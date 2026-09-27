@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/config/app_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/auth_provider.dart';
+import '../emergency/emergency_directory_screen.dart';
 import '../radio/radio_player_provider.dart';
 
 class MoreScreen extends ConsumerWidget {
@@ -74,15 +75,19 @@ class MoreScreen extends ConsumerWidget {
           icon: Icons.phone_in_talk_rounded,
           color: AppColors.alertRed,
           title: 'পশ্চিমবঙ্গ জেলাভিত্তিক জরুরি নম্বর',
-          subtitle: 'বিদ্যুৎ দপ্তর, ফায়ার স্টেশন ও হাসপাতাল ডিরেক্টরি',
-          onTap: () => _callEmergency('19121'),
+          subtitle: 'থানা, ফায়ার স্টেশন ও হাসপাতাল ডিরেক্টরি খুঁজুন',
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const EmergencyDirectoryScreen()),
+            );
+          },
           isDark: isDark,
         ),
         _buildListTile(
           icon: Icons.emergency_rounded,
           color: AppColors.alertRed,
           title: 'সরাসরি বিদ্যুৎ হেল্পলাইন (19121)',
-          subtitle: '২৪x৭ ২৪ ঘণ্টা সেন্ট্রাল বিদ্যুৎ অভিযোগ',
+          subtitle: '২৪x৭ সেন্ট্রাল বিদ্যুৎ অভিযোগ',
           onTap: () => _callEmergency('19121'),
           isDark: isDark,
         ),
@@ -94,7 +99,7 @@ class MoreScreen extends ConsumerWidget {
           icon: Icons.radio_rounded,
           color: AppColors.electricBlue,
           title: 'লাইফস্কিল রেডিও চালু/বন্ধ',
-          subtitle: 'নিরাপত্তা গল্প ও মোটিভেশনাল পডকাস্ট',
+          subtitle: 'লাইভ ব্রডকাস্ট স্ট্রিম শুনুন',
           onTap: () {
             ref.read(radioProvider.notifier).showPlayer();
             ref.read(radioProvider.notifier).togglePlay();
@@ -171,24 +176,45 @@ class MoreScreen extends ConsumerWidget {
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
+      child: Material(
         color: isDark ? AppColors.slate800 : Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isDark ? AppColors.slate700 : AppColors.slate200),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: isDark ? AppColors.slate700 : AppColors.slate200),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                      const SizedBox(height: 2),
+                      Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, size: 20, color: Colors.grey),
+              ],
+            ),
           ),
-          child: Icon(icon, color: color, size: 22),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-        trailing: const Icon(Icons.chevron_right_rounded, size: 20, color: Colors.grey),
       ),
     );
   }
@@ -207,4 +233,3 @@ class MoreScreen extends ConsumerWidget {
     }
   }
 }
-

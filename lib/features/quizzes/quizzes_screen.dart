@@ -1,14 +1,17 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import 'leaderboard_provider.dart';
+import 'quiz_play_screen.dart';
 
-class QuizzesScreen extends StatefulWidget {
+class QuizzesScreen extends ConsumerStatefulWidget {
   const QuizzesScreen({super.key});
 
   @override
-  State<QuizzesScreen> createState() => _QuizzesScreenState();
+  ConsumerState<QuizzesScreen> createState() => _QuizzesScreenState();
 }
 
-class _QuizzesScreenState extends State<QuizzesScreen> with SingleTickerProviderStateMixin {
+class _QuizzesScreenState extends ConsumerState<QuizzesScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -95,7 +98,11 @@ class _QuizzesScreenState extends State<QuizzesScreen> with SingleTickerProvider
               ),
               const SizedBox(height: 14),
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const QuizPlayScreen()),
+                  );
+                },
                 icon: const Icon(Icons.play_arrow_rounded, color: AppColors.slate900),
                 label: const Text(
                   'কুইজ শুরু করুন (+১০ পয়েন্ট)',
@@ -145,7 +152,11 @@ class _QuizzesScreenState extends State<QuizzesScreen> with SingleTickerProvider
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const QuizPlayScreen()),
+                  );
+                },
                 icon: const Icon(Icons.center_focus_strong_rounded, size: 18),
                 label: const Text('অনুশীলন শুরু করুন'),
                 style: OutlinedButton.styleFrom(
@@ -162,106 +173,112 @@ class _QuizzesScreenState extends State<QuizzesScreen> with SingleTickerProvider
   }
 
   Widget _buildLeaderboardView(bool isDark) {
-    final topLinemen = [
-      {'rank': 1, 'name': 'শুভঙ্কর জানা', 'district': 'পূর্ব মেদিনীপুর', 'points': 4820, 'badge': '🥇'},
-      {'rank': 2, 'name': 'প্রদীপ চক্রবর্তী', 'district': 'বাঁকুড়া', 'points': 4650, 'badge': '🥈'},
-      {'rank': 3, 'name': 'অমল রায়', 'district': 'হুগলি', 'points': 4410, 'badge': '🥉'},
-      {'rank': 4, 'name': 'বিশ্বজিৎ মন্ডল', 'district': 'বর্ধমান', 'points': 3980, 'badge': '4'},
-      {'rank': 5, 'name': 'রাজেশ পাত্র', 'district': 'দক্ষিণ ২৪ পরগনা', 'points': 3740, 'badge': '5'},
-    ];
+    final liveLeaderboard = ref.watch(liveLeaderboardProvider);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Trophy Banner
-        Container(
+    return liveLeaderboard.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('লিডারবোর্ড লোড ত্রুটি: $e')),
+      data: (linemen) {
+        return ListView(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0F766E), Color(0xFF115E59)],
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 36),
-              SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'মাসিক উৎসাহ বোর্ড (Monthly Boards)',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+          children: [
+            // Trophy Banner
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0F766E), Color(0xFF115E59)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 36),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'মাসিক উৎসাহ বোর্ড (Monthly Boards)',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'লাইভ সুপাবেস ডাটাবেজ থেকে শীর্ষ লাইনম্যান তালিকা।',
+                          style: TextStyle(color: Colors.white70, fontSize: 11),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 2),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            ...linemen.map((lineman) {
+              final isTop3 = lineman.rank <= 3;
+              String badge = lineman.rank.toString();
+              if (lineman.rank == 1) badge = '🥇';
+              if (lineman.rank == 2) badge = '🥈';
+              if (lineman.rank == 3) badge = '🥉';
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.slate800 : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isTop3
+                        ? AppColors.primaryAmber.withValues(alpha: 0.5)
+                        : (isDark ? AppColors.slate700 : AppColors.slate200),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 32,
+                      child: Text(
+                        badge,
+                        style: TextStyle(
+                          fontSize: isTop3 ? 20 : 14,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : AppColors.slate900,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lineman.name,
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                          ),
+                          Text(
+                            lineman.district,
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
                     Text(
-                      'নিয়মিত পাঠ ও সঠিক কুইজের মাধ্যমে পয়েন্ট অর্জন করে শীর্ষে থাকুন।',
-                      style: TextStyle(color: Colors.white70, fontSize: 11),
+                      '${lineman.points} পয়েন্ট',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primaryAmber,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        ...topLinemen.map((lineman) {
-          final isTop3 = (lineman['rank'] as int) <= 3;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.slate800 : Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isTop3 ? AppColors.primaryAmber.withValues(alpha: 0.5) : (isDark ? AppColors.slate700 : AppColors.slate200),
-              ),
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 32,
-                  child: Text(
-                    lineman['badge'].toString(),
-                    style: TextStyle(
-                      fontSize: isTop3 ? 20 : 14,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : AppColors.slate900,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        lineman['name'] as String,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                      ),
-                      Text(
-                        lineman['district'] as String,
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  '${lineman['points']} পয়েন্ট',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primaryAmber,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
+              );
+            }),
+          ],
+        );
+      },
     );
   }
 }
-

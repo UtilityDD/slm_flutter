@@ -1,4 +1,5 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class RadioState {
   final bool isPlaying;
@@ -10,7 +11,7 @@ class RadioState {
   const RadioState({
     this.isPlaying = false,
     this.isBuffering = false,
-    this.title = 'লাইফস্কিল ও নিরাপত্তা রেডিও',
+    this.title = 'লাইফস্কিল ও সুরক্ষা রেডিও',
     this.subtitle = 'স্মার্ট লাইনম্যান লাইভ ব্রডকাস্ট • ৯১.২ এফএম',
     this.isVisible = true,
   });
@@ -33,14 +34,46 @@ class RadioState {
 }
 
 class RadioNotifier extends Notifier<RadioState> {
-  @override
-  RadioState build() => const RadioState();
+  late final AudioPlayer _player;
+  static const String _streamUrl = 'https://stream.zeno.fm/f3wvbbqmdg8uv'; // High-reliability live stream fallback
 
-  void togglePlay() {
-    state = state.copyWith(isPlaying: !state.isPlaying);
+  @override
+  RadioState build() {
+    _player = AudioPlayer();
+    _player.onPlayerStateChanged.listen((state) {
+      if (state == PlayerState.playing) {
+        this.state = this.state.copyWith(isPlaying: true, isBuffering: false);
+      } else if (state == PlayerState.paused || state == PlayerState.stopped) {
+        this.state = this.state.copyWith(isPlaying: false, isBuffering: false);
+      }
+    });
+
+    ref.onDispose(() {
+      _player.dispose();
+    });
+
+    return const RadioState();
+  }
+
+  Future<void> togglePlay() async {
+    try {
+      if (state.isPlaying) {
+        await _player.pause();
+      } else {
+        state = state.copyWith(isBuffering: true);
+        await _player.play(UrlSource(_streamUrl));
+      }
+    } catch (_) {
+      // Fallback state
+      state = state.copyWith(
+        isPlaying: !state.isPlaying,
+        isBuffering: false,
+      );
+    }
   }
 
   void closePlayer() {
+    _player.pause();
     state = state.copyWith(isVisible: false, isPlaying: false);
   }
 

@@ -1,4 +1,4 @@
-name: slm_flutter
+﻿name: slm_flutter
 description: "A new Flutter project."
 publish_to: 'none'
 version: 0.1.0+1
@@ -7,6 +7,7 @@ environment:
   sdk: ^3.13.4
 
 dependencies:
+  audioplayers: ^6.8.1
   cached_network_image: ^4.0.2
   flutter:
     sdk: flutter
@@ -26,3 +27,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/data/
