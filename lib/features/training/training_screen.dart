@@ -1,255 +1,342 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import 'lesson_detail_sheet.dart';
+import 'training_models.dart';
+import 'training_provider.dart';
 
-class TrainingChapter {
-  final int number;
-  final String title;
-  final String description;
-  final int totalLessons;
-  final int completedLessons;
-  final bool isCompleted;
-
-  const TrainingChapter({
-    required this.number,
-    required this.title,
-    required this.description,
-    required this.totalLessons,
-    required this.completedLessons,
-    this.isCompleted = false,
-  });
-}
-
-class TrainingScreen extends StatelessWidget {
+class TrainingScreen extends ConsumerStatefulWidget {
   const TrainingScreen({super.key});
 
-  static const List<TrainingChapter> chapters = [
-    TrainingChapter(
-      number: 1,
-      title: 'ব্যক্তিগত সুরক্ষা সরঞ্জাম (PPE) ও সাধারণ সতর্কতা',
-      description: 'হেলমেট, ইনসুলেটিং গ্লাভস, সেফটি বেল্ট ও বুটের সঠিক ব্যবহার ও পরিদর্শন।',
-      totalLessons: 10,
-      completedLessons: 10,
-      isCompleted: true,
-    ),
-    TrainingChapter(
-      number: 2,
-      title: 'পোল ও লাইনে আরোহণ পদ্ধতি',
-      description: 'ল্যাডার, ক্লাইম্বিং বেল্ট ও পোল পরীক্ষার বৈজ্ঞানিক নিয়ম।',
-      totalLessons: 10,
-      completedLessons: 6,
-    ),
-    TrainingChapter(
-      number: 3,
-      title: 'কন্ডাক্টর ও তারের নিরাপদ টান ও হ্যান্ডলিং',
-      description: 'এসিরএসআর (ACSR) কন্ডাক্টর, স্যাগিং ও জাম্পারিং কাজের সতর্কতা।',
-      totalLessons: 10,
-      completedLessons: 2,
-    ),
-    TrainingChapter(
-      number: 4,
-      title: 'ডিস্ট্রিবিউশন ট্রান্সফরমার (DTR) রক্ষণাবেক্ষণ',
-      description: 'ট্রান্সফরমার আইসোলেশন, ডিও ফিউজ প্রতিস্থাপন ও লোড ভারসাম্য।',
-      totalLessons: 10,
-      completedLessons: 0,
-    ),
-    TrainingChapter(
-      number: 5,
-      title: 'সঠিক আর্থিং ও ডিসচার্জ রড প্রয়োগ',
-      description: 'আর্থিং প্রতিরোধ পরিমাপ, ডিসচার্জ পদ্ধতি এবং রিভার্স ফিড প্রটেকশন।',
-      totalLessons: 10,
-      completedLessons: 0,
-    ),
-    TrainingChapter(
-      number: 6,
-      title: 'এলটি ও এইচটি লাইনে ফল্ট নির্ণয়',
-      description: 'লাইনের শর্ট সার্কিট, আর্থ ফল্ট শনাক্তকরণ ও জরুরি মেরামত।',
-      totalLessons: 10,
-      completedLessons: 0,
-    ),
-    TrainingChapter(
-      number: 7,
-      title: 'বিদ্যুৎস্পৃষ্টের জরুরি উদ্ধার ও সিপিআর (CPR)',
-      description: 'জরুরি পরিস্থিতিতে জীবনের সুরক্ষা ও রক্তক্ষরণ প্রতিরোধ।',
-      totalLessons: 10,
-      completedLessons: 0,
-    ),
-    TrainingChapter(
-      number: 8,
-      title: 'ডব্লিউবিইআরসি (WBERC) ও কেন্দ্রীয় বিদ্যুৎ নিরাপত্তা নিয়ম',
-      description: 'স্ট্যান্ডার্ড অপারেটিং রেগুলেশন ও আইনি দিকসমূহ।',
-      totalLessons: 10,
-      completedLessons: 0,
-    ),
-    TrainingChapter(
-      number: 9,
-      title: 'স্মার্ট মিটার ও আধুনিক মিটারিং টুলস',
-      description: 'স্মার্ট মিটার ইন্সটলেশন ও ফিল্ড টেস্ট নিরাপত্তা।',
-      totalLessons: 10,
-      completedLessons: 0,
-    ),
-    TrainingChapter(
-      number: 10,
-      title: 'ফিল্ড সেফটি ম্যানুয়াল ও চেকলিস্ট',
-      description: 'কাজের পূর্বে ও পরে সাইট পরিদর্শনের সম্পূর্ণ চেকলিস্ট।',
-      totalLessons: 18,
-      completedLessons: 0,
-    ),
-  ];
+  @override
+  ConsumerState<TrainingScreen> createState() => _TrainingScreenState();
+}
+
+class _TrainingScreenState extends ConsumerState<TrainingScreen> {
+  int? _expandedModuleNumber = 1; // Default open module 1
 
   @override
   Widget build(BuildContext context) {
+    final ladderAsync = ref.watch(trainingLadderProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: ListView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: [
-          // Banner
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.electricBlue, Color(0xFF1D4ED8)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.school_rounded, color: Colors.white, size: 24),
-                    SizedBox(width: 8),
-                    Text(
-                      'সুরক্ষা প্রশিক্ষণ ও পাঠ্যক্রম',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+      body: ladderAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('প্রশিক্ষণ লোড ত্রুটি: $e')),
+        data: (modules) {
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // Header Banner
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.electricBlue, Color(0xFF1E40AF)],
                       ),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ],
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'প্রতিটি অধ্যায় পাঠ সম্পন্ন করে রিডিং গেট যাচাই করুন এবং প্রতি ৩০ দিনে পুনরায় ২০ বোনাস পয়েন্ট অর্জন করুন।',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    height: 1.4,
+                    child: const Row(
+                      children: [
+                        Icon(Icons.stairs_rounded, color: Colors.amber, size: 36),
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'লাইনম্যান সিঁড়ি আরোহণ (Safety Ladder)',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'লেভেল ১ থেকে শুরু করে ধাপে ধাপে ১০টি অধ্যায় সম্পন্ন করুন এবং মাস্টার লাইনম্যান হিসেবে উত্তীর্ণ হন।',
+                                style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.3),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+              ),
 
-          // Chapter List
-          ...chapters.map((chapter) => _buildChapterTile(context, chapter, isDark)),
-          const SizedBox(height: 20),
-        ],
+              // Ladder Progression Path
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final item = modules[index];
+                      final isLast = index == modules.length - 1;
+                      return _buildLadderRung(item, isLast, isDark);
+                    },
+                    childCount: modules.length,
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildChapterTile(BuildContext context, TrainingChapter chapter, bool isDark) {
-    final progress = chapter.completedLessons / chapter.totalLessons;
+  Widget _buildLadderRung(TrainingModuleItem item, bool isLast, bool isDark) {
+    final isExpanded = _expandedModuleNumber == item.moduleNumber;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.slate800 : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: chapter.isCompleted
-              ? AppColors.safeGreen.withValues(alpha: 0.5)
-              : (isDark ? AppColors.slate700 : AppColors.slate200),
-          width: chapter.isCompleted ? 1.5 : 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: chapter.isCompleted
-                      ? AppColors.safeGreen
-                      : (isDark ? AppColors.slate700 : AppColors.slate100),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: chapter.isCompleted
-                      ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
-                      : Text(
-                          '${chapter.number}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: isDark ? Colors.white : AppColors.slate900,
-                          ),
-                        ),
-                ),
+    Color nodeColor;
+    IconData nodeIcon;
+
+    switch (item.status) {
+      case LadderStepStatus.completed:
+        nodeColor = AppColors.safeGreen;
+        nodeIcon = Icons.check_rounded;
+        break;
+      case LadderStepStatus.active:
+        nodeColor = AppColors.primaryAmber;
+        nodeIcon = Icons.electric_bolt_rounded;
+        break;
+      case LadderStepStatus.locked:
+        nodeColor = isDark ? AppColors.slate700 : AppColors.slate200;
+        nodeIcon = Icons.lock_outline_rounded;
+        break;
+    }
+
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left Rail & Connector Line
+            SizedBox(
+              width: 48,
+              child: Column(
+                children: [
+                  // Step Badge Node
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: item.isActive
+                          ? AppColors.primaryAmber.withValues(alpha: 0.2)
+                          : (item.isCompleted ? AppColors.safeGreen.withValues(alpha: 0.2) : (isDark ? AppColors.slate800 : AppColors.slate100)),
+                      border: Border.all(
+                        color: nodeColor,
+                        width: item.isActive ? 2.5 : 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        nodeIcon,
+                        color: nodeColor,
+                        size: item.isCompleted ? 22 : 20,
+                      ),
+                    ),
+                  ),
+
+                  // Vertical connecting line to next step
+                  if (!isLast)
+                    Container(
+                      width: 3,
+                      height: isExpanded ? 320 : 70,
+                      decoration: BoxDecoration(
+                        color: item.isCompleted
+                            ? AppColors.safeGreen.withValues(alpha: 0.8)
+                            : (isDark ? AppColors.slate700 : AppColors.slate200),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
+            ),
+            const SizedBox(width: 12),
+
+            // Right Step Card
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.slate800 : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: item.isActive
+                        ? AppColors.primaryAmber.withValues(alpha: 0.6)
+                        : (item.isCompleted
+                            ? AppColors.safeGreen.withValues(alpha: 0.4)
+                            : (isDark ? AppColors.slate700 : AppColors.slate200)),
+                    width: item.isActive ? 1.5 : 1,
+                  ),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'অধ্যায় ${chapter.number}: ${chapter.title}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                    // Main Rung Summary
+                    InkWell(
+                      onTap: () {
+                        if (item.isLocked) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('পূর্ববর্তী লেভেল সম্পন্ন করে এই ধাপ আনলক করুন।')),
+                          );
+                          return;
+                        }
+                        setState(() {
+                          _expandedModuleNumber = isExpanded ? null : item.moduleNumber;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: nodeColor.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'ধাপ ${item.moduleNumber}: ${item.badgeName}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                      color: nodeColor,
+                                    ),
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (item.isLocked)
+                                  const Text('লক করা 🔒', style: TextStyle(fontSize: 11, color: Colors.grey))
+                                else
+                                  Icon(
+                                    isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                                    color: Colors.grey,
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              item.title,
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: LinearProgressIndicator(
+                                      value: item.totalLessons > 0 ? (item.completedLessons / item.totalLessons) : 0,
+                                      minHeight: 5,
+                                      backgroundColor: isDark ? AppColors.slate700 : AppColors.slate100,
+                                      valueColor: AlwaysStoppedAnimation<Color>(nodeColor),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  '${item.completedLessons}/${item.totalLessons} পাঠ',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      chapter.description,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? AppColors.slate200 : AppColors.slate700,
-                        height: 1.3,
-                      ),
-                    ),
+
+                    // Expanded Lessons from Supabase
+                    if (isExpanded) ...[
+                      const Divider(height: 1),
+                      _buildModuleLessonsList(item.moduleNumber, isDark),
+                    ],
                   ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 6,
-                    backgroundColor: isDark ? AppColors.slate700 : AppColors.slate100,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      chapter.isCompleted ? AppColors.safeGreen : AppColors.primaryAmber,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '${chapter.completedLessons}/${chapter.totalLessons} পাঠ',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModuleLessonsList(int moduleNumber, bool isDark) {
+    final lessonsAsync = ref.watch(moduleLessonsProvider(moduleNumber));
+
+    return lessonsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text('পাঠ লোড ব্যর্থ: $e', style: const TextStyle(fontSize: 12, color: Colors.red)),
+      ),
+      data: (lessons) {
+        if (lessons.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text('এই অধ্যায়ে কোনো সক্রিয় পাঠ পাওয়া যায়নি।', style: TextStyle(fontSize: 12, color: Colors.grey)),
+          );
+        }
+
+        return ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          itemCount: lessons.length,
+          separatorBuilder: (_, _) => const Divider(height: 1),
+          itemBuilder: (context, idx) {
+            final lesson = lessons[idx];
+            return ListTile(
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              leading: CircleAvatar(
+                radius: 14,
+                backgroundColor: lesson.isCompleted
+                    ? AppColors.safeGreen
+                    : AppColors.primaryAmber.withValues(alpha: 0.2),
+                child: lesson.isCompleted
+                    ? const Icon(Icons.check_rounded, color: Colors.white, size: 16)
+                    : Text(
+                        '${lesson.chapterNumber}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryAmber,
+                        ),
+                      ),
+              ),
+              title: Text(
+                lesson.title,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                'পাঠ ${lesson.moduleNumber}.${lesson.chapterNumber} • +২০ পয়েন্ট',
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: Colors.grey),
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => LessonDetailSheet(lesson: lesson),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
