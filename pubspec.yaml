@@ -14,7 +14,6 @@ dependencies:
   flutter_riverpod: ^3.4.3
   flutter_svg: ^2.3.0
   go_router: ^18.0.1
-  google_fonts: ^8.2.1
   intl: ^0.20.3
   shared_preferences: ^2.5.5
   supabase_flutter: ^2.17.2
@@ -27,5 +26,16 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Noto Sans Bengali
+      fonts:
+        - asset: assets/fonts/NotoSansBengali-Variable.ttf
   assets:
     - assets/data/
+    - assets/safety/library/ab-cable-items/
+    - assets/safety/library/charts/
+    - assets/safety/library/insulators/
+    - assets/safety/library/others/
+    - assets/safety/library/ppe/
+    - assets/safety/library/tools/
+    - assets/safety/library/ug-cable/

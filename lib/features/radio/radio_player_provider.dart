@@ -13,7 +13,7 @@ class RadioState {
     this.isBuffering = false,
     this.title = 'লাইফস্কিল ও সুরক্ষা রেডিও',
     this.subtitle = 'স্মার্ট লাইনম্যান লাইভ ব্রডকাস্ট • ৯১.২ এফএম',
-    this.isVisible = true,
+    this.isVisible = false,
   });
 
   RadioState copyWith({

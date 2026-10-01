@@ -209,25 +209,24 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('প্রশ্ন ${_currentIndex + 1} / ${_questions.length}'),
+        title: const Text('ঘণ্টার কুইজ'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                'স্কোর: $_score',
+                'স্কোর $_score',
                 style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primaryAmber, fontSize: 14),
               ),
             ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Timer Progress Bar
             Row(
               children: [
                 Icon(
@@ -237,142 +236,160 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'অবশিষ্ট সময়: $_secondsRemaining সেকেন্ড',
+                  '$_secondsRemaining সেকেন্ড',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: _secondsRemaining <= 5 ? AppColors.alertRed : Colors.grey,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: _secondsRemaining <= 5 ? AppColors.alertRed : AppColors.muted,
                   ),
+                ),
+                const Spacer(),
+                Text(
+                  'প্রশ্ন ${_currentIndex + 1}/${_questions.length}',
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.muted),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             LinearProgressIndicator(
               value: _secondsRemaining / 25,
+              minHeight: 4,
               backgroundColor: isDark ? AppColors.slate700 : AppColors.slate200,
               valueColor: AlwaysStoppedAnimation<Color>(
                 _secondsRemaining <= 5 ? AppColors.alertRed : AppColors.primaryAmber,
               ),
             ),
-            const SizedBox(height: 20),
-
-            // Question Card
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.slate800 : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: isDark ? AppColors.slate700 : AppColors.slate200),
-              ),
-              child: Text(
-                question.question,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, height: 1.4),
-              ),
-            ),
-            const SizedBox(height: 18),
-
-            // Options
-            ...List.generate(question.options.length, (index) {
-              final optText = question.options[index];
-              Color optBorder = isDark ? AppColors.slate700 : AppColors.slate200;
-              Color optBg = isDark ? AppColors.slate800 : Colors.white;
-              Color optTextCol = isDark ? Colors.white : AppColors.slate900;
-
-              if (_isAnswered) {
-                if (index == question.correctIndex) {
-                  optBorder = AppColors.safeGreen;
-                  optBg = AppColors.safeGreen.withValues(alpha: 0.15);
-                  optTextCol = AppColors.safeGreen;
-                } else if (_selectedIndex == index) {
-                  optBorder = AppColors.alertRed;
-                  optBg = AppColors.alertRed.withValues(alpha: 0.15);
-                  optTextCol = AppColors.alertRed;
-                }
-              }
-
-              return InkWell(
-                onTap: () => _selectOption(index),
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: optBg,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: optBorder, width: _isAnswered && (index == question.correctIndex || _selectedIndex == index) ? 2 : 1),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: optBorder.withValues(alpha: 0.2),
+            const SizedBox(height: 8),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(color: const Color(0xFFE7E5E4)),
+                              ),
+                              child: Text(
+                                question.question,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                  height: 1.35,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            for (var index = 0; index < question.options.length; index++)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _HourlyOption(
+                                  letter: String.fromCharCode(65 + index),
+                                  text: question.options[index],
+                                  isDark: isDark,
+                                  revealed: _isAnswered,
+                                  isCorrect: index == question.correctIndex,
+                                  isSelected: _selectedIndex == index,
+                                  onTap: () => _selectOption(index),
+                                ),
+                              ),
+                            if (_isAnswered)
+                              FilledButton(
+                                onPressed: _nextQuestion,
+                                child: Text(
+                                  _currentIndex < _questions.length - 1 ? 'পরের প্রশ্ন' : 'ফলাফল',
+                                  style: const TextStyle(fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                          ],
                         ),
-                        child: Center(
-                          child: Text(
-                            String.fromCharCode(65 + index),
-                            style: TextStyle(fontWeight: FontWeight.w700, color: optTextCol),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          optText,
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: optTextCol),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-
-            // Explanation & Next Button
-            if (_isAnswered) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.electricBlue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.electricBlue.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.info_outline_rounded, color: AppColors.electricBlue, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        question.explanation,
-                        style: const TextStyle(fontSize: 12, height: 1.4),
                       ),
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _nextQuestion,
-                  icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.slate900),
-                  label: Text(
-                    _currentIndex < _questions.length - 1 ? 'পরবর্তী প্রশ্ন' : 'ফলাফল দেখুন',
-                    style: const TextStyle(color: AppColors.slate900, fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryAmber,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HourlyOption extends StatelessWidget {
+  final String letter;
+  final String text;
+  final bool isDark;
+  final bool revealed;
+  final bool isCorrect;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _HourlyOption({
+    required this.letter,
+    required this.text,
+    required this.isDark,
+    required this.revealed,
+    required this.isCorrect,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    var border = isDark ? AppColors.slate700 : AppColors.slate200;
+    var fill = isDark ? AppColors.slate800 : Colors.white;
+    var ink = isDark ? Colors.white : AppColors.slate900;
+    if (revealed && isCorrect) {
+      border = AppColors.safeGreen;
+      fill = AppColors.safeGreen.withValues(alpha: 0.15);
+      ink = AppColors.safeGreen;
+    } else if (revealed && isSelected) {
+      border = AppColors.alertRed;
+      fill = AppColors.alertRed.withValues(alpha: 0.15);
+      ink = AppColors.alertRed;
+    }
+
+    return Material(
+      color: fill,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: revealed ? null : onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          alignment: Alignment.centerLeft,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: border, width: revealed && (isCorrect || isSelected) ? 2 : 1),
+          ),
+          child: Row(
+            children: [
+              Text(letter, style: TextStyle(fontWeight: FontWeight.w800, color: ink)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  text,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, height: 1.25, color: ink),
                 ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );

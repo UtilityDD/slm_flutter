@@ -1,0 +1,23 @@
+abstract final class AppRoutes {
+  static const home = '/';
+  static const training = '/training';
+  static const mantra = '/mantra';
+  static const ppe = '/ppe';
+  static const quiz = '/quiz';
+  static const hourly = '/hourly';
+  static const identifyPlay = '/identify-play';
+  static const more = '/more';
+  static const emergency = '/emergency';
+  static const login = '/login';
+  static const story = '/story';
+  static const prizes = '/prizes';
+  static const guide = '/guide';
+  static const progress = '/progress';
+  static const faq = '/faq';
+  static const knowMore = '/know-more';
+  static const video = '/video';
+  static const tools = '/tools';
+  static const tales = '/tales';
+  static const notices = '/notices';
+  static const forum = '/forum';
+}

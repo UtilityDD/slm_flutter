@@ -1,235 +1,121 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../core/config/app_config.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/slm_backdrop.dart';
+import '../../shared/widgets/slm_tiles.dart';
 import '../auth/auth_provider.dart';
-import '../emergency/emergency_directory_screen.dart';
+import '../home/home_screen.dart';
 import '../radio/radio_player_provider.dart';
+import '../shell/app_routes.dart';
+import '../shell/shell_providers.dart';
 
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-    final profile = authState.profile;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bn = ref.watch(languageProvider);
+    final auth = ref.watch(authProvider);
 
-    return ListView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      children: [
-        // Profile Info Card
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.slate800 : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isDark ? AppColors.slate700 : AppColors.slate200),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: AppColors.primaryAmber.withValues(alpha: 0.2),
-                child: const Icon(Icons.person_rounded, color: AppColors.primaryAmber, size: 32),
+    final items = <_MoreItem>[
+      _MoreItem(tr(bn, 'আমাদের কথা', 'Our Story'), Icons.groups_rounded, TileTone.story, AppRoutes.story),
+      _MoreItem(tr(bn, 'পুরস্কার', 'Prizes'), Icons.card_giftcard_rounded, TileTone.prize, AppRoutes.prizes),
+      _MoreItem(tr(bn, 'আমার পিপিই', 'My PPE'), Icons.health_and_safety_rounded, TileTone.safe, AppRoutes.ppe, gapAfter: true),
+      _MoreItem(tr(bn, 'অ্যাপ গাইড', 'App guide'), Icons.smartphone_rounded, TileTone.phone, AppRoutes.guide),
+      _MoreItem(tr(bn, 'আমার অগ্রগতি', 'My Progress'), Icons.insights_rounded, TileTone.learn, AppRoutes.progress),
+      _MoreItem(tr(bn, 'জিজ্ঞাসা', 'FAQ'), Icons.help_rounded, TileTone.folder, AppRoutes.faq),
+      _MoreItem(tr(bn, 'আরো জানুন', 'Know More'), Icons.lightbulb_rounded, TileTone.idea, AppRoutes.knowMore),
+      _MoreItem(tr(bn, 'ভিডিও গাইড', 'Video Guide'), Icons.smart_display_rounded, TileTone.video, AppRoutes.video),
+      _MoreItem(tr(bn, 'আমার সরঞ্জাম', 'My Tools'), Icons.handyman_rounded, TileTone.tools, AppRoutes.tools),
+      _MoreItem(tr(bn, 'জরুরি', 'Emergency'), Icons.warning_rounded, TileTone.sos, AppRoutes.emergency, gapBefore: true, emphasize: true),
+      _MoreItem(tr(bn, 'করুণ কাহিনী', 'Tragic Stories'), Icons.favorite_rounded, TileTone.heart, AppRoutes.tales),
+      _MoreItem(tr(bn, 'SLM রেডিও', 'SLM Radio'), Icons.radio_rounded, TileTone.indigo, null, action: _MoreAction.radio),
+      _MoreItem(tr(bn, 'বিজ্ঞপ্তি', 'Notifications'), Icons.notifications_rounded, TileTone.bell, AppRoutes.notices),
+      _MoreItem(tr(bn, 'প্রশ্নোত্তর', 'Forum'), Icons.forum_rounded, TileTone.forum, AppRoutes.forum),
+      _MoreItem(tr(bn, 'শেয়ার করুন', 'Share'), Icons.share_rounded, TileTone.share, null, action: _MoreAction.share),
+    ];
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(tr(bn, 'আরও', 'More')),
+      ),
+      body: SlmBackdrop(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+          children: [
+            for (final item in items) ...[
+              if (item.gapBefore) const SizedBox(height: 10),
+              More3dRow(
+                label: item.label,
+                icon: item.icon,
+                tone: item.tone,
+                emphasize: item.emphasize,
+                onTap: () => _onTap(context, ref, bn, item),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      profile?.displayName ?? 'লাইনম্যান',
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'আইডি: ${profile?.slmId ?? "SLM-000"} • জেলা: ${profile?.district ?? "পশ্চিমবঙ্গ"}',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryAmber.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        profile?.badgeTitle ?? 'শিক্ষানবিস লাইনম্যান',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryAmber),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              SizedBox(height: item.gapAfter ? 16 : 10),
             ],
-          ),
-        ),
-        const SizedBox(height: 18),
-
-        // Emergency Section
-        _buildSectionHeader('জরুরি ও সহায়তা (Emergency Services)'),
-        _buildListTile(
-          icon: Icons.phone_in_talk_rounded,
-          color: AppColors.alertRed,
-          title: 'পশ্চিমবঙ্গ জেলাভিত্তিক জরুরি নম্বর',
-          subtitle: 'থানা, ফায়ার স্টেশন ও হাসপাতাল ডিরেক্টরি খুঁজুন',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const EmergencyDirectoryScreen()),
-            );
-          },
-          isDark: isDark,
-        ),
-        _buildListTile(
-          icon: Icons.emergency_rounded,
-          color: AppColors.alertRed,
-          title: 'সরাসরি বিদ্যুৎ হেল্পলাইন (19121)',
-          subtitle: '২৪x৭ সেন্ট্রাল বিদ্যুৎ অভিযোগ',
-          onTap: () => _callEmergency('19121'),
-          isDark: isDark,
-        ),
-        const SizedBox(height: 18),
-
-        // Radio & Audio
-        _buildSectionHeader('অডিও ও বিনোদন'),
-        _buildListTile(
-          icon: Icons.radio_rounded,
-          color: AppColors.electricBlue,
-          title: 'লাইফস্কিল রেডিও চালু/বন্ধ',
-          subtitle: 'লাইভ ব্রডকাস্ট স্ট্রিম শুনুন',
-          onTap: () {
-            ref.read(radioProvider.notifier).showPlayer();
-            ref.read(radioProvider.notifier).togglePlay();
-          },
-          isDark: isDark,
-        ),
-        const SizedBox(height: 18),
-
-        // App Info & Settings
-        _buildSectionHeader('অ্যাপ তথ্য ও সহায়তা'),
-        _buildListTile(
-          icon: Icons.info_outline_rounded,
-          color: AppColors.primaryAmber,
-          title: 'অ্যাপ সংস্করণ (Version)',
-          subtitle: 'SmartLineman Flutter v${AppConfig.appVersion}',
-          onTap: () {},
-          isDark: isDark,
-        ),
-        _buildListTile(
-          icon: Icons.mail_outline_rounded,
-          color: AppColors.primaryAmber,
-          title: 'সহায়তা ও যোগাযোগ',
-          subtitle: AppConfig.supportEmail,
-          onTap: () => _openUrl('mailto:${AppConfig.supportEmail}'),
-          isDark: isDark,
-        ),
-        const SizedBox(height: 18),
-
-        // Auth Actions
-        if (authState.isAuthenticated)
-          OutlinedButton.icon(
-            onPressed: () => ref.read(authProvider.notifier).signOut(),
-            icon: const Icon(Icons.logout_rounded, color: AppColors.alertRed),
-            label: const Text('লগআউট করুন (Log Out)', style: TextStyle(color: AppColors.alertRed)),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.alertRed),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          )
-        else
-          ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.login_rounded, color: AppColors.slate900),
-            label: const Text('লগইন করুন (Login)', style: TextStyle(color: AppColors.slate900, fontWeight: FontWeight.w700)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryAmber,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.grey),
-      ),
-    );
-  }
-
-  Widget _buildListTile({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    required bool isDark,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: isDark ? AppColors.slate800 : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: isDark ? AppColors.slate700 : AppColors.slate200),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, color: color, size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                      const SizedBox(height: 2),
-                      Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded, size: 20, color: Colors.grey),
-              ],
-            ),
-          ),
+            const SizedBox(height: 8),
+            if (auth.isAuthenticated)
+              OutlinedButton.icon(
+                onPressed: () => ref.read(authProvider.notifier).signOut(),
+                icon: const Icon(Icons.logout_rounded, color: AppColors.alertRed),
+                label: Text(tr(bn, 'লগআউট', 'Log out'), style: const TextStyle(color: AppColors.alertRed, fontWeight: FontWeight.w800)),
+              )
+            else
+              FilledButton.icon(
+                onPressed: () => Navigator.of(context).pushNamed(AppRoutes.login),
+                icon: const Icon(Icons.login_rounded),
+                label: Text(tr(bn, 'লগইন', 'Log in')),
+              ),
+          ],
         ),
       ),
     );
   }
 
-  void _callEmergency(String phone) async {
-    final uri = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+  void _onTap(BuildContext context, WidgetRef ref, bool bn, _MoreItem item) {
+    switch (item.action) {
+      case _MoreAction.radio:
+        ref.read(radioProvider.notifier).showPlayer();
+        ref.read(radioProvider.notifier).togglePlay();
+        return;
+      case _MoreAction.share:
+        copyInvite(context, bn);
+        return;
+      case _MoreAction.none:
+        break;
+    }
+    final route = item.route;
+    if (route != null) {
+      Navigator.of(context).pushNamed(route);
     }
   }
+}
 
-  void _openUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
+enum _MoreAction { none, radio, share }
+
+class _MoreItem {
+  final String label;
+  final IconData icon;
+  final TileTone tone;
+  final String? route;
+  final bool gapBefore;
+  final bool gapAfter;
+  final bool emphasize;
+  final _MoreAction action;
+
+  const _MoreItem(
+    this.label,
+    this.icon,
+    this.tone,
+    this.route, {
+    this.gapBefore = false,
+    this.gapAfter = false,
+    this.emphasize = false,
+    this.action = _MoreAction.none,
+  });
 }

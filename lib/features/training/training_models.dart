@@ -1,4 +1,6 @@
-﻿enum LadderStepStatus {
+﻿import '../../core/config/app_config.dart';
+
+enum LadderStepStatus {
   completed,
   active,
   locked,
@@ -26,15 +28,52 @@ class TrainingModuleItem {
   bool get isLocked => status == LadderStepStatus.locked;
 }
 
+class LessonSectionPoint {
+  final String itemName;
+  final String? importance;
+  final String? dailyCheck;
+  final String? specifications;
+  final String? imageName;
+  final String? imageCaption;
+
+  const LessonSectionPoint({
+    required this.itemName,
+    this.importance,
+    this.dailyCheck,
+    this.specifications,
+    this.imageName,
+    this.imageCaption,
+  });
+
+  String? get fullImageUrl {
+    if (imageName == null || imageName!.isEmpty) return null;
+    if (imageName!.startsWith('http://') || imageName!.startsWith('https://')) {
+      return imageName;
+    }
+    final path = imageName!.startsWith('/') ? imageName! : '/';
+    return '';
+  }
+}
+
+class LessonMythItem {
+  final String myth;
+  final String reality;
+
+  const LessonMythItem({
+    required this.myth,
+    required this.reality,
+  });
+}
+
 class LessonCardItem {
   final String id;
   final int moduleNumber;
   final int chapterNumber;
   final String title;
   final String? missionBriefing;
-  final String? proTip;
-  final String? mythBuster;
-  final List<String> sections;
+  final List<String> proTips;
+  final List<LessonSectionPoint> points;
+  final List<LessonMythItem> myths;
   final bool isCompleted;
 
   const LessonCardItem({
@@ -43,25 +82,80 @@ class LessonCardItem {
     required this.chapterNumber,
     required this.title,
     this.missionBriefing,
-    this.proTip,
-    this.mythBuster,
-    this.sections = const [],
+    this.proTips = const [],
+    this.points = const [],
+    this.myths = const [],
     this.isCompleted = false,
   });
 
   factory LessonCardItem.fromSupabase(Map<String, dynamic> row, bool completed) {
     final content = row['content'] as Map<String, dynamic>? ?? {};
-    
-    List<String> parseSections(dynamic raw) {
-      if (raw == null) return [];
-      if (raw is List) {
-        return raw.map((s) {
-          if (s is Map && s['body'] != null) return s['body'].toString();
-          if (s is Map && s['text'] != null) return s['text'].toString();
-          return s.toString();
-        }).toList();
+
+    // 1. Parse Mission Briefing
+    final rawMission = content['mission_briefing']?.toString();
+
+    // 2. Parse Pro Tips
+    final List<String> parsedProTips = [];
+    final rawProTip = content['pro_tip'];
+    if (rawProTip is Map) {
+      if (rawProTip['tip'] != null) parsedProTips.add(rawProTip['tip'].toString());
+      if (rawProTip['points'] is List) {
+        for (final p in rawProTip['points']) {
+          if (p != null) parsedProTips.add(p.toString());
+        }
       }
-      return [];
+    } else if (rawProTip != null) {
+      parsedProTips.add(rawProTip.toString());
+    }
+
+    // 3. Parse Section Points
+    final List<LessonSectionPoint> parsedPoints = [];
+    final rawSections = content['sections'];
+    if (rawSections is List) {
+      for (final sec in rawSections) {
+        if (sec is Map) {
+          if (sec['points'] is List) {
+            for (final pt in sec['points']) {
+              if (pt is Map) {
+                parsedPoints.add(LessonSectionPoint(
+                  itemName: pt['item_name']?.toString() ?? '',
+                  importance: pt['importance']?.toString(),
+                  dailyCheck: pt['daily_check']?.toString(),
+                  specifications: pt['specifications']?.toString(),
+                  imageName: pt['image_name']?.toString(),
+                  imageCaption: pt['image_caption']?.toString(),
+                ));
+              }
+            }
+          } else if (sec['title'] != null || sec['body'] != null) {
+            parsedPoints.add(LessonSectionPoint(
+              itemName: sec['title']?.toString() ?? 'নির্দেশনা',
+              importance: sec['body']?.toString() ?? sec['text']?.toString(),
+            ));
+          }
+        }
+      }
+    }
+
+    // 4. Parse Myths
+    final List<LessonMythItem> parsedMyths = [];
+    final rawMythBuster = content['myth_buster'];
+    if (rawMythBuster is Map) {
+      if (rawMythBuster['myths'] is List) {
+        for (final m in rawMythBuster['myths']) {
+          if (m is Map) {
+            parsedMyths.add(LessonMythItem(
+              myth: m['myth']?.toString() ?? '',
+              reality: m['reality']?.toString() ?? '',
+            ));
+          }
+        }
+      } else if (rawMythBuster['myth'] != null) {
+        parsedMyths.add(LessonMythItem(
+          myth: rawMythBuster['myth']?.toString() ?? '',
+          reality: rawMythBuster['reality']?.toString() ?? '',
+        ));
+      }
     }
 
     return LessonCardItem(
@@ -69,10 +163,10 @@ class LessonCardItem {
       moduleNumber: (row['module_number'] as num?)?.toInt() ?? 1,
       chapterNumber: (row['chapter_number'] as num?)?.toInt() ?? 1,
       title: row['title']?.toString() ?? '',
-      missionBriefing: content['mission_briefing']?.toString(),
-      proTip: content['pro_tip'] is Map ? content['pro_tip']['tip']?.toString() : content['pro_tip']?.toString(),
-      mythBuster: content['myth_buster'] is Map ? content['myth_buster']['myth']?.toString() : content['myth_buster']?.toString(),
-      sections: parseSections(content['sections']),
+      missionBriefing: rawMission,
+      proTips: parsedProTips,
+      points: parsedPoints,
+      myths: parsedMyths,
       isCompleted: completed,
     );
   }
