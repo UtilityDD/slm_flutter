@@ -1,0 +1,184 @@
+{
+  "title_bn": "ছিঁড়ে পড়া কন্ডাক্টর",
+  "subtitle_bn": "SAFE HOME কুইজ",
+  "time_seconds": 240,
+  "sites": [
+    {
+      "id": "road",
+      "name_bn": "রাস্তায়",
+      "bg": "assets/zero_loss/scene/bg_market_wire_down.webp",
+      "intro_bn": "রাস্তায় ১১ কেভি তার ছিঁড়ে পড়ে আছে। ট্রাফিক ও জনতা আছে। SAFE HOME মেনে এগোবেন।"
+    },
+    {
+      "id": "pond",
+      "name_bn": "পুকুর পাড়ে",
+      "bg": "assets/zero_loss/scene/bg_pole_storm.webp",
+      "intro_bn": "পুকুরের ধারে তার ছিঁড়ে আছে। পিছল মাটি ও পানি — সাবধানে ব্যারিকেড ও আর্থ।"
+    },
+    {
+      "id": "paddy",
+      "name_bn": "ধানক্ষেতে",
+      "bg": "assets/zero_loss/scene/bg_span_two_poles.webp",
+      "intro_bn": "ধানক্ষেতে তার পড়ে আছে। কাদা ও গ্রামের লোক। আগে বিপদ চিনুন, তারপর কবচ।"
+    }
+  ],
+  "steps": [
+    {
+      "id": "dangers",
+      "mantra": "stop",
+      "kind": "single",
+      "prompt_bn": "কাজ শুরুর আগে টিমে কী আগে করবেন?",
+      "voice_bn": "কাজ শুরুর আগে টিমে কী আগে করবেন?",
+      "hint_bn": "আগে থামুন। টিমে আলোচনা করে বিপদ, আবহাওয়া, ট্রাফিক বা কাদা চিনুন — তার ধরবেন না।",
+      "reward": 20,
+      "penalty": 12,
+      "options": [
+        {"id": "rush", "label_bn": "সঙ্গে সঙ্গে তার ধরা", "image": "assets/quizzes/mistake_shock_grab.webp"},
+        {"id": "talk", "label_bn": "টিম আলোচনা · বিপদ চিহ্নিত", "image": "assets/zero_loss/scene/spr_man_stop.webp", "correct": true},
+        {"id": "alone", "label_bn": "একা মই লাগানো", "image": "assets/zero_loss/scene/spr_man_climb.webp"},
+        {"id": "phone", "label_bn": "শুধু বসকে ফোন", "image": "assets/zero_loss/scene/spr_man_phone.webp"}
+      ]
+    },
+    {
+      "id": "crew",
+      "mantra": "stop",
+      "kind": "single",
+      "prompt_bn": "মাটিতে ছিঁড়ে পড়া লাইভ তার — ন্যূনতম কতজন?",
+      "voice_bn": "মাটিতে ছিঁড়ে পড়া লাইভ তার — ন্যূনতম কতজন?",
+      "hint_bn": "এই কাজে একা নয় — কমপক্ষে দুইজন লাইন্ম্যান লাগবে।",
+      "reward": 20,
+      "penalty": 15,
+      "options": [
+        {"id": "1", "label_bn": "১ জন", "image": "assets/lineman/lineman_01_trainee.webp"},
+        {"id": "2", "label_bn": "২ জন", "image": "assets/lineman/lineman_03_tech.webp", "correct": true},
+        {"id": "5", "label_bn": "৫ জন", "image": "assets/lineman/lineman_06_senior.webp"},
+        {"id": "8", "label_bn": "৮ জন", "image": "assets/lineman/lineman_07_supervisor.webp"}
+      ]
+    },
+    {
+      "id": "ppe",
+      "mantra": "armour",
+      "kind": "multi",
+      "prompt_bn": "মাটির কাজ — কোন কবচ লাগবে?",
+      "voice_bn": "মাটির কাজ — কোন কবচ লাগবে?",
+      "hint_bn": "মাটিতে হেলমেট, গ্লাভস ও সেফটি বুট জরুরি। ফুল বডি হারনেস এখানে লাগবে না।",
+      "reward": 25,
+      "penalty": 10,
+      "essential": ["helmet", "gloves", "boots"],
+      "forbidden": ["harness"],
+      "options": [
+        {"id": "helmet", "label_bn": "হেলমেট", "image": "assets/safety/library/ppe/Safety_Helmet.webp"},
+        {"id": "gloves", "label_bn": "গ্লাভস", "image": "assets/safety/library/ppe/Electrical_Gloves.webp"},
+        {"id": "boots", "label_bn": "সেফটি বুট", "image": "assets/safety/library/ppe/Lineman_Boot_2.webp"},
+        {"id": "harness", "label_bn": "ফুল বডি হারনেস", "image": "assets/safety/library/ppe/Full_Body_Harness_2.webp"},
+        {"id": "goggles", "label_bn": "ফেস শিল্ড", "image": "assets/safety/library/ppe/Arc_Flash_Face_Shield.webp"},
+        {"id": "slippers", "label_bn": "চটি", "image": "assets/zero_loss/scene/gear_slippers.webp"}
+      ]
+    },
+    {
+      "id": "fence",
+      "mantra": "fence",
+      "kind": "single",
+      "prompt_bn": "রাস্তা / সাইটে প্রথম নিরাপত্তা ব্যবস্থা?",
+      "voice_bn": "রাস্তা / সাইটে প্রথম নিরাপত্তা ব্যবস্থা?",
+      "hint_bn": "ফিতে ও কোন দিয়ে জায়গা ঘেরুন। লোক ও গাড়ি দূরে রাখুন।",
+      "reward": 20,
+      "penalty": 12,
+      "options": [
+        {"id": "cone", "label_bn": "ব্যারিকেড · ফিতে ও কোন", "image": "assets/zero_loss/scene/prop_cones_tape.webp", "correct": true},
+        {"id": "climb", "label_bn": "সঙ্গে সঙ্গে পোলে ওঠা", "image": "assets/zero_loss/scene/spr_man_climb.webp"},
+        {"id": "shout", "label_bn": "শুধু চিৎকার করে সরানো", "image": "assets/zero_loss/scene/spr_villagers.webp"},
+        {"id": "skip", "label_bn": "ব্যারিকেড লাগবে না", "image": "assets/quizzes/mistake_no_barrier.webp"}
+      ]
+    },
+    {
+      "id": "tools",
+      "mantra": "earth",
+      "kind": "multi",
+      "prompt_bn": "আর্থ ও টেস্টের জন্য কোন টুল জরুরি?",
+      "voice_bn": "আর্থ ও টেস্টের জন্য কোন টুল জরুরি?",
+      "hint_bn": "এইচভি টেস্টার ও আর্থিং রড নিন। বাঁশের মই বাদ দিন।",
+      "reward": 25,
+      "penalty": 10,
+      "essential": ["tester", "earth_rods"],
+      "forbidden": ["bamboo"],
+      "options": [
+        {"id": "tester", "label_bn": "এইচভি টেস্টার", "image": "assets/safety/library/tools/High_Voltage_Detector_2.webp"},
+        {"id": "earth_rods", "label_bn": "আর্থিং রড", "image": "assets/safety/library/ppe/Portable_Earth_Rod.webp"},
+        {"id": "discharge", "label_bn": "ডিসচার্জ রড", "image": "assets/safety/library/ppe/discharge_rod.webp"},
+        {"id": "bamboo", "label_bn": "বাঁশের মই", "image": "assets/safety/library/ppe/Bamboo_Ladder.webp"},
+        {"id": "megger", "label_bn": "মেগার", "image": "assets/safety/library/tools/Analog_Insulation_Tester_Hand_Crank.webp"}
+      ]
+    },
+    {
+      "id": "ptw",
+      "mantra": "permit",
+      "kind": "single",
+      "prompt_bn": "পিটিডব্লিউ নিয়ে সঠিক কাজ?",
+      "voice_bn": "পিটিডব্লিউ নিয়ে সঠিক কাজ?",
+      "hint_bn": "পারমিট ফর্ম সাবধানে মিলিয়ে দেখুন। শুধু তালা লাগানোই পিটিডব্লিউ নয়।",
+      "reward": 20,
+      "penalty": 12,
+      "options": [
+        {"id": "read", "label_bn": "PTW ফর্ম সাবধানে মিলানো", "image": "assets/zero_loss/scene/gear_ptw.webp", "correct": true},
+        {"id": "skip", "label_bn": "মুখে শুনেই কাজ শুরু", "image": "assets/zero_loss/scene/spr_man_phone.webp"},
+        {"id": "lock_only", "label_bn": "শুধু তালা লাগানোই PTW", "image": "assets/zero_loss/scene/prop_lock_board.webp"},
+        {"id": "later", "label_bn": "কাজ শেষে পারমিট", "image": "assets/zero_loss/scene/spr_man_point.webp"}
+      ]
+    },
+    {
+      "id": "earth_seq",
+      "mantra": "earth",
+      "kind": "single",
+      "prompt_bn": "টেস্ট ও আর্থের সঠিক ধারা?",
+      "voice_bn": "টেস্ট ও আর্থের সঠিক ধারা?",
+      "hint_bn": "আগে টেস্ট, তারপর আর্থ, তারপর কাজ। তার আগে ধরবেন না।",
+      "reward": 22,
+      "penalty": 14,
+      "options": [
+        {"id": "ok", "label_bn": "টেস্ট → আর্থ → তারপর কাজ", "image": "assets/zero_loss/scene/spr_man_tester.webp", "correct": true},
+        {"id": "grab", "label_bn": "আগে তার সরিয়ে আর্থ", "image": "assets/quizzes/mistake_shock_grab.webp"},
+        {"id": "one", "label_bn": "এক ফেজ আর্থই যথেষ্ট", "image": "assets/quizzes/mistake_earth_one_phase.webp"},
+        {"id": "skip", "label_bn": "আর্থ বাদ · তাড়াতাড়ি", "image": "assets/quizzes/mistake_no_earthing.webp"}
+      ]
+    },
+    {
+      "id": "loto",
+      "mantra": "cut",
+      "kind": "single",
+      "prompt_bn": "আর্থের পর লোটো মানে কী?",
+      "voice_bn": "আর্থের পর লোটো মানে কী?",
+      "hint_bn": "লোটো মানে তালা ও ডেঞ্জার ট্যাগ — কেউ যেন আবার চালু না করে।",
+      "reward": 20,
+      "penalty": 12,
+      "options": [
+        {"id": "lock", "label_bn": "তালা ও ডেঞ্জার ট্যাগ লাগানো", "image": "assets/zero_loss/scene/prop_lock_board.webp", "correct": true},
+        {"id": "paper", "label_bn": "শুধু কাগজে সই", "image": "assets/zero_loss/scene/gear_ptw.webp"},
+        {"id": "helmet", "label_bn": "হেলমেট পরা", "image": "assets/safety/library/ppe/Safety_Helmet.webp"},
+        {"id": "call", "label_bn": "শুধু কন্ট্রোলকে বলা", "image": "assets/zero_loss/scene/operator_control.jpg"}
+      ]
+    },
+    {
+      "id": "restore",
+      "mantra": "count",
+      "kind": "single",
+      "prompt_bn": "কাজ শেষে সঠিক শেষ ধাপ?",
+      "voice_bn": "কাজ শেষে সঠিক শেষ ধাপ?",
+      "hint_bn": "আগে কাউন্ট — টুল ও লোক। তারপর আর্থ খুলে রিস্টোর। সঙ্গে সঙ্গে পাওয়ার অন নয়।",
+      "reward": 25,
+      "penalty": 15,
+      "options": [
+        {"id": "count", "label_bn": "কাউন্ট → আর্থ খোলা → রিস্টোর", "image": "assets/zero_loss/scene/spr_man_earth.webp", "correct": true},
+        {"id": "power", "label_bn": "সঙ্গে সঙ্গে পাওয়ার অন", "image": "assets/zero_loss/scene/operator_control.jpg"},
+        {"id": "leave", "label_bn": "আর্থ ফেলে চলে যাওয়া", "image": "assets/quizzes/proc_earth_left_on.webp"},
+        {"id": "photo", "label_bn": "শুধু ছবি তুলে শেষ", "image": "assets/zero_loss/scene/spr_man_phone.webp"}
+      ]
+    }
+  ],
+  "disturbances": [
+    {"id": "boss", "line_bn": "বস ফোন — তাড়াতাড়ি লাইন দাও!", "penalty": 8},
+    {"id": "crowd", "line_bn": "গ্রামের লোক ভিড় জমাচ্ছে!", "penalty": 8},
+    {"id": "vehicle", "line_bn": "গাড়ি হর্ন বাজাচ্ছে — ব্যারিকেড চেক!", "penalty": 10},
+    {"id": "rain", "line_bn": "হঠাৎ ঝড়ের মেঘ — সাবধান!", "penalty": 6}
+  ]
+}

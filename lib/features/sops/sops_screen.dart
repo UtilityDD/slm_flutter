@@ -1,5 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../shell/shell_insets.dart';
 
 class SopsScreen extends StatefulWidget {
   final int initialIndex;
@@ -30,7 +31,7 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
     {
       'id': 2,
       'emoji': '🧤',
-      'title': '১১ কেভি ইনসুলেটিং গ্লাভস',
+      'title': '11 কেভি ইনসুলেটিং গ্লাভস',
       'subtitle': 'এয়ার টেস্ট ও লিক চেক',
       'desc': 'মুখে হাওয়া দিয়ে এয়ার টেস্ট করুন—কোনো সূক্ষ্ম ছিদ্র বা লিক নেই তো? তেল-কালি মুক্ত রাখুন।',
       'checked': false,
@@ -112,11 +113,11 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
           indicatorWeight: 3,
           labelColor: AppColors.primaryAmber,
           unselectedLabelColor: isDark ? Colors.white70 : AppColors.slate700,
-          labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+          labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           tabs: const [
             Tab(text: 'পিপিই'),
-            Tab(text: '৮ মন্ত্র'),
+            Tab(text: '8 মন্ত্র'),
           ],
         ),
       ),
@@ -135,7 +136,7 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
 
     return ListView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(16),
+      padding: shellScrollPadding(context, left: 16, top: 16, right: 16, extraBottom: 16),
       children: [
         // Top Inspection Status Banner
         Container(
@@ -177,10 +178,10 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
                     Text(
                       allChecked
                           ? 'সবুজ সংকেত! আপনি সুরক্ষিত ✅'
-                          : 'পোলে ওঠার আগে ৬টি পিপিই চেক করুন',
+                          : 'পোলে ওঠার আগে 6টি পিপিই চেক করুন',
                       style: TextStyle(
                         fontSize: 17,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         color: allChecked ? Colors.white : (isDark ? Colors.white : AppColors.slate900),
                       ),
                     ),
@@ -259,7 +260,7 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
                               item['title'] as String,
                               style: TextStyle(
                                 fontSize: 17,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w600,
                                 color: isChecked ? AppColors.safeGreen : (isDark ? Colors.white : AppColors.slate900),
                               ),
                             ),
@@ -268,7 +269,7 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
                               item['subtitle'] as String,
                               style: const TextStyle(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w500,
                                 color: AppColors.primaryAmber,
                               ),
                             ),
@@ -317,25 +318,25 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
   Widget _buildFieldSopView(bool isDark) {
     final sops = [
       {
-        'num': '১',
+        'num': '1',
         'title': 'শাটডাউন ও লাইন বিচ্ছিন্নকরণ (PTW)',
         'rule': 'আগে শাটডাউন নিশ্চিত করুন, টেস্টার দিয়ে ভোল্টেজ পরীক্ষা করুন, তারপর দুই প্রান্তে ডিসচার্জ ও আর্থিং রড লাগান। মনে খটকা থাকলে কখনও লাইনে হাত দেবেন না।',
         'color': AppColors.safetyOrange,
       },
       {
-        'num': '২',
-        'title': 'পোলে ওঠার ৩-পয়েন্ট নীতি',
+        'num': '2',
+        'title': 'পোলে ওঠার 3-পয়েন্ট নীতি',
         'rule': 'পোলে ওঠার সময় সব সময় দুটি হাত ও একটি পা, অথবা দুটি পা ও একটি হাত পোলে বা সিঁড়িতে আটকে থাকবে। কোমর-রশা নয়—ফুল বডি হারনেসের ডাবল ল্যানিয়ার্ড ব্যবহার করুন।',
         'color': const Color(0xFF2563EB),
       },
       {
-        'num': '৩',
+        'num': '3',
         'title': 'ডিস্ট্রিবিউশন ট্রান্সফরমার (DTR) সার্ভিসিং',
         'rule': 'এইচটি (11kV) ড্রপআউট ফিউজ নামানোর পর এলটি সার্কিট ব্রেকারও অফ করুন। ব্যাকফিডিং এড়াতে উভয় পাশেই শর্ট সার্কিট আর্থিং লাগান।',
         'color': AppColors.primaryAmber,
       },
       {
-        'num': '৪',
+        'num': '4',
         'title': 'ঝড়-বৃষ্টি ও দুর্যোগে কাজ',
         'rule': 'ঝড়-বৃষ্টি চলাকালীন ওভারহেড লাইনে কাজ বন্ধ রাখুন। ভেজা পোল ও কন্ডাক্টরে বিদ্যুৎ চমকানোর সময় কাজ করা মারাত্মক ঝুঁকিপূর্ণ।',
         'color': const Color(0xFFDC2626),
@@ -344,7 +345,7 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
 
     return ListView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(16),
+      padding: shellScrollPadding(context, left: 16, top: 16, right: 16, extraBottom: 16),
       children: [
         Container(
           padding: const EdgeInsets.all(16),
@@ -359,8 +360,8 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
               SizedBox(width: 14),
               Expanded(
                 child: Text(
-                  'মাঠের ৪টি অপরিবর্তনীয় নিয়ম: কোনো তাড়াহুড়ো নয়, আগে জীবন তারপর কাজ!',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: 1.3),
+                  'মাঠের 4টি অপরিবর্তনীয় নিয়ম: কোনো তাড়াহুড়ো নয়, আগে জীবন তারপর কাজ!',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.3),
                 ),
               ),
             ],
@@ -394,7 +395,7 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
                       child: Center(
                         child: Text(
                           sop['num'] as String,
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: color),
                         ),
                       ),
                     ),
@@ -402,7 +403,7 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
                     Expanded(
                       child: Text(
                         sop['title'] as String,
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],

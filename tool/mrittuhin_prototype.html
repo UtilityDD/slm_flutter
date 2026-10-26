@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>মৃত্যুহীন</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:#06080c;font-family:'Noto Sans Bengali',sans-serif;color:#ddd;display:flex;justify-content:center;align-items:center}
+
+.device{width:375px;height:812px;position:relative;overflow:hidden;border-radius:44px;background:#06080c;box-shadow:0 0 0 2px #151a24}
+
+canvas{position:absolute;inset:0;z-index:0}
+
+.ui{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column}
+
+/* Screens */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .45s ease,transform .45s ease;transform:scale(0.97)}
+.scr.on{opacity:1;pointer-events:auto;transform:scale(1)}
+
+/* ---- COVER ---- */
+.c-wrap{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 28px 44px;position:relative}
+.c-badge{position:absolute;top:72px;left:28px;display:flex;align-items:center;gap:8px}
+.c-badge i{display:block;width:6px;height:6px;border-radius:50%;background:#fbbf24;box-shadow:0 0 10px #fbbf24}
+.c-badge span{font-size:11px;color:#8a8a9a;letter-spacing:3px;text-transform:uppercase;font-weight:600}
+.c-title{font-size:48px;font-weight:900;line-height:1;letter-spacing:-1px;color:#f8f4ec}
+.c-sub{font-size:14px;color:#555b6a;margin:6px 0 32px;font-weight:400;line-height:1.5}
+
+.c-ring-row{display:flex;align-items:center;gap:24px;margin-bottom:32px}
+.c-ring{width:96px;height:96px;position:relative;flex-shrink:0}
+.c-ring svg{width:100%;height:100%}
+.c-ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.c-ring .n{font-size:32px;font-weight:900;color:#f8f4ec;line-height:1}
+.c-ring .d{font-size:10px;color:#555b6a;font-weight:600}
+.c-ring-info{display:flex;flex-direction:column;gap:8px}
+.c-ri{display:flex;align-items:center;gap:8px}
+.c-ri .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.c-ri .txt{font-size:13px;color:#777;font-weight:600}
+.c-ri b{color:#ccc;font-weight:800}
+
+.c-btn{width:100%;padding:18px;background:#f8f4ec;color:#06080c;border:none;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.5px;transition:background .15s}
+.c-btn:active{background:#d4cfc4}
+.c-link{text-align:center;margin-top:16px;font-size:13px;color:#444;cursor:pointer;font-weight:600}
+.c-link:hover{color:#fbbf24}
+
+/* ---- LADDER ---- */
+.l-head{padding:56px 24px 16px;display:flex;align-items:center}
+.l-back{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#555;cursor:pointer;border-radius:50%;transition:background .15s}
+.l-back:hover{background:#111318}
+.l-t{flex:1;text-align:center;font-size:13px;color:#555;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.l-body{flex:1;overflow-y:auto;padding:0 28px 32px;scrollbar-width:none}
+.l-body::-webkit-scrollbar{display:none}
+.l-path{position:relative;padding-left:28px}
+.l-path::before{content:'';position:absolute;left:11px;top:0;bottom:0;width:2px;background:#14181f}
+.l-sec{padding:20px 0 6px;font-size:10px;color:#444;letter-spacing:2px;text-transform:uppercase;font-weight:700;position:relative}
+.l-sec::before{content:'';position:absolute;left:-21px;top:28px;width:8px;height:8px;border-radius:50%;border:2px solid #2a2e38;background:#06080c}
+.l-item{display:flex;align-items:center;gap:14px;padding:10px 0;cursor:pointer;position:relative;transition:opacity .15s}
+.l-item:hover{opacity:0.8}
+.l-item .circ{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;flex-shrink:0;position:relative;margin-left:-6px}
+.l-item .circ.g{background:#1a3a2a;color:#34d399;box-shadow:0 0 0 2px #1a3a2a}
+.l-item .circ.a{background:#2a2510;color:#fbbf24;box-shadow:0 0 0 2px #2a2510}
+.l-item .circ.cur{background:#fbbf24;color:#06080c;box-shadow:0 0 20px rgba(251,191,36,0.2)}
+.l-item .circ.lk{background:#0e1118;color:#2a2e38;border:1.5px dashed #1e222c}
+.l-item .circ.fd{background:#3a1a1a;color:#f87171}
+.l-item .meta{flex:1;min-width:0}
+.l-item .meta .nm{font-size:13px;font-weight:700;color:#999}
+.l-item .meta .det{font-size:11px;color:#444}
+.l-item .tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;flex-shrink:0}
+.l-avatar{position:absolute;left:auto;right:-24px;font-size:18px}
+
+/* ---- REVIEW ---- */
+.r-head{padding:56px 24px 0}
+.r-back{width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#555;cursor:pointer;font-size:16px;border-radius:50%;margin-bottom:12px}
+.r-back:hover{background:#111318}
+.r-lev{font-size:11px;color:#444;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.r-title{font-size:24px;font-weight:900;color:#f8f4ec;margin:4px 0 8px;line-height:1.2}
+.r-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.r-chip{font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px}
+.r-list{flex:1;overflow-y:auto;padding:12px 24px 120px;scrollbar-width:none}
+.r-list::-webkit-scrollbar{display:none}
+.r-row{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-bottom:1px solid #0e1118;cursor:pointer;transition:background .15s;margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:12px}
+.r-row:last-child{border-bottom:none}
+.r-row:hover{background:#0a0d14}
+.r-row .letter{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#06080c;flex-shrink:0}
+.r-row .icon{width:44px;height:44px;border-radius:12px;background:#0e1118;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;transition:transform .2s}
+.r-row.exp .icon{transform:scale(1.1)}
+.r-row .body{flex:1;min-width:0}
+.r-row .body .nm{font-size:16px;font-weight:800;color:#ddd}
+.r-row .body .wh{font-size:12px;color:#555b6a;line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px solid #14181f;display:none}
+.r-row.exp .body .wh{display:block}
+.r-row .arr{color:#333;font-size:14px;margin-top:4px;transition:transform .2s,color .2s}
+.r-row.exp .arr{transform:rotate(90deg);color:#fbbf24}
+.r-foot{position:absolute;bottom:0;left:0;right:0;z-index:5}
+.r-foot::before{content:'';display:block;height:48px;background:linear-gradient(transparent,#06080c);pointer-events:none}
+.r-foot .inner{background:#06080c;padding:4px 24px 32px}
+
+/* ---- PLAY ---- */
+.p-hud{display:flex;align-items:center;padding:52px 20px 6px;gap:8px;flex-shrink:0}
+.p-hud .mu{width:28px;height:28px;border-radius:50%;background:#0e1118;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer}
+.p-hud .lv{font-size:12px;font-weight:800;color:#fbbf24;letter-spacing:1px}
+.p-hud .sp{flex:1}
+.p-hud .tm{font-size:22px;font-weight:900;color:#f8f4ec;font-variant-numeric:tabular-nums}
+.p-hud .tt{font-size:11px;color:#333;margin-left:2px}
+.p-hud .sc{text-align:right}
+.p-hud .sc .b{font-size:18px;font-weight:900;color:#34d399}
+.p-hud .sc .s{font-size:9px;color:#333}
+
+.p-prog{height:3px;margin:0 20px 10px;border-radius:2px;background:#0e1118;overflow:hidden;flex-shrink:0}
+.p-prog .fill{height:100%;border-radius:2px;transition:width .4s ease}
+
+.p-trail{display:flex;align-items:center;gap:3px;padding:0 20px;margin-bottom:8px;flex-shrink:0}
+.p-trail .pip{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0}
+.p-trail .pip.ok{background:#0e1e18;color:#34d399}
+.p-trail .pip.nxt{border:1.5px dashed #fbbf24;color:#fbbf24;animation:breathe 2s infinite}
+.p-trail .arr{color:#1a1e28;font-size:10px}
+
+.p-ask{text-align:center;padding:8px 20px 2px;flex-shrink:0}
+.p-ask h3{font-size:22px;font-weight:900;color:#f8f4ec}
+.p-ask .ph{font-size:11px;color:#444;margin-top:3px;font-weight:600}
+
+.p-streak{display:flex;justify-content:center;gap:6px;padding:10px 0;flex-shrink:0}
+.p-streak b{font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#0e1118;color:#222;font-style:normal;transition:all .25s}
+.p-streak b.on{background:#1e1a0e;color:#fbbf24}
+
+.p-grid{flex:1;display:grid;gap:12px;padding:12px 20px 20px;overflow-y:auto;align-content:start;scrollbar-width:none}
+.p-grid::-webkit-scrollbar{display:none}
+.p-grid.x2{grid-template-columns:1fr 1fr}
+.pc{background:#0e1118;border-radius:20px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:all .15s;border:2px solid transparent;position:relative;overflow:hidden}
+.pc::before{content:'';position:absolute;inset:0;border-radius:18px;opacity:0;transition:opacity .15s}
+.pc:hover{background:#121820}
+.pc:active{transform:scale(0.95)}
+.pc .pci{width:52px;height:52px;border-radius:16px;background:#141a24;display:flex;align-items:center;justify-content:center;font-size:28px;transition:transform .2s}
+.pc:hover .pci{transform:scale(1.08)}
+.pc .pcl{font-size:14px;font-weight:700;text-align:center;color:#999}
+.pc.hit-ok{border-color:#34d399}.pc.hit-ok::before{opacity:1;background:radial-gradient(circle at center,rgba(52,211,153,0.08),transparent 70%)}
+.pc.hit-ok .pcl{color:#34d399}
+.pc.hit-no{border-color:#f87171}.pc.hit-no::before{opacity:1;background:radial-gradient(circle at center,rgba(248,113,113,0.06),transparent 70%)}
+.pc.hit-no .pcl{color:#f87171}
+
+.p-toast{position:absolute;bottom:24px;left:20px;right:20px;background:#111620;border-radius:16px;padding:16px 18px;z-index:10;display:none;font-size:13px;line-height:1.6;color:#777;border-left:3px solid #f87171}
+.p-toast.on{display:block;animation:rise .3s ease-out}
+.p-toast strong{color:#ddd;font-weight:700}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 3px transparent}50%{box-shadow:0 0 0 3px rgba(251,191,36,0.12)}}
+
+/* ---- RESULT ---- */
+.x-wrap{flex:1;display:flex;flex-direction:column;align-items:center;padding:60px 28px 36px}
+.x-lev{font-size:11px;color:#444;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.x-ring{width:180px;height:180px;position:relative;margin:24px 0}
+.x-ring svg{width:100%;height:100%}
+.x-ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.x-ring .pts{font-size:56px;font-weight:900;line-height:1}
+.x-ring .ptl{font-size:10px;color:#444;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+
+.x-stats{display:flex;gap:6px;width:100%;margin-bottom:24px}
+.x-st{flex:1;text-align:center;padding:14px 4px;background:#0e1118;border-radius:16px}
+.x-st .v{font-size:24px;font-weight:900;line-height:1}
+.x-st .l{font-size:9px;color:#444;margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.x-st .g{font-size:9px;margin-top:4px;font-weight:700}
+
+.x-rank{font-size:48px;font-weight:900;letter-spacing:-1px}
+.x-line{font-size:14px;color:#555;font-weight:600;margin:6px 0 12px}
+.x-miss{width:100%;text-align:left;margin-bottom:16px}
+.x-miss h4{font-size:10px;color:#444;letter-spacing:1px;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+.x-miss p{font-size:12px;color:#f87171;font-weight:600}
+.x-btns{width:100%;margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.x-ba{width:100%;padding:16px;background:#f8f4ec;color:#06080c;border:none;border-radius:50px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+.x-ba:active{background:#d4cfc4}
+.x-bb{width:100%;padding:14px;background:none;border:1.5px solid #1e222c;color:#666;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.x-bb:hover{border-color:#fbbf24;color:#fbbf24}
+
+/* Nav bar */
+.dock{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:2px;background:#0a0d14;border-radius:14px;padding:4px;z-index:100;border:1px solid #14181f}
+.dock button{background:none;border:none;color:#333;font-size:10px;font-weight:700;padding:7px 12px;border-radius:10px;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:0.5px}
+.dock button.on{background:#14181f;color:#fbbf24}
+.dock button:hover{color:#888}
+</style>
+</head>
+<body>
+
+<div class="device">
+<canvas id="bg"></canvas>
+<div class="ui">
+
+<!-- COVER -->
+<div id="S0" class="scr on">
+  <div class="c-wrap">
+    <div class="c-badge"><i></i><span>Smart Lineman</span></div>
+    <div class="c-title">মৃত্যুহীন</div>
+    <div class="c-sub">কাজের ২৩টি ধাপ মুখস্থ করুন।<br>রাতের শিফটে কেউ মরবে না।</div>
+    <div class="c-ring-row">
+      <div class="c-ring">
+        <svg viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="42" fill="none" stroke="#14181f" stroke-width="5"/>
+          <circle id="cArc" cx="48" cy="48" r="42" fill="none" stroke="#fbbf24" stroke-width="5" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="168" transform="rotate(-90 48 48)"/>
+        </svg>
+        <div class="mid">
+          <div class="n">7</div>
+          <div class="d">of 19</div>
+        </div>
+      </div>
+      <div class="c-ring-info">
+        <div class="c-ri"><div class="dot" style="background:#34d399"></div><div class="txt"><b>4</b> দারুণ</div></div>
+        <div class="c-ri"><div class="dot" style="background:#fbbf24"></div><div class="txt"><b>2</b> মোটামুটি</div></div>
+        <div class="c-ri"><div class="dot" style="background:#555"></div><div class="txt"><b>120</b> points</div></div>
+      </div>
+    </div>
+    <button class="c-btn" onclick="go(1)">চালিয়ে যাই →</button>
+    <div class="c-link" onclick="go(1)">সম্পূর্ণ পথ দেখুন</div>
+  </div>
+</div>
+
+<!-- LADDER -->
+<div id="S1" class="scr">
+  <div class="l-head">
+    <div class="l-back" onclick="go(0)">←</div>
+    <div class="l-t">মৃত্যুহীন পথ</div>
+    <div style="width:40px"></div>
+  </div>
+  <div class="l-body" id="lBody">
+    <div class="l-path" id="lPath"></div>
+  </div>
+</div>
+
+<!-- REVIEW -->
+<div id="S2" class="scr">
+  <div class="r-head">
+    <div class="r-back" onclick="go(1)">←</div>
+    <div class="r-lev">Level 7 · জীবন্ত</div>
+    <div class="r-title">ধাপগুলো দেখুন</div>
+    <div class="r-chips">
+      <div class="r-chip" style="background:#0e1e18;color:#34d399">≤1 wrong · 1:25</div>
+      <div class="r-chip" style="background:#1e1a0e;color:#fbbf24">সেরা 1:40</div>
+    </div>
+    <div class="r-chip" style="background:#1e1014;color:#f87171;margin-top:4px">⚡ ভুল করলে কার্ড বদলায়</div>
+  </div>
+  <div class="r-list" id="rList"></div>
+  <div class="r-foot"><div class="inner">
+    <button class="c-btn" onclick="go(3)">শুরু করি →</button>
+  </div></div>
+</div>
+
+<!-- PLAY -->
+<div id="S3" class="scr">
+  <div class="p-hud">
+    <div class="mu">🔊</div>
+    <div class="lv">LV 7</div>
+    <div class="sp"></div>
+    <div class="tm">0:42</div>
+    <div class="tt">/ 1:25</div>
+    <div class="sc"><div class="b">35</div><div class="s">120</div></div>
+  </div>
+  <div class="p-prog"><div class="fill" style="width:62%;background:#34d399"></div></div>
+  <div class="p-trail">
+    <div class="pip ok">1</div><div class="arr">→</div>
+    <div class="pip ok">2</div><div class="arr">→</div>
+    <div class="pip ok">3</div><div class="arr">→</div>
+    <div class="pip ok">4</div><div class="arr">→</div>
+    <div class="pip ok">5</div><div class="arr">→</div>
+    <div class="pip nxt">?</div>
+  </div>
+  <div class="p-ask">
+    <h3>পরের ধাপ?</h3>
+    <div class="ph">step 6 of 8 · সাইট</div>
+  </div>
+  <div class="p-streak">
+    <b class="on">⚡</b><b class="on">⚡</b><b class="on">⚡</b><b class="on">⚡</b><b>⚡</b><b>⚡</b>
+  </div>
+  <div class="p-grid x2" id="pGrid"></div>
+  <div class="p-toast" id="toast"><strong>শাটডাউন</strong> — এটা পরে আসবে। এখন সাইটের কাজ বাকি।</div>
+</div>
+
+<!-- RESULT -->
+<div id="S4" class="scr">
+  <div class="x-wrap">
+    <div class="x-lev">Level 7 complete</div>
+    <div class="x-ring">
+      <svg viewBox="0 0 180 180">
+        <circle cx="90" cy="90" r="78" fill="none" stroke="#14181f" stroke-width="6"/>
+        <circle id="xArc" cx="90" cy="90" r="78" fill="none" stroke="#34d399" stroke-width="6" stroke-linecap="round" stroke-dasharray="490" stroke-dashoffset="70" transform="rotate(-90 90 90)"/>
+      </svg>
+      <div class="mid">
+        <div class="pts" style="color:#34d399">35</div>
+        <div class="ptl">points</div>
+      </div>
+    </div>
+    <div class="x-stats">
+      <div class="x-st"><div class="v" style="color:#34d399">1</div><div class="l">wrong</div><div class="g" style="color:#34d399">✓ ≤1</div></div>
+      <div class="x-st"><div class="v" style="color:#34d399">1:08</div><div class="l">time</div><div class="g" style="color:#34d399">✓ 1:25</div></div>
+      <div class="x-st"><div class="v" style="color:#fbbf24">6</div><div class="l">streak</div><div class="g">&nbsp;</div></div>
+    </div>
+    <div class="x-rank" style="color:#34d399">দারুণ</div>
+    <div class="x-line">ধাপগুলো মাথায় আছে।</div>
+    <div class="x-miss"><h4>missed</h4><p>আর্থ — ক্যাপাসিট্যান্স চার্জ থাকতে পারে</p></div>
+    <div class="x-btns">
+      <button class="x-ba" onclick="go(0)">পরের লেভেল →</button>
+      <button class="x-bb" onclick="go(2)">আবার খেলি</button>
+    </div>
+  </div>
+</div>
+
+</div></div>
+
+<nav class="dock">
+  <button class="on" onclick="go(0)">Cover</button>
+  <button onclick="go(1)">Ladder</button>
+  <button onclick="go(2)">Review</button>
+  <button onclick="go(3)">Play</button>
+  <button onclick="go(4)">Result</button>
+</nav>
+
+<script>
+// ---- Particle rain on canvas ----
+const cv=document.getElementById('bg'),ctx=cv.getContext('2d');
+let W,H;
+function resize(){W=cv.width=375;H=cv.height=812}
+resize();
+const drops=Array.from({length:80},()=>({x:Math.random()*W,y:Math.random()*H,l:4+Math.random()*8,s:1.5+Math.random()*3,o:0.04+Math.random()*0.08}));
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#fbbf24';
+  drops.forEach(d=>{
+    ctx.globalAlpha=d.o;
+    ctx.beginPath();
+    ctx.moveTo(d.x,d.y);
+    ctx.lineTo(d.x+0.3,d.y+d.l);
+    ctx.lineWidth=0.6;
+    ctx.stroke();
+    d.y+=d.s;
+    if(d.y>H){d.y=-d.l;d.x=Math.random()*W}
+  });
+  ctx.globalAlpha=1;
+  requestAnimationFrame(draw);
+}
+draw();
+
+// ---- Navigation ----
+let cur=0;
+function go(i){
+  document.querySelectorAll('.scr').forEach((s,j)=>s.classList.toggle('on',j===i));
+  document.querySelectorAll('.dock button').forEach((b,j)=>b.classList.toggle('on',j===i));
+  cur=i;
+  if(i===1)setTimeout(()=>{const b=document.getElementById('lBody');b.scrollTop=b.scrollHeight*0.5},60);
+  if(i===4){
+    const a=document.getElementById('xArc');
+    a.style.transition='none';a.setAttribute('stroke-dashoffset','490');
+    requestAnimationFrame(()=>{a.style.transition='stroke-dashoffset 1.4s cubic-bezier(0.25,0.1,0.25,1)';a.setAttribute('stroke-dashoffset','70')});
+  }
+}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'&&cur<4)go(cur+1);if(e.key==='ArrowLeft'&&cur>0)go(cur-1)});
+
+// ---- Build ladder ----
+const ladderData=[
+  {sec:'SAFE HOME',color:'#fbbf24'},
+  {n:1,st:'g',nm:'2 cards',tag:'দারুণ',tc:'#34d399'},
+  {n:2,st:'a',nm:'4 cards',tag:'মোটামুটি',tc:'#fbbf24'},
+  {n:3,st:'g',nm:'6 cards',tag:'দারুণ',tc:'#34d399'},
+  {n:4,st:'g',nm:'All 8',tag:'দারুণ',tc:'#34d399'},
+  {sec:'⚡ জীবন্ত SAFE HOME',color:'#fb923c'},
+  {n:5,st:'a',nm:'2 · Living',tag:'মোটামুটি',tc:'#fbbf24'},
+  {n:6,st:'g',nm:'4 · Living',tag:'দারুণ',tc:'#34d399'},
+  {n:7,st:'cur',nm:'6 · Living',det:'Your next level',avatar:true},
+  {n:8,st:'lk',nm:'All 8 · Living'},
+  {sec:'কাজের ধাপ 23',color:'#60a5fa'},
+  {n:9,st:'lk',nm:'2 steps'},{n:10,st:'lk',nm:'4 steps'},{n:11,st:'lk',nm:'6 steps'},{n:12,st:'lk',nm:'10 steps'},{n:13,st:'lk',nm:'All 23'},
+  {sec:'⚡ জীবন্ত কাজের ধাপ',color:'#f87171'},
+  {n:14,st:'lk',nm:'2 · Living'},{n:15,st:'lk',nm:'4 · Living'},{n:16,st:'lk',nm:'6 · Living'},{n:17,st:'lk',nm:'10 · Living'},{n:18,st:'lk',nm:'All 23 · Living'},
+  {sec:'⚑ মাঠের রাত',color:'#f87171'},
+  {n:19,st:'fd',nm:'Field Night',det:'সম্পূর্ণ রাতের কাজ'},
+];
+const lp=document.getElementById('lPath');
+ladderData.forEach(d=>{
+  if(d.sec){const s=document.createElement('div');s.className='l-sec';s.textContent=d.sec;s.style.color=d.color;lp.appendChild(s);return}
+  const el=document.createElement('div');el.className='l-item';
+  if(d.n===7||d.n===1||d.n===4)el.onclick=()=>go(2);
+  let tagHtml='';
+  if(d.tag)tagHtml=`<div class="tag" style="background:${d.tc}18;color:${d.tc}">${d.tag}</div>`;
+  let avHtml=d.avatar?'<div class="l-avatar">🧑‍🔧</div>':'';
+  el.innerHTML=`<div class="circ ${d.st}">${d.n}</div><div class="meta"><div class="nm">${d.nm}</div>${d.det?`<div class="det">${d.det}</div>`:''}</div>${tagHtml}${avHtml}`;
+  lp.appendChild(el);
+});
+
+// ---- Build review ----
+const steps=[
+  {l:'S',nm:'থামো',ic:'🛑',bg:'#f87171',why:'তাড়াহুড়ো করলে বিপদ দেখা যায় না। দাঁড়িয়ে চারদিক দেখুন।'},
+  {l:'A',nm:'কবচ',ic:'🦺',bg:'#60a5fa',why:'PPE ছাড়া লাইনে হাত দিলে শক, পোড়া, পড়ে যাওয়া — তিনটাই হয়।'},
+  {l:'F',nm:'পারমিট',ic:'📋',bg:'#fbbf24',why:'PTW ছাড়া কেউ জানে না আপনি লাইনে — যে কোনো সময় চালু করতে পারে।'},
+  {l:'E',nm:'কাটো',ic:'🔒',bg:'#f87171',why:'লাইন কাটা না হলে কারেন্ট আছে — ছুঁলেই মৃত্যু।'},
+  {l:'H',nm:'আর্থ',ic:'⏚',bg:'#34d399',why:'ক্যাপাসিট্যান্স বা ভুল সুইচিং-এ ভোল্টেজ ফিরতে পারে — আর্থ সেটা মাটিতে পাঠায়।'},
+  {l:'O',nm:'ফিতে',ic:'🚧',bg:'#fb923c',why:'সাধারণ মানুষ বিপদ বোঝে না — ব্যারিকেড না দিলে ঢুকে পড়বে।'},
+  {l:'M',nm:'কাজ',ic:'🔧',bg:'#60a5fa',why:'আগের সব ধাপ শেষ — এবার নিরাপদে কাজ করুন।'},
+  {l:'E',nm:'গোনা',ic:'👥',bg:'#a78bfa',why:'কেউ উপরে থাকলে লাইন চালু করলে সে মারা যাবে। সবাইকে গুনে নামান।'},
+];
+const rl=document.getElementById('rList');
+steps.forEach(s=>{
+  const r=document.createElement('div');r.className='r-row';
+  r.innerHTML=`<div class="letter" style="background:${s.bg}">${s.l}</div><div class="icon">${s.ic}</div><div class="body"><div class="nm">${s.nm}</div><div class="wh">${s.why}</div></div><div class="arr">›</div>`;
+  r.onclick=()=>r.classList.toggle('exp');
+  rl.appendChild(r);
+});
+
+// ---- Build play cards ----
+const cards=[
+  {ic:'🪖',lb:'PPE পরুন',ok:true},
+  {ic:'🗣️',lb:'আলোচনা',ok:false},
+  {ic:'🚧',lb:'ব্যারিকেড',ok:false},
+  {ic:'👁️',lb:'বিপদ খুঁজুন',ok:false},
+  {ic:'🔍',lb:'PTW মেলান',ok:false},
+  {ic:'🔌',lb:'শাটডাউন',ok:false},
+];
+const pg=document.getElementById('pGrid');
+cards.forEach(c=>{
+  const d=document.createElement('div');d.className='pc';
+  d.innerHTML=`<div class="pci">${c.ic}</div><div class="pcl">${c.lb}</div>`;
+  d.onclick=()=>{
+    d.classList.add(c.ok?'hit-ok':'hit-no');
+    if(!c.ok){const t=document.getElementById('toast');t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2200)}
+    setTimeout(()=>{d.classList.remove('hit-ok','hit-no');if(c.ok)go(4)},c.ok?500:700);
+  };
+  pg.appendChild(d);
+});
+</script>
+</body>
+</html>

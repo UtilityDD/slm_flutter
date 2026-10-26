@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/supabase_service.dart';
 
 class LeaderboardEntry {
@@ -81,7 +81,7 @@ final liveLeaderboardProvider = FutureProvider<List<LeaderboardEntry>>((ref) asy
       LeaderboardEntry(rank: 2, id: '2', name: 'প্রদীপ চক্রবর্তী', district: 'বাঁকুড়া', points: 4650, level: 4),
       LeaderboardEntry(rank: 3, id: '3', name: 'অমল রায়', district: 'হুগলি', points: 4410, level: 4),
       LeaderboardEntry(rank: 4, id: '4', name: 'বিশ্বজিৎ মন্ডল', district: 'বর্ধমান', points: 3980, level: 3),
-      LeaderboardEntry(rank: 5, id: '5', name: 'রাজেশ পাত্র', district: 'দক্ষিণ ২৪ পরগনা', points: 3740, level: 3),
+      LeaderboardEntry(rank: 5, id: '5', name: 'রাজেশ পাত্র', district: 'দক্ষিণ 24 পরগনা', points: 3740, level: 3),
     ];
   }
 });

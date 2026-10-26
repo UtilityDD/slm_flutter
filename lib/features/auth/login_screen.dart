@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/slm_backdrop.dart';
+import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 import 'auth_provider.dart';
 
@@ -38,7 +39,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       body: SlmBackdrop(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          padding: shellScrollPadding(context, left: 20, top: 12, right: 20, extraBottom: 12),
           children: [
             Text(
               tr(bn, 'ফোন বা ইমেল দিয়ে ঢুকুন', 'Sign in with your account'),
@@ -69,7 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             if (auth.errorMessage != null) ...[
               const SizedBox(height: 12),
-              Text(auth.errorMessage!, style: const TextStyle(color: AppColors.alertRed, fontWeight: FontWeight.w700)),
+              Text(auth.errorMessage!, style: const TextStyle(color: AppColors.alertRed, fontWeight: FontWeight.w500)),
             ],
             const SizedBox(height: 18),
             FilledButton(

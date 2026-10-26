@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import 'leaderboard_provider.dart';
@@ -82,7 +82,7 @@ class _QuizzesScreenState extends ConsumerState<QuizzesScreen> with SingleTicker
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -105,10 +105,10 @@ class _QuizzesScreenState extends ConsumerState<QuizzesScreen> with SingleTicker
                 },
                 icon: const Icon(Icons.play_arrow_rounded, color: AppColors.slate900),
                 label: const Text(
-                  'কুইজ শুরু করুন (+১০ পয়েন্ট)',
+                  'কুইজ শুরু করুন (+10 পয়েন্ট)',
                   style: TextStyle(
                     color: AppColors.slate900,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -141,7 +141,7 @@ class _QuizzesScreenState extends ConsumerState<QuizzesScreen> with SingleTicker
                   SizedBox(width: 8),
                   Text(
                     'ছবি দেখে সরঞ্জাম চিহ্নিতকরণ (Visual Identify)',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
                   ),
                 ],
               ),
@@ -201,7 +201,7 @@ class _QuizzesScreenState extends ConsumerState<QuizzesScreen> with SingleTicker
                       children: [
                         Text(
                           'মাসিক উৎসাহ বোর্ড (Monthly Boards)',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
                         ),
                         SizedBox(height: 2),
                         Text(
@@ -243,7 +243,7 @@ class _QuizzesScreenState extends ConsumerState<QuizzesScreen> with SingleTicker
                         badge,
                         style: TextStyle(
                           fontSize: isTop3 ? 20 : 14,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                           color: isDark ? Colors.white : AppColors.slate900,
                         ),
                       ),
@@ -255,7 +255,7 @@ class _QuizzesScreenState extends ConsumerState<QuizzesScreen> with SingleTicker
                         children: [
                           Text(
                             lineman.name,
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
                           ),
                           Text(
                             lineman.district,
@@ -267,7 +267,7 @@ class _QuizzesScreenState extends ConsumerState<QuizzesScreen> with SingleTicker
                     Text(
                       '${lineman.points} পয়েন্ট',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.primaryAmber,
                         fontSize: 13,
                       ),

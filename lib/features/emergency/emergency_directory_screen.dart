@@ -1,8 +1,9 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
+import '../shell/shell_insets.dart';
 
 class EmergencyServiceItem {
   final String id;
@@ -197,7 +198,7 @@ class _EmergencyDirectoryScreenState extends State<EmergencyDirectoryScreen> {
                   child: _filteredServices.isEmpty
                       ? const Center(child: Text('কোনো তথ্য পাওয়া যায়নি।'))
                       : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: shellScrollPadding(context, left: 16, top: 8, right: 16, extraBottom: 8),
                           itemCount: _filteredServices.length,
                           itemBuilder: (context, index) {
                             final item = _filteredServices[index];
@@ -250,7 +251,7 @@ class _EmergencyDirectoryScreenState extends State<EmergencyDirectoryScreen> {
               children: [
                 Text(
                   item.name,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -261,7 +262,7 @@ class _EmergencyDirectoryScreenState extends State<EmergencyDirectoryScreen> {
                 Text(
                   item.phone,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                     fontSize: 14,
                     color: AppColors.primaryAmber,
                   ),

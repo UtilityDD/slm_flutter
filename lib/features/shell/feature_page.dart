@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/slm_backdrop.dart';
+import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 
 class FeaturePage extends ConsumerWidget {
@@ -35,7 +36,7 @@ class FeaturePage extends ConsumerWidget {
       ),
       body: SlmBackdrop(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: shellScrollPadding(context, left: 24, top: 24, right: 24, extraBottom: 24),
           child: Column(
             children: [
               const Spacer(),
@@ -52,7 +53,7 @@ class FeaturePage extends ConsumerWidget {
               Text(
                 tr(bn, titleBn, titleEn),
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: AppColors.ink),
               ),
               const SizedBox(height: 10),
               Text(

@@ -13,6 +13,7 @@ class LibraryItem {
   final String guideBn;
   final String price;
   final List<String> images;
+  final List<String> relatedIds;
 
   const LibraryItem({
     required this.id,
@@ -22,6 +23,7 @@ class LibraryItem {
     required this.guideBn,
     required this.price,
     required this.images,
+    this.relatedIds = const [],
   });
 
   bool get hasPhoto => images.isNotEmpty;
@@ -39,8 +41,24 @@ class LibraryItem {
       guideBn: json['guide_bn']?.toString() ?? '',
       price: json['approx_price_inr']?.toString() ?? '',
       images: images,
+      relatedIds: json['related_items'] is List
+          ? (json['related_items'] as List)
+              .map((e) => e is Map ? e['id']?.toString() ?? '' : e.toString())
+              .where((e) => e.isNotEmpty)
+              .toList()
+          : const [],
     );
   }
+}
+
+/// Known groups first, then any new category found in the data.
+List<String> orderedCategories(Iterable<LibraryItem> items) {
+  final present = <String>{for (final item in items) item.category};
+  return [
+    for (final id in categoryOrder)
+      if (present.contains(id)) id,
+    ...(present.where((id) => !categoryOrder.contains(id)).toList()..sort()),
+  ];
 }
 
 const categoryOrder = [
@@ -202,7 +220,7 @@ IdentifyQuestion? _nameQuestion(List<LibraryItem> pool, String? avoidId) {
     mode: 'name',
     prompt: 'নাম কী?',
     highlight: '',
-    heroImage: item.images.first,
+    heroImage: _imageOf(item),
     photoChoices: false,
     choices: choices,
     correctId: item.id,
@@ -212,6 +230,8 @@ IdentifyQuestion? _nameQuestion(List<LibraryItem> pool, String? avoidId) {
 IdentifyQuestion? _nameOnBoard(List<LibraryItem> pool, String? avoidId) {
   final item = _pick(pool, avoidId);
   if (item == null) return null;
+  final choices = _photoChoices(item, pool);
+  if (choices.length < 4) return null;
   return IdentifyQuestion(
     id: item.id,
     mode: 'grid',
@@ -219,7 +239,7 @@ IdentifyQuestion? _nameOnBoard(List<LibraryItem> pool, String? avoidId) {
     highlight: item.nameBn,
     heroImage: '',
     photoChoices: true,
-    choices: _photoChoices(item, pool),
+    choices: choices,
     correctId: item.id,
   );
 }
@@ -228,6 +248,8 @@ IdentifyQuestion? _clueBoard(List<LibraryItem> pool, String? avoidId) {
   final withClue = pool.where((item) => _clue(item).length >= 10).toList();
   final item = _pick(withClue.isEmpty ? pool : withClue, avoidId);
   if (item == null) return null;
+  final choices = _photoChoices(item, pool);
+  if (choices.length < 4) return null;
   return IdentifyQuestion(
     id: item.id,
     mode: 'clue',
@@ -236,7 +258,7 @@ IdentifyQuestion? _clueBoard(List<LibraryItem> pool, String? avoidId) {
     highlight: '',
     heroImage: '',
     photoChoices: true,
-    choices: _photoChoices(item, pool),
+    choices: choices,
     correctId: item.id,
   );
 }
@@ -303,10 +325,11 @@ _FamilyPick? _familySplit(List<LibraryItem> pool, String? avoidId, {required boo
     board = [correct, ...others.take(3)];
   }
   board.shuffle(random);
+  if (board.length < 4) return null;
   return _FamilyPick(
     family,
     correct,
-    board.map((item) => IdentifyChoice(id: item.id, nameBn: item.nameBn, image: item.images.first)).toList(),
+    board.map((item) => IdentifyChoice(id: item.id, nameBn: item.nameBn, image: _imageOf(item))).toList(),
   );
 }
 
@@ -328,14 +351,16 @@ List<IdentifyChoice> _nameChoices(LibraryItem item, List<LibraryItem> pool) {
     if (picked.every((row) => row.nameBn != other.nameBn)) picked.add(other);
   }
   picked.shuffle(random);
-  return picked.map((row) => IdentifyChoice(id: row.id, nameBn: row.nameBn, image: row.images.first)).toList();
+  return picked.map((row) => IdentifyChoice(id: row.id, nameBn: row.nameBn, image: _imageOf(row))).toList();
 }
+
+String _imageOf(LibraryItem item) => item.images.isEmpty ? '' : item.images.first;
 
 List<IdentifyChoice> _photoChoices(LibraryItem item, List<LibraryItem> pool) {
   final random = Random();
   final others = pool.where((other) => other.id != item.id).toList()..shuffle(random);
   final board = [item, ...others.take(3)]..shuffle(random);
-  return board.map((row) => IdentifyChoice(id: row.id, nameBn: row.nameBn, image: row.images.first)).toList();
+  return board.map((row) => IdentifyChoice(id: row.id, nameBn: row.nameBn, image: _imageOf(row))).toList();
 }
 
 String _clue(LibraryItem item) {
@@ -368,6 +393,7 @@ IdentifyQuestion? _chartQuestion(List<ChartFact> charts, String? avoidId) {
   final candidates = avoidId == null ? charts : charts.where((fact) => fact.id != avoidId).toList();
   final source = candidates.isEmpty ? charts : candidates;
   final fact = source[random.nextInt(source.length)];
+  if (fact.asks.isEmpty) return null;
   final wrong = [...fact.distractors]..shuffle(random);
   final labels = [fact.answer, ...wrong.take(3)];
   if (labels.length < 4) return null;

@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/slm_backdrop.dart';
 import '../identify/library_catalog.dart';
 import '../shell/app_routes.dart';
+import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 
 class QuizHubScreen extends ConsumerWidget {
@@ -23,27 +24,13 @@ class QuizHubScreen extends ConsumerWidget {
         title: Text(tr(bn, 'কুইজ', 'Quiz')),
       ),
       body: SlmBackdrop(
-        child: SafeArea(
-          bottom: false,
+        child: ShellSafeArea(
+          top: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            padding: shellScrollPadding(context, left: 16, top: 4, right: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  tr(bn, 'দুটো আলাদা খেলা', 'Two different games'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  tr(bn, 'পয়েন্ট শুধু ঘণ্টার কুইজে।', 'Points only from the hourly quiz.'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted),
-                ),
-                const SizedBox(height: 10),
                 Expanded(
                   child: _HourMatchCard(
                     bn: bn,
@@ -108,26 +95,19 @@ class _HourMatchCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 tr(bn, 'পয়েন্টের খেলা', 'Points game'),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
               ),
               const Spacer(),
               Text(
                 hour,
-                style: const TextStyle(color: Color(0xFFFFEDD5), fontWeight: FontWeight.w800),
+                style: const TextStyle(color: Color(0xFFFFEDD5), fontWeight: FontWeight.w600),
               ),
             ],
           ),
           const Spacer(),
           Text(
             tr(bn, 'ঘণ্টার কুইজ', 'Hourly quiz'),
-            style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800, height: 1.1),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            tr(bn, 'এই ঘণ্টায় একবার। সঠিক উত্তরে পয়েন্ট।', 'Once this hour. Right answers add points.'),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Color(0xFFFFEDD5), fontSize: 14, height: 1.3, fontWeight: FontWeight.w600),
+            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600, height: 1.2),
           ),
           const Spacer(),
           SizedBox(
@@ -140,7 +120,7 @@ class _HourMatchCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               onPressed: onPlay,
-              child: Text(tr(bn, 'এখন খেলুন', 'Play now'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              child: Text(tr(bn, 'এখন খেলুন', 'Play now'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
             ),
           ),
         ],
@@ -179,25 +159,18 @@ class _IdentifyMatchCard extends StatelessWidget {
         children: [
           Text(
             tr(bn, 'অনুশীলন', 'Practice'),
-            style: const TextStyle(color: Color(0xFF0F766E), fontWeight: FontWeight.w800, fontSize: 13),
+            style: const TextStyle(color: Color(0xFF0F766E), fontWeight: FontWeight.w600, fontSize: 13),
           ),
           const Spacer(),
           Text(
             tr(bn, 'পরিচিতি কুইজ', 'Identify quiz'),
-            style: const TextStyle(color: AppColors.ink, fontSize: 24, fontWeight: FontWeight.w800, height: 1.1),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            tr(bn, 'ছবি দেখে নাম। যতবার খুশি। পয়েন্ট নয়।', 'Name the picture. Anytime. No points.'),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppColors.inkSoft, fontSize: 14, height: 1.3, fontWeight: FontWeight.w600),
+            style: const TextStyle(color: AppColors.ink, fontSize: 24, fontWeight: FontWeight.w600, height: 1.2),
           ),
           if (total > 0) ...[
             const SizedBox(height: 6),
             Text(
               tr(bn, 'স্কোর $percent%', 'Score $percent%'),
-              style: const TextStyle(color: Color(0xFF0F766E), fontWeight: FontWeight.w800, fontSize: 13),
+              style: const TextStyle(color: Color(0xFF0F766E), fontWeight: FontWeight.w600, fontSize: 13),
             ),
           ],
           const Spacer(),
@@ -211,7 +184,7 @@ class _IdentifyMatchCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               onPressed: onPlay,
-              child: Text(tr(bn, 'শুরু করুন', 'Start'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              child: Text(tr(bn, 'শুরু করুন', 'Start'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
             ),
           ),
         ],

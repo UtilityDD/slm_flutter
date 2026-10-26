@@ -1,46 +1,13 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/slm_backdrop.dart';
+import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
-
-class LifeSkillModule {
-  final String code;
-  final String titleBn;
-  final String titleEn;
-  final String descriptionBn;
-  final String descriptionEn;
-  final String duration;
-
-  const LifeSkillModule({
-    required this.code,
-    required this.titleBn,
-    required this.titleEn,
-    required this.descriptionBn,
-    required this.descriptionEn,
-    required this.duration,
-  });
-
-  factory LifeSkillModule.fromJson(Map<String, dynamic> json) {
-    return LifeSkillModule(
-      code: json['lesson_code']?.toString() ?? '',
-      titleBn: json['title_bn']?.toString() ?? '',
-      titleEn: json['title_en']?.toString() ?? '',
-      descriptionBn: json['description_bn']?.toString() ?? '',
-      descriptionEn: json['description_en']?.toString() ?? '',
-      duration: json['duration']?.toString() ?? '',
-    );
-  }
-}
-
-final lifeSkillModulesProvider = FutureProvider<List<LifeSkillModule>>((ref) async {
-  final raw = await rootBundle.loadString('assets/data/supplementary_modules.json');
-  final list = jsonDecode(raw) as List<dynamic>;
-  return list.map((row) => LifeSkillModule.fromJson(row as Map<String, dynamic>)).toList();
-});
+import 'life_skill_listen_bar.dart';
+import 'life_skill_models.dart';
+import 'life_skill_reader_page.dart';
 
 class LifeSkillScreen extends ConsumerWidget {
   const LifeSkillScreen({super.key});
@@ -51,35 +18,36 @@ class LifeSkillScreen extends ConsumerWidget {
     final modules = ref.watch(lifeSkillModulesProvider);
 
     return SlmBackdrop(
-      child: SafeArea(
-        bottom: false,
+      child: ShellSafeArea(
         child: modules.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => Center(child: Text('$error')),
           data: (rows) {
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              padding: shellScrollPadding(context, left: 16, top: 16, right: 16),
               children: [
                 Text(
                   tr(bn, 'লাইফ স্কিল', 'Life Skill'),
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.ink),
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.ink),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  tr(bn, 'কাজের বাইরের দক্ষতা। পাঠক পরের ধাপে খুলবে।', 'Skills beyond the pole. The reader opens next.'),
+                  tr(
+                    bn,
+                    'কাজের বাইরের দক্ষতা—শুনুন ও পড়ুন।',
+                    'Skills beyond the pole—listen and read.',
+                  ),
                   style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.muted),
                 ),
                 const SizedBox(height: 14),
                 for (final module in rows) ...[
                   _ModuleCard(
-                    code: module.code,
-                    title: bn ? module.titleBn : module.titleEn,
-                    duration: module.duration,
+                    module: module,
+                    bn: bn,
                     onTap: () {
+                      HapticFeedback.selectionClick();
                       Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => _ModuleDetail(module: module),
-                        ),
+                        MaterialPageRoute(builder: (_) => LifeSkillDetailPage(module: module)),
                       );
                     },
                   ),
@@ -95,55 +63,79 @@ class LifeSkillScreen extends ConsumerWidget {
 }
 
 class _ModuleCard extends StatelessWidget {
-  final String code;
-  final String title;
-  final String duration;
+  final LifeSkillModule module;
+  final bool bn;
   final VoidCallback onTap;
 
   const _ModuleCard({
-    required this.code,
-    required this.title,
-    required this.duration,
+    required this.module,
+    required this.bn,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final tone = lifeSkillTone(module.category);
+
     return Material(
       color: const Color(0xFFFFFEFB),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0x61D6BDA4)),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0x40D6BDA4)),
           ),
           child: Row(
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: 52,
+                height: 52,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFD1FAE5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.star_rounded, color: Color(0xFF047857)),
+                decoration: BoxDecoration(color: tone.soft, shape: BoxShape.circle),
+                child: Icon(tone.icon, color: tone.accent, size: 26),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(code, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF047857))),
-                    Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                    Text(
+                      module.code,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                        color: tone.accent,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      module.title(bn),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 18.5,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                        color: AppColors.ink,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Text(duration, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.muted)),
+              const SizedBox(width: 10),
+              Text(
+                module.durationLabel(),
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.muted,
+                ),
+              ),
             ],
           ),
         ),
@@ -152,14 +144,82 @@ class _ModuleCard extends StatelessWidget {
   }
 }
 
-class _ModuleDetail extends ConsumerWidget {
+class LifeSkillDetailPage extends ConsumerStatefulWidget {
   final LifeSkillModule module;
 
-  const _ModuleDetail({required this.module});
+  const LifeSkillDetailPage({super.key, required this.module});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LifeSkillDetailPage> createState() => _LifeSkillDetailPageState();
+}
+
+class _LifeSkillDetailPageState extends ConsumerState<LifeSkillDetailPage> {
+  LifeSkillManuscript? _manuscript;
+  bool _loadingMs = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final ms = await loadLifeSkillManuscript(widget.module.manuscriptAsset);
+    if (!mounted) return;
+    setState(() {
+      _manuscript = ms;
+      _loadingMs = false;
+    });
+  }
+
+  Future<void> _openReader() async {
+    HapticFeedback.selectionClick();
+    var ms = _manuscript;
+    if (ms == null) {
+      setState(() => _loadingMs = true);
+      ms = await loadLifeSkillManuscript(widget.module.manuscriptAsset);
+      if (!mounted) return;
+      setState(() {
+        _manuscript = ms;
+        _loadingMs = false;
+      });
+    }
+    if (ms == null) {
+      final asset = widget.module.manuscriptAsset ?? '(none)';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            tr(
+              ref.read(languageProvider),
+              'পাঠ খোলা যায়নি ($asset)',
+              'Lesson could not open ($asset)',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LifeSkillReaderPage(module: widget.module, manuscript: ms!),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bn = ref.watch(languageProvider);
+    final module = widget.module;
+    final tone = lifeSkillTone(module.category);
+    final audio = module.audioUrl(bn);
+    final marks = module
+        .highlights(bn)
+        .split('·')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
     return Scaffold(
       backgroundColor: AppColors.cream,
       appBar: AppBar(
@@ -168,27 +228,107 @@ class _ModuleDetail extends ConsumerWidget {
         elevation: 0,
         title: Text(module.code),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              bn ? module.titleBn : module.titleEn,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, height: 1.3, color: AppColors.ink),
+      body: ListView(
+        padding: shellScrollPadding(context, left: 20, top: 8, right: 20, extraBottom: 20),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [tone.soft, Colors.white],
+              ),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: tone.accent.withValues(alpha: 0.2)),
             ),
-            const SizedBox(height: 8),
-            Text(
-              module.duration,
-              style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.muted),
+            child: Row(
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: tone.accent.withValues(alpha: 0.25)),
+                  ),
+                  child: Icon(tone.icon, color: tone.accent, size: 28),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        module.durationLabel(),
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: tone.accent),
+                      ),
+                      Text(
+                        module.title(bn),
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, height: 1.25, color: AppColors.ink),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              bn ? module.descriptionBn : module.descriptionEn,
-              style: const TextStyle(fontSize: 17, height: 1.5, fontWeight: FontWeight.w600, color: AppColors.inkSoft),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            module.description(bn),
+            style: const TextStyle(fontSize: 16, height: 1.5, fontWeight: FontWeight.w600, color: AppColors.inkSoft),
+          ),
+          if (marks.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final mark in marks)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: tone.soft,
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(color: tone.accent.withValues(alpha: 0.22)),
+                    ),
+                    child: Text(mark, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: tone.accent)),
+                  ),
+              ],
             ),
           ],
-        ),
+          if (module.trusted(bn).isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(
+              module.trusted(bn),
+              style: const TextStyle(fontSize: 12.5, height: 1.4, fontWeight: FontWeight.w500, color: AppColors.muted),
+            ),
+          ],
+          if (audio.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            LifeSkillListenBar(audioUrl: audio, accent: tone.accent, bn: bn),
+          ],
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: _loadingMs ? null : _openReader,
+            style: FilledButton.styleFrom(
+              backgroundColor: tone.accent,
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            icon: _loadingMs
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Icon(Icons.menu_book_rounded),
+            label: Text(
+              tr(bn, 'পাঠ পড়ুন', 'Read the lesson'),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5),
+            ),
+          ),
+        ],
       ),
     );
   }

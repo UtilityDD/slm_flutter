@@ -1,0 +1,418 @@
+{
+  "title_bn": "ডিউটি স্লিপ",
+  "start_hour": 20,
+  "start_minute": 10,
+  "feeders": [
+    "রামপুর মার্কেট-১১",
+    "রামপুর কলোনি-১১",
+    "হাটতলা বাজার-১১",
+    "পুরাতন রামপুর-১১"
+  ],
+  "plan": [
+    {"id": "docket",      "label_bn": "ডকেট পড়ুন",                "lane": "office",  "icon": "assets/duty_slip/duty_fault_slip.jpg",                   "why_bn": "ডকেটে ফল্টের ঠিকানা আর টাইপ আছে — না পড়লে ভুল জায়গায় যাবেন।"},
+    {"id": "ptw",         "label_bn": "PTW নিন",                  "lane": "office",  "icon": "assets/zero_loss/scene/gear_ptw.webp",                   "why_bn": "PTW ছাড়া কন্ট্রোল জানবে না আপনি লাইনে — যখন-তখন চালু করতে পারে।"},
+    {"id": "ppe",         "label_bn": "PPE দেখে নিন",              "lane": "office",  "icon": "assets/safety/library/ppe/Safety_Helmet.webp",            "why_bn": "বেরোনোর আগে হেলমেট-গ্লাভস-বুট চেক। সাইটে গিয়ে নেই বললে সময় নষ্ট, নিরাপত্তা কম।"},
+    {"id": "tools",       "label_bn": "টুল বেছে নিন",              "lane": "office",  "icon": "assets/duty_slip/duty_tool_bag.jpg",                      "why_bn": "সাইটে গিয়ে টুল নেই মানে খালি হাতে কাজ বা আবার অফিসে ফেরা — দুটোই বিপদ।"},
+    {"id": "move",        "label_bn": "সাইটে চলে যান",             "lane": "site",    "icon": "assets/duty_slip/duty_mobile_van.jpg",                    "why_bn": "PTW, কিট আর পুরো টিম নিয়ে রওনা। একা গেলে বিপদে কেউ সাহায্য করতে পারবে না।"},
+    {"id": "wear_ppe",    "label_bn": "সব PPE পরে নিন",           "lane": "site",    "icon": "assets/safety/library/ppe/Full_Body_Harness.webp",        "why_bn": "সাইটে নেমে প্রথম কাজ PPE পরা। 'পরে পরব' বলে অনেকে আর পরেনি।"},
+    {"id": "talk",        "label_bn": "নিজেদের মধ্যে আলোচনা",      "lane": "site",    "icon": "assets/zero_loss/scene/spr_man_point.webp",               "why_bn": "কে কী করবে, কোথায় দাঁড়াবে — না বললে দুজন একই তারে হাত দেবে।"},
+    {"id": "dangers",     "label_bn": "বিপদ খুঁজে দেখুন",          "lane": "site",    "icon": "assets/zero_loss/scene/acc_charged.webp",                 "why_bn": "তার, গাড়ি, জল, ভিড় — আগে চিনুন। হাত দেওয়ার পরে চিনলে দেরি হয়ে যায়।"},
+    {"id": "feeder_pole", "label_bn": "PTW মিলিয়ে দেখুন",         "lane": "site",    "icon": "assets/duty_slip/duty_pole_stencil.jpg",                  "why_bn": "খুঁটির নম্বর আর ফিডার PTW-র সাথে মেলে কিনা। ভুল ফিডারে কাজ মানে চালু লাইনে হাত।"},
+    {"id": "fence",       "label_bn": "ব্যারিকেড করে নিন",         "lane": "site",    "icon": "assets/zero_loss/scene/gear_tape_cones.webp",             "why_bn": "কোন আর ফিতে দিয়ে ঘেরুন — গ্রামের লোক, গাড়ি, গরু ঢুকবে না।"},
+    {"id": "shutdown",    "label_bn": "শাটডাউন নিন",              "lane": "isolate", "icon": "assets/zero_loss/scene/spr_man_phone.webp",               "why_bn": "কন্ট্রোল থেকে শাটডাউন ক্লিয়ারেন্স। 'আলো নেই মানে অফ' ভাবলেই বিপদ — অটো-রিক্লোজার আছে।"},
+    {"id": "discharge",   "label_bn": "ডিসচার্জ করুন",             "lane": "isolate", "icon": "assets/zero_loss/scene/gear_discharge_rod.webp",          "why_bn": "HV টেস্টার দিয়ে ডেড নিশ্চিত করুন। ক্যাপাসিট্যান্স চার্জ থাকতে পারে — হাতে ছুঁলে শক।"},
+    {"id": "earth",       "label_bn": "দুই মাথায় আর্থ",            "lane": "isolate", "icon": "assets/zero_loss/scene/gear_earth_rods.webp",             "why_bn": "দুই দিক থেকে আর্থ — ভুল সুইচিং বা ব্যাকফিড থেকে বাঁচায়।"},
+    {"id": "loto",        "label_bn": "LOTO ব্যবহার করুন",         "lane": "isolate", "icon": "assets/safety/library/ppe/LOTO_Kit.webp",                 "why_bn": "আইসোলেটরে তালা আর ডেঞ্জার ট্যাগ — কেউ ভুল করে চালু করতে পারবে না।"},
+    {"id": "work_start",  "label_bn": "কাজ শুরু করুন",             "lane": "work",    "icon": "assets/zero_loss/scene/spr_man_climb.webp",               "why_bn": "স্পটার রেখে শুরু। একা উঠলে পড়ে গেলে কেউ দেখবে না।"},
+    {"id": "work_tool",   "label_bn": "সঠিক টুল ব্যবহার করুন",     "lane": "work",    "icon": "assets/safety/library/tools/Insulated_Hand_Tools_Set.webp","why_bn": "ইনসুলেটেড প্লায়ার বা প্রপার গ্রিপ। সাধারণ প্লায়ার বা কাস্তে বিপদ।"},
+    {"id": "finish",      "label_bn": "কাজ শেষ",                  "lane": "work",    "icon": "assets/zero_loss/scene/spr_man_earth.webp",               "why_bn": "কাজ বন্ধ করে টুল গুনে নামান। সঙ্গে সঙ্গে লাইন চালালে ওপরে কেউ থাকতে পারে।"},
+    {"id": "ppe_check",   "label_bn": "সব টুল ও PPE নামিয়ে নিন",  "lane": "close",   "icon": "assets/duty_slip/duty_tool_bag.jpg",                      "why_bn": "খুঁটিতে টুল ফেলে রাখলে লাইন চালু হলে শর্ট বা আগুন লাগতে পারে।"},
+    {"id": "heads",       "label_bn": "সবাই এক জায়গায় আসুন",     "lane": "close",   "icon": "assets/zero_loss/scene/spr_villagers.webp",               "why_bn": "হেডকাউন্ট — কেউ খুঁটিতে বা তারে থাকলে চালু করলে মারা যাবে।"},
+    {"id": "withdraw",    "label_bn": "শাটডাউন তুলে নিন",          "lane": "close",   "icon": "assets/zero_loss/scene/prop_earth_set.webp",              "why_bn": "আর্থ খুলে কন্ট্রোলকে বলুন উইথড্র। নিজে ব্রেকার চাপলে আর্ক বিস্ফোরণ হতে পারে।"},
+    {"id": "restore",     "label_bn": "বিদ্যুৎ ফিরল কিনা দেখুন",   "lane": "close",   "icon": "assets/zero_loss/scene/operator_control.jpg",             "why_bn": "কন্ট্রোল থেকে ক্লিয়ারেন্স — PTW-তে যে ফিডার লেখা আছে সেটাই।"},
+    {"id": "ptw_back",    "label_bn": "PTW ফেরত দিন",             "lane": "close",   "icon": "assets/duty_slip/duty_ptw_pad.jpg",                       "why_bn": "ফিডারের নাম শুধরে জমা দিন। ভুল নামে সই মানে রেকর্ডে গরমিল — পরে বিপদ।"},
+    {"id": "paper",       "label_bn": "মিশন কমপ্লিট",             "lane": "close",   "icon": "assets/duty_slip/duty_brass_plate.jpg",                   "why_bn": "রিপোর্ট বন্ধ, জায়গা পরিষ্কার। কাগজ ফেলে গেলে হিসেব মেলে না।"}
+  ],
+  "sites": [
+    {
+      "id": "road",
+      "name_bn": "রাস্তায়",
+      "pole": "DP-17",
+      "bg": "assets/zero_loss/scene/bg_market_wire_down.webp",
+      "intro_bn": "রাস্তায় ১১ কেভি তার ছিঁড়ে পড়ে আছে। গাড়ি-লোক জড়ো।",
+      "story_bn": "আজ রাতের কাজ {{feeder}} ফিডারে। খুঁটি {{pole}}। রাস্তায় ১১ কেভি তার ছিঁড়ে পড়ে আছে। গাড়ি আর লোক জড়ো হয়ে আছে। ওই তার সামলানোই আপনার কাজ। আগে ডকেট পড়ে নিন, PTW নিন, তারপর সাইটে যান।",
+      "calls": ["boss", "neta", "shop", "control"]
+    },
+    {
+      "id": "pond",
+      "name_bn": "পুকুর পাড়ে",
+      "pole": "DP-24",
+      "bg": "assets/zero_loss/scene/bg_pole_storm.webp",
+      "intro_bn": "পুকুরের ধারে তার ছিঁড়ে। মাটি পিছল, চারপাশে জল।",
+      "story_bn": "আজ রাতের কাজ {{feeder}} ফিডারে। খুঁটি {{pole}}। পুকুরের ধারে তার ছিঁড়ে পড়ে আছে। মাটি পিছল, চারপাশে জল। ওই তার সামলাতে হবে। আগে ডকেট পড়ে নিন, PTW নিন, তারপর সাইটে যান।",
+      "calls": ["boss", "farmer", "control"]
+    },
+    {
+      "id": "paddy",
+      "name_bn": "ধানক্ষেতে",
+      "pole": "S-09",
+      "bg": "assets/zero_loss/scene/bg_span_two_poles.webp",
+      "intro_bn": "ধানক্ষেতে তার পড়ে। কাদা, গ্রামের লোক চাপ দিচ্ছে।",
+      "story_bn": "আজ রাতের কাজ {{feeder}} ফিডারে। খুঁটি {{pole}}। ধানক্ষেতে তার পড়ে আছে। কাদা, আর গ্রামের লোক চাপ দিচ্ছে। ওই তার সামলানোই আপনার কাজ। আগে ডকেট পড়ে নিন, PTW নিন, তারপর সাইটে যান।",
+      "calls": ["farmer", "neta", "control"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "ppe",
+      "lane": "office",
+      "kind": "kit",
+      "stamp": "kit",
+      "prompt_bn": "কবচ ঠিক আছে তো?",
+      "hint_bn": "হেলমেট, গ্লাভস, বুট লাগবে। মাটিতে হারনেস নয়। চটি নয়।",
+      "essential": ["helmet", "gloves", "boots"],
+      "forbidden": ["harness", "slippers"],
+      "options": [
+        {"id": "helmet", "label_bn": "হেলমেট", "image": "assets/safety/library/ppe/Safety_Helmet.webp"},
+        {"id": "gloves", "label_bn": "গ্লাভস", "image": "assets/safety/library/ppe/Electrical_Gloves.webp"},
+        {"id": "boots", "label_bn": "সেফটি বুট", "image": "assets/safety/library/ppe/Lineman_Boot_2.webp"},
+        {"id": "harness", "label_bn": "ফুল বডি হারনেস", "image": "assets/safety/library/ppe/Full_Body_Harness_2.webp"},
+        {"id": "goggles", "label_bn": "ফেস শিল্ড", "image": "assets/safety/library/ppe/Arc_Flash_Face_Shield.webp"},
+        {"id": "slippers", "label_bn": "চটি", "image": "assets/zero_loss/scene/gear_slippers.webp"}
+      ]
+    },
+    {
+      "id": "tools",
+      "lane": "office",
+      "kind": "kit",
+      "stamp": "",
+      "prompt_bn": "ভ্যানে কী কী তুলবেন?",
+      "hint_bn": "এইচভি টেস্টার আর আর্থিং রড লাগবেই। বাঁশের মই নয়।",
+      "essential": ["tester", "earth_rods"],
+      "forbidden": ["bamboo"],
+      "options": [
+        {"id": "tester", "label_bn": "এইচভি টেস্টার", "image": "assets/safety/library/tools/High_Voltage_Detector_2.webp"},
+        {"id": "earth_rods", "label_bn": "আর্থিং রড", "image": "assets/safety/library/ppe/Portable_Earth_Rod.webp"},
+        {"id": "discharge", "label_bn": "ডিসচার্জ রড", "image": "assets/safety/library/ppe/discharge_rod.webp"},
+        {"id": "bamboo", "label_bn": "বাঁশের মই", "image": "assets/safety/library/ppe/Bamboo_Ladder.webp"},
+        {"id": "megger", "label_bn": "মেগার", "image": "assets/safety/library/tools/Analog_Insulation_Tester_Hand_Crank.webp"}
+      ]
+    },
+    {
+      "id": "move",
+      "lane": "site",
+      "kind": "single",
+      "stamp": "site",
+      "prompt_bn": "সাইটে যাবেন কীভাবে?",
+      "hint_bn": "PTW, কিট আর টিম নিয়ে রওনা। একা যাবেন না।",
+      "options": [
+        {"id": "crew", "label_bn": "PTW আর কিট নিয়ে টিমসহ রওনা", "image": "assets/zero_loss/scene/spr_man_point.webp", "correct": true},
+        {"id": "alone", "label_bn": "একা মোটরসাইকেল করে আগে যাই", "image": "assets/zero_loss/scene/spr_man_climb.webp"},
+        {"id": "noptw", "label_bn": "ফোনে শুনেই চলি, কাগজ পরে", "image": "assets/zero_loss/scene/spr_man_phone.webp"}
+      ]
+    },
+    {
+      "id": "wear_ppe",
+      "lane": "site",
+      "kind": "single",
+      "stamp": "",
+      "prompt_bn": "সাইটে নেমে সব PPE পরে নিন?",
+      "hint_bn": "হেলমেট, গ্লাভস, বুট — সব পরে তারপর কাজ।",
+      "options": [
+        {"id": "wear", "label_bn": "হেলমেট-গ্লাভস-বুট সব পরে নিলাম", "image": "assets/safety/library/ppe/Safety_Helmet.webp", "correct": true},
+        {"id": "later", "label_bn": "পরে পরব, আগে কাজ দেখি", "image": "assets/quizzes/mistake_no_helmet.webp"},
+        {"id": "half", "label_bn": "শুধু হেলমেট, গ্লাভস পরে", "image": "assets/safety/library/ppe/Electrical_Gloves.webp"}
+      ]
+    },
+    {
+      "id": "talk",
+      "lane": "site",
+      "kind": "single",
+      "stamp": "",
+      "prompt_bn": "নেমে টিমে একটু কথা বলবেন?",
+      "hint_bn": "ছোট আলোচনা — কে কী করবে, কোথায় দাঁড়াবে।",
+      "options": [
+        {"id": "tbt", "label_bn": "টিমে আলোচনা · কাজ ভাগ", "image": "assets/zero_loss/scene/spr_man_point.webp", "correct": true},
+        {"id": "rush", "label_bn": "কথা বাদ, হাত গরম", "image": "assets/zero_loss/scene/spr_man_climb.webp"},
+        {"id": "crowd", "label_bn": "গ্রামের লোককেই সাহায্য চাই", "image": "assets/zero_loss/scene/spr_villagers.webp"}
+      ]
+    },
+    {
+      "id": "dangers",
+      "lane": "site",
+      "kind": "single",
+      "stamp": "",
+      "prompt_bn": "আগে চারদিক দেখে নিন — কী কী বিপদ?",
+      "hint_bn": "তার, গাড়ি, জল, ভিড় — আগে চিনুন, পরে হাত।",
+      "options": [
+        {"id": "look", "label_bn": "দাঁড়িয়ে বিপদ চিনলাম", "image": "assets/zero_loss/scene/spr_man_stop.webp", "correct": true},
+        {"id": "grab", "label_bn": "সঙ্গে সঙ্গে তার সরালাম", "image": "assets/quizzes/mistake_shock_grab.webp", "lethal": true},
+        {"id": "climb", "label_bn": "পোলে উঠে দেখি", "image": "assets/zero_loss/scene/spr_man_climb.webp"}
+      ]
+    },
+    {
+      "id": "feeder_pole",
+      "lane": "site",
+      "kind": "match",
+      "stamp": "feeder",
+      "scene": "assets/duty_slip/duty_pole_stencil.jpg",
+      "prompt_bn": "খুঁটির রং উঠেছে। কোন নাম PTW-র সাথে মেলে?",
+      "hint_bn": "পকেটের ফিডার দেখুন — ভিড় যা বলে সেটা নয়।",
+      "miss_safety": 20,
+      "miss_min": 15,
+      "options": [
+        {"id": "true", "label_bn": "", "image": "assets/duty_slip/duty_brass_plate.jpg", "correct": true},
+        {"id": "fake1", "label_bn": "", "image": "assets/duty_slip/duty_brass_plate.jpg"},
+        {"id": "fake2", "label_bn": "", "image": "assets/duty_slip/duty_brass_plate.jpg"},
+        {"id": "fake3", "label_bn": "", "image": "assets/duty_slip/duty_brass_plate.jpg"}
+      ]
+    },
+    {
+      "id": "fence",
+      "lane": "site",
+      "kind": "single",
+      "stamp": "fence",
+      "prompt_bn": "লোক-গাড়ি সরাবেন কীভাবে?",
+      "hint_bn": "কোন আর ফিতে দিয়ে ঘেরুন। শুধু চিৎকার নয়।",
+      "options": [
+        {"id": "cone", "label_bn": "ব্যারিকেড · কোন আর ফিতে", "image": "assets/zero_loss/scene/prop_cones_tape.webp", "correct": true},
+        {"id": "shout", "label_bn": "শুধু চিৎকার করে সরানো", "image": "assets/zero_loss/scene/spr_villagers.webp"},
+        {"id": "skip", "label_bn": "ব্যারিকেড লাগবে না", "image": "assets/quizzes/mistake_no_barrier.webp"}
+      ]
+    },
+    {
+      "id": "shutdown",
+      "lane": "isolate",
+      "kind": "single",
+      "stamp": "cut",
+      "prompt_bn": "কাজের আগে শাটডাউন কীভাবে?",
+      "hint_bn": "কন্ট্রোল থেকে শাটডাউন নিন। গুজব শুনে লাইন ধরবেন না।",
+      "options": [
+        {"id": "ctrl", "label_bn": "কন্ট্রোল থেকে শাটডাউন ক্লিয়ারেন্স", "image": "assets/zero_loss/scene/operator_control.jpg", "correct": true},
+        {"id": "guess", "label_bn": "আলো নেই মানেই অফ", "image": "assets/zero_loss/scene/spr_man_point.webp"},
+        {"id": "nowork", "label_bn": "শাটডাউন ছাড়াই তার সরান", "image": "assets/quizzes/mistake_shock_grab.webp", "lethal": true}
+      ]
+    },
+    {
+      "id": "discharge",
+      "lane": "isolate",
+      "kind": "single",
+      "stamp": "test",
+      "prompt_bn": "শাটডাউনের পর ডিসচার্জ কীভাবে?",
+      "hint_bn": "আগে টেস্টার / ডিসচার্জ। হাতে ছোঁয়া প্রমাণ নয়।",
+      "options": [
+        {"id": "tester", "label_bn": "এইচভি টেস্টার দিয়ে ডেড নিশ্চিত", "image": "assets/zero_loss/scene/spr_man_tester.webp", "correct": true},
+        {"id": "hand", "label_bn": "হাতে ছুঁয়ে দেখি", "image": "assets/quizzes/mistake_shock_grab.webp", "lethal": true},
+        {"id": "skip", "label_bn": "কন্ট্রোল বলেছে অফ, টেস্ট বাদ", "image": "assets/quizzes/mistake_no_voltage_test.webp"}
+      ]
+    },
+    {
+      "id": "earth",
+      "lane": "isolate",
+      "kind": "single",
+      "stamp": "earth",
+      "prompt_bn": "ডিসচার্জের পর আর্থ কীভাবে?",
+      "hint_bn": "দুই মাথায় আর্থ। এক ফেজ নয়।",
+      "miss_safety": 18,
+      "options": [
+        {"id": "both", "label_bn": "দুই মাথায় আর্থ", "image": "assets/zero_loss/scene/prop_earth_set.webp", "correct": true},
+        {"id": "one", "label_bn": "এক ফেজ আর্থই যথেষ্ট", "image": "assets/quizzes/mistake_earth_one_phase.webp"},
+        {"id": "skip", "label_bn": "আর্থ বাদ · তাড়াতাড়ি", "image": "assets/quizzes/mistake_no_earthing.webp", "lethal": true}
+      ]
+    },
+    {
+      "id": "loto",
+      "lane": "isolate",
+      "kind": "single",
+      "stamp": "loto",
+      "prompt_bn": "আর্থের পর LOTO কী করবেন?",
+      "hint_bn": "তালা আর ডেঞ্জার ট্যাগ। PTW কাগজই LOTO নয়।",
+      "options": [
+        {"id": "lock", "label_bn": "আইসোলেটরে তালা আর ট্যাগ", "image": "assets/zero_loss/scene/prop_lock_board.webp", "correct": true},
+        {"id": "paper", "label_bn": "PTW সইই LOTO", "image": "assets/zero_loss/scene/gear_ptw.webp"},
+        {"id": "call", "label_bn": "শুধু কন্ট্রোলকে বলে রাখা", "image": "assets/zero_loss/scene/spr_man_phone.webp"}
+      ]
+    },
+    {
+      "id": "work_start",
+      "lane": "work",
+      "kind": "single",
+      "stamp": "work",
+      "prompt_bn": "কাজ শুরু করবেন কীভাবে?",
+      "hint_bn": "স্পটার রেখে শুরু। একা উঠবেন না।",
+      "options": [
+        {"id": "spot", "label_bn": "স্পটার রেখে কাজ শুরু", "image": "assets/zero_loss/scene/spr_man_point.webp", "correct": true},
+        {"id": "alone", "label_bn": "একা উঠে শুরু করলাম", "image": "assets/zero_loss/scene/spr_man_climb.webp"},
+        {"id": "crowd", "label_bn": "গ্রামের লোককে মই ধরতে দিলাম", "image": "assets/zero_loss/scene/spr_villagers.webp"}
+      ]
+    },
+    {
+      "id": "work_tool",
+      "lane": "work",
+      "kind": "single",
+      "stamp": "",
+      "prompt_bn": "সঠিক টুল কোনটা?",
+      "hint_bn": "ইনসুলেটেড প্লায়ার বা প্রপার গ্রিপ। কাস্তে নয়।",
+      "options": [
+        {"id": "insul", "label_bn": "ইনসুলেটেড প্লায়ার / গ্রিপ", "image": "assets/safety/library/tools/come_along_clamp.webp", "correct": true},
+        {"id": "plain", "label_bn": "সাধারণ প্লায়ার", "image": "assets/quizzes/mistake_non_insulated_pliers.webp"},
+        {"id": "sickle", "label_bn": "কাস্তে দিয়ে টান", "image": "assets/zero_loss/scene/gear_iron_sickle.webp"}
+      ]
+    },
+    {
+      "id": "finish",
+      "lane": "work",
+      "kind": "single",
+      "stamp": "tools",
+      "prompt_bn": "কাজ শেষ — এখন কী?",
+      "hint_bn": "টুল নামিয়ে গুনুন। সঙ্গে সঙ্গে লাইন চালাবেন না।",
+      "options": [
+        {"id": "wrap", "label_bn": "কাজ বন্ধ · টুল নামিয়ে গুনলাম", "image": "assets/zero_loss/scene/spr_man_earth.webp", "correct": true},
+        {"id": "on", "label_bn": "সঙ্গে সঙ্গে লাইন চালাও", "image": "assets/zero_loss/scene/operator_control.jpg", "lethal": true},
+        {"id": "leave", "label_bn": "টুল খুঁটিতেই থাকুক", "image": "assets/quizzes/mistake_loose_tool_height.webp"}
+      ]
+    },
+    {
+      "id": "ppe_check",
+      "lane": "close",
+      "kind": "single",
+      "stamp": "",
+      "prompt_bn": "সব টুল আর PPE নামিয়ে নিন?",
+      "hint_bn": "টুল গুনে নামান, PPE খুলে গোছান। খুঁটিতে কিছু ফেলে রাখবেন না।",
+      "options": [
+        {"id": "ok", "label_bn": "টুল আর PPE সব নামিয়ে গুনলাম", "image": "assets/safety/library/ppe/Safety_Helmet.webp", "correct": true},
+        {"id": "ppeonly", "label_bn": "শুধু PPE, টুল খুঁটিতেই", "image": "assets/quizzes/mistake_loose_tool_height.webp"},
+        {"id": "skip", "label_bn": "পরে দেখব, তাড়াতাড়ি", "image": "assets/zero_loss/scene/spr_man_phone.webp"}
+      ]
+    },
+    {
+      "id": "heads",
+      "lane": "close",
+      "kind": "single",
+      "stamp": "heads",
+      "prompt_bn": "শাটডাউন তোলার আগে টিম?",
+      "hint_bn": "সবাই মাটিতে জড়ো। কেউ উপরে থাকলে চালু নয়।",
+      "miss_safety": 20,
+      "options": [
+        {"id": "all", "label_bn": "সবাই নামুন, মাটিতে দাঁড়ান", "image": "assets/lineman/lineman_03_tech.webp", "correct": true},
+        {"id": "oneup", "label_bn": "একজন উপরে, বাকিরা ক্লিয়ার", "image": "assets/zero_loss/scene/spr_man_climb.webp", "lethal": true},
+        {"id": "phone", "label_bn": "ফোনে শুনেই ক্লিয়ার", "image": "assets/zero_loss/scene/spr_man_phone.webp"}
+      ]
+    },
+    {
+      "id": "withdraw",
+      "lane": "close",
+      "kind": "single",
+      "stamp": "earth_off",
+      "prompt_bn": "শাটডাউন কীভাবে তুলবেন?",
+      "hint_bn": "আর্থ খুলে কন্ট্রোলকে উইথড্র। নিজে ব্রেকার চাপবেন না।",
+      "miss_safety": 20,
+      "options": [
+        {"id": "ctrl", "label_bn": "আর্থ খুলে কন্ট্রোলকে শাটডাউন উইথড্র", "image": "assets/zero_loss/scene/operator_control.jpg", "correct": true},
+        {"id": "self", "label_bn": "নিজে গোয়েব / ব্রেকার চাপা", "image": "assets/zero_loss/scene/spr_man_point.webp"},
+        {"id": "leave", "label_bn": "আর্থ ফেলেই ক্লিয়ার দিলাম", "image": "assets/quizzes/proc_earth_left_on.webp", "lethal": true}
+      ]
+    },
+    {
+      "id": "restore",
+      "lane": "close",
+      "kind": "match",
+      "stamp": "restore",
+      "scene": "assets/zero_loss/scene/operator_control.jpg",
+      "prompt_bn": "বিদ্যুৎ ফিরল? কন্ট্রোল কোন ফিডার ক্লিয়ার?",
+      "hint_bn": "PTW-তে যে নাম লিখেছেন। জনপ্রিয় নাম নয়।",
+      "miss_safety": 22,
+      "miss_min": 15,
+      "options": [
+        {"id": "true", "label_bn": "", "correct": true},
+        {"id": "fake1", "label_bn": ""},
+        {"id": "fake2", "label_bn": ""},
+        {"id": "fake3", "label_bn": ""}
+      ]
+    },
+    {
+      "id": "ptw_back",
+      "lane": "close",
+      "kind": "single",
+      "stamp": "ptw_back",
+      "prompt_bn": "কেরানি পড়ে: '{{fake1}} শেষ' — আপনি কী বলবেন?",
+      "hint_bn": "নাম শুধরে PTW জমা দিন। ভুল নামে সই নয়।",
+      "miss_safety": 18,
+      "options": [
+        {"id": "fix", "label_bn": "না, {{feeder}} — নাম শুধরে জমা", "image": "assets/duty_slip/duty_ptw_pad.jpg", "correct": true},
+        {"id": "ok", "label_bn": "হ্যাঁ হ্যাঁ, ওই ফিডারই", "image": "assets/zero_loss/scene/spr_man_phone.webp"},
+        {"id": "later", "label_bn": "কাল সকালে সই করব", "image": "assets/zero_loss/scene/spr_man_point.webp"}
+      ]
+    },
+    {
+      "id": "paper",
+      "lane": "close",
+      "kind": "single",
+      "stamp": "",
+      "prompt_bn": "মিশন কমপ্লিট?",
+      "hint_bn": "রিপোর্ট বন্ধ, জায়গা পরিষ্কার। ফাঁকি নয়।",
+      "options": [
+        {"id": "done", "label_bn": "হ্যাঁ · রিপোর্ট শেষ, জায়গা ক্লিয়ার", "image": "assets/duty_slip/duty_fault_slip.jpg", "correct": true},
+        {"id": "half", "label_bn": "কাল সকালে বাকি কাগজ", "image": "assets/zero_loss/scene/spr_man_phone.webp"},
+        {"id": "leave", "label_bn": "কাগজ ফেলে বাড়ি", "image": "assets/zero_loss/scene/spr_man_point.webp"}
+      ]
+    }
+  ],
+  "calls": [
+    {
+      "id": "boss",
+      "who_bn": "বস",
+      "portrait": "assets/duty_slip/duty_caller_boss.jpg",
+      "line_bn": "মার্কেট লাইনটাই তো? তাড়াতাড়ি চালাও।",
+      "replies": [
+        {"id": "hold", "label_bn": "স্যার, PTW-তে {{feeder}} — আর্থ খোলেনি", "ok": true},
+        {"id": "yes", "label_bn": "ঠিক আছে স্যার, এখনই চালাই", "ok": false},
+        {"id": "name", "label_bn": "হ্যাঁ, মার্কেট লাইনই চালাচ্ছি", "ok": false}
+      ]
+    },
+    {
+      "id": "neta",
+      "who_bn": "স্থানীয় নেতা",
+      "portrait": "assets/duty_slip/duty_caller_neta.jpg",
+      "line_bn": "আমার এলাকা অন্ধকার! এখনই লাইন দাও।",
+      "replies": [
+        {"id": "hold", "label_bn": "স্যার, টেস্ট-আর্থ শেষ না হলে চালু নয়", "ok": true},
+        {"id": "yes", "label_bn": "আপনার কথাই রাখলাম — চালাচ্ছি", "ok": false},
+        {"id": "fight", "label_bn": "আপনি লাইন বোঝেন না", "ok": false}
+      ]
+    },
+    {
+      "id": "shop",
+      "who_bn": "দোকানি",
+      "portrait": "assets/zero_loss/scene/cust_shopkeeper.webp",
+      "line_bn": "দোকানের লাইন তো ওই খুঁটি ভাই — ওটা চালাও।",
+      "replies": [
+        {"id": "hold", "label_bn": "দোকান অন্ধকার, আমাদের PTW অন্য খুঁটি", "ok": true},
+        {"id": "yes", "label_bn": "ঠিক, ওই খুঁটিই করছি", "ok": false},
+        {"id": "shout", "label_bn": "সরুন, কাজ বুঝবেন না", "ok": false}
+      ]
+    },
+    {
+      "id": "farmer",
+      "who_bn": "কৃষক",
+      "portrait": "assets/zero_loss/scene/cust_farmer.webp",
+      "line_bn": "ধানশ্যাষ কাল সকালে — এখনই আলো চাই।",
+      "replies": [
+        {"id": "hold", "label_bn": "ভাই, সেফটি শেষেই আলো যাবে", "ok": true},
+        {"id": "yes", "label_bn": "আচ্ছা, আর্থ ফেলে চালাই", "ok": false},
+        {"id": "ignore", "label_bn": "ফোন কেটে দিলাম", "ok": false}
+      ]
+    },
+    {
+      "id": "control",
+      "who_bn": "কন্ট্রোল",
+      "portrait": "assets/zero_loss/scene/operator_control.jpg",
+      "line_bn": "ফিডার ক্লিয়ার? জনগণ ফোন করছে।",
+      "replies": [
+        {"id": "hold", "label_bn": "এখনো আর্থ/হেডকাউন্ট বাকি — ক্লিয়ার নয়", "ok": true},
+        {"id": "yes", "label_bn": "ক্লিয়ার, চালান", "ok": false},
+        {"id": "maybe", "label_bn": "প্রায় শেষ, চালিয়ে দিন", "ok": false}
+      ]
+    }
+  ]
+}

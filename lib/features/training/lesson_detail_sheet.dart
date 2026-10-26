@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -110,8 +110,8 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                 child: Text(
                   widget.lesson.isCompleted
                       ? 'রিভিশন সম্পন্ন! জ্ঞান আরও পোক্ত হলো।'
-                      : 'অভিনন্দন ওস্তাদ! +২০ পয়েন্ট আপনার একাউন্টে যোগ হয়েছে।',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                      : 'অভিনন্দন ওস্তাদ! +20 পয়েন্ট আপনার একাউন্টে যোগ হয়েছে।',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
               ),
             ],
@@ -169,7 +169,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
               Text(
                 caption,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ],
           ],
@@ -217,7 +217,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                   child: Text(
                     '🪜 পাঠ .',
                     style: const TextStyle(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.primaryAmber,
                       fontSize: 15,
                     ),
@@ -243,7 +243,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                   lesson.title,
                   style: const TextStyle(
                     fontSize: 22,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     height: 1.3,
                   ),
                 ),
@@ -269,7 +269,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                             Text(
                               '⚡ মাঠে নামার আগে (ওস্তাদের কথা):',
                               style: TextStyle(
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w600,
                                 color: Color(0xFF2563EB),
                                 fontSize: 16,
                               ),
@@ -297,7 +297,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                       SizedBox(width: 8),
                       Text(
                         '🛡️ সরঞ্জাম ও কাজের নিয়ম:',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
                       ),
                     ],
                   ),
@@ -331,7 +331,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                             point.itemName,
                             style: const TextStyle(
                               fontSize: 18,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w600,
                               height: 1.3,
                             ),
                           ),
@@ -376,7 +376,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                                               SizedBox(width: 4),
                                               Text(
                                                 'বড় করে দেখুন',
-                                                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                                                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
                                               ),
                                             ],
                                           ),
@@ -420,7 +420,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                                           'কেন অত্যন্ত জরুরি:',
                                           style: TextStyle(
                                             fontSize: 14,
-                                            fontWeight: FontWeight.w800,
+                                            fontWeight: FontWeight.w600,
                                             color: AppColors.safetyOrange,
                                           ),
                                         ),
@@ -459,7 +459,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                                           'পোলে ওঠার আগে হাত-চোখে চেক:',
                                           style: TextStyle(
                                             fontSize: 14,
-                                            fontWeight: FontWeight.w800,
+                                            fontWeight: FontWeight.w600,
                                             color: Color(0xFF0284C7),
                                           ),
                                         ),
@@ -496,7 +496,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                                           'মাঠের নিয়ম ও মান:',
                                           style: TextStyle(
                                             fontSize: 14,
-                                            fontWeight: FontWeight.w800,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                         const SizedBox(height: 2),
@@ -537,7 +537,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                               '💡 ওস্তাদের পোড়খাওয়া টিপ:',
                               style: TextStyle(
                                 fontSize: 17,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.primaryAmber,
                               ),
                             ),
@@ -556,7 +556,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                                     tip,
                                     style: const TextStyle(
                                       fontSize: 15,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w500,
                                       height: 1.4,
                                     ),
                                   ),
@@ -579,7 +579,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                       SizedBox(width: 8),
                       Text(
                         '❌ ভুল ধারণা vs আসল সত্যি:',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -622,7 +622,7 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                                   myth.reality,
                                   style: const TextStyle(
                                     fontSize: 15,
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: FontWeight.w500,
                                     color: AppColors.safeGreen,
                                   ),
                                 ),
@@ -681,11 +681,11 @@ class _LessonDetailSheetState extends ConsumerState<LessonDetailSheet> {
                             _canClaim
                                 ? (widget.lesson.isCompleted
                                     ? 'বুঝেছি (বন্ধ করুন)'
-                                    : '✅ পুরোটা পড়েছি • ২০ পয়েন্ট নিন!')
+                                    : '✅ পুরোটা পড়েছি • 20 পয়েন্ট নিন!')
                                 : '⏱️ আর  সেকেন্ড মন দিয়ে পড়ুন...',
                             style: const TextStyle(
                               fontSize: 17,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],

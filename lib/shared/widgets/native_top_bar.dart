@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/auth/auth_provider.dart';
@@ -42,7 +42,7 @@ class NativeTopBar extends ConsumerWidget implements PreferredSizeWidget {
               title,
               style: const TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -73,7 +73,7 @@ class NativeTopBar extends ConsumerWidget implements PreferredSizeWidget {
                 '${profile?.points ?? 0}',
                 style: const TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.primaryAmber,
                 ),
               ),

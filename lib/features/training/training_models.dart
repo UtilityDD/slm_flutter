@@ -1,4 +1,4 @@
-﻿import '../../core/config/app_config.dart';
+import '../../core/config/app_config.dart';
 
 enum LadderStepStatus {
   completed,
@@ -47,11 +47,21 @@ class LessonSectionPoint {
 
   String? get fullImageUrl {
     if (imageName == null || imageName!.isEmpty) return null;
-    if (imageName!.startsWith('http://') || imageName!.startsWith('https://')) {
-      return imageName;
+    final raw = imageName!.trim();
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      if (raw.contains('drive.google.com')) {
+        final match = RegExp(r'/d/(.+?)/|id=(.+?)(&|$)').firstMatch(raw);
+        final id = match?.group(1) ?? match?.group(2) ?? '';
+        if (id.isNotEmpty) {
+          final day = DateTime.now().toIso8601String().split('T').first;
+          return 'https://lh3.googleusercontent.com/u/0/d/$id?v=$day';
+        }
+      }
+      return raw;
     }
-    final path = imageName!.startsWith('/') ? imageName! : '/';
-    return '';
+    if (raw.startsWith('/')) return '${AppConfig.websiteUrl}$raw';
+    if (raw.startsWith('images/')) return '${AppConfig.websiteUrl}/$raw';
+    return '${AppConfig.websiteUrl}/quizzes/${raw.replaceFirst(RegExp(r'^/'), '')}';
   }
 }
 

@@ -110,6 +110,12 @@ class TileTone {
     iconFace: Color(0xFF38BDF8),
     iconInk: Color(0xFF0369A1),
   );
+  static const path = TileTone(
+    face: Color(0xFFFFF7E8),
+    edge: Color(0xFFE0A54A),
+    iconFace: Color(0xFFFBBF24),
+    iconInk: Color(0xFF7C4A12),
+  );
 }
 
 class Home3dTile extends StatefulWidget {
@@ -197,7 +203,7 @@ class _Home3dTileState extends State<Home3dTile> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 16.5,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                     height: 1.35,
                     color: AppColors.inkSoft,
                   ),
@@ -270,7 +276,7 @@ class _More3dRowState extends State<More3dRow> {
                 widget.label,
                 style: TextStyle(
                   fontSize: 17,
-                  fontWeight: widget.emphasize ? FontWeight.w800 : FontWeight.w700,
+                  fontWeight: widget.emphasize ? FontWeight.w600 : FontWeight.w500,
                   height: 1.35,
                   color: widget.emphasize ? const Color(0xFF9F1239) : AppColors.inkSoft,
                 ),
@@ -354,7 +360,7 @@ class _IconBadge extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xFFFFF7ED),
                     fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     height: 1.1,
                   ),
                 ),

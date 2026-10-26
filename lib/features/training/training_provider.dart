@@ -1,6 +1,7 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/supabase_service.dart';
 import '../auth/auth_provider.dart';
+import '../home/lesson_progress_store.dart';
 import 'training_models.dart';
 
 final staticChapterTitles = [
@@ -17,21 +18,25 @@ final staticChapterTitles = [
 ];
 
 final staticBadgeNames = [
-  'পিপিই চ্যাম্পিয়ন 🛡️',
-  'পোল মাস্টার 🪜',
-  'কন্ডাক্টর এক্সপার্ট ⚡',
-  'ট্রান্সফরমার লিডার ⚙️',
-  'আর্থিং প্রোটেক্টর 🔌',
-  'লাইনম্যান হিরো 🛠️',
-  'লাইফ সেভার 🚑',
-  'আইন ও নীতি বিশেষজ্ঞ 📜',
-  'স্মার্ট টেকনিশিয়ান 📱',
-  'মাস্টার লাইনম্যান 🏆',
+  'ট্রেইনি',
+  'জুনিয়র',
+  'টেকনিশিয়ান',
+  'স্কিলড',
+  'অ্যাডভান্সড',
+  'সিনিয়র',
+  'সুপারভাইজার',
+  'স্পেশালিস্ট',
+  'এক্সপার্ট',
+  'সেফটি প্রো',
 ];
 
 final trainingLadderProvider = FutureProvider<List<TrainingModuleItem>>((ref) async {
   final authState = ref.watch(authProvider);
-  final completedLessons = authState.profile?.completedLessons ?? [];
+  final local = ref.watch(localCompletedLessonsProvider).value ?? const <String>[];
+  final completedLessons = <String>{
+    ...authState.profile?.completedLessons ?? const <String>[],
+    ...local,
+  };
   final userLevel = authState.profile?.trainingLevel ?? 1;
 
   try {
@@ -51,6 +56,7 @@ final trainingLadderProvider = FutureProvider<List<TrainingModuleItem>>((ref) as
     }
 
     final List<TrainingModuleItem> items = [];
+    var previousCompleted = true; // module 1 unlocks after Level 0 (checked at open)
     for (int mod = 1; mod <= 10; mod++) {
       final lessons = moduleMap[mod] ?? [];
       final total = lessons.isNotEmpty ? lessons.length : 10;
@@ -67,10 +73,12 @@ final trainingLadderProvider = FutureProvider<List<TrainingModuleItem>>((ref) as
         }
       }
 
+      final fullyDone = doneCount >= total && total > 0;
       LadderStepStatus status;
-      if (doneCount >= total && total > 0) {
+      if (fullyDone) {
         status = LadderStepStatus.completed;
-      } else if (mod <= userLevel) {
+      } else if (previousCompleted || mod <= userLevel) {
+        // Unlock when previous level is finished (local or profile), not only training_level.
         status = LadderStepStatus.active;
       } else {
         status = LadderStepStatus.locked;
@@ -84,6 +92,7 @@ final trainingLadderProvider = FutureProvider<List<TrainingModuleItem>>((ref) as
         completedLessons: doneCount,
         status: status,
       ));
+      previousCompleted = fullyDone;
     }
 
     return items;
@@ -109,7 +118,11 @@ final trainingLadderProvider = FutureProvider<List<TrainingModuleItem>>((ref) as
 
 final moduleLessonsProvider = FutureProvider.family<List<LessonCardItem>, int>((ref, moduleNumber) async {
   final authState = ref.watch(authProvider);
-  final completedLessons = authState.profile?.completedLessons ?? [];
+  final local = ref.watch(localCompletedLessonsProvider).value ?? const <String>[];
+  final completedLessons = <String>{
+    ...authState.profile?.completedLessons ?? const <String>[],
+    ...local,
+  };
 
   try {
     final data = await SupabaseService.client
@@ -118,9 +131,9 @@ final moduleLessonsProvider = FutureProvider.family<List<LessonCardItem>, int>((
         .eq('module_number', moduleNumber)
         .eq('language', 'bn')
         .eq('is_active', true)
-        .order('chapter_number');
+        .order('chapter_number', ascending: true);
 
-    return data.map((row) {
+    final lessons = data.map((row) {
       final id = row['id']?.toString() ?? '';
       final chNum = row['chapter_number']?.toString() ?? '';
       final isDone = completedLessons.contains(id) ||
@@ -129,6 +142,9 @@ final moduleLessonsProvider = FutureProvider.family<List<LessonCardItem>, int>((
 
       return LessonCardItem.fromSupabase(row, isDone);
     }).toList();
+
+    lessons.sort((a, b) => a.chapterNumber.compareTo(b.chapterNumber));
+    return lessons;
   } catch (e) {
     return [];
   }

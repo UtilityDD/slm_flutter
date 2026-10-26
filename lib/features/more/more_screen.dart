@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/slm_backdrop.dart';
@@ -7,6 +7,7 @@ import '../auth/auth_provider.dart';
 import '../home/home_screen.dart';
 import '../radio/radio_player_provider.dart';
 import '../shell/app_routes.dart';
+import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 
 class MoreScreen extends ConsumerWidget {
@@ -45,7 +46,7 @@ class MoreScreen extends ConsumerWidget {
       ),
       body: SlmBackdrop(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+          padding: shellScrollPadding(context, left: 16, top: 4, right: 16, extraBottom: 16),
           children: [
             for (final item in items) ...[
               if (item.gapBefore) const SizedBox(height: 10),
@@ -63,7 +64,7 @@ class MoreScreen extends ConsumerWidget {
               OutlinedButton.icon(
                 onPressed: () => ref.read(authProvider.notifier).signOut(),
                 icon: const Icon(Icons.logout_rounded, color: AppColors.alertRed),
-                label: Text(tr(bn, 'লগআউট', 'Log out'), style: const TextStyle(color: AppColors.alertRed, fontWeight: FontWeight.w800)),
+                label: Text(tr(bn, 'লগআউট', 'Log out'), style: const TextStyle(color: AppColors.alertRed, fontWeight: FontWeight.w600)),
               )
             else
               FilledButton.icon(

@@ -11,6 +11,9 @@ class SlmBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // StackFit.expand keeps the wash edge-to-edge even when the child is
+    // inset by SafeArea (floating nav). Otherwise a solid scaffold slab shows
+    // behind the dock on Identify / Rank / Life Skill.
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -20,6 +23,7 @@ class SlmBackdrop extends StatelessWidget {
         ),
       ),
       child: Stack(
+        fit: StackFit.expand,
         children: [
           const Positioned(
             top: -90,

@@ -58,3 +58,7 @@ key.properties
 *.jks
 *.keystore
 
+# Hourly answer keys. Never ship these in the app.
+/tool/hourly_answer_keys.json
+/tool/hourly_answer_keys.sql
+

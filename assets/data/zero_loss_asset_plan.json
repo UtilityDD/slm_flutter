@@ -1,0 +1,68 @@
+{
+  "note": "Art production checklist for Zero Loss one-job site. Storm is only one mood. Worksite is layered: bg + props + poses + bloom overlays.",
+  "moods": ["day", "overcast", "dusk", "storm"],
+  "site_layers": {
+    "bg": "fault.sceneImage / scene_by_mood",
+    "props_on_flags": {
+      "barricade": ["overlay_barricade_on.jpg", "prop_cones_tape.webp"],
+      "earth": ["prop_earth_set.webp"],
+      "ptw": ["prop_lock_board.webp"]
+    },
+    "poses": {
+      "climb": "spr_man_climb.webp",
+      "work_ground": "spr_man_earth.webp",
+      "work_climb": "spr_man_tester.webp"
+    },
+    "blooms_only": {
+      "crowd": ["overlay_crowd_walk_in.jpg", "spr_villagers.webp"],
+      "vehicle": ["overlay_vehicle_approach.jpg", "prop_truck.webp"]
+    }
+  },
+  "generated_this_pass": [
+    "overlay_barricade_on.jpg",
+    "overlay_crowd_walk_in.jpg",
+    "overlay_vehicle_approach.jpg"
+  ],
+  "priority_jobs": [
+    {
+      "id": "wire_on_ground",
+      "need_create": [
+        "bg_market_wire_down_day.webp"
+      ],
+      "reuse_ok": [
+        "overlay_barricade_on.jpg",
+        "overlay_crowd_walk_in.jpg",
+        "overlay_vehicle_approach.jpg",
+        "prop_earth_set.webp",
+        "spr_man_earth.webp"
+      ]
+    },
+    {
+      "id": "tree_trimming",
+      "need_create": [
+        "bg_tree_on_line_day.webp",
+        "spr_man_climb_no_harness.webp"
+      ],
+      "reuse_ok": ["spr_man_climb.webp", "gear_tree_saw.webp", "gear_harness.webp"]
+    },
+    {
+      "id": "dtr_hg_fuse",
+      "need_create": ["bg_dtr_structure_day.webp"],
+      "reuse_ok": ["prop_lock_board.webp", "spr_man_tester.webp"]
+    }
+  ],
+  "worker_poses_needed": [
+    "idle_stand",
+    "phone",
+    "point_stop",
+    "climb",
+    "work",
+    "hurt_fall"
+  ],
+  "ui": {
+    "site_chrome": "score_chip_only",
+    "opening": "aat_mantra_fire_glow_code",
+    "site_actions": "icon_tiles_with_block_reasons",
+    "ppe": "multi_select_batch_wear"
+  }
+}

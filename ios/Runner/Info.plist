@@ -47,6 +47,10 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Smart Lineman uses the microphone so you can search Parichiti by voice.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Smart Lineman uses speech recognition so you can search Parichiti by voice.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
