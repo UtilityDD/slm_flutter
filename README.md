@@ -6,7 +6,7 @@ This is **not** `slm-web`. Game loops, duty-slip levels, and copy live here.
 
 ## What the app is
 
-A field-training companion: SAFE HOME mantras, PPE, identify-the-gear library, hourly quizzes, life-skill lessons, ranks, emergency numbers, and a night job called **মৃত্যুহীন** (duty slip). Home also still has the older **জিরো লস** storm-feeder sim in code.
+A field-training companion: SAFE HOME mantras, PPE, identify-the-gear library, hourly quizzes, life-skill lessons, ranks, emergency numbers, and the core field breakdown & maintenance duty path called **মৃত্যুহীন** (duty slip). Home also still has the older **জিরো লস** storm-feeder sim in code.
 
 Audience: linemen on Android phones, often offline-ish. Large posters and some lesson media stream from `https://www.smartlineman.in` so the APK stays smaller.
 
@@ -48,7 +48,7 @@ Do not use PowerShell `Set-Content` for Bangla JSON or Dart — it mojibakes. Ed
 
 A notched dock floats over pages. **SLM Radio** can sit above it.
 
-## মৃত্যুহীন (duty slip) — current night job
+## মৃত্যুহীন (duty slip) — core field duty path (day / night)
 
 Home button text is **মৃত্যুহীন** only. Cover title **কাজের ধাপ**. Ladder header **মৃত্যুহীন পথ**. Next-level button **পরের লেভেল** (returns to the wooden ladder). No সহজ/কঠিন.
 

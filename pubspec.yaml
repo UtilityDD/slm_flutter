@@ -51,6 +51,7 @@ flutter:
     - assets/sounds/accident.wav
     - assets/sounds/complaint.wav
     - assets/sounds/customer.wav
+    - assets/sounds/voice/
     - assets/data/
     - assets/data/life_skill/
     - assets/lineman/

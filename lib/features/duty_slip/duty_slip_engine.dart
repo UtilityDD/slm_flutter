@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:math';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'duty_slip_models.dart';
 
@@ -59,7 +62,7 @@ const dsLevels = <DsLevelSpec>[
   DsLevelSpec(number: 3, kind: DsLevelKind.letters, choices: 6, darunSec: 100),
   DsLevelSpec(number: 4, kind: DsLevelKind.letters, choices: 8, darunSec: 180),
   DsLevelSpec(number: 5, kind: DsLevelKind.letters, choices: 8, darunSec: 200),
-  DsLevelSpec(number: 6, kind: DsLevelKind.letters, choices: 4, darunSec: 70, living: true),
+  DsLevelSpec(number: 6, kind: DsLevelKind.letters, choices: 8, darunSec: 160),
   DsLevelSpec(number: 7, kind: DsLevelKind.letters, choices: 6, darunSec: 85, living: true),
   DsLevelSpec(number: 8, kind: DsLevelKind.letters, choices: 8, darunSec: 100, living: true),
   DsLevelSpec(number: 9, kind: DsLevelKind.job, choices: 2, darunSec: 75),
@@ -174,15 +177,16 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       3 => 'হাতে গ্লাভস',
       4 => 'হারনেস',
       5 => 'পুরো কিট',
+      6 => 'পোশাক ও জুতো Pro',
       _ => letterTitle ?? dsLetterTitlePool.first,
     };
     final body = switch (spec.number) {
-      1 => 'সঠিক পোশাকই নিরাপত্তার প্রথম ধাপ।',
-      2 => 'এবার সঠিক হেলমেট চিনে নিন ও ঠিকভাবে পরে ফেলুন।',
-      3 => 'এবার সঠিক গ্লাভস চিনে নিন ও হাতে ঠিকভাবে পরে ফেলুন।',
-      4 => 'এবার সঠিক হারনেস চিনে নিন ও গায়ে ঠিকভাবে বেঁধে ফেলুন।',
+      1 => 'লাইনে কাজের সময় পোশাকই প্রথম প্রতিরোধ। শরীরকে সম্পূর্ণ সুরক্ষিত রাখুন।',
+      2 => 'মাথার সুরক্ষায় কোনো ছাড় নেই। যেকোনো পতনশীল বস্তু ও বিদ্যুৎস্পর্শ থেকে মাথা রক্ষা করুন।',
+      3 => 'লাইনে কাজ করার সময় হাতই প্রথম ঝুঁকির মুখে পড়ে। লাইভ তার স্পর্শের আগে হাতের সঠিক সুরক্ষা নিশ্চিত করুন।',
+      4 => 'উচ্চতায় কাজের সময় পতন রোধে ফুল বডি হারনেসই জীবন বাঁচায়। সঠিক পদ্ধতিতে প্রতিটি বাকল লক করুন।',
       5 => 'এবার দ্রুত কাজের জন্য তৈরি হয়ে যান।',
-      6 => 'এবার চারটে অপশন, আর ভুল হলেই সাজ বদলাবে। তাড়াহুড়ো নয়, সঠিক ধাপটা ধরে রাখুন।',
+      6 => 'কাজে নামার আগে শরীর আর সরঞ্জাম ভালো করে পরখ করুন। কোনো লুকোনো বিপদ যেন বিদ্যুৎ না টানে!',
       7 => 'এবার ছয়টা অপশন, আর ভুল ছুঁলেই নতুন ফাঁদ। মন্ত্রটা মনে রেখে হাত বাড়ান।',
       _ => 'এবার আটটাই সামনে, আর ভুল ছুঁলেই নতুন সাজ। পুরো আট মন্ত্র মাথায় রেখে শেষ পর্যন্ত চলুন।',
     };
@@ -238,7 +242,37 @@ class DutySlipEngine {
   var streak = 0;
   final bestRank = List<DsLevelRank?>.filled(dsLevels.length, null);
   final bestDarunSec = List<int?>.filled(dsLevels.length, null);
+  final levelDangerCount = List<int?>.filled(dsLevels.length, null);
+  final levelBestScore = List<int>.filled(dsLevels.length, 0);
   late final List<String> _letterTitles;
+
+  int get totalCumulativeScore {
+    var sum = 0;
+    for (final s in levelBestScore) {
+      sum += s;
+    }
+    return sum > 0 ? sum : nightTotal;
+  }
+
+  int get totalCumulativeDanger {
+    var sum = 0;
+    for (final d in levelDangerCount) {
+      if (d != null) {
+        sum += d;
+      }
+    }
+    return sum;
+  }
+
+  int get totalCumulativeSeconds {
+    var sum = 0;
+    for (var i = 0; i < dsLevels.length; i++) {
+      if (bestDarunSec[i] != null) {
+        sum += bestDarunSec[i]!;
+      }
+    }
+    return sum;
+  }
 
   DutySlipEngine(this.pack, {int? seed}) : _rng = Random(seed ?? DateTime.now().millisecondsSinceEpoch) {
     site = pack.sites[_rng.nextInt(pack.sites.length)];
@@ -312,7 +346,7 @@ class DutySlipEngine {
   var dressArmed = false;
   var dressOpen = false;
   bool get showingSafeWalk => false;
-  bool get dressLevel => level.isLetters && level.number <= 5;
+  bool get dressLevel => level.isLetters && level.number <= 6;
   bool get showingDressIntro => listing && dressLevel && !dressOpen;
   bool get showingDress => listing && dressLevel && dressOpen;
   void finishSafeWalk() => safeWalkDone = true;
@@ -382,30 +416,30 @@ class DutySlipEngine {
   String get levelLineBn {
     if (level.isLetters && level.number == 1) {
       return switch (levelRank) {
-        DsLevelRank.darun => 'পোশাক ঠিক আছে।',
-        DsLevelRank.motamuti => 'পোশাক পরেছেন। ভুলগুলো মনে রাখুন।',
-        DsLevelRank.again => 'পোশাক এখনো আলগা। আবার পরান।',
+        DsLevelRank.darun => 'দারুণ শৃঙ্খলা! পোশাক নির্বাচনে কোনো ত্রুটি হয়নি।',
+        DsLevelRank.motamuti => 'পোশাক পরা হয়েছে, তবে কাজের সময় আরও সতর্ক থাকা জরুরি।',
+        DsLevelRank.again => 'পোশাক নির্বাচনে ঝুঁকি থেকে গেছে। সতর্কতা বজায় রেখে পুনরায় চেষ্টা করুন।',
       };
     }
     if (level.isLetters && level.number == 2) {
       return switch (levelRank) {
-        DsLevelRank.darun => 'হেলমেট ঠিক আছে।',
-        DsLevelRank.motamuti => 'হেলমেট পরেছেন। ভুলগুলো মনে রাখুন।',
-        DsLevelRank.again => 'মাথা এখনো খোলা। আবার পরান।',
+        DsLevelRank.darun => 'একদম নির্ভুল! মাথার সুরক্ষা সম্পূর্ণ।',
+        DsLevelRank.motamuti => 'হেলমেট পরা হয়েছে, কিন্তু নির্বাচন নিখুঁত ছিল না।',
+        DsLevelRank.again => 'ভুল হেলমেট মারাত্মক ঝুঁকির কারণ। পুনরায় সঠিকটি নির্বাচন করুন।',
       };
     }
     if (level.isLetters && level.number == 3) {
       return switch (levelRank) {
-        DsLevelRank.darun => 'গ্লাভস ঠিক আছে।',
-        DsLevelRank.motamuti => 'গ্লাভস পরেছেন। ভুলগুলো মনে রাখুন।',
-        DsLevelRank.again => 'হাত এখনো খোলা। আবার পরান।',
+        DsLevelRank.darun => 'অসাধারণ সতর্কতা! ত্রুটিমুক্ত ইনসুলেটেড গ্লাভস সঠিকভাবে নির্বাচন করেছেন।',
+        DsLevelRank.motamuti => 'গ্লাভস পরা হয়েছে, তবে কাজের সময় গ্লাভসের ত্রুটি আরও মনোযোগ দিয়ে পরখ করা দরকার।',
+        DsLevelRank.again => 'ত্রুটিযুক্ত গ্লাভসে লাইনে কাজ করা প্রাণঘাতী। সতর্ক হয়ে আবার সঠিক গ্লাভস নির্বাচন করুন।',
       };
     }
     if (level.isLetters && level.number == 4) {
       return switch (levelRank) {
-        DsLevelRank.darun => 'দুই আঙুল ঢোকে। হারনেস ঠিক আছে।',
-        DsLevelRank.motamuti => 'হারনেস বেঁধেছেন। আঙুলের মাপ মনে রাখুন।',
-        DsLevelRank.again => 'ফিতা এখনো ঢিলা। আবার বাঁধুন।',
+        DsLevelRank.darun => 'নিখুঁত কাজ! হারনেস সঠিকভাবে বাঁধা হয়েছে এবং দুই আঙুলের উপযুক্ত ফাঁক রয়েছে।',
+        DsLevelRank.motamuti => 'হারনেস পরা হয়েছে, তবে কাজের সময় বাকল ও ফিতার টান আরও নিশ্ছিদ্র হওয়া প্রয়োজন।',
+        DsLevelRank.again => 'আলগা বা ভুলভাবে বাঁধা হারনেসে পতন ঘটলে মারাত্মক জখম হতে পারে। পুনরায় সঠিক নিয়মে বাঁধুন।',
       };
     }
     if (level.isLetters && level.number == 5) {
@@ -447,16 +481,15 @@ class DutySlipEngine {
     }
   }
 
-  String get playClock {
-    final m = (playSeconds ~/ 60).toString().padLeft(2, '0');
-    final s = (playSeconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
+  String get playClock => formatClock(playSeconds);
 
   String formatClock(int sec) {
-    final m = (sec ~/ 60).toString().padLeft(2, '0');
-    final s = (sec % 60).toString().padLeft(2, '0');
-    return '$m:$s';
+    const d = '০১২৩৪৫৬৭৮৯';
+    final mStr = (sec ~/ 60).toString().padLeft(2, '0');
+    final sStr = (sec % 60).toString().padLeft(2, '0');
+    final mBn = mStr.split('').map((ch) => d[int.parse(ch)]).join();
+    final sBn = sStr.split('').map((ch) => d[int.parse(ch)]).join();
+    return '$mBn:$sBn';
   }
 
   void jumpMinutes(int min) {
@@ -605,22 +638,113 @@ class DutySlipEngine {
   void _finishPlan() {
     clockLive = false;
     planPhase = DsPlanPhase.result;
-    if (levelRank == DsLevelRank.again) return;
-    nightTotal += levelScore;
-    quality = nightTotal;
+
+    final earnedScore = max(0, levelScore);
+    final scoreImproved = earnedScore > levelBestScore[levelIndex];
+    if (levelRank != DsLevelRank.again && scoreImproved) {
+      levelBestScore[levelIndex] = earnedScore;
+    }
+
     final prev = bestRank[levelIndex];
-    if (prev == null || _rankWeight(levelRank) > _rankWeight(prev)) {
+    final rankImproved = prev == null || _rankWeight(levelRank) > _rankWeight(prev);
+    if (rankImproved) {
       bestRank[levelIndex] = levelRank;
     }
+
     final old = bestDarunSec[levelIndex];
-    if (old == null || playSeconds < old) bestDarunSec[levelIndex] = playSeconds;
-    if (levelIndex + 1 > unlocked) unlocked = min(levelIndex + 1, dsLevels.length - 1);
+    if (levelRank != DsLevelRank.again && (old == null || (playSeconds > 0 && playSeconds < old))) {
+      bestDarunSec[levelIndex] = playSeconds;
+    }
+
+    // Danger count: record danger for this level run.
+    final curDanger = levelDangerCount[levelIndex];
+    if (curDanger == null || prev == null || prev == DsLevelRank.again || rankImproved || scoreImproved || wrongTaps < curDanger) {
+      levelDangerCount[levelIndex] = wrongTaps;
+    }
+
+    // Advance unlock if achieved motamuti or darun
+    if (levelRank != DsLevelRank.again) {
+      if (levelIndex + 1 > unlocked) {
+        unlocked = min(levelIndex + 1, dsLevels.length - 1);
+      }
+    }
+
+    nightTotal = totalCumulativeScore;
+    quality = nightTotal;
+
+    unawaited(savePersistedState());
+  }
+
+  Future<void> loadPersistedState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedScore = prefs.getInt('ds_career_score');
+      if (savedScore != null && savedScore > 0) {
+        nightTotal = savedScore;
+        quality = savedScore;
+      }
+      final savedUnlocked = prefs.getInt('ds_unlocked_level');
+      if (savedUnlocked != null && !dsAllLevelsOpen) {
+        unlocked = savedUnlocked.clamp(0, dsLevels.length - 1);
+      }
+      final ranksRaw = prefs.getStringList('ds_best_ranks');
+      if (ranksRaw != null) {
+        for (var i = 0; i < min(ranksRaw.length, dsLevels.length); i++) {
+          final val = ranksRaw[i];
+          if (val == 'darun') bestRank[i] = DsLevelRank.darun;
+          if (val == 'motamuti') bestRank[i] = DsLevelRank.motamuti;
+          if (val == 'again') bestRank[i] = DsLevelRank.again;
+        }
+      }
+      final timesRaw = prefs.getStringList('ds_best_times');
+      if (timesRaw != null) {
+        for (var i = 0; i < min(timesRaw.length, dsLevels.length); i++) {
+          final t = int.tryParse(timesRaw[i]);
+          if (t != null && t > 0) bestDarunSec[i] = t;
+        }
+      }
+      final dangerRaw = prefs.getStringList('ds_danger_counts');
+      if (dangerRaw != null) {
+        for (var i = 0; i < min(dangerRaw.length, dsLevels.length); i++) {
+          final d = int.tryParse(dangerRaw[i]);
+          if (d != null && d >= 0) {
+            // Only attribute danger if the level has a recorded rank / was played
+            if (bestRank[i] != null) {
+              levelDangerCount[i] = d;
+            }
+          }
+        }
+      }
+      final scoresRaw = prefs.getStringList('ds_best_scores');
+      if (scoresRaw != null) {
+        for (var i = 0; i < min(scoresRaw.length, dsLevels.length); i++) {
+          final s = int.tryParse(scoresRaw[i]);
+          if (s != null) levelBestScore[i] = s;
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> savePersistedState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('ds_career_score', totalCumulativeScore);
+      await prefs.setInt('ds_unlocked_level', unlocked);
+      final ranksRaw = bestRank.map((r) => r == null ? '' : r.name).toList();
+      await prefs.setStringList('ds_best_ranks', ranksRaw);
+      final timesRaw = bestDarunSec.map((t) => (t ?? 0).toString()).toList();
+      await prefs.setStringList('ds_best_times', timesRaw);
+      final dangerRaw = levelDangerCount.map((d) => (d ?? -1).toString()).toList();
+      await prefs.setStringList('ds_danger_counts', dangerRaw);
+      final scoresRaw = levelBestScore.map((s) => s.toString()).toList();
+      await prefs.setStringList('ds_best_scores', scoresRaw);
+    } catch (_) {}
   }
 
   int _rankWeight(DsLevelRank r) => switch (r) {
-        DsLevelRank.darun => 2,
-        DsLevelRank.motamuti => 1,
-        DsLevelRank.again => 0,
+        DsLevelRank.darun => 3,
+        DsLevelRank.motamuti => 2,
+        DsLevelRank.again => 1,
       };
 
   DsResult tapPlan(String id) {
@@ -726,14 +850,56 @@ class DutySlipEngine {
     lethalReason = reason;
     act = DsAct.lethal;
     if (s.stamp.isNotEmpty) slashed.add(s.stamp);
+    final fieldIndex = dsLevels.length - 1;
+    final prev = bestRank[fieldIndex];
+    if (prev == null) {
+      bestRank[fieldIndex] = DsLevelRank.again;
+    }
+    final mistakes = callsBad + wrongSteps.length + 1;
+    final cur = levelDangerCount[fieldIndex];
+    if (cur == null || prev == null || prev == DsLevelRank.again || mistakes < cur) {
+      levelDangerCount[fieldIndex] = cur == null ? mistakes : min(cur, mistakes);
+    }
+    unawaited(savePersistedState());
     return DsResult(ok: false, lethal: true, noteBn: reason, delta: -5);
+  }
+
+  void _finishField() {
+    act = DsAct.done;
+    final fieldIndex = dsLevels.length - 1;
+    final fieldRank = switch (grade()) {
+      DsGrade.safe => DsLevelRank.darun,
+      DsGrade.risky => DsLevelRank.motamuti,
+      DsGrade.unsafe => DsLevelRank.again,
+    };
+    final prev = bestRank[fieldIndex];
+    final rankImproved = prev == null || _rankWeight(fieldRank) > _rankWeight(prev);
+    if (rankImproved) {
+      bestRank[fieldIndex] = fieldRank;
+    }
+    final mistakes = callsBad + wrongSteps.length + (hardMiss ? 1 : 0);
+    final cur = levelDangerCount[fieldIndex];
+    if (cur == null || prev == null || prev == DsLevelRank.again || rankImproved || mistakes < cur) {
+      levelDangerCount[fieldIndex] = mistakes;
+    }
+    final oldTime = bestDarunSec[fieldIndex];
+    if (oldTime == null || (jobSeconds > 0 && jobSeconds < oldTime)) {
+      bestDarunSec[fieldIndex] = jobSeconds;
+    }
+    final earned = max(0, quality);
+    if (earned > levelBestScore[fieldIndex]) {
+      levelBestScore[fieldIndex] = earned;
+    }
+    nightTotal = totalCumulativeScore;
+    quality = nightTotal;
+    unawaited(savePersistedState());
   }
 
   void _advance() {
     stepIndex++;
     _cardsSinceCall++;
     if (stepIndex >= pack.steps.length) {
-      act = DsAct.done;
+      _finishField();
       return;
     }
     if (_maybeCall()) return;
@@ -770,7 +936,11 @@ class DutySlipEngine {
     if (r.ok) {
       callsOk++;
       addScore(5);
-      act = stepIndex >= pack.steps.length ? DsAct.done : DsAct.card;
+      if (stepIndex >= pack.steps.length) {
+        _finishField();
+      } else {
+        act = DsAct.card;
+      }
       return const DsResult(ok: true, delta: 5);
     }
     callsBad++;
@@ -778,7 +948,11 @@ class DutySlipEngine {
     safety = max(0, safety - 5);
     jumpMinutes(10);
     hardMiss = true;
-    act = stepIndex >= pack.steps.length ? DsAct.done : DsAct.card;
+    if (stepIndex >= pack.steps.length) {
+      _finishField();
+    } else {
+      act = DsAct.card;
+    }
     return const DsResult(ok: false, delta: -5);
   }
 

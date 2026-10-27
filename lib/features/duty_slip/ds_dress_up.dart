@@ -18,39 +18,184 @@ class _Piece {
 }
 
 const _pieces = <_Piece>[
-  _Piece(id: 'fatua', asset: 'assets/duty_slip/dress/tray_fatua.webp', zone: 'torso', good: false, why: 'ফতুয়া ঢিলা। তারে জড়িয়ে যায়। বিদ্যুতের কাজে সুতির ফুল শার্ট পরুন।'),
-  _Piece(id: 'halftee', asset: 'assets/duty_slip/dress/tray_halftee.webp', zone: 'torso', good: false, why: 'হাফ টি-শার্টে হাত খোলা থাকে। হাতাওয়ালা সুতির শার্ট চাই।'),
-  _Piece(id: 'poly', asset: 'assets/duty_slip/dress/tray_poly.webp', zone: 'torso', good: false, why: 'পলিয়েস্টার শার্ট আর্কে গলে গায়ের সঙ্গে লেগে যায়। বিদ্যুতের কাজে সুতির ফুল শার্ট পরুন।'),
+  _Piece(id: 'fatua', asset: 'assets/duty_slip/dress/tray_fatua.webp', zone: 'torso', good: false, why: 'না, সাবধান! ঢিলে পোশাক বাতাসে উড়ে লাইনের তারে জড়িয়ে যেতে পারে। শরীর আঁটোসাঁটো রাখা জরুরি।'),
+  _Piece(id: 'halftee', asset: 'assets/duty_slip/dress/tray_halftee.webp', zone: 'torso', good: false, why: 'থামুন! হাত খোলা থাকলে সামান্য স্পার্কেই সরাসরি চামড়া পুড়ে যাবে। হাত সম্পূর্ণ ঢাকা দরকার।'),
+  _Piece(id: 'poly', asset: 'assets/duty_slip/dress/tray_poly.webp', zone: 'torso', good: false, why: 'মারাত্মক ভুল! আর্ক ফ্ল্যাশের তাপে পলিয়েস্টার গলে চামড়ায় আটকে যাবে। এমন কাপড় বিপজ্জনক।'),
   _Piece(id: 'shirt', asset: 'assets/duty_slip/dress/tray_shirt.webp', zone: 'torso', good: true, why: ''),
-  _Piece(id: 'halfpant', asset: 'assets/duty_slip/dress/tray_halfpant.webp', zone: 'legs', good: false, why: 'হাফপ্যান্টে পা খোলা থাকে। সুতির ফুল প্যান্ট পরুন।'),
-  _Piece(id: 'pajama', asset: 'assets/duty_slip/dress/tray_pajama.webp', zone: 'legs', good: false, why: 'ঢিলা পাজামা যন্ত্রে জড়ায়। সুতির ফুল প্যান্ট পরুন।'),
+  _Piece(id: 'halfpant', asset: 'assets/duty_slip/dress/tray_halfpant.webp', zone: 'legs', good: false, why: 'সাবধান! পা উন্মুক্ত রেখে কাজ করা অনিরাপদ, ধারালো তারের ঘষা লাগতে পারে।'),
+  _Piece(id: 'pajama', asset: 'assets/duty_slip/dress/tray_pajama.webp', zone: 'legs', good: false, why: 'না, এটা বিপজ্জনক! ঢিলে পাজামা যন্ত্রাংশে আটকে ভারসাম্য নষ্ট করতে পারে।'),
   _Piece(id: 'pant', asset: 'assets/duty_slip/dress/tray_pant.webp', zone: 'legs', good: true, why: ''),
-  _Piece(id: 'slip', asset: 'assets/duty_slip/dress/tray_slipper.webp', zone: 'feet', good: false, why: 'চপ্পলে পা পিছলায়। সেফটি সু পরুন।'),
-  _Piece(id: 'normal', asset: 'assets/duty_slip/dress/tray_normalshoe.webp', zone: 'feet', good: false, why: 'সাধারণ জুতোয় সেফটি সোল নেই। সেফটি সু পরুন।'),
+  _Piece(id: 'slip', asset: 'assets/duty_slip/dress/tray_slipper.webp', zone: 'feet', good: false, why: 'বিপদ! চপ্পলে কোনো গ্রিপ নেই—মই বা পোলে পা হড়কালেই পতন ঘটবে।'),
+  _Piece(id: 'normal', asset: 'assets/duty_slip/dress/tray_normalshoe.webp', zone: 'feet', good: false, why: 'না, সতর্ক হোন! সাধারণ জুতোর সোলে বৈদ্যুতিক ইনসুলেশন থাকে না।'),
   _Piece(id: 'boot', asset: 'assets/duty_slip/dress/tray_boot.webp', zone: 'feet', good: true, why: ''),
 ];
 
-const _shoeBlock = 'জুতো পরা থাকলে প্যান্ট ওঠে না। আগে প্যান্ট, তারপর সেফটি সু।';
+const _proClothingPieces = <_Piece>[
+  _Piece(
+    id: 'fatua',
+    asset: 'assets/duty_slip/dress/tray_fatua.webp',
+    zone: 'torso',
+    good: false,
+    why: 'না, সাবধান! ঢিলে পোশাক বাতাসে উড়ে লাইনের তারে জড়িয়ে যেতে পারে। শরীর আঁটোসাঁটো রাখা জরুরি।',
+  ),
+  _Piece(
+    id: 'halftee',
+    asset: 'assets/duty_slip/dress/tray_halftee.webp',
+    zone: 'torso',
+    good: false,
+    why: 'থামুন! হাত খোলা থাকলে সামান্য স্পার্কেই সরাসরি চামড়া পুড়ে যাবে। হাত সম্পূর্ণ ঢাকা দরকার।',
+  ),
+  _Piece(
+    id: 'poly',
+    asset: 'assets/duty_slip/dress/tray_poly.webp',
+    zone: 'torso',
+    good: false,
+    why: 'মারাত্মক ভুল! আর্ক ফ্ল্যাশের তাপে পলিয়েস্টার গলে চামড়ায় আটকে যাবে। এমন কাপড় বিপজ্জনক।',
+  ),
+  _Piece(
+    id: 'shirt',
+    asset: 'assets/duty_slip/dress/tray_shirt.webp',
+    zone: 'torso',
+    good: true,
+    why: '',
+  ),
+  _Piece(
+    id: 'halfpant',
+    asset: 'assets/duty_slip/dress/tray_halfpant.webp',
+    zone: 'legs',
+    good: false,
+    why: 'সাবধান! পা উন্মুক্ত রেখে কাজ করা অনিরাপদ, ধারালো তারের ঘষা লাগতে পারে।',
+  ),
+  _Piece(
+    id: 'pajama',
+    asset: 'assets/duty_slip/dress/tray_pajama.webp',
+    zone: 'legs',
+    good: false,
+    why: 'না, এটা বিপজ্জনক! ঢিলে পাজামা যন্ত্রাংশে আটকে ভারসাম্য নষ্ট করতে পারে।',
+  ),
+  _Piece(
+    id: 'pant',
+    asset: 'assets/duty_slip/dress/tray_pant.webp',
+    zone: 'legs',
+    good: true,
+    why: '',
+  ),
+  _Piece(
+    id: 'slip',
+    asset: 'assets/duty_slip/dress/tray_slipper.webp',
+    zone: 'feet',
+    good: false,
+    why: 'বিপদ! চপ্পলে কোনো গ্রিপ নেই—মই বা পোলে পা হড়কালেই পতন ঘটবে।',
+  ),
+  _Piece(
+    id: 'normal',
+    asset: 'assets/duty_slip/dress/tray_normalshoe.webp',
+    zone: 'feet',
+    good: false,
+    why: 'না, সতর্ক হোন! সাধারণ জুতোর সোলে বৈদ্যুতিক ইনসুলেশন থাকে না।',
+  ),
+  _Piece(
+    id: 'steelboot',
+    asset: 'assets/safety/library/ppe/Lineman_Boot_3.webp',
+    zone: 'feet',
+    good: false,
+    why: 'মারাত্মক ঝুঁকি! স্টিল-টো বুটের ভেতরে ধাতুর পাত থাকে—লাইভ লাইনের কাছে তা মারাত্মক শর্ট ও শক ডেকে আনে। কম্পোজিট ডাই-ইলেকট্রিক বুট আবশ্যক!',
+  ),
+  _Piece(
+    id: 'boot',
+    asset: 'assets/duty_slip/dress/tray_boot.webp',
+    zone: 'feet',
+    good: true,
+    why: '',
+  ),
+];
+
+class _KadaPainter extends CustomPainter {
+  const _KadaPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width * 0.5, size.height * 0.5);
+    final r = math.min(size.width, size.height) * 0.40;
+    final stroke = Paint()
+      ..shader = const SweepGradient(
+        colors: [
+          Color(0xFFFFFBE8),
+          Color(0xFFE5C07B),
+          Color(0xFF996515),
+          Color(0xFFD4AF37),
+          Color(0xFFFFFBE8),
+        ],
+      ).createShader(Rect.fromCircle(center: c, radius: r))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.6
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(c, r, stroke);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _MalaPainter extends CustomPainter {
+  const _MalaPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final path = Path()
+      ..moveTo(w * 0.15, 0)
+      ..cubicTo(w * 0.20, h * 0.85, w * 0.80, h * 0.85, w * 0.85, 0);
+
+    final stroke = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFFD4AF37),
+          Color(0xFFFFF8DC),
+          Color(0xFFA67C00),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, w, h))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(path, stroke);
+
+    final pC = Offset(w * 0.5, h * 0.78);
+    final pPaint = Paint()
+      ..color = const Color(0xFFD4AF37)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(pC, 3.8, pPaint);
+    canvas.drawCircle(pC, 3.8, Paint()..color = const Color(0xFF4A2F08)..style = PaintingStyle.stroke..strokeWidth = 1.0);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+const _shoeBlock = 'আরে আরে, ভুল হচ্ছে! জুতো পরা অবস্থায় প্যান্ট ঠিকমতো পরা সম্ভব নয়। আগে প্যান্টের কাজ শেষ করুন।';
 
 const _headPieces = <_Piece>[
   _Piece(id: 'gamcha', asset: 'assets/duty_slip/dress/tray_gamcha.webp', zone: 'head', good: true, why: ''),
-  _Piece(id: 'road', asset: 'assets/duty_slip/dress/tray_road_helmet.webp', zone: 'head', good: false, why: 'এটা রাস্তার হেলমেট। বিদ্যুতের কাজে এটা বসবে না। শক আটকায় না।'),
-  _Piece(id: 'vent', asset: 'assets/duty_slip/dress/tray_vent_helmet.webp', zone: 'head', good: false, why: 'এই হেলমেটে বাতাসের ফুটো আছে। ফুটো দিয়ে জল ঢোকে, শকও আটকায় না। বিদ্যুতের হেলমেট বন্ধ থাকে, চিবুকে ফিতা বাঁধা থাকে।'),
+  _Piece(id: 'road', asset: 'assets/duty_slip/dress/tray_road_helmet.webp', zone: 'head', good: false, why: 'না, একদম নয়! এটি ট্রাফিকের হেলমেট, হাই-ভোল্টেজ শক আটকানোর ক্ষমতা নেই।'),
+  _Piece(id: 'vent', asset: 'assets/duty_slip/dress/tray_vent_helmet.webp', zone: 'head', good: false, why: 'বিপজ্জনক! বাতাসের ফুটো দিয়ে লাইনের স্পার্ক বা জল ঢুকলে মাথায় বিদ্যুৎ নামবে। নিশ্ছিদ্র শেল প্রয়োজন।'),
   _Piece(id: 'helmet', asset: 'assets/duty_slip/dress/tray_elec_helmet.webp', zone: 'head', good: true, why: ''),
 ];
 
-const _gamchaBlock = 'গামছার ওপর হেলমেট বসে না। আগে গামছা নামান।';
-const _gamchaNoSave = 'এটা বিপদ থেকে বাঁচাবে না। গামছা নয়, বিদ্যুতের হেলমেট পরুন।';
+const _gamchaBlock = 'একটু দাঁড়ান! মাথায় কাপড় থাকলে হেলমেট বসবে না, একটু ঝাঁকুনিতেই পড়ে যাবে।';
+const _gamchaNoSave = 'না দাদা! গামছা কোনো নিরাপত্তা সরঞ্জাম নয়, এটি বিদ্যুৎস্পর্শ আটকাতে পারে না।';
 
 const _handPieces = <_Piece>[
-  _Piece(id: 'cotton', asset: 'assets/duty_slip/dress/tray_cotton_gloves.webp', zone: 'hands', good: false, why: 'সুতির গ্লাভস শক আটকায় না। বিদ্যুতের রাবার গ্লাভস পরুন।'),
-  _Piece(id: 'wet', asset: 'assets/duty_slip/dress/tray_wet_gloves.webp', zone: 'hands', good: false, why: 'ভেজা গ্লাভসে জল আছে। জল বিদ্যুৎ বয়ে আনে। শুকনো বিদ্যুতের গ্লাভস পরুন।'),
-  _Piece(id: 'hole', asset: 'assets/duty_slip/dress/tray_hole_gloves.webp', zone: 'hands', good: false, why: 'এই গ্লাভসে ছোট ছিদ্র আছে। ছিদ্র দিয়ে শক ঢোকে। ছেঁড়া গ্লাভস পরবেন না।'),
-  _Piece(id: 'bike', asset: 'assets/duty_slip/dress/tray_bike_gloves.webp', zone: 'hands', good: false, why: 'এটা বাইকের গ্লাভস। বিদ্যুতের কাজে এটা বসবে না। শক আটকায় না।'),
+  _Piece(id: 'cotton', asset: 'assets/duty_slip/dress/tray_cotton_gloves.webp', zone: 'hands', good: false, why: 'সাবধান! সুতির কাপড়ে কোনো ইনসুলেশন থাকে না, বিদ্যুৎ স্পর্শ লাগলেই মারাত্মক শক লাগবে।'),
+  _Piece(id: 'wet', asset: 'assets/duty_slip/dress/tray_wet_gloves.webp', zone: 'hands', good: false, why: 'থামুন! গ্লাভসে সামান্য আর্দ্রতা বা জল থাকলে তা দিয়ে বিদ্যুৎ শরীরে নেমে আসবে। সম্পূর্ণ শুকনো গ্লাভস আবশ্যক।'),
+  _Piece(id: 'hole', asset: 'assets/duty_slip/dress/tray_hole_gloves.webp', zone: 'hands', good: false, why: 'বিপজ্জনক! সামান্য সূক্ষ্ম ছিদ্র বা পিনহোল থাকলেও হাই-ভোল্টেজ বিদ্যুৎ সেখান দিয়েই আঘাত করবে। কাজ শুরুর আগে হাওয়া ভরে পরীক্ষা জরুরি।'),
+  _Piece(id: 'bike', asset: 'assets/duty_slip/dress/tray_bike_gloves.webp', zone: 'hands', good: false, why: 'না, মারাত্মক ঝুঁকি! সাধারণ বাইকের গ্লাভসে বিদ্যুৎ অপরিবাহী স্তর থাকে না, এতে বিদ্যুৎ আটকাবে না।'),
   _Piece(id: 'rubber', asset: 'assets/duty_slip/dress/tray_rubber_gloves.webp', zone: 'hands', good: true, why: ''),
 ];
 
-const _gloveBlock = 'গ্লাভস পরা থাকলে বাকল বন্ধ করবেন কীভাবে? আগে গ্লাভস খুলুন।';
+const _gloveBlock = 'থামুন! মোটা গ্লাভস পরে হারনেসের বাকল বা ডি-রিং ঠিকমতো ধরা ও লক করা যায় না। আগে গ্লাভস খুলে নিন।';
 const _sleeveBlock = 'গ্লাভস পরা থাকলে হাতা পরবেন কীভাবে? আগে গ্লাভস খুলুন।';
 const _laceBlock = 'গ্লাভস পরা থাকলে জুতোর ফিতে বাঁধবেন কীভাবে? আগে গ্লাভস খুলুন।';
 const _harnessClothes = 'শার্ট আর প্যান্ট না পরলে হারনেস বসে না।';
@@ -147,7 +292,7 @@ const _pullFit = _Piece(id: 'pullFit', asset: _strapAsset, zone: 'fitPull', good
 
 const _harnessPieces = <_Piece>[
   _Piece(id: 'rubber', asset: 'assets/duty_slip/dress/tray_rubber_gloves.webp', zone: 'hands', good: true, why: ''),
-  _Piece(id: 'belt', asset: 'assets/duty_slip/dress/tray_waist_belt.webp', zone: 'torso', good: false, why: 'কোমরের বেল্ট পড়ে গেলে বাঁচায় না। ফুল বডি হারনেস পরুন।'),
+  _Piece(id: 'belt', asset: 'assets/duty_slip/dress/tray_waist_belt.webp', zone: 'torso', good: false, why: 'সাবধান! কোমরের সাধারণ বেল্ট পতনজনিত অবস্থায় মেরুদণ্ড ভেঙে দিতে পারে। ওপরের কাজের জন্য ফুল বডি হারনেস আবশ্যক।'),
   _Piece(id: 'harness', asset: 'assets/duty_slip/dress/tray_harness.webp', zone: 'torso', good: true, why: ''),
 ];
 
@@ -181,6 +326,7 @@ class _Spot {
 }
 
 const _spotHead = _Spot('head', 0.39, 0.03, 0.22, 0.16);
+const _spotNeck = _Spot('neck', 0.43, 0.16, 0.14, 0.08);
 const _spotChest = _Spot('torso', 0.40, 0.22, 0.20, 0.14);
 const _spotTorso = _Spot('torso', 0.40, 0.22, 0.20, 0.28);
 const _spotBuckle = _Spot('harness', 0.42, 0.36, 0.16, 0.14);
@@ -247,11 +393,11 @@ class _GuideRow {
   final String miss;
 }
 
-const _earlyStep = 'এই ধাপ এখনো না। আগেরটা আগে।';
-const _tapStep = 'এই ধাপ তালিকায় টিপুন।';
+const _earlyStep = 'সাবধান! হারনেসের সুরক্ষায় ধারাবাহিকতা রক্ষা জরুরি। আগের ধাপটি আগে সম্পন্ন করুন।';
+const _tapStep = 'তালিকার সঠিক ধাপটি নির্বাচন করে এগিয়ে চলুন।';
 
 const _guideRows = <_GuideRow>[
-  _GuideRow('রিং ধরুন', 'head_helmet', 'gPalm', 'harness', 'পিঠের রিং হাতের কাছে তুলুন।'),
+  _GuideRow('রিং ধরুন', 'head_helmet', 'gPalm', 'harness', 'পিঠের রিং ধরে হাতের কাছে তুলুন।'),
   _GuideRow('কাঁধে দিন', 'pose_hold', 'gShoulder', 'harness', 'ফিতা দুই কাঁধে দিন।'),
   _GuideRow('বুক আটকান', 'pose_shoulder', 'gChest', 'harness', 'বুকের ফিতা বুকের বাকলে দিন।'),
   _GuideRow('পা বাঁধুন', 'pose_chest', 'gThigh', 'harness', 'পায়ের ফিতা উরুর বাকলে দিন।'),
@@ -479,6 +625,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   var _coachFace = DsCoachMood.talk;
   var _coachSay = '';
   Timer? _coachTimer;
+  var _speakToken = 0;
   var _guide = 0;
   var _rowOk = false;
   var _rowBad = false;
@@ -490,6 +637,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   var _linking = false;
   var _chosen = '';
   final _shelfOrder = <String>[];
+  _Piece? _inspectedShoe;
 
   @override
   void initState() {
@@ -500,20 +648,23 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _rowFx = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
     if (_headLesson) _on.add('gamcha');
     if (_harnessLesson) _on.add('rubber');
+    if (_clothingProLesson) {
+      _on.add('bala');
+      _on.add('mala');
+    }
     _mixShelf(sound: false);
     widget.engine.beginDress();
     ZlFx.holdClock();
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
     final hello = switch (widget.engine.level.number) {
-      2 => 'মাথার জিনিস টেনে ছোঁয়ান।',
-      3 => 'হাতের গ্লাভস টেনে ছোঁয়ান।',
-      4 => 'গ্লাভস খুলে হারনেস একবার হাতে ছোঁয়ান। তারপর তালিকায় টিপুন।',
+      2 => 'লাইনম্যানের সবচেয়ে বড় সুরক্ষা তার হেলমেট। সঠিক সুরক্ষাকবচটি বেছে নিন।',
+      3 => 'হাতে গ্লাভস পরার আগে ত্রুটি ও ইনসুলেশন যাচাই করে সঠিক সুরক্ষাকবচ বেছে নিন।',
+      4 => 'উচ্চতায় ওঠায় হারনেসই শেষ ভরসা। গ্লাভস সরিয়ে হারনেস ধরুন এবং ধাপে ধাপে বাঁধুন।',
       5 => 'সব জিনিস টেনে ঠিক জায়গায় ছোঁয়ান।',
-      _ => 'পোশাক টেনে শরীরে ছোঁয়ান।',
+      6 => 'কাজে নামার আগে শরীর আর সরঞ্জাম ভালো করে পরখ করুন—কোনো লুকোনো বিপদ যেন বিদ্যুৎ না টানে!',
+      _ => 'কাজে নামার আগে ঠিকঠাক পোশাক বেছে নিন—ঝুঁকি এড়িয়ে সঠিকটা পরান।',
     };
-    _coachSay = hello;
-    unawaited(widget.onSpeak(hello));
-    _holdCoach(const Duration(seconds: 5));
+    _speakCoach(hello, mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1400));
   }
 
   @override
@@ -533,6 +684,8 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   bool get _handsLesson => widget.engine.level.number == 3;
 
   bool get _harnessLesson => widget.engine.level.number == 4;
+
+  bool get _clothingProLesson => widget.engine.level.number == 6;
 
   bool get _showFingers => _harnessLesson && (_step == _HStep.fitL || _step == _HStep.fitR);
 
@@ -555,6 +708,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         3 => _handPieces,
         4 => _harnessKit,
         5 => _fullKit,
+        6 => _proClothingPieces,
         _ => _pieces,
       };
 
@@ -586,6 +740,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
             _on.contains('shield') &&
             _on.contains('rubber') &&
             !_on.contains('gamcha'),
+        6 => _on.contains('shirt') &&
+            _on.contains('pant') &&
+            _on.contains('boot') &&
+            !_on.contains('bala') &&
+            !_on.contains('mala'),
         _ => _on.contains('shirt') && _on.contains('pant') && _on.contains('boot'),
       };
 
@@ -671,6 +830,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   void _clearMark() {
     _markTimer?.cancel();
+    _coachTimer?.cancel();
     _mark = null;
     _ask = false;
     if (!_finishing) _coachFace = DsCoachMood.ready;
@@ -684,6 +844,25 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     });
   }
 
+  void _speakCoach(
+    String line, {
+    DsCoachMood mood = DsCoachMood.talk,
+    Duration buffer = const Duration(milliseconds: 1000),
+  }) {
+    _coachTimer?.cancel();
+    _markTimer?.cancel();
+    _mark = null;
+    _ask = false;
+    _coachFace = mood;
+    _coachSay = line;
+    final token = ++_speakToken;
+    setState(() {});
+    widget.onSpeak(line).whenComplete(() {
+      if (!mounted || token != _speakToken || _finishing) return;
+      _holdCoach(buffer);
+    });
+  }
+
   void _showCoach(DsCoachMood mood, String line, Duration hold) {
     _coachTimer?.cancel();
     setState(() {
@@ -691,16 +870,6 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _coachSay = line;
     });
     if (mood != DsCoachMood.ready && !_finishing) _holdCoach(hold);
-  }
-
-  void _armMark(_Mark mark) {
-    _markTimer?.cancel();
-    _mark = mark;
-    _ask = false;
-    _markTimer = Timer(const Duration(seconds: 3), () {
-      if (!mounted || _ask) return;
-      setState(_clearMark);
-    });
   }
 
   void _mixShelf({required bool sound}) {
@@ -721,15 +890,26 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     widget.engine.dressWrong();
     widget.onDelta(-5, global);
     _shake.forward(from: 0);
+    _mixShelf(sound: true);
+    unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: widget.muted));
+    HapticFeedback.heavyImpact();
+
     _coachTimer?.cancel();
+    _markTimer?.cancel();
+    _mark = _Mark(zone, why, piece.asset);
+    _ask = false;
     _coachFace = DsCoachMood.oops;
     _coachSay = why;
-    _mixShelf(sound: true);
-    setState(() => _armMark(_Mark(zone, why, piece.asset)));
-    _holdCoach(const Duration(seconds: 3));
-    unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: widget.muted));
-    unawaited(widget.onSpeak(why));
-    HapticFeedback.heavyImpact();
+    final token = ++_speakToken;
+    setState(() {});
+
+    widget.onSpeak(why).whenComplete(() {
+      if (!mounted || token != _speakToken || _ask) return;
+      _markTimer = Timer(const Duration(milliseconds: 1400), () {
+        if (!mounted || token != _speakToken || _ask) return;
+        setState(_clearMark);
+      });
+    });
   }
 
   bool _wearOrder(_Piece piece, Offset global) {
@@ -766,8 +946,18 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     widget.engine.dressRight();
     widget.onDelta(5, global);
     unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.5, muted: widget.muted));
-    HapticFeedback.mediumImpact();
-    if (!_finishing) _showCoach(DsCoachMood.glad, 'ঠিক আছে।', const Duration(milliseconds: 900));
+    final okSay = switch (widget.engine.level.number) {
+      1 || 2 || 3 || 4 => switch (math.Random().nextInt(4)) {
+          0 => 'বাহবা! একদম ঠিক।',
+          1 => 'বাঃ, একদম মানানসই!',
+          2 => 'সঠিক নির্বাচন, এগিয়ে চলুন।',
+          _ => 'চমৎকার! এটা ঠিক বসেছে।',
+        },
+      _ => 'ঠিক আছে।',
+    };
+    if (!_finishing) {
+      _speakCoach(okSay, mood: DsCoachMood.glad, buffer: const Duration(milliseconds: 800));
+    }
   }
 
   Future<void> _doneLesson(String line) async {
@@ -1136,7 +1326,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       if (!glovesOn) _step = _HStep.lift;
     });
     _point(global);
-    unawaited(widget.onSpeak(glovesOn ? 'হারনেস সামনে আছে। আগে গ্লাভস খুলুন।' : 'পিঠের রিং ধরে হাতের কাছে তুলুন।'));
+    _speakCoach(glovesOn ? 'হারনেস সামনে আছে। আগে গ্লাভস খুলুন।' : 'পিঠের রিং ধরে হাতের কাছে তুলুন।', mood: DsCoachMood.talk);
   }
 
   void _guideDrop(_Spot spot, _Piece piece, Offset global) {
@@ -1185,11 +1375,10 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         _rowOk = false;
       });
       if (next == 6) {
-        const ring = 'পিঠে ডি রিংয়ের পজিশন চেক করুন।';
-        _showCoach(DsCoachMood.talk, ring, const Duration(seconds: 4));
-        unawaited(widget.onSpeak(ring));
+        const ring = 'পিঠের ডি-রিং যেন কাঁধের ব্লেডের ঠিক মাঝখানে থাকে, অবস্থান যাচাই করুন।';
+        _speakCoach(ring, mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1400));
       }
-      if (next >= _guideRows.length) _doneLesson('হারনেস ঠিক আছে। নড়াচড়া করা যায়।');
+      if (next >= _guideRows.length) _doneLesson('হারনেসের সমস্ত বাকল যথাযথ লক হয়েছে এবং দুই আঙুলের ছাড় ঠিক আছে। উচ্চতায় কাজের সুরক্ষা নিশ্চিত।');
     });
   }
 
@@ -1232,6 +1421,16 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _fail(piece.zone, piece.why, piece, global);
       return;
     }
+    if (_clothingProLesson && piece.id == 'shirt' && (_on.contains('bala') || _on.contains('mala'))) {
+      _shake.forward(from: 0);
+      final what = _on.contains('bala') && _on.contains('mala')
+          ? 'হাতের বালা ও গলার মালা'
+          : _on.contains('bala')
+              ? 'হাতের বালা'
+              : 'গলার মালা';
+      _fail('torso', 'পোশাকের নিচে ধাতব জিনিস থাকলে তা সরাসরি বিদ্যুৎ শরীরে টানে। আগে $what খুলে নিরাপদ বাক্সে রাখুন!', piece, global);
+      return;
+    }
     if (piece.id == 'pant' && _on.contains('boot')) {
       _fail('legs', _shoeBlock, piece, global);
       return;
@@ -1253,10 +1452,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     if (score) _point(global);
     if (!_ready) return;
     _doneLesson(switch (widget.engine.level.number) {
-      2 => 'ঠিক আছে। এভাবেই হেলমেট পরুন।',
-      3 => 'ঠিক আছে। এভাবেই গ্লাভস পরুন।',
+      2 => 'হেলমেট যথাযথভাবে লক করা হয়েছে। মাথার সুরক্ষা নিশ্চিত।',
+      3 => 'হাতের গ্লাভস পরা সম্পন্ন হয়েছে। হাত এখন কাজের জন্য প্রস্তুত।',
       5 => 'ঠিক আছে। এভাবেই পুরো কিট পরুন।',
-      _ => 'ঠিক আছে। এভাবেই কাজে যান।',
+      6 => 'চমৎকার পর্যবেক্ষণ! ধাতুমুক্ত শরীর ও ডাই-ইলেকট্রিক বুটে আপনি সম্পূর্ণ সুরক্ষিত।',
+      _ => 'পোশাক নির্বাচন সম্পূর্ণ। শরীর এখন কাজের জন্য সুরক্ষিত।',
     });
   }
 
@@ -1292,6 +1492,10 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _clearMark();
     });
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.3, muted: widget.muted));
+    if (_headLesson && piece.id == 'gamcha') {
+      const line = 'মাথা উন্মুক্ত হয়েছে। এবার উপযুক্ত ইলেকট্রিক্যাল হেলমেটটি পরিয়ে দিন।';
+      _speakCoach(line, mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1200));
+    }
   }
 
   void _openAsk() {
@@ -1377,6 +1581,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
             ],
           ),
           if (_ask && _mark != null) _modal(_mark!.why),
+          if (_inspectedShoe != null) _shoeInspectModal(_inspectedShoe!),
         ],
       ),
     );
@@ -1395,6 +1600,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       2 => const [_spotHead],
       3 => const [_spotHandL, _spotHandR],
       5 => const [_spotHead, _spotChest, _spotBuckle, _spotHandL, _spotHandR, _spotLegs, _spotFeet],
+      6 => const [_spotNeck, _spotHandL, _spotTorso, _spotLegs, _spotFeet],
       _ => const [_spotTorso, _spotLegs, _spotFeet],
     };
   }
@@ -1422,6 +1628,20 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                     fit: StackFit.expand,
                     children: [
                       Image.asset('assets/duty_slip/dress/$_figure.webp', fit: BoxFit.fill),
+                      if (_clothingProLesson && _on.contains('bala'))
+                        Positioned.fromRect(
+                          rect: _spotHandL.of(image),
+                          child: const IgnorePointer(
+                            child: CustomPaint(painter: _KadaPainter()),
+                          ),
+                        ),
+                      if (_clothingProLesson && _on.contains('mala'))
+                        Positioned.fromRect(
+                          rect: _spotNeck.of(image),
+                          child: const IgnorePointer(
+                            child: CustomPaint(painter: _MalaPainter()),
+                          ),
+                        ),
                       for (final s in spots) _handle(s.spot, s.rect),
                       for (final s in spots) _reach(s.spot, image),
                       for (final s in spots)
@@ -1748,6 +1968,24 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   void _tapMark(_Spot spot, Rect rect) {
+    if (_clothingProLesson && spot.zone == 'neck' && _on.contains('mala')) {
+      setState(() {
+        _on.remove('mala');
+        _clearMark();
+      });
+      unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
+      _speakCoach('গলার মেটাল মালা খুলে নিরাপদ বাক্সে রাখলেন।', mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1000));
+      return;
+    }
+    if (_clothingProLesson && spot.zone == 'hands' && _on.contains('bala')) {
+      setState(() {
+        _on.remove('bala');
+        _clearMark();
+      });
+      unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
+      _speakCoach('হাতের বালা খুলে নিরাপদ বাক্সে রাখলেন।', mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1000));
+      return;
+    }
     if (_finishing || _linking || !_harnessLesson || !_on.contains('harness')) return;
     final zone = spot.zone;
     if (_isStrap(zone) || (zone == 'ring' && _canTug)) {
@@ -2054,19 +2292,223 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   Widget _token(_Piece piece) {
-    return Draggable<_Piece>(
-      data: piece,
-      onDragStarted: () => setState(() {
-        _dragZone = piece.id == 'fingers' ? (_fingerL ? 'gapR' : 'gapL') : piece.zone;
-        _clearMark();
-      }),
-      onDragEnd: (_) => setState(() => _dragZone = ''),
-      feedback: Material(
-        color: Colors.transparent,
-        child: SizedBox(width: 84, height: 84, child: Image.asset(piece.asset, fit: BoxFit.contain)),
+    final isInspectable = _clothingProLesson && (piece.id == 'boot' || piece.id == 'steelboot');
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Draggable<_Piece>(
+          data: piece,
+          onDragStarted: () => setState(() {
+            _dragZone = piece.id == 'fingers' ? (_fingerL ? 'gapR' : 'gapL') : piece.zone;
+            _clearMark();
+          }),
+          onDragEnd: (_) => setState(() => _dragZone = ''),
+          feedback: Material(
+            color: Colors.transparent,
+            child: SizedBox(width: 84, height: 84, child: Image.asset(piece.asset, fit: BoxFit.contain)),
+          ),
+          childWhenDragging: Opacity(opacity: 0.25, child: _thumb(piece)),
+          child: _thumb(piece),
+        ),
+        if (isInspectable)
+          Positioned(
+            right: -2,
+            top: -2,
+            child: GestureDetector(
+              onTap: () => setState(() => _inspectedShoe = piece),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFC9A227),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x66000000), blurRadius: 4, offset: Offset(0, 1)),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.search_rounded, size: 11, color: Color(0xFF1F140A)),
+                    const SizedBox(width: 2),
+                    Text('ভিতর', style: zlText(9, weight: FontWeight.w900, color: const Color(0xFF1F140A))),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _shoeInspectModal(_Piece shoe) {
+    final isSteel = shoe.id == 'steelboot';
+    return Positioned.fill(
+      child: ColoredBox(
+        color: const Color(0xB3000000),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            child: Material(
+              color: const Color(0xFF1B140E),
+              borderRadius: BorderRadius.circular(22),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: isSteel ? const Color(0xFFE53935) : const Color(0xFF43A047),
+                    width: 2.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isSteel ? const Color(0x66E53935) : const Color(0x6643A047),
+                      blurRadius: 24,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          isSteel ? Icons.dangerous_rounded : Icons.verified_user_rounded,
+                          color: isSteel ? const Color(0xFFE53935) : const Color(0xFF66BB6A),
+                          size: 26,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            isSteel ? 'স্টিল-টো বুটের ভেতরের পরীক্ষা' : 'ডাই-ইলেকট্রিক বুটের ভেতরের পরীক্ষা',
+                            style: zlText(16, weight: FontWeight.w900, color: const Color(0xFFF6E7B0)),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => setState(() => _inspectedShoe = null),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(color: Color(0x33FFFFFF), shape: BoxShape.circle),
+                            child: const Icon(Icons.close_rounded, size: 18, color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      height: 110,
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0x22FFFFFF),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Image.asset(shoe.asset, fit: BoxFit.contain),
+                          Positioned(
+                            right: 18,
+                            bottom: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isSteel ? const Color(0xCCE53935) : const Color(0xCC2E7D32),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(isSteel ? Icons.bolt_rounded : Icons.shield_rounded, size: 14, color: Colors.white),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isSteel ? 'মেটাল ক্যাপ' : 'কম্পোজিট ফাইবার',
+                                    style: zlText(11, weight: FontWeight.w900, color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isSteel ? const Color(0x22E53935) : const Color(0x2243A047),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSteel ? const Color(0x55E53935) : const Color(0x5543A047),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                isSteel ? 'ভিতরের অংশ: শক্ত স্টিলের পাত' : 'ভিতরের অংশ: নন-মেটালিক কম্পোজিট',
+                                style: zlText(13, weight: FontWeight.w800, color: isSteel ? const Color(0xFFFF8A80) : const Color(0xFFA5D6A7)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            isSteel
+                                ? 'এই জুতোর ভেতরে ধাতব স্টিল টো ক্যাপ রয়েছে। এটি লাইভ লাইনে কাজ করার সময় পা মাটিতে রাখলেই পুরো বিদ্যুৎ শরীরের ভেতর দিয়ে মাটিতে টেনে প্রাণঘাতী শক সৃষ্টি করবে।'
+                                : 'এই জুতোর ভেতরে কোনো ধাতু নেই। নন-মেটালিক ফাইবার টো এবং ১৪,০০০ ভোল্ট প্রতিরোধী ডাই-ইলেকট্রিক রাবার সোল বিদ্যুৎকে মাটিতে নামতে সম্পূর্ণ বাধা দেয়।',
+                            style: zlText(12, weight: FontWeight.w600, height: 1.45, color: const Color(0xFFDDD0BE)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        if (isSteel)
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFC62828),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () {
+                                setState(() => _inspectedShoe = null);
+                                _speakCoach('সঠিক নজর! স্টিল-টো বুট বাতিল করা হলো—এটি লাইনে বিদ্যুৎ টানে।', mood: DsCoachMood.talk);
+                              },
+                              icon: const Icon(Icons.block_rounded, size: 18),
+                              label: Text('বাতিল করুন (বিপজ্জনক)', style: zlText(13, weight: FontWeight.w800, color: Colors.white)),
+                            ),
+                          )
+                        else
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2E7D32),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () {
+                                setState(() => _inspectedShoe = null);
+                                _wear(shoe, Offset.zero);
+                              },
+                              icon: const Icon(Icons.check_circle_rounded, size: 18),
+                              label: Text('এই বুটটি পরুন (নিরাপদ)', style: zlText(13, weight: FontWeight.w800, color: Colors.white)),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
-      childWhenDragging: Opacity(opacity: 0.25, child: _thumb(piece)),
-      child: _thumb(piece),
     );
   }
 

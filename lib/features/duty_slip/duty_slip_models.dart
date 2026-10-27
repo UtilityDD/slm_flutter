@@ -238,8 +238,11 @@ class DsPack {
         calls: [for (final c in j['calls'] as List? ?? const []) DsCall.fromJson(c as Map<String, dynamic>)],
       );
 
+  static DsPack? _cached;
   static Future<DsPack> load() async {
+    if (_cached != null) return _cached!;
     final raw = await rootBundle.loadString('assets/data/duty_slip_job.json');
-    return DsPack.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    _cached = DsPack.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    return _cached!;
   }
 }

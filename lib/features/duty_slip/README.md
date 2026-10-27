@@ -1,6 +1,6 @@
 # Duty slip — মৃত্যুহীন পথ
 
-Night job. Home card **মৃত্যুহীন পথ** opens `DutySlipPage`. Pack: `assets/data/duty_slip_job.json`. Photos: `assets/duty_slip/`.
+Field duty companion. Home card **মৃত্যুহীন পথ** opens `DutySlipPage`. Pack: `assets/data/duty_slip_job.json`. Photos: `assets/duty_slip/`. Applicable for any field breakdown or maintenance job (day or night).
 
 Do not use PowerShell `Set-Content` on Bangla in this folder — it mojibakes. Edit in the IDE.
 
@@ -14,16 +14,19 @@ Set it **`false`** before a real release. Then only `unlocked` plates open, a pa
 
 | File | Role |
 |---|---|
-| `duty_slip_engine.dart` | 19-level specs, SAFE HOME deck, briefs, scoring, living rebuild, field night |
+| `duty_slip_engine.dart` | Level specs, SAFE HOME deck, briefs, scoring, living rebuild, field night |
 | `duty_slip_page.dart` | Cover, bamboo ladder, briefing, quiz, result medal, field docket |
-| `ds_dress_up.dart` | Levels 1–5: shelf, drag, harness checklist, coach |
+| `ds_dress_up.dart` | Levels 1–6 (Dress-Up & Dress-Up Pro): shelf, drag, harness checklist, coach |
 | `duty_slip_models.dart` | Plan items, sites, PTW/kit/match steps, pack loader |
+| `GAME_LEVELS_GUIDE.md` | Master 20-level developer guide (Tier 1 Foundational, Tier 2 Pro, Tier 3 Field Operations) |
 
 ## Flow
 
 `cover` → `road` (ladder) → briefing → `play` or field night → `result`.
 
-**1–5** are the dress game (`ds_dress_up.dart`), not the mantra cards. Intro: level name, the object picture under the title, character at the bottom-left saying the sentence. Play: drag onto the body. A miss is −5 and reshuffles the shelf. A right step is +5. On a pass the lineman glows, then the character springs into his place, and the score waits until the spoken line finishes. Back is on the intro only.
+**1–6** are the interactive dress game (`ds_dress_up.dart`):
+* Levels 1–5: Foundational PPE (পোশাক, মাথায় হেলমেট, হাতে গ্লাভস, হারনেস, পুরো কিট)
+* Level 6: পোশাক ও জুতো Pro (ধাতুর বালা-চেইন অপসারণ, স্টিল-টো ট্র্যাপ, ডাই-ইলেকট্রিক বুট ও খাঁটি সুতি পোশাক)
 
 | # | Name | Play |
 |---|---|---|
@@ -32,6 +35,7 @@ Set it **`false`** before a real release. Then only `unlocked` plates open, a pa
 | 3 | হাতে গ্লাভস | Rubber electrical gloves |
 | 4 | হারনেস | Gloves off, one drag into the hand, then the checklist. Last step: two fingers. Brown belt is the trap |
 | 5 | পুরো কিট | Shirt, pant, shoe, harness, helmet, shield, gloves. গামছা is refused |
+| 6 | পোশাক ও জুতো Pro | Metallic bracelet/chain starts on wrist and must come off first. Steel-toe boot is a fatal trap; certified dielectric boot + 100% cotton required |
 
 **6–8 briefing** is the SAFE HOME list (title, then body). **9–18 briefing** (job): different site photo (torn wire). Page 1 title **আসল কাজ**, lead **২৩ ধাপ। মাঠে তার ছিঁড়ে পড়ে আছে।**, caption **শুরু থেকে শেষ পর্যন্ত কাজের ধাপগুলো দেখে নিন।** Five tappable group plates (`dsJobGroups`). Tap a group → same **আসল কাজ** header, that group’s steps fill the list (no serials). Bottom ring turns back and returns to the five plates. Tap a step for why; the plate has prev / next (and swipe) to walk the group. Next → clean 23 list, still **আসল কাজ**. Next → full-page level hint (`dsJobHint`). Next starts the quiz.
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,16 +11,170 @@ import '../zero_loss/zero_loss_ui.dart';
 import 'ds_dress_up.dart';
 import 'duty_slip_engine.dart';
 import 'duty_slip_models.dart';
+import 'duty_slip_voice.dart';
 
 class DutySlipPage extends StatefulWidget {
   const DutySlipPage({super.key});
 
-  static Future<void> open(BuildContext context) => Navigator.of(context, rootNavigator: true).push(
-        MaterialPageRoute(builder: (_) => const DutySlipPage()),
+  static Future<void> open(BuildContext context, {Rect? sourceRect}) =>
+      Navigator.of(context, rootNavigator: true).push(
+        _DramaticGamePageRoute(
+          page: const DutySlipPage(),
+          sourceRect: sourceRect,
+        ),
       );
 
   @override
   State<DutySlipPage> createState() => _DutySlipPageState();
+}
+
+class _DramaticGamePageRoute extends PageRouteBuilder<void> {
+  final Widget page;
+  final Rect? sourceRect;
+
+  _DramaticGamePageRoute({required this.page, this.sourceRect})
+      : super(
+          pageBuilder: (context, animation, secondaryAnimation) => page,
+          transitionDuration: const Duration(milliseconds: 700),
+          reverseTransitionDuration: const Duration(milliseconds: 380),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return _DramaticPortalTransition(
+              animation: animation,
+              sourceRect: sourceRect,
+              child: child,
+            );
+          },
+        );
+}
+
+class _DramaticPortalTransition extends StatelessWidget {
+  final Animation<double> animation;
+  final Rect? sourceRect;
+  final Widget child;
+
+  const _DramaticPortalTransition({
+    required this.animation,
+    required this.sourceRect,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final center = sourceRect?.center ?? size.center(Offset.zero);
+
+    final dX = math.max(center.dx, size.width - center.dx);
+    final dY = math.max(center.dy, size.height - center.dy);
+    final maxRadius = math.sqrt(dX * dX + dY * dY) * 1.08;
+    final minRadius = sourceRect != null ? (sourceRect!.width / 2).clamp(16.0, 48.0) : 24.0;
+
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) {
+        final t = Curves.fastOutSlowIn.transform(animation.value);
+        final currentRadius = ui.lerpDouble(minRadius, maxRadius, t)!;
+        final scale = 0.88 + 0.12 * Curves.easeOutCubic.transform(animation.value);
+        final flashAlpha = (animation.value < 0.35
+                ? (animation.value / 0.35)
+                : ((1.0 - animation.value) / 0.65))
+            .clamp(0.0, 1.0);
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            ClipPath(
+              clipper: _PortalCircleClipper(center: center, radius: currentRadius),
+              child: Transform.scale(
+                scale: scale,
+                alignment: Alignment(
+                  (center.dx / size.width) * 2 - 1,
+                  (center.dy / size.height) * 2 - 1,
+                ),
+                child: child,
+              ),
+            ),
+            if (animation.value < 0.98)
+              IgnorePointer(
+                child: CustomPaint(
+                  painter: _PortalShockwavePainter(
+                    center: center,
+                    radius: currentRadius,
+                    progress: animation.value,
+                  ),
+                ),
+              ),
+            if (flashAlpha > 0.01)
+              IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(
+                        (center.dx / size.width) * 2 - 1,
+                        (center.dy / size.height) * 2 - 1,
+                      ),
+                      radius: 0.9,
+                      colors: [
+                        Color.fromRGBO(251, 191, 36, 0.42 * flashAlpha),
+                        Color.fromRGBO(245, 158, 11, 0.18 * flashAlpha),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PortalCircleClipper extends CustomClipper<Path> {
+  final Offset center;
+  final double radius;
+
+  const _PortalCircleClipper({required this.center, required this.radius});
+
+  @override
+  Path getClip(Size size) {
+    return Path()..addOval(Rect.fromCircle(center: center, radius: radius));
+  }
+
+  @override
+  bool shouldReclip(_PortalCircleClipper old) => old.center != center || old.radius != radius;
+}
+
+class _PortalShockwavePainter extends CustomPainter {
+  final Offset center;
+  final double radius;
+  final double progress;
+
+  const _PortalShockwavePainter({
+    required this.center,
+    required this.radius,
+    required this.progress,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final fade = (1.0 - progress).clamp(0.0, 1.0);
+    final haloPaint = Paint()
+      ..color = Color.fromRGBO(251, 191, 36, 0.72 * fade)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 7 + 12 * (1 - progress)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawCircle(center, radius, haloPaint);
+
+    final corePaint = Paint()
+      ..color = Color.fromRGBO(255, 247, 214, 0.96 * fade)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5;
+    canvas.drawCircle(center, radius, corePaint);
+  }
+
+  @override
+  bool shouldRepaint(_PortalShockwavePainter old) =>
+      old.radius != radius || old.progress != progress;
 }
 
 class _FlyBit {
@@ -53,6 +208,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   String? _ptwShift;
   var _ynKey = 0;
   var _clockHeld = false;
+  var _loadingWaitOpenRoad = false;
   var _flyId = 0;
   final _flies = <_FlyBit>[];
 
@@ -73,6 +229,11 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   Future<void> _boot() async {
     final pack = await DsPack.load();
     final engine = DutySlipEngine(pack);
+    await engine.loadPersistedState();
+    if (_loadingWaitOpenRoad) {
+      engine.openRoad();
+    }
+    if (!mounted) return;
     setState(() {
       _engine = engine;
       _loading = false;
@@ -89,7 +250,10 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
 
   void _openRoad() {
     final e = _engine;
-    if (e == null) return;
+    if (e == null) {
+      _loadingWaitOpenRoad = true;
+      return;
+    }
     e.openRoad();
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: _muted));
     HapticFeedback.mediumImpact();
@@ -107,6 +271,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _backToRoad() {
     final e = _engine;
     if (e == null) return;
+    DsVoice.stop();
     _tts.stop();
     e.backToRoad();
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: _muted));
@@ -125,6 +290,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _openDress() {
     final e = _engine;
     if (e == null || !e.showingDressIntro) return;
+    DsVoice.stop();
     _tts.stop();
     e.openDress();
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.45, muted: _muted));
@@ -135,6 +301,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _startLevel() {
     final e = _engine;
     if (e == null || !e.listing) return;
+    DsVoice.stop();
     _tts.stop();
     e.startLevelPlay();
     if (e.playing) {
@@ -182,6 +349,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     _clock?.cancel();
     _jobTick.dispose();
     _shake.dispose();
+    DsVoice.stop();
     _tts.stop();
     if (_clockHeld) ZlFx.releaseClock();
     ZlFx.stopClock();
@@ -201,7 +369,11 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
 
   Future<void> _speak(String text) async {
     if (_muted || text.trim().isEmpty) return;
-    await _tts.speakAwait(_engine?.fill(text) ?? text, rate: 0.42);
+    final clean = _engine?.fill(text) ?? text;
+    final played = await DsVoice.play(clean, muted: _muted);
+    if (!played) {
+      await _tts.speakAwait(clean, rate: 0.42);
+    }
   }
 
   void _loadCard({required bool speak}) {
@@ -384,9 +556,38 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     if (_loading || _engine == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: ZlColors.bg,
-        body: Center(child: CircularProgressIndicator(color: ZlColors.amber)),
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              'assets/duty_slip/duty_fault_slip.jpg',
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => const ColoredBox(color: ZlColors.bg),
+            ),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x77000000), Color(0xDD000000)],
+                ),
+              ),
+            ),
+            SafeArea(
+              child: _CoverBoard(
+                onOpen: () {
+                  if (_engine != null) {
+                    _openRoad();
+                  } else {
+                    _loadingWaitOpenRoad = true;
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       );
     }
     final e = _engine!;
@@ -940,12 +1141,16 @@ class _InkField extends StatelessWidget {
   }
 }
 
-String _bnNum(int n) => '$n';
-
-String _bnCount(int n) {
+String _bnNum(int n) {
+  if (n < 0) return '-${_bnNum(-n)}';
   const d = '০১২৩৪৫৬৭৮৯';
-  return n.toString().split('').map((ch) => d[int.parse(ch)]).join();
+  return n.toString().split('').map((ch) {
+    final idx = int.tryParse(ch);
+    return idx != null ? d[idx] : ch;
+  }).join();
 }
+
+String _bnCount(int n) => _bnNum(n);
 
 String _groupMark(DsJobGroup g) => '${g.title}  ·  ${_bnCount(g.count)} ধাপ';
 
@@ -1014,7 +1219,533 @@ class _PlanBoard extends StatelessWidget {
       return _BriefBoard(engine: e, onNext: onStartLevel, onBack: onBackRoad, muted: muted, onSpeak: onSpeak);
     }
     if (e.playing) return _PlayBoard(engine: e, onPlan: onPlan);
-    return _ResultBoard(engine: e, onNext: onNextLevel, onRetry: onRetry, muted: muted);
+    return _ResultBoard(engine: e, onNext: onNextLevel, onRetry: onRetry, onBack: onBackRoad, muted: muted);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// জীবনের শিরস্ত্রাণ ও স্বর্ণবলয় (Lineman Safety Helmet with Golden Life Aureole)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _LifeHelmetAuraBadge extends StatelessWidget {
+  final double pulse;
+  final double size;
+  const _LifeHelmetAuraBadge({this.pulse = 1.0, this.size = 100});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _HelmetAuraPainter(pulse: pulse),
+        size: Size(size, size),
+      ),
+    );
+  }
+}
+
+class _HelmetAuraPainter extends CustomPainter {
+  final double pulse;
+  const _HelmetAuraPainter({required this.pulse});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final c = Offset(w / 2, h / 2);
+    final r = w / 2;
+
+    // 1. Outer Golden Aura Glow (স্বর্ণবলয় আভা)
+    canvas.drawCircle(
+      c,
+      r * 0.95,
+      Paint()
+        ..color = Color.fromRGBO(245, 158, 11, 0.35 * pulse)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16),
+    );
+
+    // 2. Unbroken Golden Life-Ring (স্বর্ণবলয় - জীবনের সুরক্ষা বৃত্ত)
+    final ringPaint = Paint()
+      ..shader = SweepGradient(
+        colors: const [
+          Color(0xFFFFFBE8),
+          Color(0xFFFBBF24),
+          Color(0xFFD97706),
+          Color(0xFF92400E),
+          Color(0xFFFDE68A),
+          Color(0xFFFFFBE8),
+        ],
+      ).createShader(Rect.fromCircle(center: c, radius: r * 0.88))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.8;
+    canvas.drawCircle(c, r * 0.88, ringPaint);
+
+    // Inner subtle gold wire ring
+    canvas.drawCircle(
+      c,
+      r * 0.80,
+      Paint()
+        ..color = const Color(0x66FDE68A)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0,
+    );
+
+    // 8 Golden Safety Beads along the circle (representing the 8 SAFE HOME steps)
+    for (var i = 0; i < 8; i++) {
+      final a = (i * math.pi * 2 / 8) - (math.pi / 2);
+      final bx = c.dx + math.cos(a) * (r * 0.88);
+      final by = c.dy + math.sin(a) * (r * 0.88);
+      canvas.drawCircle(Offset(bx, by), 2.2, Paint()..color = const Color(0xFFFFFBE8));
+    }
+
+    // 3. Inner Dark Disc Background (contrast base for the golden helmet)
+    canvas.drawCircle(
+      c,
+      r * 0.77,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0xFF3B1E05), Color(0xFF140A01)],
+        ).createShader(Rect.fromCircle(center: c, radius: r * 0.77)),
+    );
+
+    // 4. জীবনের শিরস্ত্রাণ (Lineman Electrical Safety Helmet with Chin-Strap)
+    final scale = w / 100.0;
+    final hc = c + Offset(0, -1.5 * scale);
+
+    // A. Helmet Dome (Aerodynamic 3D dome)
+    final dome = Path()
+      ..moveTo(hc.dx - 24 * scale, hc.dy + 6 * scale)
+      ..cubicTo(
+        hc.dx - 26 * scale, hc.dy - 16 * scale,
+        hc.dx - 14 * scale, hc.dy - 25 * scale,
+        hc.dx, hc.dy - 25 * scale,
+      )
+      ..cubicTo(
+        hc.dx + 14 * scale, hc.dy - 25 * scale,
+        hc.dx + 26 * scale, hc.dy - 16 * scale,
+        hc.dx + 24 * scale, hc.dy + 6 * scale,
+      )
+      ..close();
+
+    final domeRect = Rect.fromCircle(center: hc, radius: 26 * scale);
+    canvas.drawPath(
+      dome,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: const [
+            Color(0xFFFFFBE8),
+            Color(0xFFFBBF24),
+            Color(0xFFF59E0B),
+            Color(0xFFD97706),
+            Color(0xFF92400E),
+          ],
+          stops: const [0.0, 0.25, 0.55, 0.80, 1.0],
+        ).createShader(domeRect),
+    );
+
+    // B. Central Impact-Deflection Ridge (মাঝের স্ট্রাকচারাল রিজ)
+    final ridge = Path()
+      ..moveTo(hc.dx - 2.5 * scale, hc.dy + 6 * scale)
+      ..lineTo(hc.dx - 1.5 * scale, hc.dy - 25 * scale)
+      ..lineTo(hc.dx + 1.5 * scale, hc.dy - 25 * scale)
+      ..lineTo(hc.dx + 2.5 * scale, hc.dy + 6 * scale)
+      ..close();
+    canvas.drawPath(ridge, Paint()..color = const Color(0x66FFFFFF));
+
+    // C. Wide Safety Brim (নিরাপত্তা সান-পিক কার্ভ)
+    final brim = Path()
+      ..moveTo(hc.dx - 29 * scale, hc.dy + 6 * scale)
+      ..quadraticBezierTo(hc.dx, hc.dy + 14 * scale, hc.dx + 29 * scale, hc.dy + 6 * scale)
+      ..quadraticBezierTo(hc.dx, hc.dy + 9 * scale, hc.dx - 29 * scale, hc.dy + 6 * scale)
+      ..close();
+    canvas.drawPath(
+      brim,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: const [Color(0xFFD97706), Color(0xFFFFFBE8), Color(0xFFD97706)],
+        ).createShader(Rect.fromLTWH(hc.dx - 29 * scale, hc.dy + 5 * scale, 58 * scale, 10 * scale)),
+    );
+
+    // Under-brim dark shadow
+    final underBrim = Path()
+      ..moveTo(hc.dx - 25 * scale, hc.dy + 8 * scale)
+      ..quadraticBezierTo(hc.dx, hc.dy + 13 * scale, hc.dx + 25 * scale, hc.dy + 8 * scale)
+      ..lineTo(hc.dx + 24 * scale, hc.dy + 10 * scale)
+      ..quadraticBezierTo(hc.dx, hc.dy + 15 * scale, hc.dx - 24 * scale, hc.dy + 10 * scale)
+      ..close();
+    canvas.drawPath(underBrim, Paint()..color = const Color(0xAA3B1E05));
+
+    // D. Chin-Strap (চিবুক বন্ধনী - জিরো টলারেন্সের প্রতীক)
+    final strapPaint = Paint()
+      ..color = const Color(0xFF451A03)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0 * scale
+      ..strokeCap = StrokeCap.round;
+
+    final strapLeft = Path()
+      ..moveTo(hc.dx - 18 * scale, hc.dy + 9 * scale)
+      ..quadraticBezierTo(hc.dx - 12 * scale, hc.dy + 17 * scale, hc.dx - 2 * scale, hc.dy + 20 * scale);
+    canvas.drawPath(strapLeft, strapPaint);
+
+    final strapRight = Path()
+      ..moveTo(hc.dx + 18 * scale, hc.dy + 9 * scale)
+      ..quadraticBezierTo(hc.dx + 12 * scale, hc.dy + 17 * scale, hc.dx + 2 * scale, hc.dy + 20 * scale);
+    canvas.drawPath(strapRight, strapPaint);
+
+    // Secure Chin-Strap Clasp/Buckle
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(hc.dx, hc.dy + 20 * scale), width: 7 * scale, height: 4.5 * scale),
+        Radius.circular(1.5 * scale),
+      ),
+      Paint()..color = const Color(0xFFFDE68A),
+    );
+
+    // E. Front Shield Insignia (Crown Badge with grounded spark)
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(hc.dx, hc.dy - 7 * scale), width: 10 * scale, height: 11 * scale),
+        Radius.circular(2 * scale),
+      ),
+      Paint()..color = const Color(0xFF451A03),
+    );
+    // Micro golden star / zero on helmet
+    canvas.drawCircle(Offset(hc.dx, hc.dy - 7 * scale), 2.2 * scale, Paint()..color = const Color(0xFFFDE68A));
+  }
+
+  @override
+  bool shouldRepaint(covariant _HelmetAuraPainter old) => old.pulse != pulse;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ৩-ধাপের অভিযান ব্রিফিং মডাল (3-Card Mission Briefing Dialog)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MissionBriefingDialog extends StatefulWidget {
+  final VoidCallback onStart;
+  const _MissionBriefingDialog({required this.onStart});
+
+  @override
+  State<_MissionBriefingDialog> createState() => _MissionBriefingDialogState();
+}
+
+class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
+  final _pageController = PageController();
+  var _page = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 380, maxHeight: 520),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F1B2E), Color(0xFF08101C)],
+          ),
+          border: Border.all(color: const Color(0x66F59E0B), width: 1.5),
+          boxShadow: const [
+            BoxShadow(color: Color(0x99000000), blurRadius: 28, offset: Offset(0, 10)),
+            BoxShadow(color: Color(0x33F59E0B), blurRadius: 20, spreadRadius: 1),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Top Indicator Dots
+            Padding(
+              padding: const EdgeInsets.only(top: 18, bottom: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(3, (i) {
+                  final active = _page == i;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: active ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(99),
+                      color: active ? const Color(0xFFFBBF24) : const Color(0x33FBBF24),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (p) => setState(() => _page = p),
+                children: [
+                  _buildSlide1(),
+                  _buildSlide2(),
+                  _buildSlide3(),
+                ],
+              ),
+            ),
+            // Bottom Action Bar (Clean Arrow Navigation)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+              child: Row(
+                children: [
+                  if (_page > 0)
+                    InkWell(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 320),
+                          curve: Curves.easeOutCubic,
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(99),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0x331E293B),
+                          border: Border.all(color: const Color(0x4464748B)),
+                        ),
+                        child: const Icon(Icons.arrow_back_rounded, size: 22, color: Color(0xFFCBD5E1)),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 44, height: 44),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      if (_page < 2) {
+                        HapticFeedback.lightImpact();
+                        unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.5));
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.easeOutCubic,
+                        );
+                      } else {
+                        HapticFeedback.heavyImpact();
+                        unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.7));
+                        Navigator.of(context).pop();
+                        widget.onStart();
+                      }
+                    },
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFBBF24), Color(0xFFF59E0B), Color(0xFFD97706)],
+                        ),
+                        boxShadow: const [
+                          BoxShadow(color: Color(0x55F59E0B), blurRadius: 14, offset: Offset(0, 4)),
+                        ],
+                        border: Border.all(color: const Color(0xFFFFFBE8), width: 1.2),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 22,
+                          color: Color(0xFF451A03),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSlide1() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const _LifeHelmetAuraBadge(size: 82),
+          const SizedBox(height: 16),
+          Text(
+            'শূন্য মৃত্যু অভিযান',
+            textAlign: TextAlign.center,
+            style: zlText(22, weight: FontWeight.w900, color: const Color(0xFFFFF6D8)),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0x33EF4444),
+              borderRadius: BorderRadius.circular(99),
+              border: Border.all(color: const Color(0x88EF4444)),
+            ),
+            child: Text(
+              '⚠️ ১টি ভুল = ১টি মৃত্যুঝুঁকি',
+              style: zlText(12, weight: FontWeight.w800, color: const Color(0xFFFCA5A5)),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'বিদ্যুতের লাইনে কোনো "ছোট ভুল" নেই। প্রতিটি অসাবধানতা সরাসরি প্রাণঘাতী বিপদ ডেকে আনে। ধাপে ধাপে সঠিক সুরক্ষা ও নিয়ম মানাই মৃত্যুহীন পথের একমাত্র পাথেয়।',
+            textAlign: TextAlign.center,
+            style: zlText(13.5, height: 1.45, color: const Color(0xFFCBD5E1)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSlide2() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'কাজের ৩টি হিসেব',
+            textAlign: TextAlign.center,
+            style: zlText(20, weight: FontWeight.w900, color: const Color(0xFFFFF6D8)),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'সব লেভেলের মোট হিসাব জমা থাকবে',
+            textAlign: TextAlign.center,
+            style: zlText(12, color: const Color(0xFFFDE68A)),
+          ),
+          const SizedBox(height: 16),
+          _metricRow(
+            icon: Icons.stars_rounded,
+            color: const Color(0xFFFBBF24),
+            title: 'মোট স্কোর',
+            desc: 'প্রতি লেভেলে সঠিক কাজের পয়েন্ট। ডিভাইসের মেমরিতে জমা থাকবে।',
+          ),
+          const SizedBox(height: 10),
+          _metricRow(
+            icon: Icons.shield_rounded,
+            color: const Color(0xFF34D399),
+            title: 'মৃত্যুঝুঁকি (০ লক্ষ্য)',
+            desc: 'ভুল হলেই বাড়বে। আপনার লক্ষ্য: প্রতিটি লেভেলে ০ মৃত্যুঝুঁকি রাখা।',
+          ),
+          const SizedBox(height: 10),
+          _metricRow(
+            icon: Icons.timer_outlined,
+            color: const Color(0xFF38BDF8),
+            title: 'মোট সময়',
+            desc: 'কাজে অতিবাহিত মোট সময়। তাড়াহুড়ো নয়, স্থির ও নিরাপদ কাজ।',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricRow({required IconData icon, required Color color, required String title, required String desc}) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: const Color(0x33060E18),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.15),
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: zlText(13, weight: FontWeight.w800, color: color)),
+                const SizedBox(height: 2),
+                Text(desc, style: zlText(11.5, height: 1.3, color: const Color(0xFFCBD5E1))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSlide3() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      child: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0x2210B981),
+                  border: Border.all(color: const Color(0xFF10B981), width: 2),
+                ),
+                child: const Center(
+                  child: Icon(Icons.verified_user_rounded, size: 38, color: Color(0xFF34D399)),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'লাইনম্যানের শপথ',
+                textAlign: TextAlign.center,
+                style: zlText(21, weight: FontWeight.w900, color: const Color(0xFFFFF6D8)),
+              ),
+              const SizedBox(height: 12),
+              _pledgeItem('সুরক্ষায় কোনো আপস নয় — শতভাগ পিপিই'),
+              const SizedBox(height: 8),
+              _pledgeItem('ভুল না করে ০ মৃত্যুঝুঁকি অক্ষুণ্ণ রাখব'),
+              const SizedBox(height: 8),
+              _pledgeItem('নিরাপদে কাজ সেরে পরিবারের কাছে ফিরব'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _pledgeItem(String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0x3310B981),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x4434D399)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF34D399)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text, style: zlText(12.5, weight: FontWeight.w700, color: const Color(0xFFF1F5F9))),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1026,101 +1757,181 @@ class _CoverBoard extends StatefulWidget {
   State<_CoverBoard> createState() => _CoverBoardState();
 }
 
-class _CoverBoardState extends State<_CoverBoard> with SingleTickerProviderStateMixin {
+class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin {
   late final AnimationController _glow;
+  late final AnimationController _intro;
+  late final AnimationController _ctaPulse;
+  late final AnimationController _exit;
+  var _isExiting = false;
 
   @override
   void initState() {
     super.initState();
     _glow = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800))..repeat(reverse: true);
+    _ctaPulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat(reverse: true);
+    _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 750))..forward();
+    _exit = AnimationController(vsync: this, duration: const Duration(milliseconds: 380));
+
+    Future<void>.delayed(const Duration(milliseconds: 120), () {
+      if (!mounted) return;
+      unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.85));
+    });
   }
 
   @override
   void dispose() {
     _glow.dispose();
+    _intro.dispose();
+    _ctaPulse.dispose();
+    _exit.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
-      child: Column(
-        children: [
-          const Spacer(),
-          AnimatedBuilder(
-            animation: _glow,
-            builder: (_, _) {
-              final pulse = 0.55 + (0.45 * _glow.value);
-              return SizedBox(
-                height: 220,
-                width: double.infinity,
-                child: Stack(
-                  alignment: Alignment.center,
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_glow, _intro, _ctaPulse, _exit]),
+        builder: (context, _) {
+          final pulse = 0.55 + (0.45 * _glow.value);
+          final introVal = Curves.easeOutBack.transform(_intro.value.clamp(0.0, 1.0));
+          final ctaPulseVal = 1.0 + (math.sin(_ctaPulse.value * math.pi) * 0.04);
+          final exitVal = Curves.easeInOutCubic.transform(_exit.value);
+
+          return Transform.translate(
+            offset: Offset(0, 90 * exitVal),
+            child: Opacity(
+              opacity: (1.0 - exitVal).clamp(0.0, 1.0),
+              child: Transform.scale(
+                scale: 1.0 - (0.10 * exitVal),
+                child: Column(
                   children: [
-                    Container(
-                      width: 280,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            Color.fromRGBO(251, 191, 36, 0.28 * pulse),
-                            Color.fromRGBO(253, 230, 138, 0.12 * pulse),
-                            const Color(0x00000000),
+                    const Spacer(),
+                    // Hero Badge: জীবনের শিরস্ত্রাণ ও স্বর্ণবলয়
+                    Transform.scale(
+                      scale: introVal,
+                      child: _LifeHelmetAuraBadge(pulse: pulse, size: 104),
+                    ),
+                    const SizedBox(height: 24),
+                    // Game Title with golden bloom
+                    Transform.translate(
+                      offset: Offset(0, 24 * (1.0 - _intro.value)),
+                      child: Opacity(
+                        opacity: _intro.value.clamp(0.0, 1.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              'মৃত্যুহীন পথ',
+                              textAlign: TextAlign.center,
+                              style: zlText(38, weight: FontWeight.w900, height: 1.25, color: const Color(0xFFFFF6D8)).copyWith(
+                                letterSpacing: 1.2,
+                                shadows: [
+                                  Shadow(color: Color.fromRGBO(251, 191, 36, 0.9 * pulse), blurRadius: 22),
+                                  Shadow(color: Color.fromRGBO(255, 247, 214, 0.65 * pulse), blurRadius: 42),
+                                  const Shadow(color: Color(0x99000000), offset: Offset(0, 4), blurRadius: 10),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: const Color(0x33F59E0B),
+                                borderRadius: BorderRadius.circular(99),
+                                border: Border.all(color: Color.fromRGBO(251, 191, 36, 0.4 * pulse), width: 1.0),
+                              ),
+                              child: Text(
+                                'শূন্য দুর্ঘটনা অভিযান • জিরো টলারেন্স',
+                                textAlign: TextAlign.center,
+                                style: zlText(13, weight: FontWeight.w700, color: const Color(0xFFFDE68A)),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              'ধাপে ধাপে সঠিক সুরক্ষায় বাঁচবে জীবন',
+                              textAlign: TextAlign.center,
+                              style: zlText(14.5, weight: FontWeight.w500, color: const Color(0xFFD6CBB2)).copyWith(
+                                shadows: const [Shadow(color: Color(0x88000000), blurRadius: 8)],
+                              ),
+                            ),
                           ],
-                          stops: const [0.0, 0.42, 1.0],
                         ),
                       ),
                     ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'মৃত্যুহীন পথ',
-                          textAlign: TextAlign.center,
-                          style: zlText(34, weight: FontWeight.w800, height: 1.4, color: const Color(0xFFFFF6D8)).copyWith(
-                            shadows: [
-                              Shadow(color: Color.fromRGBO(251, 191, 36, 0.85 * pulse), blurRadius: 18),
-                              Shadow(color: Color.fromRGBO(255, 247, 214, 0.55 * pulse), blurRadius: 36),
-                              const Shadow(color: Color(0x66FFFFFF), blurRadius: 8),
+                    const Spacer(),
+                    // Gamified Action Button
+                    Transform.scale(
+                      scale: ctaPulseVal * introVal,
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.85));
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            barrierColor: const Color(0xF2040A14),
+                            builder: (ctx) => BackdropFilter(
+                              filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                              child: _MissionBriefingDialog(
+                                onStart: () {
+                                  if (_isExiting) return;
+                                  _isExiting = true;
+                                  _exit.forward().then((_) {
+                                    if (mounted) widget.onOpen();
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          constraints: const BoxConstraints(maxWidth: 290),
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(999),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFFFBBF24), Color(0xFFF59E0B), Color(0xFFD97706)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color.fromRGBO(245, 158, 11, 0.45 * pulse),
+                                offset: const Offset(0, 8),
+                                blurRadius: 22,
+                                spreadRadius: 2,
+                              ),
+                              const BoxShadow(
+                                color: Color(0x55000000),
+                                offset: Offset(0, 4),
+                                blurRadius: 10,
+                              ),
+                            ],
+                            border: Border.all(color: const Color(0xFFFFFBEB), width: 1.5),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'অভিযান শুরু করুন',
+                                style: zlText(18, weight: FontWeight.w800, color: const Color(0xFF451A03)),
+                              ),
+                              const SizedBox(width: 10),
+                              const Icon(Icons.arrow_forward_rounded, size: 24, color: Color(0xFF451A03)),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 14),
-                        Container(
-                          width: 88,
-                          height: 1.2,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(99),
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0x00FBBF24),
-                                Color.fromRGBO(253, 230, 138, 0.9 * pulse),
-                                const Color(0x00FBBF24),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'ধাপে ধাপে নিরাপদ',
-                          textAlign: TextAlign.center,
-                          style: zlText(14, weight: FontWeight.w500, color: const Color(0xFFD6CBB2)).copyWith(
-                            shadows: const [Shadow(color: Color(0x66000000), blurRadius: 8)],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
+                    const SizedBox(height: 28),
                   ],
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 20),
-          _RoundArrow(onTap: widget.onOpen),
-          const Spacer(),
-        ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1171,14 +1982,14 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
   late final AnimationController _drift;
 
   static const _itemH = 82.0;
-  static const _groundH = 140.0;
+  static const _groundH = 150.0;
   static const _sky = 10;
 
   @override
   void initState() {
     super.initState();
     _drift = AnimationController(vsync: this, duration: const Duration(seconds: 48))..repeat();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _pinNext());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _pinNext(initial: true));
   }
 
   @override
@@ -1189,16 +2000,27 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
     }
   }
 
-  void _pinNext() {
+  void _pinNext({bool initial = false}) {
     if (!mounted || !_scroll.hasClients) return;
     final view = _scroll.position.viewportDimension;
     final focus = dsAllLevelsOpen ? 0 : widget.engine.unlocked;
     final target = (_groundH + focus * _itemH) - (view * 0.28);
-    _scroll.animateTo(
-      target.clamp(0.0, _scroll.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 520),
-      curve: Curves.easeOutCubic,
-    );
+    final clamped = target.clamp(0.0, _scroll.position.maxScrollExtent);
+    if (initial) {
+      // Cinematic ascension from base to the active level rung
+      _scroll.jumpTo(0.0);
+      _scroll.animateTo(
+        clamped,
+        duration: const Duration(milliseconds: 950),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _scroll.animateTo(
+        clamped,
+        duration: const Duration(milliseconds: 520),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   @override
@@ -1216,7 +2038,6 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
     return Stack(
       fit: StackFit.expand,
       children: [
-        const Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: _NightSkyPainter()))),
         Positioned.fill(
           child: IgnorePointer(
             child: AnimatedBuilder(
@@ -1236,17 +2057,89 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
         ),
         Column(
           children: [
+            // Center-aligned Ladder Header (Clean title and floating Score Chip)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-              child: Text(
-                'মৃত্যুহীন পথ',
-                textAlign: TextAlign.center,
-                style: zlText(26, weight: FontWeight.w800, height: 1.2, color: const Color(0xFF8F8160)).copyWith(
-                  shadows: const [
-                    Shadow(offset: Offset(0, -1), color: Color(0x99000000), blurRadius: 0),
-                    Shadow(offset: Offset(0, 1), color: Color(0x220E1824), blurRadius: 0),
-                  ],
-                ),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Center-aligned title without logo
+                  Text(
+                    'মৃত্যুহীন পথ',
+                    textAlign: TextAlign.center,
+                    style: zlText(18, weight: FontWeight.w900, color: const Color(0xFFFFF6D8)).copyWith(
+                      letterSpacing: 0.8,
+                      shadows: const [
+                        Shadow(color: Color(0xCCF59E0B), blurRadius: 12),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Score & Telemetry Chip just below it (plenty of room for high scores)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xCC060E18),
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(color: const Color(0x33FBBF24)),
+                      boxShadow: const [
+                        BoxShadow(color: Color(0x44000000), blurRadius: 8, offset: Offset(0, 2)),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Score
+                        const Icon(Icons.stars_rounded, size: 15, color: Color(0xFFFBBF24)),
+                        const SizedBox(width: 4),
+                        Text(
+                          _bnNum(e.totalCumulativeScore),
+                          style: zlText(12, weight: FontWeight.w800, color: const Color(0xFFFFFBE8)),
+                        ),
+                        Container(margin: const EdgeInsets.symmetric(horizontal: 8), width: 1, height: 12, color: const Color(0x22FFFFFF)),
+                        // Danger Count (Zero Loss Focus)
+                        Icon(
+                          e.totalCumulativeDanger == 0 ? Icons.shield_rounded : Icons.warning_amber_rounded,
+                          size: 14,
+                          color: e.totalCumulativeDanger == 0 ? const Color(0xFF34D399) : const Color(0xFFF87171),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _bnNum(e.totalCumulativeDanger),
+                          style: zlText(
+                            12,
+                            weight: FontWeight.w800,
+                            color: e.totalCumulativeDanger == 0 ? const Color(0xFF6EE7B7) : const Color(0xFFFCA5A5),
+                          ),
+                        ),
+                        Container(margin: const EdgeInsets.symmetric(horizontal: 8), width: 1, height: 12, color: const Color(0x22FFFFFF)),
+                        // Time
+                        const Icon(Icons.timer_outlined, size: 13, color: Color(0xFF38BDF8)),
+                        const SizedBox(width: 4),
+                        Text(
+                          e.formatClock(e.totalCumulativeSeconds),
+                          style: zlText(11.5, weight: FontWeight.w700, color: const Color(0xFFE2E8F0)),
+                        ),
+                        const SizedBox(width: 8),
+                        // Info Button to re-open briefing dialog
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            showDialog(
+                              context: context,
+                              barrierColor: const Color(0xF2040A14),
+                              builder: (_) => BackdropFilter(
+                                filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                                child: _MissionBriefingDialog(onStart: () {}),
+                              ),
+                            );
+                          },
+                          child: const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xCCFBBF24)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -1292,6 +2185,7 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
                     height: _itemH,
                     child: Stack(
                       alignment: Alignment.center,
+                      clipBehavior: Clip.none,
                       children: [
                         Positioned.fill(
                           child: IgnorePointer(
@@ -1315,73 +2209,83 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
   }
 }
 
-class _NightSkyPainter extends CustomPainter {
-  const _NightSkyPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF050A14), Color(0xFF0B1830), Color(0xFF143044), Color(0xFF1A3340)],
-          stops: [0.0, 0.32, 0.62, 1.0],
-        ).createShader(rect),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
 class _SkyMotionPainter extends CustomPainter {
   final double time;
   final double scroll;
   const _SkyMotionPainter({required this.time, required this.scroll});
 
-  static const _clouds = <_CloudSpec>[
-    _CloudSpec(y: 0.08, x: 0.04, speed: 0.10, scale: 1.15, parallax: 0.04, phase: 0.2),
-    _CloudSpec(y: 0.14, x: 0.52, speed: 0.14, scale: 0.95, parallax: 0.06, phase: 1.1),
-    _CloudSpec(y: 0.22, x: 0.22, speed: 0.18, scale: 0.82, parallax: 0.09, phase: 2.4),
-    _CloudSpec(y: 0.30, x: 0.72, speed: 0.12, scale: 1.08, parallax: 0.11, phase: 0.7),
-    _CloudSpec(y: 0.38, x: 0.38, speed: 0.16, scale: 0.7, parallax: 0.14, phase: 1.8),
-  ];
-
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final rise = (scroll / 1100).clamp(0.0, 1.0);
+    final rise = (scroll / 1200.0).clamp(0.0, 1.0);
 
-    final moon = Offset(w * 0.82, h * 0.13 + scroll * 0.05);
-    canvas.drawCircle(moon, 26, Paint()..color = const Color(0x18FFF6D8));
-    canvas.drawCircle(moon, 12, Paint()..color = const Color(0xCCFFF4C2));
+    // 1. Dynamic Night Sky Dome Gradient (deepens to cosmic indigo at high altitudes)
+    final rect = Offset.zero & size;
+    final topSky = Color.lerp(const Color(0xFF040814), const Color(0xFF01040A), rise)!;
+    final midSky = Color.lerp(const Color(0xFF091629), const Color(0xFF050E1A), rise)!;
+    final lowSky = Color.lerp(const Color(0xFF142C3F), const Color(0xFF0D2132), rise)!;
+    final rimSky = Color.lerp(const Color(0xFF203F54), const Color(0xFF2E4E64), rise)!;
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [topSky, midSky, lowSky, rimSky],
+          stops: const [0.0, 0.35, 0.68, 1.0],
+        ).createShader(rect),
+    );
 
-    final star = Paint()..color = const Color(0x88FFF8E1);
-    final rng = math.Random(11);
-    for (var i = 0; i < 18; i++) {
-      final p = Offset(rng.nextDouble() * w, rng.nextDouble() * h * 0.48 + scroll * 0.035);
-      if (p.dy > h * 0.52) continue;
-      canvas.drawCircle(p, rng.nextDouble() * 1.15 + 0.35, star);
-    }
+    // 2. Deep Space Stars with Multi-Frequency Twinkle
+    _paintStars(canvas, w, h, scroll, time);
 
-    for (final c in _clouds) {
-      final span = w + 200;
-      var x = c.x * w + time * c.speed * span;
-      x = x % span;
-      if (x < 0) x += span;
-      x -= 90;
-      var y = h * c.y + scroll * c.parallax + math.sin((time * math.pi * 2) + c.phase) * 4;
-      if (y > h * 0.48) continue;
-      _cloudPuff(canvas, Offset(x, y), c.scale);
-    }
+    // 3. Volumetric Moon & Luminous Atmosphere
+    final moon = Offset(w * 0.82, h * 0.12 + scroll * 0.035);
+    // Outer atmospheric glow
+    canvas.drawCircle(
+      moon,
+      64,
+      Paint()
+        ..shader = RadialGradient(
+          colors: const [Color(0x20FFF4C2), Color(0x00FFF4C2)],
+        ).createShader(Rect.fromCircle(center: moon, radius: 64)),
+    );
+    // Inner halo
+    canvas.drawCircle(moon, 28, Paint()..color = const Color(0x28FFF6D0));
+    // Moon disc
+    canvas.drawCircle(moon, 14, Paint()..color = const Color(0xFFFFFBE0));
+    // Soft crescent shadow for natural lunar curvature
+    canvas.drawCircle(moon + const Offset(4, -3), 12, Paint()..color = const Color(0x18000000));
 
-    final horizon = h * 0.56 + scroll * 0.10;
-    _cityBand(canvas, w, horizon, rise, time, far: true);
-    _cityBand(canvas, w, horizon + 10, rise, time, far: false);
+    // 4. Cloud Tier 1: High-Altitude Cirrus Wisps (silver, translucent, slow drifting)
+    _paintCirrusClouds(canvas, w, h, time, scroll);
+
+    // 5. Parallax Horizon Calculation:
+    // As the lineman climbs higher (scroll up), the horizon descends downwards,
+    // revealing a vast panoramic perspective of the city below.
+    final horizon = h * 0.58 + (scroll * 0.11);
+
+    // 6. City Layer 1: Distant Mountain Contours & High-Voltage Transmission Pylons
+    _paintDistantMountainsAndTowers(canvas, w, horizon, scroll, time);
+
+    // 7. Ambient City Light Dome (warm sodium glow rising into the sky from the metropolis)
+    _paintCityLightDome(canvas, w, horizon, rise);
+
+    // 8. City Layer 2: Megacity High-Rise Skyline (High towers, spires, illuminated window matrices)
+    _paintMegacitySkyline(canvas, w, horizon, rise, time, scroll);
+
+    // 9. City Layer 3: Mid-Distance Commercial District & Neon Billboards
+    _paintCommercialDistrict(canvas, w, horizon, rise, time, scroll);
+
+    // 10. Cloud Tier 2: Mid-Altitude Volumetric Cumulus Cloud Banks (3D billows with moonlit rims)
+    _paintCumulusClouds(canvas, w, h, time, scroll);
+
+    // 11. City Layer 4: Near Substation & Distribution Grid (Poles, catenary wires, sodium streetlights)
+    _paintForegroundGrid(canvas, w, horizon, rise, time, scroll);
+
+    // 12. Cloud Tier 3: Low Atmospheric Ground Fog & Electrical Haze
+    _paintGroundMist(canvas, w, horizon, time, scroll);
   }
 
   @override
@@ -1389,16 +2293,261 @@ class _SkyMotionPainter extends CustomPainter {
       oldDelegate.time != time || oldDelegate.scroll != scroll;
 }
 
-class _CloudSpec {
+void _paintStars(Canvas canvas, double w, double h, double scroll, double time) {
+  final rng = math.Random(42);
+  final starPaint = Paint()..color = const Color(0x88FFF8E1);
+  for (var i = 0; i < 28; i++) {
+    final x = rng.nextDouble() * w;
+    final y = (rng.nextDouble() * h * 0.44 + scroll * 0.02) % (h * 0.52);
+    final twinkle = (math.sin((time * math.pi * 2 * 1.8) + (i * 1.7)) * 0.5 + 0.5);
+    final radius = rng.nextDouble() * 1.1 + 0.35;
+    final alpha = (0.25 + 0.65 * twinkle).clamp(0.0, 0.95);
+    canvas.drawCircle(
+      Offset(x, y),
+      radius,
+      starPaint..color = Color.fromRGBO(255, 248, 225, alpha),
+    );
+    // Subtle sparkle cross on 3 prominent stars
+    if (i % 9 == 0 && twinkle > 0.7) {
+      final crossPaint = Paint()
+        ..color = Color.fromRGBO(255, 248, 225, (twinkle - 0.7) * 2.2)
+        ..strokeWidth = 0.8;
+      canvas.drawLine(Offset(x - 3.5, y), Offset(x + 3.5, y), crossPaint);
+      canvas.drawLine(Offset(x, y - 3.5), Offset(x, y + 3.5), crossPaint);
+    }
+  }
+}
+
+void _paintCirrusClouds(Canvas canvas, double w, double h, double time, double scroll) {
+  final span = w + 260;
+  // Cloud 1: Upper wisps passing near the moon
+  final x1 = ((time * 0.035 * span) % span) - 80;
+  final y1 = h * 0.09 + scroll * 0.025 + math.sin(time * math.pi * 2 * 0.5) * 3;
+  _drawCirrusWisp(canvas, Offset(x1, y1), 1.4);
+
+  // Cloud 2: Secondary streamer
+  final x2 = (((time * 0.05 * span) + (w * 0.55)) % span) - 80;
+  final y2 = h * 0.16 + scroll * 0.035 + math.cos(time * math.pi * 2 * 0.6) * 3;
+  _drawCirrusWisp(canvas, Offset(x2, y2), 1.15);
+}
+
+void _drawCirrusWisp(Canvas canvas, Offset o, double s) {
+  final body = Paint()..color = const Color(0x18D8E4F2);
+  final rim = Paint()..color = const Color(0x14FFFDEB);
+  canvas.drawOval(Rect.fromCenter(center: o, width: 180 * s, height: 18 * s), body);
+  canvas.drawOval(Rect.fromCenter(center: o + Offset(-40 * s, -3 * s), width: 110 * s, height: 14 * s), body);
+  canvas.drawOval(Rect.fromCenter(center: o + Offset(45 * s, 2 * s), width: 90 * s, height: 12 * s), body);
+  canvas.drawOval(Rect.fromCenter(center: o + Offset(-10 * s, -5 * s), width: 80 * s, height: 8 * s), rim);
+}
+
+void _paintDistantMountainsAndTowers(Canvas canvas, double w, double horizon, double scroll, double time) {
+  final baseY = horizon - 34 + (scroll * 0.03);
+  final ridge = Path()..moveTo(0, baseY);
+  // Gentle rolling mountain contour
+  ridge.quadraticBezierTo(w * 0.22, baseY - 24, w * 0.44, baseY - 8);
+  ridge.quadraticBezierTo(w * 0.70, baseY - 28, w, baseY - 12);
+  ridge.lineTo(w, baseY + 60);
+  ridge.lineTo(0, baseY + 60);
+  ridge.close();
+
+  canvas.drawPath(ridge, Paint()..color = const Color(0xFF070E1A));
+
+  // High-Voltage 400kV Lattice Transmission Towers on the ridge line
+  final towerPositions = [w * 0.18, w * 0.54, w * 0.86];
+  for (var i = 0; i < towerPositions.length; i++) {
+    final tx = towerPositions[i];
+    final ty = baseY - (i == 0 ? 18 : i == 1 ? 10 : 22);
+    _drawTransmissionTower(canvas, tx, ty, time, i);
+  }
+}
+
+void _drawTransmissionTower(Canvas canvas, double tx, double ty, double time, int id) {
+  final p = Paint()
+    ..color = const Color(0xFF0A1626)
+    ..strokeWidth = 1.1;
+
+  // Tapered tower body
+  canvas.drawLine(Offset(tx - 5, ty + 26), Offset(tx - 1.5, ty), p);
+  canvas.drawLine(Offset(tx + 5, ty + 26), Offset(tx + 1.5, ty), p);
+  // Crossarms
+  canvas.drawLine(Offset(tx - 11, ty + 7), Offset(tx + 11, ty + 7), p);
+  canvas.drawLine(Offset(tx - 8, ty + 15), Offset(tx + 8, ty + 15), p);
+  // Spire peak
+  canvas.drawLine(Offset(tx, ty), Offset(tx, ty - 5), p);
+
+  // Red blinking aviation safety beacon on top of the transmission tower
+  final blink = math.sin((time * math.pi * 3.2) + (id * 2.1)) > 0.35;
+  final beaconColor = blink ? const Color(0xFFFF2828) : const Color(0x22FF2828);
+  canvas.drawCircle(Offset(tx, ty - 5.5), 1.8, Paint()..color = beaconColor);
+  if (blink) {
+    canvas.drawCircle(Offset(tx, ty - 5.5), 5.0, Paint()..color = const Color(0x33FF2828));
+  }
+}
+
+void _paintCityLightDome(Canvas canvas, double w, double horizon, double rise) {
+  if (rise <= 0.02) return;
+  final domeRect = Rect.fromLTWH(0, horizon - 80, w, 110);
+  canvas.drawRect(
+    domeRect,
+    Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [
+          Color.fromRGBO(245, 158, 11, 0.22 * rise),
+          Color.fromRGBO(56, 189, 248, 0.08 * rise),
+          const Color(0x00000000),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(domeRect),
+  );
+}
+
+void _paintMegacitySkyline(Canvas canvas, double w, double horizon, double rise, double time, double scroll) {
+  final baseY = horizon - 12 + (scroll * 0.065);
+  final rng = math.Random(107);
+  var x = -12.0;
+  final bodyPaint = Paint()..color = const Color(0xFF0A1526);
+
+  while (x < w + 28) {
+    final bw = 18.0 + rng.nextDouble() * 32.0;
+    // As lineman climbs higher (rise increases), towers appear taller and deeper
+    final bh = (32.0 + rng.nextDouble() * 64.0) * (0.80 + (rise * 0.45));
+    final hasSpire = rng.nextDouble() > 0.65;
+    final stepped = rng.nextDouble() > 0.70;
+
+    // Building silhouette
+    if (stepped) {
+      // Stepped crown skyscraper
+      final stepW = bw * 0.65;
+      final stepH = bh * 0.25;
+      canvas.drawRect(Rect.fromLTWH(x, baseY - bh + stepH, bw, bh - stepH + 40), bodyPaint);
+      canvas.drawRect(Rect.fromLTWH(x + (bw - stepW) / 2, baseY - bh, stepW, stepH), bodyPaint);
+    } else {
+      canvas.drawRect(Rect.fromLTWH(x, baseY - bh, bw, bh + 40), bodyPaint);
+    }
+
+    // Antenna spire with strobe
+    if (hasSpire) {
+      final sx = x + bw / 2;
+      final sy = baseY - bh;
+      canvas.drawLine(Offset(sx, sy), Offset(sx, sy - 14), Paint()..color = const Color(0xFF0A1526)..strokeWidth = 1.2);
+      final strobe = math.sin((time * math.pi * 4.0) + x) > 0.55;
+      canvas.drawCircle(Offset(sx, sy - 14), 1.4, Paint()..color = strobe ? const Color(0xFFFF5252) : const Color(0x18FF5252));
+    }
+
+    // High-Density Window Matrices
+    final cols = (bw / 5.2).floor().clamp(1, 6);
+    final baseRows = (bh / 6.8).floor().clamp(2, 14);
+    // As player climbs, more rows of windows are revealed downwards!
+    final visibleRows = (baseRows + (rise * 4).toInt()).clamp(2, 16);
+
+    for (var r = 0; r < visibleRows; r++) {
+      for (var c = 0; c < cols; c++) {
+        final seedVal = rng.nextDouble();
+        if (seedVal > (0.18 + rise * 0.68)) continue;
+
+        // Organic city pulse and flicker
+        final flicker = (math.sin((time * math.pi * 2 * 2.1) + (r * 0.7) + (c * 1.3) + (x * 0.2)) * 0.5 + 0.5);
+        final a = ((0.15 + (rise * 0.75)) * (0.45 + 0.55 * flicker)).clamp(0.0, 0.94);
+
+        // Curated window palette: warm amber, office white, cyan
+        late final Color winColor;
+        if (seedVal < 0.08) {
+          winColor = Color.fromRGBO(56, 189, 248, a); // Cyan
+        } else if (seedVal < 0.22) {
+          winColor = Color.fromRGBO(241, 245, 249, a); // Office white
+        } else {
+          winColor = Color.fromRGBO(255, 214, 120, a); // Warm sodium amber
+        }
+
+        canvas.drawRect(
+          Rect.fromLTWH(x + 2.4 + (c * 4.8), baseY - bh + 4 + (r * 6.2), 2.2, 3.2),
+          Paint()..color = winColor,
+        );
+      }
+    }
+    x += bw + 3.0 + rng.nextDouble() * 6.0;
+  }
+}
+
+void _paintCommercialDistrict(Canvas canvas, double w, double horizon, double rise, double time, double scroll) {
+  final baseY = horizon + 16 + (scroll * 0.11);
+  final rng = math.Random(219);
+  var x = -8.0;
+  final bodyPaint = Paint()..color = const Color(0xFF0E1F33);
+
+  while (x < w + 24) {
+    final bw = 24.0 + rng.nextDouble() * 38.0;
+    final bh = (22.0 + rng.nextDouble() * 45.0) * (0.85 + (rise * 0.35));
+    canvas.drawRect(Rect.fromLTWH(x, baseY - bh, bw, bh + 40), bodyPaint);
+
+    // Rooftop water tank or AC unit
+    if (rng.nextBool()) {
+      final wx = x + 4 + rng.nextDouble() * (bw - 16);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(wx, baseY - bh - 8, 9, 8), const Radius.circular(2)),
+        Paint()..color = const Color(0xFF0B1726),
+      );
+    }
+
+    // Glowing Neon Signs / Billboards on commercial roofs
+    if (rng.nextDouble() > 0.72) {
+      final neonX = x + 4.0;
+      final neonY = baseY - bh + 4.0;
+      final neonColor = rng.nextBool() ? const Color(0xFFF43F5E) : const Color(0xFFFBBF24);
+      final neonGlow = 0.55 + 0.45 * math.sin((time * math.pi * 3.5) + x);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(neonX, neonY, 14, 4), const Radius.circular(1)),
+        Paint()..color = neonColor.withValues(alpha: neonGlow),
+      );
+    }
+
+    // Windows
+    final cols = (bw / 6.5).floor().clamp(1, 5);
+    final rows = (bh / 8.5).floor().clamp(1, 6);
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        if (rng.nextDouble() > (0.25 + rise * 0.65)) continue;
+        final a = (0.20 + (rise * 0.72)).clamp(0.0, 0.90);
+        canvas.drawRect(
+          Rect.fromLTWH(x + 3.0 + (c * 6.2), baseY - bh + 9 + (r * 7.5), 2.8, 3.8),
+          Paint()..color = Color.fromRGBO(255, 224, 138, a),
+        );
+      }
+    }
+    x += bw + 4.0 + rng.nextDouble() * 8.0;
+  }
+}
+
+void _paintCumulusClouds(Canvas canvas, double w, double h, double time, double scroll) {
+  final span = w + 240;
+  // Cloud Specs spanning mid-altitudes
+  const specs = [
+    _CumulusSpec(y: 0.22, speed: 0.065, scale: 1.15, parallax: 0.065, phase: 0.3),
+    _CumulusSpec(y: 0.29, speed: 0.085, scale: 0.92, parallax: 0.075, phase: 1.8),
+    _CumulusSpec(y: 0.36, speed: 0.055, scale: 1.25, parallax: 0.085, phase: 2.7),
+    _CumulusSpec(y: 0.43, speed: 0.095, scale: 0.85, parallax: 0.095, phase: 0.9),
+  ];
+
+  for (var i = 0; i < specs.length; i++) {
+    final c = specs[i];
+    var x = ((time * c.speed * span) + (i * w * 0.32)) % span;
+    x -= 90;
+    final y = (h * c.y) + (scroll * c.parallax) + (math.sin((time * math.pi * 2) + c.phase) * 4);
+    if (y > h * 0.52) continue;
+    _drawVolumetricCloud(canvas, Offset(x, y), c.scale);
+  }
+}
+
+class _CumulusSpec {
   final double y;
-  final double x;
   final double speed;
   final double scale;
   final double parallax;
   final double phase;
-  const _CloudSpec({
+  const _CumulusSpec({
     required this.y,
-    required this.x,
     required this.speed,
     required this.scale,
     required this.parallax,
@@ -1406,40 +2555,99 @@ class _CloudSpec {
   });
 }
 
-void _cloudPuff(Canvas canvas, Offset o, double s) {
-  final body = Paint()..color = const Color(0x2CEEF2F8);
-  final lit = Paint()..color = const Color(0x18FFFFFF);
-  canvas.drawOval(Rect.fromCenter(center: o, width: 118 * s, height: 30 * s), body);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(-36 * s, -5 * s), width: 64 * s, height: 26 * s), body);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(38 * s, -7 * s), width: 58 * s, height: 24 * s), body);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(6 * s, -14 * s), width: 48 * s, height: 22 * s), body);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(-8 * s, -11 * s), width: 40 * s, height: 16 * s), lit);
+void _drawVolumetricCloud(Canvas canvas, Offset o, double s) {
+  // Volumetric mass with shaded base and moonlit top rim
+  final body = Paint()..color = const Color(0x3218283E);
+  final core = Paint()..color = const Color(0x2820354E);
+  final rim = Paint()..color = const Color(0x28E2E8F0);
+  final moonHighlight = Paint()..color = const Color(0x1EFFF8DB);
+
+  // Darker underside billows
+  canvas.drawOval(Rect.fromCenter(center: o, width: 130 * s, height: 32 * s), body);
+  canvas.drawOval(Rect.fromCenter(center: o + Offset(-38 * s, -4 * s), width: 72 * s, height: 28 * s), body);
+  canvas.drawOval(Rect.fromCenter(center: o + Offset(42 * s, -6 * s), width: 66 * s, height: 26 * s), body);
+
+  // Volumetric core
+  canvas.drawOval(Rect.fromCenter(center: o + Offset(4 * s, -12 * s), width: 56 * s, height: 24 * s), core);
+  canvas.drawOval(Rect.fromCenter(center: o + Offset(-18 * s, -14 * s), width: 44 * s, height: 22 * s), core);
+
+  // Moonlit silver rim highlights (facing moon on top-right)
+  canvas.drawOval(Rect.fromCenter(center: o + Offset(6 * s, -16 * s), width: 46 * s, height: 18 * s), rim);
+  canvas.drawOval(Rect.fromCenter(center: o + Offset(-16 * s, -17 * s), width: 36 * s, height: 15 * s), moonHighlight);
 }
 
-void _cityBand(Canvas canvas, double w, double baseY, double rise, double time, {required bool far}) {
-  final rng = math.Random(far ? 3 : 9);
-  var x = -10.0;
-  final fill = Paint()..color = far ? const Color(0xFF0A1524) : const Color(0xFF070E18);
-  final heightScale = far ? 0.62 : 0.92;
-  while (x < w + 24) {
-    final bw = 16.0 + rng.nextDouble() * (far ? 26 : 34);
-    final bh = (18 + rng.nextDouble() * 64) * heightScale;
-    canvas.drawRect(Rect.fromLTWH(x, baseY - bh, bw, bh + 36), fill);
-    final cols = (bw / 6).floor().clamp(1, 5);
-    final rows = (bh / 8).floor().clamp(1, 9);
-    for (var r = 0; r < rows; r++) {
-      for (var c = 0; c < cols; c++) {
-        if (rng.nextDouble() > 0.10 + rise * 0.72) continue;
-        final flicker = 0.72 + 0.28 * math.sin(time * math.pi * 2 * 2.4 + r * 0.8 + c * 1.3 + (far ? 0 : 2));
-        final a = ((0.12 + rise * 0.78) * flicker).clamp(0.0, 0.92);
-        canvas.drawRect(
-          Rect.fromLTWH(x + 3 + c * 5.6, baseY - bh + 4 + r * 7.6, 2.3, 3.1),
-          Paint()..color = Color.fromRGBO(255, 214, 120, a),
-        );
-      }
+void _paintForegroundGrid(Canvas canvas, double w, double horizon, double rise, double time, double scroll) {
+  final baseY = horizon + 48 + (scroll * 0.19);
+  final polePaint = Paint()
+    ..color = const Color(0xFF091422)
+    ..strokeWidth = 2.2;
+  final wirePaint = Paint()
+    ..color = const Color(0x88091422)
+    ..strokeWidth = 0.9
+    ..style = PaintingStyle.stroke;
+
+  // 3 utility distribution poles with crossarms
+  final poleXs = [w * 0.12, w * 0.50, w * 0.88];
+  for (var i = 0; i < poleXs.length; i++) {
+    final px = poleXs[i];
+    final py = baseY - 48;
+    // Main pole
+    canvas.drawLine(Offset(px, baseY + 30), Offset(px, py), polePaint);
+    // 3-Phase crossarm
+    canvas.drawLine(Offset(px - 14, py + 8), Offset(px + 14, py + 8), polePaint..strokeWidth = 1.8);
+    // Pin insulators
+    canvas.drawCircle(Offset(px - 12, py + 6), 1.5, Paint()..color = const Color(0xFF38BDF8));
+    canvas.drawCircle(Offset(px, py + 6), 1.5, Paint()..color = const Color(0xFF38BDF8));
+    canvas.drawCircle(Offset(px + 12, py + 6), 1.5, Paint()..color = const Color(0xFF38BDF8));
+
+    // Sodium Streetlight on pole #1 and #3
+    if (i == 0 || i == 2) {
+      final lampX = px + (i == 0 ? 12 : -12);
+      final lampY = py + 14;
+      // Arm
+      canvas.drawLine(Offset(px, py + 18), Offset(lampX, lampY), polePaint..strokeWidth = 1.4);
+      // Amber LED bulb
+      canvas.drawCircle(Offset(lampX, lampY), 2.2, Paint()..color = const Color(0xFFFFB703));
+
+      // Downward conical ambient streetlight cone
+      final cone = Path()
+        ..moveTo(lampX, lampY)
+        ..lineTo(lampX - 22, lampY + 44)
+        ..lineTo(lampX + 22, lampY + 44)
+        ..close();
+      canvas.drawPath(
+        cone,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: const [Color(0x38F59E0B), Color(0x00F59E0B)],
+          ).createShader(cone.getBounds()),
+      );
     }
-    x += bw + 2 + rng.nextDouble() * 7;
   }
+
+  // Overhead catenary sagging wires connecting poles
+  final wire1 = Path()
+    ..moveTo(poleXs[0] - 12, baseY - 42)
+    ..quadraticBezierTo((poleXs[0] + poleXs[1]) / 2, baseY - 35, poleXs[1] - 12, baseY - 42)
+    ..quadraticBezierTo((poleXs[1] + poleXs[2]) / 2, baseY - 35, poleXs[2] - 12, baseY - 42);
+  canvas.drawPath(wire1, wirePaint);
+
+  final wire2 = Path()
+    ..moveTo(poleXs[0] + 12, baseY - 40)
+    ..quadraticBezierTo((poleXs[0] + poleXs[1]) / 2, baseY - 33, poleXs[1] + 12, baseY - 40)
+    ..quadraticBezierTo((poleXs[1] + poleXs[2]) / 2, baseY - 33, poleXs[2] + 12, baseY - 40);
+  canvas.drawPath(wire2, wirePaint);
+}
+
+void _paintGroundMist(Canvas canvas, double w, double horizon, double time, double scroll) {
+  final span = w + 200;
+  final x = ((time * 0.12 * span) % span) - 80;
+  final y = horizon + 22 + (scroll * 0.16);
+  final mist = Paint()..color = const Color(0x168DA4C4);
+  canvas.drawOval(Rect.fromCenter(center: Offset(x, y), width: 220, height: 26), mist);
+  canvas.drawOval(Rect.fromCenter(center: Offset(x + 140, y + 8), width: 190, height: 22), mist);
 }
 
 class _GroundPainter extends CustomPainter {
@@ -1449,10 +2657,12 @@ class _GroundPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+
+    // Rich ground soil and grass layer
     final soil = Path()
-      ..moveTo(0, h * 0.42)
-      ..quadraticBezierTo(w * 0.25, h * 0.34, w * 0.5, h * 0.4)
-      ..quadraticBezierTo(w * 0.75, h * 0.48, w, h * 0.38)
+      ..moveTo(0, h * 0.38)
+      ..quadraticBezierTo(w * 0.25, h * 0.32, w * 0.5, h * 0.37)
+      ..quadraticBezierTo(w * 0.75, h * 0.44, w, h * 0.35)
       ..lineTo(w, h)
       ..lineTo(0, h)
       ..close();
@@ -1462,40 +2672,95 @@ class _GroundPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: const [Color(0xFF3D5A2A), Color(0xFF2C3F1C), Color(0xFF24180E)],
+          colors: const [Color(0xFF3B5628), Color(0xFF283918), Color(0xFF1E150C)],
         ).createShader(Offset.zero & size),
     );
-    _tree(canvas, Offset(w * 0.12, h * 0.18), 0.72);
-    _tree(canvas, Offset(w * 0.9, h * 0.14), 0.78);
+
+    // Substation Distribution Cabinet / Transformer Base at bottom left
+    final boxRect = Rect.fromLTWH(w * 0.08, h * 0.34, 52, 48);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(boxRect, const Radius.circular(3)),
+      Paint()..color = const Color(0xFF1F2B38),
+    );
+    // Radiator cooling vents
+    final ventPaint = Paint()..color = const Color(0xFF121B24)..strokeWidth = 1.0;
+    for (var v = 0; v < 4; v++) {
+      canvas.drawLine(Offset(w * 0.08 + 8 + v * 9, h * 0.34 + 6), Offset(w * 0.08 + 8 + v * 9, h * 0.34 + 28), ventPaint);
+    }
+    // High Voltage Warning Plate ("১১,০০০ ভোল্ট • বিপদ")
+    final plateRect = Rect.fromLTWH(w * 0.08 + 10, h * 0.34 + 32, 32, 11);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(plateRect, const Radius.circular(1.5)),
+      Paint()..color = const Color(0xFFFBBF24),
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(w * 0.08 + 12, h * 0.34 + 34, 4, 7),
+      Paint()..color = const Color(0xFFDC2626),
+    );
+
+    // Trees in the background
+    _tree(canvas, Offset(w * 0.14, h * 0.16), 0.72);
+    _tree(canvas, Offset(w * 0.90, h * 0.13), 0.78);
+
+    // Bamboo Pole Foundations
     final cx = w / 2;
-    const gap = 34.0;
-    _bambooPole(canvas, cx - gap, 0, h * 0.58, 13);
-    _bambooPole(canvas, cx + gap, 0, h * 0.58, 13);
-    _bambooRung(canvas, cx, h * 0.22, gap);
+    const gap = 36.0;
+    _bambooPole(canvas, cx - gap, 0, h * 0.58, 14, seed: 0);
+    _bambooPole(canvas, cx + gap, 0, h * 0.58, 14, seed: 1);
+    _bambooRung(canvas, cx, h * 0.22, gap, seed: 0);
+
+    // Foundation support soil mounds
     final mound = Paint()..color = const Color(0xFF4A3420);
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx - gap, h * 0.6), width: 28, height: 14), mound);
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx + gap, h * 0.6), width: 28, height: 14), mound);
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx - gap, h * 0.59), width: 32, height: 16), mound);
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx + gap, h * 0.59), width: 32, height: 16), mound);
+
+    // Safety Traffic Cones on the ground
+    _drawSafetyCone(canvas, Offset(w * 0.26, h * 0.62));
+    _drawSafetyCone(canvas, Offset(w * 0.74, h * 0.64));
+
+    // Wild grass blades
     final rng = math.Random(21);
     final blade = Paint()
       ..color = const Color(0x996B8F3C)
       ..strokeWidth = 1.3
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    for (var i = 0; i < 18; i++) {
+    for (var i = 0; i < 22; i++) {
       final x = rng.nextDouble() * w;
-      final y = h * 0.52 + rng.nextDouble() * h * 0.32;
+      final y = h * 0.50 + rng.nextDouble() * h * 0.34;
       final path = Path()
         ..moveTo(x, y)
-        ..quadraticBezierTo(x + (rng.nextBool() ? 4 : -4), y - 10, x + (rng.nextBool() ? 2 : -2), y - 16);
+        ..quadraticBezierTo(x + (rng.nextBool() ? 4 : -4), y - 11, x + (rng.nextBool() ? 2 : -2), y - 18);
       canvas.drawPath(path, blade);
     }
-    _flower(canvas, Offset(w * 0.24, h * 0.7), const Color(0xFFF472B6), 5);
-    _flower(canvas, Offset(w * 0.72, h * 0.66), const Color(0xFFFACC15), 5);
-    _flower(canvas, Offset(w * 0.86, h * 0.78), const Color(0xFFF9A8D4), 4.5);
+    _flower(canvas, Offset(w * 0.22, h * 0.72), const Color(0xFFF472B6), 5);
+    _flower(canvas, Offset(w * 0.72, h * 0.68), const Color(0xFFFACC15), 5);
+    _flower(canvas, Offset(w * 0.86, h * 0.80), const Color(0xFFF9A8D4), 4.5);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+void _drawSafetyCone(Canvas canvas, Offset base) {
+  // Orange cone
+  final cone = Path()
+    ..moveTo(base.dx - 9, base.dy)
+    ..lineTo(base.dx - 2.5, base.dy - 20)
+    ..lineTo(base.dx + 2.5, base.dy - 20)
+    ..lineTo(base.dx + 9, base.dy)
+    ..close();
+  canvas.drawPath(cone, Paint()..color = const Color(0xFFEA580C));
+  // White reflective stripe
+  final stripe = Path()
+    ..moveTo(base.dx - 6, base.dy - 7)
+    ..lineTo(base.dx - 3.8, base.dy - 13)
+    ..lineTo(base.dx + 3.8, base.dy - 13)
+    ..lineTo(base.dx + 6, base.dy - 7)
+    ..close();
+  canvas.drawPath(stripe, Paint()..color = const Color(0xFFF8FAFC));
+  // Base plate
+  canvas.drawRect(Rect.fromCenter(center: base, width: 22, height: 3.5), Paint()..color = const Color(0xFFEA580C));
 }
 
 class _BambooRungPainter extends CustomPainter {
@@ -1508,66 +2773,122 @@ class _BambooRungPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
     final cx = w / 2;
-    const gap = 34.0;
+    const gap = 36.0;
+
     if (!sky && index < 2) {
-      _leaves(canvas, Offset(w * 0.14, h * 0.5), index, left: true, thin: true);
-      _leaves(canvas, Offset(w * 0.88, h * 0.48), index + 3, left: false, thin: true);
+      _leaves(canvas, Offset(w * 0.12, h * 0.5), index, left: true, thin: true);
+      _leaves(canvas, Offset(w * 0.89, h * 0.48), index + 3, left: false, thin: true);
     }
-    _bambooPole(canvas, cx - gap, 0, h, 13);
-    _bambooPole(canvas, cx + gap, 0, h, 13);
-    _bambooRung(canvas, cx, h / 2, gap);
+    // Upright bamboo poles
+    _bambooPole(canvas, cx - gap, 0, h, 14, seed: index * 2);
+    _bambooPole(canvas, cx + gap, 0, h, 14, seed: index * 2 + 1);
+
+    // Cross rung with authentic jute rope lashings
+    _bambooRung(canvas, cx, h / 2, gap, seed: index);
   }
 
   @override
-  bool shouldRepaint(covariant _BambooRungPainter oldDelegate) => oldDelegate.index != index || oldDelegate.sky != sky;
+  bool shouldRepaint(covariant _BambooRungPainter oldDelegate) =>
+      oldDelegate.index != index || oldDelegate.sky != sky;
 }
 
-void _bambooPole(Canvas canvas, double x, double top, double bot, double width) {
+void _bambooPole(Canvas canvas, double x, double top, double bot, double width, {required int seed}) {
   final rect = Rect.fromLTRB(x - width / 2, top, x + width / 2, bot);
+  // Natural 3D cylindrical bamboo pole gradient
   canvas.drawRRect(
     RRect.fromRectAndRadius(rect, const Radius.circular(8)),
     Paint()
       ..shader = LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
-        colors: const [Color(0xFF5C4316), Color(0xFFC6B15A), Color(0xFFE8D98A), Color(0xFF8A6A28), Color(0xFF4A3510)],
-        stops: const [0.0, 0.28, 0.48, 0.78, 1.0],
+        colors: const [
+          Color(0xFF4A3510),
+          Color(0xFF8B6C24),
+          Color(0xFFD8C26E),
+          Color(0xFFF2E69E),
+          Color(0xFF9E7C2C),
+          Color(0xFF3E2B0C),
+        ],
+        stops: const [0.0, 0.18, 0.38, 0.52, 0.82, 1.0],
       ).createShader(rect),
   );
+
+  // Longitudinal wood grain lines
+  final grain = Paint()
+    ..color = const Color(0x33452B0C)
+    ..strokeWidth = 0.8;
+  canvas.drawLine(Offset(x - 2.5, top), Offset(x - 2.5, bot), grain);
+  canvas.drawLine(Offset(x + 2.5, top), Offset(x + 2.5, bot), grain);
+
+  // Vertical light reflection
   canvas.drawRRect(
-    RRect.fromLTRBR(x - width / 2 + 2.2, top + 2, x - 1.4, bot - 2, const Radius.circular(6)),
-    Paint()..color = const Color(0x55FFF6D8),
+    RRect.fromLTRBR(x - width / 2 + 2.2, top + 2, x - 1.2, bot - 2, const Radius.circular(6)),
+    Paint()..color = const Color(0x44FFF8E1),
   );
+
+  // Natural segment node ring in the middle
   final nodeY = (top + bot) / 2;
+  // Node collar swelling
   canvas.drawRRect(
-    RRect.fromLTRBR(x - width / 2 - 1.6, nodeY - 3.2, x + width / 2 + 1.6, nodeY + 3.2, const Radius.circular(4)),
+    RRect.fromLTRBR(x - width / 2 - 1.8, nodeY - 3.4, x + width / 2 + 1.8, nodeY + 3.4, const Radius.circular(4)),
     Paint()..color = const Color(0xFF6B4E16),
   );
+  // Dark nodal joint ring
   canvas.drawLine(
-    Offset(x - width / 2 - 1, nodeY),
-    Offset(x + width / 2 + 1, nodeY),
+    Offset(x - width / 2 - 1.2, nodeY),
+    Offset(x + width / 2 + 1.2, nodeY),
     Paint()
-      ..color = const Color(0xFF3F2A0C)
-      ..strokeWidth = 1.1,
+      ..color = const Color(0xFF2C1C07)
+      ..strokeWidth = 1.3,
+  );
+  // Node highlight line
+  canvas.drawLine(
+    Offset(x - width / 2 - 1.0, nodeY - 1.5),
+    Offset(x + width / 2 + 1.0, nodeY - 1.5),
+    Paint()
+      ..color = const Color(0x66FFF6D8)
+      ..strokeWidth = 0.9,
   );
 }
 
-void _bambooRung(Canvas canvas, double cx, double y, double gap) {
-  final rect = Rect.fromLTRB(cx - gap - 7, y - 6, cx + gap + 7, y + 6);
+void _bambooRung(Canvas canvas, double cx, double y, double gap, {required int seed}) {
+  final rect = Rect.fromLTRB(cx - gap - 8, y - 6.5, cx + gap + 8, y + 6.5);
+  // Horizontal bamboo rung
   canvas.drawRRect(
     RRect.fromRectAndRadius(rect, const Radius.circular(7)),
     Paint()
       ..shader = const LinearGradient(
-        colors: [Color(0xFF6B4E16), Color(0xFFD4C078), Color(0xFF8A6A28)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFE8D796), Color(0xFF9E7C2C), Color(0xFF4A3510)],
       ).createShader(rect),
   );
+  // Center wooden peg
   canvas.drawCircle(Offset(cx, y), 3.2, Paint()..color = const Color(0xFF5C4316));
-  final wrap = Paint()
-    ..color = const Color(0xFF3F2A0C)
-    ..strokeWidth = 1.3
-    ..style = PaintingStyle.stroke;
-  canvas.drawOval(Rect.fromCenter(center: Offset(cx - gap, y), width: 16, height: 14), wrap);
-  canvas.drawOval(Rect.fromCenter(center: Offset(cx + gap, y), width: 16, height: 14), wrap);
+
+  // Authentic criss-cross jute rope bindings on both joint sides
+  _drawJuteRopeBinding(canvas, cx - gap, y);
+  _drawJuteRopeBinding(canvas, cx + gap, y);
+}
+
+void _drawJuteRopeBinding(Canvas canvas, double jx, double jy) {
+  final rope = Paint()
+    ..color = const Color(0xFF6B4A18)
+    ..strokeWidth = 1.6
+    ..strokeCap = StrokeCap.round;
+  final fiber = Paint()
+    ..color = const Color(0xFFF2DCA0)
+    ..strokeWidth = 0.8
+    ..strokeCap = StrokeCap.round;
+
+  // Diagonal criss-cross wraps
+  canvas.drawLine(Offset(jx - 7, jy - 7), Offset(jx + 7, jy + 7), rope);
+  canvas.drawLine(Offset(jx - 7, jy + 7), Offset(jx + 7, jy - 7), rope);
+  canvas.drawLine(Offset(jx - 8, jy), Offset(jx + 8, jy), rope);
+
+  // Fiber highlights
+  canvas.drawLine(Offset(jx - 5, jy - 5), Offset(jx + 5, jy + 5), fiber);
+  canvas.drawLine(Offset(jx - 6, jy - 1), Offset(jx + 6, jy - 1), fiber);
 }
 
 void _tree(Canvas canvas, Offset base, double scale) {
@@ -1610,7 +2931,16 @@ void _leaves(Canvas canvas, Offset c, int seed, {required bool left, bool thin =
   }
 }
 
-class _LevelOrb extends StatelessWidget {
+String _formatStampBn(int sec) {
+  const d = '০১২৩৪৫৬৭৮৯';
+  final mStr = (sec ~/ 60).toString().padLeft(2, '0');
+  final sStr = (sec % 60).toString().padLeft(2, '0');
+  final mBn = mStr.split('').map((ch) => d[int.parse(ch)]).join();
+  final sBn = sStr.split('').map((ch) => d[int.parse(ch)]).join();
+  return '$mBn:$sBn';
+}
+
+class _LevelOrb extends StatefulWidget {
   final int number;
   final bool next;
   final bool locked;
@@ -1628,97 +2958,203 @@ class _LevelOrb extends StatelessWidget {
     this.onTap,
   });
 
-  List<Color> get _plate {
-    if (locked) return const [Color(0xFFC5CAD0), Color(0xFF8A919A), Color(0xFF4E555E)];
-    if (rank == DsLevelRank.darun) return const [Color(0xFFE8D39A), Color(0xFFB0892A), Color(0xFF6A4E12)];
-    if (rank == DsLevelRank.motamuti) return const [Color(0xFFD8CDB0), Color(0xFF9A8A68), Color(0xFF5C5040)];
-    if (next) return const [Color(0xFFF0DFA8), Color(0xFFC4A03A), Color(0xFF7A5C14)];
-    if (field) return const [Color(0xFFC8CCD2), Color(0xFF6E7680), Color(0xFF3A4048)];
-    return const [Color(0xFFE2C090), Color(0xFFA07840), Color(0xFF5E4020)];
+  @override
+  State<_LevelOrb> createState() => _LevelOrbState();
+}
+
+class _LevelOrbState extends State<_LevelOrb> with SingleTickerProviderStateMixin {
+  AnimationController? _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.next) {
+      _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _LevelOrb oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.next && _pulse == null) {
+      _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..repeat(reverse: true);
+    } else if (!widget.next && _pulse != null) {
+      _pulse!.dispose();
+      _pulse = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse?.dispose();
+    super.dispose();
+  }
+
+  List<Color> get _plateColors {
+    if (widget.locked) return const [Color(0xFF5A626E), Color(0xFF383E48), Color(0xFF22262C)];
+    if (widget.rank == DsLevelRank.darun) return const [Color(0xFFFDE68A), Color(0xFFD97706), Color(0xFF78350F)];
+    if (widget.rank == DsLevelRank.motamuti) return const [Color(0xFFE2E8F0), Color(0xFF94A3B8), Color(0xFF475569)];
+    if (widget.next) return const [Color(0xFFFEF08A), Color(0xFFF59E0B), Color(0xFF92400E)];
+    if (widget.field) return const [Color(0xFFCBD5E1), Color(0xFF64748B), Color(0xFF334155)];
+    return const [Color(0xFFFDE047), Color(0xFFB45309), Color(0xFF451A03)];
   }
 
   @override
   Widget build(BuildContext context) {
-    final metal = _plate;
-    final stamp = (locked || bestSec == null)
+    final metal = _plateColors;
+    final stamp = (widget.locked || widget.bestSec == null)
         ? ''
-        : '${(bestSec! ~/ 60).toString().padLeft(2, '0')}:${(bestSec! % 60).toString().padLeft(2, '0')}';
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: 68,
-        height: 40,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(5),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: metal,
-              stops: const [0.0, 0.46, 1.0],
-            ),
-            border: Border.all(color: metal.last, width: 1.15),
-            boxShadow: const [
-              BoxShadow(color: Color(0x99000000), offset: Offset(0, 1.5), blurRadius: 1.2),
-            ],
-          ),
-          child: Stack(
-            children: [
+        : _formatStampBn(widget.bestSec!);
+
+    return AnimatedBuilder(
+      animation: _pulse ?? kAlwaysCompleteAnimation,
+      builder: (context, _) {
+        final pVal = _pulse?.value ?? 0.0;
+        final isNext = widget.next;
+
+        return Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            // Floating animated upward chevron indicator for the active climb target
+            if (isNext)
               Positioned(
-                top: 1.2,
-                left: 3,
-                right: 3,
-                height: 1,
-                child: DecoratedBox(
+                top: -24 - (4 * pVal),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   decoration: BoxDecoration(
-                    color: const Color(0x55FFFFFF),
-                    borderRadius: BorderRadius.circular(1),
+                    color: const Color(0xCC091422),
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(color: const Color(0xFFFBBF24), width: 0.9),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.keyboard_double_arrow_up_rounded, size: 14, color: Color(0xFFFBBF24)),
+                      const SizedBox(width: 2),
+                      Text(
+                        'পরবর্তী',
+                        style: zlText(9.5, weight: FontWeight.w800, color: const Color(0xFFFDE68A)),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              Positioned(
-                bottom: 1.2,
-                left: 4,
-                right: 4,
-                height: 1,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0x44000000),
-                    borderRadius: BorderRadius.circular(1),
+
+            // Inspection Plate Widget
+            GestureDetector(
+              onTap: widget.onTap,
+              child: Container(
+                width: 72,
+                height: 42,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: metal,
+                    stops: const [0.0, 0.46, 1.0],
                   ),
+                  border: Border.all(
+                    color: isNext ? const Color(0xFFFFFBEB) : metal.last,
+                    width: isNext ? 1.6 : 1.2,
+                  ),
+                  boxShadow: [
+                    if (isNext) ...[
+                      BoxShadow(
+                        color: Color.fromRGBO(245, 158, 11, 0.45 + (0.35 * pVal)),
+                        blurRadius: 18 + (6 * pVal),
+                        spreadRadius: 2 + (2 * pVal),
+                      ),
+                      BoxShadow(
+                        color: Color.fromRGBO(56, 189, 248, 0.35 * pVal),
+                        blurRadius: 10,
+                      ),
+                    ] else
+                      const BoxShadow(color: Color(0x99000000), offset: Offset(0, 2), blurRadius: 3),
+                  ],
                 ),
-              ),
-              const Positioned(left: 5, top: 0, bottom: 0, child: Center(child: _MetalRivet())),
-              const Positioned(right: 5, top: 0, bottom: 0, child: Center(child: _MetalRivet())),
-              Center(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: stamp.isEmpty ? 0 : 7),
-                  child: Text(
-                    _bnNum(number),
-                    style: zlText(16, weight: FontWeight.w900, color: const Color(0xFF1C1408)).copyWith(
-                      shadows: const [
-                        Shadow(offset: Offset(0, 1), color: Color(0x55FFFFFF), blurRadius: 0),
-                        Shadow(offset: Offset(0, -0.6), color: Color(0x66000000), blurRadius: 0),
-                      ],
+                child: Stack(
+                  children: [
+                    // Top rim specular highlight
+                    Positioned(
+                      top: 1.2,
+                      left: 3,
+                      right: 3,
+                      height: 1,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: const Color(0x66FFFFFF),
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
                     ),
-                  ),
+                    // Bottom bevel shadow
+                    Positioned(
+                      bottom: 1.2,
+                      left: 4,
+                      right: 4,
+                      height: 1,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: const Color(0x44000000),
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
+                    ),
+                    // Corner Rivets
+                    const Positioned(left: 4, top: 0, bottom: 0, child: Center(child: _MetalRivet())),
+                    const Positioned(right: 4, top: 0, bottom: 0, child: Center(child: _MetalRivet())),
+
+                    // Center Content (Number, Lock, or Stars)
+                    Center(
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: stamp.isEmpty ? 0 : 7),
+                        child: widget.locked
+                            ? const Icon(Icons.lock_rounded, size: 16, color: Color(0xFF94A3B8))
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _bnNum(widget.number),
+                                    style: zlText(16.5, weight: FontWeight.w900, color: const Color(0xFF1C1408)).copyWith(
+                                      shadows: const [
+                                        Shadow(offset: Offset(0, 1), color: Color(0x55FFFFFF), blurRadius: 0),
+                                        Shadow(offset: Offset(0, -0.6), color: Color(0x66000000), blurRadius: 0),
+                                      ],
+                                    ),
+                                  ),
+                                  if (widget.rank != null && widget.rank != DsLevelRank.again) ...[
+                                    const SizedBox(width: 3),
+                                    Icon(
+                                      widget.rank == DsLevelRank.darun ? Icons.stars_rounded : Icons.star_half_rounded,
+                                      size: 13,
+                                      color: widget.rank == DsLevelRank.darun ? const Color(0xFF78350F) : const Color(0xFF334155),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                      ),
+                    ),
+
+                    if (stamp.isNotEmpty)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 3,
+                        child: Text(
+                          stamp,
+                          textAlign: TextAlign.center,
+                          style: zlText(9, weight: FontWeight.w800, color: const Color(0xCC2A1C0A), height: 1),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              if (stamp.isNotEmpty)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 3,
-                  child: Text(
-                    stamp,
-                    textAlign: TextAlign.center,
-                    style: zlText(9, weight: FontWeight.w800, color: const Color(0xCC2A1C0A), height: 1),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -2428,6 +3864,7 @@ String _dressIntroArt(int level) => switch (level) {
       3 => 'assets/duty_slip/dress/tray_rubber_gloves.webp',
       4 => 'assets/duty_slip/dress/tray_harness.webp',
       5 => 'assets/duty_slip/dress/kit_ready.webp',
+      6 => 'assets/safety/library/ppe/Lineman_Boot_3.webp',
       _ => 'assets/duty_slip/dress/tray_shirt.webp',
     };
 
@@ -3610,8 +5047,15 @@ class _ResultBoard extends StatefulWidget {
   final DutySlipEngine engine;
   final VoidCallback onNext;
   final VoidCallback onRetry;
+  final VoidCallback? onBack;
   final bool muted;
-  const _ResultBoard({required this.engine, required this.onNext, required this.onRetry, required this.muted});
+  const _ResultBoard({
+    required this.engine,
+    required this.onNext,
+    required this.onRetry,
+    this.onBack,
+    required this.muted,
+  });
 
   @override
   State<_ResultBoard> createState() => _ResultBoardState();
@@ -3766,6 +5210,33 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
                 ),
               ),
             ),
+            if (widget.onBack != null)
+              Positioned(
+                top: 10,
+                left: 12,
+                child: Opacity(
+                  opacity: btnIn,
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      widget.onBack!();
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xCC091422),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0x44FBBF24)),
+                        boxShadow: const [
+                          BoxShadow(color: Color(0x66000000), blurRadius: 8, offset: Offset(0, 2)),
+                        ],
+                      ),
+                      child: const Icon(Icons.arrow_back_rounded, color: Color(0xFFFDE68A), size: 20),
+                    ),
+                  ),
+                ),
+              ),
             Positioned(
               left: 0,
               right: 0,
