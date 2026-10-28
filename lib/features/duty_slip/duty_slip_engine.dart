@@ -63,10 +63,10 @@ const dsLevels = <DsLevelSpec>[
   DsLevelSpec(number: 4, kind: DsLevelKind.letters, choices: 8, darunSec: 180),
   DsLevelSpec(number: 5, kind: DsLevelKind.letters, choices: 8, darunSec: 200),
   DsLevelSpec(number: 6, kind: DsLevelKind.letters, choices: 8, darunSec: 160),
-  DsLevelSpec(number: 7, kind: DsLevelKind.letters, choices: 6, darunSec: 85, living: true),
-  DsLevelSpec(number: 8, kind: DsLevelKind.letters, choices: 8, darunSec: 100, living: true),
-  DsLevelSpec(number: 9, kind: DsLevelKind.job, choices: 2, darunSec: 75),
-  DsLevelSpec(number: 10, kind: DsLevelKind.job, choices: 4, darunSec: 105),
+  DsLevelSpec(number: 7, kind: DsLevelKind.letters, choices: 8, darunSec: 180),
+  DsLevelSpec(number: 8, kind: DsLevelKind.letters, choices: 8, darunSec: 200),
+  DsLevelSpec(number: 9, kind: DsLevelKind.letters, choices: 8, darunSec: 180),
+  DsLevelSpec(number: 10, kind: DsLevelKind.letters, choices: 8, darunSec: 200),
   DsLevelSpec(number: 11, kind: DsLevelKind.job, choices: 6, darunSec: 150),
   DsLevelSpec(number: 12, kind: DsLevelKind.job, choices: 10, darunSec: 180),
   DsLevelSpec(number: 13, kind: DsLevelKind.job, choices: 23, darunSec: 240),
@@ -177,7 +177,11 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       3 => 'হাতে গ্লাভস',
       4 => 'হারনেস',
       5 => 'পুরো কিট',
-      6 => 'পোশাক ও জুতো Pro',
+      6 => 'কন্ট্রোল রুম',
+      7 => 'খুঁটিতে ওঠা',
+      8 => 'ট্রান্সফরমার মৃত করা',
+      9 => 'রাতের লাইনে ফল্ট',
+      10 => 'ডাল লাইনের উপর',
       _ => letterTitle ?? dsLetterTitlePool.first,
     };
     final body = switch (spec.number) {
@@ -186,8 +190,11 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       3 => 'লাইনে কাজ করার সময় হাতই প্রথম ঝুঁকির মুখে পড়ে। লাইভ তার স্পর্শের আগে হাতের সঠিক সুরক্ষা নিশ্চিত করুন।',
       4 => 'উচ্চতায় কাজের সময় পতন রোধে ফুল বডি হারনেসই জীবন বাঁচায়। সঠিক পদ্ধতিতে প্রতিটি বাকল লক করুন।',
       5 => 'এবার দ্রুত কাজের জন্য তৈরি হয়ে যান।',
-      6 => 'কাজে নামার আগে শরীর আর সরঞ্জাম ভালো করে পরখ করুন। কোনো লুকোনো বিপদ যেন বিদ্যুৎ না টানে!',
-      7 => 'এবার ছয়টা অপশন, আর ভুল ছুঁলেই নতুন ফাঁদ। মন্ত্রটা মনে রেখে হাত বাড়ান।',
+      6 => 'কন্ট্রোল রুমে ঢোকার আগে সুরক্ষাই প্রথম প্রতিরোধ। এই ঘরের উপযুক্ত সাজ বেছে নিন।',
+      7 => 'গলিতে তার ছিঁড়ে মাটিতে পড়ে আছে। ওঠার আগে যা যা লাগবে, বেছে নিন।',
+      8 => 'শাটডাউন হয়েছে। বুশিং খোলার আগে ট্রান্সফরমার মৃত করুন।',
+      9 => 'রাত দুপুরে লাইন মরে আছে। রাস্তায় গাড়ি আছে, আলো নেই।',
+      10 => 'ঝড়ে ডাল লাইনের উপর পড়েছে। আগে লাইন মৃত, তারপর ডাল।',
       _ => 'এবার আটটাই সামনে, আর ভুল ছুঁলেই নতুন সাজ। পুরো আট মন্ত্র মাথায় রেখে শেষ পর্যন্ত চলুন।',
     };
     return DsBrief(title: title, body: body, stamps: home);
@@ -346,7 +353,7 @@ class DutySlipEngine {
   var dressArmed = false;
   var dressOpen = false;
   bool get showingSafeWalk => false;
-  bool get dressLevel => level.isLetters && level.number <= 6;
+  bool get dressLevel => level.isLetters && level.number <= 10;
   bool get showingDressIntro => listing && dressLevel && !dressOpen;
   bool get showingDress => listing && dressLevel && dressOpen;
   void finishSafeWalk() => safeWalkDone = true;
@@ -447,6 +454,41 @@ class DutySlipEngine {
         DsLevelRank.darun => 'কিট ঠিক আছে।',
         DsLevelRank.motamuti => 'কিট পরেছেন। ভুলগুলো মনে রাখুন।',
         DsLevelRank.again => 'কিট এখনো আলগা। আবার পরান।',
+      };
+    }
+    if (level.isLetters && level.number == 6) {
+      return switch (levelRank) {
+        DsLevelRank.darun => 'দারুণ শৃঙ্খলা! কন্ট্রোল রুমের সাজে কোনো ত্রুটি হয়নি।',
+        DsLevelRank.motamuti => 'সাজ পরা হয়েছে, তবে এই ঘরের জন্য আরও সতর্ক থাকা জরুরি।',
+        DsLevelRank.again => 'এই ঘরের সাজে ঝুঁকি থেকে গেছে। সতর্কতা বজায় রেখে পুনরায় চেষ্টা করুন।',
+      };
+    }
+    if (level.isLetters && level.number == 7) {
+      return switch (levelRank) {
+        DsLevelRank.darun => 'দারুণ। খুঁটিতে ওঠার সাজ ঠিক আছে।',
+        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
+        DsLevelRank.again => 'এই সাজে খুঁটিতে ওঠা যাবে না। আবার সাজান।',
+      };
+    }
+    if (level.isLetters && level.number == 8) {
+      return switch (levelRank) {
+        DsLevelRank.darun => 'দারুণ। ট্রান্সফরমার মৃত করার সাজ ঠিক আছে।',
+        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
+        DsLevelRank.again => 'এই সাজে বুশিং খোলা যাবে না। আবার সাজান।',
+      };
+    }
+    if (level.isLetters && level.number == 9) {
+      return switch (levelRank) {
+        DsLevelRank.darun => 'দারুণ। রাতের লাইনের সাজ ঠিক আছে।',
+        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
+        DsLevelRank.again => 'এই সাজে রাতের লাইনে নামা যাবে না। আবার সাজান।',
+      };
+    }
+    if (level.isLetters && level.number == 10) {
+      return switch (levelRank) {
+        DsLevelRank.darun => 'দারুণ। ডাল নামানোর সাজ ঠিক আছে।',
+        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
+        DsLevelRank.again => 'এই সাজে ডাল নামানো যাবে না। আবার সাজান।',
       };
     }
     return switch (levelRank) {

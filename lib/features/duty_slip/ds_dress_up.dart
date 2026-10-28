@@ -30,150 +30,137 @@ const _pieces = <_Piece>[
   _Piece(id: 'boot', asset: 'assets/duty_slip/dress/tray_boot.webp', zone: 'feet', good: true, why: ''),
 ];
 
-const _proClothingPieces = <_Piece>[
-  _Piece(
-    id: 'fatua',
-    asset: 'assets/duty_slip/dress/tray_fatua.webp',
-    zone: 'torso',
-    good: false,
-    why: 'না, সাবধান! ঢিলে পোশাক বাতাসে উড়ে লাইনের তারে জড়িয়ে যেতে পারে। শরীর আঁটোসাঁটো রাখা জরুরি।',
-  ),
-  _Piece(
-    id: 'halftee',
-    asset: 'assets/duty_slip/dress/tray_halftee.webp',
-    zone: 'torso',
-    good: false,
-    why: 'থামুন! হাত খোলা থাকলে সামান্য স্পার্কেই সরাসরি চামড়া পুড়ে যাবে। হাত সম্পূর্ণ ঢাকা দরকার।',
-  ),
-  _Piece(
-    id: 'poly',
-    asset: 'assets/duty_slip/dress/tray_poly.webp',
-    zone: 'torso',
-    good: false,
-    why: 'মারাত্মক ভুল! আর্ক ফ্ল্যাশের তাপে পলিয়েস্টার গলে চামড়ায় আটকে যাবে। এমন কাপড় বিপজ্জনক।',
-  ),
-  _Piece(
-    id: 'shirt',
-    asset: 'assets/duty_slip/dress/tray_shirt.webp',
-    zone: 'torso',
-    good: true,
-    why: '',
-  ),
-  _Piece(
-    id: 'halfpant',
-    asset: 'assets/duty_slip/dress/tray_halfpant.webp',
-    zone: 'legs',
-    good: false,
-    why: 'সাবধান! পা উন্মুক্ত রেখে কাজ করা অনিরাপদ, ধারালো তারের ঘষা লাগতে পারে।',
-  ),
-  _Piece(
-    id: 'pajama',
-    asset: 'assets/duty_slip/dress/tray_pajama.webp',
-    zone: 'legs',
-    good: false,
-    why: 'না, এটা বিপজ্জনক! ঢিলে পাজামা যন্ত্রাংশে আটকে ভারসাম্য নষ্ট করতে পারে।',
-  ),
-  _Piece(
-    id: 'pant',
-    asset: 'assets/duty_slip/dress/tray_pant.webp',
-    zone: 'legs',
-    good: true,
-    why: '',
-  ),
-  _Piece(
-    id: 'slip',
-    asset: 'assets/duty_slip/dress/tray_slipper.webp',
-    zone: 'feet',
-    good: false,
-    why: 'বিপদ! চপ্পলে কোনো গ্রিপ নেই—মই বা পোলে পা হড়কালেই পতন ঘটবে।',
-  ),
-  _Piece(
-    id: 'normal',
-    asset: 'assets/duty_slip/dress/tray_normalshoe.webp',
-    zone: 'feet',
-    good: false,
-    why: 'না, সতর্ক হোন! সাধারণ জুতোর সোলে বৈদ্যুতিক ইনসুলেশন থাকে না।',
-  ),
-  _Piece(
-    id: 'steelboot',
-    asset: 'assets/safety/library/ppe/Lineman_Boot_3.webp',
-    zone: 'feet',
-    good: false,
-    why: 'মারাত্মক ঝুঁকি! স্টিল-টো বুটের ভেতরে ধাতুর পাত থাকে—লাইভ লাইনের কাছে তা মারাত্মক শর্ট ও শক ডেকে আনে। কম্পোজিট ডাই-ইলেকট্রিক বুট আবশ্যক!',
-  ),
-  _Piece(
-    id: 'boot',
-    asset: 'assets/duty_slip/dress/tray_boot.webp',
-    zone: 'feet',
-    good: true,
-    why: '',
-  ),
+const _roomStart = 'কন্ট্রোল রুমে ঢোকার আগে জিনিস বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
+const _roomDone = 'কন্ট্রোল রুমের সাজ সম্পূর্ণ। এই ঘরে ঢোকার সুরক্ষা নিশ্চিত।';
+const _roomFatua = 'না, সাবধান! ঢিলে পোশাক প্যানেলের হাতলে জড়িয়ে যেতে পারে। শরীর আঁটোসাঁটো রাখা জরুরি।';
+const _roomBareLeg = 'সাবধান! পা উন্মুক্ত রেখে কাজ করা অনিরাপদ, আর্কের আগুন সরাসরি চামড়ায় লাগবে।';
+const _roomSlip = 'বিপদ! চপ্পলে কোনো ইনসুলেশন নেই। স্পার্ক লাগলে পা বাঁচবে না।';
+const _roomHarness = 'সাবধান! কন্ট্রোল রুমে হারনেস লাগে না। প্যানেলের দরজায় আটকে গেলে বিপদ। এই ঘরে হারনেস খুলে রাখুন।';
+const _roomBelt = 'না, এটা বিপজ্জনক! কোমরের বেল্ট প্যানেলের হাতলে আটকে যেতে পারে। এই ঘরে বেল্ট নয়।';
+const _roomNoShirt = 'থামুন! শরীর খোলা থাকলে সামান্য স্পার্কেই সরাসরি চামড়া পুড়ে যাবে। শরীর সম্পূর্ণ ঢাকা দরকার।';
+const _roomNoHelmet = 'মাথার সুরক্ষায় কোনো ছাড় নেই। নিশ্ছিদ্র ইলেকট্রিক্যাল হেলমেট পরুন।';
+const _roomNoShield = 'থামুন! মুখ খোলা থাকলে আর্ক ফ্ল্যাশের আগুন সরাসরি চোখে লাগবে। ফেস শিল্ড দরকার।';
+const _roomNoGlove = 'থামুন! হাত খালি থাকলে সামান্য স্পার্কেই সরাসরি চামড়া পুড়ে যাবে। ইনসুলেটেড গ্লাভস দরকার।';
+const _roomNoBoot = 'না, সতর্ক হোন! খালি পায়ে বৈদ্যুতিক ইনসুলেশন থাকে না। সেফটি বুট পরুন।';
+const _roomMiss = 'আরও কিছু জিনিস বাদ পড়েছে।';
+const _roomKeep = {'shirt', 'pant', 'boot', 'helmet', 'shield', 'rubber'};
+
+const _poleStart = 'গলিতে তার ছিঁড়ে মাটিতে পড়ে আছে। খুঁটিতে ওঠার আগে যা যা লাগবে, বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
+const _poleDone = 'ঠিক আছে। এই সাজে খুঁটিতে ওঠা যাবে।';
+const _poleBamboo = 'আরে, বাঁশের মই নিয়ে উঠবেন না। ভিজলে পা হড়কায়, হঠাৎ ভেঙেও যায়।';
+const _poleBelt = 'কোমরের বেল্টে ঝুললে শরীর উল্টে যায়। খুঁটিতে ফুল-বডি হারনেস লাগবে।';
+const _poleSlip = 'চপ্পল পরে মইয়ে উঠবেন না। পা হড়কালেই পড়ে যাবেন।';
+const _poleShoe = 'সাধারণ জুতোয় বিদ্যুৎ আটকায় না, মইয়ে পাও হড়কায়। সেফটি বুট রাখুন।';
+const _poleRoad = 'এটা রাস্তার হেলমেট। খুঁটির কাজে এতে মাথা বাঁচবে না।';
+const _poleVent = 'ফুটো হেলমেট নিয়ে খুঁটিতে উঠবেন না। ফুলকি বা জল ঢুকে যাবে।';
+const _poleCotton = 'সুতির গ্লাভসে বিদ্যুৎ আটকায় না। রাবারের গ্লাভস রাখুন।';
+const _poleWet = 'গ্লাভস ভেজা। ভেজা গ্লাভস দিয়ে বিদ্যুৎ হাতে চলে আসে।';
+const _poleHole = 'এই গ্লাভসে ফুটো। ফুটো দিয়েই শক লাগে।';
+const _poleBike = 'বাইকের গ্লাভসে বিদ্যুৎ আটকায় না।';
+const _poleFatua = 'ফতুয়া হাওয়ায় উড়ে তারে জড়িয়ে যাবে। সুতির শার্ট রাখুন।';
+const _poleHalf = 'হাতা ছোট। তারের ছ্যাঁকা সোজা গায়ে লাগবে।';
+const _polePoly = 'পলিয়েস্টার গলে গায়ে লেগে যায়। সুতির শার্ট রাখুন।';
+const _polePajama = 'ঢিলে পাজামায় পা জড়িয়ে মই থেকে পড়ে যাবেন।';
+const _poleHalfPant = 'হাফ প্যান্টে পা খোলা। তারের ঘষা সোজা গায়ে লাগবে।';
+const _poleGamcha = 'গামছা মাথায় জড়ালে হেলমেট বসবে না। এতে বিদ্যুৎও আটকায় না।';
+const _poleKeep = {'shirt', 'pant', 'boot', 'helmet', 'rubber', 'harness', 'frp'};
+
+const _dtrStart = 'শাটডাউন হয়েছে। বুশিং খোলার আগে যা যা লাগবে, বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
+const _dtrDone = 'ঠিক আছে। এবার বুশিং খোলা যাবে।';
+const _dtrWire = 'তার জড়িয়ে শর্ট করবেন না। ডিসচার্জ রড দিয়ে মাটিতে নামান।';
+const _dtrCloth = 'ভেজা ন্যাকড়া দিয়ে বুশিং মুছবেন না। জল দিয়ে বিদ্যুৎ হাতে চলে আসবে।';
+const _dtrRoad = 'এটা রাস্তার হেলমেট। বুশিংয়ের কাজে এতে মাথা বাঁচবে না।';
+const _dtrVent = 'ফুটো হেলমেট নিয়ে বুশিং খুলবেন না। ফুলকি ঢুকে যাবে।';
+const _dtrGamcha = 'গামছা মাথায় জড়ালে হেলমেট বসবে না। বুশিংয়ের আগুনও আটকায় না।';
+const _dtrFatua = 'ফতুয়া হাওয়ায় উড়ে বুশিংয়ে জড়িয়ে যাবে। সুতির শার্ট রাখুন।';
+const _dtrHalf = 'হাতা ছোট। আর্কের ছ্যাঁকা সোজা গায়ে লাগবে।';
+const _dtrPoly = 'পলিয়েস্টার গলে গায়ে লেগে যায়। সুতির শার্ট রাখুন।';
+const _dtrPajama = 'ঢিলে পাজামা যন্ত্রাংশে জড়িয়ে যাবে।';
+const _dtrHalfPant = 'হাফ প্যান্টে পা খোলা। আর্কের আগুন সোজা গায়ে লাগবে।';
+const _dtrCotton = 'সুতির গ্লাভসে বিদ্যুৎ আটকায় না। রাবারের গ্লাভস রাখুন।';
+const _dtrWet = 'গ্লাভস ভেজা। ভেজা গ্লাভস দিয়ে বিদ্যুৎ হাতে চলে আসে।';
+const _dtrHole = 'এই গ্লাভসে ফুটো। ফুটো দিয়েই শক লাগে।';
+const _dtrBike = 'বাইকের গ্লাভসে বিদ্যুৎ আটকায় না।';
+const _dtrSlip = 'চপ্পল পরে বুশিংয়ের কাছে যাবেন না। পা হড়কাবে, বিদ্যুৎও আটকাবে না।';
+const _dtrShoe = 'সাধারণ জুতোয় বিদ্যুৎ আটকায় না। সেফটি বুট রাখুন।';
+const _dtrKeep = {'shirt', 'pant', 'boot', 'helmet', 'shield', 'rubber', 'tester', 'discharge', 'earth'};
+
+const _nightStart = 'রাত দুপুরে এলটি ফল্ট। যা যা লাগবে, বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
+const _nightDone = 'ঠিক আছে। এই সাজে রাতের লাইনে নামা যাবে।';
+const _nightBamboo = 'আরে, বাঁশের মই নিয়ে রাতে উঠবেন না। ভিজলে পা হড়কায়, অন্ধকারে দেখাও যায় না।';
+const _nightWet = 'গ্লাভস ভেজা। ভেজা গ্লাভস দিয়ে বিদ্যুৎ হাতে চলে আসে।';
+const _nightSlip = 'চপ্পল পরে রাতের রাস্তায় উঠবেন না। পা হড়কালেই পড়ে যাবেন।';
+const _nightRoad = 'এটা রাস্তার হেলমেট। রাতের লাইনে এতে মাথা বাঁচবে না।';
+const _nightVent = 'ফুটো হেলমেট নিয়ে বৃষ্টিতে উঠবেন না। জল ঢুকে যাবে।';
+const _nightGamcha = 'গামছা মাথায় জড়ালে হেলমেট বসবে না। রাতে গাড়িও আপনাকে দেখবে না।';
+const _nightFatua = 'ফতুয়া হাওয়ায় উড়ে তারে জড়িয়ে যাবে। সুতির শার্ট রাখুন।';
+const _nightHalf = 'হাতা ছোট। তারের ছ্যাঁকা সোজা গায়ে লাগবে।';
+const _nightPoly = 'পলিয়েস্টার গলে গায়ে লেগে যায়। সুতির শার্ট রাখুন।';
+const _nightPajama = 'ঢিলে পাজামায় পা জড়িয়ে মই থেকে পড়ে যাবেন।';
+const _nightHalfPant = 'হাফ প্যান্টে পা খোলা। তারের ঘষা সোজা গায়ে লাগবে।';
+const _nightCotton = 'সুতির গ্লাভসে বিদ্যুৎ আটকায় না। রাবারের গ্লাভস রাখুন।';
+const _nightHole = 'এই গ্লাভসে ফুটো। ফুটো দিয়েই শক লাগে।';
+const _nightBike = 'বাইকের গ্লাভসে বিদ্যুৎ আটকায় না।';
+const _nightShoe = 'সাধারণ জুতোয় বিদ্যুৎ আটকায় না, ভেজা রাস্তায় পাও হড়কায়। সেফটি বুট রাখুন।';
+const _nightKeep = {'shirt', 'pant', 'boot', 'helmet', 'rubber', 'vest', 'torch', 'frp'};
+
+const _treeStart = 'ডাল লাইনের উপর। নামানোর আগে যা যা লাগবে, বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
+const _treeDone = 'ঠিক আছে। এবার ডাল নামানো যাবে।';
+const _treeSickle = 'লাইন মৃত না করে কাস্তে দিয়ে ডাল কাটবেন না।';
+const _treeSaw = 'লাইন মৃত না করে করাত দিয়ে ডাল কাটবেন না।';
+const _treeRoad = 'এটা রাস্তার হেলমেট। ডালের কাজে এতে মাথা বাঁচবে না।';
+const _treeVent = 'ফুটো হেলমেট নিয়ে ডালের কাছে যাবেন না। ফুলকি ঢুকে যাবে।';
+const _treeGamcha = 'গামছা মাথায় জড়ালে হেলমেট বসবে না। এতে বিদ্যুৎও আটকায় না।';
+const _treeFatua = 'ফতুয়া হাওয়ায় উড়ে ডালে জড়িয়ে যাবে। সুতির শার্ট রাখুন।';
+const _treeHalf = 'হাতা ছোট। ডালের ঘষা সোজা গায়ে লাগবে।';
+const _treePoly = 'পলিয়েস্টার গলে গায়ে লেগে যায়। সুতির শার্ট রাখুন।';
+const _treePajama = 'ঢিলে পাজামা ডালে জড়িয়ে যাবে।';
+const _treeHalfPant = 'হাফ প্যান্টে পা খোলা। ডালের ঘষা সোজা গায়ে লাগবে।';
+const _treeCotton = 'সুতির গ্লাভসে বিদ্যুৎ আটকায় না। রাবারের গ্লাভস রাখুন।';
+const _treeWet = 'গ্লাভস ভেজা। ভেজা গ্লাভস দিয়ে বিদ্যুৎ হাতে চলে আসে।';
+const _treeHole = 'এই গ্লাভসে ফুটো। ফুটো দিয়েই শক লাগে।';
+const _treeBike = 'বাইকের গ্লাভসে বিদ্যুৎ আটকায় না।';
+const _treeSlip = 'চপ্পল পরে ভেজা মাটিতে ডাল নামানো যাবে না। পা হড়কালেই পড়ে যাবেন।';
+const _treeShoe = 'সাধারণ জুতোয় বিদ্যুৎ আটকায় না। সেফটি বুট রাখুন।';
+const _treeKeep = {'shirt', 'pant', 'boot', 'helmet', 'rubber', 'tester', 'discharge', 'rope'};
+
+const _testerPiece = _Piece(id: 'tester', asset: 'assets/zero_loss/scene/gear_tester.webp', zone: 'tool', good: true, why: '');
+const _dischargePiece = _Piece(id: 'discharge', asset: 'assets/safety/library/ppe/discharge_rod_1.webp', zone: 'tool', good: true, why: '');
+const _earthPiece = _Piece(id: 'earth', asset: 'assets/zero_loss/scene/gear_earth_rods.webp', zone: 'tool', good: true, why: '');
+const _wirePiece = _Piece(id: 'wire', asset: 'assets/duty_slip/dress/tray_wire.webp', zone: 'tool', good: false, why: _dtrWire);
+const _clothPiece = _Piece(id: 'cloth', asset: 'assets/zero_loss/scene/gear_wet_cloth.webp', zone: 'tool', good: false, why: _dtrCloth);
+const _vestPiece = _Piece(id: 'vest', asset: 'assets/zero_loss/scene/gear_high_vis_vest.webp', zone: 'tool', good: true, why: '');
+const _torchPiece = _Piece(id: 'torch', asset: 'assets/zero_loss/scene/gear_high_lumen_torch.webp', zone: 'tool', good: true, why: '');
+const _ropePiece = _Piece(id: 'rope', asset: 'assets/zero_loss/scene/gear_rope.webp', zone: 'tool', good: true, why: '');
+const _sicklePiece = _Piece(id: 'sickle', asset: 'assets/zero_loss/scene/gear_iron_sickle.webp', zone: 'tool', good: false, why: _treeSickle);
+const _sawPiece = _Piece(id: 'saw', asset: 'assets/zero_loss/scene/gear_tree_saw.webp', zone: 'tool', good: false, why: _treeSaw);
+
+const _frpPiece = _Piece(
+  id: 'frp',
+  asset: 'assets/zero_loss/scene/gear_frp_ladder.webp',
+  zone: 'ladder',
+  good: true,
+  why: '',
+);
+const _bambooPiece = _Piece(
+  id: 'bamboo',
+  asset: 'assets/zero_loss/scene/gear_bamboo_ladder.webp',
+  zone: 'ladder',
+  good: false,
+  why: _poleBamboo,
+);
+
+const _benchOrder = [
+  'fatua', 'halftee', 'poly', 'shirt',
+  'halfpant', 'pajama', 'pant',
+  'slip', 'normal', 'boot',
+  'road', 'vent', 'helmet',
+  'cotton', 'wet', 'hole', 'bike', 'rubber',
+  'gamcha', 'shield', 'belt', 'harness',
+  'frp', 'bamboo',
+  'tester', 'discharge', 'earth', 'wire', 'cloth',
+  'vest', 'torch', 'rope', 'sickle', 'saw',
 ];
-
-class _KadaPainter extends CustomPainter {
-  const _KadaPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width * 0.5, size.height * 0.5);
-    final r = math.min(size.width, size.height) * 0.40;
-    final stroke = Paint()
-      ..shader = const SweepGradient(
-        colors: [
-          Color(0xFFFFFBE8),
-          Color(0xFFE5C07B),
-          Color(0xFF996515),
-          Color(0xFFD4AF37),
-          Color(0xFFFFFBE8),
-        ],
-      ).createShader(Rect.fromCircle(center: c, radius: r))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.6
-      ..strokeCap = StrokeCap.round;
-    canvas.drawCircle(c, r, stroke);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _MalaPainter extends CustomPainter {
-  const _MalaPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final path = Path()
-      ..moveTo(w * 0.15, 0)
-      ..cubicTo(w * 0.20, h * 0.85, w * 0.80, h * 0.85, w * 0.85, 0);
-
-    final stroke = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Color(0xFFD4AF37),
-          Color(0xFFFFF8DC),
-          Color(0xFFA67C00),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, w, h))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
-      ..strokeCap = StrokeCap.round;
-    canvas.drawPath(path, stroke);
-
-    final pC = Offset(w * 0.5, h * 0.78);
-    final pPaint = Paint()
-      ..color = const Color(0xFFD4AF37)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(pC, 3.8, pPaint);
-    canvas.drawCircle(pC, 3.8, Paint()..color = const Color(0xFF4A2F08)..style = PaintingStyle.stroke..strokeWidth = 1.0);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 const _shoeBlock = 'আরে আরে, ভুল হচ্ছে! জুতো পরা অবস্থায় প্যান্ট ঠিকমতো পরা সম্ভব নয়। আগে প্যান্টের কাজ শেষ করুন।';
 
@@ -419,6 +406,7 @@ _Spot _guideSpot(String zone) {
     _ => _gFingers,
   };
 }
+const _spotBelt = _Spot('belt', 0.36, 0.46, 0.28, 0.08);
 const _spotLegs = _Spot('legs', 0.38, 0.63, 0.24, 0.22);
 const _spotFeet = _Spot('feet', 0.33, 0.86, 0.34, 0.12);
 
@@ -572,6 +560,29 @@ class _JointPainter extends CustomPainter {
 }
 
 /// Getting-ready lessons. Clothes, head, hands, harness, then the whole kit.
+class _Cam {
+  const _Cam(this.scale, this.align);
+  final double scale;
+  final Alignment align;
+
+  static _Cam lerp(_Cam a, _Cam b, double t) {
+    return _Cam(a.scale + (b.scale - a.scale) * t, Alignment.lerp(a.align, b.align, t)!);
+  }
+
+  @override
+  bool operator ==(Object other) => other is _Cam && other.scale == scale && other.align == align;
+
+  @override
+  int get hashCode => Object.hash(scale, align);
+}
+
+class _CamTween extends Tween<_Cam> {
+  _CamTween(_Cam end) : super(begin: const _Cam(1, Alignment.center), end: end);
+
+  @override
+  _Cam lerp(double t) => _Cam.lerp(begin ?? const _Cam(1, Alignment.center), end ?? const _Cam(1, Alignment.center), t);
+}
+
 class DsDressUp extends StatefulWidget {
   final DutySlipEngine engine;
   final VoidCallback onDone;
@@ -637,7 +648,25 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   var _linking = false;
   var _chosen = '';
   final _shelfOrder = <String>[];
-  _Piece? _inspectedShoe;
+  var _checking = false;
+  var _blameZone = '';
+  var _roomToken = 0;
+  var _landId = '';
+  var _landToken = 0;
+  var _frontId = '';
+  var _frontWhy = '';
+  var _tossAsset = '';
+  var _tossFrom = Offset.zero;
+  var _tossTo = Offset.zero;
+  final _heldBack = <String>{};
+  _Cam _cam = const _Cam(1, Alignment.center);
+  final _roomKey = GlobalKey();
+  final _benchPaneKey = GlobalKey();
+  final _dressKey = GlobalKey();
+  final _shelfKey = GlobalKey();
+  final _pieceKeys = <String, GlobalKey>{};
+  late final AnimationController _toss;
+  late final AnimationController _ring;
 
   @override
   void initState() {
@@ -646,12 +675,10 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 460));
     _link = AnimationController(vsync: this, duration: const Duration(milliseconds: 360));
     _rowFx = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
+    _toss = AnimationController(vsync: this, duration: const Duration(milliseconds: 520));
+    _ring = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat();
     if (_headLesson) _on.add('gamcha');
     if (_harnessLesson) _on.add('rubber');
-    if (_clothingProLesson) {
-      _on.add('bala');
-      _on.add('mala');
-    }
     _mixShelf(sound: false);
     widget.engine.beginDress();
     ZlFx.holdClock();
@@ -661,7 +688,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       3 => 'হাতে গ্লাভস পরার আগে ত্রুটি ও ইনসুলেশন যাচাই করে সঠিক সুরক্ষাকবচ বেছে নিন।',
       4 => 'উচ্চতায় ওঠায় হারনেসই শেষ ভরসা। গ্লাভস সরিয়ে হারনেস ধরুন এবং ধাপে ধাপে বাঁধুন।',
       5 => 'সব জিনিস টেনে ঠিক জায়গায় ছোঁয়ান।',
-      6 => 'কাজে নামার আগে শরীর আর সরঞ্জাম ভালো করে পরখ করুন—কোনো লুকোনো বিপদ যেন বিদ্যুৎ না টানে!',
+      6 => _roomStart,
+      7 => _poleStart,
+      8 => _dtrStart,
+      9 => _nightStart,
+      10 => _treeStart,
       _ => 'কাজে নামার আগে ঠিকঠাক পোশাক বেছে নিন—ঝুঁকি এড়িয়ে সঠিকটা পরান।',
     };
     _speakCoach(hello, mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1400));
@@ -669,11 +700,14 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _roomToken++;
     _markTimer?.cancel();
     _sway.dispose();
     _shake.dispose();
     _link.dispose();
     _rowFx.dispose();
+    _toss.dispose();
+    _ring.dispose();
     _coachTimer?.cancel();
     ZlFx.releaseClock();
     super.dispose();
@@ -685,7 +719,33 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   bool get _harnessLesson => widget.engine.level.number == 4;
 
-  bool get _clothingProLesson => widget.engine.level.number == 6;
+  bool get _roomLesson => widget.engine.level.number >= 6 && widget.engine.level.number <= 10;
+
+  bool get _poleLesson => widget.engine.level.number == 7;
+
+  bool get _dtrLesson => widget.engine.level.number == 8;
+
+  bool get _nightLesson => widget.engine.level.number == 9;
+
+  bool get _treeLesson => widget.engine.level.number == 10;
+
+  String get _benchScene => switch (widget.engine.level.number) {
+        7 => 'assets/zero_loss/scene/bg_market_wire_down.webp',
+        8 => 'assets/zero_loss/scene/bg_dtr_structure.webp',
+        9 => 'assets/zero_loss/scene/bg_pole_storm.webp',
+        10 => 'assets/zero_loss/scene/bg_tree_on_line.webp',
+        _ => 'assets/zero_loss/scene/bg_control_room.webp',
+      };
+
+  String get _benchDone => switch (widget.engine.level.number) {
+        7 => _poleDone,
+        8 => _dtrDone,
+        9 => _nightDone,
+        10 => _treeDone,
+        _ => _roomDone,
+      };
+
+  bool _tallPiece(String id) => id == 'frp' || id == 'bamboo' || id == 'discharge' || id == 'tester' || id == 'torch' || id == 'sickle' || id == 'saw';
 
   bool get _showFingers => _harnessLesson && (_step == _HStep.fitL || _step == _HStep.fitR);
 
@@ -707,8 +767,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         2 => _headPieces,
         3 => _handPieces,
         4 => _harnessKit,
-        5 => _fullKit,
-        6 => _proClothingPieces,
+        5 || 6 => _fullKit,
+        7 => _poleKit,
+        8 => _dtrKit,
+        9 => _nightKit,
+        10 => _treeKit,
         _ => _pieces,
       };
 
@@ -728,6 +791,14 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     ];
   }
 
+  List<_Piece> get _poleKit => [..._fullKit, _frpPiece, _bambooPiece];
+
+  List<_Piece> get _dtrKit => [..._fullKit, _testerPiece, _dischargePiece, _earthPiece, _wirePiece, _clothPiece];
+
+  List<_Piece> get _nightKit => [..._fullKit, _vestPiece, _torchPiece, _frpPiece, _bambooPiece];
+
+  List<_Piece> get _treeKit => [..._fullKit, _testerPiece, _dischargePiece, _ropePiece, _sicklePiece, _sawPiece];
+
   bool get _ready => switch (widget.engine.level.number) {
         2 => _on.contains('helmet') && !_on.contains('gamcha'),
         3 => _on.contains('rubber'),
@@ -740,11 +811,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
             _on.contains('shield') &&
             _on.contains('rubber') &&
             !_on.contains('gamcha'),
-        6 => _on.contains('shirt') &&
-            _on.contains('pant') &&
-            _on.contains('boot') &&
-            !_on.contains('bala') &&
-            !_on.contains('mala'),
+        6 => _roomKeep.every(_on.contains) && _on.length == _roomKeep.length,
+        7 => _poleKeep.every(_on.contains),
+        8 => _dtrKeep.every(_on.contains),
+        9 => _nightKeep.every(_on.contains),
+        10 => _treeKeep.every(_on.contains),
         _ => _on.contains('shirt') && _on.contains('pant') && _on.contains('boot'),
       };
 
@@ -771,6 +842,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   String get _figure {
+    if (_roomLesson) return 'body';
     if (_fullLesson) return _fullFigure;
     if (_harnessLesson) return _harnessFigure;
     if (_handsLesson) return _on.contains('rubber') ? 'hands_gloves' : 'head_helmet';
@@ -839,7 +911,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   void _holdCoach(Duration hold) {
     _coachTimer?.cancel();
     _coachTimer = Timer(hold, () {
-      if (!mounted || _finishing || _mark != null) return;
+      if (!mounted || _finishing || _checking || _mark != null) return;
       setState(() => _coachFace = DsCoachMood.ready);
     });
   }
@@ -1399,8 +1471,510 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     });
   }
 
+  String _roomFamily(String id) => switch (id) {
+        'fatua' || 'halftee' || 'poly' || 'shirt' => 'cloth',
+        'halfpant' || 'pajama' || 'pant' => 'legs',
+        'slip' || 'normal' || 'boot' => 'feet',
+        'road' || 'vent' || 'helmet' => 'helm',
+        'cotton' || 'wet' || 'hole' || 'bike' || 'rubber' => 'gloves',
+        'frp' || 'bamboo' => 'ladder',
+        _ => id,
+      };
+
+  List<_Piece> get _benchPieces {
+    final out = <_Piece>[];
+    for (final id in _benchOrder) {
+      if (!_on.contains(id)) continue;
+      final piece = _byId(id);
+      if (piece != null) out.add(piece);
+    }
+    return out;
+  }
+
+  GlobalKey _pieceKey(String id) => _pieceKeys.putIfAbsent(id, GlobalKey.new);
+
+  RenderBox? _boxOf(GlobalKey key) {
+    final box = key.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.attached || !box.hasSize) return null;
+    return box;
+  }
+
+  RenderBox? _zoneBox(String zone) {
+    if (zone != 'bench') {
+      final piece = _boxOf(_pieceKey(zone));
+      if (piece != null) return piece;
+    }
+    return _boxOf(_benchPaneKey);
+  }
+
+  _Cam _camFor(String zone, {required double scale}) {
+    final stage = _boxOf(_roomKey);
+    final target = _zoneBox(zone);
+    if (stage == null || target == null) return _Cam(scale, Alignment.bottomCenter);
+    final p = stage.globalToLocal(target.localToGlobal(target.size.center(Offset.zero)));
+    final ax = ((p.dx / stage.size.width) * 2 - 1).clamp(-0.85, 0.85);
+    final ay = ((p.dy / stage.size.height) * 2 - 1).clamp(-0.85, 0.85);
+    return _Cam(scale, Alignment(ax.toDouble(), ay.toDouble()));
+  }
+
+  Offset _flyFrom(String zone) {
+    final box = _zoneBox(zone);
+    if (box == null) {
+      final size = MediaQuery.sizeOf(context);
+      return Offset(size.width / 2, size.height * 0.62);
+    }
+    return box.localToGlobal(box.size.center(Offset.zero));
+  }
+
+  void _wearRoom(_Piece piece) {
+    final family = _roomFamily(piece.id);
+    final token = ++_landToken;
+    setState(() {
+      _on.removeWhere((id) => _roomFamily(id) == family);
+      _on.add(piece.id);
+      _landId = piece.id;
+    });
+    HapticFeedback.lightImpact();
+    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
+    Future<void>.delayed(const Duration(milliseconds: 320), () {
+      if (!mounted || token != _landToken) return;
+      setState(() => _landId = '');
+    });
+  }
+
+  List<({String zone, String why})> _roomFaults() {
+    if (_poleLesson) return _poleFaults();
+    if (_dtrLesson) return _dtrFaults();
+    if (_nightLesson) return _nightFaults();
+    if (_treeLesson) return _treeFaults();
+    final out = <({String zone, String why})>[];
+    void add(String zone, String why) => out.add((zone: zone, why: why));
+    String whyOf(String id) => _byId(id)?.why ?? '';
+
+    if (_on.contains('gamcha')) add('gamcha', _gamchaNoSave);
+    if (_on.contains('road')) {
+      add('road', whyOf('road'));
+    } else if (_on.contains('vent')) {
+      add('vent', whyOf('vent'));
+    } else if (!_on.contains('helmet')) {
+      add('bench', _roomNoHelmet);
+    }
+    if (!_on.contains('shield')) add('bench', _roomNoShield);
+
+    if (_on.contains('fatua')) {
+      add('fatua', _roomFatua);
+    } else if (_on.contains('halftee')) {
+      add('halftee', whyOf('halftee'));
+    } else if (_on.contains('poly')) {
+      add('poly', whyOf('poly'));
+    } else if (!_on.contains('shirt')) {
+      add('bench', _roomNoShirt);
+    }
+
+    if (_on.contains('pajama')) {
+      add('pajama', whyOf('pajama'));
+    } else if (_on.contains('halfpant')) {
+      add('halfpant', _roomBareLeg);
+    } else if (!_on.contains('pant')) {
+      add('bench', _roomBareLeg);
+    }
+
+    if (_on.contains('cotton')) {
+      add('cotton', whyOf('cotton'));
+    } else if (_on.contains('wet')) {
+      add('wet', whyOf('wet'));
+    } else if (_on.contains('hole')) {
+      add('hole', whyOf('hole'));
+    } else if (_on.contains('bike')) {
+      add('bike', whyOf('bike'));
+    } else if (!_on.contains('rubber')) {
+      add('bench', _roomNoGlove);
+    }
+
+    if (_on.contains('slip')) {
+      add('slip', _roomSlip);
+    } else if (_on.contains('normal')) {
+      add('normal', whyOf('normal'));
+    } else if (!_on.contains('boot')) {
+      add('bench', _roomNoBoot);
+    }
+
+    if (_on.contains('harness')) add('harness', _roomHarness);
+    if (_on.contains('belt')) add('belt', _roomBelt);
+    return out;
+  }
+
+  List<({String zone, String why})> _poleFaults() {
+    final out = <({String zone, String why})>[];
+    void add(String zone, String why) => out.add((zone: zone, why: why));
+
+    if (_on.contains('gamcha')) add('gamcha', _poleGamcha);
+    if (_on.contains('road')) {
+      add('road', _poleRoad);
+    } else if (_on.contains('vent')) {
+      add('vent', _poleVent);
+    } else if (!_on.contains('helmet')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('fatua')) {
+      add('fatua', _poleFatua);
+    } else if (_on.contains('halftee')) {
+      add('halftee', _poleHalf);
+    } else if (_on.contains('poly')) {
+      add('poly', _polePoly);
+    } else if (!_on.contains('shirt')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('pajama')) {
+      add('pajama', _polePajama);
+    } else if (_on.contains('halfpant')) {
+      add('halfpant', _poleHalfPant);
+    } else if (!_on.contains('pant')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('cotton')) {
+      add('cotton', _poleCotton);
+    } else if (_on.contains('wet')) {
+      add('wet', _poleWet);
+    } else if (_on.contains('hole')) {
+      add('hole', _poleHole);
+    } else if (_on.contains('bike')) {
+      add('bike', _poleBike);
+    } else if (!_on.contains('rubber')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('slip')) {
+      add('slip', _poleSlip);
+    } else if (_on.contains('normal')) {
+      add('normal', _poleShoe);
+    } else if (!_on.contains('boot')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('belt')) add('belt', _poleBelt);
+    if (_on.contains('bamboo')) add('bamboo', _poleBamboo);
+    if (!_on.contains('harness')) add('bench', _roomMiss);
+    if (!_on.contains('frp')) add('bench', _roomMiss);
+    return out;
+  }
+
+  List<({String zone, String why})> _dtrFaults() {
+    final out = <({String zone, String why})>[];
+    void add(String zone, String why) => out.add((zone: zone, why: why));
+
+    if (_on.contains('gamcha')) add('gamcha', _dtrGamcha);
+    if (_on.contains('road')) {
+      add('road', _dtrRoad);
+    } else if (_on.contains('vent')) {
+      add('vent', _dtrVent);
+    } else if (!_on.contains('helmet')) {
+      add('bench', _roomMiss);
+    }
+    if (!_on.contains('shield')) add('bench', _roomMiss);
+
+    if (_on.contains('fatua')) {
+      add('fatua', _dtrFatua);
+    } else if (_on.contains('halftee')) {
+      add('halftee', _dtrHalf);
+    } else if (_on.contains('poly')) {
+      add('poly', _dtrPoly);
+    } else if (!_on.contains('shirt')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('pajama')) {
+      add('pajama', _dtrPajama);
+    } else if (_on.contains('halfpant')) {
+      add('halfpant', _dtrHalfPant);
+    } else if (!_on.contains('pant')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('cotton')) {
+      add('cotton', _dtrCotton);
+    } else if (_on.contains('wet')) {
+      add('wet', _dtrWet);
+    } else if (_on.contains('hole')) {
+      add('hole', _dtrHole);
+    } else if (_on.contains('bike')) {
+      add('bike', _dtrBike);
+    } else if (!_on.contains('rubber')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('slip')) {
+      add('slip', _dtrSlip);
+    } else if (_on.contains('normal')) {
+      add('normal', _dtrShoe);
+    } else if (!_on.contains('boot')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('wire')) add('wire', _dtrWire);
+    if (_on.contains('cloth')) add('cloth', _dtrCloth);
+    if (!_on.contains('tester')) add('bench', _roomMiss);
+    if (!_on.contains('discharge')) add('bench', _roomMiss);
+    if (!_on.contains('earth')) add('bench', _roomMiss);
+    return out;
+  }
+
+  List<({String zone, String why})> _nightFaults() {
+    final out = <({String zone, String why})>[];
+    void add(String zone, String why) => out.add((zone: zone, why: why));
+
+    if (_on.contains('gamcha')) add('gamcha', _nightGamcha);
+    if (_on.contains('road')) {
+      add('road', _nightRoad);
+    } else if (_on.contains('vent')) {
+      add('vent', _nightVent);
+    } else if (!_on.contains('helmet')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('fatua')) {
+      add('fatua', _nightFatua);
+    } else if (_on.contains('halftee')) {
+      add('halftee', _nightHalf);
+    } else if (_on.contains('poly')) {
+      add('poly', _nightPoly);
+    } else if (!_on.contains('shirt')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('pajama')) {
+      add('pajama', _nightPajama);
+    } else if (_on.contains('halfpant')) {
+      add('halfpant', _nightHalfPant);
+    } else if (!_on.contains('pant')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('cotton')) {
+      add('cotton', _nightCotton);
+    } else if (_on.contains('wet')) {
+      add('wet', _nightWet);
+    } else if (_on.contains('hole')) {
+      add('hole', _nightHole);
+    } else if (_on.contains('bike')) {
+      add('bike', _nightBike);
+    } else if (!_on.contains('rubber')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('slip')) {
+      add('slip', _nightSlip);
+    } else if (_on.contains('normal')) {
+      add('normal', _nightShoe);
+    } else if (!_on.contains('boot')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('bamboo')) add('bamboo', _nightBamboo);
+    if (!_on.contains('vest')) add('bench', _roomMiss);
+    if (!_on.contains('torch')) add('bench', _roomMiss);
+    if (!_on.contains('frp')) add('bench', _roomMiss);
+    return out;
+  }
+
+  List<({String zone, String why})> _treeFaults() {
+    final out = <({String zone, String why})>[];
+    void add(String zone, String why) => out.add((zone: zone, why: why));
+
+    if (_on.contains('gamcha')) add('gamcha', _treeGamcha);
+    if (_on.contains('road')) {
+      add('road', _treeRoad);
+    } else if (_on.contains('vent')) {
+      add('vent', _treeVent);
+    } else if (!_on.contains('helmet')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('fatua')) {
+      add('fatua', _treeFatua);
+    } else if (_on.contains('halftee')) {
+      add('halftee', _treeHalf);
+    } else if (_on.contains('poly')) {
+      add('poly', _treePoly);
+    } else if (!_on.contains('shirt')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('pajama')) {
+      add('pajama', _treePajama);
+    } else if (_on.contains('halfpant')) {
+      add('halfpant', _treeHalfPant);
+    } else if (!_on.contains('pant')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('cotton')) {
+      add('cotton', _treeCotton);
+    } else if (_on.contains('wet')) {
+      add('wet', _treeWet);
+    } else if (_on.contains('hole')) {
+      add('hole', _treeHole);
+    } else if (_on.contains('bike')) {
+      add('bike', _treeBike);
+    } else if (!_on.contains('rubber')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('slip')) {
+      add('slip', _treeSlip);
+    } else if (_on.contains('normal')) {
+      add('normal', _treeShoe);
+    } else if (!_on.contains('boot')) {
+      add('bench', _roomMiss);
+    }
+
+    if (_on.contains('sickle')) add('sickle', _treeSickle);
+    if (_on.contains('saw')) add('saw', _treeSaw);
+    if (!_on.contains('tester')) add('bench', _roomMiss);
+    if (!_on.contains('discharge')) add('bench', _roomMiss);
+    if (!_on.contains('rope')) add('bench', _roomMiss);
+    return out;
+  }
+
+  Future<void> _roomCheck() async {
+    if (_checking || _finishing || !_roomLesson) return;
+    final wrong = [for (final fault in _roomFaults()) if (fault.zone != 'bench') fault];
+    if (wrong.isEmpty) {
+      if (_ready) {
+        widget.engine.dressRight();
+        widget.onDelta(5, _flyFrom('bench'));
+        await _doneLesson(_benchDone);
+        return;
+      }
+      await _roomHint();
+      return;
+    }
+    final token = ++_roomToken;
+    _speakToken++;
+    _coachTimer?.cancel();
+    setState(() {
+      _checking = true;
+      _mark = null;
+      _ask = false;
+      _coachSay = '';
+    });
+    for (final fault in wrong) {
+      if (!mounted || token != _roomToken) return;
+      setState(() {
+        _frontId = fault.zone;
+        _frontWhy = fault.why;
+        _blameZone = fault.zone;
+        _coachFace = DsCoachMood.oops;
+        _coachSay = '';
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 160));
+      if (!mounted || token != _roomToken) return;
+      widget.engine.dressWrong();
+      widget.onDelta(-5, _frontPoint());
+      HapticFeedback.heavyImpact();
+      unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.7, muted: widget.muted));
+      await widget.onSpeak(fault.why);
+      if (!mounted || token != _roomToken) return;
+      final piece = fault.zone == 'bench' ? null : _byId(fault.zone);
+      if (piece != null) {
+        await _throwHome(piece);
+      } else {
+        await Future<void>.delayed(const Duration(milliseconds: 320));
+        if (!mounted || token != _roomToken) return;
+        setState(() {
+          _frontId = '';
+          _frontWhy = '';
+        });
+      }
+    }
+    if (!mounted || token != _roomToken) return;
+    setState(() {
+      _checking = false;
+      _blameZone = '';
+      _frontId = '';
+      _frontWhy = '';
+      _tossAsset = '';
+      _heldBack.clear();
+      _coachFace = DsCoachMood.ready;
+      _coachSay = '';
+      if (widget.engine.level.number == 6) _on.removeWhere((id) => !_roomKeep.contains(id));
+      _mixShelf(sound: true);
+    });
+  }
+
+  Future<void> _roomHint() async {
+    final token = ++_roomToken;
+    _speakToken++;
+    _coachTimer?.cancel();
+    setState(() {
+      _checking = true;
+      _frontId = 'hint';
+      _frontWhy = _roomMiss;
+      _blameZone = '';
+      _coachFace = DsCoachMood.talk;
+      _coachSay = '';
+    });
+    await widget.onSpeak(_roomMiss);
+    if (!mounted || token != _roomToken) return;
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted || token != _roomToken) return;
+    setState(() {
+      _checking = false;
+      _frontId = '';
+      _frontWhy = '';
+      _coachFace = DsCoachMood.ready;
+    });
+  }
+
+  Offset _frontPoint() {
+    final box = _boxOf(_dressKey);
+    if (box == null) {
+      final size = MediaQuery.sizeOf(context);
+      return Offset(size.width / 2, size.height * 0.4);
+    }
+    return box.localToGlobal(Offset(box.size.width / 2, box.size.height * 0.36));
+  }
+
+  Future<void> _throwHome(_Piece piece) async {
+    final stage = _boxOf(_dressKey);
+    final shelf = _boxOf(_shelfKey);
+    final from = stage == null ? const Offset(180, 240) : Offset(stage.size.width / 2, stage.size.height * 0.36);
+    var to = Offset(from.dx, (stage?.size.height ?? 520) - 28);
+    if (stage != null && shelf != null) {
+      to = stage.globalToLocal(shelf.localToGlobal(Offset(shelf.size.width * 0.62, 30)));
+    }
+    setState(() {
+      _frontId = '';
+      _frontWhy = '';
+      _on.remove(piece.id);
+      _heldBack.add(piece.id);
+      _tossAsset = piece.asset;
+      _tossFrom = from;
+      _tossTo = to;
+    });
+    try {
+      await _toss.forward(from: 0);
+    } on TickerCanceled {
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _tossAsset = '';
+      _heldBack.remove(piece.id);
+    });
+    HapticFeedback.lightImpact();
+    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.32, muted: widget.muted));
+  }
+
   void _wear(_Piece piece, Offset global) {
-    if (_finishing || _on.contains(piece.id)) return;
+    if (_finishing || _checking || _on.contains(piece.id)) return;
+    if (_roomLesson) {
+      _wearRoom(piece);
+      return;
+    }
     if (_harnessLesson && piece.id == 'harness') {
       _parkHarness(global);
       return;
@@ -1419,16 +1993,6 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     }
     if (!piece.good) {
       _fail(piece.zone, piece.why, piece, global);
-      return;
-    }
-    if (_clothingProLesson && piece.id == 'shirt' && (_on.contains('bala') || _on.contains('mala'))) {
-      _shake.forward(from: 0);
-      final what = _on.contains('bala') && _on.contains('mala')
-          ? 'হাতের বালা ও গলার মালা'
-          : _on.contains('bala')
-              ? 'হাতের বালা'
-              : 'গলার মালা';
-      _fail('torso', 'পোশাকের নিচে ধাতব জিনিস থাকলে তা সরাসরি বিদ্যুৎ শরীরে টানে। আগে $what খুলে নিরাপদ বাক্সে রাখুন!', piece, global);
       return;
     }
     if (piece.id == 'pant' && _on.contains('boot')) {
@@ -1455,7 +2019,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       2 => 'হেলমেট যথাযথভাবে লক করা হয়েছে। মাথার সুরক্ষা নিশ্চিত।',
       3 => 'হাতের গ্লাভস পরা সম্পন্ন হয়েছে। হাত এখন কাজের জন্য প্রস্তুত।',
       5 => 'ঠিক আছে। এভাবেই পুরো কিট পরুন।',
-      6 => 'চমৎকার পর্যবেক্ষণ! ধাতুমুক্ত শরীর ও ডাই-ইলেকট্রিক বুটে আপনি সম্পূর্ণ সুরক্ষিত।',
+      6 => _roomDone,
       _ => 'পোশাক নির্বাচন সম্পূর্ণ। শরীর এখন কাজের জন্য সুরক্ষিত।',
     });
   }
@@ -1468,7 +2032,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   void _take(_Piece piece) {
-    if (_finishing || !_on.contains(piece.id)) return;
+    if (_finishing || _checking || !_on.contains(piece.id)) return;
     if (_fullLesson && _blockedTake(piece)) return;
     if (_harnessLesson && piece.id == 'harness' && (_left != _Gap.open || _right != _Gap.open || _waistL || _waistR || _chest)) return;
     setState(() {
@@ -1492,6 +2056,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _clearMark();
     });
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.3, muted: widget.muted));
+    if (_roomLesson) HapticFeedback.selectionClick();
     if (_headLesson && piece.id == 'gamcha') {
       const line = 'মাথা উন্মুক্ত হয়েছে। এবার উপযুক্ত ইলেকট্রিক্যাল হেলমেটটি পরিয়ে দিন।';
       _speakCoach(line, mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1200));
@@ -1509,15 +2074,30 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFF6E2B8), Color(0xFFE7C98A), Color(0xFFC9A36A)],
-          stops: [0.0, 0.55, 1.0],
-        ),
+      decoration: BoxDecoration(
+        gradient: _roomLesson
+            ? const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF1A2430), Color(0xFF243044), Color(0xFF1B140E)],
+              )
+            : const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFF6E2B8), Color(0xFFE7C98A), Color(0xFFC9A36A)],
+                stops: [0.0, 0.55, 1.0],
+              ),
+        image: _roomLesson
+            ? DecorationImage(
+                image: AssetImage(_benchScene),
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                opacity: widget.engine.level.number == 6 ? 0.5 : 0.78,
+              )
+            : null,
       ),
       child: Stack(
+        key: _dressKey,
         clipBehavior: Clip.none,
         children: [
           Column(
@@ -1525,34 +2105,16 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
               const SizedBox(height: 8),
               Expanded(
                 child: Stack(
+                  fit: _roomLesson ? StackFit.expand : StackFit.loose,
                   alignment: Alignment.center,
                   children: [
                     AnimatedOpacity(
                       opacity: _hero ? 0 : 1,
                       duration: const Duration(milliseconds: 460),
                       curve: Curves.easeInOutCubic,
-                      child: IgnorePointer(
-                        ignoring: _finishing,
-                        child: _glow
-                            ? _WinGlow(
-                                pulse: _sway,
-                                child: _harnessLesson
-                                    ? Row(
-                                        children: [
-                                          Expanded(child: _bobbingMan()),
-                                          _guideRail(),
-                                        ],
-                                      )
-                                    : _bobbingMan(),
-                              )
-                            : _harnessLesson
-                                ? Row(
-                                    children: [
-                                      Expanded(child: _bobbingMan()),
-                                      _guideRail(),
-                                    ],
-                                  )
-                                : _bobbingMan(),
+                        child: IgnorePointer(
+                        ignoring: _finishing || _checking,
+                        child: _glow ? _WinGlow(pulse: _sway, child: _playMan()) : _playMan(),
                       ),
                     ),
                     if (_hero)
@@ -1568,6 +2130,25 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                   ],
                 ),
               ),
+              if (_roomLesson && !_finishing)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 6),
+                  child: GestureDetector(
+                    onTap: _checking ? null : _roomCheck,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _checking ? const Color(0xFF5C4632) : const Color(0xFF3A2A16),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFC9A227), width: 1.4),
+                      ),
+                      child: Text('তৈরি', style: zlText(18, weight: FontWeight.w900, color: const Color(0xFFF6E7B0))),
+                    ),
+                  ),
+                ),
               AnimatedSlide(
                 offset: _hero ? const Offset(0, 0.45) : Offset.zero,
                 duration: const Duration(milliseconds: 520),
@@ -1575,13 +2156,14 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                 child: AnimatedOpacity(
                   opacity: _hero ? 0 : 1,
                   duration: const Duration(milliseconds: 420),
-                  child: IgnorePointer(ignoring: _finishing, child: _shelf()),
+                  child: IgnorePointer(ignoring: _finishing || _checking, child: _shelf()),
                 ),
               ),
             ],
           ),
+          if (_frontId.isNotEmpty) _reviewFront(),
+          if (_tossAsset.isNotEmpty) _tossFlight(),
           if (_ask && _mark != null) _modal(_mark!.why),
-          if (_inspectedShoe != null) _shoeInspectModal(_inspectedShoe!),
         ],
       ),
     );
@@ -1600,7 +2182,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       2 => const [_spotHead],
       3 => const [_spotHandL, _spotHandR],
       5 => const [_spotHead, _spotChest, _spotBuckle, _spotHandL, _spotHandR, _spotLegs, _spotFeet],
-      6 => const [_spotNeck, _spotHandL, _spotTorso, _spotLegs, _spotFeet],
+      6 => const [_spotHead, _spotTorso, _spotBelt, _spotBuckle, _spotHandL, _spotHandR, _spotLegs, _spotFeet],
       _ => const [_spotTorso, _spotLegs, _spotFeet],
     };
   }
@@ -1628,20 +2210,22 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                     fit: StackFit.expand,
                     children: [
                       Image.asset('assets/duty_slip/dress/$_figure.webp', fit: BoxFit.fill),
-                      if (_clothingProLesson && _on.contains('bala'))
-                        Positioned.fromRect(
-                          rect: _spotHandL.of(image),
-                          child: const IgnorePointer(
-                            child: CustomPaint(painter: _KadaPainter()),
-                          ),
-                        ),
-                      if (_clothingProLesson && _on.contains('mala'))
-                        Positioned.fromRect(
-                          rect: _spotNeck.of(image),
-                          child: const IgnorePointer(
-                            child: CustomPaint(painter: _MalaPainter()),
-                          ),
-                        ),
+                      if (_blameZone.isNotEmpty)
+                        for (final s in spots)
+                          if (s.spot.zone == _blameZone)
+                            Positioned.fromRect(
+                              rect: s.rect.inflate(8),
+                              child: const IgnorePointer(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: Color(0x55E53935),
+                                    borderRadius: BorderRadius.all(Radius.circular(18)),
+                                    border: Border.fromBorderSide(BorderSide(color: Color(0xFFFF5A4A), width: 2.4)),
+                                    boxShadow: [BoxShadow(color: Color(0xAAE53935), blurRadius: 16, spreadRadius: 2)],
+                                  ),
+                                ),
+                              ),
+                            ),
                       for (final s in spots) _handle(s.spot, s.rect),
                       for (final s in spots) _reach(s.spot, image),
                       for (final s in spots)
@@ -1672,7 +2256,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   bool _canDrop(_Piece piece, _Spot spot) {
-    if (_finishing) return false;
+    if (_finishing || _checking) return false;
     if (_harnessLesson) {
       if (_rowOk || _guide >= _guideRows.length) return false;
       if (_on.contains(piece.id)) return false;
@@ -1757,6 +2341,239 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     if (_mark != null) return _mark!.why;
     if (_coachFace == DsCoachMood.ready) return '';
     return _coachSay;
+  }
+
+  Widget _playMan() {
+    if (_roomLesson) return _roomStage();
+    if (_harnessLesson) {
+      return Row(
+        children: [
+          Expanded(child: _bobbingMan()),
+          _guideRail(),
+        ],
+      );
+    }
+    return _bobbingMan();
+  }
+
+  Widget _roomStage() {
+    return ClipRect(
+      child: TweenAnimationBuilder<_Cam>(
+        tween: _CamTween(_cam),
+        duration: const Duration(milliseconds: 360),
+        curve: Curves.easeOutCubic,
+        builder: (_, cam, child) => Transform.scale(
+          scale: cam.scale,
+          alignment: cam.align,
+          filterQuality: FilterQuality.medium,
+          child: child,
+        ),
+        child: KeyedSubtree(
+          key: _roomKey,
+          child: AnimatedBuilder(
+            animation: _shake,
+            builder: (_, child) {
+              final shakeX = math.sin(_shake.value * math.pi * 6) * (1 - _shake.value) * 10;
+              return Transform.translate(offset: Offset(shakeX, 0), child: child);
+            },
+            child: Column(
+              children: [
+                const Expanded(child: Image(image: AssetImage('assets/duty_slip/dress/body.webp'), fit: BoxFit.contain)),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: _bench(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _bench() {
+    final pieces = _benchPieces;
+    final missing = _blameZone == 'bench';
+    final hot = _dragZone == 'bench';
+    return DragTarget<_Piece>(
+      hitTestBehavior: HitTestBehavior.opaque,
+      onWillAcceptWithDetails: (d) => !_checking && !_finishing,
+      onAcceptWithDetails: (d) => _wear(d.data, d.offset),
+      builder: (context, candidate, _) {
+        final lit = hot || candidate.isNotEmpty;
+        return AnimatedSlide(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          offset: Offset(0, lit ? -0.06 : 0),
+          child: AnimatedContainer(
+          key: _benchPaneKey,
+          duration: const Duration(milliseconds: 140),
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 84),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: missing
+                  ? const [Color(0xFF5A2420), Color(0xFF2A100E)]
+                  : const [Color(0xFF3A2A1C), Color(0xFF1B140E)],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: missing
+                  ? const Color(0xFFFF5A4A)
+                  : lit
+                      ? const Color(0xFFC9A227)
+                      : const Color(0x44C9A227),
+              width: missing || lit ? 2.2 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: missing ? const Color(0x88E53935) : const Color(0x66000000),
+                blurRadius: missing ? 14 : 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: pieces.isEmpty
+              ? const SizedBox(height: 64)
+              : Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [for (final piece in pieces) _benchItem(piece)],
+                ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _benchItem(_Piece piece) {
+    final blamed = _blameZone == piece.id;
+    final land = _landId == piece.id;
+    final face = AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
+      width: _tallPiece(piece.id) ? 44 : 64,
+      height: _tallPiece(piece.id) ? 84 : 56,
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: blamed ? const Color(0xFF3A1412) : const Color(0x00000000),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: blamed ? const Color(0xFFFF5A4A) : const Color(0x00000000), width: 2),
+        boxShadow: blamed ? const [BoxShadow(color: Color(0x88E53935), blurRadius: 10)] : null,
+      ),
+      child: Image.asset(piece.asset, fit: BoxFit.contain),
+    );
+    return KeyedSubtree(
+      key: _pieceKey(piece.id),
+      child: Opacity(
+        opacity: _frontId == piece.id ? 0 : 1,
+        child: Draggable<_Piece>(
+        data: piece,
+        onDragStarted: () => setState(() {
+          _dragZone = 'bench';
+          _clearMark();
+        }),
+        onDragEnd: (_) => setState(() => _dragZone = ''),
+        feedback: Material(
+          color: Colors.transparent,
+          child: SizedBox(width: 84, height: 84, child: Image.asset(piece.asset, fit: BoxFit.contain)),
+        ),
+        childWhenDragging: Opacity(opacity: 0.28, child: face),
+        child: GestureDetector(
+          onTap: () => _take(piece),
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_sway, _shake]),
+            builder: (_, child) {
+              final pulse = blamed ? 1 + math.sin(_sway.value * math.pi) * 0.08 : 1.0;
+              final kick = blamed ? math.sin(_shake.value * math.pi * 5) * (1 - _shake.value) * 7 : 0.0;
+              return Transform.translate(
+                offset: Offset(kick, 0),
+                child: Transform.scale(scale: pulse, child: child),
+              );
+            },
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey('${piece.id}-$land'),
+              tween: Tween(begin: land ? 0.42 : 1, end: 1),
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOutBack,
+              builder: (_, scale, child) => Transform.scale(scale: scale, child: child),
+              child: face,
+            ),
+          ),
+        ),
+        ),
+      ),
+    );
+  }
+
+  Widget _reviewFront() {
+    final hint = _frontId == 'hint';
+    final piece = hint ? null : _byId(_frontId);
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: ColoredBox(
+          color: const Color(0xB3080C12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (!hint)
+                SizedBox(
+                  width: 188,
+                  height: 188,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      AnimatedBuilder(
+                        animation: _ring,
+                        builder: (_, _) => CustomPaint(
+                          size: const Size(180, 180),
+                          painter: _ReviewRingPainter(_ring.value),
+                        ),
+                      ),
+                      if (piece != null)
+                        SizedBox(width: 108, height: 108, child: Image.asset(piece.asset, fit: BoxFit.contain)),
+                    ],
+                  ),
+                ),
+              DsCoach(
+                mood: hint ? DsCoachMood.talk : DsCoachMood.oops,
+                line: _frontWhy,
+                bubbleWidth: 250,
+                sprite: hint ? 156 : 132,
+                centered: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tossFlight() {
+    return AnimatedBuilder(
+      animation: _toss,
+      builder: (_, _) {
+        final t = Curves.easeInCubic.transform(_toss.value);
+        final pos = Offset.lerp(_tossFrom, _tossTo, t)!;
+        final lift = math.sin(t * math.pi) * 78;
+        return Positioned(
+          left: pos.dx - 40,
+          top: pos.dy - lift - 40,
+          child: IgnorePointer(
+            child: Transform.rotate(
+              angle: t * 1.15,
+              child: Transform.scale(
+                scale: 1.2 - (0.62 * t),
+                child: SizedBox(width: 80, height: 80, child: Image.asset(_tossAsset, fit: BoxFit.contain)),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _bobbingMan() {
@@ -1968,24 +2785,6 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   void _tapMark(_Spot spot, Rect rect) {
-    if (_clothingProLesson && spot.zone == 'neck' && _on.contains('mala')) {
-      setState(() {
-        _on.remove('mala');
-        _clearMark();
-      });
-      unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
-      _speakCoach('গলার মেটাল মালা খুলে নিরাপদ বাক্সে রাখলেন।', mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1000));
-      return;
-    }
-    if (_clothingProLesson && spot.zone == 'hands' && _on.contains('bala')) {
-      setState(() {
-        _on.remove('bala');
-        _clearMark();
-      });
-      unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
-      _speakCoach('হাতের বালা খুলে নিরাপদ বাক্সে রাখলেন।', mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1000));
-      return;
-    }
     if (_finishing || _linking || !_harnessLesson || !_on.contains('harness')) return;
     final zone = spot.zone;
     if (_isStrap(zone) || (zone == 'ring' && _canTug)) {
@@ -2259,20 +3058,22 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     final open = <_Piece>[];
     for (final id in _shelfOrder) {
       final piece = byId[id];
-      if (piece != null && !_on.contains(id) && seen.add(id)) open.add(piece);
+      if (piece != null && !_on.contains(id) && !_heldBack.contains(id) && seen.add(id)) open.add(piece);
     }
     for (final piece in _kit) {
-      if (!_on.contains(piece.id) && seen.add(piece.id)) open.add(piece);
+      if (!_on.contains(piece.id) && !_heldBack.contains(piece.id) && seen.add(piece.id)) open.add(piece);
     }
     return DragTarget<_Piece>(
       onWillAcceptWithDetails: (d) => _on.contains(d.data.id) && !(_fullLesson && _blockedTake(d.data)),
       onAcceptWithDetails: (d) => _take(d.data),
       builder: (context, candidate, _) {
         return AnimatedContainer(
+          key: _shelfKey,
           duration: const Duration(milliseconds: 140),
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
           decoration: BoxDecoration(
+            color: _roomLesson ? const Color(0xE61B140E) : null,
             border: Border(
               top: BorderSide(color: candidate.isNotEmpty ? const Color(0xFFC9A227) : const Color(0x00000000), width: 2),
             ),
@@ -2282,7 +3083,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
             spacing: 6,
             runSpacing: 6,
             children: [
-              if (!_hero) _coachSlot(),
+              if (!_hero && _frontId.isEmpty) _coachSlot(),
               for (final p in open) KeyedSubtree(key: ValueKey(p.id), child: _token(p)),
             ],
           ),
@@ -2292,14 +3093,17 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   Widget _token(_Piece piece) {
-    final isInspectable = _clothingProLesson && (piece.id == 'boot' || piece.id == 'steelboot');
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Draggable<_Piece>(
           data: piece,
           onDragStarted: () => setState(() {
-            _dragZone = piece.id == 'fingers' ? (_fingerL ? 'gapR' : 'gapL') : piece.zone;
+            _dragZone = _roomLesson
+                ? 'bench'
+                : piece.id == 'fingers'
+                    ? (_fingerL ? 'gapR' : 'gapL')
+                    : piece.zone;
             _clearMark();
           }),
           onDragEnd: (_) => setState(() => _dragZone = ''),
@@ -2310,211 +3114,19 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
           childWhenDragging: Opacity(opacity: 0.25, child: _thumb(piece)),
           child: _thumb(piece),
         ),
-        if (isInspectable)
-          Positioned(
-            right: -2,
-            top: -2,
-            child: GestureDetector(
-              onTap: () => setState(() => _inspectedShoe = piece),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFC9A227),
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: const [
-                    BoxShadow(color: Color(0x66000000), blurRadius: 4, offset: Offset(0, 1)),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.search_rounded, size: 11, color: Color(0xFF1F140A)),
-                    const SizedBox(width: 2),
-                    Text('ভিতর', style: zlText(9, weight: FontWeight.w900, color: const Color(0xFF1F140A))),
-                  ],
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }
 
-  Widget _shoeInspectModal(_Piece shoe) {
-    final isSteel = shoe.id == 'steelboot';
-    return Positioned.fill(
-      child: ColoredBox(
-        color: const Color(0xB3000000),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22),
-            child: Material(
-              color: const Color(0xFF1B140E),
-              borderRadius: BorderRadius.circular(22),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: isSteel ? const Color(0xFFE53935) : const Color(0xFF43A047),
-                    width: 2.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isSteel ? const Color(0x66E53935) : const Color(0x6643A047),
-                      blurRadius: 24,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          isSteel ? Icons.dangerous_rounded : Icons.verified_user_rounded,
-                          color: isSteel ? const Color(0xFFE53935) : const Color(0xFF66BB6A),
-                          size: 26,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            isSteel ? 'স্টিল-টো বুটের ভেতরের পরীক্ষা' : 'ডাই-ইলেকট্রিক বুটের ভেতরের পরীক্ষা',
-                            style: zlText(16, weight: FontWeight.w900, color: const Color(0xFFF6E7B0)),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => setState(() => _inspectedShoe = null),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(color: Color(0x33FFFFFF), shape: BoxShape.circle),
-                            child: const Icon(Icons.close_rounded, size: 18, color: Colors.white70),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Container(
-                      height: 110,
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0x22FFFFFF),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Image.asset(shoe.asset, fit: BoxFit.contain),
-                          Positioned(
-                            right: 18,
-                            bottom: 12,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: isSteel ? const Color(0xCCE53935) : const Color(0xCC2E7D32),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(isSteel ? Icons.bolt_rounded : Icons.shield_rounded, size: 14, color: Colors.white),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    isSteel ? 'মেটাল ক্যাপ' : 'কম্পোজিট ফাইবার',
-                                    style: zlText(11, weight: FontWeight.w900, color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isSteel ? const Color(0x22E53935) : const Color(0x2243A047),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSteel ? const Color(0x55E53935) : const Color(0x5543A047),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                isSteel ? 'ভিতরের অংশ: শক্ত স্টিলের পাত' : 'ভিতরের অংশ: নন-মেটালিক কম্পোজিট',
-                                style: zlText(13, weight: FontWeight.w800, color: isSteel ? const Color(0xFFFF8A80) : const Color(0xFFA5D6A7)),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            isSteel
-                                ? 'এই জুতোর ভেতরে ধাতব স্টিল টো ক্যাপ রয়েছে। এটি লাইভ লাইনে কাজ করার সময় পা মাটিতে রাখলেই পুরো বিদ্যুৎ শরীরের ভেতর দিয়ে মাটিতে টেনে প্রাণঘাতী শক সৃষ্টি করবে।'
-                                : 'এই জুতোর ভেতরে কোনো ধাতু নেই। নন-মেটালিক ফাইবার টো এবং ১৪,০০০ ভোল্ট প্রতিরোধী ডাই-ইলেকট্রিক রাবার সোল বিদ্যুৎকে মাটিতে নামতে সম্পূর্ণ বাধা দেয়।',
-                            style: zlText(12, weight: FontWeight.w600, height: 1.45, color: const Color(0xFFDDD0BE)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        if (isSteel)
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFC62828),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: () {
-                                setState(() => _inspectedShoe = null);
-                                _speakCoach('সঠিক নজর! স্টিল-টো বুট বাতিল করা হলো—এটি লাইনে বিদ্যুৎ টানে।', mood: DsCoachMood.talk);
-                              },
-                              icon: const Icon(Icons.block_rounded, size: 18),
-                              label: Text('বাতিল করুন (বিপজ্জনক)', style: zlText(13, weight: FontWeight.w800, color: Colors.white)),
-                            ),
-                          )
-                        else
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2E7D32),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: () {
-                                setState(() => _inspectedShoe = null);
-                                _wear(shoe, Offset.zero);
-                              },
-                              icon: const Icon(Icons.check_circle_rounded, size: 18),
-                              label: Text('এই বুটটি পরুন (নিরাপদ)', style: zlText(13, weight: FontWeight.w800, color: Colors.white)),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _thumb(_Piece piece) {
-    final full = _fullLesson;
-    return SizedBox(width: full ? 50 : 64, height: full ? 44 : 58, child: Image.asset(piece.asset, fit: BoxFit.contain));
+    final full = _fullLesson || _roomLesson;
+    final tall = _tallPiece(piece.id);
+    return SizedBox(
+      width: tall ? 34 : (full ? 50 : 64),
+      height: tall ? 62 : (full ? 44 : 58),
+      child: Image.asset(piece.asset, fit: BoxFit.contain),
+    );
   }
 
   Widget _modal(String why) {
@@ -2547,6 +3159,48 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       ),
     );
   }
+}
+
+class _ReviewRingPainter extends CustomPainter {
+  const _ReviewRingPainter(this.t);
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.width / 2 - 6;
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = const Color(0x66FF3B30),
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      t * math.pi * 2,
+      1.7,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFFFF2A24),
+    );
+    final wave = 0.5 + 0.5 * math.sin(t * math.pi * 2);
+    canvas.drawCircle(
+      center,
+      radius * (0.84 + 0.16 * wave),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.6
+        ..color = Color.fromARGB((60 + (150 * (1 - wave))).round(), 255, 64, 52),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ReviewRingPainter oldDelegate) => oldDelegate.t != t;
 }
 
 class _WinGlow extends StatelessWidget {

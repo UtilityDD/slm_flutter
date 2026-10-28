@@ -3864,7 +3864,11 @@ String _dressIntroArt(int level) => switch (level) {
       3 => 'assets/duty_slip/dress/tray_rubber_gloves.webp',
       4 => 'assets/duty_slip/dress/tray_harness.webp',
       5 => 'assets/duty_slip/dress/kit_ready.webp',
-      6 => 'assets/safety/library/ppe/Lineman_Boot_3.webp',
+      6 => 'assets/zero_loss/scene/bg_control_room.webp',
+      7 => 'assets/zero_loss/scene/bg_market_wire_down.webp',
+      8 => 'assets/zero_loss/scene/bg_dtr_structure.webp',
+      9 => 'assets/zero_loss/scene/bg_pole_storm.webp',
+      10 => 'assets/zero_loss/scene/bg_tree_on_line.webp',
       _ => 'assets/duty_slip/dress/tray_shirt.webp',
     };
 
