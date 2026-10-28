@@ -2420,7 +2420,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                                 child: KeyedSubtree(key: ValueKey(_vanPlayKey), child: _playMan()),
                               )
                             : _glow
-                                ? _WinGlow(pulse: _sway, child: _playMan())
+                                ? _WinGlow(child: _playMan())
                                 : _playMan(),
                       ),
                     ),
@@ -3993,55 +3993,149 @@ class _ReviewRingPainter extends CustomPainter {
   bool shouldRepaint(covariant _ReviewRingPainter oldDelegate) => oldDelegate.t != t;
 }
 
-class _WinGlow extends StatelessWidget {
-  const _WinGlow({required this.pulse, required this.child});
+class _WinGlow extends StatefulWidget {
+  const _WinGlow({required this.child});
 
-  final Animation<double> pulse;
   final Widget child;
 
   @override
+  State<_WinGlow> createState() => _WinGlowState();
+}
+
+class _WinGlowState extends State<_WinGlow> with TickerProviderStateMixin {
+  late final AnimationController _burst;
+  late final AnimationController _spin;
+
+  @override
+  void initState() {
+    super.initState();
+    _burst = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))..forward();
+    _spin = AnimationController(vsync: this, duration: const Duration(milliseconds: 640))..repeat();
+  }
+
+  @override
+  void dispose() {
+    _burst.dispose();
+    _spin.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
     return AnimatedBuilder(
-      animation: pulse,
+      animation: Listenable.merge([_burst, _spin]),
       builder: (_, child) {
-        final t = Curves.easeInOut.transform(pulse.value);
-        final bias = 16 + 42 * t;
+        final pop = Curves.easeOutBack.transform((_burst.value / 0.26).clamp(0.0, 1.0));
+        final settle = Curves.easeOutCubic.transform(_burst.value.clamp(0.0, 1.0));
         return Stack(
           alignment: Alignment.center,
+          clipBehavior: Clip.none,
           children: [
             Positioned.fill(
               child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      radius: 0.62 + 0.08 * t,
-                      colors: [
-                        Color.fromARGB((70 + (80 * t).round()), 255, 196, 64),
-                        const Color(0x00FFC840),
-                      ],
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    painter: _WinAuraPainter(
+                      burst: still ? 1 : _burst.value,
+                      spin: still ? 0.22 : _spin.value,
+                      rich: !still,
                     ),
                   ),
                 ),
               ),
             ),
             Transform.scale(
-              scale: 1 + 0.03 * t,
-              child: ColorFiltered(
-                colorFilter: ColorFilter.matrix([
-                  1, 0, 0, 0, bias,
-                  0, 1, 0, 0, bias * 0.7,
-                  0, 0, 1, 0, bias * 0.08,
-                  0, 0, 0, 1, 0,
-                ]),
-                child: child,
-              ),
+              scale: still ? 1.03 : 1 + 0.07 * pop * (1 - 0.5 * settle),
+              child: child,
             ),
           ],
         );
       },
-      child: child,
+      child: widget.child,
     );
   }
+}
+
+class _WinAuraPainter extends CustomPainter {
+  const _WinAuraPainter({required this.burst, required this.spin, required this.rich});
+
+  final double burst;
+  final double spin;
+  final bool rich;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width < 8 || size.height < 8) return;
+    final cx = size.width * 0.5;
+    final cy = size.height * 0.46;
+    final rx = size.width * 0.26;
+    final ry = size.height * 0.36;
+    final ignite = Curves.easeOut.transform((burst / 0.16).clamp(0.0, 1.0));
+    final hold = Curves.easeOutCubic.transform(burst.clamp(0.0, 1.0));
+
+    final coreRect = Rect.fromCenter(center: Offset(cx, cy), width: rx * 2.35, height: ry * 2.4);
+    final core = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          Color.fromARGB((230 * ignite).round(), 255, 252, 236),
+          Color.fromARGB((170 * ignite).round(), 255, 204, 64),
+          Color.fromARGB((92 * ignite).round(), 251, 146, 24),
+          const Color(0x00F59E0B),
+        ],
+        stops: const [0.0, 0.26, 0.54, 1.0],
+      ).createShader(coreRect);
+    if (rich) core.maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
+    canvas.drawOval(coreRect, core);
+
+    for (var i = 0; i < 3; i++) {
+      final u = ((burst * 1.2) - i * 0.14).clamp(0.0, 1.0);
+      if (u <= 0.02) continue;
+      final grow = Curves.easeOutCubic.transform(u);
+      final a = ((1 - u) * ignite * 0.92).clamp(0.0, 1.0);
+      final ring = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1.2, 3.4 - 1.6 * u)
+        ..color = Color.fromARGB((230 * a).round(), 255, 220, 96);
+      if (rich) ring.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.4);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(cx, cy),
+          width: rx * (1.05 + 1.95 * grow),
+          height: ry * (1.02 + 1.62 * grow),
+        ),
+        ring,
+      );
+    }
+
+    if (!rich) return;
+
+    const n = 14;
+    for (var i = 0; i < n; i++) {
+      final dir = i.isEven ? 1.55 : -1.18;
+      final ang = (i / n) * math.pi * 2 + spin * math.pi * 2 * dir;
+      final rad = 0.58 + 0.26 * math.sin(spin * math.pi * 2 + i * 0.9);
+      final out = 0.28 + 1.05 * hold;
+      final p = Offset(
+        cx + math.cos(ang) * rx * rad * out * 1.42,
+        cy + math.sin(ang) * ry * rad * out * 1.18,
+      );
+      final flick = 0.4 + 0.6 * (0.5 + 0.5 * math.sin(spin * math.pi * 8 + i * 1.7));
+      final a = (210 * flick * ignite).round().clamp(0, 255);
+      final spark = Paint()..color = Color.fromARGB(a, 255, i.isEven ? 244 : 196, i.isEven ? 176 : 58);
+      canvas.drawCircle(p, 1.8 + 2.6 * flick, spark);
+      canvas.drawCircle(
+        p,
+        4.6 + 3.2 * flick,
+        Paint()
+          ..color = Color.fromARGB((90 * flick * ignite).round().clamp(0, 255), 255, 230, 140)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_WinAuraPainter old) => old.burst != burst || old.spin != spin || old.rich != rich;
 }
 
 class _VanCheckRow extends StatelessWidget {
