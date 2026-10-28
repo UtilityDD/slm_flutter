@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/en_digits.dart';
 import '../home/bangla_read_aloud.dart';
 import 'zero_loss_engine.dart';
 import 'zero_loss_models.dart';
@@ -26,13 +27,20 @@ class ZlColors {
 /// On-screen numbers stay in English digits.
 String n(Object v) {
   if (v is num) return v == v.roundToDouble() ? v.toInt().toString() : v.toString();
-  return '$v';
+  return enDigits('$v');
 }
 
 String pct(double v) => '${n((v * 100).round())}%';
 
 TextStyle zlText(double size, {FontWeight weight = FontWeight.w500, Color color = ZlColors.text, double? height}) =>
-    TextStyle(fontSize: size, fontWeight: weight, color: color, height: height);
+    TextStyle(
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+      height: height,
+      fontFamilyFallback: const ['Roboto', 'Noto Sans'],
+      fontFeatures: const [FontFeature.localeAware(enable: false)],
+    );
 
 Color severityColor(String severity) => switch (severity) {
       'critical' => ZlColors.red,

@@ -56,7 +56,7 @@ class _ZeroLossWorkSiteState extends ConsumerState<ZeroLossWorkSite> {
         _placeBarricade = true;
         _sheet = null;
       });
-      _flash('সাইটে ট্যাপ করে কোন বসান (২–৪টি)');
+      _flash('সাইটে ট্যাপ করে কোন বসান (2–4টি)');
       return;
     }
 

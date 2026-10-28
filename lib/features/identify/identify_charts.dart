@@ -4,17 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/en_digits.dart';
+
 /// Chart numbers always use English digits.
-String chartEnglishDigits(String value) {
-  const bn = '০১২৩৪৫৬৭৮৯';
-  final buf = StringBuffer();
-  for (final r in value.runes) {
-    final ch = String.fromCharCode(r);
-    final i = bn.indexOf(ch);
-    buf.write(i >= 0 ? '$i' : ch);
-  }
-  return buf.toString();
-}
+String chartEnglishDigits(String value) => enDigits(value);
 
 class ChartStep {
   final String title;

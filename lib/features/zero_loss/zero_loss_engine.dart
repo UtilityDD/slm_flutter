@@ -812,7 +812,7 @@ class SmartLinemanDispatchNotifier extends Notifier<ZeroLossState?> {
     if (faultId == null || _s.phase != ZeroLossPhase.site) return '';
     final m = _s.mission(faultId);
     if (m.hasFlag('barricade')) return 'ব্যারিকেড আছে';
-    if (m.barricadeSpots.length < 2) return 'কমপক্ষে ২টি কোন বসান';
+    if (m.barricadeSpots.length < 2) return 'কমপক্ষে 2টি কোন বসান';
     return workSiteAct(crewId, 'barricade');
   }
 
@@ -986,7 +986,7 @@ class SmartLinemanDispatchNotifier extends Notifier<ZeroLossState?> {
 
     switch (action) {
       case 'barricade':
-        if (m.barricadeSpots.length < 2) return 'কমপক্ষে ২টি কোন বসান';
+        if (m.barricadeSpots.length < 2) return 'কমপক্ষে 2টি কোন বসান';
         flags.add('barricade');
         clearSeed('no_barricade');
         orders[crewId] = 'barricade';

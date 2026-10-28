@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
 import 'app_colors.dart';
+
+const _latinDigits = [FontFeature.localeAware(enable: false)];
 
 const banglaFont = 'Noto Sans Bengali';
 
@@ -11,11 +14,12 @@ TextStyle bangla({
 }) {
     return TextStyle(
     fontFamily: banglaFont,
-    fontFamilyFallback: const [banglaFont],
+    fontFamilyFallback: const ['Roboto', 'Noto Sans', banglaFont],
     fontSize: fontSize,
     fontWeight: fontWeight,
     color: color,
     height: height ?? 1.45,
+    fontFeatures: _latinDigits,
   );
 }
 

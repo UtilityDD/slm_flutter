@@ -4,6 +4,17 @@
 
 ---
 
+## Numbers on screen
+
+Always show **Western / English digits 0–9**, even when the rest of the line is Bangla and even if the device language is Bengali.
+
+* Clocks, scores, level numbers, and counts stay ASCII. Never convert them to `০–৯`.
+* Shared helper: [`enDigits`](../../core/en_digits.dart). Run it on copy and JSON before the string appears on screen. Duty-slip `fill()`, pack `fromJson`, Life Skill `lsDigits`, and Identify `chartEnglishDigits` all go through it.
+* Theme `bangla()` and `zlText` set `FontFeature.localeAware(enable: false)` plus a Latin fallback (`Roboto` / `Noto Sans`) so Noto Sans Bengali cannot draw ASCII `0–9` as Bengali glyphs.
+* New UI copy: write `11 kV`, `23 ধাপ`, `0 লক্ষ্য` — never `১১` / `২৩` / `০`. Bangla words stay Bangla; only the digits change.
+
+---
+
 ## 1. Vision & Core Philosophy
 
 **Mrityuhin Poth (মৃত্যুহীন পথ)** is a life-saving simulation game for electrical distribution linemen. Linemen operate under severe physical hazards (11kV / 33kV lines, heights, bad weather, crowd pressure). The game is designed to build **unshakeable muscle memory and critical hazard identification** before touching live infrastructure.
@@ -64,23 +75,18 @@ The game follows a **3-Tier Progression** spanning 20 progressive levels:
 
 *Builds directly on 1–5 by introducing rigorous physical inspection procedures.*
 
-### Level 6: পোশাক ও জুতো Pro (Clothing & Footwear Pro) — *ACTIVE*
-* **Core Risk**: Arc-flash thermal liquefaction, conductive personal jewelry (wrist kada & neck chain), and conductive steel-toe grounding paths.
-* **Scene**: Pre-duty locker and preparation bench.
-* **Briefing & Mystery Hint**: No spoilers in advance. Subtle hint: *"কাজে নামার আগে শরীর আর সরঞ্জাম ভালো করে পরখ করুন—কোনো লুকোনো বিপদ যেন বিদ্যুৎ না টানে!"*
+### Level 6: ভ্যান সাজান — *ACTIVE*
+* **Core Risk**: A dressed lineman still dies if the van leaves without a way to prove the line dead, dump trapped charge, and hold the line at earth potential.
+* **Scene**: Control-room yard. The lineman is packed into the van only after the tool choice is complete.
+* **Briefing**: *কন্ট্রোল রুমের ভিতরে কাজের আদেশ এসেছে। দ্রুত তৈরি হতে হবে।*
 * **Mechanics**:
-  1. **Jewelry Removal (হাতের বালা ও গলার মালা)**:
-     - Avatar spawns wearing a metallic wrist kada (`bala`) and neck chain (`mala`).
-     - Tapping directly on the wrist or neck safely takes them off and places them into the locker box.
-     - Trying to equip clothing while jewelry is worn triggers an arc spark warning: *"শরীরে ধাতুর বালা বা গলার মালা থাকলে কোনো পোশাক পরা যাবে না!"*
-  2. **Interactive Shoe Inspection (ভিতর দেখুন)**:
-     - Boot tray items feature a `[🔍 ভিতর]` inspection button.
-     - Tapping opens a cutaway modal showing a cross-section comparison:
-       - `steelboot`: Steel cap conducts electrical current directly through toes to ground (**Lethal trap**).
-       - `boot`: Composite non-metallic toe cap + 14kV Dielectric EH sole (**Certified Lineman Boot**).
-     - Equipping `steelboot` triggers electrical rejection alert.
-  3. **Flammability Filter**: Synthetic polyester jersey (`tray_poly.webp`) and loose fatua rejected.
-* **Pass Condition**: `bala` and `mala` removed + 100% Cotton shirt & pants equipped + Dielectric composite boots worn.
+  1. **Dress the lineman first**: Cotton shirt, cotton trousers, dielectric boots, electrical helmet, face shield, rubber gloves. No harness. Jewelry, steel-toe, polyester, fatua, and the other clothing traps from levels 1–5 still fail here. A harness is thrown off.
+  2. **তৈরি opens the ready page**: Finishing the clothes does not change the screen. `তৈরি` with that dress set exact clears the shelf and cargo. He stands beside the van in the no-harness kit, the guide says the three tools must always be carried, and only then the shuffled tool pile rises. `তৈরি` does not pass the level without all three.
+  3. **Choose from many**: The new shelf is a mixed pile, not a short list of the right answers.
+     - **Must carry**: voltage detector (`tester`), discharge rod (`discharge`), portable earthing kit (`earth`).
+     - **Traps** (each gets its own rejection): neon pen tester, multimeter, megger, clamp meter, plain pliers, wet cloth, bare jumper wire, fuse wire, hacksaw, torque wrench, sickle, screwdriver, earth-resistance tester (sounds like earthing, is not the kit), spanner.
+  4. **Missing tool**: `তৈরি` names the missing piece. One missing tool gets the full reason; two missing tools are named together; all three missing repeats the insist line.
+* **Pass Condition**: Dress set exact, plus `tester` + `discharge` + `earth`, and no trap left in the van. The loaded van shows only what was chosen — the three tools are not added for free.
 
 ### Level 7: মাথায় হেলমেট Pro (Helmet & Headgear Pro)
 * **Core Risk**: UV sunlight degradation, shell stress cracks, unbuckled chin strap during wind/fall.
@@ -142,7 +148,7 @@ The game follows a **3-Tier Progression** spanning 20 progressive levels:
   - `_dressIntroArt`: Returns showcase illustration for the level introduction card.
   - Ladder rungs display plate medal (দারুণ / মোটামুটি / আবার) and best time.
 * **Dress Mechanics**: [ds_dress_up.dart](file:///d:/Dipankar/MyCodes/AndroidProjects/SLMToolBox/slm_flutter/lib/features/duty_slip/ds_dress_up.dart)
-  - `_proClothingPieces`: Level 6 tray pieces including `metal` and `steelboot`.
+  - `_vanToolPieces` / `_vanTraps`: Level 6 shelf after the lineman is dressed. Pass needs `tester`, `discharge`, and `earth` chosen from that pile.
   - `_wear` and `_take`: Validates dependencies and state transitions.
   - `_Spot`: Precise coordinate hit-boxes mapped to the lineman sprite.
 * **Sound Effects**:

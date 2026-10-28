@@ -90,7 +90,7 @@ class _ZeroLossOpeningState extends ConsumerState<ZeroLossOpening> with TickerPr
   }
 
   static String _feederLabel(ZeroLossSetting set, Random rng) {
-    final tags = ['ফিডার-১', 'ফিডার-২', 'রুরাল ফিডার', 'ইন্ডাস্ট্রিয়াল ফিডার', 'মার্কেট ফিডার'];
+    final tags = ['ফিডার-1', 'ফিডার-2', 'রুরাল ফিডার', 'ইন্ডাস্ট্রিয়াল ফিডার', 'মার্কেট ফিডার'];
     return '${set.office.replaceAll(' সাপ্লাই অফিস', '')} ${tags[rng.nextInt(tags.length)]}';
   }
 
@@ -102,7 +102,7 @@ class _ZeroLossOpeningState extends ConsumerState<ZeroLossOpening> with TickerPr
     final pack = SiteHazardPack.fromFault(f);
     // Keep call consistent with the worksite hazard (not a generic snapped-wire line).
     final core = f.id == 'wire_on_ground'
-        ? '১১ হাজার ভোল্টের তার ছিঁড়ে $_wireWhere পড়ে আছে।'
+        ? '11 হাজার ভোল্টের তার ছিঁড়ে $_wireWhere পড়ে আছে।'
         : '${f.shortTitleBn} — $_wireWhere।';
     return '$core $_feederName ব্রেকডাউন। ${pack.operatorLineBn.split('।').first}।';
   }

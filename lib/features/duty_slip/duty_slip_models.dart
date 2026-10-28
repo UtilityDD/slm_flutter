@@ -2,6 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
+import '../../core/en_digits.dart';
+
+String _en(String? s) => enDigits(s ?? '');
+
+List<String> _enList(List? raw) => [for (final x in raw ?? const []) enDigits('$x')];
+
 class DsPlanItem {
   final String id;
   final String labelBn;
@@ -21,9 +27,9 @@ class DsPlanItem {
 
   factory DsPlanItem.fromJson(Map<String, dynamic> j) => DsPlanItem(
         id: j['id'] as String,
-        labelBn: j['label_bn'] as String? ?? '',
+        labelBn: _en(j['label_bn'] as String?),
         letter: j['letter'] as String? ?? '',
-        whyBn: j['why_bn'] as String? ?? '',
+        whyBn: _en(j['why_bn'] as String?),
         icon: j['icon'] as String? ?? '',
         lane: j['lane'] as String? ?? '',
       );
@@ -74,12 +80,12 @@ class DsSite {
 
   factory DsSite.fromJson(Map<String, dynamic> j) => DsSite(
         id: j['id'] as String,
-        nameBn: j['name_bn'] as String? ?? '',
+        nameBn: _en(j['name_bn'] as String?),
         bg: j['bg'] as String? ?? '',
         pole: j['pole'] as String? ?? 'DP-17',
-        introBn: j['intro_bn'] as String? ?? '',
-        storyBn: j['story_bn'] as String? ?? '',
-        calls: List<String>.from(j['calls'] as List? ?? const []),
+        introBn: _en(j['intro_bn'] as String?),
+        storyBn: _en(j['story_bn'] as String?),
+        calls: _enList(j['calls'] as List?),
       );
 }
 
@@ -100,7 +106,7 @@ class DsOption {
 
   factory DsOption.fromJson(Map<String, dynamic> j) => DsOption(
         id: j['id'] as String,
-        labelBn: j['label_bn'] as String? ?? '',
+        labelBn: _en(j['label_bn'] as String?),
         image: j['image'] as String? ?? '',
         correct: j['correct'] as bool? ?? false,
         lethal: j['lethal'] as bool? ?? false,
@@ -157,8 +163,8 @@ class DsStep {
           _ => DsKind.single,
         },
         stamp: j['stamp'] as String? ?? '',
-        promptBn: j['prompt_bn'] as String? ?? '',
-        hintBn: j['hint_bn'] as String? ?? '',
+        promptBn: _en(j['prompt_bn'] as String?),
+        hintBn: _en(j['hint_bn'] as String?),
         scene: j['scene'] as String? ?? '',
         missMin: (j['miss_min'] as num?)?.toInt() ?? 8,
         missSafety: (j['miss_safety'] as num?)?.toInt() ?? 10,
@@ -177,7 +183,7 @@ class DsReply {
 
   factory DsReply.fromJson(Map<String, dynamic> j) => DsReply(
         id: j['id'] as String,
-        labelBn: j['label_bn'] as String? ?? '',
+        labelBn: _en(j['label_bn'] as String?),
         ok: j['ok'] as bool? ?? false,
       );
 }
@@ -199,9 +205,9 @@ class DsCall {
 
   factory DsCall.fromJson(Map<String, dynamic> j) => DsCall(
         id: j['id'] as String,
-        whoBn: j['who_bn'] as String? ?? '',
+        whoBn: _en(j['who_bn'] as String?),
         portrait: j['portrait'] as String? ?? '',
-        lineBn: j['line_bn'] as String? ?? '',
+        lineBn: _en(j['line_bn'] as String?),
         replies: [for (final r in j['replies'] as List? ?? const []) DsReply.fromJson(r as Map<String, dynamic>)],
       );
 }
@@ -228,10 +234,10 @@ class DsPack {
   });
 
   factory DsPack.fromJson(Map<String, dynamic> j) => DsPack(
-        titleBn: j['title_bn'] as String? ?? 'ডিউটি স্লিপ',
+        titleBn: _en(j['title_bn'] as String? ?? 'ডিউটি স্লিপ'),
         startHour: (j['start_hour'] as num?)?.toInt() ?? 20,
         startMinute: (j['start_minute'] as num?)?.toInt() ?? 10,
-        feeders: List<String>.from(j['feeders'] as List? ?? const []),
+        feeders: _enList(j['feeders'] as List?),
         plan: [for (final p in j['plan'] as List? ?? const []) DsPlanItem.fromJson(p as Map<String, dynamic>)],
         sites: [for (final s in j['sites'] as List) DsSite.fromJson(s as Map<String, dynamic>)],
         steps: [for (final s in j['steps'] as List) DsStep.fromJson(s as Map<String, dynamic>)],

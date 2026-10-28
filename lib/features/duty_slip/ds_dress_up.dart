@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/en_digits.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'duty_slip_engine.dart';
@@ -30,13 +31,12 @@ const _pieces = <_Piece>[
   _Piece(id: 'boot', asset: 'assets/duty_slip/dress/tray_boot.webp', zone: 'feet', good: true, why: ''),
 ];
 
-const _roomStart = 'কলে বের হওয়ার আগে ভ্যানে কন্ট্রোল রুমের সাজ তুলুন। ঠিক জিনিস গাড়িতে উঠবে, ভুল জিনিস নয়।';
-const _roomDone = 'সাজ সম্পূর্ণ। লাইনম্যান ভ্যানে উঠেছেন। কন্ট্রোল রুমের জন্য বের হওয়া যাবে।';
-const _vanExtras = [
-  'assets/zero_loss/scene/gear_frp_ladder.webp',
-  'assets/zero_loss/scene/gear_tester.webp',
-  'assets/zero_loss/scene/gear_earth_rods.webp',
-];
+const _roomStart = 'কন্ট্রোল রুমের ভিতরে কাজের আদেশ এসেছে। দ্রুত তৈরি হতে হবে।';
+const _roomDone = 'সাজ সম্পূর্ণ। ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড আর পোর্টেবল আর্থিং কিট ভ্যানে উঠেছে। এবার বের হওয়া যাবে।';
+const _vanInsist = 'লাইনম্যান তৈরি। ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড আর পোর্টেবল আর্থিং কিট সবসময় সঙ্গে রাখতে হবে।';
+const _vanNoTester = 'ভোল্টেজ ডিটেক্টর ছাড়া ভ্যানে উঠবেন না। লাইন জীবিত না মৃত, আগে সেটাই দেখতে হয়।';
+const _vanNoDischarge = 'ডিসচার্জ রড বাদ পড়েছে। আটকে থাকা বিদ্যুৎ না নামালে ছুঁলেই শক।';
+const _vanNoEarth = 'পোর্টেবল আর্থিং কিট না নিলে কাজ শুরু করা যাবে না। ভোল্টেজ ফিরলে মাটিতে যাবে না।';
 const _roomFatua = 'না, সাবধান! ঢিলে পোশাক প্যানেলের হাতলে জড়িয়ে যেতে পারে। শরীর আঁটোসাঁটো রাখা জরুরি।';
 const _roomBareLeg = 'সাবধান! পা উন্মুক্ত রেখে কাজ করা অনিরাপদ, আর্কের আগুন সরাসরি চামড়ায় লাগবে।';
 const _roomSlip = 'বিপদ! চপ্পলে কোনো ইনসুলেশন নেই। স্পার্ক লাগলে পা বাঁচবে না।';
@@ -48,7 +48,9 @@ const _roomNoShield = 'থামুন! মুখ খোলা থাকলে �
 const _roomNoGlove = 'থামুন! হাত খালি থাকলে সামান্য স্পার্কেই সরাসরি চামড়া পুড়ে যাবে। ইনসুলেটেড গ্লাভস দরকার।';
 const _roomNoBoot = 'না, সতর্ক হোন! খালি পায়ে বৈদ্যুতিক ইনসুলেশন থাকে না। সেফটি বুট পরুন।';
 const _roomMiss = 'আরও কিছু জিনিস বাদ পড়েছে।';
-const _roomKeep = {'shirt', 'pant', 'boot', 'helmet', 'shield', 'rubber'};
+const _roomDress = {'shirt', 'pant', 'boot', 'helmet', 'shield', 'rubber'};
+const _vanMust = {'tester', 'discharge', 'earth'};
+const _roomKeep = {..._roomDress, ..._vanMust};
 
 const _poleStart = 'গলিতে তার ছিঁড়ে মাটিতে পড়ে আছে। খুঁটিতে ওঠার আগে যা যা লাগবে, বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
 const _poleDone = 'ঠিক আছে। এই সাজে খুঁটিতে ওঠা যাবে।';
@@ -140,6 +142,31 @@ const _ropePiece = _Piece(id: 'rope', asset: 'assets/zero_loss/scene/gear_rope.w
 const _sicklePiece = _Piece(id: 'sickle', asset: 'assets/zero_loss/scene/gear_iron_sickle.webp', zone: 'tool', good: false, why: _treeSickle);
 const _sawPiece = _Piece(id: 'saw', asset: 'assets/zero_loss/scene/gear_tree_saw.webp', zone: 'tool', good: false, why: _treeSaw);
 
+const _vanTraps = <_Piece>[
+  _Piece(id: 'neon', asset: 'assets/safety/library/tools/Non_Contact_Voltage_Tester_2.webp', zone: 'tool', good: false, why: 'এই কলম টেস্টার 11 কেভিতে কাজ করে না। হাই ভোল্টেজ ডিটেক্টর নিন।'),
+  _Piece(id: 'meter', asset: 'assets/safety/library/tools/Multimeter_Digital.webp', zone: 'tool', good: false, why: 'মাল্টিমিটার দিয়ে হাই ভোল্টেজ লাইন ছোঁবেন না। ভোল্টেজ ডিটেক্টর লাগবে।'),
+  _Piece(id: 'megger', asset: 'assets/safety/library/tools/Analog_Insulation_Tester_Hand_Crank.webp', zone: 'tool', good: false, why: 'মেগার ইনসুলেশন মাপে। লাইন জীবিত কি না, ভোল্টেজ ডিটেক্টর বলে।'),
+  _Piece(id: 'clamp', asset: 'assets/safety/library/tools/Digital_Clamp_On_Meter.webp', zone: 'tool', good: false, why: 'ক্ল্যাম্প মিটার কারেন্ট মাপে। লাইন মৃত প্রমাণ করে না।'),
+  _Piece(id: 'pliers', asset: 'assets/zero_loss/scene/gear_plain_pliers.webp', zone: 'tool', good: false, why: 'সাধারণ প্লায়ার বিদ্যুৎ আটকায় না। এটা ভ্যানে তুলবেন না।'),
+  _Piece(id: 'cloth', asset: 'assets/zero_loss/scene/gear_wet_cloth.webp', zone: 'tool', good: false, why: 'ভেজা ন্যাকড়া বিদ্যুৎ সরায় না। হাতে নিয়ে ছুঁলে শক লাগবে।'),
+  _Piece(id: 'wire', asset: 'assets/zero_loss/scene/gear_plain_wire.webp', zone: 'tool', good: false, why: 'খোলা তার দিয়ে শর্ট করবেন না। পোর্টেবল আর্থিং কিট লাগবে।'),
+  _Piece(id: 'fuse', asset: 'assets/zero_loss/scene/gear_fuse_wire.webp', zone: 'tool', good: false, why: 'ফিউজ তার আর্থিং নয়। পোর্টেবল আর্থিং কিট নিন।'),
+  _Piece(id: 'hacksaw', asset: 'assets/safety/library/tools/Hacksaw.webp', zone: 'tool', good: false, why: 'করাত দিয়ে চার্জড লাইন কাটা যায় না।'),
+  _Piece(id: 'torque', asset: 'assets/zero_loss/scene/gear_torque_wrench.webp', zone: 'tool', good: false, why: 'টর্ক রেঞ্চ এখন দরকার নেই। আগে ডিটেক্টর, ডিসচার্জ রড আর আর্থিং।'),
+  _Piece(id: 'sickle', asset: 'assets/zero_loss/scene/gear_iron_sickle.webp', zone: 'tool', good: false, why: 'কাস্তে কন্ট্রোল রুমের সাজ নয়।'),
+  _Piece(id: 'driver', asset: 'assets/safety/library/tools/Insulated_Screwdriver.webp', zone: 'tool', good: false, why: 'স্ক্রু ড্রাইভার ভোল্টেজ ডিটেক্টরের বদলি নয়।'),
+  _Piece(id: 'earthmeter', asset: 'assets/safety/library/tools/Digital_Earth_Tester.webp', zone: 'tool', good: false, why: 'আর্থ টেস্টার মাটির রোধ মাপে। এটা পোর্টেবল আর্থিং কিট নয়।'),
+  _Piece(id: 'spanner', asset: 'assets/safety/library/tools/Combination_Spanner.webp', zone: 'tool', good: false, why: 'স্প্যানার দিয়ে লাইন মৃত হয় না।'),
+];
+
+const _vanToolPieces = <_Piece>[_testerPiece, _dischargePiece, _earthPiece, ..._vanTraps];
+
+const _vanToolIds = {
+  'tester', 'discharge', 'earth',
+  'neon', 'meter', 'megger', 'clamp', 'pliers', 'cloth', 'wire',
+  'fuse', 'hacksaw', 'torque', 'sickle', 'driver', 'earthmeter', 'spanner',
+};
+
 const _frpPiece = _Piece(
   id: 'frp',
   asset: 'assets/zero_loss/scene/gear_frp_ladder.webp',
@@ -164,6 +191,7 @@ const _benchOrder = [
   'gamcha', 'shield', 'belt', 'harness',
   'frp', 'bamboo',
   'tester', 'discharge', 'earth', 'wire', 'cloth',
+  'neon', 'meter', 'megger', 'clamp', 'pliers', 'fuse', 'hacksaw', 'torque', 'driver', 'earthmeter', 'spanner',
   'vest', 'torch', 'rope', 'sickle', 'saw',
 ];
 
@@ -590,6 +618,22 @@ class _CamTween extends Tween<_Cam> {
 
 enum _VanBeat { coach, yard }
 
+enum _VanGate { dress, portrait, guide, tools }
+
+enum _VanOutro { idle, list, pair, aboard, away, guide }
+
+const _vanChecklist = <({String id, String label})>[
+  (id: 'shirt', label: 'সুতির শার্ট'),
+  (id: 'pant', label: 'সুতির প্যান্ট'),
+  (id: 'boot', label: 'ডাইইলেকট্রিক বুট'),
+  (id: 'helmet', label: 'ইলেকট্রিক্যাল হেলমেট'),
+  (id: 'shield', label: 'ফেস শিল্ড'),
+  (id: 'rubber', label: 'রাবার গ্লাভস'),
+  (id: 'tester', label: 'ভোল্টেজ ডিটেক্টর'),
+  (id: 'discharge', label: 'ডিসচার্জ রড'),
+  (id: 'earth', label: 'পোর্টেবল আর্থিং কিট'),
+];
+
 class DsDressUp extends StatefulWidget {
   final DutySlipEngine engine;
   final VoidCallback onDone;
@@ -660,6 +704,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   var _checking = false;
   var _vanBoarded = false;
   var _vanBeat = _VanBeat.yard;
+  var _vanGate = _VanGate.dress;
+  var _guideShown = false;
+  var _gateToken = 0;
+  var _outro = _VanOutro.idle;
+  var _checkShown = 0;
   var _coachOn = true;
   var _blameZone = '';
   var _roomToken = 0;
@@ -680,6 +729,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   late final AnimationController _toss;
   late final AnimationController _ring;
   late final AnimationController _vanRide;
+  late final AnimationController _vanDepart;
 
   @override
   void initState() {
@@ -691,6 +741,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _toss = AnimationController(vsync: this, duration: const Duration(milliseconds: 520));
     _ring = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat();
     _vanRide = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+    _vanDepart = AnimationController(vsync: this, duration: const Duration(milliseconds: 1560));
     if (_vanLesson) {
       _vanBeat = _VanBeat.coach;
       _coachOn = true;
@@ -736,6 +787,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   @override
   void dispose() {
     _roomToken++;
+    _gateToken++;
     _markTimer?.cancel();
     _sway.dispose();
     _shake.dispose();
@@ -744,6 +796,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _toss.dispose();
     _ring.dispose();
     _vanRide.dispose();
+    _vanDepart.dispose();
     _coachTimer?.cancel();
     ZlFx.releaseClock();
     super.dispose();
@@ -760,6 +813,33 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   bool get _vanLesson => widget.engine.level.number == 6;
 
   bool get _vanParked => _vanRide.status == AnimationStatus.completed;
+
+  bool get _vanPortrait => _vanLesson && (_vanGate == _VanGate.portrait || _vanGate == _VanGate.guide);
+
+  String get _vanLook {
+    final shirt = _on.contains('shirt');
+    final pant = _on.contains('pant');
+    final boot = _on.contains('boot');
+    final helmet = _on.contains('helmet');
+    final gloves = _on.contains('rubber');
+    if (shirt && pant && boot && helmet) return 'head_helmet';
+    if (gloves && shirt && pant && boot) return 'gloves_all';
+    if (gloves && shirt && pant) return 'gloves_shirt_pant';
+    if (gloves && shirt && boot) return 'gloves_shirt_boot';
+    if (gloves && pant && boot) return 'gloves_pant_boot';
+    if (gloves && shirt) return 'gloves_shirt';
+    if (gloves && pant) return 'gloves_pant';
+    if (gloves && boot) return 'gloves_boot';
+    if (shirt && pant && boot) return 'all';
+    if (shirt && pant) return 'shirt_pant';
+    if (pant && boot) return 'pant_boot';
+    if (shirt && boot) return 'shirt_boot';
+    if (gloves) return 'gloves_body';
+    if (shirt) return 'shirt';
+    if (pant) return 'pant';
+    if (boot) return 'boot';
+    return 'body';
+  }
 
   bool get _poleLesson => widget.engine.level.number == 7;
 
@@ -807,7 +887,8 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         2 => _headPieces,
         3 => _handPieces,
         4 => _harnessKit,
-        5 || 6 => _fullKit,
+        5 => _fullKit,
+        6 => [..._fullKit, ..._vanToolPieces],
         7 => _poleKit,
         8 => _dtrKit,
         9 => _nightKit,
@@ -996,8 +1077,93 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     if (mood != DsCoachMood.ready && !_finishing) _holdCoach(hold);
   }
 
+  bool get _vanDressed {
+    if (!_roomDress.every(_on.contains)) return false;
+    for (final id in _on) {
+      if (_roomDress.contains(id) || _vanToolIds.contains(id)) continue;
+      return false;
+    }
+    return true;
+  }
+
+  bool _shelfShows(String id) {
+    if (!_vanLesson) return true;
+    final tool = _vanToolIds.contains(id);
+    return _vanGate == _VanGate.tools ? tool : !tool;
+  }
+
+  Future<void> _revealTools() async {
+    if (!_vanLesson || _finishing || _vanGate != _VanGate.dress || !_vanDressed) return;
+    final token = ++_gateToken;
+    _speakToken++;
+    _coachTimer?.cancel();
+    _markTimer?.cancel();
+    setState(() {
+      _vanGate = _VanGate.portrait;
+      _checking = true;
+      _guideShown = false;
+      _mark = null;
+      _ask = false;
+      _frontId = '';
+      _frontWhy = '';
+      _coachFace = DsCoachMood.ready;
+      _coachSay = '';
+    });
+    HapticFeedback.mediumImpact();
+    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.32, muted: widget.muted));
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!mounted || token != _gateToken || _finishing) return;
+    await Future<void>.delayed(const Duration(milliseconds: 680));
+    if (!mounted || token != _gateToken || _finishing) return;
+    setState(() {
+      _vanGate = _VanGate.guide;
+      _guideShown = true;
+      _coachFace = DsCoachMood.talk;
+      _coachSay = _vanInsist;
+    });
+    HapticFeedback.selectionClick();
+    final voice = widget.onSpeak(_vanInsist);
+    final hold = Future<void>.delayed(const Duration(milliseconds: 2400));
+    try {
+      await Future.wait([voice, hold]);
+    } catch (_) {}
+    if (!mounted || token != _gateToken || _finishing) return;
+    setState(() {
+      _guideShown = false;
+      _coachFace = DsCoachMood.ready;
+      _coachSay = '';
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 420));
+    if (!mounted || token != _gateToken || _finishing) return;
+    setState(() {
+      _vanGate = _VanGate.tools;
+      _checking = false;
+      _mixShelf(sound: true);
+    });
+  }
+
+  String _vanToolGap() {
+    final missingTester = !_on.contains('tester');
+    final missingDischarge = !_on.contains('discharge');
+    final missingEarth = !_on.contains('earth');
+    final count = (missingTester ? 1 : 0) + (missingDischarge ? 1 : 0) + (missingEarth ? 1 : 0);
+    if (count == 3) return _vanInsist;
+    if (count == 1) {
+      if (missingTester) return _vanNoTester;
+      if (missingDischarge) return _vanNoDischarge;
+      return _vanNoEarth;
+    }
+    if (count == 0) return _roomMiss;
+    final bits = <String>[
+      if (missingTester) 'ভোল্টেজ ডিটেক্টর',
+      if (missingDischarge) 'ডিসচার্জ রড',
+      if (missingEarth) 'পোর্টেবল আর্থিং কিট',
+    ];
+    return 'এখনও বাকি: ${bits.join(', ')}। এগুলো ছাড়া ভ্যানে উঠবেন না।';
+  }
+
   void _mixShelf({required bool sound}) {
-    final ids = [for (final piece in _kit) if (!_on.contains(piece.id)) piece.id];
+    final ids = [for (final piece in _kit) if (!_on.contains(piece.id) && _shelfShows(piece.id)) piece.id];
     if (ids.isEmpty) return;
     final before = ids.join('|');
     ids.shuffle(math.Random());
@@ -1122,31 +1288,57 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _markTimer?.cancel();
     setState(() {
       _finishing = true;
-      _vanBoarded = true;
-      _glow = true;
+      _glow = false;
       _hero = false;
+      _vanBoarded = false;
       _mark = null;
       _ask = false;
       _coachFace = DsCoachMood.ready;
       _coachSay = '';
+      _outro = _VanOutro.list;
+      _checkShown = 0;
     });
-    unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.55, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.45, muted: widget.muted));
     HapticFeedback.mediumImpact();
+    for (var i = 0; i < _vanChecklist.length; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 280));
+      if (!mounted) return;
+      setState(() => _checkShown = i + 1);
+      unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.38, muted: widget.muted));
+      HapticFeedback.selectionClick();
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 820));
+    if (!mounted) return;
+    setState(() => _outro = _VanOutro.pair);
     await Future<void>.delayed(const Duration(milliseconds: 980));
     if (!mounted) return;
     setState(() {
-      _glow = false;
+      _outro = _VanOutro.aboard;
+      _vanBoarded = true;
+    });
+    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: widget.muted));
+    HapticFeedback.mediumImpact();
+    await Future<void>.delayed(const Duration(milliseconds: 620));
+    if (!mounted) return;
+    setState(() => _outro = _VanOutro.away);
+    unawaited(ZlFx.cue('sounds/van_arrive.wav', volume: 0.4, muted: widget.muted));
+    await _vanDepart.forward(from: 0);
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 220));
+    if (!mounted) return;
+    setState(() {
+      _outro = _VanOutro.guide;
       _hero = true;
       _coachFace = DsCoachMood.thanks;
       _coachSay = _roomDone;
     });
-    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.62, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: widget.muted));
     HapticFeedback.lightImpact();
     final voice = widget.onSpeak(_roomDone);
     final hold = Future<void>.delayed(const Duration(milliseconds: 2600));
     await Future.wait([voice, hold]);
     if (!mounted) return;
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+    await Future<void>.delayed(const Duration(milliseconds: 420));
     if (mounted) widget.onDone();
   }
 
@@ -1687,6 +1879,9 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
     if (_on.contains('harness')) add('harness', _roomHarness);
     if (_on.contains('belt')) add('belt', _roomBelt);
+    for (final trap in _vanTraps) {
+      if (_on.contains(trap.id)) add(trap.id, trap.why);
+    }
     return out;
   }
 
@@ -1939,6 +2134,10 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         }
         return;
       }
+      if (_vanLesson && _vanGate == _VanGate.dress && _vanDressed) {
+        await _revealTools();
+        return;
+      }
       await _roomHint();
       return;
     }
@@ -1982,7 +2181,6 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     }
     if (!mounted || token != _roomToken) return;
     setState(() {
-      _checking = false;
       _blameZone = '';
       _frontId = '';
       _frontWhy = '';
@@ -1991,6 +2189,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _coachFace = DsCoachMood.ready;
       _coachSay = '';
       if (widget.engine.level.number == 6) _on.removeWhere((id) => !_roomKeep.contains(id));
+      _checking = false;
       _mixShelf(sound: true);
     });
   }
@@ -2002,12 +2201,12 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     setState(() {
       _checking = true;
       _frontId = 'hint';
-      _frontWhy = _roomMiss;
+      _frontWhy = _vanLesson && _vanDressed ? _vanToolGap() : _roomMiss;
       _blameZone = '';
       _coachFace = DsCoachMood.talk;
       _coachSay = '';
     });
-    await widget.onSpeak(_roomMiss);
+    await widget.onSpeak(_frontWhy);
     if (!mounted || token != _roomToken) return;
     await Future<void>.delayed(const Duration(milliseconds: 500));
     if (!mounted || token != _roomToken) return;
@@ -2204,6 +2403,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
               Expanded(
                 child: Stack(
                   fit: _roomLesson ? StackFit.expand : StackFit.loose,
+                  clipBehavior: Clip.none,
                   alignment: Alignment.center,
                   children: [
                     AnimatedOpacity(
@@ -2212,9 +2412,19 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                       curve: Curves.easeInOutCubic,
                         child: IgnorePointer(
                         ignoring: _finishing || _checking || (_vanLesson && _vanBeat == _VanBeat.coach),
-                        child: _glow ? _WinGlow(pulse: _sway, child: _playMan()) : _playMan(),
+                        child: _vanLesson
+                            ? AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 460),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                child: KeyedSubtree(key: ValueKey(_vanPlayKey), child: _playMan()),
+                              )
+                            : _glow
+                                ? _WinGlow(pulse: _sway, child: _playMan())
+                                : _playMan(),
                       ),
                     ),
+                    if (_cornerCoach) _playCoach(),
                     if (_hero && !_vanLesson)
                       _HeroEntrance(
                         child: DsCoach(
@@ -2228,40 +2438,105 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                   ],
                 ),
               ),
-              if (_roomLesson && !_finishing && !(_vanLesson && _vanBeat == _VanBeat.coach))
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 6),
-                  child: GestureDetector(
-                    onTap: _checking || (_vanLesson && !_vanParked) ? null : _roomCheck,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: _checking || (_vanLesson && !_vanParked) ? const Color(0xFF5C4632) : const Color(0xFF3A2A16),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFC9A227), width: 1.4),
+              if (_roomLesson && !_finishing && !(_vanLesson && (_vanBeat == _VanBeat.coach || _outro != _VanOutro.idle || _hero)))
+                ClipRect(
+                  child: AnimatedAlign(
+                    alignment: Alignment.topCenter,
+                    heightFactor: _vanPortrait ? 0 : 1,
+                    duration: const Duration(milliseconds: 620),
+                    curve: Curves.easeInOutCubic,
+                    child: AnimatedOpacity(
+                      opacity: _vanPortrait ? 0 : 1,
+                      duration: const Duration(milliseconds: 380),
+                      curve: Curves.easeInCubic,
+                      child: IgnorePointer(
+                        ignoring: _vanPortrait,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 6),
+                          child: GestureDetector(
+                            onTap: _checking || (_vanLesson && !_vanParked) ? null : _roomCheck,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 160),
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: _checking || (_vanLesson && !_vanParked) ? const Color(0xFF5C4632) : const Color(0xFF3A2A16),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: const Color(0xFFC9A227), width: 1.4),
+                              ),
+                              child: Text('তৈরি', style: zlText(18, weight: FontWeight.w900, color: const Color(0xFFF6E7B0))),
+                            ),
+                          ),
+                        ),
                       ),
-                      child: Text('তৈরি', style: zlText(18, weight: FontWeight.w900, color: const Color(0xFFF6E7B0))),
                     ),
                   ),
                 ),
-              if (!(_vanLesson && (_vanBeat == _VanBeat.coach || _hero)))
-                AnimatedSlide(
-                  offset: _hero ? const Offset(0, 0.45) : Offset.zero,
-                  duration: const Duration(milliseconds: 520),
-                  curve: Curves.easeInCubic,
-                  child: AnimatedOpacity(
-                    opacity: _hero ? 0 : 1,
-                    duration: const Duration(milliseconds: 420),
-                    child: IgnorePointer(ignoring: _finishing || _checking, child: _shelf()),
+              if (!(_vanLesson && (_vanBeat == _VanBeat.coach || _outro != _VanOutro.idle || _hero)))
+                ClipRect(
+                  child: AnimatedAlign(
+                    alignment: Alignment.topCenter,
+                    heightFactor: _vanPortrait ? 0 : 1,
+                    duration: const Duration(milliseconds: 620),
+                    curve: Curves.easeInOutCubic,
+                    child: AnimatedSlide(
+                      offset: _vanPortrait ? const Offset(0, 0.22) : Offset.zero,
+                      duration: const Duration(milliseconds: 620),
+                      curve: Curves.easeInOutCubic,
+                      child: AnimatedOpacity(
+                        opacity: _vanPortrait ? 0 : 1,
+                        duration: const Duration(milliseconds: 380),
+                        curve: Curves.easeInCubic,
+                        child: IgnorePointer(ignoring: _finishing || _checking || _vanPortrait, child: _shelf()),
+                      ),
+                    ),
                   ),
                 ),
             ],
           ),
           if (_frontId.isNotEmpty) _reviewFront(),
-          if (_vanLesson && (_vanBeat == _VanBeat.coach || _hero)) _vanCoach(),
+          if (_vanLesson && _vanBeat == _VanBeat.coach) _vanCoach(),
+          if (_vanLesson && _vanGate == _VanGate.guide)
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: 8,
+              child: IgnorePointer(
+                child: AnimatedSlide(
+                  offset: _guideShown ? Offset.zero : const Offset(0, 0.32),
+                  duration: const Duration(milliseconds: 420),
+                  curve: Curves.easeInCubic,
+                  child: AnimatedOpacity(
+                    opacity: _guideShown ? 1 : 0,
+                    duration: const Duration(milliseconds: 360),
+                    child: _HeroEntrance(
+                      child: DsCoach(
+                        mood: DsCoachMood.talk,
+                        line: _vanInsist,
+                        bubbleWidth: 280,
+                        sprite: 156,
+                        centered: true,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (_vanLesson && _outro == _VanOutro.guide)
+            Positioned.fill(
+              child: Center(
+                child: _HeroEntrance(
+                  child: DsCoach(
+                    mood: DsCoachMood.thanks,
+                    line: _roomDone,
+                    bubbleWidth: 280,
+                    sprite: 188,
+                    centered: true,
+                  ),
+                ),
+              ),
+            ),
           if (_vanLesson && _vanBeat == _VanBeat.coach && widget.onBack != null)
             Positioned(
               left: 2,
@@ -2452,8 +2727,22 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     return _coachSay;
   }
 
+  String get _vanPlayKey => switch (_outro) {
+        _VanOutro.idle => 'yard',
+        _VanOutro.list => 'list',
+        _VanOutro.guide => 'clear',
+        _ => 'road',
+      };
+
   Widget _playMan() {
-    if (_vanLesson) return _vanStage();
+    if (_vanLesson) {
+      return switch (_outro) {
+        _VanOutro.list => _vanChecklistPage(),
+        _VanOutro.guide => const SizedBox.expand(),
+        _VanOutro.pair || _VanOutro.aboard || _VanOutro.away => _vanRoad(),
+        _ => _vanStage(),
+      };
+    }
     if (_roomLesson) return _roomStage();
     if (_harnessLesson) {
       return Row(
@@ -2495,52 +2784,156 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   Widget _vanStage() {
     if (_vanBeat == _VanBeat.coach) return const SizedBox.expand();
-    return Column(
-      children: [
-        Expanded(flex: 2, child: _vanActors()),
-        Expanded(flex: _vanBoarded ? 4 : 3, child: _vanBed()),
-      ],
+    return LayoutBuilder(
+      builder: (context, box) {
+        final h = box.maxHeight;
+        return TweenAnimationBuilder<double>(
+          tween: Tween(end: _vanPortrait ? 0 : 1),
+          duration: const Duration(milliseconds: 620),
+          curve: Curves.easeInOutCubic,
+          builder: (_, t, _) {
+            final bedH = h * 0.58 * t;
+            final holdH = h * 0.36 * (1 - t);
+            final actorH = (h - bedH - holdH).clamp(0.0, h);
+            return Column(
+              children: [
+                SizedBox(height: actorH, child: _vanActors()),
+                SizedBox(height: holdH),
+                SizedBox(
+                  height: bedH,
+                  child: ClipRect(
+                    child: Opacity(
+                      opacity: t.clamp(0.0, 1.0),
+                      child: Transform.translate(
+                        offset: Offset(0, 28 * (1 - t)),
+                        child: _vanBed(),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _vanRoad() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 18, 8, 28),
+      child: _vanActors(),
+    );
+  }
+
+  Widget _vanChecklistPage() {
+    final shown = _checkShown.clamp(0, _vanChecklist.length);
+    final progress = _vanChecklist.isEmpty ? 0.0 : shown / _vanChecklist.length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: const Color(0xF012181F),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: const Color(0x44F6E7B0)),
+          boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 28, offset: Offset(0, 16))],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('চেকলিস্ট', style: zlText(13, weight: FontWeight.w800, color: const Color(0xFFC9A227))),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: progress),
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOutCubic,
+                  builder: (_, t, _) => LinearProgressIndicator(
+                    value: t,
+                    minHeight: 4,
+                    backgroundColor: const Color(0x33F6E7B0),
+                    color: const Color(0xFF7DCEA0),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    for (var i = 0; i < shown; i++)
+                      _VanCheckRow(
+                        key: ValueKey(_vanChecklist[i].id),
+                        asset: _byId(_vanChecklist[i].id)?.asset ?? '',
+                        label: _vanChecklist[i].label,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _vanMan() {
+    final look = _vanLook;
+    return AnimatedOpacity(
+      opacity: _vanBoarded ? 0 : 1,
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeIn,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 480),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        child: Image.asset(
+          'assets/duty_slip/dress/$look.webp',
+          key: ValueKey(look),
+          fit: BoxFit.contain,
+          alignment: Alignment.bottomCenter,
+        ),
+      ),
     );
   }
 
   Widget _vanActors() {
     return LayoutBuilder(
       builder: (context, box) {
-        final vanW = math.min(box.maxWidth * 0.52, 280.0);
+        final road = _outro == _VanOutro.pair || _outro == _VanOutro.aboard || _outro == _VanOutro.away;
+        final vanW = road ? math.min(box.maxWidth * 0.9, 520.0) : math.min(box.maxWidth * 0.52, 280.0);
         return AnimatedBuilder(
-          animation: Listenable.merge([_shake, _vanRide]),
+          animation: Listenable.merge([_shake, _vanRide, _vanDepart]),
           builder: (_, _) {
             final shakeX = math.sin(_shake.value * math.pi * 6) * (1 - _shake.value) * 8;
-            final t = Curves.easeOutBack.transform(_vanRide.value);
+            final t = Curves.easeOutBack.transform(_vanRide.value.clamp(0.0, 1.0));
+            final leave = Curves.easeInCubic.transform(_vanDepart.value);
+            final vanX = (1 - t) * (box.maxWidth * 0.95) - leave * (box.maxWidth * 1.35);
+            final van = Transform.translate(offset: Offset(vanX, 0), child: _vanFigure(vanW));
+            if (road) {
+              final manH = math.min(box.maxHeight * 0.72, vanW * 0.46);
+              return Transform.translate(
+                offset: Offset(shakeX, 0),
+                child: Stack(
+                  alignment: Alignment.bottomLeft,
+                  clipBehavior: Clip.none,
+                  children: [
+                    Align(alignment: Alignment.bottomCenter, child: van),
+                    SizedBox(width: box.maxWidth * 0.4, height: manH, child: _vanMan()),
+                  ],
+                ),
+              );
+            }
             return Transform.translate(
               offset: Offset(shakeX, 0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Expanded(
-                    child: AnimatedOpacity(
-                      opacity: _vanBoarded ? 0 : 1,
-                      duration: const Duration(milliseconds: 280),
-                      child: AnimatedScale(
-                        scale: _vanBoarded ? 0.12 : 1,
-                        alignment: Alignment.bottomCenter,
-                        duration: const Duration(milliseconds: 420),
-                        curve: Curves.easeIn,
-                        child: Image.asset(
-                          'assets/duty_slip/dress/body.webp',
-                          fit: BoxFit.contain,
-                          alignment: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: vanW,
-                    child: Transform.translate(
-                      offset: Offset((1 - t) * (box.maxWidth * 0.95), 0),
-                      child: _vanFigure(vanW),
-                    ),
-                  ),
+                  Expanded(child: _vanMan()),
+                  SizedBox(width: vanW, child: van),
                 ],
               ),
             );
@@ -2560,24 +2953,49 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         clipBehavior: Clip.none,
         children: [
           Image.asset('assets/zero_loss/scene/prop_truck.webp', width: width, height: height, fit: BoxFit.contain),
-          if (_vanBoarded)
+          if (_vanBoarded) ...[
             Positioned(
-              left: width * 0.22,
-              bottom: height * 0.02,
+              left: width * 0.18,
+              right: width * 0.18,
+              bottom: height * 0.08,
+              top: 0,
               child: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 700),
+                duration: const Duration(milliseconds: 460),
+                curve: Curves.easeOutCubic,
+                builder: (_, t, _) => Opacity(
+                  opacity: ((1 - t) * 0.9).clamp(0, 1),
+                  child: Transform.scale(
+                    scale: 0.35 + t * 1.7,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFF6E7B0), width: 2.2),
+                        boxShadow: const [BoxShadow(color: Color(0x66F6E7B0), blurRadius: 18)],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: width * 0.24,
+              bottom: height * 0.06,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 380),
                 curve: Curves.easeOutBack,
                 builder: (_, t, child) {
                   final shown = t.clamp(0.0, 1.0);
                   return Opacity(
                     opacity: shown,
-                    child: Transform.scale(scale: 0.15 + 0.85 * shown, child: child),
+                    child: Transform.scale(scale: 0.72 + 0.28 * shown, child: child),
                   );
                 },
-                child: Image.asset('assets/duty_slip/dress/kit_ready.webp', height: height * 1.15, fit: BoxFit.contain),
+                child: Image.asset('assets/duty_slip/dress/head_helmet.webp', height: height * 0.92, fit: BoxFit.contain),
               ),
             ),
+          ],
         ],
       ),
     );
@@ -2635,7 +3053,6 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     final icons = <String>[
       for (final id in _roomKeep)
         if (_byId(id) != null) _byId(id)!.asset,
-      ..._vanExtras,
     ];
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
@@ -3410,16 +3827,17 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     );
   }
 
-  Widget _coachSlot() {
-    return SizedBox(
-      width: 96,
-      height: 96,
-      child: OverflowBox(
-        alignment: Alignment.bottomLeft,
-        maxWidth: 210,
-        maxHeight: 340,
-        child: IgnorePointer(
-          child: DsCoach(mood: _coachMood, line: _coachLine, bubbleWidth: 200),
+  bool get _cornerCoach => !_vanLesson && !_hero && _frontId.isEmpty;
+
+  Widget _playCoach() {
+    return Positioned(
+      left: 4,
+      bottom: 4,
+      child: IgnorePointer(
+        child: DsCoach(
+          mood: _coachMood,
+          line: _coachLine,
+          bubbleWidth: 228,
         ),
       ),
     );
@@ -3431,10 +3849,10 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     final open = <_Piece>[];
     for (final id in _shelfOrder) {
       final piece = byId[id];
-      if (piece != null && !_on.contains(id) && !_heldBack.contains(id) && seen.add(id)) open.add(piece);
+      if (piece != null && !_on.contains(id) && _shelfShows(id) && !_heldBack.contains(id) && seen.add(id)) open.add(piece);
     }
     for (final piece in _kit) {
-      if (!_on.contains(piece.id) && !_heldBack.contains(piece.id) && seen.add(piece.id)) open.add(piece);
+      if (!_on.contains(piece.id) && _shelfShows(piece.id) && !_heldBack.contains(piece.id) && seen.add(piece.id)) open.add(piece);
     }
     return DragTarget<_Piece>(
       onWillAcceptWithDetails: (d) => _on.contains(d.data.id) && !(_fullLesson && _blockedTake(d.data)),
@@ -3456,7 +3874,6 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
             spacing: 6,
             runSpacing: 6,
             children: [
-              if (!_vanLesson && !_hero && _frontId.isEmpty) _coachSlot(),
               for (final p in open) KeyedSubtree(key: ValueKey(p.id), child: _token(p)),
             ],
           ),
@@ -3627,6 +4044,56 @@ class _WinGlow extends StatelessWidget {
   }
 }
 
+class _VanCheckRow extends StatelessWidget {
+  const _VanCheckRow({super.key, required this.asset, required this.label});
+
+  final String asset;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+      builder: (_, t, _) {
+        final rise = t.clamp(0.0, 1.0);
+        final tick = ((t - 0.42) / 0.58).clamp(0.0, 1.0);
+        final pop = Curves.easeOutBack.transform(tick);
+        return Opacity(
+          opacity: rise,
+          child: Transform.translate(
+            offset: Offset(36 * (1 - rise), 0),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: const Color(0x14F6E7B0),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: asset.isEmpty ? const SizedBox.shrink() : Image.asset(asset, fit: BoxFit.contain),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(label, style: zlText(16, weight: FontWeight.w700, color: const Color(0xFFF6E7C8)))),
+                  Transform.scale(
+                    scale: pop,
+                    child: const Icon(Icons.check_circle_rounded, color: Color(0xFF7DCEA0), size: 26),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _HeroEntrance extends StatelessWidget {
   const _HeroEntrance({required this.child});
 
@@ -3679,6 +4146,7 @@ class DsCoach extends StatefulWidget {
 class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
   late final AnimationController _pop;
   late final AnimationController _eyes;
+  late final AnimationController _mouth;
   var _eyeLap = 0;
   var _eyeArmed = true;
 
@@ -3687,7 +4155,9 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
     super.initState();
     _pop = AnimationController(vsync: this, duration: const Duration(milliseconds: 640))..forward();
     _eyes = AnimationController(vsync: this, duration: const Duration(milliseconds: 4200))..repeat();
+    _mouth = AnimationController(vsync: this, duration: const Duration(milliseconds: 1320));
     _eyes.addListener(_countLaps);
+    _syncMouth();
   }
 
   void _countLaps() {
@@ -3703,6 +4173,19 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
   void didUpdateWidget(DsCoach old) {
     super.didUpdateWidget(old);
     if (old.mood != widget.mood) _pop.forward(from: 0);
+    if (old.mood != widget.mood || old.line != widget.line) _syncMouth(restart: true);
+  }
+
+  bool get _speaking => widget.mood == DsCoachMood.talk && widget.line.isNotEmpty;
+
+  void _syncMouth({bool restart = false}) {
+    if (_speaking) {
+      if (restart || !_mouth.isAnimating) _mouth.repeat(period: const Duration(milliseconds: 1320));
+    } else if (_mouth.isAnimating || _mouth.value != 0) {
+      _mouth
+        ..stop()
+        ..value = 0;
+    }
   }
 
   @override
@@ -3710,6 +4193,7 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
     _eyes.removeListener(_countLaps);
     _pop.dispose();
     _eyes.dispose();
+    _mouth.dispose();
     super.dispose();
   }
 
@@ -3725,7 +4209,7 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
               : 'coach_oops',
       DsCoachMood.talk => blink
           ? 'coach_talk_blink'
-          : glance
+          : widget.line.isEmpty && glance
               ? 'coach_talk_glance'
               : 'coach_talk',
       DsCoachMood.ready => blink
@@ -3736,23 +4220,71 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
     };
   }
 
+  double _lipClose(double t) {
+    const keys = <(double, double)>[
+      (0.00, 0.16),
+      (0.05, 0.00),
+      (0.16, 0.00),
+      (0.19, 1.00),
+      (0.23, 0.00),
+      (0.35, 0.00),
+      (0.39, 0.58),
+      (0.45, 0.00),
+      (0.56, 0.00),
+      (0.59, 1.00),
+      (0.64, 0.00),
+      (0.76, 0.00),
+      (0.82, 0.34),
+      (0.88, 0.00),
+      (0.95, 0.86),
+      (1.00, 0.16),
+    ];
+    for (var i = 0; i < keys.length - 1; i++) {
+      final a = keys[i];
+      final b = keys[i + 1];
+      if (t < a.$1 || t > b.$1) continue;
+      final u = ((t - a.$1) / (b.$1 - a.$1)).clamp(0.0, 1.0);
+      final snap = (b.$2 - a.$2).abs() > 0.7;
+      final s = snap ? Curves.easeInOutQuart.transform(u) : Curves.easeInOutCubic.transform(u);
+      return a.$2 + (b.$2 - a.$2) * s;
+    }
+    return keys.last.$2;
+  }
+
+  Widget _talkMouth() {
+    final close = _lipClose(_mouth.value);
+    if (close < 0.08) return const SizedBox.shrink();
+    final s = widget.sprite;
+    const imageAspect = 597 / 888;
+    final imageW = s * imageAspect;
+    final left = (s - imageW) / 2;
+    return Positioned(
+      left: left + imageW * 0.455,
+      top: s * 0.442,
+      width: imageW * 0.16,
+      height: s * 0.076,
+      child: CustomPaint(painter: _LipPainter(close)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final oops = widget.mood == DsCoachMood.oops;
     final joy = widget.mood == DsCoachMood.thanks;
     final lift = joy || widget.mood == DsCoachMood.glad;
     return AnimatedBuilder(
-      animation: Listenable.merge([_pop, _eyes]),
+      animation: Listenable.merge([_pop, _eyes, _mouth]),
       builder: (_, _) {
         final spring = Curves.elasticOut.transform(_pop.value.clamp(0.0, 1.0));
         final t = _eyes.value;
         final dx = oops ? math.sin(_pop.value * math.pi * 6) * 6 : 0.0;
         final hop = lift ? -12 * math.sin(_pop.value.clamp(0.0, 1.0) * math.pi) : 0.0;
+        final nod = _speaking ? 1.4 * math.sin(_mouth.value * math.pi * 2) : 0.0;
         final asset = _asset(t);
         final align = widget.centered ? CrossAxisAlignment.center : CrossAxisAlignment.start;
         final stars = widget.sprite > 120 ? 6 : 3;
         return Transform.translate(
-          offset: Offset(dx, 28 * (1 - spring) + hop),
+          offset: Offset(dx, 28 * (1 - spring) + hop + nod),
           child: Transform.scale(
             scale: 0.72 + 0.28 * spring,
             alignment: widget.centered ? Alignment.center : Alignment.bottomLeft,
@@ -3768,9 +4300,11 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
                     width: widget.sprite,
                     height: widget.sprite,
                     child: Stack(
+                      fit: StackFit.expand,
                       clipBehavior: Clip.none,
                       children: [
                         Image.asset('assets/duty_slip/dress/$asset.webp', fit: BoxFit.contain),
+                        if (widget.mood == DsCoachMood.talk && widget.line.isNotEmpty) _talkMouth(),
                         if (joy)
                           for (var i = 0; i < stars; i++)
                             Positioned(
@@ -3789,6 +4323,56 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
       },
     );
   }
+}
+
+class _LipPainter extends CustomPainter {
+  const _LipPainter(this.close);
+
+  final double close;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = close.clamp(0.0, 1.0);
+    if (c < 0.06 || size.width < 2 || size.height < 2) return;
+    canvas.save();
+    canvas.clipPath(
+      Path()..addOval(Rect.fromLTWH(0, size.height * 0.04, size.width, size.height * 0.92)),
+    );
+    final skin = Paint()..color = const Color(0xFFC67C4C);
+    final meet = size.height * 0.40;
+    final upperH = (meet + size.height * 0.08) * c;
+    final lowerH = (size.height - meet + size.height * 0.08) * c;
+    final upper = Path()
+      ..moveTo(-2, -2)
+      ..lineTo(size.width + 2, -2)
+      ..lineTo(size.width + 2, upperH * 0.62)
+      ..quadraticBezierTo(size.width * 0.5, upperH * 1.18, -2, upperH * 0.62)
+      ..close();
+    canvas.drawPath(upper, skin);
+    final ly = size.height - lowerH;
+    final lower = Path()
+      ..moveTo(-2, size.height + 2)
+      ..lineTo(size.width + 2, size.height + 2)
+      ..lineTo(size.width + 2, ly + lowerH * 0.42)
+      ..quadraticBezierTo(size.width * 0.5, ly - lowerH * 0.16, -2, ly + lowerH * 0.42)
+      ..close();
+    canvas.drawPath(lower, skin);
+    if (c > 0.82) {
+      final lip = Paint()
+        ..color = const Color(0xFF2C1A12)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1.15, size.width * 0.048)
+        ..strokeCap = StrokeCap.round;
+      final smile = Path()
+        ..moveTo(size.width * 0.20, meet)
+        ..quadraticBezierTo(size.width * 0.5, meet + size.height * 0.14, size.width * 0.80, meet);
+      canvas.drawPath(smile, lip);
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_LipPainter old) => old.close != close;
 }
 
 class _CoachBubble extends StatelessWidget {
@@ -3811,7 +4395,7 @@ class _CoachBubble extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 10, offset: Offset(0, 4))],
           ),
-          child: Text(line, style: zlText(13, weight: FontWeight.w700, height: 1.35, color: const Color(0xFF3A2A16))),
+          child: Text(enDigits(line), style: zlText(13, weight: FontWeight.w700, height: 1.35, color: const Color(0xFF3A2A16))),
         ),
         Padding(
           padding: const EdgeInsets.only(left: 22),

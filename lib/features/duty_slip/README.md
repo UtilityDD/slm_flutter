@@ -4,6 +4,8 @@ Field duty companion. Home card **মৃত্যুহীন পথ** opens `Du
 
 Do not use PowerShell `Set-Content` on Bangla in this folder — it mojibakes. Edit in the IDE.
 
+**Numbers:** always English digits `0–9`, even in Bangla copy and even when the phone language is Bengali. Use `enDigits` (`lib/core/en_digits.dart`) for any string that might contain `০–৯`. Do not map clocks or scores to Bangla digits. Theme text disables locale-aware digit substitution so the Bangla font cannot redraw Latin digits as Bengali.
+
 ## Testing unlock
 
 `dsAllLevelsOpen` in `duty_slip_engine.dart` is **`true`**. All 19 live plates are tappable. Ladder opens on level 1. Rank still records; আবার still does not bank score.
@@ -37,7 +39,7 @@ Set it **`false`** before a real release. Then only `unlocked` plates open, a pa
 | 5 | পুরো কিট | Shirt, pant, shoe, harness, helmet, shield, gloves. গামছা is refused |
 | 6 | পোশাক ও জুতো Pro | Metallic bracelet/chain starts on wrist and must come off first. Steel-toe boot is a fatal trap; certified dielectric boot + 100% cotton required |
 
-**6–8 briefing** is the SAFE HOME list (title, then body). **9–18 briefing** (job): different site photo (torn wire). Page 1 title **আসল কাজ**, lead **২৩ ধাপ। মাঠে তার ছিঁড়ে পড়ে আছে।**, caption **শুরু থেকে শেষ পর্যন্ত কাজের ধাপগুলো দেখে নিন।** Five tappable group plates (`dsJobGroups`). Tap a group → same **আসল কাজ** header, that group’s steps fill the list (no serials). Bottom ring turns back and returns to the five plates. Tap a step for why; the plate has prev / next (and swipe) to walk the group. Next → clean 23 list, still **আসল কাজ**. Next → full-page level hint (`dsJobHint`). Next starts the quiz.
+**6–8 briefing** is the SAFE HOME list (title, then body). **9–18 briefing** (job): different site photo (torn wire). Page 1 title **আসল কাজ**, lead **23 ধাপ। মাঠে তার ছিঁড়ে পড়ে আছে।**, caption **শুরু থেকে শেষ পর্যন্ত কাজের ধাপগুলো দেখে নিন।** Five tappable group plates (`dsJobGroups`). Tap a group → same **আসল কাজ** header, that group’s steps fill the list (no serials). Bottom ring turns back and returns to the five plates. Tap a step for why; the plate has prev / next (and swipe) to walk the group. Next → clean 23 list, still **আসল কাজ**. Next → full-page level hint (`dsJobHint`). Next starts the quiz.
 
 Dress titles are fixed: পোশাক, মাথায় হেলমেট, হাতে গ্লাভস, হারনেস, পুরো কিট. Levels 6–8 use the SAFE HOME briefing list.
 

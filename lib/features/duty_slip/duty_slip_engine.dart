@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/en_digits.dart';
 import 'duty_slip_models.dart';
 
 enum DsAct { briefing, card, call, lethal, done }
@@ -123,7 +124,7 @@ const dsJobGroups = <DsJobGroup>[
 ];
 
 String dsJobHint(int number) => switch (number) {
-      9 => 'এবার দুটো অপশন। ২৩ ধাপের মধ্যে এখন যেটা সঠিক, শুধু সেটাই ছুঁবেন।',
+      9 => 'এবার দুটো অপশন। 23 ধাপের মধ্যে এখন যেটা সঠিক, শুধু সেটাই ছুঁবেন।',
       10 => 'এবার চারটে অপশন। ক্রম মনে রেখে সঠিকটা নিন।',
       11 => 'এবার ছয়টা অপশন। কাছাকাছি নামে ধোঁকা খাবেন না।',
       12 => 'এবার দশটা অপশন। ধাপ এড়িয়ে গেলে বিপদ।',
@@ -190,18 +191,18 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       3 => 'লাইনে কাজ করার সময় হাতই প্রথম ঝুঁকির মুখে পড়ে। লাইভ তার স্পর্শের আগে হাতের সঠিক সুরক্ষা নিশ্চিত করুন।',
       4 => 'উচ্চতায় কাজের সময় পতন রোধে ফুল বডি হারনেসই জীবন বাঁচায়। সঠিক পদ্ধতিতে প্রতিটি বাকল লক করুন।',
       5 => 'এবার দ্রুত কাজের জন্য তৈরি হয়ে যান।',
-      6 => 'কলে বের হওয়ার আগে ভ্যানে কন্ট্রোল রুমের সাজ তুলুন। ঠিক জিনিস গাড়িতে উঠবে, ভুল জিনিস নয়।',
+      6 => 'কন্ট্রোল রুমের ভিতরে কাজের আদেশ এসেছে। দ্রুত তৈরি হতে হবে।',
       7 => 'গলিতে তার ছিঁড়ে মাটিতে পড়ে আছে। ওঠার আগে যা যা লাগবে, বেছে নিন।',
       8 => 'শাটডাউন হয়েছে। বুশিং খোলার আগে ট্রান্সফরমার মৃত করুন।',
       9 => 'রাত দুপুরে লাইন মরে আছে। রাস্তায় গাড়ি আছে, আলো নেই।',
       10 => 'ঝড়ে ডাল লাইনের উপর পড়েছে। আগে লাইন মৃত, তারপর ডাল।',
       _ => 'এবার আটটাই সামনে, আর ভুল ছুঁলেই নতুন সাজ। পুরো আট মন্ত্র মাথায় রেখে শেষ পর্যন্ত চলুন।',
     };
-    return DsBrief(title: title, body: body, stamps: home);
+    return DsBrief(title: enDigits(title), body: enDigits(body), stamps: home);
   }
   return DsBrief(
     title: 'আসল কাজ',
-    body: dsJobHint(spec.number),
+    body: enDigits(dsJobHint(spec.number)),
   );
 }
 
@@ -458,7 +459,7 @@ class DutySlipEngine {
     }
     if (level.isLetters && level.number == 6) {
       return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ শৃঙ্খলা! ভ্যানে কন্ট্রোল রুমের সাজ ঠিক আছে।',
+        DsLevelRank.darun => 'দারুণ। লাইনম্যান তৈরি, আর ভ্যানে ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড ও পোর্টেবল আর্থিং কিট আছে।',
         DsLevelRank.motamuti => 'ভ্যান সাজানো হয়েছে, তবে এই ঘরের জন্য আরও সতর্ক থাকা জরুরি।',
         DsLevelRank.again => 'এই সাজে ভ্যান বের হবে না। সতর্কতা বজায় রেখে পুনরায় সাজান।',
       };
@@ -526,12 +527,9 @@ class DutySlipEngine {
   String get playClock => formatClock(playSeconds);
 
   String formatClock(int sec) {
-    const d = '০১২৩৪৫৬৭৮৯';
-    final mStr = (sec ~/ 60).toString().padLeft(2, '0');
-    final sStr = (sec % 60).toString().padLeft(2, '0');
-    final mBn = mStr.split('').map((ch) => d[int.parse(ch)]).join();
-    final sBn = sStr.split('').map((ch) => d[int.parse(ch)]).join();
-    return '$mBn:$sBn';
+    final m = (sec ~/ 60).toString().padLeft(2, '0');
+    final s = (sec % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   void jumpMinutes(int min) {
@@ -543,22 +541,24 @@ class DutySlipEngine {
     quality += delta;
   }
 
-  String fill(String raw) => raw
-      .replaceAll('{{feeder}}', feeder)
-      .replaceAll('{{fake1}}', fakes.isNotEmpty ? fakes[0] : 'রামপুর কলোনি-১১')
-      .replaceAll('{{fake2}}', fakes.length > 1 ? fakes[1] : 'হাটতলা-১১')
-      .replaceAll('{{pole}}', site.pole)
-      .replaceAll('{{site}}', site.nameBn);
+  String fill(String raw) => enDigits(
+        raw
+            .replaceAll('{{feeder}}', feeder)
+            .replaceAll('{{fake1}}', fakes.isNotEmpty ? fakes[0] : 'রামপুর কলোনি-11')
+            .replaceAll('{{fake2}}', fakes.length > 1 ? fakes[1] : 'হাটতলা-11')
+            .replaceAll('{{pole}}', site.pole)
+            .replaceAll('{{site}}', site.nameBn),
+      );
 
   String optionLabel(DsOption o) {
     final baked = fill(o.labelBn);
     if (baked.isNotEmpty) return baked;
     return switch (o.id) {
-      'true' => feeder,
-      'fake1' => fakes.isNotEmpty ? fakes[0] : 'রামপুর কলোনি-১১',
-      'fake2' => fakes.length > 1 ? fakes[1] : 'হাটতলা-১১',
-      'fake3' => fakes.length > 2 ? fakes[2] : 'পুরাতন রামপুর-১১',
-      _ => o.labelBn,
+      'true' => enDigits(feeder),
+      'fake1' => enDigits(fakes.isNotEmpty ? fakes[0] : 'রামপুর কলোনি-11'),
+      'fake2' => enDigits(fakes.length > 1 ? fakes[1] : 'হাটতলা-11'),
+      'fake3' => enDigits(fakes.length > 2 ? fakes[2] : 'পুরাতন রামপুর-11'),
+      _ => enDigits(o.labelBn),
     };
   }
 
