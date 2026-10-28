@@ -594,6 +594,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final jobIntro = e.listing && e.level.isJob;
     final walk = e.showingSafeWalk;
     final dress = e.showingDress;
+    final vanYard = e.level.number == 6 && (e.showingDressIntro || e.showingDress);
     final bg = switch (e.act) {
       DsAct.briefing when e.briefingPage == 1 => 'assets/duty_slip/duty_fault_slip.jpg',
       DsAct.briefing when e.briefingPage == 2 => 'assets/duty_slip/duty_ptw_pad.jpg',
@@ -606,20 +607,32 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
         if (!did) _confirmExit();
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: dress ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
+        value: (dress || vanYard) ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
         child: Scaffold(
           backgroundColor: ZlColors.bg,
           body: Stack(
           key: _stackKey,
           fit: StackFit.expand,
           children: [
-            if (dress)
+            if (vanYard)
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF8ECAE6), Color(0xFFD7E8C8), Color(0xFFF6E2C4), Color(0xFFE4C48A)],
+                    stops: [0.0, 0.38, 0.68, 1.0],
+                  ),
+                ),
+                child: CustomPaint(painter: DsYardPainter(), child: SizedBox.expand()),
+              )
+            else if (dress)
               const ColoredBox(color: Color(0xFFF6E2C2))
             else if (walk)
               const ColoredBox(color: Color(0xFFC5DCE8))
             else
               Image.asset(bg, fit: BoxFit.cover, errorBuilder: (_, _, _) => const ColoredBox(color: ZlColors.bg)),
-            if (!walk && !dress)
+            if (!walk && !dress && !vanYard)
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -1211,6 +1224,7 @@ class _PlanBoard extends StatelessWidget {
           muted: muted,
           onSpeak: onSpeak,
           onDelta: onDelta,
+          onBack: onBackRoad,
         );
       }
       if (e.level.isJob) {
@@ -3775,6 +3789,9 @@ class _DressIntroState extends State<_DressIntro> {
   @override
   Widget build(BuildContext context) {
     final brief = widget.engine.briefOf();
+    final van = widget.engine.level.number == 6;
+    final ink = van ? const Color(0xFF3A2A16) : const Color(0xFFF6E7B0);
+    final rule = van ? const Color(0x553A2A16) : const Color(0x55C9A227);
     return Stack(
       children: [
         Padding(
@@ -3785,7 +3802,7 @@ class _DressIntroState extends State<_DressIntro> {
             alignment: Alignment.centerLeft,
             child: IconButton(
               onPressed: widget.onBack,
-              icon: const Icon(Icons.arrow_back_rounded, color: ZlColors.soft),
+              icon: Icon(Icons.arrow_back_rounded, color: van ? ink : ZlColors.soft),
             ),
           ),
           Expanded(
@@ -3802,20 +3819,20 @@ class _DressIntroState extends State<_DressIntro> {
                   const SizedBox(height: 8),
                   Text(
                     'লেভেল ${_bnNum(widget.engine.level.number)}',
-                    style: zlText(13, weight: FontWeight.w800, color: const Color(0xFFB7A57A)),
+                    style: zlText(13, weight: FontWeight.w800, color: van ? const Color(0xFF6E5A32) : const Color(0xFFB7A57A)),
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(child: Container(height: 1, color: const Color(0x55C9A227))),
+                      Expanded(child: Container(height: 1, color: rule)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Transform.rotate(
                           angle: math.pi / 4,
-                          child: Container(width: 7, height: 7, color: const Color(0xFFC9A227)),
+                          child: Container(width: 7, height: 7, color: van ? ink : const Color(0xFFC9A227)),
                         ),
                       ),
-                      Expanded(child: Container(height: 1, color: const Color(0x55C9A227))),
+                      Expanded(child: Container(height: 1, color: rule)),
                     ],
                   ),
                   const SizedBox(height: 22),
@@ -3824,19 +3841,19 @@ class _DressIntroState extends State<_DressIntro> {
                     child: Text(
                       brief.title,
                       textAlign: TextAlign.center,
-                      style: zlText(28, weight: FontWeight.w900, height: 1.28, color: const Color(0xFFF6E7B0)).copyWith(
-                        shadows: const [Shadow(color: Color(0x66C9A227), blurRadius: 12)],
+                      style: zlText(28, weight: FontWeight.w900, height: 1.28, color: ink).copyWith(
+                        shadows: van ? const <Shadow>[] : const [Shadow(color: Color(0x66C9A227), blurRadius: 12)],
                       ),
                     ),
                   ),
                   const SizedBox(height: 18),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(32, 0, 32, 118),
+                      padding: van ? const EdgeInsets.fromLTRB(8, 0, 8, 128) : const EdgeInsets.fromLTRB(32, 0, 32, 118),
                       child: Image.asset(
                         _dressIntroArt(widget.engine.level.number),
                         fit: BoxFit.contain,
-                        alignment: Alignment.topCenter,
+                        alignment: van ? Alignment.center : Alignment.topCenter,
                       ),
                     ),
                   ),
@@ -3864,7 +3881,7 @@ String _dressIntroArt(int level) => switch (level) {
       3 => 'assets/duty_slip/dress/tray_rubber_gloves.webp',
       4 => 'assets/duty_slip/dress/tray_harness.webp',
       5 => 'assets/duty_slip/dress/kit_ready.webp',
-      6 => 'assets/zero_loss/scene/bg_control_room.webp',
+      6 => 'assets/zero_loss/scene/prop_truck.webp',
       7 => 'assets/zero_loss/scene/bg_market_wire_down.webp',
       8 => 'assets/zero_loss/scene/bg_dtr_structure.webp',
       9 => 'assets/zero_loss/scene/bg_pole_storm.webp',

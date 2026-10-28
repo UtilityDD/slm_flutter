@@ -50,6 +50,7 @@ flutter:
     - assets/sounds/clock_tick.wav
     - assets/sounds/accident.wav
     - assets/sounds/complaint.wav
+    - assets/sounds/van_arrive.wav
     - assets/sounds/customer.wav
     - assets/sounds/voice/
     - assets/data/

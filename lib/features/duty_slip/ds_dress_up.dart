@@ -30,8 +30,13 @@ const _pieces = <_Piece>[
   _Piece(id: 'boot', asset: 'assets/duty_slip/dress/tray_boot.webp', zone: 'feet', good: true, why: ''),
 ];
 
-const _roomStart = 'কন্ট্রোল রুমে ঢোকার আগে জিনিস বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
-const _roomDone = 'কন্ট্রোল রুমের সাজ সম্পূর্ণ। এই ঘরে ঢোকার সুরক্ষা নিশ্চিত।';
+const _roomStart = 'কলে বের হওয়ার আগে ভ্যানে কন্ট্রোল রুমের সাজ তুলুন। ঠিক জিনিস গাড়িতে উঠবে, ভুল জিনিস নয়।';
+const _roomDone = 'সাজ সম্পূর্ণ। লাইনম্যান ভ্যানে উঠেছেন। কন্ট্রোল রুমের জন্য বের হওয়া যাবে।';
+const _vanExtras = [
+  'assets/zero_loss/scene/gear_frp_ladder.webp',
+  'assets/zero_loss/scene/gear_tester.webp',
+  'assets/zero_loss/scene/gear_earth_rods.webp',
+];
 const _roomFatua = 'না, সাবধান! ঢিলে পোশাক প্যানেলের হাতলে জড়িয়ে যেতে পারে। শরীর আঁটোসাঁটো রাখা জরুরি।';
 const _roomBareLeg = 'সাবধান! পা উন্মুক্ত রেখে কাজ করা অনিরাপদ, আর্কের আগুন সরাসরি চামড়ায় লাগবে।';
 const _roomSlip = 'বিপদ! চপ্পলে কোনো ইনসুলেশন নেই। স্পার্ক লাগলে পা বাঁচবে না।';
@@ -583,12 +588,15 @@ class _CamTween extends Tween<_Cam> {
   _Cam lerp(double t) => _Cam.lerp(begin ?? const _Cam(1, Alignment.center), end ?? const _Cam(1, Alignment.center), t);
 }
 
+enum _VanBeat { coach, yard }
+
 class DsDressUp extends StatefulWidget {
   final DutySlipEngine engine;
   final VoidCallback onDone;
   final bool muted;
   final Future<void> Function(String text) onSpeak;
   final void Function(int delta, Offset global) onDelta;
+  final VoidCallback? onBack;
 
   const DsDressUp({
     super.key,
@@ -597,6 +605,7 @@ class DsDressUp extends StatefulWidget {
     required this.muted,
     required this.onSpeak,
     required this.onDelta,
+    this.onBack,
   });
 
   @override
@@ -649,6 +658,9 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   var _chosen = '';
   final _shelfOrder = <String>[];
   var _checking = false;
+  var _vanBoarded = false;
+  var _vanBeat = _VanBeat.yard;
+  var _coachOn = true;
   var _blameZone = '';
   var _roomToken = 0;
   var _landId = '';
@@ -667,6 +679,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   final _pieceKeys = <String, GlobalKey>{};
   late final AnimationController _toss;
   late final AnimationController _ring;
+  late final AnimationController _vanRide;
 
   @override
   void initState() {
@@ -677,6 +690,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _rowFx = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
     _toss = AnimationController(vsync: this, duration: const Duration(milliseconds: 520));
     _ring = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat();
+    _vanRide = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+    if (_vanLesson) {
+      _vanBeat = _VanBeat.coach;
+      _coachOn = true;
+    }
     if (_headLesson) _on.add('gamcha');
     if (_harnessLesson) _on.add('rubber');
     _mixShelf(sound: false);
@@ -695,7 +713,24 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       10 => _treeStart,
       _ => 'কাজে নামার আগে ঠিকঠাক পোশাক বেছে নিন—ঝুঁকি এড়িয়ে সঠিকটা পরান।',
     };
-    _speakCoach(hello, mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1400));
+    _speakCoach(
+      hello,
+      mood: DsCoachMood.talk,
+      buffer: const Duration(milliseconds: 1400),
+      then: _vanLesson ? _leaveCoach : null,
+    );
+  }
+
+  void _leaveCoach() {
+    Future<void>.delayed(const Duration(milliseconds: 800), () async {
+      if (!mounted || _finishing) return;
+      setState(() => _coachOn = false);
+      await Future<void>.delayed(const Duration(milliseconds: 460));
+      if (!mounted || _finishing) return;
+      setState(() => _vanBeat = _VanBeat.yard);
+      await Future<void>.delayed(const Duration(milliseconds: 620));
+      if (mounted && !_finishing) _rollVan();
+    });
   }
 
   @override
@@ -708,6 +743,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _rowFx.dispose();
     _toss.dispose();
     _ring.dispose();
+    _vanRide.dispose();
     _coachTimer?.cancel();
     ZlFx.releaseClock();
     super.dispose();
@@ -720,6 +756,10 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   bool get _harnessLesson => widget.engine.level.number == 4;
 
   bool get _roomLesson => widget.engine.level.number >= 6 && widget.engine.level.number <= 10;
+
+  bool get _vanLesson => widget.engine.level.number == 6;
+
+  bool get _vanParked => _vanRide.status == AnimationStatus.completed;
 
   bool get _poleLesson => widget.engine.level.number == 7;
 
@@ -920,6 +960,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     String line, {
     DsCoachMood mood = DsCoachMood.talk,
     Duration buffer = const Duration(milliseconds: 1000),
+    VoidCallback? then,
   }) {
     _coachTimer?.cancel();
     _markTimer?.cancel();
@@ -931,7 +972,18 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     setState(() {});
     widget.onSpeak(line).whenComplete(() {
       if (!mounted || token != _speakToken || _finishing) return;
+      then?.call();
       _holdCoach(buffer);
+    });
+  }
+
+  void _rollVan() {
+    if (!mounted || _vanRide.isAnimating || _vanRide.isCompleted) return;
+    unawaited(ZlFx.cue('sounds/van_arrive.wav', volume: 0.62, muted: widget.muted));
+    _vanRide.forward().whenComplete(() {
+      if (!mounted) return;
+      HapticFeedback.lightImpact();
+      setState(() {});
     });
   }
 
@@ -1061,6 +1113,40 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     await Future.wait([voice, hold]);
     if (!mounted) return;
     await Future<void>.delayed(const Duration(milliseconds: 650));
+    if (mounted) widget.onDone();
+  }
+
+  Future<void> _doneVan() async {
+    if (_finishing) return;
+    _coachTimer?.cancel();
+    _markTimer?.cancel();
+    setState(() {
+      _finishing = true;
+      _vanBoarded = true;
+      _glow = true;
+      _hero = false;
+      _mark = null;
+      _ask = false;
+      _coachFace = DsCoachMood.ready;
+      _coachSay = '';
+    });
+    unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.55, muted: widget.muted));
+    HapticFeedback.mediumImpact();
+    await Future<void>.delayed(const Duration(milliseconds: 980));
+    if (!mounted) return;
+    setState(() {
+      _glow = false;
+      _hero = true;
+      _coachFace = DsCoachMood.thanks;
+      _coachSay = _roomDone;
+    });
+    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.62, muted: widget.muted));
+    HapticFeedback.lightImpact();
+    final voice = widget.onSpeak(_roomDone);
+    final hold = Future<void>.delayed(const Duration(milliseconds: 2600));
+    await Future.wait([voice, hold]);
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 500));
     if (mounted) widget.onDone();
   }
 
@@ -1846,7 +1932,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       if (_ready) {
         widget.engine.dressRight();
         widget.onDelta(5, _flyFrom('bench'));
-        await _doneLesson(_benchDone);
+        if (_vanLesson) {
+          await _doneVan();
+        } else {
+          await _doneLesson(_benchDone);
+        }
         return;
       }
       await _roomHint();
@@ -2075,7 +2165,14 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: _roomLesson
+        gradient: _vanLesson
+            ? const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF8ECAE6), Color(0xFFD7E8C8), Color(0xFFF6E2C4), Color(0xFFE4C48A)],
+                stops: [0.0, 0.22, 0.46, 1.0],
+              )
+            : _roomLesson
             ? const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -2087,12 +2184,12 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                 colors: [Color(0xFFF6E2B8), Color(0xFFE7C98A), Color(0xFFC9A36A)],
                 stops: [0.0, 0.55, 1.0],
               ),
-        image: _roomLesson
+        image: _roomLesson && !_vanLesson
             ? DecorationImage(
                 image: AssetImage(_benchScene),
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
-                opacity: widget.engine.level.number == 6 ? 0.5 : 0.78,
+                opacity: 0.78,
               )
             : null,
       ),
@@ -2100,6 +2197,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         key: _dressKey,
         clipBehavior: Clip.none,
         children: [
+          if (_vanLesson) const Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: DsYardPainter()))),
           Column(
             children: [
               const SizedBox(height: 8),
@@ -2109,15 +2207,15 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                   alignment: Alignment.center,
                   children: [
                     AnimatedOpacity(
-                      opacity: _hero ? 0 : 1,
+                      opacity: _hero && !_vanLesson ? 0 : 1,
                       duration: const Duration(milliseconds: 460),
                       curve: Curves.easeInOutCubic,
                         child: IgnorePointer(
-                        ignoring: _finishing || _checking,
+                        ignoring: _finishing || _checking || (_vanLesson && _vanBeat == _VanBeat.coach),
                         child: _glow ? _WinGlow(pulse: _sway, child: _playMan()) : _playMan(),
                       ),
                     ),
-                    if (_hero)
+                    if (_hero && !_vanLesson)
                       _HeroEntrance(
                         child: DsCoach(
                           mood: DsCoachMood.thanks,
@@ -2130,18 +2228,18 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                   ],
                 ),
               ),
-              if (_roomLesson && !_finishing)
+              if (_roomLesson && !_finishing && !(_vanLesson && _vanBeat == _VanBeat.coach))
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 6),
                   child: GestureDetector(
-                    onTap: _checking ? null : _roomCheck,
+                    onTap: _checking || (_vanLesson && !_vanParked) ? null : _roomCheck,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 160),
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: _checking ? const Color(0xFF5C4632) : const Color(0xFF3A2A16),
+                        color: _checking || (_vanLesson && !_vanParked) ? const Color(0xFF5C4632) : const Color(0xFF3A2A16),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: const Color(0xFFC9A227), width: 1.4),
                       ),
@@ -2149,19 +2247,30 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-              AnimatedSlide(
-                offset: _hero ? const Offset(0, 0.45) : Offset.zero,
-                duration: const Duration(milliseconds: 520),
-                curve: Curves.easeInCubic,
-                child: AnimatedOpacity(
-                  opacity: _hero ? 0 : 1,
-                  duration: const Duration(milliseconds: 420),
-                  child: IgnorePointer(ignoring: _finishing || _checking, child: _shelf()),
+              if (!(_vanLesson && (_vanBeat == _VanBeat.coach || _hero)))
+                AnimatedSlide(
+                  offset: _hero ? const Offset(0, 0.45) : Offset.zero,
+                  duration: const Duration(milliseconds: 520),
+                  curve: Curves.easeInCubic,
+                  child: AnimatedOpacity(
+                    opacity: _hero ? 0 : 1,
+                    duration: const Duration(milliseconds: 420),
+                    child: IgnorePointer(ignoring: _finishing || _checking, child: _shelf()),
+                  ),
                 ),
-              ),
             ],
           ),
           if (_frontId.isNotEmpty) _reviewFront(),
+          if (_vanLesson && (_vanBeat == _VanBeat.coach || _hero)) _vanCoach(),
+          if (_vanLesson && _vanBeat == _VanBeat.coach && widget.onBack != null)
+            Positioned(
+              left: 2,
+              top: 0,
+              child: IconButton(
+                onPressed: widget.onBack,
+                icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF3A2A16)),
+              ),
+            ),
           if (_tossAsset.isNotEmpty) _tossFlight(),
           if (_ask && _mark != null) _modal(_mark!.why),
         ],
@@ -2344,6 +2453,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   Widget _playMan() {
+    if (_vanLesson) return _vanStage();
     if (_roomLesson) return _roomStage();
     if (_harnessLesson) {
       return Row(
@@ -2354,6 +2464,268 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       );
     }
     return _bobbingMan();
+  }
+
+  Widget _vanCoach() {
+    final leaving = _vanBeat == _VanBeat.coach && !_coachOn;
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedSlide(
+          offset: leaving ? const Offset(-0.28, 0.08) : Offset.zero,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeInCubic,
+          child: AnimatedOpacity(
+            opacity: leaving ? 0 : 1,
+            duration: const Duration(milliseconds: 360),
+            child: Align(
+              alignment: _hero ? const Alignment(0, -0.55) : Alignment.center,
+              child: DsCoach(
+                mood: _hero ? DsCoachMood.thanks : DsCoachMood.talk,
+                line: _coachSay,
+                bubbleWidth: 280,
+                sprite: 188,
+                centered: true,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _vanStage() {
+    if (_vanBeat == _VanBeat.coach) return const SizedBox.expand();
+    return Column(
+      children: [
+        Expanded(flex: 2, child: _vanActors()),
+        Expanded(flex: _vanBoarded ? 4 : 3, child: _vanBed()),
+      ],
+    );
+  }
+
+  Widget _vanActors() {
+    return LayoutBuilder(
+      builder: (context, box) {
+        final vanW = math.min(box.maxWidth * 0.52, 280.0);
+        return AnimatedBuilder(
+          animation: Listenable.merge([_shake, _vanRide]),
+          builder: (_, _) {
+            final shakeX = math.sin(_shake.value * math.pi * 6) * (1 - _shake.value) * 8;
+            final t = Curves.easeOutBack.transform(_vanRide.value);
+            return Transform.translate(
+              offset: Offset(shakeX, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: AnimatedOpacity(
+                      opacity: _vanBoarded ? 0 : 1,
+                      duration: const Duration(milliseconds: 280),
+                      child: AnimatedScale(
+                        scale: _vanBoarded ? 0.12 : 1,
+                        alignment: Alignment.bottomCenter,
+                        duration: const Duration(milliseconds: 420),
+                        curve: Curves.easeIn,
+                        child: Image.asset(
+                          'assets/duty_slip/dress/body.webp',
+                          fit: BoxFit.contain,
+                          alignment: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: vanW,
+                    child: Transform.translate(
+                      offset: Offset((1 - t) * (box.maxWidth * 0.95), 0),
+                      child: _vanFigure(vanW),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _vanFigure(double width) {
+    final height = width * 0.5;
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        clipBehavior: Clip.none,
+        children: [
+          Image.asset('assets/zero_loss/scene/prop_truck.webp', width: width, height: height, fit: BoxFit.contain),
+          if (_vanBoarded)
+            Positioned(
+              left: width * 0.22,
+              bottom: height * 0.02,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 700),
+                curve: Curves.easeOutBack,
+                builder: (_, t, child) {
+                  final shown = t.clamp(0.0, 1.0);
+                  return Opacity(
+                    opacity: shown,
+                    child: Transform.scale(scale: 0.15 + 0.85 * shown, child: child),
+                  );
+                },
+                child: Image.asset('assets/duty_slip/dress/kit_ready.webp', height: height * 1.15, fit: BoxFit.contain),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _vanBed() {
+    final hot = _dragZone == 'bench';
+    final missing = _blameZone == 'bench';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
+      child: DragTarget<_Piece>(
+        hitTestBehavior: HitTestBehavior.opaque,
+        onWillAcceptWithDetails: (d) => _vanParked && !_checking && !_finishing && !_vanBoarded,
+        onAcceptWithDetails: (d) => _wear(d.data, d.offset),
+        builder: (context, candidate, _) {
+          final lit = hot || candidate.isNotEmpty;
+          return Container(
+            key: _benchPaneKey,
+            width: double.infinity,
+            height: double.infinity,
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+            decoration: BoxDecoration(
+              color: missing ? const Color(0xFFFFF1F0) : const Color(0xF7FFF8EE),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: missing
+                    ? const Color(0xFFFF5A4A)
+                    : lit
+                        ? const Color(0xFFC9A227)
+                        : const Color(0xFFD7C39A),
+                width: lit || missing ? 2.6 : 1.4,
+              ),
+              boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 12, offset: Offset(0, 4))],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: _vanBoarded ? _vanLoaded() : _vanOpenCargo(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _vanOpenCargo() {
+    final pieces = _benchPieces;
+    if (pieces.isEmpty) return const SizedBox.expand();
+    return _vanFit(
+      count: pieces.length,
+      item: (i, _, _) => _vanTile(pieces[i]),
+    );
+  }
+
+  Widget _vanLoaded() {
+    final icons = <String>[
+      for (final id in _roomKeep)
+        if (_byId(id) != null) _byId(id)!.asset,
+      ..._vanExtras,
+    ];
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 520),
+      curve: Curves.easeOutCubic,
+      builder: (_, t, child) => Opacity(opacity: t.clamp(0.0, 1.0), child: child),
+      child: _vanFit(
+        count: icons.length,
+        item: (i, _, _) => Image.asset(icons[i], fit: BoxFit.contain),
+      ),
+    );
+  }
+
+  Widget _vanFit({required int count, required Widget Function(int index, double w, double h) item}) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        if (box.maxWidth < 16 || box.maxHeight < 16 || !box.maxWidth.isFinite || !box.maxHeight.isFinite) {
+          return const SizedBox.expand();
+        }
+        final n = math.max(count, 1);
+        const gap = 8.0;
+        final cols = n <= 2
+            ? n
+            : n <= 4
+                ? 2
+                : n <= 6
+                    ? 3
+                    : 4;
+        final rows = (n / cols).ceil();
+        final maxW = (box.maxWidth - gap * (cols - 1)) / cols;
+        final maxH = rows <= 1 ? box.maxHeight : (box.maxHeight - gap * (rows - 1)) / rows;
+        final h = math.min(96.0, maxH.isFinite ? maxH : 72.0);
+        final w = math.min(maxW, h * 1.12);
+        return Align(
+          alignment: Alignment.center,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            runAlignment: WrapAlignment.center,
+            spacing: gap,
+            runSpacing: gap,
+            children: [
+              for (var i = 0; i < count; i++) SizedBox(width: w, height: h, child: item(i, w, h)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _vanTile(_Piece piece) {
+    final blamed = _blameZone == piece.id;
+    final land = _landId == piece.id;
+    final face = DecoratedBox(
+      decoration: BoxDecoration(
+        color: blamed ? const Color(0xFFFFE4E1) : const Color(0x00000000),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: blamed ? const Color(0xFFFF5A4A) : const Color(0x00000000), width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: Image.asset(piece.asset, fit: BoxFit.contain),
+      ),
+    );
+    return Opacity(
+      opacity: _frontId == piece.id ? 0 : 1,
+      child: Draggable<_Piece>(
+        data: piece,
+        onDragStarted: () => setState(() {
+          _dragZone = 'bench';
+          _clearMark();
+        }),
+        onDragEnd: (_) => setState(() => _dragZone = ''),
+        feedback: Material(
+          color: Colors.transparent,
+          child: SizedBox(width: 84, height: 84, child: Image.asset(piece.asset, fit: BoxFit.contain)),
+        ),
+        childWhenDragging: Opacity(opacity: 0.28, child: face),
+        child: GestureDetector(
+          onTap: () => _take(piece),
+          child: TweenAnimationBuilder<double>(
+            key: ValueKey('${piece.id}-$land'),
+            tween: Tween(begin: land ? 0.55 : 1, end: 1),
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutBack,
+            builder: (_, scale, child) => Transform.scale(scale: scale, child: child),
+            child: face,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _roomStage() {
@@ -2450,13 +2822,14 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     );
   }
 
-  Widget _benchItem(_Piece piece) {
+  Widget _benchItem(_Piece piece, {bool large = false}) {
     final blamed = _blameZone == piece.id;
     final land = _landId == piece.id;
+    final tall = _tallPiece(piece.id);
     final face = AnimatedContainer(
       duration: const Duration(milliseconds: 140),
-      width: _tallPiece(piece.id) ? 44 : 64,
-      height: _tallPiece(piece.id) ? 84 : 56,
+      width: tall ? (large ? 72 : 44) : (large ? 92 : 64),
+      height: tall ? (large ? 120 : 84) : (large ? 84 : 56),
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: blamed ? const Color(0xFF3A1412) : const Color(0x00000000),
@@ -3073,7 +3446,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
           decoration: BoxDecoration(
-            color: _roomLesson ? const Color(0xE61B140E) : null,
+            color: _vanLesson ? const Color(0xCCF6E7C8) : _roomLesson ? const Color(0xE61B140E) : null,
             border: Border(
               top: BorderSide(color: candidate.isNotEmpty ? const Color(0xFFC9A227) : const Color(0x00000000), width: 2),
             ),
@@ -3083,7 +3456,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
             spacing: 6,
             runSpacing: 6,
             children: [
-              if (!_hero && _frontId.isEmpty) _coachSlot(),
+              if (!_vanLesson && !_hero && _frontId.isEmpty) _coachSlot(),
               for (final p in open) KeyedSubtree(key: ValueKey(p.id), child: _token(p)),
             ],
           ),
@@ -3341,13 +3714,23 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
   }
 
   String _asset(double t) {
+    final blink = t > 0.06 && t < 0.13;
+    final glance = _eyeLap.isOdd && t > 0.42 && t < 0.68;
     return switch (widget.mood) {
       DsCoachMood.thanks || DsCoachMood.glad => 'coach_happy',
-      DsCoachMood.oops => 'coach_oops',
-      DsCoachMood.talk => 'coach_talk',
-      DsCoachMood.ready => t > 0.06 && t < 0.13
+      DsCoachMood.oops => blink
+          ? 'coach_oops_blink'
+          : glance
+              ? 'coach_oops_glance'
+              : 'coach_oops',
+      DsCoachMood.talk => blink
+          ? 'coach_talk_blink'
+          : glance
+              ? 'coach_talk_glance'
+              : 'coach_talk',
+      DsCoachMood.ready => blink
           ? 'coach_blink'
-          : _eyeLap.isOdd && t > 0.42 && t < 0.68
+          : glance
               ? 'coach_glance'
               : 'coach_ready',
     };
@@ -3362,9 +3745,10 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
       animation: Listenable.merge([_pop, _eyes]),
       builder: (_, _) {
         final spring = Curves.elasticOut.transform(_pop.value.clamp(0.0, 1.0));
+        final t = _eyes.value;
         final dx = oops ? math.sin(_pop.value * math.pi * 6) * 6 : 0.0;
         final hop = lift ? -12 * math.sin(_pop.value.clamp(0.0, 1.0) * math.pi) : 0.0;
-        final asset = _asset(_eyes.value);
+        final asset = _asset(t);
         final align = widget.centered ? CrossAxisAlignment.center : CrossAxisAlignment.start;
         final stars = widget.sprite > 120 ? 6 : 3;
         return Transform.translate(
@@ -3390,8 +3774,8 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
                         if (joy)
                           for (var i = 0; i < stars; i++)
                             Positioned(
-                              left: widget.sprite * 0.72 + 18 * math.cos(_eyes.value * math.pi * 2 + i * 1.05),
-                              top: 4 + 16 * math.sin(_eyes.value * math.pi * 2 + i),
+                              left: widget.sprite * 0.72 + 18 * math.cos(t * math.pi * 2 + i * 1.05),
+                              top: 4 + 16 * math.sin(t * math.pi * 2 + i),
                               child: Icon(Icons.auto_awesome, size: widget.sprite > 120 ? 18 : 14, color: const Color(0xFFE2B15A)),
                             ),
                       ],
@@ -3568,4 +3952,37 @@ class _GuideMarkPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GuideMarkPainter old) => old.tick != tick || old.cross != cross || old.live != live || old.t != t;
+}
+
+class DsYardPainter extends CustomPainter {
+  const DsYardPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final sun = Offset(size.width * 0.82, size.height * 0.10);
+    canvas.drawCircle(sun, size.width * 0.09, Paint()..color = const Color(0x55FFF1C2));
+    canvas.drawCircle(sun, size.width * 0.038, Paint()..color = const Color(0x99FFE7A0));
+    final horizon = size.height * 0.40;
+    canvas.drawLine(
+      Offset(0, horizon),
+      Offset(size.width, horizon),
+      Paint()
+        ..color = const Color(0x33FFFFFF)
+        ..strokeWidth = 1.2,
+    );
+    void pole(double x, double h) {
+      final ink = Paint()
+        ..color = const Color(0x443A2A16)
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round;
+      canvas.drawLine(Offset(x, horizon), Offset(x, horizon - h), ink);
+      canvas.drawLine(Offset(x - 8, horizon - h), Offset(x + 14, horizon - h - 4), ink);
+    }
+
+    pole(size.width * 0.08, size.height * 0.11);
+    pole(size.width * 0.46, size.height * 0.08);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

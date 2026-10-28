@@ -177,7 +177,7 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       3 => 'হাতে গ্লাভস',
       4 => 'হারনেস',
       5 => 'পুরো কিট',
-      6 => 'কন্ট্রোল রুম',
+      6 => 'ভ্যান সাজান',
       7 => 'খুঁটিতে ওঠা',
       8 => 'ট্রান্সফরমার মৃত করা',
       9 => 'রাতের লাইনে ফল্ট',
@@ -190,7 +190,7 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       3 => 'লাইনে কাজ করার সময় হাতই প্রথম ঝুঁকির মুখে পড়ে। লাইভ তার স্পর্শের আগে হাতের সঠিক সুরক্ষা নিশ্চিত করুন।',
       4 => 'উচ্চতায় কাজের সময় পতন রোধে ফুল বডি হারনেসই জীবন বাঁচায়। সঠিক পদ্ধতিতে প্রতিটি বাকল লক করুন।',
       5 => 'এবার দ্রুত কাজের জন্য তৈরি হয়ে যান।',
-      6 => 'কন্ট্রোল রুমে ঢোকার আগে সুরক্ষাই প্রথম প্রতিরোধ। এই ঘরের উপযুক্ত সাজ বেছে নিন।',
+      6 => 'কলে বের হওয়ার আগে ভ্যানে কন্ট্রোল রুমের সাজ তুলুন। ঠিক জিনিস গাড়িতে উঠবে, ভুল জিনিস নয়।',
       7 => 'গলিতে তার ছিঁড়ে মাটিতে পড়ে আছে। ওঠার আগে যা যা লাগবে, বেছে নিন।',
       8 => 'শাটডাউন হয়েছে। বুশিং খোলার আগে ট্রান্সফরমার মৃত করুন।',
       9 => 'রাত দুপুরে লাইন মরে আছে। রাস্তায় গাড়ি আছে, আলো নেই।',
@@ -458,9 +458,9 @@ class DutySlipEngine {
     }
     if (level.isLetters && level.number == 6) {
       return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ শৃঙ্খলা! কন্ট্রোল রুমের সাজে কোনো ত্রুটি হয়নি।',
-        DsLevelRank.motamuti => 'সাজ পরা হয়েছে, তবে এই ঘরের জন্য আরও সতর্ক থাকা জরুরি।',
-        DsLevelRank.again => 'এই ঘরের সাজে ঝুঁকি থেকে গেছে। সতর্কতা বজায় রেখে পুনরায় চেষ্টা করুন।',
+        DsLevelRank.darun => 'দারুণ শৃঙ্খলা! ভ্যানে কন্ট্রোল রুমের সাজ ঠিক আছে।',
+        DsLevelRank.motamuti => 'ভ্যান সাজানো হয়েছে, তবে এই ঘরের জন্য আরও সতর্ক থাকা জরুরি।',
+        DsLevelRank.again => 'এই সাজে ভ্যান বের হবে না। সতর্কতা বজায় রেখে পুনরায় সাজান।',
       };
     }
     if (level.isLetters && level.number == 7) {
@@ -574,7 +574,7 @@ class DutySlipEngine {
     if (!dsAllLevelsOpen && index > unlocked) return;
     levelIndex = index;
     dressArmed = false;
-    dressOpen = false;
+    dressOpen = dsLevels[index].number == 6;
     planPhase = DsPlanPhase.list;
   }
 
@@ -610,7 +610,7 @@ class DutySlipEngine {
     planPhase = DsPlanPhase.list;
     clockLive = false;
     dressArmed = false;
-    dressOpen = false;
+    dressOpen = level.number == 6;
     planNext = 0;
     levelScore = 0;
     wrongTaps = 0;
@@ -621,15 +621,16 @@ class DutySlipEngine {
   void replayNow() {
     if (planPhase != DsPlanPhase.result) return;
     dressArmed = false;
-    dressOpen = false;
     levelScore = 0;
     wrongTaps = 0;
     streak = 0;
     planPhase = DsPlanPhase.list;
-    if (level.isLetters && level.number <= 5) {
+    if (level.isLetters && level.number <= 10) {
       clockLive = false;
+      dressOpen = level.number == 6;
       return;
     }
+    dressOpen = false;
     startLevelPlay();
   }
 
