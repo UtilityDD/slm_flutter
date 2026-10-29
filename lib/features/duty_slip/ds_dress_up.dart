@@ -48,12 +48,9 @@ const _roomNoShield = 'থামুন! মুখ খোলা থাকলে �
 const _roomNoGlove = 'থামুন! হাত খালি থাকলে সামান্য স্পার্কেই সরাসরি চামড়া পুড়ে যাবে। ইনসুলেটেড গ্লাভস দরকার।';
 const _roomNoBoot = 'না, সতর্ক হোন! খালি পায়ে বৈদ্যুতিক ইনসুলেশন থাকে না। সেফটি বুট পরুন।';
 const _roomMiss = 'আরও কিছু জিনিস বাদ পড়েছে।';
-const _roomDress = {'shirt', 'pant', 'boot', 'helmet', 'shield', 'rubber'};
-const _vanMust = {'tester', 'discharge', 'earth'};
-const _roomKeep = {..._roomDress, ..._vanMust};
 
-const _poleStart = 'গলিতে তার ছিঁড়ে মাটিতে পড়ে আছে। খুঁটিতে ওঠার আগে যা যা লাগবে, বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
-const _poleDone = 'ঠিক আছে। এই সাজে খুঁটিতে ওঠা যাবে।';
+const _poleStart = 'গলিতে তার ছিঁড়ে মাটিতে পড়ে আছে। খুঁটিতে উঠতে হবে।';
+const _poleDone = 'সাজ সম্পূর্ণ। ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড, পোর্টেবল আর্থিং কিট, এফআরপি মই আর হাত-দড়ি ভ্যানে উঠেছে। এবার বের হওয়া যাবে।';
 const _poleBamboo = 'আরে, বাঁশের মই নিয়ে উঠবেন না। ভিজলে পা হড়কায়, হঠাৎ ভেঙেও যায়।';
 const _poleBelt = 'কোমরের বেল্টে ঝুললে শরীর উল্টে যায়। খুঁটিতে ফুল-বডি হারনেস লাগবে।';
 const _poleSlip = 'চপ্পল পরে মইয়ে উঠবেন না। পা হড়কালেই পড়ে যাবেন।';
@@ -70,10 +67,9 @@ const _polePoly = 'পলিয়েস্টার গলে গায়ে লে�
 const _polePajama = 'ঢিলে পাজামায় পা জড়িয়ে মই থেকে পড়ে যাবেন।';
 const _poleHalfPant = 'হাফ প্যান্টে পা খোলা। তারের ঘষা সোজা গায়ে লাগবে।';
 const _poleGamcha = 'গামছা মাথায় জড়ালে হেলমেট বসবে না। এতে বিদ্যুৎও আটকায় না।';
-const _poleKeep = {'shirt', 'pant', 'boot', 'helmet', 'rubber', 'harness', 'frp'};
 
-const _dtrStart = 'শাটডাউন হয়েছে। বুশিং খোলার আগে যা যা লাগবে, বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
-const _dtrDone = 'ঠিক আছে। এবার বুশিং খোলা যাবে।';
+const _dtrStart = 'রিপোর্ট এসেছে, ট্রান্সফরমার খারাপ। বুশিং খুলে দেখতে হবে।';
+const _dtrDone = 'সাজ সম্পূর্ণ। ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড, পোর্টেবল আর্থিং কিট আর তালা-বোর্ড ভ্যানে উঠেছে। এবার বের হওয়া যাবে।';
 const _dtrWire = 'তার জড়িয়ে শর্ট করবেন না। ডিসচার্জ রড দিয়ে মাটিতে নামান।';
 const _dtrCloth = 'ভেজা ন্যাকড়া দিয়ে বুশিং মুছবেন না। জল দিয়ে বিদ্যুৎ হাতে চলে আসবে।';
 const _dtrRoad = 'এটা রাস্তার হেলমেট। বুশিংয়ের কাজে এতে মাথা বাঁচবে না।';
@@ -90,10 +86,9 @@ const _dtrHole = 'এই গ্লাভসে ফুটো। ফুটো দ�
 const _dtrBike = 'বাইকের গ্লাভসে বিদ্যুৎ আটকায় না।';
 const _dtrSlip = 'চপ্পল পরে বুশিংয়ের কাছে যাবেন না। পা হড়কাবে, বিদ্যুৎও আটকাবে না।';
 const _dtrShoe = 'সাধারণ জুতোয় বিদ্যুৎ আটকায় না। সেফটি বুট রাখুন।';
-const _dtrKeep = {'shirt', 'pant', 'boot', 'helmet', 'shield', 'rubber', 'tester', 'discharge', 'earth'};
 
-const _nightStart = 'রাত দুপুরে এলটি ফল্ট। যা যা লাগবে, বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
-const _nightDone = 'ঠিক আছে। এই সাজে রাতের লাইনে নামা যাবে।';
+const _nightStart = 'রাত দুপুরে লাইন ব্রেকডাউন হয়ে গেছে। রাস্তায় গাড়ি, আলো নেই। ফল্ট সারাতে হবে।';
+const _nightDone = 'সাজ সম্পূর্ণ। ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড, পোর্টেবল আর্থিং কিট, টর্চ, এফআরপি মই আর কোন-ফিতে ভ্যানে উঠেছে। এবার বের হওয়া যাবে।';
 const _nightBamboo = 'আরে, বাঁশের মই নিয়ে রাতে উঠবেন না। ভিজলে পা হড়কায়, অন্ধকারে দেখাও যায় না।';
 const _nightWet = 'গ্লাভস ভেজা। ভেজা গ্লাভস দিয়ে বিদ্যুৎ হাতে চলে আসে।';
 const _nightSlip = 'চপ্পল পরে রাতের রাস্তায় উঠবেন না। পা হড়কালেই পড়ে যাবেন।';
@@ -109,10 +104,9 @@ const _nightCotton = 'সুতির গ্লাভসে বিদ্যু�
 const _nightHole = 'এই গ্লাভসে ফুটো। ফুটো দিয়েই শক লাগে।';
 const _nightBike = 'বাইকের গ্লাভসে বিদ্যুৎ আটকায় না।';
 const _nightShoe = 'সাধারণ জুতোয় বিদ্যুৎ আটকায় না, ভেজা রাস্তায় পাও হড়কায়। সেফটি বুট রাখুন।';
-const _nightKeep = {'shirt', 'pant', 'boot', 'helmet', 'rubber', 'vest', 'torch', 'frp'};
 
-const _treeStart = 'ডাল লাইনের উপর। নামানোর আগে যা যা লাগবে, বেঞ্চে রাখুন। ঠিক মনে হলে তৈরি টিপুন।';
-const _treeDone = 'ঠিক আছে। এবার ডাল নামানো যাবে।';
+const _treeStart = 'ঝড়ে ডাল লাইনের উপর পড়েছে। লাইন ব্রেকডাউন। ডাল সরিয়ে লাইন চালু করতে হবে।';
+const _treeDone = 'সাজ সম্পূর্ণ। ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড, পোর্টেবল আর্থিং কিট আর হাত-দড়ি ভ্যানে উঠেছে। এবার বের হওয়া যাবে।';
 const _treeSickle = 'লাইন মৃত না করে কাস্তে দিয়ে ডাল কাটবেন না।';
 const _treeSaw = 'লাইন মৃত না করে করাত দিয়ে ডাল কাটবেন না।';
 const _treeRoad = 'এটা রাস্তার হেলমেট। ডালের কাজে এতে মাথা বাঁচবে না।';
@@ -129,18 +123,23 @@ const _treeHole = 'এই গ্লাভসে ফুটো। ফুটো দ
 const _treeBike = 'বাইকের গ্লাভসে বিদ্যুৎ আটকায় না।';
 const _treeSlip = 'চপ্পল পরে ভেজা মাটিতে ডাল নামানো যাবে না। পা হড়কালেই পড়ে যাবেন।';
 const _treeShoe = 'সাধারণ জুতোয় বিদ্যুৎ আটকায় না। সেফটি বুট রাখুন।';
-const _treeKeep = {'shirt', 'pant', 'boot', 'helmet', 'rubber', 'tester', 'discharge', 'rope'};
 
 const _testerPiece = _Piece(id: 'tester', asset: 'assets/zero_loss/scene/gear_tester.webp', zone: 'tool', good: true, why: '');
 const _dischargePiece = _Piece(id: 'discharge', asset: 'assets/safety/library/ppe/discharge_rod_1.webp', zone: 'tool', good: true, why: '');
 const _earthPiece = _Piece(id: 'earth', asset: 'assets/zero_loss/scene/gear_earth_rods.webp', zone: 'tool', good: true, why: '');
 const _wirePiece = _Piece(id: 'wire', asset: 'assets/duty_slip/dress/tray_wire.webp', zone: 'tool', good: false, why: _dtrWire);
 const _clothPiece = _Piece(id: 'cloth', asset: 'assets/zero_loss/scene/gear_wet_cloth.webp', zone: 'tool', good: false, why: _dtrCloth);
+const _clothClimb = _Piece(id: 'cloth', asset: 'assets/zero_loss/scene/gear_wet_cloth.webp', zone: 'tool', good: false, why: 'ভেজা ন্যাকড়া নিয়ে খুঁটিতে উঠবেন না। জল দিয়ে বিদ্যুৎ হাতে চলে আসবে।');
 const _vestPiece = _Piece(id: 'vest', asset: 'assets/zero_loss/scene/gear_high_vis_vest.webp', zone: 'tool', good: true, why: '');
 const _torchPiece = _Piece(id: 'torch', asset: 'assets/zero_loss/scene/gear_high_lumen_torch.webp', zone: 'tool', good: true, why: '');
 const _ropePiece = _Piece(id: 'rope', asset: 'assets/zero_loss/scene/gear_rope.webp', zone: 'tool', good: true, why: '');
-const _sicklePiece = _Piece(id: 'sickle', asset: 'assets/zero_loss/scene/gear_iron_sickle.webp', zone: 'tool', good: false, why: _treeSickle);
-const _sawPiece = _Piece(id: 'saw', asset: 'assets/zero_loss/scene/gear_tree_saw.webp', zone: 'tool', good: false, why: _treeSaw);
+const _lockPiece = _Piece(id: 'lock', asset: 'assets/zero_loss/scene/gear_lock_board.webp', zone: 'tool', good: true, why: '');
+const _conesPiece = _Piece(id: 'cones', asset: 'assets/zero_loss/scene/gear_tape_cones.webp', zone: 'tool', good: true, why: '');
+const _sickleClimb = _Piece(id: 'sickle', asset: 'assets/zero_loss/scene/gear_iron_sickle.webp', zone: 'tool', good: false, why: 'কাস্তে নিয়ে খুঁটিতে উঠবেন না।');
+const _sawClimb = _Piece(id: 'saw', asset: 'assets/zero_loss/scene/gear_tree_saw.webp', zone: 'tool', good: false, why: 'করাত নিয়ে খুঁটিতে উঠবেন না।');
+const _sickleTree = _Piece(id: 'sickle', asset: 'assets/zero_loss/scene/gear_iron_sickle.webp', zone: 'tool', good: false, why: _treeSickle);
+const _sawTree = _Piece(id: 'saw', asset: 'assets/zero_loss/scene/gear_tree_saw.webp', zone: 'tool', good: false, why: _treeSaw);
+const _bambooNight = _Piece(id: 'bamboo', asset: 'assets/zero_loss/scene/gear_bamboo_ladder.webp', zone: 'ladder', good: false, why: _nightBamboo);
 
 const _vanTraps = <_Piece>[
   _Piece(id: 'neon', asset: 'assets/safety/library/tools/Non_Contact_Voltage_Tester_2.webp', zone: 'tool', good: false, why: 'এই কলম টেস্টার 11 কেভিতে কাজ করে না। হাই ভোল্টেজ ডিটেক্টর নিন।'),
@@ -192,7 +191,7 @@ const _benchOrder = [
   'frp', 'bamboo',
   'tester', 'discharge', 'earth', 'wire', 'cloth',
   'neon', 'meter', 'megger', 'clamp', 'pliers', 'fuse', 'hacksaw', 'torque', 'driver', 'earthmeter', 'spanner',
-  'vest', 'torch', 'rope', 'sickle', 'saw',
+  'vest', 'torch', 'rope', 'sickle', 'saw', 'lock', 'cones',
 ];
 
 const _shoeBlock = 'আরে আরে, ভুল হচ্ছে! জুতো পরা অবস্থায় প্যান্ট ঠিকমতো পরা সম্ভব নয়। আগে প্যান্টের কাজ শেষ করুন।';
@@ -622,17 +621,79 @@ enum _VanGate { dress, portrait, guide, tools }
 
 enum _VanOutro { idle, list, pair, aboard, away, guide }
 
-const _vanChecklist = <({String id, String label})>[
-  (id: 'shirt', label: 'সুতির শার্ট'),
-  (id: 'pant', label: 'সুতির প্যান্ট'),
-  (id: 'boot', label: 'ডাইইলেকট্রিক বুট'),
-  (id: 'helmet', label: 'ইলেকট্রিক্যাল হেলমেট'),
-  (id: 'shield', label: 'ফেস শিল্ড'),
-  (id: 'rubber', label: 'রাবার গ্লাভস'),
-  (id: 'tester', label: 'ভোল্টেজ ডিটেক্টর'),
-  (id: 'discharge', label: 'ডিসচার্জ রড'),
-  (id: 'earth', label: 'পোর্টেবল আর্থিং কিট'),
-];
+class _VanItem {
+  const _VanItem(this.id, this.label, this.miss, {this.tool = false});
+  final String id;
+  final String label;
+  final String miss;
+  final bool tool;
+}
+
+class _VanJob {
+  const _VanJob({required this.pack, required this.insist, required this.done, required this.tools});
+  final List<_VanItem> pack;
+  final String insist;
+  final String done;
+  final Set<String> tools;
+
+  Set<String> get dress => {for (final item in pack) if (!item.tool) item.id};
+  List<_VanItem> get must => [for (final item in pack) if (item.tool) item];
+  Set<String> get keep => {for (final item in pack) item.id};
+}
+
+const _coreThree = 'ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড আর পোর্টেবল আর্থিং কিট সবসময় সঙ্গে রাখতে হবে।';
+const _missFrp = 'এফআরপি মই বাদ পড়েছে। বাঁশের মই নিয়ে উঠবেন না।';
+const _missRope = 'হাত-দড়ি বাদ পড়েছে। জিনিস হাতে নিয়ে উঠবেন না।';
+const _missLock = 'তালা আর বোর্ড বাদ পড়েছে। শাটডাউন খুলে গেলে বিদ্যুৎ ফিরবে।';
+const _missTorch = 'টর্চ বাদ পড়েছে। অন্ধকারে লাইন দেখা যাবে না।';
+const _missCones = 'কোন আর ফিতে বাদ পড়েছে। রাতের রাস্তায় গাড়ি ঢুকে পড়বে।';
+
+const _shirtItem = _VanItem('shirt', 'সুতির শার্ট', '');
+const _pantItem = _VanItem('pant', 'সুতির প্যান্ট', '');
+const _bootItem = _VanItem('boot', 'ডাইইলেকট্রিক বুট', '');
+const _helmetItem = _VanItem('helmet', 'ইলেকট্রিক্যাল হেলমেট', '');
+const _shieldItem = _VanItem('shield', 'ফেস শিল্ড', '');
+const _rubberItem = _VanItem('rubber', 'রাবার গ্লাভস', '');
+const _harnessItem = _VanItem('harness', 'ফুল-বডি হারনেস', '');
+const _vestItem = _VanItem('vest', 'হাই-ভিস জ্যাকেট', '');
+const _testerItem = _VanItem('tester', 'ভোল্টেজ ডিটেক্টর', _vanNoTester, tool: true);
+const _dischargeItem = _VanItem('discharge', 'ডিসচার্জ রড', _vanNoDischarge, tool: true);
+const _earthItem = _VanItem('earth', 'পোর্টেবল আর্থিং কিট', _vanNoEarth, tool: true);
+
+const _roomJob = _VanJob(
+  insist: _vanInsist,
+  done: _roomDone,
+  tools: _vanToolIds,
+  pack: [_shirtItem, _pantItem, _bootItem, _helmetItem, _shieldItem, _rubberItem, _testerItem, _dischargeItem, _earthItem],
+);
+
+const _poleJob = _VanJob(
+  insist: '$_coreThree এই কাজে এফআরপি মই আর হাত-দড়িও লাগবে।',
+  done: _poleDone,
+  tools: {'tester', 'discharge', 'earth', 'frp', 'rope', 'bamboo', 'sickle', 'saw', 'cloth'},
+  pack: [_shirtItem, _pantItem, _bootItem, _helmetItem, _rubberItem, _harnessItem, _testerItem, _dischargeItem, _earthItem, _VanItem('frp', 'এফআরপি মই', _missFrp, tool: true), _VanItem('rope', 'হাত-দড়ি', _missRope, tool: true)],
+);
+
+const _dtrJob = _VanJob(
+  insist: '$_coreThree এই কাজে তালা আর বোর্ডও লাগবে।',
+  done: _dtrDone,
+  tools: {'tester', 'discharge', 'earth', 'lock', 'cloth', 'wire', 'fuse', 'earthmeter'},
+  pack: [_shirtItem, _pantItem, _bootItem, _helmetItem, _shieldItem, _rubberItem, _testerItem, _dischargeItem, _earthItem, _VanItem('lock', 'তালা ও বোর্ড', _missLock, tool: true)],
+);
+
+const _nightJob = _VanJob(
+  insist: '$_coreThree এই কাজে টর্চ, এফআরপি মই আর কোন-ফিতেও লাগবে।',
+  done: _nightDone,
+  tools: {'tester', 'discharge', 'earth', 'torch', 'frp', 'cones', 'bamboo', 'neon'},
+  pack: [_shirtItem, _pantItem, _bootItem, _helmetItem, _rubberItem, _vestItem, _testerItem, _dischargeItem, _earthItem, _VanItem('torch', 'টর্চ', _missTorch, tool: true), _VanItem('frp', 'এফআরপি মই', _missFrp, tool: true), _VanItem('cones', 'কোন ও ফিতে', _missCones, tool: true)],
+);
+
+const _treeJob = _VanJob(
+  insist: '$_coreThree এই কাজে হাত-দড়িও লাগবে।',
+  done: _treeDone,
+  tools: {'tester', 'discharge', 'earth', 'rope', 'sickle', 'saw'},
+  pack: [_shirtItem, _pantItem, _bootItem, _helmetItem, _rubberItem, _testerItem, _dischargeItem, _earthItem, _VanItem('rope', 'হাত-দড়ি', _missRope, tool: true)],
+);
 
 class DsDressUp extends StatefulWidget {
   final DutySlipEngine engine;
@@ -709,6 +770,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   var _gateToken = 0;
   var _outro = _VanOutro.idle;
   var _checkShown = 0;
+  final _checkScroll = ScrollController();
   var _coachOn = true;
   var _blameZone = '';
   var _roomToken = 0;
@@ -742,9 +804,10 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _ring = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat();
     _vanRide = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
     _vanDepart = AnimationController(vsync: this, duration: const Duration(milliseconds: 1560));
+    final level6 = widget.engine.level.number == 6;
     if (_vanLesson) {
-      _vanBeat = _VanBeat.coach;
-      _coachOn = true;
+      _vanBeat = level6 ? _VanBeat.coach : _VanBeat.yard;
+      _coachOn = level6;
     }
     if (_headLesson) _on.add('gamcha');
     if (_harnessLesson) _on.add('rubber');
@@ -764,12 +827,15 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       10 => _treeStart,
       _ => 'কাজে নামার আগে ঠিকঠাক পোশাক বেছে নিন—ঝুঁকি এড়িয়ে সঠিকটা পরান।',
     };
-    _speakCoach(
-      hello,
-      mood: DsCoachMood.talk,
-      buffer: const Duration(milliseconds: 1400),
-      then: _vanLesson ? _leaveCoach : null,
-    );
+    if (widget.engine.level.number == 6) {
+      _speakCoach(_roomStart, mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1400), then: _leaveCoach);
+    } else if (_vanLesson) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_finishing) _rollVan();
+      });
+    } else {
+      _speakCoach(hello, mood: DsCoachMood.talk, buffer: const Duration(milliseconds: 1400));
+    }
   }
 
   void _leaveCoach() {
@@ -797,6 +863,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _ring.dispose();
     _vanRide.dispose();
     _vanDepart.dispose();
+    _checkScroll.dispose();
     _coachTimer?.cancel();
     ZlFx.releaseClock();
     super.dispose();
@@ -810,7 +877,17 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   bool get _roomLesson => widget.engine.level.number >= 6 && widget.engine.level.number <= 10;
 
-  bool get _vanLesson => widget.engine.level.number == 6;
+  bool get _vanLesson => widget.engine.level.number >= 6 && widget.engine.level.number <= 10;
+
+  bool get _vanYard => widget.engine.level.number == 6;
+
+  _VanJob get _job => switch (widget.engine.level.number) {
+        7 => _poleJob,
+        8 => _dtrJob,
+        9 => _nightJob,
+        10 => _treeJob,
+        _ => _roomJob,
+      };
 
   bool get _vanParked => _vanRide.status == AnimationStatus.completed;
 
@@ -822,6 +899,10 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     final boot = _on.contains('boot');
     final helmet = _on.contains('helmet');
     final gloves = _on.contains('rubber');
+    final harness = _on.contains('harness');
+    if (_job.dress.contains('harness') && harness && shirt && pant && boot && helmet) {
+      return gloves ? 'kit_helmet_gloves' : 'body_harness';
+    }
     if (shirt && pant && boot && helmet) return 'head_helmet';
     if (gloves && shirt && pant && boot) return 'gloves_all';
     if (gloves && shirt && pant) return 'gloves_shirt_pant';
@@ -912,13 +993,60 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     ];
   }
 
-  List<_Piece> get _poleKit => [..._fullKit, _frpPiece, _bambooPiece];
+  _Piece _trap(String id) {
+    for (final piece in _vanTraps) {
+      if (piece.id == id) return piece;
+    }
+    throw StateError('missing trap $id');
+  }
 
-  List<_Piece> get _dtrKit => [..._fullKit, _testerPiece, _dischargePiece, _earthPiece, _wirePiece, _clothPiece];
+  List<_Piece> get _poleKit => [
+        ..._fullKit,
+        _testerPiece,
+        _dischargePiece,
+        _earthPiece,
+        _frpPiece,
+        _ropePiece,
+        _bambooPiece,
+        _sickleClimb,
+        _sawClimb,
+        _clothClimb,
+      ];
 
-  List<_Piece> get _nightKit => [..._fullKit, _vestPiece, _torchPiece, _frpPiece, _bambooPiece];
+  List<_Piece> get _dtrKit => [
+        ..._fullKit,
+        _testerPiece,
+        _dischargePiece,
+        _earthPiece,
+        _lockPiece,
+        _clothPiece,
+        _wirePiece,
+        _trap('fuse'),
+        _trap('earthmeter'),
+      ];
 
-  List<_Piece> get _treeKit => [..._fullKit, _testerPiece, _dischargePiece, _ropePiece, _sicklePiece, _sawPiece];
+  List<_Piece> get _nightKit => [
+        ..._fullKit,
+        _vestPiece,
+        _testerPiece,
+        _dischargePiece,
+        _earthPiece,
+        _torchPiece,
+        _frpPiece,
+        _conesPiece,
+        _bambooNight,
+        _trap('neon'),
+      ];
+
+  List<_Piece> get _treeKit => [
+        ..._fullKit,
+        _testerPiece,
+        _dischargePiece,
+        _earthPiece,
+        _ropePiece,
+        _sickleTree,
+        _sawTree,
+      ];
 
   bool get _ready => switch (widget.engine.level.number) {
         2 => _on.contains('helmet') && !_on.contains('gamcha'),
@@ -932,11 +1060,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
             _on.contains('shield') &&
             _on.contains('rubber') &&
             !_on.contains('gamcha'),
-        6 => _roomKeep.every(_on.contains) && _on.length == _roomKeep.length,
-        7 => _poleKeep.every(_on.contains),
-        8 => _dtrKeep.every(_on.contains),
-        9 => _nightKeep.every(_on.contains),
-        10 => _treeKeep.every(_on.contains),
+        6 || 7 || 8 || 9 || 10 => _job.keep.every(_on.contains) && _on.length == _job.keep.length,
         _ => _on.contains('shirt') && _on.contains('pant') && _on.contains('boot'),
       };
 
@@ -1078,9 +1202,9 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   bool get _vanDressed {
-    if (!_roomDress.every(_on.contains)) return false;
+    if (!_job.dress.every(_on.contains)) return false;
     for (final id in _on) {
-      if (_roomDress.contains(id) || _vanToolIds.contains(id)) continue;
+      if (_job.dress.contains(id) || _job.tools.contains(id)) continue;
       return false;
     }
     return true;
@@ -1088,7 +1212,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   bool _shelfShows(String id) {
     if (!_vanLesson) return true;
-    final tool = _vanToolIds.contains(id);
+    final tool = _job.tools.contains(id);
     return _vanGate == _VanGate.tools ? tool : !tool;
   }
 
@@ -1119,10 +1243,10 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _vanGate = _VanGate.guide;
       _guideShown = true;
       _coachFace = DsCoachMood.talk;
-      _coachSay = _vanInsist;
+      _coachSay = _job.insist;
     });
     HapticFeedback.selectionClick();
-    final voice = widget.onSpeak(_vanInsist);
+    final voice = widget.onSpeak(_job.insist);
     final hold = Future<void>.delayed(const Duration(milliseconds: 2400));
     try {
       await Future.wait([voice, hold]);
@@ -1143,23 +1267,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   String _vanToolGap() {
-    final missingTester = !_on.contains('tester');
-    final missingDischarge = !_on.contains('discharge');
-    final missingEarth = !_on.contains('earth');
-    final count = (missingTester ? 1 : 0) + (missingDischarge ? 1 : 0) + (missingEarth ? 1 : 0);
-    if (count == 3) return _vanInsist;
-    if (count == 1) {
-      if (missingTester) return _vanNoTester;
-      if (missingDischarge) return _vanNoDischarge;
-      return _vanNoEarth;
-    }
-    if (count == 0) return _roomMiss;
-    final bits = <String>[
-      if (missingTester) 'ভোল্টেজ ডিটেক্টর',
-      if (missingDischarge) 'ডিসচার্জ রড',
-      if (missingEarth) 'পোর্টেবল আর্থিং কিট',
-    ];
-    return 'এখনও বাকি: ${bits.join(', ')}। এগুলো ছাড়া ভ্যানে উঠবেন না।';
+    final missing = [for (final item in _job.must) if (!_on.contains(item.id)) item];
+    if (missing.isEmpty) return _roomMiss;
+    if (missing.length == _job.must.length) return _job.insist;
+    if (missing.length == 1) return missing.first.miss;
+    return 'এখনও বাকি: ${missing.map((item) => item.label).join(', ')}। এগুলো ছাড়া ভ্যানে উঠবেন না।';
   }
 
   void _mixShelf({required bool sound}) {
@@ -1300,17 +1412,33 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     });
     unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.45, muted: widget.muted));
     HapticFeedback.mediumImpact();
-    for (var i = 0; i < _vanChecklist.length; i++) {
+    for (var i = 0; i < _job.pack.length; i++) {
       await Future<void>.delayed(const Duration(milliseconds: 280));
       if (!mounted) return;
       setState(() => _checkShown = i + 1);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_checkScroll.hasClients) return;
+        _checkScroll.animateTo(
+          _checkScroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+        );
+      });
       unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.38, muted: widget.muted));
       HapticFeedback.selectionClick();
     }
     await Future<void>.delayed(const Duration(milliseconds: 820));
     if (!mounted) return;
-    setState(() => _outro = _VanOutro.pair);
-    await Future<void>.delayed(const Duration(milliseconds: 980));
+    setState(() {
+      _outro = _VanOutro.pair;
+      _vanRide.value = 0;
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 180));
+    if (!mounted) return;
+    unawaited(ZlFx.cue('sounds/van_arrive.wav', volume: 0.5, muted: widget.muted));
+    await _vanRide.forward();
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 420));
     if (!mounted) return;
     setState(() {
       _outro = _VanOutro.aboard;
@@ -1318,23 +1446,17 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     });
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: widget.muted));
     HapticFeedback.mediumImpact();
-    await Future<void>.delayed(const Duration(milliseconds: 620));
-    if (!mounted) return;
-    setState(() => _outro = _VanOutro.away);
-    unawaited(ZlFx.cue('sounds/van_arrive.wav', volume: 0.4, muted: widget.muted));
-    await _vanDepart.forward(from: 0);
-    if (!mounted) return;
-    await Future<void>.delayed(const Duration(milliseconds: 220));
+    await Future<void>.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
     setState(() {
       _outro = _VanOutro.guide;
       _hero = true;
       _coachFace = DsCoachMood.thanks;
-      _coachSay = _roomDone;
+      _coachSay = _job.done;
     });
     unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: widget.muted));
     HapticFeedback.lightImpact();
-    final voice = widget.onSpeak(_roomDone);
+    final voice = widget.onSpeak(_job.done);
     final hold = Future<void>.delayed(const Duration(milliseconds: 2600));
     await Future.wait([voice, hold]);
     if (!mounted) return;
@@ -1750,7 +1872,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   String _roomFamily(String id) => switch (id) {
-        'fatua' || 'halftee' || 'poly' || 'shirt' => 'cloth',
+        'fatua' || 'halftee' || 'poly' || 'shirt' => 'top',
         'halfpant' || 'pajama' || 'pant' => 'legs',
         'slip' || 'normal' || 'boot' => 'feet',
         'road' || 'vent' || 'helmet' => 'helm',
@@ -1820,11 +1942,34 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     });
   }
 
+  List<({String zone, String why})> _withStrays(List<({String zone, String why})> out) {
+    if (!_vanLesson) return out;
+    final seen = {for (final fault in out) fault.zone};
+    for (final id in _on) {
+      if (_job.keep.contains(id) || seen.contains(id)) continue;
+      out.add((zone: id, why: _strayWhy(id)));
+      seen.add(id);
+    }
+    return out;
+  }
+
+  String _strayWhy(String id) {
+    final why = _byId(id)?.why ?? '';
+    if (why.isNotEmpty) return why;
+    return switch (id) {
+      'harness' => 'এই কাজে হারনেস লাগবে না।',
+      'shield' => 'এই কাজে ফেস শিল্ড লাগবে না।',
+      'belt' => 'কোমরের বেল্টে ঝুললে শরীর উল্টে যায়।',
+      'vest' => 'এই কাজে জ্যাকেট লাগবে না।',
+      _ => 'এই জিনিস এই কাজে লাগবে না।',
+    };
+  }
+
   List<({String zone, String why})> _roomFaults() {
-    if (_poleLesson) return _poleFaults();
-    if (_dtrLesson) return _dtrFaults();
-    if (_nightLesson) return _nightFaults();
-    if (_treeLesson) return _treeFaults();
+    if (_poleLesson) return _withStrays(_poleFaults());
+    if (_dtrLesson) return _withStrays(_dtrFaults());
+    if (_nightLesson) return _withStrays(_nightFaults());
+    if (_treeLesson) return _withStrays(_treeFaults());
     final out = <({String zone, String why})>[];
     void add(String zone, String why) => out.add((zone: zone, why: why));
     String whyOf(String id) => _byId(id)?.why ?? '';
@@ -1882,7 +2027,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     for (final trap in _vanTraps) {
       if (_on.contains(trap.id)) add(trap.id, trap.why);
     }
-    return out;
+    return _withStrays(out);
   }
 
   List<({String zone, String why})> _poleFaults() {
@@ -2188,7 +2333,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _heldBack.clear();
       _coachFace = DsCoachMood.ready;
       _coachSay = '';
-      if (widget.engine.level.number == 6) _on.removeWhere((id) => !_roomKeep.contains(id));
+      if (_vanLesson) _on.removeWhere((id) => !_job.keep.contains(id));
       _checking = false;
       _mixShelf(sound: true);
     });
@@ -2364,14 +2509,14 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: _vanLesson
+        gradient: _vanYard
             ? const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [Color(0xFF8ECAE6), Color(0xFFD7E8C8), Color(0xFFF6E2C4), Color(0xFFE4C48A)],
                 stops: [0.0, 0.22, 0.46, 1.0],
               )
-            : _roomLesson
+            : _vanLesson
             ? const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -2383,12 +2528,12 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                 colors: [Color(0xFFF6E2B8), Color(0xFFE7C98A), Color(0xFFC9A36A)],
                 stops: [0.0, 0.55, 1.0],
               ),
-        image: _roomLesson && !_vanLesson
+        image: _vanLesson && !_vanYard
             ? DecorationImage(
                 image: AssetImage(_benchScene),
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
-                opacity: 0.78,
+                opacity: 0.9,
               )
             : null,
       ),
@@ -2396,7 +2541,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         key: _dressKey,
         clipBehavior: Clip.none,
         children: [
-          if (_vanLesson) const Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: DsYardPainter()))),
+          if (_vanYard) const Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: DsYardPainter()))),
           Column(
             children: [
               const SizedBox(height: 8),
@@ -2513,7 +2658,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                     child: _HeroEntrance(
                       child: DsCoach(
                         mood: DsCoachMood.talk,
-                        line: _vanInsist,
+                        line: _job.insist,
                         bubbleWidth: 280,
                         sprite: 156,
                         centered: true,
@@ -2525,11 +2670,12 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
             ),
           if (_vanLesson && _outro == _VanOutro.guide)
             Positioned.fill(
-              child: Center(
+              child: Align(
+                alignment: const Alignment(0, -0.42),
                 child: _HeroEntrance(
                   child: DsCoach(
                     mood: DsCoachMood.thanks,
-                    line: _roomDone,
+                    line: _job.done,
                     bubbleWidth: 280,
                     sprite: 188,
                     centered: true,
@@ -2730,7 +2876,6 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   String get _vanPlayKey => switch (_outro) {
         _VanOutro.idle => 'yard',
         _VanOutro.list => 'list',
-        _VanOutro.guide => 'clear',
         _ => 'road',
       };
 
@@ -2738,9 +2883,8 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     if (_vanLesson) {
       return switch (_outro) {
         _VanOutro.list => _vanChecklistPage(),
-        _VanOutro.guide => const SizedBox.expand(),
-        _VanOutro.pair || _VanOutro.aboard || _VanOutro.away => _vanRoad(),
-        _ => _vanStage(),
+        _VanOutro.idle => _vanStage(),
+        _ => _vanRoad(),
       };
     }
     if (_roomLesson) return _roomStage();
@@ -2821,14 +2965,15 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   Widget _vanRoad() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 18, 8, 28),
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
       child: _vanActors(),
     );
   }
 
   Widget _vanChecklistPage() {
-    final shown = _checkShown.clamp(0, _vanChecklist.length);
-    final progress = _vanChecklist.isEmpty ? 0.0 : shown / _vanChecklist.length;
+    final rows = _job.pack;
+    final shown = _checkShown.clamp(0, rows.length);
+    final progress = rows.isEmpty ? 0.0 : shown / rows.length;
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
       child: DecoratedBox(
@@ -2862,13 +3007,14 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
               const SizedBox(height: 12),
               Expanded(
                 child: ListView(
-                  physics: const NeverScrollableScrollPhysics(),
+                  controller: _checkScroll,
+                  physics: const ClampingScrollPhysics(),
                   children: [
                     for (var i = 0; i < shown; i++)
                       _VanCheckRow(
-                        key: ValueKey(_vanChecklist[i].id),
-                        asset: _byId(_vanChecklist[i].id)?.asset ?? '',
-                        label: _vanChecklist[i].label,
+                        key: ValueKey(rows[i].id),
+                        asset: _byId(rows[i].id)?.asset ?? '',
+                        label: rows[i].label,
                       ),
                   ],
                 ),
@@ -3051,8 +3197,8 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   Widget _vanLoaded() {
     final icons = <String>[
-      for (final id in _roomKeep)
-        if (_byId(id) != null) _byId(id)!.asset,
+      for (final item in _job.pack)
+        if (_on.contains(item.id) && _byId(item.id) != null) _byId(item.id)!.asset,
     ];
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
@@ -4217,6 +4363,22 @@ class _HeroEntrance extends StatelessWidget {
 
 enum DsCoachMood { ready, talk, glad, oops, thanks }
 
+class DsTalk {
+  DsTalk._();
+  static final active = ValueNotifier<bool>(false);
+  static var _n = 0;
+
+  static void begin() {
+    _n++;
+    if (!active.value) active.value = true;
+  }
+
+  static void end() {
+    if (_n > 0) _n--;
+    if (_n == 0 && active.value) active.value = false;
+  }
+}
+
 class DsCoach extends StatefulWidget {
   const DsCoach({
     super.key,
@@ -4251,7 +4413,13 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
     _eyes = AnimationController(vsync: this, duration: const Duration(milliseconds: 4200))..repeat();
     _mouth = AnimationController(vsync: this, duration: const Duration(milliseconds: 1320));
     _eyes.addListener(_countLaps);
+    DsTalk.active.addListener(_onTalk);
     _syncMouth();
+  }
+
+  void _onTalk() {
+    _syncMouth();
+    if (mounted) setState(() {});
   }
 
   void _countLaps() {
@@ -4270,7 +4438,7 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
     if (old.mood != widget.mood || old.line != widget.line) _syncMouth(restart: true);
   }
 
-  bool get _speaking => widget.mood == DsCoachMood.talk && widget.line.isNotEmpty;
+  bool get _speaking => widget.mood == DsCoachMood.talk && widget.line.isNotEmpty && DsTalk.active.value;
 
   void _syncMouth({bool restart = false}) {
     if (_speaking) {
@@ -4284,6 +4452,7 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    DsTalk.active.removeListener(_onTalk);
     _eyes.removeListener(_countLaps);
     _pop.dispose();
     _eyes.dispose();
@@ -4301,11 +4470,13 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
           : glance
               ? 'coach_oops_glance'
               : 'coach_oops',
-      DsCoachMood.talk => blink
-          ? 'coach_talk_blink'
-          : widget.line.isEmpty && glance
-              ? 'coach_talk_glance'
-              : 'coach_talk',
+      DsCoachMood.talk => _speaking
+          ? (blink ? 'coach_talk_blink' : 'coach_talk')
+          : blink
+              ? 'coach_blink'
+              : glance
+                  ? 'coach_glance'
+                  : 'coach_ready',
       DsCoachMood.ready => blink
           ? 'coach_blink'
           : glance
@@ -4398,7 +4569,7 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
                       clipBehavior: Clip.none,
                       children: [
                         Image.asset('assets/duty_slip/dress/$asset.webp', fit: BoxFit.contain),
-                        if (widget.mood == DsCoachMood.talk && widget.line.isNotEmpty) _talkMouth(),
+                        if (_speaking) _talkMouth(),
                         if (joy)
                           for (var i = 0; i < stars; i++)
                             Positioned(

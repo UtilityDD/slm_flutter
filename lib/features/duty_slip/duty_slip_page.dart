@@ -5,12 +5,17 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/en_digits.dart';
+import '../auth/verify_gate.dart';
+import '../auth/verify_sheet.dart';
+import '../auth/verify_tick.dart';
 import '../home/bangla_read_aloud.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'ds_dress_up.dart';
+import 'ds_pole_inspect.dart';
 import 'duty_slip_engine.dart';
 import 'duty_slip_models.dart';
 import 'duty_slip_voice.dart';
@@ -314,6 +319,10 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _openLevel(int index) {
     final e = _engine;
     if (e == null || !e.onRoad) return;
+    if (gameNeedsVerifyNow(context, index + 1)) {
+      showVerifySheet(context);
+      return;
+    }
     e.openLevel(index);
     HapticFeedback.mediumImpact();
     setState(() {});
@@ -388,6 +397,10 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _nextLevel() {
     final e = _engine;
     if (e == null || !e.showingResult) return;
+    if (gameNeedsVerifyNow(context, e.level.number + 1)) {
+      showVerifySheet(context);
+      return;
+    }
     e.nextAfterPass();
     _holdClock(false);
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', muted: _muted));
@@ -421,10 +434,15 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
 
   Future<void> _speak(String text) async {
     if (_muted || text.trim().isEmpty) return;
-    final clean = _engine?.fill(text) ?? text;
-    final played = await DsVoice.play(clean, muted: _muted);
-    if (!played) {
-      await _tts.speakAwait(clean, rate: 0.42);
+    DsTalk.begin();
+    try {
+      final clean = _engine?.fill(text) ?? text;
+      final played = await DsVoice.play(clean, muted: _muted);
+      if (!played) {
+        await _tts.speakAwait(clean, rate: 0.42);
+      }
+    } finally {
+      DsTalk.end();
     }
   }
 
@@ -646,7 +664,10 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final jobIntro = e.listing && e.level.isJob;
     final walk = e.showingSafeWalk;
     final dress = e.showingDress;
-    final vanYard = e.level.number == 6 && (e.showingDressIntro || e.showingDress);
+    final vanIntro = e.showingDressIntro && e.level.number >= 6 && e.level.number <= 11;
+    final vanIntroYard = vanIntro && e.level.number == 6;
+    final vanIntroScene = vanIntro && e.level.number > 6 && e.level.number <= 11;
+    final vanYard = e.level.number == 6 && e.showingDress;
     final bg = switch (e.act) {
       DsAct.briefing when e.briefingPage == 1 => 'assets/duty_slip/duty_fault_slip.jpg',
       DsAct.briefing when e.briefingPage == 2 => 'assets/duty_slip/duty_ptw_pad.jpg',
@@ -659,14 +680,46 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
         if (!did) _confirmExit();
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: (dress || vanYard) ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
+        value: (dress || vanYard || vanIntroYard) ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
         child: Scaffold(
           backgroundColor: ZlColors.bg,
           body: Stack(
           key: _stackKey,
           fit: StackFit.expand,
           children: [
-            if (vanYard)
+            if (vanIntroYard)
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF8ECAE6), Color(0xFFD7E8C8), Color(0xFFF6E2C4), Color(0xFFE4C48A)],
+                    stops: [0.0, 0.38, 0.68, 1.0],
+                  ),
+                ),
+                child: CustomPaint(painter: DsYardPainter(), child: SizedBox.expand()),
+              )
+            else if (vanIntroScene)
+              Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    _dressIntroArt(e.level.number),
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                  ),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0x66101820), Color(0x22101820), Color(0x66101820)],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            else if (vanYard)
               const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -684,7 +737,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
               const ColoredBox(color: Color(0xFFC5DCE8))
             else
               Image.asset(bg, fit: BoxFit.cover, errorBuilder: (_, _, _) => const ColoredBox(color: ZlColors.bg)),
-            if (!walk && !dress && !vanYard)
+            if (!walk && !dress && !vanYard && !vanIntro)
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -1262,6 +1315,16 @@ class _PlanBoard extends StatelessWidget {
         );
       }
       if (e.showingDress) {
+        if (e.level.number == 11) {
+          return DsPoleInspect(
+            key: const ValueKey(11),
+            engine: e,
+            onDone: onFinishWalk,
+            muted: muted,
+            onSpeak: onSpeak,
+            onDelta: onDelta,
+          );
+        }
         return DsDressUp(
           key: ValueKey(e.level.number),
           engine: e,
@@ -2450,7 +2513,7 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
   void _pinNext({bool initial = false}) {
     if (!mounted || !_scroll.hasClients) return;
     final view = _scroll.position.viewportDimension;
-    final focus = dsAllLevelsOpen ? 0 : widget.engine.unlocked;
+    final focus = dsPlayAllLevels ? 0 : widget.engine.unlocked;
     final target = (_groundH + focus * _itemH) - (view * 0.28);
     final clamped = target.clamp(0.0, _scroll.position.maxScrollExtent);
     if (initial) {
@@ -2624,17 +2687,19 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
                     );
                   } else {
                     final spec = dsLevels[liveI];
-                    final locked = !dsAllLevelsOpen && liveI > e.unlocked;
-                    final next = !dsAllLevelsOpen && liveI == e.unlocked;
+                    final seal = gameNeedsVerifyNow(context, spec.number);
+                    final locked = !seal && !dsPlayAllLevels && liveI > e.unlocked;
+                    final next = !seal && !dsPlayAllLevels && liveI == e.unlocked;
                     final rank = e.bestRank[liveI];
                     orb = _LevelOrb(
                       number: spec.number,
                       next: next,
                       locked: locked,
+                      verifyHold: seal,
                       rank: rank,
                       field: spec.isField,
                       bestSec: e.bestDarunSec[liveI],
-                      onTap: locked ? null : () => widget.onOpen(liveI),
+                      onTap: seal ? () => showVerifySheet(context) : (locked ? null : () => widget.onOpen(liveI)),
                     );
                   }
                   return SizedBox(
@@ -3406,6 +3471,7 @@ class _LevelOrb extends StatefulWidget {
   final int number;
   final bool next;
   final bool locked;
+  final bool verifyHold;
   final DsLevelRank? rank;
   final bool field;
   final int? bestSec;
@@ -3414,6 +3480,7 @@ class _LevelOrb extends StatefulWidget {
     required this.number,
     required this.next,
     required this.locked,
+    this.verifyHold = false,
     required this.rank,
     required this.field,
     this.bestSec,
@@ -3537,6 +3604,7 @@ class _LevelOrbState extends State<_LevelOrb> with SingleTickerProviderStateMixi
                   ],
                 ),
                 child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
                     // Top rim specular highlight
                     Positioned(
@@ -3609,6 +3677,12 @@ class _LevelOrbState extends State<_LevelOrb> with SingleTickerProviderStateMixi
                           textAlign: TextAlign.center,
                           style: zlText(9, weight: FontWeight.w800, color: const Color(0xCC2A1C0A), height: 1),
                         ),
+                      ),
+                    if (widget.verifyHold)
+                      const Positioned(
+                        top: -7,
+                        right: -7,
+                        child: VerifyTick(size: 18),
                       ),
                   ],
                 ),
@@ -4237,9 +4311,11 @@ class _DressIntroState extends State<_DressIntro> {
   @override
   Widget build(BuildContext context) {
     final brief = widget.engine.briefOf();
-    final van = widget.engine.level.number == 6;
-    final ink = van ? const Color(0xFF3A2A16) : const Color(0xFFF6E7B0);
-    final rule = van ? const Color(0x553A2A16) : const Color(0x55C9A227);
+    final van = widget.engine.level.number >= 6 && widget.engine.level.number <= 11;
+    final yardCard = widget.engine.level.number == 6;
+    final sunnyCard = yardCard;
+    final ink = van && sunnyCard ? const Color(0xFF3A2A16) : const Color(0xFFF6E7B0);
+    final rule = van && sunnyCard ? const Color(0x553A2A16) : const Color(0x55C9A227);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -4268,7 +4344,7 @@ class _DressIntroState extends State<_DressIntro> {
                   const SizedBox(height: 8),
                   Text(
                     'লেভেল ${_bnNum(widget.engine.level.number)}',
-                    style: zlText(13, weight: FontWeight.w800, color: van ? const Color(0xFF6E5A32) : const Color(0xFFB7A57A)),
+                    style: zlText(13, weight: FontWeight.w800, color: van && sunnyCard ? const Color(0xFF6E5A32) : const Color(0xFFB7A57A)),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -4278,7 +4354,7 @@ class _DressIntroState extends State<_DressIntro> {
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Transform.rotate(
                           angle: math.pi / 4,
-                          child: Container(width: 7, height: 7, color: van ? ink : const Color(0xFFC9A227)),
+                          child: Container(width: 7, height: 7, color: van && sunnyCard ? ink : const Color(0xFFC9A227)),
                         ),
                       ),
                       Expanded(child: Container(height: 1, color: rule)),
@@ -4291,21 +4367,35 @@ class _DressIntroState extends State<_DressIntro> {
                       brief.title,
                       textAlign: TextAlign.center,
                       style: zlText(28, weight: FontWeight.w900, height: 1.28, color: ink).copyWith(
-                        shadows: van ? const <Shadow>[] : const [Shadow(color: Color(0x66C9A227), blurRadius: 12)],
+                        shadows: van && sunnyCard ? const <Shadow>[] : const [Shadow(color: Color(0x66C9A227), blurRadius: 12)],
                       ),
                     ),
                   ),
                   const SizedBox(height: 18),
-                  Expanded(
-                    child: Padding(
-                      padding: van ? const EdgeInsets.fromLTRB(8, 0, 8, 128) : const EdgeInsets.fromLTRB(32, 0, 32, 168),
-                      child: Image.asset(
-                        _dressIntroArt(widget.engine.level.number),
-                        fit: BoxFit.contain,
-                        alignment: van ? Alignment.center : Alignment.topCenter,
+                  if (yardCard)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 128),
+                        child: Image.asset(
+                          _dressIntroArt(6),
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                    )
+                  else if (van)
+                    const Spacer()
+                  else
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(32, 0, 32, 168),
+                        child: Image.asset(
+                          _dressIntroArt(widget.engine.level.number),
+                          fit: BoxFit.contain,
+                          alignment: Alignment.topCenter,
+                        ),
                       ),
                     ),
-                  ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: Padding(
@@ -4322,13 +4412,29 @@ class _DressIntroState extends State<_DressIntro> {
         ],
       ),
         ),
-        Positioned(
-          left: 8,
-          bottom: 8,
-          child: IgnorePointer(
-            child: DsCoach(mood: DsCoachMood.talk, line: brief.body, bubbleWidth: 228),
+        if (yardCard || !van)
+          Positioned(
+            left: 8,
+            bottom: 8,
+            child: IgnorePointer(
+              child: DsCoach(mood: DsCoachMood.talk, line: brief.body, bubbleWidth: 228),
+            ),
           ),
-        ),
+        if (van && !yardCard)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Align(
+                alignment: const Alignment(0, 0.22),
+                child: DsCoach(
+                  mood: DsCoachMood.talk,
+                  line: brief.body,
+                  bubbleWidth: 280,
+                  sprite: 176,
+                  centered: true,
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -4344,6 +4450,7 @@ String _dressIntroArt(int level) => switch (level) {
       8 => 'assets/zero_loss/scene/bg_dtr_structure.webp',
       9 => 'assets/zero_loss/scene/bg_pole_storm.webp',
       10 => 'assets/zero_loss/scene/bg_tree_on_line.webp',
+      11 => 'assets/zero_loss/scene/pole11_title.jpg',
       _ => 'assets/duty_slip/dress/tray_shirt.webp',
     };
 

@@ -57,6 +57,11 @@ class DsResult {
 /// Testing: every live plate is tappable. Set `false` to restore sequential unlock.
 const dsAllLevelsOpen = true;
 
+/// Admin developer switch. Other accounts never set this.
+bool devLevelsOpen = false;
+
+bool get dsPlayAllLevels => dsAllLevelsOpen || devLevelsOpen;
+
 const dsLevels = <DsLevelSpec>[
   DsLevelSpec(number: 1, kind: DsLevelKind.letters, choices: 2, darunSec: 150),
   DsLevelSpec(number: 2, kind: DsLevelKind.letters, choices: 4, darunSec: 80),
@@ -68,7 +73,7 @@ const dsLevels = <DsLevelSpec>[
   DsLevelSpec(number: 8, kind: DsLevelKind.letters, choices: 8, darunSec: 200),
   DsLevelSpec(number: 9, kind: DsLevelKind.letters, choices: 8, darunSec: 180),
   DsLevelSpec(number: 10, kind: DsLevelKind.letters, choices: 8, darunSec: 200),
-  DsLevelSpec(number: 11, kind: DsLevelKind.job, choices: 6, darunSec: 150),
+  DsLevelSpec(number: 11, kind: DsLevelKind.letters, choices: 8, darunSec: 180),
   DsLevelSpec(number: 12, kind: DsLevelKind.job, choices: 10, darunSec: 180),
   DsLevelSpec(number: 13, kind: DsLevelKind.job, choices: 23, darunSec: 240),
   DsLevelSpec(number: 14, kind: DsLevelKind.job, choices: 2, darunSec: 70, living: true),
@@ -183,6 +188,7 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       8 => 'ট্রান্সফরমার মৃত করা',
       9 => 'রাতের লাইনে ফল্ট',
       10 => 'ডাল লাইনের উপর',
+      11 => 'পোলের ভাষা',
       _ => letterTitle ?? dsLetterTitlePool.first,
     };
     final body = switch (spec.number) {
@@ -192,10 +198,11 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       4 => 'উচ্চতায় কাজের সময় পতন রোধে ফুল বডি হারনেসই জীবন বাঁচায়। সঠিক পদ্ধতিতে প্রতিটি বাকল লক করুন।',
       5 => 'এবার দ্রুত কাজের জন্য তৈরি হয়ে যান।',
       6 => 'কন্ট্রোল রুমের ভিতরে কাজের আদেশ এসেছে। দ্রুত তৈরি হতে হবে।',
-      7 => 'গলিতে তার ছিঁড়ে মাটিতে পড়ে আছে। ওঠার আগে যা যা লাগবে, বেছে নিন।',
-      8 => 'শাটডাউন হয়েছে। বুশিং খোলার আগে ট্রান্সফরমার মৃত করুন।',
-      9 => 'রাত দুপুরে লাইন মরে আছে। রাস্তায় গাড়ি আছে, আলো নেই।',
-      10 => 'ঝড়ে ডাল লাইনের উপর পড়েছে। আগে লাইন মৃত, তারপর ডাল।',
+      7 => 'গলিতে তার ছিঁড়ে মাটিতে পড়ে আছে। খুঁটিতে উঠতে হবে।',
+      8 => 'রিপোর্ট এসেছে, ট্রান্সফরমার খারাপ। বুশিং খুলে দেখতে হবে।',
+      9 => 'রাত দুপুরে লাইন ব্রেকডাউন হয়ে গেছে। রাস্তায় গাড়ি, আলো নেই। ফল্ট সারাতে হবে।',
+      10 => 'ঝড়ে ডাল লাইনের উপর পড়েছে। লাইন ব্রেকডাউন। ডাল সরিয়ে লাইন চালু করতে হবে।',
+      11 => 'পিপিই পরে নিয়েছেন, যন্ত্রপাতি সঙ্গে নিয়েছেন। শাটডাউন নিয়ে ডিসচার্জ ও দুদিক আর্থ করা হয়ে গেছে। এবার পোলে ওঠার আগে যা করার করুন।',
       _ => 'এবার আটটাই সামনে, আর ভুল ছুঁলেই নতুন সাজ। পুরো আট মন্ত্র মাথায় রেখে শেষ পর্যন্ত চলুন।',
     };
     return DsBrief(title: enDigits(title), body: enDigits(body), stamps: home);
@@ -291,7 +298,7 @@ class DutySlipEngine {
     planPool = [];
     final pool = List<String>.from(dsLetterTitlePool)..shuffle(_rng);
     _letterTitles = ['পোশাক', 'মাথায় হেলমেট', 'হাতে গ্লাভস', 'হারনেস', ...pool];
-    if (dsAllLevelsOpen) unlocked = dsLevels.length - 1;
+    if (dsPlayAllLevels) unlocked = dsLevels.length - 1;
     if (site.calls.isEmpty) {
       siteCalls = List<DsCall>.from(pack.calls);
     } else {
@@ -354,7 +361,7 @@ class DutySlipEngine {
   var dressArmed = false;
   var dressOpen = false;
   bool get showingSafeWalk => false;
-  bool get dressLevel => level.isLetters && level.number <= 10;
+  bool get dressLevel => level.isLetters && level.number <= 11;
   bool get showingDressIntro => listing && dressLevel && !dressOpen;
   bool get showingDress => listing && dressLevel && dressOpen;
   void finishSafeWalk() => safeWalkDone = true;
@@ -492,6 +499,13 @@ class DutySlipEngine {
         DsLevelRank.again => 'এই সাজে ডাল নামানো যাবে না। আবার সাজান।',
       };
     }
+    if (level.isLetters && level.number == 11) {
+      return switch (levelRank) {
+        DsLevelRank.darun => 'দারুণ! পোলের চারপাশ, গোড়ার মাটি, স্টে-তার আর আর্থিং নিখুঁতভাবে যাচাই করেছেন।',
+        DsLevelRank.motamuti => 'যাচাই সম্পন্ন হয়েছে, তবে পোলের চারপাশ আরও মনোযোগ দিয়ে দেখা জরুরি।',
+        DsLevelRank.again => 'পোলের গোড়া ও স্টে-তারের বিপদ না দেখে উঠলে বড় দুর্ঘটনা ঘটবে। আবার যাচাই করুন।',
+      };
+    }
     return switch (levelRank) {
       DsLevelRank.darun => 'ধাপগুলো মাথায় আছে।',
       DsLevelRank.motamuti => nearMiss ? 'আর একটা ঠিক থাকলে দারুণ।' : 'মোটামুটি মনে আছে। সাইটে ভুল করবেন না।',
@@ -571,7 +585,7 @@ class DutySlipEngine {
   void openLevel(int index) {
     if (!onRoad) return;
     if (index < 0 || index >= dsLevels.length) return;
-    if (!dsAllLevelsOpen && index > unlocked) return;
+    if (!dsPlayAllLevels && index > unlocked) return;
     levelIndex = index;
     dressArmed = false;
     dressOpen = dsLevels[index].number == 6;
@@ -625,7 +639,7 @@ class DutySlipEngine {
     wrongTaps = 0;
     streak = 0;
     planPhase = DsPlanPhase.list;
-    if (level.isLetters && level.number <= 10) {
+    if (level.isLetters && level.number <= 11) {
       clockLive = false;
       dressOpen = level.number == 6;
       return;
@@ -727,7 +741,7 @@ class DutySlipEngine {
         quality = savedScore;
       }
       final savedUnlocked = prefs.getInt('ds_unlocked_level');
-      if (savedUnlocked != null && !dsAllLevelsOpen) {
+      if (savedUnlocked != null && !dsPlayAllLevels) {
         unlocked = savedUnlocked.clamp(0, dsLevels.length - 1);
       }
       final ranksRaw = prefs.getStringList('ds_best_ranks');
