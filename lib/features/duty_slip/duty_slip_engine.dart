@@ -74,14 +74,29 @@ const dsLevels = <DsLevelSpec>[
   DsLevelSpec(number: 9, kind: DsLevelKind.letters, choices: 8, darunSec: 180),
   DsLevelSpec(number: 10, kind: DsLevelKind.letters, choices: 8, darunSec: 200),
   DsLevelSpec(number: 11, kind: DsLevelKind.letters, choices: 8, darunSec: 180),
-  DsLevelSpec(number: 12, kind: DsLevelKind.job, choices: 10, darunSec: 180),
-  DsLevelSpec(number: 13, kind: DsLevelKind.job, choices: 23, darunSec: 240),
-  DsLevelSpec(number: 14, kind: DsLevelKind.job, choices: 2, darunSec: 70, living: true),
-  DsLevelSpec(number: 15, kind: DsLevelKind.job, choices: 4, darunSec: 95, living: true),
-  DsLevelSpec(number: 16, kind: DsLevelKind.job, choices: 6, darunSec: 135, living: true),
-  DsLevelSpec(number: 17, kind: DsLevelKind.job, choices: 10, darunSec: 160, living: true),
-  DsLevelSpec(number: 18, kind: DsLevelKind.job, choices: 23, darunSec: 210, living: true),
-  DsLevelSpec(number: 19, kind: DsLevelKind.field, choices: 0, darunSec: 0),
+  DsLevelSpec(number: 12, kind: DsLevelKind.letters, choices: 8, darunSec: 180),
+  DsLevelSpec(number: 13, kind: DsLevelKind.letters, choices: 8, darunSec: 200),
+  DsLevelSpec(number: 14, kind: DsLevelKind.letters, choices: 8, darunSec: 200),
+  // Eight-step mantra quizzes, then the 23-step jobs, then the field night.
+  DsLevelSpec(number: 15, kind: DsLevelKind.letters, choices: 2, darunSec: 60),
+  DsLevelSpec(number: 16, kind: DsLevelKind.letters, choices: 4, darunSec: 80),
+  DsLevelSpec(number: 17, kind: DsLevelKind.letters, choices: 6, darunSec: 100),
+  DsLevelSpec(number: 18, kind: DsLevelKind.letters, choices: 8, darunSec: 120),
+  DsLevelSpec(number: 19, kind: DsLevelKind.letters, choices: 2, darunSec: 50, living: true),
+  DsLevelSpec(number: 20, kind: DsLevelKind.letters, choices: 4, darunSec: 70, living: true),
+  DsLevelSpec(number: 21, kind: DsLevelKind.letters, choices: 6, darunSec: 85, living: true),
+  DsLevelSpec(number: 22, kind: DsLevelKind.letters, choices: 8, darunSec: 100, living: true),
+  DsLevelSpec(number: 23, kind: DsLevelKind.job, choices: 2, darunSec: 75),
+  DsLevelSpec(number: 24, kind: DsLevelKind.job, choices: 4, darunSec: 105),
+  DsLevelSpec(number: 25, kind: DsLevelKind.job, choices: 6, darunSec: 150),
+  DsLevelSpec(number: 26, kind: DsLevelKind.job, choices: 10, darunSec: 180),
+  DsLevelSpec(number: 27, kind: DsLevelKind.job, choices: 23, darunSec: 240),
+  DsLevelSpec(number: 28, kind: DsLevelKind.job, choices: 2, darunSec: 70, living: true),
+  DsLevelSpec(number: 29, kind: DsLevelKind.job, choices: 4, darunSec: 95, living: true),
+  DsLevelSpec(number: 30, kind: DsLevelKind.job, choices: 6, darunSec: 135, living: true),
+  DsLevelSpec(number: 31, kind: DsLevelKind.job, choices: 10, darunSec: 160, living: true),
+  DsLevelSpec(number: 32, kind: DsLevelKind.job, choices: 23, darunSec: 210, living: true),
+  DsLevelSpec(number: 33, kind: DsLevelKind.field, choices: 0, darunSec: 0),
 ];
 
 const dsSafeHome = <DsPlanItem>[
@@ -129,15 +144,15 @@ const dsJobGroups = <DsJobGroup>[
 ];
 
 String dsJobHint(int number) => switch (number) {
-      9 => 'এবার দুটো অপশন। 23 ধাপের মধ্যে এখন যেটা সঠিক, শুধু সেটাই ছুঁবেন।',
-      10 => 'এবার চারটে অপশন। ক্রম মনে রেখে সঠিকটা নিন।',
-      11 => 'এবার ছয়টা অপশন। কাছাকাছি নামে ধোঁকা খাবেন না।',
-      12 => 'এবার দশটা অপশন। ধাপ এড়িয়ে গেলে বিপদ।',
-      13 => 'এবার তেইশটাই সামনে। শুরু থেকে গোনা পর্যন্ত মনে রাখুন।',
-      14 => 'এবার দুটো অপশন। ভুল ছুঁলেই কার্ড পাল্টে যাবে।',
-      15 => 'এবার চারটে অপশন, আর ভুল হলেই সাজ বদলাবে।',
-      16 => 'এবার ছয়টা অপশন, জীবন্ত। মন্ত্রটা মনে রেখে হাত বাড়ান।',
-      17 => 'এবার দশটা অপশন, জীবন্ত। স্থির থেকে সঠিক ধাপ নিন।',
+      23 => 'এবার দুটো অপশন। 23 ধাপের মধ্যে এখন যেটা সঠিক, শুধু সেটাই ছুঁবেন।',
+      24 => 'এবার চারটে অপশন। ক্রম মনে রেখে সঠিকটা নিন।',
+      25 => 'এবার ছয়টা অপশন। কাছাকাছি নামে ধোঁকা খাবেন না।',
+      26 => 'এবার দশটা অপশন। ধাপ এড়িয়ে গেলে বিপদ।',
+      27 => 'এবার তেইশটাই সামনে। শুরু থেকে গোনা পর্যন্ত মনে রাখুন।',
+      28 => 'এবার দুটো অপশন। ভুল ছুঁলেই কার্ড পাল্টে যাবে।',
+      29 => 'এবার চারটে অপশন, আর ভুল হলেই সাজ বদলাবে।',
+      30 => 'এবার ছয়টা অপশন, জীবন্ত। মন্ত্রটা মনে রেখে হাত বাড়ান।',
+      31 => 'এবার দশটা অপশন, জীবন্ত। স্থির থেকে সঠিক ধাপ নিন।',
       _ => 'এবার তেইশটাই সামনে, আর ভুল ছুঁলেই নতুন সাজ।',
     };
 
@@ -189,6 +204,17 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       9 => 'রাতের লাইনে ফল্ট',
       10 => 'ডাল লাইনের উপর',
       11 => 'পোলের ভাষা',
+      12 => 'ফাঁপা পোল',
+      13 => 'স্টিল পোল',
+      14 => 'লক্ষ্মণ রেখা',
+      15 => 'প্রধান ও প্রথম কথা',
+      16 => 'আট ধাপ — আট মন্ত্র',
+      17 => 'নিয়মের শর্টকাট মানেই মৃত্যু',
+      18 => 'কোন ধাপ বাদ দিলে বাড়ি ফেরা হবে না',
+      19 => 'তাড়াহুড়োই আসল শত্রু',
+      20 => 'এক ভুল মানে একবার মৃত্যু',
+      21 => 'ক্রম ভাঙলেই মৃত্যুর ভয়',
+      22 => 'নিয়ম ছাড়া কাজে হাত নয়',
       _ => letterTitle ?? dsLetterTitlePool.first,
     };
     final body = switch (spec.number) {
@@ -203,6 +229,17 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       9 => 'রাত দুপুরে লাইন ব্রেকডাউন হয়ে গেছে। রাস্তায় গাড়ি, আলো নেই। ফল্ট সারাতে হবে।',
       10 => 'ঝড়ে ডাল লাইনের উপর পড়েছে। লাইন ব্রেকডাউন। ডাল সরিয়ে লাইন চালু করতে হবে।',
       11 => 'পিপিই পরে নিয়েছেন, যন্ত্রপাতি সঙ্গে নিয়েছেন। শাটডাউন নিয়ে ডিসচার্জ ও দুদিক আর্থ করা হয়ে গেছে। এবার পোলে ওঠার আগে যা করার করুন।',
+      12 => 'পিপিই পরে নিয়েছেন, শাটডাউন ও দুদিক আর্থ করা হয়ে গেছে। পোলটা বাইরে থেকে সোজা দেখাচ্ছে। ওঠার আগে যা করার করুন।',
+      13 => 'স্টিলের পোলে জাম্পারের কাজ আছে। শাটডাউন, ডিসচার্জ ও আর্থিং হয়ে গেছে। স্টিলের পোল ভাঙে না ভেবে সরাসরি উঠবেন না—যা করার করুন।',
+      14 => 'রাস্তার ধারে পোল, পাশেই বাড়ির বারান্দা আর লোকজনের ভিড়। কাজ শুরুর আগে নিজের আর সাধারণ মানুষের লক্ষ্মণ রেখা তৈরি করুন।',
+      15 => 'এবার দুটো অপশন। আট মন্ত্রের মধ্যে এখন যেটা সঠিক, শুধু সেটাই ছুঁবেন।',
+      16 => 'এবার চারটে অপশন। ক্রম মনে রেখে সঠিকটা নিন।',
+      17 => 'এবার ছয়টা অপশন। কাছাকাছি নামে ধোঁকা খাবেন না।',
+      18 => 'এবার আটটাই সামনে। শুরু থেকে গোনা পর্যন্ত মনে রাখুন।',
+      19 => 'এবার দুটো অপশন। ভুল ছুঁলেই কার্ড পাল্টে যাবে।',
+      20 => 'এবার চারটে অপশন, আর ভুল হলেই সাজ বদলাবে। তাড়াহুড়ো নয়, সঠিক ধাপটা ধরে রাখুন।',
+      21 => 'এবার ছয়টা অপশন, আর ভুল ছুঁলেই নতুন ফাঁদ। মন্ত্রটা মনে রেখে হাত বাড়ান।',
+      22 => 'এবার আটটাই সামনে, আর ভুল ছুঁলেই নতুন সাজ। পুরো আট মন্ত্র মাথায় রেখে শেষ পর্যন্ত চলুন।',
       _ => 'এবার আটটাই সামনে, আর ভুল ছুঁলেই নতুন সাজ। পুরো আট মন্ত্র মাথায় রেখে শেষ পর্যন্ত চলুন।',
     };
     return DsBrief(title: enDigits(title), body: enDigits(body), stamps: home);
@@ -361,7 +398,7 @@ class DutySlipEngine {
   var dressArmed = false;
   var dressOpen = false;
   bool get showingSafeWalk => false;
-  bool get dressLevel => level.isLetters && level.number <= 11;
+  bool get dressLevel => level.isLetters && level.number <= 14;
   bool get showingDressIntro => listing && dressLevel && !dressOpen;
   bool get showingDress => listing && dressLevel && dressOpen;
   void finishSafeWalk() => safeWalkDone = true;
@@ -506,6 +543,27 @@ class DutySlipEngine {
         DsLevelRank.again => 'পোলের গোড়া ও স্টে-তারের বিপদ না দেখে উঠলে বড় দুর্ঘটনা ঘটবে। আবার যাচাই করুন।',
       };
     }
+    if (level.isLetters && level.number == 12) {
+      return switch (levelRank) {
+        DsLevelRank.darun => 'দারুণ! ফাঁপা শব্দ আর বেরিয়ে থাকা রড দেখে মই না লাগিয়ে বিপদ রিপোর্ট করেছেন।',
+        DsLevelRank.motamuti => 'পোল বাতিল করা হয়েছে, তবে একবার ভুল হয়েছিল। মই লাগানোর আগে শব্দ আর পেছনটা দেখুন।',
+        DsLevelRank.again => 'ফাঁপা পোলে উঠলে সেটি ভেঙে পড়বে। আবার যাচাই করে রিপোর্ট করুন।',
+      };
+    }
+    if (level.isLetters && level.number == 13) {
+      return switch (levelRank) {
+        DsLevelRank.darun => 'দারুণ! গোড়ার জয়েন্ট, টন টন শব্দ আর মাথার ক্রস-আর্ম দেখে তবেই মই লাগিয়েছেন।',
+        DsLevelRank.motamuti => 'স্টিল পোল যাচাই হয়েছে, তবে গোড়া ও মাথা আরও মনোযোগ দিয়ে দেখা জরুরি।',
+        DsLevelRank.again => 'স্টিল পোলের গোড়ার মরিচা না দেখে উঠলে পোল ভেঙে পড়বে। আবার যাচাই করুন।',
+      };
+    }
+    if (level.isLetters && level.number == 14) {
+      return switch (levelRank) {
+        DsLevelRank.darun => 'দারুণ! ভিড় সরিয়ে, নিচের জায়গা পরিষ্কার করে আর লক্ষ্মণ রেখা মেনে কাজ শুরু করেছেন।',
+        DsLevelRank.motamuti => 'লক্ষ্মণ রেখা মানা হয়েছে, তবে একবার ভুল হয়েছিল। ভিড়, গোড়া আর দূরত্ব আগে দেখুন।',
+        DsLevelRank.again => 'ভিড়, ভেজা জায়গা আর লোহার পাইপ না সরিয়ে কাজ শুরু করলে বিপদ। আবার করুন।',
+      };
+    }
     return switch (levelRank) {
       DsLevelRank.darun => 'ধাপগুলো মাথায় আছে।',
       DsLevelRank.motamuti => nearMiss ? 'আর একটা ঠিক থাকলে দারুণ।' : 'মোটামুটি মনে আছে। সাইটে ভুল করবেন না।',
@@ -639,7 +697,7 @@ class DutySlipEngine {
     wrongTaps = 0;
     streak = 0;
     planPhase = DsPlanPhase.list;
-    if (level.isLetters && level.number <= 11) {
+    if (level.isLetters && level.number <= 14) {
       clockLive = false;
       dressOpen = level.number == 6;
       return;

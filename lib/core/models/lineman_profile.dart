@@ -1,4 +1,4 @@
-﻿class LinemanProfile {
+class LinemanProfile {
   final String id;
   final String? fullName;
   final String? role;
@@ -14,6 +14,10 @@
   final String? block;
   final String? job;
   final String? bloodGroup;
+  final String? phone;
+
+  /// True after an admin verifies. Null means the column is not on this row yet.
+  final bool? verified;
   final bool isGuest;
 
   const LinemanProfile({
@@ -32,6 +36,8 @@
     this.block,
     this.job,
     this.bloodGroup,
+    this.phone,
+    this.verified,
     this.isGuest = false,
   });
 
@@ -58,6 +64,24 @@
       block: json['block'] as String?,
       job: json['job'] as String?,
       bloodGroup: json['blood_group'] as String?,
+      phone: (json['phone_number'] ?? json['phone'])?.toString(),
+      verified: json.containsKey('verified') ? json['verified'] == true : null,
+      isGuest: false,
+    );
+  }
+
+  /// Google sign-in succeeded, but `profiles` has no row yet.
+  factory LinemanProfile.signedIn({
+    required String id,
+    String? fullName,
+    String? avatarUrl,
+  }) {
+    return LinemanProfile(
+      id: id,
+      fullName: fullName,
+      role: 'pending',
+      avatarUrl: avatarUrl,
+      verified: false,
       isGuest: false,
     );
   }
@@ -73,7 +97,31 @@
       readingPoints: 0,
       quizPoints: 0,
       district: 'কলকাতা (Kolkata)',
+      verified: false,
       isGuest: true,
+    );
+  }
+
+  LinemanProfile withVerified(bool? value) {
+    return LinemanProfile(
+      id: id,
+      fullName: fullName,
+      role: role,
+      slmId: slmId,
+      avatarUrl: avatarUrl,
+      trainingLevel: trainingLevel,
+      points: points,
+      readingPoints: readingPoints,
+      quizPoints: quizPoints,
+      totalPenalties: totalPenalties,
+      completedLessons: completedLessons,
+      district: district,
+      block: block,
+      job: job,
+      bloodGroup: bloodGroup,
+      phone: phone,
+      verified: value,
+      isGuest: isGuest,
     );
   }
 

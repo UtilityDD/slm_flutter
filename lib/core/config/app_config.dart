@@ -5,6 +5,19 @@
   static const String websiteOriginWww = 'https://www.smartlineman.in';
   static const String supportEmail = 'support@smartlineman.in';
 
+  /// Google accounts that may open the in-app admin panel. Matched to the session email.
+  static const Set<String> adminEmails = {
+    'dipnkr.das@gmail.com',
+    'roumak.das@gmail.com',
+  };
+
+  /// Add this exact value under Supabase → Authentication → URL Configuration → Redirect URLs.
+  static const String authRedirectUrl = 'com.smartlineman.app://login-callback';
+
+  /// Public web client id. The secret stays in the Supabase dashboard.
+  static const String googleWebClientId =
+      '1062290108902-3slmum79r57rlf7d2hij7lfdmumjpr2t.apps.googleusercontent.com';
+
   // Supabase Configuration
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',

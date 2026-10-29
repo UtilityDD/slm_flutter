@@ -22,11 +22,59 @@ const _okStay = 'স্টে-তার আর ইনসুলেটর টা�
 const _okBack = 'পেছনের দিক দেখা হয়েছে। আর্থিং তার ঠিক আছে।';
 const _okHammer = 'হাতুড়ি ঠুকে শব্দ নিরেট। ঠিক আছে।';
 
+const _okGrass12 = 'গোড়ার ঘাস সরানো হয়েছে। ফাউন্ডেশনে চুলের মতো ফাটল দেখা যাচ্ছে। ঠিক আছে।';
+const _okStay12 = 'স্টে-তার দেখা হয়েছে। ঠিক আছে।';
+const _okBack12 = 'পেছনের দিক দেখা হয়েছে। কংক্রিট খসে ভেতরের রড বেরিয়ে আছে! ঠিক আছে।';
+const _okHammer12 = 'হাতুড়ি ঠুকে ফাঁপা দপ্ দপ্ শব্দ মিলেছে। ভেতরটা দুর্বল, ধরা পড়েছে। ঠিক আছে।';
+const _repGrass = 'গোড়ার ঘাস সরিয়ে ফাটলটা না দেখে রিপোর্ট করবেন না।';
+const _repStay = 'স্টে-তার দেখে নিন, তারপর রিপোর্ট করুন।';
+const _repBack = 'পেছনে রড বেরিয়েছে কি না না দেখে রিপোর্ট করবেন না।';
+const _repHammer = 'হাতুড়ি ঠুকে শব্দ না শুনে রিপোর্ট করবেন না।';
+const _noClimb = 'হাতুড়িতে দপ্ দপ্ শব্দ আর পেছনে রড বেরিয়ে আছে! এই পোল আপনার ভারে ভেঙে পড়বে। মই লাগাবেন না।';
+const _pole12Done = 'সাবাশ! ফাঁপা শব্দ আর বেরিয়ে থাকা রড দেখে মই না লাগিয়ে বিপদ রিপোর্ট করেছেন। হিরো না হয়ে প্রাণ বাঁচিয়েছেন।';
+
+const _endHabit12 = <String>[
+  'গোড়ার ঘাস সরিয়ে ফাটল দেখা',
+  'স্টে-তার যাচাই',
+  'পেছনে খসে যাওয়া কংক্রিট ও রড',
+  'হাতুড়িতে ফাঁপা দপ্ দপ্ শব্দ',
+];
+
+const _pole12Front = 'assets/zero_loss/scene/pole12_front.jpg';
+const _pole12FrontClear = 'assets/zero_loss/scene/pole12_front_clear.jpg';
+const _pole12Back = 'assets/zero_loss/scene/pole12_back.jpg';
+const _pole12BackClear = 'assets/zero_loss/scene/pole12_back_clear.jpg';
+const _pole12Tag = 'assets/zero_loss/scene/pole12_tag.jpg';
+
+const _okBase13 = 'গোড়ার মাটি সরিয়ে জয়েন্ট দেখা হয়েছে। মরিচা নেই। ঠিক আছে।';
+const _okHammer13 = 'হাতুড়ি ঠুকে পরিষ্কার টন টন শব্দ মিলেছে। ভেতরে জং নেই, ঠিক আছে।';
+const _okBack13 = 'চারপাশ ঘুরে ওয়েল্ডিং জয়েন্ট ও আর্থিং দেখা হয়েছে। ঠিক আছে।';
+const _okTop13 = 'নিচ থেকে মাথা পর্যন্ত ক্রস-আর্ম ও ইনসুলেটর দেখে নেওয়া হয়েছে। ঠিক আছে।';
+const _missBase13 = 'স্টিল পোলের আসল শত্রু মাটির সংযোগস্থলের মরিচা। গোড়াটা পরিষ্কার করে দেখলেন না?';
+const _missHammer13 = 'স্টিলের পোলে হাতুড়ি ঠুকে টন টন শব্দটা যাচাই করলেন না?';
+const _missBack13 = 'চারপাশ ঘুরে ওয়েল্ডিং জয়েন্ট আর ক্ল্যাম্পগুলো দেখলেন না?';
+const _missTop13 = 'গোড়া থেকে ওপর পর্যন্ত চোখ বুলিয়ে ক্রস-আর্ম আর ইনসুলেটর দেখলেন না?';
+const _pole13Done = 'দারুণ অভ্যাস! গোড়ার জয়েন্ট, টন টন শব্দ আর মাথার ক্রস-আর্ম দেখে তবেই মই লাগিয়েছেন।';
+
+const _endHabit13 = <String>[
+  'গোড়ার জয়েন্টে মরিচা নেই',
+  'হাতুড়িতে টন টন শব্দ',
+  'চারপাশের ওয়েল্ড ও আর্থিং',
+  'মাথার ক্রস-আর্ম ও ইনসুলেটর',
+];
+
+const _pole13Front = 'assets/zero_loss/scene/pole13_front.jpg';
+const _pole13FrontClear = 'assets/zero_loss/scene/pole13_front_clear.jpg';
+const _pole13Back = 'assets/zero_loss/scene/pole13_back.jpg';
+const _pole13BackClear = 'assets/zero_loss/scene/pole13_back_clear.jpg';
+const _pole13Top = 'assets/zero_loss/scene/pole13_top.jpg';
+const _pole13Glass = 'assets/zero_loss/scene/pole13_glass.jpg';
+
 const _poleFront = 'assets/zero_loss/scene/pole11_front.jpg';
 const _poleFrontClear = 'assets/zero_loss/scene/pole11_front_clear.jpg';
 const _poleBack = 'assets/zero_loss/scene/pole11_back.jpg';
 const _poleBackClear = 'assets/zero_loss/scene/pole11_back_clear.jpg';
-const _poleHammer = 'assets/zero_loss/scene/pole11_hammer.jpg';
+const _poleHammer = 'assets/zero_loss/scene/pole11_hammer.webp';
 const _poleLadder = 'assets/zero_loss/scene/gear_frp_ladder.webp';
 
 const _preDoneItems = <String>[
@@ -44,7 +92,7 @@ const _endHabitItems = <String>[
   'হাতুড়ি ঠুকে ‘ঠক্ ঠক্’ শব্দ পরীক্ষা',
 ];
 
-enum _ShelfTool { hammer, ladder }
+enum _ShelfTool { hammer, ladder, tag, glass }
 
 class DsPolePreChecklist extends StatefulWidget {
   const DsPolePreChecklist({super.key});
@@ -177,11 +225,46 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
   late final AnimationController _tapAnim;
   late final AnimationController _stayTwang;
   late final AnimationController _shake;
+  late final AnimationController _climb;
 
   var _backSide = false;
   var _grassCleared = false;
   final _done = <String>{}; // 'grass', 'stay', 'back', 'hammer'
   var _ladderPlaced = false;
+  var _reported = false;
+  var _lookingUp = false;
+
+  bool get _unfit => widget.engine.level.number == 12;
+  bool get _steel => widget.engine.level.number == 13;
+
+  String _poleShot(bool showBack) {
+    if (_lookingUp && _steel) return _pole13Top;
+    if (_steel) {
+      return showBack
+          ? (_grassCleared ? _pole13BackClear : _pole13Back)
+          : (_grassCleared ? _pole13FrontClear : _pole13Front);
+    }
+    if (_unfit) {
+      return showBack
+          ? (_grassCleared ? _pole12BackClear : _pole12Back)
+          : (_grassCleared ? _pole12FrontClear : _pole12Front);
+    }
+    return showBack
+        ? (_grassCleared ? _poleBackClear : _poleBack)
+        : (_grassCleared ? _poleFrontClear : _poleFront);
+  }
+
+  List<String> get _endItems {
+    if (_unfit) return _endHabit12;
+    if (_steel) return _endHabit13;
+    return _endHabitItems;
+  }
+
+  String get _thanks {
+    if (_unfit) return _pole12Done;
+    if (_steel) return _pole13Done;
+    return _pole11Done;
+  }
 
   var _coachVisible = false;
   var _coachSay = '';
@@ -189,9 +272,13 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
   var _speechToken = 0;
 
   var _finishing = false;
+  var _climbed = false;
+  var _hammerBusy = false;
   var _showChecklist = false;
   var _checkedCount = 0;
+  var _checklistReady = false;
   var _showThanks = false;
+  Completer<void>? _nextGate;
 
   @override
   void initState() {
@@ -199,10 +286,11 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     widget.engine.beginDress();
     ZlFx.holdClock();
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
-    _flip = AnimationController(vsync: this, duration: const Duration(milliseconds: 480));
+    _flip = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
     _tapAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 680));
     _stayTwang = AnimationController(vsync: this, duration: const Duration(milliseconds: 520));
     _shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
+    _climb = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
   }
 
   @override
@@ -213,6 +301,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     _tapAnim.dispose();
     _stayTwang.dispose();
     _shake.dispose();
+    _climb.dispose();
     super.dispose();
   }
 
@@ -264,7 +353,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
       unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
       widget.engine.dressRight();
       widget.onDelta(5, global);
-      _praise(_okGrass);
+      _praise(_steel ? _okBase13 : _unfit ? _okGrass12 : _okGrass);
     }
   }
 
@@ -279,111 +368,190 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
       unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
       widget.engine.dressRight();
       widget.onDelta(5, global);
-      _praise(_okStay);
+      _praise(_unfit ? _okStay12 : _okStay);
     }
   }
 
-  void _doFlip(Offset global) {
-    if (_finishing) return;
+  Future<void> _doFlip(Offset global) async {
+    if (_finishing || _flip.isAnimating) return;
+    final toBack = !_backSide;
     HapticFeedback.selectionClick();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: widget.muted));
-    final nextBack = !_backSide;
-    setState(() => _backSide = nextBack);
-    if (nextBack) {
-      _flip.forward();
-      if (_done.add('back')) {
-        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
-        widget.engine.dressRight();
-        widget.onDelta(5, global);
-        _praise(_okBack);
-      }
+    setState(() => _backSide = toBack);
+    if (toBack) {
+      await _flip.forward();
     } else {
-      _flip.reverse();
+      await _flip.reverse();
+      return;
     }
-  }
-
-  void _doHammer(Offset global) {
-    if (_finishing) return;
-    HapticFeedback.mediumImpact();
-    _tapAnim.forward(from: 0);
-    unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.75, muted: widget.muted));
-    Future<void>.delayed(const Duration(milliseconds: 220), () {
-      if (!mounted) return;
-      HapticFeedback.mediumImpact();
-      unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.85, muted: widget.muted));
-    });
-    final first = _done.add('hammer');
-    setState(() {});
-    if (first) {
-      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: widget.muted));
+    if (!mounted || !_backSide || _finishing) return;
+    if (_done.add('back')) {
+      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
       widget.engine.dressRight();
       widget.onDelta(5, global);
-      _praise(_okHammer);
+      setState(() {});
+      _praise(_steel ? _okBack13 : _unfit ? _okBack12 : _okBack);
     }
+  }
+
+  Future<void> _doHammer(Offset global) async {
+    if (_finishing || _hammerBusy) return;
+    _hammerBusy = true;
+    _tapAnim.forward(from: 0);
+    HapticFeedback.mediumImpact();
+    unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.72, muted: widget.muted));
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    if (!mounted) return;
+    HapticFeedback.mediumImpact();
+    unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.86, muted: widget.muted));
+    await Future<void>.delayed(const Duration(milliseconds: 460));
+    _hammerBusy = false;
+    if (!mounted || _finishing) return;
+    if (!_done.add('hammer')) return;
+    setState(() {});
+    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: widget.muted));
+    widget.engine.dressRight();
+    widget.onDelta(5, global);
+    await Future<void>.delayed(const Duration(milliseconds: 260));
+    if (!mounted || _finishing) return;
+    _praise(_steel ? _okHammer13 : _unfit ? _okHammer12 : _okHammer);
+  }
+
+  void _fault(String line, Offset global) {
+    HapticFeedback.heavyImpact();
+    unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.8, muted: widget.muted));
+    widget.engine.dressWrong();
+    widget.onDelta(-5, global);
+    _shake.forward(from: 0);
+    _showFaultCoach(line);
+  }
+
+  String? _firstMiss({required bool reporting}) {
+    if (_steel) {
+      if (!_done.contains('grass')) return _missBase13;
+      if (!_done.contains('hammer')) return _missHammer13;
+      if (!_done.contains('back')) return _missBack13;
+      if (!_done.contains('top')) return _missTop13;
+      return null;
+    }
+    if (!_done.contains('grass')) return reporting ? _repGrass : _missGrass;
+    if (!_done.contains('stay')) return reporting ? _repStay : _missStay;
+    if (!_done.contains('back')) return reporting ? _repBack : _missBack;
+    if (!_done.contains('hammer')) return reporting ? _repHammer : _missHammer;
+    return null;
+  }
+
+  void _doTop(Offset global) {
+    if (_finishing || !_steel) return;
+    final opening = !_lookingUp;
+    setState(() => _lookingUp = opening);
+    if (!opening) return;
+    HapticFeedback.selectionClick();
+    unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: widget.muted));
+    if (_done.add('top')) {
+      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
+      widget.engine.dressRight();
+      widget.onDelta(5, global);
+      _praise(_okTop13);
+    }
+  }
+
+  Future<void> _tryReport(Offset global) async {
+    if (_finishing || !_unfit) return;
+    final missed = _firstMiss(reporting: true);
+    if (missed != null) {
+      _fault(missed, global);
+      return;
+    }
+    _clearCoachIfOpen();
+    if (_backSide) {
+      setState(() => _backSide = false);
+      await _flip.reverse();
+      if (!mounted) return;
+    }
+    setState(() {
+      _finishing = true;
+      _reported = true;
+    });
+    HapticFeedback.mediumImpact();
+    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.82, muted: widget.muted));
+    widget.engine.dressRight();
+    widget.onDelta(5, global);
+    await _closeOut(_pole12Done);
   }
 
   Future<void> _tryLadder(Offset global) async {
     if (_finishing) return;
-
-    String? missed;
-    if (!_done.contains('grass')) {
-      missed = _missGrass;
-    } else if (!_done.contains('stay')) {
-      missed = _missStay;
-    } else if (!_done.contains('back')) {
-      missed = _missBack;
-    } else if (!_done.contains('hammer')) {
-      missed = _missHammer;
-    }
-
+    final missed = _firstMiss(reporting: false);
     if (missed != null) {
-      HapticFeedback.heavyImpact();
-      unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.8, muted: widget.muted));
-      widget.engine.dressWrong();
-      widget.onDelta(-5, global);
-      _shake.forward(from: 0);
-      _showFaultCoach(missed);
+      _fault(missed, global);
       return;
     }
-
-    // All 4 habits completed! Place ladder on the pole.
+    if (_unfit) {
+      _fault(_noClimb, global);
+      return;
+    }
     _clearCoachIfOpen();
     if (_backSide) {
       setState(() => _backSide = false);
-      _flip.reverse();
+      await _flip.reverse();
+      if (!mounted) return;
     }
     setState(() {
       _finishing = true;
       _ladderPlaced = true;
     });
     HapticFeedback.mediumImpact();
-    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.82, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.62, muted: widget.muted));
     widget.engine.dressRight();
     widget.onDelta(5, global);
+    await Future<void>.delayed(const Duration(milliseconds: 780));
+    if (!mounted) return;
+    setState(() => _climbed = true);
+    _climb.forward(from: 0);
+    await Future<void>.delayed(const Duration(milliseconds: 1100));
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 420));
+    if (!mounted) return;
+    await _closeOut(_thanks);
+  }
 
-    await Future<void>.delayed(const Duration(milliseconds: 650));
+  void _proceedChecklist() {
+    final gate = _nextGate;
+    if (gate != null && !gate.isCompleted) gate.complete();
+  }
+
+  Future<void> _closeOut(String thanks) async {
+    final gate = Completer<void>();
+    _nextGate = gate;
     if (!mounted) return;
     setState(() {
       _showChecklist = true;
       _checkedCount = 0;
+      _checklistReady = false;
     });
-
-    for (var i = 0; i < _endHabitItems.length; i++) {
-      await Future<void>.delayed(const Duration(milliseconds: 380));
+    final endItems = _endItems;
+    for (var i = 0; i < endItems.length; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 520));
       if (!mounted) return;
       unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.45, muted: widget.muted));
       setState(() => _checkedCount = i + 1);
     }
-
-    await Future<void>.delayed(const Duration(milliseconds: 650));
+    await Future<void>.delayed(const Duration(milliseconds: 280));
     if (!mounted) return;
-    unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.85, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.55, muted: widget.muted));
+    setState(() => _checklistReady = true);
+    await gate.future;
+    if (!mounted) return;
     setState(() {
       _showChecklist = false;
+      _checklistReady = false;
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 480));
+    if (!mounted) return;
+    setState(() {
       _showThanks = true;
     });
-
-    await widget.onSpeak(_pole11Done).timeout(
+    await widget.onSpeak(thanks).timeout(
       const Duration(seconds: 12),
       onTimeout: () {},
     );
@@ -407,7 +575,14 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
           Column(
             children: [
               Expanded(
-                child: DragTarget<_ShelfTool>(
+                child: _showChecklist
+                    ? DsHabitChecklist(
+                        items: _endItems,
+                        shown: _checkedCount,
+                        showNext: _checklistReady,
+                        onNext: _proceedChecklist,
+                      )
+                    : DragTarget<_ShelfTool>(
                   onWillAcceptWithDetails: (_) => !_finishing,
                   onAcceptWithDetails: (details) {
                     final box = context.findRenderObject() as RenderBox?;
@@ -418,6 +593,10 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                       _doHammer(center);
                     } else if (details.data == _ShelfTool.ladder) {
                       _tryLadder(center);
+                    } else if (details.data == _ShelfTool.tag) {
+                      _tryReport(center);
+                    } else if (details.data == _ShelfTool.glass) {
+                      _doTop(center);
                     }
                   },
                   builder: (context, candidates, _) {
@@ -440,39 +619,35 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                           return Stack(
                             fit: StackFit.expand,
                             children: [
-                              // Front and back photographs of the same pole.
                               Positioned.fill(
                                 child: AnimatedBuilder(
                                   animation: Listenable.merge([_flip, _stayTwang]),
                                   builder: (context, _) {
-                                    final angle = _flip.value * math.pi;
-                                    final showBack = _flip.value >= 0.5;
-                                    final asset = showBack
-                                        ? (_grassCleared ? _poleBackClear : _poleBack)
-                                        : (_grassCleared ? _poleFrontClear : _poleFront);
                                     final nudge = math.sin(_stayTwang.value * math.pi * 6) * (1 - _stayTwang.value) * 5;
+                                    final fade = _lookingUp ? 0.0 : _flip.value;
                                     return Transform.translate(
                                       offset: Offset(nudge, 0),
-                                      child: Transform(
-                                        alignment: Alignment.center,
-                                        transform: Matrix4.identity()
-                                          ..setEntry(3, 2, 0.001)
-                                          ..rotateY(angle),
-                                        child: Transform(
-                                          alignment: Alignment.center,
-                                          transform: showBack ? Matrix4.rotationY(math.pi) : Matrix4.identity(),
-                                          child: AnimatedSwitcher(
-                                            duration: const Duration(milliseconds: 380),
+                                      child: Stack(
+                                        fit: StackFit.expand,
+                                        children: [
+                                          Image.asset(
+                                            _poleShot(false),
+                                            fit: BoxFit.cover,
+                                            alignment: _lookingUp ? Alignment.topCenter : Alignment.bottomCenter,
+                                            width: w,
+                                            height: h,
+                                          ),
+                                          Opacity(
+                                            opacity: fade,
                                             child: Image.asset(
-                                              asset,
-                                              key: ValueKey(asset),
+                                              _poleShot(true),
                                               fit: BoxFit.cover,
                                               alignment: Alignment.bottomCenter,
                                               width: w,
                                               height: h,
                                             ),
                                           ),
-                                        ),
+                                        ],
                                       ),
                                     );
                                   },
@@ -504,18 +679,6 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                                         opacity: (1 - (t - 0.15).abs()).clamp(0.35, 1),
                                         child: Column(
                                           children: [
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xF2ECFDF5),
-                                                borderRadius: BorderRadius.circular(10),
-                                                border: Border.all(color: const Color(0xFF22C55E)),
-                                              ),
-                                              child: Text(
-                                                'ঠক্ ঠক্',
-                                                style: zlText(13, weight: FontWeight.w900, color: const Color(0xFF14532D)),
-                                              ),
-                                            ),
                                             Transform.rotate(
                                               angle: -0.5 - math.sin(t * math.pi * 4) * 0.4,
                                               child: Image.asset(_poleHammer, width: 64, height: 64, fit: BoxFit.contain),
@@ -543,7 +706,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                               ),
 
                               // Touch zone: Stay wire & porcelain insulator (Left side of pole)
-                              if (!_backSide)
+                              if (!_backSide && !_steel)
                                 Positioned(
                                   left: w * 0.10,
                                   top: h * 0.26,
@@ -573,7 +736,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                                         widget.engine.dressRight();
                                         widget.onDelta(5, d.globalPosition);
                                         unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
-                                        _praise(_okBack);
+                                        _praise(_steel ? _okBack13 : _unfit ? _okBack12 : _okBack);
                                       }
                                       setState(() {});
                                     },
@@ -582,64 +745,60 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                                 ),
 
                               // Standing in PPE until the ladder is up, then the climbing pose.
-                              AnimatedPositioned(
-                                duration: const Duration(milliseconds: 700),
-                                curve: Curves.easeOutCubic,
-                                left: _ladderPlaced ? w * 0.20 : w * 0.02,
-                                bottom: _ladderPlaced ? h * 0.30 : h * 0.04,
-                                height: _ladderPlaced ? h * 0.48 : h * 0.42,
-                                child: IgnorePointer(
-                                  child: Transform.flip(
-                                    flipX: !_ladderPlaced,
-                                    child: Image.asset(
-                                      _ladderPlaced
-                                          ? 'assets/zero_loss/scene/spr_man_climb.webp'
-                                          : 'assets/zero_loss/scene/spr_man_point.webp',
-                                      fit: BoxFit.contain,
-                                      alignment: Alignment.bottomCenter,
-                                    ),
+                              if (_reported)
+                                Positioned(
+                                  left: w * 0.47,
+                                  top: h * 0.40,
+                                  width: 42,
+                                  height: 56,
+                                  child: IgnorePointer(
+                                    child: Image.asset(_pole12Tag, fit: BoxFit.contain),
                                   ),
+                                ),
+                              Positioned.fill(
+                                child: AnimatedBuilder(
+                                  animation: Listenable.merge([_flip, _climb]),
+                                  builder: (context, _) {
+                                    final walk = _flip.value;
+                                    final rise = _climb.value;
+                                    final standLeft = w * (0.02 + walk * 0.56);
+                                    final standBottom = h * 0.04;
+                                    final standH = h * 0.42;
+                                    final left = _reported
+                                        ? w * 0.0
+                                        : standLeft + (w * 0.20 - standLeft) * rise;
+                                    final bottom = _reported
+                                        ? h * 0.02
+                                        : standBottom + (h * 0.30 - standBottom) * rise;
+                                    final manH = _reported
+                                        ? h * 0.36
+                                        : standH + (h * 0.48 - standH) * rise;
+                                    return Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        Positioned(
+                                          left: left,
+                                          bottom: bottom,
+                                          height: manH,
+                                          child: IgnorePointer(
+                                            child: Transform.flip(
+                                              flipX: rise < 0.45 && walk < 0.55,
+                                              child: Image.asset(
+                                                rise > 0.35
+                                                    ? 'assets/zero_loss/scene/spr_man_climb.webp'
+                                                    : 'assets/zero_loss/scene/spr_man_point.webp',
+                                                fit: BoxFit.contain,
+                                                alignment: Alignment.bottomCenter,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
                               ),
 
-                              // Clean rotate-around icon button beside the pole (no text)
-                              Positioned(
-                                right: w * 0.16,
-                                top: h * 0.46,
-                                child: GestureDetector(
-                                  onTapDown: (d) => _doFlip(d.globalPosition),
-                                  child: Container(
-                                    width: 48,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      color: _done.contains('back')
-                                          ? const Color(0xE6143824)
-                                          : const Color(0xDDFFFBF0),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: _done.contains('back')
-                                            ? const Color(0xFF34D399)
-                                            : const Color(0xFF8C6B3F),
-                                        width: 2,
-                                      ),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Color(0x33000000),
-                                          blurRadius: 8,
-                                          offset: Offset(0, 3),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Icon(
-                                      Icons.threesixty_rounded,
-                                      size: 26,
-                                      color: _done.contains('back')
-                                          ? const Color(0xFF6EE7B7)
-                                          : const Color(0xFF3A2A16),
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ],
                           );
                         },
@@ -649,124 +808,52 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                 ),
               ),
 
-              // Clean bottom tool tray (pictures only, zero text labels)
               if (!_finishing)
-                Container(
-                  height: 108,
-                  margin: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xF2FDF4E3),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFFD4B483), width: 2),
-                    boxShadow: const [
-                      BoxShadow(color: Color(0x29000000), blurRadius: 14, offset: Offset(0, 5)),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // 1. Hammer (Tap or Drag onto pole)
-                      _TrayToolTile(
-                        tool: _ShelfTool.hammer,
-                        done: _done.contains('hammer'),
-                        onTap: _doHammer,
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Image.asset(_poleHammer, fit: BoxFit.contain),
-                        ),
+                DsFlatShelf(
+                  children: [
+                    if (!_done.contains('hammer'))
+                      DsShelfToken<_ShelfTool>(
+                        data: _ShelfTool.hammer,
+                        child: Image.asset(_poleHammer, fit: BoxFit.contain),
                       ),
-
-                      // 2. FRP Ladder (Tap or Drag onto pole when ready)
-                      _TrayToolTile(
-                        tool: _ShelfTool.ladder,
-                        done: _ladderPlaced,
-                        onTap: _tryLadder,
-                        child: Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: Image.asset(
-                            _poleLadder,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
+                    if (!_ladderPlaced && !_reported)
+                      DsShelfToken<_ShelfTool>(
+                        data: _ShelfTool.ladder,
+                        child: Image.asset(_poleLadder, fit: BoxFit.contain),
                       ),
-                    ],
-                  ),
-                )
-              else
-                const SizedBox(height: 118),
+                    if (_steel && !_done.contains('top'))
+                      DsShelfToken<_ShelfTool>(
+                        data: _ShelfTool.glass,
+                        child: Image.asset(_pole13Glass, fit: BoxFit.contain),
+                      ),
+                    if (_unfit && !_reported)
+                      DsShelfToken<_ShelfTool>(
+                        data: _ShelfTool.tag,
+                        child: Image.asset(_pole12Tag, fit: BoxFit.contain),
+                      ),
+                  ],
+                ),
             ],
           ),
 
-          const Positioned(
-            left: 14,
-            top: 8,
-            child: IgnorePointer(child: DsPolePreChecklist()),
-          ),
-
-          // One-by-one mistake coach (only appears when player makes a mistake)
-          if (_coachVisible && !_showChecklist && !_showThanks)
-            Positioned(
-              left: 10,
-              bottom: 122,
-              child: IgnorePointer(
-                child: DsCoach(
-                  mood: _coachMood,
-                  line: _coachSay,
-                  bubbleWidth: 238,
-                  sprite: 126,
-                ),
-              ),
+          if (!_showChecklist && !_showThanks)
+            const Positioned(
+              left: 14,
+              top: 8,
+              child: IgnorePointer(child: DsPolePreChecklist()),
             ),
 
-          // End-of-level habit checklist (only after success)
-          if (_showChecklist)
+          if (_coachVisible && !_showChecklist && !_showThanks)
             Positioned.fill(
-              child: Container(
-                color: const Color(0x88101820),
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(horizontal: 22),
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 340),
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFDF6E4),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: const Color(0xFFC9A227), width: 2),
-                    boxShadow: const [
-                      BoxShadow(color: Color(0x55000000), blurRadius: 20, offset: Offset(0, 8)),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (var i = 0; i < _endHabitItems.length; i++)
-                        AnimatedOpacity(
-                          duration: const Duration(milliseconds: 220),
-                          opacity: i < _checkedCount ? 1.0 : 0.25,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  i < _checkedCount
-                                      ? Icons.check_circle_rounded
-                                      : Icons.radio_button_unchecked_rounded,
-                                  size: 20,
-                                  color: i < _checkedCount ? const Color(0xFF2F6B3A) : const Color(0xFF9C8867),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    _endHabitItems[i],
-                                    style: zlText(13.5, weight: FontWeight.w800, color: const Color(0xFF3A2A16)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
+              child: IgnorePointer(
+                child: Align(
+                  alignment: const Alignment(0, -0.08),
+                  child: DsCoach(
+                    mood: _coachMood,
+                    line: _coachSay,
+                    bubbleWidth: 280,
+                    sprite: 156,
+                    centered: true,
                   ),
                 ),
               ),
@@ -776,10 +863,10 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
           if (_showThanks)
             Positioned.fill(
               child: Align(
-                alignment: const Alignment(0, -0.32),
+                alignment: const Alignment(0, -0.42),
                 child: DsCoach(
                   mood: DsCoachMood.thanks,
-                  line: _pole11Done,
+                  line: _thanks,
                   bubbleWidth: 280,
                   sprite: 184,
                   centered: true,
@@ -792,59 +879,168 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
   }
 }
 
-class _TrayToolTile extends StatelessWidget {
-  const _TrayToolTile({
-    required this.tool,
-    required this.done,
-    required this.onTap,
-    required this.child,
-  });
+/// Same flat picture strip as levels 8–10. No card, no per-item box.
+class DsFlatShelf extends StatelessWidget {
+  const DsFlatShelf({super.key, required this.children});
 
-  final _ShelfTool tool;
-  final bool done;
-  final ValueChanged<Offset> onTap;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: const Color(0xCCF6E7C8),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+        child: SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.end,
+            spacing: 6,
+            runSpacing: 6,
+            children: children,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bare shelf picture. It scores only when dropped on the scene.
+class DsShelfToken<T extends Object> extends StatelessWidget {
+  const DsShelfToken({super.key, required this.data, required this.child});
+
+  final T data;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final box = Container(
-      width: 96,
-      height: 84,
-      decoration: BoxDecoration(
-        color: done ? const Color(0xFFE6F7ED) : const Color(0xFFFFFBF2),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: done ? const Color(0xFF34D399) : const Color(0xFFCBB282),
-          width: 1.8,
-        ),
-        boxShadow: const [
-          BoxShadow(color: Color(0x18000000), blurRadius: 6, offset: Offset(0, 3)),
-        ],
+    final thumb = SizedBox(width: 50, height: 44, child: child);
+    return Draggable<T>(
+      data: data,
+      feedback: Material(
+        color: Colors.transparent,
+        child: SizedBox(width: 84, height: 84, child: child),
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          child,
-          if (done)
-            const Positioned(
-              right: 6,
-              top: 6,
-              child: Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF2F6B3A)),
-            ),
-        ],
-      ),
+      childWhenDragging: Opacity(opacity: 0.25, child: thumb),
+      child: thumb,
     );
+  }
+}
 
-    return GestureDetector(
-      onTapDown: (d) => onTap(d.globalPosition),
-      child: Draggable<_ShelfTool>(
-        data: tool,
-        feedback: Material(
-          color: Colors.transparent,
-          child: SizedBox(width: 92, height: 92, child: child),
+/// Closing list used by levels 8–10: dark card, rows appear one at a time.
+class DsHabitChecklist extends StatelessWidget {
+  const DsHabitChecklist({
+    super.key,
+    required this.items,
+    required this.shown,
+    this.showNext = false,
+    this.onNext,
+  });
+
+  final List<String> items;
+  final int shown;
+  final bool showNext;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final n = shown.clamp(0, items.length);
+    final progress = items.isEmpty ? 0.0 : n / items.length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: const Color(0xF012181F),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: const Color(0x44F6E7B0)),
+          boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 28, offset: Offset(0, 16))],
         ),
-        childWhenDragging: Opacity(opacity: 0.35, child: box),
-        child: box,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('চেকলিস্ট', style: zlText(13, weight: FontWeight.w800, color: const Color(0xFFC9A227))),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: progress),
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOutCubic,
+                  builder: (_, t, _) => LinearProgressIndicator(
+                    value: t,
+                    minHeight: 4,
+                    backgroundColor: const Color(0x33F6E7B0),
+                    color: const Color(0xFF7DCEA0),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView(
+                  physics: const ClampingScrollPhysics(),
+                  children: [
+                    for (var i = 0; i < n; i++)
+                      TweenAnimationBuilder<double>(
+                        key: ValueKey(items[i]),
+                        tween: Tween(begin: 0, end: 1),
+                        duration: const Duration(milliseconds: 420),
+                        curve: Curves.easeOutCubic,
+                        builder: (_, t, _) {
+                          final rise = t.clamp(0.0, 1.0);
+                          final tick = ((t - 0.42) / 0.58).clamp(0.0, 1.0);
+                          return Opacity(
+                            opacity: rise,
+                            child: Transform.translate(
+                              offset: Offset(36 * (1 - rise), 0),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        items[i],
+                                        style: zlText(16, weight: FontWeight.w700, color: const Color(0xFFF6E7C8)),
+                                      ),
+                                    ),
+                                    Transform.scale(
+                                      scale: Curves.easeOutBack.transform(tick),
+                                      child: const Icon(Icons.check_circle_rounded, color: Color(0xFF7DCEA0), size: 26),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+              if (showNext && onNext != null)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Material(
+                      color: const Color(0xFFC9A227),
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: onNext,
+                        child: const SizedBox(
+                          width: 52,
+                          height: 52,
+                          child: Icon(Icons.arrow_forward_rounded, color: Color(0xFF1A140C), size: 26),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

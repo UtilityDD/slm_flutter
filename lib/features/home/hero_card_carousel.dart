@@ -3,6 +3,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../admin/dev_unlock.dart';
+import '../auth/auth_provider.dart';
+import '../auth/verify_gate.dart';
+import '../auth/verify_hold.dart';
+import '../auth/verify_sheet.dart';
 import '../training/training_models.dart';
 import '../training/training_provider.dart';
 import 'hero_card.dart';
@@ -28,7 +34,8 @@ class HeroCardCarousel extends ConsumerStatefulWidget {
   ConsumerState<HeroCardCarousel> createState() => _HeroCardCarouselState();
 }
 
-class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with TickerProviderStateMixin {
+class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel>
+    with TickerProviderStateMixin {
   static const _last = 10;
 
   late final PageController _pages;
@@ -46,8 +53,14 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
     // Open on the Start card, then glide to the current reading level.
     _page = 0;
     _pages = PageController(initialPage: 0, viewportFraction: 0.8);
-    _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
-    _sheen = AnimationController(vsync: this, duration: const Duration(milliseconds: 5200));
+    _intro = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _sheen = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5200),
+    );
     _intro.forward().then((_) {
       if (!mounted) return;
       setState(() => _ready = true);
@@ -61,7 +74,8 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
   int _presentReadingLevel() {
     final completed = ref.read(allCompletedLessonsProvider);
     if (!isPathOrientationDone(completed)) return 0;
-    final ladder = ref.read(trainingLadderProvider).value ?? const <TrainingModuleItem>[];
+    final ladder =
+        ref.read(trainingLadderProvider).value ?? const <TrainingModuleItem>[];
     var highestDone = 0;
     for (final m in ladder) {
       if (!m.isCompleted) break;
@@ -106,7 +120,11 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
     final target = pending.clamp(0, _last);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted || !_pages.hasClients) return;
-      await _pages.animateToPage(target, duration: const Duration(milliseconds: 520), curve: Curves.easeOutCubic);
+      await _pages.animateToPage(
+        target,
+        duration: const Duration(milliseconds: 520),
+        curve: Curves.easeOutCubic,
+      );
       if (mounted) setState(() => _page = target);
     });
   }
@@ -131,11 +149,31 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
     _opening = true;
     try {
       if (_page != step && _pages.hasClients) {
-        await _pages.animateToPage(step, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic);
+        await _pages.animateToPage(
+          step,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+        );
       }
       if (!mounted) return;
+      if (lessonNeedsVerify(
+        ref.read(authProvider),
+        ref.read(verifyHoldProvider),
+        ref.read(devUnlockProvider),
+        step,
+      )) {
+        HapticFeedback.selectionClick();
+        await showVerifySheet(context);
+        return;
+      }
       HapticFeedback.mediumImpact();
-      await openLevelLessons(context, ref, step: step, bn: widget.bn, source: _cardRect(cardContext));
+      await openLevelLessons(
+        context,
+        ref,
+        step: step,
+        bn: widget.bn,
+        source: _cardRect(cardContext),
+      );
     } finally {
       _opening = false;
     }
@@ -161,7 +199,12 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
     final ladderAsync = ref.watch(trainingLadderProvider);
     final ladder = ladderAsync.value ?? const <TrainingModuleItem>[];
     final achieved = widget.path.achieved;
-    final orientationDone = isPathOrientationDone(ref.watch(allCompletedLessonsProvider));
+    final orientationDone = isPathOrientationDone(
+      ref.watch(allCompletedLessonsProvider),
+    );
+    final devOpen = ref.watch(devUnlockProvider);
+    final auth = ref.watch(authProvider);
+    final holds = ref.watch(verifyHoldProvider);
 
     // Run the open-scroll once the ladder data is actually available, so we
     // target the real present level (not the pre-load default of 1).
@@ -182,7 +225,7 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
     }
 
     bool lockedFor(int step) {
-      if (step <= 0) return false;
+      if (devOpen || step <= 0) return false;
       if (!orientationDone) return true;
       if (step <= achieved) return false;
       final item = moduleFor(step);
@@ -207,10 +250,25 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
                 builder: (context, _) {
                   return PageView.builder(
                     controller: _pages,
-                    physics: _ready ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
+                    physics: _ready
+                        ? const BouncingScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
                     itemCount: _last + 1,
                     onPageChanged: (i) => setState(() => _page = i),
-                    itemBuilder: (context, index) => _buildCard(index, tilt, lockedFor(index)),
+                    itemBuilder: (context, index) {
+                      final seal = lessonNeedsVerify(
+                        auth,
+                        holds,
+                        devOpen,
+                        index,
+                      );
+                      return _buildCard(
+                        index,
+                        tilt,
+                        seal ? false : lockedFor(index),
+                        seal,
+                      );
+                    },
                   );
                 },
               );
@@ -221,8 +279,10 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
     );
   }
 
-  Widget _buildCard(int index, Offset tilt, bool locked) {
-    final page = _pages.hasClients && _pages.position.haveDimensions ? (_pages.page ?? _page.toDouble()) : _page.toDouble();
+  Widget _buildCard(int index, Offset tilt, bool locked, bool verifyTick) {
+    final page = _pages.hasClients && _pages.position.haveDimensions
+        ? (_pages.page ?? _page.toDouble())
+        : _page.toDouble();
     final offset = (page - index).clamp(-1.5, 1.5);
     final focus = 1 - offset.abs().clamp(0.0, 1.0);
     final active = index == _page;
@@ -231,7 +291,9 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
     final t = _intro.value;
     final flipT = Curves.easeOutBack.transform((t / 0.8).clamp(0.0, 1.0));
     final flip = active ? (1 - flipT) * math.pi : 0.0;
-    final neighbourIn = Curves.easeOut.transform(((t - 0.55) / 0.45).clamp(0.0, 1.0));
+    final neighbourIn = Curves.easeOut.transform(
+      ((t - 0.55) / 0.45).clamp(0.0, 1.0),
+    );
     final glow = Curves.easeOut.transform(((t - 0.5) / 0.5).clamp(0.0, 1.0));
 
     final cardTilt = active ? tilt : Offset.zero;
@@ -255,6 +317,7 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
             step: index,
             title: heroTitle(index, widget.bn),
             locked: locked,
+            verifyTick: verifyTick,
             tilt: cardTilt,
             sheen: sweep,
             glow: active ? glow * (0.75 + 0.25 * focus) : 0.35 * focus,
@@ -282,4 +345,3 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel> with Ticker
     );
   }
 }
-

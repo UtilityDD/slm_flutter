@@ -15,9 +15,9 @@ import '../radio/radio_player_provider.dart';
 import '../rank/rank_screen.dart';
 import '../sops/sops_screen.dart';
 import '../training/training_screen.dart';
+import '../admin/admin_screen.dart';
 import '../auth/login_screen.dart';
 import 'app_routes.dart';
-import 'feature_page.dart';
 import 'shell_insets.dart';
 import 'shell_providers.dart';
 
@@ -90,99 +90,8 @@ class _MainShellState extends ConsumerState<MainShell> {
       AppRoutes.more => const MoreScreen(),
       AppRoutes.emergency => const EmergencyDirectoryScreen(),
       AppRoutes.login => const LoginScreen(),
-      AppRoutes.story => const FeaturePage(
-          titleBn: 'আমাদের কথা',
-          titleEn: 'Our Story',
-          noteBn: 'গল্পের পাতা পরের ধাপে ওয়েবের মতো খুলবে।',
-          noteEn: 'The story page will match the web in the next step.',
-          icon: Icons.groups_rounded,
-        ),
-      AppRoutes.prizes => const FeaturePage(
-          titleBn: 'পুরস্কার',
-          titleEn: 'Prizes',
-          noteBn: 'পুরস্কার গ্যালারি পরের ধাপে।',
-          noteEn: 'The prize gallery comes in the next step.',
-          icon: Icons.card_giftcard_rounded,
-          tint: Color(0xFFB45309),
-        ),
-      AppRoutes.guide => const FeaturePage(
-          titleBn: 'অ্যাপ গাইড',
-          titleEn: 'App guide',
-          noteBn: 'ছোট ভিডিও গাইড পরের ধাপে।',
-          noteEn: 'Short app-guide videos come next.',
-          icon: Icons.smartphone_rounded,
-          tint: Color(0xFF334155),
-        ),
-      AppRoutes.progress => const FeaturePage(
-          titleBn: 'আমার অগ্রগতি',
-          titleEn: 'My Progress',
-          noteBn: 'পয়েন্ট ও পড়ার হিসাব পরের ধাপে।',
-          noteEn: 'Points and reading history come next.',
-          icon: Icons.insights_rounded,
-          tint: Color(0xFF0F766E),
-        ),
-      AppRoutes.faq => const FeaturePage(
-          titleBn: 'জিজ্ঞাসা',
-          titleEn: 'FAQ',
-          noteBn: 'প্রশ্নোত্তর তালিকা পরের ধাপে।',
-          noteEn: 'The FAQ list comes next.',
-          icon: Icons.help_rounded,
-        ),
-      AppRoutes.knowMore => const FeaturePage(
-          titleBn: 'আরো জানুন',
-          titleEn: 'Know More',
-          noteBn: 'অতিরিক্ত জানার পাতা পরের ধাপে।',
-          noteEn: 'The know-more page comes next.',
-          icon: Icons.lightbulb_rounded,
-          tint: Color(0xFF3F6212),
-        ),
-      AppRoutes.video => const FeaturePage(
-          titleBn: 'ভিডিও গাইড',
-          titleEn: 'Video Guide',
-          noteBn: 'ভিডিও তালিকা পরের ধাপে।',
-          noteEn: 'The video list comes next.',
-          icon: Icons.smart_display_rounded,
-          tint: Color(0xFFA21CAF),
-        ),
-      AppRoutes.tools => const FeaturePage(
-          titleBn: 'আমার সরঞ্জাম',
-          titleEn: 'My Tools',
-          noteBn: 'সরঞ্জামের তালিকা পরের ধাপে।',
-          noteEn: 'The tool catalog comes next.',
-          icon: Icons.handyman_rounded,
-          tint: Color(0xFF44403C),
-        ),
-      AppRoutes.tales => const FeaturePage(
-          titleBn: 'করুণ কাহিনী',
-          titleEn: 'Tragic Stories',
-          noteBn: 'মাঠের কাহিনী পরের ধাপে।',
-          noteEn: 'Field stories come next.',
-          icon: Icons.favorite_rounded,
-          tint: Color(0xFF9F1239),
-        ),
-      AppRoutes.notices => const FeaturePage(
-          titleBn: 'বিজ্ঞপ্তি',
-          titleEn: 'Notifications',
-          noteBn: 'বিজ্ঞপ্তির তালিকা পরের ধাপে।',
-          noteEn: 'The notice list comes next.',
-          icon: Icons.notifications_rounded,
-          tint: Color(0xFF3730A3),
-        ),
-      AppRoutes.forum => const FeaturePage(
-          titleBn: 'প্রশ্নোত্তর',
-          titleEn: 'Forum',
-          noteBn: 'ফোরাম পরের ধাপে।',
-          noteEn: 'The forum comes next.',
-          icon: Icons.forum_rounded,
-          tint: Color(0xFF0E7490),
-        ),
-      _ => const FeaturePage(
-          titleBn: 'স্মার্ট লাইনম্যান',
-          titleEn: 'Smart Lineman',
-          noteBn: 'এই পাতা এখনও খোলা হয়নি।',
-          noteEn: 'This page is not open yet.',
-          icon: Icons.electric_bolt_rounded,
-        ),
+      AppRoutes.admin => const AdminScreen(),
+      _ => const _TabHost(),
     };
 
     return MaterialPageRoute(settings: settings, builder: (_) => page);

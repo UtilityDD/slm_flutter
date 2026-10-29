@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/app_colors.dart';
+import '../admin/dev_unlock.dart';
+import '../auth/auth_provider.dart';
+import '../auth/verify_gate.dart';
+import '../auth/verify_hold.dart';
+import '../auth/verify_sheet.dart';
+import '../auth/verify_tick.dart';
 import '../home/lesson_reader_page.dart';
 import '../shell/shell_insets.dart';
 import 'training_models.dart';
@@ -49,7 +56,11 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.safetyOrange),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  size: 48,
+                  color: AppColors.safetyOrange,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'পাঠ লোড করা যায়নি',
@@ -65,18 +76,20 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
             physics: const BouncingScrollPhysics(),
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final item = modules[index];
-                      return _buildLadderRung(item, isDark);
-                    },
-                    childCount: modules.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final item = modules[index];
+                    return _buildLadderRung(item, isDark);
+                  }, childCount: modules.length),
                 ),
               ),
-              SliverToBoxAdapter(child: SizedBox(height: shellDockBottomInset(context) + 16)),
+              SliverToBoxAdapter(
+                child: SizedBox(height: shellDockBottomInset(context) + 16),
+              ),
             ],
           );
         },
@@ -120,8 +133,10 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                   color: item.isActive
                       ? AppColors.primaryAmber
                       : (item.isCompleted
-                          ? AppColors.safeGreen.withValues(alpha: 0.6)
-                          : (isDark ? AppColors.slate700 : AppColors.slate200)),
+                            ? AppColors.safeGreen.withValues(alpha: 0.6)
+                            : (isDark
+                                  ? AppColors.slate700
+                                  : AppColors.slate200)),
                   width: item.isActive ? 2 : 1.2,
                 ),
                 boxShadow: [
@@ -137,12 +152,25 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                   // Rung Header Bar (Tap Target)
                   InkWell(
                     onTap: () {
+                      final seal = lessonNeedsVerify(
+                        ref.read(authProvider),
+                        ref.read(verifyHoldProvider),
+                        ref.read(devUnlockProvider),
+                        item.moduleNumber,
+                      );
+                      if (seal) {
+                        showVerifySheet(context);
+                        return;
+                      }
                       if (item.isLocked) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
                               'আগের অধ্যায় শেষ করে এই পাঠ খুলুন।',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             backgroundColor: AppColors.slate900,
                             behavior: SnackBarBehavior.floating,
@@ -151,7 +179,9 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                         return;
                       }
                       setState(() {
-                        _expandedModuleNumber = isExpanded ? null : item.moduleNumber;
+                        _expandedModuleNumber = isExpanded
+                            ? null
+                            : item.moduleNumber;
                       });
                     },
                     borderRadius: BorderRadius.circular(18),
@@ -164,7 +194,10 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: rungColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
@@ -179,21 +212,34 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                                 ),
                               ),
                               const Spacer(),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: isDark ? AppColors.slate700 : AppColors.slate100,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  statusLabel,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: rungColor,
+                              if (lessonNeedsVerify(
+                                ref.watch(authProvider),
+                                ref.watch(verifyHoldProvider),
+                                ref.watch(devUnlockProvider),
+                                item.moduleNumber,
+                              ))
+                                const VerifyTick(size: 22)
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? AppColors.slate700
+                                        : AppColors.slate100,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    statusLabel,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: rungColor,
+                                    ),
                                   ),
                                 ),
-                              ),
                             ],
                           ),
                           const SizedBox(height: 10),
@@ -217,11 +263,16 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                                   borderRadius: BorderRadius.circular(6),
                                   child: LinearProgressIndicator(
                                     value: item.totalLessons > 0
-                                        ? (item.completedLessons / item.totalLessons)
+                                        ? (item.completedLessons /
+                                              item.totalLessons)
                                         : 0,
                                     minHeight: 8,
-                                    backgroundColor: isDark ? AppColors.slate700 : AppColors.slate100,
-                                    valueColor: AlwaysStoppedAnimation<Color>(rungColor),
+                                    backgroundColor: isDark
+                                        ? AppColors.slate700
+                                        : AppColors.slate100,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      rungColor,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -243,7 +294,9 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Text(
-                                  isExpanded ? 'পাঠ লুকান ▲' : 'পাঠগুলো দেখুন ▼',
+                                  isExpanded
+                                      ? 'পাঠ লুকান ▲'
+                                      : 'পাঠগুলো দেখুন ▼',
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
@@ -290,7 +343,10 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
       ),
       error: (e, _) => Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Text('পাঠ লোড ব্যর্থ: ', style: const TextStyle(fontSize: 13, color: Colors.red)),
+        child: Text(
+          'পাঠ লোড ব্যর্থ: ',
+          style: const TextStyle(fontSize: 13, color: Colors.red),
+        ),
       ),
       data: (lessons) {
         if (lessons.isEmpty) {
@@ -318,12 +374,16 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => LessonReaderPage(lesson: lesson, bn: true),
+                      builder: (_) =>
+                          LessonReaderPage(lesson: lesson, bn: true),
                     ),
                   );
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       // Large Lesson Number Avatar
@@ -336,13 +396,19 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                               ? AppColors.safeGreen
                               : AppColors.primaryAmber.withValues(alpha: 0.2),
                           border: Border.all(
-                            color: lesson.isCompleted ? AppColors.safeGreen : AppColors.primaryAmber,
+                            color: lesson.isCompleted
+                                ? AppColors.safeGreen
+                                : AppColors.primaryAmber,
                             width: 1.5,
                           ),
                         ),
                         child: Center(
                           child: lesson.isCompleted
-                              ? const Icon(Icons.check_rounded, color: Colors.white, size: 22)
+                              ? const Icon(
+                                  Icons.check_rounded,
+                                  color: Colors.white,
+                                  size: 22,
+                                )
                               : Text(
                                   '',
                                   style: const TextStyle(
@@ -375,14 +441,21 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white60 : AppColors.slate700,
+                                    color: isDark
+                                        ? Colors.white60
+                                        : AppColors.slate700,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.safeGreen.withValues(alpha: 0.15),
+                                    color: AppColors.safeGreen.withValues(
+                                      alpha: 0.15,
+                                    ),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Text(
@@ -402,7 +475,10 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
 
                       // Large Tap Action Indicator
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: lesson.isCompleted
                               ? AppColors.safeGreen.withValues(alpha: 0.12)
@@ -414,7 +490,9 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: lesson.isCompleted ? AppColors.safeGreen : AppColors.primaryAmber,
+                            color: lesson.isCompleted
+                                ? AppColors.safeGreen
+                                : AppColors.primaryAmber,
                           ),
                         ),
                       ),

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/supabase_service.dart';
+import '../admin/dev_unlock.dart';
 import '../auth/auth_provider.dart';
 import '../home/lesson_progress_store.dart';
 import 'training_models.dart';
@@ -32,6 +33,7 @@ final staticBadgeNames = [
 
 final trainingLadderProvider = FutureProvider<List<TrainingModuleItem>>((ref) async {
   final authState = ref.watch(authProvider);
+  final devOpen = ref.watch(devUnlockProvider);
   final local = ref.watch(localCompletedLessonsProvider).value ?? const <String>[];
   final completedLessons = <String>{
     ...authState.profile?.completedLessons ?? const <String>[],
@@ -77,7 +79,7 @@ final trainingLadderProvider = FutureProvider<List<TrainingModuleItem>>((ref) as
       LadderStepStatus status;
       if (fullyDone) {
         status = LadderStepStatus.completed;
-      } else if (previousCompleted || mod <= userLevel) {
+      } else if (devOpen || previousCompleted || mod <= userLevel) {
         // Unlock when previous level is finished (local or profile), not only training_level.
         status = LadderStepStatus.active;
       } else {
@@ -101,8 +103,9 @@ final trainingLadderProvider = FutureProvider<List<TrainingModuleItem>>((ref) as
     return List.generate(10, (i) {
       final mod = i + 1;
       LadderStepStatus status = LadderStepStatus.locked;
-      if (mod == 1) status = LadderStepStatus.completed;
-      if (mod == 2) status = LadderStepStatus.active;
+      if (devOpen || mod == 1) status = LadderStepStatus.completed;
+      if (!devOpen && mod == 2) status = LadderStepStatus.active;
+      if (devOpen && mod > 1) status = LadderStepStatus.active;
 
       return TrainingModuleItem(
         moduleNumber: mod,

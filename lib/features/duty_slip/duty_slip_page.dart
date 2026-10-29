@@ -14,6 +14,7 @@ import '../auth/verify_tick.dart';
 import '../home/bangla_read_aloud.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
+import 'ds_clearance.dart';
 import 'ds_dress_up.dart';
 import 'ds_pole_inspect.dart';
 import 'duty_slip_engine.dart';
@@ -247,7 +248,9 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   final _scoreKey = GlobalKey();
   final _stackKey = GlobalKey();
   Timer? _clock;
+  final _roadScroll = ValueNotifier<double>(0);
   late final AnimationController _shake;
+  late final AnimationController _skyDrift;
   late final Animation<double> _shakeX;
   List<DsOption> _opts = [];
   String? _hint;
@@ -271,6 +274,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void initState() {
     super.initState();
     _shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
+    _skyDrift = AnimationController(vsync: this, duration: const Duration(seconds: 48))..repeat();
     _shakeX = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0, end: 12), weight: 1),
       TweenSequenceItem(tween: Tween(begin: 12, end: -12), weight: 2),
@@ -413,7 +417,9 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     DsMotionGate.stop();
     _clock?.cancel();
     _jobTick.dispose();
+    _roadScroll.dispose();
     _shake.dispose();
+    _skyDrift.dispose();
     DsVoice.stop();
     _tts.stop();
     if (_clockHeld) ZlFx.releaseClock();
@@ -664,9 +670,9 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final jobIntro = e.listing && e.level.isJob;
     final walk = e.showingSafeWalk;
     final dress = e.showingDress;
-    final vanIntro = e.showingDressIntro && e.level.number >= 6 && e.level.number <= 11;
+    final vanIntro = e.showingDressIntro && e.level.number >= 6 && e.level.number <= 14;
     final vanIntroYard = vanIntro && e.level.number == 6;
-    final vanIntroScene = vanIntro && e.level.number > 6 && e.level.number <= 11;
+    final vanIntroScene = vanIntro && e.level.number > 6 && e.level.number <= 14;
     final vanYard = e.level.number == 6 && e.showingDress;
     final bg = switch (e.act) {
       DsAct.briefing when e.briefingPage == 1 => 'assets/duty_slip/duty_fault_slip.jpg',
@@ -735,9 +741,20 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
               const ColoredBox(color: Color(0xFFF6E2C2))
             else if (walk)
               const ColoredBox(color: Color(0xFFC5DCE8))
+            else if (e.onRoad)
+              AnimatedBuilder(
+                animation: Listenable.merge([_skyDrift, _roadScroll]),
+                builder: (context, _) => CustomPaint(
+                  painter: _SkyMotionPainter(
+                    time: _skyDrift.value,
+                    scroll: _roadScroll.value,
+                  ),
+                  child: const SizedBox.expand(),
+                ),
+              )
             else
               Image.asset(bg, fit: BoxFit.cover, errorBuilder: (_, _, _) => const ColoredBox(color: ZlColors.bg)),
-            if (!walk && !dress && !vanYard && !vanIntro)
+            if (!walk && !dress && !vanYard && !vanIntro && !e.onRoad)
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -794,6 +811,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                             muted: _muted,
                             onSpeak: _speak,
                             onDelta: _flyDelta,
+                            roadScroll: _roadScroll,
                             onOpenPtw: () {
                               unawaited(ZlFx.cue('sounds/quiz_flip.wav', muted: _muted));
                               e.openPtw();
@@ -1036,6 +1054,7 @@ class _OfficeStage extends StatelessWidget {
   final bool muted;
   final Future<void> Function(String text) onSpeak;
   final void Function(int delta, {Offset? fromGlobal}) onDelta;
+  final ValueNotifier<double> roadScroll;
   final ValueChanged<String> onSetFeeder;
   final ValueChanged<String> onSetPole;
   final ValueChanged<String> onSetShift;
@@ -1060,6 +1079,7 @@ class _OfficeStage extends StatelessWidget {
     required this.muted,
     required this.onSpeak,
     required this.onDelta,
+    required this.roadScroll,
     required this.onSetFeeder,
     required this.onSetPole,
     required this.onSetShift,
@@ -1089,6 +1109,7 @@ class _OfficeStage extends StatelessWidget {
         muted: muted,
         onSpeak: onSpeak,
         onDelta: (delta, global) => onDelta(delta, fromGlobal: global),
+        roadScroll: roadScroll,
       );
     }
     if (e.briefingPage == 1) {
@@ -1280,6 +1301,7 @@ class _PlanBoard extends StatelessWidget {
   final bool muted;
   final Future<void> Function(String text) onSpeak;
   final void Function(int delta, Offset global) onDelta;
+  final ValueNotifier<double> roadScroll;
 
   const _PlanBoard({
     required this.engine,
@@ -1296,13 +1318,14 @@ class _PlanBoard extends StatelessWidget {
     required this.muted,
     required this.onSpeak,
     required this.onDelta,
+    required this.roadScroll,
   });
 
   @override
   Widget build(BuildContext context) {
     final e = engine;
     if (e.covering) return _CoverBoard(onOpen: onOpenRoad);
-    if (e.onRoad) return _RoadBoard(engine: e, onOpen: onOpenLevel);
+    if (e.onRoad) return _RoadBoard(engine: e, onOpen: onOpenLevel, scrollOut: roadScroll);
     if (e.listing) {
       if (e.showingDressIntro) {
         return _DressIntro(
@@ -1315,9 +1338,19 @@ class _PlanBoard extends StatelessWidget {
         );
       }
       if (e.showingDress) {
-        if (e.level.number == 11) {
+        if (e.level.number == 14) {
+          return DsClearance(
+            key: ValueKey(e.level.number),
+            engine: e,
+            onDone: onFinishWalk,
+            muted: muted,
+            onSpeak: onSpeak,
+            onDelta: onDelta,
+          );
+        }
+        if (e.level.number >= 11 && e.level.number <= 13) {
           return DsPoleInspect(
-            key: const ValueKey(11),
+            key: ValueKey(e.level.number),
             engine: e,
             onDone: onFinishWalk,
             muted: muted,
@@ -2471,15 +2504,15 @@ class _PaperCard extends StatelessWidget {
 class _RoadBoard extends StatefulWidget {
   final DutySlipEngine engine;
   final void Function(int index) onOpen;
-  const _RoadBoard({required this.engine, required this.onOpen});
+  final ValueNotifier<double> scrollOut;
+  const _RoadBoard({required this.engine, required this.onOpen, required this.scrollOut});
 
   @override
   State<_RoadBoard> createState() => _RoadBoardState();
 }
 
-class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMixin {
+class _RoadBoardState extends State<_RoadBoard> {
   final _scroll = ScrollController();
-  late final AnimationController _drift;
 
   static const _itemH = 82.0;
   static const _groundH = 150.0;
@@ -2488,18 +2521,8 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
   @override
   void initState() {
     super.initState();
-    _drift = AnimationController(vsync: this, duration: const Duration(seconds: 48));
+    _scroll.addListener(_publishScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _pinNext(initial: true));
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (dsMotionOf(context) == DsMotion.lite) {
-      if (_drift.isAnimating) _drift.stop();
-    } else if (!_drift.isAnimating) {
-      _drift.repeat();
-    }
   }
 
   @override
@@ -2533,9 +2556,15 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
     }
   }
 
+  void _publishScroll() {
+    if (!mounted || !_scroll.hasClients) return;
+    final next = _scroll.offset;
+    if (widget.scrollOut.value != next) widget.scrollOut.value = next;
+  }
+
   @override
   void dispose() {
-    _drift.dispose();
+    _scroll.removeListener(_publishScroll);
     _scroll.dispose();
     super.dispose();
   }
@@ -2548,28 +2577,6 @@ class _RoadBoardState extends State<_RoadBoard> with SingleTickerProviderStateMi
     return Stack(
       fit: StackFit.expand,
       children: [
-        Positioned.fill(
-          child: IgnorePointer(
-            child: RepaintBoundary(
-              child: AnimatedBuilder(
-                animation: Listenable.merge([_drift, _scroll]),
-                builder: (context, _) {
-                  final motion = dsMotionOf(context);
-                  final scroll = _scroll.hasClients ? _scroll.offset : 0.0;
-                  return CustomPaint(
-                    painter: _SkyMotionPainter(
-                      time: motion == DsMotion.lite ? 0 : _drift.value,
-                      scroll: scroll,
-                      rich: motion != DsMotion.lite,
-                      fps: motion == DsMotion.cinematic ? 48 : 8,
-                    ),
-                    child: const SizedBox.expand(),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
         Column(
           children: [
             // Center-aligned Ladder Header (Clean title and floating Score Chip)
@@ -2741,7 +2748,7 @@ class _SkyMotionPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final rise = (scroll / 1200.0).clamp(0.0, 1.0);
+    final rise = (scroll / 900.0).clamp(0.0, 1.0);
 
     // 1. Dynamic Night Sky Dome Gradient (deepens to cosmic indigo at high altitudes)
     final rect = Offset.zero & size;
@@ -2760,13 +2767,10 @@ class _SkyMotionPainter extends CustomPainter {
         ).createShader(rect),
     );
 
-    if (!rich) return;
-
-    // 2. Deep Space Stars with Multi-Frequency Twinkle
     _paintStars(canvas, w, h, scroll, time);
 
     // 3. Volumetric Moon & Luminous Atmosphere
-    final moon = Offset(w * 0.82, h * 0.12 + scroll * 0.035);
+    final moon = Offset(w * 0.82, h * 0.12 + _climbShift(scroll, 0.02));
     // Outer atmospheric glow
     canvas.drawCircle(
       moon,
@@ -2786,10 +2790,9 @@ class _SkyMotionPainter extends CustomPainter {
     // 4. Cloud Tier 1: High-Altitude Cirrus Wisps (silver, translucent, slow drifting)
     _paintCirrusClouds(canvas, w, h, time, scroll);
 
-    // 5. Parallax Horizon Calculation:
-    // As the lineman climbs higher (scroll up), the horizon descends downwards,
-    // revealing a vast panoramic perspective of the city below.
-    final horizon = h * 0.58 + (scroll * 0.11);
+    // The upper half stays open sky. The city sits in the lower band and
+    // each layer shifts only a little, so the buildings stay in view.
+    final horizon = h * 0.62;
 
     // 6. City Layer 1: Distant Mountain Contours & High-Voltage Transmission Pylons
     _paintDistantMountainsAndTowers(canvas, w, horizon, scroll, time);
@@ -2823,12 +2826,14 @@ class _SkyMotionPainter extends CustomPainter {
   }
 }
 
+double _climbShift(double scroll, double speed) => (scroll * speed).clamp(-24.0, 56.0);
+
 void _paintStars(Canvas canvas, double w, double h, double scroll, double time) {
   final rng = math.Random(42);
   final starPaint = Paint()..color = const Color(0x88FFF8E1);
   for (var i = 0; i < 28; i++) {
     final x = rng.nextDouble() * w;
-    final y = (rng.nextDouble() * h * 0.44 + scroll * 0.02) % (h * 0.52);
+    final y = (rng.nextDouble() * h * 0.44 + _climbShift(scroll, 0.012)) % (h * 0.52);
     final twinkle = (math.sin((time * math.pi * 2 * 1.8) + (i * 1.7)) * 0.5 + 0.5);
     final radius = rng.nextDouble() * 1.1 + 0.35;
     final alpha = (0.25 + 0.65 * twinkle).clamp(0.0, 0.95);
@@ -2852,12 +2857,12 @@ void _paintCirrusClouds(Canvas canvas, double w, double h, double time, double s
   final span = w + 260;
   // Cloud 1: Upper wisps passing near the moon
   final x1 = ((time * 0.035 * span) % span) - 80;
-  final y1 = h * 0.09 + scroll * 0.025 + math.sin(time * math.pi * 2 * 0.5) * 3;
+  final y1 = h * 0.09 + _climbShift(scroll, 0.016) + math.sin(time * math.pi * 2 * 0.5) * 3;
   _drawCirrusWisp(canvas, Offset(x1, y1), 1.4);
 
   // Cloud 2: Secondary streamer
   final x2 = (((time * 0.05 * span) + (w * 0.55)) % span) - 80;
-  final y2 = h * 0.16 + scroll * 0.035 + math.cos(time * math.pi * 2 * 0.6) * 3;
+  final y2 = h * 0.16 + _climbShift(scroll, 0.022) + math.cos(time * math.pi * 2 * 0.6) * 3;
   _drawCirrusWisp(canvas, Offset(x2, y2), 1.15);
 }
 
@@ -2871,7 +2876,7 @@ void _drawCirrusWisp(Canvas canvas, Offset o, double s) {
 }
 
 void _paintDistantMountainsAndTowers(Canvas canvas, double w, double horizon, double scroll, double time) {
-  final baseY = horizon - 34 + (scroll * 0.03);
+  final baseY = horizon - 34 + _climbShift(scroll, 0.02);
   final ridge = Path()..moveTo(0, baseY);
   // Gentle rolling mountain contour
   ridge.quadraticBezierTo(w * 0.22, baseY - 24, w * 0.44, baseY - 8);
@@ -2915,8 +2920,8 @@ void _drawTransmissionTower(Canvas canvas, double tx, double ty, double time, in
 }
 
 void _paintCityLightDome(Canvas canvas, double w, double horizon, double rise) {
-  if (rise <= 0.02) return;
-  final domeRect = Rect.fromLTWH(0, horizon - 80, w, 110);
+  final glow = 0.42 + 0.58 * rise;
+  final domeRect = Rect.fromLTWH(0, horizon - 110, w, 140);
   canvas.drawRect(
     domeRect,
     Paint()
@@ -2924,8 +2929,8 @@ void _paintCityLightDome(Canvas canvas, double w, double horizon, double rise) {
         begin: Alignment.bottomCenter,
         end: Alignment.topCenter,
         colors: [
-          Color.fromRGBO(245, 158, 11, 0.22 * rise),
-          Color.fromRGBO(56, 189, 248, 0.08 * rise),
+          Color.fromRGBO(245, 158, 11, 0.28 * glow),
+          Color.fromRGBO(56, 189, 248, 0.10 * glow),
           const Color(0x00000000),
         ],
         stops: const [0.0, 0.5, 1.0],
@@ -2934,7 +2939,7 @@ void _paintCityLightDome(Canvas canvas, double w, double horizon, double rise) {
 }
 
 void _paintMegacitySkyline(Canvas canvas, double w, double horizon, double rise, double time, double scroll) {
-  final baseY = horizon - 12 + (scroll * 0.065);
+  final baseY = horizon - 18 + _climbShift(scroll, 0.045);
   final rng = math.Random(107);
   var x = -12.0;
   final bodyPaint = Paint()..color = const Color(0xFF0A1526);
@@ -2975,11 +2980,11 @@ void _paintMegacitySkyline(Canvas canvas, double w, double horizon, double rise,
     for (var r = 0; r < visibleRows; r++) {
       for (var c = 0; c < cols; c++) {
         final seedVal = rng.nextDouble();
-        if (seedVal > (0.18 + rise * 0.68)) continue;
+        if (seedVal > (0.62 + rise * 0.28)) continue;
 
         // Organic city pulse and flicker
         final flicker = (math.sin((time * math.pi * 2 * 2.1) + (r * 0.7) + (c * 1.3) + (x * 0.2)) * 0.5 + 0.5);
-        final a = ((0.15 + (rise * 0.75)) * (0.45 + 0.55 * flicker)).clamp(0.0, 0.94);
+        final a = ((0.55 + (rise * 0.4)) * (0.6 + 0.4 * flicker)).clamp(0.0, 0.95);
 
         // Curated window palette: warm amber, office white, cyan
         late final Color winColor;
@@ -3002,7 +3007,7 @@ void _paintMegacitySkyline(Canvas canvas, double w, double horizon, double rise,
 }
 
 void _paintCommercialDistrict(Canvas canvas, double w, double horizon, double rise, double time, double scroll) {
-  final baseY = horizon + 16 + (scroll * 0.11);
+  final baseY = horizon + 6 + _climbShift(scroll, 0.07);
   final rng = math.Random(219);
   var x = -8.0;
   final bodyPaint = Paint()..color = const Color(0xFF0E1F33);
@@ -3038,8 +3043,8 @@ void _paintCommercialDistrict(Canvas canvas, double w, double horizon, double ri
     final rows = (bh / 8.5).floor().clamp(1, 6);
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) {
-        if (rng.nextDouble() > (0.25 + rise * 0.65)) continue;
-        final a = (0.20 + (rise * 0.72)).clamp(0.0, 0.90);
+        if (rng.nextDouble() > (0.7 + rise * 0.22)) continue;
+        final a = (0.55 + (rise * 0.35)).clamp(0.0, 0.92);
         canvas.drawRect(
           Rect.fromLTWH(x + 3.0 + (c * 6.2), baseY - bh + 9 + (r * 7.5), 2.8, 3.8),
           Paint()..color = Color.fromRGBO(255, 224, 138, a),
@@ -3064,8 +3069,8 @@ void _paintCumulusClouds(Canvas canvas, double w, double h, double time, double 
     final c = specs[i];
     var x = ((time * c.speed * span) + (i * w * 0.32)) % span;
     x -= 90;
-    final y = (h * c.y) + (scroll * c.parallax) + (math.sin((time * math.pi * 2) + c.phase) * 4);
-    if (y > h * 0.52) continue;
+    final y = (h * c.y) + _climbShift(scroll, c.parallax * 0.4) + (math.sin((time * math.pi * 2) + c.phase) * 4);
+    if (y > h * 0.58) continue;
     _drawVolumetricCloud(canvas, Offset(x, y), c.scale);
   }
 }
@@ -3107,7 +3112,7 @@ void _drawVolumetricCloud(Canvas canvas, Offset o, double s) {
 }
 
 void _paintForegroundGrid(Canvas canvas, double w, double horizon, double rise, double time, double scroll) {
-  final baseY = horizon + 48 + (scroll * 0.19);
+  final baseY = horizon + 28 + _climbShift(scroll, 0.1);
   final polePaint = Paint()
     ..color = const Color(0xFF091422)
     ..strokeWidth = 2.2;
@@ -3174,7 +3179,7 @@ void _paintForegroundGrid(Canvas canvas, double w, double horizon, double rise, 
 void _paintGroundMist(Canvas canvas, double w, double horizon, double time, double scroll) {
   final span = w + 200;
   final x = ((time * 0.12 * span) % span) - 80;
-  final y = horizon + 22 + (scroll * 0.16);
+  final y = horizon + 16 + _climbShift(scroll, 0.08);
   final mist = Paint()..color = const Color(0x168DA4C4);
   canvas.drawOval(Rect.fromCenter(center: Offset(x, y), width: 220, height: 26), mist);
   canvas.drawOval(Rect.fromCenter(center: Offset(x + 140, y + 8), width: 190, height: 22), mist);
@@ -4311,7 +4316,7 @@ class _DressIntroState extends State<_DressIntro> {
   @override
   Widget build(BuildContext context) {
     final brief = widget.engine.briefOf();
-    final van = widget.engine.level.number >= 6 && widget.engine.level.number <= 11;
+    final van = widget.engine.level.number >= 6 && widget.engine.level.number <= 14;
     final yardCard = widget.engine.level.number == 6;
     final sunnyCard = yardCard;
     final ink = van && sunnyCard ? const Color(0xFF3A2A16) : const Color(0xFFF6E7B0);
@@ -4451,6 +4456,9 @@ String _dressIntroArt(int level) => switch (level) {
       9 => 'assets/zero_loss/scene/bg_pole_storm.webp',
       10 => 'assets/zero_loss/scene/bg_tree_on_line.webp',
       11 => 'assets/zero_loss/scene/pole11_title.jpg',
+      12 => 'assets/zero_loss/scene/pole12_title.jpg',
+      13 => 'assets/zero_loss/scene/pole13_title.jpg',
+      14 => 'assets/zero_loss/scene/pole14_open.jpg',
       _ => 'assets/duty_slip/dress/tray_shirt.webp',
     };
 

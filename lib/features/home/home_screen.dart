@@ -1,12 +1,17 @@
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/config/app_config.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/slm_backdrop.dart';
 import '../auth/auth_provider.dart';
+import '../auth/verify_gate.dart';
+import '../auth/verify_hold.dart';
+import '../auth/verify_sheet.dart';
+import '../auth/verify_tick.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
@@ -41,12 +46,15 @@ class HomeScreen extends ConsumerWidget {
       highestCompletedModule: highestDone > 0 ? highestDone : null,
     );
     final guest = auth.isGuest || !auth.isAuthenticated;
+    final verified = linemanIsVerified(auth, ref.watch(verifyHoldProvider));
     final fullName = profile?.fullName?.trim() ?? '';
     final slmId = profile?.slmId?.trim() ?? '';
     final guestLabel = tr(bn, 'অতিথি', 'Guest');
     final name = guest
         ? guestLabel
-        : (fullName.isNotEmpty ? fullName : (slmId.isNotEmpty ? slmId : guestLabel));
+        : (fullName.isNotEmpty
+              ? fullName
+              : (slmId.isNotEmpty ? slmId : guestLabel));
 
     return SlmBackdrop(
       child: ShellSafeArea(
@@ -57,8 +65,17 @@ class HomeScreen extends ConsumerWidget {
               child: _Header(
                 bn: bn,
                 name: name,
-                onName: () => Navigator.of(context).pushNamed(guest ? AppRoutes.login : AppRoutes.more),
-                onLanguage: (value) => ref.read(languageProvider.notifier).setBengali(value),
+                onName: () {
+                  if (guest) {
+                    Navigator.of(context).pushNamed(AppRoutes.login);
+                    return;
+                  }
+                  Navigator.of(context).pushNamed(AppRoutes.more);
+                },
+                onTick: verified ? null : () => showVerifySheet(context),
+                verified: verified,
+                onLanguage: (value) =>
+                    ref.read(languageProvider.notifier).setBengali(value),
               ),
             ),
             Expanded(
@@ -66,7 +83,9 @@ class HomeScreen extends ConsumerWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(bottom: shellDockBottomInset(context) + 68),
+                    padding: EdgeInsets.only(
+                      bottom: shellDockBottomInset(context) + 68,
+                    ),
                     child: HeroCardCarousel(path: path, bn: bn),
                   ),
                   Positioned(
@@ -102,7 +121,8 @@ class _PathPlayChip extends StatefulWidget {
   State<_PathPlayChip> createState() => _PathPlayChipState();
 }
 
-class _PathPlayChipState extends State<_PathPlayChip> with TickerProviderStateMixin {
+class _PathPlayChipState extends State<_PathPlayChip>
+    with TickerProviderStateMixin {
   bool _pressed = false;
   late final AnimationController _glow;
   late final AnimationController _charge;
@@ -111,8 +131,14 @@ class _PathPlayChipState extends State<_PathPlayChip> with TickerProviderStateMi
   void initState() {
     super.initState();
     unawaited(DsPack.load());
-    _glow = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))..repeat(reverse: true);
-    _charge = AnimationController(vsync: this, duration: const Duration(milliseconds: 240));
+    _glow = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    _charge = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 240),
+    );
   }
 
   @override
@@ -127,7 +153,9 @@ class _PathPlayChipState extends State<_PathPlayChip> with TickerProviderStateMi
     HapticFeedback.heavyImpact();
     unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.95));
     final box = ctx.findRenderObject() as RenderBox?;
-    final rect = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
+    final rect = box != null
+        ? (box.localToGlobal(Offset.zero) & box.size)
+        : null;
     _charge.forward(from: 0).then((_) {
       if (!mounted) return;
       setState(() => _pressed = false);
@@ -165,12 +193,22 @@ class _PathPlayChipState extends State<_PathPlayChip> with TickerProviderStateMi
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(999),
                               border: Border.all(
-                                color: Color.fromRGBO(251, 191, 36, (1.0 - chargeVal).clamp(0.0, 1.0)),
+                                color: Color.fromRGBO(
+                                  251,
+                                  191,
+                                  36,
+                                  (1.0 - chargeVal).clamp(0.0, 1.0),
+                                ),
                                 width: 3.0,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color.fromRGBO(251, 191, 36, 0.4 * (1.0 - chargeVal)),
+                                  color: Color.fromRGBO(
+                                    251,
+                                    191,
+                                    36,
+                                    0.4 * (1.0 - chargeVal),
+                                  ),
                                   blurRadius: 18 * chargeVal,
                                   spreadRadius: 4 * chargeVal,
                                 ),
@@ -185,13 +223,21 @@ class _PathPlayChipState extends State<_PathPlayChip> with TickerProviderStateMi
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Color(0xFFFBBF24), Color(0xFFF59E0B), Color(0xFFEA580C)],
+                          colors: [
+                            Color(0xFFFBBF24),
+                            Color(0xFFF59E0B),
+                            Color(0xFFEA580C),
+                          ],
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFE08A1E).withValues(alpha: 0.32 + lift * 0.25 + chargeVal * 0.3),
+                            color: const Color(0xFFE08A1E).withValues(
+                              alpha: 0.32 + lift * 0.25 + chargeVal * 0.3,
+                            ),
                             offset: Offset(0, _pressed ? 2 : 8),
-                            blurRadius: _pressed ? 6 : 16 + lift * 8 + chargeVal * 12,
+                            blurRadius: _pressed
+                                ? 6
+                                : 16 + lift * 8 + chargeVal * 12,
                             spreadRadius: chargeVal * 3,
                           ),
                         ],
@@ -216,7 +262,11 @@ class _PathPlayChipState extends State<_PathPlayChip> with TickerProviderStateMi
                     color: Colors.white.withValues(alpha: 0.28),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 28),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Flexible(
@@ -244,13 +294,17 @@ class _PathPlayChipState extends State<_PathPlayChip> with TickerProviderStateMi
 class _Header extends StatelessWidget {
   final bool bn;
   final String name;
+  final bool verified;
   final VoidCallback onName;
+  final VoidCallback? onTick;
   final ValueChanged<bool> onLanguage;
 
   const _Header({
     required this.bn,
     required this.name,
+    required this.verified,
     required this.onName,
+    required this.onTick,
     required this.onLanguage,
   });
 
@@ -261,11 +315,27 @@ class _Header extends StatelessWidget {
         Expanded(
           child: GestureDetector(
             onTap: onName,
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.2, color: AppColors.ink),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: onTick,
+                  child: VerifyTick(gold: verified, size: 22),
+                ),
+              ],
             ),
           ),
         ),
@@ -306,7 +376,11 @@ class _LangSeg extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _LangSeg({required this.label, required this.selected, required this.onTap});
+  const _LangSeg({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -330,14 +404,4 @@ class _LangSeg extends StatelessWidget {
       ),
     );
   }
-}
-
-void copyInvite(BuildContext context, bool bn) {
-  final text = bn
-      ? 'স্মার্টলাইনম্যান — খেলতে খেলতে শিখুন, পুরস্কার জিতুন। ${AppConfig.websiteUrl}'
-      : 'SmartLineman — learn while you play, win prizes. ${AppConfig.websiteUrl}';
-  Clipboard.setData(ClipboardData(text: text));
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(tr(bn, 'আমন্ত্রণ কপি হয়েছে', 'Invite copied'))),
-  );
 }

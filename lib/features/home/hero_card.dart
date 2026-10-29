@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_theme.dart';
+import '../auth/verify_tick.dart';
 import 'lineman_figure.dart';
 
 /// Frame metal per rank: the card frame *is* the badge.
@@ -15,22 +17,82 @@ class CardMetal {
 }
 
 const _metals = <CardMetal>[
-  CardMetal(Color(0xFFC5CAD3), Color(0xFF7A808A), Color(0xFF3A3F48), Color(0xFF94A3B8)), // 0 iron
-  CardMetal(Color(0xFFF0C495), Color(0xFFB87333), Color(0xFF5C2E12), Color(0xFFD97706)), // 1 copper
-  CardMetal(Color(0xFFE2E5EA), Color(0xFF6B7280), Color(0xFF1F2937), Color(0xFF67E8F9)), // 2 gunmetal
-  CardMetal(Color(0xFF99F6E4), Color(0xFF2A7A72), Color(0xFF0A2926), Color(0xFF2DD4BF)), // 3 teal steel
-  CardMetal(Color(0xFFF5E6A3), Color(0xFFC9A227), Color(0xFF4A3508), Color(0xFFEAB308)), // 4 brass
-  CardMetal(Color(0xFFBFDBFE), Color(0xFF2B5FBF), Color(0xFF0B1A3D), Color(0xFF60A5FA)), // 5 cobalt
-  CardMetal(Color(0xFFFFFFFF), Color(0xFFA8B0BC), Color(0xFF2D3642), Color(0xFFE2E8F0)), // 6 silver
-  CardMetal(Color(0xFFFFF1B8), Color(0xFFD4A017), Color(0xFF5C3D06), Color(0xFFF59E0B)), // 7 gold
-  CardMetal(Color(0xFFE9D5FF), Color(0xFF6D4AB8), Color(0xFF1E0A4A), Color(0xFFC084FC)), // 8 violet
-  CardMetal(Color(0xFFFFFFFF), Color(0xFFB8C0CC), Color(0xFF3A4450), Color(0xFF7DD3FC)), // 9 platinum
-  CardMetal(Color(0xFFF5D76E), Color(0xFF8A6A1C), Color(0xFF0A0908), Color(0xFFFBBF24)), // 10 obsidian-gold
+  CardMetal(
+    Color(0xFFC5CAD3),
+    Color(0xFF7A808A),
+    Color(0xFF3A3F48),
+    Color(0xFF94A3B8),
+  ), // 0 iron
+  CardMetal(
+    Color(0xFFF0C495),
+    Color(0xFFB87333),
+    Color(0xFF5C2E12),
+    Color(0xFFD97706),
+  ), // 1 copper
+  CardMetal(
+    Color(0xFFE2E5EA),
+    Color(0xFF6B7280),
+    Color(0xFF1F2937),
+    Color(0xFF67E8F9),
+  ), // 2 gunmetal
+  CardMetal(
+    Color(0xFF99F6E4),
+    Color(0xFF2A7A72),
+    Color(0xFF0A2926),
+    Color(0xFF2DD4BF),
+  ), // 3 teal steel
+  CardMetal(
+    Color(0xFFF5E6A3),
+    Color(0xFFC9A227),
+    Color(0xFF4A3508),
+    Color(0xFFEAB308),
+  ), // 4 brass
+  CardMetal(
+    Color(0xFFBFDBFE),
+    Color(0xFF2B5FBF),
+    Color(0xFF0B1A3D),
+    Color(0xFF60A5FA),
+  ), // 5 cobalt
+  CardMetal(
+    Color(0xFFFFFFFF),
+    Color(0xFFA8B0BC),
+    Color(0xFF2D3642),
+    Color(0xFFE2E8F0),
+  ), // 6 silver
+  CardMetal(
+    Color(0xFFFFF1B8),
+    Color(0xFFD4A017),
+    Color(0xFF5C3D06),
+    Color(0xFFF59E0B),
+  ), // 7 gold
+  CardMetal(
+    Color(0xFFE9D5FF),
+    Color(0xFF6D4AB8),
+    Color(0xFF1E0A4A),
+    Color(0xFFC084FC),
+  ), // 8 violet
+  CardMetal(
+    Color(0xFFFFFFFF),
+    Color(0xFFB8C0CC),
+    Color(0xFF3A4450),
+    Color(0xFF7DD3FC),
+  ), // 9 platinum
+  CardMetal(
+    Color(0xFFF5D76E),
+    Color(0xFF8A6A1C),
+    Color(0xFF0A0908),
+    Color(0xFFFBBF24),
+  ), // 10 obsidian-gold
 ];
 
 CardMetal cardMetalFor(int step) => _metals[step.clamp(0, 10)];
 
-const _lockedMetal = CardMetal(Color(0xFF9AA0A8), Color(0xFF4B5058), Color(0xFF1C1F24), Color(0xFF475569));
+const _lockedMetal = CardMetal(
+  Color(0xFF9AA0A8),
+  Color(0xFF4B5058),
+  Color(0xFF1C1F24),
+  Color(0xFF475569),
+);
 
 /// One level as a collectible character card.
 class HeroCard extends StatelessWidget {
@@ -52,6 +114,12 @@ class HeroCard extends StatelessWidget {
 
   final bool enableHero;
 
+  /// Level numeral. Off for the login title card.
+  final bool showGem;
+
+  /// Grey check on levels that stay closed until an admin verifies the member.
+  final bool verifyTick;
+
   const HeroCard({
     super.key,
     required this.step,
@@ -62,6 +130,8 @@ class HeroCard extends StatelessWidget {
     this.glow = 1,
     this.launch = 0,
     this.enableHero = false,
+    this.showGem = true,
+    this.verifyTick = false,
   });
 
   @override
@@ -110,7 +180,13 @@ class HeroCard extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment(-1 + tilt.dx * 0.6, -1 + tilt.dy * 0.6),
                       end: Alignment(1 + tilt.dx * 0.6, 1 + tilt.dy * 0.6),
-                      colors: [metal.light, metal.mid, metal.dark, metal.mid, metal.light],
+                      colors: [
+                        metal.light,
+                        metal.mid,
+                        metal.dark,
+                        metal.mid,
+                        metal.light,
+                      ],
                       stops: const [0.0, 0.28, 0.55, 0.8, 1.0],
                     ),
                   ),
@@ -132,7 +208,9 @@ class HeroCard extends StatelessWidget {
                         offset: Offset(-tilt.dx * 8, -tilt.dy * 6 + launch * 8),
                         child: Transform.scale(
                           scale: 1.08 - launch * 0.05,
-                          child: CustomPaint(painter: _ScenePainter(step: step, locked: locked)),
+                          child: CustomPaint(
+                            painter: _ScenePainter(step: step, locked: locked),
+                          ),
                         ),
                       ),
                       // Figure — pops forward faster than scene (parallax front layer).
@@ -159,7 +237,9 @@ class HeroCard extends StatelessWidget {
                                 end: Alignment(-0.9 + sheen * 3.2, 1),
                                 colors: [
                                   Colors.white.withValues(alpha: 0),
-                                  Colors.white.withValues(alpha: locked ? 0.06 : 0.22),
+                                  Colors.white.withValues(
+                                    alpha: locked ? 0.06 : 0.22,
+                                  ),
                                   Colors.white.withValues(alpha: 0),
                                 ],
                               ),
@@ -170,8 +250,13 @@ class HeroCard extends StatelessWidget {
                       IgnorePointer(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(radius - frame + 2),
-                            border: Border.all(color: Colors.black.withValues(alpha: 0.35), width: 1.4),
+                            borderRadius: BorderRadius.circular(
+                              radius - frame + 2,
+                            ),
+                            border: Border.all(
+                              color: Colors.black.withValues(alpha: 0.35),
+                              width: 1.4,
+                            ),
                           ),
                         ),
                       ),
@@ -179,12 +264,18 @@ class HeroCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Level numeral corner gem.
-              Positioned(
-                left: frame + 8,
-                top: frame + 8,
-                child: _LevelGem(step: step, metal: metal, locked: locked),
-              ),
+              if (showGem && !verifyTick)
+                Positioned(
+                  left: frame + 8,
+                  top: frame + 8,
+                  child: _LevelGem(step: step, metal: metal, locked: locked),
+                ),
+              if (verifyTick)
+                const Positioned(
+                  left: 14,
+                  top: 14,
+                  child: VerifyTick(size: 28),
+                ),
               // Nameplate.
               Positioned(
                 left: w * 0.1,
@@ -220,7 +311,11 @@ class _LevelGem extends StatelessWidget {
   final CardMetal metal;
   final bool locked;
 
-  const _LevelGem({required this.step, required this.metal, required this.locked});
+  const _LevelGem({
+    required this.step,
+    required this.metal,
+    required this.locked,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -235,8 +330,17 @@ class _LevelGem extends StatelessWidget {
           colors: [metal.light, metal.mid, metal.dark],
           stops: const [0.0, 0.5, 1.0],
         ),
-        border: Border.all(color: metal.dark.withValues(alpha: 0.7), width: 1.2),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2))],
+        border: Border.all(
+          color: metal.dark.withValues(alpha: 0.7),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: locked
           ? Icon(Icons.lock_rounded, size: 16, color: metal.light)
@@ -259,7 +363,11 @@ class _Nameplate extends StatelessWidget {
   final CardMetal metal;
   final bool locked;
 
-  const _Nameplate({required this.title, required this.metal, required this.locked});
+  const _Nameplate({
+    required this.title,
+    required this.metal,
+    required this.locked,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -274,7 +382,11 @@ class _Nameplate extends StatelessWidget {
         ),
         border: Border.all(color: metal.dark, width: 1.4),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 5)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
       child: Container(
@@ -283,31 +395,45 @@ class _Nameplate extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(11),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 0.8),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.35),
+            width: 0.8,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (locked) ...[
-              Icon(Icons.lock_rounded, size: 16, color: Colors.white.withValues(alpha: 0.85)),
+              Icon(
+                Icons.lock_rounded,
+                size: 16,
+                color: Colors.white.withValues(alpha: 0.85),
+              ),
               const SizedBox(width: 6),
             ],
             Flexible(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                textScaler: TextScaler.noScaling,
-                style: TextStyle(
-                  fontFamily: banglaFont,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  height: 1.25,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(color: metal.dark.withValues(alpha: 0.85), blurRadius: 6, offset: const Offset(0, 1.5)),
-                  ],
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  softWrap: false,
+                  textAlign: TextAlign.center,
+                  textScaler: TextScaler.noScaling,
+                  style: TextStyle(
+                    fontFamily: banglaFont,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: metal.dark.withValues(alpha: 0.85),
+                        blurRadius: 6,
+                        offset: const Offset(0, 1.5),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -353,12 +479,17 @@ class _ScenePainter extends CustomPainter {
         w * 0.5,
         Paint()
           ..shader = RadialGradient(
-            colors: [const Color(0xFFFFE2A8).withValues(alpha: 0.75), const Color(0xFFFFE2A8).withValues(alpha: 0)],
+            colors: [
+              const Color(0xFFFFE2A8).withValues(alpha: 0.75),
+              const Color(0xFFFFE2A8).withValues(alpha: 0),
+            ],
           ).createShader(Rect.fromCircle(center: sun, radius: w * 0.5)),
       );
     }
 
-    final ink = Paint()..color = (locked ? const Color(0xFF151A20) : const Color(0xFF0A2E2B)).withValues(alpha: 0.55);
+    final ink = Paint()
+      ..color = (locked ? const Color(0xFF151A20) : const Color(0xFF0A2E2B))
+          .withValues(alpha: 0.55);
     final faint = Paint()..color = ink.color.withValues(alpha: 0.28);
 
     // Far hills.
@@ -394,7 +525,12 @@ class _ScenePainter extends CustomPainter {
         final offset = (line - 1) * 12.0;
         final p = Path()
           ..moveTo(a + offset, ya)
-          ..quadraticBezierTo((a + b) / 2, math.max(ya, yb) + 22, b + offset, yb);
+          ..quadraticBezierTo(
+            (a + b) / 2,
+            math.max(ya, yb) + 22,
+            b + offset,
+            yb,
+          );
         canvas.drawPath(p, wire);
       }
     }
@@ -406,24 +542,33 @@ class _ScenePainter extends CustomPainter {
       ..lineTo(w, h)
       ..lineTo(0, h)
       ..close();
-    canvas.drawPath(ground, Paint()..color = (locked ? const Color(0xFF12161B) : const Color(0xFF082522)));
+    canvas.drawPath(
+      ground,
+      Paint()
+        ..color = (locked ? const Color(0xFF12161B) : const Color(0xFF082522)),
+    );
 
     // Ground light pool under the figure.
     final pool = Offset(w * 0.5, h * 0.86);
     canvas.drawOval(
       Rect.fromCenter(center: pool, width: w * 0.8, height: h * 0.08),
       Paint()
-        ..shader = RadialGradient(
-          colors: [
-            (locked ? const Color(0xFF64748B) : const Color(0xFF5EEAD4)).withValues(alpha: 0.35),
-            Colors.transparent,
-          ],
-        ).createShader(Rect.fromCenter(center: pool, width: w * 0.8, height: h * 0.08)),
+        ..shader =
+            RadialGradient(
+              colors: [
+                (locked ? const Color(0xFF64748B) : const Color(0xFF5EEAD4))
+                    .withValues(alpha: 0.35),
+                Colors.transparent,
+              ],
+            ).createShader(
+              Rect.fromCenter(center: pool, width: w * 0.8, height: h * 0.08),
+            ),
     );
   }
 
   @override
-  bool shouldRepaint(covariant _ScenePainter old) => old.step != step || old.locked != locked;
+  bool shouldRepaint(covariant _ScenePainter old) =>
+      old.step != step || old.locked != locked;
 }
 
 /// Back face shown during the flip-in.
@@ -445,16 +590,28 @@ class HeroCardBack extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [metal.light, metal.mid, metal.dark],
           ),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.28), blurRadius: 22, offset: const Offset(0, 14))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.28),
+              blurRadius: 22,
+              offset: const Offset(0, 14),
+            ),
+          ],
         ),
         child: Container(
           margin: const EdgeInsets.all(7),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(21),
-            gradient: const RadialGradient(colors: [Color(0xFF1F6B63), Color(0xFF0B3B37)]),
+            gradient: const RadialGradient(
+              colors: [Color(0xFF1F6B63), Color(0xFF0B3B37)],
+            ),
           ),
           alignment: Alignment.center,
-          child: Icon(Icons.bolt_rounded, size: 96, color: metal.light.withValues(alpha: 0.85)),
+          child: Icon(
+            Icons.bolt_rounded,
+            size: 96,
+            color: metal.light.withValues(alpha: 0.85),
+          ),
         ),
       ),
     );

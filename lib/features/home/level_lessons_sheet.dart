@@ -4,8 +4,12 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../admin/dev_unlock.dart';
+import '../auth/verify_gate.dart';
+import '../auth/verify_sheet.dart';
 import '../training/training_models.dart';
 import '../training/training_provider.dart';
 import 'hero_card.dart';
@@ -20,14 +24,20 @@ Future<void> playLessonCue(bool open) async {
     await player.setReleaseMode(ReleaseMode.release);
     await player.setPlayerMode(PlayerMode.mediaPlayer);
     await player.setVolume(0.85);
-    await player.play(AssetSource(open ? 'sounds/quiz_right.wav' : 'sounds/quiz_wrong.wav'));
+    await player.play(
+      AssetSource(open ? 'sounds/quiz_right.wav' : 'sounds/quiz_wrong.wav'),
+    );
     player.onPlayerComplete.first.then((_) => player.dispose()).ignore();
   } catch (_) {
     await player.dispose();
   }
 }
 
-void showModernLockMessage(BuildContext context, {required bool bn, required String message}) {
+void showModernLockMessage(
+  BuildContext context, {
+  required bool bn,
+  required String message,
+}) {
   ScaffoldMessenger.of(context).clearSnackBars();
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
@@ -46,7 +56,11 @@ void showModernLockMessage(BuildContext context, {required bool bn, required Str
               color: const Color(0xFF292524),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFFFBBF24)),
+            child: const Icon(
+              Icons.lock_outline_rounded,
+              size: 18,
+              color: Color(0xFFFBBF24),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -72,15 +86,24 @@ Rect _fitCard(Rect bounds, double aspect) {
   final boundsAspect = bounds.width / bounds.height;
   if (boundsAspect > aspect) {
     final width = bounds.height * aspect;
-    return Rect.fromCenter(center: bounds.center, width: width, height: bounds.height);
+    return Rect.fromCenter(
+      center: bounds.center,
+      width: width,
+      height: bounds.height,
+    );
   }
   final height = bounds.width / aspect;
-  return Rect.fromCenter(center: bounds.center, width: bounds.width, height: height);
+  return Rect.fromCenter(
+    center: bounds.center,
+    width: bounds.width,
+    height: height,
+  );
 }
 
 String _shelfCardTitle(int step, bool bn) {
   if (step <= 0) return bn ? 'শুরু' : 'Start';
-  final chapter = linemanChapters[(step - 1).clamp(0, linemanChapters.length - 1)];
+  final chapter =
+      linemanChapters[(step - 1).clamp(0, linemanChapters.length - 1)];
   return bn ? chapter.$1 : chapter.$2;
 }
 
@@ -101,12 +124,25 @@ Future<void> openLevelLessons(
   if (step <= 0) {
     await playLessonCue(true);
     if (!context.mounted) return;
-    await _openShelf(context, page: LevelZeroPage(bn: bn), source: source, step: step, bn: bn);
+    await _openShelf(
+      context,
+      page: LevelZeroPage(bn: bn),
+      source: source,
+      step: step,
+      bn: bn,
+    );
     return;
   }
 
+  if (lessonNeedsVerifyNow(context, step)) {
+    if (!context.mounted) return;
+    await showVerifySheet(context);
+    return;
+  }
+
+  final devOpen = ref.read(devUnlockProvider);
   final completed = ref.read(allCompletedLessonsProvider);
-  if (!isPathOrientationDone(completed)) {
+  if (!devOpen && !isPathOrientationDone(completed)) {
     await playLessonCue(false);
     if (!context.mounted) return;
     showModernLockMessage(
@@ -137,7 +173,7 @@ Future<void> openLevelLessons(
     }
   }
 
-  final locked = item?.isLocked ?? (module > 1);
+  final locked = !devOpen && (item?.isLocked ?? (module > 1));
   if (locked) {
     await playLessonCue(false);
     if (!context.mounted) return;
@@ -154,10 +190,16 @@ Future<void> openLevelLessons(
   await playLessonCue(true);
   if (!context.mounted) return;
 
-  final badge = item?.badgeName ??
-      (module <= staticBadgeNames.length ? staticBadgeNames[module - 1] : 'লেভেল $module');
-  final title = item?.title ??
-      (module <= staticChapterTitles.length ? staticChapterTitles[module - 1] : 'অধ্যায় $module');
+  final badge =
+      item?.badgeName ??
+      (module <= staticBadgeNames.length
+          ? staticBadgeNames[module - 1]
+          : 'লেভেল $module');
+  final title =
+      item?.title ??
+      (module <= staticChapterTitles.length
+          ? staticChapterTitles[module - 1]
+          : 'অধ্যায় $module');
   await _openShelf(
     context,
     page: LevelLessonsPage(
@@ -254,19 +296,25 @@ class _CardExpandTransition extends StatelessWidget {
     );
     final fitted = _fitCard(safe, aspect);
     final metal = cardMetalFor(step);
-    final startScale = fitted.width == 0 ? 1.0 : (source.width / fitted.width).clamp(0.2, 1.0);
+    final startScale = fitted.width == 0
+        ? 1.0
+        : (source.width / fitted.width).clamp(0.2, 1.0);
 
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
         final t = animation.value;
         final reverse = animation.status == AnimationStatus.reverse;
-        final move = (reverse ? Curves.easeInCubic : Curves.easeOutCubic).transform(t);
+        final move = (reverse ? Curves.easeInCubic : Curves.easeOutCubic)
+            .transform(t);
         final scaleT = reverse ? move : Curves.easeOutBack.transform(t);
         final scale = (startScale + (1 - startScale) * scaleT).toDouble();
         final dx = (source.center.dx - fitted.center.dx) * (1 - move);
         final dy = (source.center.dy - fitted.center.dy) * (1 - move);
-        final side = ((source.center.dx - size.width / 2) / size.width).clamp(-0.5, 0.5);
+        final side = ((source.center.dx - size.width / 2) / size.width).clamp(
+          -0.5,
+          0.5,
+        );
         final pitch = (1 - move) * 0.22;
         final yaw = (1 - move) * side * 0.55;
         final scrim = _span(t, 0, 0.42, Curves.easeOut);
@@ -274,8 +322,14 @@ class _CardExpandTransition extends StatelessWidget {
         final cardOut = _span(t, 0.72, 1, Curves.easeIn);
         final sheen = _span(t, 0.08, 0.62, Curves.easeInOut);
         final glowAlign = Alignment(
-          ((source.center.dx + (fitted.center.dx - source.center.dx) * move) / size.width) * 2 - 1,
-          ((source.center.dy + (fitted.center.dy - source.center.dy) * move) / size.height) * 2 - 1,
+          ((source.center.dx + (fitted.center.dx - source.center.dx) * move) /
+                      size.width) *
+                  2 -
+              1,
+          ((source.center.dy + (fitted.center.dy - source.center.dy) * move) /
+                      size.height) *
+                  2 -
+              1,
         );
 
         final matrix = Matrix4.identity()
@@ -296,7 +350,8 @@ class _CardExpandTransition extends StatelessWidget {
                   radius: 1.15,
                   colors: [
                     metal.glow.withValues(alpha: 0.55 * scrim * (1 - pageIn)),
-                    const Color(0xFF0B1A18).withValues(alpha: 0.62 * scrim * (1 - pageIn * 0.35)),
+                    const Color(0xFF0B1A18)
+                        .withValues(alpha: 0.62 * scrim * (1 - pageIn * 0.35)),
                     const Color(0xFFF4EDE0).withValues(alpha: scrim),
                   ],
                   stops: const [0.0, 0.42, 1.0],

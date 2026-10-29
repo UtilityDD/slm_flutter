@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../admin/dev_unlock.dart';
 import '../training/training_models.dart';
 import '../training/training_provider.dart';
 import '../shell/shell_insets.dart';
@@ -93,6 +94,7 @@ class _LevelLessonsPageState extends ConsumerState<LevelLessonsPage> with Single
   @override
   Widget build(BuildContext context) {
     final bn = widget.bn;
+    final devOpen = ref.watch(devUnlockProvider);
     final lessonsAsync = ref.watch(moduleLessonsProvider(widget.moduleNumber));
 
     final slivers = <Widget>[
@@ -154,7 +156,7 @@ class _LevelLessonsPageState extends ConsumerState<LevelLessonsPage> with Single
                   (context, index) {
                     final lesson = ordered[index];
                     final prevDone = index == 0 || ordered[index - 1].isCompleted;
-                    final locked = !lesson.isCompleted && !prevDone;
+                    final locked = !devOpen && !lesson.isCompleted && !prevDone;
                     final isNext = index == nextIndex;
                     final start = (index * 0.07).clamp(0.0, 0.55);
                     final entrance = CurvedAnimation(

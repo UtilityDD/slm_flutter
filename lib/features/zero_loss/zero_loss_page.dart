@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../admin/dev_unlock.dart';
 import '../home/bangla_read_aloud.dart';
 import '../home/level_lessons_sheet.dart' show playLessonCue;
 import 'zero_loss_crew.dart';
@@ -544,6 +545,7 @@ class _BriefingViewState extends ConsumerState<_BriefingView> {
           child: choosing
               ? _ModePick(
                   record: record,
+                  forceOpen: ref.watch(devUnlockProvider),
                   onPractice: () {
                     _voice.stop();
                     ref.read(zeroLossProvider.notifier).startShift();
@@ -581,18 +583,20 @@ String _jobPhoto(FaultDispatch f) => f.sceneImage;
 
 class _ModePick extends StatelessWidget {
   final ZeroLossRecord? record;
+  final bool forceOpen;
   final VoidCallback onPractice;
   final VoidCallback onDuty;
 
   const _ModePick({
     required this.record,
+    required this.forceOpen,
     required this.onPractice,
     required this.onDuty,
   });
 
   @override
   Widget build(BuildContext context) {
-    final locked = record == null || record!.plays == 0;
+    final locked = !forceOpen && (record == null || record!.plays == 0);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Column(

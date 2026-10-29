@@ -15,7 +15,8 @@ Every new level must follow these rules. Earlier iterations were rejected whenev
 
 2. **Zero Text Clutter on the Work Screen**
    * Do not put instruction banners, hint chips, floating labels, arrows, or diagnostic cards on the pole, equipment, or tools.
-   * Bottom tool trays are **pictures only** (no captions).
+   * Bottom tool trays are **pictures only** (no captions), and they use the **same flat cream strip as levels 8–10**: bare pictures in a wrap, full width, no floating card, no box around each picture, no tick badge. A picture scores only when it is **dragged onto the scene**. Tapping a tray picture does nothing. A used picture leaves the strip.
+   * When the level ends, remove the strip. Do not leave an empty band under the scene. The closing checklist fills the play area the way levels 8–10 do (dark card titled চেকলিস্ট, rows appear one at a time). Then the centered thanks guide speaks over the finished scene.
    * If earlier steps of the job are already done (e.g., PPE, tools, shutdown, discharge, both-side earth), show them only as short unticked words down the top-left (no box, no border), and draw their green ticks one by one after ~2 seconds:
      `পিপিই` · `যন্ত্রপাতি` · `শাটডাউন` · `ডিসচার্জ` · `দুদিক আর্থ`
 
@@ -34,9 +35,9 @@ Every new level must follow these rules. Earlier iterations were rejected whenev
 
 5. **Guide Speech Rules (One by One)**
    * **Opening (`brief.body`)**: States the job and what is already done, then ends with a natural prompt such as `এবার যা করার করুন।`
-   * **First-time success (`_praise`, `DsCoachMood.glad`)**: Every correct habit check is spoken the **first time** it is done: name what was checked + `ঠিক আছে।`
-   * **Mistake / premature action (`_showFaultCoach`, `DsCoachMood.oops`)**: If the player tries the final step early or touches a trap, deduct `−5` and speak **only the first missed habit** (or that single mistake). Never dump all remaining steps at once.
-   * **Completion (`DsCoachMood.thanks`)**: After the end checklist ticks one line at a time, the guide speaks the closing praise while the completed scene stays visible behind.
+   * **First-time success (`_praise`, `DsCoachMood.glad`)**: Every correct habit check is spoken the **first time** it is done: name what was checked + `ঠিক আছে।` The guide is the centered `DsCoach` used on levels 8–10 (bubble width 280, sprite 156), not a small corner sprite sitting on the tray.
+   * **Mistake / premature action (`_showFaultCoach`, `DsCoachMood.oops`)**: If the player drops the final tool early or drops a trap on the scene, deduct `−5` and speak **only the first missed habit** (or that single mistake), with the same centered guide. Never dump all remaining steps at once.
+   * **Completion (`DsCoachMood.thanks`)**: The checklist ticks one line at a time. When it is full, a next arrow appears. The guide speaks the closing praise only after that arrow is tapped, while the completed scene stays visible behind.
 
 6. **Locked Words & Digits**
    * Always **Western / English digits `0–9`** on screen (`11 kV`, `360°`, `10 মিনিট`). Run strings through [`enDigits`](../../core/en_digits.dart).
@@ -123,7 +124,7 @@ Every level below follows the exact Level 11 architecture: real photo title card
 
 ---
 
-### Level 12: ফাঁপা পোলের ভাষা (Hollow PCC Pole & Hidden Rebar)
+### Level 12: ফাঁপা পোলের ভাষা (Hollow PCC Pole & Hidden Rebar) — *ACTIVE*
 * **Lesson Source**: Lesson 1.3 (“পোলের ‘ভাষা’ পড়তে শিখুন” — Pt 2 & 3: `দপ্ দপ্` hollow sound, spalling & exposed rebar at the back, reporting instead of climbing).
 * **Scene**: Normal-looking PCC pole from the front. Clearing the grass reveals a hairline crack at the foot; turning 360° reveals spalled concrete and exposed rebar on the back; tapping with the hammer gives a dull hollow `দপ্ দপ্` sound instead of `ঠক্ ঠক্`.
 * **Bottom Tray (Pictures Only)**: Hammer, FRP Ladder (trap here!), Red Danger Tag / Report Phone.
@@ -144,7 +145,7 @@ Every level below follows the exact Level 11 architecture: real photo title card
 
 ---
 
-### Level 13: স্টিল পোলের ক্যান্সার ও মাথার বিপদ (Steel Pole Base Rust & Top Scan)
+### Level 13: স্টিল পোলের ক্যান্সার ও মাথার বিপদ (Steel Pole Base Rust & Top Scan) — *ACTIVE*
 * **Lesson Source**: Lesson 1.3 (“পোলের ‘ভাষা’ পড়তে শিখুন” — Pt 2, 3 & 4: Steel tubular/rail pole ground-line corrosion, `টন টন` vs dull rust flake, bottom-to-top scan for wasp nest / cable clutter / tilted cross-arm).
 * **Scene**: Daylight photo of a steel tubular pole. Grass hides ground-line rust; looking up (vertical pan / look-up button) shows a cable tangle and a cracked pin insulator on the cross-arm.
 * **Bottom Tray**: Hammer, Binocular/Look-Up scan, Hand Rope (to clear clutter after check), FRP Ladder.
@@ -165,7 +166,7 @@ Every level below follows the exact Level 11 architecture: real photo title card
 
 ---
 
-### Level 14: লক্ষ্মণ রেখা (Safe Clearance & Crowd Barrier)
+### Level 14: লক্ষ্মণ রেখা (Safe Clearance & Crowd Barrier) — *ACTIVE*
 * **Lesson Source**: Lesson 1.2 (“পাওয়ার লাইনের ‘লক্ষ্মণ রেখা’”) & Lesson 10.4 (“সিইএ ২০২৩ ক্লিয়ারেন্স”).
 * **Scene**: Roadside 11 kV pole next to a house balcony; curious bystanders standing too close; wet ground patch beside the pole; long metal pipe lying nearby.
 * **Bottom Tray**: Cones & Barrier Tape, Dry Insulating Mat / Dry Board,FRP Ladder, Long Metal Pipe (trap).
