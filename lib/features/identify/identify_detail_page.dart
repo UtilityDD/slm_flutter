@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/app_colors.dart';
+import '../../design/slm_design.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
@@ -72,10 +72,18 @@ class _IdentifyDetailPageState extends ConsumerState<IdentifyDetailPage> {
     final current = widget.items[_index];
     final style = categoryStyle(current.category);
 
-    return Scaffold(
-      backgroundColor: AppColors.cream,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+      backgroundColor: SlmColors.navy950,
       body: Stack(
         children: [
+          Positioned.fill(
+            child: Theme(
+              data: SlmTheme.night(),
+              child: const SlmBackground(constrain: false, child: SizedBox.expand()),
+            ),
+          ),
           AnimatedContainer(
             duration: const Duration(milliseconds: 450),
             height: MediaQuery.sizeOf(context).height * 0.55,
@@ -83,7 +91,7 @@ class _IdentifyDetailPageState extends ConsumerState<IdentifyDetailPage> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [style.soft, AppColors.cream],
+                colors: [style.color.withValues(alpha: 0.22), style.color.withValues(alpha: 0)],
               ),
             ),
           ),
@@ -121,20 +129,28 @@ class _IdentifyDetailPageState extends ConsumerState<IdentifyDetailPage> {
                         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          color: Colors.white.withValues(alpha: 0.7),
+                          decoration: BoxDecoration(
+                            color: SlmColors.navy900.withValues(alpha: 0.72),
+                            borderRadius: SlmRadius.pillAll,
+                            border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
+                          ),
                           child: Row(
                             children: [
                               IconButton(
                                 visualDensity: VisualDensity.compact,
+                                color: SlmColors.ivory,
+                                disabledColor: SlmColors.slate.withValues(alpha: 0.5),
                                 onPressed: _index > 0 ? () => _go(-1) : null,
                                 icon: const Icon(Icons.chevron_left_rounded),
                               ),
                               Text(
                                 '${bnNumber(_index + 1, bn)} / ${bnNumber(total, bn)}',
-                                style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.inkSoft),
+                                style: const TextStyle(fontWeight: FontWeight.w700, color: SlmColors.gold200),
                               ),
                               IconButton(
                                 visualDensity: VisualDensity.compact,
+                                color: SlmColors.ivory,
+                                disabledColor: SlmColors.slate.withValues(alpha: 0.5),
                                 onPressed: _index < total - 1 ? () => _go(1) : null,
                                 icon: const Icon(Icons.chevron_right_rounded),
                               ),
@@ -149,6 +165,7 @@ class _IdentifyDetailPageState extends ConsumerState<IdentifyDetailPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -165,10 +182,11 @@ class _GlassButton extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Material(
-          color: Colors.white.withValues(alpha: 0.7),
+          color: SlmColors.navy900.withValues(alpha: 0.72),
+          shape: CircleBorder(side: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.45))),
           child: InkWell(
             onTap: onTap,
-            child: SizedBox(width: 44, height: 44, child: Icon(icon, color: AppColors.ink)),
+            child: SizedBox(width: 44, height: 44, child: Icon(icon, color: SlmColors.ivory)),
           ),
         ),
       ),
@@ -202,7 +220,7 @@ class _DetailBody extends StatelessWidget {
       padding: shellScrollPadding(context, top: top + 56, extraBottom: 20),
       children: [
         if (isChart)
-          IdentifyChartBody(page: chart!, title: item.nameBn, bn: bn)
+          SlmReveal(child: IdentifyChartBody(page: chart!, title: item.nameBn, bn: bn))
         else ...[
           item.hasPhoto
               ? _Gallery(item: item, style: style)
@@ -212,42 +230,61 @@ class _DetailBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _Tag(icon: style.icon, label: categoryLabel(item.category, bn), color: style.color),
-                    if (price.isNotEmpty && price != '0')
+                SlmReveal(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
                       _Tag(
-                        icon: Icons.currency_rupee_rounded,
-                        label: tr(bn, 'আনুমানিক ₹${bnNumber(price, bn)}', 'About ₹$price'),
-                        color: const Color(0xFF92400E),
+                        icon: style.icon,
+                        label: categoryLabel(item.category, bn),
+                        color: Color.lerp(style.color, Colors.white, 0.3)!,
                       ),
-                  ],
+                      if (price.isNotEmpty && price != '0')
+                        _Tag(
+                          icon: Icons.currency_rupee_rounded,
+                          label: tr(bn, 'আনুমানিক ₹${bnNumber(price, bn)}', 'About ₹$price'),
+                          color: SlmColors.gold300,
+                        ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  item.nameBn,
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1.25, color: AppColors.ink),
+                SlmReveal(
+                  index: 1,
+                  child: Text(
+                    item.nameBn,
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      height: 1.25,
+                      color: SlmColors.ivory,
+                      shadows: [Shadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 10, offset: const Offset(0, 2))],
+                    ),
+                  ),
                 ),
                 if (item.functionBn.isNotEmpty) ...[
                   const SizedBox(height: 18),
-                  _InfoCard(
-                    icon: Icons.lightbulb_rounded,
-                    title: tr(bn, 'কী কাজে লাগে', 'What it does'),
-                    body: item.functionBn,
-                    color: style.color,
-                    background: Colors.white,
+                  SlmReveal(
+                    index: 2,
+                    child: _InfoCard(
+                      icon: Icons.lightbulb_rounded,
+                      title: tr(bn, 'কী কাজে লাগে', 'What it does'),
+                      body: item.functionBn,
+                      color: SlmColors.gold700,
+                    ),
                   ),
                 ],
                 if (item.guideBn.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  _InfoCard(
-                    icon: Icons.shield_rounded,
-                    title: tr(bn, 'ব্যবহার ও সতর্কতা', 'Use & safety'),
-                    body: item.guideBn,
-                    color: const Color(0xFF9A3412),
-                    background: const Color(0xFFFFF7ED),
+                  SlmReveal(
+                    index: 3,
+                    child: _InfoCard(
+                      icon: Icons.shield_rounded,
+                      title: tr(bn, 'ব্যবহার ও সতর্কতা', 'Use & safety'),
+                      body: item.guideBn,
+                      color: const Color(0xFFB4441E),
+                    ),
                   ),
                 ],
               ],
@@ -256,15 +293,25 @@ class _DetailBody extends StatelessWidget {
         ],
         if (related.isNotEmpty) ...[
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: Text(
-              tr(bn, 'সম্পর্কিত', 'Related'),
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+            child: Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 16,
+                  decoration: BoxDecoration(gradient: SlmGradients.gold, borderRadius: SlmRadius.pillAll),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  tr(bn, 'সম্পর্কিত', 'Related'),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: SlmColors.ivory),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 150,
+            height: 156,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -276,18 +323,13 @@ class _DetailBody extends StatelessWidget {
         ],
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-          child: OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).pushNamed(AppRoutes.identifyPlay),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(52),
-              foregroundColor: const Color(0xFF0F766E),
-              side: const BorderSide(color: Color(0xFF0F766E), width: 1.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            ),
-            icon: const Icon(Icons.play_circle_fill_rounded),
-            label: Text(
-              tr(bn, 'ছবি দেখে চিনুন — খেলুন', 'Play name-the-photo'),
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+          child: Theme(
+            data: SlmTheme.night(),
+            child: SlmButton.gold(
+              label: tr(bn, 'ছবি দেখে চিনুন — খেলুন', 'Play name-the-photo'),
+              icon: Icons.play_circle_fill_rounded,
+              expand: true,
+              onPressed: () => Navigator.of(context).pushNamed(AppRoutes.identifyPlay),
             ),
           ),
         ),
@@ -345,38 +387,68 @@ class _GalleryState extends State<_Gallery> {
     final height = (MediaQuery.sizeOf(context).height * 0.36).clamp(220.0, 380.0);
     return Column(
       children: [
-        SizedBox(
-          height: height,
-          child: PageView.builder(
-            itemCount: images.length,
-            onPageChanged: (i) => setState(() => _photo = i),
-            itemBuilder: (_, i) {
-              final image = Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 8),
-                child: _LiftedImage(path: images[i]),
-              );
-              return GestureDetector(
-                onTap: () => _zoom(images[i]),
-                child: i == 0 ? Hero(tag: 'lib-${widget.item.id}', child: image) : image,
-              );
-            },
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: Container(
+            height: height,
+            padding: const EdgeInsets.all(1.3),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              gradient: SlmGradients.goldEdge,
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 26, offset: const Offset(0, 12)),
+                BoxShadow(color: widget.style.color.withValues(alpha: 0.18), blurRadius: 30),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(26.7),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.25),
+                    radius: 0.9,
+                    colors: [Colors.white, SlmColors.ivory, Color.lerp(SlmColors.ivoryDeep, widget.style.color, 0.07)!],
+                    stops: const [0, 0.45, 1],
+                  ),
+                ),
+                child: PageView.builder(
+                  itemCount: images.length,
+                  onPageChanged: (i) => setState(() => _photo = i),
+                  itemBuilder: (_, i) {
+                    final image = Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                      child: _LiftedImage(path: images[i]),
+                    );
+                    return GestureDetector(
+                      onTap: () => _zoom(images[i]),
+                      child: i == 0 ? Hero(tag: 'lib-${widget.item.id}', child: image) : image,
+                    );
+                  },
+                ),
+              ),
+            ),
           ),
         ),
         if (images.length > 1)
           Padding(
-            padding: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.only(top: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 for (var i = 0; i < images.length; i++)
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
+                    duration: SlmMotion.base,
+                    curve: SlmMotion.emphasized,
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     width: i == _photo ? 18 : 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: i == _photo ? widget.style.color : widget.style.color.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(99),
+                      gradient: i == _photo ? SlmGradients.gold : null,
+                      color: i == _photo ? null : SlmColors.navy600,
+                      borderRadius: SlmRadius.pillAll,
+                      boxShadow: i == _photo
+                          ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.5), blurRadius: 6)]
+                          : null,
                     ),
                   ),
               ],
@@ -411,7 +483,7 @@ class _LiftedImage extends StatelessWidget {
         Image.asset(
           path,
           fit: BoxFit.contain,
-          errorBuilder: (_, _, _) => const Icon(Icons.image_outlined, color: AppColors.muted, size: 48),
+          errorBuilder: (_, _, _) => const Icon(Icons.image_outlined, color: SlmColors.slate, size: 48),
         ),
       ],
     );
@@ -465,8 +537,9 @@ class _Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
+        color: SlmColors.navy800.withValues(alpha: 0.9),
+        borderRadius: SlmRadius.pillAll,
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -485,42 +558,61 @@ class _InfoCard extends StatelessWidget {
   final String title;
   final String body;
   final Color color;
-  final Color background;
 
   const _InfoCard({
     required this.icon,
     required this.title,
     required this.body,
     required this.color,
-    required this.background,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
-        color: background,
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [SlmColors.ivory, SlmColors.ivoryDeep],
+        ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.15)),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 16, offset: const Offset(0, 6))],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 18, color: color),
-              const SizedBox(width: 6),
-              Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            body,
-            style: const TextStyle(fontSize: 16, height: 1.55, fontWeight: FontWeight.w500, color: AppColors.inkSoft),
-          ),
-        ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(17),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              height: 3,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.15)]),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 11, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(icon, size: 18, color: color),
+                      const SizedBox(width: 6),
+                      Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    body,
+                    style: const TextStyle(fontSize: 16, height: 1.55, fontWeight: FontWeight.w500, color: SlmColors.ink),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -539,44 +631,50 @@ class _RelatedCard extends ConsumerWidget {
     final style = categoryStyle(item.category);
     return SizedBox(
       width: 118,
-      child: Material(
-        color: chart != null ? Colors.transparent : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: chart != null
-              ? IdentifyChartTile(title: item.nameBn, page: chart, bn: bn)
-              : Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(13),
-                          child: ColoredBox(
-                            color: style.wash,
-                            child: item.hasPhoto
-                                ? Padding(
-                                    padding: const EdgeInsets.all(6),
-                                    child: Image.asset(item.images.first, fit: BoxFit.contain, cacheWidth: 260),
-                                  )
-                                : Icon(style.icon, color: style.color),
+      child: SlmPressable(
+        pressedScale: 0.96,
+        onTap: onTap,
+        child: chart != null
+            ? IdentifyChartTile(title: item.nameBn, page: chart, bn: bn)
+            : Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  gradient: SlmGradients.navyCard,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.3)),
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 4))],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(13),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              colors: [SlmColors.ivory, Color.lerp(SlmColors.ivoryDeep, style.color, 0.06)!],
+                            ),
                           ),
+                          child: item.hasPhoto
+                              ? Padding(
+                                  padding: const EdgeInsets.all(6),
+                                  child: Image.asset(item.images.first, fit: BoxFit.contain, cacheWidth: 260),
+                                )
+                              : Icon(style.icon, color: style.color),
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        item.nameBn,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w700, color: AppColors.ink),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item.nameBn,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w700, color: SlmColors.ivory),
+                    ),
+                  ],
                 ),
-        ),
+              ),
       ),
     );
   }

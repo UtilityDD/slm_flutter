@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../design/slm_design.dart';
 import '../shell/shell_providers.dart';
 import 'identify_charts.dart';
 
-/// Kraft-paper style chart body — port of web IdentifyChartPage.
+const _ink = SlmColors.ink;
+const _softInk = Color(0xFF3A4660);
+const _kicker = SlmColors.gold700;
+const _card = Color(0xFFFFFCF4);
+const _rowAlt = Color(0xFFF7EFDD);
+const _line = Color(0xFFDCC9A0);
+
+/// Ivory-paper chart body — port of web IdentifyChartPage.
 class IdentifyChartBody extends StatelessWidget {
   final IdentifyChartPage page;
   final String title;
@@ -23,11 +30,15 @@ class IdentifyChartBody extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(10, 8, 10, 20),
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 18),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3E6C8),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFB89A6C), width: 1.2),
-        boxShadow: const [
-          BoxShadow(color: Color(0x33281E10), blurRadius: 16, offset: Offset(0, 6)),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [SlmColors.ivory, SlmColors.ivoryDeep],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6), width: 1.2),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 24, offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
@@ -65,7 +76,7 @@ class IdentifyChartBody extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         height: 1.25,
-                        color: Color(0xFF2A2318),
+                        color: _ink,
                       ),
                     ),
                   ],
@@ -84,6 +95,17 @@ class IdentifyChartBody extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Container(
+            height: 1.2,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [
+                SlmColors.gold400.withValues(alpha: 0),
+                SlmColors.gold500,
+                SlmColors.gold400.withValues(alpha: 0),
+              ]),
+            ),
+          ),
           if (page.kicker != null) ...[
             const SizedBox(height: 12),
             Text(
@@ -91,7 +113,7 @@ class IdentifyChartBody extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF8A3D12),
+                color: _kicker,
               ),
             ),
           ],
@@ -99,7 +121,7 @@ class IdentifyChartBody extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               page.intro!,
-              style: const TextStyle(fontSize: 14.5, height: 1.45, fontWeight: FontWeight.w500, color: Color(0xFF2A2318)),
+              style: const TextStyle(fontSize: 14.5, height: 1.45, fontWeight: FontWeight.w500, color: _ink),
             ),
           ],
           if (page.flow.isNotEmpty) ...[
@@ -173,17 +195,17 @@ class _Flow extends StatelessWidget {
       children: [
         for (var i = 0; i < flow.length; i++) ...[
           if (i > 0)
-            const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF8A7464)),
+            const Icon(Icons.arrow_forward_rounded, size: 14, color: SlmColors.slate),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFBF0),
+              color: _card,
               borderRadius: BorderRadius.circular(99),
-              border: Border.all(color: const Color(0xFFC4B08A)),
+              border: Border.all(color: _line),
             ),
             child: Text(
               flow[i],
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF2A2318)),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _ink),
             ),
           ),
         ],
@@ -203,9 +225,9 @@ class _StepCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBF0),
+        color: _card,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD6C4A3)),
+        border: Border.all(color: _line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,17 +238,21 @@ class _StepCard extends StatelessWidget {
                 width: 24,
                 height: 24,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(color: Color(0xFF2A2318), shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  gradient: SlmGradients.navyHero,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.8)),
+                ),
                 child: Text(
                   '$index',
-                  style: const TextStyle(color: Color(0xFFF3E6C8), fontWeight: FontWeight.w800, fontSize: 12),
+                  style: const TextStyle(color: SlmColors.gold200, fontWeight: FontWeight.w800, fontSize: 12),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   step.title,
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5, color: Color(0xFF2A2318)),
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5, color: _ink),
                 ),
               ),
             ],
@@ -313,8 +339,9 @@ class _TableBlock extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2318),
+        gradient: SlmGradients.navyCard,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -324,14 +351,14 @@ class _TableBlock extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(10, 9, 10, 7),
               child: Text(
                 table.title!,
-                style: const TextStyle(color: Color(0xFFF3E6C8), fontWeight: FontWeight.w800, fontSize: 12.5),
+                style: const TextStyle(color: SlmColors.gold200, fontWeight: FontWeight.w800, fontSize: 12.5),
               ),
             ),
           Container(
             margin: const EdgeInsets.fromLTRB(1, 0, 1, 1),
             padding: const EdgeInsets.fromLTRB(2, 2, 2, 2),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFBF0),
+              color: _card,
               borderRadius: BorderRadius.circular(13),
             ),
             child: Table(
@@ -340,12 +367,12 @@ class _TableBlock extends StatelessWidget {
                 for (var i = 0; i < cols; i++) i: const FlexColumnWidth(1),
               },
               border: TableBorder(
-                horizontalInside: BorderSide(color: const Color(0xFF2A2318).withValues(alpha: 0.08)),
-                verticalInside: BorderSide(color: const Color(0xFF2A2318).withValues(alpha: 0.06)),
+                horizontalInside: BorderSide(color: _ink.withValues(alpha: 0.08)),
+                verticalInside: BorderSide(color: _ink.withValues(alpha: 0.06)),
               ),
               children: [
                 TableRow(
-                  decoration: const BoxDecoration(color: Color(0xFFFFF1D6)),
+                  decoration: const BoxDecoration(color: SlmColors.gold100),
                   children: [
                     for (final h in table.headers)
                       Padding(
@@ -359,7 +386,7 @@ class _TableBlock extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                             fontSize: headSize,
                             height: 1.15,
-                            color: const Color(0xFF8A3D12),
+                            color: _kicker,
                           ),
                         ),
                       ),
@@ -368,7 +395,7 @@ class _TableBlock extends StatelessWidget {
                 for (var r = 0; r < table.rows.length; r++)
                   TableRow(
                     decoration: BoxDecoration(
-                      color: r.isOdd ? const Color(0xFFFFF7E8) : const Color(0xFFFFFBF0),
+                      color: r.isOdd ? _rowAlt : _card,
                     ),
                     children: [
                       for (var i = 0; i < cols; i++)
@@ -383,7 +410,7 @@ class _TableBlock extends StatelessWidget {
                               fontWeight: i == 0 ? FontWeight.w800 : FontWeight.w600,
                               fontSize: cellSize,
                               height: 1.15,
-                              color: const Color(0xFF2A2318),
+                              color: _ink,
                               fontFeatures: const [FontFeature.tabularFigures()],
                             ),
                           ),
@@ -401,7 +428,7 @@ class _TableBlock extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(10, 7, 10, 9),
               child: Text(
                 note,
-                style: const TextStyle(color: Color(0xFFE7D5C6), fontSize: 11.5, height: 1.35),
+                style: const TextStyle(color: SlmColors.mist, fontSize: 11.5, height: 1.35),
               ),
             ),
         ],
@@ -422,19 +449,19 @@ class _PickCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFBF0),
+          color: _card,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFD6C4A3)),
+          border: Border.all(color: _line),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(card.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Color(0xFF2A2318))),
+            Text(card.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: _ink)),
             const SizedBox(height: 6),
             for (final p in card.points)
               Padding(
                 padding: const EdgeInsets.only(bottom: 2),
-                child: Text('· $p', style: const TextStyle(fontSize: 12, height: 1.35, color: Color(0xFF3F3A36))),
+                child: Text('· $p', style: const TextStyle(fontSize: 12, height: 1.35, color: _softInk)),
               ),
           ],
         ),
@@ -453,7 +480,7 @@ class _SectionCard extends StatelessWidget {
     final (bg, border, ink) = switch (section.tone) {
       'ok' => (const Color(0xFFECFDF5), const Color(0xFF86EFAC), const Color(0xFF166534)),
       'bad' => (const Color(0xFFFFF1F2), const Color(0xFFFECACA), const Color(0xFF9F1239)),
-      _ => (const Color(0xFFFFFBF0), const Color(0xFFD6C4A3), const Color(0xFF2A2318)),
+      _ => (_card, _line, _ink),
     };
     return Container(
       width: double.infinity,
@@ -489,9 +516,9 @@ class _Figure extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBF0),
+        color: _card,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD6C4A3)),
+        border: Border.all(color: _line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,19 +531,19 @@ class _Figure extends StatelessWidget {
                 figure.image,
                 fit: BoxFit.contain,
                 errorBuilder: (_, _, _) => const ColoredBox(
-                  color: Color(0xFFE7D5C6),
-                  child: Icon(Icons.image_outlined, color: Color(0xFF8A7464)),
+                  color: SlmColors.ivoryDeep,
+                  child: Icon(Icons.image_outlined, color: SlmColors.slate),
                 ),
               ),
             ),
           ),
           if (figure.title != null) ...[
             const SizedBox(height: 8),
-            Text(figure.title!, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Color(0xFF2A2318))),
+            Text(figure.title!, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: _ink)),
           ],
           if (figure.info != null) ...[
             const SizedBox(height: 4),
-            Text(figure.info!, style: const TextStyle(fontSize: 12.5, height: 1.4, color: AppColors.inkSoft)),
+            Text(figure.info!, style: const TextStyle(fontSize: 12.5, height: 1.4, color: _softInk)),
           ],
         ],
       ),
@@ -565,7 +592,7 @@ class _Callout extends StatelessWidget {
                   ),
                   TextSpan(
                     text: text,
-                    style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF2A2318), height: 1.4),
+                    style: const TextStyle(fontWeight: FontWeight.w600, color: _ink, height: 1.4),
                   ),
                 ],
               ),
@@ -618,17 +645,21 @@ class IdentifyChartTile extends StatelessWidget {
     final topic = chartTopic(page?.id ?? '');
     final preview = page?.previewLine() ?? '';
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFCFC2A4),
-        borderRadius: BorderRadius.all(Radius.circular(14)),
+      padding: const EdgeInsets.all(1.2),
+      decoration: BoxDecoration(
+        gradient: SlmGradients.goldEdge,
+        borderRadius: const BorderRadius.all(Radius.circular(15)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.42), blurRadius: 12, offset: const Offset(0, 5))],
       ),
       child: Container(
-        margin: const EdgeInsets.all(7),
         padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF3E6C8),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFF2A2318), width: 1.35),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [SlmColors.ivory, SlmColors.ivoryDeep],
+          ),
+          borderRadius: BorderRadius.circular(13.8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -664,7 +695,7 @@ class IdentifyChartTile extends StatelessWidget {
                 fontSize: 13.5,
                 fontWeight: FontWeight.w800,
                 height: 1.25,
-                color: Color(0xFF2A2318),
+                color: _ink,
               ),
             ),
             if (preview.isNotEmpty) ...[
@@ -678,7 +709,7 @@ class IdentifyChartTile extends StatelessWidget {
                   fontSize: 10.5,
                   height: 1.3,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF8A3D12),
+                  color: _kicker,
                 ),
               ),
             ],

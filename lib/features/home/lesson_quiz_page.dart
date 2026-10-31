@@ -9,8 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../design/slm_design.dart';
 import 'bangla_read_aloud.dart';
 import 'lesson_quiz_sfx.dart';
 import 'lesson_rich_text.dart';
@@ -157,13 +157,14 @@ class LessonQuizPage extends StatefulWidget {
 }
 
 class _LessonQuizPageState extends State<LessonQuizPage> {
-  static const _paper = Color(0xFFF7F0E3);
-  static const _paperDeep = Color(0xFFEFE5D4);
-  static const _ink = Color(0xFF1F1A14);
-  static const _softInk = Color(0xFF4A4036);
-  static const _accent = Color(0xFF8B5E3C);
-  static const _right = Color(0xFF1F8A4C);
-  static const _wrong = Color(0xFFC0392B);
+  static const _paper = SlmColors.ivory;
+  static const _paperDeep = SlmColors.ivoryDeep;
+  static const _ink = SlmColors.ink;
+  static const _softInk = Color(0xFF3A4660);
+  static const _accent = SlmColors.gold700;
+  static const _right = SlmColors.emerald700;
+  static const _wrong = Color(0xFFB83A2E);
+  static const _wrongSoft = Color(0xFFF2998E);
 
   final _rng = math.Random();
   final _voice = BanglaReadAloud();
@@ -430,28 +431,43 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
           _close();
         }
       },
-      child: Scaffold(
-        backgroundColor: _paper,
-        body: SafeArea(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 380),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, anim) => FadeTransition(
-              opacity: anim,
-              child: ScaleTransition(scale: Tween(begin: 0.97, end: 1.0).animate(anim), child: child),
-            ),
-            child: switch (_mode) {
-              _Mode.loading => _buildLoading(),
-              _Mode.active => _buildActive(),
-              _Mode.result => _buildResult(),
-              _Mode.review => _buildReview(),
-            },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Scaffold(
+          backgroundColor: SlmColors.navy950,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: Theme(
+                  data: SlmTheme.night(),
+                  child: const SlmBackground(constrain: false, child: SizedBox.expand()),
+                ),
+              ),
+              SafeArea(
+                child: AnimatedSwitcher(
+                  duration: SlmMotion.slow,
+                  switchInCurve: SlmMotion.emphasized,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim,
+                    child: ScaleTransition(scale: Tween(begin: 0.97, end: 1.0).animate(anim), child: child),
+                  ),
+                  child: switch (_mode) {
+                    _Mode.loading => _buildLoading(),
+                    _Mode.active => _buildActive(),
+                    _Mode.result => _buildResult(),
+                    _Mode.review => _buildReview(),
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+
+  Widget _nightButton(SlmButton button) => Theme(data: SlmTheme.night(), child: button);
 
   Widget _buildLoading() {
     return QuizDealSplash(
@@ -459,9 +475,9 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
       label: _retrying ? tr('নতুন করে সাজানো হচ্ছে…', 'Reshuffling…') : tr('কুইজ প্রস্তুত করা হচ্ছে...', 'Preparing quiz...'),
       paper: _paper,
       paperDeep: _paperDeep,
-      ink: _ink,
-      accent: _accent,
-      softInk: _softInk,
+      ink: Colors.black,
+      accent: SlmColors.gold500,
+      softInk: SlmColors.mist,
     );
   }
 
@@ -472,15 +488,19 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
         children: [
           IconButton(
             onPressed: () => _close(),
-            icon: const Icon(Icons.close_rounded, color: _ink),
+            icon: const Icon(Icons.close_rounded, color: SlmColors.ivory),
             tooltip: tr('বন্ধ করুন', 'Close'),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: _accent, borderRadius: BorderRadius.circular(999)),
+            decoration: BoxDecoration(
+              color: SlmColors.navy800,
+              borderRadius: SlmRadius.pillAll,
+              border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6)),
+            ),
             child: Text(
               widget.lessonBadge,
-              style: const TextStyle(fontFamily: banglaFont, color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+              style: const TextStyle(fontFamily: banglaFont, color: SlmColors.gold200, fontWeight: FontWeight.w800, fontSize: 13),
             ),
           ),
           const SizedBox(width: 10),
@@ -507,25 +527,25 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
             children: [
               Text(
                 widget.isPractice ? tr('অনুশীলন কুইজ', 'Practice quiz') : tr('অধ্যায় কুইজ', 'Chapter quiz'),
-                style: const TextStyle(fontFamily: banglaFont, fontSize: 12, color: _softInk, fontWeight: FontWeight.w600),
+                style: const TextStyle(fontFamily: banglaFont, fontSize: 12, color: SlmColors.gold300, fontWeight: FontWeight.w600),
               ),
               Text(
                 '${tr('প্রশ্ন', 'Question')} ${_num(_index + 1, bn)} / ${_num(total, bn)}',
-                style: const TextStyle(fontFamily: banglaFont, fontSize: 16, color: _ink, fontWeight: FontWeight.w800),
+                style: const TextStyle(fontFamily: banglaFont, fontSize: 16, color: SlmColors.ivory, fontWeight: FontWeight.w800),
               ),
             ],
           ),
           actions: [
             IconButton(
               onPressed: () => _askSearch(q.questionText),
-              icon: const Icon(Icons.travel_explore_rounded, color: _softInk),
+              icon: const Icon(Icons.travel_explore_rounded, color: SlmColors.mist),
               tooltip: tr('গুগলে খুঁজুন', 'Search Google'),
             ),
             IconButton(
               onPressed: _toggleMute,
               icon: Icon(
                 _muted ? Icons.volume_off_rounded : (_speaking ? Icons.graphic_eq_rounded : Icons.volume_up_rounded),
-                color: _muted ? _softInk : _accent,
+                color: _muted ? SlmColors.slate : SlmColors.gold300,
               ),
               tooltip: _muted ? tr('পড়ে শোনান', 'Read aloud') : tr('শব্দ বন্ধ', 'Mute'),
             ),
@@ -538,16 +558,21 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
               for (var i = 0; i < total; i++)
                 Expanded(
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: 5,
+                    duration: SlmMotion.base,
+                    curve: SlmMotion.emphasized,
+                    height: i == _index ? 6 : 5,
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: SlmRadius.pillAll,
+                      gradient: i < _index ? SlmGradients.gold : null,
                       color: i < _index
-                          ? _accent
+                          ? null
                           : i == _index
-                              ? _accent.withValues(alpha: 0.55)
-                              : _paperDeep,
+                              ? SlmColors.gold400.withValues(alpha: 0.6)
+                              : SlmColors.navy700,
+                      boxShadow: i == _index
+                          ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.45), blurRadius: 6)]
+                          : null,
                     ),
                   ),
                 ),
@@ -561,9 +586,9 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
             children: [
               QuizTurnCard(
                 turnKey: _index,
-                paper: Colors.white.withValues(alpha: 0.88),
-                ink: _ink,
-                accent: _accent,
+                paper: _paper,
+                ink: Colors.black,
+                accent: SlmColors.gold500,
                 onFlipStart: () => _sfx.flip(),
                 child: Column(
                   key: ValueKey('qface$_index'),
@@ -626,31 +651,16 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
             ],
           ),
         ),
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-          decoration: BoxDecoration(
-            color: _paper,
-            boxShadow: [BoxShadow(color: _ink.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, -4))],
-          ),
-          child: SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: ElevatedButton(
-              onPressed: answered ? _next : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: last ? AppColors.safeGreen : _accent,
-                disabledBackgroundColor: _paperDeep,
-                foregroundColor: Colors.white,
-                disabledForegroundColor: _softInk.withValues(alpha: 0.6),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                elevation: 0,
-              ),
-              child: Text(
-                last ? tr('কুইজ জমা দিন', 'Submit quiz') : tr('পরবর্তী প্রশ্ন', 'Next question'),
-                style: const TextStyle(fontFamily: banglaFont, fontSize: 17, fontWeight: FontWeight.w800),
-              ),
-            ),
-          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(18, 10, 18, 14),
+          child: _nightButton(SlmButton(
+            label: last ? tr('কুইজ জমা দিন', 'Submit quiz') : tr('পরবর্তী প্রশ্ন', 'Next question'),
+            variant: last ? SlmButtonVariant.primary : SlmButtonVariant.gold,
+            size: SlmButtonSize.large,
+            expand: true,
+            trailingIcon: last ? Icons.check_rounded : Icons.arrow_forward_rounded,
+            onPressed: answered ? _next : null,
+          )),
         ),
       ],
     );
@@ -658,61 +668,68 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
 
   Widget _letter(int i, bool selected) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: SlmMotion.fast,
       width: 32,
       height: 32,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: selected ? Colors.white : _paperDeep,
+        color: selected ? SlmColors.navy950 : SlmColors.navy700,
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: selected ? 0.9 : 0.45)),
       ),
       child: Text(
         String.fromCharCode(65 + i),
-        style: TextStyle(fontWeight: FontWeight.w800, color: selected ? _accent : _softInk),
+        style: TextStyle(fontWeight: FontWeight.w800, color: selected ? SlmColors.gold200 : SlmColors.gold300),
       ),
     );
   }
+
+  BoxDecoration _optionDecoration(bool selected) => BoxDecoration(
+        gradient: selected ? SlmGradients.gold : SlmGradients.navyCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: selected ? SlmColors.gold200 : SlmColors.gold400.withValues(alpha: 0.28),
+          width: selected ? 1.6 : 1.1,
+        ),
+        boxShadow: selected
+            ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.4), blurRadius: 16, offset: const Offset(0, 4))]
+            : [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
+      );
 
   Widget _textOption(String text, int i) {
     final selected = _answers[_index] == i;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: AnimatedScale(
-        duration: const Duration(milliseconds: 180),
-        scale: selected ? 1.025 : 1.0,
-        child: Material(
-          color: selected ? _accent : Colors.white.withValues(alpha: 0.82),
-          elevation: selected ? 3 : 0,
-          shadowColor: _accent.withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(16),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => _select(i),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: selected ? _accent : _paperDeep, width: selected ? 2 : 1.5),
-              ),
-              child: Row(
-                children: [
-                  _letter(i, selected),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      text,
-                      style: TextStyle(
-                        fontFamily: banglaFont,
-                        fontSize: 17,
-                        height: 1.4,
-                        fontWeight: FontWeight.w600,
-                        color: selected ? Colors.white : _ink,
-                      ),
+      child: SlmPressable(
+        pressedScale: 0.97,
+        haptic: false,
+        onTap: () => _select(i),
+        child: AnimatedScale(
+          duration: SlmMotion.fast,
+          curve: SlmMotion.emphasized,
+          scale: selected ? 1.02 : 1.0,
+          child: AnimatedContainer(
+            duration: SlmMotion.base,
+            curve: SlmMotion.emphasized,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: _optionDecoration(selected),
+            child: Row(
+              children: [
+                _letter(i, selected),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontFamily: banglaFont,
+                      fontSize: 17,
+                      height: 1.4,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                      color: selected ? SlmColors.navy950 : SlmColors.ivory,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -722,22 +739,19 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
 
   Widget _imageOption(String src, int i) {
     final selected = _answers[_index] == i;
-    return GestureDetector(
+    return SlmPressable(
+      pressedScale: 0.96,
+      haptic: false,
       onTap: () => _select(i),
       child: AnimatedScale(
-        duration: const Duration(milliseconds: 180),
+        duration: SlmMotion.fast,
+        curve: SlmMotion.emphasized,
         scale: selected ? 1.03 : 1.0,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: SlmMotion.base,
+          curve: SlmMotion.emphasized,
           padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: selected ? _accent : Colors.white.withValues(alpha: 0.82),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: selected ? _accent : _paperDeep, width: selected ? 2.5 : 2),
-            boxShadow: selected
-                ? [BoxShadow(color: _accent.withValues(alpha: 0.28), blurRadius: 12, offset: const Offset(0, 4))]
-                : null,
-          ),
+          decoration: _optionDecoration(selected),
           child: Stack(
             children: [
               Positioned.fill(
@@ -765,7 +779,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
     final total = _quiz.length;
     final pct = total == 0 ? 0 : (_score * 100 / total).round();
     final passed = _passed;
-    final tone = passed ? _right : _accent;
+    final tone = passed ? SlmColors.emerald400 : SlmColors.gold400;
 
     return Column(
       key: const ValueKey('result'),
@@ -774,150 +788,186 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
           alignment: Alignment.centerLeft,
           child: IconButton(
             onPressed: () => _close(),
-            icon: const Icon(Icons.close_rounded, color: _ink),
+            icon: const Icon(Icons.close_rounded, color: SlmColors.ivory),
           ),
         ),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
             children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: pct / 100),
-                duration: const Duration(milliseconds: 1100),
-                curve: Curves.easeOutCubic,
-                builder: (_, v, __) => Center(
+              SlmReveal(
+                child: Center(
                   child: SizedBox(
-                    width: 168,
-                    height: 168,
+                    width: 220,
+                    height: 220,
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        SizedBox.expand(
-                          child: CircularProgressIndicator(
-                            value: v,
-                            strokeWidth: 12,
-                            strokeCap: StrokeCap.round,
-                            color: tone,
-                            backgroundColor: _paperDeep,
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: pct / 100),
+                          duration: const Duration(milliseconds: 1100),
+                          curve: SlmMotion.emphasized,
+                          builder: (_, v, __) => Container(
+                            width: 168,
+                            height: 168,
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: SlmGradients.navyHero,
+                              border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55), width: 1.2),
+                              boxShadow: [
+                                BoxShadow(color: tone.withValues(alpha: 0.28 * v + 0.08), blurRadius: 28, spreadRadius: 2),
+                              ],
+                            ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                SizedBox.expand(
+                                  child: CircularProgressIndicator(
+                                    value: v,
+                                    strokeWidth: 11,
+                                    strokeCap: StrokeCap.round,
+                                    color: tone,
+                                    backgroundColor: SlmColors.navy700,
+                                  ),
+                                ),
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(passed ? '✨' : '💪', style: const TextStyle(fontSize: 26)),
+                                    Text(
+                                      '${_num((v * 100).round(), bn)}%',
+                                      style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: tone),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(passed ? '✨' : '💪', style: const TextStyle(fontSize: 28)),
-                            Text(
-                              '${_num((v * 100).round(), bn)}%',
-                              style: TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: tone),
-                            ),
-                          ],
-                        ),
+                        if (passed)
+                          const IgnorePointer(
+                            child: SlmSparkBurst(playOnMount: true, radius: 104, count: 22),
+                          ),
                       ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 18),
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: tone.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    passed ? tr('পাস', 'Pass') : tr('আরেকটু চেষ্টা', 'Almost there'),
-                    style: TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w800, color: tone),
+              const SizedBox(height: 10),
+              SlmReveal(
+                index: 1,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: tone.withValues(alpha: 0.14),
+                      borderRadius: SlmRadius.pillAll,
+                      border: Border.all(color: tone.withValues(alpha: 0.55)),
+                    ),
+                    child: Text(
+                      passed ? tr('পাস', 'Pass') : tr('আরেকটু চেষ্টা', 'Almost there'),
+                      style: TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w800, color: tone),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
-                passed ? tr('কুইজ সম্পন্ন!', 'Quiz complete!') : tr('পাস মার্ক অর্জিত হয়নি', 'Pass mark not reached'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontFamily: banglaFont, fontSize: 24, fontWeight: FontWeight.w900, color: _ink),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                tr('মোট ${_num(total, bn)}টির মধ্যে ${_num(_score, bn)}টি সঠিক', '$_score of $total correct'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w600, color: _softInk),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                passed
-                    ? tr('ভালো হয়েছে—কুইজটি সম্পন্ন।', 'Well done — quiz complete.')
-                    : tr('নিচে উত্তরগুলো দেখে নিন।', 'Check your answers below.'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontFamily: banglaFont, fontSize: 14, color: _softInk),
-              ),
-              if (!passed) ...[
-                const SizedBox(height: 22),
-                _passBar(pct / 100),
-                const SizedBox(height: 10),
-                Text(
-                  tr('পাস করার জন্য 70% সঠিক উত্তর প্রয়োজন।', 'You need 70% correct to pass.'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontFamily: banglaFont, fontSize: 14, fontWeight: FontWeight.w600, color: _wrong),
+              SlmReveal(
+                index: 2,
+                child: Column(
+                  children: [
+                    Text(
+                      passed ? tr('কুইজ সম্পন্ন!', 'Quiz complete!') : tr('পাস মার্ক অর্জিত হয়নি', 'Pass mark not reached'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: banglaFont,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: SlmColors.ivory,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      tr('মোট ${_num(total, bn)}টির মধ্যে ${_num(_score, bn)}টি সঠিক', '$_score of $total correct'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: banglaFont,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: SlmColors.gold200,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      passed
+                          ? tr('ভালো হয়েছে—কুইজটি সম্পন্ন।', 'Well done — quiz complete.')
+                          : tr('নিচে উত্তরগুলো দেখে নিন।', 'Check your answers below.'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontFamily: banglaFont, fontSize: 14, color: SlmColors.mist),
+                    ),
+                  ],
                 ),
-              ],
+              ),
+              if (!passed)
+                SlmReveal(
+                  index: 3,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 22),
+                      _passBar(pct / 100),
+                      const SizedBox(height: 10),
+                      Text(
+                        tr('পাস করার জন্য 70% সঠিক উত্তর প্রয়োজন।', 'You need 70% correct to pass.'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: banglaFont,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: _wrongSoft,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+          padding: const EdgeInsets.fromLTRB(18, 4, 18, 14),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: passed ? () => _close(LessonQuizOutcome.passed) : () => _start(retry: true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: passed ? AppColors.safeGreen : _accent,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    passed ? tr('পরবর্তী পাঠে যান', 'Go to next lesson') : tr('আবার চেষ্টা করুন', 'Try again'),
-                    style: const TextStyle(fontFamily: banglaFont, fontSize: 17, fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ),
+              _nightButton(SlmButton(
+                label: passed ? tr('পরবর্তী পাঠে যান', 'Go to next lesson') : tr('আবার চেষ্টা করুন', 'Try again'),
+                variant: passed ? SlmButtonVariant.primary : SlmButtonVariant.gold,
+                size: SlmButtonSize.large,
+                expand: true,
+                trailingIcon: passed ? Icons.arrow_forward_rounded : Icons.refresh_rounded,
+                onPressed: passed ? () => _close(LessonQuizOutcome.passed) : () => _start(retry: true),
+              )),
               const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
+                    child: _nightButton(SlmButton.secondary(
+                      label: tr('উত্তরগুলো দেখুন', 'Review answers'),
+                      expand: true,
                       onPressed: () {
                         HapticFeedback.selectionClick();
                         setState(() => _mode = _Mode.review);
                       },
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                        foregroundColor: _ink,
-                        side: const BorderSide(color: _paperDeep, width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      child: Text(tr('উত্তরগুলো দেখুন', 'Review answers'),
-                          style: const TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w700)),
-                    ),
+                    )),
                   ),
                   if (!passed) ...[
                     const SizedBox(width: 10),
                     Expanded(
-                      child: OutlinedButton(
+                      child: _nightButton(SlmButton.secondary(
+                        label: tr('আবার পড়ুন', 'Read again'),
+                        expand: true,
                         onPressed: () => _close(LessonQuizOutcome.readAgain),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(48),
-                          foregroundColor: _accent,
-                          side: const BorderSide(color: _accent, width: 1.5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: Text(tr('আবার পড়ুন', 'Read again'),
-                            style: const TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w700)),
-                      ),
+                      )),
                     ),
                   ],
                 ],
@@ -944,7 +994,11 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
                 top: 8,
                 child: Container(
                   height: 10,
-                  decoration: BoxDecoration(color: _paperDeep, borderRadius: BorderRadius.circular(6)),
+                  decoration: BoxDecoration(
+                    color: SlmColors.navy900,
+                    borderRadius: SlmRadius.pillAll,
+                    border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.25), width: 0.8),
+                  ),
                 ),
               ),
               Positioned(
@@ -953,18 +1007,30 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
                 child: TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: value.clamp(0, 1)),
                   duration: const Duration(milliseconds: 900),
-                  curve: Curves.easeOutCubic,
+                  curve: SlmMotion.emphasized,
                   builder: (_, v, __) => Container(
                     width: w * v,
                     height: 10,
-                    decoration: BoxDecoration(color: _accent, borderRadius: BorderRadius.circular(6)),
+                    decoration: BoxDecoration(
+                      gradient: SlmGradients.gold,
+                      borderRadius: SlmRadius.pillAll,
+                      boxShadow: [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.45), blurRadius: 6)],
+                    ),
                   ),
                 ),
               ),
               Positioned(
                 left: w * lessonQuizPassRate - 1.5,
                 top: 2,
-                child: Container(width: 3, height: 22, color: _right),
+                child: Container(
+                  width: 3,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: SlmColors.emerald400,
+                    borderRadius: SlmRadius.pillAll,
+                    boxShadow: [BoxShadow(color: SlmColors.emerald400.withValues(alpha: 0.6), blurRadius: 6)],
+                  ),
+                ),
               ),
             ],
           );
@@ -980,7 +1046,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
         _header(
           title: Text(
             tr('আপনার উত্তরগুলো দেখুন', 'Review your answers'),
-            style: const TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w800, color: _ink),
+            style: const TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w800, color: SlmColors.ivory),
           ),
         ),
         Expanded(
@@ -988,26 +1054,18 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             itemCount: _quiz.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (_, qi) => _reviewCard(qi),
+            itemBuilder: (_, qi) => qi < 4 ? SlmReveal(index: qi, child: _reviewCard(qi)) : _reviewCard(qi),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-          child: SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: () => setState(() => _mode = _Mode.result),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _accent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                elevation: 0,
-              ),
-              child: Text(tr('ফলাফলে ফিরে যান', 'Back to result'),
-                  style: const TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w800)),
-            ),
-          ),
+          padding: const EdgeInsets.fromLTRB(18, 4, 18, 14),
+          child: _nightButton(SlmButton(
+            label: tr('ফলাফলে ফিরে যান', 'Back to result'),
+            variant: SlmButtonVariant.gold,
+            expand: true,
+            icon: Icons.arrow_back_rounded,
+            onPressed: () => setState(() => _mode = _Mode.result),
+          )),
         ),
       ],
     );
@@ -1027,9 +1085,14 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [_paper, _paperDeep],
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border(left: BorderSide(color: statusColor, width: 4)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 6))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -3,8 +3,9 @@ import 'dart:math' as math;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/app_colors.dart';
+import '../../design/slm_design.dart';
 import '../identify/library_catalog.dart';
 import '../shell/shell_insets.dart';
 
@@ -137,14 +138,28 @@ class _IdentifyQuizScreenState extends ConsumerState<IdentifyQuizScreen> {
     final stats = ref.watch(identifyStatsProvider);
     final question = _question;
 
-    return Scaffold(
-      backgroundColor: AppColors.cream,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned.fill(
+          child: Theme(
+            data: SlmTheme.night(),
+            child: const SlmBackground(constrain: false, child: SizedBox.expand()),
+          ),
+        ),
+        Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        foregroundColor: SlmColors.ivory,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         elevation: 0,
         titleSpacing: 0,
-        title: const Text('পরিচিতি কুইজ'),
+        title: const Text(
+          'পরিচিতি কুইজ',
+          style: TextStyle(color: SlmColors.ivory, fontSize: 19, fontWeight: FontWeight.w700),
+        ),
         actions: [
           if (stats.lifeTotal > 0)
             Padding(
@@ -153,12 +168,13 @@ class _IdentifyQuizScreenState extends ConsumerState<IdentifyQuizScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEA580C),
-                    borderRadius: BorderRadius.circular(99),
+                    gradient: SlmGradients.gold,
+                    borderRadius: SlmRadius.pillAll,
+                    boxShadow: [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.35), blurRadius: 10)],
                   ),
                   child: Text(
                     '${stats.percent}% · ${stats.lifeCorrect}/${stats.lifeTotal}',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+                    style: const TextStyle(color: SlmColors.navy950, fontWeight: FontWeight.w800, fontSize: 12),
                   ),
                 ),
               ),
@@ -166,9 +182,14 @@ class _IdentifyQuizScreenState extends ConsumerState<IdentifyQuizScreen> {
         ],
       ),
       body: !_ready
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: SlmColors.gold400))
           : question == null
-              ? const Center(child: Text('চেনার মতো ছবি নেই', style: TextStyle(fontWeight: FontWeight.w600)))
+              ? const Center(
+                  child: Text(
+                    'চেনার মতো ছবি নেই',
+                    style: TextStyle(fontWeight: FontWeight.w600, color: SlmColors.mist),
+                  ),
+                )
               : Padding(
                   // Leave the floating dock clear so the board centers in the
                   // visible band above the nav — not the full screen.
@@ -182,6 +203,8 @@ class _IdentifyQuizScreenState extends ConsumerState<IdentifyQuizScreen> {
                     onPick: _pick,
                   ),
                 ),
+        ),
+      ],
     );
   }
 }
@@ -244,20 +267,34 @@ class _Board extends StatelessWidget {
         const Text(
           'নাম কী?',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, height: 1.5, color: AppColors.ink),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: 1.5, color: SlmColors.ivory),
         ),
         const SizedBox(height: 10),
         SizedBox(
           height: photo,
-          child: DecoratedBox(
+          child: Container(
+            padding: const EdgeInsets.all(1.3),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE7E5E4)),
+              borderRadius: BorderRadius.circular(21),
+              gradient: SlmGradients.goldEdge,
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 20, offset: const Offset(0, 8))],
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: _FitImage(question.heroImage),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(19.7),
+              child: DecoratedBox(
+                decoration: const BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(0, -0.2),
+                    radius: 0.95,
+                    colors: [Colors.white, SlmColors.ivory, SlmColors.ivoryDeep],
+                    stops: [0, 0.5, 1],
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: _FitImage(question.heroImage),
+                ),
+              ),
             ),
           ),
         ),
@@ -323,22 +360,27 @@ class _Prompt extends StatelessWidget {
           Text(
             question.prompt,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, height: 1.5, color: AppColors.ink),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.5, color: SlmColors.ivory),
           ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFBEB),
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [SlmColors.ivory, SlmColors.ivoryDeep],
+              ),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFFDE68A)),
+              border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6)),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 12, offset: const Offset(0, 4))],
             ),
             child: Text(
               question.detail,
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.55, color: Color(0xFF44403C)),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.55, color: SlmColors.ink),
             ),
           ),
         ],
@@ -350,14 +392,17 @@ class _Prompt extends StatelessWidget {
         TextSpan(
           children: [
             const TextSpan(text: 'কোনটা '),
-            TextSpan(text: question.highlight, style: const TextStyle(color: Color(0xFFEA580C))),
+            TextSpan(
+              text: question.highlight,
+              style: const TextStyle(color: SlmColors.gold300, fontWeight: FontWeight.w700),
+            ),
             const TextSpan(text: '?'),
           ],
         ),
         textAlign: TextAlign.center,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500, height: 1.5, color: AppColors.ink),
+        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: 1.5, color: SlmColors.ivory),
       );
     }
 
@@ -366,7 +411,7 @@ class _Prompt extends StatelessWidget {
       textAlign: TextAlign.center,
       maxLines: 3,
       overflow: TextOverflow.ellipsis,
-      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500, height: 1.5, color: AppColors.ink),
+      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: 1.5, color: SlmColors.ivory),
     );
   }
 }
@@ -393,13 +438,25 @@ class _AnswerBoard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
                 decoration: BoxDecoration(
-                  color: flashRight! ? const Color(0xFF059669) : const Color(0xFFE11D48),
-                  borderRadius: BorderRadius.circular(99),
-                  boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 12, offset: Offset(0, 4))],
+                  gradient: flashRight! ? SlmGradients.emerald : null,
+                  color: flashRight! ? null : _wrongRed,
+                  borderRadius: SlmRadius.pillAll,
+                  border: Border.all(color: SlmColors.gold200.withValues(alpha: 0.85), width: 1.2),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 14, offset: const Offset(0, 5)),
+                    BoxShadow(
+                      color: (flashRight! ? SlmColors.emerald400 : _wrongRed).withValues(alpha: 0.5),
+                      blurRadius: 22,
+                    ),
+                  ],
                 ),
                 child: Text(
                   flashRight! ? 'ঠিক' : 'ভুল',
-                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: flashRight! ? SlmColors.navy950 : Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),
@@ -422,7 +479,7 @@ class _FitImage extends StatelessWidget {
         path,
         fit: BoxFit.contain,
         alignment: Alignment.center,
-        errorBuilder: (_, _, _) => const Icon(Icons.image_not_supported_outlined, color: AppColors.muted),
+        errorBuilder: (_, _, _) => const Icon(Icons.image_not_supported_outlined, color: SlmColors.slate),
       ),
     );
   }
@@ -481,7 +538,7 @@ class _NameGrid extends StatelessWidget {
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,
-        style: const TextStyle(fontWeight: FontWeight.w400, fontSize: 14, height: 1.45),
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, height: 1.45, color: SlmColors.ivory),
       ),
     );
   }
@@ -533,6 +590,8 @@ class _PhotoGrid extends StatelessWidget {
       showAnswer: showAnswer,
       onTap: () => onPick(choice.id),
       padding: const EdgeInsets.all(4),
+      fill: SlmColors.ivory,
+      light: true,
       child: SizedBox.expand(child: _FitImage(choice.image)),
     );
   }
@@ -554,10 +613,10 @@ class _TextGrid extends StatelessWidget {
   });
 
   static const _tones = [
-    (Color(0xFFE0F2FE), Color(0xFF0284C7), Color(0xFF0C4A6E)),
-    (Color(0xFFFFF7ED), Color(0xFFEA580C), Color(0xFF7C2D12)),
-    (Color(0xFFECFDF5), Color(0xFF059669), Color(0xFF064E3B)),
-    (Color(0xFFF5F3FF), Color(0xFF7C3AED), Color(0xFF4C1D95)),
+    (Color(0xFF13284A), Color(0xFF38BDF8), Color(0xFFE0F2FE)),
+    (Color(0xFF2A2230), Color(0xFFFB923C), Color(0xFFFFEDD5)),
+    (Color(0xFF0F2E33), Color(0xFF34D399), Color(0xFFD1FAE5)),
+    (Color(0xFF1F2045), Color(0xFFA78BFA), Color(0xFFEDE9FE)),
   ];
 
   @override
@@ -601,8 +660,12 @@ class _TextGrid extends StatelessWidget {
             width: 28,
             height: 28,
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: tone.$2, shape: BoxShape.circle),
-            child: Text(letter, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            decoration: BoxDecoration(
+              color: tone.$2,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: tone.$2.withValues(alpha: 0.5), blurRadius: 8)],
+            ),
+            child: Text(letter, style: const TextStyle(color: SlmColors.navy950, fontWeight: FontWeight.w800)),
           ),
           const SizedBox(height: 8),
           Text(
@@ -628,6 +691,7 @@ class _ChoiceShell extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding;
   final Color fill;
+  final bool light;
 
   const _ChoiceShell({
     required this.picked,
@@ -638,7 +702,8 @@ class _ChoiceShell extends StatelessWidget {
     required this.onTap,
     required this.child,
     this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-    this.fill = Colors.white,
+    this.fill = SlmColors.navy800,
+    this.light = false,
   });
 
   @override
@@ -647,15 +712,20 @@ class _ChoiceShell extends StatelessWidget {
     final showRight = locked && right && (picked || showAnswer);
     final dimmed = dimOthers && !right && !picked;
     final border = showRight
-        ? const Color(0xFF34D399)
+        ? SlmColors.emerald400
         : showWrong
             ? const Color(0xFFFB7185)
-            : const Color(0xFFE7E5E4);
+            : SlmColors.gold400.withValues(alpha: light ? 0.55 : 0.28);
     final background = showRight
-        ? const Color(0xFFECFDF5)
+        ? (light ? const Color(0xFFE3F8EE) : SlmColors.emerald900)
         : showWrong
-            ? const Color(0xFFFFF1F2)
+            ? (light ? const Color(0xFFFDE8EA) : const Color(0xFF3D1621))
             : fill;
+    final glow = showRight
+        ? SlmColors.emerald400
+        : showWrong
+            ? _wrongRed
+            : null;
     Widget tile = AnimatedContainer(
       duration: const Duration(milliseconds: 460),
       curve: Curves.easeOutCubic,
@@ -667,6 +737,10 @@ class _ChoiceShell extends StatelessWidget {
         color: background,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: border, width: showRight || showWrong ? 2 : 1),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.32), blurRadius: 10, offset: const Offset(0, 4)),
+          if (glow != null) BoxShadow(color: glow.withValues(alpha: 0.45), blurRadius: 16),
+        ],
       ),
       child: child,
     );
@@ -683,19 +757,18 @@ class _ChoiceShell extends StatelessWidget {
         duration: const Duration(milliseconds: 520),
         curve: Curves.easeOut,
         scale: dimmed ? 0.96 : 1,
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          child: InkWell(
-            onTap: locked ? null : onTap,
-            borderRadius: BorderRadius.circular(16),
-            child: tile,
-          ),
+        child: SlmPressable(
+          pressedScale: 0.96,
+          haptic: false,
+          onTap: locked ? null : onTap,
+          child: tile,
         ),
       ),
     );
   }
 }
+
+const _wrongRed = Color(0xFFE5484D);
 
 class _Shake extends StatelessWidget {
   final Widget child;

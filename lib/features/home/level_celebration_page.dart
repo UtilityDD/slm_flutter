@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
+import '../../design/slm_design.dart';
 import 'hero_card.dart';
 import 'level_lessons_sheet.dart';
 import 'lineman_figure.dart';
@@ -128,8 +129,10 @@ class _LevelCelebrationPageState extends ConsumerState<LevelCelebrationPage>
     final doneMetal = cardMetalFor(widget.completedStep);
     final nextMetal = hasNext ? cardMetalFor(next) : doneMetal;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0C1214),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+      backgroundColor: SlmColors.navy950,
       body: AnimatedBuilder(
         animation: Listenable.merge([_burst, _reveal, _sheen]),
         builder: (context, _) {
@@ -154,21 +157,39 @@ class _LevelCelebrationPageState extends ConsumerState<LevelCelebrationPage>
                     children: [
                       Opacity(
                         opacity: Curves.easeOut.transform((_burst.value / 0.45).clamp(0.0, 1.0)),
-                        child: Text(
-                          bn ? 'লেভেল সম্পন্ন!' : 'Level complete!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: banglaFont,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            color: doneMetal.light,
-                            shadows: [
-                              Shadow(color: doneMetal.glow.withValues(alpha: 0.7), blurRadius: 18),
-                            ],
+                        child: Transform.scale(
+                          scale: 0.86 + 0.14 * Curves.easeOutBack.transform((_burst.value / 0.5).clamp(0.0, 1.0)),
+                          child: Text(
+                            bn ? 'লেভেল সম্পন্ন!' : 'Level complete!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: banglaFont,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: SlmColors.gold200,
+                              shadows: [
+                                Shadow(color: SlmColors.gold400.withValues(alpha: 0.65), blurRadius: 18),
+                                Shadow(color: doneMetal.glow.withValues(alpha: 0.4), blurRadius: 30),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      Opacity(
+                        opacity: Curves.easeOut.transform(((_burst.value - 0.08) / 0.4).clamp(0.0, 1.0)),
+                        child: Container(
+                          width: 120 * Curves.easeOutCubic.transform(((_burst.value - 0.08) / 0.5).clamp(0.0, 1.0)),
+                          height: 1.2,
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: [
+                              SlmColors.gold400.withValues(alpha: 0),
+                              SlmColors.gold300,
+                              SlmColors.gold400.withValues(alpha: 0),
+                            ]),
+                          ),
+                        ),
+                      ),
                       Opacity(
                         opacity: Curves.easeOut.transform(((_burst.value - 0.12) / 0.4).clamp(0.0, 1.0)),
                         child: Text(
@@ -180,7 +201,7 @@ class _LevelCelebrationPageState extends ConsumerState<LevelCelebrationPage>
                             fontFamily: banglaFont,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFFCBD5E1),
+                            color: SlmColors.ivory,
                           ),
                         ),
                       ),
@@ -206,29 +227,16 @@ class _LevelCelebrationPageState extends ConsumerState<LevelCelebrationPage>
                         opacity: showContinue ? 1 : 0,
                         child: IgnorePointer(
                           ignoring: !showContinue,
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 48,
-                            child: ElevatedButton(
+                          child: Theme(
+                            data: SlmTheme.night(),
+                            child: SlmButton.gold(
+                              label: hasNext
+                                  ? (bn ? 'এগিয়ে যান' : 'Continue')
+                                  : (bn ? 'হোমে ফিরে যান' : 'Back to home'),
+                              size: SlmButtonSize.large,
+                              expand: true,
+                              trailingIcon: hasNext ? Icons.arrow_forward_rounded : Icons.home_rounded,
                               onPressed: () => _finish(openNext: hasNext),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: nextMetal.mid,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                              ),
-                              child: Text(
-                                hasNext
-                                    ? (bn ? 'এগিয়ে যান' : 'Continue')
-                                    : (bn ? 'হোমে ফিরে যান' : 'Back to home'),
-                                style: const TextStyle(
-                                  fontFamily: banglaFont,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
                             ),
                           ),
                         ),
@@ -241,6 +249,7 @@ class _LevelCelebrationPageState extends ConsumerState<LevelCelebrationPage>
           );
         },
       ),
+    ),
     );
   }
 }
@@ -369,7 +378,7 @@ class _AutoRevealStage extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
-                color: Color.lerp(const Color(0xFF94A3B8), nextMetal.light, wipe),
+                color: Color.lerp(SlmColors.gold300, nextMetal.light, wipe),
               ),
             ),
             const SizedBox(height: 10),
@@ -499,28 +508,58 @@ class _FinalStage extends StatelessWidget {
     return Column(
       children: [
         const Spacer(),
-        Text(
-          bn ? 'সব লেভেল জয়!' : 'All levels conquered!',
-          style: TextStyle(
-            fontFamily: banglaFont,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: metal.light,
+        SlmReveal(
+          child: Text(
+            bn ? 'সব লেভেল জয়!' : 'All levels conquered!',
+            style: const TextStyle(
+              fontFamily: banglaFont,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: SlmColors.gold200,
+            ),
           ),
         ),
         const SizedBox(height: 12),
         SizedBox(
-          width: 200,
-          child: LinemanFigure(step: step, enableHero: false),
+          width: 300,
+          height: 300,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 260,
+                height: 260,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(colors: [
+                    SlmColors.gold400.withValues(alpha: 0.22),
+                    SlmColors.gold400.withValues(alpha: 0),
+                  ]),
+                ),
+              ),
+              SlmReveal(
+                index: 1,
+                rise: 24,
+                child: SizedBox(
+                  width: 200,
+                  child: LinemanFigure(step: step, enableHero: false),
+                ),
+              ),
+              const IgnorePointer(child: SlmSparkBurst(playOnMount: true, radius: 130, count: 24)),
+            ],
+          ),
         ),
         const SizedBox(height: 10),
-        Text(
-          title,
-          style: const TextStyle(
-            fontFamily: banglaFont,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+        SlmReveal(
+          index: 2,
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontFamily: banglaFont,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: SlmColors.ivory,
+            ),
           ),
         ),
         const Spacer(flex: 2),
@@ -683,8 +722,8 @@ class _CelebrationFieldPainter extends CustomPainter {
           center: const Alignment(0, -0.15),
           radius: 1.2,
           colors: [
-            Color.lerp(const Color(0xFF134E4A), metal.dark, reveal)!,
-            const Color(0xFF0C1214),
+            Color.lerp(SlmColors.navy600, metal.dark, reveal)!,
+            SlmColors.navy950,
           ],
         ).createShader(Offset.zero & size),
     );
@@ -699,7 +738,7 @@ class _CelebrationFieldPainter extends CustomPainter {
         p,
         2.2 + (i % 4) * 0.9,
         Paint()
-          ..color = Color.lerp(const Color(0xFFFBBF24), metal.glow, reveal)!
+          ..color = Color.lerp(SlmColors.gold300, metal.glow, reveal)!
               .withValues(alpha: alpha),
       );
     }

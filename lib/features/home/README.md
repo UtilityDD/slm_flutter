@@ -1,10 +1,16 @@
 # Home
 
-Tab 0. Cream backdrop, name + Bangla/English pill, **মৃত্যুহীন** card, then the lineman hero carousel.
+Tab 0. Navy premium backdrop, name + verify tick + বাং / EN switch, the lineman hero carousel, then the **মৃত্যুহীন পথ** button. Premium rules: root [`README.md`](../../../README.md#premium-design-system-and-motion).
 
 ## Entry
 
-`DutySlipPage.open(context)` from `_ZeroLossCard`. Button copy is **মৃত্যুহীন** only — no extra subtitle.
+`DutySlipPage.open(context, sourceRect:)` from `_PathPlayChip`. The button is `_PathBadge`: `AnimatedSafetyShield` + real text **মৃত্যুহীন পথ** + gold arrow, 270 px wide (narrower on small screens). Tap keeps the old charge pulse, haptic and `quiz_select.wav` cue.
+
+## Learning flow
+
+Hero card tap → `openLevelLessons` (card-expand flight) → `LevelZeroPage` for level 0, or `LevelLessonsPage` (lesson shelf) for 1–10 → `LessonReaderPage` → lesson quiz → snackbar + `+20 পয়েন্ট` toast, or `LevelCelebrationPage` when the level is cleared. All of it is in the navy design except the quiz and celebration pages. Reading text stays dark on an ivory sheet.
+
+`HeroCard(premium: true)` is used by the carousel and the expand flight only.
 
 ## Files
 

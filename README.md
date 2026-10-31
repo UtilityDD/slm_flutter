@@ -14,7 +14,8 @@ Audience: linemen on Android phones, often offline-ish. Large posters and some l
 
 | Piece | Choice |
 |---|---|
-| UI | Flutter, Material 3, cream/amber brand |
+| UI | Flutter, Material 3. Premium night look (Midnight Navy + Emerald + Antique Gold) from `lib/design/` on Home and the learning screens; other tabs still use the older cream/amber look |
+| Motion | Own motion engine in `lib/design/motion/` (no animation packages) |
 | State | Riverpod 3 |
 | Auth / points / leaderboards | Supabase (`wkunyvomogeazjwtenck`) |
 | Local persistence | `shared_preferences` |
@@ -26,7 +27,19 @@ Audience: linemen on Android phones, often offline-ish. Large posters and some l
 
 ## Run
 
-Primary device in this project: Oppo CPH2467, adb id `f6650cdf`.
+Primary device now: Oppo CPH2487, adb id `8012f054` (earlier: Oppo CPH2467, `f6650cdf`).
+
+Debug APK, install and launch (used for every check in the premium work):
+
+```powershell
+$env:GRADLE_USER_HOME = "$env:LOCALAPPDATA\Temp\cursor-sandbox-cache\c3a692ac3dd2c7cf96edcb758878463a\gradle"
+& "$env:USERPROFILE\flutter\bin\flutter.bat" build apk --debug
+$adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
+& $adb -s 8012f054 install -r -t -d build\app\outputs\flutter-apk\app-debug.apk
+& $adb -s 8012f054 shell am start -n com.smartlineman.app.slm_flutter/.MainActivity
+```
+
+If install says `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, ask before uninstalling: it wipes local progress.
 
 Gradle wrapper is **9.3.1**. Wrapper download often times out; use a populated `GRADLE_USER_HOME` and offline:
 
@@ -41,16 +54,53 @@ Do not use PowerShell `Set-Content` for Bangla JSON or Dart — it mojibakes. Ed
 
 ## Bottom tabs
 
-1. **হোম / Home** — header, **মৃত্যুহীন** card, lineman hero carousel
+1. **হোম / Home** — header, lineman hero carousel, **মৃত্যুহীন পথ** shield button
 2. **পরিচিতি / Identify** — safety library + charts
 3. **র‍্যাঙ্ক / Rank** — monthly boards (Champion / New / Improved / Learner)
 4. **লাইফ স্কিল / Life Skill** — 13 local lessons
 
-A notched dock floats over pages. **SLM Radio** can sit above it.
+A notched emerald dock with a gold-rimmed bubble floats over pages. **SLM Radio** can sit above it.
+
+## Premium design system and motion
+
+The app is being upgraded screen by screen to one visual identity: **Midnight Navy** surfaces, **Emerald** for progress and success, **Antique Gold** for edges, highlights and rewards. Done so far: Home (phase 3) and the learning screens (phase 4). Next: quizzes, only after approval.
+
+**The rule for every phase: same layout, same functionality, premium visuals.** An upgrade may restyle and animate; it may not move sections, rename labels, change routes, or touch Supabase, progress, points, XP, ranks or game logic. Each phase is shown on the phone and approved before the next starts.
+
+### Where things live
+
+| Path | What |
+|---|---|
+| `lib/design/slm_design.dart` | Barrel. Import this one file |
+| `lib/design/tokens/` | Colours (`SlmColors`), palette (`SlmPalette`, night / day), spacing and radii (`SlmSpace`, `SlmRadius`), motion timings (`SlmMotion`), gradients and shadows (`SlmGradients`, `SlmShadows`), Bangla-safe type (`SlmType`) |
+| `lib/design/theme/slm_theme.dart` | `SlmTheme.night()` / `day()`; read tokens with `context.slm` |
+| `lib/design/components/` | `SlmButton`, `SlmCard`, `SlmIconBadge`, `SlmSegmented`, `SlmProgressBar`, `SlmBackground`, `SlmTopBar`, … |
+| `lib/design/motion/` | Motion engine. Widget list and shield asset notes: [`lib/design/MOTION.md`](lib/design/MOTION.md) |
+| `assets/brand/shield_*.webp` | The three layers of the animated মৃত্যুহীন পথ shield |
+| `lib/features/design_preview/` | Debug-only **প্রিমিয়াম প্রিভিউ** and **মোশন শোকেস** (More menu, `kDebugMode` only) |
+
+### How to apply it to a screen
+
+- **Theme only the backdrop.** Paint the navy background as its own layer: `Positioned.fill(Theme(data: SlmTheme.night(), child: SlmBackground(constrain: false, child: SizedBox.expand())))`, with the page on top. Do not wrap the whole page in the night theme: bottom sheets and dialogs capture the caller's theme and would change their look. Wrap only design-system widgets that read the theme (for example `SlmButton`) in `Theme(data: SlmTheme.night())`.
+- **Status bar.** Navy pages set `AnnotatedRegion<SystemUiOverlayStyle>(value: SystemUiOverlayStyle.light)`. `MainShell` sets `dark` for the cream tabs; the inner region wins.
+- **Shared widgets get an opt-in flag.** `HeroCard(premium: true, press: …)` is the Home finish; the login and celebration cards keep the old finish because they don't pass it.
+- **Reading stays dark on paper.** Lesson text is dark ink (`SlmColors.ink`) on a warm ivory sheet with a gold edge; only the chrome around it is navy. Keep font sizes and line heights; no effects behind reading text. Field staff read this in sunlight.
+- **Contrast on navy.** Titles `SlmColors.ivory`, secondary text `SlmColors.mist`, labels `gold300`, success `emerald300`, locked `slate`.
+- **Motion is meaningful and light.** Use `SlmPressable` / `SlmTactile` for press feedback, `SlmReveal` (with `index`) for staggered entrances, `SlmShimmer` for one slow highlight, `TweenAnimationBuilder` + `SlmMotion.emphasized` for progress. No GIFs or videos. The phone's "remove animations" setting turns loops and entrances off.
+- **Rewards are display only.** `showSlmXpToast`, `showSlmBadgeUnlock`, `showSlmLevelUp` run after the existing code has saved the result, and must show the same number the existing code awards (the reader shows `+20 পয়েন্ট` only on a first-time completion).
+
+### What each upgraded screen got
+
+- **Home** (`home_screen.dart`, `hero_card*.dart`, `main_shell.dart`): navy backdrop; ivory name, shimmering gold verify tick, gold sliding বাং / EN switch; bevelled metal card frame with ambient scene light (the lineman is never dimmed or re-animated); metal nameplate with moving light and press depth; **মৃত্যুহীন পথ** is now `AnimatedSafetyShield` + real Bangla text + gold arrow on an emerald pill in the old 270 px footprint; emerald dock, gold bubble rim, gold active bar, press feedback, labels capped at 1.15× text scale.
+- **Lesson shelf** (`level_lessons_page.dart`): navy header and pinned progress bar (gold, emerald when complete, fills from zero); navy book cards with a metal spine — bronze not started, gold next, emerald done, slate locked; shimmering gold **এখান থেকে শুরু** pill; press feedback; the existing staggered entrance.
+- **Level 0 map** (`level_zero_page.dart`): same night treatment, staggered intro cards and step tiles, emerald `SlmButton` with loading.
+- **Lesson reader** (`lesson_reader_page.dart`): navy chrome, gliding gold progress bar, ivory reading sheet, fade-and-slide between pages, animated step segments, gold point badge, gold **পরের পাতা** / emerald quiz button, navy-gold **শুনুন**, completion medal with spark burst, `+20 পয়েন্ট` toast on first completion.
+
+Not upgraded yet: quizzes, celebration page, Identify, Rank, Life Skill, More, login. `TrainingScreen` (`/training`) is registered but nothing opens it.
 
 ## মৃত্যুহীন (duty slip) — core field duty path (day / night)
 
-Home button text is **মৃত্যুহীন** only. Cover title **কাজের ধাপ**. Ladder header **মৃত্যুহীন পথ**. Next-level button **পরের লেভেল** (returns to the wooden ladder). No সহজ/কঠিন.
+Home button text is **মৃত্যুহীন পথ** (real text beside the animated shield). Cover title **কাজের ধাপ**. Ladder header **মৃত্যুহীন পথ**. Next-level button **পরের লেভেল** (returns to the wooden ladder). No সহজ/কঠিন.
 
 ### 19-level path
 
@@ -147,6 +197,9 @@ Every meaningful folder has its own README.
 ## Product / engineering notes from current work
 
 - Do not commit unless asked.
-- `dart analyze` can throw RangeError in this tree; prefer `flutter run` on device.
+- **Safe commit and push:** stage files by name, never `git add -A`. Leave out files from other work in progress, root `phone_*.png` screenshots, keystores, `key.properties` and answer keys. Scan the staged diff for keys and tokens before committing. Pushing to `master` needs the owner's approval.
+- **Phone privacy:** take a phone screenshot only after `dumpsys window` shows `com.smartlineman.app.slm_flutter` in focus. If the owner is using the phone, stop and ask.
+- `flutter analyze` / `dart analyze` can crash with a RangeError or access violation in its cache. Rename `%LOCALAPPDATA%\.dartServer\.analysis-driver` and run it again. The baseline is 107 old notes and warnings, 0 errors; new code should add none.
+- For a visual check without the phone, render a temporary widget test with `matchesGoldenFile` and `--update-goldens`, then delete the test. Bangla shows as boxes in tests.
 - Impeller opt-out may still be in the Android manifest; Flutter warns it is going away.
 - Hourly answer keys: never add `tool/hourly_answer_keys.json` or `.sql` to git (see `.gitignore`).

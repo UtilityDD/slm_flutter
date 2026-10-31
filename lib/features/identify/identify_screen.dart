@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import '../../core/theme/app_colors.dart';
-import '../../shared/widgets/slm_backdrop.dart';
+import '../../design/slm_design.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
@@ -19,7 +18,6 @@ import 'library_catalog.dart';
 
 const _allGroup = '__all__';
 const _sectionPreview = 4;
-const _teal = Color(0xFF0F766E);
 
 class IdentifyScreen extends ConsumerStatefulWidget {
   const IdentifyScreen({super.key});
@@ -192,10 +190,27 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
     final catalog = ref.watch(libraryCatalogProvider);
     final stats = ref.watch(identifyStatsProvider);
 
-    return SlmBackdrop(
-      child: catalog.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: _teal)),
-        error: (error, _) => Center(child: Text('$error')),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: Theme(
+              data: SlmTheme.night(),
+              child: const SlmBackground(constrain: false, child: SizedBox.expand()),
+            ),
+          ),
+          _body(bn, catalog, stats),
+        ],
+      ),
+    );
+  }
+
+  Widget _body(bool bn, AsyncValue<List<LibraryItem>> catalog, IdentifyStats stats) {
+    return catalog.when(
+        loading: () => const Center(child: CircularProgressIndicator(color: SlmColors.gold400)),
+        error: (error, _) => Center(child: Text('$error', style: const TextStyle(color: SlmColors.mist))),
         data: (items) {
           final groups = orderedCategories(items);
           if (_group != _allGroup && !groups.contains(_group)) _group = _allGroup;
@@ -263,8 +278,7 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
             ],
           );
         },
-      ),
-    );
+      );
   }
 
   List<Widget> _content(bool bn, List<LibraryItem> items, List<String> groups, String q) {
@@ -304,27 +318,29 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
   Widget _sliverLabel(String text) => SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 6, 20, 4),
-          child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted)),
+          child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: SlmColors.gold300)),
         ),
       );
 
   Widget _emptySliver(bool bn) => SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.only(top: 60),
-          child: Column(
-            children: [
-              Icon(Icons.search_off_rounded, size: 48, color: AppColors.muted.withValues(alpha: 0.6)),
-              const SizedBox(height: 10),
-              Text(
-                tr(bn, 'কিছু পাওয়া যায়নি', 'Nothing found'),
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.inkSoft),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                tr(bn, 'অন্য নাম বা কাজ লিখে দেখুন', 'Try another name or use'),
-                style: const TextStyle(fontSize: 13, color: AppColors.muted),
-              ),
-            ],
+          child: SlmReveal(
+            child: Column(
+              children: [
+                Icon(Icons.search_off_rounded, size: 48, color: SlmColors.gold400.withValues(alpha: 0.7)),
+                const SizedBox(height: 10),
+                Text(
+                  tr(bn, 'কিছু পাওয়া যায়নি', 'Nothing found'),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: SlmColors.ivory),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  tr(bn, 'অন্য নাম বা কাজ লিখে দেখুন', 'Try another name or use'),
+                  style: const TextStyle(fontSize: 13, color: SlmColors.mist),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -377,12 +393,31 @@ class _Intro extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            tr(bn, 'পরিচিতি', 'Identify'),
-            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, height: 1.15, color: AppColors.ink),
+          SlmReveal(
+            child: Text(
+              tr(bn, 'পরিচিতি', 'Identify'),
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
+                height: 1.15,
+                color: SlmColors.ivory,
+                shadows: [Shadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 10, offset: const Offset(0, 2))],
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          SlmReveal(
+            index: 1,
+            child: Container(
+              width: 64,
+              height: 1.4,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [SlmColors.gold300, SlmColors.gold400.withValues(alpha: 0)]),
+              ),
+            ),
           ),
           const SizedBox(height: 14),
-          _QuizBanner(bn: bn, stats: stats),
+          SlmReveal(index: 2, child: _QuizBanner(bn: bn, stats: stats)),
         ],
       ),
     );
@@ -398,93 +433,120 @@ class _QuizBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final played = stats.lifeTotal > 0;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          Navigator.of(context).pushNamed(AppRoutes.identifyPlay);
-        },
-        child: Ink(
+    return SlmTactile(
+      haptic: false,
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        Navigator.of(context).pushNamed(AppRoutes.identifyPlay);
+      },
+      builder: (context, press, _) => Transform.scale(
+        scale: 1 - 0.02 * press,
+        child: Container(
           height: 132,
+          padding: const EdgeInsets.all(1.4),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF115E59), Color(0xFF0F766E), Color(0xFF14B8A6)],
-            ),
-            boxShadow: const [BoxShadow(color: Color(0x400F766E), blurRadius: 22, offset: Offset(0, 10))],
+            gradient: SlmGradients.goldEdge,
+            boxShadow: [
+              BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 22, offset: const Offset(0, 10)),
+              BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.12 + 0.18 * press), blurRadius: 24),
+            ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Stack(
-              children: [
-                Positioned(
-                  right: -26,
-                  top: -30,
-                  child: Container(
-                    width: 150,
-                    height: 150,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.08)),
-                  ),
-                ),
-                Positioned(
-                  right: 18,
-                  bottom: -18,
-                  child: Icon(Icons.image_search_rounded, size: 120, color: Colors.white.withValues(alpha: 0.13)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              tr(bn, 'ছবি দেখে চিনুন', 'Name the photos'),
-                              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800, height: 1.2),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              played
-                                  ? tr(bn, 'সব মিলিয়ে ${bnNumber(stats.percent, bn)}% · ${bnNumber(stats.lifeTotal, bn)}টি উত্তর',
-                                      'All-time ${stats.percent}% · ${stats.lifeTotal} answered')
-                                  : tr(bn, 'ছোট খেলা — কতগুলো চেনেন দেখুন', 'Quick game — see how many you know'),
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.85),
-                                fontSize: 13,
-                                height: 1.35,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.fromLTRB(10, 6, 14, 6),
-                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.play_arrow_rounded, color: _teal, size: 20),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    played ? tr(bn, 'আবার খেলুন', 'Play again') : tr(bn, 'খেলা শুরু', 'Start'),
-                                    style: const TextStyle(color: _teal, fontWeight: FontWeight.w700, fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+            borderRadius: BorderRadius.circular(22.6),
+            child: DecoratedBox(
+              decoration: const BoxDecoration(gradient: SlmGradients.navyHero),
+              child: SlmShimmer(
+                period: const Duration(milliseconds: 5200),
+                intensity: 0.45,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      right: -30,
+                      top: -36,
+                      child: Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(colors: [
+                            SlmColors.emerald500.withValues(alpha: 0.28),
+                            SlmColors.emerald500.withValues(alpha: 0),
+                          ]),
                         ),
                       ),
-                      if (played) _ScoreRing(percent: stats.percent, bn: bn),
-                    ],
-                  ),
+                    ),
+                    Positioned(
+                      right: 18,
+                      bottom: -18,
+                      child: Icon(Icons.image_search_rounded, size: 120, color: SlmColors.gold300.withValues(alpha: 0.10)),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  tr(bn, 'ছবি দেখে চিনুন', 'Name the photos'),
+                                  style: const TextStyle(
+                                    color: SlmColors.ivory,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.2,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  played
+                                      ? tr(bn, 'সব মিলিয়ে ${bnNumber(stats.percent, bn)}% · ${bnNumber(stats.lifeTotal, bn)}টি উত্তর',
+                                          'All-time ${stats.percent}% · ${stats.lifeTotal} answered')
+                                      : tr(bn, 'ছোট খেলা — কতগুলো চেনেন দেখুন', 'Quick game — see how many you know'),
+                                  style: const TextStyle(
+                                    color: SlmColors.mist,
+                                    fontSize: 13,
+                                    height: 1.35,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.fromLTRB(10, 6, 14, 6),
+                                  decoration: BoxDecoration(
+                                    gradient: SlmGradients.emerald,
+                                    borderRadius: SlmRadius.pillAll,
+                                    border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.8)),
+                                    boxShadow: [BoxShadow(color: SlmColors.emerald400.withValues(alpha: 0.35), blurRadius: 10)],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.play_arrow_rounded, color: SlmColors.navy950, size: 20),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        played ? tr(bn, 'আবার খেলুন', 'Play again') : tr(bn, 'খেলা শুরু', 'Start'),
+                                        style: const TextStyle(
+                                          color: SlmColors.navy950,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (played) _ScoreRing(percent: stats.percent, bn: bn),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -504,25 +566,32 @@ class _ScoreRing extends StatelessWidget {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: percent / 100),
       duration: const Duration(milliseconds: 1100),
-      curve: Curves.easeOutCubic,
-      builder: (_, v, _) => SizedBox(
-        width: 74,
-        height: 74,
+      curve: SlmMotion.emphasized,
+      builder: (_, v, _) => Container(
+        width: 78,
+        height: 78,
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: SlmColors.navy950.withValues(alpha: 0.55),
+          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
+          boxShadow: [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.25 * v), blurRadius: 16)],
+        ),
         child: Stack(
           alignment: Alignment.center,
           children: [
             SizedBox.expand(
               child: CircularProgressIndicator(
                 value: v,
-                strokeWidth: 7,
+                strokeWidth: 6,
                 strokeCap: StrokeCap.round,
-                color: Colors.white,
-                backgroundColor: Colors.white.withValues(alpha: 0.22),
+                color: SlmColors.gold300,
+                backgroundColor: SlmColors.navy700,
               ),
             ),
             Text(
               '${bnNumber((v * 100).round(), bn)}%',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 17),
+              style: const TextStyle(color: SlmColors.gold100, fontWeight: FontWeight.w800, fontSize: 17),
             ),
           ],
         ),
@@ -552,9 +621,9 @@ class _FilterBarDelegate extends SliverPersistentHeaderDelegate {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            color: stuck ? AppColors.cream.withValues(alpha: 0.86) : Colors.transparent,
+            color: stuck ? SlmColors.navy900.withValues(alpha: 0.82) : Colors.transparent,
             border: Border(
-              bottom: BorderSide(color: stuck ? const Color(0x33D6BDA4) : Colors.transparent),
+              bottom: BorderSide(color: stuck ? SlmColors.gold400.withValues(alpha: 0.28) : Colors.transparent),
             ),
           ),
           child: child,
@@ -610,20 +679,21 @@ class _FilterBar extends StatelessWidget {
               focusNode: focus,
               onChanged: onQuery,
               textInputAction: TextInputAction.search,
-              style: const TextStyle(fontSize: 15, height: 1.3, color: AppColors.ink),
+              cursorColor: SlmColors.gold300,
+              style: const TextStyle(fontSize: 15, height: 1.3, color: SlmColors.ivory),
               decoration: InputDecoration(
                 hintText: listening
                     ? tr(bn, 'শুনছি… বলুন', 'Listening… speak now')
                     : tr(bn, 'নাম বা কাজ দিয়ে খুঁজুন', 'Search by name or use'),
-                hintStyle: TextStyle(color: listening ? _teal : AppColors.muted),
-                prefixIcon: const Icon(Icons.search_rounded, size: 22, color: AppColors.muted),
+                hintStyle: TextStyle(color: listening ? SlmColors.emerald300 : SlmColors.slate),
+                prefixIcon: const Icon(Icons.search_rounded, size: 22, color: SlmColors.gold300),
                 suffixIcon: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (searching && !listening)
                       IconButton(
                         tooltip: tr(bn, 'মুছুন', 'Clear'),
-                        icon: const Icon(Icons.close_rounded, size: 20),
+                        icon: const Icon(Icons.close_rounded, size: 20, color: SlmColors.mist),
                         onPressed: () {
                           controller.clear();
                           onQuery('');
@@ -635,37 +705,42 @@ class _FilterBar extends StatelessWidget {
                           : tr(bn, 'ভয়েস সার্চ', 'Voice search'),
                       onPressed: onVoice,
                       icon: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
+                        duration: SlmMotion.fast,
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: listening ? const Color(0x1A0F766E) : Colors.transparent,
+                          color: listening ? SlmColors.emerald500.withValues(alpha: 0.18) : Colors.transparent,
                           shape: BoxShape.circle,
+                          boxShadow: listening
+                              ? [BoxShadow(color: SlmColors.emerald400.withValues(alpha: 0.5), blurRadius: 12)]
+                              : null,
                         ),
                         child: Icon(
                           listening ? Icons.mic_rounded : Icons.mic_none_rounded,
                           size: 22,
-                          color: listening ? _teal : AppColors.muted,
+                          color: listening ? SlmColors.emerald300 : SlmColors.mist,
                         ),
                       ),
                     ),
                   ],
                 ),
                 filled: true,
-                fillColor: listening ? const Color(0xFFF0FDFA) : Colors.white,
+                fillColor: listening ? SlmColors.emerald900.withValues(alpha: 0.6) : SlmColors.navy800,
                 contentPadding: EdgeInsets.zero,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0x40D6BDA4)),
+                  borderSide: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.3)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                    color: listening ? _teal.withValues(alpha: 0.45) : const Color(0x40D6BDA4),
+                    color: listening
+                        ? SlmColors.emerald400.withValues(alpha: 0.6)
+                        : SlmColors.gold400.withValues(alpha: 0.3),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: _teal, width: 1.5),
+                  borderSide: const BorderSide(color: SlmColors.gold300, width: 1.5),
                 ),
               ),
             ),
@@ -683,16 +758,16 @@ class _FilterBar extends StatelessWidget {
                 _GroupChip(
                   label: tr(bn, 'সব', 'All'),
                   count: total,
-                  color: _teal,
+                  color: SlmColors.gold300,
                   selected: active == _allGroup && !searching,
                   bn: bn,
                   onTap: () => onGroup(_allGroup),
                 ),
                 for (final g in groups)
                   _GroupChip(
-                    label: categoryLabel(g, bn),
-                    count: counts[g] ?? 0,
-                    color: categoryStyle(g).color,
+                  label: categoryLabel(g, bn),
+                  count: counts[g] ?? 0,
+                  color: Color.lerp(categoryStyle(g).color, Colors.white, 0.22)!,
                     selected: active == g && !searching,
                     bn: bn,
                     onTap: () => onGroup(g),
@@ -727,30 +802,51 @@ class _GroupChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 6),
-      child: GestureDetector(
+      child: SlmPressable(
+        pressedScale: 0.94,
+        haptic: false,
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOutCubic,
+          duration: SlmMotion.base,
+          curve: SlmMotion.emphasized,
           height: 32,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected ? color : Colors.white.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(999),
+            gradient: selected ? SlmGradients.gold : null,
+            color: selected ? null : SlmColors.navy800.withValues(alpha: 0.9),
+            borderRadius: SlmRadius.pillAll,
             border: Border.all(
-              color: selected ? color : const Color(0x33D6BDA4),
+              color: selected ? SlmColors.gold200 : SlmColors.gold400.withValues(alpha: 0.25),
               width: 1,
             ),
+            boxShadow: selected
+                ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.35), blurRadius: 10)]
+                : null,
           ),
-          child: Text(
-            '$label · ${bnNumber(count, bn)}',
-            style: TextStyle(
-              fontSize: 13,
-              height: 1,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-              color: selected ? Colors.white : AppColors.inkSoft,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected ? SlmColors.navy950 : color,
+                  boxShadow: selected ? null : [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 4)],
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '$label · ${bnNumber(count, bn)}',
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? SlmColors.navy950 : SlmColors.mist,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -776,22 +872,33 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = categoryStyle(group);
+    final hue = Color.lerp(style.color, Colors.white, 0.22)!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+      padding: const EdgeInsets.fromLTRB(16, 14, 8, 2),
       child: Row(
         children: [
-          Icon(style.icon, size: 18, color: style.color),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: SlmColors.navy800,
+              border: Border.all(color: hue.withValues(alpha: 0.55)),
+              boxShadow: [BoxShadow(color: hue.withValues(alpha: 0.25), blurRadius: 8)],
+            ),
+            child: Icon(style.icon, size: 15, color: hue),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               categoryLabel(group, bn),
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: SlmColors.ivory),
             ),
           ),
           if (showAll)
             TextButton(
               onPressed: onAll,
-              style: TextButton.styleFrom(foregroundColor: style.color),
+              style: TextButton.styleFrom(foregroundColor: SlmColors.gold300),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -806,7 +913,7 @@ class _SectionHeader extends StatelessWidget {
           else
             Padding(
               padding: const EdgeInsets.only(right: 10),
-              child: Text(bnNumber(count, bn), style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.muted)),
+              child: Text(bnNumber(count, bn), style: const TextStyle(fontWeight: FontWeight.w700, color: SlmColors.slate)),
             ),
         ],
       ),
@@ -826,7 +933,7 @@ class _Appear extends StatelessWidget {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 560),
-      curve: Interval(start, 1, curve: Curves.easeOutCubic),
+      curve: Interval(start, 1, curve: SlmMotion.emphasized),
       builder: (_, t, c) => Opacity(
         opacity: t,
         child: Transform.translate(offset: Offset(0, (1 - t) * 18), child: c),
@@ -897,54 +1004,73 @@ class _ItemCardState extends State<_ItemCard> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: ColoredBox(
-                  color: style.wash,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: item.hasPhoto
-                            ? Hero(
-                                tag: widget.heroTag,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(6),
-                                  child: Image.asset(
-                                    item.images.first,
-                                    fit: BoxFit.contain,
-                                    cacheWidth: 360,
-                                    errorBuilder: (_, _, _) =>
-                                        Icon(Icons.image_outlined, color: style.color.withValues(alpha: 0.45)),
-                                  ),
-                                ),
-                              )
-                            : ColoredBox(
-                                color: style.wash,
-                                child: Icon(style.icon, color: style.color),
-                              ),
+              child: AnimatedContainer(
+                duration: SlmMotion.fast,
+                padding: const EdgeInsets.all(1),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  gradient: SlmGradients.goldEdge,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: _down ? 0.28 : 0.42),
+                      blurRadius: _down ? 6 : 12,
+                      offset: Offset(0, _down ? 2 : 5),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(0, -0.2),
+                        radius: 0.95,
+                        colors: [SlmColors.ivory, Color.lerp(SlmColors.ivoryDeep, style.color, 0.06)!],
                       ),
-                      if (item.images.length > 1)
-                        Positioned(
-                          right: 5,
-                          top: 5,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.38),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              bnNumber(item.images.length, widget.bn),
-                              style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: item.hasPhoto
+                              ? Hero(
+                                  tag: widget.heroTag,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(6),
+                                    child: Image.asset(
+                                      item.images.first,
+                                      fit: BoxFit.contain,
+                                      cacheWidth: 360,
+                                      errorBuilder: (_, _, _) =>
+                                          Icon(Icons.image_outlined, color: style.color.withValues(alpha: 0.45)),
+                                    ),
+                                  ),
+                                )
+                              : Icon(style.icon, color: style.color),
+                        ),
+                        if (item.images.length > 1)
+                          Positioned(
+                            right: 5,
+                            top: 5,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: SlmColors.navy900.withValues(alpha: 0.82),
+                                borderRadius: SlmRadius.pillAll,
+                                border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6), width: 0.8),
+                              ),
+                              child: Text(
+                                bnNumber(item.images.length, widget.bn),
+                                style: const TextStyle(fontSize: 10, color: SlmColors.gold200, fontWeight: FontWeight.w700),
+                              ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 6),
             Text(
               item.nameBn,
               maxLines: 2,
@@ -953,7 +1079,7 @@ class _ItemCardState extends State<_ItemCard> {
                 fontWeight: FontWeight.w600,
                 fontSize: 12.5,
                 height: 1.25,
-                color: AppColors.inkSoft,
+                color: SlmColors.ivory,
               ),
             ),
           ],
@@ -970,16 +1096,22 @@ class _QuizPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: _teal,
-      elevation: 8,
-      shadowColor: const Color(0x660F766E),
-      borderRadius: BorderRadius.circular(999),
-      child: InkWell(
-        onTap: () => Navigator.of(context).pushNamed(AppRoutes.identifyPlay),
-        borderRadius: BorderRadius.circular(999),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 6, 16, 6),
+    return SlmPressable(
+      pressedScale: 0.95,
+      onTap: () => Navigator.of(context).pushNamed(AppRoutes.identifyPlay),
+      child: Container(
+        padding: const EdgeInsets.all(1.4),
+        decoration: BoxDecoration(
+          gradient: SlmGradients.goldEdge,
+          borderRadius: SlmRadius.pillAll,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 16, offset: const Offset(0, 6)),
+            BoxShadow(color: SlmColors.emerald400.withValues(alpha: 0.3), blurRadius: 18),
+          ],
+        ),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(7, 5, 16, 5),
+          decoration: const BoxDecoration(gradient: SlmGradients.emerald, borderRadius: SlmRadius.pillAll),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -987,13 +1119,17 @@ class _QuizPill extends StatelessWidget {
                 width: 32,
                 height: 32,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                child: const Icon(Icons.play_arrow_rounded, color: _teal, size: 22),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: SlmGradients.gold,
+                  border: Border.all(color: SlmColors.gold100.withValues(alpha: 0.8)),
+                ),
+                child: const Icon(Icons.play_arrow_rounded, color: SlmColors.navy950, size: 22),
               ),
               const SizedBox(width: 8),
               Text(
                 tr(bn, 'ছবি দেখে চিনুন', 'Name the photos'),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
+                style: const TextStyle(color: SlmColors.navy950, fontWeight: FontWeight.w800, fontSize: 15),
               ),
             ],
           ),
