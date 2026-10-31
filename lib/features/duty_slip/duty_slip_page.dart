@@ -351,6 +351,39 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     setState(() {});
   }
 
+  Widget _photoLevel(DutySlipEngine e) {
+    void onDelta(int delta, Offset global) => _flyDelta(delta, fromGlobal: global);
+    if (e.level.number == 14) {
+      return DsClearance(
+        key: ValueKey(e.level.number),
+        engine: e,
+        onDone: _finishSafeWalk,
+        muted: _muted,
+        onSpeak: _speak,
+        onDelta: onDelta,
+      );
+    }
+    if (e.level.number >= 11 && e.level.number <= 13) {
+      return DsPoleInspect(
+        key: ValueKey(e.level.number),
+        engine: e,
+        onDone: _finishSafeWalk,
+        muted: _muted,
+        onSpeak: _speak,
+        onDelta: onDelta,
+      );
+    }
+    return DsDressUp(
+      key: ValueKey(e.level.number),
+      engine: e,
+      onDone: _finishSafeWalk,
+      muted: _muted,
+      onSpeak: _speak,
+      onDelta: onDelta,
+      onBack: _backToRoad,
+    );
+  }
+
   void _openDress() {
     final e = _engine;
     if (e == null || !e.showingDressIntro) return;
@@ -629,6 +662,70 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     if (ok == true && mounted) Navigator.of(context).pop();
   }
 
+  Widget _briefingStage(DutySlipEngine e) {
+    return _OfficeStage(
+      engine: e,
+      feeder: _ptwFeeder,
+      pole: _ptwPole,
+      shift: _ptwShift,
+      onPlan: _tapPlan,
+      onOpenRoad: _openRoad,
+      onOpenLevel: _openLevel,
+      onBackRoad: _backToRoad,
+      onFinishWalk: _finishSafeWalk,
+      onOpenDress: _openDress,
+      onStartLevel: _startLevel,
+      onRetry: _retryLevel,
+      onShowList: _showLevelList,
+      onNextLevel: _nextLevel,
+      muted: _muted,
+      onSpeak: _speak,
+      onDelta: _flyDelta,
+      roadScroll: _roadScroll,
+      onOpenPtw: () {
+        unawaited(ZlFx.cue('sounds/quiz_flip.wav', muted: _muted));
+        e.openPtw();
+        setState(() {});
+      },
+      onSetFeeder: (v) {
+        unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.35, muted: _muted));
+        setState(() => _ptwFeeder = v);
+      },
+      onSetPole: (v) {
+        unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.35, muted: _muted));
+        setState(() => _ptwPole = v);
+      },
+      onSetShift: (v) {
+        unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.35, muted: _muted));
+        setState(() => _ptwShift = v);
+      },
+      onSubmitPtw: () {
+        if (_ptwFeeder == null ||
+            _ptwFeeder!.isEmpty ||
+            _ptwPole == null ||
+            _ptwPole!.isEmpty ||
+            _ptwShift == null ||
+            _ptwShift!.isEmpty) {
+          return;
+        }
+        final box = context.findRenderObject() as RenderBox?;
+        final mid = box?.size.center(Offset.zero) ?? Offset.zero;
+        final g = box?.localToGlobal(mid);
+        final ok = e.submitPtw(feederPick: _ptwFeeder!, polePick: _ptwPole!, shiftPick: _ptwShift!);
+        if (ok) {
+          unawaited(ZlFx.cue('sounds/quiz_right.wav', muted: _muted));
+          _flyDelta(5, fromGlobal: g);
+          _loadCard(speak: true);
+        } else {
+          unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: _muted));
+          _shake.forward(from: 0);
+          _flyDelta(-5, fromGlobal: g);
+          setState(() {});
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading || _engine == null) {
@@ -670,6 +767,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final jobIntro = e.listing && e.level.isJob;
     final walk = e.showingSafeWalk;
     final dress = e.showingDress;
+    final photoPlay = dress;
     final vanIntro = e.showingDressIntro && e.level.number >= 6 && e.level.number <= 14;
     final vanIntroYard = vanIntro && e.level.number == 6;
     final vanIntroScene = vanIntro && e.level.number > 6 && e.level.number <= 14;
@@ -693,17 +791,39 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
           key: _stackKey,
           fit: StackFit.expand,
           children: [
-            if (vanIntroYard)
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF8ECAE6), Color(0xFFD7E8C8), Color(0xFFF6E2C4), Color(0xFFE4C48A)],
-                    stops: [0.0, 0.38, 0.68, 1.0],
-                  ),
+            if (photoPlay)
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _shakeX,
+                  builder: (_, child) => Transform.translate(offset: Offset(_shakeX.value, 0), child: child),
+                  child: _photoLevel(e),
                 ),
-                child: CustomPaint(painter: DsYardPainter(), child: SizedBox.expand()),
+              )
+            else if (vanIntroYard)
+              Stack(
+                fit: StackFit.expand,
+                children: [
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF8ECAE6), Color(0xFFD7E8C8), Color(0xFFF6E2C4), Color(0xFFE4C48A)],
+                        stops: [0.0, 0.38, 0.68, 1.0],
+                      ),
+                    ),
+                    child: CustomPaint(painter: DsYardPainter(), child: SizedBox.expand()),
+                  ),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0x77000000), Color(0xDD000000)],
+                      ),
+                    ),
+                  ),
+                ],
               )
             else if (vanIntroScene)
               Stack(
@@ -719,26 +839,12 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Color(0x66101820), Color(0x22101820), Color(0x66101820)],
+                        colors: [Color(0x77000000), Color(0xDD000000)],
                       ),
                     ),
                   ),
                 ],
               )
-            else if (vanYard)
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF8ECAE6), Color(0xFFD7E8C8), Color(0xFFF6E2C4), Color(0xFFE4C48A)],
-                    stops: [0.0, 0.38, 0.68, 1.0],
-                  ),
-                ),
-                child: CustomPaint(painter: DsYardPainter(), child: SizedBox.expand()),
-              )
-            else if (dress)
-              const ColoredBox(color: Color(0xFFF6E2C2))
             else if (walk)
               const ColoredBox(color: Color(0xFFC5DCE8))
             else if (e.onRoad)
@@ -789,71 +895,13 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                   if (e.stamps.contains('ptw'))
                     _PocketChip(feeder: e.feeder, alert: e.slashed.contains('feeder')),
                   Expanded(
-                    child: AnimatedBuilder(
+                    child: dress
+                        ? const IgnorePointer(child: SizedBox.expand())
+                        : AnimatedBuilder(
                       animation: _shakeX,
                       builder: (_, child) => Transform.translate(offset: Offset(_shakeX.value, 0), child: child),
                       child: switch (e.act) {
-                        DsAct.briefing => _OfficeStage(
-                            engine: e,
-                            feeder: _ptwFeeder,
-                            pole: _ptwPole,
-                            shift: _ptwShift,
-                            onPlan: _tapPlan,
-                            onOpenRoad: _openRoad,
-                            onOpenLevel: _openLevel,
-                            onBackRoad: _backToRoad,
-                            onFinishWalk: _finishSafeWalk,
-                            onOpenDress: _openDress,
-                            onStartLevel: _startLevel,
-                            onRetry: _retryLevel,
-                            onShowList: _showLevelList,
-                            onNextLevel: _nextLevel,
-                            muted: _muted,
-                            onSpeak: _speak,
-                            onDelta: _flyDelta,
-                            roadScroll: _roadScroll,
-                            onOpenPtw: () {
-                              unawaited(ZlFx.cue('sounds/quiz_flip.wav', muted: _muted));
-                              e.openPtw();
-                              setState(() {});
-                            },
-                            onSetFeeder: (v) {
-                              unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.35, muted: _muted));
-                              setState(() => _ptwFeeder = v);
-                            },
-                            onSetPole: (v) {
-                              unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.35, muted: _muted));
-                              setState(() => _ptwPole = v);
-                            },
-                            onSetShift: (v) {
-                              unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.35, muted: _muted));
-                              setState(() => _ptwShift = v);
-                            },
-                            onSubmitPtw: () {
-                              if (_ptwFeeder == null ||
-                                  _ptwFeeder!.isEmpty ||
-                                  _ptwPole == null ||
-                                  _ptwPole!.isEmpty ||
-                                  _ptwShift == null ||
-                                  _ptwShift!.isEmpty) {
-                                return;
-                              }
-                              final box = context.findRenderObject() as RenderBox?;
-                              final mid = box?.size.center(Offset.zero) ?? Offset.zero;
-                              final g = box?.localToGlobal(mid);
-                              final ok = e.submitPtw(feederPick: _ptwFeeder!, polePick: _ptwPole!, shiftPick: _ptwShift!);
-                              if (ok) {
-                                unawaited(ZlFx.cue('sounds/quiz_right.wav', muted: _muted));
-                                _flyDelta(5, fromGlobal: g);
-                                _loadCard(speak: true);
-                              } else {
-                                unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: _muted));
-                                _shake.forward(from: 0);
-                                _flyDelta(-5, fromGlobal: g);
-                                setState(() {});
-                              }
-                            },
-                          ),
+                        DsAct.briefing => _briefingStage(e),
                         DsAct.card when e.step != null => _PlayCard(
                             engine: e,
                             step: e.step!,
@@ -941,9 +989,10 @@ class _Hud extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final e = engine;
-    final livePlay = e.playing || e.showingDress;
-    final live = livePlay ? e.levelScore : e.quality;
+    final onLevel = e.playing || e.listing;
+    final live = onLevel ? e.levelScore : e.quality;
     final liveColor = live < 0 ? ZlColors.red : ZlColors.text;
+    final title = onLevel ? e.briefOf().title : '';
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
       child: Container(
@@ -957,12 +1006,27 @@ class _Hud extends StatelessWidget {
           children: [
             _MuteDot(muted: muted, onMute: onMute),
             const SizedBox(width: 12),
-            if (livePlay)
-              Text(
-                'লেভেল ${_bnNum(e.level.number)}',
-                style: zlText(18, weight: FontWeight.w900, color: ZlColors.amber),
-              ),
-            const Spacer(),
+            if (onLevel)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'লেভেল ${_bnNum(e.level.number)}',
+                      style: zlText(16, weight: FontWeight.w900, color: ZlColors.amber, height: 1.05),
+                    ),
+                    if (title.isNotEmpty)
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: zlText(13, weight: FontWeight.w700, color: ZlColors.cream, height: 1.15),
+                      ),
+                  ],
+                ),
+              )
+            else
+              const Spacer(),
             Text(
               e.playClock,
               style: zlText(20, weight: FontWeight.w900, color: e.overtime && !e.playing ? ZlColors.red : ZlColors.cream),
@@ -972,7 +1036,7 @@ class _Hud extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text('$live', key: scoreKey, style: zlText(24, weight: FontWeight.w900, color: liveColor, height: 1)),
-                if (livePlay)
+                if (onLevel)
                   Text('${e.hudTotal}', style: zlText(12, weight: FontWeight.w700, color: ZlColors.soft, height: 1.2)),
               ],
             ),
@@ -3919,70 +3983,65 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
       animation: Listenable.merge([_run, _insist]),
       builder: (_, _) {
         final next = _span(_run.value, 0.88, 1.00);
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: () {
-                    if (_openStep != null) {
-                      setState(() => _openStep = null);
-                      return;
-                    }
-                    if (_openGroup != null) {
-                      _closeGroup();
-                      return;
-                    }
-                    if (_page == 2) {
-                      setState(() {
-                        _page = 1;
-                        _openStep = null;
-                      });
-                      return;
-                    }
-                    if (_page == 1) {
-                      setState(() {
-                        _page = 0;
-                        _openStep = null;
-                      });
-                      return;
-                    }
-                    widget.onBack();
-                  },
-                  icon: const Icon(Icons.arrow_back_rounded, color: ZlColors.soft),
-                ),
-              ),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 480),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, anim) {
-                    final slide = Tween<Offset>(begin: const Offset(0.08, 0), end: Offset.zero).animate(anim);
-                    return FadeTransition(opacity: anim, child: SlideTransition(position: slide, child: child));
-                  },
-                  child: _page == 2
-                      ? _GuidePane(
-                          key: const ValueKey('job-hint'),
-                          body: e.briefOf().body,
-                          bloom: 1,
-                          onNext: widget.onNext,
-                        )
-                      : _page == 1
-                          ? _review(plan)
-                          : _asolPage(plan, next),
-                ),
-              ),
-            ],
+        final arrow = _page == 2
+            ? _FloatArrow(onTap: widget.onNext)
+            : _page == 1
+                ? _FloatArrow(onTap: _toHint)
+                : _openGroup == null
+                    ? _FloatArrow(reveal: next, onTap: _toReview)
+                    : const SizedBox.shrink();
+        return _IntroFrame(
+          title: e.briefOf().title,
+          onBack: () {
+            if (_openStep != null) {
+              setState(() => _openStep = null);
+              return;
+            }
+            if (_openGroup != null) {
+              _closeGroup();
+              return;
+            }
+            if (_page == 2) {
+              setState(() {
+                _page = 1;
+                _openStep = null;
+              });
+              return;
+            }
+            if (_page == 1) {
+              setState(() {
+                _page = 0;
+                _openStep = null;
+              });
+              return;
+            }
+            widget.onBack();
+          },
+          next: arrow,
+          body: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 480),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, anim) {
+              final slide = Tween<Offset>(begin: const Offset(0.08, 0), end: Offset.zero).animate(anim);
+              return FadeTransition(opacity: anim, child: SlideTransition(position: slide, child: child));
+            },
+            child: _page == 2
+                ? _GuidePane(
+                    key: const ValueKey('job-hint'),
+                    body: e.briefOf().body,
+                    bloom: 1,
+                  )
+                : _page == 1
+                    ? _review(plan)
+                    : _asolPage(plan),
           ),
         );
       },
     );
   }
 
-  Widget _asolPage(List<DsPlanItem> plan, double next) {
+  Widget _asolPage(List<DsPlanItem> plan) {
     final group = _openGroup == null ? null : dsJobGroups[_openGroup!];
     return Stack(
       key: const ValueKey('job-asol'),
@@ -4018,16 +4077,6 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
               child: _jobFocus(plan),
             ),
           ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 6,
-          child: Center(
-            child: group == null
-                ? _FloatArrow(reveal: next, onTap: _toReview)
-                : _FloatArrow(icon: Icons.arrow_back_rounded, onTap: _closeGroup),
-          ),
-        ),
       ],
     );
   }
@@ -4139,14 +4188,6 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
     return Column(
       children: [
         Text(
-          'আসল কাজ',
-          textAlign: TextAlign.center,
-          style: zlText(28, weight: FontWeight.w900, height: 1.28, color: const Color(0xFFF6E7B0)).copyWith(
-            shadows: const [Shadow(color: Color(0x66C9A227), blurRadius: 12)],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
           '23 ধাপ। মাঠে তার ছিঁড়ে পড়ে আছে।',
           textAlign: TextAlign.center,
           style: zlText(16, weight: FontWeight.w700, height: 1.4, color: const Color(0xFFE8D9A8)),
@@ -4190,12 +4231,6 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
               child: _jobFocus(plan),
             ),
           ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 6,
-          child: Center(child: _FloatArrow(onTap: _toHint)),
-        ),
       ],
     );
   }
@@ -4278,6 +4313,59 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
   }
 }
 
+class _IntroFrame extends StatelessWidget {
+  final String title;
+  final VoidCallback onBack;
+  final Widget body;
+  final Widget next;
+  final bool showBack;
+  const _IntroFrame({
+    required this.title,
+    required this.onBack,
+    required this.body,
+    required this.next,
+    this.showBack = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 22),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: zlText(28, weight: FontWeight.w900, height: 1.28, color: const Color(0xFFF6E7B0)).copyWith(
+                shadows: const [Shadow(color: Color(0x66C9A227), blurRadius: 12)],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(child: body),
+                Positioned(right: 10, bottom: 6, child: next),
+                if (showBack)
+                  Positioned(
+                    left: 10,
+                    bottom: 6,
+                    child: _FloatArrow(icon: Icons.arrow_back_rounded, onTap: onBack),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _DressIntro extends StatefulWidget {
   final DutySlipEngine engine;
   final VoidCallback onNext;
@@ -4318,109 +4406,37 @@ class _DressIntroState extends State<_DressIntro> {
     final brief = widget.engine.briefOf();
     final van = widget.engine.level.number >= 6 && widget.engine.level.number <= 14;
     final yardCard = widget.engine.level.number == 6;
-    final sunnyCard = yardCard;
-    final ink = van && sunnyCard ? const Color(0xFF3A2A16) : const Color(0xFFF6E7B0);
-    final rule = van && sunnyCard ? const Color(0x553A2A16) : const Color(0x55C9A227);
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Padding(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              onPressed: widget.onBack,
-              icon: Icon(Icons.arrow_back_rounded, color: van ? ink : ZlColors.soft),
-            ),
-          ),
-          Expanded(
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 700),
-              curve: Curves.easeOutCubic,
-              builder: (_, t, child) => Opacity(
-                opacity: t,
-                child: Transform.translate(offset: Offset(0, 18 * (1 - t)), child: child),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 8),
-                  Text(
-                    'লেভেল ${_bnNum(widget.engine.level.number)}',
-                    style: zlText(13, weight: FontWeight.w800, color: van && sunnyCard ? const Color(0xFF6E5A32) : const Color(0xFFB7A57A)),
+        _IntroFrame(
+          title: brief.title,
+          onBack: widget.onBack,
+          next: _FloatArrow(onTap: widget.onNext),
+          body: yardCard
+              ? Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 128),
+                  child: Image.asset(
+                    _dressIntroArt(6),
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: Container(height: 1, color: rule)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Transform.rotate(
-                          angle: math.pi / 4,
-                          child: Container(width: 7, height: 7, color: van && sunnyCard ? ink : const Color(0xFFC9A227)),
-                        ),
-                      ),
-                      Expanded(child: Container(height: 1, color: rule)),
-                    ],
-                  ),
-                  const SizedBox(height: 22),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: Text(
-                      brief.title,
-                      textAlign: TextAlign.center,
-                      style: zlText(28, weight: FontWeight.w900, height: 1.28, color: ink).copyWith(
-                        shadows: van && sunnyCard ? const <Shadow>[] : const [Shadow(color: Color(0x66C9A227), blurRadius: 12)],
+                )
+              : van
+                  ? const SizedBox.expand()
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(32, 0, 32, 168),
+                      child: Image.asset(
+                        _dressIntroArt(widget.engine.level.number),
+                        fit: BoxFit.contain,
+                        alignment: Alignment.topCenter,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  if (yardCard)
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 128),
-                        child: Image.asset(
-                          _dressIntroArt(6),
-                          fit: BoxFit.contain,
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                    )
-                  else if (van)
-                    const Spacer()
-                  else
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(32, 0, 32, 168),
-                        child: Image.asset(
-                          _dressIntroArt(widget.engine.level.number),
-                          fit: BoxFit.contain,
-                          alignment: Alignment.topCenter,
-                        ),
-                      ),
-                    ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 8, 8),
-                      child: _FloatArrow(
-                        onTap: widget.onNext,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
         ),
         if (yardCard || !van)
           Positioned(
             left: 8,
-            bottom: 8,
+            bottom: 72,
             child: IgnorePointer(
               child: DsCoach(mood: DsCoachMood.talk, line: brief.body, bubbleWidth: 228),
             ),
@@ -4545,28 +4561,23 @@ class _BriefBoardState extends State<_BriefBoard> with SingleTickerProviderState
         final bloom = _span(t, 0.10, 0.42, curve: Curves.easeOut);
         final titleIn = _span(t, 0.18, 0.40);
         final next = _span(t, 0.93, 1.00);
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: () {
-                    if (_showBody) {
-                      setState(() {
-                        _showBody = false;
-                        _open = null;
-                      });
-                      return;
-                    }
-                    widget.onBack();
-                  },
-                  icon: const Icon(Icons.arrow_back_rounded, color: ZlColors.soft),
-                ),
-              ),
-              Expanded(
-                child: AnimatedSwitcher(
+        return _IntroFrame(
+          title: brief.title,
+          onBack: () {
+            if (_showBody) {
+              setState(() {
+                _showBody = false;
+                _open = null;
+              });
+              return;
+            }
+            widget.onBack();
+          },
+          next: _FloatArrow(
+            reveal: _showBody ? 1 : next,
+            onTap: _showBody ? widget.onNext : _onArrow,
+          ),
+          body: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 520),
                   switchInCurve: Curves.easeOutCubic,
                   switchOutCurve: Curves.easeInCubic,
@@ -4582,7 +4593,6 @@ class _BriefBoardState extends State<_BriefBoard> with SingleTickerProviderState
                           key: const ValueKey('guide'),
                           body: brief.body,
                           bloom: 1,
-                          onNext: widget.onNext,
                         )
                       : _ListPane(
                           key: const ValueKey('list'),
@@ -4600,9 +4610,6 @@ class _BriefBoardState extends State<_BriefBoard> with SingleTickerProviderState
                           onNext: _onArrow,
                         ),
                 ),
-              ),
-            ],
-          ),
         );
       },
     );
@@ -4711,57 +4718,9 @@ class _ListPane extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         _BriefBloom(bloom: bloom),
-        Column(
-          children: [
-            const SizedBox(height: 8),
-            Opacity(
-              opacity: chip,
-              child: Transform.translate(
-                offset: Offset(0, 8 * (1 - chip)),
-                child: Text(
-                  'লেভেল ${_bnNum(e.level.number)}',
-                  style: zlText(13, weight: FontWeight.w800, color: const Color(0xFFB7A57A)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Opacity(
-              opacity: line,
-              child: Row(
-                children: [
-                  Expanded(child: Container(height: 1, color: const Color(0x55C9A227))),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Transform.rotate(
-                      angle: math.pi / 4,
-                      child: Container(width: 7, height: 7, color: const Color(0xFFC9A227)),
-                    ),
-                  ),
-                  Expanded(child: Container(height: 1, color: const Color(0x55C9A227))),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            Opacity(
-              opacity: titleIn,
-              child: Transform.translate(
-                offset: Offset(0, 18 * (1 - titleIn)),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  child: Text(
-                    brief.title,
-                    textAlign: TextAlign.center,
-                    style: zlText(28, weight: FontWeight.w900, height: 1.28, color: const Color(0xFFF6E7B0)).copyWith(
-                      shadows: const [Shadow(color: Color(0x66C9A227), blurRadius: 12)],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: Stack(
-                children: [
+        Positioned.fill(
+          child: Stack(
+            children: [
                   if (e.level.isLetters)
                     ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
@@ -4812,17 +4771,9 @@ class _ListPane extends StatelessWidget {
                             : null,
                       ),
                     ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 6,
-                    child: Center(child: _FloatArrow(reveal: next, onTap: onNext)),
-                  ),
                 ],
               ),
             ),
-          ],
-        ),
       ],
     );
   }
@@ -4831,8 +4782,7 @@ class _ListPane extends StatelessWidget {
 class _GuidePane extends StatelessWidget {
   final String body;
   final double bloom;
-  final VoidCallback onNext;
-  const _GuidePane({super.key, required this.body, required this.bloom, required this.onNext});
+  const _GuidePane({super.key, required this.body, required this.bloom});
 
   @override
   Widget build(BuildContext context) {
@@ -4860,12 +4810,6 @@ class _GuidePane extends StatelessWidget {
               ),
             ),
           ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 6,
-          child: Center(child: _FloatArrow(onTap: onNext)),
         ),
       ],
     );

@@ -231,7 +231,9 @@ class _DsClearanceState extends State<DsClearance> with TickerProviderStateMixin
             children: [
               Expanded(
                 child: _showChecklist
-                    ? DsHabitChecklist(
+                    ? Padding(
+                        padding: EdgeInsets.only(top: dsBadgeInset(context)),
+                        child: DsHabitChecklist(
                         items: _endItems,
                         shown: _checkedCount,
                         showNext: _checklistReady,
@@ -239,6 +241,7 @@ class _DsClearanceState extends State<DsClearance> with TickerProviderStateMixin
                           final gate = _nextGate;
                           if (gate != null && !gate.isCompleted) gate.complete();
                         },
+                      ),
                       )
                     : LayoutBuilder(
                         builder: (context, box) {
@@ -343,34 +346,19 @@ class _DsClearanceState extends State<DsClearance> with TickerProviderStateMixin
               if (!_finishing)
                 DsFlatShelf(
                   children: [
-                    if (!_done.contains('crowd'))
-                      DsShelfToken<String>(
-                        data: 'cones',
-                        child: Image.asset(_cones, fit: BoxFit.contain),
-                      ),
-                    if (!_done.contains('ground'))
-                      DsShelfToken<String>(
-                        data: 'mat',
-                        child: Image.asset(_mat, fit: BoxFit.contain),
-                      ),
-                    if (!_ladderPlaced)
-                      DsShelfToken<String>(
-                        data: 'ladder',
-                        child: Image.asset(_ladder, fit: BoxFit.contain),
-                      ),
-                    DsShelfToken<String>(
-                      data: 'pipe',
-                      child: Image.asset(_pipe, fit: BoxFit.contain),
-                    ),
+                    if (!_done.contains('crowd')) DsShelfToken<String>(data: 'cones', asset: _cones),
+                    if (!_done.contains('ground')) DsShelfToken<String>(data: 'mat', asset: _mat),
+                    if (!_ladderPlaced) DsShelfToken<String>(data: 'ladder', asset: _ladder),
+                    DsShelfToken<String>(data: 'pipe', asset: _pipe),
                   ],
                 ),
             ],
           ),
           if (!_showChecklist && !_showThanks)
-            const Positioned(
+            Positioned(
               left: 14,
-              top: 8,
-              child: IgnorePointer(child: DsPolePreChecklist()),
+              top: dsBadgeInset(context),
+              child: const IgnorePointer(child: DsPolePreChecklist()),
             ),
           if (_coachVisible && !_showChecklist && !_showThanks)
             Positioned.fill(

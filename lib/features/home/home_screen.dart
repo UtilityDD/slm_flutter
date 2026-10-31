@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/slm_backdrop.dart';
 import '../auth/auth_provider.dart';
 import '../auth/verify_gate.dart';
@@ -122,19 +123,14 @@ class _PathPlayChip extends StatefulWidget {
 }
 
 class _PathPlayChipState extends State<_PathPlayChip>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   bool _pressed = false;
-  late final AnimationController _glow;
   late final AnimationController _charge;
 
   @override
   void initState() {
     super.initState();
     unawaited(DsPack.load());
-    _glow = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
     _charge = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 240),
@@ -143,7 +139,6 @@ class _PathPlayChipState extends State<_PathPlayChip>
 
   @override
   void dispose() {
-    _glow.dispose();
     _charge.dispose();
     super.dispose();
   }
@@ -171,16 +166,15 @@ class _PathPlayChipState extends State<_PathPlayChip>
         onTapCancel: () => setState(() => _pressed = false),
         onTapUp: (_) => _trigger(chipContext),
         child: AnimatedBuilder(
-          animation: Listenable.merge([_glow, _charge]),
+          animation: _charge,
           builder: (context, child) {
-            final lift = _pressed ? 0.0 : _glow.value;
             final chargeVal = _charge.value;
             final chargeScale = 1.0 + (math.sin(chargeVal * math.pi) * 0.08);
 
             return Transform.translate(
               offset: Offset(0, _pressed ? 2 : 0),
               child: Transform.scale(
-                scale: (_pressed ? 0.97 : 1 + lift * 0.025) * chargeScale,
+                scale: (_pressed ? 0.97 : 1) * chargeScale,
                 child: Stack(
                   alignment: Alignment.center,
                   clipBehavior: Clip.none,
@@ -229,18 +223,6 @@ class _PathPlayChipState extends State<_PathPlayChip>
                             Color(0xFFEA580C),
                           ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFE08A1E).withValues(
-                              alpha: 0.32 + lift * 0.25 + chargeVal * 0.3,
-                            ),
-                            offset: Offset(0, _pressed ? 2 : 8),
-                            blurRadius: _pressed
-                                ? 6
-                                : 16 + lift * 8 + chargeVal * 12,
-                            spreadRadius: chargeVal * 3,
-                          ),
-                        ],
                       ),
                       child: child,
                     ),
@@ -249,42 +231,76 @@ class _PathPlayChipState extends State<_PathPlayChip>
               ),
             );
           },
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 7, 18, 7),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.28),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    widget.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w800,
-                      height: 1.1,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+            child: _LabelLight(widget.label),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LabelLight extends StatefulWidget {
+  final String text;
+  const _LabelLight(this.text);
+
+  @override
+  State<_LabelLight> createState() => _LabelLightState();
+}
+
+class _LabelLightState extends State<_LabelLight>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _sweep;
+
+  @override
+  void initState() {
+    super.initState();
+    _sweep = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _sweep.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _sweep,
+      builder: (context, child) {
+        return ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) {
+            final slide = -bounds.width + (_sweep.value * bounds.width * 2.4);
+            return const LinearGradient(
+              colors: [
+                Color(0xB8FFFFFF),
+                Color(0xFFFFFFFF),
+                Color(0xFFFFF6C8),
+                Color(0xFFFFFFFF),
+                Color(0xB8FFFFFF),
+              ],
+              stops: [0.30, 0.44, 0.50, 0.56, 0.70],
+            ).createShader(Rect.fromLTWH(slide, 0, bounds.width, bounds.height));
+          },
+          child: child,
+        );
+      },
+      child: Text(
+        widget.text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          fontFamily: banglaFont,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          height: 1.2,
+          color: Colors.white,
         ),
       ),
     );

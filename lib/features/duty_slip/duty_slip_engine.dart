@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/en_digits.dart';
 import 'duty_slip_models.dart';
 
+const dsPlayBadgeBand = 80.0;
+
 enum DsAct { briefing, card, call, lethal, done }
 
 enum DsPlanPhase { cover, road, list, play, result }
@@ -438,7 +440,7 @@ class DutySlipEngine {
   bool get playing => planning && planPhase == DsPlanPhase.play;
   bool get showingResult => planning && planPhase == DsPlanPhase.result;
   bool get prePlay => covering || onRoad || listing || showingResult;
-  bool get showHud => playing || showingDress || !planning;
+  bool get showHud => playing || listing || !planning;
 
   String get siteStory => fill(site.storyBn.isNotEmpty ? site.storyBn : site.introBn);
 

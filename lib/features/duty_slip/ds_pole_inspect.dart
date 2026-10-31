@@ -576,11 +576,14 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
             children: [
               Expanded(
                 child: _showChecklist
-                    ? DsHabitChecklist(
+                    ? Padding(
+                        padding: EdgeInsets.only(top: dsBadgeInset(context)),
+                        child: DsHabitChecklist(
                         items: _endItems,
                         shown: _checkedCount,
                         showNext: _checklistReady,
                         onNext: _proceedChecklist,
+                      ),
                       )
                     : DragTarget<_ShelfTool>(
                   onWillAcceptWithDetails: (_) => !_finishing,
@@ -812,35 +815,23 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                 DsFlatShelf(
                   children: [
                     if (!_done.contains('hammer'))
-                      DsShelfToken<_ShelfTool>(
-                        data: _ShelfTool.hammer,
-                        child: Image.asset(_poleHammer, fit: BoxFit.contain),
-                      ),
+                      DsShelfToken<_ShelfTool>(data: _ShelfTool.hammer, asset: _poleHammer),
                     if (!_ladderPlaced && !_reported)
-                      DsShelfToken<_ShelfTool>(
-                        data: _ShelfTool.ladder,
-                        child: Image.asset(_poleLadder, fit: BoxFit.contain),
-                      ),
+                      DsShelfToken<_ShelfTool>(data: _ShelfTool.ladder, asset: _poleLadder),
                     if (_steel && !_done.contains('top'))
-                      DsShelfToken<_ShelfTool>(
-                        data: _ShelfTool.glass,
-                        child: Image.asset(_pole13Glass, fit: BoxFit.contain),
-                      ),
+                      DsShelfToken<_ShelfTool>(data: _ShelfTool.glass, asset: _pole13Glass),
                     if (_unfit && !_reported)
-                      DsShelfToken<_ShelfTool>(
-                        data: _ShelfTool.tag,
-                        child: Image.asset(_pole12Tag, fit: BoxFit.contain),
-                      ),
+                      DsShelfToken<_ShelfTool>(data: _ShelfTool.tag, asset: _pole12Tag),
                   ],
                 ),
             ],
           ),
 
           if (!_showChecklist && !_showThanks)
-            const Positioned(
+            Positioned(
               left: 14,
-              top: 8,
-              child: IgnorePointer(child: DsPolePreChecklist()),
+              top: dsBadgeInset(context),
+              child: const IgnorePointer(child: DsPolePreChecklist()),
             ),
 
           if (_coachVisible && !_showChecklist && !_showThanks)
@@ -875,54 +866,6 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
             ),
         ],
       ),
-    );
-  }
-}
-
-/// Same flat picture strip as levels 8–10. No card, no per-item box.
-class DsFlatShelf extends StatelessWidget {
-  const DsFlatShelf({super.key, required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: const Color(0xCCF6E7C8),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
-        child: SizedBox(
-          width: double.infinity,
-          child: Wrap(
-            crossAxisAlignment: WrapCrossAlignment.end,
-            spacing: 6,
-            runSpacing: 6,
-            children: children,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Bare shelf picture. It scores only when dropped on the scene.
-class DsShelfToken<T extends Object> extends StatelessWidget {
-  const DsShelfToken({super.key, required this.data, required this.child});
-
-  final T data;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final thumb = SizedBox(width: 50, height: 44, child: child);
-    return Draggable<T>(
-      data: data,
-      feedback: Material(
-        color: Colors.transparent,
-        child: SizedBox(width: 84, height: 84, child: child),
-      ),
-      childWhenDragging: Opacity(opacity: 0.25, child: thumb),
-      child: thumb,
     );
   }
 }
