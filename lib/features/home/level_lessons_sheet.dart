@@ -388,6 +388,7 @@ class _CardExpandTransition extends StatelessWidget {
                           locked: false,
                           enableHero: false,
                           sheen: sheen,
+                          premium: true,
                           glow: 0.65 + 0.7 * move,
                           launch: math.sin(move * math.pi) * 0.42,
                         ),

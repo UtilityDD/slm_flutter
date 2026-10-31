@@ -62,6 +62,7 @@ flutter:
     - assets/quizzes/
     - assets/duty_slip/
     - assets/duty_slip/dress/
+    - assets/brand/
     - assets/safety/library/ab-cable-items/
     - assets/safety/library/charts/
     - assets/safety/library/insulators/

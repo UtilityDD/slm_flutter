@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/supabase_service.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
 import '../training/training_provider.dart';
 import 'hero_card_carousel.dart';
@@ -76,17 +76,19 @@ class _LevelZeroPageState extends ConsumerState<LevelZeroPage> {
     final bn = widget.bn;
     final done = isPathOrientationDone(ref.watch(allCompletedLessonsProvider));
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4EDE0),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF8F1E4), Color(0xFFF0E6D4), Color(0xFFEADFCB)],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+      backgroundColor: SlmColors.navy950,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Theme(
+              data: SlmTheme.night(),
+              child: const SlmBackground(constrain: false, child: SizedBox.expand()),
+            ),
           ),
-        ),
-        child: SafeArea(
+          SafeArea(
           child: Column(
             children: [
               Padding(
@@ -95,14 +97,15 @@ class _LevelZeroPageState extends ConsumerState<LevelZeroPage> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF3F3A36)),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: SlmColors.ivory),
                     ),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2A2A28).withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(99),
+                        color: SlmColors.navy800,
+                        borderRadius: SlmRadius.pillAll,
+                        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55)),
                       ),
                       child: Text(
                         bn ? 'পথের মানচিত্র' : 'Path map',
@@ -110,7 +113,7 @@ class _LevelZeroPageState extends ConsumerState<LevelZeroPage> {
                           fontFamily: banglaFont,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFFF8F1E4),
+                          color: SlmColors.gold100,
                         ),
                       ),
                     ),
@@ -141,7 +144,7 @@ class _LevelZeroPageState extends ConsumerState<LevelZeroPage> {
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.4,
-                                  color: Color(0xFF8A7464),
+                                  color: SlmColors.gold300,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -152,7 +155,7 @@ class _LevelZeroPageState extends ConsumerState<LevelZeroPage> {
                                   fontSize: 24,
                                   fontWeight: FontWeight.w700,
                                   height: 1.25,
-                                  color: Color(0xFF1C1917),
+                                  color: SlmColors.ivory,
                                 ),
                               ),
                             ],
@@ -161,18 +164,23 @@ class _LevelZeroPageState extends ConsumerState<LevelZeroPage> {
                       ],
                     ),
                     const SizedBox(height: 18),
-                    _IntroCard(
-                      title: bn ? 'এই অ্যাপের পথ' : 'Your path in the app',
-                      body: bn
-                          ? 'প্রথমে এই মানচিত্রটি পড়ুন। তারপর এক এক করে লেভেল খুলবে। প্রতিটি লেভেলে পাঠ আছে — আগের পাঠ শেষ না হলে পরেরটি খুলবে না।'
-                          : 'Read this map first. Then levels open one by one. Inside each level, finish the previous lesson before the next unlocks.',
+                    SlmReveal(
+                      child: _IntroCard(
+                        title: bn ? 'এই অ্যাপের পথ' : 'Your path in the app',
+                        body: bn
+                            ? 'প্রথমে এই মানচিত্রটি পড়ুন। তারপর এক এক করে লেভেল খুলবে। প্রতিটি লেভেলে পাঠ আছে — আগের পাঠ শেষ না হলে পরেরটি খুলবে না।'
+                            : 'Read this map first. Then levels open one by one. Inside each level, finish the previous lesson before the next unlocks.',
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    _IntroCard(
-                      title: bn ? 'শিখবেন যেভাবে' : 'How learning works',
-                      body: bn
-                          ? '1) পাঠ পড়ুন বা শুনুন\n2) ধাপ ধাপ বুঝে এগোন\n3) শেষে পয়েন্ট নিন\n4) পরের পাঠ / লেভেল খুলবে'
-                          : '1) Read or listen to a lesson\n2) Move step by step\n3) Collect points at the end\n4) The next lesson / level unlocks',
+                    SlmReveal(
+                      index: 1,
+                      child: _IntroCard(
+                        title: bn ? 'শিখবেন যেভাবে' : 'How learning works',
+                        body: bn
+                            ? '1) পাঠ পড়ুন বা শুনুন\n2) ধাপ ধাপ বুঝে এগোন\n3) শেষে পয়েন্ট নিন\n4) পরের পাঠ / লেভেল খুলবে'
+                            : '1) Read or listen to a lesson\n2) Move step by step\n3) Collect points at the end\n4) The next lesson / level unlocks',
+                      ),
                     ),
                     const SizedBox(height: 20),
                     Text(
@@ -181,17 +189,20 @@ class _LevelZeroPageState extends ConsumerState<LevelZeroPage> {
                         fontFamily: banglaFont,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1C1917),
+                        color: SlmColors.gold200,
                       ),
                     ),
                     const SizedBox(height: 10),
                     for (var i = 0; i < linemanChapters.length; i++)
-                      _PathStepTile(
-                        index: i + 1,
-                        titleBn: linemanChapters[i].$1,
-                        titleEn: linemanChapters[i].$2,
-                        topic: staticChapterTitles[i],
-                        bn: bn,
+                      SlmReveal(
+                        index: i + 2,
+                        child: _PathStepTile(
+                          index: i + 1,
+                          titleBn: linemanChapters[i].$1,
+                          titleEn: linemanChapters[i].$2,
+                          topic: staticChapterTitles[i],
+                          bn: bn,
+                        ),
                       ),
                     const SizedBox(height: 12),
                     Text(
@@ -203,7 +214,7 @@ class _LevelZeroPageState extends ConsumerState<LevelZeroPage> {
                         fontSize: 13.5,
                         height: 1.45,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF8A7464),
+                        color: SlmColors.mist,
                       ),
                     ),
                   ],
@@ -211,10 +222,15 @@ class _LevelZeroPageState extends ConsumerState<LevelZeroPage> {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: ElevatedButton(
+                child: Theme(
+                  data: SlmTheme.night(),
+                  child: SlmButton(
+                    label: done
+                        ? (bn ? 'লেভেল 1 খুলুন' : 'Open Level 1')
+                        : (bn ? 'বুঝেছি · লেভেল 1 শুরু' : 'Got it · start Level 1'),
+                    size: SlmButtonSize.large,
+                    expand: true,
+                    loading: _saving,
                     onPressed: _saving
                         ? null
                         : () {
@@ -225,30 +241,14 @@ class _LevelZeroPageState extends ConsumerState<LevelZeroPage> {
                               _completeAndOpenTrainee();
                             }
                           },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F766E),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: _saving
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
-                          )
-                        : Text(
-                            done
-                                ? (bn ? 'লেভেল 1 খুলুন' : 'Open Level 1')
-                                : (bn ? 'বুঝেছি · লেভেল 1 শুরু' : 'Got it · start Level 1'),
-                            style: const TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w700),
-                          ),
                   ),
                 ),
               ),
             ],
           ),
         ),
+        ],
+      ),
       ),
     );
   }
@@ -266,9 +266,12 @@ class _IntroCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBF4),
+        gradient: SlmGradients.navyHero,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD8C7AE)),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.35)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 14, offset: const Offset(0, 6)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,7 +282,7 @@ class _IntroCard extends StatelessWidget {
               fontFamily: banglaFont,
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF0F766E),
+              color: SlmColors.emerald300,
             ),
           ),
           const SizedBox(height: 8),
@@ -288,9 +291,9 @@ class _IntroCard extends StatelessWidget {
             style: const TextStyle(
               fontFamily: banglaFont,
               fontSize: 15.5,
-              height: 1.55,
+              height: 1.6,
               fontWeight: FontWeight.w500,
-              color: AppColors.ink,
+              color: SlmColors.ivory,
             ),
           ),
         ],
@@ -320,9 +323,9 @@ class _PathStepTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
+        gradient: SlmGradients.navyCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2D4C0)),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.16)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,9 +334,10 @@ class _PathStepTile extends StatelessWidget {
             width: 34,
             height: 34,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: Color(0xFF0F766E),
+            decoration: BoxDecoration(
+              gradient: SlmGradients.emerald,
               shape: BoxShape.circle,
+              border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.7)),
             ),
             child: Text(
               '$index',
@@ -356,7 +360,7 @@ class _PathStepTile extends StatelessWidget {
                     fontFamily: banglaFont,
                     fontSize: 15.5,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1C1917),
+                    color: SlmColors.ivory,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -365,9 +369,9 @@ class _PathStepTile extends StatelessWidget {
                   style: const TextStyle(
                     fontFamily: banglaFont,
                     fontSize: 13,
-                    height: 1.35,
+                    height: 1.4,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF8A7464),
+                    color: SlmColors.mist,
                   ),
                 ),
               ],

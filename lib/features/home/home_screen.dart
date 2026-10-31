@@ -5,9 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
-import '../../shared/widgets/slm_backdrop.dart';
+import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
 import '../auth/verify_gate.dart';
 import '../auth/verify_hold.dart';
@@ -57,8 +56,20 @@ class HomeScreen extends ConsumerWidget {
               ? fullName
               : (slmId.isNotEmpty ? slmId : guestLabel));
 
-    return SlmBackdrop(
-      child: ShellSafeArea(
+    // Only the backdrop takes the night theme: sheets opened from Home capture
+    // the caller's theme and must keep their own look.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: Theme(
+              data: SlmTheme.night(),
+              child: const SlmBackground(constrain: false, child: SizedBox.expand()),
+            ),
+          ),
+          ShellSafeArea(
         child: Column(
           children: [
             Padding(
@@ -85,7 +96,7 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   Padding(
                     padding: EdgeInsets.only(
-                      bottom: shellDockBottomInset(context) + 68,
+                      bottom: shellDockBottomInset(context) + 88,
                     ),
                     child: HeroCardCarousel(path: path, bn: bn),
                   ),
@@ -107,6 +118,8 @@ class HomeScreen extends ConsumerWidget {
             ),
           ],
         ),
+          ),
+        ],
       ),
     );
   }
@@ -123,9 +136,10 @@ class _PathPlayChip extends StatefulWidget {
 }
 
 class _PathPlayChipState extends State<_PathPlayChip>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _pressed = false;
   late final AnimationController _charge;
+  late final AnimationController _shine;
 
   @override
   void initState() {
@@ -135,11 +149,16 @@ class _PathPlayChipState extends State<_PathPlayChip>
       vsync: this,
       duration: const Duration(milliseconds: 240),
     );
+    _shine = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat();
   }
 
   @override
   void dispose() {
     _charge.dispose();
+    _shine.dispose();
     super.dispose();
   }
 
@@ -175,65 +194,27 @@ class _PathPlayChipState extends State<_PathPlayChip>
               offset: Offset(0, _pressed ? 2 : 0),
               child: Transform.scale(
                 scale: (_pressed ? 0.97 : 1) * chargeScale,
-                child: Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    if (chargeVal > 0.01)
-                      Positioned.fill(
-                        child: Transform.scale(
-                          scale: 1.0 + (chargeVal * 0.45),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: Color.fromRGBO(
-                                  251,
-                                  191,
-                                  36,
-                                  (1.0 - chargeVal).clamp(0.0, 1.0),
-                                ),
-                                width: 3.0,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color.fromRGBO(
-                                    251,
-                                    191,
-                                    36,
-                                    0.4 * (1.0 - chargeVal),
-                                  ),
-                                  blurRadius: 18 * chargeVal,
-                                  spreadRadius: 4 * chargeVal,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(999),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFFFBBF24),
-                            Color(0xFFF59E0B),
-                            Color(0xFFEA580C),
-                          ],
-                        ),
-                      ),
-                      child: child,
-                    ),
-                  ],
-                ),
+                child: child,
               ),
             );
           },
-            child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-            child: _LabelLight(widget.label),
+          child: Semantics(
+            button: true,
+            label: widget.label,
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final w = math.min(_PathBadge.width, box.maxWidth);
+                return SizedBox(
+                  width: w,
+                  height: w * _PathBadge.aspect,
+                  child: _PathBadge(
+                    shine: _shine,
+                    charge: _charge,
+                    pressed: _pressed,
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -241,66 +222,208 @@ class _PathPlayChipState extends State<_PathPlayChip>
   }
 }
 
-class _LabelLight extends StatefulWidget {
-  final String text;
-  const _LabelLight(this.text);
+/// Shield emblem riding on an emerald pill with the title and a gold arrow.
+/// Keeps the footprint of the old 270 px artwork (560 × 174).
+class _PathBadge extends StatelessWidget {
+  static const width = 270.0;
+  static const aspect = 174 / 560;
 
-  @override
-  State<_LabelLight> createState() => _LabelLightState();
-}
+  final Animation<double> shine;
+  final Animation<double> charge;
+  final bool pressed;
 
-class _LabelLightState extends State<_LabelLight>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _sweep;
-
-  @override
-  void initState() {
-    super.initState();
-    _sweep = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2400),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _sweep.dispose();
-    super.dispose();
-  }
+  const _PathBadge({
+    required this.shine,
+    required this.charge,
+    required this.pressed,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _sweep,
-      builder: (context, child) {
-        return ShaderMask(
-          blendMode: BlendMode.srcIn,
-          shaderCallback: (bounds) {
-            final slide = -bounds.width + (_sweep.value * bounds.width * 2.4);
-            return const LinearGradient(
-              colors: [
-                Color(0xB8FFFFFF),
-                Color(0xFFFFFFFF),
-                Color(0xFFFFF6C8),
-                Color(0xFFFFFFFF),
-                Color(0xB8FFFFFF),
-              ],
-              stops: [0.30, 0.44, 0.50, 0.56, 0.70],
-            ).createShader(Rect.fromLTWH(slide, 0, bounds.width, bounds.height));
-          },
-          child: child,
+    return LayoutBuilder(
+      builder: (context, box) {
+        final h = box.maxHeight;
+        final inset = h * 0.13;
+        final pillH = h - inset * 2;
+        final shield = h * 1.32;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: h * 0.36,
+              right: 0,
+              top: inset,
+              bottom: inset,
+              child: AnimatedBuilder(
+                animation: Listenable.merge([shine, charge]),
+                builder: (context, _) => _pill(pillH, h * 0.6),
+              ),
+            ),
+            Positioned(
+              left: -h * 0.24,
+              top: (h - shield) / 2 - h * 0.02,
+              width: shield,
+              height: shield,
+              child: IgnorePointer(
+                child: AnimatedSafetyShield(size: shield, intensity: 0.85),
+              ),
+            ),
+          ],
         );
       },
-      child: Text(
-        widget.text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          fontFamily: banglaFont,
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          height: 1.2,
-          color: Colors.white,
+    );
+  }
+
+  Widget _pill(double pillH, double textStart) {
+    // The band crosses in the first 45% of each loop, then rests.
+    final run = (shine.value / 0.45).clamp(0.0, 1.0);
+    final pass = Curves.easeInOutSine.transform(run);
+    final boost = math.sin(charge.value * math.pi);
+    final radius = BorderRadius.circular(pillH / 2);
+    final title = TextStyle(
+      fontFamily: banglaFont,
+      fontSize: pillH * 0.42,
+      fontWeight: FontWeight.w800,
+      height: 1.15,
+      color: SlmColors.ivory,
+      shadows: const [
+        Shadow(color: Color(0x99000000), blurRadius: 4, offset: Offset(0, 2)),
+      ],
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(1.8),
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            SlmColors.gold200,
+            SlmColors.gold500,
+            SlmColors.gold700,
+            SlmColors.gold300,
+          ],
+          stops: [0.0, 0.35, 0.7, 1.0],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: SlmColors.emerald500.withValues(alpha: 0.28 + 0.32 * boost),
+            blurRadius: 18 + 10 * boost,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: pressed ? 0.25 : 0.4),
+            blurRadius: pressed ? 6 : 12,
+            offset: Offset(0, pressed ? 2 : 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: SlmSweepMask(
+          t: pass,
+          intensity: 0.9,
+          color: const Color(0xFFFFF6D6),
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF0E7A5E), SlmColors.emerald800, Color(0xFF04281F)],
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const Align(
+                  alignment: Alignment.topCenter,
+                  child: FractionallySizedBox(
+                    heightFactor: 0.48,
+                    widthFactor: 1,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0x2EFFFFFF), Color(0x00FFFFFF)],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(textStart, 0, pillH * 0.1, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                const TextSpan(text: 'মৃত্যুহীন '),
+                                TextSpan(
+                                  text: 'পথ',
+                                  style: title.copyWith(color: SlmColors.gold300),
+                                ),
+                              ],
+                            ),
+                            style: title,
+                            maxLines: 1,
+                            softWrap: false,
+                            textScaler: TextScaler.noScaling,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: pillH * 0.08),
+                      _PathArrow(size: pillH * 0.74, phase: shine.value),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PathArrow extends StatelessWidget {
+  final double size;
+  final double phase;
+
+  const _PathArrow({required this.size, required this.phase});
+
+  @override
+  Widget build(BuildContext context) {
+    final nudge = math.sin(phase * 2 * math.pi) * 1.6;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: const RadialGradient(
+          center: Alignment(-0.35, -0.45),
+          colors: [SlmColors.gold100, SlmColors.gold300, SlmColors.gold600],
+          stops: [0.0, 0.5, 1.0],
+        ),
+        border: Border.all(color: SlmColors.gold700, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: SlmColors.gold400.withValues(alpha: 0.45),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Transform.translate(
+        offset: Offset(1 + nudge, 0),
+        child: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: size * 0.42,
+          color: SlmColors.navy900,
         ),
       ),
     );
@@ -340,16 +463,25 @@ class _Header extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       height: 1.2,
-                      color: AppColors.ink,
+                      letterSpacing: 0.1,
+                      color: SlmColors.ivory,
+                      shadows: [
+                        Shadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 1)),
+                      ],
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: onTick,
-                  child: VerifyTick(gold: verified, size: 22),
+                  child: SlmShimmer(
+                    enabled: verified,
+                    period: const Duration(milliseconds: 4600),
+                    intensity: 1.2,
+                    child: VerifyTick(gold: verified, size: 22),
+                  ),
                 ),
               ],
             ),
@@ -367,21 +499,50 @@ class _LangPill extends StatelessWidget {
 
   const _LangPill({required this.bn, required this.onLanguage});
 
+  static const _seg = 38.0;
+  static const _segH = 24.0;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F0EA),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: const Color(0xFFE7D5C6)),
+        color: SlmColors.navy950.withValues(alpha: 0.55),
+        borderRadius: SlmRadius.pillAll,
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _LangSeg(label: 'বাং', selected: bn, onTap: () => onLanguage(true)),
-          _LangSeg(label: 'EN', selected: !bn, onTap: () => onLanguage(false)),
-        ],
+      child: SizedBox(
+        width: _seg * 2,
+        height: _segH,
+        child: Stack(
+          children: [
+            AnimatedAlign(
+              alignment: bn ? Alignment.centerLeft : Alignment.centerRight,
+              duration: SlmMotion.base,
+              curve: SlmMotion.emphasized,
+              child: Container(
+                width: _seg,
+                height: _segH,
+                decoration: BoxDecoration(
+                  gradient: SlmGradients.gold,
+                  borderRadius: SlmRadius.pillAll,
+                  boxShadow: [
+                    BoxShadow(
+                      color: SlmColors.gold400.withValues(alpha: 0.35),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                _LangSeg(label: 'বাং', selected: bn, onTap: () => onLanguage(true)),
+                _LangSeg(label: 'EN', selected: !bn, onTap: () => onLanguage(false)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -400,21 +561,24 @@ class _LangSeg extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return SlmPressable(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFF0F766E) : Colors.transparent,
-          borderRadius: BorderRadius.circular(99),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.5,
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : AppColors.muted,
+      pressedScale: 0.9,
+      semanticLabel: label,
+      child: SizedBox(
+        width: _LangPill._seg,
+        height: _LangPill._segH,
+        child: Center(
+          child: AnimatedDefaultTextStyle(
+            duration: SlmMotion.base,
+            style: TextStyle(
+              fontFamily: banglaFont,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              height: 1.1,
+              color: selected ? SlmColors.navy900 : SlmColors.mist,
+            ),
+            child: Text(label, textScaler: TextScaler.noScaling),
           ),
         ),
       ),

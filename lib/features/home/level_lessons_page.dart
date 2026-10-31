@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../design/slm_design.dart';
 import '../admin/dev_unlock.dart';
 import '../training/training_models.dart';
 import '../training/training_provider.dart';
@@ -10,9 +11,9 @@ import 'lesson_reader_page.dart';
 import 'level_lessons_sheet.dart';
 import 'lineman_figure.dart';
 
-const _shelfPaper = Color(0xFFF8F1E4);
+const _shelfTop = SlmColors.navy900;
 
-/// Warm paper shelf for one rank's lessons — book-cover cards.
+/// Night shelf for one rank's lessons — book-cover cards.
 class LevelLessonsPage extends ConsumerStatefulWidget {
   final int moduleNumber;
   final int step;
@@ -113,14 +114,14 @@ class _LevelLessonsPageState extends ConsumerState<LevelLessonsPage> with Single
       loading: () => slivers.add(
         const SliverFillRemaining(
           hasScrollBody: false,
-          child: Center(child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF8A7464))),
+          child: Center(child: CircularProgressIndicator(strokeWidth: 2.5, color: SlmColors.gold400)),
         ),
       ),
       error: (_, __) => slivers.add(
-        SliverFillRemaining(
+        const SliverFillRemaining(
           hasScrollBody: false,
           child: Center(
-            child: Icon(Icons.wifi_off_rounded, size: 40, color: AppColors.muted.withValues(alpha: 0.7)),
+            child: Icon(Icons.wifi_off_rounded, size: 40, color: SlmColors.slate),
           ),
         ),
       ),
@@ -129,7 +130,7 @@ class _LevelLessonsPageState extends ConsumerState<LevelLessonsPage> with Single
           slivers.add(
             const SliverFillRemaining(
               hasScrollBody: false,
-              child: Center(child: Icon(Icons.menu_book_outlined, size: 40, color: Color(0xFFD6D3D1))),
+              child: Center(child: Icon(Icons.menu_book_outlined, size: 40, color: SlmColors.slate)),
             ),
           );
           return;
@@ -161,7 +162,7 @@ class _LevelLessonsPageState extends ConsumerState<LevelLessonsPage> with Single
                     final start = (index * 0.07).clamp(0.0, 0.55);
                     final entrance = CurvedAnimation(
                       parent: _enter,
-                      curve: Interval(start, (start + 0.45).clamp(0.0, 1.0), curve: Curves.easeOutCubic),
+                      curve: Interval(start, (start + 0.45).clamp(0.0, 1.0), curve: SlmMotion.emphasized),
                     );
                     return Padding(
                       key: isNext ? _nextKey : null,
@@ -208,47 +209,51 @@ class _LevelLessonsPageState extends ConsumerState<LevelLessonsPage> with Single
       },
     );
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4EDE0),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [_shelfPaper, Color(0xFFF0E6D4), Color(0xFFEADFCB)],
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Stack(
-            children: [
-              CustomScrollView(
-                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                slivers: slivers,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: SlmColors.navy950,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Theme(
+                data: SlmTheme.night(),
+                child: const SlmBackground(constrain: false, child: SizedBox.expand()),
               ),
-              // Soft paper fade so cards slip away at the bottom edge.
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 36,
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          const Color(0xFFEADFCB).withValues(alpha: 0),
-                          const Color(0xFFEADFCB),
-                        ],
+            ),
+            SafeArea(
+              bottom: false,
+              child: Stack(
+                children: [
+                  CustomScrollView(
+                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                    slivers: slivers,
+                  ),
+                  // Soft fade so cards slip away at the bottom edge.
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 36,
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              SlmColors.navy950.withValues(alpha: 0),
+                              SlmColors.navy950,
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -288,8 +293,13 @@ class _ShelfHeaderDelegate extends SliverPersistentHeaderDelegate {
     final bigOpacity = (1 - t * 1.8).clamp(0.0, 1.0);
     final smallOpacity = ((t - 0.55) / 0.45).clamp(0.0, 1.0);
 
-    return ColoredBox(
-      color: _shelfPaper,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: _shelfTop,
+        border: Border(
+          bottom: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.28 * t)),
+        ),
+      ),
       child: ClipRect(
         child: Stack(
           children: [
@@ -305,12 +315,12 @@ class _ShelfHeaderDelegate extends SliverPersistentHeaderDelegate {
                   children: [
                     Text(
                       bn ? 'পাঠের তালিকা' : 'Lesson shelf',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: banglaFont,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.4,
-                        color: AppColors.muted.withValues(alpha: 0.9),
+                        color: SlmColors.gold300,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -323,7 +333,7 @@ class _ShelfHeaderDelegate extends SliverPersistentHeaderDelegate {
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
                         height: 1.28,
-                        color: Color(0xFF1C1917),
+                        color: SlmColors.ivory,
                       ),
                     ),
                   ],
@@ -353,7 +363,7 @@ class _ShelfHeaderDelegate extends SliverPersistentHeaderDelegate {
                       fontFamily: banglaFont,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1C1917),
+                      color: SlmColors.ivory,
                     ),
                   ),
                 ),
@@ -368,13 +378,17 @@ class _ShelfHeaderDelegate extends SliverPersistentHeaderDelegate {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A2A28).withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(99),
+                    color: SlmColors.navy800,
+                    borderRadius: SlmRadius.pillAll,
+                    border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55)),
+                    boxShadow: [
+                      BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.18), blurRadius: 10),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.auto_stories_rounded, size: 15, color: Color(0xFFF5D76E)),
+                      const Icon(Icons.auto_stories_rounded, size: 15, color: SlmColors.gold300),
                       const SizedBox(width: 6),
                       Text(
                         badgeName,
@@ -382,7 +396,7 @@ class _ShelfHeaderDelegate extends SliverPersistentHeaderDelegate {
                           fontFamily: banglaFont,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFFF8F1E4),
+                          color: SlmColors.gold100,
                         ),
                       ),
                     ],
@@ -395,7 +409,7 @@ class _ShelfHeaderDelegate extends SliverPersistentHeaderDelegate {
               top: 6,
               child: IconButton(
                 onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF3F3A36)),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: SlmColors.ivory),
               ),
             ),
           ],
@@ -431,9 +445,9 @@ class _ShelfProgressDelegate extends SliverPersistentHeaderDelegate {
     final complete = total > 0 && done == total;
     return Container(
       decoration: BoxDecoration(
-        color: _shelfPaper,
+        color: _shelfTop,
         boxShadow: overlapsContent
-            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.07), blurRadius: 10, offset: const Offset(0, 4))]
+            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 12, offset: const Offset(0, 4))]
             : null,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -442,11 +456,11 @@ class _ShelfProgressDelegate extends SliverPersistentHeaderDelegate {
         children: [
           Text(
             bn ? '$done / $total পড়া হয়েছে' : '$done / $total read',
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: banglaFont,
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF6B5A4C),
+              color: complete ? SlmColors.emerald300 : SlmColors.mist,
             ),
           ),
           const SizedBox(width: 12),
@@ -454,16 +468,8 @@ class _ShelfProgressDelegate extends SliverPersistentHeaderDelegate {
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: ratio),
               duration: const Duration(milliseconds: 900),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, _) => ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: LinearProgressIndicator(
-                  value: value,
-                  minHeight: 4,
-                  backgroundColor: const Color(0xFFE2D4C0),
-                  color: complete ? AppColors.safeGreen : const Color(0xFF8B5E3C),
-                ),
-              ),
+              curve: SlmMotion.emphasized,
+              builder: (context, value, _) => _ShelfBar(value: value, complete: complete),
             ),
           ),
         ],
@@ -474,6 +480,45 @@ class _ShelfProgressDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _ShelfProgressDelegate old) =>
       old.done != done || old.total != total || old.bn != bn;
+}
+
+class _ShelfBar extends StatelessWidget {
+  final double value;
+  final bool complete;
+
+  const _ShelfBar({required this.value, required this.complete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 7,
+      padding: const EdgeInsets.all(1),
+      decoration: BoxDecoration(
+        color: SlmColors.navy950,
+        borderRadius: SlmRadius.pillAll,
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.25), width: 0.8),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: FractionallySizedBox(
+          widthFactor: value.clamp(0.0, 1.0),
+          heightFactor: 1,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: complete ? SlmGradients.emerald : SlmGradients.gold,
+              borderRadius: SlmRadius.pillAll,
+              boxShadow: [
+                BoxShadow(
+                  color: (complete ? SlmColors.emerald400 : SlmColors.gold400).withValues(alpha: 0.45),
+                  blurRadius: 6,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Cards rising in from the bottom edge scale up from a slightly smaller size.
@@ -549,43 +594,49 @@ class _BookLessonCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final done = lesson.isCompleted;
     final spine = locked
-        ? const Color(0xFFA8A29E)
+        ? SlmColors.slate
         : done
-            ? const Color(0xFF166534)
-            : const Color(0xFF8B5E3C);
-    final paper = locked
-        ? const Color(0xFFF5F0E8)
+            ? SlmColors.emerald300
+            : isNext
+                ? SlmColors.gold300
+                : SlmColors.bronze;
+    final metal = locked
+        ? const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [SlmColors.slate, SlmColors.navy600],
+          )
         : done
-            ? const Color(0xFFF5FBF6)
-            : const Color(0xFFFFFBF4);
+            ? SlmGradients.emerald
+            : isNext
+                ? SlmGradients.gold
+                : SlmGradients.bronze;
 
     return Opacity(
-      opacity: locked ? 0.72 : 1,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Ink(
+      opacity: locked ? 0.78 : 1,
+      child: SlmPressable(
+        onTap: onTap,
+        pressedScale: 0.98,
+        semanticLabel: lesson.title,
+        child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [paper, Color.lerp(paper, const Color(0xFFE8DCC8), 0.35)!],
-              ),
+              gradient: isNext ? SlmGradients.navyHero : SlmGradients.navyCard,
               border: Border.all(
-                color: isNext ? const Color(0xFFD97706) : const Color(0xFFD8C7AE).withValues(alpha: 0.85),
-                width: isNext ? 1.6 : 1,
+                color: isNext
+                    ? SlmColors.gold400
+                    : done
+                        ? SlmColors.emerald600.withValues(alpha: 0.5)
+                        : SlmColors.gold400.withValues(alpha: 0.18),
+                width: isNext ? 1.4 : 1,
               ),
               boxShadow: locked
                   ? null
                   : [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.07), blurRadius: 16, offset: const Offset(0, 8)),
-                      BoxShadow(color: spine.withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(-2, 2)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 8)),
                       if (isNext)
                         BoxShadow(
-                          color: const Color(0xFFF59E0B).withValues(alpha: 0.28),
+                          color: SlmColors.gold400.withValues(alpha: 0.25),
                           blurRadius: 22,
                           spreadRadius: 1,
                         ),
@@ -599,11 +650,7 @@ class _BookLessonCard extends StatelessWidget {
                     width: 8,
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.horizontal(left: Radius.circular(17)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [spine, Color.lerp(spine, Colors.black, 0.25)!],
-                      ),
+                      gradient: metal,
                     ),
                   ),
                   Expanded(
@@ -622,7 +669,7 @@ class _BookLessonCard extends StatelessWidget {
                                     fontFamily: banglaFont,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: spine.withValues(alpha: 0.8),
+                                    color: spine.withValues(alpha: 0.85),
                                   ),
                                 ),
                                 Text(
@@ -638,7 +685,11 @@ class _BookLessonCard extends StatelessWidget {
                               ],
                             ),
                           ),
-                          Container(width: 1, margin: const EdgeInsets.symmetric(vertical: 4), color: const Color(0xFFD8C7AE)),
+                          Container(
+                            width: 1,
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            color: SlmColors.gold400.withValues(alpha: 0.2),
+                          ),
                           const SizedBox(width: 14),
                           Expanded(
                             child: Column(
@@ -653,32 +704,41 @@ class _BookLessonCard extends StatelessWidget {
                                     fontSize: 17,
                                     fontWeight: FontWeight.w600,
                                     height: 1.35,
-                                    color: locked ? const Color(0xFF78716C) : const Color(0xFF1C1917),
+                                    color: locked ? SlmColors.slate : SlmColors.ivory,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
                                 if (isNext)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFD97706),
-                                      borderRadius: BorderRadius.circular(99),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(Icons.play_arrow_rounded, size: 15, color: Colors.white),
-                                        const SizedBox(width: 3),
-                                        Text(
-                                          bn ? 'এখান থেকে শুরু' : 'Continue here',
-                                          style: const TextStyle(
-                                            fontFamily: banglaFont,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.white,
+                                  SlmShimmer(
+                                    period: const Duration(milliseconds: 3800),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        gradient: SlmGradients.gold,
+                                        borderRadius: SlmRadius.pillAll,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: SlmColors.gold400.withValues(alpha: 0.35),
+                                            blurRadius: 8,
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.play_arrow_rounded, size: 15, color: SlmColors.navy900),
+                                          const SizedBox(width: 3),
+                                          Text(
+                                            bn ? 'এখান থেকে শুরু' : 'Continue here',
+                                            style: const TextStyle(
+                                              fontFamily: banglaFont,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: SlmColors.navy900,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   )
                                 else
@@ -693,24 +753,23 @@ class _BookLessonCard extends StatelessWidget {
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w600,
                                       color: locked
-                                          ? const Color(0xFFA8A29E)
+                                          ? SlmColors.slate
                                           : done
-                                              ? AppColors.safeGreen
-                                              : const Color(0xFF8A7464),
+                                              ? SlmColors.emerald300
+                                              : SlmColors.mist,
                                     ),
                                   ),
                               ],
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Icon(
-                            locked
+                          _CardMedal(
+                            color: spine,
+                            icon: locked
                                 ? Icons.lock_outline_rounded
                                 : done
                                     ? Icons.menu_book_rounded
                                     : Icons.auto_stories_rounded,
-                            size: 26,
-                            color: spine.withValues(alpha: 0.85),
                           ),
                         ],
                       ),
@@ -720,8 +779,32 @@ class _BookLessonCard extends StatelessWidget {
               ),
             ),
           ),
-        ),
       ),
+    );
+  }
+}
+
+class _CardMedal extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+
+  const _CardMedal({required this.color, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          center: const Alignment(-0.3, -0.4),
+          colors: [color.withValues(alpha: 0.22), color.withValues(alpha: 0.06)],
+        ),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
+      ),
+      child: Icon(icon, size: 22, color: color),
     );
   }
 }

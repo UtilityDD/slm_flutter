@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
 import '../training/training_models.dart';
 import '../training/training_provider.dart';
@@ -38,11 +39,12 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
   bool _speaking = false;
   bool _voiceBusy = false;
 
-  static const _paper = Color(0xFFF7F0E3);
-  static const _paperDeep = Color(0xFFEFE5D4);
-  static const _ink = Color(0xFF1F1A14);
-  static const _softInk = Color(0xFF4A4036);
-  static const _accent = Color(0xFF8B5E3C);
+  // Reading stays dark ink on warm paper; only the chrome around it is night.
+  static const _paper = SlmColors.ivory;
+  static const _paperDeep = SlmColors.ivoryDeep;
+  static const _ink = SlmColors.ink;
+  static const _softInk = Color(0xFF3A4660);
+  static const _accent = SlmColors.gold700;
 
   @override
   void initState() {
@@ -295,6 +297,9 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
       return;
     }
 
+    if (!wasRevision && mounted) {
+      showSlmXpToast(context, amount: 20, unit: widget.bn ? 'পয়েন্ট' : 'points');
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -407,126 +412,146 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
       cta = bn ? 'পরের পাতা' : 'Next page';
     }
 
-    return Scaffold(
-      backgroundColor: _paper,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [_paper, _paperDeep],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(4, 2, 12, 4),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () async {
-                        await _stopVoice();
-                        if (context.mounted) Navigator.of(context).pop();
-                      },
-                      icon: const Icon(Icons.close_rounded, color: _softInk),
+    final ratio = totalSteps == 0 ? 0.0 : progress / totalSteps;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: SlmColors.navy950,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Theme(
+                data: SlmTheme.night(),
+                child: const SlmBackground(constrain: false, child: SizedBox.expand()),
+              ),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 2, 12, 4),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () async {
+                            await _stopVoice();
+                            if (context.mounted) Navigator.of(context).pop();
+                          },
+                          icon: const Icon(Icons.close_rounded, color: SlmColors.ivory),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                bn ? 'পাঠ ${lesson.chapterNumber}' : 'Lesson ${lesson.chapterNumber}',
+                                style: const TextStyle(
+                                  fontFamily: banglaFont,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.3,
+                                  color: SlmColors.gold300,
+                                ),
+                              ),
+                              Text(
+                                lesson.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: banglaFont,
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: SlmColors.ivory,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _ListenButton(
+                          speaking: _speaking,
+                          busy: _voiceBusy,
+                          bn: bn,
+                          onTap: _toggleListen,
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            bn ? 'পাঠ ${lesson.chapterNumber}' : 'Lesson ${lesson.chapterNumber}',
-                            style: const TextStyle(
-                              fontFamily: banglaFont,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                              color: Color(0xFF8A7464),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(end: ratio),
+                      duration: SlmMotion.slow,
+                      curve: SlmMotion.emphasized,
+                      builder: (context, value, _) => _ReaderBar(value: value, complete: phase == _Phase.done),
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(22),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [_paper, _paperDeep],
+                          ),
+                          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55)),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 24, offset: const Offset(0, 10)),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(21),
+                          child: AnimatedSwitcher(
+                            duration: SlmMotion.slow,
+                            reverseDuration: SlmMotion.fast,
+                            switchInCurve: SlmMotion.emphasized,
+                            switchOutCurve: Curves.easeInCubic,
+                            transitionBuilder: (child, anim) => FadeTransition(
+                              opacity: anim,
+                              child: SlideTransition(
+                                position: Tween(begin: const Offset(0.035, 0), end: Offset.zero).animate(anim),
+                                child: child,
+                              ),
+                            ),
+                            child: KeyedSubtree(
+                              key: ValueKey('$_phaseIndex-$_pointDone'),
+                              child: _buildBody(phase, lesson, bn),
                             ),
                           ),
-                          Text(
-                            lesson.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontFamily: banglaFont,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _ink,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                    _ListenButton(
-                      speaking: _speaking,
-                      busy: _voiceBusy,
-                      bn: bn,
-                      onTap: _toggleListen,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(18, 12, 18, 12 + MediaQuery.paddingOf(context).bottom * 0.15),
+                    child: Theme(
+                      data: SlmTheme.night(),
+                      child: SlmButton(
+                        label: cta,
+                        variant: phase == _Phase.done ? SlmButtonVariant.primary : SlmButtonVariant.gold,
+                        size: SlmButtonSize.large,
+                        expand: true,
+                        loading: _isClaiming,
+                        trailingIcon: phase == _Phase.done ? null : Icons.arrow_forward_rounded,
+                        onPressed: _isClaiming
+                            ? null
+                            : () {
+                                if (phase == _Phase.done) {
+                                  _claim();
+                                } else {
+                                  _advance();
+                                }
+                              },
+                      ),
                     ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(99),
-                  child: LinearProgressIndicator(
-                    value: totalSteps == 0 ? 0 : progress / totalSteps,
-                    minHeight: 3,
-                    backgroundColor: const Color(0xFFDFD0BA),
-                    color: _accent,
                   ),
-                ),
+                ],
               ),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 320),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  child: KeyedSubtree(
-                    key: ValueKey('$_phaseIndex-$_pointDone'),
-                    child: _buildBody(phase, lesson, bn),
-                  ),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.fromLTRB(18, 10, 18, 12 + MediaQuery.paddingOf(context).bottom * 0.15),
-                decoration: BoxDecoration(
-                  color: _paper.withValues(alpha: 0.96),
-                  border: const Border(top: BorderSide(color: Color(0xFFDFD0BA), width: 0.8)),
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: ElevatedButton(
-                    onPressed: _isClaiming
-                        ? null
-                        : () {
-                            if (phase == _Phase.done) {
-                              _claim();
-                            } else {
-                              _advance();
-                            }
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: phase == _Phase.done ? AppColors.safeGreen : const Color(0xFF2A2A28),
-                      foregroundColor: const Color(0xFFF8F1E4),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
-                    ),
-                    child: _isClaiming
-                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                        : Text(
-                            cta,
-                            style: const TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -549,7 +574,12 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
               ),
             ),
             const SizedBox(height: 18),
-            Container(height: 1, color: const Color(0xFFD8C7AE)),
+            Container(
+              height: 1.2,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [SlmColors.gold500, Color(0x00BF9443)]),
+              ),
+            ),
             const SizedBox(height: 18),
             Text(
               bn ? 'প্রথমে এটা বুঝুন' : 'Understand this first',
@@ -676,7 +706,18 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.menu_book_rounded, size: 64, color: _accent.withValues(alpha: 0.85)),
+                const SizedBox(
+                  width: 112,
+                  height: 112,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      SlmSparkBurst(playOnMount: true, radius: 78),
+                      SlmReveal(rise: 0, child: _DoneMedal()),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   bn ? 'পাঠ শেষ' : 'Lesson complete',
@@ -716,8 +757,10 @@ class _ListenButton extends StatelessWidget {
     return Tooltip(
       message: speaking ? (bn ? 'থামান' : 'Stop') : (bn ? 'শুনুন' : 'Listen'),
       child: Material(
-        color: speaking ? const Color(0xFF8B5E3C) : const Color(0xFF2A2A28),
-        borderRadius: BorderRadius.circular(99),
+        color: speaking ? SlmColors.emerald700 : SlmColors.navy800,
+        shape: StadiumBorder(
+          side: BorderSide(color: SlmColors.gold400.withValues(alpha: speaking ? 0.9 : 0.55)),
+        ),
         child: InkWell(
           borderRadius: BorderRadius.circular(99),
           onTap: busy ? null : onTap,
@@ -730,13 +773,13 @@ class _ListenButton extends StatelessWidget {
                   const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFF8F1E4)),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: SlmColors.gold200),
                   )
                 else
                   Icon(
                     speaking ? Icons.stop_rounded : Icons.headphones_rounded,
                     size: 18,
-                    color: const Color(0xFFF8F1E4),
+                    color: SlmColors.gold200,
                   ),
                 const SizedBox(width: 6),
                 Text(
@@ -745,13 +788,81 @@ class _ListenButton extends StatelessWidget {
                     fontFamily: banglaFont,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFFF8F1E4),
+                    color: SlmColors.gold100,
                   ),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ReaderBar extends StatelessWidget {
+  final double value;
+  final bool complete;
+
+  const _ReaderBar({required this.value, required this.complete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 6,
+      padding: const EdgeInsets.all(1),
+      decoration: BoxDecoration(
+        color: SlmColors.navy950,
+        borderRadius: SlmRadius.pillAll,
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.25), width: 0.8),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: FractionallySizedBox(
+          widthFactor: value.clamp(0.0, 1.0),
+          heightFactor: 1,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: complete ? SlmGradients.emerald : SlmGradients.gold,
+              borderRadius: SlmRadius.pillAll,
+              boxShadow: [
+                BoxShadow(
+                  color: (complete ? SlmColors.emerald400 : SlmColors.gold400).withValues(alpha: 0.5),
+                  blurRadius: 6,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DoneMedal extends StatelessWidget {
+  const _DoneMedal();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 92,
+      height: 92,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: SlmGradients.gold,
+        boxShadow: SlmShadows.glow(SlmColors.gold400),
+      ),
+      child: const DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            center: Alignment(-0.3, -0.4),
+            colors: [SlmColors.emerald500, SlmColors.emerald700, SlmColors.emerald900],
+            stops: [0.0, 0.6, 1.0],
+          ),
+        ),
+        child: Icon(Icons.menu_book_rounded, size: 44, color: SlmColors.gold100),
       ),
     );
   }
@@ -785,7 +896,7 @@ class _GuidedPoints extends StatelessWidget {
               finished
                   ? (bn ? 'সব ধাপ সম্পন্ন' : 'All steps done')
                   : (bn ? 'ধাপ ${active + 1} / ${points.length}' : 'Step ${active + 1} / ${points.length}'),
-              style: const TextStyle(fontFamily: banglaFont, fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF8B5E3C)),
+              style: const TextStyle(fontFamily: banglaFont, fontSize: 13, fontWeight: FontWeight.w700, color: SlmColors.gold700),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -793,16 +904,18 @@ class _GuidedPoints extends StatelessWidget {
                 children: [
                   for (var i = 0; i < points.length; i++)
                     Expanded(
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: SlmMotion.slow,
+                        curve: SlmMotion.emphasized,
                         height: 4,
                         margin: EdgeInsets.only(right: i == points.length - 1 ? 0 : 3),
                         decoration: BoxDecoration(
                           color: i < done
-                              ? AppColors.safeGreen
+                              ? SlmColors.emerald600
                               : (!finished && i == done)
-                                  ? const Color(0xFF8B5E3C)
-                                  : const Color(0xFFDFD0BA),
-                          borderRadius: BorderRadius.circular(99),
+                                  ? SlmColors.gold500
+                                  : const Color(0xFFDCD2BE),
+                          borderRadius: SlmRadius.pillAll,
                         ),
                       ),
                     ),
@@ -910,10 +1023,10 @@ class _ActivePointCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBF4),
+        color: const Color(0xFFFFFDF8),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFD8C7AE)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 14, offset: const Offset(0, 6))],
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: SlmColors.navy900.withValues(alpha: 0.08), blurRadius: 14, offset: const Offset(0, 6))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -925,17 +1038,21 @@ class _ActivePointCard extends StatelessWidget {
                 width: 34,
                 height: 34,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(color: Color(0xFFF3E4CF), shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  gradient: SlmGradients.gold,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: SlmColors.gold700.withValues(alpha: 0.6)),
+                ),
                 child: Text(
                   '$index',
-                  style: const TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF8B5E3C)),
+                  style: const TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w700, color: SlmColors.navy900),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   point.itemName,
-                  style: const TextStyle(fontFamily: banglaFont, fontSize: 21, fontWeight: FontWeight.w700, height: 1.35, color: Color(0xFF1F1A14)),
+                  style: const TextStyle(fontFamily: banglaFont, fontSize: 21, fontWeight: FontWeight.w700, height: 1.35, color: SlmColors.ink),
                 ),
               ),
             ],
@@ -1010,7 +1127,7 @@ class _FactBox extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontFamily: banglaFont, fontSize: 12.5, fontWeight: FontWeight.w700, letterSpacing: 0.3, color: Color(0xFF8A7464)),
+            style: const TextStyle(fontFamily: banglaFont, fontSize: 12.5, fontWeight: FontWeight.w700, letterSpacing: 0.3, color: SlmColors.gold700),
           ),
           const SizedBox(height: 6),
           child,

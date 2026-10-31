@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../design/motion/slm_motion_widgets.dart';
 import '../auth/verify_tick.dart';
 import 'lineman_figure.dart';
 
@@ -120,6 +121,12 @@ class HeroCard extends StatelessWidget {
   /// Grey check on levels that stay closed until an admin verifies the member.
   final bool verifyTick;
 
+  /// Home finish: beveled metal, ambient scene light, polished nameplate.
+  final bool premium;
+
+  /// Finger-down depth 0..1 (slightly negative on the release spring).
+  final double press;
+
   const HeroCard({
     super.key,
     required this.step,
@@ -132,6 +139,8 @@ class HeroCard extends StatelessWidget {
     this.enableHero = false,
     this.showGem = true,
     this.verifyTick = false,
+    this.premium = false,
+    this.press = 0,
   });
 
   @override
@@ -164,7 +173,9 @@ class HeroCard extends StatelessWidget {
                       ),
                       if (!locked)
                         BoxShadow(
-                          color: metal.glow.withValues(alpha: 0.38 * glow),
+                          color: metal.glow.withValues(
+                            alpha: (0.38 * glow * (1 + 0.4 * press)).clamp(0.0, 1.0),
+                          ),
                           blurRadius: 30,
                           spreadRadius: 1,
                         ),
@@ -180,18 +191,30 @@ class HeroCard extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment(-1 + tilt.dx * 0.6, -1 + tilt.dy * 0.6),
                       end: Alignment(1 + tilt.dx * 0.6, 1 + tilt.dy * 0.6),
-                      colors: [
-                        metal.light,
-                        metal.mid,
-                        metal.dark,
-                        metal.mid,
-                        metal.light,
-                      ],
-                      stops: const [0.0, 0.28, 0.55, 0.8, 1.0],
+                      colors: premium
+                          ? [
+                              metal.light,
+                              metal.mid,
+                              metal.dark,
+                              metal.mid,
+                              metal.light,
+                              metal.mid,
+                            ]
+                          : [
+                              metal.light,
+                              metal.mid,
+                              metal.dark,
+                              metal.mid,
+                              metal.light,
+                            ],
+                      stops: premium
+                          ? const [0.0, 0.22, 0.48, 0.7, 0.86, 1.0]
+                          : const [0.0, 0.28, 0.55, 0.8, 1.0],
                     ),
                   ),
                 ),
               ),
+              if (premium) ..._bevel(metal, radius),
               // Inner scene window.
               Positioned(
                 left: frame,
@@ -213,6 +236,7 @@ class HeroCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (premium) ..._ambient(metal),
                       // Figure — pops forward faster than scene (parallax front layer).
                       Positioned(
                         left: w * 0.04 + tilt.dx * 6,
@@ -282,7 +306,14 @@ class HeroCard extends StatelessWidget {
                 right: w * 0.1,
                 bottom: -plateH * 0.18,
                 height: plateH,
-                child: _Nameplate(title: title, metal: metal, locked: locked),
+                child: _Nameplate(
+                  title: title,
+                  metal: metal,
+                  locked: locked,
+                  premium: premium,
+                  sheen: sheen,
+                  press: press,
+                ),
               ),
             ],
           );
@@ -290,6 +321,92 @@ class HeroCard extends StatelessWidget {
       ),
     );
   }
+
+  /// Hairline bevels and a corner specular on the metal frame.
+  List<Widget> _bevel(CardMetal metal, double radius) => [
+    Positioned.fill(
+      child: IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(color: metal.dark.withValues(alpha: 0.85), width: 1),
+            gradient: RadialGradient(
+              center: Alignment(-0.75 + tilt.dx * 0.3, -0.9 + tilt.dy * 0.3),
+              radius: 0.9,
+              colors: [
+                Colors.white.withValues(alpha: locked ? 0.1 : 0.28),
+                Colors.white.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+    Positioned.fill(
+      left: 1.6,
+      top: 1.6,
+      right: 1.6,
+      bottom: 1.6,
+      child: IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius - 1.6),
+            border: Border.all(
+              color: metal.light.withValues(alpha: locked ? 0.25 : 0.6),
+              width: 0.9,
+            ),
+          ),
+        ),
+      ),
+    ),
+  ];
+
+  /// Navy dusk veil, edge vignette and a warm floor light between the scene
+  /// and the figure, so the lineman stays crisp.
+  List<Widget> _ambient(CardMetal metal) => [
+    const IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0x660A1428), Color(0x000A1428)],
+            stops: [0.0, 0.5],
+          ),
+        ),
+      ),
+    ),
+    IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(0, -0.1),
+            radius: 0.95,
+            colors: [
+              Colors.black.withValues(alpha: 0),
+              Colors.black.withValues(alpha: locked ? 0.2 : 0.32),
+            ],
+            stops: const [0.6, 1.0],
+          ),
+        ),
+      ),
+    ),
+    if (!locked)
+      IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0, 1.05),
+              radius: 0.7,
+              colors: [
+                metal.glow.withValues(alpha: 0.22 * glow.clamp(0.0, 1.0)),
+                metal.glow.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        ),
+      ),
+  ];
 
   Widget _figure() {
     final figure = LinemanFigure(step: step, enableHero: enableHero && !locked);
@@ -362,34 +479,98 @@ class _Nameplate extends StatelessWidget {
   final String title;
   final CardMetal metal;
   final bool locked;
+  final bool premium;
+  final double sheen;
+  final double press;
 
   const _Nameplate({
     required this.title,
     required this.metal,
     required this.locked,
+    this.premium = false,
+    this.sheen = -1,
+    this.press = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    final depth = premium ? press.clamp(-0.3, 1.0) : 0.0;
+    final plate = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [metal.light, metal.mid, metal.dark],
-          stops: const [0.0, 0.45, 1.0],
+          colors: premium
+              ? [metal.light, metal.mid, metal.dark, metal.mid]
+              : [metal.light, metal.mid, metal.dark],
+          stops: premium
+              ? const [0.0, 0.4, 0.82, 1.0]
+              : const [0.0, 0.45, 1.0],
         ),
         border: Border.all(color: metal.dark, width: 1.4),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: 0.35 - 0.12 * depth),
+            blurRadius: 10 - 5 * depth,
+            offset: Offset(0, 5 - 3 * depth),
           ),
+          if (premium && !locked)
+            BoxShadow(
+              color: metal.glow.withValues(alpha: 0.18 + 0.2 * depth.clamp(0.0, 1.0)),
+              blurRadius: 14,
+            ),
         ],
       ),
-      child: Container(
+      child: _face(),
+    );
+    if (!premium) return plate;
+    // The band trails the card sheen so the plate catches the light after it.
+    return Transform.translate(
+      offset: Offset(0, 2.2 * depth),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: SlmSweepMask(
+          t: sheen - 0.35,
+          intensity: locked ? 0.25 : 0.85,
+          color: const Color(0xFFFFF6D6),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              plate,
+              IgnorePointer(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: FractionallySizedBox(
+                    heightFactor: 0.42,
+                    widthFactor: 0.92,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(18),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.white.withValues(alpha: locked ? 0.08 : 0.26),
+                            Colors.white.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _face() {
+    return Container(
         margin: const EdgeInsets.all(3),
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -439,7 +620,6 @@ class _Nameplate extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

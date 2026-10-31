@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
+import '../../design/slm_design.dart';
 import '../emergency/emergency_directory_screen.dart';
 import '../home/home_screen.dart';
 import '../identify/identify_screen.dart';
@@ -17,6 +18,8 @@ import '../sops/sops_screen.dart';
 import '../training/training_screen.dart';
 import '../admin/admin_screen.dart';
 import '../auth/login_screen.dart';
+import '../design_preview/motion_showcase.dart';
+import '../design_preview/premium_rank_preview.dart';
 import 'app_routes.dart';
 import 'shell_insets.dart';
 import 'shell_providers.dart';
@@ -41,7 +44,10 @@ class _MainShellState extends ConsumerState<MainShell> {
     // Overlay dock (not Scaffold.bottomNavigationBar) so the notch stays
     // truly transparent. Pages clear it via [ShellDockScope] padding — never
     // a SafeArea/Scaffold-colored slab behind the bar.
-    return Scaffold(
+    // Dark status icons for the cream tabs; Home's navy backdrop overrides it.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
         fit: StackFit.expand,
@@ -75,6 +81,7 @@ class _MainShellState extends ConsumerState<MainShell> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -91,6 +98,8 @@ class _MainShellState extends ConsumerState<MainShell> {
       AppRoutes.emergency => const EmergencyDirectoryScreen(),
       AppRoutes.login => const LoginScreen(),
       AppRoutes.admin => const AdminScreen(),
+      AppRoutes.premiumPreview => const PremiumRankPreview(),
+      AppRoutes.motionShowcase => const MotionShowcase(),
       _ => const _TabHost(),
     };
 
@@ -170,9 +179,13 @@ class _BottomNav extends StatelessWidget {
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF0F766E).withValues(alpha: 0.22),
+                            color: SlmColors.navy950.withValues(alpha: 0.35),
                             blurRadius: 22,
                             offset: const Offset(0, 8),
+                          ),
+                          BoxShadow(
+                            color: SlmColors.emerald600.withValues(alpha: 0.18),
+                            blurRadius: 18,
                           ),
                         ],
                       ),
@@ -201,32 +214,48 @@ class _BottomNav extends StatelessWidget {
                     top: -_rise + 4,
                     width: bubble,
                     height: bubble,
-                    child: DecoratedBox(
+                    child: Container(
+                      padding: const EdgeInsets.all(2.5),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF14B8A6), Color(0xFF0F766E)],
-                        ),
-                        border: Border.all(color: Colors.white, width: 3),
+                        gradient: SlmGradients.gold,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF0F766E).withValues(alpha: 0.35),
-                            blurRadius: 14,
+                            color: SlmColors.navy950.withValues(alpha: 0.4),
+                            blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
                           BoxShadow(
-                            color: const Color(0xFFFBBF24).withValues(alpha: 0.35),
-                            blurRadius: 10,
+                            color: SlmColors.gold400.withValues(alpha: 0.4),
+                            blurRadius: 12,
                           ),
                         ],
                       ),
-                      child: Center(
-                        child: Icon(
-                          items[index].$1,
-                          size: 24,
-                          color: const Color(0xFFFEF3C7),
+                      child: DecoratedBox(
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            center: Alignment(-0.3, -0.45),
+                            radius: 0.95,
+                            colors: [SlmColors.emerald500, SlmColors.emerald700, SlmColors.emerald900],
+                            stops: [0.0, 0.6, 1.0],
+                          ),
+                        ),
+                        child: Center(
+                          child: AnimatedSwitcher(
+                            duration: SlmMotion.base,
+                            switchInCurve: SlmMotion.emphasized,
+                            transitionBuilder: (child, t) => ScaleTransition(
+                              scale: Tween(begin: 0.6, end: 1.0).animate(t),
+                              child: FadeTransition(opacity: t, child: child),
+                            ),
+                            child: Icon(
+                              items[index].$1,
+                              key: ValueKey(index),
+                              size: 24,
+                              color: SlmColors.gold100,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -290,19 +319,41 @@ class _NotchedDockPainter extends CustomPainter {
 
     final path = Path.combine(PathOperation.difference, bar, cut);
 
+    final bounds = Rect.fromLTWH(0, barTop, size.width, size.height - barTop);
     final fill = Paint()
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF165E5A), Color(0xFF0F3D39)],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-
+        colors: [Color(0xFF0B5C49), SlmColors.emerald900, Color(0xFF042A21)],
+        stops: [0.0, 0.55, 1.0],
+      ).createShader(bounds);
     canvas.drawPath(path, fill);
+
+    // Top gloss, kept inside the dock outline.
+    canvas.save();
+    canvas.clipPath(path);
+    canvas.drawRect(
+      Rect.fromLTWH(0, barTop, size.width, bounds.height * 0.45),
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0x1FFFFFFF), Color(0x00FFFFFF)],
+        ).createShader(Rect.fromLTWH(0, barTop, size.width, bounds.height * 0.45)),
+    );
+    canvas.restore();
 
     final stroke = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.1
-      ..color = const Color(0x66F59E0B);
+      ..strokeWidth = 1.2
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          SlmColors.gold300.withValues(alpha: 0.8),
+          SlmColors.gold600.withValues(alpha: 0.35),
+        ],
+      ).createShader(bounds);
     canvas.drawPath(path, stroke);
   }
 
@@ -329,15 +380,16 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const idle = Color(0xFF8FA9A4);
+    const idle = Color(0xFFA9C7BE);
     const duration = Duration(milliseconds: 220);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
+    return SlmTactile(
+      semanticLabel: label,
+      onTap: onTap,
+      builder: (context, press, child) => Transform.scale(
+        scale: 1 - 0.08 * press,
+        child: child,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -348,18 +400,35 @@ class _NavItem extends StatelessWidget {
                 : Icon(icon, size: 22, color: idle),
           ),
           const SizedBox(height: 2),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: AnimatedDefaultTextStyle(
-              duration: duration,
-              style: TextStyle(
-                fontFamily: banglaFont,
-                fontSize: 10.5,
-                height: 1.15,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? const Color(0xFFFEF3C7) : idle,
+          AnimatedDefaultTextStyle(
+            duration: duration,
+            style: TextStyle(
+              fontFamily: banglaFont,
+              fontSize: 11,
+              height: 1.15,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected ? SlmColors.gold200 : idle,
+            ),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.15),
+            ),
+          ),
+          SizedBox(
+            height: 10,
+            child: Center(
+              child: AnimatedContainer(
+                duration: SlmMotion.base,
+                curve: SlmMotion.emphasized,
+                width: selected ? 16 : 0,
+                height: 2.5,
+                decoration: BoxDecoration(
+                  gradient: SlmGradients.gold,
+                  borderRadius: SlmRadius.pillAll,
+                ),
               ),
-              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           ),
         ],

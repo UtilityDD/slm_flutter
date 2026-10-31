@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design/motion/slm_motion_widgets.dart';
 import '../admin/dev_unlock.dart';
 import '../auth/auth_provider.dart';
 import '../auth/verify_gate.dart';
@@ -307,7 +308,7 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel>
     final showBack = flip > math.pi / 2;
     final sweep = _ready && active ? _sheen.value / 0.32 : -1.0;
 
-    Widget face = showBack
+    Widget face(double press) => showBack
         ? Transform(
             alignment: Alignment.center,
             transform: Matrix4.rotationY(math.pi),
@@ -322,6 +323,8 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel>
             sheen: sweep,
             glow: active ? glow * (0.75 + 0.25 * focus) : 0.35 * focus,
             enableHero: active && _ready,
+            premium: true,
+            press: press,
           );
 
     return Center(
@@ -333,10 +336,13 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel>
             alignment: Alignment.center,
             transform: matrix..scaleByDouble(scale, scale, 1, 1),
             child: Builder(
-              builder: (cardContext) => GestureDetector(
-                behavior: HitTestBehavior.opaque,
+              builder: (cardContext) => SlmTactile(
+                haptic: false,
                 onTap: () => _open(index, cardContext),
-                child: face,
+                builder: (context, press, _) => Transform.scale(
+                  scale: 1 - 0.022 * press,
+                  child: face(press),
+                ),
               ),
             ),
           ),

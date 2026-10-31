@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -65,6 +66,24 @@ class MoreScreen extends ConsumerWidget {
           const Color(0xFF1E3A8A),
           () {
             Navigator.of(context).pushNamed(AppRoutes.admin);
+          },
+        ),
+      if (kDebugMode)
+        _Row(
+          tr(bn, 'প্রিমিয়াম প্রিভিউ', 'Premium preview'),
+          Icons.auto_awesome_rounded,
+          const Color(0xFFBF9443),
+          () {
+            Navigator.of(context).pushNamed(AppRoutes.premiumPreview);
+          },
+        ),
+      if (kDebugMode)
+        _Row(
+          tr(bn, 'মোশন শোকেস', 'Motion showcase'),
+          Icons.animation_rounded,
+          const Color(0xFF10B981),
+          () {
+            Navigator.of(context).pushNamed(AppRoutes.motionShowcase);
           },
         ),
     ];

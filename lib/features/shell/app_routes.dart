@@ -10,4 +10,6 @@ abstract final class AppRoutes {
   static const emergency = '/emergency';
   static const login = '/login';
   static const admin = '/admin';
+  static const premiumPreview = '/premium-preview';
+  static const motionShowcase = '/motion-showcase';
 }
