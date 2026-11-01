@@ -17,8 +17,10 @@ import 'adventure_scenery.dart';
 import 'duty_slip_engine.dart';
 import 'duty_slip_voice.dart';
 
-/// Winding valley journey. Stop positions come from the index, so level 3 and
-/// level 100 use the same widgets. This screen does not award points.
+/// Monumental golden ladder. The bamboo climb in commit 4672672
+/// (`_RoadBoard`, `_BambooRungPainter`) is the layout this screen recovers:
+/// vertical rails, one rung per level, the checkpoint on the rung.
+/// Stop numbers still come from [dsLevels]. This screen does not award points.
 class AdventureMap extends StatefulWidget {
   final DutySlipEngine engine;
   final void Function(int index) onOpen;
@@ -51,15 +53,8 @@ _Station? _stationAt(int index) => switch (index % 8) {
       _ => null,
     };
 
-/// Gentle left-right weave. Adjacent stops stay close so each step climbs
-/// much farther than it drifts, and the path never leaves the centre corridor.
-double _lane(int index, double width) {
-  const stops = [0.47, 0.54, 0.45, 0.55, 0.46, 0.53, 0.48, 0.52];
-  return width * stops[index % stops.length];
-}
-
 class _AdventureMapState extends State<AdventureMap> with SingleTickerProviderStateMixin {
-  static const _rowH = 118.0;
+  static const _rowH = 108.0;
   static const _tail = 6;
 
   final _scroll = ScrollController();
@@ -186,6 +181,14 @@ class _AdventureMapState extends State<AdventureMap> with SingleTickerProviderSt
     final lit = <_Station, int>{
       for (final s in _Station.values) s: _lit(s, focus, live),
     };
+    final activityAt = <int>{};
+    for (var n = focus; n < focus + 5 && n < live; n++) {
+      if (_stationAt(n) != null) activityAt.add(n);
+      if (activityAt.length == 2) break;
+    }
+    final quietBands = [for (var n = focus; n < focus + 5 && n < live; n++) n].where((n) => !activityAt.contains(n)).toList();
+    final poleAt = quietBands.isEmpty ? -1 : quietBands.first;
+    final dtrAt = quietBands.length < 2 ? -1 : quietBands[1];
 
     return AnimatedBuilder(
       animation: _glow,
@@ -218,6 +221,7 @@ class _AdventureMapState extends State<AdventureMap> with SingleTickerProviderSt
                       final fog = i > focus + 3;
                       final station = soon ? null : _stationAt(i);
                       final isLit = station != null && lit[station] == i && !fog;
+                      final showcase = !soon && i >= focus && i < focus + 5;
                       return _MapBand(
                         index: i,
                         number: soon ? i + 1 : dsLevels[i].number,
@@ -230,7 +234,10 @@ class _AdventureMapState extends State<AdventureMap> with SingleTickerProviderSt
                         glow: glow,
                         station: station,
                         stationLit: isLit,
-                        stationDone: !soon && i < focus,
+                        showcase: showcase,
+                        featuredActivity: activityAt.contains(i),
+                        pole: i == poleAt,
+                        dtr: i == dtrAt,
                         onLevel: soon
                             ? () {
                                 HapticFeedback.selectionClick();
@@ -510,7 +517,10 @@ class _MapBand extends StatelessWidget {
   final double glow;
   final _Station? station;
   final bool stationLit;
-  final bool stationDone;
+  final bool showcase;
+  final bool featuredActivity;
+  final bool pole;
+  final bool dtr;
   final VoidCallback? onLevel;
   final VoidCallback? onStation;
 
@@ -526,7 +536,10 @@ class _MapBand extends StatelessWidget {
     required this.glow,
     required this.station,
     required this.stationLit,
-    required this.stationDone,
+    required this.showcase,
+    required this.featuredActivity,
+    required this.pole,
+    required this.dtr,
     required this.onLevel,
     required this.onStation,
   });
@@ -537,63 +550,48 @@ class _MapBand extends StatelessWidget {
       builder: (context, box) {
         final w = box.maxWidth;
         final h = box.maxHeight;
-        final x = _lane(index, w);
-        final prev = _lane(index == 0 ? 0 : index - 1, w);
-        final next = _lane(index + 1, w);
-        final slot = index % 8;
-        final markLeft = index.isEven;
-        final lift = _hillLift(index);
-        final roadBottom = Offset((prev + x) / 2, h);
-        final roadHere = Offset(x, h * 0.5 - lift);
-        final roadTop = Offset((x + next) / 2, 0);
-        final onRoad = Offset(
-          0.25 * roadBottom.dx + 0.5 * roadHere.dx + 0.25 * roadTop.dx,
-          0.25 * roadBottom.dy + 0.5 * roadHere.dy + 0.25 * roadTop.dy,
-        );
+        final rungY = h * 0.58;
+        final branchLeft = featuredActivity && index.isEven;
+        final branchRight = featuredActivity && !index.isEven;
+        final sideLeft = index.isEven;
 
         return Opacity(
-          opacity: fog ? 0.35 : 1,
+          opacity: fog ? 0.42 : 1,
           child: Stack(
             clipBehavior: Clip.hardEdge,
             children: [
               CustomPaint(
                 size: Size(w, h),
-                painter: _DioramaGroundPainter(
-                  index: index,
-                  river: slot == 2,
-                ),
-              ),
-              CustomPaint(
-                size: Size(w, h),
-                painter: _GoldenRoadPainter(
-                  bottom: roadBottom,
-                  here: roadHere,
-                  top: roadTop,
+                painter: _GoldenLadderPainter(
+                  branchLeft: branchLeft,
+                  branchRight: branchRight,
+                  rich: showcase,
                   fog: fog,
-                  slot: slot,
                 ),
               ),
-              if (!soon && _landmarkFor(slot) != null)
+              if (pole)
                 Positioned(
-                  left: markLeft ? 0 : null,
-                  right: markLeft ? null : 0,
+                  left: station != null && index.isEven ? null : 0,
+                  right: station != null && index.isEven ? 0 : null,
                   bottom: 0,
-                  width: w * 0.26,
-                  child: Align(
-                    alignment: markLeft ? Alignment.bottomLeft : Alignment.bottomRight,
-                    child: _Seated(shadow: 36, child: _landmarkFor(slot)!),
-                  ),
+                  child: const _FitMark(height: 76, child: Pole3D()),
+                ),
+              if (dtr)
+                Positioned(
+                  left: station != null && !index.isEven ? 0 : null,
+                  right: station != null && !index.isEven ? null : 0,
+                  bottom: 0,
+                  child: const _FitMark(height: 68, child: DtrStation()),
                 ),
               if (crest && !soon)
                 Positioned(
-                  left: markLeft ? 4 : null,
-                  right: markLeft ? null : 4,
+                  right: 4,
                   top: 0,
-                  child: const _FitMark(height: 36, child: ZeroDeathCrest()),
+                  child: const _FitMark(height: 34, child: ZeroDeathCrest()),
                 ),
               Positioned(
-                left: onRoad.dx - 26,
-                top: onRoad.dy - 26,
+                left: w / 2 - 24,
+                top: rungY - 24,
                 child: _LevelCoin(
                   number: number,
                   soon: soon,
@@ -606,13 +604,12 @@ class _MapBand extends StatelessWidget {
               ),
               if (station != null)
                 Positioned(
-                  left: markLeft ? null : 2,
-                  right: markLeft ? 2 : null,
-                  top: 36,
+                  left: sideLeft ? 2 : null,
+                  right: sideLeft ? null : 2,
+                  top: featuredActivity ? rungY - 46 : 8,
                   child: _StationPlaque(
                     station: station!,
                     lit: stationLit,
-                    done: stationDone,
                     glow: glow,
                     onTap: onStation,
                   ),
@@ -625,276 +622,175 @@ class _MapBand extends StatelessWidget {
   }
 }
 
-/// How far the road crests above the band midline. Endpoints stay on the
-/// band edges so neighbouring bands still meet.
-double _hillLift(int index) => 5 * math.sin(index * 0.85 + 0.3);
-
-/// One slim landmark for this band, kept in the side gutter.
-Widget? _landmarkFor(int slot) {
-  return switch (slot) {
-    0 => const _FitMark(height: 50, child: TrainingShed()),
-    1 || 4 => const _FitMark(height: 68, child: _PoleMark()),
-    2 => const _FitMark(height: 40, child: BridgeArch3D()),
-    3 => const _FitMark(height: 54, child: DtrStation()),
-    5 || 7 => const _FitMark(height: 38, child: TreeCluster3D(size: 52)),
-    6 => const _FitMark(height: 50, child: SubstationYard()),
-    _ => null,
-  };
-}
-
-class _GoldenRoadPainter extends CustomPainter {
-  final Offset bottom;
-  final Offset here;
-  final Offset top;
+class _GoldenLadderPainter extends CustomPainter {
+  final bool branchLeft;
+  final bool branchRight;
+  final bool rich;
   final bool fog;
-  final int slot;
 
-  const _GoldenRoadPainter({
-    required this.bottom,
-    required this.here,
-    required this.top,
+  const _GoldenLadderPainter({
+    required this.branchLeft,
+    required this.branchRight,
+    required this.rich,
     required this.fog,
-    required this.slot,
   });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..moveTo(bottom.dx, bottom.dy)
-      ..quadraticBezierTo(here.dx, here.dy, top.dx, top.dy);
-
-    // Soil cut the ribbon sits in, then the raised gold surface.
-    canvas.drawPath(
-      path,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 38
-        ..strokeCap = StrokeCap.round
-        ..color = fog ? const Color(0x3320140C) : const Color(0xFF24160C),
-    );
-    final bank = path.shift(const Offset(2.5, 5.5));
-    canvas.drawPath(
-      bank,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 30
-        ..strokeCap = StrokeCap.round
-        ..color = fog ? const Color(0x33000000) : const Color(0x7707120B)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
-    );
-    canvas.drawPath(
-      path.shift(const Offset(1.2, 3.2)),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 26
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF3E270B),
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 23
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF76521B),
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 17
-        ..strokeCap = StrokeCap.round
-        ..color = fog ? const Color(0xFFB59B67) : SlmColors.gold400,
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 11
-        ..strokeCap = StrokeCap.round
-        ..color = fog ? const Color(0xFFCBB686) : SlmColors.gold200,
-    );
-    canvas.drawPath(
-      path.shift(const Offset(-1.5, -1.5)),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.2
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xBBFAF1DA),
-    );
-
-    // Overhead 3-phase 11kV catenary distribution conductors along the valley
-    if (!fog && (slot == 1 || slot == 2 || slot == 3 || slot == 4)) {
-      final wirePaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.15
-        ..color = const Color(0x88E2E8F0);
-      for (final d in [-6.0, 0.0, 6.0]) {
-        final wPath = Path()
-          ..moveTo(bottom.dx + 12 + d, bottom.dy)
-          ..quadraticBezierTo(here.dx + 12 + d, here.dy + 4, top.dx + 12 + d, top.dy);
-        canvas.drawPath(wPath, wirePaint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _GoldenRoadPainter oldDelegate) =>
-      oldDelegate.here != here || oldDelegate.fog != fog || oldDelegate.slot != slot;
-}
-
-/// Rolling miniature ground for one map band. Mound centres are in world
-/// space so a hill continues into the bands above and below.
-class _DioramaGroundPainter extends CustomPainter {
-  final int index;
-  final bool river;
-
-  const _DioramaGroundPainter({required this.index, required this.river});
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
     final rect = Offset.zero & size;
-    canvas.save();
-    canvas.clipRect(rect);
-
-    canvas.drawRect(rect, Paint()..color = const Color(0xFF5F8C44));
-
-    // Soft brightness along the climb. Tall and faint, so it reads as a slope
-    // in a corridor rather than a round hill sitting across the screen.
-    for (var m = index - 1; m <= index + 1; m++) {
-      final localCy = (index - m + 0.5) * h;
-      final crown = Rect.fromCenter(center: Offset(w * 0.5, localCy), width: w * 0.62, height: h * 0.85);
-      canvas.drawOval(
-        crown,
-        Paint()
-          ..shader = const RadialGradient(
-            center: Alignment(0, -0.15),
-            radius: 1.05,
-            colors: [Color(0x5599C86C), Color(0x2299C86C), Color(0x0099C86C)],
-            stops: [0.0, 0.42, 1.0],
-          ).createShader(crown),
-      );
-    }
-
-    // Valley walls. Darker at the screen edges, open down the middle.
+    canvas.drawRect(rect, Paint()..color = const Color(0xFF0C1A2C));
     canvas.drawRect(
       rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFF081422),
+            rich ? const Color(0xFF16344C) : const Color(0xFF102033),
+            rich ? const Color(0xFF1A4A34) : const Color(0xFF12263A),
+          ],
+        ).createShader(rect),
+    );
+    if (rich) {
+      final terrace = Path()
+        ..moveTo(0, h)
+        ..lineTo(0, h * 0.55)
+        ..quadraticBezierTo(w * 0.08, h * 0.36, w * 0.2, h)
+        ..close();
+      canvas.drawPath(terrace, Paint()..color = const Color(0xFF1C5A38));
+      canvas.drawPath(
+        terrace,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = const Color(0x663A8A58),
+      );
+      final far = Path()
+        ..moveTo(w, h)
+        ..lineTo(w, h * 0.48)
+        ..quadraticBezierTo(w * 0.9, h * 0.3, w * 0.78, h)
+        ..close();
+      canvas.drawPath(far, Paint()..color = const Color(0xFF245C40));
+    }
+
+    const railW = 11.0;
+    final span = w * 0.38;
+    final gap = (span - railW) / 2;
+    final leftX = w / 2 - gap;
+    final rightX = w / 2 + gap;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Rect.fromLTRB(leftX - 10, 0, rightX + 14, h), const Radius.circular(12)),
+      Paint()
+        ..color = const Color(0x44040A12)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+    );
+
+    _rail(canvas, leftX, h);
+    _rail(canvas, rightX, h);
+    _rung(canvas, leftX, rightX, h * 0.58, fog);
+    if (branchLeft) _branch(canvas, leftX, 16, h * 0.58 - 20, w);
+    if (branchRight) _branch(canvas, rightX, w - 16, h * 0.58 - 20, w);
+  }
+
+  void _rail(Canvas canvas, double x, double h) {
+    final body = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset(x, h / 2), width: 11, height: h + 2),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(body.shift(const Offset(2.4, 0)), Paint()..color = const Color(0xFF3A280C));
+    canvas.drawRRect(
+      body,
       Paint()
         ..shader = const LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
-          colors: [Color(0xE02A461E), Color(0x002A461E), Color(0x002A461E), Color(0xD0243C1A)],
-          stops: [0.0, 0.30, 0.70, 1.0],
-        ).createShader(rect),
+          colors: [
+            Color(0xFF5C4212),
+            Color(0xFFC6A15A),
+            Color(0xFFFFF6D2),
+            Color(0xFFE8C56A),
+            Color(0xFF8A6420),
+            Color(0xFF3A280C),
+          ],
+          stops: [0.0, 0.2, 0.42, 0.56, 0.8, 1.0],
+        ).createShader(body.outerRect),
     );
-
-    final rng = math.Random(index * 17 + 3);
-    final grass = Paint()
-      ..strokeWidth = 1.2
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xAAB6D86A);
-    for (var i = 0; i < 8; i++) {
-      final leftSide = i.isEven;
-      final gx = leftSide ? 6 + rng.nextDouble() * w * 0.16 : w - 6 - rng.nextDouble() * w * 0.16;
-      final gy = h * (0.2 + rng.nextDouble() * 0.6);
-      canvas.drawLine(Offset(gx, gy), Offset(gx + (leftSide ? 1.1 : -1.1), gy - 4), grass);
-    }
-    if (index.isEven) {
-      final rock = Rect.fromCenter(
-        center: Offset(w * 0.08, h * 0.62),
-        width: 9,
-        height: 5,
-      );
-      canvas.drawOval(
-        rock,
-        Paint()
-          ..shader = const RadialGradient(
-            center: Alignment(-0.4, -0.5),
-            colors: [Color(0xFFE4DDD2), Color(0xFF6E675C)],
-          ).createShader(rock),
-      );
-    }
-
-    if (river) _paintRiver(canvas, size);
-    canvas.restore();
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(x - 0.6, h / 2), width: 2.2, height: h),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFF14915F),
+    );
   }
 
-  void _paintRiver(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final path = Path();
-    const steps = 8;
-    for (var s = 0; s <= steps; s++) {
-      final t = s / steps;
-      final x = w * (0.08 + 0.015 * math.sin((index + t) * 1.6));
-      final y = t * h;
-      if (s == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
+  void _rung(Canvas canvas, double leftX, double rightX, double y, bool fog) {
+    final rung = Rect.fromLTRB(leftX - 1, y - 4.5, rightX + 1, y + 4.5);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rung.shift(const Offset(1.6, 3)), const Radius.circular(4)),
+      Paint()..color = const Color(0xFF2C1C08),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rung, const Radius.circular(4)),
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: fog
+              ? const [Color(0xFFD9C48A), Color(0xFF8A7040), Color(0xFF4A3818)]
+              : const [Color(0xFFFFF8DC), Color(0xFFE6C56E), Color(0xFF8C6822), Color(0xFF4A3410)],
+          stops: fog ? const [0.0, 0.55, 1.0] : const [0.0, 0.32, 0.7, 1.0],
+        ).createShader(rung),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTRB(rung.left + 6, rung.top + 1.1, rung.right - 6, rung.top + 2.4),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xDDFFF8E6),
+    );
+    for (final x in [leftX, rightX]) {
+      canvas.drawCircle(Offset(x, y), 4.6, Paint()..color = const Color(0xFFB8893A));
+      canvas.drawCircle(Offset(x, y), 3.3, Paint()..color = const Color(0xFF0E7A4E));
+      canvas.drawCircle(Offset(x - 0.8, y - 0.9), 1.15, Paint()..color = const Color(0xFFB6FFD8));
     }
+  }
+
+  void _branch(Canvas canvas, double fromX, double toX, double y, double w) {
+    final path = Path()
+      ..moveTo(fromX, y)
+      ..lineTo(toX, y);
     canvas.drawPath(
-      path,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 16
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF1A140E),
-    );
-    canvas.drawPath(
-      path.shift(const Offset(2, 2)),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 7
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF6B4A2A),
-    );
-    canvas.drawPath(
-      path,
+      path.shift(const Offset(0, 4)),
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 6
         ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF2E9CC0),
+        ..color = const Color(0xFF2C1C08),
     );
     canvas.drawPath(
-      path.shift(const Offset(-0.8, -0.8)),
+      path,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
+        ..strokeWidth = 4.5
         ..strokeCap = StrokeCap.round
-        ..color = const Color(0xCCF2FBFF),
+        ..shader = LinearGradient(
+          colors: const [Color(0xFF8A6420), Color(0xFFFFF3C8), Color(0xFFC6A15A)],
+        ).createShader(Rect.fromLTWH(0, y - 8, w, 16)),
     );
   }
 
   @override
-  bool shouldRepaint(covariant _DioramaGroundPainter oldDelegate) =>
-      oldDelegate.index != index || oldDelegate.river != river;
+  bool shouldRepaint(covariant _GoldenLadderPainter oldDelegate) =>
+      oldDelegate.branchLeft != branchLeft ||
+      oldDelegate.branchRight != branchRight ||
+      oldDelegate.rich != rich ||
+      oldDelegate.fog != fog;
 }
 
-class _ContactShadow extends StatelessWidget {
-  final double width;
-
-  const _ContactShadow({required this.width});
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: width,
-        height: width * 0.26,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.elliptical(width, width * 0.26)),
-          color: const Color(0x99060C08),
-          boxShadow: const [BoxShadow(color: Color(0x66060C08), blurRadius: 5, offset: Offset(2, 1))],
-        ),
-      ),
-    );
-  }
-}
 
 class _FitMark extends StatelessWidget {
   final double height;
@@ -908,51 +804,6 @@ class _FitMark extends StatelessWidget {
   }
 }
 
-class _PoleMark extends StatelessWidget {
-  const _PoleMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 70,
-      height: 96,
-      child: Stack(
-        alignment: Alignment.bottomLeft,
-        children: [
-          Pole3D(),
-          Positioned(
-            right: 0,
-            bottom: 6,
-            child: Image(
-              image: AssetImage('assets/zero_loss/scene/spr_man_climb.webp'),
-              width: 26,
-              height: 36,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Seated extends StatelessWidget {
-  final double shadow;
-  final Widget child;
-
-  const _Seated({required this.shadow, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.bottomCenter,
-      clipBehavior: Clip.none,
-      children: [
-        Positioned(bottom: -1, child: _ContactShadow(width: shadow)),
-        child,
-      ],
-    );
-  }
-}
 
 class _LevelCoin extends StatelessWidget {
   final int number;
@@ -975,66 +826,53 @@ class _LevelCoin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muted = soon || (locked && !cleared && !current);
-    final asset = muted
-        ? 'assets/duty_slip/world3d/coin_locked_3d.webp'
-        : cleared
+    final bronze = soon || (locked && !current);
+    final asset = !bronze && current
+        ? 'assets/duty_slip/world3d/coin_current_3d.webp'
+        : !bronze && cleared
             ? 'assets/duty_slip/world3d/coin_cleared_3d.webp'
-            : 'assets/duty_slip/world3d/coin_current_3d.webp';
-
-    final alive = onTap != null && !soon && !locked;
-    final disc = Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.center,
-      children: [
-        const Positioned(
-          bottom: -2,
-          child: _ContactShadow(width: 34),
-        ),
-        Container(
-          width: 56,
-          height: 56,
-          decoration: alive
-              ? BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: (current ? SlmColors.gold300 : SlmColors.emerald400)
-                          .withValues(alpha: current ? 0.35 + 0.4 * glow : 0.22 + 0.15 * glow),
-                      blurRadius: current ? 16 + 6 * glow : 10,
-                      spreadRadius: current ? 2 : 0.5,
-                    ),
-                  ],
-                )
-              : null,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Image.asset(
-                asset,
-                width: 56,
-                height: 56,
-                cacheWidth: 150,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.medium,
-                gaplessPlayback: true,
-              ),
-              Text(
-                '$number',
-                style: zlText(18, weight: FontWeight.w900, color: SlmColors.ivory).copyWith(
-                  shadows: const [Shadow(color: Color(0xDD000000), offset: Offset(0, 1.5), blurRadius: 2.5)],
+            : 'assets/duty_slip/world3d/medallion_bronze_3d.webp';
+    final disc = Container(
+      width: 48,
+      height: 48,
+      decoration: !bronze && (current || cleared)
+          ? BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: (current ? SlmColors.gold300 : SlmColors.emerald400)
+                      .withValues(alpha: current ? 0.42 + 0.38 * glow : 0.22),
+                  blurRadius: current ? 16 + 8 * glow : 8,
+                  spreadRadius: current ? 1.4 : 0,
                 ),
-              ),
-            ],
+                if (current)
+                  BoxShadow(
+                    color: SlmColors.emerald400.withValues(alpha: 0.22 + 0.2 * glow),
+                    blurRadius: 12,
+                  ),
+              ],
+            )
+          : null,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Image.asset(
+            asset,
+            width: 48,
+            height: 48,
+            cacheWidth: 140,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+            gaplessPlayback: true,
           ),
-        ),
-        if (cleared || (locked && !current))
-          Positioned(
-            right: cleared ? -1 : null,
-            bottom: -3,
-            child: _StatusPip(cleared: cleared),
+          Text(
+            '$number',
+            style: zlText(16, weight: FontWeight.w900, color: SlmColors.ivory).copyWith(
+              shadows: const [Shadow(color: Color(0xDD000000), offset: Offset(0, 1.2), blurRadius: 2)],
+            ),
           ),
-      ],
+        ],
+      ),
     );
 
     return SlmTactile(
@@ -1048,48 +886,15 @@ class _LevelCoin extends StatelessWidget {
   }
 }
 
-class _StatusPip extends StatelessWidget {
-  final bool cleared;
-
-  const _StatusPip({required this.cleared});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 18,
-      height: 18,
-      padding: const EdgeInsets.all(1.2),
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: SlmGradients.gold,
-        boxShadow: [BoxShadow(color: Color(0x88000000), blurRadius: 3, offset: Offset(0, 1.5))],
-      ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: cleared ? SlmGradients.emerald : SlmGradients.navyCard,
-        ),
-        child: Icon(
-          cleared ? Icons.check_rounded : Icons.lock_rounded,
-          size: 10.5,
-          color: SlmColors.ivory,
-        ),
-      ),
-    );
-  }
-}
-
 class _StationPlaque extends StatelessWidget {
   final _Station station;
   final bool lit;
-  final bool done;
   final double glow;
   final VoidCallback? onTap;
 
   const _StationPlaque({
     required this.station,
     required this.lit,
-    required this.done,
     required this.glow,
     required this.onTap,
   });
@@ -1158,7 +963,6 @@ class _StationPlaque extends StatelessWidget {
             child: emblem,
           ),
         ),
-        if (done) const _StatusPip(cleared: true),
       ],
     );
 

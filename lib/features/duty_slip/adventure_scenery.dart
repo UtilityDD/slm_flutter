@@ -30,8 +30,8 @@ class _SkyRidgePainter extends CustomPainter {
         ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF10243A), Color(0xFF2E5870), Color(0xFF6E9460)],
-          stops: [0.0, 0.42, 1.0],
+          colors: [Color(0xFF07111E), Color(0xFF10243A), Color(0xFF16382C)],
+          stops: [0.0, 0.55, 1.0],
         ).createShader(rect),
     );
     canvas.drawRect(
