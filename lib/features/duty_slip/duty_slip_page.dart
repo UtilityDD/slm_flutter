@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/en_digits.dart';
+import '../../design/slm_design.dart';
 import '../auth/verify_gate.dart';
 import '../auth/verify_sheet.dart';
 import '../auth/verify_tick.dart';
@@ -739,15 +740,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => const ColoredBox(color: ZlColors.bg),
             ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0x77000000), Color(0xDD000000)],
-                ),
-              ),
-            ),
+            const _CoverShade(),
             SafeArea(
               child: _CoverBoard(
                 onOpen: () {
@@ -773,6 +766,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final vanIntroScene = vanIntro && e.level.number > 6 && e.level.number <= 14;
     final vanYard = e.level.number == 6 && e.showingDress;
     final bg = switch (e.act) {
+      _ when e.covering => 'assets/duty_slip/duty_fault_slip.jpg',
       DsAct.briefing when e.briefingPage == 1 => 'assets/duty_slip/duty_fault_slip.jpg',
       DsAct.briefing when e.briefingPage == 2 => 'assets/duty_slip/duty_ptw_pad.jpg',
       _ when jobIntro => e.site.bg.isNotEmpty ? e.site.bg : 'assets/zero_loss/scene/bg_market_wire_down.webp',
@@ -860,7 +854,9 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
               )
             else
               Image.asset(bg, fit: BoxFit.cover, errorBuilder: (_, _, _) => const ColoredBox(color: ZlColors.bg)),
-            if (!walk && !dress && !vanYard && !vanIntro && !e.onRoad)
+            if (e.covering)
+              const _CoverShade()
+            else if (!walk && !dress && !vanYard && !vanIntro && !e.onRoad)
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -1443,221 +1439,6 @@ class _PlanBoard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// জীবনের শিরস্ত্রাণ ও স্বর্ণবলয় (Lineman Safety Helmet with Golden Life Aureole)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _LifeHelmetAuraBadge extends StatelessWidget {
-  final double pulse;
-  final double size;
-  final bool blur;
-  const _LifeHelmetAuraBadge({this.pulse = 1.0, this.size = 100, this.blur = true});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(
-        painter: _HelmetAuraPainter(pulse: pulse, blur: blur),
-        size: Size(size, size),
-      ),
-    );
-  }
-}
-
-class _HelmetAuraPainter extends CustomPainter {
-  final double pulse;
-  final bool blur;
-  const _HelmetAuraPainter({required this.pulse, this.blur = true});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final c = Offset(w / 2, h / 2);
-    final r = w / 2;
-
-    // 1. Outer Golden Aura Glow (স্বর্ণবলয় আভা)
-    if (blur) {
-      canvas.drawCircle(
-        c,
-        r * 0.95,
-        Paint()
-          ..color = Color.fromRGBO(245, 158, 11, 0.35 * pulse)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16),
-      );
-    } else {
-      canvas.drawCircle(
-        c,
-        r * 0.98,
-        Paint()
-          ..shader = RadialGradient(
-            colors: [
-              Color.fromRGBO(245, 158, 11, 0.28 * pulse),
-              Color.fromRGBO(245, 158, 11, 0),
-            ],
-          ).createShader(Rect.fromCircle(center: c, radius: r * 0.98)),
-      );
-    }
-
-    // 2. Unbroken Golden Life-Ring (স্বর্ণবলয় - জীবনের সুরক্ষা বৃত্ত)
-    final ringPaint = Paint()
-      ..shader = SweepGradient(
-        colors: const [
-          Color(0xFFFFFBE8),
-          Color(0xFFFBBF24),
-          Color(0xFFD97706),
-          Color(0xFF92400E),
-          Color(0xFFFDE68A),
-          Color(0xFFFFFBE8),
-        ],
-      ).createShader(Rect.fromCircle(center: c, radius: r * 0.88))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.8;
-    canvas.drawCircle(c, r * 0.88, ringPaint);
-
-    // Inner subtle gold wire ring
-    canvas.drawCircle(
-      c,
-      r * 0.80,
-      Paint()
-        ..color = const Color(0x66FDE68A)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0,
-    );
-
-    // 8 Golden Safety Beads along the circle (representing the 8 SAFE HOME steps)
-    for (var i = 0; i < 8; i++) {
-      final a = (i * math.pi * 2 / 8) - (math.pi / 2);
-      final bx = c.dx + math.cos(a) * (r * 0.88);
-      final by = c.dy + math.sin(a) * (r * 0.88);
-      canvas.drawCircle(Offset(bx, by), 2.2, Paint()..color = const Color(0xFFFFFBE8));
-    }
-
-    // 3. Inner Dark Disc Background (contrast base for the golden helmet)
-    canvas.drawCircle(
-      c,
-      r * 0.77,
-      Paint()
-        ..shader = const RadialGradient(
-          colors: [Color(0xFF3B1E05), Color(0xFF140A01)],
-        ).createShader(Rect.fromCircle(center: c, radius: r * 0.77)),
-    );
-
-    // 4. জীবনের শিরস্ত্রাণ (Lineman Electrical Safety Helmet with Chin-Strap)
-    final scale = w / 100.0;
-    final hc = c + Offset(0, -1.5 * scale);
-
-    // A. Helmet Dome (Aerodynamic 3D dome)
-    final dome = Path()
-      ..moveTo(hc.dx - 24 * scale, hc.dy + 6 * scale)
-      ..cubicTo(
-        hc.dx - 26 * scale, hc.dy - 16 * scale,
-        hc.dx - 14 * scale, hc.dy - 25 * scale,
-        hc.dx, hc.dy - 25 * scale,
-      )
-      ..cubicTo(
-        hc.dx + 14 * scale, hc.dy - 25 * scale,
-        hc.dx + 26 * scale, hc.dy - 16 * scale,
-        hc.dx + 24 * scale, hc.dy + 6 * scale,
-      )
-      ..close();
-
-    final domeRect = Rect.fromCircle(center: hc, radius: 26 * scale);
-    canvas.drawPath(
-      dome,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: const [
-            Color(0xFFFFFBE8),
-            Color(0xFFFBBF24),
-            Color(0xFFF59E0B),
-            Color(0xFFD97706),
-            Color(0xFF92400E),
-          ],
-          stops: const [0.0, 0.25, 0.55, 0.80, 1.0],
-        ).createShader(domeRect),
-    );
-
-    // B. Central Impact-Deflection Ridge (মাঝের স্ট্রাকচারাল রিজ)
-    final ridge = Path()
-      ..moveTo(hc.dx - 2.5 * scale, hc.dy + 6 * scale)
-      ..lineTo(hc.dx - 1.5 * scale, hc.dy - 25 * scale)
-      ..lineTo(hc.dx + 1.5 * scale, hc.dy - 25 * scale)
-      ..lineTo(hc.dx + 2.5 * scale, hc.dy + 6 * scale)
-      ..close();
-    canvas.drawPath(ridge, Paint()..color = const Color(0x66FFFFFF));
-
-    // C. Wide Safety Brim (নিরাপত্তা সান-পিক কার্ভ)
-    final brim = Path()
-      ..moveTo(hc.dx - 29 * scale, hc.dy + 6 * scale)
-      ..quadraticBezierTo(hc.dx, hc.dy + 14 * scale, hc.dx + 29 * scale, hc.dy + 6 * scale)
-      ..quadraticBezierTo(hc.dx, hc.dy + 9 * scale, hc.dx - 29 * scale, hc.dy + 6 * scale)
-      ..close();
-    canvas.drawPath(
-      brim,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: const [Color(0xFFD97706), Color(0xFFFFFBE8), Color(0xFFD97706)],
-        ).createShader(Rect.fromLTWH(hc.dx - 29 * scale, hc.dy + 5 * scale, 58 * scale, 10 * scale)),
-    );
-
-    // Under-brim dark shadow
-    final underBrim = Path()
-      ..moveTo(hc.dx - 25 * scale, hc.dy + 8 * scale)
-      ..quadraticBezierTo(hc.dx, hc.dy + 13 * scale, hc.dx + 25 * scale, hc.dy + 8 * scale)
-      ..lineTo(hc.dx + 24 * scale, hc.dy + 10 * scale)
-      ..quadraticBezierTo(hc.dx, hc.dy + 15 * scale, hc.dx - 24 * scale, hc.dy + 10 * scale)
-      ..close();
-    canvas.drawPath(underBrim, Paint()..color = const Color(0xAA3B1E05));
-
-    // D. Chin-Strap (চিবুক বন্ধনী - জিরো টলারেন্সের প্রতীক)
-    final strapPaint = Paint()
-      ..color = const Color(0xFF451A03)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0 * scale
-      ..strokeCap = StrokeCap.round;
-
-    final strapLeft = Path()
-      ..moveTo(hc.dx - 18 * scale, hc.dy + 9 * scale)
-      ..quadraticBezierTo(hc.dx - 12 * scale, hc.dy + 17 * scale, hc.dx - 2 * scale, hc.dy + 20 * scale);
-    canvas.drawPath(strapLeft, strapPaint);
-
-    final strapRight = Path()
-      ..moveTo(hc.dx + 18 * scale, hc.dy + 9 * scale)
-      ..quadraticBezierTo(hc.dx + 12 * scale, hc.dy + 17 * scale, hc.dx + 2 * scale, hc.dy + 20 * scale);
-    canvas.drawPath(strapRight, strapPaint);
-
-    // Secure Chin-Strap Clasp/Buckle
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(hc.dx, hc.dy + 20 * scale), width: 7 * scale, height: 4.5 * scale),
-        Radius.circular(1.5 * scale),
-      ),
-      Paint()..color = const Color(0xFFFDE68A),
-    );
-
-    // E. Front Shield Insignia (Crown Badge with grounded spark)
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(hc.dx, hc.dy - 7 * scale), width: 10 * scale, height: 11 * scale),
-        Radius.circular(2 * scale),
-      ),
-      Paint()..color = const Color(0xFF451A03),
-    );
-    // Micro golden star / zero on helmet
-    canvas.drawCircle(Offset(hc.dx, hc.dy - 7 * scale), 2.2 * scale, Paint()..color = const Color(0xFFFDE68A));
-  }
-
-  @override
-  bool shouldRepaint(covariant _HelmetAuraPainter old) => old.pulse != pulse || old.blur != blur;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // ৩-ধাপের অভিযান ব্রিফিং মডাল (3-Card Mission Briefing Dialog)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1683,7 +1464,7 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
     if (_page < 2) {
       HapticFeedback.lightImpact();
       unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.5));
-      _pageController.nextPage(duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
+      _pageController.nextPage(duration: SlmMotion.slow, curve: SlmMotion.emphasized);
       return;
     }
     HapticFeedback.heavyImpact();
@@ -1702,14 +1483,16 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
         constraints: const BoxConstraints(maxWidth: 380, maxHeight: 520),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0F1B2E), Color(0xFF08101C)],
+          gradient: const RadialGradient(
+            center: Alignment(0, -1.1),
+            radius: 1.25,
+            colors: [SlmColors.navy700, SlmColors.navy900, SlmColors.navy950],
+            stops: [0, 0.45, 1],
           ),
-          border: Border.all(color: const Color(0x66F59E0B), width: 1.5),
-          boxShadow: const [
-            BoxShadow(color: Color(0x99000000), blurRadius: 28, offset: Offset(0, 10)),
+          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55), width: 1.2),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.6), blurRadius: 32, offset: const Offset(0, 14)),
+            BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.10), blurRadius: 40),
           ],
         ),
         child: Column(
@@ -1720,14 +1503,20 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(3, (i) {
                   final active = _page == i;
+                  final done = i < _page;
                   return AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
+                    duration: SlmMotion.base,
+                    curve: SlmMotion.emphasized,
                     margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: active ? 24 : 8,
+                    width: active ? 26 : 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(99),
-                      color: active ? const Color(0xFFFBBF24) : const Color(0x33FBBF24),
+                      borderRadius: SlmRadius.pillAll,
+                      gradient: active || done ? SlmGradients.gold : null,
+                      color: active || done ? null : SlmColors.navy700,
+                      boxShadow: active
+                          ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.55), blurRadius: 8)]
+                          : null,
                     ),
                   );
                 }),
@@ -1763,29 +1552,30 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
               child: Row(
                 children: [
-                  if (_page > 0)
-                    InkWell(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        _pageController.previousPage(
-                          duration: const Duration(milliseconds: 320),
-                          curve: Curves.easeOutCubic,
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(99),
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0x331E293B),
-                          border: Border.all(color: const Color(0x4464748B)),
+                  AnimatedOpacity(
+                    opacity: _page > 0 ? 1 : 0,
+                    duration: SlmMotion.fast,
+                    child: IgnorePointer(
+                      ignoring: _page == 0,
+                      child: SlmPressable(
+                        haptic: false,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          _pageController.previousPage(duration: SlmMotion.slow, curve: SlmMotion.emphasized);
+                        },
+                        child: Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: SlmColors.navy800,
+                            border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
+                          ),
+                          child: const Icon(Icons.arrow_back_rounded, size: 22, color: SlmColors.gold100),
                         ),
-                        child: const Icon(Icons.arrow_back_rounded, size: 22, color: Color(0xFFCBD5E1)),
                       ),
-                    )
-                  else
-                    const SizedBox(width: 44, height: 44),
+                    ),
+                  ),
                   const Spacer(),
                   _BriefNext(
                     last: _page == 2,
@@ -1812,9 +1602,14 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
             from: 0.00,
             to: 0.14,
             instant: lite,
-            child: _LifeHelmetAuraBadge(size: 82, blur: dsMotionOf(context) == DsMotion.cinematic),
+            child: AnimatedSafetyShield(
+              size: 132,
+              entrance: false,
+              animate: dsMotionOf(context) != DsMotion.lite,
+              intensity: 0.9,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
           _PhraseIn(
             clock: clock,
             from: 0.18,
@@ -1823,7 +1618,7 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
             child: Text(
               'শূন্য মৃত্যু অভিযান',
               textAlign: TextAlign.center,
-              style: zlText(22, weight: FontWeight.w900, color: const Color(0xFFFFF6D8)),
+              style: zlText(22, weight: FontWeight.w900, color: SlmColors.ivory),
             ),
           ),
           const SizedBox(height: 8),
@@ -1854,7 +1649,7 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
             child: Text(
               'বিদ্যুতের লাইনে কোনো "ছোট ভুল" নেই। প্রতিটি অসাবধানতা সরাসরি প্রাণঘাতী বিপদ ডেকে আনে।',
               textAlign: TextAlign.center,
-              style: zlText(13.5, height: 1.45, color: const Color(0xFFCBD5E1)),
+              style: zlText(13.5, height: 1.45, color: SlmColors.mist),
             ),
           ),
           const SizedBox(height: 8),
@@ -1866,7 +1661,7 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
             child: Text(
               'ধাপে ধাপে সঠিক সুরক্ষা ও নিয়ম মানাই মৃত্যুহীন পথের একমাত্র পাথেয়।',
               textAlign: TextAlign.center,
-              style: zlText(13.5, height: 1.45, weight: FontWeight.w600, color: const Color(0xFFE2E8F0)),
+              style: zlText(13.5, height: 1.45, weight: FontWeight.w600, color: SlmColors.ivory),
             ),
           ),
         ],
@@ -1888,7 +1683,7 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
             child: Text(
               'কাজের 3টি হিসেব',
               textAlign: TextAlign.center,
-              style: zlText(20, weight: FontWeight.w900, color: const Color(0xFFFFF6D8)),
+              style: zlText(20, weight: FontWeight.w900, color: SlmColors.ivory),
             ),
           ),
           const SizedBox(height: 4),
@@ -1900,7 +1695,7 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
             child: Text(
               'সব লেভেলের মোট হিসাব জমা থাকবে',
               textAlign: TextAlign.center,
-              style: zlText(12, color: const Color(0xFFFDE68A)),
+              style: zlText(12, color: SlmColors.gold300),
             ),
           ),
           const SizedBox(height: 16),
@@ -1911,7 +1706,7 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
             instant: lite,
             child: _metricRow(
               icon: Icons.stars_rounded,
-              color: const Color(0xFFFBBF24),
+              color: SlmColors.gold400,
               title: 'মোট স্কোর',
               desc: 'প্রতি লেভেলে সঠিক কাজের পয়েন্ট। ডিভাইসের মেমরিতে জমা থাকবে।',
             ),
@@ -1924,7 +1719,7 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
             instant: lite,
             child: _metricRow(
               icon: Icons.shield_rounded,
-              color: const Color(0xFF34D399),
+              color: SlmColors.emerald300,
               title: 'মৃত্যুঝুঁকি (0 লক্ষ্য)',
               desc: 'ভুল হলেই বাড়বে। আপনার লক্ষ্য: প্রতিটি লেভেলে 0 মৃত্যুঝুঁকি রাখা।',
             ),
@@ -1949,20 +1744,21 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
 
   Widget _metricRow({required IconData icon, required Color color, required String title, required String desc}) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
       decoration: BoxDecoration(
-        color: const Color(0x33060E18),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        gradient: SlmGradients.navyCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.15),
+              color: color.withValues(alpha: 0.14),
+              border: Border.all(color: color.withValues(alpha: 0.45)),
             ),
             child: Icon(icon, size: 18, color: color),
           ),
@@ -1973,7 +1769,7 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
               children: [
                 Text(title, style: zlText(13, weight: FontWeight.w800, color: color)),
                 const SizedBox(height: 2),
-                Text(desc, style: zlText(11.5, height: 1.3, color: const Color(0xFFCBD5E1))),
+                Text(desc, style: zlText(11.5, height: 1.3, color: SlmColors.mist)),
               ],
             ),
           ),
@@ -1996,15 +1792,16 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
                 to: 0.14,
                 instant: lite,
                 child: Container(
-                  width: 64,
-                  height: 64,
+                  width: 68,
+                  height: 68,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0x2210B981),
-                    border: Border.all(color: const Color(0xFF10B981), width: 2),
+                    gradient: SlmGradients.emerald,
+                    border: Border.all(color: SlmColors.gold300, width: 2),
+                    boxShadow: [BoxShadow(color: SlmColors.emerald400.withValues(alpha: 0.45), blurRadius: 18)],
                   ),
                   child: const Center(
-                    child: Icon(Icons.verified_user_rounded, size: 38, color: Color(0xFF34D399)),
+                    child: Icon(Icons.verified_user_rounded, size: 36, color: SlmColors.ivory),
                   ),
                 ),
               ),
@@ -2017,7 +1814,7 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
                 child: Text(
                   'লাইনম্যানের শপথ',
                   textAlign: TextAlign.center,
-                  style: zlText(21, weight: FontWeight.w900, color: const Color(0xFFFFF6D8)),
+                  style: zlText(21, weight: FontWeight.w900, color: SlmColors.ivory),
                 ),
               ),
               const SizedBox(height: 12),
@@ -2054,18 +1851,18 @@ class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
   Widget _pledgeItem(String text) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0x3310B981),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0x4434D399)),
+        gradient: SlmGradients.navyCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: SlmColors.emerald400.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF34D399)),
+          const Icon(Icons.check_circle_rounded, size: 18, color: SlmColors.emerald300),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(text, style: zlText(12.5, weight: FontWeight.w700, color: const Color(0xFFF1F5F9))),
+            child: Text(text, style: zlText(12.5, weight: FontWeight.w700, color: SlmColors.ivory)),
           ),
         ],
       ),
@@ -2160,10 +1957,10 @@ class _PhraseIn extends StatelessWidget {
       builder: (context, child) {
         final span = (to - from).clamp(0.04, 1.0);
         final t = ((clock.value - from) / span).clamp(0.0, 1.0);
-        final s = Curves.easeOutCubic.transform(t);
+        final s = SlmMotion.emphasized.transform(t);
         return Opacity(
           opacity: s,
-          child: Transform.translate(offset: Offset(0, 16 * (1 - s)), child: child),
+          child: Transform.translate(offset: Offset(0, 14 * (1 - s)), child: child),
         );
       },
       child: child,
@@ -2222,29 +2019,41 @@ class _BriefNextState extends State<_BriefNext> with SingleTickerProviderStateMi
         final s = widget.last && !widget.lite ? 1.0 + 0.04 * _pulse.value : 1.0;
         return Transform.scale(scale: s, child: child);
       },
-      child: GestureDetector(
+      child: SlmPressable(
+        haptic: false,
         onTap: widget.onTap,
-        child: Container(
-          width: 44,
-          height: 44,
+        child: AnimatedContainer(
+          duration: SlmMotion.base,
+          curve: SlmMotion.emphasized,
+          height: 46,
+          padding: EdgeInsets.symmetric(horizontal: widget.last ? 18 : 0),
+          constraints: const BoxConstraints(minWidth: 46),
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFBBF24), Color(0xFFF59E0B), Color(0xFFD97706)],
-            ),
+            borderRadius: SlmRadius.pillAll,
+            gradient: SlmGradients.gold,
             boxShadow: [
               BoxShadow(
-                color: Color.fromRGBO(245, 158, 11, widget.last ? 0.45 : 0.28),
-                blurRadius: widget.last ? 14 : 8,
+                color: SlmColors.gold400.withValues(alpha: widget.last ? 0.5 : 0.3),
+                blurRadius: widget.last ? 16 : 9,
                 offset: const Offset(0, 4),
               ),
             ],
-            border: Border.all(color: const Color(0xFFFFFBE8), width: 1.2),
+            border: Border.all(color: SlmColors.gold100, width: 1.1),
           ),
-          child: Icon(
-            widget.last ? Icons.check_rounded : Icons.arrow_forward_rounded,
-            size: 22,
-            color: const Color(0xFF451A03),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (widget.last) ...[
+                Text('শুরু করি', style: zlText(15, weight: FontWeight.w800, color: SlmColors.navy950)),
+                const SizedBox(width: 6),
+              ],
+              Icon(
+                widget.last ? Icons.check_rounded : Icons.arrow_forward_rounded,
+                size: 22,
+                color: SlmColors.navy950,
+              ),
+            ],
           ),
         ),
       ),
@@ -2266,8 +2075,7 @@ class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin 
   late final AnimationController _ctaPulse;
   late final AnimationController _exit;
   late final Animation<double> _rise;
-  late final Animation<double> _pop;
-  late final Animation<double> _badgeScale;
+  late final Animation<double> _ctaFade;
   late final Animation<Offset> _titleSlide;
   late final Animation<double> _ctaIn;
   var _isExiting = false;
@@ -2277,12 +2085,11 @@ class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin 
     super.initState();
     _glow = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800));
     _ctaPulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
-    _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 750))..forward();
-    _rise = CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic);
-    _pop = CurvedAnimation(parent: _intro, curve: Curves.easeOutBack);
-    _badgeScale = Tween(begin: 0.78, end: 1.0).animate(_pop);
+    _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 1150))..forward();
+    _rise = CurvedAnimation(parent: _intro, curve: const Interval(0.32, 0.82, curve: SlmMotion.emphasized));
+    _ctaFade = CurvedAnimation(parent: _intro, curve: const Interval(0.55, 1, curve: SlmMotion.emphasized));
     _titleSlide = Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(_rise);
-    _ctaIn = Tween(begin: 0.94, end: 1.0).animate(_rise);
+    _ctaIn = Tween(begin: 0.94, end: 1.0).animate(_ctaFade);
     _exit = AnimationController(vsync: this, duration: const Duration(milliseconds: 380));
 
     Future<void>.delayed(const Duration(milliseconds: 120), () {
@@ -2321,11 +2128,23 @@ class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin 
     HapticFeedback.lightImpact();
     unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.85));
     final cinematic = dsMotionOf(context) == DsMotion.cinematic;
-    showDialog<void>(
+    showGeneralDialog<void>(
       context: context,
       barrierDismissible: false,
-      barrierColor: const Color(0xF2040A14),
-      builder: (ctx) {
+      barrierLabel: 'briefing',
+      barrierColor: SlmColors.navy950.withValues(alpha: 0.88),
+      transitionDuration: SlmMotion.slow,
+      transitionBuilder: (_, anim, _, child) {
+        final t = SlmMotion.emphasized.transform(anim.value);
+        return Opacity(
+          opacity: anim.value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, 24 * (1 - t)),
+            child: Transform.scale(scale: 0.94 + 0.06 * t, child: child),
+          ),
+        );
+      },
+      pageBuilder: (ctx, _, _) {
         final dialog = _MissionBriefingDialog(
           onStart: () {
             if (_isExiting) return;
@@ -2366,25 +2185,8 @@ class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin 
         child: Column(
           children: [
             const Spacer(),
-            FadeTransition(
-              opacity: _rise,
-              child: ScaleTransition(
-                scale: _badgeScale,
-                child: RepaintBoundary(
-                  child: lite
-                      ? const _LifeHelmetAuraBadge(size: 104, pulse: 1, blur: false)
-                      : AnimatedBuilder(
-                          animation: _glow,
-                          builder: (_, _) => _LifeHelmetAuraBadge(
-                            size: 104,
-                            pulse: 0.55 + 0.45 * _glow.value,
-                            blur: cinematic,
-                          ),
-                        ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
+            AnimatedSafetyShield(size: 210, animate: !lite, intensity: cinematic ? 1 : 0.85),
+            const SizedBox(height: 10),
             FadeTransition(
               opacity: _rise,
               child: SlideTransition(
@@ -2399,20 +2201,28 @@ class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin 
             ),
             const Spacer(),
             FadeTransition(
-              opacity: _rise,
+              opacity: _ctaFade,
               child: ScaleTransition(
                 scale: _ctaIn,
-                child: RepaintBoundary(
-                  child: cinematic
-                      ? AnimatedBuilder(
-                          animation: Listenable.merge([_glow, _ctaPulse]),
-                          builder: (_, _) => _CoverCta(
-                            pulse: 0.55 + 0.45 * _glow.value,
-                            scale: 1.0 + math.sin(_ctaPulse.value * math.pi) * 0.03,
-                            onTap: _openBriefing,
-                          ),
-                        )
-                      : _CoverCta(pulse: 1, scale: 1, onTap: _openBriefing),
+                child: AnimatedBuilder(
+                  animation: _ctaPulse,
+                  builder: (_, child) => Transform.scale(
+                    scale: lite ? 1 : 1.0 + math.sin(_ctaPulse.value * math.pi) * 0.02,
+                    child: child,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 300),
+                    child: Theme(
+                      data: SlmTheme.night(),
+                      child: SlmButton.gold(
+                        label: 'অভিযান শুরু করুন',
+                        trailingIcon: Icons.arrow_forward_rounded,
+                        size: SlmButtonSize.large,
+                        expand: true,
+                        onPressed: _openBriefing,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -2420,6 +2230,39 @@ class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin 
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Navy wash over the cover photo with a soft gold halo where the shield sits.
+class _CoverShade extends StatelessWidget {
+  const _CoverShade();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Stack(
+      fit: StackFit.expand,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xB3050B16), Color(0xD9050B16), Color(0xF5050B16)],
+              stops: [0, 0.55, 1],
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment(0, -0.28),
+              radius: 0.7,
+              colors: [Color(0x33D9B25F), Color(0x00D9B25F)],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -2437,99 +2280,45 @@ class _CoverTitles extends StatelessWidget {
         Text(
           'মৃত্যুহীন পথ',
           textAlign: TextAlign.center,
-          style: zlText(38, weight: FontWeight.w900, height: 1.25, color: const Color(0xFFFFF6D8)).copyWith(
+          style: zlText(38, weight: FontWeight.w900, height: 1.25, color: SlmColors.gold100).copyWith(
             letterSpacing: 1.2,
-            shadows: rich
-                ? [
-                    Shadow(color: Color.fromRGBO(251, 191, 36, 0.9 * pulse), blurRadius: 22),
-                    Shadow(color: Color.fromRGBO(255, 247, 214, 0.65 * pulse), blurRadius: 42),
-                    const Shadow(color: Color(0x99000000), offset: Offset(0, 4), blurRadius: 10),
-                  ]
-                : const [
-                    Shadow(color: Color(0x66FBBF24), blurRadius: 10),
-                    Shadow(color: Color(0x99000000), offset: Offset(0, 3), blurRadius: 6),
-                  ],
+            shadows: [
+              Shadow(color: SlmColors.gold400.withValues(alpha: (rich ? 0.75 : 0.45) * pulse), blurRadius: rich ? 24 : 12),
+              const Shadow(color: Color(0x99000000), offset: Offset(0, 3), blurRadius: 8),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          width: 120,
+          height: 1.4,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(colors: [Color(0x00D9B25F), SlmColors.gold400, Color(0x00D9B25F)]),
           ),
         ),
         const SizedBox(height: 12),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0x33F59E0B),
-            borderRadius: BorderRadius.circular(99),
-            border: Border.all(color: Color.fromRGBO(251, 191, 36, rich ? 0.4 * pulse : 0.35), width: 1.0),
+            color: SlmColors.navy900.withValues(alpha: 0.7),
+            borderRadius: SlmRadius.pillAll,
+            border: Border.all(color: SlmColors.gold400.withValues(alpha: rich ? 0.35 + 0.25 * pulse : 0.45)),
           ),
           child: Text(
             'শূন্য দুর্ঘটনা অভিযান • জিরো টলারেন্স',
             textAlign: TextAlign.center,
-            style: zlText(13, weight: FontWeight.w700, color: const Color(0xFFFDE68A)),
+            style: zlText(13, weight: FontWeight.w700, color: SlmColors.gold300),
           ),
         ),
         const SizedBox(height: 14),
         Text(
-          'ধাপে ধাপে সঠিক সুরক্ষায় বাঁচবে জীবন',
+          'ধাপে ধাপে সঠিক সুরক্ষায় বাঁচবে জীবন',
           textAlign: TextAlign.center,
-          style: zlText(14.5, weight: FontWeight.w500, color: const Color(0xFFD6CBB2)).copyWith(
+          style: zlText(14.5, weight: FontWeight.w500, color: SlmColors.ivory).copyWith(
             shadows: const [Shadow(color: Color(0x88000000), blurRadius: 8)],
           ),
         ),
       ],
-    );
-  }
-}
-
-class _CoverCta extends StatelessWidget {
-  const _CoverCta({required this.pulse, required this.scale, required this.onTap});
-
-  final double pulse;
-  final double scale;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.scale(
-      scale: scale,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: double.infinity,
-          constraints: const BoxConstraints(maxWidth: 290),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFFBBF24), Color(0xFFF59E0B), Color(0xFFD97706)],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Color.fromRGBO(245, 158, 11, 0.45 * pulse),
-                offset: const Offset(0, 8),
-                blurRadius: scale > 1.001 ? 22 : 14,
-                spreadRadius: scale > 1.001 ? 2 : 0,
-              ),
-              const BoxShadow(
-                color: Color(0x55000000),
-                offset: Offset(0, 4),
-                blurRadius: 10,
-              ),
-            ],
-            border: Border.all(color: const Color(0xFFFFFBEB), width: 1.5),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'অভিযান শুরু করুন',
-                style: zlText(18, weight: FontWeight.w800, color: const Color(0xFF451A03)),
-              ),
-              const SizedBox(width: 10),
-              const Icon(Icons.arrow_forward_rounded, size: 24, color: Color(0xFF451A03)),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

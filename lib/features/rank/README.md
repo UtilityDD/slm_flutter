@@ -1,10 +1,9 @@
 # Rank — র‍্যাঙ্ক
 
-Tab 2. Four boards:
+Tab 2. One monthly leaderboard (this month's total points) in the navy, emerald and gold design system:
 
-1. **মাসের সেরা / Champion** — points this month  
-2. **নতুন / New** — joiners last 90 days (copy says board landing)  
-3. **এগিয়ে / Improved** — growth vs last month  
-4. **পড়া / Learner** — reading points this month  
+- **Podium** — top 3 with medal rings, a pulse on first place and medal-coloured pedestals.
+- **List** — the rest of the top 25 as rank cards; the signed-in member's row is gold with an emerald "আপনি" chip.
+- **আপনার অবস্থান** — pinned above the dock: rank, points and the gap to the next spot (guest and off-board copy when not on the list). No buttons; quiz entry lives elsewhere.
 
-Data: `features/quizzes/leaderboard_provider.dart` + auth profile. Guest still sees the chrome.
+Data: `features/quizzes/leaderboard_provider.dart` + auth profile. The look is taken from `design_preview/premium_rank_preview.dart`.
