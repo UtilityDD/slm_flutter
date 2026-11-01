@@ -11,13 +11,14 @@ import '../../core/en_digits.dart';
 import '../../design/slm_design.dart';
 import '../auth/verify_gate.dart';
 import '../auth/verify_sheet.dart';
-import '../auth/verify_tick.dart';
 import '../home/bangla_read_aloud.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'ds_clearance.dart';
 import 'ds_dress_up.dart';
 import 'ds_pole_inspect.dart';
+import 'adventure_map.dart';
+import 'adventure_scenery.dart';
 import 'duty_slip_engine.dart';
 import 'duty_slip_models.dart';
 import 'duty_slip_voice.dart';
@@ -850,15 +851,9 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
             else if (walk)
               const ColoredBox(color: Color(0xFFC5DCE8))
             else if (e.onRoad)
-              AnimatedBuilder(
-                animation: Listenable.merge([_skyDrift, _roadScroll]),
-                builder: (context, _) => CustomPaint(
-                  painter: _SkyMotionPainter(
-                    time: _skyDrift.value,
-                    scroll: _roadScroll.value,
-                  ),
-                  child: const SizedBox.expand(),
-                ),
+              ValueListenableBuilder<double>(
+                valueListenable: _roadScroll,
+                builder: (_, scroll, _) => ValleyBackdrop(scroll: scroll),
               )
             else
               Image.asset(bg, fit: BoxFit.cover, errorBuilder: (_, _, _) => const ColoredBox(color: ZlColors.bg)),
@@ -1393,7 +1388,15 @@ class _PlanBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     final e = engine;
     if (e.covering) return _CoverBoard(onOpen: onOpenRoad);
-    if (e.onRoad) return _RoadBoard(engine: e, onOpen: onOpenLevel, scrollOut: roadScroll);
+    if (e.onRoad) {
+      return AdventureMap(
+        engine: e,
+        onOpen: onOpenLevel,
+        scrollOut: roadScroll,
+        muted: muted,
+        onInfo: () => _showMissionBriefing(context, onStart: () {}, dismissible: true),
+      );
+    }
     if (e.listing) {
       if (e.showingDressIntro) {
         return _DressIntro(
@@ -2372,241 +2375,6 @@ class _PaperCard extends StatelessWidget {
   }
 }
 
-class _RoadBoard extends StatefulWidget {
-  final DutySlipEngine engine;
-  final void Function(int index) onOpen;
-  final ValueNotifier<double> scrollOut;
-  const _RoadBoard({required this.engine, required this.onOpen, required this.scrollOut});
-
-  @override
-  State<_RoadBoard> createState() => _RoadBoardState();
-}
-
-class _RoadBoardState extends State<_RoadBoard> {
-  final _scroll = ScrollController();
-
-  static const _itemH = 82.0;
-  static const _groundH = 150.0;
-  static const _sky = 10;
-
-  @override
-  void initState() {
-    super.initState();
-    _scroll.addListener(_publishScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _pinNext(initial: true));
-  }
-
-  @override
-  void didUpdateWidget(covariant _RoadBoard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.engine.unlocked != widget.engine.unlocked) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _pinNext());
-    }
-  }
-
-  void _pinNext({bool initial = false}) {
-    if (!mounted || !_scroll.hasClients) return;
-    final view = _scroll.position.viewportDimension;
-    final focus = dsPlayAllLevels ? 0 : widget.engine.unlocked;
-    final target = (_groundH + focus * _itemH) - (view * 0.28);
-    final clamped = target.clamp(0.0, _scroll.position.maxScrollExtent);
-    if (initial) {
-      // Cinematic ascension from base to the active level rung
-      _scroll.jumpTo(0.0);
-      _scroll.animateTo(
-        clamped,
-        duration: const Duration(milliseconds: 950),
-        curve: SlmMotion.emphasized,
-      );
-    } else {
-      _scroll.animateTo(
-        clamped,
-        duration: SlmMotion.page,
-        curve: SlmMotion.emphasized,
-      );
-    }
-  }
-
-  void _publishScroll() {
-    if (!mounted || !_scroll.hasClients) return;
-    final next = _scroll.offset;
-    if (widget.scrollOut.value != next) widget.scrollOut.value = next;
-  }
-
-  @override
-  void dispose() {
-    _scroll.removeListener(_publishScroll);
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final e = widget.engine;
-    final live = dsLevels.length;
-    final total = 1 + live + _sky;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Column(
-          children: [
-            // Center-aligned Ladder Header (Clean title and floating Score Chip)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Center-aligned title without logo
-                  Text(
-                    'মৃত্যুহীন পথ',
-                    textAlign: TextAlign.center,
-                    style: zlText(18, weight: FontWeight.w900, color: SlmColors.gold100).copyWith(
-                      letterSpacing: 0.8,
-                      shadows: [
-                        Shadow(color: SlmColors.gold400.withValues(alpha: 0.7), blurRadius: 14),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  // Score & Telemetry Chip just below it (plenty of room for high scores)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      gradient: SlmGradients.navyCard,
-                      borderRadius: SlmRadius.pillAll,
-                      border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 3)),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Score
-                        const Icon(Icons.stars_rounded, size: 15, color: SlmColors.gold400),
-                        const SizedBox(width: 4),
-                        Text(
-                          _bnNum(e.totalCumulativeScore),
-                          style: zlText(12, weight: FontWeight.w800, color: SlmColors.ivory),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                          width: 1,
-                          height: 12,
-                          color: SlmColors.gold400.withValues(alpha: 0.35),
-                        ),
-                        // Danger Count (Zero Loss Focus)
-                        Icon(
-                          e.totalCumulativeDanger == 0 ? Icons.shield_rounded : Icons.warning_amber_rounded,
-                          size: 14,
-                          color: e.totalCumulativeDanger == 0 ? SlmColors.emerald300 : SlmColors.danger,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _bnNum(e.totalCumulativeDanger),
-                          style: zlText(
-                            12,
-                            weight: FontWeight.w800,
-                            color: e.totalCumulativeDanger == 0 ? SlmColors.emerald200 : const Color(0xFFFCA5A5),
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                          width: 1,
-                          height: 12,
-                          color: SlmColors.gold400.withValues(alpha: 0.35),
-                        ),
-                        // Time
-                        const Icon(Icons.timer_outlined, size: 13, color: SlmColors.gold300),
-                        const SizedBox(width: 4),
-                        Text(
-                          e.formatClock(e.totalCumulativeSeconds),
-                          style: zlText(11.5, weight: FontWeight.w700, color: SlmColors.mist),
-                        ),
-                        const SizedBox(width: 8),
-                        // Info Button to re-open briefing dialog
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            _showMissionBriefing(context, onStart: () {}, dismissible: true);
-                          },
-                          child: const Icon(Icons.info_outline_rounded, size: 16, color: SlmColors.gold300),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                controller: _scroll,
-                reverse: true,
-                padding: EdgeInsets.zero,
-                itemCount: total,
-                itemBuilder: (_, i) {
-                  if (i == 0) {
-                    return const SizedBox(
-                      height: _groundH,
-                      child: IgnorePointer(child: CustomPaint(painter: _GroundPainter(), size: Size.infinite)),
-                    );
-                  }
-                  final liveI = i - 1;
-                  late final Widget orb;
-                  if (liveI >= live) {
-                    orb = _LevelOrb(
-                      number: liveI + 1,
-                      next: false,
-                      locked: true,
-                      rank: null,
-                      field: false,
-                      bestSec: null,
-                    );
-                  } else {
-                    final spec = dsLevels[liveI];
-                    final seal = gameNeedsVerifyNow(context, spec.number);
-                    final locked = !seal && !dsPlayAllLevels && liveI > e.unlocked;
-                    final next = !seal && !dsPlayAllLevels && liveI == e.unlocked;
-                    final rank = e.bestRank[liveI];
-                    orb = _LevelOrb(
-                      number: spec.number,
-                      next: next,
-                      locked: locked,
-                      verifyHold: seal,
-                      rank: rank,
-                      field: spec.isField,
-                      bestSec: e.bestDarunSec[liveI],
-                      onTap: seal ? () => showVerifySheet(context) : (locked ? null : () => widget.onOpen(liveI)),
-                    );
-                  }
-                  return SizedBox(
-                    height: _itemH,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            child: CustomPaint(
-                              painter: _BambooRungPainter(index: liveI, sky: liveI >= live),
-                              size: Size.infinite,
-                            ),
-                          ),
-                        ),
-                        orb,
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
 class _SkyMotionPainter extends CustomPainter {
   final double time;
   final double scroll;
@@ -2618,7 +2386,7 @@ class _SkyMotionPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final rise = (scroll / 900.0).clamp(0.0, 1.0);
+    final rise = _ladderRise(scroll);
 
     // 1. Dynamic Night Sky Dome Gradient (deepens to cosmic indigo at high altitudes)
     final rect = Offset.zero & size;
@@ -2667,14 +2435,8 @@ class _SkyMotionPainter extends CustomPainter {
     // 6. City Layer 1: Distant Mountain Contours & High-Voltage Transmission Pylons
     _paintDistantMountainsAndTowers(canvas, w, horizon, scroll, time);
 
-    // 7. Ambient City Light Dome (warm sodium glow rising into the sky from the metropolis)
-    _paintCityLightDome(canvas, w, horizon, rise);
-
-    // 8. City Layer 2: Megacity High-Rise Skyline (High towers, spires, illuminated window matrices)
-    _paintMegacitySkyline(canvas, w, horizon, rise, time, scroll);
-
-    // 9. City Layer 3: Mid-Distance Commercial District & Neon Billboards
-    _paintCommercialDistrict(canvas, w, horizon, rise, time, scroll);
+    // The ridge stays. The city comes off this climb: yard, then village.
+    _paintQuietCountry(canvas, w, horizon, rise, scroll);
 
     // 10. Cloud Tier 2: Mid-Altitude Volumetric Cumulus Cloud Banks (3D billows with moonlit rims)
     _paintCumulusClouds(canvas, w, h, time, scroll);
@@ -2696,7 +2458,20 @@ class _SkyMotionPainter extends CustomPainter {
   }
 }
 
-double _climbShift(double scroll, double speed) => (scroll * speed).clamp(-24.0, 56.0);
+double _ladderRise(double scroll) {
+  const ground = 150.0;
+  const item = 82.0;
+  const sky = 10;
+  final travel = (ground + (dsLevels.length + sky) * item) * 0.78;
+  if (travel <= 0) return 0;
+  return (scroll / travel).clamp(0.0, 1.0);
+}
+
+/// Far layers drift a little. Near layers cross the view across the whole bamboo.
+double _climbShift(double scroll, double speed) {
+  final depth = (speed / 0.1).clamp(0.0, 1.6);
+  return _ladderRise(scroll) * (16 + depth * 110);
+}
 
 void _paintStars(Canvas canvas, double w, double h, double scroll, double time) {
   final rng = math.Random(42);
@@ -2789,140 +2564,31 @@ void _drawTransmissionTower(Canvas canvas, double tx, double ty, double time, in
   }
 }
 
-void _paintCityLightDome(Canvas canvas, double w, double horizon, double rise) {
-  final glow = 0.42 + 0.58 * rise;
-  final domeRect = Rect.fromLTWH(0, horizon - 110, w, 140);
-  canvas.drawRect(
-    domeRect,
-    Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.bottomCenter,
-        end: Alignment.topCenter,
-        colors: [
-          Color.fromRGBO(245, 158, 11, 0.28 * glow),
-          Color.fromRGBO(56, 189, 248, 0.10 * glow),
-          const Color(0x00000000),
-        ],
-        stops: const [0.0, 0.5, 1.0],
-      ).createShader(domeRect),
-  );
-}
-
-void _paintMegacitySkyline(Canvas canvas, double w, double horizon, double rise, double time, double scroll) {
-  final baseY = horizon - 18 + _climbShift(scroll, 0.045);
-  final rng = math.Random(107);
-  var x = -12.0;
-  final bodyPaint = Paint()..color = const Color(0xFF0A1526);
-
-  while (x < w + 28) {
-    final bw = 18.0 + rng.nextDouble() * 32.0;
-    // As lineman climbs higher (rise increases), towers appear taller and deeper
-    final bh = (32.0 + rng.nextDouble() * 64.0) * (0.80 + (rise * 0.45));
-    final hasSpire = rng.nextDouble() > 0.65;
-    final stepped = rng.nextDouble() > 0.70;
-
-    // Building silhouette
-    if (stepped) {
-      // Stepped crown skyscraper
-      final stepW = bw * 0.65;
-      final stepH = bh * 0.25;
-      canvas.drawRect(Rect.fromLTWH(x, baseY - bh + stepH, bw, bh - stepH + 40), bodyPaint);
-      canvas.drawRect(Rect.fromLTWH(x + (bw - stepW) / 2, baseY - bh, stepW, stepH), bodyPaint);
-    } else {
-      canvas.drawRect(Rect.fromLTWH(x, baseY - bh, bw, bh + 40), bodyPaint);
+void _paintQuietCountry(Canvas canvas, double w, double horizon, double rise, double scroll) {
+  void huts(double alpha, double speed, int seed, double hutH) {
+    if (alpha < 0.05) return;
+    final y = horizon + 16 + _climbShift(scroll, speed);
+    final paint = Paint()..color = Color.fromRGBO(7, 14, 24, alpha);
+    final rng = math.Random(seed);
+    var x = 6.0;
+    while (x < w) {
+      final hw = 14 + rng.nextDouble() * 18;
+      final hh = hutH * (0.75 + rng.nextDouble() * 0.4);
+      final roof = Path()
+        ..moveTo(x - 2, y - hh)
+        ..lineTo(x + hw / 2, y - hh - 8)
+        ..lineTo(x + hw + 2, y - hh)
+        ..close();
+      canvas.drawPath(roof, paint);
+      canvas.drawRect(Rect.fromLTWH(x, y - hh, hw, hh + 24), paint);
+      x += hw + 22 + rng.nextDouble() * 36;
     }
-
-    // Antenna spire with strobe
-    if (hasSpire) {
-      final sx = x + bw / 2;
-      final sy = baseY - bh;
-      canvas.drawLine(Offset(sx, sy), Offset(sx, sy - 14), Paint()..color = const Color(0xFF0A1526)..strokeWidth = 1.2);
-      final strobe = math.sin((time * math.pi * 4.0) + x) > 0.55;
-      canvas.drawCircle(Offset(sx, sy - 14), 1.4, Paint()..color = strobe ? const Color(0xFFFF5252) : const Color(0x18FF5252));
-    }
-
-    // High-Density Window Matrices
-    final cols = (bw / 5.2).floor().clamp(1, 6);
-    final baseRows = (bh / 6.8).floor().clamp(2, 14);
-    // As player climbs, more rows of windows are revealed downwards!
-    final visibleRows = (baseRows + (rise * 4).toInt()).clamp(2, 16);
-
-    for (var r = 0; r < visibleRows; r++) {
-      for (var c = 0; c < cols; c++) {
-        final seedVal = rng.nextDouble();
-        if (seedVal > (0.62 + rise * 0.28)) continue;
-
-        // Organic city pulse and flicker
-        final flicker = (math.sin((time * math.pi * 2 * 2.1) + (r * 0.7) + (c * 1.3) + (x * 0.2)) * 0.5 + 0.5);
-        final a = ((0.55 + (rise * 0.4)) * (0.6 + 0.4 * flicker)).clamp(0.0, 0.95);
-
-        // Curated window palette: warm amber, office white, cyan
-        late final Color winColor;
-        if (seedVal < 0.08) {
-          winColor = Color.fromRGBO(56, 189, 248, a); // Cyan
-        } else if (seedVal < 0.22) {
-          winColor = Color.fromRGBO(241, 245, 249, a); // Office white
-        } else {
-          winColor = Color.fromRGBO(255, 214, 120, a); // Warm sodium amber
-        }
-
-        canvas.drawRect(
-          Rect.fromLTWH(x + 2.4 + (c * 4.8), baseY - bh + 4 + (r * 6.2), 2.2, 3.2),
-          Paint()..color = winColor,
-        );
-      }
-    }
-    x += bw + 3.0 + rng.nextDouble() * 6.0;
   }
-}
 
-void _paintCommercialDistrict(Canvas canvas, double w, double horizon, double rise, double time, double scroll) {
-  final baseY = horizon + 6 + _climbShift(scroll, 0.07);
-  final rng = math.Random(219);
-  var x = -8.0;
-  final bodyPaint = Paint()..color = const Color(0xFF0E1F33);
-
-  while (x < w + 24) {
-    final bw = 24.0 + rng.nextDouble() * 38.0;
-    final bh = (22.0 + rng.nextDouble() * 45.0) * (0.85 + (rise * 0.35));
-    canvas.drawRect(Rect.fromLTWH(x, baseY - bh, bw, bh + 40), bodyPaint);
-
-    // Rooftop water tank or AC unit
-    if (rng.nextBool()) {
-      final wx = x + 4 + rng.nextDouble() * (bw - 16);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(wx, baseY - bh - 8, 9, 8), const Radius.circular(2)),
-        Paint()..color = const Color(0xFF0B1726),
-      );
-    }
-
-    // Glowing Neon Signs / Billboards on commercial roofs
-    if (rng.nextDouble() > 0.72) {
-      final neonX = x + 4.0;
-      final neonY = baseY - bh + 4.0;
-      final neonColor = rng.nextBool() ? const Color(0xFFF43F5E) : const Color(0xFFFBBF24);
-      final neonGlow = 0.55 + 0.45 * math.sin((time * math.pi * 3.5) + x);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(neonX, neonY, 14, 4), const Radius.circular(1)),
-        Paint()..color = neonColor.withValues(alpha: neonGlow),
-      );
-    }
-
-    // Windows
-    final cols = (bw / 6.5).floor().clamp(1, 5);
-    final rows = (bh / 8.5).floor().clamp(1, 6);
-    for (var r = 0; r < rows; r++) {
-      for (var c = 0; c < cols; c++) {
-        if (rng.nextDouble() > (0.7 + rise * 0.22)) continue;
-        final a = (0.55 + (rise * 0.35)).clamp(0.0, 0.92);
-        canvas.drawRect(
-          Rect.fromLTWH(x + 3.0 + (c * 6.2), baseY - bh + 9 + (r * 7.5), 2.8, 3.8),
-          Paint()..color = Color.fromRGBO(255, 224, 138, a),
-        );
-      }
-    }
-    x += bw + 4.0 + rng.nextDouble() * 8.0;
-  }
+  final yard = (1 - rise / 0.42).clamp(0.0, 1.0);
+  final village = ((rise - 0.12) / 0.55).clamp(0.0, 1.0) * (1 - ((rise - 0.72) / 0.28).clamp(0.0, 1.0));
+  huts(0.9 * yard, 0.1, 11, 16);
+  huts(0.72 * village, 0.055, 29, 22);
 }
 
 void _paintCumulusClouds(Canvas canvas, double w, double h, double time, double scroll) {
@@ -3053,544 +2719,6 @@ void _paintGroundMist(Canvas canvas, double w, double horizon, double time, doub
   final mist = Paint()..color = const Color(0x168DA4C4);
   canvas.drawOval(Rect.fromCenter(center: Offset(x, y), width: 220, height: 26), mist);
   canvas.drawOval(Rect.fromCenter(center: Offset(x + 140, y + 8), width: 190, height: 22), mist);
-}
-
-class _GroundPainter extends CustomPainter {
-  const _GroundPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    // Rich ground soil and grass layer
-    final soil = Path()
-      ..moveTo(0, h * 0.38)
-      ..quadraticBezierTo(w * 0.25, h * 0.32, w * 0.5, h * 0.37)
-      ..quadraticBezierTo(w * 0.75, h * 0.44, w, h * 0.35)
-      ..lineTo(w, h)
-      ..lineTo(0, h)
-      ..close();
-    canvas.drawPath(
-      soil,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: const [Color(0xFF3B5628), Color(0xFF283918), Color(0xFF1E150C)],
-        ).createShader(Offset.zero & size),
-    );
-
-    // Substation Distribution Cabinet / Transformer Base at bottom left
-    final boxRect = Rect.fromLTWH(w * 0.08, h * 0.34, 52, 48);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(boxRect, const Radius.circular(3)),
-      Paint()..color = const Color(0xFF1F2B38),
-    );
-    // Radiator cooling vents
-    final ventPaint = Paint()..color = const Color(0xFF121B24)..strokeWidth = 1.0;
-    for (var v = 0; v < 4; v++) {
-      canvas.drawLine(Offset(w * 0.08 + 8 + v * 9, h * 0.34 + 6), Offset(w * 0.08 + 8 + v * 9, h * 0.34 + 28), ventPaint);
-    }
-    // High Voltage Warning Plate ("১১,০০০ ভোল্ট • বিপদ")
-    final plateRect = Rect.fromLTWH(w * 0.08 + 10, h * 0.34 + 32, 32, 11);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(plateRect, const Radius.circular(1.5)),
-      Paint()..color = const Color(0xFFFBBF24),
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(w * 0.08 + 12, h * 0.34 + 34, 4, 7),
-      Paint()..color = const Color(0xFFDC2626),
-    );
-
-    // Trees in the background
-    _tree(canvas, Offset(w * 0.14, h * 0.16), 0.72);
-    _tree(canvas, Offset(w * 0.90, h * 0.13), 0.78);
-
-    // Bamboo Pole Foundations
-    final cx = w / 2;
-    const gap = 36.0;
-    _bambooPole(canvas, cx - gap, 0, h * 0.58, 14, seed: 0);
-    _bambooPole(canvas, cx + gap, 0, h * 0.58, 14, seed: 1);
-    _bambooRung(canvas, cx, h * 0.22, gap, seed: 0);
-
-    // Foundation support soil mounds
-    final mound = Paint()..color = const Color(0xFF4A3420);
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx - gap, h * 0.59), width: 32, height: 16), mound);
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx + gap, h * 0.59), width: 32, height: 16), mound);
-
-    // Safety Traffic Cones on the ground
-    _drawSafetyCone(canvas, Offset(w * 0.26, h * 0.62));
-    _drawSafetyCone(canvas, Offset(w * 0.74, h * 0.64));
-
-    // Wild grass blades
-    final rng = math.Random(21);
-    final blade = Paint()
-      ..color = const Color(0x996B8F3C)
-      ..strokeWidth = 1.3
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-    for (var i = 0; i < 22; i++) {
-      final x = rng.nextDouble() * w;
-      final y = h * 0.50 + rng.nextDouble() * h * 0.34;
-      final path = Path()
-        ..moveTo(x, y)
-        ..quadraticBezierTo(x + (rng.nextBool() ? 4 : -4), y - 11, x + (rng.nextBool() ? 2 : -2), y - 18);
-      canvas.drawPath(path, blade);
-    }
-    _flower(canvas, Offset(w * 0.22, h * 0.72), const Color(0xFFF472B6), 5);
-    _flower(canvas, Offset(w * 0.72, h * 0.68), const Color(0xFFFACC15), 5);
-    _flower(canvas, Offset(w * 0.86, h * 0.80), const Color(0xFFF9A8D4), 4.5);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-void _drawSafetyCone(Canvas canvas, Offset base) {
-  // Orange cone
-  final cone = Path()
-    ..moveTo(base.dx - 9, base.dy)
-    ..lineTo(base.dx - 2.5, base.dy - 20)
-    ..lineTo(base.dx + 2.5, base.dy - 20)
-    ..lineTo(base.dx + 9, base.dy)
-    ..close();
-  canvas.drawPath(cone, Paint()..color = const Color(0xFFEA580C));
-  // White reflective stripe
-  final stripe = Path()
-    ..moveTo(base.dx - 6, base.dy - 7)
-    ..lineTo(base.dx - 3.8, base.dy - 13)
-    ..lineTo(base.dx + 3.8, base.dy - 13)
-    ..lineTo(base.dx + 6, base.dy - 7)
-    ..close();
-  canvas.drawPath(stripe, Paint()..color = const Color(0xFFF8FAFC));
-  // Base plate
-  canvas.drawRect(Rect.fromCenter(center: base, width: 22, height: 3.5), Paint()..color = const Color(0xFFEA580C));
-}
-
-class _BambooRungPainter extends CustomPainter {
-  final int index;
-  final bool sky;
-  const _BambooRungPainter({required this.index, required this.sky});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final cx = w / 2;
-    const gap = 36.0;
-
-    if (!sky && index < 2) {
-      _leaves(canvas, Offset(w * 0.12, h * 0.5), index, left: true, thin: true);
-      _leaves(canvas, Offset(w * 0.89, h * 0.48), index + 3, left: false, thin: true);
-    }
-    // Upright bamboo poles
-    _bambooPole(canvas, cx - gap, 0, h, 14, seed: index * 2);
-    _bambooPole(canvas, cx + gap, 0, h, 14, seed: index * 2 + 1);
-
-    // Cross rung with authentic jute rope lashings
-    _bambooRung(canvas, cx, h / 2, gap, seed: index);
-  }
-
-  @override
-  bool shouldRepaint(covariant _BambooRungPainter oldDelegate) =>
-      oldDelegate.index != index || oldDelegate.sky != sky;
-}
-
-void _bambooPole(Canvas canvas, double x, double top, double bot, double width, {required int seed}) {
-  final rect = Rect.fromLTRB(x - width / 2, top, x + width / 2, bot);
-  // Natural 3D cylindrical bamboo pole gradient
-  canvas.drawRRect(
-    RRect.fromRectAndRadius(rect, const Radius.circular(8)),
-    Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: const [
-          Color(0xFF4A3510),
-          Color(0xFF8B6C24),
-          Color(0xFFD8C26E),
-          Color(0xFFF2E69E),
-          Color(0xFF9E7C2C),
-          Color(0xFF3E2B0C),
-        ],
-        stops: const [0.0, 0.18, 0.38, 0.52, 0.82, 1.0],
-      ).createShader(rect),
-  );
-
-  // Longitudinal wood grain lines
-  final grain = Paint()
-    ..color = const Color(0x33452B0C)
-    ..strokeWidth = 0.8;
-  canvas.drawLine(Offset(x - 2.5, top), Offset(x - 2.5, bot), grain);
-  canvas.drawLine(Offset(x + 2.5, top), Offset(x + 2.5, bot), grain);
-
-  // Vertical light reflection
-  canvas.drawRRect(
-    RRect.fromLTRBR(x - width / 2 + 2.2, top + 2, x - 1.2, bot - 2, const Radius.circular(6)),
-    Paint()..color = const Color(0x44FFF8E1),
-  );
-
-  // Natural segment node ring in the middle
-  final nodeY = (top + bot) / 2;
-  // Node collar swelling
-  canvas.drawRRect(
-    RRect.fromLTRBR(x - width / 2 - 1.8, nodeY - 3.4, x + width / 2 + 1.8, nodeY + 3.4, const Radius.circular(4)),
-    Paint()..color = const Color(0xFF6B4E16),
-  );
-  // Dark nodal joint ring
-  canvas.drawLine(
-    Offset(x - width / 2 - 1.2, nodeY),
-    Offset(x + width / 2 + 1.2, nodeY),
-    Paint()
-      ..color = const Color(0xFF2C1C07)
-      ..strokeWidth = 1.3,
-  );
-  // Node highlight line
-  canvas.drawLine(
-    Offset(x - width / 2 - 1.0, nodeY - 1.5),
-    Offset(x + width / 2 + 1.0, nodeY - 1.5),
-    Paint()
-      ..color = const Color(0x66FFF6D8)
-      ..strokeWidth = 0.9,
-  );
-}
-
-void _bambooRung(Canvas canvas, double cx, double y, double gap, {required int seed}) {
-  final rect = Rect.fromLTRB(cx - gap - 8, y - 6.5, cx + gap + 8, y + 6.5);
-  // Horizontal bamboo rung
-  canvas.drawRRect(
-    RRect.fromRectAndRadius(rect, const Radius.circular(7)),
-    Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFFE8D796), Color(0xFF9E7C2C), Color(0xFF4A3510)],
-      ).createShader(rect),
-  );
-  // Center wooden peg
-  canvas.drawCircle(Offset(cx, y), 3.2, Paint()..color = const Color(0xFF5C4316));
-
-  // Authentic criss-cross jute rope bindings on both joint sides
-  _drawJuteRopeBinding(canvas, cx - gap, y);
-  _drawJuteRopeBinding(canvas, cx + gap, y);
-}
-
-void _drawJuteRopeBinding(Canvas canvas, double jx, double jy) {
-  final rope = Paint()
-    ..color = const Color(0xFF6B4A18)
-    ..strokeWidth = 1.6
-    ..strokeCap = StrokeCap.round;
-  final fiber = Paint()
-    ..color = const Color(0xFFF2DCA0)
-    ..strokeWidth = 0.8
-    ..strokeCap = StrokeCap.round;
-
-  // Diagonal criss-cross wraps
-  canvas.drawLine(Offset(jx - 7, jy - 7), Offset(jx + 7, jy + 7), rope);
-  canvas.drawLine(Offset(jx - 7, jy + 7), Offset(jx + 7, jy - 7), rope);
-  canvas.drawLine(Offset(jx - 8, jy), Offset(jx + 8, jy), rope);
-
-  // Fiber highlights
-  canvas.drawLine(Offset(jx - 5, jy - 5), Offset(jx + 5, jy + 5), fiber);
-  canvas.drawLine(Offset(jx - 6, jy - 1), Offset(jx + 6, jy - 1), fiber);
-}
-
-void _tree(Canvas canvas, Offset base, double scale) {
-  final trunk = Paint()
-    ..color = const Color(0xFF3F2A18)
-    ..strokeWidth = 8 * scale
-    ..strokeCap = StrokeCap.round;
-  canvas.drawLine(base, base + Offset(0, -72 * scale), trunk);
-  final leaf = Paint()..color = const Color(0xCC1B4332);
-  canvas.drawOval(Rect.fromCenter(center: base + Offset(0, -86 * scale), width: 70 * scale, height: 54 * scale), leaf);
-  canvas.drawOval(
-    Rect.fromCenter(center: base + Offset(-22 * scale, -70 * scale), width: 48 * scale, height: 38 * scale),
-    Paint()..color = const Color(0xBB2D6A4F),
-  );
-  canvas.drawOval(
-    Rect.fromCenter(center: base + Offset(24 * scale, -74 * scale), width: 46 * scale, height: 36 * scale),
-    Paint()..color = const Color(0xAA40916C),
-  );
-}
-
-void _flower(Canvas canvas, Offset c, Color petal, double r) {
-  final p = Paint()..color = petal;
-  for (var i = 0; i < 5; i++) {
-    final a = i * math.pi * 2 / 5;
-    canvas.drawCircle(c + Offset(math.cos(a) * r * 0.7, math.sin(a) * r * 0.7), r * 0.48, p);
-  }
-  canvas.drawCircle(c, r * 0.34, Paint()..color = const Color(0xFFFACC15));
-}
-
-void _leaves(Canvas canvas, Offset c, int seed, {required bool left, bool thin = false}) {
-  final rng = math.Random(seed + 9);
-  final n = thin ? 2 : 3;
-  for (var i = 0; i < n; i++) {
-    final dx = (left ? -1 : 1) * (8.0 + rng.nextDouble() * 22);
-    final dy = (rng.nextDouble() - 0.5) * 28;
-    canvas.drawOval(
-      Rect.fromCenter(center: c + Offset(dx, dy), width: thin ? 26 : 34, height: thin ? 18 : 24),
-      Paint()..color = Color.fromARGB(thin ? 90 : 140, 27 + rng.nextInt(40), 90 + rng.nextInt(50), 50),
-    );
-  }
-}
-
-String _formatStampBn(int sec) {
-  final m = (sec ~/ 60).toString().padLeft(2, '0');
-  final s = (sec % 60).toString().padLeft(2, '0');
-  return '$m:$s';
-}
-
-class _LevelOrb extends StatefulWidget {
-  final int number;
-  final bool next;
-  final bool locked;
-  final bool verifyHold;
-  final DsLevelRank? rank;
-  final bool field;
-  final int? bestSec;
-  final VoidCallback? onTap;
-  const _LevelOrb({
-    required this.number,
-    required this.next,
-    required this.locked,
-    this.verifyHold = false,
-    required this.rank,
-    required this.field,
-    this.bestSec,
-    this.onTap,
-  });
-
-  @override
-  State<_LevelOrb> createState() => _LevelOrbState();
-}
-
-class _LevelOrbState extends State<_LevelOrb> with SingleTickerProviderStateMixin {
-  AnimationController? _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.next) {
-      _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..repeat(reverse: true);
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant _LevelOrb oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.next && _pulse == null) {
-      _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..repeat(reverse: true);
-    } else if (!widget.next && _pulse != null) {
-      _pulse!.dispose();
-      _pulse = null;
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulse?.dispose();
-    super.dispose();
-  }
-
-  List<Color> get _plateColors {
-    if (widget.locked) return const [Color(0xFF5A626E), Color(0xFF383E48), Color(0xFF22262C)];
-    if (widget.rank == DsLevelRank.darun) return const [Color(0xFFFDE68A), Color(0xFFD97706), Color(0xFF78350F)];
-    if (widget.rank == DsLevelRank.motamuti) return const [Color(0xFFE2E8F0), Color(0xFF94A3B8), Color(0xFF475569)];
-    if (widget.next) return const [Color(0xFFFEF08A), Color(0xFFF59E0B), Color(0xFF92400E)];
-    if (widget.field) return const [Color(0xFFCBD5E1), Color(0xFF64748B), Color(0xFF334155)];
-    return const [Color(0xFFFDE047), Color(0xFFB45309), Color(0xFF451A03)];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final metal = _plateColors;
-    final stamp = (widget.locked || widget.bestSec == null)
-        ? ''
-        : _formatStampBn(widget.bestSec!);
-
-    return AnimatedBuilder(
-      animation: _pulse ?? kAlwaysCompleteAnimation,
-      builder: (context, _) {
-        final pVal = _pulse?.value ?? 0.0;
-        final isNext = widget.next;
-
-        return Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.none,
-          children: [
-            // Floating animated upward chevron indicator for the active climb target
-            if (isNext)
-              Positioned(
-                top: -24 - (4 * pVal),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                  decoration: BoxDecoration(
-                    gradient: SlmGradients.navyCard,
-                    borderRadius: SlmRadius.pillAll,
-                    border: Border.all(color: SlmColors.gold400, width: 0.9),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.keyboard_double_arrow_up_rounded, size: 14, color: SlmColors.gold300),
-                      const SizedBox(width: 2),
-                      Text(
-                        'পরবর্তী',
-                        style: zlText(9.5, weight: FontWeight.w800, color: SlmColors.gold100),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // Inspection Plate Widget
-            GestureDetector(
-              onTap: widget.onTap,
-              child: Container(
-                width: 72,
-                height: 42,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: metal,
-                    stops: const [0.0, 0.46, 1.0],
-                  ),
-                  border: Border.all(
-                    color: isNext ? const Color(0xFFFFFBEB) : metal.last,
-                    width: isNext ? 1.6 : 1.2,
-                  ),
-                  boxShadow: [
-                    if (isNext) ...[
-                      BoxShadow(
-                        color: Color.fromRGBO(245, 158, 11, 0.45 + (0.35 * pVal)),
-                        blurRadius: 18 + (6 * pVal),
-                        spreadRadius: 2 + (2 * pVal),
-                      ),
-                      BoxShadow(
-                        color: Color.fromRGBO(56, 189, 248, 0.35 * pVal),
-                        blurRadius: 10,
-                      ),
-                    ] else
-                      const BoxShadow(color: Color(0x99000000), offset: Offset(0, 2), blurRadius: 3),
-                  ],
-                ),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Top rim specular highlight
-                    Positioned(
-                      top: 1.2,
-                      left: 3,
-                      right: 3,
-                      height: 1,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: const Color(0x66FFFFFF),
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                    ),
-                    // Bottom bevel shadow
-                    Positioned(
-                      bottom: 1.2,
-                      left: 4,
-                      right: 4,
-                      height: 1,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: const Color(0x44000000),
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                    ),
-                    // Corner Rivets
-                    const Positioned(left: 4, top: 0, bottom: 0, child: Center(child: _MetalRivet())),
-                    const Positioned(right: 4, top: 0, bottom: 0, child: Center(child: _MetalRivet())),
-
-                    // Center Content (Number, Lock, or Stars)
-                    Center(
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: stamp.isEmpty ? 0 : 7),
-                        child: widget.locked
-                            ? const Icon(Icons.lock_rounded, size: 16, color: Color(0xFF94A3B8))
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _bnNum(widget.number),
-                                    style: zlText(16.5, weight: FontWeight.w900, color: const Color(0xFF1C1408)).copyWith(
-                                      shadows: const [
-                                        Shadow(offset: Offset(0, 1), color: Color(0x55FFFFFF), blurRadius: 0),
-                                        Shadow(offset: Offset(0, -0.6), color: Color(0x66000000), blurRadius: 0),
-                                      ],
-                                    ),
-                                  ),
-                                  if (widget.rank != null && widget.rank != DsLevelRank.again) ...[
-                                    const SizedBox(width: 3),
-                                    Icon(
-                                      widget.rank == DsLevelRank.darun ? Icons.stars_rounded : Icons.star_half_rounded,
-                                      size: 13,
-                                      color: widget.rank == DsLevelRank.darun ? const Color(0xFF78350F) : const Color(0xFF334155),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                      ),
-                    ),
-
-                    if (stamp.isNotEmpty)
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 3,
-                        child: Text(
-                          stamp,
-                          textAlign: TextAlign.center,
-                          style: zlText(9, weight: FontWeight.w800, color: const Color(0xCC2A1C0A), height: 1),
-                        ),
-                      ),
-                    if (widget.verifyHold)
-                      const Positioned(
-                        top: -7,
-                        right: -7,
-                        child: VerifyTick(size: 18),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _MetalRivet extends StatelessWidget {
-  const _MetalRivet();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 5.5,
-      height: 5.5,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFEDE4C8), Color(0xFF8A7340), Color(0xFF3F2A10)],
-        ),
-        boxShadow: [
-          BoxShadow(color: Color(0x66000000), offset: Offset(0, 0.6), blurRadius: 0.4),
-        ],
-      ),
-    );
-  }
 }
 
 class _RoundArrow extends StatelessWidget {

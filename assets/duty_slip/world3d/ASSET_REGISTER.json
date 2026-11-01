@@ -1,0 +1,137 @@
+{
+  "project": "SmartLineMan (\u09ae\u09c3\u09a4\u09cd\u09af\u09c1\u09b9\u09c0\u09a8 \u09aa\u09a5) \u2014 Phase 5 3D Adventure World",
+  "workflow": "Zero-Cost Procedural 3D Mesh + Oblique-Isometric PBR Renderer & Blender Python Suite",
+  "camera_spec": {
+    "projection": "Oblique Isometric Orthographic",
+    "elevation_deg": 32.0,
+    "azimuth_deg": 45.0,
+    "sun_direction": [
+      -0.48,
+      -0.56,
+      0.67
+    ]
+  },
+  "licence_policy": "100% First-Party Procedural + CC0 Public Domain Compatible. Zero commercial/copyrighted third-party restrictions.",
+  "assets": [
+    {
+      "file": "assets/duty_slip/world3d/bridge_arch_3d.webp",
+      "dimensions": "210x148",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/chest_treasure_3d.webp",
+      "dimensions": "180x168",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/coin_cleared_3d.webp",
+      "dimensions": "160x160",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/coin_current_3d.webp",
+      "dimensions": "160x160",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/coin_locked_3d.webp",
+      "dimensions": "160x160",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/dtr_station_3d.webp",
+      "dimensions": "240x226",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/medallion_bronze_3d.webp",
+      "dimensions": "160x160",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/medallion_emerald_3d.webp",
+      "dimensions": "160x160",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/medallion_navy_3d.webp",
+      "dimensions": "160x160",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/pole_11kv_3d.webp",
+      "dimensions": "160x214",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/substation_33kv_3d.webp",
+      "dimensions": "260x205",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/terrain_valley_bg.webp",
+      "dimensions": "720x1280",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/training_shed_3d.webp",
+      "dimensions": "260x205",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/tree_cluster_3d.webp",
+      "dimensions": "190x190",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    },
+    {
+      "file": "assets/duty_slip/world3d/zero_death_crest_3d.webp",
+      "dimensions": "180x180",
+      "format": "WebP (RGBA/RGB)",
+      "category": "3D SDF Raymarched + PBR Adventure World Asset",
+      "creator": "SmartLineMan 3D Pipeline (tool/world3d_production)",
+      "licence": "CC0 1.0 Universal / First-Party Unrestricted"
+    }
+  ]
+}

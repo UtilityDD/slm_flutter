@@ -1,0 +1,17 @@
+# SmartLineMan 3D Material Library (CC0 / First-Party Procedural)
+newmtl AntiqueGold
+Kd 0.827 0.678 0.361
+Ks 0.920 0.840 0.620
+Ns 180.0
+newmtl DeepEmerald
+Kd 0.020 0.588 0.412
+Ks 0.350 0.650 0.520
+Ns 90.0
+newmtl GalvSteel
+Kd 0.710 0.760 0.815
+Ks 0.850 0.880 0.920
+Ns 140.0
+newmtl PorcelainInsulator
+Kd 0.480 0.240 0.140
+Ks 0.900 0.900 0.900
+Ns 220.0

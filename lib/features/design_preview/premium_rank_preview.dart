@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../design/slm_design.dart';
@@ -9,18 +10,40 @@ import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 
 const _bnMonths = [
-  'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
-  'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর',
+  'জানুয়ারি',
+  'ফেব্রুয়ারি',
+  'মার্চ',
+  'এপ্রিল',
+  'মে',
+  'জুন',
+  'জুলাই',
+  'আগস্ট',
+  'সেপ্টেম্বর',
+  'অক্টোবর',
+  'নভেম্বর',
+  'ডিসেম্বর',
 ];
 const _enMonths = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
-/// Rank screen rebuilt on the premium design system. Same data and actions
-/// as [RankScreen]; only the look differs.
+/// Rank screen on the premium design system. Same leaderboard data as the
+/// previous rank tab. [asTab] hides the back control on the shell tab.
 class PremiumRankPreview extends ConsumerStatefulWidget {
-  const PremiumRankPreview({super.key});
+  final bool asTab;
+
+  const PremiumRankPreview({super.key, this.asTab = false});
 
   @override
   ConsumerState<PremiumRankPreview> createState() => _PremiumRankPreviewState();
@@ -34,7 +57,8 @@ class _PremiumRankPreviewState extends ConsumerState<PremiumRankPreview> {
   Widget build(BuildContext context) {
     final bn = ref.watch(languageProvider);
     final now = DateTime.now();
-    final month = '${bn ? _bnMonths[now.month - 1] : _enMonths[now.month - 1]} ${now.year}';
+    final month =
+        '${bn ? _bnMonths[now.month - 1] : _enMonths[now.month - 1]} ${now.year}';
     final boards = [
       tr(bn, 'মাসের সেরা', 'Champion'),
       tr(bn, 'নতুন', 'New'),
@@ -43,90 +67,132 @@ class _PremiumRankPreviewState extends ConsumerState<PremiumRankPreview> {
     ];
     final notes = [
       tr(bn, 'এই মাসের মোট পয়েন্ট।', 'Total points this month.'),
-      tr(bn, 'গত 90 দিনের নতুন সদস্য। বোর্ড শীঘ্রই।', 'Joiners from the last 90 days. Board lands next.'),
-      tr(bn, 'গত মাসের চেয়ে যারা এগিয়েছেন।', 'Who grew the most since last month.'),
+      tr(
+        bn,
+        'গত 90 দিনের নতুন সদস্য। বোর্ড শীঘ্রই।',
+        'Joiners from the last 90 days. Board lands next.',
+      ),
+      tr(
+        bn,
+        'গত মাসের চেয়ে যারা এগিয়েছেন।',
+        'Who grew the most since last month.',
+      ),
       tr(bn, 'এই মাসের পড়ার পয়েন্ট।', 'Reading points this month.'),
     ];
 
-    return Theme(
-      data: _night ? SlmTheme.night() : SlmTheme.day(),
-      child: Builder(
-        builder: (context) {
-          final g = context.slm.layout.gutter;
-          return Scaffold(
-            backgroundColor: Colors.transparent,
-            body: SlmBackground(
-              child: SafeArea(
-                bottom: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SlmTopBar(
-                      title: tr(bn, 'র‍্যাঙ্ক', 'Rank'),
-                      subtitle: tr(bn, 'মাসিক লিডারবোর্ড · $month', 'Monthly leaderboard · $month'),
-                      onBack: () => Navigator.of(context).maybePop(),
-                      backLabel: tr(bn, 'ফিরে যান', 'Back'),
-                      actions: [
-                        SlmChip(
-                          label: bn ? 'EN' : 'বাং',
-                          icon: Icons.translate_rounded,
-                          onTap: () => ref.read(languageProvider.notifier).setBengali(!bn),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: _night ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: Theme(
+        data: _night ? SlmTheme.night() : SlmTheme.day(),
+        child: Builder(
+          builder: (context) {
+            final g = context.slm.layout.gutter;
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: SlmBackground(
+                child: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SlmTopBar(
+                        title: tr(bn, 'র‍্যাঙ্ক', 'Rank'),
+                        subtitle: tr(
+                          bn,
+                          'মাসিক লিডারবোর্ড · $month',
+                          'Monthly leaderboard · $month',
                         ),
-                        SlmIconButton(
-                          icon: _night ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                          tooltip: tr(bn, 'দিন / রাত', 'Day / night'),
-                          size: 44,
-                          onPressed: () => setState(() => _night = !_night),
-                        ),
-                      ],
-                    ),
-                    Expanded(
-                      child: ListView(
-                        padding: shellScrollPadding(context, left: g, top: SlmSpace.xs, right: g, extraBottom: SlmSpace.xl),
-                        children: [
-                          SlmReveal(
-                            child: Theme(data: SlmTheme.night(), child: _StandingHero(bn: bn)),
+                        onBack: widget.asTab
+                            ? null
+                            : () => Navigator.of(context).maybePop(),
+                        backLabel: tr(bn, 'ফিরে যান', 'Back'),
+                        actions: [
+                          SlmChip(
+                            label: bn ? 'EN' : 'বাং',
+                            icon: Icons.translate_rounded,
+                            onTap: () => ref
+                                .read(languageProvider.notifier)
+                                .setBengali(!bn),
                           ),
-                          const SizedBox(height: SlmSpace.lg),
-                          SlmReveal(
-                            index: 1,
-                            child: SlmSegmented(
-                              labels: boards,
-                              selected: _board,
-                              onChanged: (i) => setState(() => _board = i),
-                            ),
-                          ),
-                          const SizedBox(height: SlmSpace.xs),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: SlmSpace.xs),
-                            child: SlmText(notes[_board], role: SlmTextRole.caption),
-                          ),
-                          const SizedBox(height: SlmSpace.md),
-                          AnimatedSwitcher(
-                            duration: SlmMotion.base,
-                            child: _board == 0
-                                ? _ChampionBoard(key: const ValueKey('champ'), bn: bn)
-                                : SlmEmptyState(
-                                    key: ValueKey(_board),
-                                    icon: Icons.hourglass_top_rounded,
-                                    title: boards[_board],
-                                    message: notes[_board],
-                                    action: SlmChip(
-                                      label: tr(bn, 'শীঘ্রই খুলবে', 'Opening soon'),
-                                      icon: Icons.schedule_rounded,
-                                      tone: SlmTone.emerald,
-                                    ),
-                                  ),
+                          SlmIconButton(
+                            icon: _night
+                                ? Icons.light_mode_rounded
+                                : Icons.dark_mode_rounded,
+                            tooltip: tr(bn, 'দিন / রাত', 'Day / night'),
+                            size: 44,
+                            onPressed: () => setState(() => _night = !_night),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: ListView(
+                          padding: shellScrollPadding(
+                            context,
+                            left: g,
+                            top: SlmSpace.xs,
+                            right: g,
+                            extraBottom: SlmSpace.xl,
+                          ),
+                          children: [
+                            SlmReveal(
+                              child: Theme(
+                                data: SlmTheme.night(),
+                                child: _StandingHero(bn: bn),
+                              ),
+                            ),
+                            const SizedBox(height: SlmSpace.lg),
+                            SlmReveal(
+                              index: 1,
+                              child: SlmSegmented(
+                                labels: boards,
+                                selected: _board,
+                                onChanged: (i) => setState(() => _board = i),
+                              ),
+                            ),
+                            const SizedBox(height: SlmSpace.xs),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: SlmSpace.xs,
+                              ),
+                              child: SlmText(
+                                notes[_board],
+                                role: SlmTextRole.caption,
+                              ),
+                            ),
+                            const SizedBox(height: SlmSpace.md),
+                            AnimatedSwitcher(
+                              duration: SlmMotion.base,
+                              child: _board == 0
+                                  ? _ChampionBoard(
+                                      key: const ValueKey('champ'),
+                                      bn: bn,
+                                    )
+                                  : SlmEmptyState(
+                                      key: ValueKey(_board),
+                                      icon: Icons.hourglass_top_rounded,
+                                      title: boards[_board],
+                                      message: notes[_board],
+                                      action: SlmChip(
+                                        label: tr(
+                                          bn,
+                                          'শীঘ্রই খুলবে',
+                                          'Opening soon',
+                                        ),
+                                        icon: Icons.schedule_rounded,
+                                        tone: SlmTone.emerald,
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -141,7 +207,8 @@ class _StandingHero extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final s = context.slm;
     final auth = ref.watch(authProvider);
-    final rows = ref.watch(liveLeaderboardProvider).value ?? const <LeaderboardEntry>[];
+    final rows =
+        ref.watch(liveLeaderboardProvider).value ?? const <LeaderboardEntry>[];
     final meId = auth.profile?.id;
     final signedIn = auth.isAuthenticated;
     final i = meId == null ? -1 : rows.indexWhere((r) => r.id == meId);
@@ -152,19 +219,37 @@ class _StandingHero extends ConsumerWidget {
     final String detail;
     final double progress;
     if (me == null) {
-      headline = signedIn ? tr(bn, 'এখনও বোর্ডে নেই', 'Not on the board yet') : tr(bn, 'অতিথি', 'Guest');
+      headline = signedIn
+          ? tr(bn, 'এখনও বোর্ডে নেই', 'Not on the board yet')
+          : tr(bn, 'অতিথি', 'Guest');
       detail = signedIn
-          ? tr(bn, 'কুইজ খেলে পয়েন্ট জিতুন, সেরা 25-এ উঠে আসুন।', 'Play quizzes to earn points and reach the top 25.')
-          : tr(bn, 'লগইন করলে আপনার পয়েন্ট বোর্ডে উঠবে।', 'Sign in to put your points on the board.');
+          ? tr(
+              bn,
+              'কুইজ খেলে পয়েন্ট জিতুন, সেরা 25-এ উঠে আসুন।',
+              'Play quizzes to earn points and reach the top 25.',
+            )
+          : tr(
+              bn,
+              'লগইন করলে আপনার পয়েন্ট বোর্ডে উঠবে।',
+              'Sign in to put your points on the board.',
+            );
       progress = 0;
     } else if (above == null) {
       headline = tr(bn, 'আপনিই শীর্ষে', 'You are on top');
-      detail = tr(bn, 'জায়গা ধরে রাখতে খেলতে থাকুন।', 'Keep playing to hold the spot.');
+      detail = tr(
+        bn,
+        'জায়গা ধরে রাখতে খেলতে থাকুন।',
+        'Keep playing to hold the spot.',
+      );
       progress = 1;
     } else {
       final gap = above.points - me.points;
       headline = tr(bn, 'স্থান ${me.rank}', 'Rank ${me.rank}');
-      detail = tr(bn, 'পরের স্থানে যেতে আর $gap পয়েন্ট', '$gap points to the next spot');
+      detail = tr(
+        bn,
+        'পরের স্থানে যেতে আর $gap পয়েন্ট',
+        '$gap points to the next spot',
+      );
       progress = above.points == 0 ? 0 : me.points / above.points;
     }
 
@@ -177,7 +262,11 @@ class _StandingHero extends ConsumerWidget {
           Row(
             children: [
               me == null
-                  ? const SlmIconBadge(icon: Icons.person_rounded, style: SlmIconStyle.medal, size: 56)
+                  ? const SlmIconBadge(
+                      icon: Icons.person_rounded,
+                      style: SlmIconStyle.medal,
+                      size: 56,
+                    )
                   : SlmPulse(
                       color: s.palette.accent,
                       child: SlmRankDisc(rank: me.rank, size: 56),
@@ -187,9 +276,17 @@ class _StandingHero extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SlmText(tr(bn, 'আপনার অবস্থান', 'Your standing'), role: SlmTextRole.overline),
+                    SlmText(
+                      tr(bn, 'আপনার অবস্থান', 'Your standing'),
+                      role: SlmTextRole.overline,
+                    ),
                     const SizedBox(height: 2),
-                    SlmText(headline, role: SlmTextRole.title, color: Colors.white, maxLines: 1),
+                    SlmText(
+                      headline,
+                      role: SlmTextRole.title,
+                      color: Colors.white,
+                      maxLines: 1,
+                    ),
                   ],
                 ),
               ),
@@ -199,9 +296,15 @@ class _StandingHero extends ConsumerWidget {
                   children: [
                     SlmCountUp(
                       value: me.points,
-                      style: s.type.number.copyWith(fontSize: 26 * s.layout.scale, color: s.palette.accent),
+                      style: s.type.number.copyWith(
+                        fontSize: 26 * s.layout.scale,
+                        color: s.palette.accent,
+                      ),
                     ),
-                    SlmText(tr(bn, 'পয়েন্ট', 'points'), role: SlmTextRole.caption),
+                    SlmText(
+                      tr(bn, 'পয়েন্ট', 'points'),
+                      role: SlmTextRole.caption,
+                    ),
                   ],
                 ),
             ],
@@ -215,16 +318,22 @@ class _StandingHero extends ConsumerWidget {
           const SizedBox(height: SlmSpace.md),
           signedIn
               ? SlmButton.gold(
-                  label: tr(bn, 'কুইজ খেলে পয়েন্ট বাড়ান', 'Play a quiz to earn points'),
+                  label: tr(
+                    bn,
+                    'কুইজ খেলে পয়েন্ট বাড়ান',
+                    'Play a quiz to earn points',
+                  ),
                   icon: Icons.bolt_rounded,
                   expand: true,
-                  onPressed: () => Navigator.of(context).pushNamed(AppRoutes.quiz),
+                  onPressed: () =>
+                      Navigator.of(context).pushNamed(AppRoutes.quiz),
                 )
               : SlmButton(
                   label: tr(bn, 'লগইন করুন', 'Sign in'),
                   icon: Icons.login_rounded,
                   expand: true,
-                  onPressed: () => Navigator.of(context).pushNamed(AppRoutes.login),
+                  onPressed: () =>
+                      Navigator.of(context).pushNamed(AppRoutes.login),
                 ),
         ],
       ),
@@ -259,7 +368,9 @@ class _ChampionBoard extends ConsumerWidget {
             title: tr(bn, 'এখনও কেউ নেই', 'No one here yet'),
           );
         }
-        final rest = rows.length > 3 ? rows.sublist(3) : const <LeaderboardEntry>[];
+        final rest = rows.length > 3
+            ? rows.sublist(3)
+            : const <LeaderboardEntry>[];
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -275,7 +386,11 @@ class _ChampionBoard extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: SlmSpace.xs),
                   child: SlmReveal(
                     index: 3 + i,
-                    child: _RankRow(entry: rest[i], isMe: meId != null && meId == rest[i].id, bn: bn),
+                    child: _RankRow(
+                      entry: rest[i],
+                      isMe: meId != null && meId == rest[i].id,
+                      bn: bn,
+                    ),
                   ),
                 ),
             ],
@@ -296,12 +411,21 @@ class _Podium extends StatelessWidget {
     final order = [at(1), at(0), at(2)];
     return SlmCard(
       variant: SlmCardVariant.gold,
-      padding: const EdgeInsets.fromLTRB(SlmSpace.xs, SlmSpace.lg, SlmSpace.xs, 0),
+      padding: const EdgeInsets.fromLTRB(
+        SlmSpace.xs,
+        SlmSpace.lg,
+        SlmSpace.xs,
+        0,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           for (final e in order)
-            Expanded(child: e == null ? const SizedBox(height: 150) : _PodiumSlot(entry: e)),
+            Expanded(
+              child: e == null
+                  ? const SizedBox(height: 150)
+                  : _PodiumSlot(entry: e),
+            ),
         ],
       ),
     );
@@ -318,7 +442,13 @@ class _PodiumSlot extends StatelessWidget {
     final medal = SlmMedalLook.forRank(entry.rank) ?? SlmMedal.bronze;
     final first = entry.rank == 1;
     final k = s.layout.scale;
-    final pedestal = switch (entry.rank) { 1 => 64.0, 2 => 46.0, _ => 34.0 } * k;
+    final pedestal =
+        switch (entry.rank) {
+          1 => 64.0,
+          2 => 46.0,
+          _ => 34.0,
+        } *
+        k;
     final name = entry.name.trim().split(RegExp(r'\s+')).first;
 
     return Padding(
@@ -327,21 +457,45 @@ class _PodiumSlot extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (first)
-            SlmShimmer(child: Icon(Icons.workspace_premium_rounded, size: 28 * k, color: s.palette.accent))
+            SlmShimmer(
+              child: Icon(
+                Icons.workspace_premium_rounded,
+                size: 28 * k,
+                color: s.palette.accent,
+              ),
+            )
           else
             SizedBox(height: 28 * k),
           const SizedBox(height: SlmSpace.xxs),
           first
               ? SlmPulse(
                   color: medal.glow,
-                  child: SlmAvatar(name: entry.name, url: entry.avatarUrl, size: 68, medal: medal),
+                  child: SlmAvatar(
+                    name: entry.name,
+                    url: entry.avatarUrl,
+                    size: 68,
+                    medal: medal,
+                  ),
                 )
-              : SlmAvatar(name: entry.name, url: entry.avatarUrl, size: 54, medal: medal),
+              : SlmAvatar(
+                  name: entry.name,
+                  url: entry.avatarUrl,
+                  size: 54,
+                  medal: medal,
+                ),
           const SizedBox(height: SlmSpace.xs),
-          SlmText(name, role: SlmTextRole.label, maxLines: 1, align: TextAlign.center),
+          SlmText(
+            name,
+            role: SlmTextRole.label,
+            maxLines: 1,
+            align: TextAlign.center,
+          ),
           SlmCountUp(
             value: entry.points,
-            style: s.type.number.copyWith(fontSize: 14 * k, color: s.palette.accent),
+            style: s.type.number.copyWith(
+              fontSize: 14 * k,
+              color: s.palette.accent,
+            ),
           ),
           const SizedBox(height: SlmSpace.xs),
           Container(
@@ -351,10 +505,14 @@ class _PodiumSlot extends StatelessWidget {
             padding: const EdgeInsets.only(top: SlmSpace.xs),
             decoration: BoxDecoration(
               gradient: medal.gradient,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(SlmRadius.md)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(SlmRadius.md),
+              ),
             ),
             foregroundDecoration: const BoxDecoration(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(SlmRadius.md)),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(SlmRadius.md),
+              ),
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -363,7 +521,10 @@ class _PodiumSlot extends StatelessWidget {
             ),
             child: Text(
               '${entry.rank}',
-              style: s.type.number.copyWith(fontSize: 18 * k, color: SlmColors.navy950),
+              style: s.type.number.copyWith(
+                fontSize: 18 * k,
+                color: SlmColors.navy950,
+              ),
             ),
           ),
         ],
@@ -394,10 +555,20 @@ class _RankRow extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Flexible(child: SlmText(entry.name, role: SlmTextRole.titleSm, maxLines: 1)),
+                  Flexible(
+                    child: SlmText(
+                      entry.name,
+                      role: SlmTextRole.titleSm,
+                      maxLines: 1,
+                    ),
+                  ),
                   if (isMe) ...[
                     const SizedBox(width: SlmSpace.xs),
-                    SlmChip(label: tr(bn, 'আপনি', 'You'), tone: SlmTone.emerald, selected: true),
+                    SlmChip(
+                      label: tr(bn, 'আপনি', 'You'),
+                      tone: SlmTone.emerald,
+                      selected: true,
+                    ),
                   ],
                 ],
               ),
@@ -416,7 +587,10 @@ class _RankRow extends StatelessWidget {
     return SlmCard(
       variant: isMe ? SlmCardVariant.gold : SlmCardVariant.surface,
       radius: SlmRadius.md,
-      padding: const EdgeInsets.symmetric(horizontal: SlmSpace.sm, vertical: SlmSpace.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SlmSpace.sm,
+        vertical: SlmSpace.sm,
+      ),
       child: row,
     );
   }
@@ -430,10 +604,13 @@ class _BoardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.slm.palette;
     Widget bar(double w, double h) => Container(
-          width: w,
-          height: h,
-          decoration: BoxDecoration(color: p.surfaceRaised, borderRadius: SlmRadius.smAll),
-        );
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        color: p.surfaceRaised,
+        borderRadius: SlmRadius.smAll,
+      ),
+    );
     return SlmShimmer(
       period: const Duration(milliseconds: 1600),
       intensity: 0.35,

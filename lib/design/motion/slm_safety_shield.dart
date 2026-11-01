@@ -145,7 +145,8 @@ class _AnimatedSafetyShieldState extends State<AnimatedSafetyShield> with Ticker
     final shieldH = s * 0.78;
     final shieldW = shieldH * SlmShieldAssets.aspect;
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final cacheW = math.min(SlmShieldAssets.pixelWidth, (shieldW * dpr).round());
+    final rawCache = (shieldW * dpr).round();
+    final cacheW = rawCache <= 0 ? null : math.min(SlmShieldAssets.pixelWidth, rawCache);
     final k = widget.intensity;
 
     Image layer(String asset, {Color? tint}) => Image.asset(

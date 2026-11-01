@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../emergency/emergency_directory_screen.dart';
@@ -13,7 +14,6 @@ import '../quizzes/quiz_hub_screen.dart';
 import '../quizzes/quiz_play_screen.dart';
 import '../radio/radio_mini_player.dart';
 import '../radio/radio_player_provider.dart';
-import '../rank/rank_screen.dart';
 import '../sops/sops_screen.dart';
 import '../training/training_screen.dart';
 import '../admin/admin_screen.dart';
@@ -48,39 +48,39 @@ class _MainShellState extends ConsumerState<MainShell> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          ShellDockScope(
-            bottomInset: dockInset,
-            child: Navigator(
-              key: _navKey,
-              initialRoute: AppRoutes.home,
-              onGenerateRoute: _onGenerateRoute,
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            ShellDockScope(
+              bottomInset: dockInset,
+              child: Navigator(
+                key: _navKey,
+                initialRoute: AppRoutes.home,
+                onGenerateRoute: _onGenerateRoute,
+              ),
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const RadioMiniPlayer(),
-                _BottomNav(
-                  index: tab,
-                  bn: bn,
-                  onSelect: (index) {
-                    _navKey.currentState?.popUntil((route) => route.isFirst);
-                    ref.read(shellTabProvider.notifier).select(index);
-                  },
-                ),
-              ],
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const RadioMiniPlayer(),
+                  _BottomNav(
+                    index: tab,
+                    bn: bn,
+                    onSelect: (index) {
+                      _navKey.currentState?.popUntil((route) => route.isFirst);
+                      ref.read(shellTabProvider.notifier).select(index);
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -118,7 +118,7 @@ class _TabHost extends ConsumerWidget {
       children: const [
         HomeScreen(),
         IdentifyScreen(),
-        RankScreen(),
+        PremiumRankPreview(asTab: true),
         LifeSkillScreen(),
       ],
     );
@@ -144,9 +144,21 @@ class _BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       (Icons.home_rounded, Icons.home_outlined, tr(bn, 'হোম', 'Home')),
-      (Icons.visibility_rounded, Icons.visibility_outlined, tr(bn, 'পরিচিতি', 'Identify')),
-      (Icons.emoji_events_rounded, Icons.emoji_events_outlined, tr(bn, 'র‍্যাঙ্ক', 'Rank')),
-      (Icons.star_rounded, Icons.star_outline_rounded, tr(bn, 'লাইফ স্কিল', 'Life Skill')),
+      (
+        Icons.visibility_rounded,
+        Icons.visibility_outlined,
+        tr(bn, 'পরিচিতি', 'Identify'),
+      ),
+      (
+        Icons.emoji_events_rounded,
+        Icons.emoji_events_outlined,
+        tr(bn, 'র‍্যাঙ্ক', 'Rank'),
+      ),
+      (
+        Icons.star_rounded,
+        Icons.star_outline_rounded,
+        tr(bn, 'লাইফ স্কিল', 'Life Skill'),
+      ),
     ];
     const move = Duration(milliseconds: 340);
     const curve = Curves.easeOutCubic;
@@ -202,7 +214,10 @@ class _BottomNav extends StatelessWidget {
                       curve: curve,
                       builder: (context, cx, _) {
                         return CustomPaint(
-                          painter: _NotchedDockPainter(notchCenterX: cx, notchRadius: _notchR),
+                          painter: _NotchedDockPainter(
+                            notchCenterX: cx,
+                            notchRadius: _notchR,
+                          ),
                         );
                       },
                     ),
@@ -237,7 +252,11 @@ class _BottomNav extends StatelessWidget {
                           gradient: RadialGradient(
                             center: Alignment(-0.3, -0.45),
                             radius: 0.95,
-                            colors: [SlmColors.emerald500, SlmColors.emerald700, SlmColors.emerald900],
+                            colors: [
+                              SlmColors.emerald500,
+                              SlmColors.emerald700,
+                              SlmColors.emerald900,
+                            ],
                             stops: [0.0, 0.6, 1.0],
                           ),
                         ),
@@ -315,7 +334,9 @@ class _NotchedDockPainter extends CustomPainter {
     // Circle centered on the top edge → clean semicircle bite on every tab,
     // including the first and last (no cubic/corner clash).
     final cut = Path()
-      ..addOval(Rect.fromCircle(center: Offset(cx, barTop), radius: notchRadius));
+      ..addOval(
+        Rect.fromCircle(center: Offset(cx, barTop), radius: notchRadius),
+      );
 
     final path = Path.combine(PathOperation.difference, bar, cut);
 
@@ -335,11 +356,14 @@ class _NotchedDockPainter extends CustomPainter {
     canvas.drawRect(
       Rect.fromLTWH(0, barTop, size.width, bounds.height * 0.45),
       Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0x1FFFFFFF), Color(0x00FFFFFF)],
-        ).createShader(Rect.fromLTWH(0, barTop, size.width, bounds.height * 0.45)),
+        ..shader =
+            const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x1FFFFFFF), Color(0x00FFFFFF)],
+            ).createShader(
+              Rect.fromLTWH(0, barTop, size.width, bounds.height * 0.45),
+            ),
     );
     canvas.restore();
 
@@ -359,7 +383,8 @@ class _NotchedDockPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _NotchedDockPainter oldDelegate) {
-    return oldDelegate.notchCenterX != notchCenterX || oldDelegate.notchRadius != notchRadius;
+    return oldDelegate.notchCenterX != notchCenterX ||
+        oldDelegate.notchRadius != notchRadius;
   }
 }
 
@@ -386,10 +411,8 @@ class _NavItem extends StatelessWidget {
     return SlmTactile(
       semanticLabel: label,
       onTap: onTap,
-      builder: (context, press, child) => Transform.scale(
-        scale: 1 - 0.08 * press,
-        child: child,
-      ),
+      builder: (context, press, child) =>
+          Transform.scale(scale: 1 - 0.08 * press, child: child),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -413,7 +436,8 @@ class _NavItem extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.15),
+              textScaler: MediaQuery.textScalerOf(context)
+                  .clamp(maxScaleFactor: 1.15),
             ),
           ),
           SizedBox(
