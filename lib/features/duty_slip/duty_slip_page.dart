@@ -1438,6 +1438,40 @@ class _PlanBoard extends StatelessWidget {
   }
 }
 
+/// The same briefing card the cover opens, with the same rise-and-fade.
+void _showMissionBriefing(
+  BuildContext context, {
+  required VoidCallback onStart,
+  bool dismissible = false,
+}) {
+  final cinematic = dsMotionOf(context) == DsMotion.cinematic;
+  showGeneralDialog<void>(
+    context: context,
+    barrierDismissible: dismissible,
+    barrierLabel: 'briefing',
+    barrierColor: SlmColors.navy950.withValues(alpha: 0.88),
+    transitionDuration: SlmMotion.slow,
+    transitionBuilder: (_, anim, _, child) {
+      final t = SlmMotion.emphasized.transform(anim.value);
+      return Opacity(
+        opacity: anim.value.clamp(0.0, 1.0),
+        child: Transform.translate(
+          offset: Offset(0, 24 * (1 - t)),
+          child: Transform.scale(scale: 0.94 + 0.06 * t, child: child),
+        ),
+      );
+    },
+    pageBuilder: (ctx, _, _) {
+      final dialog = _MissionBriefingDialog(onStart: onStart);
+      if (!cinematic) return dialog;
+      return BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: dialog,
+      );
+    },
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // ৩-ধাপের অভিযান ব্রিফিং মডাল (3-Card Mission Briefing Dialog)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2127,38 +2161,14 @@ class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin 
   void _openBriefing() {
     HapticFeedback.lightImpact();
     unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.85));
-    final cinematic = dsMotionOf(context) == DsMotion.cinematic;
-    showGeneralDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      barrierLabel: 'briefing',
-      barrierColor: SlmColors.navy950.withValues(alpha: 0.88),
-      transitionDuration: SlmMotion.slow,
-      transitionBuilder: (_, anim, _, child) {
-        final t = SlmMotion.emphasized.transform(anim.value);
-        return Opacity(
-          opacity: anim.value.clamp(0.0, 1.0),
-          child: Transform.translate(
-            offset: Offset(0, 24 * (1 - t)),
-            child: Transform.scale(scale: 0.94 + 0.06 * t, child: child),
-          ),
-        );
-      },
-      pageBuilder: (ctx, _, _) {
-        final dialog = _MissionBriefingDialog(
-          onStart: () {
-            if (_isExiting) return;
-            _isExiting = true;
-            _exit.forward().then((_) {
-              if (mounted) widget.onOpen();
-            });
-          },
-        );
-        if (!cinematic) return dialog;
-        return BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: dialog,
-        );
+    _showMissionBriefing(
+      context,
+      onStart: () {
+        if (_isExiting) return;
+        _isExiting = true;
+        _exit.forward().then((_) {
+          if (mounted) widget.onOpen();
+        });
       },
     );
   }
@@ -2398,13 +2408,13 @@ class _RoadBoardState extends State<_RoadBoard> {
       _scroll.animateTo(
         clamped,
         duration: const Duration(milliseconds: 950),
-        curve: Curves.easeOutCubic,
+        curve: SlmMotion.emphasized,
       );
     } else {
       _scroll.animateTo(
         clamped,
-        duration: const Duration(milliseconds: 520),
-        curve: Curves.easeOutCubic,
+        duration: SlmMotion.page,
+        curve: SlmMotion.emphasized,
       );
     }
   }
@@ -2442,10 +2452,10 @@ class _RoadBoardState extends State<_RoadBoard> {
                   Text(
                     'মৃত্যুহীন পথ',
                     textAlign: TextAlign.center,
-                    style: zlText(18, weight: FontWeight.w900, color: const Color(0xFFFFF6D8)).copyWith(
+                    style: zlText(18, weight: FontWeight.w900, color: SlmColors.gold100).copyWith(
                       letterSpacing: 0.8,
-                      shadows: const [
-                        Shadow(color: Color(0xCCF59E0B), blurRadius: 12),
+                      shadows: [
+                        Shadow(color: SlmColors.gold400.withValues(alpha: 0.7), blurRadius: 14),
                       ],
                     ),
                   ),
@@ -2454,29 +2464,34 @@ class _RoadBoardState extends State<_RoadBoard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: const Color(0xCC060E18),
-                      borderRadius: BorderRadius.circular(99),
-                      border: Border.all(color: const Color(0x33FBBF24)),
-                      boxShadow: const [
-                        BoxShadow(color: Color(0x44000000), blurRadius: 8, offset: Offset(0, 2)),
+                      gradient: SlmGradients.navyCard,
+                      borderRadius: SlmRadius.pillAll,
+                      border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 3)),
                       ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Score
-                        const Icon(Icons.stars_rounded, size: 15, color: Color(0xFFFBBF24)),
+                        const Icon(Icons.stars_rounded, size: 15, color: SlmColors.gold400),
                         const SizedBox(width: 4),
                         Text(
                           _bnNum(e.totalCumulativeScore),
-                          style: zlText(12, weight: FontWeight.w800, color: const Color(0xFFFFFBE8)),
+                          style: zlText(12, weight: FontWeight.w800, color: SlmColors.ivory),
                         ),
-                        Container(margin: const EdgeInsets.symmetric(horizontal: 8), width: 1, height: 12, color: const Color(0x22FFFFFF)),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          width: 1,
+                          height: 12,
+                          color: SlmColors.gold400.withValues(alpha: 0.35),
+                        ),
                         // Danger Count (Zero Loss Focus)
                         Icon(
                           e.totalCumulativeDanger == 0 ? Icons.shield_rounded : Icons.warning_amber_rounded,
                           size: 14,
-                          color: e.totalCumulativeDanger == 0 ? const Color(0xFF34D399) : const Color(0xFFF87171),
+                          color: e.totalCumulativeDanger == 0 ? SlmColors.emerald300 : SlmColors.danger,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -2484,36 +2499,30 @@ class _RoadBoardState extends State<_RoadBoard> {
                           style: zlText(
                             12,
                             weight: FontWeight.w800,
-                            color: e.totalCumulativeDanger == 0 ? const Color(0xFF6EE7B7) : const Color(0xFFFCA5A5),
+                            color: e.totalCumulativeDanger == 0 ? SlmColors.emerald200 : const Color(0xFFFCA5A5),
                           ),
                         ),
-                        Container(margin: const EdgeInsets.symmetric(horizontal: 8), width: 1, height: 12, color: const Color(0x22FFFFFF)),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          width: 1,
+                          height: 12,
+                          color: SlmColors.gold400.withValues(alpha: 0.35),
+                        ),
                         // Time
-                        const Icon(Icons.timer_outlined, size: 13, color: Color(0xFF38BDF8)),
+                        const Icon(Icons.timer_outlined, size: 13, color: SlmColors.gold300),
                         const SizedBox(width: 4),
                         Text(
                           e.formatClock(e.totalCumulativeSeconds),
-                          style: zlText(11.5, weight: FontWeight.w700, color: const Color(0xFFE2E8F0)),
+                          style: zlText(11.5, weight: FontWeight.w700, color: SlmColors.mist),
                         ),
                         const SizedBox(width: 8),
                         // Info Button to re-open briefing dialog
                         GestureDetector(
                           onTap: () {
                             HapticFeedback.lightImpact();
-                            showDialog<void>(
-                              context: context,
-                              barrierColor: const Color(0xF2040A14),
-                              builder: (ctx) {
-                                final dialog = _MissionBriefingDialog(onStart: () {});
-                                if (dsMotionOf(ctx) != DsMotion.cinematic) return dialog;
-                                return BackdropFilter(
-                                  filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                                  child: dialog,
-                                );
-                              },
-                            );
+                            _showMissionBriefing(context, onStart: () {}, dismissible: true);
                           },
-                          child: const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xCCFBBF24)),
+                          child: const Icon(Icons.info_outline_rounded, size: 16, color: SlmColors.gold300),
                         ),
                       ],
                     ),
@@ -3410,18 +3419,18 @@ class _LevelOrbState extends State<_LevelOrb> with SingleTickerProviderStateMixi
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   decoration: BoxDecoration(
-                    color: const Color(0xCC091422),
-                    borderRadius: BorderRadius.circular(99),
-                    border: Border.all(color: const Color(0xFFFBBF24), width: 0.9),
+                    gradient: SlmGradients.navyCard,
+                    borderRadius: SlmRadius.pillAll,
+                    border: Border.all(color: SlmColors.gold400, width: 0.9),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.keyboard_double_arrow_up_rounded, size: 14, color: Color(0xFFFBBF24)),
+                      const Icon(Icons.keyboard_double_arrow_up_rounded, size: 14, color: SlmColors.gold300),
                       const SizedBox(width: 2),
                       Text(
                         'পরবর্তী',
-                        style: zlText(9.5, weight: FontWeight.w800, color: const Color(0xFFFDE68A)),
+                        style: zlText(9.5, weight: FontWeight.w800, color: SlmColors.gold100),
                       ),
                     ],
                   ),
