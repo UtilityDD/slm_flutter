@@ -31,7 +31,6 @@ SET search_path = public
 AS $$
 DECLARE
   v_name text;
-  v_verified boolean;
 BEGIN
   IF lower(COALESCE(auth.jwt() ->> 'email', '')) NOT IN ('dipnkr.das@gmail.com', 'roumak.das@gmail.com') THEN
     RAISE EXCEPTION 'not admin';
@@ -41,11 +40,8 @@ BEGIN
     RAISE EXCEPTION 'bad role';
   END IF;
 
-  v_verified := p_role <> 'pending';
-
   UPDATE public.profiles
-  SET role = p_role,
-      verified = v_verified
+  SET role = p_role
   WHERE id = p_user_id;
 
   IF NOT FOUND THEN
@@ -58,8 +54,8 @@ BEGIN
     FROM auth.users u
     WHERE u.id = p_user_id;
 
-    INSERT INTO public.profiles (id, role, full_name, verified)
-    VALUES (p_user_id, p_role, COALESCE(v_name, 'লাইনম্যান'), v_verified);
+    INSERT INTO public.profiles (id, role, full_name)
+    VALUES (p_user_id, p_role, COALESCE(v_name, 'লাইনম্যান'));
   END IF;
 END;
 $$;

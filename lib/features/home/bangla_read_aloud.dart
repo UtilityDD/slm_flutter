@@ -2,6 +2,160 @@ import 'dart:async';
 
 import 'package:flutter_tts/flutter_tts.dart';
 
+import '../../core/services/neural_tts_service.dart';
+
+const _rateSub = '-2%';
+
+/// Part A: fixed welcome before every lesson.
+const lessonWelcomeClips = [
+  NeuralClip('নমস্কার লাইনম্যান ভাই!', pauseMs: 500),
+  NeuralClip('স্মার্ট লাইনম্যানের আজকের সুরক্ষা পাঠে আপনাকে স্বাগতম।', pauseMs: 650),
+  NeuralClip('লাইনে বা পোলে কাজে নামার আগে এই পাঠের প্রতিটি নিয়ম মনোযোগ দিয়ে শুনুন এবং মনে গেঁথে নিন।', pauseMs: 800),
+];
+
+/// Part C: fixed close that sends the reader to the quiz.
+const lessonQuizCallClips = [
+  NeuralClip('এই পাঠের মূল আলোচনা এখানেই সম্পন্ন হলো।', pauseMs: 650),
+  NeuralClip('মনে রাখবেন: আগে জীবন, তারপর কাজ!', pauseMs: 600),
+  NeuralClip('নিজের সুরক্ষা জ্ঞান ঝালিয়ে নিতে এবং দক্ষতা প্রমাণ করতে এখনই নিচের কুইজে অংশ নিন,', pauseMs: 400),
+  NeuralClip('সঠিক উত্তর দিয়ে পরবর্তী লেভেল আনলক করুন।'),
+];
+
+const quizWelcomeClips = [
+  NeuralClip('সুরক্ষা কুইজে স্বাগতম!', pauseMs: 500),
+  NeuralClip('এখানে আপনার ফিল্ড রিফ্লেক্স ও সুরক্ষা জ্ঞানের পরীক্ষা হবে।', pauseMs: 450),
+  NeuralClip('প্রতিটি প্রশ্ন মনোযোগ দিয়ে শুনুন এবং নিরাপদতম অপশনটি বেছে নিন।', pauseMs: 700),
+];
+
+List<NeuralClip> lessonTitleClips(int chapter, String title) => [
+      NeuralClip('পাঠ $chapter: ${_speechClean(title)}', volume: '+10%', pitch: '+1Hz', pauseMs: 750),
+    ];
+
+List<NeuralClip> lessonSubheadClips(String text) {
+  final t = _speechClean(text).replaceAll(RegExp(r'[।.:]+$'), '').trim();
+  return t.isEmpty ? const [] : [NeuralClip(t, rate: _rateSub, pauseMs: 500)];
+}
+
+const _optionNames = ['এ', 'বি', 'সি', 'ডি', 'ই', 'এফ'];
+
+/// "প্রশ্ন N, মোট M।" → question → spaced options.
+List<NeuralClip> quizQuestionClips({
+  required String question,
+  required List<String> options,
+  required int index,
+  required int total,
+  bool hasImage = false,
+  bool Function(String option)? isImage,
+}) {
+  final out = <NeuralClip>[
+    NeuralClip('প্রশ্ন ${index + 1}, মোট $total।', pauseMs: 500),
+    ..._sentences(_speechClean(question)),
+  ];
+  if (hasImage) out.add(const NeuralClip('এখানে একটি ছবি আছে।'));
+  _setLastPause(out, 600);
+  for (var i = 0; i < options.length; i++) {
+    final name = i < _optionNames.length ? _optionNames[i] : '${i + 1}';
+    final opt = isImage?.call(options[i]) == true ? 'ছবি' : _speechClean(options[i]);
+    out.add(NeuralClip('অপশন $name: $opt', pauseMs: i == options.length - 1 ? 0 : 350));
+  }
+  return out;
+}
+
+List<NeuralClip> quizResultClips({required bool passed, required int score, required int total}) => passed
+    ? [
+        const NeuralClip('খুব ভালো!', pauseMs: 400),
+        NeuralClip('আপনি $total-এ $score পেয়ে সফলভাবে এই কুইজ সম্পন্ন করেছেন।', pauseMs: 600),
+        const NeuralClip('মনে রাখবেন: আগে জীবন, তারপর কাজ!', pauseMs: 450),
+        const NeuralClip('পরের লেভেলে এগিয়ে চলুন।'),
+      ]
+    : [
+        const NeuralClip('সাবধান!', pauseMs: 400),
+        const NeuralClip('ফিল্ডে সামান্য অসাবধানতাই বড় দুর্ঘটনার কারণ হতে পারে।', pauseMs: 500),
+        NeuralClip('আপনার স্কোর $score।', pauseMs: 250),
+        const NeuralClip('কুইজ পাস করতে অন্তত 70 শতাংশ সঠিক উত্তর প্রয়োজন।', pauseMs: 500),
+        const NeuralClip('পাঠটি আরেকবার মনোযোগ দিয়ে পড়ুন এবং পুনরায় পরীক্ষা দিন।'),
+      ];
+
+final _bulletLead = RegExp(r'^(?:[•·\-*–]|[0-9০-৯]+[.)।])\s*');
+final _headingLine = RegExp(r'^(?:#{1,6}\s+.+|\*\*[^*]+\*\*\s*:?)$');
+
+/// Part B: lesson text cut into sentence clips with the pause hierarchy.
+List<NeuralClip> lessonBodyClips(String raw) {
+  final out = <NeuralClip>[];
+  var inList = false;
+  for (final rawLine in raw.split(RegExp(r'\r?\n'))) {
+    final line = rawLine.trim();
+    if (line.isEmpty) continue;
+    if (_headingLine.hasMatch(line)) {
+      inList = false;
+      out.addAll(lessonSubheadClips(line));
+      continue;
+    }
+    final inline = line.contains('•') ? line.split('•').map((s) => s.trim()).where((s) => s.isNotEmpty).toList() : null;
+    final isBullet = _bulletLead.hasMatch(line) && !RegExp(r'^[0-9০-৯]+\.[0-9০-৯]').hasMatch(line);
+    final items = inline != null && (inline.length > 1 || isBullet) ? inline : (isBullet ? [line] : null);
+    if (items == null) {
+      inList = false;
+      out.addAll(_sentences(_speechClean(line)));
+      continue;
+    }
+    for (final item in items) {
+      final clips = _sentences(_speechClean(item.replaceFirst(_bulletLead, '')));
+      if (clips.isEmpty) continue;
+      if (!inList) {
+        _setLastPause(out, 400, atLeast: true);
+        inList = true;
+      }
+      out.addAll(clips);
+      _setLastPause(out, 350);
+    }
+  }
+  return out;
+}
+
+void _setLastPause(List<NeuralClip> clips, int ms, {bool atLeast = false}) {
+  if (clips.isEmpty) return;
+  final last = clips.last;
+  if (atLeast && last.pauseMs >= ms) return;
+  clips[clips.length - 1] = last.withPause(ms);
+}
+
+/// Markup and token cleanup for the neural voice.
+String _speechClean(String raw) => lessonSpeechText(raw)
+    .replaceAll(RegExp(r'[*_#>`~]+'), ' ')
+    .replaceAll(RegExp(r'\s+([।,?!:;])'), r'$1')
+    .replaceAll(RegExp(r'\s{2,}'), ' ')
+    .trim();
+
+/// One clip per sentence; the danda and ?/! set the rest after it.
+List<NeuralClip> _sentences(String text) {
+  final out = <NeuralClip>[];
+  final buf = StringBuffer();
+  final chars = text.runes.map(String.fromCharCode).toList();
+  void flush(int pause) {
+    final s = buf.toString().trim();
+    buf.clear();
+    if (s.replaceAll(RegExp(r'[\s।.,?!:;]'), '').isEmpty) return;
+    out.add(NeuralClip(s, pauseMs: pause));
+  }
+
+  for (var i = 0; i < chars.length; i++) {
+    final ch = chars[i];
+    buf.write(ch);
+    final next = i + 1 < chars.length ? chars[i + 1] : ' ';
+    final prev = i > 0 ? chars[i - 1] : '';
+    if (ch == '।') {
+      flush(450);
+    } else if ((ch == '?' || ch == '!') && next != '?' && next != '!') {
+      flush(500);
+    } else if (ch == '.' && next.trim().isEmpty && !RegExp(r'[0-9]').hasMatch(prev)) {
+      flush(450);
+    }
+  }
+  flush(450);
+  return out;
+}
+
 /// Strips lesson markup so Bangla TTS reads clean prose.
 String lessonSpeechText(String raw) {
   var text = raw;

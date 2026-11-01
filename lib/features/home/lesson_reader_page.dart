@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/supabase_service.dart';
+import '../../core/services/neural_tts_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
@@ -33,6 +36,10 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
   late final List<_Phase> _phases;
   late final List<LessonSectionPoint> _points;
   late final BanglaReadAloud _voice;
+  late final NeuralTtsService _neural;
+  bool _neuralRun = false;
+  int _listenRun = 0;
+  String? _nowReading;
   int _phaseIndex = 0;
   int _pointDone = 0;
   bool _isClaiming = false;
@@ -60,14 +67,23 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     ];
     _voice = BanglaReadAloud();
     _voice.onSpeakingChanged = (value) {
-      if (!mounted) return;
+      if (!mounted || _neuralRun) return;
       setState(() => _speaking = value);
     };
     _voice.init();
+    _neural = NeuralTtsService();
+    _neural.onSpeakingChanged = (value) {
+      if (!mounted) return;
+      setState(() {
+        _speaking = value;
+        if (value) _voiceBusy = false;
+      });
+    };
   }
 
   @override
   void dispose() {
+    _neural.dispose();
     _voice.dispose();
     super.dispose();
   }
@@ -75,8 +91,106 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
   bool get _pointsFinished => _points.isEmpty || _pointDone >= _points.length;
 
   Future<void> _stopVoice() async {
+    _listenRun++;
+    _neuralRun = false;
+    await _neural.stop();
     await _voice.stop();
-    if (mounted) setState(() => _speaking = false);
+    if (mounted) {
+      setState(() {
+        _speaking = false;
+        _voiceBusy = false;
+        _nowReading = null;
+      });
+    }
+  }
+
+  List<NeuralClip> _pageClips() {
+    final lesson = widget.lesson;
+    final out = <NeuralClip>[];
+    switch (_phases[_phaseIndex]) {
+      case _Phase.hero:
+        out
+          ..addAll(lessonWelcomeClips)
+          ..addAll(lessonTitleClips(lesson.chapterNumber, lesson.title))
+          ..addAll(lessonSubheadClips('প্রথমে এটা বুঝুন'));
+        final brief = lesson.missionBriefing;
+        out.addAll(lessonBodyClips(brief != null && brief.isNotEmpty ? brief : 'এই পাঠের মূল কথা পরের ধাপে আসবে।'));
+      case _Phase.point:
+        if (_pointsFinished) {
+          out
+            ..addAll(lessonSubheadClips('সব ধাপ সম্পন্ন'))
+            ..addAll(lessonBodyClips(_points.map((p) => '• ${p.itemName}').join('\n')));
+        } else {
+          final p = _points[_pointDone.clamp(0, _points.length - 1)];
+          out.addAll(lessonSubheadClips(p.itemName));
+          if (p.specifications != null) out.addAll(lessonBodyClips(p.specifications!));
+          if (p.importance != null) {
+            out
+              ..addAll(lessonSubheadClips('কেন জরুরি'))
+              ..addAll(lessonBodyClips(p.importance!));
+          }
+          if (p.dailyCheck != null) {
+            out
+              ..addAll(lessonSubheadClips('কাজের আগে চেক'))
+              ..addAll(lessonBodyClips(p.dailyCheck!));
+          }
+        }
+      case _Phase.tip:
+        out.addAll(lessonSubheadClips('কাজের সহজ টিপ'));
+        for (final tip in lesson.proTips) {
+          out.addAll(lessonBodyClips(tip));
+        }
+      case _Phase.myth:
+        out.addAll(lessonSubheadClips('ভুল কথা এবং সত্য কথা'));
+        for (final myth in lesson.myths) {
+          out
+            ..addAll(lessonSubheadClips('ভুল'))
+            ..addAll(lessonBodyClips(myth.myth))
+            ..addAll(lessonSubheadClips('সত্য'))
+            ..addAll(lessonBodyClips(myth.reality));
+        }
+      case _Phase.done:
+        out.addAll(lessonQuizCallClips);
+    }
+    return out;
+  }
+
+  Future<void> _listenNeural() async {
+    final run = ++_listenRun;
+    _neuralRun = true;
+    final ok = await _neural.play(
+      _pageClips(),
+      onClip: (_, clip) {
+        if (mounted) setState(() => _nowReading = clip.text);
+      },
+      fallback: (text) async {
+        await _voice.speakAwait(text);
+        return _voice.language != null;
+      },
+    );
+    if (!mounted || run != _listenRun) return;
+    _neuralRun = false;
+    setState(() {
+      _speaking = false;
+      _voiceBusy = false;
+      _nowReading = null;
+    });
+    if (!ok) _noVoiceNotice();
+  }
+
+  void _noVoiceNotice() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          widget.bn
+              ? 'এই ফোনে বাংলা কণ্ঠ পাওয়া যায়নি। ভাষা প্যাক ইনস্টল করুন।'
+              : 'No Bangla voice on this phone. Install a language pack.',
+          style: const TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w600),
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF3F3A36),
+      ),
+    );
   }
 
   String _pageSpeech() {
@@ -132,29 +246,21 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
   }
 
   Future<void> _toggleListen() async {
-    if (_voiceBusy) return;
+    if (_speaking || _voiceBusy) {
+      await _stopVoice();
+      return;
+    }
+    HapticFeedback.selectionClick();
     setState(() => _voiceBusy = true);
+    if (widget.bn && neuralVoiceEnabled) {
+      unawaited(_listenNeural());
+      return;
+    }
     try {
-      if (_speaking) {
-        await _stopVoice();
-        return;
-      }
-      HapticFeedback.selectionClick();
       final ok = await _voice.speak(_pageSpeech());
       if (!mounted) return;
       if (!ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.bn
-                  ? 'এই ফোনে বাংলা কণ্ঠ পাওয়া যায়নি। ভাষা প্যাক ইনস্টল করুন।'
-                  : 'No Bangla voice on this phone. Install a language pack.',
-              style: const TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w600),
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFF3F3A36),
-          ),
-        );
+        _noVoiceNotice();
         setState(() => _speaking = false);
       }
     } finally {
@@ -502,7 +608,9 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
                             BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 24, offset: const Offset(0, 10)),
                           ],
                         ),
-                        child: ClipRRect(
+                        child: _NowReadingLayer(
+                          text: _speaking ? _nowReading : null,
+                          child: ClipRRect(
                           borderRadius: BorderRadius.circular(21),
                           child: AnimatedSwitcher(
                             duration: SlmMotion.slow,
@@ -521,6 +629,7 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
                               child: _buildBody(phase, lesson, bn),
                             ),
                           ),
+                        ),
                         ),
                       ),
                     ),
@@ -739,6 +848,81 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
   }
 }
 
+/// Caption of the sentence being read, floating at the foot of the page.
+class _NowReadingLayer extends StatelessWidget {
+  final String? text;
+  final Widget child;
+
+  const _NowReadingLayer({required this.text, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final line = text;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        child,
+        Positioned(
+          left: 10,
+          right: 10,
+          bottom: 10,
+          child: IgnorePointer(
+            child: AnimatedSwitcher(
+              duration: SlmMotion.base,
+              switchInCurve: SlmMotion.emphasized,
+              transitionBuilder: (c, anim) => FadeTransition(
+                opacity: anim,
+                child: SlideTransition(
+                  position: Tween(begin: const Offset(0, 0.25), end: Offset.zero).animate(anim),
+                  child: c,
+                ),
+              ),
+              child: line == null
+                  ? const SizedBox.shrink()
+                  : Container(
+                      key: ValueKey(line),
+                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 11),
+                      decoration: BoxDecoration(
+                        color: SlmColors.navy900.withValues(alpha: 0.94),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6)),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 6)),
+                        ],
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(top: 3),
+                            child: Icon(Icons.graphic_eq_rounded, size: 18, color: SlmColors.gold300),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              line,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: banglaFont,
+                                fontSize: 15.5,
+                                height: 1.45,
+                                fontWeight: FontWeight.w600,
+                                color: SlmColors.gold100,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ListenButton extends StatelessWidget {
   final bool speaking;
   final bool busy;
@@ -763,7 +947,7 @@ class _ListenButton extends StatelessWidget {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(99),
-          onTap: busy ? null : onTap,
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 14, 8),
             child: Row(

@@ -18,6 +18,9 @@ class LinemanProfile {
 
   /// True after an admin verifies. Null means the column is not on this row yet.
   final bool? verified;
+
+  /// True when an admin has blocked this account.
+  final bool blocked;
   final bool isGuest;
 
   const LinemanProfile({
@@ -38,6 +41,7 @@ class LinemanProfile {
     this.bloodGroup,
     this.phone,
     this.verified,
+    this.blocked = false,
     this.isGuest = false,
   });
 
@@ -66,6 +70,7 @@ class LinemanProfile {
       bloodGroup: json['blood_group'] as String?,
       phone: (json['phone_number'] ?? json['phone'])?.toString(),
       verified: json.containsKey('verified') ? json['verified'] == true : null,
+      blocked: json['blocked'] == true,
       isGuest: false,
     );
   }
@@ -121,6 +126,7 @@ class LinemanProfile {
       bloodGroup: bloodGroup,
       phone: phone,
       verified: value,
+      blocked: blocked,
       isGuest: isGuest,
     );
   }

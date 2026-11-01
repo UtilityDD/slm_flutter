@@ -33,8 +33,36 @@ class LeaderboardEntry {
   }
 }
 
+Future<Set<String>> _blockedIds() async {
+  try {
+    final rows = await SupabaseService.client.from('profiles').select('id').eq('blocked', true);
+    return {
+      for (final raw in rows)
+        if ((raw['id']?.toString() ?? '').isNotEmpty) raw['id'].toString(),
+    };
+  } catch (_) {
+    return {};
+  }
+}
+
+List<LeaderboardEntry> _ranked(List<LeaderboardEntry> rows) {
+  return [
+    for (var i = 0; i < rows.length; i++)
+      LeaderboardEntry(
+        rank: i + 1,
+        id: rows[i].id,
+        name: rows[i].name,
+        district: rows[i].district,
+        points: rows[i].points,
+        level: rows[i].level,
+        avatarUrl: rows[i].avatarUrl,
+      ),
+  ];
+}
+
 final liveLeaderboardProvider = FutureProvider<List<LeaderboardEntry>>((ref) async {
   try {
+    final hidden = await _blockedIds();
     // Try fetching from monthly_leaderboard_view first
     final now = DateTime.now();
     try {
@@ -47,18 +75,20 @@ final liveLeaderboardProvider = FutureProvider<List<LeaderboardEntry>>((ref) asy
           .limit(25);
 
       if (monthlyData.isNotEmpty) {
-        return List<LeaderboardEntry>.generate(monthlyData.length, (index) {
-          final row = monthlyData[index];
-          return LeaderboardEntry(
-            rank: index + 1,
-            id: row['user_id']?.toString() ?? '',
-            name: row['full_name']?.toString() ?? 'লাইনম্যান',
-            district: row['district']?.toString() ?? 'পশ্চিমবঙ্গ',
-            points: (row['points'] as num?)?.toInt() ?? 0,
-            level: 1,
-            avatarUrl: row['avatar_url']?.toString(),
-          );
-        });
+        final rows = [
+          for (final row in monthlyData)
+            if (!hidden.contains(row['user_id']?.toString() ?? ''))
+              LeaderboardEntry(
+                rank: 0,
+                id: row['user_id']?.toString() ?? '',
+                name: row['full_name']?.toString() ?? 'লাইনম্যান',
+                district: row['district']?.toString() ?? 'পশ্চিমবঙ্গ',
+                points: (row['points'] as num?)?.toInt() ?? 0,
+                level: 1,
+                avatarUrl: row['avatar_url']?.toString(),
+              ),
+        ];
+        if (rows.isNotEmpty) return _ranked(rows);
       }
     } catch (_) {
       // Fallback to profiles table if view has different structure
@@ -71,9 +101,11 @@ final liveLeaderboardProvider = FutureProvider<List<LeaderboardEntry>>((ref) asy
         .order('points', ascending: false)
         .limit(25);
 
-    return List<LeaderboardEntry>.generate(profileData.length, (index) {
-      return LeaderboardEntry.fromMap(profileData[index], index + 1);
-    });
+    final rows = [
+      for (final row in profileData)
+        if (!hidden.contains(row['id']?.toString() ?? '')) LeaderboardEntry.fromMap(row, 0),
+    ];
+    return _ranked(rows);
   } catch (e) {
     // Fallback data if offline
     return const [

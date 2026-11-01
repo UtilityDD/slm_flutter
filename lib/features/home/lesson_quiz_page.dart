@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/services/neural_tts_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import 'bangla_read_aloud.dart';
@@ -168,6 +169,8 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
 
   final _rng = math.Random();
   final _voice = BanglaReadAloud();
+  final _neural = NeuralTtsService();
+  bool _neuralRun = false;
   final _sfx = LessonQuizSfx();
   final _scroll = ScrollController();
 
@@ -190,6 +193,9 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
   void initState() {
     super.initState();
     _voice.onSpeakingChanged = (v) {
+      if (mounted && !_neuralRun) setState(() => _speaking = v);
+    };
+    _neural.onSpeakingChanged = (v) {
       if (mounted) setState(() => _speaking = v);
     };
     _voice.init();
@@ -201,6 +207,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
 
   @override
   void dispose() {
+    _neural.dispose();
     _voice.dispose();
     _sfx.dispose();
     _scroll.dispose();
@@ -208,7 +215,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
   }
 
   Future<void> _start({bool retry = false}) async {
-    await _voice.stop();
+    await _hush();
     setState(() {
       _mode = _Mode.loading;
       _retrying = retry;
@@ -221,12 +228,42 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
     await Future.delayed(const Duration(milliseconds: 720));
     if (!mounted) return;
     setState(() => _mode = _Mode.active);
-    _speakCurrent();
+    _speakCurrent(welcome: !retry);
   }
 
-  Future<void> _speakCurrent() async {
+  Future<void> _hush() async {
+    _neuralRun = false;
+    await _neural.stop();
+    await _voice.stop();
+  }
+
+  Future<void> _sayNeural(List<NeuralClip> clips) async {
+    await _hush();
+    _neuralRun = true;
+    await _neural.play(clips, fallback: (text) async {
+      await _voice.speakAwait(text);
+      return _voice.language != null;
+    });
+  }
+
+  Future<void> _speakCurrent({bool welcome = false}) async {
     if (_muted || _mode != _Mode.active || _quiz.isEmpty) return;
-    await _voice.speak(_quizSpeech(_quiz[_index], _index, _quiz.length, bn));
+    final q = _quiz[_index];
+    if (!bn || !neuralVoiceEnabled) {
+      await _voice.speak(_quizSpeech(q, _index, _quiz.length, bn));
+      return;
+    }
+    await _sayNeural([
+      if (welcome) ...quizWelcomeClips,
+      ...quizQuestionClips(
+        question: q.questionText,
+        options: q.options,
+        index: _index,
+        total: _quiz.length,
+        hasImage: q.image != null,
+        isImage: isQuizImageOption,
+      ),
+    ]);
   }
 
   Future<void> _toggleMute() async {
@@ -236,7 +273,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
     final p = await SharedPreferences.getInstance();
     await p.setBool(_muteKey, next);
     if (next) {
-      await _voice.stop();
+      await _hush();
     } else {
       _speakCurrent();
     }
@@ -251,7 +288,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
   Future<void> _next() async {
     if (!_answers.containsKey(_index)) return;
     HapticFeedback.lightImpact();
-    await _voice.stop();
+    await _hush();
     if (_index < _quiz.length - 1) {
       setState(() => _index++);
       if (_scroll.hasClients) _scroll.jumpTo(0);
@@ -277,16 +314,20 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
     await Future.delayed(const Duration(milliseconds: 220));
     if (!mounted) return;
     _sfx.result(passed);
+    if (!bn || _muted || !neuralVoiceEnabled) return;
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (!mounted || _mode != _Mode.result) return;
+    await _sayNeural(quizResultClips(passed: passed, score: s, total: _quiz.length));
   }
 
   Future<void> _close([LessonQuizOutcome outcome = LessonQuizOutcome.closed]) async {
-    await _voice.stop();
+    await _hush();
     if (mounted) Navigator.of(context).pop(outcome);
   }
 
   Future<void> _askSearch(String text) async {
     if (text.trim().isEmpty) return;
-    await _voice.stop();
+    await _hush();
     if (!mounted) return;
     final left = _maxSearchQuota - _searchCount;
     final go = await showDialog<bool>(
@@ -330,7 +371,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
   }
 
   Future<void> _report(int qIndex) async {
-    await _voice.stop();
+    await _hush();
     if (!mounted) return;
     final controller = TextEditingController();
     final send = await showModalBottomSheet<bool>(

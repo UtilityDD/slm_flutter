@@ -257,6 +257,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   String? _hint;
   var _hintOn = false;
   var _hintOpen = false;
+  var _cardMistakes = 0;
   var _loading = true;
   var _muted = false;
   var _kitI = 0;
@@ -499,6 +500,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     _hintOn = false;
     _hintOpen = false;
     _hint = null;
+    _cardMistakes = 0;
     _opts = [...s.options]..shuffle();
     _holdClock(true);
     setState(() {});
@@ -562,7 +564,13 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       HapticFeedback.heavyImpact();
       _shake.forward(from: 0);
       _hintOn = true;
+      _cardMistakes++;
       setState(() {});
+      if (_cardMistakes == 1) {
+        unawaited(_speak('না, হলো না!'));
+      } else {
+        _showHint();
+      }
     }
   }
 

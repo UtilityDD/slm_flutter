@@ -129,13 +129,25 @@ class _DsClearanceState extends State<DsClearance> with TickerProviderStateMixin
     );
   }
 
+  final _faultCounts = <String, int>{};
+
   void _fault(String line, Offset global) {
     HapticFeedback.heavyImpact();
     unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.8, muted: widget.muted));
     widget.engine.dressWrong();
     widget.onDelta(-5, global);
     _shake.forward(from: 0);
-    _showFaultCoach(line);
+
+    final count = (_faultCounts[line] ?? 0) + 1;
+    _faultCounts[line] = count;
+
+    // 1st instance: tell "না, হলো না!" or "ভুল হলো!"
+    // Next efforts: provide specific warning and site hints
+    final speech = count == 1
+        ? ((_faultCounts.length % 2 == 1) ? 'না, হলো না!' : 'ভুল হলো!')
+        : line;
+
+    _showFaultCoach(speech);
   }
 
   void _grant(String id, String line, Offset global) {

@@ -47,6 +47,7 @@ class AuthState {
 
 class AuthNotifier extends Notifier<AuthState> {
   int _fetchGen = 0;
+  String? _blockNotice;
 
   @override
   AuthState build() {
@@ -71,7 +72,7 @@ class AuthNotifier extends Notifier<AuthState> {
         }
       case sb.AuthChangeEvent.signedOut:
         _fetchGen++;
-        state = AuthState(profile: LinemanProfile.guest());
+        state = AuthState(profile: LinemanProfile.guest(), errorMessage: _blockNotice);
       default:
         break;
     }
@@ -109,6 +110,12 @@ class AuthNotifier extends Notifier<AuthState> {
           unawaited(ref.read(verifyHoldProvider.notifier).hold(user.id));
           unawaited(_markUnverified(user.id));
         }
+        if (profile.blocked && !state.isAdmin) {
+          _blockNotice = 'এই অ্যাকাউন্ট বন্ধ করা হয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।';
+          await _signOutQuiet();
+          state = AuthState(profile: LinemanProfile.guest(), errorMessage: _blockNotice);
+          return;
+        }
         state = AuthState(
           profile: profile,
           isLoading: false,
@@ -136,6 +143,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<bool> signInWithGoogle() async {
     try {
+      _blockNotice = null;
       state = state.copyWith(isLoading: true, errorMessage: null);
       await _ensureGoogle();
       final account = await GoogleSignIn.instance.authenticate(
@@ -201,19 +209,23 @@ class AuthNotifier extends Notifier<AuthState> {
 
   void continueAsGuest() {
     _fetchGen++;
+    _blockNotice = null;
     state = AuthState(profile: LinemanProfile.guest());
   }
 
   Future<void> signOut() async {
+    await _signOutQuiet();
+    state = AuthState(profile: LinemanProfile.guest());
+  }
+
+  Future<void> _signOutQuiet() async {
     _fetchGen++;
     try {
       await GoogleSignIn.instance.signOut();
     } catch (_) {}
     try {
       await SupabaseService.client.auth.signOut();
-    } finally {
-      state = AuthState(profile: LinemanProfile.guest());
-    }
+    } catch (_) {}
   }
 }
 

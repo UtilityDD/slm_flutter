@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/supabase_service.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../design/slm_design.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
@@ -51,105 +51,71 @@ class _VerifyInfo extends ConsumerWidget {
     final guest = !ref.watch(authProvider).isAuthenticated;
     final bottom = _sheetBottom(context);
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottom),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.cream,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        child: SafeArea(
-          top: false,
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 18, 24, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const VerifyTick(size: 36),
-                const SizedBox(height: 12),
-                Text(
-                  tr(bn, 'যাচাই হয়নি', 'Not verified'),
-                  textAlign: TextAlign.center,
-                  style: bangla(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.ink,
-                    height: 1.2,
+    return Theme(
+      data: SlmTheme.night(),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottom),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [SlmColors.navy800, SlmColors.navy950],
+            ),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          child: SafeArea(
+            top: false,
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(color: SlmColors.gold400.withValues(alpha: 0.7), borderRadius: SlmRadius.pillAll),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  tr(
-                    bn,
-                    'পাঠ ৩ আর খেলা ৫ পর্যন্ত খোলা। বাকি লেভেল যাচাইয়ের পর।',
-                    'Lessons through 3 and games through 5 stay open. The rest opens after a check.',
+                  const VerifyTick(size: 36),
+                  const SizedBox(height: 12),
+                  SlmText(tr(bn, 'যাচাই হয়নি', 'Not verified'), role: SlmTextRole.title, color: SlmColors.ivory, align: TextAlign.center),
+                  const SizedBox(height: 8),
+                  SlmText(
+                    tr(
+                      bn,
+                      'পাঠ ৩ আর খেলা ৫ পর্যন্ত খোলা। বাকি লেভেল যাচাইয়ের পর।',
+                      'Lessons through 3 and games through 5 stay open. The rest opens after a check.',
+                    ),
+                    role: SlmTextRole.bodySm,
+                    color: SlmColors.mist,
+                    align: TextAlign.center,
+                    maxLines: 4,
                   ),
-                  textAlign: TextAlign.center,
-                  style: bangla(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.inkSoft,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                if (guest) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFEA580C),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
+                  const SizedBox(height: 18),
+                  if (guest) ...[
+                    SlmButton.gold(
+                      label: tr(bn, 'লগইন', 'Log in'),
+                      expand: true,
                       onPressed: () => _openLogin(context),
-                      child: Text(
-                        tr(bn, 'লগইন', 'Log in'),
-                        style: bangla(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () => _openForm(context, ref),
-                    child: Text(
-                      tr(bn, 'ফর্ম', 'Form'),
-                      style: bangla(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.muted,
-                      ),
-                    ),
-                  ),
-                ] else
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFEA580C),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
+                    const SizedBox(height: 4),
+                    SlmButton.ghost(
+                      label: tr(bn, 'ফর্ম', 'Form'),
+                      expand: true,
                       onPressed: () => _openForm(context, ref),
-                      child: Text(
-                        tr(bn, 'ফর্ম', 'Form'),
-                        style: bangla(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
                     ),
-                  ),
-              ],
+                  ] else
+                    SlmButton.gold(
+                      label: tr(bn, 'ফর্ম', 'Form'),
+                      expand: true,
+                      onPressed: () => _openForm(context, ref),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -306,13 +272,19 @@ class _VerifyFormState extends ConsumerState<_VerifyForm> {
     final districts = _places.keys.toList()..sort();
     final blocks = _places[_district] ?? const <String>[];
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottom),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.cream,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
+    return Theme(
+      data: SlmTheme.night(),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottom),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [SlmColors.navy800, SlmColors.navy950],
+            ),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
         child: SafeArea(
           top: false,
           bottom: false,
@@ -321,24 +293,22 @@ class _VerifyFormState extends ConsumerState<_VerifyForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  tr(bn, 'ফর্ম', 'Form'),
-                  style: bangla(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.ink,
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(color: SlmColors.gold400.withValues(alpha: 0.7), borderRadius: SlmRadius.pillAll),
                   ),
                 ),
+                SlmText(tr(bn, 'ফর্ম', 'Form'), role: SlmTextRole.headline, color: SlmColors.ivory),
                 const SizedBox(height: 14),
                 _box(
                   child: TextField(
                     controller: _name,
                     textInputAction: TextInputAction.next,
-                    style: bangla(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.ink,
-                    ),
+                    cursorColor: SlmColors.gold400,
+                    style: bangla(fontSize: 16, fontWeight: FontWeight.w600, color: SlmColors.ivory),
                     decoration: _deco(tr(bn, 'নাম', 'Name')),
                   ),
                 ),
@@ -350,6 +320,9 @@ class _VerifyFormState extends ConsumerState<_VerifyForm> {
                         ? _district
                         : null,
                     isExpanded: true,
+                    dropdownColor: SlmColors.navy800,
+                    iconEnabledColor: SlmColors.gold300,
+                    style: bangla(fontSize: 16, fontWeight: FontWeight.w600, color: SlmColors.ivory),
                     decoration: _deco(tr(bn, 'জেলা', 'District')),
                     items: [
                       for (final name in districts)
@@ -367,6 +340,9 @@ class _VerifyFormState extends ConsumerState<_VerifyForm> {
                     key: ValueKey('block-$_district-$_block-${blocks.length}'),
                     initialValue: blocks.contains(_block) ? _block : null,
                     isExpanded: true,
+                    dropdownColor: SlmColors.navy800,
+                    iconEnabledColor: SlmColors.gold300,
+                    style: bangla(fontSize: 16, fontWeight: FontWeight.w600, color: SlmColors.ivory),
                     decoration: _deco(tr(bn, 'ব্লক', 'Block')),
                     items: [
                       for (final name in blocks)
@@ -383,6 +359,9 @@ class _VerifyFormState extends ConsumerState<_VerifyForm> {
                     key: ValueKey('job-$_job'),
                     initialValue: _jobs.contains(_job) ? _job : null,
                     isExpanded: true,
+                    dropdownColor: SlmColors.navy800,
+                    iconEnabledColor: SlmColors.gold300,
+                    style: bangla(fontSize: 16, fontWeight: FontWeight.w600, color: SlmColors.ivory),
                     decoration: _deco(tr(bn, 'কাজ', 'Job')),
                     items: [
                       for (final name in _jobs)
@@ -396,11 +375,8 @@ class _VerifyFormState extends ConsumerState<_VerifyForm> {
                   child: TextField(
                     controller: _phone,
                     keyboardType: TextInputType.phone,
-                    style: bangla(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.ink,
-                    ),
+                    cursorColor: SlmColors.gold400,
+                    style: bangla(fontSize: 16, fontWeight: FontWeight.w600, color: SlmColors.ivory),
                     decoration: _deco(tr(bn, 'ফোন', 'Phone')),
                   ),
                 ),
@@ -408,51 +384,21 @@ class _VerifyFormState extends ConsumerState<_VerifyForm> {
                   const SizedBox(height: 10),
                   Text(
                     _error!,
-                    style: bangla(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.alertRed,
-                    ),
+                    style: bangla(fontSize: 14, fontWeight: FontWeight.w600, color: SlmColors.danger),
                   ),
                 ],
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 48,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFEA580C),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    onPressed: _sending || _sent ? null : _send,
-                    child: _sending
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            tr(
-                              bn,
-                              _sent ? 'পাঠানো হয়েছে' : 'পাঠান',
-                              _sent ? 'Sent' : 'Send',
-                            ),
-                            style: bangla(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
+                SlmButton.gold(
+                  label: tr(bn, _sent ? 'পাঠানো হয়েছে' : 'পাঠান', _sent ? 'Sent' : 'Send'),
+                  expand: true,
+                  loading: _sending,
+                  onPressed: _sending || _sent ? null : _send,
                 ),
               ],
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -460,9 +406,9 @@ class _VerifyFormState extends ConsumerState<_VerifyForm> {
   Widget _box({required Widget child}) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: SlmColors.navy900,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE7E5E4)),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
       ),
       child: child,
     );
@@ -471,11 +417,7 @@ class _VerifyFormState extends ConsumerState<_VerifyForm> {
   InputDecoration _deco(String label) {
     return InputDecoration(
       labelText: label,
-      labelStyle: bangla(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: AppColors.muted,
-      ),
+      labelStyle: bangla(fontSize: 13, fontWeight: FontWeight.w600, color: SlmColors.gold300),
       border: InputBorder.none,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
     );

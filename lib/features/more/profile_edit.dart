@@ -5,9 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/supabase_service.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
-import '../../shared/widgets/slm_backdrop.dart';
+import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
 import '../home/lineman_progress.dart';
 import '../shell/shell_insets.dart';
@@ -230,74 +229,62 @@ class _TextSheetState extends ConsumerState<_TextSheet> {
   @override
   Widget build(BuildContext context) {
     final bn = ref.watch(languageProvider);
-    return Padding(
-      padding: EdgeInsets.only(bottom: _sheetBottom(context)),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.cream,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 18, 22, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                tr(bn, widget.titleBn, widget.titleEn),
-                style: bangla(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.ink,
-                ),
-              ),
-              const SizedBox(height: 14),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE7E5E4)),
-                ),
-                child: TextField(
-                  controller: _text,
-                  autofocus: true,
-                  keyboardType: widget.keyboard,
-                  style: bangla(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.ink,
+    return Theme(
+      data: SlmTheme.night(),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: _sheetBottom(context)),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [SlmColors.navy800, SlmColors.navy950],
+            ),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(color: SlmColors.gold400.withValues(alpha: 0.7), borderRadius: SlmRadius.pillAll),
                   ),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
+                ),
+                SlmText(tr(bn, widget.titleBn, widget.titleEn), role: SlmTextRole.headline, color: SlmColors.ivory),
+                const SizedBox(height: 14),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: SlmColors.navy900,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
+                  ),
+                  child: TextField(
+                    controller: _text,
+                    autofocus: true,
+                    keyboardType: widget.keyboard,
+                    cursorColor: SlmColors.gold400,
+                    style: bangla(fontSize: 16, fontWeight: FontWeight.w600, color: SlmColors.ivory),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                height: 48,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFEA580C),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
+                const SizedBox(height: 14),
+                SlmButton.gold(
+                  label: tr(bn, 'সেভ', 'Save'),
+                  expand: true,
+                  loading: _saving,
                   onPressed: _saving ? null : _saveText,
-                  child: Text(
-                    tr(bn, 'সেভ', 'Save'),
-                    style: bangla(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -361,88 +348,82 @@ class _PickSheetState extends ConsumerState<_PickSheet> {
         : widget.names.where((name) => name.toLowerCase().contains(q)).toList();
     final height = MediaQuery.sizeOf(context).height * 0.72;
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: _sheetBottom(context)),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.cream,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        child: SizedBox(
-          height: height,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(22, 18, 22, 10),
-                child: Text(
-                  tr(bn, widget.titleBn, widget.titleEn),
-                  style: bangla(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.ink,
+    return Theme(
+      data: SlmTheme.night(),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: _sheetBottom(context)),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [SlmColors.navy800, SlmColors.navy950],
+            ),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          child: SizedBox(
+            height: height,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    margin: const EdgeInsets.only(top: 12),
+                    decoration: BoxDecoration(color: SlmColors.gold400.withValues(alpha: 0.7), borderRadius: SlmRadius.pillAll),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(22, 0, 22, 8),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFE7E5E4)),
-                  ),
-                  child: TextField(
-                    controller: _query,
-                    onChanged: (_) => setState(() {}),
-                    style: bangla(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.ink,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 10),
+                  child: SlmText(tr(bn, widget.titleBn, widget.titleEn), role: SlmTextRole.headline, color: SlmColors.ivory),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 8),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: SlmColors.navy900,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
                     ),
-                    decoration: InputDecoration(
-                      hintText: tr(bn, 'খুঁজুন', 'Search'),
-                      hintStyle: bangla(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.muted,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
+                    child: TextField(
+                      controller: _query,
+                      onChanged: (_) => setState(() {}),
+                      cursorColor: SlmColors.gold400,
+                      style: bangla(fontSize: 16, fontWeight: FontWeight.w600, color: SlmColors.ivory),
+                      decoration: InputDecoration(
+                        hintText: tr(bn, 'খুঁজুন', 'Search'),
+                        hintStyle: bangla(fontSize: 15, fontWeight: FontWeight.w500, color: SlmColors.slate),
+                        prefixIcon: const Icon(Icons.search_rounded, color: SlmColors.gold300),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: shown.length,
-                  itemBuilder: (context, index) {
-                    final name = shown[index];
-                    final on = name == widget.selected;
-                    return ListTile(
-                      title: Text(
-                        name,
-                        style: bangla(
-                          fontSize: 16,
-                          fontWeight: on ? FontWeight.w700 : FontWeight.w500,
-                          color: AppColors.ink,
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: shown.length,
+                    itemBuilder: (context, index) {
+                      final name = shown[index];
+                      final on = name == widget.selected;
+                      return ListTile(
+                        title: Text(
+                          name,
+                          style: bangla(
+                            fontSize: 16,
+                            fontWeight: on ? FontWeight.w700 : FontWeight.w500,
+                            color: on ? SlmColors.gold100 : SlmColors.ivory,
+                          ),
                         ),
-                      ),
-                      trailing: on
-                          ? const Icon(
-                              Icons.check_rounded,
-                              color: Color(0xFFEA580C),
-                            )
-                          : null,
-                      onTap: () => Navigator.of(context).pop(name),
-                    );
-                  },
+                        trailing: on ? const Icon(Icons.check_rounded, color: SlmColors.gold400) : null,
+                        onTap: () => Navigator.of(context).pop(name),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -462,84 +443,84 @@ class CertificatePage extends ConsumerWidget {
     final level = profile?.trainingLevel ?? 1;
     final badge = linemanBadgeName(level, bn);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SlmBackdrop(
-        child: ShellSafeArea(
-          child: Padding(
-            padding: shellScrollPadding(context, left: 24, top: 4, right: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    onPressed: () => Navigator.of(context).maybePop(),
-                    icon: const Icon(
-                      Icons.arrow_back_rounded,
-                      color: AppColors.ink,
-                    ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Theme(
+        data: SlmTheme.night(),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              const Positioned.fill(child: SlmBackground(constrain: false, child: SizedBox.expand())),
+              ShellSafeArea(
+                child: Padding(
+                  padding: shellScrollPadding(context, left: 24, top: 4, right: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          icon: const Icon(Icons.arrow_back_rounded, color: SlmColors.ivory),
+                        ),
+                      ),
+                      const Spacer(),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [SlmColors.ivory, SlmColors.ivoryDeep],
+                          ),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: SlmColors.gold400, width: 1.4),
+                          boxShadow: [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.2), blurRadius: 24)],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(22, 28, 22, 26),
+                          child: Column(
+                            children: [
+                              Text(
+                                tr(bn, 'সার্টিফিকেট', 'Certificate'),
+                                style: bangla(fontSize: 14, fontWeight: FontWeight.w700, color: SlmColors.gold700),
+                              ),
+                              const SizedBox(height: 10),
+                              Container(
+                                width: 72,
+                                height: 1.4,
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(colors: [Color(0x00BF9443), SlmColors.gold500, Color(0x00BF9443)]),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                name,
+                                textAlign: TextAlign.center,
+                                style: bangla(fontSize: 28, fontWeight: FontWeight.w700, color: SlmColors.ink, height: 1.2),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                badge,
+                                textAlign: TextAlign.center,
+                                style: bangla(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF3A4660)),
+                              ),
+                              const SizedBox(height: 18),
+                              Text(
+                                (id != null && id.isNotEmpty) ? id : '—',
+                                style: bangla(fontSize: 15, fontWeight: FontWeight.w700, color: SlmColors.gold700),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const Spacer(flex: 2),
+                    ],
                   ),
                 ),
-                const Spacer(),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFFBF5),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                      color: const Color(0xFFF3D7A1),
-                      width: 1.4,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 28, 22, 26),
-                    child: Column(
-                      children: [
-                        Text(
-                          tr(bn, 'সার্টিফিকেট', 'Certificate'),
-                          style: bangla(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFB45309),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          name,
-                          textAlign: TextAlign.center,
-                          style: bangla(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.ink,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          badge,
-                          textAlign: TextAlign.center,
-                          style: bangla(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.inkSoft,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Text(
-                          (id != null && id.isNotEmpty) ? id : '—',
-                          style: bangla(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.muted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const Spacer(flex: 2),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

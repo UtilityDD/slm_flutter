@@ -1437,6 +1437,8 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     if (sound) unawaited(ZlFx.cue('sounds/quiz_shuffle.wav', volume: 0.4, muted: widget.muted));
   }
 
+  final _mistakeCounts = <String, int>{};
+
   void _fail(String zone, String why, _Piece piece, Offset global) {
     widget.engine.dressWrong();
     widget.onDelta(-5, global);
@@ -1447,14 +1449,25 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
     _coachTimer?.cancel();
     _markTimer?.cancel();
-    _mark = _Mark(zone, why, piece.asset);
     _ask = false;
     _coachFace = DsCoachMood.oops;
-    _coachSay = why;
+
+    final key = '${zone}_${piece.id}';
+    final count = (_mistakeCounts[key] ?? 0) + 1;
+    _mistakeCounts[key] = count;
+
+    // 1st instance: tell "না, হলো না!" or "ভুল হলো!"
+    // Next efforts: provide specific guidance and safety hints
+    final spokenLine = count == 1
+        ? ((_mistakeCounts.length % 2 == 1) ? 'না, হলো না!' : 'ভুল হলো!')
+        : why;
+
+    _mark = _Mark(zone, spokenLine, piece.asset);
+    _coachSay = spokenLine;
     final token = ++_speakToken;
     setState(() {});
 
-    widget.onSpeak(why).whenComplete(() {
+    widget.onSpeak(spokenLine).whenComplete(() {
       if (!mounted || token != _speakToken || _ask) return;
       _markTimer = Timer(const Duration(milliseconds: 1400), () {
         if (!mounted || token != _speakToken || _ask) return;

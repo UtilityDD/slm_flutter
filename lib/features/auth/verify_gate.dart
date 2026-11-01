@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/models/lineman_profile.dart';
 import '../admin/dev_unlock.dart';
 import 'auth_provider.dart';
 import 'verify_hold.dart';
@@ -19,12 +20,22 @@ bool linemanIsVerified(AuthState auth, Set<String> holds) {
   return true;
 }
 
+/// Someone who already has progress keeps the lessons and games they earned.
+/// A verify tick does not take that away, and it does not touch web play.
+bool _alreadyPlaying(LinemanProfile? profile) {
+  if (profile == null || profile.isGuest) return false;
+  if (profile.points > 0) return true;
+  if (profile.trainingLevel > 1) return true;
+  return profile.completedLessons.isNotEmpty;
+}
+
 bool lessonNeedsVerify(
   AuthState auth,
   Set<String> holds,
   bool devOpen,
   int step,
 ) {
+  if (_alreadyPlaying(auth.profile)) return false;
   return !linemanIsVerified(auth, holds) &&
       !devOpen &&
       step > lessonOpenThrough;
@@ -36,6 +47,7 @@ bool gameNeedsVerify(
   bool devOpen,
   int level,
 ) {
+  if (_alreadyPlaying(auth.profile)) return false;
   return !linemanIsVerified(auth, holds) && !devOpen && level > gameOpenThrough;
 }
 

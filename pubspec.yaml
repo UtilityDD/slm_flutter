@@ -21,6 +21,8 @@ dependencies:
   speech_to_text: ^7.5.0
   supabase_flutter: ^2.17.2
   url_launcher: ^6.3.2
+  path_provider: ^2.1.6
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:
