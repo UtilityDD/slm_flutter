@@ -4,6 +4,8 @@ Field duty companion. Home card **মৃত্যুহীন পথ** opens `Du
 
 Do not use PowerShell `Set-Content` on Bangla in this folder — it mojibakes. Edit in the IDE.
 
+> **Target design:** [`GAME_DESIGN.md`](../../../GAME_DESIGN.md). The fixed level list below (`dsLevels`, the 19-level table) and the hard-coded 200-rung ladder in `adventure_map.dart` are the current build. They are being replaced by a ladder built from modules, lessons, and per-lesson game pools. The games described here (dress-up, SAFE HOME, 23-step job, field night, pole inspection) carry over as Do-rung games.
+
 **Numbers:** always English digits `0–9`, even in Bangla copy and even when the phone language is Bengali. Use `enDigits` (`lib/core/en_digits.dart`) for any string that might contain `০–৯`. Do not map clocks or scores to Bangla digits. Theme text disables locale-aware digit substitution so the Bangla font cannot redraw Latin digits as Bengali.
 
 ## Testing unlock

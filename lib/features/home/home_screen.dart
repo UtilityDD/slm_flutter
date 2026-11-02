@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../core/en_digits.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
@@ -13,21 +16,126 @@ import '../auth/verify_hold.dart';
 import '../auth/verify_sheet.dart';
 import '../auth/verify_tick.dart';
 import '../shell/app_routes.dart';
-import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 import '../training/training_provider.dart';
 import '../duty_slip/duty_slip_page.dart';
 import '../duty_slip/duty_slip_models.dart';
 import '../zero_loss/zero_loss_fx.dart';
-import 'hero_card_carousel.dart';
 import 'lesson_progress_store.dart';
+import 'lineman_figure.dart';
 import 'lineman_progress.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  int _score = 0;
+  int _deaths = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadBoard());
+  }
+
+  /// Same numbers the ladder already saves. Not a new score.
+  Future<void> _loadBoard() async {
+    final prefs = await SharedPreferences.getInstance();
+    final score = prefs.getInt('ds_career_score') ?? 0;
+    final ranks = prefs.getStringList('ds_best_ranks') ?? const <String>[];
+    final danger = prefs.getStringList('ds_danger_counts') ?? const <String>[];
+    var deaths = 0;
+    final n = math.min(ranks.length, danger.length);
+    for (var i = 0; i < n; i++) {
+      if (ranks[i].isEmpty) continue;
+      final d = int.tryParse(danger[i]);
+      if (d != null && d > 0) deaths += d;
+    }
+    if (!mounted) return;
+    setState(() {
+      _score = score;
+      _deaths = deaths;
+    });
+  }
+
+  Future<void> _openPath(Rect? sourceRect) async {
+    await DutySlipPage.open(context, sourceRect: sourceRect);
+    await _loadBoard();
+  }
+
+  void _openToolbox() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: SlmColors.navy900,
+      builder: (ctx) => Consumer(
+        builder: (context, ref, _) {
+          final bn = ref.watch(languageProvider);
+          return Padding(
+            padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.viewPaddingOf(ctx).bottom),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(tr(bn, 'টুলবক্স', 'Toolbox'), style: _ivory(16, FontWeight.w800)),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _LangChoice(
+                        label: 'বাংলা',
+                        selected: bn,
+                        onTap: () => ref.read(languageProvider.notifier).setBengali(true),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _LangChoice(
+                        label: 'English',
+                        selected: !bn,
+                        onTap: () => ref.read(languageProvider.notifier).setBengali(false),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _ToolRow(
+                  icon: Icons.phone_in_talk_rounded,
+                  label: tr(bn, 'জরুরি নম্বর', 'Emergency'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Navigator.of(this.context).pushNamed(AppRoutes.emergency);
+                  },
+                ),
+                _ToolRow(
+                  icon: Icons.visibility_rounded,
+                  label: tr(bn, 'পরিচিতি', 'Identify'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ref.read(shellTabProvider.notifier).select(1);
+                  },
+                ),
+                _ToolRow(
+                  icon: Icons.tune_rounded,
+                  label: tr(bn, 'সেটিংস', 'Settings'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Navigator.of(this.context).pushNamed(AppRoutes.more);
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bn = ref.watch(languageProvider);
     final auth = ref.watch(authProvider);
     final profile = auth.profile;
@@ -55,9 +163,9 @@ class HomeScreen extends ConsumerWidget {
         : (fullName.isNotEmpty
               ? fullName
               : (slmId.isNotEmpty ? slmId : guestLabel));
+    final rank = linemanBadgeName(path.achieved == 0 ? 1 : path.achieved, bn);
+    final quiet = MediaQuery.disableAnimationsOf(context);
 
-    // Only the backdrop takes the night theme: sheets opened from Home capture
-    // the caller's theme and must keep their own look.
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Stack(
@@ -69,57 +177,394 @@ class HomeScreen extends ConsumerWidget {
               child: const SlmBackground(constrain: false, child: SizedBox.expand()),
             ),
           ),
-          ShellSafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: _Header(
-                bn: bn,
-                name: name,
-                onName: () {
-                  if (guest) {
-                    Navigator.of(context).pushNamed(AppRoutes.login);
-                    return;
-                  }
-                  Navigator.of(context).pushNamed(AppRoutes.more);
-                },
-                onTick: verified ? null : () => showVerifySheet(context),
-                verified: verified,
-                onLanguage: (value) =>
-                    ref.read(languageProvider.notifier).setBengali(value),
-              ),
-            ),
-            Expanded(
-              child: Stack(
-                clipBehavior: Clip.none,
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+              child: Column(
                 children: [
-                  Padding(
-                    padding: EdgeInsets.only(
-                      bottom: shellDockBottomInset(context) + 88,
-                    ),
-                    child: HeroCardCarousel(path: path, bn: bn),
-                  ),
-                  Positioned(
-                    left: 20,
-                    right: 20,
-                    bottom: shellDockBottomOffset(context, 14),
-                    child: Center(
-                      child: _PathPlayChip(
-                        label: tr(bn, 'মৃত্যুহীন পথ', 'Mrityuhin Path'),
-                        onTap: (sourceRect) {
-                          DutySlipPage.open(context, sourceRect: sourceRect);
-                        },
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Face(url: guest ? null : profile?.avatarUrl, name: name),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).pushNamed(
+                                        guest ? AppRoutes.login : AppRoutes.more,
+                                      );
+                                    },
+                                    child: Text(
+                                      name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: _ivory(22, FontWeight.w800),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                if (!verified)
+                                  GestureDetector(
+                                    onTap: () => showVerifySheet(context),
+                                    child: const VerifyTick(gold: false, size: 18),
+                                  )
+                                else
+                                  const VerifyTick(gold: true, size: 18),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            _RankPill(label: rank),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
+                      _ToolboxButton(onTap: _openToolbox),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ScoreChip(
+                          mark: '◆',
+                          value: enDigits('$_score'),
+                          color: SlmColors.gold200,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _ScoreChip(
+                          mark: '💀',
+                          value: enDigits('$_deaths'),
+                          color: _deaths == 0 ? SlmColors.emerald300 : SlmColors.danger,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                          height: 280,
+                          child: _RankPeek(
+                            step: path.achieved.clamp(0, 10),
+                            bn: bn,
+                            motion: !quiet,
+                          ),
+                        ),
+                        Container(
+                          width: 120,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.all(Radius.elliptical(120, 14)),
+                            color: const Color(0xCC061008),
+                            boxShadow: const [BoxShadow(color: Color(0xAA061008), blurRadius: 8)],
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  _PathPlayChip(
+                    label: 'মৃত্যুহীন পথ',
+                    onTap: (sourceRect) => unawaited(_openPath(sourceRect)),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RankPeek extends StatefulWidget {
+  final int step;
+  final bool bn;
+  final bool motion;
+
+  const _RankPeek({required this.step, required this.bn, required this.motion});
+
+  @override
+  State<_RankPeek> createState() => _RankPeekState();
+}
+
+class _RankPeekState extends State<_RankPeek> with SingleTickerProviderStateMixin {
+  double _page = 0;
+  double _from = 0;
+  int _crossed = 0;
+  bool _dragging = false;
+  late final AnimationController _back;
+
+  @override
+  void initState() {
+    super.initState();
+    _crossed = widget.step;
+    _back = AnimationController(vsync: this, duration: const Duration(milliseconds: 280))..addListener(_onSpring);
+  }
+
+  @override
+  void didUpdateWidget(_RankPeek oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.step != widget.step) {
+      _back.stop();
+      _page = 0;
+      _crossed = widget.step;
+    }
+  }
+
+  @override
+  void dispose() {
+    _back.dispose();
+    super.dispose();
+  }
+
+  void _onSpring() {
+    if (!mounted) return;
+    setState(() => _page = _from * (1 - Curves.easeOutCubic.transform(_back.value)));
+  }
+
+  void _returnHome() {
+    if (!widget.motion || _page.abs() < 0.02) {
+      setState(() => _page = 0);
+      return;
+    }
+    _from = _page;
+    final ms = (240 + 70 * _page.abs()).round().clamp(240, 520);
+    _back.duration = Duration(milliseconds: ms);
+    _back.forward(from: 0);
+  }
+
+  String _lookName(int step) {
+    if (step <= 0) return widget.bn ? 'শুরু' : 'Start';
+    return linemanBadgeName(step, widget.bn);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final nearest = (widget.step + _page).round().clamp(0, 10);
+    final peeking = nearest != widget.step;
+    return ClipRect(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragStart: (_) {
+          _dragging = true;
+          _back.stop();
+        },
+        onHorizontalDragUpdate: (d) {
+          final width = context.size?.width ?? 1;
+          final span = width < 1 ? 1.0 : width;
+          final min = -widget.step.toDouble();
+          final max = (10 - widget.step).toDouble();
+          var next = _page - d.delta.dx / span;
+          if (next < min || next > max) {
+            final edge = next.clamp(min, max);
+            next = edge + (next - edge) * 0.22;
+          }
+          setState(() => _page = next);
+          final shown = (widget.step + _page).round().clamp(0, 10);
+          if (_dragging && shown != _crossed) {
+            _crossed = shown;
+            HapticFeedback.selectionClick();
+          }
+        },
+        onHorizontalDragEnd: (_) {
+          _dragging = false;
+          _returnHome();
+        },
+        onHorizontalDragCancel: () {
+          _dragging = false;
+          _returnHome();
+        },
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            for (final i in _visibleSteps()) _slot(i),
+            Positioned(
+              top: 2,
+              left: 12,
+              right: 12,
+              child: IgnorePointer(
+                child: AnimatedOpacity(
+                  opacity: peeking ? 1 : 0,
+                  duration: Duration(milliseconds: widget.motion ? 140 : 0),
+                  child: Text(
+                    _lookName(nearest),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _ivory(13, FontWeight.w700).copyWith(color: SlmColors.ivory.withValues(alpha: 0.5)),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<int> _visibleSteps() {
+    final center = widget.step + _page;
+    final steps = <int>[
+      for (var i = 0; i <= 10; i++)
+        if ((i - center).abs() < 1.15) i,
+    ];
+    steps.sort((a, b) => (b - center).abs().compareTo((a - center).abs()));
+    return steps;
+  }
+
+  Widget _slot(int step) {
+    final dist = (step - (widget.step + _page)).abs();
+    final mine = step == widget.step;
+    final opacity = mine ? (1 - dist * 0.45).clamp(0.55, 1.0) : 1.0;
+    return LayoutBuilder(
+      builder: (context, box) {
+        return Transform.translate(
+          offset: Offset((step - (widget.step + _page)) * box.maxWidth, 0),
+          child: Opacity(
+            opacity: opacity,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: LinemanFigure(
+                step: step,
+                quiet: !mine,
+                enableHero: widget.motion && mine && _page.abs() < 0.02,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+TextStyle _ivory(double size, FontWeight weight) => TextStyle(
+      fontFamily: banglaFont,
+      fontSize: size,
+      fontWeight: weight,
+      height: 1.2,
+      color: SlmColors.ivory,
+    );
+
+class _Face extends StatelessWidget {
+  final String? url;
+  final String name;
+
+  const _Face({required this.url, required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = name.isEmpty ? 'ল' : name.characters.first;
+    final photo = url != null && url!.startsWith('http');
+    return CircleAvatar(
+      radius: 18,
+      backgroundColor: SlmColors.navy800,
+      backgroundImage: photo ? NetworkImage(url!) : null,
+      child: photo
+          ? null
+          : Text(initial, style: _ivory(14, FontWeight.w700)),
+    );
+  }
+}
+
+class _RankPill extends StatelessWidget {
+  final String label;
+
+  const _RankPill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
+        color: SlmColors.navy950.withValues(alpha: 0.35),
+      ),
+      child: Text(label, style: _ivory(11, FontWeight.w700).copyWith(color: SlmColors.gold200, height: 1.1)),
+    );
+  }
+}
+
+class _ScoreChip extends StatelessWidget {
+  final String mark;
+  final String value;
+  final Color color;
+
+  const _ScoreChip({required this.mark, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: SlmColors.navy950.withValues(alpha: 0.42),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        '$mark  $value',
+        textAlign: TextAlign.center,
+        style: _ivory(16, FontWeight.w800).copyWith(color: color),
+      ),
+    );
+  }
+}
+
+class _ToolboxButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ToolboxButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SlmPressable(
+      onTap: onTap,
+      semanticLabel: 'টুলবক্স',
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6)),
+          color: SlmColors.navy950.withValues(alpha: 0.45),
+        ),
+        child: const Icon(Icons.apps_rounded, size: 18, color: SlmColors.gold200),
+      ),
+    );
+  }
+}
+
+class _ToolRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ToolRow({required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SlmPressable(
+      onTap: onTap,
+      semanticLabel: label,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(icon, color: SlmColors.gold200, size: 22),
+            const SizedBox(width: 12),
+            Text(label, style: _ivory(16, FontWeight.w700)),
+          ],
+        ),
       ),
     );
   }
@@ -430,155 +875,35 @@ class _PathArrow extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  final bool bn;
-  final String name;
-  final bool verified;
-  final VoidCallback onName;
-  final VoidCallback? onTick;
-  final ValueChanged<bool> onLanguage;
-
-  const _Header({
-    required this.bn,
-    required this.name,
-    required this.verified,
-    required this.onName,
-    required this.onTick,
-    required this.onLanguage,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: onName,
-            child: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
-                      letterSpacing: 0.1,
-                      color: SlmColors.ivory,
-                      shadows: [
-                        Shadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 1)),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: onTick,
-                  child: SlmShimmer(
-                    enabled: verified,
-                    period: const Duration(milliseconds: 4600),
-                    intensity: 1.2,
-                    child: VerifyTick(gold: verified, size: 22),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        _LangPill(bn: bn, onLanguage: onLanguage),
-      ],
-    );
-  }
-}
-
-class _LangPill extends StatelessWidget {
-  final bool bn;
-  final ValueChanged<bool> onLanguage;
-
-  const _LangPill({required this.bn, required this.onLanguage});
-
-  static const _seg = 38.0;
-  static const _segH = 24.0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: SlmColors.navy950.withValues(alpha: 0.55),
-        borderRadius: SlmRadius.pillAll,
-        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
-      ),
-      child: SizedBox(
-        width: _seg * 2,
-        height: _segH,
-        child: Stack(
-          children: [
-            AnimatedAlign(
-              alignment: bn ? Alignment.centerLeft : Alignment.centerRight,
-              duration: SlmMotion.base,
-              curve: SlmMotion.emphasized,
-              child: Container(
-                width: _seg,
-                height: _segH,
-                decoration: BoxDecoration(
-                  gradient: SlmGradients.gold,
-                  borderRadius: SlmRadius.pillAll,
-                  boxShadow: [
-                    BoxShadow(
-                      color: SlmColors.gold400.withValues(alpha: 0.35),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                _LangSeg(label: 'বাং', selected: bn, onTap: () => onLanguage(true)),
-                _LangSeg(label: 'EN', selected: !bn, onTap: () => onLanguage(false)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LangSeg extends StatelessWidget {
+class _LangChoice extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
-  const _LangSeg({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+  const _LangChoice({required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return SlmPressable(
       onTap: onTap,
-      pressedScale: 0.9,
       semanticLabel: label,
-      child: SizedBox(
-        width: _LangPill._seg,
-        height: _LangPill._segH,
-        child: Center(
-          child: AnimatedDefaultTextStyle(
-            duration: SlmMotion.base,
-            style: TextStyle(
-              fontFamily: banglaFont,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              height: 1.1,
-              color: selected ? SlmColors.navy900 : SlmColors.mist,
-            ),
-            child: Text(label, textScaler: TextScaler.noScaling),
+      child: Container(
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          gradient: selected ? SlmGradients.gold : null,
+          color: selected ? null : SlmColors.navy950.withValues(alpha: 0.45),
+          border: Border.all(color: selected ? SlmColors.gold700 : SlmColors.gold400.withValues(alpha: 0.4)),
+        ),
+        child: Text(
+          label,
+          textScaler: TextScaler.noScaling,
+          style: TextStyle(
+            fontFamily: banglaFont,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: selected ? SlmColors.navy900 : SlmColors.ivory,
           ),
         ),
       ),

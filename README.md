@@ -4,6 +4,8 @@ Flutter app for West Bengal distribution linemen. Bangla-first. Sister of the we
 
 This is **not** `slm-web`. Game loops, duty-slip levels, and copy live here.
 
+> **New direction:** the app is being simplified into one game: a one-button Home, a data-driven ladder of Learn / Do rungs and rank gates, a death count, falls to the module checkpoint, and the emerald at the top. The full design is in [`GAME_DESIGN.md`](GAME_DESIGN.md). Where this README describes tabs, the 19-level path, or separate quiz and lesson pages, it describes the current build, not the target.
+
 ## What the app is
 
 A field-training companion: SAFE HOME mantras, PPE, identify-the-gear library, hourly quizzes, life-skill lessons, ranks, emergency numbers, and the core field breakdown & maintenance duty path called **মৃত্যুহীন** (duty slip). Home also still has the older **জিরো লস** storm-feeder sim in code.
@@ -54,6 +56,8 @@ Do not use PowerShell `Set-Content` for Bangla JSON or Dart — it mojibakes. Ed
 
 ## Bottom tabs
 
+Current build only. The target removes the tab bar (see [`GAME_DESIGN.md`](GAME_DESIGN.md) section 4).
+
 1. **হোম / Home** — header, lineman hero carousel, **মৃত্যুহীন পথ** shield button
 2. **পরিচিতি / Identify** — safety library + charts
 3. **র‍্যাঙ্ক / Rank** — monthly boards (Champion / New / Improved / Learner)
@@ -103,6 +107,8 @@ Not upgraded yet: quizzes, celebration page, Identify, Rank, Life Skill, More, l
 Home button text is **মৃত্যুহীন পথ** (real text beside the animated shield). Cover title **কাজের ধাপ**. Ladder header **মৃত্যুহীন পথ**. Next-level button **পরের লেভেল** (returns to the wooden ladder). No সহজ/কঠিন.
 
 ### 19-level path
+
+Old fixed list. The live code has 33 levels on a 200-rung ladder, and the target builds the ladder from lesson data (see [`GAME_DESIGN.md`](GAME_DESIGN.md) section 6). These games stay as Do-rung games in modules 1, 2, 5, and 6.
 
 | Levels | What you play | দারুণ time |
 |---|---|---|

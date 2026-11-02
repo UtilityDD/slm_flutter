@@ -1,4 +1,208 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
+/// Four depths, each a short run of different plates. A plate overlaps the
+/// next through mist, and higher on the path the air gets cooler and paler.
+/// The ladder above this stays locked to the checkpoints.
+class AdventureWorld extends StatelessWidget {
+  final ScrollController scroll;
+  final Animation<double> drift;
+  final bool motion;
+
+  const AdventureWorld({super.key, required this.scroll, required this.drift, required this.motion});
+
+  static const _bands = <_DepthBand>[
+    _DepthBand(
+      assets: [
+        'assets/duty_slip/world3d/depth_sky_a.webp',
+        'assets/duty_slip/world3d/depth_sky_b.webp',
+      ],
+      factor: 0.10,
+      aspect: 16 / 9,
+      overlap: 0.42,
+      cacheWidth: 720,
+    ),
+    _DepthBand(
+      assets: [
+        'assets/duty_slip/world3d/depth_ridge_a.webp',
+        'assets/duty_slip/world3d/depth_ridge_b.webp',
+        'assets/duty_slip/world3d/depth_ridge_c.webp',
+      ],
+      factor: 0.22,
+      aspect: 4 / 3,
+      overlap: 0.40,
+      cacheWidth: 780,
+    ),
+    _DepthBand(
+      assets: [
+        'assets/duty_slip/world3d/depth_mid_river.webp',
+        'assets/duty_slip/world3d/depth_mid_falls.webp',
+        'assets/duty_slip/world3d/depth_mid_forest.webp',
+      ],
+      factor: 0.40,
+      aspect: 16 / 9,
+      overlap: 0.36,
+      cacheWidth: 900,
+    ),
+    _DepthBand(
+      assets: [
+        'assets/duty_slip/world3d/depth_near_a.webp',
+        'assets/duty_slip/world3d/depth_near_b.webp',
+      ],
+      factor: 0.65,
+      aspect: 16 / 9,
+      overlap: 0.28,
+      cacheWidth: 800,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([scroll, drift]),
+      builder: (context, _) {
+        final offset = scroll.hasClients ? scroll.offset : 0.0;
+        final phase = motion ? drift.value : 0.35;
+        final climb = (offset / (200 * 108)).clamp(0.0, 1.0);
+        return LayoutBuilder(
+          builder: (context, box) {
+            final w = box.maxWidth;
+            final h = box.maxHeight;
+            if (w <= 0 || h <= 0) return const SizedBox.expand();
+            return Stack(
+              fit: StackFit.expand,
+              clipBehavior: Clip.hardEdge,
+              children: [
+                const ColoredBox(color: Color(0xFFC5D4E4)),
+                for (final band in _bands) _DepthStrip(band: band, width: w, height: h, offset: offset),
+                IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          const Color(0x00D5E4F0),
+                          Color.fromRGBO(214, 228, 238, 0.08 + 0.34 * climb),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (motion) _Motes(phase: phase),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _DepthBand {
+  final List<String> assets;
+  final double factor;
+  final double aspect;
+  final double overlap;
+  final int cacheWidth;
+
+  const _DepthBand({
+    required this.assets,
+    required this.factor,
+    required this.aspect,
+    required this.overlap,
+    required this.cacheWidth,
+  });
+}
+
+class _DepthStrip extends StatelessWidget {
+  final _DepthBand band;
+  final double width;
+  final double height;
+  final double offset;
+
+  const _DepthStrip({required this.band, required this.width, required this.height, required this.offset});
+
+  @override
+  Widget build(BuildContext context) {
+    final tileH = math.max(height * 0.92, width * band.aspect);
+    final step = tileH * (1 - band.overlap);
+    if (step <= 0) return const SizedBox.shrink();
+    final travel = offset * band.factor;
+    final first = (travel / step).floor() - 1;
+    final count = (height / step).ceil() + 3;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        for (var n = 0; n < count; n++)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: (first + n) * step - travel,
+            height: tileH,
+            child: ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (rect) => const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0x00FFFFFF), Color(0xFFFFFFFF), Color(0xFFFFFFFF), Color(0x00FFFFFF)],
+                stops: [0.0, 0.16, 0.84, 1.0],
+              ).createShader(rect),
+              child: Image.asset(
+                band.assets[_slot(first + n, band.assets.length)],
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+                cacheWidth: band.cacheWidth,
+                filterQuality: FilterQuality.medium,
+                gaplessPlayback: true,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  static int _slot(int world, int length) {
+    final m = world % length;
+    return m < 0 ? m + length : m;
+  }
+}
+
+class _Motes extends StatelessWidget {
+  final double phase;
+
+  const _Motes({required this.phase});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: CustomPaint(
+        painter: _MotePainter(phase),
+        child: const SizedBox.expand(),
+      ),
+    );
+  }
+}
+
+class _MotePainter extends CustomPainter {
+  final double phase;
+
+  const _MotePainter(this.phase);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0x66FFF6D8);
+    for (var i = 0; i < 7; i++) {
+      final x = size.width * (0.12 + 0.76 * ((i * 0.17) % 1));
+      final y = size.height * ((0.15 * i + phase * 0.35) % 1);
+      canvas.drawCircle(Offset(x, y), 1.3 + (i % 3) * 0.4, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MotePainter oldDelegate) => oldDelegate.phase != phase;
+}
 
 /// Distant sky and ridge silhouettes. The ground itself is painted per band.
 class ValleyBackdrop extends StatelessWidget {

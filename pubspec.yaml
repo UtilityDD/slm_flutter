@@ -55,6 +55,12 @@ flutter:
     - assets/sounds/complaint.wav
     - assets/sounds/van_arrive.wav
     - assets/sounds/customer.wav
+    - assets/sounds/intro/impact_metal.ogg
+    - assets/sounds/intro/tick.ogg
+    - assets/sounds/intro/glass.ogg
+    - assets/sounds/intro/drop.ogg
+    - assets/sounds/intro/confirm.ogg
+    - assets/sounds/intro/click.ogg
     - assets/sounds/voice/
     - assets/data/
     - assets/data/life_skill/

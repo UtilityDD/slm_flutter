@@ -70,7 +70,7 @@ class _LinemanFigureState extends State<LinemanFigure> with SingleTickerProvider
           child: Transform.translate(
             offset: Offset(glance * 6, 0),
             child: Transform.scale(
-              scale: 1 + (lift * _breath.value),
+              scale: widget.quiet ? 1 : 1 + (lift * _breath.value),
               child: AspectRatio(
                 aspectRatio: _viewW / _viewH,
                 child: LayoutBuilder(

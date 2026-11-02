@@ -47,6 +47,8 @@ Every new level must follow these rules. Earlier iterations were rejected whenev
 
 ## 1. Master Level Architecture (31 Levels)
 
+> **Replaced.** The fixed 31-level tier structure below is superseded by [`GAME_DESIGN.md`](../../../GAME_DESIGN.md): modules of Learn / Do rungs with rank gates, built from data. Keep section 0 (the rules) and the level ideas in sections 2–5: each becomes a game in the pool of the matching lesson. Read the tier and numbering parts as history.
+
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ TIER 1 (Levels 1–5)   : Foundational PPE (Basic Selection & Fitting)     │

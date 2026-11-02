@@ -39,7 +39,11 @@ class _MainShellState extends ConsumerState<MainShell> {
     final bn = ref.watch(languageProvider);
     final tab = ref.watch(shellTabProvider);
     final radioOn = ref.watch(radioProvider).isVisible;
-    final dockInset = ShellDockMetrics.compute(context, radioVisible: radioOn);
+    // The clean home stands alone. The dock returns on the other tabs.
+    final dockOn = tab != 0;
+    final dockInset = dockOn
+        ? ShellDockMetrics.compute(context, radioVisible: radioOn)
+        : MediaQuery.viewPaddingOf(context).bottom;
 
     // Overlay dock (not Scaffold.bottomNavigationBar) so the notch stays
     // truly transparent. Pages clear it via [ShellDockScope] padding — never
@@ -60,7 +64,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                 onGenerateRoute: _onGenerateRoute,
               ),
             ),
-            Positioned(
+            if (dockOn)
+              Positioned(
               left: 0,
               right: 0,
               bottom: 0,

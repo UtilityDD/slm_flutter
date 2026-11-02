@@ -18,7 +18,6 @@ import 'ds_clearance.dart';
 import 'ds_dress_up.dart';
 import 'ds_pole_inspect.dart';
 import 'adventure_map.dart';
-import 'adventure_scenery.dart';
 import 'duty_slip_engine.dart';
 import 'duty_slip_models.dart';
 import 'duty_slip_voice.dart';
@@ -851,10 +850,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
             else if (walk)
               const ColoredBox(color: Color(0xFFC5DCE8))
             else if (e.onRoad)
-              ValueListenableBuilder<double>(
-                valueListenable: _roadScroll,
-                builder: (_, scroll, _) => ValleyBackdrop(scroll: scroll),
-              )
+              const SizedBox.shrink()
             else
               Image.asset(bg, fit: BoxFit.cover, errorBuilder: (_, _, _) => const ColoredBox(color: ZlColors.bg)),
             if (e.covering)
@@ -873,6 +869,9 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                   ),
                 ),
               ),
+            if (e.onRoad)
+              Positioned.fill(child: _briefingStage(e))
+            else
             SafeArea(
               child: Column(
                 children: [
@@ -1387,14 +1386,19 @@ class _PlanBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final e = engine;
-    if (e.covering) return _CoverBoard(onOpen: onOpenRoad);
+    if (e.covering) {
+      return _CoverBoard(
+        onOpen: onOpenRoad,
+        muted: muted,
+        play: true,
+      );
+    }
     if (e.onRoad) {
       return AdventureMap(
         engine: e,
         onOpen: onOpenLevel,
         scrollOut: roadScroll,
         muted: muted,
-        onInfo: () => _showMissionBriefing(context, onStart: () {}, dismissible: true),
       );
     }
     if (e.listing) {
@@ -1449,666 +1453,17 @@ class _PlanBoard extends StatelessWidget {
   }
 }
 
-/// The same briefing card the cover opens, with the same rise-and-fade.
-void _showMissionBriefing(
-  BuildContext context, {
-  required VoidCallback onStart,
-  bool dismissible = false,
-}) {
-  final cinematic = dsMotionOf(context) == DsMotion.cinematic;
-  showGeneralDialog<void>(
-    context: context,
-    barrierDismissible: dismissible,
-    barrierLabel: 'briefing',
-    barrierColor: SlmColors.navy950.withValues(alpha: 0.88),
-    transitionDuration: SlmMotion.slow,
-    transitionBuilder: (_, anim, _, child) {
-      final t = SlmMotion.emphasized.transform(anim.value);
-      return Opacity(
-        opacity: anim.value.clamp(0.0, 1.0),
-        child: Transform.translate(
-          offset: Offset(0, 24 * (1 - t)),
-          child: Transform.scale(scale: 0.94 + 0.06 * t, child: child),
-        ),
-      );
-    },
-    pageBuilder: (ctx, _, _) {
-      final dialog = _MissionBriefingDialog(onStart: onStart);
-      if (!cinematic) return dialog;
-      return BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: dialog,
-      );
-    },
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ৩-ধাপের অভিযান ব্রিফিং মডাল (3-Card Mission Briefing Dialog)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _MissionBriefingDialog extends StatefulWidget {
-  final VoidCallback onStart;
-  const _MissionBriefingDialog({required this.onStart});
-
-  @override
-  State<_MissionBriefingDialog> createState() => _MissionBriefingDialogState();
-}
-
-class _MissionBriefingDialogState extends State<_MissionBriefingDialog> {
-  final _pageController = PageController();
-  var _page = 0;
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _goNext() {
-    if (_page < 2) {
-      HapticFeedback.lightImpact();
-      unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.5));
-      _pageController.nextPage(duration: SlmMotion.slow, curve: SlmMotion.emphasized);
-      return;
-    }
-    HapticFeedback.heavyImpact();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.7));
-    Navigator.of(context).pop();
-    widget.onStart();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final lite = dsReduceMotion(context);
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 380, maxHeight: 520),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: const RadialGradient(
-            center: Alignment(0, -1.1),
-            radius: 1.25,
-            colors: [SlmColors.navy700, SlmColors.navy900, SlmColors.navy950],
-            stops: [0, 0.45, 1],
-          ),
-          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55), width: 1.2),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.6), blurRadius: 32, offset: const Offset(0, 14)),
-            BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.10), blurRadius: 40),
-          ],
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 18, bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (i) {
-                  final active = _page == i;
-                  final done = i < _page;
-                  return AnimatedContainer(
-                    duration: SlmMotion.base,
-                    curve: SlmMotion.emphasized,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: active ? 26 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      borderRadius: SlmRadius.pillAll,
-                      gradient: active || done ? SlmGradients.gold : null,
-                      color: active || done ? null : SlmColors.navy700,
-                      boxShadow: active
-                          ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.55), blurRadius: 8)]
-                          : null,
-                    ),
-                  );
-                }),
-              ),
-            ),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (p) => setState(() => _page = p),
-                children: [
-                  _StagedSlide(
-                    active: _page == 0,
-                    lite: lite,
-                    duration: const Duration(milliseconds: 2400),
-                    builder: (_, clock) => _slideWarn(clock, lite),
-                  ),
-                  _StagedSlide(
-                    active: _page == 1,
-                    lite: lite,
-                    duration: const Duration(milliseconds: 2200),
-                    builder: (_, clock) => _slideCounts(clock, lite),
-                  ),
-                  _StagedSlide(
-                    active: _page == 2,
-                    lite: lite,
-                    duration: const Duration(milliseconds: 2300),
-                    builder: (_, clock) => _slideOath(clock, lite),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
-              child: Row(
-                children: [
-                  AnimatedOpacity(
-                    opacity: _page > 0 ? 1 : 0,
-                    duration: SlmMotion.fast,
-                    child: IgnorePointer(
-                      ignoring: _page == 0,
-                      child: SlmPressable(
-                        haptic: false,
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          _pageController.previousPage(duration: SlmMotion.slow, curve: SlmMotion.emphasized);
-                        },
-                        child: Container(
-                          width: 46,
-                          height: 46,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: SlmColors.navy800,
-                            border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
-                          ),
-                          child: const Icon(Icons.arrow_back_rounded, size: 22, color: SlmColors.gold100),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  _BriefNext(
-                    last: _page == 2,
-                    lite: lite,
-                    onTap: _goNext,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _slideWarn(Animation<double> clock, bool lite) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 22),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _PhraseIn(
-            clock: clock,
-            from: 0.00,
-            to: 0.14,
-            instant: lite,
-            child: AnimatedSafetyShield(
-              size: 132,
-              entrance: false,
-              animate: dsMotionOf(context) != DsMotion.lite,
-              intensity: 0.9,
-            ),
-          ),
-          const SizedBox(height: 6),
-          _PhraseIn(
-            clock: clock,
-            from: 0.18,
-            to: 0.32,
-            instant: lite,
-            child: Text(
-              'শূন্য মৃত্যু অভিযান',
-              textAlign: TextAlign.center,
-              style: zlText(22, weight: FontWeight.w900, color: SlmColors.ivory),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _PhraseIn(
-            clock: clock,
-            from: 0.36,
-            to: 0.50,
-            instant: lite,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0x33EF4444),
-                borderRadius: BorderRadius.circular(99),
-                border: Border.all(color: const Color(0x88EF4444)),
-              ),
-              child: Text(
-                '1টি ভুল = 1টি মৃত্যুঝুঁকি',
-                style: zlText(12, weight: FontWeight.w800, color: const Color(0xFFFCA5A5)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          _PhraseIn(
-            clock: clock,
-            from: 0.54,
-            to: 0.70,
-            instant: lite,
-            child: Text(
-              'বিদ্যুতের লাইনে কোনো "ছোট ভুল" নেই। প্রতিটি অসাবধানতা সরাসরি প্রাণঘাতী বিপদ ডেকে আনে।',
-              textAlign: TextAlign.center,
-              style: zlText(13.5, height: 1.45, color: SlmColors.mist),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _PhraseIn(
-            clock: clock,
-            from: 0.74,
-            to: 0.92,
-            instant: lite,
-            child: Text(
-              'ধাপে ধাপে সঠিক সুরক্ষা ও নিয়ম মানাই মৃত্যুহীন পথের একমাত্র পাথেয়।',
-              textAlign: TextAlign.center,
-              style: zlText(13.5, height: 1.45, weight: FontWeight.w600, color: SlmColors.ivory),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _slideCounts(Animation<double> clock, bool lite) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _PhraseIn(
-            clock: clock,
-            from: 0.00,
-            to: 0.14,
-            instant: lite,
-            child: Text(
-              'কাজের 3টি হিসেব',
-              textAlign: TextAlign.center,
-              style: zlText(20, weight: FontWeight.w900, color: SlmColors.ivory),
-            ),
-          ),
-          const SizedBox(height: 4),
-          _PhraseIn(
-            clock: clock,
-            from: 0.20,
-            to: 0.34,
-            instant: lite,
-            child: Text(
-              'সব লেভেলের মোট হিসাব জমা থাকবে',
-              textAlign: TextAlign.center,
-              style: zlText(12, color: SlmColors.gold300),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _PhraseIn(
-            clock: clock,
-            from: 0.40,
-            to: 0.54,
-            instant: lite,
-            child: _metricRow(
-              icon: Icons.stars_rounded,
-              color: SlmColors.gold400,
-              title: 'মোট স্কোর',
-              desc: 'প্রতি লেভেলে সঠিক কাজের পয়েন্ট। ডিভাইসের মেমরিতে জমা থাকবে।',
-            ),
-          ),
-          const SizedBox(height: 10),
-          _PhraseIn(
-            clock: clock,
-            from: 0.60,
-            to: 0.74,
-            instant: lite,
-            child: _metricRow(
-              icon: Icons.shield_rounded,
-              color: SlmColors.emerald300,
-              title: 'মৃত্যুঝুঁকি (0 লক্ষ্য)',
-              desc: 'ভুল হলেই বাড়বে। আপনার লক্ষ্য: প্রতিটি লেভেলে 0 মৃত্যুঝুঁকি রাখা।',
-            ),
-          ),
-          const SizedBox(height: 10),
-          _PhraseIn(
-            clock: clock,
-            from: 0.80,
-            to: 0.94,
-            instant: lite,
-            child: _metricRow(
-              icon: Icons.timer_outlined,
-              color: const Color(0xFF38BDF8),
-              title: 'মোট সময়',
-              desc: 'কাজে অতিবাহিত মোট সময়। তাড়াহুড়ো নয়, স্থির ও নিরাপদ কাজ।',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _metricRow({required IconData icon, required Color color, required String title, required String desc}) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
-      decoration: BoxDecoration(
-        gradient: SlmGradients.navyCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.14),
-              border: Border.all(color: color.withValues(alpha: 0.45)),
-            ),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: zlText(13, weight: FontWeight.w800, color: color)),
-                const SizedBox(height: 2),
-                Text(desc, style: zlText(11.5, height: 1.3, color: SlmColors.mist)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _slideOath(Animation<double> clock, bool lite) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 22),
-      child: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _PhraseIn(
-                clock: clock,
-                from: 0.00,
-                to: 0.14,
-                instant: lite,
-                child: Container(
-                  width: 68,
-                  height: 68,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: SlmGradients.emerald,
-                    border: Border.all(color: SlmColors.gold300, width: 2),
-                    boxShadow: [BoxShadow(color: SlmColors.emerald400.withValues(alpha: 0.45), blurRadius: 18)],
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.verified_user_rounded, size: 36, color: SlmColors.ivory),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              _PhraseIn(
-                clock: clock,
-                from: 0.20,
-                to: 0.34,
-                instant: lite,
-                child: Text(
-                  'লাইনম্যানের শপথ',
-                  textAlign: TextAlign.center,
-                  style: zlText(21, weight: FontWeight.w900, color: SlmColors.ivory),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _PhraseIn(
-                clock: clock,
-                from: 0.40,
-                to: 0.54,
-                instant: lite,
-                child: _pledgeItem('সুরক্ষায় কোনো আপস নয় — শতভাগ পিপিই'),
-              ),
-              const SizedBox(height: 8),
-              _PhraseIn(
-                clock: clock,
-                from: 0.60,
-                to: 0.74,
-                instant: lite,
-                child: _pledgeItem('ভুল না করে 0 মৃত্যুঝুঁকি অক্ষুণ্ণ রাখব'),
-              ),
-              const SizedBox(height: 8),
-              _PhraseIn(
-                clock: clock,
-                from: 0.80,
-                to: 0.94,
-                instant: lite,
-                child: _pledgeItem('নিরাপদে কাজ সেরে পরিবারের কাছে ফিরব'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _pledgeItem(String text) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        gradient: SlmGradients.navyCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: SlmColors.emerald400.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle_rounded, size: 18, color: SlmColors.emerald300),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(text, style: zlText(12.5, weight: FontWeight.w700, color: SlmColors.ivory)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StagedSlide extends StatefulWidget {
-  const _StagedSlide({
-    required this.active,
-    required this.lite,
-    required this.duration,
-    required this.builder,
-  });
-
-  final bool active;
-  final bool lite;
-  final Duration duration;
-  final Widget Function(BuildContext context, Animation<double> clock) builder;
-
-  @override
-  State<_StagedSlide> createState() => _StagedSlideState();
-}
-
-class _StagedSlideState extends State<_StagedSlide> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  late final AnimationController _clock;
-
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  void initState() {
-    super.initState();
-    _clock = AnimationController(vsync: this, duration: widget.duration);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _kick();
-    });
-  }
-
-  @override
-  void didUpdateWidget(_StagedSlide old) {
-    super.didUpdateWidget(old);
-    if (widget.lite) {
-      _clock.value = 1;
-      return;
-    }
-    if (widget.active && (!old.active || _clock.value == 0)) _kick();
-  }
-
-  void _kick() {
-    if (!mounted) return;
-    if (widget.lite) {
-      _clock.value = 1;
-      return;
-    }
-    if (widget.active && !_clock.isAnimating) _clock.forward(from: 0);
-  }
-
-  @override
-  void dispose() {
-    _clock.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return widget.builder(context, _clock);
-  }
-}
-
-class _PhraseIn extends StatelessWidget {
-  const _PhraseIn({
-    required this.clock,
-    required this.from,
-    required this.to,
-    required this.child,
-    this.instant = false,
-  });
-
-  final Animation<double> clock;
-  final double from;
-  final double to;
-  final Widget child;
-  final bool instant;
-
-  @override
-  Widget build(BuildContext context) {
-    if (instant) return child;
-    return AnimatedBuilder(
-      animation: clock,
-      builder: (context, child) {
-        final span = (to - from).clamp(0.04, 1.0);
-        final t = ((clock.value - from) / span).clamp(0.0, 1.0);
-        final s = SlmMotion.emphasized.transform(t);
-        return Opacity(
-          opacity: s,
-          child: Transform.translate(offset: Offset(0, 14 * (1 - s)), child: child),
-        );
-      },
-      child: child,
-    );
-  }
-}
-
-class _BriefNext extends StatefulWidget {
-  const _BriefNext({required this.last, required this.lite, required this.onTap});
-
-  final bool last;
-  final bool lite;
-  final VoidCallback onTap;
-
-  @override
-  State<_BriefNext> createState() => _BriefNextState();
-}
-
-class _BriefNextState extends State<_BriefNext> with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
-    _sync();
-  }
-
-  @override
-  void didUpdateWidget(_BriefNext old) {
-    super.didUpdateWidget(old);
-    _sync();
-  }
-
-  void _sync() {
-    if (widget.last && !widget.lite) {
-      if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
-    } else if (_pulse.isAnimating) {
-      _pulse
-        ..stop()
-        ..value = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _pulse,
-      builder: (_, child) {
-        final s = widget.last && !widget.lite ? 1.0 + 0.04 * _pulse.value : 1.0;
-        return Transform.scale(scale: s, child: child);
-      },
-      child: SlmPressable(
-        haptic: false,
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: SlmMotion.base,
-          curve: SlmMotion.emphasized,
-          height: 46,
-          padding: EdgeInsets.symmetric(horizontal: widget.last ? 18 : 0),
-          constraints: const BoxConstraints(minWidth: 46),
-          decoration: BoxDecoration(
-            borderRadius: SlmRadius.pillAll,
-            gradient: SlmGradients.gold,
-            boxShadow: [
-              BoxShadow(
-                color: SlmColors.gold400.withValues(alpha: widget.last ? 0.5 : 0.3),
-                blurRadius: widget.last ? 16 : 9,
-                offset: const Offset(0, 4),
-              ),
-            ],
-            border: Border.all(color: SlmColors.gold100, width: 1.1),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (widget.last) ...[
-                Text('শুরু করি', style: zlText(15, weight: FontWeight.w800, color: SlmColors.navy950)),
-                const SizedBox(width: 6),
-              ],
-              Icon(
-                widget.last ? Icons.check_rounded : Icons.arrow_forward_rounded,
-                size: 22,
-                color: SlmColors.navy950,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _CoverBoard extends StatefulWidget {
   final VoidCallback onOpen;
-  const _CoverBoard({required this.onOpen});
+  final bool muted;
+  final bool play;
+
+  const _CoverBoard({
+    required this.onOpen,
+    this.muted = false,
+    this.play = false,
+  });
 
   @override
   State<_CoverBoard> createState() => _CoverBoardState();
@@ -2117,13 +1472,14 @@ class _CoverBoard extends StatefulWidget {
 class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin {
   late final AnimationController _glow;
   late final AnimationController _intro;
+  late final AnimationController _beat;
   late final AnimationController _ctaPulse;
   late final AnimationController _exit;
   late final Animation<double> _rise;
-  late final Animation<double> _ctaFade;
   late final Animation<Offset> _titleSlide;
-  late final Animation<double> _ctaIn;
   var _isExiting = false;
+  var _started = false;
+  var _skipped = false;
 
   @override
   void initState() {
@@ -2131,83 +1487,114 @@ class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin 
     _glow = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800));
     _ctaPulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
     _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 1150))..forward();
+    _beat = AnimationController(vsync: this, duration: const Duration(milliseconds: 3400));
     _rise = CurvedAnimation(parent: _intro, curve: const Interval(0.32, 0.82, curve: SlmMotion.emphasized));
-    _ctaFade = CurvedAnimation(parent: _intro, curve: const Interval(0.55, 1, curve: SlmMotion.emphasized));
     _titleSlide = Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(_rise);
-    _ctaIn = Tween(begin: 0.94, end: 1.0).animate(_ctaFade);
     _exit = AnimationController(vsync: this, duration: const Duration(milliseconds: 380));
-
-    Future<void>.delayed(const Duration(milliseconds: 120), () {
-      if (!mounted) return;
-      unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.85));
-    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (dsMotionOf(context) == DsMotion.lite) {
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    if (reduce) {
       _glow
         ..stop()
         ..value = 1;
       _ctaPulse
         ..stop()
         ..value = 0;
-      if (MediaQuery.disableAnimationsOf(context) && !_intro.isCompleted) _intro.value = 1;
+      if (!_intro.isCompleted) _intro.value = 1;
     } else {
       if (!_glow.isAnimating) _glow.repeat(reverse: true);
       if (!_ctaPulse.isAnimating) _ctaPulse.repeat(reverse: true);
     }
+    if (_started) return;
+    _started = true;
+    if (!widget.play || reduce) {
+      _beat.value = 1;
+    } else {
+      _beat.forward();
+    }
+    _armSounds(reduce);
   }
 
   @override
   void dispose() {
     _glow.dispose();
     _intro.dispose();
+    _beat.dispose();
     _ctaPulse.dispose();
     _exit.dispose();
     super.dispose();
   }
 
-  void _openBriefing() {
-    HapticFeedback.lightImpact();
-    unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.85));
-    _showMissionBriefing(
-      context,
-      onStart: () {
-        if (_isExiting) return;
-        _isExiting = true;
-        _exit.forward().then((_) {
-          if (mounted) widget.onOpen();
-        });
-      },
-    );
+  void _armSounds(bool still) {
+    if (!widget.play || widget.muted) return;
+    _at(0, 'sounds/intro/impact_metal.ogg', 0.55);
+    if (still) {
+      _at(180, 'sounds/intro/glass.ogg', 0.5);
+      return;
+    }
+    _at(1080, 'sounds/intro/tick.ogg', 0.32);
+    _at(1970, 'sounds/intro/glass.ogg', 0.55);
+    _at(2720, 'sounds/intro/confirm.ogg', 0.38);
+  }
+
+  void _at(int ms, String file, double volume) {
+    Future<void>.delayed(Duration(milliseconds: ms), () {
+      if (!mounted || _skipped || widget.muted) return;
+      unawaited(ZlFx.cue(file, volume: volume, muted: widget.muted));
+    });
+  }
+
+  double _span(double from, double to) {
+    final v = _beat.value;
+    if (v <= from) return 0;
+    if (v >= to) return 1;
+    return Curves.easeOutCubic.transform((v - from) / (to - from));
+  }
+
+  void _begin() {
+    if (_isExiting) return;
+    _skipped = true;
+    HapticFeedback.mediumImpact();
+    unawaited(ZlFx.cue('sounds/intro/click.ogg', volume: 0.55, muted: widget.muted));
+    _isExiting = true;
+    _exit.forward().then((_) {
+      if (mounted) widget.onOpen();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final motion = dsMotionOf(context);
-    final lite = motion == DsMotion.lite;
-    final cinematic = motion == DsMotion.cinematic;
+    final lite = motion == DsMotion.lite || MediaQuery.disableAnimationsOf(context);
+    final cinematic = motion == DsMotion.cinematic && !lite;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
       child: AnimatedBuilder(
-        animation: _exit,
-        builder: (_, child) {
+        animation: Listenable.merge([_exit, _beat]),
+        builder: (_, _) {
           final exitVal = Curves.easeInOutCubic.transform(_exit.value);
-          return Transform.translate(
-            offset: Offset(0, 90 * exitVal),
-            child: Opacity(
-              opacity: (1.0 - exitVal).clamp(0.0, 1.0),
-              child: Transform.scale(scale: 1.0 - (0.10 * exitVal), child: child),
-            ),
-          );
-        },
-        child: Column(
+          final heat = widget.play && !lite ? (1 - _span(0.08, 0.32)).clamp(0.0, 1.0) : 0.0;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              IgnorePointer(
+                child: ColoredBox(color: SlmColors.danger.withValues(alpha: 0.22 * heat)),
+              ),
+              Transform.translate(
+                offset: Offset(0, 90 * exitVal),
+                child: Opacity(
+                  opacity: (1.0 - exitVal).clamp(0.0, 1.0),
+                  child: Transform.scale(
+                    scale: 1.0 - (0.10 * exitVal),
+                    child: Column(
           children: [
             const Spacer(),
-            AnimatedSafetyShield(size: 210, animate: !lite, intensity: cinematic ? 1 : 0.85),
-            const SizedBox(height: 10),
+            AnimatedSafetyShield(size: widget.play ? 148 : 210, animate: !lite, intensity: cinematic ? 1 : 0.85),
+            const SizedBox(height: 8),
             FadeTransition(
               opacity: _rise,
               child: SlideTransition(
@@ -2220,36 +1607,66 @@ class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin 
                     : const _CoverTitles(pulse: 1, rich: false),
               ),
             ),
+            if (widget.play) ...[
+              const SizedBox(height: 18),
+              _WordLine(
+                text: '1টি ভুল = 1টি মৃত্যুঝুঁকি',
+                progress: _span(0.00, 0.28),
+                style: zlText(
+                  20,
+                  weight: FontWeight.w900,
+                  color: Color.lerp(
+                    SlmColors.ivory,
+                    SlmColors.danger,
+                    lite ? 0 : (1 - _span(0.08, 0.32)).clamp(0.0, 1.0),
+                  )!,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _WordLine(
+                text: 'লাইনে ছোট ভুল নেই।',
+                progress: _span(0.30, 0.46),
+                style: zlText(14, weight: FontWeight.w600, color: SlmColors.mist),
+              ),
+              const SizedBox(height: 18),
+              _SkullMark(appear: _span(0.48, 0.70), still: MediaQuery.disableAnimationsOf(context)),
+              const SizedBox(height: 16),
+              _WordLine(
+                text: '0 মৃত্যুঝুঁকি রেখে বাড়ি ফিরব।',
+                progress: _span(0.78, 0.96),
+                style: zlText(15, weight: FontWeight.w800, color: SlmColors.emerald300),
+              ),
+            ],
             const Spacer(),
-            FadeTransition(
-              opacity: _ctaFade,
-              child: ScaleTransition(
-                scale: _ctaIn,
-                child: AnimatedBuilder(
-                  animation: _ctaPulse,
-                  builder: (_, child) => Transform.scale(
-                    scale: lite ? 1 : 1.0 + math.sin(_ctaPulse.value * math.pi) * 0.02,
-                    child: child,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 300),
-                    child: Theme(
-                      data: SlmTheme.night(),
-                      child: SlmButton.gold(
-                        label: 'অভিযান শুরু করুন',
-                        trailingIcon: Icons.arrow_forward_rounded,
-                        size: SlmButtonSize.large,
-                        expand: true,
-                        onPressed: _openBriefing,
-                      ),
-                    ),
+            AnimatedBuilder(
+              animation: _ctaPulse,
+              builder: (_, child) => Transform.scale(
+                scale: lite ? 1 : 1.0 + math.sin(_ctaPulse.value * math.pi) * 0.02,
+                child: child,
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 300),
+                child: Theme(
+                  data: SlmTheme.night(),
+                  child: SlmButton.gold(
+                    label: 'অভিযান শুরু করুন',
+                    trailingIcon: Icons.arrow_forward_rounded,
+                    size: SlmButtonSize.large,
+                    expand: true,
+                    onPressed: _begin,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 20),
           ],
-        ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -2317,29 +1734,134 @@ class _CoverTitles extends StatelessWidget {
             gradient: LinearGradient(colors: [Color(0x00D9B25F), SlmColors.gold400, Color(0x00D9B25F)]),
           ),
         ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: SlmColors.navy900.withValues(alpha: 0.7),
-            borderRadius: SlmRadius.pillAll,
-            border: Border.all(color: SlmColors.gold400.withValues(alpha: rich ? 0.35 + 0.25 * pulse : 0.45)),
-          ),
-          child: Text(
-            'শূন্য দুর্ঘটনা অভিযান • জিরো টলারেন্স',
-            textAlign: TextAlign.center,
-            style: zlText(13, weight: FontWeight.w700, color: SlmColors.gold300),
-          ),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          'ধাপে ধাপে সঠিক সুরক্ষায় বাঁচবে জীবন',
-          textAlign: TextAlign.center,
-          style: zlText(14.5, weight: FontWeight.w500, color: SlmColors.ivory).copyWith(
-            shadows: const [Shadow(color: Color(0x88000000), blurRadius: 8)],
-          ),
-        ),
       ],
+    );
+  }
+}
+
+class _WordLine extends StatelessWidget {
+  final String text;
+  final double progress;
+  final TextStyle style;
+
+  const _WordLine({required this.text, required this.progress, required this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    final words = text.split(' ');
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (var i = 0; i < words.length; i++) _word(words[i], i, words.length),
+      ],
+    );
+  }
+
+  Widget _word(String word, int index, int count) {
+    final start = index / count;
+    final end = (index + 1) / count;
+    final local = progress <= start ? 0.0 : progress >= end ? 1.0 : (progress - start) / (end - start);
+    final t = Curves.easeOutBack.transform(local.clamp(0.0, 1.0));
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+      child: Opacity(
+        opacity: local.clamp(0.0, 1.0),
+        child: Transform.translate(
+          offset: Offset(0, 16 * (1 - t)),
+          child: Transform.scale(scale: 0.78 + 0.22 * t, child: Text(word, style: style)),
+        ),
+      ),
+    );
+  }
+}
+
+class _SkullMark extends StatefulWidget {
+  final double appear;
+  final bool still;
+
+  const _SkullMark({required this.appear, required this.still});
+
+  @override
+  State<_SkullMark> createState() => _SkullMarkState();
+}
+
+class _SkullMarkState extends State<_SkullMark> with SingleTickerProviderStateMixin {
+  late final AnimationController _shiver;
+
+  @override
+  void initState() {
+    super.initState();
+    _shiver = AnimationController(vsync: this, duration: const Duration(milliseconds: 460));
+    if (!widget.still) _shiver.repeat();
+  }
+
+  @override
+  void didUpdateWidget(_SkullMark oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.still) {
+      _shiver.stop();
+    } else if (!_shiver.isAnimating) {
+      _shiver.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _shiver.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = widget.appear.clamp(0.0, 1.0);
+    final land = Curves.easeOutBack.transform(shown);
+    return AnimatedBuilder(
+      animation: _shiver,
+      builder: (_, _) {
+        final turn = widget.still ? 0.0 : _shiver.value * math.pi * 2;
+        final live = shown > 0.82 && !widget.still;
+        final jx = live ? math.sin(turn * 4) * 2.6 : 0.0;
+        final jy = live ? math.cos(turn * 3) * 1.4 : 0.0;
+        final glow = live ? 0.45 + 0.55 * (0.5 + 0.5 * math.sin(turn)) : shown;
+        return Opacity(
+          opacity: shown,
+          child: Transform.scale(
+            scale: 0.4 + 0.6 * land,
+            child: SizedBox(
+              width: 132,
+              height: 132,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 118,
+                    height: 118,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFFFF2A2A).withValues(alpha: 0.72 * glow),
+                          const Color(0xFFEF5350).withValues(alpha: 0.18 * glow),
+                          const Color(0x00EF5350),
+                        ],
+                        stops: const [0.0, 0.42, 1],
+                      ),
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: Offset(jx, jy),
+                    child: Transform.rotate(
+                      angle: live ? math.sin(turn * 4) * 0.07 : 0,
+                      child: const Text('💀', style: TextStyle(fontSize: 72, height: 1)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
