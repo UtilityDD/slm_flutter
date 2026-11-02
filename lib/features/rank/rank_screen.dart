@@ -46,9 +46,11 @@ class RankScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(g, SlmSpace.sm, g, SlmSpace.md),
-                        child: SlmReveal(child: _Header(bn: bn, month: month)),
+                      SlmTopBar(
+                        title: tr(bn, 'র‍্যাঙ্ক', 'Rank'),
+                        subtitle: tr(bn, 'এই মাসের মোট পয়েন্ট · $month', 'Total points this month · $month'),
+                        onBack: () => Navigator.of(context).maybePop(),
+                        backLabel: tr(bn, 'ফিরে যান', 'Back'),
                       ),
                       Expanded(
                         child: _ChampionBoard(
@@ -76,38 +78,6 @@ class RankScreen extends ConsumerWidget {
           },
         ),
       ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  final bool bn;
-  final String month;
-
-  const _Header({required this.bn, required this.month});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const SlmIconBadge(icon: Icons.emoji_events_rounded, style: SlmIconStyle.medal, size: 44),
-        const SizedBox(width: SlmSpace.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SlmText(tr(bn, 'র‍্যাঙ্ক', 'Rank'), role: SlmTextRole.headline, color: SlmColors.ivory, maxLines: 1),
-              const SizedBox(height: 2),
-              SlmText(
-                tr(bn, 'এই মাসের মোট পয়েন্ট · $month', 'Total points this month · $month'),
-                role: SlmTextRole.caption,
-                color: SlmColors.gold300,
-                maxLines: 1,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

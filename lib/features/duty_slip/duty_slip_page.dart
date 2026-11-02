@@ -68,7 +68,10 @@ DsMotion dsMotionOf(BuildContext context) {
 bool dsReduceMotion(BuildContext context) => MediaQuery.disableAnimationsOf(context);
 
 class DutySlipPage extends StatefulWidget {
-  const DutySlipPage({super.key});
+  /// Skip the death cover and open the ladder. Level briefings are unchanged.
+  final bool startOnRoad;
+
+  const DutySlipPage({super.key, this.startOnRoad = false});
 
   static Future<void> open(BuildContext context, {Rect? sourceRect}) =>
       Navigator.of(context, rootNavigator: true).push(
@@ -275,6 +278,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
+    _loadingWaitOpenRoad = widget.startOnRoad;
     _shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
     _skyDrift = AnimationController(vsync: this, duration: const Duration(seconds: 48))..repeat();
     _shakeX = TweenSequence<double>([
@@ -738,6 +742,12 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     if (_loading || _engine == null) {
+      if (widget.startOnRoad) {
+        return const Scaffold(
+          backgroundColor: SlmColors.navy950,
+          body: Center(child: CircularProgressIndicator(strokeWidth: 2, color: SlmColors.gold300)),
+        );
+      }
       return Scaffold(
         backgroundColor: ZlColors.bg,
         body: Stack(

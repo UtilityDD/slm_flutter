@@ -7,13 +7,13 @@ import '../../design/slm_design.dart';
 import '../emergency/emergency_directory_screen.dart';
 import '../home/home_screen.dart';
 import '../identify/identify_screen.dart';
-import '../life_skill/life_skill_screen.dart';
 import '../more/more_screen.dart';
 import '../quizzes/identify_quiz_screen.dart';
 import '../quizzes/quiz_hub_screen.dart';
 import '../quizzes/quiz_play_screen.dart';
 import '../radio/radio_mini_player.dart';
 import '../radio/radio_player_provider.dart';
+import '../rank/rank_screen.dart';
 import '../sops/sops_screen.dart';
 import '../training/training_screen.dart';
 import '../admin/admin_screen.dart';
@@ -36,19 +36,9 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final bn = ref.watch(languageProvider);
-    final tab = ref.watch(shellTabProvider);
     final radioOn = ref.watch(radioProvider).isVisible;
-    // The clean home stands alone. The dock returns on the other tabs.
-    final dockOn = tab != 0;
-    final dockInset = dockOn
-        ? ShellDockMetrics.compute(context, radioVisible: radioOn)
-        : MediaQuery.viewPaddingOf(context).bottom;
+    final dockInset = MediaQuery.viewPaddingOf(context).bottom;
 
-    // Overlay dock (not Scaffold.bottomNavigationBar) so the notch stays
-    // truly transparent. Pages clear it via [ShellDockScope] padding — never
-    // a SafeArea/Scaffold-colored slab behind the bar.
-    // Dark status icons for the cream tabs; Home's navy backdrop overrides it.
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
@@ -64,26 +54,16 @@ class _MainShellState extends ConsumerState<MainShell> {
                 onGenerateRoute: _onGenerateRoute,
               ),
             ),
-            if (dockOn)
-              Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const RadioMiniPlayer(),
-                  _BottomNav(
-                    index: tab,
-                    bn: bn,
-                    onSelect: (index) {
-                      _navKey.currentState?.popUntil((route) => route.isFirst);
-                      ref.read(shellTabProvider.notifier).select(index);
-                    },
-                  ),
-                ],
+            if (radioOn)
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: SafeArea(
+                  top: false,
+                  child: RadioMiniPlayer(),
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -92,41 +72,25 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   Route<dynamic> _onGenerateRoute(RouteSettings settings) {
     final page = switch (settings.name) {
-      AppRoutes.home => const _TabHost(),
+      AppRoutes.home => const HomeScreen(),
       AppRoutes.training => const TrainingScreen(),
       AppRoutes.mantra => const SopsScreen(initialIndex: 1, title: '8 মন্ত্র'),
       AppRoutes.ppe => const SopsScreen(initialIndex: 0, title: 'আমার পিপিই'),
       AppRoutes.quiz => const QuizHubScreen(),
       AppRoutes.hourly => const QuizPlayScreen(),
       AppRoutes.identifyPlay => const IdentifyQuizScreen(),
+      AppRoutes.identify => const IdentifyScreen(),
+      AppRoutes.rank => const RankScreen(),
       AppRoutes.more => const MoreScreen(),
       AppRoutes.emergency => const EmergencyDirectoryScreen(),
       AppRoutes.login => const LoginScreen(),
       AppRoutes.admin => const AdminScreen(),
       AppRoutes.premiumPreview => const PremiumRankPreview(),
       AppRoutes.motionShowcase => const MotionShowcase(),
-      _ => const _TabHost(),
+      _ => const HomeScreen(),
     };
 
     return MaterialPageRoute(settings: settings, builder: (_) => page);
-  }
-}
-
-class _TabHost extends ConsumerWidget {
-  const _TabHost();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tab = ref.watch(shellTabProvider);
-    return IndexedStack(
-      index: tab,
-      children: const [
-        HomeScreen(),
-        IdentifyScreen(),
-        PremiumRankPreview(asTab: true),
-        LifeSkillScreen(),
-      ],
-    );
   }
 }
 

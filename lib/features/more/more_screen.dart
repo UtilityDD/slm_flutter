@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,11 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
+import '../auth/google_mark.dart';
 import '../auth/verify_gate.dart';
 import '../auth/verify_hold.dart';
 import '../auth/verify_sheet.dart';
 import '../auth/verify_tick.dart';
-import '../radio/radio_player_provider.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
@@ -30,155 +29,122 @@ class MoreScreen extends ConsumerWidget {
     final mail = auth.email?.trim() ?? '';
     final district = profile?.district?.trim() ?? '';
     final blockReady = district.isNotEmpty;
+    final initial = name.isEmpty ? 'ল' : name.characters.first;
 
-    final tools = <_Row>[
-      _Row(tr(bn, 'জরুরি', 'Emergency'), Icons.warning_rounded, SlmColors.danger, () {
-        Navigator.of(context).pushNamed(AppRoutes.emergency);
-      }),
-      _Row(tr(bn, 'আমার পিপিই', 'My PPE'), Icons.health_and_safety_rounded, SlmColors.emerald300, () {
-        Navigator.of(context).pushNamed(AppRoutes.ppe);
-      }),
-      _Row(tr(bn, 'রেডিও', 'Radio'), Icons.radio_rounded, SlmColors.gold300, () {
-        ref.read(radioProvider.notifier).showPlayer();
-        ref.read(radioProvider.notifier).togglePlay();
-      }),
+    final shortcuts = <_Shortcut>[
+      if (!guest) ...[
+        _Shortcut(
+          tr(bn, 'সার্টিফিকেট', 'Certificate'),
+          Icons.workspace_premium_rounded,
+          SlmColors.gold300,
+          () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const CertificatePage()),
+          ),
+        ),
+        _Shortcut(
+          tr(bn, 'পিপিই', 'PPE'),
+          Icons.health_and_safety_rounded,
+          SlmColors.emerald300,
+          () => Navigator.of(context).pushNamed(AppRoutes.ppe),
+        ),
+      ],
       if (auth.isAdmin)
-        _Row(tr(bn, 'অ্যাডমিন', 'Admin'), Icons.admin_panel_settings_rounded, SlmColors.gold400, () {
-          Navigator.of(context).pushNamed(AppRoutes.admin);
-        }),
-      if (kDebugMode)
-        _Row(tr(bn, 'প্রিমিয়াম প্রিভিউ', 'Premium preview'), Icons.auto_awesome_rounded, SlmColors.gold400, () {
-          Navigator.of(context).pushNamed(AppRoutes.premiumPreview);
-        }),
-      if (kDebugMode)
-        _Row(tr(bn, 'মোশন শোকেস', 'Motion showcase'), Icons.animation_rounded, SlmColors.emerald300, () {
-          Navigator.of(context).pushNamed(AppRoutes.motionShowcase);
-        }),
+        _Shortcut(
+          tr(bn, 'অ্যাডমিন', 'Admin'),
+          Icons.admin_panel_settings_rounded,
+          SlmColors.gold200,
+          () => Navigator.of(context).pushNamed(AppRoutes.admin),
+        ),
     ];
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Theme(
         data: SlmTheme.night(),
-        child: Builder(builder: (context) {
-          final g = context.slm.layout.gutter;
-          return Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Stack(
-            fit: StackFit.expand,
-            children: [
-              const Positioned.fill(child: SlmBackground(constrain: false, child: SizedBox.expand())),
-              ShellSafeArea(
-                child: ListView(
-                  padding: shellScrollPadding(context, left: g, top: 4, right: g, extraBottom: 12),
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        icon: const Icon(Icons.arrow_back_rounded, color: SlmColors.ivory),
-                        tooltip: tr(bn, 'ফিরে যান', 'Back'),
-                      ),
-                    ),
-                    const SizedBox(height: SlmSpace.xs),
-                    Row(
+        child: Builder(
+          builder: (context) {
+            final g = context.slm.layout.gutter;
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Stack(
+                fit: StackFit.expand,
+                children: [
+                  const Positioned.fill(child: SlmBackground(constrain: false, child: SizedBox.expand())),
+                  ShellSafeArea(
+                    child: ListView(
+                      padding: shellScrollPadding(context, left: g, top: 0, right: g, extraBottom: 16),
                       children: [
-                        Flexible(
-                          child: SlmText(name, role: SlmTextRole.headline, color: SlmColors.ivory, maxLines: 1),
+                        SlmTopBar(
+                          title: tr(bn, 'সেটিংস', 'Settings'),
+                          onBack: () => Navigator.of(context).maybePop(),
+                          backLabel: tr(bn, 'ফিরে যান', 'Back'),
                         ),
-                        const SizedBox(width: SlmSpace.xs),
-                        GestureDetector(
-                          onTap: verified ? null : () => showVerifySheet(context),
-                          child: VerifyTick(gold: verified, size: 26),
+                        const SizedBox(height: 8),
+                        _IdentityHero(
+                          name: name,
+                          mail: mail,
+                          guest: guest,
+                          verified: verified,
+                          initial: initial,
+                          onTick: verified || guest ? null : () => showVerifySheet(context),
                         ),
+                        const SizedBox(height: 14),
+                        _LanguageRail(
+                          bn: bn,
+                          onBn: () => ref.read(languageProvider.notifier).setBengali(true),
+                          onEn: () => ref.read(languageProvider.notifier).setBengali(false),
+                        ),
+                        if (!guest) ...[
+                          const SizedBox(height: 18),
+                          _SectionCue(tr(bn, 'পরিচয়', 'Profile')),
+                          const SizedBox(height: 8),
+                          _ProfileGrid(
+                            tiles: [
+                              _TileSpec(tr(bn, 'নাম', 'Name'), _shown(profile?.fullName), () => showNameSheet(context, ref)),
+                              _TileSpec(tr(bn, 'জেলা', 'District'), _shown(profile?.district), () => showDistrictSheet(context, ref)),
+                              _TileSpec(
+                                tr(bn, 'ব্লক', 'Block'),
+                                blockReady ? _shown(profile?.block) : '—',
+                                blockReady ? () => showBlockSheet(context, ref) : null,
+                              ),
+                              _TileSpec(tr(bn, 'কাজ', 'Job'), _shown(profile?.job), () => showJobSheet(context, ref)),
+                              _TileSpec(tr(bn, 'ফোন', 'Phone'), _shown(profile?.phone), () => showPhoneSheet(context, ref)),
+                            ],
+                          ),
+                        ],
+                        if (shortcuts.isNotEmpty) ...[
+                          const SizedBox(height: 18),
+                          _SectionCue(tr(bn, 'সরঞ্জাম', 'Tools')),
+                          const SizedBox(height: 8),
+                          _ShortcutRail(items: shortcuts),
+                        ],
+                        const SizedBox(height: 22),
+                        if (auth.isAuthenticated)
+                          SlmButton(
+                            label: tr(bn, 'লগআউট', 'Log out'),
+                            icon: Icons.logout_rounded,
+                            variant: SlmButtonVariant.danger,
+                            size: SlmButtonSize.medium,
+                            expand: true,
+                            onPressed: () => _confirmSignOut(context, ref, bn),
+                          )
+                        else
+                          GoogleSignInButton(
+                            bn: bn,
+                            loading: auth.isLoading,
+                            error: auth.errorMessage,
+                            onPressed: auth.isLoading
+                                ? null
+                                : () => ref.read(authProvider.notifier).signInWithGoogle(),
+                          ),
                       ],
                     ),
-                    if (!guest && mail.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      SlmText(mail, role: SlmTextRole.caption, color: SlmColors.gold300, maxLines: 1),
-                    ],
-                    if (!guest) ...[
-                      const SizedBox(height: SlmSpace.xl),
-                      SlmSectionHeader(title: tr(bn, 'আমার পরিচয়', 'My details')),
-                      _Card(
-                        children: [
-                          _ValueRow(
-                            label: tr(bn, 'নাম', 'Name'),
-                            value: _shown(profile?.fullName),
-                            onTap: () => showNameSheet(context, ref),
-                          ),
-                          _ValueRow(
-                            label: tr(bn, 'জেলা', 'District'),
-                            value: _shown(profile?.district),
-                            onTap: () => showDistrictSheet(context, ref),
-                          ),
-                          _ValueRow(
-                            label: tr(bn, 'ব্লক', 'Block'),
-                            value: blockReady ? _shown(profile?.block) : tr(bn, 'আগে জেলা', 'District first'),
-                            enabled: blockReady,
-                            onTap: () => showBlockSheet(context, ref),
-                          ),
-                          _ValueRow(
-                            label: tr(bn, 'কাজ', 'Job'),
-                            value: _shown(profile?.job),
-                            onTap: () => showJobSheet(context, ref),
-                          ),
-                          _ValueRow(
-                            label: tr(bn, 'ফোন', 'Phone'),
-                            value: _shown(profile?.phone),
-                            onTap: () => showPhoneSheet(context, ref),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: SlmSpace.lg),
-                      SlmSectionHeader(title: tr(bn, 'আমার কাগজ', 'My papers')),
-                      _Card(
-                        children: [
-                          _AccountRow(
-                            row: _Row(
-                              tr(bn, 'সার্টিফিকেট', 'Certificate'),
-                              Icons.workspace_premium_rounded,
-                              SlmColors.gold300,
-                              () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(builder: (_) => const CertificatePage()),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    if (!guest) ...[
-                      const SizedBox(height: SlmSpace.lg),
-                      SlmSectionHeader(title: tr(bn, 'সরঞ্জাম', 'Tools')),
-                      _Card(children: [for (final tool in tools) _AccountRow(row: tool)]),
-                    ],
-                    const SizedBox(height: SlmSpace.xl),
-                    if (auth.isAuthenticated)
-                      SlmButton(
-                        label: tr(bn, 'লগআউট', 'Log out'),
-                        icon: Icons.logout_rounded,
-                        variant: SlmButtonVariant.danger,
-                        size: SlmButtonSize.large,
-                        expand: true,
-                        onPressed: () => _confirmSignOut(context, ref, bn),
-                      )
-                    else
-                      SlmButton.gold(
-                        label: tr(bn, 'লগইন', 'Log in'),
-                        icon: Icons.login_rounded,
-                        size: SlmButtonSize.large,
-                        expand: true,
-                        onPressed: () => Navigator.of(context).pushNamed(AppRoutes.login),
-                      ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
-        }),
+            );
+          },
+        ),
       ),
     );
   }
@@ -186,6 +152,300 @@ class MoreScreen extends ConsumerWidget {
   String _shown(String? raw) {
     final text = raw?.trim() ?? '';
     return text.isEmpty ? '—' : text;
+  }
+}
+
+class _IdentityHero extends StatelessWidget {
+  final String name;
+  final String mail;
+  final bool guest;
+  final bool verified;
+  final String initial;
+  final VoidCallback? onTick;
+
+  const _IdentityHero({
+    required this.name,
+    required this.mail,
+    required this.guest,
+    required this.verified,
+    required this.initial,
+    required this.onTick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF152445), SlmColors.navy900, Color(0xFF07111F)],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: SlmGradients.navyCard,
+              border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.7), width: 1.4),
+            ),
+            child: Text(
+              initial,
+              style: bangla(fontSize: 24, fontWeight: FontWeight.w800, color: SlmColors.gold200),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: SlmText(name, role: SlmTextRole.title, color: SlmColors.ivory, maxLines: 1),
+                    ),
+                    if (!guest) ...[
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: onTick,
+                        child: VerifyTick(gold: verified, size: 20),
+                      ),
+                    ],
+                  ],
+                ),
+                if (!guest && mail.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  SlmText(mail, role: SlmTextRole.caption, color: SlmColors.gold300, maxLines: 1),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LanguageRail extends StatelessWidget {
+  final bool bn;
+  final VoidCallback onBn;
+  final VoidCallback onEn;
+
+  const _LanguageRail({required this.bn, required this.onBn, required this.onEn});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: SlmColors.navy950.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _LangPill(label: 'বাংলা', selected: bn, onTap: onBn)),
+          Expanded(child: _LangPill(label: 'English', selected: !bn, onTap: onEn)),
+        ],
+      ),
+    );
+  }
+}
+
+class _LangPill extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _LangPill({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SlmPressable(
+      onTap: onTap,
+      semanticLabel: label,
+      child: AnimatedContainer(
+        duration: SlmMotion.fast,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: selected ? SlmGradients.gold : null,
+        ),
+        child: Text(
+          label,
+          style: bangla(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: selected ? SlmColors.navy950 : SlmColors.mist,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionCue extends StatelessWidget {
+  final String text;
+
+  const _SectionCue(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 18,
+          height: 1.2,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(colors: [Color(0x00D9B25F), SlmColors.gold400]),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SlmText(text, role: SlmTextRole.label, color: SlmColors.gold300),
+      ],
+    );
+  }
+}
+
+class _TileSpec {
+  final String label;
+  final String value;
+  final VoidCallback? onTap;
+
+  const _TileSpec(this.label, this.value, this.onTap);
+}
+
+class _ProfileGrid extends StatelessWidget {
+  final List<_TileSpec> tiles;
+
+  const _ProfileGrid({required this.tiles});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final tile in tiles)
+          SizedBox(
+            width: (MediaQuery.sizeOf(context).width - context.slm.layout.gutter * 2 - 8) / 2,
+            child: _ProfileTile(tile: tile),
+          ),
+      ],
+    );
+  }
+}
+
+class _ProfileTile extends StatelessWidget {
+  final _TileSpec tile;
+
+  const _ProfileTile({required this.tile});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = tile.onTap != null;
+    return SlmPressable(
+      onTap: tile.onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 72),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        decoration: BoxDecoration(
+          gradient: SlmGradients.navyCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: SlmColors.gold400.withValues(alpha: enabled ? 0.4 : 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SlmText(tile.label, role: SlmTextRole.caption, color: SlmColors.gold300, maxLines: 1),
+            const SizedBox(height: 4),
+            SlmText(
+              tile.value,
+              role: SlmTextRole.titleSm,
+              color: enabled ? SlmColors.ivory : SlmColors.slate,
+              maxLines: 2,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Shortcut {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _Shortcut(this.label, this.icon, this.color, this.onTap);
+}
+
+class _ShortcutRail extends StatelessWidget {
+  final List<_Shortcut> items;
+
+  const _ShortcutRail({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    final count = items.length.clamp(1, 3);
+    final gap = 8.0;
+    final width = (MediaQuery.sizeOf(context).width - context.slm.layout.gutter * 2 - gap * (count - 1)) / count;
+    return Wrap(
+      spacing: gap,
+      runSpacing: gap,
+      children: [
+        for (final item in items)
+          SizedBox(
+            width: width,
+            child: SlmPressable(
+              onTap: item.onTap,
+              semanticLabel: item.label,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
+                decoration: BoxDecoration(
+                  gradient: SlmGradients.navyCard,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: item.color.withValues(alpha: 0.4)),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: item.color.withValues(alpha: 0.14),
+                        border: Border.all(color: item.color.withValues(alpha: 0.45)),
+                      ),
+                      child: Icon(item.icon, color: item.color, size: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      item.label,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: bangla(fontSize: 12, fontWeight: FontWeight.w700, color: SlmColors.ivory),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 
@@ -270,109 +530,4 @@ Future<void> _confirmSignOut(BuildContext context, WidgetRef ref, bool bn) async
     },
   );
   if (go == true) await ref.read(authProvider.notifier).signOut();
-}
-
-class _Card extends StatelessWidget {
-  final List<Widget> children;
-
-  const _Card({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return SlmCard(
-      variant: SlmCardVariant.surface,
-      padding: EdgeInsets.zero,
-      radius: SlmRadius.md,
-      child: Column(children: _withDividers(children)),
-    );
-  }
-
-  List<Widget> _withDividers(List<Widget> items) {
-    final out = <Widget>[];
-    for (var i = 0; i < items.length; i++) {
-      if (i > 0) {
-        out.add(Divider(height: 1, color: SlmColors.gold400.withValues(alpha: 0.18)));
-      }
-      out.add(items[i]);
-    }
-    return out;
-  }
-}
-
-class _ValueRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-  final bool enabled;
-
-  const _ValueRow({
-    required this.label,
-    required this.value,
-    required this.onTap,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final ink = enabled ? SlmColors.ivory : SlmColors.slate;
-    return SlmPressable(
-      onTap: enabled ? onTap : null,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Expanded(child: SlmText(label, role: SlmTextRole.titleSm, color: ink, maxLines: 1)),
-            const SizedBox(width: 12),
-            Flexible(
-              child: SlmText(value, role: SlmTextRole.bodySm, color: SlmColors.mist, maxLines: 1, align: TextAlign.right),
-            ),
-            Icon(Icons.chevron_right_rounded, color: enabled ? SlmColors.gold300 : SlmColors.slate),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Row {
-  final String label;
-  final IconData icon;
-  final Color ink;
-  final VoidCallback onTap;
-
-  const _Row(this.label, this.icon, this.ink, this.onTap);
-}
-
-class _AccountRow extends StatelessWidget {
-  final _Row row;
-
-  const _AccountRow({required this.row});
-
-  @override
-  Widget build(BuildContext context) {
-    return SlmPressable(
-      onTap: row.onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: row.ink.withValues(alpha: 0.14),
-                border: Border.all(color: row.ink.withValues(alpha: 0.45)),
-              ),
-              child: Icon(row.icon, color: row.ink, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: SlmText(row.label, role: SlmTextRole.titleSm, color: SlmColors.ivory, maxLines: 1)),
-            const Icon(Icons.chevron_right_rounded, color: SlmColors.gold300),
-          ],
-        ),
-      ),
-    );
-  }
 }

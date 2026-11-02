@@ -388,38 +388,22 @@ class _Intro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SlmReveal(
-            child: Text(
-              tr(bn, 'পরিচিতি', 'Identify'),
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
-                height: 1.15,
-                color: SlmColors.ivory,
-                shadows: [Shadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 10, offset: const Offset(0, 2))],
-              ),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Theme(
+          data: SlmTheme.night(),
+          child: SlmTopBar(
+            title: tr(bn, 'পরিচিতি', 'Identify'),
+            onBack: () => Navigator.of(context).maybePop(),
+            backLabel: tr(bn, 'ফিরে যান', 'Back'),
           ),
-          const SizedBox(height: 6),
-          SlmReveal(
-            index: 1,
-            child: Container(
-              width: 64,
-              height: 1.4,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [SlmColors.gold300, SlmColors.gold400.withValues(alpha: 0)]),
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          SlmReveal(index: 2, child: _QuizBanner(bn: bn, stats: stats)),
-        ],
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+          child: SlmReveal(index: 1, child: _QuizBanner(bn: bn, stats: stats)),
+        ),
+      ],
     );
   }
 }

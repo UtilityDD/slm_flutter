@@ -5,9 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
-import '../../shared/widgets/slm_backdrop.dart';
+import '../../design/slm_design.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 
@@ -54,60 +53,16 @@ class _Group {
 }
 
 const _immediate = <_Group>[
-  _Group(
-    'ambulance',
-    'অ্যাম্বুলেন্স',
-    'Ambulance',
-    Icons.airport_shuttle_rounded,
-    AppColors.safeGreen,
-  ),
-  _Group(
-    'fire',
-    'ফায়ার',
-    'Fire',
-    Icons.local_fire_department_rounded,
-    AppColors.safetyOrange,
-  ),
-  _Group(
-    'police',
-    'পুলিশ',
-    'Police',
-    Icons.local_police_rounded,
-    AppColors.electricBlue,
-  ),
-  _Group(
-    'power',
-    'বিদ্যুৎ জরুরি',
-    'Electricity emergency',
-    Icons.electric_bolt_rounded,
-    AppColors.primaryDarkAmber,
-  ),
+  _Group('ambulance', 'অ্যাম্বুলেন্স', 'Ambulance', Icons.airport_shuttle_rounded, SlmColors.emerald400),
+  _Group('fire', 'ফায়ার', 'Fire', Icons.local_fire_department_rounded, SlmColors.danger),
+  _Group('police', 'পুলিশ', 'Police', Icons.local_police_rounded, Color(0xFF5B9BF8)),
+  _Group('power', 'বিদ্যুৎ', 'Power', Icons.electric_bolt_rounded, Color(0xFFE4C77F)),
 ];
 
-const _hospitals = _Group(
-  'hospitals',
-  'হাসপাতাল',
-  'Hospitals',
-  Icons.local_hospital_rounded,
-  Color(0xFF0F766E),
-);
+const _hospitals = _Group('hospitals', 'হাসপাতাল', 'Hospitals', Icons.local_hospital_rounded, Color(0xFF6EE7B7));
+const _other = _Group('other', 'অন্যান্য', 'Other', Icons.forum_rounded, Color(0xFF8A97B1));
 
-const _other = _Group(
-  'other',
-  'অন্যান্য',
-  'Other',
-  Icons.forum_rounded,
-  AppColors.muted,
-);
-
-const _groupOrder = [
-  'ambulance',
-  'fire',
-  'police',
-  'power',
-  'hospitals',
-  'other',
-];
+const _groupOrder = ['ambulance', 'fire', 'police', 'power', 'hospitals', 'other'];
 
 String _bucket(String type) {
   final t = type.toLowerCase();
@@ -127,19 +82,16 @@ _Group _groupFor(String id) {
   return _other;
 }
 
-String _shownName(String raw) =>
-    raw.replaceAll('&#038;', '&').replaceAll('&amp;', '&');
+String _shownName(String raw) => raw.replaceAll('&#038;', '&').replaceAll('&amp;', '&');
 
 class EmergencyDirectoryScreen extends ConsumerStatefulWidget {
   const EmergencyDirectoryScreen({super.key});
 
   @override
-  ConsumerState<EmergencyDirectoryScreen> createState() =>
-      _EmergencyDirectoryScreenState();
+  ConsumerState<EmergencyDirectoryScreen> createState() => _EmergencyDirectoryScreenState();
 }
 
-class _EmergencyDirectoryScreenState
-    extends ConsumerState<EmergencyDirectoryScreen> {
+class _EmergencyDirectoryScreenState extends ConsumerState<EmergencyDirectoryScreen> {
   List<EmergencyServiceItem> _allServices = [];
   List<String> _districts = const [];
   String _selectedDistrict = '';
@@ -155,18 +107,12 @@ class _EmergencyDirectoryScreenState
 
   Future<void> _loadEmergencyData() async {
     try {
-      final jsonString = await rootBundle.loadString(
-        'assets/data/districtEmergencyServices.json',
-      );
+      final jsonString = await rootBundle.loadString('assets/data/districtEmergencyServices.json');
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      final items = jsonList
-          .map((e) => EmergencyServiceItem.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final items = jsonList.map((e) => EmergencyServiceItem.fromJson(e as Map<String, dynamic>)).toList();
       final districtSet = <String>{};
       for (final item in items) {
-        if (item.district.trim().isNotEmpty) {
-          districtSet.add(item.district.trim());
-        }
+        if (item.district.trim().isNotEmpty) districtSet.add(item.district.trim());
       }
       final sortedDistricts = districtSet.toList()..sort();
       if (!mounted) return;
@@ -183,10 +129,7 @@ class _EmergencyDirectoryScreenState
 
   List<EmergencyServiceItem> _scoped() {
     if (_selectedDistrict.isEmpty) return _allServices;
-    return [
-      for (final item in _allServices)
-        if (item.district == _selectedDistrict) item,
-    ];
+    return [for (final item in _allServices) if (item.district == _selectedDistrict) item];
   }
 
   List<EmergencyServiceItem> _matched(List<EmergencyServiceItem> source) {
@@ -216,136 +159,146 @@ class _EmergencyDirectoryScreenState
     setState(() => _kind = _kind == id ? null : id);
   }
 
+  Future<void> _callNumber(String phone) async {
+    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    final uri = Uri.parse('tel:$cleanPhone');
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
   @override
   Widget build(BuildContext context) {
     final bn = ref.watch(languageProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SlmBackdrop(
-        child: ShellSafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _TopBar(bn: bn),
-              if (_isLoading)
-                const Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Theme(
+        data: SlmTheme.night(),
+        child: Builder(
+          builder: (context) {
+            final g = context.slm.layout.gutter;
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Stack(
+                fit: StackFit.expand,
+                children: [
+                  const Positioned.fill(child: SlmBackground(constrain: false, child: SizedBox.expand())),
+                  ShellSafeArea(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SlmTopBar(
+                          title: tr(bn, 'জরুরি নম্বর', 'Emergency'),
+                          onBack: () => Navigator.of(context).maybePop(),
+                          backLabel: tr(bn, 'ফিরে যান', 'Back'),
+                        ),
+                        if (_isLoading)
+                          const Expanded(
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2, color: SlmColors.gold300),
+                            ),
+                          )
+                        else ...[
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(g, 0, g, 0),
+                            child: Column(
+                              children: [
+                                _DistrictField(
+                                  bn: bn,
+                                  districts: _districts,
+                                  value: _selectedDistrict,
+                                  onChanged: (value) => setState(() => _selectedDistrict = value),
+                                ),
+                                const SizedBox(height: 8),
+                                _SearchField(
+                                  bn: bn,
+                                  onChanged: (value) => setState(() => _searchQuery = value),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Expanded(child: _showPicker ? _picker(bn, g) : _results(bn, g)),
+                        ],
+                      ],
+                    ),
                   ),
-                )
-              else ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  child: Column(
-                    children: [
-                      _DistrictField(
-                        bn: bn,
-                        districts: _districts,
-                        value: _selectedDistrict,
-                        onChanged: (value) {
-                          setState(() => _selectedDistrict = value);
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      _SearchField(
-                        bn: bn,
-                        onChanged: (value) =>
-                            setState(() => _searchQuery = value),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(child: _showPicker ? _picker(bn) : _results(bn)),
-              ],
-            ],
-          ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _picker(bool bn) {
+  Widget _picker(bool bn, double g) {
     final otherCount = _count(_other.id);
     return ListView(
-      padding: shellScrollPadding(
-        context,
-        left: 20,
-        top: 0,
-        right: 20,
-        extraBottom: 16,
-      ),
+      padding: shellScrollPadding(context, left: g, top: 0, right: g, extraBottom: 12),
       children: [
-        _SectionLabel(tr(bn, 'এখনই কল', 'Call now')),
+        SlmText(tr(bn, 'এখনই কল', 'Call now'), role: SlmTextRole.label, color: SlmColors.gold300),
         const SizedBox(height: 8),
-        for (final group in _immediate) ...[
-          _GroupRow(
-            label: tr(bn, group.bn, group.en),
-            detail: tr(
-              bn,
-              '${_count(group.id)} টি নম্বর',
-              '${_count(group.id)} numbers',
-            ),
-            icon: group.icon,
-            color: group.color,
-            selected: false,
-            onTap: () => _selectKind(group.id),
-          ),
-          const SizedBox(height: 10),
-        ],
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 1.55,
+          children: [
+            for (final group in _immediate)
+              _GroupTile(
+                label: tr(bn, group.bn, group.en),
+                count: _count(group.id),
+                icon: group.icon,
+                color: group.color,
+                bn: bn,
+                onTap: () => _selectKind(group.id),
+              ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        SlmText(tr(bn, 'অন্যান্য', 'Other'), role: SlmTextRole.label, color: SlmColors.gold300),
         const SizedBox(height: 8),
-        _SectionLabel(tr(bn, 'অন্যান্য যোগাযোগ', 'Other contacts')),
-        const SizedBox(height: 8),
-        _GroupRow(
+        _GroupTile(
           label: tr(bn, _hospitals.bn, _hospitals.en),
-          detail: tr(
-            bn,
-            '${_count(_hospitals.id)} টি নম্বর',
-            '${_count(_hospitals.id)} numbers',
-          ),
+          count: _count(_hospitals.id),
           icon: _hospitals.icon,
           color: _hospitals.color,
-          selected: false,
+          bn: bn,
           onTap: () => _selectKind(_hospitals.id),
         ),
         if (otherCount > 0) ...[
-          const SizedBox(height: 10),
-          _GroupRow(
+          const SizedBox(height: 8),
+          _GroupTile(
             label: tr(bn, _other.bn, _other.en),
-            detail: tr(bn, '$otherCount টি নম্বর', '$otherCount numbers'),
+            count: otherCount,
             icon: _other.icon,
             color: _other.color,
-            selected: false,
+            bn: bn,
             onTap: () => _selectKind(_other.id),
           ),
         ],
-        const SizedBox(height: 14),
-        Text(
+        const SizedBox(height: 12),
+        SlmText(
           tr(
             bn,
-            'জেলা বেছে নিয়ে একটা দল খুলুন। নম্বরে চাপ দিলে কল যাবে।',
+            'জেলা বেছে নিন, তারপর একটি দল খুলুন। নম্বরে চাপ দিলে কল যাবে।',
             'Pick a district, then a group. Tap a number to call.',
           ),
-          style: bangla(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.muted,
-            height: 1.35,
-          ),
+          role: SlmTextRole.caption,
+          color: SlmColors.mist,
+          maxLines: 3,
         ),
       ],
     );
   }
 
-  Widget _results(bool bn) {
+  Widget _results(bool bn, double g) {
     final matched = _matched(_scoped());
     final visible = _kind == null
         ? matched
-        : [
-            for (final item in matched)
-              if (_bucket(item.type) == _kind) item,
-          ];
+        : [for (final item in matched) if (_bucket(item.type) == _kind) item];
     final chips = [
       for (final id in _groupOrder)
         if (_allServices.any((item) => _bucket(item.type) == id)) id,
@@ -355,58 +308,44 @@ class _EmergencyDirectoryScreenState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SizedBox(
-          height: 48,
+          height: 40,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: g),
             itemCount: chips.length,
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final id = chips[index];
               final group = _groupFor(id);
-              return _KindChip(
-                label: tr(bn, group.bn, group.en),
-                selected: _kind == id,
-                onTap: () => _selectKind(id),
+              return Theme(
+                data: Theme.of(context),
+                child: SlmChip(
+                  label: tr(bn, group.bn, group.en),
+                  selected: _kind == id,
+                  onTap: () => _selectKind(id),
+                ),
               );
             },
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
-          child: Text(
-            tr(
-              bn,
-              'মোট ${visible.length} টি জরুরি যোগাযোগ নম্বর উপলব্ধ',
-              '${visible.length} emergency numbers',
-            ),
-            style: bangla(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.muted,
-            ),
+          padding: EdgeInsets.fromLTRB(g, 10, g, 6),
+          child: SlmText(
+            tr(bn, '${visible.length} টি নম্বর', '${visible.length} numbers'),
+            role: SlmTextRole.caption,
+            color: SlmColors.mist,
           ),
         ),
         Expanded(
           child: visible.isEmpty
               ? Center(
-                  child: Text(
-                    tr(bn, 'কোনো তথ্য পাওয়া যায়নি।', 'Nothing found.'),
-                    style: bangla(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.inkSoft,
-                    ),
+                  child: SlmEmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: tr(bn, 'কোনো তথ্য পাওয়া যায়নি।', 'Nothing found.'),
                   ),
                 )
               : ListView(
-                  padding: shellScrollPadding(
-                    context,
-                    left: 20,
-                    top: 4,
-                    right: 20,
-                    extraBottom: 12,
-                  ),
+                  padding: shellScrollPadding(context, left: g, top: 0, right: g, extraBottom: 12),
                   children: _contactChildren(bn, visible),
                 ),
         ),
@@ -417,24 +356,21 @@ class _EmergencyDirectoryScreenState
   List<Widget> _contactChildren(bool bn, List<EmergencyServiceItem> visible) {
     final out = <Widget>[];
     for (final id in _groupOrder) {
-      final items = [
-        for (final item in visible)
-          if (_bucket(item.type) == id) item,
-      ];
+      final items = [for (final item in visible) if (_bucket(item.type) == id) item];
       if (items.isEmpty) continue;
       if (_kind == null) {
         final group = _groupFor(id);
         out.add(
           Padding(
-            padding: const EdgeInsets.only(top: 6, bottom: 8),
-            child: _SectionLabel(tr(bn, group.bn, group.en)),
+            padding: const EdgeInsets.only(top: 4, bottom: 6),
+            child: SlmText(tr(bn, group.bn, group.en), role: SlmTextRole.label, color: SlmColors.gold300),
           ),
         );
       }
       for (final item in items) {
         out.add(
           Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.only(bottom: 8),
             child: _ContactCard(
               item: item,
               color: _groupFor(id).color,
@@ -446,67 +382,6 @@ class _EmergencyDirectoryScreenState
       }
     }
     return out;
-  }
-
-  Future<void> _callNumber(String phone) async {
-    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
-    final uri = Uri.parse('tel:$cleanPhone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
-}
-
-class _TopBar extends StatelessWidget {
-  final bool bn;
-
-  const _TopBar({required this.bn});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, 16, 4),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.of(context).maybePop(),
-            tooltip: tr(bn, 'ফিরে যান', 'Back'),
-            icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
-          ),
-          Expanded(
-            child: Text(
-              tr(bn, 'জরুরি সহায়তা ডিরেক্টরি', 'Emergency directory'),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: bangla(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.ink,
-                height: 1.2,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-
-  const _SectionLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: bangla(
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        color: AppColors.muted,
-      ),
-    );
   }
 }
 
@@ -527,35 +402,23 @@ class _DistrictField extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE7E5E4)),
+        gradient: SlmGradients.navyCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.4)),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: value,
             isExpanded: true,
-            icon: const Icon(
-              Icons.expand_more_rounded,
-              color: AppColors.inkSoft,
-            ),
-            style: bangla(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.ink,
-            ),
+            dropdownColor: SlmColors.navy800,
+            iconEnabledColor: SlmColors.gold300,
+            style: bangla(fontSize: 15, fontWeight: FontWeight.w700, color: SlmColors.ivory),
             items: [
-              DropdownMenuItem(
-                value: '',
-                child: Text(tr(bn, 'সব জেলা', 'All districts')),
-              ),
+              DropdownMenuItem(value: '', child: Text(tr(bn, 'সব জেলা', 'All districts'))),
               for (final district in districts)
-                DropdownMenuItem(
-                  value: district,
-                  child: Text(district, overflow: TextOverflow.ellipsis),
-                ),
+                DropdownMenuItem(value: district, child: Text(district, overflow: TextOverflow.ellipsis)),
             ],
             onChanged: (next) {
               if (next != null) onChanged(next);
@@ -578,170 +441,95 @@ class _SearchField extends StatelessWidget {
     return TextField(
       onChanged: onChanged,
       textInputAction: TextInputAction.search,
-      style: bangla(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: AppColors.ink,
-      ),
+      cursorColor: SlmColors.gold400,
+      style: bangla(fontSize: 15, fontWeight: FontWeight.w600, color: SlmColors.ivory),
       decoration: InputDecoration(
-        hintText: tr(
-          bn,
-          'থানা, হাসপাতাল বা ফোন নম্বর খুঁজুন...',
-          'Search station, hospital, or number...',
-        ),
-        hintStyle: bangla(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          color: AppColors.muted,
-        ),
-        prefixIcon: const Icon(Icons.search_rounded, color: AppColors.muted),
+        hintText: tr(bn, 'নাম বা নম্বর খুঁজুন', 'Search name or number'),
+        hintStyle: bangla(fontSize: 14, fontWeight: FontWeight.w500, color: SlmColors.slate),
+        prefixIcon: const Icon(Icons.search_rounded, color: SlmColors.gold300, size: 22),
         filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 16,
-        ),
+        fillColor: SlmColors.navy900,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFE7E5E4)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.35)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFE7E5E4)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.35)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFEA580C), width: 1.4),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: SlmColors.gold400, width: 1.4),
         ),
       ),
     );
   }
 }
 
-class _GroupRow extends StatelessWidget {
+class _GroupTile extends StatelessWidget {
   final String label;
-  final String detail;
+  final int count;
   final IconData icon;
   final Color color;
-  final bool selected;
+  final bool bn;
   final VoidCallback onTap;
 
-  const _GroupRow({
+  const _GroupTile({
     required this.label,
-    required this.detail,
+    required this.count,
     required this.icon,
     required this.color,
-    required this.selected,
+    required this.bn,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? const Color(0xFFFFF7ED) : Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 76),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: selected
-                  ? const Color(0xFFEA580C)
-                  : const Color(0xFFE7E5E4),
-              width: selected ? 1.6 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: bangla(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.ink,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      detail,
-                      style: bangla(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.muted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
-            ],
-          ),
+    return SlmPressable(
+      onTap: onTap,
+      semanticLabel: label,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        decoration: BoxDecoration(
+          gradient: SlmGradients.navyCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.45)),
         ),
-      ),
-    );
-  }
-}
-
-class _KindChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _KindChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? const Color(0xFFFFF7ED) : Colors.white,
-      borderRadius: BorderRadius.circular(999),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: selected
-                  ? const Color(0xFFEA580C)
-                  : const Color(0xFFE7E5E4),
-              width: selected ? 1.6 : 1,
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 20),
             ),
-          ),
-          child: Text(
-            label,
-            style: bangla(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.ink,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: bangla(fontSize: 14, fontWeight: FontWeight.w800, color: SlmColors.ivory, height: 1.15),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    tr(bn, '$count টি', '$count'),
+                    style: bangla(fontSize: 12, fontWeight: FontWeight.w600, color: SlmColors.mist),
+                  ),
+                ],
+              ),
             ),
-          ),
+            Icon(Icons.chevron_right_rounded, color: color.withValues(alpha: 0.85), size: 20),
+          ],
         ),
       ),
     );
@@ -763,102 +551,67 @@ class _ContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final place = [
-      item.district,
-      item.location,
-    ].where((part) => part.trim().isNotEmpty).join(' • ');
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onCall,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 84),
-          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE7E5E4)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 22),
+    final place = [item.district, item.location].where((part) => part.trim().isNotEmpty).join(' • ');
+    return SlmPressable(
+      onTap: onCall,
+      semanticLabel: item.phone,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+        decoration: BoxDecoration(
+          gradient: SlmGradients.navyCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(11),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _shownName(item.name),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: bangla(fontSize: 14, fontWeight: FontWeight.w800, color: SlmColors.ivory, height: 1.2),
+                  ),
+                  if (place.isNotEmpty) ...[
+                    const SizedBox(height: 2),
                     Text(
-                      _shownName(item.name),
-                      maxLines: 2,
+                      place,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: bangla(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.ink,
-                        height: 1.25,
-                      ),
-                    ),
-                    if (place.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        place,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: bangla(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.muted,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    Text(
-                      item.phone,
-                      style: bangla(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primaryAmber,
-                        height: 1.1,
-                      ),
+                      style: bangla(fontSize: 12, fontWeight: FontWeight.w500, color: SlmColors.mist),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFFFBBF24),
-                      Color(0xFFF59E0B),
-                      Color(0xFFEA580C),
-                    ],
+                  const SizedBox(height: 3),
+                  Text(
+                    item.phone,
+                    style: bangla(fontSize: 16, fontWeight: FontWeight.w800, color: SlmColors.gold300, height: 1.1),
                   ),
-                ),
-                child: SizedBox(
-                  width: 52,
-                  height: 52,
-                  child: Icon(
-                    Icons.call_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SlmGradients.gold,
+              ),
+              child: const Icon(Icons.call_rounded, color: SlmColors.navy950, size: 22),
+            ),
+          ],
         ),
       ),
     );
