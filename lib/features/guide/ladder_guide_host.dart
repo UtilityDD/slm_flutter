@@ -212,69 +212,36 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
           Positioned(
             right: 0,
             bottom: pad.bottom,
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_dockPop, _bubble]),
-              builder: (_, _) {
-                final t = Curves.easeOutCubic.transform(_dockPop.value.clamp(0.0, 1.0));
-                // Soft overshoot only on the last third — less “toy bounce”, more present.
-                final pop = t < 0.75 ? (t / 0.75) : (1 + 0.06 * (1 - ((t - 0.75) / 0.25)));
-                final bubbleT = Curves.easeOutCubic.transform(_bubble.value.clamp(0.0, 1.0));
-                return Opacity(
-                  opacity: t.clamp(0.0, 1.0),
-                  child: Transform.translate(
-                    offset: Offset(0, (1 - t) * 64),
-                    child: Transform.scale(
-                      scale: 0.62 + 0.38 * pop.clamp(0.0, 1.08),
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
-                            onTap: _onPoke,
-                            child: AiLinemanGuide(
-                              sprite: 72,
-                              bubbleWidth: 128,
-                              showBubble: _bubbleVisible,
-                              bubbleOpacity: _bubbleVisible ? bubbleT : 0,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        if (_centerVisible)
-          Positioned.fill(
-            child: IgnorePointer(
-              ignoring: true,
+            // The guide's own idle motion (eyes, gestures) repaints this layer
+            // only, not the ladder page underneath.
+            child: RepaintBoundary(
               child: AnimatedBuilder(
-                animation: Listenable.merge([_welcome, _bubble]),
+                animation: Listenable.merge([_dockPop, _bubble]),
                 builder: (_, _) {
-                  final t = Curves.easeOutCubic.transform(_welcome.value.clamp(0.0, 1.0));
+                  final t = Curves.easeOutCubic.transform(_dockPop.value.clamp(0.0, 1.0));
+                  // Soft overshoot only on the last third — less “toy bounce”, more present.
+                  final pop = t < 0.75 ? (t / 0.75) : (1 + 0.06 * (1 - ((t - 0.75) / 0.25)));
                   final bubbleT = Curves.easeOutCubic.transform(_bubble.value.clamp(0.0, 1.0));
                   return Opacity(
-                    opacity: t,
-                    child: Transform.scale(
-                      scale: 0.88 + 0.12 * t,
-                      child: Center(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: SlmColors.navy950.withValues(alpha: 0.32 * t),
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
-                            child: AiLinemanGuide(
-                              sprite: 132,
-                              bubbleWidth: 260,
-                              large: true,
-                              showBubble: _bubbleVisible,
-                              bubbleOpacity: _bubbleVisible ? bubbleT : 0,
+                    opacity: t.clamp(0.0, 1.0),
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - t) * 64),
+                      child: Transform.scale(
+                        scale: 0.62 + 0.38 * pop.clamp(0.0, 1.08),
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(20),
+                              onTap: _onPoke,
+                              child: AiLinemanGuide(
+                                sprite: 72,
+                                bubbleWidth: 128,
+                                showBubble: _bubbleVisible,
+                                bubbleOpacity: _bubbleVisible ? bubbleT : 0,
+                              ),
                             ),
                           ),
                         ),
@@ -282,6 +249,45 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
                     ),
                   );
                 },
+              ),
+            ),
+          ),
+        if (_centerVisible)
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: IgnorePointer(
+                ignoring: true,
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([_welcome, _bubble]),
+                  builder: (_, _) {
+                    final t = Curves.easeOutCubic.transform(_welcome.value.clamp(0.0, 1.0));
+                    final bubbleT = Curves.easeOutCubic.transform(_bubble.value.clamp(0.0, 1.0));
+                    return Opacity(
+                      opacity: t,
+                      child: Transform.scale(
+                        scale: 0.88 + 0.12 * t,
+                        child: Center(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: SlmColors.navy950.withValues(alpha: 0.32 * t),
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+                              child: AiLinemanGuide(
+                                sprite: 132,
+                                bubbleWidth: 260,
+                                large: true,
+                                showBubble: _bubbleVisible,
+                                bubbleOpacity: _bubbleVisible ? bubbleT : 0,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
