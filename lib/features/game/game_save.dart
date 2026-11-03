@@ -174,10 +174,27 @@ class ScorePulse {
   const ScorePulse(this.delta, this.atMs);
 }
 
+/// Latest lethal death for death-moment FX (E5).
+@immutable
+class DeathPulse {
+  final int deathCount;
+  final String cause;
+  final String moduleFirstRungId;
+  final int atMs;
+
+  const DeathPulse({
+    required this.deathCount,
+    required this.cause,
+    required this.moduleFirstRungId,
+    required this.atMs,
+  });
+}
+
 class GameSaveController extends Notifier<GameSave> {
   static const _prefsKey = 'game_save_v1';
 
   ScorePulse? lastPulse;
+  DeathPulse? lastDeathPulse;
 
   @override
   GameSave build() {
@@ -262,17 +279,25 @@ class GameSaveController extends Notifier<GameSave> {
     required String rungId,
     required String moduleFirstRungId,
   }) async {
+    final atMs = DateTime.now().millisecondsSinceEpoch;
+    final nextDeaths = state.deaths + 1;
     final log = [
       ...state.deathLog,
       DeathLogEntry(
         cause: cause,
         lessonId: lessonId,
         rungId: rungId,
-        atMs: DateTime.now().millisecondsSinceEpoch,
+        atMs: atMs,
       ),
     ];
+    lastDeathPulse = DeathPulse(
+      deathCount: nextDeaths,
+      cause: cause,
+      moduleFirstRungId: moduleFirstRungId,
+      atMs: atMs,
+    );
     state = state.copyWith(
-      deaths: state.deaths + 1,
+      deaths: nextDeaths,
       safeStreak: 0,
       deathLog: log,
       currentRungId: moduleFirstRungId,

@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
 import '../auth/verify_tick.dart';
+import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 import 'dev_unlock.dart';
@@ -555,6 +556,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                         onChanged: (value) => ref.read(devUnlockProvider.notifier).setOn(value),
                                       ),
                                     ),
+                                    if (devOn) ...[
+                                      const SizedBox(height: SlmSpace.md),
+                                      SlmSectionHeader(title: tr(bn, 'প্রিভিউ', 'Previews')),
+                                      const SizedBox(height: 8),
+                                      _DevPreviewGrid(bn: bn),
+                                    ],
                                     const SizedBox(height: SlmSpace.lg),
                                     SlmSectionHeader(title: tr(bn, 'অনুমোদন', 'Authorization')),
                                     SlmText(
@@ -812,3 +819,136 @@ class _Panel extends StatelessWidget {
     );
   }
 }
+
+class _DevPreviewItem {
+  final String labelBn;
+  final String labelEn;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _DevPreviewItem({
+    required this.labelBn,
+    required this.labelEn,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+}
+
+/// All built preview / QA surfaces — only shown when Developer mode is on.
+class _DevPreviewGrid extends StatelessWidget {
+  final bool bn;
+
+  const _DevPreviewGrid({required this.bn});
+
+  @override
+  Widget build(BuildContext context) {
+    void go(String route) => Navigator.of(context).pushNamed(route);
+    final items = <_DevPreviewItem>[
+      _DevPreviewItem(
+        labelBn: 'প্রিমিয়াম প্রিভিউ',
+        labelEn: 'Premium preview',
+        icon: Icons.auto_awesome_rounded,
+        color: SlmColors.gold300,
+        onTap: () => go(AppRoutes.premiumPreview),
+      ),
+      _DevPreviewItem(
+        labelBn: 'মোশন শোকেস',
+        labelEn: 'Motion showcase',
+        icon: Icons.animation_rounded,
+        color: SlmColors.emerald300,
+        onTap: () => go(AppRoutes.motionShowcase),
+      ),
+      _DevPreviewItem(
+        labelBn: 'র‍্যাঙ্ক',
+        labelEn: 'Rank',
+        icon: Icons.emoji_events_rounded,
+        color: SlmColors.gold200,
+        onTap: () => go(AppRoutes.rank),
+      ),
+      _DevPreviewItem(
+        labelBn: 'আইডেন্টিফাই',
+        labelEn: 'Identify',
+        icon: Icons.manage_search_rounded,
+        color: SlmColors.emerald300,
+        onTap: () => go(AppRoutes.identify),
+      ),
+      _DevPreviewItem(
+        labelBn: 'জরুরি',
+        labelEn: 'Emergency',
+        icon: Icons.phone_in_talk_rounded,
+        color: SlmColors.danger,
+        onTap: () => go(AppRoutes.emergency),
+      ),
+      _DevPreviewItem(
+        labelBn: 'সেটিংস',
+        labelEn: 'Settings',
+        icon: Icons.settings_rounded,
+        color: SlmColors.gold300,
+        onTap: () => go(AppRoutes.more),
+      ),
+      _DevPreviewItem(
+        labelBn: 'পিপিই',
+        labelEn: 'PPE',
+        icon: Icons.health_and_safety_rounded,
+        color: SlmColors.emerald300,
+        onTap: () => go(AppRoutes.ppe),
+      ),
+      _DevPreviewItem(
+        labelBn: 'কুইজ হাব',
+        labelEn: 'Quiz hub',
+        icon: Icons.quiz_rounded,
+        color: SlmColors.gold400,
+        onTap: () => go(AppRoutes.quiz),
+      ),
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final item in items)
+          SizedBox(
+            width: (MediaQuery.sizeOf(context).width - context.slm.layout.gutter * 2 - 8) / 2,
+            child: SlmPressable(
+              onTap: item.onTap,
+              semanticLabel: bn ? item.labelBn : item.labelEn,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                decoration: BoxDecoration(
+                  gradient: SlmGradients.navyCard,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: item.color.withValues(alpha: 0.45)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: item.color.withValues(alpha: 0.14),
+                        border: Border.all(color: item.color.withValues(alpha: 0.45)),
+                      ),
+                      child: Icon(item.icon, color: item.color, size: 18),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        bn ? item.labelBn : item.labelEn,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: bangla(fontSize: 13, fontWeight: FontWeight.w700, color: SlmColors.ivory, height: 1.2),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+

@@ -57,8 +57,9 @@ class DsResult {
   });
 }
 
-/// Testing: every live plate is tappable. Set `false` to restore sequential unlock.
-const dsAllLevelsOpen = true;
+/// Testing only. Keep `false` so normal / guest accounts unlock one level at a time.
+/// Admin Developer mode still opens everything via [devLevelsOpen].
+const dsAllLevelsOpen = false;
 
 /// Admin developer switch. Other accounts never set this.
 bool devLevelsOpen = false;
@@ -653,12 +654,35 @@ class DutySlipEngine {
     planPhase = DsPlanPhase.list;
   }
 
+  /// After a catalog Learn clear — open the next bridge index without finishing a Do.
+  void unlockThrough(int index) {
+    if (dsPlayAllLevels) return;
+    final next = index.clamp(0, dsLevels.length - 1);
+    if (next > unlocked) {
+      unlocked = next;
+      unawaited(savePersistedState());
+    }
+  }
+
   void backToRoad() {
     if (planPhase != DsPlanPhase.list && planPhase != DsPlanPhase.result) return;
     clockLive = false;
     dressArmed = false;
     dressOpen = false;
     planPhase = DsPlanPhase.road;
+  }
+
+  /// Lethal fall: rewind unlock to the first level of the current 20-level module.
+  void fallToModuleCheckpoint() {
+    final start = (levelIndex ~/ 20) * 20;
+    unlocked = start.clamp(0, unlocked);
+    levelIndex = start;
+    clockLive = false;
+    dressArmed = false;
+    dressOpen = false;
+    planPhase = DsPlanPhase.road;
+    act = DsAct.briefing;
+    unawaited(savePersistedState());
   }
 
   void startLevelPlay() {

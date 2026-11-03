@@ -1292,7 +1292,7 @@
       "lessonId": "1.1",
       "moduleId": "m1",
       "packId": "learn_1_1",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 0
     },
     {
@@ -1319,7 +1319,7 @@
       "lessonId": "1.2",
       "moduleId": "m1",
       "packId": "learn_1_2",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 3
     },
     {
@@ -1346,7 +1346,7 @@
       "lessonId": "1.3",
       "moduleId": "m1",
       "packId": "learn_1_3",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 6
     },
     {
@@ -1373,7 +1373,7 @@
       "lessonId": "1.4",
       "moduleId": "m1",
       "packId": "learn_1_4",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 9
     },
     {
@@ -1400,7 +1400,7 @@
       "lessonId": "1.5",
       "moduleId": "m1",
       "packId": "learn_1_5",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 12
     },
     {
@@ -1427,7 +1427,7 @@
       "lessonId": "1.6",
       "moduleId": "m1",
       "packId": "learn_1_6",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 15
     },
     {
@@ -1454,7 +1454,7 @@
       "lessonId": "1.7",
       "moduleId": "m1",
       "packId": "learn_1_7",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 18
     },
     {
@@ -1481,7 +1481,7 @@
       "lessonId": "1.8",
       "moduleId": "m1",
       "packId": "learn_1_8",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 21
     },
     {
@@ -1508,7 +1508,7 @@
       "lessonId": "1.9",
       "moduleId": "m1",
       "packId": "learn_1_9",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 24
     },
     {
@@ -1535,7 +1535,7 @@
       "lessonId": "1.10",
       "moduleId": "m1",
       "packId": "learn_1_10",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 27
     },
     {
@@ -4235,7 +4235,7 @@
       "id": "learn_1_1",
       "engineType": "learn_cards",
       "lessonId": "1.1",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4262,7 +4262,7 @@
       "id": "learn_1_2",
       "engineType": "learn_cards",
       "lessonId": "1.2",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4289,7 +4289,7 @@
       "id": "learn_1_3",
       "engineType": "learn_cards",
       "lessonId": "1.3",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4316,7 +4316,7 @@
       "id": "learn_1_4",
       "engineType": "learn_cards",
       "lessonId": "1.4",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4343,7 +4343,7 @@
       "id": "learn_1_5",
       "engineType": "learn_cards",
       "lessonId": "1.5",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4370,7 +4370,7 @@
       "id": "learn_1_6",
       "engineType": "learn_cards",
       "lessonId": "1.6",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4397,7 +4397,7 @@
       "id": "learn_1_7",
       "engineType": "learn_cards",
       "lessonId": "1.7",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4424,7 +4424,7 @@
       "id": "learn_1_8",
       "engineType": "learn_cards",
       "lessonId": "1.8",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4451,7 +4451,7 @@
       "id": "learn_1_9",
       "engineType": "learn_cards",
       "lessonId": "1.9",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4478,7 +4478,7 @@
       "id": "learn_1_10",
       "engineType": "learn_cards",
       "lessonId": "1.10",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },

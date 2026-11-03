@@ -10,7 +10,12 @@ import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
 import '../auth/verify_gate.dart';
 import '../auth/verify_sheet.dart';
+import '../admin/dev_unlock.dart';
+import '../game/beat_fx.dart';
+import '../game/content_catalog.dart';
 import '../game/game_save.dart';
+import '../game/ladder_builder.dart';
+import '../game/learn_runner.dart';
 import '../guide/guide_director.dart';
 import '../guide/ladder_guide_host.dart';
 import '../home/lesson_progress_store.dart';
@@ -26,11 +31,11 @@ import 'adventure_scenery.dart';
 import 'duty_slip_engine.dart';
 import 'duty_slip_voice.dart';
 
-/// Monumental golden ladder. The bamboo climb in commit 4672672
-/// (`_RoadBoard`, `_BambooRungPainter`) is the layout this screen recovers:
-/// vertical rails, one rung per level, the checkpoint on the rung.
-/// Stop numbers still come from [dsLevels]. This screen does not award points.
-class AdventureMap extends StatefulWidget {
+/// Monumental golden ladder shell.
+/// Rung count + kinds come from [builtLadderProvider] (327). Module 1 Learn
+/// rungs open the Learn runner; Do/gate still use the [dsLevels] bridge until
+/// the Do wire lands.
+class AdventureMap extends ConsumerStatefulWidget {
   final DutySlipEngine engine;
   final void Function(int index) onOpen;
   final ValueNotifier<double> scrollOut;
@@ -45,7 +50,7 @@ class AdventureMap extends StatefulWidget {
   });
 
   @override
-  State<AdventureMap> createState() => _AdventureMapState();
+  ConsumerState<AdventureMap> createState() => _AdventureMapState();
 }
 
 enum _Station { tips, hourly, identify, gift, life, lesson }
@@ -126,14 +131,23 @@ String _assetFor(_Station station, int index) => switch (station) {
       _Station.tips => _tipAsset(index),
     };
 
-class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMixin {
+class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProviderStateMixin {
   static const _rowH = 108.0;
-  static const _path = 200;
+  /// Emerald cap sits above the last catalog rung.
+  static const _emeraldExtra = 1;
 
+  /// Legacy bridge: catalog is Coming Soon until Module 1 fill; keep old levels playable.
+  bool _bridgePlayable(int index) => index >= 0 && index < dsLevels.length;
+
+  int _ladderLen(BuiltLadder? built) => built?.length ?? math.max(dsLevels.length, 40);
+
+  final _scoreKey = GlobalKey();
+  final _deathKey = GlobalKey();
   final _scroll = ScrollController();
   final _seen = <int>{};
   _Flight? _flight;
   _Reply? _reply;
+  Timer? _replyAutoClose;
   late final AnimationController _glow = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1400),
@@ -145,6 +159,14 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
   late final AnimationController _nudgePulse = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1400),
+  );
+  late final AnimationController _mist = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 780),
+  );
+  late final AnimationController _shake = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
   );
 
   Timer? _idleTimer;
@@ -205,7 +227,8 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
   /// Gift chests currently on-screen (any face except opened).
   List<int> _visibleGiftIndices() {
     if (!_scroll.hasClients) return const [];
-    final live = dsLevels.length;
+    final built = ref.read(builtLadderProvider).value;
+    final live = math.min(_ladderLen(built), dsLevels.length);
     final focus = widget.engine.unlocked.clamp(0, math.max(0, live - 1)).toInt();
     final view = _scroll.position.viewportDimension;
     final scrolled = _scroll.offset;
@@ -213,7 +236,7 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
     final out = <int>[];
     for (var i = 0; i < live; i++) {
       if (_stationAt(i) != _Station.gift) continue;
-      final soon = i >= live;
+      final soon = !_bridgePlayable(i);
       final face = _giftFace(_Station.gift, i, focus, soon);
       if (face == _GiftFace.opened || face == _GiftFace.none) continue;
       final fromBottom = bottomInset + i * _rowH + _rowH / 2 - scrolled;
@@ -242,7 +265,8 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
 
   void _applyNudgeTarget({required bool giftTurn}) {
     if (!mounted) return;
-    final live = dsLevels.length;
+    final built = ref.read(builtLadderProvider).value;
+    final live = math.min(_ladderLen(built), dsLevels.length);
     final focus = widget.engine.unlocked.clamp(0, math.max(0, live - 1)).toInt();
     final gifts = _visibleGiftIndices();
     late final int target;
@@ -327,26 +351,103 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
   void dispose() {
     _idleTimer?.cancel();
     _nudgeCycleTimer?.cancel();
+    _replyAutoClose?.cancel();
     _scroll.removeListener(_publish);
     _scroll.dispose();
     _glow.dispose();
     _ascent.dispose();
     _nudgePulse.dispose();
+    _mist.dispose();
+    _shake.dispose();
     super.dispose();
   }
 
-  void _openLevel(int index) {
+  void _openLevel(int index, {BuiltLadder? built}) {
     _clearNudge();
     _armIdle();
+    final rung = built != null && index < built.length ? built.rungs[index] : null;
+    final locked = !dsPlayAllLevels && index > widget.engine.unlocked;
+    if (locked) {
+      // Design: rung above → shake + mist, no text.
+      _pulseMist(shake: true);
+      return;
+    }
+
+    // Catalog Learn (playable) opens the swipe runner — never a fall path.
+    if (rung != null && rung.isLearn && !rung.isComingSoon) {
+      if (gameNeedsVerifyNow(context, index + 1)) {
+        showVerifySheet(context);
+        return;
+      }
+      HapticFeedback.selectionClick();
+      unawaited(ref.read(gameSaveProvider.notifier).setCurrentRung(rung.id));
+      unawaited(_openLearn(rung, index));
+      return;
+    }
+
+    final soon = (rung?.isComingSoon ?? true) && !_bridgePlayable(index);
+    if (soon) {
+      _hintComingSoon();
+      return;
+    }
+    if (!_bridgePlayable(index)) {
+      _hintComingSoon();
+      return;
+    }
     final spec = dsLevels[index];
     if (gameNeedsVerifyNow(context, spec.number)) {
       showVerifySheet(context);
       return;
     }
-    final locked = !dsPlayAllLevels && index > widget.engine.unlocked;
-    if (locked) return;
     HapticFeedback.selectionClick();
+    unawaited(ref.read(gameSaveProvider.notifier).setCurrentRung(rung?.id ?? '${spec.number}'));
     widget.onOpen(index);
+  }
+
+  Future<void> _openLearn(BuiltRung rung, int index) async {
+    final lessonId = rung.lesson?.id ?? rung.def.lessonId ?? '';
+    if (lessonId.isEmpty) {
+      _hintComingSoon();
+      return;
+    }
+    final cleared = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => LearnRunnerPage(
+          rungId: rung.id,
+          lessonId: lessonId,
+          ladderIndex: index,
+          muted: widget.muted,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (cleared == true) {
+      widget.engine.unlockThrough(index + 1);
+      setState(() {});
+      unawaited(_softScrollToIndex(index + 1));
+    }
+  }
+
+  bool _scrolledAwayFromFocus(int focus) {
+    if (!_scroll.hasClients) return false;
+    final view = _scroll.position.viewportDimension;
+    final scrolled = _scroll.offset;
+    final bottomInset = MediaQuery.paddingOf(context).bottom + 18;
+    final fromBottom = bottomInset + focus * _rowH + _rowH / 2 - scrolled;
+    return fromBottom < view * 0.12 || fromBottom > view * 0.88;
+  }
+
+  void _pulseMist({required bool shake}) {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      HapticFeedback.selectionClick();
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    _mist.forward(from: 0);
+    if (shake) _shake.forward(from: 0);
+    if (!widget.muted) {
+      unawaited(ZlFx.cue('sounds/intro/glass.ogg', volume: 0.28, muted: false));
+    }
   }
 
   _GiftFace _giftFace(_Station? station, int index, int focus, bool soon) {
@@ -377,7 +478,20 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
   void _showKinetic({required String title, required String body, required bool speak}) {
     if (speak && !widget.muted) unawaited(DsVoice.play(body, muted: false));
     if (!mounted) return;
+    _replyAutoClose?.cancel();
     setState(() => _reply = _Reply(title, enDigits(body)));
+    _replyAutoClose = Timer(const Duration(milliseconds: 3200), () {
+      if (!mounted || _reply == null) return;
+      setState(() => _reply = null);
+      _armIdle();
+    });
+  }
+
+  void _closeKinetic() {
+    _replyAutoClose?.cancel();
+    if (_reply == null) return;
+    setState(() => _reply = null);
+    _armIdle();
   }
 
   void _openStation(_Station station, int index) {
@@ -391,6 +505,7 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
       return;
     }
     setState(() => _seen.add(index));
+    final guide = ProviderScope.containerOf(context).read(guideDirectorProvider.notifier);
     switch (station) {
       case _Station.hourly:
         Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const QuizPlayScreen()));
@@ -399,12 +514,15 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
       case _Station.lesson:
         Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TrainingScreen()));
       case _Station.tips || _Station.life:
+        guide.react(GuideMood.inspire);
         _showKinetic(
-          title: station == _Station.tips ? 'নিরাপত্তা টিপস' : 'লাইফ স্কিল কুইজ',
+          title: station == _Station.tips ? 'নিরাপত্তা টিপস' : 'লাইফ স্কিল',
           body: dsBriefFor(dsLevels[index]).body,
           speak: true,
         );
       case _Station.gift:
+        guide.react(GuideMood.glad);
+        unawaited(ProviderScope.containerOf(context).read(gameSaveProvider.notifier).claimGift('ladder_$index'));
         _showKinetic(
           title: 'সারপ্রাইজ গিফট',
           body: 'পরের ধাপগুলো খুললে এই বক্সে বিশেষ চ্যালেঞ্জ পাবেন।',
@@ -413,54 +531,85 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
     }
   }
 
-  Future<void> _showSheet({required String title, required String body, required bool speak}) async {
-    if (speak && !widget.muted) unawaited(DsVoice.play(body, muted: false));
-    if (!mounted) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: SlmColors.navy900,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(20, 18, 20, 24 + MediaQuery.viewPaddingOf(ctx).bottom),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: zlText(16, weight: FontWeight.w800, color: SlmColors.gold200)),
-            const SizedBox(height: 8),
-            Text(enDigits(body), style: zlText(15, weight: FontWeight.w600, color: SlmColors.ivory, height: 1.45)),
-          ],
-        ),
-      ),
+  void _hintComingSoon() {
+    _clearNudge();
+    _pulseMist(shake: false);
+    _showKinetic(
+      title: 'শীঘ্রই আসছে',
+      body: 'এই ধাপটি এখনো খোলেনি।',
+      speak: false,
+    );
+  }
+
+  void _hintEmerald() {
+    _clearNudge();
+    HapticFeedback.selectionClick();
+    ProviderScope.containerOf(context).read(guideDirectorProvider.notifier).react(GuideMood.inspire);
+    _showKinetic(
+      title: 'মৃত্যুহীন লক্ষ্য',
+      body: 'পথের শেষ। প্রতিটি ধাপে বাঁচার অভ্যাসই এই লক্ষ্য।',
+      speak: false,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final e = widget.engine;
-    final live = dsLevels.length;
-    final focus = e.unlocked.clamp(0, math.max(0, live - 1)).toInt();
+    final ladderAsync = ref.watch(builtLadderProvider);
+    final built = ladderAsync.value;
+    final catalogLen = _ladderLen(built);
+    final itemCount = catalogLen + _emeraldExtra;
+    final bridgeLive = math.min(catalogLen, dsLevels.length);
+    // Achieved progress (always pin here). Developer mode opens every bridge rung.
+    final focus = e.unlocked.clamp(0, math.max(0, bridgeLive - 1)).toInt();
+    final openUpTo = dsPlayAllLevels ? math.max(0, bridgeLive - 1) : focus;
+    ref.watch(devUnlockProvider); // rebuild lock chrome when admin toggles Developer
     final quiet = MediaQuery.disableAnimationsOf(context);
-    final activityAt = <int>{};
-    for (var n = focus; n < focus + 5 && n < live; n++) {
-      if (_stationAt(n) != null) activityAt.add(n);
-      if (activityAt.length == 2) break;
-    }
+    final save = ref.watch(gameSaveProvider);
+    final chromeBoot = ladderAsync.isLoading && built == null;
+
+    // Always bring the player to their achieved rung when the catalog settles.
+    ref.listen(builtLadderProvider, (prev, next) {
+      if (next.hasValue && !(prev?.hasValue ?? false)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _pin(initial: true);
+        });
+      }
+    });
 
     return AnimatedBuilder(
-      animation: Listenable.merge([_glow, _ascent, _scroll, _nudgePulse]),
+      animation: Listenable.merge([_glow, _ascent, _scroll, _nudgePulse, _mist, _shake]),
       builder: (context, _) {
         final glow = quiet ? 0.6 : _glow.value;
-        final journey = (_path + 1) * _rowH;
+        final journey = itemCount * _rowH;
         final light = (quiet ? 0.35 : _ascent.value) * journey;
         final view = _scroll.hasClients ? _scroll.position.viewportDimension : 640.0;
         final scrolled = _scroll.hasClients ? _scroll.offset : 0.0;
         final topInset = MediaQuery.paddingOf(context).top + 58;
         final bottomInset = MediaQuery.paddingOf(context).bottom + 18;
-        return Stack(
+        final mistT = quiet ? 0.0 : Curves.easeOut.transform((_mist.value < 0.45 ? _mist.value / 0.45 : (1 - _mist.value) / 0.55).clamp(0.0, 1.0));
+        final shakeX = quiet
+            ? 0.0
+            : math.sin(_shake.value * math.pi * 6) * 5 * (1 - _shake.value);
+        final showMe = _scrolledAwayFromFocus(focus);
+        return DeathMomentHost(
+          deathKey: _deathKey,
+          onSettled: () {
+            final save = ref.read(gameSaveProvider);
+            final checkpoint = _legacyCheckpointIndex(save.currentRungId, focus);
+            if (checkpoint != focus) {
+              unawaited(_softScrollToIndex(checkpoint));
+            }
+          },
+          child: ScoreFlyHost(
+            scoreKey: _scoreKey,
+            child: Stack(
           fit: StackFit.expand,
           children: [
             Positioned.fill(child: AdventureWorld(scroll: _scroll, drift: _ascent, motion: !quiet)),
-            NotificationListener<ScrollNotification>(
+            Transform.translate(
+              offset: Offset(shakeX, 0),
+              child: NotificationListener<ScrollNotification>(
               onNotification: (n) {
                 if (_programmaticScroll) return false;
                 if (n is ScrollUpdateNotification && n.dragDetails != null) {
@@ -476,14 +625,15 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
                     reverse: true,
                     physics: const ClampingScrollPhysics(),
                     clipBehavior: Clip.hardEdge,
-                    itemCount: _path + 1,
+                    itemCount: itemCount,
                     itemExtent: _rowH,
-                    padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+                    padding: EdgeInsets.only(top: topInset, bottom: bottomInset + 18),
                     itemBuilder: (context, i) {
-                      final cap = i == _path;
-                      final soon = !cap && i >= live;
+                      final cap = i == catalogLen;
+                      final rung = !cap && built != null && i < built.length ? built.rungs[i] : null;
+                      final soon = !cap && ((rung?.isComingSoon ?? true) && !_bridgePlayable(i));
                       final fog = !cap && i > focus + 3;
-                      final station = cap ? null : _stationAt(i);
+                      final station = cap || soon ? null : _stationAt(i);
                       final rested = station != null && !soon && (i < focus || _seen.contains(i));
                       final fresh = station != null && !soon && !fog && !rested && station != _Station.gift;
                       final giftFace = _giftFace(station, i, focus, soon);
@@ -491,51 +641,39 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
                       final dist = (((view - fromBottom) / view) - 0.5).abs().clamp(0.0, 0.5) * 2;
                       final closeness = 1 - dist;
                       final zoom = quiet || station == null ? 1.0 : 0.34 + 1.2 * closeness * closeness;
-                      final number = cap ? _path : (soon ? i + 1 : dsLevels[i].number);
+                      final number = cap ? catalogLen : (rung?.number ?? (i + 1));
                       final gleamY = _rowH - (light - i * _rowH);
+                      final learnCleared = rung != null && save.rungProgress[rung.id] == 'cleared';
+                      final bridgeCleared = _bridgePlayable(i) &&
+                          (i < focus || (e.bestRank[i] != null && e.bestRank[i] != DsLevelRank.again));
+                      final cleared = !soon && !cap && (learnCleared || bridgeCleared);
                       return _MapBand(
                         index: i,
                         number: number,
                         soon: soon,
                         fog: fog,
                         cap: cap,
-                        cleared: !soon && !cap && (i < focus || (e.bestRank[i] != null && e.bestRank[i] != DsLevelRank.again)),
+                        cleared: cleared,
                         current: !soon && !cap && i == focus,
-                        locked: !cap && (soon || i > focus),
+                        locked: !cap && (soon || i > openUpTo),
                         glow: glow,
+                        kind: rung?.kind ?? CatalogRungKind.doKind,
                         station: station,
                         fresh: fresh,
                         rested: rested,
                         giftFace: giftFace,
                         zoom: zoom,
                         hidden: _flight?.index == i,
-                        featuredActivity: activityAt.contains(i),
                         motion: !quiet,
                         gleamY: gleamY,
                         idleNudge: _nudgeIndex == i,
                         nudgeGift: _nudgeGift && _nudgeIndex == i,
                         nudgePulse: quiet ? 0.0 : _nudgePulse.value,
                         onLevel: cap
-                            ? () {
-                                _clearNudge();
-                                HapticFeedback.selectionClick();
-                                unawaited(_showSheet(
-                                  title: 'মৃত্যুহীন লক্ষ্য',
-                                  body: 'পথের শেষ। 200 ধাপ পেরিয়ে মৃত্যুঝুঁকি শূন্য রাখাই এই লক্ষ্য।',
-                                  speak: false,
-                                ));
-                              }
+                            ? _hintEmerald
                             : soon
-                                ? () {
-                                    _clearNudge();
-                                    HapticFeedback.selectionClick();
-                                    unawaited(_showSheet(
-                                      title: 'শীঘ্রই আসছে',
-                                      body: 'এই ধাপটি এখনো খোলেনি।',
-                                      speak: false,
-                                    ));
-                                  }
-                                : () => _openLevel(i),
+                                ? _hintComingSoon
+                                : () => _openLevel(i, built: built),
                         onStation: station == null
                             ? null
                             : () {
@@ -550,7 +688,39 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
                       );
                     },
                   ),
+              ),
             ),
+            if (chromeBoot)
+              const Positioned.fill(
+                child: IgnorePointer(
+                  child: Center(
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(strokeWidth: 2.2, color: SlmColors.gold300),
+                    ),
+                  ),
+                ),
+              ),
+            if (mistT > 0.01)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(0, -0.1),
+                        radius: 1.15,
+                        colors: [
+                          const Color(0x33D7E4F5).withValues(alpha: 0.18 * mistT),
+                          const Color(0x99A8B8CC).withValues(alpha: 0.42 * mistT),
+                          const Color(0xCC050A16).withValues(alpha: 0.55 * mistT),
+                        ],
+                        stops: const [0.0, 0.45, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             Positioned(
               top: 0,
               left: 0,
@@ -567,6 +737,8 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
                   padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
                   child: _TopHeader(
                     engine: e,
+                    scoreKey: _scoreKey,
+                    deathKey: _deathKey,
                     onBack: () => Navigator.of(context).maybePop(),
                   ),
                 ),
@@ -592,12 +764,61 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
                   title: _reply!.title,
                   body: _reply!.body,
                   still: quiet,
-                  onClose: () => setState(() => _reply = null),
+                  onClose: _closeKinetic,
+                ),
+              ),
+            if (showMe)
+              Positioned(
+                right: 16,
+                bottom: MediaQuery.paddingOf(context).bottom + 14,
+                child: _MeChip(
+                  onTap: () {
+                    _clearNudge();
+                    unawaited(_softScrollToIndex(focus));
+                  },
                 ),
               ),
           ],
+            ),
+          ),
         );
       },
+    );
+  }
+
+  /// Catalog module id `mN` / rung `N.x/...` → first legacy bridge index of that module.
+  int _legacyCheckpointIndex(String rungId, int fallback) {
+    final match = RegExp(r'^(\d+)\.').firstMatch(rungId);
+    if (match != null) {
+      final module = int.tryParse(match.group(1)!) ?? 1;
+      return ((module - 1) * 20).clamp(0, math.max(0, dsLevels.length - 1));
+    }
+    return (fallback ~/ 20) * 20;
+  }
+}
+
+class _MeChip extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _MeChip({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SlmTactile(
+      onTap: onTap,
+      semanticLabel: 'আমি',
+      builder: (context, press, child) => Transform.scale(scale: 1 - 0.06 * press, child: child),
+        child: Container(
+        width: 52,
+        height: 52,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0xE6050A16),
+          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55)),
+        ),
+        child: Text('আমি', style: zlText(13, weight: FontWeight.w800, color: SlmColors.gold200, height: 1)),
+      ),
     );
   }
 }
@@ -637,9 +858,16 @@ class _GoldShell extends StatelessWidget {
 
 class _TopHeader extends ConsumerWidget {
   final DutySlipEngine engine;
+  final GlobalKey scoreKey;
+  final GlobalKey deathKey;
   final VoidCallback onBack;
 
-  const _TopHeader({required this.engine, required this.onBack});
+  const _TopHeader({
+    required this.engine,
+    required this.scoreKey,
+    required this.deathKey,
+    required this.onBack,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -672,12 +900,18 @@ class _TopHeader extends ConsumerWidget {
           const SizedBox(width: 10),
           _RankPill(label: rank),
           const Spacer(),
-          _ScoreChip(mark: '◆', value: enDigits('${save.points}'), color: SlmColors.gold200),
+          KeyedSubtree(
+            key: scoreKey,
+            child: _ScoreChip(mark: '◆', value: enDigits('${save.points}'), color: SlmColors.gold200),
+          ),
           const SizedBox(width: 8),
-          _ScoreChip(
-            mark: '💀',
-            value: enDigits('${save.deaths}'),
-            color: calm ? SlmColors.emerald300 : SlmColors.danger,
+          KeyedSubtree(
+            key: deathKey,
+            child: _ScoreChip(
+              mark: '💀',
+              value: enDigits('${save.deaths}'),
+              color: calm ? SlmColors.emerald300 : SoftDanger.ink,
+            ),
           ),
         ],
       ),
@@ -759,13 +993,13 @@ class _MapBand extends StatelessWidget {
   final bool current;
   final bool locked;
   final double glow;
+  final CatalogRungKind kind;
   final _Station? station;
   final bool fresh;
   final bool rested;
   final _GiftFace giftFace;
   final double zoom;
   final bool hidden;
-  final bool featuredActivity;
   final bool motion;
   final double gleamY;
   final bool idleNudge;
@@ -784,13 +1018,13 @@ class _MapBand extends StatelessWidget {
     required this.current,
     required this.locked,
     required this.glow,
+    required this.kind,
     required this.station,
     required this.fresh,
     required this.rested,
     required this.giftFace,
     required this.zoom,
     required this.hidden,
-    required this.featuredActivity,
     required this.motion,
     required this.gleamY,
     required this.idleNudge,
@@ -807,8 +1041,6 @@ class _MapBand extends StatelessWidget {
         final w = box.maxWidth;
         final h = box.maxHeight;
         final rungY = h * 0.58;
-        final branchLeft = featuredActivity && index.isEven;
-        final branchRight = featuredActivity && !index.isEven;
         final gift = station == _Station.gift;
         final sideLeft = gift ? (index ~/ 8).isEven : index.isEven;
         final stationTop = gift ? const [0.0, 8.0, 16.0][(index ~/ 8) % 3] : 2.0 + (index % 3) * 4.0;
@@ -820,8 +1052,6 @@ class _MapBand extends StatelessWidget {
               CustomPaint(
                 size: Size(w, h),
                 painter: _GoldenLadderPainter(
-                  branchLeft: false,
-                  branchRight: false,
                   fog: false,
                   gleamY: gleamY,
                   cap: true,
@@ -842,17 +1072,15 @@ class _MapBand extends StatelessWidget {
               CustomPaint(
                 size: Size(w, h),
                 painter: _GoldenLadderPainter(
-                  branchLeft: branchLeft,
-                  branchRight: branchRight,
                   fog: fog,
                   gleamY: gleamY,
                 ),
               ),
               Positioned(
-                left: w / 2 - 24,
-                top: rungY - 24,
-                width: 48,
-                height: 48,
+                left: w / 2 - (current ? (kind == CatalogRungKind.gate ? 34 : 30) : (kind == CatalogRungKind.gate ? 28 : 24)),
+                top: rungY - (current ? (kind == CatalogRungKind.gate ? 34 : 30) : (kind == CatalogRungKind.gate ? 28 : 24)),
+                width: current ? (kind == CatalogRungKind.gate ? 68 : 60) : (kind == CatalogRungKind.gate ? 56 : 48),
+                height: current ? (kind == CatalogRungKind.gate ? 68 : 60) : (kind == CatalogRungKind.gate ? 56 : 48),
                 child: _IdleNudgeHalo(
                   active: idleNudge && !nudgeGift,
                   pulse: nudgePulse,
@@ -863,6 +1091,8 @@ class _MapBand extends StatelessWidget {
                     current: current,
                     locked: locked,
                     glow: glow,
+                    kind: kind,
+                    motion: motion,
                     onTap: onLevel,
                   ),
                 ),
@@ -984,15 +1214,11 @@ class _NudgeRingPainter extends CustomPainter {
 }
 
 class _GoldenLadderPainter extends CustomPainter {
-  final bool branchLeft;
-  final bool branchRight;
   final bool fog;
   final double gleamY;
   final bool cap;
 
   const _GoldenLadderPainter({
-    required this.branchLeft,
-    required this.branchRight,
     required this.fog,
     required this.gleamY,
     this.cap = false,
@@ -1019,8 +1245,6 @@ class _GoldenLadderPainter extends CustomPainter {
     _rail(canvas, rightX, h);
     if (!cap) {
       _rung(canvas, leftX, rightX, h * 0.58, fog);
-      if (branchLeft) _branch(canvas, leftX, 18, h * 0.58 - 20, w);
-      if (branchRight) _branch(canvas, rightX, w - 18, h * 0.58 - 20, w);
     }
     if (gleamY > -28 && gleamY < h + 28) {
       for (final x in [leftX, rightX]) {
@@ -1099,46 +1323,22 @@ class _GoldenLadderPainter extends CustomPainter {
     }
   }
 
-  void _branch(Canvas canvas, double fromX, double toX, double y, double w) {
-    final path = Path()
-      ..moveTo(fromX, y)
-      ..lineTo(toX, y);
-    canvas.drawPath(
-      path.shift(const Offset(0, 4)),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 6
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF2C1C08),
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4.5
-        ..strokeCap = StrokeCap.round
-        ..shader = LinearGradient(
-          colors: const [Color(0xFF8A6420), Color(0xFFFFF3C8), Color(0xFFC6A15A)],
-        ).createShader(Rect.fromLTWH(0, y - 8, w, 16)),
-    );
-  }
-
   @override
   bool shouldRepaint(covariant _GoldenLadderPainter oldDelegate) =>
-      oldDelegate.branchLeft != branchLeft ||
-      oldDelegate.branchRight != branchRight ||
       oldDelegate.fog != fog ||
       oldDelegate.gleamY != gleamY ||
       oldDelegate.cap != cap;
 }
 
-class _LevelCoin extends StatelessWidget {
+class _LevelCoin extends StatefulWidget {
   final int number;
   final bool soon;
   final bool cleared;
   final bool current;
   final bool locked;
   final double glow;
+  final CatalogRungKind kind;
+  final bool motion;
   final VoidCallback? onTap;
 
   const _LevelCoin({
@@ -1148,69 +1348,248 @@ class _LevelCoin extends StatelessWidget {
     required this.current,
     required this.locked,
     required this.glow,
+    required this.kind,
+    required this.motion,
     required this.onTap,
   });
 
   @override
+  State<_LevelCoin> createState() => _LevelCoinState();
+}
+
+class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
+  late final AnimationController _breath;
+  late final AnimationController _spin;
+  late final AnimationController _flash;
+
+  @override
+  void initState() {
+    super.initState();
+    _breath = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
+    _spin = AnimationController(vsync: this, duration: const Duration(milliseconds: 5200));
+    _flash = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncLoops();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _LevelCoin oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.current != widget.current ||
+        oldWidget.motion != widget.motion ||
+        oldWidget.locked != widget.locked ||
+        oldWidget.soon != widget.soon) {
+      _syncLoops();
+    }
+  }
+
+  void _syncLoops() {
+    final quiet = !widget.motion || MediaQuery.disableAnimationsOf(context);
+    final liveCurrent = widget.current && !widget.locked && !widget.soon;
+    if (liveCurrent && !quiet) {
+      if (!_breath.isAnimating) _breath.repeat(reverse: true);
+      if (!_spin.isAnimating) _spin.repeat();
+    } else {
+      _breath.stop();
+      _breath.value = liveCurrent ? 0.55 : 0;
+      _spin.stop();
+      _spin.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _breath.dispose();
+    _spin.dispose();
+    _flash.dispose();
+    super.dispose();
+  }
+
+  void _onTap() {
+    final quiet = !widget.motion || MediaQuery.disableAnimationsOf(context);
+    final live = !widget.locked && !widget.soon;
+    if (!quiet && live && (widget.current || widget.cleared)) {
+      _flash.forward(from: 0);
+    }
+    widget.onTap?.call();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final bronze = soon || (locked && !current);
-    final asset = !bronze && current
+    final bronze = widget.soon || (widget.locked && !widget.current);
+    final gate = widget.kind == CatalogRungKind.gate;
+    final learn = widget.kind == CatalogRungKind.learn;
+    final current = widget.current && !bronze;
+    final cleared = widget.cleared && !bronze && !current;
+    final base = gate ? 56.0 : 48.0;
+    final size = current ? base + 8 : base;
+    final accent = gate
+        ? SlmColors.emerald300
+        : learn
+            ? SlmColors.ivory
+            : SlmColors.gold300;
+    final asset = current
         ? 'assets/duty_slip/world3d/coin_current_3d.webp'
-        : !bronze && cleared
+        : cleared
             ? 'assets/duty_slip/world3d/coin_cleared_3d.webp'
             : 'assets/duty_slip/world3d/medallion_bronze_3d.webp';
-    final disc = Container(
-      width: 48,
-      height: 48,
-      decoration: !bronze && (current || cleared)
-          ? BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: (current ? SlmColors.gold300 : SlmColors.emerald400)
-                      .withValues(alpha: current ? 0.42 + 0.38 * glow : 0.22),
-                  blurRadius: current ? 16 + 8 * glow : 8,
-                  spreadRadius: current ? 1.4 : 0,
-                ),
+    final numberColor = bronze
+        ? SlmColors.mist.withValues(alpha: 0.7)
+        : current
+            ? SlmColors.ivory
+            : cleared
+                ? const Color(0xFFE8D7A8)
+                : SlmColors.ivory;
+
+    return AnimatedBuilder(
+      animation: Listenable.merge([_breath, _spin, _flash]),
+      builder: (context, _) {
+        final breath = current ? (0.55 + 0.45 * _breath.value) : 0.0;
+        final flash = Curves.easeOut.transform(_flash.value.clamp(0.0, 1.0));
+        final flashOut = flash < 0.55 ? (flash / 0.55) : (1 - (flash - 0.55) / 0.45).clamp(0.0, 1.0);
+        final pressDepth = current ? 0.09 : (cleared ? 0.06 : 0.05);
+
+        final disc = Opacity(
+          opacity: bronze ? 0.42 : 1,
+          child: SizedBox(
+            width: size + (current ? 16 : 0),
+            height: size + (current ? 16 : 0),
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
                 if (current)
-                  BoxShadow(
-                    color: SlmColors.emerald400.withValues(alpha: 0.22 + 0.2 * glow),
-                    blurRadius: 12,
+                  Container(
+                    width: size + 18 + 10 * breath,
+                    height: size + 18 + 10 * breath,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: SlmColors.gold300.withValues(alpha: 0.22 + 0.28 * breath),
+                          blurRadius: 14 + 10 * breath,
+                          spreadRadius: 1 + 2 * breath,
+                        ),
+                        BoxShadow(
+                          color: SlmColors.emerald400.withValues(alpha: 0.14 + 0.12 * breath),
+                          blurRadius: 22,
+                        ),
+                      ],
+                    ),
                   ),
+                if (current)
+                  Transform.rotate(
+                    angle: _spin.value * 6.283185307179586,
+                    child: CustomPaint(
+                      size: Size(size + 10, size + 10),
+                      painter: _EmeraldRingPainter(progress: breath),
+                    ),
+                  ),
+                if (flashOut > 0.02 && (current || cleared))
+                  Container(
+                    width: size + 8 + 28 * flash,
+                    height: size + 8 + 28 * flash,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: (current ? SlmColors.gold300 : SlmColors.gold200).withValues(alpha: 0.8 * flashOut),
+                        width: current ? 2.4 : 1.6,
+                      ),
+                    ),
+                  ),
+                Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: current
+                          ? SlmColors.gold300.withValues(alpha: 0.9)
+                          : cleared
+                              ? SlmColors.gold200.withValues(alpha: 0.55)
+                              : accent.withValues(alpha: bronze ? 0.2 : 0.35),
+                      width: current ? 2.2 : (gate ? 1.6 : 1.15),
+                    ),
+                    boxShadow: cleared
+                        ? [
+                            BoxShadow(
+                              color: SlmColors.gold300.withValues(alpha: 0.18),
+                              blurRadius: 8,
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Image.asset(
+                        asset,
+                        width: size,
+                        height: size,
+                        cacheWidth: 180,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium,
+                        gaplessPlayback: true,
+                      ),
+                      Text(
+                        enDigits('${widget.number}'),
+                        style: zlText(
+                          gate ? (current ? 16 : 15) : (current ? 17 : 16),
+                          weight: FontWeight.w900,
+                          color: numberColor,
+                        ).copyWith(
+                          shadows: const [Shadow(color: Color(0xDD000000), offset: Offset(0, 1.2), blurRadius: 2)],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
-            )
-          : null,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Image.asset(
-            asset,
-            width: 48,
-            height: 48,
-            cacheWidth: 140,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
-            gaplessPlayback: true,
-          ),
-          Text(
-            '$number',
-            style: zlText(16, weight: FontWeight.w900, color: SlmColors.ivory).copyWith(
-              shadows: const [Shadow(color: Color(0xDD000000), offset: Offset(0, 1.2), blurRadius: 2)],
             ),
           ),
-        ],
-      ),
-    );
+        );
 
-    return SlmTactile(
-      onTap: onTap,
-      builder: (context, press, child) => Transform.scale(
-        scale: 1 - 0.07 * press,
-        child: current ? SlmShimmer(intensity: 0.28, child: child!) : child,
-      ),
-      child: disc,
+        Widget body = disc;
+        if (current) {
+          body = SlmShimmer(intensity: 0.22 + 0.1 * breath, child: disc);
+        } else if (cleared) {
+          body = SlmShimmer(intensity: 0.08, child: disc);
+        }
+
+        return SlmTactile(
+          onTap: widget.onTap == null ? null : _onTap,
+          builder: (context, press, child) => Transform.scale(
+            scale: 1 - pressDepth * press,
+            child: child,
+          ),
+          child: body,
+        );
+      },
     );
   }
+}
+
+class _EmeraldRingPainter extends CustomPainter {
+  final double progress;
+
+  _EmeraldRingPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 1.5;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.1
+      ..strokeCap = StrokeCap.round
+      ..color = SlmColors.emerald300.withValues(alpha: 0.35 + 0.45 * progress);
+    canvas.drawArc(Rect.fromCircle(center: c, radius: r), -1.2, 2.1, false, paint);
+    canvas.drawArc(Rect.fromCircle(center: c, radius: r), 2.0, 1.5, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _EmeraldRingPainter oldDelegate) => oldDelegate.progress != progress;
 }
 
 class _StationPlaque extends StatelessWidget {
@@ -1380,13 +1759,15 @@ class _ObjectReveal extends StatefulWidget {
 class _ObjectRevealState extends State<_ObjectReveal> with SingleTickerProviderStateMixin {
   late final AnimationController _move = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 620),
+    duration: const Duration(milliseconds: 780),
   );
 
   @override
   void initState() {
     super.initState();
-    _move.forward().whenComplete(() {
+    // Zoom in, hold a beat at peak, then hand off to kinetic text.
+    _move.forward().whenComplete(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 220));
       if (mounted) widget.onDone();
     });
   }
@@ -1402,17 +1783,17 @@ class _ObjectRevealState extends State<_ObjectReveal> with SingleTickerProviderS
     return AnimatedBuilder(
       animation: _move,
       builder: (context, _) {
-        final t = Curves.easeOutCubic.transform(_move.value);
-        final scale = 0.28 + (widget.endScale - 0.28) * t;
+        final t = Curves.easeOutBack.transform(_move.value.clamp(0.0, 1.0));
+        final scale = 0.22 + (widget.endScale - 0.22) * t;
         return Stack(
           children: [
             ModalBarrier(
-              color: Colors.black.withValues(alpha: 0.46 * t),
+              color: Colors.black.withValues(alpha: 0.5 * t.clamp(0.0, 1.0)),
               dismissible: false,
             ),
             Center(
               child: Transform.translate(
-                offset: Offset(0, (1 - t) * 120),
+                offset: Offset(0, (1 - t.clamp(0.0, 1.0)) * 140),
                 child: Transform.scale(
                   scale: scale,
                   child: DecoratedBox(
@@ -1420,8 +1801,9 @@ class _ObjectRevealState extends State<_ObjectReveal> with SingleTickerProviderS
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFFD56A).withValues(alpha: 0.15 + 0.4 * t),
-                          blurRadius: widget.endScale > 1.8 ? 28 : 16,
+                          color: const Color(0xFFFFD56A).withValues(alpha: 0.18 + 0.45 * t.clamp(0.0, 1.0)),
+                          blurRadius: widget.endScale > 1.8 ? 34 : 18,
+                          spreadRadius: 2 * t.clamp(0.0, 1.0),
                         ),
                       ],
                     ),

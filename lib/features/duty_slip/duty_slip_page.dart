@@ -545,6 +545,23 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     });
   }
 
+  Future<void> _commitLethalFall(DutySlipEngine e, DsResult r) async {
+    final cause = (e.lethalReason ?? r.noteBn).trim();
+    final module = (e.levelIndex ~/ 20) + 1;
+    final moduleFirst = '$module.1/learn';
+    final rungId = '$module.${(e.levelIndex % 20) + 1}/do';
+    final container = ProviderScope.containerOf(context);
+    await container.read(gameSaveProvider.notifier).recordLethalDeath(
+          cause: cause.isEmpty ? 'মারাত্মক ভুল' : cause,
+          lessonId: '${e.level.number}',
+          rungId: rungId,
+          moduleFirstRungId: moduleFirst,
+        );
+    if (!mounted) return;
+    e.fallToModuleCheckpoint();
+    setState(() {});
+  }
+
   void _handle(DsResult r, {Offset? fromGlobal}) {
     final e = _engine;
     if (e == null) return;
@@ -570,6 +587,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       HapticFeedback.heavyImpact();
       setState(() {});
       unawaited(_speak(e.lethalReason ?? r.noteBn));
+      unawaited(_commitLethalFall(e, r));
     } else {
       unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: _muted));
       HapticFeedback.heavyImpact();

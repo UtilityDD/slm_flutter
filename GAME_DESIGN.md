@@ -2,7 +2,7 @@
 
 The single source of truth for what the app is becoming. When this file and an older guide disagree, this file wins.
 
-**Status (Nov 2026):** implementation started element-by-element. Local `ContentCatalog` reserves **327** rungs (109 lessons × 1 Learn + 2 Do, gate = last Do; soft cap 400). `GameSave`, exit sheet, and AI Line Man guide are landing first; Coming Soon coins stay until packs are playable. See section 13 and `assets/game/catalog/content_catalog.json`.
+**Status (Nov 2026):** through **Learn runner** — Module 1 `1.N/learn` packs are playable; ladder opens swipe cards + 2-question exit (points only, never a fall). Do/gate still Coming Soon via legacy `dsLevels` bridge. Next: **Do wire**, then Module 1 fill. See section 13 and `assets/game/catalog/content_catalog.json`.
 
 ---
 
