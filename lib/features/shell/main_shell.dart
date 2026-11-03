@@ -33,6 +33,7 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   final _navKey = GlobalKey<NavigatorState>();
+  final _heroController = MaterialApp.createMaterialHeroController();
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +49,16 @@ class _MainShellState extends ConsumerState<MainShell> {
           children: [
             ShellDockScope(
               bottomInset: dockInset,
-              child: Navigator(
-                key: _navKey,
-                initialRoute: AppRoutes.home,
-                onGenerateRoute: _onGenerateRoute,
+              // Route Android system back into the nested navigator so pages
+              // pop (and their PopScope confirms run) instead of the app exiting.
+              child: NavigatorPopHandler<Object?>(
+                onPopWithResult: (result) => _navKey.currentState?.maybePop(result),
+                child: Navigator(
+                  key: _navKey,
+                  initialRoute: AppRoutes.home,
+                  onGenerateRoute: _onGenerateRoute,
+                  observers: [_heroController],
+                ),
               ),
             ),
             if (radioOn)
