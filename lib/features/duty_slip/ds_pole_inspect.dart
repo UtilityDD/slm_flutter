@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/en_digits.dart';
 import '../../design/motion/slm_motion_scope.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
@@ -273,7 +272,6 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
   var _speechToken = 0;
 
   var _finishing = false;
-  var _climbed = false;
   var _hammerBusy = false;
   var _showChecklist = false;
   var _checkedCount = 0;
@@ -545,7 +543,6 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     widget.onDelta(5, global);
     await Future<void>.delayed(const Duration(milliseconds: 780));
     if (!mounted) return;
-    setState(() => _climbed = true);
     _climb.forward(from: 0);
     await Future<void>.delayed(const Duration(milliseconds: 1100));
     if (!mounted) return;

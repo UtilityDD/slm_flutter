@@ -130,8 +130,6 @@ const dsSafeHome = <DsPlanItem>[
     icon: 'assets/zero_loss/crew/rafiq.webp'),
 ];
 
-const dsSafeHomeWord = 'SAFE HOME';
-
 class DsJobGroup {
   final String title;
   final int start;
@@ -167,17 +165,7 @@ class DsBrief {
   const DsBrief({required this.title, required this.body, this.stamps = const []});
 }
 
-const dsLetterTitlePool = [
-  'আট ধাপ — আট মন্ত্র',
-  'নিয়মের শর্টকাট মানেই মৃত্যু',
-  'কোন ধাপ বাদ দিলে বাড়ি ফেরা হবে না',
-  'তাড়াহুড়োই আসল শত্রু',
-  'এক ভুল মানে একবার মৃত্যু',
-  'ক্রম ভাঙলেই মৃত্যুর ভয়',
-  'নিয়ম ছাড়া কাজে হাত নয়',
-];
-
-DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
+DsBrief dsBriefFor(DsLevelSpec spec) {
   const home = [
     'থামো ও বিপদ খুঁজো',
     'কবচ পরো',
@@ -219,7 +207,7 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       20 => 'এক ভুল মানে একবার মৃত্যু',
       21 => 'ক্রম ভাঙলেই মৃত্যুর ভয়',
       22 => 'নিয়ম ছাড়া কাজে হাত নয়',
-      _ => letterTitle ?? dsLetterTitlePool.first,
+      _ => 'আট ধাপ — আট মন্ত্র',
     };
     final body = switch (spec.number) {
       1 => 'লাইনে কাজে নামার সময় আপনার পোশাকই প্রথম বর্ম। শরীরকে সম্পূর্ণ সুরক্ষিত রাখুন।',
@@ -286,7 +274,6 @@ class DutySlipEngine {
   var _cardsSinceCall = 0;
   var _callsFired = 0;
   var planNext = 0;
-  late List<DsPlanItem> planPool;
   var easyChoices = <DsPlanItem>[];
   var poolStamp = 0;
 
@@ -300,7 +287,6 @@ class DutySlipEngine {
   final bestDarunSec = List<int?>.filled(dsLevels.length, null);
   final levelDangerCount = List<int?>.filled(dsLevels.length, null);
   final levelBestScore = List<int>.filled(dsLevels.length, 0);
-  late final List<String> _letterTitles;
 
   int get totalCumulativeScore {
     var sum = 0;
@@ -310,35 +296,12 @@ class DutySlipEngine {
     return sum > 0 ? sum : nightTotal;
   }
 
-  int get totalCumulativeDanger {
-    var sum = 0;
-    for (final d in levelDangerCount) {
-      if (d != null) {
-        sum += d;
-      }
-    }
-    return sum;
-  }
-
-  int get totalCumulativeSeconds {
-    var sum = 0;
-    for (var i = 0; i < dsLevels.length; i++) {
-      if (bestDarunSec[i] != null) {
-        sum += bestDarunSec[i]!;
-      }
-    }
-    return sum;
-  }
-
   DutySlipEngine(this.pack, {int? seed}) : _rng = Random(seed ?? DateTime.now().millisecondsSinceEpoch) {
     site = pack.sites[_rng.nextInt(pack.sites.length)];
     final names = [...pack.feeders]..shuffle(_rng);
     feeder = names.first;
     fakes = names.skip(1).take(3).toList();
     tonightPlan = List<DsPlanItem>.from(pack.plan);
-    planPool = [];
-    final pool = List<String>.from(dsLetterTitlePool)..shuffle(_rng);
-    _letterTitles = ['পোশাক', 'মাথায় হেলমেট', 'হাতে গ্লাভস', 'হারনেস', ...pool];
     if (dsPlayAllLevels) unlocked = dsLevels.length - 1;
     if (site.calls.isEmpty) {
       siteCalls = List<DsCall>.from(pack.calls);
@@ -351,14 +314,12 @@ class DutySlipEngine {
 
   DsStep? get step => stepIndex < pack.steps.length ? pack.steps[stepIndex] : null;
   int get totalSteps => pack.steps.length;
-  bool get shutdownLive => stamps.contains('cut') && !stamps.contains('restore');
   int get clockHour {
     final t = pack.startHour * 3600 + pack.startMinute * 60 + jobSeconds;
     return (t ~/ 3600) % 24;
   }
 
   int get clockMinute => ((pack.startHour * 3600 + pack.startMinute * 60 + jobSeconds) % 3600) ~/ 60;
-  int get clockSecond => (pack.startHour * 3600 + pack.startMinute * 60 + jobSeconds) % 60;
 
   String get clockLabel {
     final h = clockHour.toString().padLeft(2, '0');
@@ -366,28 +327,9 @@ class DutySlipEngine {
     return '$h:$m';
   }
 
-  String get clockFull {
-    final s = clockSecond.toString().padLeft(2, '0');
-    return '$clockLabel:$s';
-  }
-
-  DsLane get lane {
-    if (act == DsAct.briefing) return DsLane.office;
-    return step?.lane ?? DsLane.close;
-  }
-
   DsLevelSpec get level => dsLevels[levelIndex.clamp(0, dsLevels.length - 1)];
-  DsBrief briefOf([DsLevelSpec? spec]) {
-    final s = spec ?? level;
-    String? letterTitle;
-    if (s.isLetters) {
-      final i = s.number - 1;
-      if (i >= 0 && i < _letterTitles.length) letterTitle = _letterTitles[i];
-    }
-    return dsBriefFor(s, letterTitle: letterTitle);
-  }
+  DsBrief briefOf([DsLevelSpec? spec]) => dsBriefFor(spec ?? level);
 
-  bool get lettersOnly => level.isLetters && level.number <= 2;
   List<DsPlanItem> get currentDeck => level.isLetters ? dsSafeHome : tonightPlan;
   int get choiceCount {
     final n = level.choices;
@@ -398,14 +340,11 @@ class DutySlipEngine {
   bool get covering => planning && planPhase == DsPlanPhase.cover;
   bool get onRoad => planning && planPhase == DsPlanPhase.road;
   bool get listing => planning && planPhase == DsPlanPhase.list;
-  var safeWalkDone = false;
   var dressArmed = false;
   var dressOpen = false;
-  bool get showingSafeWalk => false;
   bool get dressLevel => level.isLetters && level.number <= 14;
   bool get showingDressIntro => listing && dressLevel && !dressOpen;
   bool get showingDress => listing && dressLevel && dressOpen;
-  void finishSafeWalk() => safeWalkDone = true;
 
   void openDress() {
     if (!showingDressIntro) return;
@@ -444,13 +383,10 @@ class DutySlipEngine {
   bool get prePlay => covering || onRoad || listing || showingResult;
   bool get showHud => playing || listing || !planning;
 
-  String get siteStory => fill(site.storyBn.isNotEmpty ? site.storyBn : site.introBn);
-
   var clockLive = false;
   var playSeconds = 0;
   var _playAcc = 0;
 
-  int get hudLevelScore => (playing || showingDress || showingResult) ? levelScore : quality;
   int get hudTotal => (playing || showingDress) ? nightTotal + levelScore : nightTotal;
 
   DsLevelRank get levelRank {
@@ -461,127 +397,6 @@ class DutySlipEngine {
     if (wrongTaps <= darunWrong && playSeconds <= level.darunSec) return DsLevelRank.darun;
     if (wrongTaps <= maxWrong) return DsLevelRank.motamuti;
     return DsLevelRank.again;
-  }
-
-  String get levelRankBn => switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ',
-        DsLevelRank.motamuti => 'মোটামুটি',
-        DsLevelRank.again => 'আবার',
-      };
-
-  String get levelLineBn {
-    if (level.isLetters && level.number == 1) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ শৃঙ্খলা! পোশাক নির্বাচনে কোনো ত্রুটি হয়নি।',
-        DsLevelRank.motamuti => 'পোশাক পরা হয়েছে, তবে কাজের সময় আরও সতর্ক থাকা জরুরি।',
-        DsLevelRank.again => 'পোশাক নির্বাচনে ঝুঁকি থেকে গেছে। সতর্কতা বজায় রেখে পুনরায় চেষ্টা করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 2) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'একদম নির্ভুল! মাথার সুরক্ষা সম্পূর্ণ।',
-        DsLevelRank.motamuti => 'হেলমেট পরা হয়েছে, কিন্তু নির্বাচন নিখুঁত ছিল না।',
-        DsLevelRank.again => 'ভুল হেলমেট মারাত্মক ঝুঁকির কারণ। পুনরায় সঠিকটি নির্বাচন করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 3) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'অসাধারণ সতর্কতা! ত্রুটিমুক্ত ইনসুলেটেড গ্লাভস সঠিকভাবে নির্বাচন করেছেন।',
-        DsLevelRank.motamuti => 'গ্লাভস পরা হয়েছে, তবে কাজের সময় গ্লাভসের ত্রুটি আরও মনোযোগ দিয়ে পরখ করা দরকার।',
-        DsLevelRank.again => 'ত্রুটিযুক্ত গ্লাভসে লাইনে কাজ করা প্রাণঘাতী। সতর্ক হয়ে আবার সঠিক গ্লাভস নির্বাচন করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 4) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'নিখুঁত কাজ! হারনেস সঠিকভাবে বাঁধা হয়েছে এবং দুই আঙুলের উপযুক্ত ফাঁক রয়েছে।',
-        DsLevelRank.motamuti => 'হারনেস পরা হয়েছে, তবে কাজের সময় বাকল ও ফিতার টান আরও নিশ্ছিদ্র হওয়া প্রয়োজন।',
-        DsLevelRank.again => 'আলগা বা ভুলভাবে বাঁধা হারনেসে পতন ঘটলে মারাত্মক জখম হতে পারে। পুনরায় সঠিক নিয়মে বাঁধুন।',
-      };
-    }
-    if (level.isLetters && level.number == 5) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'কিট ঠিক আছে।',
-        DsLevelRank.motamuti => 'কিট পরেছেন। ভুলগুলো মনে রাখুন।',
-        DsLevelRank.again => 'কিট এখনো আলগা। আবার পরান।',
-      };
-    }
-    if (level.isLetters && level.number == 6) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ। লাইনম্যান তৈরি, আর ভ্যানে ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড ও পোর্টেবল আর্থিং কিট আছে।',
-        DsLevelRank.motamuti => 'ভ্যান সাজানো হয়েছে, তবে এই ঘরের জন্য আরও সতর্ক থাকা জরুরি।',
-        DsLevelRank.again => 'এই সাজে ভ্যান বের হবে না। সতর্কতা বজায় রেখে পুনরায় সাজান।',
-      };
-    }
-    if (level.isLetters && level.number == 7) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ। খুঁটিতে ওঠার সাজ ঠিক আছে।',
-        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
-        DsLevelRank.again => 'এই সাজে খুঁটিতে ওঠা যাবে না। আবার সাজান।',
-      };
-    }
-    if (level.isLetters && level.number == 8) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ। ট্রান্সফরমার মৃত করার সাজ ঠিক আছে।',
-        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
-        DsLevelRank.again => 'এই সাজে বুশিং খোলা যাবে না। আবার সাজান।',
-      };
-    }
-    if (level.isLetters && level.number == 9) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ। রাতের লাইনের সাজ ঠিক আছে।',
-        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
-        DsLevelRank.again => 'এই সাজে রাতের লাইনে নামা যাবে না। আবার সাজান।',
-      };
-    }
-    if (level.isLetters && level.number == 10) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ। ডাল নামানোর সাজ ঠিক আছে।',
-        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
-        DsLevelRank.again => 'এই সাজে ডাল নামানো যাবে না। আবার সাজান।',
-      };
-    }
-    if (level.isLetters && level.number == 11) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ! পোলের চারপাশ, গোড়ার মাটি, স্টে-তার আর আর্থিং নিখুঁতভাবে যাচাই করেছেন।',
-        DsLevelRank.motamuti => 'যাচাই সম্পন্ন হয়েছে, তবে পোলের চারপাশ আরও মনোযোগ দিয়ে দেখা জরুরি।',
-        DsLevelRank.again => 'পোলের গোড়া ও স্টে-তারের বিপদ না দেখে উঠলে বড় দুর্ঘটনা ঘটবে। আবার যাচাই করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 12) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ! ফাঁপা শব্দ আর বেরিয়ে থাকা রড দেখে মই না লাগিয়ে বিপদ রিপোর্ট করেছেন।',
-        DsLevelRank.motamuti => 'পোল বাতিল করা হয়েছে, তবে একবার ভুল হয়েছিল। মই লাগানোর আগে শব্দ আর পেছনটা দেখুন।',
-        DsLevelRank.again => 'ফাঁপা পোলে উঠলে সেটি ভেঙে পড়বে। আবার যাচাই করে রিপোর্ট করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 13) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ! গোড়ার জয়েন্ট, টন টন শব্দ আর মাথার ক্রস-আর্ম দেখে তবেই মই লাগিয়েছেন।',
-        DsLevelRank.motamuti => 'স্টিল পোল যাচাই হয়েছে, তবে গোড়া ও মাথা আরও মনোযোগ দিয়ে দেখা জরুরি।',
-        DsLevelRank.again => 'স্টিল পোলের গোড়ার মরিচা না দেখে উঠলে পোল ভেঙে পড়বে। আবার যাচাই করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 14) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ! ভিড় সরিয়ে, নিচের জায়গা পরিষ্কার করে আর লক্ষ্মণ রেখা মেনে কাজ শুরু করেছেন।',
-        DsLevelRank.motamuti => 'লক্ষ্মণ রেখা মানা হয়েছে, তবে একবার ভুল হয়েছিল। ভিড়, গোড়া আর দূরত্ব আগে দেখুন।',
-        DsLevelRank.again => 'ভিড়, ভেজা জায়গা আর লোহার পাইপ না সরিয়ে কাজ শুরু করলে বিপদ। আবার করুন।',
-      };
-    }
-    return switch (levelRank) {
-      DsLevelRank.darun => 'ধাপগুলো মাথায় আছে।',
-      DsLevelRank.motamuti => nearMiss ? 'আর একটা ঠিক থাকলে দারুণ।' : 'মোটামুটি মনে আছে। সাইটে ভুল করবেন না।',
-      DsLevelRank.again => 'ধাপগুলো এখনো আলগা।',
-    };
-  }
-
-  bool get nearMiss {
-    if (levelRank != DsLevelRank.motamuti) return false;
-    final deck = currentDeck.length;
-    final darunWrong = deck <= 8 ? 1 : 3;
-    if (wrongTaps == darunWrong + 1) return true;
-    if (wrongTaps <= darunWrong && playSeconds > level.darunSec) return true;
-    return false;
   }
 
   void addJobSeconds(int sec) {
@@ -717,19 +532,6 @@ class DutySlipEngine {
     easyChoices = [];
     _armClock();
     _rebuildChoices();
-  }
-
-  void retryPlay() {
-    if (planPhase != DsPlanPhase.result) return;
-    planPhase = DsPlanPhase.list;
-    clockLive = false;
-    dressArmed = false;
-    dressOpen = level.number == 6;
-    planNext = 0;
-    levelScore = 0;
-    wrongTaps = 0;
-    streak = 0;
-    easyChoices = [];
   }
 
   void replayNow() {
