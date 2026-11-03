@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:audioplayers/audioplayers.dart';
+import '../zero_loss/zero_loss_fx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,20 +18,11 @@ import 'level_lessons_page.dart';
 import 'level_zero_page.dart';
 import 'lineman_progress.dart';
 
-Future<void> playLessonCue(bool open) async {
-  final player = AudioPlayer();
-  try {
-    await player.setReleaseMode(ReleaseMode.release);
-    await player.setPlayerMode(PlayerMode.mediaPlayer);
-    await player.setVolume(0.85);
-    await player.play(
-      AssetSource(open ? 'sounds/quiz_right.wav' : 'sounds/quiz_wrong.wav'),
+Future<void> playLessonCue(bool open) => SlmSfx.play(
+      open ? 'sounds/quiz_right.wav' : 'sounds/quiz_wrong.wav',
+      volume: 0.85,
+      mix: false,
     );
-    player.onPlayerComplete.first.then((_) => player.dispose()).ignore();
-  } catch (_) {
-    await player.dispose();
-  }
-}
 
 void showModernLockMessage(
   BuildContext context, {

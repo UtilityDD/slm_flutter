@@ -36,11 +36,8 @@ class NeuralClip {
 /// The Edge service only accepts one voice + prosody per request, so pauses are
 /// played as silences between clips instead of SSML breaks.
 class NeuralTtsService {
-  NeuralTtsService() {
-    _player.setReleaseMode(ReleaseMode.stop);
-    _player.setAudioContext(AudioContextConfig(focus: AudioContextConfigFocus.mixWithOthers).build());
-    _completeSub = _player.onPlayerComplete.listen((_) => _endWait());
-  }
+  /// Builds nothing native: the player is made on the first clip that plays.
+  NeuralTtsService();
 
   static const voice = 'Microsoft Server Speech Text to Speech Voice (bn-IN, BashkarNeural)';
   static const baseRate = '-1%';
@@ -52,8 +49,18 @@ class NeuralTtsService {
   static final Map<String, Future<File?>> _inflight = {};
   static Directory? _dir;
 
-  final AudioPlayer _player = AudioPlayer();
-  late final StreamSubscription<void> _completeSub;
+  AudioPlayer? _p;
+  StreamSubscription<void>? _completeSub;
+
+  AudioPlayer get _player {
+    final existing = _p;
+    if (existing != null) return existing;
+    final p = _p = AudioPlayer()..positionUpdater = null;
+    p.setReleaseMode(ReleaseMode.stop);
+    p.setAudioContext(AudioContextConfig(focus: AudioContextConfigFocus.mixWithOthers).build());
+    _completeSub = p.onPlayerComplete.listen((_) => _endWait());
+    return p;
+  }
   Completer<void>? _wait;
   int _run = 0;
   bool speaking = false;
@@ -80,7 +87,7 @@ class NeuralTtsService {
   }) async {
     final mine = ++_run;
     _endWait();
-    await _player.stop();
+    await _p?.stop();
     if (clips.isEmpty || mine != _run) return false;
 
     final ahead = <int, Future<File?>>{};
@@ -122,14 +129,14 @@ class NeuralTtsService {
     _endWait();
     _mark(false);
     try {
-      await _player.stop();
+      await _p?.stop();
     } catch (_) {}
   }
 
   Future<void> dispose() async {
     await stop();
-    await _completeSub.cancel();
-    await _player.dispose();
+    await _completeSub?.cancel();
+    await _p?.dispose();
   }
 
   static String ssml(NeuralClip c) =>

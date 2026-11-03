@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:audioplayers/audioplayers.dart';
+import '../zero_loss/zero_loss_fx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,18 +21,7 @@ class PendingHomeRevealNotifier extends Notifier<int?> {
 final pendingHomeRevealStepProvider =
     NotifierProvider<PendingHomeRevealNotifier, int?>(PendingHomeRevealNotifier.new);
 
-Future<void> _playCelebrationCue() async {
-  final player = AudioPlayer();
-  try {
-    await player.setReleaseMode(ReleaseMode.release);
-    await player.setPlayerMode(PlayerMode.mediaPlayer);
-    await player.setVolume(1.0);
-    await player.play(AssetSource('sounds/quiz_right.wav'));
-    player.onPlayerComplete.first.then((_) => player.dispose()).ignore();
-  } catch (_) {
-    await player.dispose();
-  }
-}
+Future<void> _playCelebrationCue() => SlmSfx.play('sounds/quiz_right.wav', volume: 1.0, mix: false);
 
 /// Premium level-clear celebration + automatic color reveal of the next lineman.
 class LevelCelebrationPage extends ConsumerStatefulWidget {

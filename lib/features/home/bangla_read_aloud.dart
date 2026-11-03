@@ -239,21 +239,52 @@ List<SpeechBit> speechBits(String raw) {
   return bits;
 }
 
-/// Device TTS tuned for clear Bangla narration.
-class BanglaReadAloud {
-  BanglaReadAloud();
+/// The one device voice for the app.
+///
+/// flutter_tts sends every callback over one static channel to whichever
+/// FlutterTts was built last, so a FlutterTts per page left older pages
+/// waiting out 12-20 s timeouts. One engine, set up once; the reader that
+/// spoke last owns the callbacks.
+class _DeviceTts {
+  _DeviceTts._();
+  static final instance = _DeviceTts._();
 
-  final FlutterTts _tts = FlutterTts();
-  bool _ready = false;
-  bool speaking = false;
+  FlutterTts? _engine;
+  FlutterTts get _tts => _engine ??= FlutterTts();
+  Future<void>? _setup;
   String? language;
-  Completer<void>? _wait;
-  int _token = 0;
-
-  void Function(bool speaking)? onSpeakingChanged;
+  BanglaReadAloud? owner;
 
   Future<void> init() async {
-    if (_ready) return;
+    final running = _setup ??= _init();
+    try {
+      await running;
+    } catch (_) {
+      if (identical(_setup, running)) _setup = null;
+      rethrow;
+    }
+  }
+
+  /// [reader] is about to speak. A different reader that was mid-line is
+  /// cut off at once (its voice is about to be stopped) instead of waiting.
+  void claim(BanglaReadAloud reader) {
+    final prev = owner;
+    owner = reader;
+    if (prev == null || identical(prev, reader)) return;
+    prev._token++;
+    if (prev.speaking) prev._mark(false);
+    prev._endWait();
+  }
+
+  void release(BanglaReadAloud reader) {
+    if (identical(owner, reader)) owner = null;
+  }
+
+  Future<void> stop() => _tts.stop();
+  Future<void> speak(String text) => _tts.speak(text);
+  Future<void> setSpeechRate(double rate) => _tts.setSpeechRate(rate);
+
+  Future<void> _init() async {
     await _tts.awaitSpeakCompletion(false);
     await _tts.setVolume(1.0);
     await _tts.setPitch(1.0);
@@ -267,25 +298,10 @@ class BanglaReadAloud {
       await _tts.setLanguage(language!);
       await _pickBanglaVoice(language!);
     }
-    void mark(bool value) {
-      speaking = value;
-      onSpeakingChanged?.call(value);
-    }
-
-    _tts.setStartHandler(() => mark(true));
-    _tts.setCompletionHandler(() {
-      mark(false);
-      _endWait();
-    });
-    _tts.setCancelHandler(() {
-      mark(false);
-      _endWait();
-    });
-    _tts.setErrorHandler((_) {
-      mark(false);
-      _endWait();
-    });
-    _ready = true;
+    _tts.setStartHandler(() => owner?._mark(true));
+    _tts.setCompletionHandler(() => owner?._finished());
+    _tts.setCancelHandler(() => owner?._finished());
+    _tts.setErrorHandler((_) => owner?._finished());
   }
 
   Future<String?> _pickBanglaLanguage() async {
@@ -350,6 +366,34 @@ class BanglaReadAloud {
     if (n.contains('female') || n.contains('bn-in-x') || n.contains('bn-bd')) score += 2;
     return score;
   }
+}
+
+/// Device TTS tuned for clear Bangla narration. Every reader shares one engine.
+class BanglaReadAloud {
+  BanglaReadAloud();
+
+  static _DeviceTts get _device => _DeviceTts.instance;
+
+  bool speaking = false;
+  Completer<void>? _wait;
+  int _token = 0;
+
+  /// The Bangla language the device voice uses, or null when it has none.
+  String? get language => _device.language;
+
+  void Function(bool speaking)? onSpeakingChanged;
+
+  Future<void> init() => _device.init();
+
+  void _mark(bool value) {
+    speaking = value;
+    onSpeakingChanged?.call(value);
+  }
+
+  void _finished() {
+    _mark(false);
+    _endWait();
+  }
 
   void _endWait() {
     final wait = _wait;
@@ -361,15 +405,16 @@ class BanglaReadAloud {
     final clean = lessonSpeechText(raw);
     if (clean.isEmpty) return false;
     final mine = ++_token;
+    _device.claim(this);
     _endWait();
     try {
-      await _tts.stop();
+      await _device.stop();
     } catch (_) {}
     if (mine != _token) return false;
     await init();
     if (mine != _token) return false;
     if (language == null) return false;
-    await _tts.setSpeechRate(rate);
+    await _device.setSpeechRate(rate);
     if (mine != _token) return false;
 
     if (onClause != null) {
@@ -378,7 +423,7 @@ class BanglaReadAloud {
       speaking = true;
       final wait = Completer<void>();
       _wait = wait;
-      await _tts.speak(clean);
+      await _device.speak(clean);
       await wait.future.timeout(const Duration(seconds: 15), onTimeout: () {});
       if (mine == _token) speaking = false;
     }
@@ -390,19 +435,20 @@ class BanglaReadAloud {
     final clean = lessonSpeechText(raw);
     if (clean.isEmpty) return;
     final mine = ++_token;
+    _device.claim(this);
     _endWait();
     try {
-      await _tts.stop();
+      await _device.stop();
     } catch (_) {}
     if (mine != _token) return;
     await init();
     if (mine != _token || language == null) return;
-    await _tts.setSpeechRate(rate);
+    await _device.setSpeechRate(rate);
     if (mine != _token) return;
     speaking = true;
     final wait = Completer<void>();
     _wait = wait;
-    await _tts.speak(clean);
+    await _device.speak(clean);
     await wait.future.timeout(const Duration(seconds: 20), onTimeout: () {});
     if (mine == _token) speaking = false;
   }
@@ -416,7 +462,7 @@ class BanglaReadAloud {
       final wait = Completer<void>();
       _wait = wait;
       speaking = true;
-      await _tts.speak(bits[i].spoken);
+      await _device.speak(bits[i].spoken);
       await wait.future.timeout(const Duration(seconds: 12), onTimeout: () {});
       if (mine != _token) return;
       if (bits[i].pause > Duration.zero) await Future<void>.delayed(bits[i].pause);
@@ -429,11 +475,12 @@ class BanglaReadAloud {
     speaking = false;
     _endWait();
     try {
-      await _tts.stop();
+      await _device.stop();
     } catch (_) {}
   }
 
   Future<void> dispose() async {
     await stop();
+    _device.release(this);
   }
 }
