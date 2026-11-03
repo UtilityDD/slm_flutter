@@ -31,6 +31,50 @@ final staticBadgeNames = [
   'সেফটি প্রো',
 ];
 
+/// Network side of the training content. Swappable in tests.
+class TrainingChaptersSource {
+  const TrainingChaptersSource();
+
+  Future<List<Map<String, dynamic>>> chapterIndex() {
+    return SupabaseService.client
+        .from('training_chapters')
+        .select('id, module_number, chapter_number, title')
+        .eq('language', 'bn')
+        .eq('is_active', true)
+        .order('module_number')
+        .order('chapter_number');
+  }
+
+  Future<List<Map<String, dynamic>>> moduleRows(int moduleNumber) {
+    return SupabaseService.client
+        .from('training_chapters')
+        .select('*')
+        .eq('module_number', moduleNumber)
+        .eq('language', 'bn')
+        .eq('is_active', true)
+        .order('chapter_number', ascending: true);
+  }
+}
+
+final trainingChaptersSourceProvider = Provider<TrainingChaptersSource>((ref) => const TrainingChaptersSource());
+
+/// Signed-in user id only, so a profile refresh (points, completions) does not
+/// count as a new session.
+final _sessionUserProvider = Provider<String?>((ref) => ref.watch(authProvider.select((s) => s.profile?.id)));
+
+/// Chapter list, fetched once per session. Progress is applied on top in
+/// [trainingLadderProvider], which is cheap to recompute.
+final trainingChapterIndexProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.watch(_sessionUserProvider);
+  return ref.read(trainingChaptersSourceProvider).chapterIndex();
+});
+
+/// Full lesson rows (100-200 KB per module), fetched once per module per session.
+final trainingModuleRowsProvider = FutureProvider.family<List<Map<String, dynamic>>, int>((ref, moduleNumber) async {
+  ref.watch(_sessionUserProvider);
+  return ref.read(trainingChaptersSourceProvider).moduleRows(moduleNumber);
+});
+
 final trainingLadderProvider = FutureProvider<List<TrainingModuleItem>>((ref) async {
   final authState = ref.watch(authProvider);
   final devOpen = ref.watch(devUnlockProvider);
@@ -42,14 +86,8 @@ final trainingLadderProvider = FutureProvider<List<TrainingModuleItem>>((ref) as
   final userLevel = authState.profile?.trainingLevel ?? 1;
 
   try {
-    // Query Supabase training_chapters to get exact module counts
-    final chaptersData = await SupabaseService.client
-        .from('training_chapters')
-        .select('id, module_number, chapter_number, title')
-        .eq('language', 'bn')
-        .eq('is_active', true)
-        .order('module_number')
-        .order('chapter_number');
+    // training_chapters index (cached per session) gives exact module counts.
+    final chaptersData = await ref.watch(trainingChapterIndexProvider.future);
 
     final Map<int, List<Map<String, dynamic>>> moduleMap = {};
     for (final row in chaptersData) {
@@ -128,13 +166,7 @@ final moduleLessonsProvider = FutureProvider.family<List<LessonCardItem>, int>((
   };
 
   try {
-    final data = await SupabaseService.client
-        .from('training_chapters')
-        .select('*')
-        .eq('module_number', moduleNumber)
-        .eq('language', 'bn')
-        .eq('is_active', true)
-        .order('chapter_number', ascending: true);
+    final data = await ref.watch(trainingModuleRowsProvider(moduleNumber).future);
 
     final lessons = data.map((row) {
       final id = row['id']?.toString() ?? '';

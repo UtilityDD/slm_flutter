@@ -12,6 +12,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/services/neural_tts_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
+import '../identify/fit_image.dart';
 import 'bangla_read_aloud.dart';
 import 'lesson_quiz_sfx.dart';
 import 'lesson_rich_text.dart';
@@ -814,10 +815,14 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
                   borderRadius: BorderRadius.circular(12),
                   child: ColoredBox(
                     color: _paperDeep,
-                    child: CachedNetworkImage(
-                      imageUrl: resolveTrainingMediaSrc(src),
-                      fit: BoxFit.contain,
-                      errorWidget: (_, __, ___) => const Icon(Icons.broken_image_outlined, color: _softInk),
+                    child: LayoutBuilder(
+                      builder: (context, box) => CachedNetworkImage(
+                        imageUrl: resolveTrainingMediaSrc(src),
+                        fit: BoxFit.contain,
+                        // Decode to the tile, not the full photo.
+                        memCacheWidth: decodePx(context, box.maxWidth),
+                        errorWidget: (_, __, ___) => const Icon(Icons.broken_image_outlined, color: _softInk),
+                      ),
                     ),
                   ),
                 ),
@@ -1231,7 +1236,11 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
                         height: 84,
                         width: 120,
                         color: _paperDeep,
-                        child: CachedNetworkImage(imageUrl: resolveTrainingMediaSrc(opt), fit: BoxFit.contain),
+                        child: CachedNetworkImage(
+                          imageUrl: resolveTrainingMediaSrc(opt),
+                          fit: BoxFit.contain,
+                          memCacheWidth: decodePx(context, 120),
+                        ),
                       ),
                     ),
                   )

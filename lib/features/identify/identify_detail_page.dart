@@ -7,6 +7,7 @@ import '../../design/slm_design.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
+import 'fit_image.dart';
 import 'identify_chart_view.dart';
 import 'identify_charts.dart';
 import 'identify_style.dart';
@@ -125,37 +126,36 @@ class _IdentifyDetailPageState extends ConsumerState<IdentifyDetailPage> {
                   if (total > 1)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(999),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          decoration: BoxDecoration(
-                            color: SlmColors.navy900.withValues(alpha: 0.72),
-                            borderRadius: SlmRadius.pillAll,
-                            border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
-                          ),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                color: SlmColors.ivory,
-                                disabledColor: SlmColors.slate.withValues(alpha: 0.5),
-                                onPressed: _index > 0 ? () => _go(-1) : null,
-                                icon: const Icon(Icons.chevron_left_rounded),
-                              ),
-                              Text(
-                                '${bnNumber(_index + 1, bn)} / ${bnNumber(total, bn)}',
-                                style: const TextStyle(fontWeight: FontWeight.w700, color: SlmColors.gold200),
-                              ),
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                color: SlmColors.ivory,
-                                disabledColor: SlmColors.slate.withValues(alpha: 0.5),
-                                onPressed: _index < total - 1 ? () => _go(1) : null,
-                                icon: const Icon(Icons.chevron_right_rounded),
-                              ),
-                            ],
-                          ),
+                      // Solid fill instead of a backdrop blur over the paging content:
+                      // 0.86 reads like the old blurred 0.72 glass at no per-frame cost.
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: SlmColors.navy900.withValues(alpha: _glassAlpha),
+                          borderRadius: SlmRadius.pillAll,
+                          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
+                        ),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              color: SlmColors.ivory,
+                              disabledColor: SlmColors.slate.withValues(alpha: 0.5),
+                              onPressed: _index > 0 ? () => _go(-1) : null,
+                              icon: const Icon(Icons.chevron_left_rounded),
+                            ),
+                            Text(
+                              '${bnNumber(_index + 1, bn)} / ${bnNumber(total, bn)}',
+                              style: const TextStyle(fontWeight: FontWeight.w700, color: SlmColors.gold200),
+                            ),
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              color: SlmColors.ivory,
+                              disabledColor: SlmColors.slate.withValues(alpha: 0.5),
+                              onPressed: _index < total - 1 ? () => _go(1) : null,
+                              icon: const Icon(Icons.chevron_right_rounded),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -170,6 +170,11 @@ class _IdentifyDetailPageState extends ConsumerState<IdentifyDetailPage> {
   }
 }
 
+/// Fill for the floating controls. They used a 12 sigma backdrop blur under a
+/// 0.72 navy fill; a slightly denser solid fill looks the same without
+/// re-blurring the page under them every frame.
+const _glassAlpha = 0.86;
+
 class _GlassButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -179,15 +184,12 @@ class _GlassButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipOval(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Material(
-          color: SlmColors.navy900.withValues(alpha: 0.72),
-          shape: CircleBorder(side: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.45))),
-          child: InkWell(
-            onTap: onTap,
-            child: SizedBox(width: 44, height: 44, child: Icon(icon, color: SlmColors.ivory)),
-          ),
+      child: Material(
+        color: SlmColors.navy900.withValues(alpha: _glassAlpha),
+        shape: CircleBorder(side: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.45))),
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(width: 44, height: 44, child: Icon(icon, color: SlmColors.ivory)),
         ),
       ),
     );
@@ -467,25 +469,37 @@ class _LiftedImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Transform.translate(
-          offset: const Offset(0, 16),
-          child: ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 18, sigmaY: 12),
-            child: ColorFiltered(
-              colorFilter: const ColorFilter.mode(Color(0x3357534E), BlendMode.srcIn),
-              child: Image.asset(path, fit: BoxFit.contain, cacheWidth: 600),
-            ),
-          ),
-        ),
-        Image.asset(
+    return LayoutBuilder(
+      builder: (context, box) {
+        // One decode, sized to the page, shared by the shadow and the photo.
+        final size = MediaQuery.sizeOf(context);
+        final image = fitAsset(
+          context,
           path,
-          fit: BoxFit.contain,
-          errorBuilder: (_, _, _) => const Icon(Icons.image_outlined, color: SlmColors.slate, size: 48),
-        ),
-      ],
+          width: box.hasBoundedWidth ? box.maxWidth : size.width,
+          height: box.hasBoundedHeight ? box.maxHeight : size.height,
+        );
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Transform.translate(
+              offset: const Offset(0, 16),
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 18, sigmaY: 12),
+                child: ColorFiltered(
+                  colorFilter: const ColorFilter.mode(Color(0x3357534E), BlendMode.srcIn),
+                  child: Image(image: image, fit: BoxFit.contain),
+                ),
+              ),
+            ),
+            Image(
+              image: image,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => const Icon(Icons.image_outlined, color: SlmColors.slate, size: 48),
+            ),
+          ],
+        );
+      },
     );
   }
 }

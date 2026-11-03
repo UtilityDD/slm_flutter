@@ -10,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
+import '../identify/fit_image.dart';
 import '../training/training_models.dart';
 import '../training/training_provider.dart';
 import 'bangla_read_aloud.dart';
@@ -371,8 +372,8 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
       } catch (_) {}
     }
 
-    ref.invalidate(trainingLadderProvider);
-    ref.invalidate(moduleLessonsProvider(module));
+    // No explicit invalidate here: the ladder and lesson list already watch
+    // auth and local progress, and their content rows are cached per session.
 
     if (!mounted) return;
 
@@ -442,6 +443,7 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
               child: CachedNetworkImage(
                 imageUrl: url,
                 fit: BoxFit.contain,
+                memCacheWidth: screenDecodeWidth(context),
                 placeholder: (_, __) => const Padding(
                   padding: EdgeInsets.all(40),
                   child: CircularProgressIndicator(color: Colors.white),

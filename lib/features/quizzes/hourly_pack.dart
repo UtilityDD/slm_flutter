@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class HourlyOption {
@@ -42,34 +43,50 @@ class HourlyPack {
 
   const HourlyPack(this.questions);
 
-  static Future<HourlyPack> load() async {
-    final raw = await rootBundle.loadString('assets/data/hourly_quiz_pack.json');
-    final json = jsonDecode(raw) as Map<String, dynamic>;
-    final rows = json['questions'] as List<dynamic>? ?? [];
-    final questions = <HourlyQuestion>[];
-    for (final row in rows) {
-      if (row is! Map) continue;
-      final options = <HourlyOption>[];
-      for (final option in row['options'] as List<dynamic>? ?? []) {
-        if (option is! Map) continue;
-        final value = option['value']?.toString() ?? '';
-        if (value.isEmpty) continue;
-        options.add(HourlyOption(value: value, image: option['image']?.toString() ?? ''));
-      }
-      final id = row['id']?.toString() ?? '';
-      final text = row['text']?.toString() ?? '';
-      if (id.isEmpty || text.isEmpty || options.length < 2) continue;
-      questions.add(HourlyQuestion(
-        id: id,
-        text: text,
-        image: row['image']?.toString() ?? '',
-        options: options,
-        tags: (row['tags'] as List<dynamic>? ?? []).map((tag) => tag.toString()).toList(),
-        visual: row['visual'] == true,
-      ));
-    }
-    return HourlyPack(questions);
+  static Future<HourlyPack>? _cache;
+
+  /// Parsed once per app run, off the UI isolate. Later opens reuse the result.
+  static Future<HourlyPack> load() {
+    return _cache ??= _load().catchError((Object e) {
+      _cache = null;
+      throw e;
+    });
   }
+
+  static Future<HourlyPack> _load() async {
+    // cache:false so the 845 KB string is not kept next to the parsed pack.
+    final raw = await rootBundle.loadString('assets/data/hourly_quiz_pack.json', cache: false);
+    return compute(parseHourlyPack, raw, debugLabel: 'hourly-pack');
+  }
+}
+
+/// Top-level so it can run in a background isolate.
+HourlyPack parseHourlyPack(String raw) {
+  final json = jsonDecode(raw) as Map<String, dynamic>;
+  final rows = json['questions'] as List<dynamic>? ?? [];
+  final questions = <HourlyQuestion>[];
+  for (final row in rows) {
+    if (row is! Map) continue;
+    final options = <HourlyOption>[];
+    for (final option in row['options'] as List<dynamic>? ?? []) {
+      if (option is! Map) continue;
+      final value = option['value']?.toString() ?? '';
+      if (value.isEmpty) continue;
+      options.add(HourlyOption(value: value, image: option['image']?.toString() ?? ''));
+    }
+    final id = row['id']?.toString() ?? '';
+    final text = row['text']?.toString() ?? '';
+    if (id.isEmpty || text.isEmpty || options.length < 2) continue;
+    questions.add(HourlyQuestion(
+      id: id,
+      text: text,
+      image: row['image']?.toString() ?? '',
+      options: options,
+      tags: (row['tags'] as List<dynamic>? ?? []).map((tag) => tag.toString()).toList(),
+      visual: row['visual'] == true,
+    ));
+  }
+  return HourlyPack(questions);
 }
 
 String hourlyQuizId(DateTime now) {
