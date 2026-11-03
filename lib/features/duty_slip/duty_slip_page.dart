@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show SynchronousFuture, ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -70,6 +71,99 @@ DsMotion dsMotionOf(BuildContext context) {
 }
 
 bool dsReduceMotion(BuildContext context) => MediaQuery.disableAnimationsOf(context);
+
+@immutable
+class DsBoxDecodeKey {
+  const DsBoxDecodeKey(this.inner, this.width, this.height, this.cover);
+  final Object inner;
+  final int width;
+  final int height;
+  final bool cover;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DsBoxDecodeKey &&
+      other.inner == inner &&
+      other.width == width &&
+      other.height == height &&
+      other.cover == cover;
+
+  @override
+  int get hashCode => Object.hash(inner, width, height, cover);
+}
+
+/// Decodes an image no larger than the device-pixel box it is shown in.
+/// [cover] keeps the short side at least box size (BoxFit.cover); otherwise
+/// the whole image fits the box (BoxFit.contain). Aspect ratio is kept and the
+/// image is never upscaled, so what is painted looks the same as a full decode.
+class DsBoxDecode extends ImageProvider<DsBoxDecodeKey> {
+  const DsBoxDecode(this.inner, {required this.width, required this.height, required this.cover});
+
+  final ImageProvider<Object> inner;
+  final int width;
+  final int height;
+  final bool cover;
+
+  /// [Image] for an asset shown in a [w] x [h] logical box.
+  static Widget asset(
+    BuildContext context,
+    String path, {
+    required double w,
+    required double h,
+    required BoxFit fit,
+    double? width,
+    double? height,
+    ImageErrorWidgetBuilder? errorBuilder,
+  }) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return Image(
+      image: DsBoxDecode(
+        AssetImage(path),
+        width: (w * dpr).ceil(),
+        height: (h * dpr).ceil(),
+        cover: fit == BoxFit.cover,
+      ),
+      width: width,
+      height: height,
+      fit: fit,
+      errorBuilder: errorBuilder,
+    );
+  }
+
+  @override
+  Future<DsBoxDecodeKey> obtainKey(ImageConfiguration configuration) {
+    Completer<DsBoxDecodeKey>? completer;
+    SynchronousFuture<DsBoxDecodeKey>? result;
+    inner.obtainKey(configuration).then((Object key) {
+      final k = DsBoxDecodeKey(key, width, height, cover);
+      if (completer == null) {
+        result = SynchronousFuture<DsBoxDecodeKey>(k);
+      } else {
+        completer.complete(k);
+      }
+    }, onError: (Object e, StackTrace s) => completer?.completeError(e, s));
+    final sync = result;
+    if (sync != null) return sync;
+    completer = Completer<DsBoxDecodeKey>();
+    return completer.future;
+  }
+
+  @override
+  ImageStreamCompleter loadImage(DsBoxDecodeKey key, ImageDecoderCallback decode) {
+    Future<ui.Codec> boxed(ui.ImmutableBuffer buffer, {ui.TargetImageSizeCallback? getTargetSize}) {
+      return decode(buffer, getTargetSize: (int iw, int ih) {
+        if (iw <= 0 || ih <= 0) return const ui.TargetImageSize();
+        final sx = width / iw;
+        final sy = height / ih;
+        final s = cover ? math.max(sx, sy) : math.min(sx, sy);
+        if (s >= 1) return const ui.TargetImageSize();
+        return ui.TargetImageSize(width: math.max(1, (iw * s).ceil()));
+      });
+    }
+
+    return inner.loadImage(key.inner, boxed);
+  }
+}
 
 class DutySlipPage extends StatefulWidget {
   /// Skip the death cover and open the ladder. Level briefings are unchanged.
@@ -252,13 +346,29 @@ class _FlyBit {
 class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMixin {
   DutySlipEngine? _engine;
   final _tts = BanglaReadAloud();
-  final _jobTick = ValueNotifier(0);
+  /// Bumped when HUD numbers change (score, level); rebuilds only the HUD.
+  final _hudTick = ValueNotifier(0);
+  /// Bumped when the HUD clock text or its overtime colour changes.
+  final _clockTick = ValueNotifier(0);
   final _scoreKey = GlobalKey();
   final _stackKey = GlobalKey();
+  /// Level / job clock: a one-shot timer re-armed about once a second (just
+  /// after the next play-second boundary), only while a level is on screen and
+  /// the app is visible. Each tick credits the interval it waited; a tap or a
+  /// hide mid-interval credits the part already elapsed ([_armWatch]).
   Timer? _clock;
+  var _clockOn = false;
+  var _armMs = 0;
+  var _armFedMs = 0;
+  final _armWatch = Stopwatch();
+  var _jobAccMs = 0;
+  var _appHidden = false;
+  late final AppLifecycleListener _life;
+  var _shownClock = '';
+  var _shownOver = false;
+  var _hudSig = 0;
   final _roadScroll = ValueNotifier<double>(0);
   late final AnimationController _shake;
-  late final AnimationController _skyDrift;
   late final Animation<double> _shakeX;
   List<DsOption> _opts = [];
   String? _hint;
@@ -277,14 +387,13 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   var _clockHeld = false;
   var _loadingWaitOpenRoad = false;
   var _flyId = 0;
-  final _flies = <_FlyBit>[];
+  final _flies = ValueNotifier<List<_FlyBit>>(const []);
 
   @override
   void initState() {
     super.initState();
     _loadingWaitOpenRoad = widget.startOnRoad;
     _shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
-    _skyDrift = AnimationController(vsync: this, duration: const Duration(seconds: 48))..repeat();
     _shakeX = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0, end: 12), weight: 1),
       TweenSequenceItem(tween: Tween(begin: 12, end: -12), weight: 2),
@@ -293,7 +402,106 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       TweenSequenceItem(tween: Tween(begin: -4, end: 0), weight: 1),
     ]).animate(CurvedAnimation(parent: _shake, curve: Curves.easeOut));
     DsMotionGate.listen();
+    _life = AppLifecycleListener(onHide: _onAppHide, onShow: _onAppShow);
     _boot();
+  }
+
+  void _onAppHide() {
+    _feedClock();
+    _appHidden = true;
+    _stopClock();
+  }
+
+  void _onAppShow() {
+    _appHidden = false;
+    final e = _engine;
+    if (e != null) _syncClock(e);
+  }
+
+  /// Start or stop the clock to match the screen. Called from build, so every
+  /// page transition re-checks it.
+  void _syncClock(DutySlipEngine e) {
+    final want = !_appHidden && e.clockScreen;
+    if (want == _clockOn) return;
+    if (!want) {
+      _stopClock();
+      return;
+    }
+    _clockOn = true;
+    _jobAccMs = 0;
+    _armClock(e);
+  }
+
+  void _stopClock() {
+    _clockOn = false;
+    _clock?.cancel();
+    _clock = null;
+    _armWatch.stop();
+  }
+
+  void _armClock(DutySlipEngine e) {
+    _clock?.cancel();
+    // Wake just after the mm:ss clock rolls over; otherwise once a second.
+    final ms = (e.playClockRuns ? e.playMsToNextSecond + 8 : 1000).clamp(20, 1000);
+    _armMs = ms;
+    _armFedMs = 0;
+    _armWatch
+      ..reset()
+      ..start();
+    _clock = Timer(Duration(milliseconds: ms), _onClockTick);
+  }
+
+  void _onClockTick() {
+    final e = _engine;
+    if (!mounted || e == null || !_clockOn) return;
+    _credit(_armMs - _armFedMs);
+    _armFedMs = _armMs;
+    _refreshHud();
+    _armClock(e);
+  }
+
+  /// Credit the part of the current interval that has already passed, so a tap
+  /// or leaving the app is timed to the millisecond, not to the tick.
+  void _feedClock() {
+    if (!_clockOn) return;
+    final done = math.min(_armWatch.elapsedMilliseconds, _armMs);
+    final d = done - _armFedMs;
+    if (d <= 0) return;
+    _armFedMs = done;
+    _credit(d);
+  }
+
+  /// 2 job-seconds per 100 ms and the play clock in milliseconds: the same
+  /// rates the old 100 ms periodic timer used.
+  void _credit(int ms) {
+    final e = _engine;
+    if (e == null || ms <= 0) return;
+    if (e.act == DsAct.done || e.act == DsAct.lethal) return;
+    _jobAccMs += ms;
+    final steps = _jobAccMs ~/ 100;
+    if (steps > 0) {
+      _jobAccMs -= steps * 100;
+      e.addJobSeconds(2 * steps);
+    }
+    e.tickPlay(ms);
+  }
+
+  /// Rebuild the HUD (and/or its clock text) only if what it shows changed.
+  void _refreshHud() {
+    final e = _engine;
+    if (!mounted || e == null) return;
+    final clock = e.playClock;
+    final over = e.overtime;
+    if (clock != _shownClock || over != _shownOver) {
+      _shownClock = clock;
+      _shownOver = over;
+      _clockTick.value++;
+    }
+    final sig = Object.hash(e.levelScore, e.quality, e.hudTotal, e.playing, e.listing, e.levelIndex);
+    if (sig != _hudSig) {
+      _hudSig = sig;
+      _hudTick.value++;
+    }
   }
 
   Future<void> _boot() async {
@@ -309,13 +517,6 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       _loading = false;
     });
     unawaited(ZlMusic.start());
-    _clock = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      final e = _engine;
-      if (e == null || e.act == DsAct.done || e.act == DsAct.lethal) return;
-      e.addJobSeconds(2);
-      e.tickPlay(100);
-      _jobTick.value++;
-    });
   }
 
   void _openRoad() {
@@ -345,6 +546,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _backToRoad() {
     final e = _engine;
     if (e == null) return;
+    _feedClock();
     DsVoice.stop();
     _tts.stop();
     e.backToRoad();
@@ -356,6 +558,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _finishSafeWalk() {
     final e = _engine;
     if (e == null || !e.showingDress) return;
+    _feedClock();
     e.finishDress();
     _holdClock(false);
     setState(() {});
@@ -458,11 +661,13 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   @override
   void dispose() {
     DsMotionGate.stop();
-    _clock?.cancel();
-    _jobTick.dispose();
+    _life.dispose();
+    _stopClock();
+    _hudTick.dispose();
+    _clockTick.dispose();
+    _flies.dispose();
     _roadScroll.dispose();
     _shake.dispose();
-    _skyDrift.dispose();
     DsVoice.stop();
     _tts.stop();
     if (_clockHeld) ZlFx.releaseClock();
@@ -535,13 +740,16 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final from = _stackLocal(fromGlobal ?? Offset(size.width / 2, size.height * 0.55));
     final to = _scoreTarget();
     final id = ++_flyId;
-    setState(() => _flies.add(_FlyBit(id: id, delta: delta, from: from, to: to)));
+    // Only the fly overlay and the HUD rebuild; the game board below does not.
+    _flies.value = [..._flies.value, _FlyBit(id: id, delta: delta, from: from, to: to)];
+    // Callers may change the score right after this call; read it once they are done.
+    scheduleMicrotask(_refreshHud);
     final container = ProviderScope.containerOf(context);
     container.read(gameSaveProvider.notifier).pulseDelta(delta);
     container.read(guideDirectorProvider.notifier).react(delta > 0 ? GuideMood.glad : GuideMood.warn);
     Future<void>.delayed(const Duration(milliseconds: 720), () {
       if (!mounted) return;
-      setState(() => _flies.removeWhere((f) => f.id == id));
+      _flies.value = [for (final f in _flies.value) if (f.id != id) f];
     });
   }
 
@@ -619,6 +827,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _pickSingle(String id, Offset global) {
     final e = _engine;
     if (e == null || e.act != DsAct.card) return;
+    _feedClock();
     _handle(e.answerSingle(id), fromGlobal: global);
   }
 
@@ -627,6 +836,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final s = e?.step;
     if (e == null || s == null || s.kind != DsKind.kit) return;
     if (_kitI >= _opts.length) return;
+    _feedClock();
     final o = _opts[_kitI];
     final must = s.essential.contains(o.id);
     final ban = s.forbidden.contains(o.id);
@@ -659,6 +869,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _tapPlan(String id, Offset global) {
     final e = _engine;
     if (e == null) return;
+    _feedClock();
     final r = e.tapPlan(id);
     if (r.ok) {
       unawaited(ZlFx.cue('sounds/quiz_select.wav', muted: _muted));
@@ -753,6 +964,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
         final box = context.findRenderObject() as RenderBox?;
         final mid = box?.size.center(Offset.zero) ?? Offset.zero;
         final g = box?.localToGlobal(mid);
+        _feedClock();
         final ok = e.submitPtw(feederPick: _ptwFeeder!, polePick: _ptwPole!, shiftPick: _ptwShift!);
         if (ok) {
           unawaited(ZlFx.cue('sounds/quiz_right.wav', muted: _muted));
@@ -804,6 +1016,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       );
     }
     final e = _engine!;
+    _syncClock(e);
     final jobIntro = e.listing && e.level.isJob;
     final walk = e.showingSafeWalk;
     final dress = e.showingDress;
@@ -916,10 +1129,11 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                 children: [
                   if (e.showHud)
                     ValueListenableBuilder<int>(
-                      valueListenable: _jobTick,
+                      valueListenable: _hudTick,
                       builder: (_, _, _) => _Hud(
                         engine: e,
                         scoreKey: _scoreKey,
+                        clockTick: _clockTick,
                         muted: _muted,
                         onMute: () async {
                           setState(() => _muted = !_muted);
@@ -960,7 +1174,10 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                               unawaited(ZlFx.cue('sounds/quiz_flip.wav', muted: _muted));
                               setState(() => _callOpen = true);
                             },
-                            onReply: (id, g) => _handle(e.answerCall(id), fromGlobal: g),
+                            onReply: (id, g) {
+                              _feedClock();
+                              _handle(e.answerCall(id), fromGlobal: g);
+                            },
                           ),
                         DsAct.lethal || DsAct.done => SingleChildScrollView(
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -973,7 +1190,15 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                 ],
               ),
             ),
-            for (final f in _flies) _FlyingScore(bit: f),
+            Positioned.fill(
+              child: ValueListenableBuilder<List<_FlyBit>>(
+                valueListenable: _flies,
+                builder: (_, flies, _) => Stack(
+                  clipBehavior: Clip.none,
+                  children: [for (final f in flies) _FlyingScore(key: ValueKey(f.id), bit: f)],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -984,7 +1209,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
 
 class _FlyingScore extends StatelessWidget {
   final _FlyBit bit;
-  const _FlyingScore({required this.bit});
+  const _FlyingScore({super.key, required this.bit});
 
   @override
   Widget build(BuildContext context) {
@@ -1019,9 +1244,16 @@ class _FlyingScore extends StatelessWidget {
 class _Hud extends StatelessWidget {
   final DutySlipEngine engine;
   final Key scoreKey;
+  final ValueListenable<int> clockTick;
   final bool muted;
   final VoidCallback onMute;
-  const _Hud({required this.engine, required this.scoreKey, required this.muted, required this.onMute});
+  const _Hud({
+    required this.engine,
+    required this.scoreKey,
+    required this.clockTick,
+    required this.muted,
+    required this.onMute,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1064,10 +1296,7 @@ class _Hud extends StatelessWidget {
               )
             else
               const Spacer(),
-            Text(
-              e.playClock,
-              style: zlText(20, weight: FontWeight.w900, color: e.overtime && !e.playing ? ZlColors.red : ZlColors.cream),
-            ),
+            _HudClock(engine: e, tick: clockTick),
             const SizedBox(width: 14),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -1080,6 +1309,50 @@ class _Hud extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The HUD's mm:ss text. Rebuilds on its own when [tick] fires (about 1 Hz).
+class _HudClock extends StatefulWidget {
+  final DutySlipEngine engine;
+  final ValueListenable<int> tick;
+  const _HudClock({required this.engine, required this.tick});
+
+  @override
+  State<_HudClock> createState() => _HudClockState();
+}
+
+class _HudClockState extends State<_HudClock> {
+  @override
+  void initState() {
+    super.initState();
+    widget.tick.addListener(_changed);
+  }
+
+  @override
+  void didUpdateWidget(_HudClock old) {
+    super.didUpdateWidget(old);
+    if (old.tick != widget.tick) {
+      old.tick.removeListener(_changed);
+      widget.tick.addListener(_changed);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.tick.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) {
+    final e = widget.engine;
+    return Text(
+      e.playClock,
+      style: zlText(20, weight: FontWeight.w900, color: e.overtime && !e.playing ? ZlColors.red : ZlColors.cream),
     );
   }
 }
@@ -2423,6 +2696,7 @@ class _JobBriefBoard extends StatefulWidget {
 class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderStateMixin {
   late final AnimationController _run;
   late final AnimationController _insist;
+  late final Animation<double> _insistScale;
   final _pinged = <int>{};
   var _page = 0;
   var _said = false;
@@ -2435,7 +2709,8 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
     _run = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800))
       ..addListener(_onTick)
       ..forward();
-    _insist = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat(reverse: true);
+    _insist = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
+    _insistScale = _insist.drive(Tween<double>(begin: 1, end: 1.03));
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.48, muted: widget.muted));
     Future<void>.delayed(const Duration(milliseconds: 480), () {
       if (!mounted || _said) return;
@@ -2450,6 +2725,18 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
         unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.38, muted: widget.muted));
         HapticFeedback.mediumImpact();
       }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (slmLoopsOn(context)) {
+      if (!_insist.isAnimating) _insist.repeat(reverse: true);
+    } else {
+      _insist
+        ..stop()
+        ..value = 0;
     }
   }
 
@@ -2475,7 +2762,7 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
     final e = widget.engine;
     final plan = e.tonightPlan;
     return AnimatedBuilder(
-      animation: Listenable.merge([_run, _insist]),
+      animation: _run,
       builder: (_, _) {
         final next = _span(_run.value, 0.88, 1.00);
         final arrow = _page == 2
@@ -2611,43 +2898,46 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
   Widget _groupBtn(int g) {
     final group = dsJobGroups[g];
     final punch = _btnPunch(g);
-    final insist = 1 + 0.03 * _insist.value;
     return Opacity(
       opacity: punch.clamp(0.0, 1.0),
       child: Transform.translate(
         offset: Offset(0, 28 * (1 - punch.clamp(0.0, 1.0))),
         child: Transform.scale(
-          scale: (0.86 + 0.14 * punch.clamp(0.0, 1.2)) * insist,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: punch < 0.55 ? null : () => _toggleGroup(g),
-                child: Ink(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: const [Color(0xFFE8D39A), Color(0xFFB0892A), Color(0xFF6A4E12)],
-                    ),
-                    border: Border.all(color: const Color(0xFF5C4316), width: 1.15),
-                    boxShadow: const [BoxShadow(color: Color(0x88000000), offset: Offset(0, 2), blurRadius: 4)],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _groupMark(group),
-                          style: zlText(16, weight: FontWeight.w900, color: const Color(0xFF1C1408)),
-                        ),
+          scale: 0.86 + 0.14 * punch.clamp(0.0, 1.2),
+          // The 3% "tap me" pulse repaints only; the board does not rebuild.
+          child: ScaleTransition(
+            scale: _insistScale,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: punch < 0.55 ? null : () => _toggleGroup(g),
+                  child: Ink(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: const [Color(0xFFE8D39A), Color(0xFFB0892A), Color(0xFF6A4E12)],
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF3A2A10)),
-                    ],
+                      border: Border.all(color: const Color(0xFF5C4316), width: 1.15),
+                      boxShadow: const [BoxShadow(color: Color(0x88000000), offset: Offset(0, 2), blurRadius: 4)],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _groupMark(group),
+                            style: zlText(16, weight: FontWeight.w900, color: const Color(0xFF1C1408)),
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right_rounded, color: Color(0xFF3A2A10)),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -3464,8 +3754,11 @@ class _StepFocus extends StatelessWidget {
                                                 borderRadius: BorderRadius.circular(10),
                                                 child: ColoredBox(
                                                   color: const Color(0x22000000),
-                                                  child: Image.asset(
+                                                  child: DsBoxDecode.asset(
+                                                    context,
                                                     item.icon,
+                                                    w: MediaQuery.sizeOf(context).width,
+                                                    h: 120,
                                                     height: 120,
                                                     width: double.infinity,
                                                     fit: BoxFit.contain,
@@ -4022,7 +4315,16 @@ class _PlayCard extends StatelessWidget {
           if (step.scene.isNotEmpty) ...[
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: Image.asset(step.scene, height: 150, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox()),
+              child: DsBoxDecode.asset(
+                context,
+                step.scene,
+                w: MediaQuery.sizeOf(context).width,
+                h: 150,
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const SizedBox(),
+              ),
             ),
             const SizedBox(height: 12),
           ],
@@ -4108,7 +4410,7 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
     _show = AnimationController(vsync: this, duration: const Duration(milliseconds: 3200))
       ..addListener(_onShow)
       ..forward();
-    _burst = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800))..repeat();
+    _burst = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800));
     _jolt = AnimationController(vsync: this, duration: const Duration(milliseconds: 640));
     if (_ok) {
       HapticFeedback.mediumImpact();
@@ -4140,6 +4442,16 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (slmLoopsOn(context)) {
+      if (!_burst.isAnimating) _burst.repeat();
+    } else {
+      _burst.stop();
+    }
+  }
+
+  @override
   void dispose() {
     _show.removeListener(_onShow);
     _show.dispose();
@@ -4160,7 +4472,7 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
     final wrong = e.wrongTaps;
     final total = e.nightTotal;
     return AnimatedBuilder(
-      animation: Listenable.merge([_show, _burst, _jolt]),
+      animation: Listenable.merge([_show, _jolt]),
       builder: (_, _) {
         final t = _show.value;
         final drop = _span(t, 0.00, 0.16, curve: Curves.easeOutBack);
@@ -4179,9 +4491,11 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
           fit: StackFit.expand,
           children: [
             IgnorePointer(
-              child: CustomPaint(
-                painter: _CelebratePainter(time: _burst.value, reveal: drop, ok: _ok),
-                child: const SizedBox.expand(),
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  painter: _CelebratePainter(time: _burst, reveal: drop, ok: _ok),
+                  child: const SizedBox.expand(),
+                ),
               ),
             ),
             Padding(
@@ -4197,7 +4511,7 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
                         offset: Offset(0, (1 - drop.clamp(0.0, 1.0)) * 42),
                         child: Transform.scale(
                           scale: 0.78 + 0.22 * drop.clamp(0.0, 1.2),
-                          child: _ScoreBadge(score: shownScore, ok: _ok, shine: _burst.value),
+                          child: _ScoreBadge(score: shownScore, ok: _ok, shine: _burst),
                         ),
                       ),
                     ),
@@ -4344,7 +4658,7 @@ class _ResultStat extends StatelessWidget {
 class _ScoreBadge extends StatelessWidget {
   final int score;
   final bool ok;
-  final double shine;
+  final Animation<double> shine;
   const _ScoreBadge({required this.score, required this.ok, required this.shine});
 
   @override
@@ -4361,7 +4675,9 @@ class _ScoreBadge extends StatelessWidget {
       height: h,
       child: Stack(
         children: [
-          CustomPaint(painter: _MedalPainter(ok: ok, shine: shine), size: const Size(w, h)),
+          RepaintBoundary(
+            child: CustomPaint(painter: _MedalPainter(ok: ok, shine: shine), size: const Size(w, h)),
+          ),
           Positioned(
             left: (w - well) / 2,
             top: cy - well / 2,
@@ -4393,8 +4709,9 @@ class _ScoreBadge extends StatelessWidget {
 
 class _MedalPainter extends CustomPainter {
   final bool ok;
-  final double shine;
-  const _MedalPainter({required this.ok, required this.shine});
+  /// Repaints from the animation directly; no widget rebuild per frame.
+  final Animation<double> shine;
+  _MedalPainter({required this.ok, required this.shine}) : super(repaint: shine);
 
   Path _octa(Offset c, double r) {
     final path = Path();
@@ -4532,7 +4849,7 @@ class _MedalPainter extends CustomPainter {
 
     final gloss = Path()
       ..addOval(Rect.fromCenter(
-        center: Offset(c.dx - r * 0.18 + math.sin(shine * math.pi * 2) * 6, c.dy - r * 0.28),
+        center: Offset(c.dx - r * 0.18 + math.sin(shine.value * math.pi * 2) * 6, c.dy - r * 0.28),
         width: r * 0.9,
         height: r * 0.42,
       ));
@@ -4547,13 +4864,17 @@ class _MedalPainter extends CustomPainter {
 }
 
 class _CelebratePainter extends CustomPainter {
-  final double time;
+  /// Repaints from the animation directly; no widget rebuild per frame.
+  final Animation<double> anim;
   final double reveal;
   final bool ok;
-  const _CelebratePainter({required this.time, required this.reveal, required this.ok});
+  _CelebratePainter({required Animation<double> time, required this.reveal, required this.ok})
+      : anim = time,
+        super(repaint: time);
 
   @override
   void paint(Canvas canvas, Size size) {
+    final time = anim.value;
     final c = Offset(size.width / 2, size.height * 0.22);
     final a = (reveal * 0.9).clamp(0.0, 1.0);
     if (ok) {
@@ -4586,7 +4907,7 @@ class _CelebratePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CelebratePainter old) => old.time != time || old.reveal != reveal || old.ok != ok;
+  bool shouldRepaint(covariant _CelebratePainter old) => old.anim != anim || old.reveal != reveal || old.ok != ok;
 }
 
 class _SceneBoard extends StatelessWidget {
@@ -4758,7 +5079,16 @@ class _LineOpt extends StatelessWidget {
                 if (image.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(image, width: 58, height: 58, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.circle_outlined, color: ZlColors.soft)),
+                    child: DsBoxDecode.asset(
+                      context,
+                      image,
+                      w: 58,
+                      h: 58,
+                      width: 58,
+                      height: 58,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(Icons.circle_outlined, color: ZlColors.soft),
+                    ),
                   )
                 else
                   const Icon(Icons.circle_outlined, color: ZlColors.soft, size: 22),
@@ -4809,8 +5139,11 @@ class _CallBurst extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(18),
-                child: Image.asset(
+                child: DsBoxDecode.asset(
+                  context,
                   call.portrait,
+                  w: 120,
+                  h: 120,
                   width: 120,
                   height: 120,
                   fit: BoxFit.cover,

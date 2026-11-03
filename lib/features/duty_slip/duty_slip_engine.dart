@@ -590,9 +590,24 @@ class DutySlipEngine {
     if (jobSeconds >= 2 * 3600 + 20 * 60) overtime = true;
   }
 
+  /// True while [tickPlay] counts (the level's mm:ss clock is running).
+  bool get playClockRuns {
+    if (!clockLive || showingResult || act == DsAct.done || act == DsAct.lethal) return false;
+    return playing || showingDress || !planning;
+  }
+
+  /// True while the page should drive the clocks at all: a level or job act
+  /// is on screen. Does not depend on [clockLive], which games arm themselves.
+  bool get clockScreen {
+    if (act == DsAct.done || act == DsAct.lethal) return false;
+    return playing || showingDress || !planning;
+  }
+
+  /// Milliseconds of play time left before [playSeconds] goes up next.
+  int get playMsToNextSecond => 1000 - _playAcc;
+
   void tickPlay(int millis) {
-    if (!clockLive || showingResult || act == DsAct.done || act == DsAct.lethal) return;
-    if (!(playing || showingDress || !planning)) return;
+    if (!playClockRuns) return;
     _playAcc += millis;
     while (_playAcc >= 1000) {
       _playAcc -= 1000;
