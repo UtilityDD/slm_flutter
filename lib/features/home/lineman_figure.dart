@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../design/motion/slm_motion_scope.dart';
+
 /// Progressive illustrated looks. Same navy/orange field kit; gear builds by level.
 const double _viewW = 3;
 const double _viewH = 4;
@@ -26,13 +28,7 @@ class LinemanFigure extends StatefulWidget {
   final bool quiet;
   final bool enableHero;
 
-  const LinemanFigure({
-    super.key,
-    required this.step,
-    this.glance = 0,
-    this.quiet = false,
-    this.enableHero = true,
-  });
+  const LinemanFigure({super.key, required this.step, this.glance = 0, this.quiet = false, this.enableHero = true});
 
   static String heroTagFor(int step) => 'lineman-look-$step';
 
@@ -46,8 +42,23 @@ class _LinemanFigureState extends State<LinemanFigure> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _breath = AnimationController(vsync: this, duration: const Duration(milliseconds: 3200))..repeat(reverse: true);
+    _breath = AnimationController(vsync: this, duration: const Duration(milliseconds: 3200));
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncBreath();
+  }
+
+  @override
+  void didUpdateWidget(covariant LinemanFigure oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.quiet != widget.quiet) _syncBreath();
+  }
+
+  // Quiet figures do not breathe, and nothing breathes with remove-animations.
+  void _syncBreath() => slmSyncLoop(context, _breath, enabled: !widget.quiet, reverse: true, restAt: 0);
 
   @override
   void dispose() {
@@ -62,67 +73,64 @@ class _LinemanFigureState extends State<LinemanFigure> with SingleTickerProvider
     final asset = linemanAssetForStep(step);
     final glance = widget.glance.clamp(-1.0, 1.0);
 
-    return AnimatedBuilder(
-      animation: _breath,
-      builder: (context, _) {
-        return Opacity(
-          opacity: widget.quiet ? 0.52 : 1,
-          child: Transform.translate(
-            offset: Offset(glance * 6, 0),
-            child: Transform.scale(
-              scale: widget.quiet ? 1 : 1 + (lift * _breath.value),
-              child: AspectRatio(
-                aspectRatio: _viewW / _viewH,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final w = constraints.maxWidth;
-                    final h = constraints.maxHeight;
-                    Widget portrait = Image.asset(
-                      asset,
-                      fit: BoxFit.contain,
-                      alignment: Alignment.bottomCenter,
-                      filterQuality: FilterQuality.medium,
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(Icons.person_outline_rounded, size: 64, color: Color(0xFFD6D3D1)),
-                      ),
-                    );
-                    if (widget.enableHero) {
-                      portrait = Hero(
-                        tag: LinemanFigure.heroTagFor(step),
-                        child: Material(type: MaterialType.transparency, child: portrait),
-                      );
-                    }
-                    return Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Positioned(
-                          left: w * 0.22,
-                          right: w * 0.22,
-                          bottom: h * 0.04,
-                          height: h * 0.04,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(99),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF000000).withValues(alpha: widget.quiet ? 0.04 : 0.10),
-                                  blurRadius: 16,
-                                  spreadRadius: 1,
-                                ),
-                              ],
+    // Only the breathing scale rebuilds per frame; the portrait is built once.
+    return Opacity(
+      opacity: widget.quiet ? 0.52 : 1,
+      child: Transform.translate(
+        offset: Offset(glance * 6, 0),
+        child: AnimatedBuilder(
+          animation: _breath,
+          builder: (context, child) =>
+              Transform.scale(scale: widget.quiet ? 1 : 1 + (lift * _breath.value), child: child),
+          child: AspectRatio(
+            aspectRatio: _viewW / _viewH,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final w = constraints.maxWidth;
+                final h = constraints.maxHeight;
+                Widget portrait = Image.asset(
+                  asset,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.bottomCenter,
+                  filterQuality: FilterQuality.medium,
+                  errorBuilder: (_, __, ___) =>
+                      const Center(child: Icon(Icons.person_outline_rounded, size: 64, color: Color(0xFFD6D3D1))),
+                );
+                if (widget.enableHero) {
+                  portrait = Hero(
+                    tag: LinemanFigure.heroTagFor(step),
+                    child: Material(type: MaterialType.transparency, child: portrait),
+                  );
+                }
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Positioned(
+                      left: w * 0.22,
+                      right: w * 0.22,
+                      bottom: h * 0.04,
+                      height: h * 0.04,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(99),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF000000).withValues(alpha: widget.quiet ? 0.04 : 0.10),
+                              blurRadius: 16,
+                              spreadRadius: 1,
                             ),
-                          ),
+                          ],
                         ),
-                        portrait,
-                      ],
-                    );
-                  },
-                ),
-              ),
+                      ),
+                    ),
+                    portrait,
+                  ],
+                );
+              },
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

@@ -76,8 +76,9 @@ class SlmType {
 
   /// Bangla-safe version of [style] for [text]: no letter spacing (it breaks
   /// conjuncts apart) and a taller line so matras never clip.
-  static TextStyle adapt(TextStyle style, String text) {
-    if (!slmIsBangla(text)) return style;
+  /// Pass [bangla] when the caller already ran [slmIsBangla] on [text].
+  static TextStyle adapt(TextStyle style, String text, {bool? bangla}) {
+    if (!(bangla ?? slmIsBangla(text))) return style;
     final h = style.height ?? 1.3;
     return style.copyWith(
       letterSpacing: 0,

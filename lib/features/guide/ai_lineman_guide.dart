@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -27,43 +28,84 @@ class AiLinemanGuide extends ConsumerStatefulWidget {
   ConsumerState<AiLinemanGuide> createState() => _AiLinemanGuideState();
 }
 
+enum _Eye { open, blink, glance, lapEnd }
+
 class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide> with TickerProviderStateMixin {
-  late final AnimationController _eyes;
+  /// One eye lap, as offsets into a 4.8 s loop: blink at 5–11 %, and on odd
+  /// laps a glance at 45–62 %. Driven by a Timer, so an idle guide only
+  /// rebuilds when the face overlay actually changes.
+  static const _oddLap = [(240, _Eye.blink), (528, _Eye.open), (2160, _Eye.glance), (2976, _Eye.open), (4800, _Eye.lapEnd)];
+  static const _evenLap = [(240, _Eye.blink), (528, _Eye.open), (4800, _Eye.lapEnd)];
+
+  late final AnimationController _spark;
   late final AnimationController _face;
   late final AnimationController _gesture;
   late final AnimationController _settle;
+  late final CurvedAnimation _faceIn;
+  late final Animation<double> _faceOut;
 
   String _faceA = 'coach_ready';
   String _faceB = 'coach_ready';
   var _showingA = true;
   var _eyeLap = 0;
-  var _eyeArmed = true;
+  var _eye = _Eye.open;
+  Timer? _eyeTimer;
   GuideGesture _gestureTarget = GuideGesture.none;
   var _lastToken = 0;
 
   @override
   void initState() {
     super.initState();
-    _eyes = AnimationController(vsync: this, duration: const Duration(milliseconds: 4800))..repeat();
+    _spark = AnimationController(vsync: this, duration: const Duration(milliseconds: 4800));
     _face = AnimationController(vsync: this, duration: const Duration(milliseconds: 280))..value = 1;
     _gesture = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _settle = AnimationController(vsync: this, duration: const Duration(milliseconds: 640))..value = 1;
-    _eyes.addListener(_countLaps);
+    _faceIn = CurvedAnimation(parent: _face, curve: Curves.easeInOutCubic);
+    _faceOut = ReverseAnimation(_faceIn);
   }
 
-  void _countLaps() {
-    if (_eyes.value < 0.03 && _eyeArmed) {
-      _eyeArmed = false;
-      _eyeLap++;
-    } else if (_eyes.value > 0.2) {
-      _eyeArmed = true;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncEyes();
+  }
+
+  /// Eyes run only while loops are allowed and this route is on screen.
+  void _syncEyes() {
+    final on = slmLoopsOn(context) && TickerMode.valuesOf(context).enabled;
+    if (on) {
+      if (_eyeTimer == null) {
+        _eyeLap++;
+        _armEye(0);
+      }
+    } else {
+      _eyeTimer?.cancel();
+      _eyeTimer = null;
+      _eye = _Eye.open;
     }
+  }
+
+  void _armEye(int i) {
+    final lap = _eyeLap.isOdd ? _oddLap : _evenLap;
+    final wait = lap[i].$1 - (i == 0 ? 0 : lap[i - 1].$1);
+    _eyeTimer = Timer(Duration(milliseconds: wait), () {
+      if (!mounted) return;
+      final next = lap[i].$2;
+      if (next == _Eye.lapEnd) {
+        _eyeLap++;
+        _armEye(0);
+        return;
+      }
+      if (next != _eye) setState(() => _eye = next);
+      _armEye(i + 1);
+    });
   }
 
   @override
   void dispose() {
-    _eyes.removeListener(_countLaps);
-    _eyes.dispose();
+    _eyeTimer?.cancel();
+    _faceIn.dispose();
+    _spark.dispose();
     _face.dispose();
     _gesture.dispose();
     _settle.dispose();
@@ -81,10 +123,10 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide> with TickerProv
     };
   }
 
-  String? _blinkOverlay(GuideMood mood, double t, {required bool reduce}) {
+  String? _blinkOverlay(GuideMood mood, {required bool reduce}) {
     if (reduce) return null;
-    final blink = t > 0.05 && t < 0.11;
-    final glance = _eyeLap.isOdd && t > 0.45 && t < 0.62;
+    final blink = _eye == _Eye.blink;
+    final glance = _eye == _Eye.glance;
     if (!blink && !glance) return null;
     return switch (mood) {
       GuideMood.warn || GuideMood.fright || GuideMood.fallen => blink ? 'coach_oops_blink' : 'coach_oops_glance',
@@ -131,37 +173,22 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide> with TickerProv
     }
   }
 
+  // One structure for every gesture value, so the sprite never remounts
+  // when a gag starts or ends (identity transforms paint without a layer).
   Widget _gestureWrap(double g, GuideGesture kind, Widget child) {
-    if (g < 0.001 || kind == GuideGesture.none) return child;
-    switch (kind) {
-      case GuideGesture.handstand:
-        return Transform.translate(
-          offset: Offset(0, widget.sprite * 0.08 * g),
-          child: Transform.rotate(angle: math.pi * g, child: child),
-        );
-      case GuideGesture.leanLeft:
-        return Transform.translate(
-          offset: Offset(-6 * g, 0),
-          child: Transform.rotate(angle: -0.28 * g, child: child),
-        );
-      case GuideGesture.leanRight:
-        return Transform.translate(
-          offset: Offset(6 * g, 0),
-          child: Transform.rotate(angle: 0.28 * g, child: child),
-        );
-      case GuideGesture.peek:
-        return Transform.translate(
-          offset: Offset(10 * g, -4 * g),
-          child: Transform.rotate(angle: 0.12 * g, child: child),
-        );
-      case GuideGesture.spinHop:
-        return Transform.translate(
-          offset: Offset(0, -12 * math.sin(g * math.pi)),
-          child: Transform.rotate(angle: math.pi * 2 * g, child: child),
-        );
-      case GuideGesture.none:
-        return child;
-    }
+    if (g < 0.001) kind = GuideGesture.none;
+    final (Offset offset, double angle) = switch (kind) {
+      GuideGesture.handstand => (Offset(0, widget.sprite * 0.08 * g), math.pi * g),
+      GuideGesture.leanLeft => (Offset(-6 * g, 0), -0.28 * g),
+      GuideGesture.leanRight => (Offset(6 * g, 0), 0.28 * g),
+      GuideGesture.peek => (Offset(10 * g, -4 * g), 0.12 * g),
+      GuideGesture.spinHop => (Offset(0, -12 * math.sin(g * math.pi)), math.pi * 2 * g),
+      GuideGesture.none => (Offset.zero, 0.0),
+    };
+    return Transform.translate(
+      offset: offset,
+      child: Transform.rotate(angle: angle, child: child),
+    );
   }
 
   @override
@@ -186,86 +213,93 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide> with TickerProv
     final warn = guide.mood == GuideMood.warn || guide.mood == GuideMood.fright || guide.mood == GuideMood.fallen;
     final joy = guide.mood == GuideMood.glad || guide.mood == GuideMood.celebrate;
     final sleep = guide.mood == GuideMood.sleep;
+    // Sparkles are the only continuous motion, and only in a joyful mood.
+    slmSyncLoop(context, _spark, enabled: joy);
+
+    final overlay = _blinkOverlay(guide.mood, reduce: reduce);
+    final topFace = _showingA ? _faceA : _faceB;
+    final botFace = _showingA ? _faceB : _faceA;
+    final kind = _gestureTarget == GuideGesture.none ? guide.gesture : _gestureTarget;
+    final s = widget.sprite;
+
+    // Faces fade via the image's own opacity: no rebuild, no saveLayer.
+    final sprite = RepaintBoundary(
+      child: SizedBox(
+        width: s,
+        height: s,
+        child: Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.none,
+          children: [
+            _Face(asset: botFace, size: s, opacity: _faceOut),
+            _Face(asset: topFace, size: s, opacity: _faceIn),
+            if (overlay != null) _Face(asset: overlay, size: s, opacity: const AlwaysStoppedAnimation(0.92)),
+            if (joy && !reduce)
+              for (var i = 0; i < 3; i++)
+                AnimatedBuilder(
+                  animation: _spark,
+                  child: Icon(Icons.auto_awesome, size: 11, color: SlmColors.gold300.withValues(alpha: 0.85)),
+                  builder: (_, icon) {
+                    final t = _spark.value;
+                    return Positioned(
+                      left: s * 0.68 + 10 * math.cos(t * math.pi * 2 + i),
+                      top: 2 + 8 * math.sin(t * math.pi * 2 + i * 0.9),
+                      child: icon!,
+                    );
+                  },
+                ),
+            if (sleep && !reduce)
+              Positioned(
+                right: 2,
+                top: 2,
+                child: Text('z', style: TextStyle(color: SlmColors.mist.withValues(alpha: 0.7), fontSize: 13)),
+              ),
+          ],
+        ),
+      ),
+    );
+
+    final body = SizedBox(
+      width: widget.bubbleWidth,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (widget.showBubble && guide.line.isNotEmpty && widget.bubbleOpacity > 0.02) ...[
+            Opacity(
+              opacity: widget.bubbleOpacity.clamp(0.0, 1.0),
+              child: Transform.translate(
+                offset: Offset(0, (1 - widget.bubbleOpacity.clamp(0.0, 1.0)) * 8),
+                child: _GuideBubble(
+                  key: ValueKey(guide.line),
+                  line: guide.line,
+                  warn: warn,
+                  maxWidth: widget.bubbleWidth,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
+          AnimatedBuilder(
+            animation: _gesture,
+            child: sprite,
+            builder: (_, child) => _gestureWrap(_gesture.value.clamp(0.0, 1.0), kind, child!),
+          ),
+        ],
+      ),
+    );
 
     return AnimatedBuilder(
-      animation: Listenable.merge([_eyes, _face, _gesture, _settle]),
-      builder: (_, _) {
-        final t = reduce ? 0.0 : _eyes.value;
-        final overlay = _blinkOverlay(guide.mood, t, reduce: reduce);
-        final faceT = Curves.easeInOutCubic.transform(_face.value.clamp(0.0, 1.0));
-        final topFace = _showingA ? _faceA : _faceB;
-        final botFace = _showingA ? _faceB : _faceA;
+      animation: _settle,
+      child: body,
+      builder: (_, child) {
         final settle = Curves.easeOutCubic.transform(_settle.value.clamp(0.0, 1.0));
-        final g = _gesture.value.clamp(0.0, 1.0);
         return Transform.translate(
           offset: Offset(0, (1 - settle) * (widget.large ? 28 : 14)),
           child: Transform.scale(
             scale: 0.92 + 0.08 * settle,
             alignment: Alignment.bottomCenter,
-            child: SizedBox(
-              width: widget.bubbleWidth,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (widget.showBubble && guide.line.isNotEmpty && widget.bubbleOpacity > 0.02) ...[
-                    Opacity(
-                      opacity: widget.bubbleOpacity.clamp(0.0, 1.0),
-                      child: Transform.translate(
-                        offset: Offset(0, (1 - widget.bubbleOpacity.clamp(0.0, 1.0)) * 8),
-                        child: _GuideBubble(
-                          key: ValueKey(guide.line),
-                          line: guide.line,
-                          warn: warn,
-                          maxWidth: widget.bubbleWidth,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-                  _gestureWrap(
-                    g,
-                    _gestureTarget == GuideGesture.none ? guide.gesture : _gestureTarget,
-                    SizedBox(
-                      width: widget.sprite,
-                      height: widget.sprite,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        clipBehavior: Clip.none,
-                        children: [
-                          Opacity(
-                            opacity: 1 - faceT,
-                            child: _Face(asset: botFace, size: widget.sprite),
-                          ),
-                          Opacity(
-                            opacity: faceT,
-                            child: _Face(asset: topFace, size: widget.sprite),
-                          ),
-                          if (overlay != null)
-                            Opacity(
-                              opacity: 0.92,
-                              child: _Face(asset: overlay, size: widget.sprite),
-                            ),
-                          if (joy && !reduce)
-                            for (var i = 0; i < 3; i++)
-                              Positioned(
-                                left: widget.sprite * 0.68 + 10 * math.cos(t * math.pi * 2 + i),
-                                top: 2 + 8 * math.sin(t * math.pi * 2 + i * 0.9),
-                                child: Icon(Icons.auto_awesome, size: 11, color: SlmColors.gold300.withValues(alpha: 0.85)),
-                              ),
-                          if (sleep && !reduce)
-                            Positioned(
-                              right: 2,
-                              top: 2,
-                              child: Text('z', style: TextStyle(color: SlmColors.mist.withValues(alpha: 0.7), fontSize: 13)),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: child,
           ),
         );
       },
@@ -276,18 +310,27 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide> with TickerProv
 class _Face extends StatelessWidget {
   final String asset;
   final double size;
+  final Animation<double> opacity;
 
-  const _Face({required this.asset, required this.size});
+  const _Face({required this.asset, required this.size, required this.opacity});
+
+  /// Tallest face export; never decode above the source.
+  static const _maxPx = 900;
 
   @override
   Widget build(BuildContext context) {
+    // Faces are taller than wide, so BoxFit.contain shows them [size] tall:
+    // decode at that height × DPR instead of the full ~900 px source.
+    final px = (size * MediaQuery.devicePixelRatioOf(context)).round().clamp(1, _maxPx);
     return Image.asset(
       'assets/duty_slip/dress/$asset.webp',
       width: size,
       height: size,
+      cacheHeight: px,
       fit: BoxFit.contain,
       gaplessPlayback: true,
       filterQuality: FilterQuality.medium,
+      opacity: opacity,
       errorBuilder: (_, _, _) => Icon(Icons.face_retouching_natural, size: size * 0.7, color: SlmColors.gold300),
     );
   }

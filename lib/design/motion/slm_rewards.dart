@@ -160,11 +160,7 @@ class _SlmRaysState extends State<SlmRays> with SingleTickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (slmLoopsOn(context)) {
-      if (!_c.isAnimating) _c.repeat();
-    } else {
-      _c.stop();
-    }
+    slmSyncLoop(context, _c);
   }
 
   @override

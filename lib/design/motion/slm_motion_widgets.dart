@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../tokens/slm_motion.dart';
@@ -161,7 +162,7 @@ class SlmReveal extends StatefulWidget {
 
 class _SlmRevealState extends State<SlmReveal> with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(vsync: this, duration: widget.duration);
-  late final Animation<double> _t = CurvedAnimation(parent: _c, curve: SlmMotion.emphasized);
+  late final CurvedAnimation _t = CurvedAnimation(parent: _c, curve: SlmMotion.emphasized);
   int? _token;
   Timer? _wait;
 
@@ -185,28 +186,209 @@ class _SlmRevealState extends State<SlmReveal> with SingleTickerProviderStateMix
   @override
   void dispose() {
     _wait?.cancel();
+    _t.dispose();
     _c.dispose();
     super.dispose();
   }
 
+  // Fade and rise run in the render tree: no widget rebuilds per frame.
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _t,
-      child: widget.child,
-      builder: (context, child) => Opacity(
-        opacity: _t.value,
-        child: Transform.translate(
-          offset: Offset(0, widget.rise * (1 - _t.value)),
-          child: child,
-        ),
-      ),
+    return FadeTransition(
+      opacity: _t,
+      child: _SlmRise(progress: _t, rise: widget.rise, child: widget.child),
     );
+  }
+}
+
+/// Paints [child] `rise * (1 - progress)` px lower, repainting (not
+/// rebuilding) as [progress] moves. Same result as Transform.translate.
+class _SlmRise extends SingleChildRenderObjectWidget {
+  final Animation<double> progress;
+  final double rise;
+
+  const _SlmRise({required this.progress, required this.rise, super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderSlmRise(progress, rise);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderSlmRise renderObject) {
+    renderObject
+      ..progress = progress
+      ..rise = rise;
+  }
+}
+
+class _RenderSlmRise extends RenderProxyBox {
+  _RenderSlmRise(this._progress, this._rise);
+
+  Animation<double> _progress;
+  set progress(Animation<double> v) {
+    if (identical(v, _progress)) return;
+    if (attached) _progress.removeListener(markNeedsPaint);
+    _progress = v;
+    if (attached) _progress.addListener(markNeedsPaint);
+    markNeedsPaint();
+  }
+
+  double _rise;
+  set rise(double v) {
+    if (v == _rise) return;
+    _rise = v;
+    markNeedsPaint();
+  }
+
+  Offset get _shift => Offset(0, _rise * (1 - _progress.value));
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _progress.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _progress.removeListener(markNeedsPaint);
+    super.detach();
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    return result.addWithPaintOffset(
+      offset: _shift,
+      position: position,
+      hitTest: (result, p) => super.hitTestChildren(result, position: p),
+    );
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final c = child;
+    if (c != null) context.paintChild(c, offset + _shift);
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    final s = _shift;
+    transform.translateByDouble(s.dx, s.dy, 0, 1);
+  }
+}
+
+/// A shader mask whose element tree never changes shape. [shader] is asked
+/// for a shader on every paint; returning null paints the child plainly (or
+/// not at all with [hideWhenIdle]) without a compositing layer. [repaint]
+/// repaints without rebuilding, so a loop can drive the light directly.
+///
+/// Prefer this to switching between `child` and `ShaderMask(child)`: that
+/// swap re-inflates the subtree and drops any gesture in progress.
+class SlmLiveShaderMask extends SingleChildRenderObjectWidget {
+  final Shader? Function(Rect bounds) shader;
+  final Listenable? repaint;
+  final BlendMode blendMode;
+  final bool hideWhenIdle;
+
+  const SlmLiveShaderMask({
+    super.key,
+    required this.shader,
+    this.repaint,
+    this.blendMode = BlendMode.modulate,
+    this.hideWhenIdle = false,
+    super.child,
+  });
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      RenderSlmLiveShaderMask(shader, repaint, blendMode, hideWhenIdle);
+
+  @override
+  void updateRenderObject(BuildContext context, RenderSlmLiveShaderMask renderObject) {
+    renderObject
+      ..shader = shader
+      ..repaint = repaint
+      ..blendMode = blendMode
+      ..hideWhenIdle = hideWhenIdle;
+  }
+}
+
+class RenderSlmLiveShaderMask extends RenderProxyBox {
+  RenderSlmLiveShaderMask(this._shader, this._repaint, this._blendMode, this._hideWhenIdle);
+
+  Shader? Function(Rect bounds) _shader;
+  set shader(Shader? Function(Rect bounds) v) {
+    if (identical(v, _shader)) return;
+    _shader = v;
+    markNeedsPaint();
+  }
+
+  Listenable? _repaint;
+  set repaint(Listenable? v) {
+    if (identical(v, _repaint)) return;
+    if (attached) _repaint?.removeListener(markNeedsPaint);
+    _repaint = v;
+    if (attached) _repaint?.addListener(markNeedsPaint);
+    markNeedsPaint();
+  }
+
+  BlendMode _blendMode;
+  set blendMode(BlendMode v) {
+    if (v == _blendMode) return;
+    _blendMode = v;
+    markNeedsPaint();
+  }
+
+  bool _hideWhenIdle;
+  set hideWhenIdle(bool v) {
+    if (v == _hideWhenIdle) return;
+    _hideWhenIdle = v;
+    markNeedsPaint();
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _repaint?.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _repaint?.removeListener(markNeedsPaint);
+    super.detach();
+  }
+
+  @override
+  bool get alwaysNeedsCompositing => child != null;
+
+  @override
+  ShaderMaskLayer? get layer => super.layer as ShaderMaskLayer?;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final c = child;
+    if (c == null) {
+      layer = null;
+      return;
+    }
+    final shader = _shader(Offset.zero & size);
+    if (shader == null) {
+      layer = null;
+      if (!_hideWhenIdle) context.paintChild(c, offset);
+      return;
+    }
+    layer ??= ShaderMaskLayer();
+    layer!
+      ..shader = shader
+      ..maskRect = offset & size
+      ..blendMode = _blendMode;
+    context.pushLayer(layer!, super.paint, offset);
   }
 }
 
 /// Paints a soft diagonal band of light across [child] at sweep position
 /// [t] (0 = off the left edge, 1 = off the right edge).
+///
+/// The element tree is the same for every [t], so the subtree (and any tap
+/// on it) survives the band coming and going.
 class SlmSweepMask extends StatelessWidget {
   final double t;
   final double intensity;
@@ -221,35 +403,40 @@ class SlmSweepMask extends StatelessWidget {
     this.color = Colors.white,
   });
 
+  /// The band shader for sweep position [t] over [r], or null when the band
+  /// is off the child (t <= 0 or t >= 1).
+  static Shader? shaderFor(Rect r, double t, {double intensity = 1, Color color = Colors.white}) {
+    if (t <= 0 || t >= 1) return null;
+    final a = (0.55 * intensity).clamp(0.0, 1.0);
+    final x = -0.5 * r.width + t * 2 * r.width;
+    return LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [
+        color.withValues(alpha: 0),
+        color.withValues(alpha: a * 0.5),
+        color.withValues(alpha: a),
+        color.withValues(alpha: a * 0.5),
+        color.withValues(alpha: 0),
+      ],
+      stops: const [0, 0.38, 0.5, 0.62, 1],
+      transform: const GradientRotation(-0.35),
+    ).createShader(Rect.fromLTWH(x - r.width * 0.18, 0, r.width * 0.36, r.height));
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (t <= 0 || t >= 1) return child;
-    final a = (0.55 * intensity).clamp(0.0, 1.0);
-    return ShaderMask(
+    return SlmLiveShaderMask(
       blendMode: BlendMode.srcATop,
-      shaderCallback: (r) {
-        final x = -0.5 * r.width + t * 2 * r.width;
-        return LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            color.withValues(alpha: 0),
-            color.withValues(alpha: a * 0.5),
-            color.withValues(alpha: a),
-            color.withValues(alpha: a * 0.5),
-            color.withValues(alpha: 0),
-          ],
-          stops: const [0, 0.38, 0.5, 0.62, 1],
-          transform: const GradientRotation(-0.35),
-        ).createShader(Rect.fromLTWH(x - r.width * 0.18, 0, r.width * 0.36, r.height));
-      },
+      shader: (r) => shaderFor(r, t, intensity: intensity, color: color),
       child: child,
     );
   }
 }
 
 /// A soft band of light that sweeps across [child] every [period].
-/// The band covers the first 45% of a loop.
+/// The band covers the first 45% of a loop; the rest of the loop is an idle
+/// gap that schedules no frames.
 class SlmShimmer extends StatefulWidget {
   final Widget child;
   final Duration period;
@@ -269,7 +456,11 @@ class SlmShimmer extends StatefulWidget {
 }
 
 class _SlmShimmerState extends State<SlmShimmer> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: widget.period);
+  static const _band = 0.45;
+
+  late final AnimationController _c = AnimationController(vsync: this, duration: widget.period * _band)
+    ..addStatusListener(_onStatus);
+  Timer? _gap;
   bool _run = false;
 
   @override
@@ -281,35 +472,52 @@ class _SlmShimmerState extends State<SlmShimmer> with SingleTickerProviderStateM
   @override
   void didUpdateWidget(covariant SlmShimmer old) {
     super.didUpdateWidget(old);
+    if (old.period != widget.period) _c.duration = widget.period * _band;
     _sync();
   }
 
   void _sync() {
-    _run = widget.enabled && slmLoopsOn(context);
-    if (_run && !_c.isAnimating) {
-      _c.repeat();
-    } else if (!_run && _c.isAnimating) {
+    final run = widget.enabled && slmLoopsOn(context);
+    if (run == _run) return;
+    _run = run;
+    if (run) {
+      _c.forward(from: 0);
+    } else {
+      _gap?.cancel();
       _c.stop();
+      // A paused scope freezes the band; remove-animations or disabling clears it.
+      if (!widget.enabled || slmReduceMotion(context)) _c.value = 0;
     }
+  }
+
+  void _onStatus(AnimationStatus s) {
+    if (s != AnimationStatus.completed || !_run) return;
+    _gap?.cancel();
+    _gap = Timer(widget.period - widget.period * _band, () {
+      if (mounted && _run) _c.forward(from: 0);
+    });
   }
 
   @override
   void dispose() {
+    _gap?.cancel();
     _c.dispose();
     super.dispose();
   }
 
+  Shader? _shader(Rect r) {
+    final v = _c.value;
+    if (v <= 0 || v >= 1) return null;
+    return SlmSweepMask.shaderFor(r, Curves.easeInOutSine.transform(v), intensity: widget.intensity);
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled || slmReduceMotion(context)) return widget.child;
-    return AnimatedBuilder(
-      animation: _c,
+    return SlmLiveShaderMask(
+      blendMode: BlendMode.srcATop,
+      repaint: _c,
+      shader: _shader,
       child: widget.child,
-      builder: (context, child) => SlmSweepMask(
-        t: Curves.easeInOutSine.transform((_c.value / 0.45).clamp(0.0, 1.0)),
-        intensity: widget.intensity,
-        child: child!,
-      ),
     );
   }
 }
@@ -363,11 +571,7 @@ class _SlmPulseState extends State<SlmPulse> with SingleTickerProviderStateMixin
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!slmLoopsOn(context)) {
-      _c.stop();
-    } else if (!_c.isAnimating) {
-      _c.repeat(reverse: true);
-    }
+    slmSyncLoop(context, _c, reverse: true);
   }
 
   @override
@@ -428,11 +632,7 @@ class _SlmFloatState extends State<SlmFloat> with SingleTickerProviderStateMixin
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (slmLoopsOn(context)) {
-      if (!_c.isAnimating) _c.repeat();
-    } else {
-      _c.stop();
-    }
+    slmSyncLoop(context, _c);
   }
 
   @override

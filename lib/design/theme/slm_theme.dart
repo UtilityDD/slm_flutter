@@ -20,9 +20,16 @@ extension SlmContext on BuildContext {
   SlmTokens get slm {
     final p = Theme.of(this).extension<SlmPalette>() ?? SlmPalette.night;
     final layout = SlmLayout.of(this);
-    return SlmTokens(p, SlmType.of(p, scale: layout.scale), layout);
+    return SlmTokens(p, _slmTypeFor(p, layout.scale), layout);
   }
 }
+
+/// Type scales per palette instance and layout scale. Weakly keyed, so
+/// palettes lerped during a theme change are dropped with their theme.
+final _slmTypes = Expando<Map<double, SlmType>>('slmTypes');
+
+SlmType _slmTypeFor(SlmPalette p, double scale) =>
+    (_slmTypes[p] ??= <double, SlmType>{})[scale] ??= SlmType.of(p, scale: scale);
 
 abstract final class SlmTheme {
   static final ThemeData _night = _build(SlmPalette.night);

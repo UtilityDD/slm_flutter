@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../design/motion/slm_motion_scope.dart';
 import '../../design/motion/slm_motion_widgets.dart';
 import '../admin/dev_unlock.dart';
 import '../auth/auth_provider.dart';
@@ -65,9 +66,16 @@ class _HeroCardCarouselState extends ConsumerState<HeroCardCarousel>
     _intro.forward().then((_) {
       if (!mounted) return;
       setState(() => _ready = true);
-      _sheen.repeat();
+      slmSyncLoop(context, _sheen);
       _consumePendingReveal();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The sheen loop starts after the intro and honours remove-animations.
+    if (_ready) slmSyncLoop(context, _sheen);
   }
 
   /// Present reading level = next level after the last consecutively completed

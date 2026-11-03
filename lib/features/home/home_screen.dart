@@ -25,7 +25,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _openIntro() {
-    final reduce = MediaQuery.disableAnimationsOf(context);
+    final reduce = slmReduceMotion(context);
     HapticFeedback.lightImpact();
     Navigator.of(context)
         .push(
@@ -51,7 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final name = guest
         ? guestLabel
         : (fullName.isNotEmpty ? fullName : (slmId.isNotEmpty ? slmId : guestLabel));
-    final reduce = MediaQuery.disableAnimationsOf(context);
+    final reduce = slmReduceMotion(context);
     final score = save.points;
     final deaths = save.deaths;
 

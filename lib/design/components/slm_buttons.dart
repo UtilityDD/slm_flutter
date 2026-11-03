@@ -206,14 +206,14 @@ class _SlmButtonState extends State<SlmButton> with SingleTickerProviderStateMix
         offset: Offset(0, 2.2 * press),
         child: Transform.scale(
           scale: 1 - 0.022 * press,
-          child: AnimatedBuilder(
-            animation: _sweep,
-            builder: (context, child) => SlmSweepMask(
-              t: _sweep.isAnimating ? Curves.easeInOutSine.transform(_sweep.value) : 0,
-              color: sweepColor,
-              intensity: 0.9,
-              child: child!,
-            ),
+          // Repaints with the tap sweep; the face subtree is never rebuilt or swapped.
+          child: SlmLiveShaderMask(
+            blendMode: BlendMode.srcATop,
+            repaint: _sweep,
+            shader: (r) => _sweep.isAnimating
+                ? SlmSweepMask.shaderFor(r, Curves.easeInOutSine.transform(_sweep.value),
+                    color: sweepColor, intensity: 0.9)
+                : null,
             child: face(press),
           ),
         ),

@@ -26,6 +26,30 @@ pause loops, switch them off, or replay entrances (`replayEntrances()`).
 Without a scope everything plays. The phone's "remove animations" setting
 always turns loops and entrances off.
 
+One reduced-motion policy for the whole app (all in `slm_motion_scope.dart`):
+
+- `slmReduceMotion(context)`: one-shot entrances and transitions. Use this, not
+  `MediaQuery.disableAnimationsOf`, in feature code.
+- `slmLoopsOn(context)`: may looping decoration run here.
+- `slmSyncLoop(context, controller, enabled:, reverse:, restAt:)`: start or stop
+  a `repeat()` loop to match. Call it from `didChangeDependencies` (and
+  `didUpdateWidget` when `enabled` depends on widget fields). Never call
+  `repeat()` directly in `initState`.
+
+## Keeping motion cheap
+
+- Never switch a child between `child` and `Wrapper(child)` as an animation
+  runs: the subtree remounts and taps in progress are lost. Use
+  `SlmLiveShaderMask` (shader or null per paint, driven by `repaint:`), or keep
+  the wrapper and pass an identity value.
+- Drive paint-only changes with `CustomPaint(painter: P(repaint: controller))`
+  or `SlmLiveShaderMask(repaint:)` and fades with `FadeTransition` or
+  `Image(opacity:)`, so loops repaint and do not rebuild.
+- Idle gaps belong on a `Timer`, not on a ticking controller (see `SlmShimmer`
+  and the AI Line Man eyes).
+- `test/perf/motion_perf_test.dart` guards remounts, taps, rebuilds per frame
+  and frames requested with remove-animations on.
+
 ## Widgets
 
 - `AnimatedSafetyShield(size: 220, animate: true)`: signature emblem. Options:
