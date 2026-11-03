@@ -36,7 +36,7 @@ Brand source JPEGs are in `tool/media_src/brand/`, not in `assets/`, so they do 
 | `identify_chart_pages.json` | `identify/identify_charts.dart` |
 | `districtEmergencyServices.json` | `emergency/emergency_directory_screen.dart` |
 | `wb_locations.json` | `more/profile_edit.dart` |
-| `zero_loss_storm_feeder.json` | `zero_loss_engine.dart` (no screen opens it) |
+| `zero_loss_storm_feeder.json` | nothing (its engine was deleted) |
 | `safe_home_snapped.json`, `supplementary_modules.json`, `zero_loss_asset_plan.json` | No Dart reader now |
 
 Rules:
