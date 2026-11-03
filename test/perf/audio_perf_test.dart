@@ -10,7 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:slm_flutter/core/services/neural_tts_service.dart';
 import 'package:slm_flutter/features/home/bangla_read_aloud.dart';
 import 'package:slm_flutter/features/home/lesson_quiz_sfx.dart';
-import 'package:slm_flutter/features/home/level_lessons_sheet.dart';
 import 'package:slm_flutter/features/radio/radio_player_provider.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
@@ -131,7 +130,8 @@ void main() {
         await _settle(10);
       }
       for (var i = 0; i < 4; i++) {
-        await playLessonCue(i.isEven);
+        // The old lesson-shelf open/close cue (same call it made).
+        await SlmSfx.play(i.isEven ? 'sounds/quiz_right.wav' : 'sounds/quiz_wrong.wav', volume: 0.85, mix: false);
         await _settle(10);
       }
       await quiz.dispose();

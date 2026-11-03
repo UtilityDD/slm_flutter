@@ -10,13 +10,4 @@ class LanguageNotifier extends Notifier<bool> {
 
 final languageProvider = NotifierProvider<LanguageNotifier, bool>(LanguageNotifier.new);
 
-class ShellTabNotifier extends Notifier<int> {
-  @override
-  int build() => 0;
-
-  void select(int index) => state = index;
-}
-
-final shellTabProvider = NotifierProvider<ShellTabNotifier, int>(ShellTabNotifier.new);
-
 String tr(bool bn, String bangla, String english) => bn ? bangla : english;

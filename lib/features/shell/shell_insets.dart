@@ -1,21 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Geometry of the floating notched dock (must match [_BottomNav] in main_shell).
-abstract final class ShellDockMetrics {
-  static const barH = 62.0;
-  static const rise = 22.0;
-  static const bottomGap = 8.0;
-  static const radioApproxH = 64.0;
-
-  static double compute(BuildContext context, {bool radioVisible = false}) {
-    return barH +
-        rise +
-        bottomGap +
-        MediaQuery.viewPaddingOf(context).bottom +
-        (radioVisible ? radioApproxH : 0);
-  }
-}
-
 /// Provides the dock clearance without inflating [SafeArea] / Scaffold chrome
 /// (so page content still shows through the transparent notch).
 class ShellDockScope extends InheritedWidget {

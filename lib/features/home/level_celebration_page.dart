@@ -7,19 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import 'hero_card.dart';
-import 'level_lessons_sheet.dart';
 import 'lineman_figure.dart';
-
-/// Home carousel listens and scrolls to this step after a level celebration.
-class PendingHomeRevealNotifier extends Notifier<int?> {
-  @override
-  int? build() => null;
-
-  void setStep(int? step) => state = step;
-}
-
-final pendingHomeRevealStepProvider =
-    NotifierProvider<PendingHomeRevealNotifier, int?>(PendingHomeRevealNotifier.new);
 
 Future<void> _playCelebrationCue() => SlmSfx.play('sounds/quiz_right.wav', volume: 1.0, mix: false);
 
@@ -94,20 +82,11 @@ class _LevelCelebrationPageState extends ConsumerState<LevelCelebrationPage>
     super.dispose();
   }
 
-  Future<void> _finish({bool openNext = false}) async {
+  Future<void> _finish() async {
     if (_finishing) return;
     _finishing = true;
-    final next = widget.nextStep;
-    if (next != null) {
-      ref.read(pendingHomeRevealStepProvider.notifier).setStep(next);
-    }
     if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
-    if (openNext && next != null && mounted) {
-      await Future<void>.delayed(const Duration(milliseconds: 420));
-      if (!mounted) return;
-      await openLevelLessons(context, ref, step: next, bn: widget.bn);
-    }
   }
 
   @override
@@ -197,7 +176,7 @@ class _LevelCelebrationPageState extends ConsumerState<LevelCelebrationPage>
                       Expanded(
                         child: hasNext
                             ? _AutoRevealStage(
-                                nextStep: next!,
+                                nextStep: next,
                                 nextTitle: widget.nextTitle!,
                                 nextMetal: nextMetal,
                                 reveal: revealT,
@@ -225,7 +204,7 @@ class _LevelCelebrationPageState extends ConsumerState<LevelCelebrationPage>
                               size: SlmButtonSize.large,
                               expand: true,
                               trailingIcon: hasNext ? Icons.arrow_forward_rounded : Icons.home_rounded,
-                              onPressed: () => _finish(openNext: hasNext),
+                              onPressed: _finish,
                             ),
                           ),
                         ),

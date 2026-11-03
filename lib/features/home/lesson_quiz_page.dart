@@ -821,7 +821,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
                         fit: BoxFit.contain,
                         // Decode to the tile, not the full photo.
                         memCacheWidth: decodePx(context, box.maxWidth),
-                        errorWidget: (_, __, ___) => const Icon(Icons.broken_image_outlined, color: _softInk),
+                        errorWidget: (_, _, _) => const Icon(Icons.broken_image_outlined, color: _softInk),
                       ),
                     ),
                   ),
@@ -867,7 +867,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
                           tween: Tween(begin: 0, end: pct / 100),
                           duration: const Duration(milliseconds: 1100),
                           curve: SlmMotion.emphasized,
-                          builder: (_, v, __) => Container(
+                          builder: (_, v, _) => Container(
                             width: 168,
                             height: 168,
                             padding: const EdgeInsets.all(6),
@@ -1068,7 +1068,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
                   tween: Tween(begin: 0, end: value.clamp(0, 1)),
                   duration: const Duration(milliseconds: 900),
                   curve: SlmMotion.emphasized,
-                  builder: (_, v, __) => Container(
+                  builder: (_, v, _) => Container(
                     width: w * v,
                     height: 10,
                     decoration: BoxDecoration(
@@ -1113,7 +1113,7 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             itemCount: _quiz.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (_, qi) => qi < 4 ? SlmReveal(index: qi, child: _reviewCard(qi)) : _reviewCard(qi),
           ),
         ),

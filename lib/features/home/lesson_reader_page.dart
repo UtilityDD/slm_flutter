@@ -14,11 +14,11 @@ import '../identify/fit_image.dart';
 import '../training/training_models.dart';
 import '../training/training_provider.dart';
 import 'bangla_read_aloud.dart';
-import 'hero_card_carousel.dart';
 import 'lesson_progress_store.dart';
 import 'lesson_quiz_page.dart';
 import 'lesson_rich_text.dart';
 import 'level_celebration_page.dart';
+import 'lineman_progress.dart';
 
 /// Immersive guided reader — Kindle / Google Books paper feel + Bangla read-aloud.
 class LessonReaderPage extends ConsumerStatefulWidget {
@@ -295,14 +295,14 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 420),
           reverseTransitionDuration: const Duration(milliseconds: 300),
-          pageBuilder: (_, __, ___) => LessonQuizPage(
+          pageBuilder: (_, _, _) => LessonQuizPage(
             questions: selectLessonQuizQuestions(pool),
             lessonBadge: '${lesson.moduleNumber}.${lesson.chapterNumber}',
             lessonTitle: lesson.title,
             bn: widget.bn,
             isPractice: lesson.isCompleted,
           ),
-          transitionsBuilder: (_, anim, __, child) {
+          transitionsBuilder: (_, anim, _, child) {
             final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
             return FadeTransition(
               opacity: curved,
@@ -388,14 +388,14 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
       await Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 480),
-          pageBuilder: (_, __, ___) => LevelCelebrationPage(
+          pageBuilder: (_, _, _) => LevelCelebrationPage(
             completedStep: module,
             completedTitle: heroTitle(module, widget.bn),
             nextStep: nextStep,
             nextTitle: nextStep == null ? null : heroTitle(nextStep, widget.bn),
             bn: widget.bn,
           ),
-          transitionsBuilder: (_, anim, __, child) {
+          transitionsBuilder: (_, anim, _, child) {
             final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
             return FadeTransition(opacity: curved, child: child);
           },
@@ -444,11 +444,11 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
                 imageUrl: url,
                 fit: BoxFit.contain,
                 memCacheWidth: screenDecodeWidth(context),
-                placeholder: (_, __) => const Padding(
+                placeholder: (_, _) => const Padding(
                   padding: EdgeInsets.all(40),
                   child: CircularProgressIndicator(color: Colors.white),
                 ),
-                errorWidget: (_, __, ___) => const Icon(Icons.broken_image_rounded, color: Colors.white70, size: 48),
+                errorWidget: (_, _, _) => const Icon(Icons.broken_image_rounded, color: Colors.white70, size: 48),
               ),
             ),
             if (caption.isNotEmpty) ...[

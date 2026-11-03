@@ -93,7 +93,7 @@ class _LinemanFigureState extends State<LinemanFigure> with SingleTickerProvider
                   fit: BoxFit.contain,
                   alignment: Alignment.bottomCenter,
                   filterQuality: FilterQuality.medium,
-                  errorBuilder: (_, __, ___) =>
+                  errorBuilder: (_, _, _) =>
                       const Center(child: Icon(Icons.person_outline_rounded, size: 64, color: Color(0xFFD6D3D1))),
                 );
                 if (widget.enableHero) {

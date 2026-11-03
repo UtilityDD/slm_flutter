@@ -29,8 +29,6 @@ class LinemanPath {
     required this.battery,
     required this.pins,
   });
-
-  int get lastPage => math.min(10, achieved + 1);
 }
 
 const linemanChapters = [
@@ -141,4 +139,11 @@ LinemanPath linemanPath(
     battery: battery,
     pins: pins,
   );
+}
+
+/// Card title for a ladder step: "Start" for step 0, else the chapter name.
+String heroTitle(int step, bool bn) {
+  if (step <= 0) return bn ? 'শুরু' : 'Start';
+  final c = linemanChapters[(step - 1).clamp(0, linemanChapters.length - 1)];
+  return bn ? c.$1 : c.$2;
 }

@@ -91,26 +91,6 @@ class SlmPageRoute<T> extends PageRouteBuilder<T> {
         );
 }
 
-/// For `ThemeData.pageTransitionsTheme`, so plain `MaterialPageRoute`s share
-/// the same motion once a screen adopts the premium theme.
-class SlmPageTransitionsBuilder extends PageTransitionsBuilder {
-  final SlmTransition style;
-
-  const SlmPageTransitionsBuilder([this.style = SlmTransition.fadeRise]);
-
-  @override
-  Widget buildTransitions<T>(
-    PageRoute<T> route,
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget child,
-  ) {
-    if (slmReduceMotion(context)) return child;
-    return slmTransition(style, animation, secondaryAnimation, child);
-  }
-}
-
 /// Swaps between steps with a direction-aware horizontal slide
 /// (onboarding, multi-step forms). Change [index] to move.
 class SlmStepSwitcher extends StatefulWidget {

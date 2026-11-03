@@ -77,17 +77,7 @@ class GuideDirector extends Notifier<GuideState> {
   static const _welcomeDayKey = 'guide_last_welcome_day_v1';
 
   int _token = 0;
-  DateTime _lastInspire = DateTime.fromMillisecondsSinceEpoch(0);
-  DateTime _lastGag = DateTime.fromMillisecondsSinceEpoch(0);
   final _rng = math.Random();
-
-  static const _gagLines = <String>[
-    'উল্টো দাঁড়ালাম — মজার বিরতি!',
-    'হাতের ওপর একটু সার্কাস!',
-    'কেউ দেখছে না তো? …দেখছে!',
-    'ব্য়াম — আবার সোজা!',
-    'অলস সময়? একটু ভাঁড়ামি চলে।',
-  ];
 
   static const _pokeLines = <String>[
     'ঐ ধরলেন? একটু নাচছি!',
@@ -144,11 +134,6 @@ class GuideDirector extends Notifier<GuideState> {
     state = state.copyWith(clearEntrance: true, token: ++_token);
   }
 
-  void sleep() {
-    if (state.gesture != GuideGesture.none) return;
-    say(mood: GuideMood.sleep, line: '');
-  }
-
   void wake({String line = ''}) => say(mood: GuideMood.wake, line: line);
 
   void endGesture() {
@@ -202,24 +187,6 @@ class GuideDirector extends Notifier<GuideState> {
     return Duration(milliseconds: ms);
   }
 
-  Future<void> comingSoon() async {
-    final catalog = await ref.read(contentCatalogProvider.future);
-    final line = catalog.lineFor('coming_soon')?.bnText ?? 'শীঘ্রই আসছে — এই ধাপ তৈরি হচ্ছে।';
-    say(mood: GuideMood.talk, line: line);
-  }
-
-  Future<void> maybeInspire({Duration minGap = const Duration(seconds: 45)}) async {
-    if (state.gesture != GuideGesture.none) return;
-    final now = DateTime.now();
-    if (now.difference(_lastInspire) < minGap) return;
-    final catalog = await ref.read(contentCatalogProvider.future);
-    final lines = catalog.guideLines.where((g) => g.when == 'idle').toList();
-    if (lines.isEmpty) return;
-    _lastInspire = now;
-    final pick = lines[_rng.nextInt(lines.length)];
-    say(mood: GuideMood.inspire, line: pick.bnText);
-  }
-
   int _nudgeLineIndex = 0;
 
   /// Idle highlight on a playable level / gift — short, actionable coach line.
@@ -229,7 +196,6 @@ class GuideDirector extends Notifier<GuideState> {
     if (state.gesture != GuideGesture.none) {
       state = state.copyWith(gesture: GuideGesture.none);
     }
-    _lastInspire = DateTime.now();
     const levelLines = <String>[
       'এই ধাপ জ্বলছে — ট্যাপ করে খেলুন, জিতুন।',
       'প্রস্তুত? এই স্তরে চাপুন — খেলা শুরু।',
@@ -246,32 +212,16 @@ class GuideDirector extends Notifier<GuideState> {
     say(mood: GuideMood.inspire, line: line);
   }
 
-  /// Funny idle gag — handstand / lean / peek. Call after long quiet.
-  Future<void> maybeFunnyIdle({Duration minGap = const Duration(seconds: 28)}) async {
-    final now = DateTime.now();
-    if (now.difference(_lastGag) < minGap) return;
-    if (state.entrance != null) return;
-    if (state.mood == GuideMood.warn ||
-        state.mood == GuideMood.fright ||
-        state.mood == GuideMood.fallen ||
-        state.mood == GuideMood.celebrate) {
-      return;
-    }
-    _lastGag = now;
-    _playGag(fromPoke: false);
-  }
-
   /// User tapped the mascot — always react with a fresh gesture (light debounce).
   void onPoke() {
     if (state.entrance != null) return;
     final now = DateTime.now();
     if (now.difference(_lastPoke) < const Duration(milliseconds: 420)) return;
     _lastPoke = now;
-    _lastGag = now;
-    _playGag(fromPoke: true);
+    _playGag();
   }
 
-  void _playGag({required bool fromPoke}) {
+  void _playGag() {
     const cycle = <GuideGesture>[
       GuideGesture.handstand,
       GuideGesture.leanLeft,
@@ -280,11 +230,8 @@ class GuideDirector extends Notifier<GuideState> {
       GuideGesture.peek,
       GuideGesture.handstand,
     ];
-    final gesture = fromPoke
-        ? cycle[_pokeIndex++ % cycle.length]
-        : cycle[_rng.nextInt(cycle.length)];
-    final lines = fromPoke ? _pokeLines : _gagLines;
-    final line = lines[_rng.nextInt(lines.length)];
+    final gesture = cycle[_pokeIndex++ % cycle.length];
+    final line = _pokeLines[_rng.nextInt(_pokeLines.length)];
     final face = switch (gesture) {
       GuideGesture.handstand || GuideGesture.spinHop => GuideMood.glad,
       GuideGesture.peek => GuideMood.talk,

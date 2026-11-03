@@ -64,12 +64,12 @@ class LessonFigurePlate extends StatelessWidget {
               // Never wider than the screen; decode no bigger than that.
               memCacheWidth: screenDecodeWidth(context),
               alignment: Alignment.center,
-              placeholder: (_, __) => SizedBox(
+              placeholder: (_, _) => SizedBox(
                 height: maxH * 0.45,
                 width: double.infinity,
                 child: ColoredBox(color: paperColor),
               ),
-              errorWidget: (_, __, ___) => SizedBox(
+              errorWidget: (_, _, _) => SizedBox(
                 height: 120,
                 width: double.infinity,
                 child: ColoredBox(

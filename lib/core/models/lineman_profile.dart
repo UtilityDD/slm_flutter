@@ -13,7 +13,6 @@ class LinemanProfile {
   final String? district;
   final String? block;
   final String? job;
-  final String? bloodGroup;
   final String? phone;
 
   /// True after an admin verifies. Null means the column is not on this row yet.
@@ -38,7 +37,6 @@ class LinemanProfile {
     this.district,
     this.block,
     this.job,
-    this.bloodGroup,
     this.phone,
     this.verified,
     this.blocked = false,
@@ -67,7 +65,6 @@ class LinemanProfile {
       district: json['district'] as String?,
       block: json['block'] as String?,
       job: json['job'] as String?,
-      bloodGroup: json['blood_group'] as String?,
       phone: (json['phone_number'] ?? json['phone'])?.toString(),
       verified: json.containsKey('verified') ? json['verified'] == true : null,
       blocked: json['blocked'] == true,
@@ -123,7 +120,6 @@ class LinemanProfile {
       district: district,
       block: block,
       job: job,
-      bloodGroup: bloodGroup,
       phone: phone,
       verified: value,
       blocked: blocked,
@@ -139,13 +135,5 @@ class LinemanProfile {
       return slmId!;
     }
     return 'লাইনম্যান';
-  }
-
-  String get badgeTitle {
-    if (points >= 5000) return 'মাস্টার লাইনম্যান 🏆';
-    if (points >= 2000) return 'সিনিয়র টেকনিশিয়ান ⭐';
-    if (points >= 800) return 'দক্ষ লাইনম্যান ⚡';
-    if (points >= 200) return 'অগ্রণী লাইনম্যান 🛠️';
-    return 'শিক্ষানবিস লাইনম্যান 🌱';
   }
 }
