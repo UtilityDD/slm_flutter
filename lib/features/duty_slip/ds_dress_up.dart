@@ -6,12 +6,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/en_digits.dart';
+import '../../design/motion/slm_motion_scope.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'duty_slip_engine.dart';
 
 /// Space the play scene keeps clear under the shared level badge.
 double dsBadgeInset(BuildContext context) => MediaQuery.paddingOf(context).top + dsPlayBadgeBand;
+
+/// Tray, gear and token art drawn in a box of at most [box] dp: decoded at
+/// that size times the screen density instead of its 380-1024 px source.
+/// One bucket per box so a piece shared by tray, drag and review is one
+/// cache entry. Full-width intro art (duty_slip_page.dart) keeps its own
+/// full-size Image.asset, so it stays sharp.
+ImageProvider dsThumb(BuildContext context, String asset, {double box = 128}) {
+  final px = (box * MediaQuery.devicePixelRatioOf(context)).round();
+  return ResizeImage(AssetImage(asset), width: px, height: px, policy: ResizeImagePolicy.fit);
+}
 
 /// Round back control matching the next arrow, for a first page's bottom-left corner.
 class DsBackDot extends StatelessWidget {
@@ -67,8 +78,8 @@ class DsLiftedTool extends StatelessWidget {
               offset: const Offset(0, 6),
               child: ImageFiltered(
                 imageFilter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                child: Image.asset(
-                  asset,
+                child: Image(
+                  image: dsThumb(context, asset),
                   fit: BoxFit.contain,
                   color: const Color(0x55000000),
                   colorBlendMode: BlendMode.srcIn,
@@ -76,7 +87,7 @@ class DsLiftedTool extends StatelessWidget {
               ),
             ),
           ),
-          Positioned.fill(child: Image.asset(asset, fit: BoxFit.contain)),
+          Positioned.fill(child: Image(image: dsThumb(context, asset), fit: BoxFit.contain)),
         ],
       ),
     );
@@ -133,7 +144,7 @@ class DsShelfToken<T extends Object> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final thumb = SizedBox(width: 56, height: 50, child: Image.asset(asset, fit: BoxFit.contain));
+    final thumb = SizedBox(width: 56, height: 50, child: Image(image: dsThumb(context, asset), fit: BoxFit.contain));
     return Draggable<T>(
       data: data,
       feedback: Material(color: Colors.transparent, child: DsLiftedTool(asset: asset)),
@@ -587,12 +598,13 @@ class _OvalClip extends CustomClipper<Path> {
 }
 
 class _SoftRingPainter extends CustomPainter {
-  const _SoftRingPainter(this.pulse);
+  _SoftRingPainter(this.sway) : super(repaint: sway);
 
-  final double pulse;
+  final Animation<double> sway;
 
   @override
   void paint(Canvas canvas, Size size) {
+    final pulse = sway.value;
     final oval = (Offset.zero & size).deflate(7);
     if (oval.width < 8 || oval.height < 8) return;
     canvas.drawOval(
@@ -613,7 +625,7 @@ class _SoftRingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SoftRingPainter oldDelegate) => oldDelegate.pulse != pulse;
+  bool shouldRepaint(covariant _SoftRingPainter oldDelegate) => oldDelegate.sway != sway;
 }
 
 class _DotRingPainter extends CustomPainter {
@@ -770,9 +782,14 @@ class _VanJob {
   final String done;
   final Set<String> tools;
 
-  Set<String> get dress => {for (final item in pack) if (!item.tool) item.id};
-  List<_VanItem> get must => [for (final item in pack) if (item.tool) item];
-  Set<String> get keep => {for (final item in pack) item.id};
+  // Jobs are const, so the derived collections are cached per job, not rebuilt per call.
+  static final _dressOf = Expando<Set<String>>();
+  static final _mustOf = Expando<List<_VanItem>>();
+  static final _keepOf = Expando<Set<String>>();
+
+  Set<String> get dress => _dressOf[this] ??= {for (final item in pack) if (!item.tool) item.id};
+  List<_VanItem> get must => _mustOf[this] ??= List.unmodifiable([for (final item in pack) if (item.tool) item]);
+  Set<String> get keep => _keepOf[this] ??= {for (final item in pack) item.id};
 }
 
 const _coreThree = 'ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড আর পোর্টেবল আর্থিং কিট সবসময় সঙ্গে রাখতে হবে।';
@@ -926,21 +943,22 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   final _shelfKey = GlobalKey();
   final _pieceKeys = <String, GlobalKey>{};
   late final AnimationController _toss;
-  late final AnimationController _ring;
   late final AnimationController _vanRide;
-  late final AnimationController _vanDepart;
+
+  /// OS "remove animations": shakes and flights jump to their end values.
+  var _still = false;
+  final _warmLooks = <String>{};
 
   @override
   void initState() {
     super.initState();
-    _sway = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800))..repeat(reverse: true);
+    // Started in didChangeDependencies, and only where something reads it.
+    _sway = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800));
     _shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 460));
     _link = AnimationController(vsync: this, duration: const Duration(milliseconds: 360));
     _rowFx = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
     _toss = AnimationController(vsync: this, duration: const Duration(milliseconds: 520));
-    _ring = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat();
     _vanRide = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
-    _vanDepart = AnimationController(vsync: this, duration: const Duration(milliseconds: 1560));
     final level6 = widget.engine.level.number == 6;
     if (_vanLesson) {
       _vanBeat = level6 ? _VanBeat.coach : _VanBeat.yard;
@@ -998,6 +1016,19 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _still = slmReduceMotion(context);
+    // The bob and the L4 guide ring are the only readers, both on levels 1-5.
+    final sway = widget.engine.level.number <= 5 && slmLoopsOn(context);
+    if (sway && !_sway.isAnimating) {
+      _sway.repeat(reverse: true);
+    } else if (!sway && _sway.isAnimating) {
+      _sway.stop();
+    }
+  }
+
+  @override
   void dispose() {
     _roomToken++;
     _gateToken++;
@@ -1008,9 +1039,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _link.dispose();
     _rowFx.dispose();
     _toss.dispose();
-    _ring.dispose();
     _vanRide.dispose();
-    _vanDepart.dispose();
     _checkScroll.dispose();
     _coachTimer?.cancel();
     ZlFx.releaseClock();
@@ -1043,6 +1072,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   String get _vanLook {
     if (_vanGate == _VanGate.dress && !_finishing) return 'body';
+    return _vanDressedLook;
+  }
+
+  /// Look the figure switches to once the dress gate opens.
+  String get _vanDressedLook {
     final shirt = _on.contains('shirt');
     final pant = _on.contains('pant');
     final boot = _on.contains('boot');
@@ -1113,10 +1147,13 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   bool get _fullLesson => widget.engine.level.number == 5;
 
-  List<_Piece> get _kit => switch (widget.engine.level.number) {
+  /// The L4 kit changes with the guide row; every other level's kit is fixed,
+  /// so it is built once instead of on every lookup.
+  List<_Piece> get _kit => widget.engine.level.number == 4 ? _harnessKit : _fixedKit;
+
+  late final List<_Piece> _fixedKit = switch (widget.engine.level.number) {
         2 => _headPieces,
         3 => _handPieces,
-        4 => _harnessKit,
         5 => _fullKit,
         6 => [..._fullKit, ..._vanToolPieces],
         7 => _poleKit,
@@ -1126,7 +1163,17 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         _ => _pieces,
       };
 
-  List<_Piece> get _fullKit {
+  late final List<_Piece> _fullKit = _buildFullKit();
+
+  late final Map<String, _Piece> _fixedById = () {
+    final byId = <String, _Piece>{};
+    for (final p in _fixedKit) {
+      byId.putIfAbsent(p.id, () => p);
+    }
+    return byId;
+  }();
+
+  List<_Piece> _buildFullKit() {
     final byId = <String, _Piece>{};
     for (final p in [..._pieces, ..._headPieces, ..._handPieces, ..._harnessPieces]) {
       byId[p.id] = p;
@@ -1214,6 +1261,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       };
 
   _Piece? _byId(String id) {
+    if (widget.engine.level.number != 4) return _fixedById[id];
     for (final p in _kit) {
       if (p.id == id) return p;
     }
@@ -1334,7 +1382,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   void _rollVan() {
     if (!mounted || _vanRide.isAnimating || _vanRide.isCompleted) return;
     unawaited(ZlFx.cue('sounds/van_arrive.wav', volume: 0.62, muted: widget.muted));
-    _vanRide.forward().whenComplete(() {
+    _vanRide.animateTo(1, duration: _still ? Duration.zero : null).whenComplete(() {
       if (!mounted) return;
       HapticFeedback.lightImpact();
       setState(() {});
@@ -1442,7 +1490,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   void _fail(String zone, String why, _Piece piece, Offset global) {
     widget.engine.dressWrong();
     widget.onDelta(-5, global);
-    _shake.forward(from: 0);
+    if (!_still) _shake.forward(from: 0);
     _mixShelf(sound: true);
     unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: widget.muted));
     HapticFeedback.heavyImpact();
@@ -1598,7 +1646,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     await Future<void>.delayed(const Duration(milliseconds: 180));
     if (!mounted) return;
     unawaited(ZlFx.cue('sounds/van_arrive.wav', volume: 0.5, muted: widget.muted));
-    await _vanRide.forward();
+    try {
+      await _vanRide.animateTo(1, duration: _still ? Duration.zero : null).orCancel;
+    } on TickerCanceled {
+      return;
+    }
     if (!mounted) return;
     await Future<void>.delayed(const Duration(milliseconds: 420));
     if (!mounted) return;
@@ -2552,7 +2604,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _tossTo = to;
     });
     try {
-      await _toss.forward(from: 0);
+      if (_still) {
+        _toss.value = 1;
+      } else {
+        await _toss.forward(from: 0).orCancel;
+      }
     } on TickerCanceled {
       return;
     }
@@ -2919,7 +2975,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                     key: _boardKey,
                     fit: StackFit.expand,
                     children: [
-                      Image.asset('assets/duty_slip/dress/$_figure.webp', fit: BoxFit.fill),
+                      Image.asset('assets/duty_slip/dress/$_figure.webp', fit: BoxFit.fill, gaplessPlayback: true),
                       if (_blameZone.isNotEmpty)
                         for (final s in spots)
                           if (s.spot.zone == _blameZone)
@@ -3309,8 +3365,18 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     );
   }
 
+  /// The portrait swap builds a new keyed Image; once the dress is complete,
+  /// decode that look ahead so the cross-fade has a picture to fade to.
+  void _warmVanLook() {
+    if (!_job.dress.every(_on.contains)) return;
+    final next = _vanDressedLook;
+    if (!_warmLooks.add(next)) return;
+    precacheImage(AssetImage('assets/duty_slip/dress/$next.webp'), context, onError: (_, _) {});
+  }
+
   Widget _vanMan() {
     final look = _vanLook;
+    if (look == 'body') _warmVanLook();
     return AnimatedOpacity(
       opacity: _vanBoarded ? 0 : 1,
       duration: const Duration(milliseconds: 140),
@@ -3335,12 +3401,11 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         final road = _outro == _VanOutro.pair || _outro == _VanOutro.aboard || _outro == _VanOutro.away;
         final vanW = road ? math.min(box.maxWidth * 0.9, 520.0) : math.min(box.maxWidth * 0.52, 280.0);
         return AnimatedBuilder(
-          animation: Listenable.merge([_shake, _vanRide, _vanDepart]),
+          animation: Listenable.merge([_shake, _vanRide]),
           builder: (_, _) {
             final shakeX = math.sin(_shake.value * math.pi * 6) * (1 - _shake.value) * 8;
             final t = Curves.easeOutBack.transform(_vanRide.value.clamp(0.0, 1.0));
-            final leave = Curves.easeInCubic.transform(_vanDepart.value);
-            final vanX = (1 - t) * (box.maxWidth * 0.95) - leave * (box.maxWidth * 1.35);
+            final vanX = (1 - t) * (box.maxWidth * 0.95);
             final van = Transform.translate(offset: Offset(vanX, 0), child: _vanFigure(vanW));
             if (road) {
               final manH = math.min(box.maxHeight * 0.72, vanW * 0.46);
@@ -3468,7 +3533,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       ),
       child: Padding(
         padding: const EdgeInsets.all(2),
-        child: Image.asset(piece.asset, fit: BoxFit.contain),
+        child: Image(image: dsThumb(context, piece.asset), fit: BoxFit.contain),
       ),
     );
     return Opacity(
@@ -3609,7 +3674,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         border: Border.all(color: blamed ? const Color(0xFFFF5A4A) : const Color(0x00000000), width: 2),
         boxShadow: blamed ? const [BoxShadow(color: Color(0x88E53935), blurRadius: 10)] : null,
       ),
-      child: Image.asset(piece.asset, fit: BoxFit.contain),
+      child: Image(image: dsThumb(context, piece.asset), fit: BoxFit.contain),
     );
     return KeyedSubtree(
       key: _pieceKey(piece.id),
@@ -3624,7 +3689,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         onDragEnd: (_) => setState(() => _dragZone = ''),
         feedback: Material(
           color: Colors.transparent,
-          child: SizedBox(width: 84, height: 84, child: Image.asset(piece.asset, fit: BoxFit.contain)),
+          child: SizedBox(width: 84, height: 84, child: Image(image: dsThumb(context, piece.asset), fit: BoxFit.contain)),
         ),
         childWhenDragging: Opacity(opacity: 0.28, child: face),
         child: GestureDetector(
@@ -3671,15 +3736,9 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      AnimatedBuilder(
-                        animation: _ring,
-                        builder: (_, _) => CustomPaint(
-                          size: const Size(180, 180),
-                          painter: _ReviewRingPainter(_ring.value),
-                        ),
-                      ),
+                      const _ReviewRing(),
                       if (piece != null)
-                        SizedBox(width: 108, height: 108, child: Image.asset(piece.asset, fit: BoxFit.contain)),
+                        SizedBox(width: 108, height: 108, child: Image(image: dsThumb(context, piece.asset), fit: BoxFit.contain)),
                     ],
                   ),
                 ),
@@ -3712,7 +3771,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
               angle: t * 1.15,
               child: Transform.scale(
                 scale: 1.2 - (0.62 * t),
-                child: SizedBox(width: 80, height: 80, child: Image.asset(_tossAsset, fit: BoxFit.contain)),
+                child: SizedBox(width: 80, height: 80, child: Image(image: dsThumb(context, _tossAsset), fit: BoxFit.contain)),
               ),
             ),
           ),
@@ -3848,7 +3907,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     if (piece.id == 'pullRing') {
       return Material(
         color: Colors.transparent,
-        child: SizedBox(width: 120, height: 156, child: Image.asset(_strapAsset, fit: BoxFit.contain)),
+        child: SizedBox(width: 120, height: 156, child: Image(image: dsThumb(context, _strapAsset, box: 160), fit: BoxFit.contain)),
       );
     }
     return Material(
@@ -3886,7 +3945,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   Widget _jointMark(_Spot spot, Rect rect) {
     if (spot.zone.startsWith('g')) {
-      return IgnorePointer(child: CustomPaint(painter: _SoftRingPainter(_sway.value)));
+      return IgnorePointer(child: CustomPaint(painter: _SoftRingPainter(_sway)));
     }
     if (spot.shape == _MarkShape.dots) {
       return const IgnorePointer(child: CustomPaint(painter: _DotRingPainter()));
@@ -4097,7 +4156,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
               ? _pullGhost(worn)
               : Material(
                   color: Colors.transparent,
-                  child: SizedBox(width: 84, height: 84, child: Image.asset(worn.asset, fit: BoxFit.contain)),
+                  child: SizedBox(width: 84, height: 84, child: Image(image: dsThumb(context, worn.asset), fit: BoxFit.contain)),
                 ),
           childWhenDragging: pad,
           child: pad,
@@ -4158,7 +4217,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (asset != null) SizedBox(width: 40, height: 36, child: Image.asset(asset, fit: BoxFit.contain)),
+                    if (asset != null) SizedBox(width: 40, height: 36, child: Image(image: dsThumb(context, asset), fit: BoxFit.contain)),
                     const SizedBox(width: 4),
                     Container(
                       width: 32,
@@ -4256,7 +4315,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
             color: Colors.transparent,
             child: _vanLesson
                 ? DsLiftedTool(asset: piece.asset)
-                : SizedBox(width: 84, height: 84, child: Image.asset(piece.asset, fit: BoxFit.contain)),
+                : SizedBox(width: 84, height: 84, child: Image(image: dsThumb(context, piece.asset), fit: BoxFit.contain)),
           ),
           childWhenDragging: Opacity(opacity: 0.25, child: _thumb(piece)),
           child: _thumb(piece),
@@ -4272,7 +4331,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     return SizedBox(
       width: tall ? 34 : (full ? 50 : 64),
       height: tall ? 62 : (full ? 44 : 58),
-      child: Image.asset(piece.asset, fit: BoxFit.contain),
+      child: Image(image: dsThumb(context, piece.asset), fit: BoxFit.contain),
     );
   }
 
@@ -4308,12 +4367,47 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   }
 }
 
+/// Spinning red ring behind a reviewed piece. Owns its loop, so the spin runs
+/// only while the review card is up, and not at all with animations removed.
+class _ReviewRing extends StatefulWidget {
+  const _ReviewRing();
+
+  @override
+  State<_ReviewRing> createState() => _ReviewRingState();
+}
+
+class _ReviewRingState extends State<_ReviewRing> with SingleTickerProviderStateMixin {
+  late final AnimationController _ring = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (slmLoopsOn(context)) {
+      if (!_ring.isAnimating) _ring.repeat();
+    } else {
+      _ring.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ring.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(size: const Size(180, 180), painter: _ReviewRingPainter(_ring));
+  }
+}
+
 class _ReviewRingPainter extends CustomPainter {
-  const _ReviewRingPainter(this.t);
-  final double t;
+  _ReviewRingPainter(this.ring) : super(repaint: ring);
+  final Animation<double> ring;
 
   @override
   void paint(Canvas canvas, Size size) {
+    final t = ring.value;
     final center = size.center(Offset.zero);
     final radius = size.width / 2 - 6;
     canvas.drawCircle(
@@ -4347,7 +4441,7 @@ class _ReviewRingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ReviewRingPainter oldDelegate) => oldDelegate.t != t;
+  bool shouldRepaint(covariant _ReviewRingPainter oldDelegate) => oldDelegate.ring != ring;
 }
 
 class _WinGlow extends StatefulWidget {
@@ -4527,7 +4621,7 @@ class _VanCheckRow extends StatelessWidget {
                       color: const Color(0x14F6E7B0),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: asset.isEmpty ? const SizedBox.shrink() : Image.asset(asset, fit: BoxFit.contain),
+                    child: asset.isEmpty ? const SizedBox.shrink() : Image(image: dsThumb(context, asset), fit: BoxFit.contain),
                   ),
                   const SizedBox(width: 12),
                   Expanded(child: Text(label, style: zlText(16, weight: FontWeight.w700, color: const Color(0xFFF6E7C8)))),
@@ -4552,6 +4646,8 @@ class _HeroEntrance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // End state of the pop is the plain child.
+    if (slmReduceMotion(context)) return child;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 780),
@@ -4614,18 +4710,77 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
   late final AnimationController _pop;
   late final AnimationController _eyes;
   late final AnimationController _mouth;
+
+  /// Blink and glance change the sprite only a few times per 4.2 s lap, so a
+  /// timer drives them and only the sprite image rebuilds. [_eyeT] holds the
+  /// middle of the current lap phase, which is all [_asset] reads.
+  final _eyeT = ValueNotifier<double>(_eyeRest);
+  Timer? _eyeTimer;
   var _eyeLap = 0;
-  var _eyeArmed = true;
+  var _started = false;
+  var _eyesSynced = false;
+  var _still = false;
+  var _loops = true;
+  double _dpr = 0;
+
+  static const _eyeMs = 4200;
+  static const _eyeMarks = <double>[0.06, 0.13, 0.42, 0.68, 1.0];
+  static const _eyeRest = 0.275;
+  static const _frames = <String>[
+    'coach_ready',
+    'coach_blink',
+    'coach_glance',
+    'coach_talk',
+    'coach_talk_blink',
+    'coach_oops',
+    'coach_oops_blink',
+    'coach_oops_glance',
+    'coach_happy',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _pop = AnimationController(vsync: this, duration: const Duration(milliseconds: 640))..forward();
-    _eyes = AnimationController(vsync: this, duration: const Duration(milliseconds: 4200))..repeat();
+    _pop = AnimationController(vsync: this, duration: const Duration(milliseconds: 640));
+    _eyes = AnimationController(vsync: this, duration: const Duration(milliseconds: 4200));
     _mouth = AnimationController(vsync: this, duration: const Duration(milliseconds: 1320));
-    _eyes.addListener(_countLaps);
     DsTalk.active.addListener(_onTalk);
-    _syncMouth();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _still = slmReduceMotion(context);
+    final loops = slmLoopsOn(context) && TickerMode.valuesOf(context).enabled;
+    if (!_started) {
+      _started = true;
+      if (_still) {
+        _pop.value = 1;
+      } else {
+        _pop.forward();
+      }
+    }
+    if (loops != _loops || !_eyesSynced) {
+      _eyesSynced = true;
+      _loops = loops;
+      _syncEyes();
+      _syncMouth();
+    }
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    if (dpr != _dpr) {
+      _dpr = dpr;
+      // Blink and glance frames are swapped in a new Image each time: have
+      // them decoded (at sprite size) before the first swap.
+      for (final f in _frames) {
+        precacheImage(_frame(f), context, onError: (_, _) {});
+      }
+    }
+  }
+
+  /// Coach frames are 465x892; decode them at the tallest sprite they are drawn at.
+  ImageProvider _frame(String asset) {
+    final px = (math.max(188.0, widget.sprite) * (_dpr == 0 ? 2 : _dpr)).round();
+    return ResizeImage(AssetImage('assets/duty_slip/dress/$asset.webp'), height: px);
   }
 
   void _onTalk() {
@@ -4633,26 +4788,58 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
     if (mounted) setState(() {});
   }
 
-  void _countLaps() {
-    if (_eyes.value < 0.03 && _eyeArmed) {
-      _eyeArmed = false;
-      _eyeLap++;
-    } else if (_eyes.value > 0.2) {
-      _eyeArmed = true;
+  bool get _joy => widget.mood == DsCoachMood.thanks;
+
+  /// Stars need every frame; blink and glance need only the timer.
+  void _syncEyes() {
+    _eyeTimer?.cancel();
+    _eyeTimer = null;
+    if (_loops && _joy) {
+      if (!_eyes.isAnimating) _eyes.repeat();
+    } else if (_eyes.isAnimating) {
+      _eyes.stop();
     }
+    if (!_loops) {
+      _eyeT.value = _eyeRest;
+      return;
+    }
+    _eyeLap = 1;
+    _eyePhase(0);
+  }
+
+  void _eyePhase(int i) {
+    final from = i == 0 ? 0.0 : _eyeMarks[i - 1];
+    final to = _eyeMarks[i];
+    _eyeT.value = (from + to) / 2;
+    _eyeTimer = Timer(Duration(milliseconds: ((to - from) * _eyeMs).round()), () {
+      if (!mounted) return;
+      if (i == _eyeMarks.length - 1) {
+        _eyeLap++;
+        _eyePhase(0);
+      } else {
+        _eyePhase(i + 1);
+      }
+    });
   }
 
   @override
   void didUpdateWidget(DsCoach old) {
     super.didUpdateWidget(old);
-    if (old.mood != widget.mood) _pop.forward(from: 0);
+    if (old.mood != widget.mood) {
+      if (_still) {
+        _pop.value = 1;
+      } else {
+        _pop.forward(from: 0);
+      }
+      if ((old.mood == DsCoachMood.thanks) != _joy) _syncEyes();
+    }
     if (old.mood != widget.mood || old.line != widget.line) _syncMouth(restart: true);
   }
 
   bool get _speaking => widget.mood == DsCoachMood.talk && widget.line.isNotEmpty && DsTalk.active.value;
 
   void _syncMouth({bool restart = false}) {
-    if (_speaking) {
+    if (_speaking && _loops) {
       if (restart || !_mouth.isAnimating) _mouth.repeat(period: const Duration(milliseconds: 1320));
     } else if (_mouth.isAnimating || _mouth.value != 0) {
       _mouth
@@ -4664,7 +4851,8 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
   @override
   void dispose() {
     DsTalk.active.removeListener(_onTalk);
-    _eyes.removeListener(_countLaps);
+    _eyeTimer?.cancel();
+    _eyeT.dispose();
     _pop.dispose();
     _eyes.dispose();
     _mouth.dispose();
@@ -4696,7 +4884,7 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
     };
   }
 
-  double _lipClose(double t) {
+  static double _lipClose(double t) {
     const keys = <(double, double)>[
       (0.00, 0.16),
       (0.05, 0.00),
@@ -4728,8 +4916,6 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
   }
 
   Widget _talkMouth() {
-    final close = _lipClose(_mouth.value);
-    if (close < 0.08) return const SizedBox.shrink();
     final s = widget.sprite;
     const imageAspect = 597 / 888;
     final imageW = s * imageAspect;
@@ -4739,66 +4925,102 @@ class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
       top: s * 0.442,
       width: imageW * 0.16,
       height: s * 0.076,
-      child: CustomPaint(painter: _LipPainter(close)),
+      child: CustomPaint(painter: _LiveLipPainter(_mouth)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final oops = widget.mood == DsCoachMood.oops;
-    final joy = widget.mood == DsCoachMood.thanks;
+    final joy = _joy;
     final lift = joy || widget.mood == DsCoachMood.glad;
+    final align = widget.centered ? CrossAxisAlignment.center : CrossAxisAlignment.start;
+    final stars = widget.sprite > 120 ? 6 : 3;
+    final speaking = _speaking;
+    // Built once per widget change; the per-frame builders below only touch
+    // the transform, the sprite frame, the lip paint and the joy stars.
+    final body = SizedBox(
+      width: widget.bubbleWidth,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: align,
+        children: [
+          if (widget.line.isNotEmpty) _CoachBubble(line: widget.line, bad: oops, maxWidth: widget.bubbleWidth),
+          if (widget.line.isNotEmpty) const SizedBox(height: 2),
+          SizedBox(
+            width: widget.sprite,
+            height: widget.sprite,
+            child: Stack(
+              fit: StackFit.expand,
+              clipBehavior: Clip.none,
+              children: [
+                ValueListenableBuilder<double>(
+                  valueListenable: _eyeT,
+                  builder: (_, t, _) => Image(image: _frame(_asset(t)), fit: BoxFit.contain, gaplessPlayback: true),
+                ),
+                if (speaking) _talkMouth(),
+                if (joy)
+                  Positioned.fill(
+                    child: AnimatedBuilder(
+                      animation: _eyes,
+                      builder: (_, _) {
+                        final t = _eyes.value;
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            for (var i = 0; i < stars; i++)
+                              Positioned(
+                                left: widget.sprite * 0.72 + 18 * math.cos(t * math.pi * 2 + i * 1.05),
+                                top: 4 + 16 * math.sin(t * math.pi * 2 + i),
+                                child: Icon(Icons.auto_awesome, size: widget.sprite > 120 ? 18 : 14, color: const Color(0xFFE2B15A)),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
     return AnimatedBuilder(
-      animation: Listenable.merge([_pop, _eyes, _mouth]),
-      builder: (_, _) {
+      animation: Listenable.merge([_pop, _mouth]),
+      child: body,
+      builder: (_, child) {
         final spring = Curves.elasticOut.transform(_pop.value.clamp(0.0, 1.0));
-        final t = _eyes.value;
         final dx = oops ? math.sin(_pop.value * math.pi * 6) * 6 : 0.0;
         final hop = lift ? -12 * math.sin(_pop.value.clamp(0.0, 1.0) * math.pi) : 0.0;
-        final nod = _speaking ? 1.4 * math.sin(_mouth.value * math.pi * 2) : 0.0;
-        final asset = _asset(t);
-        final align = widget.centered ? CrossAxisAlignment.center : CrossAxisAlignment.start;
-        final stars = widget.sprite > 120 ? 6 : 3;
+        final nod = speaking ? 1.4 * math.sin(_mouth.value * math.pi * 2) : 0.0;
         return Transform.translate(
           offset: Offset(dx, 28 * (1 - spring) + hop + nod),
           child: Transform.scale(
             scale: 0.72 + 0.28 * spring,
             alignment: widget.centered ? Alignment.center : Alignment.bottomLeft,
-            child: SizedBox(
-              width: widget.bubbleWidth,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: align,
-                children: [
-                  if (widget.line.isNotEmpty) _CoachBubble(line: widget.line, bad: oops, maxWidth: widget.bubbleWidth),
-                  if (widget.line.isNotEmpty) const SizedBox(height: 2),
-                  SizedBox(
-                    width: widget.sprite,
-                    height: widget.sprite,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      clipBehavior: Clip.none,
-                      children: [
-                        Image.asset('assets/duty_slip/dress/$asset.webp', fit: BoxFit.contain),
-                        if (_speaking) _talkMouth(),
-                        if (joy)
-                          for (var i = 0; i < stars; i++)
-                            Positioned(
-                              left: widget.sprite * 0.72 + 18 * math.cos(t * math.pi * 2 + i * 1.05),
-                              top: 4 + 16 * math.sin(t * math.pi * 2 + i),
-                              child: Icon(Icons.auto_awesome, size: widget.sprite > 120 ? 18 : 14, color: const Color(0xFFE2B15A)),
-                            ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: child,
           ),
         );
       },
     );
   }
+}
+
+/// Lip overlay that repaints from the mouth controller without a rebuild.
+class _LiveLipPainter extends CustomPainter {
+  _LiveLipPainter(this.mouth) : super(repaint: mouth);
+
+  final Animation<double> mouth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final close = _DsCoachState._lipClose(mouth.value);
+    if (close < 0.08) return;
+    _LipPainter(close).paint(canvas, size);
+  }
+
+  @override
+  bool shouldRepaint(_LiveLipPainter old) => old.mouth != mouth;
 }
 
 class _LipPainter extends CustomPainter {
