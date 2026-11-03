@@ -1,11 +1,8 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../core/en_digits.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
@@ -14,7 +11,7 @@ import '../auth/verify_gate.dart';
 import '../auth/verify_hold.dart';
 import '../auth/verify_sheet.dart';
 import '../auth/verify_tick.dart';
-import '../shell/app_routes.dart';
+import '../game/game_save.dart';
 import '../shell/shell_providers.dart';
 import 'home_toolbox.dart';
 import 'path_intro_page.dart';
@@ -27,35 +24,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _score = 0;
-  int _deaths = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_loadBoard());
-  }
-
-  /// Same numbers the ladder already saves. Not a new score.
-  Future<void> _loadBoard() async {
-    final prefs = await SharedPreferences.getInstance();
-    final score = prefs.getInt('ds_career_score') ?? 0;
-    final ranks = prefs.getStringList('ds_best_ranks') ?? const <String>[];
-    final danger = prefs.getStringList('ds_danger_counts') ?? const <String>[];
-    var deaths = 0;
-    final n = math.min(ranks.length, danger.length);
-    for (var i = 0; i < n; i++) {
-      if (ranks[i].isEmpty) continue;
-      final d = int.tryParse(danger[i]);
-      if (d != null && d > 0) deaths += d;
-    }
-    if (!mounted) return;
-    setState(() {
-      _score = score;
-      _deaths = deaths;
-    });
-  }
-
   void _openIntro() {
     final reduce = MediaQuery.disableAnimationsOf(context);
     HapticFeedback.lightImpact();
@@ -66,12 +34,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             style: SlmTransition.fadeRise,
           ),
         )
-        .then((_) => _loadBoard());
+        .then((_) => ref.read(gameSaveProvider.notifier).reloadFromDisk());
   }
 
   @override
   Widget build(BuildContext context) {
     final bn = ref.watch(languageProvider);
+    final save = ref.watch(gameSaveProvider);
     final auth = ref.watch(authProvider);
     final profile = auth.profile;
     final guest = auth.isGuest || !auth.isAuthenticated;
@@ -83,6 +52,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? guestLabel
         : (fullName.isNotEmpty ? fullName : (slmId.isNotEmpty ? slmId : guestLabel));
     final reduce = MediaQuery.disableAnimationsOf(context);
+    final score = save.points;
+    final deaths = save.deaths;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -105,7 +76,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _CornerMarks(score: _score, deaths: _deaths),
+                        _CornerMarks(score: score, deaths: deaths, bn: bn),
                         const Spacer(),
                         HomeToolboxButton(onTap: () => openHomeToolbox(context)),
                       ],
@@ -126,10 +97,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 child: _NameLine(
                                   name: name,
                                   verified: verified,
-                                  onName: () {
-                                    Navigator.of(context).pushNamed(guest ? AppRoutes.login : AppRoutes.more);
-                                  },
-                                  onTick: verified ? null : () => showVerifySheet(context),
+                                  onOpen: () => showVerifySheet(context),
                                 ),
                               ),
                               const SizedBox(height: 22),
@@ -189,24 +157,24 @@ class _Welcome extends StatelessWidget {
 class _NameLine extends StatelessWidget {
   final String name;
   final bool verified;
-  final VoidCallback onName;
-  final VoidCallback? onTick;
+  final VoidCallback onOpen;
 
   const _NameLine({
     required this.name,
     required this.verified,
-    required this.onName,
-    required this.onTick,
+    required this.onOpen,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Flexible(
-          child: GestureDetector(
-            onTap: onName,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onOpen,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
             child: Text(
               name,
               maxLines: 1,
@@ -222,13 +190,10 @@ class _NameLine extends StatelessWidget {
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 6),
-        GestureDetector(
-          onTap: onTick,
-          child: VerifyTick(gold: verified, size: 18),
-        ),
-      ],
+          const SizedBox(width: 6),
+          VerifyTick(gold: verified, size: 18),
+        ],
+      ),
     );
   }
 }
@@ -236,8 +201,9 @@ class _NameLine extends StatelessWidget {
 class _CornerMarks extends StatelessWidget {
   final int score;
   final int deaths;
+  final bool bn;
 
-  const _CornerMarks({required this.score, required this.deaths});
+  const _CornerMarks({required this.score, required this.deaths, required this.bn});
 
   @override
   Widget build(BuildContext context) {
@@ -250,10 +216,16 @@ class _CornerMarks extends StatelessWidget {
       letterSpacing: 0,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
+    final scoreLabel = score == 0
+        ? Text(
+            tr(bn, 'স্কোর', 'Score'),
+            style: number.copyWith(color: SlmColors.gold200, fontSize: 14, letterSpacing: 0.2),
+          )
+        : Text(enDigits('$score'), style: number.copyWith(color: SlmColors.gold200));
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(enDigits('$score'), style: number.copyWith(color: SlmColors.gold200)),
+        scoreLabel,
         const SizedBox(width: 12),
         Text('💀', style: number.copyWith(fontSize: 14, color: skull)),
         const SizedBox(width: 4),

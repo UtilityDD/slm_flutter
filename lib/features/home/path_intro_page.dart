@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
+import '../duty_slip/duty_slip_page.dart';
 import '../shell/shell_providers.dart';
 import 'home_toolbox.dart';
+import 'path_fear_gate.dart';
 import 'path_fear_page.dart';
 
 /// One quiet door into মৃত্যুহীন পথ. The shield arrives from home, then a
@@ -15,11 +19,23 @@ class PathIntroPage extends ConsumerWidget {
 
   const PathIntroPage({super.key, this.reduceMotion = false});
 
-  void _openFear(BuildContext context) {
+  Future<void> _openPath(BuildContext context) async {
     HapticFeedback.mediumImpact();
-    Navigator.of(context).push(
+    final showFear = await PathFearGate.shouldShow();
+    if (!context.mounted) return;
+    if (showFear) {
+      Navigator.of(context).push(
+        SlmPageRoute<void>(
+          builder: (_) => const PathFearPage(),
+          style: SlmTransition.fadeThrough,
+        ),
+      );
+      return;
+    }
+    // Already seen today (and within 4h) — skip skull silently.
+    Navigator.of(context).pushReplacement(
       SlmPageRoute<void>(
-        builder: (_) => const PathFearPage(),
+        builder: (_) => const DutySlipPage(startOnRoad: true),
         style: SlmTransition.fadeThrough,
       ),
     );
@@ -85,7 +101,7 @@ class PathIntroPage extends ConsumerWidget {
                           trailingIcon: Icons.arrow_forward_rounded,
                           size: SlmButtonSize.large,
                           expand: true,
-                          onPressed: () => _openFear(context),
+                          onPressed: () => unawaited(_openPath(context)),
                         ),
                       ),
                     ],

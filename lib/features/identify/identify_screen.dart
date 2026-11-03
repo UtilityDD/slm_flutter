@@ -17,7 +17,7 @@ import 'identify_style.dart';
 import 'library_catalog.dart';
 
 const _allGroup = '__all__';
-const _sectionPreview = 4;
+const _sectionPreview = 3;
 
 class IdentifyScreen extends ConsumerStatefulWidget {
   const IdentifyScreen({super.key});
@@ -40,8 +40,13 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
   @override
   void initState() {
     super.initState();
+    // Warm catalog/charts so tab opens with chrome instead of a blank spinner.
+    Future.microtask(() {
+      ref.read(libraryCatalogProvider);
+      ref.read(identifyChartPagesProvider);
+    });
     _scroll.addListener(() {
-      final show = _scroll.offset > 230;
+      final show = _scroll.offset > 140;
       if (show != _showPill) setState(() => _showPill = show);
     });
   }
@@ -161,8 +166,8 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
     if (id == _group) return;
     HapticFeedback.selectionClick();
     setState(() => _group = id);
-    if (_scroll.hasClients && _scroll.offset > 230) {
-      _scroll.animateTo(230, duration: const Duration(milliseconds: 380), curve: Curves.easeOutCubic);
+    if (_scroll.hasClients && _scroll.offset > 140) {
+      _scroll.animateTo(140, duration: const Duration(milliseconds: 340), curve: Curves.easeOutCubic);
     }
   }
 
@@ -192,93 +197,99 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Theme(
-              data: SlmTheme.night(),
-              child: const SlmBackground(constrain: false, child: SizedBox.expand()),
-            ),
-          ),
-          _body(bn, catalog, stats),
-        ],
+      child: Theme(
+        data: SlmTheme.night(),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const Positioned.fill(child: SlmBackground(constrain: false, child: SizedBox.expand())),
+            _body(bn, catalog, stats),
+          ],
+        ),
       ),
     );
   }
 
   Widget _body(bool bn, AsyncValue<List<LibraryItem>> catalog, IdentifyStats stats) {
-    return catalog.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: SlmColors.gold400)),
-        error: (error, _) => Center(child: Text('$error', style: const TextStyle(color: SlmColors.mist))),
-        data: (items) {
-          final groups = orderedCategories(items);
-          if (_group != _allGroup && !groups.contains(_group)) _group = _allGroup;
-          final q = _query.trim().toLowerCase();
-          final counts = {for (final g in groups) g: items.where((i) => i.category == g).length};
+    final items = catalog.value;
+    if (catalog.hasError && items == null) {
+      return Center(child: Text('${catalog.error}', style: const TextStyle(color: SlmColors.mist)));
+    }
 
-          return Stack(
-            children: [
-              GestureDetector(
-                onTap: _searchFocus.unfocus,
-                behavior: HitTestBehavior.translucent,
-                child: ShellSafeArea(
-                  child: CustomScrollView(
-                  controller: _scroll,
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: _Intro(bn: bn, stats: stats),
-                    ),
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _FilterBarDelegate(
-                        child: _FilterBar(
-                          bn: bn,
-                          controller: _search,
-                          focus: _searchFocus,
-                          query: _query,
-                          listening: _listening,
-                          groups: groups,
-                          counts: counts,
-                          total: items.length,
-                          active: _group,
-                          onQuery: (v) => setState(() => _query = v),
-                          onGroup: _selectGroup,
-                          onVoice: _toggleVoiceSearch,
-                        ),
-                      ),
-                    ),
-                    ..._content(bn, items, groups, q),
-                    SliverToBoxAdapter(
-                      child: SizedBox(height: shellDockBottomInset(context) + 12),
-                    ),
-                  ],
-                ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: shellDockBottomOffset(context),
-                child: IgnorePointer(
-                  ignoring: !_showPill,
-                  child: AnimatedSlide(
-                    duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeOutCubic,
-                    offset: _showPill ? Offset.zero : const Offset(0, 1.6),
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 220),
-                      opacity: _showPill ? 1 : 0,
-                      child: Center(child: _QuizPill(bn: bn)),
+    final list = items ?? const <LibraryItem>[];
+    final groups = orderedCategories(list);
+    if (_group != _allGroup && groups.isNotEmpty && !groups.contains(_group)) {
+      _group = _allGroup;
+    }
+    final q = _query.trim().toLowerCase();
+    final counts = {for (final g in groups) g: list.where((i) => i.category == g).length};
+    final loading = items == null;
+
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: _searchFocus.unfocus,
+          behavior: HitTestBehavior.translucent,
+          child: ShellSafeArea(
+            child: CustomScrollView(
+              controller: _scroll,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverToBoxAdapter(child: _Intro(bn: bn, stats: stats)),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _FilterBarDelegate(
+                    child: _FilterBar(
+                      bn: bn,
+                      controller: _search,
+                      focus: _searchFocus,
+                      query: _query,
+                      listening: _listening,
+                      groups: groups,
+                      counts: counts,
+                      total: list.length,
+                      active: _group,
+                      onQuery: (v) => setState(() => _query = v),
+                      onGroup: _selectGroup,
+                      onVoice: _toggleVoiceSearch,
                     ),
                   ),
                 ),
+                if (loading)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _CatalogBusy(),
+                  )
+                else ...[
+                  ..._content(bn, list, groups, q),
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: shellDockBottomInset(context) + 12),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: shellDockBottomOffset(context),
+          child: IgnorePointer(
+            ignoring: !_showPill || loading,
+            child: AnimatedSlide(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOutCubic,
+              offset: _showPill && !loading ? Offset.zero : const Offset(0, 1.6),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 220),
+                opacity: _showPill && !loading ? 1 : 0,
+                child: Center(child: _QuizPill(bn: bn)),
               ),
-            ],
-          );
-        },
-      );
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   List<Widget> _content(bool bn, List<LibraryItem> items, List<String> groups, String q) {
@@ -349,13 +360,13 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
     final source = openList ?? list;
     final charts = ref.watch(identifyChartPagesProvider).value;
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(14, 4, 14, 6),
+      padding: const EdgeInsets.fromLTRB(14, 2, 14, 4),
       sliver: SliverGrid(
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 168,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 0.86,
+          maxCrossAxisExtent: 156,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 0.88,
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
@@ -388,22 +399,80 @@ class _Intro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.of(context).canPop();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Theme(
-          data: SlmTheme.night(),
-          child: SlmTopBar(
-            title: tr(bn, 'পরিচিতি', 'Identify'),
-            onBack: () => Navigator.of(context).maybePop(),
-            backLabel: tr(bn, 'ফিরে যান', 'Back'),
-          ),
+        SlmTopBar(
+          title: tr(bn, 'পরিচিতি', 'Identify'),
+          onBack: canPop ? () => Navigator.of(context).maybePop() : null,
+          backLabel: tr(bn, 'ফিরে যান', 'Back'),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
           child: SlmReveal(index: 1, child: _QuizBanner(bn: bn, stats: stats)),
         ),
       ],
+    );
+  }
+}
+
+class _CatalogBusy extends StatelessWidget {
+  const _CatalogBusy();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var row = 0; row < 2; row++) ...[
+            if (row > 0) const SizedBox(height: 10),
+            Row(
+              children: [
+                for (var col = 0; col < 3; col++) ...[
+                  if (col > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 0.88,
+                      child: _BusyTile(delayMs: (row * 3 + col) * 70),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _BusyTile extends StatelessWidget {
+  final int delayMs;
+
+  const _BusyTile({required this.delayMs});
+
+  @override
+  Widget build(BuildContext context) {
+    final child = DecoratedBox(
+      decoration: BoxDecoration(
+        color: SlmColors.navy800.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.12)),
+      ),
+    );
+    if (slmReduceMotion(context)) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 420 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (_, t, c) => Opacity(
+        opacity: 0.45 + 0.35 * t,
+        child: Transform.translate(offset: Offset(0, (1 - t) * 6), child: c),
+      ),
+      child: child,
     );
   }
 }
@@ -424,110 +493,80 @@ class _QuizBanner extends StatelessWidget {
         Navigator.of(context).pushNamed(AppRoutes.identifyPlay);
       },
       builder: (context, press, _) => Transform.scale(
-        scale: 1 - 0.02 * press,
+        scale: 1 - 0.018 * press,
         child: Container(
-          height: 132,
-          padding: const EdgeInsets.all(1.4),
+          height: 76,
+          padding: const EdgeInsets.all(1.2),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(18),
             gradient: SlmGradients.goldEdge,
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 22, offset: const Offset(0, 10)),
-              BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.12 + 0.18 * press), blurRadius: 24),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 6)),
+              BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.10 + 0.14 * press), blurRadius: 16),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(22.6),
+            borderRadius: BorderRadius.circular(16.8),
             child: DecoratedBox(
               decoration: const BoxDecoration(gradient: SlmGradients.navyHero),
-              child: SlmShimmer(
-                period: const Duration(milliseconds: 5200),
-                intensity: 0.45,
-                child: Stack(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+                child: Row(
                   children: [
-                    Positioned(
-                      right: -30,
-                      top: -36,
-                      child: Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(colors: [
-                            SlmColors.emerald500.withValues(alpha: 0.28),
-                            SlmColors.emerald500.withValues(alpha: 0),
-                          ]),
-                        ),
+                    Container(
+                      width: 42,
+                      height: 42,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: SlmGradients.emerald,
+                        border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.75)),
                       ),
+                      child: const Icon(Icons.play_arrow_rounded, color: SlmColors.navy950, size: 26),
                     ),
-                    Positioned(
-                      right: 18,
-                      bottom: -18,
-                      child: Icon(Icons.image_search_rounded, size: 120, color: SlmColors.gold300.withValues(alpha: 0.10)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-                      child: Row(
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  tr(bn, 'ছবি দেখে চিনুন', 'Name the photos'),
-                                  style: const TextStyle(
-                                    color: SlmColors.ivory,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                    height: 1.2,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  played
-                                      ? tr(bn, 'সব মিলিয়ে ${bnNumber(stats.percent, bn)}% · ${bnNumber(stats.lifeTotal, bn)}টি উত্তর',
-                                          'All-time ${stats.percent}% · ${stats.lifeTotal} answered')
-                                      : tr(bn, 'ছোট খেলা — কতগুলো চেনেন দেখুন', 'Quick game — see how many you know'),
-                                  style: const TextStyle(
-                                    color: SlmColors.mist,
-                                    fontSize: 13,
-                                    height: 1.35,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Container(
-                                  padding: const EdgeInsets.fromLTRB(10, 6, 14, 6),
-                                  decoration: BoxDecoration(
-                                    gradient: SlmGradients.emerald,
-                                    borderRadius: SlmRadius.pillAll,
-                                    border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.8)),
-                                    boxShadow: [BoxShadow(color: SlmColors.emerald400.withValues(alpha: 0.35), blurRadius: 10)],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.play_arrow_rounded, color: SlmColors.navy950, size: 20),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        played ? tr(bn, 'আবার খেলুন', 'Play again') : tr(bn, 'খেলা শুরু', 'Start'),
-                                        style: const TextStyle(
-                                          color: SlmColors.navy950,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                          Text(
+                            tr(bn, 'ছবি দেখে চিনুন', 'Name the photos'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: SlmColors.ivory,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              height: 1.15,
                             ),
                           ),
-                          if (played) _ScoreRing(percent: stats.percent, bn: bn),
+                          const SizedBox(height: 3),
+                          Text(
+                            played
+                                ? tr(
+                                    bn,
+                                    '${bnNumber(stats.percent, bn)}% · ${bnNumber(stats.lifeTotal, bn)}টি উত্তর',
+                                    '${stats.percent}% · ${stats.lifeTotal} answered',
+                                  )
+                                : tr(bn, 'ছোট খেলা — কতগুলো চেনেন', 'Quick game — how many you know'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: SlmColors.mist,
+                              fontSize: 12,
+                              height: 1.2,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ],
                       ),
                     ),
+                    if (played) ...[
+                      const SizedBox(width: 8),
+                      _ScoreRing(percent: stats.percent, bn: bn),
+                    ] else
+                      const Icon(Icons.chevron_right_rounded, color: SlmColors.gold300, size: 22),
                   ],
                 ),
               ),
@@ -549,17 +588,16 @@ class _ScoreRing extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: percent / 100),
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 900),
       curve: SlmMotion.emphasized,
       builder: (_, v, _) => Container(
-        width: 78,
-        height: 78,
-        padding: const EdgeInsets.all(4),
+        width: 52,
+        height: 52,
+        padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: SlmColors.navy950.withValues(alpha: 0.55),
           border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
-          boxShadow: [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.25 * v), blurRadius: 16)],
         ),
         child: Stack(
           alignment: Alignment.center,
@@ -567,7 +605,7 @@ class _ScoreRing extends StatelessWidget {
             SizedBox.expand(
               child: CircularProgressIndicator(
                 value: v,
-                strokeWidth: 6,
+                strokeWidth: 4.5,
                 strokeCap: StrokeCap.round,
                 color: SlmColors.gold300,
                 backgroundColor: SlmColors.navy700,
@@ -575,7 +613,7 @@ class _ScoreRing extends StatelessWidget {
             ),
             Text(
               '${bnNumber((v * 100).round(), bn)}%',
-              style: const TextStyle(color: SlmColors.gold100, fontWeight: FontWeight.w800, fontSize: 17),
+              style: const TextStyle(color: SlmColors.gold100, fontWeight: FontWeight.w800, fontSize: 12),
             ),
           ],
         ),
@@ -589,7 +627,7 @@ class _FilterBarDelegate extends SliverPersistentHeaderDelegate {
 
   _FilterBarDelegate({required this.child});
 
-  static const _bar = 100.0;
+  static const _bar = 88.0;
 
   @override
   double get minExtent => _bar;
@@ -655,9 +693,9 @@ class _FilterBar extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
           child: SizedBox(
-            height: 46,
+            height: 42,
             child: TextField(
               controller: controller,
               focusNode: focus,
@@ -731,13 +769,13 @@ class _FilterBar extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 32,
+          height: 30,
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 200),
             opacity: searching ? 0.4 : 1,
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 2),
               children: [
                 _GroupChip(
                   label: tr(bn, 'সব', 'All'),
@@ -793,8 +831,8 @@ class _GroupChip extends StatelessWidget {
         child: AnimatedContainer(
           duration: SlmMotion.base,
           curve: SlmMotion.emphasized,
-          height: 32,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          height: 30,
+          padding: const EdgeInsets.symmetric(horizontal: 9),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             gradient: selected ? SlmGradients.gold : null,
@@ -805,15 +843,15 @@ class _GroupChip extends StatelessWidget {
               width: 1,
             ),
             boxShadow: selected
-                ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.35), blurRadius: 10)]
+                ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.3), blurRadius: 8)]
                 : null,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 7,
-                height: 7,
+                width: 6,
+                height: 6,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: selected ? SlmColors.navy950 : color,
@@ -824,7 +862,7 @@ class _GroupChip extends StatelessWidget {
               Text(
                 '$label · ${bnNumber(count, bn)}',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   height: 1,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                   color: selected ? SlmColors.navy950 : SlmColors.mist,
@@ -858,25 +896,25 @@ class _SectionHeader extends StatelessWidget {
     final style = categoryStyle(group);
     final hue = Color.lerp(style.color, Colors.white, 0.22)!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 8, 2),
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 0),
       child: Row(
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: SlmColors.navy800,
               border: Border.all(color: hue.withValues(alpha: 0.55)),
               boxShadow: [BoxShadow(color: hue.withValues(alpha: 0.25), blurRadius: 8)],
             ),
-            child: Icon(style.icon, size: 15, color: hue),
+            child: Icon(style.icon, size: 13, color: hue),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               categoryLabel(group, bn),
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: SlmColors.ivory),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: SlmColors.ivory),
             ),
           ),
           if (showAll)
@@ -913,14 +951,15 @@ class _Appear extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final start = math.min(index * 0.07, 0.5);
+    if (slmReduceMotion(context) || index > 8) return child;
+    final start = math.min(index * 0.04, 0.28);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 560),
-      curve: Interval(start, 1, curve: SlmMotion.emphasized),
+      duration: const Duration(milliseconds: 360),
+      curve: Interval(start, 1, curve: Curves.easeOutCubic),
       builder: (_, t, c) => Opacity(
         opacity: t,
-        child: Transform.translate(offset: Offset(0, (1 - t) * 18), child: c),
+        child: Transform.translate(offset: Offset(0, (1 - t) * 8), child: c),
       ),
       child: child,
     );

@@ -9,14 +9,18 @@ import '../../core/en_digits.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
 import '../auth/verify_gate.dart';
+import '../auth/verify_sheet.dart';
+import '../game/game_save.dart';
+import '../guide/guide_director.dart';
+import '../guide/ladder_guide_host.dart';
 import '../home/lesson_progress_store.dart';
 import '../home/lineman_progress.dart';
-import '../shell/shell_providers.dart';
-import '../training/training_provider.dart';
-import '../auth/verify_sheet.dart';
 import '../quizzes/identify_quiz_screen.dart';
 import '../quizzes/quiz_play_screen.dart';
+import '../shell/shell_providers.dart';
+import '../training/training_provider.dart';
 import '../training/training_screen.dart';
+import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'adventure_scenery.dart';
 import 'duty_slip_engine.dart';
@@ -138,6 +142,18 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
     vsync: this,
     duration: const Duration(milliseconds: 7000),
   );
+  late final AnimationController _nudgePulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+
+  Timer? _idleTimer;
+  Timer? _nudgeCycleTimer;
+  int? _nudgeIndex;
+  var _nudgeGift = false;
+  var _nudgeOnGiftTurn = false;
+  var _programmaticScroll = false;
+  final _nudgeRng = math.Random();
 
   @override
   void initState() {
@@ -150,6 +166,134 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
         _ascent.repeat();
       }
       _pin(initial: true);
+      _armIdle();
+    });
+  }
+
+  void _onFingerScroll() {
+    _clearNudge();
+    _armIdle();
+    final guide = ProviderScope.containerOf(context).read(guideDirectorProvider);
+    if (guide.mood == GuideMood.sleep) {
+      ProviderScope.containerOf(context).read(guideDirectorProvider.notifier).wake();
+    }
+  }
+
+  void _clearNudge() {
+    _nudgeCycleTimer?.cancel();
+    _nudgeCycleTimer = null;
+    if (_nudgePulse.isAnimating) _nudgePulse.stop();
+    if (_nudgeIndex != null && mounted) {
+      setState(() {
+        _nudgeIndex = null;
+        _nudgeGift = false;
+      });
+    } else {
+      _nudgeIndex = null;
+      _nudgeGift = false;
+    }
+  }
+
+  void _armIdle() {
+    _idleTimer?.cancel();
+    _idleTimer = Timer(const Duration(seconds: 14), () {
+      if (!mounted) return;
+      _startIdleNudge();
+    });
+  }
+
+  /// Gift chests currently on-screen (any face except opened).
+  List<int> _visibleGiftIndices() {
+    if (!_scroll.hasClients) return const [];
+    final live = dsLevels.length;
+    final focus = widget.engine.unlocked.clamp(0, math.max(0, live - 1)).toInt();
+    final view = _scroll.position.viewportDimension;
+    final scrolled = _scroll.offset;
+    final bottomInset = MediaQuery.paddingOf(context).bottom + 18;
+    final out = <int>[];
+    for (var i = 0; i < live; i++) {
+      if (_stationAt(i) != _Station.gift) continue;
+      final soon = i >= live;
+      final face = _giftFace(_Station.gift, i, focus, soon);
+      if (face == _GiftFace.opened || face == _GiftFace.none) continue;
+      final fromBottom = bottomInset + i * _rowH + _rowH / 2 - scrolled;
+      if (fromBottom > 36 && fromBottom < view - 36) out.add(i);
+    }
+    return out;
+  }
+
+  Future<void> _softScrollToIndex(int index) async {
+    if (!_scroll.hasClients) return;
+    final view = _scroll.position.viewportDimension;
+    final scrolled = _scroll.offset;
+    final bottomInset = MediaQuery.paddingOf(context).bottom + 18;
+    final fromBottom = bottomInset + index * _rowH + _rowH / 2 - scrolled;
+    // Already comfortably on screen — don't move (avoids fighting the pulse).
+    if (fromBottom > view * 0.18 && fromBottom < view * 0.82) return;
+    final want = (index * _rowH) - (view * 0.28);
+    final clamped = want.clamp(0.0, _scroll.position.maxScrollExtent);
+    _programmaticScroll = true;
+    try {
+      await _scroll.animateTo(clamped, duration: const Duration(milliseconds: 520), curve: Curves.easeOutCubic);
+    } finally {
+      _programmaticScroll = false;
+    }
+  }
+
+  void _applyNudgeTarget({required bool giftTurn}) {
+    if (!mounted) return;
+    final live = dsLevels.length;
+    final focus = widget.engine.unlocked.clamp(0, math.max(0, live - 1)).toInt();
+    final gifts = _visibleGiftIndices();
+    late final int target;
+    late final bool asGift;
+    if (giftTurn && gifts.isNotEmpty) {
+      // Prefer a different gift than last time when possible.
+      final pool = gifts.length == 1
+          ? gifts
+          : gifts.where((g) => g != _nudgeIndex).toList(growable: false);
+      final pick = pool.isEmpty ? gifts : pool;
+      target = pick[_nudgeRng.nextInt(pick.length)];
+      asGift = true;
+    } else {
+      target = focus;
+      asGift = false;
+    }
+    setState(() {
+      _nudgeIndex = target;
+      _nudgeGift = asGift;
+    });
+    unawaited(_softScrollToIndex(target));
+    ProviderScope.containerOf(context).read(guideDirectorProvider.notifier).nudgePlay(gift: asGift);
+    if (!widget.muted) {
+      unawaited(ZlFx.cue(
+        asGift ? 'sounds/intro/glass.ogg' : 'sounds/intro/confirm.ogg',
+        volume: 0.4,
+        muted: false,
+      ));
+    }
+  }
+
+  void _startIdleNudge() {
+    if (!mounted || MediaQuery.disableAnimationsOf(context)) return;
+    if (_flight != null || _reply != null) return;
+    if (_nudgeIndex != null) return;
+    _nudgeOnGiftTurn = false;
+    _nudgePulse
+      ..value = 0
+      ..repeat();
+    _applyNudgeTarget(giftTurn: false);
+    _nudgeCycleTimer?.cancel();
+    // Alternate: level → random visible gift → level → …
+    _nudgeCycleTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted || _nudgeIndex == null) return;
+      _nudgeOnGiftTurn = !_nudgeOnGiftTurn;
+      // If no gift on screen, stay on the active level (still speak/sound).
+      final gifts = _visibleGiftIndices();
+      if (_nudgeOnGiftTurn && gifts.isEmpty) {
+        _nudgeOnGiftTurn = false;
+      }
+      _applyNudgeTarget(giftTurn: _nudgeOnGiftTurn);
     });
   }
 
@@ -181,14 +325,19 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
 
   @override
   void dispose() {
+    _idleTimer?.cancel();
+    _nudgeCycleTimer?.cancel();
     _scroll.removeListener(_publish);
     _scroll.dispose();
     _glow.dispose();
     _ascent.dispose();
+    _nudgePulse.dispose();
     super.dispose();
   }
 
   void _openLevel(int index) {
+    _clearNudge();
+    _armIdle();
     final spec = dsLevels[index];
     if (gameNeedsVerifyNow(context, spec.number)) {
       showVerifySheet(context);
@@ -298,7 +447,7 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
     }
 
     return AnimatedBuilder(
-      animation: Listenable.merge([_glow, _ascent, _scroll]),
+      animation: Listenable.merge([_glow, _ascent, _scroll, _nudgePulse]),
       builder: (context, _) {
         final glow = quiet ? 0.6 : _glow.value;
         final journey = (_path + 1) * _rowH;
@@ -311,7 +460,17 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
           fit: StackFit.expand,
           children: [
             Positioned.fill(child: AdventureWorld(scroll: _scroll, drift: _ascent, motion: !quiet)),
-            ListView.builder(
+            NotificationListener<ScrollNotification>(
+              onNotification: (n) {
+                if (_programmaticScroll) return false;
+                if (n is ScrollUpdateNotification && n.dragDetails != null) {
+                  _onFingerScroll();
+                } else if (n is ScrollStartNotification && n.dragDetails != null) {
+                  _onFingerScroll();
+                }
+                return false;
+              },
+              child: ListView.builder(
                     controller: _scroll,
                     scrollDirection: Axis.vertical,
                     reverse: true,
@@ -353,8 +512,12 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
                         featuredActivity: activityAt.contains(i),
                         motion: !quiet,
                         gleamY: gleamY,
+                        idleNudge: _nudgeIndex == i,
+                        nudgeGift: _nudgeGift && _nudgeIndex == i,
+                        nudgePulse: quiet ? 0.0 : _nudgePulse.value,
                         onLevel: cap
                             ? () {
+                                _clearNudge();
                                 HapticFeedback.selectionClick();
                                 unawaited(_showSheet(
                                   title: 'মৃত্যুহীন লক্ষ্য',
@@ -364,6 +527,7 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
                               }
                             : soon
                                 ? () {
+                                    _clearNudge();
                                     HapticFeedback.selectionClick();
                                     unawaited(_showSheet(
                                       title: 'শীঘ্রই আসছে',
@@ -374,14 +538,19 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
                                 : () => _openLevel(i),
                         onStation: station == null
                             ? null
-                            : () => _present(
+                            : () {
+                                _clearNudge();
+                                _armIdle();
+                                _present(
                                   station,
                                   i,
                                   large: station == _Station.gift && giftFace == _GiftFace.active,
-                                ),
+                                );
+                              },
                       );
                     },
                   ),
+            ),
             Positioned(
               top: 0,
               left: 0,
@@ -403,41 +572,10 @@ class _AdventureMapState extends State<AdventureMap> with TickerProviderStateMix
                 ),
               ),
             ),
-            Positioned(
-              right: 10,
-              bottom: MediaQuery.paddingOf(context).bottom + 16,
-              child: IgnorePointer(
-                child: SizedBox(
-                  width: 86,
-                  height: 118,
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      Positioned(
-                        bottom: 2,
-                        child: Container(
-                          width: 62,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.all(Radius.elliptical(62, 12)),
-                            color: const Color(0xCC061008),
-                            boxShadow: const [BoxShadow(color: Color(0xAA061008), blurRadius: 8, offset: Offset(0, 2))],
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 6,
-                        top: 0,
-                        child: Transform.translate(
-                          offset: Offset(0, quiet ? 0 : -1.2 * glow),
-                          child: const FittedBox(alignment: Alignment.bottomCenter, child: CornerLineman()),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+            Positioned.fill(
+              child: Transform.translate(
+                offset: Offset(0, quiet ? 0 : -0.6 * glow),
+                child: LadderGuideHost(muted: widget.muted),
               ),
             ),
             if (_flight != null)
@@ -521,8 +659,11 @@ class _TopHeader extends ConsumerWidget {
       extraCompleted: localDone,
       highestCompletedModule: highestDone > 0 ? highestDone : null,
     );
-    final rank = linemanBadgeName(path.achieved == 0 ? 1 : path.achieved, bn);
-    final calm = engine.totalCumulativeDanger == 0;
+    final save = ref.watch(gameSaveProvider);
+    final rankFromSave = save.rankIndex;
+    final rankLevel = rankFromSave > 0 ? rankFromSave : (path.achieved == 0 ? 1 : path.achieved);
+    final rank = linemanBadgeName(rankLevel, bn);
+    final calm = save.deaths == 0;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
       child: Row(
@@ -531,11 +672,11 @@ class _TopHeader extends ConsumerWidget {
           const SizedBox(width: 10),
           _RankPill(label: rank),
           const Spacer(),
-          _ScoreChip(mark: '◆', value: enDigits('${engine.totalCumulativeScore}'), color: SlmColors.gold200),
+          _ScoreChip(mark: '◆', value: enDigits('${save.points}'), color: SlmColors.gold200),
           const SizedBox(width: 8),
           _ScoreChip(
             mark: '💀',
-            value: enDigits('${engine.totalCumulativeDanger}'),
+            value: enDigits('${save.deaths}'),
             color: calm ? SlmColors.emerald300 : SlmColors.danger,
           ),
         ],
@@ -627,6 +768,9 @@ class _MapBand extends StatelessWidget {
   final bool featuredActivity;
   final bool motion;
   final double gleamY;
+  final bool idleNudge;
+  final bool nudgeGift;
+  final double nudgePulse;
   final VoidCallback? onLevel;
   final VoidCallback? onStation;
 
@@ -649,6 +793,9 @@ class _MapBand extends StatelessWidget {
     required this.featuredActivity,
     required this.motion,
     required this.gleamY,
+    required this.idleNudge,
+    required this.nudgeGift,
+    required this.nudgePulse,
     required this.onLevel,
     required this.onStation,
   });
@@ -704,14 +851,20 @@ class _MapBand extends StatelessWidget {
               Positioned(
                 left: w / 2 - 24,
                 top: rungY - 24,
-                child: _LevelCoin(
-                  number: number,
-                  soon: soon,
-                  cleared: cleared,
-                  current: current,
-                  locked: locked,
-                  glow: glow,
-                  onTap: onLevel,
+                width: 48,
+                height: 48,
+                child: _IdleNudgeHalo(
+                  active: idleNudge && !nudgeGift,
+                  pulse: nudgePulse,
+                  child: _LevelCoin(
+                    number: number,
+                    soon: soon,
+                    cleared: cleared,
+                    current: current,
+                    locked: locked,
+                    glow: glow,
+                    onTap: onLevel,
+                  ),
                 ),
               ),
               if (station != null && !hidden)
@@ -719,18 +872,24 @@ class _MapBand extends StatelessWidget {
                   left: sideLeft ? 4 : null,
                   right: sideLeft ? null : 4,
                   top: stationTop,
+                  width: 96,
+                  height: 84,
                   child: Transform.scale(
                     scale: zoom,
                     alignment: Alignment.center,
-                    child: _StationPlaque(
-                      station: station!,
-                      asset: _assetFor(station!, index),
-                      glow: glow,
-                      fresh: fresh,
-                      rested: rested,
-                      giftFace: giftFace,
-                      motion: motion,
-                      onTap: onStation,
+                    child: _IdleNudgeHalo(
+                      active: idleNudge && nudgeGift && station == _Station.gift,
+                      pulse: nudgePulse,
+                      child: _StationPlaque(
+                        station: station!,
+                        asset: _assetFor(station!, index),
+                        glow: glow,
+                        fresh: fresh,
+                        rested: rested,
+                        giftFace: giftFace,
+                        motion: motion,
+                        onTap: onStation,
+                      ),
                     ),
                   ),
                 ),
@@ -740,6 +899,88 @@ class _MapBand extends StatelessWidget {
       },
     );
   }
+}
+
+class _IdleNudgeHalo extends StatelessWidget {
+  final bool active;
+  final double pulse;
+  final Widget child;
+
+  const _IdleNudgeHalo({
+    required this.active,
+    required this.pulse,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!active) return child;
+    final t = pulse.clamp(0.0, 1.0);
+    // Zoom the child only — rings paint outside without shifting layout.
+    final scale = 1.0 + 0.14 * math.sin(t * math.pi * 2);
+    return Stack(
+      alignment: Alignment.center,
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: IgnorePointer(
+            child: OverflowBox(
+              maxWidth: 140,
+              maxHeight: 140,
+              alignment: Alignment.center,
+              child: CustomPaint(
+                size: const Size(140, 140),
+                painter: _NudgeRingPainter(progress: t, color: SlmColors.gold300),
+              ),
+            ),
+          ),
+        ),
+        Transform.scale(
+          scale: scale,
+          alignment: Alignment.center,
+          filterQuality: FilterQuality.medium,
+          child: child,
+        ),
+      ],
+    );
+  }
+}
+
+class _NudgeRingPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  const _NudgeRingPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    for (final phase in const [0.0, 0.33, 0.66]) {
+      final p = (progress + phase) % 1.0;
+      final radius = size.shortestSide * (0.22 + 0.28 * p);
+      final opacity = (1.0 - p).clamp(0.0, 1.0);
+      canvas.drawCircle(
+        c,
+        radius,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.0
+          ..color = color.withValues(alpha: 0.72 * opacity),
+      );
+      canvas.drawCircle(
+        c,
+        radius * 0.78,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5
+          ..color = SlmColors.emerald300.withValues(alpha: 0.42 * opacity),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _NudgeRingPainter old) =>
+      old.progress != progress || old.color != color;
 }
 
 class _GoldenLadderPainter extends CustomPainter {

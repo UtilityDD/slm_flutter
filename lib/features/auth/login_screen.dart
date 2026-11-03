@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';

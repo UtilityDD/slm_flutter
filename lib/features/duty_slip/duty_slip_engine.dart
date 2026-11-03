@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -855,6 +856,39 @@ class DutySlipEngine {
       await prefs.setStringList('ds_danger_counts', dangerRaw);
       final scoresRaw = levelBestScore.map((s) => s.toString()).toList();
       await prefs.setStringList('ds_best_scores', scoresRaw);
+      // Bridge: keep GameSave ◆ in sync until all beats write GameSave directly.
+      await _mirrorCareerIntoGameSave(prefs, totalCumulativeScore);
+    } catch (_) {}
+  }
+
+  Future<void> _mirrorCareerIntoGameSave(SharedPreferences prefs, int points) async {
+    const key = 'game_save_v1';
+    try {
+      final raw = prefs.getString(key);
+      Map<String, dynamic> json;
+      if (raw != null && raw.isNotEmpty) {
+        json = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      } else {
+        json = {
+          'seasonId': 'season-1',
+          'points': 0,
+          'deaths': 0,
+          'safeStreak': 0,
+          'rankIndex': 0,
+          'currentRungId': '1.1/learn',
+          'rungProgress': <String, String>{},
+          'bestByRung': <String, int>{},
+          'deathLog': <dynamic>[],
+          'promises': <String>[],
+          'ppeOwned': <String>[],
+          'giftsClaimed': <String>[],
+          'migratedFromDs': true,
+        };
+      }
+      final prev = (json['points'] as num?)?.toInt() ?? 0;
+      if (points > prev) json['points'] = points;
+      json['migratedFromDs'] = true;
+      await prefs.setString(key, jsonEncode(json));
     } catch (_) {}
   }
 

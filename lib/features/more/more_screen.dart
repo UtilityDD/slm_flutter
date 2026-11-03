@@ -86,7 +86,7 @@ class MoreScreen extends ConsumerWidget {
                           guest: guest,
                           verified: verified,
                           initial: initial,
-                          onTick: verified || guest ? null : () => showVerifySheet(context),
+                          onStatus: () => showVerifySheet(context),
                         ),
                         const SizedBox(height: 14),
                         _LanguageRail(
@@ -161,7 +161,7 @@ class _IdentityHero extends StatelessWidget {
   final bool guest;
   final bool verified;
   final String initial;
-  final VoidCallback? onTick;
+  final VoidCallback onStatus;
 
   const _IdentityHero({
     required this.name,
@@ -169,68 +169,67 @@ class _IdentityHero extends StatelessWidget {
     required this.guest,
     required this.verified,
     required this.initial,
-    required this.onTick,
+    required this.onStatus,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF152445), SlmColors.navy900, Color(0xFF07111F)],
+    return SlmPressable(
+      onTap: onStatus,
+      pressedScale: 0.985,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF152445), SlmColors.navy900, Color(0xFF07111F)],
+          ),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8)),
+          ],
         ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: SlmGradients.navyCard,
-              border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.7), width: 1.4),
+        child: Row(
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SlmGradients.navyCard,
+                border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.7), width: 1.4),
+              ),
+              child: Text(
+                initial,
+                style: bangla(fontSize: 24, fontWeight: FontWeight.w800, color: SlmColors.gold200),
+              ),
             ),
-            child: Text(
-              initial,
-              style: bangla(fontSize: 24, fontWeight: FontWeight.w800, color: SlmColors.gold200),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: SlmText(name, role: SlmTextRole.title, color: SlmColors.ivory, maxLines: 1),
-                    ),
-                    if (!guest) ...[
-                      const SizedBox(width: 6),
-                      GestureDetector(
-                        onTap: onTick,
-                        child: VerifyTick(gold: verified, size: 20),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: SlmText(name, role: SlmTextRole.title, color: SlmColors.ivory, maxLines: 1),
                       ),
+                      const SizedBox(width: 6),
+                      VerifyTick(gold: verified, size: 20),
                     ],
+                  ),
+                  if (!guest && mail.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    SlmText(mail, role: SlmTextRole.caption, color: SlmColors.gold300, maxLines: 1),
                   ],
-                ),
-                if (!guest && mail.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  SlmText(mail, role: SlmTextRole.caption, color: SlmColors.gold300, maxLines: 1),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

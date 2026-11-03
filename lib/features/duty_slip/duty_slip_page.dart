@@ -11,7 +11,11 @@ import '../../core/en_digits.dart';
 import '../../design/slm_design.dart';
 import '../auth/verify_gate.dart';
 import '../auth/verify_sheet.dart';
+import '../game/game_exit_sheet.dart';
+import '../game/game_save.dart';
+import '../guide/guide_director.dart';
 import '../home/bangla_read_aloud.dart';
+import '../shell/shell_providers.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'ds_clearance.dart';
@@ -532,6 +536,9 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final to = _scoreTarget();
     final id = ++_flyId;
     setState(() => _flies.add(_FlyBit(id: id, delta: delta, from: from, to: to)));
+    final container = ProviderScope.containerOf(context);
+    container.read(gameSaveProvider.notifier).pulseDelta(delta);
+    container.read(guideDirectorProvider.notifier).react(delta > 0 ? GuideMood.glad : GuideMood.warn);
     Future<void>.delayed(const Duration(milliseconds: 720), () {
       if (!mounted) return;
       setState(() => _flies.removeWhere((f) => f.id == id));
@@ -661,18 +668,22 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   }
 
   Future<void> _confirmExit() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: ZlColors.panel,
-        title: Text('বের হবেন?', style: zlText(18, weight: FontWeight.w800)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('না', style: zlText(14))),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('হ্যাঁ', style: zlText(14, color: ZlColors.red))),
-        ],
-      ),
+    final e = _engine;
+    final onLadder = e == null || e.onRoad || e.covering || e.listing || e.showingResult;
+    final bn = ProviderScope.containerOf(context).read(languageProvider);
+    final ok = await showGameExitSheet(
+      context,
+      scope: onLadder ? GameExitScope.game : GameExitScope.level,
+      bn: bn,
     );
-    if (ok == true && mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    if (!ok) return;
+    if (onLadder) {
+      Navigator.of(context).pop();
+      return;
+    }
+    // Leave active step → road/ladder, not home.
+    _backToRoad();
   }
 
   Widget _briefingStage(DutySlipEngine e) {

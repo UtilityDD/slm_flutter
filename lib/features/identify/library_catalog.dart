@@ -85,6 +85,7 @@ String categoryLabel(String id, bool bn) {
 }
 
 final libraryCatalogProvider = FutureProvider<List<LibraryItem>>((ref) async {
+  ref.keepAlive();
   final raw = await rootBundle.loadString('assets/data/safety_library.json');
   final list = jsonDecode(raw) as List<dynamic>;
   return list

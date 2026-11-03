@@ -2,7 +2,7 @@
 
 The single source of truth for what the app is becoming. When this file and an older guide disagree, this file wins.
 
-**Status (Nov 2026):** agreed design, not built yet. The current app still has bottom tabs, a fixed 200-rung ladder with 33 real levels, and separate lesson / quiz pages. Build toward this file step by step (see section 13).
+**Status (Nov 2026):** implementation started element-by-element. Local `ContentCatalog` reserves **327** rungs (109 lessons × 1 Learn + 2 Do, gate = last Do; soft cap 400). `GameSave`, exit sheet, and AI Line Man guide are landing first; Coming Soon coins stay until packs are playable. See section 13 and `assets/game/catalog/content_catalog.json`.
 
 ---
 
@@ -243,17 +243,24 @@ Ten reference promises (one per module) were drafted in the design chat: gloves,
 
 What moves out of code: `_path = 200`, the `dsLevels` const list, and the `index % 8` side-item pattern in `adventure_map.dart`.
 
-## 13. Build order
+## 13. Build order (element-by-element)
 
-1. **Release basics:** upload key and Play App Signing, real version and description, `dsAllLevelsOpen = false`, ladder progress synced to Supabase, unused permissions removed, privacy policy, account deletion.
-2. **Home:** one button, name, `◆`, `💀`, rank, character, toolbox. Remove the tab bar.
-3. **One score, death count, fall rule, module checkpoints.**
-4. **Data-driven ladder:** modules / lessons / pools from data, progress by lesson id.
-5. **Module 1 (PPE) pilot:** Learn cards, dress-up Do rungs, PPE gate. Test with real linemen, tune how far a fall drops.
-6. **Character moods, emerald finish, seasons.**
-7. **Content from the server + admin page.**
-8. **Size and speed:** voice files to mono 32–48 kbps (50 MB → about 12 MB) or downloaded per module, faster start, light mode for weak phones, tested on a 3 GB phone.
-9. **Closed testing on Play** with 20+ linemen, then public.
+Ship feel systems before filling every pack. Content add/reorder = catalog JSON `order` / `status` only.
+
+0. **Catalog + docs** — `content_catalog.json` (327 rungs), `LadderBuilder`, this file.
+1. **GameSave + HUD** — one local `◆` / lethal-only `💀`; migrate `ds_*` score once.
+2. **Exit sheet** — leave level vs leave game.
+3. **AI Line Man guide** — replace static corner; idle sleep/wake/inspire.
+4. **Score FX** — `+/−` flies to `◆` after save commit.
+5. **Death + fall** — lethal → fall to module checkpoint; climb avatar moves.
+6. **Hint appear** — tip/gift/Coming Soon zoom + kinetic.
+7. **Ladder shell** — render 327 from catalog, chrome-first boot, `পরের ধাপ`.
+8. **Learn runner** — cards + guide reads.
+9. **Do wire** — dress/pole/… via `engineType` registry.
+10. **Module 1 fill** — PPE pilot + PPE gold collection; rest Coming Soon.
+11. **Expand via catalog** — remap remaining scenes; no hardcoded rung indices.
+
+Later: Supabase sync, admin CMS, remove tab bar, voice size cut, Play closed test.
 
 ## 14. Rules that do not change
 

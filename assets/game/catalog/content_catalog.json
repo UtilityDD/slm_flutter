@@ -1,0 +1,7242 @@
+{
+  "version": 1,
+  "softCap": 400,
+  "doSlotsPerLesson": 2,
+  "modules": [
+    {
+      "id": "m1",
+      "order": 1,
+      "rankName": "ট্রেইনি",
+      "sceneryZone": "zone_1",
+      "gateRungId": "m1/gate",
+      "lessonCount": 10
+    },
+    {
+      "id": "m2",
+      "order": 2,
+      "rankName": "জুনিয়র",
+      "sceneryZone": "zone_2",
+      "gateRungId": "m2/gate",
+      "lessonCount": 10
+    },
+    {
+      "id": "m3",
+      "order": 3,
+      "rankName": "টেকনিশিয়ান",
+      "sceneryZone": "zone_3",
+      "gateRungId": "m3/gate",
+      "lessonCount": 10
+    },
+    {
+      "id": "m4",
+      "order": 4,
+      "rankName": "স্কিলড",
+      "sceneryZone": "zone_4",
+      "gateRungId": "m4/gate",
+      "lessonCount": 10
+    },
+    {
+      "id": "m5",
+      "order": 5,
+      "rankName": "অ্যাডভান্সড",
+      "sceneryZone": "zone_5",
+      "gateRungId": "m5/gate",
+      "lessonCount": 10
+    },
+    {
+      "id": "m6",
+      "order": 6,
+      "rankName": "সিনিয়র",
+      "sceneryZone": "zone_6",
+      "gateRungId": "m6/gate",
+      "lessonCount": 11
+    },
+    {
+      "id": "m7",
+      "order": 7,
+      "rankName": "সুপারভাইজার",
+      "sceneryZone": "zone_7",
+      "gateRungId": "m7/gate",
+      "lessonCount": 10
+    },
+    {
+      "id": "m8",
+      "order": 8,
+      "rankName": "স্পেশালিস্ট",
+      "sceneryZone": "zone_8",
+      "gateRungId": "m8/gate",
+      "lessonCount": 10
+    },
+    {
+      "id": "m9",
+      "order": 9,
+      "rankName": "এক্সপার্ট",
+      "sceneryZone": "zone_9",
+      "gateRungId": "m9/gate",
+      "lessonCount": 10
+    },
+    {
+      "id": "m10",
+      "order": 10,
+      "rankName": "সেফটি প্রো",
+      "sceneryZone": "zone_10",
+      "gateRungId": "m10/gate",
+      "lessonCount": 18
+    }
+  ],
+  "lessons": [
+    {
+      "id": "1.1",
+      "moduleId": "m1",
+      "order": 1,
+      "titleBn": "প্রথম দিনের ইউনিফর্ম ও পিপিই (PPE)",
+      "learnPackId": "learn_1_1",
+      "doSlotIds": [
+        "do_1_1_a",
+        "do_1_1_b"
+      ]
+    },
+    {
+      "id": "1.2",
+      "moduleId": "m1",
+      "order": 2,
+      "titleBn": "পাওয়ার লাইনের 'লক্ষ্মণ রেখা'",
+      "learnPackId": "learn_1_2",
+      "doSlotIds": [
+        "do_1_2_a",
+        "do_1_2_b"
+      ]
+    },
+    {
+      "id": "1.3",
+      "moduleId": "m1",
+      "order": 3,
+      "titleBn": "পোলের 'ভাষা' পড়তে শিখুন",
+      "learnPackId": "learn_1_3",
+      "doSlotIds": [
+        "do_1_3_a",
+        "do_1_3_b"
+      ]
+    },
+    {
+      "id": "1.4",
+      "moduleId": "m1",
+      "order": 4,
+      "titleBn": "সেফটি হারনেস: আপনার লাইফলাইন",
+      "learnPackId": "learn_1_4",
+      "doSlotIds": [
+        "do_1_4_a",
+        "do_1_4_b"
+      ]
+    },
+    {
+      "id": "1.5",
+      "moduleId": "m1",
+      "order": 5,
+      "titleBn": "ডিসচার্জ রড ব্যবহারের কায়দা",
+      "learnPackId": "learn_1_5",
+      "doSlotIds": [
+        "do_1_5_a",
+        "do_1_5_b"
+      ]
+    },
+    {
+      "id": "1.6",
+      "moduleId": "m1",
+      "order": 6,
+      "titleBn": "পারমিট-টু-ওয়ার্ক (PTW): একটি জীবন বীমা",
+      "learnPackId": "learn_1_6",
+      "doSlotIds": [
+        "do_1_6_a",
+        "do_1_6_b"
+      ]
+    },
+    {
+      "id": "1.7",
+      "moduleId": "m1",
+      "order": 7,
+      "titleBn": "শক লাগলে ফার্স্ট এইড",
+      "learnPackId": "learn_1_7",
+      "doSlotIds": [
+        "do_1_7_a",
+        "do_1_7_b"
+      ]
+    },
+    {
+      "id": "1.8",
+      "moduleId": "m1",
+      "order": 8,
+      "titleBn": "মাঠে আগুন লাগলে করণীয়",
+      "learnPackId": "learn_1_8",
+      "doSlotIds": [
+        "do_1_8_a",
+        "do_1_8_b"
+      ]
+    },
+    {
+      "id": "1.9",
+      "moduleId": "m1",
+      "order": 9,
+      "titleBn": "ঝড়-বৃষ্টিতে কাজ: কখন 'না' বলবেন",
+      "learnPackId": "learn_1_9",
+      "doSlotIds": [
+        "do_1_9_a",
+        "do_1_9_b"
+      ]
+    },
+    {
+      "id": "1.10",
+      "moduleId": "m1",
+      "order": 10,
+      "titleBn": "১০ সেকেন্ডের মেন্টাল চেকলিস্ট",
+      "learnPackId": "learn_1_10",
+      "doSlotIds": [
+        "do_1_10_a",
+        "m1/gate"
+      ]
+    },
+    {
+      "id": "2.1",
+      "moduleId": "m2",
+      "order": 1,
+      "titleBn": "লাইনম্যানের টুলবক্স পরিচিতি",
+      "learnPackId": "learn_2_1",
+      "doSlotIds": [
+        "do_2_1_a",
+        "do_2_1_b"
+      ]
+    },
+    {
+      "id": "2.2",
+      "moduleId": "m2",
+      "order": 2,
+      "titleBn": "মাল্টিমিটারের জাদু",
+      "learnPackId": "learn_2_2",
+      "doSlotIds": [
+        "do_2_2_a",
+        "do_2_2_b"
+      ]
+    },
+    {
+      "id": "2.3",
+      "moduleId": "m2",
+      "order": 3,
+      "titleBn": "ল্যাগস ক্রিম্পিং: সঠিক চাপ, নিরাপদ কানেকশন",
+      "learnPackId": "learn_2_3",
+      "doSlotIds": [
+        "do_2_3_a",
+        "do_2_3_b"
+      ]
+    },
+    {
+      "id": "2.4",
+      "moduleId": "m2",
+      "order": 4,
+      "titleBn": "কাম-অ্যালং ক্ল্যাম্প (Come-Along Clamp): নিয়ন্ত্রিত শক্তি",
+      "learnPackId": "learn_2_4",
+      "doSlotIds": [
+        "do_2_4_a",
+        "do_2_4_b"
+      ]
+    },
+    {
+      "id": "2.5",
+      "moduleId": "m2",
+      "order": 5,
+      "titleBn": "অপারেটিং রড (হট স্টিক): দূরত্বের সুরক্ষা",
+      "learnPackId": "learn_2_5",
+      "doSlotIds": [
+        "do_2_5_a",
+        "do_2_5_b"
+      ]
+    },
+    {
+      "id": "2.6",
+      "moduleId": "m2",
+      "order": 6,
+      "titleBn": "কেবিল স্কিনিং-এর শিল্প",
+      "learnPackId": "learn_2_6",
+      "doSlotIds": [
+        "do_2_6_a",
+        "do_2_6_b"
+      ]
+    },
+    {
+      "id": "2.7",
+      "moduleId": "m2",
+      "order": 7,
+      "titleBn": "'মেগার' (Megger) কী ও কেন?",
+      "learnPackId": "learn_2_7",
+      "doSlotIds": [
+        "do_2_7_a",
+        "do_2_7_b"
+      ]
+    },
+    {
+      "id": "2.8",
+      "moduleId": "m2",
+      "order": 8,
+      "titleBn": "ফেজ সিকোয়েন্স মিটার: সঠিক ঘূর্ণন",
+      "learnPackId": "learn_2_8",
+      "doSlotIds": [
+        "do_2_8_a",
+        "do_2_8_b"
+      ]
+    },
+    {
+      "id": "2.9",
+      "moduleId": "m2",
+      "order": 9,
+      "titleBn": "হাইড্রোলিক ক্রিম্পার ও কাটার: দানবীয় শক্তি",
+      "learnPackId": "learn_2_9",
+      "doSlotIds": [
+        "do_2_9_a",
+        "do_2_9_b"
+      ]
+    },
+    {
+      "id": "2.10",
+      "moduleId": "m2",
+      "order": 10,
+      "titleBn": "হাতিয়ারের যত্ন ও রক্ষণাবেক্ষণ",
+      "learnPackId": "learn_2_10",
+      "doSlotIds": [
+        "do_2_10_a",
+        "m2/gate"
+      ]
+    },
+    {
+      "id": "3.1",
+      "moduleId": "m3",
+      "order": 1,
+      "titleBn": "কন্ডাক্টর পরিচিতি: ACSR, AAAC",
+      "learnPackId": "learn_3_1",
+      "doSlotIds": [
+        "do_3_1_a",
+        "do_3_1_b"
+      ]
+    },
+    {
+      "id": "3.2",
+      "moduleId": "m3",
+      "order": 2,
+      "titleBn": "ইনসুলেটর পরিচিতি: পিন, ডিস্ক, শ্যাকল",
+      "learnPackId": "learn_3_2",
+      "doSlotIds": [
+        "do_3_2_a",
+        "do_3_2_b"
+      ]
+    },
+    {
+      "id": "3.3",
+      "moduleId": "m3",
+      "order": 3,
+      "titleBn": "ক্রস-আর্ম ও ক্ল্যাম্প: লাইনের কঙ্কাল",
+      "learnPackId": "learn_3_3",
+      "doSlotIds": [
+        "do_3_3_a",
+        "do_3_3_b"
+      ]
+    },
+    {
+      "id": "3.4",
+      "moduleId": "m3",
+      "order": 4,
+      "titleBn": "ডিও (DO) ফিউজ ও হর্ন গ্যাপ ফিউজ: নীরব প্রহরী",
+      "learnPackId": "learn_3_4",
+      "doSlotIds": [
+        "do_3_4_a",
+        "do_3_4_b"
+      ]
+    },
+    {
+      "id": "3.5",
+      "moduleId": "m3",
+      "order": 5,
+      "titleBn": "লাইটনিং অ্যারেস্টার (LA): বজ্রপাতের কবচ",
+      "learnPackId": "learn_3_5",
+      "doSlotIds": [
+        "do_3_5_a",
+        "do_3_5_b"
+      ]
+    },
+    {
+      "id": "3.6",
+      "moduleId": "m3",
+      "order": 6,
+      "titleBn": "ডিস্ট্রিবিউশন ট্রান্সফরমার (DTR): লাইনের হৃৎপিণ্ড",
+      "learnPackId": "learn_3_6",
+      "doSlotIds": [
+        "do_3_6_a",
+        "do_3_6_b"
+      ]
+    },
+    {
+      "id": "3.7",
+      "moduleId": "m3",
+      "order": 7,
+      "titleBn": "এলটি (LT) ডিস্ট্রিবিউশন বক্স/ফিডার পিলার: শেষ প্রবেশদ্বার",
+      "learnPackId": "learn_3_7",
+      "doSlotIds": [
+        "do_3_7_a",
+        "do_3_7_b"
+      ]
+    },
+    {
+      "id": "3.8",
+      "moduleId": "m3",
+      "order": 8,
+      "titleBn": "সার্ভিস কেবিল ও এনার্জি মিটার: শেষ সংযোগ",
+      "learnPackId": "learn_3_8",
+      "doSlotIds": [
+        "do_3_8_a",
+        "do_3_8_b"
+      ]
+    },
+    {
+      "id": "3.9",
+      "moduleId": "m3",
+      "order": 9,
+      "titleBn": "গার্ড ওয়্যার ও ক্রেডল গার্ডিং: অতিরিক্ত সুরক্ষা জাল",
+      "learnPackId": "learn_3_9",
+      "doSlotIds": [
+        "do_3_9_a",
+        "do_3_9_b"
+      ]
+    },
+    {
+      "id": "3.10",
+      "moduleId": "m3",
+      "order": 10,
+      "titleBn": "লাইন ডায়াগ্রাম পড়া: কাগজের ওপর জাদুর নকশা",
+      "learnPackId": "learn_3_10",
+      "doSlotIds": [
+        "do_3_10_a",
+        "m3/gate"
+      ]
+    },
+    {
+      "id": "4.1",
+      "moduleId": "m4",
+      "order": 1,
+      "titleBn": "পিন বা ডিস্ক ইনসুলেটর বদলানো",
+      "learnPackId": "learn_4_1",
+      "doSlotIds": [
+        "do_4_1_a",
+        "do_4_1_b"
+      ]
+    },
+    {
+      "id": "4.2",
+      "moduleId": "m4",
+      "order": 2,
+      "titleBn": "জাম্পার কানেকশন ও টাইট করা",
+      "learnPackId": "learn_4_2",
+      "doSlotIds": [
+        "do_4_2_a",
+        "do_4_2_b"
+      ]
+    },
+    {
+      "id": "4.3",
+      "moduleId": "m4",
+      "order": 3,
+      "titleBn": "নতুন সার্ভিস কানেকশন দেওয়া",
+      "learnPackId": "learn_4_3",
+      "doSlotIds": [
+        "do_4_3_a",
+        "do_4_3_b"
+      ]
+    },
+    {
+      "id": "4.4",
+      "moduleId": "m4",
+      "order": 4,
+      "titleBn": "ডিও (DO) ফিউজ পরিচালনা করা",
+      "learnPackId": "learn_4_4",
+      "doSlotIds": [
+        "do_4_4_a",
+        "do_4_4_b"
+      ]
+    },
+    {
+      "id": "4.5",
+      "moduleId": "m4",
+      "order": 5,
+      "titleBn": "ট্রান্সফরমারের অয়েল লেভেল ও তাপমাত্রা পরীক্ষা",
+      "learnPackId": "learn_4_5",
+      "doSlotIds": [
+        "do_4_5_a",
+        "do_4_5_b"
+      ]
+    },
+    {
+      "id": "4.6",
+      "moduleId": "m4",
+      "order": 6,
+      "titleBn": "সঠিক আর্থিং (Earthing) পরীক্ষা ও রক্ষণাবেক্ষণ",
+      "learnPackId": "learn_4_6",
+      "doSlotIds": [
+        "do_4_6_a",
+        "do_4_6_b"
+      ]
+    },
+    {
+      "id": "4.7",
+      "moduleId": "m4",
+      "order": 7,
+      "titleBn": "ডিপি (DP) স্ট্রাকচার ড্রেসিং: পরিচ্ছন্নতার শিল্প",
+      "learnPackId": "learn_4_7",
+      "doSlotIds": [
+        "do_4_7_a",
+        "do_4_7_b"
+      ]
+    },
+    {
+      "id": "4.8",
+      "moduleId": "m4",
+      "order": 8,
+      "titleBn": "গাছের ডালপালা ছাঁটা (Tree Trimming)",
+      "learnPackId": "learn_4_8",
+      "doSlotIds": [
+        "do_4_8_a",
+        "do_4_8_b"
+      ]
+    },
+    {
+      "id": "4.9",
+      "moduleId": "m4",
+      "order": 9,
+      "titleBn": "রাস্তার আলো (Street Light) মেরামত: রাতের প্রহরীকে বাঁচান",
+      "learnPackId": "learn_4_9",
+      "doSlotIds": [
+        "do_4_9_a",
+        "do_4_9_b"
+      ]
+    },
+    {
+      "id": "4.10",
+      "moduleId": "m4",
+      "order": 10,
+      "titleBn": "এলটি (LT) লাইনের ফেজ ব্যালেন্সিং",
+      "learnPackId": "learn_4_10",
+      "doSlotIds": [
+        "do_4_10_a",
+        "m4/gate"
+      ]
+    },
+    {
+      "id": "5.1",
+      "moduleId": "m5",
+      "order": 1,
+      "titleBn": "'লাইন ট্রিপ করেছে'—প্রথম কাজ কী?",
+      "learnPackId": "learn_5_1",
+      "doSlotIds": [
+        "do_5_1_a",
+        "do_5_1_b"
+      ]
+    },
+    {
+      "id": "5.2",
+      "moduleId": "m5",
+      "order": 2,
+      "titleBn": "লাইন পেট্রোলিং-এর সঠিক নিয়ম",
+      "learnPackId": "learn_5_2",
+      "doSlotIds": [
+        "do_5_2_a",
+        "do_5_2_b"
+      ]
+    },
+    {
+      "id": "5.3",
+      "moduleId": "m5",
+      "order": 3,
+      "titleBn": "সাধারণ ফল্ট: অপরাধীদের প্যারেড",
+      "learnPackId": "learn_5_3",
+      "doSlotIds": [
+        "do_5_3_a",
+        "do_5_3_b"
+      ]
+    },
+    {
+      "id": "5.4",
+      "moduleId": "m5",
+      "order": 4,
+      "titleBn": "ফিউজ বারবার উড়ে যাওয়ার কারণ: অস্থায়ী বনাম স্থায়ী ফল্ট",
+      "learnPackId": "learn_5_4",
+      "doSlotIds": [
+        "do_5_4_a",
+        "do_5_4_b"
+      ]
+    },
+    {
+      "id": "5.5",
+      "moduleId": "m5",
+      "order": 5,
+      "titleBn": "'লো-ভোল্টেজ' সমস্যার সমাধান",
+      "learnPackId": "learn_5_5",
+      "doSlotIds": [
+        "do_5_5_a",
+        "do_5_5_b"
+      ]
+    },
+    {
+      "id": "5.6",
+      "moduleId": "m5",
+      "order": 6,
+      "titleBn": "শর্ট সার্কিট এবং ওপেন সার্কিট ফল্ট: দুই ভিন্ন শত্রু",
+      "learnPackId": "learn_5_6",
+      "doSlotIds": [
+        "do_5_6_a",
+        "do_5_6_b"
+      ]
+    },
+    {
+      "id": "5.7",
+      "moduleId": "m5",
+      "order": 7,
+      "titleBn": "রাতের বেলা ফল্ট খোঁজার কৌশল",
+      "learnPackId": "learn_5_7",
+      "doSlotIds": [
+        "do_5_7_a",
+        "do_5_7_b"
+      ]
+    },
+    {
+      "id": "5.8",
+      "moduleId": "m5",
+      "order": 8,
+      "titleBn": "ট্রান্সফরমারের সাধারণ সমস্যা: হৃৎপিণ্ডের রোগ নির্ণয়",
+      "learnPackId": "learn_5_8",
+      "doSlotIds": [
+        "do_5_8_a",
+        "do_5_8_b"
+      ]
+    },
+    {
+      "id": "5.9",
+      "moduleId": "m5",
+      "order": 9,
+      "titleBn": "কেবিল ফল্ট খোঁজার প্রাথমিক ধারণা",
+      "learnPackId": "learn_5_9",
+      "doSlotIds": [
+        "do_5_9_a",
+        "do_5_9_b"
+      ]
+    },
+    {
+      "id": "5.10",
+      "moduleId": "m5",
+      "order": 10,
+      "titleBn": "প্রিভেন্টিভ মেইনটেন্যান্স: গোয়েন্দা থেকে ডাক্তার",
+      "learnPackId": "learn_5_10",
+      "doSlotIds": [
+        "do_5_10_a",
+        "m5/gate"
+      ]
+    },
+    {
+      "id": "6.1",
+      "moduleId": "m6",
+      "order": 1,
+      "titleBn": "ডিস্ট্রিবিউশন ট্রান্সফরমার (DTR): লাইনের হৃৎপিণ্ড",
+      "learnPackId": "learn_6_1",
+      "doSlotIds": [
+        "do_6_1_a",
+        "do_6_1_b"
+      ]
+    },
+    {
+      "id": "6.2",
+      "moduleId": "m6",
+      "order": 2,
+      "titleBn": "সার্কিট ব্রেকার: চূড়ান্ত রক্ষাকর্তা",
+      "learnPackId": "learn_6_2",
+      "doSlotIds": [
+        "do_6_2_a",
+        "do_6_2_b"
+      ]
+    },
+    {
+      "id": "6.3",
+      "moduleId": "m6",
+      "order": 3,
+      "titleBn": "ফিউজ: নীরব প্রহরী",
+      "learnPackId": "learn_6_3",
+      "doSlotIds": [
+        "do_6_3_a",
+        "do_6_3_b"
+      ]
+    },
+    {
+      "id": "6.4",
+      "moduleId": "m6",
+      "order": 4,
+      "titleBn": "AB সুইচ ও আইসোলেটর: ট্র্যাফিক কন্ট্রোলার",
+      "learnPackId": "learn_6_4",
+      "doSlotIds": [
+        "do_6_4_a",
+        "do_6_4_b"
+      ]
+    },
+    {
+      "id": "6.5",
+      "moduleId": "m6",
+      "order": 5,
+      "titleBn": "আন্ডারগ্রাউন্ড (UG) কেবিল: লুকানো নেটওয়ার্ক",
+      "learnPackId": "learn_6_5",
+      "doSlotIds": [
+        "do_6_5_a",
+        "do_6_5_b"
+      ]
+    },
+    {
+      "id": "6.6",
+      "moduleId": "m6",
+      "order": 6,
+      "titleBn": "এবি কেবিল (AB Cable): ঝঞ্ঝাটমুক্ত আধুনিক লাইন",
+      "learnPackId": "learn_6_6",
+      "doSlotIds": [
+        "do_6_6_a",
+        "do_6_6_b"
+      ]
+    },
+    {
+      "id": "6.7",
+      "moduleId": "m6",
+      "order": 7,
+      "titleBn": "ক্যাপাসিটর ব্যাংক: পাওয়ার বুস্টার",
+      "learnPackId": "learn_6_7",
+      "doSlotIds": [
+        "do_6_7_a",
+        "do_6_7_b"
+      ]
+    },
+    {
+      "id": "6.8",
+      "moduleId": "m6",
+      "order": 8,
+      "titleBn": "অটো-রিক্লোজার ও সেকশনালাইজার: লাইনের স্মার্ট ব্রেন",
+      "learnPackId": "learn_6_8",
+      "doSlotIds": [
+        "do_6_8_a",
+        "do_6_8_b"
+      ]
+    },
+    {
+      "id": "6.9",
+      "moduleId": "m6",
+      "order": 9,
+      "titleBn": "এলটি ডিস্ট্রিবিউশন পিলার: শেষ প্রবেশদ্বার",
+      "learnPackId": "learn_6_9",
+      "doSlotIds": [
+        "do_6_9_a",
+        "do_6_9_b"
+      ]
+    },
+    {
+      "id": "6.10",
+      "moduleId": "m6",
+      "order": 10,
+      "titleBn": "এনার্জি মিটার: ক্যাশ রেজিস্টার",
+      "learnPackId": "learn_6_10",
+      "doSlotIds": [
+        "do_6_10_a",
+        "do_6_10_b"
+      ]
+    },
+    {
+      "id": "6.11",
+      "moduleId": "m6",
+      "order": 11,
+      "titleBn": "আর্থিং সিস্টেম: অদৃশ্য অভিভাবক",
+      "learnPackId": "learn_6_11",
+      "doSlotIds": [
+        "do_6_11_a",
+        "m6/gate"
+      ]
+    },
+    {
+      "id": "7.1",
+      "moduleId": "m7",
+      "order": 1,
+      "titleBn": "ইন্ডিয়ান ইলেকট্রিসিটি অ্যাক্ট ও রুলস: আপনার বাইবেল",
+      "learnPackId": "learn_7_1",
+      "doSlotIds": [
+        "do_7_1_a",
+        "do_7_1_b"
+      ]
+    },
+    {
+      "id": "7.2",
+      "moduleId": "m7",
+      "order": 2,
+      "titleBn": "ওয়ার্কম্যান কম্পেনসেশন অ্যাক্ট: দুর্ঘটনার পর আপনার অধিকার",
+      "learnPackId": "learn_7_2",
+      "doSlotIds": [
+        "do_7_2_a",
+        "do_7_2_b"
+      ]
+    },
+    {
+      "id": "7.3",
+      "moduleId": "m7",
+      "order": 3,
+      "titleBn": "ন্যূনতম ক্লিয়ারেন্স: আইনত কতটা দূরত্ব?",
+      "learnPackId": "learn_7_3",
+      "doSlotIds": [
+        "do_7_3_a",
+        "do_7_3_b"
+      ]
+    },
+    {
+      "id": "7.4",
+      "moduleId": "m7",
+      "order": 4,
+      "titleBn": "পারমিট-টু-ওয়ার্ক (PTW): একটি আইনি চুক্তি",
+      "learnPackId": "learn_7_4",
+      "doSlotIds": [
+        "do_7_4_a",
+        "do_7_4_b"
+      ]
+    },
+    {
+      "id": "7.5",
+      "moduleId": "m7",
+      "order": 5,
+      "titleBn": "বিদ্যুৎ চুরি: একটি অপরাধ এবং তার বিপদ",
+      "learnPackId": "learn_7_5",
+      "doSlotIds": [
+        "do_7_5_a",
+        "do_7_5_b"
+      ]
+    },
+    {
+      "id": "7.6",
+      "moduleId": "m7",
+      "order": 6,
+      "titleBn": "ব্যক্তিগত সুরক্ষা সরঞ্জাম (PPE) সংক্রান্ত আইন",
+      "learnPackId": "learn_7_6",
+      "doSlotIds": [
+        "do_7_6_a",
+        "do_7_6_b"
+      ]
+    },
+    {
+      "id": "7.7",
+      "moduleId": "m7",
+      "order": 7,
+      "titleBn": "দুর্ঘটনার রিপোর্ট (Accident Reporting): আপনার দায়িত্ব",
+      "learnPackId": "learn_7_7",
+      "doSlotIds": [
+        "do_7_7_a",
+        "do_7_7_b"
+      ]
+    },
+    {
+      "id": "7.8",
+      "moduleId": "m7",
+      "order": 8,
+      "titleBn": "পরিবেশগত আইন: আমাদের দায়িত্ব",
+      "learnPackId": "learn_7_8",
+      "doSlotIds": [
+        "do_7_8_a",
+        "do_7_8_b"
+      ]
+    },
+    {
+      "id": "7.9",
+      "moduleId": "m7",
+      "order": 9,
+      "titleBn": "গ্রাহকের অধিকার এবং লাইনম্যানের দায়িত্ব",
+      "learnPackId": "learn_7_9",
+      "doSlotIds": [
+        "do_7_9_a",
+        "do_7_9_b"
+      ]
+    },
+    {
+      "id": "7.10",
+      "moduleId": "m7",
+      "order": 10,
+      "titleBn": "একজন 'সার্টিফায়েড' লাইনম্যান: লাইসেন্স ও যোগ্যতার গুরুত্ব",
+      "learnPackId": "learn_7_10",
+      "doSlotIds": [
+        "do_7_10_a",
+        "m7/gate"
+      ]
+    },
+    {
+      "id": "8.1",
+      "moduleId": "m8",
+      "order": 1,
+      "titleBn": "WBERC পরিচিতি: রাজ্যের পাওয়ার বস",
+      "learnPackId": "learn_8_1",
+      "doSlotIds": [
+        "do_8_1_a",
+        "do_8_1_b"
+      ]
+    },
+    {
+      "id": "8.2",
+      "moduleId": "m8",
+      "order": 2,
+      "titleBn": "সাপ্লাই কোড (Supply Code): গ্রাহক পরিষেবার নিয়মাবলী",
+      "learnPackId": "learn_8_2",
+      "doSlotIds": [
+        "do_8_2_a",
+        "do_8_2_b"
+      ]
+    },
+    {
+      "id": "8.3",
+      "moduleId": "m8",
+      "order": 3,
+      "titleBn": "স্ট্যান্ডার্ডস অফ পারফর্ম্যান্স (SoP): সময়ের মূল্য",
+      "learnPackId": "learn_8_3",
+      "doSlotIds": [
+        "do_8_3_a",
+        "do_8_3_b"
+      ]
+    },
+    {
+      "id": "8.4",
+      "moduleId": "m8",
+      "order": 4,
+      "titleBn": "গ্রিড কোড (Grid Code): সিস্টেম শৃঙ্খলার নিয়ম",
+      "learnPackId": "learn_8_4",
+      "doSlotIds": [
+        "do_8_4_a",
+        "do_8_4_b"
+      ]
+    },
+    {
+      "id": "8.5",
+      "moduleId": "m8",
+      "order": 5,
+      "titleBn": "সেফটি কোড (Safety Code): সুরক্ষার স্থানীয় আইন",
+      "learnPackId": "learn_8_5",
+      "doSlotIds": [
+        "do_8_5_a",
+        "do_8_5_b"
+      ]
+    },
+    {
+      "id": "8.6",
+      "moduleId": "m8",
+      "order": 6,
+      "titleBn": "গ্রাহক অভিযোগ নিষ্পত্তি (Grievance Redressal): আপনার কাজের পর্যালোচনা",
+      "learnPackId": "learn_8_6",
+      "doSlotIds": [
+        "do_8_6_a",
+        "do_8_6_b"
+      ]
+    },
+    {
+      "id": "8.7",
+      "moduleId": "m8",
+      "order": 7,
+      "titleBn": "ট্যারিফ অর্ডার (Tariff Order): বিদ্যুতের দামের হিসাব",
+      "learnPackId": "learn_8_7",
+      "doSlotIds": [
+        "do_8_7_a",
+        "do_8_7_b"
+      ]
+    },
+    {
+      "id": "8.8",
+      "moduleId": "m8",
+      "order": 8,
+      "titleBn": "নেট মিটারিং (Net Metering) রেগুলেশন: সৌরশক্তির নিয়ম",
+      "learnPackId": "learn_8_8",
+      "doSlotIds": [
+        "do_8_8_a",
+        "do_8_8_b"
+      ]
+    },
+    {
+      "id": "8.9",
+      "moduleId": "m8",
+      "order": 9,
+      "titleBn": "পরিবেশগত নিয়মাবলী: রাজ্যের দৃষ্টিকোণ",
+      "learnPackId": "learn_8_9",
+      "doSlotIds": [
+        "do_8_9_a",
+        "do_8_9_b"
+      ]
+    },
+    {
+      "id": "8.10",
+      "moduleId": "m8",
+      "order": 10,
+      "titleBn": "রেগুলেশন এবং আপনি: ফিল্ডে প্রয়োগ",
+      "learnPackId": "learn_8_10",
+      "doSlotIds": [
+        "do_8_10_a",
+        "m8/gate"
+      ]
+    },
+    {
+      "id": "9.1",
+      "moduleId": "m9",
+      "order": 1,
+      "titleBn": "ট্রান্সফরমার টেস্টিং (পার্ট ১): মৌলিক পরীক্ষা",
+      "learnPackId": "learn_9_1",
+      "doSlotIds": [
+        "do_9_1_a",
+        "do_9_1_b"
+      ]
+    },
+    {
+      "id": "9.2",
+      "moduleId": "m9",
+      "order": 2,
+      "titleBn": "ট্রান্সফরমার টেস্টিং (পার্ট ২): তেল পরীক্ষা",
+      "learnPackId": "learn_9_2",
+      "doSlotIds": [
+        "do_9_2_a",
+        "do_9_2_b"
+      ]
+    },
+    {
+      "id": "9.3",
+      "moduleId": "m9",
+      "order": 3,
+      "titleBn": "সার্কিট ব্রেকার টেস্টিং: কমান্ডোর ফিটনেস টেস্ট",
+      "learnPackId": "learn_9_3",
+      "doSlotIds": [
+        "do_9_3_a",
+        "do_9_3_b"
+      ]
+    },
+    {
+      "id": "9.4",
+      "moduleId": "m9",
+      "order": 4,
+      "titleBn": "কেবিল টেস্টিং: লুকানো নেটওয়ার্কের স্বাস্থ্য",
+      "learnPackId": "learn_9_4",
+      "doSlotIds": [
+        "do_9_4_a",
+        "do_9_4_b"
+      ]
+    },
+    {
+      "id": "9.5",
+      "moduleId": "m9",
+      "order": 5,
+      "titleBn": "আর্থিং সিস্টেম টেস্টিং: অদৃশ্য রক্ষকের শক্তি পরীক্ষা",
+      "learnPackId": "learn_9_5",
+      "doSlotIds": [
+        "do_9_5_a",
+        "do_9_5_b"
+      ]
+    },
+    {
+      "id": "9.6",
+      "moduleId": "m9",
+      "order": 6,
+      "titleBn": "ইনসুলেটর টেস্টিং: প্রহরীর শক্তি পরীক্ষা",
+      "learnPackId": "learn_9_6",
+      "doSlotIds": [
+        "do_9_6_a",
+        "do_9_6_b"
+      ]
+    },
+    {
+      "id": "9.7",
+      "moduleId": "m9",
+      "order": 7,
+      "titleBn": "রিলে টেস্টিং: মস্তিষ্কের কার্যকারিতা পরীক্ষা",
+      "learnPackId": "learn_9_7",
+      "doSlotIds": [
+        "do_9_7_a",
+        "do_9_7_b"
+      ]
+    },
+    {
+      "id": "9.8",
+      "moduleId": "m9",
+      "order": 8,
+      "titleBn": "ব্যাটারি এবং চার্জার টেস্টিং: জরুরি শক্তির উৎস",
+      "learnPackId": "learn_9_8",
+      "doSlotIds": [
+        "do_9_8_a",
+        "do_9_8_b"
+      ]
+    },
+    {
+      "id": "9.9",
+      "moduleId": "m9",
+      "order": 9,
+      "titleBn": "ক্যাপাসিটর ব্যাংক টেস্টিং: পাওয়ার বুস্টারের কার্যকারিতা",
+      "learnPackId": "learn_9_9",
+      "doSlotIds": [
+        "do_9_9_a",
+        "do_9_9_b"
+      ]
+    },
+    {
+      "id": "9.10",
+      "moduleId": "m9",
+      "order": 10,
+      "titleBn": "টেস্টিং রিপোর্ট তৈরি: ডাক্তারের প্রেসক্রিপশন",
+      "learnPackId": "learn_9_10",
+      "doSlotIds": [
+        "do_9_10_a",
+        "m9/gate"
+      ]
+    },
+    {
+      "id": "10.1",
+      "moduleId": "m10",
+      "order": 1,
+      "titleBn": "ম্যানুয়ালের ভূমিকা ও সারকথা: এক নজরে সব পাঠ",
+      "learnPackId": "learn_10_1",
+      "doSlotIds": [
+        "do_10_1_a",
+        "do_10_1_b"
+      ]
+    },
+    {
+      "id": "10.2",
+      "moduleId": "m10",
+      "order": 2,
+      "titleBn": "সেফটি শপথ ও নীতি: আগে জান, তারপর কাম",
+      "learnPackId": "learn_10_2",
+      "doSlotIds": [
+        "do_10_2_a",
+        "do_10_2_b"
+      ]
+    },
+    {
+      "id": "10.3",
+      "moduleId": "m10",
+      "order": 3,
+      "titleBn": "সাধারণ শর্ত ও তদারকি: কাজের শুরু",
+      "learnPackId": "learn_10_3",
+      "doSlotIds": [
+        "do_10_3_a",
+        "do_10_3_b"
+      ]
+    },
+    {
+      "id": "10.4",
+      "moduleId": "m10",
+      "order": 4,
+      "titleBn": "সিইএ ২০২৩ ক্লিয়ারেন্স: তার থেকে নিরাপদ দূরত্ব",
+      "learnPackId": "learn_10_4",
+      "doSlotIds": [
+        "do_10_4_a",
+        "do_10_4_b"
+      ]
+    },
+    {
+      "id": "10.5",
+      "moduleId": "m10",
+      "order": 5,
+      "titleBn": "পারমিট ও শাটডাউন: কাগজের সই, প্রাণের গ্যারান্টি",
+      "learnPackId": "learn_10_5",
+      "doSlotIds": [
+        "do_10_5_a",
+        "do_10_5_b"
+      ]
+    },
+    {
+      "id": "10.6",
+      "moduleId": "m10",
+      "order": 6,
+      "titleBn": "লাইন চেক ও আর্থিং: চার্জমুক্ত করার সঠিক কায়দা",
+      "learnPackId": "learn_10_6",
+      "doSlotIds": [
+        "do_10_6_a",
+        "do_10_6_b"
+      ]
+    },
+    {
+      "id": "10.7",
+      "moduleId": "m10",
+      "order": 7,
+      "titleBn": "সেফ জোন ও ব্যাকফিড: লুকানো বিপদ থেকে বাঁচা",
+      "learnPackId": "learn_10_7",
+      "doSlotIds": [
+        "do_10_7_a",
+        "do_10_7_b"
+      ]
+    },
+    {
+      "id": "10.8",
+      "moduleId": "m10",
+      "order": 8,
+      "titleBn": "সাবস্টেশন ও সুইচিং: ইয়ার্ডের নিয়মকানুন",
+      "learnPackId": "learn_10_8",
+      "doSlotIds": [
+        "do_10_8_a",
+        "do_10_8_b"
+      ]
+    },
+    {
+      "id": "10.9",
+      "moduleId": "m10",
+      "order": 9,
+      "titleBn": "মাঠের কী করবেন, আর কী কক্ষনো নয়",
+      "learnPackId": "learn_10_9",
+      "doSlotIds": [
+        "do_10_9_a",
+        "do_10_9_b"
+      ]
+    },
+    {
+      "id": "10.10",
+      "moduleId": "m10",
+      "order": 10,
+      "titleBn": "আন্ডারগ্রাউন্ড কেবল: মাটির নিচের বিপদ",
+      "learnPackId": "learn_10_10",
+      "doSlotIds": [
+        "do_10_10_a",
+        "do_10_10_b"
+      ]
+    },
+    {
+      "id": "10.11",
+      "moduleId": "m10",
+      "order": 11,
+      "titleBn": "গ্রাহক প্রাঙ্গণে কাজ: দুয়ারে সুরক্ষা",
+      "learnPackId": "learn_10_11",
+      "doSlotIds": [
+        "do_10_11_a",
+        "do_10_11_b"
+      ]
+    },
+    {
+      "id": "10.12",
+      "moduleId": "m10",
+      "order": 12,
+      "titleBn": "কমিউনিকেশন লাইন: বিদ্যুৎ লাইনের সঙ্গী",
+      "learnPackId": "learn_10_12",
+      "doSlotIds": [
+        "do_10_12_a",
+        "do_10_12_b"
+      ]
+    },
+    {
+      "id": "10.13",
+      "moduleId": "m10",
+      "order": 13,
+      "titleBn": "পাবলিক সেফটি: সাধারণ মানুষের সুরক্ষা",
+      "learnPackId": "learn_10_13",
+      "doSlotIds": [
+        "do_10_13_a",
+        "do_10_13_b"
+      ]
+    },
+    {
+      "id": "10.14",
+      "moduleId": "m10",
+      "order": 14,
+      "titleBn": "সেফটি কমিটি ও অডিট: নজরদারি",
+      "learnPackId": "learn_10_14",
+      "doSlotIds": [
+        "do_10_14_a",
+        "do_10_14_b"
+      ]
+    },
+    {
+      "id": "10.15",
+      "moduleId": "m10",
+      "order": 15,
+      "titleBn": "ঠিকাদার ও কনস্ট্রাকশন: সাইটের কড়া নিয়ম",
+      "learnPackId": "learn_10_15",
+      "doSlotIds": [
+        "do_10_15_a",
+        "do_10_15_b"
+      ]
+    },
+    {
+      "id": "10.16",
+      "moduleId": "m10",
+      "order": 16,
+      "titleBn": "অগ্নিনির্বাপণ: আগুনের মোকাবিলা",
+      "learnPackId": "learn_10_16",
+      "doSlotIds": [
+        "do_10_16_a",
+        "do_10_16_b"
+      ]
+    },
+    {
+      "id": "10.17",
+      "moduleId": "m10",
+      "order": 17,
+      "titleBn": "প্রাথমিক চিকিৎসা: জীবন বাঁচানোর প্রথম ধাপ",
+      "learnPackId": "learn_10_17",
+      "doSlotIds": [
+        "do_10_17_a",
+        "do_10_17_b"
+      ]
+    },
+    {
+      "id": "10.18",
+      "moduleId": "m10",
+      "order": 18,
+      "titleBn": "সেফটি চেকলিস্ট: ভ্যান থেকে সাবস্টেশন",
+      "learnPackId": "learn_10_18",
+      "doSlotIds": [
+        "do_10_18_a",
+        "m10/gate"
+      ]
+    }
+  ],
+  "rungDefs": [
+    {
+      "id": "1.1/learn",
+      "kind": "learn",
+      "lessonId": "1.1",
+      "moduleId": "m1",
+      "packId": "learn_1_1",
+      "status": "comingSoon",
+      "orderInModule": 0
+    },
+    {
+      "id": "1.1/do/0",
+      "kind": "do",
+      "lessonId": "1.1",
+      "moduleId": "m1",
+      "packId": "do_1_1_a",
+      "status": "comingSoon",
+      "orderInModule": 1
+    },
+    {
+      "id": "1.1/do/1",
+      "kind": "do",
+      "lessonId": "1.1",
+      "moduleId": "m1",
+      "packId": "do_1_1_b",
+      "status": "comingSoon",
+      "orderInModule": 2
+    },
+    {
+      "id": "1.2/learn",
+      "kind": "learn",
+      "lessonId": "1.2",
+      "moduleId": "m1",
+      "packId": "learn_1_2",
+      "status": "comingSoon",
+      "orderInModule": 3
+    },
+    {
+      "id": "1.2/do/0",
+      "kind": "do",
+      "lessonId": "1.2",
+      "moduleId": "m1",
+      "packId": "do_1_2_a",
+      "status": "comingSoon",
+      "orderInModule": 4
+    },
+    {
+      "id": "1.2/do/1",
+      "kind": "do",
+      "lessonId": "1.2",
+      "moduleId": "m1",
+      "packId": "do_1_2_b",
+      "status": "comingSoon",
+      "orderInModule": 5
+    },
+    {
+      "id": "1.3/learn",
+      "kind": "learn",
+      "lessonId": "1.3",
+      "moduleId": "m1",
+      "packId": "learn_1_3",
+      "status": "comingSoon",
+      "orderInModule": 6
+    },
+    {
+      "id": "1.3/do/0",
+      "kind": "do",
+      "lessonId": "1.3",
+      "moduleId": "m1",
+      "packId": "do_1_3_a",
+      "status": "comingSoon",
+      "orderInModule": 7
+    },
+    {
+      "id": "1.3/do/1",
+      "kind": "do",
+      "lessonId": "1.3",
+      "moduleId": "m1",
+      "packId": "do_1_3_b",
+      "status": "comingSoon",
+      "orderInModule": 8
+    },
+    {
+      "id": "1.4/learn",
+      "kind": "learn",
+      "lessonId": "1.4",
+      "moduleId": "m1",
+      "packId": "learn_1_4",
+      "status": "comingSoon",
+      "orderInModule": 9
+    },
+    {
+      "id": "1.4/do/0",
+      "kind": "do",
+      "lessonId": "1.4",
+      "moduleId": "m1",
+      "packId": "do_1_4_a",
+      "status": "comingSoon",
+      "orderInModule": 10
+    },
+    {
+      "id": "1.4/do/1",
+      "kind": "do",
+      "lessonId": "1.4",
+      "moduleId": "m1",
+      "packId": "do_1_4_b",
+      "status": "comingSoon",
+      "orderInModule": 11
+    },
+    {
+      "id": "1.5/learn",
+      "kind": "learn",
+      "lessonId": "1.5",
+      "moduleId": "m1",
+      "packId": "learn_1_5",
+      "status": "comingSoon",
+      "orderInModule": 12
+    },
+    {
+      "id": "1.5/do/0",
+      "kind": "do",
+      "lessonId": "1.5",
+      "moduleId": "m1",
+      "packId": "do_1_5_a",
+      "status": "comingSoon",
+      "orderInModule": 13
+    },
+    {
+      "id": "1.5/do/1",
+      "kind": "do",
+      "lessonId": "1.5",
+      "moduleId": "m1",
+      "packId": "do_1_5_b",
+      "status": "comingSoon",
+      "orderInModule": 14
+    },
+    {
+      "id": "1.6/learn",
+      "kind": "learn",
+      "lessonId": "1.6",
+      "moduleId": "m1",
+      "packId": "learn_1_6",
+      "status": "comingSoon",
+      "orderInModule": 15
+    },
+    {
+      "id": "1.6/do/0",
+      "kind": "do",
+      "lessonId": "1.6",
+      "moduleId": "m1",
+      "packId": "do_1_6_a",
+      "status": "comingSoon",
+      "orderInModule": 16
+    },
+    {
+      "id": "1.6/do/1",
+      "kind": "do",
+      "lessonId": "1.6",
+      "moduleId": "m1",
+      "packId": "do_1_6_b",
+      "status": "comingSoon",
+      "orderInModule": 17
+    },
+    {
+      "id": "1.7/learn",
+      "kind": "learn",
+      "lessonId": "1.7",
+      "moduleId": "m1",
+      "packId": "learn_1_7",
+      "status": "comingSoon",
+      "orderInModule": 18
+    },
+    {
+      "id": "1.7/do/0",
+      "kind": "do",
+      "lessonId": "1.7",
+      "moduleId": "m1",
+      "packId": "do_1_7_a",
+      "status": "comingSoon",
+      "orderInModule": 19
+    },
+    {
+      "id": "1.7/do/1",
+      "kind": "do",
+      "lessonId": "1.7",
+      "moduleId": "m1",
+      "packId": "do_1_7_b",
+      "status": "comingSoon",
+      "orderInModule": 20
+    },
+    {
+      "id": "1.8/learn",
+      "kind": "learn",
+      "lessonId": "1.8",
+      "moduleId": "m1",
+      "packId": "learn_1_8",
+      "status": "comingSoon",
+      "orderInModule": 21
+    },
+    {
+      "id": "1.8/do/0",
+      "kind": "do",
+      "lessonId": "1.8",
+      "moduleId": "m1",
+      "packId": "do_1_8_a",
+      "status": "comingSoon",
+      "orderInModule": 22
+    },
+    {
+      "id": "1.8/do/1",
+      "kind": "do",
+      "lessonId": "1.8",
+      "moduleId": "m1",
+      "packId": "do_1_8_b",
+      "status": "comingSoon",
+      "orderInModule": 23
+    },
+    {
+      "id": "1.9/learn",
+      "kind": "learn",
+      "lessonId": "1.9",
+      "moduleId": "m1",
+      "packId": "learn_1_9",
+      "status": "comingSoon",
+      "orderInModule": 24
+    },
+    {
+      "id": "1.9/do/0",
+      "kind": "do",
+      "lessonId": "1.9",
+      "moduleId": "m1",
+      "packId": "do_1_9_a",
+      "status": "comingSoon",
+      "orderInModule": 25
+    },
+    {
+      "id": "1.9/do/1",
+      "kind": "do",
+      "lessonId": "1.9",
+      "moduleId": "m1",
+      "packId": "do_1_9_b",
+      "status": "comingSoon",
+      "orderInModule": 26
+    },
+    {
+      "id": "1.10/learn",
+      "kind": "learn",
+      "lessonId": "1.10",
+      "moduleId": "m1",
+      "packId": "learn_1_10",
+      "status": "comingSoon",
+      "orderInModule": 27
+    },
+    {
+      "id": "1.10/do/0",
+      "kind": "do",
+      "lessonId": "1.10",
+      "moduleId": "m1",
+      "packId": "do_1_10_a",
+      "status": "comingSoon",
+      "orderInModule": 28
+    },
+    {
+      "id": "m1/gate",
+      "kind": "gate",
+      "lessonId": "1.10",
+      "moduleId": "m1",
+      "packId": "gate_m1",
+      "status": "comingSoon",
+      "orderInModule": 29
+    },
+    {
+      "id": "2.1/learn",
+      "kind": "learn",
+      "lessonId": "2.1",
+      "moduleId": "m2",
+      "packId": "learn_2_1",
+      "status": "comingSoon",
+      "orderInModule": 0
+    },
+    {
+      "id": "2.1/do/0",
+      "kind": "do",
+      "lessonId": "2.1",
+      "moduleId": "m2",
+      "packId": "do_2_1_a",
+      "status": "comingSoon",
+      "orderInModule": 1
+    },
+    {
+      "id": "2.1/do/1",
+      "kind": "do",
+      "lessonId": "2.1",
+      "moduleId": "m2",
+      "packId": "do_2_1_b",
+      "status": "comingSoon",
+      "orderInModule": 2
+    },
+    {
+      "id": "2.2/learn",
+      "kind": "learn",
+      "lessonId": "2.2",
+      "moduleId": "m2",
+      "packId": "learn_2_2",
+      "status": "comingSoon",
+      "orderInModule": 3
+    },
+    {
+      "id": "2.2/do/0",
+      "kind": "do",
+      "lessonId": "2.2",
+      "moduleId": "m2",
+      "packId": "do_2_2_a",
+      "status": "comingSoon",
+      "orderInModule": 4
+    },
+    {
+      "id": "2.2/do/1",
+      "kind": "do",
+      "lessonId": "2.2",
+      "moduleId": "m2",
+      "packId": "do_2_2_b",
+      "status": "comingSoon",
+      "orderInModule": 5
+    },
+    {
+      "id": "2.3/learn",
+      "kind": "learn",
+      "lessonId": "2.3",
+      "moduleId": "m2",
+      "packId": "learn_2_3",
+      "status": "comingSoon",
+      "orderInModule": 6
+    },
+    {
+      "id": "2.3/do/0",
+      "kind": "do",
+      "lessonId": "2.3",
+      "moduleId": "m2",
+      "packId": "do_2_3_a",
+      "status": "comingSoon",
+      "orderInModule": 7
+    },
+    {
+      "id": "2.3/do/1",
+      "kind": "do",
+      "lessonId": "2.3",
+      "moduleId": "m2",
+      "packId": "do_2_3_b",
+      "status": "comingSoon",
+      "orderInModule": 8
+    },
+    {
+      "id": "2.4/learn",
+      "kind": "learn",
+      "lessonId": "2.4",
+      "moduleId": "m2",
+      "packId": "learn_2_4",
+      "status": "comingSoon",
+      "orderInModule": 9
+    },
+    {
+      "id": "2.4/do/0",
+      "kind": "do",
+      "lessonId": "2.4",
+      "moduleId": "m2",
+      "packId": "do_2_4_a",
+      "status": "comingSoon",
+      "orderInModule": 10
+    },
+    {
+      "id": "2.4/do/1",
+      "kind": "do",
+      "lessonId": "2.4",
+      "moduleId": "m2",
+      "packId": "do_2_4_b",
+      "status": "comingSoon",
+      "orderInModule": 11
+    },
+    {
+      "id": "2.5/learn",
+      "kind": "learn",
+      "lessonId": "2.5",
+      "moduleId": "m2",
+      "packId": "learn_2_5",
+      "status": "comingSoon",
+      "orderInModule": 12
+    },
+    {
+      "id": "2.5/do/0",
+      "kind": "do",
+      "lessonId": "2.5",
+      "moduleId": "m2",
+      "packId": "do_2_5_a",
+      "status": "comingSoon",
+      "orderInModule": 13
+    },
+    {
+      "id": "2.5/do/1",
+      "kind": "do",
+      "lessonId": "2.5",
+      "moduleId": "m2",
+      "packId": "do_2_5_b",
+      "status": "comingSoon",
+      "orderInModule": 14
+    },
+    {
+      "id": "2.6/learn",
+      "kind": "learn",
+      "lessonId": "2.6",
+      "moduleId": "m2",
+      "packId": "learn_2_6",
+      "status": "comingSoon",
+      "orderInModule": 15
+    },
+    {
+      "id": "2.6/do/0",
+      "kind": "do",
+      "lessonId": "2.6",
+      "moduleId": "m2",
+      "packId": "do_2_6_a",
+      "status": "comingSoon",
+      "orderInModule": 16
+    },
+    {
+      "id": "2.6/do/1",
+      "kind": "do",
+      "lessonId": "2.6",
+      "moduleId": "m2",
+      "packId": "do_2_6_b",
+      "status": "comingSoon",
+      "orderInModule": 17
+    },
+    {
+      "id": "2.7/learn",
+      "kind": "learn",
+      "lessonId": "2.7",
+      "moduleId": "m2",
+      "packId": "learn_2_7",
+      "status": "comingSoon",
+      "orderInModule": 18
+    },
+    {
+      "id": "2.7/do/0",
+      "kind": "do",
+      "lessonId": "2.7",
+      "moduleId": "m2",
+      "packId": "do_2_7_a",
+      "status": "comingSoon",
+      "orderInModule": 19
+    },
+    {
+      "id": "2.7/do/1",
+      "kind": "do",
+      "lessonId": "2.7",
+      "moduleId": "m2",
+      "packId": "do_2_7_b",
+      "status": "comingSoon",
+      "orderInModule": 20
+    },
+    {
+      "id": "2.8/learn",
+      "kind": "learn",
+      "lessonId": "2.8",
+      "moduleId": "m2",
+      "packId": "learn_2_8",
+      "status": "comingSoon",
+      "orderInModule": 21
+    },
+    {
+      "id": "2.8/do/0",
+      "kind": "do",
+      "lessonId": "2.8",
+      "moduleId": "m2",
+      "packId": "do_2_8_a",
+      "status": "comingSoon",
+      "orderInModule": 22
+    },
+    {
+      "id": "2.8/do/1",
+      "kind": "do",
+      "lessonId": "2.8",
+      "moduleId": "m2",
+      "packId": "do_2_8_b",
+      "status": "comingSoon",
+      "orderInModule": 23
+    },
+    {
+      "id": "2.9/learn",
+      "kind": "learn",
+      "lessonId": "2.9",
+      "moduleId": "m2",
+      "packId": "learn_2_9",
+      "status": "comingSoon",
+      "orderInModule": 24
+    },
+    {
+      "id": "2.9/do/0",
+      "kind": "do",
+      "lessonId": "2.9",
+      "moduleId": "m2",
+      "packId": "do_2_9_a",
+      "status": "comingSoon",
+      "orderInModule": 25
+    },
+    {
+      "id": "2.9/do/1",
+      "kind": "do",
+      "lessonId": "2.9",
+      "moduleId": "m2",
+      "packId": "do_2_9_b",
+      "status": "comingSoon",
+      "orderInModule": 26
+    },
+    {
+      "id": "2.10/learn",
+      "kind": "learn",
+      "lessonId": "2.10",
+      "moduleId": "m2",
+      "packId": "learn_2_10",
+      "status": "comingSoon",
+      "orderInModule": 27
+    },
+    {
+      "id": "2.10/do/0",
+      "kind": "do",
+      "lessonId": "2.10",
+      "moduleId": "m2",
+      "packId": "do_2_10_a",
+      "status": "comingSoon",
+      "orderInModule": 28
+    },
+    {
+      "id": "m2/gate",
+      "kind": "gate",
+      "lessonId": "2.10",
+      "moduleId": "m2",
+      "packId": "gate_m2",
+      "status": "comingSoon",
+      "orderInModule": 29
+    },
+    {
+      "id": "3.1/learn",
+      "kind": "learn",
+      "lessonId": "3.1",
+      "moduleId": "m3",
+      "packId": "learn_3_1",
+      "status": "comingSoon",
+      "orderInModule": 0
+    },
+    {
+      "id": "3.1/do/0",
+      "kind": "do",
+      "lessonId": "3.1",
+      "moduleId": "m3",
+      "packId": "do_3_1_a",
+      "status": "comingSoon",
+      "orderInModule": 1
+    },
+    {
+      "id": "3.1/do/1",
+      "kind": "do",
+      "lessonId": "3.1",
+      "moduleId": "m3",
+      "packId": "do_3_1_b",
+      "status": "comingSoon",
+      "orderInModule": 2
+    },
+    {
+      "id": "3.2/learn",
+      "kind": "learn",
+      "lessonId": "3.2",
+      "moduleId": "m3",
+      "packId": "learn_3_2",
+      "status": "comingSoon",
+      "orderInModule": 3
+    },
+    {
+      "id": "3.2/do/0",
+      "kind": "do",
+      "lessonId": "3.2",
+      "moduleId": "m3",
+      "packId": "do_3_2_a",
+      "status": "comingSoon",
+      "orderInModule": 4
+    },
+    {
+      "id": "3.2/do/1",
+      "kind": "do",
+      "lessonId": "3.2",
+      "moduleId": "m3",
+      "packId": "do_3_2_b",
+      "status": "comingSoon",
+      "orderInModule": 5
+    },
+    {
+      "id": "3.3/learn",
+      "kind": "learn",
+      "lessonId": "3.3",
+      "moduleId": "m3",
+      "packId": "learn_3_3",
+      "status": "comingSoon",
+      "orderInModule": 6
+    },
+    {
+      "id": "3.3/do/0",
+      "kind": "do",
+      "lessonId": "3.3",
+      "moduleId": "m3",
+      "packId": "do_3_3_a",
+      "status": "comingSoon",
+      "orderInModule": 7
+    },
+    {
+      "id": "3.3/do/1",
+      "kind": "do",
+      "lessonId": "3.3",
+      "moduleId": "m3",
+      "packId": "do_3_3_b",
+      "status": "comingSoon",
+      "orderInModule": 8
+    },
+    {
+      "id": "3.4/learn",
+      "kind": "learn",
+      "lessonId": "3.4",
+      "moduleId": "m3",
+      "packId": "learn_3_4",
+      "status": "comingSoon",
+      "orderInModule": 9
+    },
+    {
+      "id": "3.4/do/0",
+      "kind": "do",
+      "lessonId": "3.4",
+      "moduleId": "m3",
+      "packId": "do_3_4_a",
+      "status": "comingSoon",
+      "orderInModule": 10
+    },
+    {
+      "id": "3.4/do/1",
+      "kind": "do",
+      "lessonId": "3.4",
+      "moduleId": "m3",
+      "packId": "do_3_4_b",
+      "status": "comingSoon",
+      "orderInModule": 11
+    },
+    {
+      "id": "3.5/learn",
+      "kind": "learn",
+      "lessonId": "3.5",
+      "moduleId": "m3",
+      "packId": "learn_3_5",
+      "status": "comingSoon",
+      "orderInModule": 12
+    },
+    {
+      "id": "3.5/do/0",
+      "kind": "do",
+      "lessonId": "3.5",
+      "moduleId": "m3",
+      "packId": "do_3_5_a",
+      "status": "comingSoon",
+      "orderInModule": 13
+    },
+    {
+      "id": "3.5/do/1",
+      "kind": "do",
+      "lessonId": "3.5",
+      "moduleId": "m3",
+      "packId": "do_3_5_b",
+      "status": "comingSoon",
+      "orderInModule": 14
+    },
+    {
+      "id": "3.6/learn",
+      "kind": "learn",
+      "lessonId": "3.6",
+      "moduleId": "m3",
+      "packId": "learn_3_6",
+      "status": "comingSoon",
+      "orderInModule": 15
+    },
+    {
+      "id": "3.6/do/0",
+      "kind": "do",
+      "lessonId": "3.6",
+      "moduleId": "m3",
+      "packId": "do_3_6_a",
+      "status": "comingSoon",
+      "orderInModule": 16
+    },
+    {
+      "id": "3.6/do/1",
+      "kind": "do",
+      "lessonId": "3.6",
+      "moduleId": "m3",
+      "packId": "do_3_6_b",
+      "status": "comingSoon",
+      "orderInModule": 17
+    },
+    {
+      "id": "3.7/learn",
+      "kind": "learn",
+      "lessonId": "3.7",
+      "moduleId": "m3",
+      "packId": "learn_3_7",
+      "status": "comingSoon",
+      "orderInModule": 18
+    },
+    {
+      "id": "3.7/do/0",
+      "kind": "do",
+      "lessonId": "3.7",
+      "moduleId": "m3",
+      "packId": "do_3_7_a",
+      "status": "comingSoon",
+      "orderInModule": 19
+    },
+    {
+      "id": "3.7/do/1",
+      "kind": "do",
+      "lessonId": "3.7",
+      "moduleId": "m3",
+      "packId": "do_3_7_b",
+      "status": "comingSoon",
+      "orderInModule": 20
+    },
+    {
+      "id": "3.8/learn",
+      "kind": "learn",
+      "lessonId": "3.8",
+      "moduleId": "m3",
+      "packId": "learn_3_8",
+      "status": "comingSoon",
+      "orderInModule": 21
+    },
+    {
+      "id": "3.8/do/0",
+      "kind": "do",
+      "lessonId": "3.8",
+      "moduleId": "m3",
+      "packId": "do_3_8_a",
+      "status": "comingSoon",
+      "orderInModule": 22
+    },
+    {
+      "id": "3.8/do/1",
+      "kind": "do",
+      "lessonId": "3.8",
+      "moduleId": "m3",
+      "packId": "do_3_8_b",
+      "status": "comingSoon",
+      "orderInModule": 23
+    },
+    {
+      "id": "3.9/learn",
+      "kind": "learn",
+      "lessonId": "3.9",
+      "moduleId": "m3",
+      "packId": "learn_3_9",
+      "status": "comingSoon",
+      "orderInModule": 24
+    },
+    {
+      "id": "3.9/do/0",
+      "kind": "do",
+      "lessonId": "3.9",
+      "moduleId": "m3",
+      "packId": "do_3_9_a",
+      "status": "comingSoon",
+      "orderInModule": 25
+    },
+    {
+      "id": "3.9/do/1",
+      "kind": "do",
+      "lessonId": "3.9",
+      "moduleId": "m3",
+      "packId": "do_3_9_b",
+      "status": "comingSoon",
+      "orderInModule": 26
+    },
+    {
+      "id": "3.10/learn",
+      "kind": "learn",
+      "lessonId": "3.10",
+      "moduleId": "m3",
+      "packId": "learn_3_10",
+      "status": "comingSoon",
+      "orderInModule": 27
+    },
+    {
+      "id": "3.10/do/0",
+      "kind": "do",
+      "lessonId": "3.10",
+      "moduleId": "m3",
+      "packId": "do_3_10_a",
+      "status": "comingSoon",
+      "orderInModule": 28
+    },
+    {
+      "id": "m3/gate",
+      "kind": "gate",
+      "lessonId": "3.10",
+      "moduleId": "m3",
+      "packId": "gate_m3",
+      "status": "comingSoon",
+      "orderInModule": 29
+    },
+    {
+      "id": "4.1/learn",
+      "kind": "learn",
+      "lessonId": "4.1",
+      "moduleId": "m4",
+      "packId": "learn_4_1",
+      "status": "comingSoon",
+      "orderInModule": 0
+    },
+    {
+      "id": "4.1/do/0",
+      "kind": "do",
+      "lessonId": "4.1",
+      "moduleId": "m4",
+      "packId": "do_4_1_a",
+      "status": "comingSoon",
+      "orderInModule": 1
+    },
+    {
+      "id": "4.1/do/1",
+      "kind": "do",
+      "lessonId": "4.1",
+      "moduleId": "m4",
+      "packId": "do_4_1_b",
+      "status": "comingSoon",
+      "orderInModule": 2
+    },
+    {
+      "id": "4.2/learn",
+      "kind": "learn",
+      "lessonId": "4.2",
+      "moduleId": "m4",
+      "packId": "learn_4_2",
+      "status": "comingSoon",
+      "orderInModule": 3
+    },
+    {
+      "id": "4.2/do/0",
+      "kind": "do",
+      "lessonId": "4.2",
+      "moduleId": "m4",
+      "packId": "do_4_2_a",
+      "status": "comingSoon",
+      "orderInModule": 4
+    },
+    {
+      "id": "4.2/do/1",
+      "kind": "do",
+      "lessonId": "4.2",
+      "moduleId": "m4",
+      "packId": "do_4_2_b",
+      "status": "comingSoon",
+      "orderInModule": 5
+    },
+    {
+      "id": "4.3/learn",
+      "kind": "learn",
+      "lessonId": "4.3",
+      "moduleId": "m4",
+      "packId": "learn_4_3",
+      "status": "comingSoon",
+      "orderInModule": 6
+    },
+    {
+      "id": "4.3/do/0",
+      "kind": "do",
+      "lessonId": "4.3",
+      "moduleId": "m4",
+      "packId": "do_4_3_a",
+      "status": "comingSoon",
+      "orderInModule": 7
+    },
+    {
+      "id": "4.3/do/1",
+      "kind": "do",
+      "lessonId": "4.3",
+      "moduleId": "m4",
+      "packId": "do_4_3_b",
+      "status": "comingSoon",
+      "orderInModule": 8
+    },
+    {
+      "id": "4.4/learn",
+      "kind": "learn",
+      "lessonId": "4.4",
+      "moduleId": "m4",
+      "packId": "learn_4_4",
+      "status": "comingSoon",
+      "orderInModule": 9
+    },
+    {
+      "id": "4.4/do/0",
+      "kind": "do",
+      "lessonId": "4.4",
+      "moduleId": "m4",
+      "packId": "do_4_4_a",
+      "status": "comingSoon",
+      "orderInModule": 10
+    },
+    {
+      "id": "4.4/do/1",
+      "kind": "do",
+      "lessonId": "4.4",
+      "moduleId": "m4",
+      "packId": "do_4_4_b",
+      "status": "comingSoon",
+      "orderInModule": 11
+    },
+    {
+      "id": "4.5/learn",
+      "kind": "learn",
+      "lessonId": "4.5",
+      "moduleId": "m4",
+      "packId": "learn_4_5",
+      "status": "comingSoon",
+      "orderInModule": 12
+    },
+    {
+      "id": "4.5/do/0",
+      "kind": "do",
+      "lessonId": "4.5",
+      "moduleId": "m4",
+      "packId": "do_4_5_a",
+      "status": "comingSoon",
+      "orderInModule": 13
+    },
+    {
+      "id": "4.5/do/1",
+      "kind": "do",
+      "lessonId": "4.5",
+      "moduleId": "m4",
+      "packId": "do_4_5_b",
+      "status": "comingSoon",
+      "orderInModule": 14
+    },
+    {
+      "id": "4.6/learn",
+      "kind": "learn",
+      "lessonId": "4.6",
+      "moduleId": "m4",
+      "packId": "learn_4_6",
+      "status": "comingSoon",
+      "orderInModule": 15
+    },
+    {
+      "id": "4.6/do/0",
+      "kind": "do",
+      "lessonId": "4.6",
+      "moduleId": "m4",
+      "packId": "do_4_6_a",
+      "status": "comingSoon",
+      "orderInModule": 16
+    },
+    {
+      "id": "4.6/do/1",
+      "kind": "do",
+      "lessonId": "4.6",
+      "moduleId": "m4",
+      "packId": "do_4_6_b",
+      "status": "comingSoon",
+      "orderInModule": 17
+    },
+    {
+      "id": "4.7/learn",
+      "kind": "learn",
+      "lessonId": "4.7",
+      "moduleId": "m4",
+      "packId": "learn_4_7",
+      "status": "comingSoon",
+      "orderInModule": 18
+    },
+    {
+      "id": "4.7/do/0",
+      "kind": "do",
+      "lessonId": "4.7",
+      "moduleId": "m4",
+      "packId": "do_4_7_a",
+      "status": "comingSoon",
+      "orderInModule": 19
+    },
+    {
+      "id": "4.7/do/1",
+      "kind": "do",
+      "lessonId": "4.7",
+      "moduleId": "m4",
+      "packId": "do_4_7_b",
+      "status": "comingSoon",
+      "orderInModule": 20
+    },
+    {
+      "id": "4.8/learn",
+      "kind": "learn",
+      "lessonId": "4.8",
+      "moduleId": "m4",
+      "packId": "learn_4_8",
+      "status": "comingSoon",
+      "orderInModule": 21
+    },
+    {
+      "id": "4.8/do/0",
+      "kind": "do",
+      "lessonId": "4.8",
+      "moduleId": "m4",
+      "packId": "do_4_8_a",
+      "status": "comingSoon",
+      "orderInModule": 22
+    },
+    {
+      "id": "4.8/do/1",
+      "kind": "do",
+      "lessonId": "4.8",
+      "moduleId": "m4",
+      "packId": "do_4_8_b",
+      "status": "comingSoon",
+      "orderInModule": 23
+    },
+    {
+      "id": "4.9/learn",
+      "kind": "learn",
+      "lessonId": "4.9",
+      "moduleId": "m4",
+      "packId": "learn_4_9",
+      "status": "comingSoon",
+      "orderInModule": 24
+    },
+    {
+      "id": "4.9/do/0",
+      "kind": "do",
+      "lessonId": "4.9",
+      "moduleId": "m4",
+      "packId": "do_4_9_a",
+      "status": "comingSoon",
+      "orderInModule": 25
+    },
+    {
+      "id": "4.9/do/1",
+      "kind": "do",
+      "lessonId": "4.9",
+      "moduleId": "m4",
+      "packId": "do_4_9_b",
+      "status": "comingSoon",
+      "orderInModule": 26
+    },
+    {
+      "id": "4.10/learn",
+      "kind": "learn",
+      "lessonId": "4.10",
+      "moduleId": "m4",
+      "packId": "learn_4_10",
+      "status": "comingSoon",
+      "orderInModule": 27
+    },
+    {
+      "id": "4.10/do/0",
+      "kind": "do",
+      "lessonId": "4.10",
+      "moduleId": "m4",
+      "packId": "do_4_10_a",
+      "status": "comingSoon",
+      "orderInModule": 28
+    },
+    {
+      "id": "m4/gate",
+      "kind": "gate",
+      "lessonId": "4.10",
+      "moduleId": "m4",
+      "packId": "gate_m4",
+      "status": "comingSoon",
+      "orderInModule": 29
+    },
+    {
+      "id": "5.1/learn",
+      "kind": "learn",
+      "lessonId": "5.1",
+      "moduleId": "m5",
+      "packId": "learn_5_1",
+      "status": "comingSoon",
+      "orderInModule": 0
+    },
+    {
+      "id": "5.1/do/0",
+      "kind": "do",
+      "lessonId": "5.1",
+      "moduleId": "m5",
+      "packId": "do_5_1_a",
+      "status": "comingSoon",
+      "orderInModule": 1
+    },
+    {
+      "id": "5.1/do/1",
+      "kind": "do",
+      "lessonId": "5.1",
+      "moduleId": "m5",
+      "packId": "do_5_1_b",
+      "status": "comingSoon",
+      "orderInModule": 2
+    },
+    {
+      "id": "5.2/learn",
+      "kind": "learn",
+      "lessonId": "5.2",
+      "moduleId": "m5",
+      "packId": "learn_5_2",
+      "status": "comingSoon",
+      "orderInModule": 3
+    },
+    {
+      "id": "5.2/do/0",
+      "kind": "do",
+      "lessonId": "5.2",
+      "moduleId": "m5",
+      "packId": "do_5_2_a",
+      "status": "comingSoon",
+      "orderInModule": 4
+    },
+    {
+      "id": "5.2/do/1",
+      "kind": "do",
+      "lessonId": "5.2",
+      "moduleId": "m5",
+      "packId": "do_5_2_b",
+      "status": "comingSoon",
+      "orderInModule": 5
+    },
+    {
+      "id": "5.3/learn",
+      "kind": "learn",
+      "lessonId": "5.3",
+      "moduleId": "m5",
+      "packId": "learn_5_3",
+      "status": "comingSoon",
+      "orderInModule": 6
+    },
+    {
+      "id": "5.3/do/0",
+      "kind": "do",
+      "lessonId": "5.3",
+      "moduleId": "m5",
+      "packId": "do_5_3_a",
+      "status": "comingSoon",
+      "orderInModule": 7
+    },
+    {
+      "id": "5.3/do/1",
+      "kind": "do",
+      "lessonId": "5.3",
+      "moduleId": "m5",
+      "packId": "do_5_3_b",
+      "status": "comingSoon",
+      "orderInModule": 8
+    },
+    {
+      "id": "5.4/learn",
+      "kind": "learn",
+      "lessonId": "5.4",
+      "moduleId": "m5",
+      "packId": "learn_5_4",
+      "status": "comingSoon",
+      "orderInModule": 9
+    },
+    {
+      "id": "5.4/do/0",
+      "kind": "do",
+      "lessonId": "5.4",
+      "moduleId": "m5",
+      "packId": "do_5_4_a",
+      "status": "comingSoon",
+      "orderInModule": 10
+    },
+    {
+      "id": "5.4/do/1",
+      "kind": "do",
+      "lessonId": "5.4",
+      "moduleId": "m5",
+      "packId": "do_5_4_b",
+      "status": "comingSoon",
+      "orderInModule": 11
+    },
+    {
+      "id": "5.5/learn",
+      "kind": "learn",
+      "lessonId": "5.5",
+      "moduleId": "m5",
+      "packId": "learn_5_5",
+      "status": "comingSoon",
+      "orderInModule": 12
+    },
+    {
+      "id": "5.5/do/0",
+      "kind": "do",
+      "lessonId": "5.5",
+      "moduleId": "m5",
+      "packId": "do_5_5_a",
+      "status": "comingSoon",
+      "orderInModule": 13
+    },
+    {
+      "id": "5.5/do/1",
+      "kind": "do",
+      "lessonId": "5.5",
+      "moduleId": "m5",
+      "packId": "do_5_5_b",
+      "status": "comingSoon",
+      "orderInModule": 14
+    },
+    {
+      "id": "5.6/learn",
+      "kind": "learn",
+      "lessonId": "5.6",
+      "moduleId": "m5",
+      "packId": "learn_5_6",
+      "status": "comingSoon",
+      "orderInModule": 15
+    },
+    {
+      "id": "5.6/do/0",
+      "kind": "do",
+      "lessonId": "5.6",
+      "moduleId": "m5",
+      "packId": "do_5_6_a",
+      "status": "comingSoon",
+      "orderInModule": 16
+    },
+    {
+      "id": "5.6/do/1",
+      "kind": "do",
+      "lessonId": "5.6",
+      "moduleId": "m5",
+      "packId": "do_5_6_b",
+      "status": "comingSoon",
+      "orderInModule": 17
+    },
+    {
+      "id": "5.7/learn",
+      "kind": "learn",
+      "lessonId": "5.7",
+      "moduleId": "m5",
+      "packId": "learn_5_7",
+      "status": "comingSoon",
+      "orderInModule": 18
+    },
+    {
+      "id": "5.7/do/0",
+      "kind": "do",
+      "lessonId": "5.7",
+      "moduleId": "m5",
+      "packId": "do_5_7_a",
+      "status": "comingSoon",
+      "orderInModule": 19
+    },
+    {
+      "id": "5.7/do/1",
+      "kind": "do",
+      "lessonId": "5.7",
+      "moduleId": "m5",
+      "packId": "do_5_7_b",
+      "status": "comingSoon",
+      "orderInModule": 20
+    },
+    {
+      "id": "5.8/learn",
+      "kind": "learn",
+      "lessonId": "5.8",
+      "moduleId": "m5",
+      "packId": "learn_5_8",
+      "status": "comingSoon",
+      "orderInModule": 21
+    },
+    {
+      "id": "5.8/do/0",
+      "kind": "do",
+      "lessonId": "5.8",
+      "moduleId": "m5",
+      "packId": "do_5_8_a",
+      "status": "comingSoon",
+      "orderInModule": 22
+    },
+    {
+      "id": "5.8/do/1",
+      "kind": "do",
+      "lessonId": "5.8",
+      "moduleId": "m5",
+      "packId": "do_5_8_b",
+      "status": "comingSoon",
+      "orderInModule": 23
+    },
+    {
+      "id": "5.9/learn",
+      "kind": "learn",
+      "lessonId": "5.9",
+      "moduleId": "m5",
+      "packId": "learn_5_9",
+      "status": "comingSoon",
+      "orderInModule": 24
+    },
+    {
+      "id": "5.9/do/0",
+      "kind": "do",
+      "lessonId": "5.9",
+      "moduleId": "m5",
+      "packId": "do_5_9_a",
+      "status": "comingSoon",
+      "orderInModule": 25
+    },
+    {
+      "id": "5.9/do/1",
+      "kind": "do",
+      "lessonId": "5.9",
+      "moduleId": "m5",
+      "packId": "do_5_9_b",
+      "status": "comingSoon",
+      "orderInModule": 26
+    },
+    {
+      "id": "5.10/learn",
+      "kind": "learn",
+      "lessonId": "5.10",
+      "moduleId": "m5",
+      "packId": "learn_5_10",
+      "status": "comingSoon",
+      "orderInModule": 27
+    },
+    {
+      "id": "5.10/do/0",
+      "kind": "do",
+      "lessonId": "5.10",
+      "moduleId": "m5",
+      "packId": "do_5_10_a",
+      "status": "comingSoon",
+      "orderInModule": 28
+    },
+    {
+      "id": "m5/gate",
+      "kind": "gate",
+      "lessonId": "5.10",
+      "moduleId": "m5",
+      "packId": "gate_m5",
+      "status": "comingSoon",
+      "orderInModule": 29
+    },
+    {
+      "id": "6.1/learn",
+      "kind": "learn",
+      "lessonId": "6.1",
+      "moduleId": "m6",
+      "packId": "learn_6_1",
+      "status": "comingSoon",
+      "orderInModule": 0
+    },
+    {
+      "id": "6.1/do/0",
+      "kind": "do",
+      "lessonId": "6.1",
+      "moduleId": "m6",
+      "packId": "do_6_1_a",
+      "status": "comingSoon",
+      "orderInModule": 1
+    },
+    {
+      "id": "6.1/do/1",
+      "kind": "do",
+      "lessonId": "6.1",
+      "moduleId": "m6",
+      "packId": "do_6_1_b",
+      "status": "comingSoon",
+      "orderInModule": 2
+    },
+    {
+      "id": "6.2/learn",
+      "kind": "learn",
+      "lessonId": "6.2",
+      "moduleId": "m6",
+      "packId": "learn_6_2",
+      "status": "comingSoon",
+      "orderInModule": 3
+    },
+    {
+      "id": "6.2/do/0",
+      "kind": "do",
+      "lessonId": "6.2",
+      "moduleId": "m6",
+      "packId": "do_6_2_a",
+      "status": "comingSoon",
+      "orderInModule": 4
+    },
+    {
+      "id": "6.2/do/1",
+      "kind": "do",
+      "lessonId": "6.2",
+      "moduleId": "m6",
+      "packId": "do_6_2_b",
+      "status": "comingSoon",
+      "orderInModule": 5
+    },
+    {
+      "id": "6.3/learn",
+      "kind": "learn",
+      "lessonId": "6.3",
+      "moduleId": "m6",
+      "packId": "learn_6_3",
+      "status": "comingSoon",
+      "orderInModule": 6
+    },
+    {
+      "id": "6.3/do/0",
+      "kind": "do",
+      "lessonId": "6.3",
+      "moduleId": "m6",
+      "packId": "do_6_3_a",
+      "status": "comingSoon",
+      "orderInModule": 7
+    },
+    {
+      "id": "6.3/do/1",
+      "kind": "do",
+      "lessonId": "6.3",
+      "moduleId": "m6",
+      "packId": "do_6_3_b",
+      "status": "comingSoon",
+      "orderInModule": 8
+    },
+    {
+      "id": "6.4/learn",
+      "kind": "learn",
+      "lessonId": "6.4",
+      "moduleId": "m6",
+      "packId": "learn_6_4",
+      "status": "comingSoon",
+      "orderInModule": 9
+    },
+    {
+      "id": "6.4/do/0",
+      "kind": "do",
+      "lessonId": "6.4",
+      "moduleId": "m6",
+      "packId": "do_6_4_a",
+      "status": "comingSoon",
+      "orderInModule": 10
+    },
+    {
+      "id": "6.4/do/1",
+      "kind": "do",
+      "lessonId": "6.4",
+      "moduleId": "m6",
+      "packId": "do_6_4_b",
+      "status": "comingSoon",
+      "orderInModule": 11
+    },
+    {
+      "id": "6.5/learn",
+      "kind": "learn",
+      "lessonId": "6.5",
+      "moduleId": "m6",
+      "packId": "learn_6_5",
+      "status": "comingSoon",
+      "orderInModule": 12
+    },
+    {
+      "id": "6.5/do/0",
+      "kind": "do",
+      "lessonId": "6.5",
+      "moduleId": "m6",
+      "packId": "do_6_5_a",
+      "status": "comingSoon",
+      "orderInModule": 13
+    },
+    {
+      "id": "6.5/do/1",
+      "kind": "do",
+      "lessonId": "6.5",
+      "moduleId": "m6",
+      "packId": "do_6_5_b",
+      "status": "comingSoon",
+      "orderInModule": 14
+    },
+    {
+      "id": "6.6/learn",
+      "kind": "learn",
+      "lessonId": "6.6",
+      "moduleId": "m6",
+      "packId": "learn_6_6",
+      "status": "comingSoon",
+      "orderInModule": 15
+    },
+    {
+      "id": "6.6/do/0",
+      "kind": "do",
+      "lessonId": "6.6",
+      "moduleId": "m6",
+      "packId": "do_6_6_a",
+      "status": "comingSoon",
+      "orderInModule": 16
+    },
+    {
+      "id": "6.6/do/1",
+      "kind": "do",
+      "lessonId": "6.6",
+      "moduleId": "m6",
+      "packId": "do_6_6_b",
+      "status": "comingSoon",
+      "orderInModule": 17
+    },
+    {
+      "id": "6.7/learn",
+      "kind": "learn",
+      "lessonId": "6.7",
+      "moduleId": "m6",
+      "packId": "learn_6_7",
+      "status": "comingSoon",
+      "orderInModule": 18
+    },
+    {
+      "id": "6.7/do/0",
+      "kind": "do",
+      "lessonId": "6.7",
+      "moduleId": "m6",
+      "packId": "do_6_7_a",
+      "status": "comingSoon",
+      "orderInModule": 19
+    },
+    {
+      "id": "6.7/do/1",
+      "kind": "do",
+      "lessonId": "6.7",
+      "moduleId": "m6",
+      "packId": "do_6_7_b",
+      "status": "comingSoon",
+      "orderInModule": 20
+    },
+    {
+      "id": "6.8/learn",
+      "kind": "learn",
+      "lessonId": "6.8",
+      "moduleId": "m6",
+      "packId": "learn_6_8",
+      "status": "comingSoon",
+      "orderInModule": 21
+    },
+    {
+      "id": "6.8/do/0",
+      "kind": "do",
+      "lessonId": "6.8",
+      "moduleId": "m6",
+      "packId": "do_6_8_a",
+      "status": "comingSoon",
+      "orderInModule": 22
+    },
+    {
+      "id": "6.8/do/1",
+      "kind": "do",
+      "lessonId": "6.8",
+      "moduleId": "m6",
+      "packId": "do_6_8_b",
+      "status": "comingSoon",
+      "orderInModule": 23
+    },
+    {
+      "id": "6.9/learn",
+      "kind": "learn",
+      "lessonId": "6.9",
+      "moduleId": "m6",
+      "packId": "learn_6_9",
+      "status": "comingSoon",
+      "orderInModule": 24
+    },
+    {
+      "id": "6.9/do/0",
+      "kind": "do",
+      "lessonId": "6.9",
+      "moduleId": "m6",
+      "packId": "do_6_9_a",
+      "status": "comingSoon",
+      "orderInModule": 25
+    },
+    {
+      "id": "6.9/do/1",
+      "kind": "do",
+      "lessonId": "6.9",
+      "moduleId": "m6",
+      "packId": "do_6_9_b",
+      "status": "comingSoon",
+      "orderInModule": 26
+    },
+    {
+      "id": "6.10/learn",
+      "kind": "learn",
+      "lessonId": "6.10",
+      "moduleId": "m6",
+      "packId": "learn_6_10",
+      "status": "comingSoon",
+      "orderInModule": 27
+    },
+    {
+      "id": "6.10/do/0",
+      "kind": "do",
+      "lessonId": "6.10",
+      "moduleId": "m6",
+      "packId": "do_6_10_a",
+      "status": "comingSoon",
+      "orderInModule": 28
+    },
+    {
+      "id": "6.10/do/1",
+      "kind": "do",
+      "lessonId": "6.10",
+      "moduleId": "m6",
+      "packId": "do_6_10_b",
+      "status": "comingSoon",
+      "orderInModule": 29
+    },
+    {
+      "id": "6.11/learn",
+      "kind": "learn",
+      "lessonId": "6.11",
+      "moduleId": "m6",
+      "packId": "learn_6_11",
+      "status": "comingSoon",
+      "orderInModule": 30
+    },
+    {
+      "id": "6.11/do/0",
+      "kind": "do",
+      "lessonId": "6.11",
+      "moduleId": "m6",
+      "packId": "do_6_11_a",
+      "status": "comingSoon",
+      "orderInModule": 31
+    },
+    {
+      "id": "m6/gate",
+      "kind": "gate",
+      "lessonId": "6.11",
+      "moduleId": "m6",
+      "packId": "gate_m6",
+      "status": "comingSoon",
+      "orderInModule": 32
+    },
+    {
+      "id": "7.1/learn",
+      "kind": "learn",
+      "lessonId": "7.1",
+      "moduleId": "m7",
+      "packId": "learn_7_1",
+      "status": "comingSoon",
+      "orderInModule": 0
+    },
+    {
+      "id": "7.1/do/0",
+      "kind": "do",
+      "lessonId": "7.1",
+      "moduleId": "m7",
+      "packId": "do_7_1_a",
+      "status": "comingSoon",
+      "orderInModule": 1
+    },
+    {
+      "id": "7.1/do/1",
+      "kind": "do",
+      "lessonId": "7.1",
+      "moduleId": "m7",
+      "packId": "do_7_1_b",
+      "status": "comingSoon",
+      "orderInModule": 2
+    },
+    {
+      "id": "7.2/learn",
+      "kind": "learn",
+      "lessonId": "7.2",
+      "moduleId": "m7",
+      "packId": "learn_7_2",
+      "status": "comingSoon",
+      "orderInModule": 3
+    },
+    {
+      "id": "7.2/do/0",
+      "kind": "do",
+      "lessonId": "7.2",
+      "moduleId": "m7",
+      "packId": "do_7_2_a",
+      "status": "comingSoon",
+      "orderInModule": 4
+    },
+    {
+      "id": "7.2/do/1",
+      "kind": "do",
+      "lessonId": "7.2",
+      "moduleId": "m7",
+      "packId": "do_7_2_b",
+      "status": "comingSoon",
+      "orderInModule": 5
+    },
+    {
+      "id": "7.3/learn",
+      "kind": "learn",
+      "lessonId": "7.3",
+      "moduleId": "m7",
+      "packId": "learn_7_3",
+      "status": "comingSoon",
+      "orderInModule": 6
+    },
+    {
+      "id": "7.3/do/0",
+      "kind": "do",
+      "lessonId": "7.3",
+      "moduleId": "m7",
+      "packId": "do_7_3_a",
+      "status": "comingSoon",
+      "orderInModule": 7
+    },
+    {
+      "id": "7.3/do/1",
+      "kind": "do",
+      "lessonId": "7.3",
+      "moduleId": "m7",
+      "packId": "do_7_3_b",
+      "status": "comingSoon",
+      "orderInModule": 8
+    },
+    {
+      "id": "7.4/learn",
+      "kind": "learn",
+      "lessonId": "7.4",
+      "moduleId": "m7",
+      "packId": "learn_7_4",
+      "status": "comingSoon",
+      "orderInModule": 9
+    },
+    {
+      "id": "7.4/do/0",
+      "kind": "do",
+      "lessonId": "7.4",
+      "moduleId": "m7",
+      "packId": "do_7_4_a",
+      "status": "comingSoon",
+      "orderInModule": 10
+    },
+    {
+      "id": "7.4/do/1",
+      "kind": "do",
+      "lessonId": "7.4",
+      "moduleId": "m7",
+      "packId": "do_7_4_b",
+      "status": "comingSoon",
+      "orderInModule": 11
+    },
+    {
+      "id": "7.5/learn",
+      "kind": "learn",
+      "lessonId": "7.5",
+      "moduleId": "m7",
+      "packId": "learn_7_5",
+      "status": "comingSoon",
+      "orderInModule": 12
+    },
+    {
+      "id": "7.5/do/0",
+      "kind": "do",
+      "lessonId": "7.5",
+      "moduleId": "m7",
+      "packId": "do_7_5_a",
+      "status": "comingSoon",
+      "orderInModule": 13
+    },
+    {
+      "id": "7.5/do/1",
+      "kind": "do",
+      "lessonId": "7.5",
+      "moduleId": "m7",
+      "packId": "do_7_5_b",
+      "status": "comingSoon",
+      "orderInModule": 14
+    },
+    {
+      "id": "7.6/learn",
+      "kind": "learn",
+      "lessonId": "7.6",
+      "moduleId": "m7",
+      "packId": "learn_7_6",
+      "status": "comingSoon",
+      "orderInModule": 15
+    },
+    {
+      "id": "7.6/do/0",
+      "kind": "do",
+      "lessonId": "7.6",
+      "moduleId": "m7",
+      "packId": "do_7_6_a",
+      "status": "comingSoon",
+      "orderInModule": 16
+    },
+    {
+      "id": "7.6/do/1",
+      "kind": "do",
+      "lessonId": "7.6",
+      "moduleId": "m7",
+      "packId": "do_7_6_b",
+      "status": "comingSoon",
+      "orderInModule": 17
+    },
+    {
+      "id": "7.7/learn",
+      "kind": "learn",
+      "lessonId": "7.7",
+      "moduleId": "m7",
+      "packId": "learn_7_7",
+      "status": "comingSoon",
+      "orderInModule": 18
+    },
+    {
+      "id": "7.7/do/0",
+      "kind": "do",
+      "lessonId": "7.7",
+      "moduleId": "m7",
+      "packId": "do_7_7_a",
+      "status": "comingSoon",
+      "orderInModule": 19
+    },
+    {
+      "id": "7.7/do/1",
+      "kind": "do",
+      "lessonId": "7.7",
+      "moduleId": "m7",
+      "packId": "do_7_7_b",
+      "status": "comingSoon",
+      "orderInModule": 20
+    },
+    {
+      "id": "7.8/learn",
+      "kind": "learn",
+      "lessonId": "7.8",
+      "moduleId": "m7",
+      "packId": "learn_7_8",
+      "status": "comingSoon",
+      "orderInModule": 21
+    },
+    {
+      "id": "7.8/do/0",
+      "kind": "do",
+      "lessonId": "7.8",
+      "moduleId": "m7",
+      "packId": "do_7_8_a",
+      "status": "comingSoon",
+      "orderInModule": 22
+    },
+    {
+      "id": "7.8/do/1",
+      "kind": "do",
+      "lessonId": "7.8",
+      "moduleId": "m7",
+      "packId": "do_7_8_b",
+      "status": "comingSoon",
+      "orderInModule": 23
+    },
+    {
+      "id": "7.9/learn",
+      "kind": "learn",
+      "lessonId": "7.9",
+      "moduleId": "m7",
+      "packId": "learn_7_9",
+      "status": "comingSoon",
+      "orderInModule": 24
+    },
+    {
+      "id": "7.9/do/0",
+      "kind": "do",
+      "lessonId": "7.9",
+      "moduleId": "m7",
+      "packId": "do_7_9_a",
+      "status": "comingSoon",
+      "orderInModule": 25
+    },
+    {
+      "id": "7.9/do/1",
+      "kind": "do",
+      "lessonId": "7.9",
+      "moduleId": "m7",
+      "packId": "do_7_9_b",
+      "status": "comingSoon",
+      "orderInModule": 26
+    },
+    {
+      "id": "7.10/learn",
+      "kind": "learn",
+      "lessonId": "7.10",
+      "moduleId": "m7",
+      "packId": "learn_7_10",
+      "status": "comingSoon",
+      "orderInModule": 27
+    },
+    {
+      "id": "7.10/do/0",
+      "kind": "do",
+      "lessonId": "7.10",
+      "moduleId": "m7",
+      "packId": "do_7_10_a",
+      "status": "comingSoon",
+      "orderInModule": 28
+    },
+    {
+      "id": "m7/gate",
+      "kind": "gate",
+      "lessonId": "7.10",
+      "moduleId": "m7",
+      "packId": "gate_m7",
+      "status": "comingSoon",
+      "orderInModule": 29
+    },
+    {
+      "id": "8.1/learn",
+      "kind": "learn",
+      "lessonId": "8.1",
+      "moduleId": "m8",
+      "packId": "learn_8_1",
+      "status": "comingSoon",
+      "orderInModule": 0
+    },
+    {
+      "id": "8.1/do/0",
+      "kind": "do",
+      "lessonId": "8.1",
+      "moduleId": "m8",
+      "packId": "do_8_1_a",
+      "status": "comingSoon",
+      "orderInModule": 1
+    },
+    {
+      "id": "8.1/do/1",
+      "kind": "do",
+      "lessonId": "8.1",
+      "moduleId": "m8",
+      "packId": "do_8_1_b",
+      "status": "comingSoon",
+      "orderInModule": 2
+    },
+    {
+      "id": "8.2/learn",
+      "kind": "learn",
+      "lessonId": "8.2",
+      "moduleId": "m8",
+      "packId": "learn_8_2",
+      "status": "comingSoon",
+      "orderInModule": 3
+    },
+    {
+      "id": "8.2/do/0",
+      "kind": "do",
+      "lessonId": "8.2",
+      "moduleId": "m8",
+      "packId": "do_8_2_a",
+      "status": "comingSoon",
+      "orderInModule": 4
+    },
+    {
+      "id": "8.2/do/1",
+      "kind": "do",
+      "lessonId": "8.2",
+      "moduleId": "m8",
+      "packId": "do_8_2_b",
+      "status": "comingSoon",
+      "orderInModule": 5
+    },
+    {
+      "id": "8.3/learn",
+      "kind": "learn",
+      "lessonId": "8.3",
+      "moduleId": "m8",
+      "packId": "learn_8_3",
+      "status": "comingSoon",
+      "orderInModule": 6
+    },
+    {
+      "id": "8.3/do/0",
+      "kind": "do",
+      "lessonId": "8.3",
+      "moduleId": "m8",
+      "packId": "do_8_3_a",
+      "status": "comingSoon",
+      "orderInModule": 7
+    },
+    {
+      "id": "8.3/do/1",
+      "kind": "do",
+      "lessonId": "8.3",
+      "moduleId": "m8",
+      "packId": "do_8_3_b",
+      "status": "comingSoon",
+      "orderInModule": 8
+    },
+    {
+      "id": "8.4/learn",
+      "kind": "learn",
+      "lessonId": "8.4",
+      "moduleId": "m8",
+      "packId": "learn_8_4",
+      "status": "comingSoon",
+      "orderInModule": 9
+    },
+    {
+      "id": "8.4/do/0",
+      "kind": "do",
+      "lessonId": "8.4",
+      "moduleId": "m8",
+      "packId": "do_8_4_a",
+      "status": "comingSoon",
+      "orderInModule": 10
+    },
+    {
+      "id": "8.4/do/1",
+      "kind": "do",
+      "lessonId": "8.4",
+      "moduleId": "m8",
+      "packId": "do_8_4_b",
+      "status": "comingSoon",
+      "orderInModule": 11
+    },
+    {
+      "id": "8.5/learn",
+      "kind": "learn",
+      "lessonId": "8.5",
+      "moduleId": "m8",
+      "packId": "learn_8_5",
+      "status": "comingSoon",
+      "orderInModule": 12
+    },
+    {
+      "id": "8.5/do/0",
+      "kind": "do",
+      "lessonId": "8.5",
+      "moduleId": "m8",
+      "packId": "do_8_5_a",
+      "status": "comingSoon",
+      "orderInModule": 13
+    },
+    {
+      "id": "8.5/do/1",
+      "kind": "do",
+      "lessonId": "8.5",
+      "moduleId": "m8",
+      "packId": "do_8_5_b",
+      "status": "comingSoon",
+      "orderInModule": 14
+    },
+    {
+      "id": "8.6/learn",
+      "kind": "learn",
+      "lessonId": "8.6",
+      "moduleId": "m8",
+      "packId": "learn_8_6",
+      "status": "comingSoon",
+      "orderInModule": 15
+    },
+    {
+      "id": "8.6/do/0",
+      "kind": "do",
+      "lessonId": "8.6",
+      "moduleId": "m8",
+      "packId": "do_8_6_a",
+      "status": "comingSoon",
+      "orderInModule": 16
+    },
+    {
+      "id": "8.6/do/1",
+      "kind": "do",
+      "lessonId": "8.6",
+      "moduleId": "m8",
+      "packId": "do_8_6_b",
+      "status": "comingSoon",
+      "orderInModule": 17
+    },
+    {
+      "id": "8.7/learn",
+      "kind": "learn",
+      "lessonId": "8.7",
+      "moduleId": "m8",
+      "packId": "learn_8_7",
+      "status": "comingSoon",
+      "orderInModule": 18
+    },
+    {
+      "id": "8.7/do/0",
+      "kind": "do",
+      "lessonId": "8.7",
+      "moduleId": "m8",
+      "packId": "do_8_7_a",
+      "status": "comingSoon",
+      "orderInModule": 19
+    },
+    {
+      "id": "8.7/do/1",
+      "kind": "do",
+      "lessonId": "8.7",
+      "moduleId": "m8",
+      "packId": "do_8_7_b",
+      "status": "comingSoon",
+      "orderInModule": 20
+    },
+    {
+      "id": "8.8/learn",
+      "kind": "learn",
+      "lessonId": "8.8",
+      "moduleId": "m8",
+      "packId": "learn_8_8",
+      "status": "comingSoon",
+      "orderInModule": 21
+    },
+    {
+      "id": "8.8/do/0",
+      "kind": "do",
+      "lessonId": "8.8",
+      "moduleId": "m8",
+      "packId": "do_8_8_a",
+      "status": "comingSoon",
+      "orderInModule": 22
+    },
+    {
+      "id": "8.8/do/1",
+      "kind": "do",
+      "lessonId": "8.8",
+      "moduleId": "m8",
+      "packId": "do_8_8_b",
+      "status": "comingSoon",
+      "orderInModule": 23
+    },
+    {
+      "id": "8.9/learn",
+      "kind": "learn",
+      "lessonId": "8.9",
+      "moduleId": "m8",
+      "packId": "learn_8_9",
+      "status": "comingSoon",
+      "orderInModule": 24
+    },
+    {
+      "id": "8.9/do/0",
+      "kind": "do",
+      "lessonId": "8.9",
+      "moduleId": "m8",
+      "packId": "do_8_9_a",
+      "status": "comingSoon",
+      "orderInModule": 25
+    },
+    {
+      "id": "8.9/do/1",
+      "kind": "do",
+      "lessonId": "8.9",
+      "moduleId": "m8",
+      "packId": "do_8_9_b",
+      "status": "comingSoon",
+      "orderInModule": 26
+    },
+    {
+      "id": "8.10/learn",
+      "kind": "learn",
+      "lessonId": "8.10",
+      "moduleId": "m8",
+      "packId": "learn_8_10",
+      "status": "comingSoon",
+      "orderInModule": 27
+    },
+    {
+      "id": "8.10/do/0",
+      "kind": "do",
+      "lessonId": "8.10",
+      "moduleId": "m8",
+      "packId": "do_8_10_a",
+      "status": "comingSoon",
+      "orderInModule": 28
+    },
+    {
+      "id": "m8/gate",
+      "kind": "gate",
+      "lessonId": "8.10",
+      "moduleId": "m8",
+      "packId": "gate_m8",
+      "status": "comingSoon",
+      "orderInModule": 29
+    },
+    {
+      "id": "9.1/learn",
+      "kind": "learn",
+      "lessonId": "9.1",
+      "moduleId": "m9",
+      "packId": "learn_9_1",
+      "status": "comingSoon",
+      "orderInModule": 0
+    },
+    {
+      "id": "9.1/do/0",
+      "kind": "do",
+      "lessonId": "9.1",
+      "moduleId": "m9",
+      "packId": "do_9_1_a",
+      "status": "comingSoon",
+      "orderInModule": 1
+    },
+    {
+      "id": "9.1/do/1",
+      "kind": "do",
+      "lessonId": "9.1",
+      "moduleId": "m9",
+      "packId": "do_9_1_b",
+      "status": "comingSoon",
+      "orderInModule": 2
+    },
+    {
+      "id": "9.2/learn",
+      "kind": "learn",
+      "lessonId": "9.2",
+      "moduleId": "m9",
+      "packId": "learn_9_2",
+      "status": "comingSoon",
+      "orderInModule": 3
+    },
+    {
+      "id": "9.2/do/0",
+      "kind": "do",
+      "lessonId": "9.2",
+      "moduleId": "m9",
+      "packId": "do_9_2_a",
+      "status": "comingSoon",
+      "orderInModule": 4
+    },
+    {
+      "id": "9.2/do/1",
+      "kind": "do",
+      "lessonId": "9.2",
+      "moduleId": "m9",
+      "packId": "do_9_2_b",
+      "status": "comingSoon",
+      "orderInModule": 5
+    },
+    {
+      "id": "9.3/learn",
+      "kind": "learn",
+      "lessonId": "9.3",
+      "moduleId": "m9",
+      "packId": "learn_9_3",
+      "status": "comingSoon",
+      "orderInModule": 6
+    },
+    {
+      "id": "9.3/do/0",
+      "kind": "do",
+      "lessonId": "9.3",
+      "moduleId": "m9",
+      "packId": "do_9_3_a",
+      "status": "comingSoon",
+      "orderInModule": 7
+    },
+    {
+      "id": "9.3/do/1",
+      "kind": "do",
+      "lessonId": "9.3",
+      "moduleId": "m9",
+      "packId": "do_9_3_b",
+      "status": "comingSoon",
+      "orderInModule": 8
+    },
+    {
+      "id": "9.4/learn",
+      "kind": "learn",
+      "lessonId": "9.4",
+      "moduleId": "m9",
+      "packId": "learn_9_4",
+      "status": "comingSoon",
+      "orderInModule": 9
+    },
+    {
+      "id": "9.4/do/0",
+      "kind": "do",
+      "lessonId": "9.4",
+      "moduleId": "m9",
+      "packId": "do_9_4_a",
+      "status": "comingSoon",
+      "orderInModule": 10
+    },
+    {
+      "id": "9.4/do/1",
+      "kind": "do",
+      "lessonId": "9.4",
+      "moduleId": "m9",
+      "packId": "do_9_4_b",
+      "status": "comingSoon",
+      "orderInModule": 11
+    },
+    {
+      "id": "9.5/learn",
+      "kind": "learn",
+      "lessonId": "9.5",
+      "moduleId": "m9",
+      "packId": "learn_9_5",
+      "status": "comingSoon",
+      "orderInModule": 12
+    },
+    {
+      "id": "9.5/do/0",
+      "kind": "do",
+      "lessonId": "9.5",
+      "moduleId": "m9",
+      "packId": "do_9_5_a",
+      "status": "comingSoon",
+      "orderInModule": 13
+    },
+    {
+      "id": "9.5/do/1",
+      "kind": "do",
+      "lessonId": "9.5",
+      "moduleId": "m9",
+      "packId": "do_9_5_b",
+      "status": "comingSoon",
+      "orderInModule": 14
+    },
+    {
+      "id": "9.6/learn",
+      "kind": "learn",
+      "lessonId": "9.6",
+      "moduleId": "m9",
+      "packId": "learn_9_6",
+      "status": "comingSoon",
+      "orderInModule": 15
+    },
+    {
+      "id": "9.6/do/0",
+      "kind": "do",
+      "lessonId": "9.6",
+      "moduleId": "m9",
+      "packId": "do_9_6_a",
+      "status": "comingSoon",
+      "orderInModule": 16
+    },
+    {
+      "id": "9.6/do/1",
+      "kind": "do",
+      "lessonId": "9.6",
+      "moduleId": "m9",
+      "packId": "do_9_6_b",
+      "status": "comingSoon",
+      "orderInModule": 17
+    },
+    {
+      "id": "9.7/learn",
+      "kind": "learn",
+      "lessonId": "9.7",
+      "moduleId": "m9",
+      "packId": "learn_9_7",
+      "status": "comingSoon",
+      "orderInModule": 18
+    },
+    {
+      "id": "9.7/do/0",
+      "kind": "do",
+      "lessonId": "9.7",
+      "moduleId": "m9",
+      "packId": "do_9_7_a",
+      "status": "comingSoon",
+      "orderInModule": 19
+    },
+    {
+      "id": "9.7/do/1",
+      "kind": "do",
+      "lessonId": "9.7",
+      "moduleId": "m9",
+      "packId": "do_9_7_b",
+      "status": "comingSoon",
+      "orderInModule": 20
+    },
+    {
+      "id": "9.8/learn",
+      "kind": "learn",
+      "lessonId": "9.8",
+      "moduleId": "m9",
+      "packId": "learn_9_8",
+      "status": "comingSoon",
+      "orderInModule": 21
+    },
+    {
+      "id": "9.8/do/0",
+      "kind": "do",
+      "lessonId": "9.8",
+      "moduleId": "m9",
+      "packId": "do_9_8_a",
+      "status": "comingSoon",
+      "orderInModule": 22
+    },
+    {
+      "id": "9.8/do/1",
+      "kind": "do",
+      "lessonId": "9.8",
+      "moduleId": "m9",
+      "packId": "do_9_8_b",
+      "status": "comingSoon",
+      "orderInModule": 23
+    },
+    {
+      "id": "9.9/learn",
+      "kind": "learn",
+      "lessonId": "9.9",
+      "moduleId": "m9",
+      "packId": "learn_9_9",
+      "status": "comingSoon",
+      "orderInModule": 24
+    },
+    {
+      "id": "9.9/do/0",
+      "kind": "do",
+      "lessonId": "9.9",
+      "moduleId": "m9",
+      "packId": "do_9_9_a",
+      "status": "comingSoon",
+      "orderInModule": 25
+    },
+    {
+      "id": "9.9/do/1",
+      "kind": "do",
+      "lessonId": "9.9",
+      "moduleId": "m9",
+      "packId": "do_9_9_b",
+      "status": "comingSoon",
+      "orderInModule": 26
+    },
+    {
+      "id": "9.10/learn",
+      "kind": "learn",
+      "lessonId": "9.10",
+      "moduleId": "m9",
+      "packId": "learn_9_10",
+      "status": "comingSoon",
+      "orderInModule": 27
+    },
+    {
+      "id": "9.10/do/0",
+      "kind": "do",
+      "lessonId": "9.10",
+      "moduleId": "m9",
+      "packId": "do_9_10_a",
+      "status": "comingSoon",
+      "orderInModule": 28
+    },
+    {
+      "id": "m9/gate",
+      "kind": "gate",
+      "lessonId": "9.10",
+      "moduleId": "m9",
+      "packId": "gate_m9",
+      "status": "comingSoon",
+      "orderInModule": 29
+    },
+    {
+      "id": "10.1/learn",
+      "kind": "learn",
+      "lessonId": "10.1",
+      "moduleId": "m10",
+      "packId": "learn_10_1",
+      "status": "comingSoon",
+      "orderInModule": 0
+    },
+    {
+      "id": "10.1/do/0",
+      "kind": "do",
+      "lessonId": "10.1",
+      "moduleId": "m10",
+      "packId": "do_10_1_a",
+      "status": "comingSoon",
+      "orderInModule": 1
+    },
+    {
+      "id": "10.1/do/1",
+      "kind": "do",
+      "lessonId": "10.1",
+      "moduleId": "m10",
+      "packId": "do_10_1_b",
+      "status": "comingSoon",
+      "orderInModule": 2
+    },
+    {
+      "id": "10.2/learn",
+      "kind": "learn",
+      "lessonId": "10.2",
+      "moduleId": "m10",
+      "packId": "learn_10_2",
+      "status": "comingSoon",
+      "orderInModule": 3
+    },
+    {
+      "id": "10.2/do/0",
+      "kind": "do",
+      "lessonId": "10.2",
+      "moduleId": "m10",
+      "packId": "do_10_2_a",
+      "status": "comingSoon",
+      "orderInModule": 4
+    },
+    {
+      "id": "10.2/do/1",
+      "kind": "do",
+      "lessonId": "10.2",
+      "moduleId": "m10",
+      "packId": "do_10_2_b",
+      "status": "comingSoon",
+      "orderInModule": 5
+    },
+    {
+      "id": "10.3/learn",
+      "kind": "learn",
+      "lessonId": "10.3",
+      "moduleId": "m10",
+      "packId": "learn_10_3",
+      "status": "comingSoon",
+      "orderInModule": 6
+    },
+    {
+      "id": "10.3/do/0",
+      "kind": "do",
+      "lessonId": "10.3",
+      "moduleId": "m10",
+      "packId": "do_10_3_a",
+      "status": "comingSoon",
+      "orderInModule": 7
+    },
+    {
+      "id": "10.3/do/1",
+      "kind": "do",
+      "lessonId": "10.3",
+      "moduleId": "m10",
+      "packId": "do_10_3_b",
+      "status": "comingSoon",
+      "orderInModule": 8
+    },
+    {
+      "id": "10.4/learn",
+      "kind": "learn",
+      "lessonId": "10.4",
+      "moduleId": "m10",
+      "packId": "learn_10_4",
+      "status": "comingSoon",
+      "orderInModule": 9
+    },
+    {
+      "id": "10.4/do/0",
+      "kind": "do",
+      "lessonId": "10.4",
+      "moduleId": "m10",
+      "packId": "do_10_4_a",
+      "status": "comingSoon",
+      "orderInModule": 10
+    },
+    {
+      "id": "10.4/do/1",
+      "kind": "do",
+      "lessonId": "10.4",
+      "moduleId": "m10",
+      "packId": "do_10_4_b",
+      "status": "comingSoon",
+      "orderInModule": 11
+    },
+    {
+      "id": "10.5/learn",
+      "kind": "learn",
+      "lessonId": "10.5",
+      "moduleId": "m10",
+      "packId": "learn_10_5",
+      "status": "comingSoon",
+      "orderInModule": 12
+    },
+    {
+      "id": "10.5/do/0",
+      "kind": "do",
+      "lessonId": "10.5",
+      "moduleId": "m10",
+      "packId": "do_10_5_a",
+      "status": "comingSoon",
+      "orderInModule": 13
+    },
+    {
+      "id": "10.5/do/1",
+      "kind": "do",
+      "lessonId": "10.5",
+      "moduleId": "m10",
+      "packId": "do_10_5_b",
+      "status": "comingSoon",
+      "orderInModule": 14
+    },
+    {
+      "id": "10.6/learn",
+      "kind": "learn",
+      "lessonId": "10.6",
+      "moduleId": "m10",
+      "packId": "learn_10_6",
+      "status": "comingSoon",
+      "orderInModule": 15
+    },
+    {
+      "id": "10.6/do/0",
+      "kind": "do",
+      "lessonId": "10.6",
+      "moduleId": "m10",
+      "packId": "do_10_6_a",
+      "status": "comingSoon",
+      "orderInModule": 16
+    },
+    {
+      "id": "10.6/do/1",
+      "kind": "do",
+      "lessonId": "10.6",
+      "moduleId": "m10",
+      "packId": "do_10_6_b",
+      "status": "comingSoon",
+      "orderInModule": 17
+    },
+    {
+      "id": "10.7/learn",
+      "kind": "learn",
+      "lessonId": "10.7",
+      "moduleId": "m10",
+      "packId": "learn_10_7",
+      "status": "comingSoon",
+      "orderInModule": 18
+    },
+    {
+      "id": "10.7/do/0",
+      "kind": "do",
+      "lessonId": "10.7",
+      "moduleId": "m10",
+      "packId": "do_10_7_a",
+      "status": "comingSoon",
+      "orderInModule": 19
+    },
+    {
+      "id": "10.7/do/1",
+      "kind": "do",
+      "lessonId": "10.7",
+      "moduleId": "m10",
+      "packId": "do_10_7_b",
+      "status": "comingSoon",
+      "orderInModule": 20
+    },
+    {
+      "id": "10.8/learn",
+      "kind": "learn",
+      "lessonId": "10.8",
+      "moduleId": "m10",
+      "packId": "learn_10_8",
+      "status": "comingSoon",
+      "orderInModule": 21
+    },
+    {
+      "id": "10.8/do/0",
+      "kind": "do",
+      "lessonId": "10.8",
+      "moduleId": "m10",
+      "packId": "do_10_8_a",
+      "status": "comingSoon",
+      "orderInModule": 22
+    },
+    {
+      "id": "10.8/do/1",
+      "kind": "do",
+      "lessonId": "10.8",
+      "moduleId": "m10",
+      "packId": "do_10_8_b",
+      "status": "comingSoon",
+      "orderInModule": 23
+    },
+    {
+      "id": "10.9/learn",
+      "kind": "learn",
+      "lessonId": "10.9",
+      "moduleId": "m10",
+      "packId": "learn_10_9",
+      "status": "comingSoon",
+      "orderInModule": 24
+    },
+    {
+      "id": "10.9/do/0",
+      "kind": "do",
+      "lessonId": "10.9",
+      "moduleId": "m10",
+      "packId": "do_10_9_a",
+      "status": "comingSoon",
+      "orderInModule": 25
+    },
+    {
+      "id": "10.9/do/1",
+      "kind": "do",
+      "lessonId": "10.9",
+      "moduleId": "m10",
+      "packId": "do_10_9_b",
+      "status": "comingSoon",
+      "orderInModule": 26
+    },
+    {
+      "id": "10.10/learn",
+      "kind": "learn",
+      "lessonId": "10.10",
+      "moduleId": "m10",
+      "packId": "learn_10_10",
+      "status": "comingSoon",
+      "orderInModule": 27
+    },
+    {
+      "id": "10.10/do/0",
+      "kind": "do",
+      "lessonId": "10.10",
+      "moduleId": "m10",
+      "packId": "do_10_10_a",
+      "status": "comingSoon",
+      "orderInModule": 28
+    },
+    {
+      "id": "10.10/do/1",
+      "kind": "do",
+      "lessonId": "10.10",
+      "moduleId": "m10",
+      "packId": "do_10_10_b",
+      "status": "comingSoon",
+      "orderInModule": 29
+    },
+    {
+      "id": "10.11/learn",
+      "kind": "learn",
+      "lessonId": "10.11",
+      "moduleId": "m10",
+      "packId": "learn_10_11",
+      "status": "comingSoon",
+      "orderInModule": 30
+    },
+    {
+      "id": "10.11/do/0",
+      "kind": "do",
+      "lessonId": "10.11",
+      "moduleId": "m10",
+      "packId": "do_10_11_a",
+      "status": "comingSoon",
+      "orderInModule": 31
+    },
+    {
+      "id": "10.11/do/1",
+      "kind": "do",
+      "lessonId": "10.11",
+      "moduleId": "m10",
+      "packId": "do_10_11_b",
+      "status": "comingSoon",
+      "orderInModule": 32
+    },
+    {
+      "id": "10.12/learn",
+      "kind": "learn",
+      "lessonId": "10.12",
+      "moduleId": "m10",
+      "packId": "learn_10_12",
+      "status": "comingSoon",
+      "orderInModule": 33
+    },
+    {
+      "id": "10.12/do/0",
+      "kind": "do",
+      "lessonId": "10.12",
+      "moduleId": "m10",
+      "packId": "do_10_12_a",
+      "status": "comingSoon",
+      "orderInModule": 34
+    },
+    {
+      "id": "10.12/do/1",
+      "kind": "do",
+      "lessonId": "10.12",
+      "moduleId": "m10",
+      "packId": "do_10_12_b",
+      "status": "comingSoon",
+      "orderInModule": 35
+    },
+    {
+      "id": "10.13/learn",
+      "kind": "learn",
+      "lessonId": "10.13",
+      "moduleId": "m10",
+      "packId": "learn_10_13",
+      "status": "comingSoon",
+      "orderInModule": 36
+    },
+    {
+      "id": "10.13/do/0",
+      "kind": "do",
+      "lessonId": "10.13",
+      "moduleId": "m10",
+      "packId": "do_10_13_a",
+      "status": "comingSoon",
+      "orderInModule": 37
+    },
+    {
+      "id": "10.13/do/1",
+      "kind": "do",
+      "lessonId": "10.13",
+      "moduleId": "m10",
+      "packId": "do_10_13_b",
+      "status": "comingSoon",
+      "orderInModule": 38
+    },
+    {
+      "id": "10.14/learn",
+      "kind": "learn",
+      "lessonId": "10.14",
+      "moduleId": "m10",
+      "packId": "learn_10_14",
+      "status": "comingSoon",
+      "orderInModule": 39
+    },
+    {
+      "id": "10.14/do/0",
+      "kind": "do",
+      "lessonId": "10.14",
+      "moduleId": "m10",
+      "packId": "do_10_14_a",
+      "status": "comingSoon",
+      "orderInModule": 40
+    },
+    {
+      "id": "10.14/do/1",
+      "kind": "do",
+      "lessonId": "10.14",
+      "moduleId": "m10",
+      "packId": "do_10_14_b",
+      "status": "comingSoon",
+      "orderInModule": 41
+    },
+    {
+      "id": "10.15/learn",
+      "kind": "learn",
+      "lessonId": "10.15",
+      "moduleId": "m10",
+      "packId": "learn_10_15",
+      "status": "comingSoon",
+      "orderInModule": 42
+    },
+    {
+      "id": "10.15/do/0",
+      "kind": "do",
+      "lessonId": "10.15",
+      "moduleId": "m10",
+      "packId": "do_10_15_a",
+      "status": "comingSoon",
+      "orderInModule": 43
+    },
+    {
+      "id": "10.15/do/1",
+      "kind": "do",
+      "lessonId": "10.15",
+      "moduleId": "m10",
+      "packId": "do_10_15_b",
+      "status": "comingSoon",
+      "orderInModule": 44
+    },
+    {
+      "id": "10.16/learn",
+      "kind": "learn",
+      "lessonId": "10.16",
+      "moduleId": "m10",
+      "packId": "learn_10_16",
+      "status": "comingSoon",
+      "orderInModule": 45
+    },
+    {
+      "id": "10.16/do/0",
+      "kind": "do",
+      "lessonId": "10.16",
+      "moduleId": "m10",
+      "packId": "do_10_16_a",
+      "status": "comingSoon",
+      "orderInModule": 46
+    },
+    {
+      "id": "10.16/do/1",
+      "kind": "do",
+      "lessonId": "10.16",
+      "moduleId": "m10",
+      "packId": "do_10_16_b",
+      "status": "comingSoon",
+      "orderInModule": 47
+    },
+    {
+      "id": "10.17/learn",
+      "kind": "learn",
+      "lessonId": "10.17",
+      "moduleId": "m10",
+      "packId": "learn_10_17",
+      "status": "comingSoon",
+      "orderInModule": 48
+    },
+    {
+      "id": "10.17/do/0",
+      "kind": "do",
+      "lessonId": "10.17",
+      "moduleId": "m10",
+      "packId": "do_10_17_a",
+      "status": "comingSoon",
+      "orderInModule": 49
+    },
+    {
+      "id": "10.17/do/1",
+      "kind": "do",
+      "lessonId": "10.17",
+      "moduleId": "m10",
+      "packId": "do_10_17_b",
+      "status": "comingSoon",
+      "orderInModule": 50
+    },
+    {
+      "id": "10.18/learn",
+      "kind": "learn",
+      "lessonId": "10.18",
+      "moduleId": "m10",
+      "packId": "learn_10_18",
+      "status": "comingSoon",
+      "orderInModule": 51
+    },
+    {
+      "id": "10.18/do/0",
+      "kind": "do",
+      "lessonId": "10.18",
+      "moduleId": "m10",
+      "packId": "do_10_18_a",
+      "status": "comingSoon",
+      "orderInModule": 52
+    },
+    {
+      "id": "m10/gate",
+      "kind": "gate",
+      "lessonId": "10.18",
+      "moduleId": "m10",
+      "packId": "gate_m10",
+      "status": "comingSoon",
+      "orderInModule": 53
+    }
+  ],
+  "gamePacks": [
+    {
+      "id": "learn_1_1",
+      "engineType": "learn_cards",
+      "lessonId": "1.1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_1_a",
+      "engineType": "dress_up",
+      "lessonId": "1.1",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": "dress_clothes",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_1_b",
+      "engineType": "placeholder",
+      "lessonId": "1.1",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_1_2",
+      "engineType": "learn_cards",
+      "lessonId": "1.2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_2_a",
+      "engineType": "dress_up",
+      "lessonId": "1.2",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": "dress_helmet",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_2_b",
+      "engineType": "placeholder",
+      "lessonId": "1.2",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_1_3",
+      "engineType": "learn_cards",
+      "lessonId": "1.3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_3_a",
+      "engineType": "dress_up",
+      "lessonId": "1.3",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": "dress_gloves",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_3_b",
+      "engineType": "placeholder",
+      "lessonId": "1.3",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_1_4",
+      "engineType": "learn_cards",
+      "lessonId": "1.4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_4_a",
+      "engineType": "dress_up",
+      "lessonId": "1.4",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": "dress_harness",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_4_b",
+      "engineType": "placeholder",
+      "lessonId": "1.4",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_1_5",
+      "engineType": "learn_cards",
+      "lessonId": "1.5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_5_a",
+      "engineType": "dress_up",
+      "lessonId": "1.5",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": "dress_full",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_5_b",
+      "engineType": "placeholder",
+      "lessonId": "1.5",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_1_6",
+      "engineType": "learn_cards",
+      "lessonId": "1.6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_6_a",
+      "engineType": "placeholder",
+      "lessonId": "1.6",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_6_b",
+      "engineType": "placeholder",
+      "lessonId": "1.6",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_1_7",
+      "engineType": "learn_cards",
+      "lessonId": "1.7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_7_a",
+      "engineType": "placeholder",
+      "lessonId": "1.7",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_7_b",
+      "engineType": "placeholder",
+      "lessonId": "1.7",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_1_8",
+      "engineType": "learn_cards",
+      "lessonId": "1.8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_8_a",
+      "engineType": "placeholder",
+      "lessonId": "1.8",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_8_b",
+      "engineType": "placeholder",
+      "lessonId": "1.8",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_1_9",
+      "engineType": "learn_cards",
+      "lessonId": "1.9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_9_a",
+      "engineType": "placeholder",
+      "lessonId": "1.9",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_9_b",
+      "engineType": "placeholder",
+      "lessonId": "1.9",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_1_10",
+      "engineType": "learn_cards",
+      "lessonId": "1.10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_1_10_a",
+      "engineType": "placeholder",
+      "lessonId": "1.10",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "gate_m1",
+      "engineType": "gate_field",
+      "moduleId": "m1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": [
+        "lethal_any_marked"
+      ]
+    },
+    {
+      "id": "learn_2_1",
+      "engineType": "learn_cards",
+      "lessonId": "2.1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_1_a",
+      "engineType": "placeholder",
+      "lessonId": "2.1",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_1_b",
+      "engineType": "placeholder",
+      "lessonId": "2.1",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_2_2",
+      "engineType": "learn_cards",
+      "lessonId": "2.2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_2_a",
+      "engineType": "placeholder",
+      "lessonId": "2.2",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_2_b",
+      "engineType": "placeholder",
+      "lessonId": "2.2",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_2_3",
+      "engineType": "learn_cards",
+      "lessonId": "2.3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_3_a",
+      "engineType": "placeholder",
+      "lessonId": "2.3",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_3_b",
+      "engineType": "placeholder",
+      "lessonId": "2.3",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_2_4",
+      "engineType": "learn_cards",
+      "lessonId": "2.4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_4_a",
+      "engineType": "placeholder",
+      "lessonId": "2.4",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_4_b",
+      "engineType": "placeholder",
+      "lessonId": "2.4",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_2_5",
+      "engineType": "learn_cards",
+      "lessonId": "2.5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_5_a",
+      "engineType": "placeholder",
+      "lessonId": "2.5",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_5_b",
+      "engineType": "placeholder",
+      "lessonId": "2.5",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_2_6",
+      "engineType": "learn_cards",
+      "lessonId": "2.6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_6_a",
+      "engineType": "placeholder",
+      "lessonId": "2.6",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_6_b",
+      "engineType": "placeholder",
+      "lessonId": "2.6",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_2_7",
+      "engineType": "learn_cards",
+      "lessonId": "2.7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_7_a",
+      "engineType": "placeholder",
+      "lessonId": "2.7",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_7_b",
+      "engineType": "placeholder",
+      "lessonId": "2.7",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_2_8",
+      "engineType": "learn_cards",
+      "lessonId": "2.8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_8_a",
+      "engineType": "placeholder",
+      "lessonId": "2.8",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_8_b",
+      "engineType": "placeholder",
+      "lessonId": "2.8",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_2_9",
+      "engineType": "learn_cards",
+      "lessonId": "2.9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_9_a",
+      "engineType": "placeholder",
+      "lessonId": "2.9",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_9_b",
+      "engineType": "placeholder",
+      "lessonId": "2.9",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_2_10",
+      "engineType": "learn_cards",
+      "lessonId": "2.10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_2_10_a",
+      "engineType": "placeholder",
+      "lessonId": "2.10",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "gate_m2",
+      "engineType": "gate_field",
+      "moduleId": "m2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": [
+        "lethal_any_marked"
+      ]
+    },
+    {
+      "id": "learn_3_1",
+      "engineType": "learn_cards",
+      "lessonId": "3.1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_1_a",
+      "engineType": "placeholder",
+      "lessonId": "3.1",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_1_b",
+      "engineType": "placeholder",
+      "lessonId": "3.1",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_3_2",
+      "engineType": "learn_cards",
+      "lessonId": "3.2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_2_a",
+      "engineType": "placeholder",
+      "lessonId": "3.2",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_2_b",
+      "engineType": "placeholder",
+      "lessonId": "3.2",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_3_3",
+      "engineType": "learn_cards",
+      "lessonId": "3.3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_3_a",
+      "engineType": "placeholder",
+      "lessonId": "3.3",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_3_b",
+      "engineType": "placeholder",
+      "lessonId": "3.3",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_3_4",
+      "engineType": "learn_cards",
+      "lessonId": "3.4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_4_a",
+      "engineType": "placeholder",
+      "lessonId": "3.4",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_4_b",
+      "engineType": "placeholder",
+      "lessonId": "3.4",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_3_5",
+      "engineType": "learn_cards",
+      "lessonId": "3.5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_5_a",
+      "engineType": "placeholder",
+      "lessonId": "3.5",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_5_b",
+      "engineType": "placeholder",
+      "lessonId": "3.5",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_3_6",
+      "engineType": "learn_cards",
+      "lessonId": "3.6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_6_a",
+      "engineType": "placeholder",
+      "lessonId": "3.6",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_6_b",
+      "engineType": "placeholder",
+      "lessonId": "3.6",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_3_7",
+      "engineType": "learn_cards",
+      "lessonId": "3.7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_7_a",
+      "engineType": "placeholder",
+      "lessonId": "3.7",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_7_b",
+      "engineType": "placeholder",
+      "lessonId": "3.7",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_3_8",
+      "engineType": "learn_cards",
+      "lessonId": "3.8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_8_a",
+      "engineType": "placeholder",
+      "lessonId": "3.8",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_8_b",
+      "engineType": "placeholder",
+      "lessonId": "3.8",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_3_9",
+      "engineType": "learn_cards",
+      "lessonId": "3.9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_9_a",
+      "engineType": "placeholder",
+      "lessonId": "3.9",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_9_b",
+      "engineType": "placeholder",
+      "lessonId": "3.9",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_3_10",
+      "engineType": "learn_cards",
+      "lessonId": "3.10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_3_10_a",
+      "engineType": "placeholder",
+      "lessonId": "3.10",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "gate_m3",
+      "engineType": "gate_field",
+      "moduleId": "m3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": [
+        "lethal_any_marked"
+      ]
+    },
+    {
+      "id": "learn_4_1",
+      "engineType": "learn_cards",
+      "lessonId": "4.1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_1_a",
+      "engineType": "placeholder",
+      "lessonId": "4.1",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_1_b",
+      "engineType": "placeholder",
+      "lessonId": "4.1",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_4_2",
+      "engineType": "learn_cards",
+      "lessonId": "4.2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_2_a",
+      "engineType": "placeholder",
+      "lessonId": "4.2",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_2_b",
+      "engineType": "placeholder",
+      "lessonId": "4.2",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_4_3",
+      "engineType": "learn_cards",
+      "lessonId": "4.3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_3_a",
+      "engineType": "placeholder",
+      "lessonId": "4.3",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_3_b",
+      "engineType": "placeholder",
+      "lessonId": "4.3",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_4_4",
+      "engineType": "learn_cards",
+      "lessonId": "4.4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_4_a",
+      "engineType": "placeholder",
+      "lessonId": "4.4",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_4_b",
+      "engineType": "placeholder",
+      "lessonId": "4.4",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_4_5",
+      "engineType": "learn_cards",
+      "lessonId": "4.5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_5_a",
+      "engineType": "placeholder",
+      "lessonId": "4.5",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_5_b",
+      "engineType": "placeholder",
+      "lessonId": "4.5",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_4_6",
+      "engineType": "learn_cards",
+      "lessonId": "4.6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_6_a",
+      "engineType": "placeholder",
+      "lessonId": "4.6",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_6_b",
+      "engineType": "placeholder",
+      "lessonId": "4.6",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_4_7",
+      "engineType": "learn_cards",
+      "lessonId": "4.7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_7_a",
+      "engineType": "placeholder",
+      "lessonId": "4.7",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_7_b",
+      "engineType": "placeholder",
+      "lessonId": "4.7",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_4_8",
+      "engineType": "learn_cards",
+      "lessonId": "4.8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_8_a",
+      "engineType": "placeholder",
+      "lessonId": "4.8",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_8_b",
+      "engineType": "placeholder",
+      "lessonId": "4.8",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_4_9",
+      "engineType": "learn_cards",
+      "lessonId": "4.9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_9_a",
+      "engineType": "placeholder",
+      "lessonId": "4.9",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_9_b",
+      "engineType": "placeholder",
+      "lessonId": "4.9",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_4_10",
+      "engineType": "learn_cards",
+      "lessonId": "4.10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_4_10_a",
+      "engineType": "placeholder",
+      "lessonId": "4.10",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "gate_m4",
+      "engineType": "gate_field",
+      "moduleId": "m4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": [
+        "lethal_any_marked"
+      ]
+    },
+    {
+      "id": "learn_5_1",
+      "engineType": "learn_cards",
+      "lessonId": "5.1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_1_a",
+      "engineType": "placeholder",
+      "lessonId": "5.1",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_1_b",
+      "engineType": "placeholder",
+      "lessonId": "5.1",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_5_2",
+      "engineType": "learn_cards",
+      "lessonId": "5.2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_2_a",
+      "engineType": "placeholder",
+      "lessonId": "5.2",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_2_b",
+      "engineType": "placeholder",
+      "lessonId": "5.2",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_5_3",
+      "engineType": "learn_cards",
+      "lessonId": "5.3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_3_a",
+      "engineType": "placeholder",
+      "lessonId": "5.3",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_3_b",
+      "engineType": "placeholder",
+      "lessonId": "5.3",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_5_4",
+      "engineType": "learn_cards",
+      "lessonId": "5.4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_4_a",
+      "engineType": "placeholder",
+      "lessonId": "5.4",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_4_b",
+      "engineType": "placeholder",
+      "lessonId": "5.4",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_5_5",
+      "engineType": "learn_cards",
+      "lessonId": "5.5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_5_a",
+      "engineType": "placeholder",
+      "lessonId": "5.5",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_5_b",
+      "engineType": "placeholder",
+      "lessonId": "5.5",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_5_6",
+      "engineType": "learn_cards",
+      "lessonId": "5.6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_6_a",
+      "engineType": "placeholder",
+      "lessonId": "5.6",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_6_b",
+      "engineType": "placeholder",
+      "lessonId": "5.6",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_5_7",
+      "engineType": "learn_cards",
+      "lessonId": "5.7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_7_a",
+      "engineType": "placeholder",
+      "lessonId": "5.7",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_7_b",
+      "engineType": "placeholder",
+      "lessonId": "5.7",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_5_8",
+      "engineType": "learn_cards",
+      "lessonId": "5.8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_8_a",
+      "engineType": "placeholder",
+      "lessonId": "5.8",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_8_b",
+      "engineType": "placeholder",
+      "lessonId": "5.8",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_5_9",
+      "engineType": "learn_cards",
+      "lessonId": "5.9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_9_a",
+      "engineType": "placeholder",
+      "lessonId": "5.9",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_9_b",
+      "engineType": "placeholder",
+      "lessonId": "5.9",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_5_10",
+      "engineType": "learn_cards",
+      "lessonId": "5.10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_5_10_a",
+      "engineType": "placeholder",
+      "lessonId": "5.10",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "gate_m5",
+      "engineType": "gate_field",
+      "moduleId": "m5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": [
+        "lethal_any_marked"
+      ]
+    },
+    {
+      "id": "learn_6_1",
+      "engineType": "learn_cards",
+      "lessonId": "6.1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_1_a",
+      "engineType": "placeholder",
+      "lessonId": "6.1",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_1_b",
+      "engineType": "placeholder",
+      "lessonId": "6.1",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_6_2",
+      "engineType": "learn_cards",
+      "lessonId": "6.2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_2_a",
+      "engineType": "placeholder",
+      "lessonId": "6.2",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_2_b",
+      "engineType": "placeholder",
+      "lessonId": "6.2",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_6_3",
+      "engineType": "learn_cards",
+      "lessonId": "6.3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_3_a",
+      "engineType": "placeholder",
+      "lessonId": "6.3",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_3_b",
+      "engineType": "placeholder",
+      "lessonId": "6.3",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_6_4",
+      "engineType": "learn_cards",
+      "lessonId": "6.4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_4_a",
+      "engineType": "placeholder",
+      "lessonId": "6.4",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_4_b",
+      "engineType": "placeholder",
+      "lessonId": "6.4",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_6_5",
+      "engineType": "learn_cards",
+      "lessonId": "6.5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_5_a",
+      "engineType": "placeholder",
+      "lessonId": "6.5",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_5_b",
+      "engineType": "placeholder",
+      "lessonId": "6.5",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_6_6",
+      "engineType": "learn_cards",
+      "lessonId": "6.6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_6_a",
+      "engineType": "placeholder",
+      "lessonId": "6.6",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_6_b",
+      "engineType": "placeholder",
+      "lessonId": "6.6",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_6_7",
+      "engineType": "learn_cards",
+      "lessonId": "6.7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_7_a",
+      "engineType": "placeholder",
+      "lessonId": "6.7",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_7_b",
+      "engineType": "placeholder",
+      "lessonId": "6.7",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_6_8",
+      "engineType": "learn_cards",
+      "lessonId": "6.8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_8_a",
+      "engineType": "placeholder",
+      "lessonId": "6.8",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_8_b",
+      "engineType": "placeholder",
+      "lessonId": "6.8",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_6_9",
+      "engineType": "learn_cards",
+      "lessonId": "6.9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_9_a",
+      "engineType": "placeholder",
+      "lessonId": "6.9",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_9_b",
+      "engineType": "placeholder",
+      "lessonId": "6.9",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_6_10",
+      "engineType": "learn_cards",
+      "lessonId": "6.10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_10_a",
+      "engineType": "placeholder",
+      "lessonId": "6.10",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_10_b",
+      "engineType": "placeholder",
+      "lessonId": "6.10",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_6_11",
+      "engineType": "learn_cards",
+      "lessonId": "6.11",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_6_11_a",
+      "engineType": "placeholder",
+      "lessonId": "6.11",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "gate_m6",
+      "engineType": "gate_field",
+      "moduleId": "m6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": [
+        "lethal_any_marked"
+      ]
+    },
+    {
+      "id": "learn_7_1",
+      "engineType": "learn_cards",
+      "lessonId": "7.1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_1_a",
+      "engineType": "placeholder",
+      "lessonId": "7.1",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_1_b",
+      "engineType": "placeholder",
+      "lessonId": "7.1",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_7_2",
+      "engineType": "learn_cards",
+      "lessonId": "7.2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_2_a",
+      "engineType": "placeholder",
+      "lessonId": "7.2",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_2_b",
+      "engineType": "placeholder",
+      "lessonId": "7.2",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_7_3",
+      "engineType": "learn_cards",
+      "lessonId": "7.3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_3_a",
+      "engineType": "placeholder",
+      "lessonId": "7.3",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_3_b",
+      "engineType": "placeholder",
+      "lessonId": "7.3",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_7_4",
+      "engineType": "learn_cards",
+      "lessonId": "7.4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_4_a",
+      "engineType": "placeholder",
+      "lessonId": "7.4",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_4_b",
+      "engineType": "placeholder",
+      "lessonId": "7.4",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_7_5",
+      "engineType": "learn_cards",
+      "lessonId": "7.5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_5_a",
+      "engineType": "placeholder",
+      "lessonId": "7.5",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_5_b",
+      "engineType": "placeholder",
+      "lessonId": "7.5",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_7_6",
+      "engineType": "learn_cards",
+      "lessonId": "7.6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_6_a",
+      "engineType": "placeholder",
+      "lessonId": "7.6",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_6_b",
+      "engineType": "placeholder",
+      "lessonId": "7.6",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_7_7",
+      "engineType": "learn_cards",
+      "lessonId": "7.7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_7_a",
+      "engineType": "placeholder",
+      "lessonId": "7.7",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_7_b",
+      "engineType": "placeholder",
+      "lessonId": "7.7",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_7_8",
+      "engineType": "learn_cards",
+      "lessonId": "7.8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_8_a",
+      "engineType": "placeholder",
+      "lessonId": "7.8",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_8_b",
+      "engineType": "placeholder",
+      "lessonId": "7.8",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_7_9",
+      "engineType": "learn_cards",
+      "lessonId": "7.9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_9_a",
+      "engineType": "placeholder",
+      "lessonId": "7.9",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_9_b",
+      "engineType": "placeholder",
+      "lessonId": "7.9",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_7_10",
+      "engineType": "learn_cards",
+      "lessonId": "7.10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_7_10_a",
+      "engineType": "placeholder",
+      "lessonId": "7.10",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "gate_m7",
+      "engineType": "gate_field",
+      "moduleId": "m7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": [
+        "lethal_any_marked"
+      ]
+    },
+    {
+      "id": "learn_8_1",
+      "engineType": "learn_cards",
+      "lessonId": "8.1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_1_a",
+      "engineType": "placeholder",
+      "lessonId": "8.1",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_1_b",
+      "engineType": "placeholder",
+      "lessonId": "8.1",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_8_2",
+      "engineType": "learn_cards",
+      "lessonId": "8.2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_2_a",
+      "engineType": "placeholder",
+      "lessonId": "8.2",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_2_b",
+      "engineType": "placeholder",
+      "lessonId": "8.2",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_8_3",
+      "engineType": "learn_cards",
+      "lessonId": "8.3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_3_a",
+      "engineType": "placeholder",
+      "lessonId": "8.3",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_3_b",
+      "engineType": "placeholder",
+      "lessonId": "8.3",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_8_4",
+      "engineType": "learn_cards",
+      "lessonId": "8.4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_4_a",
+      "engineType": "placeholder",
+      "lessonId": "8.4",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_4_b",
+      "engineType": "placeholder",
+      "lessonId": "8.4",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_8_5",
+      "engineType": "learn_cards",
+      "lessonId": "8.5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_5_a",
+      "engineType": "placeholder",
+      "lessonId": "8.5",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_5_b",
+      "engineType": "placeholder",
+      "lessonId": "8.5",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_8_6",
+      "engineType": "learn_cards",
+      "lessonId": "8.6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_6_a",
+      "engineType": "placeholder",
+      "lessonId": "8.6",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_6_b",
+      "engineType": "placeholder",
+      "lessonId": "8.6",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_8_7",
+      "engineType": "learn_cards",
+      "lessonId": "8.7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_7_a",
+      "engineType": "placeholder",
+      "lessonId": "8.7",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_7_b",
+      "engineType": "placeholder",
+      "lessonId": "8.7",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_8_8",
+      "engineType": "learn_cards",
+      "lessonId": "8.8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_8_a",
+      "engineType": "placeholder",
+      "lessonId": "8.8",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_8_b",
+      "engineType": "placeholder",
+      "lessonId": "8.8",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_8_9",
+      "engineType": "learn_cards",
+      "lessonId": "8.9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_9_a",
+      "engineType": "placeholder",
+      "lessonId": "8.9",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_9_b",
+      "engineType": "placeholder",
+      "lessonId": "8.9",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_8_10",
+      "engineType": "learn_cards",
+      "lessonId": "8.10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_8_10_a",
+      "engineType": "placeholder",
+      "lessonId": "8.10",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "gate_m8",
+      "engineType": "gate_field",
+      "moduleId": "m8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": [
+        "lethal_any_marked"
+      ]
+    },
+    {
+      "id": "learn_9_1",
+      "engineType": "learn_cards",
+      "lessonId": "9.1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_1_a",
+      "engineType": "placeholder",
+      "lessonId": "9.1",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_1_b",
+      "engineType": "placeholder",
+      "lessonId": "9.1",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_9_2",
+      "engineType": "learn_cards",
+      "lessonId": "9.2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_2_a",
+      "engineType": "placeholder",
+      "lessonId": "9.2",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_2_b",
+      "engineType": "placeholder",
+      "lessonId": "9.2",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_9_3",
+      "engineType": "learn_cards",
+      "lessonId": "9.3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_3_a",
+      "engineType": "placeholder",
+      "lessonId": "9.3",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_3_b",
+      "engineType": "placeholder",
+      "lessonId": "9.3",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_9_4",
+      "engineType": "learn_cards",
+      "lessonId": "9.4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_4_a",
+      "engineType": "placeholder",
+      "lessonId": "9.4",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_4_b",
+      "engineType": "placeholder",
+      "lessonId": "9.4",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_9_5",
+      "engineType": "learn_cards",
+      "lessonId": "9.5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_5_a",
+      "engineType": "placeholder",
+      "lessonId": "9.5",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_5_b",
+      "engineType": "placeholder",
+      "lessonId": "9.5",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_9_6",
+      "engineType": "learn_cards",
+      "lessonId": "9.6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_6_a",
+      "engineType": "placeholder",
+      "lessonId": "9.6",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_6_b",
+      "engineType": "placeholder",
+      "lessonId": "9.6",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_9_7",
+      "engineType": "learn_cards",
+      "lessonId": "9.7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_7_a",
+      "engineType": "placeholder",
+      "lessonId": "9.7",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_7_b",
+      "engineType": "placeholder",
+      "lessonId": "9.7",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_9_8",
+      "engineType": "learn_cards",
+      "lessonId": "9.8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_8_a",
+      "engineType": "placeholder",
+      "lessonId": "9.8",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_8_b",
+      "engineType": "placeholder",
+      "lessonId": "9.8",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_9_9",
+      "engineType": "learn_cards",
+      "lessonId": "9.9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_9_a",
+      "engineType": "placeholder",
+      "lessonId": "9.9",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_9_b",
+      "engineType": "placeholder",
+      "lessonId": "9.9",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_9_10",
+      "engineType": "learn_cards",
+      "lessonId": "9.10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_9_10_a",
+      "engineType": "placeholder",
+      "lessonId": "9.10",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "gate_m9",
+      "engineType": "gate_field",
+      "moduleId": "m9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": [
+        "lethal_any_marked"
+      ]
+    },
+    {
+      "id": "learn_10_1",
+      "engineType": "learn_cards",
+      "lessonId": "10.1",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_1_a",
+      "engineType": "placeholder",
+      "lessonId": "10.1",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_1_b",
+      "engineType": "placeholder",
+      "lessonId": "10.1",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_2",
+      "engineType": "learn_cards",
+      "lessonId": "10.2",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_2_a",
+      "engineType": "placeholder",
+      "lessonId": "10.2",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_2_b",
+      "engineType": "placeholder",
+      "lessonId": "10.2",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_3",
+      "engineType": "learn_cards",
+      "lessonId": "10.3",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_3_a",
+      "engineType": "placeholder",
+      "lessonId": "10.3",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_3_b",
+      "engineType": "placeholder",
+      "lessonId": "10.3",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_4",
+      "engineType": "learn_cards",
+      "lessonId": "10.4",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_4_a",
+      "engineType": "placeholder",
+      "lessonId": "10.4",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_4_b",
+      "engineType": "placeholder",
+      "lessonId": "10.4",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_5",
+      "engineType": "learn_cards",
+      "lessonId": "10.5",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_5_a",
+      "engineType": "placeholder",
+      "lessonId": "10.5",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_5_b",
+      "engineType": "placeholder",
+      "lessonId": "10.5",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_6",
+      "engineType": "learn_cards",
+      "lessonId": "10.6",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_6_a",
+      "engineType": "placeholder",
+      "lessonId": "10.6",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_6_b",
+      "engineType": "placeholder",
+      "lessonId": "10.6",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_7",
+      "engineType": "learn_cards",
+      "lessonId": "10.7",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_7_a",
+      "engineType": "placeholder",
+      "lessonId": "10.7",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_7_b",
+      "engineType": "placeholder",
+      "lessonId": "10.7",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_8",
+      "engineType": "learn_cards",
+      "lessonId": "10.8",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_8_a",
+      "engineType": "placeholder",
+      "lessonId": "10.8",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_8_b",
+      "engineType": "placeholder",
+      "lessonId": "10.8",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_9",
+      "engineType": "learn_cards",
+      "lessonId": "10.9",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_9_a",
+      "engineType": "placeholder",
+      "lessonId": "10.9",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_9_b",
+      "engineType": "placeholder",
+      "lessonId": "10.9",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_10",
+      "engineType": "learn_cards",
+      "lessonId": "10.10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_10_a",
+      "engineType": "placeholder",
+      "lessonId": "10.10",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_10_b",
+      "engineType": "placeholder",
+      "lessonId": "10.10",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_11",
+      "engineType": "learn_cards",
+      "lessonId": "10.11",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_11_a",
+      "engineType": "placeholder",
+      "lessonId": "10.11",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_11_b",
+      "engineType": "placeholder",
+      "lessonId": "10.11",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_12",
+      "engineType": "learn_cards",
+      "lessonId": "10.12",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_12_a",
+      "engineType": "placeholder",
+      "lessonId": "10.12",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_12_b",
+      "engineType": "placeholder",
+      "lessonId": "10.12",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_13",
+      "engineType": "learn_cards",
+      "lessonId": "10.13",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_13_a",
+      "engineType": "placeholder",
+      "lessonId": "10.13",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_13_b",
+      "engineType": "placeholder",
+      "lessonId": "10.13",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_14",
+      "engineType": "learn_cards",
+      "lessonId": "10.14",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_14_a",
+      "engineType": "placeholder",
+      "lessonId": "10.14",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_14_b",
+      "engineType": "placeholder",
+      "lessonId": "10.14",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_15",
+      "engineType": "learn_cards",
+      "lessonId": "10.15",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_15_a",
+      "engineType": "placeholder",
+      "lessonId": "10.15",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_15_b",
+      "engineType": "placeholder",
+      "lessonId": "10.15",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_16",
+      "engineType": "learn_cards",
+      "lessonId": "10.16",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_16_a",
+      "engineType": "placeholder",
+      "lessonId": "10.16",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_16_b",
+      "engineType": "placeholder",
+      "lessonId": "10.16",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_17",
+      "engineType": "learn_cards",
+      "lessonId": "10.17",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_17_a",
+      "engineType": "placeholder",
+      "lessonId": "10.17",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_17_b",
+      "engineType": "placeholder",
+      "lessonId": "10.17",
+      "slot": 1,
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "learn_10_18",
+      "engineType": "learn_cards",
+      "lessonId": "10.18",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "do_10_18_a",
+      "engineType": "placeholder",
+      "lessonId": "10.18",
+      "slot": 0,
+      "status": "comingSoon",
+      "legacyHint": null,
+      "assetRefs": {},
+      "deadlyRules": []
+    },
+    {
+      "id": "gate_m10",
+      "engineType": "gate_field",
+      "moduleId": "m10",
+      "status": "comingSoon",
+      "assetRefs": {},
+      "deadlyRules": [
+        "lethal_any_marked"
+      ]
+    }
+  ],
+  "sideItemDefs": [
+    {
+      "id": "tip_gloves",
+      "kind": "tip",
+      "placeRule": "near_player_every_3",
+      "packId": null,
+      "status": "comingSoon"
+    },
+    {
+      "id": "gift_chest",
+      "kind": "gift",
+      "placeRule": "near_player_every_8",
+      "packId": null,
+      "status": "comingSoon"
+    }
+  ],
+  "guideLines": [
+    {
+      "id": "welcome",
+      "mood": "wake",
+      "bnText": "আসুন, নিরাপদ পথে ওঠা যাক।",
+      "when": "home_open"
+    },
+    {
+      "id": "inspire_1",
+      "mood": "inspire",
+      "bnText": "নিরাপদ অভ্যাসই জীবন।",
+      "when": "idle"
+    },
+    {
+      "id": "inspire_2",
+      "mood": "inspire",
+      "bnText": "এক ভুল — আজীবনের শিক্ষা।",
+      "when": "idle"
+    },
+    {
+      "id": "coming_soon",
+      "mood": "talk",
+      "bnText": "শীঘ্রই আসছে — এই ধাপ তৈরি হচ্ছে।",
+      "when": "coming_soon"
+    },
+    {
+      "id": "exit_level",
+      "mood": "listen",
+      "bnText": "ধাপ ছেড়ে মইয়ে ফিরবেন?",
+      "when": "exit_level"
+    },
+    {
+      "id": "exit_game",
+      "mood": "listen",
+      "bnText": "খেলা ছেড়ে হোমে যাবেন?",
+      "when": "exit_game"
+    }
+  ]
+}

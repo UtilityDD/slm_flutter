@@ -323,6 +323,7 @@ ChartTopic chartTopic(String id) =>
     );
 
 final identifyChartPagesProvider = FutureProvider<Map<String, IdentifyChartPage>>((ref) async {
+  ref.keepAlive();
   final raw = await rootBundle.loadString('assets/data/identify_chart_pages.json');
   final map = jsonDecode(raw) as Map<String, dynamic>;
   return {

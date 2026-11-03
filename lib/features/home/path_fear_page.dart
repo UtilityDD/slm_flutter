@@ -12,6 +12,7 @@ import '../duty_slip/duty_slip_page.dart';
 import '../shell/shell_providers.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'home_toolbox.dart';
+import 'path_fear_gate.dart';
 
 /// Beat 3: red fear, emerald-standard skull, three lines, then the ladder.
 class PathFearPage extends ConsumerStatefulWidget {
@@ -41,6 +42,7 @@ class _PathFearPageState extends ConsumerState<PathFearPage> with TickerProvider
   @override
   void initState() {
     super.initState();
+    unawaited(PathFearGate.markShown());
     _enter = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..forward();
     _breath = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400));
     _gaze = AnimationController(vsync: this, duration: const Duration(milliseconds: 5200));
