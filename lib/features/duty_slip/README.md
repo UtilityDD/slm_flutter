@@ -1,100 +1,75 @@
-# Duty slip — মৃত্যুহীন পথ
+# Duty slip: মৃত্যুহীন পথ
 
-Field duty companion. Home card **মৃত্যুহীন পথ** opens `DutySlipPage`. Pack: `assets/data/duty_slip_job.json`. Photos: `assets/duty_slip/`. Applicable for any field breakdown or maintenance job (day or night).
+The core game. Home → path intro → `DutySlipPage(startOnRoad: true)`, which opens straight on the ladder (`adventure_map.dart`). Target design: [`GAME_DESIGN.md`](../../../GAME_DESIGN.md). Level rules and level ideas: [`GAME_LEVELS_GUIDE.md`](GAME_LEVELS_GUIDE.md).
 
-Do not use PowerShell `Set-Content` on Bangla in this folder — it mojibakes. Edit in the IDE.
+Edit Bangla here in the editor only. PowerShell `Set-Content` corrupts it.
 
-> **Target design:** [`GAME_DESIGN.md`](../../../GAME_DESIGN.md). The fixed level list below (`dsLevels`, the 19-level table) and the hard-coded 200-rung ladder in `adventure_map.dart` are the current build. They are being replaced by a ladder built from modules, lessons, and per-lesson game pools. The games described here (dress-up, SAFE HOME, 23-step job, field night, pole inspection) carry over as Do-rung games.
+## The ladder
 
-**Numbers:** always English digits `0–9`, even in Bangla copy and even when the phone language is Bengali. Use `enDigits` (`lib/core/en_digits.dart`) for any string that might contain `০–৯`. Do not map clocks or scores to Bangla digits. Theme text disables locale-aware digit substitution so the Bangla font cannot redraw Latin digits as Bengali.
+- Rungs come from `assets/game/catalog/content_catalog.json` through `lib/features/game/ladder_builder.dart`: 10 modules, 327 rungs (Learn, Do, rank gate), soft cap 400. Today only 10 Learn rungs are `playable`; the rest are `comingSoon`.
+- A playable Learn rung opens `LearnRunnerPage` (swipe cards + 2 questions, never a fall). Clearing it unlocks the next rung.
+- Rung index `i < 33` is also bridged to the old fixed level `dsLevels[i]`, so those 33 levels stay playable.
+- Side stations repeat every 8 rungs (only on rungs 1–33): tips, hourly quiz, identify quiz, gift, life tip, lesson (`TrainingScreen`).
+- Locked rung: shake + mist, no text. Unlock is one at a time. `dsAllLevelsOpen` is `false`; admins can open everything with `devLevelsOpen` (Admin → developer mode).
 
-## Testing unlock
+## The 33 levels (`dsLevels` in `duty_slip_engine.dart`)
 
-`dsAllLevelsOpen` in `duty_slip_engine.dart` is **`true`**. All 19 live plates are tappable. Ladder opens on level 1. Rank still records; আবার still does not bank score.
+| Levels | Game | File |
+|---|---|---|
+| 1–10 | Dress-up and van jobs: drag the right kit onto the lineman or van | `ds_dress_up.dart` |
+| 11–13 | Pole check before climbing (normal PCC, hollow PCC, steel pole) | `ds_pole_inspect.dart` |
+| 14 | Safe clearance and crowd barrier | `ds_clearance.dart` |
+| 15–22 | SAFE HOME 8-step cards: 2 / 4 / 6 / 8 choices, then the same living | `duty_slip_page.dart` |
+| 23–32 | 23-step job: 2 / 4 / 6 / 10 / 23 choices, then the same living | `duty_slip_page.dart` |
+| 33 | Field night: docket, PTW, PPE, tools, site calls | `duty_slip_page.dart` |
 
-Set it **`false`** before a real release. Then only `unlocked` plates open, a pass opens the next one, and the ladder pins to that next plate.
+`dressLevel` is `level.isLetters && level.number <= 14`. Level 4 (হারনেস) is a tap-in-order checklist today.
+
+**Living:** a wrong tap swaps in unused far decoys and reshuffles. All-option living levels only reshuffle.
 
 ## Files
 
 | File | Role |
 |---|---|
-| `duty_slip_engine.dart` | Level specs, SAFE HOME deck, briefs, scoring, living rebuild, field night |
-| `duty_slip_page.dart` | Cover, bamboo ladder, briefing, quiz, result medal, field docket |
-| `ds_dress_up.dart` | Levels 1–6 (Dress-Up & Dress-Up Pro): shelf, drag, harness checklist, coach |
-| `duty_slip_models.dart` | Plan items, sites, PTW/kit/match steps, pack loader |
-| `GAME_LEVELS_GUIDE.md` | Master 20-level developer guide (Tier 1 Foundational, Tier 2 Pro, Tier 3 Field Operations) |
+| `duty_slip_engine.dart` | Level specs, SAFE HOME deck (`dsSafeHome`), briefs (`dsBriefFor`), scoring, living rebuild, field night, unlock |
+| `duty_slip_models.dart` | Plan items, sites, PTW / kit / match steps, loads `assets/data/duty_slip_job.json` |
+| `duty_slip_page.dart` | Ladder host, briefing, card quiz, result medal, field docket, HUD, `DsMotionGate` (frame-time motion tier) |
+| `adventure_map.dart`, `adventure_scenery.dart` | The ladder and its world layers |
+| `ds_dress_up.dart`, `ds_pole_inspect.dart`, `ds_clearance.dart` | Interactive levels 1–14 |
+| `duty_slip_voice.dart` | `DsVoice`: Bangla line → clip in `assets/sounds/voice/` (generated, see `AUDIO_DEVELOPMENT_GUIDE.md`) |
 
-## Flow
+## SAFE HOME
 
-`cover` → `road` (ladder) → briefing → `play` or field night → `result`.
-
-**1–6** are the interactive dress game (`ds_dress_up.dart`):
-* Levels 1–5: Foundational PPE (পোশাক, মাথায় হেলমেট, হাতে গ্লাভস, হারনেস, পুরো কিট)
-* Level 6: পোশাক ও জুতো Pro (ধাতুর বালা-চেইন অপসারণ, স্টিল-টো ট্র্যাপ, ডাই-ইলেকট্রিক বুট ও খাঁটি সুতি পোশাক)
-
-| # | Name | Play |
+| Letter | id | Bangla |
 |---|---|---|
-| 1 | পোশাক | Cotton full shirt, full pant, safety shoes |
-| 2 | মাথায় হেলমেট | Electrical helmet. গামছা starts on and comes off first |
-| 3 | হাতে গ্লাভস | Rubber electrical gloves |
-| 4 | হারনেস | Gloves off, one drag into the hand, then the checklist. Last step: two fingers. Brown belt is the trap |
-| 5 | পুরো কিট | Shirt, pant, shoe, harness, helmet, shield, gloves. গামছা is refused |
-| 6 | পোশাক ও জুতো Pro | Metallic bracelet/chain starts on wrist and must come off first. Steel-toe boot is a fatal trap; certified dielectric boot + 100% cotton required |
+| S | stop | থামো ও বিপদ খুঁজো |
+| A | armour | কবচ পরো |
+| F | form | পারমিট নাও |
+| E | end | দুদিক কাটো |
+| H | hold | আর্থ করো |
+| O | ok | ফিতে ঘেরো |
+| M | mend | কাজ সারো |
+| E | exit | গুনে ফিরো |
 
-**6–8 briefing** is the SAFE HOME list (title, then body). **9–18 briefing** (job): different site photo (torn wire). Page 1 title **আসল কাজ**, lead **23 ধাপ। মাঠে তার ছিঁড়ে পড়ে আছে।**, caption **শুরু থেকে শেষ পর্যন্ত কাজের ধাপগুলো দেখে নিন।** Five tappable group plates (`dsJobGroups`). Tap a group → same **আসল কাজ** header, that group’s steps fill the list (no serials). Bottom ring turns back and returns to the five plates. Tap a step for why; the plate has prev / next (and swipe) to walk the group. Next → clean 23 list, still **আসল কাজ**. Next → full-page level hint (`dsJobHint`). Next starts the quiz.
+Letters S A F E H O M E appear only on the briefing list. Quiz cards are Bangla text only: no letters, no serials.
 
-Dress titles are fixed: পোশাক, মাথায় হেলমেট, হাতে গ্লাভস, হারনেস, পুরো কিট. Levels 6–8 use the SAFE HOME briefing list.
-
-## 19 levels (`dsLevels`)
-
-| # | Deck | On-screen choices | Living | দারুণ time |
-|---|---|---|---|---|
-| 1–5 | Dress the lineman | shelf | no | 150 / 80 / 100 / 180 / 200 s |
-| 6–8 | SAFE HOME 8 | 4 / 6 / 8 | yes | 70 / 85 / 100 s |
-| 9–13 | 23-step job | 2 / 4 / 6 / 10 / 23 | no | 75 / 105 / 150 / 180 / 240 s |
-| 14–18 | 23-step job | 2 / 4 / 6 / 10 / 23 | yes | 70 / 95 / 135 / 160 / 210 s |
-| 19 | field night | docket / PTW / PPE / tools / calls | — | — |
-
-**Living:** wrong tap rebuilds far distractors (avoid last decoy set) and re-deals. Clock never fails a level.
-
-Quiz cards: Bangla `labelBn` only. Letters only on the 6–8 briefing list. Two-choice prefers **far** distractors.
-
-## SAFE HOME (1–8)
-
-| Letter | id | Bangla | Why (tap the plate) |
-|---|---|---|---|
-| S | stop | থামো ও বিপদ খুঁজো | তাড়াহুড়ো করলে বিপদ দেখা যায় না |
-| A | armour | কবচ পরো | PPE ছাড়া শক / পোড়া / পড়ে যাওয়া |
-| F | form | পারমিট নাও | PTW ছাড়া কেউ জানে না আপনি লাইনে |
-| E | end | দুদিক কাটো | লাইন কাটা না হলে কারেন্ট আছে |
-| H | hold | আর্থ করো | ভোল্টেজ ফিরতে পারে |
-| O | ok | ফিতে ঘেরো | ব্যারিকেড না দিলে মানুষ ঢোকে |
-| M | mend | কাজ সারো | আগের ধাপ শেষ, এবার কাজ |
-| E | exit | গুনে ফিরো | সবাইকে গুনে নামান |
-
-## 23-step job (9–18)
+## 23-step job
 
 Spine in `duty_slip_job.json`: ডকেট পড়ুন → PTW নিন → PPE দেখে নিন → টুল বেছে নিন → সাইটে চলে যান → সব PPE পরে নিন → নিজেদের মধ্যে আলোচনা → বিপদ খুঁজে দেখুন → PTW মিলিয়ে দেখুন → ব্যারিকেড করে নিন → শাটডাউন নিন → ডিসচার্জ করুন → দুই মাথায় আর্থ → LOTO → কাজ শুরু করুন → সঠিক টুল → কাজ শেষ → টুল ও PPE নামিয়ে নিন → সবাই এক জায়গায় আসুন → শাটডাউন তুলে নিন → বিদ্যুৎ ফিরল কিনা দেখুন → PTW ফেরত দিন → মিশন কমপ্লিট.
 
-Sites: রাস্তায় / পুকুর পাড়ে / ধানক্ষেতে. Clock 20:10. Water copy **জল**. Shutdown **শাটডাউন**.
+Sites: রাস্তায় / পুকুর পাড়ে / ধানক্ষেতে. Clock starts 20:10.
 
 ## Scoring and ranks
 
 - Correct **+5**, wrong **−5**. Streak gift **+5** every 6 correct.
-- Clock counts. Never auto-fails.
-- HUD: time + this-level score large + night total small.
-- Ranks from wrongs + দারুণ time, not streak: **দারুণ / মোটামুটি / আবার**.
-- 8-step deck: দারুণ ≤1 wrong and in time; মোটামুটি ≤2; আবার 3+.
-- 23-step deck: দারুণ ≤3 wrong and in time; মোটামুটি ≤7; আবার 8+.
-- আবার does not add `levelScore` to `nightTotal`. Best time on a plate is the lowest pass (any rank except আবার).
-- Result medal: number only, seated in the well, scales for bigger totals. Pass: celebration sting + sparks. Fail: accident sting + shake.
+- The clock counts and never closes a level.
+- HUD: time + this-level score large + night total small. The HUD clock ticks once a second and pauses in the background.
+- Ranks come from wrong taps + time, not streak: **দারুণ / মোটামুটি / আবার**.
+- 8-step deck: দারুণ ≤1 wrong and in time; মোটামুটি ≤2; আবার 3+. 23-step deck: দারুণ ≤3 wrong and in time; মোটামুটি ≤7; আবার 8+.
+- আবার does not add the level score to the night total.
+- Field night has its own grade: **সেফ / ঝুঁকি ছিল / আনসেফ**. A lethal miss plays `accident.wav`.
 
-## Field night (level 19)
+## Copy rules
 
-Docket, PTW feeder/pole/shift, PPE kit, tools, site calls (বস / নেতা / দোকানি / কৃষক / কন্ট্রোল). Lethal → `accident.wav`. Grade **সেফ / ঝুঁকি ছিল / আনসেফ**, separate from দারুণ/মোটামুটি/আবার.
-
-## Ladder UI
-
-Reverse `ListView`. Ground, 19 live plates, grey sky plates 20+. Bamboo rungs, city-light parallax, clouds. Best `mm:ss` stamped on a passed plate. Rank lives in metal colour. Next arrow is a floating ring, not a glass bar.
-
-Device for installs: CPH2467 / `f6650cdf`. Gradle 9.3.1 offline.
+- Western digits `0–9` everywhere (`enDigits`). Never Bangla digits on clocks or scores.
+- **ডকেট**, **শাটডাউন**, **জল** (never পানি), **গ্লাভস** (never দস্তানা).

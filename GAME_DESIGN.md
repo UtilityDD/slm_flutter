@@ -4,6 +4,8 @@ The single source of truth for what the app is becoming. When this file and an o
 
 **Status (Nov 2026):** through **Learn runner** — Module 1 `1.N/learn` packs are playable; ladder opens swipe cards + 2-question exit (points only, never a fall). Do/gate still Coming Soon via legacy `dsLevels` bridge. Next: **Do wire**, then Module 1 fill. See section 13 and `assets/game/catalog/content_catalog.json`.
 
+> **Zero Loss note:** the Zero Loss screens were removed on branch `cleanup/audit-2026-11`. Only its engine, models, FX and UI helpers remain (`lib/features/zero_loss/`). Where this file says "Zero Loss", read it as the field-night style (`DsLevelKind.field`), not a live game.
+
 ---
 
 ## 1. Purpose

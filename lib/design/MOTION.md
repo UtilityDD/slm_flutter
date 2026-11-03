@@ -19,22 +19,17 @@ covers the thin seam left where the old ring was removed, so keep the ring
 geometry constants in `slm_safety_shield.dart` unchanged unless the layers are
 regenerated.
 
-## Global switches
+## Reduced-motion policy (one for the whole app)
 
-Wrap a subtree in `SlmMotionScope(settings: SlmMotionSettings(), child: …)` to
-pause loops, switch them off, or replay entrances (`replayEntrances()`).
-Without a scope everything plays. The phone's "remove animations" setting
-always turns loops and entrances off.
+All in `motion/slm_motion_scope.dart`:
 
-One reduced-motion policy for the whole app (all in `slm_motion_scope.dart`):
-
-- `slmReduceMotion(context)`: one-shot entrances and transitions. Use this, not
-  `MediaQuery.disableAnimationsOf`, in feature code.
+- `slmReduceMotion(context)`: true when the phone's "remove animations" is on. Use it for one-shot entrances and transitions. Do not read `MediaQuery.disableAnimationsOf` in feature code.
 - `slmLoopsOn(context)`: may looping decoration run here.
-- `slmSyncLoop(context, controller, enabled:, reverse:, restAt:)`: start or stop
-  a `repeat()` loop to match. Call it from `didChangeDependencies` (and
-  `didUpdateWidget` when `enabled` depends on widget fields). Never call
-  `repeat()` directly in `initState`.
+- `slmSyncLoop(context, controller, enabled:, reverse:, restAt:)`: starts or stops a `repeat()` loop to match. Call it from `didChangeDependencies`, and from `didUpdateWidget` when `enabled` depends on widget fields. Never call `repeat()` straight in `initState`. A stopped loop schedules no frames; `restAt` snaps it to a rest pose.
+
+`SlmMotionScope` / `SlmMotionSettings` (pause, loops off, `replayEntrances()`) exist, but no screen installs one. Without a scope, loops play unless "remove animations" is on.
+
+Not yet on the policy (fix when you touch them): about 20 `.repeat(` calls in `lib/features` (duty slip, dress-up, ladder, path fear, celebration, quiz turn card) and direct `MediaQuery.disableAnimationsOf` reads in `duty_slip_page.dart`, `path_fear_page.dart` and `learn_runner.dart`. Duty slip also has `DsMotionGate` (`duty_slip_page.dart`), which drops its own effects to a `lite` tier when frames run slow.
 
 ## Keeping motion cheap
 
@@ -52,29 +47,18 @@ One reduced-motion policy for the whole app (all in `slm_motion_scope.dart`):
 
 ## Widgets
 
-- `AnimatedSafetyShield(size: 220, animate: true)`: signature emblem. Options:
-  `entrance`, `controller` (`AnimatedSafetyShieldController.replayEntrance()`),
-  `revolution`, `intensity`, `heroTag`.
-- `SlmButton` (and `.gold`, `.secondary`, `.ghost`): press depth, spring
-  release, one light sweep per tap, `loading`, disabled when `onPressed` is null.
-- `SlmTactile(builder: (context, press, child) …)`: press physics for custom
-  tappables; `press` runs 0 → 1 and springs slightly below 0 on release.
-- `SlmMotionCard(index: i, onTap: …)`: staggered entrance, lift and gold edge
-  light on press, optional `float` (one per screen).
-- `SlmContentSwitcher`: cross-fade + rise + resize between keyed children.
-- `SlmXpBar(value:)`: animates from the previous value; fresh progress glows
-  gold; reaching 1.0 flashes and calls `onFilled`.
-- `SlmProgressRing`, `SlmStepProgress`, `SlmAchievementCounter`,
-  `SlmLevelMeter`, `SlmCountUp`: progress displays that animate to new data.
-- `showSlmXpToast(context, amount: 20, anchor: key.currentContext)`.
-- `showSlmBadgeUnlock(context, icon:, title:, caption:)`.
-- `showSlmLevelUp(context, fromLevel:, toLevel:, heading:, title:, reward:)`.
-- `SlmSparkBurst(trigger: value)`: small burst whenever `trigger` changes.
-- `SlmReveal`, `SlmStagger`, `SlmStaggeredText`: entrances.
-- `SlmShimmer`, `SlmSweepMask`, `SlmPulse`, `SlmFloat`, `SlmRays`: lighting loops.
-- `SlmPageRoute(builder:, style: SlmTransition.fadeThrough)`: route with the
-  shared motion; `SlmPageTransitionsBuilder` does the same through
-  `ThemeData.pageTransitionsTheme`. `SlmStepSwitcher` for onboarding steps.
+Used by app screens today:
+
+- `AnimatedSafetyShield(size:, animate:)`: the মৃত্যুহীন পথ emblem. Options: `entrance`, `controller` (`replayEntrance()`), `revolution`, `intensity`, `heroTag`.
+- `SlmButton` (`.gold`, `.secondary`, `.ghost`): press depth, spring release, one light sweep per tap, `loading`, disabled when `onPressed` is null. **`.gold` defaults to `shine: true`, a continuous `SlmShimmer`.** Pass `shine: false` where a loop is not wanted.
+- `SlmPressable` and `SlmTactile(builder: (context, press, child) …)`: press feedback for custom tappables.
+- `SlmReveal` (with `index`): staggered entrance.
+- `SlmShimmer`: one slow highlight; the idle gap runs on a `Timer`.
+- `SlmSweepMask` / `SlmLiveShaderMask`: light sweep without swapping the widget type (see above).
+- `SlmPulse`, `SlmSparkBurst(trigger:)`, `SlmCountUp`, `showSlmXpToast`.
+- `SlmPageRoute(builder:, style: SlmTransition.…)`: route with the shared motion.
+
+Built but with no app caller yet (check before you add a new one): `SlmMotionCard`, `SlmContentSwitcher`, `SlmXpBar`, `SlmProgressRing`, `SlmStepProgress`, `SlmAchievementCounter`, `SlmLevelMeter`, `SlmStagger`, `SlmStaggeredText`, `SlmStepSwitcher`, `SlmFloat`, `SlmRays`, `showSlmBadgeUnlock`, `showSlmLevelUp`, `SlmMotionScope`. `SlmPageTransitionsBuilder` is not wired into any `ThemeData.pageTransitionsTheme`.
 
 Rewards are display only. Call them after the existing scoring code has
 saved the result; they never change points, levels or the leaderboard.

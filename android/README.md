@@ -1,22 +1,17 @@
-# Android (primary ship target)
+# Android (the ship target)
 
-Application id `com.smartlineman.app.slm_flutter`.
+Application id `com.smartlineman.app.slm_flutter`. Launcher label **SmartLineman**.
 
-- Gradle **9.3.1** (`gradle/wrapper/gradle-wrapper.properties`)
-- Android Gradle Plugin **9.1.0**, Kotlin **2.4.0** (`settings.gradle.kts`)
-- Java 17
-- `flutter_tts` still applies its own KGP; Flutter prints a future-breakage warning
+- Gradle wrapper **9.3.1**, Android Gradle Plugin **9.1.0**, Kotlin **2.4.0** (`settings.gradle.kts`)
+- Code targets Java 17 (`app/build.gradle.kts`). Run Gradle on JDK 17 or 21
+- `flutter_tts` still applies its own Kotlin plugin, so Flutter prints a future-breakage warning
 
-Permissions (`app/src/main/AndroidManifest.xml`): INTERNET, RECORD_AUDIO (speech), Bluetooth trio (radio / audio routing). Queries: PROCESS_TEXT, speech RecognitionService.
+Manifest (`app/src/main/AndroidManifest.xml`):
 
-Launcher label is still `slm_flutter`. Impeller may be opted out in the manifest; Flutter warns that flag is going away.
+- Permissions: `INTERNET`, `RECORD_AUDIO` (speech). No Bluetooth.
+- Deep link `com.smartlineman.app://login-callback` for sign-in.
+- `<queries>`: `DIAL` `tel` (emergency calls), `PROCESS_TEXT`, speech `RecognitionService`, `VIEW` `https`.
 
-Offline Gradle (wrapper zip already in `%USERPROFILE%\.gradle`):
+Release builds still sign with the debug config. Not store-ready.
 
-```
-$env:GRADLE_USER_HOME = "$env:USERPROFILE\.gradle"
-$env:GRADLE_OPTS = "-Dorg.gradle.offline=true"
-flutter run -d f6650cdf --no-pub
-```
-
-Release signing still uses the debug config (`app/build.gradle.kts`) — not store-ready.
+Android rejects any non-resource file under `app/src/main/res/`, so notes on that folder are in `app/src/main/README.md`.

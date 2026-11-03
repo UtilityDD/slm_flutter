@@ -1,6 +1,6 @@
 # Identify — পরিচিতি
 
-Tab 1. Photo library of field gear plus how-to / rating charts.
+Photo library of field gear plus how-to / rating charts. Route `/identify`, opened from the Home toolbox.
 
 | File | Role |
 |---|---|
@@ -10,6 +10,7 @@ Tab 1. Photo library of field gear plus how-to / rating charts.
 | `identify_search.dart` | Search |
 | `identify_charts.dart` / `identify_chart_view.dart` | Chart kinds: howto, compare, table, sections, cards |
 | `identify_style.dart` | Local look |
+| `fit_image.dart` | Decodes photos at display size (keep using it for new images) |
 
 ## Categories (order)
 

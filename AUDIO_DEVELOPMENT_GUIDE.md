@@ -179,12 +179,11 @@ await DsVoice.play('সাবস্টেশনে জরুরি রক্ষ�
 | **Windows UTF-8 Mojibake** | PowerShell ডিফল্ট `Set-Content` এনকোডিং সিপি১২৫২/আনসিতে রূপান্তর করে অক্ষর নষ্ট করে। | পাইথন ফাইলে `sys.stdout.reconfigure(encoding='utf-8')` ব্যবহার করুন। পাওয়ারশেল পাইপলাইনের বদলে পাইথন টুল ব্যবহার করুন। |
 | **অডিও প্লে ওভারল্যাপ** | পূর্ববর্তী অডিও শেষ না হতেই নতুন অডিও চালু হওয়া। | `DsVoice.play()` ব্যবহারের আগে স্বয়ংক্রিয়ভাবে `_player.stop()` কল হয়। নিশ্চিত করুন `await DsVoice.play(...)` দিয়ে পরবর্তী ধাপে যাচ্ছেন। |
 | **মিউজিকের সাথে ভয়েস ভলিউম ক্ল্যাশ** | গেমের ব্যাকগ্রাউন্ড টিকটিক শব্দে ভয়েস চাপা পড়া। | `AudioContextConfig(focus: AudioContextConfigFocus.mixWithOthers)` ব্যবহার করুন এবং ভয়েস চলার সময় ব্যাকগ্রাউন্ড মিউজিকের ভলিউম `0.2`-এ নামিয়ে রাখুন। |
-| **আক্ষরিক ইংরেজি পরিভাষা** | গুগল ট্রান্সলেট বা চ্যাটবটের সরাসরি বাংলা অনুবাদ। | [**`game_audio_level_by_level_audit.md`**](file:///C:/Users/rouma/.gemini/antigravity-ide/brain/4668dc13-9193-433c-804a-fb85feeaef65/game_audio_level_by_level_audit.md) ফাইলে দেওয়া ফিল্ড স্ট্যান্ডার্ড শব্দভাণ্ডার মিলিয়ে নিন। |
+| **আক্ষরিক ইংরেজি পরিভাষা** | গুগল ট্রান্সলেট বা চ্যাটবটের সরাসরি বাংলা অনুবাদ। | `tool/game_voice_catalog.json` (পুরনো `game_audio_level_by_level_audit.md` এই রিপোতে নেই) ফাইলে দেওয়া ফিল্ড স্ট্যান্ডার্ড শব্দভাণ্ডার মিলিয়ে নিন। |
 
 ---
 
 ## ৮. সমাপ্তি ও রিসোর্স লিংক
 
-* **সম্পূর্ণ গেম লেভেল অডিট**: [`game_audio_level_by_level_audit.md`](file:///C:/Users/rouma/.gemini/antigravity-ide/brain/4668dc13-9193-433c-804a-fb85feeaef65/game_audio_level_by_level_audit.md)
-* **মাস্টার ভয়েস ক্যাটালগ**: [`tool/game_voice_catalog.json`](file:///c:/Dipankar/slm_flutter/tool/game_voice_catalog.json)
-* **ডার্ট ভয়েস প্লেয়ার**: [`lib/features/duty_slip/duty_slip_voice.dart`](file:///c:/Dipankar/slm_flutter/lib/features/duty_slip/duty_slip_voice.dart)
+* **মাস্টার ভয়েস ক্যাটালগ**: [`tool/game_voice_catalog.json`](tool/game_voice_catalog.json)
+* **ডার্ট ভয়েস প্লেয়ার**: [`lib/features/duty_slip/duty_slip_voice.dart`](lib/features/duty_slip/duty_slip_voice.dart)

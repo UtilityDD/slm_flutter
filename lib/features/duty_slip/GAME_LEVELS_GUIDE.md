@@ -2,6 +2,8 @@
 
 > **Important**: All Bengali text in this module must be saved in clean UTF-8. Do not use PowerShell `Set-Content` (which causes mojibake); edit within the IDE or agent tools (`Write` / `StrReplace`).
 
+> **Status (Nov 2026).** Sections 0, 2, 3, 4 and levels 12–14 in section 5 describe live code. Levels 15–31 in section 5 are **planned ideas, not built**. Their numbers are idea numbers, not `dsLevels` numbers: in the code, levels 15–33 are SAFE HOME cards, the 23-step job and the field night (see [`README.md`](README.md)). Each idea becomes a Do game in the pool of its lesson ([`GAME_DESIGN.md`](../../../GAME_DESIGN.md)). The old 31-level tier plan is in the Archive at the end.
+
 ---
 
 ## 0. Non-Negotiable Rules (To Prevent Repeated Mistakes)
@@ -9,7 +11,7 @@
 Every new level must follow these rules. Earlier iterations were rejected whenever any of these were broken.
 
 1. **Lessons Are the Source, Habits Are the Game**
-   * Every level comes from the training chapters (`c:\Dipankar\slm_web\public\quizzes\chapter_*.json`).
+   * Every level comes from the training chapters (`public/quizzes/chapter_*.json` in the `slm_web` repo; a Bangla copy is in `tool/all_training_chapters_bn.json`).
    * Assume the lineman has **already read the lesson**. The game tests whether he remembers the habit in the field, not whether he can read labels on the screen.
    * **Never reveal the checks before playing.** The opening speech gives only the job situation and what has already been completed. It must never list the answers.
 
@@ -45,24 +47,6 @@ Every new level must follow these rules. Earlier iterations were rejected whenev
 
 ---
 
-## 1. Master Level Architecture (31 Levels)
-
-> **Replaced.** The fixed 31-level tier structure below is superseded by [`GAME_DESIGN.md`](../../../GAME_DESIGN.md): modules of Learn / Do rungs with rank gates, built from data. Keep section 0 (the rules) and the level ideas in sections 2–5: each becomes a game in the pool of the matching lesson. Read the tier and numbering parts as history.
-
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│ TIER 1 (Levels 1–5)   : Foundational PPE (Basic Selection & Fitting)     │
-├──────────────────────────────────────────────────────────────────────────┤
-│ TIER 2 (Levels 6–10)  : Van Jobs (Dress + 3 Core Tools + Job Extras)     │
-├──────────────────────────────────────────────────────────────────────────┤
-│ TIER 3 (Levels 11–31) : Field Habit Mastery (Lesson-Based Real Scenes)   │
-│   • 11 : पोলের ভাষা — Normal Pole Routine (ACTIVE)                       │
-│   • 12–31 : 20 Planned Lesson-Based Levels (Detailed Below)              │
-└──────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
 ## 2. Tier 1: Foundational PPE (Levels 1–5) — *ACTIVE*
 
 *Implemented in [`ds_dress_up.dart`](ds_dress_up.dart). Do not alter.*
@@ -70,7 +54,7 @@ Every new level must follow these rules. Earlier iterations were rejected whenev
 * **Level 1 — পোশাক**: Full-sleeve cotton shirt, cotton trousers, dielectric boots.
 * **Level 2 — মাথায় হেলমেট**: Remove *gamcha* to shelf, fit Class E electrical helmet.
 * **Level 3 — হাতে গ্লাভস**: Clean dry rubber gloves (reject cotton, wet, punctured, bike gloves).
-* **Level 4 — হারনেস**: Full-body harness (waist belt on shelf is a trap), buckle sequence + two-finger check.
+* **Level 4 — হারনেস**: Full-body harness (waist belt on shelf is a trap), then the checks tapped in order from a list. (The old buckle sequence + two-finger drag was removed.)
 * **Level 5 — পুরো কিট**: Full PPE in order.
 
 ---
@@ -120,7 +104,7 @@ Every new level must follow these rules. Earlier iterations were rejected whenev
 
 ---
 
-## 5. Planned 20 Lesson-Based Levels (Levels 12–31)
+## 5. Lesson-Based Levels: 12–14 Active, 15–31 Planned
 
 Every level below follows the exact Level 11 architecture: real photo title card with clean header, no back button on the work screen, `clock_tick.wav` held during play, top-left short pre-done ticks, picture-only bottom tray, one-by-one mistake coaching, first-success `ঠিক আছে` confirmation, and end checklist + thank-you.
 
@@ -187,6 +171,10 @@ Every level below follows the exact Level 11 architecture: real photo title card
   `এই তো নিয়ম! ভিড় সরিয়ে, নিচের জায়গা পরিষ্কার করে আর লক্ষ্মণ রেখা মেনে কাজ শুরু করেছেন।`
 
 ---
+
+### Planned ideas (not built)
+
+Levels 15–31 below are product ideas for future Do games. Nothing below this line is in the code yet.
 
 ### Level 15: হারনেসের তিন মিনিট (3-Minute Harness Pre-Use Inspection)
 * **Lesson Source**: Lesson 1.4 (“সেফটি হারনেস: আপনার লাইফলাইন” — Webbing cut check, stitching check, D-ring/buckle rust check, expiry label check, high anchor above head).
@@ -517,11 +505,31 @@ Every level below follows the exact Level 11 architecture: real photo title card
 
 * **Engine Configuration**: [`duty_slip_engine.dart`](duty_slip_engine.dart)
   - `dsLevels`: List of `DsLevelSpec`. Defines level numbers, choices, and `darunSec` target times.
-  - `dressLevel`: Currently returns `true` for `level.isLetters && level.number <= 11` (extend as interactive field habit levels 12+ replace quiz placeholders).
+  - `dressLevel`: Returns `true` for `level.isLetters && level.number <= 14`. Levels 15–33 are the card quizzes and the field night.
   - `dsBriefFor`: Returns level title and opening speech (`brief.body`).
 * **UI & Intro Presentation**: [`duty_slip_page.dart`](duty_slip_page.dart)
   - `_dressIntroArt`: Returns the full-screen photograph for the level introduction card.
   - `_DressIntro`: Renders the clean header (Back arrow, `লেভেল N`, diamond rule, title) and centered guide speech.
 * **Interactive Habit Levels**:
   - Levels 1–10: [`ds_dress_up.dart`](ds_dress_up.dart)
-  - Level 11+: [`ds_pole_inspect.dart`](ds_pole_inspect.dart) (and dedicated field habit widgets following the exact same contract: `ZlFx.holdClock()` / `ZlFx.releaseClock()`, no in-level back arrow, top-left pre-done ticks, `_praise` on first success, `_showFaultCoach` one-by-one on mistake, end checklist + thank-you).
+  - Levels 11–13: [`ds_pole_inspect.dart`](ds_pole_inspect.dart). Level 14: [`ds_clearance.dart`](ds_clearance.dart). New habit levels get their own widget that follows the same contract: `ZlFx.holdClock()` / `ZlFx.releaseClock()`, no in-level back arrow, top-left pre-done ticks, `_praise` on first success, `_showFaultCoach` one-by-one on mistake, end checklist + thank-you.
+
+---
+
+## Archive (superseded, kept as history)
+
+### Old master level architecture (31 levels)
+
+> **Replaced.** The fixed 31-level tier structure below is superseded by [`GAME_DESIGN.md`](../../../GAME_DESIGN.md): modules of Learn / Do rungs with rank gates, built from data. Keep section 0 (the rules) and the level ideas in sections 2–5: each becomes a game in the pool of the matching lesson. Read the tier and numbering parts as history.
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│ TIER 1 (Levels 1–5)   : Foundational PPE (Basic Selection & Fitting)     │
+├──────────────────────────────────────────────────────────────────────────┤
+│ TIER 2 (Levels 6–10)  : Van Jobs (Dress + 3 Core Tools + Job Extras)     │
+├──────────────────────────────────────────────────────────────────────────┤
+│ TIER 3 (Levels 11–31) : Field Habit Mastery (Lesson-Based Real Scenes)   │
+│   • 11 : पोলের ভাষা — Normal Pole Routine (ACTIVE)                       │
+│   • 12–31 : 20 Planned Lesson-Based Levels (Detailed Below)              │
+└──────────────────────────────────────────────────────────────────────────┘
+```

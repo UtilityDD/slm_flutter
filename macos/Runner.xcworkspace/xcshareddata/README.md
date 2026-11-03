@@ -1,1 +1,0 @@
-# macOS workspace shared data.

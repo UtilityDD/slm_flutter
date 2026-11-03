@@ -1,32 +1,29 @@
 # Home
 
-Tab 0. Navy premium backdrop, name + verify tick + বাং / EN switch, the lineman hero carousel, then the **মৃত্যুহীন পথ** button. Premium rules: root [`README.md`](../../../README.md#premium-design-system-and-motion).
+One-button Home on the navy backdrop: name, verify tick, বাং / EN switch, score and death count in the corners, the toolbox button, and the **মৃত্যুহীন পথ** shield button (`AnimatedSafetyShield` + real Bangla text).
 
-## Entry
+## Flow
 
-`DutySlipPage.open(context, sourceRect:)` from `_PathPlayChip`. The button is `_PathBadge`: `AnimatedSafetyShield` + real text **মৃত্যুহীন পথ** + gold arrow, 270 px wide (narrower on small screens). Tap keeps the old charge pulse, haptic and `quiz_select.wav` cue.
+Shield button → `PathIntroPage` → `PathFearPage` (first open of the day, or after 4 hours: `PathFearGate`) → `DutySlipPage(startOnRoad: true)`, which opens on the ladder. Home reloads `gameSaveProvider` when the player comes back.
 
-## Learning flow
-
-Hero card tap → `openLevelLessons` (card-expand flight) → `LevelZeroPage` for level 0, or `LevelLessonsPage` (lesson shelf) for 1–10 → `LessonReaderPage` → lesson quiz → snackbar + `+20 পয়েন্ট` toast, or `LevelCelebrationPage` when the level is cleared. All of it is in the navy design except the quiz and celebration pages. Reading text stays dark on an ivory sheet.
-
-`HeroCard(premium: true)` is used by the carousel and the expand flight only.
+The toolbox (`home_toolbox.dart`) is one sheet shared by Home, the intro and the fear page. It opens `/rank`, `/identify`, `/emergency` and `/more`.
 
 ## Files
 
 | File | Role |
 |---|---|
-| `home_screen.dart` | Layout + মৃত্যুহীন card |
-| `hero_card.dart` / `hero_card_carousel.dart` | Rank pages 0–10 |
-| `lineman_figure.dart` | Draws `assets/lineman/lineman_NN_*.webp` |
-| `lineman_progress.dart` | Rank names, reading-point thresholds, caution pins |
-| `level_zero_page.dart` / `level_lessons_page.dart` / `level_lessons_sheet.dart` | Training lessons per rank |
-| `level_celebration_page.dart` | Rank-up |
-| `lesson_reader_page.dart` / `lesson_rich_text.dart` | Lesson body + media markup |
-| `lesson_quiz_page.dart` / `quiz_turn_card.dart` / `lesson_quiz_sfx.dart` | End-of-lesson quiz cues |
+| `home_screen.dart` | Home layout |
+| `home_toolbox.dart` | Toolbox button and sheet |
+| `path_intro_page.dart`, `path_fear_page.dart`, `path_fear_gate.dart` | Pages before the ladder |
+| `lesson_reader_page.dart`, `lesson_rich_text.dart` | Lesson body and media markup (opened from `TrainingScreen`) |
+| `lesson_quiz_page.dart`, `quiz_turn_card.dart`, `lesson_quiz_sfx.dart` | End-of-lesson quiz |
+| `level_celebration_page.dart` | Level cleared |
 | `lesson_progress_store.dart` | Local completed-lesson ids |
-| `bangla_read_aloud.dart` | TTS; strips `((media\|label))` and `[[image\|caption]]` |
+| `lineman_figure.dart`, `lineman_progress.dart` | Rank figures (`assets/lineman/`), rank names, `webBadgeLevel` |
+| `bangla_read_aloud.dart` | The one shared device TTS. Strips `((media\|label))` and `[[image\|caption]]` |
 
 ## Ranks
 
-ট্রেইনি → জুনিয়র → টেকনিশিয়ান → স্কিলড → অ্যাডভান্সড → সিনিয়র → সুপারভাইজার → স্পেশালিস্ট → এক্সপার্ট → সেফটি প্রো.
+ট্রেইনি → জুনিয়র → টেকনিশিয়ান → স্কিলড → অ্যাডভান্সড → সিনিয়র → সুপারভাইজার → স্পেশালিস্ট → এক্সপার্ট → সেফটি প্রো (`lineman_01` … `lineman_10`, plus `lineman_00_start`).
+
+Reading text stays dark ink on an ivory sheet. Field staff read it in sunlight.

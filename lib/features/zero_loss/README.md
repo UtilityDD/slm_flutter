@@ -1,27 +1,11 @@
-# Zero Loss (জিরো লস)
+# Zero Loss (জিরো লস): what is left
 
-Older “one storm-night as feeder in-charge” sim. Engine, TBT, crew, field canvas, stress calls, and FX still live here. **Home currently opens duty slip instead.** `ZeroLossPage.open` remains if something else routes to it.
+The storm-feeder game was never routed, and its screens were removed on branch `cleanup/audit-2026-11`. **Do not rebuild it.** Only these files remain:
 
-## Files (high level)
-
-| File | Role |
+| File | Why it stays |
 |---|---|
-| `zero_loss_engine.dart` | Shift state, faults, crew assign, scoring |
-| `zero_loss_models.dart` | Scenario, faults, gear, moods |
-| `zero_loss_places.dart` | West Bengal district / town names |
-| `zero_loss_page.dart` | Root UI |
-| `zero_loss_opening.dart` / `zero_loss_rules.dart` | Brief + rules |
-| `zero_loss_tbt.dart` / `zero_loss_tbt_preview.dart` | Toolbox talk |
-| `zero_loss_crew.dart` | Anil, Bapi, Kartik, Rafiq, Subrata |
-| `zero_loss_field.dart` / `zero_loss_scene.dart` / `zero_loss_work_site.dart` | Site canvas |
-| `zero_loss_stress.dart` | Villager / customer / accident pressure |
-| `zero_loss_fx.dart` | `ZlFx` cues (shuffle, tick, accident, complaint…) |
-| `zero_loss_ui.dart` / `zero_loss_reveal.dart` | Shared chrome |
+| `zero_loss_fx.dart` | Shared audio for the whole app: `SlmSfx` (pooled SFX players), `ZlFx` (cues, `holdClock()` / `releaseClock()` for `clock_tick.wav`), `ZlMusic` |
+| `zero_loss_ui.dart` | Night palette, text and small widgets (`ZlColors`, `zlText`, `ZlVoice`, `CrewFace`, `GearPicture`…) used by duty slip |
+| `zero_loss_engine.dart`, `zero_loss_models.dart`, `zero_loss_places.dart` | Old engine and its types. `zero_loss_ui.dart` imports them; no screen runs the game. The engine reads `assets/data/zero_loss_storm_feeder.json` |
 
-## Data
-
-- `assets/data/zero_loss_storm_feeder.json` — jobs, gear, protocol
-- `assets/data/zero_loss_asset_plan.json` — asset map
-- `assets/zero_loss/crew/` and `scene/`
-
-Tests: `test/zero_loss_engine_test.dart`.
+Art in `assets/zero_loss/` is still bundled: duty slip uses many scene and crew files.
