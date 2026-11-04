@@ -15,6 +15,8 @@ import '../game/beat_fx.dart';
 import '../game/content_catalog.dart';
 import '../game/game_save.dart';
 import '../game/ladder_builder.dart';
+import '../game/learn_board_models.dart';
+import '../game/learn_board_runner.dart';
 import '../game/learn_runner.dart';
 import '../guide/ai_lineman_guide.dart';
 import '../guide/guide_director.dart';
@@ -554,14 +556,23 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       _hintComingSoon();
       return;
     }
+    final boardPack = learnBoardPackFor(lessonId);
     final cleared = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) => LearnRunnerPage(
-          rungId: rung.id,
-          lessonId: lessonId,
-          ladderIndex: index,
-          muted: widget.muted,
-        ),
+        builder: (_) => boardPack != null
+            ? LearnBoardRunnerPage(
+                rungId: rung.id,
+                lessonId: lessonId,
+                ladderIndex: index,
+                pack: boardPack,
+                muted: widget.muted,
+              )
+            : LearnRunnerPage(
+                rungId: rung.id,
+                lessonId: lessonId,
+                ladderIndex: index,
+                muted: widget.muted,
+              ),
       ),
     );
     if (!mounted) return;
