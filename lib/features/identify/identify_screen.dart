@@ -174,15 +174,7 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
     HapticFeedback.lightImpact();
     _searchFocus.unfocus();
     Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 420),
-        reverseTransitionDuration: const Duration(milliseconds: 340),
-        pageBuilder: (_, _, _) => IdentifyDetailPage(items: list, initialIndex: index),
-        transitionsBuilder: (_, anim, _, child) => FadeTransition(
-          opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
-          child: child,
-        ),
-      ),
+      SlmPageRoute<void>(builder: (_) => IdentifyDetailPage(items: list, initialIndex: index)),
     );
   }
 

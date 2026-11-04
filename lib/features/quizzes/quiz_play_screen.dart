@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../auth/auth_provider.dart';
 import '../identify/fit_image.dart';
 import 'hourly_pack.dart';
+import 'leaderboard_provider.dart';
 
 /// Hourly quiz from the bundled pack. The phone does not know the right answer.
 /// A logged-in player sends the chosen options; Supabase marks the score.
@@ -141,6 +142,8 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
       if (!mounted) return;
       final result = raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
       if (result['success'] == true) {
+        // Points changed on the server: the kept board is stale now.
+        ref.invalidate(liveLeaderboardProvider);
         final already = result['already_played'] == true;
         final score = result['score'];
         final correct = result['correct'];
