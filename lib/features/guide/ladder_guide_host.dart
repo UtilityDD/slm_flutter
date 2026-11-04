@@ -223,7 +223,9 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
           Positioned(
             right: 8,
             bottom: pad.bottom + 8,
-            child: AnimatedBuilder(
+            // Own layer: the guide's per-frame motion never repaints the ladder.
+            child: RepaintBoundary(
+              child: AnimatedBuilder(
               animation: Listenable.merge([_dockPop, _bubble]),
               builder: (_, _) {
                 final raw = _dockPop.value.clamp(0.0, 1.0);
@@ -254,11 +256,13 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
                 );
               },
             ),
+            ),
           ),
         if (_centerVisible)
           Positioned.fill(
             child: IgnorePointer(
               ignoring: true,
+              child: RepaintBoundary(
               child: AnimatedBuilder(
                 animation: Listenable.merge([_welcome, _bubble]),
                 builder: (_, _) {
@@ -295,6 +299,7 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
                     ),
                   );
                 },
+              ),
               ),
             ),
           ),
