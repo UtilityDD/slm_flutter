@@ -9,7 +9,7 @@ import os
 import shutil
 
 root = r'c:\Dipankar\slm_flutter'
-data_path = os.path.join(root, 'assets', 'data', 'zero_loss_storm_feeder.json')
+data_path = os.path.join(root, 'tool', 'media_src', 'data', 'zero_loss_storm_feeder.json')
 scene_dir = os.path.join(root, 'assets', 'zero_loss', 'scene')
 
 # 1. Copy gear assets into assets/zero_loss/scene/gear_<id>.webp

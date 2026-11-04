@@ -8,6 +8,8 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1] / "assets" / "lineman"
+# Source JPGs live outside the bundled assets folder.
+SRC = Path(__file__).resolve().parents[1] / "tool" / "media_src" / "lineman"
 # Generated art uses app cream + near-white studio fill.
 TARGETS = np.array(
     [
@@ -134,15 +136,15 @@ def process(src: Path) -> Path:
     alpha = feather(alpha, bg)
     out = arr.copy()
     out[..., 3] = alpha
-    dest = src.with_suffix(".webp")
+    dest = ROOT / (src.stem + ".webp")
     Image.fromarray(out).save(dest, "WEBP", quality=92, method=6)
     return dest
 
 
 def main() -> None:
-    jpgs = sorted(ROOT.glob("lineman_*.jpg"))
+    jpgs = sorted(SRC.glob("lineman_*.jpg"))
     if not jpgs:
-        raise SystemExit(f"No JPGs in {ROOT}")
+        raise SystemExit(f"No JPGs in {SRC}")
     for src in jpgs:
         dest = process(src)
         print(f"{src.name} -> {dest.name}")

@@ -13,18 +13,18 @@ Large posters and some lesson media are not bundled. They stream from `https://w
 | `data/` | JSON packs (table below) | see table |
 | `data/life_skill/` | 13 life-skill lessons, `lesson_10_1.json` … `lesson_10_13.json` | nothing now (the Life Skill UI was removed; content kept) |
 | `game/catalog/content_catalog.json` | Modules, lessons, rungs, game packs, guide lines for the ladder | `lib/features/game/content_catalog.dart` |
-| `duty_slip/` | Night-job photos (desk, docket, PTW, brass plate, pole stencil, tool bag, van, callers). `path_button.webp` has no Dart reader | duty slip |
+| `duty_slip/` | Night-job photos (docket, PTW, brass plate, pole stencil, tool bag, van, callers) | duty slip |
 | `duty_slip/dress/` | Dress-up and guide art | `ds_dress_up.dart`, `ai_lineman_guide.dart` |
 | `duty_slip/world3d/` | Ladder world layers (see `tool/world3d_production/ASSET_REGISTER.md`) | `adventure_map.dart` |
 | `brand/` | `shield_body/rim/glass.webp`, the three layers of the animated shield (see `lib/design/MOTION.md`) | `slm_safety_shield.dart` |
-| `lineman/` | Rank figures `lineman_00_start` … `lineman_10_pro`, `.jpg` + `.webp` (UI uses webp). Backgrounds cut with `tool/remove_lineman_bg.py` | `lineman_figure.dart` |
+| `lineman/` | Rank figures `lineman_00_start` … `lineman_10_pro` (`.webp`). Cut from the JPGs in `tool/media_src/lineman/` with `tool/remove_lineman_bg.py` | `lineman_figure.dart` |
 | `quizzes/` | Quiz stills (prefixes below) | hourly pack, identify quiz |
 | `safety/library/<cat>/` | Identify photos: `ppe`, `tools`, `insulators`, `ab-cable-items`, `ug-cable`, `others`, `charts` | Identify, duty slip kit |
 | `zero_loss/crew/`, `zero_loss/scene/` | Crew portraits; scene layers `bg_*`, `gear_*`, `acc_*`, `spr_*`, `cust_*` | duty slip reuses many (sites, gear, lineman sprites) |
 | `sounds/` | Wav cues; `sounds/intro/*.ogg`; `sounds/voice/` voice clips | `SlmSfx` / `ZlFx` in `zero_loss_fx.dart`, `DsVoice` |
 | `fonts/` | Noto Sans Bengali 400 / 500 / 600 / 700. Family name `Noto Sans Bengali` | theme |
 
-Brand source JPEGs are in `tool/media_src/brand/`, not in `assets/`, so they do not ship.
+Source and tool-only art lives in `tool/media_src/`, which mirrors the `assets/` layout and does not ship: brand JPEGs, lineman JPGs, unused world3d renders and `ASSET_REGISTER.json`, the dress `house*` / `tray_loose` cut-outs, Zero Loss `acc_*` / `gear_*` files the tool scripts read, 7 unlinked library photos, and the reader-less JSON packs.
 
 ## `data/` files
 
@@ -36,8 +36,8 @@ Brand source JPEGs are in `tool/media_src/brand/`, not in `assets/`, so they do 
 | `identify_chart_pages.json` | `identify/identify_charts.dart` |
 | `districtEmergencyServices.json` | `emergency/emergency_directory_screen.dart` |
 | `wb_locations.json` | `more/profile_edit.dart` |
-| `zero_loss_storm_feeder.json` | nothing (its engine was deleted) |
-| `safe_home_snapped.json`, `supplementary_modules.json`, `zero_loss_asset_plan.json` | No Dart reader now |
+
+`zero_loss_storm_feeder.json` and `supplementary_modules.json` had no Dart reader and moved to `tool/media_src/data/`. `safe_home_snapped.json` and `zero_loss_asset_plan.json` were deleted.
 
 Rules:
 

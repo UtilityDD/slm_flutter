@@ -12,7 +12,7 @@
 | `build_lesson_*.py` | Lesson 1.x media and portraits |
 | `cut_scene_assets.py`, `expand_zero_loss_jobs.py` | Old Zero Loss scene and job data (the game screens are gone) |
 | `world3d_production/` | Ladder world renders. Register: `world3d_production/ASSET_REGISTER.md` |
-| `media_src/brand/` | Source JPEGs kept out of the APK |
+| `media_src/` | Source and tool-only art and data kept out of the APK (mirrors `assets/`) |
 | `all_training_chapters_bn.json`, `inspect_*.py`, `dump_curriculum_details.py`, `fetch_chapters.py` | Training chapter source and inspectors |
 
 Never commit (gitignored): `tool/hourly_answer_keys.json`, `tool/hourly_answer_keys.sql`.

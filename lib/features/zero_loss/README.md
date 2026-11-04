@@ -7,6 +7,6 @@ The storm-feeder game was never routed, and its screens were removed on branch `
 | `zero_loss_fx.dart` | Shared audio for the whole app: `SlmSfx` (pooled SFX players), `ZlFx` (cues, `holdClock()` / `releaseClock()` for `clock_tick.wav`), `ZlMusic` |
 | `zero_loss_ui.dart` | Only the night palette and text helper (`ZlColors`, `zlText`) used by duty slip |
 
-The old engine, models and places files were deleted. `assets/data/zero_loss_storm_feeder.json` now has no reader.
+The old engine, models and places files were deleted. Its `zero_loss_storm_feeder.json` has no reader and now lives in `tool/media_src/data/`.
 
 Art in `assets/zero_loss/` is still bundled: duty slip uses many scene and crew files.

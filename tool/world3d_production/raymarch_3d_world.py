@@ -361,6 +361,8 @@ def build_training_shed_3d(path: Path):
     # Composite actual high-detail PPE & cone assets onto the 3D bench and plinth
     def paste_asset(rel: str, pos: tuple[int, int], size: tuple[int, int]):
         ap = SCENE_DIR / rel
+        if not ap.exists():
+            ap = ROOT / "tool" / "media_src" / "zero_loss" / "scene" / rel
         if ap.exists():
             prop = Image.open(ap).convert("RGBA").resize(size, Image.Resampling.LANCZOS)
             img.alpha_composite(prop, dest=pos)
