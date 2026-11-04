@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/en_digits.dart';
+import '../guide/ai_lineman_guide.dart';
+import '../guide/guide_director.dart';
+import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'duty_slip_engine.dart';
@@ -4576,21 +4579,16 @@ enum DsCoachMood { ready, talk, glad, oops, thanks }
 
 class DsTalk {
   DsTalk._();
-  static final active = ValueNotifier<bool>(false);
-  static var _n = 0;
+  static ValueNotifier<bool> get active => MascotTalk.active;
 
-  static void begin() {
-    _n++;
-    if (!active.value) active.value = true;
-  }
+  static void begin() => MascotTalk.begin();
 
-  static void end() {
-    if (_n > 0) _n--;
-    if (_n == 0 && active.value) active.value = false;
-  }
+  static void end() => MascotTalk.end();
 }
 
-class DsCoach extends StatefulWidget {
+/// Unified Game Mascot adapter for Do levels — delegates directly to [AiLinemanGuide]
+/// so the exact same mascot, lip-sync, and Midnight-Navy/Gold speech bubble appear everywhere.
+class DsCoach extends StatelessWidget {
   const DsCoach({
     super.key,
     required this.mood,
@@ -4606,281 +4604,25 @@ class DsCoach extends StatefulWidget {
   final double sprite;
   final bool centered;
 
-  @override
-  State<DsCoach> createState() => _DsCoachState();
-}
-
-class _DsCoachState extends State<DsCoach> with TickerProviderStateMixin {
-  late final AnimationController _pop;
-  late final AnimationController _eyes;
-  late final AnimationController _mouth;
-  var _eyeLap = 0;
-  var _eyeArmed = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _pop = AnimationController(vsync: this, duration: const Duration(milliseconds: 640))..forward();
-    _eyes = AnimationController(vsync: this, duration: const Duration(milliseconds: 4200))..repeat();
-    _mouth = AnimationController(vsync: this, duration: const Duration(milliseconds: 1320));
-    _eyes.addListener(_countLaps);
-    DsTalk.active.addListener(_onTalk);
-    _syncMouth();
-  }
-
-  void _onTalk() {
-    _syncMouth();
-    if (mounted) setState(() {});
-  }
-
-  void _countLaps() {
-    if (_eyes.value < 0.03 && _eyeArmed) {
-      _eyeArmed = false;
-      _eyeLap++;
-    } else if (_eyes.value > 0.2) {
-      _eyeArmed = true;
-    }
-  }
-
-  @override
-  void didUpdateWidget(DsCoach old) {
-    super.didUpdateWidget(old);
-    if (old.mood != widget.mood) _pop.forward(from: 0);
-    if (old.mood != widget.mood || old.line != widget.line) _syncMouth(restart: true);
-  }
-
-  bool get _speaking => widget.mood == DsCoachMood.talk && widget.line.isNotEmpty && DsTalk.active.value;
-
-  void _syncMouth({bool restart = false}) {
-    if (_speaking) {
-      if (restart || !_mouth.isAnimating) _mouth.repeat(period: const Duration(milliseconds: 1320));
-    } else if (_mouth.isAnimating || _mouth.value != 0) {
-      _mouth
-        ..stop()
-        ..value = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    DsTalk.active.removeListener(_onTalk);
-    _eyes.removeListener(_countLaps);
-    _pop.dispose();
-    _eyes.dispose();
-    _mouth.dispose();
-    super.dispose();
-  }
-
-  String _asset(double t) {
-    final blink = t > 0.06 && t < 0.13;
-    final glance = _eyeLap.isOdd && t > 0.42 && t < 0.68;
-    return switch (widget.mood) {
-      DsCoachMood.thanks || DsCoachMood.glad => 'coach_happy',
-      DsCoachMood.oops => blink
-          ? 'coach_oops_blink'
-          : glance
-              ? 'coach_oops_glance'
-              : 'coach_oops',
-      DsCoachMood.talk => _speaking
-          ? (blink ? 'coach_talk_blink' : 'coach_talk')
-          : blink
-              ? 'coach_blink'
-              : glance
-                  ? 'coach_glance'
-                  : 'coach_ready',
-      DsCoachMood.ready => blink
-          ? 'coach_blink'
-          : glance
-              ? 'coach_glance'
-              : 'coach_ready',
-    };
-  }
-
-  double _lipClose(double t) {
-    const keys = <(double, double)>[
-      (0.00, 0.16),
-      (0.05, 0.00),
-      (0.16, 0.00),
-      (0.19, 1.00),
-      (0.23, 0.00),
-      (0.35, 0.00),
-      (0.39, 0.58),
-      (0.45, 0.00),
-      (0.56, 0.00),
-      (0.59, 1.00),
-      (0.64, 0.00),
-      (0.76, 0.00),
-      (0.82, 0.34),
-      (0.88, 0.00),
-      (0.95, 0.86),
-      (1.00, 0.16),
-    ];
-    for (var i = 0; i < keys.length - 1; i++) {
-      final a = keys[i];
-      final b = keys[i + 1];
-      if (t < a.$1 || t > b.$1) continue;
-      final u = ((t - a.$1) / (b.$1 - a.$1)).clamp(0.0, 1.0);
-      final snap = (b.$2 - a.$2).abs() > 0.7;
-      final s = snap ? Curves.easeInOutQuart.transform(u) : Curves.easeInOutCubic.transform(u);
-      return a.$2 + (b.$2 - a.$2) * s;
-    }
-    return keys.last.$2;
-  }
-
-  Widget _talkMouth() {
-    final close = _lipClose(_mouth.value);
-    if (close < 0.08) return const SizedBox.shrink();
-    final s = widget.sprite;
-    const imageAspect = 597 / 888;
-    final imageW = s * imageAspect;
-    final left = (s - imageW) / 2;
-    return Positioned(
-      left: left + imageW * 0.455,
-      top: s * 0.442,
-      width: imageW * 0.16,
-      height: s * 0.076,
-      child: CustomPaint(painter: _LipPainter(close)),
-    );
-  }
+  GuideMood get _mappedMood => switch (mood) {
+        DsCoachMood.ready => GuideMood.idle,
+        DsCoachMood.talk => GuideMood.talk,
+        DsCoachMood.glad => GuideMood.glad,
+        DsCoachMood.oops => GuideMood.warn,
+        DsCoachMood.thanks => GuideMood.celebrate,
+      };
 
   @override
   Widget build(BuildContext context) {
-    final oops = widget.mood == DsCoachMood.oops;
-    final joy = widget.mood == DsCoachMood.thanks;
-    final lift = joy || widget.mood == DsCoachMood.glad;
-    return AnimatedBuilder(
-      animation: Listenable.merge([_pop, _eyes, _mouth]),
-      builder: (_, _) {
-        final spring = Curves.elasticOut.transform(_pop.value.clamp(0.0, 1.0));
-        final t = _eyes.value;
-        final dx = oops ? math.sin(_pop.value * math.pi * 6) * 6 : 0.0;
-        final hop = lift ? -12 * math.sin(_pop.value.clamp(0.0, 1.0) * math.pi) : 0.0;
-        final nod = _speaking ? 1.4 * math.sin(_mouth.value * math.pi * 2) : 0.0;
-        final asset = _asset(t);
-        final align = widget.centered ? CrossAxisAlignment.center : CrossAxisAlignment.start;
-        final stars = widget.sprite > 120 ? 6 : 3;
-        return Transform.translate(
-          offset: Offset(dx, 28 * (1 - spring) + hop + nod),
-          child: Transform.scale(
-            scale: 0.72 + 0.28 * spring,
-            alignment: widget.centered ? Alignment.center : Alignment.bottomLeft,
-            child: SizedBox(
-              width: widget.bubbleWidth,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: align,
-                children: [
-                  if (widget.line.isNotEmpty) _CoachBubble(line: widget.line, bad: oops, maxWidth: widget.bubbleWidth),
-                  if (widget.line.isNotEmpty) const SizedBox(height: 2),
-                  SizedBox(
-                    width: widget.sprite,
-                    height: widget.sprite,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      clipBehavior: Clip.none,
-                      children: [
-                        Image.asset('assets/duty_slip/dress/$asset.webp', fit: BoxFit.contain),
-                        if (_speaking) _talkMouth(),
-                        if (joy)
-                          for (var i = 0; i < stars; i++)
-                            Positioned(
-                              left: widget.sprite * 0.72 + 18 * math.cos(t * math.pi * 2 + i * 1.05),
-                              top: 4 + 16 * math.sin(t * math.pi * 2 + i),
-                              child: Icon(Icons.auto_awesome, size: widget.sprite > 120 ? 18 : 14, color: const Color(0xFFE2B15A)),
-                            ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _LipPainter extends CustomPainter {
-  const _LipPainter(this.close);
-
-  final double close;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = close.clamp(0.0, 1.0);
-    if (c < 0.06 || size.width < 2 || size.height < 2) return;
-    canvas.save();
-    canvas.clipPath(
-      Path()..addOval(Rect.fromLTWH(0, size.height * 0.04, size.width, size.height * 0.92)),
-    );
-    final skin = Paint()..color = const Color(0xFFC67C4C);
-    final meet = size.height * 0.40;
-    final upperH = (meet + size.height * 0.08) * c;
-    final lowerH = (size.height - meet + size.height * 0.08) * c;
-    final upper = Path()
-      ..moveTo(-2, -2)
-      ..lineTo(size.width + 2, -2)
-      ..lineTo(size.width + 2, upperH * 0.62)
-      ..quadraticBezierTo(size.width * 0.5, upperH * 1.18, -2, upperH * 0.62)
-      ..close();
-    canvas.drawPath(upper, skin);
-    final ly = size.height - lowerH;
-    final lower = Path()
-      ..moveTo(-2, size.height + 2)
-      ..lineTo(size.width + 2, size.height + 2)
-      ..lineTo(size.width + 2, ly + lowerH * 0.42)
-      ..quadraticBezierTo(size.width * 0.5, ly - lowerH * 0.16, -2, ly + lowerH * 0.42)
-      ..close();
-    canvas.drawPath(lower, skin);
-    if (c > 0.82) {
-      final lip = Paint()
-        ..color = const Color(0xFF2C1A12)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(1.15, size.width * 0.048)
-        ..strokeCap = StrokeCap.round;
-      final smile = Path()
-        ..moveTo(size.width * 0.20, meet)
-        ..quadraticBezierTo(size.width * 0.5, meet + size.height * 0.14, size.width * 0.80, meet);
-      canvas.drawPath(smile, lip);
-    }
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(_LipPainter old) => old.close != close;
-}
-
-class _CoachBubble extends StatelessWidget {
-  const _CoachBubble({required this.line, required this.bad, required this.maxWidth});
-
-  final String line;
-  final bool bad;
-  final double maxWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-          decoration: BoxDecoration(
-            color: bad ? const Color(0xFFFFF1F0) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 10, offset: Offset(0, 4))],
-          ),
-          child: Text(enDigits(line), style: zlText(13, weight: FontWeight.w700, height: 1.35, color: const Color(0xFF3A2A16))),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 22),
-          child: Transform.rotate(
-            angle: math.pi / 4,
-            child: Container(width: 12, height: 12, color: bad ? const Color(0xFFFFF1F0) : Colors.white),
-          ),
-        ),
-      ],
+    return AiLinemanGuide(
+      sprite: sprite,
+      bubbleWidth: bubbleWidth,
+      showBubble: line.trim().isNotEmpty,
+      bubbleOpacity: 1.0,
+      large: sprite > 120,
+      overrideMood: _mappedMood,
+      overrideLine: line,
+      centered: centered,
     );
   }
 }

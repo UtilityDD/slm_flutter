@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,9 +10,10 @@ import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../guide/guide_director.dart';
 import '../shell/shell_providers.dart';
+import '../zero_loss/zero_loss_fx.dart';
 import 'game_save.dart';
 
-/// Shared beat FX bus — score chips, death moment, later hints.
+/// Shared beat FX bus — score chips, sound cues, death moment, and unified HUD.
 class BeatFx {
   BeatFx._();
 
@@ -18,10 +22,34 @@ class BeatFx {
     int delta, {
     String? rungId,
     GuideMood? mood,
+    Offset? originGlobal,
+    bool playSound = true,
+    bool muted = false,
   }) async {
-    await ref.read(gameSaveProvider.notifier).addPoints(delta, rungId: rungId);
+    if (delta == 0) return;
+    if (delta > 0) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.mediumImpact();
+    }
+    if (playSound && !muted) {
+      if (delta >= 20) {
+        unawaited(ZlFx.cue('sounds/level_done.wav', volume: 0.75, muted: false));
+      } else if (delta > 0) {
+        unawaited(ZlFx.cue('sounds/dress_right.wav', volume: 0.72, muted: false));
+      } else {
+        unawaited(ZlFx.cue('sounds/dress_wrong.wav', volume: 0.72, muted: false));
+      }
+    }
+    await ref.read(gameSaveProvider.notifier).addPoints(
+          delta,
+          rungId: rungId,
+          originGlobal: originGlobal,
+        );
     if (mood != null) {
       ref.read(guideDirectorProvider.notifier).react(mood);
+    } else if (delta >= 20) {
+      ref.read(guideDirectorProvider.notifier).react(GuideMood.celebrate);
     } else if (delta > 0) {
       ref.read(guideDirectorProvider.notifier).react(GuideMood.glad);
     } else if (delta < 0) {
@@ -35,7 +63,222 @@ class BeatFx {
   }
 }
 
-/// Overlay that flies the latest GameSave pulse toward the top score chip.
+/// Unified top HUD bar shared by LearnRunnerPage and Do Rungs (DutySlipPage)
+/// so the player always sees the exact same live ◆ Score and 💀 Death counters.
+class UnifiedGameTopHud extends ConsumerStatefulWidget {
+  final GlobalKey scoreKey;
+  final GlobalKey? deathKey;
+  final String badgeText;
+  final String titleText;
+  final VoidCallback onClose;
+  final IconData closeIcon;
+  final bool muted;
+  final VoidCallback? onToggleMute;
+  final Widget? trailingExtra;
+
+  const UnifiedGameTopHud({
+    super.key,
+    required this.scoreKey,
+    this.deathKey,
+    required this.badgeText,
+    required this.titleText,
+    required this.onClose,
+    this.closeIcon = Icons.arrow_back_rounded,
+    this.muted = false,
+    this.onToggleMute,
+    this.trailingExtra,
+  });
+
+  @override
+  ConsumerState<UnifiedGameTopHud> createState() => _UnifiedGameTopHudState();
+}
+
+class _UnifiedGameTopHudState extends ConsumerState<UnifiedGameTopHud>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bump;
+  int? _lastPoints;
+
+  @override
+  void initState() {
+    super.initState();
+    _bump = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+  }
+
+  @override
+  void dispose() {
+    _bump.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final save = ref.watch(gameSaveProvider);
+    if (_lastPoints != null && _lastPoints != save.points) {
+      _bump.forward(from: 0);
+    }
+    _lastPoints = save.points;
+
+    return Container(
+      height: 54,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            SlmColors.navy950.withValues(alpha: 0.94),
+            SlmColors.navy900.withValues(alpha: 0.82),
+          ],
+        ),
+        border: Border(
+          bottom: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.22)),
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: widget.onClose,
+            icon: Icon(widget.closeIcon, color: SlmColors.ivory, size: 22),
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+          ),
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: SlmColors.gold400.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
+            ),
+            child: Text(
+              enDigits(widget.badgeText),
+              style: bangla(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w800,
+                color: SlmColors.gold300,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              enDigits(widget.titleText),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: bangla(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: SlmColors.ivory,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          // Unified Live ◆ Score Chip
+          AnimatedBuilder(
+            animation: _bump,
+            builder: (_, child) {
+              final s = 1.0 + 0.18 * math.sin(_bump.value * math.pi);
+              return Transform.scale(scale: s, child: child);
+            },
+            child: Container(
+              key: widget.scoreKey,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E2B45), Color(0xFF111A2E)],
+                ),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.65), width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: SlmColors.gold400.withValues(alpha: 0.18),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '◆',
+                    style: TextStyle(
+                      color: SlmColors.gold300,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    enDigits('${save.points}'),
+                    style: bangla(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: SlmColors.ivory,
+                      height: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          // Unified 💀 Death Counter Chip
+          Container(
+            key: widget.deathKey,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1524),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: save.deaths > 0
+                    ? SoftDanger.ink.withValues(alpha: 0.55)
+                    : Colors.white.withValues(alpha: 0.16),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('💀', style: TextStyle(fontSize: 11.5)),
+                const SizedBox(width: 4),
+                Text(
+                  enDigits('${save.deaths}'),
+                  style: bangla(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: save.deaths > 0 ? SoftDanger.ink : SlmColors.mist,
+                    height: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (widget.onToggleMute != null) ...[
+            const SizedBox(width: 2),
+            IconButton(
+              onPressed: widget.onToggleMute,
+              icon: Icon(
+                widget.muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+                color: widget.muted ? SlmColors.mist : SlmColors.gold300,
+                size: 20,
+              ),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+            ),
+          ],
+          if (widget.trailingExtra != null) widget.trailingExtra!,
+        ],
+      ),
+    );
+  }
+}
+
+/// Overlay that flies the latest GameSave pulse toward the top score chip
+/// along an energetic curved trajectory with spark particles.
 class ScoreFlyHost extends ConsumerStatefulWidget {
   final Widget child;
   final GlobalKey scoreKey;
@@ -57,7 +300,7 @@ class _ScoreFlyHostState extends ConsumerState<ScoreFlyHost> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 780));
+    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 820));
     _c.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
         setState(() => _flying = false);
@@ -81,11 +324,14 @@ class _ScoreFlyHostState extends ConsumerState<ScoreFlyHost> with SingleTickerPr
     if (pulse == null || pulse.atMs == _seenAt || pulse.delta == 0) return;
     _seenAt = pulse.atMs;
     final size = MediaQuery.sizeOf(context);
-    final originGlobal = Offset(size.width * 0.5, size.height * 0.52);
+    final rawOrigin = pulse.originGlobal;
+    final originGlobal = (rawOrigin != null && rawOrigin != Offset.zero)
+        ? rawOrigin
+        : Offset(size.width * 0.5, size.height * 0.52);
     final scoreBox = widget.scoreKey.currentContext?.findRenderObject() as RenderBox?;
     final targetGlobal = scoreBox != null && scoreBox.hasSize
         ? scoreBox.localToGlobal(Offset(scoreBox.size.width / 2, scoreBox.size.height / 2))
-        : Offset(size.width - 72, MediaQuery.paddingOf(context).top + 36);
+        : Offset(size.width - 78, MediaQuery.paddingOf(context).top + 28);
     setState(() {
       _delta = pulse.delta;
       _from = _hostLocal(originGlobal);
@@ -119,30 +365,59 @@ class _ScoreFlyHostState extends ConsumerState<ScoreFlyHost> with SingleTickerPr
             child: AnimatedBuilder(
               animation: _c,
               builder: (_, _) {
-                final t = Curves.easeOutCubic.transform(_c.value.clamp(0.0, 1.0));
-                final pos = Offset.lerp(_from, _to, t)!;
-                final opacity = (1.0 - t * 0.2).clamp(0.0, 1.0);
-                final label = _delta > 0 ? '+${enDigits('$_delta')}' : enDigits('$_delta');
-                final color = _delta > 0 ? SlmColors.emerald300 : SoftDanger.ink;
+                final rawT = _c.value.clamp(0.0, 1.0);
+                final t = Curves.easeOutCubic.transform(rawT);
+                final linearPos = Offset.lerp(_from, _to, t)!;
+                // Add an upward arc parabola for dynamic motion graphics feel
+                final arcLift = -38.0 * math.sin(rawT * math.pi);
+                final pos = Offset(linearPos.dx, linearPos.dy + arcLift);
+                final opacity = (rawT < 0.85 ? 1.0 : (1.0 - (rawT - 0.85) / 0.15)).clamp(0.0, 1.0);
+                final positive = _delta > 0;
+                final label = positive ? '+${enDigits('$_delta')} ◆' : '${enDigits('$_delta')} ◆';
+                final color = positive ? SlmColors.emerald300 : SoftDanger.ink;
+                final borderColor = positive ? SlmColors.gold300 : SoftDanger.ink;
+                final popScale = rawT < 0.18
+                    ? (0.7 + 0.55 * (rawT / 0.18))
+                    : (1.25 - 0.42 * ((rawT - 0.18) / 0.82));
+
                 return Positioned(
-                  left: pos.dx - 30,
-                  top: pos.dy - 16,
+                  left: pos.dx - 44,
+                  top: pos.dy - 20,
                   child: Opacity(
                     opacity: opacity,
                     child: Transform.scale(
-                      scale: 1.12 - 0.22 * t,
-                      child: Text(
-                        label,
-                        style: bangla(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: color,
-                          height: 1,
-                        ).copyWith(
-                          shadows: [
-                            Shadow(color: Colors.black.withValues(alpha: 0.65), blurRadius: 10),
-                            Shadow(color: color.withValues(alpha: 0.45), blurRadius: 14),
+                      scale: popScale,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: positive
+                                ? const [Color(0xF20D3326), Color(0xF2081F18)]
+                                : const [Color(0xF23B1219), Color(0xF2240A0E)],
+                          ),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: borderColor, width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.55),
+                              blurRadius: 16,
+                              spreadRadius: 1,
+                            ),
+                            const BoxShadow(
+                              color: Color(0x88000000),
+                              blurRadius: 8,
+                              offset: Offset(0, 3),
+                            ),
                           ],
+                        ),
+                        child: Text(
+                          label,
+                          style: bangla(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: positive ? SlmColors.gold200 : SoftDanger.ink,
+                            height: 1.05,
+                          ),
                         ),
                       ),
                     ),

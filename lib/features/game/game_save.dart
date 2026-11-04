@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' show Offset;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -171,7 +172,8 @@ class DeathLogEntry {
 class ScorePulse {
   final int delta;
   final int atMs;
-  const ScorePulse(this.delta, this.atMs);
+  final Offset? originGlobal;
+  const ScorePulse(this.delta, this.atMs, {this.originGlobal});
 }
 
 /// Latest lethal death for death-moment FX (E5).
@@ -252,7 +254,7 @@ class GameSaveController extends Notifier<GameSave> {
     } catch (_) {}
   }
 
-  Future<void> addPoints(int delta, {String? rungId}) async {
+  Future<void> addPoints(int delta, {String? rungId, Offset? originGlobal}) async {
     if (delta == 0) return;
     final nextPoints = (state.points + delta).clamp(0, 1 << 30);
     var best = Map<String, int>.from(state.bestByRung);
@@ -260,15 +262,23 @@ class GameSaveController extends Notifier<GameSave> {
       final prev = best[rungId] ?? 0;
       if (delta > prev) best[rungId] = delta;
     }
-    lastPulse = ScorePulse(delta, DateTime.now().millisecondsSinceEpoch);
+    lastPulse = ScorePulse(
+      delta,
+      DateTime.now().millisecondsSinceEpoch,
+      originGlobal: originGlobal,
+    );
     state = state.copyWith(points: nextPoints, bestByRung: best);
     await _persist();
   }
 
   /// Visual-only score chip (legacy Duty Slip still owns career math during bridge).
-  void pulseDelta(int delta) {
+  void pulseDelta(int delta, {Offset? originGlobal}) {
     if (delta == 0) return;
-    lastPulse = ScorePulse(delta, DateTime.now().millisecondsSinceEpoch);
+    lastPulse = ScorePulse(
+      delta,
+      DateTime.now().millisecondsSinceEpoch,
+      originGlobal: originGlobal,
+    );
     // Touch state so listeners rebuild / ScoreFlyHost can launch.
     state = state.copyWith(points: state.points);
   }
