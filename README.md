@@ -1,5 +1,7 @@
 # SmartLineman (`slm_flutter`)
 
+> **Before you change anything, read [`AGENTS.md`](AGENTS.md).** It has the rules every agent and contributor must follow (performance, tests, assets, offline, scoring). `flutter analyze`, `flutter test` and `python3 -I tool/check_asset_refs.py .` must pass before every push.
+
 Flutter app for West Bengal distribution linemen. Bangla first. Built for budget Android phones that are often offline. Sister of the web site [smartlineman.in](https://smartlineman.in), but this is **not** `slm-web`: game loops, levels and copy live here.
 
 Package `slm_flutter`. Android application id `com.smartlineman.app.slm_flutter`. Launcher label **SmartLineman**.

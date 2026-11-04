@@ -1,0 +1,8 @@
+---
+description: Project rules for every change in this repo
+alwaysApply: true
+---
+Before writing or changing any code in this repo, read and follow `AGENTS.md` at the repo root.
+Key points: `git pull` first; `flutter analyze`, `flutter test` and `python3 -I tool/check_asset_refs.py .`
+must all pass before any push; never re-introduce whole-screen AnimatedBuilders or ungated `..repeat()`
+loops (use `slmSyncLoop`); decode images at display size; small diffs in shared files.
