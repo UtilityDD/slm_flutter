@@ -234,30 +234,51 @@ class MascotSpeechLibrary {
   static const _pokePool = <MascotCue>[
     MascotCue(
       id: 'ladder.poke.1',
-      textBn: 'আমি একদম রেডি ভাই! PPE আর Tools ঠিক থাকলে কোনো ভয় নেই।',
-      mood: GuideMood.glad,
-      gesture: GuideGesture.spinHop,
-      voiceKey: 'ds_exp_right_1',
+      textBn: 'মনে রাখবেন—হেলমেটের চিন-স্ট্র্যাপ শক্ত করে না বাঁধলে পড়ে যাওয়ার সময় কোনো কাজ হবে না!',
+      mood: GuideMood.talk,
+      gesture: GuideGesture.leanRight,
     ),
     MascotCue(
       id: 'ladder.poke.2',
-      textBn: 'মনে রাখবেন—Shutdown নিলেও টেস্টার আর আর্থিং ছাড়া তারে হাত দেবেন না!',
+      textBn: 'তারে হাত দেওয়ার আগে গ্লাভস গুটিয়ে ফুঁ দিয়ে দেখুন—একটুও এয়ার লিক থাকলে ওই গ্লাভস বাতিল!',
       mood: GuideMood.inspire,
-      gesture: GuideGesture.leanRight,
-      voiceKey: 'ds_l6_no_tester',
+      gesture: GuideGesture.leanLeft,
     ),
     MascotCue(
       id: 'ladder.poke.3',
-      textBn: 'পোলে ওঠার আগে হাতুড়ি ঠুকে ঠক্-ঠক্ শব্দ শুনেছেন তো?',
-      mood: GuideMood.talk,
+      textBn: 'শাটডাউন নিলেও লাইন টেস্টার দিয়ে আগে চেক করুন, তারপর দুপাশে আর্থিং রড লাগান!',
+      mood: GuideMood.warn,
       gesture: GuideGesture.peek,
-      voiceKey: 'ds_l11_ok_hammer',
     ),
     MascotCue(
       id: 'ladder.poke.4',
-      textBn: 'তাড়াহুড়ো নয় ভাই—ঘরে পরিবার আপনার ফেরার অপেক্ষায় আছে।',
+      textBn: 'পোলে ওঠার সময় দুটো ল্যানিয়ার্ডের নিয়ম মানুন—লাইন পার করার সময়ও এক মুহূর্তের জন্য বেল্ট খুলবেন না!',
       mood: GuideMood.inspire,
+      gesture: GuideGesture.spinHop,
+    ),
+    MascotCue(
+      id: 'ladder.poke.5',
+      textBn: 'পোলে ওঠার আগে হাতুড়ি বা লাঠি ঠুকে শুনুন—নিরেট ঠক্-ঠক্ না হয়ে ভোঁতা দপ্-দপ্ শব্দ হলে ওই পোল বিপজ্জনক!',
+      mood: GuideMood.warn,
+      gesture: GuideGesture.leanRight,
+    ),
+    MascotCue(
+      id: 'ladder.poke.6',
+      textBn: 'কখনো হাত দিয়ে টুলস ওপরে ছুঁড়ে দেবেন না—সবসময় শুকনো ক্যানভাস ব্যাগ আর হ্যান্ড-লাইন দড়ি ব্যবহার করুন!',
+      mood: GuideMood.talk,
       gesture: GuideGesture.leanLeft,
+    ),
+    MascotCue(
+      id: 'ladder.poke.7',
+      textBn: 'স্টে-ওয়ারে কখনো লিকেজ কারেন্ট থাকতে পারে—কাজ করার আগে স্টে-ওয়ারেও টেস্টার ছুঁইয়ে দেখুন!',
+      mood: GuideMood.warn,
+      gesture: GuideGesture.peek,
+    ),
+    MascotCue(
+      id: 'ladder.poke.8',
+      textBn: 'তাড়াহুড়ো একদম নয় ভাই—প্রতিদিন ০ মৃত্যুঝুঁকি নিয়ে ঘরে ফেরার শপথ আমাদের!',
+      mood: GuideMood.glad,
+      gesture: GuideGesture.spinHop,
     ),
   ];
 
@@ -899,32 +920,43 @@ class MascotSpeechLibrary {
       return;
     }
 
-    // 2. Otherwise use FlutterTts (bn-IN) with live lip-sync pulse
+    // 2. Otherwise use FlutterTts (bn-IN) with live synchronized lip-sync
     DsVoice.stop();
     MascotTalk.begin();
     try {
       final tts = await _ensureTts();
-      if (tts == null || token != _speakToken) return;
-      await tts.stop();
-      await tts.speak(cleanText);
-      // Estimate natural hold duration for lip-sync if platform completion callback is early
-      final estMs = (cleanText.length * 68).clamp(1400, 7500);
-      await Future<void>.delayed(Duration(milliseconds: estMs));
-    } catch (_) {
-      // Ignore platform TTS errors silently
-    } finally {
-      if (token == _speakToken) {
-        MascotTalk.end();
+      if (tts == null || token != _speakToken) {
+        MascotTalk.reset();
+        return;
       }
+      await tts.stop();
+      tts.setCompletionHandler(() {
+        if (token == _speakToken) {
+          MascotTalk.end();
+        }
+      });
+      tts.setCancelHandler(() {
+        if (token == _speakToken) {
+          MascotTalk.reset();
+        }
+      });
+      tts.setErrorHandler((_) {
+        if (token == _speakToken) {
+          MascotTalk.reset();
+        }
+      });
+      await tts.speak(cleanText);
+    } catch (_) {
+      MascotTalk.reset();
     }
   }
 
-  /// Stops any active mascot speech (both neural MP3 and TTS) and resets lip-sync.
+  /// Stops any active mascot speech (both neural MP3 and TTS) and resets lip-sync immediately.
   static Future<void> stop() async {
     _speakToken++;
+    MascotTalk.reset();
     DsVoice.stop();
     await _stopTts();
-    MascotTalk.reset();
   }
 
   static Future<FlutterTts?> _ensureTts() async {
@@ -932,12 +964,13 @@ class MascotSpeechLibrary {
       if (_tts == null) {
         _tts = FlutterTts();
         await _tts!.setLanguage('bn-IN');
-        await _tts!.setSpeechRate(0.47);
+        await _tts!.setSpeechRate(0.48);
         await _tts!.setPitch(1.0);
-        await _tts!.awaitSpeakCompletion(false);
+        await _tts!.awaitSpeakCompletion(true);
         _ttsReady = true;
       } else if (!_ttsReady) {
         await _tts!.setLanguage('bn-IN');
+        await _tts!.awaitSpeakCompletion(true);
         _ttsReady = true;
       }
       return _tts;

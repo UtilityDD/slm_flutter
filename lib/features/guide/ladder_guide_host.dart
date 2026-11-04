@@ -1,3 +1,4 @@
+import 'mascot_speech_library.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -9,8 +10,8 @@ import '../zero_loss/zero_loss_fx.dart';
 import 'ai_lineman_guide.dart';
 import 'guide_director.dart';
 
-/// Ladder guide host: waits for the ladder to settle, then a slow
-/// body pop, then an unhurried speech bubble with live lip-sync.
+/// Ladder guide host: waits for the ladder to settle, then a smooth
+/// spring body pop, then an expressive speech bubble with live 60fps lip-sync.
 class LadderGuideHost extends ConsumerStatefulWidget {
   final bool muted;
 
@@ -20,14 +21,15 @@ class LadderGuideHost extends ConsumerStatefulWidget {
   const LadderGuideHost({
     super.key,
     required this.muted,
-    this.ladderSettle = const Duration(milliseconds: 1400),
+    this.ladderSettle = const Duration(milliseconds: 950),
   });
 
   @override
   ConsumerState<LadderGuideHost> createState() => _LadderGuideHostState();
 }
 
-class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerProviderStateMixin {
+class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
+    with TickerProviderStateMixin {
   late final AnimationController _welcome;
   late final AnimationController _dockPop;
   late final AnimationController _bubble;
@@ -41,14 +43,23 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
   @override
   void initState() {
     super.initState();
-    _welcome = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
-    _dockPop = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
-    _bubble = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _welcome = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 820),
+    );
+    _dockPop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 780),
+    );
+    _bubble = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 480),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _boot());
   }
 
   Future<void> _waitLadderSettled(bool reduce) async {
-    final wait = reduce ? const Duration(milliseconds: 400) : widget.ladderSettle;
+    final wait = reduce ? const Duration(milliseconds: 280) : widget.ladderSettle;
     await Future<void>.delayed(wait);
   }
 
@@ -70,7 +81,7 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
   }
 
   Future<void> _revealBubbleSlowly({required bool reduce}) async {
-    await Future<void>.delayed(Duration(milliseconds: reduce ? 250 : 750));
+    await Future<void>.delayed(Duration(milliseconds: reduce ? 160 : 420));
     if (!mounted) return;
     ref.read(guideDirectorProvider.notifier).revealEntranceLine();
     setState(() => _bubbleVisible = true);
@@ -90,7 +101,7 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
     if (!mounted) return;
     setState(() => _bubbleVisible = false);
     dir.clearEntrance();
-    await Future<void>.delayed(Duration(milliseconds: reduce ? 100 : 350));
+    await Future<void>.delayed(Duration(milliseconds: reduce ? 80 : 240));
     if (!mounted) return;
     if (ref.read(guideDirectorProvider).line.isNotEmpty) {
       dir.clearLine();
@@ -106,7 +117,9 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
     await _waitLadderSettled(reduce);
     if (!mounted) return;
 
-    final kind = await ref.read(guideDirectorProvider.notifier).beginLadderEntrance(muted: widget.muted);
+    final kind = await ref
+        .read(guideDirectorProvider.notifier)
+        .beginLadderEntrance(muted: widget.muted);
     if (!mounted) return;
 
     if (kind == GuideEntranceKind.dailyWelcome) {
@@ -121,7 +134,9 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
         await _welcome.forward(from: 0);
       }
       if (!widget.muted) {
-        unawaited(ZlFx.cue('sounds/intro/confirm.ogg', volume: 0.5, muted: false));
+        unawaited(
+          ZlFx.cue('sounds/intro/confirm.ogg', volume: 0.5, muted: false),
+        );
       }
       await _revealBubbleSlowly(reduce: reduce);
       if (!mounted) return;
@@ -130,7 +145,7 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
       if (!reduce) await _welcome.reverse();
       if (!mounted) return;
       setState(() => _centerVisible = false);
-      await Future<void>.delayed(Duration(milliseconds: reduce ? 150 : 450));
+      await Future<void>.delayed(Duration(milliseconds: reduce ? 120 : 320));
       if (!mounted) return;
       await _playDockPop(withSound: true);
       _entranceBusy = false;
@@ -156,7 +171,9 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
     } else {
       unawaited(_bubble.forward(from: 0));
     }
-    final hold = ref.read(guideDirectorProvider.notifier).entranceHoldFor(line, reduce: reduce);
+    final hold = ref
+        .read(guideDirectorProvider.notifier)
+        .entranceHoldFor(line, reduce: reduce);
     _pokeBubbleTimer = Timer(hold, () async {
       if (!mounted) return;
       if (!reduce) await _bubble.reverse();
@@ -166,12 +183,13 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
       if (g.entrance == null && g.line.isNotEmpty) {
         ref.read(guideDirectorProvider.notifier).clearLine();
       }
+      unawaited(MascotSpeechLibrary.stop());
     });
   }
 
   void _onPoke() {
     if (!_dockVisible || _centerVisible || _entranceBusy) return;
-    if (_dockPop.value < 0.95) return;
+    if (_dockPop.value < 0.85) return;
     HapticFeedback.selectionClick();
     if (!widget.muted) {
       unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.55, muted: false));
@@ -203,37 +221,73 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
       children: [
         if (_dockVisible)
           Positioned(
-            right: 0,
-            bottom: pad.bottom,
-            // The guide's own idle motion (eyes, gestures) repaints this layer
-            // only, not the ladder page underneath.
-            child: RepaintBoundary(
+            right: 8,
+            bottom: pad.bottom + 8,
+            child: AnimatedBuilder(
+              animation: Listenable.merge([_dockPop, _bubble]),
+              builder: (_, _) {
+                final raw = _dockPop.value.clamp(0.0, 1.0);
+                final spring = Curves.easeOutBack.transform(raw);
+                final bubbleT = Curves.easeOutBack
+                    .transform(_bubble.value.clamp(0.0, 1.0))
+                    .clamp(0.0, 1.0);
+                return Opacity(
+                  opacity: raw,
+                  child: Transform.translate(
+                    offset: Offset(0, (1 - spring) * 56),
+                    child: Transform.scale(
+                      scale: (0.68 + 0.32 * spring).clamp(0.5, 1.12),
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 4, 4, 2),
+                        child: AiLinemanGuide(
+                          sprite: 86,
+                          bubbleWidth: 184,
+                          centered: false,
+                          showBubble: _bubbleVisible,
+                          bubbleOpacity: _bubbleVisible ? bubbleT : 0,
+                          onTap: _onPoke,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        if (_centerVisible)
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: true,
               child: AnimatedBuilder(
-                animation: Listenable.merge([_dockPop, _bubble]),
+                animation: Listenable.merge([_welcome, _bubble]),
                 builder: (_, _) {
-                  final t = Curves.easeOutCubic.transform(_dockPop.value.clamp(0.0, 1.0));
-                  final pop = t < 0.75 ? (t / 0.75) : (1 + 0.06 * (1 - ((t - 0.75) / 0.25)));
-                  final bubbleT = Curves.easeOutCubic.transform(_bubble.value.clamp(0.0, 1.0));
+                  final raw = _welcome.value.clamp(0.0, 1.0);
+                  final t = Curves.easeOutBack.transform(raw);
+                  final bubbleT = Curves.easeOutCubic
+                      .transform(_bubble.value.clamp(0.0, 1.0));
                   return Opacity(
-                    opacity: t.clamp(0.0, 1.0),
-                    child: Transform.translate(
-                      offset: Offset(0, (1 - t) * 64),
-                      child: Transform.scale(
-                        scale: 0.62 + 0.38 * pop.clamp(0.0, 1.08),
-                        alignment: Alignment.bottomCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 8, 6, 8),
-                          child: Material(
-                            type: MaterialType.transparency,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(20),
-                              onTap: _onPoke,
-                              child: AiLinemanGuide(
-                                sprite: 76,
-                                bubbleWidth: 168,
-                                showBubble: _bubbleVisible,
-                                bubbleOpacity: _bubbleVisible ? bubbleT : 0,
-                              ),
+                    opacity: raw,
+                    child: Transform.scale(
+                      scale: (0.86 + 0.14 * t).clamp(0.7, 1.1),
+                      child: Center(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: SlmColors.navy950.withValues(alpha: 0.56 * raw),
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
+                              color: SlmColors.gold400.withValues(alpha: 0.32 * raw),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+                            child: AiLinemanGuide(
+                              sprite: 140,
+                              bubbleWidth: 284,
+                              large: true,
+                              centered: true,
+                              showBubble: _bubbleVisible,
+                              bubbleOpacity: _bubbleVisible ? bubbleT : 0,
                             ),
                           ),
                         ),
@@ -242,46 +296,7 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
                   );
                 },
               ),
-            )
-          ),
-        if (_centerVisible)
-          Positioned.fill(
-            child: RepaintBoundary(
-              child: IgnorePointer(
-                ignoring: true,
-                child: AnimatedBuilder(
-                  animation: Listenable.merge([_welcome, _bubble]),
-                  builder: (_, _) {
-                    final t = Curves.easeOutCubic.transform(_welcome.value.clamp(0.0, 1.0));
-                    final bubbleT = Curves.easeOutCubic.transform(_bubble.value.clamp(0.0, 1.0));
-                    return Opacity(
-                      opacity: t,
-                      child: Transform.scale(
-                        scale: 0.88 + 0.12 * t,
-                        child: Center(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: SlmColors.navy950.withValues(alpha: 0.42 * t),
-                              borderRadius: BorderRadius.circular(28),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
-                              child: AiLinemanGuide(
-                                sprite: 132,
-                                bubbleWidth: 276,
-                                large: true,
-                                showBubble: _bubbleVisible,
-                                bubbleOpacity: _bubbleVisible ? bubbleT : 0,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            )
+            ),
           ),
       ],
     );

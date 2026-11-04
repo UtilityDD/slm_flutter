@@ -300,7 +300,7 @@ class _ScoreFlyHostState extends ConsumerState<ScoreFlyHost> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 820));
+    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 980));
     _c.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
         setState(() => _flying = false);
@@ -368,60 +368,98 @@ class _ScoreFlyHostState extends ConsumerState<ScoreFlyHost> with SingleTickerPr
                 final rawT = _c.value.clamp(0.0, 1.0);
                 final t = Curves.easeOutCubic.transform(rawT);
                 final linearPos = Offset.lerp(_from, _to, t)!;
-                // Add an upward arc parabola for dynamic motion graphics feel
-                final arcLift = -38.0 * math.sin(rawT * math.pi);
+                final arcLift = -72.0 * math.sin(rawT * math.pi);
                 final pos = Offset(linearPos.dx, linearPos.dy + arcLift);
-                final opacity = (rawT < 0.85 ? 1.0 : (1.0 - (rawT - 0.85) / 0.15)).clamp(0.0, 1.0);
+                final opacity = (rawT < 0.82 ? 1.0 : (1.0 - (rawT - 0.82) / 0.18)).clamp(0.0, 1.0);
                 final positive = _delta > 0;
                 final label = positive ? '+${enDigits('$_delta')} ◆' : '${enDigits('$_delta')} ◆';
                 final color = positive ? SlmColors.emerald300 : SoftDanger.ink;
                 final borderColor = positive ? SlmColors.gold300 : SoftDanger.ink;
-                final popScale = rawT < 0.18
-                    ? (0.7 + 0.55 * (rawT / 0.18))
-                    : (1.25 - 0.42 * ((rawT - 0.18) / 0.82));
+                final popScale = rawT < 0.14
+                    ? (0.55 + 0.85 * (rawT / 0.14))
+                    : (1.4 - 0.55 * ((rawT - 0.14) / 0.86));
 
-                return Positioned(
-                  left: pos.dx - 44,
-                  top: pos.dy - 20,
-                  child: Opacity(
-                    opacity: opacity,
-                    child: Transform.scale(
-                      scale: popScale,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: positive
-                                ? const [Color(0xF20D3326), Color(0xF2081F18)]
-                                : const [Color(0xF23B1219), Color(0xF2240A0E)],
-                          ),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: borderColor, width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.55),
-                              blurRadius: 16,
-                              spreadRadius: 1,
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    for (var i = 1; i <= 5; i++)
+                      Builder(
+                        builder: (_) {
+                          final trailT = (rawT - i * 0.045).clamp(0.0, 1.0);
+                          final trailEase = Curves.easeOutCubic.transform(trailT);
+                          final trailLinear = Offset.lerp(_from, _to, trailEase)!;
+                          final trailLift = -72.0 * math.sin(trailT * math.pi);
+                          final trailPos = Offset(trailLinear.dx, trailLinear.dy + trailLift);
+                          final trailAlpha = (0.42 - i * 0.06) * opacity;
+                          return Positioned(
+                            left: trailPos.dx - 5,
+                            top: trailPos.dy - 5,
+                            child: Opacity(
+                              opacity: trailAlpha.clamp(0.0, 1.0),
+                              child: Container(
+                                width: 10 - i * 0.8,
+                                height: 10 - i * 0.8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: (positive ? SlmColors.gold300 : SoftDanger.ink)
+                                      .withValues(alpha: 0.9),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (positive ? SlmColors.gold300 : SoftDanger.ink)
+                                          .withValues(alpha: 0.45),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            const BoxShadow(
-                              color: Color(0x88000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 3),
+                          );
+                        },
+                      ),
+                    Positioned(
+                      left: pos.dx - 48,
+                      top: pos.dy - 22,
+                      child: Opacity(
+                        opacity: opacity,
+                        child: Transform.scale(
+                          scale: popScale.clamp(0.5, 1.6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: positive
+                                    ? const [Color(0xF2143D2C), Color(0xF2081F18)]
+                                    : const [Color(0xF23B1219), Color(0xF2240A0E)],
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: borderColor, width: 1.7),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: color.withValues(alpha: 0.7),
+                                  blurRadius: 22,
+                                  spreadRadius: 2,
+                                ),
+                                const BoxShadow(
+                                  color: Color(0x99000000),
+                                  blurRadius: 10,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Text(
-                          label,
-                          style: bangla(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: positive ? SlmColors.gold200 : SoftDanger.ink,
-                            height: 1.05,
+                            child: Text(
+                              label,
+                              style: bangla(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                color: positive ? SlmColors.gold200 : SoftDanger.ink,
+                                height: 1.05,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 );
               },
             ),
