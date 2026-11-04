@@ -1,4 +1,5 @@
 # Miscellaneous
+/slm_flutter/
 *.class
 *.log
 *.pyc
