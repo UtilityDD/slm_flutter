@@ -230,7 +230,9 @@ class GuideDirector extends Notifier<GuideState> {
 
   Future<void> maybeInspire({Duration minGap = const Duration(seconds: 45)}) async {
     if (state.gesture != GuideGesture.none) return;
+    if (MascotTalk.active.value || state.line.isNotEmpty) return;
     final now = DateTime.now();
+    if (now.difference(_lastPoke) < const Duration(seconds: 12)) return;
     if (now.difference(_lastInspire) < minGap) return;
     final catalog = await ref.read(contentCatalogProvider.future);
     final lines = catalog.guideLines.where((g) => g.when == 'idle').toList();
@@ -244,12 +246,16 @@ class GuideDirector extends Notifier<GuideState> {
   }
 
   /// Idle highlight on a playable level / gift — short, actionable field coach line.
+  /// Never overrules other active lineman engagement (TTS speech, recent pro-tip poke, active dialogue).
   void nudgePlay({required bool gift}) {
     if (state.entrance != null) return;
+    if (MascotTalk.active.value || state.line.isNotEmpty) return;
+    final now = DateTime.now();
+    if (now.difference(_lastPoke) < const Duration(seconds: 12)) return;
     if (state.gesture != GuideGesture.none) {
       state = state.copyWith(gesture: GuideGesture.none);
     }
-    _lastInspire = DateTime.now();
+    _lastInspire = now;
     sayCue(gift ? MascotCueId.ladderIdleGift : MascotCueId.ladderIdleLevel);
   }
 
@@ -258,6 +264,8 @@ class GuideDirector extends Notifier<GuideState> {
     final now = DateTime.now();
     if (now.difference(_lastGag) < minGap) return;
     if (state.entrance != null) return;
+    if (MascotTalk.active.value || state.line.isNotEmpty) return;
+    if (now.difference(_lastPoke) < const Duration(seconds: 12)) return;
     if (state.mood == GuideMood.warn ||
         state.mood == GuideMood.fright ||
         state.mood == GuideMood.fallen ||

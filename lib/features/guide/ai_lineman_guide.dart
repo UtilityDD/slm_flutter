@@ -1068,63 +1068,6 @@ class _MascotRigOverlayPainter extends CustomPainter {
         ..color = const Color(0x66050A16)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5),
     );
-
-    // 5. Articulated Lineman Gloved Hand & Arm Gestures
-    const gloveColor = Color(0xFFF39C12);
-    const cuffColor = Color(0xFF1E2A38);
-    const strokeColor = Color(0xFF1E130B);
-
-    if (mood == GuideMood.inspire || mood == GuideMood.talk || syllableOpen > 0.22) {
-      // Pro-tip pointing gesture (arm lifts and points index finger up toward safety rule)
-      final armT = (syllableOpen * 1.6).clamp(0.0, 1.0);
-      final handX = w * (0.80 + 0.03 * math.sin(rigPhase * math.pi * 4));
-      final handY = h * (0.62 - 0.14 * armT);
-
-      // Sleeve
-      final sleeve = Path()
-        ..moveTo(w * 0.72, h * 0.74)
-        ..lineTo(handX, handY + h * 0.06)
-        ..lineTo(handX - w * 0.06, handY + h * 0.08)
-        ..close();
-      canvas.drawPath(sleeve, Paint()..color = const Color(0xFF28547A));
-
-      // Insulated Glove
-      canvas.drawCircle(Offset(handX, handY), w * 0.060, Paint()..color = gloveColor);
-      canvas.drawCircle(Offset(handX, handY), w * 0.060, Paint()..color = strokeColor..style = PaintingStyle.stroke..strokeWidth = 1.2);
-      // Index finger pointing up
-      final finger = Path()
-        ..moveTo(handX - w * 0.02, handY)
-        ..lineTo(handX, handY - h * 0.075)
-        ..lineTo(handX + w * 0.02, handY)
-        ..close();
-      canvas.drawPath(finger, Paint()..color = gloveColor);
-      canvas.drawPath(finger, Paint()..color = strokeColor..style = PaintingStyle.stroke..strokeWidth = 1.2);
-      // Rubber cuff
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(handX - w * 0.02, handY + h * 0.045), width: w * 0.08, height: h * 0.028), const Radius.circular(2)),
-        Paint()..color = cuffColor,
-      );
-    } else if (mood == GuideMood.glad || mood == GuideMood.celebrate) {
-      // Thumbs-Up Hand Gesture
-      final handX = w * 0.81;
-      final handY = h * 0.58;
-      canvas.drawCircle(Offset(handX, handY), w * 0.064, Paint()..color = gloveColor);
-      canvas.drawCircle(Offset(handX, handY), w * 0.064, Paint()..color = strokeColor..style = PaintingStyle.stroke..strokeWidth = 1.2);
-      final thumb = Path()
-        ..moveTo(handX - w * 0.03, handY - h * 0.01)
-        ..lineTo(handX - w * 0.01, handY - h * 0.070)
-        ..lineTo(handX + w * 0.02, handY - h * 0.01)
-        ..close();
-      canvas.drawPath(thumb, Paint()..color = gloveColor);
-      canvas.drawPath(thumb, Paint()..color = strokeColor..style = PaintingStyle.stroke..strokeWidth = 1.2);
-    } else if (mood == GuideMood.warn || mood == GuideMood.fright) {
-      // Open Palm Warning Gesture
-      final handX = w * 0.82;
-      final handY = h * 0.60;
-      final palm = Rect.fromCenter(center: Offset(handX, handY), width: w * 0.09, height: h * 0.10);
-      canvas.drawRRect(RRect.fromRectAndRadius(palm, const Radius.circular(5)), Paint()..color = gloveColor);
-      canvas.drawRRect(RRect.fromRectAndRadius(palm, const Radius.circular(5)), Paint()..color = strokeColor..style = PaintingStyle.stroke..strokeWidth = 1.2);
-    }
   }
 
   @override

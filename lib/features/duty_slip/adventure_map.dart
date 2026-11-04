@@ -307,7 +307,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
 
   void _armIdle() {
     _idleTimer?.cancel();
-    _idleTimer = Timer(const Duration(seconds: 14), () {
+    _idleTimer = Timer(const Duration(seconds: 24), () {
       if (!mounted) return;
       _startIdleNudge();
     });
@@ -379,24 +379,36 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       _nudgeIndex = target;
       _nudgeGift = asGift;
     });
-    unawaited(_softScrollToIndex(target));
-    ProviderScope.containerOf(context)
-        .read(guideDirectorProvider.notifier)
-        .nudgePlay(gift: asGift);
-    if (!widget.muted) {
-      unawaited(
-        ZlFx.cue(
-          asGift ? 'sounds/intro/glass.ogg' : 'sounds/intro/confirm.ogg',
-          volume: 0.4,
-          muted: false,
-        ),
-      );
+
+    // Check if the lineman is engaged in speech, tips, or user interaction
+    final guide = ProviderScope.containerOf(context).read(guideDirectorProvider);
+    final isEngaged = MascotTalk.active.value ||
+        guide.line.isNotEmpty ||
+        guide.gesture != GuideGesture.none ||
+        _reply != null ||
+        _sideChallenge != null;
+
+    // Never overrule active lineman engagement with idle nudge speech/audio
+    if (!isEngaged) {
+      ProviderScope.containerOf(context)
+          .read(guideDirectorProvider.notifier)
+          .nudgePlay(gift: asGift);
+      if (!widget.muted) {
+        unawaited(
+          ZlFx.cue(
+            asGift ? 'sounds/intro/glass.ogg' : 'sounds/intro/confirm.ogg',
+            volume: 0.35,
+            muted: false,
+          ),
+        );
+      }
     }
   }
 
   void _startIdleNudge() {
     if (!mounted || MediaQuery.disableAnimationsOf(context)) return;
     if (_flight != null || _reply != null || _sideChallenge != null) return;
+    if (MascotTalk.active.value) return;
     if (_nudgeIndex != null) return;
     _nudgeOnGiftTurn = false;
     _nudgePulse
@@ -404,8 +416,11 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       ..repeat();
     _applyNudgeTarget(giftTurn: false);
     _nudgeCycleTimer?.cancel();
-    _nudgeCycleTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+    _nudgeCycleTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted || _nudgeIndex == null) return;
+      if (MascotTalk.active.value || _reply != null || _sideChallenge != null) {
+        return;
+      }
       _nudgeOnGiftTurn = !_nudgeOnGiftTurn;
       final gifts = _visibleGiftIndices();
       if (_nudgeOnGiftTurn && gifts.isEmpty) {

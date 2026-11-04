@@ -224,3 +224,4 @@ If authoring in Adobe After Effects + Bodymovin:
 - [x] **Field Safety Tips on Touch**: Rotating directly through vital electrical safety rules (chin-strap, gloves air leak, 11 kV earthing, stay wire test, double-lanyard, hammer sound test).
 - [x] **Zero Lingering Lip-Sync**: Calling `MascotSpeechLibrary.stop()` or closing the bubble terminates mouth animation on the exact millisecond audio stops.
 - [x] **Grounded Contact Shadow & Articulated Gestures**: Procedural arms/gloves point upward on safety tips and give thumbs-up on celebration.
+
