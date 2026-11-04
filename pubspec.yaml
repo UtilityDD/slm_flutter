@@ -1,7 +1,8 @@
 name: slm_flutter
-description: "A new Flutter project."
+description: "SmartLineman: Bangla safety-training game for electricity linemen (Android)."
 publish_to: 'none'
-version: 0.1.0+1
+# Keep the name in step with AppConfig.appVersion (lib/core/config/app_config.dart).
+version: 1.0.0+1
 
 environment:
   sdk: ^3.13.4

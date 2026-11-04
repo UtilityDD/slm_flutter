@@ -9,3 +9,49 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+  # The rules added below pass on the current code (Nov 2026). Raised to warnings so a new
+  # violation stands out in `flutter analyze` instead of hiding among infos.
+  errors:
+    cancel_subscriptions: warning
+    close_sinks: warning
+    avoid_void_async: warning
+    avoid_type_to_string: warning
+    throw_in_finally: warning
+    empty_statements: warning
+    unnecessary_statements: warning
+    literal_only_boolean_expressions: warning
+    no_adjacent_strings_in_list: warning
+    test_types_in_equals: warning
+    avoid_catching_errors: warning
+    always_declare_return_types: warning
+    use_colored_box: warning
+    use_string_buffers: warning
+    prefer_relative_imports: warning
+    secure_pubspec_urls: warning
+
+linter:
+  rules:
+    # Leaks: an uncancelled StreamSubscription / unclosed StreamController keeps work (and
+    # often a ticker or audio player) alive after its screen is gone. See AGENTS.md section 1.
+    - cancel_subscriptions
+    - close_sinks
+    # `void f() async` hides errors and cannot be awaited; return Future<void>.
+    - avoid_void_async
+    # runtimeType.toString() changes under `--obfuscate` (tool/build_release.sh) — never
+    # compare or persist it.
+    - avoid_type_to_string
+    # Bug catchers.
+    - throw_in_finally
+    - empty_statements
+    - unnecessary_statements
+    - literal_only_boolean_expressions
+    - no_adjacent_strings_in_list
+    - test_types_in_equals
+    - avoid_catching_errors
+    - always_declare_return_types
+    # Cheaper widgets / string building.
+    - use_colored_box
+    - use_string_buffers
+    # The code base uses relative imports inside lib/; keep it consistent.
+    - prefer_relative_imports
+    - secure_pubspec_urls
