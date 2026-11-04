@@ -1469,7 +1469,8 @@ class _TopHeader extends ConsumerWidget {
         children: [
           _CircleIcon(icon: Icons.arrow_back_rounded, onTap: onBack),
           const SizedBox(width: 10),
-          _RankPill(label: rank, streak: save.safeStreak),
+          // Shrinks (and ellipsizes) on narrow phones instead of overflowing.
+          Flexible(child: _RankPill(label: rank, streak: save.safeStreak)),
           const Spacer(),
           KeyedSubtree(
             key: scoreKey,
@@ -1514,13 +1515,17 @@ class _RankPill extends StatelessWidget {
         children: [
           const Icon(Icons.shield_rounded, size: 13, color: SlmColors.gold300),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: zlText(
-              12,
-              weight: FontWeight.w800,
-              color: SlmColors.gold200,
-              height: 1.1,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: zlText(
+                12,
+                weight: FontWeight.w800,
+                color: SlmColors.gold200,
+                height: 1.1,
+              ),
             ),
           ),
           if (streak > 0) ...[
