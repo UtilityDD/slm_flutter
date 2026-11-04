@@ -307,28 +307,17 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
       return;
     }
     if (load.isReady) {
-      final pool = load.questions;
+      // Picked once, outside the page builder, so a rebuild of the route never reshuffles.
+      final questions = selectLessonQuizQuestions(load.questions);
       final outcome = await Navigator.of(context).push<LessonQuizOutcome>(
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 420),
-          reverseTransitionDuration: const Duration(milliseconds: 300),
-          pageBuilder: (_, _, _) => LessonQuizPage(
-            questions: selectLessonQuizQuestions(pool),
+        SlmPageRoute<LessonQuizOutcome>(
+          builder: (_) => LessonQuizPage(
+            questions: questions,
             lessonBadge: '${lesson.moduleNumber}.${lesson.chapterNumber}',
             lessonTitle: lesson.title,
             bn: widget.bn,
             isPractice: lesson.isCompleted,
           ),
-          transitionsBuilder: (_, anim, _, child) {
-            final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
-            return FadeTransition(
-              opacity: curved,
-              child: SlideTransition(
-                position: Tween(begin: const Offset(0, 0.06), end: Offset.zero).animate(curved),
-                child: child,
-              ),
-            );
-          },
         ),
       );
       if (!mounted) return;
@@ -416,19 +405,15 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
       if (!mounted) return;
       final nextStep = module < 10 ? module + 1 : null;
       await Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 480),
-          pageBuilder: (_, _, _) => LevelCelebrationPage(
+        SlmPageRoute<void>(
+          style: SlmTransition.scaleFade,
+          builder: (_) => LevelCelebrationPage(
             completedStep: module,
             completedTitle: heroTitle(module, widget.bn),
             nextStep: nextStep,
             nextTitle: nextStep == null ? null : heroTitle(nextStep, widget.bn),
             bn: widget.bn,
           ),
-          transitionsBuilder: (_, anim, _, child) {
-            final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
-            return FadeTransition(opacity: curved, child: child);
-          },
         ),
       );
       return;

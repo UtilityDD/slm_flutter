@@ -8,10 +8,14 @@ Application id `com.smartlineman.app.slm_flutter`. Launcher label **SmartLineman
 
 Manifest (`app/src/main/AndroidManifest.xml`):
 
-- Permissions: `INTERNET`, `RECORD_AUDIO` (speech). No Bluetooth.
+- Permissions: `INTERNET`, `RECORD_AUDIO` (speech). No Bluetooth. `USE_BIOMETRIC`/`USE_FINGERPRINT` (pulled in by androidx.credentials) are removed with `tools:node="remove"`.
 - Deep link `com.smartlineman.app://login-callback` for sign-in.
-- `<queries>`: `DIAL` `tel` (emergency calls), `PROCESS_TEXT`, speech `RecognitionService`, `VIEW` `https`.
+- `<queries>`: `DIAL` `tel` (emergency calls), `PROCESS_TEXT`, speech `RecognitionService`, `TTS_SERVICE` (flutter_tts on Android 11+), `VIEW` `https`.
 
-Release builds still sign with the debug config. Not store-ready.
+Release: build with `tool/build_release.sh` (arm64 APK + AAB, `--obfuscate`, Dart symbols in
+`build/symbols/<version>/` — keep them per shipped build). R8 + resource shrinking and
+`localeFilters` (en, bn) are set in `app/build.gradle.kts`; keep rules in `app/proguard-rules.pro`.
+Signing uses `android/key.properties` when present (never committed), else the debug key — see the
+script header for the one-time `keytool` command and the Google sign-in SHA-1 step.
 
 Android rejects any non-resource file under `app/src/main/res/`, so notes on that folder are in `app/src/main/README.md`.

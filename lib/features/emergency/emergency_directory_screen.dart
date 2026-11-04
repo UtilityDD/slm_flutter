@@ -13,41 +13,43 @@ import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 
 class EmergencyServiceItem {
-  final String id;
   final String name;
   final String type;
   final String district;
   final String location;
   final String phone;
-  final String? address;
+
+  /// Group id (ambulance, fire, police, power, hospitals, other), worked out
+  /// once at parse time instead of on every filter pass.
+  final String group;
 
   /// Lower-cased name, location and type, built once so search does not
   /// lower-case 900 rows on every keystroke.
   final String searchKey;
 
   const EmergencyServiceItem({
-    required this.id,
     required this.name,
     required this.type,
     required this.district,
     required this.location,
     required this.phone,
-    this.address,
+    this.group = 'other',
     this.searchKey = '',
   });
 
+  /// Reads the five fields the screen shows. The asset carries only these
+  /// (id, block, address and description were dropped: nothing read them).
   factory EmergencyServiceItem.fromJson(Map<String, dynamic> json) {
     final name = json['name']?.toString() ?? '';
     final type = json['type']?.toString() ?? 'emergency';
     final location = json['location']?.toString() ?? '';
     return EmergencyServiceItem(
-      id: json['id']?.toString() ?? '',
       name: name,
       type: type,
       district: json['district']?.toString() ?? '',
       location: location,
       phone: json['phone']?.toString() ?? '',
-      address: json['address']?.toString(),
+      group: _bucket(type),
       // \u0000 keeps a query from matching across two fields.
       searchKey: '${name.toLowerCase()}\u0000${location.toLowerCase()}\u0000${type.toLowerCase()}',
     );
@@ -169,28 +171,40 @@ class _EmergencyDirectoryScreenState extends ConsumerState<EmergencyDirectoryScr
     }
   }
 
-  List<EmergencyServiceItem> _scoped() {
-    if (_selectedDistrict.isEmpty) return _allServices;
-    return [for (final item in _allServices) if (item.district == _selectedDistrict) item];
-  }
+  // District + search result, kept until one of them changes so a rebuild
+  // (chip tap, keyboard inset) does not re-filter 900 rows six times.
+  _View? _view;
 
-  List<EmergencyServiceItem> _matched(List<EmergencyServiceItem> source) {
+  _View _current() {
     final q = _searchQuery.trim().toLowerCase();
-    if (q.isEmpty) return source;
-    return [
-      for (final item in source)
-        if (item.searchKey.contains(q) || item.phone.contains(q))
-          item,
-    ];
+    final cached = _view;
+    if (cached != null && cached.district == _selectedDistrict && cached.query == q && cached.source == _allServices) {
+      return cached;
+    }
+    final scoped = _selectedDistrict.isEmpty
+        ? _allServices
+        : [for (final item in _allServices) if (item.district == _selectedDistrict) item];
+    final matched = q.isEmpty
+        ? scoped
+        : [
+            for (final item in scoped)
+              if (item.searchKey.contains(q) || item.phone.contains(q)) item,
+          ];
+    final byGroup = <String, List<EmergencyServiceItem>>{for (final id in _groupOrder) id: []};
+    for (final item in matched) {
+      byGroup[item.group]!.add(item);
+    }
+    final present = <String>{for (final item in scoped) item.group};
+    return _view = _View(
+      district: _selectedDistrict,
+      query: q,
+      source: _allServices,
+      byGroup: byGroup,
+      chips: [for (final id in _groupOrder) if (present.contains(id)) id],
+    );
   }
 
-  int _count(String id) {
-    var n = 0;
-    for (final item in _matched(_scoped())) {
-      if (_bucket(item.type) == id) n++;
-    }
-    return n;
-  }
+  int _count(String id) => _current().byGroup[id]!.length;
 
   bool get _showPicker => _kind == null && _searchQuery.trim().isEmpty;
 
@@ -334,14 +348,18 @@ class _EmergencyDirectoryScreenState extends ConsumerState<EmergencyDirectoryScr
   }
 
   Widget _results(bool bn, double g) {
-    final matched = _matched(_scoped());
-    final visible = _kind == null
-        ? matched
-        : [for (final item in matched) if (_bucket(item.type) == _kind) item];
-    final chips = [
-      for (final id in _groupOrder)
-        if (_allServices.any((item) => _bucket(item.type) == id)) id,
-    ];
+    final view = _current();
+    // One flat list of headers and cards, built lazily as it scrolls.
+    final rows = <Object>[];
+    for (final id in _groupOrder) {
+      if (_kind != null && _kind != id) continue;
+      final items = view.byGroup[id]!;
+      if (items.isEmpty) continue;
+      if (_kind == null) rows.add(_groupFor(id));
+      rows.addAll(items);
+    }
+    final total = rows.whereType<EmergencyServiceItem>().length;
+    final chips = view.chips;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -356,13 +374,10 @@ class _EmergencyDirectoryScreenState extends ConsumerState<EmergencyDirectoryScr
             itemBuilder: (context, index) {
               final id = chips[index];
               final group = _groupFor(id);
-              return Theme(
-                data: Theme.of(context),
-                child: SlmChip(
-                  label: tr(bn, group.bn, group.en),
-                  selected: _kind == id,
-                  onTap: () => _selectKind(id),
-                ),
+              return SlmChip(
+                label: tr(bn, group.bn, group.en),
+                selected: _kind == id,
+                onTap: () => _selectKind(id),
               );
             },
           ),
@@ -370,58 +385,63 @@ class _EmergencyDirectoryScreenState extends ConsumerState<EmergencyDirectoryScr
         Padding(
           padding: EdgeInsets.fromLTRB(g, 10, g, 6),
           child: SlmText(
-            tr(bn, '${visible.length} টি নম্বর', '${visible.length} numbers'),
+            tr(bn, '$total টি নম্বর', '$total numbers'),
             role: SlmTextRole.caption,
             color: SlmColors.mist,
           ),
         ),
         Expanded(
-          child: visible.isEmpty
+          child: rows.isEmpty
               ? Center(
                   child: SlmEmptyState(
                     icon: Icons.search_off_rounded,
                     title: tr(bn, 'কোনো তথ্য পাওয়া যায়নি।', 'Nothing found.'),
                   ),
                 )
-              : ListView(
+              : ListView.builder(
                   padding: shellScrollPadding(context, left: g, top: 0, right: g, extraBottom: 12),
-                  children: _contactChildren(bn, visible),
+                  itemCount: rows.length,
+                  itemBuilder: (context, index) {
+                    final row = rows[index];
+                    if (row is _Group) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4, bottom: 6),
+                        child: SlmText(tr(bn, row.bn, row.en), role: SlmTextRole.label, color: SlmColors.gold300),
+                      );
+                    }
+                    final item = row as EmergencyServiceItem;
+                    final group = _groupFor(item.group);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _ContactCard(
+                        item: item,
+                        color: group.color,
+                        icon: group.icon,
+                        onCall: () => _callNumber(item.phone),
+                      ),
+                    );
+                  },
                 ),
         ),
       ],
     );
   }
+}
 
-  List<Widget> _contactChildren(bool bn, List<EmergencyServiceItem> visible) {
-    final out = <Widget>[];
-    for (final id in _groupOrder) {
-      final items = [for (final item in visible) if (_bucket(item.type) == id) item];
-      if (items.isEmpty) continue;
-      if (_kind == null) {
-        final group = _groupFor(id);
-        out.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 6),
-            child: SlmText(tr(bn, group.bn, group.en), role: SlmTextRole.label, color: SlmColors.gold300),
-          ),
-        );
-      }
-      for (final item in items) {
-        out.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _ContactCard(
-              item: item,
-              color: _groupFor(id).color,
-              icon: _groupFor(id).icon,
-              onCall: () => _callNumber(item.phone),
-            ),
-          ),
-        );
-      }
-    }
-    return out;
-  }
+class _View {
+  final String district;
+  final String query;
+  final List<EmergencyServiceItem> source;
+  final Map<String, List<EmergencyServiceItem>> byGroup;
+  final List<String> chips;
+
+  const _View({
+    required this.district,
+    required this.query,
+    required this.source,
+    required this.byGroup,
+    required this.chips,
+  });
 }
 
 class _DistrictField extends StatelessWidget {

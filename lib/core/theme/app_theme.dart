@@ -12,7 +12,7 @@ TextStyle bangla({
   required Color color,
   double? height,
 }) {
-    return TextStyle(
+  return TextStyle(
     fontFamily: banglaFont,
     fontFamilyFallback: const ['Roboto', 'Noto Sans', banglaFont],
     fontSize: fontSize,
@@ -24,16 +24,15 @@ TextStyle bangla({
 }
 
 class AppTheme {
-  static ThemeData get lightTheme => _theme(Brightness.light);
+  /// Built once on first use. The app is light-only (no dark theme), which
+  /// also saves a second ThemeData + ColorScheme.fromSeed before the first frame.
+  static final ThemeData lightTheme = _theme();
 
-  static ThemeData get darkTheme => _theme(Brightness.dark);
-
-  static ThemeData _theme(Brightness brightness) {
-    final dark = brightness == Brightness.dark;
-    final ink = dark ? Colors.white : AppColors.slate900;
-    final body = dark ? Colors.white70 : AppColors.slate800;
-    final soft = dark ? Colors.white60 : AppColors.slate700;
-    final base = dark ? ThemeData.dark(useMaterial3: true) : ThemeData.light(useMaterial3: true);
+  static ThemeData _theme() {
+    const ink = AppColors.slate900;
+    const body = AppColors.slate800;
+    const soft = AppColors.slate700;
+    final base = ThemeData.light(useMaterial3: true);
     final textTheme = base.textTheme.apply(fontFamily: banglaFont).copyWith(
           displayLarge: bangla(fontSize: 28, fontWeight: FontWeight.w600, color: ink),
           displayMedium: bangla(fontSize: 24, fontWeight: FontWeight.w600, color: ink),
@@ -41,27 +40,27 @@ class AppTheme {
           headlineSmall: bangla(fontSize: 18, fontWeight: FontWeight.w600, color: ink),
           titleLarge: bangla(fontSize: 18, fontWeight: FontWeight.w600, color: ink),
           titleMedium: bangla(fontSize: 16, fontWeight: FontWeight.w500, color: ink),
-          titleSmall: bangla(fontSize: 14, fontWeight: FontWeight.w500, color: dark ? Colors.white70 : ink),
-          bodyLarge: bangla(fontSize: 16, fontWeight: FontWeight.w400, color: dark ? Colors.white : ink, height: 1.55),
+          titleSmall: bangla(fontSize: 14, fontWeight: FontWeight.w500, color: ink),
+          bodyLarge: bangla(fontSize: 16, fontWeight: FontWeight.w400, color: ink, height: 1.55),
           bodyMedium: bangla(fontSize: 15, fontWeight: FontWeight.w400, color: body, height: 1.55),
           bodySmall: bangla(fontSize: 13, fontWeight: FontWeight.w400, color: soft, height: 1.5),
           labelLarge: bangla(fontSize: 15, fontWeight: FontWeight.w600, color: ink),
-          labelMedium: bangla(fontSize: 13, fontWeight: FontWeight.w500, color: dark ? Colors.white70 : ink),
+          labelMedium: bangla(fontSize: 13, fontWeight: FontWeight.w500, color: ink),
         );
 
     return base.copyWith(
-      scaffoldBackgroundColor: dark ? AppColors.slate900 : AppColors.cream,
+      scaffoldBackgroundColor: AppColors.cream,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primaryAmber,
-        brightness: brightness,
+        brightness: Brightness.light,
         primary: AppColors.primaryAmber,
         secondary: AppColors.safetyOrange,
-        surface: dark ? AppColors.slate800 : Colors.white,
+        surface: Colors.white,
       ),
       textTheme: textTheme,
       primaryTextTheme: textTheme,
       appBarTheme: AppBarTheme(
-        backgroundColor: dark ? AppColors.slate900 : AppColors.cream,
+        backgroundColor: AppColors.cream,
         elevation: 1,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: bangla(fontSize: 18, fontWeight: FontWeight.w600, color: ink),

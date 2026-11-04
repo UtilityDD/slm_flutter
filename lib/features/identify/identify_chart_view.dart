@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../design/slm_design.dart';
 import '../shell/shell_providers.dart';
+import 'fit_image.dart';
 import 'identify_charts.dart';
 
 const _ink = SlmColors.ink;
@@ -527,9 +528,9 @@ class _Figure extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             child: AspectRatio(
               aspectRatio: 16 / 10,
-              child: Image.asset(
+              // Decoded to the 16:10 box, not the file size.
+              child: FitAssetImage(
                 figure.image,
-                fit: BoxFit.contain,
                 errorBuilder: (_, _, _) => const ColoredBox(
                   color: SlmColors.ivoryDeep,
                   child: Icon(Icons.image_outlined, color: SlmColors.slate),

@@ -20,5 +20,3 @@ String enDigits(String raw) {
   }
   return out.toString();
 }
-
-String enNum(int n) => n.toString();

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../core/config/app_config.dart';
 import '../../core/network/supabase_service.dart';
@@ -78,11 +81,121 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     _load();
   }
 
+  /// Rows per server page. Each row is ~8 short columns, so a page is a few KB.
+  static const _pageSize = 50;
+
+  /// True once admin_people_page answered; false means the SQL was not run
+  /// yet and the old 200-row list is used.
+  bool _paged = true;
+  bool _hasMore = false;
+  bool _loadingMore = false;
+  Map<String, int>? _counts;
+  Timer? _searchDebounce;
+  int _loadGen = 0;
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    super.dispose();
+  }
+
+  void _onQuery(String value) {
+    setState(() => _query = value);
+    if (!_paged) return;
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), _load);
+  }
+
+  void _onFilter(String filter) {
+    if (_filter == filter) return;
+    setState(() => _filter = filter);
+    if (_paged) _load();
+  }
+
+  /// One page from the server: search, filter and counts are done there.
+  Future<List<_Person>> _fetchPage(int offset) async {
+    final rows = await SupabaseService.client.rpc('admin_people_page', params: {
+      'p_query': _query.trim(),
+      'p_filter': _filter,
+      'p_offset': offset,
+      'p_limit': _pageSize,
+    }) as List;
+    final maps = [for (final row in rows) Map<String, dynamic>.from(row as Map)];
+    if (maps.isNotEmpty) {
+      int n(String k) => (maps.first[k] as num?)?.toInt() ?? 0;
+      _counts = {
+        'all': n('n_all'),
+        'pending': n('n_pending'),
+        'verified': n('n_verified'),
+        'unverified': n('n_unverified'),
+        'blocked': n('n_blocked'),
+      };
+    }
+    _hasMore = maps.length == _pageSize;
+    return [for (final m in maps) _Person.fromMap(m)].where((p) => p.id.isNotEmpty).toList();
+  }
+
+  Future<void> _loadMore() async {
+    if (_loadingMore || !_hasMore) return;
+    final gen = _loadGen;
+    setState(() => _loadingMore = true);
+    try {
+      final more = await _fetchPage(_people.length);
+      if (!mounted || gen != _loadGen) return;
+      setState(() {
+        _people = [..._people, ...more];
+        _loadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted || gen != _loadGen) return;
+      setState(() {
+        _loadingMore = false;
+        _note = 'তালিকা লোড হয়নি।';
+      });
+    }
+  }
+
   Future<void> _load() async {
+    final gen = ++_loadGen;
     setState(() {
       _loading = true;
       _note = null;
     });
+    if (_paged) {
+      try {
+        final people = await _fetchPage(0);
+        if (!mounted || gen != _loadGen) return;
+        setState(() {
+          _people = people;
+          _loading = false;
+        });
+        return;
+      } on PostgrestException catch (e) {
+        // PGRST202: function not found (supabase/admin_people_page.sql not run).
+        if (e.code != 'PGRST202') {
+          if (!mounted || gen != _loadGen) return;
+          setState(() {
+            _loading = false;
+            _note = 'তালিকা লোড হয়নি।';
+          });
+          return;
+        }
+        _paged = false;
+        _hasMore = false;
+        _counts = null;
+      } catch (_) {
+        if (!mounted || gen != _loadGen) return;
+        setState(() {
+          _loading = false;
+          _note = 'তালিকা লোড হয়নি।';
+        });
+        return;
+      }
+    }
+    await _loadLegacy(gen);
+  }
+
+  Future<void> _loadLegacy(int gen) async {
     try {
       final rows = await SupabaseService.client.rpc('admin_list_people');
       final people = (rows as List)
@@ -91,10 +204,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           .toList();
       if (!mounted) return;
       final marked = await _withVerified(people);
-      if (!mounted) return;
+      if (!mounted || gen != _loadGen) return;
       setState(() {
         _people = marked;
         _loading = false;
+        _note = 'নতুন ২০০ জনের বেশি খুঁজতে supabase/admin_people_page.sql একবার চালান।';
       });
     } catch (_) {
       try {
@@ -109,14 +223,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             .toList();
         if (!mounted) return;
         final marked = await _withVerified(people);
-        if (!mounted) return;
+        if (!mounted || gen != _loadGen) return;
         setState(() {
           _people = marked;
           _loading = false;
           _note = 'পুরো তালিকা দেখতে supabase/admin_access.sql একবার চালান।';
         });
       } catch (e) {
-        if (!mounted) return;
+        if (!mounted || gen != _loadGen) return;
         setState(() {
           _loading = false;
           _note = 'তালিকা লোড হয়নি।';
@@ -126,14 +240,17 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 
   Future<List<_Person>> _withVerified(List<_Person> people) async {
+    if (people.isEmpty) return people;
+    final ids = [for (final p in people) p.id];
     try {
       List rows;
       var hasBlocked = true;
       try {
-        rows = await SupabaseService.client.from('profiles').select('id, verified, blocked');
+        // Only the listed people (<= 200 ids), not every profile row.
+        rows = await SupabaseService.client.from('profiles').select('id, verified, blocked').inFilter('id', ids);
       } catch (_) {
         hasBlocked = false;
-        rows = await SupabaseService.client.from('profiles').select('id, verified');
+        rows = await SupabaseService.client.from('profiles').select('id, verified').inFilter('id', ids);
       }
       final flags = <String, bool>{};
       final blocks = <String, bool>{};
@@ -486,10 +603,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final bn = ref.watch(languageProvider);
     final admin = ref.watch(authProvider).isAdmin;
     final devOn = ref.watch(devUnlockProvider);
-    final pending = _people.where((p) => p.role == 'pending').length;
-    final verified = _people.where((p) => p.verified).length;
-    final unverified = _people.where((p) => !p.verified).length;
-    final blocked = _people.where((p) => p.blocked).length;
+    final counts = _paged ? _counts : null;
+    final all = counts?['all'] ?? _people.length;
+    final pending = counts?['pending'] ?? _people.where((p) => p.role == 'pending').length;
+    final verified = counts?['verified'] ?? _people.where((p) => p.verified).length;
+    final unverified = counts?['unverified'] ?? _people.where((p) => !p.verified).length;
+    final blocked = counts?['blocked'] ?? _people.where((p) => p.blocked).length;
     final shown = _shown;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -572,19 +691,19 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                     const SizedBox(height: SlmSpace.md),
                                     Row(
                                       children: [
-                                        _Count(label: tr(bn, 'মোট', 'All'), value: _people.length, on: _filter == 'all', onTap: () => setState(() => _filter = 'all')),
+                                        _Count(label: tr(bn, 'মোট', 'All'), value: all, on: _filter == 'all', onTap: () => _onFilter('all')),
                                         const SizedBox(width: SlmSpace.xs),
-                                        _Count(label: tr(bn, 'যাচাই', 'Verified'), value: verified, on: _filter == 'verified', tone: SlmColors.emerald300, onTap: () => setState(() => _filter = 'verified')),
+                                        _Count(label: tr(bn, 'যাচাই', 'Verified'), value: verified, on: _filter == 'verified', tone: SlmColors.emerald300, onTap: () => _onFilter('verified')),
                                         const SizedBox(width: SlmSpace.xs),
-                                        _Count(label: tr(bn, 'অযাচাই', 'Unverified'), value: unverified, on: _filter == 'unverified', tone: SlmColors.slate, onTap: () => setState(() => _filter = 'unverified')),
+                                        _Count(label: tr(bn, 'অযাচাই', 'Unverified'), value: unverified, on: _filter == 'unverified', tone: SlmColors.slate, onTap: () => _onFilter('unverified')),
                                       ],
                                     ),
                                     const SizedBox(height: SlmSpace.xs),
                                     Row(
                                       children: [
-                                        _Count(label: tr(bn, 'অপেক্ষমাণ', 'Pending'), value: pending, on: _filter == 'pending', tone: SlmColors.gold300, onTap: () => setState(() => _filter = 'pending')),
+                                        _Count(label: tr(bn, 'অপেক্ষমাণ', 'Pending'), value: pending, on: _filter == 'pending', tone: SlmColors.gold300, onTap: () => _onFilter('pending')),
                                         const SizedBox(width: SlmSpace.xs),
-                                        _Count(label: tr(bn, 'ব্লক', 'Blocked'), value: blocked, on: _filter == 'blocked', tone: SlmColors.danger, onTap: () => setState(() => _filter = 'blocked')),
+                                        _Count(label: tr(bn, 'ব্লক', 'Blocked'), value: blocked, on: _filter == 'blocked', tone: SlmColors.danger, onTap: () => _onFilter('blocked')),
                                         const SizedBox(width: SlmSpace.xs),
                                         const Expanded(child: SizedBox.shrink()),
                                       ],
@@ -597,7 +716,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                         border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
                                       ),
                                       child: TextField(
-                                        onChanged: (value) => setState(() => _query = value),
+                                        onChanged: _onQuery,
                                         cursorColor: SlmColors.gold400,
                                         style: bangla(fontSize: 16, fontWeight: FontWeight.w600, color: SlmColors.ivory),
                                         decoration: InputDecoration(
@@ -639,6 +758,23 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                         ),
                                         const SizedBox(height: SlmSpace.sm),
                                       ],
+                                    if (!_loading && _paged && _hasMore)
+                                      Center(
+                                        child: TextButton.icon(
+                                          onPressed: _loadingMore ? null : _loadMore,
+                                          icon: _loadingMore
+                                              ? const SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child: CircularProgressIndicator(strokeWidth: 2, color: SlmColors.gold300),
+                                                )
+                                              : const Icon(Icons.expand_more_rounded, color: SlmColors.gold300),
+                                          label: Text(
+                                            tr(bn, 'আরও দেখুন', 'Show more'),
+                                            style: bangla(fontSize: 15, fontWeight: FontWeight.w700, color: SlmColors.gold300),
+                                          ),
+                                        ),
+                                      ),
                                   ],
                                 )
                               : Center(

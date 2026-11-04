@@ -21,55 +21,86 @@ enum SlmTransition {
   scaleFade,
 }
 
-/// Wraps a page in one of the [SlmTransition] styles. [secondary] animates
-/// the page underneath when another page is pushed on top.
-Widget slmTransition(
-  SlmTransition style,
-  Animation<double> primary,
-  Animation<double> secondary,
-  Widget child,
-) {
-  final inn = CurvedAnimation(parent: primary, curve: SlmMotion.emphasized, reverseCurve: SlmMotion.exit);
-  final under = CurvedAnimation(parent: secondary, curve: SlmMotion.emphasized, reverseCurve: SlmMotion.exit);
-  switch (style) {
-    case SlmTransition.sharedAxisX:
-      return SlideTransition(
-        position: Tween(begin: const Offset(0.18, 0), end: Offset.zero).animate(inn),
-        child: FadeTransition(
-          opacity: CurvedAnimation(parent: primary, curve: const Interval(0.2, 1, curve: Curves.easeOut)),
-          child: SlideTransition(
-            position: Tween(begin: Offset.zero, end: const Offset(-0.18, 0)).animate(under),
-            child: FadeTransition(
-              opacity: Tween(begin: 1.0, end: 0.0).animate(CurvedAnimation(parent: secondary, curve: const Interval(0, 0.6))),
-              child: child,
+/// The curved views of one route's animations for one [SlmTransition].
+///
+/// A CurvedAnimation adds a status listener to its parent and keeps it until
+/// disposed, so these are built once per route (not in every
+/// buildTransitions call) and disposed with the route.
+class _SlmRouteCurves {
+  final SlmTransition style;
+  final Animation<double> primary;
+  final Animation<double> secondary;
+  final List<CurvedAnimation> _owned = [];
+
+  _SlmRouteCurves(this.style, this.primary, this.secondary);
+
+  CurvedAnimation _curve(Animation<double> parent, Curve curve, {Curve? reverse}) {
+    final c = CurvedAnimation(parent: parent, curve: curve, reverseCurve: reverse);
+    _owned.add(c);
+    return c;
+  }
+
+  late final Animation<double> _inn = _curve(primary, SlmMotion.emphasized, reverse: SlmMotion.exit);
+  late final Animation<double> _under = _curve(secondary, SlmMotion.emphasized, reverse: SlmMotion.exit);
+
+  late final Widget Function(Widget child) build = switch (style) {
+    SlmTransition.sharedAxisX => _sharedAxisX(),
+    SlmTransition.fadeRise => _fadeRise(),
+    SlmTransition.fadeThrough => _fadeThrough(),
+    SlmTransition.scaleFade => _scaleFade(),
+  };
+
+  Widget Function(Widget) _sharedAxisX() {
+    final slideIn = Tween(begin: const Offset(0.18, 0), end: Offset.zero).animate(_inn);
+    final fadeIn = _curve(primary, const Interval(0.2, 1, curve: Curves.easeOut));
+    final slideOut = Tween(begin: Offset.zero, end: const Offset(-0.18, 0)).animate(_under);
+    final fadeOut = Tween(begin: 1.0, end: 0.0).animate(_curve(secondary, const Interval(0, 0.6)));
+    return (child) => SlideTransition(
+          position: slideIn,
+          child: FadeTransition(
+            opacity: fadeIn,
+            child: SlideTransition(
+              position: slideOut,
+              child: FadeTransition(opacity: fadeOut, child: child),
             ),
           ),
-        ),
-      );
-    case SlmTransition.fadeRise:
-      return FadeTransition(
-        opacity: inn,
-        child: SlideTransition(
-          position: Tween(begin: const Offset(0, 0.06), end: Offset.zero).animate(inn),
-          child: child,
-        ),
-      );
-    case SlmTransition.fadeThrough:
-      return FadeTransition(
-        opacity: CurvedAnimation(parent: primary, curve: const Interval(0.35, 1, curve: Curves.easeOut)),
-        child: ScaleTransition(
-          scale: Tween(begin: 0.94, end: 1.0).animate(CurvedAnimation(parent: primary, curve: const Interval(0.35, 1, curve: SlmMotion.emphasized))),
-          child: FadeTransition(
-            opacity: Tween(begin: 1.0, end: 0.0).animate(CurvedAnimation(parent: secondary, curve: const Interval(0, 0.35))),
-            child: child,
+        );
+  }
+
+  Widget Function(Widget) _fadeRise() {
+    final rise = Tween(begin: const Offset(0, 0.06), end: Offset.zero).animate(_inn);
+    return (child) => FadeTransition(
+          opacity: _inn,
+          child: SlideTransition(position: rise, child: child),
+        );
+  }
+
+  Widget Function(Widget) _fadeThrough() {
+    final fadeIn = _curve(primary, const Interval(0.35, 1, curve: Curves.easeOut));
+    final scaleIn = Tween(begin: 0.94, end: 1.0).animate(_curve(primary, const Interval(0.35, 1, curve: SlmMotion.emphasized)));
+    final fadeOut = Tween(begin: 1.0, end: 0.0).animate(_curve(secondary, const Interval(0, 0.35)));
+    return (child) => FadeTransition(
+          opacity: fadeIn,
+          child: ScaleTransition(
+            scale: scaleIn,
+            child: FadeTransition(opacity: fadeOut, child: child),
           ),
-        ),
-      );
-    case SlmTransition.scaleFade:
-      return FadeTransition(
-        opacity: inn,
-        child: ScaleTransition(scale: Tween(begin: 0.9, end: 1.0).animate(inn), child: child),
-      );
+        );
+  }
+
+  Widget Function(Widget) _scaleFade() {
+    final scale = Tween(begin: 0.9, end: 1.0).animate(_inn);
+    return (child) => FadeTransition(
+          opacity: _inn,
+          child: ScaleTransition(scale: scale, child: child),
+        );
+  }
+
+  void dispose() {
+    for (final c in _owned) {
+      c.dispose();
+    }
+    _owned.clear();
   }
 }
 
@@ -86,9 +117,32 @@ class SlmPageRoute<T> extends PageRouteBuilder<T> {
           transitionDuration: SlmMotion.page,
           reverseTransitionDuration: SlmMotion.slow,
           pageBuilder: (context, _, _) => builder(context),
-          transitionsBuilder: (context, a, b, child) =>
-              slmReduceMotion(context) ? child : slmTransition(style, a, b, child),
         );
+
+  _SlmRouteCurves? _curves;
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (slmReduceMotion(context)) return child;
+    var curves = _curves;
+    if (curves == null || curves.primary != animation || curves.secondary != secondaryAnimation) {
+      curves?.dispose();
+      curves = _curves = _SlmRouteCurves(style, animation, secondaryAnimation);
+    }
+    return curves.build(child);
+  }
+
+  @override
+  void dispose() {
+    _curves?.dispose();
+    _curves = null;
+    super.dispose();
+  }
 }
 
 /// Swaps between steps with a direction-aware horizontal slide

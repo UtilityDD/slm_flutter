@@ -34,8 +34,29 @@ migrate_working_dir/
 /build/
 /coverage/
 
-# Symbolication related
+# Symbolication related (tool/build_release.sh writes Dart symbols to build/symbols/, already
+# covered by /build/; these catch --split-debug-info runs pointed elsewhere)
 app.*.symbols
+/symbols/
+*.symbols
+
+# Kotlin / Gradle / native build caches
+.kotlin/
+**/android/.kotlin/
+.gradle/
+.cxx/
+*.hprof
+
+# Temp files and screen recordings (keep media sources in tool/media_src/, never in the repo root)
+*.tmp
+*.bak
+*~
+/tmp/
+*.mp4
+*.mov
+*.webm
+*.mkv
+!tool/media_src/**
 
 # Obfuscation related
 app.*.map.json

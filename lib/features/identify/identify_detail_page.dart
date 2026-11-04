@@ -56,11 +56,7 @@ class _IdentifyDetailPageState extends ConsumerState<IdentifyDetailPage> {
       return;
     }
     Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 360),
-        pageBuilder: (_, _, _) => IdentifyDetailPage(items: [item], initialIndex: 0),
-        transitionsBuilder: (_, anim, _, child) => FadeTransition(opacity: anim, child: child),
-      ),
+      SlmPageRoute<void>(builder: (_) => IdentifyDetailPage(items: [item], initialIndex: 0)),
     );
   }
 
@@ -366,7 +362,19 @@ class _GalleryState extends State<_Gallery> {
               child: InteractiveViewer(
                 minScale: 1,
                 maxScale: 5,
-                child: Center(child: Image.asset(path, fit: BoxFit.contain)),
+                // Up to 2x the screen so a 5x pinch stays sharp without
+                // decoding a full-size camera photo.
+                child: Center(
+                  child: Image(
+                    image: fitAsset(
+                      ctx,
+                      path,
+                      width: MediaQuery.sizeOf(ctx).width * 2,
+                      height: MediaQuery.sizeOf(ctx).height * 2,
+                    ),
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
             ),
             Positioned(

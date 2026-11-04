@@ -98,14 +98,36 @@ class AuthNotifier extends Notifier<AuthState> {
   Timer? _retry;
   int _retryCount = 0;
 
+  StreamSubscription<sb.AuthState>? _authSub;
+
+  /// Listens to the auth stream. It replays past events, so subscribing after
+  /// Supabase has started still delivers the restored session.
+  bool _listenAuth() {
+    try {
+      _authSub ??= SupabaseService.client.auth.onAuthStateChange.listen(_onAuth);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   AuthState build() {
-    try {
-      final sub = SupabaseService.client.auth.onAuthStateChange.listen(_onAuth);
-      ref.onDispose(sub.cancel);
-    } catch (_) {
-      return AuthState(profile: LinemanProfile.guest());
+    ref.onDispose(() => _authSub?.cancel());
+    if (SupabaseService.hasClient || !SupabaseService.isStarted) {
+      // Never started (tests) or broken: guest straight away, as before.
+      if (!_listenAuth()) return AuthState(profile: LinemanProfile.guest());
     }
+    // main.dart starts Supabase just after the first frame. Wait for it
+    // (stays "loading", same as while the profile is fetched), then listen.
+    // If restoring failed no initialSession may come: run as guest.
+    unawaited(SupabaseService.ready.then((ok) {
+      if (!ref.mounted) return;
+      final listening = _listenAuth();
+      if ((!ok || !listening) && state.isLoading && state.profile == null) {
+        state = AuthState(profile: LinemanProfile.guest());
+      }
+    }));
     ref.onDispose(() => _retry?.cancel());
     try {
       // Coming back to the app is the cheapest "maybe online now" signal.

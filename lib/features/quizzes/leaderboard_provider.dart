@@ -172,15 +172,23 @@ class LeaderboardCache {
   }
 }
 
+/// How long a fetched board is reused while the app runs. Opening Rank again
+/// inside this window costs no network; a finished hourly quiz invalidates it.
+const leaderboardFreshFor = Duration(minutes: 5);
+
 /// The monthly board. Offline it shows the last real board saved on this
 /// phone; with no saved board it fails at once (no automatic retry, which
 /// would keep a skeleton up for ~40 s), so the screen shows its offline state.
-/// Auto-dispose: the next visit to Rank fetches again. Never makes up people
-/// or points.
+/// A live board is kept for [leaderboardFreshFor] after the last visit, so
+/// tab hopping does not refetch; the cached offline fallback is not kept, so
+/// the next visit tries the network again. Never makes up people or points.
 final liveLeaderboardProvider = FutureProvider.autoDispose<List<LeaderboardEntry>>(retry: (_, _) => null, (ref) async {
   try {
     final rows = await ref.read(leaderboardSourceProvider).fetch();
     unawaited(LeaderboardCache.save(rows, DateTime.now()));
+    final link = ref.keepAlive();
+    final expire = Timer(leaderboardFreshFor, link.close);
+    ref.onDispose(expire.cancel);
     return rows;
   } catch (_) {
     final saved = await LeaderboardCache.load();

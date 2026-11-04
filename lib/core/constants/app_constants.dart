@@ -1,6 +1,8 @@
-﻿class AppConstants {
-  static const String appName = 'SmartLineman';
+import '../config/app_config.dart';
 
-  // Remote assets origin (for streaming large posters / audio to keep APK slim)
-  static const String remoteAssetOrigin = 'https://www.smartlineman.in';
+/// Kept for existing imports; the values live in [AppConfig]. New code should
+/// use [AppConfig] directly.
+abstract final class AppConstants {
+  static const String appName = AppConfig.appName;
+  static const String remoteAssetOrigin = AppConfig.remoteAssetOrigin;
 }
