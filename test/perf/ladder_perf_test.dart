@@ -131,6 +131,9 @@ void main() {
 
   testWidgets('idle ladder: rebuild work per frame stays local to animated bits', (tester) async {
     await _pumpLadder(tester);
+    // The mascot greets on open and breathes for one ~6 s cycle, then rests;
+    // measure the settled ladder (dfd3fd1 mascot design).
+    await _idle(tester, const Duration(seconds: 8));
     final r = await _measureFrames(tester);
     _report('idle 2s (120 frames)', r);
     // Header, bands, background and guide host must not rebuild per frame.
@@ -139,8 +142,10 @@ void main() {
     expect(r.of('LadderGuideHost'), lessThanOrEqualTo(2));
     expect(r.of('AdventureWorld'), lessThanOrEqualTo(2));
     expect(r.of('_DepthStrip'), lessThanOrEqualTo(2));
-    // Whatever still animates (coin breath, glow bob, guide eyes) is small.
-    expect(r.total, lessThan(120 * 15));
+    // Whatever still animates is small leaf work: coin breath, play-button
+    // glow + shimmer, helper badge bob, lively props (dfd3fd1) and guide blinks.
+    // ~16 leaf rebuilds/frame settled; the structural widgets above stay at 0.
+    expect(r.total, lessThan(120 * 20));
     await tester.pumpWidget(const SizedBox());
   });
 

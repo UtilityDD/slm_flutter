@@ -1469,9 +1469,15 @@ class _TopHeader extends ConsumerWidget {
         children: [
           _CircleIcon(icon: Icons.arrow_back_rounded, onTap: onBack),
           const SizedBox(width: 10),
-          // Shrinks (and ellipsizes) on narrow phones instead of overflowing.
-          Flexible(child: _RankPill(label: rank, streak: save.safeStreak)),
-          const Spacer(),
+          // Takes the free space (left-aligned) and ellipsizes on narrow phones
+          // instead of overflowing the bar.
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _RankPill(label: rank, streak: save.safeStreak),
+            ),
+          ),
+          const SizedBox(width: 8),
           KeyedSubtree(
             key: scoreKey,
             child: _ScoreChip(
