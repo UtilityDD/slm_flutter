@@ -7,10 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/en_digits.dart';
 import '../../design/slm_design.dart';
+import '../admin/dev_unlock.dart';
 import '../auth/auth_provider.dart';
 import '../auth/verify_gate.dart';
 import '../auth/verify_sheet.dart';
-import '../admin/dev_unlock.dart';
 import '../game/beat_fx.dart';
 import '../game/content_catalog.dart';
 import '../game/game_save.dart';
@@ -22,21 +22,16 @@ import '../guide/ladder_guide_host.dart';
 import '../guide/mascot_speech_library.dart';
 import '../home/lesson_progress_store.dart';
 import '../home/lineman_progress.dart';
-import '../quizzes/identify_quiz_screen.dart';
-import '../quizzes/quiz_play_screen.dart';
 import '../shell/shell_providers.dart';
 import '../training/training_provider.dart';
-import '../training/training_screen.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'adventure_scenery.dart';
 import 'duty_slip_engine.dart';
-import 'duty_slip_voice.dart';
 
 /// Monumental golden ladder shell.
-/// Rung count + kinds come from [builtLadderProvider] (327). Module 1 Learn
-/// rungs open the Learn runner; Do/gate still use the [dsLevels] bridge until
-/// the Do wire lands.
+/// Rung count + kinds come from [builtLadderProvider] (327).
+/// Automatically springs back to the player's current rung when scrolling ends.
 class AdventureMap extends ConsumerStatefulWidget {
   final DutySlipEngine engine;
   final void Function(int index) onOpen;
@@ -147,15 +142,49 @@ String _assetFor(_Station station, int index) => switch (station) {
       _Station.tips => _tipAsset(index),
     };
 
-class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProviderStateMixin {
+class _AdventureMapState extends ConsumerState<AdventureMap>
+    with TickerProviderStateMixin {
   static const _rowH = 108.0;
+
   /// Emerald cap sits above the last catalog rung.
   static const _emeraldExtra = 1;
 
-  /// Legacy bridge: catalog is Coming Soon until Module 1 fill; keep old levels playable.
-  bool _bridgePlayable(int index) => index >= 0 && index < dsLevels.length;
+  /// First 31 rungs (all of Module 1: 10 lessons × 3 rungs + 1 Gate) are playable
+  /// via LearnRunnerPage + the 14 active Do drills in [dsLevels].
+  static const _playableLadderSpan = 31;
 
-  int _ladderLen(BuiltLadder? built) => built?.length ?? math.max(dsLevels.length, 40);
+  bool _isRungPlayable(int index, BuiltLadder? built) {
+    if (index < 0) return false;
+    if (built != null && index < built.length) {
+      final r = built.rungs[index];
+      if (r.isLearn && !r.isComingSoon) return true;
+    }
+    return index < _playableLadderSpan;
+  }
+
+  int _ladderLen(BuiltLadder? built) =>
+      built?.length ?? math.max(_playableLadderSpan, 40);
+
+  /// Computes the player's current active ladder rung (`focus`) by combining
+  /// `engine.unlocked` and cleared rungs in `GameSave.rungProgress`.
+  int _computeFocus(BuiltLadder? built, GameSave save) {
+    final len = _ladderLen(built);
+    final maxPlayable = math.min(len, _playableLadderSpan);
+    var focus =
+        widget.engine.unlocked.clamp(0, math.max(0, maxPlayable - 1)).toInt();
+    if (built != null) {
+      for (var i = 0; i < maxPlayable; i++) {
+        final r = built.rungs[i];
+        final cleared = save.rungProgress[r.id] == 'cleared';
+        if (cleared && i >= focus) {
+          focus = (i + 1).clamp(0, math.max(0, maxPlayable - 1)).toInt();
+        } else if (!cleared && i >= focus) {
+          break;
+        }
+      }
+    }
+    return focus;
+  }
 
   final _scoreKey = GlobalKey();
   final _deathKey = GlobalKey();
@@ -165,6 +194,10 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
   _Reply? _reply;
   _ActiveSideChallenge? _sideChallenge;
   Timer? _replyAutoClose;
+  Timer? _springBackTimer;
+  var _activePointers = 0;
+  int? _lastFocus;
+
   late final AnimationController _glow = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1400),
@@ -210,11 +243,50 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
   }
 
   void _onFingerScroll() {
+    _springBackTimer?.cancel();
     _clearNudge();
     _armIdle();
     final guide = ProviderScope.containerOf(context).read(guideDirectorProvider);
     if (guide.mood == GuideMood.sleep) {
       ProviderScope.containerOf(context).read(guideDirectorProvider.notifier).wake();
+    }
+  }
+
+  /// Schedules an automatic elastic spring-back to the player's current rung
+  /// whenever the user finishes scrolling or lifts their finger away from `focus`.
+  void _scheduleAutoSpringBack(int focus) {
+    _springBackTimer?.cancel();
+    if (_activePointers > 0 || _programmaticScroll) return;
+    if (_flight != null || _reply != null || _sideChallenge != null) return;
+    if (!_scrolledAwayFromFocus(focus)) return;
+
+    _springBackTimer = Timer(const Duration(milliseconds: 520), () {
+      if (!mounted || _activePointers > 0 || _programmaticScroll) return;
+      if (_flight != null || _reply != null || _sideChallenge != null) return;
+      final built = ref.read(builtLadderProvider).value;
+      final save = ref.read(gameSaveProvider);
+      final currentFocus = _computeFocus(built, save);
+      if (_scrolledAwayFromFocus(currentFocus)) {
+        unawaited(_springBackToFocus(currentFocus));
+      }
+    });
+  }
+
+  Future<void> _springBackToFocus(int focus) async {
+    if (!mounted || !_scroll.hasClients) return;
+    final view = _scroll.position.viewportDimension;
+    final want = (focus * _rowH) - (view * 0.24);
+    final clamped = want.clamp(0.0, _scroll.position.maxScrollExtent);
+    if ((_scroll.offset - clamped).abs() < 6) return;
+    _programmaticScroll = true;
+    try {
+      await _scroll.animateTo(
+        clamped,
+        duration: const Duration(milliseconds: 680),
+        curve: Curves.easeOutBack,
+      );
+    } finally {
+      _programmaticScroll = false;
     }
   }
 
@@ -245,16 +317,17 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
   List<int> _visibleGiftIndices() {
     if (!_scroll.hasClients) return const [];
     final built = ref.read(builtLadderProvider).value;
-    final live = math.min(_ladderLen(built), dsLevels.length);
-    final focus = widget.engine.unlocked.clamp(0, math.max(0, live - 1)).toInt();
+    final save = ref.read(gameSaveProvider);
+    final live = math.min(_ladderLen(built), _playableLadderSpan);
+    final focus = _computeFocus(built, save);
     final view = _scroll.position.viewportDimension;
     final scrolled = _scroll.offset;
     final bottomInset = MediaQuery.paddingOf(context).bottom + 18;
     final out = <int>[];
     for (var i = 0; i < live; i++) {
       if (_stationAt(i) != _Station.gift) continue;
-      final soon = !_bridgePlayable(i);
-      final face = _giftFace(_Station.gift, i, focus, soon);
+      final soon = !_isRungPlayable(i, built);
+      final face = _giftFace(_Station.gift, i, focus, soon, save);
       if (face == _GiftFace.opened || face == _GiftFace.none) continue;
       final fromBottom = bottomInset + i * _rowH + _rowH / 2 - scrolled;
       if (fromBottom > 36 && fromBottom < view - 36) out.add(i);
@@ -268,13 +341,16 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     final scrolled = _scroll.offset;
     final bottomInset = MediaQuery.paddingOf(context).bottom + 18;
     final fromBottom = bottomInset + index * _rowH + _rowH / 2 - scrolled;
-    // Already comfortably on screen — don't move (avoids fighting the pulse).
-    if (fromBottom > view * 0.18 && fromBottom < view * 0.82) return;
-    final want = (index * _rowH) - (view * 0.28);
+    if (fromBottom > view * 0.20 && fromBottom < view * 0.78) return;
+    final want = (index * _rowH) - (view * 0.24);
     final clamped = want.clamp(0.0, _scroll.position.maxScrollExtent);
     _programmaticScroll = true;
     try {
-      await _scroll.animateTo(clamped, duration: const Duration(milliseconds: 520), curve: Curves.easeOutCubic);
+      await _scroll.animateTo(
+        clamped,
+        duration: const Duration(milliseconds: 560),
+        curve: Curves.easeOutBack,
+      );
     } finally {
       _programmaticScroll = false;
     }
@@ -283,13 +359,12 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
   void _applyNudgeTarget({required bool giftTurn}) {
     if (!mounted) return;
     final built = ref.read(builtLadderProvider).value;
-    final live = math.min(_ladderLen(built), dsLevels.length);
-    final focus = widget.engine.unlocked.clamp(0, math.max(0, live - 1)).toInt();
+    final save = ref.read(gameSaveProvider);
+    final focus = _computeFocus(built, save);
     final gifts = _visibleGiftIndices();
     late final int target;
     late final bool asGift;
     if (giftTurn && gifts.isNotEmpty) {
-      // Prefer a different gift than last time when possible.
       final pool = gifts.length == 1
           ? gifts
           : gifts.where((g) => g != _nudgeIndex).toList(growable: false);
@@ -305,19 +380,23 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
       _nudgeGift = asGift;
     });
     unawaited(_softScrollToIndex(target));
-    ProviderScope.containerOf(context).read(guideDirectorProvider.notifier).nudgePlay(gift: asGift);
+    ProviderScope.containerOf(context)
+        .read(guideDirectorProvider.notifier)
+        .nudgePlay(gift: asGift);
     if (!widget.muted) {
-      unawaited(ZlFx.cue(
-        asGift ? 'sounds/intro/glass.ogg' : 'sounds/intro/confirm.ogg',
-        volume: 0.4,
-        muted: false,
-      ));
+      unawaited(
+        ZlFx.cue(
+          asGift ? 'sounds/intro/glass.ogg' : 'sounds/intro/confirm.ogg',
+          volume: 0.4,
+          muted: false,
+        ),
+      );
     }
   }
 
   void _startIdleNudge() {
     if (!mounted || MediaQuery.disableAnimationsOf(context)) return;
-    if (_flight != null || _reply != null) return;
+    if (_flight != null || _reply != null || _sideChallenge != null) return;
     if (_nudgeIndex != null) return;
     _nudgeOnGiftTurn = false;
     _nudgePulse
@@ -325,11 +404,9 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
       ..repeat();
     _applyNudgeTarget(giftTurn: false);
     _nudgeCycleTimer?.cancel();
-    // Alternate: level → random visible gift → level → …
     _nudgeCycleTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (!mounted || _nudgeIndex == null) return;
       _nudgeOnGiftTurn = !_nudgeOnGiftTurn;
-      // If no gift on screen, stay on the active level (still speak/sound).
       final gifts = _visibleGiftIndices();
       if (_nudgeOnGiftTurn && gifts.isEmpty) {
         _nudgeOnGiftTurn = false;
@@ -348,19 +425,37 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
 
   void _publish() {
     if (!_scroll.hasClients) return;
-    if (widget.scrollOut.value != _scroll.offset) widget.scrollOut.value = _scroll.offset;
+    if (widget.scrollOut.value != _scroll.offset) {
+      widget.scrollOut.value = _scroll.offset;
+    }
   }
 
   void _pin({bool initial = false}) {
     if (!mounted || !_scroll.hasClients) return;
+    final built = ref.read(builtLadderProvider).value;
+    final save = ref.read(gameSaveProvider);
+    final focus = _computeFocus(built, save);
     final view = _scroll.position.viewportDimension;
-    final target = (widget.engine.unlocked * _rowH) - (view * 0.22);
+    final target = (focus * _rowH) - (view * 0.24);
     final clamped = target.clamp(0.0, _scroll.position.maxScrollExtent);
+    _programmaticScroll = true;
     if (initial) {
       _scroll.jumpTo(0);
-      _scroll.animateTo(clamped, duration: const Duration(milliseconds: 850), curve: Curves.easeOutCubic);
+      _scroll
+          .animateTo(
+            clamped,
+            duration: const Duration(milliseconds: 850),
+            curve: Curves.easeOutCubic,
+          )
+          .whenComplete(() => _programmaticScroll = false);
     } else {
-      _scroll.animateTo(clamped, duration: const Duration(milliseconds: 420), curve: Curves.easeOutCubic);
+      _scroll
+          .animateTo(
+            clamped,
+            duration: const Duration(milliseconds: 520),
+            curve: Curves.easeOutBack,
+          )
+          .whenComplete(() => _programmaticScroll = false);
     }
   }
 
@@ -369,6 +464,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     _idleTimer?.cancel();
     _nudgeCycleTimer?.cancel();
     _replyAutoClose?.cancel();
+    _springBackTimer?.cancel();
     _scroll.removeListener(_publish);
     _scroll.dispose();
     _glow.dispose();
@@ -380,26 +476,28 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
   }
 
   /// Maps a Do rung on the 327-rung ladder to its corresponding [dsLevels] index
-  /// without Learn rungs (at 0, 3, 6...) shadowing Do levels 1, 4, 7...
+  /// without Learn rungs (at 0, 3, 6...) shadowing Do levels.
   int _resolveDoLevelIndex(int ladderIndex, BuiltLadder? built) {
     if (built == null || ladderIndex >= built.length) {
-      return ladderIndex.clamp(0, dsLevels.length - 1);
+      return (ladderIndex % dsLevels.length).clamp(0, dsLevels.length - 1);
     }
     var doOrd = 0;
     for (var i = 0; i < ladderIndex; i++) {
       if (!built.rungs[i].isLearn) doOrd++;
     }
-    return doOrd.clamp(0, dsLevels.length - 1);
+    return (doOrd % dsLevels.length).clamp(0, dsLevels.length - 1);
   }
 
   void _openLevel(int index, {BuiltLadder? built}) {
     _clearNudge();
     _armIdle();
-    final rung = built != null && index < built.length ? built.rungs[index] : null;
-    final locked = !dsPlayAllLevels && index > widget.engine.unlocked;
+    final save = ref.read(gameSaveProvider);
+    final focus = _computeFocus(built, save);
+    final rung =
+        built != null && index < built.length ? built.rungs[index] : null;
+    final locked = !dsPlayAllLevels && index > focus;
     if (locked) {
-      // Design: rung above → shake + mist, no text.
-      _pulseMist(shake: true);
+      _pulseMist(shake: true, focus: focus);
       return;
     }
 
@@ -415,13 +513,9 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
       return;
     }
 
-    final soon = (rung?.isComingSoon ?? true) && !_bridgePlayable(index);
+    final soon = !_isRungPlayable(index, built);
     if (soon) {
-      _hintComingSoon();
-      return;
-    }
-    if (!_bridgePlayable(index)) {
-      _hintComingSoon();
+      _hintComingSoon(focus: focus);
       return;
     }
     final doIdx = _resolveDoLevelIndex(index, built);
@@ -431,7 +525,11 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
       return;
     }
     HapticFeedback.selectionClick();
-    unawaited(ref.read(gameSaveProvider.notifier).setCurrentRung(rung?.id ?? '${spec.number}'));
+    unawaited(
+      ref
+          .read(gameSaveProvider.notifier)
+          .setCurrentRung(rung?.id ?? '${spec.number}'),
+    );
     widget.onOpen(doIdx);
   }
 
@@ -465,10 +563,10 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     final scrolled = _scroll.offset;
     final bottomInset = MediaQuery.paddingOf(context).bottom + 18;
     final fromBottom = bottomInset + focus * _rowH + _rowH / 2 - scrolled;
-    return fromBottom < view * 0.12 || fromBottom > view * 0.88;
+    return fromBottom < view * 0.16 || fromBottom > view * 0.80;
   }
 
-  void _pulseMist({required bool shake}) {
+  void _pulseMist({required bool shake, int? focus}) {
     if (MediaQuery.disableAnimationsOf(context)) {
       HapticFeedback.selectionClick();
       return;
@@ -479,11 +577,21 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     if (!widget.muted) {
       unawaited(ZlFx.cue('sounds/intro/glass.ogg', volume: 0.28, muted: false));
     }
+    if (focus != null) {
+      _scheduleAutoSpringBack(focus);
+    }
   }
 
-  _GiftFace _giftFace(_Station? station, int index, int focus, bool soon) {
+  _GiftFace _giftFace(
+    _Station? station,
+    int index,
+    int focus,
+    bool soon,
+    GameSave save,
+  ) {
     if (station != _Station.gift) return _GiftFace.none;
-    if (_seen.contains(index) && !soon) return _GiftFace.opened;
+    final claimed = save.giftsClaimed.contains('station_gift_$index');
+    if ((claimed || _seen.contains(index)) && !soon) return _GiftFace.opened;
     if (soon || index > focus) return _GiftFace.upcoming;
     if (index < focus) return _GiftFace.missed;
     return _GiftFace.active;
@@ -491,6 +599,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
 
   void _present(_Station station, int index, {required bool large}) {
     if (_flight != null || _reply != null || _sideChallenge != null) return;
+    _springBackTimer?.cancel();
     if (MediaQuery.disableAnimationsOf(context)) {
       _openStation(station, index);
       return;
@@ -506,17 +615,24 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     _openStation(flight.station, flight.index);
   }
 
-  void _showKinetic({required String title, required String body, required bool speak}) {
+  void _showKinetic({
+    required String title,
+    required String body,
+    required bool speak,
+  }) {
     if (speak && !widget.muted) {
       unawaited(MascotSpeechLibrary.speak(body, muted: false));
     }
     if (!mounted) return;
     _replyAutoClose?.cancel();
     setState(() => _reply = _Reply(title, enDigits(body)));
-    _replyAutoClose = Timer(const Duration(milliseconds: 3200), () {
+    _replyAutoClose = Timer(const Duration(milliseconds: 3000), () {
       if (!mounted || _reply == null) return;
       setState(() => _reply = null);
       _armIdle();
+      final built = ref.read(builtLadderProvider).value;
+      final save = ref.read(gameSaveProvider);
+      _scheduleAutoSpringBack(_computeFocus(built, save));
     });
   }
 
@@ -525,6 +641,9 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     if (_reply == null) return;
     setState(() => _reply = null);
     _armIdle();
+    final built = ref.read(builtLadderProvider).value;
+    final save = ref.read(gameSaveProvider);
+    _scheduleAutoSpringBack(_computeFocus(built, save));
   }
 
   void _closeSideChallenge() {
@@ -532,11 +651,19 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     unawaited(MascotSpeechLibrary.stop());
     setState(() => _sideChallenge = null);
     _armIdle();
+    final built = ref.read(builtLadderProvider).value;
+    final save = ref.read(gameSaveProvider);
+    _scheduleAutoSpringBack(_computeFocus(built, save));
   }
 
   void _openStation(_Station station, int index) {
     HapticFeedback.lightImpact();
-    if (index >= dsLevels.length) {
+    final built = ref.read(builtLadderProvider).value;
+    final save = ref.read(gameSaveProvider);
+    final focus = _computeFocus(built, save);
+    final openUpTo = dsPlayAllLevels ? _playableLadderSpan : focus + 2;
+
+    if (!_isRungPlayable(index, built) || index > openUpTo) {
       ref.read(guideDirectorProvider.notifier).sayCue(
             MascotCueId.ladderComingSoon,
             speakVoice: true,
@@ -544,7 +671,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
           );
       _showKinetic(
         title: 'শীঘ্রই আসছে',
-        body: 'এই ধাপটি এখনো খোলেনি।',
+        body: 'আগের ধাপগুলো পার করলে এই সরঞ্জামটি খুলবে।',
         speak: false,
       );
       return;
@@ -574,9 +701,9 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     });
   }
 
-  void _hintComingSoon() {
+  void _hintComingSoon({int? focus}) {
     _clearNudge();
-    _pulseMist(shake: false);
+    _pulseMist(shake: false, focus: focus);
     _showKinetic(
       title: 'শীঘ্রই আসছে',
       body: 'এই ধাপটি এখনো খোলেনি।',
@@ -587,7 +714,9 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
   void _hintEmerald() {
     _clearNudge();
     HapticFeedback.selectionClick();
-    ProviderScope.containerOf(context).read(guideDirectorProvider.notifier).react(GuideMood.inspire);
+    ProviderScope.containerOf(context)
+        .read(guideDirectorProvider.notifier)
+        .react(GuideMood.inspire);
     _showKinetic(
       title: 'মৃত্যুহীন লক্ষ্য',
       body: 'পথের শেষ। প্রতিটি ধাপে বাঁচার অভ্যাসই এই লক্ষ্য।',
@@ -602,16 +731,25 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     final built = ladderAsync.value;
     final catalogLen = _ladderLen(built);
     final itemCount = catalogLen + _emeraldExtra;
-    final bridgeLive = math.min(catalogLen, dsLevels.length);
-    // Achieved progress (always pin here). Developer mode opens every bridge rung.
-    final focus = e.unlocked.clamp(0, math.max(0, bridgeLive - 1)).toInt();
-    final openUpTo = dsPlayAllLevels ? math.max(0, bridgeLive - 1) : focus;
-    ref.watch(devUnlockProvider); // rebuild lock chrome when admin toggles Developer
-    final quiet = MediaQuery.disableAnimationsOf(context);
     final save = ref.watch(gameSaveProvider);
+    ref.watch(devUnlockProvider);
+
+    final focus = _computeFocus(built, save);
+    if (_lastFocus != null && _lastFocus != focus) {
+      final nextFocus = focus;
+      _lastFocus = focus;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_springBackToFocus(nextFocus));
+      });
+    } else {
+      _lastFocus = focus;
+    }
+    final openUpTo =
+        dsPlayAllLevels ? math.max(0, _playableLadderSpan - 1) : focus;
+    final quiet = MediaQuery.disableAnimationsOf(context);
     final chromeBoot = ladderAsync.isLoading && built == null;
 
-    // Always bring the player to their achieved rung when the catalog settles.
+    // Always bring the player to their achieved rung when the catalog settles or focus changes.
     ref.listen(builtLadderProvider, (prev, next) {
       if (next.hasValue && !(prev?.hasValue ?? false)) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -620,216 +758,317 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
       }
     });
 
+    final currentRung =
+        built != null && focus < built.length ? built.rungs[focus] : null;
+    final currentIsLearn = currentRung?.isLearn ?? (focus % 3 == 0);
+
     return AnimatedBuilder(
-      animation: Listenable.merge([_glow, _ascent, _scroll, _nudgePulse, _mist, _shake]),
+      animation: Listenable.merge([
+        _glow,
+        _ascent,
+        _scroll,
+        _nudgePulse,
+        _mist,
+        _shake,
+      ]),
       builder: (context, _) {
         final glow = quiet ? 0.6 : _glow.value;
         final journey = itemCount * _rowH;
         final light = (quiet ? 0.35 : _ascent.value) * journey;
-        final view = _scroll.hasClients ? _scroll.position.viewportDimension : 640.0;
+        final view =
+            _scroll.hasClients ? _scroll.position.viewportDimension : 640.0;
         final scrolled = _scroll.hasClients ? _scroll.offset : 0.0;
         final topInset = MediaQuery.paddingOf(context).top + 58;
-        final bottomInset = MediaQuery.paddingOf(context).bottom + 18;
-        final mistT = quiet ? 0.0 : Curves.easeOut.transform((_mist.value < 0.45 ? _mist.value / 0.45 : (1 - _mist.value) / 0.55).clamp(0.0, 1.0));
+        final bottomInset = MediaQuery.paddingOf(context).bottom + 24;
+        final mistT = quiet
+            ? 0.0
+            : Curves.easeOut.transform(
+                (_mist.value < 0.45
+                        ? _mist.value / 0.45
+                        : (1 - _mist.value) / 0.55)
+                    .clamp(0.0, 1.0),
+              );
         final shakeX = quiet
             ? 0.0
             : math.sin(_shake.value * math.pi * 6) * 5 * (1 - _shake.value);
-        final showMe = _scrolledAwayFromFocus(focus);
+
         return DeathMomentHost(
           deathKey: _deathKey,
           onSettled: () {
-            final save = ref.read(gameSaveProvider);
-            final checkpoint = _legacyCheckpointIndex(save.currentRungId, focus);
+            final latestSave = ref.read(gameSaveProvider);
+            final checkpoint =
+                _legacyCheckpointIndex(latestSave.currentRungId, focus);
             if (checkpoint != focus) {
               unawaited(_softScrollToIndex(checkpoint));
             }
           },
           child: ScoreFlyHost(
             scoreKey: _scoreKey,
-            child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned.fill(child: AdventureWorld(scroll: _scroll, drift: _ascent, motion: !quiet)),
-            Transform.translate(
-              offset: Offset(shakeX, 0),
-              child: NotificationListener<ScrollNotification>(
-              onNotification: (n) {
-                if (_programmaticScroll) return false;
-                if (n is ScrollUpdateNotification && n.dragDetails != null) {
-                  _onFingerScroll();
-                } else if (n is ScrollStartNotification && n.dragDetails != null) {
-                  _onFingerScroll();
-                }
-                return false;
+            child: Listener(
+              onPointerDown: (_) {
+                _activePointers++;
+                _springBackTimer?.cancel();
               },
-              child: ListView.builder(
-                    controller: _scroll,
-                    scrollDirection: Axis.vertical,
-                    reverse: true,
-                    physics: const ClampingScrollPhysics(),
-                    clipBehavior: Clip.hardEdge,
-                    itemCount: itemCount,
-                    itemExtent: _rowH,
-                    padding: EdgeInsets.only(top: topInset, bottom: bottomInset + 18),
-                    itemBuilder: (context, i) {
-                      final cap = i == catalogLen;
-                      final rung = !cap && built != null && i < built.length ? built.rungs[i] : null;
-                      final soon = !cap && ((rung?.isComingSoon ?? true) && !_bridgePlayable(i));
-                      final fog = !cap && i > focus + 3;
-                      final station = cap || soon ? null : _stationAt(i);
-                      final rested = station != null && !soon && (i < focus || _seen.contains(i));
-                      final fresh = station != null && !soon && !fog && !rested && station != _Station.gift;
-                      final giftFace = _giftFace(station, i, focus, soon);
-                      final fromBottom = bottomInset + i * _rowH + _rowH / 2 - scrolled;
-                      final dist = (((view - fromBottom) / view) - 0.5).abs().clamp(0.0, 0.5) * 2;
-                      final closeness = 1 - dist;
-                      final zoom = quiet || station == null ? 1.0 : 0.34 + 1.2 * closeness * closeness;
-                      final number = cap ? catalogLen : (rung?.number ?? (i + 1));
-                      final gleamY = _rowH - (light - i * _rowH);
-                      final learnCleared = rung != null && save.rungProgress[rung.id] == 'cleared';
-                      final bridgeCleared = _bridgePlayable(i) &&
-                          (i < focus || (e.bestRank[i] != null && e.bestRank[i] != DsLevelRank.again));
-                      final cleared = !soon && !cap && (learnCleared || bridgeCleared);
-                      return _MapBand(
-                        index: i,
-                        number: number,
-                        soon: soon,
-                        fog: fog,
-                        cap: cap,
-                        cleared: cleared,
-                        current: !soon && !cap && i == focus,
-                        locked: !cap && (soon || i > openUpTo),
-                        glow: glow,
-                        kind: rung?.kind ?? CatalogRungKind.doKind,
-                        station: station,
-                        fresh: fresh,
-                        rested: rested,
-                        giftFace: giftFace,
-                        zoom: zoom,
-                        hidden: _flight?.index == i,
-                        motion: !quiet,
-                        gleamY: gleamY,
-                        idleNudge: _nudgeIndex == i,
-                        nudgeGift: _nudgeGift && _nudgeIndex == i,
-                        nudgePulse: quiet ? 0.0 : _nudgePulse.value,
-                        onLevel: cap
-                            ? _hintEmerald
-                            : soon
-                                ? _hintComingSoon
-                                : () => _openLevel(i, built: built),
-                        onStation: station == null
-                            ? null
-                            : () {
-                                _clearNudge();
-                                _armIdle();
-                                _present(
-                                  station,
-                                  i,
-                                  large: station == _Station.gift && giftFace == _GiftFace.active,
-                                );
-                              },
-                      );
-                    },
-                  ),
-              ),
-            ),
-            if (chromeBoot)
-              const Positioned.fill(
-                child: IgnorePointer(
-                  child: Center(
-                    child: SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(strokeWidth: 2.2, color: SlmColors.gold300),
+              onPointerUp: (_) {
+                _activePointers = math.max(0, _activePointers - 1);
+                if (_activePointers == 0) {
+                  _scheduleAutoSpringBack(focus);
+                }
+              },
+              onPointerCancel: (_) {
+                _activePointers = math.max(0, _activePointers - 1);
+                if (_activePointers == 0) {
+                  _scheduleAutoSpringBack(focus);
+                }
+              },
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned.fill(
+                    child: AdventureWorld(
+                      scroll: _scroll,
+                      drift: _ascent,
+                      motion: !quiet,
                     ),
                   ),
-                ),
-              ),
-            if (mistT > 0.01)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        center: const Alignment(0, -0.1),
-                        radius: 1.15,
-                        colors: [
-                          const Color(0x33D7E4F5).withValues(alpha: 0.18 * mistT),
-                          const Color(0x99A8B8CC).withValues(alpha: 0.42 * mistT),
-                          const Color(0xCC050A16).withValues(alpha: 0.55 * mistT),
-                        ],
-                        stops: const [0.0, 0.45, 1.0],
+                  Transform.translate(
+                    offset: Offset(shakeX, 0),
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (n) {
+                        if (_programmaticScroll) return false;
+                        if (n is ScrollStartNotification &&
+                            n.dragDetails != null) {
+                          _onFingerScroll();
+                        } else if (n is ScrollUpdateNotification &&
+                            n.dragDetails != null) {
+                          _onFingerScroll();
+                        } else if (n is ScrollEndNotification) {
+                          _scheduleAutoSpringBack(focus);
+                        }
+                        return false;
+                      },
+                      child: ListView.builder(
+                        controller: _scroll,
+                        scrollDirection: Axis.vertical,
+                        reverse: true,
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        clipBehavior: Clip.hardEdge,
+                        itemCount: itemCount,
+                        itemExtent: _rowH,
+                        padding: EdgeInsets.only(
+                          top: topInset,
+                          bottom: bottomInset + 64,
+                        ),
+                        itemBuilder: (context, i) {
+                          final cap = i == catalogLen;
+                          final rung = !cap && built != null && i < built.length
+                              ? built.rungs[i]
+                              : null;
+                          final soon = !cap && !_isRungPlayable(i, built);
+                          final fog = !cap && i > focus + 3;
+                          final station = cap || soon || fog ? null : _stationAt(i);
+                          final claimed = station != null &&
+                              save.giftsClaimed
+                                  .contains('station_${station.name}_$i');
+                          final rested = station != null &&
+                              !soon &&
+                              (claimed || i < focus || _seen.contains(i));
+                          final fresh = station != null &&
+                              !soon &&
+                              !fog &&
+                              !rested &&
+                              station != _Station.gift;
+                          final giftFace =
+                              _giftFace(station, i, focus, soon, save);
+                          final fromBottom =
+                              bottomInset + i * _rowH + _rowH / 2 - scrolled;
+                          final dist = (((view - fromBottom) / view) - 0.5)
+                                  .abs()
+                                  .clamp(0.0, 0.5) *
+                              2;
+                          final closeness = 1 - dist;
+                          final zoom = quiet || station == null
+                              ? 1.0
+                              : 0.42 + 1.08 * closeness * closeness;
+                          final number =
+                              cap ? catalogLen : (rung?.number ?? (i + 1));
+                          final gleamY = _rowH - (light - i * _rowH);
+                          final learnCleared = rung != null &&
+                              save.rungProgress[rung.id] == 'cleared';
+                          final bridgeCleared =
+                              _isRungPlayable(i, built) && i < focus;
+                          final cleared =
+                              !soon && !cap && (learnCleared || bridgeCleared);
+                          return _MapBand(
+                            index: i,
+                            number: number,
+                            soon: soon,
+                            fog: fog,
+                            cap: cap,
+                            cleared: cleared,
+                            current: !soon && !cap && i == focus,
+                            locked: !cap && (soon || i > openUpTo),
+                            glow: glow,
+                            kind: rung?.kind ?? CatalogRungKind.doKind,
+                            station: station,
+                            fresh: fresh,
+                            rested: rested,
+                            claimed: claimed,
+                            giftFace: giftFace,
+                            zoom: zoom,
+                            hidden: _flight?.index == i,
+                            motion: !quiet,
+                            gleamY: gleamY,
+                            idleNudge: _nudgeIndex == i,
+                            nudgeGift: _nudgeGift && _nudgeIndex == i,
+                            nudgePulse: quiet ? 0.0 : _nudgePulse.value,
+                            onLevel: cap
+                                ? _hintEmerald
+                                : soon
+                                    ? () => _hintComingSoon(focus: focus)
+                                    : () => _openLevel(i, built: built),
+                            onStation: station == null
+                                ? null
+                                : () {
+                                    _clearNudge();
+                                    _armIdle();
+                                    _present(
+                                      station,
+                                      i,
+                                      large: station == _Station.gift &&
+                                          giftFace == _GiftFace.active,
+                                    );
+                                  },
+                          );
+                        },
                       ),
                     ),
                   ),
-                ),
-              ),
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0x66050A16), Color(0x00050A16)],
+                  // Right-edge vertical climb progress line (ground -> module notches -> player -> emerald)
+                  Positioned(
+                    right: 6,
+                    top: topInset + 18,
+                    bottom: bottomInset + 118,
+                    child: IgnorePointer(
+                      child: _LadderAltitudeTrack(
+                        currentRung: focus,
+                        totalRungs: catalogLen,
+                        glow: glow,
+                      ),
+                    ),
                   ),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
-                  child: _TopHeader(
-                    engine: e,
-                    scoreKey: _scoreKey,
-                    deathKey: _deathKey,
-                    onBack: () => Navigator.of(context).maybePop(),
+                  if (chromeBoot)
+                    const Positioned.fill(
+                      child: IgnorePointer(
+                        child: Center(
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: SlmColors.gold300,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (mistT > 0.01)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              center: const Alignment(0, -0.1),
+                              radius: 1.15,
+                              colors: [
+                                const Color(0x33D7E4F5)
+                                    .withValues(alpha: 0.18 * mistT),
+                                const Color(0x99A8B8CC)
+                                    .withValues(alpha: 0.42 * mistT),
+                                const Color(0xCC050A16)
+                                    .withValues(alpha: 0.55 * mistT),
+                              ],
+                              stops: const [0.0, 0.45, 1.0],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0x99050A16), Color(0x00050A16)],
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          top: MediaQuery.paddingOf(context).top,
+                        ),
+                        child: _TopHeader(
+                          engine: e,
+                          scoreKey: _scoreKey,
+                          deathKey: _deathKey,
+                          onBack: () => Navigator.of(context).maybePop(),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  // Bottom-left / center primary play button ("▶ পরের ধাপ")
+                  Positioned(
+                    left: 16,
+                    bottom: MediaQuery.paddingOf(context).bottom + 14,
+                    child: _NextRungPlayBar(
+                      rungNumber: focus + 1,
+                      isLearn: currentIsLearn,
+                      glow: glow,
+                      onTap: () async {
+                        if (_scrolledAwayFromFocus(focus)) {
+                          await _springBackToFocus(focus);
+                        }
+                        if (!mounted) return;
+                        _openLevel(focus, built: built);
+                      },
+                    ),
+                  ),
+                  // Unified Rive-like Mascot dock & welcome stage
+                  Positioned.fill(
+                    child: LadderGuideHost(muted: widget.muted),
+                  ),
+                  if (_flight != null)
+                    Positioned.fill(
+                      child: _ObjectReveal(
+                        asset: _assetFor(_flight!.station, _flight!.index),
+                        endScale: _flight!.large ? 2.2 : 1.45,
+                        onDone: _finishFlight,
+                      ),
+                    ),
+                  if (_reply != null)
+                    Positioned.fill(
+                      child: _KineticReply(
+                        title: _reply!.title,
+                        body: _reply!.body,
+                        still: quiet,
+                        onClose: _closeKinetic,
+                      ),
+                    ),
+                  if (_sideChallenge != null)
+                    Positioned.fill(
+                      child: _SideChallengeOverlay(
+                        active: _sideChallenge!,
+                        muted: widget.muted,
+                        onClose: _closeSideChallenge,
+                      ),
+                    ),
+                ],
               ),
-            ),
-            Positioned.fill(
-              child: Transform.translate(
-                offset: Offset(0, quiet ? 0 : -0.6 * glow),
-                child: LadderGuideHost(muted: widget.muted),
-              ),
-            ),
-            if (_flight != null)
-              Positioned.fill(
-                child: _ObjectReveal(
-                  asset: _assetFor(_flight!.station, _flight!.index),
-                  endScale: _flight!.large ? 2.2 : 1.45,
-                  onDone: _finishFlight,
-                ),
-              ),
-            if (_reply != null)
-              Positioned.fill(
-                child: _KineticReply(
-                  title: _reply!.title,
-                  body: _reply!.body,
-                  still: quiet,
-                  onClose: _closeKinetic,
-                ),
-              ),
-            if (_sideChallenge != null)
-              Positioned.fill(
-                child: _SideChallengeOverlay(
-                  active: _sideChallenge!,
-                  muted: widget.muted,
-                  onClose: _closeSideChallenge,
-                ),
-              ),
-            if (showMe)
-              Positioned(
-                right: 16,
-                bottom: MediaQuery.paddingOf(context).bottom + 14,
-                child: _MeChip(
-                  onTap: () {
-                    _clearNudge();
-                    unawaited(_softScrollToIndex(focus));
-                  },
-                ),
-              ),
-          ],
             ),
           ),
         );
@@ -842,36 +1081,208 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     final match = RegExp(r'^(\d+)\.').firstMatch(rungId);
     if (match != null) {
       final module = int.tryParse(match.group(1)!) ?? 1;
-      return ((module - 1) * 20).clamp(0, math.max(0, dsLevels.length - 1));
+      return ((module - 1) * 20).clamp(0, math.max(0, _playableLadderSpan - 1));
     }
     return (fallback ~/ 20) * 20;
   }
 }
 
-class _MeChip extends StatelessWidget {
+/// Primary one-tap play button on the Ladder ("▶ পরের ধাপ").
+class _NextRungPlayBar extends StatelessWidget {
+  final int rungNumber;
+  final bool isLearn;
+  final double glow;
   final VoidCallback onTap;
 
-  const _MeChip({required this.onTap});
+  const _NextRungPlayBar({
+    required this.rungNumber,
+    required this.isLearn,
+    required this.glow,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final kindLabel = isLearn ? 'শিখুন' : 'মাঠের কাজ';
     return SlmTactile(
       onTap: onTap,
-      semanticLabel: 'আমি',
-      builder: (context, press, child) => Transform.scale(scale: 1 - 0.06 * press, child: child),
-        child: Container(
-        width: 52,
-        height: 52,
-        alignment: Alignment.center,
+      semanticLabel: 'পরের ধাপ',
+      builder: (context, press, child) => Transform.scale(
+        scale: 1 - 0.05 * press,
+        child: child,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: const Color(0xE6050A16),
-          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55)),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFF6D379), Color(0xFFC89228)],
+          ),
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(
+            color: SlmColors.ivory.withValues(alpha: 0.55 + 0.35 * glow),
+            width: 1.4,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: SlmColors.gold300.withValues(alpha: 0.25 + 0.25 * glow),
+              blurRadius: 16,
+              spreadRadius: 1,
+            ),
+            const BoxShadow(
+              color: Color(0x99000000),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
-        child: Text('আমি', style: zlText(13, weight: FontWeight.w800, color: SlmColors.gold200, height: 1)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 26,
+              height: 26,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: SlmColors.navy950,
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                size: 18,
+                color: SlmColors.gold300,
+              ),
+            ),
+            const SizedBox(width: 9),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  enDigits('পরের ধাপ · $rungNumber'),
+                  style: zlText(
+                    13.5,
+                    weight: FontWeight.w900,
+                    color: SlmColors.navy950,
+                    height: 1.05,
+                  ),
+                ),
+                Text(
+                  kindLabel,
+                  style: zlText(
+                    10.5,
+                    weight: FontWeight.w800,
+                    color: const Color(0xFF281B06),
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Thin vertical progress line on the right edge showing the 10 module notches,
+/// the top emerald goal, and the player's current altitude dot.
+class _LadderAltitudeTrack extends StatelessWidget {
+  final int currentRung;
+  final int totalRungs;
+  final double glow;
+
+  const _LadderAltitudeTrack({
+    required this.currentRung,
+    required this.totalRungs,
+    required this.glow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = totalRungs <= 1
+        ? 0.0
+        : (currentRung / (totalRungs - 1)).clamp(0.0, 1.0);
+    return SizedBox(
+      width: 12,
+      child: CustomPaint(
+        painter: _AltitudeTrackPainter(progress: progress, glow: glow),
+      ),
+    );
+  }
+}
+
+class _AltitudeTrackPainter extends CustomPainter {
+  final double progress;
+  final double glow;
+
+  const _AltitudeTrackPainter({required this.progress, required this.glow});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final x = size.width / 2;
+    final topY = 8.0;
+    final botY = size.height - 6.0;
+    final span = math.max(1.0, botY - topY);
+
+    // Background track
+    canvas.drawLine(
+      Offset(x, topY),
+      Offset(x, botY),
+      Paint()
+        ..color = SlmColors.ivory.withValues(alpha: 0.16)
+        ..strokeWidth = 2.0
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // 10 module notches
+    for (var m = 1; m <= 10; m++) {
+      final ny = botY - (m / 10.0) * span;
+      canvas.drawLine(
+        Offset(x - 3, ny),
+        Offset(x + 3, ny),
+        Paint()
+          ..color = SlmColors.gold300.withValues(alpha: 0.35)
+          ..strokeWidth = 1.2,
+      );
+    }
+
+    // Active climb fill
+    final dotY = botY - progress * span;
+    canvas.drawLine(
+      Offset(x, dotY),
+      Offset(x, botY),
+      Paint()
+        ..color = SlmColors.gold300.withValues(alpha: 0.78)
+        ..strokeWidth = 2.4
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Top emerald diamond
+    canvas.drawCircle(
+      Offset(x, topY),
+      3.5,
+      Paint()..color = SlmColors.emerald300.withValues(alpha: 0.85),
+    );
+
+    // Player glowing dot
+    canvas.drawCircle(
+      Offset(x, dotY),
+      5.5 + 1.5 * glow,
+      Paint()
+        ..color = SlmColors.gold300.withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    canvas.drawCircle(
+      Offset(x, dotY),
+      3.8,
+      Paint()..color = SlmColors.gold200,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _AltitudeTrackPainter old) =>
+      old.progress != progress || old.glow != glow;
 }
 
 /// Outer brushed-gold bezel around a dark navy or emerald housing.
@@ -894,7 +1305,13 @@ class _GoldShell extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: SlmGradients.gold,
         borderRadius: BorderRadius.circular(radius),
-        boxShadow: const [BoxShadow(color: Color(0x8C000000), blurRadius: 8, offset: Offset(0, 3))],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x8C000000),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -940,7 +1357,8 @@ class _TopHeader extends ConsumerWidget {
     );
     final save = ref.watch(gameSaveProvider);
     final rankFromSave = save.rankIndex;
-    final rankLevel = rankFromSave > 0 ? rankFromSave : (path.achieved == 0 ? 1 : path.achieved);
+    final rankLevel =
+        rankFromSave > 0 ? rankFromSave : (path.achieved == 0 ? 1 : path.achieved);
     final rank = linemanBadgeName(rankLevel, bn);
     final calm = save.deaths == 0;
     return Padding(
@@ -949,11 +1367,15 @@ class _TopHeader extends ConsumerWidget {
         children: [
           _CircleIcon(icon: Icons.arrow_back_rounded, onTap: onBack),
           const SizedBox(width: 10),
-          _RankPill(label: rank),
+          _RankPill(label: rank, streak: save.safeStreak),
           const Spacer(),
           KeyedSubtree(
             key: scoreKey,
-            child: _ScoreChip(mark: '◆', value: enDigits('${save.points}'), color: SlmColors.gold200),
+            child: _ScoreChip(
+              mark: '◆',
+              value: enDigits('${save.points}'),
+              color: SlmColors.gold200,
+            ),
           ),
           const SizedBox(width: 8),
           KeyedSubtree(
@@ -972,8 +1394,9 @@ class _TopHeader extends ConsumerWidget {
 
 class _RankPill extends StatelessWidget {
   final String label;
+  final int streak;
 
-  const _RankPill({required this.label});
+  const _RankPill({required this.label, required this.streak});
 
   @override
   Widget build(BuildContext context) {
@@ -984,7 +1407,34 @@ class _RankPill extends StatelessWidget {
         border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
         color: const Color(0xB3050A16),
       ),
-      child: Text(label, style: zlText(12, weight: FontWeight.w800, color: SlmColors.gold200, height: 1.1)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.shield_rounded, size: 13, color: SlmColors.gold300),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: zlText(
+              12,
+              weight: FontWeight.w800,
+              color: SlmColors.gold200,
+              height: 1.1,
+            ),
+          ),
+          if (streak > 0) ...[
+            const SizedBox(width: 6),
+            Text(
+              enDigits('· $streak'),
+              style: zlText(
+                11,
+                weight: FontWeight.w800,
+                color: SlmColors.emerald300,
+                height: 1.1,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -994,7 +1444,11 @@ class _ScoreChip extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _ScoreChip({required this.mark, required this.value, required this.color});
+  const _ScoreChip({
+    required this.mark,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1005,7 +1459,10 @@ class _ScoreChip extends StatelessWidget {
         color: const Color(0xB3050A16),
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
-      child: Text('$mark  $value', style: zlText(14, weight: FontWeight.w800, color: color, height: 1.1)),
+      child: Text(
+        '$mark  $value',
+        style: zlText(14, weight: FontWeight.w800, color: color, height: 1.1),
+      ),
     );
   }
 }
@@ -1020,7 +1477,8 @@ class _CircleIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return SlmTactile(
       onTap: onTap,
-      builder: (context, press, child) => Transform.scale(scale: 1 - 0.06 * press, child: child),
+      builder: (context, press, child) =>
+          Transform.scale(scale: 1 - 0.06 * press, child: child),
       child: _GoldShell(
         radius: 18,
         rim: 1.15,
@@ -1048,6 +1506,7 @@ class _MapBand extends StatelessWidget {
   final _Station? station;
   final bool fresh;
   final bool rested;
+  final bool claimed;
   final _GiftFace giftFace;
   final double zoom;
   final bool hidden;
@@ -1073,6 +1532,7 @@ class _MapBand extends StatelessWidget {
     required this.station,
     required this.fresh,
     required this.rested,
+    required this.claimed,
     required this.giftFace,
     required this.zoom,
     required this.hidden,
@@ -1094,7 +1554,9 @@ class _MapBand extends StatelessWidget {
         final rungY = h * 0.58;
         final gift = station == _Station.gift;
         final sideLeft = gift ? (index ~/ 8).isEven : index.isEven;
-        final stationTop = gift ? const [0.0, 8.0, 16.0][(index ~/ 8) % 3] : 2.0 + (index % 3) * 4.0;
+        final stationTop = gift
+            ? const [0.0, 8.0, 16.0][(index ~/ 8) % 3]
+            : 2.0 + (index % 3) * 4.0;
 
         if (cap) {
           return Stack(
@@ -1115,6 +1577,11 @@ class _MapBand extends StatelessWidget {
           );
         }
 
+        final coinHalf = current
+            ? (kind == CatalogRungKind.gate ? 34.0 : 30.0)
+            : (kind == CatalogRungKind.gate ? 28.0 : 24.0);
+        final coinSize = coinHalf * 2;
+
         return Opacity(
           opacity: fog ? 0.42 : 1,
           child: Stack(
@@ -1128,10 +1595,10 @@ class _MapBand extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: w / 2 - (current ? (kind == CatalogRungKind.gate ? 34 : 30) : (kind == CatalogRungKind.gate ? 28 : 24)),
-                top: rungY - (current ? (kind == CatalogRungKind.gate ? 34 : 30) : (kind == CatalogRungKind.gate ? 28 : 24)),
-                width: current ? (kind == CatalogRungKind.gate ? 68 : 60) : (kind == CatalogRungKind.gate ? 56 : 48),
-                height: current ? (kind == CatalogRungKind.gate ? 68 : 60) : (kind == CatalogRungKind.gate ? 56 : 48),
+                left: w / 2 - coinHalf,
+                top: rungY - coinHalf,
+                width: coinSize,
+                height: coinSize,
                 child: _IdleNudgeHalo(
                   active: idleNudge && !nudgeGift,
                   pulse: nudgePulse,
@@ -1148,18 +1615,28 @@ class _MapBand extends StatelessWidget {
                   ),
                 ),
               ),
+              // Climber avatar badge standing right beside the active rung
+              if (current)
+                Positioned(
+                  left: w / 2 + coinHalf + 6,
+                  top: rungY - 22 + (motion ? -3.0 * glow : 0.0),
+                  child: IgnorePointer(
+                    child: _ClimberOnRungBadge(glow: glow),
+                  ),
+                ),
               if (station != null && !hidden)
                 Positioned(
-                  left: sideLeft ? 4 : null,
-                  right: sideLeft ? null : 4,
+                  left: sideLeft ? 10 : null,
+                  right: sideLeft ? null : 18,
                   top: stationTop,
-                  width: 96,
-                  height: 84,
+                  width: 92,
+                  height: 82,
                   child: Transform.scale(
                     scale: zoom,
                     alignment: Alignment.center,
                     child: _IdleNudgeHalo(
-                      active: idleNudge && nudgeGift && station == _Station.gift,
+                      active:
+                          idleNudge && nudgeGift && station == _Station.gift,
                       pulse: nudgePulse,
                       child: _StationPlaque(
                         station: station!,
@@ -1167,6 +1644,7 @@ class _MapBand extends StatelessWidget {
                         glow: glow,
                         fresh: fresh,
                         rested: rested,
+                        claimed: claimed,
                         giftFace: giftFace,
                         motion: motion,
                         onTap: onStation,
@@ -1178,6 +1656,48 @@ class _MapBand extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Small glowing lineman helmet avatar standing on the player's current rung.
+class _ClimberOnRungBadge extends StatelessWidget {
+  final double glow;
+
+  const _ClimberOnRungBadge({required this.glow});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: SlmColors.navy900,
+        border: Border.all(
+          color: SlmColors.emerald300.withValues(alpha: 0.75 + 0.25 * glow),
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: SlmColors.emerald400.withValues(alpha: 0.35 + 0.25 * glow),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: Image.asset(
+          'assets/duty_slip/dress/coach_ready.webp',
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          errorBuilder: (_, _, _) => const Icon(
+            Icons.engineering_rounded,
+            size: 20,
+            color: SlmColors.gold300,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1197,7 +1717,6 @@ class _IdleNudgeHalo extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!active) return child;
     final t = pulse.clamp(0.0, 1.0);
-    // Zoom the child only — rings paint outside without shifting layout.
     final scale = 1.0 + 0.14 * math.sin(t * math.pi * 2);
     return Stack(
       alignment: Alignment.center,
@@ -1211,7 +1730,10 @@ class _IdleNudgeHalo extends StatelessWidget {
               alignment: Alignment.center,
               child: CustomPaint(
                 size: const Size(140, 140),
-                painter: _NudgeRingPainter(progress: t, color: SlmColors.gold300),
+                painter: _NudgeRingPainter(
+                  progress: t,
+                  color: SlmColors.gold300,
+                ),
               ),
             ),
           ),
@@ -1286,7 +1808,10 @@ class _GoldenLadderPainter extends CustomPainter {
     final leftX = w / 2 - gap;
     final rightX = w / 2 + gap;
     canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTRB(leftX - 8, 0, rightX + 12, h), const Radius.circular(12)),
+      RRect.fromRectAndRadius(
+        Rect.fromLTRB(leftX - 8, 0, rightX + 12, h),
+        const Radius.circular(12),
+      ),
       Paint()
         ..color = const Color(0x33040A12)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
@@ -1315,7 +1840,10 @@ class _GoldenLadderPainter extends CustomPainter {
       Rect.fromCenter(center: Offset(x, h / 2), width: 11, height: h + 2),
       const Radius.circular(4),
     );
-    canvas.drawRRect(body.shift(const Offset(2.4, 0)), Paint()..color = const Color(0xFF3A280C));
+    canvas.drawRRect(
+      body.shift(const Offset(2.4, 0)),
+      Paint()..color = const Color(0xFF3A280C),
+    );
     canvas.drawRRect(
       body,
       Paint()
@@ -1345,7 +1873,10 @@ class _GoldenLadderPainter extends CustomPainter {
   void _rung(Canvas canvas, double leftX, double rightX, double y, bool fog) {
     final rung = Rect.fromLTRB(leftX - 1, y - 4.5, rightX + 1, y + 4.5);
     canvas.drawRRect(
-      RRect.fromRectAndRadius(rung.shift(const Offset(1.6, 3)), const Radius.circular(4)),
+      RRect.fromRectAndRadius(
+        rung.shift(const Offset(1.6, 3)),
+        const Radius.circular(4),
+      ),
       Paint()..color = const Color(0xFF2C1C08),
     );
     canvas.drawRRect(
@@ -1356,7 +1887,12 @@ class _GoldenLadderPainter extends CustomPainter {
           end: Alignment.bottomCenter,
           colors: fog
               ? const [Color(0xFFD9C48A), Color(0xFF8A7040), Color(0xFF4A3818)]
-              : const [Color(0xFFFFF8DC), Color(0xFFE6C56E), Color(0xFF8C6822), Color(0xFF4A3410)],
+              : const [
+                  Color(0xFFFFF8DC),
+                  Color(0xFFE6C56E),
+                  Color(0xFF8C6822),
+                  Color(0xFF4A3410),
+                ],
           stops: fog ? const [0.0, 0.55, 1.0] : const [0.0, 0.32, 0.7, 1.0],
         ).createShader(rung),
     );
@@ -1370,7 +1906,11 @@ class _GoldenLadderPainter extends CustomPainter {
     for (final x in [leftX, rightX]) {
       canvas.drawCircle(Offset(x, y), 4.6, Paint()..color = const Color(0xFFB8893A));
       canvas.drawCircle(Offset(x, y), 3.3, Paint()..color = const Color(0xFF0E7A4E));
-      canvas.drawCircle(Offset(x - 0.8, y - 0.9), 1.15, Paint()..color = const Color(0xFFB6FFD8));
+      canvas.drawCircle(
+        Offset(x - 0.8, y - 0.9),
+        1.15,
+        Paint()..color = const Color(0xFFB6FFD8),
+      );
     }
   }
 
@@ -1416,9 +1956,18 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _breath = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
-    _spin = AnimationController(vsync: this, duration: const Duration(milliseconds: 5200));
-    _flash = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
+    _breath = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+    _spin = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5200),
+    );
+    _flash = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _syncLoops();
     });
@@ -1498,7 +2047,9 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
       builder: (context, _) {
         final breath = current ? (0.55 + 0.45 * _breath.value) : 0.0;
         final flash = Curves.easeOut.transform(_flash.value.clamp(0.0, 1.0));
-        final flashOut = flash < 0.55 ? (flash / 0.55) : (1 - (flash - 0.55) / 0.45).clamp(0.0, 1.0);
+        final flashOut = flash < 0.55
+            ? (flash / 0.55)
+            : (1 - (flash - 0.55) / 0.45).clamp(0.0, 1.0);
         final pressDepth = current ? 0.09 : (cleared ? 0.06 : 0.05);
 
         final disc = Opacity(
@@ -1518,12 +2069,14 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: SlmColors.gold300.withValues(alpha: 0.22 + 0.28 * breath),
+                          color: SlmColors.gold300
+                              .withValues(alpha: 0.22 + 0.28 * breath),
                           blurRadius: 14 + 10 * breath,
                           spreadRadius: 1 + 2 * breath,
                         ),
                         BoxShadow(
-                          color: SlmColors.emerald400.withValues(alpha: 0.14 + 0.12 * breath),
+                          color: SlmColors.emerald400
+                              .withValues(alpha: 0.14 + 0.12 * breath),
                           blurRadius: 22,
                         ),
                       ],
@@ -1544,7 +2097,8 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: (current ? SlmColors.gold300 : SlmColors.gold200).withValues(alpha: 0.8 * flashOut),
+                        color: (current ? SlmColors.gold300 : SlmColors.gold200)
+                            .withValues(alpha: 0.8 * flashOut),
                         width: current ? 2.4 : 1.6,
                       ),
                     ),
@@ -1590,7 +2144,13 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
                           weight: FontWeight.w900,
                           color: numberColor,
                         ).copyWith(
-                          shadows: const [Shadow(color: Color(0xDD000000), offset: Offset(0, 1.2), blurRadius: 2)],
+                          shadows: const [
+                            Shadow(
+                              color: Color(0xDD000000),
+                              offset: Offset(0, 1.2),
+                              blurRadius: 2,
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -1635,12 +2195,25 @@ class _EmeraldRingPainter extends CustomPainter {
       ..strokeWidth = 2.1
       ..strokeCap = StrokeCap.round
       ..color = SlmColors.emerald300.withValues(alpha: 0.35 + 0.45 * progress);
-    canvas.drawArc(Rect.fromCircle(center: c, radius: r), -1.2, 2.1, false, paint);
-    canvas.drawArc(Rect.fromCircle(center: c, radius: r), 2.0, 1.5, false, paint);
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: r),
+      -1.2,
+      2.1,
+      false,
+      paint,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: r),
+      2.0,
+      1.5,
+      false,
+      paint,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _EmeraldRingPainter oldDelegate) => oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _EmeraldRingPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 class _StationPlaque extends StatelessWidget {
@@ -1649,6 +2222,7 @@ class _StationPlaque extends StatelessWidget {
   final double glow;
   final bool fresh;
   final bool rested;
+  final bool claimed;
   final _GiftFace giftFace;
   final bool motion;
   final VoidCallback? onTap;
@@ -1659,6 +2233,7 @@ class _StationPlaque extends StatelessWidget {
     required this.glow,
     required this.fresh,
     required this.rested,
+    required this.claimed,
     required this.giftFace,
     required this.motion,
     required this.onTap,
@@ -1669,7 +2244,8 @@ class _StationPlaque extends StatelessWidget {
     final chest = station == _Station.gift;
     final active = giftFace == _GiftFace.active;
     final missed = giftFace == _GiftFace.missed;
-    final lively = motion && (active || (giftFace == _GiftFace.none && fresh));
+    final lively =
+        motion && !claimed && (active || (giftFace == _GiftFace.none && fresh));
     final turn = lively ? glow : 0.2;
     final bob = lively
         ? switch (station) {
@@ -1679,11 +2255,12 @@ class _StationPlaque extends StatelessWidget {
             _ => -1.2 * turn,
           }
         : 0.0;
-    final tilt = motion && fresh && station == _Station.life ? (turn - 0.5) * 0.1 : 0.0;
+    final tilt =
+        motion && fresh && station == _Station.life ? (turn - 0.5) * 0.1 : 0.0;
     final picture = Image.asset(
       asset,
-      width: 96,
-      height: 84,
+      width: 92,
+      height: 82,
       cacheWidth: 280,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.medium,
@@ -1703,9 +2280,9 @@ class _StationPlaque extends StatelessWidget {
         : dull
             ? ColorFiltered(
                 colorFilter: const ColorFilter.matrix(<double>[
-                  0.45, 0.28, 0.12, 0, 10,
-                  0.18, 0.42, 0.12, 0, 10,
-                  0.12, 0.2, 0.38, 0, 8,
+                  0.55, 0.28, 0.12, 0, 10,
+                  0.18, 0.52, 0.12, 0, 10,
+                  0.12, 0.2, 0.48, 0, 8,
                   0, 0, 0, 1, 0,
                 ]),
                 child: picture,
@@ -1713,27 +2290,28 @@ class _StationPlaque extends StatelessWidget {
             : picture;
 
     final body = Opacity(
-      opacity: missed ? 0.78 : dull ? 0.62 : 1,
+      opacity: missed ? 0.78 : dull ? 0.72 : 1,
       child: Transform.translate(
         offset: Offset(0, bob),
         child: Transform.rotate(
           angle: tilt,
           child: SizedBox(
-            width: 96,
-            height: 84,
+            width: 92,
+            height: 82,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 if (active)
                   Container(
-                    width: 74,
-                    height: 74,
+                    width: 72,
+                    height: 72,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: const Color(0x66FFE7A3),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xCCFFD56A).withValues(alpha: 0.55 + 0.35 * turn),
+                          color: const Color(0xCCFFD56A)
+                              .withValues(alpha: 0.55 + 0.35 * turn),
                           blurRadius: 16,
                         ),
                       ],
@@ -1743,10 +2321,38 @@ class _StationPlaque extends StatelessWidget {
                 if (station == _Station.hourly && fresh)
                   Align(
                     alignment: const Alignment(0, -0.16),
-                    child: CustomPaint(size: const Size(22, 22), painter: _ClockPainter(turn)),
+                    child: CustomPaint(
+                      size: const Size(22, 22),
+                      painter: _ClockPainter(turn),
+                    ),
                   ),
                 if (chest && motion && active)
-                  CustomPaint(size: const Size(96, 84), painter: _SparkPainter(turn)),
+                  CustomPaint(
+                    size: const Size(92, 82),
+                    painter: _SparkPainter(turn),
+                  ),
+                if (claimed)
+                  Positioned(
+                    right: 10,
+                    bottom: 6,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: SlmColors.navy950,
+                        border: Border.all(
+                          color: SlmColors.emerald300,
+                          width: 1.3,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        size: 12,
+                        color: SlmColors.emerald300,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1756,7 +2362,8 @@ class _StationPlaque extends StatelessWidget {
 
     return SlmTactile(
       onTap: onTap,
-      builder: (context, press, child) => Transform.scale(scale: 1 - 0.05 * press, child: child),
+      builder: (context, press, child) =>
+          Transform.scale(scale: 1 - 0.05 * press, child: child),
       child: body,
     );
   }
@@ -1767,7 +2374,11 @@ class _FinishMark extends StatelessWidget {
   final bool motion;
   final VoidCallback? onTap;
 
-  const _FinishMark({required this.glow, required this.motion, required this.onTap});
+  const _FinishMark({
+    required this.glow,
+    required this.motion,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1779,7 +2390,12 @@ class _FinishMark extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Color.lerp(const Color(0xFFE8C56B), const Color(0xFF3DDC97), pulse)!.withValues(alpha: 0.72),
+              color: Color.lerp(
+                const Color(0xFFE8C56B),
+                const Color(0xFF3DDC97),
+                pulse,
+              )!
+                  .withValues(alpha: 0.72),
               blurRadius: 22 + 12 * pulse,
               spreadRadius: 2 + pulse,
             ),
@@ -1790,7 +2406,8 @@ class _FinishMark extends StatelessWidget {
     );
     return SlmTactile(
       onTap: onTap,
-      builder: (context, press, child) => Transform.scale(scale: 1 - 0.05 * press, child: child),
+      builder: (context, press, child) =>
+          Transform.scale(scale: 1 - 0.05 * press, child: child),
       child: mark,
     );
   }
@@ -1801,24 +2418,28 @@ class _ObjectReveal extends StatefulWidget {
   final double endScale;
   final VoidCallback onDone;
 
-  const _ObjectReveal({required this.asset, required this.endScale, required this.onDone});
+  const _ObjectReveal({
+    required this.asset,
+    required this.endScale,
+    required this.onDone,
+  });
 
   @override
   State<_ObjectReveal> createState() => _ObjectRevealState();
 }
 
-class _ObjectRevealState extends State<_ObjectReveal> with SingleTickerProviderStateMixin {
+class _ObjectRevealState extends State<_ObjectReveal>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _move = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 780),
+    duration: const Duration(milliseconds: 620),
   );
 
   @override
   void initState() {
     super.initState();
-    // Zoom in, hold a beat at peak, then hand off to kinetic text.
     _move.forward().whenComplete(() async {
-      await Future<void>.delayed(const Duration(milliseconds: 220));
+      await Future<void>.delayed(const Duration(milliseconds: 140));
       if (mounted) widget.onDone();
     });
   }
@@ -1844,7 +2465,7 @@ class _ObjectRevealState extends State<_ObjectReveal> with SingleTickerProviderS
             ),
             Center(
               child: Transform.translate(
-                offset: Offset(0, (1 - t.clamp(0.0, 1.0)) * 140),
+                offset: Offset(0, (1 - t.clamp(0.0, 1.0)) * 120),
                 child: Transform.scale(
                   scale: scale,
                   child: DecoratedBox(
@@ -1852,7 +2473,8 @@ class _ObjectRevealState extends State<_ObjectReveal> with SingleTickerProviderS
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFFD56A).withValues(alpha: 0.18 + 0.45 * t.clamp(0.0, 1.0)),
+                          color: const Color(0xFFFFD56A)
+                              .withValues(alpha: 0.18 + 0.45 * t.clamp(0.0, 1.0)),
                           blurRadius: widget.endScale > 1.8 ? 34 : 18,
                           spreadRadius: 2 * t.clamp(0.0, 1.0),
                         ),
@@ -1894,7 +2516,8 @@ class _KineticReply extends StatefulWidget {
   State<_KineticReply> createState() => _KineticReplyState();
 }
 
-class _KineticReplyState extends State<_KineticReply> with SingleTickerProviderStateMixin {
+class _KineticReplyState extends State<_KineticReply>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _play = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 980),
@@ -1918,8 +2541,10 @@ class _KineticReplyState extends State<_KineticReply> with SingleTickerProviderS
 
   @override
   Widget build(BuildContext context) {
-    final titleWords = widget.title.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-    final bodyWords = widget.body.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    final titleWords =
+        widget.title.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    final bodyWords =
+        widget.body.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
     return GestureDetector(
       onTap: widget.onClose,
       child: ColoredBox(
@@ -1940,7 +2565,12 @@ class _KineticReplyState extends State<_KineticReply> with SingleTickerProviderS
                       clock: _play,
                       start: 0,
                       step: step,
-                      style: zlText(28, weight: FontWeight.w900, color: SlmColors.gold100, height: 1.15),
+                      style: zlText(
+                        28,
+                        weight: FontWeight.w900,
+                        color: SlmColors.gold100,
+                        height: 1.15,
+                      ),
                     ),
                     const SizedBox(height: 14),
                     _KineticLine(
@@ -1948,7 +2578,12 @@ class _KineticReplyState extends State<_KineticReply> with SingleTickerProviderS
                       clock: _play,
                       start: titleWords.length,
                       step: step,
-                      style: zlText(16, weight: FontWeight.w600, color: SlmColors.ivory, height: 1.45),
+                      style: zlText(
+                        16,
+                        weight: FontWeight.w600,
+                        color: SlmColors.ivory,
+                        height: 1.45,
+                      ),
                     ),
                   ],
                 );
@@ -2015,7 +2650,11 @@ class _KineticWord extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final begin = (index * step).clamp(0.0, 0.72);
-    final t = Interval(begin, (begin + 0.28).clamp(begin + 0.01, 1.0), curve: Curves.easeOutCubic).transform(clock.value);
+    final t = Interval(
+      begin,
+      (begin + 0.28).clamp(begin + 0.01, 1.0),
+      curve: Curves.easeOutCubic,
+    ).transform(clock.value);
     return Opacity(
       opacity: t,
       child: Transform.translate(
@@ -2033,13 +2672,15 @@ class _SparkPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Color.fromRGBO(255, 236, 180, 0.25 + 0.55 * turn);
+    final paint = Paint()
+      ..color = Color.fromRGBO(255, 236, 180, 0.25 + 0.55 * turn);
     canvas.drawCircle(Offset(size.width * 0.22, size.height * 0.18), 1.4, paint);
     canvas.drawCircle(Offset(size.width * 0.78, size.height * 0.28), 1.1, paint);
   }
 
   @override
-  bool shouldRepaint(covariant _SparkPainter oldDelegate) => oldDelegate.turn != turn;
+  bool shouldRepaint(covariant _SparkPainter oldDelegate) =>
+      oldDelegate.turn != turn;
 }
 
 class _ClockPainter extends CustomPainter {
@@ -2052,7 +2693,11 @@ class _ClockPainter extends CustomPainter {
     final c = size.center(Offset.zero);
     canvas.drawLine(
       c,
-      c + Offset(math.cos(turn * math.pi * 2 - 1.2) * 7, math.sin(turn * math.pi * 2 - 1.2) * 7),
+      c +
+          Offset(
+            math.cos(turn * math.pi * 2 - 1.2) * 7,
+            math.sin(turn * math.pi * 2 - 1.2) * 7,
+          ),
       Paint()
         ..strokeWidth = 1.4
         ..strokeCap = StrokeCap.round
@@ -2061,7 +2706,8 @@ class _ClockPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ClockPainter oldDelegate) => oldDelegate.turn != turn;
+  bool shouldRepaint(covariant _ClockPainter oldDelegate) =>
+      oldDelegate.turn != turn;
 }
 
 /// Interactive in-ladder overlay for touchable side items (_Station props)
@@ -2078,14 +2724,16 @@ class _SideChallengeOverlay extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_SideChallengeOverlay> createState() => _SideChallengeOverlayState();
+  ConsumerState<_SideChallengeOverlay> createState() =>
+      _SideChallengeOverlayState();
 }
 
 class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
   int? _pickedOption;
   bool _completed = false;
 
-  String get _claimKey => 'station_${widget.active.station.name}_${widget.active.index}';
+  String get _claimKey =>
+      'station_${widget.active.station.name}_${widget.active.index}';
 
   bool get _alreadyClaimed =>
       ref.read(gameSaveProvider).giftsClaimed.contains(_claimKey);
@@ -2184,11 +2832,16 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
                   ),
                   borderRadius: BorderRadius.circular(26),
                   border: Border.all(
-                    color: _completed ? SlmColors.emerald400 : SlmColors.gold400,
+                    color:
+                        _completed ? SlmColors.emerald400 : SlmColors.gold400,
                     width: 1.6,
                   ),
                   boxShadow: const [
-                    BoxShadow(color: Color(0xAA000000), blurRadius: 28, offset: Offset(0, 12)),
+                    BoxShadow(
+                      color: Color(0xAA000000),
+                      blurRadius: 28,
+                      offset: Offset(0, 12),
+                    ),
                   ],
                 ),
                 child: Padding(
@@ -2200,22 +2853,35 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: SlmColors.gold400.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(99),
-                              border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55)),
+                              border: Border.all(
+                                color: SlmColors.gold400.withValues(alpha: 0.55),
+                              ),
                             ),
                             child: Text(
                               enDigits(ch.badgeBn),
-                              style: zlText(12, weight: FontWeight.w800, color: SlmColors.gold300),
+                              style: zlText(
+                                12,
+                                weight: FontWeight.w800,
+                                color: SlmColors.gold300,
+                              ),
                             ),
                           ),
                           const Spacer(),
                           IconButton(
                             onPressed: widget.onClose,
                             visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.close_rounded, color: SlmColors.ivory, size: 22),
+                            icon: const Icon(
+                              Icons.close_rounded,
+                              color: SlmColors.ivory,
+                              size: 22,
+                            ),
                           ),
                         ],
                       ),
@@ -2224,20 +2890,33 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
                         child: SizedBox(
                           width: 84,
                           height: 84,
-                          child: Image.asset(widget.active.asset, fit: BoxFit.contain),
+                          child: Image.asset(
+                            widget.active.asset,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
                         enDigits(ch.titleBn),
                         textAlign: TextAlign.center,
-                        style: zlText(20, weight: FontWeight.w900, color: SlmColors.ivory, height: 1.22),
+                        style: zlText(
+                          20,
+                          weight: FontWeight.w900,
+                          color: SlmColors.ivory,
+                          height: 1.22,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         enDigits(ch.bodyBn),
                         textAlign: TextAlign.center,
-                        style: zlText(15, weight: FontWeight.w600, color: const Color(0xFFD6E0F0), height: 1.38),
+                        style: zlText(
+                          15,
+                          weight: FontWeight.w600,
+                          color: const Color(0xFFD6E0F0),
+                          height: 1.38,
+                        ),
                       ),
                       const SizedBox(height: 14),
                       if (ch.isQuiz) ...[
@@ -2250,10 +2929,14 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
                               final showRight = _completed && isRight;
                               final showWrong = selected && !isRight;
                               return GestureDetector(
-                                onTapDown: (d) => _onOptionTap(i, d.globalPosition),
+                                onTapDown: (d) =>
+                                    _onOptionTap(i, d.globalPosition),
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 220),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: showRight
                                         ? const Color(0xFF0F3D2C)
@@ -2266,7 +2949,8 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
                                           ? SlmColors.emerald300
                                           : showWrong
                                               ? SoftDanger.ink
-                                              : SlmColors.gold400.withValues(alpha: 0.45),
+                                              : SlmColors.gold400
+                                                  .withValues(alpha: 0.45),
                                       width: 1.4,
                                     ),
                                   ),
@@ -2289,7 +2973,12 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
                                       Expanded(
                                         child: Text(
                                           enDigits(ch.optionsBn![i]),
-                                          style: zlText(14.5, weight: FontWeight.w700, color: SlmColors.ivory, height: 1.3),
+                                          style: zlText(
+                                            14.5,
+                                            weight: FontWeight.w700,
+                                            color: SlmColors.ivory,
+                                            height: 1.3,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -2304,16 +2993,27 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
                           onTapDown: (d) => _onCheckTap(d.globalPosition),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 220),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 13,
+                            ),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: _completed
-                                    ? const [Color(0xFF124634), Color(0xFF0B2B20)]
-                                    : const [Color(0xFFF3C969), Color(0xFFD4A037)],
+                                    ? const [
+                                        Color(0xFF124634),
+                                        Color(0xFF0B2B20),
+                                      ]
+                                    : const [
+                                        Color(0xFFF3C969),
+                                        Color(0xFFD4A037),
+                                      ],
                               ),
                               borderRadius: BorderRadius.circular(15),
                               border: Border.all(
-                                color: _completed ? SlmColors.emerald300 : SlmColors.gold200,
+                                color: _completed
+                                    ? SlmColors.emerald300
+                                    : SlmColors.gold200,
                                 width: 1.4,
                               ),
                             ),
@@ -2321,21 +3021,31 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  _completed ? Icons.verified_rounded : Icons.touch_app_rounded,
+                                  _completed
+                                      ? Icons.verified_rounded
+                                      : Icons.touch_app_rounded,
                                   size: 20,
-                                  color: _completed ? SlmColors.emerald300 : SlmColors.navy950,
+                                  color: _completed
+                                      ? SlmColors.emerald300
+                                      : SlmColors.navy950,
                                 ),
                                 const SizedBox(width: 8),
                                 Flexible(
                                   child: Text(
                                     _completed
                                         ? enDigits(ch.rewardNoteBn)
-                                        : enDigits(claimed ? 'আবার যাচাই করুন' : ch.checkActionBn),
+                                        : enDigits(
+                                            claimed
+                                                ? 'আবার যাচাই করুন'
+                                                : ch.checkActionBn,
+                                          ),
                                     textAlign: TextAlign.center,
                                     style: zlText(
                                       14.5,
                                       weight: FontWeight.w900,
-                                      color: _completed ? SlmColors.emerald300 : SlmColors.navy950,
+                                      color: _completed
+                                          ? SlmColors.emerald300
+                                          : SlmColors.navy950,
                                     ),
                                   ),
                                 ),
@@ -2351,20 +3061,26 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
                             backgroundColor: SlmColors.gold400,
                             foregroundColor: SlmColors.navy950,
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                           onPressed: widget.onClose,
                           child: Text(
                             'মইয়ে ফিরুন',
-                            style: zlText(15, weight: FontWeight.w900, color: SlmColors.navy950),
+                            style: zlText(
+                              15,
+                              weight: FontWeight.w900,
+                              color: SlmColors.navy950,
+                            ),
                           ),
                         ),
                       ],
                       const SizedBox(height: 10),
                       const Center(
                         child: AiLinemanGuide(
-                          sprite: 76,
-                          bubbleWidth: 260,
+                          sprite: 88,
+                          bubbleWidth: 268,
                           showBubble: true,
                         ),
                       ),
@@ -2379,5 +3095,3 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
     );
   }
 }
-
-
