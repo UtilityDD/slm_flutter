@@ -135,7 +135,9 @@ Future<void> _teardown(WidgetTester tester) async {
   // The mascot's lip-sync keeps a 12 s safety timer while it "speaks".
   MascotTalk.reset();
   await tester.pumpWidget(const SizedBox());
-  await _pumpFor(tester, const Duration(seconds: 2));
+  // trainingLadderProvider waits up to 8 s for the network before falling back
+  // to the bundled catalog (offline fix); let that timer finish.
+  await _pumpFor(tester, const Duration(seconds: 9));
   FlutterError.onError = _prevOnError;
 }
 
