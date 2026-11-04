@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
+import '../auth/auth_provider.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 
@@ -152,9 +153,14 @@ class _EmergencyDirectoryScreenState extends ConsumerState<EmergencyDirectoryScr
     try {
       final directory = await loadEmergencyDirectory();
       if (!mounted) return;
+      // Open on the lineman's own district when the profile has a known one.
+      final home = ref.read(authProvider).profile?.district?.trim() ?? '';
       setState(() {
         _allServices = directory.items;
         _districts = directory.districts;
+        if (_selectedDistrict.isEmpty && directory.districts.contains(home)) {
+          _selectedDistrict = home;
+        }
         _isLoading = false;
       });
     } catch (_) {

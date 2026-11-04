@@ -64,7 +64,7 @@ class _LevelCelebrationPageState extends ConsumerState<LevelCelebrationPage>
       _playCelebrationCue();
     });
 
-    // After reveal finishes, return home so carousel shows the new colors.
+    // After the reveal finishes, go back to where the lesson was opened.
     _reveal.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Future.delayed(const Duration(milliseconds: 900), () {
@@ -86,7 +86,9 @@ class _LevelCelebrationPageState extends ConsumerState<LevelCelebrationPage>
     if (_finishing) return;
     _finishing = true;
     if (!mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    // This page replaced the lesson reader, so one pop returns the player to
+    // the screen that opened the lesson (the ladder), not to Home.
+    await Navigator.of(context).maybePop();
   }
 
   @override

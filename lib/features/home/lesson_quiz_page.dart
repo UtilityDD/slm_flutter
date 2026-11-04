@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -8,13 +6,13 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/services/neural_tts_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../identify/fit_image.dart';
 import 'bangla_read_aloud.dart';
 import 'lesson_quiz_sfx.dart';
+import 'lesson_quiz_store.dart';
 import 'lesson_rich_text.dart';
 import 'quiz_turn_card.dart';
 
@@ -80,30 +78,52 @@ bool isQuizImageOption(String opt) {
 /// Web lesson id "1.1" → `questions_1_1.json`.
 String lessonQuizFileName(int module, int chapter) => 'questions_${module}_$chapter.json';
 
-final Map<String, List<LessonQuizQuestion>> _quizCache = {};
-
-/// Returns null when the lesson has no quiz (404, empty, offline).
+/// Returns null when there are no questions to show (no quiz, or offline with
+/// no saved copy). Use [LessonQuizStore.load] to tell those two apart.
 Future<List<LessonQuizQuestion>?> fetchLessonQuiz(int module, int chapter) async {
-  final file = lessonQuizFileName(module, chapter);
-  final cached = _quizCache[file];
-  if (cached != null) return cached;
-  final client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
-  try {
-    final req = await client.getUrl(Uri.parse('${AppConstants.remoteAssetOrigin}/quizzes/$file'));
-    final res = await req.close().timeout(const Duration(seconds: 15));
-    if (res.statusCode != 200) return null;
-    final body = await res.transform(utf8.decoder).join();
-    final decoded = jsonDecode(body);
-    if (decoded is! List) return null;
-    final list = decoded.map(LessonQuizQuestion.fromJson).whereType<LessonQuizQuestion>().toList();
-    if (list.isEmpty) return null;
-    _quizCache[file] = list;
-    return list;
-  } catch (_) {
-    return null;
-  } finally {
-    client.close(force: true);
-  }
+  final load = await LessonQuizStore.instance.load(module, chapter);
+  return load.isReady ? load.questions : null;
+}
+
+/// Shown when the lesson quiz is not on this phone yet and cannot be
+/// downloaded. Returns true when the player taps retry.
+Future<bool?> showLessonQuizOfflineDialog(BuildContext context, {required bool bn}) {
+  const ink = SlmColors.ink;
+  const softInk = Color(0xFF3A4660);
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: SlmColors.ivory,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      icon: const Icon(Icons.wifi_off_rounded, color: SlmColors.gold700, size: 36),
+      title: Text(
+        bn ? 'কুইজ আনা যায়নি' : 'Could not get the quiz',
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w800, color: ink),
+      ),
+      content: Text(
+        bn
+            ? 'পাঠ শেষ করতে কুইজ দিতে হবে। ইন্টারনেট চালু করে আবার চেষ্টা করুন। একবার নামলে পরে নেট ছাড়াও চলবে।'
+            : 'The quiz is needed to finish this lesson. Turn on the internet and try again. Once saved, it works offline.',
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontFamily: banglaFont, color: softInk, height: 1.5),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(bn ? 'পরে' : 'Later', style: const TextStyle(fontFamily: banglaFont, color: softInk)),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: SlmColors.gold700),
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(
+            bn ? 'আবার চেষ্টা' : 'Try again',
+            style: const TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Up to 10 questions, at least 2 picture questions when available.

@@ -10,12 +10,14 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
+import '../game/game_save.dart';
 import '../identify/fit_image.dart';
 import '../training/training_models.dart';
 import '../training/training_provider.dart';
 import 'bangla_read_aloud.dart';
 import 'lesson_progress_store.dart';
 import 'lesson_quiz_page.dart';
+import 'lesson_quiz_store.dart';
 import 'lesson_rich_text.dart';
 import 'level_celebration_page.dart';
 import 'lineman_progress.dart';
@@ -32,6 +34,8 @@ class LessonReaderPage extends ConsumerStatefulWidget {
 }
 
 enum _Phase { hero, point, tip, myth, done }
+
+const int _lessonPoints = 20;
 
 class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
   late final List<_Phase> _phases;
@@ -80,6 +84,11 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
         if (value) _voiceBusy = false;
       });
     };
+    // Download (or read the saved copy of) the quiz while the lesson is read,
+    // so it is ready offline by the last page.
+    unawaited(LessonQuizStore.instance.prefetch(lesson.moduleNumber, lesson.chapterNumber));
+    // Make sure the local score is loaded before the lesson can add to it.
+    ref.read(gameSaveProvider);
   }
 
   @override
@@ -288,9 +297,17 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     setState(() => _isClaiming = true);
 
     final lesson = widget.lesson;
-    final pool = await fetchLessonQuiz(lesson.moduleNumber, lesson.chapterNumber);
+    final load = await LessonQuizStore.instance.load(lesson.moduleNumber, lesson.chapterNumber);
     if (!mounted) return;
-    if (pool != null) {
+    if (load.status == LessonQuizStatus.unavailable) {
+      // Never clear a lesson without its quiz: keep it open and offer a retry.
+      setState(() => _isClaiming = false);
+      final retry = await showLessonQuizOfflineDialog(context, bn: widget.bn);
+      if (retry == true && mounted) await _claim();
+      return;
+    }
+    if (load.isReady) {
+      final pool = load.questions;
       final outcome = await Navigator.of(context).push<LessonQuizOutcome>(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 420),
@@ -345,7 +362,9 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     await markLessonCompletedLocally(ref, '${module}_${widget.lesson.chapterNumber}');
 
     final authState = ref.read(authProvider);
-    final userId = authState.isAuthenticated ? authState.profile?.id : null;
+    // An offline (cached) profile is stale: writing from it would overwrite
+    // newer server totals, so the server copy waits for a live session.
+    final userId = authState.isAuthenticated && !authState.offline ? authState.profile?.id : null;
     final nextLevel = module < 10 ? module + 1 : module;
 
     if (userId != null) {
@@ -359,7 +378,7 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
           'updated_at': DateTime.now().toIso8601String(),
         };
         if (!wasRevision) {
-          updates['points'] = (authState.profile?.points ?? 0) + 20;
+          updates['points'] = (authState.profile?.points ?? 0) + _lessonPoints;
         }
         if (moduleFullyDone) {
           final currentLevel = authState.profile?.trainingLevel ?? 1;
@@ -375,6 +394,16 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     // No explicit invalidate here: the ladder and lesson list already watch
     // auth and local progress, and their content rows are cached per session.
 
+    // The one score the player sees (Home ◆) is the local save. Award first
+    // clears there, for guests too, and only then show the reward.
+    var awarded = 0;
+    if (!wasRevision) {
+      final save = ref.read(gameSaveProvider.notifier);
+      await save.reloadFromDisk();
+      await save.addPoints(_lessonPoints);
+      awarded = _lessonPoints;
+    }
+
     if (!mounted) return;
 
     // Celebrate first clear, or recover if module is done but celebration never ran.
@@ -384,6 +413,7 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     if (levelJustCleared) {
       HapticFeedback.heavyImpact();
       await markModuleCelebrated(ref, module);
+      if (!mounted) return;
       final nextStep = module < 10 ? module + 1 : null;
       await Navigator.of(context).pushReplacement(
         PageRouteBuilder(
@@ -404,15 +434,16 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
       return;
     }
 
-    if (!wasRevision && mounted) {
-      showSlmXpToast(context, amount: 20, unit: widget.bn ? 'পয়েন্ট' : 'points');
+    if (!mounted) return;
+    if (awarded > 0) {
+      showSlmXpToast(context, amount: awarded, unit: widget.bn ? 'পয়েন্ট' : 'points');
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          wasRevision
+          awarded == 0
               ? (widget.bn ? 'রিভিশন সম্পন্ন।' : 'Revision done.')
-              : (widget.bn ? 'ভালো হয়েছে! +20 পয়েন্ট যোগ হয়েছে।' : 'Well done! +20 points added.'),
+              : (widget.bn ? 'ভালো হয়েছে! +$awarded পয়েন্ট যোগ হয়েছে।' : 'Well done! +$awarded points added.'),
           style: const TextStyle(fontFamily: banglaFont, fontSize: 15, fontWeight: FontWeight.w600),
         ),
         backgroundColor: AppColors.safeGreen,
