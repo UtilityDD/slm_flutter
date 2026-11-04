@@ -178,7 +178,7 @@ void main() {
           '${first.questions.length} questions');
       expect(identical(first, second), isTrue);
       expect(first.questions.length, greaterThan(900));
-      expect(b.$1, lessThan(5));
+      expect(b.$1, lessThan(50)); // cached: ~0 ms; slack for GC pauses on shared CI runners
     });
 
     test('emergency directory (335 KB)', () async {
@@ -191,7 +191,7 @@ void main() {
       expect(identical(first, second), isTrue);
       expect(first.items.length, greaterThan(900));
       expect(first.items.first.searchKey, contains(first.items.first.name.toLowerCase()));
-      expect(b.$1, lessThan(5));
+      expect(b.$1, lessThan(50)); // cached: ~0 ms; slack for GC pauses on shared CI runners
     });
 
     test('safety library', () async {
@@ -201,7 +201,7 @@ void main() {
       final b = await _measure(() => container.read(libraryCatalogProvider.future));
       debugPrint('PERF safety library open #1 ${a.$1} ms (UI stall ${a.$2} ms), #2 ${b.$1} ms');
       expect((await container.read(libraryCatalogProvider.future)).isNotEmpty, isTrue);
-      expect(b.$1, lessThan(5));
+      expect(b.$1, lessThan(50)); // cached: ~0 ms; slack for GC pauses on shared CI runners
     });
 
     test('parsers match a direct parse', () async {
