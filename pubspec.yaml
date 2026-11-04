@@ -46,6 +46,9 @@ flutter:
     - assets/sounds/quiz_flip.wav
     - assets/sounds/quiz_select.wav
     - assets/sounds/quiz_complete.wav
+    - assets/sounds/dress_right.wav
+    - assets/sounds/dress_wrong.wav
+    - assets/sounds/level_done.wav
     - assets/sounds/safe_home.wav
     - assets/sounds/clock_tick.wav
     - assets/sounds/accident.wav
