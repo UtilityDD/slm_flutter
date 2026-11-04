@@ -17,20 +17,18 @@ import '../game/content_catalog.dart';
 import '../game/game_save.dart';
 import '../game/ladder_builder.dart';
 import '../game/learn_runner.dart';
+import '../guide/ai_lineman_guide.dart';
 import '../guide/guide_director.dart';
 import '../guide/ladder_guide_host.dart';
+import '../guide/mascot_speech_library.dart';
 import '../home/lesson_progress_store.dart';
 import '../home/lineman_progress.dart';
-import '../quizzes/identify_quiz_screen.dart';
-import '../quizzes/quiz_play_screen.dart';
 import '../shell/shell_providers.dart';
 import '../training/training_provider.dart';
-import '../training/training_screen.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'adventure_scenery.dart';
 import 'duty_slip_engine.dart';
-import 'duty_slip_voice.dart';
 
 /// Monumental golden ladder shell.
 /// Rung count + kinds come from [builtLadderProvider] (327). Module 1 Learn
@@ -89,6 +87,20 @@ class _Reply {
   final String body;
 
   const _Reply(this.title, this.body);
+}
+
+class _ActiveSideChallenge {
+  final int index;
+  final _Station station;
+  final String asset;
+  final SideItemChallenge challenge;
+
+  const _ActiveSideChallenge({
+    required this.index,
+    required this.station,
+    required this.asset,
+    required this.challenge,
+  });
 }
 
 const _tipHelmet = 'assets/duty_slip/world3d/prop_shield.webp';
@@ -156,6 +168,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
   final _seen = <int>{};
   _Flight? _flight;
   _Reply? _reply;
+  _ActiveSideChallenge? _sideChallenge;
   Timer? _replyAutoClose;
   late final AnimationController _glow = AnimationController(
     vsync: this,
@@ -401,6 +414,19 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     super.dispose();
   }
 
+  /// Maps a Do rung on the 327-rung ladder to its corresponding [dsLevels] index
+  /// without Learn rungs (at 0, 3, 6...) shadowing Do levels 1, 4, 7...
+  int _resolveDoLevelIndex(int ladderIndex, BuiltLadder? built) {
+    if (built == null || ladderIndex >= built.length) {
+      return ladderIndex.clamp(0, dsLevels.length - 1);
+    }
+    var doOrd = 0;
+    for (var i = 0; i < ladderIndex; i++) {
+      if (!built.rungs[i].isLearn) doOrd++;
+    }
+    return doOrd.clamp(0, dsLevels.length - 1);
+  }
+
   void _openLevel(int index, {BuiltLadder? built}) {
     _clearNudge();
     _armIdle();
@@ -412,7 +438,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
       return;
     }
 
-    // Catalog Learn (playable) opens the swipe runner — never a fall path.
+    // Catalog Learn (playable) opens the interactive field-card deck — never a fall path.
     if (rung != null && rung.isLearn && !rung.isComingSoon) {
       if (gameNeedsVerifyNow(context, index + 1)) {
         showVerifySheet(context);
@@ -433,14 +459,15 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
       _hintComingSoon();
       return;
     }
-    final spec = dsLevels[index];
+    final doIdx = _resolveDoLevelIndex(index, built);
+    final spec = dsLevels[doIdx];
     if (gameNeedsVerifyNow(context, spec.number)) {
       showVerifySheet(context);
       return;
     }
     HapticFeedback.selectionClick();
     unawaited(ref.read(gameSaveProvider.notifier).setCurrentRung(rung?.id ?? '${spec.number}'));
-    widget.onOpen(index);
+    widget.onOpen(doIdx);
   }
 
   Future<void> _openLearn(BuiltRung rung, int index) async {
@@ -498,7 +525,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
   }
 
   void _present(_Station station, int index, {required bool large}) {
-    if (_flight != null || _reply != null) return;
+    if (_flight != null || _reply != null || _sideChallenge != null) return;
     if (MediaQuery.disableAnimationsOf(context)) {
       _openStation(station, index);
       return;
@@ -515,7 +542,9 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
   }
 
   void _showKinetic({required String title, required String body, required bool speak}) {
-    if (speak && !widget.muted) unawaited(DsVoice.play(body, muted: false));
+    if (speak && !widget.muted) {
+      unawaited(MascotSpeechLibrary.speak(body, muted: false));
+    }
     if (!mounted) return;
     _replyAutoClose?.cancel();
     setState(() => _reply = _Reply(title, enDigits(body)));
@@ -533,9 +562,21 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
     _armIdle();
   }
 
+  void _closeSideChallenge() {
+    if (_sideChallenge == null) return;
+    unawaited(MascotSpeechLibrary.stop());
+    setState(() => _sideChallenge = null);
+    _armIdle();
+  }
+
   void _openStation(_Station station, int index) {
     HapticFeedback.lightImpact();
     if (index >= dsLevels.length) {
+      ref.read(guideDirectorProvider.notifier).sayCue(
+            MascotCueId.ladderComingSoon,
+            speakVoice: true,
+            muted: widget.muted,
+          );
       _showKinetic(
         title: 'শীঘ্রই আসছে',
         body: 'এই ধাপটি এখনো খোলেনি।',
@@ -544,30 +585,28 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
       return;
     }
     setState(() => _seen.add(index));
-    final guide = ProviderScope.containerOf(context).read(guideDirectorProvider.notifier);
-    switch (station) {
-      case _Station.hourly:
-        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const QuizPlayScreen()));
-      case _Station.identify:
-        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const IdentifyQuizScreen()));
-      case _Station.lesson:
-        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TrainingScreen()));
-      case _Station.tips || _Station.life:
-        guide.react(GuideMood.inspire);
-        _showKinetic(
-          title: station == _Station.tips ? 'নিরাপত্তা টিপস' : 'লাইফ স্কিল',
-          body: dsBriefFor(dsLevels[index]).body,
-          speak: true,
+    final asset = _assetFor(station, index);
+    final challenge = MascotSpeechLibrary.challengeForSideItem(
+      stationKind: station.name,
+      propAsset: asset,
+      ladderIndex: index,
+    );
+    ref.read(guideDirectorProvider.notifier).say(
+          mood: challenge.mascotCue.mood,
+          line: challenge.mascotCue.displayBn,
+          gesture: challenge.mascotCue.gesture,
+          voiceKey: challenge.mascotCue.voiceKey,
+          speakVoice: true,
+          muted: widget.muted,
         );
-      case _Station.gift:
-        guide.react(GuideMood.glad);
-        unawaited(ProviderScope.containerOf(context).read(gameSaveProvider.notifier).claimGift('ladder_$index'));
-        _showKinetic(
-          title: 'সারপ্রাইজ গিফট',
-          body: 'পরের ধাপগুলো খুললে এই বক্সে বিশেষ চ্যালেঞ্জ পাবেন।',
-          speak: false,
-        );
-    }
+    setState(() {
+      _sideChallenge = _ActiveSideChallenge(
+        index: index,
+        station: station,
+        asset: asset,
+        challenge: challenge,
+      );
+    });
   }
 
   void _hintComingSoon() {
@@ -808,6 +847,14 @@ class _AdventureMapState extends ConsumerState<AdventureMap> with TickerProvider
                   body: _reply!.body,
                   still: quiet,
                   onClose: _closeKinetic,
+                ),
+              ),
+            if (_sideChallenge != null)
+              Positioned.fill(
+                child: _SideChallengeOverlay(
+                  active: _sideChallenge!,
+                  muted: widget.muted,
+                  onClose: _closeSideChallenge,
                 ),
               ),
             Positioned(
@@ -2203,4 +2250,321 @@ class _ClockPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ClockPainter oldDelegate) => oldDelegate.turn != turn;
 }
+
+/// Interactive in-ladder overlay for touchable side items (_Station props)
+/// that awards live ◆ points into the top HUD and speaks with the Game Mascot.
+class _SideChallengeOverlay extends ConsumerStatefulWidget {
+  final _ActiveSideChallenge active;
+  final bool muted;
+  final VoidCallback onClose;
+
+  const _SideChallengeOverlay({
+    required this.active,
+    required this.muted,
+    required this.onClose,
+  });
+
+  @override
+  ConsumerState<_SideChallengeOverlay> createState() => _SideChallengeOverlayState();
+}
+
+class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
+  int? _pickedOption;
+  bool _completed = false;
+
+  String get _claimKey => 'station_${widget.active.station.name}_${widget.active.index}';
+
+  bool get _alreadyClaimed =>
+      ref.read(gameSaveProvider).giftsClaimed.contains(_claimKey);
+
+  Future<void> _onCheckTap(Offset globalOrigin) async {
+    if (_completed) {
+      widget.onClose();
+      return;
+    }
+    final ch = widget.active.challenge;
+    final firstTime = !_alreadyClaimed;
+    setState(() => _completed = true);
+    if (firstTime) {
+      await ref.read(gameSaveProvider.notifier).claimGift(_claimKey);
+      await BeatFx.scoreDelta(
+        ref,
+        ch.points,
+        mood: GuideMood.celebrate,
+        originGlobal: globalOrigin,
+        muted: widget.muted,
+      );
+    }
+    ref.read(guideDirectorProvider.notifier).say(
+          mood: GuideMood.celebrate,
+          line: ch.rewardNoteBn,
+          voiceKey: 'ds_exp_right_1',
+          speakVoice: true,
+          muted: widget.muted,
+        );
+  }
+
+  Future<void> _onOptionTap(int index, Offset globalOrigin) async {
+    if (_completed) return;
+    final ch = widget.active.challenge;
+    final ok = index == ch.correctIndex;
+    setState(() {
+      _pickedOption = index;
+      if (ok) _completed = true;
+    });
+    if (ok) {
+      final firstTime = !_alreadyClaimed;
+      if (firstTime) {
+        await ref.read(gameSaveProvider.notifier).claimGift(_claimKey);
+        await BeatFx.scoreDelta(
+          ref,
+          ch.points,
+          mood: GuideMood.celebrate,
+          originGlobal: globalOrigin,
+          muted: widget.muted,
+        );
+      }
+      ref.read(guideDirectorProvider.notifier).say(
+            mood: GuideMood.celebrate,
+            line: ch.rewardNoteBn,
+            voiceKey: 'ds_exp_right_1',
+            speakVoice: true,
+            muted: widget.muted,
+          );
+    } else {
+      await BeatFx.scoreDelta(
+        ref,
+        -5,
+        mood: GuideMood.warn,
+        originGlobal: globalOrigin,
+        muted: widget.muted,
+      );
+      ref.read(guideDirectorProvider.notifier).say(
+            mood: GuideMood.warn,
+            line: ch.wrongFeedbackBn ?? 'আরেকবার ভেবে সঠিক উত্তরটি বেছে নিন!',
+            voiceKey: 'ds_wrong_bhabun',
+            speakVoice: true,
+            muted: widget.muted,
+          );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ch = widget.active.challenge;
+    final claimed = ref.watch(gameSaveProvider).giftsClaimed.contains(_claimKey);
+
+    return ColoredBox(
+      color: const Color(0xCC040914),
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(18, 24, 18, 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF15243E), Color(0xFF0A1324)],
+                  ),
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(
+                    color: _completed ? SlmColors.emerald400 : SlmColors.gold400,
+                    width: 1.6,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0xAA000000), blurRadius: 28, offset: Offset(0, 12)),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: SlmColors.gold400.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(99),
+                              border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55)),
+                            ),
+                            child: Text(
+                              enDigits(ch.badgeBn),
+                              style: zlText(12, weight: FontWeight.w800, color: SlmColors.gold300),
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: widget.onClose,
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.close_rounded, color: SlmColors.ivory, size: 22),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Center(
+                        child: SizedBox(
+                          width: 84,
+                          height: 84,
+                          child: Image.asset(widget.active.asset, fit: BoxFit.contain),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        enDigits(ch.titleBn),
+                        textAlign: TextAlign.center,
+                        style: zlText(20, weight: FontWeight.w900, color: SlmColors.ivory, height: 1.22),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        enDigits(ch.bodyBn),
+                        textAlign: TextAlign.center,
+                        style: zlText(15, weight: FontWeight.w600, color: const Color(0xFFD6E0F0), height: 1.38),
+                      ),
+                      const SizedBox(height: 14),
+                      if (ch.isQuiz) ...[
+                        for (var i = 0; i < ch.optionsBn!.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          Builder(
+                            builder: (_) {
+                              final selected = _pickedOption == i;
+                              final isRight = i == ch.correctIndex;
+                              final showRight = _completed && isRight;
+                              final showWrong = selected && !isRight;
+                              return GestureDetector(
+                                onTapDown: (d) => _onOptionTap(i, d.globalPosition),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 220),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: showRight
+                                        ? const Color(0xFF0F3D2C)
+                                        : showWrong
+                                            ? const Color(0xFF3E161B)
+                                            : const Color(0xFF1D2E4D),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: showRight
+                                          ? SlmColors.emerald300
+                                          : showWrong
+                                              ? SoftDanger.ink
+                                              : SlmColors.gold400.withValues(alpha: 0.45),
+                                      width: 1.4,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        showRight
+                                            ? Icons.check_circle_rounded
+                                            : showWrong
+                                                ? Icons.cancel_rounded
+                                                : Icons.bolt_rounded,
+                                        size: 20,
+                                        color: showRight
+                                            ? SlmColors.emerald300
+                                            : showWrong
+                                                ? SoftDanger.ink
+                                                : SlmColors.gold300,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          enDigits(ch.optionsBn![i]),
+                                          style: zlText(14.5, weight: FontWeight.w700, color: SlmColors.ivory, height: 1.3),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ] else ...[
+                        GestureDetector(
+                          onTapDown: (d) => _onCheckTap(d.globalPosition),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 220),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: _completed
+                                    ? const [Color(0xFF124634), Color(0xFF0B2B20)]
+                                    : const [Color(0xFFF3C969), Color(0xFFD4A037)],
+                              ),
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: _completed ? SlmColors.emerald300 : SlmColors.gold200,
+                                width: 1.4,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _completed ? Icons.verified_rounded : Icons.touch_app_rounded,
+                                  size: 20,
+                                  color: _completed ? SlmColors.emerald300 : SlmColors.navy950,
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    _completed
+                                        ? enDigits(ch.rewardNoteBn)
+                                        : enDigits(claimed ? 'আবার যাচাই করুন' : ch.checkActionBn),
+                                    textAlign: TextAlign.center,
+                                    style: zlText(
+                                      14.5,
+                                      weight: FontWeight.w900,
+                                      color: _completed ? SlmColors.emerald300 : SlmColors.navy950,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (_completed) ...[
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: SlmColors.gold400,
+                            foregroundColor: SlmColors.navy950,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          onPressed: widget.onClose,
+                          child: Text(
+                            'মইয়ে ফিরুন',
+                            style: zlText(15, weight: FontWeight.w900, color: SlmColors.navy950),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 10),
+                      const Center(
+                        child: AiLinemanGuide(
+                          sprite: 76,
+                          bubbleWidth: 260,
+                          showBubble: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 

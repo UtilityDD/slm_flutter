@@ -13,11 +13,13 @@
 // regression guards that the perf pass established.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slm_flutter/features/duty_slip/ds_dress_up.dart';
 import 'package:slm_flutter/features/duty_slip/ds_pole_inspect.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_engine.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_models.dart';
+import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 class _Sample {
@@ -72,7 +74,7 @@ Future<_Sample> _measure(WidgetTester tester, String label, int level, {required
   final game = level >= 11
       ? DsPoleInspect(engine: engine, onDone: () {}, muted: true, onSpeak: speak, onDelta: (_, _) {})
       : DsDressUp(engine: engine, onDone: () {}, muted: true, onSpeak: speak, onDelta: (_, _) {}, onBack: () {});
-  await tester.pumpWidget(MaterialApp(home: Scaffold(body: game)));
+  await tester.pumpWidget(ProviderScope(child: MaterialApp(home: Scaffold(body: game))));
   await _decode(tester);
 
   // Let the intro play out: coach line, van arrival, coach leaving (L6).
@@ -105,7 +107,11 @@ void main() {
   setUp(() {
     debugOnRebuildDirtyWidget = (_, _) => _rebuilds++;
   });
-  tearDown(() => debugOnRebuildDirtyWidget = null);
+  tearDown(() {
+    debugOnRebuildDirtyWidget = null;
+    // The mascot's lip-sync keeps a 12 s safety timer while it "speaks".
+    MascotTalk.reset();
+  });
 
   final results = <_Sample>[];
 

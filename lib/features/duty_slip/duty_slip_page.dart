@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:flutter/foundation.dart' show SynchronousFuture, ValueListenable;
+import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,9 +11,11 @@ import '../../core/en_digits.dart';
 import '../../design/slm_design.dart';
 import '../auth/verify_gate.dart';
 import '../auth/verify_sheet.dart';
+import '../game/beat_fx.dart';
 import '../game/game_exit_sheet.dart';
 import '../game/game_save.dart';
 import '../guide/guide_director.dart';
+import '../guide/mascot_speech_library.dart';
 import '../home/bangla_read_aloud.dart';
 import '../shell/shell_providers.dart';
 import '../zero_loss/zero_loss_fx.dart';
@@ -144,7 +146,6 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   /// Bumped when HUD numbers change (score, level); rebuilds only the HUD.
   final _hudTick = ValueNotifier(0);
   /// Bumped when the HUD clock text or its overtime colour changes.
-  final _clockTick = ValueNotifier(0);
   final _scoreKey = GlobalKey();
   final _stackKey = GlobalKey();
   /// Level / job clock: a one-shot timer re-armed about once a second (just
@@ -159,8 +160,6 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   var _jobAccMs = 0;
   var _appHidden = false;
   late final AppLifecycleListener _life;
-  var _shownClock = '';
-  var _shownOver = false;
   var _hudSig = 0;
   final _roadScroll = ValueNotifier<double>(0);
   late final AnimationController _shake;
@@ -282,13 +281,6 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _refreshHud() {
     final e = _engine;
     if (!mounted || e == null) return;
-    final clock = e.playClock;
-    final over = e.overtime;
-    if (clock != _shownClock || over != _shownOver) {
-      _shownClock = clock;
-      _shownOver = over;
-      _clockTick.value++;
-    }
     final sig = Object.hash(e.levelScore, e.quality, e.hudTotal, e.playing, e.listing, e.levelIndex);
     if (sig != _hudSig) {
       _hudSig = sig;
@@ -339,6 +331,20 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     _feedClock();
     e.finishDress();
     _holdClock(false);
+    final container = ProviderScope.containerOf(context);
+    final rungId = container.read(gameSaveProvider).currentRungId;
+    final already = container.read(gameSaveProvider).rungProgress[rungId] == 'cleared';
+    final bonus = already ? 5 : 20;
+    unawaited(container.read(gameSaveProvider.notifier).markRungCleared(rungId));
+    unawaited(container.read(gameSaveProvider.notifier).addPoints(bonus, rungId: rungId));
+    container.read(guideDirectorProvider.notifier).sayCue(
+          MascotCueId.doLevelClear,
+          speakVoice: false,
+          muted: _muted,
+        );
+    unawaited(ZlFx.cue('sounds/level_done.wav', volume: 0.75, muted: _muted));
+    // Return directly to the unified Ladder instead of the old medal result board.
+    e.backToRoad();
     setState(() {});
   }
 
@@ -432,7 +438,6 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     _life.dispose();
     _stopClock();
     _hudTick.dispose();
-    _clockTick.dispose();
     _flies.dispose();
     _roadScroll.dispose();
     _shake.dispose();
@@ -505,7 +510,10 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _flyDelta(int delta, {Offset? fromGlobal}) {
     if (delta == 0) return;
     final size = MediaQuery.sizeOf(context);
-    final from = _stackLocal(fromGlobal ?? Offset(size.width / 2, size.height * 0.55));
+    final origin = (fromGlobal != null && fromGlobal != Offset.zero)
+        ? fromGlobal
+        : Offset(size.width / 2, size.height * 0.55);
+    final from = _stackLocal(origin);
     final to = _scoreTarget();
     final id = ++_flyId;
     // Only the fly overlay and the HUD rebuild; the game board below does not.
@@ -513,9 +521,16 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     // Callers may change the score right after this call; read it once they are done.
     scheduleMicrotask(_refreshHud);
     final container = ProviderScope.containerOf(context);
-    container.read(gameSaveProvider.notifier).pulseDelta(delta);
+    final rungId = container.read(gameSaveProvider).currentRungId;
+    unawaited(
+      container.read(gameSaveProvider.notifier).addPoints(
+            delta,
+            rungId: rungId,
+            originGlobal: origin,
+          ),
+    );
     container.read(guideDirectorProvider.notifier).react(delta > 0 ? GuideMood.glad : GuideMood.warn);
-    Future<void>.delayed(const Duration(milliseconds: 720), () {
+    Future<void>.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
       _flies.value = [for (final f in _flies.value) if (f.id != id) f];
     });
@@ -651,6 +666,16 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       _flyDelta(r.delta, fromGlobal: global);
       if (e.showingResult) {
         _holdClock(false);
+        final container = ProviderScope.containerOf(context);
+        final rungId = container.read(gameSaveProvider).currentRungId;
+        unawaited(container.read(gameSaveProvider.notifier).markRungCleared(rungId));
+        unawaited(container.read(gameSaveProvider.notifier).addPoints(20, rungId: rungId));
+        container.read(guideDirectorProvider.notifier).sayCue(
+              MascotCueId.doLevelClear,
+              speakVoice: false,
+              muted: _muted,
+            );
+        e.backToRoad();
       }
     } else {
       unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: _muted));
@@ -838,7 +863,6 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                       builder: (_, _, _) => _Hud(
                         engine: e,
                         scoreKey: _scoreKey,
-                        clockTick: _clockTick,
                         muted: _muted,
                         onMute: () async {
                           setState(() => _muted = !_muted);
@@ -919,25 +943,46 @@ class _FlyingScore extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final plus = bit.delta > 0;
-    final label = plus ? '+${bit.delta}' : '${bit.delta}';
-    final color = plus ? ZlColors.green : ZlColors.red;
+    final label = plus ? '+${enDigits('${bit.delta}')} ◆' : '${enDigits('${bit.delta}')} ◆';
+    final color = plus ? SlmColors.emerald300 : SoftDanger.ink;
+    final borderColor = plus ? SlmColors.gold300 : SoftDanger.ink;
     return TweenAnimationBuilder<double>(
       key: ValueKey(bit.id),
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 700),
-      curve: Curves.easeInOutCubic,
+      duration: const Duration(milliseconds: 780),
+      curve: Curves.easeOutCubic,
       builder: (_, t, _) {
-        final pos = Offset.lerp(bit.from, bit.to, t)!;
-        final scale = 1.15 - (t * 0.35);
+        final linearPos = Offset.lerp(bit.from, bit.to, t)!;
+        final arcLift = -36.0 * math.sin(t * math.pi);
+        final pos = Offset(linearPos.dx, linearPos.dy + arcLift);
+        final scale = t < 0.2 ? (0.75 + 0.45 * (t / 0.2)) : (1.2 - 0.35 * ((t - 0.2) / 0.8));
         final opacity = t < 0.85 ? 1.0 : (1 - t) / 0.15;
         return Positioned(
-          left: pos.dx - 28,
-          top: pos.dy - 14,
+          left: pos.dx - 42,
+          top: pos.dy - 18,
           child: Opacity(
             opacity: opacity.clamp(0.0, 1.0),
             child: Transform.scale(
               scale: scale,
-              child: Text(label, style: zlText(22, weight: FontWeight.w900, color: color)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: plus
+                        ? const [Color(0xF20D3326), Color(0xF2081F18)]
+                        : const [Color(0xF23B1219), Color(0xF2240A0E)],
+                  ),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: borderColor, width: 1.4),
+                  boxShadow: [
+                    BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 14),
+                  ],
+                ),
+                child: Text(
+                  label,
+                  style: zlText(17, weight: FontWeight.w900, color: plus ? SlmColors.gold200 : SoftDanger.ink),
+                ),
+              ),
             ),
           ),
         );
@@ -946,118 +991,116 @@ class _FlyingScore extends StatelessWidget {
   }
 }
 
-class _Hud extends StatelessWidget {
+class _Hud extends ConsumerWidget {
   final DutySlipEngine engine;
   final Key scoreKey;
-  final ValueListenable<int> clockTick;
   final bool muted;
   final VoidCallback onMute;
-  const _Hud({
-    required this.engine,
-    required this.scoreKey,
-    required this.clockTick,
-    required this.muted,
-    required this.onMute,
-  });
+  const _Hud({required this.engine, required this.scoreKey, required this.muted, required this.onMute});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final e = engine;
+    final save = ref.watch(gameSaveProvider);
     final onLevel = e.playing || e.listing;
-    final live = onLevel ? e.levelScore : e.quality;
-    final liveColor = live < 0 ? ZlColors.red : ZlColors.text;
     final title = onLevel ? e.briefOf().title : '';
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+        padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
         decoration: BoxDecoration(
-          color: const Color(0xCC131C2E),
+          color: const Color(0xE60B1324),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: ZlColors.amber.withValues(alpha: 0.28)),
+          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.38)),
+          boxShadow: const [
+            BoxShadow(color: Color(0x55000000), blurRadius: 12, offset: Offset(0, 4)),
+          ],
         ),
         child: Row(
           children: [
             _MuteDot(muted: muted, onMute: onMute),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             if (onLevel)
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'লেভেল ${_bnNum(e.level.number)}',
-                      style: zlText(16, weight: FontWeight.w900, color: ZlColors.amber, height: 1.05),
+                      enDigits('লেভেল ${e.level.number}'),
+                      style: zlText(14, weight: FontWeight.w900, color: SlmColors.gold300, height: 1.05),
                     ),
                     if (title.isNotEmpty)
                       Text(
-                        title,
+                        enDigits(title),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: zlText(13, weight: FontWeight.w700, color: ZlColors.cream, height: 1.15),
+                        style: zlText(12.5, weight: FontWeight.w700, color: SlmColors.ivory, height: 1.15),
                       ),
                   ],
                 ),
               )
             else
               const Spacer(),
-            _HudClock(engine: e, tick: clockTick),
-            const SizedBox(width: 14),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text('$live', key: scoreKey, style: zlText(24, weight: FontWeight.w900, color: liveColor, height: 1)),
-                if (onLevel)
-                  Text('${e.hudTotal}', style: zlText(12, weight: FontWeight.w700, color: ZlColors.soft, height: 1.2)),
-              ],
+            const SizedBox(width: 8),
+            // Unified ◆ Main Game Score Pill
+            Container(
+              key: scoreKey,
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E2B45), Color(0xFF111A2E)],
+                ),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.7), width: 1.2),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '◆',
+                    style: TextStyle(color: SlmColors.gold300, fontSize: 13.5, fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    enDigits('${save.points}'),
+                    style: zlText(15, weight: FontWeight.w900, color: SlmColors.ivory, height: 1),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Unified 💀 Death Counter Pill
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1524),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: save.deaths > 0
+                      ? SoftDanger.ink.withValues(alpha: 0.55)
+                      : Colors.white.withValues(alpha: 0.16),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('💀', style: TextStyle(fontSize: 12)),
+                  const SizedBox(width: 4),
+                  Text(
+                    enDigits('${save.deaths}'),
+                    style: zlText(
+                      13.5,
+                      weight: FontWeight.w800,
+                      color: save.deaths > 0 ? SoftDanger.ink : SlmColors.mist,
+                      height: 1,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-/// The HUD's mm:ss text. Rebuilds on its own when [tick] fires (about 1 Hz).
-class _HudClock extends StatefulWidget {
-  final DutySlipEngine engine;
-  final ValueListenable<int> tick;
-  const _HudClock({required this.engine, required this.tick});
-
-  @override
-  State<_HudClock> createState() => _HudClockState();
-}
-
-class _HudClockState extends State<_HudClock> {
-  @override
-  void initState() {
-    super.initState();
-    widget.tick.addListener(_changed);
-  }
-
-  @override
-  void didUpdateWidget(_HudClock old) {
-    super.didUpdateWidget(old);
-    if (old.tick != widget.tick) {
-      old.tick.removeListener(_changed);
-      widget.tick.addListener(_changed);
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.tick.removeListener(_changed);
-    super.dispose();
-  }
-
-  void _changed() => setState(() {});
-
-  @override
-  Widget build(BuildContext context) {
-    final e = widget.engine;
-    return Text(
-      e.playClock,
-      style: zlText(20, weight: FontWeight.w900, color: e.overtime && !e.playing ? ZlColors.red : ZlColors.cream),
     );
   }
 }

@@ -9,8 +9,8 @@ import '../zero_loss/zero_loss_fx.dart';
 import 'ai_lineman_guide.dart';
 import 'guide_director.dart';
 
-/// Ladder-only guide host: waits for the ladder to settle, then a slow
-/// body pop, then an unhurried speech bubble.
+/// Ladder guide host: waits for the ladder to settle, then a slow
+/// body pop, then an unhurried speech bubble with live lip-sync.
 class LadderGuideHost extends ConsumerStatefulWidget {
   final bool muted;
 
@@ -48,7 +48,6 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
   }
 
   Future<void> _waitLadderSettled(bool reduce) async {
-    // Pin animation is ~850ms; add a beat of stillness after.
     final wait = reduce ? const Duration(milliseconds: 400) : widget.ladderSettle;
     await Future<void>.delayed(wait);
   }
@@ -71,7 +70,6 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
   }
 
   Future<void> _revealBubbleSlowly({required bool reduce}) async {
-    // Let the body land before speaking.
     await Future<void>.delayed(Duration(milliseconds: reduce ? 250 : 750));
     if (!mounted) return;
     ref.read(guideDirectorProvider.notifier).revealEntranceLine();
@@ -92,7 +90,6 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
     if (!mounted) return;
     setState(() => _bubbleVisible = false);
     dir.clearEntrance();
-    // Softly clear the spoken line after the bubble is gone.
     await Future<void>.delayed(Duration(milliseconds: reduce ? 100 : 350));
     if (!mounted) return;
     if (ref.read(guideDirectorProvider).line.isNotEmpty) {
@@ -106,7 +103,6 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
     _entranceBusy = true;
     final reduce = slmReduceMotion(context);
 
-    // 1) Ladder page settles first — mascot stays hidden.
     await _waitLadderSettled(reduce);
     if (!mounted) return;
 
@@ -127,7 +123,6 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
       if (!widget.muted) {
         unawaited(ZlFx.cue('sounds/intro/confirm.ogg', volume: 0.5, muted: false));
       }
-      // Body visible, then speech.
       await _revealBubbleSlowly(reduce: reduce);
       if (!mounted) return;
       await _holdThenClear(reduce: reduce);
@@ -142,7 +137,6 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
       return;
     }
 
-    // Same-day hi: body pops, pause, then bubble, hold, clear.
     await _playDockPop(withSound: true);
     if (!mounted) return;
     await _revealBubbleSlowly(reduce: reduce);
@@ -182,7 +176,7 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
     if (!widget.muted) {
       unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.55, muted: false));
     }
-    ref.read(guideDirectorProvider.notifier).onPoke();
+    ref.read(guideDirectorProvider.notifier).onPoke(muted: widget.muted);
     _presentDockBubble(ref.read(guideDirectorProvider).line);
   }
 
@@ -197,7 +191,6 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
 
   @override
   Widget build(BuildContext context) {
-    // Idle nudge / inspire lines must show the bubble (not only poke/entrance).
     ref.listen<GuideState>(guideDirectorProvider, (prev, next) {
       if (_entranceBusy || _centerVisible || !_dockVisible) return;
       if (next.entrance != null) return;
@@ -219,7 +212,6 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
                 animation: Listenable.merge([_dockPop, _bubble]),
                 builder: (_, _) {
                   final t = Curves.easeOutCubic.transform(_dockPop.value.clamp(0.0, 1.0));
-                  // Soft overshoot only on the last third — less “toy bounce”, more present.
                   final pop = t < 0.75 ? (t / 0.75) : (1 + 0.06 * (1 - ((t - 0.75) / 0.25)));
                   final bubbleT = Curves.easeOutCubic.transform(_bubble.value.clamp(0.0, 1.0));
                   return Opacity(
@@ -230,15 +222,15 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
                         scale: 0.62 + 0.38 * pop.clamp(0.0, 1.08),
                         alignment: Alignment.bottomCenter,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
+                          padding: const EdgeInsets.fromLTRB(8, 8, 6, 8),
                           child: Material(
                             type: MaterialType.transparency,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(20),
                               onTap: _onPoke,
                               child: AiLinemanGuide(
-                                sprite: 72,
-                                bubbleWidth: 128,
+                                sprite: 76,
+                                bubbleWidth: 168,
                                 showBubble: _bubbleVisible,
                                 bubbleOpacity: _bubbleVisible ? bubbleT : 0,
                               ),
@@ -250,7 +242,7 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
                   );
                 },
               ),
-            ),
+            )
           ),
         if (_centerVisible)
           Positioned.fill(
@@ -269,14 +261,14 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
                         child: Center(
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: SlmColors.navy950.withValues(alpha: 0.32 * t),
+                              color: SlmColors.navy950.withValues(alpha: 0.42 * t),
                               borderRadius: BorderRadius.circular(28),
                             ),
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
                               child: AiLinemanGuide(
                                 sprite: 132,
-                                bubbleWidth: 260,
+                                bubbleWidth: 276,
                                 large: true,
                                 showBubble: _bubbleVisible,
                                 bubbleOpacity: _bubbleVisible ? bubbleT : 0,
@@ -289,7 +281,7 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost> with TickerPr
                   },
                 ),
               ),
-            ),
+            )
           ),
       ],
     );

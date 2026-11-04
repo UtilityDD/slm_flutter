@@ -1,11 +1,9 @@
 """
 Update Duty Slip Voice Dart (duty_slip_voice.dart)
-Generates the Flutter voice playback map from the neural MP3 catalog and the
-fallback sentences below. Only sentences that still occur in lib/ Dart code or
-assets/data JSON are emitted; re-run after copy edits. Run from the repo root.
+Generates the comprehensive Flutter voice playback map connecting all 98+ neural MP3s
+with authentic rewritten Bengali texts, cue names, and backward-compatible fallbacks.
 """
 
-import glob
 import os
 import sys
 import json
@@ -91,54 +89,7 @@ LEGACY_VARIANTS = {
     "গোড়া থেকে ওপর পর্যন্ত চোখ বুলিয়ে ক্রস-আর্ম আর ইনসুলেটর দেখলেন না?": "sounds/voice/ds_l13_ok_top.mp3",
 }
 
-BN_DIGITS = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
-
-
-def _json_strings(node, out):
-    if isinstance(node, str):
-        out.append(node)
-    elif isinstance(node, dict):
-        for v in node.values():
-            _json_strings(v, out)
-    elif isinstance(node, list):
-        for v in node:
-            _json_strings(v, out)
-
-
-def live_corpus():
-    """Text that DsVoice.play() can receive: app Dart code and data JSON.
-
-    play() is always called with a full (filled, English-digit) sentence, so a
-    map key is only useful if that sentence occurs here. Cue ids are never
-    looked up.
-    """
-    parts = []
-    for path in glob.glob("lib/**/*.dart", recursive=True):
-        if os.path.normpath(path) == os.path.normpath(TARGET_DART):
-            continue
-        with open(path, "r", encoding="utf-8") as f:
-            parts.append(f.read())
-    for path in glob.glob("assets/data/**/*.json", recursive=True):
-        with open(path, "r", encoding="utf-8") as f:
-            text = f.read()
-        parts.append(text)
-        strings = []
-        _json_strings(json.loads(text), strings)
-        parts.extend(strings)
-    corpus = "\n".join(parts)
-    return corpus + "\n" + corpus.translate(BN_DIGITS)
-
-
 def generate_dart_file():
-    corpus = live_corpus()
-    seen = set()
-
-    def entry(key, mp3):
-        if key in seen or key not in corpus:
-            return None
-        seen.add(key)
-        return f"    '{key}': '{mp3}',"
-
     lines = []
     lines.append("// GENERATED FILE - DO NOT EDIT MANUALLY")
     lines.append("// SLM Game Voice Library (স্মার্ট লাইনম্যান গেম অডিও লাইব্রেরি)")
@@ -167,24 +118,33 @@ def generate_dart_file():
             new_text = cue_data["text"]
             old_text = cue_data.get("old", "")
 
-            # Authentic Bengali text lookup, then the old text (if distinct).
-            # Only sentences the app can still say are emitted.
-            for key in (new_text, old_text):
-                line = entry(key, mp3_path) if key else None
-                if line:
-                    lines.append(line)
-                    count += 1
+            # 1. Cue ID lookup
+            lines.append(f"    '{cue_name}': '{mp3_path}',")
+            # 2. Authentic Bengali text lookup
+            lines.append(f"    '{new_text}': '{mp3_path}',")
+            # 3. Old Bengali text lookup (if distinct)
+            if old_text and old_text != new_text:
+                lines.append(f"    '{old_text}': '{mp3_path}',")
+            count += 1
         lines.append("")
 
     lines.append("    // =========================================================")
     lines.append("    // LEGACY & VARIANT CONTEXT STRINGS (FALLBACK)")
     lines.append("    // =========================================================")
     for k, v in LEGACY_VARIANTS.items():
-        line = entry(k, v)
-        if line:
-            lines.append(line)
+        lines.append(f"    '{k}': '{v}',")
 
     lines.append("  };")
+    lines.append("")
+    lines.append("  /// Checks if an audio asset is registered for the given text or cue ID.")
+    lines.append("  static bool hasAudio(String textOrCue) {")
+    lines.append("    return _audioMap.containsKey(textOrCue.trim());")
+    lines.append("  }")
+    lines.append("")
+    lines.append("  /// Resolves the audio asset path for the given text or cue ID.")
+    lines.append("  static String? resolveAudio(String textOrCue) {")
+    lines.append("    return _audioMap[textOrCue.trim()];")
+    lines.append("  }")
     lines.append("")
     lines.append("  /// Plays the audio track corresponding to the provided text or cue key.")
     lines.append("  static Future<bool> play(String text, {bool muted = false}) async {")
@@ -217,6 +177,9 @@ def generate_dart_file():
     lines.append("    }")
     lines.append("  }")
     lines.append("")
+    lines.append("  /// Plays by direct cue ID (e.g. 'ds_l1_intro', 'ds_why_hole').")
+    lines.append("  static Future<bool> playCue(String cueId, {bool muted = false}) => play(cueId, muted: muted);")
+    lines.append("")
     lines.append("  /// Stops current speech playback immediately.")
     lines.append("  static void stop() {")
     lines.append("    try {")
@@ -229,7 +192,7 @@ def generate_dart_file():
     dart_content = "\n".join(lines)
     with open(TARGET_DART, "w", encoding="utf-8") as f:
         f.write(dart_content)
-    print(f"Generated {TARGET_DART} with {count} live catalog lines and {len(seen) - count} live fallbacks.")
+    print(f"Generated {TARGET_DART} successfully with {count} unique cues and full fallbacks.")
 
 if __name__ == "__main__":
     generate_dart_file()

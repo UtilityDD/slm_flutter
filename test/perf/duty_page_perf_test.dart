@@ -25,6 +25,7 @@ import 'package:slm_flutter/features/duty_slip/adventure_map.dart';
 import 'package:slm_flutter/features/duty_slip/ds_dress_up.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_engine.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_page.dart';
+import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 
 final _counts = <String, int>{};
 
@@ -131,6 +132,8 @@ Future<DutySlipEngine> _openLevel(WidgetTester tester, int index) async {
 }
 
 Future<void> _teardown(WidgetTester tester) async {
+  // The mascot's lip-sync keeps a 12 s safety timer while it "speaks".
+  MascotTalk.reset();
   await tester.pumpWidget(const SizedBox());
   await _pumpFor(tester, const Duration(seconds: 2));
   FlutterError.onError = _prevOnError;
@@ -213,37 +216,13 @@ void main() {
         'clock rebuilds/s=${(live['_HudClock'] ?? 0) / 3}');
     _check((live['_Hud'] ?? 0) / 3, lessThanOrEqualTo(1.5));
 
-    // Finish -> result board.
+    // Finish -> back on the ladder (e05c011 skips the old medal result board).
+    // Idle cost of the ladder itself is covered by ladder_perf_test.dart; here
+    // the catalog never finishes loading, so its boot spinner would spin.
     dress.onDone();
     await _pumpFor(tester, const Duration(seconds: 4));
-    expect(e.showingResult, isTrue);
-    _startCount();
-    await _pumpFor(tester, const Duration(seconds: 2));
-    final r = _stopCount();
-    final rTotal = _total(r) / 2;
-    final scheduled = tester.binding.hasScheduledFrame;
-    _log('result settled (reduce motion): rebuilds/s=$rTotal hasScheduledFrame=$scheduled '
-        'top=${_top(r)}');
-    _check(rTotal, lessThanOrEqualTo(5), reason: 'settled result board must not rebuild every frame');
-    _check(scheduled, isFalse, reason: 'reduce motion: settled result board must go idle');
-    await _teardown(tester);
-  });
-
-  testWidgets('result board, animations on: only the painters animate', (tester) async {
-    await _boot(tester, reduceMotion: false);
-    final e = await _openLevel(tester, 1);
-    await tester.tap(find.byIcon(Icons.arrow_forward_rounded).last);
-    await _pumpFor(tester, const Duration(milliseconds: 800));
-    final dress = tester.widget<DsDressUp>(find.byType(DsDressUp));
-    dress.onDone();
-    await _pumpFor(tester, const Duration(seconds: 4));
-    expect(e.showingResult, isTrue);
-    _startCount();
-    await _pumpFor(tester, const Duration(seconds: 2));
-    final r = _stopCount();
-    final rTotal = _total(r) / 2;
-    _log('result settled (animations on): rebuilds/s=$rTotal top=${_top(r)}');
-    _check(rTotal, lessThanOrEqualTo(10));
+    expect(e.showingResult, isFalse);
+    expect(e.onRoad, isTrue);
     await _teardown(tester);
   });
 

@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/en_digits.dart';
 import '../game/content_catalog.dart';
+import 'mascot_speech_library.dart';
 
 enum GuideMood {
   idle,
@@ -77,19 +80,12 @@ class GuideDirector extends Notifier<GuideState> {
   static const _welcomeDayKey = 'guide_last_welcome_day_v1';
 
   int _token = 0;
-  final _rng = math.Random();
-
-  static const _pokeLines = <String>[
-    'ঐ ধরলেন? একটু নাচছি!',
-    'টিক টিক — আবার দেখুন!',
-    'হ্যাঁ হ্যাঁ, আমি জীবন্ত!',
-    'উফ, ইশারা পেয়েছি!',
-    'হাসি পেয়ে গেল!',
-    'হাত দাঁড় — সার্কাস মোড!',
-  ];
-
+  DateTime _lastInspire = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime _lastGag = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastPoke = DateTime.fromMillisecondsSinceEpoch(0);
-  int _pokeIndex = 0;
+  final _rng = math.Random();
+  bool _entranceMuted = false;
+  String? _entranceVoiceKey;
 
   @override
   GuideState build() => GuideState.quiet;
@@ -99,15 +95,40 @@ class GuideDirector extends Notifier<GuideState> {
     required String line,
     GuideGesture gesture = GuideGesture.none,
     GuideEntranceKind? entrance,
+    String? voiceKey,
+    bool speakVoice = false,
+    bool muted = false,
   }) {
     _token++;
+    final cleanLine = enDigits(line);
     state = GuideState(
       mood: mood,
       gesture: gesture,
-      line: line,
+      line: cleanLine,
       token: _token,
       entrance: entrance,
     );
+    if (speakVoice && cleanLine.trim().isNotEmpty && !muted) {
+      unawaited(MascotSpeechLibrary.speak(cleanLine, voiceKey: voiceKey, muted: muted));
+    }
+  }
+
+  /// Trigger a structured [MascotCue] from [MascotSpeechLibrary] with optional audio.
+  MascotCue sayCue(
+    MascotCueId id, {
+    bool speakVoice = false,
+    bool muted = false,
+  }) {
+    final cue = MascotSpeechLibrary.cueFor(id);
+    say(
+      mood: cue.mood,
+      line: cue.displayBn,
+      gesture: cue.gesture,
+      voiceKey: cue.voiceKey,
+      speakVoice: speakVoice,
+      muted: muted,
+    );
+    return cue;
   }
 
   void react(GuideMood mood) {
@@ -134,6 +155,11 @@ class GuideDirector extends Notifier<GuideState> {
     state = state.copyWith(clearEntrance: true, token: ++_token);
   }
 
+  void sleep() {
+    if (state.gesture != GuideGesture.none) return;
+    say(mood: GuideMood.sleep, line: '');
+  }
+
   void wake({String line = ''}) => say(mood: GuideMood.wake, line: line);
 
   void endGesture() {
@@ -154,18 +180,22 @@ class GuideDirector extends Notifier<GuideState> {
   /// First ladder open today → center welcome; else dock hi-pop.
   /// Body mood is set immediately; speech line stays empty until [revealEntranceLine].
   Future<GuideEntranceKind> beginLadderEntrance({bool muted = false}) async {
+    _entranceMuted = muted;
     final prefs = await SharedPreferences.getInstance();
     final today = _dayKey(DateTime.now());
     final last = prefs.getString(_welcomeDayKey);
     final firstToday = last != today;
     if (firstToday) {
       await prefs.setString(_welcomeDayKey, today);
-      final catalog = await ref.read(contentCatalogProvider.future);
-      _entranceLine = catalog.lineFor('home_open')?.bnText ?? 'আসুন, নিরাপদ পথে ওঠা যাক।';
+      final cue = MascotSpeechLibrary.cueFor(MascotCueId.ladderWelcomeDaily);
+      _entranceLine = cue.displayBn;
+      _entranceVoiceKey = cue.voiceKey;
       say(mood: GuideMood.wake, line: '', entrance: GuideEntranceKind.dailyWelcome);
       return GuideEntranceKind.dailyWelcome;
     }
-    _entranceLine = 'হাই! চলুন ওঠি।';
+    final cue = MascotSpeechLibrary.cueFor(MascotCueId.ladderWelcomeReturn);
+    _entranceLine = cue.displayBn;
+    _entranceVoiceKey = cue.voiceKey;
     say(mood: GuideMood.talk, line: '', entrance: GuideEntranceKind.hiPop);
     return GuideEntranceKind.hiPop;
   }
@@ -175,7 +205,14 @@ class GuideDirector extends Notifier<GuideState> {
     final line = _entranceLine;
     final mood = state.entrance == GuideEntranceKind.dailyWelcome ? GuideMood.wake : GuideMood.talk;
     final entrance = state.entrance;
-    say(mood: mood, line: line, entrance: entrance);
+    say(
+      mood: mood,
+      line: line,
+      entrance: entrance,
+      voiceKey: _entranceVoiceKey,
+      speakVoice: true,
+      muted: _entranceMuted,
+    );
   }
 
   /// Hold time so the user can actually read the bubble (Bangla, unhurried).
@@ -187,57 +224,59 @@ class GuideDirector extends Notifier<GuideState> {
     return Duration(milliseconds: ms);
   }
 
-  int _nudgeLineIndex = 0;
+  Future<void> comingSoon() async {
+    sayCue(MascotCueId.ladderComingSoon);
+  }
 
-  /// Idle highlight on a playable level / gift — short, actionable coach line.
+  Future<void> maybeInspire({Duration minGap = const Duration(seconds: 45)}) async {
+    if (state.gesture != GuideGesture.none) return;
+    final now = DateTime.now();
+    if (now.difference(_lastInspire) < minGap) return;
+    final catalog = await ref.read(contentCatalogProvider.future);
+    final lines = catalog.guideLines.where((g) => g.when == 'idle').toList();
+    _lastInspire = now;
+    if (lines.isEmpty) {
+      sayCue(MascotCueId.ladderIdleLevel);
+      return;
+    }
+    final pick = lines[_rng.nextInt(lines.length)];
+    say(mood: GuideMood.inspire, line: MascotSpeechLibrary.toNaturalFieldBangla(pick.bnText));
+  }
+
+  /// Idle highlight on a playable level / gift — short, actionable field coach line.
   void nudgePlay({required bool gift}) {
     if (state.entrance != null) return;
-    // End any gag so the bubble is readable.
     if (state.gesture != GuideGesture.none) {
       state = state.copyWith(gesture: GuideGesture.none);
     }
-    const levelLines = <String>[
-      'এই ধাপ জ্বলছে — ট্যাপ করে খেলুন, জিতুন।',
-      'প্রস্তুত? এই স্তরে চাপুন — খেলা শুরু।',
-      'এখনই খেলুন — এই ধাপ খোলা আছে।',
-      'এক ট্যাপ — খেলুন, জিতুন, ওপরে উঠুন।',
-    ];
-    const giftLines = <String>[
-      'উপহার জ্বলছে — ট্যাপ করুন, জিতুন।',
-      'সাইড উপহার খোলা — চাপুন, নিন।',
-      'উপহার এখনই নিন — ট্যাপ করুন।',
-    ];
-    final pool = gift ? giftLines : levelLines;
-    final line = pool[_nudgeLineIndex++ % pool.length];
-    say(mood: GuideMood.inspire, line: line);
+    _lastInspire = DateTime.now();
+    sayCue(gift ? MascotCueId.ladderIdleGift : MascotCueId.ladderIdleLevel);
   }
 
-  /// User tapped the mascot — always react with a fresh gesture (light debounce).
-  void onPoke() {
+  /// Gentle idle gesture — lean / peek / hop. Call after long quiet.
+  Future<void> maybeFunnyIdle({Duration minGap = const Duration(seconds: 28)}) async {
+    final now = DateTime.now();
+    if (now.difference(_lastGag) < minGap) return;
+    if (state.entrance != null) return;
+    if (state.mood == GuideMood.warn ||
+        state.mood == GuideMood.fright ||
+        state.mood == GuideMood.fallen ||
+        state.mood == GuideMood.celebrate) {
+      return;
+    }
+    _lastGag = now;
+    final cue = MascotSpeechLibrary.randomFunnyIdle();
+    say(mood: cue.mood, line: cue.displayBn, gesture: cue.gesture);
+  }
+
+  /// User tapped the mascot — react with an encouraging senior lineman field tip & voice!
+  void onPoke({bool muted = false}) {
     if (state.entrance != null) return;
     final now = DateTime.now();
     if (now.difference(_lastPoke) < const Duration(milliseconds: 420)) return;
     _lastPoke = now;
-    _playGag();
-  }
-
-  void _playGag() {
-    const cycle = <GuideGesture>[
-      GuideGesture.handstand,
-      GuideGesture.leanLeft,
-      GuideGesture.spinHop,
-      GuideGesture.leanRight,
-      GuideGesture.peek,
-      GuideGesture.handstand,
-    ];
-    final gesture = cycle[_pokeIndex++ % cycle.length];
-    final line = _pokeLines[_rng.nextInt(_pokeLines.length)];
-    final face = switch (gesture) {
-      GuideGesture.handstand || GuideGesture.spinHop => GuideMood.glad,
-      GuideGesture.peek => GuideMood.talk,
-      _ => GuideMood.inspire,
-    };
-    say(mood: face, line: line, gesture: gesture);
+    _lastGag = now;
+    sayCue(MascotCueId.ladderPoke, speakVoice: true, muted: muted);
   }
 
   String _dayKey(DateTime d) =>

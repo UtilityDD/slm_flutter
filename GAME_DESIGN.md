@@ -278,7 +278,8 @@ Later: Supabase sync, admin CMS, remove tab bar, voice size cut, Play closed tes
 
 ## Related guides
 
-- [`lib/features/duty_slip/GAME_LEVELS_GUIDE.md`](lib/features/duty_slip/GAME_LEVELS_GUIDE.md): screen rules and detailed scene ideas for real-work games. The level ideas become entries in lesson game pools.
+- [`GAME_DEVELOPER_GUIDE.md`](GAME_DEVELOPER_GUIDE.md): **Unified Developer Guide & Collaborator Roadmap** — complete system architecture, file map, step-by-step workflows for Mascot speeches, Learn cards, Touchable side items, and Do levels, plus the Phase 1–3 implementation roadmap.
+- [`lib/features/duty_slip/GAME_LEVELS_GUIDE.md`](lib/features/duty_slip/GAME_LEVELS_GUIDE.md): screen rules and detailed scene ideas for real-work games (Levels 1–14 active, Levels 15–31 planned). The level ideas become entries in lesson game pools.
 - [`AUDIO_DEVELOPMENT_GUIDE.md`](AUDIO_DEVELOPMENT_GUIDE.md): voice lines and mistake audio.
 - [`lib/design/MOTION.md`](lib/design/MOTION.md): motion widgets.
 - [`NEW_MACHINE.md`](NEW_MACHINE.md): machine setup and Google sign-in.
