@@ -5,8 +5,8 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
 print("--- SUPPLEMENTARY MODULES ---")
-if os.path.exists('assets/data/supplementary_modules.json'):
-    data = json.load(open('assets/data/supplementary_modules.json', encoding='utf-8'))
+if os.path.exists('tool/media_src/data/supplementary_modules.json'):
+    data = json.load(open('tool/media_src/data/supplementary_modules.json', encoding='utf-8'))
     for item in data:
         code = item.get('lesson_code') or item.get('number')
         print(f"[{code}] {item.get('title_bn')} | {item.get('title_en')}")

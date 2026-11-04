@@ -1,16 +1,13 @@
 # Quizzes
 
-Hub plus two play modes.
-
 | File | Role |
 |---|---|
-| `quiz_hub_screen.dart` | Hourly card + Identify-match card |
-| `quiz_play_screen.dart` | Hourly run |
+| `quiz_play_screen.dart` | Hourly quiz run (`/hourly`). Also the ladder's hourly station |
 | `hourly_pack.dart` | Loads `assets/data/hourly_quiz_pack.json` |
-| `identify_quiz_screen.dart` | “What is this photo?” from the library |
-| `quizzes_screen.dart` | Older / extra quiz list if still routed |
-| `leaderboard_provider.dart` | Rank boards from Supabase |
+| `identify_quiz_screen.dart` | "What is this photo?" from the library (`/identify-play`). Also a ladder station |
+| `quiz_hub_screen.dart` | Hourly card + identify card (`/quiz`). Only the admin panel opens it now |
+| `leaderboard_provider.dart` | Monthly boards from Supabase, used by `RankScreen` |
 
-Hourly questions may be visual (`assets/quizzes/…`). Correct answers are **not** in the APK. The phone sends question id + chosen text; Postgres function `submit_flutter_hourly_quiz` marks them (see `/supabase`). Keys on disk: `tool/hourly_answer_keys.*` — gitignored.
+Hourly questions may be photos (`assets/quizzes/…`). Correct answers are **not** in the APK. The phone sends question id + chosen text. The Postgres function `submit_flutter_hourly_quiz` marks them (see `/supabase`). One play per hour window is enforced on the server.
 
-IST hour label is shown on the hub card. One play per hour window is enforced server-side.
+Answer keys on disk (`tool/hourly_answer_keys.*`) are gitignored. Never commit them.

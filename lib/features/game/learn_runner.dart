@@ -15,6 +15,7 @@ import '../guide/mascot_speech_library.dart';
 import '../home/bangla_read_aloud.dart';
 import '../home/lesson_progress_store.dart';
 import '../home/lesson_quiz_page.dart';
+import '../identify/fit_image.dart';
 import '../shell/shell_providers.dart';
 import '../training/training_models.dart';
 import '../training/training_provider.dart';
@@ -907,6 +908,7 @@ class _LearnCard extends StatelessWidget {
                             : CachedNetworkImage(
                                 imageUrl: url,
                                 fit: BoxFit.contain,
+                                memCacheWidth: screenDecodeWidth(context),
                                 placeholder: (_, _) => const Center(
                                   child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF8A6A28)),
                                 ),
@@ -1221,6 +1223,7 @@ class _QuizPhase extends StatelessWidget {
                               : 'https://www.smartlineman.in/quizzes/${q.image}',
                           height: 132,
                           fit: BoxFit.contain,
+                          memCacheHeight: decodePx(context, 140),
                           errorWidget: (_, _, _) => const SizedBox.shrink(),
                         ),
                       ),
@@ -1376,6 +1379,7 @@ class _OptionTile extends StatelessWidget {
                             : 'https://www.smartlineman.in/quizzes/${label.replaceFirst(RegExp(r'^/'), '')}',
                         height: 72,
                         fit: BoxFit.contain,
+                        memCacheHeight: decodePx(context, 72),
                         errorWidget: (_, _, _) => Text(
                           enDigits(label),
                           style: TextStyle(fontFamily: banglaFont, color: textColor),

@@ -6,6 +6,7 @@ import '../../core/network/supabase_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../auth/auth_provider.dart';
+import '../identify/fit_image.dart';
 import 'hourly_pack.dart';
 
 /// Hourly quiz from the bundled pack. The phone does not know the right answer.
@@ -280,8 +281,9 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8),
-                                  child: Image.asset(
-                                    question.image,
+                                  child: Image(
+                                    // Decode to the 164 dp tall box, not the file size.
+                                    image: fitAsset(context, question.image, width: MediaQuery.sizeOf(context).width, height: 164),
                                     width: double.infinity,
                                     height: double.infinity,
                                     fit: BoxFit.contain,
@@ -390,7 +392,11 @@ class _TextChoice extends StatelessWidget {
                 SizedBox(
                   width: 42,
                   height: 42,
-                  child: Image.asset(option.image, fit: BoxFit.contain, errorBuilder: (_, _, _) => const SizedBox.shrink()),
+                  child: Image(
+                    image: fitAsset(context, option.image, width: 42, height: 42),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
                 ),
                 const SizedBox(width: 8),
               ],
@@ -469,12 +475,8 @@ class _ImageTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: selected ? AppColors.primaryAmber : const Color(0xFFE7E5E4), width: selected ? 2 : 1),
           ),
-          child: Image.asset(
+          child: FitAssetImage(
             option.image,
-            width: double.infinity,
-            height: double.infinity,
-            fit: BoxFit.contain,
-            alignment: Alignment.center,
             errorBuilder: (_, _, _) => const Icon(Icons.image_not_supported_outlined),
           ),
         ),

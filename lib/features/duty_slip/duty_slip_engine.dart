@@ -130,8 +130,6 @@ const dsSafeHome = <DsPlanItem>[
     icon: 'assets/zero_loss/crew/rafiq.webp'),
 ];
 
-const dsSafeHomeWord = 'SAFE HOME';
-
 class DsJobGroup {
   final String title;
   final int start;
@@ -167,17 +165,7 @@ class DsBrief {
   const DsBrief({required this.title, required this.body, this.stamps = const []});
 }
 
-const dsLetterTitlePool = [
-  'আট ধাপ — আট মন্ত্র',
-  'নিয়মের শর্টকাট মানেই মৃত্যু',
-  'কোন ধাপ বাদ দিলে বাড়ি ফেরা হবে না',
-  'তাড়াহুড়োই আসল শত্রু',
-  'এক ভুল মানে একবার মৃত্যু',
-  'ক্রম ভাঙলেই মৃত্যুর ভয়',
-  'নিয়ম ছাড়া কাজে হাত নয়',
-];
-
-DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
+DsBrief dsBriefFor(DsLevelSpec spec) {
   const home = [
     'থামো ও বিপদ খুঁজো',
     'কবচ পরো',
@@ -219,7 +207,7 @@ DsBrief dsBriefFor(DsLevelSpec spec, {String? letterTitle}) {
       20 => 'এক ভুল মানে একবার মৃত্যু',
       21 => 'ক্রম ভাঙলেই মৃত্যুর ভয়',
       22 => 'নিয়ম ছাড়া কাজে হাত নয়',
-      _ => letterTitle ?? dsLetterTitlePool.first,
+      _ => 'আট ধাপ — আট মন্ত্র',
     };
     final body = switch (spec.number) {
       1 => 'লাইনে কাজে নামার সময় আপনার পোশাকই প্রথম বর্ম। শরীরকে সম্পূর্ণ সুরক্ষিত রাখুন।',
@@ -286,13 +274,16 @@ class DutySlipEngine {
   var _cardsSinceCall = 0;
   var _callsFired = 0;
   var planNext = 0;
-  late List<DsPlanItem> planPool;
   var easyChoices = <DsPlanItem>[];
   var poolStamp = 0;
 
   var levelIndex = 0;
   var unlocked = 0;
   var nightTotal = 0;
+
+  /// [nightTotal] when the field night started; the night's own score is
+  /// [quality] minus this.
+  var _fieldBase = 0;
   var levelScore = 0;
   var wrongTaps = 0;
   var streak = 0;
@@ -300,7 +291,6 @@ class DutySlipEngine {
   final bestDarunSec = List<int?>.filled(dsLevels.length, null);
   final levelDangerCount = List<int?>.filled(dsLevels.length, null);
   final levelBestScore = List<int>.filled(dsLevels.length, 0);
-  late final List<String> _letterTitles;
 
   int get totalCumulativeScore {
     var sum = 0;
@@ -310,35 +300,12 @@ class DutySlipEngine {
     return sum > 0 ? sum : nightTotal;
   }
 
-  int get totalCumulativeDanger {
-    var sum = 0;
-    for (final d in levelDangerCount) {
-      if (d != null) {
-        sum += d;
-      }
-    }
-    return sum;
-  }
-
-  int get totalCumulativeSeconds {
-    var sum = 0;
-    for (var i = 0; i < dsLevels.length; i++) {
-      if (bestDarunSec[i] != null) {
-        sum += bestDarunSec[i]!;
-      }
-    }
-    return sum;
-  }
-
   DutySlipEngine(this.pack, {int? seed}) : _rng = Random(seed ?? DateTime.now().millisecondsSinceEpoch) {
     site = pack.sites[_rng.nextInt(pack.sites.length)];
     final names = [...pack.feeders]..shuffle(_rng);
     feeder = names.first;
     fakes = names.skip(1).take(3).toList();
     tonightPlan = List<DsPlanItem>.from(pack.plan);
-    planPool = [];
-    final pool = List<String>.from(dsLetterTitlePool)..shuffle(_rng);
-    _letterTitles = ['পোশাক', 'মাথায় হেলমেট', 'হাতে গ্লাভস', 'হারনেস', ...pool];
     if (dsPlayAllLevels) unlocked = dsLevels.length - 1;
     if (site.calls.isEmpty) {
       siteCalls = List<DsCall>.from(pack.calls);
@@ -351,14 +318,12 @@ class DutySlipEngine {
 
   DsStep? get step => stepIndex < pack.steps.length ? pack.steps[stepIndex] : null;
   int get totalSteps => pack.steps.length;
-  bool get shutdownLive => stamps.contains('cut') && !stamps.contains('restore');
   int get clockHour {
     final t = pack.startHour * 3600 + pack.startMinute * 60 + jobSeconds;
     return (t ~/ 3600) % 24;
   }
 
   int get clockMinute => ((pack.startHour * 3600 + pack.startMinute * 60 + jobSeconds) % 3600) ~/ 60;
-  int get clockSecond => (pack.startHour * 3600 + pack.startMinute * 60 + jobSeconds) % 60;
 
   String get clockLabel {
     final h = clockHour.toString().padLeft(2, '0');
@@ -366,28 +331,9 @@ class DutySlipEngine {
     return '$h:$m';
   }
 
-  String get clockFull {
-    final s = clockSecond.toString().padLeft(2, '0');
-    return '$clockLabel:$s';
-  }
-
-  DsLane get lane {
-    if (act == DsAct.briefing) return DsLane.office;
-    return step?.lane ?? DsLane.close;
-  }
-
   DsLevelSpec get level => dsLevels[levelIndex.clamp(0, dsLevels.length - 1)];
-  DsBrief briefOf([DsLevelSpec? spec]) {
-    final s = spec ?? level;
-    String? letterTitle;
-    if (s.isLetters) {
-      final i = s.number - 1;
-      if (i >= 0 && i < _letterTitles.length) letterTitle = _letterTitles[i];
-    }
-    return dsBriefFor(s, letterTitle: letterTitle);
-  }
+  DsBrief briefOf([DsLevelSpec? spec]) => dsBriefFor(spec ?? level);
 
-  bool get lettersOnly => level.isLetters && level.number <= 2;
   List<DsPlanItem> get currentDeck => level.isLetters ? dsSafeHome : tonightPlan;
   int get choiceCount {
     final n = level.choices;
@@ -398,14 +344,11 @@ class DutySlipEngine {
   bool get covering => planning && planPhase == DsPlanPhase.cover;
   bool get onRoad => planning && planPhase == DsPlanPhase.road;
   bool get listing => planning && planPhase == DsPlanPhase.list;
-  var safeWalkDone = false;
   var dressArmed = false;
   var dressOpen = false;
-  bool get showingSafeWalk => false;
   bool get dressLevel => level.isLetters && level.number <= 14;
   bool get showingDressIntro => listing && dressLevel && !dressOpen;
   bool get showingDress => listing && dressLevel && dressOpen;
-  void finishSafeWalk() => safeWalkDone = true;
 
   void openDress() {
     if (!showingDressIntro) return;
@@ -444,13 +387,10 @@ class DutySlipEngine {
   bool get prePlay => covering || onRoad || listing || showingResult;
   bool get showHud => playing || listing || !planning;
 
-  String get siteStory => fill(site.storyBn.isNotEmpty ? site.storyBn : site.introBn);
-
   var clockLive = false;
   var playSeconds = 0;
   var _playAcc = 0;
 
-  int get hudLevelScore => (playing || showingDress || showingResult) ? levelScore : quality;
   int get hudTotal => (playing || showingDress) ? nightTotal + levelScore : nightTotal;
 
   DsLevelRank get levelRank {
@@ -463,136 +403,30 @@ class DutySlipEngine {
     return DsLevelRank.again;
   }
 
-  String get levelRankBn => switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ',
-        DsLevelRank.motamuti => 'মোটামুটি',
-        DsLevelRank.again => 'আবার',
-      };
-
-  String get levelLineBn {
-    if (level.isLetters && level.number == 1) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ শৃঙ্খলা! পোশাক নির্বাচনে কোনো ত্রুটি হয়নি।',
-        DsLevelRank.motamuti => 'পোশাক পরা হয়েছে, তবে কাজের সময় আরও সতর্ক থাকা জরুরি।',
-        DsLevelRank.again => 'পোশাক নির্বাচনে ঝুঁকি থেকে গেছে। সতর্কতা বজায় রেখে পুনরায় চেষ্টা করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 2) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'একদম নির্ভুল! মাথার সুরক্ষা সম্পূর্ণ।',
-        DsLevelRank.motamuti => 'হেলমেট পরা হয়েছে, কিন্তু নির্বাচন নিখুঁত ছিল না।',
-        DsLevelRank.again => 'ভুল হেলমেট মারাত্মক ঝুঁকির কারণ। পুনরায় সঠিকটি নির্বাচন করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 3) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'অসাধারণ সতর্কতা! ত্রুটিমুক্ত ইনসুলেটেড গ্লাভস সঠিকভাবে নির্বাচন করেছেন।',
-        DsLevelRank.motamuti => 'গ্লাভস পরা হয়েছে, তবে কাজের সময় গ্লাভসের ত্রুটি আরও মনোযোগ দিয়ে পরখ করা দরকার।',
-        DsLevelRank.again => 'ত্রুটিযুক্ত গ্লাভসে লাইনে কাজ করা প্রাণঘাতী। সতর্ক হয়ে আবার সঠিক গ্লাভস নির্বাচন করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 4) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'নিখুঁত কাজ! হারনেস সঠিকভাবে বাঁধা হয়েছে এবং দুই আঙুলের উপযুক্ত ফাঁক রয়েছে।',
-        DsLevelRank.motamuti => 'হারনেস পরা হয়েছে, তবে কাজের সময় বাকল ও ফিতার টান আরও নিশ্ছিদ্র হওয়া প্রয়োজন।',
-        DsLevelRank.again => 'আলগা বা ভুলভাবে বাঁধা হারনেসে পতন ঘটলে মারাত্মক জখম হতে পারে। পুনরায় সঠিক নিয়মে বাঁধুন।',
-      };
-    }
-    if (level.isLetters && level.number == 5) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'কিট ঠিক আছে।',
-        DsLevelRank.motamuti => 'কিট পরেছেন। ভুলগুলো মনে রাখুন।',
-        DsLevelRank.again => 'কিট এখনো আলগা। আবার পরান।',
-      };
-    }
-    if (level.isLetters && level.number == 6) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ। লাইনম্যান তৈরি, আর ভ্যানে ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড ও পোর্টেবল আর্থিং কিট আছে।',
-        DsLevelRank.motamuti => 'ভ্যান সাজানো হয়েছে, তবে এই ঘরের জন্য আরও সতর্ক থাকা জরুরি।',
-        DsLevelRank.again => 'এই সাজে ভ্যান বের হবে না। সতর্কতা বজায় রেখে পুনরায় সাজান।',
-      };
-    }
-    if (level.isLetters && level.number == 7) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ। খুঁটিতে ওঠার সাজ ঠিক আছে।',
-        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
-        DsLevelRank.again => 'এই সাজে খুঁটিতে ওঠা যাবে না। আবার সাজান।',
-      };
-    }
-    if (level.isLetters && level.number == 8) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ। ট্রান্সফরমার মৃত করার সাজ ঠিক আছে।',
-        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
-        DsLevelRank.again => 'এই সাজে বুশিং খোলা যাবে না। আবার সাজান।',
-      };
-    }
-    if (level.isLetters && level.number == 9) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ। রাতের লাইনের সাজ ঠিক আছে।',
-        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
-        DsLevelRank.again => 'এই সাজে রাতের লাইনে নামা যাবে না। আবার সাজান।',
-      };
-    }
-    if (level.isLetters && level.number == 10) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ। ডাল নামানোর সাজ ঠিক আছে।',
-        DsLevelRank.motamuti => 'সাজ হয়েছে। একবার ভুল হয়েছিল, মনে রাখুন।',
-        DsLevelRank.again => 'এই সাজে ডাল নামানো যাবে না। আবার সাজান।',
-      };
-    }
-    if (level.isLetters && level.number == 11) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ! পোলের চারপাশ, গোড়ার মাটি, স্টে-তার আর আর্থিং নিখুঁতভাবে যাচাই করেছেন।',
-        DsLevelRank.motamuti => 'যাচাই সম্পন্ন হয়েছে, তবে পোলের চারপাশ আরও মনোযোগ দিয়ে দেখা জরুরি।',
-        DsLevelRank.again => 'পোলের গোড়া ও স্টে-তারের বিপদ না দেখে উঠলে বড় দুর্ঘটনা ঘটবে। আবার যাচাই করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 12) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ! ফাঁপা শব্দ আর বেরিয়ে থাকা রড দেখে মই না লাগিয়ে বিপদ রিপোর্ট করেছেন।',
-        DsLevelRank.motamuti => 'পোল বাতিল করা হয়েছে, তবে একবার ভুল হয়েছিল। মই লাগানোর আগে শব্দ আর পেছনটা দেখুন।',
-        DsLevelRank.again => 'ফাঁপা পোলে উঠলে সেটি ভেঙে পড়বে। আবার যাচাই করে রিপোর্ট করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 13) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ! গোড়ার জয়েন্ট, টন টন শব্দ আর মাথার ক্রস-আর্ম দেখে তবেই মই লাগিয়েছেন।',
-        DsLevelRank.motamuti => 'স্টিল পোল যাচাই হয়েছে, তবে গোড়া ও মাথা আরও মনোযোগ দিয়ে দেখা জরুরি।',
-        DsLevelRank.again => 'স্টিল পোলের গোড়ার মরিচা না দেখে উঠলে পোল ভেঙে পড়বে। আবার যাচাই করুন।',
-      };
-    }
-    if (level.isLetters && level.number == 14) {
-      return switch (levelRank) {
-        DsLevelRank.darun => 'দারুণ! ভিড় সরিয়ে, নিচের জায়গা পরিষ্কার করে আর লক্ষ্মণ রেখা মেনে কাজ শুরু করেছেন।',
-        DsLevelRank.motamuti => 'লক্ষ্মণ রেখা মানা হয়েছে, তবে একবার ভুল হয়েছিল। ভিড়, গোড়া আর দূরত্ব আগে দেখুন।',
-        DsLevelRank.again => 'ভিড়, ভেজা জায়গা আর লোহার পাইপ না সরিয়ে কাজ শুরু করলে বিপদ। আবার করুন।',
-      };
-    }
-    return switch (levelRank) {
-      DsLevelRank.darun => 'ধাপগুলো মাথায় আছে।',
-      DsLevelRank.motamuti => nearMiss ? 'আর একটা ঠিক থাকলে দারুণ।' : 'মোটামুটি মনে আছে। সাইটে ভুল করবেন না।',
-      DsLevelRank.again => 'ধাপগুলো এখনো আলগা।',
-    };
-  }
-
-  bool get nearMiss {
-    if (levelRank != DsLevelRank.motamuti) return false;
-    final deck = currentDeck.length;
-    final darunWrong = deck <= 8 ? 1 : 3;
-    if (wrongTaps == darunWrong + 1) return true;
-    if (wrongTaps <= darunWrong && playSeconds > level.darunSec) return true;
-    return false;
-  }
-
   void addJobSeconds(int sec) {
     if (act == DsAct.done || act == DsAct.lethal || prePlay || playing) return;
     jobSeconds += sec;
     if (jobSeconds >= 2 * 3600 + 20 * 60) overtime = true;
   }
 
+  /// True while [tickPlay] counts (the level's mm:ss clock is running).
+  bool get playClockRuns {
+    if (!clockLive || showingResult || act == DsAct.done || act == DsAct.lethal) return false;
+    return playing || showingDress || !planning;
+  }
+
+  /// True while the page should drive the clocks at all: a level or job act
+  /// is on screen. Does not depend on [clockLive], which games arm themselves.
+  bool get clockScreen {
+    if (act == DsAct.done || act == DsAct.lethal) return false;
+    return playing || showingDress || !planning;
+  }
+
+  /// Milliseconds of play time left before [playSeconds] goes up next.
+  int get playMsToNextSecond => 1000 - _playAcc;
+
   void tickPlay(int millis) {
-    if (!clockLive || showingResult || act == DsAct.done || act == DsAct.lethal) return;
-    if (!(playing || showingDress || !planning)) return;
+    if (!playClockRuns) return;
     _playAcc += millis;
     while (_playAcc >= 1000) {
       _playAcc -= 1000;
@@ -665,6 +499,10 @@ class DutySlipEngine {
   }
 
   void backToRoad() {
+    if (inField) {
+      leaveField();
+      return;
+    }
     if (planPhase != DsPlanPhase.list && planPhase != DsPlanPhase.result) return;
     clockLive = false;
     dressArmed = false;
@@ -672,8 +510,71 @@ class DutySlipEngine {
     planPhase = DsPlanPhase.road;
   }
 
+  /// True once the field night has left the level list (docket, PTW, cards,
+  /// calls or the report are on screen).
+  bool get inField => level.isField && (act != DsAct.briefing || briefingPage != 0);
+
+  /// The field night's own score so far (what it adds to the career total).
+  int get fieldEarned => max(0, quality - _fieldBase);
+
+  /// Leave the field night for the ladder. Drops the unfinished night; a
+  /// finished night's score was already recorded by [_finishField].
+  void leaveField() {
+    if (!inField) return;
+    _resetFieldRun();
+    clockLive = false;
+    dressArmed = false;
+    dressOpen = false;
+    quality = nightTotal;
+    planPhase = DsPlanPhase.road;
+  }
+
+  void _resetFieldRun() {
+    act = DsAct.briefing;
+    briefingPage = 0;
+    stepIndex = 0;
+    stamps.clear();
+    slashed.clear();
+    rightSteps.clear();
+    wrongSteps.clear();
+    callsOk = 0;
+    callsBad = 0;
+    _callsFired = 0;
+    _cardsSinceCall = 0;
+    activeCall = null;
+    lethalReason = null;
+    safety = 100;
+    jobSeconds = 0;
+    hardMiss = false;
+    overtime = false;
+  }
+
+  static const _maxCalls = 3;
+
+  /// Most a field night can score: +5 per single/match card, +5 per kit item
+  /// (yes/no taps), +5 per call (at most [_maxCalls] fire) and +5 for the PTW.
+  int get fieldMaxScore {
+    var n = 5;
+    for (final s in pack.steps) {
+      n += s.kind == DsKind.kit ? 5 * s.options.length : 5;
+    }
+    if (pack.calls.isNotEmpty) n += 5 * _maxCalls;
+    return n;
+  }
+
+  /// Most one run of level [index] can score, or null when the level's own
+  /// game decides (the dress and photo levels 1-14).
+  int? levelMaxScore(int index) {
+    final spec = dsLevels[index];
+    if (spec.isField) return fieldMaxScore;
+    if (spec.isLetters && spec.number <= 14) return null;
+    final n = spec.isLetters ? dsSafeHome.length : tonightPlan.length;
+    return 5 * n + 5 * (n ~/ 6);
+  }
+
   /// Lethal fall: rewind unlock to the first level of the current 20-level module.
   void fallToModuleCheckpoint() {
+    _resetFieldRun();
     final start = (levelIndex ~/ 20) * 20;
     unlocked = start.clamp(0, unlocked);
     levelIndex = start;
@@ -688,6 +589,8 @@ class DutySlipEngine {
   void startLevelPlay() {
     if (planPhase != DsPlanPhase.list) return;
     if (level.isField) {
+      _resetFieldRun();
+      _fieldBase = nightTotal;
       quality = nightTotal;
       stamps.add('assign');
       briefingPage = 1;
@@ -702,19 +605,6 @@ class DutySlipEngine {
     easyChoices = [];
     _armClock();
     _rebuildChoices();
-  }
-
-  void retryPlay() {
-    if (planPhase != DsPlanPhase.result) return;
-    planPhase = DsPlanPhase.list;
-    clockLive = false;
-    dressArmed = false;
-    dressOpen = level.number == 6;
-    planNext = 0;
-    levelScore = 0;
-    wrongTaps = 0;
-    streak = 0;
-    easyChoices = [];
   }
 
   void replayNow() {
@@ -817,6 +707,36 @@ class DutySlipEngine {
     unawaited(savePersistedState());
   }
 
+  /// Progress is saved by level number, never by list position (GAME_DESIGN
+  /// §6), so adding or moving levels cannot shift it onto other levels.
+  static const progressKey = 'ds_progress_v2';
+  static const _legacyKeys = [
+    'ds_unlocked_level',
+    'ds_best_ranks',
+    'ds_best_times',
+    'ds_danger_counts',
+    'ds_best_scores',
+  ];
+
+  /// Level numbers of the 19-level ladder saved before 2026-10-29, by index.
+  /// Levels 1-11 kept their numbers; old 12-19 (the two plain jobs, the five
+  /// living jobs and the field night) are now 26-33.
+  static const legacy19Numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 26, 27, 28, 29, 30, 31, 32, 33];
+
+  static int? _indexOfNumber(int number) {
+    for (var i = 0; i < dsLevels.length; i++) {
+      if (dsLevels[i].number == number) return i;
+    }
+    return null;
+  }
+
+  static DsLevelRank? _rankFrom(Object? raw) => switch (raw) {
+        'darun' => DsLevelRank.darun,
+        'motamuti' => DsLevelRank.motamuti,
+        'again' => DsLevelRank.again,
+        _ => null,
+      };
+
   Future<void> loadPersistedState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -825,61 +745,146 @@ class DutySlipEngine {
         nightTotal = savedScore;
         quality = savedScore;
       }
-      final savedUnlocked = prefs.getInt('ds_unlocked_level');
-      if (savedUnlocked != null && !dsPlayAllLevels) {
-        unlocked = savedUnlocked.clamp(0, dsLevels.length - 1);
+      var dirty = false;
+      final raw = prefs.getString(progressKey);
+      if (raw != null && raw.isNotEmpty) {
+        _readProgress(jsonDecode(raw) as Map<String, dynamic>);
+      } else if (_legacyKeys.any(prefs.containsKey)) {
+        _readLegacyLists(prefs);
+        dirty = true;
       }
-      final ranksRaw = prefs.getStringList('ds_best_ranks');
-      if (ranksRaw != null) {
-        for (var i = 0; i < min(ranksRaw.length, dsLevels.length); i++) {
-          final val = ranksRaw[i];
-          if (val == 'darun') bestRank[i] = DsLevelRank.darun;
-          if (val == 'motamuti') bestRank[i] = DsLevelRank.motamuti;
-          if (val == 'again') bestRank[i] = DsLevelRank.again;
+      // One-time repair: older builds stored (every other level + the night)
+      // in the field slot and it grew on each replay; an index-based load
+      // could also move that number onto level 19. No run can beat the max.
+      var repaired = false;
+      for (var i = 0; i < dsLevels.length; i++) {
+        final cap = levelMaxScore(i);
+        if (cap != null && levelBestScore[i] > cap) {
+          levelBestScore[i] = cap;
+          repaired = true;
         }
       }
-      final timesRaw = prefs.getStringList('ds_best_times');
-      if (timesRaw != null) {
-        for (var i = 0; i < min(timesRaw.length, dsLevels.length); i++) {
-          final t = int.tryParse(timesRaw[i]);
-          if (t != null && t > 0) bestDarunSec[i] = t;
-        }
+      if (repaired) {
+        nightTotal = totalCumulativeScore;
+        quality = nightTotal;
+        dirty = true;
       }
-      final dangerRaw = prefs.getStringList('ds_danger_counts');
-      if (dangerRaw != null) {
-        for (var i = 0; i < min(dangerRaw.length, dsLevels.length); i++) {
-          final d = int.tryParse(dangerRaw[i]);
-          if (d != null && d >= 0) {
-            // Only attribute danger if the level has a recorded rank / was played
-            if (bestRank[i] != null) {
-              levelDangerCount[i] = d;
-            }
-          }
-        }
-      }
-      final scoresRaw = prefs.getStringList('ds_best_scores');
-      if (scoresRaw != null) {
-        for (var i = 0; i < min(scoresRaw.length, dsLevels.length); i++) {
-          final s = int.tryParse(scoresRaw[i]);
-          if (s != null) levelBestScore[i] = s;
+      if (dirty) {
+        await savePersistedState();
+        for (final k in _legacyKeys) {
+          await prefs.remove(k);
         }
       }
     } catch (_) {}
+  }
+
+  void _readProgress(Map<String, dynamic> json) {
+    final unlockedNo = (json['unlocked'] as num?)?.toInt();
+    if (unlockedNo != null && !dsPlayAllLevels) {
+      var idx = 0;
+      for (var i = 0; i < dsLevels.length; i++) {
+        if (dsLevels[i].number <= unlockedNo) idx = i;
+      }
+      unlocked = idx;
+    }
+    final levels = json['levels'];
+    if (levels is! Map) return;
+    for (final entry in levels.entries) {
+      final i = _indexOfNumber(int.tryParse('${entry.key}') ?? -1);
+      final v = entry.value;
+      if (i == null || v is! Map) continue;
+      bestRank[i] = _rankFrom(v['rank']);
+      final t = (v['time'] as num?)?.toInt();
+      if (t != null && t > 0) bestDarunSec[i] = t;
+      final d = (v['danger'] as num?)?.toInt();
+      if (d != null && d >= 0 && bestRank[i] != null) levelDangerCount[i] = d;
+      final sc = (v['score'] as num?)?.toInt();
+      if (sc != null) levelBestScore[i] = sc;
+    }
+  }
+
+  /// Old saves: positional string lists. 19-long lists are the pre-2026-10-29
+  /// ladder; any other length was written by the current ladder.
+  void _readLegacyLists(SharedPreferences prefs) {
+    final ranksRaw = prefs.getStringList('ds_best_ranks');
+    final timesRaw = prefs.getStringList('ds_best_times');
+    final dangerRaw = prefs.getStringList('ds_danger_counts');
+    final scoresRaw = prefs.getStringList('ds_best_scores');
+    final lengths = [ranksRaw, timesRaw, dangerRaw, scoresRaw].whereType<List<String>>().map((l) => l.length);
+    final old19 = dsLevels.length != legacy19Numbers.length &&
+        lengths.isNotEmpty &&
+        lengths.every((n) => n == legacy19Numbers.length);
+    int? target(int oldIndex) {
+      if (!old19) return oldIndex < dsLevels.length ? oldIndex : null;
+      if (oldIndex >= legacy19Numbers.length) return null;
+      return _indexOfNumber(legacy19Numbers[oldIndex]);
+    }
+
+    final savedUnlocked = prefs.getInt('ds_unlocked_level');
+    if (savedUnlocked != null && !dsPlayAllLevels) {
+      final top = (old19 ? legacy19Numbers.length : dsLevels.length) - 1;
+      final u = target(savedUnlocked.clamp(0, top));
+      if (u != null) unlocked = u;
+    }
+    if (ranksRaw != null) {
+      for (var i = 0; i < ranksRaw.length; i++) {
+        final j = target(i);
+        final r = _rankFrom(ranksRaw[i]);
+        if (j != null && r != null) bestRank[j] = r;
+      }
+    }
+    if (timesRaw != null) {
+      for (var i = 0; i < timesRaw.length; i++) {
+        final j = target(i);
+        final t = int.tryParse(timesRaw[i]);
+        if (j != null && t != null && t > 0) bestDarunSec[j] = t;
+      }
+    }
+    if (dangerRaw != null) {
+      for (var i = 0; i < dangerRaw.length; i++) {
+        final j = target(i);
+        final d = int.tryParse(dangerRaw[i]);
+        // Only attribute danger if the level has a recorded rank / was played.
+        if (j != null && d != null && d >= 0 && bestRank[j] != null) levelDangerCount[j] = d;
+      }
+    }
+    if (scoresRaw != null) {
+      for (var i = 0; i < scoresRaw.length; i++) {
+        final j = target(i);
+        final sc = int.tryParse(scoresRaw[i]);
+        if (j != null && sc != null) levelBestScore[j] = sc;
+      }
+    }
+  }
+
+  /// The saved form of per-level progress, keyed by level number.
+  Map<String, dynamic> progressJson() {
+    final levels = <String, dynamic>{};
+    for (var i = 0; i < dsLevels.length; i++) {
+      final r = bestRank[i];
+      final t = bestDarunSec[i];
+      final d = levelDangerCount[i];
+      final sc = levelBestScore[i];
+      if (r == null && t == null && d == null && sc == 0) continue;
+      levels['${dsLevels[i].number}'] = {
+        if (r != null) 'rank': r.name,
+        'time': ?t,
+        'danger': ?d,
+        if (sc != 0) 'score': sc,
+      };
+    }
+    return {
+      'v': 2,
+      'unlocked': dsLevels[unlocked.clamp(0, dsLevels.length - 1)].number,
+      'levels': levels,
+    };
   }
 
   Future<void> savePersistedState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('ds_career_score', totalCumulativeScore);
-      await prefs.setInt('ds_unlocked_level', unlocked);
-      final ranksRaw = bestRank.map((r) => r == null ? '' : r.name).toList();
-      await prefs.setStringList('ds_best_ranks', ranksRaw);
-      final timesRaw = bestDarunSec.map((t) => (t ?? 0).toString()).toList();
-      await prefs.setStringList('ds_best_times', timesRaw);
-      final dangerRaw = levelDangerCount.map((d) => (d ?? -1).toString()).toList();
-      await prefs.setStringList('ds_danger_counts', dangerRaw);
-      final scoresRaw = levelBestScore.map((s) => s.toString()).toList();
-      await prefs.setStringList('ds_best_scores', scoresRaw);
+      await prefs.setString(progressKey, jsonEncode(progressJson()));
       // Bridge: keep GameSave ◆ in sync until all beats write GameSave directly.
       await _mirrorCareerIntoGameSave(prefs, totalCumulativeScore);
     } catch (_) {}
@@ -1061,7 +1066,7 @@ class DutySlipEngine {
     if (oldTime == null || (jobSeconds > 0 && jobSeconds < oldTime)) {
       bestDarunSec[fieldIndex] = jobSeconds;
     }
-    final earned = max(0, quality);
+    final earned = min(fieldEarned, fieldMaxScore);
     if (earned > levelBestScore[fieldIndex]) {
       levelBestScore[fieldIndex] = earned;
     }
@@ -1082,7 +1087,7 @@ class DutySlipEngine {
   }
 
   bool _maybeCall() {
-    if (siteCalls.isEmpty || _callsFired >= 3) return false;
+    if (siteCalls.isEmpty || _callsFired >= _maxCalls) return false;
     if (!stamps.contains('site')) return false;
     if (_cardsSinceCall < 2) return false;
     if (_rng.nextDouble() > 0.4) return false;

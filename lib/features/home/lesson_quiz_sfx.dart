@@ -1,12 +1,10 @@
-import 'package:audioplayers/audioplayers.dart';
+import '../zero_loss/zero_loss_fx.dart';
 
 /// Short UI cues for the lesson quiz. Independent of TTS mute.
+/// Plays through the shared [SlmSfx] players; nothing native is owned here.
 class LessonQuizSfx {
   LessonQuizSfx();
 
-  final AudioPlayer _a = AudioPlayer();
-  final AudioPlayer _b = AudioPlayer();
-  bool _useA = true;
   bool _disposed = false;
 
   Future<void> shuffle() => _play('sounds/quiz_shuffle.wav', volume: 0.8);
@@ -20,22 +18,10 @@ class LessonQuizSfx {
 
   Future<void> _play(String asset, {double volume = 0.8}) async {
     if (_disposed) return;
-    final player = _useA ? _a : _b;
-    _useA = !_useA;
-    try {
-      await player.stop();
-      await player.setReleaseMode(ReleaseMode.release);
-      await player.setPlayerMode(PlayerMode.lowLatency);
-      await player.setVolume(volume);
-      await player.play(AssetSource(asset));
-    } catch (_) {
-      // Ignore missing assets / platform audio failures.
-    }
+    await SlmSfx.play(asset, volume: volume, mix: false);
   }
 
   Future<void> dispose() async {
     _disposed = true;
-    await _a.dispose();
-    await _b.dispose();
   }
 }

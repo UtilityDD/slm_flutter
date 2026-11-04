@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../design/slm_design.dart';
+import '../identify/fit_image.dart';
 import '../identify/library_catalog.dart';
 import '../shell/shell_insets.dart';
 
@@ -475,10 +476,8 @@ class _FitImage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (path.isEmpty) return const SizedBox.shrink();
     return SizedBox.expand(
-      child: Image.asset(
+      child: FitAssetImage(
         path,
-        fit: BoxFit.contain,
-        alignment: Alignment.center,
         errorBuilder: (_, _, _) => const Icon(Icons.image_not_supported_outlined, color: SlmColors.slate),
       ),
     );

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,14 +85,20 @@ String categoryLabel(String id, bool bn) {
   return bn ? row.$1 : row.$2;
 }
 
-final libraryCatalogProvider = FutureProvider<List<LibraryItem>>((ref) async {
-  ref.keepAlive();
-  final raw = await rootBundle.loadString('assets/data/safety_library.json');
+/// Top-level so it can run in a background isolate.
+List<LibraryItem> parseLibraryCatalog(String raw) {
   final list = jsonDecode(raw) as List<dynamic>;
   return list
       .map((row) => LibraryItem.fromJson(row as Map<String, dynamic>))
       .where((item) => item.nameBn.trim().isNotEmpty)
       .toList();
+}
+
+/// Parsed once per app run (keepAlive), off the UI isolate.
+final libraryCatalogProvider = FutureProvider<List<LibraryItem>>((ref) async {
+  ref.keepAlive();
+  final raw = await rootBundle.loadString('assets/data/safety_library.json', cache: false);
+  return compute(parseLibraryCatalog, raw, debugLabel: 'safety-library');
 });
 
 class IdentifyChoice {

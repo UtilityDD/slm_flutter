@@ -44,14 +44,14 @@ class SlmText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = context.slm.type;
-    var style = styleFor(t, role).copyWith(color: color, fontWeight: weight);
-    if (size != null) style = style.copyWith(fontSize: size! * context.slm.layout.scale);
+    final tokens = context.slm;
+    var style = styleFor(tokens.type, role).copyWith(color: color, fontWeight: weight);
+    if (size != null) style = style.copyWith(fontSize: size! * tokens.layout.scale);
     final bangla = slmIsBangla(text);
     final shown = role == SlmTextRole.overline && !bangla ? text.toUpperCase() : text;
     return Text(
       shown,
-      style: SlmType.adapt(style, text),
+      style: SlmType.adapt(style, text, bangla: bangla),
       textAlign: align,
       maxLines: maxLines,
       overflow: overflow ?? (maxLines != null ? TextOverflow.ellipsis : null),

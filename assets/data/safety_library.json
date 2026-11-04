@@ -303,10 +303,7 @@
     "category": "PPE",
     "name_bn": "কোমর সেফটি বেল্ট",
     "function_bn": "পোলে হেলান দিয়ে দাঁড়িয়ে কাজের জন্য। পড়ে গেলে প্রাণ বাঁচায় না — কোমর ভাঙতে পারে।",
-    "images": [
-      "assets/safety/safety_belt.webp",
-      "assets/safety/ppe-sources/safety_belt.webp"
-    ],
+    "images": [],
     "approx_price_inr": "---",
     "guide_bn": "পতন সুরক্ষায় ফুল বডি হারনেস পরুন। এই বেল্ট শুধু হেলান দিয়ে কাজের সময়।",
     "related_items": [
@@ -377,8 +374,7 @@
     "function_bn": "পোলে যা পরবেন। পলিয়েস্টার আর্কে গলে চামড়ায় সেঁটে যায়। সুতি বা FR গলে না।",
     "images": [
       "assets/safety/library/ppe/Arc_Fire_Resistant_Full_Body_Vest.webp",
-      "assets/safety/library/ppe/Arc_Fire_Resistant_Full_Body_Vest_2.webp",
-      "/images/loader/ppe11_dress.webp"
+      "assets/safety/library/ppe/Arc_Fire_Resistant_Full_Body_Vest_2.webp"
     ],
     "approx_price_inr": "---",
     "guide_bn": "ফুল হাতা নামিয়ে বোতাম লাগান। তেল-গ্রিজ মাখা কাপড় বাতিল। ভেস্ট আগুন আটকায় না।",
@@ -436,9 +432,7 @@
     "category": "PPE",
     "name_bn": "হাতের টর্চ",
     "function_bn": "হাতে আলো। জরুরি কাজে। পোলে উঠলে হেলমেট টর্চই ভালো।",
-    "images": [
-      "/images/ppe-thumbs/torch.webp"
-    ],
+    "images": [],
     "approx_price_inr": "---",
     "guide_bn": "বেরোনোর আগে চার্জ দেখুন। লাইভ লাইনের কাছে মেটাল বডি সাবধানে।",
     "related_items": [
@@ -1317,9 +1311,7 @@
     "category": "Tools",
     "name_bn": "টুল বেল্ট",
     "function_bn": "পোলে টুল কোমরে রাখে — হাত খালি থাকে।",
-    "images": [
-      "/prizes/2026-07-new_player-1.webp"
-    ],
+    "images": [],
     "approx_price_inr": "---",
     "guide_bn": "পকেট থেকে টুল পড়ে কি না দেখুন। ওপর থেকে নিচে টুল ফেলবেন না — দড়ি বা ঝুড়ি দিয়ে নামান।",
     "related_items": [
@@ -1895,10 +1887,7 @@
     "category": "PPE",
     "name_bn": "রেইনকোট",
     "function_bn": "বৃষ্টি আর ভেজা আবহাওয়ায় শরীর শুকনো রাখে।",
-    "images": [
-      "assets/safety/raincoat.webp",
-      "assets/safety/ppe-sources/raincoat.webp"
-    ],
+    "images": [],
     "approx_price_inr": "---",
     "guide_bn": "প্রতিফলক স্ট্রিপ পরিষ্কার রাখুন। ভিজে গেলে শুকিয়ে তুলুন।",
     "related_items": []

@@ -14,7 +14,6 @@ class DsPlanItem {
   final String letter;
   final String whyBn;
   final String icon;
-  final String lane;
 
   const DsPlanItem({
     required this.id,
@@ -22,7 +21,6 @@ class DsPlanItem {
     this.letter = '',
     this.whyBn = '',
     this.icon = '',
-    this.lane = '',
   });
 
   factory DsPlanItem.fromJson(Map<String, dynamic> j) => DsPlanItem(
@@ -31,32 +29,7 @@ class DsPlanItem {
         letter: j['letter'] as String? ?? '',
         whyBn: _en(j['why_bn'] as String?),
         icon: j['icon'] as String? ?? '',
-        lane: j['lane'] as String? ?? '',
       );
-}
-
-/// Lane group labels and colours for the 23-step job review sheet.
-class DsLaneGroup {
-  final String id;
-  final String labelBn;
-  final int color;
-
-  const DsLaneGroup(this.id, this.labelBn, this.color);
-
-  static const groups = <DsLaneGroup>[
-    DsLaneGroup('office',  'অফিস',      0xFF3B82F6),
-    DsLaneGroup('site',    'সাইট',       0xFF22C55E),
-    DsLaneGroup('isolate', 'আইসোলেশন',  0xFFEF4444),
-    DsLaneGroup('work',    'কাজ',        0xFFF59E0B),
-    DsLaneGroup('close',   'ক্লোজ',      0xFF8B5CF6),
-  ];
-
-  static DsLaneGroup? of(String lane) {
-    for (final g in groups) {
-      if (g.id == lane) return g;
-    }
-    return null;
-  }
 }
 
 class DsSite {
@@ -65,7 +38,6 @@ class DsSite {
   final String bg;
   final String pole;
   final String introBn;
-  final String storyBn;
   final List<String> calls;
 
   const DsSite({
@@ -74,7 +46,6 @@ class DsSite {
     required this.bg,
     required this.pole,
     required this.introBn,
-    this.storyBn = '',
     this.calls = const [],
   });
 
@@ -84,7 +55,6 @@ class DsSite {
         bg: j['bg'] as String? ?? '',
         pole: j['pole'] as String? ?? 'DP-17',
         introBn: _en(j['intro_bn'] as String?),
-        storyBn: _en(j['story_bn'] as String?),
         calls: _enList(j['calls'] as List?),
       );
 }
@@ -115,19 +85,8 @@ class DsOption {
 
 enum DsKind { single, kit, match }
 
-enum DsLane { office, site, isolate, work, close }
-
-DsLane parseLane(String? raw) => switch (raw) {
-      'site' => DsLane.site,
-      'isolate' => DsLane.isolate,
-      'work' => DsLane.work,
-      'close' => DsLane.close,
-      _ => DsLane.office,
-    };
-
 class DsStep {
   final String id;
-  final DsLane lane;
   final DsKind kind;
   final String stamp;
   final String promptBn;
@@ -141,7 +100,6 @@ class DsStep {
 
   const DsStep({
     required this.id,
-    required this.lane,
     required this.kind,
     required this.stamp,
     required this.promptBn,
@@ -156,7 +114,6 @@ class DsStep {
 
   factory DsStep.fromJson(Map<String, dynamic> j) => DsStep(
         id: j['id'] as String,
-        lane: parseLane(j['lane'] as String?),
         kind: switch (j['kind'] as String?) {
           'kit' => DsKind.kit,
           'match' => DsKind.match,
@@ -213,7 +170,6 @@ class DsCall {
 }
 
 class DsPack {
-  final String titleBn;
   final int startHour;
   final int startMinute;
   final List<String> feeders;
@@ -223,7 +179,6 @@ class DsPack {
   final List<DsCall> calls;
 
   const DsPack({
-    required this.titleBn,
     required this.startHour,
     required this.startMinute,
     required this.feeders,
@@ -234,7 +189,6 @@ class DsPack {
   });
 
   factory DsPack.fromJson(Map<String, dynamic> j) => DsPack(
-        titleBn: _en(j['title_bn'] as String? ?? 'ডিউটি স্লিপ'),
         startHour: (j['start_hour'] as num?)?.toInt() ?? 20,
         startMinute: (j['start_minute'] as num?)?.toInt() ?? 10,
         feeders: _enList(j['feeders'] as List?),

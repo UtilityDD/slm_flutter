@@ -406,7 +406,7 @@ class DsVoice {
     'হাফ প্যান্টে পা খোলা। তারের ঘষা সোজা গায়ে লাগবে।': 'sounds/voice/ds_why_halfpant.mp3',
     'হাফ প্যান্টে পা খোলা। আর্কের আগুন সোজা গায়ে লাগবে।': 'sounds/voice/ds_why_halfpant.mp3',
     'হাফ প্যান্টে পা খোলা। ডালের ঘষা সোজা গায়ে লাগবে।': 'sounds/voice/ds_why_halfpant.mp3',
-    'সাবধান! পা উন্মুক্ত রেখে কাজ করা অনিরাপদ, আর্কের আগুন সরাসরি চামড়ায় লাগবে।': 'sounds/why_halfpant.mp3',
+    'সাবধান! পা উন্মুক্ত রেখে কাজ করা অনিরাপদ, আর্কের আগুন সরাসরি চামড়ায় লাগবে।': 'sounds/voice/ds_why_halfpant.mp3',
     'চপ্পল পরে মইয়ে উঠবেন না। পা হড়কালেই পড়ে যাবেন।': 'sounds/voice/ds_why_slip.mp3',
     'চপ্পল পরে বুশিংয়ের কাছে যাবেন না। পা হড়কাবে, বিদ্যুৎও আটকাবে না।': 'sounds/voice/ds_why_slip.mp3',
     'চপ্পল পরে রাতের রাস্তায় উঠবেন না। পা হড়কালেই পড়ে যাবেন।': 'sounds/voice/ds_why_slip.mp3',
@@ -415,15 +415,6 @@ class DsVoice {
     'সাধারণ জুতোয় বিদ্যুৎ আটকায় না, মইয়ে পাও হড়কায়। সেফটি বুট রাখুন।': 'sounds/voice/ds_why_normal.mp3',
     'সাধারণ জুতোয় বিদ্যুৎ আটকায় না। সেফটি বুট রাখুন।': 'sounds/voice/ds_why_normal.mp3',
     'সাধারণ জুতোয় বিদ্যুৎ আটকায় না, ভেজা রাস্তায় পাও হড়কায়। সেফটি বুট রাখুন।': 'sounds/voice/ds_why_normal.mp3',
-    'লাইন মৃত না করে করাত দিয়ে ডাল কাটবেন না।': 'sounds/voice/ds_l10_sickle.mp3',
-    'গোড়ার ঘাস সরিয়ে ফাটলটা না দেখে রিপোর্ট করবেন না।': 'sounds/voice/ds_l11_miss_grass.mp3',
-    'স্টে-তার দেখে নিন, তারপর রিপোর্ট করুন।': 'sounds/voice/ds_l11_miss_stay.mp3',
-    'পেছনে রড বেরিয়েছে কি না না দেখে রিপোর্ট করবেন না।': 'sounds/voice/ds_l11_miss_back.mp3',
-    'হাতুড়ি ঠুকে শব্দ না শুনে রিপোর্ট করবেন না।': 'sounds/voice/ds_l11_miss_hammer.mp3',
-    'স্টিল পোলের আসল শত্রু মাটির সংযোগস্থলের মরিচা। গোড়াটা পরিষ্কার করে দেখলেন না?': 'sounds/voice/ds_l13_ok_base.mp3',
-    'স্টিলের পোলে হাতুড়ি ঠুকে টন টন শব্দটা যাচাই করলেন না?': 'sounds/voice/ds_l13_ok_hammer.mp3',
-    'চারপাশ ঘুরে ওয়েল্ডিং জয়েন্ট আর ক্ল্যাম্পগুলো দেখলেন না?': 'sounds/voice/ds_l13_ok_back.mp3',
-    'গোড়া থেকে ওপর পর্যন্ত চোখ বুলিয়ে ক্রস-আর্ম আর ইনসুলেটর দেখলেন না?': 'sounds/voice/ds_l13_ok_top.mp3',
   };
 
   /// Checks if an audio asset is registered for the given text or cue ID.

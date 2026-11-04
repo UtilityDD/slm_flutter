@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/en_digits.dart';
+import '../../design/motion/slm_motion_scope.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'ds_dress_up.dart';
@@ -272,7 +272,6 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
   var _speechToken = 0;
 
   var _finishing = false;
-  var _climbed = false;
   var _hammerBusy = false;
   var _showChecklist = false;
   var _checkedCount = 0;
@@ -293,9 +292,34 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     _climb = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
   }
 
+  var _backWarm = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The back photo is built only while it shows (see build); decode it now
+    // so the first flip fades into a picture, not a blank.
+    if (!_backWarm) {
+      _backWarm = true;
+      precacheImage(AssetImage(_poleShot(true)), context, onError: (_, _) {});
+    }
+  }
+
+  /// Runs [c] forward or back; false if the widget was disposed mid-way.
+  Future<bool> _run(TickerFuture Function() c) async {
+    try {
+      await c().orCancel;
+    } on TickerCanceled {
+      return false;
+    }
+    return mounted;
+  }
+
   @override
   void dispose() {
     _speechToken++;
+    final gate = _nextGate;
+    if (gate != null && !gate.isCompleted) gate.complete();
     ZlFx.releaseClock();
     _flip.dispose();
     _tapAnim.dispose();
@@ -349,6 +373,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.55, muted: widget.muted));
     final first = _done.add('grass');
     setState(() => _grassCleared = true);
+    precacheImage(AssetImage(_poleShot(true)), context, onError: (_, _) {});
     if (first) {
       unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
       widget.engine.dressRight();
@@ -360,7 +385,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
   void _doStay(Offset global) {
     if (_finishing) return;
     HapticFeedback.lightImpact();
-    _stayTwang.forward(from: 0);
+    if (!slmReduceMotion(context)) _stayTwang.forward(from: 0);
     unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: widget.muted));
     final first = _done.add('stay');
     setState(() {});
@@ -378,9 +403,9 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     HapticFeedback.selectionClick();
     setState(() => _backSide = toBack);
     if (toBack) {
-      await _flip.forward();
+      if (!await _run(_flip.forward)) return;
     } else {
-      await _flip.reverse();
+      await _run(_flip.reverse);
       return;
     }
     if (!mounted || !_backSide || _finishing) return;
@@ -423,7 +448,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.8, muted: widget.muted));
     widget.engine.dressWrong();
     widget.onDelta(-5, global);
-    _shake.forward(from: 0);
+    if (!slmReduceMotion(context)) _shake.forward(from: 0);
 
     final count = (_faultCounts[line] ?? 0) + 1;
     _faultCounts[line] = count;
@@ -477,8 +502,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     _clearCoachIfOpen();
     if (_backSide) {
       setState(() => _backSide = false);
-      await _flip.reverse();
-      if (!mounted) return;
+      if (!await _run(_flip.reverse)) return;
     }
     setState(() {
       _finishing = true;
@@ -502,11 +526,12 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
       _fault(_noClimb, global);
       return;
     }
+    // The climb pose swaps in below; have it decoded before it is needed.
+    precacheImage(const AssetImage('assets/zero_loss/scene/spr_man_climb.webp'), context, onError: (_, _) {});
     _clearCoachIfOpen();
     if (_backSide) {
       setState(() => _backSide = false);
-      await _flip.reverse();
-      if (!mounted) return;
+      if (!await _run(_flip.reverse)) return;
     }
     setState(() {
       _finishing = true;
@@ -518,7 +543,6 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     widget.onDelta(5, global);
     await Future<void>.delayed(const Duration(milliseconds: 780));
     if (!mounted) return;
-    setState(() => _climbed = true);
     _climb.forward(from: 0);
     await Future<void>.delayed(const Duration(milliseconds: 1100));
     if (!mounted) return;
@@ -652,16 +676,17 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                                             width: w,
                                             height: h,
                                           ),
-                                          Opacity(
-                                            opacity: fade,
-                                            child: Image.asset(
-                                              _poleShot(true),
-                                              fit: BoxFit.cover,
-                                              alignment: Alignment.bottomCenter,
-                                              width: w,
-                                              height: h,
+                                          if (fade > 0)
+                                            Opacity(
+                                              opacity: fade,
+                                              child: Image.asset(
+                                                _poleShot(true),
+                                                fit: BoxFit.cover,
+                                                alignment: Alignment.bottomCenter,
+                                                width: w,
+                                                height: h,
+                                              ),
                                             ),
-                                          ),
                                         ],
                                       ),
                                     );
@@ -696,7 +721,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                                           children: [
                                             Transform.rotate(
                                               angle: -0.5 - math.sin(t * math.pi * 4) * 0.4,
-                                              child: Image.asset(_poleHammer, width: 64, height: 64, fit: BoxFit.contain),
+                                              child: Image(image: dsThumb(context, _poleHammer), width: 64, height: 64, fit: BoxFit.contain),
                                             ),
                                           ],
                                         ),
@@ -767,7 +792,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                                   width: 42,
                                   height: 56,
                                   child: IgnorePointer(
-                                    child: Image.asset(_pole12Tag, fit: BoxFit.contain),
+                                    child: Image(image: dsThumb(context, _pole12Tag), fit: BoxFit.contain),
                                   ),
                                 ),
                               Positioned.fill(
@@ -804,6 +829,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                                                     : 'assets/zero_loss/scene/spr_man_point.webp',
                                                 fit: BoxFit.contain,
                                                 alignment: Alignment.bottomCenter,
+                                                gaplessPlayback: true,
                                               ),
                                             ),
                                           ),

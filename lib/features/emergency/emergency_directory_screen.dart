@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
+import '../auth/auth_provider.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 
@@ -19,6 +21,10 @@ class EmergencyServiceItem {
   final String phone;
   final String? address;
 
+  /// Lower-cased name, location and type, built once so search does not
+  /// lower-case 900 rows on every keystroke.
+  final String searchKey;
+
   const EmergencyServiceItem({
     required this.id,
     required this.name,
@@ -27,19 +33,57 @@ class EmergencyServiceItem {
     required this.location,
     required this.phone,
     this.address,
+    this.searchKey = '',
   });
 
   factory EmergencyServiceItem.fromJson(Map<String, dynamic> json) {
+    final name = json['name']?.toString() ?? '';
+    final type = json['type']?.toString() ?? 'emergency';
+    final location = json['location']?.toString() ?? '';
     return EmergencyServiceItem(
       id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      type: json['type']?.toString() ?? 'emergency',
+      name: name,
+      type: type,
       district: json['district']?.toString() ?? '',
-      location: json['location']?.toString() ?? '',
+      location: location,
       phone: json['phone']?.toString() ?? '',
       address: json['address']?.toString(),
+      // \u0000 keeps a query from matching across two fields.
+      searchKey: '${name.toLowerCase()}\u0000${location.toLowerCase()}\u0000${type.toLowerCase()}',
     );
   }
+}
+
+class EmergencyDirectory {
+  final List<EmergencyServiceItem> items;
+  final List<String> districts;
+
+  const EmergencyDirectory(this.items, this.districts);
+}
+
+/// Top-level so it can run in a background isolate.
+EmergencyDirectory parseEmergencyDirectory(String raw) {
+  final jsonList = jsonDecode(raw) as List<dynamic>;
+  final items = jsonList.map((e) => EmergencyServiceItem.fromJson(e as Map<String, dynamic>)).toList();
+  final districtSet = <String>{};
+  for (final item in items) {
+    if (item.district.trim().isNotEmpty) districtSet.add(item.district.trim());
+  }
+  return EmergencyDirectory(items, districtSet.toList()..sort());
+}
+
+Future<EmergencyDirectory>? _directoryCache;
+
+/// The 335 KB directory is parsed once per app run, off the UI isolate.
+Future<EmergencyDirectory> loadEmergencyDirectory() {
+  return _directoryCache ??= () async {
+    final raw = await rootBundle.loadString('assets/data/districtEmergencyServices.json', cache: false);
+    return compute(parseEmergencyDirectory, raw, debugLabel: 'emergency-directory');
+  }()
+      .catchError((Object e) {
+    _directoryCache = null;
+    throw e;
+  });
 }
 
 class _Group {
@@ -107,18 +151,16 @@ class _EmergencyDirectoryScreenState extends ConsumerState<EmergencyDirectoryScr
 
   Future<void> _loadEmergencyData() async {
     try {
-      final jsonString = await rootBundle.loadString('assets/data/districtEmergencyServices.json');
-      final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      final items = jsonList.map((e) => EmergencyServiceItem.fromJson(e as Map<String, dynamic>)).toList();
-      final districtSet = <String>{};
-      for (final item in items) {
-        if (item.district.trim().isNotEmpty) districtSet.add(item.district.trim());
-      }
-      final sortedDistricts = districtSet.toList()..sort();
+      final directory = await loadEmergencyDirectory();
       if (!mounted) return;
+      // Open on the lineman's own district when the profile has a known one.
+      final home = ref.read(authProvider).profile?.district?.trim() ?? '';
       setState(() {
-        _allServices = items;
-        _districts = sortedDistricts;
+        _allServices = directory.items;
+        _districts = directory.districts;
+        if (_selectedDistrict.isEmpty && directory.districts.contains(home)) {
+          _selectedDistrict = home;
+        }
         _isLoading = false;
       });
     } catch (_) {
@@ -137,10 +179,7 @@ class _EmergencyDirectoryScreenState extends ConsumerState<EmergencyDirectoryScr
     if (q.isEmpty) return source;
     return [
       for (final item in source)
-        if (item.name.toLowerCase().contains(q) ||
-            item.phone.contains(q) ||
-            item.location.toLowerCase().contains(q) ||
-            item.type.toLowerCase().contains(q))
+        if (item.searchKey.contains(q) || item.phone.contains(q))
           item,
     ];
   }

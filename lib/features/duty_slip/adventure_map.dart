@@ -226,6 +226,11 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   int? _nudgeIndex;
   var _nudgeGift = false;
   var _nudgeOnGiftTurn = false;
+  /// Nudge cycles shown this idle spell; after [_nudgeMaxCycles] the ladder
+  /// stays quiet until the next touch re-arms it.
+  static const _nudgeMaxCycles = 3;
+  var _nudgeCycles = 0;
+  var _nudgeSounded = false;
   var _programmaticScroll = false;
   final _nudgeRng = math.Random();
 
@@ -235,14 +240,36 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     _scroll.addListener(_publish);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (!MediaQuery.disableAnimationsOf(context)) {
-        _glow.repeat(reverse: true);
-        _ascent.repeat();
-      }
       _pin(initial: true);
       _armIdle();
     });
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncLoops();
+  }
+
+  /// Glow and gleam loop only while looping motion is allowed (slmLoopsOn);
+  /// TickerMode already mutes them while another route covers the ladder.
+  void _syncLoops() {
+    if (slmLoopsOn(context)) {
+      if (!_glow.isAnimating) _glow.repeat(reverse: true);
+      if (!_ascent.isAnimating) _ascent.repeat();
+    } else {
+      _glow
+        ..stop()
+        ..value = 0.6;
+      _ascent
+        ..stop()
+        ..value = 0.35;
+      _clearNudge();
+    }
+  }
+
+  /// False while another route sits on top of the ladder.
+  bool _ladderVisible() => ModalRoute.isCurrentOf(context) ?? true;
 
   void _onFingerScroll() {
     _springBackTimer?.cancel();
@@ -308,6 +335,8 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   }
 
   void _armIdle() {
+    _nudgeCycles = 0;
+    _nudgeSounded = false;
     _idleTimer?.cancel();
     _idleTimer = Timer(const Duration(seconds: 24), () {
       if (!mounted) return;
@@ -377,10 +406,13 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       target = focus;
       asGift = false;
     }
-    setState(() {
-      _nudgeIndex = target;
-      _nudgeGift = asGift;
-    });
+    _nudgeCycles++;
+    if (_nudgeIndex != target || _nudgeGift != asGift) {
+      setState(() {
+        _nudgeIndex = target;
+        _nudgeGift = asGift;
+      });
+    }
 
     // Check if the lineman is engaged in speech, tips, or user interaction
     final guide = ProviderScope.containerOf(context).read(guideDirectorProvider);
@@ -395,7 +427,9 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       ProviderScope.containerOf(context)
           .read(guideDirectorProvider.notifier)
           .nudgePlay(gift: asGift);
-      if (!widget.muted) {
+      // One sound per idle spell, not one every cycle.
+      if (!widget.muted && !_nudgeSounded) {
+        _nudgeSounded = true;
         unawaited(
           ZlFx.cue(
             asGift ? 'sounds/intro/glass.ogg' : 'sounds/intro/confirm.ogg',
@@ -408,10 +442,15 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   }
 
   void _startIdleNudge() {
-    if (!mounted || MediaQuery.disableAnimationsOf(context)) return;
+    if (!mounted || !slmLoopsOn(context)) return;
     if (_flight != null || _reply != null || _sideChallenge != null) return;
     if (MascotTalk.active.value) return;
     if (_nudgeIndex != null) return;
+    if (!_ladderVisible()) {
+      // A lesson or quiz is on top: check again later, stay silent now.
+      _armIdle();
+      return;
+    }
     _nudgeOnGiftTurn = false;
     _nudgePulse
       ..value = 0
@@ -420,6 +459,11 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     _nudgeCycleTimer?.cancel();
     _nudgeCycleTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted || _nudgeIndex == null) return;
+      if (_nudgeCycles >= _nudgeMaxCycles || !_ladderVisible()) {
+        // Done for this idle spell; the next touch re-arms it.
+        _clearNudge();
+        return;
+      }
       if (MascotTalk.active.value || _reply != null || _sideChallenge != null) {
         return;
       }
@@ -788,35 +832,18 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
         built != null && focus < built.length ? built.rungs[focus] : null;
     final currentIsLearn = currentRung?.isLearn ?? (focus % 3 == 0);
 
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        _glow,
-        _ascent,
-        _scroll,
-        _nudgePulse,
-        _mist,
-        _shake,
-      ]),
-      builder: (context, _) {
-        final glow = quiet ? 0.6 : _glow.value;
+    // Nothing here listens to an animation: header, bands and guide build on
+    // state changes only. Each moving piece (coin glow, rail gleam, prop
+    // zoom, nudge halo, mist, shake) has its own small listener.
+    return Builder(
+      builder: (context) {
+        final Animation<double> glow =
+            quiet ? const AlwaysStoppedAnimation(0.6) : _glow;
         final journey = itemCount * _rowH;
-        final light = (quiet ? 0.35 : _ascent.value) * journey;
-        final view =
-            _scroll.hasClients ? _scroll.position.viewportDimension : 640.0;
-        final scrolled = _scroll.hasClients ? _scroll.offset : 0.0;
+        final Animation<double> light =
+            quiet ? const AlwaysStoppedAnimation(0.35) : _ascent;
         final topInset = MediaQuery.paddingOf(context).top + 58;
         final bottomInset = MediaQuery.paddingOf(context).bottom + 24;
-        final mistT = quiet
-            ? 0.0
-            : Curves.easeOut.transform(
-                (_mist.value < 0.45
-                        ? _mist.value / 0.45
-                        : (1 - _mist.value) / 0.55)
-                    .clamp(0.0, 1.0),
-              );
-        final shakeX = quiet
-            ? 0.0
-            : math.sin(_shake.value * math.pi * 6) * 5 * (1 - _shake.value);
 
         return DeathMomentHost(
           deathKey: _deathKey,
@@ -851,14 +878,27 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                 fit: StackFit.expand,
                 children: [
                   Positioned.fill(
-                    child: AdventureWorld(
-                      scroll: _scroll,
-                      drift: _ascent,
-                      motion: !quiet,
+                    child: RepaintBoundary(
+                      child: AdventureWorld(
+                        scroll: _scroll,
+                        drift: _ascent,
+                        motion: !quiet,
+                      ),
                     ),
                   ),
-                  Transform.translate(
-                    offset: Offset(shakeX, 0),
+                  AnimatedBuilder(
+                    animation: _shake,
+                    builder: (context, child) => Transform.translate(
+                      offset: Offset(
+                        quiet
+                            ? 0.0
+                            : math.sin(_shake.value * math.pi * 6) *
+                                5 *
+                                (1 - _shake.value),
+                        0,
+                      ),
+                      child: child,
+                    ),
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (n) {
                         if (_programmaticScroll) return false;
@@ -908,19 +948,27 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                               station != _Station.gift;
                           final giftFace =
                               _giftFace(station, i, focus, soon, save);
-                          final fromBottom =
-                              bottomInset + i * _rowH + _rowH / 2 - scrolled;
-                          final dist = (((view - fromBottom) / view) - 0.5)
-                                  .abs()
-                                  .clamp(0.0, 0.5) *
-                              2;
-                          final closeness = 1 - dist;
-                          final zoom = quiet || station == null
-                              ? 1.0
-                              : 0.42 + 1.08 * closeness * closeness;
+                          // Read on scroll ticks by the prop's own builder.
+                          double zoom() {
+                            if (quiet || station == null) return 1.0;
+                            final view = _scroll.hasClients &&
+                                    _scroll.position.hasViewportDimension
+                                ? _scroll.position.viewportDimension
+                                : 640.0;
+                            final scrolled =
+                                _scroll.hasClients ? _scroll.offset : 0.0;
+                            final fromBottom =
+                                bottomInset + i * _rowH + _rowH / 2 - scrolled;
+                            final dist = (((view - fromBottom) / view) - 0.5)
+                                    .abs()
+                                    .clamp(0.0, 0.5) *
+                                2;
+                            final closeness = 1 - dist;
+                            return 0.42 + 1.08 * closeness * closeness;
+                          }
+
                           final number =
                               cap ? catalogLen : (rung?.number ?? (i + 1));
-                          final gleamY = _rowH - (light - i * _rowH);
                           final learnCleared = rung != null &&
                               save.rungProgress[rung.id] == 'cleared';
                           final bridgeCleared =
@@ -944,12 +992,16 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                             claimed: claimed,
                             giftFace: giftFace,
                             zoom: zoom,
+                            scroll: quiet ? null : _scroll,
                             hidden: _flight?.index == i,
                             motion: !quiet,
-                            gleamY: gleamY,
+                            light: light,
+                            journey: journey,
                             idleNudge: _nudgeIndex == i,
                             nudgeGift: _nudgeGift && _nudgeIndex == i,
-                            nudgePulse: quiet ? 0.0 : _nudgePulse.value,
+                            nudgePulse: quiet
+                                ? const AlwaysStoppedAnimation(0.0)
+                                : _nudgePulse,
                             onLevel: cap
                                 ? _hintEmerald
                                 : soon
@@ -1000,28 +1052,41 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                         ),
                       ),
                     ),
-                  if (mistT > 0.01)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: RadialGradient(
-                              center: const Alignment(0, -0.1),
-                              radius: 1.15,
-                              colors: [
-                                const Color(0x33D7E4F5)
-                                    .withValues(alpha: 0.18 * mistT),
-                                const Color(0x99A8B8CC)
-                                    .withValues(alpha: 0.42 * mistT),
-                                const Color(0xCC050A16)
-                                    .withValues(alpha: 0.55 * mistT),
-                              ],
-                              stops: const [0.0, 0.45, 1.0],
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: AnimatedBuilder(
+                        animation: _mist,
+                        builder: (context, _) {
+                          final mistT = quiet
+                              ? 0.0
+                              : Curves.easeOut.transform(
+                                  (_mist.value < 0.45
+                                          ? _mist.value / 0.45
+                                          : (1 - _mist.value) / 0.55)
+                                      .clamp(0.0, 1.0),
+                                );
+                          if (mistT <= 0.01) return const SizedBox.shrink();
+                          return DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: RadialGradient(
+                                center: const Alignment(0, -0.1),
+                                radius: 1.15,
+                                colors: [
+                                  const Color(0x33D7E4F5)
+                                      .withValues(alpha: 0.18 * mistT),
+                                  const Color(0x99A8B8CC)
+                                      .withValues(alpha: 0.42 * mistT),
+                                  const Color(0xCC050A16)
+                                      .withValues(alpha: 0.55 * mistT),
+                                ],
+                                stops: const [0.0, 0.45, 1.0],
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ),
+                  ),
                   Positioned(
                     top: 0,
                     left: 0,
@@ -1117,7 +1182,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
 class _NextRungPlayBar extends StatelessWidget {
   final int rungNumber;
   final bool isLearn;
-  final double glow;
+  final Animation<double> glow;
   final VoidCallback onTap;
 
   const _NextRungPlayBar({
@@ -1137,74 +1202,82 @@ class _NextRungPlayBar extends StatelessWidget {
         scale: 1 - 0.05 * press,
         child: child,
       ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFF6D379), Color(0xFFC89228)],
-          ),
-          borderRadius: BorderRadius.circular(99),
-          border: Border.all(
-            color: SlmColors.ivory.withValues(alpha: 0.55 + 0.35 * glow),
-            width: 1.4,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: SlmColors.gold300.withValues(alpha: 0.25 + 0.25 * glow),
-              blurRadius: 16,
-              spreadRadius: 1,
-            ),
-            const BoxShadow(
-              color: Color(0x99000000),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 26,
-              height: 26,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: SlmColors.navy950,
+      // Only the glowing rim follows the glow clock; the label is built once.
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: glow,
+          builder: (context, child) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFF6D379), Color(0xFFC89228)],
               ),
-              child: const Icon(
-                Icons.play_arrow_rounded,
-                size: 18,
-                color: SlmColors.gold300,
+              borderRadius: BorderRadius.circular(99),
+              border: Border.all(
+                color: SlmColors.ivory.withValues(alpha: 0.55 + 0.35 * glow.value),
+                width: 1.4,
               ),
-            ),
-            const SizedBox(width: 9),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  enDigits('পরের ধাপ · $rungNumber'),
-                  style: zlText(
-                    13.5,
-                    weight: FontWeight.w900,
-                    color: SlmColors.navy950,
-                    height: 1.05,
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: SlmColors.gold300
+                      .withValues(alpha: 0.25 + 0.25 * glow.value),
+                  blurRadius: 16,
+                  spreadRadius: 1,
                 ),
-                Text(
-                  kindLabel,
-                  style: zlText(
-                    10.5,
-                    weight: FontWeight.w800,
-                    color: const Color(0xFF281B06),
-                    height: 1.1,
-                  ),
+                const BoxShadow(
+                  color: Color(0x99000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
-          ],
+            child: child,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: SlmColors.navy950,
+                ),
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  size: 18,
+                  color: SlmColors.gold300,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    enDigits('পরের ধাপ · $rungNumber'),
+                    style: zlText(
+                      13.5,
+                      weight: FontWeight.w900,
+                      color: SlmColors.navy950,
+                      height: 1.05,
+                    ),
+                  ),
+                  Text(
+                    kindLabel,
+                    style: zlText(
+                      10.5,
+                      weight: FontWeight.w800,
+                      color: const Color(0xFF281B06),
+                      height: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1216,7 +1289,7 @@ class _NextRungPlayBar extends StatelessWidget {
 class _LadderAltitudeTrack extends StatelessWidget {
   final int currentRung;
   final int totalRungs;
-  final double glow;
+  final Animation<double> glow;
 
   const _LadderAltitudeTrack({
     required this.currentRung,
@@ -1231,8 +1304,10 @@ class _LadderAltitudeTrack extends StatelessWidget {
         : (currentRung / (totalRungs - 1)).clamp(0.0, 1.0);
     return SizedBox(
       width: 12,
-      child: CustomPaint(
-        painter: _AltitudeTrackPainter(progress: progress, glow: glow),
+      child: RepaintBoundary(
+        child: CustomPaint(
+          painter: _AltitudeTrackPainter(progress: progress, glow: glow),
+        ),
       ),
     );
   }
@@ -1240,9 +1315,10 @@ class _LadderAltitudeTrack extends StatelessWidget {
 
 class _AltitudeTrackPainter extends CustomPainter {
   final double progress;
-  final double glow;
+  final Animation<double> glow;
 
-  const _AltitudeTrackPainter({required this.progress, required this.glow});
+  _AltitudeTrackPainter({required this.progress, required this.glow})
+      : super(repaint: glow);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1294,7 +1370,7 @@ class _AltitudeTrackPainter extends CustomPainter {
     // Player glowing dot
     canvas.drawCircle(
       Offset(x, dotY),
-      5.5 + 1.5 * glow,
+      5.5 + 1.5 * glow.value,
       Paint()
         ..color = SlmColors.gold300.withValues(alpha: 0.35)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
@@ -1393,8 +1469,15 @@ class _TopHeader extends ConsumerWidget {
         children: [
           _CircleIcon(icon: Icons.arrow_back_rounded, onTap: onBack),
           const SizedBox(width: 10),
-          _RankPill(label: rank, streak: save.safeStreak),
-          const Spacer(),
+          // Takes the free space (left-aligned) and ellipsizes on narrow phones
+          // instead of overflowing the bar.
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _RankPill(label: rank, streak: save.safeStreak),
+            ),
+          ),
+          const SizedBox(width: 8),
           KeyedSubtree(
             key: scoreKey,
             child: _ScoreChip(
@@ -1438,13 +1521,17 @@ class _RankPill extends StatelessWidget {
         children: [
           const Icon(Icons.shield_rounded, size: 13, color: SlmColors.gold300),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: zlText(
-              12,
-              weight: FontWeight.w800,
-              color: SlmColors.gold200,
-              height: 1.1,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: zlText(
+                12,
+                weight: FontWeight.w800,
+                color: SlmColors.gold200,
+                height: 1.1,
+              ),
             ),
           ),
           if (streak > 0) ...[
@@ -1527,20 +1614,22 @@ class _MapBand extends StatelessWidget {
   final bool cleared;
   final bool current;
   final bool locked;
-  final double glow;
+  final Animation<double> glow;
   final CatalogRungKind kind;
   final _Station? station;
   final bool fresh;
   final bool rested;
   final bool claimed;
   final _GiftFace giftFace;
-  final double zoom;
+  final double Function() zoom;
+  final ScrollController? scroll;
   final bool hidden;
   final bool motion;
-  final double gleamY;
+  final Animation<double> light;
+  final double journey;
   final bool idleNudge;
   final bool nudgeGift;
-  final double nudgePulse;
+  final Animation<double> nudgePulse;
   final VoidCallback? onLevel;
   final VoidCallback? onStation;
 
@@ -1561,9 +1650,11 @@ class _MapBand extends StatelessWidget {
     required this.claimed,
     required this.giftFace,
     required this.zoom,
+    required this.scroll,
     required this.hidden,
     required this.motion,
-    required this.gleamY,
+    required this.light,
+    required this.journey,
     required this.idleNudge,
     required this.nudgeGift,
     required this.nudgePulse,
@@ -1583,6 +1674,15 @@ class _MapBand extends StatelessWidget {
         final stationTop = gift
             ? const [0.0, 8.0, 16.0][(index ~/ 8) % 3]
             : 2.0 + (index % 3) * 4.0;
+        final gleam = CustomPaint(
+          size: Size(w, h),
+          painter: _RailGleamPainter(
+            index: index,
+            light: light,
+            journey: journey,
+            height: h,
+          ),
+        );
 
         if (cap) {
           return Stack(
@@ -1590,12 +1690,12 @@ class _MapBand extends StatelessWidget {
             children: [
               CustomPaint(
                 size: Size(w, h),
-                painter: _GoldenLadderPainter(
+                painter: const _GoldenLadderPainter(
                   fog: false,
-                  gleamY: gleamY,
                   cap: true,
                 ),
               ),
+              gleam,
               Center(
                 child: _FinishMark(glow: glow, motion: motion, onTap: onLevel),
               ),
@@ -1617,9 +1717,9 @@ class _MapBand extends StatelessWidget {
                 size: Size(w, h),
                 painter: _GoldenLadderPainter(
                   fog: fog,
-                  gleamY: gleamY,
                 ),
               ),
+              gleam,
               Positioned(
                 left: w / 2 - coinHalf,
                 top: rungY - coinHalf,
@@ -1634,7 +1734,6 @@ class _MapBand extends StatelessWidget {
                     cleared: cleared,
                     current: current,
                     locked: locked,
-                    glow: glow,
                     kind: kind,
                     motion: motion,
                     onTap: onLevel,
@@ -1645,9 +1744,9 @@ class _MapBand extends StatelessWidget {
               if (current)
                 Positioned(
                   left: w / 2 + coinHalf + 6,
-                  top: rungY - 22 + (motion ? -3.0 * glow : 0.0),
+                  top: rungY - 22,
                   child: IgnorePointer(
-                    child: _ClimberOnRungBadge(glow: glow),
+                    child: _ClimberOnRungBadge(glow: glow, motion: motion),
                   ),
                 ),
               if (station != null && !hidden)
@@ -1657,9 +1756,9 @@ class _MapBand extends StatelessWidget {
                   top: stationTop,
                   width: 92,
                   height: 82,
-                  child: Transform.scale(
-                    scale: zoom,
-                    alignment: Alignment.center,
+                  child: _StationZoom(
+                    scroll: scroll,
+                    zoom: zoom,
                     child: _IdleNudgeHalo(
                       active:
                           idleNudge && nudgeGift && station == _Station.gift,
@@ -1688,39 +1787,53 @@ class _MapBand extends StatelessWidget {
 
 /// Small glowing lineman helmet avatar standing on the player's current rung.
 class _ClimberOnRungBadge extends StatelessWidget {
-  final double glow;
+  final Animation<double> glow;
+  final bool motion;
 
-  const _ClimberOnRungBadge({required this.glow});
+  const _ClimberOnRungBadge({required this.glow, required this.motion});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 38,
-      height: 38,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: SlmColors.navy900,
-        border: Border.all(
-          color: SlmColors.emerald300.withValues(alpha: 0.75 + 0.25 * glow),
-          width: 1.8,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: SlmColors.emerald400.withValues(alpha: 0.35 + 0.25 * glow),
-            blurRadius: 10,
-            spreadRadius: 1,
+    // Bob and rim follow the glow clock on their own layer; the avatar
+    // image is built once.
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: glow,
+        builder: (context, child) => Transform.translate(
+          offset: Offset(0, motion ? -3.0 * glow.value : 0.0),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: SlmColors.navy900,
+              border: Border.all(
+                color: SlmColors.emerald300
+                    .withValues(alpha: 0.75 + 0.25 * glow.value),
+                width: 1.8,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: SlmColors.emerald400
+                      .withValues(alpha: 0.35 + 0.25 * glow.value),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: child,
           ),
-        ],
-      ),
-      child: ClipOval(
-        child: Image.asset(
-          'assets/duty_slip/dress/coach_ready.webp',
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-          errorBuilder: (_, _, _) => const Icon(
-            Icons.engineering_rounded,
-            size: 20,
-            color: SlmColors.gold300,
+        ),
+        child: ClipOval(
+          child: Image.asset(
+            'assets/duty_slip/dress/coach_ready.webp',
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+            errorBuilder: (_, _, _) => const Icon(
+              Icons.engineering_rounded,
+              size: 20,
+              color: SlmColors.gold300,
+            ),
           ),
         ),
       ),
@@ -1728,9 +1841,44 @@ class _ClimberOnRungBadge extends StatelessWidget {
   }
 }
 
+/// Scales a station prop with the scroll position; only this transform
+/// rebuilds while the ladder scrolls.
+class _StationZoom extends StatelessWidget {
+  final ScrollController? scroll;
+  final double Function() zoom;
+  final Widget child;
+
+  const _StationZoom({
+    required this.scroll,
+    required this.zoom,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final s = scroll;
+    if (s == null) {
+      return Transform.scale(
+        scale: zoom(),
+        alignment: Alignment.center,
+        child: child,
+      );
+    }
+    return AnimatedBuilder(
+      animation: s,
+      child: child,
+      builder: (context, child) => Transform.scale(
+        scale: zoom(),
+        alignment: Alignment.center,
+        child: child,
+      ),
+    );
+  }
+}
+
 class _IdleNudgeHalo extends StatelessWidget {
   final bool active;
-  final double pulse;
+  final Animation<double> pulse;
   final Widget child;
 
   const _IdleNudgeHalo({
@@ -1742,8 +1890,6 @@ class _IdleNudgeHalo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!active) return child;
-    final t = pulse.clamp(0.0, 1.0);
-    final scale = 1.0 + 0.14 * math.sin(t * math.pi * 2);
     return Stack(
       alignment: Alignment.center,
       clipBehavior: Clip.none,
@@ -1757,18 +1903,23 @@ class _IdleNudgeHalo extends StatelessWidget {
               child: CustomPaint(
                 size: const Size(140, 140),
                 painter: _NudgeRingPainter(
-                  progress: t,
+                  progress: pulse,
                   color: SlmColors.gold300,
                 ),
               ),
             ),
           ),
         ),
-        Transform.scale(
-          scale: scale,
-          alignment: Alignment.center,
-          filterQuality: FilterQuality.medium,
+        AnimatedBuilder(
+          animation: pulse,
           child: child,
+          builder: (context, child) => Transform.scale(
+            scale: 1.0 +
+                0.14 * math.sin(pulse.value.clamp(0.0, 1.0) * math.pi * 2),
+            alignment: Alignment.center,
+            filterQuality: FilterQuality.medium,
+            child: child,
+          ),
         ),
       ],
     );
@@ -1776,16 +1927,18 @@ class _IdleNudgeHalo extends StatelessWidget {
 }
 
 class _NudgeRingPainter extends CustomPainter {
-  final double progress;
+  final Animation<double> progress;
   final Color color;
 
-  const _NudgeRingPainter({required this.progress, required this.color});
+  _NudgeRingPainter({required this.progress, required this.color})
+      : super(repaint: progress);
 
   @override
   void paint(Canvas canvas, Size size) {
     final c = size.center(Offset.zero);
+    final t = progress.value.clamp(0.0, 1.0);
     for (final phase in const [0.0, 0.33, 0.66]) {
-      final p = (progress + phase) % 1.0;
+      final p = (t + phase) % 1.0;
       final radius = size.shortestSide * (0.22 + 0.28 * p);
       final opacity = (1.0 - p).clamp(0.0, 1.0);
       canvas.drawCircle(
@@ -1812,16 +1965,102 @@ class _NudgeRingPainter extends CustomPainter {
       old.progress != progress || old.color != color;
 }
 
+/// The travelling gleam on the two rails. Repaints only while the gleam is
+/// inside (or just leaving) this band, not on every tick of the 7 s loop.
+class _RailGleamPainter extends CustomPainter {
+  final int index;
+  final Animation<double> light;
+  final double journey;
+  final double height;
+
+  _RailGleamPainter({
+    required this.index,
+    required this.light,
+    required this.journey,
+    required this.height,
+  }) : super(
+          repaint: _GleamGate(
+            light,
+            (v) => _inBand(_gleamY(v, index, journey), height),
+          ),
+        );
+
+  static double _gleamY(double v, int index, double journey) {
+    const rowH = _AdventureMapState._rowH;
+    return rowH - (v * journey - index * rowH);
+  }
+
+  static bool _inBand(double gleamY, double h) =>
+      gleamY > -28 && gleamY < h + 28;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gleamY = _gleamY(light.value, index, journey);
+    if (!_inBand(gleamY, size.height)) return;
+    final (leftX, rightX) = _GoldenLadderPainter.railsX(size.width);
+    for (final x in [leftX, rightX]) {
+      canvas.drawCircle(
+        Offset(x, gleamY),
+        14,
+        Paint()
+          ..color = const Color(0x88FFF3C4)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _RailGleamPainter old) =>
+      old.index != index ||
+      old.light != light ||
+      old.journey != journey ||
+      old.height != height;
+}
+
+/// Forwards ticks of [source] only while [inside] is true, plus one tick
+/// after it turns false so the last gleam is wiped.
+class _GleamGate extends Listenable {
+  final Animation<double> source;
+  final bool Function(double value) inside;
+  final _wrapped = <VoidCallback, VoidCallback>{};
+
+  _GleamGate(this.source, this.inside);
+
+  @override
+  void addListener(VoidCallback listener) {
+    var was = inside(source.value);
+    void gate() {
+      final now = inside(source.value);
+      if (now || was) listener();
+      was = now;
+    }
+
+    _wrapped[listener] = gate;
+    source.addListener(gate);
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    final gate = _wrapped.remove(listener);
+    if (gate != null) source.removeListener(gate);
+  }
+}
+
 class _GoldenLadderPainter extends CustomPainter {
   final bool fog;
-  final double gleamY;
   final bool cap;
 
   const _GoldenLadderPainter({
     required this.fog,
-    required this.gleamY,
     this.cap = false,
   });
+
+  static (double, double) railsX(double w) {
+    const railW = 11.0;
+    final span = w * 0.38;
+    final gap = (span - railW) / 2;
+    return (w / 2 - gap, w / 2 + gap);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1847,17 +2086,6 @@ class _GoldenLadderPainter extends CustomPainter {
     _rail(canvas, rightX, h);
     if (!cap) {
       _rung(canvas, leftX, rightX, h * 0.58, fog);
-    }
-    if (gleamY > -28 && gleamY < h + 28) {
-      for (final x in [leftX, rightX]) {
-        canvas.drawCircle(
-          Offset(x, gleamY),
-          14,
-          Paint()
-            ..color = const Color(0x88FFF3C4)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
-        );
-      }
     }
   }
 
@@ -1942,9 +2170,7 @@ class _GoldenLadderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GoldenLadderPainter oldDelegate) =>
-      oldDelegate.fog != fog ||
-      oldDelegate.gleamY != gleamY ||
-      oldDelegate.cap != cap;
+      oldDelegate.fog != fog || oldDelegate.cap != cap;
 }
 
 class _LevelCoin extends StatefulWidget {
@@ -1953,7 +2179,6 @@ class _LevelCoin extends StatefulWidget {
   final bool cleared;
   final bool current;
   final bool locked;
-  final double glow;
   final CatalogRungKind kind;
   final bool motion;
   final VoidCallback? onTap;
@@ -1964,7 +2189,6 @@ class _LevelCoin extends StatefulWidget {
     required this.cleared,
     required this.current,
     required this.locked,
-    required this.glow,
     required this.kind,
     required this.motion,
     required this.onTap,
@@ -2068,15 +2292,72 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
                 ? const Color(0xFFE8D7A8)
                 : SlmColors.ivory;
 
-    return AnimatedBuilder(
+    // The coin face (rim, art, number) never changes while it breathes:
+    // build it once and let the loop only move the halo, ring and flash.
+    final face = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: current
+              ? SlmColors.gold300.withValues(alpha: 0.9)
+              : cleared
+                  ? SlmColors.gold200.withValues(alpha: 0.55)
+                  : accent.withValues(alpha: bronze ? 0.2 : 0.35),
+          width: current ? 2.2 : (gate ? 1.6 : 1.15),
+        ),
+        boxShadow: cleared
+            ? [
+                BoxShadow(
+                  color: SlmColors.gold300.withValues(alpha: 0.18),
+                  blurRadius: 8,
+                ),
+              ]
+            : null,
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Image.asset(
+            asset,
+            width: size,
+            height: size,
+            cacheWidth: 180,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+            gaplessPlayback: true,
+          ),
+          Text(
+            enDigits('${widget.number}'),
+            style: zlText(
+              gate ? (current ? 16 : 15) : (current ? 17 : 16),
+              weight: FontWeight.w900,
+              color: numberColor,
+            ).copyWith(
+              shadows: const [
+                Shadow(
+                  color: Color(0xDD000000),
+                  offset: Offset(0, 1.2),
+                  blurRadius: 2,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    final pressDepth = current ? 0.09 : (cleared ? 0.06 : 0.05);
+
+    final animated = AnimatedBuilder(
       animation: Listenable.merge([_breath, _spin, _flash]),
-      builder: (context, _) {
+      child: face,
+      builder: (context, face) {
         final breath = current ? (0.55 + 0.45 * _breath.value) : 0.0;
         final flash = Curves.easeOut.transform(_flash.value.clamp(0.0, 1.0));
         final flashOut = flash < 0.55
             ? (flash / 0.55)
             : (1 - (flash - 0.55) / 0.45).clamp(0.0, 1.0);
-        final pressDepth = current ? 0.09 : (cleared ? 0.06 : 0.05);
 
         final disc = Opacity(
           opacity: bronze ? 0.42 : 1,
@@ -2129,80 +2410,29 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                Container(
-                  width: size,
-                  height: size,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: current
-                          ? SlmColors.gold300.withValues(alpha: 0.9)
-                          : cleared
-                              ? SlmColors.gold200.withValues(alpha: 0.55)
-                              : accent.withValues(alpha: bronze ? 0.2 : 0.35),
-                      width: current ? 2.2 : (gate ? 1.6 : 1.15),
-                    ),
-                    boxShadow: cleared
-                        ? [
-                            BoxShadow(
-                              color: SlmColors.gold300.withValues(alpha: 0.18),
-                              blurRadius: 8,
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Image.asset(
-                        asset,
-                        width: size,
-                        height: size,
-                        cacheWidth: 180,
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.medium,
-                        gaplessPlayback: true,
-                      ),
-                      Text(
-                        enDigits('${widget.number}'),
-                        style: zlText(
-                          gate ? (current ? 16 : 15) : (current ? 17 : 16),
-                          weight: FontWeight.w900,
-                          color: numberColor,
-                        ).copyWith(
-                          shadows: const [
-                            Shadow(
-                              color: Color(0xDD000000),
-                              offset: Offset(0, 1.2),
-                              blurRadius: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                face!,
               ],
             ),
           ),
         );
 
-        Widget body = disc;
         if (current) {
-          body = SlmShimmer(intensity: 0.22 + 0.1 * breath, child: disc);
+          return SlmShimmer(intensity: 0.22 + 0.1 * breath, child: disc);
         } else if (cleared) {
-          body = SlmShimmer(intensity: 0.08, child: disc);
+          return SlmShimmer(intensity: 0.08, child: disc);
         }
-
-        return SlmTactile(
-          onTap: widget.onTap == null ? null : _onTap,
-          builder: (context, press, child) => Transform.scale(
-            scale: 1 - pressDepth * press,
-            child: child,
-          ),
-          child: body,
-        );
+        return disc;
       },
+    );
+
+    return SlmTactile(
+      onTap: widget.onTap == null ? null : _onTap,
+      builder: (context, press, child) => Transform.scale(
+        scale: 1 - pressDepth * press,
+        child: child,
+      ),
+      // The live coin breathes every frame: keep that off the band's layer.
+      child: current ? RepaintBoundary(child: animated) : animated,
     );
   }
 }
@@ -2245,7 +2475,7 @@ class _EmeraldRingPainter extends CustomPainter {
 class _StationPlaque extends StatelessWidget {
   final _Station station;
   final String asset;
-  final double glow;
+  final Animation<double> glow;
   final bool fresh;
   final bool rested;
   final bool claimed;
@@ -2272,8 +2502,7 @@ class _StationPlaque extends StatelessWidget {
     final missed = giftFace == _GiftFace.missed;
     final lively =
         motion && !claimed && (active || (giftFace == _GiftFace.none && fresh));
-    final turn = lively ? glow : 0.2;
-    final bob = lively
+    double bob(double turn) => lively
         ? switch (station) {
             _Station.gift => -5 * turn,
             _Station.identify => -2.2 * turn,
@@ -2281,7 +2510,7 @@ class _StationPlaque extends StatelessWidget {
             _ => -1.2 * turn,
           }
         : 0.0;
-    final tilt =
+    double tilt(double turn) =>
         motion && fresh && station == _Station.life ? (turn - 0.5) * 0.1 : 0.0;
     final picture = Image.asset(
       asset,
@@ -2315,12 +2544,12 @@ class _StationPlaque extends StatelessWidget {
               )
             : picture;
 
-    final body = Opacity(
+    Widget frame(double turn, Widget art) => Opacity(
       opacity: missed ? 0.78 : dull ? 0.72 : 1,
       child: Transform.translate(
-        offset: Offset(0, bob),
+        offset: Offset(0, bob(turn)),
         child: Transform.rotate(
-          angle: tilt,
+          angle: tilt(turn),
           child: SizedBox(
             width: 92,
             height: 82,
@@ -2386,6 +2615,18 @@ class _StationPlaque extends StatelessWidget {
       ),
     );
 
+    // Only a lively prop follows the glow clock, on its own layer; the rest
+    // are built once.
+    final body = lively
+        ? RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: glow,
+              child: art,
+              builder: (context, art) => frame(glow.value, art!),
+            ),
+          )
+        : frame(0.2, art);
+
     return SlmTactile(
       onTap: onTap,
       builder: (context, press, child) =>
@@ -2396,7 +2637,7 @@ class _StationPlaque extends StatelessWidget {
 }
 
 class _FinishMark extends StatelessWidget {
-  final double glow;
+  final Animation<double> glow;
   final bool motion;
   final VoidCallback? onTap;
 
@@ -2408,8 +2649,9 @@ class _FinishMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pulse = motion ? glow : 0.65;
-    final mark = Transform.scale(
+    final shield =
+        AnimatedSafetyShield(size: 78, animate: motion, entrance: false);
+    Widget glowAt(double pulse, Widget shield) => Transform.scale(
       scale: motion ? 1 + 0.06 * pulse : 1,
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -2427,9 +2669,18 @@ class _FinishMark extends StatelessWidget {
             ),
           ],
         ),
-        child: AnimatedSafetyShield(size: 78, animate: motion, entrance: false),
+        child: shield,
       ),
     );
+    final mark = motion
+        ? RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: glow,
+              child: shield,
+              builder: (context, shield) => glowAt(glow.value, shield!),
+            ),
+          )
+        : glowAt(0.65, shield);
     return SlmTactile(
       onTap: onTap,
       builder: (context, press, child) =>

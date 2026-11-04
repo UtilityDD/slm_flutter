@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 
@@ -89,7 +91,8 @@ class _VisemePose {
 
 class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     with TickerProviderStateMixin {
-  /// Continuous 60fps master rig clock (drives breathing, head drift, eye glints, aura).
+  /// Master rig clock (drives breathing, head drift, eye glints, aura). It
+  /// loops while speaking, then finishes its lap and rests (see [_syncRig]).
   late final AnimationController _rig;
 
   /// Smooth crossfade between base facial expressions.
@@ -113,6 +116,14 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   var _showingA = true;
   var _eyeLap = 0;
   var _eyeArmed = true;
+
+  /// Eye phase while the rig rests; stepped by [_eyeTimer], not a ticker.
+  var _eyeT = 0.0;
+  Timer? _eyeTimer;
+  var _rigLooping = false;
+
+  /// Loops allowed: animations on and this route visible.
+  var _loopsOn = true;
   GuideGesture _gestureTarget = GuideGesture.none;
   var _lastToken = 0;
   GuideMood? _lastOverrideMood;
@@ -284,7 +295,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     _rig = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 6000),
-    )..repeat();
+    );
     _face = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 220),
@@ -311,19 +322,91 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       duration: const Duration(milliseconds: 360),
     );
     _rig.addListener(_countLaps);
+    _rig.addStatusListener(_onRigStatus);
     MascotTalk.active.addListener(_onTalkChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loopsOn = slmLoopsOn(context) && TickerMode.valuesOf(context).enabled;
     _syncMouth();
+    _syncRig();
   }
 
   void _onTalkChanged() {
     _syncMouth();
+    _syncRig();
     if (mounted) setState(() {});
+  }
+
+  /// The rig loops only while speaking. After speech, a cue or a tap it
+  /// finishes the current lap (at most one 6 s breath cycle) and rests at
+  /// the neutral pose, where blinks run on a Timer, so an idle guide draws
+  /// no frames. Nothing runs with remove-animations or a hidden route.
+  void _syncRig({bool kick = false}) {
+    if (!_loopsOn) {
+      _rigLooping = false;
+      _rig.stop();
+      if (_rig.value != 0) _rig.value = 0;
+      _stopEyes();
+    } else if (_isSpeaking) {
+      if (_rigLooping) return;
+      _rigLooping = true;
+      _stopEyes();
+      _rig.repeat();
+    } else if (_rigLooping || kick) {
+      _rigLooping = false;
+      _stopEyes();
+      _rig.forward();
+    } else if (!_rig.isAnimating) {
+      _startEyes();
+    }
+  }
+
+  void _onRigStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed || _rigLooping) return;
+    _rig.value = 0;
+    _startEyes();
+  }
+
+  void _startEyes() {
+    if (_eyeTimer == null && _loopsOn) _armEye(0);
+  }
+
+  void _stopEyes() {
+    _eyeTimer?.cancel();
+    _eyeTimer = null;
+    _eyeT = 0;
+  }
+
+  /// Steps [_eyeT] through the same blink / double-blink / glance beats as
+  /// one rig lap (ms into 6 s), with one setState per beat.
+  void _armEye(int ms) {
+    final beats = [
+      360, 630,
+      if (_eyeLap % 3 == 0) ...[810, 1050],
+      if (_eyeLap.isOdd) ...[2880, 3840],
+      6000,
+    ];
+    final next = beats.firstWhere((b) => b > ms);
+    _eyeTimer = Timer(Duration(milliseconds: next - ms), () {
+      if (!mounted) return;
+      if (next >= 6000) {
+        _eyeLap++;
+        _eyeT = 0;
+        _armEye(0);
+        return;
+      }
+      setState(() => _eyeT = (next + 1) / 6000);
+      _armEye(next);
+    });
   }
 
   bool get _isSpeaking => MascotTalk.active.value;
 
   void _syncMouth({bool restart = false}) {
-    if (_isSpeaking) {
+    if (_isSpeaking && _loopsOn) {
       _talkBlend.forward();
       if (restart || !_mouth.isAnimating) {
         _mouth.repeat(period: const Duration(milliseconds: 1650));
@@ -348,13 +431,16 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   void _onSpriteTap() {
     HapticFeedback.selectionClick();
     _touchPop.forward(from: 0);
+    _syncRig(kick: true);
     widget.onTap?.call();
   }
 
   @override
   void dispose() {
     MascotTalk.active.removeListener(_onTalkChanged);
+    _eyeTimer?.cancel();
     _rig.removeListener(_countLaps);
+    _rig.removeStatusListener(_onRigStatus);
     _rig.dispose();
     _face.dispose();
     _gesture.dispose();
@@ -441,6 +527,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     _lastToken = token;
     _lastOverrideMood = widget.overrideMood;
     _lastOverrideLine = widget.overrideLine;
+    _syncRig(kick: true);
 
     if (hasEntrance || overrideChanged) {
       _settle.forward(from: 0);
@@ -550,7 +637,13 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   }
 
   Widget _gestureWrap(double g, GuideGesture kind, Widget child) {
-    if (g < 0.001 || kind == GuideGesture.none) return child;
+    // Same Transform pair at rest keeps the sprite subtree mounted.
+    if (g < 0.001 || kind == GuideGesture.none) {
+      return Transform.translate(
+        offset: Offset.zero,
+        child: Transform.rotate(angle: 0, child: child),
+      );
+    }
     switch (kind) {
       case GuideGesture.handstand:
         return Transform.translate(
@@ -578,7 +671,10 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
           child: Transform.rotate(angle: math.pi * 2 * g, child: child),
         );
       case GuideGesture.none:
-        return child;
+        return Transform.translate(
+          offset: Offset.zero,
+          child: Transform.rotate(angle: 0, child: child),
+        );
     }
   }
 
@@ -635,7 +731,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
         final tau = rigT * math.pi * 2;
         final overlay = _blinkOverlay(
           activeMood,
-          rigT,
+          _rig.isAnimating ? rigT : _eyeT,
           reduce: reduce,
           speaking: _isSpeaking,
         );
@@ -742,7 +838,8 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
                       _gestureTarget == GuideGesture.none
                           ? activeGesture
                           : _gestureTarget,
-                      SizedBox(
+                      RepaintBoundary(
+                      child: SizedBox(
                         width: widget.sprite,
                         height: widget.sprite,
                     child: Stack(
@@ -857,6 +954,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
                       ],
                     ),
                   ),
+                  ),
                 ),
               ),
             ),
@@ -875,12 +973,19 @@ class _Face extends StatelessWidget {
 
   const _Face({required this.asset, required this.size});
 
+  /// Tallest face export; never decode above the source.
+  static const _maxPx = 900;
+
   @override
   Widget build(BuildContext context) {
+    // Faces are taller than wide, so BoxFit.contain shows them [size] tall:
+    // decode at that height x DPR instead of the full ~900 px source.
+    final px = (size * MediaQuery.devicePixelRatioOf(context)).round().clamp(1, _maxPx);
     return Image.asset(
       'assets/duty_slip/dress/$asset.webp',
       width: size,
       height: size,
+      cacheHeight: px,
       fit: BoxFit.contain,
       gaplessPlayback: true,
       filterQuality: FilterQuality.medium,

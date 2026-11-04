@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../core/config/app_config.dart';
 import '../../core/theme/app_colors.dart';
+import '../identify/fit_image.dart';
 
 String resolveTrainingMediaSrc(String mediaRef) {
   final s = mediaRef.trim();
@@ -60,13 +61,15 @@ class LessonFigurePlate extends StatelessWidget {
               imageUrl: imageUrl,
               fit: BoxFit.contain,
               width: double.infinity,
+              // Never wider than the screen; decode no bigger than that.
+              memCacheWidth: screenDecodeWidth(context),
               alignment: Alignment.center,
-              placeholder: (_, __) => SizedBox(
+              placeholder: (_, _) => SizedBox(
                 height: maxH * 0.45,
                 width: double.infinity,
                 child: ColoredBox(color: paperColor),
               ),
-              errorWidget: (_, __, ___) => SizedBox(
+              errorWidget: (_, _, _) => SizedBox(
                 height: 120,
                 width: double.infinity,
                 child: ColoredBox(

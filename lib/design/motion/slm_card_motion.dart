@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../components/slm_cards.dart';
 import '../theme/slm_theme.dart';
 import '../tokens/slm_layout.dart';
-import '../tokens/slm_motion.dart';
 import 'slm_motion_widgets.dart';
 
 /// [SlmCard] with motion: staggered entrance, lift and gold edge light while
@@ -67,40 +66,5 @@ class SlmMotionCard extends StatelessWidget {
     if (float) body = SlmFloat(amplitude: 3, phase: ((index ?? 0) * 0.17) % 1, child: body);
     if (index != null) body = SlmReveal(index: index!, child: body);
     return body;
-  }
-}
-
-/// Cross-fades between children with a short rise, resizing smoothly.
-/// Give each child a distinct key.
-class SlmContentSwitcher extends StatelessWidget {
-  final Widget child;
-  final Duration duration;
-
-  const SlmContentSwitcher({super.key, required this.child, this.duration = SlmMotion.base});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedSize(
-      duration: duration,
-      curve: SlmMotion.emphasized,
-      alignment: Alignment.topCenter,
-      child: AnimatedSwitcher(
-        duration: duration,
-        switchInCurve: SlmMotion.emphasized,
-        switchOutCurve: SlmMotion.exit,
-        layoutBuilder: (current, previous) => Stack(
-          alignment: Alignment.topCenter,
-          children: [...previous, ?current],
-        ),
-        transitionBuilder: (child, a) => FadeTransition(
-          opacity: a,
-          child: SlideTransition(
-            position: Tween(begin: const Offset(0, 0.04), end: Offset.zero).animate(a),
-            child: child,
-          ),
-        ),
-        child: child,
-      ),
-    );
   }
 }

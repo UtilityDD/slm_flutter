@@ -34,22 +34,29 @@ class RadioState {
 }
 
 class RadioNotifier extends Notifier<RadioState> {
-  late final AudioPlayer _player;
+  AudioPlayer? _p;
   static const String _streamUrl = 'https://stream.zeno.fm/f3wvbbqmdg8uv'; // High-reliability live stream fallback
 
-  @override
-  RadioState build() {
-    _player = AudioPlayer();
-    _player.onPlayerStateChanged.listen((state) {
+  /// Made on the first play, so an unused radio holds no native player.
+  AudioPlayer get _player {
+    final existing = _p;
+    if (existing != null) return existing;
+    final p = _p = AudioPlayer()..positionUpdater = null;
+    p.onPlayerStateChanged.listen((state) {
       if (state == PlayerState.playing) {
         this.state = this.state.copyWith(isPlaying: true, isBuffering: false);
       } else if (state == PlayerState.paused || state == PlayerState.stopped) {
         this.state = this.state.copyWith(isPlaying: false, isBuffering: false);
       }
     });
+    return p;
+  }
 
+  @override
+  RadioState build() {
     ref.onDispose(() {
-      _player.dispose();
+      _p?.dispose();
+      _p = null;
     });
 
     return const RadioState();
@@ -58,7 +65,7 @@ class RadioNotifier extends Notifier<RadioState> {
   Future<void> togglePlay() async {
     try {
       if (state.isPlaying) {
-        await _player.pause();
+        await _p?.pause();
       } else {
         state = state.copyWith(isBuffering: true);
         await _player.play(UrlSource(_streamUrl));
@@ -73,7 +80,7 @@ class RadioNotifier extends Notifier<RadioState> {
   }
 
   void closePlayer() {
-    _player.pause();
+    _p?.pause();
     state = state.copyWith(isVisible: false, isPlaying: false);
   }
 

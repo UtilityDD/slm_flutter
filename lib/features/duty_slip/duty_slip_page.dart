@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,219 +28,108 @@ import 'duty_slip_engine.dart';
 import 'duty_slip_models.dart';
 import 'duty_slip_voice.dart';
 
-enum DsMotion { cinematic, smooth, lite }
+@immutable
+class DsBoxDecodeKey {
+  const DsBoxDecodeKey(this.inner, this.width, this.height, this.cover);
+  final Object inner;
+  final int width;
+  final int height;
+  final bool cover;
 
-class DsMotionGate {
-  static DsMotion tier = DsMotion.smooth;
-  static var _n = 0;
-  static var _heavy = 0;
-  static var _light = 0;
-  static var _on = false;
+  @override
+  bool operator ==(Object other) =>
+      other is DsBoxDecodeKey &&
+      other.inner == inner &&
+      other.width == width &&
+      other.height == height &&
+      other.cover == cover;
 
-  static void listen() {
-    if (_on) return;
-    _on = true;
-    SchedulerBinding.instance.addTimingsCallback(_onTimings);
-  }
-
-  static void stop() {
-    if (!_on) return;
-    _on = false;
-    SchedulerBinding.instance.removeTimingsCallback(_onTimings);
-  }
-
-  static void _onTimings(List<FrameTiming> frames) {
-    if (tier == DsMotion.lite) return;
-    for (final frame in frames) {
-      final us = frame.buildDuration.inMicroseconds + frame.rasterDuration.inMicroseconds;
-      _n++;
-      if (us > 22000) _heavy++;
-      if (us < 11000) _light++;
-    }
-    if (_n < 12) return;
-    if (_heavy >= 5) {
-      tier = DsMotion.lite;
-    } else if (_light >= 10 && _heavy == 0) {
-      tier = DsMotion.cinematic;
-    }
-  }
+  @override
+  int get hashCode => Object.hash(inner, width, height, cover);
 }
 
-DsMotion dsMotionOf(BuildContext context) {
-  if (MediaQuery.disableAnimationsOf(context)) return DsMotion.lite;
-  return DsMotionGate.tier;
-}
+/// Decodes an image no larger than the device-pixel box it is shown in.
+/// [cover] keeps the short side at least box size (BoxFit.cover); otherwise
+/// the whole image fits the box (BoxFit.contain). Aspect ratio is kept and the
+/// image is never upscaled, so what is painted looks the same as a full decode.
+class DsBoxDecode extends ImageProvider<DsBoxDecodeKey> {
+  const DsBoxDecode(this.inner, {required this.width, required this.height, required this.cover});
 
-bool dsReduceMotion(BuildContext context) => MediaQuery.disableAnimationsOf(context);
+  final ImageProvider<Object> inner;
+  final int width;
+  final int height;
+  final bool cover;
+
+  /// [Image] for an asset shown in a [w] x [h] logical box.
+  static Widget asset(
+    BuildContext context,
+    String path, {
+    required double w,
+    required double h,
+    required BoxFit fit,
+    double? width,
+    double? height,
+    ImageErrorWidgetBuilder? errorBuilder,
+  }) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return Image(
+      image: DsBoxDecode(
+        AssetImage(path),
+        width: (w * dpr).ceil(),
+        height: (h * dpr).ceil(),
+        cover: fit == BoxFit.cover,
+      ),
+      width: width,
+      height: height,
+      fit: fit,
+      errorBuilder: errorBuilder,
+    );
+  }
+
+  @override
+  Future<DsBoxDecodeKey> obtainKey(ImageConfiguration configuration) {
+    Completer<DsBoxDecodeKey>? completer;
+    SynchronousFuture<DsBoxDecodeKey>? result;
+    inner.obtainKey(configuration).then((Object key) {
+      final k = DsBoxDecodeKey(key, width, height, cover);
+      if (completer == null) {
+        result = SynchronousFuture<DsBoxDecodeKey>(k);
+      } else {
+        completer.complete(k);
+      }
+    }, onError: (Object e, StackTrace s) => completer?.completeError(e, s));
+    final sync = result;
+    if (sync != null) return sync;
+    completer = Completer<DsBoxDecodeKey>();
+    return completer.future;
+  }
+
+  @override
+  ImageStreamCompleter loadImage(DsBoxDecodeKey key, ImageDecoderCallback decode) {
+    Future<ui.Codec> boxed(ui.ImmutableBuffer buffer, {ui.TargetImageSizeCallback? getTargetSize}) {
+      return decode(buffer, getTargetSize: (int iw, int ih) {
+        if (iw <= 0 || ih <= 0) return const ui.TargetImageSize();
+        final sx = width / iw;
+        final sy = height / ih;
+        final s = cover ? math.max(sx, sy) : math.min(sx, sy);
+        if (s >= 1) return const ui.TargetImageSize();
+        return ui.TargetImageSize(width: math.max(1, (iw * s).ceil()));
+      });
+    }
+
+    return inner.loadImage(key.inner, boxed);
+  }
+}
 
 class DutySlipPage extends StatefulWidget {
-  /// Skip the death cover and open the ladder. Level briefings are unchanged.
+  /// Kept for existing callers, which all pass `true`. The page always opens
+  /// on the ladder; the old death cover is gone.
   final bool startOnRoad;
 
   const DutySlipPage({super.key, this.startOnRoad = false});
 
-  static Future<void> open(BuildContext context, {Rect? sourceRect}) =>
-      Navigator.of(context, rootNavigator: true).push(
-        _DramaticGamePageRoute(
-          page: const DutySlipPage(),
-          sourceRect: sourceRect,
-        ),
-      );
-
   @override
   State<DutySlipPage> createState() => _DutySlipPageState();
-}
-
-class _DramaticGamePageRoute extends PageRouteBuilder<void> {
-  final Widget page;
-  final Rect? sourceRect;
-
-  _DramaticGamePageRoute({required this.page, this.sourceRect})
-      : super(
-          pageBuilder: (context, animation, secondaryAnimation) => page,
-          transitionDuration: const Duration(milliseconds: 700),
-          reverseTransitionDuration: const Duration(milliseconds: 380),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return _DramaticPortalTransition(
-              animation: animation,
-              sourceRect: sourceRect,
-              child: child,
-            );
-          },
-        );
-}
-
-class _DramaticPortalTransition extends StatelessWidget {
-  final Animation<double> animation;
-  final Rect? sourceRect;
-  final Widget child;
-
-  const _DramaticPortalTransition({
-    required this.animation,
-    required this.sourceRect,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final center = sourceRect?.center ?? size.center(Offset.zero);
-
-    final dX = math.max(center.dx, size.width - center.dx);
-    final dY = math.max(center.dy, size.height - center.dy);
-    final maxRadius = math.sqrt(dX * dX + dY * dY) * 1.08;
-    final minRadius = sourceRect != null ? (sourceRect!.width / 2).clamp(16.0, 48.0) : 24.0;
-
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, _) {
-        final motion = dsMotionOf(context);
-        final t = Curves.fastOutSlowIn.transform(animation.value);
-        final currentRadius = ui.lerpDouble(minRadius, maxRadius, t)!;
-        final scale = 0.88 + 0.12 * Curves.easeOutCubic.transform(animation.value);
-        final flashAlpha = (animation.value < 0.35
-                ? (animation.value / 0.35)
-                : ((1.0 - animation.value) / 0.65))
-            .clamp(0.0, 1.0);
-        final showFlash = motion != DsMotion.lite && flashAlpha > 0.01;
-        final showWave = motion == DsMotion.cinematic && animation.value < 0.98;
-
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            ClipPath(
-              clipper: _PortalCircleClipper(center: center, radius: currentRadius),
-              child: Transform.scale(
-                scale: scale,
-                alignment: Alignment(
-                  (center.dx / size.width) * 2 - 1,
-                  (center.dy / size.height) * 2 - 1,
-                ),
-                child: child,
-              ),
-            ),
-            if (showWave)
-              IgnorePointer(
-                child: CustomPaint(
-                  painter: _PortalShockwavePainter(
-                    center: center,
-                    radius: currentRadius,
-                    progress: animation.value,
-                  ),
-                ),
-              ),
-            if (showFlash)
-              IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment(
-                        (center.dx / size.width) * 2 - 1,
-                        (center.dy / size.height) * 2 - 1,
-                      ),
-                      radius: 0.9,
-                      colors: [
-                        Color.fromRGBO(251, 191, 36, (motion == DsMotion.cinematic ? 0.42 : 0.22) * flashAlpha),
-                        Color.fromRGBO(245, 158, 11, (motion == DsMotion.cinematic ? 0.18 : 0.08) * flashAlpha),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _PortalCircleClipper extends CustomClipper<Path> {
-  final Offset center;
-  final double radius;
-
-  const _PortalCircleClipper({required this.center, required this.radius});
-
-  @override
-  Path getClip(Size size) {
-    return Path()..addOval(Rect.fromCircle(center: center, radius: radius));
-  }
-
-  @override
-  bool shouldReclip(_PortalCircleClipper old) => old.center != center || old.radius != radius;
-}
-
-class _PortalShockwavePainter extends CustomPainter {
-  final Offset center;
-  final double radius;
-  final double progress;
-
-  const _PortalShockwavePainter({
-    required this.center,
-    required this.radius,
-    required this.progress,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final fade = (1.0 - progress).clamp(0.0, 1.0);
-    final haloPaint = Paint()
-      ..color = Color.fromRGBO(251, 191, 36, 0.72 * fade)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 7 + 12 * (1 - progress)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
-    canvas.drawCircle(center, radius, haloPaint);
-
-    final corePaint = Paint()
-      ..color = Color.fromRGBO(255, 247, 214, 0.96 * fade)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.5;
-    canvas.drawCircle(center, radius, corePaint);
-  }
-
-  @override
-  bool shouldRepaint(_PortalShockwavePainter old) =>
-      old.radius != radius || old.progress != progress;
 }
 
 class _FlyBit {
@@ -254,13 +143,26 @@ class _FlyBit {
 class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMixin {
   DutySlipEngine? _engine;
   final _tts = BanglaReadAloud();
-  final _jobTick = ValueNotifier(0);
+  /// Bumped when HUD numbers change (score, level); rebuilds only the HUD.
+  final _hudTick = ValueNotifier(0);
+  /// Bumped when the HUD clock text or its overtime colour changes.
   final _scoreKey = GlobalKey();
   final _stackKey = GlobalKey();
+  /// Level / job clock: a one-shot timer re-armed about once a second (just
+  /// after the next play-second boundary), only while a level is on screen and
+  /// the app is visible. Each tick credits the interval it waited; a tap or a
+  /// hide mid-interval credits the part already elapsed ([_armWatch]).
   Timer? _clock;
+  var _clockOn = false;
+  var _armMs = 0;
+  var _armFedMs = 0;
+  final _armWatch = Stopwatch();
+  var _jobAccMs = 0;
+  var _appHidden = false;
+  late final AppLifecycleListener _life;
+  var _hudSig = 0;
   final _roadScroll = ValueNotifier<double>(0);
   late final AnimationController _shake;
-  late final AnimationController _skyDrift;
   late final Animation<double> _shakeX;
   List<DsOption> _opts = [];
   String? _hint;
@@ -268,7 +170,8 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   var _hintOpen = false;
   var _cardMistakes = 0;
   var _loading = true;
-  var _muted = false;
+  /// Mute lives in [ZlMusic] (static), so it survives leaving and re-entering.
+  bool get _muted => ZlMusic.muted;
   var _kitI = 0;
   final _yes = <String>{};
   var _callOpen = false;
@@ -277,16 +180,13 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   String? _ptwShift;
   var _ynKey = 0;
   var _clockHeld = false;
-  var _loadingWaitOpenRoad = false;
   var _flyId = 0;
-  final _flies = <_FlyBit>[];
+  final _flies = ValueNotifier<List<_FlyBit>>(const []);
 
   @override
   void initState() {
     super.initState();
-    _loadingWaitOpenRoad = widget.startOnRoad;
     _shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
-    _skyDrift = AnimationController(vsync: this, duration: const Duration(seconds: 48))..repeat();
     _shakeX = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0, end: 12), weight: 1),
       TweenSequenceItem(tween: Tween(begin: 12, end: -12), weight: 2),
@@ -294,42 +194,113 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       TweenSequenceItem(tween: Tween(begin: 7, end: -4), weight: 2),
       TweenSequenceItem(tween: Tween(begin: -4, end: 0), weight: 1),
     ]).animate(CurvedAnimation(parent: _shake, curve: Curves.easeOut));
-    DsMotionGate.listen();
+    _life = AppLifecycleListener(onHide: _onAppHide, onShow: _onAppShow);
+    ZlFx.setMuted(ZlMusic.muted);
     _boot();
+  }
+
+  void _onAppHide() {
+    _feedClock();
+    _appHidden = true;
+    _stopClock();
+  }
+
+  void _onAppShow() {
+    _appHidden = false;
+    final e = _engine;
+    if (e != null) _syncClock(e);
+  }
+
+  /// Start or stop the clock to match the screen. Called from build, so every
+  /// page transition re-checks it.
+  void _syncClock(DutySlipEngine e) {
+    final want = !_appHidden && e.clockScreen;
+    if (want == _clockOn) return;
+    if (!want) {
+      _stopClock();
+      return;
+    }
+    _clockOn = true;
+    _jobAccMs = 0;
+    _armClock(e);
+  }
+
+  void _stopClock() {
+    _clockOn = false;
+    _clock?.cancel();
+    _clock = null;
+    _armWatch.stop();
+  }
+
+  void _armClock(DutySlipEngine e) {
+    _clock?.cancel();
+    // Wake just after the mm:ss clock rolls over; otherwise once a second.
+    final ms = (e.playClockRuns ? e.playMsToNextSecond + 8 : 1000).clamp(20, 1000);
+    _armMs = ms;
+    _armFedMs = 0;
+    _armWatch
+      ..reset()
+      ..start();
+    _clock = Timer(Duration(milliseconds: ms), _onClockTick);
+  }
+
+  void _onClockTick() {
+    final e = _engine;
+    if (!mounted || e == null || !_clockOn) return;
+    _credit(_armMs - _armFedMs);
+    _armFedMs = _armMs;
+    _refreshHud();
+    _armClock(e);
+  }
+
+  /// Credit the part of the current interval that has already passed, so a tap
+  /// or leaving the app is timed to the millisecond, not to the tick.
+  void _feedClock() {
+    if (!_clockOn) return;
+    final done = math.min(_armWatch.elapsedMilliseconds, _armMs);
+    final d = done - _armFedMs;
+    if (d <= 0) return;
+    _armFedMs = done;
+    _credit(d);
+  }
+
+  /// 2 job-seconds per 100 ms and the play clock in milliseconds: the same
+  /// rates the old 100 ms periodic timer used.
+  void _credit(int ms) {
+    final e = _engine;
+    if (e == null || ms <= 0) return;
+    if (e.act == DsAct.done || e.act == DsAct.lethal) return;
+    _jobAccMs += ms;
+    final steps = _jobAccMs ~/ 100;
+    if (steps > 0) {
+      _jobAccMs -= steps * 100;
+      e.addJobSeconds(2 * steps);
+    }
+    e.tickPlay(ms);
+  }
+
+  /// Rebuild the HUD (and/or its clock text) only if what it shows changed.
+  void _refreshHud() {
+    final e = _engine;
+    if (!mounted || e == null) return;
+    final sig = Object.hash(e.levelScore, e.quality, e.hudTotal, e.playing, e.listing, e.levelIndex);
+    if (sig != _hudSig) {
+      _hudSig = sig;
+      _hudTick.value++;
+    }
   }
 
   Future<void> _boot() async {
     final pack = await DsPack.load();
     final engine = DutySlipEngine(pack);
     await engine.loadPersistedState();
-    if (_loadingWaitOpenRoad) {
-      engine.openRoad();
-    }
+    engine.openRoad();
     if (!mounted) return;
     setState(() {
       _engine = engine;
       _loading = false;
     });
     unawaited(ZlMusic.start());
-    _clock = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      final e = _engine;
-      if (e == null || e.act == DsAct.done || e.act == DsAct.lethal) return;
-      e.addJobSeconds(2);
-      e.tickPlay(100);
-      _jobTick.value++;
-    });
-  }
-
-  void _openRoad() {
-    final e = _engine;
-    if (e == null) {
-      _loadingWaitOpenRoad = true;
-      return;
-    }
-    e.openRoad();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: _muted));
-    HapticFeedback.mediumImpact();
-    setState(() {});
   }
 
   void _openLevel(int index) {
@@ -347,8 +318,19 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _backToRoad() {
     final e = _engine;
     if (e == null) return;
+    _feedClock();
     DsVoice.stop();
     _tts.stop();
+    if (e.inField) {
+      // Leaving the field night: drop the half-filled PTW and any open call.
+      _ptwFeeder = null;
+      _ptwPole = null;
+      _ptwShift = null;
+      _callOpen = false;
+      _hintOn = false;
+      _hintOpen = false;
+      _hint = null;
+    }
     e.backToRoad();
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: _muted));
     _holdClock(false);
@@ -358,6 +340,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _finishSafeWalk() {
     final e = _engine;
     if (e == null || !e.showingDress) return;
+    _feedClock();
     e.finishDress();
     _holdClock(false);
     final container = ProviderScope.containerOf(context);
@@ -448,15 +431,6 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     setState(() {});
   }
 
-  void _showLevelList() {
-    final e = _engine;
-    if (e == null || !e.showingResult) return;
-    e.retryPlay();
-    _holdClock(false);
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.45, muted: _muted));
-    setState(() {});
-  }
-
   void _nextLevel() {
     final e = _engine;
     if (e == null || !e.showingResult) return;
@@ -473,12 +447,12 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
 
   @override
   void dispose() {
-    DsMotionGate.stop();
-    _clock?.cancel();
-    _jobTick.dispose();
+    _life.dispose();
+    _stopClock();
+    _hudTick.dispose();
+    _flies.dispose();
     _roadScroll.dispose();
     _shake.dispose();
-    _skyDrift.dispose();
     DsVoice.stop();
     _tts.stop();
     if (_clockHeld) ZlFx.releaseClock();
@@ -554,7 +528,10 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final from = _stackLocal(origin);
     final to = _scoreTarget();
     final id = ++_flyId;
-    setState(() => _flies.add(_FlyBit(id: id, delta: delta, from: from, to: to)));
+    // Only the fly overlay and the HUD rebuild; the game board below does not.
+    _flies.value = [..._flies.value, _FlyBit(id: id, delta: delta, from: from, to: to)];
+    // Callers may change the score right after this call; read it once they are done.
+    scheduleMicrotask(_refreshHud);
     final container = ProviderScope.containerOf(context);
     final rungId = container.read(gameSaveProvider).currentRungId;
     unawaited(
@@ -567,7 +544,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     container.read(guideDirectorProvider.notifier).react(delta > 0 ? GuideMood.glad : GuideMood.warn);
     Future<void>.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
-      setState(() => _flies.removeWhere((f) => f.id == id));
+      _flies.value = [for (final f in _flies.value) if (f.id != id) f];
     });
   }
 
@@ -645,6 +622,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _pickSingle(String id, Offset global) {
     final e = _engine;
     if (e == null || e.act != DsAct.card) return;
+    _feedClock();
     _handle(e.answerSingle(id), fromGlobal: global);
   }
 
@@ -653,6 +631,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final s = e?.step;
     if (e == null || s == null || s.kind != DsKind.kit) return;
     if (_kitI >= _opts.length) return;
+    _feedClock();
     final o = _opts[_kitI];
     final must = s.essential.contains(o.id);
     final ban = s.forbidden.contains(o.id);
@@ -685,6 +664,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _tapPlan(String id, Offset global) {
     final e = _engine;
     if (e == null) return;
+    _feedClock();
     final r = e.tapPlan(id);
     if (r.ok) {
       unawaited(ZlFx.cue('sounds/quiz_select.wav', muted: _muted));
@@ -747,14 +727,11 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       pole: _ptwPole,
       shift: _ptwShift,
       onPlan: _tapPlan,
-      onOpenRoad: _openRoad,
       onOpenLevel: _openLevel,
       onBackRoad: _backToRoad,
-      onFinishWalk: _finishSafeWalk,
       onOpenDress: _openDress,
       onStartLevel: _startLevel,
       onRetry: _retryLevel,
-      onShowList: _showLevelList,
       onNextLevel: _nextLevel,
       muted: _muted,
       onSpeak: _speak,
@@ -789,6 +766,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
         final box = context.findRenderObject() as RenderBox?;
         final mid = box?.size.center(Offset.zero) ?? Offset.zero;
         final g = box?.localToGlobal(mid);
+        _feedClock();
         final ok = e.submitPtw(feederPick: _ptwFeeder!, polePick: _ptwPole!, shiftPick: _ptwShift!);
         if (ok) {
           unawaited(ZlFx.cue('sounds/quiz_right.wav', muted: _muted));
@@ -807,49 +785,20 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     if (_loading || _engine == null) {
-      if (widget.startOnRoad) {
-        return const Scaffold(
-          backgroundColor: SlmColors.navy950,
-          body: Center(child: CircularProgressIndicator(strokeWidth: 2, color: SlmColors.gold300)),
-        );
-      }
-      return Scaffold(
-        backgroundColor: ZlColors.bg,
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(
-              'assets/duty_slip/duty_fault_slip.jpg',
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const ColoredBox(color: ZlColors.bg),
-            ),
-            const _CoverShade(),
-            SafeArea(
-              child: _CoverBoard(
-                onOpen: () {
-                  if (_engine != null) {
-                    _openRoad();
-                  } else {
-                    _loadingWaitOpenRoad = true;
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
+      return const Scaffold(
+        backgroundColor: SlmColors.navy950,
+        body: Center(child: CircularProgressIndicator(strokeWidth: 2, color: SlmColors.gold300)),
       );
     }
     final e = _engine!;
+    _syncClock(e);
     final jobIntro = e.listing && e.level.isJob;
-    final walk = e.showingSafeWalk;
     final dress = e.showingDress;
     final photoPlay = dress;
+    // Level 6 opens straight into the dress game, so its intro never shows.
     final vanIntro = e.showingDressIntro && e.level.number >= 6 && e.level.number <= 14;
-    final vanIntroYard = vanIntro && e.level.number == 6;
     final vanIntroScene = vanIntro && e.level.number > 6 && e.level.number <= 14;
-    final vanYard = e.level.number == 6 && e.showingDress;
     final bg = switch (e.act) {
-      _ when e.covering => 'assets/duty_slip/duty_fault_slip.jpg',
       DsAct.briefing when e.briefingPage == 1 => 'assets/duty_slip/duty_fault_slip.jpg',
       DsAct.briefing when e.briefingPage == 2 => 'assets/duty_slip/duty_ptw_pad.jpg',
       _ when jobIntro => e.site.bg.isNotEmpty ? e.site.bg : 'assets/zero_loss/scene/bg_market_wire_down.webp',
@@ -861,7 +810,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
         if (!did) _confirmExit();
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: (dress || vanYard || vanIntroYard) ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
+        value: dress ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
         child: Scaffold(
           backgroundColor: ZlColors.bg,
           body: Stack(
@@ -875,32 +824,6 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                   builder: (_, child) => Transform.translate(offset: Offset(_shakeX.value, 0), child: child),
                   child: _photoLevel(e),
                 ),
-              )
-            else if (vanIntroYard)
-              Stack(
-                fit: StackFit.expand,
-                children: [
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0xFF8ECAE6), Color(0xFFD7E8C8), Color(0xFFF6E2C4), Color(0xFFE4C48A)],
-                        stops: [0.0, 0.38, 0.68, 1.0],
-                      ),
-                    ),
-                    child: CustomPaint(painter: DsYardPainter(), child: SizedBox.expand()),
-                  ),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0x77000000), Color(0xDD000000)],
-                      ),
-                    ),
-                  ),
-                ],
               )
             else if (vanIntroScene)
               Stack(
@@ -922,15 +845,11 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                   ),
                 ],
               )
-            else if (walk)
-              const ColoredBox(color: Color(0xFFC5DCE8))
             else if (e.onRoad)
               const SizedBox.shrink()
             else
               Image.asset(bg, fit: BoxFit.cover, errorBuilder: (_, _, _) => const ColoredBox(color: ZlColors.bg)),
-            if (e.covering)
-              const _CoverShade()
-            else if (!walk && !dress && !vanYard && !vanIntro && !e.onRoad)
+            if (!dress && !vanIntro && !e.onRoad)
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -952,16 +871,18 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                 children: [
                   if (e.showHud)
                     ValueListenableBuilder<int>(
-                      valueListenable: _jobTick,
+                      valueListenable: _hudTick,
                       builder: (_, _, _) => _Hud(
                         engine: e,
                         scoreKey: _scoreKey,
                         muted: _muted,
                         onMute: () async {
-                          setState(() => _muted = !_muted);
-                          ZlFx.setMuted(_muted);
-                          await ZlMusic.setMuted(_muted);
-                          if (_muted) _tts.stop();
+                          final next = !_muted;
+                          ZlFx.setMuted(next);
+                          final done = ZlMusic.setMuted(next);
+                          setState(() {});
+                          if (next) _tts.stop();
+                          await done;
                         },
                       ),
                     ),
@@ -996,7 +917,10 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                               unawaited(ZlFx.cue('sounds/quiz_flip.wav', muted: _muted));
                               setState(() => _callOpen = true);
                             },
-                            onReply: (id, g) => _handle(e.answerCall(id), fromGlobal: g),
+                            onReply: (id, g) {
+                              _feedClock();
+                              _handle(e.answerCall(id), fromGlobal: g);
+                            },
                           ),
                         DsAct.lethal || DsAct.done => SingleChildScrollView(
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -1009,7 +933,15 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                 ],
               ),
             ),
-            for (final f in _flies) _FlyingScore(bit: f),
+            Positioned.fill(
+              child: ValueListenableBuilder<List<_FlyBit>>(
+                valueListenable: _flies,
+                builder: (_, flies, _) => Stack(
+                  clipBehavior: Clip.none,
+                  children: [for (final f in flies) _FlyingScore(key: ValueKey(f.id), bit: f)],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -1020,7 +952,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
 
 class _FlyingScore extends StatelessWidget {
   final _FlyBit bit;
-  const _FlyingScore({required this.bit});
+  const _FlyingScore({super.key, required this.bit});
 
   @override
   Widget build(BuildContext context) {
@@ -1245,14 +1177,11 @@ class _OfficeStage extends StatelessWidget {
   final String? pole;
   final String? shift;
   final void Function(String id, Offset global) onPlan;
-  final VoidCallback onOpenRoad;
   final void Function(int index) onOpenLevel;
   final VoidCallback onBackRoad;
-  final VoidCallback onFinishWalk;
   final VoidCallback onOpenDress;
   final VoidCallback onStartLevel;
   final VoidCallback onRetry;
-  final VoidCallback onShowList;
   final VoidCallback onNextLevel;
   final VoidCallback onOpenPtw;
   final bool muted;
@@ -1270,14 +1199,11 @@ class _OfficeStage extends StatelessWidget {
     required this.pole,
     required this.shift,
     required this.onPlan,
-    required this.onOpenRoad,
     required this.onOpenLevel,
     required this.onBackRoad,
-    required this.onFinishWalk,
     required this.onOpenDress,
     required this.onStartLevel,
     required this.onRetry,
-    required this.onShowList,
     required this.onNextLevel,
     required this.onOpenPtw,
     required this.muted,
@@ -1291,7 +1217,6 @@ class _OfficeStage extends StatelessWidget {
   });
 
   static const _ink = Color(0xFF1A140C);
-  static const _mute = Color(0xFF6B6256);
   static const _wine = Color(0xFF7F1D1D);
 
   @override
@@ -1301,14 +1226,11 @@ class _OfficeStage extends StatelessWidget {
       return _PlanBoard(
         engine: e,
         onPlan: onPlan,
-        onOpenRoad: onOpenRoad,
         onOpenLevel: onOpenLevel,
         onBackRoad: onBackRoad,
-        onFinishWalk: onFinishWalk,
         onOpenDress: onOpenDress,
         onStartLevel: onStartLevel,
         onRetry: onRetry,
-        onShowList: onShowList,
         onNextLevel: onNextLevel,
         muted: muted,
         onSpeak: onSpeak,
@@ -1493,14 +1415,11 @@ String _groupMark(DsJobGroup g) => '${g.title}  ·  ${_bnCount(g.count)} ধা�
 class _PlanBoard extends StatelessWidget {
   final DutySlipEngine engine;
   final void Function(String id, Offset global) onPlan;
-  final VoidCallback onOpenRoad;
   final void Function(int index) onOpenLevel;
   final VoidCallback onBackRoad;
-  final VoidCallback onFinishWalk;
   final VoidCallback onOpenDress;
   final VoidCallback onStartLevel;
   final VoidCallback onRetry;
-  final VoidCallback onShowList;
   final VoidCallback onNextLevel;
   final bool muted;
   final Future<void> Function(String text) onSpeak;
@@ -1510,14 +1429,11 @@ class _PlanBoard extends StatelessWidget {
   const _PlanBoard({
     required this.engine,
     required this.onPlan,
-    required this.onOpenRoad,
     required this.onOpenLevel,
     required this.onBackRoad,
-    required this.onFinishWalk,
     required this.onOpenDress,
     required this.onStartLevel,
     required this.onRetry,
-    required this.onShowList,
     required this.onNextLevel,
     required this.muted,
     required this.onSpeak,
@@ -1528,13 +1444,6 @@ class _PlanBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final e = engine;
-    if (e.covering) {
-      return _CoverBoard(
-        onOpen: onOpenRoad,
-        muted: muted,
-        play: true,
-      );
-    }
     if (e.onRoad) {
       return AdventureMap(
         engine: e,
@@ -1554,37 +1463,6 @@ class _PlanBoard extends StatelessWidget {
           onSpeak: onSpeak,
         );
       }
-      if (e.showingDress) {
-        if (e.level.number == 14) {
-          return DsClearance(
-            key: ValueKey(e.level.number),
-            engine: e,
-            onDone: onFinishWalk,
-            muted: muted,
-            onSpeak: onSpeak,
-            onDelta: onDelta,
-          );
-        }
-        if (e.level.number >= 11 && e.level.number <= 13) {
-          return DsPoleInspect(
-            key: ValueKey(e.level.number),
-            engine: e,
-            onDone: onFinishWalk,
-            muted: muted,
-            onSpeak: onSpeak,
-            onDelta: onDelta,
-          );
-        }
-        return DsDressUp(
-          key: ValueKey(e.level.number),
-          engine: e,
-          onDone: onFinishWalk,
-          muted: muted,
-          onSpeak: onSpeak,
-          onDelta: onDelta,
-          onBack: onBackRoad,
-        );
-      }
       if (e.level.isJob) {
         return _JobBriefBoard(engine: e, onNext: onStartLevel, onBack: onBackRoad, muted: muted, onSpeak: onSpeak);
       }
@@ -1595,424 +1473,10 @@ class _PlanBoard extends StatelessWidget {
   }
 }
 
-
-class _CoverBoard extends StatefulWidget {
-  final VoidCallback onOpen;
-  final bool muted;
-  final bool play;
-
-  const _CoverBoard({
-    required this.onOpen,
-    this.muted = false,
-    this.play = false,
-  });
-
-  @override
-  State<_CoverBoard> createState() => _CoverBoardState();
-}
-
-class _CoverBoardState extends State<_CoverBoard> with TickerProviderStateMixin {
-  late final AnimationController _glow;
-  late final AnimationController _intro;
-  late final AnimationController _beat;
-  late final AnimationController _ctaPulse;
-  late final AnimationController _exit;
-  late final Animation<double> _rise;
-  late final Animation<Offset> _titleSlide;
-  var _isExiting = false;
-  var _started = false;
-  var _skipped = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _glow = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800));
-    _ctaPulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
-    _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 1150))..forward();
-    _beat = AnimationController(vsync: this, duration: const Duration(milliseconds: 3400));
-    _rise = CurvedAnimation(parent: _intro, curve: const Interval(0.32, 0.82, curve: SlmMotion.emphasized));
-    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(_rise);
-    _exit = AnimationController(vsync: this, duration: const Duration(milliseconds: 380));
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final reduce = MediaQuery.disableAnimationsOf(context);
-    if (reduce) {
-      _glow
-        ..stop()
-        ..value = 1;
-      _ctaPulse
-        ..stop()
-        ..value = 0;
-      if (!_intro.isCompleted) _intro.value = 1;
-    } else {
-      if (!_glow.isAnimating) _glow.repeat(reverse: true);
-      if (!_ctaPulse.isAnimating) _ctaPulse.repeat(reverse: true);
-    }
-    if (_started) return;
-    _started = true;
-    if (!widget.play || reduce) {
-      _beat.value = 1;
-    } else {
-      _beat.forward();
-    }
-    _armSounds(reduce);
-  }
-
-  @override
-  void dispose() {
-    _glow.dispose();
-    _intro.dispose();
-    _beat.dispose();
-    _ctaPulse.dispose();
-    _exit.dispose();
-    super.dispose();
-  }
-
-  void _armSounds(bool still) {
-    if (!widget.play || widget.muted) return;
-    _at(0, 'sounds/intro/impact_metal.ogg', 0.55);
-    if (still) {
-      _at(180, 'sounds/intro/glass.ogg', 0.5);
-      return;
-    }
-    _at(1080, 'sounds/intro/tick.ogg', 0.32);
-    _at(1970, 'sounds/intro/glass.ogg', 0.55);
-    _at(2720, 'sounds/intro/confirm.ogg', 0.38);
-  }
-
-  void _at(int ms, String file, double volume) {
-    Future<void>.delayed(Duration(milliseconds: ms), () {
-      if (!mounted || _skipped || widget.muted) return;
-      unawaited(ZlFx.cue(file, volume: volume, muted: widget.muted));
-    });
-  }
-
-  double _span(double from, double to) {
-    final v = _beat.value;
-    if (v <= from) return 0;
-    if (v >= to) return 1;
-    return Curves.easeOutCubic.transform((v - from) / (to - from));
-  }
-
-  void _begin() {
-    if (_isExiting) return;
-    _skipped = true;
-    HapticFeedback.mediumImpact();
-    unawaited(ZlFx.cue('sounds/intro/click.ogg', volume: 0.55, muted: widget.muted));
-    _isExiting = true;
-    _exit.forward().then((_) {
-      if (mounted) widget.onOpen();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final motion = dsMotionOf(context);
-    final lite = motion == DsMotion.lite || MediaQuery.disableAnimationsOf(context);
-    final cinematic = motion == DsMotion.cinematic && !lite;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_exit, _beat]),
-        builder: (_, _) {
-          final exitVal = Curves.easeInOutCubic.transform(_exit.value);
-          final heat = widget.play && !lite ? (1 - _span(0.08, 0.32)).clamp(0.0, 1.0) : 0.0;
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              IgnorePointer(
-                child: ColoredBox(color: SlmColors.danger.withValues(alpha: 0.22 * heat)),
-              ),
-              Transform.translate(
-                offset: Offset(0, 90 * exitVal),
-                child: Opacity(
-                  opacity: (1.0 - exitVal).clamp(0.0, 1.0),
-                  child: Transform.scale(
-                    scale: 1.0 - (0.10 * exitVal),
-                    child: Column(
-          children: [
-            const Spacer(),
-            AnimatedSafetyShield(size: widget.play ? 148 : 210, animate: !lite, intensity: cinematic ? 1 : 0.85),
-            const SizedBox(height: 8),
-            FadeTransition(
-              opacity: _rise,
-              child: SlideTransition(
-                position: _titleSlide,
-                child: cinematic
-                    ? AnimatedBuilder(
-                        animation: _glow,
-                        builder: (_, _) => _CoverTitles(pulse: 0.55 + 0.45 * _glow.value, rich: true),
-                      )
-                    : const _CoverTitles(pulse: 1, rich: false),
-              ),
-            ),
-            if (widget.play) ...[
-              const SizedBox(height: 18),
-              _WordLine(
-                text: '1টি ভুল = 1টি মৃত্যুঝুঁকি',
-                progress: _span(0.00, 0.28),
-                style: zlText(
-                  20,
-                  weight: FontWeight.w900,
-                  color: Color.lerp(
-                    SlmColors.ivory,
-                    SlmColors.danger,
-                    lite ? 0 : (1 - _span(0.08, 0.32)).clamp(0.0, 1.0),
-                  )!,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _WordLine(
-                text: 'লাইনে ছোট ভুল নেই।',
-                progress: _span(0.30, 0.46),
-                style: zlText(14, weight: FontWeight.w600, color: SlmColors.mist),
-              ),
-              const SizedBox(height: 18),
-              _SkullMark(appear: _span(0.48, 0.70), still: MediaQuery.disableAnimationsOf(context)),
-              const SizedBox(height: 16),
-              _WordLine(
-                text: '0 মৃত্যুঝুঁকি রেখে বাড়ি ফিরব।',
-                progress: _span(0.78, 0.96),
-                style: zlText(15, weight: FontWeight.w800, color: SlmColors.emerald300),
-              ),
-            ],
-            const Spacer(),
-            AnimatedBuilder(
-              animation: _ctaPulse,
-              builder: (_, child) => Transform.scale(
-                scale: lite ? 1 : 1.0 + math.sin(_ctaPulse.value * math.pi) * 0.02,
-                child: child,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 300),
-                child: Theme(
-                  data: SlmTheme.night(),
-                  child: SlmButton.gold(
-                    label: 'অভিযান শুরু করুন',
-                    trailingIcon: Icons.arrow_forward_rounded,
-                    size: SlmButtonSize.large,
-                    expand: true,
-                    onPressed: _begin,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Navy wash over the cover photo with a soft gold halo where the shield sits.
-class _CoverShade extends StatelessWidget {
-  const _CoverShade();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Stack(
-      fit: StackFit.expand,
-      children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xB3050B16), Color(0xD9050B16), Color(0xF5050B16)],
-              stops: [0, 0.55, 1],
-            ),
-          ),
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(0, -0.28),
-              radius: 0.7,
-              colors: [Color(0x33D9B25F), Color(0x00D9B25F)],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CoverTitles extends StatelessWidget {
-  const _CoverTitles({required this.pulse, required this.rich});
-
-  final double pulse;
-  final bool rich;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          'মৃত্যুহীন পথ',
-          textAlign: TextAlign.center,
-          style: zlText(38, weight: FontWeight.w900, height: 1.25, color: SlmColors.gold100).copyWith(
-            letterSpacing: 1.2,
-            shadows: [
-              Shadow(color: SlmColors.gold400.withValues(alpha: (rich ? 0.75 : 0.45) * pulse), blurRadius: rich ? 24 : 12),
-              const Shadow(color: Color(0x99000000), offset: Offset(0, 3), blurRadius: 8),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-          width: 120,
-          height: 1.4,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(colors: [Color(0x00D9B25F), SlmColors.gold400, Color(0x00D9B25F)]),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _WordLine extends StatelessWidget {
-  final String text;
-  final double progress;
-  final TextStyle style;
-
-  const _WordLine({required this.text, required this.progress, required this.style});
-
-  @override
-  Widget build(BuildContext context) {
-    final words = text.split(' ');
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        for (var i = 0; i < words.length; i++) _word(words[i], i, words.length),
-      ],
-    );
-  }
-
-  Widget _word(String word, int index, int count) {
-    final start = index / count;
-    final end = (index + 1) / count;
-    final local = progress <= start ? 0.0 : progress >= end ? 1.0 : (progress - start) / (end - start);
-    final t = Curves.easeOutBack.transform(local.clamp(0.0, 1.0));
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-      child: Opacity(
-        opacity: local.clamp(0.0, 1.0),
-        child: Transform.translate(
-          offset: Offset(0, 16 * (1 - t)),
-          child: Transform.scale(scale: 0.78 + 0.22 * t, child: Text(word, style: style)),
-        ),
-      ),
-    );
-  }
-}
-
-class _SkullMark extends StatefulWidget {
-  final double appear;
-  final bool still;
-
-  const _SkullMark({required this.appear, required this.still});
-
-  @override
-  State<_SkullMark> createState() => _SkullMarkState();
-}
-
-class _SkullMarkState extends State<_SkullMark> with SingleTickerProviderStateMixin {
-  late final AnimationController _shiver;
-
-  @override
-  void initState() {
-    super.initState();
-    _shiver = AnimationController(vsync: this, duration: const Duration(milliseconds: 460));
-    if (!widget.still) _shiver.repeat();
-  }
-
-  @override
-  void didUpdateWidget(_SkullMark oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.still) {
-      _shiver.stop();
-    } else if (!_shiver.isAnimating) {
-      _shiver.repeat();
-    }
-  }
-
-  @override
-  void dispose() {
-    _shiver.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final shown = widget.appear.clamp(0.0, 1.0);
-    final land = Curves.easeOutBack.transform(shown);
-    return AnimatedBuilder(
-      animation: _shiver,
-      builder: (_, _) {
-        final turn = widget.still ? 0.0 : _shiver.value * math.pi * 2;
-        final live = shown > 0.82 && !widget.still;
-        final jx = live ? math.sin(turn * 4) * 2.6 : 0.0;
-        final jy = live ? math.cos(turn * 3) * 1.4 : 0.0;
-        final glow = live ? 0.45 + 0.55 * (0.5 + 0.5 * math.sin(turn)) : shown;
-        return Opacity(
-          opacity: shown,
-          child: Transform.scale(
-            scale: 0.4 + 0.6 * land,
-            child: SizedBox(
-              width: 132,
-              height: 132,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 118,
-                    height: 118,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          const Color(0xFFFF2A2A).withValues(alpha: 0.72 * glow),
-                          const Color(0xFFEF5350).withValues(alpha: 0.18 * glow),
-                          const Color(0x00EF5350),
-                        ],
-                        stops: const [0.0, 0.42, 1],
-                      ),
-                    ),
-                  ),
-                  Transform.translate(
-                    offset: Offset(jx, jy),
-                    child: Transform.rotate(
-                      angle: live ? math.sin(turn * 4) * 0.07 : 0,
-                      child: const Text('💀', style: TextStyle(fontSize: 72, height: 1)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 class _PaperCard extends StatelessWidget {
   final Widget child;
-  final VoidCallback? onTap;
   final GestureTapDownCallback? onTapDown;
-  const _PaperCard({required this.child, this.onTap, this.onTapDown});
+  const _PaperCard({required this.child, this.onTapDown});
 
   @override
   Widget build(BuildContext context) {
@@ -2023,7 +1487,6 @@ class _PaperCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(6),
       child: InkWell(
         borderRadius: BorderRadius.circular(6),
-        onTap: onTap,
         onTapDown: onTapDown,
         child: Container(
           width: double.infinity,
@@ -2037,352 +1500,6 @@ class _PaperCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SkyMotionPainter extends CustomPainter {
-  final double time;
-  final double scroll;
-  final bool rich;
-  final int fps;
-  const _SkyMotionPainter({required this.time, required this.scroll, this.rich = true, this.fps = 8});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final rise = _ladderRise(scroll);
-
-    // 1. Dynamic Night Sky Dome Gradient (deepens to cosmic indigo at high altitudes)
-    final rect = Offset.zero & size;
-    final topSky = Color.lerp(const Color(0xFF040814), const Color(0xFF01040A), rise)!;
-    final midSky = Color.lerp(const Color(0xFF091629), const Color(0xFF050E1A), rise)!;
-    final lowSky = Color.lerp(const Color(0xFF142C3F), const Color(0xFF0D2132), rise)!;
-    final rimSky = Color.lerp(const Color(0xFF203F54), const Color(0xFF2E4E64), rise)!;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [topSky, midSky, lowSky, rimSky],
-          stops: const [0.0, 0.35, 0.68, 1.0],
-        ).createShader(rect),
-    );
-
-    _paintStars(canvas, w, h, scroll, time);
-
-    // 3. Volumetric Moon & Luminous Atmosphere
-    final moon = Offset(w * 0.82, h * 0.12 + _climbShift(scroll, 0.02));
-    // Outer atmospheric glow
-    canvas.drawCircle(
-      moon,
-      64,
-      Paint()
-        ..shader = RadialGradient(
-          colors: const [Color(0x20FFF4C2), Color(0x00FFF4C2)],
-        ).createShader(Rect.fromCircle(center: moon, radius: 64)),
-    );
-    // Inner halo
-    canvas.drawCircle(moon, 28, Paint()..color = const Color(0x28FFF6D0));
-    // Moon disc
-    canvas.drawCircle(moon, 14, Paint()..color = const Color(0xFFFFFBE0));
-    // Soft crescent shadow for natural lunar curvature
-    canvas.drawCircle(moon + const Offset(4, -3), 12, Paint()..color = const Color(0x18000000));
-
-    // 4. Cloud Tier 1: High-Altitude Cirrus Wisps (silver, translucent, slow drifting)
-    _paintCirrusClouds(canvas, w, h, time, scroll);
-
-    // The upper half stays open sky. The city sits in the lower band and
-    // each layer shifts only a little, so the buildings stay in view.
-    final horizon = h * 0.62;
-
-    // 6. City Layer 1: Distant Mountain Contours & High-Voltage Transmission Pylons
-    _paintDistantMountainsAndTowers(canvas, w, horizon, scroll, time);
-
-    // The ridge stays. The city comes off this climb: yard, then village.
-    _paintQuietCountry(canvas, w, horizon, rise, scroll);
-
-    // 10. Cloud Tier 2: Mid-Altitude Volumetric Cumulus Cloud Banks (3D billows with moonlit rims)
-    _paintCumulusClouds(canvas, w, h, time, scroll);
-
-    // 11. City Layer 4: Near Substation & Distribution Grid (Poles, catenary wires, sodium streetlights)
-    _paintForegroundGrid(canvas, w, horizon, rise, time, scroll);
-
-    // 12. Cloud Tier 3: Low Atmospheric Ground Fog & Electrical Haze
-    _paintGroundMist(canvas, w, horizon, time, scroll);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SkyMotionPainter oldDelegate) {
-    if (oldDelegate.rich != rich || oldDelegate.fps != fps) return true;
-    if ((oldDelegate.scroll - scroll).abs() > 8) return true;
-    if (fps <= 1) return oldDelegate.scroll != scroll;
-    final step = math.max(fps, 1);
-    return (oldDelegate.time * 48 * step).floor() != (time * 48 * step).floor();
-  }
-}
-
-double _ladderRise(double scroll) {
-  const ground = 150.0;
-  const item = 82.0;
-  const sky = 10;
-  final travel = (ground + (dsLevels.length + sky) * item) * 0.78;
-  if (travel <= 0) return 0;
-  return (scroll / travel).clamp(0.0, 1.0);
-}
-
-/// Far layers drift a little. Near layers cross the view across the whole bamboo.
-double _climbShift(double scroll, double speed) {
-  final depth = (speed / 0.1).clamp(0.0, 1.6);
-  return _ladderRise(scroll) * (16 + depth * 110);
-}
-
-void _paintStars(Canvas canvas, double w, double h, double scroll, double time) {
-  final rng = math.Random(42);
-  final starPaint = Paint()..color = const Color(0x88FFF8E1);
-  for (var i = 0; i < 28; i++) {
-    final x = rng.nextDouble() * w;
-    final y = (rng.nextDouble() * h * 0.44 + _climbShift(scroll, 0.012)) % (h * 0.52);
-    final twinkle = (math.sin((time * math.pi * 2 * 1.8) + (i * 1.7)) * 0.5 + 0.5);
-    final radius = rng.nextDouble() * 1.1 + 0.35;
-    final alpha = (0.25 + 0.65 * twinkle).clamp(0.0, 0.95);
-    canvas.drawCircle(
-      Offset(x, y),
-      radius,
-      starPaint..color = Color.fromRGBO(255, 248, 225, alpha),
-    );
-    // Subtle sparkle cross on 3 prominent stars
-    if (i % 9 == 0 && twinkle > 0.7) {
-      final crossPaint = Paint()
-        ..color = Color.fromRGBO(255, 248, 225, (twinkle - 0.7) * 2.2)
-        ..strokeWidth = 0.8;
-      canvas.drawLine(Offset(x - 3.5, y), Offset(x + 3.5, y), crossPaint);
-      canvas.drawLine(Offset(x, y - 3.5), Offset(x, y + 3.5), crossPaint);
-    }
-  }
-}
-
-void _paintCirrusClouds(Canvas canvas, double w, double h, double time, double scroll) {
-  final span = w + 260;
-  // Cloud 1: Upper wisps passing near the moon
-  final x1 = ((time * 0.035 * span) % span) - 80;
-  final y1 = h * 0.09 + _climbShift(scroll, 0.016) + math.sin(time * math.pi * 2 * 0.5) * 3;
-  _drawCirrusWisp(canvas, Offset(x1, y1), 1.4);
-
-  // Cloud 2: Secondary streamer
-  final x2 = (((time * 0.05 * span) + (w * 0.55)) % span) - 80;
-  final y2 = h * 0.16 + _climbShift(scroll, 0.022) + math.cos(time * math.pi * 2 * 0.6) * 3;
-  _drawCirrusWisp(canvas, Offset(x2, y2), 1.15);
-}
-
-void _drawCirrusWisp(Canvas canvas, Offset o, double s) {
-  final body = Paint()..color = const Color(0x18D8E4F2);
-  final rim = Paint()..color = const Color(0x14FFFDEB);
-  canvas.drawOval(Rect.fromCenter(center: o, width: 180 * s, height: 18 * s), body);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(-40 * s, -3 * s), width: 110 * s, height: 14 * s), body);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(45 * s, 2 * s), width: 90 * s, height: 12 * s), body);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(-10 * s, -5 * s), width: 80 * s, height: 8 * s), rim);
-}
-
-void _paintDistantMountainsAndTowers(Canvas canvas, double w, double horizon, double scroll, double time) {
-  final baseY = horizon - 34 + _climbShift(scroll, 0.02);
-  final ridge = Path()..moveTo(0, baseY);
-  // Gentle rolling mountain contour
-  ridge.quadraticBezierTo(w * 0.22, baseY - 24, w * 0.44, baseY - 8);
-  ridge.quadraticBezierTo(w * 0.70, baseY - 28, w, baseY - 12);
-  ridge.lineTo(w, baseY + 60);
-  ridge.lineTo(0, baseY + 60);
-  ridge.close();
-
-  canvas.drawPath(ridge, Paint()..color = const Color(0xFF070E1A));
-
-  // High-Voltage 400kV Lattice Transmission Towers on the ridge line
-  final towerPositions = [w * 0.18, w * 0.54, w * 0.86];
-  for (var i = 0; i < towerPositions.length; i++) {
-    final tx = towerPositions[i];
-    final ty = baseY - (i == 0 ? 18 : i == 1 ? 10 : 22);
-    _drawTransmissionTower(canvas, tx, ty, time, i);
-  }
-}
-
-void _drawTransmissionTower(Canvas canvas, double tx, double ty, double time, int id) {
-  final p = Paint()
-    ..color = const Color(0xFF0A1626)
-    ..strokeWidth = 1.1;
-
-  // Tapered tower body
-  canvas.drawLine(Offset(tx - 5, ty + 26), Offset(tx - 1.5, ty), p);
-  canvas.drawLine(Offset(tx + 5, ty + 26), Offset(tx + 1.5, ty), p);
-  // Crossarms
-  canvas.drawLine(Offset(tx - 11, ty + 7), Offset(tx + 11, ty + 7), p);
-  canvas.drawLine(Offset(tx - 8, ty + 15), Offset(tx + 8, ty + 15), p);
-  // Spire peak
-  canvas.drawLine(Offset(tx, ty), Offset(tx, ty - 5), p);
-
-  // Red blinking aviation safety beacon on top of the transmission tower
-  final blink = math.sin((time * math.pi * 3.2) + (id * 2.1)) > 0.35;
-  final beaconColor = blink ? const Color(0xFFFF2828) : const Color(0x22FF2828);
-  canvas.drawCircle(Offset(tx, ty - 5.5), 1.8, Paint()..color = beaconColor);
-  if (blink) {
-    canvas.drawCircle(Offset(tx, ty - 5.5), 5.0, Paint()..color = const Color(0x33FF2828));
-  }
-}
-
-void _paintQuietCountry(Canvas canvas, double w, double horizon, double rise, double scroll) {
-  void huts(double alpha, double speed, int seed, double hutH) {
-    if (alpha < 0.05) return;
-    final y = horizon + 16 + _climbShift(scroll, speed);
-    final paint = Paint()..color = Color.fromRGBO(7, 14, 24, alpha);
-    final rng = math.Random(seed);
-    var x = 6.0;
-    while (x < w) {
-      final hw = 14 + rng.nextDouble() * 18;
-      final hh = hutH * (0.75 + rng.nextDouble() * 0.4);
-      final roof = Path()
-        ..moveTo(x - 2, y - hh)
-        ..lineTo(x + hw / 2, y - hh - 8)
-        ..lineTo(x + hw + 2, y - hh)
-        ..close();
-      canvas.drawPath(roof, paint);
-      canvas.drawRect(Rect.fromLTWH(x, y - hh, hw, hh + 24), paint);
-      x += hw + 22 + rng.nextDouble() * 36;
-    }
-  }
-
-  final yard = (1 - rise / 0.42).clamp(0.0, 1.0);
-  final village = ((rise - 0.12) / 0.55).clamp(0.0, 1.0) * (1 - ((rise - 0.72) / 0.28).clamp(0.0, 1.0));
-  huts(0.9 * yard, 0.1, 11, 16);
-  huts(0.72 * village, 0.055, 29, 22);
-}
-
-void _paintCumulusClouds(Canvas canvas, double w, double h, double time, double scroll) {
-  final span = w + 240;
-  // Cloud Specs spanning mid-altitudes
-  const specs = [
-    _CumulusSpec(y: 0.22, speed: 0.065, scale: 1.15, parallax: 0.065, phase: 0.3),
-    _CumulusSpec(y: 0.29, speed: 0.085, scale: 0.92, parallax: 0.075, phase: 1.8),
-    _CumulusSpec(y: 0.36, speed: 0.055, scale: 1.25, parallax: 0.085, phase: 2.7),
-    _CumulusSpec(y: 0.43, speed: 0.095, scale: 0.85, parallax: 0.095, phase: 0.9),
-  ];
-
-  for (var i = 0; i < specs.length; i++) {
-    final c = specs[i];
-    var x = ((time * c.speed * span) + (i * w * 0.32)) % span;
-    x -= 90;
-    final y = (h * c.y) + _climbShift(scroll, c.parallax * 0.4) + (math.sin((time * math.pi * 2) + c.phase) * 4);
-    if (y > h * 0.58) continue;
-    _drawVolumetricCloud(canvas, Offset(x, y), c.scale);
-  }
-}
-
-class _CumulusSpec {
-  final double y;
-  final double speed;
-  final double scale;
-  final double parallax;
-  final double phase;
-  const _CumulusSpec({
-    required this.y,
-    required this.speed,
-    required this.scale,
-    required this.parallax,
-    required this.phase,
-  });
-}
-
-void _drawVolumetricCloud(Canvas canvas, Offset o, double s) {
-  // Volumetric mass with shaded base and moonlit top rim
-  final body = Paint()..color = const Color(0x3218283E);
-  final core = Paint()..color = const Color(0x2820354E);
-  final rim = Paint()..color = const Color(0x28E2E8F0);
-  final moonHighlight = Paint()..color = const Color(0x1EFFF8DB);
-
-  // Darker underside billows
-  canvas.drawOval(Rect.fromCenter(center: o, width: 130 * s, height: 32 * s), body);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(-38 * s, -4 * s), width: 72 * s, height: 28 * s), body);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(42 * s, -6 * s), width: 66 * s, height: 26 * s), body);
-
-  // Volumetric core
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(4 * s, -12 * s), width: 56 * s, height: 24 * s), core);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(-18 * s, -14 * s), width: 44 * s, height: 22 * s), core);
-
-  // Moonlit silver rim highlights (facing moon on top-right)
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(6 * s, -16 * s), width: 46 * s, height: 18 * s), rim);
-  canvas.drawOval(Rect.fromCenter(center: o + Offset(-16 * s, -17 * s), width: 36 * s, height: 15 * s), moonHighlight);
-}
-
-void _paintForegroundGrid(Canvas canvas, double w, double horizon, double rise, double time, double scroll) {
-  final baseY = horizon + 28 + _climbShift(scroll, 0.1);
-  final polePaint = Paint()
-    ..color = const Color(0xFF091422)
-    ..strokeWidth = 2.2;
-  final wirePaint = Paint()
-    ..color = const Color(0x88091422)
-    ..strokeWidth = 0.9
-    ..style = PaintingStyle.stroke;
-
-  // 3 utility distribution poles with crossarms
-  final poleXs = [w * 0.12, w * 0.50, w * 0.88];
-  for (var i = 0; i < poleXs.length; i++) {
-    final px = poleXs[i];
-    final py = baseY - 48;
-    // Main pole
-    canvas.drawLine(Offset(px, baseY + 30), Offset(px, py), polePaint);
-    // 3-Phase crossarm
-    canvas.drawLine(Offset(px - 14, py + 8), Offset(px + 14, py + 8), polePaint..strokeWidth = 1.8);
-    // Pin insulators
-    canvas.drawCircle(Offset(px - 12, py + 6), 1.5, Paint()..color = const Color(0xFF38BDF8));
-    canvas.drawCircle(Offset(px, py + 6), 1.5, Paint()..color = const Color(0xFF38BDF8));
-    canvas.drawCircle(Offset(px + 12, py + 6), 1.5, Paint()..color = const Color(0xFF38BDF8));
-
-    // Sodium Streetlight on pole #1 and #3
-    if (i == 0 || i == 2) {
-      final lampX = px + (i == 0 ? 12 : -12);
-      final lampY = py + 14;
-      // Arm
-      canvas.drawLine(Offset(px, py + 18), Offset(lampX, lampY), polePaint..strokeWidth = 1.4);
-      // Amber LED bulb
-      canvas.drawCircle(Offset(lampX, lampY), 2.2, Paint()..color = const Color(0xFFFFB703));
-
-      // Downward conical ambient streetlight cone
-      final cone = Path()
-        ..moveTo(lampX, lampY)
-        ..lineTo(lampX - 22, lampY + 44)
-        ..lineTo(lampX + 22, lampY + 44)
-        ..close();
-      canvas.drawPath(
-        cone,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: const [Color(0x38F59E0B), Color(0x00F59E0B)],
-          ).createShader(cone.getBounds()),
-      );
-    }
-  }
-
-  // Overhead catenary sagging wires connecting poles
-  final wire1 = Path()
-    ..moveTo(poleXs[0] - 12, baseY - 42)
-    ..quadraticBezierTo((poleXs[0] + poleXs[1]) / 2, baseY - 35, poleXs[1] - 12, baseY - 42)
-    ..quadraticBezierTo((poleXs[1] + poleXs[2]) / 2, baseY - 35, poleXs[2] - 12, baseY - 42);
-  canvas.drawPath(wire1, wirePaint);
-
-  final wire2 = Path()
-    ..moveTo(poleXs[0] + 12, baseY - 40)
-    ..quadraticBezierTo((poleXs[0] + poleXs[1]) / 2, baseY - 33, poleXs[1] + 12, baseY - 40)
-    ..quadraticBezierTo((poleXs[1] + poleXs[2]) / 2, baseY - 33, poleXs[2] + 12, baseY - 40);
-  canvas.drawPath(wire2, wirePaint);
-}
-
-void _paintGroundMist(Canvas canvas, double w, double horizon, double time, double scroll) {
-  final span = w + 200;
-  final x = ((time * 0.12 * span) % span) - 80;
-  final y = horizon + 16 + _climbShift(scroll, 0.08);
-  final mist = Paint()..color = const Color(0x168DA4C4);
-  canvas.drawOval(Rect.fromCenter(center: Offset(x, y), width: 220, height: 26), mist);
-  canvas.drawOval(Rect.fromCenter(center: Offset(x + 140, y + 8), width: 190, height: 22), mist);
 }
 
 class _RoundArrow extends StatelessWidget {
@@ -2442,69 +1559,6 @@ class _FloatArrow extends StatelessWidget {
   }
 }
 
-class _StepThumb extends StatelessWidget {
-  final String path;
-  final double w;
-  final double h;
-  final String? badge;
-  final Color? badgeColor;
-  const _StepThumb({required this.path, this.w = 56, this.h = 56, this.badge, this.badgeColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: w,
-      height: h,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: w,
-            height: h,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: const Color(0x18FFFFFF),
-              border: Border.all(color: const Color(0x22FFFFFF)),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(9),
-              child: Image.asset(
-                path,
-                width: w,
-                height: h,
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => const Center(
-                  child: Icon(Icons.image_rounded, color: Color(0x44FFFFFF), size: 20),
-                ),
-              ),
-            ),
-          ),
-          if (badge != null)
-            Positioned(
-              top: -5,
-              left: -5,
-              child: Container(
-                width: 22,
-                height: 22,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: badgeColor ?? const Color(0xFFF59E0B),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF131C2E), width: 2),
-                  boxShadow: [BoxShadow(color: (badgeColor ?? const Color(0xFFF59E0B)).withValues(alpha: 0.4), blurRadius: 6)],
-                ),
-                child: Text(
-                  badge!,
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white, height: 1),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 class _JobBriefBoard extends StatefulWidget {
   final DutySlipEngine engine;
   final VoidCallback onNext;
@@ -2526,6 +1580,7 @@ class _JobBriefBoard extends StatefulWidget {
 class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderStateMixin {
   late final AnimationController _run;
   late final AnimationController _insist;
+  late final Animation<double> _insistScale;
   final _pinged = <int>{};
   var _page = 0;
   var _said = false;
@@ -2538,7 +1593,8 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
     _run = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800))
       ..addListener(_onTick)
       ..forward();
-    _insist = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat(reverse: true);
+    _insist = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
+    _insistScale = _insist.drive(Tween<double>(begin: 1, end: 1.03));
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.48, muted: widget.muted));
     Future<void>.delayed(const Duration(milliseconds: 480), () {
       if (!mounted || _said) return;
@@ -2553,6 +1609,18 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
         unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.38, muted: widget.muted));
         HapticFeedback.mediumImpact();
       }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (slmLoopsOn(context)) {
+      if (!_insist.isAnimating) _insist.repeat(reverse: true);
+    } else {
+      _insist
+        ..stop()
+        ..value = 0;
     }
   }
 
@@ -2578,7 +1646,7 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
     final e = widget.engine;
     final plan = e.tonightPlan;
     return AnimatedBuilder(
-      animation: Listenable.merge([_run, _insist]),
+      animation: _run,
       builder: (_, _) {
         final next = _span(_run.value, 0.88, 1.00);
         final arrow = _page == 2
@@ -2714,43 +1782,46 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
   Widget _groupBtn(int g) {
     final group = dsJobGroups[g];
     final punch = _btnPunch(g);
-    final insist = 1 + 0.03 * _insist.value;
     return Opacity(
       opacity: punch.clamp(0.0, 1.0),
       child: Transform.translate(
         offset: Offset(0, 28 * (1 - punch.clamp(0.0, 1.0))),
         child: Transform.scale(
-          scale: (0.86 + 0.14 * punch.clamp(0.0, 1.2)) * insist,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: punch < 0.55 ? null : () => _toggleGroup(g),
-                child: Ink(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: const [Color(0xFFE8D39A), Color(0xFFB0892A), Color(0xFF6A4E12)],
-                    ),
-                    border: Border.all(color: const Color(0xFF5C4316), width: 1.15),
-                    boxShadow: const [BoxShadow(color: Color(0x88000000), offset: Offset(0, 2), blurRadius: 4)],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _groupMark(group),
-                          style: zlText(16, weight: FontWeight.w900, color: const Color(0xFF1C1408)),
-                        ),
+          scale: 0.86 + 0.14 * punch.clamp(0.0, 1.2),
+          // The 3% "tap me" pulse repaints only; the board does not rebuild.
+          child: ScaleTransition(
+            scale: _insistScale,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: punch < 0.55 ? null : () => _toggleGroup(g),
+                  child: Ink(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: const [Color(0xFFE8D39A), Color(0xFFB0892A), Color(0xFF6A4E12)],
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF3A2A10)),
-                    ],
+                      border: Border.all(color: const Color(0xFF5C4316), width: 1.15),
+                      boxShadow: const [BoxShadow(color: Color(0x88000000), offset: Offset(0, 2), blurRadius: 4)],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _groupMark(group),
+                            style: zlText(16, weight: FontWeight.w900, color: const Color(0xFF1C1408)),
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right_rounded, color: Color(0xFF3A2A10)),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -2916,13 +1987,11 @@ class _IntroFrame extends StatelessWidget {
   final VoidCallback onBack;
   final Widget body;
   final Widget next;
-  final bool showBack;
   const _IntroFrame({
     required this.title,
     required this.onBack,
     required this.body,
     required this.next,
-    this.showBack = true,
   });
 
   @override
@@ -2949,12 +2018,11 @@ class _IntroFrame extends StatelessWidget {
               children: [
                 Positioned.fill(child: body),
                 Positioned(right: 10, bottom: 6, child: next),
-                if (showBack)
-                  Positioned(
-                    left: 10,
-                    bottom: 6,
-                    child: _FloatArrow(icon: Icons.arrow_back_rounded, onTap: onBack),
-                  ),
+                Positioned(
+                  left: 10,
+                  bottom: 6,
+                  child: _FloatArrow(icon: Icons.arrow_back_rounded, onTap: onBack),
+                ),
               ],
             ),
           ),
@@ -3447,8 +2515,7 @@ class _StepCard extends StatelessWidget {
   final DsPlanItem item;
   final double punch;
   final bool focused;
-  final String? mark;
-  const _StepCard({required this.item, required this.punch, required this.focused, this.mark});
+  const _StepCard({required this.item, required this.punch, required this.focused});
 
   @override
   Widget build(BuildContext context) {
@@ -3481,7 +2548,7 @@ class _StepCard extends StatelessWidget {
               boxShadow: const [BoxShadow(color: Color(0x66000000), offset: Offset(0, 1), blurRadius: 1)],
             ),
             child: Text(
-              mark == null ? enDigits(item.labelBn) : '$mark  ${enDigits(item.labelBn)}',
+              enDigits(item.labelBn),
               textAlign: TextAlign.center,
               style: zlText(15, weight: FontWeight.w900, color: const Color(0xFF1C1408)),
             ),
@@ -3567,8 +2634,11 @@ class _StepFocus extends StatelessWidget {
                                                 borderRadius: BorderRadius.circular(10),
                                                 child: ColoredBox(
                                                   color: const Color(0x22000000),
-                                                  child: Image.asset(
+                                                  child: DsBoxDecode.asset(
+                                                    context,
                                                     item.icon,
+                                                    w: MediaQuery.sizeOf(context).width,
+                                                    h: 120,
                                                     height: 120,
                                                     width: double.infinity,
                                                     fit: BoxFit.contain,
@@ -3661,8 +2731,7 @@ class _StepNavBtn extends StatelessWidget {
 
 class _BriefStamp extends StatelessWidget {
   final String label;
-  final bool focused;
-  const _BriefStamp({required this.label, this.focused = false});
+  const _BriefStamp({required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -3672,20 +2741,13 @@ class _BriefStamp extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(7),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: focused
-              ? const [Color(0xFFFFF3C4), Color(0xFFE0B13A), Color(0xFF8A5A10)]
-              : const [Color(0xFFE8D39A), Color(0xFFB0892A), Color(0xFF6A4E12)],
+          colors: [Color(0xFFE8D39A), Color(0xFFB0892A), Color(0xFF6A4E12)],
         ),
-        border: Border.all(color: focused ? const Color(0xFFF6E7B0) : const Color(0xFF5C4316), width: focused ? 1.4 : 1),
-        boxShadow: focused
-            ? const [
-                BoxShadow(color: Color(0x88FBBF24), blurRadius: 14),
-                BoxShadow(color: Color(0x66000000), offset: Offset(0, 1), blurRadius: 1),
-              ]
-            : const [BoxShadow(color: Color(0x66000000), offset: Offset(0, 1), blurRadius: 1)],
+        border: Border.all(color: const Color(0xFF5C4316), width: 1),
+        boxShadow: const [BoxShadow(color: Color(0x66000000), offset: Offset(0, 1), blurRadius: 1)],
       ),
       child: Text(
         label,
@@ -3695,7 +2757,6 @@ class _BriefStamp extends StatelessWidget {
     );
   }
 }
-
 
 class _DealDeck extends StatelessWidget {
   final Animation<double> animation;
@@ -3773,31 +2834,6 @@ class _DealCard extends StatelessWidget {
         );
       },
       child: child,
-    );
-  }
-}
-
-class _SafeHomeWord extends StatelessWidget {
-  final int lit;
-  const _SafeHomeWord({required this.lit});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < dsSafeHome.length; i++) ...[
-          if (i == 4) const SizedBox(width: 10),
-          Text(
-            dsSafeHome[i].letter,
-            style: zlText(
-              22,
-              weight: FontWeight.w900,
-              color: i < lit ? ZlColors.amber : ZlColors.soft.withValues(alpha: 0.35),
-            ),
-          ),
-        ],
-      ],
     );
   }
 }
@@ -3970,63 +3006,6 @@ class _PlayBoardState extends State<_PlayBoard> with SingleTickerProviderStateMi
   }
 }
 
-class _ArrangeBoard extends StatefulWidget {
-  final DutySlipEngine engine;
-  final void Function(String id, Offset global) onPlan;
-  const _ArrangeBoard({required this.engine, required this.onPlan});
-
-  @override
-  State<_ArrangeBoard> createState() => _ArrangeBoardState();
-}
-
-class _ArrangeBoardState extends State<_ArrangeBoard> with SingleTickerProviderStateMixin {
-  late final AnimationController _riffle;
-
-  @override
-  void initState() {
-    super.initState();
-    _riffle = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..forward();
-  }
-
-  @override
-  void dispose() {
-    _riffle.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final e = widget.engine;
-    final pool = e.planPool;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 14),
-      child: Column(
-        children: [
-          _PickedStrip(engine: e),
-          const SizedBox(height: 8),
-          _DealDeck(animation: _riffle),
-          Expanded(
-            child: ListView.separated(
-              clipBehavior: Clip.none,
-              itemCount: pool.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 9),
-              itemBuilder: (_, i) {
-                final p = pool[i];
-                return _DealCard(
-                  animation: _riffle,
-                  index: i,
-                  count: pool.length,
-                  child: _ChoiceCard(item: p, onTapDown: (d) => widget.onPlan(p.id, d.globalPosition)),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _PlayCard extends StatelessWidget {
   final DutySlipEngine engine;
   final DsStep step;
@@ -4125,7 +3104,16 @@ class _PlayCard extends StatelessWidget {
           if (step.scene.isNotEmpty) ...[
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: Image.asset(step.scene, height: 150, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox()),
+              child: DsBoxDecode.asset(
+                context,
+                step.scene,
+                w: MediaQuery.sizeOf(context).width,
+                h: 150,
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const SizedBox(),
+              ),
             ),
             const SizedBox(height: 12),
           ],
@@ -4211,7 +3199,7 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
     _show = AnimationController(vsync: this, duration: const Duration(milliseconds: 3200))
       ..addListener(_onShow)
       ..forward();
-    _burst = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800))..repeat();
+    _burst = AnimationController(vsync: this, duration: const Duration(milliseconds: 2800));
     _jolt = AnimationController(vsync: this, duration: const Duration(milliseconds: 640));
     if (_ok) {
       HapticFeedback.mediumImpact();
@@ -4243,6 +3231,16 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (slmLoopsOn(context)) {
+      if (!_burst.isAnimating) _burst.repeat();
+    } else {
+      _burst.stop();
+    }
+  }
+
+  @override
   void dispose() {
     _show.removeListener(_onShow);
     _show.dispose();
@@ -4263,7 +3261,7 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
     final wrong = e.wrongTaps;
     final total = e.nightTotal;
     return AnimatedBuilder(
-      animation: Listenable.merge([_show, _burst, _jolt]),
+      animation: Listenable.merge([_show, _jolt]),
       builder: (_, _) {
         final t = _show.value;
         final drop = _span(t, 0.00, 0.16, curve: Curves.easeOutBack);
@@ -4282,9 +3280,11 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
           fit: StackFit.expand,
           children: [
             IgnorePointer(
-              child: CustomPaint(
-                painter: _CelebratePainter(time: _burst.value, reveal: drop, ok: _ok),
-                child: const SizedBox.expand(),
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  painter: _CelebratePainter(time: _burst, reveal: drop, ok: _ok),
+                  child: const SizedBox.expand(),
+                ),
               ),
             ),
             Padding(
@@ -4300,7 +3300,7 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
                         offset: Offset(0, (1 - drop.clamp(0.0, 1.0)) * 42),
                         child: Transform.scale(
                           scale: 0.78 + 0.22 * drop.clamp(0.0, 1.2),
-                          child: _ScoreBadge(score: shownScore, ok: _ok, shine: _burst.value),
+                          child: _ScoreBadge(score: shownScore, ok: _ok, shine: _burst),
                         ),
                       ),
                     ),
@@ -4447,7 +3447,7 @@ class _ResultStat extends StatelessWidget {
 class _ScoreBadge extends StatelessWidget {
   final int score;
   final bool ok;
-  final double shine;
+  final Animation<double> shine;
   const _ScoreBadge({required this.score, required this.ok, required this.shine});
 
   @override
@@ -4464,7 +3464,9 @@ class _ScoreBadge extends StatelessWidget {
       height: h,
       child: Stack(
         children: [
-          CustomPaint(painter: _MedalPainter(ok: ok, shine: shine), size: const Size(w, h)),
+          RepaintBoundary(
+            child: CustomPaint(painter: _MedalPainter(ok: ok, shine: shine), size: const Size(w, h)),
+          ),
           Positioned(
             left: (w - well) / 2,
             top: cy - well / 2,
@@ -4496,8 +3498,9 @@ class _ScoreBadge extends StatelessWidget {
 
 class _MedalPainter extends CustomPainter {
   final bool ok;
-  final double shine;
-  const _MedalPainter({required this.ok, required this.shine});
+  /// Repaints from the animation directly; no widget rebuild per frame.
+  final Animation<double> shine;
+  _MedalPainter({required this.ok, required this.shine}) : super(repaint: shine);
 
   Path _octa(Offset c, double r) {
     final path = Path();
@@ -4635,7 +3638,7 @@ class _MedalPainter extends CustomPainter {
 
     final gloss = Path()
       ..addOval(Rect.fromCenter(
-        center: Offset(c.dx - r * 0.18 + math.sin(shine * math.pi * 2) * 6, c.dy - r * 0.28),
+        center: Offset(c.dx - r * 0.18 + math.sin(shine.value * math.pi * 2) * 6, c.dy - r * 0.28),
         width: r * 0.9,
         height: r * 0.42,
       ));
@@ -4650,13 +3653,17 @@ class _MedalPainter extends CustomPainter {
 }
 
 class _CelebratePainter extends CustomPainter {
-  final double time;
+  /// Repaints from the animation directly; no widget rebuild per frame.
+  final Animation<double> anim;
   final double reveal;
   final bool ok;
-  const _CelebratePainter({required this.time, required this.reveal, required this.ok});
+  _CelebratePainter({required Animation<double> time, required this.reveal, required this.ok})
+      : anim = time,
+        super(repaint: time);
 
   @override
   void paint(Canvas canvas, Size size) {
+    final time = anim.value;
     final c = Offset(size.width / 2, size.height * 0.22);
     final a = (reveal * 0.9).clamp(0.0, 1.0);
     if (ok) {
@@ -4689,55 +3696,7 @@ class _CelebratePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CelebratePainter old) => old.time != time || old.reveal != reveal || old.ok != ok;
-}
-
-class _SceneBoard extends StatelessWidget {
-  final DutySlipEngine engine;
-  final VoidCallback onNext;
-  const _SceneBoard({required this.engine, required this.onNext});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 8, 22, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('আজকের কাজ', style: zlText(22, weight: FontWeight.w900)),
-          const SizedBox(height: 16),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Text(engine.siteStory, style: zlText(20, weight: FontWeight.w700, height: 1.5, color: ZlColors.cream)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _GentleBtn(label: 'এগোই', onTap: onNext),
-        ],
-      ),
-    );
-  }
-}
-
-class _GentleBtn extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _GentleBtn({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return _PaperCard(
-      onTap: onTap,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(label, style: zlText(16, weight: FontWeight.w800, color: const Color(0xFF1A140C))),
-          const SizedBox(width: 8),
-          const Icon(Icons.arrow_forward_rounded, size: 18, color: Color(0xFF6B6256)),
-        ],
-      ),
-    );
-  }
+  bool shouldRepaint(covariant _CelebratePainter old) => old.anim != anim || old.reveal != reveal || old.ok != ok;
 }
 
 enum _BtnTone { primary, good, bad, ghost }
@@ -4861,7 +3820,16 @@ class _LineOpt extends StatelessWidget {
                 if (image.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(image, width: 58, height: 58, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.circle_outlined, color: ZlColors.soft)),
+                    child: DsBoxDecode.asset(
+                      context,
+                      image,
+                      w: 58,
+                      h: 58,
+                      width: 58,
+                      height: 58,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(Icons.circle_outlined, color: ZlColors.soft),
+                    ),
                   )
                 else
                   const Icon(Icons.circle_outlined, color: ZlColors.soft, size: 22),
@@ -4912,8 +3880,11 @@ class _CallBurst extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(18),
-                child: Image.asset(
+                child: DsBoxDecode.asset(
+                  context,
                   call.portrait,
+                  w: 120,
+                  h: 120,
                   width: 120,
                   height: 120,
                   fit: BoxFit.cover,

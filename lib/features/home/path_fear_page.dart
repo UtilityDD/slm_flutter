@@ -36,7 +36,7 @@ class _PathFearPageState extends ConsumerState<PathFearPage> with TickerProvider
   static const _lines = <(String, Color)>[
     ('বিদ্যুতে ছোট ভুল বলে কিছু নেই।', Color(0xFFC3CCDD)),
     ('একটি ভুলেই জীবন শেষ।', Color(0xFFFFE8E6)),
-    ('সব নিয়ম মেনে নিরাপদে বাড়ি ফিরব।', const Color(0xFF6EE7B7)),
+    ('সব নিয়ম মেনে নিরাপদে বাড়ি ফিরব।', Color(0xFF6EE7B7)),
   ];
 
   @override

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../tokens/slm_colors.dart';
 import 'slm_motion_scope.dart';
+import 'slm_motion_widgets.dart';
 
 /// Layers cut from `assets/brand/source/shield_reference.jpg`. All three share
 /// one crop, so they stack pixel for pixel.
@@ -117,14 +118,8 @@ class _AnimatedSafetyShieldState extends State<AnimatedSafetyShield> with Ticker
     _syncLoop();
   }
 
-  void _syncLoop() {
-    final run = widget.animate && slmLoopsOn(context);
-    if (run && !_loop.isAnimating) {
-      _loop.repeat();
-    } else if (!run && _loop.isAnimating) {
-      _loop.stop();
-    }
-  }
+  // Stops with remove-animations; covered routes mute the ticker (TickerMode).
+  void _syncLoop() => slmSyncLoop(context, _loop, enabled: widget.animate);
 
   void _replay() {
     if (slmReduceMotion(context)) return;
@@ -139,6 +134,19 @@ class _AnimatedSafetyShieldState extends State<AnimatedSafetyShield> with Ticker
     super.dispose();
   }
 
+  // Ring segment geometry depends only on the shield height, so it is built
+  // once per size instead of once per frame.
+  _RingCache? _ring;
+
+  _RingCache _ringFor(Offset center, double shieldH) {
+    final r = _ring;
+    if (r != null && r.center == center && r.shieldH == shieldH) return r;
+    return _ring = _RingCache(center, shieldH);
+  }
+
+  double get _pulse => 0.5 + 0.5 * math.sin(_loop.value * 4 * math.pi);
+  double get _goldFlash => _enter.value < 1 ? math.sin(_enter.value * math.pi) : 0.0;
+
   @override
   Widget build(BuildContext context) {
     final s = widget.size;
@@ -149,7 +157,7 @@ class _AnimatedSafetyShieldState extends State<AnimatedSafetyShield> with Ticker
     final cacheW = rawCache <= 0 ? null : math.min(SlmShieldAssets.pixelWidth, rawCache);
     final k = widget.intensity;
 
-    Image layer(String asset, {Color? tint}) => Image.asset(
+    Image layer(String asset, {Color? tint, Animation<double>? opacity}) => Image.asset(
           asset,
           width: shieldW,
           height: shieldH,
@@ -158,31 +166,81 @@ class _AnimatedSafetyShieldState extends State<AnimatedSafetyShield> with Ticker
           gaplessPlayback: true,
           color: tint,
           colorBlendMode: tint == null ? null : BlendMode.srcIn,
+          opacity: opacity,
         );
 
-    final body = layer(SlmShieldAssets.body);
     final shieldRect = Rect.fromCenter(center: Offset(s / 2, s / 2), width: shieldW, height: shieldH);
-    final geo = _RingGeometry(center: shieldRect.center, shieldH: shieldH);
+    final ring = _ringFor(shieldRect.center, shieldH);
+
+    // Everything below is built once; the loop only repaints it. The painters
+    // and masks read the controllers at paint time, and the emerald tint is
+    // an image opacity (same pixels as a tint colour with that alpha).
+    final stack = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: CustomPaint(
+            painter: _GlowPainter(
+              repaint: _tick,
+              center: shieldRect.center,
+              radius: s * 0.5,
+              emerald: () => (0.14 + 0.08 * _pulse) * k,
+              gold: () => (0.08 + 0.32 * _goldFlash) * k,
+            ),
+          ),
+        ),
+        Positioned.fill(child: CustomPaint(painter: _RingPainter(ring, _loop, front: false))),
+        Positioned.fromRect(rect: shieldRect, child: layer(SlmShieldAssets.body)),
+        Positioned.fromRect(
+          rect: shieldRect,
+          child: layer(
+            SlmShieldAssets.glass,
+            tint: SlmColors.emerald400,
+            opacity: _loop.drive(_GlassTint(k)),
+          ),
+        ),
+        Positioned.fromRect(
+          rect: shieldRect,
+          child: SlmLiveShaderMask(
+            blendMode: BlendMode.srcIn,
+            repaint: _loop,
+            hideWhenIdle: true,
+            shader: (r) {
+              final glass = Curves.easeInOutSine.transform(((_loop.value - 0.52) / 0.3).clamp(0.0, 1.0));
+              return glass > 0 && glass < 1 ? _glassSheen(r, glass, 0.2 * k) : null;
+            },
+            child: layer(SlmShieldAssets.glass),
+          ),
+        ),
+        Positioned.fromRect(
+          rect: shieldRect,
+          child: SlmLiveShaderMask(
+            blendMode: BlendMode.srcIn,
+            repaint: _tick,
+            shader: (r) => _rimGlint(r, _loop.value, (0.7 + 0.3 * _goldFlash) * k),
+            child: layer(SlmShieldAssets.rim),
+          ),
+        ),
+        Positioned.fill(child: CustomPaint(painter: _RingPainter(ring, _loop, front: true))),
+      ],
+    );
 
     Widget emblem = SizedBox.square(
       dimension: s,
       child: AnimatedBuilder(
         animation: _tick,
-        builder: (context, _) {
+        child: stack,
+        builder: (context, child) {
           final t = _loop.value;
           final e = _enter.value;
           final wave = math.sin(t * 2 * math.pi);
-          final pulse = 0.5 + 0.5 * math.sin(t * 4 * math.pi);
 
           final appear = Curves.easeOut.transform((e / 0.55).clamp(0.0, 1.0));
           final grow = 0.75 + 0.25 * Curves.easeOutBack.transform(e);
           final settle = -0.17 * (1 - Curves.easeOutCubic.transform(e));
-          final goldFlash = e < 1 ? math.sin(e * math.pi) : 0.0;
 
           final bob = wave * s * 0.032;
           final tilt = math.cos(t * 2 * math.pi) * 0.022;
-
-          final glass = Curves.easeInOutSine.transform(((t - 0.52) / 0.3).clamp(0.0, 1.0));
 
           return Opacity(
             opacity: appear,
@@ -192,48 +250,7 @@ class _AnimatedSafetyShieldState extends State<AnimatedSafetyShield> with Ticker
                 ..translateByDouble(0, bob, 0, 1)
                 ..rotateZ(settle + tilt)
                 ..scaleByDouble(grow, grow, 1, 1),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _GlowPainter(
-                        center: shieldRect.center,
-                        radius: s * 0.5,
-                        emerald: (0.14 + 0.08 * pulse) * k,
-                        gold: (0.08 + 0.32 * goldFlash) * k,
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(child: CustomPaint(painter: _RingPainter(geo, t, front: false))),
-                  Positioned.fromRect(rect: shieldRect, child: body),
-                  Positioned.fromRect(
-                    rect: shieldRect,
-                    child: layer(
-                      SlmShieldAssets.glass,
-                      tint: SlmColors.emerald400.withValues(alpha: (0.05 + 0.07 * pulse) * k),
-                    ),
-                  ),
-                  if (glass > 0 && glass < 1)
-                    Positioned.fromRect(
-                      rect: shieldRect,
-                      child: ShaderMask(
-                        blendMode: BlendMode.srcIn,
-                        shaderCallback: (r) => _glassSheen(r, glass, 0.2 * k),
-                        child: layer(SlmShieldAssets.glass),
-                      ),
-                    ),
-                  Positioned.fromRect(
-                    rect: shieldRect,
-                    child: ShaderMask(
-                      blendMode: BlendMode.srcIn,
-                      shaderCallback: (r) => _rimGlint(r, t, (0.7 + 0.3 * goldFlash) * k),
-                      child: layer(SlmShieldAssets.rim),
-                    ),
-                  ),
-                  Positioned.fill(child: CustomPaint(painter: _RingPainter(geo, t, front: true))),
-                ],
-              ),
+              child: child,
             ),
           );
         },
@@ -314,14 +331,91 @@ class _RingGeometry {
   static double depth(double phi) => math.sin(phi);
 }
 
+/// Emerald tint strength over the glass, on the shield clock.
+class _GlassTint extends Animatable<double> {
+  final double k;
+
+  const _GlassTint(this.k);
+
+  @override
+  double transform(double t) {
+    final pulse = 0.5 + 0.5 * math.sin(t * 4 * math.pi);
+    return ((0.05 + 0.07 * pulse) * k).clamp(0.0, 1.0);
+  }
+}
+
+/// Per-size ring segments. Everything here is independent of the spin, so
+/// it is computed once per shield size; only the gold band moves per frame.
+class _RingCache {
+  final Offset center;
+  final double shieldH;
+  final _RingGeometry g;
+  final List<_Seg> front;
+  final List<_Seg> back;
+  final Path frontShadow;
+
+  factory _RingCache(Offset center, double shieldH) {
+    final g = _RingGeometry(center: center, shieldH: shieldH);
+    return _RingCache._(center, shieldH, g, _segs(g, true), _segs(g, false));
+  }
+
+  _RingCache._(this.center, this.shieldH, this.g, this.front, this.back) : frontShadow = _shadow(g, front);
+
+  static List<_Seg> _segs(_RingGeometry g, bool front) {
+    final segs = <_Seg>[];
+    for (var i = 0; i < _RingPainter._segments; i++) {
+      final p0 = i / _RingPainter._segments * 2 * math.pi;
+      final p1 = (i + 1) / _RingPainter._segments * 2 * math.pi;
+      final mid = (p0 + p1) / 2;
+      final z = _RingGeometry.depth(mid);
+      if (front != (z > 0)) continue;
+
+      final d = (z + 1) / 2;
+      final n = g.at(mid) - g.center;
+      final nl = n.distance == 0 ? Offset.zero : n / n.distance;
+      final lambert = math.max(0.0, nl.dx * _RingPainter._light.dx + nl.dy * _RingPainter._light.dy);
+      final lit = 0.35 + 0.65 * lambert;
+      final width = g.tube * (0.7 + 0.5 * d);
+      final spec = math.pow(lambert, 10).toDouble();
+      final off = _RingPainter._light * (width * 0.16);
+      final a = g.at(p0);
+      final b = g.at(p1);
+
+      segs.add(_Seg(
+        mid: mid,
+        a: a,
+        b: b,
+        shineA: a + off,
+        shineB: b + off,
+        width: width,
+        silver: Color.lerp(_RingPainter._silverDark, _RingPainter._silverLit, lit)!,
+        gold: Color.lerp(_RingPainter._goldDark, _RingPainter._goldLit, lit)!,
+        shine: (0.25 + 0.75 * spec) * (front ? 1 : 0.5),
+      ));
+    }
+    return segs;
+  }
+
+  static Path _shadow(_RingGeometry g, List<_Seg> segs) {
+    final path = Path();
+    if (segs.isEmpty) return path;
+    final off = Offset(0, g.tube * 1.0);
+    path.moveTo(segs.first.a.dx + off.dx, segs.first.a.dy + off.dy);
+    for (final s in segs) {
+      path.lineTo(s.b.dx + off.dx, s.b.dy + off.dy);
+    }
+    return path;
+  }
+}
+
 /// Half of the orbital ring. The rear half paints under the shield and the
 /// front half over it, which is what puts the shield inside the ring.
 class _RingPainter extends CustomPainter {
-  final _RingGeometry g;
-  final double t;
+  final _RingCache ring;
+  final Animation<double> loop;
   final bool front;
 
-  _RingPainter(this.g, this.t, {required this.front});
+  _RingPainter(this.ring, this.loop, {required this.front}) : super(repaint: loop);
 
   static const _segments = 120;
   static const _light = Offset(-0.6, -0.8);
@@ -330,86 +424,64 @@ class _RingPainter extends CustomPainter {
   static const _goldDark = Color(0xFF8A6526);
   static const _goldLit = Color(0xFFF6E2A6);
 
+  static final _shadowPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round;
+  static final _edge = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round;
+  static final _core = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round;
+  static final _shine = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.butt;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final spin = t * 2 * math.pi;
-    final shadow = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    final edge = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    final core = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    final shine = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.butt;
+    final g = ring.g;
+    final spin = loop.value * 2 * math.pi;
+    final segs = front ? ring.front : ring.back;
 
-    final segs = <_Seg>[];
-    for (var i = 0; i < _segments; i++) {
-      final p0 = i / _segments * 2 * math.pi;
-      final p1 = (i + 1) / _segments * 2 * math.pi;
-      final mid = (p0 + p1) / 2;
-      final z = _RingGeometry.depth(mid);
-      if (front != (z > 0)) continue;
-
-      final d = (z + 1) / 2;
-      final n = g.at(mid) - g.center;
-      final nl = n.distance == 0 ? Offset.zero : n / n.distance;
-      final lambert = math.max(0.0, nl.dx * _light.dx + nl.dy * _light.dy);
-      final lit = 0.35 + 0.65 * lambert;
-
+    // Only the gold band depends on the spin.
+    final metals = List<Color>.filled(segs.length, const Color(0x00000000));
+    for (var i = 0; i < segs.length; i++) {
+      final s = segs[i];
       // Two gold bands ride the ring, so its spin is visible.
-      final band = math.pow(0.5 + 0.5 * math.cos(2 * (mid - spin)), 4).toDouble();
-      var metal = Color.lerp(
-        Color.lerp(_silverDark, _silverLit, lit)!,
-        Color.lerp(_goldDark, _goldLit, lit)!,
-        band * 0.85,
-      )!;
+      final band = math.pow(0.5 + 0.5 * math.cos(2 * (s.mid - spin)), 4).toDouble();
+      var metal = Color.lerp(s.silver, s.gold, band * 0.85)!;
       if (!front) metal = Color.lerp(metal, SlmColors.navy900, 0.45)!;
-
-      segs.add(_Seg(
-        a: g.at(p0),
-        b: g.at(p1),
-        d: d,
-        width: g.tube * (0.7 + 0.5 * d),
-        metal: metal,
-        spec: math.pow(lambert, 10).toDouble(),
-      ));
+      metals[i] = metal;
     }
 
     // One pass per layer, so a segment never paints over its neighbour's core.
     if (front && segs.isNotEmpty) {
-      final off = Offset(0, g.tube * 1.0);
-      final path = Path()..moveTo(segs.first.a.dx + off.dx, segs.first.a.dy + off.dy);
-      for (final s in segs) {
-        path.lineTo(s.b.dx + off.dx, s.b.dy + off.dy);
-      }
-      shadow
+      _shadowPaint
         ..strokeWidth = g.tube * 2.4
         ..strokeJoin = StrokeJoin.round
         ..color = Colors.black.withValues(alpha: 0.16);
-      canvas.drawPath(path, shadow);
+      canvas.drawPath(ring.frontShadow, _shadowPaint);
     }
-    for (final s in segs) {
-      edge
+    for (var i = 0; i < segs.length; i++) {
+      final s = segs[i];
+      _edge
         ..strokeWidth = s.width
-        ..color = Color.lerp(s.metal, Colors.black, 0.5)!;
-      canvas.drawLine(s.a, s.b, edge);
+        ..color = Color.lerp(metals[i], Colors.black, 0.5)!;
+      canvas.drawLine(s.a, s.b, _edge);
     }
-    for (final s in segs) {
-      core
+    for (var i = 0; i < segs.length; i++) {
+      final s = segs[i];
+      _core
         ..strokeWidth = s.width * 0.62
-        ..color = s.metal;
-      canvas.drawLine(s.a, s.b, core);
+        ..color = metals[i];
+      canvas.drawLine(s.a, s.b, _core);
     }
-    for (final s in segs) {
-      final off = _light * (s.width * 0.16);
-      shine
+    for (var i = 0; i < segs.length; i++) {
+      final s = segs[i];
+      _shine
         ..strokeWidth = s.width * 0.22
-        ..color = Color.lerp(s.metal, Colors.white, (0.25 + 0.75 * s.spec) * (front ? 1 : 0.5))!;
-      canvas.drawLine(s.a + off, s.b + off, shine);
+        ..color = Color.lerp(metals[i], Colors.white, s.shine)!;
+      canvas.drawLine(s.shineA, s.shineB, _shine);
     }
 
     for (var k = 0; k < 3; k++) {
@@ -449,37 +521,54 @@ class _RingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RingPainter old) => old.t != t || old.front != front || old.g.a != g.a;
+  bool shouldRepaint(covariant _RingPainter old) =>
+      !identical(old.ring, ring) || old.front != front || !identical(old.loop, loop);
 }
 
 class _Seg {
+  final double mid;
   final Offset a;
   final Offset b;
-  final double d;
+  final Offset shineA;
+  final Offset shineB;
   final double width;
-  final Color metal;
-  final double spec;
+  final Color silver;
+  final Color gold;
+
+  /// Highlight mix toward white (spec and front/back already applied).
+  final double shine;
 
   const _Seg({
+    required this.mid,
     required this.a,
     required this.b,
-    required this.d,
+    required this.shineA,
+    required this.shineB,
     required this.width,
-    required this.metal,
-    required this.spec,
+    required this.silver,
+    required this.gold,
+    required this.shine,
   });
 }
 
 class _GlowPainter extends CustomPainter {
   final Offset center;
   final double radius;
-  final double emerald;
-  final double gold;
+  final double Function() emerald;
+  final double Function() gold;
 
-  _GlowPainter({required this.center, required this.radius, required this.emerald, required this.gold});
+  _GlowPainter({
+    required Listenable repaint,
+    required this.center,
+    required this.radius,
+    required this.emerald,
+    required this.gold,
+  }) : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {
+    final emerald = this.emerald();
+    final gold = this.gold();
     if (emerald > 0) {
       final r = Rect.fromCircle(center: center, radius: radius);
       canvas.drawCircle(
@@ -507,7 +596,8 @@ class _GlowPainter extends CustomPainter {
     }
   }
 
+  // Values are read at paint time; the repaint listenable drives changes.
   @override
   bool shouldRepaint(covariant _GlowPainter old) =>
-      old.emerald != emerald || old.gold != gold || old.radius != radius || old.center != center;
+      old.radius != radius || old.center != center || old.emerald() != emerald() || old.gold() != gold();
 }

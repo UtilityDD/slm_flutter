@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -637,20 +636,17 @@ class _FilterBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     final stuck = overlapsContent || shrinkOffset > 0;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: stuck ? 16 : 0, sigmaY: stuck ? 16 : 0),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: stuck ? SlmColors.navy900.withValues(alpha: 0.82) : Colors.transparent,
-            border: Border(
-              bottom: BorderSide(color: stuck ? SlmColors.gold400.withValues(alpha: 0.28) : Colors.transparent),
-            ),
-          ),
-          child: child,
+    // No backdrop blur: it re-blurred the scrolling grid every frame under a fill
+    // that was already 0.82 navy. A denser solid fill gives the same frosted bar.
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: stuck ? SlmColors.navy900.withValues(alpha: 0.94) : Colors.transparent,
+        border: Border(
+          bottom: BorderSide(color: stuck ? SlmColors.gold400.withValues(alpha: 0.28) : Colors.transparent),
         ),
       ),
+      child: child,
     );
   }
 
