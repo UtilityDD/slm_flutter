@@ -254,7 +254,6 @@ const _nightShoe = 'সাধারণ জুতোয় বিদ্যুৎ আ
 
 const _treeStart = 'ঝড়ে ডাল লাইনের উপর পড়েছে। লাইন ব্রেকডাউন। ডাল সরিয়ে লাইন চালু করতে হবে।';
 const _treeDone = 'সাজ সম্পূর্ণ। ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড, পোর্টেবল আর্থিং কিট আর হাত-দড়ি ভ্যানে উঠেছে। এবার বের হওয়া যাবে।';
-const _treeSickle = 'লাইন মৃত না করে কাস্তে দিয়ে ডাল কাটবেন না।';
 const _treeSaw = 'লাইন মৃত না করে করাত দিয়ে ডাল কাটবেন না।';
 const _treeRoad = 'এটা রাস্তার হেলমেট। ডালের কাজে এতে মাথা বাঁচবে না।';
 const _treeVent = 'ফুটো হেলমেট নিয়ে ডালের কাছে যাবেন না। ফুলকি ঢুকে যাবে।';
@@ -277,15 +276,13 @@ const _earthPiece = _Piece(id: 'earth', asset: 'assets/zero_loss/scene/gear_eart
 const _wirePiece = _Piece(id: 'wire', asset: 'assets/duty_slip/dress/tray_wire.webp', zone: 'tool', good: false, why: _dtrWire);
 const _clothPiece = _Piece(id: 'cloth', asset: 'assets/zero_loss/scene/gear_wet_cloth.webp', zone: 'tool', good: false, why: _dtrCloth);
 const _clothClimb = _Piece(id: 'cloth', asset: 'assets/zero_loss/scene/gear_wet_cloth.webp', zone: 'tool', good: false, why: 'ভেজা ন্যাকড়া নিয়ে খুঁটিতে উঠবেন না। জল দিয়ে বিদ্যুৎ হাতে চলে আসবে।');
-const _vestPiece = _Piece(id: 'vest', asset: 'assets/zero_loss/scene/gear_high_vis_vest.webp', zone: 'tool', good: true, why: '');
-const _torchPiece = _Piece(id: 'torch', asset: 'assets/zero_loss/scene/gear_high_lumen_torch.webp', zone: 'tool', good: true, why: '');
+const _vestPiece = _Piece(id: 'vest', asset: 'assets/safety/library/ppe/High_Visibility_Vest_3.webp', zone: 'tool', good: true, why: '');
+const _torchPiece = _Piece(id: 'torch', asset: 'assets/safety/library/ppe/Helmet_Mounted_Torch_2.webp', zone: 'tool', good: true, why: '');
 const _ropePiece = _Piece(id: 'rope', asset: 'assets/zero_loss/scene/gear_rope.webp', zone: 'tool', good: true, why: '');
 const _lockPiece = _Piece(id: 'lock', asset: 'assets/zero_loss/scene/gear_lock_board.webp', zone: 'tool', good: true, why: '');
 const _conesPiece = _Piece(id: 'cones', asset: 'assets/zero_loss/scene/gear_tape_cones.webp', zone: 'tool', good: true, why: '');
-const _sickleClimb = _Piece(id: 'sickle', asset: 'assets/zero_loss/scene/gear_iron_sickle.webp', zone: 'tool', good: false, why: 'কাস্তে নিয়ে খুঁটিতে উঠবেন না।');
-const _sawClimb = _Piece(id: 'saw', asset: 'assets/zero_loss/scene/gear_tree_saw.webp', zone: 'tool', good: false, why: 'করাত নিয়ে খুঁটিতে উঠবেন না।');
-const _sickleTree = _Piece(id: 'sickle', asset: 'assets/zero_loss/scene/gear_iron_sickle.webp', zone: 'tool', good: false, why: _treeSickle);
-const _sawTree = _Piece(id: 'saw', asset: 'assets/zero_loss/scene/gear_tree_saw.webp', zone: 'tool', good: false, why: _treeSaw);
+const _sawClimb = _Piece(id: 'saw', asset: 'assets/safety/library/tools/Hacksaw.webp', zone: 'tool', good: false, why: 'করাত নিয়ে খুঁটিতে উঠবেন না।');
+const _sawTree = _Piece(id: 'saw', asset: 'assets/safety/library/tools/Hacksaw.webp', zone: 'tool', good: false, why: _treeSaw);
 const _bambooNight = _Piece(id: 'bamboo', asset: 'assets/zero_loss/scene/gear_bamboo_ladder.webp', zone: 'ladder', good: false, why: _nightBamboo);
 
 const _vanTraps = <_Piece>[
@@ -295,11 +292,10 @@ const _vanTraps = <_Piece>[
   _Piece(id: 'clamp', asset: 'assets/safety/library/tools/Digital_Clamp_On_Meter.webp', zone: 'tool', good: false, why: 'ক্ল্যাম্প মিটার কারেন্ট মাপে। লাইন মৃত প্রমাণ করে না।'),
   _Piece(id: 'pliers', asset: 'assets/zero_loss/scene/gear_plain_pliers.webp', zone: 'tool', good: false, why: 'সাধারণ প্লায়ার বিদ্যুৎ আটকায় না। এটা ভ্যানে তুলবেন না।'),
   _Piece(id: 'cloth', asset: 'assets/zero_loss/scene/gear_wet_cloth.webp', zone: 'tool', good: false, why: 'ভেজা ন্যাকড়া বিদ্যুৎ সরায় না। হাতে নিয়ে ছুঁলে শক লাগবে।'),
-  _Piece(id: 'wire', asset: 'assets/zero_loss/scene/gear_plain_wire.webp', zone: 'tool', good: false, why: 'খোলা তার দিয়ে শর্ট করবেন না। পোর্টেবল আর্থিং কিট লাগবে।'),
-  _Piece(id: 'fuse', asset: 'assets/zero_loss/scene/gear_fuse_wire.webp', zone: 'tool', good: false, why: 'ফিউজ তার আর্থিং নয়। পোর্টেবল আর্থিং কিট নিন।'),
+  _Piece(id: 'wire', asset: 'assets/quizzes/mat_acsr.webp', zone: 'tool', good: false, why: 'খোলা তার দিয়ে শর্ট করবেন না। পোর্টেবল আর্থিং কিট লাগবে।'),
+  _Piece(id: 'fuse', asset: 'assets/safety/library/others/DO_Fuse_1.webp', zone: 'tool', good: false, why: 'ফিউজ তার আর্থিং নয়। পোর্টেবল আর্থিং কিট নিন।'),
   _Piece(id: 'hacksaw', asset: 'assets/safety/library/tools/Hacksaw.webp', zone: 'tool', good: false, why: 'করাত দিয়ে চার্জড লাইন কাটা যায় না।'),
-  _Piece(id: 'torque', asset: 'assets/zero_loss/scene/gear_torque_wrench.webp', zone: 'tool', good: false, why: 'টর্ক রেঞ্চ এখন দরকার নেই। আগে ডিটেক্টর, ডিসচার্জ রড আর আর্থিং।'),
-  _Piece(id: 'sickle', asset: 'assets/zero_loss/scene/gear_iron_sickle.webp', zone: 'tool', good: false, why: 'কাস্তে কন্ট্রোল রুমের সাজ নয়।'),
+  _Piece(id: 'torque', asset: 'assets/safety/library/tools/Torque_Wrench.webp', zone: 'tool', good: false, why: 'টর্ক রেঞ্চ এখন দরকার নেই। আগে ডিটেক্টর, ডিসচার্জ রড আর আর্থিং।'),
   _Piece(id: 'driver', asset: 'assets/safety/library/tools/Insulated_Screwdriver.webp', zone: 'tool', good: false, why: 'স্ক্রু ড্রাইভার ভোল্টেজ ডিটেক্টরের বদলি নয়।'),
   _Piece(id: 'earthmeter', asset: 'assets/safety/library/tools/Digital_Earth_Tester.webp', zone: 'tool', good: false, why: 'আর্থ টেস্টার মাটির রোধ মাপে। এটা পোর্টেবল আর্থিং কিট নয়।'),
   _Piece(id: 'spanner', asset: 'assets/safety/library/tools/Combination_Spanner.webp', zone: 'tool', good: false, why: 'স্প্যানার দিয়ে লাইন মৃত হয় না।'),
@@ -310,7 +306,7 @@ const _vanToolPieces = <_Piece>[_testerPiece, _dischargePiece, _earthPiece, ..._
 const _vanToolIds = {
   'tester', 'discharge', 'earth',
   'neon', 'meter', 'megger', 'clamp', 'pliers', 'cloth', 'wire',
-  'fuse', 'hacksaw', 'torque', 'sickle', 'driver', 'earthmeter', 'spanner',
+  'fuse', 'hacksaw', 'torque', 'driver', 'earthmeter', 'spanner',
 };
 
 const _frpPiece = _Piece(
@@ -338,7 +334,7 @@ const _benchOrder = [
   'frp', 'bamboo',
   'tester', 'discharge', 'earth', 'wire', 'cloth',
   'neon', 'meter', 'megger', 'clamp', 'pliers', 'fuse', 'hacksaw', 'torque', 'driver', 'earthmeter', 'spanner',
-  'vest', 'torch', 'rope', 'sickle', 'saw', 'lock', 'cones',
+  'vest', 'torch', 'rope', 'saw', 'lock', 'cones',
 ];
 
 const _shoeBlock = 'আরে আরে, ভুল হচ্ছে! জুতো পরা অবস্থায় প্যান্ট ঠিকমতো পরা সম্ভব নয়। আগে প্যান্টের কাজ শেষ করুন।';
@@ -596,7 +592,7 @@ const _roomJob = _VanJob(
 const _poleJob = _VanJob(
   insist: '$_coreThree এই কাজে এফআরপি মই আর হাত-দড়িও লাগবে।',
   done: _poleDone,
-  tools: {'tester', 'discharge', 'earth', 'frp', 'rope', 'bamboo', 'sickle', 'saw', 'cloth'},
+  tools: {'tester', 'discharge', 'earth', 'frp', 'rope', 'bamboo', 'saw', 'cloth'},
   pack: [_shirtItem, _pantItem, _bootItem, _helmetItem, _rubberItem, _harnessItem, _testerItem, _dischargeItem, _earthItem, _VanItem('frp', 'এফআরপি মই', _missFrp, tool: true), _VanItem('rope', 'হাত-দড়ি', _missRope, tool: true)],
 );
 
@@ -617,7 +613,7 @@ const _nightJob = _VanJob(
 const _treeJob = _VanJob(
   insist: '$_coreThree এই কাজে হাত-দড়িও লাগবে।',
   done: _treeDone,
-  tools: {'tester', 'discharge', 'earth', 'rope', 'sickle', 'saw'},
+  tools: {'tester', 'discharge', 'earth', 'rope', 'saw'},
   pack: [_shirtItem, _pantItem, _bootItem, _helmetItem, _rubberItem, _testerItem, _dischargeItem, _earthItem, _VanItem('rope', 'হাত-দড়ি', _missRope, tool: true)],
 );
 
@@ -831,6 +827,8 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     if (_job.dress.contains('harness') && harness && shirt && pant && boot && helmet) {
       return gloves ? 'kit_helmet_gloves' : 'body_harness';
     }
+    // No figure shows the face shield without a harness yet (jobs 6 and 8).
+    if (gloves && shirt && pant && boot && helmet) return 'hands_gloves';
     if (shirt && pant && boot && helmet) return 'head_helmet';
     if (gloves && shirt && pant && boot) return 'gloves_all';
     if (gloves && shirt && pant) return 'gloves_shirt_pant';
@@ -866,7 +864,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         _ => 'assets/zero_loss/scene/bg_control_room.webp',
       };
 
-  bool _tallPiece(String id) => id == 'frp' || id == 'bamboo' || id == 'discharge' || id == 'tester' || id == 'torch' || id == 'sickle' || id == 'saw';
+  bool _tallPiece(String id) => id == 'frp' || id == 'bamboo' || id == 'discharge' || id == 'tester' || id == 'torch' || id == 'saw';
 
   List<_Piece> get _harnessKit {
     final kit = <_Piece>[_harnessPieces[0], _harnessPieces[1]];
@@ -933,7 +931,6 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         _frpPiece,
         _ropePiece,
         _bambooPiece,
-        _sickleClimb,
         _sawClimb,
         _clothClimb,
       ];
@@ -969,7 +966,6 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
         _dischargePiece,
         _earthPiece,
         _ropePiece,
-        _sickleTree,
         _sawTree,
       ];
 
@@ -1841,7 +1837,6 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       add('bench', _roomMiss);
     }
 
-    if (_on.contains('sickle')) add('sickle', _treeSickle);
     if (_on.contains('saw')) add('saw', _treeSaw);
     if (!_on.contains('tester')) add('bench', _roomMiss);
     if (!_on.contains('discharge')) add('bench', _roomMiss);
@@ -2746,7 +2741,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                     child: Transform.scale(scale: 0.72 + 0.28 * shown, child: child),
                   );
                 },
-                child: Image.asset('assets/duty_slip/dress/head_helmet.webp', height: height * 0.92, fit: BoxFit.contain),
+                child: Image.asset('assets/duty_slip/dress/$_vanDressedLook.webp', height: height * 0.92, fit: BoxFit.contain),
               ),
             ),
           ],

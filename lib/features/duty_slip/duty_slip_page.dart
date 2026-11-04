@@ -170,7 +170,8 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   var _hintOpen = false;
   var _cardMistakes = 0;
   var _loading = true;
-  var _muted = false;
+  /// Mute lives in [ZlMusic] (static), so it survives leaving and re-entering.
+  bool get _muted => ZlMusic.muted;
   var _kitI = 0;
   final _yes = <String>{};
   var _callOpen = false;
@@ -194,6 +195,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       TweenSequenceItem(tween: Tween(begin: -4, end: 0), weight: 1),
     ]).animate(CurvedAnimation(parent: _shake, curve: Curves.easeOut));
     _life = AppLifecycleListener(onHide: _onAppHide, onShow: _onAppShow);
+    ZlFx.setMuted(ZlMusic.muted);
     _boot();
   }
 
@@ -319,6 +321,16 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     _feedClock();
     DsVoice.stop();
     _tts.stop();
+    if (e.inField) {
+      // Leaving the field night: drop the half-filled PTW and any open call.
+      _ptwFeeder = null;
+      _ptwPole = null;
+      _ptwShift = null;
+      _callOpen = false;
+      _hintOn = false;
+      _hintOpen = false;
+      _hint = null;
+    }
     e.backToRoad();
     unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: _muted));
     _holdClock(false);
@@ -865,10 +877,12 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                         scoreKey: _scoreKey,
                         muted: _muted,
                         onMute: () async {
-                          setState(() => _muted = !_muted);
-                          ZlFx.setMuted(_muted);
-                          await ZlMusic.setMuted(_muted);
-                          if (_muted) _tts.stop();
+                          final next = !_muted;
+                          ZlFx.setMuted(next);
+                          final done = ZlMusic.setMuted(next);
+                          setState(() {});
+                          if (next) _tts.stop();
+                          await done;
                         },
                       ),
                     ),
