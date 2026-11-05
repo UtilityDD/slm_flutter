@@ -600,6 +600,12 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       _hintComingSoon();
       return;
     }
+    // Level owns the mascot — kill ladder idle nudge / gag while the route is up.
+    _clearNudge();
+    _idleTimer?.cancel();
+    _idleTimer = null;
+    ref.read(guideDirectorProvider.notifier).setLevelFocus(true);
+    unawaited(MascotSpeechLibrary.stop());
     final boardPack = learnBoardPackFor(lessonId);
     final cleared = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
@@ -620,6 +626,8 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       ),
     );
     if (!mounted) return;
+    ref.read(guideDirectorProvider.notifier).setLevelFocus(false);
+    _armIdle();
     if (cleared == true) {
       widget.engine.unlockThrough(index + 1);
       setState(() {});

@@ -1,0 +1,269 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import 'guide_director.dart';
+
+/// Layered SVG "ওস্তাদ" puppet — one brow pair, independent arm / head / mouth.
+/// Replaces the coach WebP bust so faces never double-draw.
+class MascotSvgPuppet extends StatelessWidget {
+  final double size;
+  final GuideMood mood;
+  final GuideGesture gesture;
+  final double gestureT;
+  final double breath;
+  final double talkBlend;
+  final double open;
+  final double width;
+  final double round;
+  final double smile;
+  final bool reduce;
+  final bool speaking;
+  final double rigPhase;
+
+  const MascotSvgPuppet({
+    super.key,
+    required this.size,
+    required this.mood,
+    required this.gesture,
+    required this.gestureT,
+    required this.breath,
+    required this.talkBlend,
+    required this.open,
+    required this.width,
+    required this.round,
+    required this.smile,
+    required this.reduce,
+    required this.speaking,
+    required this.rigPhase,
+  });
+
+  static const _vbW = 200.0;
+  static const _vbH = 240.0;
+
+  bool get _warn =>
+      mood == GuideMood.warn || mood == GuideMood.fright || mood == GuideMood.fallen;
+
+  bool get _joy => mood == GuideMood.glad || mood == GuideMood.celebrate;
+
+  bool get _sleep => mood == GuideMood.sleep;
+
+  String get _eyesAsset {
+    if (_sleep) return 'assets/guide/mascot/puppet_eyes_blink.svg';
+    if (_joy) return 'assets/guide/mascot/puppet_eyes_happy.svg';
+    if (_warn) return 'assets/guide/mascot/puppet_eyes_warn.svg';
+    // Soft blink window on the continuous rig clock.
+    final t = rigPhase % 1.0;
+    final blink = !reduce && ((t > 0.06 && t < 0.105) || (t > 0.135 && t < 0.165));
+    if (blink) return 'assets/guide/mascot/puppet_eyes_blink.svg';
+    return 'assets/guide/mascot/puppet_eyes_open.svg';
+  }
+
+  String get _mouthAsset {
+    if (_sleep) return 'assets/guide/mascot/puppet_mouth_rest.svg';
+    if (talkBlend < 0.04 || open < 0.08) {
+      return open < 0.05 && talkBlend > 0.2
+          ? 'assets/guide/mascot/puppet_mouth_mbp.svg'
+          : 'assets/guide/mascot/puppet_mouth_rest.svg';
+    }
+    if (round > 0.55 && open > 0.35) return 'assets/guide/mascot/puppet_mouth_o.svg';
+    if (width > 0.98 && open > 0.28) return 'assets/guide/mascot/puppet_mouth_ee.svg';
+    if (open > 0.55) return 'assets/guide/mascot/puppet_mouth_aa.svg';
+    if (open > 0.18) return 'assets/guide/mascot/puppet_mouth_ee.svg';
+    return 'assets/guide/mascot/puppet_mouth_rest.svg';
+  }
+
+  double get _g => reduce ? 0.0 : gestureT.clamp(0.0, 1.0);
+
+  /// Right arm: point / wave / celebrate lift.
+  double get _armR {
+    if (reduce) return 0.0;
+    final g = _g;
+    switch (gesture) {
+      case GuideGesture.leanRight:
+      case GuideGesture.peek:
+        return -0.55 * g;
+      case GuideGesture.spinHop:
+        return -0.85 * math.sin(g * math.pi);
+      case GuideGesture.handstand:
+        return -0.35 * g;
+      case GuideGesture.leanLeft:
+        return 0.18 * g;
+      case GuideGesture.none:
+        break;
+    }
+    if (_joy) return -0.45 - 0.12 * math.sin(rigPhase * math.pi * 4);
+    if (speaking || talkBlend > 0.2) {
+      return -0.12 - 0.10 * open * talkBlend - 0.04 * math.sin(rigPhase * math.pi * 6);
+    }
+    return 0.05 * breath;
+  }
+
+  double get _armL {
+    if (reduce) return 0.0;
+    final g = _g;
+    switch (gesture) {
+      case GuideGesture.leanLeft:
+        return 0.45 * g;
+      case GuideGesture.spinHop:
+        return 0.55 * math.sin(g * math.pi);
+      case GuideGesture.handstand:
+        return 0.35 * g;
+      case GuideGesture.leanRight:
+      case GuideGesture.peek:
+        return -0.12 * g;
+      case GuideGesture.none:
+        break;
+    }
+    if (_joy) return 0.28 + 0.10 * math.sin(rigPhase * math.pi * 4 + 0.7);
+    if (speaking || talkBlend > 0.2) {
+      return 0.08 + 0.05 * math.sin(rigPhase * math.pi * 5);
+    }
+    return -0.04 * breath;
+  }
+
+  double get _headTilt {
+    if (reduce) return 0.0;
+    final g = _g;
+    switch (gesture) {
+      case GuideGesture.leanLeft:
+        return -0.14 * g;
+      case GuideGesture.leanRight:
+      case GuideGesture.peek:
+        return 0.14 * g;
+      case GuideGesture.spinHop:
+        return 0.22 * math.sin(g * math.pi);
+      case GuideGesture.handstand:
+        return 0.10 * g;
+      case GuideGesture.none:
+        break;
+    }
+    if (_warn) return 0.04 * math.sin(rigPhase * math.pi * 8);
+    if (speaking) return 0.03 * math.sin(rigPhase * math.pi * 3) * talkBlend;
+    return 0.015 * breath;
+  }
+
+  double get _browLift {
+    if (reduce || _sleep) return 0.0;
+    if (_joy) return -size * 0.012;
+    if (_warn) return size * 0.008;
+    return -open * talkBlend * (size * 0.010);
+  }
+
+  double get _browTilt =>
+      reduce ? 0.0 : (_warn ? 0.12 : (_joy ? -0.06 : 0.0));
+
+  Widget _layer(String asset) {
+    return SvgPicture.asset(
+      asset,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      alignment: Alignment.bottomCenter,
+    );
+  }
+
+  /// Rotate a full-frame layer around a viewBox pivot (normalized 0..1).
+  Widget _pivoted({
+    required String asset,
+    required Alignment pivot,
+    required double angle,
+  }) {
+    return Transform.rotate(
+      angle: angle,
+      alignment: pivot,
+      child: _layer(asset),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mouthScaleY = (0.85 + open * 0.55).clamp(0.8, 1.45);
+    final mouthScaleX =
+        (0.92 + (width - 0.9) * 0.4 + smile.abs() * 0.05).clamp(0.8, 1.2);
+
+    // Shoulder pivots in viewBox → Flutter Alignment (x: -1..1, y: -1..1).
+    // Shoulder L ~ (58,130), R ~ (142,130) in 200×240.
+    const shoulderL = Alignment(
+      (58 / _vbW) * 2 - 1,
+      (130 / _vbH) * 2 - 1,
+    );
+    const shoulderR = Alignment(
+      (142 / _vbW) * 2 - 1,
+      (130 / _vbH) * 2 - 1,
+    );
+    const neckPivot = Alignment(0, (118 / _vbH) * 2 - 1);
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        fit: StackFit.expand,
+        clipBehavior: Clip.none,
+        children: [
+          _layer('assets/guide/mascot/puppet_shadow.svg'),
+          // Arms behind torso so sleeves tuck under shoulders.
+          _pivoted(
+            asset: 'assets/guide/mascot/puppet_arm_l.svg',
+            pivot: shoulderL,
+            angle: _armL,
+          ),
+          _pivoted(
+            asset: 'assets/guide/mascot/puppet_arm_r.svg',
+            pivot: shoulderR,
+            angle: _armR,
+          ),
+          _layer('assets/guide/mascot/puppet_body.svg'),
+          Transform.rotate(
+            angle: _headTilt,
+            alignment: neckPivot,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _layer('assets/guide/mascot/puppet_head.svg'),
+                _layer(_eyesAsset),
+                if (!_sleep)
+                  Transform.translate(
+                    offset: Offset(0, _browLift),
+                    child: Transform(
+                      alignment: const Alignment(0, -0.35),
+                      transform: Matrix4.identity()
+                        ..setEntry(0, 1, _browTilt * 0.4)
+                        ..rotateZ(_browTilt * 0.12),
+                      child: _layer('assets/guide/mascot/puppet_brows.svg'),
+                    ),
+                  ),
+                if (!_sleep)
+                  Opacity(
+                    opacity: talkBlend < 0.03 && !_joy && !_warn ? 0.95 : 1,
+                    child: Transform(
+                      alignment: const Alignment(0, 0.05),
+                      transform: Matrix4.diagonal3Values(
+                        mouthScaleX,
+                        talkBlend > 0.03 ? mouthScaleY : 1.0,
+                        1,
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: reduce
+                            ? Duration.zero
+                            : const Duration(milliseconds: 90),
+                        child: SvgPicture.asset(
+                          _mouthAsset,
+                          key: ValueKey(_mouthAsset),
+                          width: size,
+                          height: size,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

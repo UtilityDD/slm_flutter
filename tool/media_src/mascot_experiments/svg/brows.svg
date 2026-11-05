@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" fill="none">
+  <g id="browL">
+    <path d="M28 48 Q52 28 78 46" stroke="#1F140E" stroke-width="7.5" stroke-linecap="round" fill="none"/>
+  </g>
+  <g id="browR">
+    <path d="M122 46 Q148 28 172 48" stroke="#1F140E" stroke-width="7.5" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

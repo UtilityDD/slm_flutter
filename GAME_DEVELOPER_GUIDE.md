@@ -154,6 +154,7 @@ When building a new `Do` level in [`lib/features/duty_slip/`](lib/features/duty_
 - [x] **327-Rung Content Catalog & Ladder Builder** (`10 Modules`, `109 Lessons`, `Learn + 2 Do` per lesson + `10 Rank Gates`).
 - [x] **Unified Top HUD (`UnifiedGameTopHud`) & Parabolic Flying Score FX (`ScoreFlyHost`)** across Ladder, Learn, and Do.
 - [x] **Unified Mascot (`AiLinemanGuide`) + Lip-Sync (`MascotTalk`) + Speech Library (`mascot_speech_library.dart`)** replacing separate `DsCoach` and static corner avatars.
+- [x] **SVG face-rig** (`mascot_face_rig.dart`, `assets/guide/mascot/`) — spring tap, soft gestures, no back-glow, no double eyebrows; full Rive body still future (see `MASCOT_LOTTIE_DESIGN_PLAN.md`).
 - [x] **Interactive `LearnRunnerPage`** with concise Bangla flash-cards, `+5 ◆` pre-work habit checks, offline fallback deck, and `+10 ◆ / -5 ◆` exit drill.
 - [x] **In-Ladder Touchable Side Items (`_SideChallengeOverlay`)** keeping players inside the ladder climb.
 - [x] **Unified `Do` Engine (`DutySlipPage`)** wired to live `◆` / `💀` HUD and auto-returning to the Ladder on clear.

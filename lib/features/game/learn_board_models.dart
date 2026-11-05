@@ -55,10 +55,12 @@ class LearnMythBeat {
     required this.believeNoIsCorrect,
     required this.whyChips,
     this.pendingPoints = 15,
-    this.bodyAsset = 'assets/duty_slip/dress/body.webp',
+    this.bodyAsset = 'assets/duty_slip/dress/myth_rival_bad.webp',
     this.wornAssets = const [],
     this.dangerHints = const [],
-    this.stingBn = 'এই লোক যা বলছে… বিশ্বাস?',
+    this.tauntBn = 'আরে! আমাদের বাপ-দাদারা তো এসব দিয়েই সারা জীবন কাজ করে গেল!',
+    this.stingBn = 'এই লোক যা বলছে… বিশ্বাস করেন?',
+    this.exitBn = 'যত্তসব নতুন নিয়ম! আমি চললাম… হা!',
   });
 
   final String rivalLineBn;
@@ -68,17 +70,23 @@ class LearnMythBeat {
   final List<LearnWhyChip> whyChips;
   final int pendingPoints;
 
-  /// Base silhouette under wrong kit layers.
+  /// Full-body aggressive rival WebP (badly dressed).
   final String bodyAsset;
 
-  /// Wrong kit overlays slapped on during entrance (order = slap order).
+  /// Optional wrong-kit slap layers (legacy); prefer dangerHints alone.
   final List<String> wornAssets;
 
-  /// Short Bangla danger ticks aligned to [wornAssets] (optional).
+  /// Short Bangla danger ticks (optional).
   final List<String> dangerHints;
 
-  /// Coach sting before Believe CTAs.
+  /// Cocky burst line as rival storms in.
+  final String tauntBn;
+
+  /// Coach sting after rival exits, before Believe CTAs.
   final String stingBn;
+
+  /// Rival parting snarl while sliding off.
+  final String exitBn;
 }
 
 class LearnBoardPack {
@@ -111,11 +119,11 @@ const learnBoardPack11 = LearnBoardPack(
   lessonId: '1.1',
   titleBn: 'প্রথম দিনের ইউনিফর্ম ও পিপিই',
   badgeBn: 'সুরক্ষা কবচ',
-  introBn: 'আজ প্রথম দিন। ভুল জিনিস পরলেই মৃত্যু। কিটটা সাজান।',
+  introBn: 'আজ প্রথম দিন। সঠিক জিনিস বেছে নিন—ভুল মানে বিপদ।',
   slots: [
     LearnBoardSlot(
       id: 'shirt',
-      promptBn: 'শার্ট বেছে নিন',
+      promptBn: 'সঠিক জিনিস বেছে নিন',
       wearAsset: 'assets/duty_slip/dress/tray_shirt.webp',
       options: [
         LearnBoardOption(
@@ -166,7 +174,7 @@ const learnBoardPack11 = LearnBoardPack(
     ),
     LearnBoardSlot(
       id: 'helmet',
-      promptBn: 'হেলমেট বেছে নিন',
+      promptBn: 'সঠিক জিনিস বেছে নিন',
       wearAsset: 'assets/duty_slip/dress/tray_elec_helmet.webp',
       options: [
         LearnBoardOption(
@@ -210,7 +218,7 @@ const learnBoardPack11 = LearnBoardPack(
     ),
     LearnBoardSlot(
       id: 'boots',
-      promptBn: 'জুতো বেছে নিন',
+      promptBn: 'সঠিক জিনিস বেছে নিন',
       wearAsset: 'assets/duty_slip/dress/tray_boot.webp',
       options: [
         LearnBoardOption(
@@ -254,7 +262,7 @@ const learnBoardPack11 = LearnBoardPack(
     ),
     LearnBoardSlot(
       id: 'gloves',
-      promptBn: 'রাবার গ্লাভস বেছে নিন',
+      promptBn: 'সঠিক জিনিস বেছে নিন',
       wearAsset: 'assets/duty_slip/dress/tray_rubber_gloves.webp',
       options: [
         LearnBoardOption(
@@ -305,18 +313,17 @@ const learnBoardPack11 = LearnBoardPack(
     ),
   ],
   myth: LearnMythBeat(
-    rivalLineBn: 'রাস্তার হার্ড হ্যাট বা বাইকের হেলমেট দিয়েই লাইনের কাজ চলবে—সবই তো মাথা বাঁচায়।',
+    bodyAsset: 'assets/duty_slip/dress/myth_rival_bad.webp',
+    tauntBn: 'আরে! আমাদের বাপ-দাদারা তো এসব দিয়েই সারা জীবন কাজ করে গেল!',
+    rivalLineBn: 'ফাটা হেলমেট হোক বা বাইকের হেলমেট—সবই তো মাথা বাঁচায়! এত নিয়ম লাগে নাকি?',
+    exitBn: 'যত্তসব নতুন নিয়ম! আমি চললাম… হা!',
     believeNoIsCorrect: true,
-    stingBn: 'এই লোক যা বলছে… বিশ্বাস?',
-    wornAssets: [
-      'assets/duty_slip/dress/worn_poly.webp',
-      'assets/duty_slip/dress/worn_slip.webp',
-      'assets/duty_slip/dress/worn_road.webp',
-    ],
+    stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
+    wornAssets: [],
     dangerHints: [
-      'পলি গলে যায়',
+      'ফাটা হেলমেট—চিন-স্ট্র্যাপ খোলা',
+      'এক হাতে ছেঁড়া গ্লাভস, অন্য হাত খালি',
       'চপ্পল—কোনো ইনসুলেশন নেই',
-      'রাস্তার হেলমেট শক আটকায় না',
     ],
     whyChips: [
       LearnWhyChip(

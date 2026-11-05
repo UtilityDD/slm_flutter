@@ -43,6 +43,7 @@ class GuideState {
   final String line;
   final int token;
   final GuideEntranceKind? entrance;
+  final bool levelFocus;
 
   const GuideState({
     required this.mood,
@@ -50,6 +51,7 @@ class GuideState {
     required this.line,
     required this.token,
     this.entrance,
+    this.levelFocus = false,
   });
 
   static const quiet = GuideState(
@@ -66,6 +68,7 @@ class GuideState {
     int? token,
     GuideEntranceKind? entrance,
     bool clearEntrance = false,
+    bool? levelFocus,
   }) =>
       GuideState(
         mood: mood ?? this.mood,
@@ -73,6 +76,7 @@ class GuideState {
         line: line ?? this.line,
         token: token ?? this.token,
         entrance: clearEntrance ? null : (entrance ?? this.entrance),
+        levelFocus: levelFocus ?? this.levelFocus,
       );
 }
 
@@ -86,6 +90,25 @@ class GuideDirector extends Notifier<GuideState> {
   final _rng = math.Random();
   bool _entranceMuted = false;
   String? _entranceVoiceKey;
+
+  bool get levelFocus => state.levelFocus;
+
+  /// Pause ladder mascot idle while a level route owns the coach.
+  void setLevelFocus(bool active) {
+    if (active) {
+      _lastInspire = DateTime.now();
+      _lastGag = DateTime.now();
+      state = GuideState(
+        mood: GuideMood.idle,
+        gesture: GuideGesture.none,
+        line: '',
+        token: ++_token,
+        levelFocus: true,
+      );
+      return;
+    }
+    state = state.copyWith(levelFocus: false, token: ++_token);
+  }
 
   @override
   GuideState build() => GuideState.quiet;
@@ -107,6 +130,7 @@ class GuideDirector extends Notifier<GuideState> {
       line: cleanLine,
       token: _token,
       entrance: entrance,
+      levelFocus: state.levelFocus,
     );
     if (speakVoice && cleanLine.trim().isNotEmpty && !muted) {
       unawaited(MascotSpeechLibrary.speak(cleanLine, voiceKey: voiceKey, muted: muted));
@@ -143,6 +167,7 @@ class GuideDirector extends Notifier<GuideState> {
       gesture: GuideGesture.none,
       line: state.line,
       token: _token,
+      levelFocus: state.levelFocus,
     );
   }
 
@@ -215,12 +240,12 @@ class GuideDirector extends Notifier<GuideState> {
     );
   }
 
-  /// Hold time so the user can actually read the bubble (Bangla, unhurried).
+  /// Minimum on-screen time before we may clear; voice wait is separate ([MascotSpeechLibrary.waitUntilQuiet]).
   Duration entranceHoldFor(String line, {bool reduce = false}) {
-    if (reduce) return const Duration(milliseconds: 1200);
+    if (reduce) return const Duration(milliseconds: 1400);
     final chars = line.trim().length;
-    // ~55ms per character, clamped 2.8s–5.5s.
-    final ms = (chars * 55).clamp(2800, 5500);
+    // Floor for reading; actual clear waits for voice to finish.
+    final ms = (1400 + chars * 40).clamp(2000, 4000);
     return Duration(milliseconds: ms);
   }
 
@@ -229,6 +254,7 @@ class GuideDirector extends Notifier<GuideState> {
   }
 
   Future<void> maybeInspire({Duration minGap = const Duration(seconds: 45)}) async {
+    if (state.levelFocus) return;
     if (state.gesture != GuideGesture.none) return;
     if (MascotTalk.active.value || state.line.isNotEmpty) return;
     final now = DateTime.now();
@@ -248,6 +274,7 @@ class GuideDirector extends Notifier<GuideState> {
   /// Idle highlight on a playable level / gift — short, actionable field coach line.
   /// Never overrules other active lineman engagement (TTS speech, recent pro-tip poke, active dialogue).
   void nudgePlay({required bool gift}) {
+    if (state.levelFocus) return;
     if (state.entrance != null) return;
     if (MascotTalk.active.value || state.line.isNotEmpty) return;
     final now = DateTime.now();
@@ -261,6 +288,7 @@ class GuideDirector extends Notifier<GuideState> {
 
   /// Gentle idle gesture — lean / peek / hop. Call after long quiet.
   Future<void> maybeFunnyIdle({Duration minGap = const Duration(seconds: 28)}) async {
+    if (state.levelFocus) return;
     final now = DateTime.now();
     if (now.difference(_lastGag) < minGap) return;
     if (state.entrance != null) return;
@@ -279,6 +307,7 @@ class GuideDirector extends Notifier<GuideState> {
 
   /// User tapped the mascot — react with an encouraging senior lineman field tip & voice!
   void onPoke({bool muted = false}) {
+    if (state.levelFocus) return;
     if (state.entrance != null) return;
     final now = DateTime.now();
     if (now.difference(_lastPoke) < const Duration(milliseconds: 420)) return;

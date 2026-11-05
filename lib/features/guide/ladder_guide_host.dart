@@ -95,7 +95,12 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
   Future<void> _holdThenClear({required bool reduce}) async {
     final dir = ref.read(guideDirectorProvider.notifier);
     final line = dir.entranceLine;
+    // Keep bubble at least long enough to read, then until voice finishes.
     await Future<void>.delayed(dir.entranceHoldFor(line, reduce: reduce));
+    if (!mounted) return;
+    await MascotSpeechLibrary.waitUntilQuiet();
+    if (!mounted) return;
+    await Future<void>.delayed(Duration(milliseconds: reduce ? 180 : 420));
     if (!mounted) return;
     if (!reduce) await _bubble.reverse();
     if (!mounted) return;
@@ -171,10 +176,14 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
     } else {
       unawaited(_bubble.forward(from: 0));
     }
-    final hold = ref
+    final minHold = ref
         .read(guideDirectorProvider.notifier)
         .entranceHoldFor(line, reduce: reduce);
-    _pokeBubbleTimer = Timer(hold, () async {
+    _pokeBubbleTimer = Timer(minHold, () async {
+      // Do not cut the voice — wait for speech to finish, then clear the bubble.
+      await MascotSpeechLibrary.waitUntilQuiet();
+      if (!mounted) return;
+      await Future<void>.delayed(Duration(milliseconds: reduce ? 160 : 380));
       if (!mounted) return;
       if (!reduce) await _bubble.reverse();
       if (!mounted) return;
@@ -183,7 +192,6 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
       if (g.entrance == null && g.line.isNotEmpty) {
         ref.read(guideDirectorProvider.notifier).clearLine();
       }
-      unawaited(MascotSpeechLibrary.stop());
     });
   }
 
@@ -210,6 +218,8 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
   @override
   Widget build(BuildContext context) {
     ref.listen<GuideState>(guideDirectorProvider, (prev, next) {
+      // Learn/Do owns the coach — do not steal bubbles under the level route.
+      if (ref.read(guideDirectorProvider.notifier).levelFocus) return;
       if (_entranceBusy || _centerVisible || !_dockVisible) return;
       if (next.entrance != null) return;
       if (next.line.isEmpty) return;
@@ -243,8 +253,8 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(4, 4, 4, 2),
                         child: AiLinemanGuide(
-                          sprite: 86,
-                          bubbleWidth: 184,
+                          sprite: 122,
+                          bubbleWidth: 228,
                           centered: false,
                           showBubble: _bubbleVisible,
                           bubbleOpacity: _bubbleVisible ? bubbleT : 0,
@@ -286,8 +296,8 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
                             child: AiLinemanGuide(
-                              sprite: 140,
-                              bubbleWidth: 284,
+                              sprite: 176,
+                              bubbleWidth: 300,
                               large: true,
                               centered: true,
                               showBubble: _bubbleVisible,

@@ -1,0 +1,226 @@
+import 'package:flutter/material.dart';
+import 'package:rive/rive.dart' as rive;
+
+import '../../design/slm_design.dart';
+import 'guide_director.dart';
+
+/// Custom ওস্তাদ লাইনম্যান (`tool/rive/ostad` → `ostad.riv`).
+const kMascotRiveAsset = 'assets/guide/mascot/ostad.riv';
+
+/// Contract inputs:
+/// - `poke` (trigger)
+/// - `isSpeaking` (bool)
+/// - `viseme` (number 0..4)
+/// - `mood` (number 0..3)
+class MascotRivePuppet extends StatefulWidget {
+  final double size;
+  final GuideMood mood;
+  final GuideGesture gesture;
+  final double gestureT;
+  final double breath;
+  final double talkBlend;
+  final double open;
+  final double width;
+  final double round;
+  final double smile;
+  final bool reduce;
+  final bool speaking;
+  final double rigPhase;
+  final int pokeToken;
+
+  const MascotRivePuppet({
+    super.key,
+    required this.size,
+    required this.mood,
+    required this.gesture,
+    required this.gestureT,
+    required this.breath,
+    required this.talkBlend,
+    required this.open,
+    required this.width,
+    required this.round,
+    required this.smile,
+    required this.reduce,
+    required this.speaking,
+    required this.rigPhase,
+    this.pokeToken = 0,
+  });
+
+  @override
+  State<MascotRivePuppet> createState() => _MascotRivePuppetState();
+}
+
+class _MascotRivePuppetState extends State<MascotRivePuppet> {
+  late final rive.FileLoader _loader = rive.FileLoader.fromAsset(
+    kMascotRiveAsset,
+    riveFactory: rive.Factory.rive,
+  );
+
+  rive.RiveWidgetController? _controller;
+  rive.BooleanInput? _speakingIn;
+  rive.NumberInput? _visemeIn;
+  rive.NumberInput? _moodIn;
+  rive.NumberInput? _levelIn;
+  rive.TriggerInput? _pokeIn;
+  var _logged = false;
+  var _lastPokeToken = 0;
+
+  @override
+  void dispose() {
+    _loader.dispose();
+    super.dispose();
+  }
+
+  void _onLoaded(rive.RiveLoaded state) {
+    _controller = state.controller;
+    _bindInputs(state.controller.stateMachine);
+    _pushInputs();
+    print('MascotRivePuppet LOADED $kMascotRiveAsset sm=${state.controller.stateMachine.name}');
+  }
+
+  void _onFailed(Object error, StackTrace st) {
+    print('MascotRivePuppet FAILED: $error\n$st');
+  }
+
+  void _bindInputs(rive.StateMachine sm) {
+    if (!_logged) {
+      _logged = true;
+      print('Rive SM "${sm.name}" inputs:');
+      try {
+        for (final input in sm.inputs) {
+          print('  → ${input.name} (${input.runtimeType})');
+        }
+      } catch (e) {
+        print('  (could not list inputs: $e)');
+      }
+    }
+    _speakingIn = _firstBool(sm, const [
+      'isSpeaking',
+      'speaking',
+      'talk',
+      'isTalking',
+      'Talk',
+    ]);
+    _visemeIn = _firstNumber(sm, const [
+      'viseme',
+      'Viseme',
+      'mouth',
+      'Mouth',
+      'lip',
+    ]);
+    _moodIn = _firstNumber(sm, const ['mood', 'Mood', 'emotion']);
+    _levelIn = _firstNumber(sm, const ['Level', 'level']);
+    _pokeIn = _firstTrigger(sm, const ['poke', 'Poke', 'tap', 'Tap', 'hit']);
+  }
+
+  rive.BooleanInput? _firstBool(rive.StateMachine sm, List<String> names) {
+    for (final n in names) {
+      final v = sm.boolean(n);
+      if (v != null) return v;
+    }
+    return null;
+  }
+
+  rive.NumberInput? _firstNumber(rive.StateMachine sm, List<String> names) {
+    for (final n in names) {
+      final v = sm.number(n);
+      if (v != null) return v;
+    }
+    return null;
+  }
+
+  rive.TriggerInput? _firstTrigger(rive.StateMachine sm, List<String> names) {
+    for (final n in names) {
+      final v = sm.trigger(n);
+      if (v != null) return v;
+    }
+    return null;
+  }
+
+  int _visemeIndex() {
+    if (widget.talkBlend < 0.04 || widget.open < 0.08) {
+      return widget.open < 0.05 && widget.talkBlend > 0.2 ? 1 : 0;
+    }
+    if (widget.round > 0.55 && widget.open > 0.35) return 3;
+    if (widget.width > 0.98 && widget.open > 0.28) return 4;
+    if (widget.open > 0.55) return 2;
+    if (widget.open > 0.18) return 4;
+    return 0;
+  }
+
+  double _moodIndex() {
+    return switch (widget.mood) {
+      GuideMood.glad || GuideMood.celebrate => 1,
+      GuideMood.warn || GuideMood.fright || GuideMood.fallen => 2,
+      GuideMood.sleep => 3,
+      _ => 0,
+    };
+  }
+
+  /// skills.riv Level: 0 beginner / 1 intermediate / 2 expert
+  double _levelFromState() {
+    if (widget.speaking || widget.talkBlend > 0.2) return 2;
+    return switch (widget.mood) {
+      GuideMood.glad || GuideMood.celebrate => 2,
+      GuideMood.warn || GuideMood.fright || GuideMood.fallen => 0,
+      _ => 1,
+    };
+  }
+
+  void _pushInputs() {
+    final speaking = widget.speaking || widget.talkBlend > 0.15;
+    _speakingIn?.value = speaking;
+    _visemeIn?.value = _visemeIndex().toDouble();
+    _moodIn?.value = _moodIndex();
+    _levelIn?.value = _levelFromState();
+    if (widget.pokeToken != _lastPokeToken) {
+      _lastPokeToken = widget.pokeToken;
+      if (widget.pokeToken > 0) _pokeIn?.fire();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MascotRivePuppet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_controller != null) _pushInputs();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: widget.size,
+      height: widget.size,
+      child: rive.RiveWidgetBuilder(
+        fileLoader: _loader,
+        onLoaded: _onLoaded,
+        onFailed: _onFailed,
+        builder: (context, state) => switch (state) {
+          rive.RiveLoading() => const Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          rive.RiveFailed(:final error) => Image.asset(
+              'assets/duty_slip/dress/coach_ready.webp',
+              width: widget.size,
+              height: widget.size,
+              fit: BoxFit.contain,
+              gaplessPlayback: true,
+              errorBuilder: (_, _, _) => Icon(
+                Icons.engineering_rounded,
+                size: widget.size * 0.7,
+                color: SlmColors.gold300,
+              ),
+            ),
+          rive.RiveLoaded(:final controller) => rive.RiveWidget(
+              controller: controller,
+              fit: rive.Fit.contain,
+              alignment: Alignment.bottomCenter,
+            ),
+        },
+      ),
+    );
+  }
+}

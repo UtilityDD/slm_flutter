@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <!-- Right arm  pivot near shoulder ~142,130 -->
+  <path d="M142 130 C154 138 162 156 164 176 C166 190 160 198 150 200 C142 201 136 194 138 184 C140 168 138 150 130 140 Z" fill="#182B52"/>
+  <!-- Glove -->
+  <ellipse cx="154" cy="204" rx="14" ry="11" fill="#0D1932"/>
+  <path d="M164 200 C166 210 160 216 152 216 C144 216 140 210 142 202" fill="#111F3D"/>
+  <path d="M146 208 H160" stroke="#34D399" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" fill="none">
+  <!-- Soft skin plate that hides the WebP brows before the SVG brows draw -->
+  <ellipse cx="53" cy="44" rx="36" ry="14" fill="#C97F4F"/>
+  <ellipse cx="147" cy="44" rx="36" ry="14" fill="#C97F4F"/>
+</svg>

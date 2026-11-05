@@ -9,15 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/en_digits.dart';
 import '../../design/slm_design.dart';
 import 'guide_director.dart';
+import 'mascot_face_rig.dart';
 import 'mascot_speech_library.dart';
 
-/// Unified expressive Game Mascot ("ওস্তাদ লাইনম্যান") — engineered with a
-/// 60fps Rive / Lottie-style procedural skeletal & viseme rig:
-/// - Continuous multi-harmonic breathing, torso squash-and-stretch, and head tilt
-/// - Syllabic body bounce, eyebrow articulation, and specular eye catchlights
-/// - Multi-viseme smooth morphing lip-sync (AA, OH, EE, MBP, FV, Smile) with
-///   oral cavity, upper teeth, tongue contour, and lip shading
-/// - Dynamic acoustic aura rings & live equalizer speech bubble
+/// Unified Game Mascot ("ওস্তাদ লাইনম্যান") — expressive coach WebP + mouth visemes.
+/// Soft spring breathe / tap / gestures. Brows stay on WebP (no double draw).
 class AiLinemanGuide extends ConsumerStatefulWidget {
   final double sprite;
   final double bubbleWidth;
@@ -319,7 +315,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     );
     _touchPop = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 360),
+      duration: const Duration(milliseconds: 380),
     );
     _rig.addListener(_countLaps);
     _rig.addStatusListener(_onRigStatus);
@@ -451,8 +447,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     super.dispose();
   }
 
-  /// Base sprite selection — when speaking, we use `coach_talk` so our
-  /// 60fps Rive-style mouth rig (`MascotRiveMouthPainter`) has a clean canvas.
+  /// Base sprite — `coach_talk` while speaking so the SVG mouth sits on a calm mouth plate.
   String _baseFace(GuideMood mood, {required bool speaking}) {
     if (speaking &&
         mood != GuideMood.warn &&
@@ -540,14 +535,14 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       } else if (gesture == GuideGesture.none) {
         _gesture.animateTo(
           0,
-          duration: const Duration(milliseconds: 520),
-          curve: Curves.easeInOutCubic,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
         );
       } else {
         _gesture.animateTo(
           1,
-          duration: const Duration(milliseconds: 700),
-          curve: Curves.easeInOutCubic,
+          duration: const Duration(milliseconds: 520),
+          curve: Curves.easeOutCubic,
         );
       }
     }
@@ -585,54 +580,33 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     return _VisemePose.lerp(_VisemePose.rest, adjusted, blend);
   }
 
-  Widget _buildRiveMouth(GuideMood mood, _VisemePose pose) {
-    if (_talkBlend.value < 0.02) return const SizedBox.shrink();
-    if (mood == GuideMood.warn ||
-        mood == GuideMood.fright ||
-        mood == GuideMood.fallen) {
-      return const SizedBox.shrink();
+  /// Touch poke: squash → easeOutBack overshoot (~1.18) → settle to 1. No sin bump.
+  double _touchScale(double t) {
+    final p = t.clamp(0.0, 1.0);
+    if (p <= 0.0) return 1.0;
+    if (p < 0.25) {
+      return 1.0 - 0.06 * Curves.easeOutCubic.transform(p / 0.25);
     }
-    final s = widget.sprite;
-    const imageAspect = 597 / 888;
-    final imageW = s * imageAspect;
-    final left = (s - imageW) / 2;
-    return Positioned(
-      left: left + imageW * 0.442,
-      top: s * 0.436,
-      width: imageW * 0.185,
-      height: s * 0.086,
-      child: CustomPaint(
-        painter: _MascotRiveMouthPainter(
-          pose: pose,
-          talkBlend: _talkBlend.value,
-        ),
-      ),
-    );
+    if (p < 0.58) {
+      final u = Curves.easeOutBack.transform(((p - 0.25) / 0.33).clamp(0.0, 1.0));
+      return 0.94 + 0.24 * u;
+    }
+    final u = Curves.easeOutCubic.transform(((p - 0.58) / 0.42).clamp(0.0, 1.0));
+    return 1.18 + (1.0 - 1.18) * u;
   }
 
-  Widget _buildRiveExpressions(
-    GuideMood mood,
-    _VisemePose pose,
-    double rigPhase,
-  ) {
-    final s = widget.sprite;
-    const imageAspect = 597 / 888;
-    final imageW = s * imageAspect;
-    final left = (s - imageW) / 2;
-    return Positioned(
-      left: left,
-      top: 0,
-      width: imageW,
-      height: s,
-      child: IgnorePointer(
-        child: CustomPaint(
-          painter: _MascotRigOverlayPainter(
-            mood: mood,
-            syllableOpen: pose.open * _talkBlend.value,
-            rigPhase: rigPhase,
-          ),
-        ),
-      ),
+  /// Same instance per asset so the per-frame builder skips re-building faces.
+  final Map<String, Widget> _faces = {};
+  double _facesSize = 0;
+
+  Widget _faceWidget(String asset) {
+    if (_facesSize != widget.sprite) {
+      _faces.clear();
+      _facesSize = widget.sprite;
+    }
+    return _faces.putIfAbsent(
+      asset,
+      () => _CoachFace(asset: asset, size: widget.sprite),
     );
   }
 
@@ -644,31 +618,33 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
         child: Transform.rotate(angle: 0, child: child),
       );
     }
+    final e = Curves.easeOutCubic.transform(g.clamp(0.0, 1.0));
     switch (kind) {
       case GuideGesture.handstand:
+        // Soft tip — not a full flip.
         return Transform.translate(
-          offset: Offset(0, widget.sprite * 0.08 * g),
-          child: Transform.rotate(angle: math.pi * g, child: child),
+          offset: Offset(0, widget.sprite * 0.04 * e),
+          child: Transform.rotate(angle: 0.35 * e, alignment: Alignment.bottomCenter, child: child),
         );
       case GuideGesture.leanLeft:
         return Transform.translate(
-          offset: Offset(-6 * g, 0),
-          child: Transform.rotate(angle: -0.22 * g, child: child),
+          offset: Offset(-3.5 * e, 0),
+          child: Transform.rotate(angle: -0.10 * e, child: child),
         );
       case GuideGesture.leanRight:
         return Transform.translate(
-          offset: Offset(6 * g, 0),
-          child: Transform.rotate(angle: 0.22 * g, child: child),
+          offset: Offset(3.5 * e, 0),
+          child: Transform.rotate(angle: 0.10 * e, child: child),
         );
       case GuideGesture.peek:
         return Transform.translate(
-          offset: Offset(8 * g, -4 * g),
-          child: Transform.rotate(angle: 0.11 * g, child: child),
+          offset: Offset(4 * e, -2.5 * e),
+          child: Transform.rotate(angle: 0.06 * e, child: child),
         );
       case GuideGesture.spinHop:
         return Transform.translate(
-          offset: Offset(0, -12 * math.sin(g * math.pi)),
-          child: Transform.rotate(angle: math.pi * 2 * g, child: child),
+          offset: Offset(0, -8 * math.sin(e * math.pi)),
+          child: Transform.rotate(angle: 0.35 * math.sin(e * math.pi), child: child),
         );
       case GuideGesture.none:
         return Transform.translate(
@@ -738,53 +714,48 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
         final faceT = Curves.easeInOutCubic.transform(_face.value.clamp(0.0, 1.0));
         final topFace = _showingA ? _faceA : _faceB;
         final botFace = _showingA ? _faceB : _faceA;
-
         // Spring-like settle curve for entrance/reaction pops
         final settleRaw = _settle.value.clamp(0.0, 1.0);
         final settle = Curves.easeOutBack.transform(settleRaw);
         final g = _gesture.value.clamp(0.0, 1.0);
+        final activeGag = _gestureTarget == GuideGesture.none
+            ? activeGesture
+            : _gestureTarget;
 
         // Viseme & syllable energy
         final viseme = _currentViseme(activeMood);
         final talkW = _talkBlend.value.clamp(0.0, 1.0);
         final syllableEnergy = viseme.open * talkW;
 
-        // Continuous 60fps Rive-like body physics:
-        // 1. Multi-harmonic breathing (slow deep breath + secondary chest harmonic)
+        // Soft Lottie-like body physics (capped amplitudes — no wild wobble).
         final breathWave = reduce
             ? 0.0
-            : (math.sin(tau * 2.0) * 0.7 + math.sin(tau * 4.0 + 0.6) * 0.3);
-        // 2. Idle figure-8 sway + talking syllabic bounce
+            : (math.sin(tau * 2.0) * 0.75 + math.sin(tau * 4.0 + 0.6) * 0.25);
         final swayX = reduce
             ? 0.0
-            : math.sin(tau * 1.0) * 1.4 +
-                math.cos(_mouth.value * math.pi * 4) * 1.2 * talkW;
+            : math.sin(tau) * 0.7 + math.cos(_mouth.value * math.pi * 3) * 0.55 * talkW;
         final floatY = reduce
             ? 0.0
-            : -breathWave.abs() * 1.8 - syllableEnergy * 3.4;
-        // 3. Articulated head/torso tilt (rotates smoothly with breath & speech emphasis)
+            : -breathWave.abs() * 1.1 - syllableEnergy * 1.8;
         final tiltAngle = reduce
             ? 0.0
-            : math.sin(tau * 1.0 + 0.4) * 0.026 +
-                math.sin(_mouth.value * math.pi * 2) * 0.048 * talkW +
-                (joy ? math.sin(tau * 3) * 0.032 : 0.0);
-        // 4. Squash-and-stretch (preserved volume: when stretching Y, slightly compress X)
+            : math.sin(tau + 0.4) * 0.014 +
+                math.sin(_mouth.value * math.pi * 2) * 0.022 * talkW +
+                (joy ? math.sin(tau * 2.2) * 0.016 : 0.0);
         final stretchY = reduce
             ? 1.0
-            : 1.0 +
-                0.016 * breathWave +
-                0.034 * syllableEnergy +
-                (1.0 - settleRaw) * 0.06;
+            : 1.0 + 0.010 * breathWave + 0.018 * syllableEnergy + (1.0 - settleRaw) * 0.04;
         final squashX = reduce
             ? 1.0
-            : 1.0 -
-                0.010 * breathWave -
-                0.018 * syllableEnergy -
-                (1.0 - settleRaw) * 0.04;
+            : 1.0 - 0.006 * breathWave - 0.010 * syllableEnergy - (1.0 - settleRaw) * 0.028;
 
         final warnShake = (warn && !reduce && settleRaw < 0.95)
-            ? math.sin(settleRaw * math.pi * 6) * 4.5 * (1 - settleRaw)
+            ? math.sin(settleRaw * math.pi * 5) * 2.4 * (1 - settleRaw)
             : 0.0;
+        final poke = reduce ? 1.0 : _touchScale(_touchPop.value);
+        // Gentle zoom while speaking so the face reads clearly with the bubble.
+        final talkZoom = reduce ? 1.0 : 1.0 + 0.10 * talkW;
+        final bodyScale = poke * talkZoom;
 
         return Transform.translate(
           offset: Offset(
@@ -825,153 +796,127 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
                   const SizedBox(height: 5),
                 ],
                 Transform.scale(
-                  scale: 1.0 + 0.22 * math.sin(_touchPop.value * math.pi),
+                  scale: bodyScale,
                   alignment: widget.centered ? Alignment.bottomCenter : Alignment.bottomRight,
                   child: InkResponse(
-                    onTap: widget.onTap != null ? _onSpriteTap : null,
+                    onTap: _onSpriteTap,
                     customBorder: const CircleBorder(),
-                    splashColor: SlmColors.gold300.withValues(alpha: 0.35),
-                    highlightColor: SlmColors.gold300.withValues(alpha: 0.15),
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
                     radius: widget.sprite * 0.52,
                     child: _gestureWrap(
                       g,
-                      _gestureTarget == GuideGesture.none
-                          ? activeGesture
-                          : _gestureTarget,
+                      activeGag,
                       RepaintBoundary(
                       child: SizedBox(
                         width: widget.sprite,
                         height: widget.sprite,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      clipBehavior: Clip.none,
-                      children: [
-                        // 1. Rive-style glowing aura & acoustic voice ripples behind character
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: _MascotAuraPainter(
-                              mood: activeMood,
-                              rigPhase: rigT,
-                              talkEnergy: syllableEnergy,
-                              talkBlend: talkW,
-                            ),
-                          ),
-                        ),
-                        // 2. Articulated character body with squash-stretch, tilt & float
-                        Transform.translate(
-                          offset: Offset(swayX, floatY),
-                          child: Transform.rotate(
-                            angle: tiltAngle,
-                            alignment: const Alignment(0, 0.72),
-                            child: Transform(
-                              alignment: Alignment.bottomCenter,
-                              transform: Matrix4.diagonal3Values(
-                                squashX * (0.92 + 0.08 * settle.clamp(0.0, 1.08)),
-                                stretchY * (0.92 + 0.08 * settle.clamp(0.0, 1.08)),
-                                1.0,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          clipBehavior: Clip.none,
+                          children: [
+                            Transform.translate(
+                              offset: Offset(swayX, floatY),
+                              child: Transform.rotate(
+                                angle: tiltAngle,
+                                alignment: const Alignment(0, 0.72),
+                                child: Transform(
+                                  alignment: Alignment.bottomCenter,
+                                  transform: Matrix4.diagonal3Values(
+                                    squashX * (0.94 + 0.06 * settle.clamp(0.0, 1.08)),
+                                    stretchY * (0.94 + 0.06 * settle.clamp(0.0, 1.08)),
+                                    1.0,
+                                  ),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Opacity(
+                                        opacity: (1 - faceT).clamp(0.0, 1.0),
+                                        child: _faceWidget(botFace),
+                                      ),
+                                      Opacity(
+                                        opacity: faceT.clamp(0.0, 1.0),
+                                        child: _faceWidget(topFace),
+                                      ),
+                                      if (overlay != null)
+                                        Opacity(
+                                          opacity: 0.94,
+                                          child: _faceWidget(overlay),
+                                        ),
+                                      MascotFaceRig(
+                                        sprite: widget.sprite,
+                                        mood: activeMood,
+                                        open: viseme.open,
+                                        width: viseme.width,
+                                        round: viseme.round,
+                                        smile: viseme.smile,
+                                        talkBlend: talkW,
+                                        reduce: reduce,
+                                        speaking: _isSpeaking,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Opacity(
-                                    opacity: (1 - faceT).clamp(0.0, 1.0),
-                                    child: _Face(
-                                      asset: botFace,
-                                      size: widget.sprite,
+                            ),
+                            if (joy && !reduce)
+                              for (var i = 0; i < stars; i++)
+                                Positioned(
+                                  left: widget.sprite * 0.5 +
+                                      (widget.sprite * 0.40) *
+                                          math.cos(tau * 1.2 + i * (math.pi * 2 / stars)) -
+                                      6,
+                                  top: widget.sprite * 0.26 +
+                                      (widget.sprite * 0.18) *
+                                          math.sin(tau * 1.2 + i * (math.pi * 2 / stars)),
+                                  child: Opacity(
+                                    opacity: 0.55 + 0.35 * math.sin(tau * 2 + i).abs(),
+                                    child: Icon(
+                                      Icons.auto_awesome,
+                                      size: widget.sprite > 110 ? 12 : 9,
+                                      color: SlmColors.gold300,
                                     ),
                                   ),
-                                  Opacity(
-                                    opacity: faceT.clamp(0.0, 1.0),
-                                    child: _Face(
-                                      asset: topFace,
-                                      size: widget.sprite,
-                                    ),
-                                  ),
-                                  if (overlay != null)
-                                    Opacity(
-                                      opacity: 0.94,
-                                      child: _Face(
-                                        asset: overlay,
-                                        size: widget.sprite,
+                                ),
+                            if (sleep && !reduce)
+                              for (var i = 0; i < 2; i++)
+                                Positioned(
+                                  right: 4 + i * 8.0,
+                                  top: 8 - ((rigT * 2 + i * 0.5) % 1.0) * 16,
+                                  child: Opacity(
+                                    opacity: (1.0 - ((rigT * 2 + i * 0.5) % 1.0)).clamp(0.0, 0.75),
+                                    child: Text(
+                                      i == 0 ? 'z' : 'Z',
+                                      style: TextStyle(
+                                        color: SlmColors.gold200,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: i == 0 ? 11 : 14,
                                       ),
                                     ),
-                                  // 3. Multi-viseme fluid lip-sync mouth rig
-                                  _buildRiveMouth(activeMood, viseme),
-                                  // 4. Expressive eyebrows, eye glints & helmet sheen
-                                  if (!reduce)
-                                    _buildRiveExpressions(
-                                      activeMood,
-                                      viseme,
-                                      rigT,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // 5. Orbiting celebration sparkles
-                        if (joy && !reduce)
-                          for (var i = 0; i < stars; i++)
-                            Positioned(
-                              left: widget.sprite * 0.5 +
-                                  (widget.sprite * 0.44) *
-                                      math.cos(tau * 1.5 + i * (math.pi * 2 / stars)) -
-                                  7,
-                              top: widget.sprite * 0.28 +
-                                  (widget.sprite * 0.22) *
-                                      math.sin(tau * 1.5 + i * (math.pi * 2 / stars)),
-                              child: Transform.scale(
-                                scale: 0.75 +
-                                    0.35 *
-                                        math.sin(tau * 3 + i * 1.3).abs(),
-                                child: Icon(
-                                  Icons.auto_awesome,
-                                  size: widget.sprite > 110 ? 15 : 11,
-                                  color: SlmColors.gold300.withValues(alpha: 0.92),
-                                ),
-                              ),
-                            ),
-                        // 6. Floating Zzz sleep particles
-                        if (sleep && !reduce)
-                          for (var i = 0; i < 2; i++)
-                            Positioned(
-                              right: 4 + i * 8.0,
-                              top: 8 - ((rigT * 2 + i * 0.5) % 1.0) * 16,
-                              child: Opacity(
-                                opacity: (1.0 - ((rigT * 2 + i * 0.5) % 1.0))
-                                    .clamp(0.0, 0.85),
-                                child: Text(
-                                  i == 0 ? 'z' : 'Z',
-                                  style: TextStyle(
-                                    color: SlmColors.gold200,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: i == 0 ? 11 : 14,
                                   ),
                                 ),
-                              ),
-                            ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
-  },
-);
   }
 }
 
-class _Face extends StatelessWidget {
+class _CoachFace extends StatelessWidget {
   final String asset;
   final double size;
 
-  const _Face({required this.asset, required this.size});
+  const _CoachFace({required this.asset, required this.size});
 
   /// Tallest face export; never decode above the source.
   static const _maxPx = 900;
@@ -998,352 +943,7 @@ class _Face extends StatelessWidget {
   }
 }
 
-/// Rive-style circular rim-light pedestal and acoustic voice wave rings behind the Mascot.
-class _MascotAuraPainter extends CustomPainter {
-  final GuideMood mood;
-  final double rigPhase;
-  final double talkEnergy;
-  final double talkBlend;
-
-  const _MascotAuraPainter({
-    required this.mood,
-    required this.rigPhase,
-    required this.talkEnergy,
-    required this.talkBlend,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.5, size.height * 0.54);
-    final baseR = size.shortestSide * 0.40;
-    final warn = mood == GuideMood.warn ||
-        mood == GuideMood.fright ||
-        mood == GuideMood.fallen;
-    final joy = mood == GuideMood.glad || mood == GuideMood.celebrate;
-
-    final primaryColor = warn
-        ? SlmColors.danger
-        : joy
-            ? SlmColors.emerald400
-            : SlmColors.gold400;
-
-    // Soft ambient radial glow behind head & shoulders
-    final pulse = 0.5 + 0.5 * math.sin(rigPhase * math.pi * 4);
-    final glowRadius = baseR * (1.05 + 0.08 * pulse + 0.14 * talkEnergy);
-    canvas.drawCircle(
-      center,
-      glowRadius,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            primaryColor.withValues(alpha: 0.28 + 0.18 * talkEnergy),
-            primaryColor.withValues(alpha: 0.08),
-            Colors.transparent,
-          ],
-          stops: const [0.0, 0.65, 1.0],
-        ).createShader(Rect.fromCircle(center: center, radius: glowRadius)),
-    );
-
-    // Acoustic voice ripple rings when speaking
-    if (talkBlend > 0.05) {
-      for (var i = 0; i < 2; i++) {
-        final waveP = ((rigPhase * 3.0) + i * 0.5) % 1.0;
-        final r = baseR * (0.88 + 0.42 * waveP);
-        final alpha = (1.0 - waveP) * 0.38 * talkBlend * (0.5 + 0.5 * talkEnergy);
-        canvas.drawCircle(
-          center,
-          r,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.6
-            ..color = primaryColor.withValues(alpha: alpha.clamp(0.0, 1.0)),
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _MascotAuraPainter old) =>
-      old.mood != mood ||
-      old.rigPhase != rigPhase ||
-      old.talkEnergy != talkEnergy ||
-      old.talkBlend != talkBlend;
-}
-
-/// Rive-style procedural overlay for expressive eyebrows, eye catchlights,
-/// and safety-helmet rim sheen.
-class _MascotRigOverlayPainter extends CustomPainter {
-  final GuideMood mood;
-  final double syllableOpen;
-  final double rigPhase;
-
-  const _MascotRigOverlayPainter({
-    required this.mood,
-    required this.syllableOpen,
-    required this.rigPhase,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    if (w < 16 || h < 16) return;
-
-    // 1. Safety Helmet Specular Rim Sheen (sweeps smoothly across the yellow helmet dome)
-    final sheenPhase = (rigPhase * 1.5) % 1.0;
-    final sheenX = w * (0.28 + 0.44 * math.sin(sheenPhase * math.pi));
-    final sheenRect = Rect.fromCenter(
-      center: Offset(sheenX, h * 0.20),
-      width: w * 0.22,
-      height: h * 0.055,
-    );
-    canvas.save();
-    canvas.translate(sheenRect.center.dx, sheenRect.center.dy);
-    canvas.rotate(-0.18);
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset.zero,
-        width: sheenRect.width,
-        height: sheenRect.height,
-      ),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.22)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-    );
-    canvas.restore();
-
-    if (mood == GuideMood.sleep) return;
-
-    // 2. Animated Eye Specular Catchlights (gives living Rive/Lottie sparkle to the eyes)
-    final driftX = math.sin(rigPhase * math.pi * 2) * (w * 0.006);
-    final driftY = -syllableOpen * (h * 0.004);
-    final glintPaint = Paint()..color = Colors.white.withValues(alpha: 0.88);
-    final rGlint = math.max(1.0, w * 0.016);
-    // Left & right eye highlight positions in normalized sprite space
-    final leftEye = Offset(w * 0.435 + driftX, h * 0.356 + driftY);
-    final rightEye = Offset(w * 0.625 + driftX, h * 0.356 + driftY);
-    canvas.drawCircle(leftEye, rGlint, glintPaint);
-    canvas.drawCircle(rightEye, rGlint, glintPaint);
-
-    // 3. Expressive Eyebrow Articulation (lifts with speech syllables & mood)
-    final browLift = (mood == GuideMood.glad || mood == GuideMood.celebrate)
-        ? -h * 0.012
-        : (mood == GuideMood.warn || mood == GuideMood.fright)
-            ? h * 0.005
-            : -syllableOpen * (h * 0.011);
-    final browPaint = Paint()
-      ..color = const Color(0xFF1F140E).withValues(alpha: 0.72)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(1.3, w * 0.026)
-      ..strokeCap = StrokeCap.round;
-
-    final browY = h * 0.318 + browLift;
-    final tilt = (mood == GuideMood.warn || mood == GuideMood.fright)
-        ? h * 0.008
-        : 0.0;
-
-    final leftBrow = Path()
-      ..moveTo(w * 0.37, browY + h * 0.006 - tilt)
-      ..quadraticBezierTo(
-        w * 0.43,
-        browY - h * 0.010,
-        w * 0.48,
-        browY + h * 0.004 + tilt,
-      );
-    final rightBrow = Path()
-      ..moveTo(w * 0.57, browY + h * 0.004 + tilt)
-      ..quadraticBezierTo(
-        w * 0.63,
-        browY - h * 0.010,
-        w * 0.69,
-        browY + h * 0.006 - tilt,
-      );
-    canvas.drawPath(leftBrow, browPaint);
-    canvas.drawPath(rightBrow, browPaint);
-
-    // 4. Grounded Contact Shadow (gives grounded weight and removes rigid floating)
-    final shadowPulse = 0.5 + 0.5 * math.sin(rigPhase * math.pi * 2);
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.52, h * 0.94),
-        width: w * (0.62 + 0.08 * shadowPulse),
-        height: h * 0.08,
-      ),
-      Paint()
-        ..color = const Color(0x66050A16)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _MascotRigOverlayPainter old) =>
-      old.mood != mood ||
-      old.syllableOpen != syllableOpen ||
-      old.rigPhase != rigPhase;
-}
-
-/// Multi-viseme 60fps mouth rig painter that morphs between closed smile,
-/// bilabial press, dental grin, rounded 'O', and wide 'AA' with oral cavity,
-/// upper teeth, animated tongue, and natural lip contours.
-class _MascotRiveMouthPainter extends CustomPainter {
-  final _VisemePose pose;
-  final double talkBlend;
-
-  const _MascotRiveMouthPainter({
-    required this.pose,
-    required this.talkBlend,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    if (w < 2 || h < 2 || talkBlend < 0.02) return;
-
-    canvas.save();
-    // 1. Clean skin-tone base plate over the underlying static sprite mouth
-    // so we can draw any viseme shape (narrow 'O', closed 'M', wide 'AA') cleanly.
-    final baseRect = Rect.fromLTWH(0, h * 0.02, w, h * 0.96);
-    final skinBase = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Color(0xFFC97F4F),
-          Color(0xFFC27646),
-          Color(0xFFB86C3D),
-        ],
-      ).createShader(baseRect);
-    canvas.drawOval(baseRect, skinBase);
-
-    final cx = w * 0.50;
-    final cy = h * 0.46;
-    final open = pose.open.clamp(0.0, 1.0);
-    final widthFactor = pose.width.clamp(0.55, 1.08);
-    final round = pose.round.clamp(0.0, 1.0);
-    final smile = pose.smile.clamp(-0.35, 0.55);
-
-    final halfW = (w * 0.42) * widthFactor * (1.0 - 0.22 * round);
-    final halfH = (h * 0.06) + (h * 0.36) * open * (1.0 + 0.12 * round);
-    final cornerLift = -smile * h * 0.16;
-
-    // 2. If mouth is nearly closed (Bilabial M/B/P or brief pause), draw a warm curved lip line
-    if (open < 0.09) {
-      final lipLine = Path()
-        ..moveTo(cx - halfW, cy + cornerLift)
-        ..quadraticBezierTo(cx, cy + h * 0.12, cx + halfW, cy + cornerLift);
-      canvas.drawPath(
-        lipLine,
-        Paint()
-          ..color = const Color(0xFF3A1F16)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(1.4, w * 0.065)
-          ..strokeCap = StrokeCap.round,
-      );
-      canvas.restore();
-      return;
-    }
-
-    // 3. Build smooth upper & lower lip bezier contour for the active viseme
-    final leftCorner = Offset(cx - halfW, cy + cornerLift);
-    final rightCorner = Offset(cx + halfW, cy + cornerLift);
-    final topCtrlY = cy - halfH * (0.85 + 0.25 * round);
-    final botCtrlY = cy + halfH * (1.15 + 0.25 * round);
-
-    final mouthPath = Path()
-      ..moveTo(leftCorner.dx, leftCorner.dy)
-      ..cubicTo(
-        cx - halfW * 0.55,
-        topCtrlY,
-        cx + halfW * 0.55,
-        topCtrlY,
-        rightCorner.dx,
-        rightCorner.dy,
-      )
-      ..cubicTo(
-        cx + halfW * 0.60,
-        botCtrlY,
-        cx - halfW * 0.60,
-        botCtrlY,
-        leftCorner.dx,
-        leftCorner.dy,
-      )
-      ..close();
-
-    // 4. Oral cavity interior
-    canvas.save();
-    canvas.clipPath(mouthPath);
-    canvas.drawPath(
-      mouthPath,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: const [
-            Color(0xFF2B0E0E),
-            Color(0xFF4A151B),
-          ],
-        ).createShader(mouthPath.getBounds()),
-    );
-
-    // 5. Animated tongue contour at bottom of oral cavity
-    if (open > 0.22) {
-      final tongueTop = cy + halfH * (0.28 - 0.22 * pose.tongue);
-      final tongueRect = Rect.fromCenter(
-        center: Offset(cx, tongueTop + halfH * 0.55),
-        width: halfW * 1.35,
-        height: halfH * 1.1,
-      );
-      canvas.drawOval(
-        tongueRect,
-        Paint()..color = const Color(0xFFD95B66),
-      );
-    }
-
-    // 6. Crisp white upper teeth bar
-    if (pose.teeth > 0.12 && open > 0.16) {
-      final teethH = halfH * 0.42 * pose.teeth;
-      final teethRect = RRect.fromRectAndCorners(
-        Rect.fromLTRB(
-          cx - halfW * 0.78,
-          cy - halfH * 0.85,
-          cx + halfW * 0.78,
-          cy - halfH * 0.85 + teethH,
-        ),
-        bottomLeft: const Radius.circular(2.5),
-        bottomRight: const Radius.circular(2.5),
-      );
-      canvas.drawRRect(
-        teethRect,
-        Paint()..color = const Color(0xFFFDF8EE),
-      );
-    }
-    canvas.restore();
-
-    // 7. Outer lip border definition
-    canvas.drawPath(
-      mouthPath,
-      Paint()
-        ..color = const Color(0xFF3E1F16)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(1.1, w * 0.048)
-        ..strokeJoin = StrokeJoin.round,
-    );
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _MascotRiveMouthPainter old) =>
-      old.pose.open != pose.open ||
-      old.pose.width != pose.width ||
-      old.pose.round != pose.round ||
-      old.pose.smile != pose.smile ||
-      old.talkBlend != talkBlend;
-}
-
-/// Legacy compatibility alias so any external caller referencing [MascotLipPainter]
-/// gets the smooth Rive-style mouth rendering automatically.
+/// Legacy lip helper — thin closed smile for any leftover call sites.
 class MascotLipPainter extends CustomPainter {
   const MascotLipPainter(this.close);
 
@@ -1351,18 +951,21 @@ class MascotLipPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final open = (1.0 - close.clamp(0.0, 1.0)).clamp(0.0, 1.0);
-    _MascotRiveMouthPainter(
-      pose: _VisemePose(
-        open: open,
-        width: 0.92,
-        round: 0.25,
-        smile: 0.26,
-        teeth: open * 0.8,
-        tongue: open * 0.5,
-      ),
-      talkBlend: 1.0,
-    ).paint(canvas, size);
+    final w = size.width;
+    final h = size.height;
+    final cy = h * 0.46;
+    final halfW = w * 0.38;
+    final path = Path()
+      ..moveTo(w * 0.5 - halfW, cy)
+      ..quadraticBezierTo(w * 0.5, cy + h * 0.10, w * 0.5 + halfW, cy);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = const Color(0xFF3A1F16)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1.4, w * 0.06)
+        ..strokeCap = StrokeCap.round,
+    );
   }
 
   @override

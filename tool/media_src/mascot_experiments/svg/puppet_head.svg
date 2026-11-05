@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <!-- Neck -->
+  <path d="M88 118 H112 V132 H88 Z" fill="#C97F4F"/>
+  <!-- Face (no brows  brows are a separate layer) -->
+  <ellipse cx="100" cy="92" rx="38" ry="42" fill="#D08A57"/>
+  <!-- Ear L/R -->
+  <ellipse cx="62" cy="96" rx="7" ry="10" fill="#C97F4F"/>
+  <ellipse cx="138" cy="96" rx="7" ry="10" fill="#C97F4F"/>
+  <!-- Cheek warmth -->
+  <ellipse cx="78" cy="104" rx="7" ry="4.5" fill="#E8A07A" opacity="0.45"/>
+  <ellipse cx="122" cy="104" rx="7" ry="4.5" fill="#E8A07A" opacity="0.45"/>
+  <!-- Nose -->
+  <path d="M100 92 L96 106 Q100 110 104 106 Z" fill="#B86F45"/>
+  <!-- Soft jaw shade -->
+  <path d="M72 118 Q100 128 128 118" stroke="#B86F45" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
+  <!-- Helmet shell -->
+  <path d="M58 78 C60 48 78 34 100 34 C122 34 140 48 142 78 L138 88 H62 Z" fill="#E4C77F"/>
+  <path d="M58 78 C60 52 78 38 100 38 C122 38 140 52 142 78" stroke="#BF9443" stroke-width="3" fill="none"/>
+  <!-- Helmet brim -->
+  <path d="M52 78 H148" stroke="#9C7631" stroke-width="5" stroke-linecap="round"/>
+  <!-- Helmet highlight -->
+  <path d="M78 48 Q100 42 118 52" stroke="#FAF1DA" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+  <!-- Chin strap -->
+  <path d="M70 100 Q68 122 88 128" stroke="#765822" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M130 100 Q132 122 112 128" stroke="#765822" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+</svg>

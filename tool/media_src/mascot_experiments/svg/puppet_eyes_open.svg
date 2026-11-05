@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <!-- Whites -->
+  <ellipse cx="84" cy="90" rx="9.5" ry="8" fill="#F8F3E7"/>
+  <ellipse cx="116" cy="90" rx="9.5" ry="8" fill="#F8F3E7"/>
+  <!-- Pupils -->
+  <circle cx="85" cy="91" r="4.2" fill="#0B1426"/>
+  <circle cx="117" cy="91" r="4.2" fill="#0B1426"/>
+  <!-- Specular -->
+  <circle cx="87" cy="88.5" r="1.4" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="119" cy="88.5" r="1.4" fill="#FFFFFF" opacity="0.9"/>
+</svg>

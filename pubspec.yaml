@@ -21,6 +21,7 @@ dependencies:
   url_launcher: ^6.3.2
   path_provider: ^2.1.6
   crypto: ^3.0.8
+  flutter_svg: ^2.2.3
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +64,7 @@ flutter:
     - assets/sounds/intro/confirm.ogg
     - assets/sounds/intro/click.ogg
     - assets/sounds/voice/
+    - assets/sounds/learn/
     - assets/data/
     - assets/game/catalog/
     - assets/lineman/
@@ -71,6 +73,8 @@ flutter:
     - assets/quizzes/
     - assets/duty_slip/
     - assets/duty_slip/dress/
+    - assets/guide/mascot/
+    - assets/guide/mascot/rival/
     - assets/duty_slip/world3d/
     - assets/brand/
     - assets/safety/library/ab-cable-items/

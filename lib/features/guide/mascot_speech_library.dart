@@ -163,30 +163,26 @@ class MascotSpeechLibrary {
   static const _welcomeDailyPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.daily.1',
-      textBn: 'কি ভাই, ডিউটিতে নামার আগে তৈরি তো? চলুন, আজও যেন একটাও ভুল না হয়!',
+      textBn: 'আজকের ডিউটিতে স্বাগতম। আগে নিরাপত্তা, তারপর কাজ। চলুন শুরু করি।',
       mood: GuideMood.wake,
-      voiceKey: 'ds_l1_intro',
     ),
     MascotCue(
       id: 'ladder.welcome.daily.2',
-      textBn: 'সুপ্রভাত পার্টনার! আগে জীবন, পরে কাজ—চলুন আজকের ধাপটা শুরু করি।',
+      textBn: 'স্বাগতম। মইয়ের ধাপগুলো একটার পর একটা শেষ করে এগোই।',
       mood: GuideMood.wake,
-      voiceKey: 'ds_l2_start',
     ),
   ];
 
   static const _welcomeReturnPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.return.1',
-      textBn: 'চলে এসেছেন! চলুন, সামনের ধাপটা ক্লিয়ার করে ওপরে উঠি।',
+      textBn: 'ফিরে এসেছেন। যেখানে থেমেছিলেন, সেখান থেকেই এগোই।',
       mood: GuideMood.talk,
-      voiceKey: 'ds_exp_right_3',
     ),
     MascotCue(
       id: 'ladder.welcome.return.2',
-      textBn: 'তৈরি তো ভাই? এক ধাপ এক ধাপ করে নিরাপদ পথে এগোই।',
-      mood: GuideMood.inspire,
-      voiceKey: 'ds_exp_right_1',
+      textBn: 'চলুন, সামনের ধাপটা শেষ করে ওপরে উঠি।',
+      mood: GuideMood.talk,
     ),
   ];
 
@@ -891,6 +887,8 @@ class MascotSpeechLibrary {
     String textBn, {
     String? voiceKey,
     bool muted = false,
+    double pitch = 1.0,
+    double rate = 0.48,
   }) async {
     final token = ++_speakToken;
     if (muted || textBn.trim().isEmpty) {
@@ -909,7 +907,7 @@ class MascotSpeechLibrary {
 
     if (resolvedKey != null) {
       await _stopTts();
-      MascotTalk.begin();
+      MascotTalk.begin(maxHold: _estimateHold(cleanText));
       try {
         await DsVoice.play(resolvedKey, muted: false);
       } finally {
@@ -920,9 +918,17 @@ class MascotSpeechLibrary {
       return;
     }
 
-    // 2. Otherwise use FlutterTts (bn-IN) with live synchronized lip-sync
+    // 2. Otherwise use FlutterTts (bn-IN). Lips open on the engine's start
+    // callback (not before), so the mouth never runs ahead of the voice.
     DsVoice.stop();
-    MascotTalk.begin();
+    var began = false;
+    void open() {
+      if (began || token != _speakToken) return;
+      began = true;
+      MascotTalk.begin(maxHold: _estimateHold(cleanText));
+    }
+
+    Timer? startGuard;
     try {
       final tts = await _ensureTts();
       if (tts == null || token != _speakToken) {
@@ -930,24 +936,55 @@ class MascotSpeechLibrary {
         return;
       }
       await tts.stop();
+      await tts.setPitch(pitch);
+      await tts.setSpeechRate(rate);
+      if (token != _speakToken) return;
+      tts.setStartHandler(open);
       tts.setCompletionHandler(() {
-        if (token == _speakToken) {
-          MascotTalk.end();
-        }
+        if (token == _speakToken && began) MascotTalk.end();
       });
       tts.setCancelHandler(() {
-        if (token == _speakToken) {
-          MascotTalk.reset();
-        }
+        if (token == _speakToken) MascotTalk.reset();
       });
       tts.setErrorHandler((_) {
-        if (token == _speakToken) {
-          MascotTalk.reset();
-        }
+        if (token == _speakToken) MascotTalk.reset();
       });
+      // Engines that never report start still get lips after a short beat.
+      startGuard = Timer(const Duration(milliseconds: 650), open);
       await tts.speak(cleanText);
     } catch (_) {
-      MascotTalk.reset();
+      if (token == _speakToken) MascotTalk.reset();
+    } finally {
+      startGuard?.cancel();
+      // awaitSpeakCompletion should finish with the utterance; clear lip-sync if still open.
+      if (token == _speakToken && MascotTalk.active.value) {
+        MascotTalk.reset();
+      }
+    }
+  }
+
+  /// Rough max hold so lip-sync never outlives a hung TTS session.
+  static Duration _estimateHold(String text) {
+    final chars = text.trim().length;
+    final ms = (1200 + chars * 85).clamp(2500, 18000);
+    return Duration(milliseconds: ms);
+  }
+
+  /// Wait until lip-sync / voice finishes (bubble + host should call this before clearing text).
+  static Future<void> waitUntilQuiet({
+    Duration timeout = const Duration(seconds: 18),
+  }) async {
+    if (!MascotTalk.active.value) return;
+    final done = Completer<void>();
+    void listener() {
+      if (!MascotTalk.active.value && !done.isCompleted) done.complete();
+    }
+
+    MascotTalk.active.addListener(listener);
+    try {
+      await done.future.timeout(timeout, onTimeout: () {});
+    } finally {
+      MascotTalk.active.removeListener(listener);
     }
   }
 

@@ -3,6 +3,8 @@
 > **Master Technical & Animation Specification for Collaborators, 2D Motion Designers, and Developers**  
 > Target: Transform the Game Mascot ("ওস্তাদ লাইনম্যান" — `AiLinemanGuide`) from procedural 2D overlays into a studio-grade, fluid, vector-rigged character (Lottie / Rive) with full skeletal articulation, lifelike squash-and-stretch, and audio-synchronized visemes.
 
+**Status (live app):** Expressive **coach WebP** bust is the live mascot again (happy / oops / blink / talk plates) + **mouth-only** SVG visemes — no SVG brows (avoids double eyebrows). The Rive/SVG puppet experiments (`MascotRivePuppet`, `ostad.riv` source) are parked in `tool/media_src/mascot_experiments/` (not bundled) for when a real lineman rig ships; do **not** use marketplace demo characters as the face.
+
 ---
 
 ## 1. Executive Summary: Why Vector Rigging Replaces Flat Sprites
