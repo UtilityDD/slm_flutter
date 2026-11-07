@@ -1463,7 +1463,7 @@
       "lessonId": "1.7",
       "moduleId": "m1",
       "packId": "do_1_7_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 19
     },
     {
@@ -1472,7 +1472,7 @@
       "lessonId": "1.7",
       "moduleId": "m1",
       "packId": "do_1_7_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 20
     },
     {
@@ -1490,7 +1490,7 @@
       "lessonId": "1.8",
       "moduleId": "m1",
       "packId": "do_1_8_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 22
     },
     {
@@ -1499,7 +1499,7 @@
       "lessonId": "1.8",
       "moduleId": "m1",
       "packId": "do_1_8_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 23
     },
     {
@@ -4409,20 +4409,20 @@
     },
     {
       "id": "do_1_7_a",
-      "engineType": "placeholder",
+      "engineType": "shock_rescue",
       "lessonId": "1.7",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 17
     },
     {
       "id": "do_1_7_b",
-      "engineType": "placeholder",
+      "engineType": "golden_minute",
       "lessonId": "1.7",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 24
@@ -4437,20 +4437,20 @@
     },
     {
       "id": "do_1_8_a",
-      "engineType": "placeholder",
+      "engineType": "fire_choose",
       "lessonId": "1.8",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 18
     },
     {
       "id": "do_1_8_b",
-      "engineType": "placeholder",
+      "engineType": "fire_pass",
       "lessonId": "1.8",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 25

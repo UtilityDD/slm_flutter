@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <rect x="40" y="40" width="80" height="100" rx="8" fill="#f2efe6" stroke="#6b6560" stroke-width="3"/>
+  <g fill="#3b3f45"><rect x="54" y="60" width="14" height="30" rx="3"/><rect x="74" y="60" width="14" height="30" rx="3"/><rect x="94" y="60" width="14" height="30" rx="3"/></g>
+  <path d="M60 84 L60 66" stroke="#2e8b45" stroke-width="4"/>
+  <path d="M150 90 L190 90 M180 80 L192 90 L180 100" fill="none" stroke="#2e8b45" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="210" y="48" width="44" height="80" rx="8" fill="#31363c"/><rect x="216" y="58" width="32" height="50" rx="2" fill="#8fb7dd"/>
+  <g transform="translate(232 160)"><circle r="20" fill="#fff" stroke="#31363c" stroke-width="3"/><path d="M0 0 L0 -14 M0 0 L10 6" stroke="#c0392b" stroke-width="3" stroke-linecap="round"/></g>
+  <circle cx="292" cy="172" r="14" fill="#2e8b45"/><path d="M284 172 L290 178 L300 166" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

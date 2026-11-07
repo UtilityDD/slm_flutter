@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <g transform="translate(80 96)">
+    <circle r="48" fill="#fff" stroke="#31363c" stroke-width="5"/>
+    <path d="M-40 0 A40 40 0 0 1 -12 -38" fill="none" stroke="#c0392b" stroke-width="10"/>
+    <path d="M-12 -38 A40 40 0 0 1 12 -38" fill="none" stroke="#2e8b45" stroke-width="10"/>
+    <path d="M12 -38 A40 40 0 0 1 40 0" fill="none" stroke="#c0392b" stroke-width="10"/>
+    <path d="M0 0 L-30 -14" stroke="#31363c" stroke-width="4" stroke-linecap="round"/><circle r="5" fill="#31363c"/>
+  </g>
+  <circle cx="132" cy="172" r="14" fill="#c0392b"/><path d="M125 165 L139 179 M139 165 L125 179" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+  <g transform="translate(240 96)">
+    <circle r="48" fill="#fff" stroke="#31363c" stroke-width="5"/>
+    <path d="M-40 0 A40 40 0 0 1 -12 -38" fill="none" stroke="#c0392b" stroke-width="10"/>
+    <path d="M-12 -38 A40 40 0 0 1 12 -38" fill="none" stroke="#2e8b45" stroke-width="10"/>
+    <path d="M12 -38 A40 40 0 0 1 40 0" fill="none" stroke="#c0392b" stroke-width="10"/>
+    <path d="M0 0 L0 -32" stroke="#31363c" stroke-width="4" stroke-linecap="round"/><circle r="5" fill="#31363c"/>
+  </g>
+  <circle cx="292" cy="172" r="14" fill="#2e8b45"/><path d="M284 172 L290 178 L300 166" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

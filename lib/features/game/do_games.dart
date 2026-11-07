@@ -3,7 +3,10 @@ import 'package:flutter/widgets.dart';
 import 'content_catalog.dart';
 import 'discharge_order.dart';
 import 'distance_spot.dart';
+import 'fire_choose.dart';
+import 'fire_pass.dart';
 import 'glove_check.dart';
+import 'golden_minute.dart';
 import 'harness_check.dart';
 import 'harness_fit.dart';
 import 'kit_check.dart';
@@ -12,6 +15,7 @@ import 'pole_read.dart';
 import 'ptw_match.dart';
 import 'ptw_steps.dart';
 import 'rod_pick.dart';
+import 'shock_rescue.dart';
 import 'tool_tip.dart';
 
 /// Builds the page of a Do game inside the level shell.
@@ -59,6 +63,22 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = stepsPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => PtwStepsPage(ctx: ctx, pack: content, muted: muted);
+    case 'golden_minute':
+      final content = goldenPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => GoldenMinutePage(ctx: ctx, pack: content, muted: muted);
+    case 'fire_choose':
+      final content = firePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => FireChoosePage(ctx: ctx, pack: content, muted: muted);
+    case 'fire_pass':
+      final content = passPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => FirePassPage(ctx: ctx, pack: content, muted: muted);
+    case 'shock_rescue':
+      final content = rescuePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => ShockRescuePage(ctx: ctx, pack: content, muted: muted);
     case 'rod_pick':
       final content = rodPickPacks[pack.id];
       if (content == null) return null;

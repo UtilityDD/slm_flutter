@@ -494,7 +494,7 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard 
                         padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
                         children: [
                           for (var i = 0; i < order.length; i++)
-                            _Slot(
+                            StepSlot(
                               index: i,
                               card: placed.contains(order[i]) ? cards.firstWhere((c) => c.id == order[i]) : null,
                               note: order[i] == StepIds.count && placed.contains(StepIds.count) ? StepLines.headcount(_crew) : null,
@@ -507,7 +507,7 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard 
                               runSpacing: 8,
                               children: [
                                 for (var i = 0; i < tray.length; i++)
-                                  _TrayCard(
+                                  StepTrayCard(
                                     key: ValueKey('tray-${tray[i].id}-${_shook == tray[i].id ? _shakes : 0}'),
                                     card: tray[i],
                                     shake: _shook == tray[i].id,
@@ -590,8 +590,8 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard 
 // ============================================================================
 
 /// A numbered place in the sequence: empty, or the step that belongs there.
-class _Slot extends StatelessWidget {
-  const _Slot({required this.index, required this.card, required this.note, required this.quiet});
+class StepSlot extends StatelessWidget {
+  const StepSlot({super.key, required this.index, required this.card, required this.note, required this.quiet});
   final int index;
   final StepCard? card;
   final String? note;
@@ -651,8 +651,8 @@ class _Slot extends StatelessWidget {
 }
 
 /// A step card waiting in the tray; shakes once when tapped out of turn.
-class _TrayCard extends StatelessWidget {
-  const _TrayCard({super.key, required this.card, required this.shake, required this.quiet, required this.onTap});
+class StepTrayCard extends StatelessWidget {
+  const StepTrayCard({super.key, required this.card, required this.shake, required this.quiet, required this.onTap});
   final StepCard card;
   final bool shake;
   final bool quiet;

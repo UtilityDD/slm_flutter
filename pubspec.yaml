@@ -73,7 +73,9 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/ptw/
     - assets/game/art/distance/
+    - assets/game/art/fire/
     - assets/game/art/rod/
+    - assets/game/art/shock/
     - assets/lineman/
     - assets/zero_loss/crew/
     - assets/zero_loss/scene/

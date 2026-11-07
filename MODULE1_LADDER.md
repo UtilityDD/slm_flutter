@@ -44,11 +44,11 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 | 17 | 1.6 কাজ 1 | কাগজ মেলাও — PTW fields vs the pole's feeder tag; verbal "line off" | spot + say no | working on a verbal permit or the wrong feeder | ✅ built (2026-11-07) |
 | 18 | 1.6 কাজ 2 | পারমিটের সোনালি ধাপ + লাইন ক্লিয়ার | order | skipping test/discharge after the permit | ✅ built (2026-11-07) |
 | 19 | 1.7 শেখা | শক লাগলে ফার্স্ট এইড | choose | — | text deck ♻️ → picture board 🆕 |
-| 20 | 1.7 কাজ 1 | ছোঁবেন না! — colleague shocked: switch off / separate with the right object | choose + spot (where to push), timed | touching the victim; iron/wet stick | ♻️ L17 (stand-in) → 🆕 |
-| 21 | 1.7 কাজ 2 | গোল্ডেন মিনিট — response, call, CPR; mud myth | order + say no | — (wrong order costs points) | ♻️ L24 (stand-in) → 🆕 |
+| 20 | 1.7 কাজ 1 | ছোঁবেন না! — colleague shocked: switch off / separate with the right object | choose + spot (where to push), timed | touching the victim; iron/wet stick | ✅ built (2026-11-07) |
+| 21 | 1.7 কাজ 2 | গোল্ডেন মিনিট — response, call, CPR; mud myth | order + say no | — (wrong order costs points) | ✅ built (2026-11-07) |
 | 22 | 1.8 শেখা | মাঠে আগুন | choose | — | text deck ♻️ → picture board 🆕 |
-| 23 | 1.8 কাজ 1 | কোন আগুনে কী — fire class → extinguisher; power off first; gauge | choose + inspect | water on an electrical or oil fire | ♻️ L18 (stand-in) → 🆕 |
-| 24 | 1.8 কাজ 2 | PASS — pull, aim at the base, squeeze, sweep; where to stand | order + spot | — (cornered without escape: points) | ♻️ L25 (stand-in) → 🆕 |
+| 23 | 1.8 কাজ 1 | কোন আগুনে কী — fire class → extinguisher; power off first; gauge | choose + inspect | water on an electrical or oil fire | ✅ built (2026-11-07) |
+| 24 | 1.8 কাজ 2 | PASS — pull, aim at the base, squeeze, sweep; where to stand | order + spot | — (cornered without escape: points) | ✅ built (2026-11-07) |
 | 25 | 1.9 শেখা | ঝড়-বৃষ্টিতে 'না' | choose | — | text deck ♻️ → picture board 🆕 |
 | 26 | 1.9 কাজ 1 | আকাশ পড়ুন — drizzle → wind galloping → thunder: when to stop | say no + spot | staying on the pole in lightning | ♻️ L9 → 🆕 |
 | 27 | 1.9 কাজ 2 | সুপারভাইজারের চাপ — "হালকা বৃষ্টি, শেষ করো"; safe shelter | say no + choose | climbing in a storm under pressure | ♻️ L10 → 🆕 |
