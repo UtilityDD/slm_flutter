@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_providers.dart';
+import '../training/training_screen.dart';
 
 /// Same gold circle used on Home, the intro, and the fear page.
 class HomeToolboxButton extends StatelessWidget {
@@ -77,6 +78,16 @@ Future<void> openHomeToolbox(BuildContext context) {
                 ],
               ),
               const SizedBox(height: 8),
+              _ToolRow(
+                icon: Icons.school_rounded,
+                label: tr(bn, 'প্রশিক্ষণ জোন · পাঠ', 'Training Zone · Lessons'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const TrainingScreen()),
+                  );
+                },
+              ),
               _ToolRow(
                 icon: Icons.emoji_events_rounded,
                 label: tr(bn, 'র‍্যাঙ্ক', 'Rank'),

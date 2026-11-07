@@ -1,4 +1,6 @@
-# Mrityuhin Poth (মৃত্যুহীন পথ) — Game Levels Developer Guide
+# Mrityuhin Poth (মৃত্যুহীন পথ) — Do Field Levels Developer Guide
+
+> **Learn levels** (picture board, text deck, 60% pass, পাঠ offer, voices, ladder comeback) are documented in [`GAME_DEVELOPER_GUIDE.md`](../../../GAME_DEVELOPER_GUIDE.md). This file is the **Do** visual and speech spec.
 
 > **Important**: All Bengali text in this module must be saved in clean UTF-8. Do not use PowerShell `Set-Content` (which causes mojibake); edit within the IDE or agent tools (`Write` / `StrReplace`).
 

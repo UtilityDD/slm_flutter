@@ -98,15 +98,12 @@ class MascotFaceRig extends StatelessWidget {
               child: Transform(
                 alignment: Alignment.center,
                 transform: Matrix4.diagonal3Values(mouthScaleX, mouthScaleY, 1),
-                child: AnimatedSwitcher(
-                  duration: reduce ? Duration.zero : const Duration(milliseconds: 90),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  child: SvgPicture.asset(
-                    _mouthAsset,
-                    key: ValueKey(_mouthAsset),
-                    fit: BoxFit.fill,
-                  ),
+                // Visemes swap instantly. A cross-fade (AnimatedSwitcher keyed by
+                // asset) threw "Duplicate keys" when speech went ee → o → ee
+                // faster than the fade, with the old ee still fading out.
+                child: SvgPicture.asset(
+                  _mouthAsset,
+                  fit: BoxFit.fill,
                 ),
               ),
             ),

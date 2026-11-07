@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -15,19 +16,55 @@ import '../guide/mascot_speech_library.dart';
 import '../home/bangla_read_aloud.dart';
 import '../home/lesson_progress_store.dart';
 import '../home/lesson_quiz_page.dart';
+import '../home/lesson_quiz_store.dart';
+import '../home/lesson_reader_page.dart';
 import '../identify/fit_image.dart';
 import '../shell/shell_providers.dart';
 import '../training/training_models.dart';
+import '../zero_loss/zero_loss_fx.dart';
 import '../training/training_provider.dart';
 import 'beat_fx.dart';
-import 'content_catalog.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'learn_feedback_lines.dart';
+import 'lesson_day_card.dart';
+import 'lesson_promise_card.dart';
+import 'level_result_parts.dart';
+import 'read_lesson_offer.dart';
+
+/// Two questions built from the lesson's own points, for a lesson whose server
+/// copy has no quiz file: "which check belongs to this item?". Empty when fewer
+/// than 3 points carry a daily check; the deck then clears on its cards, as the
+/// reader does for a lesson without a quiz. Never invents content.
+List<LessonQuizQuestion> learnQuizFromPoints(List<LessonSectionPoint> points, [math.Random? rng]) {
+  final checks = <String, String>{}; // item name → its check, one per distinct check
+  for (final p in points) {
+    final name = p.itemName.trim();
+    final check = MascotSpeechLibrary.conciseFieldRule(p.dailyCheck ?? '', maxChars: 110);
+    if (name.isEmpty || check.isEmpty || checks.containsValue(check)) continue;
+    checks[name] = check;
+  }
+  if (checks.length < 3) return const [];
+  final r = rng ?? math.Random();
+  final names = checks.keys.toList()..shuffle(r);
+  return [
+    for (final name in names.take(2))
+      () {
+        final others = [for (final n in names) if (n != name) checks[n]!]..shuffle(r);
+        final options = [checks[name]!, ...others.take(2)]..shuffle(r);
+        return LessonQuizQuestion(
+          questionText: '$name — কাজের আগে কোন চেকটা করবেন?',
+          options: options,
+          correctIndex: options.indexOf(checks[name]!),
+        );
+      }(),
+  ];
+}
 
 /// Interactive Ladder Learn Deck — visual-first field flash-cards with
 /// 1-tap pre-work checks (+5 ◆), unified Mascot lip-sync coaching, and
 /// 2 quick-fire field decisions (+10 ◆ / -5 ◆) + 20 ◆ completion burst.
-class LearnRunnerPage extends ConsumerStatefulWidget {
+class LearnRunnerPage extends StatefulWidget {
   final String rungId;
   final String lessonId;
   final int ladderIndex;
@@ -42,14 +79,76 @@ class LearnRunnerPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<LearnRunnerPage> createState() => _LearnRunnerPageState();
+  State<LearnRunnerPage> createState() => _LearnRunnerPageState();
+}
+
+/// "আবার খেলুন" after a fail starts a fresh run on the same route, so the
+/// ladder keeps waiting for this level's real result.
+class _LearnRunnerPageState extends State<LearnRunnerPage> {
+  int _round = 0;
+  late bool _muted = widget.muted;
+
+  @override
+  Widget build(BuildContext context) {
+    return _LearnRun(
+      key: ValueKey(_round),
+      rungId: widget.rungId,
+      lessonId: widget.lessonId,
+      muted: _muted,
+      onRetry: (muted) => setState(() {
+        _muted = muted;
+        _round++;
+      }),
+    );
+  }
+}
+
+class _LearnRun extends ConsumerStatefulWidget {
+  final String rungId;
+  final String lessonId;
+  final bool muted;
+  final ValueChanged<bool> onRetry;
+
+  const _LearnRun({
+    super.key,
+    required this.rungId,
+    required this.lessonId,
+    required this.muted,
+    required this.onRetry,
+  });
+
+  @override
+  ConsumerState<_LearnRun> createState() => _LearnRunState();
 }
 
 enum _Phase { load, cards, quiz, done }
 
-class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
+class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderStateMixin {
   final _scoreKey = GlobalKey();
   final _deathKey = GlobalKey();
+
+  /// "Read the lesson" card: 0 = tucked into the পাঠ pill, 1 = open over the quiz.
+  late final AnimationController _readFly = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 620),
+    reverseDuration: const Duration(milliseconds: 460),
+  );
+  late final CurvedAnimation _readCurve =
+      CurvedAnimation(parent: _readFly, curve: Curves.easeOutBack, reverseCurve: Curves.easeInCubic);
+  final _readPillKey = GlobalKey();
+  final _layerKey = GlobalKey();
+  Offset _readFrom = Offset.zero;
+  var _readOpen = false;
+  var _readHot = false;
+  var _readShown = false;
+  ReadNudge? _readNudge;
+  Completer<void>? _endOfferDone;
+
+  /// First-try mark for the pass line; earlier plays of this level.
+  final _marks = LessonMarks();
+  var _failed = false;
+  int? _runMark;
+  late final ({int plays, int? best}) _history;
 
   late final PageController _pages;
   late final BanglaReadAloud _voice;
@@ -60,6 +159,10 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
   List<LessonSectionPoint> _points = const [];
   List<LessonQuizQuestion> _quiz = const [];
   final Set<int> _checkedCards = <int>{};
+
+  /// This play's level score: every ◆ won or lost flies into it; when the
+  /// level ends it replaces this level's last score in the main ◆.
+  int _runScore = 0;
   int _card = 0;
   int _q = 0;
   int? _picked;
@@ -68,6 +171,10 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
   bool _voiceBusy = false;
   bool _muted = false;
   bool _finishing = false;
+
+  /// Set once the clear is saved: leaving now still counts as a pass.
+  bool _passed = false;
+  bool _popped = false;
   int _listenRun = 0;
   bool _neuralRun = false;
 
@@ -77,6 +184,8 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
   void initState() {
     super.initState();
     _muted = widget.muted;
+    final save = ref.read(gameSaveProvider);
+    _history = (plays: save.playsByRung[widget.rungId] ?? 0, best: save.bestMarkByRung[widget.rungId]);
     _pages = PageController();
     _voice = BanglaReadAloud();
     _neural = NeuralTtsService();
@@ -108,7 +217,10 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
   @override
   void dispose() {
     unawaited(_stopVoice());
+    _endOfferFinish();
     MascotTalk.reset();
+    _readCurve.dispose();
+    _readFly.dispose();
     _pages.dispose();
     _neural.dispose();
     _voice.dispose();
@@ -121,39 +233,41 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
     final chapter = int.tryParse(parts.length > 1 ? parts[1] : '') ?? 1;
 
     LessonCardItem? hit;
-    List<LessonQuizQuestion> quiz = const [];
+    var quizLoad = LessonQuizLoad.unavailable;
 
     try {
-      final lessons = await ref.read(moduleLessonsProvider(module).future);
+      // A dead connection must reach the offline dialog, not spin forever
+      // (a failed provider is retried, so its future may never complete).
+      final lessons = await ref
+          .read(moduleLessonsProvider(module).future)
+          .timeout(const Duration(seconds: 12));
       for (final l in lessons) {
         if (l.chapterNumber == chapter) {
           hit = l;
           break;
         }
       }
-      final pool = await fetchLessonQuiz(module, chapter);
-      if (pool != null && pool.isNotEmpty) {
-        quiz = selectLearnExitQuestions(pool);
-      }
+      quizLoad = await LessonQuizStore.instance.load(module, chapter);
     } catch (_) {
-      // Fall back to built-in field deck below if offline or un-synced
+      // Offline with nothing saved: handled below, never with made-up content.
     }
 
-    if (hit == null || hit.points.isEmpty) {
-      final catalog = await ref.read(contentCatalogProvider.future);
-      CatalogLesson? catLesson;
-      for (final l in catalog.lessons) {
-        if (l.id == widget.lessonId) {
-          catLesson = l;
-          break;
-        }
+    // Never play (or pass) a lesson without its own points and quiz (AGENTS §4).
+    if (hit == null || hit.points.isEmpty || quizLoad.status == LessonQuizStatus.unavailable) {
+      if (!mounted) return;
+      final retry = await showLessonQuizOfflineDialog(context, bn: _bn);
+      if (!mounted) return;
+      if (retry == true) {
+        await _boot();
+      } else {
+        _popOnce(false);
       }
-      hit = _buildOfflineFallbackLesson(module, chapter, catLesson?.titleBn);
+      return;
     }
 
-    if (quiz.isEmpty) {
-      quiz = _buildOfflineFallbackQuiz(module, chapter, hit.points);
-    }
+    final quiz = quizLoad.isReady
+        ? selectLearnExitQuestions(quizLoad.questions)
+        : learnQuizFromPoints(hit.points);
 
     if (!mounted) return;
     setState(() {
@@ -163,7 +277,10 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
       _phase = _Phase.cards;
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      // First play of the lesson: the day card sets the scene before the cards.
+      await showLessonDayCard(context, ref, lessonId: widget.lessonId, rungId: widget.rungId, muted: _muted);
       if (!mounted) return;
       ref.read(guideDirectorProvider.notifier).sayCue(
             MascotCueId.learnDeckStart,
@@ -174,77 +291,11 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
     });
   }
 
-  LessonCardItem _buildOfflineFallbackLesson(int module, int chapter, String? titleBn) {
-    final title = titleBn ?? 'মাঠের সুরক্ষা ও জীবনরক্ষাকারী অভ্যাস';
-    return LessonCardItem(
-      id: '${module}_$chapter',
-      moduleNumber: module,
-      chapterNumber: chapter,
-      title: title,
-      missionBriefing: 'কাজের আগে জরুরি ফিল্ড চেক',
-      points: const [
-        LessonSectionPoint(
-          itemName: 'Class-E Electrical Helmet ও Chin-Strap',
-          importance:
-              'উঁচু পোলে আর্ক ফ্ল্যাশ ও উপর থেকে পড়া যন্ত্রাংশ থেকে মাথা বাঁচাতে নিশ্ছিদ্র Class-E হেলমেট পরুন। গামছা বেঁধে হেলমেট পরবেন না।',
-          dailyCheck: 'মাথায় হেলমেট বসিয়ে চিন-স্ট্র্যাপ লক করুন এবং ফাটল নেই নিশ্চিত করুন।',
-          specifications: '20 kV পর্যন্ত ডাই-ইলেকট্রিক সুরক্ষা · ভেন্টিলেশন ছিদ্রহীন শেল।',
-        ),
-        LessonSectionPoint(
-          itemName: 'HT Insulated Hand Gloves (11 kV / 33 kV)',
-          importance:
-              'Shutdown নেওয়া থাকলেও ইনডাকশন কারেন্ট বা ব্যাক-ফিড থেকে হাত বাঁচাতে রেটেড রাবার গ্লাভসই আপনার প্রথম বর্ম।',
-          dailyCheck: 'কাজের আগে গ্লাভস মুড়িয়ে হাওয়া ভরে পিন-হোল বা লিক চেক করুন।',
-          specifications: 'Class-2 (17 kV টেস্টেড) বা Class-3 · সম্পূর্ণ শুকনো ও তেলমুক্ত।',
-        ),
-        LessonSectionPoint(
-          itemName: 'Full-Body Safety Harness ও D-Ring',
-          importance:
-              'কোমরের বেল্ট পতনের ঝাঁকুনিতে মেরুদণ্ড ভেঙে দেয়। পোলে ওঠার আগে সবসময় Full-Body Harness ও Energy Absorber Lanyard পরুন।',
-          dailyCheck: 'পিঠের D-Ring কাঁধের মাঝখানে রাখুন এবং ফিতেয় দুই আঙুলের ছাড় যাচাই করুন।',
-          specifications: 'ফিতেয় কাটা বা সেলাই ছেঁড়া থাকলে ব্যবহার নিষিদ্ধ।',
-        ),
-        LessonSectionPoint(
-          itemName: 'Voltage Detector, Discharge Rod ও দুদিক Earthing',
-          importance:
-              'লিখিত PTW ও LOTO তালা লাগানোর পর টেস্টার দিয়ে লাইন চেক করুন, আগে মাটিতে আর্থ লাগিয়ে ডিসচার্জ রড ছোঁয়ান এবং দুদিকে আর্থিং করুন।',
-          dailyCheck: 'টেস্টারের Self-Test বোতাম টিপে বিপ শব্দ ও ডিসচার্জ রডের কপার তার যাচাই করুন।',
-          specifications: 'আগে মাটি পরে লাইন — খোলার সময় আগে লাইন শেষে মাটি।',
-        ),
-      ],
-    );
-  }
-
-  List<LessonQuizQuestion> _buildOfflineFallbackQuiz(
-    int module,
-    int chapter,
-    List<LessonSectionPoint> points,
-  ) {
-    return const [
-      LessonQuizQuestion(
-        questionText: '11 kV লাইনে কাজের আগে রাবার গ্লাভস পরার সবচেয়ে জরুরি পরীক্ষা কোনটি?',
-        options: [
-          'গ্লাভস মুড়িয়ে হাওয়া ভরে পিন-হোল বা লিক চেক করা',
-          'জলে ভিজিয়ে গ্লাভস নরম করে নেওয়া',
-          'সুতির গ্লাভস পরে সরাসরি তারে হাত দেওয়া',
-        ],
-        correctIndex: 0,
-      ),
-      LessonQuizQuestion(
-        questionText: 'ডিসচার্জ রড দিয়ে লাইন চার্জমুক্ত করার সঠিক নিয়ম কোনটি?',
-        options: [
-          'আগে তারে হুক লাগিয়ে পরে মাটিতে আর্থ ক্ল্যাম্প লাগানো',
-          'আগে মাটির আর্থ স্পাইকে ক্ল্যাম্প শক্ত করে লাগিয়ে তবেই তারে হুক ছোঁয়ানো',
-          'ডিসচার্জ রড ছাড়াই খালি হাতে ব্রাস চেইন ছোঁড়া',
-        ],
-        correctIndex: 1,
-      ),
-    ];
-  }
-
   Future<void> _stopVoice() async {
     _listenRun++;
     _neuralRun = false;
+    // Coach lines from the director (fail, nudge, praise) must not outlive the run.
+    unawaited(MascotSpeechLibrary.stop());
     await _neural.stop();
     await _voice.stop();
     MascotTalk.reset();
@@ -332,19 +383,41 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
     return leave;
   }
 
-  Future<void> _onCheckCard(int index, Offset globalOrigin) async {
+  /// Every exit goes through here, so the level never pops twice.
+  void _popOnce(bool cleared) {
+    if (_popped || !mounted) return;
+    _popped = true;
+    _endOfferFinish();
+    Navigator.of(context).pop(cleared);
+  }
+
+  /// Back / close. After a pass the clear is already saved, so leave with it.
+  Future<void> _leave() async {
+    if (_passed) {
+      await _stopVoice();
+      _popOnce(true);
+      return;
+    }
+    if (!await _confirmExit()) return;
+    _popOnce(false);
+  }
+
+  /// Adds [delta] to this play's level score (never below 0) and flies it in.
+  Future<void> _levelDelta(int delta, Offset origin, {GuideMood? mood}) async {
+    final next = (_runScore + delta).clamp(0, 1 << 30);
+    final real = next - _runScore;
+    if (real == 0 || !mounted) return;
+    setState(() => _runScore = next);
+    await BeatFx.levelDelta(ref, real, mood: mood, originGlobal: origin, muted: _muted);
+  }
+
+  Future<void> _onCheckCard(int index, Offset globalOrigin, {bool speak = true}) async {
     if (_checkedCards.contains(index)) return;
     setState(() => _checkedCards.add(index));
     await _stopVoice();
-    await BeatFx.scoreDelta(
-      ref,
-      5,
-      rungId: widget.rungId,
-      mood: GuideMood.glad,
-      originGlobal: globalOrigin,
-      muted: _muted,
-    );
     final p = _points[index];
+    await _levelDelta(5, globalOrigin, mood: GuideMood.glad);
+    if (!speak || !mounted) return;
     final checkLine = _extractCheckRule(p);
     ref.read(guideDirectorProvider.notifier).say(
           mood: GuideMood.glad,
@@ -370,7 +443,8 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
   void _nextCard(Offset globalOrigin) {
     // If the user hasn't tapped the card check yet, reward them right now so no learning beat is missed!
     if (!_checkedCards.contains(_card)) {
-      unawaited(_onCheckCard(_card, globalOrigin));
+      // Moving on: no check line, the next card speaks.
+      unawaited(_onCheckCard(_card, globalOrigin, speak: false));
     }
     if (_card >= _points.length - 1) {
       unawaited(_enterQuiz());
@@ -409,26 +483,139 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
 
   Future<void> _pickOption(int i, Offset globalOrigin) async {
     if (_revealed || _finishing) return;
-    await _stopVoice();
     final q = _quiz[_q];
     final ok = i == q.correctIndex;
+    // Lock before any await: a double tap must not answer twice.
     setState(() {
       _picked = i;
       _revealed = true;
     });
-    await BeatFx.scoreDelta(
-      ref,
-      ok ? 10 : -5,
-      rungId: widget.rungId,
-      mood: ok ? GuideMood.celebrate : GuideMood.warn,
-      originGlobal: globalOrigin,
-      muted: _muted,
-    );
+    await _stopVoice();
+    if (!mounted) return;
+    await _levelDelta(ok ? 10 : -5, globalOrigin, mood: ok ? GuideMood.celebrate : GuideMood.warn);
     ref.read(guideDirectorProvider.notifier).sayCue(
           ok ? MascotCueId.learnQuizRight : MascotCueId.learnQuizWrongFirst,
           speakVoice: true,
           muted: _muted,
         );
+    _marks.settle(right: ok);
+    unawaited(ref.read(gameSaveProvider.notifier).markWeak(widget.lessonId, q.questionText.trim(), weak: !ok));
+    if (ok) LessonMissTally.hit(widget.lessonId);
+    if (!ok && LessonMissTally.miss(widget.lessonId)) {
+      // Let the red/green reveal read first, then offer the lesson.
+      await Future<void>.delayed(const Duration(milliseconds: 1400));
+      if (mounted && _phase == _Phase.quiz) await _showReadCard();
+    }
+  }
+
+  bool get _quietMotion => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
+
+  void _onReadPill() {
+    if (_readOpen) {
+      unawaited(_tuckReadCard());
+    } else if (_phase == _Phase.cards || _phase == _Phase.quiz) {
+      unawaited(_showReadCard());
+    }
+  }
+
+  /// After a passed level with no offer so far: a varied nudge to read, then leave.
+  Future<void> _endOffer() async {
+    final done = Completer<void>();
+    _endOfferDone = done;
+    final nudge = ReadLessonNudges.next(widget.lessonId);
+    await _showReadCard(nudge: nudge);
+    if (!mounted || !_readOpen) return;
+    ref.read(guideDirectorProvider.notifier).say(
+          mood: GuideMood.inspire,
+          line: nudge.title,
+          speakVoice: true,
+          muted: _muted,
+        );
+    await done.future;
+  }
+
+  void _endOfferFinish() {
+    final done = _endOfferDone;
+    _endOfferDone = null;
+    if (done != null && !done.isCompleted) done.complete();
+  }
+
+  Future<void> _showReadCard({ReadNudge? nudge}) async {
+    if (_readOpen || (_finishing && nudge == null) || !mounted) return;
+    await _stopVoice();
+    if (!mounted) return;
+    _readFrom = readLessonFrom(_readPillKey, _layerKey) ?? _readFrom;
+    setState(() {
+      _readOpen = true;
+      _readShown = true;
+      _readNudge = nudge;
+    });
+    HapticFeedback.selectionClick();
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.32, muted: false));
+    if (_quietMotion) {
+      _readFly.value = 1;
+    } else {
+      await _readFly.forward(from: 0);
+    }
+  }
+
+  Future<void> _tuckReadCard() async {
+    if (!_readOpen || _readFly.isAnimating) return;
+    _readFrom = readLessonFrom(_readPillKey, _layerKey) ?? _readFrom;
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.3, muted: false));
+    if (_quietMotion) {
+      _readFly.value = 0;
+    } else {
+      await _readFly.reverse();
+    }
+    if (!mounted) return;
+    final atEnd = _readNudge != null;
+    setState(() {
+      _readOpen = false;
+      _readHot = !atEnd;
+      _readNudge = null;
+    });
+    if (atEnd) _endOfferFinish();
+  }
+
+  Future<void> _startReadCard() async {
+    if (!_readOpen) return;
+    _readFly.value = 0;
+    final atEnd = _readNudge != null;
+    setState(() {
+      _readOpen = false;
+      _readNudge = null;
+    });
+    await _readLesson();
+    if (atEnd) _endOfferFinish();
+  }
+
+  /// Opens this level's lesson in the reader, or explains why it can't.
+  Future<void> _readLesson() async {
+    final lesson = _lesson;
+    if (lesson == null || lesson.points.isEmpty) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: SlmColors.navy900,
+          content: Text(
+            'পাঠটা এখন খোলা যাচ্ছে না। ইন্টারনেট চালু করে আবার চেষ্টা করুন।',
+            style: bangla(fontSize: 14, fontWeight: FontWeight.w700, color: SlmColors.ivory),
+          ),
+        ),
+      );
+      setState(() => _readHot = true);
+      return;
+    }
+    LessonMissTally.read(widget.lessonId);
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => LessonReaderPage(lesson: lesson, bn: true, muted: _muted)),
+    );
+    // The reader hands over to its seal page; wait until the level is on top again.
+    while (mounted && !(ModalRoute.of(context)?.isCurrent ?? true)) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    }
+    if (mounted) setState(() => _readHot = false);
   }
 
   Future<void> _nextQuiz() async {
@@ -452,18 +639,38 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
     await _stopVoice();
     final save = ref.read(gameSaveProvider.notifier);
     final already = ref.read(gameSaveProvider).rungProgress[widget.rungId] == 'cleared';
+    // A lesson with no quiz at all (server says so) clears on its cards, like the reader.
+    final noQuiz = _quiz.isEmpty;
+    final mark = noQuiz ? 100 : _marks.percent;
+    await save.recordLevelResult(widget.rungId, mark);
+    if (!mounted) return;
+    _runMark = mark;
+    if (!noQuiz && !_marks.passed) {
+      // Below the pass line: nothing is cleared; the play's score still stands (latest counts).
+      await save.commitLevelScore(widget.rungId, _runScore);
+      if (!mounted) return;
+      setState(() {
+        _failed = true;
+        _phase = _Phase.done;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 900));
+      if (!mounted) return;
+      final line = LearnFeedbackLines.failed[DateTime.now().millisecond % LearnFeedbackLines.failed.length];
+      ref.read(guideDirectorProvider.notifier).say(
+            mood: GuideMood.warn,
+            line: line.shownBn,
+            speakVoice: true,
+            muted: _muted,
+          );
+      return;
+    }
     if (cleared) {
       final size = MediaQuery.sizeOf(context);
       await save.markRungCleared(widget.rungId);
-      final bonus = already ? 5 : 20;
-      await BeatFx.scoreDelta(
-        ref,
-        bonus,
-        rungId: widget.rungId,
-        mood: GuideMood.celebrate,
-        originGlobal: Offset(size.width * 0.5, size.height * 0.48),
-        muted: _muted,
-      );
+      _passed = true;
+      await _levelDelta(20, Offset(size.width * 0.5, size.height * 0.48), mood: GuideMood.celebrate);
+      // The latest play's score replaces this level's last one in the main ◆.
+      await save.commitLevelScore(widget.rungId, _runScore);
       if (!already) {
         final lesson = _lesson;
         if (lesson != null) {
@@ -477,11 +684,25 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
             muted: _muted,
           );
     }
-    if (!mounted) return;
+    if (!mounted || _popped) return;
     setState(() => _phase = _Phase.done);
-    await Future<void>.delayed(const Duration(milliseconds: 950));
+    await Future<void>.delayed(const Duration(milliseconds: 1600));
+    if (!mounted || _popped) return;
+    await _stopVoice();
     if (!mounted) return;
-    Navigator.of(context).pop(cleared);
+    final promised = await askLessonPromise(
+      context,
+      ref,
+      lessonId: widget.lessonId,
+      rungId: widget.rungId,
+      muted: _muted,
+    );
+    if (!mounted || _popped) return;
+    if (!promised && !_readShown) {
+      await _endOffer();
+      if (!mounted || _popped) return;
+    }
+    _popOnce(cleared);
   }
 
   @override
@@ -497,9 +718,7 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        if (!await _confirmExit()) return;
-        if (!mounted) return;
-        Navigator.of(this.context).pop(false);
+        await _leave();
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
@@ -520,6 +739,7 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
                     children: [
                       UnifiedGameTopHud(
                         scoreKey: _scoreKey,
+                        levelScore: _runScore,
                         deathKey: _deathKey,
                         badgeText: badgeLabel,
                         titleText: MascotSpeechLibrary.toNaturalFieldBangla(
@@ -527,31 +747,60 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
                         ),
                         closeIcon: Icons.close_rounded,
                         muted: _muted,
-                        onClose: () async {
-                          if (!await _confirmExit()) return;
-                          if (!mounted) return;
-                          Navigator.of(this.context).pop(false);
-                        },
+                        onClose: _leave,
                         onToggleMute: () async {
                           await _stopVoice();
                           setState(() => _muted = !_muted);
                         },
-                        trailingExtra: IconButton(
-                          tooltip: bn ? 'পড়ে শোনান' : 'Listen',
-                          onPressed: _muted ? null : _toggleListen,
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-                          icon: Icon(
-                            _speaking || _voiceBusy
-                                ? Icons.stop_circle_outlined
-                                : Icons.headphones_rounded,
-                            color: _speaking ? SlmColors.emerald300 : SlmColors.ivory,
-                            size: 20,
-                          ),
+                        trailingExtra: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: bn ? 'পড়ে শোনান' : 'Listen',
+                              onPressed: _muted ? null : _toggleListen,
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+                              icon: Icon(
+                                _speaking || _voiceBusy
+                                    ? Icons.stop_circle_outlined
+                                    : Icons.headphones_rounded,
+                                color: _speaking ? SlmColors.emerald300 : SlmColors.ivory,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            ReadLessonPill(key: _readPillKey, hot: _readHot, onTap: _onReadPill),
+                          ],
                         ),
                       ),
-                      Expanded(child: _body(bn: bn, quiet: quiet)),
+                      Expanded(
+                        child: Stack(
+                          key: _layerKey,
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned.fill(child: _body(bn: bn, quiet: quiet)),
+                            if (_readOpen)
+                              Positioned.fill(
+                                child: ReadLessonFlyLayer(
+                                  fly: _readFly,
+                                  curve: _readCurve,
+                                  from: _readFrom,
+                                  onScrimTap: () => unawaited(_tuckReadCard()),
+                                  card: ReadLessonCard(
+                                    atStart: false,
+                                    nudge: _readNudge,
+                                    lessonLine: enDigits(
+                                      'পাঠ ${widget.lessonId} · ${_lesson?.title ?? ''}',
+                                    ),
+                                    onStart: () => unawaited(_startReadCard()),
+                                    onLater: () => unawaited(_tuckReadCard()),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -582,6 +831,9 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
           },
           onCheckCard: _onCheckCard,
           onNext: _nextCard,
+          history: _history.plays > 0
+              ? LevelHistoryChip(plays: _history.plays, bestMark: _history.best)
+              : null,
         );
       case _Phase.quiz:
         return _QuizPhase(
@@ -592,6 +844,33 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
           bn: bn,
           onPick: _pickOption,
           onNext: _nextQuiz,
+        );
+      case _Phase.done when _failed:
+        return LayoutBuilder(
+          builder: (_, box) => SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: (box.maxHeight - 36).clamp(0, double.infinity)),
+              child: Center(
+                child: LevelFailPanel(
+                  percent: _runMark ?? 0,
+                  muted: _muted,
+                  history: _history.plays > 0
+                      ? LevelHistoryChip(plays: _history.plays, bestMark: _history.best)
+                      : null,
+                  onRetry: () async {
+                    await _stopVoice();
+                    widget.onRetry(_muted);
+                  },
+                  onRead: _lesson == null ? null : () => unawaited(_readLesson()),
+                  onLeave: () async {
+                    await _stopVoice();
+                    if (mounted) Navigator.of(context).pop(false);
+                  },
+                ),
+              ),
+            ),
+          ),
         );
       case _Phase.done:
         return Center(
@@ -622,6 +901,17 @@ class _LearnRunnerPageState extends ConsumerState<LearnRunnerPage> {
                   ),
                 ),
               ),
+              if (_runMark != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  enDigits('নম্বর $_runMark%'),
+                  style: bangla(fontSize: 20, fontWeight: FontWeight.w900, color: SlmColors.emerald300),
+                ),
+              ],
+              if (_history.plays > 0) ...[
+                const SizedBox(height: 10),
+                LevelHistoryChip(plays: _history.plays, bestMark: _history.best),
+              ],
             ],
           ),
         );
@@ -640,6 +930,9 @@ class _CardsPhase extends StatelessWidget {
   final void Function(int index, Offset globalOrigin) onCheckCard;
   final void Function(Offset globalOrigin) onNext;
 
+  /// Earlier plays of this level, shown quietly on the first card.
+  final Widget? history;
+
   const _CardsPhase({
     required this.points,
     required this.card,
@@ -650,6 +943,7 @@ class _CardsPhase extends StatelessWidget {
     required this.onPage,
     required this.onCheckCard,
     required this.onNext,
+    this.history,
   });
 
   @override
@@ -720,6 +1014,8 @@ class _CardsPhase extends StatelessWidget {
             ],
           ),
         ),
+        if (history != null && card == 0)
+          Padding(padding: const EdgeInsets.only(bottom: 4), child: history),
         // Interactive Flash-Card Deck
         Expanded(
           child: PageView.builder(
@@ -750,7 +1046,7 @@ class _CardsPhase extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: GestureDetector(
-                  onTapDown: (d) => onNext(d.globalPosition),
+                  onTapUp: (d) => onNext(d.globalPosition),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
                     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
@@ -891,7 +1187,7 @@ class _LearnCard extends StatelessWidget {
               Expanded(
                 flex: 46,
                 child: GestureDetector(
-                  onTapDown: (d) => onCheck(d.globalPosition),
+                  onTapUp: (d) => onCheck(d.globalPosition),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -1023,7 +1319,7 @@ class _LearnCard extends StatelessWidget {
                       const Spacer(),
                       // Interactive "কাজের আগে চেক" Action Card
                       GestureDetector(
-                        onTapDown: (d) => onCheck(d.globalPosition),
+                        onTapUp: (d) => onCheck(d.globalPosition),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 260),
                           width: double.infinity,
@@ -1236,7 +1532,7 @@ class _QuizPhase extends StatelessWidget {
                         selected: picked == i,
                         revealed: revealed,
                         correct: i == q.correctIndex,
-                        onTapDown: revealed ? null : (d) => onPick(i, d.globalPosition),
+                        onTapUp: revealed ? null : (d) => onPick(i, d.globalPosition),
                       ),
                     ],
                     if (revealed) ...[
@@ -1322,14 +1618,14 @@ class _OptionTile extends StatelessWidget {
   final bool selected;
   final bool revealed;
   final bool correct;
-  final GestureTapDownCallback? onTapDown;
+  final GestureTapUpCallback? onTapUp;
 
   const _OptionTile({
     required this.label,
     required this.selected,
     required this.revealed,
     required this.correct,
-    required this.onTapDown,
+    required this.onTapUp,
   });
 
   @override
@@ -1359,7 +1655,7 @@ class _OptionTile extends StatelessWidget {
       color: bg,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        onTapDown: onTapDown,
+        onTapUp: onTapUp,
         borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),

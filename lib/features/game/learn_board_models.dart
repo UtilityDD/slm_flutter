@@ -3,7 +3,13 @@
 
 enum LearnBoardMode { pickGear, mythRival }
 
-class LearnBoardOption {
+/// Anything dealt onto a board: an item card or a "why" chip.
+abstract interface class LearnPick {
+  String get id;
+  bool get correct;
+}
+
+class LearnBoardOption implements LearnPick {
   const LearnBoardOption({
     required this.id,
     required this.labelBn,
@@ -12,20 +18,24 @@ class LearnBoardOption {
     this.rejectBn = '',
   });
 
+  @override
   final String id;
   final String labelBn;
   final String asset;
+  @override
   final bool correct;
 
   /// Spoken / shown when this trap is tapped.
   final String rejectBn;
 }
 
-class LearnWhyChip {
+class LearnWhyChip implements LearnPick {
   const LearnWhyChip({required this.id, required this.textBn, required this.correct});
 
+  @override
   final String id;
   final String textBn;
+  @override
   final bool correct;
 }
 
@@ -37,12 +47,21 @@ class LearnBoardSlot {
     required this.whyChips,
     this.wearAsset = '',
     this.pendingPoints = 15,
+    this.cards = 4,
+    this.whyCards = 3,
   });
 
   final String id;
   final String promptBn;
+
+  /// Item pool: every run deals one safe item and [cards] − 1 traps from it;
+  /// unseen traps swap in after a mistake.
   final List<LearnBoardOption> options;
+
+  /// Reason pool, dealt the same way ([whyCards] at a time).
   final List<LearnWhyChip> whyChips;
+  final int cards;
+  final int whyCards;
 
   /// Optional body-layer asset shown on the silhouette when locked.
   final String wearAsset;
@@ -60,7 +79,8 @@ class LearnMythBeat {
     this.dangerHints = const [],
     this.tauntBn = 'আরে! আমাদের বাপ-দাদারা তো এসব দিয়েই সারা জীবন কাজ করে গেল!',
     this.stingBn = 'এই লোক যা বলছে… বিশ্বাস করেন?',
-    this.exitBn = 'যত্তসব নতুন নিয়ম! আমি চললাম… হা!',
+    this.flipStingBn = 'এই লোক যা বলছে… সেটা কি ভুল?',
+    this.exitBn = 'যত্তসব নতুন নিয়ম! আমি চললাম…',
   });
 
   final String rivalLineBn;
@@ -85,6 +105,10 @@ class LearnMythBeat {
   /// Coach sting after rival exits, before Believe CTAs.
   final String stingBn;
 
+  /// The same question turned round ("is he wrong?"), asked on about half the
+  /// runs so হ্যাঁ / না must be read, never learnt as "always না".
+  final String flipStingBn;
+
   /// Rival parting snarl while sliding off.
   final String exitBn;
 }
@@ -97,6 +121,7 @@ class LearnBoardPack {
     required this.slots,
     required this.myth,
     this.introBn = '',
+    this.earnedBn = '',
     this.clearBonus = 20,
   });
 
@@ -104,6 +129,10 @@ class LearnBoardPack {
   final String titleBn;
   final String badgeBn;
   final String introBn;
+
+  /// Spoken when the level is passed. Empty → the kit line from [LearnCoachLines].
+  final String earnedBn;
+
   final List<LearnBoardSlot> slots;
   final LearnMythBeat myth;
   final int clearBonus;
@@ -119,7 +148,7 @@ const learnBoardPack11 = LearnBoardPack(
   lessonId: '1.1',
   titleBn: 'প্রথম দিনের ইউনিফর্ম ও পিপিই',
   badgeBn: 'সুরক্ষা কবচ',
-  introBn: 'আজ প্রথম দিন। সঠিক জিনিস বেছে নিন—ভুল মানে বিপদ।',
+  introBn: 'আজ প্রথম দিন। সঠিক পোশাক বেছে নিন—ভুল মানে বিপদ।',
   slots: [
     LearnBoardSlot(
       id: 'shirt',
@@ -153,6 +182,18 @@ const learnBoardPack11 = LearnBoardPack(
           correct: false,
           rejectBn: 'হাত খোলা থাকলে স্পার্কে চামড়া পুড়ে যায়।',
         ),
+        LearnBoardOption(
+          id: 'fr_suit',
+          labelBn: 'FR কভারঅল',
+          asset: 'assets/safety/library/ppe/Arc_Fire_Resistant_Full_Body_Vest.webp',
+          correct: true,
+        ),
+        LearnBoardOption(
+          id: 'fr_suit2',
+          labelBn: 'FR কভারঅল',
+          asset: 'assets/safety/library/ppe/Arc_Fire_Resistant_Full_Body_Vest_2.webp',
+          correct: true,
+        ),
       ],
       whyChips: [
         LearnWhyChip(
@@ -168,6 +209,21 @@ const learnBoardPack11 = LearnBoardPack(
         LearnWhyChip(
           id: 'w3',
           textBn: 'মেটাল জিপার থাকলে আরও নিরাপদ',
+          correct: false,
+        ),
+        LearnWhyChip(
+          id: 'w4',
+          textBn: 'পুরো হাত ঢাকা থাকে—স্পার্কে চামড়া বাঁচে',
+          correct: true,
+        ),
+        LearnWhyChip(
+          id: 'w5',
+          textBn: 'রঙিন জামা দূর থেকে দেখা যায়, তাই নিরাপদ',
+          correct: false,
+        ),
+        LearnWhyChip(
+          id: 'w6',
+          textBn: 'ঢিলে জামায় পোলে ওঠা সহজ',
           correct: false,
         ),
       ],
@@ -197,6 +253,25 @@ const learnBoardPack11 = LearnBoardPack(
           correct: false,
           rejectBn: 'রাস্তার হেলমেট লাইনের শক আটকায় না।',
         ),
+        LearnBoardOption(
+          id: 'gamcha',
+          labelBn: 'মাথায় গামছা',
+          asset: 'assets/duty_slip/dress/tray_gamcha.webp',
+          correct: false,
+          rejectBn: 'গামছা আঘাতও আটকায় না, শকও না।',
+        ),
+        LearnBoardOption(
+          id: 'helmet2',
+          labelBn: 'ক্লাস-ই হেলমেট',
+          asset: 'assets/safety/library/ppe/Safety_Helmet_2.webp',
+          correct: true,
+        ),
+        LearnBoardOption(
+          id: 'helmet3',
+          labelBn: 'ক্লাস-ই হেলমেট',
+          asset: 'assets/safety/library/ppe/Safety_Helmet.webp',
+          correct: true,
+        ),
       ],
       whyChips: [
         LearnWhyChip(
@@ -212,6 +287,21 @@ const learnBoardPack11 = LearnBoardPack(
         LearnWhyChip(
           id: 'w3',
           textBn: 'বাইক হেলমেটই যথেষ্ট',
+          correct: false,
+        ),
+        LearnWhyChip(
+          id: 'w4',
+          textBn: 'শক্ত শেল আঘাত আর শক—দুটোই ঠেকায়',
+          correct: true,
+        ),
+        LearnWhyChip(
+          id: 'w5',
+          textBn: 'হালকা হলেই হেলমেট ভালো',
+          correct: false,
+        ),
+        LearnWhyChip(
+          id: 'w6',
+          textBn: 'গামছা বাঁধলেও মাথা বাঁচে',
           correct: false,
         ),
       ],
@@ -241,7 +331,20 @@ const learnBoardPack11 = LearnBoardPack(
           correct: false,
           rejectBn: 'সাধারণ সোলে বৈদ্যুতিক সুরক্ষা নেই।',
         ),
+        LearnBoardOption(
+          id: 'lineboot',
+          labelBn: 'লাইনম্যান EH বুট',
+          asset: 'assets/safety/library/ppe/Lineman_Boot_2.webp',
+          correct: true,
+        ),
+        LearnBoardOption(
+          id: 'lineboot3',
+          labelBn: 'লাইনম্যান সেফটি বুট',
+          asset: 'assets/safety/library/ppe/Lineman_Boot_3.webp',
+          correct: true,
+        ),
       ],
+      cards: 3,
       whyChips: [
         LearnWhyChip(
           id: 'w1',
@@ -256,6 +359,21 @@ const learnBoardPack11 = LearnBoardPack(
         LearnWhyChip(
           id: 'w3',
           textBn: 'মেটাল পেরেক গেঁথে থাকলেও চলবে',
+          correct: false,
+        ),
+        LearnWhyChip(
+          id: 'w4',
+          textBn: 'ইনসুলেটেড সোল পায়ের পথে শক আটকায়',
+          correct: true,
+        ),
+        LearnWhyChip(
+          id: 'w5',
+          textBn: 'খালি পায়ে মাটিতে গ্রিপ ভালো',
+          correct: false,
+        ),
+        LearnWhyChip(
+          id: 'w6',
+          textBn: 'জুতো ভিজে গেলেও সমস্যা নেই',
           correct: false,
         ),
       ],
@@ -292,6 +410,32 @@ const learnBoardPack11 = LearnBoardPack(
           correct: false,
           rejectBn: 'কাট-গ্লাভস শক আটকায় না—শুধু ঘষা আটকায়।',
         ),
+        LearnBoardOption(
+          id: 'cotton',
+          labelBn: 'সুতির গ্লাভস',
+          asset: 'assets/duty_slip/dress/tray_cotton_gloves.webp',
+          correct: false,
+          rejectBn: 'সুতি ঘাম আর জল টেনে নেয়—শক আটকায় না।',
+        ),
+        LearnBoardOption(
+          id: 'cut',
+          labelBn: 'কাট-রেজিস্ট্যান্ট গ্লাভস',
+          asset: 'assets/safety/library/ppe/Cut_Resistant_Gloves.webp',
+          correct: false,
+          rejectBn: 'এই গ্লাভস ধারালো জিনিস আটকায়, বিদ্যুৎ নয়।',
+        ),
+        LearnBoardOption(
+          id: 'insul',
+          labelBn: 'ইনসুলেটেড রাবার গ্লাভস',
+          asset: 'assets/safety/library/ppe/Electrical_Gloves.webp',
+          correct: true,
+        ),
+        LearnBoardOption(
+          id: 'insul2',
+          labelBn: 'ইনসুলেটেড রাবার গ্লাভস',
+          asset: 'assets/safety/library/ppe/Electrical_Gloves_2.webp',
+          correct: true,
+        ),
       ],
       whyChips: [
         LearnWhyChip(
@@ -309,6 +453,21 @@ const learnBoardPack11 = LearnBoardPack(
           textBn: 'ভেজা রাবার আরও ভালো ইনসুলেট করে',
           correct: false,
         ),
+        LearnWhyChip(
+          id: 'w4',
+          textBn: 'অক্ষত রাবার বিদ্যুৎ ঢুকতে দেয় না',
+          correct: true,
+        ),
+        LearnWhyChip(
+          id: 'w5',
+          textBn: 'যেকোনো মোটা গ্লাভসেই চলবে',
+          correct: false,
+        ),
+        LearnWhyChip(
+          id: 'w6',
+          textBn: 'সুতির গ্লাভস ঘাম শোষে, তাই নিরাপদ',
+          correct: false,
+        ),
       ],
     ),
   ],
@@ -316,7 +475,7 @@ const learnBoardPack11 = LearnBoardPack(
     bodyAsset: 'assets/duty_slip/dress/myth_rival_bad.webp',
     tauntBn: 'আরে! আমাদের বাপ-দাদারা তো এসব দিয়েই সারা জীবন কাজ করে গেল!',
     rivalLineBn: 'ফাটা হেলমেট হোক বা বাইকের হেলমেট—সবই তো মাথা বাঁচায়! এত নিয়ম লাগে নাকি?',
-    exitBn: 'যত্তসব নতুন নিয়ম! আমি চললাম… হা!',
+    exitBn: 'যত্তসব নতুন নিয়ম! আমি চললাম…',
     believeNoIsCorrect: true,
     stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
     wornAssets: [],
@@ -339,6 +498,21 @@ const learnBoardPack11 = LearnBoardPack(
       LearnWhyChip(
         id: 'm3',
         textBn: 'যেকোনো হেলমেট একই কাজ করে',
+        correct: false,
+      ),
+      LearnWhyChip(
+        id: 'm4',
+        textBn: 'ফাটা হেলমেটের ফাটল দিয়েই শক ঢোকে',
+        correct: true,
+      ),
+      LearnWhyChip(
+        id: 'm5',
+        textBn: 'অভিজ্ঞ লোকের কথাই সবসময় ঠিক',
+        correct: false,
+      ),
+      LearnWhyChip(
+        id: 'm6',
+        textBn: 'পুরোনো নিয়মেই কাজ চলে যায়',
         correct: false,
       ),
     ],

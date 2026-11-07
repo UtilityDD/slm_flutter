@@ -121,11 +121,45 @@ def swoosh_out():
     return _norm(w, 0.75)
 
 
+def wood_tick(freq, seed):
+    """Soft wood-block tick for the decision clock (quiet, very short)."""
+    t = _t(0.06)
+    body = np.sin(2 * np.pi * freq * t) * np.exp(-t * 95)
+    body += np.sin(2 * np.pi * freq * 2.7 * t) * np.exp(-t * 160) * 0.35
+    click = np.random.default_rng(seed).standard_normal(len(t))
+    click = _bandpass(click, 2000, 6000) * np.exp(-t * 400) * 0.4
+    return _norm(body + click, 0.6)
+
+
+def level_fail():
+    """Below the pass mark: three soft falling notes, the last one sagging."""
+    notes = ((523.25, 0.0, 0.20), (440.0, 0.22, 0.20), (349.23, 0.44, 0.62))
+    out = np.zeros(int(SR * 1.12))
+    for i, (f, start, dur) in enumerate(notes):
+        t = _t(dur)
+        bend = np.ones_like(t)
+        if i == 2:
+            bend = (1 - 0.06 * (t / dur) ** 2) * (1 + 0.012 * np.sin(2 * np.pi * 5.5 * t))
+        phase = 2 * np.pi * np.cumsum(f * bend) / SR
+        tone = np.sin(phase) + 0.35 * np.sin(2 * phase) + 0.12 * np.sin(3 * phase)
+        tone *= _env(len(t), 0.06, 1.3 if i < 2 else 1.8)
+        s = int(SR * start)
+        out[s:s + len(t)] += tone
+    thud_t = _t(0.18)
+    thud = np.sin(2 * np.pi * 70 * thud_t) * np.exp(-thud_t * 18) * 0.5
+    s = int(SR * 0.44)
+    out[s:s + len(thud)] += thud
+    return _norm(out, 0.7)
+
+
 if __name__ == "__main__":
+    _write("tick.wav", wood_tick(1500, 31))
+    _write("tock.wav", wood_tick(1150, 32))
     _write("card_deal_a.wav", card_deal(1, 1.0))
     _write("card_deal_b.wav", card_deal(2, 1.12))
     _write("rush_in.wav", rush_whoosh())
     _write("stomp.wav", stomp())
     _write("tag_slap.wav", tag_slap())
     _write("rush_out.wav", swoosh_out())
+    _write("level_fail.wav", level_fail())
     print("wrote", sorted(os.listdir(OUT)))

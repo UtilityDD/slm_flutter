@@ -10,7 +10,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
-import '../game/game_save.dart';
 import '../identify/fit_image.dart';
 import '../training/training_models.dart';
 import '../training/training_provider.dart';
@@ -19,6 +18,7 @@ import 'lesson_progress_store.dart';
 import 'lesson_quiz_page.dart';
 import 'lesson_quiz_store.dart';
 import 'lesson_rich_text.dart';
+import 'lesson_seal_page.dart';
 import 'level_celebration_page.dart';
 import 'lineman_progress.dart';
 
@@ -27,15 +27,16 @@ class LessonReaderPage extends ConsumerStatefulWidget {
   final LessonCardItem lesson;
   final bool bn;
 
-  const LessonReaderPage({super.key, required this.lesson, required this.bn});
+  /// Opened from a muted level: the seal at the end stays silent too.
+  final bool muted;
+
+  const LessonReaderPage({super.key, required this.lesson, required this.bn, this.muted = false});
 
   @override
   ConsumerState<LessonReaderPage> createState() => _LessonReaderPageState();
 }
 
 enum _Phase { hero, point, tip, myth, done }
-
-const int _lessonPoints = 20;
 
 class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
   late final List<_Phase> _phases;
@@ -87,8 +88,6 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     // Download (or read the saved copy of) the quiz while the lesson is read,
     // so it is ready offline by the last page.
     unawaited(LessonQuizStore.instance.prefetch(lesson.moduleNumber, lesson.chapterNumber));
-    // Make sure the local score is loaded before the lesson can add to it.
-    ref.read(gameSaveProvider);
   }
 
   @override
@@ -366,9 +365,6 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
           'completed_lessons': currentCompleted,
           'updated_at': DateTime.now().toIso8601String(),
         };
-        if (!wasRevision) {
-          updates['points'] = (authState.profile?.points ?? 0) + _lessonPoints;
-        }
         if (moduleFullyDone) {
           final currentLevel = authState.profile?.trainingLevel ?? 1;
           if (nextLevel > currentLevel) {
@@ -383,16 +379,7 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     // No explicit invalidate here: the ladder and lesson list already watch
     // auth and local progress, and their content rows are cached per session.
 
-    // The one score the player sees (Home ◆) is the local save. Award first
-    // clears there, for guests too, and only then show the reward.
-    var awarded = 0;
-    if (!wasRevision) {
-      final save = ref.read(gameSaveProvider.notifier);
-      await save.reloadFromDisk();
-      await save.addPoints(_lessonPoints);
-      awarded = _lessonPoints;
-    }
-
+    // Lessons give no points: the win is the seal and the next lesson opening.
     if (!mounted) return;
 
     // Celebrate first clear, or recover if module is done but celebration never ran.
@@ -420,22 +407,37 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     }
 
     if (!mounted) return;
-    if (awarded > 0) {
-      showSlmXpToast(context, amount: awarded, unit: widget.bn ? 'পয়েন্ট' : 'points');
+    final lesson = widget.lesson;
+    final ordered = [...siblings]..sort((a, b) => a.chapterNumber.compareTo(b.chapterNumber));
+    if (!ordered.any((l) => l.id == lesson.id)) {
+      ordered
+        ..add(lesson)
+        ..sort((a, b) => a.chapterNumber.compareTo(b.chapterNumber));
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          awarded == 0
-              ? (widget.bn ? 'রিভিশন সম্পন্ন।' : 'Revision done.')
-              : (widget.bn ? 'ভালো হয়েছে! +$awarded পয়েন্ট যোগ হয়েছে।' : 'Well done! +$awarded points added.'),
-          style: const TextStyle(fontFamily: banglaFont, fontSize: 15, fontWeight: FontWeight.w600),
+    final mine = ordered.indexWhere((l) => l.id == lesson.id);
+    final next = mine + 1 < ordered.length ? ordered[mine + 1] : null;
+    final nav = Navigator.of(context);
+    final bn = widget.bn;
+    HapticFeedback.mediumImpact();
+    await nav.pushReplacement(
+      SlmPageRoute<void>(
+        style: SlmTransition.scaleFade,
+        builder: (_) => LessonSealPage(
+          lesson: lesson,
+          seals: [for (final l in ordered) l.isCompleted || l.id == lesson.id],
+          mine: mine,
+          revision: wasRevision,
+          bn: bn,
+          muted: widget.muted,
+          next: next,
+          onOpenNext: next == null
+              ? null
+              : () => nav.pushReplacement(
+                    SlmPageRoute<void>(builder: (_) => LessonReaderPage(lesson: next, bn: bn, muted: widget.muted)),
+                  ),
         ),
-        backgroundColor: AppColors.safeGreen,
-        behavior: SnackBarBehavior.floating,
       ),
     );
-    Navigator.of(context).pop();
   }
 
   void _zoom(String url, String caption) {
@@ -853,8 +855,8 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
                 const SizedBox(height: 10),
                 Text(
                   bn
-                      ? 'কুইজে 70% সঠিক হলে পাঠ সম্পন্ন — 20 পয়েন্ট।'
-                      : 'Score 70% in the quiz to complete the lesson — 20 points.',
+                      ? 'কুইজে 70% সঠিক হলে পাঠ সম্পন্ন—পাবেন এই পাঠের সিল।'
+                      : 'Score 70% in the quiz to complete the lesson and earn its seal.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontFamily: banglaFont, fontSize: 16, height: 1.5, color: _softInk),
                 ),

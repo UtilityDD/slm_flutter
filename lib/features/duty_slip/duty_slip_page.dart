@@ -14,6 +14,8 @@ import '../auth/verify_sheet.dart';
 import '../game/beat_fx.dart';
 import '../game/game_exit_sheet.dart';
 import '../game/game_save.dart';
+import '../game/ladder_builder.dart';
+import '../game/level_shell.dart';
 import '../guide/guide_director.dart';
 import '../guide/mascot_speech_library.dart';
 import '../home/bangla_read_aloud.dart';
@@ -119,6 +121,12 @@ class DsBoxDecode extends ImageProvider<DsBoxDecodeKey> {
 
     return inner.loadImage(key.inner, boxed);
   }
+}
+
+/// "1.4/do/1" or "m1/gate" → module 1; null for an old level-number id.
+int? _moduleOfRung(String rungId) {
+  final m = RegExp(r'^m?(\d+)[./]').firstMatch(rungId);
+  return m == null ? null : int.tryParse(m.group(1)!);
 }
 
 class DutySlipPage extends StatefulWidget {
@@ -283,7 +291,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _refreshHud() {
     final e = _engine;
     if (!mounted || e == null) return;
-    final sig = Object.hash(e.levelScore, e.quality, e.hudTotal, e.playing, e.listing, e.levelIndex);
+    final sig = Object.hash(e.levelScore, e.quality, e.hudTotal, e.playing, e.listing, e.levelIndex, _runScore);
     if (sig != _hudSig) {
       _hudSig = sig;
       _hudTick.value++;
@@ -303,14 +311,28 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     unawaited(ZlMusic.start());
   }
 
+  /// This Do play's score: every chip that flies adds to it. When the play
+  /// ends it replaces the rung's last score in the main ◆ ([_commitRun]),
+  /// so the latest play counts and replays never farm points.
+  int _runScore = 0;
+
+  /// A Do play ended: its score plus [bonus] replaces the rung's last score
+  /// in the main ◆. Leaving mid-level commits nothing.
+  void _commitRun({int bonus = 0}) {
+    final container = ProviderScope.containerOf(context);
+    final rungId = container.read(gameSaveProvider).currentRungId;
+    final score = _runScore + bonus;
+    _runScore = 0;
+    if (rungId.isEmpty) return;
+    unawaited(container.read(gameSaveProvider.notifier).commitLevelScore(rungId, score));
+  }
+
+  /// Called by the ladder, which has already checked its lock and the verify gate.
   void _openLevel(int index) {
     final e = _engine;
     if (e == null || !e.onRoad) return;
-    if (gameNeedsVerifyNow(context, index + 1)) {
-      showVerifySheet(context);
-      return;
-    }
-    e.openLevel(index);
+    _runScore = 0;
+    e.openLevel(index, fromLadder: true);
     HapticFeedback.mediumImpact();
     setState(() {});
   }
@@ -337,6 +359,16 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     setState(() {});
   }
 
+  /// A safe (or risky) field night clears the rung that opened it — the
+  /// module's rank gate. An unsafe night clears nothing.
+  void _clearFieldRung() {
+    final container = ProviderScope.containerOf(context);
+    final rungId = container.read(gameSaveProvider).currentRungId;
+    if (rungId.isEmpty) return;
+    unawaited(container.read(gameSaveProvider.notifier).markRungCleared(rungId));
+    _commitRun(bonus: 20);
+  }
+
   void _finishSafeWalk() {
     final e = _engine;
     if (e == null || !e.showingDress) return;
@@ -345,10 +377,8 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     _holdClock(false);
     final container = ProviderScope.containerOf(context);
     final rungId = container.read(gameSaveProvider).currentRungId;
-    final already = container.read(gameSaveProvider).rungProgress[rungId] == 'cleared';
-    final bonus = already ? 5 : 20;
     unawaited(container.read(gameSaveProvider.notifier).markRungCleared(rungId));
-    unawaited(container.read(gameSaveProvider.notifier).addPoints(bonus, rungId: rungId));
+    _commitRun(bonus: 20);
     container.read(guideDirectorProvider.notifier).sayCue(
           MascotCueId.doLevelClear,
           speakVoice: false,
@@ -425,6 +455,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   void _retryLevel() {
     final e = _engine;
     if (e == null || !e.showingResult) return;
+    _runScore = 0;
     e.replayNow();
     if (e.playing) _holdClock(true);
     if (!e.showingDressIntro) unawaited(ZlFx.cue('sounds/quiz_shuffle.wav', muted: _muted));
@@ -532,15 +563,9 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     _flies.value = [..._flies.value, _FlyBit(id: id, delta: delta, from: from, to: to)];
     // Callers may change the score right after this call; read it once they are done.
     scheduleMicrotask(_refreshHud);
+    // Into this play's score (never below 0); the main ◆ changes when the play ends.
+    _runScore = math.max(0, _runScore + delta);
     final container = ProviderScope.containerOf(context);
-    final rungId = container.read(gameSaveProvider).currentRungId;
-    unawaited(
-      container.read(gameSaveProvider.notifier).addPoints(
-            delta,
-            rungId: rungId,
-            originGlobal: origin,
-          ),
-    );
     container.read(guideDirectorProvider.notifier).react(delta > 0 ? GuideMood.glad : GuideMood.warn);
     Future<void>.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
@@ -550,13 +575,19 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
 
   Future<void> _commitLethalFall(DutySlipEngine e, DsResult r) async {
     final cause = (e.lethalReason ?? r.noteBn).trim();
-    final module = (e.levelIndex ~/ 20) + 1;
-    final moduleFirst = '$module.1/learn';
-    final rungId = '$module.${(e.levelIndex % 20) + 1}/do';
     final container = ProviderScope.containerOf(context);
+    // The rung being played (set by the ladder) says which module to fall to,
+    // whichever legacy level it opened.
+    final current = container.read(gameSaveProvider).currentRungId;
+    final fromRung = _moduleOfRung(current);
+    final module = fromRung ?? (e.levelIndex ~/ 20) + 1;
+    final moduleFirst = '$module.1/learn';
+    final rungId = fromRung != null ? current : '$module.${(e.levelIndex % 20) + 1}/do';
+    final head = current.split('/').first;
+    _commitRun();
     await container.read(gameSaveProvider.notifier).recordLethalDeath(
           cause: cause.isEmpty ? 'মারাত্মক ভুল' : cause,
-          lessonId: '${e.level.number}',
+          lessonId: head.contains('.') ? head : '${e.level.number}',
           rungId: rungId,
           moduleFirstRungId: moduleFirst,
         );
@@ -582,6 +613,14 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       if (e.act == DsAct.done || e.act == DsAct.lethal) {
         _holdClock(false);
         unawaited(ZlFx.cue('sounds/quiz_complete.wav', muted: _muted));
+      }
+      if (e.act == DsAct.done && e.level.isField) {
+        // Safe or risky: the gate clears. Unsafe: no clear, but the play's score stands.
+        if (e.grade() != DsGrade.unsafe) {
+          _clearFieldRung();
+        } else {
+          _commitRun();
+        }
       }
       _loadCard(speak: true);
     } else if (r.lethal || e.act == DsAct.lethal) {
@@ -681,7 +720,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
         final container = ProviderScope.containerOf(context);
         final rungId = container.read(gameSaveProvider).currentRungId;
         unawaited(container.read(gameSaveProvider.notifier).markRungCleared(rungId));
-        unawaited(container.read(gameSaveProvider.notifier).addPoints(20, rungId: rungId));
+        _commitRun(bonus: 20);
         container.read(guideDirectorProvider.notifier).sayCue(
               MascotCueId.doLevelClear,
               speakVoice: false,
@@ -875,6 +914,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                       builder: (_, _, _) => _Hud(
                         engine: e,
                         scoreKey: _scoreKey,
+                        levelScore: _runScore,
                         muted: _muted,
                         onMute: () async {
                           final next = !_muted;
@@ -1010,7 +1050,15 @@ class _Hud extends ConsumerWidget {
   final Key scoreKey;
   final bool muted;
   final VoidCallback onMute;
-  const _Hud({required this.engine, required this.scoreKey, required this.muted, required this.onMute});
+  /// This play's score: the pill shows it (chips fly into it); the main total sits beside it.
+  final int levelScore;
+  const _Hud({
+    required this.engine,
+    required this.scoreKey,
+    required this.levelScore,
+    required this.muted,
+    required this.onMute,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1018,6 +1066,9 @@ class _Hud extends ConsumerWidget {
     final save = ref.watch(gameSaveProvider);
     final onLevel = e.playing || e.listing;
     final title = onLevel ? e.briefOf().title : '';
+    // Same chip as every level: "পাঠ 1.1 · কাজ 2/2" from the catalog, not the old level number.
+    final ctx = levelContextFor(ref.watch(builtLadderProvider).value, save.currentRungId);
+    final chip = ctx?.chipBn ?? enDigits('লেভেল ${e.level.number}');
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
       child: Container(
@@ -1040,7 +1091,7 @@ class _Hud extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      enDigits('লেভেল ${e.level.number}'),
+                      chip,
                       style: zlText(14, weight: FontWeight.w900, color: SlmColors.gold300, height: 1.05),
                     ),
                     if (title.isNotEmpty)
@@ -1076,12 +1127,16 @@ class _Hud extends ConsumerWidget {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    enDigits('${save.points}'),
+                    enDigits('${onLevel ? levelScore : save.points}'),
                     style: zlText(15, weight: FontWeight.w900, color: SlmColors.ivory, height: 1),
                   ),
                 ],
               ),
             ),
+            if (onLevel) ...[
+              const SizedBox(width: 6),
+              ScoreTotalTicker(total: save.points),
+            ],
             const SizedBox(width: 6),
             // Unified 💀 Death Counter Pill
             Container(

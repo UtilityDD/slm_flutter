@@ -6,6 +6,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../core/en_digits.dart';
 import '../duty_slip/duty_slip_voice.dart';
+import '../game/learn_voice.dart';
 import 'guide_director.dart';
 
 /// Shared lip-sync notifier so [AiLinemanGuide] and legacy [DsCoach] adapters
@@ -42,6 +43,7 @@ class MascotTalk {
 /// High-level activity / event categories for the unified Game Mascot.
 enum MascotCueId {
   // 1. Ladder Presence & Nudges
+  ladderWelcomeNew,
   ladderWelcomeDaily,
   ladderWelcomeReturn,
   ladderIdleLevel,
@@ -160,15 +162,33 @@ class MascotSpeechLibrary {
   // 1. LADDER PRESENCE, WELCOME, IDLE NUDGE & POKE LINES
   // ===========================================================================
 
+  static const _welcomeNewPool = <MascotCue>[
+    MascotCue(
+      id: 'ladder.welcome.new.1',
+      textBn: 'হ্যালো! আমি ওস্তাদ, আপনার সেফটি গাইড। চলুন, প্রথম ধাপ থেকে শুরু করি!',
+      mood: GuideMood.wake,
+    ),
+    MascotCue(
+      id: 'ladder.welcome.new.2',
+      textBn: 'হাই! স্বাগতম। খেলতে খেলতে নিরাপদে কাজ শিখব—প্রথম ধাপে ট্যাপ করুন।',
+      mood: GuideMood.wake,
+    ),
+  ];
+
   static const _welcomeDailyPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.daily.1',
-      textBn: 'আজকের ডিউটিতে স্বাগতম। আগে নিরাপত্তা, তারপর কাজ। চলুন শুরু করি।',
+      textBn: 'হ্যালো! আবার দেখা হলো। আজকের ডিউটি শুরু করি?',
       mood: GuideMood.wake,
     ),
     MascotCue(
       id: 'ladder.welcome.daily.2',
-      textBn: 'স্বাগতম। মইয়ের ধাপগুলো একটার পর একটা শেষ করে এগোই।',
+      textBn: 'ওয়েলকাম ব্যাক! চলুন, পরের ধাপটা সেরে ফেলি।',
+      mood: GuideMood.wake,
+    ),
+    MascotCue(
+      id: 'ladder.welcome.daily.3',
+      textBn: 'হাই! আজও এসেছেন—দারুণ! চলুন এগোই।',
       mood: GuideMood.wake,
     ),
   ];
@@ -176,12 +196,17 @@ class MascotSpeechLibrary {
   static const _welcomeReturnPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.return.1',
-      textBn: 'ফিরে এসেছেন। যেখানে থেমেছিলেন, সেখান থেকেই এগোই।',
+      textBn: 'হাই! আবার এলেন? চলুন, যেখানে ছিলাম।',
       mood: GuideMood.talk,
     ),
     MascotCue(
       id: 'ladder.welcome.return.2',
-      textBn: 'চলুন, সামনের ধাপটা শেষ করে ওপরে উঠি।',
+      textBn: 'ওয়েলকাম ব্যাক! পরের ধাপটা আপনার অপেক্ষায়।',
+      mood: GuideMood.talk,
+    ),
+    MascotCue(
+      id: 'ladder.welcome.return.3',
+      textBn: 'হ্যালো! চলুন, আরেকটা ধাপ উঠি।',
       mood: GuideMood.talk,
     ),
   ];
@@ -470,6 +495,7 @@ class MascotSpeechLibrary {
   static MascotCue cueFor(MascotCueId id) {
     final idx = _cycle++;
     return switch (id) {
+      MascotCueId.ladderWelcomeNew => _welcomeNewPool[idx % _welcomeNewPool.length],
       MascotCueId.ladderWelcomeDaily => _welcomeDailyPool[idx % _welcomeDailyPool.length],
       MascotCueId.ladderWelcomeReturn => _welcomeReturnPool[idx % _welcomeReturnPool.length],
       MascotCueId.ladderIdleLevel => _idleLevelPool[idx % _idleLevelPool.length],
@@ -889,6 +915,7 @@ class MascotSpeechLibrary {
     bool muted = false,
     double pitch = 1.0,
     double rate = 0.48,
+    bool rival = false,
   }) async {
     final token = ++_speakToken;
     if (muted || textBn.trim().isEmpty) {
@@ -899,17 +926,30 @@ class MascotSpeechLibrary {
     final cleanText = toNaturalFieldBangla(textBn);
 
     // 1. Check if we have a pre-synthesized neural MP3 in DsVoice (by voiceKey or exact text)
-    final resolvedKey = (voiceKey != null && DsVoice.hasAudio(voiceKey))
-        ? voiceKey
-        : (DsVoice.hasAudio(cleanText)
-              ? cleanText
-              : (DsVoice.hasAudio(textBn.trim()) ? textBn.trim() : null));
+    final resolvedKey = rival
+        ? null
+        : (voiceKey != null && DsVoice.hasAudio(voiceKey))
+            ? voiceKey
+            : (DsVoice.hasAudio(cleanText)
+                ? cleanText
+                : (DsVoice.hasAudio(textBn.trim()) ? textBn.trim() : null));
 
-    if (resolvedKey != null) {
+    // 1b. Learn voice pack: the coach's other fixed lines, and the rival's own voice.
+    final learnClip = resolvedKey != null
+        ? null
+        : LearnVoice.resolve(textBn, rival: rival) ?? LearnVoice.resolve(cleanText, rival: rival);
+
+    if (resolvedKey != null || learnClip != null) {
       await _stopTts();
+      DsVoice.stop();
+      LearnVoice.stop();
       MascotTalk.begin(maxHold: _estimateHold(cleanText));
       try {
-        await DsVoice.play(resolvedKey, muted: false);
+        if (learnClip != null) {
+          await LearnVoice.play(learnClip);
+        } else {
+          await DsVoice.play(resolvedKey!, muted: false);
+        }
       } finally {
         if (token == _speakToken) {
           MascotTalk.end();
@@ -921,6 +961,7 @@ class MascotSpeechLibrary {
     // 2. Otherwise use FlutterTts (bn-IN). Lips open on the engine's start
     // callback (not before), so the mouth never runs ahead of the voice.
     DsVoice.stop();
+    LearnVoice.stop();
     var began = false;
     void open() {
       if (began || token != _speakToken) return;
@@ -993,6 +1034,7 @@ class MascotSpeechLibrary {
     _speakToken++;
     MascotTalk.reset();
     DsVoice.stop();
+    LearnVoice.stop();
     await _stopTts();
   }
 

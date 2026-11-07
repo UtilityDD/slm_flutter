@@ -12,10 +12,43 @@ import '../guide/guide_director.dart';
 import '../shell/shell_providers.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'game_save.dart';
+import 'lesson_promises.dart';
 
 /// Shared beat FX bus — score chips, sound cues, death moment, and unified HUD.
 class BeatFx {
   BeatFx._();
+
+  /// Points inside a level: the chip flies into the level score and the
+  /// player hears and feels it, but the main ◆ only changes when the level
+  /// ends ([GameSaveController.commitLevelScore]).
+  static Future<void> levelDelta(
+    WidgetRef ref,
+    int delta, {
+    GuideMood? mood,
+    Offset? originGlobal,
+    bool playSound = true,
+    bool muted = false,
+  }) async {
+    if (delta == 0) return;
+    if (delta > 0) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.mediumImpact();
+    }
+    if (playSound && !muted) {
+      if (delta >= 20) {
+        unawaited(ZlFx.cue('sounds/level_done.wav', volume: 0.75, muted: false));
+      } else if (delta > 0) {
+        unawaited(ZlFx.cue('sounds/dress_right.wav', volume: 0.72, muted: false));
+      } else {
+        unawaited(ZlFx.cue('sounds/dress_wrong.wav', volume: 0.72, muted: false));
+      }
+    }
+    ref.read(gameSaveProvider.notifier).pulseDelta(delta, originGlobal: originGlobal);
+    if (mood != null) {
+      ref.read(guideDirectorProvider.notifier).react(mood);
+    }
+  }
 
   static Future<void> scoreDelta(
     WidgetRef ref,
@@ -65,6 +98,36 @@ class BeatFx {
 
 /// Unified top HUD bar shared by LearnRunnerPage and Do Rungs (DutySlipPage)
 /// so the player always sees the exact same live ◆ Score and 💀 Death counters.
+/// The main ◆ total, small, beside a level score. When the level ends and
+/// its score lands in the total, the number counts to the new value once
+/// (one-shot tween, nothing runs while idle).
+class ScoreTotalTicker extends StatelessWidget {
+  const ScoreTotalTicker({super.key, required this.total});
+
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: total.toDouble()),
+      duration: quiet ? Duration.zero : const Duration(milliseconds: 1100),
+      curve: Curves.easeOutCubic,
+      builder: (_, v, _) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('মোট', style: bangla(fontSize: 9.5, fontWeight: FontWeight.w700, color: SlmColors.mist, height: 1)),
+          Text(
+            enDigits('◆ ${v.round()}'),
+            style: bangla(fontSize: 11.5, fontWeight: FontWeight.w800, color: SlmColors.gold200, height: 1.15),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class UnifiedGameTopHud extends ConsumerStatefulWidget {
   final GlobalKey scoreKey;
   final GlobalKey? deathKey;
@@ -75,6 +138,10 @@ class UnifiedGameTopHud extends ConsumerStatefulWidget {
   final bool muted;
   final VoidCallback? onToggleMute;
   final Widget? trailingExtra;
+
+  /// This level's running score. When set, the pill shows it (chips fly into
+  /// it) and the main ◆ total sits small beside it.
+  final int? levelScore;
 
   const UnifiedGameTopHud({
     super.key,
@@ -87,6 +154,7 @@ class UnifiedGameTopHud extends ConsumerStatefulWidget {
     this.muted = false,
     this.onToggleMute,
     this.trailingExtra,
+    this.levelScore,
   });
 
   @override
@@ -116,10 +184,11 @@ class _UnifiedGameTopHudState extends ConsumerState<UnifiedGameTopHud>
   @override
   Widget build(BuildContext context) {
     final save = ref.watch(gameSaveProvider);
-    if (_lastPoints != null && _lastPoints != save.points) {
+    final shown = widget.levelScore ?? save.points;
+    if (_lastPoints != null && _lastPoints != shown) {
       _bump.forward(from: 0);
     }
-    _lastPoints = save.points;
+    _lastPoints = shown;
 
     return Container(
       height: 54,
@@ -147,35 +216,60 @@ class _UnifiedGameTopHudState extends ConsumerState<UnifiedGameTopHud>
             constraints: const BoxConstraints.tightFor(width: 36, height: 36),
           ),
           const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: SlmColors.gold400.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
-            ),
-            child: Text(
-              enDigits(widget.badgeText),
-              style: bangla(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w800,
-                color: SlmColors.gold300,
+          // With a level score the bar carries more, so the chip sits above
+          // the title and both shrink to fit a 360 dp phone.
+          if (widget.levelScore != null)
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    enDigits(widget.badgeText),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: bangla(fontSize: 11.5, fontWeight: FontWeight.w800, color: SlmColors.gold300, height: 1.1),
+                  ),
+                  Text(
+                    enDigits(widget.titleText),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: bangla(fontSize: 13, fontWeight: FontWeight.w700, color: SlmColors.ivory, height: 1.15),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: SlmColors.gold400.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
+              ),
+              child: Text(
+                enDigits(widget.badgeText),
+                style: bangla(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  color: SlmColors.gold300,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              enDigits(widget.titleText),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: bangla(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: SlmColors.ivory,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                enDigits(widget.titleText),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: bangla(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: SlmColors.ivory,
+                ),
               ),
             ),
-          ),
+          ],
           const SizedBox(width: 6),
           // Unified Live ◆ Score Chip
           AnimatedBuilder(
@@ -213,7 +307,7 @@ class _UnifiedGameTopHudState extends ConsumerState<UnifiedGameTopHud>
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    enDigits('${save.points}'),
+                    enDigits('$shown'),
                     style: bangla(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
@@ -225,6 +319,10 @@ class _UnifiedGameTopHudState extends ConsumerState<UnifiedGameTopHud>
               ),
             ),
           ),
+          if (widget.levelScore != null) ...[
+            const SizedBox(width: 6),
+            ScoreTotalTicker(total: save.points),
+          ],
           const SizedBox(width: 6),
           // Unified 💀 Death Counter Chip
           Container(
@@ -552,6 +650,8 @@ class _DeathMomentHostState extends ConsumerState<DeathMomentHost> with SingleTi
       _c.value = 1;
       return;
     }
+    // A broken promise is one more line to read.
+    _c.duration = Duration(milliseconds: pulse.promiseBn != null ? 3400 : 2200);
     _c.forward(from: 0);
   }
 
@@ -650,6 +750,20 @@ class _DeathMomentHostState extends ConsumerState<DeathMomentHost> with SingleTi
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
                                           color: SoftDanger.ink,
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                    ],
+                                    if (pulse.promiseBn != null) ...[
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        '${PromiseLines.broken} — “${pulse.promiseBn}”',
+                                        textAlign: TextAlign.center,
+                                        maxLines: 3,
+                                        style: bangla(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800,
+                                          color: SlmColors.gold200,
                                           height: 1.35,
                                         ),
                                       ),

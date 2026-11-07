@@ -1,0 +1,1304 @@
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/theme/app_theme.dart';
+import '../../design/slm_design.dart';
+import '../guide/guide_director.dart';
+import '../guide/mascot_speech_library.dart';
+import '../zero_loss/zero_loss_fx.dart';
+import 'beat_fx.dart';
+import 'do_parts.dart';
+import 'game_exit_sheet.dart';
+import 'game_save.dart';
+import 'learn_feedback_lines.dart';
+import 'level_result_parts.dart';
+import 'level_shell.dart';
+import 'spoken_once.dart';
+
+// ============================================================================
+// Data
+// ============================================================================
+
+/// Body part a kit item goes on, dressed in this order.
+enum KitSlot { torso, legs, feet }
+
+/// good: the right item, sound. flawed: the right item with a defect only a
+/// close look shows. wrong: the wrong item for line work.
+enum KitKind { good, flawed, wrong }
+
+/// Defects painted over a picture (placeholders until flawed photos exist).
+enum KitFlawKind { grease, burn, tear, oil, nail, crack }
+
+/// One way a good item can turn up damaged. [marks] are positions inside the
+/// picture box (0–1 on each axis); [inspectAsset] replaces the painted marks
+/// with a real photo of the damaged item when one exists.
+@immutable
+class KitFlaw {
+  const KitFlaw({
+    required this.id,
+    required this.kind,
+    required this.marks,
+    required this.labelBn,
+    required this.lineBn,
+    this.inspectAsset,
+  });
+
+  final String id;
+  final KitFlawKind kind;
+  final List<Offset> marks;
+  final String labelBn;
+  final String lineBn;
+  final String? inspectAsset;
+}
+
+@immutable
+class KitItem {
+  const KitItem({
+    required this.id,
+    required this.slot,
+    required this.kind,
+    required this.asset,
+    required this.aspect,
+    required this.labelBn,
+    this.lineBn = '',
+    this.flaws = const [],
+    this.flaw,
+    this.wornAsset,
+  });
+
+  /// Stable id. A dealt flawed copy is `<good id>#<flaw id>`.
+  final String id;
+  final KitSlot slot;
+  final KitKind kind;
+  final String asset;
+  final double aspect;
+  final String labelBn;
+
+  /// Why it is wrong / what the flaw is.
+  final String lineBn;
+
+  /// Good items only: the ways this item can turn up damaged.
+  final List<KitFlaw> flaws;
+
+  /// Flawed copies only: the defect it has.
+  final KitFlaw? flaw;
+
+  /// The figure wearing this wrong item — the "what would happen" picture.
+  final String? wornAsset;
+
+  KitItem withFlaw(KitFlaw f) => KitItem(
+        id: '$id#${f.id}',
+        slot: slot,
+        kind: KitKind.flawed,
+        asset: asset,
+        aspect: aspect,
+        labelBn: f.labelBn,
+        lineBn: f.lineBn,
+        flaw: f,
+      );
+
+  /// Key for the "explain once" memory: the flaw kind, or the wrong item.
+  String get lessonKey => flaw != null ? 'flaw/${flaw!.kind.name}' : 'item/$id';
+}
+
+/// Someone rushing the player before one slot is dressed.
+typedef KitCaller = DoCaller;
+
+@immutable
+class KitCheckPack {
+  const KitCheckPack({
+    required this.id,
+    required this.titleBn,
+    required this.sceneBn,
+    required this.introBn,
+    required this.pool,
+    required this.callers,
+    required this.callBefore,
+    required this.quickMs,
+  });
+
+  final String id;
+  final String titleBn;
+
+  /// Where and when, shown at the start ("সকাল 7টা · …").
+  final String sceneBn;
+  final String introBn;
+
+  /// Every good and wrong item that can be dealt; flawed copies are made
+  /// from the good items' [KitItem.flaws] at deal time.
+  final List<KitItem> pool;
+  final List<KitCaller> callers;
+
+  /// The pressure call comes before one of these slots (picked per play).
+  final List<KitSlot> callBefore;
+
+  /// A clean play faster than this earns the "ঝটপট ও নির্ভুল" bonus.
+  final int quickMs;
+}
+
+/// Fixed coach lines (recorded with the Learn voice pack).
+abstract final class KitLines {
+  static const askTorso = 'আগে জামা। হাতে নিয়ে ভালো করে দেখুন।';
+  static const askLegs = 'এবার প্যান্ট। দেখে তবেই পরুন।';
+  static const askFeet = 'এবার জুতো। সোলটা দেখতে ভুলবেন না।';
+  static const caught = 'ঠিক ধরেছেন!';
+  static const rejectedGood = 'এটা তো ঠিক ছিল!';
+  static const callHeld = 'ঠিক। তাড়াহুড়োতেই দুর্ঘটনা হয়।';
+  static const callRushed = 'না! চেক বাদ দেওয়া মানেই ঝুঁকি।';
+  static const allSet = 'সব ঠিক আছে। এবার কাজে নামা যায়।';
+  static const fail = 'এবার হলো না। দেখে নিয়ে আবার চেষ্টা করুন।';
+  static const quick = 'ঝটপট আর নির্ভুল! বোনাস পেলেন।';
+  static const checkFirst = DoLines.checkFirst;
+  static const rushOn = DoLines.rushOn;
+
+  static String ask(KitSlot s) => switch (s) {
+        KitSlot.torso => askTorso,
+        KitSlot.legs => askLegs,
+        KitSlot.feet => askFeet,
+      };
+
+  static const coach = [askTorso, askLegs, askFeet, caught, rejectedGood, callHeld, callRushed, allSet, fail, quick];
+}
+
+const _d = 'assets/duty_slip/dress';
+const _ppe = 'assets/safety/library/ppe';
+
+const _greaseLine = 'জামায় তেল-গ্রিজ লেগে আছে। ফুলকি পড়লেই জ্বলে উঠবে।';
+const _burnLine = 'জামায় পোড়া ফুটো। ওখান দিয়েই আগুনের তাপ চামড়ায় লাগবে।';
+const _tearLine = 'হাতা ছেঁড়া। ঝুলন্ত কাপড় তারে বা যন্ত্রে আটকে যাবে।';
+const _oilLine = 'প্যান্টে মোবিলের দাগ। আগুনের ফুলকিতে দপ করে জ্বলবে।';
+const _nailLine = 'সোলে পেরেক গেঁথে আছে। কারেন্ট মাটিতে নামার রাস্তা পেয়ে যাবে।';
+const _crackLine = 'সোল ফেটে গেছে। ফাটল দিয়ে জল আর কারেন্ট দুটোই ঢুকবে।';
+
+/// Lesson 1.1, first Do: dress for work from the store's old kit — and look
+/// before you wear. A fresh set is dealt every play.
+const kitCheckPack11 = KitCheckPack(
+  id: 'kit_check_1_1',
+  titleBn: 'কবচ যাচাই',
+  sceneBn: 'সকাল 7টা · সাবস্টেশনের স্টোর রুম',
+  introBn: 'কাল রাতের ঝড়ে লাইন পড়েছে। স্টোরের কিট পুরনো—প্রতিটা জিনিস দেখে তবেই পরুন।',
+  quickMs: 75000,
+  callBefore: [KitSlot.legs, KitSlot.feet],
+  callers: [
+    KitCaller(id: 'je', whoBn: 'JE সাহেব (ফোনে)', lineBn: 'জলদি করো! গাড়ি দাঁড়িয়ে আছে। চেক-টেক পরে হবে!', icon: Icons.phone_in_talk_rounded),
+    KitCaller(id: 'crowd', whoBn: 'বাইরে গ্রাহকেরা', lineBn: 'কারেন্ট কখন আসবে? সকাল থেকে বসে আছি!', icon: Icons.groups_rounded),
+    KitCaller(id: 'mate', whoBn: 'সহকর্মী', lineBn: 'চল চল, দেরি হচ্ছে! এসব দেখার সময় নেই।', icon: Icons.directions_run_rounded),
+  ],
+  pool: [
+    // ---- জামা
+    KitItem(
+      id: 'shirt',
+      slot: KitSlot.torso,
+      kind: KitKind.good,
+      asset: '$_d/tray_shirt.webp',
+      aspect: 435 / 512,
+      labelBn: 'সুতি ফুল-হাতা জামা',
+      flaws: [
+        KitFlaw(
+          id: 'grease',
+          kind: KitFlawKind.grease,
+          marks: [Offset(0.40, 0.46), Offset(0.58, 0.62), Offset(0.66, 0.38), Offset(0.30, 0.70)],
+          labelBn: 'গ্রিজ লাগা জামা',
+          lineBn: _greaseLine,
+        ),
+        KitFlaw(id: 'burn', kind: KitFlawKind.burn, marks: [Offset(0.62, 0.40)], labelBn: 'পোড়া ফুটো জামা', lineBn: _burnLine),
+        KitFlaw(id: 'tear', kind: KitFlawKind.tear, marks: [Offset(0.86, 0.66)], labelBn: 'ছেঁড়া হাতার জামা', lineBn: _tearLine),
+      ],
+    ),
+    KitItem(id: 'poly', slot: KitSlot.torso, kind: KitKind.wrong, asset: '$_d/tray_poly.webp', aspect: 431 / 512, labelBn: 'পলিয়েস্টার জামা', lineBn: 'আর্ক ফ্ল্যাশের তাপে পলিয়েস্টার গলে চামড়ায় সেঁটে যায়।', wornAsset: '$_d/worn_poly.webp'),
+    KitItem(id: 'halftee', slot: KitSlot.torso, kind: KitKind.wrong, asset: '$_d/tray_halftee.webp', aspect: 473 / 512, labelBn: 'হাফ-হাতা গেঞ্জি', lineBn: 'হাত খোলা থাকলে সামান্য স্পার্কেই চামড়া পুড়ে যাবে।'),
+    KitItem(id: 'fatua', slot: KitSlot.torso, kind: KitKind.wrong, asset: '$_d/tray_fatua.webp', aspect: 473 / 512, labelBn: 'ফতুয়া', lineBn: 'ঢিলে ফতুয়া বাতাসে উড়ে তারে জড়িয়ে যেতে পারে।'),
+    // ---- প্যান্ট
+    KitItem(
+      id: 'pant',
+      slot: KitSlot.legs,
+      kind: KitKind.good,
+      asset: '$_d/tray_pant.webp',
+      aspect: 223 / 512,
+      labelBn: 'সুতির ফুল প্যান্ট',
+      flaws: [
+        KitFlaw(id: 'oil', kind: KitFlawKind.oil, marks: [Offset(0.35, 0.55), Offset(0.66, 0.72), Offset(0.42, 0.33)], labelBn: 'মোবিল লাগা প্যান্ট', lineBn: _oilLine),
+      ],
+    ),
+    KitItem(id: 'halfpant', slot: KitSlot.legs, kind: KitKind.wrong, asset: '$_d/tray_halfpant.webp', aspect: 456 / 512, labelBn: 'হাফ প্যান্ট', lineBn: 'পা খোলা রেখে লাইনের কাজ নয়। তারের ঘষায় চামড়া কাটবে।'),
+    KitItem(id: 'pajama', slot: KitSlot.legs, kind: KitKind.wrong, asset: '$_d/tray_pajama.webp', aspect: 245 / 512, labelBn: 'ঢিলে পাজামা', lineBn: 'ঢিলে পাজামা যন্ত্রে আটকে ভারসাম্য নষ্ট করে।'),
+    // ---- জুতো
+    KitItem(
+      id: 'boot',
+      slot: KitSlot.feet,
+      kind: KitKind.good,
+      asset: '$_d/tray_boot.webp',
+      aspect: 512 / 342,
+      labelBn: 'সেফটি বুট',
+      flaws: [
+        KitFlaw(id: 'boot-nail', kind: KitFlawKind.nail, marks: [Offset(0.26, 0.90)], labelBn: 'পেরেক গাঁথা বুট', lineBn: _nailLine),
+        KitFlaw(id: 'boot-crack', kind: KitFlawKind.crack, marks: [Offset(0.12, 0.88)], labelBn: 'ফাটা সোলের বুট', lineBn: _crackLine),
+      ],
+    ),
+    KitItem(
+      id: 'boot2',
+      slot: KitSlot.feet,
+      kind: KitKind.good,
+      asset: '$_ppe/Lineman_Boot_2.webp',
+      aspect: 600 / 597,
+      labelBn: 'লাইনম্যান বুট',
+      flaws: [
+        KitFlaw(id: 'boot2-nail', kind: KitFlawKind.nail, marks: [Offset(0.46, 0.92)], labelBn: 'পেরেক গাঁথা বুট', lineBn: _nailLine),
+        KitFlaw(id: 'boot2-crack', kind: KitFlawKind.crack, marks: [Offset(0.22, 0.90)], labelBn: 'ফাটা সোলের বুট', lineBn: _crackLine),
+      ],
+    ),
+    KitItem(
+      id: 'boot3',
+      slot: KitSlot.feet,
+      kind: KitKind.good,
+      asset: '$_ppe/Lineman_Boot_3.webp',
+      aspect: 704 / 621,
+      labelBn: 'সেফটি জুতো',
+      flaws: [
+        KitFlaw(id: 'boot3-nail', kind: KitFlawKind.nail, marks: [Offset(0.46, 0.43)], labelBn: 'পেরেক গাঁথা জুতো', lineBn: _nailLine),
+        KitFlaw(id: 'boot3-crack', kind: KitFlawKind.crack, marks: [Offset(0.14, 0.41)], labelBn: 'ফাটা সোলের জুতো', lineBn: _crackLine),
+      ],
+    ),
+    KitItem(id: 'slipper', slot: KitSlot.feet, kind: KitKind.wrong, asset: '$_d/tray_slipper.webp', aspect: 455 / 512, labelBn: 'চপ্পল', lineBn: 'চপ্পলে গ্রিপ নেই। পা হড়কালেই পতন।', wornAsset: '$_d/worn_slip.webp'),
+    KitItem(id: 'shoe', slot: KitSlot.feet, kind: KitKind.wrong, asset: '$_d/tray_normalshoe.webp', aspect: 512 / 249, labelBn: 'সাধারণ জুতো', lineBn: 'সাধারণ সোলে বৈদ্যুতিক সুরক্ষা নেই।'),
+  ],
+);
+
+/// Do packs by game pack id (catalog `gamePacks[].id`).
+const kitCheckPacks = <String, KitCheckPack>{'do_1_1_a': kitCheckPack11};
+
+// ============================================================================
+// Deal + rules (pure, tested)
+// ============================================================================
+
+/// One play's set: what is on offer per slot, and who calls before which slot.
+@immutable
+class KitDeal {
+  const KitDeal({required this.items, required this.callBefore, required this.caller});
+  final List<KitItem> items;
+  final KitSlot callBefore;
+  final KitCaller caller;
+}
+
+/// Deals a fresh set: per slot one sound item, a damaged copy that looks the
+/// same in the tray (always for shirt and boots, often for trousers), and 1–2
+/// wrong items. Picture, flaw, wrong items, caller and call slot all vary.
+KitDeal dealKit(KitCheckPack pack, math.Random rng) {
+  T pick<T>(List<T> l) => l[rng.nextInt(l.length)];
+  final items = <KitItem>[];
+  for (final slot in KitSlot.values) {
+    final goods = [for (final i in pack.pool) if (i.slot == slot && i.kind == KitKind.good) i];
+    final wrongs = [for (final i in pack.pool) if (i.slot == slot && i.kind == KitKind.wrong) i]..shuffle(rng);
+    final good = pick(goods);
+    items.add(good);
+    final flawable = [for (final g in goods) if (g.flaws.isNotEmpty) g];
+    if (flawable.isNotEmpty && (slot != KitSlot.legs || rng.nextBool())) {
+      // Mostly the same picture as the sound one, so only a close look tells them apart.
+      final base = flawable.contains(good) && rng.nextDouble() < 0.7 ? good : pick(flawable);
+      items.add(base.withFlaw(pick(base.flaws)));
+    }
+    final wrongCount = slot == KitSlot.torso ? 2 : 1 + rng.nextInt(2);
+    items.addAll(wrongs.take(math.min(wrongCount, wrongs.length)));
+  }
+  return KitDeal(items: items, callBefore: pick(pack.callBefore), caller: pick(pack.callers));
+}
+
+enum KitChoice { wear, reject }
+
+/// What a decision means. [stampBn] lands on the card; [reasonBn] is spoken
+/// the first time this flaw / wrong item is met, shown as text after that.
+@immutable
+class KitOutcome {
+  const KitOutcome({
+    required this.right,
+    required this.delta,
+    required this.wears,
+    required this.leavesTray,
+    required this.stampBn,
+    this.reasonBn = '',
+  });
+
+  final bool right;
+  final int delta;
+  final bool wears;
+  final bool leavesTray;
+  final String stampBn;
+  final String reasonBn;
+}
+
+const kitStampRight = 'ঠিক';
+const kitStampReject = 'বাতিল';
+const kitStampWrong = 'ভুল';
+
+KitOutcome judgeKit(KitItem item, KitChoice choice) {
+  switch ((item.kind, choice)) {
+    case (KitKind.good, KitChoice.wear):
+      return const KitOutcome(right: true, delta: 10, wears: true, leavesTray: true, stampBn: kitStampRight);
+    case (KitKind.good, KitChoice.reject):
+      return const KitOutcome(right: false, delta: -5, wears: false, leavesTray: false, stampBn: kitStampWrong);
+    case (_, KitChoice.wear):
+      return KitOutcome(right: false, delta: -5, wears: false, leavesTray: true, stampBn: kitStampWrong, reasonBn: item.lineBn);
+    case (_, KitChoice.reject):
+      return KitOutcome(right: true, delta: 5, wears: false, leavesTray: true, stampBn: kitStampReject, reasonBn: item.lineBn);
+  }
+}
+
+/// One play: which slot is being dressed, what is left in the tray, what is
+/// worn, what was caught, and the first-try mark.
+class KitCheckRound {
+  KitCheckRound(this.deal);
+
+  final KitDeal deal;
+  final worn = <KitSlot>{};
+  final caught = <KitItem>[];
+  final _gone = <String>{};
+  final _tried = <String>{};
+  int asked = 0;
+  int clean = 0;
+  bool callDone = false;
+
+  KitSlot? get slot {
+    for (final s in KitSlot.values) {
+      if (!worn.contains(s)) return s;
+    }
+    return null;
+  }
+
+  bool get done => slot == null;
+  bool get callDue => !callDone && slot == deal.callBefore;
+
+  List<KitItem> get tray => [
+        for (final i in deal.items)
+          if (i.slot == slot && !_gone.contains(i.id)) i,
+      ];
+
+  KitOutcome decide(KitItem item, KitChoice choice) {
+    final o = judgeKit(item, choice);
+    if (_tried.add(item.id)) {
+      asked++;
+      if (o.right) clean++;
+    }
+    if (o.right && choice == KitChoice.reject) caught.add(item);
+    if (o.leavesTray) _gone.add(item.id);
+    if (o.wears) worn.add(item.slot);
+    return o;
+  }
+
+  void answerCall({required bool heldCheck}) {
+    callDone = true;
+    asked++;
+    if (heldCheck) clean++;
+  }
+
+  int get percent => asked == 0 ? 0 : (clean * 100 / asked).round();
+  bool get passed => percent >= kLessonPassMark;
+}
+
+/// Figure picture for what is worn (every combination exists in the dress art).
+String kitFigureAsset(Set<KitSlot> worn) {
+  final parts = [
+    if (worn.contains(KitSlot.torso)) 'shirt',
+    if (worn.contains(KitSlot.legs)) 'pant',
+    if (worn.contains(KitSlot.feet)) 'boot',
+  ];
+  if (parts.isEmpty) return '$_d/body.webp';
+  if (parts.length == 3) return '$_d/all.webp';
+  return '$_d/${parts.join('_')}.webp';
+}
+
+/// Every fixed coach line of [p] for the voice pack.
+Iterable<String> kitCheckSpokenLines(KitCheckPack p) sync* {
+  yield p.introBn;
+  yield* KitLines.coach;
+  for (final i in p.pool) {
+    if (i.lineBn.isNotEmpty) yield i.lineBn;
+    for (final f in i.flaws) {
+      yield f.lineBn;
+    }
+  }
+}
+
+/// Callers' lines, spoken in the rival's (other) voice.
+Iterable<String> kitCheckCallerLines(KitCheckPack p) => p.callers.map((c) => c.lineBn);
+
+// ============================================================================
+// Page
+// ============================================================================
+
+/// A kit-check Do level inside the shared level shell. "আবার খেলুন" remounts
+/// the play (with a new deal) on the same route, so the ladder keeps waiting.
+class KitCheckPage extends StatefulWidget {
+  const KitCheckPage({super.key, required this.ctx, required this.pack, this.muted = false, this.seed});
+
+  final LevelContext ctx;
+  final KitCheckPack pack;
+  final bool muted;
+
+  /// Fixed deal for tests; null = a fresh random deal every play.
+  final int? seed;
+
+  @override
+  State<KitCheckPage> createState() => _KitCheckPageState();
+}
+
+class _KitCheckPageState extends State<KitCheckPage> {
+  int _round = 0;
+  late bool _muted = widget.muted;
+
+  @override
+  Widget build(BuildContext context) => _KitCheckRun(
+        key: ValueKey(_round),
+        ctx: widget.ctx,
+        pack: widget.pack,
+        muted: _muted,
+        rng: widget.seed == null ? math.Random() : math.Random(widget.seed! + _round),
+        onRetry: (m) => setState(() {
+          _muted = m;
+          _round++;
+        }),
+      );
+}
+
+class _KitCheckRun extends ConsumerStatefulWidget {
+  const _KitCheckRun({
+    super.key,
+    required this.ctx,
+    required this.pack,
+    required this.muted,
+    required this.rng,
+    required this.onRetry,
+  });
+
+  final LevelContext ctx;
+  final KitCheckPack pack;
+  final bool muted;
+  final math.Random rng;
+  final ValueChanged<bool> onRetry;
+
+  @override
+  ConsumerState<_KitCheckRun> createState() => _KitCheckRunState();
+}
+
+enum _Overlay { none, inspect, consequence, call }
+
+class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
+  final _scoreKey = GlobalKey();
+  late final KitDeal _deal = dealKit(widget.pack, widget.rng);
+  late final KitCheckRound _r = KitCheckRound(_deal);
+  late final List<KitItem> _order = [..._deal.items]..shuffle(widget.rng);
+  final _clock = Stopwatch();
+  late bool _muted = widget.muted;
+  final _rightBag = LineBag(LearnFeedbackLines.right);
+  final _wrongBag = LineBag(LearnFeedbackLines.wrong);
+
+  int _runScore = 0;
+  int _chain = 0;
+  int _wave = 0;
+  int _figureWave = 0;
+
+  /// Slot whose tray is on screen (the first is dealt with the page).
+  KitSlot? _dealtSlot = KitSlot.torso;
+
+  /// A short hold the player can cut with a tap (see [_dwell]).
+  Completer<void>? _skip;
+  var _intro = true;
+
+  _Overlay _overlay = _Overlay.none;
+  KitItem? _held;
+  KitItem? _shown;
+  KitOutcome? _verdict;
+  var _leaving = false;
+  Completer<void>? _gone;
+  var _busy = false;
+  var _ended = false;
+  var _passed = false;
+  var _popped = false;
+  var _quickBonus = false;
+  int? _mark;
+  int _totalDelta = 0;
+
+  String get _rungId => widget.ctx.rungId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
+  }
+
+  @override
+  void dispose() {
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+    super.dispose();
+  }
+
+  List<KitItem> get _tray {
+    final left = _r.tray.map((i) => i.id).toSet();
+    return [for (final i in _order) if (left.contains(i.id)) i];
+  }
+
+  // ---- voice -----------------------------------------------------------------
+
+  /// Speaks [line] (the caption shows it). Muted: returns at once — the text
+  /// stays in the strip, and nothing waits on reading time.
+  Future<void> _say(String line, {GuideMood mood = GuideMood.talk, bool other = false}) async {
+    if (line.trim().isEmpty || !mounted) return;
+    if (!other) ref.read(guideDirectorProvider.notifier).say(mood: mood, line: line);
+    await MascotSpeechLibrary.speak(line, muted: _muted, rival: other);
+  }
+
+  /// Speaks [lines] in order unless the player moves on (a pick cuts it).
+  Future<void> _sayChain(List<String> lines, {GuideMood mood = GuideMood.talk}) async {
+    final chain = ++_chain;
+    for (final l in lines) {
+      if (!mounted || chain != _chain) return;
+      await _say(l, mood: mood);
+    }
+  }
+
+  /// Waits [d], or less if the player taps to move on.
+  Future<void> _dwell(Duration d) async {
+    final skip = _skip = Completer<void>();
+    await Future.any([skip.future, Future<void>.delayed(d)]);
+    if (identical(_skip, skip)) _skip = null;
+  }
+
+  void _skipDwell() {
+    final s = _skip;
+    if (s != null && !s.isCompleted) s.complete();
+  }
+
+  // ---- flow ------------------------------------------------------------------
+
+  Future<void> _start() async {
+    await _say(widget.pack.introBn, mood: GuideMood.inspire);
+    if (!mounted) return;
+    setState(() => _intro = false);
+    _clock.start();
+    await _askSlot();
+  }
+
+  Future<void> _askSlot() async {
+    final s = _r.slot;
+    if (s == null || !mounted) return;
+    if (_r.callDue) {
+      await _ring();
+      return;
+    }
+    if (s != _dealtSlot) {
+      setState(() {
+        _dealtSlot = s;
+        _wave++;
+      });
+    }
+    // The player may already be looking at a card: don't talk over it.
+    if (_overlay == _Overlay.none) await _sayChain([KitLines.ask(s)]);
+  }
+
+  /// Tap on the shade before deciding: the item goes back to the tray.
+  void _putBack() {
+    if (_busy || _verdict != null || _overlay != _Overlay.inspect) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      _overlay = _Overlay.none;
+      _held = null;
+    });
+  }
+
+  void _pickUp(KitItem item) {
+    if (_busy || _ended || _overlay != _Overlay.none) return;
+    HapticFeedback.selectionClick();
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+    // A fresh look: yesterday's caption ("ঠিক ধরেছেন!") must not linger.
+    ref.read(guideDirectorProvider.notifier).clearLine();
+    setState(() {
+      _held = item;
+      _verdict = null;
+      _leaving = false;
+      _overlay = _Overlay.inspect;
+    });
+  }
+
+  Future<void> _decide(KitChoice choice, Offset origin) async {
+    final item = _held;
+    if (item == null || _busy || _verdict != null) return;
+    _busy = true;
+    final o = _r.decide(item, choice);
+    if (o.right) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.heavyImpact();
+    }
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: o.right ? 0.45 : 0.7, muted: false));
+    unawaited(_levelDelta(o.delta, origin, mood: o.right ? GuideMood.glad : GuideMood.warn));
+    // The coach reacts on his own time; his voice never holds the player.
+    unawaited(_react(item, o, choice));
+
+    final worstWear = !o.right && choice == KitChoice.wear && item.wornAsset != null;
+    if (worstWear) {
+      // Straight to "what would happen": short, and a tap skips it.
+      if (!_muted) unawaited(ZlFx.cue('sounds/dress_wrong.wav', volume: 0.7, muted: false));
+      setState(() {
+        _overlay = _Overlay.consequence;
+        _shown = item;
+        _held = null;
+      });
+      await _dwell(const Duration(milliseconds: 1600));
+      if (!mounted) return;
+      setState(() {
+        _overlay = _Overlay.none;
+        _shown = null;
+      });
+      _busy = false;
+      return;
+    }
+
+    // Stamp + flaw pulse for a moment (a tap moves on sooner), then the card
+    // goes: onto the body, out of the store, or a shake back to the tray.
+    setState(() => _verdict = o);
+    // Short: the reason stays in the coach strip after the card has gone.
+    await _dwell(Duration(milliseconds: o.reasonBn.isEmpty ? 750 : 1000));
+    if (!mounted) return;
+    final gone = _gone = Completer<void>();
+    setState(() => _leaving = true);
+    await gone.future.timeout(const Duration(seconds: 1), onTimeout: () {});
+    if (!mounted) return;
+    setState(() {
+      _overlay = _Overlay.none;
+      _held = null;
+      _verdict = null;
+      _leaving = false;
+      if (o.wears) _figureWave++;
+    });
+    _busy = false;
+    if (o.wears) {
+      if (_r.done) {
+        await _finish();
+      } else {
+        await _askSlot();
+      }
+    }
+  }
+
+  /// One short word; the reason is spoken in full the first time this flaw or
+  /// wrong item is met, and only shown as text after that.
+  Future<void> _react(KitItem item, KitOutcome o, KitChoice choice) async {
+    final chain = ++_chain;
+    final goodRejected = item.kind == KitKind.good && choice == KitChoice.reject;
+    final word = goodRejected
+        ? KitLines.rejectedGood
+        : (o.right ? (choice == KitChoice.reject ? KitLines.caught : _rightBag.next().shownBn) : _wrongBag.next().shownBn);
+    final mood = o.right ? GuideMood.glad : GuideMood.warn;
+    final reason = o.reasonBn == KitLines.rejectedGood ? '' : o.reasonBn;
+    final speakReason = reason.isNotEmpty && await SpokenOnce.first('kit/${widget.pack.id}/${item.lessonKey}');
+    if (!mounted || chain != _chain) return;
+    await _say(word, mood: mood);
+    if (!mounted || chain != _chain || reason.isEmpty) return;
+    if (speakReason) {
+      await _say(reason, mood: mood);
+    } else {
+      // Already heard once: the reason stays as text in the strip.
+      ref.read(guideDirectorProvider.notifier).say(mood: mood, line: reason);
+    }
+  }
+
+  Future<void> _ring() async {
+    HapticFeedback.heavyImpact();
+    if (!_muted) unawaited(ZlFx.cue('sounds/complaint.wav', volume: 0.8, muted: false));
+    setState(() => _overlay = _Overlay.call);
+    await _say(_deal.caller.lineBn, other: true);
+  }
+
+  Future<void> _answerCall(bool held, Offset origin) async {
+    if (_busy || _r.callDone) return;
+    _busy = true;
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+    _r.answerCall(heldCheck: held);
+    final s = _r.slot;
+    setState(() {
+      _overlay = _Overlay.none;
+      if (s != null && s != _dealtSlot) {
+        _dealtSlot = s;
+        _wave++;
+      }
+    });
+    _busy = false;
+    unawaited(_levelDelta(held ? 5 : -10, origin, mood: held ? GuideMood.glad : GuideMood.warn));
+    // The next tray is already dealt; the coach talks while the player looks.
+    await _sayChain(
+      [held ? KitLines.callHeld : KitLines.callRushed, if (s != null) KitLines.ask(s)],
+      mood: held ? GuideMood.glad : GuideMood.warn,
+    );
+  }
+
+  Future<void> _levelDelta(int delta, Offset origin, {GuideMood? mood}) async {
+    final next = math.max(0, _runScore + delta);
+    final real = next - _runScore;
+    if (real == 0 || !mounted) return;
+    setState(() => _runScore = next);
+    await BeatFx.levelDelta(ref, real, mood: mood, originGlobal: origin, muted: _muted);
+  }
+
+  Future<void> _finish() async {
+    if (_ended) return;
+    _ended = true;
+    _clock.stop();
+    final save = ref.read(gameSaveProvider.notifier);
+    final size = MediaQuery.sizeOf(context);
+    final centre = Offset(size.width / 2, size.height * 0.45);
+    final mark = _r.percent;
+    await save.recordLevelResult(_rungId, mark);
+    if (!mounted) return;
+    if (_r.passed) {
+      await save.markRungCleared(_rungId);
+      _passed = true;
+      await _levelDelta(20, centre, mood: GuideMood.celebrate);
+      if (mark == 100 && _clock.elapsedMilliseconds < widget.pack.quickMs) {
+        _quickBonus = true;
+        await _levelDelta(10, centre, mood: GuideMood.celebrate);
+      }
+    }
+    final delta = await save.commitLevelScore(_rungId, _runScore);
+    if (_r.passed) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
+    if (!mounted) return;
+    setState(() {
+      _mark = mark;
+      _totalDelta = delta;
+    });
+    final end = !_r.passed ? KitLines.fail : (_quickBonus ? KitLines.quick : KitLines.allSet);
+    await _say(end, mood: _r.passed ? GuideMood.celebrate : GuideMood.warn);
+  }
+
+  void _popOnce(bool cleared) {
+    if (_popped || !mounted) return;
+    _popped = true;
+    Navigator.of(context).pop(cleared);
+  }
+
+  Future<void> _leave() async {
+    if (_passed) {
+      _popOnce(true);
+      return;
+    }
+    final leave = await showGameExitSheet(context, scope: GameExitScope.level, bn: true);
+    if (leave == true) _popOnce(false);
+  }
+
+  // ---- build -------------------------------------------------------------------
+
+  @override
+  Widget build(BuildContext context) {
+    final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final screenH = MediaQuery.sizeOf(context).height;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_leave());
+      },
+      child: Scaffold(
+        backgroundColor: SlmColors.navy950,
+        body: ScoreFlyHost(
+          scoreKey: _scoreKey,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const DoBackdrop(asset: 'assets/zero_loss/scene/bg_control_room.webp'),
+              SafeArea(
+                child: Column(
+                  children: [
+                    LevelShellBar(
+                      context_: widget.ctx,
+                      titleBn: widget.pack.titleBn,
+                      scoreKey: _scoreKey,
+                      levelScore: _runScore,
+                      muted: _muted,
+                      onClose: () => unawaited(_leave()),
+                      onToggleMute: () {
+                        unawaited(MascotSpeechLibrary.stop());
+                        setState(() => _muted = !_muted);
+                      },
+                    ),
+                    DoProgress(
+                      labels: const ['জামা', 'প্যান্ট', 'জুতো'],
+                      done: {for (final s in _r.worn) s.index},
+                      current: _r.slot?.index,
+                      quiet: quiet,
+                    ),
+                    AnimatedOpacity(
+                      opacity: _intro ? 1 : 0,
+                      duration: quiet ? Duration.zero : const Duration(milliseconds: 500),
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          widget.pack.sceneBn,
+                          style: bangla(fontSize: 12.5, fontWeight: FontWeight.w700, color: SlmColors.gold200),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: _Figure(
+                        asset: kitFigureAsset(_r.worn),
+                        wave: _figureWave,
+                        quiet: quiet,
+                        cacheHeight: (screenH * dpr * 0.55).round(),
+                      ),
+                    ),
+                    // Under a card or call the coach moves above the shade (see overlays).
+                    Opacity(opacity: _overlay == _Overlay.none ? 1 : 0, child: const DoCoachStrip()),
+                    if (_mark == null)
+                      DoTray(
+                        key: ValueKey('tray-$_wave'),
+                        entries: [for (final i in _tray) DoTrayEntry(id: i.id, asset: i.asset)],
+                        quiet: quiet,
+                        muted: _muted,
+                        onPick: (n) => _pickUp(_tray[n]),
+                      ),
+                  ],
+                ),
+              ),
+              if (_overlay == _Overlay.inspect && _held != null)
+                _InspectCard(
+                  key: ValueKey('inspect-${_held!.id}'),
+                  item: _held!,
+                  verdict: _verdict,
+                  leaving: _leaving,
+                  quiet: quiet,
+                  onDecide: (c, o) => unawaited(_decide(c, o)),
+                  onTapCard: _skipDwell,
+                  onTapShade: _putBack,
+                  onGone: () {
+                    final g = _gone;
+                    if (g != null && !g.isCompleted) g.complete();
+                  },
+                ),
+              if (_overlay == _Overlay.consequence && _shown?.wornAsset != null)
+                _Consequence(item: _shown!, quiet: quiet, onTap: _skipDwell),
+              if (_overlay == _Overlay.call)
+                DoCallCard(caller: _deal.caller, quiet: quiet, onAnswer: (held, o) => unawaited(_answerCall(held, o))),
+              if (_mark != null)
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: const Color(0xB3050A16),
+                    child: Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: _r.passed
+                            ? LevelPassPanel(
+                                mark: _mark!,
+                                levelScore: _runScore,
+                                totalDelta: _totalDelta,
+                                ms: _clock.elapsedMilliseconds,
+                                caughtBn: [for (final c in _r.caught) c.labelBn],
+                                quickBonus: _quickBonus,
+                                onNext: () => _popOnce(true),
+                                onRetry: () => widget.onRetry(_muted),
+                              )
+                            : LevelFailPanel(
+                                percent: _mark!,
+                                muted: _muted,
+                                onRetry: () => widget.onRetry(_muted),
+                                onLeave: () => _popOnce(false),
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Pieces (every animation plays once, then the screen is still)
+// ============================================================================
+
+/// The man in what he wears: pops in, with a warm glow, when a piece goes on.
+class _Figure extends StatelessWidget {
+  const _Figure({required this.asset, required this.wave, required this.quiet, required this.cacheHeight});
+
+  final String asset;
+  final int wave;
+  final bool quiet;
+  final int cacheHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(48, 6, 48, 4),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (!quiet && wave > 0)
+            TweenAnimationBuilder<double>(
+              key: ValueKey('glow-$wave'),
+              tween: Tween(begin: 1, end: 0),
+              duration: const Duration(milliseconds: 900),
+              builder: (_, v, _) => DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [SlmColors.gold300.withValues(alpha: 0.45 * v), Colors.transparent],
+                    stops: const [0, 0.7],
+                  ),
+                ),
+              ),
+            ),
+          AnimatedSwitcher(
+            duration: quiet ? Duration.zero : const Duration(milliseconds: 420),
+            switchInCurve: Curves.easeOutBack,
+            transitionBuilder: (child, a) => FadeTransition(
+              opacity: a,
+              child: ScaleTransition(scale: Tween(begin: 0.9, end: 1.0).animate(a), child: child),
+            ),
+            child: Image.asset(asset, key: ValueKey('fig-$wave'), fit: BoxFit.contain, cacheHeight: cacheHeight),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Close look at one item. While deciding it is still; after a decision the
+/// flaw pulses and a stamp drops — and it stays while the coach speaks — then
+/// it leaves: onto the body, out of the store, or a shake back to the tray.
+class _InspectCard extends StatefulWidget {
+  const _InspectCard({
+    super.key,
+    required this.item,
+    required this.verdict,
+    required this.leaving,
+    required this.quiet,
+    required this.onDecide,
+    required this.onTapCard,
+    required this.onTapShade,
+    required this.onGone,
+  });
+
+  final KitItem item;
+  final KitOutcome? verdict;
+  final bool leaving;
+  final bool quiet;
+  final void Function(KitChoice choice, Offset origin) onDecide;
+
+  /// After a decision: move on now instead of waiting out the stamp.
+  final VoidCallback onTapCard;
+
+  /// Before a decision: put the item back.
+  final VoidCallback onTapShade;
+  final VoidCallback onGone;
+
+  @override
+  State<_InspectCard> createState() => _InspectCardState();
+}
+
+class _InspectCardState extends State<_InspectCard> with TickerProviderStateMixin {
+  late final AnimationController _lift = AnimationController(vsync: this, duration: const Duration(milliseconds: 380));
+  late final AnimationController _stamp = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+  late final AnimationController _exit = AnimationController(vsync: this, duration: const Duration(milliseconds: 380));
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.quiet) {
+      _lift.value = 1;
+    } else {
+      _lift.forward();
+    }
+    _exit.addStatusListener((s) {
+      if (s == AnimationStatus.completed) widget.onGone();
+    });
+  }
+
+  @override
+  void didUpdateWidget(_InspectCard old) {
+    super.didUpdateWidget(old);
+    if (widget.verdict != null && old.verdict == null) {
+      if (widget.quiet) {
+        _stamp.value = 1;
+      } else {
+        _stamp.forward(from: 0);
+      }
+    }
+    if (widget.leaving && !old.leaving) {
+      if (widget.quiet) {
+        _exit.value = 1;
+        widget.onGone();
+      } else {
+        _exit.forward(from: 0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _lift.dispose();
+    _stamp.dispose();
+    _exit.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+    final v = widget.verdict;
+    final px = (300 * MediaQuery.devicePixelRatioOf(context)).round();
+    final inspectAsset = item.flaw?.inspectAsset;
+    final card = Container(
+      margin: const EdgeInsets.symmetric(horizontal: 26),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      decoration: BoxDecoration(
+        color: SlmColors.ivory,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('ভালো করে দেখুন', style: bangla(fontSize: 14, fontWeight: FontWeight.w800, color: SlmColors.gold700)),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 240,
+            child: Center(
+              child: AspectRatio(
+                aspectRatio: item.aspect,
+                child: Stack(
+                  fit: StackFit.expand,
+                  clipBehavior: Clip.none,
+                  children: [
+                    Image(image: ResizeImage(AssetImage(inspectAsset ?? item.asset), height: px, policy: ResizeImagePolicy.fit), fit: BoxFit.fill),
+                    if (item.flaw != null && inspectAsset == null) CustomPaint(painter: _FlawPainter(item.flaw!)),
+                    // After the decision: the flaw pulses, so the player sees what was wrong.
+                    if (v != null && item.flaw != null)
+                      CustomPaint(painter: DoPulsePainter(item.flaw!.marks, _stamp)),
+                    if (v != null)
+                      AnimatedBuilder(
+                        animation: _stamp,
+                        builder: (_, _) {
+                          final t = Curves.easeOutBack.transform((_stamp.value / 0.3).clamp(0.0, 1.0));
+                          return Center(
+                            child: Opacity(
+                              opacity: t.clamp(0.0, 1.0),
+                              child: Transform.rotate(angle: -0.22, child: Transform.scale(scale: 2.2 - 1.2 * t, child: DoStamp(text: v.stampBn, good: v.stampBn == kitStampRight))),
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (v == null)
+            Row(
+              children: [
+                Expanded(child: DoBigButton(label: 'বাদ দিন', filled: false, onTapUp: (d) => widget.onDecide(KitChoice.reject, d.globalPosition))),
+                const SizedBox(width: 12),
+                Expanded(child: DoBigButton(label: 'পরে নিন', filled: true, onTapUp: (d) => widget.onDecide(KitChoice.wear, d.globalPosition))),
+              ],
+            )
+          else
+            // The why, right on the item; a tap anywhere on the card moves on.
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(minHeight: 52),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: (v.right ? SlmColors.emerald500 : SlmColors.danger).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                v.reasonBn.isNotEmpty ? v.reasonBn : (v.wears ? 'পরে নিলেন।' : KitLines.rejectedGood),
+                textAlign: TextAlign.center,
+                style: bangla(fontSize: 14, fontWeight: FontWeight.w800, color: SlmColors.ink, height: 1.35),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: v == null ? widget.onTapShade : widget.onTapCard,
+              child: _animatedCard(GestureDetector(onTap: v == null ? null : widget.onTapCard, child: card)),
+            ),
+          ),
+          // The coach talks above the shade, under the card — not hidden behind it.
+          if (!widget.leaving) const Positioned(left: 0, right: 0, bottom: 8, child: DoCoachStrip()),
+        ],
+      ),
+    );
+  }
+
+  Widget _animatedCard(Widget card) {
+    final v = widget.verdict;
+    return AnimatedBuilder(
+        animation: Listenable.merge([_lift, _exit]),
+        child: card,
+        builder: (_, child) {
+          final lift = Curves.easeOutBack.transform(_lift.value);
+          final e = Curves.easeInCubic.transform(_exit.value);
+          var dx = 0.0, dy = 0.0, rot = 0.0, scale = 0.7 + 0.3 * lift;
+          var fade = 1.0;
+          if (v != null && _exit.value > 0) {
+            if (v.wears) {
+              dy = -220 * e; // up onto the body
+              scale *= 1 - 0.8 * e;
+              fade = 1 - e;
+            } else if (v.leavesTray) {
+              dx = 420 * e; // tossed out of the store
+              rot = 0.6 * e;
+              fade = 1 - e;
+            } else {
+              dx = math.sin(_exit.value * math.pi * 6) * 14 * (1 - _exit.value); // shake back to the tray
+              scale *= 1 - 0.3 * e;
+              fade = 1 - e;
+            }
+          }
+          return ColoredBox(
+            color: Color.fromRGBO(5, 10, 22, 0.8 * (1 - e)),
+            child: Align(
+              alignment: const Alignment(0, -0.35),
+              child: Opacity(
+                opacity: (fade * _lift.value).clamp(0.0, 1.0),
+                child: Transform.translate(
+                  offset: Offset(dx, dy + 40 * (1 - lift)),
+                  child: Transform.rotate(angle: rot, child: Transform.scale(scale: scale, child: child)),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+  }
+}
+
+/// Placeholder defect marks until photos of damaged kit exist.
+class _FlawPainter extends CustomPainter {
+  _FlawPainter(this.flaw);
+  final KitFlaw flaw;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    for (final m in flaw.marks) {
+      final c = Offset(m.dx * w, m.dy * h);
+      switch (flaw.kind) {
+        case KitFlawKind.grease:
+        case KitFlawKind.oil:
+          final r = w * (flaw.kind == KitFlawKind.oil ? 0.12 : 0.07);
+          canvas.drawOval(Rect.fromCenter(center: c, width: r * 2.2, height: r * 1.5), Paint()..color = const Color(0xB33B2A12));
+          canvas.drawOval(Rect.fromCenter(center: c.translate(r * 0.4, r * 0.3), width: r, height: r * 0.7), Paint()..color = const Color(0xCC2A1D0B));
+        case KitFlawKind.burn:
+          final r = w * 0.055;
+          canvas.drawCircle(c, r * 1.6, Paint()..color = const Color(0x99442A10));
+          canvas.drawCircle(c, r, Paint()..color = const Color(0xFF120A04));
+          canvas.drawCircle(
+            c,
+            r,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2
+              ..color = const Color(0xFFB8641E),
+          );
+        case KitFlawKind.tear:
+          final s = w * 0.12;
+          final path = Path()..moveTo(c.dx - s * 0.6, c.dy - s);
+          for (var i = 0; i < 6; i++) {
+            path.lineTo(c.dx + (i.isEven ? s * 0.5 : -s * 0.3), c.dy - s + i * s * 0.4);
+          }
+          canvas.drawPath(
+            path,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 3.5
+              ..color = const Color(0xFFE8E2D0),
+          );
+        case KitFlawKind.nail:
+          final s = h * 0.16;
+          final p = Paint()
+            ..color = const Color(0xFF8E959E)
+            ..strokeWidth = s * 0.16
+            ..strokeCap = StrokeCap.round;
+          canvas.drawLine(c, c.translate(-s * 0.15, s * 0.75), p);
+          canvas.drawCircle(c, s * 0.18, Paint()..color = const Color(0xFFB6BCC4));
+        case KitFlawKind.crack:
+          final s = w * 0.16;
+          final path = Path()
+            ..moveTo(c.dx, c.dy)
+            ..lineTo(c.dx + s * 0.3, c.dy + h * 0.02)
+            ..lineTo(c.dx + s * 0.55, c.dy - h * 0.015)
+            ..lineTo(c.dx + s * 0.85, c.dy + h * 0.025)
+            ..lineTo(c.dx + s * 1.1, c.dy);
+          canvas.drawPath(
+            path,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 3
+              ..color = const Color(0xFFF2EBDD),
+          );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FlawPainter old) => old.flaw != flaw;
+}
+
+/// "What would happen": the figure wearing the wrong item, with a shake.
+class _Consequence extends StatelessWidget {
+  const _Consequence({required this.item, required this.quiet, required this.onTap});
+  final KitItem item;
+  final bool quiet;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final h = (420 * MediaQuery.devicePixelRatioOf(context)).round();
+    return Positioned.fill(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ColoredBox(
+          color: const Color(0xCC1A0508),
+          child: Stack(
+            children: [
+              Align(
+                alignment: const Alignment(0, -0.3),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: quiet ? 1 : 0, end: 1),
+                  duration: const Duration(milliseconds: 520),
+                  builder: (_, t, child) => Transform.translate(
+                    offset: Offset(math.sin(t * math.pi * 7) * 14 * (1 - t), 0),
+                    child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
+                  ),
+                  child: SizedBox(
+                    height: 360,
+                    child: Image(image: ResizeImage(AssetImage(item.wornAsset!), height: h, policy: ResizeImagePolicy.fit), fit: BoxFit.contain),
+                  ),
+                ),
+              ),
+              const Positioned(left: 0, right: 0, bottom: 8, child: DoCoachStrip()),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

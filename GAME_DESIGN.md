@@ -2,7 +2,7 @@
 
 The single source of truth for what the app is becoming. When this file and an older guide disagree, this file wins.
 
-**Status (Nov 2026):** through **Learn runner** — Module 1 `1.N/learn` packs are playable; ladder opens swipe cards + 2-question exit (points only, never a fall). Do/gate still Coming Soon via legacy `dsLevels` bridge. Next: **Do wire**, then Module 1 fill. See section 13 and `assets/game/catalog/content_catalog.json`.
+**Status (Nov 2026):** Learn **1.1** is the picture board (`LearnBoardRunnerPage`: pick → why → myth rival). Every other playable Learn rung is the text deck (`LearnRunnerPage`: cards + 2 questions). Both need **60%** first-try-correct to clear; never a fall. Implementation: [`GAME_DEVELOPER_GUIDE.md`](GAME_DEVELOPER_GUIDE.md). Do/gate still Coming Soon via the legacy `dsLevels` bridge (levels 1–14 live). Next: JSON Learn packs per lesson, then Do wire. See section 13 and `assets/game/catalog/content_catalog.json`.
 
 > **Zero Loss note:** the Zero Loss screens were removed on branch `cleanup/audit-2026-11`. Only its engine, models, FX and UI helpers remain (`lib/features/zero_loss/`). Where this file says "Zero Loss", read it as the field-night style (`DsLevelKind.field`), not a live game.
 
@@ -124,11 +124,13 @@ With one Learn and one Do rung per lesson, a module is 20 rungs and the gate rep
 
 ## 7. Rung types
 
-**Learn (about 1 minute)**
-- Each lesson point becomes one swipe card: picture, item name, one line on why it matters, voice.
-- Long `specifications` text stays behind an optional "more".
-- Ends with **2 questions** from that lesson's quiz file (`questions_M_C.json`).
-- Wrong answer: lose points, see the right answer. **Never a fall.**
+**Learn (about 1–2 minutes)** — two runners; see [`GAME_DEVELOPER_GUIDE.md`](GAME_DEVELOPER_GUIDE.md) §4.
+
+- **Picture board** (Learn 1.1; more packs later): pick the safe item from a dealt hand → say why → beat a myth rival. Multiple correct pictures of the same item; a miss reshuffles and swaps the correct picture. The first Do of 1.1 stays the dress-up: shirt, trousers, and boots dragged onto the figure.
+- **Text deck** (every other playable lesson): swipe cards (habit check `+5 ◆`) + **2 questions** from `questions_M_C.json`.
+- **Pass mark 60%** of questions right on the **first try**. Below that: fail panel, no clear, no lesson-complete. The clock never closes a Learn rung. **Never a fall.**
+- Three wrong answers in a row (item or why) offer the full lesson (`পাঠ`). If the player never missed, the same card appears after a pass, before returning to the ladder.
+- Reading the lesson itself awards **no `◆`** — the reader ends on a seal stamp.
 
 **Do (1–2 minutes)**
 - A real-work game for the same lesson, picked from the lesson's game pool.

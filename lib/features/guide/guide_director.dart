@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/en_digits.dart';
 import '../game/content_catalog.dart';
+import '../game/game_save.dart';
 import 'mascot_speech_library.dart';
 
 enum GuideMood {
@@ -34,7 +35,28 @@ enum GuideGesture {
   spinHop,
 }
 
-enum GuideEntranceKind { dailyWelcome, hiPop }
+enum GuideEntranceKind { dailyWelcome, hiPop, comeback }
+
+/// Back on the ladder from a level in the same app session: no welcome again,
+/// just a quick word about where the player stands.
+abstract final class LadderComebackLines {
+  static const climbed = <String>[
+    'এক ধাপ উপরে! চলুন, পরেরটা।',
+    'সাবাশ! পরের ধাপ আপনার অপেক্ষায়।',
+    'দারুণ চলছে! থামবেন না।',
+    'আরও একটা ধাপ পার! এগিয়ে চলুন।',
+  ];
+  /// A rung passed again (replay): praise without claiming a new rung.
+  static const passedAgain = <String>[
+    'সাবাশ! পরের ধাপ আপনার অপেক্ষায়।',
+    'দারুণ চলছে! থামবেন না।',
+  ];
+  static const same = <String>[
+    'আবার চেষ্টা করলেই হবে, আমি আছি।',
+    'কোন ধাপে যাবেন? আমি সঙ্গে আছি।',
+    'একটু ভেবে নিয়ে আবার শুরু করুন।',
+  ];
+}
 
 @immutable
 class GuideState {
@@ -90,6 +112,16 @@ class GuideDirector extends Notifier<GuideState> {
   final _rng = math.Random();
   bool _entranceMuted = false;
   String? _entranceVoiceKey;
+  GuideMood _entranceMood = GuideMood.talk;
+  GuideGesture _entranceGesture = GuideGesture.none;
+
+  /// Cleared rungs at the last ladder entrance of this app session (null = none yet).
+  int? _clearedAtEntrance;
+
+  /// [GameSave.safeStreak] at the last entrance: it grows on every pass,
+  /// replays included, so a replayed pass is not mistaken for "try again".
+  int? _streakAtEntrance;
+  int _comebackPick = 0;
 
   bool get levelFocus => state.levelFocus;
 
@@ -189,10 +221,12 @@ class GuideDirector extends Notifier<GuideState> {
 
   void endGesture() {
     if (state.gesture == GuideGesture.none) return;
+    // An entrance line stays up until the host clears it.
+    final keep = state.entrance != null;
     state = state.copyWith(
       gesture: GuideGesture.none,
-      mood: GuideMood.idle,
-      line: '',
+      mood: keep ? state.mood : GuideMood.idle,
+      line: keep ? state.line : '',
       token: ++_token,
     );
   }
@@ -206,21 +240,45 @@ class GuideDirector extends Notifier<GuideState> {
   /// Body mood is set immediately; speech line stays empty until [revealEntranceLine].
   Future<GuideEntranceKind> beginLadderEntrance({bool muted = false}) async {
     _entranceMuted = muted;
+    _entranceGesture = GuideGesture.none;
+    final save = ref.read(gameSaveProvider);
+    final cleared = save.rungProgress.values.where((v) => v == 'cleared').length;
+    final before = _clearedAtEntrance;
+    final streakBefore = _streakAtEntrance;
+    _clearedAtEntrance = cleared;
+    _streakAtEntrance = save.safeStreak;
     final prefs = await SharedPreferences.getInstance();
     final today = _dayKey(DateTime.now());
     final last = prefs.getString(_welcomeDayKey);
     final firstToday = last != today;
+    if (before != null && !firstToday) {
+      final climbed = cleared > before;
+      final passedAgain = !climbed && streakBefore != null && save.safeStreak > streakBefore;
+      final pool = climbed
+          ? LadderComebackLines.climbed
+          : (passedAgain ? LadderComebackLines.passedAgain : LadderComebackLines.same);
+      _entranceLine = pool[_comebackPick++ % pool.length];
+      _entranceVoiceKey = null;
+      _entranceMood = climbed || passedAgain ? GuideMood.celebrate : GuideMood.inspire;
+      _entranceGesture = climbed ? GuideGesture.spinHop : GuideGesture.none;
+      say(mood: _entranceMood, line: '', entrance: GuideEntranceKind.comeback);
+      return GuideEntranceKind.comeback;
+    }
     if (firstToday) {
       await prefs.setString(_welcomeDayKey, today);
-      final cue = MascotSpeechLibrary.cueFor(MascotCueId.ladderWelcomeDaily);
+      final cue = MascotSpeechLibrary.cueFor(
+        last == null ? MascotCueId.ladderWelcomeNew : MascotCueId.ladderWelcomeDaily,
+      );
       _entranceLine = cue.displayBn;
       _entranceVoiceKey = cue.voiceKey;
+      _entranceMood = GuideMood.wake;
       say(mood: GuideMood.wake, line: '', entrance: GuideEntranceKind.dailyWelcome);
       return GuideEntranceKind.dailyWelcome;
     }
     final cue = MascotSpeechLibrary.cueFor(MascotCueId.ladderWelcomeReturn);
     _entranceLine = cue.displayBn;
     _entranceVoiceKey = cue.voiceKey;
+    _entranceMood = GuideMood.talk;
     say(mood: GuideMood.talk, line: '', entrance: GuideEntranceKind.hiPop);
     return GuideEntranceKind.hiPop;
   }
@@ -228,10 +286,10 @@ class GuideDirector extends Notifier<GuideState> {
   void revealEntranceLine() {
     if (_entranceLine.isEmpty) return;
     final line = _entranceLine;
-    final mood = state.entrance == GuideEntranceKind.dailyWelcome ? GuideMood.wake : GuideMood.talk;
     final entrance = state.entrance;
     say(
-      mood: mood,
+      mood: _entranceMood,
+      gesture: _entranceGesture,
       line: line,
       entrance: entrance,
       voiceKey: _entranceVoiceKey,

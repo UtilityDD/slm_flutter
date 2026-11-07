@@ -663,6 +663,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   var _badRow = -1;
   late final AnimationController _rowFx;
   final _shelfOrder = <String>[];
+  var _shelfWave = 0;
   var _checking = false;
   var _vanBoarded = false;
   var _vanBeat = _VanBeat.yard;
@@ -1197,6 +1198,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _shelfOrder
       ..clear()
       ..addAll(ids);
+    _shelfWave++;
     if (sound) unawaited(ZlFx.cue('sounds/quiz_shuffle.wav', volume: 0.4, muted: widget.muted));
   }
 
@@ -2053,14 +2055,19 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     unawaited(widget.onSpeak(why));
   }
 
+  bool get _clothLesson => widget.engine.level.number == 1;
+
   @override
   Widget build(BuildContext context) {
     final scene = _vanLesson && (_vanBeat == _VanBeat.coach || _outro != _VanOutro.idle);
     return DecoratedBox(
-      decoration: const BoxDecoration(gradient: dsPlayGround),
+      decoration: _clothLesson
+          ? const BoxDecoration(color: Color(0xFF07122A))
+          : const BoxDecoration(gradient: dsPlayGround),
       child: Stack(
         fit: StackFit.expand,
         children: [
+          if (_clothLesson) const _ClothNight(),
           if (_vanLesson)
             Positioned.fill(
               child: IgnorePointer(
@@ -2296,7 +2303,12 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.asset('assets/duty_slip/dress/$_figure.webp', fit: BoxFit.fill, gaplessPlayback: true),
+                      Image.asset(
+                        'assets/duty_slip/dress/$_figure.webp',
+                        fit: BoxFit.fill,
+                        gaplessPlayback: true,
+                        cacheWidth: (box.maxWidth * MediaQuery.devicePixelRatioOf(context)).round().clamp(1, 1080),
+                      ),
                       if (_blameZone.isNotEmpty)
                         for (final s in spots)
                           if (s.spot.zone == _blameZone)
@@ -3122,17 +3134,31 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
           decoration: BoxDecoration(
+            color: _clothLesson ? const Color(0xF0141C2E) : null,
+            borderRadius: _clothLesson ? const BorderRadius.vertical(top: Radius.circular(18)) : null,
             border: Border(
-              top: BorderSide(color: candidate.isNotEmpty ? const Color(0xFFC9A227) : const Color(0x00000000), width: 2),
+              top: BorderSide(
+                color: candidate.isNotEmpty
+                    ? const Color(0xFFC9A227)
+                    : (_clothLesson ? const Color(0x66C9A227) : const Color(0x00000000)),
+                width: 2,
+              ),
             ),
           ),
           child: Wrap(
-            alignment: _vanLesson ? WrapAlignment.center : WrapAlignment.start,
+            alignment: _vanLesson || _clothLesson ? WrapAlignment.center : WrapAlignment.start,
             crossAxisAlignment: WrapCrossAlignment.end,
-            spacing: _vanLesson ? 10 : 6,
-            runSpacing: _vanLesson ? 8 : 6,
+            spacing: _vanLesson || _clothLesson ? 10 : 6,
+            runSpacing: _vanLesson || _clothLesson ? 8 : 6,
             children: [
-              for (final p in open) KeyedSubtree(key: ValueKey(p.id), child: _token(p)),
+              for (var i = 0; i < open.length; i++)
+                _clothLesson
+                    ? _ShelfDeal(
+                        key: ValueKey('${open[i].id}-$_shelfWave'),
+                        index: i,
+                        child: _token(open[i]),
+                      )
+                    : KeyedSubtree(key: ValueKey(open[i].id), child: _token(open[i])),
             ],
           ),
         );
@@ -3169,8 +3195,8 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     final full = _fullLesson || _vanLesson;
     final tall = _tallPiece(piece.id);
     return SizedBox(
-      width: tall ? 34 : (full ? 50 : 64),
-      height: tall ? 62 : (full ? 44 : 58),
+      width: tall ? 34 : (full ? 50 : (_clothLesson ? 72 : 64)),
+      height: tall ? 62 : (full ? 44 : (_clothLesson ? 66 : 58)),
       child: Image(image: dsThumb(context, piece.asset), fit: BoxFit.contain),
     );
   }
@@ -3503,6 +3529,75 @@ class _HeroEntrance extends StatelessWidget {
           ),
         );
       },
+      child: child,
+    );
+  }
+}
+
+/// Night yard behind the পোশাক figure. Static, so an idle screen draws nothing.
+class _ClothNight extends StatelessWidget {
+  const _ClothNight();
+
+  @override
+  Widget build(BuildContext context) {
+    final px = (MediaQuery.sizeOf(context).width * MediaQuery.devicePixelRatioOf(context)).round().clamp(1, 720);
+    return IgnorePointer(
+      child: RepaintBoundary(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const ColoredBox(color: Color(0xFF07122A)),
+            Image.asset(
+              'assets/duty_slip/world3d/depth_mid_river.webp',
+              fit: BoxFit.cover,
+              alignment: const Alignment(0, -0.35),
+              cacheWidth: px,
+              gaplessPlayback: true,
+            ),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x8C07122A), Color(0xD907112A), Color(0xF5050C1C)],
+                  stops: [0, 0.42, 1],
+                ),
+              ),
+            ),
+            Image.asset(
+              'assets/duty_slip/world3d/depth_near_a.webp',
+              fit: BoxFit.cover,
+              alignment: Alignment.bottomCenter,
+              cacheWidth: px,
+              color: const Color(0xFF26343A),
+              colorBlendMode: BlendMode.modulate,
+              gaplessPlayback: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One rise when a tray picture is dealt. No loop.
+class _ShelfDeal extends StatelessWidget {
+  const _ShelfDeal({super.key, required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (slmReduceMotion(context)) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 260 + index * 36),
+      curve: Curves.easeOutCubic,
+      builder: (_, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(offset: Offset(0, 16 * (1 - t)), child: child),
+      ),
       child: child,
     );
   }

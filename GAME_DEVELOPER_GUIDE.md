@@ -1,202 +1,433 @@
-# মৃত্যুহীন পথ (The Zero-Death Path) — Unified Developer Guide & Collaborator Roadmap
+# মৃত্যুহীন পথ (The Zero-Death Path) — Unified Developer Guide
 
-> **Single Source of Architectural & Implementation Truth for All Collaborators**  
-> Read this guide before adding or editing any **Learn card**, **Do field level**, **Touchable side item**, **Mascot speech**, or **Scoring animation**.
-
----
-
-## 1. Core Philosophy: One Seamless Game, Zero Textbook Reading
-
-The **মৃত্যুহীন পথ** app is not a traditional classroom app with separate textbook tabs, quiz pages, and mini-game scores. Everything happens inside **one continuous vertical climb** toward the Emerald at the top of the ladder:
-
-1. **No Textbook Reading**: Players are West Bengal distribution linemen and helpers playing outdoors in short 1–2 minute breaks. Long text walls are forbidden. Every `Learn` rung is an interactive deck of **Field Flash-Cards** (`1–2` punchy lines of natural field Bangla, spoken aloud by the Mascot, with a 1-tap pre-work habit check and 2 quick-fire field decisions).
-2. **One Unified Score (`◆` Points & `💀` Deaths)**:
-   - There are **no separate level scores**, no `nightTotal`, no `playClock` timers in the HUD, and no old `দারুণ / মোটামুটি / আবার` end-of-level result boards.
-   - Every positive action across **Ladder Side Items**, **Learn Cards**, and **Do Field Drills** fires a glowing flying score chip (`ScoreFlyHost`) from the exact finger tap (`originGlobal`) along a parabolic arc straight into the top `◆` counter, accompanied by synthesized musical chords (`ZlFx.cue`) and tactile haptics.
-3. **One Unified Mascot ("ওস্তাদ লাইনম্যান" — `AiLinemanGuide`)**:
-   - The Ladder Mascot and the `Do` Field Coach are **the exact same character** (`AiLinemanGuide`) with real-time lip-sync (`MascotTalk.active`).
-   - All spoken lines, pro-tips, riddles, praises, and lethal warnings live in **one central library**: [`lib/features/guide/mascot_speech_library.dart`](lib/features/guide/mascot_speech_library.dart).
-4. **Natural West Bengal Field Bangla**:
-   - Speak like a caring senior `ওস্তাদ` (Ustad) on the field.
-   - Keep everyday English electrical/field terms natural in Bangla script or English: **PTW, Shutdown, Docket, Earthing, Jumper, LOTO, PPE, Gloves, Harness, Helmet, 11 kV, LT, HT, DTR, Clamp Meter, Fuse, Isolator**.
-   - Never use artificial/bookish translations (use `গ্লাভস`, never `দস্তানা`; use `জল`, never `পানি`; use `ডকেট` and `শাটডাউন`).
-   - Always render numbers in Western digits `0–9` via [`enDigits()`](lib/core/en_digits.dart).
+> **Single source of implementation truth for collaborators.**  
+> Read this before adding or editing a **Learn level**, **Do field level**, **side item**, **mascot line**, or **score animation**.  
+> Product intent lives in [`GAME_DESIGN.md`](GAME_DESIGN.md). Do-level visual specs live in [`lib/features/duty_slip/GAME_LEVELS_GUIDE.md`](lib/features/duty_slip/GAME_LEVELS_GUIDE.md). Repo rules live in [`AGENTS.md`](AGENTS.md).  
+> **Status (Nov 2026):** Learn **1.1** is a picture board (`LearnBoardRunnerPage`). Every other playable Learn rung, including 1.2, is the text deck (`LearnRunnerPage`). Do rungs open the dress-up and field games. Ladder step 2 (`1.1/do/0`) is still পোশাক: drag the shirt, trousers, and boots onto the figure.
 
 ---
 
-## 2. System Architecture & Key File Map
+## 1. Core Philosophy
 
-```
-lib/
-├── core/
-│   └── en_digits.dart                   # Enforces 0-9 Western digits across all Bangla UI
-├── features/
-│   ├── game/
-│   │   ├── content_catalog.dart         # Loads assets/game/catalog/content_catalog.json (10 Modules, 109 Lessons, 327 Rungs)
-│   │   ├── ladder_builder.dart          # Builds ordered LadderRung list (Learn -> Do -> Do -> ... -> Gate)
-│   │   ├── game_save.dart               # Single source of truth for ◆ points, 💀 deaths, passedRungs, promises, ScorePulse
-│   │   ├── beat_fx.dart                 # UnifiedGameTopHud + ScoreFlyHost (parabolic flying ◆ chips) + DeathMomentHost
-│   │   └── learn_runner.dart            # Interactive Learn Flash-Card deck + 1-tap habit check (+5 ◆) + 2-Q Exit Drill (+10 ◆)
-│   ├── guide/
-│   │   ├── mascot_speech_library.dart   # CENTRAL SPEECH & CHALLENGE LIBRARY + MascotTalk lip-sync notifier + TTS/MP3 router
-│   │   ├── ai_lineman_guide.dart        # Unified Mascot renderer (7 moods, animated lip-sync mouth, Midnight-Navy speech bubble)
-│   │   ├── guide_director.dart          # State machine driving Mascot cues on Ladder, Learn, and Do screens
-│   │   └── ladder_guide_host.dart       # Corner dock & centre hero-stage overlay for the Mascot on the Ladder
-│   ├── duty_slip/
-│   │   ├── adventure_map.dart           # Main 327-rung Ladder screen + In-Ladder Touchable Side Item overlay (_SideChallengeOverlay)
-│   │   ├── duty_slip_page.dart          # Real-work Do engine host (Unified HUD, direct ◆ scoring, auto-return to Ladder on clear)
-│   │   ├── duty_slip_engine.dart        # Do level definitions (dsLevels 1..14 active, 15..31 planned)
-│   │   ├── duty_slip_voice.dart         # Pre-generated Edge-TTS neural MP3 lookup table (DsVoice)
-│   │   ├── ds_dress_up.dart             # Shared flat-2D shelf widgets (DsFlatShelf, DsShelfToken) + DsCoach -> AiLinemanGuide adapter
-│   │   └── GAME_LEVELS_GUIDE.md         # Detailed visual & pedagogical specs for Do Levels 1-31
-│   └── zero_loss/
-│       └── zero_loss_fx.dart            # Synthesized sound effects (ZlFx.cue: coin, win, warn, buzz, combo, fanfare)
-└── assets/
-    ├── game/catalog/content_catalog.json # Master 10-Module, 109-Lesson, 327-Rung curriculum definition
-    └── audio/duty_slip/                 # Pre-generated Edge-TTS neural Bangla MP3 clips
-```
+The app is **one climb**, not a classroom with a textbook tab, a quiz tab and a game tab.
+
+1. **Learn is a game, not a wall of text.** Players are West Bengal distribution linemen on a 1–2 minute break. A Learn rung is either a picture board (pick the kit, say why, beat the rival) or a short flash-card deck plus two field questions. The full lesson lives behind a **পাঠ** offer — never as the level itself.
+2. **One score (`◆`) and one death count (`💀`).** Points go through `GameSave.addPoints` / `BeatFx.scoreDelta` only. There is no second level-score box, no `nightTotal` on Learn, and the clock **never closes a level**.
+3. **Reading a lesson awards no `◆`.** [`LessonReaderPage`](lib/features/home/lesson_reader_page.dart) finishes with a **seal stamp** ([`LessonSealPage`](lib/features/home/lesson_seal_page.dart)), not points. The win feel is the seal, not a toast of `+20`.
+4. **One mascot ("ওস্তাদ").** Ladder, Learn and Do all use [`AiLinemanGuide`](lib/features/guide/ai_lineman_guide.dart). Fixed lines go through [`MascotSpeechLibrary.speak`](lib/features/guide/mascot_speech_library.dart) so the mouth (`MascotTalk.active`) matches the voice.
+5. **Field Bangla.** Everyday electrical words stay as the crew says them: PTW, Shutdown, Docket, Earthing, Jumper, LOTO, PPE, Gloves, Harness, Helmet, 11 kV. Locked words: **ডকেট**, **শাটডাউন**, **জল**, **গ্লাভস** (never দস্তানা / পানি). Digits always `0–9` via [`enDigits()`](lib/core/en_digits.dart). Animate Bangla **by word**, never by code point.
 
 ---
 
-## 3. Non-Negotiable UI & UX Standards
+## 2. File Map
 
-### 3.1. The Unified Top HUD (`UnifiedGameTopHud`)
-Every game screen (**Ladder**, **Learn Runner**, and **Do Field Drill**) shows the exact same compact single-row top bar:
 ```
-[ ← ]   [ 🛡 Rank / Rung Pill ]      [ ◆ 1,240 ]   [ 💀 3 ]   [ 🔊 ]
+lib/features/
+├── game/
+│   ├── content_catalog.dart          # assets/game/catalog/content_catalog.json
+│   ├── ladder_builder.dart           # Learn → Do → … → Gate
+│   ├── game_save.dart                # ◆, 💀, rungProgress, bestTime, bestMark, plays
+│   ├── beat_fx.dart                  # UnifiedGameTopHud + ScoreFlyHost + DeathMomentHost
+│   ├── learn_board_models.dart       # LearnBoardPack / Slot / Option / WhyChip / Myth
+│   ├── learn_board_deal.dart         # LearnDealer — deal + reshuffle after a miss
+│   ├── learn_board_runner.dart       # Picture Learn (lesson 1.1)
+│   ├── learn_runner.dart             # Text Learn (every other playable lesson)
+│   ├── learn_feedback_lines.dart     # Wrong / right / why / fail pools + LearnCoachLines
+│   ├── read_lesson_offer.dart        # 3-in-a-row tally, পাঠ pill, fly card, end nudges
+│   ├── level_result_parts.dart       # 60% pass mark, history chip, fail panel
+│   ├── learn_voice.dart              # Player for assets/sounds/learn_voice/
+│   └── learn_voice_map.dart          # GENERATED — text → mp3 (do not hand-edit)
+├── guide/
+│   ├── mascot_speech_library.dart    # Cues + speak() router (DsVoice → LearnVoice → TTS)
+│   ├── ai_lineman_guide.dart         # Coach sprites + mouth overlay
+│   ├── guide_director.dart           # Mood / entrance / levelFocus / comeback
+│   └── ladder_guide_host.dart        # Corner dock + first-open-of-day welcome
+├── home/
+│   ├── lesson_reader_page.dart       # Full lesson (no ◆). Offline snackbar if no points.
+│   ├── lesson_seal_page.dart         # Stamp win after reading
+│   └── lesson_progress_store.dart    # completed_lessons (stable ids, never list index)
+├── training/
+│   └── training_screen.dart          # Toolbox → প্রশিক্ষণ জোন (seals, no score)
+└── duty_slip/
+    ├── adventure_map.dart            # Ladder. _openLearn picks board vs text runner
+    ├── duty_slip_page.dart           # Do host (swaps AdventureMap out while onRoad is false)
+    ├── duty_slip_engine.dart         # dsLevels 1–33
+    ├── duty_slip_voice.dart          # GENERATED Duty-Slip MP3 map (Bashkar)
+    ├── ds_dress_up.dart              # Do 1–10
+    ├── ds_pole_inspect.dart          # Do 11–13
+    ├── ds_clearance.dart             # Do 14
+    └── GAME_LEVELS_GUIDE.md          # Do visual + speech specs
+
+assets/sounds/learn/                  # Board SFX (deal, stomp, fail sting, tick/tock)
+assets/sounds/learn_voice/            # Coach + rival spoken lines (mono MP3 ≤ 48 kbps)
+assets/duty_slip/dress/coach_*.webp   # One sprite per mood (see §7)
 ```
-- **Never** add a second score box, level score counter, or countdown clock to the top bar.
-- Wrap the screen body in [`ScoreFlyHost`](lib/features/game/beat_fx.dart) and pass `_scorePillKey` to both `ScoreFlyHost` and `UnifiedGameTopHud` so flying score chips land directly on the `◆` counter.
 
-### 3.2. Awarding or Deducting Points (`BeatFx.scoreDelta`)
-Whenever a player earns or loses points in **any** mode:
-1. Capture the tap position (`details.globalPosition` or widget RenderBox center) as `Offset? originGlobal`.
-2. Call:
-   ```dart
-   await BeatFx.scoreDelta(
-     ref,
-     delta, // e.g., +5, +10, +15, +20, or -5
-     reason: 'learn_card_check',
-     originGlobal: originGlobal,
-   );
-   ```
-3. `BeatFx.scoreDelta` automatically:
-   - Updates `GameSave.points` in `SharedPreferences`.
-   - Emits a `ScorePulse` with `originGlobal`.
-   - Triggers `ScoreFlyHost` to launch a glowing gold (`+◆`) or crimson (`-◆`) chip along a parabolic bezier curve into the top HUD `◆` pill, playing `ZlFx.cue('coin')` or `ZlFx.cue('warn')` and pulsing the `◆` counter on impact.
+**Shared files — small diffs only** (several people edit them): `adventure_map.dart`, `ai_lineman_guide.dart`, `ladder_guide_host.dart`, `duty_slip_page.dart`, `ds_dress_up.dart`.
 
-### 3.3. What Counts as a Death (`💀`) vs. Point Loss (`-◆`)
-| Event | Consequence | Never Do This |
+---
+
+## 3. How a Learn Rung Opens
+
+[`AdventureMap._openLearn`](lib/features/duty_slip/adventure_map.dart) is the only entry.
+
+```
+playable Learn rung
+        │
+        ▼
+learnBoardPackFor(lessonId)   ← lib/features/game/learn_board_models.dart
+        │
+   ┌────┴────────────────────┐
+   │ pack != null            │ pack == null
+   ▼                         ▼
+LearnBoardRunnerPage         LearnRunnerPage
+(picture board, Learn 1.1) (cards + 2 quiz questions)
+```
+
+Both routes:
+
+- Every exit goes through `_popOnce`. **After a pass the clear is saved first**; back / close then leaves with `pop(true)` (no exit sheet), and the ladder also unlocks when the save shows a new clear, whatever the route returned.
+- **Level score, latest play counts.** Every ◆ won or lost in a Learn level flies into that level's score (the pill in the top bar, `BeatFx.levelDelta`; the main total sits small beside it). When the level ends — pass or fail — `GameSave.commitLevelScore(rungId, score)` replaces the level's previous score in the main ◆ (`levelScoreByRung`). Replays animate every time and can raise or lower the total, but can never farm it. Quitting mid-level commits nothing.
+- A busy-lock ignores a second tap (double tap, হ্যাঁ then না) while an answer is handled.
+
+1. Call `guideDirector.setLevelFocus(true)` so the ladder mascot stops talking.
+2. `pop(true)` only when the player **passes** (≥ 60%, see §5). The ladder then `unlockThrough(index + 1)` and soft-scrolls to the next rung.
+3. `pop(false)` on quit or fail-and-leave. Nothing unlocks.
+4. Call `setLevelFocus(false)` on return. The next ladder entrance is a **comeback**, not a welcome (see §8).
+
+`আবার খেলুন` on the fail panel **does not pop**. It remounts the run (`ValueKey(_round)`) so the ladder is still waiting for this route's result.
+
+---
+
+## 4. Learn Level Types
+
+### 4.1 Picture board — `LearnBoardRunnerPage` (lesson 1.1)
+
+Lesson 1.2 and every other Learn rung stay on the text deck. The first Do of lesson 1.1 is the dress-up game, not this board.
+
+Beats, in order: `intro → pick → why` (repeat per slot) `→ mythSay → mythBelieve → mythWhy → award | fail`.
+
+| Beat | What the player does |
+|---|---|
+| `intro` | Coach states the mission. Quiet history chip if they have played before. |
+| `pick` | Choose the safe item from a dealt hand (usually 4 pictures). |
+| `why` | Choose why that item is right (usually 3 chips). |
+| `mythSay` | Scripted: coach warns, rival storms in, taunts, gets danger tags, leaves. Input locked. |
+| `mythBelieve` | Yes / no: do you believe him? |
+| `mythWhy` | Why his claim is wrong. |
+| `award` | Pass: badge + time + mark, then optional end-of-level পাঠ card, then `pop(true)`. |
+| fail | Below 60%: shared fail panel. No clear, no bonus, no lesson-complete. |
+
+**Dealer** ([`LearnDealer`](lib/features/game/learn_board_deal.dart)):
+
+- Each question key (`lessonId/slotId`, `…/why`, `myth/why`) deals **one correct + N−1 traps**.
+- Prefers items not shown last time this session (`LearnDealer._recent`).
+- After a miss: the tapped trap is replaced by an unseen trap; the **correct picture swaps to another correct picture of the same item** (so the player cannot memorise “the card on the left”); the hand reshuffles.
+- A slot therefore needs **at least two correct pictures** of the same item (shirt / FR suit, helmet variants, …) plus enough traps.
+
+Prototype pack: `learnBoardPack11` in `learn_board_models.dart`.
+
+**Teaching rules** (keep them when adding packs):
+
+- **No name on a picture until it is tapped.** The picture must show the cue (water drops, vent holes, shiny polyester); the label appears only on the tapped card. Art for a new trap must show its flaw.
+- **The myth question is turned round on about half the runs** (`flipStingBn`: "সেটা কি ভুল?" — হ্যাঁ is right), so "always না" is never a free answer.
+- **A right "why" is spoken back as the rule** (the chip text, recorded in the coach voice). A wrong myth-why says why not.
+- **Weak spots are saved**: a question missed on the first try goes into `GameSave.weakByLesson[lessonId]` (keys: slot id, `<slot>/why`, `myth`, `myth/why`; text deck: question text). A clean answer later removes it. Recall side items should draw from here first.
+
+```
+shirt   3 correct pictures, 3 traps, 4 cards, 6 why chips (2 correct)
+helmet  3 correct, 3 traps, 4 cards
+boots   2 correct, 2 traps, 3 cards
+gloves  3 correct, 5 traps, 4 cards
+myth    6 why chips (2 correct)
+```
+
+To add the next picture lesson (e.g. 1.2):
+
+1. Build a `const LearnBoardPack` in `learn_board_models.dart` (stable slot / option **ids**, never list indexes).
+2. Return it from `learnBoardPackFor('1.2')`.
+3. Put new trap art in `assets/` (decode at tile size; no READMEs/PSDs in `assets/`).
+4. Add every new spoken line to `LearnFeedbackLines` / the pack (`rejectBn`, `tauntBn`, …).
+5. Regenerate the voice pack (§7).
+6. Add / extend `test/learn_board_deal_test.dart`. A new animated screen needs `test/perf/`.
+
+### 4.2 Text deck — `LearnRunnerPage` (every other playable lesson)
+
+Phases: `load → cards → quiz → done`.
+
+1. **Load.** `moduleLessonsProvider` + `LessonQuizStore.load`. No lesson points, or the quiz is `unavailable` (offline, never saved) → the Bangla offline dialog (retry / later → `pop(false)`). There is **no built-in deck** — never play or pass a lesson on made-up content. Quiz `noQuiz` (server has no file) → `learnQuizFromPoints`: two "which check belongs to this item?" questions from the lesson's own `daily_check` lines; with fewer than 3 checks the deck clears on its cards, as the reader does.
+2. **Cards.** One swipe card per lesson point. Mascot reads a short field line (`conciseFieldRule`). Tap **কাজের আগে চেক করুন** → `+5 ◆` into the level score.
+3. **Quiz.** `selectLearnExitQuestions` picks **2** questions. Right `+10 ◆`, wrong `−5 ◆` (level score, never below 0). The answer locks before any await, so a double tap counts once.
+4. **Finish.** Mark = first-try-correct / 2. With only two questions, **one miss is 50% and fails**. First clear `+20 ◆`, replay clear `+5 ◆`. Then the end পাঠ card if it never appeared, then `pop(true)`.
+
+Cards still award `◆`. The **lesson reader** (পাঠ) does not.
+
+### 4.3 Shared Learn chrome
+
+| | Picture board | Text deck |
 |---|---|---|
-| Wrong answer on a `Learn` exit question | `-5 ◆` flying red chip + Mascot explains the rule | **Never** trigger a death (`💀`) or ladder fall in a `Learn` rung |
-| Wrong answer on a Ladder Side Item riddle | Mascot gives a gentle hint (`+2 ◆` for trying) | **Never** deduct points or cause a death on side items |
-| Non-lethal mistake in a `Do` level (e.g., wrong pocket item or minor order slip) | `-5 ◆` to `-15 ◆` flying red chip + Mascot warning | Do not kill the player for non-lethal slips |
-| **Lethal mistake in a `Do` level or Rank Gate** (e.g., touching un-earthed HT line, climbing rotten pole without check, bare-handing live conductor) | `DeathMomentHost.trigger()` → screen crack + heartbeat + `💀 +1` + fall to current Module checkpoint | Never reset the player all the way to Rung 0 of Module 1 |
+| Top bar | `_LearnBoardChrome` | `UnifiedGameTopHud` + listen button |
+| পাঠ pill | Yes (`ReadLessonPill`) | Yes |
+| Clock | Counts **decision** time only; pause when the app is hidden; never ends the level | No level clock |
+| Coach | Corner on the board; centre on intro / award / myth ask | Centre on cards / done |
+| Retry after fail | Remount run | Remount run |
 
 ---
 
-## 4. Collaborator Workflows (How to Build & Extend)
+## 5. Pass Mark, History, Fail, পাঠ Offer
 
-### Workflow A: Adding or Editing Mascot Speech & Voice (`mascot_speech_library.dart`)
-All Mascot dialogue is centralized in [`lib/features/guide/mascot_speech_library.dart`](lib/features/guide/mascot_speech_library.dart).
-1. **To add a new cue**:
-   - Add an enum value to `MascotCueId` (if it's a fixed situational cue) and register its `MascotCue` in `MascotSpeechLibrary._cues`.
-   - Write `voiceBn` (full natural spoken line, 1–2 sentences) and `bubbleBn` (short 1–2 line text for the Midnight-Navy bubble, max ~65 characters).
-2. **To speak a cue with lip-sync**:
-   - Call `MascotSpeechLibrary.speak(text, muted: isMuted)` or `guideDirector.sayCue(MascotCueId.xyz, speakVoice: !isMuted)`.
-   - `MascotSpeechLibrary.speak()` first checks `DsVoice` for a pre-generated neural `.mp3` clip; if found, it plays the MP3 and drives `MascotTalk.active`. If no MP3 exists yet, it falls back seamlessly to `FlutterTts` (`bn-IN`) while still animating the Mascot's mouth!
-3. **To generate offline neural `.mp3` clips for new Bangla lines**:
-   - Run the Python Edge-TTS generator script:
-     ```bash
-     python tool/update_duty_slip_voice_dart.py
-     ```
+These apply to **both** Learn runners. Constant: `kLessonPassMark = 60` in [`level_result_parts.dart`](lib/features/game/level_result_parts.dart).
 
-### Workflow B: How `Learn` Rungs Work & How to Improve Lesson Cards
-[`LearnRunnerPage`](lib/features/game/learn_runner.dart) automatically transforms any lesson in `training_chapters` (or its offline fallback) into a 60-second interactive game:
-1. **Card Phase**:
-   - Each key point is converted via `MascotSpeechLibrary.conciseFieldRule()` and `toNaturalFieldBangla()` into a concise field card (max 2 short lines on front; full specifications hidden behind `"বিস্তারিত স্পেসিফিকেশন"`).
-   - The Mascot automatically reads the card aloud with lip-sync.
-   - The player taps **`"কাজের আগে চেক করুন (+5 ◆)"`** on each card to verify the field habit and launch a `+5 ◆` chip into the HUD before advancing.
-2. **Exit Drill Phase**:
-   - 2 multiple-choice field decision questions from `assets/quizzes/questions_{M}_{L}.json` (or synthesized from the lesson points if the JSON is empty).
-   - Correct tap = `+10 ◆` flying chip + Mascot celebration. Wrong tap = `-5 ◆` chip + Mascot coaching note.
-3. **Completion**:
-   - Marks `{lessonId}/learn` passed in `GameSave`, awards `+20 ◆` completion burst, and climbs to the next rung on the Ladder.
+### 5.1 How the mark is counted
 
-### Workflow C: Adding or Customizing Touchable Side Items on the Ladder
-Side items (`_Station` props alongside the ladder in [`adventure_map.dart`](lib/features/duty_slip/adventure_map.dart)) must **never** push separate legacy screens (`QuizPlayScreen`, `IdentifyQuizScreen`, `TrainingScreen`).
-- When tapped, `_openStation` opens `_SideChallengeOverlay` right over the ladder.
-- The content comes from `MascotSpeechLibrary.challengeForSideItem(kind, seed: rungIndex)`:
-  - **PPE Props (`helmet`, `gloves`, `harness`, `boots`, `vest`, `lock`, `rope`, `cone`, `goggles`)**: Mascot speaks a pro-tip + player taps `"কথা দিলাম (+5 ◆)"` or answers a 2-option check (`+10 ◆`).
-  - **Mystery Chest (`gift`)**: 2-option field safety riddle (`+15 ◆`).
-  - **Quick Spotter (`identify`, `hourly`)**: Rapid hazard/equipment question (`+10 ◆`).
-  - **Golden Rule (`life`, `lesson`)**: 1-sentence life-saving mantra + promise (`+10 ◆`).
-- Station rewards are tracked via `passedRungs.contains('station_${st.rung}')` so each station awards points once.
+`LessonMarks`: share of **questions answered right on the first try**.
 
-### Workflow D: Building a New `Do` Real-Work Level (Levels 15–31+)
-When building a new `Do` level in [`lib/features/duty_slip/`](lib/features/duty_slip/):
-1. **Visual Layout (No-Overlap 3-Zone Rule)**:
-   - **Top**: Unified HUD (`_Hud` in `duty_slip_page.dart`) + `AiLinemanGuide` coach row (`DsCoach`).
-   - **Center (62%–68% height)**: Interactive work stage (real field photo with normalized `0.0..1.0` hotspots or 2D animated pole/DTR/kit scene). **Zero permanent text labels on objects.**
-   - **Bottom (118–136 px)**: `DsFlatShelf` with `DsShelfToken` flat 2D icons (`showLabel: false` until tapped).
-2. **Scoring & Voice Integration**:
-   - Call `widget.onDelta(points, 'reason')` for every correct step (`+15` to `+25`) or non-lethal mistake (`-10` to `-15`). `DutySlipPage` routes this directly into `BeatFx.scoreDelta` and the top HUD `◆` counter.
-   - Use `DsVoice.Line` (or `MascotSpeechLibrary.speak`) so `AiLinemanGuide` speaks with live lip-sync.
-3. **Completion & Lethal Failures**:
-   - On level clear, call `widget.onFinish(clean: mistakes == 0)`. `DutySlipPage` awards the `+20 ◆` clear bonus, marks the `Do` rung passed, and pops back to the Ladder so the lineman climbs up!
-   - On a **lethal error** (e.g., touching live wire without earthing/shutdown), trigger `DeathMomentHost.trigger` so `💀` increments and the lineman falls to the Module checkpoint.
+- Picture board: each pick, each why, the believe tap, and the myth-why are questions (`settle` when that question ends; `miss()` on a wrong tap).
+- Text deck: each of the 2 quiz questions.
+- A miss then a later right on the **same** question is **not** clean.
 
----
+`GameSave.recordLevelResult(rungId, percent)` always runs (pass or fail): bumps `playsByRung`, keeps the best mark in `bestMarkByRung`. Progress ids are the **rung id** (`1.1/learn`), never a list index.
 
-## 5. Master Collaborator Roadmap & Level Matrix
+On a **pass** only: `markRungCleared`, clear bonus, `markLessonCompletedLocally` (board 1.1 writes both `'1_1'` and `'1.1'`).
 
-### Phase 1: Core Gamified UX & Unification (✅ COMPLETED)
-- [x] **327-Rung Content Catalog & Ladder Builder** (`10 Modules`, `109 Lessons`, `Learn + 2 Do` per lesson + `10 Rank Gates`).
-- [x] **Unified Top HUD (`UnifiedGameTopHud`) & Parabolic Flying Score FX (`ScoreFlyHost`)** across Ladder, Learn, and Do.
-- [x] **Unified Mascot (`AiLinemanGuide`) + Lip-Sync (`MascotTalk`) + Speech Library (`mascot_speech_library.dart`)** replacing separate `DsCoach` and static corner avatars.
-- [x] **SVG face-rig** (`mascot_face_rig.dart`, `assets/guide/mascot/`) — spring tap, soft gestures, no back-glow, no double eyebrows; full Rive body still future (see `MASCOT_LOTTIE_DESIGN_PLAN.md`).
-- [x] **Interactive `LearnRunnerPage`** with concise Bangla flash-cards, `+5 ◆` pre-work habit checks, offline fallback deck, and `+10 ◆ / -5 ◆` exit drill.
-- [x] **In-Ladder Touchable Side Items (`_SideChallengeOverlay`)** keeping players inside the ladder climb.
-- [x] **Unified `Do` Engine (`DutySlipPage`)** wired to live `◆` / `💀` HUD and auto-returning to the Ladder on clear.
-- [x] **Active `Do` Levels 1–14** (`dsLevels` in `duty_slip_engine.dart`).
+### 5.2 History chip
 
-### Phase 2: Real-Photo Lesson `Do` Levels 15–31 (🚧 NEXT FOR COLLABORATORS)
-Full visual specifications, hotspot coordinates, and voice scripts for Levels 15–31 are documented in [`lib/features/duty_slip/GAME_LEVELS_GUIDE.md`](lib/features/duty_slip/GAME_LEVELS_GUIDE.md). Collaborators can claim and build these levels in parallel:
+`LevelHistoryChip` — one quiet line, only if `plays > 0`:
 
-| Level # | Code ID | Target Lesson | Game Archetype | Asset Folder (`assets/images/lesson_M_L/`) | Status |
-|---|---|---|---|---|---|
-| **1–14** | `L0`–`L8` | Core PPE, Pole, Shutdown, 8-Mantra, Crowd, Full Night | Dress-up, Pole Inspect, Sequence, Spot | Built-in custom painters + kit assets | ✅ Active |
-| **15** | `L15_PPE_INSPECT` | Module 1 · Lesson 2 (`1.2`) | Photo Defect Spotter (Cracked Helmet, Torn Glove, Worn Boot) | `lesson_1_2/` | 📋 Spec Ready |
-| **16** | `L16_VOLT_GLOVE` | Module 1 · Lesson 3 (`1.3`) | Voltage-to-Glove Rating Match + Air-Leak Roll Test | `lesson_1_3/` | 📋 Spec Ready |
-| **17** | `L17_HARNESS_BELT` | Module 1 · Lesson 4 (`1.4`) | Full-Body Harness vs Waist Belt + Double Lanyard Anchor | `lesson_1_4/` | 📋 Spec Ready |
-| **18** | `L18_EYE_FACE` | Module 1 · Lesson 5 (`1.5`) | Task-to-Visor/Goggle Match (DO Fuse Arc vs Tree Trimming) | `lesson_1_5/` | 📋 Spec Ready |
-| **19** | `L19_BOOT_TEST` | Module 1 · Lesson 6 (`1.6`) | Footwear Nail/Crack/Oil X-Ray Scanner | `lesson_1_6/` | 📋 Spec Ready |
-| **20** | `L20_POLE_360` | Module 2 · Lesson 1 (`2.1`) | Real Photo 360° Pole Hazard Hunt (Hornet, Earth Wire, Stay, Crack) | `lesson_2_1/` | 📋 Spec Ready |
-| **21** | `L21_LADDER_SETUP` | Module 2 · Lesson 2 (`2.2`) | `4:1` Ladder Angle Slider + Base Soil + Top Lash Rope | `lesson_2_2/` | 📋 Spec Ready |
-| **22** | `L22_CLIMB_TECH` | Module 2 · Lesson 3 (`2.3`) | 3-Point Contact Rhythm Climb + Obstacle Bypass Lanyard Transfer | `lesson_2_3/` | 📋 Spec Ready |
-| **23** | `L23_POLE_TOP_POS` | Module 2 · Lesson 4 (`2.4`) | Minimum Approach Distance (MAD) Safe Work Zone Arc | `lesson_2_4/` | 📋 Spec Ready |
-| **24** | `L24_TOOL_HOIST` | Module 2 · Lesson 5 (`2.5`) | Hand-Line Canvas Bucket Hoist (Never Throw Tools / Never Climb with Tools) | `lesson_2_5/` | 📋 Spec Ready |
-| **25** | `L25_METER_ID` | Module 9 · Lesson 1 (`9.1`) | Smart Meter Terminal, Optical Port & Tamper Seal Inspector | `lesson_9_1/` | 📋 Spec Ready |
-| **26** | `L26_METER_CHANGE` | Module 9 · Lesson 2 (`9.2`) | 7-Step Safe Smart Meter Replacement Sequence | `lesson_9_2/` | 📋 Spec Ready |
-| **27** | `L27_CLAMP_METER` | Module 10 · Lesson 1 (`10.1`) | Clamp Meter Selector Dial (`A~`, `V~`) & Single-Wire Jaw Clamp | `lesson_10_1/` | 📋 Spec Ready |
-| **28** | `L28_DTR_LOAD` | Module 10 · Lesson 2 (`10.2`) | 3-Phase (`R-Y-B-N`) Load Balancing Diagnostic | `lesson_10_2/` | 📋 Spec Ready |
-| **29** | `L29_CABLE_JOINT` | Module 10 · Lesson 3 (`10.3`) | Insulation Resistance (Megger) & Crimping Sequence | `lesson_10_3/` | 📋 Spec Ready |
-| **30** | `L30_HT_DO_FUSE` | Module 10 · Lesson 4 (`10.4`) | 11 kV DO Fuse Operating Rod + Arc Shield + Windward Stance | `lesson_10_4/` | 📋 Spec Ready |
-| **31** | `L31_EMERGENCY_RESCUE` | Module 7 · Lesson 1 (`7.1`) | Pole-Top Shock Rescue + Golden 4-Minute CPR Rhythm | `lesson_7_1/` | 📋 Spec Ready |
+`আগে: সেরা 80% · 1:12 · 3 বার খেলেছেন`
 
-### Phase 3: Catalog Engine Registry & Module 3–8 Expansion
-- [ ] **Catalog `engineType` Router**: Map `CatalogGamePack.engineType` in `adventure_map.dart` directly to the modular scene builders (`dress_up`, `pole_inspect`, `photo_spot`, `sequence_8`, `meter_swap`, `clamp_test`, `rescue_cpr`) so adding a new level requires only a JSON entry in `content_catalog.json`.
-- [ ] **Rank Gate Boss Scenes (`1.gate` – `10.gate`)**: Multi-stage night-storm duty scenarios combining all habits from the module, awarding the **মৃত্যুহীন** (Zero-Death) crest on the rank badge if cleared with `0` module deaths.
-- [ ] **Promise Recall & Death Log (`কেন মারা গেলাম`)**: Surface broken promises on the fall screen and turn past lethal mistakes into targeted recall side items on the ladder.
+Show it on the intro / first card, the award stage, and the fail panel. Do not add a second score box.
+
+### 5.3 Fail panel
+
+[`LevelFailPanel`](lib/features/game/level_result_parts.dart): drops, shakes, fills a meter that stops short of a green **পাস 60%** line, plays `sounds/learn/level_fail.wav`. Buttons:
+
+- **আবার খেলুন** — remount the run.
+- **পাঠটা পড়ুন** — open `LessonReaderPage`.
+- **ফিরে যান** — `pop(false)`.
+
+Must go **idle after one sequence** (`test/perf/level_fail_perf_test.dart`). No looping controller.
+
+### 5.3b Day card ("প্রথম সপ্তাহ")
+
+Lessons 1.1–1.5 are five workdays of a new helper (`lesson_day_card.dart`). Before a lesson's **first** play (rung not cleared), a scene card shows `দিন N · time · place` with one recorded coach line, for about 3 s or until tapped. Replays skip it. Add a day for a new lesson in `lessonDays`, then regenerate the voice pack. Ambient place sounds are planned once recordings exist (none in `assets/sounds/` yet).
+
+### 5.3a Promise card (habit)
+
+After a **pass**, `askLessonPromise` (`lesson_promise_card.dart`) shows the lesson's promise from `lesson_promises.dart` (one per lesson, written from that lesson's `daily_check`; lessons 1.1–1.5 so far) until it is made:
+
+- **আমি করব** → saved in `GameSave.promises` by stable id, `+5 ◆` once ever (`promise_reward:<id>`).
+- **এখনো না** → nothing lost; asked again on the next pass.
+- When shown, it replaces the end-of-level পাঠ nudge (one end card at most).
+- A later **death** in that lesson quotes it on the death screen: `আপনি কথা দিয়েছিলেন — “…”` (`DeathPulse.promiseBn`).
+
+Add a promise for a new lesson in `lesson_promises.dart`, then regenerate the voice pack (§7). Never rename a shipped id.
+
+### 5.4 Three wrong in a row → পাঠ card
+
+[`LessonMissTally`](lib/features/game/read_lesson_offer.dart) is a **consecutive** streak per `lessonId`, kept across replays in this app session.
+
+| Call | When |
+|---|---|
+| `miss(id)` | Every wrong pick / why / quiz tap. Returns `true` on the 3rd, 6th, … in a row. |
+| `hit(id)` | Every right answer — **breaks the run**. |
+| `read(id)` | Player opened the lesson — count restarts. |
+
+The card flies out of the top-bar **পাঠ** pill and lands over the items (`ReadLessonFlyLayer`). **এখন না** tucks it back; the pill stays gold. Tapping the pill brings it out again.
+
+If the card **never** appeared during the run, show it **after a passing result** and **before** `pop`, with a random [`ReadLessonNudges`](lib/features/game/read_lesson_offer.dart) title (আরও জানুন / জেনে রাখা ভালো / না জানলে বিপদ হতে পারে / …). The same title is not reused back-to-back for that lesson. Buttons then read **পরে পড়ব** / **পাঠ পড়ুন**.
+
+The start-of-level offer (first play of 1.1, lesson not yet completed) still uses the original wording and **এখন না** / **শুরু করুন**.
 
 ---
 
-## 6. Quick Pre-Commit Checklist for Collaborators
+## 6. Scoring Rules (Do Not Drift)
 
-Before opening a PR or committing changes, verify:
-1. **UTF-8 Integrity**: Did you edit Bangla files using an IDE / editor tool (never PowerShell `Set-Content`)?
-2. **Western Digits**: Are all visible numbers wrapped in `enDigits()`?
-3. **One HUD / One Score**: Does your screen or level use `UnifiedGameTopHud` / `BeatFx.scoreDelta` with `originGlobal` instead of local score counters?
-4. **One Mascot**: Does your feature use `AiLinemanGuide` (or `DsCoach`) backed by `MascotSpeechLibrary` with live lip-sync (`MascotTalk.active`)?
-5. **Zero Analyzer Errors**: Run `flutter analyze` and confirm zero errors in modified files.
+| Surface | Award | Never |
+|---|---|---|
+| Learn picture board | Level score: pending ◆ on a right pick, banked on a right why (`BeatFx.levelDelta`). Wrong: burn pending or `−5` (level score never below 0). Pass adds the pack `clearBonus` (20). At the end the level score replaces the last one in the main ◆ (`commitLevelScore`). | A fall. Closing on the clock. Adding to the main ◆ mid-level. |
+| Learn text deck | Level score: card check `+5`, quiz `+10` / `−5`, pass `+20`; committed at the end like the board. | Same. |
+| Lesson **reader** / seal | **No ◆.** Seal stamp + `completed_lessons` only. | Writing `profiles.points` or a second save key. |
+| Do field drill | Habit `+5`, mistake `−5` into the play's score (`_flyDelta` → `_runScore`, never below 0). When the play ends (clear `+20`, lethal fall, or an unsafe field night) `_commitRun` → `commitLevelScore`: the latest play replaces the rung's last score. Leaving mid-level commits nothing. Ranks **দারুণ / মোটামুটি / আবার**. Clock never fails the level. | Adding to the main ◆ per action. `Offset.zero` as `originGlobal`. |
+| Lethal Do / gate | `DeathMomentHost` → `💀 +1` → fall to the **module** checkpoint. | Fall to rung 0 of Module 1. Death on a Learn rung. |
+| Side item | One reward per `station_<kind>@<rung id>` (old `station_<kind>_<index>` claims still honoured). | Pushing a legacy quiz / lesson shelf route. Keying by ladder index. |
 
+`BeatFx.scoreDelta(ref, delta, rungId: …, originGlobal: tap, muted: …)` is the only animation entry. It updates `GameSave`, emits `ScorePulse`, and flies a chip into the HUD `◆`.
+
+---
+
+## 7. Voice, Lines, Mascot Sprites
+
+### 7.1 Speak router
+
+`MascotSpeechLibrary.speak(text, {voiceKey, muted, rival})`:
+
+1. If `rival: false` and `DsVoice` has `voiceKey` or the exact text → play the Duty-Slip Bashkar MP3.
+2. Else `LearnVoice.resolve(text, rival: …)` → play `assets/sounds/learn_voice/`.
+3. Else `FlutterTts` `bn-IN` (device voice). **Avoid this for any fixed line** — it is a different person.
+
+The rival must pass `rival: true` so he never borrows a coach clip. Live lesson-body text (server / neural read-aloud) still uses TTS / Edge; it cannot be pre-recorded.
+
+### 7.2 Adding a spoken line
+
+1. Put coach reactions in [`LearnFeedbackLines`](lib/features/game/learn_feedback_lines.dart) (pools are shuffle-bags; **ids are not saved**, so you may reorder).
+2. Put one-off board lines in `LearnCoachLines`.
+3. Pack-specific copy (`introBn`, `rejectBn`, `tauntBn`, `stingBn`, `exitBn`) lives on the pack.
+4. Why / pick prompts already rotate (`whyAsk`, `mythWhyAsk`, `pickAsk`). Add there, do not hard-code a new prompt in the runner.
+5. **Regenerate recordings** (coach = `bn-IN-BashkarNeural` rate `−1%` pitch `+0Hz`; rival = `bn-BD-PradeepNeural` rate `−6%` pitch `−14Hz`):
+
+```bash
+flutter test tool/dump_learn_voice_lines_test.dart   # writes tool/learn_voice_lines.json
+python -I tool/make_learn_voice.py                   # fills assets/sounds/learn_voice/ + learn_voice_map.dart
+python -I tool/check_asset_refs.py .                 # every new mp3 must be referenced
+```
+
+Do **not** hand-edit `learn_voice_map.dart` or `duty_slip_voice.dart`. Duty-Slip clips still come from `tool/update_duty_slip_voice_dart.py` / `tool/slm_game_voice_library.py`.
+
+### 7.3 Coach sprites
+
+`assets/duty_slip/dress/coach_*.webp` — same character, same scale, **no floor shadow, no white outline**.
+
+| Mood | File |
+|---|---|
+| idle / listen / talk (quiet) | `coach_ready` |
+| speaking | `coach_talk` (+ blink / glance overlays) |
+| glad / celebrate | `coach_happy` (both arms up — must match the others) |
+| warn / fright / fallen | `coach_oops` |
+| sleep | `coach_blink` |
+
+Celebrate **must not** use a mismatched raised-arm export. Source for a replacement: `tool/media_src/mascot/`. Mouth SVGs in `assets/guide/mascot/` overlay **only** on `coach_talk` while speaking.
+
+Gate every looping controller with `slmSyncLoop`. Idle screens draw **zero frames**. Decode faces with `cacheHeight`.
+
+---
+
+## 8. Ladder Welcome vs Comeback
+
+[`GuideDirector.beginLadderEntrance`](lib/features/guide/guide_director.dart):
+
+| Situation | Kind | What the player sees |
+|---|---|---|
+| First open of this calendar day | `dailyWelcome` | Centre-stage welcome, then the dock. |
+| First open of the **app session** later in the day | `hiPop` | Dock hi. |
+| Return from a Learn / Do in the **same session** | `comeback` | Dock only. **No “স্বাগতম”.** |
+
+Comeback copy ([`LadderComebackLines`](lib/features/guide/guide_director.dart)): if `rungProgress` gained a `cleared` since the last entrance → celebrate + spin-hop (“এক ধাপ উপরে! চলুন, পরেরটা।”). Else an encourage-retry line. `setLevelFocus` while a level is up stops idle nudges.
+
+`DutySlipPage` **remounts** `AdventureMap` when a Do level ends (`onRoad` flips). That remount is why comeback must be session-aware — do not “fix” it by playing the daily welcome again.
+
+---
+
+## 8a. Level Shell and Do Games (new Do levels go here)
+
+Every level is one rung of the catalog; a lesson has one Learn rung and **any number of Do rungs** (the catalog's `doSlotIds` decide: 1, 2, 4 …). The shell never assumes a count.
+
+- **`LevelContext`** (`level_shell.dart`): `levelContextAt(ladder, index)` / `levelContextFor(ladder, rungId)` give lesson id and title, kind, ladder step, and for Do rungs `doIndex` / `doCount`. Its `chipBn` is the one header label: `পাঠ 1.1 · শেখা`, `পাঠ 1.1 · কাজ 1/2`, `র‍্যাঙ্ক গেট`. Never print the old `dsLevels` number.
+- **`LevelShellBar`**: close · chip over title · level score pill (chips fly in) + `মোট` total · 💀 · mute. Same bar in Learn text levels and shell Do games; the legacy Do HUD shows the same chip and level score.
+- **`LevelPassPanel`** (rank দারুণ / মোটামুটি / আবার, nম্বর, time, `এই কাজে ◆`, change to the total) and the shared `LevelFailPanel`.
+- **Scoring**: `BeatFx.levelDelta` into the level score; at the end `commitLevelScore` (latest play counts). Pass mark 60 % first-try.
+- **Do game registry** (`do_games.dart`): a game pack's `engineType` picks the game, its `id` the content. `doGameFor(pack)` returns a page builder, or null — then the ladder opens the old level from `legacyLevel`. The ladder's `_openRoute` opens Learn and shell Do games the same way (coach focus, unlock on a saved clear).
+
+**Adding a Do level:** add content for an existing engine (e.g. a new `KitCheckPack` in `kitCheckPacks` keyed by the pack id), set the pack's `engineType` and `status: playable` in `content_catalog.json`, add its lines to the voice dump, run the voice pack, add tests. A new **engine** = a new page in the shell + a case in `doGameFor`.
+
+**`kit_check`** (`kit_check.dart`, lesson 1.1 কাজ 1 — "কবচ যাচাই"): store-room scene ("সকাল 7টা · সাবস্টেশনের স্টোর রুম"), dress জামা → প্যান্ট → জুতো. **A fresh set every play** (`dealKit`): per slot one sound item, a damaged look-alike (always for shirt and boots, often trousers; flaws: grease, burn hole, torn sleeve, oil, nail in the sole, cracked sole — painted marks until photos exist, set `KitFlaw.inspectAsset`), and 1–2 wrong items from the pool; the pressure call (JE সাহেব on the phone, consumers outside, a co-worker) and its slot vary too. The tray shows pictures only, dealt like Level 1's cards. Tap → close-up → **পরে নিন** / **বাদ দিন**; the card **stays** with a stamp (ঠিক / বাতিল / ভুল) and the flaw pulsing while the coach reacts, then flies onto the body, out of the store, or shakes back. Reactions are one short word (shared `LearnFeedbackLines` pools); a reason is spoken only the first time (`SpokenOnce`), then shown as text in the coach strip. Result: rank, score, "আজ যা ধরলেন", and a "ঝটপট ও নির্ভুল" bonus for a clean run under `quickMs`. No deaths (yard). Placeholder scene: `bg_control_room.webp`.
+
+## 9. Do Field Levels (summary)
+
+Full visual / speech specs: [`GAME_LEVELS_GUIDE.md`](lib/features/duty_slip/GAME_LEVELS_GUIDE.md). Live code:
+
+| Levels | File |
+|---|---|
+| 1–10 dress / van | `ds_dress_up.dart` |
+| 11–13 pole language | `ds_pole_inspect.dart` |
+| 14 clearance | `ds_clearance.dart` |
+| 15–22 SAFE HOME cards | `duty_slip_page.dart` |
+| 23–32 23-step job | `duty_slip_page.dart` |
+| 33 field night | `duty_slip_page.dart` |
+
+Do rules that Learn must not copy: picture-only trays, no back arrow on the work screen, `ZlFx.holdClock()` / `releaseClock()`, ranks দারুণ / মোটামুটি / আবার, lethal mistakes may kill.
+
+---
+
+## 10. Workflows
+
+### A. New mascot cue
+
+Add `MascotCueId` + pool entry in `mascot_speech_library.dart`. Speak with `guideDirector.sayCue(..., speakVoice: true, muted: …)` or `MascotSpeechLibrary.speak`. Then regenerate the Learn voice pack if the line is new.
+
+### B. New picture Learn pack
+
+See §4.1. Register in `learnBoardPackFor`. Stable ids. Two+ correct pictures per item. Voice dump + `make_learn_voice.py`. Perf test if you add a new animated overlay.
+
+### C. New text-quiz lesson
+
+No runner change. The catalog lesson + `questions_M_C.json` (or the offline fallback) is enough. If the quiz cannot load, **do not** mark complete.
+
+### D. New Do level (15+)
+
+Follow `GAME_LEVELS_GUIDE.md` §0. Wire through `dsLevels` / `duty_slip_page.dart`. Do not resurrect deleted Zero-Loss screens.
+
+### E. Side items
+
+`_openStation` → `_SideChallengeOverlay` over the ladder. Content from `MascotSpeechLibrary.challengeForSideItem`. Never push `QuizPlayScreen` / `IdentifyQuizScreen` / a lesson shelf.
+
+---
+
+## 11. Tests You Must Keep Green
+
+```bash
+flutter analyze
+flutter test
+python -I tool/check_asset_refs.py .     # on Windows: python -I …
+```
+
+Learn-specific:
+
+| File | Guards |
+|---|---|
+| `test/learn_board_deal_test.dart` | Deal + after-miss swap of the correct picture |
+| `test/lesson_miss_tally_test.dart` | Consecutive-3 offer; `hit` breaks the run; nudges do not repeat |
+| `test/level_result_test.dart` | 60% mark; `recordLevelResult`; end-card wording |
+| `test/game_save_best_time_test.dart` | Best time |
+| `test/perf/level_fail_perf_test.dart` | Fail panel settles, then **zero frames** |
+| `test/perf/lesson_seal_perf_test.dart` | Seal stamps once, then idle |
+| `test/perf/learn_board_perf_test.dart` | Board: day card first, no 60 fps loop while waiting, no item names before a tap (with and without remove-animations) |
+| `test/learn_runner_offline_test.dart` | Text deck offline: honest dialog after the 12 s lesson timeout, no made-up deck, no clear, no ◆ |
+| `test/learn_fixes_test.dart` | Latest-play scoring, weak spots, promises, Module 1 Do routing, questions built from lesson data |
+
+If a perf guard fails, **fix the widget**, not the test, unless the design really changed — then say why in the same commit.
+
+---
+
+## 12. Roadmap
+
+### Done
+- [x] Catalog + ladder builder; unified HUD + flying `◆`.
+- [x] One mascot + lip-sync + speech library.
+- [x] Picture Learn 1.1 (dealer, myth rival, পাঠ offer, 60% pass, fail panel, history, voice pack).
+- [x] Text Learn for the other playable lessons (same পাঠ / pass / fail / history).
+- [x] Lesson reader without scoring; seal win; Training Zone in the toolbox.
+- [x] Comeback line instead of re-welcoming after a level.
+- [x] Do 1–14 live.
+
+### Next
+- [ ] JSON Learn packs per lesson + `tool/check_learn_packs.py` + a Learn-board perf test.
+- [ ] More trap / correct-item art.
+- [ ] Catalog `engineType` router for Do scenes.
+- [ ] Rank-gate boss scenes; promise recall on the fall screen.
+- [ ] Do 15–31 as specified in `GAME_LEVELS_GUIDE.md`.
+
+---
+
+## 13. Pre-commit Checklist
+
+1. `git pull` first. Never force-push.
+2. Bangla edited in the IDE / `Write` / `StrReplace` — **never** PowerShell `Set-Content`.
+3. Visible numbers through `enDigits()`.
+4. Points only via `BeatFx.scoreDelta` / `GameSave.addPoints`. Lesson reader still awards **zero** `◆`.
+5. Save by stable id (`1.2/learn`, lesson id), never by list index.
+6. One mascot; fixed lines recorded (dump + `make_learn_voice.py`); rival uses `rival: true`.
+7. No whole-screen `AnimatedBuilder`, no ungated `..repeat()` (use `slmSyncLoop`). Images decoded at display size.
+8. New animated screen → `test/perf/` that settles to zero frames.
+9. `flutter analyze` (0 errors, no new warnings), `flutter test`, `python -I tool/check_asset_refs.py .`.
+10. No secrets (`key.properties`, service-role keys, `tool/hourly_answer_keys*`).

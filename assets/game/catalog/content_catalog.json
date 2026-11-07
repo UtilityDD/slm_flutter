@@ -1301,7 +1301,7 @@
       "lessonId": "1.1",
       "moduleId": "m1",
       "packId": "do_1_1_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 1
     },
     {
@@ -1310,7 +1310,7 @@
       "lessonId": "1.1",
       "moduleId": "m1",
       "packId": "do_1_1_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 2
     },
     {
@@ -4241,22 +4241,23 @@
     },
     {
       "id": "do_1_1_a",
-      "engineType": "dress_up",
+      "engineType": "kit_check",
       "lessonId": "1.1",
       "slot": 0,
-      "status": "comingSoon",
-      "legacyHint": "dress_clothes",
+      "status": "playable",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 1
     },
     {
       "id": "do_1_1_b",
-      "engineType": "placeholder",
+      "engineType": "glove_check",
       "lessonId": "1.1",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 3
     },
     {
       "id": "learn_1_2",
@@ -4272,9 +4273,9 @@
       "lessonId": "1.2",
       "slot": 0,
       "status": "comingSoon",
-      "legacyHint": "dress_helmet",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 14
     },
     {
       "id": "do_1_2_b",
@@ -4283,7 +4284,8 @@
       "slot": 1,
       "status": "comingSoon",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 15
     },
     {
       "id": "learn_1_3",
@@ -4299,9 +4301,9 @@
       "lessonId": "1.3",
       "slot": 0,
       "status": "comingSoon",
-      "legacyHint": "dress_gloves",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 11
     },
     {
       "id": "do_1_3_b",
@@ -4310,7 +4312,8 @@
       "slot": 1,
       "status": "comingSoon",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 12
     },
     {
       "id": "learn_1_4",
@@ -4326,9 +4329,9 @@
       "lessonId": "1.4",
       "slot": 0,
       "status": "comingSoon",
-      "legacyHint": "dress_harness",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 4
     },
     {
       "id": "do_1_4_b",
@@ -4337,7 +4340,8 @@
       "slot": 1,
       "status": "comingSoon",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 7
     },
     {
       "id": "learn_1_5",
@@ -4353,9 +4357,9 @@
       "lessonId": "1.5",
       "slot": 0,
       "status": "comingSoon",
-      "legacyHint": "dress_full",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 6
     },
     {
       "id": "do_1_5_b",
@@ -4364,7 +4368,8 @@
       "slot": 1,
       "status": "comingSoon",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 8
     },
     {
       "id": "learn_1_6",
@@ -4380,9 +4385,9 @@
       "lessonId": "1.6",
       "slot": 0,
       "status": "comingSoon",
-      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 16
     },
     {
       "id": "do_1_6_b",
@@ -4391,7 +4396,8 @@
       "slot": 1,
       "status": "comingSoon",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 23
     },
     {
       "id": "learn_1_7",
@@ -4407,9 +4413,9 @@
       "lessonId": "1.7",
       "slot": 0,
       "status": "comingSoon",
-      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 17
     },
     {
       "id": "do_1_7_b",
@@ -4418,7 +4424,8 @@
       "slot": 1,
       "status": "comingSoon",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 24
     },
     {
       "id": "learn_1_8",
@@ -4434,9 +4441,9 @@
       "lessonId": "1.8",
       "slot": 0,
       "status": "comingSoon",
-      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 18
     },
     {
       "id": "do_1_8_b",
@@ -4445,7 +4452,8 @@
       "slot": 1,
       "status": "comingSoon",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 25
     },
     {
       "id": "learn_1_9",
@@ -4461,9 +4469,9 @@
       "lessonId": "1.9",
       "slot": 0,
       "status": "comingSoon",
-      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 9
     },
     {
       "id": "do_1_9_b",
@@ -4472,7 +4480,8 @@
       "slot": 1,
       "status": "comingSoon",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 10
     },
     {
       "id": "learn_1_10",
@@ -4488,9 +4497,9 @@
       "lessonId": "1.10",
       "slot": 0,
       "status": "comingSoon",
-      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [],
+      "legacyLevel": 5
     },
     {
       "id": "gate_m1",
@@ -4500,7 +4509,8 @@
       "assetRefs": {},
       "deadlyRules": [
         "lethal_any_marked"
-      ]
+      ],
+      "legacyLevel": 33
     },
     {
       "id": "learn_2_1",

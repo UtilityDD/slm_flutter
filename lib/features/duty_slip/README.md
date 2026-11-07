@@ -7,8 +7,9 @@ Edit Bangla here in the editor only. PowerShell `Set-Content` corrupts it.
 ## The ladder
 
 - Rungs come from `assets/game/catalog/content_catalog.json` through `lib/features/game/ladder_builder.dart`: 10 modules, 327 rungs (Learn, Do, rank gate), soft cap 400. Today only 10 Learn rungs are `playable`; the rest are `comingSoon`.
-- A playable Learn rung opens `LearnRunnerPage` (swipe cards + 2 questions, never a fall). Clearing it unlocks the next rung.
-- Rung index `i < 33` is also bridged to the old fixed level `dsLevels[i]`, so those 33 levels stay playable.
+- A playable Learn rung: lesson **1.1** opens `LearnBoardRunnerPage` (picture board); every other playable lesson opens `LearnRunnerPage` (cards + 2 questions). Both need **60%** first-try-correct to clear; never a fall. Details: [`GAME_DEVELOPER_GUIDE.md`](../../../GAME_DEVELOPER_GUIDE.md).
+- A Do rung (and the gate) opens the built level named by its game pack's `legacyLevel` in the catalog, chosen by **topic**: the Do after a lesson practises that lesson (1.2 → L14 clearance, 1.3 → L11/L12 pole, 1.4 → L4 harness, gate → L33 field night). Packs without `legacyLevel` fall back to play order (Nth Do rung → `dsLevels[N]`). Module 1 is mapped; `test/learn_fixes_test.dart` guards it.
+- Ladder-opened levels unlock by saved rung id (`GameSave.rungProgress`); they never move `engine.unlocked`. The verify gate still uses play order, so it sits where it always did.
 - Side stations repeat every 8 rungs (only on rungs 1–33): tips, hourly quiz, identify quiz, gift, life tip, lesson (`TrainingScreen`).
 - Locked rung: shake + mist, no text. Unlock is one at a time. `dsAllLevelsOpen` is `false`; admins can open everything with `devLevelsOpen` (Admin → developer mode).
 

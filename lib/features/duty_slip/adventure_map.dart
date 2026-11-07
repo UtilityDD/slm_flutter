@@ -13,11 +13,13 @@ import '../auth/verify_gate.dart';
 import '../auth/verify_sheet.dart';
 import '../game/beat_fx.dart';
 import '../game/content_catalog.dart';
+import '../game/do_games.dart';
 import '../game/game_save.dart';
 import '../game/ladder_builder.dart';
 import '../game/learn_board_models.dart';
 import '../game/learn_board_runner.dart';
 import '../game/learn_runner.dart';
+import '../game/level_shell.dart';
 import '../guide/ai_lineman_guide.dart';
 import '../guide/guide_director.dart';
 import '../guide/ladder_guide_host.dart';
@@ -64,6 +66,20 @@ _Station? _stationAt(int index) => switch (index % 8) {
       _ => null,
     };
 
+/// One-time side-item reward id, keyed by the rung the item stands beside —
+/// never by ladder position (AGENTS §3).
+String _stationClaimId(_Station s, BuiltLadder? built, int index) {
+  final rungId = built != null && index >= 0 && index < built.length ? built.rungs[index].id : null;
+  return rungId == null ? _stationLegacyClaimId(s, index) : 'station_${s.name}@$rungId';
+}
+
+/// Old index-based id: still honoured so earlier claims are never paid twice.
+String _stationLegacyClaimId(_Station s, int index) => 'station_${s.name}_$index';
+
+bool _stationClaimed(GameSave save, _Station s, BuiltLadder? built, int index) =>
+    save.giftsClaimed.contains(_stationClaimId(s, built, index)) ||
+    save.giftsClaimed.contains(_stationLegacyClaimId(s, index));
+
 enum _GiftFace { none, missed, active, upcoming, opened }
 
 class _Flight {
@@ -87,11 +103,17 @@ class _ActiveSideChallenge {
   final String asset;
   final SideItemChallenge challenge;
 
+  /// Stable reward id ([_stationClaimId]) and the old index id it replaces.
+  final String claimId;
+  final String legacyClaimId;
+
   const _ActiveSideChallenge({
     required this.index,
     required this.station,
     required this.asset,
     required this.challenge,
+    required this.claimId,
+    required this.legacyClaimId,
   });
 }
 
@@ -539,6 +561,19 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   /// Maps a Do rung on the 327-rung ladder to its corresponding [dsLevels] index
   /// without Learn rungs (at 0, 3, 6...) shadowing Do levels.
   int _resolveDoLevelIndex(int ladderIndex, BuiltLadder? built) {
+    // The catalog names the level by topic (pack.legacyLevel); play order is only a fallback.
+    final mapped = built != null && ladderIndex >= 0 && ladderIndex < built.length
+        ? built.rungs[ladderIndex].pack.legacyLevel
+        : null;
+    if (mapped != null) {
+      final at = dsLevels.indexWhere((l) => l.number == mapped);
+      if (at >= 0) return at;
+    }
+    return _orderedDoLevelIndex(ladderIndex, built);
+  }
+
+  /// Old play-order bridge: the Nth Do rung opens `dsLevels[N]`.
+  int _orderedDoLevelIndex(int ladderIndex, BuiltLadder? built) {
     if (built == null || ladderIndex >= built.length) {
       return (ladderIndex % dsLevels.length).clamp(0, dsLevels.length - 1);
     }
@@ -574,6 +609,20 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       return;
     }
 
+    // A Do rung whose game type is built opens it in the shared level shell.
+    final shellGame = rung != null && !rung.isLearn ? doGameFor(rung.pack) : null;
+    final shellCtx = shellGame != null ? levelContextAt(built, index) : null;
+    if (shellGame != null && shellCtx != null) {
+      if (gameNeedsVerifyNow(context, dsLevels[_orderedDoLevelIndex(index, built)].number)) {
+        showVerifySheet(context);
+        return;
+      }
+      HapticFeedback.selectionClick();
+      unawaited(ref.read(gameSaveProvider.notifier).setCurrentRung(rung!.id));
+      unawaited(_openRoute(rung, index, (_) => shellGame(shellCtx, widget.muted)));
+      return;
+    }
+
     final soon = !_isRungPlayable(index, built);
     if (soon) {
       _hintComingSoon(focus: focus);
@@ -581,7 +630,8 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     }
     final doIdx = _resolveDoLevelIndex(index, built);
     final spec = dsLevels[doIdx];
-    if (gameNeedsVerifyNow(context, spec.number)) {
+    // Verify gate stays where it was (by play order), whichever level the rung opens.
+    if (gameNeedsVerifyNow(context, dsLevels[_orderedDoLevelIndex(index, built)].number)) {
       showVerifySheet(context);
       return;
     }
@@ -600,35 +650,44 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       _hintComingSoon();
       return;
     }
+    final boardPack = learnBoardPackFor(lessonId);
+    await _openRoute(
+      rung,
+      index,
+      (_) => boardPack != null
+          ? LearnBoardRunnerPage(
+              rungId: rung.id,
+              lessonId: lessonId,
+              ladderIndex: index,
+              pack: boardPack,
+              muted: widget.muted,
+            )
+          : LearnRunnerPage(
+              rungId: rung.id,
+              lessonId: lessonId,
+              ladderIndex: index,
+              muted: widget.muted,
+            ),
+    );
+  }
+
+  /// Opens a level page (Learn, or a Do game in the level shell) over the
+  /// ladder; on a clear the next rung unlocks and the ladder scrolls to it.
+  Future<void> _openRoute(BuiltRung rung, int index, WidgetBuilder builder) async {
     // Level owns the mascot — kill ladder idle nudge / gag while the route is up.
     _clearNudge();
     _idleTimer?.cancel();
     _idleTimer = null;
     ref.read(guideDirectorProvider.notifier).setLevelFocus(true);
     unawaited(MascotSpeechLibrary.stop());
-    final boardPack = learnBoardPackFor(lessonId);
-    final cleared = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
-        builder: (_) => boardPack != null
-            ? LearnBoardRunnerPage(
-                rungId: rung.id,
-                lessonId: lessonId,
-                ladderIndex: index,
-                pack: boardPack,
-                muted: widget.muted,
-              )
-            : LearnRunnerPage(
-                rungId: rung.id,
-                lessonId: lessonId,
-                ladderIndex: index,
-                muted: widget.muted,
-              ),
-      ),
-    );
+    bool savedClear() => ref.read(gameSaveProvider).rungProgress[rung.id] == 'cleared';
+    final wasCleared = savedClear();
+    final cleared = await Navigator.of(context).push<bool>(MaterialPageRoute<bool>(builder: builder));
     if (!mounted) return;
     ref.read(guideDirectorProvider.notifier).setLevelFocus(false);
     _armIdle();
-    if (cleared == true) {
+    // A pass is saved before the level can be left, so trust the save too.
+    if (cleared == true || (!wasCleared && savedClear())) {
       widget.engine.unlockThrough(index + 1);
       setState(() {});
       unawaited(_softScrollToIndex(index + 1));
@@ -668,7 +727,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     GameSave save,
   ) {
     if (station != _Station.gift) return _GiftFace.none;
-    final claimed = save.giftsClaimed.contains('station_gift_$index');
+    final claimed = _stationClaimed(save, station!, ref.read(builtLadderProvider).value, index);
     if ((claimed || _seen.contains(index)) && !soon) return _GiftFace.opened;
     if (soon || index > focus) return _GiftFace.upcoming;
     if (index < focus) return _GiftFace.missed;
@@ -775,6 +834,8 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
         station: station,
         asset: asset,
         challenge: challenge,
+        claimId: _stationClaimId(station, built, index),
+        legacyClaimId: _stationLegacyClaimId(station, index),
       );
     });
   }
@@ -944,8 +1005,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                           final fog = !cap && i > focus + 3;
                           final station = cap || soon || fog ? null : _stationAt(i);
                           final claimed = station != null &&
-                              save.giftsClaimed
-                                  .contains('station_${station.name}_$i');
+                              _stationClaimed(save, station, built, i);
                           final rested = station != null &&
                               !soon &&
                               (claimed || i < focus || _seen.contains(i));
@@ -3017,11 +3077,12 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
   int? _pickedOption;
   bool _completed = false;
 
-  String get _claimKey =>
-      'station_${widget.active.station.name}_${widget.active.index}';
+  String get _claimKey => widget.active.claimId;
 
-  bool get _alreadyClaimed =>
-      ref.read(gameSaveProvider).giftsClaimed.contains(_claimKey);
+  bool _claimedIn(GameSave save) =>
+      save.giftsClaimed.contains(_claimKey) || save.giftsClaimed.contains(widget.active.legacyClaimId);
+
+  bool get _alreadyClaimed => _claimedIn(ref.read(gameSaveProvider));
 
   Future<void> _onCheckTap(Offset globalOrigin) async {
     if (_completed) {
@@ -3098,7 +3159,7 @@ class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
   @override
   Widget build(BuildContext context) {
     final ch = widget.active.challenge;
-    final claimed = ref.watch(gameSaveProvider).giftsClaimed.contains(_claimKey);
+    final claimed = _claimedIn(ref.watch(gameSaveProvider));
 
     return ColoredBox(
       color: const Color(0xCC040914),

@@ -65,6 +65,7 @@ flutter:
     - assets/sounds/intro/click.ogg
     - assets/sounds/voice/
     - assets/sounds/learn/
+    - assets/sounds/learn_voice/
     - assets/data/
     - assets/game/catalog/
     - assets/lineman/

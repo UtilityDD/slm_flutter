@@ -478,10 +478,17 @@ class DutySlipEngine {
     planPhase = DsPlanPhase.road;
   }
 
-  void openLevel(int index) {
+  /// True while the level on screen was opened from the catalog ladder. The
+  /// ladder unlocks by saved rung ids then, and [unlocked] (a ladder index)
+  /// must not jump to this level's own `dsLevels` index.
+  var openedFromLadder = false;
+
+  void openLevel(int index, {bool fromLadder = false}) {
     if (!onRoad) return;
     if (index < 0 || index >= dsLevels.length) return;
-    if (!dsPlayAllLevels && index > unlocked) return;
+    // The ladder already checked its own lock; a rung may open a later level by topic.
+    if (!fromLadder && !dsPlayAllLevels && index > unlocked) return;
+    openedFromLadder = fromLadder;
     levelIndex = index;
     dressArmed = false;
     dressOpen = dsLevels[index].number == 6;
@@ -694,8 +701,8 @@ class DutySlipEngine {
       levelDangerCount[levelIndex] = wrongTaps;
     }
 
-    // Advance unlock if achieved motamuti or darun
-    if (levelRank != DsLevelRank.again) {
+    // Advance unlock if achieved motamuti or darun (ladder-opened levels unlock by rung id).
+    if (levelRank != DsLevelRank.again && !openedFromLadder) {
       if (levelIndex + 1 > unlocked) {
         unlocked = min(levelIndex + 1, dsLevels.length - 1);
       }

@@ -205,6 +205,11 @@ class CatalogGamePack {
   final String? legacyHint;
   final List<String> deadlyRules;
 
+  /// Number of the built Do level (`dsLevels`) this pack opens until it has an
+  /// engine of its own. Chosen by topic, so the Do after a lesson practises
+  /// that lesson. Null: no mapping (the ladder falls back to play order).
+  final int? legacyLevel;
+
   const CatalogGamePack({
     required this.id,
     required this.engineType,
@@ -214,6 +219,7 @@ class CatalogGamePack {
     required this.status,
     required this.legacyHint,
     required this.deadlyRules,
+    this.legacyLevel,
   });
 
   factory CatalogGamePack.fromJson(Map<String, dynamic> json) {
@@ -229,6 +235,7 @@ class CatalogGamePack {
       deadlyRules: [
         for (final v in (json['deadlyRules'] as List? ?? const [])) v.toString(),
       ],
+      legacyLevel: (json['legacyLevel'] as num?)?.toInt(),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/en_digits.dart';
@@ -331,10 +332,24 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   }
 
   void _onTalkChanged() {
+    // Speech can stop while the tree is locked (a level's dispose calls
+    // MascotSpeechLibrary.stop() while its route unmounts); a rebuild then
+    // throws "setState() called when widget tree was locked". Wait for the frame.
+    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      if (_talkChangePending) return;
+      _talkChangePending = true;
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        _talkChangePending = false;
+        if (mounted) _onTalkChanged();
+      });
+      return;
+    }
     _syncMouth();
     _syncRig();
     if (mounted) setState(() {});
   }
+
+  var _talkChangePending = false;
 
   /// The rig loops only while speaking. After speech, a cue or a tap it
   /// finishes the current lap (at most one 6 s breath cycle) and rests at
@@ -798,12 +813,10 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
                 Transform.scale(
                   scale: bodyScale,
                   alignment: widget.centered ? Alignment.bottomCenter : Alignment.bottomRight,
-                  child: InkResponse(
+                  // Splash-free tap: InkResponse rebuilt ~7 widgets per frame here.
+                  child: GestureDetector(
                     onTap: _onSpriteTap,
-                    customBorder: const CircleBorder(),
-                    splashColor: Colors.transparent,
-                    highlightColor: Colors.transparent,
-                    radius: widget.sprite * 0.52,
+                    behavior: HitTestBehavior.opaque,
                     child: _gestureWrap(
                       g,
                       activeGag,
