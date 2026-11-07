@@ -30,7 +30,11 @@ class LessonReaderPage extends ConsumerStatefulWidget {
   /// Opened from a muted level: the seal at the end stays silent too.
   final bool muted;
 
-  const LessonReaderPage({super.key, required this.lesson, required this.bn, this.muted = false});
+  /// Open straight at this lesson point (0-based), e.g. from a mistake's
+  /// "পাঠে দেখুন". Null: start at the beginning.
+  final int? startPoint;
+
+  const LessonReaderPage({super.key, required this.lesson, required this.bn, this.muted = false, this.startPoint});
 
   @override
   ConsumerState<LessonReaderPage> createState() => _LessonReaderPageState();
@@ -71,6 +75,11 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
       if (lesson.myths.isNotEmpty) _Phase.myth,
       _Phase.done,
     ];
+    final start = widget.startPoint;
+    if (start != null && _points.isNotEmpty && _phases.contains(_Phase.point)) {
+      _phaseIndex = _phases.indexOf(_Phase.point);
+      _pointDone = start.clamp(0, _points.length - 1);
+    }
     _voice = BanglaReadAloud();
     _voice.onSpeakingChanged = (value) {
       if (!mounted || _neuralRun) return;

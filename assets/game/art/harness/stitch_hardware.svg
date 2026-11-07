@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fff8ee" stroke="#c48a2e" stroke-width="3"/>
+  <rect x="24" y="30" width="120" height="70" fill="#e67e22"/>
+  <path d="M34 44 L54 86 L74 44 L94 86 L114 44 L134 86" fill="none" stroke="#3b2a12" stroke-width="2.5"/>
+  <path d="M74 44 Q86 30 96 46" fill="none" stroke="#3b2a12" stroke-width="2"/>
+  <path d="M94 86 Q104 104 116 88" fill="none" stroke="#3b2a12" stroke-width="2"/>
+  <circle cx="84" cy="140" r="14" fill="#c0392b"/><path d="M77 133 L91 147 M91 133 L77 147" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M206 40 Q206 20 236 20 Q266 20 266 40 L266 80 L206 80 Z" fill="none" stroke="#8d949b" stroke-width="9"/>
+  <path d="M248 22 L242 36 L250 44" fill="none" stroke="#3b3a36" stroke-width="2.5"/>
+  <rect x="200" y="76" width="72" height="20" rx="4" fill="#8d949b"/>
+  <g fill="#a0522d"><circle cx="214" cy="86" r="3"/><circle cx="256" cy="84" r="3.5"/></g>
+  <circle cx="236" cy="140" r="14" fill="#c0392b"/><path d="M229 133 L243 147 M243 133 L229 147" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+</svg>

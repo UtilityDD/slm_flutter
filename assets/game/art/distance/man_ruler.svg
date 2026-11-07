@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <path d="M14 30 L306 26" stroke="#31363c" stroke-width="4"/>
+  <g fill="#2e8b45" opacity="0.85">
+    <circle cx="60" cy="42" r="7"/><rect x="54" y="50" width="12" height="30" rx="5"/><rect x="54" y="78" width="5" height="22" rx="2"/><rect x="61" y="78" width="5" height="22" rx="2"/>
+    <circle cx="60" cy="112" r="7" opacity="0.6"/><rect x="54" y="120" width="12" height="30" rx="5" opacity="0.6"/><rect x="54" y="148" width="5" height="22" rx="2" opacity="0.6"/><rect x="61" y="148" width="5" height="22" rx="2" opacity="0.6"/>
+  </g>
+  <path d="M90 30 L90 100 M84 100 L96 100 M84 30 L96 30" stroke="#2e8b45" stroke-width="2.5"/>
+  <circle cx="220" cy="128" r="11" fill="#f0c9a0" stroke="#5a4636" stroke-width="2"/>
+  <path d="M220 139 L220 170 M220 148 L206 160 M220 148 L234 160 M220 170 L210 190 M220 170 L230 190" stroke="#5a4636" stroke-width="5" stroke-linecap="round"/>
+  <path d="M250 28 L250 116 M244 116 L256 116 M244 28 L256 28" stroke="#2e8b45" stroke-width="2.5"/>
+  <circle cx="292" cy="170" r="14" fill="#2e8b45"/>
+  <path d="M284 170 L290 176 L300 164" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

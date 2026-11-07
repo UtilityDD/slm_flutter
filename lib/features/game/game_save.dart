@@ -38,6 +38,16 @@ class GameSave {
   /// question keys: slot ids, `myth`, quiz text). A clean answer later removes
   /// one. Recall side items and later levels bring these back first.
   final Map<String, List<String>> weakByLesson;
+
+  /// "আমার ভুলের খাতা": the latest mistake per key (newest last, capped).
+  final List<MistakeEntry> mistakes;
+
+  /// Do rungs passed since the last death. A death turns them back to
+  /// 'prove' (fall option C: prove them again); Learn rungs never fall.
+  final List<String> clearedSinceDeath;
+
+  /// The first deadly mistake in the game is a near-miss (no death, no fall).
+  final bool nearMissUsed;
   final bool migratedFromDs;
 
   const GameSave({
@@ -58,6 +68,9 @@ class GameSave {
     required this.ppeOwned,
     required this.giftsClaimed,
     this.weakByLesson = const {},
+    this.mistakes = const [],
+    this.clearedSinceDeath = const [],
+    this.nearMissUsed = false,
     required this.migratedFromDs,
   });
 
@@ -95,6 +108,9 @@ class GameSave {
     List<String>? ppeOwned,
     List<String>? giftsClaimed,
     Map<String, List<String>>? weakByLesson,
+    List<MistakeEntry>? mistakes,
+    List<String>? clearedSinceDeath,
+    bool? nearMissUsed,
     bool? migratedFromDs,
   }) {
     return GameSave(
@@ -115,6 +131,9 @@ class GameSave {
       ppeOwned: ppeOwned ?? this.ppeOwned,
       giftsClaimed: giftsClaimed ?? this.giftsClaimed,
       weakByLesson: weakByLesson ?? this.weakByLesson,
+      mistakes: mistakes ?? this.mistakes,
+      clearedSinceDeath: clearedSinceDeath ?? this.clearedSinceDeath,
+      nearMissUsed: nearMissUsed ?? this.nearMissUsed,
       migratedFromDs: migratedFromDs ?? this.migratedFromDs,
     );
   }
@@ -137,6 +156,9 @@ class GameSave {
         'ppeOwned': ppeOwned,
         'giftsClaimed': giftsClaimed,
         'weakByLesson': weakByLesson,
+        'mistakes': [for (final m in mistakes) m.toJson()],
+        'clearedSinceDeath': clearedSinceDeath,
+        'nearMissUsed': nearMissUsed,
         'migratedFromDs': migratedFromDs,
       };
 
@@ -183,6 +205,14 @@ class GameSave {
       giftsClaimed: [
         for (final v in (json['giftsClaimed'] as List? ?? const [])) v.toString(),
       ],
+      mistakes: [
+        for (final raw in (json['mistakes'] as List? ?? const []))
+          if (raw is Map) MistakeEntry.fromJson(Map<String, dynamic>.from(raw)),
+      ],
+      clearedSinceDeath: [
+        for (final v in (json['clearedSinceDeath'] as List? ?? const [])) v.toString(),
+      ],
+      nearMissUsed: json['nearMissUsed'] as bool? ?? false,
       weakByLesson: {
         if (json['weakByLesson'] is Map)
           for (final e in (json['weakByLesson'] as Map).entries)
@@ -192,6 +222,58 @@ class GameSave {
     );
   }
 }
+
+/// One entry in "আমার ভুলের খাতা".
+@immutable
+class MistakeEntry {
+  const MistakeEntry({
+    required this.key,
+    required this.lessonId,
+    required this.rungId,
+    required this.textBn,
+    required this.deadly,
+    required this.atMs,
+    this.lessonPoint,
+    this.count = 1,
+  });
+
+  /// Stable id of the mistake, e.g. `1.5/discharge/line-before-earth`.
+  final String key;
+  final String lessonId;
+  final String rungId;
+  final String textBn;
+  final bool deadly;
+  final int atMs;
+
+  /// Lesson point (0-based) that teaches it, for "পাঠে দেখুন".
+  final int? lessonPoint;
+  final int count;
+
+  Map<String, dynamic> toJson() => {
+        'key': key,
+        'lessonId': lessonId,
+        'rungId': rungId,
+        'textBn': textBn,
+        'deadly': deadly,
+        'atMs': atMs,
+        if (lessonPoint != null) 'lessonPoint': lessonPoint,
+        'count': count,
+      };
+
+  factory MistakeEntry.fromJson(Map<String, dynamic> j) => MistakeEntry(
+        key: j['key'] as String? ?? '',
+        lessonId: j['lessonId'] as String? ?? '',
+        rungId: j['rungId'] as String? ?? '',
+        textBn: j['textBn'] as String? ?? '',
+        deadly: j['deadly'] as bool? ?? false,
+        atMs: (j['atMs'] as num?)?.toInt() ?? 0,
+        lessonPoint: (j['lessonPoint'] as num?)?.toInt(),
+        count: (j['count'] as num?)?.toInt() ?? 1,
+      );
+}
+
+/// Do levels and gates (their passes fall on a death); Learn rungs do not.
+bool isFallableRung(String rungId) => rungId.contains('/do/') || rungId.endsWith('/gate');
 
 @immutable
 class DeathLogEntry {
@@ -409,17 +491,28 @@ class GameSaveController extends Notifier<GameSave> {
       atMs: atMs,
       promiseBn: promise != null && state.promises.contains(promise.id) ? promise.textBn : null,
     );
+    // Fall option C: every Do level passed since the last death must be
+    // proven again; Learn rungs stay done.
+    final progress = Map<String, String>.from(state.rungProgress);
+    for (final id in state.clearedSinceDeath) {
+      if (progress[id] == 'cleared') progress[id] = 'prove';
+    }
     state = state.copyWith(
       deaths: nextDeaths,
       safeStreak: 0,
       deathLog: log,
       currentRungId: moduleFirstRungId,
+      rungProgress: progress,
+      clearedSinceDeath: const [],
     );
     await _persist();
   }
 
   Future<void> markRungCleared(String rungId, {int? score}) async {
     final progress = Map<String, String>.from(state.rungProgress)..[rungId] = 'cleared';
+    final since = isFallableRung(rungId) && !state.clearedSinceDeath.contains(rungId)
+        ? [...state.clearedSinceDeath, rungId]
+        : state.clearedSinceDeath;
     final best = Map<String, int>.from(state.bestByRung);
     if (score != null) {
       final prev = best[rungId] ?? 0;
@@ -430,6 +523,7 @@ class GameSaveController extends Notifier<GameSave> {
       bestByRung: best,
       safeStreak: state.safeStreak + 1,
       currentRungId: rungId,
+      clearedSinceDeath: since,
     );
     await _persist();
   }
@@ -463,6 +557,40 @@ class GameSaveController extends Notifier<GameSave> {
   Future<bool> claimOnce(String id) async {
     if (state.giftsClaimed.contains(id)) return false;
     await claimGift(id);
+    return true;
+  }
+
+  /// Writes a mistake into "আমার ভুলের খাতা" (one entry per key, newest last,
+  /// at most 200 kept).
+  Future<void> addMistake({
+    required String key,
+    required String lessonId,
+    required String rungId,
+    required String textBn,
+    required bool deadly,
+    int? lessonPoint,
+  }) async {
+    final old = state.mistakes.where((m) => m.key == key).toList();
+    final entry = MistakeEntry(
+      key: key,
+      lessonId: lessonId,
+      rungId: rungId,
+      textBn: textBn,
+      deadly: deadly,
+      atMs: DateTime.now().millisecondsSinceEpoch,
+      lessonPoint: lessonPoint,
+      count: old.isEmpty ? 1 : old.first.count + 1,
+    );
+    final list = [for (final m in state.mistakes) if (m.key != key) m, entry];
+    state = state.copyWith(mistakes: list.length > 200 ? list.sublist(list.length - 200) : list);
+    await _persist();
+  }
+
+  /// True the first time only: the game's first deadly mistake is a near-miss.
+  Future<bool> useNearMiss() async {
+    if (state.nearMissUsed) return false;
+    state = state.copyWith(nearMissUsed: true);
+    await _persist();
     return true;
   }
 

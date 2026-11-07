@@ -174,7 +174,8 @@ void main() {
       final second = ladder.rungs.firstWhere((r) => r.id == '1.1/do/1');
       expect(second.pack.engineType, 'glove_check');
       expect(doGameFor(second.pack), isNotNull);
-      final later = ladder.rungs.firstWhere((r) => r.id == '1.2/do/0');
+      // A lesson whose Do rungs are not rebuilt yet still opens its old level.
+      final later = ladder.rungs.firstWhere((r) => r.id == '1.7/do/0');
       expect(doGameFor(later.pack), isNull);
       expect(later.pack.legacyLevel, isNotNull);
     });

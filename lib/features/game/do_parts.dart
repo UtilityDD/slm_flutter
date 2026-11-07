@@ -364,11 +364,14 @@ class DoPulsePainter extends CustomPainter {
 }
 
 class DoBigButton extends StatelessWidget {
-  const DoBigButton({super.key, required this.label, required this.filled, required this.onTapUp});
+  const DoBigButton({super.key, required this.label, required this.filled, required this.onTapUp, this.onDark = false});
 
   final String label;
   final bool filled;
   final GestureTapUpCallback onTapUp;
+
+  /// An outline button on the dark level page (light text and border).
+  final bool onDark;
 
   @override
   Widget build(BuildContext context) {
@@ -384,9 +387,12 @@ class DoBigButton extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: filled ? null : Border.all(color: const Color(0x553A4660)),
+            border: filled ? null : Border.all(color: onDark ? SlmColors.gold300.withValues(alpha: 0.7) : const Color(0x553A4660), width: onDark ? 1.6 : 1),
+            color: !filled && onDark ? const Color(0x1AFFFFFF) : null,
           ),
-          child: Text(label, style: bangla(fontSize: 16, fontWeight: FontWeight.w900, color: filled ? Colors.white : SlmColors.ink)),
+          child: Text(label,
+              textAlign: TextAlign.center,
+              style: bangla(fontSize: 16, fontWeight: FontWeight.w900, color: filled || onDark ? Colors.white : SlmColors.ink)),
         ),
       ),
     );
@@ -395,9 +401,13 @@ class DoBigButton extends StatelessWidget {
 
 /// Someone rushing the player: the card shakes like a ringing phone, once.
 class DoCallCard extends StatelessWidget {
-  const DoCallCard({super.key, required this.caller, required this.quiet, required this.onAnswer});
+  const DoCallCard({super.key, required this.caller, required this.quiet, required this.onAnswer, this.rushBn, this.holdBn});
   final DoCaller caller;
   final bool quiet;
+
+  /// Button words; default "দেখার সময় নেই" / "আগে দেখুন".
+  final String? rushBn;
+  final String? holdBn;
   final void Function(bool heldCheck, Offset origin) onAnswer;
 
   @override
@@ -432,9 +442,9 @@ class DoCallCard extends StatelessWidget {
                   const SizedBox(height: 18),
                   Row(
                     children: [
-                      Expanded(child: DoBigButton(label: DoLines.rushOn, filled: false, onTapUp: (d) => onAnswer(false, d.globalPosition))),
+                      Expanded(child: DoBigButton(label: rushBn ?? DoLines.rushOn, filled: false, onTapUp: (d) => onAnswer(false, d.globalPosition))),
                       const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: DoLines.checkFirst, filled: true, onTapUp: (d) => onAnswer(true, d.globalPosition))),
+                      Expanded(child: DoBigButton(label: holdBn ?? DoLines.checkFirst, filled: true, onTapUp: (d) => onAnswer(true, d.globalPosition))),
                     ],
                   ),
                 ],

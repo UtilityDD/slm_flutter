@@ -1328,7 +1328,7 @@
       "lessonId": "1.2",
       "moduleId": "m1",
       "packId": "do_1_2_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 4
     },
     {
@@ -1337,7 +1337,7 @@
       "lessonId": "1.2",
       "moduleId": "m1",
       "packId": "do_1_2_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 5
     },
     {
@@ -1355,7 +1355,7 @@
       "lessonId": "1.3",
       "moduleId": "m1",
       "packId": "do_1_3_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 7
     },
     {
@@ -1364,7 +1364,7 @@
       "lessonId": "1.3",
       "moduleId": "m1",
       "packId": "do_1_3_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 8
     },
     {
@@ -1382,7 +1382,7 @@
       "lessonId": "1.4",
       "moduleId": "m1",
       "packId": "do_1_4_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 10
     },
     {
@@ -1391,7 +1391,7 @@
       "lessonId": "1.4",
       "moduleId": "m1",
       "packId": "do_1_4_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 11
     },
     {
@@ -1409,7 +1409,7 @@
       "lessonId": "1.5",
       "moduleId": "m1",
       "packId": "do_1_5_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 13
     },
     {
@@ -1418,7 +1418,7 @@
       "lessonId": "1.5",
       "moduleId": "m1",
       "packId": "do_1_5_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 14
     },
     {
@@ -1436,7 +1436,7 @@
       "lessonId": "1.6",
       "moduleId": "m1",
       "packId": "do_1_6_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 16
     },
     {
@@ -1445,7 +1445,7 @@
       "lessonId": "1.6",
       "moduleId": "m1",
       "packId": "do_1_6_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 17
     },
     {
@@ -4269,20 +4269,20 @@
     },
     {
       "id": "do_1_2_a",
-      "engineType": "dress_up",
+      "engineType": "distance_spot",
       "lessonId": "1.2",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 14
     },
     {
       "id": "do_1_2_b",
-      "engineType": "placeholder",
+      "engineType": "tool_tip",
       "lessonId": "1.2",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 15
@@ -4297,20 +4297,20 @@
     },
     {
       "id": "do_1_3_a",
-      "engineType": "dress_up",
+      "engineType": "pole_read",
       "lessonId": "1.3",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 11
     },
     {
       "id": "do_1_3_b",
-      "engineType": "placeholder",
+      "engineType": "pole_read",
       "lessonId": "1.3",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 12
@@ -4325,20 +4325,20 @@
     },
     {
       "id": "do_1_4_a",
-      "engineType": "dress_up",
+      "engineType": "harness_check",
       "lessonId": "1.4",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 4
     },
     {
       "id": "do_1_4_b",
-      "engineType": "placeholder",
+      "engineType": "harness_fit",
       "lessonId": "1.4",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 7
@@ -4353,20 +4353,20 @@
     },
     {
       "id": "do_1_5_a",
-      "engineType": "dress_up",
+      "engineType": "rod_pick",
       "lessonId": "1.5",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 6
     },
     {
       "id": "do_1_5_b",
-      "engineType": "placeholder",
+      "engineType": "discharge_order",
       "lessonId": "1.5",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 8
@@ -4381,20 +4381,20 @@
     },
     {
       "id": "do_1_6_a",
-      "engineType": "placeholder",
+      "engineType": "ptw_match",
       "lessonId": "1.6",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 16
     },
     {
       "id": "do_1_6_b",
-      "engineType": "placeholder",
+      "engineType": "ptw_steps",
       "lessonId": "1.6",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 23

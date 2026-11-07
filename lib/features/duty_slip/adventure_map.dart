@@ -15,6 +15,7 @@ import '../game/beat_fx.dart';
 import '../game/content_catalog.dart';
 import '../game/do_games.dart';
 import '../game/game_save.dart';
+import '../game/mistakes_book.dart';
 import '../game/ladder_builder.dart';
 import '../game/learn_board_models.dart';
 import '../game/learn_board_runner.dart';
@@ -197,6 +198,10 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     var focus =
         widget.engine.unlocked.clamp(0, math.max(0, maxPlayable - 1)).toInt();
     if (built != null) {
+      // After a death (fall option C) the climb resumes at the first Do level
+      // to prove again, whatever the old unlock counter says.
+      final prove = built.rungs.indexWhere((r) => save.rungProgress[r.id] == 'prove');
+      if (prove >= 0 && prove < focus) focus = prove;
       for (var i = 0; i < maxPlayable; i++) {
         final r = built.rungs[i];
         final cleared = save.rungProgress[r.id] == 'cleared';
@@ -917,11 +922,13 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
         return DeathMomentHost(
           deathKey: _deathKey,
           onSettled: () {
+            // Fall option C: the climb resumes at the first Do level to prove
+            // again (Learn rungs stay done), not at the module's first rung.
             final latestSave = ref.read(gameSaveProvider);
-            final checkpoint =
-                _legacyCheckpointIndex(latestSave.currentRungId, focus);
-            if (checkpoint != focus) {
-              unawaited(_softScrollToIndex(checkpoint));
+            final resume = _computeFocus(ref.read(builtLadderProvider).value, latestSave);
+            if (resume != focus) {
+              setState(() {});
+              unawaited(_softScrollToIndex(resume));
             }
           },
           child: ScoreFlyHost(
@@ -1043,13 +1050,18 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                               _isRungPlayable(i, built) && i < focus;
                           final cleared =
                               !soon && !cap && (learnCleared || bridgeCleared);
+                          final prove = !soon &&
+                              !cap &&
+                              rung != null &&
+                              save.rungProgress[rung.id] == 'prove';
                           return _MapBand(
                             index: i,
                             number: number,
                             soon: soon,
                             fog: fog,
                             cap: cap,
-                            cleared: cleared,
+                            cleared: cleared && !prove,
+                            prove: prove,
                             current: !soon && !cap && i == focus,
                             locked: !cap && (soon || i > openUpTo),
                             glow: glow,
@@ -1233,16 +1245,6 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
         );
       },
     );
-  }
-
-  /// Catalog module id `mN` / rung `N.x/...` → first legacy bridge index of that module.
-  int _legacyCheckpointIndex(String rungId, int fallback) {
-    final match = RegExp(r'^(\d+)\.').firstMatch(rungId);
-    if (match != null) {
-      final module = int.tryParse(match.group(1)!) ?? 1;
-      return ((module - 1) * 20).clamp(0, math.max(0, _playableLadderSpan - 1));
-    }
-    return (fallback ~/ 20) * 20;
   }
 }
 
@@ -1555,12 +1557,19 @@ class _TopHeader extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 8),
-          KeyedSubtree(
-            key: deathKey,
-            child: _ScoreChip(
-              mark: '💀',
-              value: enDigits('${save.deaths}'),
-              color: calm ? SlmColors.emerald300 : SoftDanger.ink,
+          // Tap the 💀 chip: "আমার ভুলের খাতা".
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const MistakesBookPage()),
+            ),
+            child: KeyedSubtree(
+              key: deathKey,
+              child: _ScoreChip(
+                mark: '💀',
+                value: enDigits('${save.deaths}'),
+                color: calm ? SlmColors.emerald300 : SoftDanger.ink,
+              ),
             ),
           ),
         ],
@@ -1680,6 +1689,9 @@ class _MapBand extends StatelessWidget {
   final bool fog;
   final bool cap;
   final bool cleared;
+
+  /// Passed before the last death: must be proven again (fall option C).
+  final bool prove;
   final bool current;
   final bool locked;
   final Animation<double> glow;
@@ -1708,6 +1720,7 @@ class _MapBand extends StatelessWidget {
     required this.fog,
     required this.cap,
     required this.cleared,
+    this.prove = false,
     required this.current,
     required this.locked,
     required this.glow,
@@ -1800,6 +1813,7 @@ class _MapBand extends StatelessWidget {
                     number: number,
                     soon: soon,
                     cleared: cleared,
+                    prove: prove,
                     current: current,
                     locked: locked,
                     kind: kind,
@@ -2241,10 +2255,21 @@ class _GoldenLadderPainter extends CustomPainter {
       oldDelegate.fog != fog || oldDelegate.cap != cap;
 }
 
+const _noFilter = ColorFilter.mode(Color(0x00000000), BlendMode.dst);
+
+/// Grey-silver: luminance with a cool tint.
+const _silverFilter = ColorFilter.matrix(<double>[
+  0.25, 0.60, 0.10, 0, 18, //
+  0.25, 0.60, 0.10, 0, 22, //
+  0.25, 0.60, 0.10, 0, 30, //
+  0, 0, 0, 1, 0,
+]);
+
 class _LevelCoin extends StatefulWidget {
   final int number;
   final bool soon;
   final bool cleared;
+  final bool prove;
   final bool current;
   final bool locked;
   final CatalogRungKind kind;
@@ -2255,6 +2280,7 @@ class _LevelCoin extends StatefulWidget {
     required this.number,
     required this.soon,
     required this.cleared,
+    this.prove = false,
     required this.current,
     required this.locked,
     required this.kind,
@@ -2335,7 +2361,10 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final bronze = widget.soon || (widget.locked && !widget.current);
+    // A level to prove again stays visible in silver (with a ↻ badge) even
+    // above the climber, so the fall after a death reads at a glance.
+    final silver = widget.prove && !widget.soon && !widget.current;
+    final bronze = !silver && (widget.soon || (widget.locked && !widget.current));
     final gate = widget.kind == CatalogRungKind.gate;
     final learn = widget.kind == CatalogRungKind.learn;
     final current = widget.current && !bronze;
@@ -2386,16 +2415,35 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
       ),
       child: Stack(
         alignment: Alignment.center,
+        clipBehavior: Clip.none,
         children: [
-          Image.asset(
-            asset,
-            width: size,
-            height: size,
-            cacheWidth: 180,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
-            gaplessPlayback: true,
+          ColorFiltered(
+            colorFilter: silver ? _silverFilter : _noFilter,
+            child: Image.asset(
+              silver ? 'assets/duty_slip/world3d/coin_cleared_3d.webp' : asset,
+              width: size,
+              height: size,
+              cacheWidth: 180,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.medium,
+              gaplessPlayback: true,
+            ),
           ),
+          if (widget.prove && !widget.soon)
+            Positioned(
+              right: -3,
+              top: -3,
+              child: Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFDDE3EA),
+                  border: Border.all(color: const Color(0xFF6B7682), width: 1.2),
+                ),
+                child: const Icon(Icons.replay_rounded, size: 12, color: Color(0xFF2B3440)),
+              ),
+            ),
           Text(
             enDigits('${widget.number}'),
             style: zlText(

@@ -11,7 +11,7 @@ broken at the baseline listed in KNOWN_BROKEN.
 import os, re, sys, json
 
 root = sys.argv[1]
-EXT = r'(?:webp|jpg|jpeg|png|gif|mp3|wav|ogg|json|ttf|riv|lottie)'
+EXT = r'(?:webp|jpg|jpeg|png|gif|svg|mp3|wav|ogg|json|ttf|riv|lottie)'
 LIT = re.compile(r"""['"]((?:assets/)?(?:sounds|duty_slip|zero_loss|safety|quizzes|lineman|brand|data|game|fonts)/[^'"$\s]*?\.""" + EXT + r""")['"]""")
 JSON_LIT = re.compile(r'"((?:assets/)[^"$\s]*?\.' + EXT + r')"')
 # Known broken before this change (reported, not caused here)
