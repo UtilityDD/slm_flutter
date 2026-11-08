@@ -29,8 +29,8 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 | 2 | 1.1 কাজ 1 | কবচ যাচাই — clothes & boots from the store | choose + inspect + say no | wearing polyester; boot with a nail in the sole | ✅ on the shared kit (2026-11-08): drawn store room, reason deck, coworker; deaths not wired yet |
 | 3 | 1.1 কাজ 2 | গ্লাভস যাচাই — rubber gloves air test (+ helmet torch sweep: proposed) | inspect + choose + say no | packing a pinholed / cotton glove | ✅ on the shared kit (2026-11-08): drawn van yard, air test, reason deck, coworker; helmet station 🆕 |
 | 4 | 1.2 শেখা | লক্ষ্মণ রেখা | choose | — | ✅ picture board (2026-11-08) |
-| 5 | 1.2 কাজ 1 | কতটা দূরে? — judge safe distance by voltage | spot | standing / tool tip inside the line's distance | ✅ built (2026-11-07) |
-| 6 | 1.2 কাজ 2 | লম্বা টুলের ডগা — hot stick vs bamboo vs PVC jugaad | choose + spot + say no | bamboo / PVC on a live line; tool tip inside | ✅ built (2026-11-07) |
+| 5 | 1.2 কাজ 1 | কতটা দূরে? — judge safe distance by voltage | spot (drag the band) | standing / tool tip inside the line's distance | ✅ built (2026-11-07) · on the shared kit (2026-11-08) |
+| 6 | 1.2 কাজ 2 | লম্বা টুলের ডগা — hot stick vs bamboo vs PVC jugaad | choose + drag the tip + say no | bamboo / PVC on a live line; tool tip inside | ✅ built (2026-11-07) · on the shared kit (2026-11-08) |
 | 7 | 1.3 শেখা | পোলের ভাষা | choose | — | text deck ♻️ → picture board 🆕 |
 | 8 | 1.3 কাজ 1 | ৩৬০° পোল পাঠ — PCC pole: base, lean, cracks, sound test | inspect + spot | climbing a condemned pole | ✅ built (2026-11-07) |
 | 9 | 1.3 কাজ 2 | স্টিলের ক্যান্সার — steel pole rust at ground level, hardware | inspect + spot | climbing a rusted-through pole | ✅ built (2026-11-07) |
@@ -71,8 +71,8 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 
 ### 1.2 লক্ষ্মণ রেখা (steps 4–6)
 - **Teaches:** arc flash jumps without touching; minimum distances LT 1.2 m · 11 kV 2.5 m · 33 kV 3.0 m; more in rain/fog/wind/height; a long tool's tip counts as your hand; judge distance by a man's height (~5.5 ft); PVC/bamboo jugaad is not a hot stick.
-- **Step 5 কতটা দূরে?** 🆕 Spot: a street/market photo with a line of known voltage; workers, a ladder, a kite-flying child at different distances — tap who is inside the line's distance. A "man-height" ruler appears as the measuring hint. Rain variant: the safe distance grows.
-- **Step 6 লম্বা টুলের ডগা** 🆕 Choose the tool (tested fibreglass hot stick vs dry bamboo vs PVC pipe with metal hook vs aluminium ladder), then spot whether its tip stays outside. Pressure: "শুকনো বাঁশ তো, চলবে".
+- **Step 5 কতটা দূরে?** 🆕 Spot: a street with a line of known voltage (its plate on the pole); workers on a ladder, a roof, with a pole, a boom — the player drags the লক্ষ্মণ রেখা out from the wire; only its distance shows (মি · ফুট), no target and no hint. Everyone under its edge is stopped. The real band and its rule show only after the check (as the hint after a mistake). Rain variant: 11 kV grows to 10–12 ft. *(Owner approved 2026-11-08: no man-height ruler, the hint only on failure.)*
+- **Step 6 লম্বা টুলের ডগা** 🆕 Choose the tool (tested fibreglass hot stick vs dry bamboo vs PVC pipe with metal hook), then drag the stick's tip (only its distance shows) to bring the kite down — or call শাটডাউন when the kite is inside. Pressure: the careless coworker peeps in, "শুকনো বাঁশ তো, চলবে".
 - **Deadly:** entering the distance; bamboo/PVC near a live line.
 - **Assets:** existing `bg_market_wire_down`, `pole14_*` (crowd, cones), `bamboo_ladder`, `FRP_Ladder`; mistake pictures `arc_flash`, `safe_distance`, `bamboo_vs_hot_stick`, `corona`.
 - **Promise:** keep a long tool's tip outside the লক্ষ্মণ রেখা.

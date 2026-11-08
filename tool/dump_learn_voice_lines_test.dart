@@ -11,6 +11,7 @@ import 'package:slm_flutter/features/duty_slip/duty_slip_voice.dart';
 import 'package:slm_flutter/features/game/fire_choose.dart';
 import 'package:slm_flutter/features/game/fire_pass.dart';
 import 'package:slm_flutter/features/game/glove_check.dart';
+import 'package:slm_flutter/features/game/tool_tip.dart';
 import 'package:slm_flutter/features/game/kit_check.dart';
 import 'package:slm_flutter/features/game/learn_board_models.dart';
 import 'package:slm_flutter/features/game/learn_feedback_lines.dart';
@@ -101,7 +102,7 @@ void main() {
       rival.add(enDigits(l).trim());
     }
     // Steps 2–3: the careless coworker's pushes in his own voice.
-    for (final c in [KitLines.coworkerHurry, KitLines.coworkerVan, GloveLines.coworkerNew, GloveLines.coworkerTrip]) {
+    for (final c in [KitLines.coworkerHurry, KitLines.coworkerVan, GloveLines.coworkerNew, GloveLines.coworkerTrip, ToolTipLines.coworker]) {
       for (final l in c.recordedLines) {
         rival.add(enDigits(l).trim());
       }

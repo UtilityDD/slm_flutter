@@ -12,27 +12,39 @@ import '../guide/guide_director.dart';
 import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'beat_fx.dart';
-import 'distance_spot.dart' show StreetGeo, distanceFor, paintWireAndRuler;
+import 'choice_deck.dart';
+import 'coworker_moment.dart';
+import 'distance_spot.dart' show ArcJumpPainter, StreetBackdrop, StreetGeo, distanceFor, paintWireAndRuler;
 import 'do_parts.dart';
+import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
+import 'level_juice.dart' show FreezeFrame, freezeFilter;
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
+import 'reason_table.dart';
 import 'rod_pick.dart' show RodRating, RodRatingText;
+import 'scene_kit.dart' show GuideIntro;
 import 'spoken_once.dart';
 
 // Lesson 1.2, কাজ 2: "লম্বা টুলের ডগা". A kite is caught in a tree near a live
 // line. First pick the tool: only the tested fibreglass hot stick (dry
 // bamboo and the PVC pipe with a metal hook are not insulators you can
-// trust). Then judge: if the kite is outside the লক্ষ্মণ রেখা, reach it — the
-// tip stays outside; if it is inside, the tip would be inside too, so the only
-// right answer is "শাটডাউন চাই". Once, a helper pushes "শুকনো বাঁশ তো, চলবে".
+// trust). Then, hands on: drag the stick's tip — only its distance from the
+// wire shows — and bring the kite down, or call "শাটডাউন চাই". If the kite is
+// inside the লক্ষ্মণ রেখা the tip would be inside too, so the only right answer
+// is the shutdown. Once, the careless coworker (level 1's rival, his recorded
+// voice) peeps in: "শুকনো বাঁশ তো, চলবে!".
+// Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
+// scene, corner guide, ◆ on the table → "কেন …?" (the tool once, every
+// decision) → next kite by itself.
 //
-// Deadly (owner-approved list): bamboo / PVC near a live line; the tool tip
-// inside the distance. Slip: asking for a shutdown that was not needed.
+// Deadly (owner-approved list): bamboo / PVC near a live line (also by
+// listening to him); the tool tip resting inside the distance. Slip: asking
+// for a shutdown that was not needed (then the kite is still to do).
 //
 // Voice: device TTS only. The street art is shared with কাজ 1; tools, tree
 // and kite are drawn in code to scale.
@@ -70,26 +82,81 @@ abstract final class ToolTipLines {
   /// What the guide repeats (a different way each time) when tapped.
   static const tasks = [askTool, askReach];
 
+  /// The hands-on reach: only the tip's distance from the wire shows.
+  static const stickLabel = 'হট স্টিক';
+  static String tipReadout(double m) => 'ডগা: ${m.toStringAsFixed(1)} মি · ${(m * 3.281).round()} ফুট';
+
+  // The reasons (lesson 1.2): one right, two wrong, all about the same length.
+  static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
+  static const toolAsk = 'কেন হট স্টিক নিলেন?';
+  static const toolRight = [
+    'ফাইবারগ্লাস হট স্টিকই বিদ্যুৎ আটকায়',
+    'শুকনো বাঁশেও ভেতরের আর্দ্রতা বিদ্যুৎ টানে',
+    'পিভিসি জুগাড় ফাটে, ভিজে গিয়ে লিক করে',
+  ];
+  static const toolWrong = [
+    'বাঁশ শুকনো হলে লাইনের কাছে কোনো ভয় নেই',
+    'প্লাস্টিকের পাইপ তো কারেন্ট আটকায়ই',
+    'যে টুল যত লম্বা, সেটা তত বেশি নিরাপদ',
+    'হট স্টিক ভারী, তাই বাঁশেই কাজ সহজ',
+    'হাতে গ্লাভস থাকলে যে কোনো টুলই চলে',
+  ];
+  static const reachAsk = 'কেন ডগা দিয়ে নামালেন?';
+  static const reachRight = [
+    'ঘুড়ি রেখার বাইরে, তাই ডগাও বাইরে থাকে',
+    'ডগা লক্ষ্মণ রেখার বাইরে থাকলে নিরাপদ',
+  ];
+  static const shutAsk = 'কেন শাটডাউন চাইলেন?';
+  static const shutRight = [
+    'ঘুড়ি রেখার ভেতরে, ডগাও ভেতরে ঢুকত',
+    'রেখার ভেতরে কাজ মানেই লাইন বন্ধ চাই',
+  ];
+  static const decideWrong = [
+    'টুল লম্বা হলে রেখা মানার দরকার নেই',
+    'ডগা একটু ভেতরে গেলে কিছুই হয় না',
+    'তাড়াতাড়ি সারলে দূরত্ব না মানলেও চলে',
+    'ঘুড়ি তো কাগজের, তাতে কারেন্ট আসে না',
+    'লাইন বন্ধ চাইলে লোকে রাগ করবে, তাই',
+  ];
+
+  /// The careless coworker (his recorded voice) pushes the dry bamboo.
+  static const coworkerExit = 'হুঁ! যা খুশি করুন।';
+  static const coworker = CoworkerScript(
+    line: helperLine,
+    exitLine: coworkerExit,
+    right: [
+      'না — হট স্টিক এনেই কাজ করব',
+      'বাঁশ নয়, পরীক্ষিত হট স্টিক আনি',
+      'গাড়ি দূরে হোক, হট স্টিকই আনব',
+    ],
+    wrong: [
+      'ঠিক, শুকনো বাঁশই নিয়ে নিই',
+      'বাঁশ তো শুকনো, এতেই চলবে',
+      'পিভিসি পাইপটাই নিই তাহলে',
+      'একবার বাঁশ দিয়ে চেষ্টা করি',
+      'সবাই তো বাঁশ দিয়েই নামায়',
+    ],
+    asks: [
+      'ও বলছে বাঁশেই চলবে। আপনি কী করবেন?',
+      'বাঁশ নেবেন, না হট স্টিক আনবেন?',
+      'কার কথা শুনবেন — ওর, না নিয়মের?',
+    ],
+  );
+
+
   static const title = 'লম্বা টুলের ডগা';
   static const intro = 'লাইভ লাইনের পাশে গাছে ঘুড়ি আটকেছে। হাতে লম্বা টুল নিলে তার ডগাও আপনার হাত।';
   static const rounds = ['প্রথম', 'দ্বিতীয়', 'শেষ'];
   static const askTool = 'কোন টুল নেবেন?';
-  static const askReach = 'ডগা কি রেখার বাইরে থাকবে? সরাবেন, না শাটডাউন?';
-  static const reach = 'ডগা দিয়ে সরাই';
+  static const askReach = 'ডগা টেনে ঘুড়ি নামাবেন, না শাটডাউন চাইবেন?';
   static const shutdown = 'শাটডাউন চাই';
-  static const next = 'পরের কাজ';
-  static const finish = 'ফলাফল';
-  static const ruler = 'মাপকাঠি: একজন মানুষ প্রায় 5.5 ফুট';
   static String scene(KiteRound r) => '${r.line.lineBn} লাইন · গাছে আটকানো ঘুড়ি';
   static String band(KiteRound r) => switch (r.line) {
         RodRating.lt => 'এলটি: কমপক্ষে 1.2 মিটার (প্রায় 4 ফুট)',
         RodRating.kv11 => '11 কেভি: কমপক্ষে 2.5 মিটার (প্রায় 8 ফুট)',
         RodRating.kv33 => '33 কেভি: কমপক্ষে 3.0 মিটার (প্রায় 10 ফুট)',
       };
-  static const helperWho = 'সাথী হেল্পার';
   static const helperLine = 'শুকনো বাঁশ তো, চলবে! হট স্টিক আনতে গাড়ি পর্যন্ত কে যাবে?';
-  static const giveIn = 'ঠিক, বাঁশই নিই';
-  static const holdOut = 'না, হট স্টিক আনি';
   static const callHeld = 'ঠিক! শুকনো বাঁশও বিদ্যুৎ টানে।';
   static const toolOk = [FeedbackLine('ফাইবারগ্লাস — ঠিক টুল।'), FeedbackLine('পরীক্ষিত হট স্টিক!'), FeedbackLine('এটাই।')];
   static const reachOk = 'ডগা রেখার বাইরে — ঘুড়ি নামল।';
@@ -129,7 +196,7 @@ abstract final class ToolTipMistakes {
   );
   static const needlessShutdown = DoMistake(
     key: '1.2/tool/needless-shutdown',
-    textBn: 'ঘুড়িটা রেখার বাইরেই ছিল — ডগাও বাইরে থাকত। মাপকাঠি দিয়ে মেপে তবে শাটডাউন চান।',
+    textBn: 'ঘুড়িটা রেখার বাইরেই ছিল — ডগাও বাইরে থাকত। কোন লাইনে কত দূর, পাঠে দেখে নিন।',
     art: 'assets/game/art/distance/man_ruler.svg',
     lessonPoint: 1,
   );
@@ -192,17 +259,30 @@ class KiteRun {
     }
   }
 
+  /// The tip comes to rest [tipGapM] below the wire: inside the distance is
+  /// deadly (null = safe there).
+  DoMistake? restTip(double tipGapM) {
+    if (ended || phase != KitePhase.decide) return null;
+    if (tipGapM < current.distanceM) return deadly = ToolTipMistakes.tipInside;
+    return null;
+  }
+
   /// Reach (true) or ask for a shutdown (false). Returns the mistake, if any.
+  /// A needless shutdown is a slip and the kite is still to do.
   DoMistake? decide({required bool reach}) {
     if (ended || phase != KitePhase.decide) return null;
-    reached = reach;
-    phase = KitePhase.shown;
     final r = current;
-    if (reach && r.inside) return deadly = ToolTipMistakes.tipInside;
+    if (reach && r.inside) {
+      reached = reach;
+      phase = KitePhase.shown;
+      return deadly = ToolTipMistakes.tipInside;
+    }
     if (!reach && !r.inside) {
       slips++;
       return ToolTipMistakes.needlessShutdown;
     }
+    reached = reach;
+    phase = KitePhase.shown;
     final tag = reach ? ToolTipLines.caughtReach : ToolTipLines.caughtShut;
     if (!caught.contains(tag)) caught.add(tag);
     return null;
@@ -273,7 +353,7 @@ class _ToolTipRun extends ConsumerStatefulWidget {
   ConsumerState<_ToolTipRun> createState() => _ToolTipRunState();
 }
 
-class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoStrikeOut {
+class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoStrikeOut, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
   late final KiteRun _run = KiteRun(dealKites(widget.rng));
   final _clock = Stopwatch();
@@ -286,8 +366,6 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
   /// The guide's full-screen intro is up; the game starts when it is done.
   var _intro = true;
   int _chain = 0;
-  var _callOpen = false;
-  var _callDone = false;
   DoMistake? _card;
   MistakeTone _cardTone = MistakeTone.slip;
   var _busy = false;
@@ -295,29 +373,32 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
   var _passed = false;
   var _popped = false;
   var _quickBonus = false;
+  var _freeze = false;
+  Completer<void>? _frozen;
   int? _mark;
   int _totalDelta = 0;
+
+  /// The stick's tip under the finger (design px), while dragging.
+  Offset? _tip;
+  final _nudge = TaskNudge();
+  int _nudgeN = 0;
 
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void dispose() {
+    disposeCoworker();
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     super.dispose();
   }
 
-  Future<void> _say(String line, {GuideMood mood = GuideMood.talk, bool other = false}) async {
+  Future<void> _say(String line, {GuideMood mood = GuideMood.talk}) async {
     if (line.trim().isEmpty || !mounted) return;
-    if (!other) ref.read(guideDirectorProvider.notifier).say(mood: mood, line: line);
-    await MascotSpeechLibrary.speak(line, muted: _muted, rival: other);
+    ref.read(guideDirectorProvider.notifier).say(mood: mood, line: line);
+    await MascotSpeechLibrary.speak(line, muted: _muted);
   }
 
   Future<void> _sayChain(List<String> lines, {GuideMood mood = GuideMood.talk}) async {
@@ -333,41 +414,21 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
     unawaited(MascotSpeechLibrary.stop());
   }
 
-  /// After the guide's intro: the clock runs and play begins.
+  String get _task => _run.phase == KitePhase.decide ? ToolTipLines.askReach : ToolTipLines.askTool;
+
+  /// After the guide's intro: the clock runs and he gives the first task.
   Future<void> _start() async {
     _clock.start();
-    _maybeCall();
+    scheduleCoworker();
+    await _sayChain([ToolTipLines.askTool]);
   }
 
-  bool _maybeCall() {
-    if (_callDone || _run.ended || _run.round != _run.deal.callRound || _run.phase != KitePhase.tool) return false;
-    _hush();
-    HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/complaint.wav', volume: 0.8, muted: false));
-    setState(() => _callOpen = true);
-    unawaited(_say(ToolTipLines.helperLine, other: true));
-    return true;
-  }
-
-  Future<void> _answerCall(bool held, Offset origin) async {
-    if (!_callOpen) return;
-    _hush();
-    setState(() {
-      _callOpen = false;
-      _callDone = true;
-    });
-    if (!held) {
-      _run.deadly = ToolTipMistakes.bamboo;
-      await _deadly(ToolTipMistakes.bamboo);
-      return;
-    }
-    _run.caught.add(ToolTipLines.caughtCall);
-    unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
-    await _sayChain([ToolTipLines.callHeld, ToolTipLines.askTool], mood: GuideMood.glad);
-  }
+  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen;
 
   void _pickTool(LongTool t, Offset origin) {
-    if (_busy || _ended || _callOpen || _card != null || _run.phase != KitePhase.tool) return;
+    // Taking the hot stick while he is still talking refuses him too.
+    if (coworkerOpen && !coworkerChoiceUp && t == LongTool.hotStick) unawaited(answerCoworker(true, origin, direct: true));
+    if (_blocked || coworkerOpen || _run.phase != KitePhase.tool) return;
     HapticFeedback.selectionClick();
     final m = _run.pickTool(t);
     if (m != null) {
@@ -375,45 +436,167 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
       return;
     }
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: false));
+    if (_run.round == 0) {
+      // The first time: "কেন হট স্টিক?" — the ◆ wait on the table.
+      putOnTable(10);
+      unawaited(askReason(
+        deal: () => dealChoices(ToolTipLines.toolRight, ToolTipLines.toolWrong, widget.rng),
+        question: ToolTipLines.toolAsk,
+      ));
+      return;
+    }
     unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
     setState(() {});
     unawaited(_sayChain([_toolBag.next().shownBn, ToolTipLines.askReach], mood: GuideMood.glad));
   }
 
+  // --- the hands-on reach: drag the tip ---------------------------------------
+  bool get _canReach => !_blocked && _run.phase == KitePhase.decide;
+
+  void _dragTip(Offset p) {
+    if (!_canReach) return;
+    final tip = Offset(p.dx.clamp(60.0, 350.0), p.dy.clamp(StreetGeo.lineY + 4, StreetGeo.groundY - 60));
+    if (_tip == null) HapticFeedback.selectionClick();
+    setState(() => _tip = tip);
+  }
+
+  /// The finger lets go: the tip rests where it is. Inside the distance is
+  /// deadly; on the kite (outside) the kite comes down; elsewhere the stick
+  /// goes back.
+  Future<void> _releaseTip(Offset origin) async {
+    final tip = _tip;
+    if (tip == null || !_canReach) {
+      if (_tip != null) setState(() => _tip = null);
+      return;
+    }
+    final gap = (tip.dy - StreetGeo.lineY) / StreetGeo.ppm;
+    final m = _run.restTip(gap);
+    if (m != null) {
+      await _deadly(m);
+      return;
+    }
+    if ((tip - _KiteScene.kiteAt(_run.current)).distance <= 30) {
+      setState(() => _tip = null);
+      await _decide(true, origin);
+      return;
+    }
+    setState(() => _tip = null);
+  }
+
   Future<void> _decide(bool reach, Offset origin) async {
-    if (_busy || _ended || _card != null || _run.phase != KitePhase.decide) return;
+    if (!_canReach) return;
     _hush();
     final m = _run.decide(reach: reach);
     HapticFeedback.mediumImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.5, muted: false));
     setState(() {});
-    final quiet = MediaQuery.disableAnimationsOf(context);
     if (m == null) {
-      unawaited(_levelDelta(15, origin, mood: GuideMood.glad));
-      unawaited(_sayChain([reach ? ToolTipLines.reachOk : ToolTipLines.shutOk], mood: GuideMood.glad));
+      // Right: the ◆ wait on the table, then "কেন …?".
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+      putOnTable(15);
+      final round = _run.round;
+      unawaited(askReason(
+        deal: () => dealChoices(reach ? ToolTipLines.reachRight : ToolTipLines.shutRight, ToolTipLines.decideWrong, widget.rng),
+        question: reach ? ToolTipLines.reachAsk : ToolTipLines.shutAsk,
+        stillValid: () => _run.round == round && !_ended,
+      ));
+      return;
+    }
+    if (m.deadly) {
+      await _deadly(m);
       return;
     }
     _busy = true;
-    await Future<void>.delayed(quiet ? Duration.zero : const Duration(milliseconds: 1100));
+    await Future<void>.delayed(MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 700));
     _busy = false;
     if (!mounted) return;
-    if (m.deadly) {
-      await _deadly(m);
-    } else {
-      unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
-      await _slip(m);
-    }
+    unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
+    await _slip(m);
   }
 
+  /// Next kite (or the result) — by itself, after the reason.
   void _next() {
-    if (_busy || _card != null || _run.phase != KitePhase.shown) return;
     _run.next();
     if (_run.done) {
       unawaited(_finish());
       return;
     }
-    setState(() {});
-    if (!_maybeCall()) unawaited(_sayChain([ToolTipLines.askTool]));
+    setState(() => _tip = null);
+    scheduleCoworker();
+    unawaited(_sayChain([ToolTipLines.askTool]));
+  }
+
+  // --- the shared success beat (ReasonTable) ---------------------------------
+  @override
+  bool get reasonMuted => _muted;
+  @override
+  bool get reasonEnded => _ended;
+  @override
+  Future<void> reasonSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void reasonHush() => _hush();
+  @override
+  Future<void> reasonScore(int delta, Offset origin, {GuideMood? mood}) => _levelDelta(delta, origin, mood: mood);
+  @override
+  void onReasonPaid() {
+    if (_run.phase == KitePhase.decide) {
+      // The tool's reason: now the kite.
+      setState(() {});
+      unawaited(_sayChain([ToolTipLines.askReach]));
+    } else {
+      _next();
+    }
+  }
+
+  // --- the shared pressure moment (CoworkerMoment) ----------------------------
+  @override
+  CoworkerScript get coworkerScript => ToolTipLines.coworker;
+  @override
+  math.Random get coworkerRng => widget.rng;
+  @override
+  bool get coworkerMuted => _muted;
+  @override
+  bool? coworkerCanCome() {
+    if (_ended || _run.round != _run.deal.callRound || _run.phase != KitePhase.tool) return null;
+    if (_blocked) return false;
+    return true;
+  }
+
+  @override
+  Future<void> coworkerGuideSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void coworkerHush() => _hush();
+
+  @override
+  Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
+    if (!held) {
+      // Took the dry bamboo near a live line.
+      _run.deadly = ToolTipMistakes.bamboo;
+      await _deadly(ToolTipMistakes.bamboo);
+      return;
+    }
+    _run.caught.add(ToolTipLines.caughtCall);
+    unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
+    if (direct) return;
+    final chain = _chain;
+    unawaited(() async {
+      await coworkerSnarl();
+      if (!mounted || chain != _chain) return;
+      await _sayChain([ToolTipLines.callHeld, ToolTipLines.askTool], mood: GuideMood.glad);
+    }());
+  }
+
+  /// Tap the guide: the task again, a different way each time.
+  void _tapGuide() {
+    if (_intro || _ended) return;
+    final String line = coworkerOpen
+        ? nextCoworkerAsk()
+        : reasonOpen
+            ? ToolTipLines.tapWhy[_nudgeN++ % ToolTipLines.tapWhy.length]
+            : _nudge.next(_task);
+    HapticFeedback.selectionClick();
+    if (!_muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.5, muted: false));
+    unawaited(_sayChain([line]));
   }
 
   /// The third small mistake: the level fails and the lesson card insists.
@@ -444,6 +627,7 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
     await _sayChain([speak ? m.textBn : _wrongBag.next().shownBn], mood: GuideMood.warn);
   }
 
+  /// A deadly move: the street freezes grey, then the card.
   Future<void> _deadly(DoMistake m) async {
     if (_ended) return;
     _ended = true;
@@ -451,6 +635,11 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.9, muted: false));
+    final frozen = _frozen = Completer<void>();
+    setState(() => _freeze = true);
+    await frozen.future;
+    if (!mounted) return;
     if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
@@ -468,6 +657,7 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
       case MistakeTone.slip:
         _hush();
         setState(() => _card = null);
+        unawaited(_sayChain([ToolTipLines.askReach]));
       case MistakeTone.nearMiss:
         _hush();
         widget.onRetry(_muted);
@@ -539,8 +729,14 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
   @override
   Widget build(BuildContext context) {
     final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
+    final size = MediaQuery.sizeOf(context);
+    final pad = MediaQuery.paddingOf(context);
     final r = _run.current;
     final phase = _run.phase;
+    final playing = !_intro && _mark == null && !struckOut && !_freeze;
+    final deckUp = reasonOpen || coworkerChoiceUp;
+    final trayUp = playing && phase == KitePhase.tool && !reasonOpen && !coworkerChoiceUp;
+    final callUp = playing && phase == KitePhase.decide && _card == null && !reasonOpen && _tip == null;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -550,97 +746,99 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
         backgroundColor: SlmColors.navy950,
         body: ScoreFlyHost(
           scoreKey: _scoreKey,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              SafeArea(
-                child: Column(
-                  children: [
-                    LevelShellBar(
-                      context_: widget.ctx,
-                      titleBn: widget.pack.titleBn,
-                      scoreKey: _scoreKey,
-                      levelScore: _runScore,
-                      muted: _muted,
-                      onClose: () => unawaited(_leave()),
-                      onToggleMute: () {
-                        unawaited(MascotSpeechLibrary.stop());
-                        setState(() => _muted = !_muted);
-                      },
-                    ),
-                    DoProgress(
-                      labels: ToolTipLines.rounds,
-                      done: {for (var i = 0; i < math.min(_run.round, 3); i++) i},
-                      current: _run.done ? null : _run.round,
+          child: FullSceneFrame(
+            ctx: widget.ctx,
+            titleBn: widget.pack.titleBn,
+            scoreKey: _scoreKey,
+            levelScore: _runScore,
+            muted: _muted,
+            onClose: () => unawaited(_leave()),
+            onToggleMute: () {
+              unawaited(MascotSpeechLibrary.stop());
+              setState(() => _muted = !_muted);
+            },
+            progress: DoProgress(
+              labels: ToolTipLines.rounds,
+              done: {for (var i = 0; i < math.min(_run.round, 3); i++) i},
+              current: _run.done ? null : _run.round,
+              quiet: quiet,
+            ),
+            layers: (context, m) {
+              final top = StreetGeo.topIn(m.height);
+              return [
+                Positioned.fill(
+                  key: const ValueKey('sky'),
+                  child: ColorFiltered(
+                    colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
+                    child: StreetBackdrop(streetTop: top),
+                  ),
+                ),
+                Positioned(
+                  key: const ValueKey('street'),
+                  left: 0,
+                  top: top,
+                  width: StreetGeo.size.width,
+                  height: StreetGeo.size.height,
+                  child: ColorFiltered(
+                    colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
+                    child: _KiteScene(
+                      key: ValueKey('kite-${_run.round}'),
+                      round: r,
+                      holding: phase != KitePhase.tool,
+                      reached: _run.reached,
+                      reveal: phase == KitePhase.shown || (_card != null && _cardTone == MistakeTone.slip),
+                      tip: _tip,
                       quiet: quiet,
+                      onDrag: _dragTip,
+                      onRelease: () => unawaited(_releaseTip(Offset(size.width / 2, size.height / 2))),
                     ),
-                    const SizedBox(height: 6),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: SizedBox.fromSize(
-                              size: StreetGeo.size,
-                              child: _KiteScene(
-                                key: ValueKey('kite-${_run.round}'),
-                                round: r,
-                                holding: phase != KitePhase.tool,
-                                reached: _run.reached,
-                                reveal: phase == KitePhase.shown,
-                                quiet: quiet,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (_mark == null)
-                      SizedBox(
-                        height: 92,
-                        child: switch (phase) {
-                          KitePhase.tool => _ToolTray(
-                              key: ValueKey('tray-${_run.round}'),
-                              tools: r.tools,
-                              quiet: quiet,
-                              onPick: _pickTool,
-                            ),
-                          KitePhase.decide => Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                              child: Row(
-                                children: [
-                                  Expanded(child: DoBigButton(label: ToolTipLines.shutdown, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: DoBigButton(label: ToolTipLines.reach, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
-                                ],
-                              ),
-                            ),
-                          KitePhase.shown => Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                              child: DoBigButton(
-                                label: _run.round >= _run.deal.rounds.length - 1 ? ToolTipLines.finish : ToolTipLines.next,
-                                filled: true,
-                                onTapUp: (_) => _next(),
-                              ),
-                            ),
-                        },
-                      ),
-                    Opacity(opacity: _card == null && !_callOpen ? 1 : 0, child: DoCoachStrip(tasks: ToolTipLines.tasks, muted: _muted)),
-                    const SizedBox(height: 6),
-                  ],
+                  ),
                 ),
-              ),
-              if (_callOpen)
-                DoCallCard(
-                  caller: const DoCaller(id: 'helper', whoBn: ToolTipLines.helperWho, lineBn: ToolTipLines.helperLine, icon: Icons.engineering_rounded),
-                  quiet: quiet,
-                  rushBn: ToolTipLines.giveIn,
-                  holdBn: ToolTipLines.holdOut,
-                  onAnswer: (held, o) => unawaited(_answerCall(held, o)),
+                // The tip rested inside: the arc jumps to it.
+                if (_freeze && _tip != null)
+                  Positioned(
+                    key: const ValueKey('arc'),
+                    left: 0,
+                    top: top,
+                    width: StreetGeo.size.width,
+                    height: StreetGeo.size.height,
+                    child: IgnorePointer(child: CustomPaint(painter: ArcJumpPainter(_tip!))),
+                  ),
+              ];
+            },
+            overlays: [
+              ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
+              if (trayUp)
+                Positioned(
+                  key: const ValueKey('hud-tray'),
+                  left: 0,
+                  right: 0,
+                  bottom: pad.bottom + 12,
+                  height: 92,
+                  child: _ToolTray(key: ValueKey('tray-${_run.round}'), tools: r.tools, quiet: quiet, onPick: _pickTool),
                 ),
+              if (callUp)
+                Positioned(
+                  key: const ValueKey('hud-call'),
+                  left: 16,
+                  right: 136,
+                  bottom: pad.bottom + 22,
+                  child: DoBigButton(label: ToolTipLines.shutdown, filled: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition))),
+                ),
+              if (deckUp)
+                Positioned(
+                  key: const ValueKey('hud-deck'),
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: pad.bottom),
+                    child: reasonOpen ? reasonDeck(quiet: quiet, key: const ValueKey('why-deck')) : coworkerDeck(quiet: quiet, key: const ValueKey('choice-deck')),
+                  ),
+                ),
+              if (playing && _card == null)
+                cornerGuide(onTap: _tapGuide, bottom: pad.bottom + (deckUp ? 236 : (trayUp ? 112 : 8)), onLeft: coworkerFromRight),
+              ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
               if (_card != null)
                 MistakeCard(
                   key: ValueKey('card-${_card!.key}-${_run.round}'),
@@ -651,8 +849,7 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
                       ? null
                       : () {
                           _hush();
-                          unawaited(openLessonPoint(context, ref,
-                              lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
+                          unawaited(openLessonPoint(context, ref, lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
                         },
                   onGo: _cardGo,
                 ),
@@ -665,9 +862,19 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
                   onRetry: () => widget.onRetry(_muted),
                   onLeave: () => _popOnce(false),
                 ),
+              if (_freeze && _card == null)
+                FreezeFrame(
+                  muted: _muted,
+                  ms: MediaQuery.disableAnimationsOf(context) ? 300 : 2200,
+                  onDone: () {
+                    final f = _frozen;
+                    if (f != null && !f.isCompleted) f.complete();
+                  },
+                ),
               if (_intro)
-                LevelIntro(
-                  lines: [ToolTipLines.intro, ToolTipLines.askTool],
+                GuideIntro(
+                  line: ToolTipLines.intro,
+                  alarm: 'sounds/learn/rush_in.wav',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);
@@ -697,8 +904,7 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
                                 muted: _muted,
                                 onRetry: () => widget.onRetry(_muted),
                                 onLeave: () => _popOnce(false),
-                                onRead: () => unawaited(openLessonPoint(context, ref,
-                                    lessonId: widget.ctx.lessonId, point: 2, muted: _muted)),
+                                onRead: () => unawaited(openLessonPoint(context, ref, lessonId: widget.ctx.lessonId, point: 2, muted: _muted)),
                               ),
                       ),
                     ),
@@ -833,19 +1039,37 @@ class _ToolPainter extends CustomPainter {
 }
 
 /// The street with a tree and a kite caught near the wire; the lineman with
-/// the hot stick; after the decision the danger band shows.
+/// the hot stick (drag its tip — only the tip's distance from the wire
+/// shows); after the decision, or a wrong one, the real band shows.
 class _KiteScene extends StatelessWidget {
-  const _KiteScene({super.key, required this.round, required this.holding, required this.reached, required this.reveal, required this.quiet});
+  const _KiteScene({
+    super.key,
+    required this.round,
+    required this.holding,
+    required this.reached,
+    required this.reveal,
+    required this.tip,
+    required this.quiet,
+    required this.onDrag,
+    required this.onRelease,
+  });
   final KiteRound round;
   final bool holding;
   final bool? reached;
   final bool reveal;
+  final Offset? tip;
   final bool quiet;
+  final ValueChanged<Offset> onDrag;
+  final VoidCallback onRelease;
+
+  /// Where the kite hangs (design px).
+  static Offset kiteAt(KiteRound r) => Offset(250, StreetGeo.y(r.gapM));
 
   @override
   Widget build(BuildContext context) {
     final d = round.distanceM * StreetGeo.ppm;
-    final kite = Offset(250, StreetGeo.y(round.gapM));
+    final kite = kiteAt(round);
+    final t = tip;
     return Stack(
       clipBehavior: Clip.hardEdge,
       children: [
@@ -869,31 +1093,60 @@ class _KiteScene extends StatelessWidget {
           ),
         ),
         Positioned.fill(
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(end: reached == true ? 1.0 : 0.0),
-            duration: quiet ? Duration.zero : const Duration(milliseconds: 650),
-            curve: Curves.easeInOutCubic,
-            builder: (_, t, _) => CustomPaint(
-              painter: _KitePainter(round: round, kite: kite, holding: holding, reach: t, down: reached == true && !round.inside),
+          child: IgnorePointer(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(end: reached == true ? 1.0 : 0.0),
+              duration: quiet ? Duration.zero : const Duration(milliseconds: 650),
+              curve: Curves.easeInCubic,
+              builder: (_, f, _) => CustomPaint(
+                painter: _KitePainter(round: round, kite: kite, holding: holding, tip: t ?? (reached == true ? kite : null), fall: f),
+              ),
             ),
           ),
         ),
-        Positioned(left: 18, top: 168, child: _Plate(text: round.line.tag)),
+        // The line's plate at eye level on the pole.
+        Positioned(left: 8, top: 330, child: _Plate(text: round.line.tag)),
+        // Layers that come and go are keyed, so the drag surface keeps its
+        // gesture while the readout appears.
+        if (t != null)
+          Positioned(
+            key: const ValueKey('tip-readout'),
+            left: math.min(t.dx + 12, StreetGeo.size.width - 112),
+            top: t.dy - 34,
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF2B632),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                child: Text(
+                  ToolTipLines.tipReadout((t.dy - StreetGeo.lineY) / StreetGeo.ppm),
+                  style: bangla(fontSize: 12, fontWeight: FontWeight.w900, color: const Color(0xFF1E2228)),
+                ),
+              ),
+            ),
+          ),
         if (reveal)
           Positioned(
+            key: const ValueKey('band-label'),
             left: 60,
             right: 8,
             top: math.max(4, StreetGeo.lineY - d + 4),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: SlmColors.danger, borderRadius: BorderRadius.circular(8)),
-                child: Text(ToolTipLines.band(round), style: bangla(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white)),
+            child: IgnorePointer(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: SlmColors.danger, borderRadius: BorderRadius.circular(8)),
+                  child: Text(ToolTipLines.band(round), style: bangla(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white)),
+                ),
               ),
             ),
           ),
         if (reveal && reached == false)
           Positioned(
+            key: const ValueKey('shut-chip'),
             left: 96,
             top: 300,
             child: Container(
@@ -909,6 +1162,21 @@ class _KiteScene extends StatelessWidget {
               ),
             ),
           ),
+        // Drag on the street: the tip follows the finger.
+        if (holding && reached == null)
+          Positioned.fill(
+            key: const ValueKey('drag'),
+            child: Semantics(
+              label: ToolTipLines.stickLabel,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanStart: (e) => onDrag(e.localPosition),
+                onPanUpdate: (e) => onDrag(e.localPosition),
+                onPanEnd: (_) => onRelease(),
+                onPanCancel: onRelease,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -921,26 +1189,26 @@ class _Plate extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-        decoration: BoxDecoration(color: const Color(0xFFFFF6D6), border: Border.all(color: const Color(0xFFC0392B), width: 1)),
-        child: Text(text, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFF1E2228))),
+        decoration: BoxDecoration(color: const Color(0xFFFFF6D6), border: Border.all(color: const Color(0xFFC0392B), width: 1.2)),
+        child: Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF1E2228))),
       );
 }
 
 class _KitePainter extends CustomPainter {
-  _KitePainter({required this.round, required this.kite, required this.holding, required this.reach, required this.down});
+  _KitePainter({required this.round, required this.kite, required this.holding, required this.tip, required this.fall});
   final KiteRound round;
   final Offset kite;
   final bool holding;
 
-  /// 0 = stick held ready, 1 = tip at the kite.
-  final double reach;
+  /// Where the stick's tip is (null = held ready).
+  final Offset? tip;
 
-  /// The kite came down (a safe reach).
-  final bool down;
+  /// 0..1: the kite falling after a safe reach.
+  final double fall;
 
   @override
   void paint(Canvas c, Size size) {
-    paintWireAndRuler(c, size);
+    paintWireAndRuler(c, size, withRuler: false);
     const g = StreetGeo.groundY;
     // The tree: trunk, crown, one branch reaching toward the wire.
     c.drawRect(const Rect.fromLTRB(296, 250, 312, g), Paint()..color = const Color(0xFF6E4724));
@@ -948,7 +1216,7 @@ class _KitePainter extends CustomPainter {
     c.drawCircle(const Offset(280, 280), 30, Paint()..color = const Color(0xFF5E8A44));
     c.drawLine(const Offset(300, 230), kite.translate(8, 10), Paint()..color = const Color(0xFF6E4724)..strokeWidth = 5..strokeCap = StrokeCap.round);
     // The kite (falls to the ground after a safe reach).
-    final k = down ? Offset.lerp(kite, const Offset(250, g - 14), reach)! : kite;
+    final k = Offset.lerp(kite, Offset(kite.dx, g - 14), fall)!;
     final kp = Path()
       ..moveTo(k.dx, k.dy - 14)
       ..lineTo(k.dx + 10, k.dy)
@@ -978,7 +1246,7 @@ class _KitePainter extends CustomPainter {
     if (!holding) return;
     // The hot stick: held ready (pointing up toward the tree), or reaching.
     final ready = hand + Offset.fromDirection(-1.1, 3.4 * StreetGeo.ppm);
-    final tip = Offset.lerp(ready, kite, reach)!;
+    final tip = this.tip ?? ready;
     c.drawLine(hand, tip, Paint()..color = const Color(0xFFE9B949)..strokeWidth = 5..strokeCap = StrokeCap.round);
     c.drawLine(hand, Offset.lerp(hand, tip, 0.14)!, Paint()..color = const Color(0xFF3B3F45)..strokeWidth = 6..strokeCap = StrokeCap.round);
     final g0 = Offset.lerp(hand, tip, 0.24)!;
@@ -987,6 +1255,5 @@ class _KitePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_KitePainter old) =>
-      old.reach != reach || old.holding != holding || old.round != round || old.down != down;
+  bool shouldRepaint(_KitePainter old) => old.tip != tip || old.holding != holding || old.round != round || old.fall != fall;
 }
