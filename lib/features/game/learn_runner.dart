@@ -93,6 +93,7 @@ class _LearnRunnerPageState extends State<LearnRunnerPage> {
     return _LearnRun(
       key: ValueKey(_round),
       rungId: widget.rungId,
+      ladderIndex: widget.ladderIndex,
       lessonId: widget.lessonId,
       muted: _muted,
       onRetry: (muted) => setState(() {
@@ -105,11 +106,13 @@ class _LearnRunnerPageState extends State<LearnRunnerPage> {
 
 class _LearnRun extends ConsumerStatefulWidget {
   final String rungId;
+  final int ladderIndex;
   final String lessonId;
   final bool muted;
   final ValueChanged<bool> onRetry;
 
   const _LearnRun({
+    required this.ladderIndex,
     super.key,
     required this.rungId,
     required this.lessonId,
@@ -710,9 +713,6 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
     final bn = ref.watch(languageProvider);
     final quiet = MediaQuery.disableAnimationsOf(context);
     final lesson = _lesson;
-    final badgeLabel = lesson?.chapterNumber != null
-        ? 'পাঠ ${lesson!.chapterNumber}'
-        : 'পাঠ ${widget.lessonId}';
 
     return PopScope(
       canPop: false,
@@ -741,7 +741,8 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
                         scoreKey: _scoreKey,
                         levelScore: _runScore,
                         deathKey: _deathKey,
-                        badgeText: badgeLabel,
+                        badgeText: 'ধাপ ${widget.ladderIndex + 1}',
+                        stepOnly: true,
                         titleText: MascotSpeechLibrary.toNaturalFieldBangla(
                           lesson?.title ?? widget.lessonId,
                         ),

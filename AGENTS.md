@@ -22,6 +22,9 @@ cost days of rework: the same per-frame slowdowns were re-introduced three times
    don't reformat or restructure whole files.
 4. **Never commit secrets** (service-role keys, keystores, `key.properties`, `tool/hourly_answer_keys*`).
    The Supabase anon key in `app_config.dart` is public by design; nothing else is.
+5. **Game levels follow [GAME_LEVEL_PLAYBOOK.md](GAME_LEVEL_PLAYBOOK.md).** Read it before you generate, rebuild or
+   change any game level: guide first (the existing mascot, no start button), full-screen scene, hints only after
+   mistakes, level 1's success and reason deck, the careless coworker, existing scoring functions only, tests.
 
 ## 1. Performance rules (target: 3–4 GB Android phones)
 

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/en_digits.dart';
 import '../../core/theme/app_theme.dart';
@@ -64,6 +65,7 @@ class _LearnBoardRunnerPageState extends State<LearnBoardRunnerPage> {
     return _LearnBoardRun(
       key: ValueKey(_round),
       rungId: widget.rungId,
+      ladderIndex: widget.ladderIndex,
       pack: widget.pack,
       muted: _muted,
       onRetry: (muted) => setState(() {
@@ -76,11 +78,13 @@ class _LearnBoardRunnerPageState extends State<LearnBoardRunnerPage> {
 
 class _LearnBoardRun extends ConsumerStatefulWidget {
   final String rungId;
+  final int ladderIndex;
   final LearnBoardPack pack;
   final bool muted;
   final ValueChanged<bool> onRetry;
 
   const _LearnBoardRun({
+    required this.ladderIndex,
     super.key,
     required this.rungId,
     required this.pack,
@@ -765,7 +769,11 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       _cardWave++;
     });
     _clockGo(reset: true);
-    final ask = _pickAskBag.next();
+    // A round with its own situation ("11 kV লাইন — কোথায় দাঁড়াবেন?") says it;
+    // a generic one ("সঠিক জিনিস বেছে নিন", lesson 1.1) rotates the usual wordings.
+    final own = _pack.slots[i].promptBn;
+    final generic = own.trim().isEmpty || LearnFeedbackLines.pickAsk.any((l) => l.shownBn == own);
+    final ask = generic ? _pickAskBag.next() : FeedbackLine(own);
     _ask = ask.shownBn;
     if (i == 0 && _offerLessonFirst()) {
       // New player: once the cards have landed, offer the lesson over them.
@@ -1275,6 +1283,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                           children: [
                             _LearnBoardChrome(
                               scoreKey: _scoreKey,
+                              step: widget.ladderIndex + 1,
                               levelScore: _runScore,
                               muted: _muted,
                               dimmed: _beat == _Beat.intro,
@@ -1448,6 +1457,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                   onLaunch: () => _dealCue(i),
                   child: _optionTile(
                     asset: o.asset,
+                    scene: o.scene,
                     // The picture must carry the cue; the name shows only on the card tapped.
                     label: _hitId == o.id ? o.labelBn : '',
                     palette: palette,
@@ -1463,6 +1473,51 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// A scene card: the picture edge to edge (the gap to the wire must read at
+  /// card size); the name slides up over it only on the card tapped.
+  Widget _sceneTile({required String asset, required String label, required GestureTapUpCallback onTapUp}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTapUp: onTapUp,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55), width: 1.4),
+            boxShadow: const [BoxShadow(color: Color(0x8C000000), blurRadius: 16, offset: Offset(0, 8))],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(19),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                asset.endsWith('.svg') ? SvgPicture.asset(asset, fit: BoxFit.cover) : Image.asset(asset, fit: BoxFit.cover),
+                if (label.isNotEmpty)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+                      color: const Color(0xD90A1226),
+                      child: Text(
+                        enDigits(label),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: bangla(fontSize: 13, fontWeight: FontWeight.w800, height: 1.2, color: SlmColors.ivory),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -2146,7 +2201,9 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     required String label,
     required SlmPalette palette,
     required GestureTapUpCallback onTapUp,
+    bool scene = false,
   }) {
+    if (scene) return _sceneTile(asset: asset, label: label, onTapUp: onTapUp);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -2853,15 +2910,18 @@ class _ItemPedestal extends StatelessWidget {
               right: w * 0.1,
               top: h * 0.08,
               height: floor - h * 0.08,
-              child: Image.asset(
-                asset,
-                fit: BoxFit.contain,
-                alignment: Alignment.bottomCenter,
-                cacheWidth: (w * 0.8 * dpr).round().clamp(1, 512),
-                filterQuality: FilterQuality.medium,
-                gaplessPlayback: true,
-                errorBuilder: (_, _, _) => Icon(Icons.image_not_supported_rounded, color: accent),
-              ),
+              // Scene cards (lesson 1.2 on) are vector art; photos keep the decode cap.
+              child: asset.endsWith('.svg')
+                  ? SvgPicture.asset(asset, fit: BoxFit.contain, alignment: Alignment.bottomCenter)
+                  : Image.asset(
+                      asset,
+                      fit: BoxFit.contain,
+                      alignment: Alignment.bottomCenter,
+                      cacheWidth: (w * 0.8 * dpr).round().clamp(1, 512),
+                      filterQuality: FilterQuality.medium,
+                      gaplessPlayback: true,
+                      errorBuilder: (_, _, _) => Icon(Icons.image_not_supported_rounded, color: accent),
+                    ),
             ),
           ],
         );
@@ -2873,6 +2933,9 @@ class _ItemPedestal extends StatelessWidget {
 /// Slim Learn chrome: close · live ◆ · mute. No title / badge / death clutter.
 class _LearnBoardChrome extends ConsumerStatefulWidget {
   final GlobalKey scoreKey;
+
+  /// The ladder step shown at the left ("ধাপ N"), the same on every level.
+  final int step;
 
   /// This play's score: the pill shows it; the main total sits beside it.
   final int levelScore;
@@ -2887,6 +2950,7 @@ class _LearnBoardChrome extends ConsumerStatefulWidget {
 
   const _LearnBoardChrome({
     required this.scoreKey,
+    required this.step,
     required this.levelScore,
     required this.muted,
     required this.dimmed,
@@ -2949,7 +3013,13 @@ class _LearnBoardChromeState extends ConsumerState<_LearnBoardChrome>
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints.tightFor(width: 36, height: 36),
               ),
-              const Spacer(),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: LadderStepBadge(step: widget.step),
+                ),
+              ),
               AnimatedBuilder(
                 animation: _bump,
                 builder: (_, child) {
@@ -3012,9 +3082,9 @@ class _LearnBoardChromeState extends ConsumerState<_LearnBoardChrome>
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              ScoreTotalTicker(total: save.points),
-              const Spacer(),
+              const SizedBox(width: 6),
+              DeathCountChip(deaths: save.deaths),
+              const SizedBox(width: 4),
               ReadLessonPill(key: widget.readPillKey, hot: widget.readHot, onTap: widget.onReadLesson),
               const SizedBox(width: 4),
               IconButton(

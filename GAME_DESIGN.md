@@ -280,6 +280,7 @@ Later: Supabase sync, admin CMS, remove tab bar, voice size cut, Play closed tes
 
 ## Related guides
 
+- [`GAME_LEVEL_PLAYBOOK.md`](GAME_LEVEL_PLAYBOOK.md): **how to build any game level** — read it before generating or changing a level (guide first, full-screen scene, hints only after mistakes, level 1's success and reason deck, the careless coworker, scoring calls, tests).
 - [`GAME_DEVELOPER_GUIDE.md`](GAME_DEVELOPER_GUIDE.md): **Unified Developer Guide & Collaborator Roadmap** — complete system architecture, file map, step-by-step workflows for Mascot speeches, Learn cards, Touchable side items, and Do levels, plus the Phase 1–3 implementation roadmap.
 - [`lib/features/duty_slip/GAME_LEVELS_GUIDE.md`](lib/features/duty_slip/GAME_LEVELS_GUIDE.md): screen rules and detailed scene ideas for real-work games (Levels 1–14 active, Levels 15–31 planned). The level ideas become entries in lesson game pools.
 - [`AUDIO_DEVELOPMENT_GUIDE.md`](AUDIO_DEVELOPMENT_GUIDE.md): voice lines and mistake audio.

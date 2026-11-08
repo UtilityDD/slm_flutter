@@ -48,6 +48,9 @@ class GameSave {
 
   /// The first deadly mistake in the game is a near-miss (no death, no fall).
   final bool nearMissUsed;
+
+  /// Best stars (1–3) earned on each rung.
+  final Map<String, int> starsByRung;
   final bool migratedFromDs;
 
   const GameSave({
@@ -71,6 +74,7 @@ class GameSave {
     this.mistakes = const [],
     this.clearedSinceDeath = const [],
     this.nearMissUsed = false,
+    this.starsByRung = const {},
     required this.migratedFromDs,
   });
 
@@ -111,6 +115,7 @@ class GameSave {
     List<MistakeEntry>? mistakes,
     List<String>? clearedSinceDeath,
     bool? nearMissUsed,
+    Map<String, int>? starsByRung,
     bool? migratedFromDs,
   }) {
     return GameSave(
@@ -134,6 +139,7 @@ class GameSave {
       mistakes: mistakes ?? this.mistakes,
       clearedSinceDeath: clearedSinceDeath ?? this.clearedSinceDeath,
       nearMissUsed: nearMissUsed ?? this.nearMissUsed,
+      starsByRung: starsByRung ?? this.starsByRung,
       migratedFromDs: migratedFromDs ?? this.migratedFromDs,
     );
   }
@@ -159,6 +165,7 @@ class GameSave {
         'mistakes': [for (final m in mistakes) m.toJson()],
         'clearedSinceDeath': clearedSinceDeath,
         'nearMissUsed': nearMissUsed,
+        'starsByRung': starsByRung,
         'migratedFromDs': migratedFromDs,
       };
 
@@ -213,6 +220,11 @@ class GameSave {
         for (final v in (json['clearedSinceDeath'] as List? ?? const [])) v.toString(),
       ],
       nearMissUsed: json['nearMissUsed'] as bool? ?? false,
+      starsByRung: {
+        if (json['starsByRung'] is Map)
+          for (final e in (json['starsByRung'] as Map).entries)
+            if (e.value is num) e.key.toString(): (e.value as num).toInt(),
+      },
       weakByLesson: {
         if (json['weakByLesson'] is Map)
           for (final e in (json['weakByLesson'] as Map).entries)
@@ -584,6 +596,15 @@ class GameSaveController extends Notifier<GameSave> {
     final list = [for (final m in state.mistakes) if (m.key != key) m, entry];
     state = state.copyWith(mistakes: list.length > 200 ? list.sublist(list.length - 200) : list);
     await _persist();
+  }
+
+  /// Keeps the best stars (1–3) of a rung; returns true when this is a new best.
+  Future<bool> recordStars(String rungId, int stars) async {
+    final s = stars.clamp(0, 3);
+    if (s <= (state.starsByRung[rungId] ?? 0)) return false;
+    state = state.copyWith(starsByRung: {...state.starsByRung, rungId: s});
+    await _persist();
+    return true;
   }
 
   /// True the first time only: the game's first deadly mistake is a near-miss.

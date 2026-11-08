@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../guide/guide_director.dart';
 import '../guide/mascot_speech_library.dart';
@@ -16,6 +15,7 @@ import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -43,6 +43,9 @@ import 'spoken_once.dart';
 // ============================================================================
 
 abstract final class DischargeLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [askOn, askOff];
+
   static const title = 'আগে মাটি, পরে লাইন';
   static const intro = 'পারমিট হাতে, লাইন বন্ধ। কিন্তু ঘুমন্ত বাঘও বাঘ — রড দিয়ে লাইনটা সত্যিই নিরাপদ করুন।';
   static const scene = '11 কেভি লাইন · পারমিট হাতে';
@@ -281,7 +284,7 @@ class _DischargeRun extends ConsumerStatefulWidget {
   ConsumerState<_DischargeRun> createState() => _DischargeRunState();
 }
 
-class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard {
+class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard, DoStrikeOut {
   final _scoreKey = GlobalKey();
   late final DischargeDeal _deal = dealDischarge(widget.rng);
   final OrderRun _run = OrderRun(dischargeRounds());
@@ -293,6 +296,9 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard 
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; the game starts when it is done.
+  var _intro = true;
   int _chain = 0;
   var _callOpen = false;
   var _callDone = false;
@@ -324,7 +330,6 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -357,11 +362,10 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard 
 
   // ---- flow -----------------------------------------------------------------------
 
+  /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
-    await _sayChain([DischargeLines.intro]);
-    if (!mounted || _ended) return;
     _clock.start();
-    if (!_maybeCall()) unawaited(_sayChain([DischargeLines.askOn]));
+    _maybeCall();
   }
 
   /// Opens the pressure call when its moment has come; true if it opened.
@@ -459,7 +463,22 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard 
     unawaited(_sayChain([word], mood: GuideMood.glad));
   }
 
+  /// The third small mistake: the level fails and the lesson card insists.
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _slip(DoMistake m, Offset origin, Offset scenePoint) async {
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
     _hush();
@@ -593,7 +612,6 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard 
   @override
   Widget build(BuildContext context) {
     final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
-    final round = _run.done ? 1 : _run.round;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -627,13 +645,6 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard 
                       current: _run.done ? null : _run.round,
                       quiet: quiet,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6, bottom: 4),
-                      child: Text(
-                        round == 0 ? DischargeLines.scene : DischargeLines.sceneOff,
-                        style: bangla(fontSize: 12.5, fontWeight: FontWeight.w700, color: SlmColors.gold200),
-                      ),
-                    ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -661,7 +672,7 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard 
                         ),
                       ),
                     ),
-                    Opacity(opacity: _card == null && !_callOpen ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _card == null && !_callOpen ? 1 : 0, child: DoCoachStrip(tasks: DischargeLines.tasks, muted: _muted)),
                     const SizedBox(height: 8),
                   ],
                 ),
@@ -682,6 +693,24 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard 
                   quiet: quiet,
                   onRead: _card!.lessonPoint == null ? null : () => unawaited(_readLesson(_card!)),
                   onGo: _cardGo,
+                ),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.electric,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_intro)
+                LevelIntro(
+                  lines: [DischargeLines.intro, DischargeLines.askOn],
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _intro = false);
+                    unawaited(_start());
+                  },
                 ),
               if (_mark != null)
                 Positioned.fill(

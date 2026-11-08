@@ -1,4 +1,4 @@
-// Learn 1.1 picture board (LearnBoardRunnerPage): once the cards are dealt and
+// Learn picture boards (LearnBoardRunnerPage — 1.1, and 1.2 from ladder step 4): once the cards are dealt and
 // the coach has asked, the board waits for the player. Only the decision clock
 // may change (once a second) — nothing loops at 60 fps on a 3–4 GB phone — and
 // with "remove animations" the board deals instantly and waits just as quietly.
@@ -16,11 +16,17 @@ import 'package:slm_flutter/features/game/learn_board_runner.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
-/// Has read lesson 1.1 already, so the board opens straight on the cards.
+/// Has read lessons 1.1 and 1.2 already, so a board opens straight on the cards.
 class _TestAuth extends AuthNotifier {
   @override
-  AuthState build() => const AuthState(profile: LinemanProfile(id: 'u1', completedLessons: ['1_1', '1.1']));
+  AuthState build() => const AuthState(profile: LinemanProfile(id: 'u1', completedLessons: ['1_1', '1.1', '1_2', '1.2']));
 }
+
+/// The boards under test: pack, ladder index, the first play's day card.
+final _boards = [
+  (pack: learnBoardPack11, index: 0, day: 'দিন 1'),
+  (pack: learnBoardPack12, index: 3, day: 'দিন 2'),
+];
 
 var _rebuilds = 0;
 
@@ -37,6 +43,9 @@ Finder get _cards => find.byWidgetPredicate((w) => w.runtimeType.toString() == '
 Future<({double rebuildsPerSec, int framesInIdleSecond, bool dayCardFirst})> _waitAtFirstQuestion(
   WidgetTester tester, {
   required bool reduce,
+  required LearnBoardPack pack,
+  required int index,
+  required String day,
 }) async {
   tester.view.physicalSize = const Size(720, 1600);
   tester.view.devicePixelRatio = 2.0;
@@ -47,11 +56,11 @@ Future<({double rebuildsPerSec, int framesInIdleSecond, bool dayCardFirst})> _wa
     overrides: [authProvider.overrideWith(_TestAuth.new)],
     child: MaterialApp(
       theme: SlmTheme.night(),
-      home: const LearnBoardRunnerPage(
-        rungId: '1.1/learn',
-        lessonId: '1.1',
-        ladderIndex: 0,
-        pack: learnBoardPack11,
+      home: LearnBoardRunnerPage(
+        rungId: '${pack.lessonId}/learn',
+        lessonId: pack.lessonId,
+        ladderIndex: index,
+        pack: pack,
         muted: true,
       ),
     ),
@@ -60,7 +69,7 @@ Future<({double rebuildsPerSec, int framesInIdleSecond, bool dayCardFirst})> _wa
   for (var i = 0; i < 5; i++) {
     await tester.pump(const Duration(milliseconds: 100));
   }
-  final dayCardFirst = find.text('দিন 1').evaluate().isNotEmpty;
+  final dayCardFirst = find.text(day).evaluate().isNotEmpty;
   // Day card, intro line, deal, first ask (muted lines still hold for their reading time).
   for (var i = 0; i < 160; i++) {
     await tester.pump(const Duration(milliseconds: 100));
@@ -97,26 +106,28 @@ void main() {
   setUp(() => debugOnRebuildDirtyWidget = (_, _) => _rebuilds++);
   tearDown(() => debugOnRebuildDirtyWidget = null);
 
+  for (final b in _boards) {
   for (final reduce in [false, true]) {
-    final tag = reduce ? 'reduce' : 'anim';
+    final tag = '${b.pack.lessonId} ${reduce ? 'reduce' : 'anim'}';
     testWidgets('board waits quietly at the first question ($tag)', (tester) async {
-      final s = await _waitAtFirstQuestion(tester, reduce: reduce);
+      final s = await _waitAtFirstQuestion(tester, reduce: reduce, pack: b.pack, index: b.index, day: b.day);
       debugPrint('PERF learn board $tag: ${s.rebuildsPerSec.toStringAsFixed(0)} rebuilds/s, '
           '${s.framesInIdleSecond} frames in an idle second');
 
       expect(tester.takeException(), isNull);
       expect(s.dayCardFirst, isTrue, reason: 'a first play opens on the day card');
-      expect(find.text('দিন 1'), findsNothing, reason: 'the day card leaves on its own');
-      expect(_cards, findsNWidgets(learnBoardPack11.slots.first.cards), reason: 'the first hand is dealt');
+      expect(find.text(b.day), findsNothing, reason: 'the day card leaves on its own');
+      expect(_cards, findsNWidgets(b.pack.slots.first.cards), reason: 'the first hand is dealt');
       // Only the clock (once a second) and the coach's blink may draw while waiting.
       expect(s.rebuildsPerSec, lessThan(20), reason: 'nothing may rebuild every frame while the player thinks');
       expect(s.framesInIdleSecond, lessThan(12), reason: 'no 60 fps loop while waiting for an answer');
 
       // The picture must carry the cue: no item names until a card is tapped.
-      for (final o in learnBoardPack11.slots.first.options) {
+      for (final o in b.pack.slots.first.options) {
         expect(find.text(o.labelBn), findsNothing, reason: '"${o.labelBn}" shown before any tap');
       }
       await _tearDownBoard(tester);
     });
+  }
   }
 }

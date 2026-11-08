@@ -13,6 +13,8 @@ import 'package:slm_flutter/features/game/spoken_once.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
+import 'support/intro_wait.dart';
+
 GloveItem _pool(String id) => gloveCheckPack11.pool.firstWhere((g) => g.id == id);
 GloveItem _pinholed(GloveItem g) => g.withFlaw(g.flaws.firstWhere((f) => f.kind == GloveFlawKind.pinhole));
 
@@ -130,10 +132,12 @@ void main() {
       await t.pumpWidget(ProviderScope(
         child: MaterialApp(home: GloveCheckPage(ctx: _ctx, pack: _packRef, muted: true, seed: 2)),
       ));
+        await t.pump(const Duration(milliseconds: 100));
+        await waitIntro(t);
       for (var i = 0; i < 60; i++) {
         await t.pump(const Duration(milliseconds: 50));
       }
-      expect(find.text('পাঠ 1.1 · কাজ 2/2'), findsOneWidget);
+      expect(find.textContaining('ধাপ '), findsOneWidget);
       final cards = find.byWidgetPredicate((w) => w.runtimeType.toString() == 'DoTrayCard');
       expect(cards, findsWidgets);
 

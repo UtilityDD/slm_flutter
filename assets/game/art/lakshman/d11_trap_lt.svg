@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8EC3EA"/><stop offset="1" stop-color="#E9F2F7"/></linearGradient>
+  <linearGradient id="skyRain" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5E6E7E"/><stop offset="1" stop-color="#AEB9C2"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CDBB93"/><stop offset="1" stop-color="#AF9C74"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9E9B93"/><stop offset="0.5" stop-color="#D3D0C8"/><stop offset="1" stop-color="#97948C"/></linearGradient>
+  <linearGradient id="vest" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E06D10"/><stop offset="0.5" stop-color="#FF8A2A"/><stop offset="1" stop-color="#D9640C"/></linearGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D99A1E"/><stop offset="0.5" stop-color="#FFD25A"/><stop offset="1" stop-color="#C98A12"/></linearGradient>
+  <linearGradient id="bamboo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3C98A"/><stop offset="1" stop-color="#B8954E"/></linearGradient>
+  <linearGradient id="pvc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F6F7"/><stop offset="1" stop-color="#C9CFD3"/></linearGradient>
+  <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A6B43"/><stop offset="1" stop-color="#6E4A2C"/></linearGradient>
+  <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2E6EA"/><stop offset="1" stop-color="#8E979F"/></linearGradient>
+  <radialGradient id="wireGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE38A" stop-opacity="0.55"/><stop offset="1" stop-color="#FFE38A" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#sky)"/>
+<g fill="#FFFFFF" opacity="0.9"><ellipse cx="40" cy="78" rx="22" ry="8"/><ellipse cx="56" cy="72" rx="16" ry="9"/></g>
+<rect y="200" width="200" height="20" fill="url(#ground)"/>
+<rect x="168" y="14" width="9" height="186" fill="url(#pole)"/>
+<rect x="118" y="30" width="74" height="5" rx="1.5" fill="#5F676F"/>
+<rect x="128" y="22" width="7" height="10" rx="2.5" fill="#E8EDF0"/><rect x="181" y="22" width="7" height="10" rx="2.5" fill="#E8EDF0"/>
+<ellipse cx="80" cy="40" rx="110" ry="9" fill="url(#wireGlow)"/>
+<path d="M-4 42 Q 70 46 131 32" stroke="#2B3138" stroke-width="2.4" fill="none"/>
+<path d="M72 127 L62 200 M84 127 L94 200" stroke="#B0B7BD" stroke-width="2.6"/><line x1="70.63013698630137" y1="137" x2="85.36986301369863" y2="137" stroke="#B0B7BD" stroke-width="2"/><line x1="68.98630136986301" y1="149" x2="87.01369863013699" y2="149" stroke="#B0B7BD" stroke-width="2"/><line x1="67.34246575342466" y1="161" x2="88.65753424657534" y2="161" stroke="#B0B7BD" stroke-width="2"/><line x1="65.6986301369863" y1="173" x2="90.3013698630137" y2="173" stroke="#B0B7BD" stroke-width="2"/><line x1="64.05479452054794" y1="185" x2="91.94520547945206" y2="185" stroke="#B0B7BD" stroke-width="2"/><rect x="69" y="125" width="18" height="3" rx="1" fill="#8D959C"/>
+<path d="M74 109 L72 125 M82 109 L84 125" stroke="#26303D" stroke-width="5" stroke-linecap="round"/><rect x="69" y="123" width="8" height="3.5" rx="1.5" fill="#1C1F24"/><rect x="80" y="123" width="8" height="3.5" rx="1.5" fill="#1C1F24"/><rect x="71" y="94" width="14" height="17" rx="4" fill="#1F5F8F"/><rect x="72" y="95" width="12" height="15" rx="3" fill="url(#vest)"/><rect x="72" y="102" width="12" height="1.8" fill="#E3E8EC"/><rect x="72" y="106" width="12" height="1.8" fill="#E3E8EC"/><path d="M83 97 L86 86 L86 77.5" stroke="#1F5F8F" stroke-width="3.6" fill="none" stroke-linecap="round"/><circle cx="86" cy="77.6" r="2.2" fill="#6B4A33"/><path d="M73 97 L70 108" stroke="#1F5F8F" stroke-width="3.6" fill="none" stroke-linecap="round"/><circle cx="78" cy="88" r="5.4" fill="#A86E48"/><path d="M71.5 86 A6.5 6.5 0 0 1 84.5 86 Z" fill="#FFD34E"/><rect x="70" y="85.2" width="16" height="2" rx="1" fill="#E5B92E"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

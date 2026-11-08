@@ -15,7 +15,9 @@ import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
 import 'level_result_parts.dart';
+import 'mistake_kit.dart';
 import 'level_shell.dart';
 import 'spoken_once.dart';
 
@@ -142,6 +144,9 @@ class KitCheckPack {
 
 /// Fixed coach lines (recorded with the Learn voice pack).
 abstract final class KitLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [askTorso, askLegs, askFeet];
+
   static const askTorso = 'আগে জামা। হাতে নিয়ে ভালো করে দেখুন।';
   static const askLegs = 'এবার প্যান্ট। দেখে তবেই পরুন।';
   static const askFeet = 'এবার জুতো। সোলটা দেখতে ভুলবেন না।';
@@ -485,7 +490,7 @@ class _KitCheckRun extends ConsumerStatefulWidget {
 
 enum _Overlay { none, inspect, consequence, call }
 
-class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
+class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
   final _scoreKey = GlobalKey();
   late final KitDeal _deal = dealKit(widget.pack, widget.rng);
   late final KitCheckRound _r = KitCheckRound(_deal);
@@ -496,6 +501,9 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; play starts when it is done.
+  var _introCard = true;
   int _chain = 0;
   int _wave = 0;
   int _figureWave = 0;
@@ -505,7 +513,6 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
 
   /// A short hold the player can cut with a tap (see [_dwell]).
   Completer<void>? _skip;
-  var _intro = true;
 
   _Overlay _overlay = _Overlay.none;
   KitItem? _held;
@@ -526,7 +533,6 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -575,9 +581,6 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
   // ---- flow ------------------------------------------------------------------
 
   Future<void> _start() async {
-    await _say(widget.pack.introBn, mood: GuideMood.inspire);
-    if (!mounted) return;
-    setState(() => _intro = false);
     _clock.start();
     await _askSlot();
   }
@@ -630,6 +633,10 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
     if (item == null || _busy || _verdict != null) return;
     _busy = true;
     final o = _r.decide(item, choice);
+    if (!o.right && strike(DoMistake(key: 'kit/${item.id}', textBn: o.reasonBn, art: item.asset))) {
+      await _struckOut();
+      return;
+    }
     if (o.right) {
       HapticFeedback.lightImpact();
     } else {
@@ -776,6 +783,22 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
     await _say(end, mood: _r.passed ? GuideMood.celebrate : GuideMood.warn);
   }
 
+  /// The third wrong decision: the level fails and the lesson card insists.
+  Future<void> _struckOut() async {
+    if (_ended) return;
+    _ended = true;
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+    _clock.stop();
+    await recordStrikeOut(widget.ctx, percent: _r.percent, runScore: _runScore);
+    if (!mounted) return;
+    setState(() {
+      _overlay = _Overlay.none;
+      _held = null;
+      _busy = false;
+    });
+  }
+
   void _popOnce(bool cleared) {
     if (_popped || !mounted) return;
     _popped = true;
@@ -832,17 +855,6 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
                       current: _r.slot?.index,
                       quiet: quiet,
                     ),
-                    AnimatedOpacity(
-                      opacity: _intro ? 1 : 0,
-                      duration: quiet ? Duration.zero : const Duration(milliseconds: 500),
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          widget.pack.sceneBn,
-                          style: bangla(fontSize: 12.5, fontWeight: FontWeight.w700, color: SlmColors.gold200),
-                        ),
-                      ),
-                    ),
                     Expanded(
                       child: _Figure(
                         asset: kitFigureAsset(_r.worn),
@@ -852,7 +864,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
                       ),
                     ),
                     // Under a card or call the coach moves above the shade (see overlays).
-                    Opacity(opacity: _overlay == _Overlay.none ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _overlay == _Overlay.none ? 1 : 0, child: DoCoachStrip(tasks: KitLines.tasks, muted: _muted)),
                     if (_mark == null)
                       DoTray(
                         key: ValueKey('tray-$_wave'),
@@ -883,6 +895,24 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> {
                 _Consequence(item: _shown!, quiet: quiet, onTap: _skipDwell),
               if (_overlay == _Overlay.call)
                 DoCallCard(caller: _deal.caller, quiet: quiet, onAnswer: (held, o) => unawaited(_answerCall(held, o))),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.thud,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_introCard)
+                LevelIntro(
+                  lines: [widget.pack.introBn],
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _introCard = false);
+                    unawaited(_start());
+                  },
+                ),
               if (_mark != null)
                 Positioned.fill(
                   child: ColoredBox(

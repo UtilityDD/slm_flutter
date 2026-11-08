@@ -19,6 +19,8 @@ import 'package:slm_flutter/features/game/spoken_once.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
+import 'support/intro_wait.dart';
+
 const _ctx = LevelContext(
   rungId: '1.5/do/1',
   kind: CatalogRungKind.doKind,
@@ -61,6 +63,10 @@ Future<void> _tap(WidgetTester t, Finder f, [int after = 400]) async {
   await _pump(t, after);
 }
 
+
+/// The level opens with the guide (no start button, as level 1): wait for him.
+Future<void> _skipIntro(WidgetTester t) => waitIntro(t);
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -88,6 +94,7 @@ void main() {
       builder: (_) => DischargeOrderPage(ctx: _ctx, pack: dischargePack15, muted: true, seed: seed),
     )));
     await _pump(t, 3000);
+    await _skipIntro(t);
     return (c, nav);
   }
 
@@ -107,7 +114,7 @@ void main() {
     await save.markRungCleared('1.1/learn');
     await save.markRungCleared('1.1/do/0');
 
-    expect(find.text('পাঠ 1.5 · কাজ 2/2'), findsOneWidget);
+    expect(find.textContaining('ধাপ '), findsOneWidget);
     expect(find.text('আর্থ পয়েন্ট'), findsNothing, reason: 'no names on screen');
 
     // Hook on R before the earth: deadly, but the game's first is a near-miss.
@@ -120,7 +127,9 @@ void main() {
     expect(c.read(gameSaveProvider).mistakes.single.key, DischargeMistakes.lineBeforeEarth.key);
 
     // Try again; this time the chain before the earth: a real death.
-    await _tap(t, find.text(MistakeLines.tryAgain), 3000);
+    await _tap(t, find.text(MistakeLines.tryAgain), 600);
+    await _skipIntro(t);
+    await _pump(t, 1500);
     expect(find.text(MistakeLines.nearMissHead), findsNothing);
     await _tap(t, _spot('চেইন'), 1500);
     expect(find.text(MistakeLines.deadlyHead), findsOneWidget);

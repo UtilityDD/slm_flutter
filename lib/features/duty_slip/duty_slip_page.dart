@@ -1047,10 +1047,10 @@ class _FlyingScore extends StatelessWidget {
 
 class _Hud extends ConsumerWidget {
   final DutySlipEngine engine;
-  final Key scoreKey;
+  final GlobalKey scoreKey;
   final bool muted;
   final VoidCallback onMute;
-  /// This play's score: the pill shows it (chips fly into it); the main total sits beside it.
+  /// This play's score: the pill shows it (chips fly into it).
   final int levelScore;
   const _Hud({
     required this.engine,
@@ -1060,147 +1060,23 @@ class _Hud extends ConsumerWidget {
     required this.onMute,
   });
 
+  /// The same header as every level on the ladder: close · "ধাপ N" · ◆ · 💀 · mute.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final e = engine;
     final save = ref.watch(gameSaveProvider);
     final onLevel = e.playing || e.listing;
-    final title = onLevel ? e.briefOf().title : '';
-    // Same chip as every level: "পাঠ 1.1 · কাজ 2/2" from the catalog, not the old level number.
     final ctx = levelContextFor(ref.watch(builtLadderProvider).value, save.currentRungId);
-    final chip = ctx?.chipBn ?? enDigits('লেভেল ${e.level.number}');
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
-        decoration: BoxDecoration(
-          color: const Color(0xE60B1324),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.38)),
-          boxShadow: const [
-            BoxShadow(color: Color(0x55000000), blurRadius: 12, offset: Offset(0, 4)),
-          ],
-        ),
-        child: Row(
-          children: [
-            _MuteDot(muted: muted, onMute: onMute),
-            const SizedBox(width: 10),
-            if (onLevel)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      chip,
-                      style: zlText(14, weight: FontWeight.w900, color: SlmColors.gold300, height: 1.05),
-                    ),
-                    if (title.isNotEmpty)
-                      Text(
-                        enDigits(title),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: zlText(12.5, weight: FontWeight.w700, color: SlmColors.ivory, height: 1.15),
-                      ),
-                  ],
-                ),
-              )
-            else
-              const Spacer(),
-            const SizedBox(width: 8),
-            // Unified ◆ Main Game Score Pill
-            Container(
-              key: scoreKey,
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1E2B45), Color(0xFF111A2E)],
-                ),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.7), width: 1.2),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    '◆',
-                    style: TextStyle(color: SlmColors.gold300, fontSize: 13.5, fontWeight: FontWeight.w900),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    enDigits('${onLevel ? levelScore : save.points}'),
-                    style: zlText(15, weight: FontWeight.w900, color: SlmColors.ivory, height: 1),
-                  ),
-                ],
-              ),
-            ),
-            if (onLevel) ...[
-              const SizedBox(width: 6),
-              ScoreTotalTicker(total: save.points),
-            ],
-            const SizedBox(width: 6),
-            // Unified 💀 Death Counter Pill
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1524),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: save.deaths > 0
-                      ? SoftDanger.ink.withValues(alpha: 0.55)
-                      : Colors.white.withValues(alpha: 0.16),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('💀', style: TextStyle(fontSize: 12)),
-                  const SizedBox(width: 4),
-                  Text(
-                    enDigits('${save.deaths}'),
-                    style: zlText(
-                      13.5,
-                      weight: FontWeight.w800,
-                      color: save.deaths > 0 ? SoftDanger.ink : SlmColors.mist,
-                      height: 1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MuteDot extends StatelessWidget {
-  final bool muted;
-  final VoidCallback onMute;
-  const _MuteDot({required this.muted, required this.onMute});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onMute,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: ZlColors.line),
-          ),
-          child: Icon(
-            muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-            size: 20,
-            color: muted ? ZlColors.soft : ZlColors.cream,
-          ),
-        ),
-      ),
+    return UnifiedGameTopHud(
+      scoreKey: scoreKey,
+      badgeText: 'ধাপ ${ctx?.ladderStep ?? e.level.number}',
+      titleText: onLevel ? e.briefOf().title : '',
+      stepOnly: true,
+      closeIcon: Icons.close_rounded,
+      muted: muted,
+      levelScore: onLevel ? levelScore : null,
+      onClose: () => Navigator.of(context).maybePop(),
+      onToggleMute: onMute,
     );
   }
 }

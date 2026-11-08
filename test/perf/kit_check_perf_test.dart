@@ -15,6 +15,8 @@ import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
+import '../support/intro_wait.dart';
+
 var _rebuilds = 0;
 
 const _ctx = LevelContext(
@@ -52,6 +54,8 @@ void main() {
           home: const KitCheckPage(ctx: _ctx, pack: kitCheckPack11, muted: true, seed: 7),
         ),
       ));
+      await tester.pump(const Duration(milliseconds: 100));
+      await waitIntro(tester);
       // Intro line, first ask, tray deal.
       for (var i = 0; i < 100; i++) {
         await tester.pump(const Duration(milliseconds: 100));
@@ -70,7 +74,7 @@ void main() {
       debugPrint('PERF kit check $tag: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames in an idle second');
 
       expect(tester.takeException(), isNull);
-      expect(find.text('পাঠ 1.1 · কাজ 1/2'), findsOneWidget, reason: 'shell chip from the level context');
+      expect(find.textContaining('ধাপ '), findsOneWidget, reason: 'shell step from the level context');
       // Same seed as the page: the first deal of this play.
       final torso = dealKit(kitCheckPack11, math.Random(7)).items.where((i) => i.slot == KitSlot.torso).length;
       expect(

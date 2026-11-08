@@ -12,6 +12,8 @@ import 'package:slm_flutter/features/game/spoken_once.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
+import 'support/intro_wait.dart';
+
 const _ctx = LevelContext(
   rungId: '1.1/do/0',
   kind: CatalogRungKind.doKind,
@@ -47,6 +49,8 @@ void main() {
     await t.pumpWidget(const ProviderScope(
       child: MaterialApp(home: KitCheckPage(ctx: _ctx, pack: kitCheckPack11, muted: true, seed: 3)),
     ));
+    await t.pump(const Duration(milliseconds: 100));
+    await waitIntro(t);
     await _pump(t, 3000);
     expect(_cards, findsWidgets);
 

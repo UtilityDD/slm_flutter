@@ -20,6 +20,8 @@ import 'package:slm_flutter/features/game/spoken_once.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
+import 'support/intro_wait.dart';
+
 LevelContext _ctx(int doIndex) => LevelContext(
       rungId: '1.7/do/${doIndex - 1}',
       kind: CatalogRungKind.doKind,
@@ -35,6 +37,10 @@ Future<void> _pump(WidgetTester t, int ms) async {
     await t.pump(const Duration(milliseconds: 50));
   }
 }
+
+
+/// The level opens with the guide (no start button, as level 1): wait for him.
+Future<void> _skipIntro(WidgetTester t) => waitIntro(t);
 
 void main() {
   group('rescue rules', () {
@@ -139,6 +145,8 @@ void main() {
                   : GoldenMinutePage(ctx: _ctx(2), pack: goldenPack17, muted: true, seed: 2),
             ),
           ));
+        await t.pump(const Duration(milliseconds: 100));
+        await waitIntro(t);
           await _pump(t, 6000);
           rebuilds = 0;
           for (var i = 0; i < 125; i++) {
@@ -174,6 +182,7 @@ void main() {
       ));
       unawaited(nav.currentState!.push(MaterialPageRoute<bool>(builder: (_) => page)));
       await _pump(t, 1500);
+      await _skipIntro(t);
       return (c, nav);
     }
 

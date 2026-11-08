@@ -17,6 +17,8 @@ import 'fire_choose.dart' show FireKind, FireScenePainter;
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
+import 'level_juice.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -64,6 +66,9 @@ const passCards = [
 ];
 
 abstract final class PassLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [askStand, askPass, askAim];
+
   static const title = 'PASS';
   static const intro = 'হাতে অগ্নি নির্বাপক — আগে ঠিক জায়গায় দাঁড়ান, তারপর PASS।';
   static const rounds = ['প্রথম', 'দ্বিতীয়'];
@@ -76,6 +81,9 @@ abstract final class PassLines {
   static const next = 'পরের আগুন';
   static const wind = 'বাতাস';
   static const legendWind = 'বাতাসের দিক';
+  static const tourWind = 'বাতাস এদিকে বইছে — ধোঁয়াও ওদিকে যাচ্ছে।';
+  static const tourWall = 'আর এখানে দেয়াল।';
+  static const tourWhere = 'কোথায় দাঁড়াবেন — এখানে? এখানে? না এখানে?';
   static const legendSmoke = 'ধোঁয়া';
   static const legendWall = 'দেয়াল';
   static const ok = [FeedbackLine('ঠিক!'), FeedbackLine('এটাই পরের ধাপ।'), FeedbackLine('বেশ!')];
@@ -199,7 +207,7 @@ class _PassRunPage extends ConsumerStatefulWidget {
   ConsumerState<_PassRunPage> createState() => _PassRunPageState();
 }
 
-class _PassRunPageState extends ConsumerState<_PassRunPage> {
+class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
   final _scoreKey = GlobalKey();
   late final List<PassRound> _rounds;
   late final List<List<StepCard>> _trays;
@@ -207,6 +215,37 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
   late bool _muted = widget.muted;
   final _okBag = LineBag(PassLines.ok);
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
+
+  // The guided tour points at these (on the top view).
+  final _windKey = GlobalKey();
+  final _wallKey = GlobalKey();
+  final Map<StandSpot, GlobalKey> _spotKeys = {for (final sp in StandSpot.values) sp: GlobalKey()};
+
+  final _combo = Combo();
+  int _comboN = 0;
+  int _comboMult = 1;
+  int? _stars;
+
+  List<TourBeat> get _tourBeats {
+    // The spots are pointed at in a shuffled order (never the answer first by rule).
+    final order = [...StandSpot.values]..shuffle(math.Random(_round * 7 + 3));
+    return [
+      TourBeat(PassLines.tourWind, target: _windKey),
+      TourBeat(PassLines.tourWall, target: _wallKey),
+      TourBeat(PassLines.tourWhere, targets: [for (final sp in order) _spotKeys[sp]!]),
+    ];
+  }
+
+  int _scored(int base) {
+    final (mult, up) = _combo.hit();
+    if (up) {
+      setState(() {
+        _comboN++;
+        _comboMult = _combo.mult;
+      });
+    }
+    return base * mult;
+  }
   final List<String> _caught = [];
 
   int _round = 0;
@@ -214,6 +253,9 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
   OrderRun _order = OrderRun(passOrderRounds());
   int _slips = 0;
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; the game starts when it is done.
+  var _intro = true;
   int _chain = 0;
   int _shakes = 0;
   String? _shook;
@@ -235,7 +277,6 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
     super.initState();
     _rounds = dealPass(widget.rng);
     _trays = [for (var i = 0; i < 2; i++) [...passCards]..shuffle(widget.rng)];
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -264,9 +305,9 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
     unawaited(MascotSpeechLibrary.stop());
   }
 
+  /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
     _clock.start();
-    await _sayChain([PassLines.intro, PassLines.askStand]);
   }
 
   bool get _idle => !_ended && _card == null;
@@ -283,7 +324,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
     HapticFeedback.lightImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.5, muted: false));
     if (!_caught.contains(PassLines.caughtStand)) _caught.add(PassLines.caughtStand);
-    unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
+    unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
     setState(() => _phase = PassPhase.order);
     unawaited(_sayChain([PassLines.stood, PassLines.askPass], mood: GuideMood.glad));
   }
@@ -305,7 +346,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
       case OrderTapKind.ok:
         HapticFeedback.lightImpact();
         if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.5, muted: false));
-        unawaited(_levelDelta(5, origin, mood: GuideMood.glad));
+        unawaited(_levelDelta(_scored(5), origin, mood: GuideMood.glad));
         if (c.id == PassIds.aim) {
           setState(() => _phase = PassPhase.aim);
           unawaited(_sayChain([PassLines.askAim]));
@@ -314,7 +355,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
         if (t.allDone) {
           HapticFeedback.mediumImpact();
           if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
-          unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
+          unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
           setState(() => _phase = PassPhase.out);
           unawaited(_sayChain([PassLines.out], mood: GuideMood.glad));
           return;
@@ -335,7 +376,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
     }
     HapticFeedback.lightImpact();
     if (!_caught.contains(PassLines.caughtAim)) _caught.add(PassLines.caughtAim);
-    unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
+    unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
     setState(() => _phase = PassPhase.order);
     unawaited(_sayChain([PassLines.aimed], mood: GuideMood.glad));
   }
@@ -369,12 +410,28 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
       return;
     }
     _caught.add(PassLines.caughtRefill);
-    unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
+    unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
     unawaited(_sayChain([PassLines.refillOk], mood: GuideMood.glad));
     unawaited(_finish());
   }
 
+  /// The third small mistake: the level fails and the lesson card insists.
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _percent, runScore: _runScore);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _slip(DoMistake m) async {
+    _combo.miss();
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
     setState(() => _card = m);
@@ -419,6 +476,9 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
       }
     }
     final delta = await save.commitLevelScore(_rungId, _runScore);
+    final stars = starsFor(passed: _passedRun, strikes: strikes, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
+    if (stars > 0) await save.recordStars(_rungId, stars);
+    _stars = stars;
     if (_passedRun) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
     if (!mounted) return;
     setState(() {
@@ -501,6 +561,9 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
                                   ? _TopView(
                                       key: ValueKey('top-$_round'),
                                       windFromLeft: r.windFromLeft,
+                                      windKey: _windKey,
+                                      wallKey: _wallKey,
+                                      spotKeys: _spotKeys,
                                       onSpot: (s, o) => unawaited(_stand(s, o)),
                                     )
                                   : Stack(
@@ -516,6 +579,11 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
                                               Positioned.fill(
                                                 child: CustomPaint(painter: FireScenePainter(kind: r.kind, out: _phase == PassPhase.out || _phase == PassPhase.refill)),
                                               ),
+                                              if (_phase == PassPhase.out)
+                                                Positioned.fromRect(
+                                                  rect: Rect.fromCenter(center: base.translate(0, -30), width: 300, height: 220),
+                                                  child: RescueBurst(key: ValueKey('rescue-$_round'), muted: _muted),
+                                                ),
                                               if (_phase == PassPhase.aim) ...[
                                                 Positioned.fromRect(
                                                   rect: Rect.fromCenter(center: base.translate(0, -6), width: 170, height: 26),
@@ -610,17 +678,13 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
                                       ),
                                   ],
                                 ),
-                              if (_phase == PassPhase.aim)
-                                Text(PassLines.askAim,
-                                    textAlign: TextAlign.center,
-                                    style: bangla(fontSize: 14, fontWeight: FontWeight.w800, color: SlmColors.gold200)),
                               if (_phase == PassPhase.out)
                                 DoBigButton(label: PassLines.next, filled: true, onTapUp: (_) => _next()),
                             ],
                           ),
                       },
                     ),
-                    Opacity(opacity: _card == null ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _card == null ? 1 : 0, child: DoCoachStrip(tasks: PassLines.tasks, muted: _muted)),
                     const SizedBox(height: 6),
                   ],
                 ),
@@ -640,6 +704,31 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
                         },
                   onGo: _cardGo,
                 ),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.fire,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_comboN > 0)
+                Positioned(
+                  top: MediaQuery.paddingOf(context).top + 92,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: ComboPop(key: ValueKey('combo-$_comboN'), mult: _comboMult)),
+                ),
+              if (_intro)
+                GuidedTour(
+                  beats: _tourBeats,
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _intro = false);
+                    unawaited(_start());
+                  },
+                ),
               if (_mark != null)
                 Positioned.fill(
                   child: ColoredBox(
@@ -655,6 +744,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> {
                                 ms: _clock.elapsedMilliseconds,
                                 caughtBn: _caught,
                                 quickBonus: _quickBonus,
+                                stars: _stars,
                                 onNext: () => _popOnce(true),
                                 onRetry: () => widget.onRetry(_muted),
                               )
@@ -692,8 +782,18 @@ Widget _legend(IconData icon, Color color, String text) => Row(
 // ============================================================================
 
 class _TopView extends StatelessWidget {
-  const _TopView({super.key, required this.windFromLeft, required this.onSpot});
+  const _TopView({
+    super.key,
+    required this.windFromLeft,
+    required this.windKey,
+    required this.wallKey,
+    required this.spotKeys,
+    required this.onSpot,
+  });
   final bool windFromLeft;
+  final GlobalKey windKey;
+  final GlobalKey wallKey;
+  final Map<StandSpot, GlobalKey> spotKeys;
   final void Function(StandSpot s, Offset origin) onSpot;
 
   /// Spot centres (scene 360 x 300); mirrored when the wind comes from the right.
@@ -712,14 +812,23 @@ class _TopView extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(child: CustomPaint(painter: _TopPainter(windFromLeft: windFromLeft, spots: sp))),
+        // Regions the guided tour lights up.
+        Positioned.fromRect(
+          rect: const Rect.fromLTRB(100, 246, 260, 292),
+          child: KeyedSubtree(key: windKey, child: const IgnorePointer(child: SizedBox.expand())),
+        ),
+        Positioned.fromRect(
+          rect: windFromLeft ? const Rect.fromLTRB(24, 24, 156, 136) : const Rect.fromLTRB(204, 24, 336, 136),
+          child: KeyedSubtree(key: wallKey, child: const IgnorePointer(child: SizedBox.expand())),
+        ),
         for (final e in sp.entries)
           Positioned.fromRect(
             rect: Rect.fromCenter(center: e.value, width: 64, height: 64),
-            child: Semantics(
+            child: KeyedSubtree(key: spotKeys[e.key], child: Semantics(
               button: true,
               label: 'জায়গা',
               child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => onSpot(e.key, d.globalPosition)),
-            ),
+            )),
           ),
       ],
     );

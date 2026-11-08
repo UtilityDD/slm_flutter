@@ -15,7 +15,9 @@ import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
 import 'level_result_parts.dart';
+import 'mistake_kit.dart';
 import 'level_shell.dart';
 import 'spoken_once.dart';
 
@@ -88,6 +90,9 @@ class GloveItem {
 
 /// Fixed lines (read by device TTS until recorded).
 abstract final class GloveLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [askOwn, askMate, askSpare];
+
   static const intro = 'গাড়ি ছাড়ার আগে তিন জোড়া রাবার গ্লাভস বাছুন—নিজের, সাথীর আর একটা বাড়তি। প্রতিটায় হাওয়া দিয়ে দেখুন।';
   static const scene = 'সকাল 7:20 · ভ্যানের পাশে';
   static const askOwn = 'আগে নিজের জোড়াটা বাছুন।';
@@ -405,7 +410,7 @@ class _GloveRun extends ConsumerStatefulWidget {
 
 enum _Overlay { none, inspect, call }
 
-class _GloveRunState extends ConsumerState<_GloveRun> {
+class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
   final _scoreKey = GlobalKey();
   late final GloveDeal _deal = dealGloves(widget.pack, widget.rng);
   late final GloveRound _r = GloveRound(_deal);
@@ -416,10 +421,12 @@ class _GloveRunState extends ConsumerState<_GloveRun> {
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; play starts when it is done.
+  var _introCard = true;
   int _chain = 0;
   int _wave = 0;
   int _dealtRound = 0;
-  var _intro = true;
 
   _Overlay _overlay = _Overlay.none;
   GloveItem? _held;
@@ -440,7 +447,6 @@ class _GloveRunState extends ConsumerState<_GloveRun> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -486,9 +492,6 @@ class _GloveRunState extends ConsumerState<_GloveRun> {
   // ---- flow -----------------------------------------------------------------------
 
   Future<void> _start() async {
-    await _say(GloveLines.intro, mood: GuideMood.inspire);
-    if (!mounted) return;
-    setState(() => _intro = false);
     _clock.start();
     await _askRound();
   }
@@ -554,6 +557,10 @@ class _GloveRunState extends ConsumerState<_GloveRun> {
     _busy = true;
     final roundBefore = _r.round;
     final o = _r.decide(g, c);
+    if (!o.right && strike(DoMistake(key: 'glove/${g.id}', textBn: o.reasonBn, art: g.asset))) {
+      await _struckOut();
+      return;
+    }
     if (o.right) {
       HapticFeedback.lightImpact();
     } else {
@@ -660,6 +667,22 @@ class _GloveRunState extends ConsumerState<_GloveRun> {
         mood: _r.passed ? GuideMood.celebrate : GuideMood.warn);
   }
 
+  /// The third wrong decision: the level fails and the lesson card insists.
+  Future<void> _struckOut() async {
+    if (_ended) return;
+    _ended = true;
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+    _clock.stop();
+    await recordStrikeOut(widget.ctx, percent: _r.percent, runScore: _runScore);
+    if (!mounted) return;
+    setState(() {
+      _overlay = _Overlay.none;
+      _held = null;
+      _busy = false;
+    });
+  }
+
   void _popOnce(bool cleared) {
     if (_popped || !mounted) return;
     _popped = true;
@@ -715,16 +738,8 @@ class _GloveRunState extends ConsumerState<_GloveRun> {
                       current: _r.done ? null : _r.round,
                       quiet: quiet,
                     ),
-                    AnimatedOpacity(
-                      opacity: _intro ? 1 : 0,
-                      duration: quiet ? Duration.zero : const Duration(milliseconds: 500),
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(GloveLines.scene, style: bangla(fontSize: 12.5, fontWeight: FontWeight.w700, color: SlmColors.gold200)),
-                      ),
-                    ),
                     Expanded(child: _Bag(packed: _r.packed, quiet: quiet)),
-                    Opacity(opacity: _overlay == _Overlay.none ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _overlay == _Overlay.none ? 1 : 0, child: DoCoachStrip(tasks: GloveLines.tasks, muted: _muted)),
                     if (_mark == null)
                       DoTray(
                         key: ValueKey('tray-$_wave'),
@@ -756,6 +771,24 @@ class _GloveRunState extends ConsumerState<_GloveRun> {
                 ),
               if (_overlay == _Overlay.call)
                 DoCallCard(caller: _deal.caller, quiet: quiet, onAnswer: (held, o) => unawaited(_answerCall(held, o))),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.thud,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_introCard)
+                LevelIntro(
+                  lines: [GloveLines.intro],
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _introCard = false);
+                    unawaited(_start());
+                  },
+                ),
               if (_mark != null)
                 Positioned.fill(
                   child: ColoredBox(

@@ -68,7 +68,8 @@ void main() {
 
   test('every picture pack can deal full hands and its art exists', () {
     _checkPack(learnBoardPack11);
-    expect(learnBoardPackFor('1.2'), isNull);
+    // Ladder step 4 (lesson 1.2) is a picture board too.
+    _checkPack(learnBoardPack12);
   });
 }
 

@@ -16,6 +16,7 @@ import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -99,6 +100,9 @@ class RodDeal {
 }
 
 abstract final class RodLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [ask];
+
   static const title = 'সঠিক রড';
   static const intro = 'কাজের আগে স্টোর। ডকেটের ভোল্টেজ দেখে ঠিক রড বেছে নিন — হাতে নিয়ে যাচাই করে।';
   static const scene = 'সাবস্টেশনের স্টোর · রড র‍্যাক';
@@ -330,7 +334,7 @@ class _RodRunPage extends ConsumerStatefulWidget {
   ConsumerState<_RodRunPage> createState() => _RodRunPageState();
 }
 
-class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard {
+class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoStrikeOut {
   final _scoreKey = GlobalKey();
   late final RodRun _run = RodRun(dealRods(widget.rng));
   final _clock = Stopwatch();
@@ -339,6 +343,9 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard {
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; the game starts when it is done.
+  var _intro = true;
   int _chain = 0;
   RodItem? _held;
   DoMistake? _card;
@@ -358,7 +365,6 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -391,9 +397,9 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard {
 
   // ---- flow -----------------------------------------------------------------------
 
+  /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
     _clock.start();
-    await _sayChain([RodLines.intro, RodLines.ask]);
   }
 
   /// The last docket: the store-keeper pushes the wrong rod.
@@ -461,7 +467,22 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard {
     }
   }
 
+  /// The third small mistake: the level fails and the lesson card insists.
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _slip(DoMistake m, Offset origin) async {
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
     _hush();
@@ -647,7 +668,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard {
                         child: _HoldButton(onTapUp: (d) => _holdJob(d.globalPosition)),
                       ),
                     ),
-                    Opacity(opacity: _card == null && _held == null ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _card == null && _held == null ? 1 : 0, child: DoCoachStrip(tasks: RodLines.tasks, muted: _muted)),
                     const SizedBox(height: 6),
                   ],
                 ),
@@ -674,6 +695,24 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard {
                               lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
                         },
                   onGo: _cardGo,
+                ),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.paper,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_intro)
+                LevelIntro(
+                  lines: [RodLines.intro, RodLines.ask],
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _intro = false);
+                    unawaited(_start());
+                  },
                 ),
               if (_mark != null)
                 Positioned.fill(

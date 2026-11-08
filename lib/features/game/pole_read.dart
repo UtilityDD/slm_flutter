@@ -16,6 +16,7 @@ import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -90,10 +91,13 @@ class PoleCase {
 }
 
 abstract final class PoleLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [ask];
+
   static const titlePcc = '৩৬০° পোল পাঠ';
   static const titleSteel = 'স্টিলের ক্যান্সার';
-  static const introPcc = 'পোলে হাত দেওয়ার আগে পোলের ভাষা পড়ুন — চারপাশ ঘুরে, গোড়া দেখে, ঠুকে শুনে।';
-  static const introSteel = 'স্টিলের পোলে মরিচাই ক্যান্সার — বিশেষ করে মাটির কাছে আর জোড়ে। দেখে, ঠুকে, তবে উঠুন।';
+  static const introPcc = 'পোলে হাত দেওয়ার আগে পোলের ভাষা পড়ুন — চারপাশ ঘুরে, গোড়া-মাঝ-মাথায় ট্যাপ করে কাছ থেকে দেখে, ঠুকে শুনে।';
+  static const introSteel = 'স্টিলের পোলে মরিচাই ক্যান্সার — বিশেষ করে মাটির কাছে আর জোড়ে। চারপাশ ঘুরে, ট্যাপ করে কাছ থেকে দেখে, ঠুকে তবে উঠুন।';
   static const rounds = ['ক', 'খ', 'গ', 'ঘ'];
   static const ask = 'পোলটা পড়ুন। উঠবেন?';
   static String scene(PoleCase c) => c.kind == PoleKind.pcc ? 'গ্রামের রাস্তা · পিসিসি পোল' : (c.rail ? 'গ্রামের রাস্তা · রেল পোল' : 'গ্রামের রাস্তা · স্টিলের টিউবুলার পোল');
@@ -384,7 +388,7 @@ class _PoleRunPage extends ConsumerStatefulWidget {
   ConsumerState<_PoleRunPage> createState() => _PoleRunPageState();
 }
 
-class _PoleRunPageState extends ConsumerState<_PoleRunPage> with DoDeathGuard {
+class _PoleRunPageState extends ConsumerState<_PoleRunPage> with DoDeathGuard, DoStrikeOut {
   final _scoreKey = GlobalKey();
   late final PoleRun _run = PoleRun(dealPoles(widget.rng, widget.pack.kind));
   final _clock = Stopwatch();
@@ -393,6 +397,9 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage> with DoDeathGuard {
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; the game starts when it is done.
+  var _intro = true;
   int _chain = 0;
   PoleSide _side = PoleSide.front;
   PoleZone? _lens;
@@ -418,7 +425,6 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage> with DoDeathGuard {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -447,9 +453,9 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage> with DoDeathGuard {
     unawaited(MascotSpeechLibrary.stop());
   }
 
+  /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
     _clock.start();
-    await _sayChain([_pcc ? PoleLines.introPcc : PoleLines.introSteel, PoleLines.ask]);
   }
 
   bool get _idle => !_busy && !_ended && !_callOpen && _card == null && !_run.shown;
@@ -562,7 +568,22 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage> with DoDeathGuard {
     unawaited(_sayChain([PoleLines.ask]));
   }
 
+  /// The third small mistake: the level fails and the lesson card insists.
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _slip(DoMistake m) async {
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
     setState(() {
@@ -704,13 +725,6 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage> with DoDeathGuard {
                       current: _run.done ? null : _run.index,
                       quiet: quiet,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
-                      child: Text(PoleLines.scene(p),
-                          textAlign: TextAlign.center,
-                          style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.gold200)),
-                    ),
-                    _CheckRow(done: _run.checks),
                     const SizedBox(height: 6),
                     Expanded(
                       child: Padding(
@@ -758,7 +772,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage> with DoDeathGuard {
                               ],
                             ),
                     ),
-                    Opacity(opacity: _card == null && !_callOpen && _lens == null ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _card == null && !_callOpen && _lens == null ? 1 : 0, child: DoCoachStrip(tasks: PoleLines.tasks, muted: _muted)),
                     const SizedBox(height: 6),
                   ],
                 ),
@@ -799,6 +813,24 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage> with DoDeathGuard {
                               lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
                         },
                   onGo: _cardGo,
+                ),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.thud,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_intro)
+                LevelIntro(
+                  lines: [_pcc ? PoleLines.introPcc : PoleLines.introSteel, PoleLines.ask],
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _intro = false);
+                    unawaited(_start());
+                  },
                 ),
               if (_mark != null)
                 Positioned.fill(
@@ -841,39 +873,6 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage> with DoDeathGuard {
 // ============================================================================
 // Pieces
 // ============================================================================
-
-/// The habit, ticked as it is done: চারপাশ · গোড়া · শব্দ · ওপর.
-class _CheckRow extends StatelessWidget {
-  const _CheckRow({required this.done});
-  final Set<PoleCheck> done;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 6,
-      runSpacing: 4,
-      children: [
-        for (var i = 0; i < PoleCheck.values.length; i++)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: done.contains(PoleCheck.values[i]) ? const Color(0xFF2E8B45) : const Color(0x22FFFFFF),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(done.contains(PoleCheck.values[i]) ? Icons.check_rounded : Icons.circle_outlined, size: 12, color: SlmColors.ivory),
-                const SizedBox(width: 3),
-                Text(PoleLines.checks[i], style: bangla(fontSize: 11.5, fontWeight: FontWeight.w800, color: SlmColors.ivory)),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
 
 class _ReportButton extends StatelessWidget {
   const _ReportButton({required this.onTapUp});
@@ -1058,15 +1057,6 @@ class _PoleScene extends StatelessWidget {
         if (!reveal) ...[
           Positioned(left: 10, bottom: 10, child: _ToolChip(icon: Icons.threesixty_rounded, label: PoleLines.walk, onTap: onWalk)),
           Positioned(right: 10, bottom: 10, child: _ToolChip(icon: Icons.handyman_rounded, label: PoleLines.tap, onTap: onHammer)),
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 40,
-            child: Center(
-              child: Text(PoleLines.zoneHint,
-                  style: bangla(fontSize: 10.5, fontWeight: FontWeight.w700, color: const Color(0xFF3A4660))),
-            ),
-          ),
         ],
       ],
     );

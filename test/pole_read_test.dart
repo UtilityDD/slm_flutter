@@ -17,6 +17,8 @@ import 'package:slm_flutter/features/game/spoken_once.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
+import 'support/intro_wait.dart';
+
 LevelContext _ctx(int doIndex) => LevelContext(
       rungId: '1.3/do/${doIndex - 1}',
       kind: CatalogRungKind.doKind,
@@ -32,6 +34,10 @@ Future<void> _pump(WidgetTester t, int ms) async {
     await t.pump(const Duration(milliseconds: 50));
   }
 }
+
+
+/// The level opens with the guide (no start button, as level 1): wait for him.
+Future<void> _skipIntro(WidgetTester t) => waitIntro(t);
 
 void main() {
   group('rules', () {
@@ -123,6 +129,8 @@ void main() {
           await t.pumpWidget(ProviderScope(
             child: MaterialApp(home: PoleReadPage(ctx: _ctx(doIndex), pack: pack, muted: true, seed: 2)),
           ));
+        await t.pump(const Duration(milliseconds: 100));
+        await waitIntro(t);
           await _pump(t, 6000);
           rebuilds = 0;
           for (var i = 0; i < 125; i++) {
@@ -136,7 +144,7 @@ void main() {
           }
           debugPrint('PERF ${pack.id} ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
           expect(t.takeException(), isNull);
-          expect(find.text('পাঠ 1.3 · কাজ $doIndex/2'), findsOneWidget);
+          expect(find.textContaining('ধাপ '), findsOneWidget);
           expect(perSec, lessThan(20));
           expect(frames, lessThan(12));
           await t.pumpWidget(const SizedBox());
@@ -164,6 +172,7 @@ void main() {
         builder: (_) => PoleReadPage(ctx: _ctx(1), pack: pack, muted: true, seed: seed),
       )));
       await _pump(t, 2000);
+      await _skipIntro(t);
       final zones = find.byWidgetPredicate((w) => w is Semantics && w.properties.label == 'পোলের অংশ');
 
       Future<void> closeCall() async {

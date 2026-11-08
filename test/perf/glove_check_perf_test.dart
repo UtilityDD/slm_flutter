@@ -12,6 +12,8 @@ import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
+import '../support/intro_wait.dart';
+
 var _rebuilds = 0;
 
 const _ctx = LevelContext(
@@ -44,6 +46,8 @@ void main() {
       await t.pumpWidget(ProviderScope(
         child: MaterialApp(home: GloveCheckPage(ctx: _ctx, pack: gloveCheckPack11, muted: true, seed: 4)),
       ));
+        await t.pump(const Duration(milliseconds: 100));
+        await waitIntro(t);
       for (var i = 0; i < 100; i++) {
         await t.pump(const Duration(milliseconds: 100));
       }
@@ -60,7 +64,7 @@ void main() {
       debugPrint('PERF glove check $tag: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames in an idle second');
 
       expect(t.takeException(), isNull);
-      expect(find.text('পাঠ 1.1 · কাজ 2/2'), findsOneWidget);
+      expect(find.textContaining('ধাপ '), findsOneWidget);
       for (final g in gloveCheckPack11.pool) {
         expect(find.text(g.labelBn), findsNothing, reason: 'no names in the tray: "${g.labelBn}"');
       }

@@ -15,6 +15,7 @@ import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -57,6 +58,9 @@ const goldenCards = [
 enum CrowdMyth { mud, ice, home, lowVolt }
 
 abstract final class GoldenLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [askOrder, askCrowd];
+
   static const title = 'গোল্ডেন মিনিট';
   static const intro = 'সহকর্মী তার থেকে আলাদা — কিন্তু নড়ছে না। মাথা ঠান্ডা, ধাপে ধাপে।';
   static const rounds = ['ধাপ', 'ভিড়ের কথা'];
@@ -198,7 +202,7 @@ class _GoldenRunPage extends ConsumerStatefulWidget {
   ConsumerState<_GoldenRunPage> createState() => _GoldenRunPageState();
 }
 
-class _GoldenRunPageState extends ConsumerState<_GoldenRunPage> {
+class _GoldenRunPageState extends ConsumerState<_GoldenRunPage> with DoStrikeOut {
   final _scoreKey = GlobalKey();
   final OrderRun _order = OrderRun(goldenRounds());
   // Dealt in a fixed order in initState: the crowd first, then the tray.
@@ -211,6 +215,9 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage> {
   final List<String> _caught = [];
 
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; the game starts when it is done.
+  var _intro = true;
   int _chain = 0;
   int _shakes = 0;
   String? _shook;
@@ -237,7 +244,6 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage> {
     super.initState();
     _crowd = dealCrowd(widget.rng);
     _tray = [...goldenCards]..shuffle(widget.rng);
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -266,9 +272,9 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage> {
     unawaited(MascotSpeechLibrary.stop());
   }
 
+  /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
     _clock.start();
-    await _sayChain([GoldenLines.intro, GoldenLines.askOrder]);
   }
 
   void _tap(StepCard c, Offset origin) {
@@ -341,7 +347,22 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage> {
     _askMyth();
   }
 
+  /// The third small mistake: the level fails and the lesson card insists.
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _percent, runScore: _runScore);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _slip(DoMistake m) async {
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
     _hush();
@@ -455,11 +476,6 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage> {
                       current: _mark != null ? null : (_stage == 2 ? 1 : (_stage == 0 ? 0 : null)),
                       quiet: quiet,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-                      child: Text(_stage == 2 ? GoldenLines.askCrowd : GoldenLines.scene,
-                          style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.gold200)),
-                    ),
                     Expanded(
                       child: _stage == 2
                           ? Center(
@@ -508,7 +524,7 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage> {
                           child: DoBigButton(label: GoldenLines.next, filled: true, onTapUp: (_) => _toCrowd()),
                         ),
                       ),
-                    Opacity(opacity: _card == null ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _card == null ? 1 : 0, child: DoCoachStrip(tasks: GoldenLines.tasks, muted: _muted)),
                     const SizedBox(height: 6),
                   ],
                 ),
@@ -527,6 +543,24 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage> {
                               lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
                         },
                   onGo: _cardGo,
+                ),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.paper,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_intro)
+                LevelIntro(
+                  lines: [GoldenLines.intro, GoldenLines.askOrder],
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _intro = false);
+                    unawaited(_start());
+                  },
                 ),
               if (_mark != null)
                 Positioned.fill(

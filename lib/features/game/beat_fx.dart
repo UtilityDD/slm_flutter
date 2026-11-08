@@ -128,6 +128,63 @@ class ScoreTotalTicker extends StatelessWidget {
   }
 }
 
+/// "ধাপ N": the one place a level's number shows (lesson numbers are internal).
+class LadderStepBadge extends StatelessWidget {
+  const LadderStepBadge({super.key, required this.step});
+  final int step;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: SlmColors.gold400.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        enDigits('ধাপ $step'),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: bangla(fontSize: 15, fontWeight: FontWeight.w900, color: SlmColors.gold200),
+      ),
+    );
+  }
+}
+
+/// The 💀 count, the same chip on every level.
+class DeathCountChip extends StatelessWidget {
+  const DeathCountChip({super.key, required this.deaths, this.chipKey});
+  final int deaths;
+  final Key? chipKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: chipKey,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1524),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: deaths > 0 ? SoftDanger.ink.withValues(alpha: 0.55) : Colors.white.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('💀', style: TextStyle(fontSize: 11.5)),
+          const SizedBox(width: 4),
+          Text(
+            enDigits('$deaths'),
+            style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: deaths > 0 ? SoftDanger.ink : SlmColors.mist, height: 1),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class UnifiedGameTopHud extends ConsumerStatefulWidget {
   final GlobalKey scoreKey;
   final GlobalKey? deathKey;
@@ -143,6 +200,13 @@ class UnifiedGameTopHud extends ConsumerStatefulWidget {
   /// it) and the main ◆ total sits small beside it.
   final int? levelScore;
 
+  /// The clean level header: only the badge (the ladder step), the score pill
+  /// and the 💀 count — no title, no running total.
+  final bool stepOnly;
+
+  /// No bar behind the chips: they float on a full-screen scene (as level 1).
+  final bool bare;
+
   const UnifiedGameTopHud({
     super.key,
     required this.scoreKey,
@@ -155,6 +219,8 @@ class UnifiedGameTopHud extends ConsumerStatefulWidget {
     this.onToggleMute,
     this.trailingExtra,
     this.levelScore,
+    this.stepOnly = false,
+    this.bare = false,
   });
 
   @override
@@ -193,19 +259,21 @@ class _UnifiedGameTopHudState extends ConsumerState<UnifiedGameTopHud>
     return Container(
       height: 54,
       padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            SlmColors.navy950.withValues(alpha: 0.94),
-            SlmColors.navy900.withValues(alpha: 0.82),
-          ],
-        ),
-        border: Border(
-          bottom: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.22)),
-        ),
-      ),
+      decoration: widget.bare
+          ? null
+          : BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  SlmColors.navy950.withValues(alpha: 0.94),
+                  SlmColors.navy900.withValues(alpha: 0.82),
+                ],
+              ),
+              border: Border(
+                bottom: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.22)),
+              ),
+            ),
       child: Row(
         children: [
           IconButton(
@@ -216,9 +284,31 @@ class _UnifiedGameTopHudState extends ConsumerState<UnifiedGameTopHud>
             constraints: const BoxConstraints.tightFor(width: 36, height: 36),
           ),
           const SizedBox(width: 6),
+          if (widget.stepOnly)
+            // The step badge takes the free space and may shrink, so a big
+            // score never pushes the bar over the edge.
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: SlmColors.gold400.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
+                  ),
+                  child: Text(
+                    enDigits(widget.badgeText),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: bangla(fontSize: 15, fontWeight: FontWeight.w900, color: SlmColors.gold200),
+                  ),
+                ),
+              ),
+            )
           // With a level score the bar carries more, so the chip sits above
           // the title and both shrink to fit a 360 dp phone.
-          if (widget.levelScore != null)
+          else if (widget.levelScore != null)
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -319,7 +409,7 @@ class _UnifiedGameTopHudState extends ConsumerState<UnifiedGameTopHud>
               ),
             ),
           ),
-          if (widget.levelScore != null) ...[
+          if (widget.levelScore != null && !widget.stepOnly) ...[
             const SizedBox(width: 6),
             ScoreTotalTicker(total: save.points),
           ],

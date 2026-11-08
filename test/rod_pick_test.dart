@@ -17,6 +17,8 @@ import 'package:slm_flutter/features/game/spoken_once.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
+import 'support/intro_wait.dart';
+
 const _ctx = LevelContext(
   rungId: '1.5/do/0',
   kind: CatalogRungKind.doKind,
@@ -34,6 +36,10 @@ Future<void> _pump(WidgetTester t, int ms) async {
     await t.pump(const Duration(milliseconds: 50));
   }
 }
+
+
+/// The level opens with the guide (no start button, as level 1): wait for him.
+Future<void> _skipIntro(WidgetTester t) => waitIntro(t);
 
 void main() {
   group('rules', () {
@@ -119,6 +125,8 @@ void main() {
         await t.pumpWidget(ProviderScope(
           child: MaterialApp(home: RodPickPage(ctx: _ctx, pack: rodPickPack15, muted: true, seed: 2)),
         ));
+        await t.pump(const Duration(milliseconds: 100));
+        await waitIntro(t);
         await _pump(t, 6000);
         rebuilds = 0;
         for (var i = 0; i < 125; i++) {
@@ -132,7 +140,7 @@ void main() {
         }
         debugPrint('PERF rod pick ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.text('পাঠ 1.5 · কাজ 1/2'), findsOneWidget);
+        expect(find.textContaining('ধাপ '), findsOneWidget);
         expect(find.text(RodLines.docket), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
@@ -159,6 +167,7 @@ void main() {
         builder: (_) => RodPickPage(ctx: _ctx, pack: rodPickPack15, muted: true, seed: seed),
       )));
       await _pump(t, 2500);
+      await _skipIntro(t);
 
       final rods = find.byWidgetPredicate((w) => w is Semantics && w.properties.label == 'রড');
       Future<void> takeAt(RodRoundDeal r, RodItem rod) async {

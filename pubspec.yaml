@@ -22,6 +22,7 @@ dependencies:
   path_provider: ^2.1.6
   crypto: ^3.0.8
   flutter_svg: ^2.2.3
+  lottie: ^3.8.2
 
 dev_dependencies:
   flutter_test:
@@ -68,12 +69,14 @@ flutter:
     - assets/sounds/learn_voice/
     - assets/data/
     - assets/game/catalog/
+    - assets/game/anim/
     - assets/game/art/discharge/
     - assets/game/art/harness/
     - assets/game/art/pole/
     - assets/game/art/ptw/
     - assets/game/art/distance/
     - assets/game/art/fire/
+    - assets/game/art/lakshman/
     - assets/game/art/rod/
     - assets/game/art/shock/
     - assets/lineman/

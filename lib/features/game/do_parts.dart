@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../guide/ai_lineman_guide.dart';
 import '../guide/guide_director.dart';
+import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
 
 // Pieces every Do game in the level shell shares, so all Do levels look, move
@@ -60,23 +62,62 @@ class DoBackdrop extends StatelessWidget {
   }
 }
 
+/// Tap the guide and he says the task on screen again — a different way each
+/// time, never the answer (level 1's "say the question again").
+class TaskNudge {
+  int _n = 0;
+
+  static final List<String Function(String)> _ways = [
+    (t) => t,
+    (t) => 'আবার বলি — $t',
+    (t) => 'তাড়াহুড়ো নয়। $t',
+    (t) => 'ভালো করে দেখুন। $t',
+  ];
+
+  String next(String task) => _ways[_n++ % _ways.length](task);
+}
+
 /// The coach and his words in one strip, so he never covers the scene and
-/// is never hidden behind a card.
-class DoCoachStrip extends ConsumerWidget {
-  const DoCoachStrip({super.key});
+/// is never hidden behind a card. Tap him: he says the current task again
+/// (the last of [tasks] he said), a different way each time.
+class DoCoachStrip extends ConsumerStatefulWidget {
+  const DoCoachStrip({super.key, this.tasks = const [], this.muted = false});
+
+  /// The level's task lines (its "ask" lines).
+  final List<String> tasks;
+  final bool muted;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DoCoachStrip> createState() => _DoCoachStripState();
+}
+
+class _DoCoachStripState extends ConsumerState<DoCoachStrip> {
+  final _nudge = TaskNudge();
+  String? _task;
+
+  void _tap() {
+    final t = _task ?? (widget.tasks.isEmpty ? null : widget.tasks.first);
+    if (t == null) return;
+    HapticFeedback.selectionClick();
+    if (!widget.muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.5, muted: false));
+    final line = _nudge.next(t);
+    ref.read(guideDirectorProvider.notifier).say(mood: GuideMood.talk, line: line);
+    unawaited(MascotSpeechLibrary.speak(line, muted: widget.muted));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final line = ref.watch(guideDirectorProvider.select((s) => s.line));
+    if (widget.tasks.contains(line)) _task = line;
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 12, 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const SizedBox(
+          SizedBox(
             width: 64,
             height: 72,
-            child: AiLinemanGuide(sprite: 64, bubbleWidth: 0, showBubble: false, large: false, centered: true),
+            child: AiLinemanGuide(sprite: 64, bubbleWidth: 0, showBubble: false, large: false, centered: true, onTap: _tap),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -107,6 +148,7 @@ class DoCoachStrip extends ConsumerWidget {
 class DoProgress extends StatelessWidget {
   const DoProgress({super.key, required this.labels, required this.done, required this.current, required this.quiet});
 
+  /// Round names: for screen readers only — on screen the rounds are dots.
   final List<String> labels;
   final Set<int> done;
   final int? current;
@@ -115,40 +157,36 @@ class DoProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          for (var i = 0; i < labels.length; i++) ...[
-            if (i > 0) Container(width: 18, height: 2, color: SlmColors.gold400.withValues(alpha: done.contains(i) ? 0.9 : 0.3)),
-            TweenAnimationBuilder<double>(
-              key: ValueKey('$i-${done.contains(i)}'),
-              tween: Tween(begin: done.contains(i) && !quiet ? 1.3 : 1.0, end: 1.0),
-              duration: const Duration(milliseconds: 520),
-              curve: Curves.elasticOut,
-              builder: (_, v, child) => Transform.scale(scale: v, child: child),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                decoration: BoxDecoration(
-                  color: done.contains(i) ? SlmColors.gold400 : const Color(0xCC0B1324),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: i == current ? SlmColors.gold300 : SlmColors.gold400.withValues(alpha: 0.35),
-                    width: i == current ? 1.8 : 1,
-                  ),
-                ),
-                child: Text(
-                  labels[i],
-                  style: bangla(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: done.contains(i) ? SlmColors.navy950 : SlmColors.ivory,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 2),
+      child: Semantics(
+        label: [for (var i = 0; i < labels.length; i++) '${labels[i]}${done.contains(i) ? ' ✓' : ''}'].join(', '),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < labels.length; i++) ...[
+              if (i > 0) Container(width: 14, height: 2, color: SlmColors.gold400.withValues(alpha: done.contains(i) ? 0.9 : 0.3)),
+              TweenAnimationBuilder<double>(
+                key: ValueKey('$i-${done.contains(i)}'),
+                tween: Tween(begin: done.contains(i) && !quiet ? 1.6 : 1.0, end: 1.0),
+                duration: const Duration(milliseconds: 520),
+                curve: Curves.elasticOut,
+                builder: (_, v, child) => Transform.scale(scale: v, child: child),
+                child: Container(
+                  width: i == current ? 14 : 11,
+                  height: i == current ? 14 : 11,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: done.contains(i) ? SlmColors.gold400 : const Color(0xCC0B1324),
+                    border: Border.all(
+                      color: i == current ? SlmColors.gold300 : SlmColors.gold400.withValues(alpha: 0.45),
+                      width: i == current ? 2.2 : 1.2,
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

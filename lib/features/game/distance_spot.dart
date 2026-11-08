@@ -16,6 +16,7 @@ import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -73,6 +74,9 @@ double distanceFor(RodRating line, {bool rain = false}) => switch (line) {
     };
 
 abstract final class DistanceLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [ask];
+
   static const title = 'কতটা দূরে?';
   static const intro = 'ছুঁতে হয় না — কাছে গেলেই বিদ্যুৎ লাফায়। লক্ষ্মণ রেখার ভেতরে কে কে আছে, থামান।';
   static const rounds = ['প্রথম', 'দ্বিতীয়', 'শেষ'];
@@ -317,7 +321,7 @@ class _DistanceRunPage extends ConsumerStatefulWidget {
   ConsumerState<_DistanceRunPage> createState() => _DistanceRunPageState();
 }
 
-class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeathGuard {
+class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeathGuard, DoStrikeOut {
   final _scoreKey = GlobalKey();
   late final DistanceRun _run = DistanceRun(dealStreets(widget.rng));
   final _clock = Stopwatch();
@@ -326,6 +330,9 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; the game starts when it is done.
+  var _intro = true;
   int _chain = 0;
   final Set<String> _marked = {};
   StreetCheck? _shown;
@@ -346,7 +353,6 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -375,9 +381,9 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
     unawaited(MascotSpeechLibrary.stop());
   }
 
+  /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
     _clock.start();
-    await _sayChain([DistanceLines.intro, DistanceLines.ask]);
   }
 
   void _toggle(StreetFigure f) {
@@ -431,7 +437,22 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
     unawaited(_sayChain([DistanceLines.ask]));
   }
 
+  /// The third small mistake: the level fails and the lesson card insists.
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _slip(DoMistake m) async {
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
     setState(() {
       _card = m;
@@ -572,13 +593,6 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
                       current: _run.done ? null : _run.round,
                       quiet: quiet,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
-                      child: Text(DistanceLines.scene(r),
-                          textAlign: TextAlign.center,
-                          style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.gold200)),
-                    ),
-                    Text(DistanceLines.ruler, style: bangla(fontSize: 11.5, fontWeight: FontWeight.w700, color: SlmColors.mist)),
                     const SizedBox(height: 6),
                     Expanded(
                       child: Padding(
@@ -615,7 +629,7 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
                               ),
                       ),
                     ),
-                    Opacity(opacity: _card == null ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _card == null ? 1 : 0, child: DoCoachStrip(tasks: DistanceLines.tasks, muted: _muted)),
                     const SizedBox(height: 6),
                   ],
                 ),
@@ -634,6 +648,24 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
                               lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
                         },
                   onGo: _cardGo,
+                ),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.electric,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_intro)
+                LevelIntro(
+                  lines: [DistanceLines.intro, DistanceLines.ask],
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _intro = false);
+                    unawaited(_start());
+                  },
                 ),
               if (_mark != null)
                 Positioned.fill(

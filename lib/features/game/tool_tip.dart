@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -66,6 +67,9 @@ class KiteDeal {
 }
 
 abstract final class ToolTipLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [askTool, askReach];
+
   static const title = 'লম্বা টুলের ডগা';
   static const intro = 'লাইভ লাইনের পাশে গাছে ঘুড়ি আটকেছে। হাতে লম্বা টুল নিলে তার ডগাও আপনার হাত।';
   static const rounds = ['প্রথম', 'দ্বিতীয়', 'শেষ'];
@@ -269,7 +273,7 @@ class _ToolTipRun extends ConsumerStatefulWidget {
   ConsumerState<_ToolTipRun> createState() => _ToolTipRunState();
 }
 
-class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard {
+class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoStrikeOut {
   final _scoreKey = GlobalKey();
   late final KiteRun _run = KiteRun(dealKites(widget.rng));
   final _clock = Stopwatch();
@@ -278,6 +282,9 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard {
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; the game starts when it is done.
+  var _intro = true;
   int _chain = 0;
   var _callOpen = false;
   var _callDone = false;
@@ -298,7 +305,6 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -327,10 +333,10 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard {
     unawaited(MascotSpeechLibrary.stop());
   }
 
+  /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
     _clock.start();
-    if (_maybeCall()) return;
-    await _sayChain([ToolTipLines.intro, ToolTipLines.askTool]);
+    _maybeCall();
   }
 
   bool _maybeCall() {
@@ -410,7 +416,22 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard {
     if (!_maybeCall()) unawaited(_sayChain([ToolTipLines.askTool]));
   }
 
+  /// The third small mistake: the level fails and the lesson card insists.
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _slip(DoMistake m) async {
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
     setState(() {
@@ -553,13 +574,6 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard {
                       current: _run.done ? null : _run.round,
                       quiet: quiet,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
-                      child: Text(ToolTipLines.scene(r),
-                          textAlign: TextAlign.center,
-                          style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.gold200)),
-                    ),
-                    Text(ToolTipLines.ruler, style: bangla(fontSize: 11.5, fontWeight: FontWeight.w700, color: SlmColors.mist)),
                     const SizedBox(height: 6),
                     Expanded(
                       child: Padding(
@@ -614,7 +628,7 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard {
                             ),
                         },
                       ),
-                    Opacity(opacity: _card == null && !_callOpen ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _card == null && !_callOpen ? 1 : 0, child: DoCoachStrip(tasks: ToolTipLines.tasks, muted: _muted)),
                     const SizedBox(height: 6),
                   ],
                 ),
@@ -641,6 +655,24 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard {
                               lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
                         },
                   onGo: _cardGo,
+                ),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.electric,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_intro)
+                LevelIntro(
+                  lines: [ToolTipLines.intro, ToolTipLines.askTool],
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _intro = false);
+                    unawaited(_start());
+                  },
                 ),
               if (_mark != null)
                 Positioned.fill(

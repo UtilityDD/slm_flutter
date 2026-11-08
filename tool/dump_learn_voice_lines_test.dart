@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slm_flutter/core/en_digits.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_voice.dart';
+import 'package:slm_flutter/features/game/fire_choose.dart';
 import 'package:slm_flutter/features/game/kit_check.dart';
 import 'package:slm_flutter/features/game/learn_board_models.dart';
 import 'package:slm_flutter/features/game/learn_feedback_lines.dart';
@@ -88,6 +89,14 @@ void main() {
       for (final l in kitCheckCallerLines(pack)) {
         rival.add(enDigits(l).trim());
       }
+    }
+
+    // Step 4 (lesson 1.2 board): the rival's myth line in his own voice (the
+    // guide's lines stay on device TTS for now).
+    rival.add(enDigits(learnBoardPack12.myth.rivalLineBn).trim());
+    // Step 23: the careless coworker (level 1's rival) in his own voice.
+    for (final l in FireLines.coworkerLines) {
+      rival.add(enDigits(l).trim());
     }
 
     for (final id in MascotCueId.values) {

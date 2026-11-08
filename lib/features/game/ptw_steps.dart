@@ -16,6 +16,7 @@ import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -80,6 +81,9 @@ const clearCards = [
 ];
 
 abstract final class StepLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [askPermit, askClear];
+
   static const title = 'সোনালি ধাপ';
   static const intro = 'পারমিটের প্রতিটা ধাপ জীবন বাঁচায় — একটা বাদ গেলেই পুরো সুরক্ষা ভেঙে পড়ে।';
   static const rounds = ['পারমিট', 'লাইন ক্লিয়ার'];
@@ -219,14 +223,13 @@ class _StepsRunPage extends ConsumerStatefulWidget {
   ConsumerState<_StepsRunPage> createState() => _StepsRunPageState();
 }
 
-class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard {
+class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard, DoStrikeOut {
   final _scoreKey = GlobalKey();
   final OrderRun _run = OrderRun(permitStepRounds());
   late final List<List<StepCard>> _trays = [
     [...permitCards]..shuffle(widget.rng),
     [...clearCards]..shuffle(widget.rng),
   ];
-  late final String _feeder = StepLines.feeders[widget.rng.nextInt(StepLines.feeders.length)];
   late final int _crew = 4 + widget.rng.nextInt(3);
   final _clock = Stopwatch();
   late bool _muted = widget.muted;
@@ -235,6 +238,9 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard 
   final List<String> _caught = [];
 
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; the game starts when it is done.
+  var _intro = true;
   int _chain = 0;
   int _shakes = 0;
   String? _shook;
@@ -257,7 +263,6 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -286,9 +291,9 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard 
     unawaited(MascotSpeechLibrary.stop());
   }
 
+  /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
     _clock.start();
-    await _sayChain([StepLines.intro, StepLines.askPermit]);
   }
 
   void _tap(StepCard card, Offset origin) {
@@ -337,7 +342,22 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard 
     unawaited(_sayChain([StepLines.askClear]));
   }
 
+  /// The third small mistake: the level fails and the lesson card insists.
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _slip(DoMistake m) async {
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
     _hush();
@@ -484,11 +504,6 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard 
                       current: _run.done ? null : (_between ? null : _run.round),
                       quiet: quiet,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-                      child: Text(StepLines.scene(_feeder),
-                          style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.gold200)),
-                    ),
                     Expanded(
                       child: ListView(
                         padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
@@ -527,7 +542,7 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard 
                           child: DoBigButton(label: StepLines.next, filled: true, onTapUp: (_) => _toClear()),
                         ),
                       ),
-                    Opacity(opacity: _card == null ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _card == null ? 1 : 0, child: DoCoachStrip(tasks: StepLines.tasks, muted: _muted)),
                     const SizedBox(height: 6),
                   ],
                 ),
@@ -546,6 +561,24 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard 
                               lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
                         },
                   onGo: _cardGo,
+                ),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.paper,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_intro)
+                LevelIntro(
+                  lines: [StepLines.intro, StepLines.askPermit],
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _intro = false);
+                    unawaited(_start());
+                  },
                 ),
               if (_mark != null)
                 Positioned.fill(

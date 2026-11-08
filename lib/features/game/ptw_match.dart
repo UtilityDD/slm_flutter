@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'level_frame.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -115,6 +116,9 @@ class PtwRound {
 }
 
 abstract final class PtwLines {
+  /// What the guide repeats (a different way each time) when tapped.
+  static const tasks = [ask];
+
   static const title = 'কাগজ মেলাও';
   static const intro = 'পারমিট মানে লিখিত চুক্তি — নির্দিষ্ট লোক, নির্দিষ্ট জায়গা, নির্দিষ্ট সময়। প্রতিটা ঘর সাইটের সঙ্গে মিলিয়ে পড়ুন।';
   static const rounds = ['ক', 'খ', 'গ', 'ঘ'];
@@ -408,7 +412,7 @@ class _PtwRunPage extends ConsumerStatefulWidget {
   ConsumerState<_PtwRunPage> createState() => _PtwRunPageState();
 }
 
-class _PtwRunPageState extends ConsumerState<_PtwRunPage> with DoDeathGuard {
+class _PtwRunPageState extends ConsumerState<_PtwRunPage> with DoDeathGuard, DoStrikeOut {
   final _scoreKey = GlobalKey();
   late final PtwRun _run = PtwRun(dealPermits(widget.rng, widget.today));
   final _clock = Stopwatch();
@@ -417,6 +421,9 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage> with DoDeathGuard {
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; the game starts when it is done.
+  var _intro = true;
   int _chain = 0;
   PtwField? _flag;
   DoMistake? _card;
@@ -436,7 +443,6 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage> with DoDeathGuard {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
@@ -465,9 +471,9 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage> with DoDeathGuard {
     unawaited(MascotSpeechLibrary.stop());
   }
 
+  /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
     _clock.start();
-    await _sayChain([PtwLines.intro, PtwLines.ask]);
   }
 
   void _roundStarted() {
@@ -537,7 +543,22 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage> with DoDeathGuard {
     _roundStarted();
   }
 
+  /// The third small mistake: the level fails and the lesson card insists.
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _slip(DoMistake m) async {
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
     setState(() {
@@ -723,7 +744,7 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage> with DoDeathGuard {
                                   ],
                                 ),
                     ),
-                    Opacity(opacity: _card == null ? 1 : 0, child: const DoCoachStrip()),
+                    Opacity(opacity: _card == null ? 1 : 0, child: DoCoachStrip(tasks: PtwLines.tasks, muted: _muted)),
                     const SizedBox(height: 6),
                   ],
                 ),
@@ -742,6 +763,24 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage> with DoDeathGuard {
                               lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
                         },
                   onGo: _cardGo,
+                ),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.paper,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_intro)
+                LevelIntro(
+                  lines: [PtwLines.intro, PtwLines.ask],
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _intro = false);
+                    unawaited(_start());
+                  },
                 ),
               if (_mark != null)
                 Positioned.fill(

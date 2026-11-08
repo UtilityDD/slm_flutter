@@ -78,8 +78,10 @@ LevelContext? levelContextFor(BuiltLadder? built, String rungId) {
 /// Rank of a finished Do play from its first-try mark (same words as before).
 String doRankBn(int mark) => mark >= 90 ? 'দারুণ' : (mark >= 60 ? 'মোটামুটি' : 'আবার');
 
-/// The one top bar every level uses: close · lesson chip + title · level
-/// score (chips fly into it) with the main total beside it · mute.
+/// The one top bar every level uses (owner's brief): close · "ধাপ N" (the
+/// ladder step — lesson and কাজ numbers are internal) · this level's score
+/// (chips fly into it) · 💀 · an optional clock ([trailing]) · mute. The
+/// title stays for screen readers only.
 class LevelShellBar extends StatelessWidget {
   const LevelShellBar({
     super.key,
@@ -92,7 +94,11 @@ class LevelShellBar extends StatelessWidget {
     required this.onToggleMute,
     this.deathKey,
     this.trailing,
+    this.bare = false,
   });
+
+  /// Float on a full-screen scene (no bar), as level 1.
+  final bool bare;
 
   final LevelContext context_;
   final String titleBn;
@@ -106,17 +112,51 @@ class LevelShellBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return UnifiedGameTopHud(
-      scoreKey: scoreKey,
-      deathKey: deathKey,
-      badgeText: context_.chipBn,
-      titleText: titleBn,
+    return Semantics(
+      label: titleBn,
+      child: UnifiedGameTopHud(
+        scoreKey: scoreKey,
+        deathKey: deathKey,
+        badgeText: 'ধাপ ${context_.ladderStep}',
+        titleText: titleBn,
+        stepOnly: true,
       closeIcon: Icons.close_rounded,
       muted: muted,
       levelScore: levelScore,
       onClose: onClose,
-      onToggleMute: onToggleMute,
-      trailingExtra: trailing,
+        onToggleMute: onToggleMute,
+        trailingExtra: trailing,
+        bare: bare,
+      ),
+    );
+  }
+}
+
+/// Three stars, the earned ones popping in one after another (once).
+class StarRow extends StatelessWidget {
+  const StarRow({super.key, required this.stars, this.size = 38});
+  final int stars;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final quiet = MediaQuery.disableAnimationsOf(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < 3; i++)
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: quiet || i >= stars ? 1 : 0, end: 1),
+            duration: Duration(milliseconds: 420 + 260 * i),
+            curve: Curves.elasticOut,
+            builder: (_, t, child) => Transform.scale(scale: t.clamp(0.0, 1.4), child: child),
+            child: Icon(
+              i < stars ? Icons.star_rounded : Icons.star_outline_rounded,
+              size: i == 1 ? size + 8 : size,
+              color: i < stars ? const Color(0xFFF2B632) : const Color(0x55A08A5A),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -133,7 +173,11 @@ class LevelPassPanel extends StatelessWidget {
     required this.onRetry,
     this.caughtBn = const [],
     this.quickBonus = false,
+    this.stars,
   });
+
+  /// Stars earned this play (1–3); null hides the row.
+  final int? stars;
 
   /// Faults the player caught this play ("আজ যা ধরলেন").
   final List<String> caughtBn;
@@ -168,6 +212,10 @@ class LevelPassPanel extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (stars != null) ...[
+              StarRow(stars: stars!),
+              const SizedBox(height: 4),
+            ],
             Text(rank, style: bangla(fontSize: 34, fontWeight: FontWeight.w900, color: SlmColors.gold700, height: 1.1)),
             const SizedBox(height: 6),
             Text(

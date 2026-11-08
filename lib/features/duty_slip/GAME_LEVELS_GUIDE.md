@@ -1,5 +1,7 @@
 # Mrityuhin Poth (মৃত্যুহীন পথ) — Do Field Levels Developer Guide
 
+> **Building or changing a ladder level (the level shell, Nov 2026 on)? Follow [`GAME_LEVEL_PLAYBOOK.md`](../../../GAME_LEVEL_PLAYBOOK.md) — it wins where this file differs** (code-drawn / Lottie scenes, no title card, the mascot first, no clock unless timed). This file stays the spec for the legacy `dsLevels` screens.
+
 > **Learn levels** (picture board, text deck, 60% pass, পাঠ offer, voices, ladder comeback) are documented in [`GAME_DEVELOPER_GUIDE.md`](../../../GAME_DEVELOPER_GUIDE.md). This file is the **Do** visual and speech spec.
 
 > **Important**: All Bengali text in this module must be saved in clean UTF-8. Do not use PowerShell `Set-Content` (which causes mojibake); edit within the IDE or agent tools (`Write` / `StrReplace`).

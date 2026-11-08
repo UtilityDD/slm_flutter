@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8EC3EA"/><stop offset="1" stop-color="#E9F2F7"/></linearGradient>
+  <linearGradient id="skyRain" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5E6E7E"/><stop offset="1" stop-color="#AEB9C2"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CDBB93"/><stop offset="1" stop-color="#AF9C74"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9E9B93"/><stop offset="0.5" stop-color="#D3D0C8"/><stop offset="1" stop-color="#97948C"/></linearGradient>
+  <linearGradient id="vest" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E06D10"/><stop offset="0.5" stop-color="#FF8A2A"/><stop offset="1" stop-color="#D9640C"/></linearGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D99A1E"/><stop offset="0.5" stop-color="#FFD25A"/><stop offset="1" stop-color="#C98A12"/></linearGradient>
+  <linearGradient id="bamboo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3C98A"/><stop offset="1" stop-color="#B8954E"/></linearGradient>
+  <linearGradient id="pvc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F6F7"/><stop offset="1" stop-color="#C9CFD3"/></linearGradient>
+  <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A6B43"/><stop offset="1" stop-color="#6E4A2C"/></linearGradient>
+  <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2E6EA"/><stop offset="1" stop-color="#8E979F"/></linearGradient>
+  <radialGradient id="wireGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE38A" stop-opacity="0.55"/><stop offset="1" stop-color="#FFE38A" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g transform="rotate(-38 100 120)">
+<rect x="14" y="112" width="172" height="12" rx="6" fill="url(#glass)"/>
+<rect x="62" y="111" width="5" height="14" rx="1.5" fill="#B1760E"/>
+<rect x="112" y="111" width="5" height="14" rx="1.5" fill="#B1760E"/>
+<rect x="14" y="110" width="34" height="16" rx="6" fill="#2B2F35"/>
+<rect x="44" y="110" width="7" height="16" rx="2" fill="#D7261E"/>
+<path d="M186 118 q14 0 14 -12 q0 -10 -9 -10" stroke="#8E979F" stroke-width="4" fill="none" stroke-linecap="round"/>
+</g></svg>

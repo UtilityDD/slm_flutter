@@ -28,7 +28,7 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 | 1 | 1.1 শেখা | পোশাক ও পিপিই চেনা (picture board + rival myth) | choose | — (Learn never kills) | ✅ |
 | 2 | 1.1 কাজ 1 | কবচ যাচাই — clothes & boots from the store | choose + inspect + say no | wearing polyester; boot with a nail in the sole | ✅ (deaths not wired yet) |
 | 3 | 1.1 কাজ 2 | গ্লাভস যাচাই — rubber gloves air test (+ helmet torch sweep: proposed) | inspect + choose + say no | packing a pinholed / cotton glove | ✅ (helmet station 🆕) |
-| 4 | 1.2 শেখা | লক্ষ্মণ রেখা | choose | — | text deck ♻️ → picture board 🆕 |
+| 4 | 1.2 শেখা | লক্ষ্মণ রেখা | choose | — | ✅ picture board (2026-11-08) |
 | 5 | 1.2 কাজ 1 | কতটা দূরে? — judge safe distance by voltage | spot | standing / tool tip inside the line's distance | ✅ built (2026-11-07) |
 | 6 | 1.2 কাজ 2 | লম্বা টুলের ডগা — hot stick vs bamboo vs PVC jugaad | choose + spot + say no | bamboo / PVC on a live line; tool tip inside | ✅ built (2026-11-07) |
 | 7 | 1.3 শেখা | পোলের ভাষা | choose | — | text deck ♻️ → picture board 🆕 |
@@ -121,7 +121,7 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 
 ### 1.8 মাঠে আগুন (steps 22–24)
 - **Teaches:** Class A (grass, wood, paper), B (transformer oil, diesel), C (live electrical); never water on B or C; power off first when safe (C may then become A/B); DCP (ABC), CO₂ (B/C), sand (small oil fire); gauge in the green; PASS; wind at your back; keep the escape route open; call the fire brigade when it's beyond you.
-- **Step 23 কোন আগুনে কী** 🆕 Three fires (burning transformer oil, sparking panel, dry grass under a pole): choose the right extinguisher for each; one bucket of water is the trap; inspect the gauge before use.
+- **Step 23 কোন আগুনে কী** 🆕 Three fires (burning transformer oil, sparking panel, dry grass under a pole): choose the right extinguisher for each; one bucket of water is the trap; inspect the gauge before use. Lottie scene (2026-11-07): live flames and smoke, hold to spray at the base, buckets thrown, rescue bloom, flare-up on water.
 - **Step 24 PASS** 🆕 Order P-A-S-S, aim at the base (spot), and choose where to stand (wind behind, exit behind you).
 - **Deadly:** water on an electrical or oil fire.
 - **Assets:** `Fire_ABC_Extinguisher`; pictures `fire_class_abc`, `fire_no_water_bc`, `fire_extinguisher_types`, `fire_pass_method`, `fire_myth_refill_required`. A fire scene needs new art.

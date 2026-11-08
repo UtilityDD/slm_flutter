@@ -4,37 +4,67 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
+import '../guide/ai_lineman_guide.dart';
 import '../guide/guide_director.dart';
 import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'beat_fx.dart';
+import 'choice_deck.dart';
 import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
+import 'fire_fx.dart';
+import 'fire_world.dart';
+import 'level_frame.dart';
+import 'level_juice.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
+import 'myth_rival_puppet.dart';
+import 'scene_kit.dart';
 import 'spoken_once.dart';
 
 // Lesson 1.8, কাজ 1: "কোন আগুনে কী". Three fires in the substation yard, in
-// random order: burning transformer oil (Class B), a sparking panel (Class
-// C), dry grass under a pole (Class A). On the panel, first switch the power
-// off (when safe). Then pick the tool — water bucket, DCP, CO2, sand bucket:
-// oil → DCP / CO2 / sand; electrical → CO2 / DCP; grass → DCP / water. Pick
-// up an extinguisher and read its gauge: one per play is empty (needle in
-// the red). Once, someone says "ছোট আগুন, নিজেই নিভে যাবে".
+// random order: burning transformer oil (Class B), a live feeder panel (an
+// electrical fire: by IS 2190 a Class A/B hazard on energised equipment),
+// dry grass under a pole (Class A). On the panel the isolator shows ON:
+// switch it OFF first (grabbing a tool while it is ON is a slip, and it must
+// still be switched off). Then the tool — water bucket, ABC powder, CO2,
+// sand bucket: oil → ABC / CO2 / sand; electrical → CO2 / ABC; grass → ABC /
+// water (IS 2190 cl. 10.1: Class A → water, foam, ABC powder; CO2 is not for
+// Class A). Pick up an extinguisher and read its gauge: one per play is
+// empty (needle in the red). Once per play, at a random fire, the careless
+// coworker (level 1's rival, his art and his recorded voice) peeks in from
+// the left or right edge: "এরকম কত দেখেছি! কিছুই হবে না — আপনিই নিভে যাবে।"
+// Act now (a button, or just take a tool / pull the switch) or listen (a
+// slip).
+//
+// Flow (as level 1): the mentor first, full screen — the fire and "now!";
+// then the scene. He stays in the bottom-right corner with short lines (the
+// next task only, no hints). A fire put out leaves its ◆ on the table; "কেন
+// এটা নিলেন?" — the right reason pays it, a wrong one burns it (a right
+// retry still pays 5); then on to the next fire by itself.
 //
 // Deadly (owner-approved list): water on an oil or electrical fire. Slips:
 // the wrong tool otherwise; skipping power-off on the panel; using an empty
 // extinguisher; letting a small fire be.
 //
+// The scene is a place (fire_world.dart, scene_kit.dart): a substation yard
+// the camera pans along — sky, far village (parallax), fence, gantry,
+// transformer, feeder panel, pole. The senior mentor stands in front and
+// speaks (bubble = the guide's lines); the trainee (the player) takes tools
+// from the fire point and does the work. Hands-on: a right extinguisher
+// (after the gauge) is held down to spray at the base until the fire is
+// gone; sand and water are thrown. Water on oil or the panel: the fire leaps
+// up (in colour, over the frozen grey scene). Scoring is unchanged.
+//
 // Voice: device TTS only. Art: assets/game/art/fire/ (hand-made SVG, no text
-// inside); fires, transformer, panel and tools are drawn in code (static).
+// inside); transformer, panel and tools drawn in code; fire, smoke, sprays,
+// throws, bloom and flare-up are Lottie (assets/game/anim/, fire_fx.dart).
 
 // ============================================================================
 // Content
@@ -82,13 +112,85 @@ abstract final class FireLines {
         FireKind.electrical => 'প্যানেলে স্পার্ক, আগুন',
         FireKind.grass => 'পোলের নিচে শুকনো ঘাসে আগুন',
       };
-  static const askPower = 'প্যানেলে আগুন — প্রথমে কী?';
+  static const askPower = 'জলদি! কী করবেন?';
+  static String alarmFirst(FireKind k) => switch (k) {
+        FireKind.oil => 'সাবস্টেশনে আগুন! ট্রান্সফরমারের তেল জ্বলছে — এখনই নেভান!',
+        FireKind.electrical => 'সাবস্টেশনে আগুন! প্যানেলে আগুন লেগেছে — এখনই ব্যবস্থা নিন!',
+        FireKind.grass => 'সাবস্টেশনে আগুন! পোলের নিচে শুকনো ঘাস জ্বলছে — এখনই নেভান!',
+      };
+  static String alarm(FireKind k) => switch (k) {
+        FireKind.oil => 'ট্রান্সফরমারের তেলে আগুন! জলদি!',
+        FireKind.electrical => 'প্যানেলে আগুন! জলদি!',
+        FireKind.grass => 'পোলের নিচে ঘাসে আগুন! জলদি!',
+      };
+  static const switchLabel = 'পাওয়ার সুইচ';
+  static const whyTool = 'কেন এটা নিলেন?';
+  static const whySwitch = 'কেন আগে সুইচ বন্ধ করলেন?';
+
+  // Option libraries: each choice deals one right and two wrong at random,
+  // so plays don't repeat; all options about the same length (no guessing
+  // by length). Reasons follow the lesson's mistake texts and IS 2190
+  // (Class A: cooling by water / ABC powder; Class B: blanketing).
+  static const whyOilRight = [
+    'তেল জলে ভাসে, তাই আগুন ছড়ায়',
+    'তেলের আগুনে জল দিলে আগুন বাড়ে',
+    'তেলের আগুন ঢেকে নেভাতে হয়',
+  ];
+  static const whyOilSand = ['বালি তেলের আগুনকে ঢেকে দেয়'];
+  static const whyOilWrong = [
+    'যত বেশি জল, তত তাড়াতাড়ি নেভে',
+    'হাতের কাছে এটাই পড়ে ছিল বলে',
+    'তেলের আগুন নিজে থেকেই নিভে যায়',
+    'জল আর বালি আসলে একই কাজ করে',
+    'ট্রান্সফরমারে জলই সবচেয়ে ভালো',
+  ];
+  static const whySwitchRight = [
+    'পাওয়ার বন্ধ হলে শকের ভয় থাকে না',
+    'বিদ্যুৎ বন্ধ হলে সাধারণ আগুন হয়',
+    'লাইভ প্যানেলে নেভাতে গেলে শক লাগে',
+  ];
+  static const whySwitchWrong = [
+    'সুইচ বন্ধ করা নেহাতই ঐচ্ছিক কাজ',
+    'আলো নিভলে আগুন ভালো দেখা যায়',
+    'সুইচ বন্ধ করলেই আগুন নিভে যায়',
+    'বিদ্যুৎ থাকলে আগুন তাড়াতাড়ি নেভে',
+    'নিয়ম আছে বলে, কারণ কিছু নেই',
+  ];
+  static const whyGrassWater = [
+    'ঘাস-কাঠের আগুন জল ঠান্ডা করে নেভায়',
+    'শুকনো ঘাসের আগুনে জলই ঠিক কাজ করে',
+  ];
+  static const whyGrassAbc = [
+    'ABC পাউডার ঘাস-কাঠের আগুনেও চলে',
+    'গায়ে ABC লেখা — ঘাসের আগুনে চলে',
+  ];
+  static const whyGrassWrong = [
+    'ছোট ঘাসের আগুন নিজেই নিভে যায়',
+    'ঘাসের আগুনে শুধু CO2 দিলেই হয়',
+    'পোলের নিচের আগুনে কিছু করার নেই',
+    'ঘাস পুড়লে ক্ষতি নেই, ছেড়ে দিই',
+    'যে কোনো পাউডারেই ঘাসের আগুন নেভে',
+  ];
+
+  /// Right reasons for this fire (and the tool used on it).
+  static List<String> whyRight(FireKind k, FireTool? used) => switch (k) {
+        FireKind.oil => [...whyOilRight, if (used == FireTool.sand) ...whyOilSand],
+        FireKind.electrical => whySwitchRight,
+        FireKind.grass => used == FireTool.dcp ? whyGrassAbc : whyGrassWater,
+      };
+  static List<String> whyWrong(FireKind k) => switch (k) {
+        FireKind.oil => whyOilWrong,
+        FireKind.electrical => whySwitchWrong,
+        FireKind.grass => whyGrassWrong,
+      };
+  static List<ChoiceOption> whyDeal(FireKind k, FireTool? used, math.Random rng) => dealChoices(whyRight(k, used), whyWrong(k), rng);
+
   static const powerOff = 'নিরাপদ হলে আগে পাওয়ার বন্ধ';
   static const rushIn = 'সোজা নেভাতে যাই';
   static const askTool = 'কী দিয়ে নেভাবেন?';
   static String tool(FireTool t) => switch (t) {
         FireTool.water => 'জলের বালতি',
-        FireTool.dcp => 'DCP',
+        FireTool.dcp => 'ABC পাউডার',
         FireTool.co2 => 'CO2',
         FireTool.sand => 'বালির বালতি',
       };
@@ -96,14 +198,51 @@ abstract final class FireLines {
   static const use = 'ব্যবহার করি';
   static const other = 'অন্যটা নিই';
   static const out = 'আগুন নিভল!';
+  static const squeeze = 'চেপে ধরুন';
+  static String toolShort(FireTool t) => switch (t) {
+        FireTool.water => 'জল',
+        FireTool.dcp => 'ABC',
+        FireTool.co2 => 'CO2',
+        FireTool.sand => 'বালি',
+      };
+  static const sprayGo = 'চেপে ধরুন!';
   static const next = 'পরেরটা';
   static const finish = 'ফলাফল';
-  static const pushWho = 'পাশের দোকানদার';
-  static const pushLine = 'ছোট্ট আগুন — ছেড়ে দাও, একটু পরে নিজেই নিভে যাবে!';
-  static const giveIn = 'ঠিক, অপেক্ষা করি';
-  static const holdOut = 'না, এখনই নেভাই';
+  /// The careless coworker (level 1's rival) — lines in his recorded voice.
+  static const coworkerTag = 'অসাবধান লাইনম্যান';
+  static const coworkerLine = 'এরকম কত দেখেছি! কিছুই হবে না — আপনিই নিভে যাবে।';
+  static const coworkerExit = 'হুঁ! যা খুশি করুন।';
+  static const coworkerLines = [coworkerLine, coworkerExit];
+  /// After the coworker: one way to act now, two ways to listen to him.
+  static const choiceRight = [
+    'এখনই নেভাই — ছোট থাকতেই',
+    'দেরি না করে এখনই নেভাই',
+    'ওর কথা নয়, আগুনটা নেভাই',
+    'ছোট আছে বলেই এখনই নেভাই',
+  ];
+  static const choiceWrong = [
+    'ওর কথাই ঠিক, অপেক্ষা করি',
+    'একটু দেখি, নিজেই নিভবে',
+    'ছোট আগুন, ছেড়ে দিলেই হয়',
+    'ধোঁয়া কমুক, তারপর দেখব',
+    'সবাই বসে আছে, আমিও বসি',
+    'আগে চা খেয়ে আসি, পরে দেখব',
+  ];
+
+  /// The guide puts the coworker's push to the player (a different way each time).
+  static const choiceAsk = [
+    'আপনি কী করবেন — ওর কথা শুনবেন?',
+    'ও বলছে নিজেই নিভে যাবে। শুনবেন, না এখনই নেভাবেন?',
+    'কার কথা শুনবেন — ওর, না আগুনের?',
+  ];
+
+  // Tap the guide: the task again, a different way each time (never the answer).
+  static const tapPower = ['জলদি! কী করবেন?', 'প্যানেলে আগুন — কী করবেন?', 'চারদিকে ভালো করে দেখুন।'];
+  static const tapTool = ['কী দিয়ে নেভাবেন?', 'স্ট্যান্ড থেকে ঠিক জিনিসটা নিন।', 'আগুনটা দেখুন — কোনটা কাজে লাগবে?'];
+  static const tapSpray = ['চেপে ধরে রাখুন — পুরো নেভা পর্যন্ত।', 'ছাড়বেন না — চেপে ধরুন!'];
+  static const tapWhy = ['কেন এটা নিলেন — কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
   static const callHeld = 'ঠিক! ছোট থাকতেই নেভান — কয়েক মিনিটে বড় হয়।';
-  static const poweredOff = 'পাওয়ার বন্ধ — এবার নেভানো নিরাপদ।';
+  static const poweredOff = 'সাবাশ! এবার নেভান।';
   static const ok = [FeedbackLine('ঠিক অস্ত্র!'), FeedbackLine('আগুন চিনেছেন।'), FeedbackLine('নিখুঁত!')];
   static const allSet = 'আগুন চেনা আর অস্ত্র বাছা — দুটোই পাকা!';
   static const quick = 'নিখুঁত আর ঝটপট!';
@@ -119,21 +258,21 @@ abstract final class FireLines {
 abstract final class FireMistakes {
   static const waterOil = DoMistake(
     key: '1.8/fire/water-oil',
-    textBn: 'তেলের আগুনে জল — তেল জলে ভাসে, আগুন আরও ছড়ায়। DCP, CO2 বা বালি।',
+    textBn: 'তেলের আগুনে জল — তেল জলে ভাসে, আগুন আরও ছড়ায়। ABC পাউডার, CO2 বা বালি।',
     art: 'assets/game/art/fire/water_no.svg',
     deadly: true,
     lessonPoint: 1,
   );
   static const waterElectric = DoMistake(
     key: '1.8/fire/water-electric',
-    textBn: 'বৈদ্যুতিক আগুনে জল — জল বিদ্যুৎ টানে, শক লাগবে। আগে পাওয়ার বন্ধ, তারপর CO2 বা DCP।',
+    textBn: 'বৈদ্যুতিক আগুনে জল — জল বিদ্যুৎ টানে, শক লাগবে। আগে পাওয়ার বন্ধ, তারপর CO2 বা ABC পাউডার।',
     art: 'assets/game/art/fire/water_no.svg',
     deadly: true,
     lessonPoint: 1,
   );
   static const wrongTool = DoMistake(
     key: '1.8/fire/wrong-tool',
-    textBn: 'এই আগুনে এটা ঠিক অস্ত্র নয় — তেল: DCP/CO2/বালি · বিদ্যুৎ: CO2/DCP · ঘাস-কাঠ: DCP বা জল।',
+    textBn: 'এই আগুনে এটা ঠিক অস্ত্র নয় — তেল: ABC/CO2/বালি · বিদ্যুৎ: CO2/ABC · ঘাস-কাঠ: জল বা ABC পাউডার।',
     art: 'assets/game/art/fire/fire_class.svg',
     lessonPoint: 2,
   );
@@ -193,6 +332,15 @@ class FireRun {
     }
     _tag(FireLines.caughtPower);
     return null;
+  }
+
+  /// A tool grabbed while the panel is still live: water is deadly, anything
+  /// else a slip — and the power must still go off.
+  DoMistake? grabLive(FireTool t) {
+    if (ended || phase != FirePhase.power) return null;
+    if (t == FireTool.water) return deadly = FireMistakes.waterElectric;
+    slips++;
+    return FireMistakes.noPowerOff;
   }
 
   DoMistake? pick(FireTool t) {
@@ -255,6 +403,10 @@ class FirePack {
   final int quickMs;
 }
 
+/// The reason pays what waited on the table; after a wrong reason burned it,
+/// the right one still pays 5 (the level 1 rule).
+int whyPayout({required int pending, required bool retried}) => pending > 0 ? pending : (retried ? 5 : 0);
+
 const firePack18 = FirePack(id: 'do_1_8_a', titleBn: FireLines.title);
 const firePacks = {'do_1_8_a': firePack18};
 
@@ -305,18 +457,108 @@ class _FireRunPage extends ConsumerStatefulWidget {
   ConsumerState<_FireRunPage> createState() => _FireRunPageState();
 }
 
-class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
+class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, DoStrikeOut, SingleTickerProviderStateMixin {
+  /// The camera pans from fire to fire.
+  late final AnimationController _cam = AnimationController(vsync: this, duration: const Duration(milliseconds: 1300))
+    ..addStatusListener((_) {
+      if (mounted) setState(() {});
+    });
+  late double _camFrom = FireWorld.cameraFor(_run.current);
+  late double _camTo = _camFrom;
+  double get _camX => _camFrom + (_camTo - _camFrom) * Curves.easeInOutCubic.transform(_cam.value);
+
+  /// Fires already put out (scorched ground).
+  final Set<FireKind> _doneKinds = {};
+
   final _scoreKey = GlobalKey();
   late final FireRun _run = FireRun(dealFires(widget.rng));
   final _clock = Stopwatch();
   late bool _muted = widget.muted;
-  final _okBag = LineBag(FireLines.ok);
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
+  final _rightBag = LineBag(LearnFeedbackLines.right);
+
+  // The scene is laid out for the screen: a tall screen gets more sky.
+  double _lift = 0;
+  double _inset = 0;
+
+  // "কেন এটা নিলেন?": the fire's ◆ wait on the table for the reason.
+  int _pending = 0;
+  int _pendingTok = 0;
+  int _burnAmt = 0;
+  int _burnTok = 0;
+  var _whyOpen = false;
+  var _whyBusy = false;
+  var _whyRetry = false;
+  List<ChoiceOption> _whyOpts = const [];
+  final Set<String> _whyWrong = {};
+  String? _whyPicked;
+  final _tokenKey = GlobalKey();
+
+  final _combo = Combo();
+  int _comboN = 0;
+  int _comboMult = 1;
+  int? _stars;
+
+  /// Bumped on every move: the fire and smoke move for a few seconds after.
+  int _wake = 0;
+
+  /// How much of this round's fire is left (1 → 0); sizes the flames.
+  final _fire = ValueNotifier<double>(1);
+
+  /// A right extinguisher in hand: hold to spray until the fire is gone.
+  FireTool? _spraying;
+  var _holding = false;
+  Timer? _sprayTick;
+  Offset _sprayFrom = Offset.zero;
+
+  /// Sand or water in the air.
+  FireTool? _throwing;
+
+  /// The empty extinguisher coughs.
+  FireTool? _puff;
+
+  bool get _isOut => _run.phase == FirePhase.out && _spraying == null && _throwing == null;
+
+  /// A deadly move: the scene freezes in grey while the consequence plays.
+  var _freeze = false;
+  Completer<void>? _frozen;
+
+  /// A right move scores with the combo multiplier (and pops "×2" when it rises).
+  int _scored(int base) {
+    final (mult, up) = _combo.hit();
+    if (up) {
+      setState(() {
+        _comboN++;
+        _comboMult = _combo.mult;
+      });
+    }
+    return base * mult;
+  }
+
   int _runScore = 0;
+
+  /// The guide's full-screen intro is up; the game starts when it is done.
+  var _intro = true;
   int _chain = 0;
   var _callOpen = false;
   var _callDone = false;
+
+  // The careless coworker: once per play he peeks in from a side.
+  Timer? _coworkerTimer;
+  var _coworkerLeft = true;
+  CoworkerExit? _coworkerOut;
+
+  /// He has said his piece; the guide asks and the two answers show.
+  var _choiceReady = false;
+  List<ChoiceOption> _choiceOpts = const [];
+  String? _choiceWrong;
+  String? _choicePicked;
+
+  /// The tool that put this fire out (the right reason fits it).
+  FireTool? _usedTool;
+  int _choiceN = 0;
+  int _tapN = 0;
   DoMistake? _card;
   MistakeTone _cardTone = MistakeTone.slip;
   var _busy = false;
@@ -334,11 +576,14 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
   void dispose() {
+    _coworkerTimer?.cancel();
+    _sprayTick?.cancel();
+    _fire.dispose();
+    _cam.dispose();
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     super.dispose();
@@ -363,31 +608,98 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
     unawaited(MascotSpeechLibrary.stop());
   }
 
+  /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
     _clock.start();
-    if (_maybeCall()) return;
-    await _sayChain([FireLines.intro, _ask]);
+    setState(() => _wake++);
+    _scheduleCoworker();
+    unawaited(_sayChain([_ask]));
   }
 
   String get _ask => _run.phase == FirePhase.power ? FireLines.askPower : FireLines.askTool;
 
-  bool _maybeCall() {
-    if (_callDone || _run.round != _run.deal.pushRound || _run.ended) return false;
-    _hush();
-    HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/customer.wav', volume: 0.6, muted: false));
-    setState(() => _callOpen = true);
-    unawaited(_say(FireLines.pushLine, other: true));
-    return true;
+  /// On the push fire, the coworker turns up a moment after it is seen.
+  void _scheduleCoworker() {
+    if (_callDone || _run.round != _run.deal.pushRound || _run.ended) return;
+    final round = _run.round;
+    _coworkerTimer?.cancel();
+    _coworkerTimer = Timer(Duration(milliseconds: 1200 + widget.rng.nextInt(1200)), () => _tryCoworker(round));
   }
 
-  Future<void> _answerCall(bool held, Offset origin) async {
+  /// He peeks in (from a random side) only while the player is still
+  /// choosing; if the player is busy he waits a little.
+  void _tryCoworker(int round) {
+    if (!mounted || _callDone || _callOpen || _ended || _run.round != round) return;
+    final ph = _run.phase;
+    if (ph == FirePhase.out) return;
+    if (_card != null || _busy || _intro || ph == FirePhase.gauge) {
+      _coworkerTimer = Timer(const Duration(milliseconds: 900), () => _tryCoworker(round));
+      return;
+    }
+    _hush();
+    HapticFeedback.heavyImpact();
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.6, muted: false));
+    setState(() {
+      _callOpen = true;
+      _choiceReady = false;
+      _choiceWrong = null;
+      _choicePicked = null;
+      _choiceOpts = dealChoices(FireLines.choiceRight, FireLines.choiceWrong, widget.rng);
+      _coworkerOut = null;
+      _coworkerLeft = widget.rng.nextBool();
+    });
+    unawaited(() async {
+      await _say(FireLines.coworkerLine, other: true);
+      if (!mounted || !_callOpen) return;
+      // The guide puts it to the player; the answers show beside him.
+      setState(() => _choiceReady = true);
+      await _sayChain([FireLines.choiceAsk[_choiceN++ % FireLines.choiceAsk.length]], mood: GuideMood.think);
+    }());
+  }
+
+  /// A card of the coworker choice: it shakes red / pops green first.
+  Future<void> _onChoice(ChoiceOption o, Offset origin) async {
+    if (!_callOpen || !_choiceReady || _choiceWrong != null || _choicePicked != null) return;
+    setState(() => o.correct ? _choicePicked = o.textBn : _choiceWrong = o.textBn);
+    await Future<void>.delayed(const Duration(milliseconds: 420));
+    if (!mounted) return;
+    await _answerCall(o.correct, origin);
+  }
+
+  /// Tap the guide: he says the task on screen again, a different way each time.
+  void _tapGuide() {
+    if (_intro || _ended || _card != null) return;
+    final ways = _callOpen
+        ? FireLines.choiceAsk
+        : _whyOpen
+            ? FireLines.tapWhy
+            : _spraying != null
+                ? FireLines.tapSpray
+                : switch (_run.phase) {
+                    FirePhase.power => FireLines.tapPower,
+                    FirePhase.tool || FirePhase.gauge => FireLines.tapTool,
+                    FirePhase.out => const <String>[],
+                  };
+    if (ways.isEmpty) return;
+    HapticFeedback.selectionClick();
+    if (!_muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.5, muted: false));
+    unawaited(_sayChain([ways[_tapN++ % ways.length]]));
+  }
+
+  /// Act now ([held]) or listen to him. [direct]: the player simply went on
+  /// working (took a tool, pulled the switch) — that refuses him too.
+  Future<void> _answerCall(bool held, Offset origin, {bool direct = false}) async {
     if (!_callOpen) return;
     _hush();
     setState(() {
       _callOpen = false;
       _callDone = true;
+      _choiceReady = false;
+      _coworkerOut = held ? CoworkerExit.beaten : CoworkerExit.smirk;
     });
+    unawaited(Future<void>.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _coworkerOut = null);
+    }));
     if (!held) {
       _run.slips++;
       unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
@@ -396,13 +708,20 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
     }
     _run.caught.add(FireLines.caughtCall);
     unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
-    unawaited(_sayChain([FireLines.callHeld, _ask], mood: GuideMood.glad));
+    if (direct) return;
+    final chain = _chain;
+    unawaited(() async {
+      await _say(FireLines.coworkerExit, other: true);
+      if (!mounted || chain != _chain) return;
+      await _sayChain([FireLines.callHeld, _ask], mood: GuideMood.glad);
+    }());
   }
 
   bool get _idle => !_busy && !_ended && !_callOpen && _card == null;
 
   Future<void> _power(bool off, Offset origin) async {
-    if (!_idle) return;
+    if (_callOpen && _run.phase == FirePhase.power) await _answerCall(true, origin, direct: true);
+    if (!_idle || _run.phase != FirePhase.power) return;
     _hush();
     final m = _run.power(off: off);
     setState(() {});
@@ -412,36 +731,203 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
       return;
     }
     HapticFeedback.lightImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
-    unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
-    unawaited(_sayChain([FireLines.poweredOff, FireLines.askTool], mood: GuideMood.glad));
+    if (!_muted) unawaited(ZlFx.cue('sounds/intro/impact_metal.ogg', volume: 0.7, muted: false));
+    setState(() => _wake++);
+    unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
+    unawaited(_sayChain([FireLines.poweredOff], mood: GuideMood.glad));
   }
 
   Future<void> _pick(FireTool t, Offset origin) async {
+    if (_callOpen) await _answerCall(true, origin, direct: true);
     if (!_idle) return;
     _hush();
-    final m = _run.pick(t);
-    setState(() {});
+    final m = _run.phase == FirePhase.power ? _run.grabLive(t) : _run.pick(t);
+    setState(() => _wake++);
+    if (m != null && m.deadly) {
+      // The bucket flies first; the fire answers.
+      setState(() => _throwing = FireTool.water);
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.5, muted: false));
+      await Future<void>.delayed(const Duration(milliseconds: 450));
+      if (!mounted) return;
+      await _after(m, origin);
+      return;
+    }
+    if (m == null && _run.phase == FirePhase.out) {
+      // Sand or water: thrown at the base; the fire dies as it lands.
+      setState(() {
+        _throwing = t;
+        _usedTool = t;
+      });
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.5, muted: false));
+      _dropFire(origin);
+      return;
+    }
     await _after(m, origin);
+  }
+
+  /// The thrown load lands: the fire shrinks to nothing, then it is out.
+  void _dropFire(Offset origin) {
+    _sprayTick?.cancel();
+    var wait = 10; // ~0.4 s in the air
+    _sprayTick = Timer.periodic(const Duration(milliseconds: 42), (tm) {
+      if (!mounted) return tm.cancel();
+      if (wait-- > 0) return;
+      _fire.value = math.max(0, _fire.value - 0.06);
+      if (_fire.value <= 0) {
+        tm.cancel();
+        _outNow(origin);
+      }
+    });
+  }
+
+  /// Held down on the squeeze: spray (the fire shrinks while held).
+  void _hold(bool down, [Offset? at]) {
+    if (_spraying == null || _ended) return;
+    if (down == _holding) return;
+    _sprayTick?.cancel();
+    setState(() {
+      _holding = down;
+      if (down) _wake++;
+    });
+    if (!down) return;
+    if (at != null) _sprayFrom = at;
+    HapticFeedback.mediumImpact();
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.5, muted: false));
+    var n = 0;
+    _sprayTick = Timer.periodic(const Duration(milliseconds: 42), (tm) {
+      if (!mounted) return tm.cancel();
+      if (++n % 6 == 0) HapticFeedback.selectionClick();
+      _fire.value = math.max(0, _fire.value - 0.028);
+      if (_fire.value <= 0) {
+        tm.cancel();
+        _holding = false;
+        _outNow(_sprayFrom);
+      }
+    });
+  }
+
+  /// The fire is out: the rescue moment; its ◆ wait on the table until the
+  /// player says why (level 1's rule).
+  void _outNow(Offset origin) {
+    if (!mounted) return;
+    final pend = _scored(15);
+    setState(() {
+      _spraying = null;
+      _throwing = null;
+      _holding = false;
+      _wake++;
+      _pending = pend;
+      _pendingTok++;
+      _whyRetry = false;
+      _whyWrong.clear();
+      _whyPicked = null;
+    });
+    HapticFeedback.mediumImpact();
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: false));
+    unawaited(_askWhy());
+  }
+
+  /// Praise, then the reason cards are dealt.
+  Future<void> _askWhy() async {
+    final round = _run.round;
+    await _sayChain([_rightBag.next().shownBn], mood: GuideMood.celebrate);
+    await Future<void>.delayed(const Duration(milliseconds: 650));
+    if (!mounted || _ended || _run.round != round || _whyOpen) return;
+    final k = _run.current;
+    setState(() {
+      _whyOpts = FireLines.whyDeal(k, _usedTool, widget.rng);
+      _whyOpen = true;
+    });
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/card_deal_a.wav', volume: 0.6, muted: false));
+    unawaited(_sayChain([k == FireKind.electrical ? FireLines.whySwitch : FireLines.whyTool]));
+  }
+
+  Offset? _tokenCentre() {
+    final box = _tokenKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    return box.localToGlobal(box.size.center(Offset.zero));
+  }
+
+  /// A reason card: the right one pays the table into the score; a wrong one
+  /// burns it (not a strike — the field mistakes are the strikes).
+  Future<void> _onWhy(ChoiceOption opt, Offset origin) async {
+    if (!_whyOpen || _whyBusy || _ended || _whyWrong.contains(opt.textBn)) return;
+    _hush();
+    if (!opt.correct) {
+      HapticFeedback.mediumImpact();
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+      final burnt = _pending;
+      setState(() {
+        _whyWrong.add(opt.textBn);
+        _whyRetry = true;
+        if (burnt > 0) {
+          _burnAmt = burnt;
+          _burnTok++;
+          _pending = 0;
+        }
+      });
+      if (burnt > 0 && !_muted) unawaited(ZlFx.cue('sounds/dress_wrong.wav', volume: 0.7, muted: false));
+      unawaited(_sayChain([LearnCoachLines.notThisReason], mood: GuideMood.warn));
+      return;
+    }
+    _whyBusy = true;
+    // The right card stays green a moment, however fast the rest goes.
+    final dwell = Future<void>.delayed(const Duration(milliseconds: 900));
+    final bank = whyPayout(pending: _pending, retried: _whyRetry);
+    final from = _tokenCentre() ?? origin;
+    setState(() {
+      _whyPicked = opt.textBn;
+      _pending = 0;
+    });
+    HapticFeedback.lightImpact();
+    if (!_muted) {
+      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.8, muted: false));
+      unawaited(ZlFx.cue('sounds/intro/confirm.ogg', volume: 0.7, muted: false));
+    }
+    await _levelDelta(bank, from, mood: GuideMood.celebrate);
+    if (!mounted) return;
+    await _sayChain([LearnCoachLines.realPoint], mood: GuideMood.glad);
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    await dwell;
+    if (!mounted || _ended) return;
+    setState(() {
+      _whyOpen = false;
+      _whyBusy = false;
+    });
+    _next();
   }
 
   Future<void> _useHeld(bool use, Offset origin) async {
     if (!_idle) return;
     _hush();
+    final tool = _run.held;
     final m = _run.useHeld(use: use);
-    setState(() {});
+    setState(() => _wake++);
     if (!use && m == null) return;
+    if (m == FireMistakes.empty) {
+      // Squeeze: a weak cough of powder, nothing more.
+      setState(() => _puff = tool);
+      _busy = true;
+      await Future<void>.delayed(const Duration(milliseconds: 900));
+      if (!mounted) return;
+      _busy = false;
+      setState(() => _puff = null);
+    }
+    if (m == null && _run.phase == FirePhase.out && tool != null) {
+      setState(() {
+        _spraying = tool;
+        _usedTool = tool;
+      });
+      _sprayFrom = origin;
+      unawaited(_sayChain([FireLines.sprayGo]));
+      return;
+    }
     await _after(m, origin);
   }
 
   Future<void> _after(DoMistake? m, Offset origin) async {
     if (m == null) {
-      if (_run.phase == FirePhase.out) {
-        HapticFeedback.mediumImpact();
-        if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
-        unawaited(_levelDelta(15, origin, mood: GuideMood.glad));
-        unawaited(_sayChain([FireLines.out, _okBag.next().shownBn], mood: GuideMood.glad));
-      }
+      if (_run.phase == FirePhase.out) _outNow(origin);
       return;
     }
     if (m.deadly) {
@@ -452,18 +938,59 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
     }
   }
 
+  /// On to the next fire by itself (after the reason is paid).
   void _next() {
-    if (!_idle || _run.phase != FirePhase.out) return;
+    if (!_idle || !_isOut) return;
+    _doneKinds.add(_run.current);
     _run.next();
+    _fire.value = 1;
+    _wake++;
+    _whyOpen = false;
     if (_run.done) {
+      setState(() {});
       unawaited(_finish());
       return;
     }
+    // Walk on to the next fire.
+    _camFrom = _camX;
+    _camTo = FireWorld.cameraFor(_run.current);
+    final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
     setState(() {});
-    if (!_maybeCall()) unawaited(_sayChain([_ask]));
+    if (quiet) {
+      _cam.value = 1;
+      _arrive();
+    } else {
+      unawaited(_cam.forward(from: 0).then((_) => _arrive()));
+    }
+  }
+
+  /// At the next fire: the alarm, what burns and "now" — or the push call.
+  void _arrive() {
+    if (!mounted || _ended) return;
+    setState(() => _wake++);
+    HapticFeedback.heavyImpact();
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/fire_alarm.wav', volume: 0.5, muted: false));
+    _scheduleCoworker();
+    unawaited(_sayChain([FireLines.alarm(_run.current), _ask], mood: GuideMood.warn));
+  }
+
+  /// The third small mistake: the level fails and the lesson card insists.
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore);
+    if (mounted) setState(() {});
   }
 
   Future<void> _slip(DoMistake m) async {
+    _combo.miss();
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
     setState(() {
@@ -483,7 +1010,10 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
     _clock.stop();
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    final frozen = _frozen = Completer<void>();
+    setState(() => _freeze = true);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
+    await frozen.future;
     if (!mounted) return;
     setState(() {
       _card = m;
@@ -538,6 +1068,9 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
     }
     final delta = await save.commitLevelScore(_rungId, _runScore);
     if (_run.passed) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
+    final stars = starsFor(passed: _run.passed, strikes: strikes, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
+    if (stars > 0) await save.recordStars(_rungId, stars);
+    _stars = stars;
     if (!mounted) return;
     setState(() {
       _mark = mark;
@@ -568,6 +1101,318 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
     if (leave == true) _popOnce(false);
   }
 
+  /// World → scene pixels (the yard sits [_lift] lower on a tall screen).
+  Offset _view(Offset world) => Offset(world.dx - _camX, world.dy + _lift);
+
+  /// This fire's base on screen and its size.
+  (Offset, double) _fireOnScreen(FireKind k) {
+    final (b, sz) = FireWorld.fireAt(k);
+    return (_view(b), sz);
+  }
+
+  /// Places a [w]x[h] animation so its own point [own] sits on this fire's
+  /// base (moved by [shift]), scaled by the fire's size times [scale].
+  Widget _at(FireKind k, double w, double h, Offset own, double scale, Widget child, {Offset shift = Offset.zero}) {
+    final (b, sz) = _fireOnScreen(k);
+    final sc = sz * scale;
+    final p = b + shift * sz;
+    return Positioned(left: p.dx - own.dx * sc, top: p.dy - own.dy * sc, width: w * sc, height: h * sc, child: child);
+  }
+
+  Rect get _traineeBox => Rect.fromLTWH(64, 206 + _lift, 72, 144);
+
+  Carry _carryOf(FireTool t) => switch (t) {
+        FireTool.water => Carry.water,
+        FireTool.sand => Carry.sand,
+        FireTool.dcp => Carry.dcp,
+        FireTool.co2 => Carry.co2,
+      };
+
+  (LinemanMode, Carry) get _trainee {
+    if (_cam.isAnimating) return (LinemanMode.walk, Carry.none);
+    final th = _throwing;
+    if (th != null) return (LinemanMode.throwIt, _carryOf(th));
+    final sp = _spraying;
+    if (sp != null) return (_holding ? LinemanMode.spray : LinemanMode.hold, _carryOf(sp));
+    final pf = _puff;
+    if (pf != null) return (LinemanMode.spray, _carryOf(pf));
+    final held = _run.held;
+    if (_run.phase == FirePhase.gauge && held != null) return (LinemanMode.hold, _carryOf(held));
+    if (_freeze || (_card != null && _cardTone == MistakeTone.slip)) return (LinemanMode.worried, Carry.none);
+    if (_isOut && !_ended) return (LinemanMode.cheer, Carry.none);
+    return (LinemanMode.idle, Carry.none);
+  }
+
+  bool _taken(FireTool t) => _run.held == t || _spraying == t || _throwing == t || _puff == t;
+
+  /// The isolator lever is up (ON) until the panel's power is switched off.
+  bool get _isolatorOn =>
+      !_doneKinds.contains(FireKind.electrical) && !(_run.current == FireKind.electrical && _run.phase != FirePhase.power);
+
+  List<Widget> _scene(FireKind k, FirePhase phase, bool quiet) {
+    final (base, size) = _fireOnScreen(k);
+    // Aim at the near edge of the fire's base.
+    final aim = base.translate(-40 * size, -6);
+    final paused = _card != null || _ended || _callOpen || _intro;
+    final burning = !_isOut;
+    final zoom = 1 + 0.05 * math.sin(math.pi * _cam.value);
+    final (tMode, tCarry) = _trainee;
+    final tb = _traineeBox;
+    final tip = tb.topLeft + LinemanFigure.tipOf(tMode == LinemanMode.throwIt ? LinemanMode.throwIt : LinemanMode.spray, tCarry, tb.size);
+    final iso = _view(FireWorld.isolator);
+    return [
+      // The world, behind everything (it leans in a touch while the camera travels).
+      Positioned.fill(
+        child: Transform.scale(
+          scale: zoom,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: AwakeClock(
+                  wake: _wake,
+                  quiet: quiet || paused,
+                  builder: (_, t) => ValueListenableBuilder<double>(
+                    valueListenable: t,
+                    builder: (_, v, _) => CustomPaint(
+                      painter: FireWorldPainter(
+                        camX: _camX,
+                        t: v,
+                        burning: burning ? k : null,
+                        done: {..._doneKinds, if (!burning) k},
+                        powerOn: _isolatorOn,
+                        lift: _lift,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // The isolator: ON until the player pulls it down.
+              Positioned(
+                left: iso.dx - 42,
+                top: iso.dy - 50,
+                width: 84,
+                height: 106,
+                child: _IsolatorSwitch(
+                  on: _isolatorOn,
+                  live: k == FireKind.electrical && phase == FirePhase.power && !_intro,
+                  quiet: quiet,
+                  onOff: (o) => unawaited(_power(true, o)),
+                ),
+              ),
+              // Smoke above the fire (thick while it burns, a thin wisp after).
+              _at(
+                k,
+                320,
+                210,
+                const Offset(160, 150),
+                1.1,
+                ValueListenableBuilder<double>(
+                  valueListenable: _fire,
+                  builder: (_, v, child) => Opacity(opacity: burning ? 0.25 + 0.55 * v : 0.35, child: child),
+                  child: FxLoop(FireAnim.smoke, key: ValueKey('smoke-${_run.round}'), wake: _wake, paused: paused, quiet: quiet),
+                ),
+                shift: const Offset(0, -70),
+              ),
+              if (burning && !_cam.isAnimating)
+                _at(
+                  k,
+                  320,
+                  210,
+                  const Offset(160, 192),
+                  1,
+                  ValueListenableBuilder<double>(
+                    valueListenable: _fire,
+                    builder: (_, v, child) => Opacity(
+                      opacity: (v / 0.15).clamp(0.0, 1.0),
+                      child: Transform(
+                        alignment: const Alignment(0, 0.83),
+                        transform: Matrix4.diagonal3Values(0.55 + 0.45 * v, 0.2 + 0.8 * v, 1),
+                        child: child,
+                      ),
+                    ),
+                    child: FxLoop(FireAnim.fire, key: ValueKey('flames-${_run.round}'), wake: _wake, paused: paused, quiet: quiet),
+                  ),
+                ),
+              if (_isOut && !_freeze && !_cam.isAnimating) ...[
+                _at(k, 320, 240, const Offset(160, 130), 1.2, FxOnce(FireAnim.bloom, key: ValueKey('bloom-${_run.round}'), ms: 1700, quiet: quiet)),
+                Positioned.fromRect(
+                  rect: Rect.fromCenter(center: base.translate(0, -30), width: 300, height: 220),
+                  child: RescueBurst(key: ValueKey('rescue-${_run.round}'), muted: _muted, cloud: false),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      // The trainee does the work.
+      Positioned.fromRect(
+        rect: tb,
+        child: LinemanFigure(look: LinemanLook.trainee, mode: tMode, carry: tCarry, wake: _wake, quiet: quiet),
+      ),
+      // The jet while squeezed, the empty cough, the thrown load.
+      if (_spraying != null && _holding)
+        FxBeam(
+          a: tip,
+          b: aim,
+          thick: 1.8,
+          child: FxLoop(_spraying == FireTool.co2 ? FireAnim.sprayCo2 : FireAnim.sprayDcp, wake: _wake, quiet: quiet, still: 0.5),
+        ),
+      if (_puff != null) FxBeam(a: tip, b: aim, thick: 1.8, child: FxOnce(FireAnim.weak, ms: 800, quiet: quiet)),
+      if (_throwing != null)
+        FxBeam(
+          a: tip,
+          b: base.translate(-20 * size, -4),
+          from: const Offset(20, 100),
+          to: const Offset(250, 100),
+          thick: 1.3,
+          child: FxOnce(_throwing == FireTool.sand ? FireAnim.sand : FireAnim.water,
+              key: ValueKey('throw-${_run.round}-$_throwing'), ms: 1100, quiet: quiet),
+        ),
+    ];
+  }
+
+  /// What sits on the scene's bottom edge: the tools, the squeeze, the reason
+  /// cards, the ◆ on the table, and the guide (the app's mascot) in the corner.
+  List<Widget> _hud(FireKind k, FirePhase phase, bool quiet, double h) {
+    final b = _inset;
+    final deckUp = _whyOpen || (_callOpen && _choiceReady);
+    final coworkerRight = (_callOpen || _coworkerOut != null) && !_coworkerLeft;
+    final rackOn = !_intro && !deckUp && (phase == FirePhase.power || phase == FirePhase.tool || phase == FirePhase.gauge);
+    final squeezeOn = _spraying != null;
+    final (base, _) = _fireOnScreen(k);
+    return [
+      if (rackOn) Positioned(key: const ValueKey('hud-rack'), left: 6, bottom: b + 4, width: 214, height: 92, child: _rack(phase)),
+      if (squeezeOn)
+        Positioned(key: const ValueKey('hud-squeeze'), left: 14, right: 128, bottom: b + 12, height: 62, child: _SqueezeButton(holding: _holding, onHold: (down, at) => _hold(down, at))),
+      // The fire's ◆ waiting on the table (or burning away).
+      if (_pending > 0)
+        Positioned(
+          key: const ValueKey('hud-token'),
+          left: base.dx - 44,
+          top: base.dy - 150,
+          width: 88,
+          height: 36,
+          child: KeyedSubtree(
+            key: _tokenKey,
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey('tok-$_pendingTok'),
+              tween: Tween(begin: quiet ? 1 : 0, end: 1),
+              duration: const Duration(milliseconds: 520),
+              curve: Curves.elasticOut,
+              builder: (_, t, child) => Transform.scale(scale: t, child: child),
+              child: _TablePill(amount: _pending),
+            ),
+          ),
+        ),
+      if (_burnAmt > 0)
+        Positioned(
+          key: const ValueKey('hud-burn'),
+          left: base.dx - 44,
+          top: base.dy - 150,
+          width: 88,
+          height: 36,
+          child: TweenAnimationBuilder<double>(
+            key: ValueKey('burn-$_burnTok'),
+            tween: Tween(begin: 0, end: 1),
+            duration: Duration(milliseconds: quiet ? 1 : 800),
+            onEnd: () {
+              if (mounted) setState(() => _burnAmt = 0);
+            },
+            builder: (_, t, child) => Opacity(
+              opacity: (1 - t).clamp(0.0, 1.0),
+              child: Transform.translate(offset: Offset(0, -24 * t), child: Transform.scale(scale: 1 - 0.4 * t, child: child)),
+            ),
+            child: _TablePill(amount: _burnAmt, burnt: true),
+          ),
+        ),
+      // The guide — the app's own mascot — in the bottom-right corner; he
+      // steps up above the reason cards while they are out.
+      // The answers: one deck, level 1's cards, for the coworker choice and
+      // for the reason.
+      if (deckUp)
+        Positioned(
+          key: const ValueKey('hud-deck'),
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: b),
+            child: _whyOpen
+                ? ChoiceDeck(
+                    key: ValueKey('why-deck-${_run.round}'),
+                    options: _whyOpts,
+                    quiet: quiet,
+                    muted: _muted,
+                    wrong: _whyWrong,
+                    picked: _whyPicked,
+                    onPick: (o, at) => unawaited(_onWhy(o, at)),
+                  )
+                : ChoiceDeck(
+                    key: ValueKey('choice-deck-${_run.round}'),
+                    options: _choiceOpts,
+                    quiet: quiet,
+                    muted: _muted,
+                    wrong: {?_choiceWrong},
+                    picked: _choicePicked,
+                    onPick: (o, at) => unawaited(_onChoice(o, at)),
+                  ),
+          ),
+        ),
+      if (!_intro)
+        Positioned(
+          key: const ValueKey('hud-guide'),
+          // Opposite the coworker while he peeps in.
+          left: coworkerRight ? 0 : null,
+          right: coworkerRight ? null : 0,
+          bottom: b + (deckUp ? 236 : 2),
+          child: AiLinemanGuide(sprite: 116, bubbleWidth: 232, showBubble: true, large: true, centered: false, onTap: _tapGuide),
+        ),
+    ];
+  }
+
+  /// The red fire-point stand with the four tools (pictures, short names).
+  Widget _rack(FirePhase phase) {
+    final canPick = phase == FirePhase.tool || phase == FirePhase.power;
+    return CustomPaint(
+      painter: const _StandPainter(),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+        child: Row(
+          children: [
+            for (final t in _run.deal.tools)
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  label: FireLines.tool(t),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTapUp: canPick && !_run.spent.contains(t) && !_taken(t) ? (d) => unawaited(_pick(t, d.globalPosition)) : null,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: CustomPaint(
+                            painter: RackToolPainter(tool: t, taken: _taken(t), spent: _run.spent.contains(t)),
+                            size: Size.infinite,
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(top: 2, bottom: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(color: const Color(0xD9091329), borderRadius: BorderRadius.circular(6)),
+                          child: Text(FireLines.toolShort(t),
+                              maxLines: 1, style: bangla(fontSize: 10.5, fontWeight: FontWeight.w900, color: const Color(0xFFF5F7FA))),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
@@ -585,10 +1430,66 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
           child: Stack(
             fit: StackFit.expand,
             children: [
+              // The scene, edge to edge — under the header, to the bottom (as level 1).
+              Positioned.fill(
+                child: LayoutBuilder(
+                  builder: (context, box) {
+                    final w = math.max(1.0, box.maxWidth);
+                    final h = (360 * box.maxHeight / w).clamp(560.0, 900.0);
+                    _lift = h - 532;
+                    _inset = MediaQuery.paddingOf(context).bottom * 360 / w;
+                    return ClipRect(
+                      child: FittedBox(
+                        fit: BoxFit.cover,
+                        child: SizedBox(
+                          width: 360,
+                          height: h,
+                          child: AnimatedBuilder(
+                            animation: _cam,
+                            builder: (context, _) => Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: ColorFiltered(
+                                    colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
+                                    child: Stack(children: _scene(k, phase, quiet)),
+                                  ),
+                                ),
+                                // What would have happened — in colour over the frozen scene.
+                                if (_freeze) _at(k, 320, 360, const Offset(160, 356), 1.15, FxOnce(FireAnim.flare, ms: 2000, quiet: quiet)),
+                                ..._hud(k, phase, quiet, h),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // A soft shade under the status bar and the header chips.
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: MediaQuery.paddingOf(context).top + 96,
+                child: const IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xB3091329), Color(0x00091329)],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               SafeArea(
+                bottom: false,
                 child: Column(
                   children: [
                     LevelShellBar(
+                      bare: true,
                       context_: widget.ctx,
                       titleBn: widget.pack.titleBn,
                       scoreKey: _scoreKey,
@@ -606,81 +1507,6 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
                       current: _run.done ? null : _run.round,
                       quiet: quiet,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-                      child: Text(FireLines.scene(k), style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.gold200)),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: SizedBox(
-                              width: 360,
-                              height: 420,
-                              child: Stack(
-                                children: [
-                                  Positioned.fill(child: SvgPicture.asset('assets/game/art/fire/yard.svg', fit: BoxFit.fill)),
-                                  Positioned.fill(
-                                    child: AnimatedSwitcher(
-                                      duration: quiet ? Duration.zero : const Duration(milliseconds: 500),
-                                      child: CustomPaint(
-                                        key: ValueKey('fire-${_run.round}-${phase == FirePhase.out}-${phase == FirePhase.power}'),
-                                        painter: FireScenePainter(kind: k, out: phase == FirePhase.out, powerOff: phase != FirePhase.power),
-                                        size: const Size(360, 420),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (_mark == null)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
-                        child: switch (phase) {
-                          FirePhase.power => Row(
-                              children: [
-                                Expanded(child: DoBigButton(label: FireLines.rushIn, filled: false, onDark: true, onTapUp: (d) => unawaited(_power(false, d.globalPosition)))),
-                                const SizedBox(width: 10),
-                                Expanded(child: DoBigButton(label: FireLines.powerOff, filled: true, onTapUp: (d) => unawaited(_power(true, d.globalPosition)))),
-                              ],
-                            ),
-                          FirePhase.tool || FirePhase.gauge => SizedBox(
-                              height: 104,
-                              child: Row(
-                                children: [
-                                  for (final t in _run.deal.tools)
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                                        child: _ToolCard(
-                                          tool: t,
-                                          spent: _run.spent.contains(t),
-                                          onTap: (o) => unawaited(_pick(t, o)),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          FirePhase.out => SizedBox(
-                              width: double.infinity,
-                              child: DoBigButton(
-                                label: _run.round >= 2 ? FireLines.finish : FireLines.next,
-                                filled: true,
-                                onTapUp: (_) => _next(),
-                              ),
-                            ),
-                        },
-                      ),
-                    Opacity(opacity: _card == null && !_callOpen && phase != FirePhase.gauge ? 1 : 0, child: const DoCoachStrip()),
-                    const SizedBox(height: 6),
                   ],
                 ),
               ),
@@ -692,13 +1518,14 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
                   quiet: quiet,
                   onUse: (use, o) => unawaited(_useHeld(use, o)),
                 ),
-              if (_callOpen)
-                DoCallCard(
-                  caller: const DoCaller(id: 'shop', whoBn: FireLines.pushWho, lineBn: FireLines.pushLine, icon: Icons.storefront_rounded),
+              if (_callOpen || _coworkerOut != null)
+                CoworkerPeek(
+                  key: ValueKey('coworker-${_run.round}'),
+                  fromLeft: _coworkerLeft,
+                  exit: _coworkerOut,
                   quiet: quiet,
-                  rushBn: FireLines.giveIn,
-                  holdBn: FireLines.holdOut,
-                  onAnswer: (held, o) => unawaited(_answerCall(held, o)),
+                  lineBn: FireLines.coworkerLine,
+                  tagBn: FireLines.coworkerTag,
                 ),
               if (_card != null)
                 MistakeCard(
@@ -715,6 +1542,40 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
                         },
                   onGo: _cardGo,
                 ),
+              if (struckOut)
+                StruckOutCard(
+                  mistake: strikeOutBy!,
+                  lessonId: widget.ctx.lessonId,
+                  sound: FailSound.fire,
+                  muted: _muted,
+                  onRetry: () => widget.onRetry(_muted),
+                  onLeave: () => _popOnce(false),
+                ),
+              if (_comboN > 0)
+                Positioned(
+                  top: MediaQuery.paddingOf(context).top + 92,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: ComboPop(key: ValueKey('combo-$_comboN'), mult: _comboMult)),
+                ),
+              if (_freeze && _card == null)
+                FreezeFrame(
+                  muted: _muted,
+                  ms: MediaQuery.disableAnimationsOf(context) ? 300 : 2200,
+                  onDone: () {
+                    final f = _frozen;
+                    if (f != null && !f.isCompleted) f.complete();
+                  },
+                ),
+              if (_intro)
+                GuideIntro(
+                  line: FireLines.alarmFirst(k),
+                  muted: _muted,
+                  onDone: () {
+                    setState(() => _intro = false);
+                    unawaited(_start());
+                  },
+                ),
               if (_mark != null)
                 Positioned.fill(
                   child: ColoredBox(
@@ -730,6 +1591,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
                                 ms: _clock.elapsedMilliseconds,
                                 caughtBn: _run.caught,
                                 quickBonus: _quickBonus,
+                                stars: _stars,
                                 onNext: () => _popOnce(true),
                                 onRetry: () => widget.onRetry(_muted),
                               )
@@ -756,46 +1618,6 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard {
 // ============================================================================
 // Pieces
 // ============================================================================
-
-class _ToolCard extends StatelessWidget {
-  const _ToolCard({required this.tool, required this.spent, required this.onTap});
-  final FireTool tool;
-  final bool spent;
-  final ValueChanged<Offset> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: FireLines.tool(tool),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapUp: spent ? null : (d) => onTap(d.globalPosition),
-        child: Opacity(
-          opacity: spent ? 0.35 : 1,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(4, 6, 4, 4),
-            decoration: BoxDecoration(
-              color: SlmColors.ivory,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 3))],
-            ),
-            child: Column(
-              children: [
-                Expanded(child: CustomPaint(painter: ToolIconPainter(tool), size: Size.infinite)),
-                const SizedBox(height: 2),
-                Text(FireLines.tool(tool),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: bangla(fontSize: 11.5, fontWeight: FontWeight.w900, color: SlmColors.ink)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// The picked-up extinguisher's pressure gauge: green = ready, red = empty.
 class _GaugeCard extends StatelessWidget {
@@ -944,9 +1766,12 @@ class ToolIconPainter extends CustomPainter {
 /// a sparking panel, or dry grass under a pole; flames are still shapes (no
 /// loop); after it is out, grey smoke.
 class FireScenePainter extends CustomPainter {
-  FireScenePainter({required this.kind, required this.out, this.powerOff = true});
+  FireScenePainter({required this.kind, required this.out, this.powerOff = true, this.flames = true});
   final FireKind kind;
   final bool out;
+
+  /// Paint the still flames and smoke (off where the Lottie fire plays).
+  final bool flames;
 
   /// The panel's power is off (no spark).
   final bool powerOff;
@@ -998,7 +1823,8 @@ class FireScenePainter extends CustomPainter {
           c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x - 5, 150, 10, 32), const Radius.circular(4)), bush);
         }
         c.drawOval(const Rect.fromLTRB(120, 292, 290, 310), Paint()..color = const Color(0xFF2B1D0E));
-        if (out) {
+        if (!flames) {
+        } else if (out) {
           smoke(c, const Offset(200, 296));
         } else {
           for (final (x, sc) in const [(140.0, 0.8), (170.0, 1.1), (205.0, 1.3), (240.0, 1.0), (272.0, 0.7)]) {
@@ -1037,7 +1863,8 @@ class FireScenePainter extends CustomPainter {
             c.drawLine(sp + Offset(math.cos(a), math.sin(a)) * 6, sp + Offset(math.cos(a), math.sin(a)) * 18, ray);
           }
         }
-        if (out) {
+        if (!flames) {
+        } else if (out) {
           smoke(c, const Offset(180, 250));
         } else {
           flame(c, const Offset(166, 262), 0.9);
@@ -1058,8 +1885,8 @@ class FireScenePainter extends CustomPainter {
         }
         if (out) {
           c.drawOval(const Rect.fromLTRB(110, 292, 240, 306), Paint()..color = const Color(0xFF3B3326));
-          smoke(c, const Offset(170, 296));
-        } else {
+          if (flames) smoke(c, const Offset(170, 296));
+        } else if (flames) {
           for (final (x, sc) in const [(120.0, 0.7), (150.0, 1.0), (180.0, 1.2), (212.0, 0.9)]) {
             flame(c, Offset(x, 302), sc);
           }
@@ -1068,5 +1895,353 @@ class FireScenePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(FireScenePainter old) => old.kind != kind || old.out != out || old.powerOff != powerOff;
+  bool shouldRepaint(FireScenePainter old) => old.kind != kind || old.out != out || old.powerOff != powerOff || old.flames != flames;
+}
+
+/// How the coworker leaves: beaten (the player acted) or smirking (obeyed).
+enum CoworkerExit { beaten, smirk }
+
+/// The careless coworker (level 1's rival — same art, same puppet) peeps
+/// round the left or right edge: he leans in from behind the screen's side,
+/// head and shoulders in view, and says to let the fire be. The guide then
+/// puts the choice to the player. The scene dims a little behind him (taps
+/// still reach the tools and the switch).
+class CoworkerPeek extends StatefulWidget {
+  const CoworkerPeek({
+    super.key,
+    required this.fromLeft,
+    required this.exit,
+    required this.quiet,
+    required this.lineBn,
+    required this.tagBn,
+  });
+
+  final bool fromLeft;
+  final CoworkerExit? exit;
+  final bool quiet;
+  final String lineBn;
+  final String tagBn;
+
+  static const bodyAsset = 'assets/duty_slip/dress/myth_rival_bad.webp';
+
+  @override
+  State<CoworkerPeek> createState() => _CoworkerPeekState();
+}
+
+class _CoworkerPeekState extends State<CoworkerPeek> with SingleTickerProviderStateMixin {
+  late final AnimationController _bob = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.quiet) unawaited(_bob.repeat());
+  }
+
+  @override
+  void didUpdateWidget(CoworkerPeek old) {
+    super.didUpdateWidget(old);
+    if (widget.exit != null && old.exit == null) {
+      // One last flinch / smirk, then still.
+      _bob.stop();
+      if (!widget.quiet) unawaited(_bob.forward(from: 0));
+    }
+  }
+
+  @override
+  void dispose() {
+    _bob.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final pw = math.min(250.0, size.width * 0.6);
+    final ph = pw * 1.22;
+    final leaving = widget.exit != null;
+    final quiet = widget.quiet;
+    // He leans in round the edge: his feet are behind the side of the screen,
+    // the lean brings his head and shoulders into view.
+    const lean = 0.5;
+    final pivotY = size.height * 0.72;
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          // The scene dims a little (taps pass through to it).
+          IgnorePointer(
+            child: AnimatedOpacity(
+              opacity: leaving ? 0 : 1,
+              duration: const Duration(milliseconds: 260),
+              child: const ColoredBox(color: Color(0x4D050A16), child: SizedBox.expand()),
+            ),
+          ),
+          Positioned.fill(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: quiet ? 1 : 0, end: leaving ? 0 : 1),
+              duration: Duration(milliseconds: quiet ? 1 : (leaving ? 380 : 300)),
+              curve: leaving ? Curves.easeInBack : Curves.easeOutBack,
+              builder: (_, v, child) {
+                // The pivot (his feet) slides from well out of view to just past the edge.
+                final out = -pw * 0.9 + pw * 0.62 * v;
+                final pivotX = widget.fromLeft ? out : size.width - out;
+                return Stack(
+                  children: [
+                    Positioned(
+                      left: pivotX - pw / 2,
+                      top: pivotY - ph,
+                      width: pw,
+                      height: ph,
+                      child: Transform.rotate(
+                        angle: (widget.fromLeft ? lean : -lean) * (0.6 + 0.4 * v),
+                        alignment: Alignment.bottomCenter,
+                        child: child,
+                      ),
+                    ),
+                  ],
+                );
+              },
+              child: IgnorePointer(
+                child: Transform.flip(
+                  // His art faces left: from the left edge he turns to the player.
+                  flipX: widget.fromLeft,
+                  child: AnimatedBuilder(
+                    animation: _bob,
+                    builder: (_, _) => ValueListenableBuilder<bool>(
+                      valueListenable: MascotTalk.active,
+                      builder: (_, talking, _) => MythRivalPuppet(
+                        size: pw,
+                        bodyAsset: CoworkerPeek.bodyAsset,
+                        phase: _bob.value,
+                        speaking: talking && !leaving,
+                        reduce: quiet,
+                        defeated: widget.exit == CoworkerExit.beaten,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // His words, up in the sky so the fire he waves off stays in view.
+          Positioned(
+            left: 14,
+            right: 14,
+            top: size.height * 0.15,
+            child: AnimatedOpacity(
+              opacity: leaving ? 0 : 1,
+              duration: const Duration(milliseconds: 200),
+              child: IgnorePointer(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: quiet ? 1 : 0, end: 1),
+                  duration: const Duration(milliseconds: 420),
+                  curve: Curves.easeOutBack,
+                  builder: (_, t, child) => Transform.scale(scale: 0.7 + 0.3 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(14, 9, 14, 12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF3B0C14), Color(0xFF22070C)],
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: SlmColors.danger, width: 1.8),
+                      boxShadow: [BoxShadow(color: SlmColors.danger.withValues(alpha: 0.40), blurRadius: 18, spreadRadius: 1)],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                          decoration: BoxDecoration(color: SlmColors.danger, borderRadius: BorderRadius.circular(999)),
+                          child: Text(widget.tagBn, style: bangla(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white)),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(widget.lineBn,
+                            textAlign: TextAlign.center,
+                            style: bangla(fontSize: 16, fontWeight: FontWeight.w800, height: 1.35, color: SlmColors.ivory)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The isolator switch beside the panel: a grey box with a red lever, ON
+/// (up, red lamp) or OFF (down, green lamp). Tap it or pull it down.
+class _IsolatorSwitch extends StatelessWidget {
+  const _IsolatorSwitch({required this.on, required this.live, required this.quiet, required this.onOff});
+  final bool on;
+
+  /// It can be switched now.
+  final bool live;
+  final bool quiet;
+  final ValueChanged<Offset> onOff;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: FireLines.switchLabel,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapUp: live ? (d) => onOff(d.globalPosition) : null,
+        onVerticalDragUpdate: live
+            ? (d) {
+                if (d.delta.dy > 1.5) onOff(d.globalPosition);
+              }
+            : null,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(end: on ? 0 : 1),
+          duration: quiet ? Duration.zero : const Duration(milliseconds: 240),
+          curve: Curves.easeInCubic,
+          builder: (_, v, _) => CustomPaint(painter: _IsolatorPainter(v)),
+        ),
+      ),
+    );
+  }
+}
+
+class _IsolatorPainter extends CustomPainter {
+  _IsolatorPainter(this.v);
+
+  /// 0 = ON (lever up) … 1 = OFF (lever down).
+  final double v;
+
+  void _label(Canvas c, String text, Offset centre, Color col) {
+    final tp = TextPainter(
+      text: TextSpan(text: text, style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w900, color: col, height: 1)),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(c, centre - Offset(tp.width / 2, tp.height / 2));
+  }
+
+  @override
+  void paint(Canvas c, Size size) {
+    // Drawn for a 60-wide box, scaled to fit.
+    final k = size.width / 60;
+    c.scale(k);
+    final s = Size(60, size.height / k);
+    final box = Rect.fromCenter(center: Offset(s.width / 2, s.height / 2 - 4), width: 36, height: 50);
+    c.drawRRect(RRect.fromRectAndRadius(box.shift(const Offset(1.5, 2)), const Radius.circular(5)), Paint()..color = const Color(0x55000000));
+    c.drawRRect(
+      RRect.fromRectAndRadius(box, const Radius.circular(5)),
+      Paint()..shader = const LinearGradient(colors: [Color(0xFF8F98A0), Color(0xFFC3CAD0), Color(0xFF858E96)]).createShader(box),
+    );
+    final on = v < 0.5;
+    _label(c, 'ON', Offset(box.center.dx - 6, box.top + 8), on ? const Color(0xFFB71C1C) : const Color(0xFF5B636B));
+    _label(c, 'OFF', Offset(box.center.dx - 6, box.bottom - 8), on ? const Color(0xFF5B636B) : const Color(0xFF1B7A3D));
+    // Lamp.
+    final lamp = Offset(box.right - 7, box.top + 8);
+    final lc = on ? const Color(0xFFE5483A) : const Color(0xFF39B86A);
+    c.drawCircle(lamp, 7, Paint()..shader = RadialGradient(colors: [lc.withValues(alpha: 0.55), lc.withValues(alpha: 0)]).createShader(Rect.fromCircle(center: lamp, radius: 7)));
+    c.drawCircle(lamp, 3.2, Paint()..color = lc);
+    // Lever: pivots at the middle, up when ON, down when OFF.
+    final pivot = Offset(box.center.dx - 4, box.center.dy);
+    final a = -math.pi / 2 + 0.25 + v * (math.pi - 0.5);
+    final end = pivot + Offset(math.cos(a), math.sin(a)) * 17;
+    c.drawLine(pivot, end, Paint()
+      ..color = const Color(0xFF2B2F35)
+      ..strokeWidth = 4.2
+      ..strokeCap = StrokeCap.round);
+    c.drawCircle(end, 5.2, Paint()..color = const Color(0xFFD7261E));
+    c.drawCircle(end.translate(-1.4, -1.4), 1.8, Paint()..color = const Color(0x88FFFFFF));
+    c.drawCircle(pivot, 3.4, Paint()..color = const Color(0xFF3A3F46));
+  }
+
+  @override
+  bool shouldRepaint(_IsolatorPainter old) => old.v != v;
+}
+
+/// The ◆ waiting on the table for the reason (grey and red when burnt).
+class _TablePill extends StatelessWidget {
+  const _TablePill({required this.amount, this.burnt = false});
+  final int amount;
+  final bool burnt;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: burnt ? const [Color(0xFF6B2A22), Color(0xFF3A1C18)] : const [Color(0xFFFFD34E), Color(0xFFF2A51A)]),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: burnt ? const Color(0xFFC0392B) : const Color(0xFFFFF3C4), width: 1.5),
+        boxShadow: const [BoxShadow(color: Color(0x88000000), blurRadius: 8, offset: Offset(0, 3))],
+      ),
+      child: Text('◆ +$amount',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: burnt ? const Color(0xFFF3B9B0) : const Color(0xFF3A2500))),
+    );
+  }
+}
+
+/// The squeeze lever: hold it down to spray, let go to stop.
+class _SqueezeButton extends StatelessWidget {
+  const _SqueezeButton({required this.holding, required this.onHold});
+  final bool holding;
+  final void Function(bool down, Offset at) onHold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: FireLines.squeeze,
+      child: Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (e) => onHold(true, e.position),
+        onPointerUp: (e) => onHold(false, e.position),
+        onPointerCancel: (e) => onHold(false, e.position),
+        child: AnimatedScale(
+          scale: holding ? 0.94 : 1,
+          duration: const Duration(milliseconds: 90),
+          child: Container(
+            height: 64,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: holding ? const [Color(0xFFB02A1F), Color(0xFF7E1C14)] : const [Color(0xFFE5483A), Color(0xFFB02A1F)],
+              ),
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: holding ? const [] : const [BoxShadow(color: Color(0x88000000), blurRadius: 8, offset: Offset(0, 4))],
+            ),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.touch_app_rounded, color: Colors.white, size: 26),
+                const SizedBox(width: 8),
+                Text(FireLines.squeeze, style: bangla(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The fire point's red stand: two posts and a rail with hooks.
+class _StandPainter extends CustomPainter {
+  const _StandPainter();
+
+  @override
+  void paint(Canvas c, Size s) {
+    final post = Paint()
+      ..shader = const LinearGradient(colors: [Color(0xFF8E1F16), Color(0xFFD23A2C), Color(0xFF8E1F16)]).createShader(Rect.fromLTWH(0, 0, 10, s.height));
+    c.drawOval(Rect.fromLTWH(-4, s.height - 8, s.width + 8, 12), Paint()..color = const Color(0x40000000));
+    c.drawRect(Rect.fromLTWH(2, 2, 7, s.height - 4), post);
+    c.drawRect(Rect.fromLTWH(s.width - 9, 2, 7, s.height - 4), post);
+    c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0, 2, s.width, 7), const Radius.circular(2)), Paint()..color = const Color(0xFFC0392B));
+  }
+
+  @override
+  bool shouldRepaint(_StandPainter old) => false;
 }
