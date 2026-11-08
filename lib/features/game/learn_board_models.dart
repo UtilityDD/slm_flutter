@@ -1,6 +1,12 @@
 // Shared Learn choice-board models (PickGear + MythRival spine).
 // Modes beyond PickGear (OrderSteps, MeasureRule, …) reuse the same pending/Why flow later.
 
+import 'learn_board_pack13.dart';
+import 'learn_board_pack14.dart';
+
+export 'learn_board_pack13.dart' show learnBoardPack13, PoleBoardLines;
+export 'learn_board_pack14.dart' show learnBoardPack14;
+
 enum LearnBoardMode { pickGear, mythRival }
 
 /// Anything dealt onto a board: an item card or a "why" chip.
@@ -146,6 +152,8 @@ class LearnBoardPack {
 LearnBoardPack? learnBoardPackFor(String lessonId) {
   if (lessonId == '1.1') return learnBoardPack11;
   if (lessonId == '1.2') return learnBoardPack12;
+  if (lessonId == '1.3') return learnBoardPack13;
+  if (lessonId == '1.4') return learnBoardPack14;
   return null;
 }
 

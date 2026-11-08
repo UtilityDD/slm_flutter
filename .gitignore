@@ -53,6 +53,8 @@ app.*.symbols
 *~
 /tmp/
 *.mp4
+# The brand intro is part of the app (assets/brand, ~330 KB).
+!assets/brand/intro.mp4
 *.mov
 *.webm
 *.mkv

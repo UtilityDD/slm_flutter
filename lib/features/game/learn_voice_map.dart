@@ -164,16 +164,22 @@ const learnCoachVoice = <String, String>{
 
 const learnRivalVoice = <String, String>{
   "অর্ধেকটা তো বাকি — রেখে দাও, পরের বার কাজে লাগবে।": 'sounds/learn_voice/r_84c998f6a9.mp3',
+  "আমি 20 বছর ধরে কাজ করছি, খুব সাবধানে থাকি। আমার কখনো হারনেস লাগে না।": 'sounds/learn_voice/r_98caf375ff.mp3',
   "আমি তো তারটা ছুঁচ্ছি না, একটু কাছে গেলে কিছু হবে না।": 'sounds/learn_voice/r_e8af4656af.mp3',
   "আরে! আমাদের বাপ-দাদারা তো এসব দিয়েই সারা জীবন কাজ করে গেল!": 'sounds/learn_voice/r_5e987e0ee2.mp3',
+  "আরে! এত বছর এই পোলেই উঠছি, কিছু তো হয়নি!": 'sounds/learn_voice/r_47630d2bdd.mp3',
+  "আরে! হারনেস-টারনেস ছাড়াই তো সারা জীবন পোলে উঠলাম!": 'sounds/learn_voice/r_882c4026c8.mp3',
   "এরকম কত দেখেছি! কিছুই হবে না — আপনিই নিভে যাবে।": 'sounds/learn_voice/r_a4b3e32d45.mp3',
   "কারেন্ট কখন আসবে? সকাল থেকে বসে আছি!": 'sounds/learn_voice/r_17dfdebfd2.mp3',
   "চল চল, দেরি হচ্ছে! এসব দেখার সময় নেই।": 'sounds/learn_voice/r_b56e8939c0.mp3',
+  "চুলের মতো ফাটল তো থাকেই, ওতে কিছু হয় না! উঠে পড়ো।": 'sounds/learn_voice/r_25361a4a22.mp3',
   "জলদি করো! গাড়ি দাঁড়িয়ে আছে। চেক-টেক পরে হবে!": 'sounds/learn_voice/r_6d3fbf8557.mp3',
   "ফাটা হেলমেট হোক বা বাইকের হেলমেট—সবই তো মাথা বাঁচায়! এত নিয়ম লাগে নাকি?": 'sounds/learn_voice/r_791fe7e4ab.mp3',
   "যত্তসব নতুন নিয়ম! আমি চললাম…": 'sounds/learn_voice/r_8e9c3c8dd0.mp3',
   "লাইন ট্রিপ করেছে, এখনই বেরোও!": 'sounds/learn_voice/r_59ada826f9.mp3',
   "শুকনো বাঁশ তো, চলবে! হট স্টিক আনতে গাড়ি পর্যন্ত কে যাবে?": 'sounds/learn_voice/r_710db6061f.mp3',
   "সময় নেই! গ্লাভস তো নতুনই, এমনিই পরে নাও!": 'sounds/learn_voice/r_d2718672c3.mp3',
+  "স্টিলের পোল তো শুধু বাঁকে, ভাঙে না! উঠে পড়ো।": 'sounds/learn_voice/r_9e9e99185c.mp3',
+  "স্টিলের পোল তো শুধু বাঁকে, ভাঙে না! গোড়ায় একটু মরিচা থাকলে কী হয়?": 'sounds/learn_voice/r_833d990572.mp3',
   "হুঁ! যা খুশি করুন।": 'sounds/learn_voice/r_95012c7c49.mp3',
 };

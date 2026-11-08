@@ -51,6 +51,15 @@ class SlmSfx {
     } catch (_) {}
   }
 
+  /// Loads a player for each of [files] now (no sound), so their first play
+  /// has no load delay (done while the brand intro plays).
+  static void warm(Iterable<String> files, {bool mix = true}) {
+    for (final f in files) {
+      final list = _slots.putIfAbsent('$f|$mix', () => []);
+      if (list.isEmpty) list.add(_SfxSlot(f, mix)..startedAt = _clock.elapsed - _busyFor);
+    }
+  }
+
   static _SfxSlot _pick(String key, String file, bool mix) {
     final list = _slots.putIfAbsent(key, () => []);
     final now = _clock.elapsed;

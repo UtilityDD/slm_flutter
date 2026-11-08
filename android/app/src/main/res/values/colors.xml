@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The brand navy (the logo's own background): icon and launch screen. -->
+    <color name="ic_launcher_background">#0E162B</color>
+    <color name="splash_background">#0E162B</color>
+</resources>

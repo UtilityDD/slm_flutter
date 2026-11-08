@@ -1729,7 +1729,8 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
           if (believe && !_rivalDefeated && _askReady) ...[
             const SizedBox(height: 8),
             Text(
-              'বিশ্বাস করেন?',
+              // On a flipped ask the bubble asks "…সেটা কি ভুল?"; the heading matches it.
+              _askFlipped ? 'সেটা কি ভুল?' : 'বিশ্বাস করেন?',
               style: bangla(fontSize: 22, fontWeight: FontWeight.w900, color: palette.accent),
             ),
             const SizedBox(height: 10),

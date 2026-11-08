@@ -31,10 +31,10 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 | 4 | 1.2 শেখা | লক্ষ্মণ রেখা | choose | — | ✅ picture board (2026-11-08) |
 | 5 | 1.2 কাজ 1 | কতটা দূরে? — judge safe distance by voltage | spot (drag the band) | standing / tool tip inside the line's distance | ✅ built (2026-11-07) · on the shared kit (2026-11-08) |
 | 6 | 1.2 কাজ 2 | লম্বা টুলের ডগা — hot stick vs bamboo vs PVC jugaad | choose + drag the tip + say no | bamboo / PVC on a live line; tool tip inside | ✅ built (2026-11-07) · on the shared kit (2026-11-08) |
-| 7 | 1.3 শেখা | পোলের ভাষা | choose | — | text deck ♻️ → picture board 🆕 |
-| 8 | 1.3 কাজ 1 | ৩৬০° পোল পাঠ — PCC pole: base, lean, cracks, sound test | inspect + spot | climbing a condemned pole | ✅ built (2026-11-07) |
-| 9 | 1.3 কাজ 2 | স্টিলের ক্যান্সার — steel pole rust at ground level, hardware | inspect + spot | climbing a rusted-through pole | ✅ built (2026-11-07) |
-| 10 | 1.4 শেখা | হারনেস: লাইফলাইন | choose | — | text deck ♻️ → picture board 🆕 |
+| 7 | 1.3 শেখা | পোলের ভাষা | choose | — | ✅ picture board (2026-11-08): 5 rounds (walk round, base, sound test, scan, hardware) + the rival's steel-pole myth |
+| 8 | 1.3 কাজ 1 | ৩৬০° পোল পাঠ — PCC pole: base, lean, cracks, sound test | inspect + spot | climbing a condemned pole | ✅ on the shared kit (2026-11-08): drawn village roadside, swipe round the pole, lens, hammer knock, reason deck, coworker, freeze |
+| 9 | 1.3 কাজ 2 | স্টিলের ক্যান্সার — steel pole rust at ground level, hardware | inspect + spot | climbing a rusted-through pole | ✅ on the shared kit (2026-11-08), same engine as step 8 |
+| 10 | 1.4 শেখা | হারনেস: লাইফলাইন | choose | — | ✅ picture board (2026-11-08): 6 rounds (belt vs harness, webbing, hardware & label, fit, anchor, rescue) + the rival's "হারনেস লাগে না" myth |
 | 11 | 1.4 কাজ 1 | তিন মিনিটের পরীক্ষা — full body vs waist belt; webbing, stitches, hardware, label date | choose + inspect | waist belt for fall arrest; frayed webbing; expired harness | ✅ built (2026-11-07) |
 | 12 | 1.4 কাজ 2 | ফিটিং আর অ্যাঙ্কর — fit (4 fingers, chest strap, D-ring) + anchor point | spot + say no | anchoring to a broken cross-arm / insulator pin | ✅ built (2026-11-07) |
 | 13 | 1.5 শেখা | ডিসচার্জ রড | choose | — | text deck ♻️ → picture board 🆕 |

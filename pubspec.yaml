@@ -23,6 +23,7 @@ dependencies:
   crypto: ^3.0.8
   flutter_svg: ^2.2.3
   lottie: ^3.8.2
+  video_player: ^2.14.1
 
 dev_dependencies:
   flutter_test:
@@ -73,6 +74,8 @@ flutter:
     - assets/game/art/discharge/
     - assets/game/art/harness/
     - assets/game/art/pole/
+    - assets/game/art/pole_board/
+    - assets/game/art/harness_board/
     - assets/game/art/ptw/
     - assets/game/art/distance/
     - assets/game/art/fire/

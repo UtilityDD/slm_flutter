@@ -1,13 +1,17 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/app_config.dart';
 import 'core/network/supabase_service.dart';
 import 'core/startup/app_memory.dart';
 import 'core/startup/startup_trace.dart';
+import 'core/startup/startup_warmup.dart';
 import 'core/theme/app_theme.dart';
 import 'features/shell/main_shell.dart';
+import 'features/startup/intro_video.dart';
 
 void main() {
   bootstrap();
@@ -43,6 +47,9 @@ Future<void> _firstFrameShown() {
   return shown.future;
 }
 
+/// `flutter test` sets FLUTTER_TEST; the intro needs the real video plugin.
+final bool _inWidgetTest = !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
+
 class SmartLinemanApp extends StatelessWidget {
   const SmartLinemanApp({super.key});
 
@@ -52,7 +59,9 @@ class SmartLinemanApp extends StatelessWidget {
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const MainShell(),
+      // The brand intro plays over Home on a cold start (not in widget tests).
+      // Meanwhile the warm-up loads the ladder, lessons, voice and sounds.
+      home: IntroGate(enabled: !_inWidgetTest, warmUp: warmUpDuringIntro, child: const MainShell()),
     );
   }
 }

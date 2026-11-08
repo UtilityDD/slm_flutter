@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8EC3EA"/><stop offset="1" stop-color="#E9F2F7"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CDBB93"/><stop offset="1" stop-color="#AF9C74"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9E9B93"/><stop offset="0.5" stop-color="#D3D0C8"/><stop offset="1" stop-color="#97948C"/></linearGradient>
+  <linearGradient id="steelArm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A939B"/><stop offset="1" stop-color="#4F575F"/></linearGradient>
+  <linearGradient id="woodArm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A7048"/><stop offset="1" stop-color="#5E4128"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9D2D8"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B8C2C9"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="webO" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF9F45"/><stop offset="0.5" stop-color="#F7811F"/><stop offset="1" stop-color="#D9640C"/></linearGradient>
+  <linearGradient id="webOv" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D9640C"/><stop offset="0.5" stop-color="#FF9F45"/><stop offset="1" stop-color="#D9640C"/></linearGradient>
+  <linearGradient id="webUnder" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6E3206"/><stop offset="1" stop-color="#8E450C"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="pad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A3F46"/><stop offset="1" stop-color="#1F2328"/></linearGradient>
+  <linearGradient id="bench" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9965E"/><stop offset="1" stop-color="#9E6B38"/></linearGradient>
+  <linearGradient id="tag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E9EDF0"/></linearGradient>
+  <radialGradient id="vignette" cx="0.5" cy="0.45" r="0.75"><stop offset="0.6" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.28"/></radialGradient>
+  <radialGradient id="burn" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1C120B"/><stop offset="0.55" stop-color="#3B2414"/><stop offset="0.85" stop-color="#7A4A22" stop-opacity="0.85"/><stop offset="1" stop-color="#A8601E" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#bench)"/>
+<path d="M0 44 L200 44" stroke="#7E5229" stroke-width="1.4" opacity="0.55"/><path d="M0 98 L200 98" stroke="#7E5229" stroke-width="1.4" opacity="0.55"/><path d="M0 152 L200 152" stroke="#7E5229" stroke-width="1.4" opacity="0.55"/><path d="M0 206 L200 206" stroke="#7E5229" stroke-width="1.4" opacity="0.55"/>
+<g stroke="#8A5A2E" stroke-width="0.8" fill="none" opacity="0.35"><path d="M10 20 Q60 14 120 22 T200 18"/><path d="M0 70 Q50 64 110 74 T200 66"/><path d="M6 126 Q70 118 130 128 T200 122"/><path d="M0 180 Q60 174 120 184 T200 178"/></g>
+<path d="M40 214 L86 150 M160 214 L114 150" stroke="#00000030" stroke-width="20"/>
+<path d="M40 214 L86 150 M160 214 L114 150" stroke="#F7811F" stroke-width="17"/>
+<path d="M60 -4 L88 110 M140 -4 L112 110" stroke="#00000030" stroke-width="20"/>
+<path d="M60 -4 L88 110 M140 -4 L112 110" stroke="#F7811F" stroke-width="17"/>
+<rect x="62" y="108" width="76" height="58" rx="12" fill="url(#pad)"/>
+<rect x="67" y="113" width="66" height="48" rx="9" fill="none" stroke="#5A616A" stroke-width="1.2" stroke-dasharray="2.4 1.6"/>
+<path d="M74 120 L126 120 Q126 70 100 62 Q74 70 74 120 Z" fill="none" stroke="#00000040" stroke-width="12" transform="translate(2 3)"/>
+<path d="M74 120 L126 120 Q126 70 100 62 Q74 70 74 120 Z" fill="none" stroke="url(#steel)" stroke-width="10"/>
+<path d="M80 74 Q90 66 100 65" stroke="#FFFFFF" stroke-width="2.4" fill="none" stroke-linecap="round" opacity="0.8"/>
+<rect width="200" height="220" fill="url(#vignette)"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

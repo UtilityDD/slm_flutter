@@ -11,6 +11,7 @@ import 'package:slm_flutter/features/duty_slip/duty_slip_voice.dart';
 import 'package:slm_flutter/features/game/fire_choose.dart';
 import 'package:slm_flutter/features/game/fire_pass.dart';
 import 'package:slm_flutter/features/game/glove_check.dart';
+import 'package:slm_flutter/features/game/pole_read.dart';
 import 'package:slm_flutter/features/game/tool_tip.dart';
 import 'package:slm_flutter/features/game/kit_check.dart';
 import 'package:slm_flutter/features/game/learn_board_models.dart';
@@ -97,12 +98,16 @@ void main() {
     // Step 4 (lesson 1.2 board): the rival's myth line in his own voice (the
     // guide's lines stay on device TTS for now).
     rival.add(enDigits(learnBoardPack12.myth.rivalLineBn).trim());
+    // Steps 7 and 10 (lesson 1.3 / 1.4 boards): the rival's taunt and myth.
+    for (final l in [...PoleBoardLines.recorded, learnBoardPack14.myth.tauntBn, learnBoardPack14.myth.rivalLineBn]) {
+      rival.add(enDigits(l).trim());
+    }
     // Step 24: the coworker's refill push in his own voice.
     for (final l in PassLines.coworker.recordedLines) {
       rival.add(enDigits(l).trim());
     }
     // Steps 2–3: the careless coworker's pushes in his own voice.
-    for (final c in [KitLines.coworkerHurry, KitLines.coworkerVan, GloveLines.coworkerNew, GloveLines.coworkerTrip, ToolTipLines.coworker]) {
+    for (final c in [KitLines.coworkerHurry, KitLines.coworkerVan, GloveLines.coworkerNew, GloveLines.coworkerTrip, ToolTipLines.coworker, PoleLines.coworkerPcc, PoleLines.coworkerSteel]) {
       for (final l in c.recordedLines) {
         rival.add(enDigits(l).trim());
       }

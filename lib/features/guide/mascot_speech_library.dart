@@ -1038,6 +1038,12 @@ class MascotSpeechLibrary {
     await _stopTts();
   }
 
+  /// Starts the TTS engine (language, rate) without speaking, so the guide's
+  /// first line does not wait for it (done while the brand intro plays).
+  static Future<void> warmUp() async {
+    await _ensureTts();
+  }
+
   static Future<FlutterTts?> _ensureTts() async {
     try {
       if (_tts == null) {

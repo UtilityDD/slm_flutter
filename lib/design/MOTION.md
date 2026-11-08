@@ -12,6 +12,17 @@ No packages were added; it is all built on Flutter's own animation classes.
 | `assets/brand/shield_rim.webp` | White + alpha mask of the gold border, same crop. Drives the travelling rim light. |
 | `assets/brand/shield_glass.webp` | White + alpha mask of the green glass, same crop. Drives the emerald tint and glass sheen. |
 
+## App logo, launch screen and intro
+
+| Path | What it is |
+|---|---|
+| `assets/brand/source/app_icon_512.png` | The app logo (gear and bolt on navy #0E162B). Not bundled. `python -I tool/brand_assets.py .` makes every icon and launch-screen size from it: Android launcher (legacy, adaptive, themed), Android launch screen (pre-12 and 12+), iOS AppIcon and LaunchImage, and `assets/brand/splash_logo.png`. |
+| `assets/brand/intro.mp4` | The brand intro (5.7 s, 464 × 832, H.264 Main 30 fps + AAC 64 kb/s, faststart, 330 KB; the source clip trimmed of its black lead-in and cut at the white flash). |
+
+`lib/features/startup/intro_video.dart` (`IntroGate`) plays it once per cold start over Home: the native navy+logo screen hands over to the same navy and logo, the video fades in, a skip chip (এড়িয়ে যান) appears after 1.2 s, and the layer fades into the app at the end. Reduced motion skips it; a video that fails or takes over 2.5 s to load never holds the app. Widget tests run without it (`FLUTTER_TEST`).
+
+While it plays, `warmUpDuringIntro` (`lib/core/startup/startup_warmup.dart`) loads what the first taps would wait for: the ladder's content catalog, Module 1's lessons (network, kept on disk), the device TTS engine, players for the most used sound cues, and the ladder map's coins at their decode size. Local steps first with a frame's pause between them (the video keeps its frames); every step has a time limit, swallows errors, never holds the app, keeps running if the intro is skipped, and is timed in `StartupTrace.background` as `warm:<name>`.
+
 The three layers share one crop, so they stack pixel for pixel. The ring is
 painted in code (`_RingPainter`) on the ellipse fitted to the ring in the
 original art: rear half under the shield, front half over it. Its front arc
