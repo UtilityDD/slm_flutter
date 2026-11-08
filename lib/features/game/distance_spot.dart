@@ -64,7 +64,8 @@ class StreetFigure {
 
 @immutable
 class StreetRound {
-  const StreetRound({required this.line, required this.rain, required this.placeBn, required this.figures});
+  const StreetRound({required this.line, required this.rain, required this.placeBn, required this.figures})
+      : assert(!rain || line == RodRating.kv11, 'rain rounds are 11 kV only (lesson 1.2)');
   final RodRating line;
   final bool rain;
   final String placeBn;
@@ -81,13 +82,17 @@ class StreetRound {
   double get maxM => rain ? 3.7 : distanceM + 0.6;
 }
 
-/// The lesson gives a rain figure only for 11 kV (10–12 ft); the LT and
-/// 33 kV rain values are placeholders, never dealt (owner to confirm).
-double distanceFor(RodRating line, {bool rain = false}) => switch (line) {
-      RodRating.lt => rain ? 1.8 : 1.2,
-      RodRating.kv11 => rain ? 3.0 : 2.5,
-      RodRating.kv33 => rain ? 4.0 : 3.0,
-    };
+/// The lesson gives a rain figure only for 11 kV (10–12 ft), and no standard
+/// gives a rain multiplier, so rain rounds are dealt on 11 kV only (owner,
+/// 2026-11-08).
+double distanceFor(RodRating line, {bool rain = false}) {
+  assert(!rain || line == RodRating.kv11, 'rain rounds are 11 kV only (lesson 1.2)');
+  return switch (line) {
+    RodRating.lt => 1.2,
+    RodRating.kv11 => rain ? 3.0 : 2.5,
+    RodRating.kv33 => 3.0,
+  };
+}
 
 abstract final class DistanceLines {
   /// What the guide repeats (a different way each time) when tapped.

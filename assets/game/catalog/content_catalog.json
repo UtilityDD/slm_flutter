@@ -1517,7 +1517,7 @@
       "lessonId": "1.9",
       "moduleId": "m1",
       "packId": "do_1_9_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 25
     },
     {
@@ -1526,7 +1526,7 @@
       "lessonId": "1.9",
       "moduleId": "m1",
       "packId": "do_1_9_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 26
     },
     {
@@ -4465,20 +4465,20 @@
     },
     {
       "id": "do_1_9_a",
-      "engineType": "placeholder",
+      "engineType": "sky_read",
       "lessonId": "1.9",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 9
     },
     {
       "id": "do_1_9_b",
-      "engineType": "placeholder",
+      "engineType": "storm_push",
       "lessonId": "1.9",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 10

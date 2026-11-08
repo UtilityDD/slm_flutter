@@ -10,7 +10,7 @@
   <linearGradient id="pcc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A29F96"/><stop offset="0.45" stop-color="#DAD7CF"/><stop offset="1" stop-color="#B3B0A7"/></linearGradient>
   <linearGradient id="pccSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E8B83"/><stop offset="1" stop-color="#77746D"/></linearGradient>
   <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F7D88"/><stop offset="0.38" stop-color="#D4DDE3"/><stop offset="0.55" stop-color="#EEF3F6"/><stop offset="1" stop-color="#7C8994"/></linearGradient>
-  <linearGradient id="steelDull" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6B6E70"/><stop offset="0.45" stop-color="#A9ABA8"/><stop offset="1" stop-color="#6E706F"/></linearGradient>
+  <linearGradient id="steelWeb" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3F4A52"/><stop offset="0.3" stop-color="#7F8C96"/><stop offset="0.75" stop-color="#9AA6AF"/><stop offset="1" stop-color="#4A555D"/></linearGradient>
   <linearGradient id="rust" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C46A2B"/><stop offset="0.5" stop-color="#9A4517"/><stop offset="1" stop-color="#6E2E0E"/></linearGradient>
   <linearGradient id="rustLight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D98A45" stop-opacity="0.9"/><stop offset="1" stop-color="#A9541F" stop-opacity="0.2"/></linearGradient>
   <linearGradient id="core" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8C887E"/><stop offset="0.5" stop-color="#ABA79C"/><stop offset="1" stop-color="#8C887E"/></linearGradient>
@@ -21,7 +21,7 @@
   <linearGradient id="porc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A4F2A"/><stop offset="0.45" stop-color="#D08A55"/><stop offset="1" stop-color="#7A4322"/></linearGradient>
   <linearGradient id="vest" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E06D10"/><stop offset="0.5" stop-color="#FF8A2A"/><stop offset="1" stop-color="#D9640C"/></linearGradient>
   <linearGradient id="hive" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F6250"/><stop offset="0.5" stop-color="#B6A68A"/><stop offset="1" stop-color="#6F6250"/></linearGradient>
-  <linearGradient id="ladder" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D8DEE2"/><stop offset="1" stop-color="#9CA6AD"/></linearGradient>
+  <linearGradient id="poly" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F777D"/><stop offset="0.45" stop-color="#BCC3C8"/><stop offset="1" stop-color="#737B81"/></linearGradient>
   <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF6D0" stop-opacity="0.95"/><stop offset="1" stop-color="#FFF6D0" stop-opacity="0"/></radialGradient>
   <radialGradient id="shade" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#000000" stop-opacity="0.32"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>
   <radialGradient id="soot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1E1A16" stop-opacity="0.75"/><stop offset="1" stop-color="#1E1A16" stop-opacity="0"/></radialGradient>
@@ -58,19 +58,25 @@
 <ellipse cx="3" cy="147.2" rx="2" ry="1.1" fill="#7D6B4C" opacity="0.7"/>
 <ellipse cx="100" cy="180" rx="60" ry="16" fill="#6E5B40"/>
 <ellipse cx="100" cy="182" rx="48" ry="11" fill="#4A3C2A"/>
-<polygon points="81,174 119,174 118,188 82,188" fill="#7E7A70"/>
-<rect x="81" y="174" width="38" height="5" fill="#5E5A51" opacity="0.6"/>
+<g class="pole-rail">
+<polygon points="85,188 94.6,188 94.6,-10 85,-10" fill="url(#steel)"/>
+<polygon points="94.6,188 101.8,188 101.8,-10 94.6,-10" fill="url(#steelWeb)"/>
+<polygon points="101.8,188 112,188 112,-10 101.8,-10" fill="url(#steel)"/>
+<polygon points="112,188 115,188 115,-10 112,-10" fill="url(#steelWeb)"/>
+<polygon points="94.6,188 96.1,188 96.1,-10 94.6,-10" fill="#5E6870" opacity="0.6"/>
+<polygon points="101.8,188 100.8,188 100.8,-10 101.8,-10" fill="#5E6870" opacity="0.6"/>
+<path d="M88.6 188 L88.6 -10" stroke="#FFFFFF" stroke-width="1.5" opacity="0.7"/>
+<path d="M94 188 L94 -10" stroke="#5E6870" stroke-width="1.1" opacity="0.8"/>
+<path d="M103 188 L103 -10" stroke="#FFFFFF" stroke-width="1" opacity="0.4"/>
+</g>
+<rect x="85" y="174" width="30" height="14" fill="#4A3C2A" opacity="0.45"/>
+<rect x="85" y="174" width="30" height="3" fill="#5E5A51" opacity="0.6"/>
 <ellipse cx="52" cy="178" rx="4" ry="2.8" fill="#8A7553"/>
 <ellipse cx="144" cy="182" rx="3.5" ry="2.4499999999999997" fill="#8A7553"/>
 <ellipse cx="70" cy="190" rx="3" ry="2.0999999999999996" fill="#8A7553"/>
 <ellipse cx="136" cy="191" rx="4.5" ry="3.15" fill="#8A7553"/>
 <ellipse cx="152" cy="174" rx="2.6" ry="1.8199999999999998" fill="#8A7553"/>
 <path d="M40 178 q8 -6 16 -2 M144 172 q8 -4 16 2" stroke="#5F8A42" stroke-width="1.6" fill="none"/>
-<g>
-<polygon points="119,174 129.6,172 123.4,-11 115,-10" fill="url(#pccSide)"/>
-<polygon points="81,174 119,174 115,-10 85,-10" fill="url(#pcc)"/>
-<g fill="#8E8A80" opacity="0.55"><circle cx="96.2" cy="85.4" r="0.4"/><circle cx="90.1" cy="18.1" r="0.6"/><circle cx="91.8" cy="83.3" r="0.6"/><circle cx="99.8" cy="11.6" r="0.4"/><circle cx="89.1" cy="111.6" r="0.4"/><circle cx="110.9" cy="161.9" r="0.4"/><circle cx="102.8" cy="141" r="0.8"/><circle cx="111.9" cy="86.5" r="0.9"/><circle cx="104.5" cy="25.3" r="0.6"/><circle cx="92.7" cy="169.5" r="0.6"/><circle cx="111.1" cy="58.3" r="0.4"/><circle cx="98" cy="40.5" r="0.7"/><circle cx="105.5" cy="142.9" r="0.7"/><circle cx="111.7" cy="47.2" r="0.6"/><circle cx="106.9" cy="78.8" r="0.5"/><circle cx="98.6" cy="61.7" r="0.8"/><circle cx="98.5" cy="57.5" r="0.9"/><circle cx="91.5" cy="89.9" r="0.6"/><circle cx="96.6" cy="155.6" r="0.4"/><circle cx="99.5" cy="38.9" r="0.5"/><circle cx="94.6" cy="78.8" r="0.8"/><circle cx="107.5" cy="111.6" r="0.9"/><circle cx="101.2" cy="-2.1" r="0.8"/><circle cx="98.3" cy="75.8" r="0.8"/><circle cx="100.9" cy="152" r="0.8"/><circle cx="95.8" cy="120.1" r="0.7"/><circle cx="102.1" cy="17.3" r="0.8"/><circle cx="107.3" cy="80.2" r="0.8"/><circle cx="102.4" cy="29.2" r="0.8"/><circle cx="106.1" cy="31.8" r="0.5"/></g>
-</g>
 </g>
 <rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
 </svg>

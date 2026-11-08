@@ -18,6 +18,7 @@ import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
+import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
 import 'level_result_parts.dart';
 import 'mistake_kit.dart';
 import 'level_shell.dart';
@@ -53,6 +54,7 @@ class KitFlaw {
     required this.labelBn,
     required this.lineBn,
     this.inspectAsset,
+    this.deadly,
   });
 
   final String id;
@@ -61,6 +63,10 @@ class KitFlaw {
   final String labelBn;
   final String lineBn;
   final String? inspectAsset;
+
+  /// Wearing an item with this flaw is deadly (owner decision 2026-11-08:
+  /// a nail in the sole). Null = a slip.
+  final DoMistake? deadly;
 }
 
 @immutable
@@ -76,6 +82,7 @@ class KitItem {
     this.flaws = const [],
     this.flaw,
     this.wornAsset,
+    this.deadly,
   });
 
   /// Stable id. A dealt flawed copy is `<good id>#<flaw id>`.
@@ -98,6 +105,10 @@ class KitItem {
   /// The figure wearing this wrong item — the "what would happen" picture.
   final String? wornAsset;
 
+  /// Wearing it is deadly (owner decision 2026-11-08: synthetic clothing, a
+  /// nail in the boot sole). Null = wearing it is a slip.
+  final DoMistake? deadly;
+
   KitItem withFlaw(KitFlaw f) => KitItem(
         id: '$id#${f.id}',
         slot: slot,
@@ -107,6 +118,7 @@ class KitItem {
         labelBn: f.labelBn,
         lineBn: f.lineBn,
         flaw: f,
+        deadly: f.deadly,
       );
 
   /// Key for the "explain once" memory: the flaw kind, or the wrong item.
@@ -163,6 +175,8 @@ abstract final class KitLines {
   static const allSet = 'সব ঠিক আছে। এবার কাজে নামা যায়।';
   static const fail = 'এবার হলো না। দেখে নিয়ে আবার চেষ্টা করুন।';
   static const quick = 'ঝটপট আর নির্ভুল! বোনাস পেলেন।';
+  static const deadlyWord = 'থামুন!';
+  static const nearMissWord = 'অল্পের জন্য!';
   static const checkFirst = DoLines.checkFirst;
   static const rushOn = DoLines.rushOn;
 
@@ -259,7 +273,32 @@ abstract final class KitLines {
         KitSlot.feet => askFeet,
       };
 
-  static const coach = [askTorso, askLegs, askFeet, caught, rejectedGood, callHeld, callRushed, allSet, fail, quick];
+  static const coach = [askTorso, askLegs, askFeet, caught, rejectedGood, callHeld, callRushed, allSet, fail, quick, deadlyWord, nearMissWord];
+}
+
+/// The two kit mistakes that end a play (lesson 1.1, owner decision
+/// 2026-11-08). Every other wrong pick is a slip.
+abstract final class KitMistakes {
+  /// Lesson 1.1 point 1 (importance): synthetic cloth melts onto the skin.
+  static const synthetic = DoMistake(
+    key: '1.1/kit/synthetic',
+    textBn: 'লাইনে সামান্য স্পার্ক বা আর্কিং ফ্ল্যাশ হলেই সিন্থেটিক কাপড় প্লাস্টিকের মতো গলে সোজা চামড়ায় সেঁটে যায়। পরুন শুধু সুতি বা FR কাপড়।',
+    art: 'assets/duty_slip/dress/mistake_synthetic.svg',
+    deadly: true,
+    lessonPoint: 0,
+  );
+
+  /// Lesson 1.1 point 3 (daily check): a nail in the sole is the current's
+  /// path to the ground.
+  static const nail = DoMistake(
+    key: '1.1/kit/boot-nail',
+    textBn: 'সোলে পেরেক গেঁথে থাকলে সেটাই কারেন্টের মাটিতে নামার রাস্তা বানিয়ে দেয় — সাক্ষাৎ মৃত্যুফাঁদ। জুতোর তলা রোজ দেখে নিন।',
+    art: 'assets/duty_slip/dress/mistake_nail.svg',
+    deadly: true,
+    lessonPoint: 2,
+  );
+
+  static const all = [synthetic, nail];
 }
 
 const _d = 'assets/duty_slip/dress';
@@ -307,7 +346,7 @@ const kitCheckPack11 = KitCheckPack(
         KitFlaw(id: 'tear', kind: KitFlawKind.tear, marks: [Offset(0.86, 0.66)], labelBn: 'ছেঁড়া হাতার জামা', lineBn: _tearLine),
       ],
     ),
-    KitItem(id: 'poly', slot: KitSlot.torso, kind: KitKind.wrong, asset: '$_d/tray_poly.webp', aspect: 431 / 512, labelBn: 'পলিয়েস্টার জামা', lineBn: 'আর্ক ফ্ল্যাশের তাপে পলিয়েস্টার গলে চামড়ায় সেঁটে যায়।', wornAsset: '$_d/worn_poly.webp'),
+    KitItem(id: 'poly', slot: KitSlot.torso, kind: KitKind.wrong, asset: '$_d/tray_poly.webp', aspect: 431 / 512, labelBn: 'পলিয়েস্টার জামা', lineBn: 'আর্ক ফ্ল্যাশের তাপে পলিয়েস্টার গলে চামড়ায় সেঁটে যায়।', wornAsset: '$_d/worn_poly.webp', deadly: KitMistakes.synthetic),
     KitItem(id: 'halftee', slot: KitSlot.torso, kind: KitKind.wrong, asset: '$_d/tray_halftee.webp', aspect: 473 / 512, labelBn: 'হাফ-হাতা গেঞ্জি', lineBn: 'হাত খোলা থাকলে সামান্য স্পার্কেই চামড়া পুড়ে যাবে।'),
     KitItem(id: 'fatua', slot: KitSlot.torso, kind: KitKind.wrong, asset: '$_d/tray_fatua.webp', aspect: 473 / 512, labelBn: 'ফতুয়া', lineBn: 'ঢিলে ফতুয়া বাতাসে উড়ে তারে জড়িয়ে যেতে পারে।'),
     // ---- প্যান্ট
@@ -333,7 +372,7 @@ const kitCheckPack11 = KitCheckPack(
       aspect: 512 / 342,
       labelBn: 'সেফটি বুট',
       flaws: [
-        KitFlaw(id: 'boot-nail', kind: KitFlawKind.nail, marks: [Offset(0.26, 0.90)], labelBn: 'পেরেক গাঁথা বুট', lineBn: _nailLine),
+        KitFlaw(id: 'boot-nail', kind: KitFlawKind.nail, marks: [Offset(0.26, 0.90)], labelBn: 'পেরেক গাঁথা বুট', lineBn: _nailLine, deadly: KitMistakes.nail),
         KitFlaw(id: 'boot-crack', kind: KitFlawKind.crack, marks: [Offset(0.12, 0.88)], labelBn: 'ফাটা সোলের বুট', lineBn: _crackLine),
       ],
     ),
@@ -345,7 +384,7 @@ const kitCheckPack11 = KitCheckPack(
       aspect: 600 / 597,
       labelBn: 'লাইনম্যান বুট',
       flaws: [
-        KitFlaw(id: 'boot2-nail', kind: KitFlawKind.nail, marks: [Offset(0.46, 0.92)], labelBn: 'পেরেক গাঁথা বুট', lineBn: _nailLine),
+        KitFlaw(id: 'boot2-nail', kind: KitFlawKind.nail, marks: [Offset(0.46, 0.92)], labelBn: 'পেরেক গাঁথা বুট', lineBn: _nailLine, deadly: KitMistakes.nail),
         KitFlaw(id: 'boot2-crack', kind: KitFlawKind.crack, marks: [Offset(0.22, 0.90)], labelBn: 'ফাটা সোলের বুট', lineBn: _crackLine),
       ],
     ),
@@ -357,7 +396,7 @@ const kitCheckPack11 = KitCheckPack(
       aspect: 704 / 621,
       labelBn: 'সেফটি জুতো',
       flaws: [
-        KitFlaw(id: 'boot3-nail', kind: KitFlawKind.nail, marks: [Offset(0.46, 0.43)], labelBn: 'পেরেক গাঁথা জুতো', lineBn: _nailLine),
+        KitFlaw(id: 'boot3-nail', kind: KitFlawKind.nail, marks: [Offset(0.46, 0.43)], labelBn: 'পেরেক গাঁথা জুতো', lineBn: _nailLine, deadly: KitMistakes.nail),
         KitFlaw(id: 'boot3-crack', kind: KitFlawKind.crack, marks: [Offset(0.14, 0.41)], labelBn: 'ফাটা সোলের জুতো', lineBn: _crackLine),
       ],
     ),
@@ -418,6 +457,7 @@ class KitOutcome {
     required this.leavesTray,
     required this.stampBn,
     this.reasonBn = '',
+    this.deadly,
   });
 
   final bool right;
@@ -426,6 +466,9 @@ class KitOutcome {
   final bool leavesTray;
   final String stampBn;
   final String reasonBn;
+
+  /// Set when the decision ends the play (wearing a deadly item).
+  final DoMistake? deadly;
 }
 
 const kitStampRight = 'ঠিক';
@@ -439,10 +482,23 @@ KitOutcome judgeKit(KitItem item, KitChoice choice) {
     case (KitKind.good, KitChoice.reject):
       return const KitOutcome(right: false, delta: -5, wears: false, leavesTray: false, stampBn: kitStampWrong);
     case (_, KitChoice.wear):
-      return KitOutcome(right: false, delta: -5, wears: false, leavesTray: true, stampBn: kitStampWrong, reasonBn: item.lineBn);
+      return KitOutcome(right: false, delta: -5, wears: false, leavesTray: true, stampBn: kitStampWrong, reasonBn: item.lineBn, deadly: item.deadly);
     case (_, KitChoice.reject):
       return KitOutcome(right: true, delta: 5, wears: false, leavesTray: true, stampBn: kitStampReject, reasonBn: item.lineBn);
   }
+}
+
+/// The mistakes-book entry for a wrong decision that is not deadly: a stable
+/// key per flaw / wrong item (or the sound item sent back) and the lesson
+/// point that teaches it (clothing = point 1, shoes = point 3).
+DoMistake kitSlip(KitItem item, KitOutcome o) {
+  final goodRejected = item.kind == KitKind.good;
+  return DoMistake(
+    key: goodRejected ? '1.1/kit/rejected-good' : '1.1/kit/${item.lessonKey}',
+    textBn: goodRejected || o.reasonBn.isEmpty ? KitLines.rejectedGood : o.reasonBn,
+    art: item.asset,
+    lessonPoint: item.slot == KitSlot.feet ? 2 : 0,
+  );
 }
 
 /// One play: which slot is being dressed, what is left in the tray, what is
@@ -458,6 +514,9 @@ class KitCheckRound {
   int asked = 0;
   int clean = 0;
   bool callDone = false;
+
+  /// The deadly item worn (the play ends there).
+  DoMistake? deadly;
 
   KitSlot? get slot {
     for (final s in KitSlot.values) {
@@ -476,6 +535,7 @@ class KitCheckRound {
 
   KitOutcome decide(KitItem item, KitChoice choice) {
     final o = judgeKit(item, choice);
+    deadly ??= o.deadly;
     if (_tried.add(item.id)) {
       asked++;
       if (o.right) clean++;
@@ -493,7 +553,7 @@ class KitCheckRound {
   }
 
   int get percent => asked == 0 ? 0 : (clean * 100 / asked).round();
-  bool get passed => percent >= kLessonPassMark;
+  bool get passed => deadly == null && percent >= kLessonPassMark;
 }
 
 /// Figure picture for what is worn (every combination exists in the dress art).
@@ -512,6 +572,9 @@ String kitFigureAsset(Set<KitSlot> worn) {
 Iterable<String> kitCheckSpokenLines(KitCheckPack p) sync* {
   yield p.introBn;
   yield* KitLines.coach;
+  for (final m in KitMistakes.all) {
+    yield m.textBn;
+  }
   for (final i in p.pool) {
     if (i.lineBn.isNotEmpty) yield i.lineBn;
     for (final f in i.flaws) {
@@ -583,7 +646,7 @@ class _KitCheckRun extends ConsumerStatefulWidget {
 
 enum _Overlay { none, inspect, consequence }
 
-class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, ReasonTable, CoworkerMoment {
+class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, DoStrikeOut, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
   late final KitDeal _deal = dealKit(widget.pack, widget.rng);
   late final KitCheckRound _r = KitCheckRound(_deal);
@@ -619,14 +682,21 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, Re
   var _popped = false;
   var _quickBonus = false;
   int? _mark;
+  int? _stars;
   int _totalDelta = 0;
+
+  /// A deadly item was worn: the store freezes grey, the consequence plays in
+  /// colour, then the near-miss / death card.
+  var _freeze = false;
+  Completer<void>? _frozen;
+  KitItem? _deathItem;
+  DoMistake? _card;
+  MistakeTone _cardTone = MistakeTone.deadly;
 
   String get _rungId => widget.ctx.rungId;
 
   @override
-  void initState() {
-    super.initState();
-  }
+  LevelContext get deathCtx => widget.ctx;
 
   @override
   void dispose() {
@@ -725,9 +795,18 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, Re
     if (item == null || _busy || _verdict != null) return;
     _busy = true;
     final o = _r.decide(item, choice);
-    if (!o.right && strike(DoMistake(key: 'kit/${item.id}', textBn: o.reasonBn, art: item.asset))) {
-      await _struckOut();
+    if (o.deadly != null) {
+      await _deadly(item, o.deadly!);
       return;
+    }
+    if (!o.right) {
+      // A slip goes into the mistakes book; the third ends the play.
+      final slip = kitSlip(item, o);
+      unawaited(bookMistake(ref, widget.ctx, slip));
+      if (strike(slip)) {
+        await _struckOut();
+        return;
+      }
     }
     if (o.right) {
       HapticFeedback.lightImpact();
@@ -929,8 +1008,11 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, Re
     }
     final delta = await save.commitLevelScore(_rungId, _runScore);
     if (_r.passed) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
+    final stars = starsFor(passed: _r.passed, strikes: strikes, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
+    if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
     setState(() {
+      _stars = stars;
       _mark = mark;
       _totalDelta = delta;
     });
@@ -954,6 +1036,56 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, Re
     });
   }
 
+  void _hush() {
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+  }
+
+  /// A deadly item worn: the store freezes grey and what it does on the line
+  /// plays in colour; then near-miss (play again) or death (back to the ladder).
+  Future<void> _deadly(KitItem item, DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _busy = true;
+    _clock.stop();
+    _hush();
+    HapticFeedback.heavyImpact();
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.9, muted: false));
+    final frozen = _frozen = Completer<void>();
+    setState(() {
+      _overlay = _Overlay.none;
+      _held = null;
+      _verdict = null;
+      _shown = null;
+      _deathItem = item;
+      _freeze = true;
+    });
+    // Booked at once (as fire_choose does), so leaving during the freeze
+    // cannot skip the mistakes book, the near-miss or the death.
+    final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
+    await frozen.future;
+    if (!mounted) return;
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    setState(() {
+      _card = m;
+      _cardTone = death ? MistakeTone.deadly : MistakeTone.nearMiss;
+    });
+    final speak = await SpokenOnce.first('kit/${widget.pack.id}/${m.key}');
+    if (!mounted) return;
+    await _sayChain([death ? KitLines.deadlyWord : KitLines.nearMissWord, if (speak) m.textBn], mood: GuideMood.warn);
+  }
+
+  void _cardGo() {
+    _hush();
+    if (_cardTone == MistakeTone.deadly) {
+      if (_popped) return;
+      _popped = true;
+      unawaited(dieAndLeave());
+    } else {
+      widget.onRetry(_muted);
+    }
+  }
+
   void _popOnce(bool cleared) {
     if (_popped || !mounted) return;
     _popped = true;
@@ -961,6 +1093,14 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, Re
   }
 
   Future<void> _leave() async {
+    if (deathPending) {
+      if (_popped) return;
+      _popped = true;
+      await dieAndLeave();
+      return;
+    }
+    // The freeze plays out first (it is short); its card is the way out.
+    if (_freeze && _card == null) return;
     if (_passed) {
       _popOnce(true);
       return;
@@ -1005,37 +1145,47 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, Re
               current: _r.slot?.index,
               quiet: quiet,
             ),
-            layers: (context, m) => const [
-              Positioned.fill(key: ValueKey('room'), child: CustomPaint(painter: StoreRoomPainter())),
+            layers: (context, m) => [
+              Positioned.fill(
+                key: const ValueKey('room'),
+                child: ColorFiltered(
+                  colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
+                  child: const CustomPaint(painter: StoreRoomPainter()),
+                ),
+              ),
             ],
             overlays: [
               // The man in what he wears, and the tray of kit.
               Positioned.fill(
-                child: SafeArea(
-                  bottom: false,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 80),
-                      Expanded(
-                        child: _Figure(
-                          asset: kitFigureAsset(_r.worn),
-                          wave: _figureWave,
-                          quiet: quiet,
-                          cacheHeight: (screenH * dpr * 0.55).round(),
-                        ),
-                      ),
-                      if (_mark == null)
-                        Padding(
-                          padding: EdgeInsets.only(bottom: pad.bottom),
-                          child: DoTray(
-                            key: ValueKey('tray-$_wave'),
-                            entries: [for (final i in _tray) DoTrayEntry(id: i.id, asset: i.asset)],
+                key: const ValueKey('figure'),
+                child: ColorFiltered(
+                  colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 80),
+                        Expanded(
+                          child: _Figure(
+                            asset: kitFigureAsset(_r.worn),
+                            wave: _figureWave,
                             quiet: quiet,
-                            muted: _muted,
-                            onPick: (n) => _pickUp(_tray[n]),
+                            cacheHeight: (screenH * dpr * 0.55).round(),
                           ),
                         ),
-                    ],
+                        if (_mark == null)
+                          Padding(
+                            padding: EdgeInsets.only(bottom: pad.bottom),
+                            child: DoTray(
+                              key: ValueKey('tray-$_wave'),
+                              entries: [for (final i in _tray) DoTrayEntry(id: i.id, asset: i.asset)],
+                              quiet: quiet,
+                              muted: _muted,
+                              onPick: (n) => _pickUp(_tray[n]),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1054,7 +1204,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, Re
                   ),
                 ),
               // The guide in the corner, above the tray (or the deck).
-              if (!_introCard && _overlay == _Overlay.none && _mark == null)
+              if (!_introCard && _overlay == _Overlay.none && _mark == null && !_freeze)
                 cornerGuide(onTap: _tapGuide, bottom: pad.bottom + (deckUp ? 236 : 124), onLeft: coworkerFromRight),
               ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
               if (_overlay == _Overlay.inspect && _held != null)
@@ -1073,7 +1223,34 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, Re
                   },
                 ),
               if (_overlay == _Overlay.consequence && _shown?.wornAsset != null)
-                _Consequence(item: _shown!, quiet: quiet, onTap: _skipDwell),
+                _Consequence(key: const ValueKey('consequence'), item: _shown!, quiet: quiet, onTap: _skipDwell),
+              // The deadly item on the line, in colour over the grey store.
+              // It stays under the card: with reduce motion the freeze is over at
+              // once, and this is where the consequence is seen.
+              if (_freeze && _deathItem != null)
+                Positioned.fill(
+                  key: const ValueKey('kit-death'),
+                  child: IgnorePointer(
+                    child: KitDeathView(
+                      kind: _deathItem!.flaw?.kind == KitFlawKind.nail ? KitDeath.nail : KitDeath.synthetic,
+                      quiet: quiet,
+                    ),
+                  ),
+                ),
+              if (_card != null)
+                MistakeCard(
+                  key: ValueKey('card-${_card!.key}'),
+                  mistake: _card!,
+                  tone: _cardTone,
+                  quiet: quiet,
+                  onRead: _card!.lessonPoint == null
+                      ? null
+                      : () {
+                          _hush();
+                          unawaited(openLessonPoint(context, ref, lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
+                        },
+                  onGo: _cardGo,
+                ),
               if (struckOut)
                 StruckOutCard(
                   mistake: strikeOutBy!,
@@ -1082,6 +1259,16 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, Re
                   muted: _muted,
                   onRetry: () => widget.onRetry(_muted),
                   onLeave: () => _popOnce(false),
+                ),
+              if (_freeze && _card == null)
+                FreezeFrame(
+                  key: const ValueKey('freeze'),
+                  muted: _muted,
+                  ms: MediaQuery.disableAnimationsOf(context) ? 300 : 2400,
+                  onDone: () {
+                    final f = _frozen;
+                    if (f != null && !f.isCompleted) f.complete();
+                  },
                 ),
               if (_introCard)
                 GuideIntro(
@@ -1108,6 +1295,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, Re
                                 ms: _clock.elapsedMilliseconds,
                                 caughtBn: [for (final c in _r.caught) c.labelBn],
                                 quickBonus: _quickBonus,
+                                stars: _stars,
                                 onNext: () => _popOnce(true),
                                 onRetry: () => widget.onRetry(_muted),
                               )
@@ -1473,7 +1661,7 @@ class _FlawPainter extends CustomPainter {
 
 /// "What would happen": the figure wearing the wrong item, with a shake.
 class _Consequence extends StatelessWidget {
-  const _Consequence({required this.item, required this.quiet, required this.onTap});
+  const _Consequence({super.key, required this.item, required this.quiet, required this.onTap});
   final KitItem item;
   final bool quiet;
   final VoidCallback onTap;
@@ -1511,4 +1699,610 @@ class _Consequence extends StatelessWidget {
       ),
     );
   }
+}
+
+// ============================================================================
+// The deadly consequence (in colour over the frozen store)
+// ============================================================================
+
+/// Which deadly item was worn.
+enum KitDeath { synthetic, nail }
+
+/// What the deadly item does on the line, played once over the grey store:
+/// a synthetic shirt — an arc flash at a joint in front of him, its heat
+/// melting the cloth onto the body (lesson 1.1, point 1); a nail in the sole — a fallen live wire at
+/// the hand and the current running down through the body and out through
+/// the nail into the ground (lesson 1.1, point 3). It ends on a still frame.
+class KitDeathView extends StatelessWidget {
+  const KitDeathView({super.key, required this.kind, required this.quiet});
+
+  final KitDeath kind;
+  final bool quiet;
+
+  @override
+  Widget build(BuildContext context) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return LayoutBuilder(
+      builder: (context, box) {
+        final w = math.min(box.maxWidth - 40, 340.0);
+        final h = math.min(w * 1.25, box.maxHeight * 0.66);
+        final g = _DeathGeo(Size(w, h));
+        final fig = g.figure;
+        final still = Stack(
+          children: [
+            Positioned.fill(child: CustomPaint(painter: _DeathBackPainter(g))),
+            Positioned.fromRect(
+              rect: fig,
+              child: Image(
+                image: ResizeImage(
+                  AssetImage(kind == KitDeath.synthetic ? '$_d/worn_poly.webp' : '$_d/all.webp'),
+                  height: (fig.height * dpr).round(),
+                  policy: ResizeImagePolicy.fit,
+                ),
+                fit: BoxFit.fill,
+              ),
+            ),
+          ],
+        );
+        return Align(
+          alignment: const Alignment(0, -0.2),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: quiet ? 1 : 0, end: 1),
+            duration: const Duration(milliseconds: 1800),
+            child: still,
+            builder: (_, t, child) {
+              final pop = (t * 6).clamp(0.0, 1.0);
+              final shake = quiet ? 0.0 : math.sin(t * math.pi * 14) * 6 * (1 - t) * (t < 0.5 ? 1 : 0);
+              return Opacity(
+                opacity: pop,
+                child: Transform.translate(
+                  offset: Offset(shake, 0),
+                  child: Transform.scale(
+                    scale: 0.92 + 0.08 * pop,
+                    child: Container(
+                      width: w,
+                      height: h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: SlmColors.danger, width: 2.5),
+                        boxShadow: const [BoxShadow(color: Color(0xAA000000), blurRadius: 24, offset: Offset(0, 10))],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(child: child!),
+                            Positioned.fill(
+                              child: CustomPaint(
+                                painter: kind == KitDeath.synthetic ? _ArcFlashPainter(g, t) : _NailPathPainter(g, t),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Where the figure stands inside the panel; [at] maps a point of the dress
+/// art (0–1 on each axis, 864×1152 pictures) into the panel.
+class _DeathGeo {
+  _DeathGeo(this.s) {
+    var fh = s.height * 0.9;
+    var fw = fh * 0.75;
+    if (fw > s.width * 0.92) {
+      fw = s.width * 0.92;
+      fh = fw / 0.75;
+    }
+    figure = Rect.fromLTWH((s.width - fw) / 2, s.height * 0.07, fw, fh);
+  }
+
+  final Size s;
+  late final Rect figure;
+
+  Offset at(double x, double y) => Offset(figure.left + x * figure.width, figure.top + y * figure.height);
+  double get groundY => at(0, 0.955).dy;
+}
+
+/// Dusk sky after the storm and the ground he stands on.
+class _DeathBackPainter extends CustomPainter {
+  _DeathBackPainter(this.g);
+  final _DeathGeo g;
+
+  @override
+  void paint(Canvas c, Size s) {
+    final gy = g.groundY;
+    c.drawRect(
+      Offset.zero & s,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF1B2440), Color(0xFF3B4A66), Color(0xFF59627A)],
+        ).createShader(Offset.zero & s),
+    );
+    final ground = Rect.fromLTRB(0, gy - 6, s.width, s.height);
+    c.drawRect(
+      ground,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF6B5236), Color(0xFF3E2E1E)],
+        ).createShader(ground),
+    );
+    c.drawLine(
+      Offset(0, gy - 6),
+      Offset(s.width, gy - 6),
+      Paint()
+        ..color = const Color(0xFF85694A)
+        ..strokeWidth = 2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_DeathBackPainter old) => old.g.s != g.s;
+}
+
+/// A jagged line through [pts] (fixed zig-zag, so every play looks the same).
+Path _jagged(List<Offset> pts, double amp) {
+  const kinks = [0.0, 0.8, -0.6, 1.0, -0.9, 0.5, -0.4];
+  final p = Path()..moveTo(pts.first.dx, pts.first.dy);
+  var k = 0;
+  for (var i = 1; i < pts.length; i++) {
+    final a = pts[i - 1];
+    final b = pts[i];
+    final d = b - a;
+    final len = d.distance;
+    if (len == 0) continue;
+    final n = Offset(-d.dy / len, d.dx / len);
+    final steps = math.max(2, (len / 14).round());
+    for (var j = 1; j <= steps; j++) {
+      final q = a + d * (j / steps);
+      final off = j == steps ? 0.0 : kinks[k++ % kinks.length] * amp;
+      p.lineTo(q.dx + n.dx * off, q.dy + n.dy * off);
+    }
+  }
+  return p;
+}
+
+/// The part of [path] from its start to [u] (0–1) of its length.
+Path _upTo(Path path, double u) {
+  final out = Path();
+  for (final m in path.computeMetrics()) {
+    out.addPath(m.extractPath(0, m.length * u.clamp(0.0, 1.0)), Offset.zero);
+  }
+  return out;
+}
+
+void _glowStroke(Canvas c, Path p, {required Color glow, required Color core, double width = 3}) {
+  c.drawPath(
+    p,
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width * 4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = glow
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+  );
+  c.drawPath(
+    p,
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = core,
+  );
+}
+
+/// Synthetic shirt: an arc flash at a joint on the line in front of him. No
+/// current goes into him: the flash's light and heat wash over the shirt,
+/// and the synthetic cloth shrivels and melts onto the body (lesson 1.1,
+/// point 1: "লাইনে সামান্য স্পার্ক বা আর্কিং ফ্ল্যাশ হলেই সিন্থেটিক কাপড় …
+/// গলে সোজা চামড়ায় সেঁটে যায়").
+class _ArcFlashPainter extends CustomPainter {
+  _ArcFlashPainter(this.g, this.t);
+  final _DeathGeo g;
+  final double t;
+
+  // The shirt in worn_poly.webp (0–1 of the picture): torso and both sleeves.
+  static const _torso = [
+    (0.445, 0.215), (0.50, 0.255), (0.555, 0.215), (0.64, 0.235), (0.618, 0.37), (0.622, 0.505), //
+    (0.62, 0.522), (0.50, 0.528), (0.385, 0.522), (0.38, 0.505), (0.385, 0.37), (0.36, 0.235),
+  ];
+  static const _sleeveL = [
+    (0.36, 0.235), (0.395, 0.30), (0.392, 0.37), (0.378, 0.43), (0.372, 0.515), //
+    (0.322, 0.518), (0.316, 0.45), (0.326, 0.33), (0.338, 0.26),
+  ];
+  static const _sleeveR = [
+    (0.64, 0.235), (0.605, 0.30), (0.612, 0.37), (0.626, 0.43), (0.636, 0.515), //
+    (0.69, 0.518), (0.692, 0.45), (0.68, 0.33), (0.664, 0.26),
+  ];
+
+  // The melt (x, y, radius as a share of the figure's width): overlapping
+  // blobs on the side that faced the flash, and a few spots beyond.
+  static const _melt = [
+    (0.358, 0.305, 0.060),
+    (0.412, 0.292, 0.058),
+    (0.446, 0.338, 0.060),
+    (0.366, 0.372, 0.052),
+    (0.418, 0.398, 0.050),
+    (0.520, 0.372, 0.026),
+    (0.350, 0.452, 0.022),
+    (0.572, 0.292, 0.020),
+  ];
+
+  // Raw burns inside the melt, where it fused to the skin.
+  static const _burns = [
+    (0.398, 0.302, 0.022),
+    (0.448, 0.345, 0.018),
+    (0.364, 0.372, 0.014),
+    (0.520, 0.372, 0.009),
+  ];
+
+  // Fixed wobble of a patch's edge (every play looks the same).
+  static const _edge = [1.0, 0.82, 1.1, 0.92, 1.04, 0.76, 1.08, 0.96, 0.86, 1.02];
+
+  Path _poly(List<(double, double)> pts) {
+    final p = Path();
+    for (var i = 0; i < pts.length; i++) {
+      final o = g.at(pts[i].$1, pts[i].$2);
+      if (i == 0) {
+        p.moveTo(o.dx, o.dy);
+      } else {
+        p.lineTo(o.dx, o.dy);
+      }
+    }
+    return p..close();
+  }
+
+  /// A smooth, irregular blob through wobbled points (Catmull-Rom curves).
+  static Path _blob(Offset c, double r, int seed) {
+    final n = _edge.length;
+    final pts = [
+      for (var k = 0; k < n; k++)
+        c +
+            Offset(math.cos(k * 2 * math.pi / n + seed * 1.3), math.sin(k * 2 * math.pi / n + seed * 1.3) * 0.85) *
+                (r * _edge[(k + seed * 3) % n]),
+    ];
+    final p = Path()..moveTo(pts[0].dx, pts[0].dy);
+    for (var i = 0; i < n; i++) {
+      final p0 = pts[(i - 1 + n) % n];
+      final p1 = pts[i];
+      final p2 = pts[(i + 1) % n];
+      final p3 = pts[(i + 2) % n];
+      final c1 = p1 + (p2 - p0) / 6;
+      final c2 = p2 - (p3 - p1) / 6;
+      p.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, p2.dx, p2.dy);
+    }
+    return p..close();
+  }
+
+  @override
+  void paint(Canvas c, Size s) {
+    final fw = g.figure.width;
+    // The line at shoulder height, ending in a joint just in front of him.
+    final lineY = g.at(0, 0.27).dy;
+    final joint = Offset(g.at(0.21, 0).dx, lineY);
+    c.drawLine(
+      Offset(-4, lineY),
+      joint,
+      Paint()
+        ..strokeWidth = 7
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFF2A2E33),
+    );
+    c.drawLine(
+      Offset(-4, lineY),
+      joint,
+      Paint()
+        ..strokeWidth = 2
+        ..color = const Color(0xFF9AA3AB),
+    );
+    final clamp = RRect.fromRectAndRadius(Rect.fromCenter(center: joint, width: 16, height: 14), const Radius.circular(3));
+    c.drawRRect(clamp, Paint()..color = const Color(0xFF7D848C));
+    c.drawRRect(
+      clamp,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = const Color(0xFF2A2E33),
+    );
+
+    // The flash at the joint: blinding at once, then gone.
+    final rise = Curves.easeOut.transform((t / 0.14).clamp(0.0, 1.0));
+    final settle = Curves.easeIn.transform(((t - 0.14) / 0.5).clamp(0.0, 1.0));
+    final white = rise * (1 - settle);
+    // The whole scene lights up for a moment.
+    if (white > 0.01) {
+      c.drawRect(Offset.zero & s, Paint()..color = Color.fromRGBO(255, 236, 190, 0.32 * white));
+    }
+    final r = fw * (0.16 + 0.3 * rise) * (1 - 0.55 * settle);
+    c.drawCircle(
+      joint,
+      r,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            Color.fromRGBO(255, 255, 255, white),
+            Color.fromRGBO(255, 232, 140, 0.9 * white),
+            Color.fromRGBO(255, 130, 30, 0.45 * white),
+            const Color(0x00FF6A00),
+          ],
+          stops: const [0, 0.2, 0.55, 1],
+        ).createShader(Rect.fromCircle(center: joint, radius: r)),
+    );
+    if (white > 0.02) {
+      final ray = Paint()
+        ..color = Color.fromRGBO(255, 244, 200, 0.9 * white)
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round;
+      for (var i = 0; i < 12; i++) {
+        final ang = i * math.pi / 6 + 0.25;
+        final dir = Offset(math.cos(ang), math.sin(ang));
+        c.drawLine(joint + dir * (r * 0.3), joint + dir * (r * (0.7 + 0.3 * (i.isEven ? 1 : 0.55))), ray);
+      }
+    }
+
+    // Heat over the shirt only: the light washes over it and the melt stays on it.
+    final shirt = Path()
+      ..addPath(_poly(_torso), Offset.zero)
+      ..addPath(_poly(_sleeveL), Offset.zero)
+      ..addPath(_poly(_sleeveR), Offset.zero);
+    c.save();
+    c.clipPath(shirt);
+    final heat = rise * (1 - 0.8 * settle);
+    final reach = fw * 0.75;
+    c.drawCircle(
+      joint,
+      reach,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [Color.fromRGBO(255, 190, 90, 0.7 * heat), Color.fromRGBO(255, 120, 30, 0.25 * heat), const Color(0x00FF7A20)],
+          stops: const [0.25, 0.65, 1],
+        ).createShader(Rect.fromCircle(center: joint, radius: reach)),
+    );
+
+    // The cloth shrivels back from the heat, goes glossy and sticks: one
+    // puckered, shiny melt on the side that faced the flash, a few spots
+    // beyond it, and raw burns where it fused to the skin.
+    final m = Curves.easeOut.transform(((t - 0.16) / 0.74).clamp(0.0, 1.0));
+    if (m > 0) {
+      final grow = 0.35 + 0.65 * m;
+      var melt = Path();
+      for (var i = 0; i < _melt.length; i++) {
+        final (x, y, rr) = _melt[i];
+        final b = _blob(g.at(x, y), fw * rr * grow, i);
+        melt = i == 0 ? b : Path.combine(PathOperation.union, melt, b);
+      }
+      final box = melt.getBounds();
+      // Scorched cloth round the melt.
+      c.drawPath(
+        melt,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = fw * 0.05
+          ..color = Color.fromRGBO(46, 20, 12, 0.5 * m)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, fw * 0.02),
+      );
+      // The shrivelled cloth: darker, glossy.
+      c.drawPath(
+        melt,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: const [Color(0xFF26368A), Color(0xFF131B58), Color(0xFF080C30)],
+            stops: const [0, 0.5, 1],
+          ).createShader(box),
+      );
+      // A curled rim: a dark lip outside, a lit edge just inside.
+      c.drawPath(
+        melt,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..strokeJoin = StrokeJoin.round
+          ..color = const Color(0xE6060820),
+      );
+      c.save();
+      c.clipPath(melt);
+      c.drawPath(
+        melt.shift(const Offset(1.4, 1.8)),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.6
+          ..strokeJoin = StrokeJoin.round
+          ..color = Color.fromRGBO(120, 145, 240, 0.7 * m),
+      );
+      c.restore();
+      // Puckers: short creases that follow the melt's edge.
+      final crease = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1, fw * 0.004)
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xCC050824);
+      final shine = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(0.8, fw * 0.003)
+        ..strokeCap = StrokeCap.round
+        ..color = Color.fromRGBO(170, 190, 255, 0.6 * m);
+      for (var i = 0; i < _melt.length; i++) {
+        final (x, y, rr) = _melt[i];
+        final p = g.at(x, y);
+        final r = fw * rr * grow;
+        for (var k = 0; k < 3; k++) {
+          final rad = r * (0.78 - 0.2 * k);
+          final start = i * 1.9 + k * 2.3;
+          final sweep = 0.9 + 0.35 * ((i + k) % 3);
+          final rect = Rect.fromCenter(center: p, width: rad * 2, height: rad * 1.7);
+          c.drawArc(rect, start, sweep, false, crease);
+          c.drawArc(rect.translate(-0.8, -1.2), start + 0.15, sweep * 0.6, false, shine);
+        }
+      }
+      // A soft sheen across the melted plastic.
+      c.drawOval(
+        Rect.fromCenter(center: box.topLeft + Offset(box.width * 0.42, box.height * 0.3), width: box.width * 0.5, height: box.height * 0.16),
+        Paint()
+          ..color = Color.fromRGBO(200, 214, 255, 0.22 * m)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, fw * 0.01),
+      );
+      // Raw burns where it fused to the skin, each with a dark bead of melt.
+      for (var i = 0; i < _burns.length; i++) {
+        final (x, y, rr) = _burns[i];
+        final p = g.at(x, y);
+        final r = fw * rr * grow;
+        final burn = _blob(p, r, i + 4);
+        c.drawPath(
+          burn,
+          Paint()
+            ..shader = RadialGradient(
+              center: const Alignment(-0.2, -0.3),
+              colors: const [Color(0xFFC0533C), Color(0xFF8E2A1E), Color(0xFF4A120D)],
+              stops: const [0, 0.55, 1],
+            ).createShader(Rect.fromCircle(center: p, radius: r * 1.1)),
+        );
+        c.drawPath(
+          burn,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1.6, r * 0.32)
+            ..strokeJoin = StrokeJoin.round
+            ..color = const Color(0xFF080B2E),
+        );
+        c.drawArc(
+          Rect.fromCircle(center: p, radius: r * 1.05),
+          math.pi * 1.1,
+          math.pi * 0.5,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(0.8, r * 0.1)
+            ..strokeCap = StrokeCap.round
+            ..color = Color.fromRGBO(200, 214, 255, 0.7 * m),
+        );
+        c.drawCircle(p + Offset(-r * 0.25, -r * 0.2), r * 0.14, Paint()..color = Color.fromRGBO(255, 220, 205, 0.55 * m));
+      }
+      // Still hot at the edge, then it cools.
+      final hot = 1 - 0.7 * m;
+      c.drawPath(
+        melt,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.4
+          ..color = Color.fromRGBO(255, 110, 30, 0.6 * hot + 0.12)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.6),
+      );
+    }
+    c.restore();
+  }
+
+  @override
+  bool shouldRepaint(_ArcFlashPainter old) => old.t != t || old.g.s != g.s;
+}
+
+/// A nail in the sole: the fallen live wire at his hand, the current down
+/// through the body and out through the nail into the ground.
+class _NailPathPainter extends CustomPainter {
+  _NailPathPainter(this.g, this.t);
+  final _DeathGeo g;
+  final double t;
+
+  @override
+  void paint(Canvas c, Size s) {
+    final hand = g.at(0.665, 0.565);
+    final nail = g.at(0.40, 0.945);
+    final gy = g.groundY;
+
+    // The fallen conductor, from up out of the picture down to his hand.
+    final wire = Path()
+      ..moveTo(s.width + 8, -8)
+      ..quadraticBezierTo(s.width * 0.95, hand.dy * 0.75, hand.dx + 4, hand.dy - 2);
+    c.drawPath(
+      wire,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFF2A2E33),
+    );
+    c.drawPath(
+      wire,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..color = const Color(0xFF9AA3AB),
+    );
+
+    // Contact flash at the hand.
+    final hit = (t / 0.15).clamp(0.0, 1.0);
+    final hr = 10 + 16 * hit;
+    c.drawCircle(
+      hand,
+      hr,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [Color.fromRGBO(255, 255, 255, hit), Color.fromRGBO(255, 230, 90, 0.7 * hit), const Color(0x00FFC400)],
+        ).createShader(Rect.fromCircle(center: hand, radius: hr)),
+    );
+
+    // The current's path through the body to the nail.
+    final body = _jagged([
+      hand,
+      g.at(0.665, 0.45),
+      g.at(0.635, 0.27),
+      g.at(0.55, 0.33),
+      g.at(0.48, 0.50),
+      g.at(0.43, 0.70),
+      g.at(0.41, 0.86),
+      nail,
+    ], 4);
+    final run = Curves.easeIn.transform(((t - 0.1) / 0.5).clamp(0.0, 1.0));
+    if (run > 0) {
+      _glowStroke(c, _upTo(body, run), glow: const Color(0xB3FFD23C), core: const Color(0xFFFFFBE0), width: 3);
+    }
+
+    // The nail through the sole.
+    final nailPaint = Paint()
+      ..color = const Color(0xFFB6BCC4)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    c.drawLine(nail.translate(0, -6), nail.translate(-1, 8), nailPaint);
+    c.drawCircle(nail.translate(0, -6), 4, Paint()..color = const Color(0xFFD5DADF));
+
+    // Out through the nail into the ground.
+    final out = ((t - 0.58) / 0.42).clamp(0.0, 1.0);
+    if (out <= 0) return;
+    final ground = Offset(nail.dx, gy + 4);
+    c.drawOval(
+      Rect.fromCenter(center: ground, width: 90 * out, height: 22 * out),
+      Paint()
+        ..color = Color.fromRGBO(255, 170, 40, 0.55 * out)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+    final spark = Paint()
+      ..color = Color.fromRGBO(255, 230, 120, out)
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 9; i++) {
+      final ang = math.pi * (0.05 + 0.9 * i / 8); // fanned out below the sole
+      final dir = Offset(math.cos(ang), math.sin(ang) * 0.6);
+      final len = (18 + (i.isEven ? 14 : 6)) * out;
+      c.drawLine(nail + dir * 6, nail + dir * (6 + len), spark);
+    }
+    _glowStroke(c, _jagged([nail.translate(-1, 8), ground.translate(-6, 10)], 3), glow: const Color(0xB3FFD23C), core: const Color(0xFFFFFBE0), width: 2.4);
+  }
+
+  @override
+  bool shouldRepaint(_NailPathPainter old) => old.t != t || old.g.s != g.s;
 }

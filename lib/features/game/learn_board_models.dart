@@ -3,9 +3,19 @@
 
 import 'learn_board_pack13.dart';
 import 'learn_board_pack14.dart';
+import 'learn_board_pack15.dart';
+import 'learn_board_pack16.dart';
+import 'learn_board_pack17.dart';
+import 'learn_board_pack18.dart';
+import 'learn_board_pack19.dart';
 
 export 'learn_board_pack13.dart' show learnBoardPack13, PoleBoardLines;
 export 'learn_board_pack14.dart' show learnBoardPack14;
+export 'learn_board_pack15.dart' show learnBoardPack15, RodBoardLines;
+export 'learn_board_pack16.dart' show learnBoardPack16, PtwBoardLines;
+export 'learn_board_pack17.dart' show learnBoardPack17, AidBoardLines;
+export 'learn_board_pack18.dart' show learnBoardPack18, FireBoardLines;
+export 'learn_board_pack19.dart' show learnBoardPack19, StormBoardLines;
 
 enum LearnBoardMode { pickGear, mythRival }
 
@@ -154,6 +164,11 @@ LearnBoardPack? learnBoardPackFor(String lessonId) {
   if (lessonId == '1.2') return learnBoardPack12;
   if (lessonId == '1.3') return learnBoardPack13;
   if (lessonId == '1.4') return learnBoardPack14;
+  if (lessonId == '1.5') return learnBoardPack15;
+  if (lessonId == '1.6') return learnBoardPack16;
+  if (lessonId == '1.7') return learnBoardPack17;
+  if (lessonId == '1.8') return learnBoardPack18;
+  if (lessonId == '1.9') return learnBoardPack19;
   return null;
 }
 

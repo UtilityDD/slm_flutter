@@ -87,7 +87,7 @@ void main() {
       for (var seed = 0; seed < 60; seed++) {
         final d = dealGloves(gloveCheckPack11, math.Random(seed));
         expect(d.rounds, hasLength(3));
-        expect([1, 2], contains(d.callBefore));
+        expect([1, 2, 3], contains(d.callBefore), reason: '3 = the helmet station');
         for (final hand in d.rounds) {
           final good = hand.where((g) => g.kind == GloveKind.good).toList();
           expect(good, hasLength(1), reason: 'seed $seed');

@@ -71,18 +71,79 @@ void main() {
       expect(r.caught.map((i) => i.labelBn), ['গ্রিজ লাগা জামা', 'পলিয়েস্টার জামা', 'পেরেক গাঁথা বুট']);
     });
 
-    test('wearing damaged kit and rushing on the call fails the play', () {
-      final d = _deal();
+    test('wearing damaged kit and rushing on the call fails the play (slips only)', () {
+      final boot = _pool('boot');
+      final cracked = boot.withFlaw(boot.flaws.firstWhere((f) => f.kind == KitFlawKind.crack));
+      final d = KitDeal(items: [..._deal().items, cracked], callBefore: KitSlot.feet, caller: kitCheckPack11.callers.first);
       final r = KitCheckRound(d);
       r.decide(_in(d, 'shirt#grease'), KitChoice.wear);
       r.decide(_in(d, 'shirt'), KitChoice.reject);
       r.decide(_in(d, 'shirt'), KitChoice.wear);
       r.decide(_in(d, 'pant'), KitChoice.wear);
       r.answerCall(heldCheck: false);
-      r.decide(_in(d, 'boot#boot-nail'), KitChoice.wear);
+      r.decide(_in(d, 'boot#boot-crack'), KitChoice.wear);
       r.decide(_in(d, 'boot'), KitChoice.wear);
       expect(r.done, isTrue);
+      expect(r.deadly, isNull, reason: 'grease and a cracked sole are slips');
       expect(r.passed, isFalse);
+    });
+
+    test('owner 2026-11-08: synthetic shirt and a nail in the sole are deadly; other faults stay slips', () {
+      // Every synthetic item and every nail flaw is deadly when worn.
+      for (final i in kitCheckPack11.pool) {
+        final synthetic = i.id == 'poly';
+        expect(judgeKit(i, KitChoice.wear).deadly, synthetic ? KitMistakes.synthetic : null, reason: i.id);
+        expect(judgeKit(i, KitChoice.reject).deadly, isNull, reason: 'sending ${i.id} back is never deadly');
+        for (final f in i.flaws) {
+          final flawed = i.withFlaw(f);
+          final o = judgeKit(flawed, KitChoice.wear);
+          expect(o.deadly, f.kind == KitFlawKind.nail ? KitMistakes.nail : null, reason: flawed.id);
+          expect(o.right, isFalse);
+          expect(judgeKit(flawed, KitChoice.reject).deadly, isNull);
+        }
+      }
+      expect([for (final i in kitCheckPack11.pool) for (final f in i.flaws) if (f.deadly != null) f.id], ['boot-nail', 'boot2-nail', 'boot3-nail']);
+      expect(KitMistakes.all.every((m) => m.deadly), isTrue);
+      expect(KitMistakes.synthetic.lessonPoint, 0);
+      expect(KitMistakes.nail.lessonPoint, 2);
+      for (final m in KitMistakes.all) {
+        expect(File(m.art).existsSync(), isTrue, reason: m.art);
+        expect(kitCheckSpokenLines(kitCheckPack11), contains(m.textBn), reason: 'the guide reads it; in the voice list');
+      }
+    });
+
+    test('wearing a deadly item ends the play unpassed, even with every other answer right', () {
+      for (final id in ['poly', 'boot#boot-nail']) {
+        final d = _deal();
+        final r = KitCheckRound(d);
+        r.decide(_in(d, 'shirt#grease'), KitChoice.reject);
+        if (id == 'poly') {
+          expect(r.decide(_in(d, 'poly'), KitChoice.wear).deadly, KitMistakes.synthetic);
+        } else {
+          r.decide(_in(d, 'poly'), KitChoice.reject);
+          r.decide(_in(d, 'shirt'), KitChoice.wear);
+          r.decide(_in(d, 'pant'), KitChoice.wear);
+          r.answerCall(heldCheck: true);
+          expect(r.decide(_in(d, id), KitChoice.wear).deadly, KitMistakes.nail);
+        }
+        expect(r.deadly, isNotNull);
+        expect(r.passed, isFalse, reason: id);
+      }
+    });
+
+    test('a slip is booked with a stable key and its lesson point', () {
+      final shirt = _pool('shirt');
+      final greasy = shirt.withFlaw(shirt.flaws.first);
+      final m = kitSlip(greasy, judgeKit(greasy, KitChoice.wear));
+      expect(m.key, '1.1/kit/flaw/grease');
+      expect(m.deadly, isFalse);
+      expect(m.textBn, greasy.flaw!.lineBn);
+      expect(m.lessonPoint, 0);
+      final slipper = _pool('slipper');
+      expect(kitSlip(slipper, judgeKit(slipper, KitChoice.wear)).lessonPoint, 2);
+      final back = kitSlip(_pool('boot'), judgeKit(_pool('boot'), KitChoice.reject));
+      expect(back.key, '1.1/kit/rejected-good');
+      expect(back.textBn, isNotEmpty);
     });
   });
 
@@ -175,7 +236,8 @@ void main() {
       expect(second.pack.engineType, 'glove_check');
       expect(doGameFor(second.pack), isNotNull);
       // A lesson whose Do rungs are not rebuilt yet still opens its old level.
-      final later = ladder.rungs.firstWhere((r) => r.id == '1.9/do/0');
+      // Lesson 1.10's Do rung has no shell game yet: it keeps its old level.
+      final later = ladder.rungs.firstWhere((r) => r.id == '1.10/do/0');
       expect(doGameFor(later.pack), isNull);
       expect(later.pack.legacyLevel, isNotNull);
     });

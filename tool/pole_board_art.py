@@ -5,16 +5,24 @@ python -I tool/pole_board_art.py .
 Writes assets/game/art/pole_board/*.svg — the same clean gradient style as
 tool/lakshman_art.py (200 x 220 cards, rounded clip, no text in the art).
 Every picture shows only what lesson 1.3 teaches:
-  walk 360° before touching the pole; the base (eroded soil, standing water,
-  a cracked foundation, a lean); the hammer sound test at waist height (PCC
-  solid vs hollow, steel clear vs dull where rust flakes off); the visual scan
-  (hairline crack, spalling with the rod showing, rust at ground level and at
-  joints); hardware seen from below (bent / loose cross-arm, broken
-  insulator, rusty bolts, wasp hive, bird nest, cable tangle).
+  walk 360° before touching the pole (not from afar, not one side only); the
+  base (eroded soil, standing water, a cracked foundation, a lean); the hammer
+  sound test at waist height (PCC solid vs hollow; rail, H-beam and tubular
+  steel clear vs dull where rust flakes off); the visual scan (hairline crack,
+  spalling with the rod showing, rust at ground level, at welds and bolts);
+  hardware seen from below (bent / loose cross-arm, broken insulator, rusty
+  bolts, wasp hive, bird nest, cable tangle).
+Steel poles come in the lesson's three kinds — rail, H-beam (RSJ) and
+stepped tubular — all drawn with one set of gradients. Insulators are
+brown-glazed porcelain pin insulators (IS 731; the WBSEDCL spec's brown
+glaze); a grey polymer pin insulator is the variant on some steel poles.
 The picture carries the cue (the board hides a card's name until it is
 tapped): the sound test is drawn as a cut-away of the pole's inside plus the
-"shape" of the sound — bright, even rings for a sound pole, short broken grey
-ones for a weak one.
+"shape" of the sound — long, even rings for a sound pole, short broken ones
+for a weak one.
+No colour gives a safe card away (test/learn_board_13_test.dart): in every
+hand the dealer can make, each gradient and colour on the safe card is also
+drawn on a trap, so only the pole's state tells them apart.
 """
 
 import math
@@ -48,7 +56,7 @@ DEFS = """<defs>
   <linearGradient id="pcc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A29F96"/><stop offset="0.45" stop-color="#DAD7CF"/><stop offset="1" stop-color="#B3B0A7"/></linearGradient>
   <linearGradient id="pccSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E8B83"/><stop offset="1" stop-color="#77746D"/></linearGradient>
   <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F7D88"/><stop offset="0.38" stop-color="#D4DDE3"/><stop offset="0.55" stop-color="#EEF3F6"/><stop offset="1" stop-color="#7C8994"/></linearGradient>
-  <linearGradient id="steelDull" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6B6E70"/><stop offset="0.45" stop-color="#A9ABA8"/><stop offset="1" stop-color="#6E706F"/></linearGradient>
+  <linearGradient id="steelWeb" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3F4A52"/><stop offset="0.3" stop-color="#7F8C96"/><stop offset="0.75" stop-color="#9AA6AF"/><stop offset="1" stop-color="#4A555D"/></linearGradient>
   <linearGradient id="rust" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C46A2B"/><stop offset="0.5" stop-color="#9A4517"/><stop offset="1" stop-color="#6E2E0E"/></linearGradient>
   <linearGradient id="rustLight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D98A45" stop-opacity="0.9"/><stop offset="1" stop-color="#A9541F" stop-opacity="0.2"/></linearGradient>
   <linearGradient id="core" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8C887E"/><stop offset="0.5" stop-color="#ABA79C"/><stop offset="1" stop-color="#8C887E"/></linearGradient>
@@ -59,7 +67,7 @@ DEFS = """<defs>
   <linearGradient id="porc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A4F2A"/><stop offset="0.45" stop-color="#D08A55"/><stop offset="1" stop-color="#7A4322"/></linearGradient>
   <linearGradient id="vest" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E06D10"/><stop offset="0.5" stop-color="#FF8A2A"/><stop offset="1" stop-color="#D9640C"/></linearGradient>
   <linearGradient id="hive" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F6250"/><stop offset="0.5" stop-color="#B6A68A"/><stop offset="1" stop-color="#6F6250"/></linearGradient>
-  <linearGradient id="ladder" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D8DEE2"/><stop offset="1" stop-color="#9CA6AD"/></linearGradient>
+  <linearGradient id="poly" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F777D"/><stop offset="0.45" stop-color="#BCC3C8"/><stop offset="1" stop-color="#737B81"/></linearGradient>
   <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF6D0" stop-opacity="0.95"/><stop offset="1" stop-color="#FFF6D0" stop-opacity="0"/></radialGradient>
   <radialGradient id="shade" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#000000" stop-opacity="0.32"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>
   <radialGradient id="soot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1E1A16" stop-opacity="0.75"/><stop offset="1" stop-color="#1E1A16" stop-opacity="0"/></radialGradient>
@@ -144,17 +152,65 @@ def pcc_x(cx, base, top, wb, wt, y):
     return (wt + (wb - wt) * f) / 2
 
 
-def steel_tube(cx, base, top, wb, wt, step_y, dull=False, tilt=0.0):
+def steel_tube(cx, base, top, wb, wt, step_y, tilt=0.0):
     """Stepped tubular steel pole: the lower tube, a welded collar, the upper tube."""
-    grad = 'steelDull' if dull else 'steel'
-    s = [f'<g transform="rotate({n(tilt)} {n(cx)} {n(base)})">' if tilt else '<g>']
-    s.append(f'<rect x="{n(cx - wb / 2)}" y="{n(step_y)}" width="{n(wb)}" height="{n(base - step_y)}" fill="url(#{grad})"/>')
-    s.append(f'<rect x="{n(cx - wt / 2)}" y="{n(top)}" width="{n(wt)}" height="{n(step_y - top)}" fill="url(#{grad})"/>')
+    s = [f'<g class="pole-tube" transform="rotate({n(tilt)} {n(cx)} {n(base)})">' if tilt else '<g class="pole-tube">']
+    for x0, w, y0, y1 in ((cx - wb / 2, wb, step_y, base), (cx - wt / 2, wt, top, step_y)):
+        s.append(f'<rect x="{n(x0)}" y="{n(y0)}" width="{n(w)}" height="{n(y1 - y0)}" fill="url(#steel)"/>')
+        # the round tube's shaded far side
+        s.append(f'<rect x="{n(x0 + w * 0.84)}" y="{n(y0)}" width="{n(w * 0.16)}" height="{n(y1 - y0)}" fill="url(#steelWeb)" opacity="0.55"/>')
     # weld collar at the step
-    s.append(f'<path d="M{n(cx - wb / 2)} {n(step_y)} L{n(cx - wt / 2)} {n(step_y - 5)} L{n(cx + wt / 2)} {n(step_y - 5)} L{n(cx + wb / 2)} {n(step_y)} Z" fill="url(#{grad})"/>')
+    s.append(f'<path d="M{n(cx - wb / 2)} {n(step_y)} L{n(cx - wt / 2)} {n(step_y - 5)} L{n(cx + wt / 2)} {n(step_y - 5)} L{n(cx + wb / 2)} {n(step_y)} Z" fill="url(#steel)"/>')
     s.append(f'<rect x="{n(cx - wb / 2)}" y="{n(step_y - 1)}" width="{n(wb)}" height="2.4" fill="#5E6870" opacity="0.6"/>')
     s.append('</g>')
     return s
+
+
+# Band layout across a section pole's face, left to right: (from, to, fill).
+# H-beam (RSJ), seen into its open side: two flange edges, the web between.
+# Rail, seen a little from the side: the thick rounded head, the narrow web,
+# the sloping top face of the wide foot, the foot's dark edge — lopsided,
+# where the H-beam is symmetric.
+SECTION = {
+    'hbeam': ((0.0, 0.17, 'steel'), (0.17, 0.83, 'steelWeb'), (0.83, 1.0, 'steel')),
+    'rail': ((0.0, 0.32, 'steel'), (0.32, 0.56, 'steelWeb'), (0.56, 0.9, 'steel'), (0.9, 1.0, 'steelWeb')),
+}
+
+
+def section_pole(kind, cx, base, top, wb, wt=None, tilt=0.0):
+    """A rail or H-beam (RSJ) steel pole; [wt] < [wb] tapers it (seen from below)."""
+    wt = wb if wt is None else wt
+
+    def x_at(y, f):
+        hw = (wt + (wb - wt) * (y - top) / max(1, base - top)) / 2
+        return cx - hw + 2 * hw * f
+
+    s = [f'<g class="pole-{kind}" transform="rotate({n(tilt)} {n(cx)} {n(base)})">' if tilt else f'<g class="pole-{kind}">']
+    for a, b, fill in SECTION[kind]:
+        s.append(f'<polygon points="{pts([(x_at(base, a), base), (x_at(base, b), base), (x_at(top, b), top), (x_at(top, a), top)])}" fill="url(#{fill})"/>')
+    web0, web1 = SECTION[kind][1][0], SECTION[kind][1][1]
+    # the flange (or head) throws a shadow on the web; edges catch the light
+    for f, sh in ((web0, 0.05), (web1, -0.035)):
+        g = f + sh
+        s.append(f'<polygon points="{pts([(x_at(base, f), base), (x_at(base, g), base), (x_at(top, g), top), (x_at(top, f), top)])}" fill="#5E6870" opacity="0.6"/>')
+    if kind == 'rail':
+        # the rounded rail head: a bright crown line and a fillet into the web
+        s.append(f'<path d="M{n(x_at(base, 0.12))} {n(base)} L{n(x_at(top, 0.12))} {n(top)}" stroke="#FFFFFF" stroke-width="{n(max(1.2, wb * 0.05))}" opacity="0.7"/>')
+        s.append(f'<path d="M{n(x_at(base, 0.3))} {n(base)} L{n(x_at(top, 0.3))} {n(top)}" stroke="#5E6870" stroke-width="{n(max(1, wb * 0.035))}" opacity="0.8"/>')
+        s.append(f'<path d="M{n(x_at(base, 0.6))} {n(base)} L{n(x_at(top, 0.6))} {n(top)}" stroke="#FFFFFF" stroke-width="{n(max(1, wb * 0.03))}" opacity="0.4"/>')
+    else:
+        for f in (0.04, 0.87):
+            s.append(f'<path d="M{n(x_at(base, f))} {n(base)} L{n(x_at(top, f))} {n(top)}" stroke="#FFFFFF" stroke-width="{n(max(1, wb * 0.03))}" opacity="0.6"/>')
+    s.append('</g>')
+    return s
+
+
+def steel_pole(kind, cx, base, top, wb, wt=None, step_y=None, tilt=0.0):
+    """Any of the lesson's steel poles: 'tube' (stepped tubular), 'rail' or 'hbeam'."""
+    if kind == 'tube':
+        wt = wb * 0.76 if wt is None else wt
+        return steel_tube(cx, base, top, wb, wt, (top + base) / 2 if step_y is None else step_y, tilt=tilt)
+    return section_pole(kind, cx, base, top, wb, wt, tilt=tilt)
 
 
 def muff(cx, y, w, h, crack=False):
@@ -175,8 +231,25 @@ def ellipse_pt(cx, cy, rx, ry, t):
     return cx + rx * math.cos(t), cy + ry * math.sin(t)
 
 
-def walk_track(cx, cy, rx, ry, front, arrow_t=None):
-    """Dashed walking loop round the pole (front half or back half), drawn as short arcs."""
+def _track_paths(d, arrow=None):
+    """The walking path's one look (white dashes on a soft green edge), shared by
+    the full loop, the half loop and a straight walk-in, so no card stands out
+    for having a path at all: only the path's shape tells (class="walk-track")."""
+    out = [f'<path class="walk-track" d="{d}" stroke="#5F8A42" stroke-width="4.4" stroke-linecap="round" fill="none" opacity="0.45"/>',
+           f'<path class="walk-track" d="{d}" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" fill="none" opacity="0.95"/>']
+    if arrow is not None:
+        (x, y), (dx, dy) = arrow
+        L = math.hypot(dx, dy)
+        dx, dy = dx / L, dy / L
+        px, py = -dy, dx
+        tip = (x + dx * 7, y + dy * 7)
+        out.append(f'<polygon points="{pts([tip, (x + px * 4.5, y + py * 4.5), (x - px * 4.5, y - py * 4.5)])}" fill="#FFFFFF" stroke="#5F8A42" stroke-opacity="0.45" stroke-width="1"/>')
+    return out
+
+
+def walk_track(cx, cy, rx, ry, front, arrow_t=None, t_from=None, t_to=None):
+    """Dashed walking loop round the pole (front half or back half), drawn as short
+    arcs; with [t_from, t_to] (radians) only that stretch of it — a half walk."""
     s = []
     segs = 22
     for i in range(segs):
@@ -185,24 +258,31 @@ def walk_track(cx, cy, rx, ry, front, arrow_t=None):
         is_front = math.sin((t0 + t1) / 2) > 0
         if is_front != front:
             continue
+        if t_from is not None and not (t_from <= t0 and t1 <= t_to):
+            continue
         a = ellipse_pt(cx, cy, rx, ry, t0)
         b = ellipse_pt(cx, cy, rx, ry, (t0 + t1) / 2)
         c = ellipse_pt(cx, cy, rx, ry, t1)
         s.append(f'M{n(a[0])} {n(a[1])} Q{n(2 * b[0] - (a[0] + c[0]) / 2)} {n(2 * b[1] - (a[1] + c[1]) / 2)} {n(c[0])} {n(c[1])}')
-    out = [f'<path d="{" ".join(s)}" stroke="#2E5B3A" stroke-width="4.4" stroke-linecap="round" fill="none" opacity="0.35"/>',
-           f'<path d="{" ".join(s)}" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" fill="none" opacity="0.95"/>']
+    arrow = None
     if arrow_t is not None and (math.sin(arrow_t) > 0) == front:
-        x, y = ellipse_pt(cx, cy, rx, ry, arrow_t)
-        dx, dy = -rx * math.sin(arrow_t), ry * math.cos(arrow_t)
-        L = math.hypot(dx, dy)
-        dx, dy = dx / L, dy / L
-        px, py = -dy, dx
-        tip = (x + dx * 7, y + dy * 7)
-        out.append(f'<polygon points="{pts([tip, (x + px * 4.5, y + py * 4.5), (x - px * 4.5, y - py * 4.5)])}" fill="#FFFFFF" stroke="#2E5B3A" stroke-opacity="0.35" stroke-width="1"/>')
-    return out
+        arrow = (ellipse_pt(cx, cy, rx, ry, arrow_t), (-rx * math.sin(arrow_t), ry * math.cos(arrow_t)))
+    return _track_paths(' '.join(s), arrow)
 
 
-def pole_top(cx, top, w, arm_y, arm_w=70):
+def walk_in(a, b, dash=7.0, gap=5.5):
+    """A straight walk from a to b in the same dashes, arrow at b: he came
+    straight in, without going round."""
+    L = math.hypot(b[0] - a[0], b[1] - a[1])
+    ux, uy = (b[0] - a[0]) / L, (b[1] - a[1]) / L
+    s, d = [], 0.0
+    while d + dash <= L - 6:
+        s.append(f'M{n(a[0] + ux * d)} {n(a[1] + uy * d)} L{n(a[0] + ux * (d + dash))} {n(a[1] + uy * (d + dash))}')
+        d += dash + gap
+    return _track_paths(' '.join(s), ((b[0] - ux * 6, b[1] - uy * 6), (ux, uy)))
+
+
+def pole_top(cx, top, arm_y, arm_w=70):
     """Simple cross-arm with insulators for a full-pole scene."""
     s = [f'<rect x="{n(cx - arm_w / 2)}" y="{n(arm_y)}" width="{n(arm_w)}" height="4" rx="1.2" fill="url(#arm)"/>']
     for ix in (cx - arm_w / 2 + 6, cx + arm_w / 2 - 6, cx):
@@ -239,7 +319,6 @@ POSES = {
     'tap': (((-3, -10), (-5, 0)), ((3, -10), (5, 0)), ((-6, -28), (-2, -24)), ((10, -29), (17, -24))),
     'climb': (((1, -10), (5, -1)), ((9, -22), (8, -13)), ((5, -44), (9, -52)), ((8, -40), (10, -47))),
     'lean': (((1, -10), (5, 0)), ((1, -10), (-4, 0)), ((-6, -28), (-4, -20)), ((10, -38), (8, -46))),
-    'rung': (((1, -9), (4, 0)), ((7, -18), (8, -10)), ((5, -42), (9, -48)), ((8, -38), (10, -44))),
     'phone': (((-3, -10), (-4.5, 0)), ((3, -10), (4.5, 0)), ((-7, -28), (-7.5, -21)), ((8, -29), (4, -38))),
 }
 
@@ -339,28 +418,28 @@ def rust_patch(cx, cy, rw, rh, seed, flakes=0, fall_to=None):
 
 
 def sound_rings(x, y, good, face=-1, scale=1.0):
-    """The sound of the hammer: bright even rings (sound pole) or short broken grey ones."""
+    """The sound of the hammer, drawn in one style on every card so only its shape
+    tells: long, even rings for a sound pole; short broken stubs and crumbs for a weak one."""
     s = []
+
+    def arc(rad, a0, a1, w_out=4.6, w_in=2.6):
+        a0r, a1r = math.radians(a0), math.radians(a1)
+        x0, y0 = x + face * rad * math.cos(a0r), y + rad * math.sin(a0r)
+        x1, y1 = x + face * rad * math.cos(a1r), y + rad * math.sin(a1r)
+        sweep = 1 if face > 0 else 0
+        d = f'M{n(x0)} {n(y0)} A{n(rad)} {n(rad)} 0 0 {sweep} {n(x1)} {n(y1)}'
+        return [f'<path d="{d}" stroke="#5B4A12" stroke-opacity="0.35" stroke-width="{w_out}" fill="none" stroke-linecap="round"/>',
+                f'<path d="{d}" stroke="#FFD54A" stroke-width="{w_in}" fill="none" stroke-linecap="round"/>']
+
     if good:
-        for i, rad in enumerate((9, 16, 23)):
-            rad *= scale
-            a0, a1 = math.radians(-42), math.radians(42)
-            x0, y0 = x + face * rad * math.cos(a0), y + rad * math.sin(a0)
-            x1, y1 = x + face * rad * math.cos(a1), y + rad * math.sin(a1)
-            sweep = 1 if face > 0 else 0
-            d = f'M{n(x0)} {n(y0)} A{n(rad)} {n(rad)} 0 0 {sweep} {n(x1)} {n(y1)}'
-            s.append(f'<path d="{d}" stroke="#5B4A12" stroke-opacity="0.35" stroke-width="4.6" fill="none" stroke-linecap="round"/>')
-            s.append(f'<path d="{d}" stroke="#FFD54A" stroke-width="2.6" fill="none" stroke-linecap="round"/>')
+        for rad in (9, 16, 23):
+            s += arc(rad * scale, -42, 42)
         s.append(f'<circle cx="{n(x)}" cy="{n(y)}" r="{n(3.4 * scale)}" fill="#FFF3B0"/>')
     else:
-        for rad, segs in ((9, ((-30, -8), (8, 26))), (14, ((-20, -4), (10, 20)))):
-            rad *= scale
+        for rad, segs in ((10, ((-26, -10), (10, 24))), (15, ((-16, -4),))):
             for a0, a1 in segs:
-                a0r, a1r = math.radians(a0), math.radians(a1)
-                x0, y0 = x + face * rad * math.cos(a0r), y + rad * math.sin(a0r)
-                x1, y1 = x + face * rad * math.cos(a1r), y + rad * math.sin(a1r)
-                sweep = 1 if face > 0 else 0
-                s.append(f'<path d="M{n(x0)} {n(y0)} A{n(rad)} {n(rad)} 0 0 {sweep} {n(x1)} {n(y1)}" stroke="#7B7F84" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.85"/>')
+                s += arc(rad * scale, a0, a1, 3.6, 1.8)
+        s.append(f'<circle cx="{n(x)}" cy="{n(y)}" r="{n(2 * scale)}" fill="#FFF3B0"/>')
         r = random.Random(int(x * 13 + y))
         for _ in range(7):
             s.append(f'<circle cx="{n(x + face * r.uniform(2, 12))}" cy="{n(y + r.uniform(-6, 9))}" r="{n(r.uniform(0.7, 1.6))}" fill="#9A9488" opacity="0.8"/>')
@@ -368,16 +447,18 @@ def sound_rings(x, y, good, face=-1, scale=1.0):
 
 
 def rebar(x, y0, y1, rusty=True):
-    col = '#8C3F14' if rusty else '#6E7A84'
-    hi = '#C66A2C' if rusty else '#A9B4BC'
-    s = [f'<rect x="{n(x - 1.8)}" y="{n(y0)}" width="3.6" height="{n(y1 - y0)}" rx="1.2" fill="{col}"/>',
-         f'<rect x="{n(x - 0.9)}" y="{n(y0)}" width="1" height="{n(y1 - y0)}" fill="{hi}" opacity="0.8"/>']
+    """A steel rod inside the concrete; a rusty one is the same rod eaten by rust."""
+    s = [f'<rect x="{n(x - 1.8)}" y="{n(y0)}" width="3.6" height="{n(y1 - y0)}" rx="1.2" fill="#6E7A84"/>',
+         f'<rect x="{n(x - 0.9)}" y="{n(y0)}" width="1" height="{n(y1 - y0)}" fill="#A9B4BC" opacity="0.8"/>']
     y = y0 + 2
     ribs = []
     while y < y1 - 1:
         ribs.append(f'M{n(x - 2.2)} {n(y + 1)} L{n(x + 2.2)} {n(y - 1)}')
         y += 3.4
-    s.append(f'<path d="{" ".join(ribs)}" stroke="{col}" stroke-width="1" opacity="0.9"/>')
+    s.append(f'<path d="{" ".join(ribs)}" stroke="#6E7A84" stroke-width="1" opacity="0.9"/>')
+    if rusty:
+        s.append(f'<rect x="{n(x - 2.2)}" y="{n(y0)}" width="4.4" height="{n(y1 - y0)}" rx="1.2" fill="#8C3F14" opacity="0.88"/>')
+        s.append(f'<rect x="{n(x - 0.9)}" y="{n(y0)}" width="1" height="{n(y1 - y0)}" fill="#C66A2C" opacity="0.8"/>')
     return s
 
 
@@ -386,6 +467,8 @@ def rebar(x, y0, y1, rusty=True):
 def walk_card(kind):
     hz = 128
     s = field(hz, rng_seed=11 + len(kind))
+    if kind == 'from_far':
+        return far_card(s, hz)
     cx, base, top = 108, 176, 30
     k = 1.25  # worker scale
     track = (cx, base + 4, 66, 17)
@@ -404,27 +487,26 @@ def walk_card(kind):
             s.append(f'<ellipse cx="{cx + dx}" cy="{base + dy}" rx="3" ry="2" fill="#8A7553"/>')
     s.append(shadow(cx + 6, base + 1, 24, 5))
     s += pcc_pole(cx, base, top, 17, 10)
-    s += pole_top(cx, top, 10, top + 14, arm_w=76)
+    s += pole_top(cx, top, top + 14, arm_w=76)
     s += wires_full(cx, top + 14, arm_w=76, top=top)
     if kind in ('walk_round', 'walk_back'):
         s += walk_track(*track, front=True, arrow_t=math.radians(52 if kind == 'walk_round' else 128))
+    elif kind == 'one_side':
+        # Half a walk: along the front only, stopping where he stands — the back
+        # of the foot is never seen.
+        s += walk_track(*track, front=True, arrow_t=math.radians(118), t_from=math.radians(15), t_to=math.radians(136))
+    elif kind == 'climb_now':
+        # Straight in from the road to the pole, and up.
+        s += walk_in((10, 216), (cx - 14, base + 8))
+    elif kind == 'lean_on':
+        # Straight in to the pole, and a shoulder on it.
+        s += walk_in((6, 206), (cx - 34, base + 14))
     if kind == 'walk_round':
         s.append(shadow(cx - 40, base + 15, 14, 3.4))
         s.append(worker(cx - 40, base + 14, k, 'point', face=1, look_down=True))
     elif kind == 'climb_now':
         s.append(worker(cx - 10, base - 40, k, 'climb', face=1))
         s.append(f'<g transform="translate({cx - 46} {base + 16})"><rect x="-9" y="-11" width="18" height="11" rx="2" fill="#3E4E3A"/><rect x="-5.5" y="-14" width="11" height="4" rx="1.5" fill="none" stroke="#2E3A2B" stroke-width="1.5"/></g>')
-    elif kind == 'ladder_up':
-        lx0, lx1, ly = cx - 46, cx - 10, base + 16
-        s.append(f'<path d="M{lx0} {ly} L{lx1 - 7} 64 M{lx0 + 11} {ly} L{lx1 + 3} 64" stroke="url(#ladder)" stroke-width="3.2" stroke-linecap="round"/>')
-        rungs = []
-        for i in range(1, 12):
-            f = i / 12
-            ya = ly - (ly - 64) * f
-            xa = lx0 + (lx1 - 7 - lx0) * f
-            rungs.append(f'M{n(xa)} {n(ya)} L{n(xa + 10.5)} {n(ya)}')
-        s.append(f'<path d="{" ".join(rungs)}" stroke="#AEB7BD" stroke-width="2"/>')
-        s.append(worker(lx0 + 7, ly - 26, k, 'rung', face=1))
     elif kind == 'lean_on':
         # Resting his shoulder on a pole he has not checked.
         s.append(shadow(cx - 18, base + 11, 14, 3.4))
@@ -432,6 +514,28 @@ def walk_card(kind):
     elif kind == 'one_side':
         s.append(shadow(cx - 50, base + 17, 14, 3.4))
         s.append(worker(cx - 50, base + 16, k, 'look', face=1, look_up=True))
+    return card(s)
+
+
+def far_card(s, hz):
+    """He sizes the pole up from the road, hand over his eyes, and never walks to it:
+    from here its foot is only a smudge in the grass."""
+    cx, base, top = 140, hz + 22, 46
+    s.append(shadow(cx + 3, base + 1, 11, 2.4))
+    s += pcc_pole(cx, base, top, 8, 5)
+    s += pole_top(cx, top, top + 8, arm_w=40)
+    s += wires_full(cx, top + 8, arm_w=40, top=top)
+    # long grass round the far foot hides it
+    r = random.Random(17)
+    tufts = []
+    for _ in range(16):
+        gx, gy = cx + r.uniform(-16, 16), base + r.uniform(-1, 3)
+        tufts.append(f'M{n(gx)} {n(gy)} l{n(r.uniform(-3, 3))} {n(-r.uniform(5, 9))}')
+    s.append(f'<path d="{" ".join(tufts)}" stroke="#5F8A42" stroke-width="1.4" stroke-linecap="round"/>')
+    # the road he stands on, and his bag still on his shoulder side
+    s.append(f'<path d="M0 {H - 30} Q 60 {H - 40} 120 {H} L0 {H} Z" fill="#9E9A8C" opacity="0.55"/>')
+    s.append(shadow(60, 207, 18, 4))
+    s.append(worker(60, 206, 1.9, 'look', face=1, bag=True))
     return card(s)
 
 
@@ -448,25 +552,35 @@ def base_card(kind):
         # A far pole stands plumb behind it: the lean reads against it.
         s.append(f'<rect x="160" y="{hz - 70}" width="5" height="70" fill="#9C9990"/><rect x="148" y="{hz - 66}" width="29" height="3" fill="#6E7378"/>')
     if kind == 'base_dry':
+        # An H-beam (RSJ) pole set in a sound, dry concrete collar.
         s.append(shadow(cx + 8, gy + 4, 46, 9))
         s += muff(cx, gy, 66, 14)
-        s += steel_tube(cx, gy - 12, -10, 34, 26, 70)
-        s.append(f'<ellipse cx="{cx}" cy="{gy - 12}" rx="17" ry="4" fill="#6E7A84" opacity="0.6"/>')
+        s += steel_pole('hbeam', cx, gy - 12, -10, 34)
         return card(s)
     tilt = 9 if kind == 'lean' else 0
     if kind == 'erosion':
-        # The soil is washed out round the foot: a pit, the buried part showing.
+        # A rail pole: the soil is washed out round the foot — a pit, the buried
+        # part of the rail showing, darker where the earth held it.
         s.append(f'<ellipse cx="{cx}" cy="{gy + 4}" rx="60" ry="16" fill="#6E5B40"/>')
         s.append(f'<ellipse cx="{cx}" cy="{gy + 6}" rx="48" ry="11" fill="#4A3C2A"/>')
-        s.append(f'<polygon points="{pts([(cx - 19, gy - 2), (cx + 19, gy - 2), (cx + 18, gy + 12), (cx - 18, gy + 12)])}" fill="#7E7A70"/>')
-        s.append(f'<rect x="{cx - 19}" y="{gy - 2}" width="38" height="5" fill="#5E5A51" opacity="0.6"/>')
+        s += steel_pole('rail', cx, gy + 12, -10, 30)
+        s.append(f'<rect x="{cx - 15}" y="{gy - 2}" width="30" height="14" fill="#4A3C2A" opacity="0.45"/>')
+        s.append(f'<rect x="{cx - 15}" y="{gy - 2}" width="30" height="3" fill="#5E5A51" opacity="0.6"/>')
         for i, (dx, dy, rr) in enumerate([(-48, 2, 4), (44, 6, 3.5), (-30, 14, 3), (36, 15, 4.5), (52, -2, 2.6)]):
             s.append(f'<ellipse cx="{cx + dx}" cy="{gy + dy}" rx="{rr}" ry="{rr * 0.7}" fill="#8A7553"/>')
         s.append(f'<path d="M{cx - 60} {gy + 2} q8 -6 16 -2 M{cx + 44} {gy - 4} q8 -4 16 2" stroke="#5F8A42" stroke-width="1.6" fill="none"/>')
-        s += pcc_pole(cx, gy - 2, -10, 38, 30)
         return card(s)
     if kind == 'water':
+        # An H-beam pole in its collar, standing in a pool of rain water.
         s.append(shadow(cx + 6, gy + 2, 40, 8))
+        s += muff(cx, gy, 66, 14)
+        s += steel_pole('hbeam', cx, gy - 12, -10, 34)
+        s.append(f'<ellipse cx="{cx}" cy="{gy + 4}" rx="76" ry="17" fill="url(#water)" opacity="0.92"/>')
+        s.append(f'<polygon points="{pts([(cx - 31, gy + 3), (cx + 31, gy + 3), (cx + 26, gy + 15), (cx - 26, gy + 15)])}" fill="#B6B3AA" opacity="0.3"/>')
+        s.append(f'<path d="M{cx - 60} {gy + 2} q10 -3 20 0 M{cx + 38} {gy + 10} q12 -3 24 0 M{cx - 44} {gy + 13} q8 -2 16 0" stroke="#E4EEF3" stroke-width="1.3" fill="none" opacity="0.85"/>')
+        s.append(f'<ellipse cx="{cx - 44}" cy="{gy - 1}" rx="10" ry="2.2" fill="none" stroke="#E4EEF3" stroke-width="1" opacity="0.8"/>')
+        s.append('<g stroke="#E4EEF3" stroke-width="1" opacity="0.55" stroke-linecap="round">' + ''.join(f'<line x1="{x}" y1="{y}" x2="{x - 3}" y2="{y + 9}"/>' for x in range(10, 200, 23) for y in range(10, 90, 30)) + '</g>')
+        return card(s)
     elif kind == 'lean':
         s.append(f'<path d="M{cx + 18} {gy - 2} q12 -8 26 -2 q8 4 18 0" fill="#8A7553" stroke="#6E5B40" stroke-width="1.2"/>')
         s.append(f'<path d="M{cx - 30} {gy + 2} l10 -3 l8 4 l9 -2" stroke="#4A3C2A" stroke-width="1.6" fill="none"/>')
@@ -478,12 +592,6 @@ def base_card(kind):
         s += muff(cx, gy, 70, 20, crack=kind == 'found_crack')
     pole_base = gy - 18 if has_muff else gy
     s += pcc_pole(cx, pole_base, -10, 38, 30, tilt=tilt)
-    if kind == 'water':
-        s.append(f'<ellipse cx="{cx}" cy="{gy + 4}" rx="74" ry="17" fill="url(#water)"/>')
-        s.append(f'<polygon points="{pts([(cx - 19, gy + 3), (cx + 19, gy + 3), (cx + 17, gy + 18), (cx - 17, gy + 18)])}" fill="#B6B3AA" opacity="0.35"/>')
-        s.append(f'<path d="M{cx - 58} {gy + 2} q10 -3 20 0 M{cx + 30} {gy + 10} q12 -3 24 0 M{cx - 40} {gy + 12} q8 -2 16 0" stroke="#E4EEF3" stroke-width="1.3" fill="none" opacity="0.85"/>')
-        s.append(f'<ellipse cx="{cx - 24}" cy="{gy - 1}" rx="10" ry="2.2" fill="none" stroke="#E4EEF3" stroke-width="1" opacity="0.8"/>')
-        s.append('<g stroke="#E4EEF3" stroke-width="1" opacity="0.55" stroke-linecap="round">' + ''.join(f'<line x1="{x}" y1="{y}" x2="{x - 3}" y2="{y + 9}"/>' for x in range(10, 200, 23) for y in range(10, 90, 30)) + '</g>')
     if kind == 'base_firm':
         s.append(f'<path d="M{cx - 44} {gy + 6} l-3 -7 M{cx - 44} {gy + 6} l1 -9 M{cx - 44} {gy + 6} l4 -7 M{cx + 46} {gy + 8} l-3 -7 M{cx + 46} {gy + 8} l1 -9" stroke="#5F8A42" stroke-width="1.6" stroke-linecap="round"/>')
     return card(s)
@@ -496,36 +604,37 @@ def sound_card(kind):
     s = field(hz, sun=True, far_pole=False, rng_seed=31 + len(kind))
     px, base = 60, 206
     tap_y = base - 2.0 * 23  # the hammer at the worker's waist (s = 2)
-    if kind in ('pcc_solid', 'pcc_hollow', 'no_tap'):
+    if kind in ('pcc_solid', 'pcc_hollow'):
         s.append(shadow(px + 8, base + 2, 34, 6))
         s += pcc_pole(px, base, -10, 40, 33)
-        if kind != 'no_tap':
-            # Cut-away window: the pole's inside at the tap point.
-            wx0, wx1, wy0, wy1 = px - 15, px + 13, tap_y - 30, tap_y + 22
-            s.append(f'<rect x="{wx0 - 2}" y="{n(wy0 - 2)}" width="{wx1 - wx0 + 4}" height="{n(wy1 - wy0 + 4)}" rx="3" fill="#E9E6DE"/>')
-            s.append(f'<rect x="{wx0}" y="{n(wy0)}" width="{wx1 - wx0}" height="{n(wy1 - wy0)}" rx="2" fill="url(#core)"/>')
-            r = random.Random(5)
-            agg = ''.join(f'<circle cx="{n(r.uniform(wx0 + 2, wx1 - 2))}" cy="{n(r.uniform(wy0 + 2, wy1 - 2))}" r="{n(r.uniform(0.8, 1.8))}"/>' for _ in range(26))
-            s.append(f'<g fill="#7A766C" opacity="0.7">{agg}</g>')
-            if kind == 'pcc_hollow':
-                cav = [(px - 9, tap_y - 22), (px + 2, tap_y - 26), (px + 8, tap_y - 14), (px + 7, tap_y + 2), (px + 9, tap_y + 14), (px - 3, tap_y + 17), (px - 10, tap_y + 6), (px - 7, tap_y - 8)]
-                s.append(f'<polygon points="{pts(cav)}" fill="url(#void)"/>')
-                s.append(f'<path d="M{px - 7} {n(tap_y - 22)} l-4 -6 M{px + 8} {n(tap_y + 14)} l4 7" stroke="#3B342C" stroke-width="1.2"/>')
-            s += rebar(wx0 + 5, wy0, wy1, rusty=kind == 'pcc_hollow')
-            s += rebar(wx1 - 5, wy0, wy1, rusty=kind == 'pcc_hollow')
+        # Cut-away window: the pole's inside at the tap point.
+        wx0, wx1, wy0, wy1 = px - 15, px + 13, tap_y - 30, tap_y + 22
+        s.append(f'<rect x="{wx0 - 2}" y="{n(wy0 - 2)}" width="{wx1 - wx0 + 4}" height="{n(wy1 - wy0 + 4)}" rx="3" fill="#E9E6DE"/>')
+        s.append(f'<rect x="{wx0}" y="{n(wy0)}" width="{wx1 - wx0}" height="{n(wy1 - wy0)}" rx="2" fill="url(#core)"/>')
+        r = random.Random(5)
+        agg = ''.join(f'<circle cx="{n(r.uniform(wx0 + 2, wx1 - 2))}" cy="{n(r.uniform(wy0 + 2, wy1 - 2))}" r="{n(r.uniform(0.8, 1.8))}"/>' for _ in range(26))
+        s.append(f'<g fill="#7A766C" opacity="0.7">{agg}</g>')
+        if kind == 'pcc_hollow':
+            cav = [(px - 9, tap_y - 22), (px + 2, tap_y - 26), (px + 8, tap_y - 14), (px + 7, tap_y + 2), (px + 9, tap_y + 14), (px - 3, tap_y + 17), (px - 10, tap_y + 6), (px - 7, tap_y - 8)]
+            s.append(f'<polygon points="{pts(cav)}" fill="url(#void)"/>')
+            s.append(f'<path d="M{px - 7} {n(tap_y - 22)} l-4 -6 M{px + 8} {n(tap_y + 14)} l4 7" stroke="#3B342C" stroke-width="1.2"/>')
+        s += rebar(wx0 + 5, wy0, wy1, rusty=kind == 'pcc_hollow')
+        s += rebar(wx1 - 5, wy0, wy1, rusty=kind == 'pcc_hollow')
     else:
+        # Steel: an H-beam rings clear; a rail pole, rusted where he taps, sounds
+        # dull; the stepped tube is the one he climbs untested.
         s.append(shadow(px + 8, base + 2, 30, 6))
-        s += steel_tube(px, base, -10, 30, 22, 46, dull=kind == 'steel_dull')
+        steel = {'steel_ring': 'hbeam', 'steel_dull': 'rail'}.get(kind, 'tube')
+        s += steel_pole(steel, px, base, -10, 32, step_y=60)
         if kind == 'steel_dull':
-            s += rust_patch(px, tap_y + 2, 13, 18, 44, flakes=9, fall_to=base)
+            s += rust_patch(px, tap_y + 2, 14, 18, 44, flakes=9, fall_to=base)
     if kind == 'no_tap':
-        # He goes up without a single tap: the hammer still hangs on his belt.
+        # He goes up a tubular pole without a single tap: the hammer still hangs on his belt.
         s.append(worker(px - 12, base - 66, 2.0, 'climb', face=1, hammer=True))
         return card(s)
     good = kind in ('pcc_solid', 'steel_ring')
-    hit_x = px + (20 if kind.startswith('pcc') else 15)
+    hit_x = px + (20 if kind.startswith('pcc') else 16)
     s += sound_rings(hit_x + 2, tap_y - 1, good, face=1, scale=1.25)
-    wx = hit_x - 2.0 * 27 + 2 * 0  # hammer head face sits on the pole surface
     s.append(shadow(hit_x + 2.0 * 27 - 4, base + 1, 22, 4.5))
     s.append(worker(hit_x + 2.0 * 27, base, 2.0, 'tap', face=-1, hammer=True))
     return card(s)
@@ -565,11 +674,14 @@ def scan_card(kind):
     else:
         s.append(shadow(cx + 8, base + 3, 36, 7))
         step = 92
-        s += steel_tube(cx, base, -12, 46, 36, step)
-        if kind == 'steel_clean':
-            s.append(f'<rect x="{cx - 23}" y="{step + 34}" width="46" height="6" rx="1" fill="#5E6870" opacity="0.5"/>')
-            s += bolt_band(cx, step + 37, 46, rusty=False)
-        elif kind == 'rust_ground':
+        # The lesson's three steel kinds: a clean H-beam, a rail pole rotten at
+        # the ground line, a stepped tube rusting at its weld and bolts. Each
+        # carries a clamp band (clean bolts, or rusty ones on the tube).
+        steel = {'steel_clean': 'hbeam', 'rust_ground': 'rail'}.get(kind, 'tube')
+        s += steel_pole(steel, cx, base, -12, 46, 36 if steel == 'tube' else 46, step_y=step)
+        s.append(f'<rect x="{cx - 23}" y="{step + 34}" width="46" height="6" rx="1" fill="#5E6870" opacity="0.5"/>')
+        s += bolt_band(cx, step + 37, 46, rusty=kind == 'rust_weld')
+        if kind == 'rust_ground':
             # Rust eats the foot where it meets the soil; scale flakes on the ground.
             r = random.Random(64)
             top_edge = [(cx - 23 + 46 * i / 9, base - 36 + r.uniform(-7, 7)) for i in range(10)]
@@ -586,8 +698,6 @@ def scan_card(kind):
             band = [(cx - 23 + 46 * i / 8, step - 4 + r.uniform(-4, 2)) for i in range(9)]
             band += [(cx + 23 - 46 * i / 8, step + 9 + r.uniform(-2, 6)) for i in range(9)]
             s += rust_area(band, 74, drips=6)
-            s.append(f'<rect x="{cx - 23}" y="{step + 34}" width="46" height="6" rx="1" fill="#5E6870" opacity="0.5"/>')
-            s += bolt_band(cx, step + 37, 46, rusty=True)
     return card(s)
 
 
@@ -595,15 +705,18 @@ def bolt_band(cx, y, w, rusty):
     s = [f'<rect x="{n(cx - w / 2 - 3)}" y="{n(y - 5)}" width="{n(w + 6)}" height="10" rx="2" fill="url(#arm)"/>']
     for bx in (cx - w / 2 - 6, cx + w / 2 + 6):
         s.append(f'<rect x="{n(bx - 3.5)}" y="{n(y - 6)}" width="7" height="12" rx="1.5" fill="#59636B"/>')
-        s.append(f'<circle cx="{n(bx)}" cy="{n(y)}" r="2.4" fill="{"#8C3F14" if rusty else "#9CA6AD"}"/>')
+        s.append(f'<circle cx="{n(bx)}" cy="{n(y)}" r="2.4" fill="#9CA6AD"/>')
         if rusty:
+            s.append(f'<circle cx="{n(bx)}" cy="{n(y)}" r="2.4" fill="#8C3F14"/>')
             s += rust_patch(bx, y + 2, 5, 5, int(bx))
     return s
 
 
 # ---------------------------------------------------------------- round 5: hardware, seen from below
 
-def top_card(kind, steel=False):
+def top_card(kind, steel=None):
+    """[steel]: None for a PCC pole, else 'tube', 'rail' or 'hbeam'. A steel pole
+    carries a grey polymer pin insulator on top; the cross-arm's are porcelain."""
     s = ['<circle cx="170" cy="36" r="42" fill="url(#sun)"/>',
          '<g fill="#FFFFFF" opacity="0.9"><ellipse cx="40" cy="26" rx="30" ry="9"/><ellipse cx="58" cy="20" rx="18" ry="9"/><ellipse cx="156" cy="168" rx="22" ry="6"/></g>',
          '<g fill="url(#trees)"><circle cx="-6" cy="216" r="34"/><circle cx="26" cy="230" r="26"/><circle cx="206" cy="220" r="30"/></g>']
@@ -611,14 +724,19 @@ def top_card(kind, steel=False):
     arm_y = 96
     ins_k = 1.7
     # Looking up: the pole narrows towards the sky.
-    if steel:
-        s.append(f'<polygon points="{pts([(cx - 19, 230), (cx + 19, 230), (cx + 13, 140), (cx - 13, 140)])}" fill="url(#steel)"/>')
-        s.append(f'<polygon points="{pts([(cx - 13, 144), (cx + 13, 144), (cx + 9, 52), (cx - 9, 52)])}" fill="url(#steel)"/>')
+    if steel == 'tube':
+        s.append('<g class="pole-tube">')
+        for (x0, y0, x1, y1) in ((19, 230, 13, 140), (13, 144, 9, 52)):
+            s.append(f'<polygon points="{pts([(cx - x0, y0), (cx + x0, y0), (cx + x1, y1), (cx - x1, y1)])}" fill="url(#steel)"/>')
+            s.append(f'<polygon points="{pts([(cx + x0 * 0.68, y0), (cx + x0, y0), (cx + x1, y1), (cx + x1 * 0.68, y1)])}" fill="url(#steelWeb)" opacity="0.55"/>')
         s.append(f'<rect x="{cx - 14}" y="138" width="28" height="5" fill="#5E6870" opacity="0.55"/>')
+        s.append('</g>')
+    elif steel:
+        s += section_pole(steel, cx, 230, 52, 40, 19)
     else:
         s.append(f'<polygon points="{pts([(cx + 20, 230), (cx + 27, 228), (cx + 14, 52), (cx + 10, 52)])}" fill="url(#pccSide)"/>')
         s.append(f'<polygon points="{pts([(cx - 20, 230), (cx + 20, 230), (cx + 10, 52), (cx - 10, 52)])}" fill="url(#pcc)"/>')
-    s += insulator(cx, 52, k=ins_k)
+    s += insulator(cx, 52, k=ins_k, polymer=bool(steel))
     s.append(f'<path d="M-6 26 Q 50 42 {cx} {n(52 - 23 * ins_k)} Q 150 42 206 24" stroke="#2B3138" stroke-width="2" fill="none"/>')
     left_drop = 26 if kind == 'arm_bent' else 0
     arm_tilt = 8 if kind == 'clamp_loose' else 0
@@ -637,9 +755,10 @@ def top_card(kind, steel=False):
     rusty = kind == 'clamp_loose'
     s.append(f'<rect x="{cx - 16}" y="{arm_y - 4}" width="32" height="18" rx="3.5" fill="none" stroke="#59636B" stroke-width="3.4"/>')
     for bx in (cx - 19, cx + 19):
-        s.append(f'<circle cx="{bx}" cy="{arm_y + 5}" r="3.8" fill="{"#8C3F14" if rusty else "#C9D1D6"}" stroke="#3E474E" stroke-width="1.1"/>')
+        s.append(f'<circle cx="{bx}" cy="{arm_y + 5}" r="3.8" fill="#C9D1D6" stroke="#3E474E" stroke-width="1.1"/>')
     if rusty:
         for bx in (cx - 19, cx + 19):
+            s.append(f'<circle cx="{bx}" cy="{arm_y + 5}" r="3.8" fill="#8C3F14" stroke="#3E474E" stroke-width="1.1"/>')
             s.append(f'<circle cx="{bx}" cy="{arm_y + 5}" r="5.4" fill="#9A4517" opacity="0.55"/>')
             s.append(f'<path d="M{bx - 1.5} {arm_y + 9} q-0.5 8 0.5 16 l1.6 0 q0.4 -8 -0.2 -16 Z M{bx + 2} {arm_y + 9} q0.6 5 -0.2 10 l1.2 0 q0.4 -5 0 -10 Z" fill="#A9541F" opacity="0.85"/>')
         # a nut gone: it lies below, the arm has slipped round the pole
@@ -676,23 +795,40 @@ def top_card(kind, steel=False):
     return card(s, sky='skyUp')
 
 
-def insulator(x, y, broken=False, tilt=0, k=1.0):
-    """A pin insulator standing on (x, y): brown glazed sheds on a steel pin, 23 px tall at k=1."""
+def insulator(x, y, broken=False, tilt=0, k=1.0, polymer=False):
+    """An 11 kV pin insulator standing on (x, y), 23 px tall at k=1, the line in its
+    top groove. Porcelain (IS 731, brown glaze): a steel pin, a small lower shed, a
+    wide top shed, the crown. Polymer: grey sheds on a core, a metal top fitting."""
     s = [f'<g transform="translate({n(x)} {n(y)}) rotate({n(tilt)}) scale({k})">']
-    s.append('<rect x="-1.6" y="-4" width="3.2" height="6" fill="#59636B"/>')
-    yy = -4
-    for w, h in [(14, 5), (11, 5), (8, 6)]:
-        s.append(f'<ellipse cx="0" cy="{yy}" rx="{w / 2 + 1.5}" ry="2.4" fill="#8A4F2A"/>')
-        s.append(f'<rect x="{-w / 2}" y="{yy - h}" width="{w}" height="{h}" rx="2" fill="url(#porc)"/>')
-        yy -= h
-    s.append(f'<ellipse cx="0" cy="{yy}" rx="4" ry="2" fill="#E7A773"/>')
-    s.append('<path d="M-3 -14 q1 -4 0 -7" stroke="#F4D2B2" stroke-width="1.2" fill="none" opacity="0.8"/>')
+    s.append('<rect x="-1.6" y="-5" width="3.2" height="7" fill="#59636B"/>')
+    if polymer:
+        s.append('<rect x="-2" y="-21" width="4" height="17" rx="1" fill="url(#poly)"/>')
+        for yy, w in ((-6.5, 12), (-11.5, 15), (-16.5, 12)):
+            s.append(f'<ellipse cx="0" cy="{n(yy + 0.9)}" rx="{n(w / 2)}" ry="1.6" fill="#6F777D"/>')
+            s.append(f'<ellipse cx="0" cy="{n(yy)}" rx="{n(w / 2)}" ry="1.7" fill="url(#poly)"/>')
+        s.append('<rect x="-3.2" y="-23.5" width="6.4" height="3.6" rx="1" fill="#9CA6AD"/>')
+        s.append('<ellipse cx="0" cy="-23.5" rx="3.2" ry="1.1" fill="#59636B"/>')
+        s.append('</g>')
+        return s
+    # lower shed
+    s.append('<ellipse cx="0" cy="-5.2" rx="7" ry="1.9" fill="#8A4F2A"/>')
+    s.append('<path d="M-7 -5.4 Q-6.4 -9.2 -3.4 -10.2 L3.4 -10.2 Q6.4 -9.2 7 -5.4 Q0 -3.8 -7 -5.4 Z" fill="url(#porc)"/>')
+    # neck
+    s.append('<rect x="-3.4" y="-14" width="6.8" height="4.4" fill="url(#porc)"/>')
+    # wide top shed
+    s.append('<ellipse cx="0" cy="-12.2" rx="9.6" ry="2.2" fill="#8A4F2A"/>')
+    s.append('<path d="M-9.6 -12.4 Q-8.6 -17 -4.2 -18 L4.2 -18 Q8.6 -17 9.6 -12.4 Q0 -10.4 -9.6 -12.4 Z" fill="url(#porc)"/>')
+    # crown with the conductor groove
+    s.append('<rect x="-3.8" y="-23" width="7.6" height="5.6" rx="1.8" fill="url(#porc)"/>')
+    s.append('<rect x="-3.8" y="-21" width="7.6" height="1.2" fill="#8A4F2A" opacity="0.8"/>')
+    s.append('<ellipse cx="0" cy="-23" rx="3.8" ry="1.2" fill="#E7A773"/>')
+    s.append('<path d="M-6 -13.6 q1.6 -3 3.4 -3.8 M-2.4 -9.4 q0.4 -2.6 0.4 -3.8" stroke="#F4D2B2" stroke-width="1" fill="none" opacity="0.8"/>')
     if broken:
-        # A shed broken away on one side, a crack down it and a scorch mark.
-        s.append(f'<polygon points="{pts([(0, -19), (10, -17), (10, -3), (4, -5), (6, -10), (1, -12)])}" fill="#7DB6DF"/>')
-        s.append(f'<polygon points="{pts([(0, -19), (1, -12), (6, -10), (4, -5)])}" fill="#E9C7A6"/>')
-        s.append('<path d="M-1 -20 l-2 4 l2 3 l-3 4 l2 4" stroke="#2A1A0E" stroke-width="0.9" fill="none"/>')
-        s.append('<ellipse cx="-3" cy="-5" rx="6" ry="4.4" fill="url(#soot)"/>')
+        # A piece of the top shed broken away, a crack down the body, a scorch mark.
+        s.append(f'<polygon points="{pts([(0.4, -23.6), (4.4, -23.6), (4.4, -18.2), (8.8, -17.2), (10.2, -12.2), (6.6, -11), (5, -13.2), (1.8, -14.6), (1.2, -18.4)])}" fill="#7DB6DF"/>')
+        s.append(f'<polygon points="{pts([(0.4, -23.6), (1.2, -18.4), (1.8, -14.6), (5, -13.2), (6.6, -11), (4.6, -10.8), (3.2, -12.4), (0.2, -13.8), (-0.4, -18.6)])}" fill="#E9C7A6"/>')
+        s.append('<path d="M-0.6 -22.6 l-1.6 3.4 l1.6 2.6 l-2.4 3.6 l1.6 3.4 l-1.2 3.4" stroke="#2A1A0E" stroke-width="0.9" fill="none"/>')
+        s.append('<ellipse cx="-3" cy="-6" rx="6" ry="4.4" fill="url(#soot)"/>')
     s.append('</g>')
     if broken:
         for dx, dy, r in [(12, 12, 20), (18, 28, 50), (10, 44, 10)]:
@@ -706,7 +842,7 @@ CARDS = {
     'walk_round': walk_card('walk_round'),
     'walk_back': walk_card('walk_back'),
     'climb_now': walk_card('climb_now'),
-    'ladder_up': walk_card('ladder_up'),
+    'from_far': walk_card('from_far'),
     'lean_on': walk_card('lean_on'),
     'one_side': walk_card('one_side'),
     # Round 2 — the base is the pole's strength; a lean can break it.
@@ -731,10 +867,10 @@ CARDS = {
     'scan_rust_weld': scan_card('rust_weld'),
     # Round 5 — hardware from below.
     'top_ok_pcc': top_card('ok'),
-    'top_ok_steel': top_card('ok', steel=True),
+    'top_ok_steel': top_card('ok', steel='hbeam'),
     'top_arm_bent': top_card('arm_bent'),
-    'top_insulator_broken': top_card('insulator_broken'),
-    'top_clamp_loose': top_card('clamp_loose', steel=True),
+    'top_insulator_broken': top_card('insulator_broken', steel='rail'),
+    'top_clamp_loose': top_card('clamp_loose', steel='tube'),
     'top_hive_nest': top_card('hive_nest'),
 }
 

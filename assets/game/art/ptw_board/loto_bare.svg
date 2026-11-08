@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8EC3EA"/><stop offset="1" stop-color="#E9F2F7"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CDBB93"/><stop offset="1" stop-color="#AF9C74"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9E9B93"/><stop offset="0.5" stop-color="#D3D0C8"/><stop offset="1" stop-color="#97948C"/></linearGradient>
+  <linearGradient id="steelArm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A939B"/><stop offset="1" stop-color="#4F575F"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9D2D8"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B8C2C9"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="fibre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7A15A"/><stop offset="0.35" stop-color="#FFC48A"/><stop offset="1" stop-color="#C9561A"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="strip" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8F989F"/><stop offset="0.5" stop-color="#D5DADE"/><stop offset="1" stop-color="#848C93"/></linearGradient>
+  <linearGradient id="copper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F0A774"/><stop offset="0.5" stop-color="#C26A2E"/><stop offset="1" stop-color="#7E3F16"/></linearGradient>
+  <linearGradient id="bench" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9965E"/><stop offset="1" stop-color="#9E6B38"/></linearGradient>
+  <linearGradient id="board" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9A6A3C"/><stop offset="1" stop-color="#6E4524"/></linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#ECEFF2"/></linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DCE2E6"/><stop offset="1" stop-color="#B9C1C7"/></linearGradient>
+  <linearGradient id="cabinet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F7D88"/><stop offset="0.5" stop-color="#8D9AA4"/><stop offset="1" stop-color="#5F6C76"/></linearGradient>
+  <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DDE3E8"/></linearGradient>
+  <radialGradient id="knob" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#4A5058"/><stop offset="1" stop-color="#15181C"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#wall)"/>
+<rect y="200" width="200" height="20" fill="#8E979E"/>
+<rect x="28" y="8" width="144" height="198" rx="5" fill="#000000" opacity="0.15"/>
+<rect x="24" y="4" width="144" height="198" rx="5" fill="url(#cabinet)" stroke="#4F5A63" stroke-width="1"/>
+<path d="M34 30 L158 30" stroke="#4F5A63" stroke-width="0.8" opacity="0.6"/>
+<circle cx="34" cy="16" r="2" fill="#4F5A63"/><circle cx="34" cy="192" r="2" fill="#4F5A63"/>
+<circle cx="158" cy="16" r="2" fill="#4F5A63"/><circle cx="158" cy="192" r="2" fill="#4F5A63"/>
+<rect x="62" y="10" width="68" height="16" rx="2" fill="url(#plate)" stroke="#4F5A63" stroke-width="0.6"/>
+<text x="96" y="22" font-family="sans-serif" font-size="10" font-weight="800" text-anchor="middle" fill="#1B2430">F-3</text>
+<text x="62" y="52" font-family="sans-serif" font-size="11" font-weight="800" text-anchor="middle" fill="#FFFFFF">OFF</text>
+<text x="130" y="52" font-family="sans-serif" font-size="11" font-weight="800" text-anchor="middle" fill="#FFFFFF">ON</text>
+<path d="M74 60 l-6 -6 M118 60 l6 -6" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+<circle cx="96" cy="82" r="24" fill="url(#steel)" stroke="#4F5A63" stroke-width="1"/>
+<g transform="rotate(-45 96 82)"><rect x="90" y="52" width="12" height="46" rx="5" fill="url(#knob)"/><path d="M96 56 L96 68" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></g>
+<circle cx="96" cy="82" r="5" fill="#15181C"/>
+<rect x="80" y="116" width="32" height="12" rx="2" fill="url(#steel)" stroke="#4F5A63" stroke-width="0.6"/>
+<circle cx="96" cy="122" r="3" fill="#4F5A63"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

@@ -15,12 +15,15 @@ import 'game_save.dart';
 import 'golden_minute.dart';
 import 'harness_check.dart';
 import 'harness_fit.dart';
+import 'kit_check.dart';
 import 'mistake_kit.dart';
 import 'pole_read.dart';
 import 'ptw_match.dart';
 import 'ptw_steps.dart';
 import 'rod_pick.dart';
 import 'shock_rescue.dart';
+import 'sky_read.dart';
+import 'storm_push.dart';
 import 'tool_tip.dart';
 
 // "আমার ভুলের খাতা": every mistake caught in a Do level, newest first, with
@@ -48,6 +51,9 @@ final Map<String, DoMistake> knownMistakes = {
     ...GoldenMistakes.all,
     ...FireMistakes.all,
     ...PassMistakes.all,
+    ...KitMistakes.all,
+    ...SkyMistakes.all,
+    ...StormMistakes.all,
   ])
     m.key: m,
 };

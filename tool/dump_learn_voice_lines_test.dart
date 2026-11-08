@@ -8,10 +8,21 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slm_flutter/core/en_digits.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_voice.dart';
+import 'package:slm_flutter/features/game/discharge_order.dart';
 import 'package:slm_flutter/features/game/fire_choose.dart';
 import 'package:slm_flutter/features/game/fire_pass.dart';
 import 'package:slm_flutter/features/game/glove_check.dart';
+import 'package:slm_flutter/features/game/golden_minute.dart';
+import 'package:slm_flutter/features/game/harness_check.dart';
+import 'package:slm_flutter/features/game/harness_fit.dart';
+import 'package:slm_flutter/features/game/helmet_check.dart';
 import 'package:slm_flutter/features/game/pole_read.dart';
+import 'package:slm_flutter/features/game/ptw_match.dart';
+import 'package:slm_flutter/features/game/ptw_steps.dart';
+import 'package:slm_flutter/features/game/rod_pick.dart';
+import 'package:slm_flutter/features/game/shock_rescue.dart';
+import 'package:slm_flutter/features/game/sky_read.dart';
+import 'package:slm_flutter/features/game/storm_push.dart';
 import 'package:slm_flutter/features/game/tool_tip.dart';
 import 'package:slm_flutter/features/game/kit_check.dart';
 import 'package:slm_flutter/features/game/learn_board_models.dart';
@@ -102,12 +113,35 @@ void main() {
     for (final l in [...PoleBoardLines.recorded, learnBoardPack14.myth.tauntBn, learnBoardPack14.myth.rivalLineBn]) {
       rival.add(enDigits(l).trim());
     }
+    // Step 13 (lesson 1.5 board): the rival's taunt and myth.
+    for (final l in RodBoardLines.recorded) {
+      rival.add(enDigits(l).trim());
+    }
+    // Steps 16, 19, 22, 25 (lesson 1.6–1.9 boards): the rival's taunt and myth.
+    for (final l in [...PtwBoardLines.recorded, ...AidBoardLines.recorded, ...FireBoardLines.recorded, ...StormBoardLines.recorded]) {
+      rival.add(enDigits(l).trim());
+    }
     // Step 24: the coworker's refill push in his own voice.
     for (final l in PassLines.coworker.recordedLines) {
       rival.add(enDigits(l).trim());
     }
-    // Steps 2–3: the careless coworker's pushes in his own voice.
-    for (final c in [KitLines.coworkerHurry, KitLines.coworkerVan, GloveLines.coworkerNew, GloveLines.coworkerTrip, ToolTipLines.coworker, PoleLines.coworkerPcc, PoleLines.coworkerSteel]) {
+    // Do levels on the kit: the careless coworker's pushes in his own voice.
+    for (final c in [
+      KitLines.coworkerHurry, KitLines.coworkerVan, GloveLines.coworkerNew, GloveLines.coworkerTrip, // steps 2–3
+      ToolTipLines.coworker, // step 6
+      PoleLines.coworkerPcc, PoleLines.coworkerSteel, // steps 8–9
+      HarnessLines.coworker, // step 11
+      FitLines.coworkerLoose, FitLines.coworkerPin, FitLines.coworkerYears, // step 12
+      RodLines.coworkerJugaad, RodLines.coworkerRating, // step 14
+      DischargeLines.coworker, // step 15
+      HelmetLines.coworker, // step 3 (helmet station)
+      PtwLines.coworker, // step 17
+      StepLines.coworker, // step 18
+      RescueLines.coworker, // step 20
+      GoldenLines.coworkerMud, GoldenLines.coworkerIce, GoldenLines.coworkerHome, // step 21
+      SkyLines.coworker, // step 26
+      for (final c in StormCue.values) StormLines.coworker(c), // step 27
+    ]) {
       for (final l in c.recordedLines) {
         rival.add(enDigits(l).trim());
       }

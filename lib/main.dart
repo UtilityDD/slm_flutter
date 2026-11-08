@@ -11,7 +11,7 @@ import 'core/startup/startup_trace.dart';
 import 'core/startup/startup_warmup.dart';
 import 'core/theme/app_theme.dart';
 import 'features/shell/main_shell.dart';
-import 'features/startup/intro_video.dart';
+import 'features/startup/brand_intro.dart';
 
 void main() {
   bootstrap();

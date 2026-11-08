@@ -11,8 +11,7 @@ logo on navy; not bundled in the app). Writes:
     pre-Android-12 window background, drawable-*/splash_icon.png (288 dp
     canvas, logo inside the 192 dp circle) for the Android 12+ splash.
   - iOS: AppIcon.appiconset (flattened, no alpha) and LaunchImage (144 pt).
-  - Flutter: assets/brand/splash_logo.png (the logo the intro overlay shows
-    while the video loads, same size as the native one).
+  (The Flutter intro draws the logo in code: lib/features/startup/brand_intro.dart.)
 The navy background is the logo's own (#0E162B).
 """
 import io
@@ -119,6 +118,4 @@ if os.path.isdir(ios):
     for suffix, k in (('', 1), ('@2x', 2), ('@3x', 3)):
         save(canvas(144 * k, 1.0), launch, f'LaunchImage{suffix}.png')
 
-# --- Flutter (the intro overlay's placeholder) ------------------------------------
-save(canvas(432, 1.0), root, 'assets', 'brand', 'splash_logo.png')
 print('ok', logo.size)

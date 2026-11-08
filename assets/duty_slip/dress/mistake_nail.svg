@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="bgL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a1d22"/>
+      <stop offset="1" stop-color="#5a2a2a"/>
+    </linearGradient>
+    <linearGradient id="bgR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d3a2c"/>
+      <stop offset="1" stop-color="#2a5a40"/>
+    </linearGradient>
+    <linearGradient id="sole" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2b2b2e"/>
+      <stop offset="0.5" stop-color="#3b3b40"/>
+      <stop offset="1" stop-color="#26262a"/>
+    </linearGradient>
+    <linearGradient id="earth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6b5236"/>
+      <stop offset="1" stop-color="#3e2e1e"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe680"/>
+      <stop offset="1" stop-color="#ffb000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="4" y="4" width="152" height="192" rx="14" fill="url(#bgL)"/>
+  <rect x="164" y="4" width="152" height="192" rx="14" fill="url(#bgR)"/>
+
+  <!-- Left: a sole with a nail; the current goes through it to the ground -->
+  <rect x="8" y="160" width="144" height="32" rx="6" fill="url(#earth)"/>
+  <path d="M40 40 Q38 20 62 18 L100 18 Q122 20 120 44 L118 136 Q116 152 98 152 L62 152 Q44 152 42 136 Z" fill="url(#sole)" stroke="#111" stroke-width="2"/>
+  <g stroke="#55555c" stroke-width="3" stroke-linecap="round">
+    <line x1="56" y1="36" x2="104" y2="36"/><line x1="54" y1="52" x2="106" y2="52"/><line x1="54" y1="68" x2="106" y2="68"/>
+    <line x1="56" y1="104" x2="104" y2="104"/><line x1="56" y1="120" x2="104" y2="120"/><line x1="58" y1="136" x2="102" y2="136"/>
+  </g>
+  <circle cx="80" cy="86" r="22" fill="url(#glow)"/>
+  <circle cx="80" cy="86" r="6" fill="#d5dadf" stroke="#7d848c" stroke-width="1.5"/>
+  <path d="M80 6 L72 30 L86 44 L74 66 L82 86 L74 110 L86 132 L78 166" fill="none" stroke="#ffd23c" stroke-width="7" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M80 6 L72 30 L86 44 L74 66 L82 86 L74 110 L86 132 L78 166" fill="none" stroke="#fffbe0" stroke-width="2.6" stroke-linejoin="round"/>
+  <ellipse cx="78" cy="184" rx="30" ry="7" fill="url(#glow)" opacity="0.8"/>
+  <path d="M78 166 L78 182" stroke="#fffbe0" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M68 174 L78 186 L88 174" fill="none" stroke="#ffe680" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="138" cy="24" r="14" fill="#c0392b"/>
+  <path d="M131 17 L145 31 M145 17 L131 31" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Right: a sound rubber sole; the current finds no way down -->
+  <rect x="168" y="160" width="144" height="32" rx="6" fill="url(#earth)"/>
+  <path d="M200 40 Q198 20 222 18 L260 18 Q282 20 280 44 L278 136 Q276 152 258 152 L222 152 Q204 152 202 136 Z" fill="url(#sole)" stroke="#111" stroke-width="2"/>
+  <g stroke="#55555c" stroke-width="3" stroke-linecap="round">
+    <line x1="216" y1="36" x2="264" y2="36"/><line x1="214" y1="52" x2="266" y2="52"/><line x1="214" y1="68" x2="266" y2="68"/>
+    <line x1="214" y1="86" x2="266" y2="86"/>
+    <line x1="216" y1="104" x2="264" y2="104"/><line x1="216" y1="120" x2="264" y2="120"/><line x1="218" y1="136" x2="262" y2="136"/>
+  </g>
+  <circle cx="298" cy="24" r="14" fill="#1f9d55"/>
+  <path d="M290 24 L296 30 L306 18" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

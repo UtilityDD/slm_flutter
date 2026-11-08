@@ -8,13 +8,19 @@ import 'learn_board_models.dart';
 /// a walking loop round the pole, the state of the foot, a cut-away of the
 /// pole's inside with the shape of the hammer's sound, rust and cracks, the
 /// hardware seen from below. Everything comes from lesson 1.3: walk 360°
-/// before touching a pole; the base (eroded soil, standing water, a cracked
-/// foundation, a lean); the sound test at waist height (PCC solid "ঠক্ ঠক্"
-/// vs hollow "দপ্ দপ্", steel clear "টন টন" vs dull where rust flakes off);
-/// the visual scan (hairline crack, spalling, rod showing, rust at ground
-/// level, welds and bolts); hardware (bent / loose cross-arm, broken
-/// insulator, clamps, hives, nests, cable tangle). The rival's myth is the
-/// lesson's own: "স্টিলের পোল তো শুধু বাঁকতে পারে, ভাঙে না।"
+/// before touching a pole (not from afar, not one side only); the base
+/// (eroded soil, standing water that the lesson only says to check for, a
+/// cracked foundation, a lean); the sound test at waist height (PCC healthy
+/// 'ঠক্ ঠক্' vs weak 'দপ্ দপ্' (ফাঁপা); steel clear metallic 'টন টন' vs a
+/// 'ভোঁতা শব্দ' where rust flakes off); the visual scan (hairline crack,
+/// spalling, rod showing, rust at ground level, welds and bolts); hardware
+/// (bent / loose cross-arm, broken insulator, clamps; hives, nests and cable
+/// tangle are reported first, climbed after they are cleared). Steel poles
+/// are the lesson's three kinds — rail, H-beam (RSJ) and stepped tubular;
+/// insulators are brown-glazed porcelain pin insulators (IS 731) with a grey
+/// polymer one on some steel poles. No ladder here (ladders are lesson 1.2).
+/// The rival's myth is the lesson's own: "স্টিলের পোল তো শুধু বাঁকতে পারে,
+/// ভাঙে না।"
 const learnBoardPack13 = LearnBoardPack(
   lessonId: '1.3',
   titleBn: "পোলের 'ভাষা' পড়তে শিখুন",
@@ -37,12 +43,12 @@ const learnBoardPack13 = LearnBoardPack(
           rejectBn: 'আগে চারপাশে ঘুরে দেখুন — নতুন দেখতে পোলেরও ভিত্তি দুর্বল থাকতে পারে।',
         ),
         LearnBoardOption(
-          id: 'ladder_up',
-          labelBn: 'আগেই মই লাগানো',
-          asset: 'assets/game/art/pole_board/ladder_up.svg',
+          id: 'from_far',
+          labelBn: 'দূর থেকে দেখেই ঠিক ধরা',
+          asset: 'assets/game/art/pole_board/from_far.svg',
           scene: true,
           correct: false,
-          rejectBn: 'মই লাগানোর আগেই পোলের চারপাশ ঘুরে গোড়া আর সোজাভাব দেখুন।',
+          rejectBn: 'দূর থেকে গোড়া বোঝা যায় না — কাছে গিয়ে চারপাশে একবার ঘুরে আসুন।',
         ),
         LearnBoardOption(
           id: 'lean_on',
@@ -67,7 +73,7 @@ const learnBoardPack13 = LearnBoardPack(
         LearnWhyChip(id: 'w3', textBn: 'নতুন দেখতে পোল সবসময় নিরাপদই হয়', correct: false),
         LearnWhyChip(id: 'w4', textBn: 'সামনে থেকে দেখলেই পুরো পোল বোঝা যায়', correct: false),
         LearnWhyChip(id: 'w5', textBn: 'তাড়া থাকলে ঘুরে দেখার দরকার নেই', correct: false),
-        LearnWhyChip(id: 'w6', textBn: 'মই শক্ত হলে পোল দেখার দরকার নেই', correct: false),
+        LearnWhyChip(id: 'w6', textBn: 'দূর থেকে একবার দেখলেই পোল চেনা যায়', correct: false),
         LearnWhyChip(id: 'w7', textBn: 'অফিস যে পোল দিয়েছে সেটা ঠিকই থাকে', correct: false),
       ],
     ),
@@ -91,7 +97,7 @@ const learnBoardPack13 = LearnBoardPack(
           asset: 'assets/game/art/pole_board/base_water.svg',
           scene: true,
           correct: false,
-          rejectBn: 'গোড়ায় জল জমে আছে — মাটি ভেজা ও পিচ্ছিল, সুপারভাইজারকে জানান।',
+          rejectBn: 'গোড়ায় জল জমে আছে — আগে দেখে নিন, বিপজ্জনক মনে হলে সুপারভাইজারকে জানান।',
         ),
         LearnBoardOption(
           id: 'lean',
@@ -124,8 +130,8 @@ const learnBoardPack13 = LearnBoardPack(
       id: 'sound',
       promptBn: 'হাতুড়ি ঠুকে শুনুন — কোন পোলে ওঠা যায়?',
       options: [
-        LearnBoardOption(id: 'pcc_solid', labelBn: "নিরেট 'ঠক্ ঠক্' শব্দ", asset: 'assets/game/art/pole_board/sound_pcc_solid.svg', scene: true, correct: true),
-        LearnBoardOption(id: 'steel_ring', labelBn: "পরিষ্কার 'টন টন' শব্দ", asset: 'assets/game/art/pole_board/sound_steel_ring.svg', scene: true, correct: true),
+        LearnBoardOption(id: 'pcc_solid', labelBn: "PCC পোলে নিরেট 'ঠক্ ঠক্'", asset: 'assets/game/art/pole_board/sound_pcc_solid.svg', scene: true, correct: true),
+        LearnBoardOption(id: 'steel_ring', labelBn: "পরিষ্কার ধাতব 'টন টন' শব্দ", asset: 'assets/game/art/pole_board/sound_steel_ring.svg', scene: true, correct: true),
         LearnBoardOption(
           id: 'pcc_hollow',
           labelBn: "ফাঁপা 'দপ্ দপ্' শব্দ",
@@ -136,7 +142,7 @@ const learnBoardPack13 = LearnBoardPack(
         ),
         LearnBoardOption(
           id: 'steel_dull',
-          labelBn: 'মরিচায় ভোঁতা শব্দ',
+          labelBn: "মরিচার জায়গায় 'ভোঁতা শব্দ'",
           asset: 'assets/game/art/pole_board/sound_steel_dull.svg',
           scene: true,
           correct: false,
@@ -152,7 +158,8 @@ const learnBoardPack13 = LearnBoardPack(
         ),
       ],
       whyChips: [
-        LearnWhyChip(id: 'w1', textBn: 'ফাঁপা শব্দ মানে ভেতরে দুর্বলতা আছে', correct: true),
+        // Both right reasons fit both safe cards (solid PCC, ringing steel).
+        LearnWhyChip(id: 'w1', textBn: 'শব্দে কোনো ফাঁপা বা ভোঁতা ভাব নেই', correct: true),
         LearnWhyChip(id: 'w2', textBn: 'সুস্থ পোলের শব্দ নিরেট আর পরিষ্কার', correct: true),
         LearnWhyChip(id: 'w3', textBn: 'দপ্ দপ্ শব্দ মানে পোল নিরেট আছে', correct: false),
         LearnWhyChip(id: 'w4', textBn: 'ভোঁতা শব্দ মানে স্টিল বেশি মোটা', correct: false),
@@ -166,7 +173,7 @@ const learnBoardPack13 = LearnBoardPack(
       promptBn: 'গোড়া থেকে ওপরে চোখ বুলান — কোনটা সুস্থ?',
       options: [
         LearnBoardOption(id: 'pcc_clean', labelBn: 'অক্ষত মসৃণ PCC পোল', asset: 'assets/game/art/pole_board/scan_pcc_clean.svg', scene: true, correct: true),
-        LearnBoardOption(id: 'steel_clean', labelBn: 'মরিচাহীন স্টিল পোল', asset: 'assets/game/art/pole_board/scan_steel_clean.svg', scene: true, correct: true),
+        LearnBoardOption(id: 'steel_clean', labelBn: 'মরিচাহীন এইচ-বিম পোল', asset: 'assets/game/art/pole_board/scan_steel_clean.svg', scene: true, correct: true),
         LearnBoardOption(
           id: 'hairline',
           labelBn: 'চুলের মতো ফাটল',
@@ -241,7 +248,7 @@ const learnBoardPack13 = LearnBoardPack(
           asset: 'assets/game/art/pole_board/top_clamp_loose.svg',
           scene: true,
           correct: false,
-          rejectBn: 'আলগা ক্রস-আর্ম আপনার ভারে ঘুরে যেতে বা ভেঙে পড়তে পারে।',
+          rejectBn: 'আলগা ক্ল্যাম্পে ক্রস-আর্ম আপনার ভারে ঘুরে যেতে বা ভেঙে পড়তে পারে।',
         ),
         LearnBoardOption(
           id: 'hive_nest',
@@ -249,11 +256,11 @@ const learnBoardPack13 = LearnBoardPack(
           asset: 'assets/game/art/pole_board/top_hive_nest.svg',
           scene: true,
           correct: false,
-          rejectBn: 'বোলতার চাক, পাখির বাসা, কেবলের জট — ওঠার আগেই দেখে নিন।',
+          rejectBn: 'চাক, বাসা বা কেবলের জট — আগে রিপোর্ট করুন, সরানো হলে তবেই উঠুন।',
         ),
       ],
       whyChips: [
-        LearnWhyChip(id: 'w1', textBn: 'আলগা ক্রস-আর্ম ভারে ঘুরে যেতে পারে', correct: true),
+        LearnWhyChip(id: 'w1', textBn: 'নিচ থেকে দেখে নিয়েছি, সব অটুট আছে', correct: true),
         LearnWhyChip(id: 'w2', textBn: 'ভাঙা ইনসুলেটরে পোলে কারেন্ট আসতে পারে', correct: true),
         LearnWhyChip(id: 'w3', textBn: 'ক্রস-আর্ম একটু বাঁকা হলে সমস্যা নেই', correct: false),
         LearnWhyChip(id: 'w4', textBn: 'ফাটা ইনসুলেটরও কারেন্ট আটকে রাখে', correct: false),

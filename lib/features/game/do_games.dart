@@ -16,6 +16,8 @@ import 'ptw_match.dart';
 import 'ptw_steps.dart';
 import 'rod_pick.dart';
 import 'shock_rescue.dart';
+import 'sky_read.dart';
+import 'storm_push.dart';
 import 'tool_tip.dart';
 
 /// Builds the page of a Do game inside the level shell.
@@ -87,6 +89,14 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = dischargePacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => DischargeOrderPage(ctx: ctx, pack: content, muted: muted);
+    case 'sky_read':
+      final content = skyReadPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => SkyReadPage(ctx: ctx, pack: content, muted: muted);
+    case 'storm_push':
+      final content = stormPushPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => StormPushPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

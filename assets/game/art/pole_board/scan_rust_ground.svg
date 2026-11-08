@@ -10,7 +10,7 @@
   <linearGradient id="pcc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A29F96"/><stop offset="0.45" stop-color="#DAD7CF"/><stop offset="1" stop-color="#B3B0A7"/></linearGradient>
   <linearGradient id="pccSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E8B83"/><stop offset="1" stop-color="#77746D"/></linearGradient>
   <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F7D88"/><stop offset="0.38" stop-color="#D4DDE3"/><stop offset="0.55" stop-color="#EEF3F6"/><stop offset="1" stop-color="#7C8994"/></linearGradient>
-  <linearGradient id="steelDull" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6B6E70"/><stop offset="0.45" stop-color="#A9ABA8"/><stop offset="1" stop-color="#6E706F"/></linearGradient>
+  <linearGradient id="steelWeb" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3F4A52"/><stop offset="0.3" stop-color="#7F8C96"/><stop offset="0.75" stop-color="#9AA6AF"/><stop offset="1" stop-color="#4A555D"/></linearGradient>
   <linearGradient id="rust" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C46A2B"/><stop offset="0.5" stop-color="#9A4517"/><stop offset="1" stop-color="#6E2E0E"/></linearGradient>
   <linearGradient id="rustLight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D98A45" stop-opacity="0.9"/><stop offset="1" stop-color="#A9541F" stop-opacity="0.2"/></linearGradient>
   <linearGradient id="core" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8C887E"/><stop offset="0.5" stop-color="#ABA79C"/><stop offset="1" stop-color="#8C887E"/></linearGradient>
@@ -21,7 +21,7 @@
   <linearGradient id="porc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A4F2A"/><stop offset="0.45" stop-color="#D08A55"/><stop offset="1" stop-color="#7A4322"/></linearGradient>
   <linearGradient id="vest" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E06D10"/><stop offset="0.5" stop-color="#FF8A2A"/><stop offset="1" stop-color="#D9640C"/></linearGradient>
   <linearGradient id="hive" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F6250"/><stop offset="0.5" stop-color="#B6A68A"/><stop offset="1" stop-color="#6F6250"/></linearGradient>
-  <linearGradient id="ladder" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D8DEE2"/><stop offset="1" stop-color="#9CA6AD"/></linearGradient>
+  <linearGradient id="poly" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F777D"/><stop offset="0.45" stop-color="#BCC3C8"/><stop offset="1" stop-color="#737B81"/></linearGradient>
   <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF6D0" stop-opacity="0.95"/><stop offset="1" stop-color="#FFF6D0" stop-opacity="0"/></radialGradient>
   <radialGradient id="shade" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#000000" stop-opacity="0.32"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>
   <radialGradient id="soot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1E1A16" stop-opacity="0.75"/><stop offset="1" stop-color="#1E1A16" stop-opacity="0"/></radialGradient>
@@ -59,12 +59,23 @@
 <ellipse cx="179.9" cy="195.3" rx="2.1" ry="0.9" fill="#7D6B4C" opacity="0.7"/>
 <ellipse cx="132.8" cy="178.4" rx="2.2" ry="1.4" fill="#7D6B4C" opacity="0.7"/>
 <ellipse cx="108" cy="199" rx="36" ry="7" fill="url(#shade)"/>
-<g>
-<rect x="77" y="92" width="46" height="104" fill="url(#steel)"/>
-<rect x="82" y="-12" width="36" height="104" fill="url(#steel)"/>
-<path d="M77 92 L82 87 L118 87 L123 92 Z" fill="url(#steel)"/>
-<rect x="77" y="91" width="46" height="2.4" fill="#5E6870" opacity="0.6"/>
+<g class="pole-rail">
+<polygon points="77,196 91.7,196 91.7,-12 77,-12" fill="url(#steel)"/>
+<polygon points="91.7,196 102.8,196 102.8,-12 91.7,-12" fill="url(#steelWeb)"/>
+<polygon points="102.8,196 118.4,196 118.4,-12 102.8,-12" fill="url(#steel)"/>
+<polygon points="118.4,196 123,196 123,-12 118.4,-12" fill="url(#steelWeb)"/>
+<polygon points="91.7,196 94,196 94,-12 91.7,-12" fill="#5E6870" opacity="0.6"/>
+<polygon points="102.8,196 101.2,196 101.2,-12 102.8,-12" fill="#5E6870" opacity="0.6"/>
+<path d="M82.5 196 L82.5 -12" stroke="#FFFFFF" stroke-width="2.3" opacity="0.7"/>
+<path d="M90.8 196 L90.8 -12" stroke="#5E6870" stroke-width="1.6" opacity="0.8"/>
+<path d="M104.6 196 L104.6 -12" stroke="#FFFFFF" stroke-width="1.4" opacity="0.4"/>
 </g>
+<rect x="77" y="126" width="46" height="6" rx="1" fill="#5E6870" opacity="0.5"/>
+<rect x="74" y="124" width="52" height="10" rx="2" fill="url(#arm)"/>
+<rect x="67.5" y="123" width="7" height="12" rx="1.5" fill="#59636B"/>
+<circle cx="71" cy="129" r="2.4" fill="#9CA6AD"/>
+<rect x="125.5" y="123" width="7" height="12" rx="1.5" fill="#59636B"/>
+<circle cx="129" cy="129" r="2.4" fill="#9CA6AD"/>
 <clipPath id="ra65"><polygon points="77,196 77,159.7 82.1,161.8 87.2,158.7 92.3,165.9 97.4,153.2 102.6,166.8 107.7,162.9 112.8,164.3 117.9,164.2 123,155.8 123,196"/></clipPath>
 <polygon points="77,196 77,159.7 82.1,161.8 87.2,158.7 92.3,165.9 97.4,153.2 102.6,166.8 107.7,162.9 112.8,164.3 117.9,164.2 123,155.8 123,196" fill="url(#rust)"/>
 <g clip-path="url(#ra65)">

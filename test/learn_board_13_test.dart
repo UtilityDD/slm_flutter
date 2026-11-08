@@ -1,7 +1,10 @@
 // Ladder step 7 — the lesson 1.3 picture board ("পোলের ভাষা"): its content
-// follows the board's rules and the lesson's points, every picture exists and
-// is used, the rival's myth is the lesson's own and in his recorded voice, and
-// the board (played straight from the pack) waits quietly at the first question.
+// follows the board's rules and the lesson's points (the owner's 2026-11-08
+// check: no ladder card, rail and H-beam steel poles, the lesson's knock words,
+// standing water only "checked"), every picture exists and is used, no colour
+// gives a safe card away, the rival's myth is the lesson's own and in his
+// recorded voice, and the board (played straight from the pack) waits quietly
+// at the first question.
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -49,7 +52,7 @@ void main() {
 
   group('content', () {
     test('step 7 is the lesson 1.3 board', () {
-    expect(learnBoardPackFor('1.3'), same(learnBoardPack13), reason: 'the ladder opens this board for step 7');
+      expect(learnBoardPackFor('1.3'), same(learnBoardPack13), reason: 'the ladder opens this board for step 7');
       expect(_pack.lessonId, '1.3');
       expect(_pack.titleBn, contains('পোলের'));
       expect(_pack.slots.length, inInclusiveRange(4, 6));
@@ -124,10 +127,144 @@ void main() {
           expect(w.textBn, isNot(contains(only)), reason: 'scan reason "${w.textBn}" fits one pole type only');
         }
       }
-      // Base: standing water — only the lesson's wording (wet, slippery; report it).
-      expect(slot('base').options.firstWhere((o) => o.id == 'water').rejectBn, isNot(contains('ভিত')));
+      // Base: standing water — the lesson only says to check for it; never a
+      // claim that it weakens the foundation.
+      final water = slot('base').options.firstWhere((o) => o.id == 'water').rejectBn;
+      for (final claim in ['ভিত', 'দুর্বল', 'ফাউন্ডেশন', 'ভেঙে']) {
+        expect(water, isNot(contains(claim)), reason: 'standing water: "$claim" is not in the lesson');
+      }
+      expect(water, contains('দেখে'), reason: 'standing water: check it');
       // Base: a lean can break under the body's weight (lesson 1.3 §1).
       expect(slot('base').options.firstWhere((o) => o.id == 'lean').rejectBn, contains('ভার'));
+    });
+
+    // Every text on the board, for the wording checks below.
+    List<String> allText() => [
+          _pack.introBn,
+          _pack.earnedBn,
+          for (final s in _pack.slots) ...[
+            s.promptBn,
+            for (final o in s.options) ...[o.labelBn, o.rejectBn],
+            for (final w in s.whyChips) w.textBn,
+          ],
+          for (final w in _pack.myth.whyChips) w.textBn,
+          ..._pack.myth.dangerHints,
+        ];
+
+    test('no ladder on this board (ladders are lesson 1.2)', () {
+      for (final s in _pack.slots) {
+        for (final o in s.options) {
+          expect(o.id, isNot(contains('ladder')), reason: o.id);
+          expect(o.asset, isNot(contains('ladder')), reason: o.asset);
+          expect(File(o.asset).readAsStringSync(), isNot(contains('ladder')), reason: '${o.asset}: a ladder drawn');
+        }
+      }
+      for (final t in allText()) {
+        expect(t, isNot(contains('মই')), reason: '"$t" is about a ladder');
+      }
+    });
+
+    test("the lesson's knock words exactly: 'ঠক্ ঠক্' / 'দপ্ দপ্' for PCC, 'টন টন' / 'ভোঁতা শব্দ' for steel", () {
+      for (final t in allText()) {
+        expect(t, isNot(contains('ঠপ্')), reason: '"$t": not a word of the lesson');
+      }
+      final sound = _pack.slots.firstWhere((s) => s.id == 'sound');
+      String label(String id) => sound.options.firstWhere((o) => o.id == id).labelBn;
+      expect(label('pcc_solid'), contains('ঠক্ ঠক্'));
+      expect(label('pcc_hollow'), allOf(contains('দপ্ দপ্'), contains('ফাঁপা')));
+      expect(label('steel_ring'), contains('টন টন'));
+      expect(label('steel_dull'), contains('ভোঁতা শব্দ'));
+    });
+
+    // The lesson's steel poles are rail, H-beam (RSJ) and tubular: the art
+    // marks each drawn pole with its kind (`class="pole-rail"` and so on).
+    test('steel poles come in all three kinds: rail, H-beam and tubular', () {
+      final kinds = <String, Set<String>>{};
+      for (final s in _pack.slots) {
+        for (final o in s.options) {
+          final svg = File(o.asset).readAsStringSync();
+          for (final m in RegExp(r'class="pole-(\w+)"').allMatches(svg)) {
+            kinds.putIfAbsent(m.group(1)!, () => {}).add(o.id);
+          }
+        }
+      }
+      expect(kinds.keys, containsAll(['rail', 'hbeam', 'tube']));
+      // In the sound test, the scan and the hardware round, every kind shows.
+      for (final id in ['sound', 'scan', 'hardware']) {
+        final ids = _pack.slots.firstWhere((s) => s.id == id).options.map((o) => o.id).toSet();
+        for (final k in ['rail', 'hbeam', 'tube']) {
+          expect(kinds[k]!.intersection(ids), isNotEmpty, reason: '$id: no $k pole');
+        }
+      }
+      // A clean steel pole is not only a tube.
+      final scan = _pack.slots.firstWhere((s) => s.id == 'scan');
+      expect(File(scan.options.firstWhere((o) => o.id == 'steel_clean').asset).readAsStringSync(), contains('class="pole-hbeam"'));
+    });
+
+    // 11 kV pin insulators: brown-glazed porcelain (IS 731; the WBSEDCL spec's
+    // "brown glaze"), a grey polymer one on some steel poles.
+    test('hardware: brown-glazed porcelain pin insulators, a grey polymer variant', () {
+      final hw = _pack.slots.firstWhere((s) => s.id == 'hardware');
+      var polymer = 0;
+      for (final o in hw.options) {
+        final svg = File(o.asset).readAsStringSync();
+        expect(svg, contains('url(#porc)'), reason: '${o.id}: porcelain pin insulators on the arm');
+        expect(svg, contains('id="porc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A4F2A"/>'), reason: '${o.id}: brown glaze');
+        if (svg.contains('url(#poly)')) polymer++;
+      }
+      expect(polymer, greaterThan(0), reason: 'a grey polymer pin insulator on some steel pole');
+    });
+
+    // Playbook §4: the right card must not stand out. Go through EVERY hand
+    // the dealer can make (one safe card + any cards-1 traps): the safe card's
+    // backdrop must be on a trap in that hand, and every colour or gradient it
+    // draws must be drawn by a trap in that same hand — only the pole's state
+    // tells them apart (tool/pole_board_art.py keeps one palette for this).
+    test("in every possible hand, the safe card's backdrop and colours are on a trap too", () {
+      final used = RegExp(r'url\(#\w+\)|#[0-9A-Fa-f]{6}\b');
+      final backdrop = RegExp(r'<g clip-path="url\(#card\)">\s*<rect width="200" height="220" fill="(url\(#\w+\))"');
+      final svgs = <String, String>{};
+      String body(String asset) => svgs.putIfAbsent(asset, () => File(asset).readAsStringSync());
+      Set<String> tokens(String asset) => used.allMatches(body(asset).split('</defs>').last).map((m) => m.group(0)!).toSet();
+      String back(String asset) {
+        final m = backdrop.firstMatch(body(asset));
+        expect(m, isNotNull, reason: '$asset: a full-card backdrop');
+        return m!.group(1)!;
+      }
+
+      Iterable<List<T>> combos<T>(List<T> xs, int k) sync* {
+        if (k == 0) {
+          yield [];
+          return;
+        }
+        for (var i = 0; i <= xs.length - k; i++) {
+          for (final rest in combos(xs.sublist(i + 1), k - 1)) {
+            yield [xs[i], ...rest];
+          }
+        }
+      }
+
+      for (final s in _pack.slots) {
+        final traps = s.options.where((o) => !o.correct).toList();
+        var hands = 0;
+        for (final safe in s.options.where((o) => o.correct)) {
+          for (final hand in combos(traps, s.cards - 1)) {
+            hands++;
+            final ids = '${s.id}: ${safe.id} with ${hand.map((o) => o.id).join(', ')}';
+            expect(hand.map((o) => back(o.asset)), contains(back(safe.asset)), reason: '$ids — the safe card alone on its backdrop');
+            final trapTokens = {for (final o in hand) ...tokens(o.asset)};
+            expect(tokens(safe.asset).difference(trapTokens), isEmpty, reason: '$ids — drawn only on the safe card');
+            // A drawn walking path is no giveaway either: a trap in the hand
+            // has one too (a half loop or a straight walk-in), so only the
+            // path's shape tells.
+            if (body(safe.asset).contains('class="walk-track"')) {
+              expect(hand.where((o) => body(o.asset).contains('class="walk-track"')), isNotEmpty,
+                  reason: '$ids — the safe card alone has a walking path');
+            }
+          }
+        }
+        expect(hands, greaterThan(0), reason: s.id);
+      }
     });
 
     test('every picture exists, is a vector scene, and every card in the folder is used', () {

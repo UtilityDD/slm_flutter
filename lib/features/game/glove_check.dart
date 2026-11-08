@@ -17,8 +17,10 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'helmet_check.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
+import 'level_juice.dart' show starsFor;
 import 'level_result_parts.dart';
 import 'mistake_kit.dart';
 import 'reason_table.dart';
@@ -29,7 +31,9 @@ import 'spoken_once.dart';
 
 // Lesson 1.1, কাজ 2: "গ্লাভস যাচাই". Before the van leaves, pick three sound
 // pairs of rubber gloves (own, partner's, spare). Rubber gloves must be
-// air-tested before they are packed: a pinhole shows only that way.
+// air-tested before they are packed: a pinhole shows only that way. Then the
+// helmet station (helmet_check.dart): your own helmet from the shelf, looked
+// over with the torch, inside and at the chin strap.
 //
 // Voice: NO recorded clips for this level (owner's decision, 2026-11-06). Every
 // line is read by the phone's TTS through MascotSpeechLibrary; all fixed lines
@@ -99,7 +103,7 @@ abstract final class GloveLines {
   /// What the guide repeats (a different way each time) when tapped.
   static const tasks = [askOwn, askMate, askSpare];
 
-  static const intro = 'গাড়ি ছাড়ার আগে তিন জোড়া রাবার গ্লাভস বাছুন—নিজের, সাথীর আর একটা বাড়তি। প্রতিটায় হাওয়া দিয়ে দেখুন।';
+  static const intro = 'গাড়ি ছাড়ার আগে তিন জোড়া রাবার গ্লাভস বাছুন—নিজের, সাথীর আর একটা বাড়তি—প্রতিটায় হাওয়া দিয়ে। শেষে নিজের হেলমেট।';
   static const scene = 'সকাল 7:20 · ভ্যানের পাশে';
   static const askOwn = 'আগে নিজের জোড়াটা বাছুন।';
   static const askMate = 'এবার সাথীর জোড়া।';
@@ -113,8 +117,8 @@ abstract final class GloveLines {
   static const rejectedGood = 'এটা তো ঠিক ছিল!';
   static const callHeld = 'ঠিক। দশ সেকেন্ডের পরীক্ষাই জীবন বাঁচায়।';
   static const callRushed = 'না! পরীক্ষা ছাড়া গ্লাভস মানে খালি হাত।';
-  static const allSet = 'তিন জোড়াই পরীক্ষিত। এবার বেরোনো যায়।';
-  static const fail = 'এবার হলো না। হাওয়া দিয়ে দেখে আবার চেষ্টা করুন।';
+  static const allSet = 'তিন জোড়া গ্লাভস পরীক্ষিত, হেলমেটও দেখা হলো। এবার বেরোনো যায়।';
+  static const fail = 'এবার হলো না। ভালো করে দেখে আবার চেষ্টা করুন।';
   static const quick = 'ঝটপট আর নির্ভুল! বোনাস পেলেন।';
   static const testButton = 'চেপে ধরে হাওয়া দিন';
 
@@ -198,7 +202,8 @@ class GloveCheckPack {
 final gloveCheckPack11 = GloveCheckPack(
   id: 'glove_check_1_1',
   titleBn: 'গ্লাভস যাচাই',
-  quickMs: 90000,
+  // A little under a thorough play: gloves ~90 s + the helmet's three looks.
+  quickMs: 135000,
   callers: const [
     DoCaller(id: 'mate', whoBn: 'সহকর্মী', lineBn: 'সময় নেই! গ্লাভস তো নতুনই, এমনিই পরে নাও!', icon: Icons.directions_run_rounded),
     DoCaller(id: 'je', whoBn: 'JE সাহেব (ফোনে)', lineBn: 'লাইন ট্রিপ করেছে, এখনই বেরোও!', icon: Icons.phone_in_talk_rounded),
@@ -263,7 +268,8 @@ class GloveDeal {
   /// Tray for each of the three rounds.
   final List<List<GloveItem>> rounds;
 
-  /// The pressure call comes before this round (1 or 2).
+  /// The pressure call comes before this round: 1 or 2 (a glove pair), or 3
+  /// (the helmet station). One coworker per play.
   final int callBefore;
   final DoCaller caller;
 }
@@ -293,7 +299,7 @@ GloveDeal dealGloves(GloveCheckPack pack, math.Random rng) {
     final seen = <String>{};
     rounds.add([for (final g in hand) if (seen.add(g.id)) g]);
   }
-  return GloveDeal(rounds: rounds, callBefore: 1 + rng.nextInt(2), caller: pick(pack.callers));
+  return GloveDeal(rounds: rounds, callBefore: 1 + rng.nextInt(3), caller: pick(pack.callers));
 }
 
 enum GloveChoice { wear, reject }
@@ -417,6 +423,7 @@ Iterable<String> gloveCheckLines(GloveCheckPack p) sync* {
   for (final c in p.callers) {
     yield c.lineBn;
   }
+  yield* helmetCheckLines();
 }
 
 // ============================================================================
@@ -472,7 +479,8 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   final _scoreKey = GlobalKey();
   late final GloveDeal _deal = dealGloves(widget.pack, widget.rng);
   late final GloveRound _r = GloveRound(_deal);
-  late final List<List<GloveItem>> _order = [for (final r in _deal.rounds) [...r]..shuffle(widget.rng)];
+  late final List<List<GloveItem>> _order;
+  late final HelmetRound _h;
   final _clock = Stopwatch();
   late bool _muted = widget.muted;
   final _rightBag = LineBag(LearnFeedbackLines.right);
@@ -488,6 +496,10 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
 
   _Overlay _overlay = _Overlay.none;
   GloveItem? _held;
+  HelmetItem? _heldHelmet;
+
+  /// The slip card on screen (helmet station).
+  DoMistake? _card;
   GloveOutcome? _verdict;
   var _leaving = false;
   Completer<void>? _gone;
@@ -498,6 +510,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   var _popped = false;
   var _quickBonus = false;
   int? _mark;
+  int _stars = 0;
   int _totalDelta = 0;
 
   String get _rungId => widget.ctx.rungId;
@@ -505,6 +518,9 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   @override
   void initState() {
     super.initState();
+    // Deal in a fixed order: the gloves, their tray order, then the helmets.
+    _order = [for (final r in _deal.rounds) [...r]..shuffle(widget.rng)];
+    _h = HelmetRound(dealHelmets(widget.rng));
   }
 
   @override
@@ -520,6 +536,17 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     final left = _r.tray.map((g) => g.id).toSet();
     return [for (final g in _order[_r.round]) if (left.contains(g.id)) g];
   }
+
+  /// 0–2 the glove pairs, 3 the helmet, 4 all done.
+  int get _station => !_r.done ? _r.round : (_h.done ? 4 : 3);
+  bool get _allDone => _r.done && _h.done;
+  String? get _taskLine => !_r.done ? GloveLines.ask(_r.round) : (_h.done ? null : HelmetLines.ask);
+  int get _percent {
+    final asked = _r.asked + _h.asked;
+    return asked == 0 ? 0 : ((_r.clean + _h.clean) * 100 / asked).round();
+  }
+
+  bool get _passMark => _percent >= kLessonPassMark;
 
   // ---- voice (never holds the player) -------------------------------------------
 
@@ -556,15 +583,16 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   }
 
   Future<void> _askRound() async {
-    if (_r.done || !mounted) return;
+    if (_allDone || !mounted) return;
     if (_r.callDue) scheduleCoworker();
-    if (_r.round != _dealtRound) {
+    if (_station != _dealtRound) {
       setState(() {
-        _dealtRound = _r.round;
+        _dealtRound = _station;
         _wave++;
       });
     }
-    if (_overlay == _Overlay.none) await _sayChain([GloveLines.ask(_r.round)]);
+    final line = _taskLine;
+    if (_overlay == _Overlay.none && _card == null && line != null) await _sayChain([line]);
   }
 
   void _pickUp(GloveItem g) {
@@ -583,13 +611,109 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     });
   }
 
+  void _pickHelmet(HelmetItem h) {
+    if (coworkerOpen && !coworkerChoiceUp) unawaited(answerCoworker(true, _screenCentre, direct: true));
+    if (_busy || _ended || _overlay != _Overlay.none || coworkerOpen || reasonOpen || _card != null) return;
+    HapticFeedback.selectionClick();
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+    ref.read(guideDirectorProvider.notifier).clearLine();
+    setState(() {
+      _heldHelmet = h;
+      _verdict = null;
+      _leaving = false;
+      _overlay = _Overlay.inspect;
+    });
+  }
+
   void _putBack() {
     if (_busy || _verdict != null || _overlay != _Overlay.inspect) return;
     HapticFeedback.selectionClick();
     setState(() {
       _overlay = _Overlay.none;
       _held = null;
+      _heldHelmet = null;
     });
+  }
+
+  /// Pack or send back the helmet in the close look. A wrong call is a slip:
+  /// its card (picture + the lesson's line + পাঠে দেখুন) follows.
+  Future<void> _decideHelmet(GloveChoice c, Offset origin) async {
+    final h = _heldHelmet;
+    if (h == null || _busy || _verdict != null) return;
+    _busy = true;
+    final o = _h.decide(h, c);
+    DoMistake? slip;
+    if (!o.right) {
+      slip = helmetMistake(h, o);
+      unawaited(bookMistake(ref, widget.ctx, slip));
+      if (strike(slip)) {
+        await _struckOut();
+        return;
+      }
+    }
+    if (o.right) {
+      HapticFeedback.lightImpact();
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.45, muted: false));
+    } else {
+      HapticFeedback.heavyImpact();
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+      // The last task line (e.g. "ক্লিক—লক হলো।") must not sit under the stamp.
+      _chain++;
+      unawaited(MascotSpeechLibrary.stop());
+      ref.read(guideDirectorProvider.notifier).say(mood: GuideMood.warn, line: o.wordBn.isNotEmpty ? o.wordBn : h.labelBn);
+    }
+    if (o.packs) {
+      putOnTable(o.delta);
+    } else {
+      unawaited(_levelDelta(o.delta, origin, mood: o.right ? GuideMood.glad : GuideMood.warn));
+      if (o.right) unawaited(_reactHelmet(h, o));
+    }
+    setState(() => _verdict = o);
+    await _dwell(Duration(milliseconds: !o.right ? 800 : (o.packs ? 900 : 1400)));
+    if (!mounted) return;
+    final gone = _gone = Completer<void>();
+    setState(() => _leaving = true);
+    await gone.future.timeout(const Duration(seconds: 1), onTimeout: () {});
+    if (!mounted) return;
+    setState(() {
+      _overlay = _Overlay.none;
+      _heldHelmet = null;
+      _verdict = null;
+      _leaving = false;
+      _card = slip;
+    });
+    _busy = false;
+    if (slip != null) {
+      final speak = await SpokenOnce.first('helmet/${slip.key}');
+      if (!mounted || _card != slip) return;
+      await _sayChain([speak ? slip.textBn : _wrongBag.next().shownBn], mood: GuideMood.warn);
+    } else if (o.packs) {
+      unawaited(askReason(
+        deal: () => dealChoices(HelmetLines.whyRight, HelmetLines.whyWrong, widget.rng),
+        question: HelmetLines.whyAsk,
+      ));
+    }
+  }
+
+  void _cardGo() {
+    HapticFeedback.selectionClick();
+    setState(() => _card = null);
+    unawaited(_askRound());
+  }
+
+  Future<void> _reactHelmet(HelmetItem h, GloveOutcome o) async {
+    final chain = ++_chain;
+    final speakReason = o.reasonBn.isNotEmpty && await SpokenOnce.first('helmet/${widget.pack.id}/${h.flaw?.kind.name ?? h.id}');
+    if (!mounted || chain != _chain) return;
+    await _say(o.wordBn.isNotEmpty ? o.wordBn : _rightBag.next().shownBn, mood: GuideMood.glad);
+    if (!mounted || chain != _chain || o.reasonBn.isEmpty) return;
+    if (speakReason) {
+      await _say(o.reasonBn, mood: GuideMood.glad);
+    } else {
+      ref.read(guideDirectorProvider.notifier).say(mood: GuideMood.glad, line: o.reasonBn);
+    }
   }
 
   /// The air test finished on the held pair.
@@ -673,7 +797,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   Future<void> reasonScore(int delta, Offset origin, {GuideMood? mood}) => _levelDelta(delta, origin, mood: mood);
   @override
   void onReasonPaid() {
-    if (_r.done) {
+    if (_allDone) {
       unawaited(_finish());
     } else {
       unawaited(_askRound());
@@ -682,7 +806,10 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
 
   // --- the shared pressure moment (CoworkerMoment) ----------------------------
   @override
-  CoworkerScript get coworkerScript => _deal.caller.id == 'je' ? GloveLines.coworkerTrip : GloveLines.coworkerNew;
+  CoworkerScript get coworkerScript => _helmetPush ? HelmetLines.coworker : (_deal.caller.id == 'je' ? GloveLines.coworkerTrip : GloveLines.coworkerNew);
+
+  /// The coworker's one push of this play falls on the helmet station.
+  bool get _helmetPush => _deal.callBefore == 3;
   @override
   math.Random get coworkerRng => widget.rng;
   @override
@@ -690,7 +817,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   @override
   bool? coworkerCanCome() {
     if (_ended || _r.callDone || _r.round != _deal.callBefore) return null;
-    if (_overlay != _Overlay.none || _busy || reasonOpen || _introCard) return false;
+    if (_overlay != _Overlay.none || _busy || reasonOpen || _introCard || _card != null) return false;
     return true;
   }
 
@@ -707,16 +834,16 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     _r.answerCall(heldCheck: held);
     unawaited(_levelDelta(held ? 5 : -10, origin, mood: held ? GuideMood.glad : GuideMood.warn));
     if (direct) return;
-    final next = [if (!_r.done) GloveLines.ask(_r.round)];
+    final next = [?_taskLine];
     if (held) {
       final chain = _chain;
       unawaited(() async {
         await coworkerSnarl();
         if (!mounted || chain != _chain) return;
-        await _sayChain([GloveLines.callHeld, ...next], mood: GuideMood.glad);
+        await _sayChain([_helmetPush ? HelmetLines.callHeld : GloveLines.callHeld, ...next], mood: GuideMood.glad);
       }());
     } else {
-      unawaited(_sayChain([GloveLines.callRushed, ...next], mood: GuideMood.warn));
+      unawaited(_sayChain([_helmetPush ? HelmetLines.callRushed : GloveLines.callRushed, ...next], mood: GuideMood.warn));
     }
   }
 
@@ -729,7 +856,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
         ? nextCoworkerAsk()
         : reasonOpen
             ? GloveLines.tapWhy[_nudgeN++ % GloveLines.tapWhy.length]
-            : (_r.done ? null : _nudge.next(GloveLines.ask(_r.round)));
+            : (_taskLine == null ? null : _nudge.next(_taskLine!));
     if (line == null) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.5, muted: false));
@@ -768,10 +895,10 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     final save = ref.read(gameSaveProvider.notifier);
     final size = MediaQuery.sizeOf(context);
     final centre = Offset(size.width / 2, size.height * 0.45);
-    final mark = _r.percent;
+    final mark = _percent;
     await save.recordLevelResult(_rungId, mark);
     if (!mounted) return;
-    if (_r.passed) {
+    if (_passMark) {
       await save.markRungCleared(_rungId);
       _passed = true;
       await _levelDelta(20, centre, mood: GuideMood.celebrate);
@@ -781,14 +908,17 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
       }
     }
     final delta = await save.commitLevelScore(_rungId, _runScore);
-    if (_r.passed) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
+    if (_passMark) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
+    final stars = starsFor(passed: _passMark, strikes: strikes, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
+    if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
     setState(() {
+      _stars = stars;
       _mark = mark;
       _totalDelta = delta;
     });
-    await _say(!_r.passed ? GloveLines.fail : (_quickBonus ? GloveLines.quick : GloveLines.allSet),
-        mood: _r.passed ? GuideMood.celebrate : GuideMood.warn);
+    await _say(!_passMark ? GloveLines.fail : (_quickBonus ? GloveLines.quick : GloveLines.allSet),
+        mood: _passMark ? GuideMood.celebrate : GuideMood.warn);
   }
 
   /// The third wrong decision: the level fails and the lesson card insists.
@@ -798,11 +928,13 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     _clock.stop();
-    await recordStrikeOut(widget.ctx, percent: _r.percent, runScore: _runScore);
+    await recordStrikeOut(widget.ctx, percent: _percent, runScore: _runScore);
     if (!mounted) return;
     setState(() {
       _overlay = _Overlay.none;
       _held = null;
+      _heldHelmet = null;
+      _card = null;
       _busy = false;
     });
   }
@@ -828,6 +960,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   Widget build(BuildContext context) {
     final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
     final tray = _tray;
+    final shelf = _r.done ? _h.shelf : const <HelmetItem>[];
     final size = MediaQuery.sizeOf(context);
     final pad = MediaQuery.paddingOf(context);
     final deckUp = reasonOpen || coworkerChoiceUp;
@@ -852,9 +985,9 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
               setState(() => _muted = !_muted);
             },
             progress: DoProgress(
-              labels: GloveLines.rounds,
-              done: {for (var i = 0; i < _r.packed.length; i++) i},
-              current: _r.done ? null : _r.round,
+              labels: const [...GloveLines.rounds, HelmetLines.station],
+              done: {for (var i = 0; i < _r.packed.length; i++) i, if (_h.done) 3},
+              current: _station < 4 ? _station : null,
               quiet: quiet,
             ),
             layers: (context, m) => const [
@@ -868,17 +1001,33 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
                   child: Column(
                     children: [
                       const SizedBox(height: 80),
-                      Expanded(child: _Bag(packed: _r.packed, quiet: quiet)),
+                      Expanded(
+                        child: _Bag(
+                          packed: [for (final g in _r.packed) g.asset, ?_h.packed?.asset],
+                          quiet: quiet,
+                          // With a deck up the corner guide stands higher: lift the
+                          // bag to just under the ◆ so its last place stays in view.
+                          liftTo: deckUp ? size.height * 0.22 + 30 - pad.top - 80 : null,
+                        ),
+                      ),
                       if (_mark == null)
                         Padding(
                           padding: EdgeInsets.only(bottom: pad.bottom),
-                          child: DoTray(
-                            key: ValueKey('tray-$_wave'),
-                            entries: [for (final g in tray) DoTrayEntry(id: g.id, asset: g.asset)],
-                            quiet: quiet,
-                            muted: _muted,
-                            onPick: (n) => _pickUp(tray[n]),
-                          ),
+                          child: _r.done
+                              ? DoTray(
+                                  key: ValueKey('tray-$_wave'),
+                                  entries: [for (final h in shelf) DoTrayEntry(id: h.id, asset: h.asset)],
+                                  quiet: quiet,
+                                  muted: _muted,
+                                  onPick: (n) => _pickHelmet(shelf[n]),
+                                )
+                              : DoTray(
+                                  key: ValueKey('tray-$_wave'),
+                                  entries: [for (final g in tray) DoTrayEntry(id: g.id, asset: g.asset)],
+                                  quiet: quiet,
+                                  muted: _muted,
+                                  onPick: (n) => _pickUp(tray[n]),
+                                ),
                         ),
                     ],
                   ),
@@ -898,7 +1047,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
                     child: reasonOpen ? reasonDeck(quiet: quiet, key: const ValueKey('why-deck')) : coworkerDeck(quiet: quiet, key: const ValueKey('choice-deck')),
                   ),
                 ),
-              if (!_introCard && _overlay == _Overlay.none && _mark == null)
+              if (!_introCard && _overlay == _Overlay.none && _mark == null && _card == null)
                 cornerGuide(onTap: _tapGuide, bottom: pad.bottom + (deckUp ? 236 : 124), onLeft: coworkerFromRight),
               ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
               if (_overlay == _Overlay.inspect && _held != null)
@@ -919,8 +1068,44 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
                     if (g != null && !g.isCompleted) g.complete();
                   },
                 ),
+              if (_overlay == _Overlay.inspect && _heldHelmet != null)
+                HelmetInspect(
+                  key: ValueKey('helmet-${_heldHelmet!.id}'),
+                  item: _heldHelmet!,
+                  stampDate: helmetStampDate(_heldHelmet!, _h.deal, DateTime.now()),
+                  checks: _h.checksOf(_heldHelmet!),
+                  verdict: _verdict,
+                  leaving: _leaving,
+                  quiet: quiet,
+                  muted: _muted,
+                  onCheck: (c) => setState(() => _h.markChecked(_heldHelmet!, c)),
+                  onSay: (l) => unawaited(_sayChain([l])),
+                  onDecide: (c, o) => unawaited(_decideHelmet(c, o)),
+                  onTapCard: _skipDwell,
+                  onTapShade: _putBack,
+                  onGone: () {
+                    final g = _gone;
+                    if (g != null && !g.isCompleted) g.complete();
+                  },
+                ),
+              if (_card != null)
+                MistakeCard(
+                  key: ValueKey('card-${_card!.key}'),
+                  mistake: _card!,
+                  tone: MistakeTone.slip,
+                  quiet: quiet,
+                  onRead: _card!.lessonPoint == null
+                      ? null
+                      : () {
+                          _chain++;
+                          unawaited(MascotSpeechLibrary.stop());
+                          unawaited(openLessonPoint(context, ref, lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
+                        },
+                  onGo: _cardGo,
+                ),
               if (struckOut)
                 StruckOutCard(
+                  key: const ValueKey('struck'),
                   mistake: strikeOutBy!,
                   lessonId: widget.ctx.lessonId,
                   sound: FailSound.thud,
@@ -945,14 +1130,15 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
                     child: Center(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24),
-                        child: _r.passed
+                        child: _passMark
                             ? LevelPassPanel(
                                 mark: _mark!,
                                 levelScore: _runScore,
                                 totalDelta: _totalDelta,
                                 ms: _clock.elapsedMilliseconds,
-                                caughtBn: [for (final c in _r.caught) c.labelBn],
+                                caughtBn: [for (final c in _r.caught) c.labelBn, for (final c in _h.caught) c.labelBn],
                                 quickBonus: _quickBonus,
+                                stars: _stars,
                                 onNext: () => _popOnce(true),
                                 onRetry: () => widget.onRetry(_muted),
                               )
@@ -978,52 +1164,74 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
 // Pieces
 // ============================================================================
 
-/// The bag by the van: three places (নিজের / সাথীর / বাড়তি) that fill with
-/// each tested pair, popping in once.
+/// The bag by the van: four places (নিজের / সাথীর / বাড়তি গ্লাভস, then the
+/// helmet) that fill with each checked item, popping in once.
 class _Bag extends StatelessWidget {
-  const _Bag({required this.packed, required this.quiet});
-  final List<GloveItem> packed;
+  const _Bag({required this.packed, required this.quiet, this.liftTo});
+
+  /// Pictures of what is packed, in order (three pairs, then the helmet).
+  final List<String> packed;
   final bool quiet;
+
+  /// When set, the bag's top sits this far below its area's top (a deck is
+  /// up and the corner guide stands over the middle); else it is centred.
+  final double? liftTo;
+
+  static const _labels = [...GloveLines.rounds, HelmetLines.station];
 
   @override
   Widget build(BuildContext context) {
-    final px = (110 * MediaQuery.devicePixelRatioOf(context)).round();
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          for (var i = 0; i < 3; i++)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 96,
-                    height: 112,
-                    decoration: BoxDecoration(
-                      color: const Color(0xAA0B1324),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: SlmColors.gold400.withValues(alpha: i < packed.length ? 0.9 : 0.3), width: i < packed.length ? 2 : 1),
-                    ),
-                    padding: const EdgeInsets.all(10),
-                    child: i < packed.length
-                        ? TweenAnimationBuilder<double>(
-                            tween: Tween(begin: quiet ? 1 : 0, end: 1),
-                            duration: const Duration(milliseconds: 520),
-                            curve: Curves.easeOutBack,
-                            builder: (_, t, child) => Transform.scale(scale: 0.4 + 0.6 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
-                            child: Image(image: ResizeImage(AssetImage(packed[i].asset), height: px, policy: ResizeImagePolicy.fit), fit: BoxFit.contain),
-                          )
-                        : Icon(Icons.back_hand_outlined, color: SlmColors.gold400.withValues(alpha: 0.35), size: 34),
+    final px = (100 * MediaQuery.devicePixelRatioOf(context)).round();
+    return LayoutBuilder(
+      builder: (context, box) {
+        final slot = math.min(88.0, (box.maxWidth - 24 - 4 * 10) / 4);
+        // The bag's height: the slot, the gap and the label line.
+        final tall = slot * 1.16 + 6 + 22;
+        final free = box.maxHeight - tall;
+        final top = liftTo;
+        final y = top == null || free <= 0 ? 0.0 : (2 * top.clamp(0.0, free) / free - 1).clamp(-1.0, 0.0);
+        return AnimatedAlign(
+          alignment: Alignment(0, y),
+          duration: quiet ? Duration.zero : const Duration(milliseconds: 380),
+          curve: Curves.easeOutCubic,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 0; i < _labels.length; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: slot,
+                        height: slot * 1.16,
+                        decoration: BoxDecoration(
+                          color: const Color(0xAA0B1324),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: SlmColors.gold400.withValues(alpha: i < packed.length ? 0.9 : 0.3), width: i < packed.length ? 2 : 1),
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        child: i < packed.length
+                            ? TweenAnimationBuilder<double>(
+                                tween: Tween(begin: quiet ? 1 : 0, end: 1),
+                                duration: const Duration(milliseconds: 520),
+                                curve: Curves.easeOutBack,
+                                builder: (_, t, child) => Transform.scale(scale: 0.4 + 0.6 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
+                                child: Image(image: ResizeImage(AssetImage(packed[i]), height: px, policy: ResizeImagePolicy.fit), fit: BoxFit.contain),
+                              )
+                            : Icon(i < 3 ? Icons.back_hand_outlined : Icons.engineering_outlined, color: SlmColors.gold400.withValues(alpha: 0.35), size: 30),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(_labels[i], style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.ivory)),
+                    ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(GloveLines.rounds[i], style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.ivory)),
-                ],
-              ),
-            ),
-        ],
-      ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

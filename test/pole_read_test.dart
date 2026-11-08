@@ -1,4 +1,6 @@
-// Lesson 1.3 (পোলের ভাষা): pole rules, deals for PCC and steel, fair reason
+// Lesson 1.3 (পোলের ভাষা): pole rules, deals for PCC and steel (tube, rail,
+// H-beam; brown porcelain or grey polymer insulators; at most one report-first
+// item — climbing past it is a slip, never deadly), fair reason
 // libraries that fit the pole, his recorded lines, and both levels in the
 // shell: idle perf, a full clean play per pack (walk round — by swipe and by
 // the button — look close with the lens, knock, decide, the reasons, the
@@ -115,27 +117,54 @@ Future<void> _readPole(WidgetTester t, {required bool swipe, Future<void> Functi
 void main() {
   group('rules', () {
     for (final kind in PoleKind.values) {
-      test('deals ($kind): 4 poles, 2–3 condemned, the headline fault once, faults of the kind only; he comes on any pole', () {
+      test('deals ($kind): 4 poles, 2–3 condemned, the headline fault once, faults of the kind only; he comes on a sound or condemned pole', () {
         final seen = <String>{};
-        var hisSound = 0, hisBad = 0;
+        var hisSound = 0, hisBad = 0, clutterPlays = 0, polymer = 0;
+        final clutterSeen = <PoleDefect>{};
+        final forms = <SteelForm>{};
         for (var s = 0; s < 60; s++) {
           final d = dealPoles(math.Random(s), kind);
           expect(d.poles.length, 4);
           final bad = d.poles.where((p) => p.condemned).length;
           expect(bad, inInclusiveRange(2, 3));
-          final allowed = kind == PoleKind.pcc ? pccDefects : steelDefects;
+          final allowed = [...defectsOf(kind), ...reportFirstDefects];
           for (final p in d.poles) {
+            expect(p.flaws.length, lessThanOrEqualTo(1));
             for (final f in p.flaws) {
               expect(allowed, contains(f.defect));
             }
+            if (p.polymer) polymer++;
+          }
+          // Report first: at most one a play, on a pole that is not broken,
+          // and then a plain sound pole is still left to climb.
+          final clutter = d.poles.where((p) => p.reportFirst).toList();
+          expect(clutter.length, lessThanOrEqualTo(1));
+          if (clutter.isNotEmpty) {
+            clutterPlays++;
+            clutterSeen.add(clutter.single.flaws.single.defect);
+            expect(clutter.single.condemned, isFalse);
+            expect(bad, 2);
+          }
+          expect(d.poles.where((p) => !p.mustReport), isNotEmpty);
+          if (kind == PoleKind.steel) {
+            // Every steel play: a tube, a rail and an H-beam pole.
+            expect(d.poles.map((p) => p.form).toSet(), containsAll(SteelForm.values));
+            forms.addAll(d.poles.map((p) => p.form));
           }
           final headline = kind == PoleKind.pcc ? PoleDefect.hairline : PoleDefect.groundRust;
           expect(d.poles.where((p) => p.has(headline)).length, 1);
           expect(d.callPole, inInclusiveRange(0, 3));
+          // His push (the crack myth, the steel-bends myth) would not fit a
+          // hive or a hoarding in plain view: never the report-first pole.
+          expect(d.poles[d.callPole].reportFirst, isFalse);
           d.poles[d.callPole].condemned ? hisBad++ : hisSound++;
           seen.add(d.poles.map((p) => p.flaws.map((f) => '${f.defect}${f.side}').join()).join('|'));
         }
         expect(seen.length, greaterThan(20), reason: 'every play is dealt fresh');
+        expect(clutterPlays, inInclusiveRange(15, 45), reason: 'report-first in some plays, not all');
+        expect(clutterSeen, containsAll(reportFirstDefects));
+        expect(polymer, inInclusiveRange(20, 100), reason: 'grey polymer insulators sometimes (of 240 poles)');
+        if (kind == PoleKind.steel) expect(forms, containsAll(SteelForm.values));
         // His coming does not give the answer away: sometimes a sound pole.
         expect(hisSound, greaterThan(5));
         expect(hisBad, greaterThan(5));
@@ -153,7 +182,7 @@ void main() {
 
     test('a sound pole: climbing unchecked is a slip; reporting is a slip and the pole stays; checked climb is clean', () {
       final d = dealPoles(math.Random(3), PoleKind.steel);
-      final ok = d.poles.indexWhere((p) => !p.condemned);
+      final ok = d.poles.indexWhere((p) => !p.mustReport);
       final a = PoleRun(d)..index = ok;
       expect(a.decide(climb: true), PoleMistakes.skipped);
       expect(a.shown, isTrue);
@@ -191,9 +220,88 @@ void main() {
       expect(PoleMistakes.climbed(PoleDefect.crossArm).key, '1.3/pole/cross-arm');
     });
 
+    test('report first: climbing past a hive (nest, cables, hoarding) is a slip, never deadly; reporting it is right', () {
+      for (final d in reportFirstDefects) {
+        final pole = PoleCase(id: 'h', kind: PoleKind.pcc, flaws: [PoleFlaw(d, PoleSide.front)]);
+        expect(pole.condemned, isFalse);
+        expect(pole.reportFirst, isTrue);
+        expect(pole.mustReport, isTrue);
+        final climbed = PoleRun(PoleDeal(poles: [pole], callPole: 0));
+        for (final k in PoleCheck.values) {
+          climbed.check(k);
+        }
+        final m = climbed.decide(climb: true);
+        expect(m, PoleMistakes.climbed(d));
+        expect(m!.deadly, isFalse, reason: '$d');
+        expect(m.lessonPoint, 2, reason: 'lesson 1.3 point 3, the visual scan');
+        expect(climbed.slips, 1);
+        expect(climbed.deadly, isNull);
+        expect(climbed.ended, isFalse);
+        expect(climbed.shown, isTrue, reason: 'the play moves on');
+        expect(climbed.caught, isNot(contains(PoleLines.caughtClutter)), reason: 'a slip earns no caught line');
+        // On his say-so: the same slip.
+        final pushed = PoleRun(PoleDeal(poles: [pole], callPole: 0));
+        expect(pushed.decide(climb: true, pushed: true)!.deadly, isFalse);
+        final reported = PoleRun(PoleDeal(poles: [pole], callPole: 0));
+        expect(reported.decide(climb: false), isNull);
+        expect(reported.slips, 0);
+        expect(reported.caught, contains(PoleLines.caughtClutter));
+        expect(PoleLines.whyRight(pole), PoleLines.defectWhy(d));
+      }
+      // The broken faults stay deadly.
+      for (final d in [...pccDefects, ...steelDefects]) {
+        expect(PoleMistakes.climbed(d).deadly, isTrue, reason: '$d');
+      }
+    });
+
+    test('the lesson\'s words: knock sounds, no ঠপ্, no claim that standing water weakens the base', () {
+      expect(PoleLines.solid, 'ঠক্ ঠক্');
+      expect(PoleLines.hollow, 'দপ্ দপ্');
+      expect(PoleLines.ring, 'টন টন');
+      expect(PoleLines.dull, 'ভোঁতা শব্দ');
+      final all = <String>[
+        ...PoleLines.tasks,
+        PoleLines.introPcc,
+        PoleLines.introSteel,
+        PoleLines.solid,
+        PoleLines.hollow,
+        PoleLines.ring,
+        PoleLines.dull,
+        ...PoleLines.soundPcc,
+        ...PoleLines.soundSteel,
+        ...PoleLines.mythsPcc,
+        ...PoleLines.mythsSteel,
+        for (final d in PoleDefect.values) ...PoleLines.defectWhy(d),
+        for (final d in PoleDefect.values) PoleLines.defectBn(d),
+        for (final m in PoleMistakes.all) m.textBn,
+        for (final k in PoleKind.values) ...PoleLines.coworker(k).recordedLines,
+        for (final k in PoleKind.values) ...PoleLines.coworker(k).right,
+        for (final k in PoleKind.values) ...PoleLines.coworker(k).wrong,
+        PoleLines.callHeld,
+        PoleLines.allSet,
+        PoleLines.fail,
+      ];
+      for (final l in all) {
+        expect(l, isNot(contains('ঠপ')), reason: l);
+      }
+      // Lesson 1.3 point 1 only says to check whether water is pooled.
+      for (final l in [...PoleLines.defectWhy(PoleDefect.erosion), PoleMistakes.climbed(PoleDefect.erosion).textBn]) {
+        expect(l, isNot(contains('দুর্বল')), reason: l);
+      }
+    });
+
+    test('quick bonus: a little under a thorough play (≈179 s → 150 s), both packs', () {
+      // The packs take the shared constant (no per-pack override), and it is
+      // the owner's figure; the arithmetic is beside kPoleQuickMs.
+      expect(kPoleQuickMs, 150000);
+      for (final pack in poleReadPacks.values) {
+        expect(pack.quickMs, kPoleQuickMs, reason: pack.id);
+      }
+    });
+
     test('three false reports on a sound pole: 3 slips', () {
       final d = dealPoles(math.Random(3), PoleKind.pcc);
-      final run = PoleRun(d)..index = d.poles.indexWhere((p) => !p.condemned);
+      final run = PoleRun(d)..index = d.poles.indexWhere((p) => !p.mustReport);
       for (var i = 0; i < 3; i++) {
         expect(run.decide(climb: false), PoleMistakes.falseReport);
       }
@@ -242,7 +350,7 @@ void main() {
 
     for (final kind in PoleKind.values) {
       test('reasons ($kind): fit the pole, same length, big enough; his lines are recorded', () {
-        final pool = kind == PoleKind.pcc ? pccDefects : steelDefects;
+        final pool = [...defectsOf(kind), ...reportFirstDefects];
         final myths = PoleLines.myths(kind);
         final sound = kind == PoleKind.pcc ? PoleLines.soundPcc : PoleLines.soundSteel;
         // Tighter than the default 1.3: the right card must not be the long one.
@@ -282,7 +390,7 @@ void main() {
   test('the report deck: every wrong card is a reason not to climb, for a fault this pole did not have', () {
     final mythSet = {...PoleLines.mythsPcc, ...PoleLines.mythsSteel};
     for (final kind in PoleKind.values) {
-      final pool = kind == PoleKind.pcc ? pccDefects : steelDefects;
+      final pool = [...defectsOf(kind), ...reportFirstDefects];
       for (final d in pool) {
         final p = PoleCase(id: 'x', kind: kind, flaws: [PoleFlaw(d, PoleSide.back)]);
         final notHis = {
@@ -389,9 +497,14 @@ void main() {
       await _close(t, c);
     });
 
-    for (final (packId, seed) in const [('do_1_3_a', 7), ('do_1_3_b', 11)]) {
+    for (final (packId, from) in const [('do_1_3_a', 7), ('do_1_3_b', 11)]) {
       testWidgets('flow ($packId): read each pole, refuse him, right call and reason each time → pass', (t) async {
         final pack = poleReadPacks[packId]!;
+        // A deal with a report-first item, so the flow reports it too.
+        var seed = from;
+        while (!dealPoles(math.Random(seed), pack.kind).poles.any((p) => p.reportFirst)) {
+          seed++;
+        }
         final deal = dealPoles(math.Random(seed), pack.kind);
         final c = await _open(t, pack, seed);
         for (var i = 0; i < 4; i++) {
@@ -412,16 +525,16 @@ void main() {
                 : null,
           );
           if (i == deal.callPole) expect(met, isTrue);
-          await t.tap(find.text(p.condemned ? PoleLines.report : PoleLines.climb));
+          await t.tap(find.text(p.mustReport ? PoleLines.report : PoleLines.climb));
           await _pump(t, 2500);
           expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'pole $i');
-          if (p.condemned) {
+          if (p.mustReport) {
             // The deck asks what he found: the fault is not named yet.
             expect(find.text(PoleLines.whyReport), findsWidgets);
             expect(find.byKey(const ValueKey('reveal-0')), findsNothing, reason: 'pole $i: no label under the deck');
           }
           await _pickRight(t, PoleLines.whyRight(p));
-          if (p.condemned) {
+          if (p.mustReport) {
             await _pump(t, 2300);
             expect(find.byKey(const ValueKey('reveal-0')), findsOneWidget, reason: 'pole $i: named once paid');
             await _pump(t, i == 3 ? 6000 : 3500);
@@ -434,6 +547,7 @@ void main() {
         expect(s.mistakes, isEmpty);
         expect(s.starsByRung[pack.kind == PoleKind.pcc ? '1.3/do/0' : '1.3/do/1'], greaterThan(0));
         expect(find.text(PoleLines.caughtCall), findsOneWidget);
+        expect(find.text(PoleLines.caughtClutter), findsOneWidget);
         expect(find.byType(LevelPassPanel), findsOneWidget);
         expect(t.takeException(), isNull);
         await _close(t, c);
@@ -443,7 +557,7 @@ void main() {
     testWidgets('a false report is a slip with its card; the pole stays; three of them strike out', (t) async {
       final pack = poleReadPacks['do_1_3_a']!;
       var seed = 0;
-      while (dealPoles(math.Random(seed), pack.kind).poles.first.condemned) {
+      while (dealPoles(math.Random(seed), pack.kind).poles.first.mustReport) {
         seed++;
       }
       final c = await _open(t, pack, seed);
@@ -464,12 +578,61 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('climbing past a report-first item: a slip with its card, no freeze; the next pole comes', (t) async {
+      final pack = poleReadPacks['do_1_3_a']!;
+      var seed = 0;
+      while (!dealPoles(math.Random(seed), pack.kind).poles.first.reportFirst) {
+        seed++;
+      }
+      final deal = dealPoles(math.Random(seed), pack.kind);
+      final first = deal.poles.first;
+      expect(deal.callPole, isNot(0), reason: 'he never comes on the report-first pole');
+      final c = await _open(t, pack, seed);
+      await t.tap(find.text(PoleLines.climb));
+      await _pump(t, 900);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.text(MistakeLines.readLesson), findsOneWidget);
+      expect(find.byKey(const ValueKey('reveal-0')), findsOneWidget, reason: 'the item is ringed under the card');
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, PoleMistakes.climbed(first.flaws.single.defect).key);
+      expect(s.mistakes.single.deadly, isFalse);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 2500);
+      expect(find.text(PoleLines.report), findsOneWidget, reason: 'on to the next pole');
+      // The rest right: the play passes, but the slip never earns the
+      // report-first line on the pass panel.
+      for (var i = 1; i < 4; i++) {
+        final p = deal.poles[i];
+        await _readPole(
+          t,
+          swipe: false,
+          onCoworker: i == deal.callPole
+              ? () async {
+                  await _pump(t, 3500);
+                  await _pickRight(t, PoleLines.coworker(pack.kind).right);
+                  await _pump(t, 2500);
+                }
+              : null,
+        );
+        await t.tap(find.text(p.mustReport ? PoleLines.report : PoleLines.climb));
+        await _pump(t, 2500);
+        await _pickRight(t, PoleLines.whyRight(p));
+        await _pump(t, p.mustReport ? 5800 : 3500);
+        if (i == 3) await _pump(t, 2500);
+      }
+      expect(find.byType(LevelPassPanel), findsOneWidget);
+      expect(find.text(PoleLines.caughtClutter), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes.length, 1);
+      await _close(t, c);
+    });
+
     testWidgets('listening to him on a sound pole: the climb-without-reading slip, no freeze', (t) async {
       final pack = poleReadPacks['do_1_3_a']!;
       var seed = 3;
       while (true) {
         final d = dealPoles(math.Random(seed), pack.kind);
-        if (d.callPole == 0 && !d.poles[0].condemned) break;
+        if (d.callPole == 0 && !d.poles[0].mustReport) break;
         seed++;
       }
       final c = await _open(t, pack, seed);
@@ -501,7 +664,7 @@ void main() {
       for (var i = 0; i < deal.callPole; i++) {
         await _readPole(t, swipe: false);
         final p = deal.poles[i];
-        await t.tap(find.text(p.condemned ? PoleLines.report : PoleLines.climb));
+        await t.tap(find.text(p.mustReport ? PoleLines.report : PoleLines.climb));
         await _pump(t, 2500);
         await _pickRight(t, PoleLines.whyRight(p));
         await _pump(t, 6000);

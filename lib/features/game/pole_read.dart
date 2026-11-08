@@ -29,15 +29,24 @@ import 'scene_kit.dart' show Carry, GuideIntro, LinemanFigure, LinemanLook, Line
 import 'spoken_once.dart';
 
 // Lesson 1.3: "পোলের ভাষা". One engine, two packs:
-//   কাজ 1 "৩৬০° পোল পাঠ"   — PCC poles (hairline crack, spalling + rebar,
+//   কাজ 1 "360° পোল পাঠ"   — PCC poles (hairline crack, spalling + rebar,
 //                             eroded base, lean, hollow sound, hardware:
 //                             a broken insulator, a loose cross-arm).
-//   কাজ 2 "স্টিলের ক্যান্সার" — steel poles (rust at ground level, rust at the
-//                             weld joint, bent, hardware).
+//   কাজ 2 "স্টিলের ক্যান্সার" — steel poles: rail, H-beam (RSJ) and tubular
+//                             (lesson 1.3 point 2), with rust at the ground
+//                             line, at a weld joint and round the clamp's
+//                             nuts and bolts (point 3), bent, hardware.
 // Four poles a play, on a drawn village roadside. Hands on: swipe (or walk)
 // round the pole — some faults are on the back only — scan it close with the
 // lens from the base to the top, tap it with the hammer (some faults are only
-// heard: ঠক্ / দপ্, টন / ভোঁতা), then decide: উঠব, or উঠব না — রিপোর্ট.
+// heard — the lesson's words: PCC 'ঠক্ ঠক্' / 'দপ্ দপ্', steel 'টন টন' /
+// 'ভোঁতা শব্দ'), then decide: উঠব, or উঠব না — রিপোর্ট.
+// The 11 kV pin insulators are brown-glazed porcelain (IS 731), sometimes a
+// grey polymer pin insulator (dealt).
+// "Report first" (lesson 1.3 point 3, "সকল পোল"): a wasp/bee hive, a bird's
+// nest, an unauthorised dish/cable tangle or an advertising hoarding on an
+// otherwise sound pole — at most one a play. Report it, climb after it is
+// cleared (owner decision 2026-11-08): climbing past it is a slip, never deadly.
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene, corner guide, ◆ on the table → "কেন …?" (the reasons fit what this
 // pole had; after a report the fault is shown only once the reason is paid)
@@ -45,8 +54,8 @@ import 'spoken_once.dart';
 //
 // Deadly (owner-approved list): climbing a condemned pole (also by listening
 // to him). Slips: climbing a sound pole without walking round, looking at the
-// base and tapping it, or because he said so; reporting a sound pole (then it
-// is still to read).
+// base and tapping it, or because he said so; climbing past a report-first
+// item; reporting a sound pole (then it is still to read).
 // Three slips strike the level out.
 //
 // Voice: the guide's lines by device TTS; the coworker in his recorded voice.
@@ -63,17 +72,44 @@ enum PoleSide { front, back }
 
 enum PoleZone { base, waist, top }
 
-enum PoleDefect { hairline, spalling, erosion, lean, hollow, groundRust, weldRust, bent, insulator, crossArm }
+/// The steel pole's section (lesson 1.3 point 2: "রেল, এইচ-বিম ও স্টিল
+/// টিউবুলার পোল").
+enum SteelForm { tube, rail, hBeam }
+
+enum PoleDefect {
+  hairline,
+  spalling,
+  erosion,
+  lean,
+  hollow,
+  groundRust,
+  weldRust,
+  boltRust,
+  bent,
+  insulator,
+  crossArm,
+  // Report first (lesson 1.3 point 3, "সকল পোল").
+  hive,
+  nest,
+  cableTangle,
+  hoarding,
+}
 
 extension PoleDefectFacts on PoleDefect {
   PoleZone get zone => switch (this) {
         PoleDefect.erosion || PoleDefect.lean || PoleDefect.groundRust => PoleZone.base,
-        PoleDefect.insulator || PoleDefect.crossArm => PoleZone.top,
+        PoleDefect.insulator || PoleDefect.crossArm || PoleDefect.boltRust || PoleDefect.hive || PoleDefect.nest => PoleZone.top,
         _ => PoleZone.waist,
       };
 
   /// Seen from every side (no need to walk round).
-  bool get allSides => this == PoleDefect.lean || this == PoleDefect.bent || this == PoleDefect.erosion || this == PoleDefect.crossArm;
+  bool get allSides =>
+      this == PoleDefect.lean || this == PoleDefect.bent || this == PoleDefect.erosion || this == PoleDefect.crossArm || reportFirst;
+
+  /// Not a broken pole but something on it to report first and climb only
+  /// after it is cleared (owner decision 2026-11-08): climbing past it is a
+  /// slip, never deadly.
+  bool get reportFirst => this == PoleDefect.hive || this == PoleDefect.nest || this == PoleDefect.cableTangle || this == PoleDefect.hoarding;
 
   /// Only the hammer finds it.
   bool get heardOnly => this == PoleDefect.hollow;
@@ -94,14 +130,27 @@ class PoleFlaw {
 
 @immutable
 class PoleCase {
-  const PoleCase({required this.id, required this.kind, required this.flaws, this.rail = false});
+  const PoleCase({required this.id, required this.kind, required this.flaws, this.form = SteelForm.tube, this.polymer = false});
   final String id;
   final PoleKind kind;
   final List<PoleFlaw> flaws;
 
-  /// Steel: a rail / H-beam pole instead of a tube.
-  final bool rail;
-  bool get condemned => flaws.isNotEmpty;
+  /// Steel: the section (tube, rail or H-beam); a PCC pole ignores it.
+  final SteelForm form;
+
+  /// Grey polymer pin insulators instead of brown-glazed porcelain.
+  final bool polymer;
+  bool get rail => kind == PoleKind.steel && form == SteelForm.rail;
+  bool get hBeam => kind == PoleKind.steel && form == SteelForm.hBeam;
+
+  /// Broken: climbing it is deadly.
+  bool get condemned => flaws.any((f) => !f.defect.reportFirst);
+
+  /// Something on it to report first (a hive, a nest, a cable tangle, a hoarding).
+  bool get reportFirst => flaws.any((f) => f.defect.reportFirst);
+
+  /// The right call is to report it (broken, or report-first).
+  bool get mustReport => flaws.isNotEmpty;
   bool has(PoleDefect d) => flaws.any((f) => f.defect == d);
   bool get soundsBad => flaws.any((f) => f.defect.soundsBad);
 }
@@ -110,10 +159,10 @@ abstract final class PoleLines {
   /// What the guide repeats (a different way each time) when tapped.
   static const tasks = [ask];
 
-  static const titlePcc = '৩৬০° পোল পাঠ';
+  static const titlePcc = '360° পোল পাঠ';
   static const titleSteel = 'স্টিলের ক্যান্সার';
   static const introPcc = 'চারটে পিসিসি পোলে আজ কাজ — কোনটা ভেতরে ভাঙা? ওঠার আগে পোলের ভাষা পড়ুন!';
-  static const introSteel = 'স্টিলের পোলে মরিচা লুকিয়ে থাকে! চারটে পোল — ওঠার আগে প্রতিটা পড়ুন।';
+  static const introSteel = 'স্টিলের পোলে মরিচা লুকিয়ে থাকে! রেল, এইচ-বিম, টিউব — ওঠার আগে প্রতিটা পোল পড়ুন।';
   static const rounds = ['ক', 'খ', 'গ', 'ঘ'];
   static const ask = 'পোলটা পড়ুন। উঠবেন?';
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
@@ -130,11 +179,12 @@ abstract final class PoleLines {
   static const front = 'সামনে';
   static const back = 'পেছনে';
 
-  // What the hammer says (the sound only, never its meaning).
+  // What the hammer says (the sound only, never its meaning) — the lesson's
+  // words (1.3 point 2): PCC 'ঠক্ ঠক্' / 'দপ্ দপ্', steel 'টন টন' / 'ভোঁতা শব্দ'.
   static const solid = 'ঠক্ ঠক্';
   static const hollow = 'দপ্ দপ্';
   static const ring = 'টন টন';
-  static const dull = 'ঠপ্ ঠপ্';
+  static const dull = 'ভোঁতা শব্দ';
 
   static const stampReport = 'রিপোর্ট';
   static const stampClimb = 'উঠুন';
@@ -165,9 +215,15 @@ abstract final class PoleLines {
         PoleDefect.hollow => const ['ঠুকলে দপ্ দপ্, ভেতরের কংক্রিট দুর্বল', 'ফাঁপা শব্দ মানেই পোলের কাঠামো দুর্বল'],
         PoleDefect.groundRust => const ['মাটির কাছে মরিচা, হঠাৎ ভেঙে পড়তে পারে', 'ঠুকলে ভোঁতা শব্দ, মরিচার স্তর খসে পড়ে'],
         PoleDefect.weldRust => const ['ওয়েল্ডিং জয়েন্টে মরিচা, সেখানেই বিপদ', 'জোড়ে মরিচা মানে স্টিলের ক্যান্সার ধরেছে'],
+        PoleDefect.boltRust => const ['নাট-বল্টুর চারপাশে মরিচা, সেখানেই বিপদ', 'ক্ল্যাম্পের নাট-বল্টুতে মরিচা, ভরসা নেই'],
         PoleDefect.bent => const ['পোল বেঁকে গেছে, স্টিলের পোলও ভেঙে পড়ে', 'বাঁকা-মোচড়ানো পোল বিপদের স্পষ্ট লক্ষণ'],
         PoleDefect.insulator => const ['ভাঙা ইনসুলেটরে কারেন্ট লিক করতে পারে', 'পুরো পোলটাই বিদ্যুতায়িত হয়ে যেতে পারে'],
         PoleDefect.crossArm => const ['আলগা ক্রস-আর্ম ঘুরে বা ভেঙে পড়তে পারে', 'ক্রস-আর্ম আলগা হয়ে হেলে আছে, ভরসা নেই'],
+        // Report first: say what was seen; climb only once it is cleared.
+        PoleDefect.hive => const ['পোলে বোলতা-মৌমাছির চাক, আগে রিপোর্ট করি', 'চাক সরানো না হলে এই পোলে ওঠা যাবে না'],
+        PoleDefect.nest => const ['পোলে পাখির বাসা, আগে জানিয়ে সরাতে হবে', 'বাসা সরানো না হলে এই পোলে ওঠা যাবে না'],
+        PoleDefect.cableTangle => const ['অননুমোদিত ডিশ-কেবলের জট, আগে রিপোর্ট', 'কেবলের জট সরানো না হলে পোলে ওঠা যাবে না'],
+        PoleDefect.hoarding => const ['পোলে বিজ্ঞাপনের হোর্ডিং, আগে রিপোর্ট করি', 'হোর্ডিং সরানো না হলে এই পোলে ওঠা যাবে না'],
       };
 
   /// The lesson's myths: wrong reasons to climb.
@@ -188,15 +244,16 @@ abstract final class PoleLines {
   static List<String> myths(PoleKind k) => k == PoleKind.pcc ? mythsPcc : mythsSteel;
 
   /// The right reasons for what [p] had.
-  static List<String> whyRight(PoleCase p) => p.condemned ? defectWhy(p.flaws.first.defect) : (p.kind == PoleKind.pcc ? soundPcc : soundSteel);
+  static List<String> whyRight(PoleCase p) => p.mustReport ? defectWhy(p.flaws.first.defect) : (p.kind == PoleKind.pcc ? soundPcc : soundSteel);
 
   /// The wrong cards for [p]'s deck. A sound pole was climbed: the myths
-  /// (wrong reasons to climb). A condemned pole was reported: the reasons of
-  /// the kind's other faults, which this pole did not have (wrong reasons
-  /// not to climb it), so the deck asks what the player actually found.
-  static List<String> whyWrong(PoleCase p) => p.condemned
+  /// (wrong reasons to climb). A pole was reported: the reasons of the kind's
+  /// other faults and the other report-first items, which this pole did not
+  /// have (wrong reasons not to climb it), so the deck asks what the player
+  /// actually found.
+  static List<String> whyWrong(PoleCase p) => p.mustReport
       ? [
-          for (final d in p.kind == PoleKind.pcc ? pccDefects : steelDefects)
+          for (final d in [...defectsOf(p.kind), ...reportFirstDefects])
             if (!p.has(d)) ...defectWhy(d),
         ]
       : myths(p.kind);
@@ -235,6 +292,7 @@ abstract final class PoleLines {
   static const caughtReport = 'বিপজ্জনক পোলে রিপোর্ট';
   static const caughtHabit = 'দেখে-শুনে তবে উঠেছেন';
   static const caughtCall = 'চাপে “না” বলেছেন';
+  static const caughtClutter = 'আগে রিপোর্ট, পরিষ্কার হলে ওঠা';
   static String defectBn(PoleDefect d) => switch (d) {
         PoleDefect.hairline => 'চুলের মতো ফাটল',
         PoleDefect.spalling => 'কংক্রিট খসে রড বেরিয়ে',
@@ -243,9 +301,14 @@ abstract final class PoleLines {
         PoleDefect.hollow => 'ভেতরটা ফাঁপা',
         PoleDefect.groundRust => 'মাটির কাছে মরিচা',
         PoleDefect.weldRust => 'জোড়ে মরিচা',
+        PoleDefect.boltRust => 'নাট-বল্টুতে মরিচা',
         PoleDefect.bent => 'পোল বেঁকে গেছে',
         PoleDefect.insulator => 'ভাঙা ইনসুলেটর',
         PoleDefect.crossArm => 'আলগা ক্রস-আর্ম',
+        PoleDefect.hive => 'বোলতা/মৌমাছির চাক',
+        PoleDefect.nest => 'পাখির বাসা',
+        PoleDefect.cableTangle => 'ডিশ/কেবলের জট',
+        PoleDefect.hoarding => 'বিজ্ঞাপনের হোর্ডিং',
       };
 }
 
@@ -277,13 +340,13 @@ abstract final class PoleMistakes {
             lessonPoint: 0),
         PoleDefect.hollow => const DoMistake(
             key: '1.3/pole/hollow',
-            textBn: 'ঠুকলে ফাঁপা ‘দপ্’ শব্দ — ভেতরের কংক্রিট দুর্বল, ফাঁপা। বাইরে ঠিক দেখালেও উঠবেন না।',
+            textBn: 'ঠুকলে ‘দপ্ দপ্’ ফাঁপা শব্দ — ভেতরে কংক্রিট দুর্বল বা ফাটল আছে। বাইরে ঠিক দেখালেও উঠবেন না।',
             art: 'assets/game/art/pole/pole_sound.svg',
             deadly: true,
             lessonPoint: 1),
         PoleDefect.groundRust => const DoMistake(
             key: '1.3/pole/ground-rust',
-            textBn: 'মাটির কাছে মরিচা — স্টিলের ক্যান্সার। স্টিলের পোলও সতর্কবার্তা ছাড়াই ভেঙে পড়ে।',
+            textBn: 'মাটির কাছে মরিচা — স্টিলের ক্যান্সার। ঠুকলে ভোঁতা শব্দ; স্টিলের পোলও সতর্কবার্তা ছাড়াই ভেঙে পড়ে।',
             art: 'assets/game/art/pole/steel_rust.svg',
             deadly: true,
             lessonPoint: 2),
@@ -291,6 +354,12 @@ abstract final class PoleMistakes {
             key: '1.3/pole/weld-rust',
             textBn: 'ওয়েল্ডিং জয়েন্টে মরিচা — মরিচা স্টিলের ক্যান্সার, যেখানে দেখবেন সেখানেই বিপদ লুকিয়ে থাকতে পারে।',
             art: 'assets/game/art/pole/steel_rust.svg',
+            deadly: true,
+            lessonPoint: 2),
+        PoleDefect.boltRust => const DoMistake(
+            key: '1.3/pole/bolt-rust',
+            textBn: 'ক্ল্যাম্পের নাট-বল্টুর চারপাশে মরিচা — স্টিলের পোলে ক্ল্যাম্প ঠিকমতো টাইট থাকা বিশেষভাবে জরুরি। রিপোর্ট করুন।',
+            art: 'assets/game/art/pole/bolt_rust.svg',
             deadly: true,
             lessonPoint: 2),
         PoleDefect.bent => const DoMistake(
@@ -311,6 +380,27 @@ abstract final class PoleMistakes {
             art: 'assets/game/art/pole/pole_hardware.svg',
             deadly: true,
             lessonPoint: 3),
+        // Report first (a slip, never deadly): lesson 1.3 point 3, the visual scan.
+        PoleDefect.hive => const DoMistake(
+            key: '1.3/pole/hive',
+            textBn: 'পোলে বোলতা/মৌমাছির চাক ছিল — না জানিয়েই উঠলেন। আগে সুপারভাইজারকে রিপোর্ট করুন, চাক সরানো হলে তবেই উঠুন।',
+            art: 'assets/game/art/pole/pole_hive.svg',
+            lessonPoint: 2),
+        PoleDefect.nest => const DoMistake(
+            key: '1.3/pole/nest',
+            textBn: 'পোলে পাখির বাসা ছিল — না জানিয়েই উঠলেন। আগে রিপোর্ট করুন, বাসা সরানো হলে তবেই উঠুন।',
+            art: 'assets/game/art/pole/pole_nest.svg',
+            lessonPoint: 2),
+        PoleDefect.cableTangle => const DoMistake(
+            key: '1.3/pole/cable-tangle',
+            textBn: 'পোলে অননুমোদিত ডিশ/কেবলের জট ছিল — আগে রিপোর্ট করুন, জট সরানো হলে তবেই উঠুন।',
+            art: 'assets/game/art/pole/pole_cables.svg',
+            lessonPoint: 2),
+        PoleDefect.hoarding => const DoMistake(
+            key: '1.3/pole/hoarding',
+            textBn: 'পোলে বিজ্ঞাপনের হোর্ডিং বাঁধা ছিল — আগে রিপোর্ট করুন, সরানো হলে তবেই উঠুন।',
+            art: 'assets/game/art/pole/pole_hoarding.svg',
+            lessonPoint: 2),
       };
 
   static const skipped = DoMistake(
@@ -329,23 +419,36 @@ abstract final class PoleMistakes {
 }
 
 const pccDefects = [PoleDefect.hairline, PoleDefect.spalling, PoleDefect.erosion, PoleDefect.lean, PoleDefect.hollow, PoleDefect.insulator, PoleDefect.crossArm];
-const steelDefects = [PoleDefect.groundRust, PoleDefect.weldRust, PoleDefect.bent, PoleDefect.insulator, PoleDefect.crossArm];
+const steelDefects = [PoleDefect.groundRust, PoleDefect.weldRust, PoleDefect.boltRust, PoleDefect.bent, PoleDefect.insulator, PoleDefect.crossArm];
+
+/// On any pole (lesson 1.3 point 3, "সকল পোল"): report first.
+const reportFirstDefects = [PoleDefect.hive, PoleDefect.nest, PoleDefect.cableTangle, PoleDefect.hoarding];
+
+/// The faults that condemn a pole of [kind].
+List<PoleDefect> defectsOf(PoleKind kind) => kind == PoleKind.pcc ? pccDefects : steelDefects;
 
 @immutable
 class PoleDeal {
   const PoleDeal({required this.poles, required this.callPole});
   final List<PoleCase> poles;
 
-  /// The pole on which the careless coworker comes: any pole, sound or
-  /// condemned, so his coming does not tell the answer.
+  /// The pole on which the careless coworker comes: a sound or a condemned
+  /// pole, so his coming does not tell the answer (never the report-first
+  /// pole, where his push would not fit what is in plain view).
   final int callPole;
 }
 
 /// Four poles: 2–3 condemned, at least one whose fault hides (on the back or
 /// heard only), the rest sound; the main fault of the kind comes first-class.
+/// Half the plays one sound pole carries a report-first item (never more
+/// than one, and then exactly 2 are condemned so one plain sound pole is
+/// left to climb). Steel: every play has a tube, a rail and an H-beam pole.
+/// Any pole may have grey polymer pin insulators (1 in 4).
 PoleDeal dealPoles(math.Random rng, PoleKind kind) {
-  final pool = kind == PoleKind.pcc ? pccDefects : steelDefects;
-  final bad = 2 + rng.nextInt(2);
+  final pool = defectsOf(kind);
+  final clutter = rng.nextBool() ? reportFirstDefects[rng.nextInt(reportFirstDefects.length)] : null;
+  final bad = clutter != null ? 2 : 2 + rng.nextInt(2);
+  final forms = [SteelForm.tube, SteelForm.rail, SteelForm.hBeam, SteelForm.values[rng.nextInt(SteelForm.values.length)]]..shuffle(rng);
   final picks = [...pool]..shuffle(rng);
   // The lesson's headline fault always shows up once.
   final headline = kind == PoleKind.pcc ? PoleDefect.hairline : PoleDefect.groundRust;
@@ -360,11 +463,22 @@ PoleDeal dealPoles(math.Random rng, PoleKind kind) {
       // The first condemned pole hides its fault on the back (if it can).
       final side = i == 0 && !d.allSides ? PoleSide.back : (rng.nextBool() ? PoleSide.front : PoleSide.back);
       flaws.add(PoleFlaw(d, side));
+    } else if (i == bad && clutter != null) {
+      flaws.add(PoleFlaw(clutter, PoleSide.front));
     }
-    poles.add(PoleCase(id: 'p$i', kind: kind, flaws: flaws, rail: kind == PoleKind.steel && rng.nextInt(3) == 0));
+    poles.add(PoleCase(
+      id: 'p$i',
+      kind: kind,
+      flaws: flaws,
+      form: kind == PoleKind.steel ? forms[i] : SteelForm.tube,
+      polymer: rng.nextInt(4) == 0,
+    ));
   }
   poles.shuffle(rng);
-  return PoleDeal(poles: poles, callPole: rng.nextInt(poles.length));
+  // He never comes on the report-first pole: his push (the crack myth, the
+  // "steel only bends" myth) would not fit a hive or a hoarding in plain view.
+  final calls = [for (var i = 0; i < poles.length; i++) if (!poles[i].reportFirst) i];
+  return PoleDeal(poles: poles, callPole: calls[rng.nextInt(calls.length)]);
 }
 
 enum PoleCheck { walk, base, sound, top }
@@ -395,6 +509,8 @@ class PoleRun {
 
   /// Climb (true) or report (false). Returns the mistake, if any. Reporting
   /// a sound pole is a slip and the pole is still to read (and climb).
+  /// Climbing past a report-first item (a hive, a nest, a cable tangle, a
+  /// hoarding) is a slip, never deadly; the play moves on.
   /// [pushed]: he climbs because the coworker said so; on a sound pole that
   /// is the climb-without-reading slip, however much he had checked.
   DoMistake? decide({required bool climb, bool pushed = false}) {
@@ -402,11 +518,15 @@ class PoleRun {
     shown = true;
     final p = current;
     if (climb && p.condemned) return deadly = PoleMistakes.climbed(p.flaws.first.defect);
+    if (climb && p.reportFirst) {
+      slips++;
+      return PoleMistakes.climbed(p.flaws.first.defect);
+    }
     if (climb && (pushed || !checks.containsAll(const [PoleCheck.walk, PoleCheck.base, PoleCheck.sound]))) {
       slips++;
       return PoleMistakes.skipped;
     }
-    if (!climb && !p.condemned) {
+    if (!climb && !p.mustReport) {
       slips++;
       shown = false;
       return PoleMistakes.falseReport;
@@ -417,6 +537,8 @@ class PoleRun {
 
     if (climb) {
       tag(PoleLines.caughtHabit);
+    } else if (p.reportFirst) {
+      tag(PoleLines.caughtClutter);
     } else {
       tag(PoleLines.caughtReport);
       final f = p.flaws.first;
@@ -433,9 +555,31 @@ class PoleRun {
   }
 }
 
+/// The quick bonus: a little under a thorough play (owner decision
+/// 2026-11-08: ~85 % of it, rounded to 10 s). The clock runs from the end of
+/// the guide's intro to the last pole's paid reason. A thorough play, per
+/// pole (ms; ~1500 human reaction per action):
+///   walk to the pole (forced)                          1200
+///   front: open the lens 1500 + 300, scan base, waist
+///     and top 3 × (1500 + 1000), close 1500           10800
+///   walk round 1500 + 1100 (orbit)                     2600
+///   back: the lens again, the same                    10800
+///   the hammer, a tap per zone 3 × (1500 + 620)        6360
+///   decide                                             1500
+///   reason: praise ~1500 + 650 gap + deck deal 910 +
+///     read three cards 2000 + pick 1500 + "এই তো আসল
+///     কথা" ~1200 + 450                                8210
+///   = 41470 × 4 poles                               165880
+/// + after a report the fault is shown (walk to its side ~half the time 475
+///   + 1600) × 2.75 reports a play on average           5706
+/// + the coworker once: his line ~3000 + deck 910 + read and pick 3500 +
+///   420                                                7830
+/// ≈ 179400 ms; 85 % ≈ 152500 → 150 s.
+const kPoleQuickMs = 150000;
+
 @immutable
 class PoleReadPack {
-  const PoleReadPack({required this.id, required this.kind, required this.titleBn, this.quickMs = 90000});
+  const PoleReadPack({required this.id, required this.kind, required this.titleBn, this.quickMs = kPoleQuickMs});
   final String id;
   final PoleKind kind;
   final String titleBn;
@@ -452,7 +596,7 @@ enum PoleCollapse { fall, spark, arm }
 
 PoleCollapse collapseFor(PoleDefect d) => switch (d) {
       PoleDefect.insulator => PoleCollapse.spark,
-      PoleDefect.crossArm => PoleCollapse.arm,
+      PoleDefect.crossArm || PoleDefect.boltRust => PoleCollapse.arm,
       _ => PoleCollapse.fall,
     };
 
@@ -787,7 +931,11 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
       await _deadly(m);
       return;
     }
-    setState(() => _knock = null);
+    setState(() {
+      _knock = null;
+      // Climbed past a report-first item: ring what was there.
+      if (_run.current.reportFirst) _revealed = true;
+    });
     unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
     await _slip(m);
   }
@@ -821,7 +969,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
   @override
   void onReasonPaid() {
     final p = _run.current;
-    if (_verdict != _Verdict.reported || !p.condemned) {
+    if (_verdict != _Verdict.reported || !p.mustReport) {
       _next();
       return;
     }
@@ -2082,7 +2230,7 @@ class PolePainter extends CustomPainter {
   /// Half the body's width at design y [y].
   static double halfAt(PoleCase p, PoleGeo geo, double y) {
     final s = geo.s;
-    if (p.kind == PoleKind.steel) return (p.rail ? 10 : 11) * s;
+    if (p.kind == PoleKind.steel) return (p.rail ? 10 : (p.hBeam ? 12 : 11)) * s;
     final k = ((y - geo.topY) / geo.length).clamp(0.0, 1.0);
     return (9 + 7 * k) * s;
   }
@@ -2106,6 +2254,321 @@ class PolePainter extends CustomPainter {
     if (f.defect.allSides) return 1;
     final (v, _) = _face(f.side, orbit);
     return ((v - 0.15) / 0.7).clamp(0.0, 1.0);
+  }
+
+  /// A brown-glazed porcelain pin insulator (IS 731) standing on [base]:
+  /// the steel pin, two sheds, the head with the conductor's groove. Broken:
+  /// a piece is gone from the big shed and the head (white body showing),
+  /// a crack runs down. Returns where the conductor sits.
+  Offset _porcelainPin(Canvas c, Offset base, {required bool broken}) {
+    final s = geo.s;
+    final w = 14 * s;
+    final x = base.dx;
+    final y = base.dy;
+    c.drawRect(Rect.fromCenter(center: Offset(x, y - 1.5 * s), width: 3 * s, height: 4 * s), Paint()..color = const Color(0xFF3B3F45));
+    final box = Rect.fromLTWH(x - w / 2, y - 17 * s, w, 17 * s);
+    final glaze = Paint()
+      ..shader = const LinearGradient(
+        colors: [Color(0xFF4A2412), Color(0xFFC88352), Color(0xFF8A4522), Color(0xFF4F2814)],
+        stops: [0, 0.32, 0.68, 1],
+      ).createShader(box);
+    final rim = Paint()
+      ..color = const Color(0xFF3A1C0E)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.7 * s;
+    Path shed(double foot, double r, double h) => Path()
+      ..moveTo(x - r, foot)
+      ..quadraticBezierTo(x - r * 0.55, foot - h, x, foot - h)
+      ..quadraticBezierTo(x + r * 0.55, foot - h, x + r, foot)
+      ..quadraticBezierTo(x, foot + 1.4 * s, x - r, foot)
+      ..close();
+    final neck = Rect.fromLTRB(x - w * 0.16, y - 13 * s, x + w * 0.16, y - 3 * s);
+    final lower = shed(y - 3.5 * s, w * 0.4, 4 * s);
+    final upper = shed(y - 8.5 * s, w * 0.5, 5 * s);
+    final head = RRect.fromRectAndRadius(Rect.fromLTRB(x - w * 0.22, y - 16.5 * s, x + w * 0.22, y - 11 * s), Radius.circular(2 * s));
+    c.drawRect(neck, glaze);
+    c.drawPath(lower, glaze);
+    c.drawPath(lower, rim);
+    final bite = Path()
+      ..moveTo(x + w * 0.05, y - 18 * s)
+      ..lineTo(x + w * 0.7, y - 18 * s)
+      ..lineTo(x + w * 0.7, y - 7.5 * s)
+      ..lineTo(x + w * 0.3, y - 9.6 * s)
+      ..lineTo(x + w * 0.16, y - 12.5 * s)
+      ..close();
+    if (broken) {
+      c.save();
+      c.clipPath(Path.combine(PathOperation.difference, Path()..addRect(box.inflate(4 * s)), bite));
+    }
+    c.drawPath(upper, glaze);
+    c.drawPath(upper, rim);
+    c.drawRRect(head, glaze);
+    // The groove the conductor sits in, and the glaze's shine.
+    c.drawLine(Offset(x - w * 0.14, y - 16.2 * s), Offset(x + w * 0.14, y - 16.2 * s), Paint()
+      ..color = const Color(0xFF2A140A)
+      ..strokeWidth = 0.9 * s);
+    c.drawLine(Offset(x - w * 0.13, y - 15 * s), Offset(x - w * 0.13, y - 12 * s), Paint()
+      ..color = const Color(0x66FFFFFF)
+      ..strokeWidth = 0.8 * s);
+    if (broken) {
+      c.restore();
+      // The fresh break shows the white porcelain body; a crack runs down.
+      c.drawPath(
+        Path()
+          ..moveTo(x + w * 0.05, y - 16.5 * s)
+          ..lineTo(x + w * 0.16, y - 12.5 * s)
+          ..lineTo(x + w * 0.3, y - 9.6 * s)
+          ..lineTo(x + w * 0.5, y - 8.6 * s),
+        Paint()
+          ..color = const Color(0xFFF1ECE2)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.1 * s,
+      );
+      c.drawLine(Offset(x - w * 0.02, y - 12 * s), Offset(x - w * 0.1, y - 4 * s), Paint()
+        ..color = const Color(0xFF1E0F07)
+        ..strokeWidth = (close ? 0.6 : 0.9) * s);
+    }
+    return Offset(x, y - 16.5 * s);
+  }
+
+  /// A grey polymer pin insulator on [base]: the pin, a thin core housing
+  /// with closely spaced sheds, the galvanised top fitting. Broken: a shed
+  /// torn and the housing split. Returns where the conductor sits.
+  Offset _polymerPin(Canvas c, Offset base, {required bool broken}) {
+    final s = geo.s;
+    final w = 14 * s;
+    final x = base.dx;
+    final y = base.dy;
+    c.drawRect(Rect.fromCenter(center: Offset(x, y - 2 * s), width: 3 * s, height: 5 * s), Paint()..color = const Color(0xFF6E767D));
+    final core = Rect.fromLTRB(x - w * 0.12, y - 17 * s, x + w * 0.12, y - 4 * s);
+    c.drawRect(core, Paint()..color = const Color(0xFF7E858B));
+    final shedBox = Rect.fromLTWH(x - w / 2, y - 18 * s, w, 16 * s);
+    final grey = Paint()..shader = const LinearGradient(colors: [Color(0xFF6F767C), Color(0xFFCDD2D6), Color(0xFF8D9399)]).createShader(shedBox);
+    final under = Paint()
+      ..color = const Color(0xFF4F555B)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.6 * s;
+    for (final (i, (dy, r)) in const [(5.5, 0.5), (8.7, 0.38), (11.9, 0.5), (15.1, 0.38)].indexed) {
+      final e = Rect.fromCenter(center: Offset(x, y - dy * s), width: 2 * r * w, height: 2.4 * s);
+      if (broken && i >= 1) {
+        // Torn: a wedge of the upper sheds is gone.
+        c.save();
+        c.clipPath(Path.combine(
+          PathOperation.difference,
+          Path()..addRect(e.inflate(2 * s)),
+          Path()
+            ..moveTo(x + w * 0.04, e.top - 2 * s)
+            ..lineTo(x + w * 0.6, e.top - 2 * s)
+            ..lineTo(x + w * 0.6, e.bottom + 2 * s)
+            ..lineTo(x + w * 0.16, e.bottom + 2 * s)
+            ..close(),
+        ));
+        c.drawOval(e, grey);
+        c.drawOval(e, under);
+        c.restore();
+      } else {
+        c.drawOval(e, grey);
+        c.drawOval(e, under);
+      }
+    }
+    // The galvanised top fitting with its saddle.
+    c.drawRect(Rect.fromLTRB(x - w * 0.2, y - 19.5 * s, x + w * 0.2, y - 17 * s), Paint()..color = const Color(0xFFAAB1B7));
+    c.drawLine(Offset(x - w * 0.12, y - 19.5 * s), Offset(x + w * 0.12, y - 19.5 * s), Paint()
+      ..color = const Color(0xFF4F555B)
+      ..strokeWidth = 0.8 * s);
+    if (broken) {
+      // The housing split open down the core.
+      c.drawPath(
+        Path()
+          ..moveTo(x + w * 0.03, y - 17 * s)
+          ..lineTo(x - w * 0.04, y - 13 * s)
+          ..lineTo(x + w * 0.04, y - 10 * s)
+          ..lineTo(x - w * 0.03, y - 6.5 * s),
+        Paint()
+          ..color = const Color(0xFF15181B)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = (close ? 0.8 : 1.1) * s,
+      );
+    }
+    return Offset(x, y - 19.5 * s);
+  }
+
+  /// An advertising hoarding strapped to the pole round [o] (its centre).
+  /// From the road its printed face (no words); from behind, its frame.
+  void _hoarding(Canvas c, Offset o, double turn) {
+    final s = geo.s;
+    final w = 84 * s * math.max(0.18, turn.abs());
+    final h = 54 * s;
+    final r = Rect.fromCenter(center: o, width: w, height: h);
+    if (turn < 0) {
+      c.drawRect(r, Paint()..color = const Color(0xFF8F969C));
+      final strut = Paint()
+        ..color = const Color(0xFF5D646A)
+        ..strokeWidth = 2 * s;
+      c.drawRect(r.deflate(1 * s), strut..style = PaintingStyle.stroke);
+      c.drawLine(r.topLeft, r.bottomRight, strut);
+      c.drawLine(r.bottomLeft, r.topRight, strut);
+      c.drawLine(r.centerLeft, r.centerRight, strut);
+      return;
+    }
+    c.drawRect(r, Paint()..color = const Color(0xFFD8342C));
+    c.save();
+    c.clipRect(r);
+    c.drawPath(
+      Path()
+        ..moveTo(r.left + w * 0.45, r.bottom)
+        ..lineTo(r.left + w * 0.7, r.top)
+        ..lineTo(r.right, r.top)
+        ..lineTo(r.right, r.bottom)
+        ..close(),
+      Paint()..color = const Color(0xFFF6C531),
+    );
+    final disc = Offset(r.left + w * 0.26, r.center.dy);
+    c.drawCircle(disc, h * 0.3, Paint()..color = Colors.white);
+    c.drawRRect(
+      RRect.fromRectAndRadius(Rect.fromCenter(center: disc, width: h * 0.22 * math.max(0.3, turn.abs()), height: h * 0.4), Radius.circular(2 * s)),
+      Paint()..color = const Color(0xFF1F5FA8),
+    );
+    final bar = Paint()..color = const Color(0xFF7A1A14);
+    for (final (k, len) in const [(0.3, 0.26), (0.5, 0.2), (0.7, 0.24)]) {
+      c.drawRect(Rect.fromLTWH(r.left + w * 0.6, r.top + h * k - 2 * s, w * len, 4 * s), bar);
+    }
+    c.restore();
+    c.drawRect(
+      r,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2 * s,
+    );
+    // The straps that tie it to the pole.
+    final strap = Paint()
+      ..color = const Color(0xFF3B3F45)
+      ..strokeWidth = 2.2 * s;
+    for (final dy in [-h * 0.36, h * 0.36]) {
+      c.drawLine(Offset(o.dx - 16 * s, o.dy + dy), Offset(o.dx + 16 * s, o.dy + dy), strap);
+    }
+  }
+
+  /// An unauthorised dish (cable TV) tangle round the pole at design y [y]:
+  /// coils wound round it, runs sagging off both ways, a hanging coil and a
+  /// little splitter box.
+  void _cableTangle(Canvas c, double x, double y, double halfW, bool close) {
+    final s = geo.s;
+    final ink = Paint()
+      ..color = const Color(0xFF1C1F23)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = (close ? 1.1 : 1.4) * s;
+    for (var i = 0; i < 6; i++) {
+      c.drawOval(
+        Rect.fromCenter(center: Offset(x + (i.isEven ? 1.5 : -1.5) * s, y + (i - 2.5) * 3 * s), width: 2 * halfW + (8 + (i % 3) * 5) * s, height: 5 * s),
+        ink,
+      );
+    }
+    for (final (dy, sag) in const [(0.0, 26.0), (4.0, 40.0), (-3.0, 18.0)]) {
+      for (final dir in const [-1.0, 1.0]) {
+        final a = Offset(x + dir * halfW, y + dy * s);
+        final b = Offset(x + dir * 420, y + dy * s - 10 * s);
+        c.drawPath(Path()..moveTo(a.dx, a.dy)..quadraticBezierTo((a.dx + b.dx) / 2, a.dy + sag * s, b.dx, b.dy), ink);
+      }
+    }
+    final coil = Offset(x + halfW + 7 * s, y + 20 * s);
+    for (final d in const [0.0, 2.5, 5.0]) {
+      c.drawOval(Rect.fromCenter(center: coil + Offset(d * s, 0), width: 13 * s, height: 17 * s), ink);
+    }
+    final box = RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(x, y + 15 * s), width: 13 * s, height: 10 * s), Radius.circular(1.5 * s));
+    c.drawRRect(box, Paint()..color = const Color(0xFFA2A8AD));
+    c.drawRRect(
+      box,
+      Paint()
+        ..color = const Color(0xFF4F555B)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8 * s,
+    );
+  }
+
+  /// A bees' comb hanging under the cross-arm from [top]; close up its cells
+  /// and the bees on it.
+  void _hive(Canvas c, Offset top, bool close) {
+    final s = geo.s;
+    final w = 17 * s;
+    final h = 25 * s;
+    final comb = Path()
+      ..moveTo(top.dx - w * 0.36, top.dy)
+      ..cubicTo(top.dx - w * 0.72, top.dy + h * 0.4, top.dx - w * 0.42, top.dy + h, top.dx, top.dy + h)
+      ..cubicTo(top.dx + w * 0.42, top.dy + h, top.dx + w * 0.72, top.dy + h * 0.4, top.dx + w * 0.36, top.dy)
+      ..close();
+    final rect = Rect.fromLTWH(top.dx - w * 0.6, top.dy, w * 1.2, h);
+    c.drawPath(
+      comb,
+      Paint()..shader = const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFE8B04A), Color(0xFFB07A2A), Color(0xFF6E4818)]).createShader(rect),
+    );
+    final line = Paint()
+      ..color = const Color(0x886B4314)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.7 * s;
+    for (final k in const [0.25, 0.45, 0.65, 0.82]) {
+      final yy = top.dy + h * k;
+      c.drawPath(Path()..moveTo(top.dx - w * 0.5, yy)..quadraticBezierTo(top.dx, yy + 3 * s, top.dx + w * 0.5, yy), line);
+    }
+    final bee = Paint()..color = const Color(0xFF2B1D0E);
+    if (close) {
+      final cell = Paint()
+        ..color = const Color(0x66FFF0B0)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.4 * s;
+      for (var row = 0; row < 6; row++) {
+        for (var col = -2; col <= 2; col++) {
+          final p = Offset(top.dx + col * 3.2 * s + (row.isOdd ? 1.6 * s : 0), top.dy + (4 + row * 3.2) * s);
+          if ((p.dx - top.dx).abs() > w * 0.42 - row * 0.4 * s) continue;
+          c.drawCircle(p, 1.4 * s, cell);
+        }
+      }
+      final wing = Paint()..color = const Color(0xB3FFFFFF);
+      for (final o in const [Offset(-12, 6), Offset(13, 10), Offset(-9, 22), Offset(10, 26), Offset(2, 30), Offset(-15, 15), Offset(4, 12), Offset(-3, 19)]) {
+        final p = top + o * s;
+        c.drawOval(Rect.fromCenter(center: p + Offset(0, -1.2 * s), width: 2.6 * s, height: 1.6 * s), wing);
+        c.drawOval(Rect.fromCenter(center: p, width: 2.6 * s, height: 1.5 * s), bee);
+        c.drawCircle(p + Offset(0.5 * s, 0), 0.5 * s, Paint()..color = const Color(0xFFF2C230));
+      }
+    } else {
+      for (final o in const [Offset(-11, 8), Offset(12, 14), Offset(-6, 24)]) {
+        c.drawCircle(top + o * s, 1 * s, bee);
+      }
+    }
+  }
+
+  /// A bird's nest of twigs on top of the cross-arm at [at]; close up, the
+  /// bird sits on it.
+  void _nest(Canvas c, Offset at, bool close) {
+    final s = geo.s;
+    final cup = Rect.fromCenter(center: at - Offset(0, 4 * s), width: 24 * s, height: 10 * s);
+    c.drawOval(cup, Paint()..color = const Color(0xFF6E5030));
+    final rnd = math.Random(7);
+    for (var i = 0; i < 18; i++) {
+      final a = Offset(cup.left + rnd.nextDouble() * cup.width, cup.top + rnd.nextDouble() * cup.height);
+      final ang = (rnd.nextDouble() - 0.5) * 1.2;
+      final len = (7 + rnd.nextDouble() * 9) * s;
+      c.drawLine(a, a + Offset(math.cos(ang) * len * (i.isEven ? 1 : -1), math.sin(ang) * len * 0.4), Paint()
+        ..color = i % 3 == 0 ? const Color(0xFFB08A55) : const Color(0xFF4F3820)
+        ..strokeWidth = 0.9 * s
+        ..strokeCap = StrokeCap.round);
+    }
+    if (close) {
+      final body = Offset(at.dx + 3 * s, cup.top - 3 * s);
+      c.drawOval(Rect.fromCenter(center: body, width: 13 * s, height: 8 * s), Paint()..color = const Color(0xFF3E4246));
+      final head = body + Offset(-6 * s, -4 * s);
+      c.drawCircle(head, 3.2 * s, Paint()..color = const Color(0xFF2E3135));
+      c.drawPath(
+        Path()
+          ..moveTo(head.dx - 2.6 * s, head.dy - 0.6 * s)
+          ..lineTo(head.dx - 6.4 * s, head.dy + 0.4 * s)
+          ..lineTo(head.dx - 2.4 * s, head.dy + 1.2 * s)
+          ..close(),
+        Paint()..color = const Color(0xFF6B6255),
+      );
+      c.drawCircle(head + Offset(-0.8 * s, -0.8 * s), 0.7 * s, Paint()..color = Colors.white);
+    }
   }
 
   void _paintPole(Canvas c, PoleCase p, double dx, double orbit) {
@@ -2164,6 +2627,9 @@ class PolePainter extends CustomPainter {
       c.drawRect(Rect.fromLTRB(cx - 21 * s, g - 7 * s, cx + 21 * s, g + 3), Paint()..color = steel ? const Color(0xFFA8A49A) : const Color(0xFF9D9A90));
     }
 
+    // A hoarding seen from behind stands beyond the pole: drawn first.
+    if (p.has(PoleDefect.hoarding) && turn < 0) _hoarding(c, Offset(cx, geo.y(3.4)), turn);
+
     c.save();
     final lean = p.has(PoleDefect.lean) ? 0.085 * turn : 0.0;
     if (lean != 0) {
@@ -2175,30 +2641,46 @@ class PolePainter extends CustomPainter {
     final bend = p.has(PoleDefect.bent) ? 18 * s * turn : 0.0;
     final kinkY = geo.y(4.2);
     final topShift = bend * 0.7;
+    final kinkLo = kinkY + 36 * s;
+    final kinkHi = kinkY - 46 * s;
+
+    /// How far the axis stands off at design y [y] (the bend; 0 if straight).
+    double shiftAt(double y) {
+      if (bend == 0 || y >= kinkLo) return 0;
+      if (y <= kinkHi) return topShift;
+      final t = (kinkLo - y) / (kinkLo - kinkHi);
+      return 2 * (1 - t) * t * bend + t * t * topShift;
+    }
+
+    double half(double y) => halfAt(p, geo, y);
+
+    /// A strip of the body between [u0] and [u1] across it (−1 left edge …
+    /// 1 right edge), from [y0] up to [y1], following the bend.
+    Path strip(double u0, double u1, {double? y0, double? y1}) {
+      final lo = y0 ?? g;
+      final hi = y1 ?? top;
+      final left = <Offset>[];
+      final right = <Offset>[];
+      for (var y = lo;; y -= 6) {
+        final yy = math.max(y, hi);
+        final x = cx + shiftAt(yy);
+        final w = half(yy);
+        left.add(Offset(x + u0 * w, yy));
+        right.add(Offset(x + u1 * w, yy));
+        if (yy <= hi) break;
+      }
+      final path = Path()..moveTo(left.first.dx, left.first.dy);
+      for (final q in left.skip(1)) {
+        path.lineTo(q.dx, q.dy);
+      }
+      for (final q in right.reversed) {
+        path.lineTo(q.dx, q.dy);
+      }
+      return path..close();
+    }
 
     // The body.
-    final body = Path();
-    double half(double y) => halfAt(p, geo, y);
-    if (steel && bend != 0) {
-      final w = half(g);
-      body
-        ..moveTo(cx - w, g)
-        ..lineTo(cx - w, kinkY + 36 * s)
-        ..quadraticBezierTo(cx - w + bend, kinkY, cx - w + topShift, kinkY - 46 * s)
-        ..lineTo(cx - w + topShift, top)
-        ..lineTo(cx + w + topShift, top)
-        ..lineTo(cx + w + topShift, kinkY - 46 * s)
-        ..quadraticBezierTo(cx + w + bend, kinkY, cx + w, kinkY + 36 * s)
-        ..lineTo(cx + w, g)
-        ..close();
-    } else {
-      body
-        ..moveTo(cx - half(g), g)
-        ..lineTo(cx - half(top), top)
-        ..lineTo(cx + half(top), top)
-        ..lineTo(cx + half(g), g)
-        ..close();
-    }
+    final body = strip(-1, 1);
     final hb = half(g);
     final lightAt = 0.34 + 0.12 * math.sin(2 * math.pi * orbit);
     final shade = Rect.fromLTRB(cx - hb - bend.abs(), top, cx + hb + bend.abs(), g);
@@ -2212,6 +2694,10 @@ class PolePainter extends CustomPainter {
           stops: [0, lightAt, 0.66, 1],
         ).createShader(shade),
     );
+    // How square-on the section's web is (1 = web view, 0 = flange face), and
+    // which way the rail's head points.
+    final webOn = turn.abs();
+    final sgn = turn >= 0 ? 1.0 : -1.0;
     if (!steel) {
       // Concrete pores that turn with the pole.
       final rnd = math.Random(p.id.hashCode);
@@ -2223,13 +2709,62 @@ class PolePainter extends CustomPainter {
         if (math.cos(a) < 0.1) continue;
         c.drawCircle(Offset(cx + math.sin(a) * (half(y) - 2), y), (close ? 0.9 : 0.8) * s, dot);
       }
-    } else if (p.rail) {
-      final flange = Paint()
-        ..color = const Color(0xFF4F575F)
-        ..strokeWidth = 2.4 * s;
-      final fx = 6 * s * turn.abs().clamp(0.3, 1.0);
-      c.drawLine(Offset(cx - fx, top), Offset(cx - fx, g), flange);
-      c.drawLine(Offset(cx + fx, top), Offset(cx + fx, g), flange);
+    } else if (p.rail || p.hBeam) {
+      // Steel sections stood on end, seen square on to the web (walking round
+      // turns them toward a flat flange face, where the bands fade out).
+      // Rail: the rounded head down one edge, its shadow on the recessed thin
+      // web, then the foot's sloped top and its edge. H-beam (RSJ): two wide
+      // flanges edge-on at both sides, the web recessed between them.
+      final a = webOn;
+      final wide = Rect.fromLTRB(cx - hb, top, cx + hb, g);
+      void band(double u0, double u1, Paint paint) {
+        final x0 = u0 * sgn, x1 = u1 * sgn;
+        c.drawPath(strip(math.min(x0, x1), math.max(x0, x1)), paint);
+      }
+
+      Paint across(List<Color> colors) => Paint()
+        ..shader = LinearGradient(
+          begin: sgn > 0 ? Alignment.centerLeft : Alignment.centerRight,
+          end: sgn > 0 ? Alignment.centerRight : Alignment.centerLeft,
+          colors: [for (final col in colors) col.withValues(alpha: a)],
+        ).createShader(wide);
+      Paint flat(int r, int gr, int b, double o) => Paint()..color = Color.fromRGBO(r, gr, b, o * a);
+      final line = Paint()
+        ..color = Color.fromRGBO(28, 32, 36, 0.9 * a)
+        ..strokeWidth = 1.1 * s
+        ..style = PaintingStyle.stroke;
+      double web;
+      if (p.rail) {
+        band(-1, -0.42, across(const [Color(0xFF5E676F), Color(0xFFF2F5F7), Color(0xFFB4BDC4), Color(0xFF6A737B)]));
+        band(-0.42, -0.3, flat(22, 26, 30, 0.8));
+        band(-0.3, 0.55, flat(72, 80, 88, 0.62));
+        band(0.55, 0.8, across(const [Color(0xFFA9B2B9), Color(0xFFE3E8EB)]));
+        band(0.8, 1, flat(104, 113, 121, 1));
+        band(0.8, 0.8, line);
+        band(-0.42, -0.42, line);
+        web = 0.12;
+      } else {
+        band(-0.72, 0.72, flat(64, 71, 78, 0.6));
+        band(-0.72, -0.52, flat(18, 22, 26, 0.35));
+        band(0.52, 0.72, flat(18, 22, 26, 0.35));
+        band(-1, -0.72, across(const [Color(0xFF9AA3AB), Color(0xFFF0F3F5), Color(0xFFBFC7CD)]));
+        band(0.72, 1, across(const [Color(0xFFBFC7CD), Color(0xFFF0F3F5), Color(0xFF9AA3AB)]));
+        band(-0.72, -0.72, line);
+        band(0.72, 0.72, line);
+        web = 0;
+      }
+      // Fitting holes through the web, in pairs.
+      if (a > 0.5) {
+        for (final m in const [6.1, 6.35, 2.75, 3.0]) {
+          final y = geo.y(m);
+          final o = Offset(cx + shiftAt(y) + web * sgn * half(y), y);
+          c.drawOval(Rect.fromCenter(center: o, width: 3.2 * s, height: 2.6 * s), Paint()..color = const Color(0xFF15181B));
+          c.drawArc(Rect.fromCenter(center: o, width: 3.2 * s, height: 2.6 * s), 0.2, 2.6, false, Paint()
+            ..color = const Color(0x88FFFFFF)
+            ..strokeWidth = 0.5 * s
+            ..style = PaintingStyle.stroke);
+        }
+      }
     }
     c.drawPath(
       body,
@@ -2238,16 +2773,57 @@ class PolePainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2,
     );
-    // Steel tube: the weld joint band low on the pole.
+    // Steel: the weld joint low on the pole — a collar on a tube, a welded
+    // splice plate on a rail or an H-beam.
     final weldY = geo.y(1.5);
-    if (steel && !p.rail) {
+    if (steel && !p.rail && !p.hBeam) {
       c.drawRect(Rect.fromLTRB(cx - hb - 1.5 * s, weldY - 3 * s, cx + hb + 1.5 * s, weldY + 3 * s), Paint()..color = const Color(0xFF6B747C));
       c.drawLine(Offset(cx - hb - 1.5 * s, weldY), Offset(cx + hb + 1.5 * s, weldY), Paint()
         ..color = const Color(0xFF4A5259)
         ..strokeWidth = 1);
+    } else if (steel) {
+      final plate = Rect.fromLTRB(cx - hb * 0.72, weldY - 9 * s, cx + hb * 0.72, weldY + 9 * s);
+      c.drawRect(plate, Paint()..color = const Color(0xFF7D868E));
+      // The weld bead round the plate.
+      final bead = Paint()..color = const Color(0xFF545C64);
+      for (var x = plate.left; x <= plate.right; x += 2.2 * s) {
+        c.drawCircle(Offset(x, plate.top), 0.9 * s, bead);
+        c.drawCircle(Offset(x, plate.bottom), 0.9 * s, bead);
+      }
+      for (var y = plate.top; y <= plate.bottom; y += 2.2 * s) {
+        c.drawCircle(Offset(plate.left, y), 0.9 * s, bead);
+        c.drawCircle(Offset(plate.right, y), 0.9 * s, bead);
+      }
     }
-    // Pole cap.
-    c.drawRect(Rect.fromLTRB(cx + topShift - half(top) - 1, top - 4 * s, cx + topShift + half(top) + 1, top), Paint()..color = const Color(0xFF4A4F55));
+    // The top end: a cap on a PCC pole or a tube; a rail or an H-beam shows
+    // its section (seen a little from above, so its shape reads).
+    final tx = cx + topShift;
+    final ht = half(top);
+    if (steel && (p.rail || p.hBeam) && webOn > 0.35) {
+      final d = 12 * s * webOn;
+      final ink = Paint()..color = const Color(0xFF8C959D);
+      final rim = Paint()
+        ..color = const Color(0xFF2E3338)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8 * s;
+      double ux(double v) => tx + v * sgn * ht;
+      Rect part(double u0, double u1, double depth) =>
+          Rect.fromLTRB(math.min(ux(u0), ux(u1)), top - depth / 2, math.max(ux(u0), ux(u1)), top + depth / 2);
+      final parts = p.rail
+          ? [part(-0.5, 0.8, d * 0.2), part(0.8, 1, d)] // web, foot
+          : [part(-0.72, 0.72, d * 0.2), part(-1, -0.72, d), part(0.72, 1, d)];
+      final head = p.rail ? RRect.fromRectAndRadius(part(-1, -0.5, d * 0.55), Radius.circular(2.5 * s)) : null;
+      for (final r in parts) {
+        c.drawRect(r, ink);
+        c.drawRect(r, rim);
+      }
+      if (head != null) {
+        c.drawRRect(head, ink);
+        c.drawRRect(head, rim);
+      }
+    } else {
+      c.drawRect(Rect.fromLTRB(tx - ht - 1, top - 4 * s, tx + ht + 1, top), Paint()..color = const Color(0xFF4A4F55));
+    }
 
     // Faults on a face (they turn away as the player walks round).
     for (final f in p.flaws) {
@@ -2325,14 +2901,37 @@ class PolePainter extends CustomPainter {
             ..strokeCap = StrokeCap.round;
           c.drawLine(Offset(cx - 4 * s, weldY + 9 * s), Offset(cx - 4 * s, weldY + 22 * s), drip);
           c.drawLine(Offset(cx + 6 * s, weldY + 9 * s), Offset(cx + 6 * s, weldY + 16 * s), drip);
+        case PoleDefect.hoarding:
+          if (turn >= 0) _hoarding(c, Offset(cx + shiftAt(geo.y(3.4)), geo.y(3.4)), turn);
+        case PoleDefect.cableTangle:
+          _cableTangle(c, cx + shiftAt(geo.y(4.6)), geo.y(4.6), half(geo.y(4.6)), close);
         default:
           break;
       }
     }
 
-    // The cross-arm (it foreshortens as the player walks round) and braces.
+    // The clamp that holds the cross-arm: a band round the pole with its
+    // nuts on the face (rusted round them on a bolt-rust pole, that side).
     final ya = geo.y(8.4);
     final ax = cx + topShift;
+    final band = Rect.fromLTRB(ax - half(ya) - 2 * s, ya + 3 * s, ax + half(ya) + 2 * s, ya + 11 * s);
+    c.drawRect(band, Paint()..color = const Color(0xFF545B62));
+    final boltFlaw = flaw(PoleDefect.boltRust);
+    final rustK = boltFlaw == null ? 0.0 : _show(boltFlaw, orbit);
+    for (final u in const [-0.55, 0.55]) {
+      final nut = Offset(ax + u * half(ya), band.center.dy);
+      if (rustK > 0) {
+        c.drawCircle(nut, 4.6 * s, Paint()..color = Color.fromRGBO(154, 79, 34, 0.85 * rustK));
+        c.drawLine(nut, nut + Offset(0.6 * s, 13 * s), Paint()
+          ..color = Color.fromRGBO(154, 79, 34, 0.9 * rustK)
+          ..strokeWidth = 1.6 * s
+          ..strokeCap = StrokeCap.round);
+      }
+      c.drawCircle(nut, 2.4 * s, Paint()..color = Color.lerp(const Color(0xFF8E979F), const Color(0xFFA0522D), rustK)!);
+      c.drawCircle(nut, 1 * s, Paint()..color = const Color(0xFF2E3338));
+    }
+
+    // The cross-arm (it foreshortens as the player walks round) and braces.
     final f = turn.abs() < 0.15 ? 0.15 * (turn < 0 ? -1 : 1) : turn;
     final reach = 64 * s;
     final looseArm = p.has(PoleDefect.crossArm);
@@ -2373,54 +2972,22 @@ class PolePainter extends CustomPainter {
       c.drawLine(armAt(-0.5), braceFoot, brace);
       c.drawLine(armAt(0.5), braceFoot, brace);
     }
+    // Report first, on the arm: a hive hanging under it, a nest on top.
+    if (p.has(PoleDefect.hive)) _hive(c, armAt(-0.36) + Offset(0, 3 * s), close);
+    if (p.has(PoleDefect.nest)) _nest(c, armAt(0.4) - Offset(0, 3 * s), close);
 
-    // Pin insulators: on each end of the arm and on the pole top.
+    // Pin insulators on each end of the arm and on the pole top: brown-glazed
+    // porcelain (IS 731), or grey polymer. One may be broken.
     final insFlaw = flaw(PoleDefect.insulator);
     final broken = insFlaw != null && _show(insFlaw, orbit) > 0;
     final tops = <Offset>[];
     for (final (i, u) in const [(0, -0.84), (1, 0.0), (2, 0.84)]) {
       final base = i == 1 ? Offset(ax, top - 4 * s) : armAt(u) - Offset(0, 3 * s);
-      final w = 11 * s;
-      final hgt = 15 * s;
-      final bodyR = Rect.fromLTWH(base.dx - w / 2, base.dy - hgt, w, hgt);
-      c.drawRect(Rect.fromCenter(center: base.translate(0, -1.5 * s), width: 3 * s, height: 3 * s), Paint()..color = const Color(0xFF3B3F45));
-      final glaze = Paint()
-        ..shader = const LinearGradient(colors: [Color(0xFFB9B4A8), Color(0xFFF4F1EA), Color(0xFFCFCABE)]).createShader(bodyR);
-      if (broken && i == 2) {
-        // A chunk broken off the top skirt, a crack down the body.
-        c.drawPath(
-          Path()
-            ..moveTo(bodyR.left, bodyR.bottom)
-            ..lineTo(bodyR.left, bodyR.top + 6 * s)
-            ..lineTo(bodyR.left + 4 * s, bodyR.top + 2 * s)
-            ..lineTo(bodyR.left + 6 * s, bodyR.top + 7 * s)
-            ..lineTo(bodyR.right - 1 * s, bodyR.top + 9 * s)
-            ..lineTo(bodyR.right, bodyR.bottom)
-            ..close(),
-          glaze,
-        );
-        c.drawLine(
-          Offset(bodyR.left + 4 * s, bodyR.top + 5 * s),
-          Offset(bodyR.left + 7 * s, bodyR.bottom - 2 * s),
-          Paint()
-            ..color = const Color(0xFF2E2B26)
-            ..strokeWidth = (close ? 0.7 : 1.0) * s,
-        );
-        // The fallen chip at the foot of the pole.
-        c.drawCircle(Offset(cx + 34 * s, g + 2), 2.6 * s, Paint()..color = const Color(0xFFE9E6DF));
-        tops.add(Offset(base.dx, bodyR.top + 8 * s));
-      } else {
-        c.drawRRect(RRect.fromRectAndRadius(bodyR, Radius.circular(3 * s)), glaze);
-        // The sheds (skirts).
-        final rim = Paint()
-          ..color = const Color(0xFF9C978C)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.8;
-        for (final k in const [0.35, 0.65]) {
-          c.drawLine(Offset(bodyR.left - 1.5 * s, bodyR.top + hgt * k), Offset(bodyR.right + 1.5 * s, bodyR.top + hgt * k), rim);
-        }
-        tops.add(Offset(base.dx, bodyR.top));
-      }
+      tops.add(p.polymer ? _polymerPin(c, base, broken: broken && i == 2) : _porcelainPin(c, base, broken: broken && i == 2));
+    }
+    if (broken) {
+      // The fallen piece at the foot of the pole.
+      c.drawCircle(Offset(cx + 34 * s, g + 2), 2.6 * s, Paint()..color = p.polymer ? const Color(0xFF9AA0A6) : const Color(0xFF8A4522));
     }
     c.restore();
     c.restore();

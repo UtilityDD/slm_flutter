@@ -14,6 +14,7 @@ import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/rod_pick.dart';
+import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro;
 import 'package:slm_flutter/features/game/spoken_once.dart';
 import 'package:slm_flutter/features/guide/ai_lineman_guide.dart';
 import 'package:slm_flutter/features/guide/guide_director.dart';
@@ -66,18 +67,18 @@ void main() {
 
     // The guide's intro covers the game (as level 1: no start button, a tap
     // does not skip); the game begins once he has said the task.
-    expect(find.byType(LevelIntro), findsOneWidget);
+    expect(find.byType(GuideIntro), findsOneWidget);
     expect(find.text('শুরু'), findsNothing, reason: 'no start button');
     expect(find.text('ধাপ 14'), findsOneWidget);
     expect(find.text('পাঠ 1.5 · কাজ 1/2'), findsNothing, reason: 'lesson numbers stay internal');
     await t.tapAt(const Offset(360, 800));
     await _pump(t, 600);
-    expect(find.byType(LevelIntro), findsOneWidget, reason: 'a tap does not skip');
+    expect(find.byType(GuideIntro), findsOneWidget, reason: 'a tap does not skip');
     await waitIntro(t);
-    expect(find.byType(LevelIntro), findsNothing);
+    expect(find.byType(GuideIntro), findsNothing);
 
     // Tap the guide (as level 1): he says the task again, a different way each time.
-    final coach = t.getCenter(find.byType(AiLinemanGuide).last);
+    final coach = t.getRect(find.byType(AiLinemanGuide).last).bottomRight - const Offset(50, 50);
     final heard = <String>{};
     for (var i = 0; i < 2; i++) {
       await t.tapAt(coach);
@@ -110,7 +111,7 @@ void main() {
     await t.tap(find.text(FrameLines.again));
     await t.pump(const Duration(milliseconds: 50));
     expect(find.text(FrameLines.struckHead), findsNothing);
-    expect(find.byType(LevelIntro), findsOneWidget, reason: 'a fresh play starts with the intro');
+    expect(find.byType(GuideIntro), findsOneWidget, reason: 'a fresh play starts with the intro');
     expect(t.takeException(), isNull);
 
     await t.pumpWidget(const SizedBox());
