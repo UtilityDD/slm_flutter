@@ -10,13 +10,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
+import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/fire_choose.dart';
 import 'package:slm_flutter/features/game/fire_pass.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/order_steps.dart';
+import 'package:slm_flutter/features/game/reason_table.dart';
 import 'package:slm_flutter/features/game/scene_kit.dart';
 import 'package:slm_flutter/features/game/spoken_once.dart';
 import 'package:slm_flutter/features/guide/ai_lineman_guide.dart';
@@ -25,6 +28,7 @@ import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
+import 'support/option_lengths.dart';
 
 LevelContext _ctx(int doIndex) => LevelContext(
       rungId: '1.8/do/${doIndex - 1}',
@@ -119,19 +123,14 @@ void main() {
     });
 
     test('option libraries: big enough not to repeat, all about the same length (no guessing by length)', () {
-      void sameLength(String name, List<String> all) {
-        final lens = all.map((t) => t.length).toList()..sort();
-        expect(lens.last / lens.first, lessThanOrEqualTo(1.3), reason: '$name: lengths ${lens.first}..${lens.last}');
-      }
-
-      sameLength('choice', [...FireLines.choiceRight, ...FireLines.choiceWrong]);
-      sameLength('oil', [...FireLines.whyOilRight, ...FireLines.whyOilSand, ...FireLines.whyOilWrong]);
-      sameLength('switch', [...FireLines.whySwitchRight, ...FireLines.whySwitchWrong]);
-      sameLength('grass', [...FireLines.whyGrassWater, ...FireLines.whyGrassAbc, ...FireLines.whyGrassWrong]);
-      expect(FireLines.choiceWrong.length, greaterThanOrEqualTo(5));
-      for (final k in FireKind.values) {
-        expect(FireLines.whyWrong(k).length, greaterThanOrEqualTo(5));
-      }
+      expectSameLength('choice', [...FireLines.choiceRight, ...FireLines.choiceWrong]);
+      expectSameLength('oil', [...FireLines.whyOilRight, ...FireLines.whyOilSand, ...FireLines.whyOilWrong]);
+      expectSameLength('switch', [...FireLines.whySwitchRight, ...FireLines.whySwitchWrong]);
+      expectSameLength('grass', [...FireLines.whyGrassWater, ...FireLines.whyGrassAbc, ...FireLines.whyGrassWrong]);
+      expectLibrary('choice', FireLines.choiceRight, FireLines.choiceWrong);
+      expectLibrary('oil', FireLines.whyOilRight, FireLines.whyOilWrong);
+      expectLibrary('switch', FireLines.whySwitchRight, FireLines.whySwitchWrong);
+      expectLibrary('grass', FireLines.whyGrassWater, FireLines.whyGrassWrong);
       // Different plays deal different sets.
       final sets = {for (var i = 0; i < 12; i++) FireLines.whyDeal(FireKind.oil, FireTool.sand, math.Random(i)).map((o) => o.textBn).toSet().join('|')};
       expect(sets.length, greaterThan(4));
@@ -157,6 +156,28 @@ void main() {
   });
 
   group('PASS rules', () {
+    test('PASS libraries: same length, big enough; the coworker speaks in his recorded voice', () {
+      expectSameLength('stand', [...PassLines.whyStandRight, ...PassLines.whyStandWrong]);
+      expectSameLength('aim', [...PassLines.whyAimRight, ...PassLines.whyAimWrong]);
+      expectSameLength('refill', [...PassLines.refillRight, ...PassLines.refillWrong]);
+      expectLibrary('stand', PassLines.whyStandRight, PassLines.whyStandWrong);
+      expectLibrary('aim', PassLines.whyAimRight, PassLines.whyAimWrong);
+      expectLibrary('refill', PassLines.refillRight, PassLines.refillWrong);
+      for (final l in PassLines.coworker.recordedLines) {
+        expect(LearnVoice.resolve(l, rival: true), isNotNull, reason: l);
+      }
+      for (final l in FireLines.coworker.recordedLines) {
+        expect(LearnVoice.resolve(l, rival: true), isNotNull, reason: l);
+      }
+    });
+
+    test('three places: upwind open, upwind against the wall, downwind — mirrored with the wind', () {
+      expect(PassStage.spotX(StandSpot.upwind, true), lessThan(PassStage.fireX));
+      expect(PassStage.spotX(StandSpot.downwind, true), greaterThan(PassStage.fireX));
+      expect(PassStage.spotX(StandSpot.upwind, false), greaterThan(PassStage.fireX));
+      expect(PassStage.spotX(StandSpot.cornered, false), greaterThan(PassStage.spotX(StandSpot.upwind, false)));
+    });
+
     test('order P-A-S-S; the right place depends on the wind', () {
       final r = OrderRun(passOrderRounds());
       expect(r.tap(PassIds.squeeze).mistake, PassMistakes.order);
@@ -444,31 +465,46 @@ void main() {
       await close(t, c);
     });
 
-    testWidgets('pass flow: stand upwind, P-A(base)-S-S twice, send for refill → pass', (t) async {
+    Finder label(String l) => find.byWidgetPredicate((w) => w is Semantics && w.properties.label == l);
+
+    /// Hold the handle and slide side to side until the fire is out.
+    Future<void> sweepOut(WidgetTester t) async {
+      final g = await t.startGesture(t.getCenter(label(PassLines.squeeze)));
+      for (var k = 0; k < 70; k++) {
+        await g.moveBy(Offset(k.isEven ? 24 : -24, 0));
+        await t.pump(const Duration(milliseconds: 30));
+      }
+      await g.up();
+    }
+
+    testWidgets('pass flow: stand upwind, pull the pin, aim at the base, squeeze and sweep, twice; refill → pass', (t) async {
       const seed = 6;
       final c = await open(t, FirePassPage(ctx: _ctx(2), pack: passPack18, muted: true, seed: seed));
-      final spots = find.byWidgetPredicate((w) => w is Semantics && w.properties.label == 'জায়গা');
-      Finder card(String title) => find.byWidgetPredicate((w) => w is Semantics && w.properties.label == title);
-      final base = find.byWidgetPredicate((w) => w is Semantics && w.properties.label == 'গোড়া');
       for (var i = 0; i < 2; i++) {
-        await t.tap(spots.first, warnIfMissed: false); // upwind is the first spot
+        expect(label(PassLines.spot), findsNWidgets(3), reason: 'three places to stand, fire $i');
+        await t.tap(find.byKey(const ValueKey('spot-upwind')), warnIfMissed: false);
         await _pump(t, 500);
-        for (final s in passCards) {
-          await t.ensureVisible(card(s.titleBn));
-          await t.tap(card(s.titleBn), warnIfMissed: false);
-          await _pump(t, 350);
-          if (s.id == PassIds.aim) {
-            await t.tap(base, warnIfMissed: false);
-            await _pump(t, 350);
-          }
-        }
+        await t.drag(label(PassLines.pin), const Offset(80, 0));
+        await _pump(t, 300);
+        await t.tap(label(PassLines.base), warnIfMissed: false);
+        await _pump(t, 300);
+        await sweepOut(t);
+        await _pump(t, 1500);
         expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'fire $i');
-        await t.ensureVisible(find.text(PassLines.next));
-        await t.tap(find.text(PassLines.next));
-        await _pump(t, 600);
+        // The reason: where you stood (first), the aim (second).
+        final right = _onScreen(i == 0 ? PassLines.whyStandRight : PassLines.whyAimRight);
+        expect(right, hasLength(1), reason: 'one right reason dealt, fire $i');
+        await t.tap(right.single, warnIfMissed: false);
+        await _pump(t, 3500);
       }
-      await t.tap(find.text(PassLines.holdOut));
-      await _pump(t, 3000);
+      // The careless coworker: keep the half-used cylinder? No — refill.
+      await _pump(t, 2800);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.text(PassLines.refillLine), findsOneWidget);
+      final refill = _onScreen(PassLines.refillRight);
+      expect(refill, hasLength(1));
+      await t.tap(refill.single, warnIfMissed: false);
+      await _pump(t, 4000);
       final s = c.read(gameSaveProvider);
       expect(s.rungProgress['1.8/do/1'], 'cleared');
       expect(s.mistakes, isEmpty);
@@ -476,5 +512,26 @@ void main() {
       expect(t.takeException(), isNull);
       await close(t, c);
     });
+
+    testWidgets('pass slips: downwind place, squeezing with the pin in, aiming at the flames', (t) async {
+      const seed = 6;
+      final c = await open(t, FirePassPage(ctx: _ctx(2), pack: passPack18, muted: true, seed: seed));
+      await t.tap(find.byKey(const ValueKey('spot-downwind')), warnIfMissed: false);
+      await _pump(t, 600);
+      expect(find.text(PassMistakes.downwind.textBn), findsWidgets);
+      await t.tap(find.text(MistakeLines.gotIt).first);
+      await _pump(t, 500);
+      await t.tap(find.byKey(const ValueKey('spot-upwind')), warnIfMissed: false);
+      await _pump(t, 500);
+      // The handle before the pin: out of order.
+      final g = await t.startGesture(t.getCenter(label(PassLines.squeeze)));
+      await _pump(t, 200);
+      await g.up();
+      await _pump(t, 500);
+      expect(find.text(PassMistakes.order.textBn), findsWidgets);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
   });
 }

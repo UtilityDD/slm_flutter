@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
@@ -12,8 +11,13 @@ import '../guide/guide_director.dart';
 import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'beat_fx.dart';
+import 'choice_deck.dart';
+import 'coworker_moment.dart';
 import 'do_parts.dart';
-import 'fire_choose.dart' show FireKind, FireScenePainter;
+import 'fire_choose.dart' show FireKind;
+import 'fire_fx.dart';
+import 'fire_world.dart';
+import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
@@ -23,20 +27,29 @@ import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
 import 'order_steps.dart';
-import 'ptw_steps.dart' show StepCard, StepSlot, StepTrayCard;
+import 'ptw_steps.dart' show StepCard;
+import 'reason_table.dart';
+import 'scene_kit.dart';
 import 'spoken_once.dart';
 
-// Lesson 1.8, কাজ 2: "PASS". Two fires. First, where to stand — seen from
-// above: wind at your back (not in the smoke), and an open way out behind you
-// (not backed into a corner). Then the extinguisher, step by step: Pull the
-// pin → Aim (tap the base of the fire, not the flames) → Squeeze → Sweep.
-// At the end: "অর্ধেকটা রেখে দাও পরের বারের জন্য" — no, it goes for refill.
+// Lesson 1.8, কাজ 2: "PASS" — rebuilt on the shared level kit
+// (GAME_LEVEL_PLAYBOOK.md). Two fires in the substation yard (transformer oil,
+// dry grass under a pole). The guide first (what burns, "now"); then the yard,
+// full screen, with the wind showing (a windsock, streaks, the smoke drifting)
+// and a wall. Where to stand: three places on the ground — upwind with the way
+// out open (right), upwind against the wall (cornered), downwind in the smoke.
+// Then PASS with the hands: drag the pin out (P), tap the fire's base, not the
+// flames (A), hold the handle (S) and slide side to side (S: sweep — only a
+// moving jet puts it out). Each fire out → its ◆ on the table → "কেন …?"
+// (first fire: where you stood; second: the aim). At the end the careless
+// coworker peeps in: "অর্ধেকটা তো বাকি — রেখে দাও" — the guide asks; refill is right.
 //
 // Deadly: none (owner-approved list: cornered without escape costs points).
-// Slips: standing downwind or cornered; a PASS step out of order; aiming at
-// the flames; keeping a used extinguisher.
+// Slips: standing downwind or cornered; a PASS step out of order (squeezing
+// with the pin in, aiming before the pin); aiming at the flames; keeping a
+// used extinguisher. Points as before; the fire-out points wait on the table.
 //
-// Voice: device TTS only. Art: assets/game/art/fire/ (hand-made SVG).
+// Voice: device TTS for the guide; the coworker's lines are clips in his voice.
 
 // ============================================================================
 // Content
@@ -72,25 +85,29 @@ abstract final class PassLines {
   static const title = 'PASS';
   static const intro = 'হাতে অগ্নি নির্বাপক — আগে ঠিক জায়গায় দাঁড়ান, তারপর PASS।';
   static const rounds = ['প্রথম', 'দ্বিতীয়'];
-  static const askStand = 'কোথায় দাঁড়াবেন? ওপর থেকে দেখুন — বাতাস আর বেরোনোর পথ।';
-  static const askPass = 'এবার PASS — পরের ধাপটা ট্যাপ করুন।';
-  static const askAim = 'কোথায় তাক করবেন? আগুনে ট্যাপ করুন।';
-  static const stood = 'ঠিক জায়গা — বাতাস পেছনে, পথ খোলা।';
-  static const aimed = 'গোড়ায় — ঠিক!';
+
+  /// The guide first: what burns and "now" (no hints).
+  static String alarmFirst(FireKind k) => switch (k) {
+        FireKind.oil => 'ট্রান্সফরমারে আবার আগুন! হাতে অগ্নি নির্বাপক — ঠিকভাবে নেভান!',
+        FireKind.grass => 'পোলের নিচে ঘাসে আগুন! হাতে অগ্নি নির্বাপক — ঠিকভাবে নেভান!',
+        FireKind.electrical => 'প্যানেলে আগুন! হাতে অগ্নি নির্বাপক — ঠিকভাবে নেভান!',
+      };
+  static String alarm(FireKind k) => switch (k) {
+        FireKind.oil => 'এবার ট্রান্সফরমারে আগুন! জলদি!',
+        FireKind.grass => 'এবার ঘাসে আগুন! জলদি!',
+        FireKind.electrical => 'এবার প্যানেলে আগুন! জলদি!',
+      };
+  static const askStand = 'কোথায় দাঁড়িয়ে নেভাবেন?';
+  static const askPass = 'এবার নেভান!';
+  static const askAim = 'কোথায় তাক করবেন?';
+  static const stood = 'ঠিক!';
   static const out = 'আগুন নিভল!';
-  static const next = 'পরের আগুন';
-  static const wind = 'বাতাস';
-  static const legendWind = 'বাতাসের দিক';
-  static const tourWind = 'বাতাস এদিকে বইছে — ধোঁয়াও ওদিকে যাচ্ছে।';
-  static const tourWall = 'আর এখানে দেয়াল।';
-  static const tourWhere = 'কোথায় দাঁড়াবেন — এখানে? এখানে? না এখানে?';
-  static const legendSmoke = 'ধোঁয়া';
-  static const legendWall = 'দেয়াল';
+  static const spot = 'জায়গা';
+  static const pin = 'পিন';
+  static const base = 'গোড়া';
+  static const flames = 'শিখা';
+  static const squeeze = 'চেপে ধরুন';
   static const ok = [FeedbackLine('ঠিক!'), FeedbackLine('এটাই পরের ধাপ।'), FeedbackLine('বেশ!')];
-  static const refillWho = 'সাথী';
-  static const refillLine = 'অর্ধেকটা তো বাকি — রেখে দাও, পরের বার কাজে লাগবে।';
-  static const giveIn = 'ঠিক, রেখে দিই';
-  static const holdOut = 'না — রিফিলে পাঠাই';
   static const refillOk = 'ঠিক! একবার চাপলেই চাপ বেরিয়ে যায় — রিফিল চাই।';
   static const allSet = 'বাতাস পেছনে, পথ খোলা, PASS নিখুঁত — আগুন আপনার নিয়ন্ত্রণে!';
   static const quick = 'নিখুঁত আর ঝটপট!';
@@ -98,6 +115,68 @@ abstract final class PassLines {
   static const caughtStand = 'বাতাস পেছনে, পথ খোলা রেখে দাঁড়ানো';
   static const caughtAim = 'আগুনের গোড়ায় তাক';
   static const caughtRefill = 'ব্যবহৃত সিলিন্ডার রিফিলে';
+
+  // Tap the guide: the task again, a different way each time (never the answer).
+  static const tapStand = ['কোথায় দাঁড়িয়ে নেভাবেন?', 'ঠিক জায়গাটা বেছে নিন।', 'চারপাশটা ভালো করে দেখুন।'];
+  static const tapPass = ['এবার নেভান!', 'নির্বাপকটা ভালো করে দেখুন।', 'আগে কী করবেন?'];
+  static const tapSweep = ['চেপে ধরে রাখুন — পুরো না নেভা পর্যন্ত।', 'ছাড়বেন না — নেভান!'];
+  static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
+
+  // The reason after each fire (first fire: where you stood; second: the aim).
+  static const whyStand = 'কেন ওখানে দাঁড়ালেন?';
+  static const whyAim = 'কেন গোড়ায় তাক করলেন?';
+  static const whyStandRight = [
+    'বাতাস পেছনে থাকলে ধোঁয়া-তাপ গায়ে আসে না',
+    'পেছনের পথ খোলা থাকলে দরকারে সরা যায়',
+    'বাতাস পিঠে আর পেছনে সরার পথ খোলা',
+  ];
+  static const whyStandWrong = [
+    'আগুনের যত কাছে, তত তাড়াতাড়ি নেভে',
+    'দেয়ালের পাশে দাঁড়ালে আড়াল পাওয়া যায়',
+    'ধোঁয়ার দিক থেকে আগুন ভালো দেখা যায়',
+    'বাতাসের দিক দেখার কোনো দরকার নেই',
+    'যেখানে খুশি দাঁড়ালেই কাজ হয়ে যায়',
+  ];
+  static const whyAimRight = [
+    'জ্বালানি জ্বলছে গোড়ায় — সেখানেই তাক',
+    'শিখায় তাক করলে পাউডার উড়ে যায়',
+    'গোড়ায় এপাশ-ওপাশ ঝাড়লে পুরো নেভে',
+  ];
+  static const whyAimWrong = [
+    'শিখার মাথায় তাক করলেই আগুন নেভে',
+    'এক জায়গায় ধরে রাখলেই যথেষ্ট',
+    'ধোঁয়ার দিকে স্প্রে করলেই হয়ে যায়',
+    'যত দূর থেকে স্প্রে, তত ভালো কাজ',
+    'একটু চেপে ছেড়ে দিলেই আগুন নেভে',
+  ];
+
+  /// The careless coworker at the end: keep the half-used cylinder.
+  static const refillLine = 'অর্ধেকটা তো বাকি — রেখে দাও, পরের বার কাজে লাগবে।';
+  static const coworkerExit = 'হুঁ! যা খুশি করুন।';
+  static const refillRight = [
+    'না — আজই রিফিলে পাঠিয়ে দিই',
+    'ব্যবহৃত সিলিন্ডার রিফিলে যাবে',
+    'চাপ বেরিয়ে গেছে — রিফিল চাই',
+  ];
+  static const refillWrong = [
+    'ঠিক বলেছে, অর্ধেকটা রেখে দিই',
+    'পরের বারের জন্য তুলে রাখি',
+    'অর্ধেক তো আছে, কাজ চলে যাবে',
+    'গেজ দেখার দরকার নেই, রাখি',
+    'স্টোরে এমনিই ফেরত রেখে দিই',
+  ];
+  static const refillAsks = [
+    'ও বলছে রেখে দিতে। আপনি কী করবেন?',
+    'ব্যবহার করা সিলিন্ডার — কী করবেন?',
+    'অর্ধেকটা রাখবেন, না রিফিলে পাঠাবেন?',
+  ];
+  static const coworker = CoworkerScript(
+    line: refillLine,
+    exitLine: coworkerExit,
+    right: refillRight,
+    wrong: refillWrong,
+    asks: refillAsks,
+  );
 }
 
 abstract final class PassMistakes {
@@ -147,7 +226,7 @@ List<OrderRoundSpec> passOrderRounds() => [
       OrderRoundSpec(groups: [for (final c in passCards) OrderGroup([c.id], skipMistake: PassMistakes.order)]),
     ];
 
-enum PassPhase { stand, order, aim, out, refill }
+enum PassPhase { stand, pass, out, refill }
 
 @immutable
 class PassPack {
@@ -159,6 +238,34 @@ class PassPack {
 
 const passPack18 = PassPack(id: 'do_1_8_b', titleBn: PassLines.title);
 const passPacks = {'do_1_8_b': passPack18};
+
+/// The fire stands at x 180 of the 360-wide scene; the three places to stand
+/// on the ground in front of it (design pixels, before the lift). With the
+/// wind from the left the upwind side is the left; the wall is behind the
+/// far-left place (cornered); downwind is in the smoke.
+abstract final class PassStage {
+  static const fireX = 180.0;
+
+  /// Just above the guide's bubble band on the bottom right.
+  static const spotY = 322.0;
+  static double spotX(StandSpot s, bool windFromLeft) {
+    final left = switch (s) {
+      StandSpot.cornered => 24.0,
+      StandSpot.upwind => 88.0,
+      StandSpot.downwind => 300.0,
+    };
+    return windFromLeft ? left : 360 - left;
+  }
+
+  /// The fire's base (world pixels) and a smaller size than step 23's, so
+  /// there is room to stand back and spray across.
+  static (Offset, double) fireAt(FireKind k) {
+    final (b, sz) = FireWorld.fireAt(k);
+    return (b, sz * 0.62);
+  }
+
+  static double cameraFor(FireKind k) => (FireWorld.fireAt(k).$1.dx - fireX).clamp(0.0, FireWorld.width - FireWorld.viewW);
+}
 
 // ============================================================================
 // Page
@@ -207,45 +314,27 @@ class _PassRunPage extends ConsumerStatefulWidget {
   ConsumerState<_PassRunPage> createState() => _PassRunPageState();
 }
 
-class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
+class _PassRunPageState extends ConsumerState<_PassRunPage>
+    with DoStrikeOut, SingleTickerProviderStateMixin, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
-  late final List<PassRound> _rounds;
-  late final List<List<StepCard>> _trays;
+  late final List<PassRound> _rounds = dealPass(widget.rng);
   final _clock = Stopwatch();
   late bool _muted = widget.muted;
-  final _okBag = LineBag(PassLines.ok);
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
-  // The guided tour points at these (on the top view).
-  final _windKey = GlobalKey();
-  final _wallKey = GlobalKey();
-  final Map<StandSpot, GlobalKey> _spotKeys = {for (final sp in StandSpot.values) sp: GlobalKey()};
+  /// The camera walks from the first fire to the second.
+  late final AnimationController _cam = AnimationController(vsync: this, duration: const Duration(milliseconds: 1300))
+    ..addStatusListener((_) {
+      if (mounted) setState(() {});
+    });
+  late double _camFrom = PassStage.cameraFor(_rounds.first.kind);
+  late double _camTo = _camFrom;
+  double get _camX => _camFrom + (_camTo - _camFrom) * Curves.easeInOutCubic.transform(_cam.value);
 
   final _combo = Combo();
   int _comboN = 0;
   int _comboMult = 1;
   int? _stars;
-
-  List<TourBeat> get _tourBeats {
-    // The spots are pointed at in a shuffled order (never the answer first by rule).
-    final order = [...StandSpot.values]..shuffle(math.Random(_round * 7 + 3));
-    return [
-      TourBeat(PassLines.tourWind, target: _windKey),
-      TourBeat(PassLines.tourWall, target: _wallKey),
-      TourBeat(PassLines.tourWhere, targets: [for (final sp in order) _spotKeys[sp]!]),
-    ];
-  }
-
-  int _scored(int base) {
-    final (mult, up) = _combo.hit();
-    if (up) {
-      setState(() {
-        _comboN++;
-        _comboMult = _combo.mult;
-      });
-    }
-    return base * mult;
-  }
   final List<String> _caught = [];
 
   int _round = 0;
@@ -253,12 +342,29 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
   OrderRun _order = OrderRun(passOrderRounds());
   int _slips = 0;
   int _runScore = 0;
+  final Set<FireKind> _doneKinds = {};
+
+  // The scene is laid out for the screen.
+  double _lift = 0;
+  double _inset = 0;
+  int _wake = 0;
+
+  /// How much of this fire is left (1 → 0); it shrinks only while swept.
+  final _fire = ValueNotifier<double>(1);
+
+  // This fire's PASS: where he stands, the pin, the aim, the squeeze/sweep.
+  StandSpot? _spot;
+  var _pinOut = false;
+  var _aimed = false;
+  var _squeezing = false;
+  var _squeezedOnce = false;
+  var _swept = false;
+  double _sweepX = 0;
 
   /// The guide's full-screen intro is up; the game starts when it is done.
   var _intro = true;
   int _chain = 0;
-  int _shakes = 0;
-  String? _shook;
+  int _tapN = 0;
   DoMistake? _card;
   var _ended = false;
   var _passed = false;
@@ -271,25 +377,33 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
   PassRound get _r => _rounds[_round];
   int get _percent => (100 - 15 * _slips).clamp(0, 100);
   bool get _passedRun => _percent >= 55;
+  bool get _idle => !_ended && _card == null && !coworkerOpen;
 
-  @override
-  void initState() {
-    super.initState();
-    _rounds = dealPass(widget.rng);
-    _trays = [for (var i = 0; i < 2; i++) [...passCards]..shuffle(widget.rng)];
+  int _scored(int base) {
+    final (mult, up) = _combo.hit();
+    if (up) {
+      setState(() {
+        _comboN++;
+        _comboMult = _combo.mult;
+      });
+    }
+    return base * mult;
   }
 
   @override
   void dispose() {
+    disposeCoworker();
+    _fire.dispose();
+    _cam.dispose();
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     super.dispose();
   }
 
-  Future<void> _say(String line, {GuideMood mood = GuideMood.talk, bool other = false}) async {
+  Future<void> _say(String line, {GuideMood mood = GuideMood.talk}) async {
     if (line.trim().isEmpty || !mounted) return;
-    if (!other) ref.read(guideDirectorProvider.notifier).say(mood: mood, line: line);
-    await MascotSpeechLibrary.speak(line, muted: _muted, rival: other);
+    ref.read(guideDirectorProvider.notifier).say(mood: mood, line: line);
+    await MascotSpeechLibrary.speak(line, muted: _muted);
   }
 
   Future<void> _sayChain(List<String> lines, {GuideMood mood = GuideMood.talk}) async {
@@ -305,12 +419,77 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
     unawaited(MascotSpeechLibrary.stop());
   }
 
+  // --- the shared success beat (ReasonTable) ---------------------------------
+  @override
+  bool get reasonMuted => _muted;
+  @override
+  bool get reasonEnded => _ended;
+  @override
+  Future<void> reasonSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void reasonHush() => _hush();
+  @override
+  Future<void> reasonScore(int delta, Offset origin, {GuideMood? mood}) => _levelDelta(delta, origin, mood: mood);
+  @override
+  void onReasonPaid() => _next();
+
+  // --- the shared pressure moment (CoworkerMoment): keep the used cylinder? --
+  @override
+  CoworkerScript get coworkerScript => PassLines.coworker;
+  @override
+  math.Random get coworkerRng => widget.rng;
+  @override
+  bool get coworkerMuted => _muted;
+  @override
+  bool? coworkerCanCome() {
+    if (_ended || _phase != PassPhase.refill) return null;
+    return _card == null && !reasonOpen;
+  }
+
+  @override
+  Future<void> coworkerGuideSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void coworkerHush() => _hush();
+  @override
+  Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
+    if (!held) {
+      _slips++;
+      unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
+      await _slip(PassMistakes.keep);
+      return;
+    }
+    _caught.add(PassLines.caughtRefill);
+    unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
+    await coworkerSnarl();
+    if (!mounted) return;
+    await _sayChain([PassLines.refillOk], mood: GuideMood.glad);
+    unawaited(_finish());
+  }
+
   /// After the guide's intro: the clock runs and play begins.
   Future<void> _start() async {
     _clock.start();
+    setState(() => _wake++);
+    unawaited(_sayChain([PassLines.askStand]));
   }
 
-  bool get _idle => !_ended && _card == null;
+  /// Tap the guide: the task on screen again, a different way each time.
+  void _tapGuide() {
+    if (_intro || _ended || _card != null) return;
+    final ways = coworkerOpen
+        ? PassLines.refillAsks
+        : reasonOpen
+            ? PassLines.tapWhy
+            : switch (_phase) {
+                PassPhase.stand => PassLines.tapStand,
+                PassPhase.pass => _squeezing || (_pinOut && _aimed) ? PassLines.tapSweep : PassLines.tapPass,
+                PassPhase.out || PassPhase.refill => const <String>[],
+              };
+    if (ways.isEmpty) return;
+    HapticFeedback.selectionClick();
+    if (!_muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.5, muted: false));
+    unawaited(_sayChain([ways[_tapN++ % ways.length]]));
+  }
 
   Future<void> _stand(StandSpot s, Offset origin) async {
     if (!_idle || _phase != PassPhase.stand) return;
@@ -325,48 +504,44 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
     if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.5, muted: false));
     if (!_caught.contains(PassLines.caughtStand)) _caught.add(PassLines.caughtStand);
     unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
-    setState(() => _phase = PassPhase.order);
+    setState(() {
+      _spot = s;
+      _phase = PassPhase.pass;
+      _wake++;
+    });
     unawaited(_sayChain([PassLines.stood, PassLines.askPass], mood: GuideMood.glad));
   }
 
-  void _tapCard(StepCard c, Offset origin) {
-    if (!_idle || _phase != PassPhase.order) return;
-    final t = _order.tap(c.id);
+  /// One PASS step in order; out of order is the slip (as the cards were).
+  bool _step(String id, Offset origin) {
+    final t = _order.tap(id);
     switch (t.kind) {
       case OrderTapKind.ignored:
-        return;
+        return false;
       case OrderTapKind.mistake:
         _slips++;
-        setState(() {
-          _shakes++;
-          _shook = c.id;
-        });
         unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
         unawaited(_slip(t.mistake!));
+        return false;
       case OrderTapKind.ok:
         HapticFeedback.lightImpact();
-        if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.5, muted: false));
         unawaited(_levelDelta(_scored(5), origin, mood: GuideMood.glad));
-        if (c.id == PassIds.aim) {
-          setState(() => _phase = PassPhase.aim);
-          unawaited(_sayChain([PassLines.askAim]));
-          return;
-        }
-        if (t.allDone) {
-          HapticFeedback.mediumImpact();
-          if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
-          unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
-          setState(() => _phase = PassPhase.out);
-          unawaited(_sayChain([PassLines.out], mood: GuideMood.glad));
-          return;
-        }
-        setState(() {});
-        unawaited(_sayChain([_okBag.next().shownBn], mood: GuideMood.glad));
+        return true;
     }
   }
 
+  /// P — the pin dragged out.
+  void _pull(Offset origin) {
+    if (!_idle || _phase != PassPhase.pass || _pinOut) return;
+    _hush();
+    if (!_step(PassIds.pull, origin)) return;
+    if (!_muted) unawaited(ZlFx.cue('sounds/intro/click.ogg', volume: 0.7, muted: false));
+    setState(() => _pinOut = true);
+  }
+
+  /// A — a tap on the fire: the base, or the flames.
   Future<void> _aim(bool base, Offset origin) async {
-    if (!_idle || _phase != PassPhase.aim) return;
+    if (!_idle || _phase != PassPhase.pass || _aimed) return;
     _hush();
     if (!base) {
       _slips++;
@@ -374,45 +549,112 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
       await _slip(PassMistakes.aimTip);
       return;
     }
-    HapticFeedback.lightImpact();
+    if (!_step(PassIds.aim, origin)) return;
     if (!_caught.contains(PassLines.caughtAim)) _caught.add(PassLines.caughtAim);
     unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
-    setState(() => _phase = PassPhase.order);
-    unawaited(_sayChain([PassLines.aimed], mood: GuideMood.glad));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.5, muted: false));
+    setState(() => _aimed = true);
   }
 
+  /// S — the handle held down (before the pin and the aim: out of order).
+  void _squeezeDown(Offset origin) {
+    if (!_idle || _phase != PassPhase.pass || _squeezing) return;
+    if (!_squeezedOnce) {
+      if (!_step(PassIds.squeeze, origin)) return;
+      _squeezedOnce = true;
+    }
+    _hush();
+    HapticFeedback.mediumImpact();
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.5, muted: false));
+    setState(() {
+      _squeezing = true;
+      _wake++;
+    });
+  }
+
+  /// S — sweeping side to side while squeezing: only a moving jet puts it out.
+  void _sweep(double dx, Offset origin) {
+    if (!_squeezing || _phase != PassPhase.pass) return;
+    if (dx.abs() < 0.8) return;
+    if (!_swept) {
+      _swept = true;
+      if (!_step(PassIds.sweep, origin)) {
+        setState(() => _squeezing = false);
+        return;
+      }
+    }
+    setState(() => _sweepX = (_sweepX + dx * 0.7).clamp(-46.0, 46.0));
+    _fire.value = math.max(0, _fire.value - 0.012 * math.min(dx.abs() / 3, 1.6));
+    if (_fire.value <= 0) _out(origin);
+  }
+
+  void _squeezeUp() {
+    if (!_squeezing) return;
+    setState(() => _squeezing = false);
+  }
+
+  /// The fire is out: the rescue moment; its ◆ wait on the table for the reason.
+  void _out(Offset origin) {
+    if (_phase != PassPhase.pass) return;
+    HapticFeedback.mediumImpact();
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: false));
+    setState(() {
+      _phase = PassPhase.out;
+      _squeezing = false;
+      _wake++;
+    });
+    putOnTable(_scored(10));
+    final round = _round;
+    final first = round == 0;
+    unawaited(askReason(
+      deal: () => first
+          ? dealChoices(PassLines.whyStandRight, PassLines.whyStandWrong, widget.rng)
+          : dealChoices(PassLines.whyAimRight, PassLines.whyAimWrong, widget.rng),
+      question: first ? PassLines.whyStand : PassLines.whyAim,
+      stillValid: () => _round == round,
+    ));
+  }
+
+  /// On to the next fire by itself, or the used cylinder at the end.
   void _next() {
-    if (!_idle || _phase != PassPhase.out) return;
+    if (_ended || _phase != PassPhase.out) return;
+    _doneKinds.add(_r.kind);
     if (_round == _rounds.length - 1) {
-      // The used extinguisher: keep it, or send it for refill?
-      _hush();
-      HapticFeedback.heavyImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/complaint.wav', volume: 0.6, muted: false));
       setState(() => _phase = PassPhase.refill);
-      unawaited(_say(PassLines.refillLine, other: true));
+      scheduleCoworker();
       return;
     }
+    _camFrom = _camX;
     setState(() {
       _round++;
       _order = OrderRun(passOrderRounds());
       _phase = PassPhase.stand;
+      _spot = null;
+      _pinOut = false;
+      _aimed = false;
+      _squeezing = false;
+      _squeezedOnce = false;
+      _swept = false;
+      _sweepX = 0;
+      _wake++;
     });
-    unawaited(_sayChain([PassLines.askStand]));
-  }
-
-  Future<void> _refill(bool held, Offset origin) async {
-    if (!_idle || _phase != PassPhase.refill) return;
-    _hush();
-    if (!held) {
-      _slips++;
-      unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
-      await _slip(PassMistakes.keep);
-      return;
+    _fire.value = 1;
+    _camTo = PassStage.cameraFor(_r.kind);
+    final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
+    void arrive() {
+      if (!mounted || _ended) return;
+      setState(() => _wake++);
+      HapticFeedback.heavyImpact();
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/fire_alarm.wav', volume: 0.5, muted: false));
+      unawaited(_sayChain([PassLines.alarm(_r.kind), PassLines.askStand], mood: GuideMood.warn));
     }
-    _caught.add(PassLines.caughtRefill);
-    unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
-    unawaited(_sayChain([PassLines.refillOk], mood: GuideMood.glad));
-    unawaited(_finish());
+
+    if (quiet) {
+      _cam.value = 1;
+      arrive();
+    } else {
+      unawaited(_cam.forward(from: 0).then((_) => arrive()));
+    }
   }
 
   /// The third small mistake: the level fails and the lesson card insists.
@@ -434,7 +676,10 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
     }
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
-    setState(() => _card = m);
+    setState(() {
+      _card = m;
+      _squeezing = false;
+    });
     unawaited(bookMistake(ref, widget.ctx, m));
     final speak = await SpokenOnce.first('pass/${m.key}');
     if (!mounted || _card != m) return;
@@ -504,14 +749,242 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
     if (leave == true) _popOnce(false);
   }
 
+  // ==========================================================================
+  // Scene
+  // ==========================================================================
+
+  /// World → scene pixels.
+  Offset _view(Offset world) => Offset(world.dx - _camX, world.dy + _lift);
+
+  (Offset, double) get _fireOnScreen {
+    final (b, sz) = PassStage.fireAt(_r.kind);
+    return (_view(b), sz);
+  }
+
+  Widget _atFire(double w, double h, Offset own, double scale, Widget child, {Offset shift = Offset.zero}) {
+    final (b, sz) = _fireOnScreen;
+    final sc = sz * scale;
+    final p = b + shift * sz;
+    return Positioned(left: p.dx - own.dx * sc, top: p.dy - own.dy * sc, width: w * sc, height: h * sc, child: child);
+  }
+
+  /// The trainee's box at his place (feet on the place's line).
+  Rect get _traineeBox {
+    final x = PassStage.spotX(_spot ?? StandSpot.upwind, _r.windFromLeft);
+    return Rect.fromLTWH(x - 36, PassStage.spotY + _lift - 140, 72, 144);
+  }
+
+  /// He faces the fire (mirror him on the right of it).
+  bool get _traineeFlipped => PassStage.spotX(_spot ?? StandSpot.upwind, _r.windFromLeft) > PassStage.fireX;
+
+  List<Widget> _scene(bool quiet) {
+    final r = _r;
+    final (base, size) = _fireOnScreen;
+    final burning = _phase == PassPhase.stand || _phase == PassPhase.pass;
+    final paused = _card != null || _ended || coworkerOpen || _intro;
+    final zoom = 1 + 0.05 * math.sin(math.pi * _cam.value);
+    final walking = _cam.isAnimating;
+    final tb = _traineeBox;
+    final mode = _squeezing ? LinemanMode.spray : (_phase == PassPhase.out ? LinemanMode.cheer : (_card != null ? LinemanMode.worried : LinemanMode.hold));
+    var tip = tb.topLeft + LinemanFigure.tipOf(LinemanMode.spray, Carry.dcp, tb.size);
+    if (_traineeFlipped) tip = Offset(tb.left + tb.right - tip.dx, tip.dy);
+    final aim = base.translate(_sweepX * size, -6);
+    return [
+      Positioned.fill(
+        key: const ValueKey('world'),
+        child: Transform.scale(
+          scale: zoom,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: AwakeClock(
+                  wake: _wake,
+                  quiet: quiet || paused,
+                  builder: (_, t) => ValueListenableBuilder<double>(
+                    valueListenable: t,
+                    builder: (_, v, _) => Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CustomPaint(
+                          painter: FireWorldPainter(
+                            camX: _camX,
+                            t: v,
+                            burning: burning && !walking ? r.kind : null,
+                            done: {..._doneKinds, if (!burning) r.kind},
+                            powerOn: false,
+                            lift: _lift,
+                          ),
+                        ),
+                        // The wind: a windsock and streaks blowing downwind.
+                        CustomPaint(painter: _WindPainter(fromLeft: r.windFromLeft, t: v, lift: _lift)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // The wall behind the far upwind place (no way out there).
+              Positioned(
+                key: const ValueKey('wall'),
+                left: r.windFromLeft ? 0 : 332,
+                top: PassStage.spotY + _lift - 112,
+                width: 28,
+                height: 126,
+                child: const CustomPaint(painter: _WallPainter()),
+              ),
+              // Smoke drifts downwind.
+              if (!walking)
+                _atFire(
+                  320,
+                  210,
+                  const Offset(160, 150),
+                  1.1,
+                  Transform.flip(
+                    flipX: !r.windFromLeft,
+                    child: ValueListenableBuilder<double>(
+                      valueListenable: _fire,
+                      builder: (_, v, child) => Opacity(opacity: burning ? 0.3 + 0.55 * v : 0.3, child: child),
+                      child: FxLoop(FireAnim.smoke, key: ValueKey('smoke-$_round'), wake: _wake, paused: paused, quiet: quiet),
+                    ),
+                  ),
+                  shift: const Offset(0, -70),
+                ),
+              if (burning && !walking)
+                _atFire(
+                  320,
+                  210,
+                  const Offset(160, 192),
+                  1,
+                  ValueListenableBuilder<double>(
+                    valueListenable: _fire,
+                    builder: (_, v, child) => Opacity(
+                      opacity: (v / 0.15).clamp(0.0, 1.0),
+                      child: Transform(
+                        alignment: const Alignment(0, 0.83),
+                        transform: Matrix4.diagonal3Values(0.55 + 0.45 * v, 0.2 + 0.8 * v, 1),
+                        child: child,
+                      ),
+                    ),
+                    child: FxLoop(FireAnim.fire, key: ValueKey('flames-$_round'), wake: _wake, paused: paused, quiet: quiet),
+                  ),
+                ),
+              if (_phase == PassPhase.out && !walking) ...[
+                _atFire(320, 240, const Offset(160, 130), 1.2, FxOnce(FireAnim.bloom, key: ValueKey('bloom-$_round'), ms: 1700, quiet: quiet)),
+                Positioned.fromRect(
+                  rect: Rect.fromCenter(center: base.translate(0, -30), width: 300, height: 220),
+                  child: RescueBurst(key: ValueKey('rescue-$_round'), muted: _muted, cloud: false),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      // Where to stand: three places on the ground.
+      if (_phase == PassPhase.stand && !walking && !_intro)
+        for (final s in StandSpot.values)
+          Positioned(
+            key: ValueKey('spot-${s.name}'),
+            left: PassStage.spotX(s, r.windFromLeft) - 30,
+            top: PassStage.spotY + _lift - 16,
+            width: 60,
+            height: 32,
+            child: Semantics(
+              button: true,
+              label: PassLines.spot,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapUp: (d) => unawaited(_stand(s, d.globalPosition)),
+                child: const CustomPaint(painter: _SpotPainter()),
+              ),
+            ),
+          ),
+      // A: the base or the flames.
+      if (_phase == PassPhase.pass && !_aimed) ...[
+        Positioned(
+          key: const ValueKey('aim-flames'),
+          left: base.dx - 80,
+          top: base.dy - 120,
+          width: 160,
+          height: 96,
+          child: Semantics(
+            button: true,
+            label: PassLines.flames,
+            child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => unawaited(_aim(false, d.globalPosition))),
+          ),
+        ),
+        Positioned(
+          key: const ValueKey('aim-base'),
+          left: base.dx - 80,
+          top: base.dy - 24,
+          width: 160,
+          height: 40,
+          child: Semantics(
+            button: true,
+            label: PassLines.base,
+            child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => unawaited(_aim(true, d.globalPosition))),
+          ),
+        ),
+      ],
+      // The trainee at his place, with the extinguisher.
+      if (_spot != null && !walking)
+        Positioned.fromRect(
+          key: const ValueKey('trainee'),
+          rect: tb,
+          child: Transform.flip(
+            flipX: _traineeFlipped,
+            child: LinemanFigure(look: LinemanLook.trainee, mode: mode, carry: Carry.dcp, wake: _wake, quiet: quiet),
+          ),
+        ),
+      if (_squeezing)
+        KeyedSubtree(
+          key: const ValueKey('jet'),
+          child: Stack(children: [FxBeam(a: tip, b: aim, thick: 1.8, child: FxLoop(FireAnim.sprayDcp, wake: _wake, quiet: quiet, still: 0.5))]),
+        ),
+    ];
+  }
+
+  /// The bottom edge: the PASS panel, the table, the decks, the guide.
+  List<Widget> _hud(bool quiet) {
+    final b = _inset;
+    final deckUp = reasonOpen || coworkerChoiceUp;
+    final (base, _) = _fireOnScreen;
+    return [
+      if (_phase == PassPhase.pass && !deckUp)
+        Positioned(
+          key: const ValueKey('hud-pass'),
+          left: 8,
+          right: 126,
+          bottom: b + 8,
+          height: 112,
+          child: _PassPanel(
+            pinOut: _pinOut,
+            squeezing: _squeezing,
+            onPull: _pull,
+            onSqueezeDown: _squeezeDown,
+            onSweep: _sweep,
+            onSqueezeUp: _squeezeUp,
+          ),
+        ),
+      ...tableLayers(at: base.translate(0, -132), quiet: quiet),
+      if (deckUp)
+        Positioned(
+          key: const ValueKey('hud-deck'),
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: b),
+            child: reasonOpen
+                ? reasonDeck(quiet: quiet, key: ValueKey('why-deck-$_round'))
+                : coworkerDeck(quiet: quiet, key: const ValueKey('refill-deck')),
+          ),
+        ),
+      if (!_intro) cornerGuide(onTap: _tapGuide, bottom: b + (deckUp ? 236 : 2), onLeft: coworkerFromRight),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
-    final r = _r;
-    final top = _phase == PassPhase.stand;
-    final placed = [for (final c in passCards) if (_order.isDone(c.id) || _order.done) c.id];
-    final tray = [for (final c in _trays[_round]) if (!placed.contains(c.id)) c];
-    final base = FireScenePainter.baseOf(r.kind);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -521,174 +994,31 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
         backgroundColor: SlmColors.navy950,
         body: ScoreFlyHost(
           scoreKey: _scoreKey,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              SafeArea(
-                child: Column(
-                  children: [
-                    LevelShellBar(
-                      context_: widget.ctx,
-                      titleBn: widget.pack.titleBn,
-                      scoreKey: _scoreKey,
-                      levelScore: _runScore,
-                      muted: _muted,
-                      onClose: () => unawaited(_leave()),
-                      onToggleMute: () {
-                        unawaited(MascotSpeechLibrary.stop());
-                        setState(() => _muted = !_muted);
-                      },
-                    ),
-                    DoProgress(
-                      labels: PassLines.rounds,
-                      done: {if (_round >= 1) 0, if (_mark != null) 1},
-                      current: _mark != null ? null : _round,
-                      quiet: quiet,
-                    ),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      height: 250,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: SizedBox(
-                              width: 360,
-                              height: 300,
-                              child: top
-                                  ? _TopView(
-                                      key: ValueKey('top-$_round'),
-                                      windFromLeft: r.windFromLeft,
-                                      windKey: _windKey,
-                                      wallKey: _wallKey,
-                                      spotKeys: _spotKeys,
-                                      onSpot: (s, o) => unawaited(_stand(s, o)),
-                                    )
-                                  : Stack(
-                                      children: [
-                                        Positioned(
-                                          left: 0,
-                                          top: -120,
-                                          width: 360,
-                                          height: 420,
-                                          child: Stack(
-                                            children: [
-                                              Positioned.fill(child: SvgPicture.asset('assets/game/art/fire/yard.svg', fit: BoxFit.fill)),
-                                              Positioned.fill(
-                                                child: CustomPaint(painter: FireScenePainter(kind: r.kind, out: _phase == PassPhase.out || _phase == PassPhase.refill)),
-                                              ),
-                                              if (_phase == PassPhase.out)
-                                                Positioned.fromRect(
-                                                  rect: Rect.fromCenter(center: base.translate(0, -30), width: 300, height: 220),
-                                                  child: RescueBurst(key: ValueKey('rescue-$_round'), muted: _muted),
-                                                ),
-                                              if (_phase == PassPhase.aim) ...[
-                                                Positioned.fromRect(
-                                                  rect: Rect.fromCenter(center: base.translate(0, -6), width: 170, height: 26),
-                                                  child: Semantics(
-                                                    button: true,
-                                                    label: 'গোড়া',
-                                                    child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => unawaited(_aim(true, d.globalPosition))),
-                                                  ),
-                                                ),
-                                                Positioned.fromRect(
-                                                  rect: Rect.fromCenter(center: base.translate(0, -50), width: 170, height: 52),
-                                                  child: Semantics(
-                                                    button: true,
-                                                    label: 'শিখা',
-                                                    child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => unawaited(_aim(false, d.globalPosition))),
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: switch (_phase) {
-                        PassPhase.stand => Center(
-                            child: Wrap(
-                              spacing: 14,
-                              runSpacing: 8,
-                              alignment: WrapAlignment.center,
-                              children: [
-                                _legend(Icons.east_rounded, const Color(0xFF6FA8E8), PassLines.legendWind),
-                                _legend(Icons.cloud_rounded, const Color(0xFFB0B6BC), PassLines.legendSmoke),
-                                _legend(Icons.fence_rounded, const Color(0xFFB59B76), PassLines.legendWall),
-                              ],
-                            ),
-                          ),
-                        PassPhase.refill => Center(
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 22),
-                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                              decoration: BoxDecoration(color: SlmColors.ivory, borderRadius: BorderRadius.circular(22)),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(PassLines.refillWho, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.gold700)),
-                                  const SizedBox(height: 6),
-                                  Text('“${PassLines.refillLine}”',
-                                      textAlign: TextAlign.center,
-                                      style: bangla(fontSize: 17, fontWeight: FontWeight.w900, color: SlmColors.ink, height: 1.4)),
-                                  const SizedBox(height: 14),
-                                  if (_mark == null && !_ended)
-                                    Row(
-                                      children: [
-                                        Expanded(child: DoBigButton(label: PassLines.giveIn, filled: false, onTapUp: (d) => unawaited(_refill(false, d.globalPosition)))),
-                                        const SizedBox(width: 10),
-                                        Expanded(child: DoBigButton(label: PassLines.holdOut, filled: true, onTapUp: (d) => unawaited(_refill(true, d.globalPosition)))),
-                                      ],
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        _ => ListView(
-                            padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
-                            children: [
-                              for (var i = 0; i < passCards.length; i++)
-                                StepSlot(
-                                  index: i,
-                                  card: placed.contains(passCards[i].id) ? passCards[i] : null,
-                                  note: null,
-                                  quiet: quiet,
-                                ),
-                              const SizedBox(height: 8),
-                              if (_phase == PassPhase.order)
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    for (final c in tray)
-                                      StepTrayCard(
-                                        key: ValueKey('tray-$_round-${c.id}-${_shook == c.id ? _shakes : 0}'),
-                                        card: c,
-                                        shake: _shook == c.id,
-                                        quiet: quiet,
-                                        onTap: (o) => _tapCard(c, o),
-                                      ),
-                                  ],
-                                ),
-                              if (_phase == PassPhase.out)
-                                DoBigButton(label: PassLines.next, filled: true, onTapUp: (_) => _next()),
-                            ],
-                          ),
-                      },
-                    ),
-                    Opacity(opacity: _card == null ? 1 : 0, child: DoCoachStrip(tasks: PassLines.tasks, muted: _muted)),
-                    const SizedBox(height: 6),
-                  ],
-                ),
-              ),
+          child: FullSceneFrame(
+            ctx: widget.ctx,
+            titleBn: widget.pack.titleBn,
+            scoreKey: _scoreKey,
+            levelScore: _runScore,
+            muted: _muted,
+            onClose: () => unawaited(_leave()),
+            onToggleMute: () {
+              unawaited(MascotSpeechLibrary.stop());
+              setState(() => _muted = !_muted);
+            },
+            animation: _cam,
+            progress: DoProgress(
+              labels: PassLines.rounds,
+              done: {for (var i = 0; i < _round + (_phase == PassPhase.refill ? 1 : 0); i++) i},
+              current: _phase == PassPhase.refill ? null : _round,
+              quiet: quiet,
+            ),
+            layers: (context, m) {
+              _lift = m.lift;
+              _inset = m.inset;
+              return [..._scene(quiet), ..._hud(quiet)];
+            },
+            overlays: [
+              ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
               if (_card != null)
                 MistakeCard(
                   key: ValueKey('card-${_card!.key}-$_slips'),
@@ -699,8 +1029,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
                       ? null
                       : () {
                           _hush();
-                          unawaited(openLessonPoint(context, ref,
-                              lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
+                          unawaited(openLessonPoint(context, ref, lessonId: widget.ctx.lessonId, point: _card!.lessonPoint, muted: _muted));
                         },
                   onGo: _cardGo,
                 ),
@@ -721,8 +1050,8 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
                   child: Center(child: ComboPop(key: ValueKey('combo-$_comboN'), mult: _comboMult)),
                 ),
               if (_intro)
-                GuidedTour(
-                  beats: _tourBeats,
+                GuideIntro(
+                  line: PassLines.alarmFirst(_rounds.first.kind),
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);
@@ -753,8 +1082,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
                                 muted: _muted,
                                 onRetry: () => widget.onRetry(_muted),
                                 onLeave: () => _popOnce(false),
-                                onRead: () => unawaited(openLessonPoint(context, ref,
-                                    lessonId: widget.ctx.lessonId, point: 3, muted: _muted)),
+                                onRead: () => unawaited(openLessonPoint(context, ref, lessonId: widget.ctx.lessonId, point: 3, muted: _muted)),
                               ),
                       ),
                     ),
@@ -768,129 +1096,254 @@ class _PassRunPageState extends ConsumerState<_PassRunPage> with DoStrikeOut {
   }
 }
 
-Widget _legend(IconData icon, Color color, String text) => Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 4),
-        Text(text, style: bangla(fontSize: 12.5, fontWeight: FontWeight.w800, color: SlmColors.ivory)),
-      ],
-    );
-
 // ============================================================================
-// Top view: fire, wind, wall, three places to stand
+// Pieces
 // ============================================================================
 
-class _TopView extends StatelessWidget {
-  const _TopView({
-    super.key,
-    required this.windFromLeft,
-    required this.windKey,
-    required this.wallKey,
-    required this.spotKeys,
-    required this.onSpot,
+/// The extinguisher's head up close (drag the ring out: the pin) and the
+/// handle (hold it down: squeeze; slide side to side while holding: sweep).
+class _PassPanel extends StatefulWidget {
+  const _PassPanel({
+    required this.pinOut,
+    required this.squeezing,
+    required this.onPull,
+    required this.onSqueezeDown,
+    required this.onSweep,
+    required this.onSqueezeUp,
   });
-  final bool windFromLeft;
-  final GlobalKey windKey;
-  final GlobalKey wallKey;
-  final Map<StandSpot, GlobalKey> spotKeys;
-  final void Function(StandSpot s, Offset origin) onSpot;
 
-  /// Spot centres (scene 360 x 300); mirrored when the wind comes from the right.
-  Map<StandSpot, Offset> get spots {
-    double x(double v) => windFromLeft ? v : 360 - v;
-    return {
-      StandSpot.upwind: Offset(x(70), 210),
-      StandSpot.cornered: Offset(x(84), 78),
-      StandSpot.downwind: Offset(x(292), 150),
-    };
-  }
+  final bool pinOut;
+  final bool squeezing;
+  final ValueChanged<Offset> onPull;
+  final ValueChanged<Offset> onSqueezeDown;
+  final void Function(double dx, Offset at) onSweep;
+  final VoidCallback onSqueezeUp;
+
+  @override
+  State<_PassPanel> createState() => _PassPanelState();
+}
+
+class _PassPanelState extends State<_PassPanel> {
+  double _ring = 0;
 
   @override
   Widget build(BuildContext context) {
-    final sp = spots;
-    return Stack(
+    return Row(
       children: [
-        Positioned.fill(child: CustomPaint(painter: _TopPainter(windFromLeft: windFromLeft, spots: sp))),
-        // Regions the guided tour lights up.
-        Positioned.fromRect(
-          rect: const Rect.fromLTRB(100, 246, 260, 292),
-          child: KeyedSubtree(key: windKey, child: const IgnorePointer(child: SizedBox.expand())),
-        ),
-        Positioned.fromRect(
-          rect: windFromLeft ? const Rect.fromLTRB(24, 24, 156, 136) : const Rect.fromLTRB(204, 24, 336, 136),
-          child: KeyedSubtree(key: wallKey, child: const IgnorePointer(child: SizedBox.expand())),
-        ),
-        for (final e in sp.entries)
-          Positioned.fromRect(
-            rect: Rect.fromCenter(center: e.value, width: 64, height: 64),
-            child: KeyedSubtree(key: spotKeys[e.key], child: Semantics(
-              button: true,
-              label: 'জায়গা',
-              child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => onSpot(e.key, d.globalPosition)),
-            )),
+        // The head: valve, lever, and the pin through it.
+        Semantics(
+          label: PassLines.pin,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragUpdate: widget.pinOut
+                ? null
+                : (d) {
+                    setState(() => _ring = (_ring + d.delta.dx).clamp(0.0, 60.0));
+                    if (_ring >= 36) widget.onPull(d.globalPosition);
+                  },
+            onHorizontalDragEnd: (_) {
+              if (!widget.pinOut) setState(() => _ring = 0);
+            },
+            child: SizedBox(
+              width: 104,
+              height: 112,
+              child: CustomPaint(painter: _HeadPainter(pinOut: widget.pinOut, ring: _ring, squeezing: widget.squeezing)),
+            ),
           ),
+        ),
+        const SizedBox(width: 8),
+        // The handle: hold and sweep.
+        Expanded(
+          child: Semantics(
+            button: true,
+            label: PassLines.squeeze,
+            child: Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (e) => widget.onSqueezeDown(e.position),
+              onPointerMove: (e) => widget.onSweep(e.delta.dx, e.position),
+              onPointerUp: (_) => widget.onSqueezeUp(),
+              onPointerCancel: (_) => widget.onSqueezeUp(),
+              child: AnimatedScale(
+                scale: widget.squeezing ? 0.95 : 1,
+                duration: const Duration(milliseconds: 90),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: widget.squeezing ? const [Color(0xFFB02A1F), Color(0xFF7E1C14)] : const [Color(0xFFE5483A), Color(0xFFB02A1F)],
+                    ),
+                    borderRadius: BorderRadius.circular(26),
+                    boxShadow: widget.squeezing ? const [] : const [BoxShadow(color: Color(0x88000000), blurRadius: 8, offset: Offset(0, 4))],
+                  ),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.swap_horiz_rounded, color: Colors.white, size: 24),
+                        const SizedBox(width: 6),
+                        Text(PassLines.squeeze, style: bangla(fontSize: 17, fontWeight: FontWeight.w900, color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
 }
 
-class _TopPainter extends CustomPainter {
-  _TopPainter({required this.windFromLeft, required this.spots});
-  final bool windFromLeft;
-  final Map<StandSpot, Offset> spots;
+/// The extinguisher's head: red cylinder top, valve, carry handle and squeeze
+/// lever, the pin (yellow ring) through them — drawn sliding out.
+class _HeadPainter extends CustomPainter {
+  _HeadPainter({required this.pinOut, required this.ring, required this.squeezing});
+  final bool pinOut;
+  final double ring;
+  final bool squeezing;
 
   @override
   void paint(Canvas c, Size s) {
-    c.drawRect(Offset.zero & s, Paint()..color = const Color(0xFFC9B98F));
-    final dot = Paint()..color = const Color(0x22000000);
-    final rnd = math.Random(2);
-    for (var i = 0; i < 60; i++) {
-      c.drawCircle(Offset(rnd.nextDouble() * s.width, rnd.nextDouble() * s.height), 1.5, dot);
-    }
-    double x(double v) => windFromLeft ? v : 360 - v;
-    // The wall boxing in the corner spot.
-    final wall = Paint()..color = const Color(0xFF7A6A52);
-    c.drawRect(Rect.fromLTRB(math.min(x(30), x(150)), 30, math.max(x(30), x(150)), 44), wall);
-    c.drawRect(Rect.fromLTRB(math.min(x(30), x(44)), 30, math.max(x(30), x(44)), 130), wall);
-    // The fire (seen from above) and its smoke blowing downwind.
-    const fire = Offset(180, 150);
-    final smoke = Paint()..color = const Color(0x888D949B);
-    for (var i = 1; i <= 4; i++) {
-      c.drawCircle(Offset(x(180 + i * 34.0), 150 - i * 4.0), 14.0 + i * 5, smoke);
-    }
-    c.drawCircle(fire, 34, Paint()..color = const Color(0xFFF05A28));
-    c.drawCircle(fire, 20, Paint()..color = const Color(0xFFFFD21F));
-    // Wind arrows.
-    final arrow = Paint()
-      ..color = const Color(0xFF2F6FD0)
-      ..strokeWidth = 3
+    c.drawRRect(RRect.fromRectAndRadius(Offset.zero & s, const Radius.circular(20)), Paint()..color = const Color(0xD90A1226));
+    final cyl = Rect.fromLTWH(s.width * 0.28, s.height * 0.55, s.width * 0.44, s.height * 0.5);
+    c.drawRRect(
+      RRect.fromRectAndCorners(cyl, topLeft: const Radius.circular(14), topRight: const Radius.circular(14)),
+      Paint()..shader = const LinearGradient(colors: [Color(0xFF8E1F16), Color(0xFFE5483A), Color(0xFF9E2419)]).createShader(cyl),
+    );
+    final valve = Rect.fromLTWH(s.width * 0.4, s.height * 0.38, s.width * 0.2, s.height * 0.2);
+    c.drawRect(valve, Paint()..color = const Color(0xFF4A4F55));
+    // Carry handle (fixed) and the squeeze lever above it.
+    final dark = Paint()
+      ..color = const Color(0xFF2B2F35)
+      ..strokeWidth = 6
       ..strokeCap = StrokeCap.round;
-    for (final y in const [258.0, 280.0]) {
-      final a = Offset(x(110), y);
-      final b = Offset(x(250), y);
-      c.drawLine(a, b, arrow);
-      final d = windFromLeft ? -1.0 : 1.0;
-      c.drawLine(b, b.translate(10 * d, -7), arrow);
-      c.drawLine(b, b.translate(10 * d, 7), arrow);
-    }
-    // Places to stand.
-    for (final p in spots.values) {
-      c.drawCircle(p, 22, Paint()..color = const Color(0xCCFFFFFF));
-      c.drawCircle(
-        p,
-        22,
-        Paint()
-          ..color = const Color(0xFF31363C)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-      );
-      c.drawCircle(p.translate(0, -6), 6, Paint()..color = const Color(0xFFF0C9A0));
-      c.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: p.translate(0, 8), width: 16, height: 14), const Radius.circular(4)),
-          Paint()..color = const Color(0xFF3F5E8C));
+    c.drawLine(Offset(s.width * 0.42, s.height * 0.4), Offset(s.width * 0.86, s.height * 0.46), dark);
+    final lever = squeezing ? 0.42 : 0.26;
+    c.drawLine(Offset(s.width * 0.42, s.height * 0.34), Offset(s.width * 0.86, s.height * lever), dark);
+    // The hose.
+    c.drawPath(
+      Path()
+        ..moveTo(s.width * 0.4, s.height * 0.42)
+        ..quadraticBezierTo(s.width * 0.12, s.height * 0.5, s.width * 0.16, s.height * 0.9),
+      Paint()
+        ..color = const Color(0xFF1E2126)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4,
+    );
+    if (pinOut) return;
+    // The pin through the handles, and its ring (drag it out to the right).
+    final y = s.height * 0.37;
+    final dx = ring;
+    c.drawLine(Offset(s.width * 0.48 + dx, y), Offset(s.width * 0.68 + dx, y), Paint()
+      ..color = const Color(0xFFD8DDE2)
+      ..strokeWidth = 3);
+    c.drawCircle(Offset(s.width * 0.76 + dx, y), 9, Paint()
+      ..color = const Color(0xFFFFD34E)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.4);
+    // A thin seal (tamper tag) on the ring.
+    c.drawLine(Offset(s.width * 0.76 + dx, y + 9), Offset(s.width * 0.76 + dx, y + 18), Paint()
+      ..color = const Color(0xFF39B86A)
+      ..strokeWidth = 2);
+  }
+
+  @override
+  bool shouldRepaint(_HeadPainter old) => old.pinOut != pinOut || old.ring != ring || old.squeezing != squeezing;
+}
+
+/// A place to stand: a soft ring on the ground with two footprints.
+class _SpotPainter extends CustomPainter {
+  const _SpotPainter();
+
+  @override
+  void paint(Canvas c, Size s) {
+    final r = Rect.fromCenter(center: s.center(Offset.zero), width: s.width - 4, height: s.height - 6);
+    c.drawOval(r, Paint()..color = const Color(0x40FFFFFF));
+    c.drawOval(r, Paint()
+      ..color = const Color(0xCCFFFFFF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2);
+    final foot = Paint()..color = const Color(0xCC1E2126);
+    for (final dx in const [-7.0, 7.0]) {
+      c.drawOval(Rect.fromCenter(center: s.center(Offset(dx, 0)), width: 7, height: 12), foot);
     }
   }
 
   @override
-  bool shouldRepaint(_TopPainter old) => old.windFromLeft != windFromLeft;
+  bool shouldRepaint(_SpotPainter old) => false;
+}
+
+/// A brick wall.
+class _WallPainter extends CustomPainter {
+  const _WallPainter();
+
+  @override
+  void paint(Canvas c, Size s) {
+    c.drawRect(Offset.zero & s, Paint()..color = const Color(0xFF9C5B43));
+    final mortar = Paint()
+      ..color = const Color(0xFFCDB8A2)
+      ..strokeWidth = 1.2;
+    for (var y = 9.0, row = 0; y < s.height; y += 9, row++) {
+      c.drawLine(Offset(0, y), Offset(s.width, y), mortar);
+      for (var x = row.isEven ? 0.0 : 7.0; x < s.width; x += 14) {
+        c.drawLine(Offset(x, y - 9), Offset(x, y), mortar);
+      }
+    }
+    c.drawRect(Rect.fromLTWH(0, 0, s.width, 5), Paint()..color = const Color(0xFF7A4433));
+  }
+
+  @override
+  bool shouldRepaint(_WallPainter old) => false;
+}
+
+/// The wind: a windsock on a short pole (it points downwind) and streaks
+/// drifting downwind (they move only while the scene is awake).
+class _WindPainter extends CustomPainter {
+  _WindPainter({required this.fromLeft, required this.t, required this.lift});
+  final bool fromLeft;
+  final double t;
+  final double lift;
+
+  @override
+  void paint(Canvas c, Size s) {
+    final dir = fromLeft ? 1.0 : -1.0;
+    // Windsock (upwind side, near the top of the yard).
+    final px = fromLeft ? 70.0 : 290.0;
+    final top = 150 + lift;
+    c.drawLine(Offset(px, top), Offset(px, top + 112), Paint()
+      ..color = const Color(0xFF8D98A3)
+      ..strokeWidth = 2.4);
+    final sway = math.sin(t * 3) * 1.6;
+    final sock = Path()
+      ..moveTo(px, top + 2)
+      ..lineTo(px + dir * 36, top + 6 + sway)
+      ..lineTo(px + dir * 36, top + 12 + sway)
+      ..lineTo(px, top + 18)
+      ..close();
+    c.drawPath(sock, Paint()..color = const Color(0xFFFF851B));
+    for (final f in const [0.33, 0.66]) {
+      c.drawLine(Offset(px + dir * 36 * f, top + 2 + 4 * f), Offset(px + dir * 36 * f, top + 18 - 6 * f), Paint()
+        ..color = const Color(0xFFF5F7FA)
+        ..strokeWidth = 3);
+    }
+    // Streaks.
+    final streak = Paint()
+      ..color = const Color(0x66FFFFFF)
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 7; i++) {
+      final y = 70 + lift + i * 23.0;
+      final x = ((i * 53 + t * 60) % 420) - 30;
+      final sx = fromLeft ? x : s.width - x;
+      c.drawLine(Offset(sx, y), Offset(sx + dir * 22, y), streak);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_WindPainter old) => old.t != t || old.fromLeft != fromLeft || old.lift != lift;
 }

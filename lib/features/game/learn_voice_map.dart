@@ -163,6 +163,7 @@ const learnCoachVoice = <String, String>{
 };
 
 const learnRivalVoice = <String, String>{
+  "অর্ধেকটা তো বাকি — রেখে দাও, পরের বার কাজে লাগবে।": 'sounds/learn_voice/r_84c998f6a9.mp3',
   "আমি তো তারটা ছুঁচ্ছি না, একটু কাছে গেলে কিছু হবে না।": 'sounds/learn_voice/r_e8af4656af.mp3',
   "আরে! আমাদের বাপ-দাদারা তো এসব দিয়েই সারা জীবন কাজ করে গেল!": 'sounds/learn_voice/r_5e987e0ee2.mp3',
   "এরকম কত দেখেছি! কিছুই হবে না — আপনিই নিভে যাবে।": 'sounds/learn_voice/r_a4b3e32d45.mp3',

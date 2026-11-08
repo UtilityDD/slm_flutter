@@ -7,24 +7,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
-import '../guide/ai_lineman_guide.dart';
 import '../guide/guide_director.dart';
 import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'beat_fx.dart';
 import 'choice_deck.dart';
+import 'coworker_moment.dart';
 import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
 import 'fire_fx.dart';
 import 'fire_world.dart';
+import 'full_scene_frame.dart';
 import 'level_frame.dart';
 import 'level_juice.dart';
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
-import 'myth_rival_puppet.dart';
+import 'reason_table.dart';
 import 'scene_kit.dart';
 import 'spoken_once.dart';
 
@@ -236,6 +237,16 @@ abstract final class FireLines {
     'কার কথা শুনবেন — ওর, না আগুনের?',
   ];
 
+  /// The pressure moment (shared `CoworkerMoment`).
+  static const coworker = CoworkerScript(
+    line: coworkerLine,
+    exitLine: coworkerExit,
+    right: choiceRight,
+    wrong: choiceWrong,
+    asks: choiceAsk,
+    tag: coworkerTag,
+  );
+
   // Tap the guide: the task again, a different way each time (never the answer).
   static const tapPower = ['জলদি! কী করবেন?', 'প্যানেলে আগুন — কী করবেন?', 'চারদিকে ভালো করে দেখুন।'];
   static const tapTool = ['কী দিয়ে নেভাবেন?', 'স্ট্যান্ড থেকে ঠিক জিনিসটা নিন।', 'আগুনটা দেখুন — কোনটা কাজে লাগবে?'];
@@ -403,10 +414,6 @@ class FirePack {
   final int quickMs;
 }
 
-/// The reason pays what waited on the table; after a wrong reason burned it,
-/// the right one still pays 5 (the level 1 rule).
-int whyPayout({required int pending, required bool retried}) => pending > 0 ? pending : (retried ? 5 : 0);
-
 const firePack18 = FirePack(id: 'do_1_8_a', titleBn: FireLines.title);
 const firePacks = {'do_1_8_a': firePack18};
 
@@ -457,7 +464,8 @@ class _FireRunPage extends ConsumerStatefulWidget {
   ConsumerState<_FireRunPage> createState() => _FireRunPageState();
 }
 
-class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, DoStrikeOut, SingleTickerProviderStateMixin {
+class _FireRunPageState extends ConsumerState<_FireRunPage>
+    with DoDeathGuard, DoStrikeOut, SingleTickerProviderStateMixin, ReasonTable, CoworkerMoment {
   /// The camera pans from fire to fire.
   late final AnimationController _cam = AnimationController(vsync: this, duration: const Duration(milliseconds: 1300))
     ..addStatusListener((_) {
@@ -476,24 +484,10 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
   late bool _muted = widget.muted;
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
 
-  final _rightBag = LineBag(LearnFeedbackLines.right);
 
   // The scene is laid out for the screen: a tall screen gets more sky.
   double _lift = 0;
   double _inset = 0;
-
-  // "কেন এটা নিলেন?": the fire's ◆ wait on the table for the reason.
-  int _pending = 0;
-  int _pendingTok = 0;
-  int _burnAmt = 0;
-  int _burnTok = 0;
-  var _whyOpen = false;
-  var _whyBusy = false;
-  var _whyRetry = false;
-  List<ChoiceOption> _whyOpts = const [];
-  final Set<String> _whyWrong = {};
-  String? _whyPicked;
-  final _tokenKey = GlobalKey();
 
   final _combo = Combo();
   int _comboN = 0;
@@ -541,23 +535,9 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
   /// The guide's full-screen intro is up; the game starts when it is done.
   var _intro = true;
   int _chain = 0;
-  var _callOpen = false;
-  var _callDone = false;
-
-  // The careless coworker: once per play he peeks in from a side.
-  Timer? _coworkerTimer;
-  var _coworkerLeft = true;
-  CoworkerExit? _coworkerOut;
-
-  /// He has said his piece; the guide asks and the two answers show.
-  var _choiceReady = false;
-  List<ChoiceOption> _choiceOpts = const [];
-  String? _choiceWrong;
-  String? _choicePicked;
 
   /// The tool that put this fire out (the right reason fits it).
   FireTool? _usedTool;
-  int _choiceN = 0;
   int _tapN = 0;
   DoMistake? _card;
   MistakeTone _cardTone = MistakeTone.slip;
@@ -580,7 +560,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
 
   @override
   void dispose() {
-    _coworkerTimer?.cancel();
+    disposeCoworker();
     _sprayTick?.cancel();
     _fire.dispose();
     _cam.dispose();
@@ -618,60 +598,70 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
 
   String get _ask => _run.phase == FirePhase.power ? FireLines.askPower : FireLines.askTool;
 
-  /// On the push fire, the coworker turns up a moment after it is seen.
-  void _scheduleCoworker() {
-    if (_callDone || _run.round != _run.deal.pushRound || _run.ended) return;
-    final round = _run.round;
-    _coworkerTimer?.cancel();
-    _coworkerTimer = Timer(Duration(milliseconds: 1200 + widget.rng.nextInt(1200)), () => _tryCoworker(round));
+  // --- the shared success beat (ReasonTable) ---------------------------------
+  @override
+  bool get reasonMuted => _muted;
+  @override
+  bool get reasonEnded => _ended;
+  @override
+  Future<void> reasonSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void reasonHush() => _hush();
+  @override
+  Future<void> reasonScore(int delta, Offset origin, {GuideMood? mood}) => _levelDelta(delta, origin, mood: mood);
+  @override
+  void onReasonPaid() => _next();
+
+  // --- the shared pressure moment (CoworkerMoment) ----------------------------
+  @override
+  CoworkerScript get coworkerScript => FireLines.coworker;
+  @override
+  math.Random get coworkerRng => widget.rng;
+  @override
+  bool get coworkerMuted => _muted;
+  @override
+  bool? coworkerCanCome() {
+    if (_ended || _run.round != _run.deal.pushRound) return null;
+    final ph = _run.phase;
+    if (ph == FirePhase.out) return null;
+    if (_card != null || _busy || _intro || ph == FirePhase.gauge) return false;
+    return true;
   }
 
-  /// He peeks in (from a random side) only while the player is still
-  /// choosing; if the player is busy he waits a little.
-  void _tryCoworker(int round) {
-    if (!mounted || _callDone || _callOpen || _ended || _run.round != round) return;
-    final ph = _run.phase;
-    if (ph == FirePhase.out) return;
-    if (_card != null || _busy || _intro || ph == FirePhase.gauge) {
-      _coworkerTimer = Timer(const Duration(milliseconds: 900), () => _tryCoworker(round));
+  @override
+  Future<void> coworkerGuideSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void coworkerHush() => _hush();
+  @override
+  Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
+    if (!held) {
+      _run.slips++;
+      unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
+      await _slip(FireMistakes.waited);
       return;
     }
-    _hush();
-    HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.6, muted: false));
-    setState(() {
-      _callOpen = true;
-      _choiceReady = false;
-      _choiceWrong = null;
-      _choicePicked = null;
-      _choiceOpts = dealChoices(FireLines.choiceRight, FireLines.choiceWrong, widget.rng);
-      _coworkerOut = null;
-      _coworkerLeft = widget.rng.nextBool();
-    });
+    _run.caught.add(FireLines.caughtCall);
+    unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
+    if (direct) return;
+    final chain = _chain;
     unawaited(() async {
-      await _say(FireLines.coworkerLine, other: true);
-      if (!mounted || !_callOpen) return;
-      // The guide puts it to the player; the answers show beside him.
-      setState(() => _choiceReady = true);
-      await _sayChain([FireLines.choiceAsk[_choiceN++ % FireLines.choiceAsk.length]], mood: GuideMood.think);
+      await coworkerSnarl();
+      if (!mounted || chain != _chain) return;
+      await _sayChain([FireLines.callHeld, _ask], mood: GuideMood.glad);
     }());
   }
 
-  /// A card of the coworker choice: it shakes red / pops green first.
-  Future<void> _onChoice(ChoiceOption o, Offset origin) async {
-    if (!_callOpen || !_choiceReady || _choiceWrong != null || _choicePicked != null) return;
-    setState(() => o.correct ? _choicePicked = o.textBn : _choiceWrong = o.textBn);
-    await Future<void>.delayed(const Duration(milliseconds: 420));
-    if (!mounted) return;
-    await _answerCall(o.correct, origin);
+  /// On the push fire, the coworker turns up a moment after it is seen.
+  void _scheduleCoworker() {
+    if (_run.round == _run.deal.pushRound) scheduleCoworker();
   }
 
   /// Tap the guide: he says the task on screen again, a different way each time.
   void _tapGuide() {
     if (_intro || _ended || _card != null) return;
-    final ways = _callOpen
+    final ways = coworkerOpen
         ? FireLines.choiceAsk
-        : _whyOpen
+        : reasonOpen
             ? FireLines.tapWhy
             : _spraying != null
                 ? FireLines.tapSpray
@@ -686,41 +676,10 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
     unawaited(_sayChain([ways[_tapN++ % ways.length]]));
   }
 
-  /// Act now ([held]) or listen to him. [direct]: the player simply went on
-  /// working (took a tool, pulled the switch) — that refuses him too.
-  Future<void> _answerCall(bool held, Offset origin, {bool direct = false}) async {
-    if (!_callOpen) return;
-    _hush();
-    setState(() {
-      _callOpen = false;
-      _callDone = true;
-      _choiceReady = false;
-      _coworkerOut = held ? CoworkerExit.beaten : CoworkerExit.smirk;
-    });
-    unawaited(Future<void>.delayed(const Duration(milliseconds: 900), () {
-      if (mounted) setState(() => _coworkerOut = null);
-    }));
-    if (!held) {
-      _run.slips++;
-      unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
-      await _slip(FireMistakes.waited);
-      return;
-    }
-    _run.caught.add(FireLines.caughtCall);
-    unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
-    if (direct) return;
-    final chain = _chain;
-    unawaited(() async {
-      await _say(FireLines.coworkerExit, other: true);
-      if (!mounted || chain != _chain) return;
-      await _sayChain([FireLines.callHeld, _ask], mood: GuideMood.glad);
-    }());
-  }
-
-  bool get _idle => !_busy && !_ended && !_callOpen && _card == null;
+  bool get _idle => !_busy && !_ended && !coworkerOpen && _card == null;
 
   Future<void> _power(bool off, Offset origin) async {
-    if (_callOpen && _run.phase == FirePhase.power) await _answerCall(true, origin, direct: true);
+    if (coworkerOpen && _run.phase == FirePhase.power) await answerCoworker(true, origin, direct: true);
     if (!_idle || _run.phase != FirePhase.power) return;
     _hush();
     final m = _run.power(off: off);
@@ -738,7 +697,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
   }
 
   Future<void> _pick(FireTool t, Offset origin) async {
-    if (_callOpen) await _answerCall(true, origin, direct: true);
+    if (coworkerOpen) await answerCoworker(true, origin, direct: true);
     if (!_idle) return;
     _hush();
     final m = _run.phase == FirePhase.power ? _run.grabLive(t) : _run.pick(t);
@@ -807,7 +766,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
   }
 
   /// The fire is out: the rescue moment; its ◆ wait on the table until the
-  /// player says why (level 1's rule).
+  /// player says why (level 1's rule — shared `ReasonTable`).
   void _outNow(Offset origin) {
     if (!mounted) return;
     final pend = _scored(15);
@@ -816,85 +775,17 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
       _throwing = null;
       _holding = false;
       _wake++;
-      _pending = pend;
-      _pendingTok++;
-      _whyRetry = false;
-      _whyWrong.clear();
-      _whyPicked = null;
     });
+    putOnTable(pend);
     HapticFeedback.mediumImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: false));
-    unawaited(_askWhy());
-  }
-
-  /// Praise, then the reason cards are dealt.
-  Future<void> _askWhy() async {
     final round = _run.round;
-    await _sayChain([_rightBag.next().shownBn], mood: GuideMood.celebrate);
-    await Future<void>.delayed(const Duration(milliseconds: 650));
-    if (!mounted || _ended || _run.round != round || _whyOpen) return;
     final k = _run.current;
-    setState(() {
-      _whyOpts = FireLines.whyDeal(k, _usedTool, widget.rng);
-      _whyOpen = true;
-    });
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/card_deal_a.wav', volume: 0.6, muted: false));
-    unawaited(_sayChain([k == FireKind.electrical ? FireLines.whySwitch : FireLines.whyTool]));
-  }
-
-  Offset? _tokenCentre() {
-    final box = _tokenKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return null;
-    return box.localToGlobal(box.size.center(Offset.zero));
-  }
-
-  /// A reason card: the right one pays the table into the score; a wrong one
-  /// burns it (not a strike — the field mistakes are the strikes).
-  Future<void> _onWhy(ChoiceOption opt, Offset origin) async {
-    if (!_whyOpen || _whyBusy || _ended || _whyWrong.contains(opt.textBn)) return;
-    _hush();
-    if (!opt.correct) {
-      HapticFeedback.mediumImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
-      final burnt = _pending;
-      setState(() {
-        _whyWrong.add(opt.textBn);
-        _whyRetry = true;
-        if (burnt > 0) {
-          _burnAmt = burnt;
-          _burnTok++;
-          _pending = 0;
-        }
-      });
-      if (burnt > 0 && !_muted) unawaited(ZlFx.cue('sounds/dress_wrong.wav', volume: 0.7, muted: false));
-      unawaited(_sayChain([LearnCoachLines.notThisReason], mood: GuideMood.warn));
-      return;
-    }
-    _whyBusy = true;
-    // The right card stays green a moment, however fast the rest goes.
-    final dwell = Future<void>.delayed(const Duration(milliseconds: 900));
-    final bank = whyPayout(pending: _pending, retried: _whyRetry);
-    final from = _tokenCentre() ?? origin;
-    setState(() {
-      _whyPicked = opt.textBn;
-      _pending = 0;
-    });
-    HapticFeedback.lightImpact();
-    if (!_muted) {
-      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.8, muted: false));
-      unawaited(ZlFx.cue('sounds/intro/confirm.ogg', volume: 0.7, muted: false));
-    }
-    await _levelDelta(bank, from, mood: GuideMood.celebrate);
-    if (!mounted) return;
-    await _sayChain([LearnCoachLines.realPoint], mood: GuideMood.glad);
-    await Future<void>.delayed(const Duration(milliseconds: 450));
-    await dwell;
-    if (!mounted || _ended) return;
-    setState(() {
-      _whyOpen = false;
-      _whyBusy = false;
-    });
-    _next();
+    unawaited(askReason(
+      deal: () => FireLines.whyDeal(k, _usedTool, widget.rng),
+      question: k == FireKind.electrical ? FireLines.whySwitch : FireLines.whyTool,
+      stillValid: () => _run.round == round,
+    ));
   }
 
   Future<void> _useHeld(bool use, Offset origin) async {
@@ -945,7 +836,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
     _run.next();
     _fire.value = 1;
     _wake++;
-    _whyOpen = false;
+    reasonOpen = false;
     if (_run.done) {
       setState(() {});
       unawaited(_finish());
@@ -1153,7 +1044,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
     final (base, size) = _fireOnScreen(k);
     // Aim at the near edge of the fire's base.
     final aim = base.translate(-40 * size, -6);
-    final paused = _card != null || _ended || _callOpen || _intro;
+    final paused = _card != null || _ended || coworkerOpen || _intro;
     final burning = !_isOut;
     final zoom = 1 + 0.05 * math.sin(math.pi * _cam.value);
     final (tMode, tCarry) = _trainee;
@@ -1273,10 +1164,9 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
 
   /// What sits on the scene's bottom edge: the tools, the squeeze, the reason
   /// cards, the ◆ on the table, and the guide (the app's mascot) in the corner.
-  List<Widget> _hud(FireKind k, FirePhase phase, bool quiet, double h) {
+  List<Widget> _hud(FireKind k, FirePhase phase, bool quiet) {
     final b = _inset;
-    final deckUp = _whyOpen || (_callOpen && _choiceReady);
-    final coworkerRight = (_callOpen || _coworkerOut != null) && !_coworkerLeft;
+    final deckUp = reasonOpen || coworkerChoiceUp;
     final rackOn = !_intro && !deckUp && (phase == FirePhase.power || phase == FirePhase.tool || phase == FirePhase.gauge);
     final squeezeOn = _spraying != null;
     final (base, _) = _fireOnScreen(k);
@@ -1285,50 +1175,8 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
       if (squeezeOn)
         Positioned(key: const ValueKey('hud-squeeze'), left: 14, right: 128, bottom: b + 12, height: 62, child: _SqueezeButton(holding: _holding, onHold: (down, at) => _hold(down, at))),
       // The fire's ◆ waiting on the table (or burning away).
-      if (_pending > 0)
-        Positioned(
-          key: const ValueKey('hud-token'),
-          left: base.dx - 44,
-          top: base.dy - 150,
-          width: 88,
-          height: 36,
-          child: KeyedSubtree(
-            key: _tokenKey,
-            child: TweenAnimationBuilder<double>(
-              key: ValueKey('tok-$_pendingTok'),
-              tween: Tween(begin: quiet ? 1 : 0, end: 1),
-              duration: const Duration(milliseconds: 520),
-              curve: Curves.elasticOut,
-              builder: (_, t, child) => Transform.scale(scale: t, child: child),
-              child: _TablePill(amount: _pending),
-            ),
-          ),
-        ),
-      if (_burnAmt > 0)
-        Positioned(
-          key: const ValueKey('hud-burn'),
-          left: base.dx - 44,
-          top: base.dy - 150,
-          width: 88,
-          height: 36,
-          child: TweenAnimationBuilder<double>(
-            key: ValueKey('burn-$_burnTok'),
-            tween: Tween(begin: 0, end: 1),
-            duration: Duration(milliseconds: quiet ? 1 : 800),
-            onEnd: () {
-              if (mounted) setState(() => _burnAmt = 0);
-            },
-            builder: (_, t, child) => Opacity(
-              opacity: (1 - t).clamp(0.0, 1.0),
-              child: Transform.translate(offset: Offset(0, -24 * t), child: Transform.scale(scale: 1 - 0.4 * t, child: child)),
-            ),
-            child: _TablePill(amount: _burnAmt, burnt: true),
-          ),
-        ),
-      // The guide — the app's own mascot — in the bottom-right corner; he
-      // steps up above the reason cards while they are out.
-      // The answers: one deck, level 1's cards, for the coworker choice and
-      // for the reason.
+      ...tableLayers(at: base.translate(0, -132), quiet: quiet),
+      // The answers: one deck, level 1's cards — the coworker choice or the reason.
       if (deckUp)
         Positioned(
           key: const ValueKey('hud-deck'),
@@ -1337,36 +1185,13 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
           bottom: 0,
           child: Padding(
             padding: EdgeInsets.only(bottom: b),
-            child: _whyOpen
-                ? ChoiceDeck(
-                    key: ValueKey('why-deck-${_run.round}'),
-                    options: _whyOpts,
-                    quiet: quiet,
-                    muted: _muted,
-                    wrong: _whyWrong,
-                    picked: _whyPicked,
-                    onPick: (o, at) => unawaited(_onWhy(o, at)),
-                  )
-                : ChoiceDeck(
-                    key: ValueKey('choice-deck-${_run.round}'),
-                    options: _choiceOpts,
-                    quiet: quiet,
-                    muted: _muted,
-                    wrong: {?_choiceWrong},
-                    picked: _choicePicked,
-                    onPick: (o, at) => unawaited(_onChoice(o, at)),
-                  ),
+            child: reasonOpen
+                ? reasonDeck(quiet: quiet, key: ValueKey('why-deck-${_run.round}'))
+                : coworkerDeck(quiet: quiet, key: ValueKey('choice-deck-${_run.round}')),
           ),
         ),
-      if (!_intro)
-        Positioned(
-          key: const ValueKey('hud-guide'),
-          // Opposite the coworker while he peeps in.
-          left: coworkerRight ? 0 : null,
-          right: coworkerRight ? null : 0,
-          bottom: b + (deckUp ? 236 : 2),
-          child: AiLinemanGuide(sprite: 116, bubbleWidth: 232, showBubble: true, large: true, centered: false, onTap: _tapGuide),
-        ),
+      // The guide in the corner (opposite the coworker; above the deck).
+      if (!_intro) cornerGuide(onTap: _tapGuide, bottom: b + (deckUp ? 236 : 2), onLeft: coworkerFromRight),
     ];
   }
 
@@ -1427,89 +1252,41 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
         backgroundColor: SlmColors.navy950,
         body: ScoreFlyHost(
           scoreKey: _scoreKey,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // The scene, edge to edge — under the header, to the bottom (as level 1).
-              Positioned.fill(
-                child: LayoutBuilder(
-                  builder: (context, box) {
-                    final w = math.max(1.0, box.maxWidth);
-                    final h = (360 * box.maxHeight / w).clamp(560.0, 900.0);
-                    _lift = h - 532;
-                    _inset = MediaQuery.paddingOf(context).bottom * 360 / w;
-                    return ClipRect(
-                      child: FittedBox(
-                        fit: BoxFit.cover,
-                        child: SizedBox(
-                          width: 360,
-                          height: h,
-                          child: AnimatedBuilder(
-                            animation: _cam,
-                            builder: (context, _) => Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: ColorFiltered(
-                                    colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
-                                    child: Stack(children: _scene(k, phase, quiet)),
-                                  ),
-                                ),
-                                // What would have happened — in colour over the frozen scene.
-                                if (_freeze) _at(k, 320, 360, const Offset(160, 356), 1.15, FxOnce(FireAnim.flare, ms: 2000, quiet: quiet)),
-                                ..._hud(k, phase, quiet, h),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              // A soft shade under the status bar and the header chips.
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: MediaQuery.paddingOf(context).top + 96,
-                child: const IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0xB3091329), Color(0x00091329)],
-                      ),
-                    ),
+          child: FullSceneFrame(
+            ctx: widget.ctx,
+            titleBn: widget.pack.titleBn,
+            scoreKey: _scoreKey,
+            levelScore: _runScore,
+            muted: _muted,
+            onClose: () => unawaited(_leave()),
+            onToggleMute: () {
+              unawaited(MascotSpeechLibrary.stop());
+              setState(() => _muted = !_muted);
+            },
+            animation: _cam,
+            progress: DoProgress(
+              labels: FireLines.rounds,
+              done: {for (var i = 0; i < math.min(_run.round, 3); i++) i},
+              current: _run.done ? null : _run.round,
+              quiet: quiet,
+            ),
+            layers: (context, m) {
+              _lift = m.lift;
+              _inset = m.inset;
+              return [
+                Positioned.fill(
+                  key: const ValueKey('scene'),
+                  child: ColorFiltered(
+                    colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
+                    child: Stack(children: _scene(k, phase, quiet)),
                   ),
                 ),
-              ),
-              SafeArea(
-                bottom: false,
-                child: Column(
-                  children: [
-                    LevelShellBar(
-                      bare: true,
-                      context_: widget.ctx,
-                      titleBn: widget.pack.titleBn,
-                      scoreKey: _scoreKey,
-                      levelScore: _runScore,
-                      muted: _muted,
-                      onClose: () => unawaited(_leave()),
-                      onToggleMute: () {
-                        unawaited(MascotSpeechLibrary.stop());
-                        setState(() => _muted = !_muted);
-                      },
-                    ),
-                    DoProgress(
-                      labels: FireLines.rounds,
-                      done: {for (var i = 0; i < math.min(_run.round, 3); i++) i},
-                      current: _run.done ? null : _run.round,
-                      quiet: quiet,
-                    ),
-                  ],
-                ),
-              ),
+                // What would have happened — in colour over the frozen scene.
+                if (_freeze) KeyedSubtree(key: const ValueKey('flare'), child: _flare(k, quiet)),
+                ..._hud(k, phase, quiet),
+              ];
+            },
+            overlays: [
               if (phase == FirePhase.gauge && _run.held != null)
                 _GaugeCard(
                   key: ValueKey('gauge-${_run.held}'),
@@ -1518,15 +1295,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
                   quiet: quiet,
                   onUse: (use, o) => unawaited(_useHeld(use, o)),
                 ),
-              if (_callOpen || _coworkerOut != null)
-                CoworkerPeek(
-                  key: ValueKey('coworker-${_run.round}'),
-                  fromLeft: _coworkerLeft,
-                  exit: _coworkerOut,
-                  quiet: quiet,
-                  lineBn: FireLines.coworkerLine,
-                  tagBn: FireLines.coworkerTag,
-                ),
+              ?coworkerPeek(quiet: quiet, key: ValueKey('coworker-${_run.round}')),
               if (_card != null)
                 MistakeCard(
                   key: ValueKey('card-${_card!.key}-${_run.round}-${_run.slips}'),
@@ -1613,6 +1382,9 @@ class _FireRunPageState extends ConsumerState<_FireRunPage> with DoDeathGuard, D
       ),
     );
   }
+
+  /// The flare-up over the frozen scene (water on oil / the live panel).
+  Widget _flare(FireKind k, bool quiet) => Stack(children: [_at(k, 320, 360, const Offset(160, 356), 1.15, FxOnce(FireAnim.flare, ms: 2000, quiet: quiet))]);
 }
 
 // ============================================================================
@@ -1898,181 +1670,6 @@ class FireScenePainter extends CustomPainter {
   bool shouldRepaint(FireScenePainter old) => old.kind != kind || old.out != out || old.powerOff != powerOff || old.flames != flames;
 }
 
-/// How the coworker leaves: beaten (the player acted) or smirking (obeyed).
-enum CoworkerExit { beaten, smirk }
-
-/// The careless coworker (level 1's rival — same art, same puppet) peeps
-/// round the left or right edge: he leans in from behind the screen's side,
-/// head and shoulders in view, and says to let the fire be. The guide then
-/// puts the choice to the player. The scene dims a little behind him (taps
-/// still reach the tools and the switch).
-class CoworkerPeek extends StatefulWidget {
-  const CoworkerPeek({
-    super.key,
-    required this.fromLeft,
-    required this.exit,
-    required this.quiet,
-    required this.lineBn,
-    required this.tagBn,
-  });
-
-  final bool fromLeft;
-  final CoworkerExit? exit;
-  final bool quiet;
-  final String lineBn;
-  final String tagBn;
-
-  static const bodyAsset = 'assets/duty_slip/dress/myth_rival_bad.webp';
-
-  @override
-  State<CoworkerPeek> createState() => _CoworkerPeekState();
-}
-
-class _CoworkerPeekState extends State<CoworkerPeek> with SingleTickerProviderStateMixin {
-  late final AnimationController _bob = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
-
-  @override
-  void initState() {
-    super.initState();
-    if (!widget.quiet) unawaited(_bob.repeat());
-  }
-
-  @override
-  void didUpdateWidget(CoworkerPeek old) {
-    super.didUpdateWidget(old);
-    if (widget.exit != null && old.exit == null) {
-      // One last flinch / smirk, then still.
-      _bob.stop();
-      if (!widget.quiet) unawaited(_bob.forward(from: 0));
-    }
-  }
-
-  @override
-  void dispose() {
-    _bob.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    final pw = math.min(250.0, size.width * 0.6);
-    final ph = pw * 1.22;
-    final leaving = widget.exit != null;
-    final quiet = widget.quiet;
-    // He leans in round the edge: his feet are behind the side of the screen,
-    // the lean brings his head and shoulders into view.
-    const lean = 0.5;
-    final pivotY = size.height * 0.72;
-    return Positioned.fill(
-      child: Stack(
-        children: [
-          // The scene dims a little (taps pass through to it).
-          IgnorePointer(
-            child: AnimatedOpacity(
-              opacity: leaving ? 0 : 1,
-              duration: const Duration(milliseconds: 260),
-              child: const ColoredBox(color: Color(0x4D050A16), child: SizedBox.expand()),
-            ),
-          ),
-          Positioned.fill(
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: quiet ? 1 : 0, end: leaving ? 0 : 1),
-              duration: Duration(milliseconds: quiet ? 1 : (leaving ? 380 : 300)),
-              curve: leaving ? Curves.easeInBack : Curves.easeOutBack,
-              builder: (_, v, child) {
-                // The pivot (his feet) slides from well out of view to just past the edge.
-                final out = -pw * 0.9 + pw * 0.62 * v;
-                final pivotX = widget.fromLeft ? out : size.width - out;
-                return Stack(
-                  children: [
-                    Positioned(
-                      left: pivotX - pw / 2,
-                      top: pivotY - ph,
-                      width: pw,
-                      height: ph,
-                      child: Transform.rotate(
-                        angle: (widget.fromLeft ? lean : -lean) * (0.6 + 0.4 * v),
-                        alignment: Alignment.bottomCenter,
-                        child: child,
-                      ),
-                    ),
-                  ],
-                );
-              },
-              child: IgnorePointer(
-                child: Transform.flip(
-                  // His art faces left: from the left edge he turns to the player.
-                  flipX: widget.fromLeft,
-                  child: AnimatedBuilder(
-                    animation: _bob,
-                    builder: (_, _) => ValueListenableBuilder<bool>(
-                      valueListenable: MascotTalk.active,
-                      builder: (_, talking, _) => MythRivalPuppet(
-                        size: pw,
-                        bodyAsset: CoworkerPeek.bodyAsset,
-                        phase: _bob.value,
-                        speaking: talking && !leaving,
-                        reduce: quiet,
-                        defeated: widget.exit == CoworkerExit.beaten,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // His words, up in the sky so the fire he waves off stays in view.
-          Positioned(
-            left: 14,
-            right: 14,
-            top: size.height * 0.15,
-            child: AnimatedOpacity(
-              opacity: leaving ? 0 : 1,
-              duration: const Duration(milliseconds: 200),
-              child: IgnorePointer(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: quiet ? 1 : 0, end: 1),
-                  duration: const Duration(milliseconds: 420),
-                  curve: Curves.easeOutBack,
-                  builder: (_, t, child) => Transform.scale(scale: 0.7 + 0.3 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(14, 9, 14, 12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0xFF3B0C14), Color(0xFF22070C)],
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: SlmColors.danger, width: 1.8),
-                      boxShadow: [BoxShadow(color: SlmColors.danger.withValues(alpha: 0.40), blurRadius: 18, spreadRadius: 1)],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                          decoration: BoxDecoration(color: SlmColors.danger, borderRadius: BorderRadius.circular(999)),
-                          child: Text(widget.tagBn, style: bangla(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white)),
-                        ),
-                        const SizedBox(height: 7),
-                        Text(widget.lineBn,
-                            textAlign: TextAlign.center,
-                            style: bangla(fontSize: 16, fontWeight: FontWeight.w800, height: 1.35, color: SlmColors.ivory)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// The isolator switch beside the panel: a grey box with a red lever, ON
 /// (up, red lamp) or OFF (down, green lamp). Tap it or pull it down.
 class _IsolatorSwitch extends StatelessWidget {
@@ -2157,28 +1754,6 @@ class _IsolatorPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_IsolatorPainter old) => old.v != v;
-}
-
-/// The ◆ waiting on the table for the reason (grey and red when burnt).
-class _TablePill extends StatelessWidget {
-  const _TablePill({required this.amount, this.burnt = false});
-  final int amount;
-  final bool burnt;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: burnt ? const [Color(0xFF6B2A22), Color(0xFF3A1C18)] : const [Color(0xFFFFD34E), Color(0xFFF2A51A)]),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: burnt ? const Color(0xFFC0392B) : const Color(0xFFFFF3C4), width: 1.5),
-        boxShadow: const [BoxShadow(color: Color(0x88000000), blurRadius: 8, offset: Offset(0, 3))],
-      ),
-      child: Text('◆ +$amount',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: burnt ? const Color(0xFFF3B9B0) : const Color(0xFF3A2500))),
-    );
-  }
 }
 
 /// The squeeze lever: hold it down to spray, let go to stop.

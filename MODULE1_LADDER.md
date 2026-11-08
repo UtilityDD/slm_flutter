@@ -48,7 +48,7 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 | 21 | 1.7 কাজ 2 | গোল্ডেন মিনিট — response, call, CPR; mud myth | order + say no | — (wrong order costs points) | ✅ built (2026-11-07) |
 | 22 | 1.8 শেখা | মাঠে আগুন | choose | — | text deck ♻️ → picture board 🆕 |
 | 23 | 1.8 কাজ 1 | কোন আগুনে কী — fire class → extinguisher; power off first; gauge | choose + inspect | water on an electrical or oil fire | ✅ built (2026-11-07) |
-| 24 | 1.8 কাজ 2 | PASS — pull, aim at the base, squeeze, sweep; where to stand | order + spot | — (cornered without escape: points) | ✅ built (2026-11-07) |
+| 24 | 1.8 কাজ 2 | PASS — pull, aim at the base, squeeze, sweep; where to stand | order + spot | — (cornered without escape: points) | ✅ rebuilt hands-on on the shared kit (2026-11-08) |
 | 25 | 1.9 শেখা | ঝড়-বৃষ্টিতে 'না' | choose | — | text deck ♻️ → picture board 🆕 |
 | 26 | 1.9 কাজ 1 | আকাশ পড়ুন — drizzle → wind galloping → thunder: when to stop | say no + spot | staying on the pole in lightning | ♻️ L9 → 🆕 |
 | 27 | 1.9 কাজ 2 | সুপারভাইজারের চাপ — "হালকা বৃষ্টি, শেষ করো"; safe shelter | say no + choose | climbing in a storm under pressure | ♻️ L10 → 🆕 |

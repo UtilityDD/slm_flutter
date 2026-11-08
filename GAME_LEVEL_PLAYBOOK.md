@@ -30,13 +30,13 @@ legacy `dsLevels` screens (photo scenes, title cards); for ladder levels in the 
 | # | Beat | What happens | Build with |
 |---|---|---|---|
 | 1 | **Guide first** | Full screen, the app's mascot says the task in **one short line**: what is wrong and how urgent ("সাবস্টেশনে আগুন! … এখনই নেভান!"). **No "শুরু" button, no skip, a tap does not skip** — the game starts when the voice and a fair reading time are done. | `LevelIntro` (`level_frame.dart`), or `GuideIntro` (`scene_kit.dart`) over a live scene |
-| 2 | **The scene** | Full screen to the top and bottom (as level 1); the header floats on it. The scene is a **place**, not a page: layered background → midground → foreground, real equipment, the player's worker doing the work. | `LevelShellBar(bare: true)`, a world painter, `LinemanFigure` |
+| 2 | **The scene** | Full screen to the top and bottom (as level 1); the header floats on it. The scene is a **place**, not a page: layered background → midground → foreground, real equipment, the player's worker doing the work. | `FullSceneFrame` (`full_scene_frame.dart`, gives `SceneMetrics`), a world painter, `LinemanFigure` |
 | 3 | **Guide in the corner** | Short lines with the **next task only** ("কী দিয়ে নেভাবেন?"). No hints, no answers, no pointing tours ("এটা? এটা? না এটা?"). | `AiLinemanGuide` in a corner, or `DoCoachStrip` |
 | 4 | **Tap the guide** | He says the current task again, **a different way each time, never the answer**; tick sound; no cost. | `DoCoachStrip(tasks: XLines.tasks, muted: _muted)` + `TaskNudge`, or a level pool (`FireLines.tap*`) |
 | 5 | **Hands-on** | Use the five moves (choose · inspect · spot · order · say no) and *do* the job where it fits: hold to spray, throw, drag, pull a switch. Equipment shows its real state (an isolator at **ON** that the player must switch **OFF**; a gauge to read). | level page + painters / Lottie |
-| 6 | **Success like level 1** | Right action → right sound + animation + a short praise line (`LearnFeedbackLines.right`) + the ◆ **wait on the table** → "কেন এটা নিলেন?" with 3 cards → right reason pays the table into the score, wrong reason burns it, a right retry pays 5 → the level moves on **by itself** (no "পরেরটা" button). | `ChoiceDeck`, `whyPayout` |
+| 6 | **Success like level 1** | Right action → right sound + animation + a short praise line (`LearnFeedbackLines.right`) + the ◆ **wait on the table** → "কেন এটা নিলেন?" with 3 cards → right reason pays the table into the score, wrong reason burns it, a right retry pays 5 → the level moves on **by itself** (no "পরেরটা" button). | `ReasonTable` mixin (`reason_table.dart`: `putOnTable`, `askReason`, `reasonDeck`, `tableLayers`, `whyPayout`) |
 | 7 | **Mistakes teach** | Hints appear **only after a mistake**: `MistakeCard` (picture + one line + **পাঠে দেখুন**). **3 slips** → the level fails with a fitting sound and the lesson card insists on reading before "আবার খেলি". Deadly → the scene freezes grey, the consequence plays in colour, then near-miss/death and the fall. | `DoStrikeOut`, `StruckOutCard`, `FailSound`, `DoDeathGuard`, `FreezeFrame` |
-| 8 | **Pressure moment** | The careless coworker (level 1's rival) **peeps in from the left or right edge** at a random moment and pushes the shortcut in his own voice; then the **guide** puts the choice to the player (rotating phrasing) on a 3-card deck. Listening = the slip. | `CoworkerPeek` (now in `fire_choose.dart`; move it to a shared file when the second level uses it) |
+| 8 | **Pressure moment** | The careless coworker (level 1's rival) **peeps in from the left or right edge** at a random moment and pushes the shortcut in his own voice; then the **guide** puts the choice to the player (rotating phrasing) on a 3-card deck. Listening = the slip. | `CoworkerMoment` mixin + `CoworkerScript` (`coworker_moment.dart`) |
 | 9 | **Result** | Pass panel (rank, mark, time, ◆, "আজ যা ধরলেন", stars) or fail panel with পাঠ. | `LevelPassPanel`, `LevelFailPanel`, `starsFor` |
 
 Every play is **dealt fresh** (order, traps, which tool is empty, who pushes and when) so it never repeats.
@@ -111,7 +111,9 @@ The UI shows only what was saved. A new kind of scoring event needs the owner's 
 
 | Need | Use | File |
 |---|---|---|
-| Header | `LevelShellBar(bare: true)` | `level_shell.dart` |
+| Full-screen frame + header | `FullSceneFrame`, `SceneMetrics`, `cornerGuide` (or `LevelShellBar(bare: true)` alone) | `full_scene_frame.dart` / `level_shell.dart` |
+| Success beat | `ReasonTable` mixin, `whyPayout`, `TablePill` | `reason_table.dart` |
+| Pressure moment | `CoworkerMoment` mixin, `CoworkerScript`, `CoworkerPeek` | `coworker_moment.dart` |
 | Guide first | `LevelIntro` / `GuideIntro` | `level_frame.dart` / `scene_kit.dart` |
 | Guide strip + tap-to-repeat | `DoCoachStrip(tasks:, muted:)`, `TaskNudge` | `do_parts.dart` |
 | Answers | `ChoiceDeck`, `ChoiceOption`, `dealChoices` | `choice_deck.dart` |
@@ -129,7 +131,7 @@ Keep the play logic pure (a `XRun` class with no widgets) so the rules are unit-
 ## 9. Tests (every level)
 
 - **Rules:** unit tests of the `XRun` logic — right/wrong/deadly per move, the deal, `whyPayout`.
-- **Libraries:** one right per deal, three different options, lengths within 1.3×, ≥ 5 wrong, plays differ.
+- **Libraries:** one right per deal, three different options, plays differ; `expectSameLength` / `expectLibrary` (`test/support/option_lengths.dart`) for lengths within 1.3× and ≥ 2 right / ≥ 5 wrong.
 - **Flow:** open the page, `waitIntro(t)` (`test/support/intro_wait.dart`), play to a pass; assert the save
   (cleared, no mistakes, stars) — not just the screen.
 - **Mistakes:** a slip shows its card; a deadly move freezes first, then the card; 3 slips fail the level.
