@@ -11,13 +11,19 @@ import '../guide/guide_director.dart';
 import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'beat_fx.dart';
+import 'choice_deck.dart';
+import 'coworker_moment.dart';
 import 'do_parts.dart';
+import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_result_parts.dart';
 import 'mistake_kit.dart';
+import 'reason_table.dart';
+import 'scene_kit.dart';
+import 'van_yard.dart';
 import 'level_shell.dart';
 import 'spoken_once.dart';
 
@@ -111,6 +117,58 @@ abstract final class GloveLines {
   static const fail = 'এবার হলো না। হাওয়া দিয়ে দেখে আবার চেষ্টা করুন।';
   static const quick = 'ঝটপট আর নির্ভুল! বোনাস পেলেন।';
   static const testButton = 'চেপে ধরে হাওয়া দিন';
+
+
+  // The reason after each pair packed (lesson 1.1): one right, two wrong.
+  static const whyAsk = 'কেন এই জোড়াটা নিলেন?';
+  static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
+  static const whyRight = [
+    'হাওয়া দিলে চোখে-না-দেখা ফুটো ধরা পড়ে',
+    'ফুটো বা ফাটা রাবারে কারেন্ট হাতে ঢোকে',
+    'পরীক্ষা করা অক্ষত রাবারই হাত বাঁচায়',
+  ];
+  static const whyWrong = [
+    'নতুন গ্লাভস হলে পরীক্ষা লাগে না',
+    'সুতির গ্লাভসও কারেন্ট আটকে দেয়',
+    'ভেজা গ্লাভস পরেও দিব্যি কাজ চলে',
+    'একটু ফাটা থাকলে টেপ দিলেই কাজ চলে',
+    'চোখে দেখলেই সব ফুটো ধরা পড়ে যায়',
+  ];
+
+  /// The careless coworker (his recorded voice) pushes to skip the air test.
+  static const coworkerExit = 'হুঁ! যা খুশি করুন।';
+  static const choiceRight = [
+    'না — হাওয়া দিয়ে দেখে তবেই নেব',
+    'দশ সেকেন্ডের পরীক্ষা বাদ দেব না',
+    'নতুন হোক, আগে হাওয়া দিয়ে দেখি',
+    'আগে পরীক্ষা, তারপর গাড়িতে উঠব',
+  ];
+  static const choiceWrong = [
+    'নতুন গ্লাভস, দেখার দরকার নেই',
+    'এমনিই পরে নিই, সময় তো নেই',
+    'পরে গাড়িতে বসে দেখে নেব একবার',
+    'চোখে একবার দেখে নিলেই হয়ে যাবে',
+    'সবাই তো না দেখেই এমনি পরে নেয়',
+  ];
+  static const choiceAsks = [
+    'ও বলছে পরীক্ষার সময় নেই। আপনি কী করবেন?',
+    'হাওয়া দিয়ে দেখবেন, না এমনিই পরবেন?',
+    'কার কথা শুনবেন — ওর, না নিয়মের?',
+  ];
+  static const coworkerNew = CoworkerScript(
+    line: 'সময় নেই! গ্লাভস তো নতুনই, এমনিই পরে নাও!',
+    exitLine: coworkerExit,
+    right: choiceRight,
+    wrong: choiceWrong,
+    asks: choiceAsks,
+  );
+  static const coworkerTrip = CoworkerScript(
+    line: 'লাইন ট্রিপ করেছে, এখনই বেরোও!',
+    exitLine: coworkerExit,
+    right: choiceRight,
+    wrong: choiceWrong,
+    asks: choiceAsks,
+  );
 
   static const rounds = ['নিজের', 'সাথীর', 'বাড়তি'];
   static String ask(int round) => [askOwn, askMate, askSpare][round.clamp(0, 2)];
@@ -408,9 +466,9 @@ class _GloveRun extends ConsumerStatefulWidget {
   ConsumerState<_GloveRun> createState() => _GloveRunState();
 }
 
-enum _Overlay { none, inspect, call }
+enum _Overlay { none, inspect }
 
-class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
+class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
   late final GloveDeal _deal = dealGloves(widget.pack, widget.rng);
   late final GloveRound _r = GloveRound(_deal);
@@ -451,6 +509,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
 
   @override
   void dispose() {
+    disposeCoworker();
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     super.dispose();
@@ -498,13 +557,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
 
   Future<void> _askRound() async {
     if (_r.done || !mounted) return;
-    if (_r.callDue) {
-      HapticFeedback.heavyImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/complaint.wav', volume: 0.8, muted: false));
-      setState(() => _overlay = _Overlay.call);
-      await _say(_deal.caller.lineBn, other: true);
-      return;
-    }
+    if (_r.callDue) scheduleCoworker();
     if (_r.round != _dealtRound) {
       setState(() {
         _dealtRound = _r.round;
@@ -515,7 +568,8 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
   }
 
   void _pickUp(GloveItem g) {
-    if (_busy || _ended || _overlay != _Overlay.none) return;
+    if (coworkerOpen && !coworkerChoiceUp) unawaited(answerCoworker(true, _screenCentre, direct: true));
+    if (_busy || _ended || _overlay != _Overlay.none || coworkerOpen || reasonOpen) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
     _chain++;
@@ -567,8 +621,12 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
       HapticFeedback.heavyImpact();
     }
     if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: o.right ? 0.45 : 0.7, muted: false));
-    unawaited(_levelDelta(o.delta, origin, mood: o.right ? GuideMood.glad : GuideMood.warn));
-    unawaited(_react(g, o));
+    if (o.packs) {
+      putOnTable(o.delta);
+    } else {
+      unawaited(_levelDelta(o.delta, origin, mood: o.right ? GuideMood.glad : GuideMood.warn));
+      unawaited(_react(g, o));
+    }
 
     setState(() => _verdict = o);
     await _dwell(Duration(milliseconds: o.reasonBn.isEmpty && o.wordBn.isEmpty ? 900 : 1400));
@@ -585,12 +643,97 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
     });
     _busy = false;
     if (_r.round != roundBefore) {
-      if (_r.done) {
-        await _finish();
-      } else {
-        await _askRound();
-      }
+      // "কেন এই জোড়াটা নিলেন?" — the right reason pays the table, then the next pair.
+      unawaited(askReason(
+        deal: () => dealChoices(GloveLines.whyRight, GloveLines.whyWrong, widget.rng),
+        question: GloveLines.whyAsk,
+      ));
     }
+  }
+
+  Offset get _screenCentre {
+    final size = MediaQuery.sizeOf(context);
+    return Offset(size.width / 2, size.height * 0.45);
+  }
+
+  // --- the shared success beat (ReasonTable) ---------------------------------
+  @override
+  bool get reasonMuted => _muted;
+  @override
+  bool get reasonEnded => _ended;
+  @override
+  Future<void> reasonSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void reasonHush() {
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+  }
+
+  @override
+  Future<void> reasonScore(int delta, Offset origin, {GuideMood? mood}) => _levelDelta(delta, origin, mood: mood);
+  @override
+  void onReasonPaid() {
+    if (_r.done) {
+      unawaited(_finish());
+    } else {
+      unawaited(_askRound());
+    }
+  }
+
+  // --- the shared pressure moment (CoworkerMoment) ----------------------------
+  @override
+  CoworkerScript get coworkerScript => _deal.caller.id == 'je' ? GloveLines.coworkerTrip : GloveLines.coworkerNew;
+  @override
+  math.Random get coworkerRng => widget.rng;
+  @override
+  bool get coworkerMuted => _muted;
+  @override
+  bool? coworkerCanCome() {
+    if (_ended || _r.callDone || _r.round != _deal.callBefore) return null;
+    if (_overlay != _Overlay.none || _busy || reasonOpen || _introCard) return false;
+    return true;
+  }
+
+  @override
+  Future<void> coworkerGuideSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void coworkerHush() {
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+  }
+
+  @override
+  Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
+    _r.answerCall(heldCheck: held);
+    unawaited(_levelDelta(held ? 5 : -10, origin, mood: held ? GuideMood.glad : GuideMood.warn));
+    if (direct) return;
+    final next = [if (!_r.done) GloveLines.ask(_r.round)];
+    if (held) {
+      final chain = _chain;
+      unawaited(() async {
+        await coworkerSnarl();
+        if (!mounted || chain != _chain) return;
+        await _sayChain([GloveLines.callHeld, ...next], mood: GuideMood.glad);
+      }());
+    } else {
+      unawaited(_sayChain([GloveLines.callRushed, ...next], mood: GuideMood.warn));
+    }
+  }
+
+  /// Tap the guide: the task on screen again, a different way each time.
+  final _nudge = TaskNudge();
+  int _nudgeN = 0;
+  void _tapGuide() {
+    if (_introCard || _ended) return;
+    final String? line = coworkerOpen
+        ? nextCoworkerAsk()
+        : reasonOpen
+            ? GloveLines.tapWhy[_nudgeN++ % GloveLines.tapWhy.length]
+            : (_r.done ? null : _nudge.next(GloveLines.ask(_r.round)));
+    if (line == null) return;
+    HapticFeedback.selectionClick();
+    if (!_muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.5, muted: false));
+    unawaited(_sayChain([line]));
   }
 
   /// A short word (or the fixed line, e.g. "আগে হাওয়া দিয়ে দেখুন!"); the
@@ -608,25 +751,6 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
     } else {
       ref.read(guideDirectorProvider.notifier).say(mood: mood, line: o.reasonBn);
     }
-  }
-
-  Future<void> _answerCall(bool held, Offset origin) async {
-    if (_busy || _r.callDone) return;
-    _chain++;
-    unawaited(MascotSpeechLibrary.stop());
-    _r.answerCall(heldCheck: held);
-    setState(() {
-      _overlay = _Overlay.none;
-      if (_r.round != _dealtRound) {
-        _dealtRound = _r.round;
-        _wave++;
-      }
-    });
-    unawaited(_levelDelta(held ? 5 : -10, origin, mood: held ? GuideMood.glad : GuideMood.warn));
-    await _sayChain(
-      [held ? GloveLines.callHeld : GloveLines.callRushed, GloveLines.ask(_r.round)],
-      mood: held ? GuideMood.glad : GuideMood.warn,
-    );
   }
 
   Future<void> _levelDelta(int delta, Offset origin, {GuideMood? mood}) async {
@@ -704,6 +828,9 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
   Widget build(BuildContext context) {
     final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
     final tray = _tray;
+    final size = MediaQuery.sizeOf(context);
+    final pad = MediaQuery.paddingOf(context);
+    final deckUp = reasonOpen || coworkerChoiceUp;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -713,44 +840,67 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
         backgroundColor: SlmColors.navy950,
         body: ScoreFlyHost(
           scoreKey: _scoreKey,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              const DoBackdrop(asset: 'assets/zero_loss/scene/bg_span_two_poles.webp', alignment: Alignment.center),
-              SafeArea(
-                child: Column(
-                  children: [
-                    LevelShellBar(
-                      context_: widget.ctx,
-                      titleBn: widget.pack.titleBn,
-                      scoreKey: _scoreKey,
-                      levelScore: _runScore,
-                      muted: _muted,
-                      onClose: () => unawaited(_leave()),
-                      onToggleMute: () {
-                        unawaited(MascotSpeechLibrary.stop());
-                        setState(() => _muted = !_muted);
-                      },
-                    ),
-                    DoProgress(
-                      labels: GloveLines.rounds,
-                      done: {for (var i = 0; i < _r.packed.length; i++) i},
-                      current: _r.done ? null : _r.round,
-                      quiet: quiet,
-                    ),
-                    Expanded(child: _Bag(packed: _r.packed, quiet: quiet)),
-                    Opacity(opacity: _overlay == _Overlay.none ? 1 : 0, child: DoCoachStrip(tasks: GloveLines.tasks, muted: _muted)),
-                    if (_mark == null)
-                      DoTray(
-                        key: ValueKey('tray-$_wave'),
-                        entries: [for (final g in tray) DoTrayEntry(id: g.id, asset: g.asset)],
-                        quiet: quiet,
-                        muted: _muted,
-                        onPick: (n) => _pickUp(tray[n]),
-                      ),
-                  ],
+          child: FullSceneFrame(
+            ctx: widget.ctx,
+            titleBn: widget.pack.titleBn,
+            scoreKey: _scoreKey,
+            levelScore: _runScore,
+            muted: _muted,
+            onClose: () => unawaited(_leave()),
+            onToggleMute: () {
+              unawaited(MascotSpeechLibrary.stop());
+              setState(() => _muted = !_muted);
+            },
+            progress: DoProgress(
+              labels: GloveLines.rounds,
+              done: {for (var i = 0; i < _r.packed.length; i++) i},
+              current: _r.done ? null : _r.round,
+              quiet: quiet,
+            ),
+            layers: (context, m) => const [
+              Positioned.fill(key: ValueKey('yard'), child: CustomPaint(painter: VanYardPainter())),
+            ],
+            overlays: [
+              // The bag (three places) and the tray of gloves.
+              Positioned.fill(
+                child: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 80),
+                      Expanded(child: _Bag(packed: _r.packed, quiet: quiet)),
+                      if (_mark == null)
+                        Padding(
+                          padding: EdgeInsets.only(bottom: pad.bottom),
+                          child: DoTray(
+                            key: ValueKey('tray-$_wave'),
+                            entries: [for (final g in tray) DoTrayEntry(id: g.id, asset: g.asset)],
+                            quiet: quiet,
+                            muted: _muted,
+                            onPick: (n) => _pickUp(tray[n]),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
+              // The pair's ◆ waiting on the table.
+              ...tableLayers(at: Offset(size.width / 2, size.height * 0.22), quiet: quiet),
+              // The answers: level 1's cards — the reason, or the coworker choice.
+              if (deckUp)
+                Positioned(
+                  key: const ValueKey('deck'),
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: pad.bottom),
+                    child: reasonOpen ? reasonDeck(quiet: quiet, key: const ValueKey('why-deck')) : coworkerDeck(quiet: quiet, key: const ValueKey('choice-deck')),
+                  ),
+                ),
+              if (!_introCard && _overlay == _Overlay.none && _mark == null)
+                cornerGuide(onTap: _tapGuide, bottom: pad.bottom + (deckUp ? 236 : 124), onLeft: coworkerFromRight),
+              ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
               if (_overlay == _Overlay.inspect && _held != null)
                 _GloveInspect(
                   key: ValueKey('inspect-${_r.round}-${_held!.id}'),
@@ -769,8 +919,6 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
                     if (g != null && !g.isCompleted) g.complete();
                   },
                 ),
-              if (_overlay == _Overlay.call)
-                DoCallCard(caller: _deal.caller, quiet: quiet, onAnswer: (held, o) => unawaited(_answerCall(held, o))),
               if (struckOut)
                 StruckOutCard(
                   mistake: strikeOutBy!,
@@ -781,8 +929,9 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut {
                   onLeave: () => _popOnce(false),
                 ),
               if (_introCard)
-                LevelIntro(
-                  lines: [GloveLines.intro],
+                GuideIntro(
+                  line: GloveLines.intro,
+                  alarm: 'sounds/learn/rush_in.wav',
                   muted: _muted,
                   onDone: () {
                     setState(() => _introCard = false);

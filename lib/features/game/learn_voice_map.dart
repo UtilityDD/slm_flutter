@@ -172,5 +172,7 @@ const learnRivalVoice = <String, String>{
   "জলদি করো! গাড়ি দাঁড়িয়ে আছে। চেক-টেক পরে হবে!": 'sounds/learn_voice/r_6d3fbf8557.mp3',
   "ফাটা হেলমেট হোক বা বাইকের হেলমেট—সবই তো মাথা বাঁচায়! এত নিয়ম লাগে নাকি?": 'sounds/learn_voice/r_791fe7e4ab.mp3',
   "যত্তসব নতুন নিয়ম! আমি চললাম…": 'sounds/learn_voice/r_8e9c3c8dd0.mp3',
+  "লাইন ট্রিপ করেছে, এখনই বেরোও!": 'sounds/learn_voice/r_59ada826f9.mp3',
+  "সময় নেই! গ্লাভস তো নতুনই, এমনিই পরে নাও!": 'sounds/learn_voice/r_d2718672c3.mp3',
   "হুঁ! যা খুশি করুন।": 'sounds/learn_voice/r_95012c7c49.mp3',
 };

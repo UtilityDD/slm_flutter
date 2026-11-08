@@ -11,7 +11,9 @@ import '../guide/guide_director.dart';
 import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'beat_fx.dart';
+import 'coworker_moment.dart';
 import 'do_parts.dart';
+import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
@@ -19,6 +21,10 @@ import 'level_frame.dart';
 import 'level_result_parts.dart';
 import 'mistake_kit.dart';
 import 'level_shell.dart';
+import 'reason_table.dart';
+import 'choice_deck.dart';
+import 'scene_kit.dart';
+import 'store_room.dart';
 import 'spoken_once.dart';
 
 // ============================================================================
@@ -159,6 +165,93 @@ abstract final class KitLines {
   static const quick = 'ঝটপট আর নির্ভুল! বোনাস পেলেন।';
   static const checkFirst = DoLines.checkFirst;
   static const rushOn = DoLines.rushOn;
+
+
+  // The reason after each piece worn (lesson 1.1): one right and two wrong
+  // dealt, all about the same length.
+  static const whyAsk = 'কেন এটা পরলেন?';
+  static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
+  static const whyTorsoRight = [
+    'সুতি বা FR গলে চামড়ায় সেঁটে যায় না',
+    'পুরো হাত ঢাকা — স্পার্কে চামড়া বাঁচে',
+    'আর্ক ফ্ল্যাশে সুতি গলে না, চামড়া বাঁচে',
+  ];
+  static const whyTorsoWrong = [
+    'গরমে পলিয়েস্টারই সবচেয়ে আরাম দেয়',
+    'মেটাল জিপার থাকলে আরও নিরাপদ হয়',
+    'রঙিন জামা দূর থেকে দেখা যায় বলে',
+    'ঢিলে জামায় পোলে ওঠা সহজ হয় বলে',
+    'হাফ-হাতায় কাজ করতে সুবিধা অনেক বেশি',
+  ];
+  static const whyLegsRight = [
+    'পুরো পা ঢাকা — ঘষা আর স্পার্কে বাঁচায়',
+    'সুতি আগুনে গলে চামড়ায় সাঁটে না',
+    'তেলমুক্ত প্যান্ট ফুলকিতে জ্বলে ওঠে না',
+  ];
+  static const whyLegsWrong = [
+    'হাফ প্যান্টে পোলে ওঠা অনেক সহজ হয়',
+    'ঢিলে পাজামায় বাতাস খেলে, আরাম লাগে',
+    'তেল লাগা প্যান্টে জল ঢুকতে পারে না',
+    'যেকোনো প্যান্ট পরলেই কাজ চলে যায়',
+    'গরমে পা খোলা রাখাই সবচেয়ে ভালো',
+  ];
+  static const whyFeetRight = [
+    'অক্ষত রাবার সোল কারেন্টের পথ আটকায়',
+    'শক্ত গ্রিপে মই আর পোলে পা হড়কায় না',
+    'বুট পা ঢেকে রাখে, আঘাত থেকে বাঁচায়',
+  ];
+  static const whyFeetWrong = [
+    'চপ্পলে হাঁটা সহজ, তাই বেশি নিরাপদ',
+    'সাধারণ জুতোও কারেন্ট আটকে দেয়',
+    'সোলে পেরেক থাকলে গ্রিপ আরও বাড়ে',
+    'সোল একটু ফাটা হলেও কাজ চলে যায়',
+    'খালি পায়ে মাটির সাথে ভালো যোগ থাকে',
+  ];
+  static List<String> whyRight(KitSlot s) => switch (s) {
+        KitSlot.torso => whyTorsoRight,
+        KitSlot.legs => whyLegsRight,
+        KitSlot.feet => whyFeetRight,
+      };
+  static List<String> whyWrong(KitSlot s) => switch (s) {
+        KitSlot.torso => whyTorsoWrong,
+        KitSlot.legs => whyLegsWrong,
+        KitSlot.feet => whyFeetWrong,
+      };
+
+  /// The careless coworker (his recorded voice) pushes to skip the check.
+  static const coworkerExit = 'হুঁ! যা খুশি করুন।';
+  static const choiceRight = [
+    'না — আগে দেখে তবেই পরব',
+    'চেক বাদ দিয়ে কাজে নামব না',
+    'দেখতে এক মিনিটই তো লাগবে',
+    'আগে দেখে নিই, তারপর গাড়িতে',
+  ];
+  static const choiceWrong = [
+    'ঠিক বলেছে, দেখার দরকার নেই',
+    'যা পাই তাই পরে নিই, চলো',
+    'পরে দেখে নেব, এখন চলি',
+    'একবার চোখ বুলিয়ে নিলেই হবে',
+    'সবাই তো এভাবেই পরে নেয়',
+  ];
+  static const choiceAsks = [
+    'ও বলছে দেখার সময় নেই। আপনি কী করবেন?',
+    'চেক বাদ দেবেন, না দেখে তবেই পরবেন?',
+    'কার কথা শুনবেন — ওর, না নিয়মের?',
+  ];
+  static const coworkerHurry = CoworkerScript(
+    line: 'চল চল, দেরি হচ্ছে! এসব দেখার সময় নেই।',
+    exitLine: coworkerExit,
+    right: choiceRight,
+    wrong: choiceWrong,
+    asks: choiceAsks,
+  );
+  static const coworkerVan = CoworkerScript(
+    line: 'জলদি করো! গাড়ি দাঁড়িয়ে আছে। চেক-টেক পরে হবে!',
+    exitLine: coworkerExit,
+    right: choiceRight,
+    wrong: choiceWrong,
+    asks: choiceAsks,
+  );
 
   static String ask(KitSlot s) => switch (s) {
         KitSlot.torso => askTorso,
@@ -488,9 +581,9 @@ class _KitCheckRun extends ConsumerStatefulWidget {
   ConsumerState<_KitCheckRun> createState() => _KitCheckRunState();
 }
 
-enum _Overlay { none, inspect, consequence, call }
+enum _Overlay { none, inspect, consequence }
 
-class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
+class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
   late final KitDeal _deal = dealKit(widget.pack, widget.rng);
   late final KitCheckRound _r = KitCheckRound(_deal);
@@ -537,6 +630,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
 
   @override
   void dispose() {
+    disposeCoworker();
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     super.dispose();
@@ -588,10 +682,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
   Future<void> _askSlot() async {
     final s = _r.slot;
     if (s == null || !mounted) return;
-    if (_r.callDue) {
-      await _ring();
-      return;
-    }
+    if (_r.callDue) scheduleCoworker();
     if (s != _dealtSlot) {
       setState(() {
         _dealtSlot = s;
@@ -613,7 +704,8 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
   }
 
   void _pickUp(KitItem item) {
-    if (_busy || _ended || _overlay != _Overlay.none) return;
+    if (coworkerOpen && !coworkerChoiceUp) unawaited(answerCoworker(true, _screenCentre, direct: true));
+    if (_busy || _ended || _overlay != _Overlay.none || coworkerOpen || reasonOpen) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
     _chain++;
@@ -643,9 +735,13 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
       HapticFeedback.heavyImpact();
     }
     if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: o.right ? 0.45 : 0.7, muted: false));
-    unawaited(_levelDelta(o.delta, origin, mood: o.right ? GuideMood.glad : GuideMood.warn));
-    // The coach reacts on his own time; his voice never holds the player.
-    unawaited(_react(item, o, choice));
+    if (o.wears) {
+      putOnTable(o.delta);
+    } else {
+      unawaited(_levelDelta(o.delta, origin, mood: o.right ? GuideMood.glad : GuideMood.warn));
+      // The coach reacts on his own time; his voice never holds the player.
+      unawaited(_react(item, o, choice));
+    }
 
     final worstWear = !o.right && choice == KitChoice.wear && item.wornAsset != null;
     if (worstWear) {
@@ -685,13 +781,102 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
     });
     _busy = false;
     if (o.wears) {
-      if (_r.done) {
-        await _finish();
-      } else {
-        await _askSlot();
-      }
+      // "কেন এটা পরলেন?" — the right reason pays the table, then the next piece.
+      final slot = item.slot;
+      unawaited(askReason(
+        deal: () => dealChoices(KitLines.whyRight(slot), KitLines.whyWrong(slot), widget.rng),
+        question: KitLines.whyAsk,
+      ));
     }
   }
+
+  Offset get _screenCentre {
+    final size = MediaQuery.sizeOf(context);
+    return Offset(size.width / 2, size.height * 0.45);
+  }
+
+  // --- the shared success beat (ReasonTable) ---------------------------------
+  @override
+  bool get reasonMuted => _muted;
+  @override
+  bool get reasonEnded => _ended;
+  @override
+  Future<void> reasonSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void reasonHush() {
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+  }
+
+  @override
+  Future<void> reasonScore(int delta, Offset origin, {GuideMood? mood}) => _levelDelta(delta, origin, mood: mood);
+  @override
+  void onReasonPaid() {
+    if (_r.done) {
+      unawaited(_finish());
+    } else {
+      unawaited(_askSlot());
+    }
+  }
+
+  // --- the shared pressure moment (CoworkerMoment) ----------------------------
+  @override
+  CoworkerScript get coworkerScript => _deal.caller.id == 'je' ? KitLines.coworkerVan : KitLines.coworkerHurry;
+  @override
+  math.Random get coworkerRng => widget.rng;
+  @override
+  bool get coworkerMuted => _muted;
+  @override
+  bool? coworkerCanCome() {
+    if (_ended || _r.callDone || _r.slot != _deal.callBefore) return null;
+    if (_overlay != _Overlay.none || _busy || reasonOpen || _introCard) return false;
+    return true;
+  }
+
+  @override
+  Future<void> coworkerGuideSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void coworkerHush() {
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+  }
+
+  @override
+  Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
+    _r.answerCall(heldCheck: held);
+    unawaited(_levelDelta(held ? 5 : -10, origin, mood: held ? GuideMood.glad : GuideMood.warn));
+    if (direct) return;
+    final s = _r.slot;
+    final next = [if (s != null) KitLines.ask(s)];
+    if (held) {
+      final chain = _chain;
+      unawaited(() async {
+        await coworkerSnarl();
+        if (!mounted || chain != _chain) return;
+        await _sayChain([KitLines.callHeld, ...next], mood: GuideMood.glad);
+      }());
+    } else {
+      unawaited(_sayChain([KitLines.callRushed, ...next], mood: GuideMood.warn));
+    }
+  }
+
+  /// Tap the guide: the task on screen again, a different way each time.
+  final _nudge = TaskNudge();
+  void _tapGuide() {
+    if (_introCard || _ended) return;
+    final s = _r.slot;
+    final String? line = coworkerOpen
+        ? nextCoworkerAsk()
+        : reasonOpen
+            ? KitLines.tapWhy[_nudgeN++ % KitLines.tapWhy.length]
+            : (s == null ? null : _nudge.next(KitLines.ask(s)));
+    if (line == null) return;
+    HapticFeedback.selectionClick();
+    if (!_muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.5, muted: false));
+    unawaited(_sayChain([line]));
+  }
+
+  int _nudgeN = 0;
 
   /// One short word; the reason is spoken in full the first time this flaw or
   /// wrong item is met, and only shown as text after that.
@@ -713,36 +898,6 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
       // Already heard once: the reason stays as text in the strip.
       ref.read(guideDirectorProvider.notifier).say(mood: mood, line: reason);
     }
-  }
-
-  Future<void> _ring() async {
-    HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/complaint.wav', volume: 0.8, muted: false));
-    setState(() => _overlay = _Overlay.call);
-    await _say(_deal.caller.lineBn, other: true);
-  }
-
-  Future<void> _answerCall(bool held, Offset origin) async {
-    if (_busy || _r.callDone) return;
-    _busy = true;
-    _chain++;
-    unawaited(MascotSpeechLibrary.stop());
-    _r.answerCall(heldCheck: held);
-    final s = _r.slot;
-    setState(() {
-      _overlay = _Overlay.none;
-      if (s != null && s != _dealtSlot) {
-        _dealtSlot = s;
-        _wave++;
-      }
-    });
-    _busy = false;
-    unawaited(_levelDelta(held ? 5 : -10, origin, mood: held ? GuideMood.glad : GuideMood.warn));
-    // The next tray is already dealt; the coach talks while the player looks.
-    await _sayChain(
-      [held ? KitLines.callHeld : KitLines.callRushed, if (s != null) KitLines.ask(s)],
-      mood: held ? GuideMood.glad : GuideMood.warn,
-    );
   }
 
   Future<void> _levelDelta(int delta, Offset origin, {GuideMood? mood}) async {
@@ -820,7 +975,10 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
   Widget build(BuildContext context) {
     final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final screenH = MediaQuery.sizeOf(context).height;
+    final size = MediaQuery.sizeOf(context);
+    final screenH = size.height;
+    final pad = MediaQuery.paddingOf(context);
+    final deckUp = reasonOpen || coworkerChoiceUp;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -830,52 +988,75 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
         backgroundColor: SlmColors.navy950,
         body: ScoreFlyHost(
           scoreKey: _scoreKey,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              const DoBackdrop(asset: 'assets/zero_loss/scene/bg_control_room.webp'),
-              SafeArea(
-                child: Column(
-                  children: [
-                    LevelShellBar(
-                      context_: widget.ctx,
-                      titleBn: widget.pack.titleBn,
-                      scoreKey: _scoreKey,
-                      levelScore: _runScore,
-                      muted: _muted,
-                      onClose: () => unawaited(_leave()),
-                      onToggleMute: () {
-                        unawaited(MascotSpeechLibrary.stop());
-                        setState(() => _muted = !_muted);
-                      },
-                    ),
-                    DoProgress(
-                      labels: const ['জামা', 'প্যান্ট', 'জুতো'],
-                      done: {for (final s in _r.worn) s.index},
-                      current: _r.slot?.index,
-                      quiet: quiet,
-                    ),
-                    Expanded(
-                      child: _Figure(
-                        asset: kitFigureAsset(_r.worn),
-                        wave: _figureWave,
-                        quiet: quiet,
-                        cacheHeight: (screenH * dpr * 0.55).round(),
+          child: FullSceneFrame(
+            ctx: widget.ctx,
+            titleBn: widget.pack.titleBn,
+            scoreKey: _scoreKey,
+            levelScore: _runScore,
+            muted: _muted,
+            onClose: () => unawaited(_leave()),
+            onToggleMute: () {
+              unawaited(MascotSpeechLibrary.stop());
+              setState(() => _muted = !_muted);
+            },
+            progress: DoProgress(
+              labels: const ['জামা', 'প্যান্ট', 'জুতো'],
+              done: {for (final s in _r.worn) s.index},
+              current: _r.slot?.index,
+              quiet: quiet,
+            ),
+            layers: (context, m) => const [
+              Positioned.fill(key: ValueKey('room'), child: CustomPaint(painter: StoreRoomPainter())),
+            ],
+            overlays: [
+              // The man in what he wears, and the tray of kit.
+              Positioned.fill(
+                child: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 80),
+                      Expanded(
+                        child: _Figure(
+                          asset: kitFigureAsset(_r.worn),
+                          wave: _figureWave,
+                          quiet: quiet,
+                          cacheHeight: (screenH * dpr * 0.55).round(),
+                        ),
                       ),
-                    ),
-                    // Under a card or call the coach moves above the shade (see overlays).
-                    Opacity(opacity: _overlay == _Overlay.none ? 1 : 0, child: DoCoachStrip(tasks: KitLines.tasks, muted: _muted)),
-                    if (_mark == null)
-                      DoTray(
-                        key: ValueKey('tray-$_wave'),
-                        entries: [for (final i in _tray) DoTrayEntry(id: i.id, asset: i.asset)],
-                        quiet: quiet,
-                        muted: _muted,
-                        onPick: (n) => _pickUp(_tray[n]),
-                      ),
-                  ],
+                      if (_mark == null)
+                        Padding(
+                          padding: EdgeInsets.only(bottom: pad.bottom),
+                          child: DoTray(
+                            key: ValueKey('tray-$_wave'),
+                            entries: [for (final i in _tray) DoTrayEntry(id: i.id, asset: i.asset)],
+                            quiet: quiet,
+                            muted: _muted,
+                            onPick: (n) => _pickUp(_tray[n]),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
+              // The piece's ◆ waiting on the table (over the man).
+              ...tableLayers(at: Offset(size.width / 2, size.height * 0.2), quiet: quiet),
+              // The answers: level 1's cards — the reason, or the coworker choice.
+              if (deckUp)
+                Positioned(
+                  key: const ValueKey('deck'),
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: pad.bottom),
+                    child: reasonOpen ? reasonDeck(quiet: quiet, key: const ValueKey('why-deck')) : coworkerDeck(quiet: quiet, key: const ValueKey('choice-deck')),
+                  ),
+                ),
+              // The guide in the corner, above the tray (or the deck).
+              if (!_introCard && _overlay == _Overlay.none && _mark == null)
+                cornerGuide(onTap: _tapGuide, bottom: pad.bottom + (deckUp ? 236 : 124), onLeft: coworkerFromRight),
+              ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
               if (_overlay == _Overlay.inspect && _held != null)
                 _InspectCard(
                   key: ValueKey('inspect-${_held!.id}'),
@@ -893,8 +1074,6 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
                 ),
               if (_overlay == _Overlay.consequence && _shown?.wornAsset != null)
                 _Consequence(item: _shown!, quiet: quiet, onTap: _skipDwell),
-              if (_overlay == _Overlay.call)
-                DoCallCard(caller: _deal.caller, quiet: quiet, onAnswer: (held, o) => unawaited(_answerCall(held, o))),
               if (struckOut)
                 StruckOutCard(
                   mistake: strikeOutBy!,
@@ -905,8 +1084,9 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoStrikeOut {
                   onLeave: () => _popOnce(false),
                 ),
               if (_introCard)
-                LevelIntro(
-                  lines: [widget.pack.introBn],
+                GuideIntro(
+                  line: widget.pack.introBn,
+                  alarm: 'sounds/learn/rush_in.wav',
                   muted: _muted,
                   onDone: () {
                     setState(() => _introCard = false);

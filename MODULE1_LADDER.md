@@ -26,8 +26,8 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 | Step | Rung | Name | Moves | Deadly (💀) | Status |
 |---:|---|---|---|---|---|
 | 1 | 1.1 শেখা | পোশাক ও পিপিই চেনা (picture board + rival myth) | choose | — (Learn never kills) | ✅ |
-| 2 | 1.1 কাজ 1 | কবচ যাচাই — clothes & boots from the store | choose + inspect + say no | wearing polyester; boot with a nail in the sole | ✅ (deaths not wired yet) |
-| 3 | 1.1 কাজ 2 | গ্লাভস যাচাই — rubber gloves air test (+ helmet torch sweep: proposed) | inspect + choose + say no | packing a pinholed / cotton glove | ✅ (helmet station 🆕) |
+| 2 | 1.1 কাজ 1 | কবচ যাচাই — clothes & boots from the store | choose + inspect + say no | wearing polyester; boot with a nail in the sole | ✅ on the shared kit (2026-11-08): drawn store room, reason deck, coworker; deaths not wired yet |
+| 3 | 1.1 কাজ 2 | গ্লাভস যাচাই — rubber gloves air test (+ helmet torch sweep: proposed) | inspect + choose + say no | packing a pinholed / cotton glove | ✅ on the shared kit (2026-11-08): drawn van yard, air test, reason deck, coworker; helmet station 🆕 |
 | 4 | 1.2 শেখা | লক্ষ্মণ রেখা | choose | — | ✅ picture board (2026-11-08) |
 | 5 | 1.2 কাজ 1 | কতটা দূরে? — judge safe distance by voltage | spot | standing / tool tip inside the line's distance | ✅ built (2026-11-07) |
 | 6 | 1.2 কাজ 2 | লম্বা টুলের ডগা — hot stick vs bamboo vs PVC jugaad | choose + spot + say no | bamboo / PVC on a live line; tool tip inside | ✅ built (2026-11-07) |
