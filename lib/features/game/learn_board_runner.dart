@@ -164,6 +164,21 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   var _hitGood = false;
   int _hitToken = 0;
 
+  /// Card currently zoomed in for inspection / mistake review.
+  LearnBoardOption? _inspectOption;
+  var _inspectGood = false;
+  Completer<void>? _inspectCompleter;
+
+  void _dismissInspection() {
+    if (_inspectCompleter != null && !_inspectCompleter!.isCompleted) {
+      if (!_muted) {
+        final cue = _inspectGood ? 'sounds/quiz_select.wav' : 'sounds/quiz_flip.wav';
+        unawaited(ZlFx.cue(cue, volume: 0.65, muted: false));
+      }
+      _inspectCompleter!.complete();
+    }
+  }
+
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
   final _againBag = LineBag(LearnFeedbackLines.wrongAgain);
   final _rightBag = LineBag(LearnFeedbackLines.right);
@@ -268,6 +283,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
 
   @override
   void dispose() {
+    _dismissInspection();
     _voiceRun++;
     unawaited(MascotSpeechLibrary.stop());
     _endOfferFinish();
@@ -379,10 +395,12 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
 
   /// Once the wrong card has shaken: an unseen trap takes its place and the
   /// whole board is dealt again in a new order, so positions can't be learnt.
-  Future<void> _redealAfterMiss(LearnPick missed) async {
+  Future<void> _redealAfterMiss(LearnPick missed, {bool immediate = false}) async {
     final wave = _cardWave;
     final beat = _beat;
-    await Future<void>.delayed(const Duration(milliseconds: 520));
+    if (!immediate) {
+      await Future<void>.delayed(const Duration(milliseconds: 520));
+    }
     if (!mounted || _cardWave != wave || _beat != beat || _locked || _busy) return;
     setState(() {
       if (missed is LearnBoardOption) {
@@ -791,20 +809,51 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   }
 
   Future<void> _onPick(LearnBoardOption opt, Offset global) async {
-    if (_beat != _Beat.pick || _locked || _busy) return;
+    if (_beat != _Beat.pick || _locked || _busy || _inspectOption != null) return;
     _busy = true;
     _markHit(opt.id, opt.correct);
     await _stopVoice();
     if (!opt.correct) {
       HapticFeedback.mediumImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.72, muted: false));
+      if (!_muted) {
+        unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.75, muted: false));
+      }
       ref.read(guideDirectorProvider.notifier).react(GuideMood.warn);
       _marks.miss();
       await _penalize(global);
+      _clockHold();
+
+      // Give the card on the table 180 ms to shake red before zooming up.
+      await Future<void>.delayed(const Duration(milliseconds: 180));
+      if (!mounted) return;
+
+      if (!_muted) {
+        unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.65, muted: false));
+      }
+
+      final completer = Completer<void>();
+      setState(() {
+        _inspectOption = opt;
+        _inspectGood = false;
+        _inspectCompleter = completer;
+      });
+
+      // Voice the mistake line so the coach speaks while the card is inspected.
+      unawaited(_sayMistake(reason: opt.rejectBn, key: 'pick/${opt.id}'));
+
+      // Wait for player to tap "বুঝেছি, আবার চেষ্টা করি" or the backdrop scrim.
+      await completer.future;
+
+      if (!mounted) return;
+      setState(() {
+        _inspectOption = null;
+        _inspectCompleter = null;
+      });
+
       _busy = false;
       if (!mounted) return;
-      unawaited(_redealAfterMiss(opt));
-      await _sayMistake(reason: opt.rejectBn, key: 'pick/${opt.id}');
+      _clockGo();
+      await _redealAfterMiss(opt, immediate: true);
       return;
     }
 
@@ -813,7 +862,9 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     _clockHold();
     await _scripted(() async {
       HapticFeedback.lightImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.78, muted: false));
+      if (!_muted) {
+        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.85, muted: false));
+      }
       setState(() {
         // A slot paid on an earlier play puts nothing on the table.
         _pending = _cur.pendingPoints;
@@ -821,17 +872,39 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       });
       _celebrate.forward(from: 0);
       _scorePunch.forward(from: 0);
-      // The praise line also lets the picked card's pop read before the board changes.
-      await _sayRight();
+
+      // Brief pop beat before opening the celebration zoom.
+      await Future<void>.delayed(const Duration(milliseconds: 160));
+      if (!mounted) return;
+
+      if (!_muted) {
+        unawaited(ZlFx.cue('sounds/intro/confirm.ogg', volume: 0.65, muted: false));
+      }
+
+      final completer = Completer<void>();
+      setState(() {
+        _inspectOption = opt;
+        _inspectGood = true;
+        _inspectCompleter = completer;
+      });
+
+      // Mascot speaks praise aloud while the celebration modal is open.
+      unawaited(_sayRight());
+
+      // Stays visible so player can read, inspect safe gear, and tap "এগিয়ে চলুন · পরের ধাপ".
+      await completer.future;
+
       if (!mounted) return;
       setState(() {
+        _inspectOption = null;
+        _inspectCompleter = null;
         _beat = _Beat.why;
         _pickedWhy = null;
         _hitId = null;
         _whyOpts = why;
         _cardWave++;
       });
-      await _pause(320);
+      await _pause(240);
     });
     _busy = false;
     if (!mounted) return;
@@ -1231,6 +1304,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
 
   /// Back / close. After a pass the clear is already saved, so leave with it.
   Future<void> _leave() async {
+    _dismissInspection();
     if (_passed) {
       await _stopVoice();
       _popOnce(true);
@@ -1260,6 +1334,10 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
+        if (_inspectOption != null) {
+          _dismissInspection();
+          return;
+        }
         await _leave();
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -1328,6 +1406,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                                       ),
                                     ),
                                   if (_readOpen) Positioned.fill(child: _readCardLayer()),
+                                  if (_inspectOption != null) Positioned.fill(child: _inspectionZoomLayer(quiet, palette)),
                                 ],
                               ),
                             ),
@@ -1462,6 +1541,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                     label: _hitId == o.id ? o.labelBn : '',
                     palette: palette,
                     onTapUp: (d) {
+                      if (_inspectOption != null || _busy) return;
                       if (!_muted) {
                         unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
                       }
@@ -1518,6 +1598,235 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Enlarged card inspection modal with mistake / affirmation details,
+  /// matching audio cues, and explicit tap-to-dismiss.
+  Widget _inspectionZoomLayer(bool quiet, SlmPalette palette) {
+    final opt = _inspectOption;
+    if (opt == null) return const SizedBox.shrink();
+
+    final isGood = _inspectGood;
+    final accent = isGood ? SlmColors.emerald400 : SlmColors.danger;
+    final bgGlow = isGood ? const Color(0x332E7D32) : const Color(0x3DFF3B30);
+
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Dimmed backdrop scrim with tap-to-dismiss
+          GestureDetector(
+            onTap: _dismissInspection,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              color: const Color(0xE8050B16),
+            ),
+          ),
+          // Centered modal dialog card
+          Center(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: quiet ? Duration.zero : const Duration(milliseconds: 240),
+              curve: Curves.easeOutBack,
+              builder: (context, t, child) {
+                return Transform.scale(
+                  scale: 0.88 + 0.12 * t,
+                  child: Opacity(
+                    opacity: t.clamp(0.0, 1.0),
+                    child: child,
+                  ),
+                );
+              },
+              child: GestureDetector(
+                onTap: () {}, // Prevent taps inside dialog from closing backdrop
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: 320,
+                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isGood
+                          ? const [Color(0xFF0E2A1B), Color(0xFF091A14), Color(0xFF06101E)]
+                          : const [Color(0xFF2E1117), Color(0xFF1E0A10), Color(0xFF080F1C)],
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: accent.withValues(alpha: 0.85), width: 1.8),
+                    boxShadow: [
+                      BoxShadow(color: bgGlow, blurRadius: 28, spreadRadius: 3),
+                      const BoxShadow(color: Color(0xCC000000), blurRadius: 20, offset: Offset(0, 10)),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(21),
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Status Header Banner
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+                            decoration: BoxDecoration(
+                              color: isGood ? const Color(0xD92E7D32) : const Color(0xD9D32F2F),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  isGood ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  isGood ? 'সঠিক নির্বাচন! · নিরাপদ পদক্ষেপ' : 'ভুল নির্বাচন · বিপদের ঝুঁকি',
+                                  style: bangla(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          // Enlarged Zoom Card Media
+                          Container(
+                            width: 200,
+                            height: 180,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: accent.withValues(alpha: 0.65), width: 1.5),
+                              boxShadow: [
+                                BoxShadow(color: bgGlow, blurRadius: 16, offset: const Offset(0, 4)),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: opt.scene
+                                  ? (opt.asset.endsWith('.svg')
+                                      ? SvgPicture.asset(opt.asset, fit: BoxFit.cover)
+                                      : Image.asset(opt.asset, fit: BoxFit.cover))
+                                  : _ItemPedestal(asset: opt.asset, accent: accent),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Item Name (Label)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              enDigits(opt.labelBn),
+                              textAlign: TextAlign.center,
+                              style: bangla(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w900,
+                                color: isGood ? SlmColors.emerald300 : SlmColors.ivory,
+                                height: 1.25,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          // Mistake Reason / Affirmation Banner
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isGood ? const Color(0x28388E3C) : const Color(0x38D32F2F),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isGood ? const Color(0x6681C784) : const Color(0x80FF5252),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                enDigits(isGood
+                                    ? 'সঠিক সুরক্ষা সামগ্রী ও নিরাপদ কাজের নিয়ম মেনে চলা হয়েছে।'
+                                    : (opt.rejectBn.isNotEmpty
+                                        ? opt.rejectBn
+                                        : 'এই সামগ্রীটি বিপজ্জনক অথবা অনুপযুক্ত।')),
+                                textAlign: TextAlign.center,
+                                style: bangla(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: isGood ? const Color(0xFFE8F5E9) : const Color(0xFFFFECEC),
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Action Button (Touch-friendly & tactile)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(14),
+                                  onTap: _dismissInspection,
+                                  child: Ink(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: isGood
+                                            ? const [Color(0xFF1B5E20), Color(0xFF2E7D32)]
+                                            : const [Color(0xFF8A1E24), Color(0xFFB71C1C)],
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                        color: isGood ? SlmColors.emerald400 : SlmColors.gold400,
+                                        width: 1.4,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (isGood ? SlmColors.emerald400 : SlmColors.gold400).withValues(alpha: 0.25),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          isGood ? Icons.arrow_forward_rounded : Icons.replay_rounded,
+                                          size: 18,
+                                          color: isGood ? Colors.white : SlmColors.gold200,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          isGood ? 'এগিয়ে চলুন · পরের ধাপ' : 'বুঝেছি, আবার চেষ্টা করি',
+                                          style: bangla(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w900,
+                                            color: isGood ? Colors.white : SlmColors.ivory,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

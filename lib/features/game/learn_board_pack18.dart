@@ -250,7 +250,7 @@ const learnBoardPack18 = LearnBoardPack(
     rivalLineBn: FireBoardLines.rivalMyth,
     exitBn: FireBoardLines.rivalExit,
     believeNoIsCorrect: true,
-    stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
+    stingBn: 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
     dangerHints: [
       'ছোট Spark কয়েক মিনিটে বড় আগুন',
       'আগুন দ্রুত বাড়ে',

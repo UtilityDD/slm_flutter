@@ -103,15 +103,15 @@ abstract final class GloveLines {
   /// What the guide repeats (a different way each time) when tapped.
   static const tasks = [askOwn, askMate, askSpare];
 
-  static const intro = 'গাড়ি ছাড়ার আগে তিন জোড়া রাবার গ্লাভস বাছুন—নিজের, সাথীর আর একটা বাড়তি—প্রতিটায় হাওয়া দিয়ে। শেষে নিজের হেলমেট।';
+  static const intro = 'ভ্যান ছাড়ার আগেই তিন জোড়া রবার গ্লাভস গুছিয়ে নিতে হবে—নিজের জন্য, সাথীর জন্য, আর একটা ব্যাক-আপ। আন্দাজে নয়, প্রতিটায় হাওয়া ভরে লিক পরীক্ষা করে নিন। শেষে নিজের হেলমেটটা যাচাই করুন।';
   static const scene = 'সকাল 7:20 · ভ্যানের পাশে';
   static const askOwn = 'আগে নিজের জোড়াটা বাছুন।';
   static const askMate = 'এবার সাথীর জোড়া।';
   static const askSpare = 'শেষে একটা বাড়তি জোড়া।';
-  static const testFirst = 'আগে হাওয়া দিয়ে দেখুন!';
+  static const testFirst = 'চোখে দেখলেই হবে না—মুড়িয়ে চেপে হাওয়া আটকে দেখুন, ফুঁস করে হাওয়া বেরোচ্ছে কি না!';
   static const guessed = 'ঠিক, কিন্তু আন্দাজে নয়—আগে হাওয়া দিয়ে দেখুন।';
   static const holds = 'হাওয়া ধরে রাখছে—ঠিক আছে।';
-  static const leaks = 'হাওয়া বেরিয়ে যাচ্ছে—ফুটো আছে!';
+  static const leaks = 'ধরা পড়েছে! হাওয়া বেরিয়ে যাচ্ছে—এই গ্লাভস পরা মানে জেনেশুনে শক খাওয়া!';
   static const pressMore = 'আরও একটু চেপে ধরে রাখুন।';
   static const caught = 'ঠিক ধরেছেন!';
   static const rejectedGood = 'এটা তো ঠিক ছিল!';
@@ -155,7 +155,7 @@ abstract final class GloveLines {
     'সবাই তো না দেখেই এমনি পরে নেয়',
   ];
   static const choiceAsks = [
-    'ও বলছে পরীক্ষার সময় নেই। আপনি কী করবেন?',
+    'ও বলছে পরীক্ষার সময় নেই। ওর ভুল কথায় নাচবেন, না হাওয়া ভরে নিশ্চিত হবেন?',
     'হাওয়া দিয়ে দেখবেন, না এমনিই পরবেন?',
     'কার কথা শুনবেন — ওর, না নিয়মের?',
   ];

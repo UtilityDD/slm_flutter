@@ -5,6 +5,7 @@ import 'discharge_order.dart';
 import 'distance_spot.dart';
 import 'fire_choose.dart';
 import 'fire_pass.dart';
+import 'gate_field.dart';
 import 'glove_check.dart';
 import 'golden_minute.dart';
 import 'harness_check.dart';
@@ -18,6 +19,7 @@ import 'rod_pick.dart';
 import 'shock_rescue.dart';
 import 'sky_read.dart';
 import 'storm_push.dart';
+import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
 
 /// Builds the page of a Do game inside the level shell.
@@ -97,6 +99,14 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = stormPushPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => StormPushPage(ctx: ctx, pack: content, muted: muted);
+    case 'ten_sec_scan':
+      final content = tenSecPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => TenSecScanPage(ctx: ctx, pack: content, muted: muted);
+    case 'gate_field':
+      final content = gateFieldPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => GateFieldPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

@@ -165,12 +165,12 @@ class MascotSpeechLibrary {
   static const _welcomeNewPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.new.1',
-      textBn: 'হ্যালো! আমি ওস্তাদ, আপনার সেফটি গাইড। চলুন, প্রথম ধাপ থেকে শুরু করি!',
+      textBn: 'নমস্কার ভাই! আমি আপনার সাথে আছি ওস্তাদ হিসেবে। চলেন, প্রথম ধাপটা ভালো করে বুঝে নিই—মাঠের কাজে একটু ভুলেই কিন্তু জান চলে যায়।',
       mood: GuideMood.wake,
     ),
     MascotCue(
       id: 'ladder.welcome.new.2',
-      textBn: 'হাই! স্বাগতম। খেলতে খেলতে নিরাপদে কাজ শিখব—প্রথম ধাপে ট্যাপ করুন।',
+      textBn: 'আসুন ভাই! লাইনম্যানের আসল ধর্ম—কাজও হবে, অক্ষত শরীরে ঘরেও ফিরব। চলেন, প্রথম ধাপটা দিয়ে ডিউটি শুরু করি।',
       mood: GuideMood.wake,
     ),
   ];
@@ -178,17 +178,17 @@ class MascotSpeechLibrary {
   static const _welcomeDailyPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.daily.1',
-      textBn: 'হ্যালো! আবার দেখা হলো। আজকের ডিউটি শুরু করি?',
+      textBn: 'কী ভাই, এসে গেছেন? খুব ভালো। চলেন, আজকের ডিউটির প্রস্তুতি সেরে নিই।',
       mood: GuideMood.wake,
     ),
     MascotCue(
       id: 'ladder.welcome.daily.2',
-      textBn: 'ওয়েলকাম ব্যাক! চলুন, পরের ধাপটা সেরে ফেলি।',
+      textBn: 'আসুন আসুন! কাজ ফেলে রাখা যাবে না, চলেন পরের ধাপটা আজকেই পাকা করে ফেলি।',
       mood: GuideMood.wake,
     ),
     MascotCue(
       id: 'ladder.welcome.daily.3',
-      textBn: 'হাই! আজও এসেছেন—দারুণ! চলুন এগোই।',
+      textBn: 'এই তো চাই! রোজ সময়মতো তৈরি থাকাই পাকা লাইনম্যানের লক্ষণ। চলেন হাত লাগাই।',
       mood: GuideMood.wake,
     ),
   ];
@@ -196,17 +196,17 @@ class MascotSpeechLibrary {
   static const _welcomeReturnPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.return.1',
-      textBn: 'হাই! আবার এলেন? চলুন, যেখানে ছিলাম।',
+      textBn: 'সাবাশ ভাই! একটা ধাপ পাকা হলো। এবার পরের কাজের দিকে এগোনো যাক।',
       mood: GuideMood.talk,
     ),
     MascotCue(
       id: 'ladder.welcome.return.2',
-      textBn: 'ওয়েলকাম ব্যাক! পরের ধাপটা আপনার অপেক্ষায়।',
+      textBn: 'ব্যাস, এই তো চাই! ঠান্ডা মাথায় কাজ করলে কোনো বিপদই কাছে ঘেঁষবে না। চলেন পরেরটায়।',
       mood: GuideMood.talk,
     ),
     MascotCue(
       id: 'ladder.welcome.return.3',
-      textBn: 'হ্যালো! চলুন, আরেকটা ধাপ উঠি।',
+      textBn: 'মন খারাপ করবেন না ভাই। মাঠে ভুল থেকে না শিখলে বড় বিপদ ঘটে। আরেকবার মন দিয়ে চেষ্টা করুন, আমি সাথে আছি।',
       mood: GuideMood.talk,
     ),
   ];
@@ -214,22 +214,22 @@ class MascotSpeechLibrary {
   static const _idleLevelPool = <MascotCue>[
     MascotCue(
       id: 'ladder.idle.level.1',
-      textBn: 'সামনের ধাপটা জ্বলছে—ট্যাপ করুন, কাজটা সেরে নিই!',
+      textBn: 'দাঁড়িয়ে ভাবছেন কী ভাই? সামনের কাজটা অপেক্ষায় আছে, হাত লাগান!',
       mood: GuideMood.inspire,
     ),
     MascotCue(
       id: 'ladder.idle.level.2',
-      textBn: 'দাঁড়িয়ে ভাবছেন কী? এই ধাপে ট্যাপ করুন, মাঠে নেমে পড়ি।',
+      textBn: 'দেরি করলে ফল্ট বাড়বে বই কমবে না। চলেন, ধাপে নেমে কাজটা শেষ করি।',
       mood: GuideMood.talk,
     ),
     MascotCue(
       id: 'ladder.idle.level.3',
-      textBn: 'এক ট্যাপেই শুরু—নিয়ম মানলে পয়েন্ট আপনার হাতেই!',
+      textBn: 'একদম তৈরি তো? সামনের কাজটায় হাত লাগান, ওপরে ওঠা যাক।',
       mood: GuideMood.inspire,
     ),
     MascotCue(
       id: 'ladder.idle.level.4',
-      textBn: 'প্রস্তুত তো? জ্বলন্ত ধাপটায় চাপ দিন, ওপরে ওঠা যাক।',
+      textBn: 'মাঠের নিয়ম মনে রেখে কাজ সারুন—পাকা লাইনম্যান কোনো শর্টকাট মারে না।',
       mood: GuideMood.talk,
     ),
   ];
@@ -255,19 +255,19 @@ class MascotSpeechLibrary {
   static const _pokePool = <MascotCue>[
     MascotCue(
       id: 'ladder.poke.1',
-      textBn: 'মনে রাখবেন—হেলমেটের চিন-স্ট্র্যাপ শক্ত করে না বাঁধলে পড়ে যাওয়ার সময় কোনো কাজ হবে না!',
+      textBn: 'মাথায় গামছা পেঁচিয়ে হেলমেট পরবেন না! আর চিন-স্ট্র্যাপের ক্লিক লক না করলে ওপর থেকে পড়ার সময় হেলমেট আগেই ছিটকে যাবে!',
       mood: GuideMood.talk,
       gesture: GuideGesture.leanRight,
     ),
     MascotCue(
       id: 'ladder.poke.2',
-      textBn: 'তারে হাত দেওয়ার আগে গ্লাভস গুটিয়ে ফুঁ দিয়ে দেখুন—একটুও এয়ার লিক থাকলে ওই গ্লাভস বাতিল!',
+      textBn: 'তারে হাত দেওয়ার আগে গ্লাভসটা মুড়িয়ে হাওয়া আটকে দেখুন—পিনের ডগার মতো ছিদ্র থাকলেও কিন্তু 11 kV টেনে নেবে!',
       mood: GuideMood.inspire,
       gesture: GuideGesture.leanLeft,
     ),
     MascotCue(
       id: 'ladder.poke.3',
-      textBn: 'শাটডাউন নিলেও লাইন টেস্টার দিয়ে আগে চেক করুন, তারপর দুপাশে আর্থিং রড লাগান!',
+      textBn: 'শাটডাউনের কথায় অন্ধ বিশ্বাস নয়! টেস্টার দিয়ে ভোল্টেজ শুঁকে দেখুন, তারপর কাজের দুদিকেই ডিসচার্জ আর আর্থিং রড বসান!',
       mood: GuideMood.warn,
       gesture: GuideGesture.peek,
     ),
@@ -279,7 +279,7 @@ class MascotSpeechLibrary {
     ),
     MascotCue(
       id: 'ladder.poke.5',
-      textBn: 'পোলে ওঠার আগে হাতুড়ি বা লাঠি ঠুকে শুনুন—নিরেট ঠক্-ঠক্ না হয়ে ভোঁতা দপ্-দপ্ শব্দ হলে ওই পোল বিপজ্জনক!',
+      textBn: 'পোলে ওঠার আগে হাতুড়ি ঠুকে কান পাতুন—নিরেট ঠক্-ঠক্ হলে উঠবেন, ফাঁপা দপ্-দপ্ শুনলে পোল বাতিল!',
       mood: GuideMood.warn,
       gesture: GuideGesture.leanRight,
     ),
@@ -291,13 +291,13 @@ class MascotSpeechLibrary {
     ),
     MascotCue(
       id: 'ladder.poke.7',
-      textBn: 'স্টে-ওয়ারে কখনো লিকেজ কারেন্ট থাকতে পারে—কাজ করার আগে স্টে-ওয়ারেও টেস্টার ছুঁইয়ে দেখুন!',
+      textBn: 'স্টে-ওয়্যারে কখনো লিকেজ কারেন্ট থাকতে পারে—কাজ করার আগে স্টে-ওয়্যারেও টেস্টার ছুঁইয়ে দেখুন!',
       mood: GuideMood.warn,
       gesture: GuideGesture.peek,
     ),
     MascotCue(
       id: 'ladder.poke.8',
-      textBn: 'তাড়াহুড়ো একদম নয় ভাই—প্রতিদিন ০ মৃত্যুঝুঁকি নিয়ে ঘরে ফেরার শপথ আমাদের!',
+      textBn: 'তাড়াহুড়ো একদম নয় ভাই—প্রতিদিন ০ মৃত্যুঝুঁকি নিয়ে অক্ষত শরীরে ঘরে ফেরার শপথ আমাদের!',
       mood: GuideMood.glad,
       gesture: GuideGesture.spinHop,
     ),
@@ -331,57 +331,48 @@ class MascotSpeechLibrary {
   static const _sidePropCues = <String, MascotCue>{
     'helmet': MascotCue(
       id: 'side.helmet',
-      textBn: 'মাথায় গামছা থাকলে Helmet ঠিকমতো বসবে না! চিন-স্ট্র্যাপ লক করে Class-E হেলমেট পরুন।',
+      textBn: 'মাথায় গামছা থাকলে হেলমেটের গ্রিপ বসে না। গামছা খুলুন, Class-E হেলমেট পরে থুতনির চিন-স্ট্র্যাপ লক করুন।',
       mood: GuideMood.inspire,
-      voiceKey: 'ds_why_gamcha_block',
     ),
     'gloves': MascotCue(
       id: 'side.gloves',
-      textBn: 'কাজের আগে Gloves মুড়িয়ে হাওয়া ভরে দেখুন—সূক্ষ্ম পিন-হোল থাকলেও 11 kV শক লাগবে!',
+      textBn: 'গ্লাভস পরা মানেই সুরক্ষা নয়! মুড়িয়ে হাওয়া আটকে দেখুন—লিক থাকলে ওই গ্লাভস সরাসরি বাতিল।',
       mood: GuideMood.inspire,
-      voiceKey: 'ds_why_hole',
     ),
     'harness': MascotCue(
       id: 'side.harness',
-      textBn: 'কোমরের বেল্ট নয়, Full-Body Harness পরুন—পিঠের D-ring কাঁধের মাঝখানে আর দুই আঙুলের ছাড় রাখুন।',
+      textBn: 'কোমরের রশি বা বেল্টে ভরসা নেই—পড়লে কোমর ভাঙবে! ফুল বডি হারনেস পরুন, পিঠের ডি-রিং থাকবে দুই কাঁধের খাঁজে।',
       mood: GuideMood.inspire,
-      voiceKey: 'ds_why_belt',
     ),
     'boots': MascotCue(
       id: 'side.boots',
-      textBn: 'চপ্পল বা সাধারণ জুতোয় ইনসুলেশন থাকে না—পোলে ও সাবস্টেশনে Dielectric Safety Boot বাধ্যতামূলক।',
+      textBn: 'চপ্পল পরে পোলে বা সাবস্টেশনে পা রাখা নিষেধ! ডাই-ইলেকট্রিক সেফটি বুটের অক্ষত সোলই মাটির সাথে শর্ট হওয়া আটকায়।',
       mood: GuideMood.inspire,
-      voiceKey: 'ds_why_slip',
     ),
     'vest': MascotCue(
       id: 'side.vest',
-      textBn: 'পলিয়েস্টার কাপড় আর্ক ফ্ল্যাশে গলে চামড়ায় আটকে যায়! ফুল-হাতা সুতির পোশাক ও রিফ্লেক্টিভ জ্যাকেট পরুন।',
+      textBn: 'পলিয়েস্টার কাপড় স্পার্ক লাগলেই গলে চামড়ায় সেঁটে যায়! ফুল-হাতা সুতির পোশাক আর রিফ্লেক্টিভ জ্যাকেট পরুন।',
       mood: GuideMood.inspire,
-      voiceKey: 'ds_why_poly',
     ),
     'lock': MascotCue(
       id: 'side.lock',
-      textBn: 'মৌখিক কথায় ভরসা নয়—ব্রেকার অফ করে নিজের হাতে LOTO তালা ও Danger Tag লাগিয়ে PTW নিন।',
+      textBn: 'ফোনে লাইন অফ করেছি বললেই বিশ্বাস করবেন না! নিজের চোখে ব্রেকার নামিয়ে নিজের তালা মারুন, ডেঞ্জার বোর্ড ঝুলিয়ে তবেই লাইন ধরুন।',
       mood: GuideMood.inspire,
-      voiceKey: 'ds_l8_start',
     ),
     'rope': MascotCue(
       id: 'side.rope',
-      textBn: 'পোলে টুলস বা তার তোলার সময় হাতে না বয়ে শুকনো Hand-Rope ও টুল-ব্যাগ ব্যবহার করুন।',
+      textBn: 'পোলে তার বা ভারী টুলস তোলার সময় কখনো হাতে ঝুলিয়ে উঠবেন না। শুকনো হ্যান্ড-রশি আর পুলি ব্যবহার করুন।',
       mood: GuideMood.inspire,
-      voiceKey: 'ds_l7_start',
     ),
     'cone': MascotCue(
       id: 'side.cone',
-      textBn: 'রাস্তার ধারে কাজ শুরুর আগে Traffic Cone ও ফিতে দিয়ে ভিড় সরিয়ে লক্ষ্মণ রেখা তৈরি করুন।',
+      textBn: 'রাস্তায় কাজের সময় আগে কোন আর ফিতে দিয়ে কাজের জায়গা ঘিরুন—পথচারী আর আপনার মাঝখানে লক্ষ্মণ রেখা টানুন।',
       mood: GuideMood.inspire,
-      voiceKey: 'ds_l14_crowd_first',
     ),
     'goggles': MascotCue(
       id: 'side.goggles',
-      textBn: 'ফিউজ বাঁধা বা প্যানেল সুইচিংয়ের সময় আর্কের ফুলকি থেকে চোখ বাঁচাতে Safety Goggles / Face Shield পরুন।',
+      textBn: 'ফিউজ বাঁধা বা প্যানেল সুইচিংয়ের সময় আর্কের ফুলকি থেকে চোখ বাঁচাতে সেফটি গগলস ও ফেস শিল্ড পরুন।',
       mood: GuideMood.inspire,
-      voiceKey: 'ds_l6_room_no_shield',
     ),
   };
 

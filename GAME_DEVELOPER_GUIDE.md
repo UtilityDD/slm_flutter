@@ -7,6 +7,7 @@
 > 3. This guide — code, wiring, tests.
 > 4. [GAME_PATH_CHECKLIST.md](GAME_PATH_CHECKLIST.md) — what is built, what is next (update it with every level).
 > 5. [MODULE1_LADDER.md](MODULE1_LADDER.md) — Module 1's rung-by-rung design notes and deadly lists.
+> 6. [LADDER_VOICE_SCRIPTS.md](LADDER_VOICE_SCRIPTS.md) — master speech scripts and ledger for guide & coworker voice generation.
 >
 > Product intent: [GAME_DESIGN.md](GAME_DESIGN.md). Motion and brand: [lib/design/MOTION.md](lib/design/MOTION.md).
 > Legacy `dsLevels` screens only: [lib/features/duty_slip/GAME_LEVELS_GUIDE.md](lib/features/duty_slip/GAME_LEVELS_GUIDE.md).
@@ -211,9 +212,9 @@ Status per rung: [GAME_PATH_CHECKLIST.md](GAME_PATH_CHECKLIST.md). Deadly lists:
 | 26 | `1.9/do/0` · `sky_read` · `do_1_9_a` | `sky_read.dart`, `sky_world.dart` | turning weather, tap the signs, stop or work on; lightning push = deadly; a needless stop is not scored |
 | 27 | `1.9/do/1` · `storm_push` · `do_1_9_b` | `storm_push.dart` | the supervisor (rival art/voice) per `StormCue`; hands-on refusal, shelter; climbing in a storm = deadly |
 
-Boards: `learnBoardPack11/12` (`learn_board_models.dart`), `learnBoardPack13…19` (`learn_board_pack13…19.dart`, art `tool/{pole,harness,rod,ptw,aid,fire,storm}_board_art.py`). The `storm_board/` folder is shared: `rain_/thunder_/wind_/step_/plan_` (board), `sky_` (step 26), `push_` (step 27).
+Boards: `learnBoardPack11/12` (`learn_board_models.dart`), `learnBoardPack13…19` (`learn_board_pack13…19.dart`), `learnBoardPack110` (`learn_board_pack110.dart`, art `tool/scan_board_art.py`). The `storm_board/` folder is shared: `rain_/thunder_/wind_/step_/plan_` (board), `sky_` (step 26), `push_` (step 27).
 
-Legacy (`lib/features/duty_slip/`): `dsLevels` 1–33 still serve rungs without a shell game (`legacyLevel`); Module 1 steps 28–30 use L5 / L33 until rebuilt. Do not resurrect deleted Zero-Loss screens.
+Legacy (`lib/features/duty_slip/`): `dsLevels` 1–33 still serve rungs without a shell game (`legacyLevel`); Module 1 steps 29–30 use L5 / L33 until rebuilt. Do not resurrect deleted Zero-Loss screens.
 
 ---
 

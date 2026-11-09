@@ -165,9 +165,9 @@ abstract final class KitLines {
   /// What the guide repeats (a different way each time) when tapped.
   static const tasks = [askTorso, askLegs, askFeet];
 
-  static const askTorso = 'আগে জামা। হাতে নিয়ে ভালো করে দেখুন।';
-  static const askLegs = 'এবার প্যান্ট। দেখে তবেই পরুন।';
-  static const askFeet = 'এবার জুতো। সোলটা দেখতে ভুলবেন না।';
+  static const askTorso = 'আগে জামাটা ভালো করে হাতড়ে দেখুন—সুতি তো? কোনো পোড়া দাগ বা পলিয়েস্টার নেই তো?';
+  static const askLegs = 'এবার প্যান্টটা দেখুন—তেল চিটচিটে থাকলে স্পার্কে দাউদাউ করে জ্বলবে।';
+  static const askFeet = 'এবার বুটটা উল্টে দেখুন—সোলের নিচে পেরেক বা ফাটল থাকলে কিন্তু কারেন্ট গ্রাউন্ডে টেনে নেবে!';
   static const caught = 'ঠিক ধরেছেন!';
   static const rejectedGood = 'এটা তো ঠিক ছিল!';
   static const callHeld = 'ঠিক। তাড়াহুড়োতেই দুর্ঘটনা হয়।';
@@ -248,7 +248,7 @@ abstract final class KitLines {
     'সবাই তো এভাবেই পরে নেয়',
   ];
   static const choiceAsks = [
-    'ও বলছে দেখার সময় নেই। আপনি কী করবেন?',
+    'দেখলেন তো কেমন তাড়া দিচ্ছে? ওর কথায় কান দিয়ে না দেখেই পরবেন, না ভালো করে যাচাই করবেন?',
     'চেক বাদ দেবেন, না দেখে তবেই পরবেন?',
     'কার কথা শুনবেন — ওর, না নিয়মের?',
   ];
@@ -317,7 +317,7 @@ const kitCheckPack11 = KitCheckPack(
   id: 'kit_check_1_1',
   titleBn: 'কবচ যাচাই',
   sceneBn: 'সকাল 7টা · সাবস্টেশনের স্টোর রুম',
-  introBn: 'কাল রাতের ঝড়ে লাইন পড়েছে। স্টোরের কিট পুরনো—প্রতিটা জিনিস দেখে তবেই পরুন।',
+  introBn: 'কাল রাতের ঝড়ে লাইন ছিঁড়ে একসা! স্টোর থেকে কিট নিয়ে বেরোতে হবে। স্টোরের মালপত্র অনেক সময় ফাটা বা ছেঁড়া থাকে—জামা, প্যান্ট, বুট—প্রতিটা জিনিস খুঁটিয়ে দেখে তবেই গায়ে তুলুন।',
   quickMs: 75000,
   callBefore: [KitSlot.legs, KitSlot.feet],
   callers: [

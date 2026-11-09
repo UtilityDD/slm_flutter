@@ -9,7 +9,7 @@ how to build a level is in [GAME_LEVEL_PLAYBOOK.md](GAME_LEVEL_PLAYBOOK.md), cod
 ♻️ plays an older version (text deck or a legacy `dsLevels` screen) · ☐ not started (catalog `comingSoon`)
 
 **Totals (2026-11-08):** 10 modules · 109 lessons · 327 rungs (109 শেখা, 208 কাজ, 10 rank gates).
-Playable: 28 rungs, all in Module 1. Module 1: **27 of 30 built**, 3 to go.
+Playable: 29 rungs, all in Module 1. Module 1: **28 of 30 built**, 2 to go.
 
 ---
 
@@ -44,8 +44,8 @@ Playable: 28 rungs, all in Module 1. Module 1: **27 of 30 built**, 3 to go.
 | 25 | `1.9/learn` | ঝড়-বৃষ্টিতে 'না' | board · `learn_board_pack19.dart` | ✅ |
 | 26 | `1.9/do/0` | আকাশ পড়ুন | Do · `sky_read.dart` + `sky_world.dart` (new) | 🟡 wind ≥ 45 km/h = stop |
 | 27 | `1.9/do/1` | সুপারভাইজারের চাপ | Do · `storm_push.dart` (new) | 🟡 supervisor uses the rival's art/voice |
-| 28 | `1.10/learn` | ১০ সেকেন্ডের মেন্টাল চেকলিস্ট | text deck (♻️) → board | ☐ |
-| 29 | `1.10/do/0` | ১০ সেকেন্ডের স্ক্যান | legacy L5 (♻️) → new Do | ☐ |
+| 28 | `1.10/learn` | ১০ সেকেন্ডের মেন্টাল চেকলিস্ট | board · `learn_board_pack110.dart` | ✅ |
+| 29 | `1.10/do/0` | ১০ সেকেন্ডের স্ক্যান | Do · `ten_sec_scan.dart` (new) | ✅ |
 | 30 | `m1/gate` | প্রথম ডকেট (rank gate) | legacy L33 field night (♻️) → new gate | ☐ |
 
 Cross-level items:

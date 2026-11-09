@@ -1544,7 +1544,7 @@
       "lessonId": "1.10",
       "moduleId": "m1",
       "packId": "do_1_10_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 28
     },
     {
@@ -1553,7 +1553,7 @@
       "lessonId": "1.10",
       "moduleId": "m1",
       "packId": "gate_m1",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 29
     },
     {
@@ -4493,10 +4493,10 @@
     },
     {
       "id": "do_1_10_a",
-      "engineType": "placeholder",
+      "engineType": "ten_sec_scan",
       "lessonId": "1.10",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [],
       "legacyLevel": 5
@@ -4505,7 +4505,7 @@
       "id": "gate_m1",
       "engineType": "gate_field",
       "moduleId": "m1",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [
         "lethal_any_marked"

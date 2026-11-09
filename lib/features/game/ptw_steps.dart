@@ -108,7 +108,7 @@ abstract final class StepLines {
   static const tasks = [askPermit, askClear];
 
   static const title = 'সোনালি ধাপ';
-  static const intro = 'আজ শাটডাউনের কাজ! পারমিট নেওয়া থেকে লাইন ক্লিয়ার — একটা ধাপও বাদ নয়।';
+  static const intro = 'আজ বড় শাটডাউনের ডিউটি। কন্ট্রোল রুমে ফোন, ব্রেকার নামানো, LOTO তালা, পারমিট সই থেকে কাজ শেষে লাইন ক্লিয়ার—একটা ধাপও এড়িয়ে যাওয়া চলবে না।';
   static const rounds = ['পারমিট', 'লাইন ক্লিয়ার'];
   static const askPermit = 'কাজ শুরুর আগে পারমিটের পরের ধাপটা কী? যা লাগে, ট্যাপ করুন।';
   static const askClear = 'কাজ শেষ। লাইন ক্লিয়ারের পরের ধাপটা কী? যা লাগে, ট্যাপ করুন।';

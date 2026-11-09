@@ -117,8 +117,14 @@ void main() {
     for (final l in RodBoardLines.recorded) {
       rival.add(enDigits(l).trim());
     }
-    // Steps 16, 19, 22, 25 (lesson 1.6–1.9 boards): the rival's taunt and myth.
-    for (final l in [...PtwBoardLines.recorded, ...AidBoardLines.recorded, ...FireBoardLines.recorded, ...StormBoardLines.recorded]) {
+    // Steps 16, 19, 22, 25, 28 (lesson 1.6–1.10 boards): the rival's taunt and myth.
+    for (final l in [
+      ...PtwBoardLines.recorded,
+      ...AidBoardLines.recorded,
+      ...FireBoardLines.recorded,
+      ...StormBoardLines.recorded,
+      ...ScanBoardLines.recorded,
+    ]) {
       rival.add(enDigits(l).trim());
     }
     // Step 24: the coworker's refill push in his own voice.

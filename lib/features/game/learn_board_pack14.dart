@@ -281,7 +281,7 @@ const learnBoardPack14 = LearnBoardPack(
     rivalLineBn: learnBoardPack14MythLine,
     exitBn: 'যত্তসব নতুন নিয়ম! আমি চললাম…',
     believeNoIsCorrect: true,
-    stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
+    stingBn: 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
     dangerHints: [
       'গায়ে কোনো হারনেস নেই',
       'পড়লে থামানোর কিছুই নেই',

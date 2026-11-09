@@ -59,7 +59,7 @@ abstract final class DischargeLines {
   static const tasks = [askOn, askNext, askOff];
 
   static const title = 'আগে মাটি, পরে লাইন';
-  static const intro = 'পারমিট হাতে, লাইন বন্ধ। কিন্তু ঘুমন্ত বাঘও বাঘ — রড দিয়ে লাইনটা সত্যিই নিরাপদ করুন!';
+  static const intro = 'পারমিট সই হলো, লাইনও বন্ধ হলো। কিন্তু মনে রাখবেন—বন্ধ লাইনও কিন্তু ঘুমন্ত বাঘ! তারে জমে থাকা ক্যাপাসিটিভ চার্জ থাকে। আগে মাটিতে আর্থ ক্ল্যাম্প, তারপর তারে রড ঠেকিয়ে লাইন নিরাপদ করুন।';
   static const rounds = ['লাগানো', 'খোলা'];
   static const askOn = 'ডিসচার্জ রড হাতে। কোনটা আগে?';
   static const askNext = 'এবার পরের ধাপ — কোনটা?';

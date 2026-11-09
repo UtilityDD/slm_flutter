@@ -52,6 +52,7 @@ Every play is **dealt fresh** (order, traps, which tool is empty, who pushes and
 
 ## 3. Characters and voice
 
+- **Master voice scripts & ledger:** All approved field-Bangla lines for the guide and the careless coworker are maintained in [LADDER_VOICE_SCRIPTS.md](LADDER_VOICE_SCRIPTS.md). Use it as the single source of truth for script reviews and voice generation.
 - **The guide is always the existing mascot** (`AiLinemanGuide`). Never create another guide character.
 - **The careless coworker** = level 1's rival: art `assets/duty_slip/dress/myth_rival_bad.webp`, puppet
   `MythRivalPuppet`, tag "অসাবধান লাইনম্যান", his lines in **his recorded voice** (`bn-BD-PradeepNeural`, −6 %,

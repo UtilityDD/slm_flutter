@@ -8,6 +8,7 @@ import 'learn_board_pack16.dart';
 import 'learn_board_pack17.dart';
 import 'learn_board_pack18.dart';
 import 'learn_board_pack19.dart';
+import 'learn_board_pack110.dart';
 
 export 'learn_board_pack13.dart' show learnBoardPack13, PoleBoardLines;
 export 'learn_board_pack14.dart' show learnBoardPack14;
@@ -16,6 +17,7 @@ export 'learn_board_pack16.dart' show learnBoardPack16, PtwBoardLines;
 export 'learn_board_pack17.dart' show learnBoardPack17, AidBoardLines;
 export 'learn_board_pack18.dart' show learnBoardPack18, FireBoardLines;
 export 'learn_board_pack19.dart' show learnBoardPack19, StormBoardLines;
+export 'learn_board_pack110.dart' show learnBoardPack110, ScanBoardLines;
 
 enum LearnBoardMode { pickGear, mythRival }
 
@@ -99,8 +101,8 @@ class LearnMythBeat {
     this.wornAssets = const [],
     this.dangerHints = const [],
     this.tauntBn = 'আরে! আমাদের বাপ-দাদারা তো এসব দিয়েই সারা জীবন কাজ করে গেল!',
-    this.stingBn = 'এই লোক যা বলছে… বিশ্বাস করেন?',
-    this.flipStingBn = 'এই লোক যা বলছে… সেটা কি ভুল?',
+    this.stingBn = 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
+    this.flipStingBn = 'ও তো নিজের আলসেমিতে শর্টকাট মারছে! ওর কথায় ভুলবেন, না নিজের জীবন বাঁচাবেন?',
     this.exitBn = 'যত্তসব নতুন নিয়ম! আমি চললাম…',
   });
 
@@ -169,6 +171,7 @@ LearnBoardPack? learnBoardPackFor(String lessonId) {
   if (lessonId == '1.7') return learnBoardPack17;
   if (lessonId == '1.8') return learnBoardPack18;
   if (lessonId == '1.9') return learnBoardPack19;
+  if (lessonId == '1.10') return learnBoardPack110;
   return null;
 }
 
@@ -506,7 +509,7 @@ const learnBoardPack11 = LearnBoardPack(
     rivalLineBn: 'ফাটা হেলমেট হোক বা বাইকের হেলমেট—সবই তো মাথা বাঁচায়! এত নিয়ম লাগে নাকি?',
     exitBn: 'যত্তসব নতুন নিয়ম! আমি চললাম…',
     believeNoIsCorrect: true,
-    stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
+    stingBn: 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
     wornAssets: [],
     dangerHints: [
       'ফাটা হেলমেট—চিন-স্ট্র্যাপ খোলা',
@@ -731,7 +734,7 @@ const learnBoardPack12 = LearnBoardPack(
     rivalLineBn: 'আমি তো তারটা ছুঁচ্ছি না, একটু কাছে গেলে কিছু হবে না।',
     exitBn: 'যত্তসব নতুন নিয়ম! আমি চললাম…',
     believeNoIsCorrect: true,
-    stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
+    stingBn: 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
     dangerHints: [
       'তারের হাতের নাগালে দাঁড়িয়ে',
       'লক্ষ্মণ রেখার একেবারে ভেতরে',

@@ -127,7 +127,7 @@ abstract final class RodLines {
   static const tasks = [ask, inspectAsk];
 
   static const title = 'সঠিক রড';
-  static const intro = 'শাটডাউনের সময় হয়ে এল! ডকেট দেখে ঠিক রড বাছুন — হাতে নিয়ে যাচাই করে।';
+  static const intro = 'শাটডাউনের টাইম হয়ে এলো! ডকেটের ভোল্টেজ মিলিয়ে ভ্যান থেকে ঠিক রেটিংয়ের ডিসচার্জ রড বাছুন—কোনো বাঁশ বা পিভিসি জুগাড় চলবে না। রডটা হাতে নিয়ে স্টিক আর ক্ল্যাম্প দেখে নিন।';
   static const rounds = ['প্রথম', 'দ্বিতীয়', 'শেষ'];
   static const ask = 'ডকেট দেখুন। কোন রডটা?';
   static const inspectAsk = 'হাত বুলিয়ে স্টিক, কেবিল আর ক্ল্যাম্প দেখুন। নেবেন?';

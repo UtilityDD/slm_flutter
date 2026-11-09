@@ -15,7 +15,7 @@ Written from the lesson content itself (`tool/all_training_chapters_bn.json`). D
 
 **Every mistake teaches visually:** freeze → that lesson's own **ভুল বনাম সঠিক** picture (from `slm_web/public/images/loader/`) → one line why → **পাঠে দেখুন** opens the lesson at that paragraph → saved in **আমার ভুলের খাতা** (comes back as recall).
 **Deadly mistake:** 💀 + fall to the rank base (option C: only Do levels passed since the last death turn silver, "prove again"; Learn stays done). Before climbing again: read the lesson section that killed you. The first deadly mistake in the game is a near-miss (no fall).
-**Same frame on every Do level:** fresh deal each play, never blocked by speech, short reactions, result card with "আজ যা ধরলেন / যা মিস করলেন", level score (latest play counts). Voice: device TTS for new levels.
+**Same frame on every Do level:** fresh deal each play, never blocked by speech, short reactions, result card with "আজ যা ধরলেন / যা মিস করলেন", level score (latest play counts). Voice: device TTS for new levels; master lines ledger in [`LADDER_VOICE_SCRIPTS.md`](LADDER_VOICE_SCRIPTS.md).
 
 Status: ✅ built · ♻️ old level used as a stand-in until the new one is built · 🆕 to build.
 
@@ -52,9 +52,9 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 | 25 | 1.9 শেখা | ঝড়-বৃষ্টিতে 'না' | choose | — | ✅ picture board (2026-11-08): 5 rounds (rain, lightning, wind, step potential, saying no) + the rival's rubber-PPE lightning myth |
 | 26 | 1.9 কাজ 1 | আকাশ পড়ুন — drizzle → wind galloping → thunder: when to stop | say no + spot | staying on the pole in lightning | ✅ new on the shared kit (2026-11-08): drawn roadside with turning weather (drizzle, galloping wires, thunder, strike), tap the signs, stop or work on, reason deck, coworker "আর একটু, শেষ করে নামি" = deadly in lightning, freeze |
 | 27 | 1.9 কাজ 2 | সুপারভাইজারের চাপ — "হালকা বৃষ্টি, শেষ করো"; safe shelter | say no + choose | climbing in a storm under pressure | ✅ new on the shared kit (2026-11-08): storm roadside, the supervisor (rival art and voice) pushes "হালকা বৃষ্টি, শেষ করো!", judge each moment, hands-on refusal, safe shelter; climbing in a storm = deadly |
-| 28 | 1.10 শেখা | ১০ সেকেন্ডের মেন্টাল চেকলিস্ট | order | — | text deck ♻️ |
-| 29 | 1.10 কাজ | ১০ সেকেন্ডের স্ক্যান — 10 quick checks before the feet leave the ground | all five, fast | any deadly check missed (from earlier lessons) | ♻️ L5 → 🆕 |
-| 30 | র‍্যাঙ্ক গেট | প্রথম ডকেট — one full job mixing the module | all five | any deadly rule of the module | ♻️ L33 field night |
+| 28 | 1.10 শেখা | ১০ সেকেন্ডের মেন্টাল চেকলিস্ট | choose | — | ✅ picture board (2026-11-09): 5 rounds (PPE, harness/tools, PTW/mindset, pole/clearance, hazards/rescue) + rival's 20-years overconfidence myth |
+| 29 | 1.10 কাজ | ১০ সেকেন্ডের স্ক্যান — 10 quick checks before the feet leave the ground | choose · say no | any deadly check missed (from earlier lessons) | ✅ new on shared kit (2026-11-09): 10 sequential checks (PPE, gloves, harness, tools, pole, clearance, PTW, weather, surroundings, rescue), rapid Go/Stop controls, reason deck, coworker pressure moment, mistake cards |
+| 30 | র‍্যাঙ্ক গেট | প্রথম ডকেট — one full job mixing the module | all five | any deadly rule of the module | ✅ new on shared kit (2026-11-09): 5-station continuous field simulation (van rack, PTW verification, 360° acoustic pole tap, earth clamp + live spark discharge, storm sky & coworker moment), unlocks Trainee rank and সুরক্ষা কবচ badge |
 
 ---
 
@@ -138,7 +138,7 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 ### 1.10 ১০ সেকেন্ডের মেন্টাল চেকলিস্ট (steps 28–30)
 - **Teaches:** a pilot-style 10-second scan before the feet leave the ground — personal (PPE, harness, tools, permit, my state of mind) and surroundings (pole checked, লক্ষ্মণ রেখা, other hazards: water/traffic/bees, weather, escape & rescue plan); stop on any doubt; run it with your mate.
 - **Step 29 ১০ সেকেন্ডের স্ক্যান** 🆕 Ten quick cards in a row, each a photo with one question ("হারনেসের ফিতে?", "পোল দেখেছেন?", "আকাশ?"), 2–3 seconds each: go or stop. Each card links to its lesson — a mistake opens that lesson's picture. The whole module recalled in under a minute.
-- **Step 30 র‍্যাঙ্ক গেট: প্রথম ডকেট** ♻️ L33 field night now. Target: one full job — kit from the store → permit check → pole check → distance → discharge order → a weather call — every move, every deadly rule of the module. Pass = **ট্রেইনি**; a clean module (0 deaths) = **মৃত্যুহীন** mark and a fresh helmet.
+- **Step 30 র‍্যাঙ্ক গেট: প্রথম ডকেট** ✅ built on shared kit (2026-11-09): `gate_field.dart`. One full live field simulation across 5 stations: kit from the van rack → signed PTW check vs pole tag & verbal refusal → 360° pole orbit & acoustic knock → earth clamp + phase hooks with live blue spark discharge → storm sky & coworker refusal → van shelter. Pass = **ট্রেইনি** rank unlocked + **সুরক্ষা কবচ** badge.
 - **Pictures:** `10s_check_list`, `choose_right_path`.
 
 ---

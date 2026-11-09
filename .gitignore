@@ -56,6 +56,9 @@ app.*.symbols
 *.mov
 *.webm
 *.mkv
+phone_*.png
+temp_audio_batch/
+temp_portrait_*/
 !tool/media_src/**
 
 # Obfuscation related

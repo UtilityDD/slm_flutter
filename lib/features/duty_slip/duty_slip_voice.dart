@@ -14,6 +14,36 @@ class DsVoice {
 
   static const _audioMap = <String, String>{
     // =========================================================
+    // ElevenLabs Studio Guide Voice
+    // =========================================================
+    'guide_welcome': 'sounds/guide_voice/guide_welcome.mp3',
+    'নমস্কার লাইনম্যান দাদা! কাজে নামার আগে প্রতিটি সুরক্ষা নিয়ম ঝালিয়ে নিন।': 'sounds/guide_voice/guide_welcome.mp3',
+    'guide_praise_great': 'sounds/guide_voice/guide_praise_great.mp3',
+    'সাবাশ! একদম খাঁটি লাইনম্যানের মতো নিখুঁত কাজ হয়েছে!': 'sounds/guide_voice/guide_praise_great.mp3',
+    'guide_warn_danger': 'sounds/guide_voice/guide_warn_danger.mp3',
+    'সাবধান! সুরক্ষায় কোনো আপস নয়, আগে নিজের জীবন তারপর কাজ!': 'sounds/guide_voice/guide_warn_danger.mp3',
+    'guide_halt_mistake': 'sounds/guide_voice/guide_halt_mistake.mp3',
+    'থামুন! এক মুহূর্তের ভুলে বড় বিপদ হতে পারে। নিয়ম মেনে পুনরায় চেষ্টা করুন।': 'sounds/guide_voice/guide_halt_mistake.mp3',
+    'guide_rank_up': 'sounds/guide_voice/guide_rank_up.mp3',
+    'অভিনন্দন! আপনি নতুন পদোন্নতি এবং সুরক্ষা কবচ অর্জন করেছেন!': 'sounds/guide_voice/guide_rank_up.mp3',
+    'gate_intro': 'sounds/guide_voice/gate_intro.mp3',
+    'জরুরি ডকেট এলো! ১১ কেভি ফিডার মেরামত। ভ্যান থেকে সঠিক রড বাছাই, পারমিট মেলানো, পোলের শব্দ পরীক্ষা, ডিসচার্জ স্পার্ক এবং ঝড় থেকে নিরাপদে ফিরে ট্রেইনি পদোন্নতি অর্জন করুন!': 'sounds/guide_voice/gate_intro.mp3',
+    'gate_ask_van': 'sounds/guide_voice/gate_ask_van.mp3',
+    'ডকেট ১১ কেভি লাইনের। ভ্যান থেকে ঠিক রডটি বেছে নিন।': 'sounds/guide_voice/gate_ask_van.mp3',
+    'gate_ask_ptw': 'sounds/guide_voice/gate_ask_ptw.mp3',
+    'সাইটের ফিডার প্লেট দেখুন। ফোনে কাজ শুরু করবেন, না থামবেন?': 'sounds/guide_voice/gate_ask_ptw.mp3',
+    'exp_right_1': 'sounds/guide_voice/exp_right_1.mp3',
+    'exp_right_2': 'sounds/guide_voice/exp_right_2.mp3',
+    'exp_right_3': 'sounds/guide_voice/exp_right_3.mp3',
+    'exp_right_4': 'sounds/guide_voice/exp_right_4.mp3',
+    'exp_wrong_holo_na': 'sounds/guide_voice/exp_wrong_holo_na.mp3',
+    'exp_wrong_vul': 'sounds/guide_voice/exp_wrong_vul.mp3',
+    'exp_wrong_bhabun': 'sounds/guide_voice/exp_wrong_bhabun.mp3',
+    'rank_3star': 'sounds/guide_voice/rank_3star.mp3',
+    'rank_2star': 'sounds/guide_voice/rank_2star.mp3',
+    'rank_fail': 'sounds/guide_voice/rank_fail.mp3',
+
+    // =========================================================
     // লেভেল ১ — পোশাক
     // =========================================================
     'ds_l1_intro': 'sounds/voice/ds_l1_intro.mp3',

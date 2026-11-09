@@ -99,7 +99,7 @@ abstract final class DistanceLines {
   static const tasks = [askAny];
 
   static const title = 'কতটা দূরে?';
-  static const intro = 'লাইনে কারেন্ট, নিচে লোকজন! লক্ষ্মণ রেখা টেনে সবাইকে বাঁচান।';
+  static const intro = 'ওপরে চালু লাইন, আর নিচে পথচলতি মানুষের ভিড়! বিদ্যুৎ স্পর্শ না করলেও বাতাসের মধ্যে লাফ মারে। লাইনের ভোল্টেজ দেখে লক্ষ্মণ রেখা মাপুন—কাউকে এর ভেতরে ঘেঁষতে দেবেন না।';
   static const rounds = ['প্রথম', 'দ্বিতীয়', 'শেষ'];
 
   /// The task: the line is named (its plate shows it too), never the distance.

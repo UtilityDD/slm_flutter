@@ -256,7 +256,7 @@ const learnBoardPack15 = LearnBoardPack(
     rivalLineBn: RodBoardLines.rivalMyth,
     exitBn: RodBoardLines.rivalExit,
     believeNoIsCorrect: true,
-    stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
+    stingBn: 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
     dangerHints: [
       'ডিসচার্জ না করেই লাইনে হাত',
       'জমা চার্জে মারাত্মক শক লাগতে পারে',

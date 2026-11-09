@@ -165,6 +165,7 @@ const learnCoachVoice = <String, String>{
 const learnRivalVoice = <String, String>{
   "অর্ধেকটা তো বাকি — রেখে দাও, পরের বার কাজে লাগবে।": 'sounds/learn_voice/r_84c998f6a9.mp3',
   "আমার সুপারভাইজার পারমিট নিয়েছেন, তাই আমার আর এটা নিয়ে ভাবার দরকার নেই।": 'sounds/learn_voice/r_172cd33959.mp3',
+  "আমি 20 বছর ধরে এই কাজ করছি, আমার এসব চেকলিস্টের দরকার নেই। সবকিছু আমার মাথায় আছে।": 'sounds/learn_voice/r_b3d015de00.mp3',
   "আমি 20 বছর ধরে কাজ করছি, খুব সাবধানে থাকি। আমার কখনো হারনেস লাগে না।": 'sounds/learn_voice/r_98caf375ff.mp3',
   "আমি তো তারটা ছুঁচ্ছি না, একটু কাছে গেলে কিছু হবে না।": 'sounds/learn_voice/r_e8af4656af.mp3',
   "আমি রাবারের জুতো আর গ্লাভস পরে আছি, তাই বজ্রপাতে আমার কিছু হবে না।": 'sounds/learn_voice/r_10d2004bcf.mp3',
@@ -184,6 +185,7 @@ const learnRivalVoice = <String, String>{
   "ওকে মাটিতে পুঁতে দাও, কাদা মাখাও — ভেতরের বিদ্যুৎ বেরিয়ে যাবে!": 'sounds/learn_voice/r_4ede43cb15.mp3',
   "কম ভোল্টেজ (LT Line) শক তেমন বিপজ্জনক নয়, একটু ঝাঁকুনি দিয়েই ছেড়ে দেয়।": 'sounds/learn_voice/r_0bc69bd21b.mp3',
   "কারেন্ট কখন আসবে? সকাল থেকে বসে আছি!": 'sounds/learn_voice/r_17dfdebfd2.mp3',
+  "কী ভাবছেন দাঁড়িয়ে? 20 বছর ধরে তো কাজ করছি, এসব চেকলিস্টের কী দরকার!": 'sounds/learn_voice/r_2054ee9516.mp3',
   "চল চল, দেরি হচ্ছে! এসব দেখার সময় নেই।": 'sounds/learn_voice/r_b56e8939c0.mp3',
   "চুলের মতো ফাটল তো থাকেই, ওতে কিছু হয় না! উঠে পড়ো।": 'sounds/learn_voice/r_25361a4a22.mp3',
   "ছোট আগুন, একটু পরেই নিজে থেকে নিভে যাবে।": 'sounds/learn_voice/r_7575295ee0.mp3',

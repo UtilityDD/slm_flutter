@@ -64,10 +64,10 @@ class LearnFeedbackLines {
 
   /// After the rival's myth is rejected: ask why it is wrong.
   static const mythWhyAsk = <FeedbackLine>[
-    FeedbackLine('কেন বিশ্বাস করবেন না?'),
-    FeedbackLine('ওর কথা ভুল কেন, বলুন তো?'),
-    FeedbackLine('কারণটা কী, জানেন?'),
-    FeedbackLine('কোন কারণে এই কথা বিপদ ডাকে?'),
+    FeedbackLine('একদম ঠিক! কিন্তু ওকে তো বুঝিয়ে বলতে হবে—ওর কথায় কেন ভুল?'),
+    FeedbackLine('সাবাশ ওস্তাদ! এবার বলুন তো, কোন কারণে ওর এই কথা বিপদ ডাকে?'),
+    FeedbackLine('ঠিক ধরেছেন! কিন্তু ওর এই শর্টকাটটা ভুল কেন, জানিয়ে দিন তো?'),
+    FeedbackLine('ওর ফাঁদে পা দেননি, খুব ভালো! এবার আসল নিয়মটা বলুন।'),
   ];
 
   /// New item to choose.
@@ -89,9 +89,9 @@ class LearnFeedbackLines {
 /// Fixed coach lines in the Learn board (all recorded in the coach voice).
 abstract final class LearnCoachLines {
   static const notThisReason = 'এই কারণ নয়।';
-  static const wrongBelief = 'ভুল বিশ্বাস। কেন নয়, বলুন।';
+  static const wrongBelief = 'সর্বনাশ! ওর ফাঁদেই পা দিলেন? ওর কথায় বিশ্বাস করলে যে লাশ হয়ে বাড়ি ফিরতে হবে!';
   static const threeMisses = 'তিনবার ভুল হলো। পাঠটা একবার দেখে নিন।';
-  static const rivalComing = 'সাবধান! একজন অসাবধান লাইনম্যান আসছে…';
+  static const rivalComing = 'আরে! ওই দেখুন, শর্টকাট মারার একজন ওস্তাদ এসে জুটেছে!';
   static const realPoint = 'এই তো আসল কথা।';
   static const newRecord = 'নতুন রেকর্ড! আগের চেয়ে দ্রুত।';
   static String badgeEarned(String badge) => '$badge পেয়েছেন। এবার আসল পোশাক পরান।';

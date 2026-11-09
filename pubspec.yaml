@@ -73,6 +73,7 @@ flutter:
     - assets/sounds/voice/
     - assets/sounds/learn/
     - assets/sounds/learn_voice/
+    - assets/sounds/guide_voice/
     - assets/data/
     - assets/game/catalog/
     - assets/game/anim/
@@ -86,6 +87,7 @@ flutter:
     - assets/game/art/aid_board/
     - assets/game/art/fire_board/
     - assets/game/art/storm_board/
+    - assets/game/art/scan_board/
     - assets/game/art/ptw/
     - assets/game/art/distance/
     - assets/game/art/fire/
