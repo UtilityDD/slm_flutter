@@ -14,13 +14,11 @@ import 'beat_fx.dart';
 import 'choice_deck.dart';
 import 'coworker_moment.dart';
 import 'do_parts.dart';
-import 'fire_fx.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
-import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
-import 'level_juice.dart' show Combo, FreezeFrame, RescueBurst, freezeFilter, starsFor;
+import 'level_juice.dart' show Combo, ComboPop, FreezeFrame, RescueBurst, freezeFilter, starsFor;
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -31,7 +29,6 @@ import 'reason_table.dart';
 import 'rod_van.dart' show RodVanGeo, RodVanPainter;
 import 'scene_kit.dart' show AwakeClock, GuideIntro, LinemanFigure, LinemanLook, LinemanMode;
 import 'sky_world.dart' show SkyBolt, SkyGeo, SkyWeather, SkyWorldPainter;
-import 'spoken_once.dart';
 
 // Step 30 (Module 1 Rank Gate): "প্রথম ডকেট" (First Real Field Docket).
 // A full-scale 5-station emergency field dispatch combining all 5 moves of Module 1:
@@ -430,8 +427,6 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
   final _combo = Combo();
   int _comboN = 0;
   int _comboMult = 1;
-  final _wrongBag = LineBag(LearnFeedbackLines.wrong);
-  final _scoreKey = GlobalKey();
   var _sparkActive = false;
   Offset? _sparkAt;
   var _thunderFlash = false;
@@ -467,6 +462,17 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
   /// A station completed: the rescue bloom over the yard.
   var _bloomActive = false;
   int _bloomRound = 0;
+
+  void _triggerBloom() {
+    if (_bloomActive || !mounted) return;
+    setState(() {
+      _bloomActive = true;
+      _bloomRound++;
+    });
+    Future<void>.delayed(const Duration(milliseconds: 1400), () {
+      if (mounted) setState(() => _bloomActive = false);
+    });
+  }
 
   /// A right move scores with the combo multiplier (and pops "×2" when it rises).
   int _scored(int base) {
@@ -567,16 +573,18 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
     if (m == null) {
       HapticFeedback.lightImpact();
       if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: false));
-      _totalDelta += 20;
-      _runScore += 20;
-      await BeatFx.levelDelta(ref, 20, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
+      final delta = _scored(20);
+      _totalDelta += delta;
+      _runScore += delta;
+      await BeatFx.levelDelta(ref, delta, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
       await _say('সঠিক নির্বাচন! ১১ কেভি সার্টিফাইড রড নির্বাচন সম্পূর্ণ।', mood: GuideMood.celebrate);
       _run.advanceStation();
-      await _enterStation();
+      _triggerBloom();
       _busy = false;
-    } else {
-      await _handleMistake(m);
+      await _enterStation();
+      return;
     }
+    await _handleMistake(m);
   }
 
   Future<void> _onAnswerPtw(bool stopWork, Offset origin) async {
@@ -615,16 +623,18 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
     if (m == null) {
       HapticFeedback.lightImpact();
       if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: false));
-      _totalDelta += 20;
-      _runScore += 20;
-      await BeatFx.levelDelta(ref, 20, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
+      final delta = _scored(20);
+      _totalDelta += delta;
+      _runScore += delta;
+      await BeatFx.levelDelta(ref, delta, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
       await _say('খাঁটি সিদ্ধান্ত! লিখিত PTW ছাড়া লাইনে কোনো কাজ নয়।', mood: GuideMood.celebrate);
       _run.advanceStation();
-      await _enterStation();
+      _triggerBloom();
       _busy = false;
-    } else {
-      await _handleMistake(m);
+      await _enterStation();
+      return;
     }
+    await _handleMistake(m);
   }
 
   Future<void> _onPoleOrbit() async {
@@ -637,7 +647,7 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
     });
   }
 
-  Future<void> _onPoleKnock() async {
+Future<void> _onPoleKnock() async {
     if (_busy || _ended || _card != null || _climbing) return;
     HapticFeedback.mediumImpact();
     if (!_muted) {
@@ -697,7 +707,11 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
       });
       HapticFeedback.lightImpact();
       if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: false));
-      putOnTable(20);
+      final delta = _scored(20);
+      _totalDelta += delta;
+      _runScore += delta;
+      await BeatFx.levelDelta(ref, delta, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
+      putOnTable(delta);
       await askReason(
         deal: () => dealChoices(GateLines.whyPoleRight, GateLines.whyPoleWrong, math.Random(widget.seed + 3)),
         question: 'কেন এই পোলে ওঠার সিদ্ধান্ত নিলেন?',
@@ -713,7 +727,11 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
       // Reported defect
       final m = _run.decidePole(climb: false);
       if (m == null) {
-        putOnTable(20);
+        final delta = _scored(20);
+        _totalDelta += delta;
+        _runScore += delta;
+        await BeatFx.levelDelta(ref, delta, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
+        putOnTable(delta);
         await askReason(
           deal: () => dealChoices(GateLines.whyPoleRight, GateLines.whyPoleWrong, math.Random(widget.seed + 3)),
           question: 'কেন ত্রুটি রিপোর্ট করলেন?',
@@ -773,7 +791,11 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
     final m = _run.touchDischargeElement(id);
     if (m == null && _run.phasesTouched.length == 3) {
       _busy = true;
-      putOnTable(20);
+      final delta = _scored(20);
+      _totalDelta += delta;
+      _runScore += delta;
+      await BeatFx.levelDelta(ref, delta, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
+      putOnTable(delta);
       await askReason(
         deal: () => dealChoices(GateLines.whyDischargeRight, GateLines.whyDischargeWrong, math.Random(widget.seed + 4)),
         question: 'কেন মাটিতে আগে আর্থ ক্ল্যাম্প সংযোগ করলেন?',
@@ -814,7 +836,11 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
     // Van chosen! Safe inside Faraday cage
     HapticFeedback.lightImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: false));
-    putOnTable(20);
+    final delta = _scored(20);
+    _totalDelta += delta;
+    _runScore += delta;
+    await BeatFx.levelDelta(ref, delta, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
+    putOnTable(delta);
     await askReason(
       deal: () => dealChoices(GateLines.whyStormRight, GateLines.whyStormWrong, math.Random(widget.seed + 5)),
       question: 'কেন গাড়িতে নিরাপদ আশ্রয় নিলেন?',
@@ -900,6 +926,7 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
   Future<void> _handleMistake(DoMistake m) async {
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.75, muted: false));
+    _combo.miss();
 
     if (m.deadly) {
       final frozen = _frozen = Completer<void>();
@@ -908,6 +935,7 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
       await frozen.future;
       if (!mounted) return;
       setState(() {
+        _freeze = false;
         _card = m;
         _cardTone = outcome == DeadlyOutcome.nearMiss ? MistakeTone.nearMiss : MistakeTone.deadly;
         _busy = false;
@@ -948,6 +976,8 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
   @override
   void onReasonPaid() {
     _run.advanceStation();
+    _triggerBloom();
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: false));
     if (_run.done) {
       unawaited(_finish());
     } else {
@@ -1635,8 +1665,54 @@ class _GateFieldRunPageState extends ConsumerState<_GateFieldRunPage>
               current: _run.done ? null : _run.station.index,
               quiet: quiet,
             ),
-            layers: _buildStationLayers,
+            layers: (c, m) => [
+              Positioned.fill(
+                key: const ValueKey('scene'),
+                child: ColorFiltered(
+                  colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
+                  child: Stack(children: _buildStationLayers(c, m)),
+                ),
+              ),
+            ],
             overlays: [
+              // Deadly freeze: the scene greys out while the consequence plays.
+              if (_freeze && _card == null)
+                Positioned.fill(
+                  child: FreezeFrame(
+                    muted: _muted,
+                    ms: MediaQuery.disableAnimationsOf(context) ? 300 : 2200,
+                    onDone: () {
+                      final f = _frozen;
+                      if (f != null && !f.isCompleted) f.complete();
+                    },
+                  ),
+                ),
+
+              // A station completed: the rescue bloom over the yard.
+              if (_bloomActive)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: RescueBurst(
+                      key: ValueKey('bloom-$_bloomRound'),
+                      muted: _muted,
+                      cloud: false,
+                    ),
+                  ),
+                ),
+
+              if (_comboN > 0)
+                Positioned(
+                  top: pad.top + 92,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: ComboPop(
+                      key: ValueKey('combo-$_comboN'),
+                      mult: _comboMult,
+                    ),
+                  ),
+                ),
+
               ...tableLayers(at: Offset(size.width / 2, pad.top + 130), quiet: quiet),
 
               // Station Header Chip (Minimal, translucent & non-intrusive at top right)
