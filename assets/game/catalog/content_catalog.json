@@ -2066,7 +2066,7 @@
       "lessonId": "3.9",
       "moduleId": "m3",
       "packId": "do_3_9_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 26
     },
     {
@@ -5019,10 +5019,10 @@
     },
     {
       "id": "do_3_9_b",
-      "engineType": "placeholder",
+      "engineType": "m3_guard_repair",
       "lessonId": "3.9",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
