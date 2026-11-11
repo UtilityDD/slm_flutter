@@ -51,6 +51,7 @@ import 'm3_pillar_fuse.dart';
 import 'm3_insulator_pick.dart';
 import 'm3_guard_patrol.dart';
 import 'm3_guard_repair.dart';
+import 'm3_dtr_tap.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -257,6 +258,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m3GuardRepairPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M3GuardRepairPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_dtr_tap':
+      final content = m3DtrTapPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3DtrTapPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

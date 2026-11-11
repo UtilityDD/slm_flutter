@@ -1985,7 +1985,7 @@
       "lessonId": "3.6",
       "moduleId": "m3",
       "packId": "do_3_6_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 17
     },
     {
@@ -4938,10 +4938,10 @@
     },
     {
       "id": "do_3_6_b",
-      "engineType": "placeholder",
+      "engineType": "m3_dtr_tap",
       "lessonId": "3.6",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
