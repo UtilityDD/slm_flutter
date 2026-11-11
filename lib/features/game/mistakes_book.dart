@@ -27,6 +27,46 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm3_gate_field.dart' as m3_gate_field;
+import 'm3_fuse_rating.dart' as m3_fuse_rating;
+import 'm3_insulator_patrol.dart' as m3_insulator_patrol;
+import 'm3_sld_isolate.dart' as m3_sld_isolate;
+import 'm3_dtr_checkup.dart' as m3_dtr_checkup;
+import 'm3_conductor_joint.dart' as m3_conductor_joint;
+import 'm3_horngap_set.dart' as m3_horngap_set;
+import 'm3_la_patrol.dart' as m3_la_patrol;
+import 'm3_crossarm_check.dart' as m3_crossarm_check;
+import 'm3_dtr_tap.dart' as m3_dtr_tap;
+import 'm3_guard_repair.dart' as m3_guard_repair;
+import 'm3_guard_patrol.dart' as m3_guard_patrol;
+import 'm3_insulator_pick.dart' as m3_insulator_pick;
+import 'm3_pillar_fuse.dart' as m3_pillar_fuse;
+import 'm3_la_earth.dart' as m3_la_earth;
+import 'm3_meter_call.dart' as m3_meter_call;
+import 'm3_pillar_inspect.dart' as m3_pillar_inspect;
+import 'm3_service_drop.dart' as m3_service_drop;
+import 'm3_crossarm_pick.dart' as m3_crossarm_pick;
+import 'm3_conductor_id.dart' as m3_conductor_id;
+import 'm4_oil_level.dart' as m4_oil_level;
+import 'm4_dp_survey.dart' as m4_dp_survey;
+import 'm4_do_refuse.dart' as m4_do_refuse;
+import 'm4_insulator_prep.dart' as m4_insulator_prep;
+import 'm4_earth_test.dart' as m4_earth_test;
+import 'm4_insulator_swap.dart' as m4_insulator_swap;
+import 'm4_service_plan.dart' as m4_service_plan;
+import 'm4_jumper_make.dart' as m4_jumper_make;
+import 'm4_earth_fix.dart' as m4_earth_fix;
+import 'm4_dtr_temp.dart' as m4_dtr_temp;
+import 'm4_jumper_tight.dart' as m4_jumper_tight;
+import 'm4_dp_dress.dart' as m4_dp_dress;
+import 'm4_tree_cut.dart' as m4_tree_cut;
+import 'm4_gate_field.dart' as m4_gate_field;
+import 'm4_streetlight_find.dart' as m4_streetlight_find;
+import 'm4_do_open.dart' as m4_do_open;
+import 'm4_tree_plan.dart' as m4_tree_plan;
+import 'm4_streetlight_fix.dart' as m4_streetlight_fix;
+import 'm4_phase_balance.dart' as m4_phase_balance;
+import 'm4_service_connect.dart' as m4_service_connect;
 import 'm2_comealong_pick.dart' as m2_comealong_pick;
 import 'm2_comealong_pull.dart' as m2_comealong_pull;
 import 'm2_crimp_steps.dart' as m2_crimp_steps;
@@ -78,6 +118,46 @@ final Map<String, DoMistake> knownMistakes = {
     ...StormMistakes.all,
     ...TenSecMistakes.all,
     ...GateMistakes.all,
+    ...m3_gate_field.M3GateMistakes.all,
+    ...m3_fuse_rating.M3FuseRatingMistakes.all,
+    ...m3_insulator_patrol.M3InsulatorPatrolMistakes.all,
+    ...m3_sld_isolate.M3SldIsolateMistakes.all,
+    ...m3_dtr_checkup.M3DtrCheckupMistakes.all,
+    ...m3_conductor_joint.M3ConductorJointMistakes.all,
+    ...m3_horngap_set.M3HorngapSetMistakes.all,
+    ...m3_la_patrol.M3LaPatrolMistakes.all,
+    ...m3_crossarm_check.M3CrossarmCheckMistakes.all,
+    ...m3_dtr_tap.M3DtrTapMistakes.all,
+    ...m3_guard_repair.M3GuardRepairMistakes.all,
+    ...m3_guard_patrol.M3GuardPatrolMistakes.all,
+    ...m3_insulator_pick.M3InsulatorPickMistakes.all,
+    ...m3_pillar_fuse.M3PillarFuseMistakes.all,
+    ...m3_la_earth.M3LaEarthMistakes.all,
+    ...m3_meter_call.M3MeterCallMistakes.all,
+    ...m3_pillar_inspect.M3PillarInspectMistakes.all,
+    ...m3_service_drop.M3ServiceDropMistakes.all,
+    ...m3_crossarm_pick.M3CrossarmPickMistakes.all,
+    ...m3_conductor_id.M3ConductorIdMistakes.all,
+    ...m4_oil_level.M4OilLevelMistakes.all,
+    ...m4_dp_survey.M4DpSurveyMistakes.all,
+    ...m4_do_refuse.M4DoRefuseMistakes.all,
+    ...m4_insulator_prep.M4InsulatorPrepMistakes.all,
+    ...m4_earth_test.M4EarthTestMistakes.all,
+    ...m4_insulator_swap.M4InsulatorSwapMistakes.all,
+    ...m4_service_plan.M4ServicePlanMistakes.all,
+    ...m4_jumper_make.M4JumperMakeMistakes.all,
+    ...m4_earth_fix.M4EarthFixMistakes.all,
+    ...m4_dtr_temp.M4DtrTempMistakes.all,
+    ...m4_jumper_tight.M4JumperTightMistakes.all,
+    ...m4_dp_dress.M4DpDressMistakes.all,
+    ...m4_tree_cut.M4TreeCutMistakes.all,
+    ...m4_gate_field.M4GateMistakes.all,
+    ...m4_streetlight_find.M4StreetlightFindMistakes.all,
+    ...m4_do_open.M4DoOpenMistakes.all,
+    ...m4_tree_plan.M4TreePlanMistakes.all,
+    ...m4_streetlight_fix.M4StreetlightFixMistakes.all,
+    ...m4_phase_balance.M4PhaseBalanceMistakes.all,
+    ...m4_service_connect.M4ServiceConnectMistakes.all,
     ...m2_comealong_pick.M2ComeAlongMistakes.all,
     ...m2_comealong_pull.PullMistakes.all,
     ...m2_crimp_steps.CrimpMistakes.all,

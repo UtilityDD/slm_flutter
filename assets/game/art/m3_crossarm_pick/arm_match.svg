@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="z" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eff2f4"/><stop offset="0.55" stop-color="#b4bcc3"/><stop offset="1" stop-color="#7d868e"/></linearGradient>
+    <linearGradient id="p" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8f928c"/><stop offset="0.5" stop-color="#c9cbc6"/><stop offset="1" stop-color="#8f928c"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- wrong: a horizontal I arm where the docket wants vertical formation (three wires stacked) -->
+  <rect x="74" y="24" width="12" height="172" fill="url(#p)"/>
+  <rect x="22" y="60" width="116" height="10" fill="url(#z)" stroke="#5f676f"/>
+  <g fill="#e8eef2" stroke="#7d868e"><rect x="28" y="46" width="10" height="14" rx="3"/><rect x="122" y="46" width="10" height="14" rx="3"/></g>
+  <g stroke="#2a2e33" stroke-width="2" stroke-dasharray="4 3"><line x1="40" y1="100" x2="120" y2="100"/><line x1="40" y1="120" x2="120" y2="120"/><line x1="40" y1="140" x2="120" y2="140"/></g>
+  <circle cx="134" cy="22" r="11" fill="#c0392b"/><path d="M128 16 l12 12 M140 16 l-12 12" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- right: three cross-arm types side by side -->
+  <path d="M176 42 L212 66 L248 42" fill="none" stroke="url(#z)" stroke-width="7"/>
+  <rect x="204" y="60" width="16" height="12" fill="url(#z)" stroke="#5f676f"/>
+  <rect x="176" y="96" width="128" height="9" fill="url(#z)" stroke="#5f676f"/>
+  <rect x="176" y="140" width="128" height="16" fill="url(#z)" stroke="#5f676f"/>
+  <line x1="176" y1="143" x2="304" y2="143" stroke="#6e777f"/><line x1="176" y1="153" x2="304" y2="153" stroke="#6e777f"/>
+  <g fill="#39414a"><circle cx="182" cy="101" r="2"/><circle cx="298" cy="101" r="2"/><circle cx="182" cy="148" r="2.4"/><circle cx="298" cy="148" r="2.4"/></g>
+  <circle cx="296" cy="48" r="12" fill="#2e8b45"/><path d="M289 48 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

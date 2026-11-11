@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="z" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eff2f4"/><stop offset="0.55" stop-color="#b4bcc3"/><stop offset="1" stop-color="#7d868e"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- wrong: no spring washer, the nut backs off with vibration -->
+  <rect x="20" y="88" width="14" height="40" fill="url(#z)" stroke="#5f676f"/>
+  <rect x="34" y="100" width="108" height="16" fill="url(#z)" stroke="#5f676f"/>
+  <rect x="104" y="88" width="16" height="40" fill="url(#z)" stroke="#5f676f" transform="translate(10 0)"/>
+  <path d="M100 82 l14 0 m-5 -5 l5 5 l-5 5" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M52 140 q6 -6 12 0 t12 0 t12 0" stroke="#c0392b" stroke-width="2" fill="none"/>
+  <circle cx="134" cy="22" r="11" fill="#c0392b"/><path d="M128 16 l12 12 M140 16 l-12 12" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- right: nut with the split spring washer under it -->
+  <rect x="180" y="88" width="14" height="40" fill="url(#z)" stroke="#5f676f"/>
+  <rect x="194" y="100" width="108" height="16" fill="url(#z)" stroke="#5f676f"/>
+  <rect x="252" y="90" width="5" height="16" fill="#8e979f"/><rect x="254" y="110" width="5" height="16" fill="#8e979f"/>
+  <line x1="251" y1="106" x2="259" y2="110" stroke="#39414a" stroke-width="1.5"/>
+  <rect x="260" y="88" width="16" height="40" fill="url(#z)" stroke="#5f676f"/>
+  <circle cx="296" cy="48" r="12" fill="#2e8b45"/><path d="M289 48 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

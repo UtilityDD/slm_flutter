@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="tb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b98a55"/><stop offset="0.5" stop-color="#8a5e33"/><stop offset="1" stop-color="#5e3c1e"/></linearGradient>
+    <linearGradient id="br" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1d58a"/><stop offset="0.5" stop-color="#c9a24a"/><stop offset="1" stop-color="#8e6e22"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- wrong: soot on the contacts, sparks; a slack link -->
+  <rect x="34" y="60" width="86" height="28" rx="6" fill="url(#tb)"/>
+  <rect x="16" y="54" width="22" height="40" rx="5" fill="url(#br)"/>
+  <rect x="116" y="52" width="22" height="44" rx="4" fill="url(#br)"/>
+  <g fill="#181410" opacity="0.85"><ellipse cx="24" cy="66" rx="7" ry="5"/><ellipse cx="30" cy="82" rx="6" ry="6"/><ellipse cx="126" cy="64" rx="7" ry="5"/><ellipse cx="130" cy="86" rx="5" ry="6"/></g>
+  <g stroke="#ffb02a" stroke-width="2.4" stroke-linecap="round"><path d="M12 48 L4 40"/><path d="M20 46 L20 34"/><path d="M28 48 L36 38"/><path d="M128 46 L136 36"/><path d="M138 50 L148 46"/></g>
+  <path d="M132 96 Q118 160 146 150" stroke="#b8c0c6" stroke-width="2.4" fill="none"/>
+  <circle cx="146" cy="150" r="6" fill="#b9963f"/>
+  <!-- right: clean shining contacts; the link pulled taut -->
+  <rect x="194" y="60" width="86" height="28" rx="6" fill="url(#tb)"/>
+  <rect x="176" y="54" width="22" height="40" rx="5" fill="url(#br)"/>
+  <rect x="276" y="52" width="22" height="44" rx="4" fill="url(#br)"/>
+  <path d="M180 62 L194 62 M280 62 L294 62" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity="0.8"/>
+  <path d="M292 96 L304 140" stroke="#b8c0c6" stroke-width="2.4"/>
+  <circle cx="304" cy="142" r="6" fill="#b9963f"/>
+  <path d="M212 168 L230 180 L268 154" fill="none" stroke="#2e8b45" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

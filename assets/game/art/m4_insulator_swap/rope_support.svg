@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf3ee" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="8" width="148" height="184" rx="9" fill="#eef8f0"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#d9c9bd" stroke-width="2" stroke-dasharray="5 4"/>
+  <g><rect x="12" y="150" width="136" height="9" fill="#6e757b"/><rect x="12" y="150" width="136" height="3" fill="#9aa1a7"/><ellipse cx="80" cy="144.0" rx="17.0" ry="5.0" fill="#8a4b2a" stroke="#5e301a" stroke-width="1"/><ellipse cx="80" cy="130.0" rx="14.0" ry="5.0" fill="#8a4b2a" stroke="#5e301a" stroke-width="1"/><ellipse cx="80" cy="118.0" rx="11.0" ry="5.0" fill="#8a4b2a" stroke="#5e301a" stroke-width="1"/><rect x="73.0" y="102.0" width="14.0" height="40.0" rx="3" fill="#b97a50" stroke="#5e301a"/><ellipse cx="80" cy="102.0" rx="9.0" ry="4.5" fill="#8a4b2a"/><path d="M20 70 Q60 75 80 100 Q100 140 140 175" fill="none" stroke="#2b3036" stroke-width="3"/><path d="M120 150 l8 10 M134 148 l-4 12" stroke="#c0392b" stroke-width="3"/></g>
+  <g transform="translate(160 0)"><rect x="12" y="150" width="136" height="9" fill="#6e757b"/><rect x="12" y="150" width="136" height="3" fill="#9aa1a7"/><rect x="72" y="118" width="8" height="34" fill="#8d949b"/><line x1="10" y1="80" x2="140" y2="80" stroke="#2b3036" stroke-width="3"/><rect x="128" y="20" width="14" height="140" fill="#c4c0b6"/><path d="M80 80 Q107.5 2 135 26" fill="none" stroke="#d8b26a" stroke-width="3"/><circle cx="80" cy="80" r="4" fill="#b58f4a"/></g>
+  <g stroke="#c0392b" stroke-width="7" stroke-linecap="round"><line x1="18" y1="18" x2="40" y2="40"/><line x1="40" y1="18" x2="18" y2="40"/></g>
+  <path d="M276 30 l10 10 l20 -22" fill="none" stroke="#2e9a44" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

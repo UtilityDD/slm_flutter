@@ -83,6 +83,66 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
+    - assets/game/art/m3_gate_field/
+    - assets/game/art/m3_fuse_rating/
+    - assets/game/art/m3_board32/
+    - assets/game/art/m3_insulator_patrol/
+    - assets/game/art/m3_sld_isolate/
+    - assets/game/art/m3_board38/
+    - assets/game/art/m3_dtr_checkup/
+    - assets/game/art/m3_conductor_joint/
+    - assets/game/art/m3_horngap_set/
+    - assets/game/art/m3_la_patrol/
+    - assets/game/art/m3_crossarm_check/
+    - assets/game/art/m3_dtr_tap/
+    - assets/game/art/m3_guard_repair/
+    - assets/game/art/m3_board39/
+    - assets/game/art/m3_guard_patrol/
+    - assets/game/art/m3_insulator_pick/
+    - assets/game/art/m3_board35/
+    - assets/game/art/m3_pillar_fuse/
+    - assets/game/art/m3_la_earth/
+    - assets/game/art/m3_board34/
+    - assets/game/art/m3_meter_call/
+    - assets/game/art/m3_board36/
+    - assets/game/art/m3_pillar_inspect/
+    - assets/game/art/m3_service_drop/
+    - assets/game/art/m3_board31/
+    - assets/game/art/m3_board310/
+    - assets/game/art/m3_board37/
+    - assets/game/art/m3_board33/
+    - assets/game/art/m3_crossarm_pick/
+    - assets/game/art/m3_conductor_id/
+    - assets/game/art/m4_oil_level/
+    - assets/game/art/m4_dp_survey/
+    - assets/game/art/m4_do_refuse/
+    - assets/game/art/m4_insulator_prep/
+    - assets/game/art/m4_earth_test/
+    - assets/game/art/m4_insulator_swap/
+    - assets/game/art/m4_service_plan/
+    - assets/game/art/m4_jumper_make/
+    - assets/game/art/m4_board47/
+    - assets/game/art/m4_earth_fix/
+    - assets/game/art/m4_dtr_temp/
+    - assets/game/art/m4_board43/
+    - assets/game/art/m4_board46/
+    - assets/game/art/m4_jumper_tight/
+    - assets/game/art/m4_dp_dress/
+    - assets/game/art/m4_tree_cut/
+    - assets/game/art/m4_board49/
+    - assets/game/art/m4_board48/
+    - assets/game/art/m4_gate_field/
+    - assets/game/art/m4_streetlight_find/
+    - assets/game/art/m4_do_open/
+    - assets/game/art/m4_board44/
+    - assets/game/art/m4_board42/
+    - assets/game/art/m4_tree_plan/
+    - assets/game/art/m4_board410/
+    - assets/game/art/m4_streetlight_fix/
+    - assets/game/art/m4_board45/
+    - assets/game/art/m4_board41/
+    - assets/game/art/m4_phase_balance/
+    - assets/game/art/m4_service_connect/
     - assets/game/art/m2_board210/
     - assets/game/art/m2_board29/
     - assets/game/art/m2_board28/

@@ -1832,7 +1832,7 @@
       "lessonId": "3.1",
       "moduleId": "m3",
       "packId": "learn_3_1",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 0
     },
     {
@@ -1841,7 +1841,7 @@
       "lessonId": "3.1",
       "moduleId": "m3",
       "packId": "do_3_1_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 1
     },
     {
@@ -1850,7 +1850,7 @@
       "lessonId": "3.1",
       "moduleId": "m3",
       "packId": "do_3_1_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 2
     },
     {
@@ -1859,7 +1859,7 @@
       "lessonId": "3.2",
       "moduleId": "m3",
       "packId": "learn_3_2",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 3
     },
     {
@@ -1868,7 +1868,7 @@
       "lessonId": "3.2",
       "moduleId": "m3",
       "packId": "do_3_2_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 4
     },
     {
@@ -1877,7 +1877,7 @@
       "lessonId": "3.2",
       "moduleId": "m3",
       "packId": "do_3_2_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 5
     },
     {
@@ -1886,7 +1886,7 @@
       "lessonId": "3.3",
       "moduleId": "m3",
       "packId": "learn_3_3",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 6
     },
     {
@@ -1895,7 +1895,7 @@
       "lessonId": "3.3",
       "moduleId": "m3",
       "packId": "do_3_3_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 7
     },
     {
@@ -1904,7 +1904,7 @@
       "lessonId": "3.3",
       "moduleId": "m3",
       "packId": "do_3_3_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 8
     },
     {
@@ -1913,7 +1913,7 @@
       "lessonId": "3.4",
       "moduleId": "m3",
       "packId": "learn_3_4",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 9
     },
     {
@@ -1922,7 +1922,7 @@
       "lessonId": "3.4",
       "moduleId": "m3",
       "packId": "do_3_4_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 10
     },
     {
@@ -1931,7 +1931,7 @@
       "lessonId": "3.4",
       "moduleId": "m3",
       "packId": "do_3_4_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 11
     },
     {
@@ -1940,7 +1940,7 @@
       "lessonId": "3.5",
       "moduleId": "m3",
       "packId": "learn_3_5",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 12
     },
     {
@@ -1949,7 +1949,7 @@
       "lessonId": "3.5",
       "moduleId": "m3",
       "packId": "do_3_5_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 13
     },
     {
@@ -1958,7 +1958,7 @@
       "lessonId": "3.5",
       "moduleId": "m3",
       "packId": "do_3_5_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 14
     },
     {
@@ -1967,7 +1967,7 @@
       "lessonId": "3.6",
       "moduleId": "m3",
       "packId": "learn_3_6",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 15
     },
     {
@@ -1976,7 +1976,7 @@
       "lessonId": "3.6",
       "moduleId": "m3",
       "packId": "do_3_6_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 16
     },
     {
@@ -1985,7 +1985,7 @@
       "lessonId": "3.6",
       "moduleId": "m3",
       "packId": "do_3_6_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 17
     },
     {
@@ -1994,7 +1994,7 @@
       "lessonId": "3.7",
       "moduleId": "m3",
       "packId": "learn_3_7",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 18
     },
     {
@@ -2003,7 +2003,7 @@
       "lessonId": "3.7",
       "moduleId": "m3",
       "packId": "do_3_7_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 19
     },
     {
@@ -2012,7 +2012,7 @@
       "lessonId": "3.7",
       "moduleId": "m3",
       "packId": "do_3_7_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 20
     },
     {
@@ -2021,7 +2021,7 @@
       "lessonId": "3.8",
       "moduleId": "m3",
       "packId": "learn_3_8",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 21
     },
     {
@@ -2030,7 +2030,7 @@
       "lessonId": "3.8",
       "moduleId": "m3",
       "packId": "do_3_8_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 22
     },
     {
@@ -2039,7 +2039,7 @@
       "lessonId": "3.8",
       "moduleId": "m3",
       "packId": "do_3_8_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 23
     },
     {
@@ -2048,7 +2048,7 @@
       "lessonId": "3.9",
       "moduleId": "m3",
       "packId": "learn_3_9",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 24
     },
     {
@@ -2057,7 +2057,7 @@
       "lessonId": "3.9",
       "moduleId": "m3",
       "packId": "do_3_9_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 25
     },
     {
@@ -2066,7 +2066,7 @@
       "lessonId": "3.9",
       "moduleId": "m3",
       "packId": "do_3_9_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 26
     },
     {
@@ -2075,7 +2075,7 @@
       "lessonId": "3.10",
       "moduleId": "m3",
       "packId": "learn_3_10",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 27
     },
     {
@@ -2084,7 +2084,7 @@
       "lessonId": "3.10",
       "moduleId": "m3",
       "packId": "do_3_10_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 28
     },
     {
@@ -2093,7 +2093,7 @@
       "lessonId": "3.10",
       "moduleId": "m3",
       "packId": "gate_m3",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 29
     },
     {
@@ -2102,7 +2102,7 @@
       "lessonId": "4.1",
       "moduleId": "m4",
       "packId": "learn_4_1",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 0
     },
     {
@@ -2111,7 +2111,7 @@
       "lessonId": "4.1",
       "moduleId": "m4",
       "packId": "do_4_1_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 1
     },
     {
@@ -2120,7 +2120,7 @@
       "lessonId": "4.1",
       "moduleId": "m4",
       "packId": "do_4_1_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 2
     },
     {
@@ -2129,7 +2129,7 @@
       "lessonId": "4.2",
       "moduleId": "m4",
       "packId": "learn_4_2",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 3
     },
     {
@@ -2138,7 +2138,7 @@
       "lessonId": "4.2",
       "moduleId": "m4",
       "packId": "do_4_2_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 4
     },
     {
@@ -2147,7 +2147,7 @@
       "lessonId": "4.2",
       "moduleId": "m4",
       "packId": "do_4_2_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 5
     },
     {
@@ -2156,7 +2156,7 @@
       "lessonId": "4.3",
       "moduleId": "m4",
       "packId": "learn_4_3",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 6
     },
     {
@@ -2165,7 +2165,7 @@
       "lessonId": "4.3",
       "moduleId": "m4",
       "packId": "do_4_3_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 7
     },
     {
@@ -2174,7 +2174,7 @@
       "lessonId": "4.3",
       "moduleId": "m4",
       "packId": "do_4_3_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 8
     },
     {
@@ -2183,7 +2183,7 @@
       "lessonId": "4.4",
       "moduleId": "m4",
       "packId": "learn_4_4",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 9
     },
     {
@@ -2192,7 +2192,7 @@
       "lessonId": "4.4",
       "moduleId": "m4",
       "packId": "do_4_4_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 10
     },
     {
@@ -2201,7 +2201,7 @@
       "lessonId": "4.4",
       "moduleId": "m4",
       "packId": "do_4_4_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 11
     },
     {
@@ -2210,7 +2210,7 @@
       "lessonId": "4.5",
       "moduleId": "m4",
       "packId": "learn_4_5",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 12
     },
     {
@@ -2219,7 +2219,7 @@
       "lessonId": "4.5",
       "moduleId": "m4",
       "packId": "do_4_5_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 13
     },
     {
@@ -2228,7 +2228,7 @@
       "lessonId": "4.5",
       "moduleId": "m4",
       "packId": "do_4_5_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 14
     },
     {
@@ -2237,7 +2237,7 @@
       "lessonId": "4.6",
       "moduleId": "m4",
       "packId": "learn_4_6",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 15
     },
     {
@@ -2246,7 +2246,7 @@
       "lessonId": "4.6",
       "moduleId": "m4",
       "packId": "do_4_6_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 16
     },
     {
@@ -2255,7 +2255,7 @@
       "lessonId": "4.6",
       "moduleId": "m4",
       "packId": "do_4_6_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 17
     },
     {
@@ -2264,7 +2264,7 @@
       "lessonId": "4.7",
       "moduleId": "m4",
       "packId": "learn_4_7",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 18
     },
     {
@@ -2273,7 +2273,7 @@
       "lessonId": "4.7",
       "moduleId": "m4",
       "packId": "do_4_7_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 19
     },
     {
@@ -2282,7 +2282,7 @@
       "lessonId": "4.7",
       "moduleId": "m4",
       "packId": "do_4_7_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 20
     },
     {
@@ -2291,7 +2291,7 @@
       "lessonId": "4.8",
       "moduleId": "m4",
       "packId": "learn_4_8",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 21
     },
     {
@@ -2300,7 +2300,7 @@
       "lessonId": "4.8",
       "moduleId": "m4",
       "packId": "do_4_8_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 22
     },
     {
@@ -2309,7 +2309,7 @@
       "lessonId": "4.8",
       "moduleId": "m4",
       "packId": "do_4_8_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 23
     },
     {
@@ -2318,7 +2318,7 @@
       "lessonId": "4.9",
       "moduleId": "m4",
       "packId": "learn_4_9",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 24
     },
     {
@@ -2327,7 +2327,7 @@
       "lessonId": "4.9",
       "moduleId": "m4",
       "packId": "do_4_9_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 25
     },
     {
@@ -2336,7 +2336,7 @@
       "lessonId": "4.9",
       "moduleId": "m4",
       "packId": "do_4_9_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 26
     },
     {
@@ -2345,7 +2345,7 @@
       "lessonId": "4.10",
       "moduleId": "m4",
       "packId": "learn_4_10",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 27
     },
     {
@@ -2354,7 +2354,7 @@
       "lessonId": "4.10",
       "moduleId": "m4",
       "packId": "do_4_10_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 28
     },
     {
@@ -2363,7 +2363,7 @@
       "lessonId": "4.10",
       "moduleId": "m4",
       "packId": "gate_m4",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 29
     },
     {
@@ -4787,26 +4787,26 @@
       "id": "learn_3_1",
       "engineType": "learn_cards",
       "lessonId": "3.1",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_1_a",
-      "engineType": "placeholder",
+      "engineType": "m3_conductor_id",
       "lessonId": "3.1",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_1_b",
-      "engineType": "placeholder",
+      "engineType": "m3_conductor_joint",
       "lessonId": "3.1",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4814,26 +4814,26 @@
       "id": "learn_3_2",
       "engineType": "learn_cards",
       "lessonId": "3.2",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_2_a",
-      "engineType": "placeholder",
+      "engineType": "m3_insulator_pick",
       "lessonId": "3.2",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_2_b",
-      "engineType": "placeholder",
+      "engineType": "m3_insulator_patrol",
       "lessonId": "3.2",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4841,26 +4841,26 @@
       "id": "learn_3_3",
       "engineType": "learn_cards",
       "lessonId": "3.3",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_3_a",
-      "engineType": "placeholder",
+      "engineType": "m3_crossarm_pick",
       "lessonId": "3.3",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_3_b",
-      "engineType": "placeholder",
+      "engineType": "m3_crossarm_check",
       "lessonId": "3.3",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4868,26 +4868,26 @@
       "id": "learn_3_4",
       "engineType": "learn_cards",
       "lessonId": "3.4",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_4_a",
-      "engineType": "placeholder",
+      "engineType": "m3_fuse_rating",
       "lessonId": "3.4",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_4_b",
-      "engineType": "placeholder",
+      "engineType": "m3_horngap_set",
       "lessonId": "3.4",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4895,26 +4895,26 @@
       "id": "learn_3_5",
       "engineType": "learn_cards",
       "lessonId": "3.5",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_5_a",
-      "engineType": "placeholder",
+      "engineType": "m3_la_patrol",
       "lessonId": "3.5",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_5_b",
-      "engineType": "placeholder",
+      "engineType": "m3_la_earth",
       "lessonId": "3.5",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4922,26 +4922,26 @@
       "id": "learn_3_6",
       "engineType": "learn_cards",
       "lessonId": "3.6",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_6_a",
-      "engineType": "placeholder",
+      "engineType": "m3_dtr_checkup",
       "lessonId": "3.6",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_6_b",
-      "engineType": "placeholder",
+      "engineType": "m3_dtr_tap",
       "lessonId": "3.6",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4949,26 +4949,26 @@
       "id": "learn_3_7",
       "engineType": "learn_cards",
       "lessonId": "3.7",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_7_a",
-      "engineType": "placeholder",
+      "engineType": "m3_pillar_fuse",
       "lessonId": "3.7",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_7_b",
-      "engineType": "placeholder",
+      "engineType": "m3_pillar_inspect",
       "lessonId": "3.7",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -4976,26 +4976,26 @@
       "id": "learn_3_8",
       "engineType": "learn_cards",
       "lessonId": "3.8",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_8_a",
-      "engineType": "placeholder",
+      "engineType": "m3_service_drop",
       "lessonId": "3.8",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_8_b",
-      "engineType": "placeholder",
+      "engineType": "m3_meter_call",
       "lessonId": "3.8",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5003,26 +5003,26 @@
       "id": "learn_3_9",
       "engineType": "learn_cards",
       "lessonId": "3.9",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_9_a",
-      "engineType": "placeholder",
+      "engineType": "m3_guard_patrol",
       "lessonId": "3.9",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_9_b",
-      "engineType": "placeholder",
+      "engineType": "m3_guard_repair",
       "lessonId": "3.9",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5030,25 +5030,25 @@
       "id": "learn_3_10",
       "engineType": "learn_cards",
       "lessonId": "3.10",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_3_10_a",
-      "engineType": "placeholder",
+      "engineType": "m3_sld_isolate",
       "lessonId": "3.10",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "gate_m3",
-      "engineType": "gate_field",
+      "engineType": "m3_gate_field",
       "moduleId": "m3",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [
         "lethal_any_marked"
@@ -5058,26 +5058,26 @@
       "id": "learn_4_1",
       "engineType": "learn_cards",
       "lessonId": "4.1",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_1_a",
-      "engineType": "placeholder",
+      "engineType": "m4_insulator_prep",
       "lessonId": "4.1",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_1_b",
-      "engineType": "placeholder",
+      "engineType": "m4_insulator_swap",
       "lessonId": "4.1",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5085,26 +5085,26 @@
       "id": "learn_4_2",
       "engineType": "learn_cards",
       "lessonId": "4.2",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_2_a",
-      "engineType": "placeholder",
+      "engineType": "m4_jumper_make",
       "lessonId": "4.2",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_2_b",
-      "engineType": "placeholder",
+      "engineType": "m4_jumper_tight",
       "lessonId": "4.2",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5112,26 +5112,26 @@
       "id": "learn_4_3",
       "engineType": "learn_cards",
       "lessonId": "4.3",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_3_a",
-      "engineType": "placeholder",
+      "engineType": "m4_service_plan",
       "lessonId": "4.3",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_3_b",
-      "engineType": "placeholder",
+      "engineType": "m4_service_connect",
       "lessonId": "4.3",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5139,26 +5139,26 @@
       "id": "learn_4_4",
       "engineType": "learn_cards",
       "lessonId": "4.4",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_4_a",
-      "engineType": "placeholder",
+      "engineType": "m4_do_open",
       "lessonId": "4.4",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_4_b",
-      "engineType": "placeholder",
+      "engineType": "m4_do_refuse",
       "lessonId": "4.4",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5166,26 +5166,26 @@
       "id": "learn_4_5",
       "engineType": "learn_cards",
       "lessonId": "4.5",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_5_a",
-      "engineType": "placeholder",
+      "engineType": "m4_oil_level",
       "lessonId": "4.5",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_5_b",
-      "engineType": "placeholder",
+      "engineType": "m4_dtr_temp",
       "lessonId": "4.5",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5193,26 +5193,26 @@
       "id": "learn_4_6",
       "engineType": "learn_cards",
       "lessonId": "4.6",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_6_a",
-      "engineType": "placeholder",
+      "engineType": "m4_earth_test",
       "lessonId": "4.6",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_6_b",
-      "engineType": "placeholder",
+      "engineType": "m4_earth_fix",
       "lessonId": "4.6",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5220,26 +5220,26 @@
       "id": "learn_4_7",
       "engineType": "learn_cards",
       "lessonId": "4.7",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_7_a",
-      "engineType": "placeholder",
+      "engineType": "m4_dp_survey",
       "lessonId": "4.7",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_7_b",
-      "engineType": "placeholder",
+      "engineType": "m4_dp_dress",
       "lessonId": "4.7",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5247,26 +5247,26 @@
       "id": "learn_4_8",
       "engineType": "learn_cards",
       "lessonId": "4.8",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_8_a",
-      "engineType": "placeholder",
+      "engineType": "m4_tree_plan",
       "lessonId": "4.8",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_8_b",
-      "engineType": "placeholder",
+      "engineType": "m4_tree_cut",
       "lessonId": "4.8",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5274,26 +5274,26 @@
       "id": "learn_4_9",
       "engineType": "learn_cards",
       "lessonId": "4.9",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_9_a",
-      "engineType": "placeholder",
+      "engineType": "m4_streetlight_find",
       "lessonId": "4.9",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_9_b",
-      "engineType": "placeholder",
+      "engineType": "m4_streetlight_fix",
       "lessonId": "4.9",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5301,25 +5301,25 @@
       "id": "learn_4_10",
       "engineType": "learn_cards",
       "lessonId": "4.10",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_4_10_a",
-      "engineType": "placeholder",
+      "engineType": "m4_phase_balance",
       "lessonId": "4.10",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "gate_m4",
-      "engineType": "gate_field",
+      "engineType": "m4_gate_field",
       "moduleId": "m4",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [
         "lethal_any_marked"

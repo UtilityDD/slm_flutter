@@ -41,6 +41,46 @@ import 'm2_comealong_pull.dart';
 import 'm2_megger_read.dart';
 import 'm2_gate_field.dart';
 import 'm2_skin_cut.dart';
+import 'm3_conductor_id.dart';
+import 'm3_crossarm_pick.dart';
+import 'm3_service_drop.dart';
+import 'm3_pillar_inspect.dart';
+import 'm3_meter_call.dart';
+import 'm3_la_earth.dart';
+import 'm3_pillar_fuse.dart';
+import 'm3_insulator_pick.dart';
+import 'm3_guard_patrol.dart';
+import 'm3_guard_repair.dart';
+import 'm3_dtr_tap.dart';
+import 'm3_crossarm_check.dart';
+import 'm3_la_patrol.dart';
+import 'm3_horngap_set.dart';
+import 'm3_conductor_joint.dart';
+import 'm3_dtr_checkup.dart';
+import 'm3_sld_isolate.dart';
+import 'm3_insulator_patrol.dart';
+import 'm3_fuse_rating.dart';
+import 'm3_gate_field.dart';
+import 'm4_service_connect.dart';
+import 'm4_phase_balance.dart';
+import 'm4_streetlight_fix.dart';
+import 'm4_tree_plan.dart';
+import 'm4_do_open.dart';
+import 'm4_streetlight_find.dart';
+import 'm4_gate_field.dart';
+import 'm4_tree_cut.dart';
+import 'm4_dp_dress.dart';
+import 'm4_jumper_tight.dart';
+import 'm4_dtr_temp.dart';
+import 'm4_earth_fix.dart';
+import 'm4_jumper_make.dart';
+import 'm4_service_plan.dart';
+import 'm4_insulator_swap.dart';
+import 'm4_earth_test.dart';
+import 'm4_insulator_prep.dart';
+import 'm4_do_refuse.dart';
+import 'm4_dp_survey.dart';
+import 'm4_oil_level.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -207,6 +247,166 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m2GateFieldPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M2GateFieldPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_conductor_id':
+      final content = m3ConductorIdPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3ConductorIdPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_crossarm_pick':
+      final content = m3CrossarmPickPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3CrossarmPickPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_service_drop':
+      final content = m3ServiceDropPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3ServiceDropPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_pillar_inspect':
+      final content = m3PillarInspectPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3PillarInspectPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_meter_call':
+      final content = m3MeterCallPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3MeterCallPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_la_earth':
+      final content = m3LaEarthPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3LaEarthPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_pillar_fuse':
+      final content = m3PillarFusePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3PillarFusePage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_insulator_pick':
+      final content = m3InsulatorPickPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3InsulatorPickPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_guard_patrol':
+      final content = m3GuardPatrolPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3GuardPatrolPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_guard_repair':
+      final content = m3GuardRepairPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3GuardRepairPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_dtr_tap':
+      final content = m3DtrTapPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3DtrTapPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_crossarm_check':
+      final content = m3CrossarmCheckPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3CrossarmCheckPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_la_patrol':
+      final content = m3LaPatrolPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3LaPatrolPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_horngap_set':
+      final content = m3HorngapSetPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3HorngapSetPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_conductor_joint':
+      final content = m3ConductorJointPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3ConductorJointPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_dtr_checkup':
+      final content = m3DtrCheckupPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3DtrCheckupPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_sld_isolate':
+      final content = m3SldIsolatePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3SldIsolatePage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_insulator_patrol':
+      final content = m3InsulatorPatrolPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3InsulatorPatrolPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_fuse_rating':
+      final content = m3FuseRatingPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3FuseRatingPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_gate_field':
+      final content = m3GateFieldPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3GateFieldPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_service_connect':
+      final content = m4ServiceConnectPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4ServiceConnectPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_phase_balance':
+      final content = m4PhaseBalancePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4PhaseBalancePage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_streetlight_fix':
+      final content = m4StreetlightFixPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4StreetlightFixPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_tree_plan':
+      final content = m4TreePlanPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4TreePlanPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_do_open':
+      final content = m4DoOpenPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4DoOpenPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_streetlight_find':
+      final content = m4StreetlightFindPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4StreetlightFindPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_gate_field':
+      final content = m4GateFieldPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4GateFieldPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_tree_cut':
+      final content = m4TreeCutPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4TreeCutPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_dp_dress':
+      final content = m4DpDressPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4DpDressPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_jumper_tight':
+      final content = m4JumperTightPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4JumperTightPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_dtr_temp':
+      final content = m4DtrTempPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4DtrTempPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_earth_fix':
+      final content = m4EarthFixPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4EarthFixPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_jumper_make':
+      final content = m4JumperMakePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4JumperMakePage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_service_plan':
+      final content = m4ServicePlanPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4ServicePlanPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_insulator_swap':
+      final content = m4InsulatorSwapPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4InsulatorSwapPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_earth_test':
+      final content = m4EarthTestPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4EarthTestPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_insulator_prep':
+      final content = m4InsulatorPrepPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4InsulatorPrepPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_do_refuse':
+      final content = m4DoRefusePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4DoRefusePage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_dp_survey':
+      final content = m4DpSurveyPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4DpSurveyPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_oil_level':
+      final content = m4OilLevelPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4OilLevelPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
