@@ -59,6 +59,7 @@ import 'm4_insulator_swap.dart';
 import 'm4_earth_test.dart';
 import 'm4_insulator_prep.dart';
 import 'm4_do_refuse.dart';
+import 'm4_dp_survey.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -297,6 +298,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m4DoRefusePacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M4DoRefusePage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_dp_survey':
+      final content = m4DpSurveyPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4DpSurveyPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

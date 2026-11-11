@@ -82,6 +82,7 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
+    - assets/game/art/m4_dp_survey/
     - assets/game/art/m4_do_refuse/
     - assets/game/art/m4_insulator_prep/
     - assets/game/art/m4_earth_test/

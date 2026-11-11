@@ -2273,7 +2273,7 @@
       "lessonId": "4.7",
       "moduleId": "m4",
       "packId": "do_4_7_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 19
     },
     {
@@ -5226,10 +5226,10 @@
     },
     {
       "id": "do_4_7_a",
-      "engineType": "placeholder",
+      "engineType": "m4_dp_survey",
       "lessonId": "4.7",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
