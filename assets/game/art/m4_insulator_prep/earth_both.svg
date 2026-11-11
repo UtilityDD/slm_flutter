@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf3ee" stroke="#c0392b" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#d9c9bd" stroke-width="2" stroke-dasharray="5 4"/>
+  <!-- wrong: one earth only; induced voltage at the work point -->
+<rect x="76" y="30" width="8" height="126" fill="#a9afb5"/><rect x="40" y="48" width="80" height="5" fill="#3c4248"/>
+  <path d="M4 40 L156 46 M4 30 L156 36" stroke="#59616a" stroke-width="2"/>
+<path d="M16 41 v4 M16 31 v4" stroke="#e2b33a" stroke-width="6"/><path d="M16 32 v12 q10 50 0 104" stroke="#b8733a" stroke-width="2.5" fill="none"/><rect x="14" y="146" width="4" height="14" fill="#3e9a3e"/>
+<g transform="translate(66 74)"><circle r="7" fill="#ffd34e"/><rect x="-6" y="6" width="12" height="22" rx="3" fill="#ff851b"/><path d="M-3 28 v16 M3 28 v16" stroke="#26303d" stroke-width="4"/></g>
+<circle cx="80" cy="44" r="18" fill="#fff3a0" opacity="0.85"/><path d="M80 24 l4 12 l10 -6 l-5 11 l12 2 l-11 5 l7 9 l-12 -3 l0 12 l-6 -10 l-7 9 l1 -12 l-12 3 l8 -9 l-11 -5 l12 -2 l-5 -11 l10 6 z" fill="#ffb02e" opacity="0.9"/>
+<g transform="translate(80 172)"><circle r="14" fill="#c0392b"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>
+  <!-- right: an earth set on both sides of the pole -->
+<rect x="236" y="30" width="8" height="126" fill="#a9afb5"/><rect x="200" y="48" width="80" height="5" fill="#3c4248"/>
+  <path d="M164 40 L316 46 M164 30 L316 36" stroke="#59616a" stroke-width="2"/>
+<path d="M176 41 v4 M176 31 v4" stroke="#e2b33a" stroke-width="6"/><path d="M176 32 v12 q10 50 0 104" stroke="#b8733a" stroke-width="2.5" fill="none"/><rect x="174" y="146" width="4" height="14" fill="#3e9a3e"/>
+<path d="M304 41 v4 M304 31 v4" stroke="#e2b33a" stroke-width="6"/><path d="M304 32 v12 q10 50 0 104" stroke="#b8733a" stroke-width="2.5" fill="none"/><rect x="302" y="146" width="4" height="14" fill="#3e9a3e"/>
+<g transform="translate(226 74)"><circle r="7" fill="#ffd34e"/><rect x="-6" y="6" width="12" height="22" rx="3" fill="#ff851b"/><path d="M-3 28 v16 M3 28 v16" stroke="#26303d" stroke-width="4"/></g>
+<g transform="translate(240 172)"><circle r="14" fill="#2e8b45"/><path d="M-7 0 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>
