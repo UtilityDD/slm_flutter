@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs><linearGradient id="st" x1="0" x2="1"><stop offset="0" stop-color="#eef1f3"/><stop offset=".5" stop-color="#b9c0c6"/><stop offset="1" stop-color="#717a82"/></linearGradient></defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#eef2f6" stroke="#53627a" stroke-width="3"/>
+  <rect x="8" y="8" width="148" height="184" rx="9" fill="#fbe9e7"/>
+  <rect x="164" y="8" width="148" height="184" rx="9" fill="#e8f5e9"/>
+  <path d="M160 14 L160 186" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <clipPath id="cl"><rect x="8" y="8" width="148" height="184" rx="9"/></clipPath>
+  <clipPath id="cr"><rect x="164" y="8" width="148" height="184" rx="9"/></clipPath>
+  <g clip-path="url(#cl)"><rect x="16" y="60" width="76" height="20" rx="5" fill="#222"/><rect x="92" y="64" width="40" height="12" fill="#d08a3c" stroke="#9c5a20" stroke-width="1"/><path d="M92 66.0 H132" stroke="#f2b27a" stroke-width="0.8"/><path d="M92 68.8 H132" stroke="#f2b27a" stroke-width="0.8"/><path d="M92 71.6 H132" stroke="#f2b27a" stroke-width="0.8"/><path d="M92 74.4 H132" stroke="#f2b27a" stroke-width="0.8"/><path d="M100 64 l5 7 l5 -7 Z" fill="#eef2f6"/><circle cx="105" cy="68" r="11" fill="none" stroke="#c62828" stroke-width="2.5"/><g transform="translate(84 122) rotate(25)"><path d="M-5 0 V-34 Q2 -44 8 -40 L5 0 Z" fill="url(#st)" stroke="#5f6870"/><rect x="-7" y="0" width="14" height="40" rx="5" fill="#8a5a2e"/></g></g>
+  <g clip-path="url(#cr)"><rect x="172" y="60" width="76" height="20" rx="5" fill="#222"/><rect x="248" y="64" width="40" height="12" fill="#d08a3c" stroke="#9c5a20" stroke-width="1"/><path d="M248 66.0 H288" stroke="#f2b27a" stroke-width="0.8"/><path d="M248 68.8 H288" stroke="#f2b27a" stroke-width="0.8"/><path d="M248 71.6 H288" stroke="#f2b27a" stroke-width="0.8"/><path d="M248 74.4 H288" stroke="#f2b27a" stroke-width="0.8"/><g transform="translate(246 112) rotate(10)">
+    <path d="M-6 0 Q-14 40 -24 78 L-12 80 Q-4 44 2 4 Z" fill="#d7262e" stroke="#f5c518" stroke-width="2"/>
+    <path d="M6 0 Q14 40 24 78 L12 80 Q4 44 -2 4 Z" fill="#d7262e" stroke="#f5c518" stroke-width="2"/>
+    <path d="M-12 2 L-8 -34 L8 -34 L12 2 Z" fill="url(#st)" stroke="#5f6870" stroke-width="1.6"/>
+    <circle cx="0" cy="-26" r="2" fill="#3b4247"/><circle cx="0" cy="-18" r="2.8" fill="#3b4247"/><circle cx="0" cy="-9" r="3.6" fill="#3b4247"/>
+    <circle cx="0" cy="0" r="4" fill="#59626a"/></g></g>
+  <circle cx="30" cy="172" r="14" fill="#c62828"/><path d="M24 166 l12 12 M36 166 l-12 12" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="290" cy="172" r="14" fill="#2e8b45"/><path d="M283 172 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
