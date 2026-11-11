@@ -1841,7 +1841,7 @@
       "lessonId": "3.1",
       "moduleId": "m3",
       "packId": "do_3_1_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 1
     },
     {
@@ -4793,10 +4793,10 @@
     },
     {
       "id": "do_3_1_a",
-      "engineType": "placeholder",
+      "engineType": "m3_conductor_id",
       "lessonId": "3.1",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []

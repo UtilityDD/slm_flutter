@@ -41,6 +41,7 @@ import 'm2_comealong_pull.dart';
 import 'm2_megger_read.dart';
 import 'm2_gate_field.dart';
 import 'm2_skin_cut.dart';
+import 'm3_conductor_id.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -207,6 +208,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m2GateFieldPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M2GateFieldPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_conductor_id':
+      final content = m3ConductorIdPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3ConductorIdPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
