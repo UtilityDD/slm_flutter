@@ -27,6 +27,7 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm4_service_connect.dart' as m4_service_connect;
 import 'm2_comealong_pick.dart' as m2_comealong_pick;
 import 'm2_comealong_pull.dart' as m2_comealong_pull;
 import 'm2_crimp_steps.dart' as m2_crimp_steps;
@@ -78,6 +79,7 @@ final Map<String, DoMistake> knownMistakes = {
     ...StormMistakes.all,
     ...TenSecMistakes.all,
     ...GateMistakes.all,
+    ...m4_service_connect.M4ServiceConnectMistakes.all,
     ...m2_comealong_pick.M2ComeAlongMistakes.all,
     ...m2_comealong_pull.PullMistakes.all,
     ...m2_crimp_steps.CrimpMistakes.all,
