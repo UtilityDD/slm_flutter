@@ -1868,7 +1868,7 @@
       "lessonId": "3.2",
       "moduleId": "m3",
       "packId": "do_3_2_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 4
     },
     {
@@ -4820,10 +4820,10 @@
     },
     {
       "id": "do_3_2_a",
-      "engineType": "placeholder",
+      "engineType": "m3_insulator_pick",
       "lessonId": "3.2",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
