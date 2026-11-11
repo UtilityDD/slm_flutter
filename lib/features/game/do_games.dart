@@ -43,6 +43,7 @@ import 'm2_gate_field.dart';
 import 'm2_skin_cut.dart';
 import 'm3_conductor_id.dart';
 import 'm3_crossarm_pick.dart';
+import 'm3_service_drop.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -217,6 +218,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m3CrossarmPickPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M3CrossarmPickPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_service_drop':
+      final content = m3ServiceDropPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3ServiceDropPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
