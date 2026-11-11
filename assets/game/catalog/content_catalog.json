@@ -2048,7 +2048,7 @@
       "lessonId": "3.9",
       "moduleId": "m3",
       "packId": "learn_3_9",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 24
     },
     {
@@ -5003,7 +5003,7 @@
       "id": "learn_3_9",
       "engineType": "learn_cards",
       "lessonId": "3.9",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
