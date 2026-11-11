@@ -27,6 +27,26 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm2_comealong_pick.dart' as m2_comealong_pick;
+import 'm2_comealong_pull.dart' as m2_comealong_pull;
+import 'm2_crimp_steps.dart' as m2_crimp_steps;
+import 'm2_dead_test.dart' as m2_dead_test;
+import 'm2_gate_field.dart' as m2_gate_field;
+import 'm2_hotstick_check.dart' as m2_hotstick_check;
+import 'm2_hotstick_operate.dart' as m2_hotstick_operate;
+import 'm2_hydraulic_pick.dart' as m2_hydraulic_pick;
+import 'm2_hydraulic_use.dart' as m2_hydraulic_use;
+import 'm2_lug_pick.dart' as m2_lug_pick;
+import 'm2_megger_prep.dart' as m2_megger_prep;
+import 'm2_megger_read.dart' as m2_megger_read;
+import 'm2_meter_setup.dart' as m2_meter_setup;
+import 'm2_phase_meter.dart' as m2_phase_meter;
+import 'm2_phase_swap.dart' as m2_phase_swap;
+import 'm2_skin_cut.dart' as m2_skin_cut;
+import 'm2_skin_tools.dart' as m2_skin_tools;
+import 'm2_tool_care.dart' as m2_tool_care;
+import 'm2_tool_use.dart' as m2_tool_use;
+import 'm2_toolbox_pack.dart' as m2_toolbox_pack;
 
 // "আমার ভুলের খাতা": every mistake caught in a Do level, newest first, with
 // its picture and "পাঠে দেখুন". Opened from the 💀 chip on the ladder.
@@ -58,6 +78,26 @@ final Map<String, DoMistake> knownMistakes = {
     ...StormMistakes.all,
     ...TenSecMistakes.all,
     ...GateMistakes.all,
+    ...m2_comealong_pick.M2ComeAlongMistakes.all,
+    ...m2_comealong_pull.PullMistakes.all,
+    ...m2_crimp_steps.CrimpMistakes.all,
+    ...m2_dead_test.DeadMistakes.all,
+    ...m2_gate_field.M2GateMistakes.all,
+    ...m2_hotstick_check.HotStickMistakes.all,
+    ...m2_hotstick_operate.HsMistakes.all,
+    ...m2_hydraulic_pick.HydMistakes.all,
+    ...m2_hydraulic_use.HydMistakes.all,
+    ...m2_lug_pick.LugMistakes.all,
+    ...m2_megger_prep.MeggerPrepMistakes.all,
+    ...m2_megger_read.M2MeggerMistakes.all,
+    ...m2_meter_setup.M2MeterMistakes.all,
+    ...m2_phase_meter.PmMistakes.all,
+    ...m2_phase_swap.PhaseMistakes.all,
+    ...m2_skin_cut.SkinMistakes.all,
+    ...m2_skin_tools.SkinMistakes.all,
+    ...m2_tool_care.CareMistakes.all,
+    ...m2_tool_use.TuMistakes.all,
+    ...m2_toolbox_pack.TbMistakes.all,
   ])
     m.key: m,
 };

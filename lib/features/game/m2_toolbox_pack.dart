@@ -254,6 +254,20 @@ abstract final class TbMistakes {
       };
 
   /// A plain tool (no 1000V insulation) packed for the LT job.
+  /// Every card this level can book, for the mistakes book (`knownMistakes`).
+  static List<DoMistake> get all => [
+        for (final k in TbKind.values) ...[
+          noMark(k),
+          tape(k),
+          for (final f in const [TbFlaw.crack, TbFlaw.cut, TbFlaw.burn]) handle(k, f),
+        ],
+        blunt,
+        bentTip,
+        deadNeon,
+        untested,
+        heldWhenRight,
+      ];
+
   static DoMistake noMark(TbKind k) => DoMistake(
         key: '2.1/toolbox/no-mark/${k.name}',
         textBn: 'হাতলে 1000V মার্ক নেই — সাধারণ টুল এলটি লাইনে বিপদ। গ্লাভস থাকলেও নয়: যেকোনো একটা ফেল করলেই শক, তাই গ্লাভস + VDE 1000V টুল।',
