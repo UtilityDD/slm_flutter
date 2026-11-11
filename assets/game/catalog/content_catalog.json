@@ -1715,7 +1715,7 @@
       "lessonId": "2.6",
       "moduleId": "m2",
       "packId": "do_2_6_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 17
     },
     {
@@ -4667,10 +4667,10 @@
     },
     {
       "id": "do_2_6_b",
-      "engineType": "placeholder",
+      "engineType": "m2_skin_cut",
       "lessonId": "2.6",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },

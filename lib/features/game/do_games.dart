@@ -157,6 +157,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m2LugPickPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M2LugPickPage(ctx: ctx, pack: content, muted: muted);
+    case 'm2_skin_cut':
+      final content = m2SkinCutPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M2SkinCutPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
