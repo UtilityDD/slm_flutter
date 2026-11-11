@@ -143,7 +143,36 @@ class GuideDirector extends Notifier<GuideState> {
   }
 
   @override
-  GuideState build() => GuideState.quiet;
+  GuideState build() {
+    // Cancel any in-flight bubble dismiss when the provider goes away (tests).
+    ref.onDispose(_abortBubbleDismiss);
+    return GuideState.quiet;
+  }
+
+  int _bubbleDismissGen = 0;
+  Timer? _bubbleDismissTimer;
+  Completer<void>? _bubbleDismissGate;
+
+  void _abortBubbleDismiss() {
+    _bubbleDismissGen++;
+    _bubbleDismissTimer?.cancel();
+    _bubbleDismissTimer = null;
+    final gate = _bubbleDismissGate;
+    _bubbleDismissGate = null;
+    if (gate != null && !gate.isCompleted) gate.complete();
+  }
+
+  /// Cancelable sleep used by bubble auto-dismiss (safe under widget tests).
+  Future<void> _dismissSleep(Duration d, int gen) async {
+    if (gen != _bubbleDismissGen) return;
+    final gate = Completer<void>();
+    _bubbleDismissGate = gate;
+    _bubbleDismissTimer?.cancel();
+    _bubbleDismissTimer = Timer(d, () {
+      if (!gate.isCompleted) gate.complete();
+    });
+    await gate.future;
+  }
 
   void say({
     required GuideMood mood,
@@ -154,7 +183,9 @@ class GuideDirector extends Notifier<GuideState> {
     bool speakVoice = false,
     bool muted = false,
   }) {
+    _abortBubbleDismiss();
     _token++;
+    final myToken = _token;
     final cleanLine = enDigits(line);
     state = GuideState(
       mood: mood,
@@ -167,6 +198,55 @@ class GuideDirector extends Notifier<GuideState> {
     if (speakVoice && cleanLine.trim().isNotEmpty && !muted) {
       unawaited(MascotSpeechLibrary.speak(cleanLine, voiceKey: voiceKey, muted: muted));
     }
+    // Praise / celebration bubbles clear after voice so they don't cover the
+    // scene. Task prompts (talk / think / inspire / warn) stay until the next say.
+    // Ladder entrance keeps its own hold/clear in LadderGuideHost.
+    if (cleanLine.trim().isNotEmpty &&
+        entrance == null &&
+        (mood == GuideMood.glad || mood == GuideMood.celebrate)) {
+      unawaited(_dismissBubbleWhenQuiet(token: myToken, line: cleanLine));
+    }
+  }
+
+  /// Clears only the speech text (keeps mood/gesture) so the corner bubble goes away.
+  void softClearLine() {
+    _abortBubbleDismiss();
+    if (state.line.isEmpty) return;
+    state = state.copyWith(line: '', token: ++_token);
+  }
+
+  /// After [say]: wait for speech to finish (or a read hold when muted), then soft-clear.
+  Future<void> _dismissBubbleWhenQuiet({required int token, required String line}) async {
+    final gen = ++_bubbleDismissGen;
+    // Callers often `say` then `speak` — give lips a moment to start.
+    await _dismissSleep(const Duration(milliseconds: 280), gen);
+    if (_token != token || gen != _bubbleDismissGen) return;
+
+    var heard = MascotTalk.active.value;
+    if (!heard) {
+      for (var i = 0; i < 22; i++) {
+        await _dismissSleep(const Duration(milliseconds: 50), gen);
+        if (_token != token || gen != _bubbleDismissGen) return;
+        if (MascotTalk.active.value) {
+          heard = true;
+          break;
+        }
+      }
+    }
+
+    if (heard) {
+      await MascotSpeechLibrary.waitUntilQuiet();
+      if (_token != token || gen != _bubbleDismissGen) return;
+      final postMs = (380 + line.trim().length * 14).clamp(420, 1100);
+      await _dismissSleep(Duration(milliseconds: postMs), gen);
+    } else {
+      // Muted / no engine: leave text long enough to read, then clear.
+      final readMs = (900 + line.trim().length * 42).clamp(1200, 3200);
+      await _dismissSleep(Duration(milliseconds: readMs), gen);
+    }
+    if (_token != token || gen != _bubbleDismissGen) return;
+    if (state.line.isEmpty) return;
+    softClearLine();
   }
 
   /// Trigger a structured [MascotCue] from [MascotSpeechLibrary] with optional audio.
@@ -204,6 +284,7 @@ class GuideDirector extends Notifier<GuideState> {
   }
 
   void clearLine() {
+    _abortBubbleDismiss();
     state = state.copyWith(line: '', mood: GuideMood.idle, gesture: GuideGesture.none, token: ++_token);
   }
 

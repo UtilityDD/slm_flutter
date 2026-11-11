@@ -107,6 +107,8 @@ Future<void> _payReason(WidgetTester t, KitSlot slot) async {
   final right = _onScreen(KitLines.whyRight(slot));
   expect(right, hasLength(1), reason: 'reason deck for $slot');
   await t.tap(right.single, warnIfMissed: false);
+  await t.pump();
+  await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
   await _pump(t, 2500);
 }
 
@@ -176,6 +178,8 @@ void main() {
       final right = _onScreen(KitLines.whyRight(KitSlot.torso));
       expect(right, hasLength(1));
       await t.tap(right.single, warnIfMissed: false);
+      await t.pump();
+      await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
       await _pump(t, 2500);
       expect(_onScreen([...KitLines.whyTorsoRight, ...KitLines.whyTorsoWrong]), isEmpty, reason: 'the reason was paid');
 

@@ -74,6 +74,16 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await t.pump();
+  // Wait for reason zoom (coworker decks have no proceed).
+  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+  final go = find.byKey(const ValueKey('reason-proceed-btn'));
+  if (go.evaluate().isNotEmpty) {
+    await t.tap(go, warnIfMissed: false);
+    await t.pump();
+  }
 }
 
 HotStick _bad(StickRoundDeal r) => r.rods.firstWhere((x) => x.rating == r.docket.line && kStickDamage.contains(x.flaw));

@@ -65,6 +65,16 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await t.pump();
+  // Wait for reason zoom (coworker decks have no proceed).
+  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+  final go = find.byKey(const ValueKey('reason-proceed-btn'));
+  if (go.evaluate().isNotEmpty) {
+    await t.tap(go, warnIfMissed: false);
+    await t.pump();
+  }
 }
 
 /// Opens the page on a navigator and waits for the guide.
@@ -489,7 +499,7 @@ void main() {
         expect(find.text(HarnessLines.faultBn(h)), findsNothing);
         await _pickRight(t, HarnessLines.whyRight(h));
         if (!h.sound) {
-          await _pump(t, 2000);
+          // Named chip shows right after proceed; send-off clears it ~0.7–1.5 s later.
           expect(find.text(HarnessLines.faultBn(h)), findsOneWidget, reason: 'harness $i: named once paid');
         }
         // The next comes by itself: back to the board (or the result).

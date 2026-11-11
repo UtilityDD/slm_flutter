@@ -151,7 +151,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   var _rivalDefeated = false;
   var _rivalOnStage = false;
 
-  /// Rival owns the voice: [MascotTalk] drives his snarl instead of the coach.
+  /// Rival owns the voice: [RivalTalk] drives his snarl instead of the coach.
   var _rivalVoice = false;
   String _rivalBubbleBn = '';
   var _askReady = false;
@@ -331,8 +331,8 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     final s = _choiceClock.elapsed.inSeconds;
     if (s == _clockSec.value) return;
     _clockSec.value = s;
-    // Tick-tock under the player's thinking, never over the coach's voice.
-    if (_muted || MascotTalk.active.value) return;
+    // Tick-tock under the player's thinking, never over coach or rival voice.
+    if (_muted || MascotTalk.active.value || RivalTalk.active.value) return;
     final file = s.isEven ? 'sounds/learn/tick.wav' : 'sounds/learn/tock.wav';
     unawaited(ZlFx.cue(file, volume: 0.3, muted: false));
   }
@@ -1884,7 +1884,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                         size: _rivalSize,
                         bodyAsset: myth.bodyAsset,
                         phase: _rivalBob.value,
-                        speaking: _rivalVoice && MascotTalk.active.value,
+                        speaking: _rivalVoice && RivalTalk.active.value,
                         reduce: false,
                       ),
                     ),

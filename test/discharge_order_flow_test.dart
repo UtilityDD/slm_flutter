@@ -99,6 +99,16 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   ];
   expect(r, hasLength(1), reason: right.first);
   await t.tap(find.descendant(of: find.byType(ChoiceDeck), matching: find.text(r.single)), warnIfMissed: false);
+  await t.pump();
+  // Wait for reason zoom (coworker decks have no proceed).
+  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+  final go = find.byKey(const ValueKey('reason-proceed-btn'));
+  if (go.evaluate().isNotEmpty) {
+    await t.tap(go, warnIfMissed: false);
+    await t.pump();
+  }
 }
 
 void main() {
@@ -331,7 +341,7 @@ void main() {
       expect(find.text(DischargeLines.earthAsk), findsWidgets);
       await _pickRight(t, DischargeLines.earthRight);
       await _pump(t, 3000);
-      expect(find.byType(ChoiceDeck), findsNothing, reason: 'the level goes on by itself');
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'proceeded after the reason');
 
       // The hook to R: a spark. Then he peeps in (his moment: two steps done).
       final hx = g.hands.dx - 60;

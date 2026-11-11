@@ -19,7 +19,9 @@ import '../game/mistakes_book.dart';
 import '../game/ladder_builder.dart';
 import '../game/learn_board_models.dart';
 import '../game/learn_board_runner.dart';
+import '../game/learn_explainer_videos.dart';
 import '../game/learn_runner.dart';
+import '../game/learn_video_gate.dart';
 import '../game/level_shell.dart';
 import '../guide/ai_lineman_guide.dart';
 import '../guide/guide_director.dart';
@@ -678,23 +680,38 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       return;
     }
     final boardPack = learnBoardPackFor(lessonId);
+    final youtubeId = LearnExplainerVideos.youtubeIdFor(lessonId);
     await _openRoute(
       rung,
       index,
-      (_) => boardPack != null
-          ? LearnBoardRunnerPage(
-              rungId: rung.id,
-              lessonId: lessonId,
-              ladderIndex: index,
-              pack: boardPack,
-              muted: widget.muted,
-            )
-          : LearnRunnerPage(
-              rungId: rung.id,
-              lessonId: lessonId,
-              ladderIndex: index,
-              muted: widget.muted,
-            ),
+      (_) {
+        if (boardPack != null && youtubeId != null) {
+          // Guide → explainer video → portrait → guide → board.
+          return LearnVideoGatePage(
+            rungId: rung.id,
+            lessonId: lessonId,
+            ladderIndex: index,
+            pack: boardPack,
+            youtubeId: youtubeId,
+            muted: widget.muted,
+          );
+        }
+        if (boardPack != null) {
+          return LearnBoardRunnerPage(
+            rungId: rung.id,
+            lessonId: lessonId,
+            ladderIndex: index,
+            pack: boardPack,
+            muted: widget.muted,
+          );
+        }
+        return LearnRunnerPage(
+          rungId: rung.id,
+          lessonId: lessonId,
+          ladderIndex: index,
+          muted: widget.muted,
+        );
+      },
     );
   }
 

@@ -237,6 +237,11 @@ void main() {
         final right = _onScreen(DistanceLines.whyRight(rounds[i]));
         expect(right, hasLength(1));
         await t.tap(right.single, warnIfMissed: false);
+        await t.pump();
+        for (var j = 0; j < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; j++) {
+          await t.pump(const Duration(milliseconds: 50));
+        }
+        await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
         await _pump(t, i == 2 ? 6000 : 3500);
       }
       final s = c.read(gameSaveProvider);

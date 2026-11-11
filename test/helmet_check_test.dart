@@ -258,6 +258,8 @@ void main() {
       expect(r, hasLength(1));
       expect(_onScreen(wrong), hasLength(2));
       await t.tap(r.single, warnIfMissed: false);
+      await t.pump();
+      await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
       await _pump(t, 2500);
       expect(_onScreen([...right, ...wrong]), isEmpty, reason: 'paid');
     }

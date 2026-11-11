@@ -450,11 +450,13 @@ void main() {
           await _pump(t, 1200);
         }
         expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'fire $i');
-        // "কেন এটা নিলেন?" — the right reason pays the table; then on by itself.
+        // "কেন এটা নিলেন?" — the right reason zooms; proceed moves on.
         await _pump(t, 1500);
         final right = _onScreen(FireLines.whyRight(k, pickTool));
         expect(right.length, 1, reason: 'one right reason dealt for fire $i');
         await t.tap(right.single, warnIfMissed: false);
+        await t.pump();
+        await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
         await _pump(t, i == 2 ? 5000 : 3500);
       }
       final s = c.read(gameSaveProvider);
@@ -495,6 +497,8 @@ void main() {
         final right = _onScreen(i == 0 ? PassLines.whyStandRight : PassLines.whyAimRight);
         expect(right, hasLength(1), reason: 'one right reason dealt, fire $i');
         await t.tap(right.single, warnIfMissed: false);
+        await t.pump();
+        await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
         await _pump(t, 3500);
       }
       // The careless coworker: keep the half-used cylinder? No — refill.

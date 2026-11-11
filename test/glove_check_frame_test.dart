@@ -94,6 +94,8 @@ void main() {
       final right = _onScreen(GloveLines.whyRight);
       expect(right, hasLength(1));
       await t.tap(right.single, warnIfMissed: false);
+      await t.pump();
+      await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
       await _pump(t, 2500);
       expect(_onScreen([...GloveLines.whyRight, ...GloveLines.whyWrong]), isEmpty, reason: 'the reason was paid');
 

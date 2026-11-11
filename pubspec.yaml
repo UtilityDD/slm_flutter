@@ -23,6 +23,7 @@ dependencies:
   crypto: ^3.0.8
   flutter_svg: ^2.2.3
   lottie: ^3.8.2
+  youtube_player_flutter: ^10.0.1
 
 dev_dependencies:
   flutter_test:

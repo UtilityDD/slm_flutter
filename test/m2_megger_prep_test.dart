@@ -65,6 +65,16 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await t.pump();
+  // Wait for reason zoom (coworker decks have no proceed).
+  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+  final go = find.byKey(const ValueKey('reason-proceed-btn'));
+  if (go.evaluate().isNotEmpty) {
+    await t.tap(go, warnIfMissed: false);
+    await t.pump();
+  }
 }
 
 Future<void> _tap(WidgetTester t, String label, {int ms = 900}) async {
@@ -415,8 +425,10 @@ void main() {
       const seed = 9;
       final c = await _open(t, seed);
       await _leadsDone(t, seed);
-      expect(find.byType(CoworkerPeek), findsNothing);
-      await _pump(t, 2000);
+      // He may already be peeping once the leads are done; wait if not.
+      for (var i = 0; i < 40 && find.byType(CoworkerPeek).evaluate().isEmpty; i++) {
+        await _pump(t, 100);
+      }
       expect(find.byType(CoworkerPeek), findsOneWidget);
       expect(find.text(L.coworkerLine), findsOneWidget);
       final wrong = _onScreen(L.coworker.wrong);

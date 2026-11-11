@@ -60,6 +60,16 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await t.pump();
+  // Wait for reason zoom (coworker decks have no proceed).
+  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+  final go = find.byKey(const ValueKey('reason-proceed-btn'));
+  if (go.evaluate().isNotEmpty) {
+    await t.tap(go, warnIfMissed: false);
+    await t.pump();
+  }
 }
 
 /// Opens the page on a navigator and waits for the guide and the walk to the
@@ -535,12 +545,13 @@ void main() {
           }
           await _pickRight(t, PoleLines.whyRight(p));
           if (p.mustReport) {
-            await _pump(t, 2300);
+            // May walk to the fault side before the reveal ring appears.
+            for (var j = 0; j < 40 && find.byKey(const ValueKey('reveal-0')).evaluate().isEmpty; j++) {
+              await _pump(t, 50);
+            }
             expect(find.byKey(const ValueKey('reveal-0')), findsOneWidget, reason: 'pole $i: named once paid');
-            await _pump(t, i == 3 ? 6000 : 3500);
-          } else {
-            await _pump(t, i == 3 ? 6000 : 3500);
           }
+          await _pump(t, i == 3 ? 6000 : 3500);
         }
         final s = c.read(gameSaveProvider);
         expect(s.rungProgress[pack.kind == PoleKind.pcc ? '1.3/do/0' : '1.3/do/1'], 'cleared');

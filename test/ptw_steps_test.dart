@@ -60,6 +60,16 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await t.pump();
+  // Wait for reason zoom (coworker decks have no proceed).
+  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+  final go = find.byKey(const ValueKey('reason-proceed-btn'));
+  if (go.evaluate().isNotEmpty) {
+    await t.tap(go, warnIfMissed: false);
+    await t.pump();
+  }
 }
 
 /// Taps a thing on the site.
@@ -76,7 +86,7 @@ Future<void> _tapAndWhy(WidgetTester t, String label, PtwWhy why, {int after = 3
   await _pickRight(t, StepLines.whyRight(why));
   await _pump(t, after);
   // (After the paper: the coworker's deck may already be up.)
-  if (why != PtwWhy.receive) expect(find.byType(ChoiceDeck), findsNothing, reason: '$why: moved on by itself');
+  if (why != PtwWhy.receive) expect(find.byType(ChoiceDeck), findsNothing, reason: '$why: proceeded after reason');
 }
 
 /// The dealt crew, read off the site (worker 2 stands there only with 3).

@@ -40,6 +40,38 @@ class MascotTalk {
   }
 }
 
+/// Lip-sync for the careless coworker / Learn rival only.
+/// Never drives [AiLinemanGuide] — rival lines used to flip [MascotTalk] and
+/// the guide kept mouth/body motion with an empty bubble.
+class RivalTalk {
+  RivalTalk._();
+
+  static final active = ValueNotifier<bool>(false);
+  static var _depth = 0;
+  static Timer? _safetyTimer;
+
+  static void begin({Duration maxHold = const Duration(seconds: 12)}) {
+    _depth++;
+    if (!active.value) active.value = true;
+    _safetyTimer?.cancel();
+    _safetyTimer = Timer(maxHold, reset);
+  }
+
+  static void end() {
+    if (_depth > 0) _depth--;
+    if (_depth == 0) {
+      _safetyTimer?.cancel();
+      if (active.value) active.value = false;
+    }
+  }
+
+  static void reset() {
+    _depth = 0;
+    _safetyTimer?.cancel();
+    if (active.value) active.value = false;
+  }
+}
+
 /// High-level activity / event categories for the unified Game Mascot.
 enum MascotCueId {
   // 1. Ladder Presence & Nudges
@@ -907,8 +939,8 @@ class MascotSpeechLibrary {
   // 6. UNIFIED VOICE + LIP-SYNC ENGINE (NEURAL MP3 FIRST -> TTS FALLBACK)
   // ===========================================================================
 
-  /// Speaks the given [cue] or raw [textBn], automatically driving [MascotTalk.active]
-  /// so the mascot's mouth animates in real time across Ladder, Learn, and Do screens.
+  /// Speaks the given [cue] or raw [textBn]. Guide lines drive [MascotTalk];
+  /// [rival] lines drive [RivalTalk] only so the app mascot stays still.
   static Future<void> speak(
     String textBn, {
     String? voiceKey,
@@ -920,10 +952,39 @@ class MascotSpeechLibrary {
     final token = ++_speakToken;
     if (muted || textBn.trim().isEmpty) {
       MascotTalk.reset();
+      RivalTalk.reset();
       return;
     }
 
     final cleanText = toNaturalFieldBangla(textBn);
+    final hold = _estimateHold(cleanText);
+    void beginLips() {
+      if (rival) {
+        MascotTalk.reset();
+        RivalTalk.begin(maxHold: hold);
+      } else {
+        RivalTalk.reset();
+        MascotTalk.begin(maxHold: hold);
+      }
+    }
+
+    void endLips() {
+      if (rival) {
+        RivalTalk.end();
+      } else {
+        MascotTalk.end();
+      }
+    }
+
+    void resetLips() {
+      if (rival) {
+        RivalTalk.reset();
+      } else {
+        MascotTalk.reset();
+      }
+    }
+
+    bool lipsOpen() => rival ? RivalTalk.active.value : MascotTalk.active.value;
 
     // 1. Check if we have a pre-synthesized neural MP3 in DsVoice (by voiceKey or exact text)
     final resolvedKey = rival
@@ -943,7 +1004,7 @@ class MascotSpeechLibrary {
       await _stopTts();
       DsVoice.stop();
       LearnVoice.stop();
-      MascotTalk.begin(maxHold: _estimateHold(cleanText));
+      beginLips();
       try {
         if (learnClip != null) {
           await LearnVoice.play(learnClip);
@@ -952,7 +1013,7 @@ class MascotSpeechLibrary {
         }
       } finally {
         if (token == _speakToken) {
-          MascotTalk.end();
+          endLips();
         }
       }
       return;
@@ -966,14 +1027,14 @@ class MascotSpeechLibrary {
     void open() {
       if (began || token != _speakToken) return;
       began = true;
-      MascotTalk.begin(maxHold: _estimateHold(cleanText));
+      beginLips();
     }
 
     Timer? startGuard;
     try {
       final tts = await _ensureTts();
       if (tts == null || token != _speakToken) {
-        MascotTalk.reset();
+        resetLips();
         return;
       }
       await tts.stop();
@@ -982,24 +1043,24 @@ class MascotSpeechLibrary {
       if (token != _speakToken) return;
       tts.setStartHandler(open);
       tts.setCompletionHandler(() {
-        if (token == _speakToken && began) MascotTalk.end();
+        if (token == _speakToken && began) endLips();
       });
       tts.setCancelHandler(() {
-        if (token == _speakToken) MascotTalk.reset();
+        if (token == _speakToken) resetLips();
       });
       tts.setErrorHandler((_) {
-        if (token == _speakToken) MascotTalk.reset();
+        if (token == _speakToken) resetLips();
       });
       // Engines that never report start still get lips after a short beat.
       startGuard = Timer(const Duration(milliseconds: 650), open);
       await tts.speak(cleanText);
     } catch (_) {
-      if (token == _speakToken) MascotTalk.reset();
+      if (token == _speakToken) resetLips();
     } finally {
       startGuard?.cancel();
       // awaitSpeakCompletion should finish with the utterance; clear lip-sync if still open.
-      if (token == _speakToken && MascotTalk.active.value) {
-        MascotTalk.reset();
+      if (token == _speakToken && lipsOpen()) {
+        resetLips();
       }
     }
   }
@@ -1033,6 +1094,7 @@ class MascotSpeechLibrary {
   static Future<void> stop() async {
     _speakToken++;
     MascotTalk.reset();
+    RivalTalk.reset();
     DsVoice.stop();
     LearnVoice.stop();
     await _stopTts();
