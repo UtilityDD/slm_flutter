@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#D6E8F0"/></linearGradient>
+  <linearGradient id="storm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5C6E80"/><stop offset="1" stop-color="#A9B8C2"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8DB36A"/><stop offset="1" stop-color="#6E9450"/></linearGradient>
+  <linearGradient id="road" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E7276"/><stop offset="1" stop-color="#55595D"/></linearGradient>
+  <linearGradient id="bark" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5A3D25"/><stop offset="0.5" stop-color="#7E5A3A"/><stop offset="1" stop-color="#553A23"/></linearGradient>
+  <radialGradient id="leaf" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#6FBF4F"/><stop offset="1" stop-color="#3C7F2E"/></radialGradient>
+  <radialGradient id="dryleaf" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#D2A65C"/><stop offset="1" stop-color="#9C7340"/></radialGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9AA4AC"/><stop offset="0.5" stop-color="#D2D8DC"/><stop offset="1" stop-color="#8E98A0"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9D2D8"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B8C2C9"/></linearGradient>
+  <radialGradient id="spark" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.35" stop-color="#C9E6FF"/><stop offset="1" stop-color="#7FB8FF" stop-opacity="0"/></radialGradient>
+  <radialGradient id="fire" cx="0.5" cy="0.6" r="0.5"><stop offset="0" stop-color="#FFF3B0"/><stop offset="0.4" stop-color="#FFB13B"/><stop offset="1" stop-color="#E5482B" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#sky)"/>
+<rect y="198" width="200" height="22" fill="url(#ground)"/>
+<rect x="178" y="28" width="9" height="170" fill="url(#pole)"/><rect x="168" y="34" width="28" height="4" fill="#6F7880"/><path d="M0 42 Q90 52 172 40" stroke="#2B3138" stroke-width="1.8" fill="none"/><path d="M0 54 Q90 64 172 52" stroke="#2B3138" stroke-width="1.8" fill="none"/><path d="M0 66 Q90 76 172 64" stroke="#2B3138" stroke-width="1.8" fill="none"/><rect x="169" y="37" width="6" height="6" rx="1.5" fill="url(#porcelain)"/><rect x="169" y="49" width="6" height="6" rx="1.5" fill="url(#porcelain)"/><rect x="169" y="61" width="6" height="6" rx="1.5" fill="url(#porcelain)"/><path d="M172 38 L172 64" stroke="#6F7880" stroke-width="2"/><path d="M186 44 L210 198" stroke="#4A525A" stroke-width="1.2"/><rect x="184" y="41" width="5" height="6" rx="1" fill="url(#steel)"/>
+<path d="M68 198 Q71 159 73.3 120 L82.7 120 Q85 159 88 198 Z" fill="url(#bark)"/><path d="M79.6 128 L48.8 105 L47.2 107 L76.4 132 Z" fill="url(#bark)"/><path d="M79.5 128 L108.7 105 L107.3 103 L76.5 124 Z" fill="url(#bark)"/><path d="M60 113.6 L55 95.8 L53 96.2 L56 114.4 Z" fill="url(#bark)"/><circle cx="54" cy="96" r="2.6" fill="#E8C99A" stroke="#6B4A2F" stroke-width="0.8"/><path d="M99.9 112.6 L104.9 94.3 L103.1 93.7 L96.1 111.4 Z" fill="url(#bark)"/><circle cx="104" cy="94" r="2.6" fill="#E8C99A" stroke="#6B4A2F" stroke-width="0.8"/><circle cx="44" cy="110" r="15" fill="url(#leaf)"/><circle cx="64" cy="102" r="17" fill="url(#leaf)"/><circle cx="88" cy="100" r="18" fill="url(#leaf)"/><circle cx="112" cy="108" r="15" fill="url(#leaf)"/><circle cx="78" cy="120" r="18" fill="url(#leaf)"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>
