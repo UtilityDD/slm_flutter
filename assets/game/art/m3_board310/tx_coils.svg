@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="desk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B4636"/><stop offset="1" stop-color="#7C6350"/></linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF7EC"/><stop offset="1" stop-color="#ECE4D0"/></linearGradient>
+  <linearGradient id="yard" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#CFE3EE"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9A983"/><stop offset="1" stop-color="#9C8A64"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E979E"/><stop offset="0.5" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9D2D8"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B8C2C9"/></linearGradient>
+  <linearGradient id="sheath" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A3F45"/><stop offset="1" stop-color="#22262B"/></linearGradient>
+  <linearGradient id="van" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2F4F6"/><stop offset="1" stop-color="#C9D0D6"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="ladder" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9A25A"/><stop offset="1" stop-color="#A9823E"/></linearGradient>
+  <radialGradient id="spark" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.35" stop-color="#FFE38A"/><stop offset="1" stop-color="#FF7A2E" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#desk)"/>
+<rect x="14" y="12" width="172" height="196" rx="4" fill="url(#paper)"/>
+<g stroke="#D9CFB8" stroke-width="0.6"><path d="M14 32 L186 32"/><path d="M14 52 L186 52"/><path d="M14 72 L186 72"/><path d="M14 92 L186 92"/><path d="M14 112 L186 112"/><path d="M14 132 L186 132"/><path d="M14 152 L186 152"/><path d="M14 172 L186 172"/><path d="M14 192 L186 192"/><path d="M34 12 L34 208"/><path d="M54 12 L54 208"/><path d="M74 12 L74 208"/><path d="M94 12 L94 208"/><path d="M114 12 L114 208"/><path d="M134 12 L134 208"/><path d="M154 12 L154 208"/><path d="M174 12 L174 208"/></g>
+<path d="M64 100 A12 12 0 0 1 88 100 A12 12 0 0 1 112 100 A12 12 0 0 1 136 100" stroke="#25323D" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M64 120 A12 12 0 0 0 88 120 A12 12 0 0 0 112 120 A12 12 0 0 0 136 120" stroke="#25323D" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M100 24 L100 88" stroke="#25323D" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M100 132 L100 196" stroke="#25323D" stroke-width="4" stroke-linecap="round" fill="none"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

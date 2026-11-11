@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="desk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B4636"/><stop offset="1" stop-color="#7C6350"/></linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF7EC"/><stop offset="1" stop-color="#ECE4D0"/></linearGradient>
+  <linearGradient id="yard" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#CFE3EE"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9A983"/><stop offset="1" stop-color="#9C8A64"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E979E"/><stop offset="0.5" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9D2D8"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B8C2C9"/></linearGradient>
+  <linearGradient id="sheath" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A3F45"/><stop offset="1" stop-color="#22262B"/></linearGradient>
+  <linearGradient id="van" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2F4F6"/><stop offset="1" stop-color="#C9D0D6"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="ladder" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9A25A"/><stop offset="1" stop-color="#A9823E"/></linearGradient>
+  <radialGradient id="spark" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.35" stop-color="#FFE38A"/><stop offset="1" stop-color="#FF7A2E" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#yard)"/>
+<rect y="198" width="200" height="22" fill="url(#ground)"/>
+<rect x="24" y="40" width="8" height="158" fill="url(#pole)"/>
+<rect x="8" y="48" width="40" height="4" fill="#6F7880"/>
+<rect x="146" y="46" width="8" height="152" fill="url(#pole)"/>
+<rect x="130" y="54" width="40" height="4" fill="#6F7880"/>
+<path d="M13 44 Q89 60 135 50" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<path d="M135 50 Q180 58 206 54" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<path d="M28 44 Q89 60 150 50" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<path d="M150 50 Q180 58 206 54" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<path d="M43 44 Q89 60 165 50" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<path d="M165 50 Q180 58 206 54" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<rect x="183" y="86" width="6" height="82" fill="url(#pole)" opacity="0.85"/>
+<rect x="174" y="92" width="24" height="3" fill="#6F7880"/>
+<path d="M142 58 Q170 82 178 90" stroke="#D98A3D" stroke-width="1.6" fill="none"/>
+<path d="M150 58 Q170 82 186 90" stroke="#D98A3D" stroke-width="1.6" fill="none"/>
+<path d="M158 58 Q170 82 194 90" stroke="#D98A3D" stroke-width="1.6" fill="none"/>
+<ellipse cx="186" cy="168" rx="10" ry="3" fill="#9C8A64"/>
+<rect x="6" y="150" width="62" height="40" rx="6" fill="url(#van)"/><rect x="46" y="156" width="18" height="14" rx="3" fill="#7FB2DA"/><circle cx="20" cy="192" r="7" fill="#1E2329"/><circle cx="54" cy="192" r="7" fill="#1E2329"/>
+<g transform="translate(124 198) scale(1.32) translate(-124 -198)"><path d="M124 168 L122.6 183.7 L131 197" stroke="#222B37" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="124" y="193" width="11" height="5" rx="2" fill="#1C1F24"/><path d="M124 168 L116.1 181.5 L118 197" stroke="#2A3442" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="111" y="193" width="11" height="5" rx="2" fill="#1C1F24"/><path d="M125 145 L118.7 151.4 L110.4 148" stroke="#174A70" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="110.4" cy="148" r="3" fill="#2A2D33"/><path d="M116.5 168.3 L115.5 141.3 Q123 138 130.5 140.7 L131.5 167.7 Z" fill="url(#shirt)"/><path d="M116.5 165.3 L131.5 164.7" stroke="#222B37" stroke-width="2.4"/><g transform="rotate(-18 121 139)"><rect x="118" y="138" width="6" height="6" rx="2" fill="#8C5A3A"/><circle cx="121" cy="134" r="7" fill="#A86E48"/><path d="M128 135 Q128 140 124 141 L124 135 Z" fill="#2A1E16"/><path d="M113 133 A8 8 0 0 1 129 133 Z" fill="#FFD34E"/><rect x="109" y="131.6" width="20" height="2.8" rx="1.3" fill="#E5B92E"/><circle cx="117" cy="135" r="1.1" fill="#2A1E16"/></g><path d="M122 145 L118.4 150 L114.9 145" stroke="#1F5F8F" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="114.9" cy="145" r="3" fill="#2A2D33"/></g>
+<g transform="rotate(10 107 128)"><rect x="90" y="115" width="34" height="26" rx="1.5" fill="url(#paper)" stroke="#BFB394" stroke-width="0.6"/><path d="M94 125 L120 125" stroke="#25323D" stroke-width="1.4" stroke-linecap="round" fill="none"/><path d="M109 125 L109 137" stroke="#25323D" stroke-width="1.4" stroke-linecap="round" fill="none"/><rect x="98" y="122" width="6" height="6" fill="none" stroke="#25323D" stroke-width="1.1"/></g>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>
