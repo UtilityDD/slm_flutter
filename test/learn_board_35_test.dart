@@ -16,7 +16,6 @@ import 'package:slm_flutter/design/slm_design.dart';
 import 'package:slm_flutter/features/auth/auth_provider.dart';
 import 'package:slm_flutter/features/game/learn_board_deal.dart';
 import 'package:slm_flutter/features/game/learn_board_models.dart';
-import 'package:slm_flutter/features/game/learn_board_pack35.dart';
 import 'package:slm_flutter/features/game/learn_board_runner.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/lesson_day_card.dart';

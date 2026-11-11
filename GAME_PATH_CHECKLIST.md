@@ -9,7 +9,7 @@ how to build a level is in [GAME_LEVEL_PLAYBOOK.md](GAME_LEVEL_PLAYBOOK.md), cod
 ♻️ plays an older version (text deck or a legacy `dsLevels` screen) · ☐ not started (catalog `comingSoon`)
 
 **Totals (2026-11-11):** 10 modules · 109 lessons · 327 rungs (109 শেখা, 208 কাজ, 10 rank gates).
-Playable: **60 rungs** (Modules 1–2). Module 1: **30 of 30 built**; Module 2: **30 of 30 built** (2026-11-11, owner decisions open — see MODULE2_LADDER.md). Next work = Module 3.
+Playable: **90 rungs** (Modules 1, 2 and 3). Module 1: **30 of 30 built**; Module 2: **30 of 30 built** (2026-11-11, owner decisions open — see MODULE2_LADDER.md). Module 3: **30 of 30 built** (2026-11-11, branch `feature/module3`, owner decisions open — see MODULE3_LADDER.md).
 
 ---
 
@@ -58,7 +58,7 @@ Cross-level items:
 
 ---
 
-## Modules 2–10 (Module 2 built; 3–10 not started)
+## Modules 2–10 (Modules 2 and 3 built on this branch)
 
 Every rung below is `comingSoon` in the catalog: no picture board, no Do game, no gate. Each lesson's text exists in
 `tool/all_training_chapters_bn.json`. Build them module by module with the playbook (board first, then the Do rungs, then the gate).
@@ -79,21 +79,21 @@ Every rung below is `comingSoon` in the catalog: no picture board, no Do game, n
 | 2.10 | হাতিয়ারের যত্ন ও রক্ষণাবেক্ষণ | ✅ | 1 × ✅ |
 | gate | র‍্যাঙ্ক গেট (জুনিয়র) | — | ✅ |
 
-### Module 3 — টেকনিশিয়ান (10 lessons + rank gate)
+### Module 3 — টেকনিশিয়ান (10 lessons + rank gate) — ✅ built 2026-11-11, design notes and open owner decisions in [MODULE3_LADDER.md](MODULE3_LADDER.md)
 
 | Lesson | Title | শেখা | কাজ rungs |
 |---|---|---|---|
-| 3.1 | কন্ডাক্টর পরিচিতি: ACSR, AAAC | ☐ | 2 × ☐ |
-| 3.2 | ইনসুলেটর পরিচিতি: পিন, ডিস্ক, শ্যাকল | ☐ | 2 × ☐ |
-| 3.3 | ক্রস-আর্ম ও ক্ল্যাম্প: লাইনের কঙ্কাল | ☐ | 2 × ☐ |
-| 3.4 | ডিও (DO) ফিউজ ও হর্ন গ্যাপ ফিউজ: নীরব প্রহরী | ☐ | 2 × ☐ |
-| 3.5 | লাইটনিং অ্যারেস্টার (LA): বজ্রপাতের কবচ | ☐ | 2 × ☐ |
-| 3.6 | ডিস্ট্রিবিউশন ট্রান্সফরমার (DTR): লাইনের হৃৎপিণ্ড | ☐ | 2 × ☐ |
-| 3.7 | এলটি (LT) ডিস্ট্রিবিউশন বক্স/ফিডার পিলার: শেষ প্রবেশদ্বার | ☐ | 2 × ☐ |
-| 3.8 | সার্ভিস কেবিল ও এনার্জি মিটার: শেষ সংযোগ | ☐ | 2 × ☐ |
-| 3.9 | গার্ড ওয়্যার ও ক্রেডল গার্ডিং: অতিরিক্ত সুরক্ষা জাল | ☐ | 2 × ☐ |
-| 3.10 | লাইন ডায়াগ্রাম পড়া: কাগজের ওপর জাদুর নকশা | ☐ | 1 × ☐ |
-| gate | র‍্যাঙ্ক গেট (টেকনিশিয়ান) | — | ☐ |
+| 3.1 | কন্ডাক্টর পরিচিতি: ACSR, AAAC | ✅ | 2 × ✅ |
+| 3.2 | ইনসুলেটর পরিচিতি: পিন, ডিস্ক, শ্যাকল | ✅ | 2 × ✅ |
+| 3.3 | ক্রস-আর্ম ও ক্ল্যাম্প: লাইনের কঙ্কাল | ✅ | 2 × ✅ |
+| 3.4 | ডিও (DO) ফিউজ ও হর্ন গ্যাপ ফিউজ: নীরব প্রহরী | ✅ | 2 × ✅ |
+| 3.5 | লাইটনিং অ্যারেস্টার (LA): বজ্রপাতের কবচ | ✅ | 2 × ✅ |
+| 3.6 | ডিস্ট্রিবিউশন ট্রান্সফরমার (DTR): লাইনের হৃৎপিণ্ড | ✅ | 2 × ✅ |
+| 3.7 | এলটি (LT) ডিস্ট্রিবিউশন বক্স/ফিডার পিলার: শেষ প্রবেশদ্বার | ✅ | 2 × ✅ |
+| 3.8 | সার্ভিস কেবিল ও এনার্জি মিটার: শেষ সংযোগ | ✅ | 2 × ✅ |
+| 3.9 | গার্ড ওয়্যার ও ক্রেডল গার্ডিং: অতিরিক্ত সুরক্ষা জাল | ✅ | 2 × ✅ |
+| 3.10 | লাইন ডায়াগ্রাম পড়া: কাগজের ওপর জাদুর নকশা | ✅ | 1 × ✅ |
+| gate | র‍্যাঙ্ক গেট (টেকনিশিয়ান) | — | ✅ |
 
 ### Module 4 — স্কিলড (10 lessons + rank gate)
 
