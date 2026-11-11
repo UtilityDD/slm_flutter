@@ -2327,7 +2327,7 @@
       "lessonId": "4.9",
       "moduleId": "m4",
       "packId": "do_4_9_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 25
     },
     {
@@ -5280,10 +5280,10 @@
     },
     {
       "id": "do_4_9_a",
-      "engineType": "placeholder",
+      "engineType": "m4_streetlight_find",
       "lessonId": "4.9",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []

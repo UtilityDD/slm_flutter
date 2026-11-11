@@ -46,6 +46,7 @@ import 'm4_phase_balance.dart';
 import 'm4_streetlight_fix.dart';
 import 'm4_tree_plan.dart';
 import 'm4_do_open.dart';
+import 'm4_streetlight_find.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -232,6 +233,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m4DoOpenPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M4DoOpenPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_streetlight_find':
+      final content = m4StreetlightFindPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4StreetlightFindPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
