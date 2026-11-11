@@ -40,6 +40,7 @@ import 'm2_phase_meter.dart';
 import 'm2_comealong_pull.dart';
 import 'm2_megger_read.dart';
 import 'm2_gate_field.dart';
+import 'm2_skin_cut.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
