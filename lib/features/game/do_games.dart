@@ -52,6 +52,7 @@ import 'm4_tree_cut.dart';
 import 'm4_dp_dress.dart';
 import 'm4_jumper_tight.dart';
 import 'm4_dtr_temp.dart';
+import 'm4_earth_fix.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -262,6 +263,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m4DtrTempPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M4DtrTempPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_earth_fix':
+      final content = m4EarthFixPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4EarthFixPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
