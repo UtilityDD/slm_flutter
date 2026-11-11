@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- left: grease poured over rust (and onto the insulated grip) -->
+  <rect x="30" y="70" width="96" height="16" rx="7" fill="#8f98a1"/>
+  <circle cx="30" cy="78" r="20" fill="#8f98a1"/>
+  <circle cx="126" cy="78" r="16" fill="#8f98a1"/>
+  <g fill="#96481a"><circle cx="40" cy="70" r="6"/><circle cx="62" cy="80" r="5"/><circle cx="88" cy="74" r="6"/><circle cx="112" cy="82" r="5"/><circle cx="26" cy="86" r="5"/></g>
+  <path d="M40 60 q30 -6 60 4 q20 10 20 30 q-10 20 -40 18 q-40 -2 -40 -22 z" fill="#8a5a12" opacity="0.6"/>
+  <g transform="translate(78 22) rotate(30)"><rect x="0" y="0" width="22" height="26" rx="3" fill="#2e7d4f"/><path d="M20 4 L40 -12" stroke="#8f98a1" stroke-width="3"/></g>
+  <g fill="#8a5a12"><circle cx="70" cy="46" r="3"/><circle cx="74" cy="56" r="3.5"/></g>
+  <circle cx="132" cy="172" r="14" fill="#c0392b"/><path d="M125 165 L139 179 M139 165 L125 179" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- right: brush the rust off first, then a thin film of oil -->
+  <rect x="190" y="70" width="96" height="16" rx="7" fill="#d8dde1"/>
+  <circle cx="190" cy="78" r="20" fill="#d8dde1"/>
+  <circle cx="286" cy="78" r="16" fill="#d8dde1"/>
+  <circle cx="286" cy="78" r="7" fill="#f1faf2"/>
+  <rect x="190" y="110" width="40" height="12" rx="3" fill="#8a5a2b"/>
+  <path d="M192 122 v12 M196 122 v12 M200 122 v12 M204 122 v12 M208 122 v12 M212 122 v12 M216 122 v12 M220 122 v12 M224 122 v12 M228 122 v12" stroke="#b8bec4" stroke-width="1.5"/>
+  <path d="M238 124 h14 l-4 -4 m4 4 l-4 4" stroke="#2e8b45" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <g transform="translate(262 104)"><rect x="0" y="6" width="18" height="22" rx="3" fill="#2e7d4f"/><rect x="0" y="14" width="18" height="5" fill="#f2c230"/><path d="M16 8 L28 -4" stroke="#8f98a1" stroke-width="2.5"/></g>
+  <g fill="#b7791f"><circle cx="232" cy="76" r="3"/><circle cx="252" cy="80" r="3"/></g>
+  <circle cx="292" cy="172" r="14" fill="#2e8b45"/><path d="M285 172 L290 178 L300 166" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
