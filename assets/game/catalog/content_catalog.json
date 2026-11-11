@@ -2039,7 +2039,7 @@
       "lessonId": "3.8",
       "moduleId": "m3",
       "packId": "do_3_8_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 23
     },
     {
@@ -4992,10 +4992,10 @@
     },
     {
       "id": "do_3_8_b",
-      "engineType": "placeholder",
+      "engineType": "m3_meter_call",
       "lessonId": "3.8",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
