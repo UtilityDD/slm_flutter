@@ -53,6 +53,7 @@ import 'm3_guard_patrol.dart';
 import 'm3_guard_repair.dart';
 import 'm3_dtr_tap.dart';
 import 'm3_crossarm_check.dart';
+import 'm3_la_patrol.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -267,6 +268,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m3CrossarmCheckPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M3CrossarmCheckPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_la_patrol':
+      final content = m3LaPatrolPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3LaPatrolPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

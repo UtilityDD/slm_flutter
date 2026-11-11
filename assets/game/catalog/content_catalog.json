@@ -1949,7 +1949,7 @@
       "lessonId": "3.5",
       "moduleId": "m3",
       "packId": "do_3_5_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 13
     },
     {
@@ -4901,10 +4901,10 @@
     },
     {
       "id": "do_3_5_a",
-      "engineType": "placeholder",
+      "engineType": "m3_la_patrol",
       "lessonId": "3.5",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
