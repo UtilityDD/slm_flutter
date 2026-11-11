@@ -82,6 +82,7 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
+    - assets/game/art/m4_board44/
     - assets/game/art/m4_board42/
     - assets/game/art/m4_tree_plan/
     - assets/game/art/m4_board410/
