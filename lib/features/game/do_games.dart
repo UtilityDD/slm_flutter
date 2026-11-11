@@ -27,6 +27,7 @@ import 'm2_hotstick_operate.dart';
 import 'm2_phase_swap.dart';
 import 'm2_hydraulic_pick.dart';
 import 'm2_hotstick_check.dart';
+import 'm2_tool_use.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -137,6 +138,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m2HotstickPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M2HotstickPage(ctx: ctx, pack: content, muted: muted);
+    case 'm2_tool_use':
+      final content = m2ToolUsePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M2ToolUsePage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

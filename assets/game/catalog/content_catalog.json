@@ -1580,7 +1580,7 @@
       "lessonId": "2.1",
       "moduleId": "m2",
       "packId": "do_2_1_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 2
     },
     {
@@ -4532,10 +4532,10 @@
     },
     {
       "id": "do_2_1_b",
-      "engineType": "placeholder",
+      "engineType": "m2_tool_use",
       "lessonId": "2.1",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
