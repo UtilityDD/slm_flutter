@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#D8E8EF"/></linearGradient>
+  <linearGradient id="close" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B9A983"/><stop offset="1" stop-color="#8E7D59"/></linearGradient>
+  <linearGradient id="section" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9C7B55"/><stop offset="1" stop-color="#6E5236"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9A983"/><stop offset="1" stop-color="#9C8A64"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9AA0A4"/><stop offset="0.5" stop-color="#C9CED1"/><stop offset="1" stop-color="#8A9094"/></linearGradient>
+  <linearGradient id="cover" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B7B9B6"/><stop offset="1" stop-color="#8D908C"/></linearGradient>
+  <linearGradient id="tank" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F8A6C"/><stop offset="0.5" stop-color="#93AE8F"/><stop offset="1" stop-color="#627C60"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9D2D8"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B8C2C9"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="bucket" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9563E"/><stop offset="0.5" stop-color="#E2775C"/><stop offset="1" stop-color="#B04A34"/></linearGradient>
+  <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF6C8"/><stop offset="0.5" stop-color="#FFE07A" stop-opacity="0.8"/><stop offset="1" stop-color="#FFE07A" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+  <clipPath id="bub"><circle cx="46" cy="44" r="30"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#close)"/>
+<path d="M30 168 L170 168 L190 220 L10 220 Z" fill="url(#cover)" stroke="#6E6A62" stroke-width="1.2"/>
+<path d="M48 176 L152 176 L166 220 L34 220 Z" fill="#26221F"/>
+<rect x="84" y="60" width="32" height="160" fill="url(#steel)"/>
+<ellipse cx="100" cy="60" rx="16" ry="5" fill="#7D868E"/>
+<rect x="78" y="98" width="44" height="20" rx="3" fill="url(#steel)" stroke="#7D868E" stroke-width="1"/>
+<path d="M0 34 L46 70 Q60 82 82 106 L124 106" stroke="#AEB7BE" stroke-width="10" fill="none" stroke-linejoin="round"/>
+<path d="M0 34 L46 70 Q60 82 82 106 L124 106" stroke="#7D868E" stroke-width="1" fill="none" transform="translate(0 4)"/>
+<polygon points="102.5,111.8 96,115.5 89.5,111.8 89.5,104.2 96,100.5 102.5,104.2" fill="#9A4A22" stroke="#5E2A12" stroke-width="0.8"/><circle cx="96" cy="108" r="2.9" fill="#5E2A12"/>
+<polygon points="122.5,111.8 116,115.5 109.5,111.8 109.5,104.2 116,100.5 122.5,104.2" fill="#9A4A22" stroke="#5E2A12" stroke-width="0.8"/><circle cx="116" cy="108" r="2.9" fill="#5E2A12"/>
+<ellipse cx="30" cy="54" rx="9.2" ry="5.7" fill="#9A4A22" opacity="0.9"/><ellipse cx="33.3" cy="52.7" rx="4.4" ry="2.6" fill="#C46A33"/><ellipse cx="52" cy="80" rx="9.2" ry="5.7" fill="#9A4A22" opacity="0.9"/><ellipse cx="55.3" cy="78.7" rx="4.4" ry="2.6" fill="#C46A33"/><ellipse cx="104" cy="102" rx="9.2" ry="5.7" fill="#9A4A22" opacity="0.9"/><ellipse cx="107.3" cy="100.7" rx="4.4" ry="2.6" fill="#C46A33"/><ellipse cx="88" cy="118" rx="9.2" ry="5.7" fill="#9A4A22" opacity="0.9"/><ellipse cx="91.3" cy="116.7" rx="4.4" ry="2.6" fill="#C46A33"/><ellipse cx="100" cy="140" rx="9.2" ry="5.7" fill="#9A4A22" opacity="0.9"/><ellipse cx="103.3" cy="138.7" rx="4.4" ry="2.6" fill="#C46A33"/><ellipse cx="92" cy="86" rx="9.2" ry="5.7" fill="#9A4A22" opacity="0.9"/><ellipse cx="95.3" cy="84.7" rx="4.4" ry="2.6" fill="#C46A33"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>
