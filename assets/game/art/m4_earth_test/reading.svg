@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe3f3"/><stop offset="1" stop-color="#f3ecd8"/></linearGradient></defs>
+<rect x="4" y="4" width="152" height="192" rx="14" fill="url(#sky)" stroke="#c0392b" stroke-width="4"/>
+<rect x="164" y="4" width="152" height="192" rx="14" fill="url(#sky)" stroke="#27ae60" stroke-width="4"/>
+<g><rect x="30" y="40" width="100" height="70" rx="10" fill="#f2b705" stroke="#6b5208" stroke-width="3"/><rect x="40" y="50" width="80" height="30" rx="4" fill="#233127"/><text x="114" y="72" text-anchor="end" font-family="monospace" font-size="18" font-weight="bold" fill="#ff8a80">18 Ω</text><circle cx="80" cy="96" r="8" fill="#c62828"/><rect x="40" y="124" width="80" height="26" rx="6" fill="#e8f5e9" stroke="#c0392b" stroke-width="2"/><path d="M68 137 l6 6 l12 -12" stroke="#c0392b" stroke-width="3" fill="none"/></g>
+<g transform="translate(160,0)"><rect x="30" y="40" width="100" height="70" rx="10" fill="#f2b705" stroke="#6b5208" stroke-width="3"/><rect x="40" y="50" width="80" height="30" rx="4" fill="#233127"/><text x="114" y="72" text-anchor="end" font-family="monospace" font-size="18" font-weight="bold" fill="#9cf2a6">2.5 Ω</text><circle cx="80" cy="96" r="8" fill="#c62828"/><rect x="40" y="124" width="80" height="26" rx="6" fill="#e8f5e9" stroke="#27ae60" stroke-width="2"/><path d="M68 137 l6 6 l12 -12" stroke="#27ae60" stroke-width="3" fill="none"/></g>
+<g transform="translate(136,24)"><circle r="12" fill="#c0392b"/><path d="M-5 -5 L5 5 M5 -5 L-5 5" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g>
+<g transform="translate(296,24)"><circle r="12" fill="#27ae60"/><path d="M-6 0 L-2 5 L6 -5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+</svg>
