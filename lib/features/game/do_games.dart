@@ -55,6 +55,7 @@ import 'm3_dtr_tap.dart';
 import 'm3_crossarm_check.dart';
 import 'm3_la_patrol.dart';
 import 'm3_horngap_set.dart';
+import 'm3_conductor_joint.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -277,6 +278,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m3HorngapSetPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M3HorngapSetPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_conductor_joint':
+      final content = m3ConductorJointPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3ConductorJointPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
