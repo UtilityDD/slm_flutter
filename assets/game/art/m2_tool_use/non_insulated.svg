@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs><linearGradient id="st" x1="0" x2="1"><stop offset="0" stop-color="#eef1f3"/><stop offset=".5" stop-color="#b9c0c6"/><stop offset="1" stop-color="#717a82"/></linearGradient></defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#eef2f6" stroke="#53627a" stroke-width="3"/>
+  <rect x="8" y="8" width="148" height="184" rx="9" fill="#fbe9e7"/>
+  <rect x="164" y="8" width="148" height="184" rx="9" fill="#e8f5e9"/>
+  <path d="M160 14 L160 186" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <clipPath id="cl"><rect x="8" y="8" width="148" height="184" rx="9"/></clipPath>
+  <clipPath id="cr"><rect x="164" y="8" width="148" height="184" rx="9"/></clipPath>
+  <g clip-path="url(#cl)"><g transform="translate(82 76) rotate(0) scale(1.0)">
+    <path d="M-6 0 Q-14 40 -24 78 L-12 80 Q-4 44 2 4 Z" fill="url(#st)" stroke="#5f6870" stroke-width="2"/>
+    <path d="M6 0 Q14 40 24 78 L12 80 Q4 44 -2 4 Z" fill="url(#st)" stroke="#5f6870" stroke-width="2"/>
+    <path d="M-12 2 L-7 -38 L7 -38 L12 2 Z" fill="url(#st)" stroke="#5f6870" stroke-width="1.6"/>
+    <path d="M0 -37 V2" stroke="#3b4247" stroke-width="1.5"/>
+    <circle cx="0" cy="0" r="4" fill="#59626a"/></g><path d="M118 28 l-7 14 h7 l-5 14 l14 -18 h-8 l6 -10 Z" fill="#ffd34e" stroke="#c62828" stroke-width="1.5"/><path d="M48 104 l-7 14 h7 l-5 14 l14 -18 h-8 l6 -10 Z" fill="#ffd34e" stroke="#c62828" stroke-width="1.5"/></g>
+  <g clip-path="url(#cr)"><g transform="translate(238 76) rotate(0) scale(1.0)">
+    <path d="M-6 0 Q-14 40 -24 78 L-12 80 Q-4 44 2 4 Z" fill="#d7262e" stroke="#f5c518" stroke-width="2"/>
+    <path d="M6 0 Q14 40 24 78 L12 80 Q4 44 -2 4 Z" fill="#d7262e" stroke="#f5c518" stroke-width="2"/>
+    <path d="M-12 2 L-7 -38 L7 -38 L12 2 Z" fill="url(#st)" stroke="#5f6870" stroke-width="1.6"/>
+    <path d="M0 -37 V2" stroke="#3b4247" stroke-width="1.5"/>
+    <circle cx="0" cy="0" r="4" fill="#59626a"/><rect x="-14" y="46" width="28" height="10" fill="#f5c518"/><text x="0" y="54" font-size="8" font-family="Arial" font-weight="bold" text-anchor="middle" fill="#000">1000V</text></g></g>
+  <circle cx="30" cy="172" r="14" fill="#c62828"/><path d="M24 166 l12 12 M36 166 l-12 12" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="290" cy="172" r="14" fill="#2e8b45"/><path d="M283 172 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

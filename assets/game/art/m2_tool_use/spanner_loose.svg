@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs><linearGradient id="st" x1="0" x2="1"><stop offset="0" stop-color="#eef1f3"/><stop offset=".5" stop-color="#b9c0c6"/><stop offset="1" stop-color="#717a82"/></linearGradient></defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#eef2f6" stroke="#53627a" stroke-width="3"/>
+  <rect x="8" y="8" width="148" height="184" rx="9" fill="#fbe9e7"/>
+  <rect x="164" y="8" width="148" height="184" rx="9" fill="#e8f5e9"/>
+  <path d="M160 14 L160 186" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <clipPath id="cl"><rect x="8" y="8" width="148" height="184" rx="9"/></clipPath>
+  <clipPath id="cr"><rect x="164" y="8" width="148" height="184" rx="9"/></clipPath>
+  <g clip-path="url(#cl)"><polygon points="102.0,70.0 92.0,87.3 72.0,87.3 62.0,70.0 72.0,52.7 92.0,52.7" fill="#9ea6ab" stroke="#4d555b" stroke-width="2" stroke-linejoin="miter"/><circle cx="82" cy="70" r="8.4" fill="#7c858b"/><g transform="translate(82 70) rotate(0)">
+    <path d="M-36.11473670974871 -36.11473670974871 H-19.114736709748716 V15.068842025849229 H31.114736709748716 V-36.11473670974871 H36.11473670974871 V32.503263038773845 H14 V96.11473670974871 H-14 V32.503263038773845 H-36.11473670974871 Z" fill="url(#st)" stroke="#5f6870" stroke-width="1.6"/></g><g stroke="#c62828" stroke-width="3" stroke-linecap="round" fill="none"><path d="M118 54 q8 -6 16 0"/><path d="M122 64 q8 -6 16 0"/></g></g>
+  <g clip-path="url(#cr)"><polygon points="258.0,70.0 248.0,87.3 228.0,87.3 218.0,70.0 228.0,52.7 248.0,52.7" fill="#9ea6ab" stroke="#4d555b" stroke-width="2" stroke-linejoin="miter"/><circle cx="238" cy="70" r="8.4" fill="#7c858b"/><g transform="translate(238 70) rotate(0)">
+    <path d="M-28.32050807568877 -28.32050807568877 H-17.32050807568877 V10.392304845413262 H17.32050807568877 V-28.32050807568877 H28.32050807568877 V25.488457268119895 H14 V88.32050807568876 H-14 V25.488457268119895 H-28.32050807568877 Z" fill="url(#st)" stroke="#5f6870" stroke-width="1.6"/></g></g>
+  <circle cx="30" cy="172" r="14" fill="#c62828"/><path d="M24 166 l12 12 M36 166 l-12 12" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="290" cy="172" r="14" fill="#2e8b45"/><path d="M283 172 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
