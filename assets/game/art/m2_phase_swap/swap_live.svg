@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf3ee" stroke="#c0392b" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#d9c9bd" stroke-width="2" stroke-dasharray="5 4"/>
+  <!-- wrong: switch ON, screwdriver on the terminals, a flash -->
+  <rect x="20" y="40" width="44" height="66" rx="5" fill="#a9b2b9" stroke="#3e454b" stroke-width="1.5"/>
+  <line x1="58" y1="74" x2="42" y2="50" stroke="#1e2226" stroke-width="6" stroke-linecap="round"/><circle cx="42" cy="50" r="5" fill="#c8302a"/>
+  <text x="26" y="58" font-family="sans-serif" font-size="9" font-weight="bold" fill="#b0261c">ON</text>
+  <rect x="76" y="56" width="66" height="34" rx="4" fill="#23262b"/>
+  <circle cx="90" cy="73" r="6" fill="#d7dce0"/><circle cx="109" cy="73" r="6" fill="#d7dce0"/><circle cx="128" cy="73" r="6" fill="#d7dce0"/>
+  <path d="M90 90 v34" stroke="#d63a2f" stroke-width="5"/><path d="M109 90 v34" stroke="#f2c230" stroke-width="5"/><path d="M128 90 v34" stroke="#2f6fd6" stroke-width="5"/>
+  <path d="M109 73 L132 30" stroke="#9aa3ab" stroke-width="3.5" stroke-linecap="round"/><path d="M132 30 L144 8" stroke="#e0a21e" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="109" cy="73" r="17" fill="#fff3a0" opacity="0.8"/>
+  <path d="M109 52 l3 10 l8 -6 l-3 10 l10 1 l-9 5 l7 7 l-10 -2 l1 10 l-6 -8 l-6 8 l1 -10 l-10 2 l7 -7 l-9 -5 l10 -1 l-3 -10 l8 6 z" fill="#ffb02e" opacity="0.9"/>
+  <g transform="translate(80 162)"><circle r="14" fill="#c0392b"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>
+  <!-- right: switch OFF, lock and tag, tester 0 V, then the screwdriver -->
+  <rect x="176" y="40" width="44" height="66" rx="5" fill="#a9b2b9" stroke="#3e454b" stroke-width="1.5"/>
+  <line x1="214" y1="74" x2="198" y2="98" stroke="#1e2226" stroke-width="6" stroke-linecap="round"/><circle cx="198" cy="98" r="5" fill="#c8302a"/>
+  <text x="180" y="58" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1e6b34">OFF</text>
+  <path d="M186 104 a6 7 0 0 1 12 0" fill="none" stroke="#9aa1a7" stroke-width="2.5"/><rect x="184" y="104" width="16" height="12" rx="2" fill="#d9a441"/>
+  <rect x="180" y="122" width="30" height="20" rx="2" fill="#d7261e"/><text x="195" y="135" text-anchor="middle" font-family="sans-serif" font-size="6.5" font-weight="bold" fill="#fff">DANGER</text>
+  <rect x="232" y="56" width="66" height="34" rx="4" fill="#23262b"/>
+  <circle cx="246" cy="73" r="6" fill="#d7dce0"/><circle cx="265" cy="73" r="6" fill="#d7dce0"/><circle cx="284" cy="73" r="6" fill="#d7dce0"/>
+  <path d="M246 90 v34" stroke="#d63a2f" stroke-width="5"/><path d="M265 90 v34" stroke="#f2c230" stroke-width="5"/><path d="M284 90 v34" stroke="#2f6fd6" stroke-width="5"/>
+  <rect x="250" y="24" width="40" height="20" rx="5" fill="#101a2b"/><circle cx="260" cy="34" r="5" fill="#3a3f45"/><text x="279" y="38" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#fff">0 V</text>
+  <g transform="translate(240 162)"><circle r="14" fill="#2e8b45"/><path d="M-7 0 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>
