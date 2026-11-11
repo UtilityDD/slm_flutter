@@ -1760,7 +1760,7 @@
       "lessonId": "2.8",
       "moduleId": "m2",
       "packId": "do_2_8_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 22
     },
     {
@@ -4711,10 +4711,10 @@
     },
     {
       "id": "do_2_8_a",
-      "engineType": "placeholder",
+      "engineType": "m2_phase_meter",
       "lessonId": "2.8",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []

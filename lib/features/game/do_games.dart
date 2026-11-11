@@ -36,6 +36,7 @@ import 'm2_comealong_pick.dart';
 import 'm2_dead_test.dart';
 import 'm2_hydraulic_use.dart';
 import 'm2_meter_setup.dart';
+import 'm2_phase_meter.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -186,6 +187,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m2MeterSetupPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M2MeterSetupPage(ctx: ctx, pack: content, muted: muted);
+    case 'm2_phase_meter':
+      final content = m2PhaseMeterPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M2PhaseMeterPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
