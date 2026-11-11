@@ -21,6 +21,7 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm2_toolbox_pack.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -107,6 +108,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = gateFieldPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => GateFieldPage(ctx: ctx, pack: content, muted: muted);
+    case 'm2_toolbox_pack':
+      final content = m2ToolboxPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M2ToolboxPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

@@ -1571,7 +1571,7 @@
       "lessonId": "2.1",
       "moduleId": "m2",
       "packId": "do_2_1_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 1
     },
     {
@@ -4522,10 +4522,10 @@
     },
     {
       "id": "do_2_1_a",
-      "engineType": "placeholder",
+      "engineType": "m2_toolbox_pack",
       "lessonId": "2.1",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
