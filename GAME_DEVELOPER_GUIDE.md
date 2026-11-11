@@ -44,8 +44,8 @@ lib/
     ├── # ---- the shared level kit (every level builds on these) ----
     ├── full_scene_frame.dart       # FullSceneFrame, SceneMetrics, cornerGuide
     ├── scene_kit.dart              # GuideIntro, LinemanFigure (poses, tipOf), AwakeClock
-    ├── reason_table.dart           # ReasonTable mixin: putOnTable → askReason → paid
-    ├── coworker_moment.dart        # CoworkerMoment mixin, CoworkerScript, CoworkerPeek
+    ├── reason_table.dart           # ReasonTable mixin: putOnTable → askReason → zoom + এগিয়ে যান → paid
+    ├── coworker_moment.dart        # CoworkerMoment mixin, CoworkerScript, CoworkerPeek (two-beat UI)
     ├── choice_deck.dart            # ChoiceDeck + dealChoices(right, wrong, rng)
     ├── do_parts.dart               # TaskNudge, DoCoachStrip, DoProgress, DoBigButton
     ├── mistake_kit.dart            # DoMistake, MistakeCard, bookMistake, DoDeathGuard
@@ -55,8 +55,10 @@ lib/
     ├── fire_fx.dart                # Lottie FxLoop / FxOnce / FxBeam (tool/lottie_gen.py)
     │
     ├── # ---- picture boards (শেখা) ----
-    ├── learn_board_models.dart     # LearnBoardPack types, packs 1.1/1.2, learnBoardPackFor(), exports
-    ├── learn_board_pack13…19.dart  # one file per lesson board (1.3 … 1.9)
+    ├── learn_explainer_videos.dart # YouTube id catalog per lessonId (null = skip gate)
+    ├── learn_video_gate.dart       # guide → YouTube → portrait → guide → board
+    ├── learn_board_models.dart     # LearnBoardPack types, learnBoardPackFor(), exports
+    ├── learn_board_pack*.dart      # one file per lesson board (M1–M4)
     ├── learn_board_runner.dart     # LearnBoardRunnerPage (the board player)
     ├── learn_board_deal.dart       # LearnDealer (deal, swap after a miss)
     ├── learn_runner.dart           # LearnRunnerPage (text deck, lessons without a board)
@@ -91,7 +93,11 @@ and the kit files above.
 ## 3. How a rung opens
 
 - The catalog (`content_catalog.json`) defines every rung (`rungDefs`: id, kind learn/do/gate, lessonId, packId, **status**) and every pack (`gamePacks`: id, **engineType**, **status**, optional `legacyLevel`). A rung shows as playable only when **both** its rung and its pack are `playable`.
-- **শেখা:** `AdventureMap._openLearn` → `learnBoardPackFor(lessonId)`; a pack → `LearnBoardRunnerPage`, null → `LearnRunnerPage` (text deck).
+- **শেখা:** `AdventureMap._openLearn` → `learnBoardPackFor(lessonId)` + `LearnExplainerVideos.youtubeIdFor(lessonId)`:
+  - pack + YouTube id → `LearnVideoGatePage` (guide → video → portrait → guide → board);
+  - pack, no video → `LearnBoardRunnerPage`;
+  - no pack → `LearnRunnerPage` (text deck).
+  Fill the next lesson's id in `learn_explainer_videos.dart` only — no other open-path change.
 - **কাজ / gate:** `doGameFor(pack)` (`do_games.dart`) switches on `engineType` and looks the content up by pack id (e.g. `poleReadPacks['do_1_3_a']`, `gateFieldPacks['gate_m1']`) → a page builder `(ctx, muted) => XxxPage(…)`. If the pack already names a real shell engine but the builder is missing, the ladder shows Coming Soon — it must **not** open `legacyLevel`. Only packs with `engineType: placeholder` (or no engine) may use the old `dsLevels` bridge.
 - `LevelContext` gives lesson id/title, kind, ladder step, `doIndex/doCount`; `chipBn` is the only header label. Lesson numbers are never shown on screen in a level.
 - After a pass the clear is saved first; the ladder unlocks on the saved clear. Retry remounts the run (`ValueKey(_round)`), never pops.
@@ -106,9 +112,9 @@ and the kit files above.
 | Edge-to-edge scene under a floating header; tall phones get more sky | `FullSceneFrame` + `SceneMetrics` (height, lift, inset) |
 | Guide in a corner, tap = the task again in other words, never the answer | `cornerGuide` + `TaskNudge` (or `DoCoachStrip(tasks:)`) |
 | The player's worker | `LinemanFigure(look: LinemanLook.trainee)` (idle, walk, hold, spray, throwIt, cheer, worried; `tipOf`) |
-| Right action → ◆ waits on the table → "কেন …?" → paid → next by itself | `ReasonTable` mixin: `putOnTable(n)`, `askReason(deal:, question:, stillValid:)`, `reasonDeck`, `tableLayers`, `whyPayout` |
+| Right action → ◆ waits on the table → "কেন …?" → zoom + **এগিয়ে যান** → paid → next | `ReasonTable` mixin: `putOnTable(n)`, `askReason(…)`, `reasonDeck`, `proceedReason`, `tableLayers`, `whyPayout` — tests must tap `reason-proceed-btn` |
 | Any 3-card choice | `ChoiceDeck` + `dealChoices(right, wrong, rng)` (libraries ≥ 2 right, ≥ 5 wrong, all within 1.3× length) |
-| The careless coworker peeps in once per play, the guide puts the choice | `CoworkerMoment` + `CoworkerScript(line, exitLine, right, wrong, asks)`; hooks `coworkerCanCome` (true / false = later / null = too late), `onCoworkerAnswer` |
+| The careless coworker peeps in once per play (two beats) | `CoworkerMoment` + `CoworkerScript`; beat 1 = caption under HUD + `RivalTalk` voice (guide idle); beat 2 = chip by peep + guide ask + deck. Hooks `coworkerCanCome` / `onCoworkerAnswer` |
 | Mistakes | `DoMistake(key, textBn, art, deadly, lessonPoint)`, `MistakeCard` (+ পাঠে দেখুন → `openLessonPoint`), `bookMistake` |
 | 3 slips | `DoStrikeOut` mixin (`strike(m)`), `StruckOutCard` (insists on reading) |
 | Deadly | `FreezeFrame` + `freezeFilter` on the scene, the consequence in colour, then `DoDeathGuard.bookDeadly(m, runScore:)` (first death of the game = near-miss) |
@@ -156,7 +162,7 @@ Follow the playbook's 9 beats. Closest models: `pole_read.dart` (inspect + decid
 
 ## 7. Voice
 
-- **Router** `MascotSpeechLibrary.speak(text, {voiceKey, muted, rival})`: Duty-Slip clip → `LearnVoice.resolve(text, rival:)` (recorded clip) → device TTS.
+- **Router** `MascotSpeechLibrary.speak(text, {voiceKey, muted, rival})`: Duty-Slip clip → `LearnVoice.resolve(text, rival:)` (recorded clip) → device TTS. Guide lines drive **`MascotTalk`**; `rival: true` drives **`RivalTalk` only** so `AiLinemanGuide` does not lip-sync during coworker/Learn-rival speech.
 - **The guide's new lines: device TTS** (owner decision, 2026-11-06). Keep them in the level's `*Lines` class so they can be recorded later.
 - **The rival / careless coworker speaks only in his recorded voice.** One clip per line:
   `python -I tool/rival_clip.py . say.txt` (line 1 = key text as in the code, line 2 = spoken form; voice bn-BD-PradeepNeural −6 % −14 Hz). It writes `assets/sounds/learn_voice/r_<sha1>.mp3` and registers it in `learnRivalVoice`. Then list the line in `tool/dump_learn_voice_lines_test.dart` (coworker scripts in the "Do levels on the kit" list; board lines via `XxxBoardLines.recorded`).

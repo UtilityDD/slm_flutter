@@ -25,7 +25,7 @@ Status: ✅ built · ♻️ old level used as a stand-in until the new one is bu
 
 | Step | Rung | Name | Moves | Deadly (💀) | Status |
 |---:|---|---|---|---|---|
-| 1 | 1.1 শেখা | পোশাক ও পিপিই চেনা (picture board + rival myth) | choose | — (Learn never kills) | ✅ |
+| 1 | 1.1 শেখা | পোশাক ও পিপিই চেনা (picture board + rival myth + explainer video gate) | choose | — (Learn never kills) | ✅ video `gm8u-yXIbZs` in `LearnExplainerVideos`; other Learn slots null until owner links |
 | 2 | 1.1 কাজ 1 | কবচ যাচাই — clothes & boots from the store | choose + inspect + say no | wearing polyester; boot with a nail in the sole | ✅ on the shared kit (2026-11-08): drawn store room, reason deck, coworker; deaths wired (polyester = arc-flash melt, nail in the sole = current to ground; owner 2026-11-08) |
 | 3 | 1.1 কাজ 2 | গ্লাভস যাচাই — rubber gloves air test (+ helmet torch sweep: proposed) | inspect + choose + say no | packing a pinholed / cotton glove | ✅ on the shared kit (2026-11-08): drawn van yard, air test, reason deck, coworker; helmet station ✅ (shelf, torch sweep to spot the hairline crack, inside: metal parts + date stamp, chin-strap lock; bad helmet = slip) |
 | 4 | 1.2 শেখা | লক্ষ্মণ রেখা | choose | — | ✅ picture board (2026-11-08) |

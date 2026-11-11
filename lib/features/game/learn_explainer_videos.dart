@@ -31,6 +31,28 @@ abstract final class LearnExplainerVideos {
     '2.8': null,
     '2.9': null,
     '2.10': null,
+    // Module 3 — slots ready
+    '3.1': null,
+    '3.2': null,
+    '3.3': null,
+    '3.4': null,
+    '3.5': null,
+    '3.6': null,
+    '3.7': null,
+    '3.8': null,
+    '3.9': null,
+    '3.10': null,
+    // Module 4 — slots ready
+    '4.1': null,
+    '4.2': null,
+    '4.3': null,
+    '4.4': null,
+    '4.5': null,
+    '4.6': null,
+    '4.7': null,
+    '4.8': null,
+    '4.9': null,
+    '4.10': null,
   };
 
   /// Resolved 11-char YouTube id, or null when this lesson has no clip yet.

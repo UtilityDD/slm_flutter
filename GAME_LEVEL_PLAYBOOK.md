@@ -29,17 +29,39 @@ legacy `dsLevels` screens (photo scenes, title cards); for ladder levels in the 
 
 | # | Beat | What happens | Build with |
 |---|---|---|---|
-| 1 | **Guide first** | Full screen, the app's mascot says the task in **one short line**: what is wrong and how urgent ("সাবস্টেশনে আগুন! … এখনই নেভান!"). **No "শুরু" button, no skip, a tap does not skip** — the game starts when the voice and a fair reading time are done. **Learn with an explainer:** guide asks to watch carefully → YouTube (`LearnExplainerVideos` / `LearnVideoGatePage`) → force portrait after landscape → guide says play carefully → board. Empty catalog slots skip the gate. | `LevelIntro` (`level_frame.dart`), or `GuideIntro` (`scene_kit.dart`) over a live scene; Learn video: `learn_explainer_videos.dart`, `learn_video_gate.dart` |
+| 1 | **Guide first** | Full screen, the app's mascot says the task in **one short line**: what is wrong and how urgent ("সাবস্টেশনে আগুন! … এখনই নেভান!"). **No "শুরু" button, no skip, a tap does not skip** — the game starts when the voice and a fair reading time are done. **Learn with an explainer** (§1.1): guide → YouTube → portrait → guide → board. | `LevelIntro` (`level_frame.dart`), or `GuideIntro` (`scene_kit.dart`) over a live scene; Learn video: `learn_explainer_videos.dart`, `learn_video_gate.dart` |
 | 2 | **The scene** | Full screen to the top and bottom (as level 1); the header floats on it. The scene is a **place**, not a page: layered background → midground → foreground, real equipment, the player's worker doing the work. | `FullSceneFrame` (`full_scene_frame.dart`, gives `SceneMetrics`), a world painter, `LinemanFigure` |
 | 3 | **Guide in the corner** | Short lines with the **next task only** ("কী দিয়ে নেভাবেন?"). No hints, no answers, no pointing tours ("এটা? এটা? না এটা?"). | `AiLinemanGuide` in a corner, or `DoCoachStrip` |
 | 4 | **Tap the guide** | He says the current task again, **a different way each time, never the answer**; tick sound; no cost. | `DoCoachStrip(tasks: XLines.tasks, muted: _muted)` + `TaskNudge`, or a level pool (`FireLines.tap*`) |
 | 5 | **Hands-on** | Use the five moves (choose · inspect · spot · order · say no) and *do* the job where it fits: hold to spray, throw, drag, pull a switch. Equipment shows its real state (an isolator at **ON** that the player must switch **OFF**; a gauge to read). | level page + painters / Lottie |
-| 6 | **Success like level 1** | Right action → right sound + animation + a short praise line (`LearnFeedbackLines.right`) + the ◆ **wait on the table** → "কেন এটা নিলেন?" with 3 cards → right reason pays the table into the score, wrong reason burns it, a right retry pays 5 → the **right card zooms with full text** and a single **এগিয়ে যান** button; the level moves only when the player taps it. Guide speech bubble **auto-clears** after voice (or a read hold when muted) so it does not cover the scene. | `ReasonTable` mixin (`reason_table.dart`: `putOnTable`, `askReason`, `reasonDeck`, `proceedReason`, `tableLayers`, `whyPayout`); bubble dismiss in `GuideDirector.say` |
+| 6 | **Success like level 1** | Right action → right sound + animation + a short praise line (`LearnFeedbackLines.right`) + the ◆ **wait on the table** → "কেন এটা নিলেন?" with 3 cards → right reason pays the table into the score, wrong reason burns it, a right retry pays 5 → the **right card zooms with full text** and a single **এগিয়ে যান** button; the level moves only when the player taps **এগিয়ে যান**. Only **glad / celebrate** bubbles auto-clear after voice — task prompts (talk / think / inspire / warn) stay until the next `say`. | `ReasonTable` mixin (`reason_table.dart`: `putOnTable`, `askReason`, `reasonDeck`, `proceedReason`, `tableLayers`, `whyPayout`); praise dismiss in `GuideDirector.say` |
 | 7 | **Mistakes teach** | Hints appear **only after a mistake**: `MistakeCard` (picture + one line + **পাঠে দেখুন**). **3 slips** → the level fails with a fitting sound and the lesson card insists on reading before "আবার খেলি". Deadly → the scene freezes grey, the consequence plays in colour, then near-miss/death and the fall. | `DoStrikeOut`, `StruckOutCard`, `FailSound`, `DoDeathGuard`, `FreezeFrame` |
 | 8 | **Pressure moment (Do only)** | Two clean beats: (1) coworker peeps + **full caption under the HUD + his voice** (no guide ask, no deck; guide idle — rival voice must not drive mascot lips); (2) caption **collapses to a thin chip by his peep** (never over the score line), then the **guide** asks and the 3-card refuse/listen deck rises. Listening = the slip. Learn myth cutscenes stay on their own board flow. | `CoworkerMoment` mixin + `CoworkerScript` (`coworker_moment.dart`); `RivalTalk` |
 | 9 | **Result** | Pass panel (rank, mark, time, ◆, "আজ যা ধরলেন", stars) or fail panel with পাঠ. | `LevelPassPanel`, `LevelFailPanel`, `starsFor` |
 
 Every play is **dealt fresh** (order, traps, which tool is empty, who pushes and when) so it never repeats.
+
+### 1.1 Learn explainer video (next Learn levels)
+
+When the player taps **শিখুন**, `AdventureMap._openLearn` checks `LearnExplainerVideos.youtubeIdFor(lessonId)`:
+
+1. **Id present** → `LearnVideoGatePage`: guide ("মন দিয়ে শুনুন") → in-app YouTube → force **portrait** after landscape → guide ("সাবধানে খেলুন") → `LearnBoardRunnerPage`.
+2. **Id null / missing** → open the board directly (unchanged).
+
+**To wire the next lesson's video** (do not invent URLs):
+
+1. Owner gives the YouTube link or 11-char id.
+2. Set it in `lib/features/game/learn_explainer_videos.dart` → `youtubeIdByLesson['N.M'] = '…'` (Modules 1–4 slots already listed; null = not ready).
+3. Full `youtu.be` / `watch?v=` URLs are OK — `parseVideoId` extracts the id.
+4. No other wiring: `_openLearn` already routes through the gate.
+5. Add/extend a unit check in `test/learn_explainer_videos_test.dart` for the new id.
+6. Offline / failed load: Bangla retry + "এগিয়ে যান" (never raw exceptions).
+
+### 1.2 Careless coworker (Do only) — layout & lips
+
+- **Beat 1:** full caption **under** the score HUD (`belowHud`), rival voice only; guide bubble cleared + idle; **`RivalTalk`** drives his mouth — never `MascotTalk` (guide must not lip-sync with an empty bubble).
+- **Beat 2:** thin **chip by his peep** (not a top strip over ◆), then guide ask + 3-card deck.
+- Learn myth cutscenes stay on the board; they also use `RivalTalk` for the rival puppet.
 
 ## 2. Screen rules
 
@@ -114,7 +136,8 @@ The UI shows only what was saved. A new kind of scoring event needs the owner's 
 |---|---|---|
 | Full-screen frame + header | `FullSceneFrame`, `SceneMetrics`, `cornerGuide` (or `LevelShellBar(bare: true)` alone) | `full_scene_frame.dart` / `level_shell.dart` |
 | Success beat | `ReasonTable` mixin, `whyPayout`, `TablePill` | `reason_table.dart` |
-| Pressure moment | `CoworkerMoment` mixin, `CoworkerScript`, `CoworkerPeek` | `coworker_moment.dart` |
+| Pressure moment | `CoworkerMoment` mixin, `CoworkerScript`, `CoworkerPeek`, `RivalTalk` | `coworker_moment.dart` / `mascot_speech_library.dart` |
+| Learn explainer | `LearnExplainerVideos`, `LearnVideoGatePage` | `learn_explainer_videos.dart` / `learn_video_gate.dart` |
 | Guide first | `LevelIntro` / `GuideIntro` | `level_frame.dart` / `scene_kit.dart` |
 | Guide strip + tap-to-repeat | `DoCoachStrip(tasks:, muted:)`, `TaskNudge` | `do_parts.dart` |
 | Answers | `ChoiceDeck`, `ChoiceOption`, `dealChoices` | `choice_deck.dart` |
@@ -137,7 +160,8 @@ Keep the play logic pure (a `XRun` class with no widgets) so the rules are unit-
   (cleared, no mistakes, stars) — not just the screen.
 - **Mistakes:** a slip shows its card; a deadly move freezes first, then the card; 3 slips fail the level.
 - **Guide:** no "শুরু", a tap does not skip; tapping the guide restates the task differently.
-- **Coworker** (if any): appears once, from a random side; the guide asks; the right card refuses him.
+- **Coworker** (if any): appears once, from a random side; beat 1 caption alone, then guide ask + refuse/listen; the right card refuses him. `_pickRight` helpers must wait for `reason-proceed-btn` after a reason (coworker decks have no proceed).
+- **Learn video** (if catalog id set): gate opens before the board; empty id skips the gate.
 - **Perf** (`test/perf` or in the level test): settle ~14 s (the mascot ends a breath lap after speaking), then
   < 20 rebuilds/s and < 12 frames in an idle second, with and without reduce-motion.
 - Screenshots: a scratch test (`test/zz_*_test.dart`, `SHOT_DIR`, load Noto Sans Bengali) — look at every beat,
