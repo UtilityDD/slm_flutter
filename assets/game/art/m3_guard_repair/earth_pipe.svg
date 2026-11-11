@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe3f3"/><stop offset="1" stop-color="#eef3e2"/></linearGradient></defs>
+<rect x="4" y="4" width="152" height="192" rx="14" fill="url(#sky)" stroke="#c0392b" stroke-width="4"/>
+<rect x="164" y="4" width="152" height="192" rx="14" fill="url(#sky)" stroke="#27ae60" stroke-width="4"/>
+<rect x="66" y="20" width="8" height="176" fill="#b9b6ad"/><path d="M78 40 v60" stroke="#8a9096" stroke-width="2.5"/><path d="M78 100 l-3 5 M78 100 l3 5" stroke="#8a9096" stroke-width="1.5"/><path d="M78 176 v-20" stroke="#8a9096" stroke-width="2.5"/><path d="M96 110 l14 14 M110 110 l-14 14" stroke="#c0392b" stroke-width="3"/><rect x="70" y="182" width="22" height="8" fill="#9e9a90"/><rect x="226" y="20" width="8" height="176" fill="#b9b6ad"/><path d="M238 40 v80" stroke="#8a9096" stroke-width="2.5"/><rect x="234" y="118" width="8" height="66" fill="#aeb4b9" stroke="#6e7378"/><rect x="232" y="182" width="22" height="8" fill="#9e9a90"/><path d="M238 184 h10" stroke="#8a9096" stroke-width="2"/>
+<circle cx="136" cy="24" r="14" fill="#c0392b"/><path d="M129 17 L143 31 M143 17 L129 31" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+<circle cx="296" cy="24" r="14" fill="#27ae60"/><path d="M288 24 L294 30 L304 18" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
