@@ -2228,7 +2228,7 @@
       "lessonId": "4.5",
       "moduleId": "m4",
       "packId": "do_4_5_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 14
     },
     {
@@ -5182,10 +5182,10 @@
     },
     {
       "id": "do_4_5_b",
-      "engineType": "placeholder",
+      "engineType": "m4_dtr_temp",
       "lessonId": "4.5",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
