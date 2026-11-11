@@ -82,6 +82,7 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
+    - assets/game/art/m2_lug_pick/
     - assets/game/art/m2_megger_prep/
     - assets/game/art/m2_tool_care/
     - assets/game/art/m2_tool_use/
