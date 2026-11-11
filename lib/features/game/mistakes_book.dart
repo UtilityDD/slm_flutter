@@ -27,6 +27,7 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm4_insulator_swap.dart' as m4_insulator_swap;
 import 'm4_service_plan.dart' as m4_service_plan;
 import 'm4_jumper_make.dart' as m4_jumper_make;
 import 'm4_earth_fix.dart' as m4_earth_fix;
@@ -92,6 +93,7 @@ final Map<String, DoMistake> knownMistakes = {
     ...StormMistakes.all,
     ...TenSecMistakes.all,
     ...GateMistakes.all,
+    ...m4_insulator_swap.M4InsulatorSwapMistakes.all,
     ...m4_service_plan.M4ServicePlanMistakes.all,
     ...m4_jumper_make.M4JumperMakeMistakes.all,
     ...m4_earth_fix.M4EarthFixMistakes.all,

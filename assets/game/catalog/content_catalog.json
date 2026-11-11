@@ -2120,7 +2120,7 @@
       "lessonId": "4.1",
       "moduleId": "m4",
       "packId": "do_4_1_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 2
     },
     {
@@ -5074,10 +5074,10 @@
     },
     {
       "id": "do_4_1_b",
-      "engineType": "placeholder",
+      "engineType": "m4_insulator_swap",
       "lessonId": "4.1",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
