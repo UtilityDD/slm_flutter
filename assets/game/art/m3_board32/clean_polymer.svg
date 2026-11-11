@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2D9"/><stop offset="1" stop-color="#CFE3EF"/></linearGradient>
+  <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9AA9B4"/><stop offset="1" stop-color="#D3DADF"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9A983"/><stop offset="1" stop-color="#9C8A64"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E8B84"/><stop offset="0.5" stop-color="#C4C1B9"/><stop offset="1" stop-color="#86837C"/></linearGradient>
+  <linearGradient id="steelArm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A939B"/><stop offset="1" stop-color="#4F575F"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9D2D8"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B8C2C9"/></linearGradient>
+  <linearGradient id="polymer" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4E6158"/><stop offset="0.5" stop-color="#7D9488"/><stop offset="1" stop-color="#46584F"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <radialGradient id="spark" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.35" stop-color="#C9E6FF"/><stop offset="1" stop-color="#7FB8FF" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#haze)"/>
+<rect x="0" y="182" width="120" height="40" fill="#6E9BB5"/>
+<path d="M0 190 q10 -3 20 0 t20 0 t20 0 t20 0 t20 0 t20 0" stroke="#FFFFFF" stroke-width="1.2" fill="none" opacity="0.7"/>
+<rect x="120" y="150" width="80" height="72" fill="#7A7F86"/><rect x="168" y="96" width="12" height="56" fill="#7A7F86"/>
+<rect x="94" y="0" width="12" height="222" fill="url(#pole)"/>
+<rect x="14" y="132" width="172" height="10" fill="url(#steelArm)"/>
+<g transform="translate(48 132) rotate(0) scale(0.6)"><rect x="-6" y="-42" width="12" height="42" fill="url(#steel)"/><rect x="-7" y="-128" width="14" height="88" fill="url(#polymer)"/><ellipse cx="0" cy="-48" rx="30" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-60" rx="22" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-72" rx="30" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-84" rx="22" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-96" rx="30" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-108" rx="22" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-120" rx="30" ry="5" fill="url(#polymer)"/><rect x="-12" y="-136" width="24" height="10" rx="3" fill="url(#steel)"/></g>
+<g transform="translate(152 132) rotate(0) scale(0.6)"><rect x="-6" y="-42" width="12" height="42" fill="url(#steel)"/><rect x="-7" y="-128" width="14" height="88" fill="url(#polymer)"/><ellipse cx="0" cy="-48" rx="30" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-60" rx="22" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-72" rx="30" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-84" rx="22" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-96" rx="30" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-108" rx="22" ry="5" fill="url(#polymer)"/><ellipse cx="0" cy="-120" rx="30" ry="5" fill="url(#polymer)"/><rect x="-12" y="-136" width="24" height="10" rx="3" fill="url(#steel)"/></g>
+<path d="M-4 60.4 L204 60.4" stroke="#2B3138" stroke-width="3.4"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>
