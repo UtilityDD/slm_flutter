@@ -1697,7 +1697,7 @@
       "lessonId": "2.6",
       "moduleId": "m2",
       "packId": "learn_2_6",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 15
     },
     {
@@ -4651,7 +4651,7 @@
       "id": "learn_2_6",
       "engineType": "learn_cards",
       "lessonId": "2.6",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
