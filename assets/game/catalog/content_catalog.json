@@ -1814,7 +1814,7 @@
       "lessonId": "2.10",
       "moduleId": "m2",
       "packId": "do_2_10_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 28
     },
     {
@@ -4765,10 +4765,10 @@
     },
     {
       "id": "do_2_10_a",
-      "engineType": "placeholder",
+      "engineType": "m2_tool_care",
       "lessonId": "2.10",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
