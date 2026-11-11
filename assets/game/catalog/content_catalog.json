@@ -2021,7 +2021,7 @@
       "lessonId": "3.8",
       "moduleId": "m3",
       "packId": "learn_3_8",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 21
     },
     {
@@ -4976,7 +4976,7 @@
       "id": "learn_3_8",
       "engineType": "learn_cards",
       "lessonId": "3.8",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
