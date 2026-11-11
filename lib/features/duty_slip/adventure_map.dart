@@ -174,27 +174,36 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   /// Emerald cap sits above the last catalog rung.
   static const _emeraldExtra = 1;
 
-  /// First 31 rungs (all of Module 1: 10 lessons × 3 rungs + 1 Gate) are playable
-  /// via LearnRunnerPage + the 14 active Do drills in [dsLevels].
-  static const _playableLadderSpan = 31;
+  /// Fallback when the catalog is not loaded yet (Module 1 + Module 2 = 60).
+  static const _playableFallbackSpan = 60;
+
+  /// Contiguous playable prefix from the catalog (stops at first comingSoon).
+  int _playableSpan(BuiltLadder? built) {
+    if (built == null) return _playableFallbackSpan;
+    var n = 0;
+    for (final r in built.rungs) {
+      if (r.isComingSoon) break;
+      n++;
+    }
+    return math.max(n, 1);
+  }
 
   bool _isRungPlayable(int index, BuiltLadder? built) {
     if (index < 0) return false;
     if (built != null && index < built.length) {
-      final r = built.rungs[index];
-      if (r.isLearn && !r.isComingSoon) return true;
+      return !built.rungs[index].isComingSoon;
     }
-    return index < _playableLadderSpan;
+    return index < _playableFallbackSpan;
   }
 
   int _ladderLen(BuiltLadder? built) =>
-      built?.length ?? math.max(_playableLadderSpan, 40);
+      built?.length ?? math.max(_playableFallbackSpan, 40);
 
   /// Computes the player's current active ladder rung (`focus`) by combining
   /// `engine.unlocked` and cleared rungs in `GameSave.rungProgress`.
   int _computeFocus(BuiltLadder? built, GameSave save) {
     final len = _ladderLen(built);
-    final maxPlayable = math.min(len, _playableLadderSpan);
+    final maxPlayable = math.min(len, _playableSpan(built));
     var focus =
         widget.engine.unlocked.clamp(0, math.max(0, maxPlayable - 1)).toInt();
     if (built != null) {
@@ -376,7 +385,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     if (!_scroll.hasClients) return const [];
     final built = ref.read(builtLadderProvider).value;
     final save = ref.read(gameSaveProvider);
-    final live = math.min(_ladderLen(built), _playableLadderSpan);
+    final live = math.min(_ladderLen(built), _playableSpan(built));
     final focus = _computeFocus(built, save);
     final view = _scroll.position.viewportDimension;
     final scrolled = _scroll.offset;
@@ -816,7 +825,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     final built = ref.read(builtLadderProvider).value;
     final save = ref.read(gameSaveProvider);
     final focus = _computeFocus(built, save);
-    final openUpTo = dsPlayAllLevels ? _playableLadderSpan : focus + 2;
+    final openUpTo = dsPlayAllLevels ? _playableSpan(built) : focus + 2;
 
     if (!_isRungPlayable(index, built) || index > openUpTo) {
       ref.read(guideDirectorProvider.notifier).sayCue(
@@ -902,7 +911,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       _lastFocus = focus;
     }
     final openUpTo =
-        dsPlayAllLevels ? math.max(0, _playableLadderSpan - 1) : focus;
+        dsPlayAllLevels ? math.max(0, _playableSpan(built) - 1) : focus;
     final quiet = MediaQuery.disableAnimationsOf(context);
     final chromeBoot = ladderAsync.isLoading && built == null;
 
