@@ -60,6 +60,7 @@ import 'm4_earth_test.dart';
 import 'm4_insulator_prep.dart';
 import 'm4_do_refuse.dart';
 import 'm4_dp_survey.dart';
+import 'm4_oil_level.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -302,6 +303,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m4DpSurveyPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M4DpSurveyPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_oil_level':
+      final content = m4OilLevelPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4OilLevelPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

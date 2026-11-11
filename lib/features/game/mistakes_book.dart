@@ -27,6 +27,7 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm4_oil_level.dart' as m4_oil_level;
 import 'm4_dp_survey.dart' as m4_dp_survey;
 import 'm4_do_refuse.dart' as m4_do_refuse;
 import 'm4_insulator_prep.dart' as m4_insulator_prep;
@@ -97,6 +98,7 @@ final Map<String, DoMistake> knownMistakes = {
     ...StormMistakes.all,
     ...TenSecMistakes.all,
     ...GateMistakes.all,
+    ...m4_oil_level.M4OilLevelMistakes.all,
     ...m4_dp_survey.M4DpSurveyMistakes.all,
     ...m4_do_refuse.M4DoRefuseMistakes.all,
     ...m4_insulator_prep.M4InsulatorPrepMistakes.all,
