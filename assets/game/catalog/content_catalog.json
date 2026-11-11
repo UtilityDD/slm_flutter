@@ -1769,7 +1769,7 @@
       "lessonId": "2.8",
       "moduleId": "m2",
       "packId": "do_2_8_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 23
     },
     {
@@ -4721,10 +4721,10 @@
     },
     {
       "id": "do_2_8_b",
-      "engineType": "placeholder",
+      "engineType": "m2_phase_swap",
       "lessonId": "2.8",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },

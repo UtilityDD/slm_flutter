@@ -82,6 +82,7 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
+    - assets/game/art/m2_phase_swap/
     - assets/game/art/m2_hotstick_operate/
     - assets/game/art/m2_skin_tools/
     - assets/game/art/rod_board/
