@@ -276,7 +276,7 @@ const learnBoardPack13 = LearnBoardPack(
     rivalLineBn: PoleBoardLines.rivalMyth,
     exitBn: 'যত্তসব নতুন নিয়ম! আমি চললাম…',
     believeNoIsCorrect: true,
-    stingBn: 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
+    stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
     dangerHints: [
       'গোড়ার মরিচা না দেখেই ওঠা',
       'হাতুড়ি ঠুকে শব্দ শোনেনি',

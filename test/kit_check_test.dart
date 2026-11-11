@@ -235,11 +235,15 @@ void main() {
       final second = ladder.rungs.firstWhere((r) => r.id == '1.1/do/1');
       expect(second.pack.engineType, 'glove_check');
       expect(doGameFor(second.pack), isNotNull);
-      // A lesson whose Do rungs are not rebuilt yet still opens its old level.
-      // Lesson 1.10's Do rung has no shell game yet: it keeps its old level.
-      final later = ladder.rungs.firstWhere((r) => r.id == '1.10/do/0');
+      // A Do rung that is not built yet has no shell game. Every Module 1 Do rung
+      // is on the kit now (step 29, 1.10/do/0, is ten_sec_scan), so the check
+      // uses Module 2's first Do rung, still a placeholder.
+      final later = ladder.rungs.firstWhere((r) => r.id == '2.1/do/0');
+      expect(later.pack.engineType, 'placeholder');
       expect(doGameFor(later.pack), isNull);
-      expect(later.pack.legacyLevel, isNotNull);
+      final scan = ladder.rungs.firstWhere((r) => r.id == '1.10/do/0');
+      expect(scan.pack.engineType, 'ten_sec_scan');
+      expect(doGameFor(scan.pack), isNotNull);
     });
   });
 }

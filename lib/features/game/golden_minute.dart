@@ -79,7 +79,7 @@ const dealtMyths = [CrowdMyth.mud, CrowdMyth.ice, CrowdMyth.home];
 
 abstract final class GoldenLines {
   static const title = 'গোল্ডেন মিনিট';
-  static const intro = 'তার থেকে ছাড়ানো গেছে, কিন্তু কোনো সাড়াশব্দ নেই, শ্বাস পড়ছে না! এটাই গোল্ডেন মিনিট—ভিড়ের একজনকে চেঁচিয়ে অ্যাম্বুলেন্সে ফোন করতে বলুন, আর নিজে বুকের ওপর তালে তালে সিপিআর শুরু করুন!';
+  static const intro = 'সহকর্মী তারের থেকে আলাদা — কিন্তু নড়ছে না! গোল্ডেন মিনিট শুরু, এখনই!';
 
   /// Screen-reader names of the progress dots (on screen they are dots only).
   static const rounds = ['1', '2', '3', '4', '5'];

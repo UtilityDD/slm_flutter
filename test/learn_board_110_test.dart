@@ -306,7 +306,8 @@ void main() {
       });
     }
 
-    testWidgets('tapping a card opens inspection zoom modal and dismisses on player tap', (tester) async {
+    // Design 2026-11-11: wrong picks shake + redeal + speak reject — no inspect zoom modal.
+    testWidgets('tapping a wrong card redeals without an inspect zoom modal', (tester) async {
       tester.view.physicalSize = const Size(720, 1600);
       tester.view.devicePixelRatio = 2.0;
       SharedPreferences.setMockInitialValues({});
@@ -321,28 +322,16 @@ void main() {
         await tester.pump(const Duration(milliseconds: 100));
       }
 
-      expect(_cards, findsWidgets);
+      expect(_cards, findsNWidgets(pack.slots.first.cards));
       await tester.tap(_cards.first);
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 260));
+      await tester.pump(const Duration(milliseconds: 700));
 
-      final wrongModal = find.text('বুঝেছি, আবার চেষ্টা করি');
-      final rightModal = find.textContaining('এগিয়ে চলুন');
-      expect(wrongModal.evaluate().isNotEmpty || rightModal.evaluate().isNotEmpty, isTrue);
-
-      if (wrongModal.evaluate().isNotEmpty) {
-        expect(find.text('ভুল নির্বাচন · বিপদের ঝুঁকি'), findsOneWidget);
-        await tester.tap(wrongModal);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-        expect(find.text('ভুল নির্বাচন · বিপদের ঝুঁকি'), findsNothing);
-      } else {
-        expect(find.text('সঠিক নির্বাচন! · নিরাপদ পদক্ষেপ'), findsOneWidget);
-        await tester.tap(rightModal);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-        expect(find.text('সঠিক নির্বাচন! · নিরাপদ পদক্ষেপ'), findsNothing);
-      }
+      // No inspect zoom sheet (wrong = redeal + speak; right = celebrate / why).
+      expect(find.text('বুঝেছি, আবার চেষ্টা করি'), findsNothing);
+      expect(find.text('ভুল নির্বাচন · বিপদের ঝুঁকি'), findsNothing);
+      expect(find.text('সঠিক নির্বাচন! · নিরাপদ পদক্ষেপ'), findsNothing);
+      expect(tester.takeException(), isNull);
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 15));

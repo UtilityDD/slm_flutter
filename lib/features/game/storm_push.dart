@@ -161,7 +161,7 @@ abstract final class StormLines {
   static const tasks = [askJudge, askShelter];
 
   static const title = 'সুপারভাইজারের চাপ';
-  static const intro = 'কাজের মাঝেই কালবৈশাখীর মেঘ ডাকছে! সুপারভাইজার তাড়াহুড়ো করে শেষ করার হুকুম দিলেও—জীবনের চেয়ে কোনো কাজ বড় নয়। মাথা ঠান্ডা রেখে "না" বলুন, নিরাপদ আশ্রয়ে যান।';
+  static const intro = 'কাজ অর্ধেক, আকাশ কালো হয়ে আসছে! চাপ এলেও আকাশ দেখে ঠিক করুন।';
   static const askJudge = 'উঠবেন? মই বেয়ে ওপরে টানুন। থামবেন? মই নামিয়ে দিন।';
   static const askShelter = 'কোথায় আশ্রয় নেবেন? জায়গাটা ছুঁয়ে দিন।';
   static const rounds = ['প্রথম', 'দ্বিতীয়', 'শেষ'];

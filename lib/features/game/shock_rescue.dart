@@ -100,7 +100,7 @@ abstract final class RescueLines {
   static const tasks = [ask];
 
   static const title = 'ছোঁবেন না!';
-  static const intro = 'সর্বনাশ! সহকর্মী তারে আটকে ছটফট করছে! খালি হাতে টেনে ধরতে গেলে আপনিও শেষ হবেন। এক সেকেন্ডও দেরি না করে মেইন সুইচ নামান, নয়তো শুকনো কাঠ বা লাঠি দিয়ে তার আলগা করুন!';
+  static const intro = 'সহকর্মী লাইভ তারে আটকে গেছে! প্রতি সেকেন্ড মূল্যবান — এখনই ছাড়ান!';
   static const rounds = ['প্রথম', 'দ্বিতীয়', 'শেষ'];
 
   /// The task at each scene (never the answer).

@@ -148,7 +148,7 @@ class PtwRound {
 
 abstract final class PtwLines {
   static const title = 'কাগজ মেলাও';
-  static const intro = 'সাইটে পারমিট কপি এলো! ফিডার নাম, পোলের নম্বর, সময় আর ইঞ্জিনিয়ারের সই—সব সাইটের সাথে মিলিয়ে নিন। ভুল কাগজে বা মৌখিক ভরসায় লাইনে হাত দেওয়া মানে সাক্ষাৎ মৃত্যু!';
+  static const intro = 'সাইটে পারমিট এসেছে! প্রতিটা ঘর পোলের সঙ্গে মেলান — ভুল কাগজে লাইনে হাত নয়!';
   static const rounds = ['ক', 'খ', 'গ', 'ঘ'];
 
   // The next task only (the corner guide; a tap says it another way).

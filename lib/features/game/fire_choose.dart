@@ -106,7 +106,7 @@ FireDeal dealFires(math.Random rng) => FireDeal(
 
 abstract final class FireLines {
   static const title = 'কোন আগুনে কী';
-  static const intro = 'সাবস্টেশনে আগুন লেগেছে! আগে চিনুন কিসের আগুন—তেলের, ইলেকট্রিক্যাল প্যানেলের না শুকনো ঘাসের? ভুল জিনিস ছুড়লে আগুন উল্টে আপনার দিকেই ধেয়ে আসবে।';
+  static const intro = 'আগুন চিনুন, তারপর অস্ত্র — ভুল অস্ত্রে আগুন বাড়ে।';
   static const rounds = ['প্রথম', 'দ্বিতীয়', 'শেষ'];
   static String scene(FireKind k) => switch (k) {
         FireKind.oil => 'ট্রান্সফরমারের তেলে আগুন',

@@ -112,7 +112,7 @@ abstract final class HelmetLines {
   static const guessed = 'ঠিক, কিন্তু আন্দাজে নয়—আগে ভালো করে দেখুন।';
   static const caught = 'ঠিক ধরেছেন!';
   static const rejectedGood = 'এই হেলমেটটা তো ঠিক ছিল!';
-  static const crackSpotted = 'বাজপাখির চোখ! খোলসে চুলের মতো ফাটল—ওপরে পাথর বা নাট পড়লে এই হেলমেট ফেটে চৌচির হবে!';
+  static const crackSpotted = 'ঠিক ধরেছেন—খোলসে সূক্ষ্ম ফাটল!';
   static const locked = 'ক্লিক—লক হলো।';
   static const noLock = 'লক হচ্ছে না!';
   static const packed = 'ব্যাগে তোলা হলো।';

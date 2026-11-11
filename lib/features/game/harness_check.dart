@@ -114,7 +114,7 @@ enum HarnessCheck { webbing, stitch, hardware, label }
 
 abstract final class HarnessLines {
   static const title = 'তিন মিনিটের পরীক্ষা';
-  static const intro = 'পোলে ওঠার ডাক এসেছে! স্টোরের হুকে হারনেস ঝুলছে—গায়ে তোলার আগে ঘড়ি ধরে 3 মিনিট ফিতে, সেলাই, বাকল আর এক্সপায়ারি তারিখ দেখে নিন। ওটাই আপনার জীবনদড়ি।';
+  static const intro = 'পোলে ওঠার ডাক এসেছে! স্টোরে হারনেস ঝুলছে — পরার আগে তিন মিনিটে পরীক্ষা করুন।';
   static const rounds = ['ক', 'খ', 'গ', 'ঘ'];
   static const take = 'একটা হারনেস নামিয়ে আনুন।';
   static const ask = 'এই হারনেস পরে পোলে উঠবেন?';

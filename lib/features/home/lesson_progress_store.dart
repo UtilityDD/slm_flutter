@@ -51,7 +51,7 @@ Future<bool> hasCelebratedModule(int module) async {
 
 Future<void> markModuleCelebrated(WidgetRef ref, int module) async {
   final prefs = await SharedPreferences.getInstance();
-  final current = prefs.getStringList(_celebratedKey) ?? const <String>[];
+  final current = prefs.getStringList(_celebratedKey) ?? <String>[];
   final key = '$module';
   if (current.contains(key)) return;
   current.add(key);

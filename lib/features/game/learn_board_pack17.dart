@@ -268,7 +268,7 @@ const learnBoardPack17 = LearnBoardPack(
     rivalLineBn: AidBoardLines.rivalMyth,
     exitBn: AidBoardLines.rivalExit,
     believeNoIsCorrect: true,
-    stingBn: 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
+    stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
     dangerHints: [
       'LT শককে হালকা ভাবা',
       'ভেজা শরীরে LT-ও প্রাণ নিতে পারে',

@@ -83,7 +83,7 @@ abstract final class PassLines {
   static const tasks = [askStand, askPass, askAim];
 
   static const title = 'PASS';
-  static const intro = 'হাতে ফায়ার এক্সটিঙ্গুইশার রেডি! আগে বাতাসের দিক দেখে পিঠ বাঁচিয়ে দাঁড়ান, পালানোর পথ খোলা রাখুন। তারপর পিন টেনে সোজা আগুনের গোড়ায় স্প্রে করুন।';
+  static const intro = 'হাতে অগ্নি নির্বাপক — আগে ঠিক জায়গায় দাঁড়ান, তারপর PASS।';
   static const rounds = ['প্রথম', 'দ্বিতীয়'];
 
   /// The guide first: what burns and "now" (no hints).

@@ -65,6 +65,7 @@ lib/
     ├── kit_check / glove_check / helmet_check / distance_spot / tool_tip / pole_read
     ├── harness_check / harness_fit / rod_pick / discharge_order / ptw_match / ptw_steps
     ├── shock_rescue / golden_minute / fire_choose / fire_pass / sky_read / storm_push
+    ├── ten_sec_scan / gate_field                         # step 29 Do · step 30 rank gate
     ├── store_room, van_yard, pole_yard, harness_store, rod_van, ptw_site, ptw_yard,
     │   shock_scene, golden_field, fire_world, sky_world   # drawn full-scene painters
     │
@@ -91,7 +92,7 @@ and the kit files above.
 
 - The catalog (`content_catalog.json`) defines every rung (`rungDefs`: id, kind learn/do/gate, lessonId, packId, **status**) and every pack (`gamePacks`: id, **engineType**, **status**, optional `legacyLevel`). A rung shows as playable only when **both** its rung and its pack are `playable`.
 - **শেখা:** `AdventureMap._openLearn` → `learnBoardPackFor(lessonId)`; a pack → `LearnBoardRunnerPage`, null → `LearnRunnerPage` (text deck).
-- **কাজ:** `doGameFor(pack)` (`do_games.dart`) switches on `engineType` and looks the content up by pack id (e.g. `poleReadPacks['do_1_3_a']`) → a page builder `(ctx, muted) => XxxPage(ctx: ctx, pack: content, muted: muted)`. Null → the old level from `legacyLevel`.
+- **কাজ / gate:** `doGameFor(pack)` (`do_games.dart`) switches on `engineType` and looks the content up by pack id (e.g. `poleReadPacks['do_1_3_a']`, `gateFieldPacks['gate_m1']`) → a page builder `(ctx, muted) => XxxPage(…)`. If the pack already names a real shell engine but the builder is missing, the ladder shows Coming Soon — it must **not** open `legacyLevel`. Only packs with `engineType: placeholder` (or no engine) may use the old `dsLevels` bridge.
 - `LevelContext` gives lesson id/title, kind, ladder step, `doIndex/doCount`; `chipBn` is the only header label. Lesson numbers are never shown on screen in a level.
 - After a pass the clear is saved first; the ladder unlocks on the saved clear. Retry remounts the run (`ValueKey(_round)`), never pops.
 
@@ -211,10 +212,39 @@ Status per rung: [GAME_PATH_CHECKLIST.md](GAME_PATH_CHECKLIST.md). Deadly lists:
 | 24 | `1.8/do/1` · `fire_pass` | `fire_pass.dart` | where to stand (wind), PASS by hand; refill push; no deadly |
 | 26 | `1.9/do/0` · `sky_read` · `do_1_9_a` | `sky_read.dart`, `sky_world.dart` | turning weather, tap the signs, stop or work on; lightning push = deadly; a needless stop is not scored |
 | 27 | `1.9/do/1` · `storm_push` · `do_1_9_b` | `storm_push.dart` | the supervisor (rival art/voice) per `StormCue`; hands-on refusal, shelter; climbing in a storm = deadly |
+| 29 | `1.10/do/0` · `ten_sec_scan` · `do_1_10_a` | `ten_sec_scan.dart` | 10 rapid Go/Stop checks remixing Module 1; reason deck; coworker once |
+| 30 | `m1/gate` · `gate_field` · `gate_m1` | `gate_field.dart` | Rank gate — see §10a |
 
 Boards: `learnBoardPack11/12` (`learn_board_models.dart`), `learnBoardPack13…19` (`learn_board_pack13…19.dart`), `learnBoardPack110` (`learn_board_pack110.dart`, art `tool/scan_board_art.py`). The `storm_board/` folder is shared: `rain_/thunder_/wind_/step_/plan_` (board), `sky_` (step 26), `push_` (step 27).
 
-Legacy (`lib/features/duty_slip/`): `dsLevels` 1–33 still serve rungs without a shell game (`legacyLevel`); Module 1 steps 29–30 use L5 / L33 until rebuilt. Do not resurrect deleted Zero-Loss screens.
+Legacy (`lib/features/duty_slip/`): `dsLevels` 1–33 still exist for **unbuilt** packs only. If a catalog pack already names a shell `engineType` (anything except `placeholder` / `learn_cards`), `adventure_map.dart` must **not** fall through to a legacy screen — show Coming Soon instead. Never resurrect deleted Zero-Loss screens.
+
+---
+
+## 10a. Rank Gate (step 30) — for the next agent
+
+**Status:** Module 1 is complete. `m1/gate` / pack `gate_m1` / `engineType: gate_field` is `playable`. Pass calls `markRungCleared('m1/gate')` + `unlockRank(1)` (ট্রেইনি) and shows the সুরক্ষা কবচ badge copy in `GateLines.allSet`.
+
+**File:** [`lib/features/game/gate_field.dart`](lib/features/game/gate_field.dart) — one host with pure `GateRun` + five stations on the shared kit (`GuideIntro`, `FullSceneFrame`, `ReasonTable`, `CoworkerMoment`, `DoDeathGuard`). Wire: `do_games.dart` `case 'gate_field'`; mistakes in `mistakes_book.dart` via `GateMistakes.all`. Guide clips already under `assets/sounds/guide_voice/gate_*.mp3`.
+
+**Stations (fixed order, one 11 kV feeder job):**
+1. **Van** — pick 11 kV rod; reject PVC jugaad (deadly) and damaged stick (slip).
+2. **PTW** — refuse verbal phone "লাইন বন্ধ… কাগজ পরে" (start without written PTW = deadly).
+3. **Pole** — 360° orbit + hammer knock; climb uninspected / condemned = deadly.
+4. **Discharge** — earth clamp first, then R/Y/B with spark; line before earth = deadly.
+5. **Storm** — coworker peeps once; refuse rush; van shelter (tree/pole climb/touch wire = deadly).
+
+**Do not:** reopen legacy Level 33 as the gate; invent new deadly rules without owner yes; wholesale-rerun `tool/make_learn_voice.py` (it deletes clips missing from a fresh dump). New rival lines only via `tool/rival_clip.py` + `learnRivalVoice` + dump-test entry.
+
+**Tests:** `test/gate_field_test.dart` (rules + option lengths + smoke), `test/perf/gate_field_perf_test.dart` (idle rebuild guard).
+
+---
+
+## 10b. Voice / coach line convention (2026-11-11)
+
+Keep guide, intro, task, and coworker-ask Bangla **short** (one breath, ~1 short sentence). Long lectures belong in the lesson reader, not on the scene. When you shorten a **recorded** Learn/rival line, the clip map key in `learn_voice_map.dart` must match the new UTF-8 string exactly (or register a new clip). Ladder welcome/idle/poke lines in `mascot_speech_library.dart` use device TTS for now — keep them short too.
+
+Learn board: after a wrong pick, shake + redeal + speak the reject line. **Do not** re-add a full-screen inspect zoom overlay on miss (removed 2026-11-11).
 
 ---
 

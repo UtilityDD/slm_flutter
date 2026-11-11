@@ -190,6 +190,7 @@ const learnRivalVoice = <String, String>{
   "চুলের মতো ফাটল তো থাকেই, ওতে কিছু হয় না! উঠে পড়ো।": 'sounds/learn_voice/r_25361a4a22.mp3',
   "ছোট আগুন, একটু পরেই নিজে থেকে নিভে যাবে।": 'sounds/learn_voice/r_7575295ee0.mp3',
   "জলদি করো! গাড়ি দাঁড়িয়ে আছে। চেক-টেক পরে হবে!": 'sounds/learn_voice/r_6d3fbf8557.mp3',
+  "থামিও না, দেরি হয়ে যাচ্ছে!": 'sounds/learn_voice/r_feab595cb8.mp3',
   "দেখার কী আছে? একটু ফাটা হেলমেটে কিছু হয় না!": 'sounds/learn_voice/r_9f4084e5f7.mp3',
   "পারমিট নেওয়া হয়ে গেছে মানে লাইন 100% নিরাপদ। আর টেস্ট করার কী দরকার?": 'sounds/learn_voice/r_50bed55306.mp3',
   "পিভিসি পাইপ তো প্লাস্টিক — এটা দিয়েই রডের কাজ চলবে!": 'sounds/learn_voice/r_119dfd0ddc.mp3',

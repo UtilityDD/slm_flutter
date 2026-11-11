@@ -291,7 +291,7 @@ const learnBoardPack16 = LearnBoardPack(
     rivalLineBn: PtwBoardLines.rivalMyth,
     exitBn: PtwBoardLines.rivalExit,
     believeNoIsCorrect: true,
-    stingBn: 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
+    stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
     dangerHints: [
       'কোন পারমিটে কাজ, তা না জেনে ওঠা',
       'পারমিটের শর্ত না জেনেই কাজ',

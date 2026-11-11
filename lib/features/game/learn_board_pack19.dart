@@ -289,7 +289,7 @@ const learnBoardPack19 = LearnBoardPack(
     rivalLineBn: StormBoardLines.rivalMyth,
     exitBn: StormBoardLines.rivalExit,
     believeNoIsCorrect: true,
-    stingBn: 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
+    stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
     dangerHints: [
       'বাজের মধ্যে পোলে কাজ',
       'রাবারের জুতো-গ্লাভসে ভরসা',

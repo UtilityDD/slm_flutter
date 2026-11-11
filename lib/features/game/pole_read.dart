@@ -161,8 +161,8 @@ abstract final class PoleLines {
 
   static const titlePcc = '360° পোল পাঠ';
   static const titleSteel = 'স্টিলের ক্যান্সার';
-  static const introPcc = 'আজ চারটে কংক্রিট পোলে কাজ আছে। বাইরে থেকে খাড়া দেখালেও কোনটা ভেতরে পচা বা রড খসা কে জানে? ওঠার আগে চারপাশ ঘুরে হাতুড়ি ঠুকে পোলের ভাষা পড়ুন!';
-  static const introSteel = 'স্টিল পোল কখনও ভাঙে না ভেবে সোজা উঠবেন না! মাটির সংযোগস্থলেই আসল মরচে পোকার মতো কুরে খায়। হাতুড়ি ঠুকে পরিষ্কার টন-টন আওয়াজ শুনে তবেই ওঠার সাহস করবেন।';
+  static const introPcc = 'চারটে পিসিসি পোলে আজ কাজ — কোনটা ভেতরে ভাঙা? ওঠার আগে পোলের ভাষা পড়ুন!';
+  static const introSteel = 'স্টিলের পোলে মরিচা লুকিয়ে থাকে! রেল, এইচ-বিম, টিউব — ওঠার আগে প্রতিটা পোল পড়ুন।';
   static const rounds = ['ক', 'খ', 'গ', 'ঘ'];
   static const ask = 'পোলটা পড়ুন। উঠবেন?';
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
@@ -261,7 +261,7 @@ abstract final class PoleLines {
   /// The careless coworker (his recorded voice), the lesson's myths.
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
   static const coworkerAsks = [
-    'ও তো পোল না দেখেই চড়তে বলছে। ওর ফাঁদে পা দিয়ে পোল ভাঙবেন, নাকি হাতুড়ি ঠুকে নিশ্চিত হবেন?',
+    'ও বলছে উঠে পড়তে। আপনি কী করবেন?',
     'উঠে পড়বেন, না আগে পোলটা পড়বেন?',
     'কার কথা শুনবেন — ওর, না পোলের?',
   ];

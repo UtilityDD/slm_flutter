@@ -614,7 +614,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       return;
     }
 
-    // A Do rung whose game type is built opens it in the shared level shell.
+    // A Do/gate rung whose game type is built opens it in the shared level shell.
     final shellGame = rung != null && !rung.isLearn ? doGameFor(rung.pack) : null;
     final shellCtx = shellGame != null ? levelContextAt(built, index) : null;
     if (shellGame != null && shellCtx != null) {
@@ -625,6 +625,19 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       HapticFeedback.selectionClick();
       unawaited(ref.read(gameSaveProvider.notifier).setCurrentRung(rung!.id));
       unawaited(_openRoute(rung, index, (_) => shellGame(shellCtx, widget.muted)));
+      return;
+    }
+
+    // Never fall through to a legacy dsLevels screen when the catalog already
+    // named a shell engine (e.g. gate_docket). That used to reopen Level 33
+    // field night for the Rank Gate whenever the shell builder missed.
+    final engine = rung?.pack.engineType ?? '';
+    if (rung != null &&
+        !rung.isLearn &&
+        engine.isNotEmpty &&
+        engine != 'placeholder' &&
+        engine != 'learn_cards') {
+      _hintComingSoon(focus: focus);
       return;
     }
 
