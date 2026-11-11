@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#CFE3EE"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9A983"/><stop offset="1" stop-color="#9C8A64"/></linearGradient>
+  <linearGradient id="plinth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C2BEB4"/><stop offset="1" stop-color="#8F8B82"/></linearGradient>
+  <linearGradient id="tank" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F8A6C"/><stop offset="0.5" stop-color="#93AE8F"/><stop offset="1" stop-color="#627C60"/></linearGradient>
+  <linearGradient id="cons" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#627C60"/><stop offset="0.45" stop-color="#9CB798"/><stop offset="1" stop-color="#566E54"/></linearGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DDE8EE"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C7D4DC"/></linearGradient>
+  <linearGradient id="oil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8B34A"/><stop offset="1" stop-color="#B9781E"/></linearGradient>
+  <linearGradient id="inside" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B3036"/><stop offset="1" stop-color="#3D444C"/></linearGradient>
+  <linearGradient id="coil" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B86A2A"/><stop offset="0.5" stop-color="#E39A52"/><stop offset="1" stop-color="#A65E22"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9D2D8"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B8C2C9"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="drum" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1F4F9A"/><stop offset="0.5" stop-color="#3D79D2"/><stop offset="1" stop-color="#1B4688"/></linearGradient>
+  <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF6C8"/><stop offset="0.45" stop-color="#FFD84E"/><stop offset="1" stop-color="#FFD84E" stop-opacity="0"/></radialGradient>
+  <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+  <radialGradient id="hot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE38A"/><stop offset="0.45" stop-color="#FF7A2E" stop-opacity="0.75"/><stop offset="1" stop-color="#FF4B3E" stop-opacity="0"/></radialGradient>
+  <radialGradient id="spark" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.35" stop-color="#C9E6FF"/><stop offset="1" stop-color="#7FB8FF" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#sky)"/>
+<rect x="-20" y="38" width="160" height="44" rx="22" fill="url(#cons)"/>
+<rect x="58" y="82" width="10" height="20" fill="url(#cons)"/>
+<rect x="150.5" y="16.5" width="25" height="87" rx="12.5" fill="#2B3138"/><rect x="152" y="18" width="22" height="84" rx="11" fill="url(#glass)"/><rect x="153" y="55.8" width="20" height="45.2" rx="10" fill="url(#oil)"/><path d="M153 55.8 L173 55.8" stroke="#A8741E" stroke-width="2.2"/><path d="M134.6 29.8 L159.7 29.8" stroke="#2B3138" stroke-width="3.1" stroke-linecap="round"/><path d="M134.6 55.8 L159.7 55.8" stroke="#FFFFFF" stroke-width="3.1" stroke-linecap="round"/><path d="M134.6 83.5 L159.7 83.5" stroke="#FF4B3E" stroke-width="3.1" stroke-linecap="round"/>
+<path d="M140 50 L152 50 M140 70 L152 70" stroke="#566E54" stroke-width="4"/>
+<rect x="-4" y="102" width="208" height="130" rx="4" fill="url(#tank)"/>
+<rect x="22" y="114" width="156" height="98" rx="6" fill="url(#inside)"/>
+<rect x="24" y="118" width="152" height="92" rx="4" fill="url(#oil)" opacity="0.85"/>
+<path d="M24 118 L176 118" stroke="#A8741E" stroke-width="1.6"/>
+<rect x="56" y="128" width="88" height="8" fill="url(#steel)"/><rect x="56" y="196" width="88" height="8" fill="url(#steel)"/>
+<rect x="59" y="136" width="22" height="60" rx="4" fill="url(#coil)"/>
+<path d="M59 140 L81 140" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M59 146 L81 146" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M59 152 L81 152" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M59 158 L81 158" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M59 164 L81 164" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M59 170 L81 170" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M59 176 L81 176" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M59 182 L81 182" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M59 188 L81 188" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M59 194 L81 194" stroke="#8A4E1A" stroke-width="1"/>
+<rect x="89" y="136" width="22" height="60" rx="4" fill="url(#coil)"/>
+<path d="M89 140 L111 140" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M89 146 L111 146" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M89 152 L111 152" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M89 158 L111 158" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M89 164 L111 164" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M89 170 L111 170" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M89 176 L111 176" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M89 182 L111 182" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M89 188 L111 188" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M89 194 L111 194" stroke="#8A4E1A" stroke-width="1"/>
+<rect x="119" y="136" width="22" height="60" rx="4" fill="url(#coil)"/>
+<path d="M119 140 L141 140" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M119 146 L141 146" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M119 152 L141 152" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M119 158 L141 158" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M119 164 L141 164" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M119 170 L141 170" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M119 176 L141 176" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M119 182 L141 182" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M119 188 L141 188" stroke="#8A4E1A" stroke-width="1"/>
+<path d="M119 194 L141 194" stroke="#8A4E1A" stroke-width="1"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>
