@@ -1904,7 +1904,7 @@
       "lessonId": "3.3",
       "moduleId": "m3",
       "packId": "do_3_3_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 8
     },
     {
@@ -4857,10 +4857,10 @@
     },
     {
       "id": "do_3_3_b",
-      "engineType": "placeholder",
+      "engineType": "m3_crossarm_check",
       "lessonId": "3.3",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
