@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="al" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef1f3"/><stop offset="0.5" stop-color="#c3cad0"/><stop offset="1" stop-color="#9ea7af"/></linearGradient>
+    <clipPath id="b1"><rect x="16" y="80" width="128" height="40" rx="20"/></clipPath>
+    <clipPath id="b2"><rect x="176" y="80" width="128" height="40" rx="20"/></clipPath>
+  </defs>
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- wrong: one strand cut and sprung out -->
+  <rect x="16" y="80" width="128" height="40" rx="20" fill="url(#al)"/>
+  <g clip-path="url(#b1)" stroke="#525a62" stroke-opacity="0.45" stroke-width="2">
+    <path d="M0 120 L40 80 M17 120 L57 80 M34 120 L74 80 M90 120 L130 80 M107 120 L147 80 M124 120 L164 80"/>
+  </g>
+  <path d="M72 116 Q80 70 100 56" stroke="#b8c0c7" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M72 116 Q80 70 100 56" stroke="#6e777f" stroke-width="1.5" fill="none"/>
+  <circle cx="80" cy="90" r="34" fill="none" stroke="#c0392b" stroke-width="3"/>
+  <path d="M60 160 l40 0 M66 152 l28 16 M66 168 l28 -16" stroke="#c0392b" stroke-width="5" stroke-linecap="round"/>
+  <!-- right: every strand whole -->
+  <rect x="176" y="80" width="128" height="40" rx="20" fill="url(#al)"/>
+  <g clip-path="url(#b2)" stroke="#525a62" stroke-opacity="0.45" stroke-width="2">
+    <path d="M160 120 L200 80 M177 120 L217 80 M194 120 L234 80 M211 120 L251 80 M228 120 L268 80 M245 120 L285 80 M262 120 L302 80 M279 120 L319 80"/>
+  </g>
+  <path d="M222 160 l12 12 l24 -26" stroke="#2e8b45" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

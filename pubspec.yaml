@@ -82,6 +82,36 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
+    - assets/game/art/m3_gate_field/
+    - assets/game/art/m3_fuse_rating/
+    - assets/game/art/m3_board32/
+    - assets/game/art/m3_insulator_patrol/
+    - assets/game/art/m3_sld_isolate/
+    - assets/game/art/m3_board38/
+    - assets/game/art/m3_dtr_checkup/
+    - assets/game/art/m3_conductor_joint/
+    - assets/game/art/m3_horngap_set/
+    - assets/game/art/m3_la_patrol/
+    - assets/game/art/m3_crossarm_check/
+    - assets/game/art/m3_dtr_tap/
+    - assets/game/art/m3_guard_repair/
+    - assets/game/art/m3_board39/
+    - assets/game/art/m3_guard_patrol/
+    - assets/game/art/m3_insulator_pick/
+    - assets/game/art/m3_board35/
+    - assets/game/art/m3_pillar_fuse/
+    - assets/game/art/m3_la_earth/
+    - assets/game/art/m3_board34/
+    - assets/game/art/m3_meter_call/
+    - assets/game/art/m3_board36/
+    - assets/game/art/m3_pillar_inspect/
+    - assets/game/art/m3_service_drop/
+    - assets/game/art/m3_board31/
+    - assets/game/art/m3_board310/
+    - assets/game/art/m3_board37/
+    - assets/game/art/m3_board33/
+    - assets/game/art/m3_crossarm_pick/
+    - assets/game/art/m3_conductor_id/
     - assets/game/art/m4_oil_level/
     - assets/game/art/m4_dp_survey/
     - assets/game/art/m4_do_refuse/

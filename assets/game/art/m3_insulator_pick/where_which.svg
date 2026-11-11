@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c98a5e"/><stop offset="0.55" stop-color="#8a4b2a"/><stop offset="1" stop-color="#5a2e18"/></linearGradient>
+    <linearGradient id="d" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d868d"/><stop offset="0.4" stop-color="#f1f3f4"/><stop offset="1" stop-color="#b9c1c7"/></linearGradient>
+  </defs>
+  <rect x="2" y="2" width="316" height="196" rx="12" fill="#f4f7f2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- 1: straight line: pin on top, the wire passes over it -->
+  <rect x="48" y="70" width="8" height="110" fill="#b9bfc4"/>
+  <rect x="22" y="70" width="60" height="7" fill="#4e5a63"/>
+  <path d="M38 70 L38 64 M38 64 L26 64 L32 56 L28 56 L36 44 L40 44 L48 56 L44 56 L50 64 L38 64" fill="url(#g)" stroke="#5a2e18" stroke-width="1"/>
+  <path d="M4 44 Q38 50 104 42" fill="none" stroke="#2b3036" stroke-width="2.4"/>
+  <path d="M8 26 L100 26" stroke="#2e8b45" stroke-width="3"/>
+  <polygon points="100,20 110,26 100,32" fill="#2e8b45"/>
+  <polygon points="16,20 6,26 16,32" fill="#2e8b45"/>
+  <!-- 2: LT dead end: shackle on a D-iron, stay pulls back -->
+  <rect x="156" y="40" width="8" height="140" fill="#b9bfc4"/>
+  <line x1="158" y1="58" x2="114" y2="180" stroke="#4b5056" stroke-width="2"/>
+  <rect x="164" y="64" width="16" height="3" fill="#3e474f"/>
+  <rect x="164" y="83" width="16" height="3" fill="#3e474f"/>
+  <rect x="178" y="64" width="3" height="22" fill="#3e474f"/>
+  <path d="M164 67 L176 67 L174 72 L174 78 L176 83 L164 83 L166 78 L166 72 Z" fill="url(#g)"/>
+  <path d="M181 75 Q200 82 214 76" fill="none" stroke="#2b3036" stroke-width="2.4"/>
+  <polygon points="200,56 214,62 200,68" fill="#c0392b"/>
+  <!-- 3: HT dead end: string of discs toward the pull -->
+  <rect x="262" y="40" width="8" height="140" fill="#b9bfc4"/>
+  <line x1="264" y1="60" x2="224" y2="180" stroke="#4b5056" stroke-width="2"/>
+  <rect x="236" y="54" width="60" height="7" fill="#4e5a63"/>
+  <line x1="270" y1="70" x2="316" y2="70" stroke="#6e777f" stroke-width="2.4"/>
+  <ellipse cx="280" cy="70" rx="4" ry="12" fill="url(#d)" stroke="#7d868d"/>
+  <ellipse cx="290" cy="70" rx="4" ry="12" fill="url(#d)" stroke="#7d868d"/>
+  <ellipse cx="300" cy="70" rx="4" ry="12" fill="url(#d)" stroke="#7d868d"/>
+  <text x="54" y="196" font-family="sans-serif" font-size="13" font-weight="700" fill="#1e2228" text-anchor="middle">PIN</text>
+  <text x="168" y="196" font-family="sans-serif" font-size="13" font-weight="700" fill="#1e2228" text-anchor="middle">SHACKLE · LT</text>
+  <text x="276" y="196" font-family="sans-serif" font-size="13" font-weight="700" fill="#1e2228" text-anchor="middle">DISC · HT</text>
+  <!-- a pin at a dead end: cracked under the pull -->
+  <g transform="translate(206,110)">
+    <circle cx="0" cy="0" r="16" fill="#fff4f2" stroke="#c0392b" stroke-width="2.4"/>
+    <path d="M0 6 L-8 6 L-4 0 L-6 0 L-1 -8 L1 -8 L6 0 L4 0 L8 6 Z" fill="url(#g)"/>
+    <path d="M0 -8 L2 -2 L-1 2 L1 6" fill="none" stroke="#1e1a16" stroke-width="1.4"/>
+    <line x1="-11" y1="11" x2="11" y2="-11" stroke="#c0392b" stroke-width="2.4"/>
+  </g>
+</svg>

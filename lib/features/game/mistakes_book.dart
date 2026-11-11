@@ -27,6 +27,26 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm3_gate_field.dart' as m3_gate_field;
+import 'm3_fuse_rating.dart' as m3_fuse_rating;
+import 'm3_insulator_patrol.dart' as m3_insulator_patrol;
+import 'm3_sld_isolate.dart' as m3_sld_isolate;
+import 'm3_dtr_checkup.dart' as m3_dtr_checkup;
+import 'm3_conductor_joint.dart' as m3_conductor_joint;
+import 'm3_horngap_set.dart' as m3_horngap_set;
+import 'm3_la_patrol.dart' as m3_la_patrol;
+import 'm3_crossarm_check.dart' as m3_crossarm_check;
+import 'm3_dtr_tap.dart' as m3_dtr_tap;
+import 'm3_guard_repair.dart' as m3_guard_repair;
+import 'm3_guard_patrol.dart' as m3_guard_patrol;
+import 'm3_insulator_pick.dart' as m3_insulator_pick;
+import 'm3_pillar_fuse.dart' as m3_pillar_fuse;
+import 'm3_la_earth.dart' as m3_la_earth;
+import 'm3_meter_call.dart' as m3_meter_call;
+import 'm3_pillar_inspect.dart' as m3_pillar_inspect;
+import 'm3_service_drop.dart' as m3_service_drop;
+import 'm3_crossarm_pick.dart' as m3_crossarm_pick;
+import 'm3_conductor_id.dart' as m3_conductor_id;
 import 'm4_oil_level.dart' as m4_oil_level;
 import 'm4_dp_survey.dart' as m4_dp_survey;
 import 'm4_do_refuse.dart' as m4_do_refuse;
@@ -98,6 +118,26 @@ final Map<String, DoMistake> knownMistakes = {
     ...StormMistakes.all,
     ...TenSecMistakes.all,
     ...GateMistakes.all,
+    ...m3_gate_field.M3GateMistakes.all,
+    ...m3_fuse_rating.M3FuseRatingMistakes.all,
+    ...m3_insulator_patrol.M3InsulatorPatrolMistakes.all,
+    ...m3_sld_isolate.M3SldIsolateMistakes.all,
+    ...m3_dtr_checkup.M3DtrCheckupMistakes.all,
+    ...m3_conductor_joint.M3ConductorJointMistakes.all,
+    ...m3_horngap_set.M3HorngapSetMistakes.all,
+    ...m3_la_patrol.M3LaPatrolMistakes.all,
+    ...m3_crossarm_check.M3CrossarmCheckMistakes.all,
+    ...m3_dtr_tap.M3DtrTapMistakes.all,
+    ...m3_guard_repair.M3GuardRepairMistakes.all,
+    ...m3_guard_patrol.M3GuardPatrolMistakes.all,
+    ...m3_insulator_pick.M3InsulatorPickMistakes.all,
+    ...m3_pillar_fuse.M3PillarFuseMistakes.all,
+    ...m3_la_earth.M3LaEarthMistakes.all,
+    ...m3_meter_call.M3MeterCallMistakes.all,
+    ...m3_pillar_inspect.M3PillarInspectMistakes.all,
+    ...m3_service_drop.M3ServiceDropMistakes.all,
+    ...m3_crossarm_pick.M3CrossarmPickMistakes.all,
+    ...m3_conductor_id.M3ConductorIdMistakes.all,
     ...m4_oil_level.M4OilLevelMistakes.all,
     ...m4_dp_survey.M4DpSurveyMistakes.all,
     ...m4_do_refuse.M4DoRefuseMistakes.all,
