@@ -82,6 +82,7 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
+    - assets/game/art/m3_crossarm_pick/
     - assets/game/art/m3_conductor_id/
     - assets/game/art/m2_board210/
     - assets/game/art/m2_board29/
