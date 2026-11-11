@@ -56,6 +56,7 @@ import 'm4_earth_fix.dart';
 import 'm4_jumper_make.dart';
 import 'm4_service_plan.dart';
 import 'm4_insulator_swap.dart';
+import 'm4_earth_test.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -282,6 +283,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m4InsulatorSwapPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M4InsulatorSwapPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_earth_test':
+      final content = m4EarthTestPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4EarthTestPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

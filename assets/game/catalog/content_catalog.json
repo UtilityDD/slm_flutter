@@ -2246,7 +2246,7 @@
       "lessonId": "4.6",
       "moduleId": "m4",
       "packId": "do_4_6_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 16
     },
     {
@@ -5199,10 +5199,10 @@
     },
     {
       "id": "do_4_6_a",
-      "engineType": "placeholder",
+      "engineType": "m4_earth_test",
       "lessonId": "4.6",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
