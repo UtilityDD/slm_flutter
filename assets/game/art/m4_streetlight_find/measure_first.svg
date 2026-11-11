@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <!-- wrong: new lamp first, meter left in the bag -->
+  <rect x="22" y="40" width="110" height="34" rx="12" fill="#7d8794" stroke="#3e454b" stroke-width="1.5"/>
+  <rect x="28" y="46" width="98" height="22" rx="8" fill="#2a2f37"/>
+  <rect x="34" y="52" width="40" height="11" rx="5.5" fill="#b9b2a2"/>
+  <rect x="74" y="50" width="9" height="15" fill="#3b3326"/>
+  <rect x="90" y="49" width="16" height="17" rx="2" fill="#ece6d6"/><circle cx="98" cy="53" r="2.5" fill="#8b949b"/><circle cx="98" cy="62" r="2.5" fill="#8b949b"/>
+  <rect x="110" y="49" width="12" height="17" rx="2" fill="#6e6b60"/>
+  <text x="78" y="112" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#c0392b">NEW LAMP?</text>
+  <path d="M60 150 l18 -26" stroke="#a86e48" stroke-width="9" stroke-linecap="round"/><path d="M78 124 l6 -10" stroke="#e6e2d6" stroke-width="5" stroke-linecap="round"/>
+  <g transform="translate(80 172)"><circle r="13" fill="#c0392b"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>
+  <!-- right: step 1, meter on the terminals -->
+  <rect x="182" y="40" width="110" height="34" rx="12" fill="#7d8794" stroke="#3e454b" stroke-width="1.5"/>
+  <rect x="188" y="46" width="98" height="22" rx="8" fill="#2a2f37"/>
+  <rect x="194" y="52" width="40" height="11" rx="5.5" fill="#b9b2a2"/>
+  <rect x="234" y="50" width="9" height="15" fill="#3b3326"/>
+  <rect x="250" y="49" width="16" height="17" rx="2" fill="#ece6d6"/><circle cx="258" cy="53" r="2.5" fill="#8b949b"/><circle cx="258" cy="62" r="2.5" fill="#8b949b"/>
+  <rect x="270" y="49" width="12" height="17" rx="2" fill="#6e6b60"/>
+  <rect x="232" y="96" width="46" height="62" rx="8" fill="#f2b230" stroke="#6b4a0c" stroke-width="1.5"/>
+  <rect x="238" y="102" width="34" height="20" rx="3" fill="#b9c7a6"/>
+  <text x="255" y="117" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#1c2416">230</text>
+  <circle cx="255" cy="140" r="10" fill="#23272d"/>
+  <text x="206" y="130" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#22282d">1</text>
+  <path d="M258 74 L250 96 M266 66 L262 96" stroke="#d63a2f" stroke-width="2"/>
+  <g transform="translate(240 172)"><circle r="13" fill="#2e8b45"/><path d="M-7 0 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

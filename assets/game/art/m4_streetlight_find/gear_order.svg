@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <!-- wrong: ballast changed first -->
+  <rect x="22" y="40" width="110" height="34" rx="12" fill="#7d8794" stroke="#3e454b" stroke-width="1.5"/>
+  <rect x="28" y="46" width="98" height="22" rx="8" fill="#2a2f37"/>
+  <rect x="34" y="52" width="40" height="11" rx="5.5" fill="#b9b2a2"/>
+  <rect x="74" y="50" width="9" height="15" fill="#3b3326"/>
+  <rect x="90" y="49" width="16" height="17" rx="2" fill="#ece6d6"/><circle cx="98" cy="53" r="2.5" fill="#8b949b"/><circle cx="98" cy="62" r="2.5" fill="#8b949b"/>
+  <rect x="110" y="49" width="12" height="17" rx="2" fill="#6e6b60"/>
+  <rect x="50" y="100" width="58" height="40" rx="4" fill="#4a5d75" stroke="#15171a" stroke-width="1.2"/>
+  <text x="79" y="115" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="bold" fill="#f1f1ec">BALLAST</text>
+  <text x="79" y="129" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="bold" fill="#e2e2d8">?</text>
+  <g transform="translate(80 172)"><circle r="13" fill="#c0392b"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>
+  <!-- right: new lamp first, then ON -->
+  <rect x="182" y="40" width="110" height="34" rx="12" fill="#7d8794" stroke="#3e454b" stroke-width="1.5"/>
+  <rect x="188" y="46" width="98" height="22" rx="8" fill="#2a2f37"/>
+  <rect x="194" y="52" width="40" height="11" rx="5.5" fill="#ffb648"/>
+  <rect x="234" y="50" width="9" height="15" fill="#3b3326"/>
+  <rect x="250" y="49" width="16" height="17" rx="2" fill="#ece6d6"/><circle cx="258" cy="53" r="2.5" fill="#8b949b"/><circle cx="258" cy="62" r="2.5" fill="#8b949b"/>
+  <rect x="270" y="49" width="12" height="17" rx="2" fill="#6e6b60"/>
+  <path d="M196 74 L232 74 L252 120 L176 120 Z" fill="#ffb648" opacity="0.35"/>
+  <text x="206" y="140" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#22282d">1 LAMP</text>
+  <text x="266" y="140" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#22282d">2 GEAR</text>
+  <g transform="translate(240 172)"><circle r="13" fill="#2e8b45"/><path d="M-7 0 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>
