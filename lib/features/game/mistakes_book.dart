@@ -27,6 +27,7 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm4_dp_dress.dart' as m4_dp_dress;
 import 'm4_tree_cut.dart' as m4_tree_cut;
 import 'm4_gate_field.dart' as m4_gate_field;
 import 'm4_streetlight_find.dart' as m4_streetlight_find;
@@ -86,6 +87,7 @@ final Map<String, DoMistake> knownMistakes = {
     ...StormMistakes.all,
     ...TenSecMistakes.all,
     ...GateMistakes.all,
+    ...m4_dp_dress.M4DpDressMistakes.all,
     ...m4_tree_cut.M4TreeCutMistakes.all,
     ...m4_gate_field.M4GateMistakes.all,
     ...m4_streetlight_find.M4StreetlightFindMistakes.all,

@@ -2282,7 +2282,7 @@
       "lessonId": "4.7",
       "moduleId": "m4",
       "packId": "do_4_7_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 20
     },
     {
@@ -5236,10 +5236,10 @@
     },
     {
       "id": "do_4_7_b",
-      "engineType": "placeholder",
+      "engineType": "m4_dp_dress",
       "lessonId": "4.7",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },

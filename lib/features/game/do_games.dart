@@ -49,6 +49,7 @@ import 'm4_do_open.dart';
 import 'm4_streetlight_find.dart';
 import 'm4_gate_field.dart';
 import 'm4_tree_cut.dart';
+import 'm4_dp_dress.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -247,6 +248,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m4TreeCutPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M4TreeCutPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_dp_dress':
+      final content = m4DpDressPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4DpDressPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
