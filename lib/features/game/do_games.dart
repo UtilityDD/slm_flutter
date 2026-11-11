@@ -29,6 +29,7 @@ import 'm2_hydraulic_pick.dart';
 import 'm2_hotstick_check.dart';
 import 'm2_tool_use.dart';
 import 'm2_tool_care.dart';
+import 'm2_megger_prep.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -147,6 +148,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m2ToolCarePacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M2ToolCarePage(ctx: ctx, pack: content, muted: muted);
+    case 'm2_megger_prep':
+      final content = m2MeggerPrepPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M2MeggerPrepPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

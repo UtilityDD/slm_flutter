@@ -1733,7 +1733,7 @@
       "lessonId": "2.7",
       "moduleId": "m2",
       "packId": "do_2_7_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 19
     },
     {
@@ -4684,10 +4684,10 @@
     },
     {
       "id": "do_2_7_a",
-      "engineType": "placeholder",
+      "engineType": "m2_megger_prep",
       "lessonId": "2.7",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
