@@ -9,7 +9,7 @@ how to build a level is in [GAME_LEVEL_PLAYBOOK.md](GAME_LEVEL_PLAYBOOK.md), cod
 ♻️ plays an older version (text deck or a legacy `dsLevels` screen) · ☐ not started (catalog `comingSoon`)
 
 **Totals (2026-11-11):** 10 modules · 109 lessons · 327 rungs (109 শেখা, 208 কাজ, 10 rank gates).
-Playable: **30 rungs**, all in Module 1. Module 1: **30 of 30 built** (rank gate included). Next work = Module 2.
+Playable: **60 rungs** (Modules 1–2). Module 1: **30 of 30 built**; Module 2: **30 of 30 built** (2026-11-11, owner decisions open — see MODULE2_LADDER.md). Next work = Module 3.
 
 ---
 
@@ -58,26 +58,26 @@ Cross-level items:
 
 ---
 
-## Modules 2–10 (not started)
+## Modules 2–10 (Module 2 built; 3–10 not started)
 
 Every rung below is `comingSoon` in the catalog: no picture board, no Do game, no gate. Each lesson's text exists in
 `tool/all_training_chapters_bn.json`. Build them module by module with the playbook (board first, then the Do rungs, then the gate).
 
-### Module 2 — জুনিয়র (10 lessons + rank gate)
+### Module 2 — জুনিয়র (10 lessons + rank gate) — ✅ built 2026-11-11, design notes and open owner decisions in [MODULE2_LADDER.md](MODULE2_LADDER.md)
 
 | Lesson | Title | শেখা | কাজ rungs |
 |---|---|---|---|
-| 2.1 | লাইনম্যানের টুলবক্স পরিচিতি | ☐ | 2 × ☐ |
-| 2.2 | মাল্টিমিটারের জাদু | ☐ | 2 × ☐ |
-| 2.3 | ল্যাগস ক্রিম্পিং: সঠিক চাপ, নিরাপদ কানেকশন | ☐ | 2 × ☐ |
-| 2.4 | কাম-অ্যালং ক্ল্যাম্প (Come-Along Clamp): নিয়ন্ত্রিত শক্তি | ☐ | 2 × ☐ |
-| 2.5 | অপারেটিং রড (হট স্টিক): দূরত্বের সুরক্ষা | ☐ | 2 × ☐ |
-| 2.6 | কেবিল স্কিনিং-এর শিল্প | ☐ | 2 × ☐ |
-| 2.7 | 'মেগার' (Megger) কী ও কেন? | ☐ | 2 × ☐ |
-| 2.8 | ফেজ সিকোয়েন্স মিটার: সঠিক ঘূর্ণন | ☐ | 2 × ☐ |
-| 2.9 | হাইড্রোলিক ক্রিম্পার ও কাটার: দানবীয় শক্তি | ☐ | 2 × ☐ |
-| 2.10 | হাতিয়ারের যত্ন ও রক্ষণাবেক্ষণ | ☐ | 1 × ☐ |
-| gate | র‍্যাঙ্ক গেট (জুনিয়র) | — | ☐ |
+| 2.1 | লাইনম্যানের টুলবক্স পরিচিতি | ✅ | 2 × ✅ |
+| 2.2 | মাল্টিমিটারের জাদু | ✅ | 2 × ✅ |
+| 2.3 | ল্যাগস ক্রিম্পিং: সঠিক চাপ, নিরাপদ কানেকশন | ✅ | 2 × ✅ |
+| 2.4 | কাম-অ্যালং ক্ল্যাম্প (Come-Along Clamp): নিয়ন্ত্রিত শক্তি | ✅ | 2 × ✅ |
+| 2.5 | অপারেটিং রড (হট স্টিক): দূরত্বের সুরক্ষা | ✅ | 2 × ✅ |
+| 2.6 | কেবিল স্কিনিং-এর শিল্প | ✅ | 2 × ✅ |
+| 2.7 | 'মেগার' (Megger) কী ও কেন? | ✅ | 2 × ✅ |
+| 2.8 | ফেজ সিকোয়েন্স মিটার: সঠিক ঘূর্ণন | ✅ | 2 × ✅ |
+| 2.9 | হাইড্রোলিক ক্রিম্পার ও কাটার: দানবীয় শক্তি | ✅ | 2 × ✅ |
+| 2.10 | হাতিয়ারের যত্ন ও রক্ষণাবেক্ষণ | ✅ | 1 × ✅ |
+| gate | র‍্যাঙ্ক গেট (জুনিয়র) | — | ✅ |
 
 ### Module 3 — টেকনিশিয়ান (10 lessons + rank gate)
 
