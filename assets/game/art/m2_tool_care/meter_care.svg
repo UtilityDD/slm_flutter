@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- left: meter left ON, leads twisted tight -->
+  <rect x="20" y="30" width="62" height="96" rx="8" fill="#f2b705"/>
+  <rect x="25" y="35" width="52" height="86" rx="5" fill="#2a2e33"/>
+  <rect x="30" y="42" width="42" height="18" rx="2" fill="#b9e3a1"/>
+  <circle cx="51" cy="92" r="12" fill="#15181b"/>
+  <path d="M51 92 L59 84" stroke="#f2b705" stroke-width="3" stroke-linecap="round"/>
+  <path d="M60 126 L84 70 L96 130 L108 66 L118 128 L130 72" fill="none" stroke="#c62828" stroke-width="3.5"/>
+  <path d="M44 126 L80 128 L92 68 L104 132 L114 68 L126 130" fill="none" stroke="#1b1d20" stroke-width="3.5"/>
+  <circle cx="132" cy="172" r="14" fill="#c0392b"/><path d="M125 165 L139 179 M139 165 L125 179" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- right: OFF, leads coiled loosely -->
+  <rect x="180" y="30" width="62" height="96" rx="8" fill="#f2b705"/>
+  <rect x="185" y="35" width="52" height="86" rx="5" fill="#2a2e33"/>
+  <rect x="190" y="42" width="42" height="18" rx="2" fill="#6d7a6a"/>
+  <circle cx="211" cy="92" r="12" fill="#15181b"/>
+  <path d="M211 92 L211 81" stroke="#f2b705" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="274" cy="84" rx="26" ry="20" fill="none" stroke="#c62828" stroke-width="3.5"/>
+  <ellipse cx="276" cy="84" rx="20" ry="15" fill="none" stroke="#1b1d20" stroke-width="3.5"/>
+  <path d="M222 126 q20 10 34 -24" fill="none" stroke="#c62828" stroke-width="3.5"/>
+  <circle cx="292" cy="172" r="14" fill="#2e8b45"/><path d="M285 172 L290 178 L300 166" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
