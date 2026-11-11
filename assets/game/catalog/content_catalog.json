@@ -1742,7 +1742,7 @@
       "lessonId": "2.7",
       "moduleId": "m2",
       "packId": "do_2_7_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 20
     },
     {
@@ -4694,10 +4694,10 @@
     },
     {
       "id": "do_2_7_b",
-      "engineType": "placeholder",
+      "engineType": "m2_megger_read",
       "lessonId": "2.7",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
