@@ -31,6 +31,7 @@ import 'm2_tool_use.dart';
 import 'm2_tool_care.dart';
 import 'm2_megger_prep.dart';
 import 'm2_lug_pick.dart';
+import 'm2_crimp_steps.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -161,6 +162,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m2SkinCutPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M2SkinCutPage(ctx: ctx, pack: content, muted: muted);
+    case 'm2_crimp_steps':
+      final content = m2CrimpStepsPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M2CrimpStepsPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

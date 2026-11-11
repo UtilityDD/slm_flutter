@@ -1634,7 +1634,7 @@
       "lessonId": "2.3",
       "moduleId": "m2",
       "packId": "do_2_3_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 8
     },
     {
@@ -4586,10 +4586,10 @@
     },
     {
       "id": "do_2_3_b",
-      "engineType": "placeholder",
+      "engineType": "m2_crimp_steps",
       "lessonId": "2.3",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
