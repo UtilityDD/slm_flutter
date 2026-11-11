@@ -1931,7 +1931,7 @@
       "lessonId": "3.4",
       "moduleId": "m3",
       "packId": "do_3_4_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 11
     },
     {
@@ -4884,10 +4884,10 @@
     },
     {
       "id": "do_3_4_b",
-      "engineType": "placeholder",
+      "engineType": "m3_horngap_set",
       "lessonId": "3.4",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
