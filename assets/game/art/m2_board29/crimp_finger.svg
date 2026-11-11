@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="yard" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5D6B66"/><stop offset="1" stop-color="#8C9A92"/></linearGradient>
+  <linearGradient id="tarp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E5566"/><stop offset="1" stop-color="#2C3E4C"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9A983"/><stop offset="1" stop-color="#9C8A64"/></linearGradient>
+  <linearGradient id="toolRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E25A3C"/><stop offset="0.5" stop-color="#C8402B"/><stop offset="1" stop-color="#8E2A1C"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="die" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9AA4AC"/><stop offset="1" stop-color="#55606A"/></linearGradient>
+  <linearGradient id="tin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A9B1B6"/><stop offset="0.5" stop-color="#E9EDEF"/><stop offset="1" stop-color="#9BA3A9"/></linearGradient>
+  <linearGradient id="copper" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A65A26"/><stop offset="0.5" stop-color="#E39A5C"/><stop offset="1" stop-color="#A65A26"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <radialGradient id="beam" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF4B0" stop-opacity="0.75"/><stop offset="1" stop-color="#FFF4B0" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#yard)"/>
+<rect x="-4" y="124" width="208" height="100" rx="6" fill="url(#tarp)"/><path d="M0 126 L200 126" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="1.2"/>
+<g transform="translate(54 64) rotate(32) scale(1.12) translate(-54 -64)"><circle cx="54" cy="64" r="24" fill="#2A2D33"/><circle cx="54" cy="64" r="24" fill="none" stroke="url(#steel)" stroke-width="8"/><path d="M54 -120 L54 44" stroke="#1E2226" stroke-width="15"/><rect x="47.5" y="42" width="13" height="5" fill="url(#copper)"/><rect x="46" y="47" width="16" height="32" rx="2" fill="url(#tin)"/><path d="M48 79 L60 79 L61 100 Q54 106 47 100 Z" fill="url(#tin)"/><circle cx="54" cy="95" r="3.4" fill="#2A2D33"/><polygon points="35,51 49.5,51 49.5,56.2 45,64 49.5,71.8 49.5,77 35,77" fill="url(#die)" stroke="#2A2D33" stroke-width="0.8"/><polygon points="73,51 58.5,51 58.5,56.2 63,64 58.5,71.8 58.5,77 73,77" fill="url(#die)" stroke="#2A2D33" stroke-width="0.8"/><rect x="74" y="57" width="12" height="14" rx="2" fill="url(#steel)"/><rect x="84" y="54" width="58" height="20" rx="5" fill="url(#toolRed)"/><rect x="118" y="48" width="8" height="7" rx="1.5" fill="url(#steel)"/><rect x="140" y="59" width="62" height="11" rx="5" fill="#2A2D33"/><path d="M132 72 L156.7 80" stroke="url(#steel)" stroke-width="6" stroke-linecap="round"/><path d="M132 72 L156.7 80" stroke="#9AA4AC" stroke-width="6" stroke-linecap="round"/><path d="M156.7 80 L196.7 93" stroke="#2A2D33" stroke-width="10" stroke-linecap="round"/><circle cx="132" cy="72" r="3" fill="url(#steel)"/><circle cx="51" cy="65" r="4.8" fill="#2A2D33"/></g>
+<path d="M90 236 L161.4 174.1" stroke="#1F5F8F" stroke-width="11" stroke-linecap="round"/><path d="M159.2 176 L162.6 173.1" stroke="#174A70" stroke-width="12"/><circle cx="166" cy="170.1" r="6.8" fill="#2A2D33"/>
+<path d="M-10 120 L33.8 54" stroke="#1F5F8F" stroke-width="13" stroke-linecap="round"/><path d="M32.2 56.5 L34.6 52.8" stroke="#174A70" stroke-width="14"/><circle cx="37.1" cy="49" r="8.1" fill="#2A2D33"/><path d="M37.1 49 L43.2 39.9" stroke="#2A2D33" stroke-width="3.6" stroke-linecap="round"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>
