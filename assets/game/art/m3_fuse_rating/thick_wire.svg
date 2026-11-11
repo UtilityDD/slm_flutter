@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="tb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b98a55"/><stop offset="0.5" stop-color="#8a5e33"/><stop offset="1" stop-color="#5e3c1e"/></linearGradient>
+    <linearGradient id="br" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1d58a"/><stop offset="0.5" stop-color="#c9a24a"/><stop offset="1" stop-color="#8e6e22"/></linearGradient>
+    <linearGradient id="tk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b3bec5"/><stop offset="0.5" stop-color="#8d9ba3"/><stop offset="1" stop-color="#5f6a71"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- wrong: thick copper in the barrel; the transformer burns -->
+  <rect x="34" y="96" width="92" height="64" rx="4" fill="url(#tk)"/>
+  <circle cx="80" cy="96" r="44" fill="#ffb02a" opacity="0.35"/>
+  <path d="M50 98 Q46 70 58 52 Q66 74 70 98 Z" fill="#f2611d"/>
+  <path d="M68 98 Q62 60 80 34 Q92 66 92 98 Z" fill="#f2611d"/>
+  <path d="M90 98 Q88 72 102 56 Q110 78 110 98 Z" fill="#f2611d"/>
+  <path d="M74 98 Q72 76 80 60 Q88 78 86 98 Z" fill="#ffd34d"/>
+  <rect x="18" y="168" width="96" height="16" rx="4" fill="url(#tb)"/>
+  <rect x="12" y="166" width="14" height="20" rx="3" fill="url(#br)"/><rect x="110" y="165" width="14" height="22" rx="3" fill="url(#br)"/>
+  <path d="M26 176 L110 176" stroke="#c9702f" stroke-width="7"/>
+  <path d="M124 176 Q138 180 140 190" stroke="#c9702f" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <!-- right: a thin rated link in the barrel -->
+  <rect x="194" y="96" width="92" height="64" rx="4" fill="url(#tk)"/>
+  <rect x="226" y="112" width="28" height="16" rx="2" fill="#dcd9cc" stroke="#5e666c"/>
+  <rect x="178" y="168" width="96" height="16" rx="4" fill="url(#tb)"/>
+  <rect x="172" y="166" width="14" height="20" rx="3" fill="url(#br)"/><rect x="270" y="165" width="14" height="22" rx="3" fill="url(#br)"/>
+  <path d="M186 176 L270 176" stroke="#b8c0c6" stroke-width="2"/>
+  <path d="M284 176 Q296 178 298 190" stroke="#b8c0c6" stroke-width="2" fill="none"/>
+  <rect x="200" y="22" width="80" height="26" rx="3" fill="#f4e7b8" stroke="#b59a4e"/>
+  <text x="240" y="40" font-family="sans-serif" font-size="13" font-weight="900" fill="#3a2e10" text-anchor="middle">FUSE LINK</text>
+  <path d="M212 70 L230 82 L268 56" fill="none" stroke="#2e8b45" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
