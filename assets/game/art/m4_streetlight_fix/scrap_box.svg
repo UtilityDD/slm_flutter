@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <path d="M50 70 h40 l-4 70 h-32 z" fill="#2f6e4a"/><rect x="46" y="64" width="48" height="8" fill="#235238"/>
+  <g transform="rotate(-30 70 56)"><rect x="56" y="50" width="26" height="10" rx="5" fill="#cfc6a8"/></g>
+  <rect x="190" y="90" width="80" height="50" fill="#d9822b" stroke="#6a3a0e" stroke-width="2"/><text x="230" y="120" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#2b1604">Hg</text>
+  <g transform="rotate(10 230 80)"><rect x="216" y="74" width="28" height="10" rx="5" fill="#cfc6a8"/></g>
+  <g transform="translate(80 172)"><circle r="14" fill="#c0392b"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>
+  <g transform="translate(240 172)"><circle r="14" fill="#2e8b45"/><path d="M-7 0 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>
