@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="al" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f4f6"/><stop offset="0.55" stop-color="#bcc3c9"/><stop offset="1" stop-color="#7a838b"/></linearGradient>
+    <linearGradient id="cu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b47a"/><stop offset="0.55" stop-color="#c77a3c"/><stop offset="1" stop-color="#7e431c"/></linearGradient>
+    <linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#454a51"/><stop offset="0.5" stop-color="#17191c"/><stop offset="1" stop-color="#2c2f33"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- wrong 1: stripped short: the conductor stops short of the barrel's bottom -->
+  <rect x="10" y="50" width="62" height="18" rx="3" fill="url(#sh)"/>
+  <rect x="72" y="53" width="22" height="12" fill="url(#cu)"/>
+  <rect x="70" y="47" width="48" height="24" fill="url(#al)" opacity="0.55"/>
+  <path d="M118 47 L128 52 L128 66 L118 71 Z" fill="url(#al)"/>
+  <rect x="126" y="52" width="24" height="14" rx="7" fill="url(#al)"/>
+  <path d="M97 51 L115 51 L115 67 L97 67 Z" fill="none" stroke="#c0392b" stroke-width="2" stroke-dasharray="3 2"/>
+  <circle cx="134" cy="26" r="11" fill="#c0392b"/><path d="M128 20 l12 12 M140 20 l-12 12" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- wrong 2: stripped long: bare strands outside the barrel -->
+  <rect x="10" y="140" width="34" height="18" rx="3" fill="url(#sh)"/>
+  <rect x="44" y="143" width="72" height="12" fill="url(#cu)"/>
+  <rect x="70" y="137" width="48" height="24" fill="url(#al)" opacity="0.55"/>
+  <path d="M118 137 L128 142 L128 156 L118 161 Z" fill="url(#al)"/>
+  <rect x="126" y="142" width="24" height="14" rx="7" fill="url(#al)"/>
+  <path d="M44 138 L68 138 M44 160 L68 160" stroke="#c0392b" stroke-width="2"/>
+  <circle cx="134" cy="116" r="11" fill="#c0392b"/><path d="M128 110 l12 12 M140 110 l-12 12" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- right: conductor fully in, insulation right at the mouth -->
+  <rect x="170" y="95" width="62" height="18" rx="3" fill="url(#sh)"/>
+  <rect x="232" y="98" width="46" height="12" fill="url(#cu)"/>
+  <rect x="232" y="92" width="48" height="24" fill="url(#al)" opacity="0.55"/>
+  <path d="M280 92 L290 97 L290 111 L280 116 Z" fill="url(#al)"/>
+  <rect x="288" y="97" width="24" height="14" rx="7" fill="url(#al)"/>
+  <circle cx="296" cy="60" r="12" fill="#2e8b45"/><path d="M289 60 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

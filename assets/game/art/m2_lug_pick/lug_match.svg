@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="al" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f4f6"/><stop offset="0.55" stop-color="#bcc3c9"/><stop offset="1" stop-color="#7a838b"/></linearGradient>
+    <linearGradient id="cu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b47a"/><stop offset="0.55" stop-color="#c77a3c"/><stop offset="1" stop-color="#7e431c"/></linearGradient>
+    <linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#454a51"/><stop offset="0.5" stop-color="#17191c"/><stop offset="1" stop-color="#2c2f33"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- wrong 1: aluminium cable in a copper lug: corrosion at the joint -->
+  <rect x="12" y="44" width="54" height="16" rx="3" fill="url(#sh)"/>
+  <rect x="64" y="46" width="12" height="12" fill="url(#al)"/>
+  <rect x="74" y="42" width="40" height="20" fill="url(#cu)"/>
+  <path d="M114 42 L124 46 L124 58 L114 62 Z" fill="url(#cu)"/>
+  <rect x="122" y="45" width="26" height="14" rx="7" fill="url(#cu)"/>
+  <circle cx="138" cy="52" r="3.5" fill="#1c2229"/>
+  <g fill="#e6f0dc" stroke="#7aa36a" stroke-width="1"><circle cx="72" cy="40" r="4"/><circle cx="78" cy="64" r="5"/><circle cx="68" cy="61" r="3"/><circle cx="84" cy="38" r="3"/></g>
+  <circle cx="134" cy="22" r="11" fill="#c0392b"/><path d="M128 16 l12 12 M140 16 l-12 12" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- wrong 2: a lug too big: the conductor loose in the barrel -->
+  <rect x="12" y="128" width="54" height="16" rx="3" fill="url(#sh)"/>
+  <rect x="74" y="120" width="44" height="32" fill="url(#al)" opacity="0.55"/>
+  <rect x="64" y="131" width="50" height="10" fill="#9aa2a9"/>
+  <path d="M118 120 L128 128 L128 144 L118 152 Z" fill="url(#al)"/>
+  <rect x="126" y="129" width="24" height="14" rx="7" fill="url(#al)"/>
+  <path d="M78 124 L112 124 M78 148 L112 148" stroke="#c0392b" stroke-width="2" stroke-dasharray="3 3"/>
+  <circle cx="134" cy="102" r="11" fill="#c0392b"/><path d="M128 96 l12 12 M140 96 l-12 12" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- right: same metal, same size, snug -->
+  <rect x="172" y="44" width="54" height="16" rx="3" fill="url(#sh)"/>
+  <rect x="226" y="42" width="40" height="20" fill="url(#al)"/>
+  <path d="M266 42 L276 46 L276 58 L266 62 Z" fill="url(#al)"/>
+  <rect x="274" y="45" width="30" height="14" rx="7" fill="url(#al)"/>
+  <circle cx="292" cy="52" r="3.5" fill="#1c2229"/>
+  <rect x="172" y="128" width="54" height="16" rx="3" fill="url(#sh)"/>
+  <rect x="226" y="126" width="40" height="20" fill="url(#cu)"/>
+  <path d="M266 126 L276 130 L276 142 L266 146 Z" fill="url(#cu)"/>
+  <rect x="274" y="129" width="30" height="14" rx="7" fill="url(#cu)"/>
+  <circle cx="292" cy="136" r="3.5" fill="#1c2229"/>
+  <circle cx="296" cy="100" r="12" fill="#2e8b45"/><path d="M289 100 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
