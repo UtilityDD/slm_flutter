@@ -27,6 +27,7 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm3_pillar_fuse.dart' as m3_pillar_fuse;
 import 'm3_la_earth.dart' as m3_la_earth;
 import 'm3_meter_call.dart' as m3_meter_call;
 import 'm3_pillar_inspect.dart' as m3_pillar_inspect;
@@ -84,6 +85,7 @@ final Map<String, DoMistake> knownMistakes = {
     ...StormMistakes.all,
     ...TenSecMistakes.all,
     ...GateMistakes.all,
+    ...m3_pillar_fuse.M3PillarFuseMistakes.all,
     ...m3_la_earth.M3LaEarthMistakes.all,
     ...m3_meter_call.M3MeterCallMistakes.all,
     ...m3_pillar_inspect.M3PillarInspectMistakes.all,

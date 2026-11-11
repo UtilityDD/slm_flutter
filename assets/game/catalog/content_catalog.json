@@ -2003,7 +2003,7 @@
       "lessonId": "3.7",
       "moduleId": "m3",
       "packId": "do_3_7_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 19
     },
     {
@@ -4955,10 +4955,10 @@
     },
     {
       "id": "do_3_7_a",
-      "engineType": "placeholder",
+      "engineType": "m3_pillar_fuse",
       "lessonId": "3.7",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
