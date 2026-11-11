@@ -27,6 +27,7 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm3_insulator_patrol.dart' as m3_insulator_patrol;
 import 'm3_sld_isolate.dart' as m3_sld_isolate;
 import 'm3_dtr_checkup.dart' as m3_dtr_checkup;
 import 'm3_conductor_joint.dart' as m3_conductor_joint;
@@ -95,6 +96,7 @@ final Map<String, DoMistake> knownMistakes = {
     ...StormMistakes.all,
     ...TenSecMistakes.all,
     ...GateMistakes.all,
+    ...m3_insulator_patrol.M3InsulatorPatrolMistakes.all,
     ...m3_sld_isolate.M3SldIsolateMistakes.all,
     ...m3_dtr_checkup.M3DtrCheckupMistakes.all,
     ...m3_conductor_joint.M3ConductorJointMistakes.all,
