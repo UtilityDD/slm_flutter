@@ -82,6 +82,7 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
+    - assets/game/art/m2_skin_tools/
     - assets/game/art/rod_board/
     - assets/game/art/ptw_board/
     - assets/game/art/aid_board/
