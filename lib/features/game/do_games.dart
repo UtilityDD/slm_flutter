@@ -25,6 +25,7 @@ import 'm2_toolbox_pack.dart';
 import 'm2_skin_tools.dart';
 import 'm2_hotstick_operate.dart';
 import 'm2_phase_swap.dart';
+import 'm2_hydraulic_pick.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -127,6 +128,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m2PhaseSwapPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M2PhaseSwapPage(ctx: ctx, pack: content, muted: muted);
+    case 'm2_hydraulic_pick':
+      final content = m2HydraulicPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M2HydraulicPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
