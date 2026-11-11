@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="canvas" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5B6B5A"/><stop offset="1" stop-color="#3E4B3F"/></linearGradient>
+  <linearGradient id="bench" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A6A58"/><stop offset="1" stop-color="#55493C"/></linearGradient>
+  <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4E6E8E"/><stop offset="1" stop-color="#9DB8CC"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="copper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F0B27A"/><stop offset="0.5" stop-color="#D2843F"/><stop offset="1" stop-color="#9A5A25"/></linearGradient>
+  <linearGradient id="alu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2F4F6"/><stop offset="0.5" stop-color="#C4CACF"/><stop offset="1" stop-color="#8E979E"/></linearGradient>
+  <linearGradient id="tin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6EAEE"/><stop offset="0.5" stop-color="#B9C1C7"/><stop offset="1" stop-color="#8A939A"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <radialGradient id="lens" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.18"/><stop offset="1" stop-color="#CFE6FF" stop-opacity="0.32"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#canvas)"/>
+<g stroke="#2F3A30" stroke-width="1.4" stroke-dasharray="4 3" fill="none"><path d="M0 176 L200 176"/><path d="M40 176 L40 220 M80 176 L80 220 M120 176 L120 220 M160 176 L160 220"/></g>
+<g fill="#4F575F"><circle cx="20" cy="184" r="2.4"/><circle cx="60" cy="184" r="2.4"/><circle cx="100" cy="184" r="2.4"/><circle cx="140" cy="184" r="2.4"/><circle cx="180" cy="184" r="2.4"/></g>
+<g transform="translate(110 104) scale(1.4) translate(-110 -104)">
+<rect x="-6" y="84" width="110" height="16" fill="#2B3138"/><path d="M-6 86.5 L104 86.5" stroke="#4A525A" stroke-width="2"/><rect x="104" y="87.6" width="18" height="8.8" rx="2" fill="url(#copper)"/><path d="M104 90.5 L122 90.5 M104 93.5 L122 93.5" stroke="#9A5A25" stroke-width="0.7"/><g stroke="#14161A" stroke-width="1.5" stroke-linecap="round"><path d="M108.5 85.6 l2 5"/><path d="M115.5 85.6 l2 5"/></g>
+<ellipse cx="160" cy="92" rx="34" ry="40" fill="#A86E48"/><path d="M126 70 Q140 40 172 48 Q196 56 194 92 L186 92 Q182 66 160 62 Q138 62 132 76 Z" fill="#2A1E16"/><path d="M124 92 L140 86 L140 100 Z" fill="#8C5A3A"/><rect x="118" y="86" width="14" height="4" fill="#F4EFE2"/><rect x="118" y="98" width="14" height="4" fill="#F4EFE2"/><circle cx="138" cy="74" r="3" fill="#2A1E16"/><path d="M150 132 L150 160 L188 160 L188 128" fill="url(#shirt)"/>
+<path d="M116 80 l-6 -8 M112 106 l-6 8" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M20 240 L42 172.9" stroke="url(#shirt)" stroke-width="26" stroke-linecap="round"/><path d="M42 172.9 L60 118" stroke="#8F9A7A" stroke-width="21" stroke-linecap="round"/><g transform="translate(60 118) rotate(10) scale(1.0)"><rect x="-13" y="-11" width="26" height="22" rx="8" fill="#8F9A7A"/><path d="M-6 -11 L-6 -4 M0 -11 L0 -4 M6 -11 L6 -4" stroke="#6E785C" stroke-width="1.6" stroke-linecap="round"/></g>
+</g>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>
