@@ -2084,7 +2084,7 @@
       "lessonId": "3.10",
       "moduleId": "m3",
       "packId": "do_3_10_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 28
     },
     {
@@ -5036,10 +5036,10 @@
     },
     {
       "id": "do_3_10_a",
-      "engineType": "placeholder",
+      "engineType": "m3_sld_isolate",
       "lessonId": "3.10",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []

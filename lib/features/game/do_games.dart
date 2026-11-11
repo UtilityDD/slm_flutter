@@ -57,6 +57,7 @@ import 'm3_la_patrol.dart';
 import 'm3_horngap_set.dart';
 import 'm3_conductor_joint.dart';
 import 'm3_dtr_checkup.dart';
+import 'm3_sld_isolate.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -287,6 +288,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m3DtrCheckupPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M3DtrCheckupPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_sld_isolate':
+      final content = m3SldIsolatePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3SldIsolatePage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
