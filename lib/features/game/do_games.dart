@@ -59,6 +59,7 @@ import 'm3_conductor_joint.dart';
 import 'm3_dtr_checkup.dart';
 import 'm3_sld_isolate.dart';
 import 'm3_insulator_patrol.dart';
+import 'm3_fuse_rating.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -297,6 +298,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m3InsulatorPatrolPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M3InsulatorPatrolPage(ctx: ctx, pack: content, muted: muted);
+    case 'm3_fuse_rating':
+      final content = m3FuseRatingPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M3FuseRatingPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

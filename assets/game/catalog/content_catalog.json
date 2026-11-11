@@ -1922,7 +1922,7 @@
       "lessonId": "3.4",
       "moduleId": "m3",
       "packId": "do_3_4_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 10
     },
     {
@@ -4874,10 +4874,10 @@
     },
     {
       "id": "do_3_4_a",
-      "engineType": "placeholder",
+      "engineType": "m3_fuse_rating",
       "lessonId": "3.4",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
