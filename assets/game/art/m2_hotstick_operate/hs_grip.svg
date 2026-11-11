@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#eef2f6" stroke="#53627a" stroke-width="3"/>
+  <path d="M160 14 L160 186" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <g><rect x="72" y="20" width="16" height="160" rx="6" fill="#f2b33d"/><rect x="56" y="100" width="48" height="8" rx="4" fill="#c0392b"/><rect x="62" y="32" width="36" height="16" rx="7" fill="#e0b21c" stroke="#6b5200"/><rect x="62" y="62" width="36" height="16" rx="7" fill="#e0b21c" stroke="#6b5200"/></g>
+  <g transform="translate(160 0)"><rect x="72" y="20" width="16" height="160" rx="6" fill="#f2b33d"/><rect x="56" y="100" width="48" height="8" rx="4" fill="#c0392b"/><rect x="62" y="120" width="36" height="16" rx="7" fill="#e0b21c" stroke="#6b5200"/><rect x="62" y="150" width="36" height="16" rx="7" fill="#e0b21c" stroke="#6b5200"/></g>
+  <g stroke="#c0392b" stroke-width="6" stroke-linecap="round"><path d="M128 18 l18 18 M146 18 l-18 18"/></g>
+  <path d="M286 30 l8 8 l16 -18" fill="none" stroke="#1e8449" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
