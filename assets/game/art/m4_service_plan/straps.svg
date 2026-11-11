@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#eef2f6" stroke="#53627a" stroke-width="3"/>
+  <rect x="8" y="8" width="148" height="184" rx="9" fill="#fbe9e7"/>
+  <rect x="164" y="8" width="148" height="184" rx="9" fill="#e8f5e9"/>
+  <path d="M160 14 L160 186" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <clipPath id="cl"><rect x="8" y="8" width="148" height="184" rx="9"/></clipPath>
+  <clipPath id="cr"><rect x="164" y="8" width="148" height="184" rx="9"/></clipPath>
+  <g clip-path="url(#cl)"><path d="M10 70 Q80 96 160 70" fill="none" stroke="#8d979e" stroke-width="2.4"/><path d="M10 76 Q80 150 160 76" fill="none" stroke="#1c1f22" stroke-width="4"/><text x="72" y="170" font-size="26" fill="#b3261e" font-family="sans-serif" font-weight="bold">?</text></g>
+  <g clip-path="url(#cr)"><g transform="translate(156 0)"><path d="M10 70 Q80 96 160 70" fill="none" stroke="#8d979e" stroke-width="2.4"/><path d="M10 76 Q80 102 160 76" fill="none" stroke="#1c1f22" stroke-width="4"/><rect x="28.5" y="78.41688888888889" width="3.5" height="12" fill="#d9541e"/><rect x="58.5" y="88.95555555555555" width="3.5" height="12" fill="#d9541e"/><rect x="88.5" y="91.59022222222222" width="3.5" height="12" fill="#d9541e"/><rect x="118.5" y="86.32088888888889" width="3.5" height="12" fill="#d9541e"/><rect x="143.5" y="75.892" width="3.5" height="12" fill="#d9541e"/></g></g>
+  <circle cx="140" cy="24" r="12" fill="#c62828"/><path d="M134 18 L146 30 M146 18 L134 30" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+  <circle cx="296" cy="24" r="12" fill="#2e7d32"/><path d="M289 24 L294 29 L303 19" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
