@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="al" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f4f6"/><stop offset="0.55" stop-color="#bcc3c9"/><stop offset="1" stop-color="#7a838b"/></linearGradient>
+    <radialGradient id="in" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#f1f4f6"/><stop offset="0.55" stop-color="#bcc3c9"/><stop offset="1" stop-color="#2a2f35"/></radialGradient>
+  </defs>
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#f1faf2" stroke="#2e8b45" stroke-width="3"/>
+  <!-- wrong: a cracked barrel; grime inside the mouth -->
+  <rect x="18" y="40" width="74" height="30" fill="url(#al)"/>
+  <path d="M92 40 L104 47 L104 63 L92 70 Z" fill="url(#al)"/>
+  <rect x="102" y="46" width="40" height="18" rx="9" fill="url(#al)"/>
+  <circle cx="128" cy="55" r="5" fill="#1c2229"/>
+  <ellipse cx="18" cy="55" rx="5" ry="15" fill="#2a2f35" stroke="#bcc3c9" stroke-width="2"/>
+  <path d="M58 40 L63 50 L56 57 L64 65 L60 70" fill="none" stroke="#1e1a16" stroke-width="2.6" stroke-linejoin="round"/>
+  <circle cx="80" cy="140" r="38" fill="url(#al)"/>
+  <circle cx="80" cy="140" r="26" fill="url(#in)"/>
+  <g fill="#3a2a16" opacity="0.9"><circle cx="70" cy="146" r="8"/><circle cx="88" cy="150" r="7"/><circle cx="84" cy="132" r="6"/><circle cx="76" cy="156" r="5"/></g>
+  <ellipse cx="76" cy="138" rx="10" ry="4" fill="#7fd6c8" opacity="0.4"/>
+  <circle cx="134" cy="102" r="11" fill="#c0392b"/><path d="M128 96 l12 12 M140 96 l-12 12" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- right: smooth barrel, clean bright inside -->
+  <rect x="178" y="40" width="74" height="30" fill="url(#al)"/>
+  <path d="M252 40 L264 47 L264 63 L252 70 Z" fill="url(#al)"/>
+  <rect x="262" y="46" width="40" height="18" rx="9" fill="url(#al)"/>
+  <circle cx="288" cy="55" r="5" fill="#1c2229"/>
+  <ellipse cx="178" cy="55" rx="5" ry="15" fill="#2a2f35" stroke="#bcc3c9" stroke-width="2"/>
+  <path d="M184 47 L250 47" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="240" cy="140" r="38" fill="url(#al)"/>
+  <circle cx="240" cy="140" r="26" fill="url(#in)"/>
+  <circle cx="296" cy="102" r="12" fill="#2e8b45"/><path d="M289 102 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
