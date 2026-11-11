@@ -2012,7 +2012,7 @@
       "lessonId": "3.7",
       "moduleId": "m3",
       "packId": "do_3_7_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 20
     },
     {
@@ -4965,10 +4965,10 @@
     },
     {
       "id": "do_3_7_b",
-      "engineType": "placeholder",
+      "engineType": "m3_pillar_inspect",
       "lessonId": "3.7",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
