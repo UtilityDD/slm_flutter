@@ -2363,7 +2363,7 @@
       "lessonId": "4.10",
       "moduleId": "m4",
       "packId": "gate_m4",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 29
     },
     {
@@ -5317,9 +5317,9 @@
     },
     {
       "id": "gate_m4",
-      "engineType": "gate_field",
+      "engineType": "m4_gate_field",
       "moduleId": "m4",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [
         "lethal_any_marked"
