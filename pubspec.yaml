@@ -82,6 +82,7 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
+    - assets/game/art/m4_streetlight_fix/
     - assets/game/art/m4_board45/
     - assets/game/art/m4_board41/
     - assets/game/art/m4_phase_balance/

@@ -27,6 +27,7 @@ import 'sky_read.dart';
 import 'storm_push.dart';
 import 'ten_sec_scan.dart';
 import 'tool_tip.dart';
+import 'm4_streetlight_fix.dart' as m4_streetlight_fix;
 import 'm4_phase_balance.dart' as m4_phase_balance;
 import 'm4_service_connect.dart' as m4_service_connect;
 import 'm2_comealong_pick.dart' as m2_comealong_pick;
@@ -80,6 +81,7 @@ final Map<String, DoMistake> knownMistakes = {
     ...StormMistakes.all,
     ...TenSecMistakes.all,
     ...GateMistakes.all,
+    ...m4_streetlight_fix.M4StreetlightFixMistakes.all,
     ...m4_phase_balance.M4PhaseBalanceMistakes.all,
     ...m4_service_connect.M4ServiceConnectMistakes.all,
     ...m2_comealong_pick.M2ComeAlongMistakes.all,
