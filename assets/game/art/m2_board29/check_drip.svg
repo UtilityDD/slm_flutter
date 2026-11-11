@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="yard" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5D6B66"/><stop offset="1" stop-color="#8C9A92"/></linearGradient>
+  <linearGradient id="tarp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E5566"/><stop offset="1" stop-color="#2C3E4C"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9A983"/><stop offset="1" stop-color="#9C8A64"/></linearGradient>
+  <linearGradient id="toolRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E25A3C"/><stop offset="0.5" stop-color="#C8402B"/><stop offset="1" stop-color="#8E2A1C"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="die" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9AA4AC"/><stop offset="1" stop-color="#55606A"/></linearGradient>
+  <linearGradient id="tin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A9B1B6"/><stop offset="0.5" stop-color="#E9EDEF"/><stop offset="1" stop-color="#9BA3A9"/></linearGradient>
+  <linearGradient id="copper" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A65A26"/><stop offset="0.5" stop-color="#E39A5C"/><stop offset="1" stop-color="#A65A26"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <radialGradient id="beam" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF4B0" stop-opacity="0.75"/><stop offset="1" stop-color="#FFF4B0" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#yard)"/>
+<rect x="-4" y="96" width="208" height="128" rx="6" fill="url(#tarp)"/><path d="M0 98 L200 98" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="1.2"/>
+<path d="M140 196 q10 -6 20 -1 q8 4 16 0 l-2 10 q-9 4 -18 0 q-8 -3 -14 2 Z" fill="#ECE6D6"/><path d="M144 199 q9 -3 18 0" stroke="#2A2D33" stroke-opacity="0.25" stroke-width="1" fill="none"/>
+<g transform="translate(176 108) rotate(-8)"><ellipse cx="-34" cy="0" rx="34" ry="16" fill="url(#beam)"/><rect x="0" y="-3.5" width="22" height="7" rx="2" fill="#2A2D33"/><rect x="-4" y="-5" width="6" height="10" rx="1.5" fill="url(#steel)"/></g>
+<path d="M100 133 q-2.6 4 0 6 q2.6 -2 0 -6 Z" fill="#C9962E"/><path d="M100 142 q-2.6 4 0 6 q2.6 -2 0 -6 Z" fill="#C9962E"/><path d="M100 151 q-2.6 4 0 6 q2.6 -2 0 -6 Z" fill="#C9962E"/><path d="M100 160 q-2.6 4 0 6 q2.6 -2 0 -6 Z" fill="#C9962E"/><ellipse cx="102" cy="175" rx="16" ry="3.4" fill="#C9962E" opacity="0.8"/>
+<circle cx="44" cy="120" r="24" fill="#2A2D33"/><circle cx="44" cy="120" r="24" fill="none" stroke="url(#steel)" stroke-width="8"/><polygon points="25,107 39.5,107 39.5,112.2 35,120 39.5,127.8 39.5,133 25,133" fill="url(#die)" stroke="#2A2D33" stroke-width="0.8"/><polygon points="63,107 48.5,107 48.5,112.2 53,120 48.5,127.8 48.5,133 63,133" fill="url(#die)" stroke="#2A2D33" stroke-width="0.8"/><rect x="64" y="113" width="12" height="14" rx="2" fill="url(#steel)"/><rect x="74" y="110" width="58" height="20" rx="5" fill="url(#toolRed)"/><rect x="108" y="104" width="8" height="7" rx="1.5" fill="url(#steel)"/><rect x="130" y="115" width="62" height="11" rx="5" fill="#2A2D33"/><path d="M122 128 L146.7 136" stroke="url(#steel)" stroke-width="6" stroke-linecap="round"/><path d="M122 128 L146.7 136" stroke="#9AA4AC" stroke-width="6" stroke-linecap="round"/><path d="M146.7 136 L186.7 149" stroke="#2A2D33" stroke-width="10" stroke-linecap="round"/><circle cx="122" cy="128" r="3" fill="url(#steel)"/>
+<path d="M214 60 L176 114" stroke="#1F5F8F" stroke-width="11" stroke-linecap="round"/><path d="M177.7 111.5 L175.1 115.2" stroke="#174A70" stroke-width="12"/><circle cx="172.5" cy="118.9" r="6.8" fill="#2A2D33"/>
+<g transform="translate(184 98) rotate(0)" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" opacity="0.85"><path d="M-6 0 l0 8"/><path d="M0 -3 l0 11"/><path d="M6 0 l0 8"/></g>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>
