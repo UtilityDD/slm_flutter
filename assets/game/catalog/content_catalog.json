@@ -1679,7 +1679,7 @@
       "lessonId": "2.5",
       "moduleId": "m2",
       "packId": "do_2_5_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 13
     },
     {
@@ -4630,10 +4630,10 @@
     },
     {
       "id": "do_2_5_a",
-      "engineType": "placeholder",
+      "engineType": "m2_hotstick_check",
       "lessonId": "2.5",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
