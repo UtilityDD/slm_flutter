@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c98a5e"/><stop offset="0.55" stop-color="#8a4b2a"/><stop offset="1" stop-color="#5a2e18"/></linearGradient>
+    <linearGradient id="d" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d868d"/><stop offset="0.4" stop-color="#f1f3f4"/><stop offset="1" stop-color="#b9c1c7"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <rect x="164" y="4" width="152" height="192" rx="12" fill="#fff4f2" stroke="#c0392b" stroke-width="3"/>
+  <!-- a pin insulator with a chipped shed: the white body shows -->
+  <rect x="76" y="150" width="8" height="30" fill="#6e777f"/>
+  <path d="M80 30 L96 30 L96 46 L104 46 L120 80 L108 80 L130 120 L30 120 L52 80 L40 80 L56 46 L64 46 L64 30 Z" fill="url(#g)" stroke="#5a2e18" stroke-width="1.5"/>
+  <rect x="58" y="120" width="44" height="30" fill="url(#g)"/>
+  <path d="M110 120 L118 102 L126 106 L130 120 Z" fill="#f2ebdd" stroke="#6b5a44" stroke-width="1.5"/>
+  <circle cx="120" cy="112" r="24" fill="none" stroke="#c0392b" stroke-width="3"/>
+  <!-- a disc with a hairline crack -->
+  <line x1="240" y1="20" x2="240" y2="180" stroke="#6e777f" stroke-width="4"/>
+  <ellipse cx="240" cy="100" rx="60" ry="22" fill="url(#d)" stroke="#7d868d" stroke-width="2"/>
+  <rect x="230" y="70" width="20" height="14" fill="#8b949b"/>
+  <path d="M206 88 L214 96 L208 102 L218 110 L214 118" fill="none" stroke="#1e1a16" stroke-width="2"/>
+  <circle cx="212" cy="104" r="22" fill="none" stroke="#c0392b" stroke-width="3"/>
+</svg>
