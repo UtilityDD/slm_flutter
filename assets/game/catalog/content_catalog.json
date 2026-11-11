@@ -2075,7 +2075,7 @@
       "lessonId": "3.10",
       "moduleId": "m3",
       "packId": "learn_3_10",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 27
     },
     {
@@ -5030,7 +5030,7 @@
       "id": "learn_3_10",
       "engineType": "learn_cards",
       "lessonId": "3.10",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
