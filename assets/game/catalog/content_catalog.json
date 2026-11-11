@@ -1958,7 +1958,7 @@
       "lessonId": "3.5",
       "moduleId": "m3",
       "packId": "do_3_5_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 14
     },
     {
@@ -4911,10 +4911,10 @@
     },
     {
       "id": "do_3_5_b",
-      "engineType": "placeholder",
+      "engineType": "m3_la_earth",
       "lessonId": "3.5",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
