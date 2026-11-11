@@ -1823,7 +1823,7 @@
       "lessonId": "2.10",
       "moduleId": "m2",
       "packId": "gate_m2",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 29
     },
     {
@@ -4775,9 +4775,9 @@
     },
     {
       "id": "gate_m2",
-      "engineType": "gate_field",
+      "engineType": "m2_gate_field",
       "moduleId": "m2",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [
         "lethal_any_marked"
