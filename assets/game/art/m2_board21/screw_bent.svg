@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="canvas" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5B6B5A"/><stop offset="1" stop-color="#3E4B3F"/></linearGradient>
+  <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9AA4AC"/><stop offset="1" stop-color="#6C767E"/></linearGradient>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6FA6D6"/><stop offset="1" stop-color="#BFDDF0"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="copper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F0B27A"/><stop offset="0.5" stop-color="#D2843F"/><stop offset="1" stop-color="#9A5A25"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="steelArm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A939B"/><stop offset="1" stop-color="#4F575F"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9D2D8"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B8C2C9"/></linearGradient>
+  <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE0B0" stop-opacity="0.95"/><stop offset="0.4" stop-color="#FF8A3D" stop-opacity="0.55"/><stop offset="1" stop-color="#FF8A3D" stop-opacity="0"/></radialGradient>
+  <radialGradient id="spark" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.35" stop-color="#C9E6FF"/><stop offset="1" stop-color="#7FB8FF" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#panel)"/>
+<g fill="#5A646C"><circle cx="14" cy="14" r="3"/><circle cx="186" cy="14" r="3"/><circle cx="14" cy="206" r="3"/><circle cx="186" cy="206" r="3"/></g>
+<rect x="20" y="40" width="160" height="64" rx="6" fill="#1C1F24" opacity="0.85"/>
+<circle cx="50" cy="72" r="15" fill="url(#steel)"/><circle cx="50" cy="72" r="15" fill="none" stroke="#7D868E" stroke-width="1.2"/><rect x="38" y="70" width="24" height="4" rx="1" fill="#4F575F"/>
+<circle cx="100" cy="72" r="15" fill="url(#steel)"/><circle cx="100" cy="72" r="15" fill="none" stroke="#7D868E" stroke-width="1.2"/><rect x="88" y="70" width="24" height="4" rx="1" fill="#4F575F"/>
+<circle cx="150" cy="72" r="15" fill="url(#steel)"/><circle cx="150" cy="72" r="15" fill="none" stroke="#7D868E" stroke-width="1.2"/><rect x="138" y="70" width="24" height="4" rx="1" fill="#4F575F"/>
+<g transform="translate(100 72) rotate(0) scale(1.0)"><g transform="rotate(38 0 10) translate(0 2)"><path d="M-2.4 10 L2.4 10 L4.6 1.2 L4.6 0 L-4.6 0 L-4.6 1.2 Z" fill="url(#steel)"/></g><rect x="-3.6" y="9" width="7.2" height="54" rx="1.6" fill="#D7372E"/><path d="M-9 62 L9 62 L10 112 Q0 118 -10 112 Z" fill="#D7372E"/><rect x="-9.5" y="62" width="19" height="7" rx="2.5" fill="#F2C230"/><path d="M-4 74 L-4 106 M4 74 L4 106" stroke="#F2C230" stroke-width="2.2" stroke-linecap="round"/></g>
+<path d="M110 240 L104.5 196" stroke="url(#shirt)" stroke-width="26" stroke-linecap="round"/><path d="M104.5 196 L100 160" stroke="#2A2D33" stroke-width="21" stroke-linecap="round"/><path d="M103.8 190.6 l0 0" stroke="#3A3E46" stroke-width="22" stroke-linecap="round"/><g transform="translate(100 160) rotate(0) scale(1.0)"><rect x="-13" y="-11" width="26" height="22" rx="8" fill="#2A2D33"/><path d="M-6 -11 L-6 -4 M0 -11 L0 -4 M6 -11 L6 -4" stroke="#3A3E46" stroke-width="1.6" stroke-linecap="round"/></g>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>
