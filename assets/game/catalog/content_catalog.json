@@ -1688,7 +1688,7 @@
       "lessonId": "2.5",
       "moduleId": "m2",
       "packId": "do_2_5_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 14
     },
     {
@@ -4640,10 +4640,10 @@
     },
     {
       "id": "do_2_5_b",
-      "engineType": "placeholder",
+      "engineType": "m2_hotstick_operate",
       "lessonId": "2.5",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
