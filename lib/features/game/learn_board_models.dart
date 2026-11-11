@@ -9,6 +9,7 @@ import 'learn_board_pack17.dart';
 import 'learn_board_pack18.dart';
 import 'learn_board_pack19.dart';
 import 'learn_board_pack110.dart';
+import 'learn_board_pack22.dart';
 import 'learn_board_pack21.dart';
 
 export 'learn_board_pack13.dart' show learnBoardPack13, PoleBoardLines;
@@ -19,6 +20,7 @@ export 'learn_board_pack17.dart' show learnBoardPack17, AidBoardLines;
 export 'learn_board_pack18.dart' show learnBoardPack18, FireBoardLines;
 export 'learn_board_pack19.dart' show learnBoardPack19, StormBoardLines;
 export 'learn_board_pack110.dart' show learnBoardPack110, ScanBoardLines;
+export 'learn_board_pack22.dart' show learnBoardPack22, MeterBoardLines;
 export 'learn_board_pack21.dart' show learnBoardPack21, ToolboxBoardLines;
 
 enum LearnBoardMode { pickGear, mythRival }
@@ -174,6 +176,7 @@ LearnBoardPack? learnBoardPackFor(String lessonId) {
   if (lessonId == '1.8') return learnBoardPack18;
   if (lessonId == '1.9') return learnBoardPack19;
   if (lessonId == '1.10') return learnBoardPack110;
+  if (lessonId == '2.2') return learnBoardPack22;
   if (lessonId == '2.1') return learnBoardPack21;
   return null;
 }
