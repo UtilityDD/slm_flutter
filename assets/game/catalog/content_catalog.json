@@ -2300,7 +2300,7 @@
       "lessonId": "4.8",
       "moduleId": "m4",
       "packId": "do_4_8_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 22
     },
     {
@@ -5253,10 +5253,10 @@
     },
     {
       "id": "do_4_8_a",
-      "engineType": "placeholder",
+      "engineType": "m4_tree_plan",
       "lessonId": "4.8",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
