@@ -1,0 +1,608 @@
+// Lesson 4.8 (গাছের ডালপালা ছাঁটা), কাজ 1 "কাটার আগে পরিকল্পনা": the rules
+// (survey only the branches grown into the line, none missed; the drop zone
+// under the tree, off the road; শাটডাউন · PTW, a helper below, গ্লাভস ·
+// গগলস, a rope for heavy branches and the tool by branch size — all before
+// the first cut; the line live = deadly), the deal, the option libraries, and
+// the level in the shell: idle perf, the guide first, a full clean play with
+// the coworker refused, a slip card, the deadly freezes (no শাটডাউন; the line
+// kept on at his say-so).
+import 'dart:async';
+import 'dart:io';
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:slm_flutter/features/game/choice_deck.dart';
+import 'package:slm_flutter/features/game/content_catalog.dart';
+import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/level_juice.dart';
+import 'package:slm_flutter/features/game/level_shell.dart';
+import 'package:slm_flutter/features/game/m4_tree_plan.dart';
+import 'package:slm_flutter/features/game/mistake_kit.dart';
+import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro;
+import 'package:slm_flutter/features/game/spoken_once.dart';
+import 'package:slm_flutter/features/guide/guide_director.dart';
+import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
+import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
+
+import 'support/intro_wait.dart';
+import 'support/option_lengths.dart';
+
+const _ctx = LevelContext(rungId: '4.8/do/0', kind: CatalogRungKind.doKind, lessonId: '4.8', lessonTitleBn: '', ladderStep: 0, doIndex: 1, doCount: 2);
+
+final _pack = m4TreePlanPacks['do_4_8_a']!;
+
+Future<void> _pump(WidgetTester t, int ms) async {
+  for (var i = 0; i < ms; i += 50) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+}
+
+Future<bool> _pumpUntil(WidgetTester t, Finder f, {int maxMs = 8000}) async {
+  for (var ms = 0; ms < maxMs; ms += 100) {
+    if (f.evaluate().isNotEmpty) return true;
+    await t.pump(const Duration(milliseconds: 100));
+  }
+  return f.evaluate().isNotEmpty;
+}
+
+Finder _label(String l) => find.byWidgetPredicate((w) => w is Semantics && w.properties.label == l);
+List<Finder> _onScreen(List<String> texts) => [
+  for (final x in texts)
+    if (_label(x).evaluate().isNotEmpty) _label(x),
+];
+
+Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  expect(find.byType(ChoiceDeck), findsOneWidget);
+  final r = _onScreen(right);
+  expect(r, hasLength(1), reason: right.first);
+  await t.tap(r.single, warnIfMissed: false);
+}
+
+/// Design px → screen px on the 392 × 850 test screen.
+const _k = 392 / 360;
+M4TreePlanGeo get _geo => M4TreePlanGeo.forScene((360 * 850 / 392).clamp(560.0, 900.0), 0);
+Offset _screen(Offset design) => design * _k;
+
+/// A point on branch [i], 80 % of the way to its tip (design px).
+Offset _onBranch(M4TreePlanTree tree, int i) {
+  final (a, c, tip) = _geo.branchOf(tree.branches[i], tree.treeX, tree.wire);
+  const s = 0.8;
+  return a * ((1 - s) * (1 - s)) + c * (2 * s * (1 - s)) + tip * (s * s);
+}
+
+Future<ProviderContainer> _open(WidgetTester t, int seed) async {
+  t.view.physicalSize = const Size(784, 1700);
+  t.view.devicePixelRatio = 2.0;
+  final c = ProviderContainer();
+  final nav = GlobalKey<NavigatorState>();
+  await t.pumpWidget(
+    UncontrolledProviderScope(
+      container: c,
+      child: MaterialApp(
+        navigatorKey: nav,
+        home: const Scaffold(body: SizedBox()),
+      ),
+    ),
+  );
+  unawaited(
+    nav.currentState!.push(
+      MaterialPageRoute<bool>(
+        builder: (_) => M4TreePlanPage(ctx: _ctx, pack: _pack, muted: true, seed: seed),
+      ),
+    ),
+  );
+  await _pump(t, 1000);
+  await waitIntro(t);
+  await _pump(t, 600);
+  return c;
+}
+
+Future<void> _close(WidgetTester t, ProviderContainer c) async {
+  await t.pumpWidget(const SizedBox());
+  await t.pump(const Duration(seconds: 15));
+  MascotTalk.reset();
+  c.dispose();
+  t.view.reset();
+}
+
+Future<void> _refuse(WidgetTester t) async {
+  expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes');
+  await _pumpUntil(t, find.byType(ChoiceDeck));
+  await _pump(t, 600);
+  await _pickRight(t, M4TreePlanLines.coworker.right);
+  await _pump(t, 2000);
+}
+
+Future<void> _survey(WidgetTester t, M4TreePlanTree tree) async {
+  for (final i in tree.toward) {
+    await t.tapAt(_screen(_onBranch(tree, i)));
+    await _pump(t, 200);
+  }
+  await t.tap(find.text(M4TreePlanLines.surveyDone));
+  await _pump(t, 600);
+}
+
+Future<void> _dropRight(WidgetTester t, M4TreePlanTree tree) async {
+  await t.tapAt(_screen(Offset(tree.treeX, _geo.groundY + 30)));
+  await _pump(t, 600);
+}
+
+Future<void> _plan(WidgetTester t, M4TreePlanTree tree, {bool shutdown = true}) async {
+  for (final l in [
+    if (shutdown) M4TreePlanLines.shutdown,
+    M4TreePlanLines.helper,
+    M4TreePlanLines.ppe,
+    if (tree.big) M4TreePlanLines.rope,
+    tree.big ? M4TreePlanLines.chainsaw : M4TreePlanLines.pruner,
+  ]) {
+    await t.tap(_label(l));
+    await _pump(t, 150);
+  }
+}
+
+/// Plays tree [i] right (refusing him at his tree).
+Future<void> _playRight(WidgetTester t, M4TreePlanDeal deal, int i) async {
+  final tree = deal.trees[i];
+  if (i == deal.callAt) await _refuse(t);
+  await _survey(t, tree);
+  await _dropRight(t, tree);
+  expect(find.text(M4TreePlanLines.start), findsOneWidget, reason: 'plan, tree $i');
+  await _plan(t, tree);
+  await t.tap(find.text(M4TreePlanLines.start));
+  await _pump(t, 2200);
+  expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'tree $i');
+  await _pumpUntil(t, find.byType(ChoiceDeck));
+  await _pump(t, 700);
+  await _pickRight(t, M4TreePlanLines.whyRight(tree));
+  await _pump(t, 6000);
+}
+
+void main() {
+  group('rules', () {
+    test('deals three trees: 11 kV and এবি কেবিল, thin and thick; topics differ; fresh each play', () {
+      final seen = <String>{};
+      final calls = <int>{};
+      for (var s = 0; s < 60; s++) {
+        final d = m4TreePlanDeal(math.Random(s));
+        expect(d.trees.length, 3);
+        expect(d.trees.map((t) => t.wire).toSet(), M4TreePlanWire.values.toSet());
+        expect(d.trees.map((t) => t.size).toSet(), M4TreePlanSize.values.toSet());
+        expect(d.trees.map((t) => t.topic).toSet().length, 3);
+        calls.add(d.callAt);
+        for (final t in d.trees) {
+          expect(t.toward.length, inInclusiveRange(2, 3));
+          expect(t.branches.length - t.toward.length, 3);
+          if (t.topic == M4TreePlanTopic.abCable) expect(t.wire, M4TreePlanWire.abLt);
+          // Every branch is tappable on its own: the tap point hits it.
+          for (var i = 0; i < t.branches.length; i++) {
+            expect(_geo.branchAt(_onBranch(t, i), t.branches, t.treeX, t.wire), i, reason: 'seed $s branch $i');
+          }
+          // The ones in the line reach the lowest wire; the others stay far below.
+          for (final b in t.branches) {
+            final (_, _, tip) = _geo.branchOf(b, t.treeX, t.wire);
+            final gap = tip.dy - _geo.lowWireAt(t.wire, tip.dx);
+            if (b.toward) {
+              expect(gap.abs(), lessThan(4));
+            } else {
+              expect(gap, greaterThan(80));
+            }
+          }
+        }
+        seen.add(d.trees.map((t) => '${t.wire.name}${t.size.name}${t.topic.name}${t.treeX}${t.toward}').join('|') + d.callAt.toString());
+      }
+      expect(seen.length, greaterThan(50));
+      expect(calls, {0, 1, 2});
+    });
+
+    M4TreePlanRun run1({M4TreePlanSize size = M4TreePlanSize.small}) => M4TreePlanRun(
+      M4TreePlanDeal(
+        trees: [
+          M4TreePlanTree(
+            wire: M4TreePlanWire.hv11,
+            size: size,
+            treeX: 180,
+            branches: m4TreePlanDeal(math.Random(4)).trees[0].branches,
+            topic: M4TreePlanTopic.shutdown,
+            walkerX: 80,
+          ),
+        ],
+        callAt: 0,
+      ),
+    );
+    M4TreePlanRun toPlan({M4TreePlanSize size = M4TreePlanSize.small}) {
+      final r = run1(size: size);
+      for (final i in r.tree.toward) {
+        r.tap(i);
+      }
+      r
+        ..surveyDone()
+        ..drop(M4TreePlanDrop.zone, 180);
+      expect(r.phase, M4TreePlanPhase.plan);
+      return r;
+    }
+
+    test('survey: a branch clear of the line is a slip (once); one missed is a slip; all and only = clean', () {
+      final a = run1();
+      final clear = [for (var i = 0; i < a.tree.branches.length; i++) if (!a.tree.branches[i].toward) i];
+      expect(a.tap(clear.first), M4TreePlanMistakes.wrongBranch);
+      expect(a.tap(clear.first), isNull, reason: 'the same branch again is not counted');
+      expect(a.slips, 1);
+      expect(a.marked, isEmpty);
+      final b = run1();
+      b.tap(b.tree.toward.first);
+      expect(b.surveyDone(), M4TreePlanMistakes.missedBranch);
+      expect(b.marked, containsAll(b.tree.toward), reason: 'the guide marks the rest');
+      expect(b.phase, M4TreePlanPhase.drop);
+      final c = run1();
+      for (final i in c.tree.toward) {
+        expect(c.tap(i), isNull);
+      }
+      expect(c.surveyDone(), isNull);
+      expect(c.caught, contains(M4TreePlanLines.caughtSurvey));
+    });
+
+    test('drop zone: far = not scored, stays; road = slip, moved under the tree; under the tree = right', () {
+      M4TreePlanRun atDrop() {
+        final r = run1();
+        for (final i in r.tree.toward) {
+          r.tap(i);
+        }
+        r.surveyDone();
+        return r;
+      }
+
+      final g = _geo;
+      final tr = run1().tree;
+      expect(m4TreePlanDropOf(g, tr, 180, g.groundY + 30), M4TreePlanDrop.zone);
+      expect(m4TreePlanDropOf(g, tr, 180, g.roadTop + 20), M4TreePlanDrop.road);
+      expect(m4TreePlanDropOf(g, tr, 40, g.groundY + 30), M4TreePlanDrop.far);
+      expect(m4TreePlanDropOf(g, tr, 180, g.wireY), M4TreePlanDrop.far);
+      final a = atDrop();
+      expect(a.drop(M4TreePlanDrop.far, 40), isNull);
+      expect(a.phase, M4TreePlanPhase.drop);
+      expect(a.drop(M4TreePlanDrop.road, 180), M4TreePlanMistakes.roadDrop);
+      expect(a.dropX, 180);
+      expect(a.phase, M4TreePlanPhase.plan);
+      final b = atDrop();
+      expect(b.drop(M4TreePlanDrop.zone, 300), isNull);
+      expect(b.dropX, 240, reason: 'kept under the tree');
+      expect(b.caught, contains(M4TreePlanLines.caughtDrop));
+    });
+
+    test('the plan: no tool = not started; no শাটডাউন = deadly (also on his say-so)', () {
+      final a = toPlan();
+      expect(a.start(), (false, null));
+      expect(a.phase, M4TreePlanPhase.plan);
+      a
+        ..wear(M4TreePlanKit.helper)
+        ..wear(M4TreePlanKit.ppe)
+        ..pick(M4TreePlanTool.pruner);
+      expect(a.start(), (true, M4TreePlanMistakes.liveLine));
+      expect(a.deadly!.deadly, isTrue);
+      expect(a.ended, isTrue);
+      final b = toPlan()..skippedShutdown = true;
+      b
+        ..wear(M4TreePlanKit.shutdown)
+        ..pick(M4TreePlanTool.pruner);
+      expect(b.kit, isNot(contains(M4TreePlanKit.shutdown)), reason: 'he talked him out of it');
+      expect(b.start().$2, M4TreePlanMistakes.liveLine);
+    });
+
+    test('the plan: the most serious gap is the slip, the rest put right; a clean plan tags', () {
+      DoMistake? go(M4TreePlanSize size, M4TreePlanTool tool, List<M4TreePlanKit> kit) {
+        final r = toPlan(size: size)..wear(M4TreePlanKit.shutdown);
+        for (final k in kit) {
+          r.wear(k);
+        }
+        r.pick(tool);
+        final (started, m) = r.start();
+        expect(started, isTrue);
+        expect(r.phase, M4TreePlanPhase.cut);
+        expect(r.deadly, isNull);
+        return m;
+      }
+
+      const all = [M4TreePlanKit.helper, M4TreePlanKit.ppe, M4TreePlanKit.rope];
+      expect(go(M4TreePlanSize.small, M4TreePlanTool.plain, all), M4TreePlanMistakes.plainTool);
+      expect(go(M4TreePlanSize.big, M4TreePlanTool.saw, all), M4TreePlanMistakes.smallTool);
+      expect(go(M4TreePlanSize.big, M4TreePlanTool.pruner, all), M4TreePlanMistakes.smallTool);
+      expect(go(M4TreePlanSize.small, M4TreePlanTool.chainsaw, all), M4TreePlanMistakes.bigTool);
+      expect(go(M4TreePlanSize.small, M4TreePlanTool.pruner, [M4TreePlanKit.ppe]), M4TreePlanMistakes.alone);
+      expect(go(M4TreePlanSize.small, M4TreePlanTool.saw, [M4TreePlanKit.helper]), M4TreePlanMistakes.noPpe);
+      expect(go(M4TreePlanSize.big, M4TreePlanTool.chainsaw, [M4TreePlanKit.helper, M4TreePlanKit.ppe]), M4TreePlanMistakes.noRope);
+      expect(go(M4TreePlanSize.small, M4TreePlanTool.pruner, [M4TreePlanKit.helper, M4TreePlanKit.ppe]), isNull, reason: 'no rope needed for thin branches');
+      expect(go(M4TreePlanSize.big, M4TreePlanTool.chainsaw, all), isNull);
+      final r = toPlan(size: M4TreePlanSize.big)..wear(M4TreePlanKit.shutdown);
+      r.pick(M4TreePlanTool.plain);
+      expect(r.start().$2, M4TreePlanMistakes.plainTool);
+      expect(r.tool, M4TreePlanTool.chainsaw, reason: 'the guide hands the right tool');
+      expect(r.kit, containsAll(all));
+      final ok = toPlan()
+        ..wear(M4TreePlanKit.shutdown)
+        ..wear(M4TreePlanKit.helper)
+        ..wear(M4TreePlanKit.ppe)
+        ..pick(M4TreePlanTool.saw);
+      expect(ok.start(), (true, null));
+      expect(ok.caught, containsAll([M4TreePlanLines.caughtShutdown, M4TreePlanLines.caughtTool, M4TreePlanLines.caughtCrew]));
+      expect(ok.clean, isTrue);
+      ok.cutDone();
+      expect(ok.phase, M4TreePlanPhase.done);
+    });
+
+    test('a toggle: tapping a plan item twice takes it back; a tool tapped twice is put down', () {
+      final r = toPlan()..wear(M4TreePlanKit.helper);
+      expect(r.kit, contains(M4TreePlanKit.helper));
+      r.wear(M4TreePlanKit.helper);
+      expect(r.kit, isEmpty);
+      r
+        ..pick(M4TreePlanTool.saw)
+        ..pick(M4TreePlanTool.saw);
+      expect(r.tool, M4TreePlanTool.none);
+    });
+
+    test('mark: 100 − 15 per slip; next tree clears the plan', () {
+      final r = M4TreePlanRun(m4TreePlanDeal(math.Random(3)));
+      r.slips = 3;
+      expect(r.percent, 55);
+      r.marked.add(0);
+      r.next();
+      expect(r.marked, isEmpty);
+      expect(r.kit, isEmpty);
+      expect(r.dropX, isNull);
+      expect(r.phase, M4TreePlanPhase.survey);
+    });
+
+    test('English digits only; every mistake has its picture, a stable key; one deadly', () {
+      final all = <String>[
+        M4TreePlanLines.intro,
+        ...M4TreePlanLines.tasks,
+        ...M4TreePlanLines.shutdownWhy,
+        ...M4TreePlanLines.cordonWhy,
+        ...M4TreePlanLines.toolSmallWhy,
+        ...M4TreePlanLines.toolBigWhy,
+        ...M4TreePlanLines.directionalWhy,
+        ...M4TreePlanLines.abWhy,
+        ...M4TreePlanLines.whyWrong,
+        ...M4TreePlanLines.coworker.recordedLines,
+        ...M4TreePlanLines.coworker.right,
+        ...M4TreePlanLines.coworker.wrong,
+        ...M4TreePlanLines.coworker.asks,
+        for (final m in M4TreePlanMistakes.all) m.textBn,
+        M4TreePlanLines.allSet,
+        M4TreePlanLines.fail,
+      ];
+      for (final l in all) {
+        expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
+        expect(l.contains('পানি'), isFalse, reason: l);
+      }
+      expect(M4TreePlanMistakes.all.where((m) => m.deadly).toSet(), {M4TreePlanMistakes.liveLine});
+      for (final m in M4TreePlanMistakes.all) {
+        expect(m.key, startsWith('4.8/m4_tree_plan/'));
+        expect(File(m.art).existsSync(), isTrue, reason: m.art);
+        if (m.lessonPoint != null) expect(m.lessonPoint, inInclusiveRange(0, 2));
+      }
+      expect(M4TreePlanMistakes.all.map((m) => m.key).toSet().length, M4TreePlanMistakes.all.length);
+      expect(m4TreePlanPacks.keys, ['do_4_8_a']);
+      expect(_pack.quickMs, 80000);
+    });
+
+    test('reasons fit the tree, same length, big enough; his choices too', () {
+      expectSameLength('why', [
+        ...M4TreePlanLines.shutdownWhy,
+        ...M4TreePlanLines.cordonWhy,
+        ...M4TreePlanLines.toolSmallWhy,
+        ...M4TreePlanLines.toolBigWhy,
+        ...M4TreePlanLines.directionalWhy,
+        ...M4TreePlanLines.abWhy,
+        ...M4TreePlanLines.whyWrong,
+      ]);
+      for (var s = 0; s < 20; s++) {
+        for (final tr in m4TreePlanDeal(math.Random(s)).trees) {
+          final right = M4TreePlanLines.whyRight(tr);
+          expectLibrary('${tr.topic}', right, M4TreePlanLines.whyWrong);
+          if (tr.topic == M4TreePlanTopic.tool) expect(right, tr.big ? M4TreePlanLines.toolBigWhy : M4TreePlanLines.toolSmallWhy);
+          final deal = dealChoices(right, M4TreePlanLines.whyWrong, math.Random(s));
+          expect(deal.where((o) => o.correct).length, 1);
+          expect(deal.map((o) => o.textBn).toSet().length, 3);
+        }
+      }
+      final s = M4TreePlanLines.coworker;
+      expectSameLength('choice', [...s.right, ...s.wrong]);
+      expectLibrary('choice', s.right, s.wrong);
+      expect(M4TreePlanLines.recordLines, hasLength(2));
+    });
+  });
+
+  group('page', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    for (final c in ['xyz.luan/audioplayers', 'xyz.luan/audioplayers.global', 'flutter_tts']) {
+      m.setMockMethodCallHandler(MethodChannel(c), (_) async => 1);
+    }
+    ZlFx.setMuted(true);
+    var rebuilds = 0;
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      SpokenOnce.resetForTest();
+      debugOnRebuildDirtyWidget = (_, _) => rebuilds++;
+    });
+    tearDown(() => debugOnRebuildDirtyWidget = null);
+
+    int seedWhere(bool Function(M4TreePlanDeal d) ok) {
+      var s = 0;
+      while (!ok(m4TreePlanDeal(math.Random(s)))) {
+        s++;
+      }
+      return s;
+    }
+
+    for (final reduce in [false, true]) {
+      testWidgets('waits quietly (${reduce ? 'reduce' : 'anim'})', (t) async {
+        t.view.physicalSize = const Size(720, 1600);
+        t.view.devicePixelRatio = 2.0;
+        t.platformDispatcher.accessibilityFeaturesTestValue = FakeAccessibilityFeatures(disableAnimations: reduce);
+        final seed = seedWhere((d) => d.callAt != 0);
+        await t.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              home: M4TreePlanPage(ctx: _ctx, pack: _pack, muted: true, seed: seed),
+            ),
+          ),
+        );
+        await t.pump(const Duration(milliseconds: 100));
+        expect(find.text('শুরু'), findsNothing);
+        await waitIntro(t);
+        await _pump(t, 14000);
+        rebuilds = 0;
+        for (var i = 0; i < 125; i++) {
+          await t.pump(const Duration(milliseconds: 16));
+        }
+        final perSec = rebuilds / 2.0;
+        var frames = 0;
+        for (var i = 0; i < 60; i++) {
+          if (t.binding.hasScheduledFrame) frames++;
+          await t.pump(const Duration(milliseconds: 16));
+        }
+        debugPrint('PERF m4_tree_plan ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
+        expect(t.takeException(), isNull);
+        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(perSec, lessThan(20));
+        expect(frames, lessThan(12));
+        await t.pumpWidget(const SizedBox());
+        await t.pump(const Duration(seconds: 15));
+        MascotTalk.reset();
+        t.platformDispatcher.clearAccessibilityFeaturesTestValue();
+        t.view.reset();
+      });
+    }
+
+    testWidgets('the guide comes first: a tap does not skip him; then the docket and the survey', (t) async {
+      final seed = seedWhere((d) => d.callAt != 0);
+      t.view.physicalSize = const Size(784, 1700);
+      t.view.devicePixelRatio = 2.0;
+      await t.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: M4TreePlanPage(ctx: _ctx, pack: _pack, muted: true, seed: seed),
+          ),
+        ),
+      );
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.byType(GuideIntro), findsOneWidget);
+      await t.tapAt(const Offset(200, 400));
+      await t.pump(const Duration(milliseconds: 400));
+      expect(find.byType(GuideIntro), findsOneWidget);
+      expect(find.text(M4TreePlanLines.surveyDone), findsNothing);
+      await waitIntro(t);
+      await _pump(t, 600);
+      expect(find.text(M4TreePlanLines.surveyDone), findsOneWidget);
+      expect(find.text(M4TreePlanLines.treeBn(m4TreePlanDeal(math.Random(seed)).trees[0])), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 15));
+      MascotTalk.reset();
+      t.view.reset();
+    });
+
+    testWidgets('tapping the guide repeats the task, a different way each time', (t) async {
+      final seed = seedWhere((d) => d.callAt != 0);
+      final c = await _open(t, seed);
+      final guide = find.byKey(const ValueKey('hud-guide'));
+      expect(guide, findsOneWidget);
+      final lines = <String>[];
+      for (var i = 0; i < 2; i++) {
+        await t.tapAt(t.getBottomRight(guide) - const Offset(50, 50));
+        await _pump(t, 400);
+        lines.add(c.read(guideDirectorProvider).line);
+      }
+      expect(lines.every((l) => l.contains(M4TreePlanLines.askSurvey)), isTrue, reason: '$lines');
+      expect(lines.first, isNot(lines.last));
+      await _close(t, c);
+    });
+
+    for (final at in [0, 2]) {
+      testWidgets('flow: three trees right, him refused (tree $at) → pass', (t) async {
+        final seed = seedWhere((d) => d.callAt == at);
+        final deal = m4TreePlanDeal(math.Random(seed));
+        final c = await _open(t, seed);
+        for (var i = 0; i < 3; i++) {
+          await _playRight(t, deal, i);
+        }
+        final s = c.read(gameSaveProvider);
+        expect(s.rungProgress['4.8/do/0'], 'cleared');
+        expect(s.mistakes, isEmpty);
+        expect(s.starsByRung['4.8/do/0'], greaterThan(0));
+        expect(find.byType(LevelPassPanel), findsOneWidget);
+        expect(find.text(M4TreePlanLines.caughtCall), findsOneWidget);
+        expect(t.takeException(), isNull);
+        await _close(t, c);
+      });
+    }
+
+    testWidgets('a branch clear of the line: the slip card, then the survey goes on', (t) async {
+      final seed = seedWhere((d) => d.callAt != 0);
+      final tree = m4TreePlanDeal(math.Random(seed)).trees[0];
+      final c = await _open(t, seed);
+      final clear = [for (var i = 0; i < tree.branches.length; i++) if (!tree.branches[i].toward) i];
+      await t.tapAt(_screen(_onBranch(tree, clear.first)));
+      await _pump(t, 900);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M4TreePlanMistakes.wrongBranch.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 800);
+      expect(find.text(M4TreePlanLines.surveyDone), findsOneWidget, reason: 'on with the survey');
+      await _close(t, c);
+    });
+
+    testWidgets('the cut without শাটডাউন: the stretch freezes first, then the card (near-miss)', (t) async {
+      final seed = seedWhere((d) => d.callAt != 0);
+      final tree = m4TreePlanDeal(math.Random(seed)).trees[0];
+      final c = await _open(t, seed);
+      await _survey(t, tree);
+      await _dropRight(t, tree);
+      await _plan(t, tree, shutdown: false);
+      await t.tap(find.text(M4TreePlanLines.start));
+      await _pump(t, 800);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, M4TreePlanMistakes.liveLine.key);
+      expect(s.mistakes.single.deadly, isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('listening to him = the line kept on: শাটডাউন cannot be taken; the cut freezes, deadly card', (t) async {
+      final seed = seedWhere((d) => d.callAt == 0);
+      final tree = m4TreePlanDeal(math.Random(seed)).trees[0];
+      final c = await _open(t, seed);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 600);
+      final wrong = _onScreen(M4TreePlanLines.coworker.wrong);
+      expect(wrong, isNotEmpty);
+      await t.tap(wrong.first, warnIfMissed: false);
+      await _pump(t, 1500);
+      await _survey(t, tree);
+      await _dropRight(t, tree);
+      await _plan(t, tree);
+      expect(find.text(M4TreePlanLines.shutdownOn), findsNothing);
+      await t.tap(find.text(M4TreePlanLines.start));
+      await _pump(t, 800);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.last.key, M4TreePlanMistakes.liveLine.key);
+      expect(s.mistakes.last.deadly, isTrue);
+      await _close(t, c);
+    });
+  });
+}
