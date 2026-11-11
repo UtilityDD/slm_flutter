@@ -2093,7 +2093,7 @@
       "lessonId": "3.10",
       "moduleId": "m3",
       "packId": "gate_m3",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 29
     },
     {
@@ -5046,9 +5046,9 @@
     },
     {
       "id": "gate_m3",
-      "engineType": "gate_field",
+      "engineType": "m3_gate_field",
       "moduleId": "m3",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [
         "lethal_any_marked"
