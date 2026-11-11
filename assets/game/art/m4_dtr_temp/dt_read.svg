@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#eef2f6" stroke="#53627a" stroke-width="3"/>
+  <path d="M160 14 L160 186" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <g><circle cx="26" cy="26" r="13" fill="#d23b2b"/><path d="M20 20 L32 32 M32 20 L20 32" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></g>
+  <g><circle cx="294" cy="26" r="13" fill="#2a9d5a"/><path d="M287 26 L292 31 L301 21" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <defs><linearGradient id="h" x1="0" x2="1"><stop offset="0" stop-color="#2e6fd8"/><stop offset=".3" stop-color="#2fb36a"/><stop offset=".55" stop-color="#f1c40f"/><stop offset=".78" stop-color="#f2853a"/><stop offset="1" stop-color="#d62b1f"/></linearGradient></defs>
+  <rect x="24" y="70" width="120" height="70" rx="10" fill="#f2b233"/><rect x="32" y="78" width="104" height="54" rx="6" fill="#14202b"/>
+  <rect x="40" y="98" width="88" height="14" rx="3" fill="url(#h)"/><path d="M118 96 l-5 -9 h10 z M117 96 h2 v18 h-2z" fill="#fff"/>
+  <text x="84" y="166" font-size="14" font-weight="800" text-anchor="middle" fill="#1b1f24">?</text>
+  <rect x="176" y="70" width="120" height="70" rx="10" fill="#f2b233"/><rect x="184" y="78" width="104" height="54" rx="6" fill="#14202b"/>
+  <rect x="192" y="98" width="88" height="14" rx="3" fill="url(#h)"/><path d="M270 96 l-5 -9 h10 z M269 96 h2 v18 h-2z" fill="#fff"/>
+  <path d="M206 160 l8 8 l16 -16" stroke="#2a9d5a" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>

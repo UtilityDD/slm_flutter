@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#eef2f6" stroke="#53627a" stroke-width="3"/>
+  <path d="M160 14 L160 186" stroke="#9aa7b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <g><circle cx="26" cy="26" r="13" fill="#d23b2b"/><path d="M20 20 L32 32 M32 20 L20 32" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></g>
+  <g><circle cx="294" cy="26" r="13" fill="#2a9d5a"/><path d="M287 26 L292 31 L301 21" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <rect x="40" y="40" width="40" height="120" fill="#2f3632"/><rect x="48" y="48" width="24" height="104" fill="#eff5f3"/><rect x="48" y="140" width="24" height="12" fill="#b8862b"/>
+  <path d="M76 70 h12 M76 100 h12 M76 128 h12" stroke="#111" stroke-width="3"/>
+  <text x="92" y="132" font-size="12" font-weight="800" fill="#1b1f24">Min</text>
+  <rect x="104" y="100" width="34" height="44" rx="4" fill="#3a6fd0"/><path d="M110 100 v-10 h14 v10" fill="none" stroke="#3a6fd0" stroke-width="4"/>
+  <rect x="190" y="40" width="40" height="120" fill="#2f3632"/><rect x="198" y="48" width="24" height="104" fill="#eff5f3"/><rect x="198" y="140" width="24" height="12" fill="#b8862b"/>
+  <rect x="244" y="64" width="50" height="72" rx="6" fill="#e6e2d6" stroke="#8a7a55" stroke-width="2"/><path d="M252 82 h34 M252 98 h34 M252 114 h24" stroke="#6b675c" stroke-width="4" stroke-linecap="round"/>
+</svg>
