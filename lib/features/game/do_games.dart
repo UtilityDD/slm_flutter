@@ -54,6 +54,7 @@ import 'm4_jumper_tight.dart';
 import 'm4_dtr_temp.dart';
 import 'm4_earth_fix.dart';
 import 'm4_jumper_make.dart';
+import 'm4_service_plan.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -272,6 +273,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m4JumperMakePacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M4JumperMakePage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_service_plan':
+      final content = m4ServicePlanPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4ServicePlanPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
