@@ -1796,7 +1796,7 @@
       "lessonId": "2.9",
       "moduleId": "m2",
       "packId": "do_2_9_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 26
     },
     {
@@ -4748,10 +4748,10 @@
     },
     {
       "id": "do_2_9_b",
-      "engineType": "placeholder",
+      "engineType": "m2_hydraulic_use",
       "lessonId": "2.9",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },

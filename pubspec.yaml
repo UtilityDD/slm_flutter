@@ -82,6 +82,7 @@ flutter:
     - assets/game/art/pole/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
+    - assets/game/art/m2_hydraulic_use/
     - assets/game/art/m2_dead_test/
     - assets/game/art/m2_crimp_steps/
     - assets/game/art/m2_skin_cut/

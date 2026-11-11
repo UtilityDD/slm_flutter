@@ -34,6 +34,7 @@ import 'm2_lug_pick.dart';
 import 'm2_crimp_steps.dart';
 import 'm2_comealong_pick.dart';
 import 'm2_dead_test.dart';
+import 'm2_hydraulic_use.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -176,6 +177,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m2DeadTestPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M2DeadTestPage(ctx: ctx, pack: content, muted: muted);
+    case 'm2_hydraulic_use':
+      final content = m2HydraulicUsePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M2HydraulicUsePage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }
