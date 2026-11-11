@@ -42,6 +42,7 @@ import 'm2_megger_read.dart';
 import 'm2_gate_field.dart';
 import 'm2_skin_cut.dart';
 import 'm4_service_connect.dart';
+import 'm4_phase_balance.dart';
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -212,6 +213,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m4ServiceConnectPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M4ServiceConnectPage(ctx: ctx, pack: content, muted: muted);
+    case 'm4_phase_balance':
+      final content = m4PhaseBalancePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M4PhaseBalancePage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

@@ -2354,7 +2354,7 @@
       "lessonId": "4.10",
       "moduleId": "m4",
       "packId": "do_4_10_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 28
     },
     {
@@ -5307,10 +5307,10 @@
     },
     {
       "id": "do_4_10_a",
-      "engineType": "placeholder",
+      "engineType": "m4_phase_balance",
       "lessonId": "4.10",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
