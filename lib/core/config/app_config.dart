@@ -5,6 +5,17 @@ class AppConfig {
   /// Where large posters, audio and quiz packs stream from (keeps the APK slim).
   static const String remoteAssetOrigin = 'https://www.smartlineman.in';
 
+  // TODO(owner): host the privacy policy page and put its real URL here
+  // (the same URL goes into Play Console → App content → Privacy policy).
+  static const String privacyPolicyUrl = 'https://example.com/privacy';
+
+  // TODO(owner): host docs/playstore/account-deletion.html and put its URL here
+  // (the same URL goes into Play Console → Data deletion).
+  static const String accountDeletionUrl = 'https://example.com/account-deletion';
+
+  // TODO(owner): the support inbox that handles deletion requests by email.
+  static const String supportEmail = 'support@example.com';
+
   /// Google accounts that may open the in-app admin panel. Matched to the session email.
   static const Set<String> adminEmails = {
     'dipnkr.das@gmail.com',
@@ -12,7 +23,7 @@ class AppConfig {
   };
 
   /// Add this exact value under Supabase → Authentication → URL Configuration → Redirect URLs.
-  static const String authRedirectUrl = 'com.smartlineman.app://login-callback';
+  static const String authRedirectUrl = 'com.smartlineman.lineman://login-callback';
 
   /// Public web client id. The secret stays in the Supabase dashboard.
   static const String googleWebClientId =

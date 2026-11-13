@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -982,20 +983,23 @@ class _DevPreviewGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     void go(String route) => Navigator.of(context).pushNamed(route);
     final items = <_DevPreviewItem>[
-      _DevPreviewItem(
-        labelBn: 'প্রিমিয়াম প্রিভিউ',
-        labelEn: 'Premium preview',
-        icon: Icons.auto_awesome_rounded,
-        color: SlmColors.gold300,
-        onTap: () => go(AppRoutes.premiumPreview),
-      ),
-      _DevPreviewItem(
-        labelBn: 'মোশন শোকেস',
-        labelEn: 'Motion showcase',
-        icon: Icons.animation_rounded,
-        color: SlmColors.emerald300,
-        onTap: () => go(AppRoutes.motionShowcase),
-      ),
+      // These two are routed in debug builds only (MainShell).
+      if (kDebugMode) ...[
+        _DevPreviewItem(
+          labelBn: 'প্রিমিয়াম প্রিভিউ',
+          labelEn: 'Premium preview',
+          icon: Icons.auto_awesome_rounded,
+          color: SlmColors.gold300,
+          onTap: () => go(AppRoutes.premiumPreview),
+        ),
+        _DevPreviewItem(
+          labelBn: 'মোশন শোকেস',
+          labelEn: 'Motion showcase',
+          icon: Icons.animation_rounded,
+          color: SlmColors.emerald300,
+          onTap: () => go(AppRoutes.motionShowcase),
+        ),
+      ],
       _DevPreviewItem(
         labelBn: 'র‍্যাঙ্ক',
         labelEn: 'Rank',
@@ -1030,13 +1034,6 @@ class _DevPreviewGrid extends StatelessWidget {
         icon: Icons.health_and_safety_rounded,
         color: SlmColors.emerald300,
         onTap: () => go(AppRoutes.ppe),
-      ),
-      _DevPreviewItem(
-        labelBn: 'কুইজ হাব',
-        labelEn: 'Quiz hub',
-        icon: Icons.quiz_rounded,
-        color: SlmColors.gold400,
-        onTap: () => go(AppRoutes.quiz),
       ),
     ];
 

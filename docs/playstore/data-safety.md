@@ -88,10 +88,10 @@ optional: the profile can be saved without it (it is today: the field shows "—
 Google's servers. Not declared as Photos. Decide whether the app should keep `avatar_url` at all.
 
 **E. Check the release build's merged manifest** for `com.google.android.gms.permission.AD_ID` or
-other permissions added by plugins:
-`aapt2 dump permissions build/app/outputs/bundle/release/app-release.aab` does not work on AABs;
-instead run `flutter build apk --release` once and `aapt dump permissions build/app/outputs/flutter-apk/app-release.apk`,
-or open the AAB in Android Studio → Build → Analyze APK → AndroidManifest.xml. Expected: only
+other permissions added by plugins: open the AAB in Android Studio → Build → Analyze APK →
+`base/manifest/AndroidManifest.xml`, or build a release APK once and run
+`aapt dump permissions build/app/outputs/flutter-apk/app-release.apk`. (The merged manifests in
+`build/` today are stale debug/profile ones from before the microphone was removed.) Expected: only
 `INTERNET` (+ the dynamic-receiver permission). If `AD_ID` appears, answer the Advertising ID
 declaration "No, my app does not use advertising ID" and remove it with
 `tools:node="remove"` in `AndroidManifest.xml`.

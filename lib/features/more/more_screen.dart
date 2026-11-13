@@ -2,19 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
 import '../auth/google_mark.dart';
+import '../auth/sign_out_confirm.dart';
 import '../auth/verify_gate.dart';
 import '../auth/verify_hold.dart';
 import '../auth/verify_sheet.dart';
 import '../auth/verify_tick.dart';
+import '../rank/league_profile.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
+import 'delete_account.dart';
 import 'profile_edit.dart';
 
+/// সেটিংস, in this order: profile, league, language, tool library,
+/// certificate + PPE, privacy policy, delete account, log out, admin.
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
@@ -30,32 +36,7 @@ class MoreScreen extends ConsumerWidget {
     final district = profile?.district?.trim() ?? '';
     final blockReady = district.isNotEmpty;
     final initial = name.isEmpty ? 'ল' : name.characters.first;
-
-    final shortcuts = <_Shortcut>[
-      if (!guest) ...[
-        _Shortcut(
-          tr(bn, 'সার্টিফিকেট', 'Certificate'),
-          Icons.workspace_premium_rounded,
-          SlmColors.gold300,
-          () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const CertificatePage()),
-          ),
-        ),
-        _Shortcut(
-          tr(bn, 'পিপিই', 'PPE'),
-          Icons.health_and_safety_rounded,
-          SlmColors.emerald300,
-          () => Navigator.of(context).pushNamed(AppRoutes.ppe),
-        ),
-      ],
-      if (auth.isAdmin)
-        _Shortcut(
-          tr(bn, 'অ্যাডমিন', 'Admin'),
-          Icons.admin_panel_settings_rounded,
-          SlmColors.gold200,
-          () => Navigator.of(context).pushNamed(AppRoutes.admin),
-        ),
-    ];
+    final openLink = ref.read(linkOpenerProvider);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -80,55 +61,105 @@ class MoreScreen extends ConsumerWidget {
                           backLabel: tr(bn, 'ফিরে যান', 'Back'),
                         ),
                         const SizedBox(height: 8),
-                        _IdentityHero(
+                        _SectionCue(tr(bn, 'আমার প্রোফাইল', 'My profile')),
+                        const SizedBox(height: 8),
+                        _ProfileCard(
                           name: name,
                           mail: mail,
                           guest: guest,
                           verified: verified,
                           initial: initial,
                           onStatus: () => showVerifySheet(context),
+                          tiles: guest
+                              ? const []
+                              : [
+                                  _TileSpec(tr(bn, 'নাম', 'Name'), _shown(profile?.fullName), () => showNameSheet(context, ref)),
+                                  _TileSpec(tr(bn, 'জেলা', 'District'), _shown(profile?.district), () => showDistrictSheet(context, ref)),
+                                  _TileSpec(
+                                    tr(bn, 'ব্লক', 'Block'),
+                                    blockReady ? _shown(profile?.block) : '—',
+                                    blockReady ? () => showBlockSheet(context, ref) : null,
+                                  ),
+                                  _TileSpec(tr(bn, 'কাজ', 'Job'), _shown(profile?.job), () => showJobSheet(context, ref)),
+                                  _TileSpec(tr(bn, 'ফোন', 'Phone'), _shown(profile?.phone), () => showPhoneSheet(context, ref)),
+                                ],
                         ),
-                        const SizedBox(height: 14),
+                        if (!guest) ...[
+                          const SizedBox(height: 18),
+                          _SectionCue(tr(bn, 'লাইনম্যান লিগ', 'Lineman league')),
+                          const SizedBox(height: 8),
+                          const LeagueProfileSection(),
+                        ],
+                        const SizedBox(height: 18),
+                        _SectionCue(tr(bn, 'ভাষা', 'Language')),
+                        const SizedBox(height: 8),
                         _LanguageRail(
                           bn: bn,
                           onBn: () => ref.read(languageProvider.notifier).setBengali(true),
                           onEn: () => ref.read(languageProvider.notifier).setBengali(false),
                         ),
+                        const SizedBox(height: 18),
+                        _NavRow(
+                          label: tr(bn, 'সরঞ্জাম চিনুন', 'Know your tools'),
+                          icon: Icons.manage_search_rounded,
+                          color: SlmColors.emerald300,
+                          onTap: () => Navigator.of(context).pushNamed(AppRoutes.identify),
+                        ),
                         if (!guest) ...[
-                          const SizedBox(height: 18),
-                          _SectionCue(tr(bn, 'পরিচয়', 'Profile')),
-                          const SizedBox(height: 8),
-                          _ProfileGrid(
-                            tiles: [
-                              _TileSpec(tr(bn, 'নাম', 'Name'), _shown(profile?.fullName), () => showNameSheet(context, ref)),
-                              _TileSpec(tr(bn, 'জেলা', 'District'), _shown(profile?.district), () => showDistrictSheet(context, ref)),
-                              _TileSpec(
-                                tr(bn, 'ব্লক', 'Block'),
-                                blockReady ? _shown(profile?.block) : '—',
-                                blockReady ? () => showBlockSheet(context, ref) : null,
-                              ),
-                              _TileSpec(tr(bn, 'কাজ', 'Job'), _shown(profile?.job), () => showJobSheet(context, ref)),
-                              _TileSpec(tr(bn, 'ফোন', 'Phone'), _shown(profile?.phone), () => showPhoneSheet(context, ref)),
-                            ],
+                          _NavRow(
+                            label: tr(bn, 'সার্টিফিকেট', 'Certificate'),
+                            icon: Icons.workspace_premium_rounded,
+                            color: SlmColors.gold300,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(builder: (_) => const CertificatePage()),
+                            ),
+                          ),
+                          _NavRow(
+                            label: tr(bn, 'পিপিই', 'PPE'),
+                            icon: Icons.health_and_safety_rounded,
+                            color: SlmColors.emerald300,
+                            onTap: () => Navigator.of(context).pushNamed(AppRoutes.ppe),
                           ),
                         ],
-                        if (shortcuts.isNotEmpty) ...[
-                          const SizedBox(height: 18),
-                          _SectionCue(tr(bn, 'সরঞ্জাম', 'Tools')),
-                          const SizedBox(height: 8),
-                          _ShortcutRail(items: shortcuts),
-                        ],
+                        _NavRow(
+                          label: tr(bn, 'গোপনীয়তা নীতি', 'Privacy policy'),
+                          icon: Icons.privacy_tip_outlined,
+                          color: SlmColors.gold200,
+                          trailing: Icons.open_in_new_rounded,
+                          onTap: () => openLink(Uri.parse(AppConfig.privacyPolicyUrl)),
+                        ),
                         const SizedBox(height: 22),
-                        if (auth.isAuthenticated)
+                        if (auth.isAuthenticated) ...[
+                          SlmButton.ghost(
+                            label: tr(bn, 'অ্যাকাউন্ট মুছুন', 'Delete account'),
+                            icon: Icons.delete_forever_rounded,
+                            size: SlmButtonSize.small,
+                            expand: true,
+                            onPressed: () => confirmDeleteAccount(context, ref),
+                          ),
+                          Center(
+                            child: TextButton(
+                              onPressed: () => openLink(Uri.parse(AppConfig.accountDeletionUrl)),
+                              child: Text(
+                                tr(bn, 'ওয়েবে অ্যাকাউন্ট মোছার নিয়ম', 'Account deletion on the web'),
+                                style: bangla(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: SlmColors.mist,
+                                ).copyWith(decoration: TextDecoration.underline, decorationColor: SlmColors.mist),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
                           SlmButton(
                             label: tr(bn, 'লগআউট', 'Log out'),
                             icon: Icons.logout_rounded,
                             variant: SlmButtonVariant.danger,
                             size: SlmButtonSize.medium,
                             expand: true,
-                            onPressed: () => _confirmSignOut(context, ref, bn),
-                          )
-                        else
+                            onPressed: () => confirmSignOut(context, ref),
+                          ),
+                        ] else
                           GoogleSignInButton(
                             bn: bn,
                             loading: auth.isLoading,
@@ -137,6 +168,15 @@ class MoreScreen extends ConsumerWidget {
                                 ? null
                                 : () => ref.read(authProvider.notifier).signInWithGoogle(),
                           ),
+                        if (auth.isAdmin) ...[
+                          const SizedBox(height: 14),
+                          _NavRow(
+                            label: tr(bn, 'অ্যাডমিন', 'Admin'),
+                            icon: Icons.admin_panel_settings_rounded,
+                            color: SlmColors.gold200,
+                            onTap: () => Navigator.of(context).pushNamed(AppRoutes.admin),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -155,81 +195,94 @@ class MoreScreen extends ConsumerWidget {
   }
 }
 
-class _IdentityHero extends StatelessWidget {
+/// Name, mail and verify tick on top; the editable profile tiles below, in
+/// one card.
+class _ProfileCard extends StatelessWidget {
   final String name;
   final String mail;
   final bool guest;
   final bool verified;
   final String initial;
   final VoidCallback onStatus;
+  final List<_TileSpec> tiles;
 
-  const _IdentityHero({
+  const _ProfileCard({
     required this.name,
     required this.mail,
     required this.guest,
     required this.verified,
     required this.initial,
     required this.onStatus,
+    required this.tiles,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SlmPressable(
-      onTap: onStatus,
-      pressedScale: 0.985,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF152445), SlmColors.navy900, Color(0xFF07111F)],
-          ),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8)),
-          ],
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF152445), SlmColors.navy900, Color(0xFF07111F)],
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: SlmGradients.navyCard,
-                border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.7), width: 1.4),
-              ),
-              child: Text(
-                initial,
-                style: bangla(fontSize: 24, fontWeight: FontWeight.w800, color: SlmColors.gold200),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SlmPressable(
+            onTap: onStatus,
+            pressedScale: 0.985,
+            child: Row(
+              children: [
+                Container(
+                  width: 58,
+                  height: 58,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: SlmGradients.navyCard,
+                    border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.7), width: 1.4),
+                  ),
+                  child: Text(
+                    initial,
+                    style: bangla(fontSize: 24, fontWeight: FontWeight.w800, color: SlmColors.gold200),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Flexible(
-                        child: SlmText(name, role: SlmTextRole.title, color: SlmColors.ivory, maxLines: 1),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: SlmText(name, role: SlmTextRole.title, color: SlmColors.ivory, maxLines: 1),
+                          ),
+                          const SizedBox(width: 6),
+                          VerifyTick(gold: verified, size: 20),
+                        ],
                       ),
-                      const SizedBox(width: 6),
-                      VerifyTick(gold: verified, size: 20),
+                      if (!guest && mail.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        SlmText(mail, role: SlmTextRole.caption, color: SlmColors.gold300, maxLines: 1),
+                      ],
                     ],
                   ),
-                  if (!guest && mail.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    SlmText(mail, role: SlmTextRole.caption, color: SlmColors.gold300, maxLines: 1),
-                  ],
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+          if (tiles.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _ProfileGrid(tiles: tiles),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -332,16 +385,18 @@ class _ProfileGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final tile in tiles)
-          SizedBox(
-            width: (MediaQuery.sizeOf(context).width - context.slm.layout.gutter * 2 - 8) / 2,
-            child: _ProfileTile(tile: tile),
-          ),
-      ],
+    return LayoutBuilder(
+      builder: (context, box) => Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final tile in tiles)
+            SizedBox(
+              width: (box.maxWidth - 8) / 2,
+              child: _ProfileTile(tile: tile),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -382,151 +437,62 @@ class _ProfileTile extends StatelessWidget {
   }
 }
 
-class _Shortcut {
+/// One tappable settings row: tinted icon, label, chevron.
+class _NavRow extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
+  final IconData trailing;
   final VoidCallback onTap;
 
-  const _Shortcut(this.label, this.icon, this.color, this.onTap);
-}
-
-class _ShortcutRail extends StatelessWidget {
-  final List<_Shortcut> items;
-
-  const _ShortcutRail({required this.items});
+  const _NavRow({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    this.trailing = Icons.chevron_right_rounded,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final count = items.length.clamp(1, 3);
-    final gap = 8.0;
-    final width = (MediaQuery.sizeOf(context).width - context.slm.layout.gutter * 2 - gap * (count - 1)) / count;
-    return Wrap(
-      spacing: gap,
-      runSpacing: gap,
-      children: [
-        for (final item in items)
-          SizedBox(
-            width: width,
-            child: SlmPressable(
-              onTap: item.onTap,
-              semanticLabel: item.label,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
-                decoration: BoxDecoration(
-                  gradient: SlmGradients.navyCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: item.color.withValues(alpha: 0.4)),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: item.color.withValues(alpha: 0.14),
-                        border: Border.all(color: item.color.withValues(alpha: 0.45)),
-                      ),
-                      child: Icon(item.icon, color: item.color, size: 18),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      item.label,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: bangla(fontSize: 12, fontWeight: FontWeight.w700, color: SlmColors.ivory),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: SlmPressable(
+        onTap: onTap,
+        semanticLabel: label,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          decoration: BoxDecoration(
+            gradient: SlmGradients.navyCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.4)),
           ),
-      ],
-    );
-  }
-}
-
-Future<void> _confirmSignOut(BuildContext context, WidgetRef ref, bool bn) async {
-  final go = await showGeneralDialog<bool>(
-    context: context,
-    barrierLabel: 'logout',
-    barrierColor: SlmColors.navy950.withValues(alpha: 0.88),
-    transitionDuration: SlmMotion.slow,
-    transitionBuilder: (_, anim, _, child) {
-      final t = SlmMotion.emphasized.transform(anim.value);
-      return Opacity(
-        opacity: anim.value.clamp(0.0, 1.0),
-        child: Transform.translate(offset: Offset(0, 24 * (1 - t)), child: child),
-      );
-    },
-    pageBuilder: (ctx, _, _) {
-      return Center(
-        child: Theme(
-          data: SlmTheme.night(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Material(
-              color: Colors.transparent,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 380),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: const RadialGradient(
-                      center: Alignment(0, -1.1),
-                      radius: 1.3,
-                      colors: [SlmColors.navy700, SlmColors.navy900, SlmColors.navy950],
-                      stops: [0, 0.5, 1],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55)),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.55), blurRadius: 28, offset: const Offset(0, 12))],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SlmIconBadge(icon: Icons.logout_rounded, style: SlmIconStyle.medal, size: 52),
-                        const SizedBox(height: SlmSpace.md),
-                        SlmText(
-                          tr(bn, 'লগআউট করবেন?', 'Log out?'),
-                          role: SlmTextRole.title,
-                          color: SlmColors.ivory,
-                          align: TextAlign.center,
-                        ),
-                        const SizedBox(height: SlmSpace.xs),
-                        SlmText(
-                          tr(bn, 'এই ফোন থেকে অ্যাকাউন্ট বন্ধ হবে। আবার ঢুকতে লগইন লাগবে।', 'This signs you out on this phone. You will need to log in again.'),
-                          role: SlmTextRole.bodySm,
-                          color: SlmColors.mist,
-                          align: TextAlign.center,
-                          maxLines: 3,
-                        ),
-                        const SizedBox(height: SlmSpace.lg),
-                        SlmButton(
-                          label: tr(bn, 'লগআউট', 'Log out'),
-                          variant: SlmButtonVariant.danger,
-                          expand: true,
-                          onPressed: () => Navigator.of(ctx).pop(true),
-                        ),
-                        const SizedBox(height: SlmSpace.xs),
-                        SlmButton.ghost(
-                          label: tr(bn, 'থাক', 'Stay'),
-                          expand: true,
-                          onPressed: () => Navigator.of(ctx).pop(false),
-                        ),
-                      ],
-                    ),
-                  ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: 0.14),
+                  border: Border.all(color: color.withValues(alpha: 0.45)),
+                ),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: bangla(fontSize: 15, fontWeight: FontWeight.w700, color: SlmColors.ivory),
                 ),
               ),
-            ),
+              Icon(trailing, color: SlmColors.mist, size: 20),
+            ],
           ),
         ),
-      );
-    },
-  );
-  if (go == true) await ref.read(authProvider.notifier).signOut();
+      ),
+    );
+  }
 }

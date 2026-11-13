@@ -35,8 +35,9 @@ android {
     }
 
     defaultConfig {
-        // Play Store id (permanent once published; owner 2026-11-13). The Kotlin namespace stays as is.
-        applicationId = "com.smartlineman.app"
+        // Play Store id (permanent once published; owner 2026-11-13: com.smartlineman.lineman,
+        // because com.smartlineman.app is the web app's id). The Kotlin namespace stays as is.
+        applicationId = "com.smartlineman.lineman"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION

@@ -57,37 +57,7 @@ Future<void> openHomeToolbox(BuildContext context) {
                   color: SlmColors.ivory,
                 ),
               ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _LangChoice(
-                      label: 'বাংলা',
-                      selected: bn,
-                      onTap: () => ref.read(languageProvider.notifier).setBengali(true),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _LangChoice(
-                      label: 'English',
-                      selected: !bn,
-                      onTap: () => ref.read(languageProvider.notifier).setBengali(false),
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 8),
-              _ToolRow(
-                icon: Icons.school_rounded,
-                label: tr(bn, 'প্রশিক্ষণ জোন · পাঠ', 'Training Zone · Lessons'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const TrainingScreen()),
-                  );
-                },
-              ),
               _ToolRow(
                 icon: Icons.emoji_events_rounded,
                 label: tr(bn, 'র‍্যাঙ্ক', 'Rank'),
@@ -96,14 +66,18 @@ Future<void> openHomeToolbox(BuildContext context) {
                   Navigator.of(context).pushNamed(AppRoutes.rank);
                 },
               ),
+              // Only the lessons the player opened by passing game levels.
               _ToolRow(
-                icon: Icons.visibility_rounded,
-                label: tr(bn, 'পরিচিতি', 'Identify'),
+                icon: Icons.school_rounded,
+                label: tr(bn, 'আমার পাঠ', 'My lessons'),
                 onTap: () {
                   Navigator.pop(ctx);
-                  Navigator.of(context).pushNamed(AppRoutes.identify);
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const TrainingScreen()),
+                  );
                 },
               ),
+              // LifeSkillsMenuRow goes here (director wires it)
               _ToolRow(
                 icon: Icons.phone_in_talk_rounded,
                 label: tr(bn, 'জরুরি নম্বর', 'Emergency'),
@@ -158,43 +132,6 @@ class _ToolRow extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LangChoice extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _LangChoice({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return SlmPressable(
-      onTap: onTap,
-      semanticLabel: label,
-      child: Container(
-        height: 48,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          gradient: selected ? SlmGradients.gold : null,
-          color: selected ? null : SlmColors.navy950.withValues(alpha: 0.45),
-          border: Border.all(color: selected ? SlmColors.gold700 : SlmColors.gold400.withValues(alpha: 0.4)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: banglaFont,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            height: 1.2,
-            letterSpacing: 0,
-            color: selected ? SlmColors.navy950 : SlmColors.ivory,
-          ),
         ),
       ),
     );

@@ -11,7 +11,7 @@ App-wide code with no feature logic. Feature engines stay under `lib/features/`.
 | `network/supabase_service.dart` | `SupabaseService.initialize()` / `.ready`. Needs no network (restores the saved session from the phone); `main.dart` starts it just after the first frame and never awaits it. A plugin/config failure is logged and the app runs as guest |
 | `startup/app_memory.dart` | Image-cache budget by phone RAM (48 MB on 3–4 GB phones, never under 24 MB, which fits the heaviest screen) and a trim on OS memory pressure |
 | `startup/startup_trace.dart` | Stopwatch log of startup steps; `test/perf/startup_perf_test.dart` guards that nothing is awaited before `runApp` |
-| `services/neural_tts_service.dart` | Neural TTS. Present but switched off; lessons use the phone's Bangla voice |
+| `services/neural_tts_service.dart` | Plays a list of voice lines with pauses through the phone's Bangla voice. No online voice (the Edge client was removed; `test/no_online_tts_test.dart` guards it) |
 | `theme/` | `AppColors`, `AppTheme`: the older cream / amber look (light only, built once) |
 
 Supabase URL and anon key can be overridden at build time:

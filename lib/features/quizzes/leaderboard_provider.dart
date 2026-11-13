@@ -28,7 +28,7 @@ class LeaderboardEntry {
     return LeaderboardEntry(
       rank: rank,
       id: map['id']?.toString() ?? '',
-      name: map['full_name']?.toString() ?? map['slm_id']?.toString() ?? 'লাইনম্যান',
+      name: map['display_name']?.toString() ?? 'লাইনম্যান',
       district: map['district']?.toString() ?? 'পশ্চিমবঙ্গ',
       points: (map['points'] as num?)?.toInt() ?? 0,
       level: (map['training_level'] as num?)?.toInt() ?? 1,
@@ -37,14 +37,22 @@ class LeaderboardEntry {
   }
 }
 
-/// Which of [ids] are blocked. Asks only about the rows on the board, not
-/// every blocked account.
-Future<Set<String>> _blockedAmong(List<String> ids) async {
+/// Other people's safe columns only (`supabase/profiles_privacy.sql`):
+/// `profiles` itself returns just the signed-in user's own row, and this view
+/// has no phone, email, block or job and leaves out blocked/hidden people.
+const _publicProfiles = 'profiles_public';
+
+/// The public row of each of [ids] that may be shown, by id. Asks only about
+/// the rows on the board.
+Future<Map<String, Map<String, dynamic>>> _shownAmong(List<String> ids) async {
   if (ids.isEmpty) return {};
-  final rows = await SupabaseService.client.from('profiles').select('id').inFilter('id', ids).eq('blocked', true);
+  final rows = await SupabaseService.client
+      .from(_publicProfiles)
+      .select('id, display_name, avatar_url')
+      .inFilter('id', ids);
   return {
     for (final raw in rows)
-      if ((raw['id']?.toString() ?? '').isNotEmpty) raw['id'].toString(),
+      if ((raw['id']?.toString() ?? '').isNotEmpty) raw['id'].toString(): raw,
   };
 }
 
@@ -73,44 +81,44 @@ class LeaderboardSource {
     final now = DateTime.now();
     try {
       // The view has no blocked flag, so read a few spare rows and drop
-      // blocked ones before cutting to the board size.
+      // blocked or hidden ones before cutting to the board size. Name and
+      // photo come from the public view (approved name or "লাইনম্যান #1234").
       final monthlyData = await SupabaseService.client
           .from('monthly_leaderboard_view')
-          .select('user_id, full_name, district, points, avatar_url')
+          .select('user_id, district, points')
           .eq('year_num', now.year)
           .eq('month_num', now.month)
           .order('points', ascending: false)
           .limit(_boardSize * 2);
 
       if (monthlyData.isNotEmpty) {
-        final hidden = await _blockedAmong([
+        final shown = await _shownAmong([
           for (final row in monthlyData)
             if ((row['user_id']?.toString() ?? '').isNotEmpty) row['user_id'].toString(),
         ]);
         final rows = [
           for (final row in monthlyData)
-            if (!hidden.contains(row['user_id']?.toString() ?? ''))
+            if (shown[row['user_id']?.toString() ?? ''] case final p?)
               LeaderboardEntry(
                 rank: 0,
-                id: row['user_id']?.toString() ?? '',
-                name: row['full_name']?.toString() ?? 'লাইনম্যান',
+                id: row['user_id'].toString(),
+                name: p['display_name']?.toString() ?? 'লাইনম্যান',
                 district: row['district']?.toString() ?? 'পশ্চিমবঙ্গ',
                 points: (row['points'] as num?)?.toInt() ?? 0,
                 level: 1,
-                avatarUrl: row['avatar_url']?.toString(),
+                avatarUrl: p['avatar_url']?.toString(),
               ),
         ];
         if (rows.isNotEmpty) return _ranked(rows.take(_boardSize).toList());
       }
     } catch (_) {
-      // Fall back to the profiles table if the view is missing or different.
+      // Fall back to the public profiles view if the monthly view is missing or different.
     }
 
-    // Blocked accounts are filtered on the server, before the limit.
+    // Blocked and hidden accounts are left out by the view, before the limit.
     final profileData = await SupabaseService.client
-        .from('profiles')
-        .select('id, full_name, slm_id, district, points, training_level, avatar_url')
-        .eq('blocked', false)
+        .from(_publicProfiles)
+        .select('id, display_name, district, points, training_level, avatar_url')
         .order('points', ascending: false)
         .limit(_boardSize);
 

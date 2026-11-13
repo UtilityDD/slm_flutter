@@ -19,7 +19,7 @@ Owner notes (delete this comment before publishing):
 
 ### 1. আমরা কে
 
-SmartLineman (প্যাকেজ `com.smartlineman.app`) পশ্চিমবঙ্গের বিদ্যুৎ বিতরণ লাইনম্যানদের জন্য একটি বাংলা সুরক্ষা-প্রশিক্ষণ গেম। অ্যাপটি চালান **[OWNER_NAME]** (ব্যক্তিগত ডেভেলপার)। যোগাযোগ: **[CONTACT_EMAIL]**।
+SmartLineman (প্যাকেজ `com.smartlineman.lineman`) পশ্চিমবঙ্গের বিদ্যুৎ বিতরণ লাইনম্যানদের জন্য একটি বাংলা সুরক্ষা-প্রশিক্ষণ গেম। অ্যাপটি চালান **[OWNER_NAME]** (ব্যক্তিগত ডেভেলপার)। যোগাযোগ: **[CONTACT_EMAIL]**।
 
 অ্যাপটি কোনো বিদ্যুৎ সংস্থা বা সরকারের অফিসিয়াল অ্যাপ নয়, এবং তাদের সঙ্গে যুক্তও নয়। একই অ্যাকাউন্ট ওয়েবসাইট [smartlineman.in](https://smartlineman.in)-এও কাজ করে; এই নীতি দুই জায়গার অ্যাকাউন্ট ডেটার জন্যই প্রযোজ্য।
 
@@ -104,7 +104,7 @@ SmartLineman (প্যাকেজ `com.smartlineman.app`) পশ্চিম�
 
 ### 1. Who we are
 
-SmartLineman (package `com.smartlineman.app`) is a Bangla safety-training game for electricity distribution linemen in West Bengal, India. It is run by **[OWNER_NAME]** (individual developer). Contact: **[CONTACT_EMAIL]**.
+SmartLineman (package `com.smartlineman.lineman`) is a Bangla safety-training game for electricity distribution linemen in West Bengal, India. It is run by **[OWNER_NAME]** (individual developer). Contact: **[CONTACT_EMAIL]**.
 
 The app is not an official app of any electricity utility or government body and is not affiliated with them. The same account also works on the website [smartlineman.in](https://smartlineman.in); this policy covers account data in both places.
 

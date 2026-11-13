@@ -6,6 +6,7 @@ import '../identify/library_catalog.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
+import 'quiz_play_screen.dart';
 
 class QuizHubScreen extends ConsumerWidget {
   const QuizHubScreen({super.key});
@@ -35,7 +36,10 @@ class QuizHubScreen extends ConsumerWidget {
                   child: _HourMatchCard(
                     bn: bn,
                     hour: _istHourLabel(),
-                    onPlay: () => Navigator.of(context).pushNamed(AppRoutes.hourly),
+                    // No named route any more (the hub left the menus); kept for reuse.
+                    onPlay: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => const QuizPlayScreen()),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),

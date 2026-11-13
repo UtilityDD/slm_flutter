@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
 import '../quizzes/leaderboard_provider.dart';
+import '../quizzes/quiz_hub_screen.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
@@ -325,8 +326,10 @@ class _StandingHero extends ConsumerWidget {
                   ),
                   icon: Icons.bolt_rounded,
                   expand: true,
-                  onPressed: () =>
-                      Navigator.of(context).pushNamed(AppRoutes.quiz),
+                  // Debug-only preview: the quiz hub has no route any more.
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const QuizHubScreen()),
+                  ),
                 )
               : SlmButton(
                   label: tr(bn, 'লগইন করুন', 'Sign in'),

@@ -117,7 +117,10 @@ class _LeagueNameSwitchState extends ConsumerState<LeagueNameSwitch> {
       variant: SlmCardVariant.sunken,
       radius: SlmRadius.md,
       padding: const EdgeInsets.symmetric(horizontal: SlmSpace.sm, vertical: SlmSpace.xxs),
-      child: SwitchListTile(
+      // Own Material: a ListTile inside the card's coloured box asserts otherwise.
+      child: Material(
+        type: MaterialType.transparency,
+        child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
         title: Text(
           tr(bn, 'বোর্ডে আমার নাম দেখান', 'Show my name on the board'),
@@ -131,6 +134,7 @@ class _LeagueNameSwitchState extends ConsumerState<LeagueNameSwitch> {
         activeThumbColor: SlmColors.gold300,
         activeTrackColor: SlmColors.gold700,
         onChanged: _saving ? null : _set,
+        ),
       ),
     );
   }

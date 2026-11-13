@@ -15,7 +15,7 @@ This repo has no keystore. Copy the old machine's debug keystore to the same pla
 - Windows: `C:\Users\<you>\.android\debug.keystore`
 - macOS: `~/.android/debug.keystore`
 
-That keeps the Android SHA-1 unchanged. If you skip the copy, Google sign-in fails until you add the new PC's SHA-1 in Google Cloud on the Android OAuth client for package `com.smartlineman.app`.
+That keeps the Android SHA-1 unchanged. If you skip the copy, Google sign-in fails until you add the new PC's SHA-1 in Google Cloud on the Android OAuth client for package `com.smartlineman.lineman`.
 
 ```powershell
 keytool -list -v -alias androiddebugkey -keystore "$env:USERPROFILE\.android\debug.keystore" -storepass android
@@ -38,7 +38,7 @@ Plug the phone in and tap Allow on the USB debugging prompt. A new computer show
 
 ```powershell
 adb install -r -t -d build\app\outputs\flutter-apk\app-debug.apk
-adb shell am start -n com.smartlineman.app/com.smartlineman.app.slm_flutter.MainActivity
+adb shell am start -n com.smartlineman.lineman/com.smartlineman.app.slm_flutter.MainActivity
 ```
 
 If install says `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, ask before uninstalling. Uninstall wipes progress stored on that phone.

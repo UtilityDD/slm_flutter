@@ -100,11 +100,14 @@ BEGIN
     RETURN v_result;
   END IF;
 
-  RETURN v_result || json_build_object(
+  -- json has no || operator: "operator does not exist: json || json" made every
+  -- submit fail (and roll back its points). Merge as jsonb, return json so the
+  -- signature stays the same and CREATE OR REPLACE still works.
+  RETURN (v_result::jsonb || jsonb_build_object(
     'correct', v_correct,
     'score', v_score,
     'penalty', v_penalty
-  );
+  ))::json;
 END;
 $$;
 

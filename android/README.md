@@ -1,6 +1,6 @@
 # Android (the ship target)
 
-Application id `com.smartlineman.app`. Launcher label **SmartLineman**.
+Application id `com.smartlineman.lineman`. Launcher label **SmartLineman**.
 
 - Gradle wrapper **9.3.1**, Android Gradle Plugin **9.1.0**, Kotlin **2.4.0** (`settings.gradle.kts`)
 - Code targets Java 17 (`app/build.gradle.kts`). Run Gradle on JDK 17 or 21
@@ -9,7 +9,7 @@ Application id `com.smartlineman.app`. Launcher label **SmartLineman**.
 Manifest (`app/src/main/AndroidManifest.xml`):
 
 - Permissions: `INTERNET`, `RECORD_AUDIO` (speech). No Bluetooth. `USE_BIOMETRIC`/`USE_FINGERPRINT` (pulled in by androidx.credentials) are removed with `tools:node="remove"`.
-- Deep link `com.smartlineman.app://login-callback` for sign-in.
+- Deep link `com.smartlineman.lineman://login-callback` for sign-in.
 - `<queries>`: `DIAL` `tel` (emergency calls), `PROCESS_TEXT`, speech `RecognitionService`, `TTS_SERVICE` (flutter_tts on Android 11+), `VIEW` `https`.
 
 Release: build with `tool/build_release.sh` (arm64 APK + AAB, `--obfuscate`, Dart symbols in

@@ -11,7 +11,7 @@ Owner notes (delete before publishing):
 
 # SmartLineman — অ্যাকাউন্ট মুছুন (Delete your account)
 
-App: **SmartLineman** (`com.smartlineman.app`) · Developer: **[OWNER_NAME]**
+App: **SmartLineman** (`com.smartlineman.lineman`) · Developer: **[OWNER_NAME]**
 
 [বাংলা](#বাংলা) · [English](#english)
 

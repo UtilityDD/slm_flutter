@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,8 +8,6 @@ import '../home/home_screen.dart';
 import '../identify/identify_screen.dart';
 import '../more/more_screen.dart';
 import '../quizzes/identify_quiz_screen.dart';
-import '../quizzes/quiz_hub_screen.dart';
-import '../quizzes/quiz_play_screen.dart';
 import '../radio/radio_mini_player.dart';
 import '../radio/radio_player_provider.dart';
 import '../rank/rank_screen.dart';
@@ -77,8 +76,6 @@ class _MainShellState extends ConsumerState<MainShell> {
     final page = switch (settings.name) {
       AppRoutes.home => const HomeScreen(),
       AppRoutes.ppe => const SopsScreen(initialIndex: 0, title: 'আমার পিপিই'),
-      AppRoutes.quiz => const QuizHubScreen(),
-      AppRoutes.hourly => const QuizPlayScreen(),
       AppRoutes.identifyPlay => const IdentifyQuizScreen(),
       AppRoutes.identify => const IdentifyScreen(),
       AppRoutes.rank => const RankScreen(),
@@ -86,8 +83,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       AppRoutes.emergency => const EmergencyDirectoryScreen(),
       AppRoutes.login => const LoginScreen(),
       AppRoutes.admin => const AdminScreen(),
-      AppRoutes.premiumPreview => const PremiumRankPreview(),
-      AppRoutes.motionShowcase => const MotionShowcase(),
+      // Dev-only previews never open in a release build.
+      AppRoutes.premiumPreview when kDebugMode => const PremiumRankPreview(),
+      AppRoutes.motionShowcase when kDebugMode => const MotionShowcase(),
       _ => const HomeScreen(),
     };
 

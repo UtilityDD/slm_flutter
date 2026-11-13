@@ -4,18 +4,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/en_digits.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
-import '../admin/dev_unlock.dart';
-import '../auth/auth_provider.dart';
-import '../auth/verify_gate.dart';
-import '../auth/verify_hold.dart';
-import '../auth/verify_sheet.dart';
-import '../auth/verify_tick.dart';
+import '../game/game_save.dart';
 import '../home/lesson_reader_page.dart';
 import '../shell/shell_insets.dart';
+import '../shell/shell_providers.dart';
 import 'training_models.dart';
 import 'training_provider.dart';
 
-/// প্রশিক্ষণ জোন: modules and their lessons. Progress is shown as seals, not points.
+/// Lessons the player opened by passing their Learn level in the game, as
+/// `M.C` ids. Owner rule: a training lesson opens only through a level pass,
+/// so reading progress or the web profile never adds one here.
+Set<String> passedLessonKeys(Map<String, String> rungProgress) => {
+      for (final e in rungProgress.entries)
+        if (e.value == 'cleared' && e.key.endsWith('/learn')) e.key.substring(0, e.key.length - '/learn'.length),
+    };
+
+final passedLessonKeysProvider = Provider<Set<String>>(
+  (ref) => passedLessonKeys(ref.watch(gameSaveProvider.select((s) => s.rungProgress))),
+);
+
+/// Module numbers that hold at least one passed lesson, in order.
+List<int> passedModules(Set<String> passed) {
+  final mods = <int>{
+    for (final key in passed) ?int.tryParse(key.split('.').first),
+  }.toList()
+    ..sort();
+  return mods;
+}
+
+/// "আমার পাঠ": only the lessons unlocked by game level passes. Locked lessons
+/// are not listed at all.
 class TrainingScreen extends ConsumerStatefulWidget {
   const TrainingScreen({super.key});
 
@@ -29,7 +47,13 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ladderAsync = ref.watch(trainingLadderProvider);
+    final bn = ref.watch(languageProvider);
+    final passed = ref.watch(passedLessonKeysProvider);
+    final modules = passedModules(passed);
+    if (!_autoOpened && modules.isNotEmpty) {
+      _autoOpened = true;
+      _expandedModuleNumber = modules.last;
+    }
 
     return Theme(
       data: SlmTheme.night(),
@@ -41,83 +65,27 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
           foregroundColor: SlmColors.ivory,
           elevation: 0,
           title: Text(
-            'প্রশিক্ষণ জোন',
+            tr(bn, 'আমার পাঠ', 'My lessons'),
             style: bangla(fontSize: 19, fontWeight: FontWeight.w900, color: SlmColors.gold200),
           ),
         ),
-        body: ladderAsync.when(
-          loading: () => Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(strokeWidth: 3, color: SlmColors.gold300),
-                const SizedBox(height: 16),
-                Text('পাঠ সাজানো হচ্ছে...', style: bangla(fontSize: 16, fontWeight: FontWeight.w600, color: SlmColors.ivory)),
-              ],
-            ),
-          ),
-          error: (e, _) => _OfflineNote(
-            text: 'পাঠ লোড করা যায়নি। ইন্টারনেট চালু করে আবার চেষ্টা করুন।',
-            onRetry: () => ref.invalidate(trainingLadderProvider),
-          ),
-          data: (modules) {
-            if (!_autoOpened) {
-              _autoOpened = true;
-              final active = modules.where((m) => m.isActive).firstOrNull ?? modules.firstOrNull;
-              _expandedModuleNumber = active?.moduleNumber;
-            }
-            return ListView.builder(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(16, 8, 16, shellDockBottomInset(context) + 16),
-              itemCount: modules.length,
-              itemBuilder: (context, index) => _moduleCard(modules[index]),
-            );
-          },
-        ),
+        body: modules.isEmpty
+            ? _EmptyLessons(bn: bn)
+            : ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(16, 8, 16, shellDockBottomInset(context) + 16),
+                itemCount: modules.length,
+                itemBuilder: (context, index) => _moduleCard(modules[index], passed),
+              ),
       ),
     );
   }
 
-  void _onModuleTap(TrainingModuleItem item, bool isExpanded) {
-    final seal = lessonNeedsVerify(
-      ref.read(authProvider),
-      ref.read(verifyHoldProvider),
-      ref.read(devUnlockProvider),
-      item.moduleNumber,
-    );
-    if (seal) {
-      showVerifySheet(context);
-      return;
-    }
-    if (item.isLocked) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'আগের অধ্যায় শেষ করে এই পাঠ খুলুন।',
-            style: bangla(fontSize: 15, fontWeight: FontWeight.w600, color: SlmColors.ivory),
-          ),
-          backgroundColor: SlmColors.navy900,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-    setState(() => _expandedModuleNumber = isExpanded ? null : item.moduleNumber);
-  }
-
-  Widget _moduleCard(TrainingModuleItem item) {
-    final isExpanded = _expandedModuleNumber == item.moduleNumber;
-    final needsVerify = lessonNeedsVerify(
-      ref.watch(authProvider),
-      ref.watch(verifyHoldProvider),
-      ref.watch(devUnlockProvider),
-      item.moduleNumber,
-    );
-    final (accent, status) = switch (item.status) {
-      LadderStepStatus.completed => (SlmColors.emerald300, 'সম্পন্ন'),
-      LadderStepStatus.active => (SlmColors.gold300, 'চলছে'),
-      LadderStepStatus.locked => (SlmColors.mist, 'পরে'),
-    };
+  Widget _moduleCard(int module, Set<String> passed) {
+    final isExpanded = _expandedModuleNumber == module;
+    final count = passed.where((k) => k.split('.').first == '$module').length;
+    final title = module <= staticChapterTitles.length ? staticChapterTitles[module - 1] : 'অধ্যায় $module';
+    const accent = SlmColors.gold300;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -125,65 +93,52 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
         duration: SlmMotion.base,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: item.isLocked
-                ? const [Color(0xFF141D33), Color(0xFF0D1426)]
-                : const [Color(0xFF1E2D4B), Color(0xFF111A30)],
+            colors: [Color(0xFF1E2D4B), Color(0xFF111A30)],
           ),
-          border: Border.all(
-            color: item.isActive ? SlmColors.gold400 : accent.withValues(alpha: item.isLocked ? 0.25 : 0.5),
-            width: item.isActive ? 1.8 : 1.1,
-          ),
-          boxShadow: item.isActive
-              ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.25), blurRadius: 20)]
-              : const [],
+          border: Border.all(color: accent.withValues(alpha: 0.5), width: 1.1),
         ),
         child: Column(
           children: [
             InkWell(
               borderRadius: BorderRadius.circular(20),
-              onTap: () => _onModuleTap(item, isExpanded),
+              onTap: () => setState(() => _expandedModuleNumber = isExpanded ? null : module),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 child: Row(
                   children: [
-                    _StepBadge(number: item.moduleNumber, accent: accent, locked: item.isLocked),
+                    _StepBadge(number: module, accent: accent),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Text(
-                                status,
-                                style: bangla(fontSize: 12, fontWeight: FontWeight.w800, color: accent),
-                              ),
-                              const Spacer(),
-                              if (needsVerify) const VerifyTick(size: 20),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
                           Text(
-                            item.title,
+                            title,
                             style: bangla(fontSize: 17, fontWeight: FontWeight.w800, color: SlmColors.ivory),
                           ),
-                          const SizedBox(height: 8),
-                          _SealStrip(done: item.completedLessons, total: item.totalLessons),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(Icons.verified_rounded, size: 16, color: SlmColors.gold300),
+                              const SizedBox(width: 4),
+                              Text(
+                                enDigits('$count টি পাঠ খোলা'),
+                                style: bangla(fontSize: 12, fontWeight: FontWeight.w700, color: SlmColors.mist),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 6),
-                    if (!item.isLocked)
-                      AnimatedRotation(
-                        turns: isExpanded ? 0.5 : 0,
-                        duration: SlmMotion.base,
-                        child: Icon(Icons.expand_more_rounded, color: accent),
-                      )
-                    else
-                      const Icon(Icons.lock_rounded, size: 20, color: SlmColors.mist),
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.5 : 0,
+                      duration: SlmMotion.base,
+                      child: const Icon(Icons.expand_more_rounded, color: accent),
+                    ),
                   ],
                 ),
               ),
@@ -196,7 +151,7 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
                   ? Column(
                       children: [
                         Divider(height: 1, color: SlmColors.gold400.withValues(alpha: 0.2)),
-                        _lessonsList(item.moduleNumber),
+                        _lessonsList(module, passed),
                       ],
                     )
                   : const SizedBox(width: double.infinity),
@@ -207,38 +162,37 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
     );
   }
 
-  Widget _lessonsList(int moduleNumber) {
+  Widget _lessonsList(int moduleNumber, Set<String> passed) {
     final lessonsAsync = ref.watch(moduleLessonsProvider(moduleNumber));
+    void retry() {
+      ref.invalidate(trainingModuleRowsProvider(moduleNumber));
+      ref.invalidate(moduleLessonsProvider(moduleNumber));
+    }
+
+    const offline = 'পাঠগুলো এখন আনা যাচ্ছে না। ইন্টারনেট চালু করে আবার চেষ্টা করুন।';
     return lessonsAsync.when(
       loading: () => const Padding(
         padding: EdgeInsets.all(20),
         child: Center(child: CircularProgressIndicator(strokeWidth: 2.5, color: SlmColors.gold300)),
       ),
-      error: (e, _) => _OfflineNote(
-        text: 'পাঠগুলো এখন আনা যাচ্ছে না। ইন্টারনেট চালু করে আবার চেষ্টা করুন।',
-        onRetry: () => ref.invalidate(moduleLessonsProvider(moduleNumber)),
-      ),
-      data: (lessons) {
-        if (lessons.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(20),
-            child: Text(
-              'এই ধাপে কোনো সক্রিয় পাঠ পাওয়া যায়নি।',
-              style: bangla(fontSize: 14, fontWeight: FontWeight.w600, color: SlmColors.mist),
-            ),
-          );
-        }
-        final nextIdx = lessons.indexWhere((l) => !l.isCompleted);
+      error: (e, _) => _OfflineNote(text: offline, onRetry: retry),
+      data: (all) {
+        final lessons = [
+          for (final l in all)
+            if (passed.contains('${l.moduleNumber}.${l.chapterNumber}')) l,
+        ];
+        // The module has passed lessons, so an empty list means the text
+        // could not be fetched (offline, never read on this phone).
+        if (lessons.isEmpty) return _OfflineNote(text: offline, onRetry: retry);
         return Padding(
           padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
           child: Column(
             children: [
-              for (var i = 0; i < lessons.length; i++)
+              for (final lesson in lessons)
                 _LessonRow(
-                  lesson: lessons[i],
-                  isNext: i == nextIdx,
+                  lesson: lesson,
                   onTap: () => Navigator.of(context).push(
-                    SlmPageRoute<void>(builder: (_) => LessonReaderPage(lesson: lessons[i], bn: true)),
+                    SlmPageRoute<void>(builder: (_) => LessonReaderPage(lesson: lesson, bn: true)),
                   ),
                 ),
             ],
@@ -249,12 +203,55 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen> {
   }
 }
 
+/// Nothing passed yet: point back to the ladder.
+class _EmptyLessons extends StatelessWidget {
+  const _EmptyLessons({required this.bn});
+
+  final bool bn;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.school_rounded, size: 44, color: SlmColors.gold300),
+            const SizedBox(height: 12),
+            Text(
+              tr(bn, 'এখনও কোনো পাঠ খোলেনি', 'No lessons open yet'),
+              textAlign: TextAlign.center,
+              style: bangla(fontSize: 18, fontWeight: FontWeight.w800, color: SlmColors.ivory),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              tr(
+                bn,
+                'মৃত্যুহীন পথে লেভেল পাস করলেই সেই পাঠ এখানে খুলে যাবে।',
+                'Pass a level on the Deathless Path and its lesson opens here.',
+              ),
+              textAlign: TextAlign.center,
+              style: bangla(fontSize: 15, fontWeight: FontWeight.w600, color: SlmColors.mist),
+            ),
+            const SizedBox(height: 18),
+            SlmButton.gold(
+              label: tr(bn, 'পথে ফিরে যান', 'Back to the path'),
+              icon: Icons.arrow_back_rounded,
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _StepBadge extends StatelessWidget {
-  const _StepBadge({required this.number, required this.accent, required this.locked});
+  const _StepBadge({required this.number, required this.accent});
 
   final int number;
   final Color accent;
-  final bool locked;
 
   @override
   Widget build(BuildContext context) {
@@ -264,8 +261,8 @@ class _StepBadge extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: accent.withValues(alpha: locked ? 0.08 : 0.16),
-        border: Border.all(color: accent.withValues(alpha: locked ? 0.3 : 0.8), width: 1.6),
+        color: accent.withValues(alpha: 0.16),
+        border: Border.all(color: accent.withValues(alpha: 0.8), width: 1.6),
       ),
       child: Text(
         enDigits('$number'),
@@ -275,41 +272,10 @@ class _StepBadge extends StatelessWidget {
   }
 }
 
-/// One small seal per lesson in the step: gold when earned.
-class _SealStrip extends StatelessWidget {
-  const _SealStrip({required this.done, required this.total});
-
-  final int done;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        for (var i = 0; i < total; i++)
-          Icon(
-            i < done ? Icons.verified_rounded : Icons.circle_outlined,
-            size: 16,
-            color: i < done ? SlmColors.gold300 : SlmColors.mist.withValues(alpha: 0.5),
-          ),
-        const SizedBox(width: 2),
-        Text(
-          enDigits('$done/$total সিল'),
-          style: bangla(fontSize: 12, fontWeight: FontWeight.w700, color: SlmColors.mist),
-        ),
-      ],
-    );
-  }
-}
-
 class _LessonRow extends StatelessWidget {
-  const _LessonRow({required this.lesson, required this.isNext, required this.onTap});
+  const _LessonRow({required this.lesson, required this.onTap});
 
   final LessonCardItem lesson;
-  final bool isNext;
   final VoidCallback onTap;
 
   @override
@@ -326,10 +292,8 @@ class _LessonRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              color: isNext ? SlmColors.gold400.withValues(alpha: 0.1) : SlmColors.navy950.withValues(alpha: 0.35),
-              border: Border.all(
-                color: isNext ? SlmColors.gold400.withValues(alpha: 0.7) : SlmColors.gold400.withValues(alpha: 0.12),
-              ),
+              color: SlmColors.navy950.withValues(alpha: 0.35),
+              border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.12)),
             ),
             child: Row(
               children: [
@@ -364,15 +328,8 @@ class _LessonRow extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        enDigits(
-                          'পাঠ ${lesson.moduleNumber}.${lesson.chapterNumber}'
-                          '${done ? ' · সিল পেয়েছেন' : ''}',
-                        ),
-                        style: bangla(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: done ? SlmColors.gold300 : SlmColors.mist,
-                        ),
+                        enDigits('পাঠ ${lesson.moduleNumber}.${lesson.chapterNumber}'),
+                        style: bangla(fontSize: 12.5, fontWeight: FontWeight.w700, color: SlmColors.mist),
                       ),
                     ],
                   ),
@@ -382,17 +339,12 @@ class _LessonRow extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999),
-                    gradient: isNext ? SlmGradients.gold : null,
-                    color: isNext ? null : SlmColors.navy900,
-                    border: Border.all(color: SlmColors.gold400.withValues(alpha: isNext ? 0 : 0.35)),
+                    color: SlmColors.navy900,
+                    border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.35)),
                   ),
                   child: Text(
-                    done ? 'রিভিশন ↻' : (isNext ? 'এখান থেকে 👉' : 'পড়ুন'),
-                    style: bangla(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w900,
-                      color: isNext ? SlmColors.navy950 : SlmColors.gold200,
-                    ),
+                    done ? 'রিভিশন ↻' : 'পড়ুন',
+                    style: bangla(fontSize: 12.5, fontWeight: FontWeight.w900, color: SlmColors.gold200),
                   ),
                 ),
               ],
