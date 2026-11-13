@@ -110,6 +110,7 @@ void main() {
       expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
       // The LTDB close-up with a reading.
       await t.tap(_label(M5LvLines.scopeMany), warnIfMissed: false);
+      await confirmChoice(t); // scope chips are two-step now
       await _pump(t, 600);
       await waitChoiceDeck(t);
       final right = [for (final l in M5LvLines.routeAreaRight) if (_label(l).evaluate().isNotEmpty) _label(l)];

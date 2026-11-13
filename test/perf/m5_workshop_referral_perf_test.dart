@@ -18,6 +18,7 @@ import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import '../support/intro_wait.dart';
+import '../support/reason_proceed.dart';
 
 const _ctx = LevelContext(rungId: '5.8/do/1', kind: CatalogRungKind.doKind, lessonId: '5.8', lessonTitleBn: '', ladderStep: 0, doIndex: 2, doCount: 2);
 
@@ -87,6 +88,7 @@ void main() {
           await t.tap(_label(M5WrLines.logOk));
           await _pump(t, 400);
           await t.tap(_label(M5WrLines.workshop));
+          await confirmChoice(t); // team buttons are two-step now
           await _pump(t, 400);
           await t.longPressAt(geo.testerHit.center * k);
           await _pump(t, 300);
