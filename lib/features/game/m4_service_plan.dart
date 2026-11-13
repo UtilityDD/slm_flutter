@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -60,16 +61,23 @@ export 'm4_service_plan_world.dart'
 //     connections and the voltage test (points 2–4).
 // The careless coworker comes once a play — on the papers ("কাগজ পরে হবে"),
 // the route (over the tree) or the material (no GI wire, myth 1); listening is
-// the slip of that shortcut.
+// the slip of that shortcut. He can't be skipped by playing fast: the round's
+// committing buttons wait for him (holdForCoworker), and he never cuts into
+// the praise window (tableBusy).
+//
+// Gesture hints (how, never what): a sweep over every sheet / route / shelf
+// item / job card and the board's buttons while the round waits; taps on the
+// empty scene count as misses.
 //
 // No deadly move: this is planning, nothing is touched on the line, and the
 // lesson gives no death for a planning mistake — every mistake is a slip.
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m4_service_plan_world.dart), corner guide, ◆ on the table →
 // "কেন …?" (the reasons fit the round) → the next round by itself.
-// Voice: the guide's lines by device TTS; the coworker's new lines by device
-// TTS until recorded in his voice (M4ServicePlanLines.toRecord); his exit
-// line is a recorded one.
+// Voice: the guide's lines by device TTS; the coworker's new lines are silent
+// with the caption held for a reading time until recorded in his voice
+// (M4ServicePlanLines.toRecord; never the device voice); his exit line is a
+// recorded one.
 
 
 // ============================================================================
@@ -100,7 +108,6 @@ abstract final class M4ServicePlanLines {
       };
   static const approval = 'অনুমোদন';
   static const approved = 'অনুমোদিত';
-  static const missingSheet = 'নেই';
   static const papersGo = 'সব ঠিক, কাজ শুরু';
   static const papersFetch = 'এটা আনিয়ে নিই';
   static const routeGo = 'এই পথেই টানব';
@@ -111,7 +118,7 @@ abstract final class M4ServicePlanLines {
   static const stampDone = 'ঠিক আছে';
   static String routeName(int i) => 'রুট ${i + 1}';
   static String item(M4ServicePlanItem i) => switch (i) {
-        M4ServicePlanItem.cable => 'কেবিল (মাপমতো)',
+        M4ServicePlanItem.cable => 'কেবিল (মোটা)',
         M4ServicePlanItem.thinCable => 'কেবিল (সরু)',
         M4ServicePlanItem.giWire => 'GI সাপোর্ট তার',
         M4ServicePlanItem.rackBolt => 'র‍্যাক বোল্ট',
@@ -204,7 +211,7 @@ abstract final class M4ServicePlanLines {
         _ => coworkerPapers,
       };
 
-  /// The coworker's new lines (device TTS until recorded in his voice).
+  /// The coworker's new lines (silent, caption held, until recorded in his voice).
   static List<String> get toRecord => [coworkerPapers.line, coworkerRoute.line, coworkerKit.line];
 
   /// The guide's fixed lines (device TTS until recorded).
@@ -575,6 +582,12 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
   int _chain = 0;
   DoMistake? _card;
   var _ended = false;
+
+  /// The work-order card open big (two steps: its preview, then ✓ places it),
+  /// where it was tapped, and the cards set aside with ✕ in this round.
+  M4ServicePlanStep? _stepPreview;
+  Offset _stepAt = Offset.zero;
+  final Set<M4ServicePlanStep> _stepAside = {};
   var _passed = false;
   var _popped = false;
   var _quickBonus = false;
@@ -588,6 +601,10 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
   int _shake = 0;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+
+  /// The gesture hint (how to touch, never what) and the last scene layout.
+  final _hints = IdleHintController();
+  M4ServicePlanGeo? _geo;
 
   String get _rungId => widget.ctx.rungId;
   bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
@@ -623,7 +640,7 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
     if (!_muted) unawaited(ZlFx.cue(file, volume: volume, muted: false));
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && !_run.done;
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown && !_run.done;
 
   // --- a round --------------------------------------------------------------------
   void _startRound() {
@@ -646,10 +663,42 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
     });
   }
 
+  /// A tap on a work-order card opens it big; nothing is placed yet.
+  void _openStep(M4ServicePlanStep s, Offset at) {
+    if (!_canPlay || _stepPreview != null || _run.round != M4ServicePlanRound.order || _run.placed.contains(s)) return;
+    setState(() {
+      _stepPreview = s;
+      _stepAt = at;
+    });
+  }
+
+  /// ✓ on the card's preview: it is placed next (as one tap was before).
+  void _confirmStep() {
+    final s = _stepPreview;
+    if (s == null) return;
+    setState(() {
+      _stepPreview = null;
+      _stepAside.remove(s);
+    });
+    unawaited(_act(_stepAt, () => _run.tapCard(s)));
+  }
+
+  /// ✕: the card is set aside (dimmed); nothing is placed.
+  void _rejectStep() {
+    final s = _stepPreview;
+    if (s == null) return;
+    setState(() {
+      _stepPreview = null;
+      _stepAside.add(s);
+    });
+  }
+
   /// A committing move: [act] settles the round (or, on the job card, places
   /// one card).
   Future<void> _act(Offset origin, DoMistake? Function() act, {bool force = false}) async {
     if (!force && !_canPlay) return;
+    // His round: the committing move waits for him (he comes in now).
+    if (!force && holdForCoworker()) return;
     final m = act();
     HapticFeedback.mediumImpact();
     if (m == null) {
@@ -720,8 +769,8 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    if (_intro || _card != null || reasonOpen) return false;
+    if (_ended || _run.done || _run.index != _run.deal.callAt || _run.shown) return null;
+    if (_intro || _card != null || tableBusy || _stepPreview != null) return false;
     return true;
   }
 
@@ -734,6 +783,7 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
       // Listened to him: does it his way (the slip of that shortcut).
+      if (_run.shown || _run.done) return;
       await _act(origin, _run.takeShortcut, force: true);
       return;
     }
@@ -787,7 +837,10 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
 
   void _cardGo() {
     _hush();
-    setState(() => _card = null);
+    setState(() {
+      _card = null;
+      _stepAside.clear();
+    });
     _next();
   }
 
@@ -855,7 +908,7 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M4ServicePlanGeo.forScene(m.height, m.inset);
+    final geo = _geo = M4ServicePlanGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final playing = !_intro && _mark == null && !struckOut && !_run.done;
     return [
@@ -881,6 +934,16 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
             M4ServicePlanLines.board(_run.round),
             style: bangla(fontSize: 13, fontWeight: FontWeight.w900, color: const Color(0xFFFFF3D6)),
           ),
+        ),
+      ),
+      // A tap on the empty scene (nothing to press): counts for the hint.
+      Positioned.fill(
+        key: const ValueKey('scene-tap'),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            if (_canPlay) _hints.missTap();
+          },
         ),
       ),
       if (playing)
@@ -913,6 +976,36 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
           child: IgnorePointer(child: _StampPop(text: M4ServicePlanLines.stampDone, quiet: quiet)),
         ),
     ];
+  }
+
+  /// How to touch now (never what): a sweep over every choice on the board
+  /// and its buttons, the same way for each (scene design pixels).
+  HintSpec? _hint() {
+    final geo = _geo;
+    if (geo == null || !_canPlay) return null;
+    final r = _run;
+    final b = geo.buttons;
+    final half = (b.width - 8) / 2;
+    final rects = switch (r.round) {
+      M4ServicePlanRound.papers => [
+          ...geo.paperSlots(),
+          Rect.fromLTWH(b.left, b.top, half, b.height),
+          if (r.paper != null) Rect.fromLTWH(b.left + half + 8, b.top, half, b.height),
+        ],
+      M4ServicePlanRound.route => [
+          for (final route in r.deal.routes)
+            Rect.fromCenter(
+              center: geo.content.topLeft + M4ServicePlanMap.place(M4ServicePlanMap.chip(route), Offset.zero & geo.content.size, r.deal.mirror),
+              width: 44,
+              height: 44,
+            ),
+          if (r.route != null) b,
+        ],
+      M4ServicePlanRound.kit => [...geo.shelf(r.deal.shelf).values, if (r.picked.isNotEmpty) b],
+      M4ServicePlanRound.order => [...geo.cards(r.deal.cards).values],
+    };
+    if (rects.length < 2) return null;
+    return HintSpec.sweep(rects, space: HintSpace.scene);
   }
 
   Widget _papers() {
@@ -1051,8 +1144,11 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
               excludeSemantics: true,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTapUp: (d) => unawaited(_act(d.globalPosition, () => r.tapCard(s))),
-                child: _StepCard(text: M4ServicePlanLines.step(s), number: r.placed.contains(s) ? r.placed.indexOf(s) + 1 : null),
+                onTapUp: (d) => _openStep(s, d.globalPosition),
+                child: CardAside(
+                  aside: _stepAside.contains(s) && !r.placed.contains(s),
+                  child: _StepCard(text: M4ServicePlanLines.step(s), number: r.placed.contains(s) ? r.placed.indexOf(s) + 1 : null),
+                ),
               ),
             ),
           ),
@@ -1131,6 +1227,10 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: _canPlay && !coworkerOnScreen && _stepPreview == null,
+            hintKey: 'round-${_run.index}',
+            hintController: _hints,
             overlays: [
               // The job card (hidden while his speech bubble is up, which covers it).
               if (playing && !_run.done && !coworkerOpen)
@@ -1154,6 +1254,20 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
                 ),
               if (playing && _card == null) cornerGuide(onTap: _tapGuide, bottom: deckUp ? pad.bottom + 236 : boardTop, onLeft: coworkerFromRight),
               ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
+              // Over the corner guide: nothing may cover the card's ✓ / ✕.
+              if (playing && _stepPreview != null && _canPlay)
+                Positioned.fill(
+                  key: ValueKey('step-preview-${_stepPreview!.name}'),
+                  child: CardPreviewOverlay(
+                    textBn: M4ServicePlanLines.step(_stepPreview!),
+                    icon: Icons.assignment_rounded,
+                    quiet: quiet,
+                    muted: _muted,
+                    bottom: pad.bottom,
+                    onConfirm: _confirmStep,
+                    onReject: _rejectStep,
+                  ),
+                ),
               if (_card != null)
                 MistakeCard(
                   key: ValueKey('card-${_card!.key}-${_run.index}'),
@@ -1286,7 +1400,6 @@ class _Sheet extends StatelessWidget {
               child: Text(M4ServicePlanLines.paper(paper),
                   textAlign: TextAlign.center, style: bangla(fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF7D735E), height: 1.15)),
             ),
-            Text(M4ServicePlanLines.missingSheet, style: bangla(fontSize: 12, fontWeight: FontWeight.w900, color: const Color(0xFFB3261E))),
           ],
         ),
       );

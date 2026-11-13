@@ -4,7 +4,9 @@
 // moves (anything on the live motor; listening to the coworker), the deal,
 // the option libraries, and the level in the shell: idle perf, the guide
 // first, tap-the-guide, a full clean play to the pass, a slip card, the
-// deadly freeze and the coworker.
+// deadly freeze and the coworker; the 3-slip strike-out; the coworker on a
+// fast play (the switch waits for him); the praise lock; the knob after a
+// wrong voltage once 500V is set; the gesture hint.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,7 +19,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m2_megger_prep.dart';
@@ -32,6 +37,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _rung = '2.7/do/1';
 final _pack = m2MeggerPrepPacks['do_2_7_a']!;
@@ -61,25 +67,30 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
 }
+
+/// The one painter of type [T] on screen (the room, the gear, the display).
+T _painter<T extends CustomPainter>() => _painters<T>().single;
+
+List<T> _painters<T extends CustomPainter>() => [
+      for (final e in find.byWidgetPredicate((w) => w is CustomPaint && w.painter is T).evaluate()) (e.widget as CustomPaint).painter! as T,
+    ];
 
 Future<void> _tap(WidgetTester t, String label, {int ms = 900}) async {
   await t.tap(_label(label), warnIfMissed: false);
   await _pump(t, ms);
+}
+
+/// A knob position on the close-up: its tap opens it big; ✓ turns the knob.
+Future<void> _volt(WidgetTester t, int v) async {
+  await t.tap(find.byKey(ValueKey('volt-$v')));
+  expect(await confirmChoice(t), isTrue, reason: '$v');
 }
 
 /// A run with the whole leads taken.
@@ -113,6 +124,22 @@ Future<void> _close(WidgetTester t, ProviderContainer c) async {
 
 String _wholeLeads(int seed) => dealMeggerPrep(math.Random(seed)).crackedLeft ? L.leadsRightLabel : L.leadsLeftLabel;
 String _crackedLeads(int seed) => dealMeggerPrep(math.Random(seed)).crackedLeft ? L.leadsLeftLabel : L.leadsRightLabel;
+
+/// Whole leads, refuse him, OFF → prove → discharge and its reason: the
+/// megger is next.
+Future<void> _toMegger(WidgetTester t, int seed) async {
+  await _leadsDone(t, seed);
+  await _pump(t, 2000);
+  expect(find.byType(CoworkerPeek), findsOneWidget);
+  await _pickRight(t, L.coworker.right);
+  await _pump(t, 2500);
+  await _tap(t, L.switchLabel);
+  await _tap(t, L.testerLabel, ms: 1500);
+  await _tap(t, L.earthLeadLabel, ms: 2400);
+  expect(find.text(L.isoAsk), findsWidgets);
+  await _pickRight(t, L.isoRight);
+  await _pump(t, 3000);
+}
 
 /// Whole leads, the reason, then the coworker is due.
 Future<void> _leadsDone(WidgetTester t, int seed) async {
@@ -155,7 +182,7 @@ void main() {
       expect(r.isDone(MeggerIds.off), isTrue, reason: 'kept after the board is done');
     });
 
-    test('deadly: a lead, the earth lead or TEST on the live motor; listening to him', () {
+    test('deadly: a lead or the earth lead on the live motor; listening to him', () {
       for (final id in [MeggerIds.leadL, MeggerIds.leadE]) {
         final r = _ready();
         expect(r.tap(id).mistake, M.notIsolated, reason: id);
@@ -167,6 +194,13 @@ void main() {
       final l = _ready()..listened();
       expect(l.deadly, M.liveMegger);
       expect(l.ended, isTrue);
+      // Once a play has ended nothing else counts (no second deadly, no helper).
+      final x = _ready()..tap(MeggerIds.leadL);
+      x
+        ..listened()
+        ..clearHelper();
+      expect(x.deadly, M.notIsolated);
+      expect(x.helperClear, isFalse);
       expect(M.all.where((m) => m.deadly), unorderedEquals([M.notIsolated, M.earthLive, M.liveMegger]));
     });
 
@@ -296,7 +330,7 @@ void main() {
         }
         debugPrint('PERF m2_megger_prep ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -361,7 +395,7 @@ void main() {
       await _pump(t, 3000);
       await _tap(t, L.knobLabel, ms: 500);
       expect(find.text('500V'), findsOneWidget);
-      await t.tap(find.text('500V'));
+      await _volt(t, 500);
       await _pump(t, 2400);
       expect(find.text(L.voltAsk), findsWidgets);
       await _pickRight(t, L.voltRight);
@@ -434,11 +468,141 @@ void main() {
       final wrong = _onScreen(L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 900);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
       expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes.single.key, M.liveMegger.key);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips: the strike-out card, never a pass', (t) async {
+      const seed = 7;
+      final c = await _open(t, seed);
+      for (var i = 0; i < 2; i++) {
+        await _tap(t, _crackedLeads(seed), ms: 1200);
+        expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${i + 1}');
+        expect(find.byType(StruckOutCard), findsNothing);
+        await t.tap(find.text(MistakeLines.gotIt));
+        await _pump(t, 900);
+      }
+      await _tap(t, _crackedLeads(seed), ms: 1500);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      expect(c.read(gameSaveProvider).rungProgress[_rung], isNot('cleared'));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play: the switch waits for him — he comes at once; refused, OFF works', (t) async {
+      const seed = 11;
+      final c = await _open(t, seed);
+      await _tap(t, _wholeLeads(seed), ms: 2200);
+      await _pickRight(t, L.leadRight);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'his timer has not fired yet');
+      // Straight to the switch, well before his 1.2–2.4 s timer.
+      await t.tap(_label(L.switchLabel), warnIfMissed: false);
+      await _pump(t, 200);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the switch brings him in now');
+      expect(find.text(L.coworkerLine), findsOneWidget);
+      expect(_painter<MeggerRoomPainter>().switchOn, isTrue, reason: 'the switch waited (no cost)');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pickRight(t, L.coworker.right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _tap(t, L.switchLabel);
+      expect(_painter<MeggerRoomPainter>().switchOn, isFalse);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('a lead on the live motor while he still talks is listening to him (deadly), never a refusal', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      const seed = 11;
+      final c = await _open(t, seed);
+      await _tap(t, _wholeLeads(seed), ms: 2200);
+      await _pickRight(t, L.leadRight);
+      await t.tap(_label(L.switchLabel), warnIfMissed: false);
+      await _pump(t, 200);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'beat 1: he is still talking');
+      await _tap(t, L.terminalLabel, ms: 600);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      await _pump(t, 3500);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, M.liveMegger.key, reason: 'he pushed it: one deadly, his, no +10 refusal');
+      await _close(t, c);
+    });
+
+    testWidgets('praise lock + knob: no step during the 500V praise; a wrong voltage after 500V leaves the knob at 500V', (t) async {
+      const seed = 11;
+      final c = await _open(t, seed);
+      await _toMegger(t, seed);
+      await _tap(t, L.knobLabel, ms: 500);
+      await _volt(t, 500);
+      await t.pump(const Duration(milliseconds: 120));
+      // The ◆ is on the table: a tap on the terminal does nothing now.
+      await t.tap(_label(L.terminalLabel), warnIfMissed: false);
+      await _pump(t, 2400);
+      expect(_painter<MeggerGearPainter>().lClipped, isFalse, reason: 'praise window: the scene is locked');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(find.text(L.voltAsk), findsWidgets);
+      await _pickRight(t, L.voltRight);
+      await _pump(t, 3000);
+      expect(_painter<MeggerDisplayPainter>().volt, 500);
+      // The knob turned to 1kV after 500V was set: a slip, and the knob goes back to 500V.
+      await _tap(t, L.knobLabel, ms: 500);
+      // A tap on a position only opens it big: the knob is not turned yet.
+      await t.tap(find.byKey(const ValueKey('volt-1000')));
+      await _pump(t, 400);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(_painter<MeggerDisplayPainter>().volt, 500);
+      await t.tap(find.byKey(const ValueKey('choice-reject')));
+      await _pump(t, 300);
+      expect(find.byKey(const ValueKey('choice-confirm')), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is CardAside && w.aside), findsOneWidget, reason: '✕ sets it aside');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _volt(t, 1000);
+      await _pump(t, 1200);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M.wrongVolt.key);
+      expect(_painter<MeggerDisplayPainter>().volt, 500, reason: 'what the knob shows is what TEST uses');
+      expect(_painter<MeggerGearPainter>().volt, 500);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 900);
+      await _tap(t, L.terminalLabel);
+      await _tap(t, L.boltLabel);
+      await _tap(t, L.helperLabel);
+      await _tap(t, L.testLabel, ms: 3600);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _tap(t, L.earthLeadLabel, ms: 2400);
+      await _pickRight(t, L.afterRight);
+      await _pump(t, 5000);
+      expect(find.byType(LevelPassPanel), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes, hasLength(1));
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: three taps on nothing sweep the hand over both lead pairs (no cost)', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 5);
+      IdleHintState hint() => t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+      expect(hint().showing, isFalse);
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(const Offset(200, 240));
+        await _pump(t, 150);
+      }
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, hasLength(2));
+      await t.tapAt(const Offset(200, 240));
+      await _pump(t, 200);
+      expect(hint().showing, isFalse, reason: 'a touch hides it');
+      expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'a tap on nothing costs nothing');
       await _close(t, c);
     });
   });

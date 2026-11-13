@@ -4,7 +4,10 @@
 // deadly), the mistakes book, reason and choice libraries, the mistake art,
 // and the level in the shell: idle perf, the guide first, tapping the guide,
 // a clean play (the coworker refused) → pass and save, a wrong move → its
-// card, listening to the coworker → his shortcut's card, three slips → out.
+// card, listening to the coworker → his shortcut's card, three slips → out,
+// the coworker comes even on a fast play (the committing button waits for
+// him), no touch in the praise window, the gesture hint (a sweep over every
+// choice, never one singled out; taps on the empty scene count as misses).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,10 +21,12 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m4_service_plan.dart';
+import 'package:slm_flutter/features/game/m4_service_plan_world.dart' show M4ServicePlanMapPainter;
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro;
 import 'package:slm_flutter/features/game/spoken_once.dart';
@@ -31,6 +36,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 typedef _R = M4ServicePlanRound;
 typedef _F = M4ServicePlanFault;
@@ -73,13 +79,15 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
-Future<ProviderContainer> _open(WidgetTester t, int seed) async {
+Future<ProviderContainer> _open(WidgetTester t, int seed, {int settle = 600}) async {
   t.view.physicalSize = const Size(784, 1700);
   t.view.devicePixelRatio = 2.0;
   final c = ProviderContainer();
@@ -93,7 +101,7 @@ Future<ProviderContainer> _open(WidgetTester t, int seed) async {
   )));
   await _pump(t, 1000);
   await waitIntro(t);
-  await _pump(t, 600);
+  await _pump(t, settle);
   return c;
 }
 
@@ -125,7 +133,7 @@ Future<void> _tapText(WidgetTester t, String text) async {
 }
 
 /// Plays round [i] right, then its reason.
-Future<void> _playRight(WidgetTester t, M4ServicePlanDeal deal, int i) async {
+Future<void> _playRight(WidgetTester t, M4ServicePlanDeal deal, int i, {int settle = 4500}) async {
   if (i == deal.callAt) await _refuse(t, deal);
   final round = _R.values[i];
   switch (round) {
@@ -149,8 +157,11 @@ Future<void> _playRight(WidgetTester t, M4ServicePlanDeal deal, int i) async {
       }
       await _tapText(t, _L.kitGo);
     case _R.order:
+      // Each card opens big first; its ✓ places it.
       for (final s in _S.values) {
-        await _tapKey(t, 'card-${s.name}');
+        await t.tap(find.byKey(ValueKey('card-${s.name}')));
+        expect(await confirmChoice(t), isTrue, reason: s.name);
+        await _pump(t, 300);
       }
   }
   await _pump(t, 1500);
@@ -158,8 +169,12 @@ Future<void> _playRight(WidgetTester t, M4ServicePlanDeal deal, int i) async {
   expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'reason deck $i');
   await _pump(t, 700);
   await _pickRight(t, _L.whyRight(round, fetched: deal.fault != _F.none));
-  await _pump(t, 4500);
+  await _pump(t, settle);
 }
+
+/// The map painter on the route round (what the sketch shows as picked).
+M4ServicePlanMapPainter _mapPainter(WidgetTester t) =>
+    t.widgetList<CustomPaint>(find.byType(CustomPaint)).map((w) => w.painter).whereType<M4ServicePlanMapPainter>().single;
 
 int _seedWhere(bool Function(M4ServicePlanDeal d) ok, {int from = 0}) {
   var s = from;
@@ -380,7 +395,7 @@ void main() {
         }
         debugPrint('PERF m4_service_plan ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -473,12 +488,154 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworkerPapers.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1200);
       expect(find.byType(MistakeCard), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes.single.key, _M.paperMissing.key);
+      await _close(t, c);
+    });
+
+    for (final call in [0, 1, 2]) {
+      testWidgets('the coworker comes even on a fast play (round $call): the committing button waits for him', (t) async {
+        final seed = _seedWhere((d) => d.callAt == call && d.fault != _F.none, from: 3);
+        final deal = dealM4ServicePlan(math.Random(seed));
+        final c = await _open(t, seed, settle: 0);
+        for (var i = 0; i < call; i++) {
+          // The round before his: go on the moment the reason is paid.
+          await _playRight(t, deal, i, settle: i == call - 1 ? 0 : 4500);
+        }
+        // The round has just begun (he is due 1.2–2.4 s from now): commit at once.
+        final round = _R.values[call];
+        switch (round) {
+          case _R.papers:
+            expect(await _pumpUntil(t, find.text(_L.papersGo), maxMs: 3000), isTrue);
+            await t.tap(find.text(_L.papersGo));
+          case _R.route:
+            expect(await _pumpUntil(t, find.byKey(const ValueKey('route-straight')), maxMs: 3000), isTrue);
+            await t.tap(find.byKey(const ValueKey('route-straight')));
+            await t.pump(const Duration(milliseconds: 16));
+            await t.tap(find.text(_L.routeGo));
+          case _R.kit:
+            expect(await _pumpUntil(t, find.byKey(const ValueKey('item-cable')), maxMs: 3000), isTrue);
+            for (final it in m4ServicePlanKit) {
+              await t.tap(find.byKey(ValueKey('item-${it.name}')));
+              await t.pump(const Duration(milliseconds: 16));
+            }
+            await t.tap(find.text(_L.kitGo));
+          case _R.order:
+            fail('he never comes on the work order');
+        }
+        await t.pump(const Duration(milliseconds: 50));
+        expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 600), isTrue, reason: 'he cuts in on the committing tap');
+        expect(find.byType(MistakeCard), findsNothing, reason: 'the tap did not settle the round');
+        expect(c.read(gameSaveProvider).mistakes, isEmpty);
+        await _pumpUntil(t, find.byType(ChoiceDeck));
+        await _pickRight(t, _L.coworkerFor(round).right);
+        await _pump(t, 2600);
+        // Then the round goes on as usual and is played right.
+        switch (round) {
+          case _R.papers:
+            await _tapKey(t, 'paper-${deal.fault.paper!.name}');
+            await _tapText(t, _L.papersFetch);
+          case _R.route:
+            await _tapText(t, _L.routeGo);
+          case _R.kit:
+            await _tapText(t, _L.kitGo);
+          case _R.order:
+            break;
+        }
+        await _pump(t, 1500);
+        expect(find.byType(MistakeCard), findsNothing);
+        expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+        await _pickRight(t, _L.whyRight(round, fetched: true));
+        await _pump(t, 3000);
+        expect(c.read(gameSaveProvider).mistakes, isEmpty);
+        expect(find.byType(CoworkerPeek), findsNothing);
+        expect(t.takeException(), isNull);
+        await _close(t, c);
+      });
+    }
+
+    testWidgets('the praise window takes no touch: a route tap after the right one changes nothing', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 2, from: 5);
+      final deal = dealM4ServicePlan(math.Random(seed));
+      final c = await _open(t, seed);
+      await _playRight(t, deal, 0);
+      final other = deal.routes.firstWhere((r) => r != _Rt.straight);
+      await _tapKey(t, 'route-straight');
+      await t.tap(find.text(_L.routeGo));
+      await t.pump(const Duration(milliseconds: 120));
+      await t.tap(find.byKey(ValueKey('route-${other.name}')), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 120));
+      expect(_mapPainter(t).picked, _Rt.straight);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      expect(_mapPainter(t).picked, _Rt.straight);
+      await _pickRight(t, _L.whyRight(_R.route));
+      await _pump(t, 2000);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: after idle a sweep over every sheet and the button (none singled out); taps on nothing show it too', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = _seedWhere((d) => d.callAt != 0 && d.fault != _F.none);
+      final c = await _open(t, seed);
+      IdleHintState hint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(hint().showing, isFalse);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue, reason: 'idle on the papers');
+      final opts = hint().debugOptions;
+      expect(opts, hasLength(4), reason: 'three sheets + the start button');
+      final sheets = opts.take(3).toList();
+      for (final r in sheets) {
+        expect(r.width, closeTo(sheets.first.width, 0.5), reason: 'every sheet the same');
+        expect(r.height, closeTo(sheets.first.height, 0.5), reason: 'every sheet the same');
+      }
+      // A touch hides it.
+      await t.tap(find.byKey(const ValueKey('paper-meter')));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(hint().showing, isFalse);
+      // Three taps on the empty scene within 4 s: the hand at once.
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(const Offset(40, 260));
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(hint().showing, isTrue, reason: 'misses');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _pump(t, 4000);
+      await _close(t, c);
+    });
+
+    testWidgets('work order: a card opens big first (no slip on touch); ✕ sets it aside; ✓ on the wrong one is the slip', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 0, from: 1);
+      final deal = dealM4ServicePlan(math.Random(seed));
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        await _playRight(t, deal, i);
+      }
+      expect(await _pumpUntil(t, find.byKey(ValueKey('card-${_S.values.last.name}')), maxMs: 4000), isTrue);
+      await _pump(t, 1500);
+      final wrong = find.byKey(ValueKey('card-${_S.values.last.name}'));
+      await t.tap(wrong);
+      await _pump(t, 100);
+      expect(find.byKey(const ValueKey('choice-confirm')), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing, reason: 'a touch is not a move');
+      await _pump(t, 400);
+      await t.tap(find.byKey(const ValueKey('choice-reject')));
+      await _pump(t, 300);
+      expect(find.byKey(const ValueKey('choice-confirm')), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is CardAside && w.aside), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await t.tap(wrong);
+      expect(await confirmChoice(t), isTrue);
+      await _pump(t, 1200);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, _M.orderWrong.key);
       await _close(t, c);
     });
 
@@ -501,9 +658,15 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       await t.tap(_onScreen(_L.coworkerKit.wrong).first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1500);
       expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['4.3/do/0'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key), containsAll([_M.paperMissing.key, _M.noGiWire.key]));
       await _close(t, c);
     });
   });

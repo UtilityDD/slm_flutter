@@ -20,6 +20,9 @@ class LinemanProfile {
 
   /// True when an admin has blocked this account.
   final bool blocked;
+
+  /// The member's choice to show the name on the league board (`league_show_name`).
+  final bool leagueShowName;
   final bool isGuest;
 
   const LinemanProfile({
@@ -40,6 +43,7 @@ class LinemanProfile {
     this.phone,
     this.verified,
     this.blocked = false,
+    this.leagueShowName = true,
     this.isGuest = false,
   });
 
@@ -68,6 +72,7 @@ class LinemanProfile {
       phone: (json['phone_number'] ?? json['phone'])?.toString(),
       verified: json.containsKey('verified') ? json['verified'] == true : null,
       blocked: json['blocked'] == true,
+      leagueShowName: json['league_show_name'] != false,
       isGuest: false,
     );
   }
@@ -123,6 +128,7 @@ class LinemanProfile {
       phone: phone,
       verified: value,
       blocked: blocked,
+      leagueShowName: leagueShowName,
       isGuest: isGuest,
     );
   }

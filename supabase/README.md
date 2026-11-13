@@ -9,6 +9,7 @@ Run each file once in the Supabase SQL editor. The database is shared with the w
 | `block_user.sql` | Block and unblock |
 | `verify_toggle.sql`, `verify_lineman.sql` | Verify / unverify a lineman |
 | `fix_new_google_signup.sql` | Profile row for a brand-new Google sign-up |
+| `league.sql`, then `league_rungs_seed.sql` | Monthly lineman league and all-time board (see `docs/LEAGUE.md`); run after `verify_lineman.sql` and `block_user.sql` |
 
 ## `submit_flutter_hourly_quiz.sql`
 

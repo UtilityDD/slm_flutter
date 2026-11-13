@@ -10,6 +10,7 @@ import 'core/startup/app_memory.dart';
 import 'core/startup/startup_trace.dart';
 import 'core/startup/startup_warmup.dart';
 import 'core/theme/app_theme.dart';
+import 'features/rank/league_service.dart';
 import 'features/shell/main_shell.dart';
 import 'features/startup/brand_intro.dart';
 
@@ -32,6 +33,8 @@ void bootstrap() {
     'supabase',
     () => SupabaseService.initialize(after: _firstFrameShown()),
   ));
+  // Monthly league: hears finished plays; sends offline ones after sign-in restore.
+  LeagueService.install();
 }
 
 /// Completes after the first frame, or after 1 s if no frame comes (app

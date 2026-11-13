@@ -42,11 +42,12 @@ lib/
     ├── beat_fx.dart                # HUD + flying ◆ (ScoreFlyHost) + DeathMomentHost
     │
     ├── # ---- the shared level kit (every level builds on these) ----
-    ├── full_scene_frame.dart       # FullSceneFrame, SceneMetrics, cornerGuide
+    ├── full_scene_frame.dart       # FullSceneFrame, SceneMetrics, cornerGuide, praise-window input shield, scene hint host
+    ├── gesture_hint.dart           # IdleHint, HintSpec, GestureHints, IdleHintController (the "how to touch" hand)
     ├── scene_kit.dart              # GuideIntro, LinemanFigure (poses, tipOf), AwakeClock
     ├── reason_table.dart           # ReasonTable mixin: putOnTable → askReason → zoom + এগিয়ে যান → paid
     ├── coworker_moment.dart        # CoworkerMoment mixin, CoworkerScript, CoworkerPeek (two-beat UI)
-    ├── choice_deck.dart            # ChoiceDeck + dealChoices(right, wrong, rng)
+    ├── choice_deck.dart            # ChoiceDeck + dealChoices; CardPreview, CardPreviewOverlay, CardAside (two-step pick)
     ├── do_parts.dart               # TaskNudge, DoCoachStrip, DoProgress, DoBigButton
     ├── mistake_kit.dart            # DoMistake, MistakeCard, bookMistake, DoDeathGuard
     ├── level_frame.dart            # DoStrikeOut, StruckOutCard, LevelIntro
@@ -67,7 +68,7 @@ lib/
     ├── kit_check / glove_check / helmet_check / distance_spot / tool_tip / pole_read
     ├── harness_check / harness_fit / rod_pick / discharge_order / ptw_match / ptw_steps
     ├── shock_rescue / golden_minute / fire_choose / fire_pass / sky_read / storm_push
-    ├── ten_sec_scan / gate_field                         # step 29 Do · step 30 rank gate
+    ├── ten_sec_scan / gate_watch                         # step 29 Do · step 30 rank gate
     ├── store_room, van_yard, pole_yard, harness_store, rod_van, ptw_site, ptw_yard,
     │   shock_scene, golden_field, fire_world, sky_world   # drawn full-scene painters
     │
@@ -112,12 +113,14 @@ and the kit files above.
 | Edge-to-edge scene under a floating header; tall phones get more sky | `FullSceneFrame` + `SceneMetrics` (height, lift, inset) |
 | Guide in a corner, tap = the task again in other words, never the answer | `cornerGuide` + `TaskNudge` (or `DoCoachStrip(tasks:)`) |
 | The player's worker | `LinemanFigure(look: LinemanLook.trainee)` (idle, walk, hold, spray, throwIt, cheer, worried; `tipOf`) |
-| Right action → ◆ waits on the table → "কেন …?" → zoom + **এগিয়ে যান** → paid → next | `ReasonTable` mixin: `putOnTable(n)`, `askReason(…)`, `reasonDeck`, `proceedReason`, `tableLayers`, `whyPayout` — tests must tap `reason-proceed-btn` |
-| Any 3-card choice | `ChoiceDeck` + `dealChoices(right, wrong, rng)` (libraries ≥ 2 right, ≥ 5 wrong, all within 1.3× length) |
-| The careless coworker peeps in once per play (two beats) | `CoworkerMoment` + `CoworkerScript`; beat 1 = caption under HUD + `RivalTalk` voice (guide idle); beat 2 = chip by peep + guide ask + deck. Hooks `coworkerCanCome` / `onCoworkerAnswer` |
+| Right action → ◆ waits on the table → "কেন …?" → zoom + **এগিয়ে যান** → paid → next | `ReasonTable` mixin: `putOnTable(n)`, `askReason(…)`, `reasonDeck`, `proceedReason`, `tableLayers`, `whyPayout` — tests must tap `reason-proceed-btn`. **Praise window:** from `putOnTable` until the deck opens, `tableHolding` is true and `FullSceneFrame` shields the scene and overlays by itself (header close/mute stay live); `tableBusy` = `tableHolding \|\| reasonOpen` — add `!tableBusy` to the level's `_canPlay` so no handler can score twice or slip in that window |
+| Any 3-card choice | `ChoiceDeck` + `dealChoices(right, wrong, rng)` (libraries ≥ 2 right, ≥ 5 wrong, all within 1.3× length). **Two steps** (playbook §1.4): a tap opens the card big (`CardPreview`: full text, ✕ **বাদ দিন** key `choice-reject`, ✓ **বেছে নিন** key `choice-confirm`, the same for every card); the buttons ignore taps for `ChoiceDeck.armDelay` (300 ms); only ✓ calls `onPick`; ✕ sets the card aside (dimmed, struck, grey; reopenable). Words in `ChoiceDeckLines` |
+| A level's own multi-option picker (chips, team buttons, knob positions, step cards, quiz rows — not a `ChoiceDeck`) | Same two steps with `CardPreviewOverlay(textBn:, icon: / index: / art:, quiet:, muted:, bottom: pad.bottom, onConfirm:, onReject:)` as a keyed `Positioned.fill` in `FullSceneFrame(overlays:)` — **after** `cornerGuide` and `coworkerPeek` so nothing covers its buttons. The picker's tap only stores the preview (`_xPreview`, tap origin); `onConfirm` clears it and calls the old evaluating handler with the stored origin (so scoring, strikes, `holdForCoworker()` and progression are unchanged); `onReject` adds it to an aside set drawn with `CardAside(aside:, child:)`. While a preview is open: `hintWaiting` false (the overlay sweeps its own two buttons) and `coworkerCanCome` returns false. Clear the aside set when the answer is confirmed or the round changes. Converted: m2_megger_prep (knob positions), m4_service_plan (work-order cards), m5_lv_street_read (scope chips), m5_workshop_referral (team buttons), learn_runner (quiz options, `top: 0`). Tests: `confirmChoice(t)` after the tap |
+| The careless coworker peeps in once per play (two beats) | `CoworkerMoment` + `CoworkerScript`; beat 1 = caption under HUD + `RivalTalk` voice (guide idle; muted → caption held `MascotSpeechLibrary.readHold(line)`); beat 2 = chip by peep + guide ask + deck. Hooks `coworkerCanCome` / `onCoworkerAnswer`. He never comes during a praise window. **Hold a decisive control for him:** `coworkerDue` (scheduled, not come yet) and `if (holdForCoworker()) return;` at the top of the control that would finish his item — the control does nothing, the guide hushes, he comes now (even if `coworkerCanCome` says "not yet"; `coworkerHeld` is true meanwhile); after him, or when `coworkerCanCome` returns null, it returns false. Replaces hand-rolled `_holdForCoworker()` (m2_hydraulic_use, m3_service_drop) |
+| A hand shows **how** to touch when the player is stuck (never what) | `gesture_hint.dart`. Scene: `FullSceneFrame(hint: () => HintSpec…, hintWaiting: <waiting for input>, hintKey: <round/station>, hintController: _hints)`; anywhere else wrap the waiting widget in `IdleHint(waiting:, spec: (size) => …, waitKey:, child:)`. Specs: `HintSpec.tap(at)`, `.hold(at)`, `.drag(from, toward:, travel:)` (≤ 96 dp nudge in a generic direction), `.swipe(from, toward:)`, `.sweep(rects)` (passes over all, presses none); `space: HintSpace.global` (default) / `.local` / `.scene` (design px, mapped by the frame). Helpers: `HintSpec.tapOn(key)`, `holdOn(key)`, `dragFrom(key, toward:)`, `sweepOver(keys)`, `gridCells(…)`, `globalRectOf(key)`. Misses: a scene with one big tap detector calls `_hints.missTap()` from its "tapped nothing" branch (or pass `hintAutoMiss: true`). Built in: `ChoiceDeck` (sweep over open cards; none when one card is left), every card preview (`ChoiceDeck`'s and `CardPreviewOverlay`: a sweep over ✕ and ✓ as a pair, once armed), the zoomed reason card (tap **এগিয়ে যান**), the Learn board pick and reason chips (sweep), and the Do level scenes (all but `ten_sec_scan.dart`). Not yet wired: `LearnRunnerPage`'s question list. A sweep drops options whose centre is outside the hint's box; a hint never shows on a route that is covered or with tickers muted |
 | Mistakes | `DoMistake(key, textBn, art, deadly, lessonPoint)`, `MistakeCard` (+ পাঠে দেখুন → `openLessonPoint`), `bookMistake` |
 | 3 slips | `DoStrikeOut` mixin (`strike(m)`), `StruckOutCard` (insists on reading) |
-| Deadly | `FreezeFrame` + `freezeFilter` on the scene, the consequence in colour, then `DoDeathGuard.bookDeadly(m, runScore:)` (first death of the game = near-miss) |
+| Deadly | `FreezeFrame` + `freezeFilter` on the scene, the consequence in colour, then `DoDeathGuard.bookDeadly(m, runScore:)` (first death of the game = near-miss). While it runs `FreezeFrame` swallows every touch under it (layers after it in the Stack stay live) except, inside `FullSceneFrame`, the header band (status bar + `FullSceneFrame.headerBand`: close, mute) — `HeaderSafeShield`; it fills its Stack with or without a `Positioned` |
 | Pass | `LevelPassPanel` (rank, mark, time, ◆, "আজ যা ধরলেন"), `starsFor` + `recordStars`, quick bonus under `quickMs` |
 | Order move | `OrderRun` / `OrderGroup` (`order_steps.dart`) |
 | Effects | Lottie via `tool/lottie_gen.py` → `assets/game/anim/`, `FxLoop` / `FxOnce` (awake 5 s after each wake) |
@@ -129,6 +132,29 @@ and the kit files above.
 - Every `await` in a page is followed by a `mounted` / still-valid check (`stillValid:` on `askReason`).
 - The coworker never comes on the item whose answer his arrival would give away (deal him on any item of the class).
 - No hint or highlight before a mistake; nothing on the scene may mark the right answer (colour, size, order, backdrop).
+  The gesture hint is the one exception and only shows *how* to touch: never `HintSpec.tap/hold` on one of several answers,
+  never a drag toward the right target, and `hintWaiting` false during the intro, voice-locked beats, cards, decks
+  (the deck has its own sweep), freezes and results.
+- Hints are **off in widget tests** (`FLUTTER_TEST`, as main.dart turns off the intro) so idle-perf tests stay at zero
+  frames; a test that checks a hint sets `GestureHints.debugEnableInTests = true` and resets it in `tearDown`.
+  Likewise the two reading holds keep the old instant timing in widget tests unless opted in:
+  `CoworkerTiming.debugReadHoldInTests` (muted beat 1) and `MascotSpeechLibrary.debugSilentHoldInTests` (unrecorded rival
+  line); `test/level_kit_test.dart` opts in.
+- The praise window is input-dead on purpose: a level that needs a tap between `putOnTable` and `askReason` (a
+  tap-to-skip dwell) now just waits out the dwell. Do not add controls that must work in that window.
+- `FullSceneFrame` finds the `ReasonTable` state above it (`findAncestorStateOfType`) — keep `FullSceneFrame` inside the
+  level state's own build. Pass `inputBlocked:` to override.
+- `ChoiceDeck` is stateful (it keeps a `GlobalKey` per card for the sweep); key it per question (`ValueKey('why-deck-…')`)
+  as before.
+- **No answer on touch.** Every multi-card pick is preview → ✓/✕ (above); any explanation after a pick (zoomed reason,
+  `MistakeCard`, a quiz result) waits for its Continue button (**এগিয়ে যান**, the card's button, **পরের প্রশ্ন**) — never a
+  timer. Tests pick with `pickChoice(t, text)` / `confirmChoice(t)` / `tapReasonProceed(t)` (`test/support/reason_proceed.dart`;
+  Learn boards: `test/support/board_pick.dart`). A free selection committed by a separate button (m4_service_plan's papers,
+  route, kit) and physical tool moves in a scene (fire_choose tools, m2_comealong_pull, m2_crimp_steps, m3_conductor_joint,
+  m3_meter_call, m3_service_drop, m4_dtr_temp, m4_tree_cut) are not card picks.
+- **Top bar:** `LevelShellBar` → close · **L<n>** (ladder step) · ◆ level score · 💀 · 📖 read-lesson book (+ an optional
+  clock). No speaker button (`muted`/`onToggleMute` stay only so callers compile). Its sizes scale with the width
+  (`UnifiedGameTopHud.scaleFor`), so a test finds the score from the ◆ in its pill, never by font size.
 
 ---
 
@@ -162,7 +188,7 @@ Follow the playbook's 9 beats. Closest models: `pole_read.dart` (inspect + decid
 
 ## 7. Voice
 
-- **Router** `MascotSpeechLibrary.speak(text, {voiceKey, muted, rival})`: Duty-Slip clip → `LearnVoice.resolve(text, rival:)` (recorded clip) → device TTS. Guide lines drive **`MascotTalk`**; `rival: true` drives **`RivalTalk` only** so `AiLinemanGuide` does not lip-sync during coworker/Learn-rival speech.
+- **Router** `MascotSpeechLibrary.speak(text, {voiceKey, muted, rival})`: Duty-Slip clip → `LearnVoice.resolve(text, rival:)` (recorded clip) → device TTS (**guide only**). Guide lines drive **`MascotTalk`**; `rival: true` drives **`RivalTalk` only** so `AiLinemanGuide` does not lip-sync during coworker/Learn-rival speech. A rival line with **no clip** never falls back to the device voice: it is silent, his lips stay still, and `speak` returns after `MascotSpeechLibrary.readHold(text)` (a new line or `stop()` ends it) so his caption/bubble stays up for reading — Do levels and Learn boards alike. Muted `speak` returns at once; callers hold captions themselves (`CoworkerMoment` does).
 - **The guide's new lines: device TTS** (owner decision, 2026-11-06). Keep them in the level's `*Lines` class so they can be recorded later.
 - **The rival / careless coworker speaks only in his recorded voice.** One clip per line:
   `python -I tool/rival_clip.py . say.txt` (line 1 = key text as in the code, line 2 = spoken form; voice bn-BD-PradeepNeural −6 % −14 Hz). It writes `assets/sounds/learn_voice/r_<sha1>.mp3` and registers it in `learnRivalVoice`. Then list the line in `tool/dump_learn_voice_lines_test.dart` (coworker scripts in the "Do levels on the kit" list; board lines via `XxxBoardLines.recorded`).
@@ -219,7 +245,7 @@ Status per rung: [GAME_PATH_CHECKLIST.md](GAME_PATH_CHECKLIST.md). Deadly lists:
 | 26 | `1.9/do/0` · `sky_read` · `do_1_9_a` | `sky_read.dart`, `sky_world.dart` | turning weather, tap the signs, stop or work on; lightning push = deadly; a needless stop is not scored |
 | 27 | `1.9/do/1` · `storm_push` · `do_1_9_b` | `storm_push.dart` | the supervisor (rival art/voice) per `StormCue`; hands-on refusal, shelter; climbing in a storm = deadly |
 | 29 | `1.10/do/0` · `ten_sec_scan` · `do_1_10_a` | `ten_sec_scan.dart` | 10 rapid Go/Stop checks remixing Module 1; reason deck; coworker once |
-| 30 | `m1/gate` · `gate_field` · `gate_m1` | `gate_field.dart` | Rank gate — see §10a |
+| 30 | `m1/gate` · `gate_watch` · `gate_m1` | `gate_watch.dart` + `gate_watch_world.dart` | Hazard-spotting rank gate: dealt moments of one job, stop → tap where → lens → what → fix; see §10a |
 
 Boards: `learnBoardPack11/12` (`learn_board_models.dart`), `learnBoardPack13…19` (`learn_board_pack13…19.dart`), `learnBoardPack110` (`learn_board_pack110.dart`, art `tool/scan_board_art.py`). The `storm_board/` folder is shared: `rain_/thunder_/wind_/step_/plan_` (board), `sky_` (step 26), `push_` (step 27).
 
@@ -227,22 +253,33 @@ Legacy (`lib/features/duty_slip/`): `dsLevels` 1–33 still exist for **unbuilt*
 
 ---
 
-## 10a. Rank Gate (step 30) — for the next agent
+## 10a. Rank Gate (step 30) — hazard-spotting gate
 
-**Status:** Module 1 is complete. `m1/gate` / pack `gate_m1` / `engineType: gate_field` is `playable`. Pass calls `markRungCleared('m1/gate')` + `unlockRank(1)` (ট্রেইনি) and shows the সুরক্ষা কবচ badge copy in `GateLines.allSet`.
+**Status:** `m1/gate` / pack `gate_m1` / `engineType: gate_watch` is `playable` (rebuilt 2026-11-11 from the owner's
+2026-11-10 concept; the earlier five-station medley was rejected and deleted). Pass calls
+`markRungCleared('m1/gate')` + `unlockRank(2)` (ট্রেইনি → জুনিয়র: Module 2's `rankName`) and shows the rank-up on the pass panel.
 
-**File:** [`lib/features/game/gate_field.dart`](lib/features/game/gate_field.dart) — one host with pure `GateRun` + five stations on the shared kit (`GuideIntro`, `FullSceneFrame`, `ReasonTable`, `CoworkerMoment`, `DoDeathGuard`). Wire: `do_games.dart` `case 'gate_field'`; mistakes in `mistakes_book.dart` via `GateMistakes.all`. Guide clips already under `assets/sounds/guide_voice/gate_*.mp3`.
+**Files:** [`lib/features/game/gate_watch.dart`](lib/features/game/gate_watch.dart) (content, deal, pure `GateRun`, page) and
+[`lib/features/game/gate_watch_world.dart`](lib/features/game/gate_watch_world.dart) (the crew, the moments' animation, tap
+zones, cameras, the consequence painter; it reuses `VanYardPainter`, `PoleYardPainter` and `PolePainter`). Wire: `do_games.dart`
+`case 'gate_watch'`; mistakes in `mistakes_book.dart` via `GateMistakes.all`; the coworker's lines in
+`tool/dump_learn_voice_lines_test.dart` (`GateLines.coworker`); pictures in `assets/game/art/gate/`.
 
-**Stations (fixed order, one 11 kV feeder job):**
-1. **Van** — pick 11 kV rod; reject PVC jugaad (deadly) and damaged stick (slip).
-2. **PTW** — refuse verbal phone "লাইন বন্ধ… কাগজ পরে" (start without written PTW = deadly).
-3. **Pole** — 360° orbit + hammer knock; climb uninspected / condemned = deadly.
-4. **Discharge** — earth clamp first, then R/Y/B with spark; line before earth = deadly.
-5. **Storm** — coworker peeps once; refuse rush; van shelter (tree/pole climb/touch wire = deadly).
+**How it plays:** GuideIntro with the dealt docket (kV · feeder · pole · job) → 10–12 moments of one job in its order
+(`GateSlot`: helmet, shirt, boots, gloves, kite, permit, rod, harness, pole check, discharge, anchor, sky, fire, line clear),
+dealt from 24 mistakes (`GateFault`, lessons 1.1–1.9) + 14 done right; about half wrong, ≥ 2 deadly-class, mistakes from
+4+ lessons. While a moment plays the red **থামান!** button is up (reduced motion: a still for the same time). A stop holds
+the scene → tap where (`gateZones`) → the lens → “কী ভুল?” (ChoiceDeck) → “এখন কী করবেন?” on the ◆ table (`ReasonTable`, 15,
+or 10 after a wrong tap / wrong pick) → the crew redoes it right. Missed slip-class = its card (a slip); missed deadly-class
+= freeze grey + the consequence in colour (`GateHarmPainter`) + `bookDeadly`; a needless stop = “সব তো ঠিক ছিল!” (a slip);
+3 slips = `StruckOutCard`. The coworker once, as a mistake moment starts ("থামিও না, দেরি হয়ে যাচ্ছে!", clip `r_feab595cb8`);
+the stop waits for him (`holdForCoworker`); listening = that mistake is missed. Gesture hint: a sweep over broad areas of
+the scene (`gateLookAreas`), the same whatever the mistake. Test hook: `GateWatchProbe` (tests only).
 
-**Do not:** reopen legacy Level 33 as the gate; invent new deadly rules without owner yes; wholesale-rerun `tool/make_learn_voice.py` (it deletes clips missing from a fresh dump). New rival lines only via `tool/rival_clip.py` + `learnRivalVoice` + dump-test entry.
+**Do not:** reopen legacy Level 33 as the gate; add deadly rules without the owner; rerun `tool/make_learn_voice.py`.
 
-**Tests:** `test/gate_field_test.dart` (rules + option lengths + smoke), `test/perf/gate_field_perf_test.dart` (idle rebuild guard).
+**Tests:** `test/gate_watch_test.dart` (deal rules, every moment's zone/card, libraries, wiring, full pass, missed deadly,
+needless stop + strike-out, coworker hold + listen, gesture hint), `test/perf/gate_watch_perf_test.dart` (idle in a stop).
 
 ---
 
@@ -251,6 +288,42 @@ Legacy (`lib/features/duty_slip/`): `dsLevels` 1–33 still exist for **unbuilt*
 Keep guide, intro, task, and coworker-ask Bangla **short** (one breath, ~1 short sentence). Long lectures belong in the lesson reader, not on the scene. When you shorten a **recorded** Learn/rival line, the clip map key in `learn_voice_map.dart` must match the new UTF-8 string exactly (or register a new clip). Ladder welcome/idle/poke lines in `mascot_speech_library.dart` use device TTS for now — keep them short too.
 
 Learn board: after a wrong pick, shake + redeal + speak the reject line. **Do not** re-add a full-screen inspect zoom overlay on miss (removed 2026-11-11).
+
+---
+
+## 10c. Level reference (Module 5, wired 2026-11-12 — pending owner review)
+
+Deadly/slip table, per-rung owner questions: [MODULE5_LADDER.md](MODULE5_LADDER.md); rulings: `docs/module_specs/module5_rulings.md`.
+Every Do pack's catalog `deadlyRules` lists that level's `deadly: true` mistake keys (`test/m5_wiring_test.dart` keeps them equal);
+art in `assets/game/art/m5_<name>/`; mistakes via `...m5_<name>.<X>Mistakes.all` in `mistakes_book.dart`; coworker scripts in
+`tool/dump_learn_voice_lines_test.dart`. Most levels expose a test-only `*Probe` hook.
+
+| Step | Rung · engineType · pack | Files | Notes |
+|---:|---|---|---|
+| 2 | `5.1/do/0` · `m5_trip_call` · `do_5_1_a` | `m5_trip_call.dart`, `m5_trip_call_world.dart` | control-room call: drag handset up, 7 question tiles (6 required incl. the logbook; 2 dealt vague topics, a second tap probes; a needless re-ask loses the thorough and quick bonus), drag down; pin the suspect, van on the start section; briefing (PTW scoped to touching/climbing, M5-3); coworker = lesson myth 2 on the first hang-up of his call, listening = deadly (R8); operator on device TTS; quickMs 100 s |
+| 3 | `5.1/do/1` · `m5_recloser_watch` · `do_5_1_b` | `m5_recloser_watch.dart`, `m5_recloser_watch_world.dart` | count recloser shots against decoys, report count + span; lock-out: docket → drive → PTW → tester → spike → clamp (no-PTW / no-test / no-earth / clamp-first deadly); PTW-stage hint is a sweep over the radio and the van, not a hold (playbook §1.3); quick clock from the lock-out (70 s) |
+| 5 | `5.2/do/0` · `m5_fault_address` · `do_5_2_a` | `m5_fault_address.dart`, `m5_fault_address_world.dart` | radio the control room for the docket first (M5-3; not on the in-service call), drive the van, read FPIs (close-up), bracket with two flags; long feeder = van 2 to the far end; sectionalizer call; decoy groves + grove T-off on the map only; needless stop loses the clean +5; history note; no deadly; quickMs 120 s |
+| 6 | `5.2/do/1` · `m5_sense_walk` · `do_5_2_b` | `m5_sense_walk.dart`, `m5_sense_walk_world.dart` | hold-walk / release-stop, swipe up to the pole top, ear/nose hold (nearest pole), tag; the hidden clue counts only after a positive ear/nose at that pole (M5-10, else slip blind-tag); decoy dirt layers and 1–2 DTRs every play; fallen wire AHEAD (stop ≥10 m, rope ring ≥10 m, then walk to the rope) or DROP (feet-together steps out, stride = deadly); coworker at the wire (listen = deadly) or mid-span 'look up while walking' (listen = slip); hook `SenseWalkProbe` |
+| 8 | `5.3/do/0` · `m5_culprit_case` · `do_5_3_a` | `m5_culprit_case.dart`, `m5_culprit_case_world.dart` | photograph clues, thread to the culprit, type + remedy deck; 'charge and see' remedy = deadly (R8, builder-added); villager blast-sound clue at some spots; hook `M5CulpritProbe`; quickMs 100 s |
+| 9 | `5.3/do/1` · `m5_anneal_cut` · `do_5_3_b` | `m5_anneal_cut.dart`, `m5_anneal_cut_world.dart` | earth both ends (climb with one missing = deadly R4), spanner off the old clamp/sleeve, judge softness by colour, cut out the soft length (too far = needless-cut slip, blocked), new joint; the snapped spot has no spanner step; the sleeve is a bolted joint sleeve; quickMs 70 s |
+| 11 | `5.4/do/0` · `m5_feeder_sectionalize` · `do_5_4_a` | `m5_feeder_sectionalize.dart`, `m5_feeder_sectionalize_world.dart` | pull every LT way, shut the DO, restore one by one, tag the blower; DTR/HT case → patrol or megger; deadly: no LT open, faulty way re-pushed, re-charge with nothing changed, re-charge after HT proved; quickMs 75 s |
+| 12 | `5.4/do/1` · `m5_reblow_clock` · `do_5_4_b` | `m5_reblow_clock.dart`, `m5_reblow_clock_world.dart` | read today's logbook page, look + hold the DO / hold the clock, drag one of two identical stamps; fuse-rating tag on the DO arm (M5-8); permanent → coworker (fault burning, deadly) → order deck; transient → 3-picture where-to-look deck; quickMs 60 s |
+| 14 | `5.5/do/0` · `m5_lv_street_read` · `do_5_5_a` | `m5_lv_street_read.dart`, `m5_lv_street_read_world.dart` | ask the street → scope chip → route → LTDB R/Y/B (3 phases before 'fine'; live tap = deadly) → line probes → evidence-gated verdict → docket/span card; coworker myth 1 on probe 1–2 of one area complaint (probes wait); notebook 2 columns / no heading on short phones; 'রিডিং দেখে ঠিক রায়' not earned when 8+ houses are probed; quickMs 90 s |
+| 15 | `5.5/do/1` · `m5_lv_load_test` · `do_5_5_b` | `m5_lv_load_test.dart`, `m5_lv_load_test_world.dart` | measure with the load on, N–E, evidence-gated verdict, method deck (R22 deadly), every joint, loaded re-measure / load-grew report; 4 coworker scripts (`M5LvLoadLines.coworkerScripts`); guide/customer lines for later recording: `M5LvLoadLines.spoken`; quickMs 90 s |
+| 17 | `5.6/do/0` · `m5_fault_casebook` · `do_5_6_a` | `m5_fault_casebook.dart`, `m5_fault_casebook_world.dart` | 4 cases, 2 clues by gesture (tap/swipe-up/sweep/hold), close-up circle; slip locked until both clues are seen (M5-10), then dragged into short/open/trip-no-proof; noSign dealt only as a feeder trip (filed as open → trip-not-open card); coworker trip myth holds the first clue; no deadly; quickMs 70 s |
+| 18 | `5.6/do/1` · `m5_live_wire_guard` · `do_5_6_b` | `m5_live_wire_guard.dart`, `m5_live_wire_guard_world.dart` | swipe to stop people reaching live metal, in waves; needless stop = 2 s busy + loses the wave's +5 + the quick bonus; from wave 2 a trap (needless people 300–600 ms before a live one); 2 dealt coworker lines (`M5LiveWireLines.coworkers`); import with `show` (the file re-exports world types); hook `M5LiveWireProbe`; quickMs 90 s |
+| 20 | `5.7/do/0` · `m5_searchlight_patrol` · `do_5_7_a` | `m5_searchlight_patrol.dart`, `m5_searchlight_patrol_world.dart` | docket chip (M5-3), two-person van, steer the searchlight, call the speed, mark poles, phone the report; climbing to look = deadly; hook `M5SearchlightProbe`; quickMs 90 s |
+| 21 | `5.7/do/1` · `m5_dark_eyes` · `do_5_7_b` | `m5_dark_eyes.dart`, `m5_dark_eyes_world.dart` | headlamp off, wait (~5 s adaptation), mark the corona/tracking glow or sound (mark before the clue = slip), report from the ground; final deck: right / climb-or-poke (deadly) / morning-or-put-off (slip); quickMs 75 s |
+| 23 | `5.8/do/0` · `m5_cause_strike` · `do_5_8_a` | `m5_cause_strike.dart`, `m5_cause_strike_world.dart` | run a test (ear, tong, gauge, meter, bushing tester), strike ruled-out causes; deadly: untested spanner/hands, climbing live; 5 coworker scripts (hum, humLate, live, climb, small); hum WAVs live in the art folder (`ZlFx.cue('game/art/m5_cause_strike/hum_*.wav')`); quickMs 80 s |
+| 24 | `5.8/do/1` · `m5_workshop_referral` · `do_5_8_b` | `m5_workshop_referral.dart`, `m5_workshop_referral_world.dart` | gather proof at 3 sites (bushing, IR card, oil colour/water/smell, record book), pin it on the workshop slip; re-charge DTR / LT with the blower in / no HT test = deadly; water push = slip (M5-6); quickMs 90 s |
+| 26 | `5.9/do/0` · `m5_cable_fault_type` · `do_5_9_a` | `m5_cable_fault_type.dart`, `m5_cable_fault_type_world.dart` | isolate + lock/tag both ends, plan megger/multimeter tests core by core, discharge, deduce open/short/earth; deadly: live lead (R23), earthed rod on a live core, lifting a charged clip (R24); clean play ~4.6 min; quickMs 230 s |
+| 27 | `5.9/do/1` · `m5_cable_route_locate` · `do_5_9_b` | `m5_cable_route_locate.dart`, `m5_cable_route_locate_world.dart` | read the TDR (blank → ARM), trace the route, phone the three underground owners before the peg (M5-7), sweep for the thump, chalk, peg labelled 'গোঁজ'; coworker B1/B2 dealt; no deadly; quickMs 80 s |
+| 29 | `5.10/do/0` · `m5_pm_thermal_round` · `do_5_10_a` | `m5_pm_thermal_round.dart`, `m5_pm_thermal_round_world.dart` | sweep the thermal camera, snap hotspots (>15 °C over the same joint on the other two phases, M5-15b), shutdown order (phone → permit → tester → earth), torque click; deadly: no permit / no test / no earth; quickMs 80 s |
+| 30 | `m5/gate` · `m5_gate_case` · `gate_m5` | `m5_gate_case.dart`, `m5_gate_case_world.dart` | one fault call as crew in-charge: phone menu, PTW clipboard, chip → map → order → hold radio dispatch (9 orders incl. rope-beside-wire R16 slip and bamboo poke R20 deadly), close view or UG sheet, report, line clear (PTW returned: hands-on after it deadly); 3 coworker scripts (chargeNight, chargeDay, waitMorning); quickMs 7 min; `unlockRank(5)` |
+
+Boards: `learnBoardPack51 … 59`, `learnBoardPack510` (`learn_board_pack5<L>.dart`, art `assets/game/art/m5_board5<L>/`, generator
+`tool/m5_board5<L>_art.py`), exported with their `M5Board5<L>Lines` from `learn_board_models.dart`. Boards have no deadly freeze
+(kit design); the deadly-class traps cost a ◆ and show their lesson/ruling text.
 
 ---
 

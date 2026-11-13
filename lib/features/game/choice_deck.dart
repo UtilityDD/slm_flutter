@@ -26,6 +26,10 @@ import 'gesture_hint.dart';
 // later. Only ✓ calls [ChoiceDeck.onPick]; the buttons take no tap while the
 // preview opens (a double tap on a card can't confirm it). Idle on the
 // preview, the hand sweeps over both buttons as a pair — never one alone.
+//
+// A level's own multi-option pickers (chips, team buttons, step cards on a
+// board) use the same card through [CardPreviewOverlay]: same text, buttons,
+// keys, 300 ms arming and pair hint; ✕ sets that picker aside ([CardAside]).
 
 @immutable
 class ChoiceOption {
@@ -190,14 +194,7 @@ class _ChoiceDeckState extends State<ChoiceDeck> {
     );
   }
 
-  /// The tallest the preview may be: the screen under the header, less the
-  /// sheet's own edges; never more than ~2/3 of the screen (the scene stays).
-  double _previewMaxHeight(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final h = mq.size.height;
-    final room = h - mq.padding.top - mq.padding.bottom - 54 - 12 - 40;
-    return math.max(150.0, math.min(room, math.max(220.0, h * 0.62)));
-  }
+  double _previewMaxHeight(BuildContext context) => CardPreview.maxHeightFor(context);
 
   Widget _sheet(BuildContext context) {
     final options = widget.options;
@@ -257,7 +254,7 @@ class _ChoiceDeckState extends State<ChoiceDeck> {
               ),
             ),
             if (preview != null && previewIndex >= 0)
-              _ChoicePreview(
+              CardPreview(
                 key: ValueKey('choice-preview-$preview'),
                 index: previewIndex,
                 textBn: preview,
@@ -276,12 +273,14 @@ class _ChoiceDeckState extends State<ChoiceDeck> {
   }
 }
 
-/// A card opened big: its number, its full text (scrolls inside if long) and
-/// the two buttons — the same for every card, so nothing gives the answer away.
-class _ChoicePreview extends StatelessWidget {
-  const _ChoicePreview({
+/// A card opened big: its number (or icon), its full text (scrolls inside if
+/// long) and the two buttons — ✕ বাদ দিন (key `choice-reject`) and ✓ বেছে নিন
+/// (key `choice-confirm`), the same for every card, so nothing gives the
+/// answer away. Shared by [ChoiceDeck] and [CardPreviewOverlay] (a level's own
+/// pickers); the buttons take taps only when [armed].
+class CardPreview extends StatelessWidget {
+  const CardPreview({
     super.key,
-    required this.index,
     required this.textBn,
     required this.quiet,
     required this.armed,
@@ -290,9 +289,19 @@ class _ChoicePreview extends StatelessWidget {
     required this.rejectBox,
     required this.onConfirm,
     required this.onReject,
+    this.index,
+    this.icon,
+    this.art,
   });
 
-  final int index;
+  /// The card's number on its board (shown 1-based), or null.
+  final int? index;
+
+  /// Shown in the badge when there is no [index] (a level's own button icon).
+  final IconData? icon;
+
+  /// A picture on the card, above [textBn] (e.g. an image option).
+  final Widget? art;
   final String textBn;
   final bool quiet;
   final bool armed;
@@ -302,8 +311,20 @@ class _ChoicePreview extends StatelessWidget {
   final VoidCallback onConfirm;
   final VoidCallback onReject;
 
+  /// The tallest the preview may be: the screen under the header, less the
+  /// sheet's own edges; never more than ~2/3 of the screen (the scene stays).
+  static double maxHeightFor(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final h = mq.size.height;
+    final room = h - mq.padding.top - mq.padding.bottom - 54 - 12 - 40;
+    return math.max(150.0, math.min(room, math.max(220.0, h * 0.62)));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final i = index;
+    final ic = icon;
+    final art = this.art;
     final card = Container(
       constraints: BoxConstraints(maxWidth: 560, maxHeight: maxHeight),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -325,28 +346,48 @@ class _ChoicePreview extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: SlmColors.navy950.withValues(alpha: 0.7),
-                    border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.9)),
+                if (i != null || ic != null) ...[
+                  Container(
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: SlmColors.navy950.withValues(alpha: 0.7),
+                      border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.9)),
+                    ),
+                    child: i != null
+                        ? Text(enDigits('${i + 1}'), style: bangla(fontSize: 16, fontWeight: FontWeight.w900, color: SlmColors.gold200))
+                        : Icon(ic, size: 20, color: SlmColors.gold200),
                   ),
-                  child: Text(enDigits('${index + 1}'), style: bangla(fontSize: 16, fontWeight: FontWeight.w900, color: SlmColors.gold200)),
-                ),
-                const SizedBox(width: 12),
+                  const SizedBox(width: 12),
+                ],
                 Expanded(
                   child: SingleChildScrollView(
                     key: const ValueKey('choice-preview-scroll'),
                     child: Padding(
                       padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        enDigits(textBn),
-                        key: const ValueKey('choice-preview-text'),
-                        style: bangla(fontSize: 18.5, fontWeight: FontWeight.w800, height: 1.42, color: SlmColors.ivory),
-                      ),
+                      child: art == null
+                          ? Text(
+                              enDigits(textBn),
+                              key: const ValueKey('choice-preview-text'),
+                              style: bangla(fontSize: 18.5, fontWeight: FontWeight.w800, height: 1.42, color: SlmColors.ivory),
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                art,
+                                if (textBn.isNotEmpty) ...[
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    enDigits(textBn),
+                                    key: const ValueKey('choice-preview-text'),
+                                    style: bangla(fontSize: 18.5, fontWeight: FontWeight.w800, height: 1.42, color: SlmColors.ivory),
+                                  ),
+                                ],
+                              ],
+                            ),
                     ),
                   ),
                 ),
@@ -403,6 +444,144 @@ class _ChoicePreview extends StatelessWidget {
       child: centred,
     );
   }
+}
+
+/// A level's own picker (buttons, chips, step cards on its board — not a
+/// [ChoiceDeck]) opened big: the same [CardPreview] over a dim shade, rising
+/// from the bottom. A tap on the shade does nothing (the scene underneath
+/// takes no touch); the player answers only with ✓ ([onConfirm]) or sets the
+/// card aside with ✕ ([onReject]). The buttons take taps after
+/// [ChoiceDeck.armDelay]; idle, the hand sweeps over both of them. The level
+/// shows it while its card is open (`Positioned.fill` in its overlays), keeps
+/// its own scene hint quiet meanwhile, and removes it in the callbacks.
+class CardPreviewOverlay extends StatefulWidget {
+  const CardPreviewOverlay({
+    super.key,
+    required this.textBn,
+    required this.onConfirm,
+    required this.onReject,
+    required this.quiet,
+    required this.muted,
+    this.index,
+    this.icon,
+    this.art,
+    this.top,
+    this.bottom = 0,
+  });
+
+  final String textBn;
+  final int? index;
+  final IconData? icon;
+  final Widget? art;
+  final VoidCallback onConfirm;
+  final VoidCallback onReject;
+  final bool quiet;
+  final bool muted;
+
+  /// Where the shade starts (default: under the status bar and the level's
+  /// top bar, which stay usable). 0 inside a body with no header over it.
+  final double? top;
+
+  /// Room kept under the card (e.g. the bottom inset).
+  final double bottom;
+
+  @override
+  State<CardPreviewOverlay> createState() => _CardPreviewOverlayState();
+}
+
+class _CardPreviewOverlayState extends State<CardPreviewOverlay> {
+  final _confirmBox = GlobalKey();
+  final _rejectBox = GlobalKey();
+  var _armed = false;
+  var _done = false;
+  Timer? _arm;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    _arm = Timer(ChoiceDeck.armDelay, () {
+      if (mounted) setState(() => _armed = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _arm?.cancel();
+    super.dispose();
+  }
+
+  void _confirm() {
+    if (!_armed || _done) return;
+    _done = true;
+    HapticFeedback.selectionClick();
+    if (!widget.muted) unawaited(ZlFx.cue('sounds/intro/click.ogg', volume: 0.55, muted: false));
+    widget.onConfirm();
+  }
+
+  void _reject() {
+    if (!_armed || _done) return;
+    _done = true;
+    if (!widget.muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.45, muted: false));
+    widget.onReject();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final top = widget.top ?? MediaQuery.paddingOf(context).top + 56;
+    return Padding(
+      padding: EdgeInsets.only(top: top),
+      child: IdleHint(
+        waiting: _armed && !_done,
+        waitKey: 'preview|${widget.textBn}|$_armed',
+        spec: (_) => _armed ? HintSpec.sweepOver([_rejectBox, _confirmBox]) : null,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                key: const ValueKey('choice-preview-shade'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () {},
+                child: const ColoredBox(color: Color(0x99050A16)),
+              ),
+            ),
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: widget.bottom + 12,
+              child: CardPreview(
+                key: ValueKey('choice-preview-${widget.textBn}'),
+                index: widget.index,
+                icon: widget.icon,
+                art: widget.art,
+                textBn: widget.textBn,
+                quiet: widget.quiet,
+                armed: _armed,
+                maxHeight: CardPreview.maxHeightFor(context),
+                confirmBox: _confirmBox,
+                rejectBox: _rejectBox,
+                onConfirm: _confirm,
+                onReject: _reject,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A level's own card or button set aside with ✕ on its [CardPreviewOverlay]:
+/// dimmed, not red (nothing was answered); it still opens.
+class CardAside extends StatelessWidget {
+  const CardAside({super.key, required this.aside, required this.child});
+  final bool aside;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) =>
+      aside ? Semantics(value: ChoiceDeckLines.asideTag, child: Opacity(opacity: 0.5, child: child)) : child;
 }
 
 /// ✕ বাদ দিন (outlined) or ✓ বেছে নিন (gold) — at least 52 dp tall.

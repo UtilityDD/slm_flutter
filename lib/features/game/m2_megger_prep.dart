@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -47,13 +48,22 @@ import 'spoken_once.dart';
 // drawn scene, corner guide, ◆ on the table → "কেন …?", the coworker, mistake
 // cards, the deadly freeze.
 //
-// Deadly: a lead, the TEST or the earth lead on the motor while the switch is
-// ON; listening to him. Slips: the split lead; proving before switching off;
-// skipping the prove or the discharge; a wrong test voltage; TEST before the
-// voltage and both leads are set; TEST with the helper's hand on the motor.
+// Deadly: a lead or the earth lead on the motor while the switch is ON;
+// listening to him (he pushes the megger onto the live motor — the lesson's
+// own forbidden act, on the module's deadly list). Slips: the split lead;
+// proving before switching off; skipping the prove or the discharge; a wrong
+// test voltage; TEST before the voltage and both leads are set (also while the
+// switch is ON: with no lead on the motor nothing reaches it, so it stays a
+// slip); TEST with the helper's hand on the motor.
+// The switch OFF is the decisive control: it waits for him (holdForCoworker).
+// A lead or the earth lead on the live motor while he talks is listening to
+// him (his deadly), never a refusal.
+// Gesture hints: a sweep over the two lead pairs, over everything the hands
+// can reach in the room, and over the four knob positions (never the answer).
 //
-// Voice: the guide's lines use device TTS; the coworker's push is new (device
-// TTS until recorded in his voice), his exit line is his recorded one.
+// Voice: the guide's lines use device TTS; the coworker's push is new (silent
+// with its caption held until recorded in his voice), his exit line is his
+// recorded one.
 
 // ============================================================================
 // Content
@@ -89,7 +99,7 @@ abstract final class MeggerPrepLines {
   static const knobClose = 'নব ছেড়ে দিন';
 
   // Short reactions.
-  static const leadsIn = 'লিড অক্ষত — মেগারে লাগল।';
+  static const leadsIn = 'লিড জোড়া মেগারে লাগল।';
   static const offDone = 'সুইচ OFF।';
   static const deadProved = 'টেস্টারে কিছু জ্বলল না — লাইন মৃত।';
   static const clipped = [FeedbackLine('লিড বসল।'), FeedbackLine('ঠিক জায়গায়।'), FeedbackLine('বেশ।')];
@@ -120,10 +130,10 @@ abstract final class MeggerPrepLines {
   static const leadWrong = [
     'এই জোড়ার রংটা একটু বেশি উজ্জ্বল দেখায়',
     'যে জোড়াটা হাতের কাছে ছিল, সেটাই নিলাম',
-    'লিড যেমনই হোক, মেগারের রিডিং একই আসে',
+    'লিড অক্ষত হোক বা না হোক, রিডিং একই আসে',
     'ফাটা লিডে টেপ জড়ালেই কাজ চলে যেত',
-    'লম্বা লিড নিলে দূর থেকে মাপা যায়',
-    'নতুন লিডে মেগারের ব্যাটারি কম খরচ হয়',
+    'ইনসুলেশন মোটা হলে দূর থেকে মাপা যায়',
+    'অক্ষত লিডে মেগারের ব্যাটারি কম খরচ হয়',
   ];
 
   static const isoAsk = 'কেন লিডের আগে বন্ধ, প্রমাণ আর ডিসচার্জ?';
@@ -137,8 +147,8 @@ abstract final class MeggerPrepLines {
     'অফিসের খাতায় লেখার জন্যই এই তিন ধাপ',
     'চালু লাইনে মাপলে রিডিং একটু বেশি আসে',
     'বন্ধ করলে মোটরটা আগে ঠান্ডা হয়ে যায়',
-    'ডিসচার্জ করলে মেগারের ব্যাটারি বাঁচে',
-    'ধাপগুলো শুধু নতুন মোটরের জন্য লাগে',
+    'চার্জ নামালে মেগারের ব্যাটারি বাঁচে',
+    'বিচ্ছিন্ন করা শুধু নতুন মোটরেই লাগে',
   ];
 
   static const voltAsk = 'কেন 500V বাছলেন?';
@@ -148,12 +158,12 @@ abstract final class MeggerPrepLines {
     'মোটরের ভোল্টেজ মিলিয়ে, 415V হলে 500V',
   ];
   static const voltWrong = [
-    'নবটা আগে থেকেই ওই ঘরে ঘোরানো ছিল',
-    'সব যন্ত্রেই সবসময় 500V দিলেই চলে',
-    '500V দিলে মেগারের ব্যাটারি কম খরচ হয়',
-    'কম ভোল্টেজে রিডিং সবসময় ভালো আসে',
-    'মাল্টিমিটারের মতো কম ভোল্টেজই যথেষ্ট',
-    'বড় সংখ্যায় ঘোরাতে নবটা শক্ত লাগে',
+    '415V লেখা দেখে নবটা আন্দাজে ঘোরালাম',
+    'সব যন্ত্রেই একই টেস্ট ভোল্টেজ, 500V',
+    '415V মোটরে 500V দিলে ব্যাটারি বাঁচে',
+    '415V লাইন চালু থাকলেও 500V-এ মাপা যায়',
+    'নবের ঘরটা 415V-এর কাছে, তাই ওটাই নিলাম',
+    'বেশি ভোল্টেজে ঘোরাতে নবটা শক্ত লাগে',
   ];
 
   static const afterAsk = 'কেন টেস্টের পরে আবার ডিসচার্জ করলেন?';
@@ -164,14 +174,14 @@ abstract final class MeggerPrepLines {
   ];
   static const afterWrong = [
     'ডিসচার্জ করলে রিডিংটা খাতায় থেকে যায়',
-    'নিয়মটা শুধু নতুন মোটরের জন্য লেখা',
+    'চার্জ নামানো শুধু নতুন মোটরের নিয়ম',
     'মোটর ঠান্ডা করতে আর্থ লিড ছোঁয়াই',
-    'পরের বার মেগার তাড়াতাড়ি চালু হয়',
-    'রিডিং ভালো এলে আসলে এর দরকার ছিল না',
+    'মেগারে চার্জ ফিরলে পরের বার দ্রুত চলে',
+    'রিডিং ভালো এলে চার্জ থাকার ভয় নেই',
     'আর্থ লিডটা ঝুলে ছিল, তাই ছুঁইয়ে দিলাম',
   ];
 
-  /// The careless coworker's push (new: device TTS until recorded in his voice).
+  /// The careless coworker's push (new: silent with its caption held until recorded in his voice).
   static const coworkerLine = 'লাইন চালু থাকলেও মেগার দাও, তাড়াতাড়ি হবে';
 
   /// His snarl when refused (his recorded clip).
@@ -353,7 +363,10 @@ class MeggerPrepRun {
     return MeggerPrepMistakes.crackedLead;
   }
 
-  void clearHelper() => helperClear = true;
+  void clearHelper() {
+    if (ended) return;
+    helperClear = true;
+  }
 
   /// A step in the room ([MeggerIds]); the earth lead after the test is
   /// [MeggerIds.discharge2].
@@ -379,7 +392,10 @@ class MeggerPrepRun {
   }
 
   /// Gave in to him: the leads went on the live motor.
-  void listened() => order.failDeadly(MeggerPrepMistakes.liveMegger);
+  void listened() {
+    if (ended) return;
+    order.failDeadly(MeggerPrepMistakes.liveMegger);
+  }
 }
 
 /// One play's variation.
@@ -478,6 +494,7 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
   final _clipBag = LineBag(MeggerPrepLines.clipped);
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
   final _nudge = TaskNudge();
+  final _hints = IdleHintController();
   int _nudgeN = 0;
   int _chain = 0;
   int _runScore = 0;
@@ -488,6 +505,11 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
   // What the scene shows.
   int? _volt;
   var _knobOpen = false;
+
+  /// A knob position open big (two steps: its preview, then ✓) and the
+  /// positions set aside with ✕ while the close-up is up.
+  int? _voltPreview;
+  final Set<int> _voltAside = {};
   var _testerOn = false;
   var _earthOn = false;
   var _testing = false;
@@ -562,18 +584,33 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
     await _sayChain([MeggerPrepLines.askLeads]);
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || struckOut || _testing;
+  /// No scene input now: intro, a card, the praise window or the reason deck
+  /// ([tableBusy]), the strike-out, the minute of TEST, the end.
+  bool get _blocked => _intro || _busy || _ended || _card != null || tableBusy || struckOut || _testing;
 
   // ---- the hands --------------------------------------------------------------------
 
-  /// A tap on something in the room. Returns false when it is not the time.
-  bool _canTouch(Offset global) {
+  /// A tap on something in the room ([step] for a step by the motor). Returns
+  /// false when it is not the time.
+  bool _canTouch(Offset global, {String? step}) {
     if (_blocked || _knobOpen || coworkerChoiceUp) return false;
     _lastGlobal = global;
-    // Going on with the work while he is still talking refuses him.
-    if (coworkerOpen) unawaited(answerCoworker(true, global, direct: true));
+    if (coworkerOpen) {
+      if (step != null && _onLiveMotor(step)) {
+        // A lead or the earth lead on the live motor while he talks is doing
+        // what he pushes: listening to him (deadly), never a refusal (+10).
+        unawaited(answerCoworker(false, global, direct: true));
+        return false;
+      }
+      // Going on with the work while he is still talking refuses him.
+      unawaited(answerCoworker(true, global, direct: true));
+    }
     return true;
   }
+
+  /// A lead or the earth lead on the motor while the switch is still ON.
+  bool _onLiveMotor(String id) =>
+      !_run.isDone(MeggerIds.off) && (id == MeggerIds.leadL || id == MeggerIds.leadE || id == MeggerIds.discharge);
 
   void _pickLeads(bool left, Offset global) {
     if (!_canTouch(global) || _run.stage != 0) return;
@@ -605,10 +642,46 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
   }
 
   void _tapKnob(Offset global) {
-    if (!_canTouch(global) || _run.stage < 2 || _run.tested) return;
+    if (!_canTouch(global)) return;
+    if (_run.stage < 2 || _run.tested) {
+      // Nothing to set on the knob now: a tap on nothing.
+      _hints.missTap();
+      return;
+    }
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.5, muted: false));
-    setState(() => _knobOpen = true);
+    setState(() {
+      _knobOpen = true;
+      _voltPreview = null;
+      _voltAside.clear();
+    });
+  }
+
+  /// A tap on a knob position opens it big; the knob is not turned yet.
+  void _openVolt(int v) {
+    if (!_knobOpen || _blocked || _voltPreview != null) return;
+    setState(() => _voltPreview = v);
+  }
+
+  /// ✓ on the position's preview: the knob is turned (as one tap was before).
+  void _confirmVolt() {
+    final v = _voltPreview;
+    if (v == null) return;
+    setState(() {
+      _voltPreview = null;
+      _voltAside.clear();
+    });
+    _pickVolt(v);
+  }
+
+  /// ✕: that position is set aside (dimmed); the knob stays.
+  void _rejectVolt() {
+    final v = _voltPreview;
+    if (v == null) return;
+    setState(() {
+      _voltPreview = null;
+      _voltAside.add(v);
+    });
   }
 
   void _pickVolt(int v) {
@@ -625,9 +698,9 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
 
   /// A step by the motor, the switch or the megger.
   void _tapStep(String id, Offset point, Offset global) {
-    if (!_canTouch(global) || _run.stage == 0) return;
-    // His moment is due before the switch goes off: it waits for him (no cost).
-    if (id == MeggerIds.off && !coworkerDone && !coworkerOpen) return;
+    if (_run.stage == 0 || !_canTouch(global, step: id)) return;
+    // The switch OFF ends his moment: while he is due it waits for him (no cost).
+    if (id == MeggerIds.off && holdForCoworker()) return;
     if (id == MeggerIds.discharge && _run.tested) id = MeggerIds.discharge2;
     _act(id, point);
   }
@@ -636,12 +709,15 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
     final t = _run.tap(id);
     switch (t.kind) {
       case OrderTapKind.ignored:
+        // Nothing to do there now (a step already done): a tap on nothing.
+        _hints.missTap();
         return;
       case OrderTapKind.mistake:
         final m = t.mistake!;
         if (id.startsWith('v') && id != MeggerIds.v500) {
-          // The knob goes back to OFF after the wrong voltage.
-          setState(() => _volt = null);
+          // The knob goes back after the wrong voltage: to 500V when that was
+          // already set (TEST then runs at what the knob shows), else to OFF.
+          setState(() => _volt = _run.isDone(MeggerIds.v500) ? 500 : null);
         }
         if (m.deadly) {
           setState(() {
@@ -734,6 +810,9 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
 
   /// A milestone: its ◆ wait on the table, then "কেন …?"; [then] once paid.
   void _ask(int amount, List<String> right, List<String> wrong, String question, {required VoidCallback then}) {
+    // One reason at a time: the scene is locked while one is pending
+    // ([_blocked] has [tableBusy]), so a second step can never replace it.
+    assert(_afterPaid == null && !tableBusy, 'a reason is already pending');
     _afterPaid = then;
     putOnTable(amount);
     unawaited(askReason(
@@ -770,8 +849,9 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("লাইন চালু থাকলেও মেগার দাও") fits only while the switch is ON.
     if (_ended || _run.ended || _run.isDone(MeggerIds.off) || _run.stage > 1) return null;
-    if (_run.stage < 1 || _blocked || _knobOpen) return false;
+    if (_run.stage < 1 || tableBusy || _blocked || _knobOpen) return false;
     return true;
   }
 
@@ -824,6 +904,7 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
   }
 
   Future<void> _slip(DoMistake m, Offset point) async {
+    if (_ended) return;
     if (strike(m)) {
       await _struckOut(m);
       return;
@@ -1092,6 +1173,11 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
             ),
           ),
         ),
+      // A tap on nothing (behind the spots) counts toward the gesture hint.
+      Positioned.fill(
+        key: const ValueKey('miss'),
+        child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (_) => _hints.missTap()),
+      ),
       // What the hands can reach.
       if (stage == 0) ...[
         _spot('leads-left', g.leadsLeft, MeggerPrepLines.leadsLeftLabel, (p) => _pickLeads(true, p)),
@@ -1115,9 +1201,11 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
 
   /// The knob close up: four positions, big enough for a thumb.
   List<Widget> _knobPanel(MeggerGeo g) {
-    final panel = Rect.fromCenter(center: Offset(180, g.floorY - 60), width: 264, height: 132);
+    final panel = _knobPanelRect(g);
     return [
-      _spot('knob-close', const Rect.fromLTWH(0, 0, 360, 2000), MeggerPrepLines.knobClose, (_) => setState(() => _knobOpen = false)),
+      _spot('knob-close', const Rect.fromLTWH(0, 0, 360, 2000), MeggerPrepLines.knobClose, (_) {
+        setState(() => _knobOpen = false);
+      }),
       Positioned.fromRect(
         key: const ValueKey('knob-panel'),
         rect: panel,
@@ -1145,11 +1233,14 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
                     excludeSemantics: true,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: () => _pickVolt(v),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(color: const Color(0xFF2A2A2A), borderRadius: BorderRadius.circular(12)),
-                        child: Center(
-                          child: Text(meggerVoltLabel(v), style: bangla(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
+                      onTap: () => _openVolt(v),
+                      child: CardAside(
+                        aside: _voltAside.contains(v),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(color: const Color(0xFF2A2A2A), borderRadius: BorderRadius.circular(12)),
+                          child: Center(
+                            child: Text(meggerVoltLabel(v), style: bangla(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
+                          ),
                         ),
                       ),
                     ),
@@ -1160,6 +1251,44 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
         ),
       ),
     ];
+  }
+
+  static Rect _knobPanelRect(MeggerGeo g) => Rect.fromCenter(center: Offset(180, g.floorY - 60), width: 264, height: 132);
+
+  /// The [i]th knob position's button on the close-up (scene pixels).
+  static Rect _voltRect(Rect panel, int i) =>
+      Rect.fromLTWH(panel.left + (i < 2 ? 10 : panel.width - 92), panel.top + (i.isEven ? 12 : 70), 82, 50);
+
+  /// The order the hand sweeps over things (shuffled once per play, so it never
+  /// walks the procedure's order).
+  final _sweepRng = math.Random();
+  late final List<int> _roomOrder = List<int>.generate(8, (i) => i)..shuffle(_sweepRng);
+  late final List<int> _knobOrder = List<int>.generate(meggerVolts.length, (i) => i)..shuffle(_sweepRng);
+
+  /// The gesture hint (how to play, never what): a sweep over the two lead
+  /// pairs, over everything the hands can reach, or over the knob positions.
+  HintSpec? _hint() {
+    final g = _geo;
+    if (g == null) return null;
+    if (_knobOpen) {
+      final panel = _knobPanelRect(g);
+      return HintSpec.sweep([for (final i in _knobOrder) _voltRect(panel, i)], space: HintSpace.scene);
+    }
+    if (_run.stage == 0) return HintSpec.sweep([g.leadsLeft, g.leadsRight], space: HintSpace.scene);
+    final room = [
+      g.switchBox,
+      g.tester,
+      Rect.fromCenter(center: g.earthClipRest.translate(-6, -14), width: 64, height: 64),
+      g.terminalBox,
+      Rect.fromCenter(center: g.earthBolt, width: 44, height: 40),
+      Rect.fromCenter(center: g.knob, width: 56, height: 56),
+      Rect.fromCenter(center: g.testButton.translate(0, -6), width: 52, height: 52),
+      g.helperBox(clear: false).deflate(6),
+    ];
+    return HintSpec.sweep([
+      for (final i in _roomOrder)
+        if (i != 7 || !_run.helperClear) room[i],
+    ], space: HintSpace.scene);
   }
 
   /// The way the live supply goes in the deadly picture.
@@ -1204,6 +1333,10 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m, quiet),
+            hint: _hint,
+            hintWaiting: playing && !_blocked && !deckUp && !coworkerOnScreen && _card == null && _voltPreview == null,
+            hintKey: '$stage|$_knobOpen|${_run.doneIds.length}|${_run.helperClear}',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (deckUp)
@@ -1219,6 +1352,20 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
                 ),
               if (playing && _card == null) cornerGuide(onTap: _tapGuide, bottom: pad.bottom + (deckUp ? 236 : 8), onLeft: coworkerFromRight),
               ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
+              // Over the corner guide: nothing may cover the card's ✓ / ✕.
+              if (playing && _knobOpen && !_blocked && _voltPreview != null)
+                Positioned.fill(
+                  key: ValueKey('volt-preview-$_voltPreview'),
+                  child: CardPreviewOverlay(
+                    textBn: meggerVoltLabel(_voltPreview!),
+                    icon: Icons.tune_rounded,
+                    quiet: quiet,
+                    muted: _muted,
+                    bottom: pad.bottom,
+                    onConfirm: _confirmVolt,
+                    onReject: _rejectVolt,
+                  ),
+                ),
               if (_card != null)
                 MistakeCard(
                   key: ValueKey('card-${_card!.key}-$_pings'),

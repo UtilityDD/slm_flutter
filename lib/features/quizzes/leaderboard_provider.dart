@@ -176,7 +176,9 @@ class LeaderboardCache {
 /// inside this window costs no network; a finished hourly quiz invalidates it.
 const leaderboardFreshFor = Duration(minutes: 5);
 
-/// The monthly board. Offline it shows the last real board saved on this
+/// The old hourly-quiz points board (design preview only). The Rank screen
+/// shows the level-clear league instead (`rank/league_board.dart`).
+/// Offline it shows the last real board saved on this
 /// phone; with no saved board it fails at once (no automatic retry, which
 /// would keep a skeleton up for ~40 s), so the screen shows its offline state.
 /// A live board is kept for [leaderboardFreshFor] after the last visit, so

@@ -24,6 +24,7 @@ import '../training/training_models.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../training/training_provider.dart';
 import 'beat_fx.dart';
+import 'choice_deck.dart' show CardAside, CardPreviewOverlay;
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
 import 'learn_feedback_lines.dart';
@@ -170,6 +171,12 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
   int _q = 0;
   int? _picked;
   bool _revealed = false;
+
+  /// The option open big (two steps: its preview, then ✓ answers), where it
+  /// was tapped, and the options set aside with ✕ on this question.
+  int? _preview;
+  Offset _previewAt = Offset.zero;
+  final Set<int> _aside = {};
   bool _speaking = false;
   bool _voiceBusy = false;
   bool _muted = false;
@@ -475,6 +482,8 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
       _q = 0;
       _picked = null;
       _revealed = false;
+      _preview = null;
+      _aside.clear();
     });
     ref.read(guideDirectorProvider.notifier).sayCue(
           MascotCueId.learnQuizStart,
@@ -482,6 +491,36 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
           muted: _muted,
         );
     unawaited(_speakQuiz());
+  }
+
+  /// A tap on an option opens it big; nothing is answered yet.
+  void _openOption(int i, Offset globalOrigin) {
+    if (_revealed || _finishing || _preview != null) return;
+    setState(() {
+      _preview = i;
+      _previewAt = globalOrigin;
+    });
+  }
+
+  /// ✓ on the option's preview: the answer (as one tap was before).
+  void _confirmOption() {
+    final i = _preview;
+    if (i == null) return;
+    setState(() {
+      _preview = null;
+      _aside.clear();
+    });
+    unawaited(_pickOption(i, _previewAt));
+  }
+
+  /// ✕: the option is set aside (dimmed); nothing is answered.
+  void _rejectOption() {
+    final i = _preview;
+    if (i == null) return;
+    setState(() {
+      _preview = null;
+      _aside.add(i);
+    });
   }
 
   Future<void> _pickOption(int i, Offset globalOrigin) async {
@@ -632,6 +671,8 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
       _q++;
       _picked = null;
       _revealed = false;
+      _preview = null;
+      _aside.clear();
     });
     unawaited(_speakQuiz());
   }
@@ -646,6 +687,7 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
     final noQuiz = _quiz.isEmpty;
     final mark = noQuiz ? 100 : _marks.percent;
     await save.recordLevelResult(widget.rungId, mark);
+    GameSaveController.onPlayResult?.call(widget.rungId, mark: mark);
     if (!mounted) return;
     _runMark = mark;
     if (!noQuiz && !_marks.passed) {
@@ -741,7 +783,7 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
                         scoreKey: _scoreKey,
                         levelScore: _runScore,
                         deathKey: _deathKey,
-                        badgeText: 'ধাপ ${widget.ladderIndex + 1}',
+                        badgeText: 'L${widget.ladderIndex + 1}',
                         stepOnly: true,
                         titleText: MascotSpeechLibrary.toNaturalFieldBangla(
                           lesson?.title ?? widget.lessonId,
@@ -761,7 +803,7 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
                               onPressed: _muted ? null : _toggleListen,
                               visualDensity: VisualDensity.compact,
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+                              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
                               icon: Icon(
                                 _speaking || _voiceBusy
                                     ? Icons.stop_circle_outlined
@@ -770,7 +812,6 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
                                 size: 20,
                               ),
                             ),
-                            const SizedBox(width: 4),
                             ReadLessonPill(key: _readPillKey, hot: _readHot, onTap: _onReadPill),
                           ],
                         ),
@@ -843,7 +884,13 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
           picked: _picked,
           revealed: _revealed,
           bn: bn,
-          onPick: _pickOption,
+          quiet: quiet,
+          muted: _muted,
+          preview: _preview,
+          aside: _aside,
+          onOpen: _openOption,
+          onConfirm: _confirmOption,
+          onReject: _rejectOption,
           onNext: _nextQuiz,
         );
       case _Phase.done when _failed:
@@ -1428,7 +1475,19 @@ class _QuizPhase extends StatelessWidget {
   final int? picked;
   final bool revealed;
   final bool bn;
-  final void Function(int optionIndex, Offset globalOrigin) onPick;
+  final bool quiet;
+  final bool muted;
+
+  /// The option open big (its [CardPreviewOverlay]), or null.
+  final int? preview;
+
+  /// Options set aside with ✕ (dimmed, still open).
+  final Set<int> aside;
+
+  /// A tap on an option: opens it big (never an answer by itself).
+  final void Function(int optionIndex, Offset globalOrigin) onOpen;
+  final VoidCallback onConfirm;
+  final VoidCallback onReject;
   final VoidCallback onNext;
 
   const _QuizPhase({
@@ -1437,13 +1496,54 @@ class _QuizPhase extends StatelessWidget {
     required this.picked,
     required this.revealed,
     required this.bn,
-    required this.onPick,
+    required this.quiet,
+    required this.muted,
+    required this.preview,
+    required this.aside,
+    required this.onOpen,
+    required this.onConfirm,
+    required this.onReject,
     required this.onNext,
   });
 
   @override
   Widget build(BuildContext context) {
     final q = questions[index];
+    final p = preview;
+    final body = _quiz(context, q);
+    if (p == null || revealed || p >= q.options.length) return body;
+    final label = MascotSpeechLibrary.toNaturalFieldBangla(q.options[p]);
+    final image = isQuizImageOption(label);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        body,
+        Positioned.fill(
+          key: ValueKey('option-preview-$index-$p'),
+          child: CardPreviewOverlay(
+            textBn: image ? '' : label,
+            index: p,
+            art: image
+                ? CachedNetworkImage(
+                    imageUrl: label.startsWith('http') ? label : 'https://www.smartlineman.in/quizzes/${label.replaceFirst(RegExp(r'^/'), '')}',
+                    height: 160,
+                    fit: BoxFit.contain,
+                    memCacheHeight: decodePx(context, 160),
+                    errorWidget: (_, _, _) => Text(enDigits(label), style: const TextStyle(fontFamily: banglaFont, color: SlmColors.ivory)),
+                  )
+                : null,
+            top: 0,
+            quiet: quiet,
+            muted: muted,
+            onConfirm: onConfirm,
+            onReject: onReject,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _quiz(BuildContext context, LessonQuizQuestion q) {
     final last = index >= questions.length - 1;
     final cleanQuestion = MascotSpeechLibrary.toNaturalFieldBangla(q.questionText);
 
@@ -1528,12 +1628,16 @@ class _QuizPhase extends StatelessWidget {
                     const SizedBox(height: 14),
                     for (var i = 0; i < q.options.length; i++) ...[
                       if (i > 0) const SizedBox(height: 9),
-                      _OptionTile(
-                        label: MascotSpeechLibrary.toNaturalFieldBangla(q.options[i]),
-                        selected: picked == i,
-                        revealed: revealed,
-                        correct: i == q.correctIndex,
-                        onTapUp: revealed ? null : (d) => onPick(i, d.globalPosition),
+                      CardAside(
+                        aside: !revealed && aside.contains(i),
+                        child: _OptionTile(
+                          key: ValueKey('quiz-option-$i'),
+                          label: MascotSpeechLibrary.toNaturalFieldBangla(q.options[i]),
+                          selected: picked == i,
+                          revealed: revealed,
+                          correct: i == q.correctIndex,
+                          onTapUp: revealed ? null : (d) => onOpen(i, d.globalPosition),
+                        ),
                       ),
                     ],
                     if (revealed) ...[
@@ -1622,6 +1726,7 @@ class _OptionTile extends StatelessWidget {
   final GestureTapUpCallback? onTapUp;
 
   const _OptionTile({
+    super.key,
     required this.label,
     required this.selected,
     required this.revealed,
