@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -55,15 +56,20 @@ export 'm3_horngap_set_world.dart' show M3HorngapSetGeo, M3HorngapSetPart, M3Hor
 // Deadly: a hand on the sets while the line is live — climbing before the
 // shutdown (also by listening to the coworker, "লাইন চালু থাকতেই ফিউজটা বদলে
 // দাও"), or climbing to tie again once the line is back on. Slips: a step out
-// of order, climbing before test and earth, a fault missed, the wrong wire, a
-// loose tie, a thick wire after it blows, walking away from a fuse that blew
-// again. Three slips strike out. Stopping when the fuse held is not scored.
+// of order, climbing before test and earth, a fault missed, a sound part
+// flagged as faulty, the wrong wire, a loose tie, a thick wire after it blows,
+// walking away from a fuse that blew again, stopping the line although the
+// fuse held. Three slips strike out. Listening to the coworker stays deadly:
+// the act he pushes (a hand on the live sets) is the ladder's deadly climb-live.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m3_horngap_set_world.dart), corner guide, ◆ on the table → "কেন …?"
 // → the next station by itself. The coworker once a play: in ক before the
-// shutdown, or (when the fuse blows again) in ঘ. Voice: the guide by device
-// TTS; the coworker's push by TTS until recorded (his exit line is recorded).
+// shutdown, or (when the fuse blows again) in ঘ; the decisive control (the
+// শাটডাউন token / climb in ক, any act in ঘ) waits for him (holdForCoworker).
+// Gesture hints: a sweep over the controls of each waiting state. Voice: the
+// guide by device TTS; the coworker's push is silent with its caption held
+// until recorded (his exit line is recorded).
 //
 // Flagged to the owner (REGISTER.md): the lesson gives no gap size and no
 // setting procedure for the horns — "a bent horn" is inferred from point 3's
@@ -132,10 +138,6 @@ abstract final class M3HorngapSetLines {
   /// The fuse blew again: the lesson's picture of it.
   static const blewAgain = 'আবার উড়ল! আর্ক শিং বেয়ে উঠে নিজেই নিভে গেল।';
   static const held = 'ফিউজ টিকে আছে, গ্রামে আলো জ্বলেছে।';
-
-  // Not scored.
-  static const spotFine = 'ওটা ঠিক আছে।';
-  static const needlessStop = 'থামা আপনার অধিকার। তবে ফিউজ টিকে আছে — লাইন ঠিক চলছে।';
 
   // Labels a worker reads.
   static const sceneLabel = 'হর্ন গ্যাপ ফিউজ';
@@ -351,6 +353,20 @@ abstract final class M3HorngapSetMistakes {
     art: '$_dir/thick_myth.svg',
     lessonPoint: 3,
   );
+  /// A sound part flagged in খ (a guess costs; the card comes after the call).
+  static const falseFlag = DoMistake(
+    key: '$_k/false-flag',
+    textBn: 'ওখানে গোলমাল ছিল না। আন্দাজে নয় — তার, শিং আর টার্মিনাল ভালো করে দেখে তবেই গোলমাল ধরুন।',
+    art: '$_dir/false_flag.svg',
+    lessonPoint: 2,
+  );
+  /// The line stopped although the fuse held (a needless stop costs too).
+  static const needlessStop = DoMistake(
+    key: '$_k/needless-stop',
+    textBn: 'ফিউজ টিকে আছে, গ্রামে আলো জ্বলেছে — লাইনে ফল্টের সংকেত নেই। ফিউজটা দেখে নিয়ে ডকেটে লিখুন।',
+    art: '$_dir/needless_stop.svg',
+    lessonPoint: 0,
+  );
   static const ignoredBlow = DoMistake(
     key: '$_k/ignored-blow',
     textBn: 'ফিউজ আবার উড়ল, অথচ চলে যাচ্ছেন! বারবার ওড়া মানে লাইনে ফল্ট — বন্ধ রেখে খুঁজতে হবে।',
@@ -358,7 +374,7 @@ abstract final class M3HorngapSetMistakes {
     lessonPoint: 0,
   );
 
-  static const all = [liveClimb, liveRetie, wrongOrder, notReady, missedFault, thickWire, thinWire, plainWire, loose, thickMyth, ignoredBlow];
+  static const all = [liveClimb, liveRetie, wrongOrder, notReady, missedFault, falseFlag, thickWire, thinWire, plainWire, loose, thickMyth, needlessStop, ignoredBlow];
 }
 
 @immutable
@@ -371,6 +387,7 @@ class M3HorngapSetDeal {
     required this.blowsAgain,
     required this.callAt,
     this.carbonRight = false,
+    this.acts = M3HorngapSetAct.values,
   });
 
   /// Every fault on the sets; the first is the blown wire.
@@ -389,6 +406,10 @@ class M3HorngapSetDeal {
   /// The station the careless coworker comes on (0 before the shutdown, or 3).
   final int callAt;
   final bool carbonRight;
+
+  /// The four acts in ঘ as they lie on screen (shuffled: no fixed spot for
+  /// the right one).
+  final List<M3HorngapSetAct> acts;
 
   int get blownPhase => faults.first.phase;
 
@@ -423,6 +444,7 @@ M3HorngapSetDeal m3HorngapSetDeal(math.Random rng) {
     blowsAgain: again,
     callAt: again && rng.nextBool() ? 3 : 0,
     carbonRight: rng.nextBool(),
+    acts: [...M3HorngapSetAct.values]..shuffle(rng),
   );
 }
 
@@ -441,6 +463,9 @@ class M3HorngapSetRun {
   // খ
   final Set<M3HorngapSetFaultAt> found = {};
   int falseTaps = 0;
+
+  /// Sound parts already flagged once (booked; a second tap does nothing).
+  final Set<(int, M3HorngapSetPart)> cleared = {};
   // গ
   final Set<M3HorngapSetFaultAt> fixed = {};
 
@@ -512,16 +537,19 @@ class M3HorngapSetRun {
   }
 
   // --- খ: inspect ---------------------------------------------------------------
-  /// A tap on [part] of set [phase]: true = a fault found; false = it is fine
-  /// (not scored); null = nothing new.
-  bool? spot(int phase, M3HorngapSetPart part) {
+  /// A tap on [part] of set [phase] flags it: a fault is found (added to
+  /// [found], null); a sound part is a slip ([M3HorngapSetMistakes.falseFlag],
+  /// booked once a part); a part already called does nothing (null).
+  DoMistake? spot(int phase, M3HorngapSetPart part) {
     if (!_open || index != 1) return null;
     final f = deal.at(phase, part);
     if (f == null) {
+      if (!cleared.add((phase, part))) return null;
       falseTaps++;
-      return false;
+      return _slip(M3HorngapSetMistakes.falseFlag);
     }
-    return found.add(f) ? true : null;
+    found.add(f);
+    return null;
   }
 
   /// "Seen it all": a missed fault is a slip (and shown).
@@ -609,10 +637,10 @@ class M3HorngapSetRun {
 
   // --- ঘ: back on -----------------------------------------------------------------
   void reveal() {
-    if (index == 3) revealed = true;
+    if (index == 3 && !ended) revealed = true;
   }
 
-  /// What he does once the line is on. A stop when it held: not scored.
+  /// What he does once the line is on. A stop when it held: a slip.
   DoMistake? act(M3HorngapSetAct a) {
     if (!_open || index != 3 || !revealed) return null;
     final again = deal.blowsAgain;
@@ -630,7 +658,7 @@ class M3HorngapSetRun {
         _tag(M3HorngapSetLines.caughtHeld);
         return null;
       case M3HorngapSetAct.stopFind:
-        if (!again) return null;
+        if (!again) return _slip(M3HorngapSetMistakes.needlessStop);
         shown = true;
         acted = a;
         _tag(M3HorngapSetLines.caughtFault);
@@ -772,6 +800,15 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// ঘ: the arc has gone out and the guide said it — he may come now.
+  var _arcSaid = false;
+
+  // Gesture hints (how to touch, never what).
+  final _hints = IdleHintController();
+  final Map<String, GlobalKey> _hintKeys = {};
+  GlobalKey _hk(String id) => _hintKeys.putIfAbsent(id, GlobalKey.new);
+  M3HorngapSetGeo? _geo;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -814,7 +851,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown;
+  bool get _canPlay => !_intro && !_busy && !_ended && !_freeze && _card == null && !tableBusy && !coworkerOpen && !_run.shown;
 
   /// The task now (what the guide says and repeats).
   String get _ask => switch (_run.index) {
@@ -857,9 +894,11 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     });
     unawaited(_sayChain([again ? M3HorngapSetLines.blewAgain : M3HorngapSetLines.held, M3HorngapSetLines.askDecide]));
     if (again && _run.deal.callAt == 3) {
-      // He comes once the arc has gone out and the guide has said it.
+      // He is due from now (a fast act waits for him: holdForCoworker), and
+      // on his own he comes once the arc has gone out and the guide said it.
+      scheduleCoworker();
       _watchTimer = Timer(Duration(milliseconds: _quiet ? 300 : 2600), () {
-        if (mounted) scheduleCoworker();
+        if (mounted) _arcSaid = true;
       });
     }
   }
@@ -874,25 +913,32 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     if (!_canPlay) return;
     switch (_run.index) {
       case 0:
-        if (geo.groundFuseHit.contains(p)) unawaited(_climb(global));
+        if (geo.groundFuseHit.contains(p)) {
+          unawaited(_climb(global));
+          return;
+        }
       case 1:
       case 2:
         for (var ph = 0; ph < 3; ph++) {
           for (final part in M3HorngapSetPart.values) {
             if (!geo.partHit(ph, part).contains(p)) continue;
             if (_run.index == 1) {
-              _spot(ph, part);
-            } else {
-              _fix(ph, part);
+              unawaited(_spot(ph, part, global));
+            } else if (!_fix(ph, part)) {
+              _hints.missTap();
             }
             return;
           }
         }
     }
+    // A tap on nothing (the gesture hint counts these).
+    _hints.missTap();
   }
 
   Future<void> _tapStep(M3HorngapSetStep s, Offset origin) async {
     if (!_canPlay) return;
+    // The shutdown ends his moment: he cuts in first (never skipped by speed).
+    if (s == M3HorngapSetStep.shutdown && holdForCoworker()) return;
     final before = _run.steps.length;
     final m = _run.tapStep(s);
     if (m != null) {
@@ -907,6 +953,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
 
   Future<void> _climb(Offset origin) async {
     if (!_canPlay) return;
+    if (holdForCoworker()) return;
     final m = _run.climb();
     if (m == null) {
       _stationRight(M3HorngapSetLines.stampSafe);
@@ -919,16 +966,22 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     await _slipAt(m, origin);
   }
 
-  void _spot(int phase, M3HorngapSetPart part) {
-    final r = _run.spot(phase, part);
-    if (r == null) return;
-    _tick();
-    if (r) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.5);
-      setState(() => _wake++);
-    } else {
-      unawaited(_sayChain([M3HorngapSetLines.spotFine]));
+  /// A part flagged: a fault gets its mark; a sound part costs a slip (the
+  /// card comes after the call — no free "it's fine" reply).
+  Future<void> _spot(int phase, M3HorngapSetPart part, Offset origin) async {
+    final before = _run.found.length;
+    final m = _run.spot(phase, part);
+    if (m != null) {
+      await _slipAt(m, origin);
+      return;
     }
+    if (_run.found.length == before) {
+      _hints.missTap();
+      return;
+    }
+    _tick();
+    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    setState(() => _wake++);
   }
 
   Future<void> _spotDone(Offset origin) async {
@@ -941,18 +994,20 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     await _slipAt(m, origin);
   }
 
-  void _fix(int phase, M3HorngapSetPart part) {
+  /// A part tapped in গ; false = nothing to do there.
+  bool _fix(int phase, M3HorngapSetPart part) {
     final r = _run.tapFix(phase, part);
-    if (r == M3HorngapSetFix.none) return;
+    if (r == M3HorngapSetFix.none) return false;
     _tick();
     if (r == M3HorngapSetFix.cleaned) _cue('sounds/learn/knock_solid.wav', volume: 0.5);
     if (r == M3HorngapSetFix.set) _cue('sounds/learn/ring_steel.wav', volume: 0.5);
     setState(() => _wake++);
     if (_run.shown) {
       _stationRight(M3HorngapSetLines.stampFixed);
-      return;
+      return true;
     }
     if (r == M3HorngapSetFix.reel) unawaited(_sayChain([M3HorngapSetLines.askReel]));
+    return true;
   }
 
   Future<void> _pickReel(M3HorngapSetReel r, Offset origin) async {
@@ -989,13 +1044,10 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
 
   Future<void> _act(M3HorngapSetAct a, Offset origin) async {
     if (!_canPlay || !_run.revealed) return;
+    // Any act ends his moment in ঘ: he cuts in first.
+    if (holdForCoworker()) return;
     final m = _run.act(a);
-    if (m == null && !_run.shown) {
-      // A stop when it held: not scored.
-      _tick();
-      unawaited(_sayChain([M3HorngapSetLines.needlessStop]));
-      return;
-    }
+    if (m == null && !_run.shown) return;
     if (m == null) {
       _stationRight(a == M3HorngapSetAct.ok ? M3HorngapSetLines.stampHeld : M3HorngapSetLines.stampStop);
       return;
@@ -1063,10 +1115,15 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    // His push only makes sense while the line is live.
+    if (_ended || _freeze || _run.index != _run.deal.callAt || _run.shown) return null;
+    // His push ("change it live, the shutdown takes too long") only makes
+    // sense before the shutdown in ক, and in ঘ once it blew again.
     if (_run.index == 0 && _run.shutdown) return null;
-    if (_intro || _busy || _card != null || reasonOpen) return false;
+    if (_run.index == 3 && (!_run.revealed || !_run.deal.blowsAgain)) return _run.revealed ? null : false;
+    if (_intro || _busy || _card != null || tableBusy) return false;
+    // ঘ: on his own he waits for the arc and the guide's line (a held
+    // decisive control lets him in at once).
+    if (_run.index == 3 && !_arcSaid) return false;
     return true;
   }
 
@@ -1253,7 +1310,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M3HorngapSetGeo.forScene(m.height, m.inset);
+    final geo = _geo = M3HorngapSetGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final up = _run.up;
     final looks = [for (var i = 0; i < 3; i++) _run.look(i)];
@@ -1435,7 +1492,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
               children: [
                 for (final s in _run.deal.tokens)
                   _ToolButton(
-                    key: ValueKey('step-${s.name}'),
+                    key: _hk('step-${s.name}'),
                     icon: _stepIcon(s),
                     label: M3HorngapSetLines.step(s),
                     done: _run.steps.contains(s),
@@ -1444,7 +1501,12 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
               ],
             ),
           ),
-          bottomRow('hud-climb', [DoBigButton(label: M3HorngapSetLines.climb, filled: true, onTapUp: (d) => unawaited(_climb(d.globalPosition)))]),
+          bottomRow('hud-climb', [
+            KeyedSubtree(
+              key: _hk('climb'),
+              child: DoBigButton(label: M3HorngapSetLines.climb, filled: true, onTapUp: (d) => unawaited(_climb(d.globalPosition))),
+            ),
+          ]),
         ];
       case 1:
         return [
@@ -1463,7 +1525,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
                 children: [
                   for (final r in _run.deal.reels)
                     _ToolButton(
-                      key: ValueKey('reel-${r.name}'),
+                      key: _hk('reel-${r.name}'),
                       icon: Icons.all_inclusive_rounded,
                       label: _reelLabel(r),
                       wide: true,
@@ -1477,24 +1539,49 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
         if (_run.tying != null) {
           return [
             bottomRow('hud-tie', [
-              DoBigButton(label: M3HorngapSetLines.pull, filled: false, onDark: true, onTapUp: (_) => _pull()),
-              DoBigButton(label: M3HorngapSetLines.tieDone, filled: true, onTapUp: (d) => unawaited(_tieDone(d.globalPosition))),
+              KeyedSubtree(key: _hk('pull'), child: DoBigButton(label: M3HorngapSetLines.pull, filled: false, onDark: true, onTapUp: (_) => _pull())),
+              KeyedSubtree(
+                key: _hk('tie'),
+                child: DoBigButton(label: M3HorngapSetLines.tieDone, filled: true, onTapUp: (d) => unawaited(_tieDone(d.globalPosition))),
+              ),
             ]),
           ];
         }
         return const [];
       default:
         if (!_run.revealed) return const [];
+        // The four acts as dealt (shuffled: the right one has no fixed spot).
+        final acts = _run.deal.acts;
+        Widget actButton(M3HorngapSetAct a) => KeyedSubtree(
+              key: _hk('act-${a.name}'),
+              child: DoBigButton(label: M3HorngapSetLines.act(a), filled: false, onDark: true, onTapUp: (d) => unawaited(_act(a, d.globalPosition))),
+            );
         return [
-          bottomRow('hud-act-a', [
-            for (final a in [M3HorngapSetAct.ok, M3HorngapSetAct.stopFind])
-              DoBigButton(label: M3HorngapSetLines.act(a), filled: false, onDark: true, onTapUp: (d) => unawaited(_act(a, d.globalPosition))),
-          ], at: 72),
-          bottomRow('hud-act-b', [
-            for (final a in [M3HorngapSetAct.thickWire, M3HorngapSetAct.climbNow])
-              DoBigButton(label: M3HorngapSetLines.act(a), filled: false, onDark: true, onTapUp: (d) => unawaited(_act(a, d.globalPosition))),
-          ]),
+          bottomRow('hud-act-a', [for (final a in acts.take(2)) actButton(a)], at: 72),
+          bottomRow('hud-act-b', [for (final a in acts.skip(2)) actButton(a)]),
         ];
+    }
+  }
+
+  /// The gesture hint for the waiting state: a sweep over every control of
+  /// the station (or every part of the three sets), never pressing one.
+  HintSpec? _hint() {
+    switch (_run.index) {
+      case 0:
+        return HintSpec.sweepOver([for (final s in _run.deal.tokens) _hk('step-${s.name}'), _hk('climb')]);
+      case 1:
+      case 2:
+        if (_run.index == 2 && _run.reelFor != null) return HintSpec.sweepOver([for (final r in _run.deal.reels) _hk('reel-${r.name}')]);
+        if (_run.index == 2 && _run.tying != null) return HintSpec.sweepOver([_hk('pull'), _hk('tie')]);
+        final geo = _geo;
+        if (geo == null) return null;
+        return HintSpec.sweep([
+          for (var ph = 0; ph < 3; ph++)
+            for (final part in M3HorngapSetPart.values) geo.partHit(ph, part),
+        ], space: HintSpace.scene);
+      default:
+        if (!_run.revealed) return null;
+        return HintSpec.sweepOver([for (final a in _run.deal.acts) _hk('act-${a.name}')]);
     }
   }
 
@@ -1518,7 +1605,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.done && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_busy;
+    final handsOn = playing && !_run.done && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_busy && !tableBusy;
     final hud = handsOn ? _hud(pad) : const <Widget>[];
     final guideAt = deckUp ? 236.0 : (_run.index == 0 ? 150.0 : (_run.index == 3 && _run.revealed ? 134.0 : (_run.reelFor != null ? 112.0 : 72.0)));
     return PopScope(
@@ -1548,6 +1635,10 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && (_run.index != 3 || _run.revealed),
+            hintKey: '${_run.index}-${_run.reelFor}-${_run.tying}-${_run.revealed}',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               ...hud,

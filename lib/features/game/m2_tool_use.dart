@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -61,9 +62,15 @@ export 'm2_tool_use_world.dart' show TuJob, TuScrew, TuTool, TuToolInfo, TuGeo, 
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m2_tool_use_world.dart), corner guide, ◆ on the table → "কেন …?"
-// (the reasons fit the job) → the next job by itself.
-// Voice: the guide's lines by device TTS; the coworker's new lines by device
-// TTS until recorded in his voice (TuLines.toRecord); his exit line is recorded.
+// (the reasons fit the job; each job's wrong reasons also name its tool, so
+// the tool's name never gives the right card away) → the next job by itself.
+// Kit (2026-11-11): no scene control works in a praise window (`tableBusy`);
+// "এটা দিয়েই করি" on his job waits for the coworker (`holdForCoworker`), so a
+// fast player still meets him; a gesture hint sweeps over the tools (or over
+// the two buttons with a tool in hand) when the player seems stuck — never
+// pointing at the right one.
+// Voice: the guide's lines by device TTS; the coworker's pushes have no clip
+// yet (TuLines.toRecord: silent, caption held); his exit line is recorded.
 
 // ============================================================================
 // Content
@@ -125,7 +132,7 @@ abstract final class TuLines {
       };
 
   // The reasons (lesson 2.1): the right ones fit the job just done; the wrong
-  // ones are field excuses — never a true rule marked wrong. 38–46 letters.
+  // ones are field excuses — never a true rule marked wrong. 38–47 letters.
   static const why = 'কেন এটা নিলেন?';
   static const nutWhy = ['নাটের মাপের স্প্যানার মুখে বসে, পিছলায় না', 'ঠিক মাপের স্প্যানারে নাটের মাথা নষ্ট হয় না', 'ঢিলা স্প্যানার পিছলে নাট নষ্ট, হাতও ফসকায়'];
   static const screwWhy = ['খাঁজের মাপের ড্রাইভার বসে যায়, হাত পিছলায় না', 'ভুল মাপে স্ক্রুর মাথা নষ্ট, হাত পিছলে শর্ট হয়', 'স্ক্রুর মাথা দেখে ঠিক ড্রাইভার, হাতল ইনসুলেটেড'];
@@ -143,6 +150,39 @@ abstract final class TuLines {
     'টুলবক্সের একদম ওপরে ছিল, তাই তুলে নিলাম',
   ];
 
+  /// Excuses that name the job's own tool and its piece (a right tool, a wrong
+  /// reason), so no word of the right cards (the tool, "নাট", "তারে", "মাপ"…)
+  /// is on right cards only.
+  static List<String> jobExcuses(TuJob j) => switch (j) {
+        TuJob.nut => const [
+            'স্প্যানারটা হাতের কাছে ছিল, তাই ওটাই তুলে নিলাম',
+            'নাটের মাপের কথা ভাবিনি, ভারী স্প্যানারটা নিলাম',
+            'নাটটা ছোট, মাপ না মিলিয়ে যেকোনোটাতেই ঘুরে যেত',
+          ],
+        TuJob.screw => const [
+            'ড্রাইভারটা টুলবক্সের ওপরে ছিল, তাই ওটাই নিলাম',
+            'যেকোনো ড্রাইভার চেপে ধরলেই স্ক্রু ঘুরে যায় তো',
+            'স্ক্রুর মাথা দেখিনি, মাপের হিসাব না করেই নিলাম',
+          ],
+        TuJob.strip => const [
+            'স্ট্রিপারটা নতুন কেনা, তাই একবার চালিয়ে দেখলাম',
+            'তারের ছাল পাতলা, যেকোনো টুলে টান দিলেই ছাড়ে',
+            'তারে খাঁজ পড়ে কি না ভাবিনি, স্ট্রিপারটাই নিলাম',
+          ],
+        TuJob.neutral => const [
+            'মিটারটা সবার ওপরে রাখা ছিল, তাই ওটাই তুলে নিলাম',
+            'মাল্টিমিটার দামি টুল, দামি মানেই সব কাজে ভালো',
+            'নিউট্রাল নিরাপদ, টেস্টার লাগে না, মিটারই নিলাম',
+          ],
+        TuJob.crimp => const [
+            'VDE প্লায়ার্সের হাতলটা রঙিন, ধরতে আরাম লাগে',
+            'VDE টুল সিনিয়ররা নেন, তাই আমিও তুলে নিলাম',
+          ],
+      };
+
+  /// The wrong reasons dealt after job [j].
+  static List<String> whyWrong(TuJob j) => [...excuses, ...jobExcuses(j)];
+
   static List<String> whyRight(TuJob j) => switch (j) {
         TuJob.nut => nutWhy,
         TuJob.screw => screwWhy,
@@ -154,25 +194,27 @@ abstract final class TuLines {
   /// The careless coworker: one push per job he can come on.
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
   static const _asks = ['ও শর্টকাট বলছে। আপনি কী করবেন?', 'ঠিক টুল নেবেন, না ওর কথা শুনবেন?', 'এই কাজে কোন পথে যাবেন?'];
+  // His line fits whether or not a tool is already in hand (he may come on the
+  // "এটা দিয়েই করি" tap). "না", "নেব" and the tool's name are on wrong cards too.
   static const coworkerNut = CoworkerScript(
-    line: 'আরে, প্লায়ার্স দিয়েই নাটটা ঘুরিয়ে দাও! স্প্যানার খুঁজে সময় নষ্ট কেন?',
+    line: 'আরে, প্লায়ার্স দিয়েই নাটটা ঘুরিয়ে দাও! মাপ মেলাতে সময় নষ্ট কেন?',
     exitLine: coworkerExit,
-    right: ['না, নাটের মাপের স্প্যানারই নেব', 'না, প্লায়ার্সে নাট পিছলে নষ্ট হয়', 'না, ঠিক কাজে ঠিক টুল, স্প্যানার নেব'],
-    wrong: ['ঠিক, প্লায়ার্স দিয়েই ঘুরিয়ে দিই', 'আচ্ছা, স্প্যানার খোঁজার সময় নেই', 'প্লায়ার্সে চেপে ধরলেই নাট ঘোরে', 'হ্যাঁ, একটু জোরে ধরলেই হয়ে যাবে', 'ঠিক আছে, এইটুকু নাটে স্প্যানার কী'],
+    right: ['না, নাটের মাপের স্প্যানারই নেব', 'প্লায়ার্সে নাট পিছলায়, স্প্যানার নেব', 'ঠিক কাজে ঠিক টুল, মাপের স্প্যানার নেব'],
+    wrong: ['ঠিক, প্লায়ার্স দিয়েই ঘুরিয়ে দিই', 'মাপের দরকার নেই, প্লায়ার্সই নেব', 'না না, প্লায়ার্সে চেপে ধরলেই নাট ঘোরে', 'হ্যাঁ, একটু জোরে ধরলেই হয়ে যাবে', 'এইটুকু নাটে আবার স্প্যানার লাগে না'],
     asks: _asks,
   );
   static const coworkerStrip = CoworkerScript(
     line: 'ছুরি দিয়ে একটানে ছাল ছাড়িয়ে নাও! স্ট্রিপার লাগে নাকি?',
     exitLine: coworkerExit,
-    right: ['না, স্ট্রিপার দিয়েই ছাল ছাড়াব', 'না, ছুরিতে তারে খাঁজ পড়ে যায়', 'না, ঠিক কাজে ঠিক টুল, স্ট্রিপার'],
-    wrong: ['ঠিক, ছুরি দিয়ে একটানে ছাড়াই', 'আচ্ছা, স্ট্রিপার খোঁজার সময় নেই', 'ছুরিতে তো আরও তাড়াতাড়ি হয়', 'হ্যাঁ, সাবধানে টানলে দাগ পড়বে না', 'ঠিক আছে, এইটুকু ছালে স্ট্রিপার কী'],
+    right: ['না, স্ট্রিপার দিয়েই ছাল ছাড়াব', 'ছুরিতে তারে খাঁজ পড়ে, স্ট্রিপার নেব', 'ঠিক কাজে ঠিক টুল, স্ট্রিপারই নেব'],
+    wrong: ['আচ্ছা, ছুরিই নেব, একটানে হয়ে যাবে', 'স্ট্রিপার খোঁজার সময় নেই, ছুরিই চলবে', 'না না, ছুরিতে তো আরও তাড়াতাড়ি হয়', 'হ্যাঁ, সাবধানে টানলে দাগ পড়বে না', 'এইটুকু ছালে স্ট্রিপার লাগে না'],
     asks: _asks,
   );
   static const coworkerCrimp = CoworkerScript(
     line: 'গ্লাভস তো পরাই আছে! সাধারণ প্লায়ার্সেই চলবে, অত বাছাবাছি কেন?',
     exitLine: coworkerExit,
-    right: ['না, গ্লাভস আর VDE টুল দুটোই চাই', 'না, যেকোনো একটা ফেল করলেই শক', 'না, ইনসুলেটেড প্লায়ার্সই নেব'],
-    wrong: ['ঠিক, গ্লাভস থাকলে সবই চলে যায়', 'আচ্ছা, সাধারণ প্লায়ার্সেই করি', 'গ্লাভসই তো আসল, টুল যা খুশি', 'হ্যাঁ, এইটুকু কাজে কিছু হবে না', 'ঠিক আছে, এবারটা এভাবেই করি'],
+    right: ['না, গ্লাভস আর VDE টুল দুটোই চাই', 'একটা ফেল করলেই শক, VDE প্লায়ার্স নেব', 'গ্লাভস থাকলেও ইনসুলেটেড প্লায়ার্স নেব'],
+    wrong: ['ঠিক, গ্লাভস থাকলে সবই চলে যায়', 'ঠিক আছে, সাধারণ প্লায়ার্সই নেব', 'না না, গ্লাভসই তো আসল, টুল যা খুশি', 'হ্যাঁ, এইটুকু কাজে কিছু হবে না', 'VDE খোঁজার দরকার নেই, এটাতেই হবে'],
     asks: _asks,
   );
   static CoworkerScript coworkerFor(TuJob j) => switch (j) {
@@ -181,7 +223,7 @@ abstract final class TuLines {
         _ => coworkerNut,
       };
 
-  /// The coworker's new lines (device TTS until recorded in his voice).
+  /// The coworker's pushes with no recorded clip yet (silent, caption held).
   static List<String> get toRecord => [coworkerNut.line, coworkerStrip.line, coworkerCrimp.line];
 
   static const callHeld = 'ঠিক! শর্টকাট নয় — ঠিক কাজে ঠিক টুল।';
@@ -507,6 +549,15 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The gesture hint (how to play, never which tool): a sweep over every
+  /// tool in the box, or over the two buttons with a tool in hand.
+  final _hints = IdleHintController();
+  final _useKey = GlobalKey();
+  final _backKey = GlobalKey();
+
+  /// The scene's geometry from the last layout (the hint's tool rects).
+  TuGeo? _geo;
+
   String get _rungId => widget.ctx.rungId;
   bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
 
@@ -542,7 +593,25 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
     if (!_muted) unawaited(ZlFx.cue(file, volume: volume, muted: false));
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown;
+  /// The scene takes a move now: never in a right move's praise window
+  /// (`tableBusy`), with a card or a deck up, or while he talks.
+  bool get _canPlay => !_intro && !_ended && !struckOut && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && !tableBusy;
+
+  /// The level waits for the player (the gesture hint may show).
+  bool get _hintWaiting => _canPlay && !coworkerOnScreen && _mark == null;
+
+  HintSpec? _hint() {
+    if (!_hintWaiting) return null;
+    if (_run.held != null) return HintSpec.sweepOver([_useKey, _backKey]);
+    final geo = _geo;
+    if (geo == null) return null;
+    return HintSpec.sweep(geo.slots(_run.deal.tray).values.toList(), space: HintSpace.scene);
+  }
+
+  /// A tap on the scene that hit no tool or button.
+  void _missTap() {
+    if (_hintWaiting) _hints.missTap();
+  }
 
   // --- a job ----------------------------------------------------------------------
   void _startJob() {
@@ -583,7 +652,12 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
   }
 
   Future<void> _use(Offset origin, {TuTool? pushed}) async {
-    if (pushed == null && (!_canPlay || _run.held == null)) return;
+    if (_ended || _run.shown) return;
+    if (pushed == null) {
+      if (!_canPlay || _run.held == null) return;
+      // His job: the coworker comes first, however fast the player is.
+      if (holdForCoworker()) return;
+    }
     _hush();
     final m = _run.use(pushed: pushed);
     HapticFeedback.mediumImpact();
@@ -606,7 +680,7 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
       putOnTable(15);
       final idx = _run.index;
       unawaited(askReason(
-        deal: () => dealChoices(TuLines.whyRight(job), TuLines.excuses, widget.rng),
+        deal: () => dealChoices(TuLines.whyRight(job), TuLines.whyWrong(job), widget.rng),
         question: TuLines.why,
         stillValid: () => _run.index == idx && !_ended,
       ));
@@ -654,8 +728,8 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    if (_intro || _card != null || reasonOpen) return false;
+    if (_ended || struckOut || _run.index != _run.deal.callAt || _run.shown) return null;
+    if (_intro || _card != null || reasonOpen || tableBusy) return false;
     return true;
   }
 
@@ -681,6 +755,11 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
   /// Tap the guide: the task again, a different way each time.
   void _tapGuide() {
     if (_intro || _ended) return;
+    // Beat 1 is his alone: the guide stays quiet until his deck is up.
+    if (coworkerOpen && !coworkerChoiceUp) return;
+    // The work and its praise are running: don't cut the praise or re-ask a
+    // finished job.
+    if ((_run.shown || tableHolding) && !reasonOpen) return;
     final String line = coworkerOpen
         ? nextCoworkerAsk()
         : reasonOpen
@@ -789,7 +868,7 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = TuGeo.forScene(m.height, m.inset);
+    final geo = _geo = TuGeo.forScene(m.height, m.inset);
     final c = _run.current;
     final quiet = _quiet;
     final playing = !_intro && _mark == null && !struckOut;
@@ -812,6 +891,12 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
       Positioned.fill(
         key: const ValueKey('tray'),
         child: RepaintBoundary(child: CustomPaint(painter: TuTrayPainter(geo: geo, slots: slots))),
+      ),
+      // Taps that hit no tool or button (the gesture hint's miss count): over
+      // the painted tray, under the tools.
+      Positioned.fill(
+        key: const ValueKey('scene-tap'),
+        child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (_) => _missTap()),
       ),
       for (final MapEntry(key: t, value: r) in slots.entries)
         Positioned.fromRect(
@@ -888,9 +973,9 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
           top: geo.lens.dy - 52,
           child: Column(
             children: [
-              DoBigButton(label: TuLines.use, filled: true, onTapUp: (d) => unawaited(_use(d.globalPosition))),
+              DoBigButton(key: _useKey, label: TuLines.use, filled: true, onTapUp: (d) => unawaited(_use(d.globalPosition))),
               const SizedBox(height: 8),
-              _PutBackButton(onTap: _putBack),
+              _PutBackButton(key: _backKey, onTap: _putBack),
             ],
           ),
         ),
@@ -934,6 +1019,10 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: playing && !deckUp && _hintWaiting,
+            hintKey: '${_run.index}/${_run.held?.name}/$strikes',
+            hintController: _hints,
             overlays: [
               // The docket (hidden while his speech bubble is up, which covers it).
               if (playing && !_run.done && !coworkerOpen)
@@ -1062,7 +1151,7 @@ class _DocketChip extends StatelessWidget {
 }
 
 class _PutBackButton extends StatelessWidget {
-  const _PutBackButton({required this.onTap});
+  const _PutBackButton({super.key, required this.onTap});
   final VoidCallback onTap;
 
   @override

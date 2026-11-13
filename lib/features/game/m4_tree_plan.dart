@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -42,8 +43,9 @@ export 'm4_tree_plan_world.dart' show M4TreePlanGeo, M4TreePlanBranch, M4TreePla
 //      branch well clear of the line = a slip;
 //   2. the drop zone (spot): tap the ground where the branches will come down
 //      — the cordon goes round it (point 2: rope or tape off the area so cut
-//      branches do not fall on people or traffic); on the road = a slip;
-//      away from the tree = not scored, try again;
+//      branches do not fall on people or traffic); on the road = a slip; on
+//      the verge away from the tree = a slip (the branches would land outside
+//      the cordon); a tap off the ground (sky, wires) is a miss, not scored;
 //   3. the plan (choose, all before the first cut, any order among them):
 //      শাটডাউন · PTW (point 2: branches very close to the line → PTW and the
 //      line de-energised before work; the film: "লাইনের কাছে কাজের আগে
@@ -51,9 +53,17 @@ export 'm4_tree_plan_world.dart' show M4TreePlanGeo, M4TreePlanBranch, M4TreePla
 //      শক্ত গ্লাভস + গগলস (point 2), a rope for a heavy branch (point 3:
 //      control the fall), and the tool: insulated pruner or saw for thin
 //      branches, chainsaw for thick (point 2; pro tip 2: fibreglass handles
-//      near the line); a plain saw = a slip.
-// Deadly: starting the cut with the line live (no শাটডাউন) — also on the
-// careless coworker's say-so ("লাইন চালু থাক …"), once a play.
+//      near the line); a plain saw = a slip. The plan buttons are dealt in a
+//      fresh order per tree (never the plan's order).
+// Deadly: starting the cut with the line live (no শাটডাউন).
+// The careless coworker ("লাইন চালু থাক …") comes once a play, before the
+// শাটডাউন is taken; taking it and "কাটা শুরু" wait for him
+// (holdForCoworker). Listening to him = a slip (playbook row 8, audit
+// 2026-11-11); the শাটডাউন stays on offer — cutting without it is still
+// the deadly.
+// Kit 2026-11-11: no control works in a praise window (tableBusy); gesture
+// hints sweep over all the branches + "জরিপ শেষ", the ground (verge and road)
+// or the plan buttons + "কাটা শুরু" — never one answer.
 // The test-and-earth after the shutdown is drawn (earth leads on the pole)
 // from the Module rule; lesson 4.8 itself says only PTW + de-energise (flagged).
 // Shared kit: guide first, full scene, corner guide, ◆ on the table → "কেন …?"
@@ -79,18 +89,33 @@ enum M4TreePlanPhase { survey, drop, plan, cut, done }
 /// What a reason card asks about.
 enum M4TreePlanTopic { shutdown, cordon, tool, directional, abCable }
 
-/// Where a tap on the ground puts the drop zone.
-enum M4TreePlanDrop { zone, road, far }
+/// Where a tap puts the drop zone: under the tree, on the road, on the verge
+/// away from the tree, or off the ground (a miss).
+enum M4TreePlanDrop { zone, road, away, far }
+
+/// A button on the plan rack (dealt in a fresh order per tree).
+enum M4TreePlanItem { shutdown, helper, ppe, rope, pruner, saw, chainsaw, plain }
 
 @immutable
 class M4TreePlanTree {
-  const M4TreePlanTree({required this.wire, required this.size, required this.treeX, required this.branches, required this.topic, required this.walkerX});
+  const M4TreePlanTree({
+    required this.wire,
+    required this.size,
+    required this.treeX,
+    required this.branches,
+    required this.topic,
+    required this.walkerX,
+    this.rack = M4TreePlanItem.values,
+  });
   final M4TreePlanWire wire;
   final M4TreePlanSize size;
   final double treeX;
   final List<M4TreePlanBranch> branches;
   final M4TreePlanTopic topic;
   final double walkerX;
+
+  /// The plan buttons in their dealt order.
+  final List<M4TreePlanItem> rack;
 
   bool get big => size == M4TreePlanSize.big;
   List<int> get toward => [
@@ -144,6 +169,11 @@ M4TreePlanDeal m4TreePlanDeal(math.Random rng) {
     }
     used.add(topic);
     final treeX = 150.0 + rng.nextInt(60);
+    // The rack never in the plan's own order (nor the enum's).
+    final rack = List.of(M4TreePlanItem.values)..shuffle(rng);
+    while (_sameOrder(rack, M4TreePlanItem.values)) {
+      rack.shuffle(rng);
+    }
     trees.add(
       M4TreePlanTree(
         wire: wires[i],
@@ -152,10 +182,18 @@ M4TreePlanDeal m4TreePlanDeal(math.Random rng) {
         branches: List.unmodifiable(bs),
         topic: topic,
         walkerX: rng.nextBool() ? 60.0 + rng.nextInt(50) : 250.0 + rng.nextInt(50),
+        rack: List.unmodifiable(rack),
       ),
     );
   }
   return M4TreePlanDeal(trees: trees, callAt: rng.nextInt(3));
+}
+
+bool _sameOrder(List<M4TreePlanItem> a, List<M4TreePlanItem> b) {
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
 }
 
 abstract final class M4TreePlanLines {
@@ -191,8 +229,8 @@ abstract final class M4TreePlanLines {
   static const docket = 'ডকেট';
   static String treeBn(M4TreePlanTree t) => t.wire == M4TreePlanWire.hv11 ? '11 kV লাইনে ডাল উঠেছে' : 'LT এবি কেবিলে ডাল ঘষছে';
 
-  // Not scored: the guide says the rule, the step stays.
-  static const dropFar = 'ডাল তো ওখানে নামবে না — গাছের নিচে, যেখানে পড়বে।';
+  // Not scored (a tap off the ground): the task again, neutral — never where.
+  static const dropFar = 'মাটিতে ছুঁয়ে দেখান — কাটা ডাল কোথায় নামবে?';
   static const noTool = 'কী দিয়ে কাটবেন? টুলটা আগে বেছে নিন।';
   static const marked = 'চিহ্ন দেওয়া হয়েছে।';
 
@@ -235,6 +273,31 @@ abstract final class M4TreePlanLines {
     'তাড়াতাড়ি সারতে হবে, নিচে ঘেরার সময় নেই',
     'সাবধানে কাটলে চালু লাইনেও কিছু হয় না',
   ];
+
+  /// Wrong reasons that use the tree's own words (so no word appears only on
+  /// the right card): field excuses and myths about the same act.
+  static const shutdownWrong = ['PTW নিলে পরে কেউ আমাকে দোষ দিতে পারে না', 'শাটডাউন নিলে সুপারভাইজার খুশি হন, তাই নিলাম'];
+  static const cordonWrong = ['নিচে ঘেরা থাকলে ডালগুলো পরে কুড়াতে সুবিধা', 'রাস্তায় ঘিরলে গাড়ি থামাতে বড় ঝামেলা হয়'];
+  static const toolSmallWrong = ['ইনসুলেটেড হাতলে ধরলে চালু লাইনেও কাটা যায়', "ইনসুলেটেড প্রুনার বা স' হালকা, হাত কম ব্যথা"];
+  static const toolBigWrong = ['চেইনসঅ থাকলে দড়ি বা ঘেরার দরকার পড়ে না', 'দড়ি বাঁধা থাকলে ডাল ধরে উঠতে সুবিধা হয়'];
+  static const directionalWrong = ['শুধু বড় ডালগুলোই ছাঁটা হয়, ছোটগুলো নয়', 'লাইনের দিকের ডাল কাটলে কাঠ বেশি পাওয়া যায়'];
+  static const abWrong = ['এবি কেবিল তো খোলা তার, তাই ছাঁটতে হয়', 'এবি কেবিলে ডাল লাগলে গ্রাহক নালিশ করেন'];
+  static List<String> topicWrong(M4TreePlanTree t) => switch (t.topic) {
+    M4TreePlanTopic.shutdown => shutdownWrong,
+    M4TreePlanTopic.cordon => cordonWrong,
+    M4TreePlanTopic.tool => t.big ? toolBigWrong : toolSmallWrong,
+    M4TreePlanTopic.directional => directionalWrong,
+    M4TreePlanTopic.abCable => abWrong,
+  };
+
+  /// The wrong library for [t]: its own excuses + the general myths.
+  static List<String> whyWrongFor(M4TreePlanTree t) => [...topicWrong(t), ...whyWrong];
+
+  /// One right, one wrong in the tree's own words, one general myth.
+  static List<ChoiceOption> dealWhy(M4TreePlanTree t, math.Random rng) {
+    final own = topicWrong(t);
+    return dealChoices(whyRight(t), [own[rng.nextInt(own.length)], whyWrong[rng.nextInt(whyWrong.length)]], rng);
+  }
 
   /// The careless coworker, before the plan: keep the line on.
   static const coworkerExit = 'হুঁ! যা খুশি করো।';
@@ -301,6 +364,20 @@ abstract final class M4TreePlanMistakes {
     art: '$_dir/tp_drop.svg',
     lessonPoint: 1,
   );
+  static const awayDrop = DoMistake(
+    key: '4.8/m4_tree_plan/drop-away-from-tree',
+    textBn: 'ঘেরা দিলেন গাছ থেকে দূরে — কাটা ডাল নামবে ঘেরার বাইরে, যেখানে লোক চলে। ডাল যেখানে পড়বে, গাছের নিচে সেই জায়গাটাই দড়ি বা টেপে ঘিরুন।',
+    art: '$_dir/tp_drop.svg',
+    lessonPoint: 1,
+  );
+
+  /// Listening to the careless coworker (playbook row 8: a slip).
+  static const listened = DoMistake(
+    key: '4.8/m4_tree_plan/listened-line-on',
+    textBn: 'লাইন চালু রেখে কাটার কথায় সায় দিলেন। ডাল লাইনের খুব কাছে — আগে PTW নিয়ে লাইন বন্ধ, তবেই কাটা। কারও চাপে নিয়ম ভাঙবেন না।',
+    art: '$_dir/tp_live.svg',
+    lessonPoint: 1,
+  );
   static const plainTool = DoMistake(
     key: '4.8/m4_tree_plan/plain-saw-near-line',
     textBn: "লাইনের কাছে সাধারণ করাত নিলেন। ফাইবারগ্লাসের হাতলযুক্ত ইনসুলেটেড প্রুনার বা স' নিন — এটি বাড়তি সুরক্ষা দেয়।",
@@ -339,7 +416,7 @@ abstract final class M4TreePlanMistakes {
     lessonPoint: 2,
   );
 
-  static List<DoMistake> get all => [liveLine, wrongBranch, missedBranch, roadDrop, plainTool, smallTool, bigTool, alone, noPpe, noRope];
+  static List<DoMistake> get all => [liveLine, listened, wrongBranch, missedBranch, roadDrop, awayDrop, plainTool, smallTool, bigTool, alone, noPpe, noRope];
 }
 
 /// The play state (pure logic).
@@ -353,9 +430,6 @@ class M4TreePlanRun {
   double? dropX;
   final Set<M4TreePlanKit> kit = {};
   M4TreePlanTool tool = M4TreePlanTool.none;
-
-  /// Listened to him: the line stays on.
-  var skippedShutdown = false;
   int slips = 0;
   int treeSlips = 0;
   DoMistake? deadly;
@@ -402,14 +476,15 @@ class M4TreePlanRun {
     return null;
   }
 
-  /// The drop zone at design x [x]: far = not scored, stay; the road = a slip
-  /// (the guide moves it under the tree).
+  /// The drop zone at design x [x]: off the ground = not scored, stay; the
+  /// road or the verge away from the tree = a slip (the guide moves it under
+  /// the tree).
   DoMistake? drop(M4TreePlanDrop d, double x) {
     if (ended || phase != M4TreePlanPhase.drop || d == M4TreePlanDrop.far) return null;
     phase = M4TreePlanPhase.plan;
-    if (d == M4TreePlanDrop.road) {
+    if (d == M4TreePlanDrop.road || d == M4TreePlanDrop.away) {
       dropX = tree.treeX;
-      return _slip(M4TreePlanMistakes.roadDrop);
+      return _slip(d == M4TreePlanDrop.road ? M4TreePlanMistakes.roadDrop : M4TreePlanMistakes.awayDrop);
     }
     dropX = x.clamp(tree.treeX - 60, tree.treeX + 60);
     _tag(M4TreePlanLines.caughtDrop);
@@ -418,8 +493,14 @@ class M4TreePlanRun {
 
   void wear(M4TreePlanKit k) {
     if (ended || phase != M4TreePlanPhase.plan) return;
-    if (k == M4TreePlanKit.shutdown && skippedShutdown) return;
     if (!kit.add(k)) kit.remove(k);
+  }
+
+  /// Agreed with the careless coworker to keep the line on: a slip. The
+  /// শাটডাউন stays on offer (cutting without it is the deadly).
+  DoMistake? listen() {
+    if (ended) return null;
+    return _slip(M4TreePlanMistakes.listened);
   }
 
   void pick(M4TreePlanTool t) {
@@ -435,7 +516,7 @@ class M4TreePlanRun {
   (bool, DoMistake?) start() {
     if (ended || phase != M4TreePlanPhase.plan) return (false, null);
     if (tool == M4TreePlanTool.none) return (false, null);
-    if (!kit.contains(M4TreePlanKit.shutdown) || skippedShutdown) {
+    if (!kit.contains(M4TreePlanKit.shutdown)) {
       phase = M4TreePlanPhase.cut;
       return (true, deadly = M4TreePlanMistakes.liveLine);
     }
@@ -478,7 +559,6 @@ class M4TreePlanRun {
     dropX = null;
     kit.clear();
     tool = M4TreePlanTool.none;
-    skippedShutdown = false;
     treeSlips = 0;
   }
 }
@@ -486,7 +566,7 @@ class M4TreePlanRun {
 /// Classify a ground tap at design ([x], [y]) for [tree].
 M4TreePlanDrop m4TreePlanDropOf(M4TreePlanGeo geo, M4TreePlanTree tree, double x, double y) {
   if (y >= geo.roadTop - 2 && y <= geo.roadBottom) return M4TreePlanDrop.road;
-  if (y >= geo.groundY - 6 && y < geo.roadTop - 2 && (x - tree.treeX).abs() <= 90) return M4TreePlanDrop.zone;
+  if (y >= geo.groundY - 6 && y < geo.roadTop - 2) return (x - tree.treeX).abs() <= 90 ? M4TreePlanDrop.zone : M4TreePlanDrop.away;
   return M4TreePlanDrop.far;
 }
 
@@ -592,6 +672,10 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
   final _nudge = TaskNudge();
   int _nudgeN = 0;
   M4TreePlanGeo _geoNow = M4TreePlanGeo.forScene(780, 0);
+  final _hints = IdleHintController();
+  final _rackKeys = {for (final i in M4TreePlanItem.values) i: GlobalKey()};
+  final _surveyKey = GlobalKey();
+  final _startKey = GlobalKey();
 
   @override
   LevelContext get deathCtx => widget.ctx;
@@ -630,7 +714,9 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
     if (!_muted) unawaited(ZlFx.cue(file, volume: volume, muted: false));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen;
+  /// The scene takes a move now: never in a right move's praise window
+  /// (`tableBusy`), a card, a deck, the coworker or the death freeze.
+  bool get _canPlay => !_intro && !_busy && !_ended && !_freeze && _card == null && !reasonOpen && !coworkerOpen && !tableBusy;
 
   void _start() {
     _clock.start();
@@ -661,7 +747,10 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
     switch (_run.phase) {
       case M4TreePlanPhase.survey:
         final i = geo.branchAt(p, t.branches, t.treeX, t.wire);
-        if (i == null) return;
+        if (i == null) {
+          _hints.missTap();
+          return;
+        }
         if (_run.marked.contains(i)) {
           HapticFeedback.selectionClick();
           return;
@@ -681,6 +770,8 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
         HapticFeedback.selectionClick();
         _cue('sounds/intro/tick.ogg', volume: 0.45);
         if (d == M4TreePlanDrop.far) {
+          // Off the ground: a miss, not a choice — the task again, neutral.
+          _hints.missTap();
           unawaited(_sayChain([M4TreePlanLines.dropFar]));
           return;
         }
@@ -693,7 +784,9 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
         }
         _cue('sounds/learn/tag_slap.wav', volume: 0.55);
         _askStep();
-      case M4TreePlanPhase.plan || M4TreePlanPhase.cut || M4TreePlanPhase.done:
+      case M4TreePlanPhase.plan:
+        _hints.missTap();
+      case M4TreePlanPhase.cut || M4TreePlanPhase.done:
         break;
     }
   }
@@ -716,7 +809,8 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
   // --- 3. the plan -----------------------------------------------------------------
   void _wear(M4TreePlanKit k) {
     if (!_canPlay || _run.phase != M4TreePlanPhase.plan) return;
-    if (k == M4TreePlanKit.shutdown && _run.skippedShutdown) return;
+    // Taking the শাটডাউন ends his moment: he has his say first.
+    if (k == M4TreePlanKit.shutdown && !_run.kit.contains(k) && holdForCoworker()) return;
     HapticFeedback.selectionClick();
     _cue(k == M4TreePlanKit.shutdown ? 'sounds/quiz_select.wav' : 'sounds/learn/tag_slap.wav', volume: 0.45);
     setState(() {
@@ -737,6 +831,8 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
 
   Future<void> _go(Offset origin) async {
     if (!_canPlay || _run.phase != M4TreePlanPhase.plan) return;
+    // The decisive control of his tree: he comes before the cut, however fast.
+    if (holdForCoworker()) return;
     final (started, m) = _run.start();
     if (!started) {
       HapticFeedback.selectionClick();
@@ -784,7 +880,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
     putOnTable(15 + (_run.clean ? 5 : 0));
     unawaited(
       askReason(
-        deal: () => dealChoices(M4TreePlanLines.whyRight(t), M4TreePlanLines.whyWrong, widget.rng),
+        deal: () => M4TreePlanLines.dealWhy(t, widget.rng),
         question: M4TreePlanLines.why(t),
         stillValid: () => _run.index == idx && !_ended,
       ),
@@ -832,8 +928,9 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
   bool? coworkerCanCome() {
     if (_ended || _run.index != _run.deal.callAt) return null;
     final ph = _run.phase;
+    // His push ("keep the line on") makes no sense once the শাটডাউন is taken.
     if (ph.index > M4TreePlanPhase.plan.index || _run.kit.contains(M4TreePlanKit.shutdown)) return null;
-    if (_intro || _busy || _card != null || reasonOpen) return false;
+    if (_intro || _busy || _freeze || _card != null || reasonOpen || tableBusy) return false;
     return true;
   }
 
@@ -845,16 +942,18 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // The line stays on: the shutdown is off the plan.
-      setState(() => _run.skippedShutdown = true);
-      _askStep();
+      // Listening = a slip (playbook row 8); the শাটডাউন stays on offer.
+      final m = _run.listen();
+      if (m == null) return;
+      unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
+      await _slip(m);
       return;
     }
     _run.caught.add(M4TreePlanLines.caughtCall);
     unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
     unawaited(coworkerSnarl());
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
+    if (!mounted || _ended) return;
     unawaited(_sayChain([M4TreePlanLines.callHeld, M4TreePlanLines.ask(_run.phase)]));
   }
 
@@ -943,6 +1042,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
         _hush();
         widget.onRetry(_muted);
       case MistakeTone.deadly:
+        if (_popped) return;
         _popped = true;
         unawaited(dieAndLeave());
     }
@@ -1051,7 +1151,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
                       wire: t.wire,
                       walkerX: t.walkerX,
                       cordonX: _run.dropX,
-                      earthed: kit.contains(M4TreePlanKit.shutdown) && !_run.skippedShutdown,
+                      earthed: kit.contains(M4TreePlanKit.shutdown),
                     ),
                   ),
                 ),
@@ -1204,30 +1304,82 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
 
   Widget _planTools() {
     final k = _run.kit;
-    Widget b(String label, IconData icon, bool on, VoidCallback tap, {bool enabled = true}) =>
-        _ToolButton(icon: icon, label: label, on: on, enabled: _canPlay && enabled, onTap: tap);
-    final off = _run.skippedShutdown;
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 2,
-      runSpacing: 6,
-      children: [
-        b(
+    Widget b(M4TreePlanItem item) {
+      final (String label, IconData icon, bool on, VoidCallback tap) = switch (item) {
+        M4TreePlanItem.shutdown => (
           k.contains(M4TreePlanKit.shutdown) ? M4TreePlanLines.shutdownOn : M4TreePlanLines.shutdown,
           Icons.power_off_rounded,
           k.contains(M4TreePlanKit.shutdown),
           () => _wear(M4TreePlanKit.shutdown),
-          enabled: !off,
         ),
-        b(M4TreePlanLines.helper, Icons.traffic_rounded, k.contains(M4TreePlanKit.helper), () => _wear(M4TreePlanKit.helper)),
-        b(M4TreePlanLines.ppe, Icons.back_hand_rounded, k.contains(M4TreePlanKit.ppe), () => _wear(M4TreePlanKit.ppe)),
-        b(M4TreePlanLines.rope, Icons.gesture_rounded, k.contains(M4TreePlanKit.rope), () => _wear(M4TreePlanKit.rope)),
-        b(M4TreePlanLines.pruner, Icons.content_cut_rounded, _run.tool == M4TreePlanTool.pruner, () => _pick(M4TreePlanTool.pruner)),
-        b(M4TreePlanLines.saw, Icons.carpenter_rounded, _run.tool == M4TreePlanTool.saw, () => _pick(M4TreePlanTool.saw)),
-        b(M4TreePlanLines.chainsaw, Icons.handyman_rounded, _run.tool == M4TreePlanTool.chainsaw, () => _pick(M4TreePlanTool.chainsaw)),
-        b(M4TreePlanLines.plain, Icons.hardware_rounded, _run.tool == M4TreePlanTool.plain, () => _pick(M4TreePlanTool.plain)),
-      ],
+        M4TreePlanItem.helper => (M4TreePlanLines.helper, Icons.traffic_rounded, k.contains(M4TreePlanKit.helper), () => _wear(M4TreePlanKit.helper)),
+        M4TreePlanItem.ppe => (M4TreePlanLines.ppe, Icons.back_hand_rounded, k.contains(M4TreePlanKit.ppe), () => _wear(M4TreePlanKit.ppe)),
+        M4TreePlanItem.rope => (M4TreePlanLines.rope, Icons.gesture_rounded, k.contains(M4TreePlanKit.rope), () => _wear(M4TreePlanKit.rope)),
+        M4TreePlanItem.pruner => (M4TreePlanLines.pruner, Icons.content_cut_rounded, _run.tool == M4TreePlanTool.pruner, () => _pick(M4TreePlanTool.pruner)),
+        M4TreePlanItem.saw => (M4TreePlanLines.saw, Icons.carpenter_rounded, _run.tool == M4TreePlanTool.saw, () => _pick(M4TreePlanTool.saw)),
+        M4TreePlanItem.chainsaw => (M4TreePlanLines.chainsaw, Icons.handyman_rounded, _run.tool == M4TreePlanTool.chainsaw, () => _pick(M4TreePlanTool.chainsaw)),
+        M4TreePlanItem.plain => (M4TreePlanLines.plain, Icons.hardware_rounded, _run.tool == M4TreePlanTool.plain, () => _pick(M4TreePlanTool.plain)),
+      };
+      return _ToolButton(key: _rackKeys[item], icon: icon, label: label, on: on, enabled: _canPlay, onTap: tap);
+    }
+
+    // The rack in the tree's dealt order (never the plan's order).
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 2,
+      runSpacing: 6,
+      children: [for (final item in _tree.rack) b(item)],
     );
+  }
+
+  // --- gesture hints (how to touch, never what) ----------------------------------
+  /// The level waits for a move on the scene or the rack.
+  bool get _hintWaiting => _canPlay && !_cutting && !coworkerOnScreen && _mark == null && !struckOut && _run.phase.index <= M4TreePlanPhase.plan.index;
+
+  Object get _hintKey => ('tp', _run.index, _run.phase, strikes);
+
+  /// Survey: a sweep over every branch (marked or not, in the line or not —
+  /// the set never narrows to the ones left) and then the "জরিপ শেষ" button;
+  /// the drop: over the verge and the road alike; the plan: over every rack
+  /// button and "কাটা শুরু". Never a tap on one answer.
+  HintSpec? _hint() {
+    final t = _tree;
+    final g = _geoNow;
+    switch (_run.phase) {
+      case M4TreePlanPhase.survey:
+        final pts = <Offset>[for (var i = 0; i < t.branches.length; i++) _branchPoint(g, t, i)]..sort((a, b) => a.dx.compareTo(b.dx));
+        final done = HintSpec.globalRectOf(_surveyKey);
+        return HintSpec.sweep([
+          for (final p in pts) Rect.fromCenter(center: _sceneToGlobal(p), width: 30, height: 30),
+          ?done,
+        ]);
+      case M4TreePlanPhase.drop:
+        final verge = g.groundY + 30;
+        final road = (g.roadTop + g.roadBottom) / 2;
+        return HintSpec.sweep([
+          for (final (x, y) in [(60.0, verge), (120.0, road), (180.0, verge), (240.0, road), (300.0, verge)]) Rect.fromCenter(center: Offset(x, y), width: 40, height: 30),
+        ], space: HintSpace.scene);
+      case M4TreePlanPhase.plan:
+        return HintSpec.sweepOver([for (final i in t.rack) _rackKeys[i]!, _startKey]);
+      case M4TreePlanPhase.cut || M4TreePlanPhase.done:
+        return null;
+    }
+  }
+
+  /// A scene point (design px) on screen — [FullSceneFrame]'s cover fit of the
+  /// full-screen body.
+  Offset _sceneToGlobal(Offset p) {
+    final size = MediaQuery.sizeOf(context);
+    final w = math.max(1.0, size.width);
+    final sh = (360 * size.height / w).clamp(560.0, 900.0);
+    final scale = math.max(size.width / 360, size.height / sh);
+    return Offset((size.width - 360 * scale) / 2 + p.dx * scale, (size.height - sh * scale) / 2 + p.dy * scale);
+  }
+
+  static Offset _branchPoint(M4TreePlanGeo g, M4TreePlanTree t, int i) {
+    final (a, c, tip) = g.branchOf(t.branches[i], t.treeX, t.wire);
+    const s = 0.7;
+    return a * ((1 - s) * (1 - s)) + c * (2 * s * (1 - s)) + tip * (s * s);
   }
 
   @override
@@ -1268,6 +1420,10 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: playing && !deckUp && _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1275,7 +1431,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
                   left: 12,
                   top: pad.top + 96,
                   child: IgnorePointer(
-                    child: _DocketChip(text: M4TreePlanLines.treeBn(t), ptw: _run.kit.contains(M4TreePlanKit.shutdown) && !_run.skippedShutdown),
+                    child: _DocketChip(text: M4TreePlanLines.treeBn(t), ptw: _run.kit.contains(M4TreePlanKit.shutdown)),
                   ),
                 ),
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
@@ -1285,7 +1441,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
                   left: 80,
                   right: 80,
                   bottom: pad.bottom + 14,
-                  child: DoBigButton(label: M4TreePlanLines.surveyDone, filled: true, onTapUp: (d) => unawaited(_surveyDone(d.globalPosition))),
+                  child: DoBigButton(key: _surveyKey, label: M4TreePlanLines.surveyDone, filled: true, onTapUp: (d) => unawaited(_surveyDone(d.globalPosition))),
                 ),
               if (planUp)
                 Positioned(
@@ -1300,7 +1456,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
                       const SizedBox(height: 8),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 60),
-                        child: DoBigButton(label: M4TreePlanLines.start, filled: true, onTapUp: (d) => unawaited(_go(d.globalPosition))),
+                        child: DoBigButton(key: _startKey, label: M4TreePlanLines.start, filled: true, onTapUp: (d) => unawaited(_go(d.globalPosition))),
                       ),
                     ],
                   ),
@@ -1451,7 +1607,7 @@ class _DocketChip extends StatelessWidget {
 
 /// A plan button: a round icon with its name under it; lit once chosen.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;

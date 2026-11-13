@@ -1,6 +1,6 @@
 # Android (the ship target)
 
-Application id `com.smartlineman.app.slm_flutter`. Launcher label **SmartLineman**.
+Application id `com.smartlineman.app`. Launcher label **SmartLineman**.
 
 - Gradle wrapper **9.3.1**, Android Gradle Plugin **9.1.0**, Kotlin **2.4.0** (`settings.gradle.kts`)
 - Code targets Java 17 (`app/build.gradle.kts`). Run Gradle on JDK 17 or 21

@@ -18,7 +18,9 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m2_megger_read.dart';
@@ -32,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.7/do/1',
@@ -76,21 +79,24 @@ List<Finder> _onScreen(List<String> texts) => [
         if (_label(x).evaluate().isNotEmpty) _label(x),
     ];
 
+/// Waits for a deck, picks its right card, and taps এগিয়ে যান on a reason
+/// (a coworker deck closes by itself).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
+  await tapReasonProceed(t);
+}
+
+/// The first seed whose deal brings him on [round].
+int _seedCalling(int round) {
+  var seed = 0;
+  while (dealMegger(math.Random(seed)).callAt != round) {
+    seed++;
   }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  return seed;
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -169,8 +175,6 @@ Future<void> _playCore(WidgetTester t, MeggerDeal deal, int core, int round) asy
   final his = round == deal.callAt;
   if (his) {
     expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes on round $round');
-    await _pumpUntil(t, find.byType(ChoiceDeck));
-    await _pump(t, 600);
     await _pickRight(t, M2MeggerLines.coworker.right);
     await _pump(t, 2000);
   } else {
@@ -182,7 +186,6 @@ Future<void> _playCore(WidgetTester t, MeggerDeal deal, int core, int round) asy
   await _tapD(t, _geo.coreEnds[core], ms: 600);
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'round $round');
   expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'reason deck, round $round');
-  await _pump(t, 700);
   await _pickRight(t, his ? M2MeggerLines.dischargeRight : (weak ? M2MeggerLines.weakRight : M2MeggerLines.goodRight));
   await _pump(t, round == 2 ? 7000 : 3500);
 }
@@ -219,10 +222,10 @@ void main() {
       final a = run(fault: MeggerFault.lead, volts: 2500);
       a.openCheck();
       expect(a.leadCracked, isTrue);
-      a.fix(MeggerFault.battery);
-      expect(a.kitOk, isFalse, reason: 'a needless fix changes nothing');
-      a.fix(MeggerFault.lead);
+      expect(a.kitOk, isFalse);
+      expect(a.fix(MeggerFault.lead), isNull);
       expect(a.kitOk, isTrue);
+      expect(a.fix(MeggerFault.lead), isNull, reason: 'the fixed part again: nothing');
       expect(a.discharge(0), isTrue, reason: 'just cut off the supply: a charge');
       expect(a.discharge(0), isFalse);
       expect(a.clipE(armour: true), isNull);
@@ -273,6 +276,21 @@ void main() {
       expect(a.percent, 0);
       expect(a.deadly, isNull);
       expect(M2MeggerMistakes.all.where((m) => m.deadly), [M2MeggerMistakes.charged]);
+    });
+
+    test('a needless fix (a good lead or battery swapped) costs a slip, once per part; it fixes nothing', () {
+      for (final fault in [MeggerFault.none, MeggerFault.lead, MeggerFault.battery]) {
+        final a = run(fault: fault)..openCheck();
+        final good = fault == MeggerFault.battery ? MeggerFault.lead : MeggerFault.battery;
+        expect(a.fix(good), M2MeggerMistakes.needlessFix, reason: '$fault');
+        expect(a.slips, 1);
+        expect(a.roundSlip, isTrue);
+        expect(a.fix(good), isNull, reason: 'the same part again is not booked twice');
+        expect(a.slips, 1);
+        expect(a.kitOk, fault == MeggerFault.none, reason: 'a needless fix leaves the real fault');
+      }
+      expect(M2MeggerMistakes.needlessFix.deadly, isFalse);
+      expect(M2MeggerMistakes.needlessFix.textBn, isNot(contains('এটা তো ঠিক আছে')));
     });
 
     test('the L clip off a charged core is deadly (after a full or a short test); off a discharged one, fine', () {
@@ -375,6 +393,57 @@ void main() {
       expectSameLength('choice', [...cw.right, ...cw.wrong]);
       expect(LearnVoice.resolve(cw.exitLine, rival: true), isNotNull);
     });
+
+    test('no giveaway: no word on two or more right cards is missing from all the wrong ones; the lengths overlap', () {
+      Set<String> words(String l) => l.split(RegExp(r'[\s,।—!?]+')).where((w) => w.isNotEmpty).toSet();
+      for (final (name, right, wrong) in [
+        ('good', M2MeggerLines.goodRight, M2MeggerLines.goodWrong),
+        ('weak', M2MeggerLines.weakRight, M2MeggerLines.weakWrong),
+        ('discharge', M2MeggerLines.dischargeRight, M2MeggerLines.dischargeWrong),
+        ('choice', M2MeggerLines.coworker.right, M2MeggerLines.coworker.wrong),
+      ]) {
+        final inWrong = wrong.expand(words).toSet();
+        final counts = <String, int>{};
+        for (final r in right) {
+          for (final w in words(r)) {
+            counts[w] = (counts[w] ?? 0) + 1;
+          }
+        }
+        final tells = [for (final e in counts.entries) if (e.value >= 2 && !inWrong.contains(e.key)) e.key];
+        expect(tells, isEmpty, reason: name);
+        // Length is no tell: the right card is neither always the longest
+        // nor always the shortest.
+        final rl = right.map((s) => s.length).toList()..sort();
+        final wl = wrong.map((s) => s.length).toList()..sort();
+        expect(rl.first <= wl.last, isTrue, reason: '$name: every right card is longer than every wrong one ($rl vs $wl)');
+        expect(rl.last >= wl.first, isTrue, reason: '$name: every right card is shorter than every wrong one ($rl vs $wl)');
+      }
+      // "1 MΩ" sits on wrong myths too, in both verdict decks.
+      expect(M2MeggerLines.goodWrong.any((w) => w.contains('1 MΩ')), isTrue);
+      expect(M2MeggerLines.weakWrong.any((w) => w.contains('1 MΩ')), isTrue);
+      // The guide's ask never points at the answer.
+      for (final a in M2MeggerLines.coworker.asks) {
+        expect(a, isNot(contains('আগে')), reason: a);
+      }
+    });
+
+    test('the free-play hint order is shuffled per waiting state and never opens check → rod', () {
+      final seen = <String>{};
+      for (var r = 0; r < 3; r++) {
+        for (final n in [6, 8]) {
+          for (final key in ['$r|none|false|false|null|false|false', '$r|none|false|true|$r|true|true', '$r|none|false|false|null|true|true']) {
+            final o = meggerHintOrder(key, n);
+            expect(o.toSet(), {for (var i = 0; i < n; i++) i}, reason: 'a permutation');
+            expect(o[0] == 0 && o[1] == 1, isFalse, reason: 'never check then rod ($key)');
+            expect(o, isNot(equals([for (var i = 0; i < n; i++) i])), reason: 'never the procedure order');
+            expect(meggerHintOrder(key, n), o, reason: 'stable while the state lasts');
+            seen.add(o.join(','));
+          }
+        }
+      }
+      expect(seen.length, greaterThan(6), reason: 'the order changes with the state');
+      expect(meggerHintOrder('x', 2), isNot([0, 1]));
+    });
   });
 
   group('page', () {
@@ -401,7 +470,7 @@ void main() {
           child: MaterialApp(home: _app(M2MeggerPage(ctx: _ctx, pack: _pack, muted: true, seed: 4))),
         ));
         await t.pump(const Duration(milliseconds: 100));
-        expect(find.text('শুরু'), findsNothing);
+        expect(find.textContaining(RegExp('শুরু')), findsNothing, reason: 'no start button of any wording');
         await waitIntro(t);
         await _pump(t, 14000);
         rebuilds = 0;
@@ -416,7 +485,7 @@ void main() {
         }
         debugPrint('PERF m2_megger_read ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -525,11 +594,8 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('listening to him ("রিডিং হয়ে গেছে, তার খুলে নাও") = deadly: freeze, then the card', (t) async {
-      var seed = 0;
-      while (dealMegger(math.Random(seed)).callAt != 1) {
-        seed++;
-      }
+    testWidgets('listening to him ("রিডিং হয়ে গেছে, তার খুলে নাও") = deadly (the act is on the module deadly list): freeze, then the card', (t) async {
+      final seed = _seedCalling(1);
       final deal = dealMegger(math.Random(seed));
       final c = await _open(t, seed);
       await _playCore(t, deal, 0, 0);
@@ -538,11 +604,11 @@ void main() {
       await _tapD(t, _geo.coreEnds[1]);
       await _holdTest(t);
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M2MeggerLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
@@ -552,25 +618,20 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('reaching for the rod on his round: he cuts in first; refused, the rod discharges the core', (t) async {
-      var seed = 0;
-      while (dealMegger(math.Random(seed)).callAt != 1) {
-        seed++;
-      }
+    testWidgets('a fast play cannot skip him: the rod reached for the moment the minute ends holds for him; refused, the rod discharges', (t) async {
+      final seed = _seedCalling(1);
       final deal = dealMegger(math.Random(seed));
       final c = await _open(t, seed);
       await _playCore(t, deal, 1, 0);
       await _discharge(t, 0);
       await _tapD(t, _geo.lPark);
       await _tapD(t, _geo.coreEnds[0]);
-      await _holdTest(t, ms: 3200);
-      if (find.byType(CoworkerPeek).evaluate().isEmpty) {
-        await t.tap(_label(M2MeggerLines.rod));
-        await _pump(t, 200);
-      }
-      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 600);
+      // Release right after the minute (his own timer is 1.2–2.4 s away).
+      await _holdTest(t, ms: 3100);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet by his timer');
+      await t.tap(_label(M2MeggerLines.rod));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the rod tap brings him in now');
       await _pickRight(t, M2MeggerLines.coworker.right);
       await _pump(t, 2000);
       // Now the clip comes off safely and the verdict closes the core.
@@ -580,6 +641,116 @@ void main() {
       expect(find.byType(FreezeFrame), findsNothing);
       expect(await _pumpUntil(t, find.text(M2MeggerLines.whyDischarge)), isTrue);
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips fail the level: the struck-out card insists on the lesson', (t) async {
+      final c = await _open(t, 2);
+      await _discharge(t, 0);
+      await _tapD(t, _geo.ePark);
+      await _tapD(t, _geo.armourAt);
+      await _tapD(t, _geo.lPark);
+      await _tapD(t, _geo.coreEnds[0]);
+      for (var i = 0; i < 2; i++) {
+        await _holdTest(t, ms: 600);
+        expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${i + 1} shows its card');
+        await t.tap(find.text(MistakeLines.gotIt));
+        await _pump(t, 500);
+      }
+      await _holdTest(t, ms: 800);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.text(FrameLines.struckHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['2.7/do/1'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key), contains(M2MeggerMistakes.unchecked.key));
+      expect(find.byType(LevelPassPanel), findsNothing);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a needless fix in the kit close-up is a slip with a neutral card; the close-up stays open', (t) async {
+      var seed = 0;
+      while (dealMegger(math.Random(seed)).fault == MeggerFault.battery) {
+        seed++;
+      }
+      final c = await _open(t, seed);
+      await t.tap(_label(M2MeggerLines.check));
+      await _pump(t, 500);
+      await t.tap(find.text(M2MeggerLines.newBattery));
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(M2MeggerMistakes.needlessFix.textBn), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M2MeggerMistakes.needlessFix.key);
+      expect(c.read(guideDirectorProvider).line, isNot(contains('এটা তো ঠিক আছে')));
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 500);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.text(M2MeggerLines.kitOk), findsOneWidget);
+      // The same swap again is not booked twice.
+      await t.tap(find.text(M2MeggerLines.newBattery));
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the praise window takes no input: the knob and the E clip tapped then change nothing', (t) async {
+      final seed = _seedCalling(2);
+      final deal = dealMegger(math.Random(seed));
+      final c = await _open(t, seed);
+      await _setUp(t, deal);
+      await _discharge(t, 0);
+      await _tapD(t, _geo.lPark);
+      await _tapD(t, _geo.coreEnds[0]);
+      await _holdTest(t);
+      await _discharge(t, 0);
+      await t.tap(find.text(deal.weak(0) ? M2MeggerLines.weak : M2MeggerLines.good));
+      await _pump(t, 400);
+      await _tapD(t, _geo.coreEnds[0], ms: 100);
+      // ◆ on the table, praise playing: try the knob and the E clip.
+      await _tapD(t, _geo.knob, ms: 100);
+      await _tapD(t, _geo.armourAt, ms: 100);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pickRight(t, deal.weak(0) ? M2MeggerLines.weakRight : M2MeggerLines.goodRight);
+      await _pump(t, 3500);
+      // Round 2 runs on the same set-up: 500 V and the E clip still on.
+      await _playCore(t, deal, 1, 1);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over every usable thing, over the places a clip can go, over the kit buttons', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 3);
+      IdleHintState hint() => t.state<IdleHintState>(find.byWidgetPredicate((w) => w is IdleHint && w.controller != null));
+      expect(hint().showing, isFalse);
+      await _pump(t, 8600);
+      expect(hint().showing, isTrue, reason: 'idle while the level waits');
+      expect(hint().debugOptions.length, greaterThanOrEqualTo(6), reason: 'check, rod, both clips, selector, TEST');
+      // Not acted out in procedure order: it never opens on check then rod.
+      final hintAt = t.getTopLeft(find.byWidgetPredicate((w) => w is IdleHint && w.controller != null));
+      final checkAt = t.getCenter(_label(M2MeggerLines.check)) - hintAt;
+      final rodAt = t.getCenter(_label(M2MeggerLines.rod)) - hintAt;
+      int indexOf(Offset c) => hint().debugOptions.indexWhere((r) => (r.center - c).distance < 1.5);
+      final ci = indexOf(checkAt), ri = indexOf(rodAt);
+      expect(ci, isNot(-1), reason: 'the check is swept');
+      expect(ri, isNot(-1), reason: 'the rod is swept');
+      expect(ci == 0 && ri == 1, isFalse, reason: 'never check → rod → … (the procedure order)');
+      // The L clip in hand: a sweep over all three cores and the armour.
+      await _tapD(t, _geo.lPark, ms: 100);
+      expect(hint().showing, isFalse, reason: 'a touch hides it');
+      await _pump(t, 8600);
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, hasLength(4));
+      await _tapD(t, _geo.lPark, ms: 100);
+      // The kit close-up: its three buttons.
+      await t.tap(_label(M2MeggerLines.check));
+      await _pump(t, 8800);
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, hasLength(3));
+      expect(t.takeException(), isNull);
       await _close(t, c);
     });
   });

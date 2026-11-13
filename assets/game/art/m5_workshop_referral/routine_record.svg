@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc3e2"/><stop offset="1" stop-color="#e6e2cc"/></linearGradient><linearGradient id="tank" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6e7f72"/><stop offset="0.5" stop-color="#9db0a1"/><stop offset="1" stop-color="#627266"/></linearGradient><linearGradient id="por" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cbd2d8"/><stop offset="0.5" stop-color="#f4f6f8"/><stop offset="1" stop-color="#b9c1c8"/></linearGradient><radialGradient id="boom"><stop offset="0" stop-color="#fffbe0"/><stop offset="0.5" stop-color="#ff8c28" stop-opacity="0.8"/><stop offset="1" stop-color="#ffc24a" stop-opacity="0"/></radialGradient><radialGradient id="arc"><stop offset="0" stop-color="#fffbe0"/><stop offset="0.5" stop-color="#8caaff" stop-opacity="0.7"/><stop offset="1" stop-color="#8caaff" stop-opacity="0"/></radialGradient></defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+<!-- wrong -->
+<g transform="translate(0 0)">
+<rect x="12" y="16" width="140" height="168" rx="8" fill="url(#sky)"/>
+<rect x="12" y="160" width="140" height="24" fill="#a88b62"/>
+<rect x="22" y="50" width="120" height="86" rx="6" fill="#f7f3e6" stroke="#7a2e2a" stroke-width="3"/><line x1="38" y1="50" x2="38" y2="136" stroke="#d23a2e" stroke-opacity="0.4"/><line x1="44" y1="66" x2="134" y2="66" stroke="#5c6b80" stroke-width="3" stroke-linecap="round"/><line x1="44" y1="84" x2="124" y2="84" stroke="#5c6b80" stroke-width="3" stroke-linecap="round"/><line x1="44" y1="102" x2="140" y2="102" stroke="#5c6b80" stroke-width="3" stroke-linecap="round"/><line x1="44" y1="120" x2="114" y2="120" stroke="#5c6b80" stroke-width="3" stroke-linecap="round"/><line x1="132" y1="64" x2="132" y2="73" stroke="#3a3f45" stroke-width="2"/><circle cx="132" cy="64" r="5.5" fill="#d23a2e"/>
+</g>
+<!-- right -->
+<g transform="translate(160 0)">
+<rect x="12" y="16" width="140" height="168" rx="8" fill="url(#sky)"/>
+<rect x="12" y="160" width="140" height="24" fill="#a88b62"/>
+<rect x="22" y="50" width="120" height="86" rx="6" fill="#f7f3e6" stroke="#7a2e2a" stroke-width="3"/><line x1="38" y1="50" x2="38" y2="136" stroke="#d23a2e" stroke-opacity="0.4"/><line x1="44" y1="66" x2="134" y2="66" stroke="#5c6b80" stroke-width="3" stroke-linecap="round"/><line x1="44" y1="84" x2="124" y2="84" stroke="#b0302a" stroke-width="4" stroke-linecap="round"/><line x1="44" y1="102" x2="140" y2="102" stroke="#5c6b80" stroke-width="3" stroke-linecap="round"/><line x1="44" y1="120" x2="114" y2="120" stroke="#b0302a" stroke-width="4" stroke-linecap="round"/><line x1="132" y1="82" x2="132" y2="91" stroke="#3a3f45" stroke-width="2"/><circle cx="132" cy="82" r="5.5" fill="#d23a2e"/><line x1="132" y1="118" x2="132" y2="127" stroke="#3a3f45" stroke-width="2"/><circle cx="132" cy="118" r="5.5" fill="#d23a2e"/>
+</g>
+<g transform="translate(140 30)"><circle r="11" fill="#d23a2e"/><path d="M-5 -5 L5 5 M5 -5 L-5 5" stroke="#fff" stroke-width="3"/></g>
+<g transform="translate(300 30)"><circle r="11" fill="#2e9e5b"/><path d="M-5 0 L-1 4 L6 -4" stroke="#fff" stroke-width="3" fill="none"/></g>
+</svg>

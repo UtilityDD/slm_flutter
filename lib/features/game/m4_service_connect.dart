@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -72,6 +73,12 @@ import 'spoken_once.dart';
 // "কেন …?" → the next house by itself; the careless coworker once a play, at
 // the meter. Voice: the guide by device TTS; the coworker's new push by
 // device TTS until recorded (his exit line is his existing recorded clip).
+//
+// Audit 2026-11-11: hands off in the praise window (tableBusy); he cuts in on
+// the first core at the meter (holdForCoworker) and stays away once a core is
+// in (his push no longer fits); the tool bar is dealt out of the job's order;
+// each reason is dealt with its own myth; gesture hints sweep over the tools,
+// the reading buttons, or the terminals / conductors once a core is picked.
 
 // ============================================================================
 // Content
@@ -145,7 +152,10 @@ abstract final class M4ServiceConnectLines {
 
   // The reasons (lesson 4.3): the right ones fit what was done on every
   // site; the wrong ones are the lesson's myths and field excuses — never a
-  // true rule marked wrong. Every card 37–46 letters.
+  // true rule marked wrong. Every card 37–47 letters. Each question deals its
+  // own myth(s) (they share its key words — জিআই, মিটারের মুখে/ড্রিপ লুপ,
+  // চিহ্ন, আগে/শাটডাউন/আর্থ, IPC/হেড, ভোল্টেজ/V), so no word of the question
+  // shows up only on the right card.
   static const whyStrapQ = 'কেন কেবিলটা জিআই তারের সাথে বাঁধলেন?';
   static const whyDripQ = 'কেন মিটারের মুখে ড্রিপ লুপ দিলেন?';
   static const whyPnQ = 'কেন ফেজ-নিউট্রাল চিহ্ন দেখে লাগালেন?';
@@ -158,16 +168,36 @@ abstract final class M4ServiceConnectLines {
   static const deadWhy = ['চালু এলটি লাইনে হাত দিলে শক, তাই আগে শাটডাউন', 'শাটডাউন, টেস্টারে মৃত, আর্থ — তবেই লাইনে হাত'];
   static const ipcWhy = ['IPC-তে ইনসুলেশন ছিলতে হয় না, জোড় জলরোধী', 'শেয়ার হেড ভেঙে পড়া মানে টর্ক ঠিক হয়েছে'];
   static const testWhy = ['ইনকামিং টার্মিনালে 230-240 V এলে তবেই ঠিক', 'ফিউজ লাগিয়ে ভোল্টেজ মেপে তবে সংযোগ চালু'];
-  static const myths = [
-    'কেবিল নিজেই মজবুত, সাপোর্ট তারের দরকার নেই',
-    'ছিলে পেঁচিয়ে দিলেই জোড় পাকা হয়ে যায়',
-    'ফেজ-নিউট্রাল যেদিকেই দিন, আলো ঠিকই জ্বলবে',
-    'নাট হাতে টাইট দিলেই যথেষ্ট, মাথা ভাঙা লাগে না',
-    'গ্রাহক তাড়া দিচ্ছিলেন, তাই ঝটপট সেরে দিলাম',
-    'ড্রিপ লুপ শুধু দেখতে ভালো লাগে বলেই দিই',
-    'বাড়িতে আলো জ্বললেই মাপার কিছু দরকার নেই',
-  ];
+  static const mythStrap = 'কেবিল নিজেই মজবুত, জিআই তারের দরকার নেই';
+  static const mythTwist = 'IPC লাগে না, ছিলে পেঁচালেই জোড় পাকা হয়';
+  static const mythPn = 'ফেজ-নিউট্রাল যেদিকেই দিন, চিহ্ন দেখা লাগে না';
+  static const mythNut = 'IPC-র নাট হাতে টাইট দিলেই হলো, হেড ভাঙা লাগে না';
+  static const mythRush = 'গ্রাহক তাড়া দিচ্ছিলেন, তাই ঝটপট সেরে দিলাম';
+  static const mythDrip = 'মিটারের মুখে ড্রিপ লুপ শুধু দেখতে সুন্দর বলে';
+  static const mythNoTest = 'বাড়িতে আলো জ্বললেই ভোল্টেজ মাপার দরকার নেই';
+  static const mythNoShutdown = 'এলটি লাইনে আগে শাটডাউন-আর্থ লাগে না, ধরলেই চলে';
+  static const mythLowVolt = 'মিটারে 150 V এলেও চলে, আলো তো জ্বলবেই';
+  static const myths = [mythStrap, mythTwist, mythPn, mythNut, mythRush, mythDrip, mythNoTest, mythNoShutdown, mythLowVolt];
   static const allRight = [...strapWhy, ...dripWhy, ...pnWhy, ...deadWhy, ...ipcWhy, ...testWhy];
+
+  /// The myths that answer the same question (always dealt with it).
+  static List<String> topicMyths(M4ServiceConnectWhy w) => switch (w) {
+        M4ServiceConnectWhy.strap => const [mythStrap],
+        M4ServiceConnectWhy.drip => const [mythDrip],
+        M4ServiceConnectWhy.pn => const [mythPn],
+        M4ServiceConnectWhy.dead => const [mythNoShutdown],
+        M4ServiceConnectWhy.ipc => const [mythTwist, mythNut],
+        M4ServiceConnectWhy.test => const [mythNoTest, mythLowVolt],
+      };
+
+  /// The two wrong cards for [s]'s question: its own myth(s), topped up with
+  /// one other myth.
+  static List<String> whyWrong(M4ServiceConnectSite s, math.Random rng) {
+    final own = topicMyths(s.why);
+    if (own.length >= 2) return [...own];
+    final rest = [for (final m in myths) if (!own.contains(m)) m]..shuffle(rng);
+    return [...own, rest.first];
+  }
 
   static List<String> whyRight(M4ServiceConnectSite s) => switch (s.why) {
         M4ServiceConnectWhy.strap => strapWhy,
@@ -191,12 +221,14 @@ abstract final class M4ServiceConnectLines {
   static const coworker = CoworkerScript(
     line: 'ফেজ-নিউট্রাল যেকোনোটা যেকোনো দিকে লাগাও! আলো তো জ্বলবেই।',
     exitLine: coworkerExit,
-    right: ['না, চিহ্ন দেখে L-এ ফেজ, N-এ নিউট্রাল', 'না, ভুল টার্মিনালে লাগালে বিপদ হয়', 'না, ফেজ-নিউট্রাল দেখে ঠিক ঘরে দেব'],
+    // Not every refusal opens with "না", and its key words (চিহ্ন, টার্মিনাল,
+    // বিপদ, L/N) show up on the listening cards too.
+    right: ['না, চিহ্ন দেখে L-এ ফেজ, N-এ নিউট্রাল', 'ভুল টার্মিনালে লাগালে বিপদ, দেখে দেব', 'চিহ্ন মিলিয়ে ঠিক ঘরে ঠিক তার দেব'],
     wrong: [
-      'ঠিক, যেকোনোটা যেকোনো দিকে লাগাই',
-      'আচ্ছা, আলো জ্বললেই তো কাজ হলো',
+      'ঠিক, যেকোনো টার্মিনালে যেকোনোটা দিই',
+      'আচ্ছা, L-N যা-ই হোক, আলো জ্বলবেই',
       'হ্যাঁ, চিহ্ন দেখার সময় কোথায় এখন',
-      'ঠিক আছে, যেদিক খুশি লাগিয়ে দিই',
+      'বিপদ কিছু নেই, যেদিক খুশি লাগাই',
       'হ্যাঁ, দুটো তারই তো দেখতে একই',
     ],
     asks: ['ও বলছে যেকোনো দিকে লাগাতে। কী করবেন?', 'ওর কথা শুনবেন, না চিহ্ন?', 'ফেজ-নিউট্রাল যেদিক খুশি দেবেন?'],
@@ -662,6 +694,44 @@ const Map<String, M4ServiceConnectPack> m4ServiceConnectPacks = {
   'do_4_3_b': M4ServiceConnectPack(id: 'do_4_3_b', titleBn: M4ServiceConnectLines.title),
 };
 
+/// The ten buttons of the tool bar.
+enum M4ServiceConnectButton { strap, ipc, pliers, harness, shutdown, tester, earth, fuse, multimeter, handover }
+
+/// The order the job uses the buttons in (the pliers are the trap: no place).
+const m4ServiceConnectWorkOrder = [
+  M4ServiceConnectButton.strap,
+  M4ServiceConnectButton.harness,
+  M4ServiceConnectButton.shutdown,
+  M4ServiceConnectButton.tester,
+  M4ServiceConnectButton.earth,
+  M4ServiceConnectButton.ipc,
+  M4ServiceConnectButton.fuse,
+  M4ServiceConnectButton.multimeter,
+  M4ServiceConnectButton.handover,
+];
+
+/// Whether [row] lays its tools out in the order the job uses them.
+bool m4ServiceConnectRowInOrder(List<M4ServiceConnectButton> row) {
+  final ranks = [
+    for (final b in row)
+      if (b != M4ServiceConnectButton.pliers) m4ServiceConnectWorkOrder.indexOf(b),
+  ];
+  for (var i = 1; i < ranks.length; i++) {
+    if (ranks[i] <= ranks[i - 1]) return false;
+  }
+  return true;
+}
+
+/// The tool bar for a play: the ten buttons shuffled into two rows of five
+/// (first five, last five); neither row in the job's order (no giveaway).
+List<M4ServiceConnectButton> m4ServiceConnectToolBar(math.Random rng) {
+  final b = [...M4ServiceConnectButton.values];
+  do {
+    b.shuffle(rng);
+  } while (m4ServiceConnectRowInOrder(b.sublist(0, 5)) || m4ServiceConnectRowInOrder(b.sublist(5)));
+  return b;
+}
+
 // ============================================================================
 // Page
 // ============================================================================
@@ -711,7 +781,7 @@ class _SvcRunPage extends ConsumerStatefulWidget {
 
 class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoStrikeOut, TickerProviderStateMixin, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
-  late final M4ServiceConnectRun _run = M4ServiceConnectRun(m4ServiceConnectDeal(widget.rng));
+  late final M4ServiceConnectRun _run;
   final _clock = Stopwatch();
   late bool _muted = widget.muted;
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
@@ -729,7 +799,15 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
   int? _mark;
   int _totalDelta = 0;
   int _wake = 0;
-  var _coworkerArmed = false;
+  var _coworkerScheduled = false;
+
+  /// The tool bar, dealt once a play (after the houses: the deal is the
+  /// first draw from the play's rng).
+  late final List<M4ServiceConnectButton> _toolBar;
+  final _toolKeys = {for (final b in M4ServiceConnectButton.values) b: GlobalKey()};
+  final _okKey = GlobalKey();
+  final _noneKey = GlobalKey();
+  final _hints = IdleHintController();
 
   /// The tester's lamp, a moment after it touches the line.
   bool? _tester;
@@ -746,6 +824,15 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
   bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
+
+  @override
+  void initState() {
+    super.initState();
+    // Deal the houses first (the tests rebuild the deal from the seed), then
+    // the tool bar from the same rng.
+    _run = M4ServiceConnectRun(m4ServiceConnectDeal(widget.rng));
+    _toolBar = m4ServiceConnectToolBar(widget.rng);
+  }
 
   @override
   void dispose() {
@@ -784,7 +871,9 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
     _startSite();
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.handedOver && !_freeze;
+  /// Hands on: not in the praise window of a right move ([tableBusy]), the
+  /// coworker, a card or the death freeze.
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.handedOver && !_freeze;
 
   String get _task {
     if (_run.readingUp) return M4ServiceConnectLines.askRead;
@@ -824,8 +913,8 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
   /// After a step: the coworker on his house, a new task line when the stage changed.
   String? _lastTask;
   void _afterStep() {
-    if (!_coworkerArmed && _run.index == _run.deal.callAt && _run.drip && !_run.meterDone) {
-      _coworkerArmed = true;
+    if (!_coworkerScheduled && _run.index == _run.deal.callAt && _run.drip && _run.houseIn.isEmpty) {
+      _coworkerScheduled = true;
       scheduleCoworker();
     }
     final t = _task;
@@ -890,7 +979,10 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
     }
     for (var k = 0; k < 4; k++) {
       if (geo.conductorHit(k).contains(p)) {
-        if (_run.tool == M4ServiceConnectTool.none) return;
+        if (_run.tool == M4ServiceConnectTool.none) {
+          _hints.missTap();
+          return;
+        }
         _arcAt = Offset(p.dx, geo.conductorY(k));
         _act(() => _run.tapConductor(k), global, sound: 'sounds/intro/click.ogg');
         return;
@@ -898,12 +990,15 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
     }
     for (var c = 0; c < 2; c++) {
       if (!_run.houseIn.contains(c) && geo.houseCoreHit(c).contains(p)) {
+        // The meter's cores are his item: he has his say before the first goes in.
+        if (_atMeter && holdForCoworker()) return;
         _act(() => _run.tapHouseCore(c), global);
         return;
       }
     }
     for (var i = 0; i < 2; i++) {
       if (geo.terminalHit(i).contains(p)) {
+        if (_atMeter && holdForCoworker()) return;
         _act(() => _run.tapTerminal(i), global, sound: 'sounds/intro/click.ogg');
         return;
       }
@@ -921,17 +1016,20 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
         return;
       }
     }
-    if (geo.spanHit.contains(p)) {
-      if (_run.tapSpan()) {
-        _tick('sounds/learn/tag_slap.wav', 0.5);
-        setState(() => _wake++);
-        _afterStep();
-      }
+    if (geo.spanHit.contains(p) && _run.tapSpan()) {
+      _tick('sounds/learn/tag_slap.wav', 0.5);
+      setState(() => _wake++);
+      _afterStep();
+      return;
     }
+    _hints.missTap();
   }
 
+  /// At the meter, ready to put the cores in (the coworker's moment).
+  bool get _atMeter => _run.strapped && _run.drip && !_run.harness && _run.houseIn.isEmpty;
+
   void _answer(bool sayOk, Offset origin) {
-    if (_intro || _ended || _card != null || !_run.readingUp) return;
+    if (_intro || _ended || _freeze || _card != null || tableBusy || coworkerOpen || !_run.readingUp) return;
     _hush();
     final m = _run.answer(sayOk);
     setState(() => _wake++);
@@ -966,7 +1064,7 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
     final s = _run.site;
     final idx = _run.index;
     unawaited(askReason(
-      deal: () => dealChoices(M4ServiceConnectLines.whyRight(s), M4ServiceConnectLines.myths, widget.rng),
+      deal: () => dealChoices(M4ServiceConnectLines.whyRight(s), M4ServiceConnectLines.whyWrong(s, widget.rng), widget.rng),
       question: M4ServiceConnectLines.whyQuestion(s),
       stillValid: () => _run.index == idx && !_ended,
     ));
@@ -1019,8 +1117,9 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt || _run.meterDone || _run.handedOver) return null;
-    if (_intro || _card != null || reasonOpen || _run.readingUp || _tester != null || _run.harness) return false;
+    // His push ("any core on any terminal") fits only while no core is in yet.
+    if (_ended || _run.index != _run.deal.callAt || _run.houseIn.isNotEmpty || _run.handedOver) return null;
+    if (_intro || _freeze || _card != null || tableBusy || _run.readingUp || _tester != null || _run.harness) return false;
     return true;
   }
 
@@ -1302,6 +1401,47 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
     ];
   }
 
+  /// One button of the dealt tool bar.
+  Widget _toolButton(M4ServiceConnectButton b) {
+    final key = _toolKeys[b]!;
+    void act(DoMistake? Function() f, Offset o, String sound) => _act(f, o, sound: sound);
+    return switch (b) {
+      M4ServiceConnectButton.strap => _ToolButton(
+          key: key, icon: Icons.linear_scale_rounded, label: M4ServiceConnectLines.strap, on: _run.tool == M4ServiceConnectTool.strap, onTap: (_) => _hold(M4ServiceConnectTool.strap)),
+      M4ServiceConnectButton.ipc => _ToolButton(
+          key: key, icon: Icons.memory_rounded, label: M4ServiceConnectLines.ipc, on: _run.tool == M4ServiceConnectTool.ipc, onTap: (_) => _hold(M4ServiceConnectTool.ipc)),
+      M4ServiceConnectButton.pliers => _ToolButton(
+          key: key,
+          icon: Icons.content_cut_rounded,
+          label: M4ServiceConnectLines.pliers,
+          on: _run.tool == M4ServiceConnectTool.pliers,
+          onTap: (_) => _hold(M4ServiceConnectTool.pliers)),
+      M4ServiceConnectButton.harness => _ToolButton(
+          key: key, icon: Icons.safety_check_rounded, label: M4ServiceConnectLines.harness, on: _run.harness, onTap: (o) => act(_run.toggleHarness, o, 'sounds/learn/tag_slap.wav')),
+      M4ServiceConnectButton.shutdown => _ToolButton(
+          key: key, icon: Icons.power_off_rounded, label: M4ServiceConnectLines.shutdown, on: _run.shutdown, onTap: (o) => act(_run.toggleShutdown, o, 'sounds/intro/impact_metal.ogg')),
+      M4ServiceConnectButton.tester => _ToolButton(key: key, icon: Icons.flash_on_rounded, label: M4ServiceConnectLines.tester, on: _tester != null, onTap: _useTester),
+      M4ServiceConnectButton.earth => _ToolButton(key: key, icon: Icons.vertical_align_bottom_rounded, label: M4ServiceConnectLines.earth, on: _run.earthed, onTap: _toggleEarth),
+      M4ServiceConnectButton.fuse => _ToolButton(
+          key: key, icon: Icons.electrical_services_rounded, label: M4ServiceConnectLines.fuse, on: _run.fuseIn, onTap: (o) => act(_run.toggleFuse, o, 'sounds/intro/impact_metal.ogg')),
+      M4ServiceConnectButton.multimeter => _ToolButton(
+          key: key, icon: Icons.speed_rounded, label: M4ServiceConnectLines.multimeter, on: _run.readingUp, onTap: (o) => act(_run.measure, o, 'sounds/intro/click.ogg')),
+      M4ServiceConnectButton.handover => _ToolButton(key: key, icon: Icons.handshake_rounded, label: M4ServiceConnectLines.handover, on: false, onTap: _handOver),
+    };
+  }
+
+  /// The gesture hint (how to interact, never which): the two reading
+  /// buttons; with a core picked, both meter terminals or (only while a tool
+  /// is held, since a bare tap there does nothing) all four LT conductors;
+  /// otherwise every tool of the bar.
+  HintSpec? _hint() {
+    if (_run.readingUp) return HintSpec.sweepOver([_okKey, _noneKey]);
+    final geo = _geo;
+    if (geo != null && _run.selHouse != null) return HintSpec.sweep([geo.terminalHit(0), geo.terminalHit(1)], space: HintSpace.scene);
+    if (geo != null && _run.selPole != null && _run.tool != M4ServiceConnectTool.none) return HintSpec.sweep([for (var k = 0; k < 4; k++) geo.conductorHit(k)], space: HintSpace.scene);
+    return HintSpec.sweepOver([for (final b in _toolBar) _toolKeys[b]!]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1309,8 +1449,7 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.handedOver && !deckUp && !coworkerOpen && _card == null;
-    Widget tool(IconData icon, String label, bool on, void Function(Offset) onTap) => _ToolButton(icon: icon, label: label, on: on, onTap: onTap);
+    final handsOn = playing && !_run.handedOver && !deckUp && !coworkerOpen && _card == null && !tableBusy;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1338,6 +1477,10 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && _tester == null,
+            hintKey: '${_run.index}-${_run.readingUp}-${_run.selHouse}-${_run.selPole}-${_run.tool.name}-${_run.houseIn.length}-${_run.ipcs.length}-${_run.sheared.length}',
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1362,9 +1505,9 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(child: DoBigButton(label: M4ServiceConnectLines.sayOk, filled: true, onTapUp: (d) => _answer(true, d.globalPosition))),
+                      Expanded(child: KeyedSubtree(key: _okKey, child: DoBigButton(label: M4ServiceConnectLines.sayOk, filled: true, onTapUp: (d) => _answer(true, d.globalPosition)))),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: M4ServiceConnectLines.sayNone, filled: true, onTapUp: (d) => _answer(false, d.globalPosition))),
+                      Expanded(child: KeyedSubtree(key: _noneKey, child: DoBigButton(label: M4ServiceConnectLines.sayNone, filled: true, onTapUp: (d) => _answer(false, d.globalPosition)))),
                     ],
                   ),
                 ),
@@ -1377,27 +1520,9 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          tool(Icons.linear_scale_rounded, M4ServiceConnectLines.strap, _run.tool == M4ServiceConnectTool.strap, (_) => _hold(M4ServiceConnectTool.strap)),
-                          tool(Icons.memory_rounded, M4ServiceConnectLines.ipc, _run.tool == M4ServiceConnectTool.ipc, (_) => _hold(M4ServiceConnectTool.ipc)),
-                          tool(Icons.content_cut_rounded, M4ServiceConnectLines.pliers, _run.tool == M4ServiceConnectTool.pliers, (_) => _hold(M4ServiceConnectTool.pliers)),
-                          tool(Icons.safety_check_rounded, M4ServiceConnectLines.harness, _run.harness, (o) => _act(_run.toggleHarness, o, sound: 'sounds/learn/tag_slap.wav')),
-                          tool(Icons.power_off_rounded, M4ServiceConnectLines.shutdown, _run.shutdown, (o) => _act(_run.toggleShutdown, o, sound: 'sounds/intro/impact_metal.ogg')),
-                        ],
-                      ),
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [for (final b in _toolBar.take(5)) _toolButton(b)]),
                       const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          tool(Icons.flash_on_rounded, M4ServiceConnectLines.tester, _tester != null, _useTester),
-                          tool(Icons.vertical_align_bottom_rounded, M4ServiceConnectLines.earth, _run.earthed, _toggleEarth),
-                          tool(Icons.electrical_services_rounded, M4ServiceConnectLines.fuse, _run.fuseIn, (o) => _act(_run.toggleFuse, o, sound: 'sounds/intro/impact_metal.ogg')),
-                          tool(Icons.speed_rounded, M4ServiceConnectLines.multimeter, _run.readingUp, (o) => _act(_run.measure, o, sound: 'sounds/intro/click.ogg')),
-                          tool(Icons.handshake_rounded, M4ServiceConnectLines.handover, false, _handOver),
-                        ],
-                      ),
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [for (final b in _toolBar.skip(5)) _toolButton(b)]),
                     ],
                   ),
                 ),
@@ -1615,7 +1740,7 @@ class _TesterChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;

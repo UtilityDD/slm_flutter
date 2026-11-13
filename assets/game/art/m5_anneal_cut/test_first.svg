@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="al" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4e8eb"/><stop offset="1" stop-color="#8f979e"/></linearGradient>
+    <linearGradient id="soft" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5c3e22" stop-opacity="0"/><stop offset="0.3" stop-color="#5c3e22" stop-opacity="0.75"/><stop offset="0.7" stop-color="#5c3e22" stop-opacity="0.75"/><stop offset="1" stop-color="#5c3e22" stop-opacity="0"/></linearGradient>
+    <linearGradient id="newp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f8fa"/><stop offset="1" stop-color="#a7afb6"/></linearGradient>
+    <linearGradient id="glove" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b233"/><stop offset="1" stop-color="#c9861a"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <!-- wrong -->
+  <g>
+    <rect x="10" y="150" width="140" height="6" fill="#a88b62"/><rect x="21" y="30" width="6" height="122" fill="#9aa1a7"/><rect x="10" y="38" width="28" height="4" fill="#4e565d"/><rect x="133" y="30" width="6" height="122" fill="#9aa1a7"/><rect x="122" y="38" width="28" height="4" fill="#4e565d"/><path d="M10 34 Q80 42 150 34" stroke="#30363c" stroke-width="1.6" fill="none"/><path d="M10 41 Q80 49 150 41" stroke="#30363c" stroke-width="1.6" fill="none"/><path d="M10 48 Q80 56 150 48" stroke="#30363c" stroke-width="1.6" fill="none"/><ellipse cx="32" cy="146" rx="11" ry="4" stroke="#c87533" stroke-width="2.2" fill="none"/><line x1="22" y1="146" x2="22" y2="154" stroke="#5a6066" stroke-width="3"/><line x1="120" y1="34" x2="120" y2="50" stroke="#3a3f45" stroke-width="3"/><path d="M120 50 Q120 110 138 146" stroke="#c87533" stroke-width="2.2" fill="none"/><line x1="138" y1="146" x2="138" y2="154" stroke="#5a6066" stroke-width="3"/><path d="M40 70 L40 50" stroke="#c87533" stroke-width="3"/><rect x="30" y="64" width="20" height="10" fill="#3a3f45"/><g opacity="0.5"><rect x="92" y="120" width="16" height="26" rx="4" fill="#f2d24b" stroke="#4a5056"/><rect x="95" y="124" width="10" height="7" fill="#101a2b"/><line x1="100" y1="120" x2="100" y2="96" stroke="#4a5056" stroke-width="2"/></g>
+  </g>
+  <!-- right -->
+  <g transform="translate(160 0)">
+    <rect x="10" y="150" width="140" height="6" fill="#a88b62"/><rect x="21" y="30" width="6" height="122" fill="#9aa1a7"/><rect x="10" y="38" width="28" height="4" fill="#4e565d"/><rect x="133" y="30" width="6" height="122" fill="#9aa1a7"/><rect x="122" y="38" width="28" height="4" fill="#4e565d"/><path d="M10 34 Q80 42 150 34" stroke="#30363c" stroke-width="1.6" fill="none"/><path d="M10 41 Q80 49 150 41" stroke="#30363c" stroke-width="1.6" fill="none"/><path d="M10 48 Q80 56 150 48" stroke="#30363c" stroke-width="1.6" fill="none"/><ellipse cx="32" cy="146" rx="11" ry="4" stroke="#c87533" stroke-width="2.2" fill="none"/><line x1="22" y1="146" x2="22" y2="154" stroke="#5a6066" stroke-width="3"/><line x1="120" y1="34" x2="120" y2="50" stroke="#3a3f45" stroke-width="3"/><path d="M120 50 Q120 110 138 146" stroke="#c87533" stroke-width="2.2" fill="none"/><line x1="138" y1="146" x2="138" y2="154" stroke="#5a6066" stroke-width="3"/><rect x="36" y="64" width="16" height="26" rx="4" fill="#f2d24b" stroke="#4a5056"/><rect x="39" y="68" width="10" height="7" fill="#101a2b"/><line x1="44" y1="64" x2="44" y2="40" stroke="#4a5056" stroke-width="2"/><text x="60" y="80" font-family="sans-serif" font-size="11" font-weight="700" fill="#101a2b">0 V</text>
+  </g>
+  <g transform="translate(80 172)"><circle r="13" fill="#c0392b"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>
+  <g transform="translate(240 172)"><circle r="13" fill="#2e8b45"/><path d="M-7 0 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

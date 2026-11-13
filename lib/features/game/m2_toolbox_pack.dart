@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -34,11 +35,12 @@ import 'spoken_once.dart';
 // only up close), runs a finger along it (a crack, a cut, a burn mark on the
 // handle, a blunt cutter edge, a bent screwdriver tip show only where the hand
 // has been — the lesson's daily checks), touches the line tester to a known
-// live point (does the neon glow?), then packs it into the open toolbox or
-// puts it back (a tool without the mark, or one whose fault he found, goes
-// into the বাতিল crate). On one tool of the four no good one hangs on the
-// board: he must send it back for a replacement. Once a play the careless
-// coworker (level 1's rival) peeps in: "টেপ মেরে নিলেই চলবে" for a cracked
+// live point (does the neon glow?), then packs it into the open toolbox, sets
+// it aside into the বাতিল crate (a decision, like packing), or just puts it
+// back on its peg (the same answer for every tool, so putting back never
+// tells which one is damaged). On one tool of the four no good one hangs on
+// the board: he must send it back for a replacement. Once a play the careless
+// coworker (level 1's rival) peeps in: "টেপ মেরে নিলেই চলবে" for a damaged
 // handle, or the lesson's own myth "গ্লাভস তো পরাই আছে — সাধারণটাতেই চলবে".
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene, corner guide, ◆ on the table → "কেন …?" → the next tool by itself.
@@ -46,13 +48,29 @@ import 'spoken_once.dart';
 // Deadly (lesson: "Non-insulated Pliers LT Line-এ = বিপদ", "সস্তা
 // Non-insulated Tool = দামী দুর্ঘটনা", myth: gloves + non-insulated = shock):
 // packing a tool without the 1000V insulation for the LT job; taping a
-// cracked handle on his word. Slips: packing a damaged insulated tool (it is
+// damaged handle on his word. Slips: packing a damaged insulated tool (it is
 // set aside), packing the tester untested, asking for a replacement when a
-// good tool was there.
+// good tool was there, setting a sound tool aside (a wrong flag: it goes
+// back on the board).
 //
-// Voice: the guide's lines on device TTS; the coworker's two new pushes on
-// device TTS too until they are recorded in his voice (his exit line is
-// already recorded). Art: the store, the tools and the consequence are drawn
+// The coworker's line fits the moment (tbPushNow): the tape push only once
+// the player's own hand has found the damaged handle (it never names a fault
+// he has not seen), the gloves push while the plain tool is still on the
+// board. Packing, sending back, or setting aside the tool he would push waits
+// for him (holdForCoworker), so a fast play still meets him; nothing on the
+// scene takes a touch in a right move's praise window (tableBusy).
+// Listening stays deadly: the act he pushes (a plain tool, or a taped damaged
+// handle, packed for the LT job) is on this rung's deadly list
+// (MODULE2_LADDER.md step 2).
+//
+// Gesture hints (how, never what): a sweep over the hanging tools and the
+// replacement button; in the close look a short generic drag nudge on the
+// tool (upward, never along it toward a fault), then a sweep over its
+// controls; a tap on the docket held up close.
+//
+// Voice: the guide's lines on device TTS; the coworker's two pushes are
+// silent with the caption held until they are recorded in his voice (his
+// exit line is already recorded). Art: the store, the tools and the consequence are drawn
 // in code (m2_toolbox_pack_world.dart and the painters below), so marks,
 // builds and faults vary each play; the mistake cards use the bundled
 // photos in assets/safety/library/tools/.
@@ -154,6 +172,7 @@ abstract final class TbLines {
   static const liveLabel = 'লাইভ পয়েন্ট';
   static const take = 'বাক্সে রাখুন';
   static const putBack = 'ফেরত রাখুন';
+  static const aside = 'বাতিল করুন';
   static const hold = 'ভালো একটাও নেই — বদলে আনি';
   static const rejected = 'বাতিল';
 
@@ -173,9 +192,11 @@ abstract final class TbLines {
     'হাতের কাছে ছিল, তাই এটাই তুলে নিলাম',
     'নতুন দেখতে, তাই খুঁটিয়ে দেখিনি',
     'লাইন তো বন্ধ, টুল যেকোনো হলেই চলে',
+    '1000V লেখা আছে, তাই হাতল আর দেখিনি',
   ];
   static const testerMyth = 'এটা দিয়ে নিউট্রালও পরীক্ষা করা যাবে';
-  static List<String> packWrong(TbKind k) => [if (k == TbKind.tester) testerMyth, ...packMyths];
+  static const testerMythOld = 'কাল টেস্ট করেছিলাম, আজ আর লাগবে না';
+  static List<String> packWrong(TbKind k) => [if (k == TbKind.tester) ...[testerMyth, testerMythOld], ...packMyths];
 
   static const holdRight = [
     'মার্ক আর অবস্থা মেলে এমন টুল নেই',
@@ -193,12 +214,12 @@ abstract final class TbLines {
   /// the two pushes go to device TTS until they are recorded.
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
   static const coworkerTape = CoworkerScript(
-    line: 'আরে! হাতলে একটু ফাটা — টেপ মেরে নিলেই চলবে!',
+    line: 'আরে! হাতলে একটু খুঁত — টেপ মেরে নিলেই চলবে!',
     exitLine: coworkerExit,
-    right: ['না — ফাটা হাতলের টুল বাতিল করব', 'টেপে ইনসুলেশন ফেরে না, বদলে আনব', 'ইনসুলেশন ফাটলে ওই টুল নেব না'],
+    right: ['না — হাতল নষ্ট, এই টুল বাতিল করব', 'টেপে ইনসুলেশন ফেরে না, বদলে আনব', 'ইনসুলেশন নষ্ট হলে ওই টুল নেব না'],
     wrong: [
       'ঠিক, টেপ জড়িয়ে নিলেই হবে',
-      'একটু ফাটলে কিছু হয় না, নিই',
+      'একটু খুঁতে কিছু হয় না, নিই',
       'টেপ মেরে আজকের কাজটা সারি',
       'নতুন আনতে দেরি, এটাই চলুক',
       'সবাই তো টেপ মেরেই চালিয়ে নেয়',
@@ -221,6 +242,7 @@ abstract final class TbLines {
   static CoworkerScript coworker(TbPush p) => p == TbPush.tape ? coworkerTape : coworkerGloves;
 
   static const callHeld = 'ঠিক! গ্লাভস আর 1000V টুল — দুই স্তরই চাই।';
+  static const callHeldTape = 'ঠিক! টেপে ইনসুলেশন ফেরে না — নষ্ট হাতলের টুল বাতিল।';
   static const asideFlaw = 'ঠিক — ভাঙা টুল বাতিল।';
   static const asidePlain = 'ঠিক — মার্ক ছাড়া টুল বাতিল।';
   static const lit = 'নিয়ন জ্বলছে।';
@@ -259,6 +281,7 @@ abstract final class TbMistakes {
         for (final k in TbKind.values) ...[
           noMark(k),
           tape(k),
+          asideSound(k),
           for (final f in const [TbFlaw.crack, TbFlaw.cut, TbFlaw.burn]) handle(k, f),
         ],
         blunt,
@@ -277,9 +300,18 @@ abstract final class TbMistakes {
       );
   static DoMistake tape(TbKind k) => DoMistake(
         key: '2.1/toolbox/tape/${k.name}',
-        textBn: 'ইনসুলেশন ফাটলে ব্যবহার নয় — টেপ জড়ালেও সেই হাতল আর পরীক্ষিত 1000V নয়। ফাটা টুল বাতিল, স্টোর থেকে বদলে নিন।',
+        textBn: 'হাতলে ফাটল, কাট বা পোড়া দাগ — ইনসুলেশন ঠিক না থাকলে ব্যবহার নয়। টেপ জড়ালেও সেই হাতল আর পরীক্ষিত 1000V নয়: টুল বাতিল, স্টোর থেকে বদলে নিন।',
         art: _art(k),
         deadly: true,
+        lessonPoint: k.lessonPoint,
+      );
+  /// A sound tool set aside (a wrong flag): it goes back on the board.
+  static DoMistake asideSound(TbKind k) => DoMistake(
+        key: '2.1/toolbox/aside-sound/${k.name}',
+        textBn: k == TbKind.tester
+            ? 'টেস্টারটা ভালোই ছিল — বাতিলের আগে জানা লাইভ পয়েন্টে ছুঁইয়ে দেখুন নিয়ন জ্বলে কিনা।'
+            : 'টুলটা ভালোই ছিল — বাতিলের আগে হাতলে আঙুল বুলিয়ে 1000V মার্ক আর অবস্থা দেখে নিন।',
+        art: _art(k),
         lessonPoint: k.lessonPoint,
       );
   static DoMistake handle(TbKind k, TbFlaw f) => DoMistake(
@@ -391,6 +423,31 @@ TbPush? tbPushFor(TbRound r, Set<String> rejected, {required bool preferTape}) {
   return tape ? TbPush.tape : null;
 }
 
+/// What the careless coworker can push right now, so his line fits the
+/// moment: the tape push only for an insulated tool with a damaged handle
+/// that is in the player's hand and whose fault the player has found
+/// ([held], [spotted]) — he never names a fault the player has not seen; the
+/// gloves push while the round's plain tool is still on the board or in hand.
+/// [preferTape] (the dealt push) waits for the tape moment while a damaged
+/// handle still hangs on the board, unless [forced] (a decisive control is
+/// waiting for him). Null: nothing he could push fits now.
+TbPush? tbPushNow(
+  TbRound r, {
+  required TbTool? held,
+  required Set<String> rejected,
+  required Set<String> spotted,
+  required bool preferTape,
+  bool forced = false,
+}) {
+  bool handle(TbTool t) => t.insulated && tbHandleFlaws.contains(t.flaw);
+  final plainLeft = r.tools.any((t) => t.plain && !rejected.contains(t.id));
+  final tapeNow = held != null && handle(held) && spotted.contains(held.id) && !rejected.contains(held.id);
+  if (tapeNow && (preferTape || !plainLeft)) return TbPush.tape;
+  if (preferTape && !forced && r.tools.any((t) => handle(t) && !rejected.contains(t.id))) return null;
+  if (plainLeft) return TbPush.gloves;
+  return tapeNow ? TbPush.tape : null;
+}
+
 /// The tool he pushes on round [r].
 TbTool? tbPushedTool(TbRound r, TbPush p, Set<String> rejected) {
   for (final t in r.tools) {
@@ -483,15 +540,19 @@ class TbRun {
     return true;
   }
 
-  /// Puts [t] back: a plain tool (no mark, to the eye), or a damaged one
-  /// whose fault the player found, goes aside (true); anything else goes
-  /// back on the board (false) — putting back never tells which is damaged.
-  bool putBack(TbTool t) {
-    if (ended || shown || rejected.contains(t.id)) return false;
-    if (!t.plain && !spotted.contains(t.id)) return false;
+  /// Sets [t] aside into the বাতিল crate — a decision, like packing: a plain
+  /// tool or a damaged one goes in (right); a sound tool is a wrong flag (a
+  /// slip) and goes back on the board. (Putting a tool back on its peg is
+  /// no act at all here: it changes nothing and tells nothing.)
+  TbOutcome setAside(TbTool t) {
+    if (ended || shown || rejected.contains(t.id)) return const TbOutcome(TbVerdict.slip);
+    if (t.sound) {
+      slips++;
+      return TbOutcome(TbVerdict.slip, mistake: TbMistakes.asideSound(t.kind));
+    }
     rejected.add(t.id);
     _tag(t.plain ? TbLines.caughtPlain : TbLines.caughtFlaw);
-    return true;
+    return const TbOutcome(TbVerdict.right);
   }
 
   /// "ভালো একটাও নেই — বদলে আনি".
@@ -616,6 +677,22 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how to touch, never what).
+  final _hints = IdleHintController();
+  final Map<String, GlobalKey> _toolKeys = {};
+  final _holdKey = GlobalKey();
+  final _closeKey = GlobalKey();
+  final _liveKey = GlobalKey();
+  final _backKey = GlobalKey();
+  final _asideKey = GlobalKey();
+  final _takeKey = GlobalKey();
+  final _docketZoomKey = GlobalKey();
+
+  /// The hand has slid along the tool in the close look.
+  var _slid = false;
+
+  GlobalKey _toolKey(String id) => _toolKeys.putIfAbsent(id, GlobalKey.new);
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -668,7 +745,9 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || _run.shown || _freeze;
+  /// No scene control works now: also never in a right move's praise window
+  /// (`tableBusy`: its ◆ wait on the table).
+  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || tableBusy || _run.shown || _freeze;
 
   void _setMode(LinemanMode m) {
     _mode = m;
@@ -677,33 +756,58 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
 
   bool _isPushed(TbTool t) => _push == TbPush.tape ? (t.insulated && tbHandleFlaws.contains(t.flaw)) : t.plain;
 
+  /// What he can push now (see [tbPushNow]).
+  TbPush? _pushNow({bool forced = false}) => tbPushNow(
+        _run.current,
+        held: _held,
+        rejected: _run.rejected,
+        spotted: _run.spotted,
+        preferTape: _run.deal.preferTape,
+        forced: forced,
+      );
+
+  /// A decisive control (pack, send back, set aside): while he is
+  /// due and something he could push is still there, it waits for him.
+  bool _holdFor() {
+    if (!coworkerDue) return false;
+    final p = _pushNow(forced: true);
+    if (p == null) return false;
+    _push = p;
+    return holdForCoworker();
+  }
+
   /// A tool comes off the pegboard into the trainee's hands.
   void _pick(TbTool t, Offset origin) {
-    // Taking another tool while he is still talking refuses him too.
-    if (coworkerOpen && !coworkerChoiceUp && !_isPushed(t)) unawaited(answerCoworker(true, origin, direct: true));
+    // While he talks the board waits: only the deck answers him (a tap on a
+    // tool never skips him or counts as refusing him).
     if (_blocked || coworkerOpen || _held != null || _docketOpen || _run.rejected.contains(t.id)) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/impact_metal.ogg', volume: 0.4, muted: false));
     _hush();
     setState(() {
       _held = t;
+      _slid = false;
       _setMode(LinemanMode.hold);
     });
     unawaited(_sayChain([_task]));
   }
 
-  /// A fault came into view under the hand.
+  /// A fault came into view under the hand. No sound or buzz: the eye must
+  /// see it (a cue only on faults would find them for the player).
   void _found() {
     final t = _held;
     if (t != null) _run.spot(t);
-    HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.wav', volume: 0.6, muted: false));
   }
 
-  /// The tester's tip on the known live point.
-  bool _test() {
+  /// The hand first touched the tool in the close look.
+  void _touched() {
+    if (!_slid && mounted) setState(() => _slid = true);
+  }
+
+  /// The tester's tip on the known live point (null: no touch taken now).
+  bool? _test() {
     final t = _held;
-    if (t == null) return false;
+    if (t == null || _blocked || coworkerOpen) return null;
     final lit = _run.test(t);
     HapticFeedback.mediumImpact();
     if (!_muted) unawaited(ZlFx.cue(lit ? 'sounds/intro/click.ogg' : 'sounds/learn/tock.wav', volume: 0.6, muted: false));
@@ -711,27 +815,45 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
     return lit;
   }
 
+  /// Back on its peg: the same sound and the same line for every tool, so
+  /// putting back never tells which one is damaged (no decision, no cost).
   void _putBack() {
-    final t = _held;
-    if (t == null || _blocked) return;
-    final aside = _run.putBack(t);
+    if (_held == null || _blocked || coworkerOpen) return;
     HapticFeedback.selectionClick();
+    if (!_muted) unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.4, muted: false));
     setState(() {
       _held = null;
       _setMode(LinemanMode.idle);
     });
-    if (aside) {
+    unawaited(_sayChain([_ask]));
+  }
+
+  /// Into the বাতিল crate — a decision: a sound tool set aside is a wrong
+  /// flag (a slip card; it goes back on the board).
+  void _aside(Offset origin) {
+    final t = _held;
+    if (t == null || _blocked || coworkerOpen) return;
+    if (_holdFor()) return;
+    final o = _run.setAside(t);
+    final right = o.verdict == TbVerdict.right;
+    setState(() {
+      _held = null;
+      _setMode(right ? LinemanMode.idle : LinemanMode.worried);
+    });
+    if (right) {
+      HapticFeedback.selectionClick();
       if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
       unawaited(_sayChain([t.plain ? TbLines.asidePlain : TbLines.asideFlaw, _ask], mood: GuideMood.glad));
-    } else {
-      if (!_muted) unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.4, muted: false));
-      unawaited(_sayChain([_ask]));
+      return;
     }
+    final m = o.mistake;
+    if (m != null) unawaited(_slip(m, origin));
   }
 
   void _pack(Offset origin) {
     final t = _held;
-    if (t == null || _blocked) return;
+    if (t == null || _blocked || coworkerOpen) return;
+    if (_holdFor()) return;
     setState(() => _held = null);
     final o = _run.pack(t);
     switch (o.verdict) {
@@ -755,6 +877,7 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
 
   void _holdJob(Offset origin) {
     if (_blocked || coworkerOpen || _held != null || _docketOpen) return;
+    if (_holdFor()) return;
     _hush();
     final o = _run.holdJob();
     if (o.verdict == TbVerdict.right) {
@@ -819,8 +942,11 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
-    if (_blocked || _held != null || _docketOpen) return false;
-    final push = tbPushFor(_run.current, _run.rejected, preferTape: _run.deal.preferTape);
+    // Never in a praise window (_blocked has tableBusy) or over the docket.
+    if (_blocked || _docketOpen) return false;
+    // His line fits the moment; a decisive control waiting for him
+    // (coworkerHeld) takes what fits now. Nothing here: a later tool.
+    final push = _pushNow(forced: coworkerHeld);
     if (push == null) return false;
     _push = push;
     return true;
@@ -835,7 +961,8 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
       final r = _run.current;
-      final t = tbPushedTool(r, _push, _run.rejected) ?? r.tools.first;
+      final h = _held;
+      final t = (h != null && _isPushed(h) ? h : null) ?? tbPushedTool(r, _push, _run.rejected) ?? r.tools.first;
       final m = _push == TbPush.tape ? TbMistakes.tape(r.kind) : TbMistakes.noMark(r.kind);
       _run.deadly = m;
       await _deadly(m, t, taped: _push == TbPush.tape);
@@ -848,7 +975,7 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
     unawaited(() async {
       await coworkerSnarl();
       if (!mounted || chain != _chain) return;
-      await _sayChain([TbLines.callHeld, _ask], mood: GuideMood.glad);
+      await _sayChain([_push == TbPush.tape ? TbLines.callHeldTape : TbLines.callHeld, _task], mood: GuideMood.glad);
     }());
   }
 
@@ -1008,6 +1135,40 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
     if (leave == true) _popOnce(false);
   }
 
+  // ---- gesture hints (how to touch, never what) ------------------------------------
+
+  /// The level waits for a touch on the scene: not during the intro, a card,
+  /// a deck, the praise window, the coworker, the freeze or the result.
+  bool get _hintWaiting => !_blocked && _card == null && !coworkerOnScreen && !struckOut && _mark == null;
+
+  Object get _hintKey => '${_run.round}/${_held?.id}/$_slid/$_docketOpen/${_run.rejected.length}/${_run.tested.length}/${_run.slips}';
+
+  /// The docket held up close: tap it to hang it back (the one way on). In
+  /// the close look: before the hand has touched the tool, a short slide
+  /// nudge on it (the kit's generic upward drag, never along the tool toward
+  /// a fault); then a sweep over every control (the live point while the
+  /// tester is untried, put back, set aside, pack). On the board: a sweep over every hanging tool and the
+  /// replacement button.
+  HintSpec? _hint() {
+    if (_docketOpen) return HintSpec.tapOn(_docketZoomKey);
+    final h = _held;
+    if (h != null) {
+      if (!_slid) return HintSpec.dragFrom(_closeKey);
+      return HintSpec.sweepOver([if (h.kind == TbKind.tester && !_run.tested.contains(h.id)) _liveKey, _backKey, _asideKey, _takeKey]);
+    }
+    final r = _run.current;
+    return HintSpec.sweepOver([
+      for (final t in r.tools)
+        if (!_run.rejected.contains(t.id) && _run.packed[_run.round]?.id != t.id) _toolKey(t.id),
+      _holdKey,
+    ]);
+  }
+
+  /// A tap on nothing (the store's wall, the dim round the close look).
+  void _missTap() {
+    if (_hintWaiting) _hints.missTap();
+  }
+
   // ---- build ------------------------------------------------------------------------
 
   List<Widget> _layers(BuildContext context, SceneMetrics m, bool quiet) {
@@ -1020,7 +1181,11 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
     return [
       Positioned.fill(
         key: const ValueKey('store'),
-        child: ColorFiltered(colorFilter: grey, child: RepaintBoundary(child: CustomPaint(painter: ToolStorePainter(geo)))),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (_) => _missTap(),
+          child: ColorFiltered(colorFilter: grey, child: RepaintBoundary(child: CustomPaint(painter: ToolStorePainter(geo)))),
+        ),
       ),
       Positioned.fromRect(
         key: const ValueKey('docket'),
@@ -1049,6 +1214,7 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
               muted: true,
               child: _BoardTool(
+                key: _toolKey(r.tools[i].id),
                 tool: r.tools[i],
                 gone: _run.rejected.contains(r.tools[i].id) || _run.packed[_run.round]?.id == r.tools[i].id || _held?.id == r.tools[i].id,
                 enabled: canPick,
@@ -1110,6 +1276,10 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: playing && !deckUp && _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (holdUp)
@@ -1118,7 +1288,7 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
                   left: 12,
                   right: 128,
                   bottom: pad.bottom + 18,
-                  child: _HoldButton(onTapUp: (d) => _holdJob(d.globalPosition)),
+                  child: KeyedSubtree(key: _holdKey, child: _HoldButton(onTapUp: (d) => _holdJob(d.globalPosition))),
                 ),
               if (held != null && playing)
                 _Inspect(
@@ -1126,14 +1296,21 @@ class _TbRunPageState extends ConsumerState<_TbRunPage> with DoDeathGuard, DoStr
                   tool: held,
                   deal: _run.deal,
                   quiet: quiet,
+                  // While he talks the tool stays in hand; the deck answers him.
+                  enabled: !coworkerOpen,
+                  keys: (close: _closeKey, live: _liveKey, back: _backKey, aside: _asideKey, take: _takeKey),
                   onFound: _found,
+                  onTouched: _touched,
+                  onMiss: _missTap,
                   onTest: _test,
                   onTake: _pack,
                   onPutBack: _putBack,
+                  onAside: _aside,
                 ),
               if (_docketOpen && playing)
                 _DocketZoom(
                   key: const ValueKey('docket-zoom'),
+                  cardKey: _docketZoomKey,
                   deal: _run.deal,
                   done: {for (var i = 0; i < _run.round; i++) i},
                   quiet: quiet,
@@ -1307,7 +1484,8 @@ class _DocketSheet extends StatelessWidget {
 
 /// The docket held up close (tap anywhere to hang it back).
 class _DocketZoom extends StatelessWidget {
-  const _DocketZoom({super.key, required this.deal, required this.done, required this.quiet, required this.onClose});
+  const _DocketZoom({super.key, required this.cardKey, required this.deal, required this.done, required this.quiet, required this.onClose});
+  final GlobalKey cardKey;
   final TbDeal deal;
   final Set<int> done;
   final bool quiet;
@@ -1330,6 +1508,7 @@ class _DocketZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: cardKey,
                 width: 290,
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
                 decoration: BoxDecoration(
@@ -1381,7 +1560,7 @@ class _DocketZoom extends StatelessWidget {
 /// blank white tag and its faults do not show. Tap it, or pull it down, to
 /// take it in hand.
 class _BoardTool extends StatefulWidget {
-  const _BoardTool({required this.tool, required this.gone, required this.enabled, required this.onTake});
+  const _BoardTool({super.key, required this.tool, required this.gone, required this.enabled, required this.onTake});
   final TbTool tool;
   final bool gone;
   final bool enabled;
@@ -1583,18 +1762,36 @@ class _Inspect extends StatefulWidget {
     required this.tool,
     required this.deal,
     required this.quiet,
+    required this.enabled,
+    required this.keys,
     required this.onFound,
+    required this.onTouched,
+    required this.onMiss,
     required this.onTest,
     required this.onTake,
     required this.onPutBack,
+    required this.onAside,
   });
   final TbTool tool;
   final TbDeal deal;
   final bool quiet;
+
+  /// Takes touches (not while the coworker is on).
+  final bool enabled;
+
+  /// The gesture hint's anchors: the close-up, the live point, the buttons.
+  final ({GlobalKey close, GlobalKey live, GlobalKey back, GlobalKey aside, GlobalKey take}) keys;
   final VoidCallback onFound;
-  final bool Function() onTest;
+
+  /// The hand touched the tool (the first time).
+  final VoidCallback onTouched;
+
+  /// A tap on nothing round the close look.
+  final VoidCallback onMiss;
+  final bool? Function() onTest;
   final ValueChanged<Offset> onTake;
   final VoidCallback onPutBack;
+  final ValueChanged<Offset> onAside;
 
   @override
   State<_Inspect> createState() => _InspectState();
@@ -1607,6 +1804,7 @@ class _InspectState extends State<_Inspect> {
   bool? _lit;
 
   void _touch(Offset p, Size s) {
+    widget.onTouched();
     final b = toolBin(ToolPainter.uAt(s, p.dx));
     final before = _seen.length;
     for (final x in [b - 1, b, b + 1]) {
@@ -1622,13 +1820,15 @@ class _InspectState extends State<_Inspect> {
 
   void _testIt() {
     if (_lit != null) return;
-    setState(() => _lit = widget.onTest());
+    final lit = widget.onTest();
+    if (lit != null) setState(() => _lit = lit);
   }
 
   Widget _closeUp(TbTool t) => LayoutBuilder(
         builder: (context, box) {
           final s = Size(box.maxWidth, box.maxHeight);
           return Semantics(
+            key: widget.keys.close,
             label: TbLines.handLabel,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -1658,75 +1858,82 @@ class _InspectState extends State<_Inspect> {
   @override
   Widget build(BuildContext context) {
     final t = widget.tool;
-    return Positioned.fill(
-      child: ColoredBox(
-        color: const Color(0xC0050A16),
-        child: Align(
-          alignment: const Alignment(0, -0.42),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
-            duration: const Duration(milliseconds: 360),
-            curve: Curves.easeOutBack,
-            builder: (_, v, child) => Transform.translate(
-              offset: Offset(0, 80 * (1 - v)),
-              child: Transform.scale(scale: 0.85 + 0.15 * v, child: Opacity(opacity: v.clamp(0.0, 1.0), child: child)),
-            ),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-              decoration: BoxDecoration(
-                color: SlmColors.ivory,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
-                      decoration: BoxDecoration(color: _paper, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFB59B62))),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.receipt_long_rounded, color: _brown, size: 16),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text('${TbLines.docket} · ${TbLines.lineBn} · ${t.kind.nameBn}',
-                                maxLines: 1, overflow: TextOverflow.ellipsis, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  AspectRatio(
-                    aspectRatio: 2.5,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF3A4654), _bench]),
-                      ),
-                      child: Padding(padding: const EdgeInsets.fromLTRB(8, 4, 8, 4), child: _closeUp(t)),
-                    ),
-                  ),
-                  if (t.kind == TbKind.tester) ...[
-                    const SizedBox(height: 8),
-                    _LivePoint(lit: _lit, onTap: _testIt),
-                  ],
-                  const SizedBox(height: 10),
-                  Row(
+    final panel = Align(
+      alignment: const Alignment(0, -0.42),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
+        duration: const Duration(milliseconds: 360),
+        curve: Curves.easeOutBack,
+        builder: (_, v, child) => Transform.translate(
+          offset: Offset(0, 80 * (1 - v)),
+          child: Transform.scale(scale: 0.85 + 0.15 * v, child: Opacity(opacity: v.clamp(0.0, 1.0), child: child)),
+        ),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+          decoration: BoxDecoration(
+            color: SlmColors.ivory,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
+                  decoration: BoxDecoration(color: _paper, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFB59B62))),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(child: DoBigButton(label: TbLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
-                      const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: TbLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
+                      const Icon(Icons.receipt_long_rounded, color: _brown, size: 16),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text('${TbLines.docket} · ${TbLines.lineBn} · ${t.kind.nameBn}',
+                            maxLines: 1, overflow: TextOverflow.ellipsis, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
+                      ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              AspectRatio(
+                aspectRatio: 2.5,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF3A4654), _bench]),
+                  ),
+                  child: Padding(padding: const EdgeInsets.fromLTRB(8, 4, 8, 4), child: _closeUp(t)),
+                ),
+              ),
+              if (t.kind == TbKind.tester) ...[
+                const SizedBox(height: 8),
+                KeyedSubtree(key: widget.keys.live, child: _LivePoint(lit: _lit, onTap: _testIt)),
+              ],
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(child: DoBigButton(key: widget.keys.back, label: TbLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
+                  const SizedBox(width: 8),
+                  Expanded(child: DoBigButton(key: widget.keys.aside, label: TbLines.aside, filled: false, onTapUp: (d) => widget.onAside(d.globalPosition))),
+                  const SizedBox(width: 8),
+                  Expanded(child: DoBigButton(key: widget.keys.take, label: TbLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
                 ],
               ),
-            ),
+            ],
           ),
+        ),
+      ),
+    );
+    return Positioned.fill(
+      child: AbsorbPointer(
+        absorbing: !widget.enabled,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (_) => widget.onMiss(),
+          child: ColoredBox(color: const Color(0xC0050A16), child: panel),
         ),
       ),
     );
@@ -2149,10 +2356,8 @@ class ToolPainter extends CustomPainter {
           c.drawCircle(Offset(x(u + d), cy - h * 0.06 + d * h), h * 0.03, Paint()..color = const Color(0xFF3A3F44));
         }
       case TbFlaw.bentTip:
-        c.drawCircle(Offset(x(0.03), cy - h * 0.08), h * 0.1, Paint()
-          ..color = const Color(0x66FF851B)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2);
+        // The bend itself is drawn with the tip (no ring round it).
+        break;
       case TbFlaw.none:
       case TbFlaw.deadNeon:
         break;

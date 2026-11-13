@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -60,17 +61,29 @@ export 'm3_sld_isolate_world.dart' show M3SldIsolateKind, M3SldIsolatePoint;
 //
 // Deadly: an isolator opened while its breaker is still ON (on load); the work
 // started on a live section — above all with only one side opened on a ring
-// that is closed today (backfeed); listening to the coworker ("এলাকা আমার
-// মুখস্থ, ম্যাপ লাগবে না"). Slips: the wrong feeder's breaker, the DO fuse
-// for the line, a tester that finds the backfeed, the earth before proving
-// dead, the work without a test / without earth / with the NO point untagged.
+// that is closed today (backfeed). Slips: the wrong feeder's breaker, the DO
+// fuse for the line, a tester that finds the backfeed, the earth before
+// proving dead, the work without a test / without earth / with the NO point
+// untagged / with an isolation point on the map still closed (only a breaker
+// open, or the ring's tie left closed today), and listening to the coworker
+// ("এলাকা আমার মুখস্থ, ম্যাপ লাগবে না" — playbook row 8; the act he pushes,
+// work on the backfed section, stays deadly when the player then does it).
+// Opening the other feeder's breaker on an open ring is not needed: it costs
+// the docket's thorough bonus and the play's quick (third) star, with no word
+// from the guide.
 // Three slips strike the level out.
+//
+// Kit (2026-11-11): no scene control works in a praise window (`tableBusy`);
+// the tie and কাজ শুরু wait for the coworker on his docket (`holdForCoworker`),
+// so a fast play still meets him; the tool row is dealt in a fresh order each
+// docket; gesture hints sweep over the map's switches and the tools.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m3_sld_isolate_world.dart), corner guide, ◆ on the table → "কেন …?"
 // → the next docket by itself; the careless coworker once a play, on the
 // ring that is closed today. Voice: the guide by device TTS; the coworker's
-// push by device TTS until recorded (his exit line is his recorded clip).
+// push is silent with its caption held until recorded (his exit line is his
+// recorded clip).
 
 // ============================================================================
 // Content
@@ -149,6 +162,9 @@ abstract final class M3SldIsolateLines {
     'ডিও ফিউজ খুললেই পুরো সেকশনটা মরা হয়ে যায়',
     'NO পয়েন্ট তো সবসময় খোলাই থাকে, ভয় নেই',
     'এক লাইনে আঁকা মানে মাঠেও একটাই তার আছে',
+    // Myth 1's own words, so "রিং" / "ব্যাকফিড" / "উল্টো" never mark the right card.
+    'রিং ফিডারেও এক দিক খুললেই পুরো লাইন মরা',
+    'রিং-এ উল্টো দিক থেকে ব্যাকফিড আসে না কখনো',
   ];
   static const allRight = [...orderWhy, ...testWhy, ...tagWhy, ...bothWhy];
 
@@ -170,15 +186,19 @@ abstract final class M3SldIsolateLines {
   static const coworker = CoworkerScript(
     line: 'এলাকা আমার মুখস্থ! এই ফিডারটা বন্ধ করলেই লাইন মরা — ম্যাপ লাগবে না!',
     exitLine: coworkerExit,
-    right: ['না, ম্যাপে রিং আছে, ওদিকটাও খুলব', 'না, ম্যাপ দেখে সব দিক বিচ্ছিন্ন করব', 'না, উল্টো দিকের ব্যাকফিডও কাটব'],
+    right: ['ম্যাপে রিং আছে, ওদিকটাও খুলে নেব', 'ম্যাপ দেখে সব দিক বিচ্ছিন্ন করব', 'উল্টো দিকের ব্যাকফিডও আগে কাটব'],
+    // The wrong ones share the right ones' words (রিং, উল্টো, ম্যাপ,
+    // বিচ্ছিন্ন, ব্যাকফিড) — no tell.
     wrong: [
-      'ঠিক, এক দিক বন্ধ করলেই যথেষ্ট',
+      'না থাক, এক দিক বিচ্ছিন্ন করলেই যথেষ্ট',
+      'ব্যাকফিড এখানে আসে না, এক দিকেই চলবে',
       'আচ্ছা, তুমি এলাকা চেনো, ম্যাপ থাক',
       'হ্যাঁ, ম্যাপ দেখা সময় নষ্ট, চলো',
-      'ঠিক আছে, এক ফিডারেই লাইন মরা',
+      'ঠিক আছে, রিং হলেও এক ফিডারেই চলবে',
       'বেশ, মুখস্থ এলাকায় ম্যাপ লাগে না',
+      'উল্টো দিকে কিছু নেই, ম্যাপ থাক',
     ],
-    asks: ['ও বলছে ম্যাপ লাগবে না। কী করবেন?', 'ওর মুখস্থ, না ম্যাপ?', 'এক দিক খুলেই কাজে নামবেন?'],
+    asks: ['ও বলছে ম্যাপ লাগবে না। কী করবেন?', 'ওর মুখস্থ, না ম্যাপ?', 'ও যা বলছে, তাতে কী করবেন?'],
   );
 
   static const callHeld = 'ঠিক! স্মৃতি ভুল করে, আপ-টু-ডেট ম্যাপ নয়।';
@@ -270,7 +290,26 @@ abstract final class M3SldIsolateMistakes {
     lessonPoint: 2,
   );
 
-  static List<DoMistake> get all => const [abOnLoad, backfeedWork, liveWork, wrongFeeder, doFuse, backfeedTest, noTest, earthUnproven, noEarth, noTag];
+  /// Work asked for with a point on the map still closed: only the breaker
+  /// open (no isolator), or the ring's tie left closed today (lesson point 3:
+  /// mark the area and its isolation points before work).
+  static const notIsolated = DoMistake(
+    key: '3.10/m3_sld_isolate/not-isolated',
+    textBn: 'ম্যাপের সব আইসোলেশন পয়েন্ট খোলা হয়নি! ব্রেকারের পর আইসোলেটরও খুলুন — রিং হলে উল্টো দিকের টাই সুইচও।',
+    art: _back,
+    lessonPoint: 2,
+  );
+
+  /// Listening to "এলাকা আমার মুখস্থ" (playbook row 8: a slip; lesson myth 1).
+  static const listened = DoMistake(
+    key: '3.10/m3_sld_isolate/listened-memory',
+    textBn: 'মুখস্থের ভরসায় নয়! রিং ফিডারে উল্টো দিক থেকেও বিদ্যুৎ আসে — ম্যাপে সব সোর্স দেখে বিচ্ছিন্ন করুন।',
+    art: _back,
+    lessonPoint: 2,
+  );
+
+  static List<DoMistake> get all =>
+      const [abOnLoad, backfeedWork, liveWork, wrongFeeder, doFuse, backfeedTest, noTest, earthUnproven, noEarth, noTag, notIsolated, listened];
 }
 
 @immutable
@@ -327,13 +366,21 @@ class M3SldIsolateRun {
   var earthed = false;
   var workOn = false;
 
+  /// The other feeder's breaker opened on an open ring (not needed): the
+  /// docket loses its thorough bonus.
+  var needless = false;
+
+  /// A needless cut on any docket this play: no "quick" third star and no
+  /// quick bonus (audit: an over-call costs at least a star), still no word.
+  var overCut = false;
+
   bool get done => index >= deal.dockets.length;
   bool get ended => done || deadly != null;
   M3SldIsolateDocket get docket => deal.dockets[index.clamp(0, deal.dockets.length - 1)];
   M3SldIsolateKind get kind => docket.kind;
   int get percent => (100 - 15 * slips).clamp(0, 100);
   bool get passed => done && deadly == null && percent >= 55;
-  bool get thorough => docketSlips == 0;
+  bool get thorough => docketSlips == 0 && !needless;
 
   bool closed(M3SldIsolatePoint p) => switch (p) {
         M3SldIsolatePoint.tie => kind == M3SldIsolateKind.ringClosed && !opened.contains(p),
@@ -385,7 +432,7 @@ class M3SldIsolateRun {
         if (opened.add(p)) _tag(M3SldIsolateLines.caughtFeeder);
         return null;
       case M3SldIsolatePoint.cbB:
-        opened.add(p);
+        if (opened.add(p) && kind == M3SldIsolateKind.ringNo) needless = overCut = true;
         return null;
       case M3SldIsolatePoint.abA:
         if (opened.contains(p)) return null;
@@ -431,19 +478,20 @@ class M3SldIsolateRun {
     return null;
   }
 
-  /// "কাজ শুরু". Null and [workOn] = the work starts on a dead, earthed section.
+  /// "কাজ শুরু". Null and [workOn] = the work starts on a dead, earthed,
+  /// fully isolated section (every point on the map open or secured).
   DoMistake? start() {
     if (!_open) return null;
     if (live) return deadly = sideAOpen ? M3SldIsolateMistakes.backfeedWork : M3SldIsolateMistakes.liveWork;
     if (!proved) return _slip(M3SldIsolateMistakes.noTest);
     if (!earthed) return _slip(M3SldIsolateMistakes.noEarth);
-    if (kind == M3SldIsolateKind.ringNo && !tieTagged) return _slip(M3SldIsolateMistakes.noTag);
+    if (!isolated) return _slip(kind == M3SldIsolateKind.ringNo && sideAOpen ? M3SldIsolateMistakes.noTag : M3SldIsolateMistakes.notIsolated);
     workOn = true;
     return null;
   }
 
-  /// Fails the play (listening to the coworker).
-  void failDeadly(DoMistake m) => deadly = m;
+  /// Listening to the coworker: a slip (the docket goes on).
+  DoMistake listened() => _slip(M3SldIsolateMistakes.listened);
 
   void next() {
     index++;
@@ -453,6 +501,7 @@ class M3SldIsolateRun {
     proved = false;
     earthed = false;
     workOn = false;
+    needless = false;
   }
 }
 
@@ -558,6 +607,16 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The tool row, dealt in a fresh order each docket (never tester → earth →
+  /// work laid out for the player).
+  List<_Tool> _tools = _Tool.values;
+  final _toolKeys = {for (final x in _Tool.values) x: GlobalKey(debugLabel: 'sld-tool-${x.name}')};
+
+  /// The scene's touch layer (design px → global for the hint's sweep).
+  final _sceneKey = GlobalKey(debugLabel: 'sld-scene');
+  M3SldIsolateGeo? _hintGeo;
+  final _hints = IdleHintController();
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -600,15 +659,22 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
     _startDocket();
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.workOn && !_freeze;
+  /// The scene takes a move now: never in a praise window (`tableBusy`).
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.workOn && !_freeze;
 
-  String get _task => _run.isolated ? M3SldIsolateLines.askNext : M3SldIsolateLines.askIsolate;
+  /// The guide's ask, keyed only on what the player has seen (the tester
+  /// read dead) — never on the hidden `isolated`, so it does not tell when
+  /// the map reading is complete.
+  String get _task => _run.proved ? M3SldIsolateLines.askNext : M3SldIsolateLines.askIsolate;
 
   void _startDocket() {
     _testerTimer?.cancel();
+    final d = _run.docket;
     setState(() {
       _tester = null;
       _wake++;
+      // Its own Random (from the docket) so the seeded deal is not disturbed.
+      _tools = [..._Tool.values]..shuffle(math.Random(d.firstPole * 7919 + d.feederA.length * 31 + _run.index * 3 + (d.flip ? 1 : 0)));
     });
     if (_run.index == _run.deal.callAt) scheduleCoworker();
     unawaited(_sayChain([M3SldIsolateLines.askIsolate]));
@@ -657,6 +723,8 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
 
   void _work(Offset origin) {
     if (!_canPlay) return;
+    // On his docket the work waits for the coworker (a fast play meets him).
+    if (holdForCoworker()) return;
     _tick('sounds/intro/click.ogg', 0.6);
     final m = _run.start();
     setState(() => _wake++);
@@ -669,7 +737,7 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
   }
 
   void _tapScene(Offset p, M3SldIsolateGeo geo, Offset global) {
-    if (_intro || _ended || _card != null || reasonOpen || _freeze || _run.workOn) return;
+    if (_intro || _ended || _card != null || tableBusy || _freeze || _run.workOn) return;
     M3SldIsolatePoint? hit;
     for (final x in M3SldIsolatePoint.values) {
       if (_run.onMap(x) && geo.hit(x).contains(p)) {
@@ -677,22 +745,32 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
         break;
       }
     }
-    if (hit == null) return;
+    if (hit == null) {
+      if (!coworkerOpen) _hints.missTap();
+      return;
+    }
     // While he talks, only the ring's other side answers him (opening it refuses him).
     if (coworkerOpen) {
       if (coworkerChoiceUp && (hit == M3SldIsolatePoint.cbB || hit == M3SldIsolatePoint.tie)) {
+        final before = _run.opened.length + (_run.tieTagged ? 1 : 0);
         final m = _run.tap(hit);
-        _tick('sounds/intro/impact_metal.ogg', 0.6);
         setState(() => _wake++);
         if (m != null) {
+          _tick('sounds/intro/impact_metal.ogg', 0.6);
           _arcAt = geo.point(hit);
           unawaited(_mistake(m, global));
-        } else {
+        } else if (_run.opened.length + (_run.tieTagged ? 1 : 0) > before) {
+          // Only a tap that really opens (or tags) a point refuses him.
+          _tick('sounds/intro/impact_metal.ogg', 0.6);
           unawaited(answerCoworker(true, global, direct: true));
+        } else {
+          _tick('sounds/intro/click.ogg', 0.3);
         }
       }
       return;
     }
+    // On his docket the tie waits for the coworker (a fast play meets him).
+    if (hit == M3SldIsolatePoint.tie && holdForCoworker()) return;
     final before = _run.opened.length + (_run.tieTagged ? 1 : 0);
     final m = _run.tap(hit);
     setState(() => _wake++);
@@ -702,8 +780,8 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
       return;
     }
     if (_run.opened.length + (_run.tieTagged ? 1 : 0) > before) {
+      // No guide line here: a line on "isolated" would tell the map's answer.
       _tick(hit == M3SldIsolatePoint.tie && _run.kind == M3SldIsolateKind.ringNo ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/impact_metal.ogg', 0.6);
-      if (_run.isolated) unawaited(_sayChain([M3SldIsolateLines.askNext]));
     } else {
       _tick('sounds/intro/click.ogg', 0.3);
     }
@@ -770,8 +848,9 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // Too late once the tie is open: "this feeder alone" no longer fits.
     if (_ended || _run.index != _run.deal.callAt || _run.opened.contains(M3SldIsolatePoint.tie) || _run.workOn) return null;
-    if (_intro || _card != null || reasonOpen || _tester != null || _freeze) return false;
+    if (_intro || _card != null || tableBusy || _tester != null || _freeze) return false;
     return true;
   }
 
@@ -783,10 +862,9 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Listened to him: up the pole with only this feeder off — the ring backfeeds.
-      _arcAt = null;
-      _run.failDeadly(M3SldIsolateMistakes.backfeedWork);
-      await _deadly(M3SldIsolateMistakes.backfeedWork);
+      // Listened to him: a slip (playbook row 8); the docket goes on, and work
+      // on the backfed section is still deadly if the player then does it.
+      await _mistake(_run.listened(), origin);
       return;
     }
     _run.caught.add(M3SldIsolateLines.caughtCall);
@@ -796,6 +874,30 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
     if (!mounted || _ended) return;
     unawaited(_sayChain([M3SldIsolateLines.callHeld, _task], mood: GuideMood.glad));
   }
+
+  // --- gesture hints (how to touch, never what) ------------------------------
+  /// The level waits for a move on the map or the tools.
+  bool get _hintWaiting =>
+      !_intro && !_ended && _mark == null && !struckOut && !_freeze && _card == null && !tableBusy && !coworkerOnScreen && !_run.workOn;
+
+  /// A sweep over every switch on the map and every tool, in screen order
+  /// (top → bottom, left → right) — passes over all, presses none.
+  HintSpec? _hint() {
+    final geo = _hintGeo;
+    final box = _sceneKey.currentContext?.findRenderObject();
+    if (geo == null || box is! RenderBox || !box.attached || !box.hasSize) return null;
+    final rects = <Rect>[
+      for (final x in M3SldIsolatePoint.values)
+        if (_run.onMap(x)) Rect.fromPoints(box.localToGlobal(geo.hit(x).topLeft), box.localToGlobal(geo.hit(x).bottomRight)),
+      for (final k in _toolKeys.values) ?HintSpec.globalRectOf(k),
+    ]..sort((a, b) {
+        final dy = (a.center.dy - b.center.dy).abs() < 8 ? 0 : a.center.dy.compareTo(b.center.dy);
+        return dy != 0 ? dy : a.center.dx.compareTo(b.center.dx);
+      });
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
+  Object get _hintKey => '${_run.index}/${_run.opened.length}/${_run.tieTagged}/${_run.proved}/${_run.earthed}/${_run.slips}';
 
   /// Tap the guide: the task again, a different way each time.
   void _tapGuide() {
@@ -895,6 +997,9 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
     await BeatFx.levelDelta(ref, real, mood: mood, originGlobal: origin, muted: _muted);
   }
 
+  /// Quick and clean: inside the time, every mark kept, no needless cut.
+  bool get _quickRun => _run.percent == 100 && !_run.overCut && _clock.elapsedMilliseconds < widget.pack.quickMs;
+
   Future<void> _finish() async {
     if (_ended) return;
     _ended = true;
@@ -909,14 +1014,14 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
       await save.markRungCleared(_rungId);
       _passed = true;
       await _levelDelta(20, centre, mood: GuideMood.celebrate);
-      if (mark == 100 && _clock.elapsedMilliseconds < widget.pack.quickMs) {
+      if (_quickRun) {
         _quickBonus = true;
         await _levelDelta(10, centre, mood: GuideMood.celebrate);
       }
     }
     final delta = await save.commitLevelScore(_rungId, _runScore);
     if (_run.passed) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
-    final stars = starsFor(passed: _run.passed, strikes: strikes, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
+    final stars = starsFor(passed: _run.passed, strikes: strikes, quick: _quickRun);
     if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
     setState(() {
@@ -950,6 +1055,15 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
   }
 
   // --- the scene ---------------------------------------------------------------
+  Widget _toolButton(_Tool x) => switch (x) {
+        _Tool.tester => _ToolButton(
+            key: _toolKeys[x], icon: Icons.flash_on_rounded, label: M3SldIsolateLines.tester, on: _tester != null, onTapUp: (d) => _useTester(d.globalPosition)),
+        _Tool.earth => _ToolButton(
+            key: _toolKeys[x], icon: Icons.vertical_align_bottom_rounded, label: M3SldIsolateLines.earth, on: _run.earthed, onTapUp: (d) => _earth(d.globalPosition)),
+        _Tool.work => _ToolButton(
+            key: _toolKeys[x], icon: Icons.engineering_rounded, label: M3SldIsolateLines.work, on: false, onTapUp: (d) => _work(d.globalPosition)),
+      };
+
   LinemanMode get _mode {
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
     if (coworkerOpen) return LinemanMode.worried;
@@ -975,7 +1089,7 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m, double topInset) {
-    final geo = _geoFor(m, topInset);
+    final geo = _hintGeo = _geoFor(m, topInset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final arc = _arcAt ?? geo.sectionBox.center;
@@ -1019,7 +1133,7 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: M3SldIsolateLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
+          child: GestureDetector(key: _sceneKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
         ),
       ),
       if (_freeze)
@@ -1084,6 +1198,10 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m, topInset),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (handsOn)
@@ -1094,11 +1212,7 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
                   bottom: pad.bottom + 8,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _ToolButton(icon: Icons.flash_on_rounded, label: M3SldIsolateLines.tester, on: _tester != null, onTapUp: (d) => _useTester(d.globalPosition)),
-                      _ToolButton(icon: Icons.vertical_align_bottom_rounded, label: M3SldIsolateLines.earth, on: _run.earthed, onTapUp: (d) => _earth(d.globalPosition)),
-                      _ToolButton(icon: Icons.engineering_rounded, label: M3SldIsolateLines.work, on: false, onTapUp: (d) => _work(d.globalPosition)),
-                    ],
+                    children: [for (final x in _tools) _toolButton(x)],
                   ),
                 ),
               if (deckUp)
@@ -1240,9 +1354,12 @@ class _TesterChip extends StatelessWidget {
   }
 }
 
+/// The hands-on tools under the map.
+enum _Tool { tester, earth, work }
+
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTapUp});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTapUp});
   final IconData icon;
   final String label;
   final bool on;

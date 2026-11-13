@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -51,16 +52,28 @@ export 'm4_earth_fix_world.dart' show M4EarthFixGeo, M4EarthFixLook, M4EarthFixS
 //
 // Deadly (lesson myth 1: "আর্থিং তার একটু কাটা থাকলেও লাইন চলে" → no trip
 // in a fault, a death): signing off with the earth still cut — also by
-// listening to the careless coworker, who comes once on the cut round right
-// after the cut is seen: "তার কেটে গেছে? ঝুলিয়ে রাখো, কেউ দেখবে না।".
+// listening to the careless coworker (MODULE4_LADDER.md row 18: the act he
+// pushes is that same deadly), who comes once on the cut round right after
+// the cut is seen: "তার কেটে গেছে? ঝুলিয়ে রাখো, কেউ দেখবে না।". The fix deck
+// and "কাজ শেষ" wait for him (holdForCoworker): a fast play cannot skip him.
 // Slips: a wrong fix, a step out of order, signing off with a high earth
 // left (rusty / dry), signing off without measuring after the fix. Three
 // slips strike out.
 //
+// No giveaways: the fix and reason decks always deal one near miss that
+// shares the right card's words (grease over rust, a new lead only twisted
+// on, water with the cover left off; "not measured", "over 8 Ω is fine" —
+// above the top of the lesson's 5–8 Ω band, so plainly wrong);
+// the dry spell in the sky is dealt on other rounds too (it never names the
+// pit); the step tray never deals two chips side by side in their right
+// order (m4EarthFixTrayDeal).
+//
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m4_earth_fix_world.dart), corner guide, ◆ on the table → "কেন …?" →
-// the next round by itself. Voice: the guide's lines by device TTS; the
-// coworker's push by TTS until recorded (his exit line is recorded).
+// the next round by itself; gesture hints (a sweep over the three spots and
+// both buttons, over the open steps; a tap on a card's one way forward).
+// Voice: the guide's lines by device TTS; the coworker's exit line is
+// recorded, his push has no clip yet (the kit holds it silent with its caption).
 //
 // Flagged to the owner: the readings are ours (before: 14.8–36.2 Ω, or "OL"
 // on a cut strip; after: 2.3–4.4 Ω, under the lesson's 5–8 Ω for a
@@ -84,7 +97,7 @@ List<String> m4EarthFixSteps(M4EarthFixFault f) => switch (f) {
 
 @immutable
 class M4EarthFixCase {
-  const M4EarthFixCase({required this.id, required this.fault, required this.at, required this.before, required this.after});
+  const M4EarthFixCase({required this.id, required this.fault, required this.at, required this.before, required this.after, this.hot = false});
 
   final String id;
   final M4EarthFixFault fault;
@@ -97,6 +110,10 @@ class M4EarthFixCase {
 
   /// The tester after the right fix (Ω), under the lesson's target.
   final double after;
+
+  /// A dry spell (the sky and the field): always on a dry-pit round, dealt
+  /// on the others too, so the weather never names the fault.
+  final bool hot;
 
   List<String> get steps => m4EarthFixSteps(fault);
 
@@ -156,8 +173,9 @@ abstract final class M4EarthFixLines {
 
   static const stamp = 'আর্থ মজবুত';
 
-  // The fix (choose): right per fault; wrong = field shortcuts and myths
-  // (+ another fault's fix that cannot help here). 36–44 letters.
+  // The fix (choose): right per fault; wrong = a near miss (the right card's
+  // words, the job left half done), field shortcuts and myths (+ another
+  // fault's fix that cannot help here). 34–44 letters.
   static List<String> fixRight(M4EarthFixFault f) => switch (f) {
         M4EarthFixFault.loose => const ['জোড় খুলে মরিচা তুলে, গ্রিজ দিয়ে টাইট দিই', 'মরিচা পরিষ্কার করে গ্রিজ লাগিয়ে টাইট করি'],
         M4EarthFixFault.cut => const ['কাটা জায়গায় নতুন আর্থ তার লাগিয়ে টাইট দিই', 'চুরি যাওয়া তার বদলে পুরো নতুন তার লাগাই'],
@@ -170,11 +188,19 @@ abstract final class M4EarthFixLines {
     'কিছু না করে রিপোর্টে আর্থ ঠিক লিখে দিই',
     'সাধারণ লোহার নাট দিয়ে কোনোমতে আটকে দিই',
   ];
-  static List<String> fixWrong(M4EarthFixFault f) => switch (f) {
+  /// Near misses: the right card's words, the job left half done (no
+  /// cleaning, twisted on, the cover left off — lesson points 2 and 4).
+  static List<String> fixNear(M4EarthFixFault f) => switch (f) {
+        M4EarthFixFault.loose => const ['মরিচার ওপরেই গ্রিজ মেখে দিয়ে চলে যাই', 'জোড় না খুলে বাইরে গ্রিজ লাগিয়ে টাইট দিই'],
+        M4EarthFixFault.cut => const ['নতুন তার এনে কাটা মাথায় শুধু পেঁচিয়ে দিই', 'পুরোনো কাটা তারেই নতুন তার পেঁচিয়ে টেপ দিই'],
+        M4EarthFixFault.dry => const ['পিটের ঢাকনার ওপরে একটু জল ছিটিয়ে দিই', 'পিটে জল ঢেলে ঢাকনা খোলা রেখেই চলে যাই'],
+      };
+  static List<String> fixOther(M4EarthFixFault f) => switch (f) {
         M4EarthFixFault.loose => [...fixShortcuts, fixRight(M4EarthFixFault.dry).first],
         M4EarthFixFault.cut => [...fixShortcuts, fixRight(M4EarthFixFault.dry).last, 'কাটা তারটা ঝুলিয়ে রেখে পরে দেখা যাবে'],
         M4EarthFixFault.dry => [...fixShortcuts, fixRight(M4EarthFixFault.cut).last],
       };
+  static List<String> fixWrong(M4EarthFixFault f) => [...fixNear(f), ...fixOther(f)];
 
   // The reason (after "কাজ শেষ"): right ones fit what this round was.
   static const whyAsk = 'কেন কাজ শেষ বললেন?';
@@ -182,6 +208,13 @@ abstract final class M4EarthFixLines {
         M4EarthFixFault.loose => const ['জোড় সাফ করে টাইট দিয়েছি, মেপে 5 Ω-এর কম', 'মরিচা তুলে টাইট করেছি, রিডিং এখন কম এসেছে'],
         M4EarthFixFault.cut => const ['নতুন তার লাগিয়েছি, মেপে রিডিং 5 Ω-এর কম', 'কাটা তার বদলে মেপেছি, রিডিং এখন কম এসেছে'],
         M4EarthFixFault.dry => const ['পিটে জল দিয়েছি, মেপে রিডিং 5 Ω-এর কম', 'শুকনো পিট ভিজিয়ে মেপেছি, রিডিং এখন কম'],
+      };
+  /// Near misses: this round's fix in its own words, but not measured or a
+  /// high reading accepted (lesson point 3).
+  static List<String> whyNear(M4EarthFixFault f) => switch (f) {
+        M4EarthFixFault.loose => const ['মরিচা তুলে টাইট দিয়েছি, তাই আর মাপিনি', 'জোড় টাইট আছে, রিডিং 8 Ω-এর বেশি হলেও চলে'],
+        M4EarthFixFault.cut => const ['নতুন তার লাগিয়েছি, তাই আর মাপার দরকার নেই', 'নতুন তার আছে, রিডিং 8 Ω-এর বেশি হলেও চলে'],
+        M4EarthFixFault.dry => const ['পিটে জল দিয়েছি, তাই আর মেপে দেখার দরকার নেই', 'পিট ভেজা, রিডিং 8 Ω-এর বেশি হলেও চলে'],
       };
   static const whyWrong = [
     'লাইন তো চলছিল, আর্থ নিয়ে ভাবার কিছু নেই',
@@ -240,7 +273,7 @@ abstract final class M4EarthFixMistakes {
   );
   static const wrongFixDry = DoMistake(
     key: '4.6/m4_earth_fix/wrong-fix-dry',
-    textBn: 'জোড় আর তার ঠিক আছে, পিট শুকনো। শুকনো আবহাওয়ায় পিটে জল দিলে মাটির আর্দ্রতা বাড়ে, রেজিস্ট্যান্স কমে।',
+    textBn: 'জোড় আর তার ঠিক আছে, পিট শুকনো। শুকনো আবহাওয়ায় পিটে জল দিলে রেজিস্ট্যান্স কমে — জল দিয়ে ঢাকনা ঠিকমতো লাগান।',
     art: '$_dir/fix_dry.svg',
     lessonPoint: 3,
   );
@@ -296,6 +329,35 @@ abstract final class M4EarthFixMistakes {
   static List<DoMistake> get all => [wrongFixLoose, wrongFixCut, wrongFixDry, orderLoose, orderCut, orderDry, highLeft, noRetest, cutLeft];
 }
 
+/// A deck of three: the right card, one near miss and one other wrong.
+List<ChoiceOption> _nearDeal(List<String> right, List<String> near, List<String> other, math.Random rng) =>
+    dealChoices(right, [near[rng.nextInt(near.length)], other[rng.nextInt(other.length)]], rng);
+
+/// The step tray for [steps] (ids in their right order): no two chips side
+/// by side in their right order, so the tray never reads as the answer.
+List<String> m4EarthFixTrayDeal(List<String> steps, math.Random rng) {
+  bool ok(List<String> o) {
+    for (var i = 0; i + 1 < o.length; i++) {
+      if (steps.indexOf(o[i + 1]) == steps.indexOf(o[i]) + 1) return false;
+    }
+    return true;
+  }
+
+  for (var t = 0; t < 24; t++) {
+    final o = [...steps]..shuffle(rng);
+    if (ok(o)) return o;
+  }
+  return steps.reversed.toList();
+}
+
+/// The fix deck for [f].
+List<ChoiceOption> m4EarthFixFixDeal(M4EarthFixFault f, math.Random rng) =>
+    _nearDeal(M4EarthFixLines.fixRight(f), M4EarthFixLines.fixNear(f), M4EarthFixLines.fixOther(f), rng);
+
+/// The reason deck after a right sign-off on an [f] round.
+List<ChoiceOption> m4EarthFixWhyDeal(M4EarthFixFault f, math.Random rng) =>
+    _nearDeal(M4EarthFixLines.whyRight(f), M4EarthFixLines.whyNear(f), M4EarthFixLines.whyWrong, rng);
+
 @immutable
 class M4EarthFixDeal {
   const M4EarthFixDeal({required this.cases, required this.callAt});
@@ -322,6 +384,7 @@ M4EarthFixDeal m4EarthFixDeal(math.Random rng) {
         },
         before: f == M4EarthFixFault.cut ? null : pick(const [14.8, 18.6, 22.4, 27.9, 31.5, 36.2]),
         after: pick(const [2.3, 2.8, 3.4, 3.9, 4.4]),
+        hot: f == M4EarthFixFault.dry || rng.nextBool(),
       ),
   ];
   return M4EarthFixDeal(cases: cases, callAt: faults.indexOf(M4EarthFixFault.cut));
@@ -533,8 +596,18 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   int _totalDelta = 0;
   int _wake = 0;
   var _signed = false;
-  var _coworkerArmed = false;
   int _fineN = 0;
+
+  /// Gesture hints (how to play, never what): the scene's tap target, the
+  /// two buttons and the step chips (for the sweeps).
+  final _hints = IdleHintController();
+  final _touchKey = GlobalKey();
+  final _measureKey = GlobalKey();
+  final _signKey = GlobalKey();
+  final Map<String, GlobalKey> _stepKeys = {};
+
+  /// The scene's layout, as last drawn (for the hint's spot rects).
+  M4EarthFixGeo? _geo;
 
   /// The fix deck (choose).
   List<ChoiceOption>? _fixOpts;
@@ -564,9 +637,6 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
   bool get _fixDeckUp => _fixOpts != null;
   bool get _stepsUp => _run.fixPicked && !_run.fixed && !_run.shown;
-
-  /// He is due on this round and has not come yet (the fix waits for him).
-  bool get _coworkerPending => _coworkerArmed && !coworkerDone;
 
   @override
   void dispose() {
@@ -605,7 +675,9 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && !_fixDeckUp;
+  /// Hands on the scene: no intro, card, deck, praise window (tableBusy) or
+  /// coworker, and the round not signed off.
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown && !_fixDeckUp;
 
   String get _ask {
     if (!_run.found) return M4EarthFixLines.askFind;
@@ -622,9 +694,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
       _fixPicked = null;
       _fixWrong = null;
       _stepWrong = null;
-      _stepOrder = [..._run.current.steps]..shuffle(widget.rng);
-      // Never dealt already in order.
-      if (_stepOrder.join() == _run.current.steps.join()) _stepOrder = [..._stepOrder.skip(1), _stepOrder.first];
+      _stepOrder = m4EarthFixTrayDeal(_run.current.steps, widget.rng);
       _settling = false;
       _spikes = false;
       _hasReading = false;
@@ -642,16 +712,24 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     for (final s in M4EarthFixSpot.values) {
       if (geo.spotHit(s).contains(p)) hit = s;
     }
-    if (hit == null) return;
+    if (hit == null) {
+      _hints.missTap();
+      return;
+    }
     HapticFeedback.selectionClick();
     final c = _run.current;
     final again = _run.looked.contains(hit);
     if (again && hit == c.at) {
-      // The fault again: the fix deck (once he has had his say).
-      if (!_run.fixPicked && !_coworkerPending) _openFixDeck();
+      // The fault again: the fix deck — on his round he cuts in first.
+      if (_run.fixPicked) return;
+      if (holdForCoworker()) return;
+      _openFixDeck();
       return;
     }
-    if (again) return;
+    if (again) {
+      _hints.missTap();
+      return;
+    }
     _cue('sounds/intro/tick.ogg', volume: 0.5);
     final bad = _run.inspect(hit);
     setState(() => _wake++);
@@ -661,8 +739,8 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     }
     _cue('sounds/quiz_wrong.wav', volume: 0.35);
     if (_run.index == _run.deal.callAt && !coworkerDone) {
-      // His moment: right after the cut is seen.
-      _coworkerArmed = true;
+      // His moment: right after the cut is seen (the fix deck and "কাজ শেষ"
+      // wait for him).
       unawaited(_sayChain([M4EarthFixLines.seen(c.fault)], mood: GuideMood.warn));
       scheduleCoworker();
       return;
@@ -674,7 +752,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   void _openFixDeck() {
     final f = _run.current.fault;
     setState(() {
-      _fixOpts = dealChoices(M4EarthFixLines.fixRight(f), M4EarthFixLines.fixWrong(f), widget.rng);
+      _fixOpts = m4EarthFixFixDeal(f, widget.rng);
       _fixPicked = null;
       _fixWrong = null;
     });
@@ -749,6 +827,9 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   // --- the sign-off ----------------------------------------------------------------
   Future<void> _signOff(Offset origin) async {
     if (!_canPlay || _settling) return;
+    // The decisive control: on his round he cuts in first (a fast play
+    // cannot skip him).
+    if (holdForCoworker()) return;
     await _commit(origin);
   }
 
@@ -770,7 +851,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
       final f = _run.current.fault;
       final idx = _run.index;
       unawaited(askReason(
-        deal: () => dealChoices(M4EarthFixLines.whyRight(f), M4EarthFixLines.whyWrong, widget.rng),
+        deal: () => m4EarthFixWhyDeal(f, widget.rng),
         question: M4EarthFixLines.whyAsk,
         stillValid: () => _run.index == idx && !_ended,
       ));
@@ -822,8 +903,10 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt || _run.shown || _run.fixed) return null;
-    if (_intro || _busy || _card != null || reasonOpen || _settling || _fixDeckUp) return false;
+    // His "ঝুলিয়ে রাখো" fits only while the cut lead is still untouched: once
+    // the fix is chosen (or done, or the round signed off) his moment is gone.
+    if (_ended || _run.index != _run.deal.callAt || _run.shown || _run.fixPicked || _run.fixed) return null;
+    if (_intro || _busy || _card != null || tableBusy || _settling || _fixDeckUp) return false;
     return true;
   }
 
@@ -998,6 +1081,67 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     if (leave == true) _popOnce(false);
   }
 
+  // --- gesture hints -------------------------------------------------------
+  GlobalKey _stepKey(String id) => _stepKeys.putIfAbsent(id, GlobalKey.new);
+
+  /// How to play, never what: while the scene waits, a sweep over the three
+  /// spots and both buttons; while the step tray waits, a sweep over its open
+  /// steps (none with one left — that would point at it); while a card waits,
+  /// a tap on its one way forward. The decks bring their own sweep.
+  HintSpec? _hint() {
+    if (_card != null) {
+      final r = _cardGoRect();
+      return r == null ? null : HintSpec.tap(r.center);
+    }
+    if (_stepsUp) {
+      final done = _run.current.steps.take(_run.stepsDone).toSet();
+      final open = [
+        for (final id in _stepOrder)
+          if (!done.contains(id)) _stepKey(id),
+      ];
+      return open.length < 2 ? null : HintSpec.sweepOver(open);
+    }
+    final rects = <Rect>[];
+    final geo = _geo;
+    final box = _touchKey.currentContext?.findRenderObject();
+    if (geo != null && box is RenderBox && box.attached && box.hasSize) {
+      for (final s in M4EarthFixSpot.values) {
+        final r = geo.spotHit(s);
+        rects.add(Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight)));
+      }
+    }
+    for (final k in [_measureKey, _signKey]) {
+      final r = HintSpec.globalRectOf(k);
+      if (r != null) rects.add(r);
+    }
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
+  /// The card's go button (the shared card has no key: find its label).
+  Rect? _cardGoRect() {
+    final label = switch (_cardTone) {
+      MistakeTone.slip => MistakeLines.gotIt,
+      MistakeTone.nearMiss => MistakeLines.tryAgain,
+      MistakeTone.deadly => MistakeLines.toLadder,
+    };
+    Rect? out;
+    void visit(Element e, bool inCard) {
+      if (out != null) return;
+      final w = e.widget;
+      final here = inCard || w is MistakeCard;
+      if (here && w is Text && w.data == label) {
+        final b = e.findRenderObject();
+        if (b is RenderBox && b.attached && b.hasSize) out = b.localToGlobal(Offset.zero) & b.size;
+        return;
+      }
+      e.visitChildren((c) => visit(c, here));
+    }
+
+    if (!mounted) return null;
+    (context as Element).visitChildren((c) => visit(c, false));
+    return out;
+  }
+
   // --- the scene ---------------------------------------------------------------
   LinemanMode get _mode {
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
@@ -1007,7 +1151,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M4EarthFixGeo.forScene(m.height, m.inset);
+    final geo = _geo = M4EarthFixGeo.forScene(m.height, m.inset);
     final c = _run.current;
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
@@ -1030,7 +1174,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
                       fixDone: _run.fixPicked ? _run.stepsDone : 0,
                       fixSteps: c.steps.length,
                       spikes: _spikes,
-                      dryDay: c.fault == M4EarthFixFault.dry,
+                      dryDay: c.hot,
                     ),
                   ),
                 ),
@@ -1057,7 +1201,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: M4EarthFixLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo)),
+          child: GestureDetector(key: _touchKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo)),
         ),
       ),
       if (_freeze)
@@ -1095,6 +1239,8 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     final free = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null;
     final handsOn = free && !_stepsUp;
     final stepsOn = free && _stepsUp;
+    final cardWaits = _card != null && !_freeze && !struckOut;
+    final sceneWaits = (handsOn || stepsOn) && !_settling && !tableBusy;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1122,6 +1268,12 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: sceneWaits || cardWaits,
+            hintKey: _card != null
+                ? 'card-${_card!.key}-${_run.index}'
+                : 'play-${_run.index}-${_run.found}-${_run.fixPicked}-${_run.stepsDone}-${_run.fixed}-$_hasReading',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (playing && !_run.done && !deckUp && !stepsOn && (_hasReading || _settling))
@@ -1140,10 +1292,18 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
                   child: Row(
                     children: [
                       Expanded(
-                        child: DoBigButton(label: M4EarthFixLines.measure, filled: false, onDark: true, onTapUp: (_) => _measure()),
+                        child: KeyedSubtree(
+                          key: _measureKey,
+                          child: DoBigButton(label: M4EarthFixLines.measure, filled: false, onDark: true, onTapUp: (_) => _measure()),
+                        ),
                       ),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: M4EarthFixLines.signOff, filled: true, onTapUp: (d) => unawaited(_signOff(d.globalPosition)))),
+                      Expanded(
+                        child: KeyedSubtree(
+                          key: _signKey,
+                          child: DoBigButton(label: M4EarthFixLines.signOff, filled: true, onTapUp: (d) => unawaited(_signOff(d.globalPosition))),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1161,6 +1321,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
                       done: _run.current.steps.take(_run.stepsDone).toSet(),
                       wrong: _stepWrong,
                       quiet: quiet,
+                      keyOf: _stepKey,
                       onTap: (id, o) => unawaited(_onStep(id, o)),
                     ),
                   ),
@@ -1349,11 +1510,14 @@ class _TesterCard extends StatelessWidget {
 /// The fix's steps, dealt out of order: tap them in the right order. Done
 /// ones turn green with their number; a wrong one flashes red.
 class _StepTray extends StatelessWidget {
-  const _StepTray({required this.order, required this.done, required this.wrong, required this.quiet, required this.onTap});
+  const _StepTray({required this.order, required this.done, required this.wrong, required this.quiet, required this.keyOf, required this.onTap});
   final List<String> order;
   final Set<String> done;
   final String? wrong;
   final bool quiet;
+
+  /// A stable key per step (the gesture hint's sweep finds the chips by it).
+  final GlobalKey Function(String id) keyOf;
   final void Function(String id, Offset origin) onTap;
 
   @override
@@ -1387,6 +1551,7 @@ class _StepTray extends StatelessWidget {
                     key: ValueKey('step-$id'),
                     width: chipW,
                     child: _StepChip(
+                      key: keyOf(id),
                       label: M4EarthFixLines.step(id),
                       number: done.contains(id) ? done.toList().indexOf(id) + 1 : null,
                       wrong: wrong == id,
@@ -1403,7 +1568,7 @@ class _StepTray extends StatelessWidget {
 }
 
 class _StepChip extends StatelessWidget {
-  const _StepChip({required this.label, required this.number, required this.wrong, required this.onTapUp});
+  const _StepChip({super.key, required this.label, required this.number, required this.wrong, required this.onTapUp});
   final String label;
   final int? number;
   final bool wrong;

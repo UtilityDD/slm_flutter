@@ -2,8 +2,9 @@
     xmlns:tools="http://schemas.android.com/tools">
     <!-- Supabase, quiz/voice downloads, Google sign-in. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- No microphone: voice search was removed for the Play release (2026-11-13). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove"/>
     <!-- speech_to_text (identify screen voice answers). -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <!-- androidx.biometric arrives with androidx.credentials (google_sign_in 7). The app never
          shows a biometric prompt (Google ID sign-in only), so drop its permissions. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" tools:node="remove"/>
@@ -63,9 +64,6 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
-        </intent>
-        <intent>
-            <action android:name="android.speech.RecognitionService" />
         </intent>
         <!-- flutter_tts: required on Android 11+ to see the installed TTS engine. -->
         <intent>

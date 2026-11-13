@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter;
@@ -41,6 +42,11 @@ import 'spoken_once.dart';
 // Deadly (owner-approved list): someone left inside the distance. Slips: a
 // band short of the lesson's distance (no one left inside), or far past it /
 // stopping someone who was safe. Three slips fail the level.
+//
+// No careless coworker on this step (MODULE1_LADDER.md: he comes on step 6).
+// Gesture hints (how, never what): before the band moves, a short downward
+// nudge on its handle; once it moved, a tap on the check button (the one way
+// to set it). The reason deck brings its own sweep.
 //
 // Voice: device TTS only. Art: assets/game/art/distance/ (hand-made SVG, no
 // text inside); the line, people and machines are drawn in code to scale.
@@ -139,6 +145,18 @@ abstract final class DistanceLines {
   static const whyKv33 = ['33 কেভিতে অন্তত 3.0 মিটার দূরে থাকতে হয়', 'ভোল্টেজ যত বেশি, দূরত্বও তত বেশি লাগে'];
   static const whyTool = ['লম্বা টুলের ডগাও হাত, তাকেও বাইরে রাখি'];
   static const whyRain = ['বৃষ্টিতে ভেজা বাতাসে দূরত্ব বাড়াতে হয়', 'বৃষ্টিতে 11 কেভিতে 8 নয়, 10–12 ফুট দূরে'];
+  /// Wrong reasons in the right ones' own words (the dealt right reason's
+  /// voltage, tool or rain also shows on a wrong card, so no word gives the
+  /// answer away).
+  /// Each wrong list pairs by index with its right list (same unit, same
+  /// phrasing), so the dealt twin shares the right card's words.
+  static const whyLtWrong = ['এলটিতে অন্তত 0.3 মিটার দূরে থাকলেই চলে', 'কম ভোল্টেজ, তাই এলটিতে 1 ফুটই যথেষ্ট'];
+  static const whyKv11Wrong = ['11 কেভিতে অন্তত 1 মিটার দূরে থাকলেই চলে', 'ভোল্টেজ যা-ই হোক, 11 কেভিতে 4 ফুটই যথেষ্ট'];
+  static const whyKv33Wrong = ['33 কেভিতে অন্তত 1.2 মিটার দূরে থাকলেই চলে', 'ভোল্টেজ বেশি হলেও দূরত্ব একই রাখা যায়'];
+  static const whyToolWrong = ['লম্বা টুলের ডগা রেখার ভেতরে গেলেও চলে', 'শুধু শরীর মাপি, টুলের ডগা তো হাত নয়'];
+  static const whyRainWrong = ['বৃষ্টিতে ভেজা বাতাসে দূরত্ব কমানো যায়', 'বৃষ্টিতেও 11 কেভিতে 8 ফুট দূরেই চলে'];
+
+  /// General wrong reasons (any street).
   static const whyWrong = [
     'না ছুঁলে তারের কাছে গেলেও কিছু হয় না',
     'রবারের জুতো থাকলে তারের কাছে যাওয়া যায়',
@@ -161,6 +179,50 @@ abstract final class DistanceLines {
               }),
         if (r.figures.any((f) => f.tool && r.inside(f))) ...whyTool,
       ];
+
+  /// The wrong cards that mirror the right card [right] (same topic).
+  static List<String> mirrorOf(String right) {
+    if (whyTool.contains(right)) return whyToolWrong;
+    if (whyRain.contains(right)) return whyRainWrong;
+    if (whyKv33.contains(right)) return whyKv33Wrong;
+    if (whyKv11.contains(right)) return whyKv11Wrong;
+    return whyLtWrong;
+  }
+
+  /// Every wrong reason this street can deal: the general ones and the
+  /// mirrors of its right ones.
+  static List<String> whyWrongFor(StreetRound r) => [
+        ...whyWrong,
+        for (final m in {for (final w in whyRight(r)) mirrorOf(w)}) ...m,
+      ];
+
+  static const _pairs = [
+    (whyTool, whyToolWrong),
+    (whyRain, whyRainWrong),
+    (whyKv33, whyKv33Wrong),
+    (whyKv11, whyKv11Wrong),
+    (whyLt, whyLtWrong),
+  ];
+
+  /// The wrong card paired with the right card [right]: same topic, same
+  /// unit and phrasing (by index).
+  static String twinOf(String right) {
+    for (final (rights, wrongs) in _pairs) {
+      final i = rights.indexOf(right);
+      if (i >= 0) return wrongs[i % wrongs.length];
+    }
+    return whyLtWrong.first;
+  }
+
+  /// One right reason, its paired wrong twin, one other wrong; shuffled.
+  static List<ChoiceOption> dealWhy(StreetRound r, math.Random rng) {
+    final rights = whyRight(r);
+    final right = rights[rng.nextInt(rights.length)];
+    final w1 = twinOf(right);
+    final rest = [for (final w in whyWrongFor(r)) if (w != w1) w];
+    final w2 = rest[rng.nextInt(rest.length)];
+    return [ChoiceOption(right, true), ChoiceOption(w1, false), ChoiceOption(w2, false)]..shuffle(rng);
+  }
 }
 
 abstract final class DistanceMistakes {
@@ -221,6 +283,9 @@ abstract final class StreetGeo {
   static const lineM = (groundY - lineY) / ppm;
   static const slots = [118.0, 205.0, 292.0];
   static double y(double gapM) => lineY + gapM * ppm;
+
+  /// The band handle's height (design px); its centre sits on the band edge.
+  static const handleH = 30.0;
 
   /// Where the street picture sits in a full scene [h] high (design px): low,
   /// so a tall phone gets more sky; the controls stay under the road.
@@ -315,6 +380,7 @@ class DistanceRun {
 
   /// Checks the marks on the current street (does not move on).
   StreetCheck check(Set<String> marked) {
+    if (ended) return const StreetCheck(caught: [], falseStops: []);
     final r = current;
     final caughtNow = <StreetFigure>[];
     final wrong = <StreetFigure>[];
@@ -349,11 +415,18 @@ class DistanceRun {
   static const bandMin = 0.3;
   static const bandMax = 6.0;
 
+  /// The gesture hint's drag nudge from [bandStart] (metres): it ends at
+  /// 0.9 m, short of the nearest street's 1.2 m, so it never shows a band
+  /// that passes.
+  static const nudgeM = 0.4;
+
   /// Checks the player's band on the current street (does not move on):
   /// everyone whose gap is under [bandM] is stopped. Someone inside left out
   /// is deadly; otherwise a band short of the lesson's distance, past the
   /// accepted edge or stopping a safe person is one slip.
   StreetCheck checkBand(double bandM) {
+    // Over (passed, or someone left inside): nothing more counts.
+    if (ended) return const StreetCheck(caught: [], falseStops: []);
     const eps = 1e-6;
     final r = current;
     final caughtNow = <StreetFigure>[];
@@ -483,6 +556,17 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// Gesture hints: the band's handle (drag nudge) and the check button (tap).
+  final _hints = IdleHintController();
+  final _handleKey = GlobalKey();
+  final _checkKey = GlobalKey();
+
+  /// The player has moved the band on this street.
+  var _moved = false;
+
+  /// Bands set on this street (a new waiting state after each slip).
+  int _tries = 0;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -519,7 +603,26 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
     await _sayChain([DistanceLines.ask(_run.current)]);
   }
 
-  bool get _canDrag => !_intro && !_busy && !_ended && _shown == null && _card == null && !reasonOpen;
+  bool get _canDrag => !_intro && !_busy && !_ended && !_freeze && _shown == null && _card == null && !tableBusy;
+
+  /// The gesture hint for the street: how to touch, never where to stop.
+  /// Before the band moves (and again after a slip, when the same band would
+  /// slip again) a short drag nudge on the handle; once it moved, the check
+  /// button.
+  HintSpec? _hint() {
+    if (_moved) return HintSpec.tapOn(_checkKey);
+    final r = HintSpec.globalRectOf(_handleKey);
+    if (r == null) return null;
+    // The nudge's length in metres, scaled like the street (FittedBox), so
+    // the hand stops well short of every street's distance.
+    final s = r.height / StreetGeo.handleH;
+    return HintSpec.drag(r.center, toward: const Offset(0, 1), travel: DistanceRun.nudgeM * StreetGeo.ppm * s);
+  }
+
+  /// A tap on the sky or the road around the street (nothing to touch there).
+  void _missTap() {
+    if (_canDrag) _hints.missTap();
+  }
 
   /// The finger sets the band's lower edge (0.1 m steps); only its distance
   /// shows — no target, no hint.
@@ -529,7 +632,10 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
     final snapped = (m * 10).round() / 10;
     if (snapped == _bandM) return;
     if ((snapped * 2).floor() != (_bandM * 2).floor()) HapticFeedback.selectionClick();
-    setState(() => _bandM = snapped);
+    setState(() {
+      _bandM = snapped;
+      _moved = true;
+    });
   }
 
   Future<void> _check(Offset origin) async {
@@ -562,7 +668,7 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
     _busy = false;
     final round = _run.round;
     unawaited(askReason(
-      deal: () => dealChoices(DistanceLines.whyRight(_run.current), DistanceLines.whyWrong, widget.rng),
+      deal: () => DistanceLines.dealWhy(_run.current, widget.rng),
       question: DistanceLines.whyAsk,
       stillValid: () => _run.round == round && !_ended,
     ));
@@ -579,6 +685,8 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
       _shown = null;
       _bandM = DistanceRun.bandStart;
       _streetSlipped = false;
+      _moved = false;
+      _tries = 0;
     });
     unawaited(_sayChain([DistanceLines.ask(_run.current)]));
   }
@@ -663,9 +771,13 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
       case MistakeTone.slip:
         _hush();
         // The real band goes away again; the player sets the band anew.
+        // The same band would slip again, so the hand shows the drag nudge
+        // again (never a tap on the check button).
         setState(() {
           _card = null;
           _shown = null;
+          _moved = false;
+          _tries++;
         });
         unawaited(_sayChain([DistanceLines.again]));
       case MistakeTone.nearMiss:
@@ -764,6 +876,10 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
               unawaited(MascotSpeechLibrary.stop());
               setState(() => _muted = !_muted);
             },
+            hint: _hint,
+            hintWaiting: playing && _canDrag,
+            hintKey: ('street', _run.round, _tries, _moved),
+            hintController: _hints,
             progress: DoProgress(
               labels: DistanceLines.rounds,
               done: {for (var i = 0; i < math.min(_run.round, 3); i++) i},
@@ -777,7 +893,11 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
                   key: const ValueKey('sky'),
                   child: ColorFiltered(
                     colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
-                    child: StreetBackdrop(streetTop: top),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTapDown: (_) => _missTap(),
+                      child: StreetBackdrop(streetTop: top),
+                    ),
                   ),
                 ),
                 Positioned(
@@ -794,6 +914,7 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
                       bandM: _bandM,
                       shown: shown,
                       quiet: quiet,
+                      handleKey: _handleKey,
                       onDrag: _dragBand,
                     ),
                   ),
@@ -818,7 +939,7 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
                   left: 16,
                   right: 136,
                   bottom: pad.bottom + 22,
-                  child: DoBigButton(label: DistanceLines.check, filled: true, onTapUp: (d) => unawaited(_check(d.globalPosition))),
+                  child: DoBigButton(key: _checkKey, label: DistanceLines.check, filled: true, onTapUp: (d) => unawaited(_check(d.globalPosition))),
                 ),
               if (reasonOpen)
                 Positioned(
@@ -982,8 +1103,9 @@ class _CloudsPainter extends CustomPainter {
 /// rain, the player's band (drag its edge) and, after the check, the real
 /// লক্ষ্মণ রেখা.
 class _StreetScene extends StatelessWidget {
-  const _StreetScene({super.key, required this.round, required this.bandM, required this.shown, required this.quiet, required this.onDrag});
+  const _StreetScene({super.key, required this.round, required this.bandM, required this.shown, required this.quiet, required this.handleKey, required this.onDrag});
   final StreetRound round;
+  final GlobalKey handleKey;
   final double bandM;
   final StreetCheck? shown;
   final bool quiet;
@@ -1043,9 +1165,9 @@ class _StreetScene extends StatelessWidget {
         // The handle on the band's edge: its distance only.
         Positioned(
           left: 44,
-          top: StreetGeo.lineY + b - 15,
-          height: 30,
-          child: IgnorePointer(child: _BandHandle(text: DistanceLines.readout(bandM), color: bandCol)),
+          top: StreetGeo.lineY + b - StreetGeo.handleH / 2,
+          height: StreetGeo.handleH,
+          child: IgnorePointer(child: _BandHandle(key: handleKey, text: DistanceLines.readout(bandM), color: bandCol)),
         ),
         if (reveal)
           Positioned(
@@ -1126,7 +1248,7 @@ class _StreetScene extends StatelessWidget {
 
 /// The band's edge handle: grip lines and the distance (মি · ফুট).
 class _BandHandle extends StatelessWidget {
-  const _BandHandle({required this.text, required this.color});
+  const _BandHandle({super.key, required this.text, required this.color});
   final String text;
   final Color color;
 

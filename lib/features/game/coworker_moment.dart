@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +15,7 @@ import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'choice_deck.dart';
 import 'myth_rival_puppet.dart';
+import 'reason_table.dart';
 
 // The pressure moment for any Do level (GAME_LEVEL_PLAYBOOK.md §1.8) — two beats:
 // 1) Careless coworker peeps in with his caption + voice only (no guide ask, no deck).
@@ -20,6 +23,11 @@ import 'myth_rival_puppet.dart';
 //    the guide asks and the 3-card deck rises. Rival voice drives RivalTalk only —
 //    the app mascot stays still with no bubble.
 // Going on working while he is still talking (beat 1) refuses him too.
+// Beat 1's caption is held for a reading time when muted (and his lines with
+// no recorded clip are silent with the caption held — never the device voice).
+// He never cuts into the praise window of a right move ([ReasonTable.tableBusy]).
+// A level that must not let the player finish his item before he comes calls
+// [CoworkerMoment.holdForCoworker] at the top of its decisive control.
 // Learn myth cutscenes are separate and unchanged.
 
 /// What the coworker says and the choice that follows (option libraries:
@@ -53,6 +61,19 @@ class CoworkerScript {
   final String tag;
 
   List<String> get recordedLines => [line, exitLine];
+}
+
+/// Kit timing switches.
+abstract final class CoworkerTiming {
+  /// Widget tests run the muted beat 1 without the reading hold (flow tests
+  /// were written for the instant collapse); a test that checks the hold
+  /// sets this (and resets it in tearDown).
+  static bool debugReadHoldInTests = false;
+
+  static final bool _inWidgetTest = !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
+
+  /// Muted beat 1 holds his caption for [MascotSpeechLibrary.readHold].
+  static bool get mutedReadHold => !_inWidgetTest || debugReadHoldInTests;
 }
 
 /// Mix into a Do level's state; implement the hooks.
@@ -96,6 +117,21 @@ mixin CoworkerMoment<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   String? _choiceWrong;
   String? _choicePicked;
   int _askN = 0;
+  /// [scheduleCoworker] was called this play and he has not come yet.
+  var _coworkerArmed = false;
+  /// A decisive control waits for him ([holdForCoworker]).
+  var _coworkerHeld = false;
+  Timer? _beatTimer;
+  Completer<void>? _beatHold;
+
+  /// He is scheduled for this play and has not come yet: a level's decisive
+  /// control should wait for him (see [holdForCoworker]).
+  bool get coworkerDue => _coworkerArmed && !coworkerDone && !coworkerOpen;
+
+  /// A decisive control is waiting for him (he is coming in now). Levels may
+  /// return true from [coworkerCanCome] while this is set; the kit lets him in
+  /// on a "not yet" anyway.
+  bool get coworkerHeld => _coworkerHeld;
 
   /// The choice deck is up (he has spoken; the guide asked).
   bool get coworkerChoiceUp => coworkerOpen && _choiceReady;
@@ -112,15 +148,45 @@ mixin CoworkerMoment<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// He will turn up a moment from now (1.2–2.4 s), once per play.
   void scheduleCoworker() {
     if (coworkerDone) return;
+    _coworkerArmed = true;
     _coworkerTimer?.cancel();
     _coworkerTimer = Timer(Duration(milliseconds: 1200 + coworkerRng.nextInt(1200)), _tryCoworker);
+  }
+
+  /// Call at the top of the level's decisive control (the step that would
+  /// finish the item he is dealt on): `if (holdForCoworker()) return;`.
+  /// While he is [coworkerDue] the control does nothing, the guide hushes and
+  /// he cuts in now; once he has gone (or his moment passed: [coworkerCanCome]
+  /// null) it returns false and the control works as usual.
+  bool holdForCoworker() {
+    if (!coworkerDue) return false;
+    if (coworkerCanCome() == null) {
+      _coworkerArmed = false;
+      _coworkerTimer?.cancel();
+      return false;
+    }
+    coworkerHush();
+    HapticFeedback.selectionClick();
+    _coworkerHeld = true;
+    _coworkerTimer?.cancel();
+    _tryCoworker();
+    return true;
+  }
+
+  bool get _tableBusy {
+    final Object self = this;
+    return self is ReasonTable && self.tableBusy;
   }
 
   void _tryCoworker() {
     if (!mounted || coworkerDone || coworkerOpen) return;
     final can = coworkerCanCome();
-    if (can == null) return;
-    if (!can) {
+    if (can == null) {
+      _coworkerArmed = false;
+      _coworkerHeld = false;
+      return;
+    }
+    if (!_coworkerHeld && (!can || _tableBusy)) {
       _coworkerTimer = Timer(const Duration(milliseconds: 900), _tryCoworker);
       return;
     }
@@ -140,9 +206,16 @@ mixin CoworkerMoment<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       _coworkerLeft = coworkerRng.nextBool();
     });
     unawaited(() async {
-      // Beat 1 — only he speaks; caption stays full; no deck yet.
+      // Beat 1 — only he speaks; caption stays full; no deck yet. Muted, the
+      // voice returns at once: hold the caption for a reading time.
+      final clock = Stopwatch()..start();
       await MascotSpeechLibrary.speak(s.line, muted: coworkerMuted, rival: true);
       if (!mounted || !coworkerOpen) return;
+      if (coworkerMuted && CoworkerTiming.mutedReadHold) {
+        final rest = MascotSpeechLibrary.readHold(s.line) - clock.elapsed;
+        if (rest > Duration.zero) await _holdBeat(rest);
+        if (!mounted || !coworkerOpen) return;
+      }
       // Beat 2 — collapse his words to a chip, then guide + deck.
       setState(() {
         _coworkerCaptionFull = false;
@@ -154,11 +227,29 @@ mixin CoworkerMoment<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     }());
   }
 
-  /// A card of the choice: it shakes red / pops green first.
+  Future<void> _holdBeat(Duration d) {
+    _endBeatHold();
+    final c = _beatHold = Completer<void>();
+    _beatTimer = Timer(d, _endBeatHold);
+    return c.future;
+  }
+
+  void _endBeatHold() {
+    _beatTimer?.cancel();
+    _beatTimer = null;
+    final c = _beatHold;
+    _beatHold = null;
+    if (c != null && !c.isCompleted) c.complete();
+  }
+
+  /// A card of the choice (confirmed with ✓ on its preview): it shakes red /
+  /// pops green first — long enough to see the whole shake — then the deck
+  /// closes. A listen goes on to the level's mistake card, which waits for the
+  /// player's button; a refuse has nothing to read and moves on.
   Future<void> _onChoice(ChoiceOption o, Offset origin) async {
     if (!coworkerChoiceUp || _choiceWrong != null || _choicePicked != null) return;
     setState(() => o.correct ? _choicePicked = o.textBn : _choiceWrong = o.textBn);
-    await Future<void>.delayed(const Duration(milliseconds: 420));
+    await Future<void>.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
     await answerCoworker(o.correct, origin);
   }
@@ -167,6 +258,9 @@ mixin CoworkerMoment<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   Future<void> answerCoworker(bool held, Offset origin, {bool direct = false}) async {
     if (!coworkerOpen) return;
     coworkerHush();
+    _endBeatHold();
+    _coworkerArmed = false;
+    _coworkerHeld = false;
     setState(() {
       coworkerOpen = false;
       coworkerDone = true;
@@ -208,7 +302,10 @@ mixin CoworkerMoment<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       : null;
 
   /// Call from the level's dispose.
-  void disposeCoworker() => _coworkerTimer?.cancel();
+  void disposeCoworker() {
+    _coworkerTimer?.cancel();
+    _endBeatHold();
+  }
 }
 
 /// How the coworker leaves: beaten (the player acted) or smirking (obeyed).
@@ -244,17 +341,28 @@ class CoworkerPeek extends StatefulWidget {
 
 class _CoworkerPeekState extends State<CoworkerPeek> with SingleTickerProviderStateMixin {
   late final AnimationController _bob = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+  Timer? _settle;
+
+  /// He bobs while he barges in, then settles on a still frame (an idle
+  /// screen draws zero frames while the player thinks over the deck).
+  static const _bobFor = Duration(milliseconds: 4500);
 
   @override
   void initState() {
     super.initState();
-    if (!widget.quiet) unawaited(_bob.repeat());
+    if (!widget.quiet) {
+      unawaited(_bob.repeat());
+      _settle = Timer(_bobFor, () {
+        if (mounted && widget.exit == null && _bob.isAnimating) unawaited(_bob.forward());
+      });
+    }
   }
 
   @override
   void didUpdateWidget(CoworkerPeek old) {
     super.didUpdateWidget(old);
     if (widget.exit != null && old.exit == null) {
+      _settle?.cancel();
       _bob.stop();
       if (!widget.quiet) unawaited(_bob.forward(from: 0));
     }
@@ -262,6 +370,7 @@ class _CoworkerPeekState extends State<CoworkerPeek> with SingleTickerProviderSt
 
   @override
   void dispose() {
+    _settle?.cancel();
     _bob.dispose();
     super.dispose();
   }

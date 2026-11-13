@@ -5,7 +5,9 @@
 // too; then tester, earth, work — work on a live section is deadly), the deal,
 // the reason libraries, and the level in the shell: idle perf, the guide first,
 // a full clean play with the coworker refused, a slip card that keeps the
-// docket, three slips, the deadly freeze (isolator on load; listening to him).
+// docket, three slips, the deadly freeze (isolator on load), listening to him
+// (a slip), he comes even on a fast play (the tie waits for him), no work
+// with a point on the map still closed, and the gesture hint (a sweep).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -19,6 +21,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -34,6 +37,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.10/do/0',
@@ -86,10 +90,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -107,7 +113,7 @@ Future<void> _tool(WidgetTester t, String label) async {
   await _pump(t, 300);
 }
 
-Future<ProviderContainer> _open(WidgetTester t, int seed) async {
+Future<ProviderContainer> _open(WidgetTester t, int seed, {int settleMs = 1200}) async {
   t.view.physicalSize = const Size(784, 1700);
   t.view.devicePixelRatio = 2.0;
   final c = ProviderContainer();
@@ -124,7 +130,7 @@ Future<ProviderContainer> _open(WidgetTester t, int seed) async {
   )));
   await _pump(t, 1000);
   await waitIntro(t);
-  await _pump(t, 1200);
+  await _pump(t, settleMs);
   return c;
 }
 
@@ -290,6 +296,70 @@ void main() {
       expect(r.opened, isEmpty);
     });
 
+    test('ring closed today: the other breaker alone kills it, but work waits for the tie (audit)', () {
+      final r = run1(_K.ringClosed)
+        ..tap(_P.cbA)
+        ..tap(_P.abA)
+        ..tap(_P.cbB);
+      expect(r.live, isFalse);
+      expect(r.isolated, isFalse, reason: 'the tie is still closed');
+      expect(r.test(), (false, null));
+      expect(r.earth(), isNull);
+      expect(r.start(), M3SldIsolateMistakes.notIsolated);
+      expect(r.workOn, isFalse);
+      expect(r.slips, 1);
+      expect(r.tap(_P.tie), isNull);
+      expect(r.start(), isNull);
+      expect(r.workOn, isTrue);
+    });
+
+    test('radial: the breaker alone is not isolation — the isolator too', () {
+      final r = run1(_K.radial)..tap(_P.cbA);
+      expect(r.live, isFalse);
+      expect(r.test(), (false, null));
+      expect(r.earth(), isNull);
+      expect(r.start(), M3SldIsolateMistakes.notIsolated);
+      expect(r.tap(_P.abA), isNull);
+      expect(r.start(), isNull);
+      expect(r.slips, 1);
+    });
+
+    test('open ring: the other breaker is not needed — no slip, but no thorough bonus', () {
+      final r = run1(_K.ringNo)
+        ..tap(_P.cbA)
+        ..tap(_P.abA)
+        ..tap(_P.tie);
+      expect(r.thorough, isTrue);
+      expect(r.tap(_P.cbB), isNull);
+      expect(r.slips, 0);
+      expect(r.thorough, isFalse);
+      expect(r.overCut, isTrue);
+      r.next();
+      expect(r.needless, isFalse);
+      expect(r.overCut, isTrue, reason: 'the play keeps it: no quick star');
+      // On the ring closed today the other breaker is needed: no cost.
+      final b = run1(_K.ringClosed)..tap(_P.cbB);
+      expect(b.needless || b.overCut, isFalse);
+    });
+
+    test('no word gives the right card away: the key words sit on wrong cards too', () {
+      final cw = M3SldIsolateLines.coworker;
+      for (final w in ['রিং', 'উল্টো', 'ম্যাপ', 'ব্যাকফিড', 'বিচ্ছিন্ন']) {
+        expect(cw.wrong.any((x) => x.contains(w)), isTrue, reason: 'coworker wrong: $w');
+      }
+      for (final w in ['রিং', 'উল্টো', 'ব্যাকফিড', 'ম্যাপ', 'আইসোলেটর', 'ব্রেকার', 'টেস্টার', 'NO পয়েন্ট']) {
+        expect(M3SldIsolateLines.myths.any((x) => x.contains(w)), isTrue, reason: 'myth: $w');
+      }
+    });
+
+    test('listening to him is a slip (playbook row 8), not a death', () {
+      final r = run1(_K.ringClosed);
+      expect(r.listened(), M3SldIsolateMistakes.listened);
+      expect(M3SldIsolateMistakes.listened.deadly, isFalse);
+      expect(r.slips, 1);
+      expect(r.ended, isFalse);
+    });
+
     test('English digits only; every mistake has its picture; deadly ones; keys unique', () {
       final all = <String>[
         M3SldIsolateLines.intro,
@@ -378,7 +448,7 @@ void main() {
         }
         debugPrint('PERF m3_sld_isolate ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -493,7 +563,7 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('listening to him = deadly: freeze, then the card', (t) async {
+    testWidgets('listening to him = a slip: its card, no freeze; the docket goes on', (t) async {
       final deal = m3SldIsolateDeal(math.Random(11));
       final c = await _open(t, 11);
       for (var i = 0; i < deal.callAt; i++) {
@@ -502,16 +572,22 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M3SldIsolateLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await tapReasonProceed(t);
       await _pump(t, 800);
-      expect(find.byType(FreezeFrame), findsOneWidget);
-      await _pump(t, 3500);
+      expect(find.byType(FreezeFrame), findsNothing);
       expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
       final s = c.read(gameSaveProvider);
-      expect(s.mistakes.single.key, M3SldIsolateMistakes.backfeedWork.key);
-      expect(s.mistakes.single.deadly, isTrue);
+      expect(s.mistakes.single.key, M3SldIsolateMistakes.listened.key);
+      expect(s.mistakes.single.deadly, isFalse);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      expect(_label(M3SldIsolateLines.tester), findsOneWidget, reason: 'the same docket goes on');
+      expect(find.byType(CoworkerPeek), findsNothing);
       await _close(t, c);
     });
 
@@ -532,7 +608,130 @@ void main() {
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
       await _close(t, c);
     });
+
+    testWidgets('a fast play still meets him: the tie waits for the coworker', (t) async {
+      final seed = _coworkerFirstSeed();
+      final d = m3SldIsolateDeal(math.Random(seed)).dockets[0];
+      final c = await _open(t, seed, settleMs: 0);
+      // Faster than his 1.2 s entrance: the other breaker, then the tie.
+      await t.tapAt(_geo(d).point(_P.cbB) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not come yet');
+      await t.tapAt(_geo(d).point(_P.tie) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the tie held for him');
+      await _pickRight(t, M3SldIsolateLines.coworker.right);
+      await _pump(t, 2600);
+      expect(find.text(M3SldIsolateLines.caughtCall), findsNothing, reason: 'no result yet');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      // After him the tie works as usual.
+      await _tapPoint(t, d, _P.cbA);
+      await _tapPoint(t, d, _P.abA);
+      await _tapPoint(t, d, _P.tie);
+      await _tool(t, M3SldIsolateLines.tester);
+      expect(find.text(M3SldIsolateLines.testerDead), findsOneWidget);
+      await _tool(t, M3SldIsolateLines.earth);
+      await _tool(t, M3SldIsolateLines.work);
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('ring closed today: work with the tie still closed is a slip card (audit fix)', (t) async {
+      final deal = m3SldIsolateDeal(math.Random(11));
+      final c = await _open(t, 11);
+      for (var i = 0; i < deal.callAt; i++) {
+        await _playRight(t, deal, i);
+      }
+      final d = deal.dockets[deal.callAt];
+      await _refuse(t);
+      await _tapPoint(t, d, _P.cbA);
+      await _tapPoint(t, d, _P.abA);
+      await _tapPoint(t, d, _P.cbB);
+      await _tool(t, M3SldIsolateLines.tester);
+      await _tool(t, M3SldIsolateLines.earth);
+      await _tool(t, M3SldIsolateLines.work);
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(M3SldIsolateMistakes.notIsolated.textBn), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'the job did not finish');
+      expect(c.read(gameSaveProvider).mistakes.single.key, M3SldIsolateMistakes.notIsolated.key);
+      await _close(t, c);
+    });
+
+    testWidgets('the guide stays neutral: after CB-1 + AB-1 a ring closed today sounds like a radial', (t) async {
+      Future<String> guideLine(ProviderContainer c) async {
+        final guide = find.byKey(const ValueKey('hud-guide'));
+        await t.tapAt(t.getBottomRight(guide) - const Offset(50, 50));
+        await _pump(t, 400);
+        return c.read(guideDirectorProvider).line;
+      }
+
+      // A radial: CB-1 and AB-1 isolate it, but the guide must not say so.
+      final rSeed = _radialFirstSeed();
+      final r = m3SldIsolateDeal(math.Random(rSeed)).dockets[0];
+      var c = await _open(t, rSeed);
+      await _tapPoint(t, r, _P.cbA);
+      await _tapPoint(t, r, _P.abA);
+      await _pump(t, 2500);
+      final radialLine = await guideLine(c);
+      expect(radialLine, contains(M3SldIsolateLines.askIsolate), reason: radialLine);
+      expect(radialLine, isNot(contains(M3SldIsolateLines.askNext)));
+      // Only the dead tester (seen by the player) moves the ask on.
+      await _tool(t, M3SldIsolateLines.tester);
+      await _pump(t, 2500);
+      expect(await guideLine(c), contains(M3SldIsolateLines.askNext));
+      await _close(t, c);
+
+      // The ring closed today: same two points, same ask.
+      final kSeed = _coworkerFirstSeed();
+      final k = m3SldIsolateDeal(math.Random(kSeed)).dockets[0];
+      expect(k.kind, _K.ringClosed);
+      c = await _open(t, kSeed);
+      await _refuse(t);
+      await _tapPoint(t, k, _P.cbA);
+      await _tapPoint(t, k, _P.abA);
+      await _pump(t, 2500);
+      final ringLine = await guideLine(c);
+      expect(ringLine, contains(M3SldIsolateLines.askIsolate), reason: ringLine);
+      expect(ringLine, isNot(contains(M3SldIsolateLines.askNext)));
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: after idle a sweep passes over every switch and tool, pressing none', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = _quietSeed();
+      final d = m3SldIsolateDeal(math.Random(seed)).dockets[0];
+      final c = await _open(t, seed);
+      final st = t.state<IdleHintState>(find.byType(IdleHint).first);
+      await _pump(t, 9500);
+      expect(st.showing, isTrue);
+      final onMap = M3SldIsolatePoint.values.where((p) => d.kind != _K.radial || (p != _P.cbB && p != _P.tie)).length;
+      expect(st.debugOptions, hasLength(onMap + 3));
+      expect(st.debugFrame?.press ?? 0, 0);
+      await t.tapAt(const Offset(4, 400));
+      await t.pump();
+      expect(st.showing, isFalse, reason: 'any touch hides it');
+      await _close(t, c);
+    });
   });
+}
+
+/// A seed whose first docket is the coworker's (the ring closed today).
+int _coworkerFirstSeed() {
+  for (var s = 1;; s++) {
+    if (m3SldIsolateDeal(math.Random(s)).callAt == 0) return s;
+  }
+}
+
+/// A seed whose first docket is a radial (and not the coworker's).
+int _radialFirstSeed() {
+  for (var s = 1;; s++) {
+    final d = m3SldIsolateDeal(math.Random(s));
+    if (d.callAt != 0 && d.dockets[0].kind == _K.radial) return s;
+  }
 }
 
 /// A seed whose first docket is not the coworker's (he stays away while idle).

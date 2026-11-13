@@ -1,20 +1,52 @@
-"""Picture cards for ladder step 28 (lesson 1.10 শেখা, "১০ সেকেন্ডের মেন্টাল চেকলিস্ট").
+"""Picture cards for ladder steps 28–29 (lesson 1.10, "১০ সেকেন্ডের মেন্টাল চেকলিস্ট").
 
 python -I tool/scan_board_art.py .
 
-Writes assets/game/art/scan_board/*.svg in canonical vector style matching
-tool/harness_board_art.py, tool/pole_board_art.py and tool/ptw_board_art.py
-(200 x 220 scene cards, drawn edge to edge).
+Writes assets/game/art/scan_board/*.svg (200 x 220 scene cards, drawn edge to
+edge, no words) for the step-28 picture board (learn_board_pack110.dart) and
+the step-29 checks (ten_sec_scan.dart). Every card shows only what a lineman
+would see; content follows lessons 1.1–1.10:
 
-Every card features macro, high-contrast, field-authentic electrical utility
-equipment and inspection checks. Defect items (such as nails in boot soles,
-unbuckled chin straps, loose harness buckles, rusted pole bases) are rendered
-as large, unmistakable macro visual elements that players can easily spot and recognize.
-No words or text tags in the art.
+* kit_*      — the day's PPE laid out on the bench (lesson 1.1): helmet, the
+               boot turned sole up, the air-filled rubber glove, the shirt.
+               Traps: a hairline crack in the helmet, a nail in the sole, a
+               pinhole leaking air, a shiny synthetic (polyester) shirt.
+* harness_*  — the full body harness on him (lesson 1.4): four fingers under
+               the strap; traps: chest strap open, chest strap up at the
+               neck, a twisted strap, cut/frayed webbing; the label against
+               the calendar (step 29 only).
+* tool_/rod_ — the tool bag and the discharge rod on the tarp (lessons 1.5,
+               1.10): a cracked rod stick, a PVC jugaad rod (step 29 only).
+* ptw_/mind_ — him at the pole with the written, signed permit (lessons 1.6,
+               1.10): calm vs a phone "permit", rushing, tired, the permit
+               pushed in the pocket unread.
+* pole_/clearance_ — the pole and the লক্ষ্মণ রেখা (lessons 1.2, 1.3): the
+               hammer's long even ring; traps: a leaning pole with a cracked
+               base, rust at the ground line, climbing unchecked, a tool tip
+               inside the line's distance.
+* site_/hazard_/rescue_/weather_ — the surroundings, the weather and the way
+               down (lessons 1.3, 1.9, 1.10): a mate standing by, a clear
+               site; traps: a hive under the cross-arm, traffic, a storm,
+               water at the pole base; a blocked way down (step 29 only).
+
+Each round's cards are one scene template with one thing changed, so no
+colour, backdrop or highlight points at the safe card (no green glow, no red
+warning marks): the generator asserts that in every hand the dealer can make
+(one safe card + three traps) every colour and gradient the safe card draws
+is drawn by a trap too, and the safe card's backdrop is on a trap. Invisible
+shapes are ignored by the check, here and in test/learn_board_110_test.dart,
+so they can never satisfy it: zero size, no paint, opacity 0 / display none /
+visibility hidden on the shape or on any group around it, a scale(0)
+transform, or a shape wholly off the card. Paint the check can't follow (a
+mask, a filter, <use>, an image, a clip other than the card's) is refused.
+Shapes also never single out the safe card: the mate standing by is on two
+traps too, and the লক্ষ্মণ রেখা ring is on every pole card.
 """
 
+import itertools
 import math
 import os
+import re
 import sys
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else '.'
@@ -24,807 +56,940 @@ if __name__ == '__main__' and (len(sys.argv) > 2 or not os.path.isfile(os.path.j
 OUT = os.path.join(ROOT, 'assets', 'game', 'art', 'scan_board')
 W, H = 200, 220
 
-# Canonical project palette
-SHIRT = '#1F5F8F'
-SHIRT_D = '#174A70'
-PANTS = '#2A3442'
-PANTS_D = '#222B37'
+# Palette (shared by every template).
 SKIN = '#A86E48'
-SKIN_D = '#8C5A3A'
+SKIN_D = '#7C4A2D'
 HAIR = '#2A1E16'
-HELMET = '#FFD34E'
-HELMET_D = '#E5B92E'
+PANTS = '#2A3442'
+PANTS_D = '#1E2631'
 BOOT = '#1C1F24'
-BOOT_D = '#121418'
 WIRE = '#2B3138'
-RAIL = '#B0B7BD'
-RED = '#D32F2F'
 YELLOW = '#FBC02D'
-WOOD = '#8A6A3E'
-WOOD_D = '#5E4626'
-METAL = '#B0B7BD'
+RED = '#D32F2F'
 WHITE = '#FFFFFF'
-LADDER = '#D4A359'
-CONE_O = '#E65100'
+DARK = '#1E293B'
+INK = '#0F172A'
+HANDLE = '#B45309'
+WEB_D = '#9A3412'
+HELMET_S = '#B45309'
+BRIM = '#EAB308'
+BRIM_S = '#A16207'
+PLANK = '#7E5229'
+GROUND_L = '#8C7550'
+GLOVE = '#EA580C'
+GLOVE_S = '#9A3412'
+GLOVE_H = '#FDBA74'
+CUFF = '#C2410C'
+SHIRT_L = '#0E3352'
+SHIRT_B = '#174A70'
+SIGN = '#1D4ED8'
+SUN = '#FDE68A'
+LEAF = '#4E7A3A'
 
 DEFS = """<defs>
   <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8EC3EA"/><stop offset="1" stop-color="#E9F2F7"/></linearGradient>
+  <linearGradient id="storm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B2433"/><stop offset="1" stop-color="#4A5568"/></linearGradient>
   <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CDBB93"/><stop offset="1" stop-color="#AF9C74"/></linearGradient>
+  <linearGradient id="road" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5B6470"/><stop offset="1" stop-color="#3F4650"/></linearGradient>
   <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9E9B93"/><stop offset="0.5" stop-color="#D3D0C8"/><stop offset="1" stop-color="#97948C"/></linearGradient>
+  <linearGradient id="steelPole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6E7780"/><stop offset="0.5" stop-color="#C9D0D6"/><stop offset="1" stop-color="#666F78"/></linearGradient>
   <linearGradient id="steelArm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A939B"/><stop offset="1" stop-color="#4F575F"/></linearGradient>
-  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9D2D8"/><stop offset="0.5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B8C2C9"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7A3B1E"/><stop offset="0.5" stop-color="#B0643A"/><stop offset="1" stop-color="#6B3219"/></linearGradient>
   <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="poly" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3E8FD6"/><stop offset="0.35" stop-color="#BFE3FF"/><stop offset="0.5" stop-color="#3C8AD0"/><stop offset="0.75" stop-color="#A7D6FF"/><stop offset="1" stop-color="#2F76B8"/></linearGradient>
   <linearGradient id="webO" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF9F45"/><stop offset="0.5" stop-color="#F7811F"/><stop offset="1" stop-color="#D9640C"/></linearGradient>
+  <linearGradient id="webBack" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C2560A"/><stop offset="1" stop-color="#8F3C06"/></linearGradient>
   <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
   <linearGradient id="board" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9A6A3C"/><stop offset="1" stop-color="#6E4524"/></linearGradient>
   <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#ECEFF2"/></linearGradient>
   <linearGradient id="bench" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9965E"/><stop offset="1" stop-color="#9E6B38"/></linearGradient>
+  <linearGradient id="tarp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F6EA6"/><stop offset="1" stop-color="#1F4F7C"/></linearGradient>
   <linearGradient id="rust" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C46A2B"/><stop offset="0.5" stop-color="#9A4517"/><stop offset="1" stop-color="#6E2E0E"/></linearGradient>
-  <linearGradient id="cone" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E65100"/><stop offset="0.5" stop-color="#FF7A29"/><stop offset="1" stop-color="#D84315"/></linearGradient>
   <linearGradient id="bootSole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#111827"/><stop offset="0.4" stop-color="#1F2937"/><stop offset="1" stop-color="#0F172A"/></linearGradient>
   <linearGradient id="bootLug" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#374151"/><stop offset="1" stop-color="#111827"/></linearGradient>
   <linearGradient id="helmetDome" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FEF08A"/><stop offset="0.25" stop-color="#FACC15"/><stop offset="1" stop-color="#CA8A04"/></linearGradient>
-  <radialGradient id="wireGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE38A" stop-opacity="0.6"/><stop offset="1" stop-color="#FFE38A" stop-opacity="0"/></radialGradient>
-  <radialGradient id="flash" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.85"/><stop offset="0.4" stop-color="#FFF4B0" stop-opacity="0.45"/><stop offset="1" stop-color="#FFF4B0" stop-opacity="0"/></radialGradient>
-  <radialGradient id="hazardGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#EF4444" stop-opacity="0.55"/><stop offset="0.7" stop-color="#EF4444" stop-opacity="0.15"/><stop offset="1" stop-color="#EF4444" stop-opacity="0"/></radialGradient>
-  <radialGradient id="safeGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#10B981" stop-opacity="0.4"/><stop offset="1" stop-color="#10B981" stop-opacity="0"/></radialGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9C46A"/><stop offset="1" stop-color="#C7962E"/></linearGradient>
+  <linearGradient id="pvc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E5E7EB"/><stop offset="0.5" stop-color="#9CA3AF"/><stop offset="1" stop-color="#D1D5DB"/></linearGradient>
+  <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB8D8"/><stop offset="1" stop-color="#3F7FA6"/></linearGradient>
+  <linearGradient id="car" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E04848"/><stop offset="1" stop-color="#9E1F1F"/></linearGradient>
+  <radialGradient id="flash" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/><stop offset="0.4" stop-color="#FFF4B0" stop-opacity="0.5"/><stop offset="1" stop-color="#FFF4B0" stop-opacity="0"/></radialGradient>
   <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
 </defs>"""
 
 
-def make_card(body_svg, back='sky'):
+def n(v):
+    s = f'{v:.1f}'
+    return s[:-2] if s.endswith('.0') else s
+
+
+def make_card(body, back='url(#sky)'):
     return '\n'.join([
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">',
         DEFS,
         '<g clip-path="url(#card)">',
-        f'<rect width="{W}" height="{H}" fill="url(#{back})"/>',
-        body_svg,
+        f'<rect width="{W}" height="{H}" fill="{back}"/>',
+        body,
         '</g>',
         '<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>',
-        '</svg>'
+        '</svg>',
     ])
 
 
-# -----------------------------------------------------------------------------
-# MACRO DRAWING HELPERS
-# -----------------------------------------------------------------------------
+# =============================================================================
+# The worker (one figure for every scene)
+# =============================================================================
 
-def draw_boot_sole_macro(nail=False, cracked=False, eh_shield=True):
-    """Macro close-up of heavy-duty Electrical Hazard (EH) safety boot sole."""
-    g = []
-    # Workshop bench backdrop with wooden planks
-    g.append('<rect width="200" height="220" fill="url(#bench)"/>')
-    for y in (42, 96, 150, 204):
-        g.append(f'<line x1="0" y1="{y}" x2="200" y2="{y}" stroke="#7E5229" stroke-width="1.2" opacity="0.6"/>')
-
-    # Soft drop shadow beneath sole
-    g.append('<path d="M62 48 C57 24 82 18 102 18 C122 18 147 24 142 48 C140 68 147 98 147 113 C147 128 130 138 127 148 L140 161 C144 178 140 203 102 203 C64 203 60 178 64 161 L77 148 C74 138 57 128 57 113 C57 98 64 68 62 48 Z" fill="#000000" opacity="0.32"/>')
-
-    # Heavy rubber boot sole contour
-    sole_d = "M60 45 C55 20 80 14 100 14 C120 14 145 20 140 45 C138 65 145 95 145 110 C145 125 128 135 125 145 L138 158 C142 175 138 200 100 200 C62 200 58 175 62 158 L75 145 C72 135 55 125 55 110 C55 95 62 65 60 45 Z"
-    g.append(f'<path d="{sole_d}" fill="url(#bootSole)" stroke="#090D14" stroke-width="2.6"/>')
-
-    # Inset welt bevel
-    welt_d = "M64 47 C60 25 82 20 100 20 C118 20 140 25 136 47 C134 65 140 93 140 108 C140 121 125 131 122 142 L134 155 C137 170 134 194 100 194 C66 194 63 170 66 155 L78 142 C75 131 60 121 60 108 C60 93 66 65 64 47 Z"
-    g.append(f'<path d="{welt_d}" fill="none" stroke="#374151" stroke-width="1.4" opacity="0.8"/>')
-
-    # Deep traction lugs on forefoot & ball (Left & Right perimeter teeth)
-    for y in [34, 52, 70, 88, 106]:
-        g.append(f'<path d="M60 {y} L76 {y+4} L76 {y+14} L58 {y+10} Z" fill="url(#bootLug)" stroke="#0B0E14" stroke-width="1.2"/>')
-        g.append(f'<path d="M140 {y} L124 {y+4} L124 {y+14} L142 {y+10} Z" fill="url(#bootLug)" stroke="#0B0E14" stroke-width="1.2"/>')
-
-    # Central Chevron traction treads down the ball of the foot
-    for cy in [32, 50, 68, 86, 104]:
-        g.append(f'<path d="M82 {cy+6} L100 {cy} L118 {cy+6} L115 {cy+14} L100 {cy+8} L85 {cy+14} Z" fill="url(#bootLug)" stroke="#0B0E14" stroke-width="1.2"/>')
-        g.append(f'<path d="M84 {cy+7} L100 {cy+2} L116 {cy+7}" stroke="#4B5563" stroke-width="1" fill="none" opacity="0.6"/>')
-
-    # Arch / Shank area
-    g.append('<rect x="84" y="126" width="32" height="20" rx="3" fill="#1F2937" stroke="#0B0E14" stroke-width="1.5"/>')
-    for sy in [131, 136, 141]:
-        g.append(f'<line x1="88" y1="{sy}" x2="112" y2="{sy}" stroke="#4B5563" stroke-width="1.4"/>')
-
-    # Heel Lugs (4 corner blocks and center heel cup)
-    g.append('<rect x="68" y="162" width="18" height="15" rx="3" fill="url(#bootLug)" stroke="#0B0E14" stroke-width="1.4"/>')
-    g.append('<rect x="114" y="162" width="18" height="15" rx="3" fill="url(#bootLug)" stroke="#0B0E14" stroke-width="1.4"/>')
-    g.append('<path d="M70 182 C70 194 84 195 100 195 C116 195 130 194 130 182 L126 174 C116 182 84 182 74 174 Z" fill="url(#bootLug)" stroke="#0B0E14" stroke-width="1.4"/>')
-    g.append('<ellipse cx="100" cy="172" rx="12" ry="7" fill="#111827" stroke="#374151" stroke-width="1.2"/>')
-
-    # EH (Electrical Hazard) Safety Shield Emblem in Arch
-    if eh_shield and not nail and not cracked:
-        g.append('<circle cx="100" cy="136" r="16" fill="url(#safeGlow)"/>')
-        g.append('<polygon points="100 126 109 130 109 138 100 144 91 138 91 130" fill="url(#steel)" stroke="#CA8A04" stroke-width="1.2"/>')
-        g.append('<polygon points="101 129 97 135 100 135 99 141 104 134 101 134" fill="#EAB308"/>')
-
-    # CRACKED SOLE / NAIL HAZARDS
-    if nail:
-        nx, ny = 100, 75
-        # Danger warning glow halo
-        g.append(f'<circle cx="{nx}" cy="{ny}" r="28" fill="url(#hazardGlow)"/>')
-        g.append(f'<circle cx="{nx}" cy="{ny}" r="22" fill="none" stroke="{RED}" stroke-width="2" stroke-dasharray="4 2.5"/>')
-        # Stress fracture cracks radiating from puncture point
-        g.append(f'<path d="M{nx-8} {ny-4} L{nx-18} {ny-10} M{nx+6} {ny-5} L{nx+16} {ny-12} M{nx-4} {ny+8} L{nx-12} {ny+18} M{nx+8} {ny+6} L{nx+20} {ny+14}" stroke="{RED}" stroke-width="2.2" stroke-linecap="round"/>')
-        g.append(f'<path d="M{nx-18} {ny-10} L{nx-24} {ny-8} M{nx+16} {ny-12} L{nx+22} {ny-16}" stroke="{YELLOW}" stroke-width="1.4" stroke-linecap="round"/>')
-        # Sharp metallic construction nail driven into the tread
-        # Nail shank angled into rubber
-        g.append('<polygon points="97 86 103 86 101 99 99 99" fill="url(#steel)" stroke="#475569" stroke-width="0.8"/>')
-        # Large steel nail head (angled perspective)
-        g.append(f'<ellipse cx="{nx}" cy="{ny}" rx="10" ry="7.5" fill="url(#steel)" stroke="#334155" stroke-width="1.6"/>')
-        g.append(f'<ellipse cx="{nx-1.5}" cy="{ny-1.2}" rx="7.5" ry="5.5" fill="none" stroke="#FFFFFF" stroke-width="1.2" opacity="0.9"/>')
-        g.append(f'<circle cx="{nx}" cy="{ny}" r="2.5" fill="#1E293B"/>')
-        # Jagged fracture split in the rubber lug
-        g.append(f'<path d="M{nx-14} {ny+2} Q{nx} {ny+5} {nx+14} {ny+1}" stroke="#000000" stroke-width="2.8" fill="none"/>')
-
-    if cracked:
-        # Deep jagged split across the ball of the sole rubber
-        g.append(f'<path d="M58 84 L76 88 L92 82 L108 90 L126 84 L142 88" stroke="#000000" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>')
-        g.append(f'<path d="M58 84 L76 88 L92 82 L108 90 L126 84 L142 88" stroke="url(#rust)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>')
-        g.append(f'<path d="M58 84 L76 88 L92 82 L108 90 L126 84 L142 88" stroke="{RED}" stroke-width="1.4" stroke-dasharray="3 3" fill="none"/>')
-
-    return ''.join(g)
-
-
-def draw_helmet_macro(buckled=True):
-    """Macro close-up of safety helmet (hard hat) and chin strap."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    # Soft clouds
-    g.append('<ellipse cx="40" cy="35" rx="30" ry="10" fill="#FFFFFF" opacity="0.6"/>')
-    g.append('<ellipse cx="160" cy="45" rx="25" ry="9" fill="#FFFFFF" opacity="0.6"/>')
-
-    # Lineman neck & jaw
-    g.append('<path d="M68 120 Q68 185 100 188 Q132 185 132 120 Z" fill="#9C643E"/>')
-    g.append('<path d="M74 120 Q74 180 100 183 Q126 180 126 120 Z" fill="url(#shirt)" opacity="0.15"/>')
-
-    # Hard hat shell shadow
-    g.append('<ellipse cx="100" cy="118" rx="72" ry="14" fill="#000000" opacity="0.25"/>')
-
-    # Dome contour
-    dome = "M32 98 Q36 28 100 24 Q164 28 168 98 Z"
-    g.append(f'<path d="{dome}" fill="url(#helmetDome)" stroke="#B45309" stroke-width="2.4"/>')
-    # Dome strengthening ribs
-    g.append('<path d="M60 88 Q70 42 100 38 Q130 42 140 88" fill="none" stroke="#FDE047" stroke-width="4.5" stroke-linecap="round" opacity="0.6"/>')
-    g.append('<path d="M85 75 Q92 36 100 34 Q108 36 115 75" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.75"/>')
-
-    # Rolled brim
-    brim = "M22 96 Q100 114 178 96 L174 108 Q100 126 26 108 Z"
-    g.append(f'<path d="{brim}" fill="#EAB308" stroke="#A16207" stroke-width="2.2"/>')
-    g.append('<path d="M26 100 Q100 116 174 100" stroke="#FEF08A" stroke-width="2" fill="none" opacity="0.8"/>')
-
-    # Quality mark badge on front crown
-    g.append('<rect x="91" y="68" width="18" height="14" rx="2.5" fill="#1E293B" stroke="#CA8A04" stroke-width="1.2"/>')
-    g.append('<polygon points="100 70 106 74 100 80 94 74" fill="#22C55E"/>')
-
-    # Chin strap anchors at sides
-    g.append('<rect x="42" y="104" width="9" height="7" rx="2" fill="url(#steel)"/>')
-    g.append('<rect x="149" y="104" width="9" height="7" rx="2" fill="url(#steel)"/>')
-
-    # Chin Straps
-    if buckled:
-        # Tightly buckled under jaw with locking snap buckle
-        g.append('<path d="M46 109 Q56 156 94 158" stroke="#1F2937" stroke-width="6.5" fill="none" stroke-linecap="round"/>')
-        g.append('<path d="M46 109 Q56 156 94 158" stroke="#4B5563" stroke-width="1" stroke-dasharray="2.5 2" fill="none"/>')
-        g.append('<path d="M154 109 Q144 156 106 158" stroke="#1F2937" stroke-width="6.5" fill="none" stroke-linecap="round"/>')
-        g.append('<path d="M154 109 Q144 156 106 158" stroke="#4B5563" stroke-width="1" stroke-dasharray="2.5 2" fill="none"/>')
-        # Snap buckle clicked together
-        g.append('<rect x="88" y="150" width="24" height="16" rx="4" fill="#111827" stroke="url(#steel)" stroke-width="1.8"/>')
-        g.append('<circle cx="100" cy="158" r="3" fill="#22C55E"/>')
-        # Chin cup
-        g.append('<path d="M84 164 Q100 174 116 164" stroke="#1F2937" stroke-width="4.5" fill="none" stroke-linecap="round"/>')
+def head(x, y, s=1.0, face='calm', tilt=0):
+    """His head with the helmet; [face]: calm, talk, tense, tired, up."""
+    g = [f'<g transform="translate({n(x)} {n(y)}) rotate({tilt}) scale({s})">']
+    g.append(f'<rect x="-6" y="8" width="12" height="12" rx="3" fill="{SKIN_D}"/>')
+    g.append(f'<ellipse cx="0" cy="0" rx="14" ry="16" fill="{SKIN}"/>')
+    g.append(f'<path d="M-17 -4 Q-16 -26 0 -27 Q16 -26 17 -4 Z" fill="url(#helmetDome)" stroke="{HELMET_S}" stroke-width="1.4"/>')
+    g.append(f'<path d="M-20 -4 Q0 2 20 -4 L19 0 Q0 6 -19 0 Z" fill="{BRIM}" stroke="{BRIM_S}" stroke-width="1"/>')
+    g.append(f'<path d="M-12 0 Q-12 14 0 16 Q12 14 12 0" fill="none" stroke="{DARK}" stroke-width="1.8"/>')
+    ey = 4 if face != 'up' else 1
+    if face == 'tired':
+        g.append(f'<path d="M-8 {ey} L-3 {ey + 1}" stroke="{HAIR}" stroke-width="2" stroke-linecap="round"/>')
+        g.append(f'<path d="M3 {ey + 1} L8 {ey}" stroke="{HAIR}" stroke-width="2" stroke-linecap="round"/>')
+        g.append(f'<ellipse cx="0" cy="12" rx="3.2" ry="4" fill="{HAIR}"/>')
     else:
-        # UNBUCKLED: Straps dangling wide apart loosely
-        g.append('<circle cx="100" cy="165" r="32" fill="url(#hazardGlow)"/>')
-        g.append('<path d="M46 109 Q42 145 36 178" stroke="#1F2937" stroke-width="6.5" fill="none" stroke-linecap="round"/>')
-        g.append(f'<path d="M46 109 Q42 145 36 178" stroke="{RED}" stroke-width="1.2" stroke-dasharray="3 2" fill="none"/>')
-        g.append('<rect x="28" y="174" width="16" height="12" rx="3" fill="#111827" stroke="url(#steel)" stroke-width="1.5"/>')
-
-        g.append('<path d="M154 109 Q158 145 164 178" stroke="#1F2937" stroke-width="6.5" fill="none" stroke-linecap="round"/>')
-        g.append(f'<path d="M154 109 Q158 145 164 178" stroke="{RED}" stroke-width="1.2" stroke-dasharray="3 2" fill="none"/>')
-        g.append('<rect x="156" y="174" width="16" height="12" rx="3" fill="#111827" stroke="url(#steel)" stroke-width="1.5"/>')
-        # Red warning dashed arc showing unfastened open space
-        g.append(f'<path d="M46 178 Q100 195 154 178" stroke="{RED}" stroke-width="2.5" stroke-dasharray="5 3" fill="none"/>')
-
-    return ''.join(g)
-
-
-def draw_gloves_macro(punctured=False):
-    """Macro close-up of Class-2 Electrical Insulating Rubber Glove Air Test."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#bench)"/>')
-    for y in (42, 96, 150, 204):
-        g.append(f'<line x1="0" y1="{y}" x2="200" y2="{y}" stroke="#7E5229" stroke-width="1.2" opacity="0.6"/>')
-
-    # Glove balloon shape
-    g.append('<ellipse cx="100" cy="115" rx="55" ry="60" fill="#000000" opacity="0.25"/>')
-    g.append('<path d="M60 145 C45 110 50 65 72 45 C80 38 90 35 100 35 C110 35 120 38 128 45 C150 65 155 110 140 145 Z" fill="#EA580C" stroke="#9A3412" stroke-width="2.5"/>')
-    # Fingers curved
-    g.append('<path d="M72 45 Q75 18 84 16 Q92 18 90 42" fill="#EA580C" stroke="#9A3412" stroke-width="2"/>')
-    g.append('<path d="M90 40 Q95 12 104 12 Q112 14 110 40" fill="#EA580C" stroke="#9A3412" stroke-width="2"/>')
-    g.append('<path d="M110 40 Q118 16 126 18 Q132 24 128 46" fill="#EA580C" stroke="#9A3412" stroke-width="2"/>')
-    # Highlights
-    g.append('<path d="M72 65 Q100 50 128 65 Q135 105 100 120 Q65 105 72 65 Z" fill="#F97316" opacity="0.6"/>')
-    g.append('<ellipse cx="88" cy="75" rx="14" ry="26" fill="#FDBA74" opacity="0.55"/>')
-
-    # Rolled tight cuff at bottom
-    g.append('<ellipse cx="100" cy="148" rx="42" ry="12" fill="#C2410C" stroke="#7C2D12" stroke-width="2"/>')
-    g.append('<ellipse cx="100" cy="154" rx="46" ry="14" fill="#1E293B" stroke="#0F172A" stroke-width="2"/>')
-    g.append('<ellipse cx="100" cy="158" rx="44" ry="12" fill="#C2410C" stroke="#7C2D12" stroke-width="1.8"/>')
-
-    # Two gloved hands gripping cuff
-    g.append('<rect x="36" y="142" width="24" height="32" rx="8" fill="#A86E48" stroke="#7C4A2D" stroke-width="1.5"/>')
-    g.append('<rect x="140" y="142" width="24" height="32" rx="8" fill="#A86E48" stroke="#7C4A2D" stroke-width="1.5"/>')
-
-    if punctured:
-        px, py = 100, 85
-        g.append(f'<circle cx="{px}" cy="{py}" r="26" fill="url(#hazardGlow)"/>')
-        g.append(f'<circle cx="{px}" cy="{py}" r="18" fill="none" stroke="{RED}" stroke-width="2" stroke-dasharray="3 2"/>')
-        # Escaping air hiss sound waves
-        for r in (8, 14, 20):
-            g.append(f'<path d="M{px-r} {py-r*0.6} Q{px} {py-r*1.3} {px+r} {py-r*0.6}" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>')
-        g.append(f'<circle cx="{px}" cy="{py}" r="3.5" fill="#1E293B" stroke="{RED}" stroke-width="1.5"/>')
-        g.append(f'<path d="M{px-16} {py+6} Q{px} {py+2} {px+16} {py+6}" stroke="#9A3412" stroke-width="2" fill="none"/>')
-    else:
-        g.append('<circle cx="100" cy="90" r="16" fill="url(#safeGlow)"/>')
-        g.append('<polygon points="100 80 109 84 109 92 100 98 91 92 91 84" fill="url(#steel)" stroke="#10B981" stroke-width="1.2"/>')
-        g.append('<path d="M96 89 L99 92 L105 86" stroke="#10B981" stroke-width="2" fill="none" stroke-linecap="round"/>')
-
-    return ''.join(g)
-
-
-def draw_shirt_macro(torn_polyester=False):
-    """Macro close-up of lineman torso and shirt fabric."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    # Lineman chest & shoulder filling frame
-    g.append('<path d="M20 220 L20 90 Q100 65 180 90 L180 220 Z" fill="url(#shirt)"/>')
-    g.append('<path d="M85 78 L100 102 L115 78" stroke="#0E3352" stroke-width="2" fill="none"/>')
-    g.append('<line x1="100" y1="102" x2="100" y2="220" stroke="#0E3352" stroke-width="1.5" opacity="0.6"/>')
-
-    for by in (122, 154, 186):
-        g.append(f'<circle cx="100" cy="{by}" r="3.5" fill="url(#steel)"/>')
-
-    if torn_polyester:
-        g.append('<path d="M30 110 Q70 100 80 140 Q40 150 30 110 Z" fill="#60A5FA" opacity="0.25"/>')
-        g.append('<circle cx="145" cy="145" r="28" fill="url(#hazardGlow)"/>')
-        g.append('<path d="M125 125 Q165 130 155 165 Q125 170 125 125 Z" fill="#A86E48" stroke="#7C4A2D" stroke-width="1.5"/>')
-        g.append(f'<path d="M124 124 Q135 135 130 148 Q140 140 152 145 Q158 155 152 166" stroke="#1E293B" stroke-width="3.5" fill="none" stroke-linecap="round"/>')
-        g.append(f'<path d="M125 125 Q136 136 131 149 Q141 141 153 146" stroke="{RED}" stroke-width="1.8" fill="none"/>')
-        g.append('<ellipse cx="65" cy="165" rx="16" ry="22" fill="#0B132B" opacity="0.7"/>')
-        g.append('<ellipse cx="75" cy="180" rx="10" ry="14" fill="#0B132B" opacity="0.8"/>')
-    else:
-        g.append('<rect x="42" y="125" width="44" height="48" rx="4" fill="#184B75" stroke="#0E3352" stroke-width="1.5"/>')
-        g.append('<path d="M42 138 L86 138" stroke="#0E3352" stroke-width="1.2"/>')
-        g.append('<circle cx="64" cy="132" r="2.5" fill="url(#steel)"/>')
-        g.append('<rect x="52" y="145" width="24" height="12" rx="2" fill="url(#steel)" opacity="0.85"/>')
-
-    return ''.join(g)
-
-
-def draw_harness_chest_macro(chest_fit='ok'):
-    """Macro close-up of Full Body Harness chest strap."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<path d="M10 220 L10 80 Q100 55 190 80 L190 220 Z" fill="url(#shirt)"/>')
-
-    for sx in (45, 135):
-        g.append(f'<rect x="{sx}" y="70" width="20" height="150" fill="url(#webO)" stroke="#9A3412" stroke-width="1.8"/>')
-        g.append(f'<line x1="{sx+10}" y1="70" x2="{sx+10}" y2="220" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="4 2.5" opacity="0.8"/>')
-
-    if chest_fit == 'ok':
-        g.append('<rect x="45" y="115" width="110" height="18" fill="url(#webO)" stroke="#9A3412" stroke-width="1.8"/>')
-        g.append('<line x1="45" y1="124" x2="155" y2="124" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.8"/>')
-        g.append('<rect x="90" y="110" width="20" height="28" rx="3.5" fill="url(#steel)" stroke="#334155" stroke-width="1.8"/>')
-        g.append('<rect x="96" y="116" width="8" height="16" rx="2" fill="#1E293B"/>')
-        # 4 fingers testing snug fit under chest strap
-        g.append('<rect x="85" y="138" width="30" height="36" rx="6" fill="#A86E48" stroke="#7C4A2D" stroke-width="1.5"/>')
-        for fy in (144, 151, 158, 165):
-            g.append(f'<line x1="88" y1="{fy}" x2="112" y2="{fy}" stroke="#7C4A2D" stroke-width="1.5"/>')
-        g.append('<circle cx="100" cy="92" r="14" fill="url(#safeGlow)"/>')
-        g.append('<path d="M94 92 L98 96 L106 88" stroke="#10B981" stroke-width="2.2" fill="none" stroke-linecap="round"/>')
-    else:
-        g.append('<circle cx="100" cy="135" r="34" fill="url(#hazardGlow)"/>')
-        g.append('<path d="M55 118 Q45 155 35 185" stroke="url(#webO)" stroke-width="18" fill="none" stroke-linecap="round"/>')
-        g.append('<rect x="24" y="180" width="22" height="18" rx="3" fill="url(#steel)" stroke="#334155" stroke-width="1.6"/>')
-        g.append('<path d="M145 118 Q155 155 165 185" stroke="url(#webO)" stroke-width="18" fill="none" stroke-linecap="round"/>')
-        g.append('<rect x="154" y="180" width="22" height="18" rx="3" fill="url(#steel)" stroke="#334155" stroke-width="1.6"/>')
-        g.append(f'<path d="M46 188 Q100 205 154 188" stroke="{RED}" stroke-width="2.5" stroke-dasharray="5 3" fill="none"/>')
-
-    return ''.join(g)
-
-
-def draw_harness_expired_macro():
-    """Macro close-up of harness webbing: frayed cut fibers & expired tag."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#bench)"/>')
-    for y in (42, 96, 150, 204):
-        g.append(f'<line x1="0" y1="{y}" x2="200" y2="{y}" stroke="#7E5229" stroke-width="1.2" opacity="0.6"/>')
-
-    g.append('<rect x="15" y="70" width="170" height="55" rx="4" fill="url(#webO)" stroke="#9A3412" stroke-width="2"/>')
-    g.append('<line x1="15" y1="84" x2="185" y2="84" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.8"/>')
-    g.append('<line x1="15" y1="111" x2="185" y2="111" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.8"/>')
-
-    # Severely frayed, cut strands
-    g.append('<path d="M80 68 Q95 95 110 68 Z" fill="url(#bench)"/>')
-    for fx, fy in ((82, 70), (86, 76), (90, 82), (95, 78), (100, 84), (105, 74), (108, 69)):
-        g.append(f'<line x1="{fx}" y1="{fy}" x2="{fx+2}" y2="{fy-8}" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>')
-        g.append(f'<line x1="{fx}" y1="{fy}" x2="{fx-3}" y2="{fy-7}" stroke="#F97316" stroke-width="1.4" stroke-linecap="round"/>')
-
-    g.append('<rect x="35" y="80" width="35" height="35" fill="none" stroke="#1E293B" stroke-width="1.5" stroke-dasharray="3 2"/>')
-    g.append(f'<line x1="35" y1="80" x2="70" y2="115" stroke="{RED}" stroke-width="2"/>')
-
-    # White inspection tag showing EXPIRED red slash
-    g.append('<rect x="115" y="115" width="55" height="70" rx="3" fill="url(#paper)" stroke="#94A3B8" stroke-width="1.5"/>')
-    g.append('<line x1="120" y1="125" x2="165" y2="125" stroke="#1E293B" stroke-width="2"/>')
-    g.append('<line x1="120" y1="135" x2="155" y2="135" stroke="#64748B" stroke-width="1.2"/>')
-    g.append('<line x1="120" y1="145" x2="160" y2="145" stroke="#64748B" stroke-width="1.2"/>')
-    g.append(f'<circle cx="142" cy="160" r="14" fill="none" stroke="{RED}" stroke-width="2.5"/>')
-    g.append(f'<line x1="132" y1="170" x2="152" y2="150" stroke="{RED}" stroke-width="3"/>')
-
-    return ''.join(g)
-
-
-def draw_tool_bag_macro():
-    """Macro close-up of heavy-duty canvas lineman tool bag & 3-point contact."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<rect x="25" y="0" width="12" height="220" fill="url(#steel)"/>')
-    g.append('<rect x="163" y="0" width="12" height="220" fill="url(#steel)"/>')
-    for ry in (40, 100, 160):
-        g.append(f'<rect x="25" y="{ry}" width="150" height="10" rx="2" fill="url(#steel)"/>')
-
-    g.append('<rect x="20" y="88" width="22" height="34" rx="6" fill="#A86E48" stroke="#7C4A2D" stroke-width="1.5"/>')
-    g.append('<rect x="158" y="88" width="22" height="34" rx="6" fill="#A86E48" stroke="#7C4A2D" stroke-width="1.5"/>')
-
-    g.append('<line x1="100" y1="0" x2="100" y2="85" stroke="#D97706" stroke-width="3.5"/>')
-    g.append('<rect x="94" y="80" width="12" height="16" rx="4" fill="url(#steel)"/>')
-    g.append('<path d="M65 95 L135 95 L128 175 L72 175 Z" fill="#D97706" stroke="#92400E" stroke-width="2.5"/>')
-    g.append('<ellipse cx="100" cy="95" rx="35" ry="9" fill="#B45309" stroke="#92400E" stroke-width="2"/>')
-    g.append('<rect x="70" y="165" width="60" height="14" rx="3" fill="#1E293B"/>')
-    g.append('<rect x="80" y="72" width="8" height="26" rx="2" fill="url(#steel)"/>')
-    g.append('<rect x="92" y="65" width="7" height="33" rx="2" fill="#EAB308"/>')
-    g.append('<rect x="103" y="70" width="9" height="28" rx="2" fill="url(#steel)"/>')
-
-    return ''.join(g)
-
-
-def draw_tool_hand_macro():
-    """Macro close-up of hand dangerously holding heavy wrench while climbing."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<rect x="40" y="0" width="18" height="220" fill="url(#steel)"/>')
-    g.append('<rect x="40" y="110" width="130" height="12" rx="3" fill="url(#steel)"/>')
-
-    g.append('<circle cx="100" cy="115" r="42" fill="url(#hazardGlow)"/>')
-
-    g.append('<rect x="88" y="45" width="16" height="135" rx="3" fill="url(#steel)" stroke="#334155" stroke-width="2"/>')
-    g.append('<rect x="80" y="42" width="32" height="22" rx="4" fill="#DC2626" stroke="#991B1B" stroke-width="1.8"/>')
-    g.append('<rect x="84" y="32" width="24" height="14" rx="2" fill="url(#steel)" stroke="#334155" stroke-width="1.5"/>')
-
-    g.append('<rect x="36" y="98" width="65" height="32" rx="8" fill="#A86E48" stroke="#7C4A2D" stroke-width="2"/>')
-    for fy in (102, 109, 116, 123):
-        g.append(f'<line x1="42" y1="{fy}" x2="95" y2="{fy}" stroke="#7C4A2D" stroke-width="1.5"/>')
-    g.append(f'<path d="M30 92 L20 86 M30 115 L18 115 M30 138 L20 144" stroke="{RED}" stroke-width="2.5" stroke-linecap="round"/>')
-
-    return ''.join(g)
-
-
-def draw_tool_overload_macro():
-    """Macro close-up of pants pockets overflowing with heavy tools."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<path d="M40 0 L160 0 L170 220 L30 220 Z" fill="url(#ground)"/>')
-    g.append('<rect x="30" y="20" width="140" height="24" rx="3" fill="#1E293B" stroke="#0F172A" stroke-width="2"/>')
-    g.append('<rect x="85" y="16" width="30" height="32" rx="4" fill="url(#steel)" stroke="#334155" stroke-width="2"/>')
-
-    g.append('<circle cx="100" cy="130" r="40" fill="url(#hazardGlow)"/>')
-    g.append('<path d="M55 70 Q50 160 115 160 Q135 155 140 70 Z" fill="#2A3442" stroke="#1E293B" stroke-width="2.5"/>')
-
-    g.append('<rect x="70" y="55" width="12" height="75" rx="3" fill="url(#steel)" transform="rotate(-15 70 55)"/>')
-    g.append('<rect x="105" y="50" width="14" height="80" rx="3" fill="#EAB308" transform="rotate(22 105 50)"/>')
-    g.append('<circle cx="120" cy="165" r="7" fill="url(#steel)" stroke="#334155" stroke-width="1.2"/>')
-    g.append('<line x1="120" y1="172" x2="120" y2="195" stroke="url(#steel)" stroke-width="4.5"/>')
-    g.append(f'<line x1="135" y1="140" x2="135" y2="190" stroke="{RED}" stroke-width="2" stroke-dasharray="4 3"/>')
-
-    return ''.join(g)
-
-
-def draw_pole_sound_macro():
-    """Macro close-up of hammer sound resonance test on solid PCC pole base."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<rect y="165" width="200" height="55" fill="url(#ground)"/>')
-    g.append('<line x1="0" y1="165" x2="200" y2="165" stroke="#78350F" stroke-width="2"/>')
-
-    g.append('<rect x="45" y="0" width="60" height="165" fill="url(#pole)" stroke="#6B7280" stroke-width="2"/>')
-    g.append('<rect x="35" y="145" width="80" height="24" rx="3" fill="#9CA3AF" stroke="#4B5563" stroke-width="2"/>')
-
-    g.append('<line x1="175" y1="95" x2="112" y2="95" stroke="#B45309" stroke-width="7" stroke-linecap="round"/>')
-    g.append('<rect x="102" y="84" width="16" height="22" rx="3" fill="url(#steel)" stroke="#334155" stroke-width="1.8"/>')
-
-    for r in (18, 32, 48, 64):
-        g.append(f'<path d="M102 {95-r} A{r} {r} 0 0 0 102 {95+r}" stroke="{YELLOW}" stroke-width="3" fill="none" stroke-linecap="round"/>')
-
-    g.append('<circle cx="75" cy="45" r="16" fill="url(#safeGlow)"/>')
-    g.append('<path d="M69 45 L73 49 L81 41" stroke="#10B981" stroke-width="2.5" fill="none" stroke-linecap="round"/>')
-
-    return ''.join(g)
-
-
-def draw_pole_rusted_macro():
-    """Macro close-up of stepped tubular steel pole corroded with flaking rust."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<rect y="165" width="200" height="55" fill="url(#ground)"/>')
-    g.append('<line x1="0" y1="165" x2="200" y2="165" stroke="#78350F" stroke-width="2"/>')
-
-    g.append('<rect x="50" y="0" width="65" height="165" fill="url(#steel)" stroke="#475569" stroke-width="2"/>')
-
-    g.append('<circle cx="82" cy="140" r="38" fill="url(#hazardGlow)"/>')
-    g.append('<path d="M48 100 Q82 90 117 100 L117 165 L48 165 Z" fill="url(#rust)" stroke="#78350F" stroke-width="2"/>')
-
-    g.append('<ellipse cx="78" cy="138" rx="14" ry="20" fill="#1E1610" stroke="#451A03" stroke-width="2"/>')
-    g.append('<ellipse cx="96" cy="146" rx="11" ry="14" fill="#1E1610" stroke="#451A03" stroke-width="2"/>')
-    for rx, ry in ((70, 155), (85, 160), (102, 158), (62, 168), (92, 172)):
-        g.append(f'<circle cx="{rx}" cy="{ry}" r="2.5" fill="#9A3412"/>')
-
-    return ''.join(g)
-
-
-def draw_pole_lean_macro():
-    """Macro close-up of dangerously leaning pole with cracked concrete base."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<rect y="165" width="200" height="55" fill="url(#ground)"/>')
-
-    g.append('<g transform="rotate(-12 85 165)">')
-    g.append('<rect x="55" y="-10" width="60" height="175" fill="url(#pole)" stroke="#4B5563" stroke-width="2"/>')
-    g.append('<rect x="45" y="135" width="80" height="30" rx="3" fill="#9CA3AF" stroke="#4B5563" stroke-width="2"/>')
-    g.append(f'<path d="M45 142 L65 148 L58 156 L78 162 L68 168" stroke="{RED}" stroke-width="3" fill="none"/>')
-    g.append(f'<path d="M85 138 L95 152 L118 158" stroke="{RED}" stroke-width="2.5" fill="none"/>')
+        g.append(f'<circle cx="-5" cy="{ey}" r="1.8" fill="{HAIR}"/>')
+        g.append(f'<circle cx="5" cy="{ey}" r="1.8" fill="{HAIR}"/>')
+        if face == 'tense':
+            g.append(f'<path d="M-9 {ey - 5} L-2 {ey - 3} M9 {ey - 5} L2 {ey - 3}" stroke="{HAIR}" stroke-width="1.6" stroke-linecap="round"/>')
+            g.append(f'<path d="M-4 12 Q0 9 4 12" fill="none" stroke="{HAIR}" stroke-width="1.6" stroke-linecap="round"/>')
+        elif face == 'talk':
+            g.append(f'<ellipse cx="0" cy="11" rx="3" ry="2.2" fill="{HAIR}"/>')
+        else:
+            g.append(f'<path d="M-4 10 Q0 13 4 10" fill="none" stroke="{HAIR}" stroke-width="1.6" stroke-linecap="round"/>')
     g.append('</g>')
-
-    g.append('<path d="M30 168 Q75 160 120 172" stroke="#451A03" stroke-width="4" fill="none"/>')
-
     return ''.join(g)
 
 
-def draw_clearance_macro(inside=False):
-    """Macro close-up of 11kV conductor Lakshman Rekha clearance zone."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<rect x="0" y="110" width="200" height="14" rx="2" fill="url(#steelArm)"/>')
-    g.append('<rect x="85" y="70" width="30" height="40" rx="4" fill="url(#porcelain)" stroke="#94A3B8" stroke-width="1.5"/>')
-    g.append(f'<path d="M0 65 Q100 70 200 65" stroke="{WIRE}" stroke-width="4.5" fill="none"/>')
+def limb(a, b, c, color, w):
+    return f'<path d="M{n(a[0])} {n(a[1])} L{n(b[0])} {n(b[1])} L{n(c[0])} {n(c[1])}" stroke="{color}" stroke-width="{w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
 
-    if inside:
-        g.append('<circle cx="100" cy="65" r="55" fill="url(#hazardGlow)"/>')
-        g.append(f'<circle cx="100" cy="65" r="48" fill="none" stroke="{RED}" stroke-width="3" stroke-dasharray="5 3"/>')
-        g.append('<line x1="170" y1="120" x2="115" y2="78" stroke="url(#steel)" stroke-width="6" stroke-linecap="round"/>')
-        g.append('<path d="M100 68 L106 72 L102 75 L112 78" stroke="#38BDF8" stroke-width="3.5" fill="none"/>')
-        g.append('<circle cx="114" cy="78" r="8" fill="url(#flash)"/>')
+
+def hand(p, r=4.2):
+    return f'<circle cx="{n(p[0])}" cy="{n(p[1])}" r="{r}" fill="{SKIN}"/>'
+
+
+def worker(x, gy, s=1.0, pose='stand', face='calm', reach=1.0):
+    """Full figure, feet at ([x], [gy]), ~95 px tall at s=1.
+    pose: stand, hammer (knocks left), rod (holds a rod up-left), climb (on the
+    pole to his left), look (looks up, hand at brow)."""
+    def P(dx, dy):
+        return (x + dx * s, gy + dy * s)
+    g = []
+    hip, sh = P(0, -44), P(0, -74)
+    # legs
+    if pose == 'climb':
+        g.append(limb(hip, P(-10, -30), P(-14, -18), PANTS, 9 * s))
+        g.append(limb(hip, P(6, -24), P(2, -6), PANTS_D, 9 * s))
+        g.append(f'<rect x="{n(x - 20 * s)}" y="{n(gy - 22 * s)}" width="{n(13 * s)}" height="{n(6 * s)}" rx="2" fill="{BOOT}"/>')
+        g.append(f'<rect x="{n(x - 3 * s)}" y="{n(gy - 9 * s)}" width="{n(13 * s)}" height="{n(6 * s)}" rx="2" fill="{BOOT}"/>')
     else:
-        g.append('<circle cx="100" cy="65" r="52" fill="url(#wireGlow)"/>')
-        g.append(f'<circle cx="100" cy="65" r="48" fill="none" stroke="{YELLOW}" stroke-width="2.5" stroke-dasharray="6 4"/>')
-        g.append('<line x1="190" y1="150" x2="155" y2="120" stroke="#D97706" stroke-width="6" stroke-linecap="round"/>')
-        g.append('<circle cx="155" cy="120" r="14" fill="url(#safeGlow)"/>')
-
-    return ''.join(g)
-
-
-def draw_ptw_clipboard_macro(signed=True):
-    """Macro close-up of official WBSEDCL Permit To Work (PTW) document."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#bench)"/>')
-    g.append('<rect x="20" y="12" width="160" height="196" rx="8" fill="url(#board)" stroke="#451A03" stroke-width="2"/>')
-    g.append('<rect x="28" y="24" width="144" height="176" rx="4" fill="url(#paper)"/>')
-    g.append('<rect x="75" y="8" width="50" height="18" rx="4" fill="url(#steel)" stroke="#334155" stroke-width="1.8"/>')
-    g.append('<circle cx="100" cy="17" r="3" fill="#1E293B"/>')
-
-    g.append('<rect x="38" y="34" width="124" height="10" rx="2" fill="url(#shirt)"/>')
-    for ry in (52, 68, 84, 100, 116):
-        g.append(f'<rect x="38" y="{ry}" width="34" height="7" rx="1.5" fill="#334155" opacity="0.6"/>')
-        g.append(f'<rect x="78" y="{ry}" width="84" height="7" rx="1.5" fill="url(#steel)" opacity="0.7"/>')
-
-    if signed:
-        g.append('<path d="M42 145 Q60 130 80 148 Q100 132 120 146" stroke="#1D4ED8" stroke-width="2.6" fill="none" stroke-linecap="round"/>')
-        g.append(f'<circle cx="138" cy="155" r="18" fill="{RED}" fill-opacity="0.85"/>')
-        g.append('<circle cx="138" cy="155" r="14" fill="none" stroke="#FFFFFF" stroke-width="1.8"/>')
-        g.append('<polygon points="138 145 142 153 150 153 144 158 146 166 138 161 130 166 132 158 126 153 134 153" fill="#FFFFFF"/>')
+        g.append(limb(hip, P(-5, -22), P(-6, -4), PANTS_D, 9 * s))
+        g.append(limb(hip, P(5, -22), P(6, -4), PANTS, 9 * s))
+        g.append(f'<rect x="{n(x - 13 * s)}" y="{n(gy - 6 * s)}" width="{n(13 * s)}" height="{n(6 * s)}" rx="2" fill="{BOOT}"/>')
+        g.append(f'<rect x="{n(x + 1 * s)}" y="{n(gy - 6 * s)}" width="{n(13 * s)}" height="{n(6 * s)}" rx="2" fill="{BOOT}"/>')
+    # torso
+    g.append(f'<path d="M{n(x - 13 * s)} {n(gy - 76 * s)} L{n(x + 13 * s)} {n(gy - 76 * s)} L{n(x + 11 * s)} {n(gy - 42 * s)} L{n(x - 11 * s)} {n(gy - 42 * s)} Z" fill="url(#shirt)"/>')
+    g.append(f'<path d="M{n(x)} {n(gy - 76 * s)} L{n(x)} {n(gy - 44 * s)}" stroke="{SHIRT_L}" stroke-width="1"/>')
+    # arms + props
+    props = []
+    if pose == 'hammer':
+        g.append(limb(sh, P(8, -58), P(10, -46), SHIRT_B, 7 * s))
+        g.append(hand(P(10, -46), 3.8 * s))
+        g.append(limb(sh, P(-12, -64), P(-24, -56), SHIRT_B, 7 * s))
+        hx, hy = P(-24, -56)
+        props.append(f'<path d="M{n(hx)} {n(hy)} L{n(hx - 16 * s)} {n(hy - 8 * s)}" stroke="{HANDLE}" stroke-width="{n(3.5 * s)}" stroke-linecap="round"/>')
+        props.append(f'<rect x="{n(hx - 22 * s)}" y="{n(hy - 16 * s)}" width="{n(8 * s)}" height="{n(13 * s)}" rx="1.5" fill="url(#steel)" stroke="{DARK}" stroke-width="0.8" transform="rotate(-25 {n(hx - 18 * s)} {n(hy - 9 * s)})"/>')
+        props.append(hand(P(-24, -56), 3.8 * s))
+    elif pose == 'rod':
+        g.append(limb(sh, P(-10, -84), P(-18, -94), SHIRT_B, 7 * s))
+        g.append(limb(sh, P(-4, -66), P(-12, -76), SHIRT_B, 7 * s))
+        props.append(f'<path d="M{n(x - 4 * s)} {n(gy - 64 * s)} L{n(x - 4 * s - 40 * reach * s)} {n(gy - 64 * s - 86 * reach * s)}" stroke="{YELLOW}" stroke-width="{n(4 * s)}" stroke-linecap="round"/>')
+        props.append(f'<path d="M{n(x - 4 * s)} {n(gy - 64 * s)} L{n(x - 14 * s)} {n(gy - 86 * s)}" stroke="{HANDLE}" stroke-width="{n(4.4 * s)}" stroke-linecap="round"/>')
+        props.append(hand(P(-18, -94), 3.8 * s))
+        props.append(hand(P(-12, -76), 3.8 * s))
+    elif pose == 'climb':
+        g.append(limb(sh, P(-12, -88), P(-16, -100), SHIRT_B, 7 * s))
+        g.append(limb(sh, P(-10, -66), P(-16, -70), SHIRT_B, 7 * s))
+        props.append(hand(P(-16, -100), 3.8 * s))
+        props.append(hand(P(-16, -70), 3.8 * s))
+    elif pose == 'look':
+        g.append(limb(sh, P(-10, -80), P(-4, -92), SHIRT_B, 7 * s))
+        g.append(limb(sh, P(10, -60), P(12, -46), SHIRT_B, 7 * s))
+        props.append(hand(P(12, -46), 3.8 * s))
     else:
-        g.append(f'<line x1="38" y1="130" x2="160" y2="180" stroke="{RED}" stroke-width="3"/>')
-        g.append(f'<line x1="38" y1="180" x2="160" y2="130" stroke="{RED}" stroke-width="3"/>')
+        g.append(limb(sh, P(-10, -60), P(-12, -46), SHIRT_B, 7 * s))
+        g.append(limb(sh, P(10, -60), P(12, -46), SHIRT_B, 7 * s))
+        props.append(hand(P(-12, -46), 3.8 * s))
+        props.append(hand(P(12, -46), 3.8 * s))
+    tilt = -8 if pose in ('look',) else (-6 if pose == 'climb' else 0)
+    g.append(head(x, gy - 90 * s, s * 0.78, 'up' if pose == 'look' else face, tilt))
+    if pose == 'look':
+        g.append(hand(P(-4, -92), 3.8 * s))
+    return ''.join(g + props)
 
+
+# =============================================================================
+# Round 1 — the PPE kit on the bench (lesson 1.1)
+# =============================================================================
+
+def bench():
+    return ''.join(f'<line x1="0" y1="{y}" x2="200" y2="{y}" stroke="{PLANK}" stroke-width="1.2" opacity="0.6"/>' for y in (42, 110, 178))
+
+
+def kit_helmet(cx, cy, crack=False):
+    g = [f'<g transform="translate({cx} {cy})">']
+    g.append('<ellipse cx="0" cy="22" rx="40" ry="8" fill="#000000" opacity="0.22"/>')
+    g.append(f'<path d="M-34 14 Q-32 -34 0 -36 Q32 -34 34 14 Z" fill="url(#helmetDome)" stroke="{HELMET_S}" stroke-width="2"/>')
+    g.append('<path d="M-16 6 Q-12 -24 0 -26 Q12 -24 16 6" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.6"/>')
+    g.append(f'<path d="M-42 12 Q0 26 42 12 L40 20 Q0 34 -40 20 Z" fill="{BRIM}" stroke="{BRIM_S}" stroke-width="1.6"/>')
+    # chin strap lying in front, buckle closed
+    g.append(f'<path d="M-30 22 Q-20 40 0 40 Q20 40 30 22" fill="none" stroke="{DARK}" stroke-width="4" stroke-linecap="round"/>')
+    g.append(f'<rect x="-6" y="35" width="12" height="9" rx="2" fill="{INK}" stroke="url(#steel)" stroke-width="1.2"/>')
+    if crack:
+        g.append(f'<path d="M6 -33 L2 -22 L9 -14 L3 -4 L8 8" fill="none" stroke="{HAIR}" stroke-width="1.8" stroke-linejoin="round"/>')
+        g.append(f'<path d="M2 -22 L-5 -18 M9 -14 L15 -12" fill="none" stroke="{HAIR}" stroke-width="1.1"/>')
+    g.append('</g>')
     return ''.join(g)
 
 
-def draw_ptw_verbal_macro():
-    """Macro close-up of lineman on phone with no written PTW."""
+def kit_shirt(cx, cy, poly=False):
+    fill = 'url(#poly)' if poly else 'url(#shirt)'
+    g = [f'<g transform="translate({cx} {cy})">']
+    g.append('<rect x="-38" y="-30" width="76" height="66" rx="5" fill="#000000" opacity="0.22"/>')
+    g.append(f'<path d="M-38 -34 L-14 -40 L14 -40 L38 -34 L38 32 L-38 32 Z" fill="{fill}" stroke="{SHIRT_L}" stroke-width="1.6"/>')
+    g.append(f'<path d="M-14 -40 L0 -26 L14 -40" fill="none" stroke="{SHIRT_L}" stroke-width="1.6"/>')
+    g.append(f'<path d="M-38 4 L-22 4 L-22 32" fill="none" stroke="{SHIRT_L}" stroke-width="1.2"/>')
+    g.append(f'<path d="M38 4 L22 4 L22 32" fill="none" stroke="{SHIRT_L}" stroke-width="1.2"/>')
+    g.append(f'<path d="M0 -26 L0 32" stroke="{SHIRT_L}" stroke-width="1.2"/>')
+    for by in (-14, 2, 18):
+        g.append(f'<circle cx="0" cy="{by}" r="2.4" fill="{SHIRT_B}"/>')
+    if poly:
+        # synthetic sheen and a melted, curled hole
+        g.append('<path d="M-32 -26 L-8 26 M-18 -32 L6 22 M12 -34 L32 14" stroke="#FFFFFF" stroke-width="2.4" opacity="0.55"/>')
+        g.append(f'<path d="M16 12 Q22 6 28 12 Q30 20 22 22 Q14 22 16 12 Z" fill="{HAIR}"/>')
+        g.append('<path d="M15 12 Q22 4 29 12" fill="none" stroke="#5B3A1E" stroke-width="1.6"/>')
+    g.append('</g>')
+    return ''.join(g)
+
+
+def kit_boot(cx, cy, nail=False):
+    """The boot turned sole up: thick rubber, lugs, heel."""
+    g = [f'<g transform="translate({cx} {cy})">']
+    g.append('<ellipse cx="0" cy="4" rx="30" ry="46" fill="#000000" opacity="0.22"/>')
+    g.append('<path d="M-22 -30 C-24 -46 -10 -48 0 -48 C10 -48 24 -46 22 -30 C21 -14 24 4 22 14 C20 22 14 24 13 30 L18 36 C20 44 14 50 0 50 C-14 50 -20 44 -18 36 L-13 30 C-14 24 -20 22 -22 14 C-24 4 -21 -14 -22 -30 Z" fill="url(#bootSole)" stroke="#090D14" stroke-width="2"/>')
+    for y in (-38, -26, -14, -2, 10):
+        g.append(f'<path d="M-12 {y + 4} L0 {y} L12 {y + 4} L10 {y + 9} L0 {y + 5} L-10 {y + 9} Z" fill="url(#bootLug)" stroke="#0B0E14" stroke-width="0.9"/>')
+    g.append('<rect x="-10" y="18" width="20" height="10" rx="2" fill="#1F2937" stroke="#0B0E14" stroke-width="1"/>')
+    g.append('<path d="M-14 38 C-14 46 -6 47 0 47 C6 47 14 46 14 38 L12 33 C6 38 -6 38 -12 33 Z" fill="url(#bootLug)" stroke="#0B0E14" stroke-width="1"/>')
+    if nail:
+        g.append('<ellipse cx="3" cy="-12" rx="8" ry="6" fill="url(#steel)" stroke="#334155" stroke-width="1.4"/>')
+        g.append('<ellipse cx="2" cy="-13" rx="5" ry="3.5" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.9"/>')
+        g.append(f'<circle cx="3" cy="-12" r="1.6" fill="{DARK}"/>')
+        g.append('<path d="M-9 -9 Q3 -4 15 -10" stroke="#000000" stroke-width="2" fill="none"/>')
+    g.append('</g>')
+    return ''.join(g)
+
+
+def kit_glove(cx, cy, leak=False):
+    """The rubber glove rolled at the cuff and full of air (the air test)."""
+    g = [f'<g transform="translate({cx} {cy})">']
+    g.append('<ellipse cx="0" cy="6" rx="32" ry="40" fill="#000000" opacity="0.22"/>')
+    g.append(f'<path d="M-24 26 C-32 4 -30 -22 -16 -34 C-10 -38 -4 -40 0 -40 C4 -40 10 -38 16 -34 C30 -22 32 4 24 26 Z" fill="{GLOVE}" stroke="{GLOVE_S}" stroke-width="1.8"/>')
+    for fx, top in ((-15, -52), (-5, -58), (6, -56), (16, -48)):
+        g.append(f'<path d="M{fx - 5} -34 Q{fx - 5} {top} {fx} {top} Q{fx + 5} {top} {fx + 5} -34" fill="{GLOVE}" stroke="{GLOVE_S}" stroke-width="1.4"/>')
+    g.append(f'<ellipse cx="-8" cy="-12" rx="7" ry="16" fill="{GLOVE_H}" opacity="0.55"/>')
+    g.append(f'<ellipse cx="0" cy="27" rx="26" ry="7" fill="{CUFF}" stroke="#7C2D12" stroke-width="1.4"/>')
+    g.append(f'<ellipse cx="0" cy="33" rx="28" ry="8" fill="{DARK}" stroke="{INK}" stroke-width="1.2"/>')
+    if leak:
+        g.append(f'<circle cx="12" cy="-8" r="1.8" fill="{INK}"/>')
+        for r in (5, 9, 13):
+            g.append(f'<path d="M{12 + r * 0.5} {-8 - r} Q{12 + r * 1.2} -8 {12 + r * 0.5} {-8 + r}" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>')
+    g.append('</g>')
+    return ''.join(g)
+
+
+def kit_card(layout='a', flaw=None):
+    a = layout == 'a'
+    spots = {'helmet': (56, 66), 'shirt': (146, 62), 'boot': (52, 158), 'glove': (148, 160)}
+    if not a:
+        spots = {'helmet': (146, 66), 'shirt': (54, 62), 'boot': (148, 158), 'glove': (52, 160)}
+    return ''.join([
+        bench(),
+        kit_shirt(*spots['shirt'], poly=flaw == 'poly'),
+        kit_helmet(*spots['helmet'], crack=flaw == 'crack'),
+        kit_boot(*spots['boot'], nail=flaw == 'nail'),
+        kit_glove(*spots['glove'], leak=flaw == 'leak'),
+    ])
+
+
+# =============================================================================
+# Round 2 — the harness on him (lesson 1.4)
+# =============================================================================
+
+def strap(x0, y0, x1, y1, w=16):
+    """A webbing strap from (x0,y0) to (x1,y1) with its stitch line."""
+    dx, dy = x1 - x0, y1 - y0
+    ln = math.hypot(dx, dy) or 1
+    px, py = -dy / ln * w / 2, dx / ln * w / 2
+    pts = f'{n(x0 + px)} {n(y0 + py)} {n(x1 + px)} {n(y1 + py)} {n(x1 - px)} {n(y1 - py)} {n(x0 - px)} {n(y0 - py)}'
+    return (f'<polygon points="{pts}" fill="url(#webO)" stroke="{WEB_D}" stroke-width="1.4"/>'
+            f'<line x1="{n(x0)}" y1="{n(y0)}" x2="{n(x1)}" y2="{n(y1)}" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="4 2.5" opacity="0.8"/>')
+
+
+def harness_card(kind):
+    """kind: snug, tail, loose, high, twisted, frayed, label."""
     g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<path d="M40 220 L40 120 Q100 95 160 120 L160 220 Z" fill="url(#shirt)"/>')
-    g.append('<circle cx="100" cy="70" r="28" fill="#A86E48"/>')
-    g.append('<path d="M68 64 Q70 25 100 22 Q130 25 132 64 Z" fill="url(#helmetDome)"/>')
-    g.append('<rect x="62" y="62" width="76" height="8" rx="3" fill="#EAB308"/>')
-
-    g.append('<path d="M140 160 L145 90 L125 70" stroke="url(#shirt)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>')
-    g.append('<circle cx="122" cy="70" r="10" fill="#A86E48"/>')
-    g.append('<rect x="115" y="55" width="16" height="28" rx="3" fill="#0F172A" stroke="url(#steel)" stroke-width="1.5"/>')
-    g.append('<rect x="117" y="58" width="12" height="22" rx="1" fill="#38BDF8" opacity="0.8"/>')
-
-    for r in (18, 28):
-        g.append(f'<path d="M136 {68-r*0.6} Q{136+r} 68 136 {68+r*0.6}" stroke="{RED}" stroke-width="2" fill="none"/>')
-
-    g.append('<circle cx="50" cy="160" r="24" fill="#000000" opacity="0.6"/>')
-    g.append('<rect x="36" y="145" width="28" height="32" rx="3" fill="#FFFFFF"/>')
-    g.append(f'<line x1="32" y1="138" x2="68" y2="182" stroke="{RED}" stroke-width="4"/>')
-
+    # torso and neck
+    g.append(f'<rect x="84" y="0" width="32" height="40" fill="{SKIN_D}"/>')
+    g.append('<path d="M6 220 L6 70 Q20 34 70 30 L130 30 Q180 34 194 70 L194 220 Z" fill="url(#shirt)"/>')
+    g.append(f'<path d="M78 30 L100 54 L122 30" fill="none" stroke="{SHIRT_L}" stroke-width="2"/>')
+    g.append(f'<line x1="100" y1="54" x2="100" y2="220" stroke="{SHIRT_L}" stroke-width="1.4" opacity="0.6"/>')
+    chest_y = 70 if kind == 'high' else 116
+    # shoulder straps
+    if kind == 'twisted':
+        g.append(strap(64, 30, 60, 84))
+        g.append('<polygon points="52 84 68 84 64 104 56 104" fill="url(#webBack)" stroke="#7C2D12" stroke-width="1.4"/>')
+        g.append('<path d="M52 84 L68 104 M68 84 L52 104" stroke="#7C2D12" stroke-width="1.2"/>')
+        g.append(strap(60, 104, 58, 220))
+    else:
+        g.append(strap(64, 30, 58, 220))
+    g.append(strap(136, 30, 142, 220))
+    if kind == 'frayed':
+        # a cut through half the webbing, the fibres sticking out of it
+        g.append('<path d="M53 62 L62 70 L55 76 L63 84 L54 90 L51 90 L50 62 Z" fill="url(#shirt)" stroke="#5B2A0B" stroke-width="1.6"/>')
+        for fx, fy in ((54, 64), (58, 70), (56, 76), (59, 82), (55, 88)):
+            g.append(f'<line x1="{fx}" y1="{fy}" x2="{fx - 9}" y2="{fy - 4}" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round"/>')
+            g.append(f'<line x1="{fx}" y1="{fy}" x2="{fx - 8}" y2="{fy + 3}" stroke="#FFB070" stroke-width="1.2" stroke-linecap="round"/>')
+        g.append('<path d="M137 150 L145 158 L138 164" fill="none" stroke="#5B2A0B" stroke-width="1.6"/>')
+    # chest strap and buckle
+    if kind == 'loose':
+        g.append(strap(60, 116, 80, 150, 14))
+        g.append(strap(140, 116, 124, 156, 14))
+        g.append('<rect x="74" y="146" width="14" height="18" rx="3" fill="url(#steel)" stroke="#334155" stroke-width="1.4"/>')
+        g.append('<rect x="118" y="152" width="14" height="18" rx="3" fill="url(#steel)" stroke="#334155" stroke-width="1.4"/>')
+    else:
+        g.append(strap(60, chest_y, 140, chest_y, 14))
+        g.append(f'<rect x="90" y="{chest_y - 12}" width="20" height="24" rx="3.5" fill="url(#steel)" stroke="#334155" stroke-width="1.6"/>')
+        g.append(f'<rect x="96" y="{chest_y - 7}" width="8" height="14" rx="2" fill="{DARK}"/>')
+    # waist belt with its buckle
+    g.append(strap(6, 196, 194, 196, 14))
+    g.append('<rect x="90" y="186" width="20" height="20" rx="3" fill="url(#steel)" stroke="#334155" stroke-width="1.4"/>')
+    # his hand
+    if kind == 'snug':
+        g.append(f'<rect x="126" y="134" width="30" height="34" rx="6" fill="{SKIN}" stroke="{SKIN_D}" stroke-width="1.4"/>')
+        for fy in (140, 147, 154, 161):
+            g.append(f'<line x1="129" y1="{fy}" x2="153" y2="{fy}" stroke="{SKIN_D}" stroke-width="1.4"/>')
+        g.append(strap(136, 128, 142, 172))
+    elif kind == 'tail':
+        g.append(f'<rect x="104" y="{chest_y + 4}" width="26" height="22" rx="6" fill="{SKIN}" stroke="{SKIN_D}" stroke-width="1.4"/>')
+        for fx in (110, 116, 122):
+            g.append(f'<line x1="{fx}" y1="{chest_y + 7}" x2="{fx}" y2="{chest_y + 24}" stroke="{SKIN_D}" stroke-width="1.3"/>')
+    elif kind in ('loose', 'high'):
+        hy = 158 if kind == 'loose' else chest_y + 4
+        g.append(f'<rect x="104" y="{hy}" width="26" height="22" rx="6" fill="{SKIN}" stroke="{SKIN_D}" stroke-width="1.4"/>')
+        for fx in (110, 116, 122):
+            g.append(f'<line x1="{fx}" y1="{hy + 3}" x2="{fx}" y2="{hy + 20}" stroke="{SKIN_D}" stroke-width="1.3"/>')
+    elif kind == 'twisted':
+        g.append(f'<rect x="126" y="134" width="30" height="34" rx="6" fill="{SKIN}" stroke="{SKIN_D}" stroke-width="1.4"/>')
+        for fy in (140, 147, 154, 161):
+            g.append(f'<line x1="129" y1="{fy}" x2="153" y2="{fy}" stroke="{SKIN_D}" stroke-width="1.4"/>')
+        g.append(strap(136, 128, 142, 172))
+    elif kind == 'label':
+        # The label hanging off the belt, held up against the calendar on the van wall.
+        g.append('<rect x="22" y="128" width="58" height="50" rx="4" fill="url(#paper)" stroke="#94A3B8" stroke-width="1.4"/>')
+        g.append(f'<rect x="22" y="128" width="58" height="12" rx="4" fill="{RED}"/>')
+        g.append(f'<text x="51" y="166" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="700" fill="{DARK}">2026</text>')
+        g.append('<rect x="130" y="128" width="54" height="44" rx="3" fill="url(#paper)" stroke="#94A3B8" stroke-width="1.4"/>')
+        g.append(f'<text x="157" y="146" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="{DARK}">EXP</text>')
+        g.append(f'<text x="157" y="164" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="700" fill="{RED}">2023</text>')
+        g.append('<path d="M142 196 L150 172" stroke="#94A3B8" stroke-width="1.4"/>')
     return ''.join(g)
 
 
-def draw_ptw_pocket_macro():
-    """Macro close-up of crumpled permit crammed unread in back pocket."""
+# =============================================================================
+# Tools on the tarp (lessons 1.5, 1.10) — step 29 only
+# =============================================================================
+
+def tool_card(kind):
+    """kind: ok, cracked (the rod's stick), pvc (a PVC jugaad for a rod)."""
     g = []
-    g.append('<rect width="200" height="220" fill="url(#ground)"/>')
-    g.append('<path d="M20 0 L180 0 L180 220 L20 220 Z" fill="#1E293B"/>')
-    g.append('<path d="M50 60 L150 60 L140 180 L60 180 Z" fill="#0F172A" stroke="#334155" stroke-width="2.5"/>')
-    g.append('<path d="M55 75 L145 75" stroke="#475569" stroke-width="1.5" stroke-dasharray="3 2"/>')
-
-    g.append('<path d="M68 85 L60 30 L105 18 L138 32 L130 85 Z" fill="url(#paper)" stroke="#94A3B8" stroke-width="2"/>')
-    g.append('<line x1="72" y1="42" x2="128" y2="48" stroke="#1E293B" stroke-width="2.5"/>')
-    g.append('<line x1="68" y1="58" x2="124" y2="64" stroke="#64748B" stroke-width="1.8"/>')
-    g.append(f'<circle cx="118" cy="68" r="8" fill="{RED}" fill-opacity="0.8"/>')
-
-    g.append('<circle cx="100" cy="120" r="24" fill="url(#hazardGlow)"/>')
-    g.append(f'<line x1="90" y1="110" x2="110" y2="130" stroke="{RED}" stroke-width="3"/>')
-    g.append(f'<line x1="90" y1="130" x2="110" y2="110" stroke="{RED}" stroke-width="3"/>')
-
+    g.append(''.join(f'<path d="M0 {y} L200 {y - 30}" stroke="#244F78" stroke-width="1" opacity="0.6"/>' for y in (60, 130, 200, 270)))
+    # tool bag, open, the tools standing in it
+    g.append('<path d="M28 150 L92 150 L86 206 L34 206 Z" fill="#D97706" stroke="#92400E" stroke-width="2"/>')
+    g.append('<ellipse cx="60" cy="150" rx="32" ry="8" fill="#B45309" stroke="#92400E" stroke-width="1.6"/>')
+    g.append('<rect x="40" y="118" width="7" height="34" rx="2" fill="url(#steel)"/>')
+    g.append(f'<rect x="52" y="110" width="6" height="42" rx="2" fill="{YELLOW}"/>')
+    g.append('<rect x="63" y="122" width="8" height="30" rx="2" fill="url(#steel)"/>')
+    g.append(f'<path d="M74 152 L80 120 L86 124 L80 152 Z" fill="{RED}"/>')
+    g.append(f'<path d="M30 150 Q60 120 90 150" fill="none" stroke="{INK}" stroke-width="3"/>')
+    # the discharge rod across the tarp: hook, stick (or PVC), copper lead, clamp
+    if kind == 'pvc':
+        g.append('<path d="M20 70 L176 30" stroke="url(#pvc)" stroke-width="11" stroke-linecap="round"/>')
+        g.append('<path d="M20 70 L176 30" stroke="#6B7280" stroke-width="1" opacity="0.6"/>')
+        g.append('<path d="M168 28 L184 22 Q194 20 192 30 Q190 38 182 34" fill="none" stroke="url(#steel)" stroke-width="4" stroke-linecap="round"/>')
+        g.append(f'<path d="M160 26 L172 23 M162 36 L174 33" stroke="{INK}" stroke-width="3"/>')
+    else:
+        for i, (x0, x1) in enumerate(((20, 72), (72, 124), (124, 172))):
+            y0 = 70 - (x0 - 20) * 40 / 156
+            y1 = 70 - (x1 - 20) * 40 / 156
+            g.append(f'<path d="M{x0} {n(y0)} L{x1} {n(y1)}" stroke="url(#glass)" stroke-width="10" stroke-linecap="round"/>')
+            g.append(f'<path d="M{x1 - 2} {n(y1 - 8)} L{x1 + 2} {n(y1 + 8)}" stroke="{HANDLE}" stroke-width="3"/>')
+        g.append('<path d="M168 30 L184 22 Q194 20 192 30 Q190 38 182 34" fill="none" stroke="url(#steel)" stroke-width="4" stroke-linecap="round"/>')
+        if kind == 'cracked':
+            g.append(f'<path d="M96 52 L101 58 L95 62 L102 68" fill="none" stroke="{HAIR}" stroke-width="2" stroke-linejoin="round"/>')
+            g.append(f'<path d="M101 58 L110 55 M95 62 L88 64" stroke="{HAIR}" stroke-width="1.2"/>')
+    g.append('<path d="M24 74 Q60 112 120 100 Q160 92 172 118" fill="none" stroke="#C26A2E" stroke-width="3.4"/>')
+    g.append('<rect x="164" y="114" width="18" height="16" rx="3" fill="url(#steel)" stroke="#334155" stroke-width="1.4"/>')
     return ''.join(g)
 
 
-def draw_mind_rushed_macro():
-    """Macro close-up of wristwatch showing frantic hurry and ticking time."""
+# =============================================================================
+# Round 3 — him at the pole, the permit and his state of mind (1.6, 1.10)
+# =============================================================================
+
+def permit_board(x, y, s=1.0, rot=0):
+    return (f'<g transform="translate({n(x)} {n(y)}) rotate({rot}) scale({s})">'
+            '<rect x="-22" y="-28" width="44" height="56" rx="4" fill="url(#board)" stroke="#451A03" stroke-width="1.4"/>'
+            '<rect x="-18" y="-22" width="36" height="46" rx="2" fill="url(#paper)"/>'
+            '<rect x="-8" y="-31" width="16" height="7" rx="2" fill="url(#steel)"/>'
+            + ''.join(f'<rect x="-14" y="{yy}" width="28" height="3" rx="1" fill="#334155" opacity="0.6"/>' for yy in (-16, -10, -4, 2))
+            + f'<path d="M-14 13 Q-8 8 -2 14 Q4 8 8 13" fill="none" stroke="{SIGN}" stroke-width="1.6" stroke-linecap="round"/>'
+            f'<circle cx="11" cy="16" r="5" fill="{RED}" fill-opacity="0.85"/>'
+            '</g>')
+
+
+def mind_card(kind):
+    """kind: signed, calm, phone, rushed, tired, pocket."""
     g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<rect x="0" y="85" width="200" height="50" rx="4" fill="url(#shirt)"/>')
-    g.append('<rect x="65" y="80" width="70" height="60" rx="10" fill="#A86E48"/>')
-
-    g.append('<rect x="86" y="55" width="28" height="110" rx="4" fill="#0F172A" stroke="#334155" stroke-width="2"/>')
-    g.append('<circle cx="100" cy="110" r="34" fill="url(#steel)" stroke="#1E293B" stroke-width="3"/>')
-    g.append('<circle cx="100" cy="110" r="28" fill="#FFFFFF"/>')
-
-    for h in range(12):
-        rad = h * math.pi / 6
-        x1, y1 = 100 + 22 * math.sin(rad), 110 - 22 * math.cos(rad)
-        x2, y2 = 100 + 26 * math.sin(rad), 110 - 26 * math.cos(rad)
-        g.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="#1E293B" stroke-width="2"/>')
-
-    g.append('<line x1="100" y1="110" x2="114" y2="96" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round"/>')
-    g.append(f'<line x1="100" y1="110" x2="84" y2="100" stroke="{RED}" stroke-width="2" stroke-linecap="round"/>')
-    g.append(f'<circle cx="100" cy="110" r="3" fill="{RED}"/>')
-
-    for sx, sy in ((30, 60), (45, 45), (155, 60), (170, 45)):
-        g.append(f'<line x1="{sx}" y1="{sy}" x2="{sx+20}" y2="{sy}" stroke="{RED}" stroke-width="2.5" stroke-linecap="round"/>')
-
+    g.append('<rect y="176" width="200" height="44" fill="url(#ground)"/>')
+    g.append(f'<line x1="0" y1="176" x2="200" y2="176" stroke="{GROUND_L}" stroke-width="2"/>')
+    g.append('<rect x="14" y="0" width="30" height="180" fill="url(#pole)" stroke="#6B7280" stroke-width="1.4"/>')
+    g.append('<ellipse cx="160" cy="34" rx="22" ry="8" fill="#FFFFFF" opacity="0.7"/>')
+    # torso
+    g.append('<path d="M60 220 L64 128 Q108 108 152 128 L156 220 Z" fill="url(#shirt)"/>')
+    g.append(f'<line x1="108" y1="122" x2="108" y2="220" stroke="{SHIRT_L}" stroke-width="1.2"/>')
+    g.append(f'<rect x="120" y="140" width="22" height="18" rx="2" fill="{SHIRT_B}"/>')
+    face = {'phone': 'talk', 'rushed': 'tense', 'tired': 'tired'}.get(kind, 'calm')
+    tilt = 12 if kind == 'tired' else 0
+    g.append(head(108, 84, 2.0, face, tilt))
+    if kind in ('signed', 'calm', 'rushed', 'tired'):
+        if kind == 'signed':
+            g.append(limb((72, 136), (70, 170), (92, 178), SHIRT_B, 14))
+            g.append(limb((144, 136), (148, 170), (126, 178), SHIRT_B, 14))
+            g.append(permit_board(108, 168, 1.2))
+            g.append(hand((88, 186), 7))
+            g.append(hand((128, 186), 7))
+        elif kind == 'calm':
+            g.append(limb((72, 136), (54, 150), (44, 132), SHIRT_B, 14))
+            g.append(hand((44, 132), 7))
+            g.append(limb((144, 136), (152, 172), (150, 196), SHIRT_B, 14))
+            g.append(permit_board(154, 186, 0.9, 8))
+            g.append(hand((150, 196), 7))
+        elif kind == 'rushed':
+            g.append(limb((72, 136), (70, 172), (88, 186), SHIRT_B, 14))
+            g.append(permit_board(84, 186, 0.9, -12))
+            g.append(hand((88, 194), 7))
+            g.append(limb((144, 136), (160, 150), (144, 132), SHIRT_B, 14))
+            g.append('<rect x="132" y="124" width="22" height="18" rx="4" fill="url(#steel)" stroke="#1E293B" stroke-width="1.6"/>')
+            g.append('<circle cx="143" cy="133" r="6" fill="#FFFFFF"/>')
+            g.append(f'<path d="M143 133 L143 128 M143 133 L147 135" stroke="{INK}" stroke-width="1.4" stroke-linecap="round"/>')
+            g.append('<circle cx="130" cy="72" r="3" fill="#38BDF8"/>')
+            g.append('<circle cx="86" cy="66" r="2.6" fill="#38BDF8"/>')
+        elif kind == 'tired':
+            g.append(limb((72, 136), (66, 176), (70, 204), SHIRT_B, 14))
+            g.append(permit_board(70, 206, 0.9, 24))
+            g.append(hand((70, 204), 7))
+            g.append(limb((144, 136), (150, 176), (148, 204), SHIRT_B, 14))
+            g.append(hand((148, 204), 7))
+    elif kind == 'phone':
+        g.append(limb((144, 136), (156, 112), (134, 88), SHIRT_B, 14))
+        g.append('<rect x="128" y="70" width="14" height="26" rx="3" fill="#0F172A" stroke="url(#steel)" stroke-width="1.4"/>')
+        g.append('<rect x="130" y="73" width="10" height="19" rx="1" fill="#38BDF8" opacity="0.85"/>')
+        g.append(hand((134, 90), 7))
+        g.append(limb((72, 136), (68, 172), (72, 200), SHIRT_B, 14))
+        g.append(hand((72, 200), 7))
+    elif kind == 'pocket':
+        # the permit crumpled into his shirt pocket, unread; already reaching for the pole
+        g.append('<path d="M118 146 L116 118 L134 112 L146 120 L142 146 Z" fill="url(#paper)" stroke="#94A3B8" stroke-width="1.4"/>')
+        g.append(f'<path d="M120 126 Q126 122 132 128" fill="none" stroke="{SIGN}" stroke-width="1.4"/>')
+        g.append(f'<circle cx="136" cy="132" r="4" fill="{RED}" fill-opacity="0.85"/>')
+        g.append(f'<rect x="120" y="140" width="22" height="18" rx="2" fill="{SHIRT_B}"/>')
+        g.append(limb((72, 136), (54, 150), (44, 132), SHIRT_B, 14))
+        g.append(hand((44, 132), 7))
+        g.append(limb((144, 136), (152, 172), (150, 196), SHIRT_B, 14))
+        g.append(hand((150, 196), 7))
     return ''.join(g)
 
 
-def draw_mind_tired_macro():
-    """Macro close-up of exhausted lineman rubbing temple with fatigue."""
+# =============================================================================
+# Round 4 — the pole and the লক্ষ্মণ রেখা (lessons 1.2, 1.3)
+# =============================================================================
+
+GY = 188
+
+
+def pole_top(cx, top=8):
+    g = [f'<rect x="{cx - 40}" y="{top + 18}" width="80" height="8" rx="2" fill="url(#steelArm)"/>']
+    for ix in (cx - 34, cx + 26):
+        g.append(f'<rect x="{ix}" y="{top + 4}" width="8" height="14" rx="3" fill="url(#porcelain)"/>')
+    g.append(f'<path d="M0 {top + 6} Q100 {top + 10} 200 {top + 6}" stroke="{WIRE}" stroke-width="2.6" fill="none"/>')
+    return ''.join(g)
+
+
+def rings(x, y, good=True):
+    """The hammer's sound: long even rings (sound) or short broken ones (weak)."""
+    dash = '' if good else ' stroke-dasharray="3 6"'
+    return ''.join(f'<path d="M{x} {y - r} A{r} {r} 0 0 0 {x} {y + r}" stroke="{YELLOW}" stroke-width="2.6" fill="none" stroke-linecap="round"{dash}/>'
+                   for r in (10, 18, 26))
+
+
+LAKSHMAN = '<circle cx="140" cy="{cy}" r="38" fill="none" stroke="' + YELLOW + '" stroke-width="2.2" stroke-dasharray="6 4"/>'
+
+
+def pole_card(kind):
+    """kind: sound, spot, lean, inside, skip, rusted."""
     g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<path d="M40 220 L40 130 Q100 100 160 130 L160 220 Z" fill="url(#shirt)"/>')
-    g.append('<circle cx="100" cy="85" r="32" fill="#A86E48"/>')
-    g.append('<path d="M64 70 Q68 25 100 22 Q132 25 136 70 Z" fill="url(#helmetDome)"/>')
-    g.append('<rect x="58" y="68" width="84" height="8" rx="3" fill="#EAB308"/>')
-
-    g.append('<path d="M82 85 Q88 90 94 85" stroke="#3E2723" stroke-width="2.2" fill="none"/>')
-    g.append('<path d="M106 85 Q112 90 118 85" stroke="#3E2723" stroke-width="2.2" fill="none"/>')
-
-    g.append('<path d="M145 160 L140 100 L120 80" stroke="url(#shirt)" stroke-width="20" stroke-linecap="round" fill="none"/>')
-    g.append('<circle cx="120" cy="80" r="12" fill="#A86E48"/>')
-
-    g.append(f'<path d="M70 45 Q80 35 90 45 Q100 55 110 45" stroke="{RED}" stroke-width="2" fill="none"/>')
-    g.append('<circle cx="135" cy="50" r="3" fill="#38BDF8"/>')
-    g.append('<circle cx="65" cy="60" r="2.5" fill="#38BDF8"/>')
-
+    g.append(f'<rect y="{GY}" width="200" height="{H - GY}" fill="url(#ground)"/>')
+    g.append(f'<line x1="0" y1="{GY}" x2="200" y2="{GY}" stroke="{GROUND_L}" stroke-width="2"/>')
+    cx = 74
+    if kind == 'rusted':
+        g.append(f'<rect x="{cx - 12}" y="0" width="24" height="{GY}" fill="url(#steelPole)" stroke="#475569" stroke-width="1.4"/>')
+        g.append(f'<path d="M{cx - 13} {GY - 34} Q{cx} {GY - 42} {cx + 13} {GY - 32} L{cx + 13} {GY} L{cx - 13} {GY} Z" fill="url(#rust)" stroke="#78350F" stroke-width="1.2"/>')
+        g.append(f'<ellipse cx="{cx - 3}" cy="{GY - 14}" rx="5" ry="8" fill="#1E1610"/>')
+        g.append(pole_top(cx))
+    elif kind == 'lean':
+        g.append(f'<g transform="rotate(-9 {cx} {GY})">')
+        g.append(f'<rect x="{cx - 12}" y="-10" width="24" height="{GY + 10}" fill="url(#pole)" stroke="#6B7280" stroke-width="1.4"/>')
+        g.append(pole_top(cx, 4))
+        g.append(LAKSHMAN.format(cy=14))
+        g.append('</g>')
+        g.append(f'<path d="M{cx - 30} {GY + 2} L{cx - 16} {GY + 8} L{cx - 22} {GY + 14} L{cx - 6} {GY + 20} M{cx + 4} {GY + 2} L{cx + 14} {GY + 12} L{cx + 30} {GY + 16}" stroke="{HAIR}" stroke-width="2" fill="none"/>')
+        g.append(f'<path d="M{cx - 40} {GY + 1} Q{cx - 10} {GY - 8} {cx + 34} {GY + 3}" stroke="#5B3A1E" stroke-width="3" fill="none"/>')
+    else:
+        g.append(f'<rect x="{cx - 12}" y="0" width="24" height="{GY}" fill="url(#pole)" stroke="#6B7280" stroke-width="1.4"/>')
+        g.append(pole_top(cx))
+        if kind == 'skip':
+            # spalling at the foot he never looked at, a rebar showing
+            g.append(f'<path d="M{cx - 12} {GY - 40} L{cx - 2} {GY - 36} L{cx - 6} {GY - 22} L{cx - 12} {GY - 20} Z" fill="#6B6A64"/>')
+            g.append(f'<path d="M{cx - 8} {GY - 38} L{cx - 7} {GY - 22}" stroke="#7A3B1E" stroke-width="2"/>')
+            g.append(f'<path d="M{cx + 2} {GY - 60} L{cx + 8} {GY - 46} L{cx + 3} {GY - 34}" stroke="{HAIR}" stroke-width="1.4" fill="none"/>')
+            for y in range(GY - 150, GY - 10, 22):
+                g.append(f'<rect x="{cx + 12}" y="{y}" width="8" height="3" rx="1" fill="url(#steel)"/>')
+    # the লক্ষ্মণ রেখা around the live wire (a worker draws it in his head) —
+    # on every pole card, so the dashed ring never marks the clearance cards
+    if kind != 'lean':
+        g.append(LAKSHMAN.format(cy=18))
+    # the worker
+    if kind == 'sound':
+        g.append(worker(cx + 40, GY, 0.9, 'hammer'))
+        g.append(rings(cx - 14, GY - 52, True))
+    elif kind == 'rusted':
+        g.append(worker(cx + 40, GY, 0.9, 'hammer'))
+        g.append(rings(cx - 14, GY - 52, False))
+    elif kind == 'lean':
+        g.append(worker(cx + 46, GY, 0.9, 'hammer'))
+        g.append(rings(cx - 10, GY - 52, False))
+    elif kind == 'spot':
+        g.append(worker(150, GY, 0.9, 'rod', reach=0.8))
+    elif kind == 'inside':
+        g.append(worker(166, GY, 0.9, 'rod', reach=1.12))
+        g.append('<circle cx="127" cy="36" r="13" fill="url(#flash)"/>')
+        g.append('<path d="M138 20 L131 27 L136 30 L128 36" stroke="#38BDF8" stroke-width="2.6" fill="none"/>')
+    elif kind == 'skip':
+        g.append(worker(cx + 26, GY - 70, 0.9, 'climb'))
     return ''.join(g)
 
 
-def draw_site_barricade_macro():
-    """Macro close-up of high-vis traffic cones and caution barrier tape."""
+# =============================================================================
+# Round 5 — the surroundings, the weather and the way down (1.3, 1.9, 1.10)
+# =============================================================================
+
+def site_card(kind):
+    """kind: mate, clear, hive, traffic, storm, water, sky (weather clear), blocked."""
     g = []
-    g.append('<rect width="200" height="220" fill="url(#ground)"/>')
-    g.append('<rect y="130" width="200" height="90" fill="#334155"/>')
-    g.append('<line x1="0" y1="175" x2="200" y2="175" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="16 12"/>')
-
-    for cx in (60, 140):
-        g.append(f'<polygon points="{cx-36} 190 {cx+36} 190 {cx+28} 178 {cx-28} 178" fill="#C2410C"/>')
-        g.append(f'<polygon points="{cx-24} 180 {cx} 90 {cx+24} 180" fill="url(#cone)"/>')
-        g.append(f'<polygon points="{cx-15} 145 {cx-9} 122 {cx+9} 122 {cx+15} 145" fill="#FFFFFF"/>')
-
-    g.append(f'<polygon points="20 120 180 120 180 135 20 135" fill="{YELLOW}"/>')
-    for tx in range(25, 175, 18):
-        g.append(f'<polygon points="{tx} 120 {tx+8} 120 {tx} 135 {tx-8} 135" fill="#000000"/>')
-
+    storm = kind == 'storm'
+    if storm:
+        for cx_, cy_, rx_, ry_ in ((40, 30, 50, 26), (120, 24, 60, 30), (186, 40, 40, 24)):
+            g.append(f'<ellipse cx="{cx_}" cy="{cy_}" rx="{rx_}" ry="{ry_}" fill="#2D3748"/>')
+    else:
+        g.append(f'<circle cx="170" cy="30" r="{16 if kind == "sky" else 12}" fill="{SUN}"/>')
+        g.append('<ellipse cx="44" cy="34" rx="20" ry="7" fill="#FFFFFF" opacity="0.75"/>')
+        if kind == 'sky':
+            g.append('<ellipse cx="112" cy="22" rx="18" ry="6" fill="#FFFFFF" opacity="0.75"/>')
+    gy = 168
+    g.append(f'<rect y="{gy}" width="200" height="{H - gy}" fill="url(#ground)"/>')
+    g.append(f'<line x1="0" y1="{gy}" x2="200" y2="{gy}" stroke="{GROUND_L}" stroke-width="2"/>')
+    g.append('<rect y="196" width="200" height="24" fill="url(#road)"/>')
+    g.append('<path d="M0 208 L200 208" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="14 10"/>')
+    # a tree by the road
+    g.append(f'<rect x="176" y="128" width="6" height="40" fill="#5B3A1E"/>')
+    g.append(f'<circle cx="179" cy="120" r="16" fill="{LEAF}"/>')
+    cx = 70
+    g.append(f'<rect x="{cx - 9}" y="20" width="18" height="{gy - 20}" fill="url(#pole)" stroke="#6B7280" stroke-width="1.2"/>')
+    g.append(pole_top(cx, 16))
+    if kind == 'hive':
+        g.append(f'<path d="M{cx + 14} 42 Q{cx + 6} 62 {cx + 14} 80 Q{cx + 26} 90 {cx + 38} 80 Q{cx + 46} 62 {cx + 38} 42 Z" fill="url(#board)" stroke="#451A03" stroke-width="1.6"/>')
+        for hy in (52, 62, 72):
+            g.append(f'<path d="M{cx + 14} {hy} Q{cx + 26} {hy + 4} {cx + 38} {hy}" stroke="{YELLOW}" stroke-width="2" fill="none"/>')
+        for bx, by in ((cx + 52, 56), (cx + 4, 70), (cx + 48, 84), (cx + 30, 96), (cx + 58, 70)):
+            g.append(f'<ellipse cx="{bx}" cy="{by}" rx="3" ry="2" fill="{INK}"/><circle cx="{bx + 1}" cy="{by - 2}" r="1.6" fill="#FFFFFF" opacity="0.8"/>')
+    if kind == 'storm':
+        g.append('<circle cx="140" cy="60" r="34" fill="url(#flash)"/>')
+        g.append(f'<polygon points="150 10 128 58 144 58 124 108 166 50 146 50" fill="{YELLOW}" stroke="#FFFFFF" stroke-width="1.6"/>')
+    if kind == 'water':
+        g.append(f'<ellipse cx="{cx + 4}" cy="{gy + 10}" rx="56" ry="11" fill="url(#water)"/>')
+        g.append(f'<path d="M{cx - 30} {gy + 8} Q{cx - 20} {gy + 5} {cx - 10} {gy + 8} M{cx + 18} {gy + 12} Q{cx + 28} {gy + 9} {cx + 38} {gy + 12}" stroke="#FFFFFF" stroke-width="1.4" fill="none" opacity="0.8"/>')
+    if kind == 'traffic':
+        g.append('<path d="M86 210 L100 194 L150 192 L168 200 L178 212 L86 214 Z" fill="url(#car)" stroke="#7F1D1D" stroke-width="1.4"/>')
+        g.append('<rect x="104" y="196" width="18" height="8" rx="1.5" fill="url(#steel)"/><rect x="126" y="196" width="20" height="8" rx="1.5" fill="url(#steel)"/>')
+        g.append(f'<circle cx="104" cy="214" r="7" fill="{INK}"/><circle cx="160" cy="214" r="7" fill="{INK}"/>')
+        g.append('<path d="M182 198 L198 198 M184 206 L200 206" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>')
+    if kind == 'blocked':
+        # crates and drums stacked hard against the pole: no room to come down or be lowered
+        for bx, by, bw, bh in ((cx - 50, gy - 34, 34, 34), (cx + 12, gy - 30, 30, 30), (cx - 40, gy - 62, 30, 28), (cx + 16, gy - 56, 26, 26)):
+            g.append(f'<rect x="{bx}" y="{by}" width="{bw}" height="{bh}" fill="url(#board)" stroke="#451A03" stroke-width="1.4"/>')
+            g.append(f'<path d="M{bx} {by} L{bx + bw} {by + bh} M{bx + bw} {by} L{bx} {by + bh}" stroke="#451A03" stroke-width="1"/>')
+        g.append(f'<rect x="{cx - 14}" y="{gy - 26}" width="20" height="26" rx="3" fill="url(#steelArm)"/>')
+    # him at the foot of the pole, about to climb; a mate standing by. The
+    # mate also stands by on the hive and water traps, so "two people" never
+    # marks the safe card.
+    if kind in ('mate', 'hive', 'water'):
+        g.append(worker(cx + 30, gy, 0.85, 'stand'))
+        g.append(worker(150, gy + 4, 0.85, 'look'))
+    elif kind == 'sky':
+        g.append(worker(cx + 34, gy, 0.85, 'look'))
+    elif kind == 'blocked':
+        g.append(worker(cx + 70, gy, 0.85, 'stand'))
+    else:
+        g.append(worker(cx + 30, gy, 0.85, 'stand'))
     return ''.join(g)
 
 
-def draw_traffic_hazard_macro():
-    """Macro close-up of car speeding within inches of unguarded ladder foot."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#ground)"/>')
-    g.append('<rect y="120" width="200" height="100" fill="#1E293B"/>')
-
-    g.append('<rect x="15" y="0" width="10" height="190" fill="url(#steel)"/>')
-    g.append('<rect x="35" y="0" width="10" height="190" fill="url(#steel)"/>')
-    for ry in (40, 90, 140):
-        g.append(f'<rect x="15" y="{ry}" width="30" height="8" rx="2" fill="url(#steel)"/>')
-
-    g.append(f'<path d="M55 175 L80 145 L150 145 L180 160 L195 180 L55 180 Z" fill="{RED}" stroke="#991B1B" stroke-width="2"/>')
-    g.append('<rect x="85" y="148" width="28" height="14" rx="2" fill="url(#steel)"/>')
-    g.append('<rect x="118" y="148" width="30" height="14" rx="2" fill="url(#steel)"/>')
-    g.append('<circle cx="85" cy="182" r="12" fill="#0F172A" stroke="#334155" stroke-width="2"/>')
-    g.append('<circle cx="165" cy="182" r="12" fill="#0F172A" stroke="#334155" stroke-width="2"/>')
-
-    g.append(f'<polygon points="55 172 20 162 20 186" fill="{YELLOW}" fill-opacity="0.6"/>')
-    for lx, ly in ((90, 138), (115, 135), (140, 138)):
-        g.append(f'<line x1="{lx}" y1="{ly}" x2="{lx+30}" y2="{ly}" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>')
-
-    return ''.join(g)
-
-
-def draw_beehive_macro():
-    """Macro close-up of pole cross-arm with large wasp/beehive nest and swarm."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<rect x="80" y="0" width="40" height="220" fill="url(#pole)"/>')
-    g.append('<rect x="10" y="55" width="180" height="16" rx="2" fill="url(#steelArm)"/>')
-    g.append('<rect x="30" y="30" width="22" height="26" rx="4" fill="url(#porcelain)"/>')
-    g.append('<rect x="150" y="30" width="22" height="26" rx="4" fill="url(#porcelain)"/>')
-    g.append(f'<line x1="0" y1="36" x2="200" y2="36" stroke="{WIRE}" stroke-width="3.5"/>')
-
-    g.append('<circle cx="100" cy="115" r="38" fill="url(#hazardGlow)"/>')
-    g.append('<path d="M75 71 Q60 105 75 135 Q100 155 125 135 Q140 105 125 71 Z" fill="url(#board)" stroke="#451A03" stroke-width="2.5"/>')
-    for hy in (88, 104, 120):
-        g.append(f'<path d="M78 {hy} Q100 {hy+6} 122 {hy}" stroke="{YELLOW}" stroke-width="2.5" fill="none"/>')
-
-    for bx, by in ((55, 90), (62, 135), (135, 85), (145, 120), (100, 160), (115, 145)):
-        g.append(f'<ellipse cx="{bx}" cy="{by}" rx="4" ry="2.5" fill="#0F172A"/>')
-        g.append(f'<circle cx="{bx+2}" cy="{by-2}" r="2" fill="#FFFFFF" opacity="0.8"/>')
-        g.append(f'<line x1="{bx-2}" y1="{by}" x2="{bx+2}" y2="{by}" stroke="{YELLOW}" stroke-width="1"/>')
-
-    return ''.join(g)
-
-
-def draw_storm_macro():
-    """Macro close-up of dark storm clouds and lightning striking power line."""
-    g = []
-    g.append('<rect width="200" height="220" fill="#0F172A"/>')
-    g.append('<ellipse cx="60" cy="45" rx="55" ry="32" fill="#1E293B"/>')
-    g.append('<ellipse cx="130" cy="40" rx="60" ry="36" fill="#334155"/>')
-    g.append('<ellipse cx="180" cy="55" rx="45" ry="28" fill="#1E293B"/>')
-
-    g.append('<rect x="90" y="110" width="20" height="110" fill="url(#pole)"/>')
-    g.append('<rect x="20" y="130" width="160" height="12" rx="2" fill="url(#steelArm)"/>')
-    g.append(f'<line x1="0" y1="125" x2="200" y2="125" stroke="{WIRE}" stroke-width="3"/>')
-
-    g.append('<circle cx="100" cy="90" r="45" fill="url(#flash)"/>')
-    bolt = "M105 15 L80 75 L102 75 L75 140 L125 70 L102 70 Z"
-    g.append(f'<polygon points="{bolt}" fill="{YELLOW}" stroke="#FFFFFF" stroke-width="2"/>')
-    g.append('<polygon points="103 20 83 73 100 73 80 130 118 72 101 72" fill="#FFFFFF"/>')
-
-    return ''.join(g)
-
-
-def draw_rescue_ready_macro():
-    """Macro close-up of coiled yellow rescue lifeline & First Aid kit."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#ground)"/>')
-    g.append('<rect x="20" y="0" width="12" height="200" fill="url(#steel)"/>')
-    g.append('<rect x="60" y="0" width="12" height="200" fill="url(#steel)"/>')
-    for ry in (40, 100, 160):
-        g.append(f'<rect x="20" y="{ry}" width="52" height="8" rx="2" fill="url(#steel)"/>')
-
-    for r in (34, 26, 18, 10):
-        g.append(f'<ellipse cx="130" cy="165" rx="{r}" ry="{int(r*0.55)}" stroke="{YELLOW}" stroke-width="5" fill="none"/>')
-    g.append('<rect x="145" y="152" width="16" height="24" rx="5" fill="url(#steel)" stroke="#334155" stroke-width="2"/>')
-
-    g.append('<rect x="85" y="90" width="60" height="45" rx="5" fill="#16A34A" stroke="#14532D" stroke-width="2"/>')
-    g.append('<rect x="105" y="82" width="20" height="10" rx="3" fill="none" stroke="#FFFFFF" stroke-width="2"/>')
-    g.append('<rect x="110" y="98" width="10" height="28" fill="#FFFFFF"/>')
-    g.append('<rect x="101" y="107" width="28" height="10" fill="#FFFFFF"/>')
-
-    return ''.join(g)
-
-
-def draw_rescue_blocked_macro():
-    """Macro close-up of ladder base choked by barbed wire and broken rubble."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#ground)"/>')
-    g.append('<rect x="40" y="0" width="12" height="190" fill="url(#steel)"/>')
-    g.append('<rect x="100" y="0" width="12" height="190" fill="url(#steel)"/>')
-    for ry in (40, 100, 160):
-        g.append(f'<rect x="40" y="{ry}" width="72" height="8" rx="2" fill="url(#steel)"/>')
-
-    g.append('<polygon points="20 160 50 145 65 175 30 190" fill="#64748B" stroke="#334155" stroke-width="2"/>')
-    g.append('<polygon points="90 150 140 140 155 180 105 195" fill="#475569" stroke="#1E293B" stroke-width="2"/>')
-
-    for cy in (155, 175):
-        g.append(f'<path d="M10 {cy} Q70 {cy-15} 130 {cy} Q170 {cy+15} 190 {cy}" stroke="url(#steel)" stroke-width="3.5" fill="none"/>')
-        for bx in (35, 75, 115, 155):
-            g.append(f'<line x1="{bx-4}" y1="{cy-4}" x2="{bx+4}" y2="{cy+4}" stroke="{RED}" stroke-width="2.5"/>')
-            g.append(f'<line x1="{bx+4}" y1="{cy-4}" x2="{bx-4}" y2="{cy+4}" stroke="{RED}" stroke-width="2.5"/>')
-
-    return ''.join(g)
-
-
-def draw_skip_scan_macro():
-    """Macro close-up of worker boot stepping onto ladder without checking pole."""
-    g = []
-    g.append('<rect width="200" height="220" fill="url(#sky)"/>')
-    g.append('<rect x="25" y="0" width="45" height="200" fill="url(#pole)"/>')
-    g.append(f'<path d="M30 140 L50 155 L40 175 L60 190" stroke="{RED}" stroke-width="3" fill="none"/>')
-
-    g.append('<rect x="95" y="0" width="14" height="200" fill="url(#steel)"/>')
-    g.append('<rect x="95" y="145" width="85" height="10" rx="2" fill="url(#steel)"/>')
-
-    g.append('<rect x="110" y="130" width="55" height="22" rx="6" fill="#1E293B" stroke="#0F172A" stroke-width="2"/>')
-    g.append('<rect x="120" y="80" width="35" height="55" fill="url(#shirt)"/>')
-
-    g.append('<circle cx="50" cy="110" r="18" fill="url(#hazardGlow)"/>')
-    g.append(f'<circle cx="50" cy="110" r="14" fill="{RED}"/>')
-    g.append('<rect x="48" y="102" width="4" height="10" rx="1.5" fill="#FFFFFF"/>')
-    g.append('<circle cx="50" cy="117" r="2" fill="#FFFFFF"/>')
-
-    return ''.join(g)
-
-
-# ==============================================================================
-# CARDS MAP
-# ==============================================================================
+# =============================================================================
+# The cards
+# =============================================================================
 
 CARDS = {
-    # Round 1: Personal PPE Check
-    'ppe_strap_sole': make_card(draw_helmet_macro(buckled=True), back='sky'),
-    'ppe_head_toe': make_card(draw_boot_sole_macro(nail=False, cracked=False, eh_shield=True), back='bench'),
-    'ppe_unstrapped': make_card(draw_helmet_macro(buckled=False), back='sky'),
-    'ppe_dirty_cut': make_card(draw_shirt_macro(torn_polyester=True), back='sky'),
-    'ppe_nail_sole': make_card(draw_boot_sole_macro(nail=True, cracked=True, eh_shield=False), back='bench'),
-    'ppe_no_check': make_card(draw_gloves_macro(punctured=True), back='bench'),
-
-    # Round 2: Harness & Tools
-    'harness_snug': make_card(draw_harness_chest_macro(chest_fit='ok'), back='sky'),
-    'tool_bagged': make_card(draw_tool_bag_macro(), back='sky'),
-    'harness_loose_chest': make_card(draw_harness_chest_macro(chest_fit='loose'), back='sky'),
-    'tool_hand_climb': make_card(draw_tool_hand_macro(), back='sky'),
-    'tool_overload': make_card(draw_tool_overload_macro(), back='sky'),
-    'harness_expired': make_card(draw_harness_expired_macro(), back='bench'),
-
-    # Round 3: PTW & Mindset
-    'ptw_signed': make_card(draw_ptw_clipboard_macro(signed=True), back='bench'),
-    'ptw_calm_team': make_card(draw_ptw_clipboard_macro(signed=True), back='bench'),
-    'ptw_verbal_phone': make_card(draw_ptw_verbal_macro(), back='sky'),
-    'mind_rushed': make_card(draw_mind_rushed_macro(), back='sky'),
-    'mind_tired': make_card(draw_mind_tired_macro(), back='sky'),
-    'ptw_no_read': make_card(draw_ptw_pocket_macro(), back='ground'),
-
-    # Round 4: Pole & Distance
-    'pole_sound': make_card(draw_pole_sound_macro(), back='sky'),
-    'clearance_spot': make_card(draw_clearance_macro(inside=False), back='sky'),
-    'pole_hug_lean': make_card(draw_pole_lean_macro(), back='sky'),
-    'clearance_inside': make_card(draw_clearance_macro(inside=True), back='sky'),
-    'pole_skip_scan': make_card(draw_skip_scan_macro(), back='sky'),
-    'pole_rusted_base': make_card(draw_pole_rusted_macro(), back='sky'),
-
-    # Round 5: Hazard & Rescue
-    'rescue_ready': make_card(draw_rescue_ready_macro(), back='ground'),
-    'site_barricade': make_card(draw_site_barricade_macro(), back='ground'),
-    'hazard_beehive': make_card(draw_beehive_macro(), back='sky'),
-    'hazard_traffic': make_card(draw_traffic_hazard_macro(), back='ground'),
-    'hazard_storm_sky': make_card(draw_storm_macro(), back='sky'),
-    'rescue_blocked': make_card(draw_rescue_blocked_macro(), back='ground'),
+    # Round 1 — PPE kit (board) · step 29 check 1
+    'kit_ok_a': make_card(kit_card('a'), 'url(#bench)'),
+    'kit_ok_b': make_card(kit_card('b'), 'url(#bench)'),
+    'kit_helmet_crack': make_card(kit_card('a', 'crack'), 'url(#bench)'),
+    'kit_nail_sole': make_card(kit_card('b', 'nail'), 'url(#bench)'),
+    'kit_glove_leak': make_card(kit_card('a', 'leak'), 'url(#bench)'),
+    'kit_polyester': make_card(kit_card('b', 'poly'), 'url(#bench)'),
+    # Round 2 — the harness on him (board) · step 29 check 2
+    'harness_snug': make_card(harness_card('snug')),
+    'harness_tail': make_card(harness_card('tail')),
+    'harness_loose_chest': make_card(harness_card('loose')),
+    'harness_chest_high': make_card(harness_card('high')),
+    'harness_twisted': make_card(harness_card('twisted')),
+    'harness_frayed': make_card(harness_card('frayed')),
+    'harness_label_expired': make_card(harness_card('label')),
+    # Tools (step 29 check 3)
+    'tool_ready': make_card(tool_card('ok'), 'url(#tarp)'),
+    'tool_rod_cracked': make_card(tool_card('cracked'), 'url(#tarp)'),
+    'tool_rod_pvc': make_card(tool_card('pvc'), 'url(#tarp)'),
+    # Round 3 — permit and state of mind (board) · step 29 checks 4–5
+    'ptw_signed': make_card(mind_card('signed')),
+    'mind_calm': make_card(mind_card('calm')),
+    'ptw_verbal_phone': make_card(mind_card('phone')),
+    'mind_rushed': make_card(mind_card('rushed')),
+    'mind_tired': make_card(mind_card('tired')),
+    'ptw_no_read': make_card(mind_card('pocket')),
+    # Round 4 — pole and লক্ষ্মণ রেখা (board) · step 29 checks 6–7
+    'pole_sound': make_card(pole_card('sound')),
+    'clearance_spot': make_card(pole_card('spot')),
+    'pole_lean': make_card(pole_card('lean')),
+    'clearance_inside': make_card(pole_card('inside')),
+    'pole_skip_scan': make_card(pole_card('skip')),
+    'pole_rusted_base': make_card(pole_card('rusted')),
+    # Round 5 — surroundings, weather, the way down (board) · step 29 checks 8–10
+    'rescue_mate': make_card(site_card('mate')),
+    'site_clear': make_card(site_card('clear')),
+    'hazard_beehive': make_card(site_card('hive')),
+    'hazard_traffic': make_card(site_card('traffic')),
+    'hazard_storm_sky': make_card(site_card('storm'), 'url(#storm)'),
+    'hazard_water': make_card(site_card('water')),
+    'weather_clear': make_card(site_card('sky')),
+    'rescue_blocked': make_card(site_card('blocked')),
 }
 
+# Which cards are safe in each board round (mirrors learn_board_pack110.dart).
+ROUNDS = {
+    'ppe': ({'kit_ok_a', 'kit_ok_b'}, {'kit_helmet_crack', 'kit_nail_sole', 'kit_glove_leak', 'kit_polyester'}),
+    'harness_tool': ({'harness_snug', 'harness_tail'}, {'harness_loose_chest', 'harness_chest_high', 'harness_twisted', 'harness_frayed'}),
+    'ptw_mind': ({'ptw_signed', 'mind_calm'}, {'ptw_verbal_phone', 'mind_rushed', 'mind_tired', 'ptw_no_read'}),
+    'pole_distance': ({'pole_sound', 'clearance_spot'}, {'pole_lean', 'clearance_inside', 'pole_skip_scan', 'pole_rusted_base'}),
+    'hazard_rescue': ({'rescue_mate', 'site_clear'}, {'hazard_beehive', 'hazard_traffic', 'hazard_storm_sky', 'hazard_water'}),
+}
+HAND = 4
+
+_ELEM = re.compile(r'<(/?)([\w:]+)\b([^>]*?)(/?)>')
+_ATTR = re.compile(r'([\w:-]+)="([^"]*)"')
+_TOKEN = re.compile(r'url\(#\w+\)|#[0-9A-Fa-f]{6}\b')
+_BACK = re.compile(r'<g clip-path="url\(#card\)">\s*<rect width="200" height="220" fill="(url\(#\w+\))"')
+_NUM = re.compile(r'[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?')
+_XFORM = re.compile(r'(matrix|translate|scale|rotate|skewX|skewY)\s*\(([^)]*)\)')
+_PATH_TOK = re.compile(r'[MmLlHhVvCcSsQqTtAaZz]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?')
+# Containers: they paint nothing themselves.
+_NO_PAINT = {'g', 'svg', 'a', 'switch'}
+# Everything inside these is a definition, never painted where it stands.
+_DEFS = {'defs', 'clipPath', 'mask', 'pattern', 'symbol', 'marker', 'linearGradient', 'radialGradient', 'filter'}
+# Inherited paint properties (a child without its own value takes its parent's).
+_INHERIT = ('fill', 'stroke', 'fill-opacity', 'stroke-opacity', 'stroke-width', 'visibility')
+_ID = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+
+
+def _num(v, default=1.0):
+    try:
+        v = v.strip()
+        return float(v[:-1]) / 100 if v.endswith('%') else float(v)
+    except (AttributeError, TypeError, ValueError):
+        return default
+
+
+def _attrs(raw):
+    """Attributes, with an inline style="k:v" winning over its attribute."""
+    a = dict(_ATTR.findall(raw))
+    for part in a.pop('style', '').split(';'):
+        if ':' in part:
+            k, v = part.split(':', 1)
+            a[k.strip()] = v.strip()
+    return a
+
+
+def _mul(m, n):
+    a1, b1, c1, d1, e1, f1 = m
+    a2, b2, c2, d2, e2, f2 = n
+    return (a1 * a2 + c1 * b2, b1 * a2 + d1 * b2, a1 * c2 + c1 * d2, b1 * c2 + d1 * d2,
+            a1 * e2 + c1 * f2 + e1, b1 * e2 + d1 * f2 + f1)
+
+
+def _transform(text):
+    """The SVG transform list as one matrix (a, b, c, d, e, f)."""
+    m = _ID
+    for fn, args in _XFORM.findall(text or ''):
+        v = [float(x) for x in _NUM.findall(args)]
+        if fn == 'matrix' and len(v) == 6:
+            t = tuple(v)
+        elif fn == 'translate' and v:
+            t = (1, 0, 0, 1, v[0], v[1] if len(v) > 1 else 0)
+        elif fn == 'scale' and v:
+            t = (v[0], 0, 0, v[1] if len(v) > 1 else v[0], 0, 0)
+        elif fn == 'rotate' and v:
+            r = math.radians(v[0])
+            t = (math.cos(r), math.sin(r), -math.sin(r), math.cos(r), 0, 0)
+            if len(v) >= 3:
+                t = _mul(_mul((1, 0, 0, 1, v[1], v[2]), t), (1, 0, 0, 1, -v[1], -v[2]))
+        elif fn == 'skewX' and v:
+            t = (1, 0, math.tan(math.radians(v[0])), 1, 0, 0)
+        elif fn == 'skewY' and v:
+            t = (1, math.tan(math.radians(v[0])), 0, 1, 0, 0)
+        else:
+            continue
+        m = _mul(m, t)
+    return m
+
+
+def _path_points(d):
+    """Points whose box holds the whole path (end and control points; an arc
+    adds a box of its size around its ends). None when the path can't be read."""
+    toks = _PATH_TOK.findall(d)
+    arity = {'m': 2, 'l': 2, 'h': 1, 'v': 1, 'c': 6, 's': 4, 'q': 4, 't': 2, 'a': 7, 'z': 0}
+    pts, i, cmd = [], 0, None
+    x = y = sx = sy = 0.0
+    last_c = None  # last control point, for S/T reflection
+    try:
+        while i < len(toks):
+            if toks[i].isalpha():
+                cmd = toks[i]
+                i += 1
+                if cmd in 'zZ':
+                    x, y = sx, sy
+                    pts.append((x, y))
+                    last_c = None
+                    continue
+            if cmd is None:
+                return None
+            n = arity[cmd.lower()]
+            v = [float(t) for t in toks[i:i + n]]
+            if len(v) < n:
+                return None
+            i += n
+            rel = cmd.islower()
+            ox, oy = (x, y) if rel else (0.0, 0.0)
+            c = cmd.lower()
+            if c == 'h':
+                x = v[0] + (x if rel else 0)
+                pts.append((x, y))
+                last_c = None
+            elif c == 'v':
+                y = v[0] + (y if rel else 0)
+                pts.append((x, y))
+                last_c = None
+            elif c == 'a':
+                ex, ey = v[5] + ox, v[6] + oy
+                r = 2 * max(abs(v[0]), abs(v[1]), math.hypot(ex - x, ey - y))
+                pts += [(x - r, y - r), (x + r, y + r), (ex, ey)]
+                x, y = ex, ey
+                last_c = None
+            else:
+                ctrl = [(v[k] + ox, v[k + 1] + oy) for k in range(0, n, 2)]
+                if c in 'st':
+                    ref = (2 * x - last_c[0], 2 * y - last_c[1]) if last_c else (x, y)
+                    ctrl.insert(0, ref)
+                pts += ctrl
+                last_c = ctrl[-2] if len(ctrl) > 1 else None
+                x, y = ctrl[-1]
+                if c == 'm':
+                    sx, sy = x, y
+                    cmd = 'l' if rel else 'L'
+    except (ValueError, KeyError, IndexError):
+        return None
+    return pts or None
+
+
+def _local_points(tag, a):
+    """Points whose box holds the shape in its own coordinates, or None."""
+    n = lambda k: _num(a.get(k), 0.0)
+    if tag == 'rect':
+        return [(n('x'), n('y')), (n('x') + n('width'), n('y') + n('height'))]
+    if tag == 'circle':
+        return [(n('cx') - n('r'), n('cy') - n('r')), (n('cx') + n('r'), n('cy') + n('r'))]
+    if tag == 'ellipse':
+        return [(n('cx') - n('rx'), n('cy') - n('ry')), (n('cx') + n('rx'), n('cy') + n('ry'))]
+    if tag == 'line':
+        return [(n('x1'), n('y1')), (n('x2'), n('y2'))]
+    if tag in ('polygon', 'polyline'):
+        v = [float(t) for t in _NUM.findall(a.get('points', ''))]
+        return list(zip(v[0::2], v[1::2])) or None
+    if tag == 'path':
+        return _path_points(a.get('d', ''))
+    return None  # text and anything else: can't place it, so it counts
+
+
+def _paint(tag, a):
+    """(fill on, stroke on, can be seen) for one element with inherited values in a."""
+    fill_on = a.get('fill') != 'none' and _num(a.get('fill-opacity')) > 0
+    stroke_on = (a.get('stroke') not in (None, 'none') and _num(a.get('stroke-opacity')) > 0
+                 and _num(a.get('stroke-width')) > 0)
+    if tag == 'rect' and (_num(a.get('width'), 0) <= 0 or _num(a.get('height'), 0) <= 0):
+        return fill_on, stroke_on, False
+    if tag == 'circle' and _num(a.get('r'), 0) <= 0:
+        return fill_on, stroke_on, False
+    if tag == 'ellipse' and (_num(a.get('rx'), 0) <= 0 or _num(a.get('ry'), 0) <= 0):
+        return fill_on, stroke_on, False
+    if tag in ('path', 'polygon', 'polyline') and not (a.get('d') or a.get('points')):
+        return fill_on, stroke_on, False
+    if tag == 'line':
+        fill_on = False  # a line has no inside
+        if a.get('x1') == a.get('x2') and a.get('y1') == a.get('y2'):
+            return fill_on, stroke_on, False
+    return fill_on, stroke_on, fill_on or stroke_on
+
+
+def painted(svg):
+    """Yield (tag, attrs, fill on, stroke on) for every element that really puts
+    paint on the 200 x 220 card. Skipped: definitions; anything with
+    display:none, visibility:hidden or opacity 0, on itself or on any ancestor
+    group; a transform that squashes it flat (scale(0)); zero-size shapes; no
+    fill and no stroke; a shape wholly off the card."""
+    root = re.search(r'<svg\b[^>]*viewBox="([^"]*)"', svg)
+    vb = [float(t) for t in _NUM.findall(root.group(1))] if root else []
+    x0, y0, cw, ch = vb if len(vb) == 4 else (0.0, 0.0, 200.0, 220.0)
+    # One frame per open element: (tag, hidden, in defs, inherited attrs, matrix).
+    stack = [('#doc', False, False, {}, _ID)]
+    for close, tag, raw, self_close in _ELEM.findall(svg):
+        if close:
+            for k in range(len(stack) - 1, 0, -1):
+                if stack[k][0] == tag:
+                    del stack[k:]
+                    break
+            continue
+        _, p_hidden, p_defs, p_inh, p_m = stack[-1]
+        own = _attrs(raw)
+        inh = dict(p_inh)
+        for k in _INHERIT:
+            if k in own:
+                inh[k] = own[k]
+        m = _mul(p_m, _transform(own.get('transform')))
+        in_defs = p_defs or tag in _DEFS
+        hidden = (p_hidden or own.get('display') == 'none' or _num(own.get('opacity')) <= 0
+                  or abs(m[0] * m[3] - m[1] * m[2]) < 1e-9)
+        if not (self_close or raw.rstrip().endswith('/')):
+            stack.append((tag, hidden, in_defs, inh, m))
+        if in_defs or hidden or tag in _NO_PAINT or inh.get('visibility') in ('hidden', 'collapse'):
+            continue
+        a = dict(own)
+        a.update(inh)
+        fill_on, stroke_on, seen = _paint(tag, a)
+        if not seen:
+            continue
+        pts = _local_points(tag, a)
+        if pts:
+            pad = 2 * _num(a.get('stroke-width')) if stroke_on else 0.0  # miter joins reach 2 x width
+            xs = [p[0] for p in pts]
+            ys = [p[1] for p in pts]
+            box = [(min(xs) - pad, min(ys) - pad), (max(xs) + pad, min(ys) - pad),
+                   (min(xs) - pad, max(ys) + pad), (max(xs) + pad, max(ys) + pad)]
+            tx = [m[0] * px + m[2] * py + m[4] for px, py in box]
+            ty = [m[1] * px + m[3] * py + m[5] for px, py in box]
+            if max(tx) <= x0 or min(tx) >= x0 + cw or max(ty) <= y0 or min(ty) >= y0 + ch:
+                continue
+        yield tag, a, fill_on, stroke_on
+
+
+def tokens(svg):
+    """Colours and gradients the card really paints (see painted())."""
+    out = set()
+    for tag, a, fill_on, stroke_on in painted(svg):
+        if fill_on and 'fill' in a:
+            out.update(_TOKEN.findall(a['fill']))
+        if stroke_on and 'stroke' in a:
+            out.update(_TOKEN.findall(a['stroke']))
+    return out
+
+
+def visible(tag, attrs):
+    """True when this one element, standing alone on the card, puts paint on it."""
+    return any(True for _ in painted(f'<svg viewBox="0 0 200 220"><{tag} {attrs}/></svg>'))
+
+
+def fairness_problems():
+    tok = {k: tokens(v) for k, v in CARDS.items()}
+    back = {k: _BACK.search(v).group(1) for k, v in CARDS.items()}
+    problems = []
+    for rnd, (safes, traps) in ROUNDS.items():
+        for s in sorted(safes):
+            for hand_ in itertools.combinations(sorted(traps), HAND - 1):
+                if back[s] not in {back[t] for t in hand_}:
+                    problems.append(f'{rnd}: {s} alone on its backdrop with {hand_}')
+                only = tok[s] - set().union(*(tok[t] for t in hand_))
+                if only:
+                    problems.append(f'{rnd}: {s} with {hand_} draws {sorted(only)} alone')
+        for name in safes | traps:
+            if '<text' in CARDS[name]:
+                problems.append(f'{rnd}: {name} has words in the art')
+    for name, svg in CARDS.items():
+        # Paint the check can't follow (a mask, a filter, a reused shape, an
+        # image, a clip other than the card's own) could hide a token.
+        clips = set(re.findall(r'clip-path="([^"]*)"', svg)) - {'url(#card)'}
+        if clips or re.search(r'\b(mask|filter)="|<use\b|<image\b|<foreignObject\b', svg):
+            problems.append(f'{name}: paint the fairness check cannot follow')
+    return problems
+
+
 if __name__ == '__main__':
+    bad = fairness_problems()
+    if bad:
+        print('\n'.join('UNFAIR ' + p for p in bad))
+        sys.exit(1)
     os.makedirs(OUT, exist_ok=True)
     keep = {name + '.svg' for name in CARDS}
     for old in os.listdir(OUT):
@@ -833,4 +998,4 @@ if __name__ == '__main__':
     for name, svg in CARDS.items():
         with open(os.path.join(OUT, name + '.svg'), 'w', encoding='utf-8', newline='\n') as fh:
             fh.write(svg)
-    print(f'wrote {len(CARDS)} macro inspection cards to {OUT}')
+    print(f'wrote {len(CARDS)} cards to {OUT}; every hand fair')

@@ -5,6 +5,9 @@
 // comes back; the recheck), the deal, the reason libraries, and the level in
 // the shell: idle perf, the guide first, a full clean play with the coworker
 // refused, a slip card that keeps the pole, three slips, the deadly freeze.
+// Audit 2026-11-11: the tool row is dealt shuffled (never the work order), a
+// fast শাটডাউন waits for the coworker, no input in the praise window, a
+// neutral wrong-clamp card, and gesture hints for every waiting state.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,7 +20,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -33,6 +38,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '4.2/do/1',
@@ -84,10 +90,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -142,8 +150,15 @@ Future<void> _close(WidgetTester t, ProviderContainer c) async {
   t.view.reset();
 }
 
-/// Plays pole [i] right (the coworker refused on his pole).
-Future<void> _playRight(WidgetTester t, M4JumperTightDeal deal, int i) async {
+/// The first seed whose deal passes [ok].
+int _seedWhere(bool Function(M4JumperTightDeal d) ok) {
+  for (var s = 0;; s++) {
+    if (ok(m4JumperTightDeal(math.Random(s)))) return s;
+  }
+}
+
+/// Plays pole [i] right up to the recheck (the coworker refused on his pole).
+Future<void> _fixPole(WidgetTester t, M4JumperTightDeal deal, int i) async {
   final s = deal.sites[i];
   await _tapClamp(t, s.phase, s.end);
   expect(_label(_L.shutdown), findsOneWidget, reason: 'spotted on pole $i');
@@ -170,6 +185,12 @@ Future<void> _playRight(WidgetTester t, M4JumperTightDeal deal, int i) async {
   await _tool(t, _L.earth); // off
   await _tool(t, _L.shutdown); // the PTW back
   await _tapClamp(t, s.phase, s.end); // the recheck
+}
+
+/// Plays pole [i] right (the coworker refused on his pole).
+Future<void> _playRight(WidgetTester t, M4JumperTightDeal deal, int i) async {
+  final s = deal.sites[i];
+  await _fixPole(t, deal, i);
   await _pump(t, 2200);
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'pole $i');
   await _pumpUntil(t, find.byType(ChoiceDeck));
@@ -199,6 +220,37 @@ void main() {
         seen.add(d.sites.map((x) => '${x.kind.name}${x.phase}${x.end}${x.why.name}').join('|') + d.callAt.toString());
       }
       expect(seen.length, greaterThan(60));
+    });
+
+    test('the tool row is dealt shuffled for every pole and is never the work order', () {
+      const work = M4JumperTightControl.values;
+      final rows = <String>{};
+      final firsts = <M4JumperTightControl>{};
+      for (var s = 0; s < 80; s++) {
+        final d = m4JumperTightDeal(math.Random(s));
+        expect(d.tools, hasLength(3));
+        for (var i = 0; i < 3; i++) {
+          final row = d.toolsAt(i);
+          expect(row.toSet(), work.toSet());
+          expect(row, hasLength(work.length));
+          expect(row, isNot(orderedEquals(work)), reason: 'seed $s pole $i');
+          rows.add(row.map((c) => c.name).join(','));
+          firsts.add(row.first);
+        }
+      }
+      expect(rows.length, greaterThan(150));
+      expect(firsts, work.toSet(), reason: 'any tool can come first');
+      for (var k = 0; k < 200; k++) {
+        expect(m4JumperTightToolRow(math.Random(k)), isNot(orderedEquals(work)));
+      }
+      // A hand-made deal without rows still gets a non-work order.
+      const bare = M4JumperTightDeal(sites: [], callAt: 0);
+      expect(bare.toolsAt(0), isNot(orderedEquals(work)));
+    });
+
+    test('the wrong-clamp card stays neutral (never says the clamp is fine)', () {
+      expect(_M.misSpot.textBn.contains('ঠিক'), isFalse);
+      expect(_M.misSpot.deadly, isFalse);
     });
 
     M4JumperTightRun run1(M4JumperTightKind k) => M4JumperTightRun(M4JumperTightDeal(
@@ -415,7 +467,7 @@ void main() {
         }
         debugPrint('PERF m4_jumper_tight ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -571,6 +623,165 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('a fast শাটডাউন right after the spot waits for the coworker; then it works', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 0);
+      final deal = m4JumperTightDeal(math.Random(seed));
+      final s = deal.sites[0];
+      final c = await _open(t, seed);
+      await _tapClamp(t, s.phase, s.end);
+      await _tool(t, _L.shutdown); // at once — before his 1.2–2.4 s timer
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the shutdown calls him in now');
+      expect(find.byKey(const ValueKey('ptw-0')), findsNothing, reason: 'the line is not shut down yet');
+      await waitChoiceDeck(t);
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2600);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _tool(t, _L.shutdown);
+      expect(find.byKey(const ValueKey('ptw-0')), findsOneWidget, reason: 'now the shutdown works');
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the tool row on screen follows the dealt order, not the work order', (t) async {
+      final deal = m4JumperTightDeal(math.Random(6));
+      final s = deal.sites[0];
+      final c = await _open(t, 6);
+      await _tapClamp(t, s.phase, s.end);
+      final byLabel = {
+        M4JumperTightControl.shutdown: _L.shutdown,
+        M4JumperTightControl.tester: _L.tester,
+        M4JumperTightControl.earth: _L.earth,
+        M4JumperTightControl.brush: _L.brush,
+        M4JumperTightControl.clamp: _L.clamp,
+        M4JumperTightControl.wrench: _L.wrench,
+      };
+      final xs = {for (final e in byLabel.entries) e.key: t.getCenter(_label(e.value)).dx};
+      final shown = [...M4JumperTightControl.values]..sort((a, b) => xs[a]!.compareTo(xs[b]!));
+      expect(shown, orderedEquals(deal.toolsAt(0)));
+      expect(shown, isNot(orderedEquals(M4JumperTightControl.values)));
+      await _close(t, c);
+    });
+
+    testWidgets('taps in the praise window after the recheck book nothing', (t) async {
+      final deal = m4JumperTightDeal(math.Random(7));
+      final c = await _open(t, 7);
+      await _fixPole(t, deal, 0);
+      // The ◆ is on the table now: a wrong clamp must not slip.
+      final (p, e) = _goodClamp(deal.sites[0]);
+      await t.tapAt(_geo.clamp(p, e) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tapAt(_geo.clamp(p, e) * _k);
+      await _pump(t, 400);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 700);
+      await _pickRight(t, _L.whyRight(deal.sites[0]));
+      await _pump(t, 4000);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over the clamps, then over the tools, a hold on টাইট দিন; taps on nothing call it', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = _seedWhere((d) => d.callAt != 0);
+      final deal = m4JumperTightDeal(math.Random(seed));
+      final s = deal.sites[0];
+      final c = await _open(t, seed);
+      IdleHintState hint() => t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+      // Spot: idle -> a sweep over all six clamps.
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, hasLength(6));
+      expect(hint().debugFrame!.press, 0, reason: 'a sweep never presses');
+      // A touch hides it; three taps on the sky (nothing) bring it back at once.
+      for (var i = 0; i < 3; i++) {
+        if (i == 1) expect(hint().showing, isFalse, reason: 'a touch hides it');
+        await t.tapAt(const Offset(40, 220));
+        await t.pump(const Duration(milliseconds: 120));
+      }
+      await t.pump(const Duration(milliseconds: 200));
+      expect(hint().showing, isTrue, reason: 'taps on nothing');
+      // Spotted: a sweep over the six tools (low on the screen).
+      await _tapClamp(t, s.phase, s.end);
+      expect(hint().showing, isFalse);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      final tools = hint().debugOptions;
+      expect(tools, hasLength(6));
+      final frame = t.getRect(find.byType(FullSceneFrame));
+      final toolTop = t.getTopLeft(_label(_L.shutdown)).dy - 8 - frame.top;
+      expect(tools.every((r) => r.center.dy > toolTop), isTrue, reason: 'over the tool row');
+      // Up to the wrenches: a hold on টাইট দিন.
+      await _tool(t, _L.shutdown);
+      await _tool(t, _L.tester);
+      await _tool(t, _L.earth);
+      await _tool(t, _L.brush);
+      await _tapClamp(t, s.phase, s.end);
+      if (s.kind == M4JumperTightKind.melted) {
+        await _tool(t, _L.clamp);
+        await _tapClamp(t, s.phase, s.end);
+      }
+      await _tool(t, _L.wrench);
+      await _tapClamp(t, s.phase, s.end);
+      expect(_label(_L.tighten), findsOneWidget);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(hint().debugFrame!.ring, isNotNull, reason: 'a hold ring');
+      final tip = hint().debugFrame!.tip;
+      expect(t.getRect(_label(_L.tighten)).inflate(4).contains(frame.topLeft + tip), isTrue);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints never tap the jumper with a tool in hand on a live line', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = _seedWhere((d) => d.callAt != 0);
+      final deal = m4JumperTightDeal(math.Random(seed));
+      final s = deal.sites[0];
+      final c = await _open(t, seed);
+      IdleHintState hint() => t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+      await _tapClamp(t, s.phase, s.end);
+      expect(_label(_L.shutdown), findsOneWidget);
+      // The brush in hand, the line still live: tapping the jumper now is death.
+      await _tool(t, _L.brush);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, hasLength(6), reason: 'a sweep over the tool row');
+      expect(hint().debugFrame!.press, 0, reason: 'never a tap at the clamp');
+      // Shut down and proved, but not earthed: still no tap (a slip).
+      await _tool(t, _L.brush); // put it down
+      await _tool(t, _L.shutdown);
+      await _tool(t, _L.tester);
+      await _tool(t, _L.brush);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, hasLength(6), reason: 'unearthed: still a sweep');
+      expect(hint().debugFrame!.press, 0);
+      // Earthed (he is up), the wrenches before the brush: that tap is a slip,
+      // so still a sweep.
+      await _tool(t, _L.brush); // put it down
+      await _tool(t, _L.earth);
+      await _tool(t, _L.wrench);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, hasLength(6), reason: 'wrenches before the brush: a sweep');
+      expect(hint().debugFrame!.press, 0);
+      // Now the brush goes on the clamp — a tap there.
+      await _tool(t, _L.wrench); // put it down
+      await _tool(t, _L.brush);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, isEmpty, reason: 'a single tap, not a sweep');
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
     testWidgets('listening to him = deadly: freeze, then the card', (t) async {
       final deal = m4JumperTightDeal(math.Random(11));
       final c = await _open(t, 11);
@@ -582,9 +793,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 8000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);

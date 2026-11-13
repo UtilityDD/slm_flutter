@@ -44,9 +44,9 @@ Playable: **120 rungs** (Modules 1–4). Module 1: **30 of 30 built**; Module 2:
 | 25 | `1.9/learn` | ঝড়-বৃষ্টিতে 'না' | board · `learn_board_pack19.dart` | ✅ |
 | 26 | `1.9/do/0` | আকাশ পড়ুন | Do · `sky_read.dart` + `sky_world.dart` (new) | 🟡 wind ≥ 45 km/h = stop |
 | 27 | `1.9/do/1` | সুপারভাইজারের চাপ | Do · `storm_push.dart` (new) | 🟡 supervisor uses the rival's art/voice |
-| 28 | `1.10/learn` | ১০ সেকেন্ডের মেন্টাল চেকলিস্ট | board · `learn_board_pack110.dart` | ✅ |
-| 29 | `1.10/do/0` | ১০ সেকেন্ডের স্ক্যান | Do · `ten_sec_scan.dart` | ✅ |
-| 30 | `m1/gate` | প্রথম ডকেট (rank gate) | gate · `gate_field.dart` (`engineType: gate_field`, pack `gate_m1`) | ✅ |
+| 28 | `1.10/learn` | ১০ সেকেন্ডের মেন্টাল চেকলিস্ট | board · `learn_board_pack110.dart` + `tool/scan_board_art.py` (rebuilt 2026-11-11: one scene per round, lessons 1.1–1.10 only, no glow/warning marks, generator asserts per-hand fairness on visible shapes — hidden groups, scale(0) and off-card shapes don't count; mate and লক্ষ্মণ রেখা ring also on traps so no shape marks the safe card) | ✅ |
+| 29 | `1.10/do/0` | ১০ সেকেন্ডের স্ক্যান | Do · `ten_sec_scan.dart` (repaired 2026-11-11: lesson's 10 questions in order, saves clear/time/stars, coworker's check re-asked, deadly freeze, shared 55 pass mark) | 🟡 a STOP on a safe check is still a slip (lesson: "সন্দেহ হলে থামুন") |
+| 30 | `m1/gate` | প্রথম ডকেট (rank gate) | gate · `gate_watch.dart` + `gate_watch_world.dart` (`engineType: gate_watch`, pack `gate_m1`) — hazard-spotting gate (owner concept 2026-11-10) | ✅ |
 
 Cross-level items:
 
@@ -58,9 +58,9 @@ Cross-level items:
 
 ---
 
-## Modules 2–10 (Modules 2, 3 and 4 built on this branch)
+## Modules 2–10 (Modules 2, 3, 4 and 5 built on this branch)
 
-Every rung below is `comingSoon` in the catalog: no picture board, no Do game, no gate. Each lesson's text exists in
+Every rung of Modules 6–10 is `comingSoon` in the catalog: no picture board, no Do game, no gate. Each lesson's text exists in
 `tool/all_training_chapters_bn.json`. Build them module by module with the playbook (board first, then the Do rungs, then the gate).
 
 ### Module 2 — জুনিয়র (10 lessons + rank gate) — ✅ built 2026-11-11, design notes and open owner decisions in [MODULE2_LADDER.md](MODULE2_LADDER.md)
@@ -111,21 +111,21 @@ Every rung below is `comingSoon` in the catalog: no picture board, no Do game, n
 | 4.10 | এলটি (LT) লাইনের ফেজ ব্যালেন্সিং | ✅ | 1 × ✅ |
 | gate | র‍্যাঙ্ক গেট (স্কিলড) | — | ✅ |
 
-### Module 5 — অ্যাডভান্সড (10 lessons + rank gate)
+### Module 5 — অ্যাডভান্সড (10 lessons + rank gate) — ✅ built and wired 2026-11-12, **pending owner review**; design notes, deadly/slip table and open owner decisions in [MODULE5_LADDER.md](MODULE5_LADDER.md)
 
 | Lesson | Title | শেখা | কাজ rungs |
 |---|---|---|---|
-| 5.1 | 'লাইন ট্রিপ করেছে'—প্রথম কাজ কী? | ☐ | 2 × ☐ |
-| 5.2 | লাইন পেট্রোলিং-এর সঠিক নিয়ম | ☐ | 2 × ☐ |
-| 5.3 | সাধারণ ফল্ট: অপরাধীদের প্যারেড | ☐ | 2 × ☐ |
-| 5.4 | ফিউজ বারবার উড়ে যাওয়ার কারণ: অস্থায়ী বনাম স্থায়ী ফল্ট | ☐ | 2 × ☐ |
-| 5.5 | 'লো-ভোল্টেজ' সমস্যার সমাধান | ☐ | 2 × ☐ |
-| 5.6 | শর্ট সার্কিট এবং ওপেন সার্কিট ফল্ট: দুই ভিন্ন শত্রু | ☐ | 2 × ☐ |
-| 5.7 | রাতের বেলা ফল্ট খোঁজার কৌশল | ☐ | 2 × ☐ |
-| 5.8 | ট্রান্সফরমারের সাধারণ সমস্যা: হৃৎপিণ্ডের রোগ নির্ণয় | ☐ | 2 × ☐ |
-| 5.9 | কেবিল ফল্ট খোঁজার প্রাথমিক ধারণা | ☐ | 2 × ☐ |
-| 5.10 | প্রিভেন্টিভ মেইনটেন্যান্স: গোয়েন্দা থেকে ডাক্তার | ☐ | 1 × ☐ |
-| gate | র‍্যাঙ্ক গেট (অ্যাডভান্সড) | — | ☐ |
+| 5.1 | 'লাইন ট্রিপ করেছে'—প্রথম কাজ কী? | ✅ | 2 × ✅ |
+| 5.2 | লাইন পেট্রোলিং-এর সঠিক নিয়ম | ✅ | 2 × ✅ |
+| 5.3 | সাধারণ ফল্ট: অপরাধীদের প্যারেড | ✅ | 2 × ✅ |
+| 5.4 | ফিউজ বারবার উড়ে যাওয়ার কারণ: অস্থায়ী বনাম স্থায়ী ফল্ট | ✅ | 2 × ✅ |
+| 5.5 | 'লো-ভোল্টেজ' সমস্যার সমাধান | ✅ | 2 × ✅ |
+| 5.6 | শর্ট সার্কিট এবং ওপেন সার্কিট ফল্ট: দুই ভিন্ন শত্রু | ✅ | 2 × ✅ |
+| 5.7 | রাতের বেলা ফল্ট খোঁজার কৌশল | ✅ | 2 × ✅ |
+| 5.8 | ট্রান্সফরমারের সাধারণ সমস্যা: হৃৎপিণ্ডের রোগ নির্ণয় | ✅ | 2 × ✅ |
+| 5.9 | কেবিল ফল্ট খোঁজার প্রাথমিক ধারণা | ✅ | 2 × ✅ |
+| 5.10 | প্রিভেন্টিভ মেইনটেন্যান্স: গোয়েন্দা থেকে ডাক্তার | ✅ | 1 × ✅ |
+| gate | র‍্যাঙ্ক গেট (অ্যাডভান্সড) — `m5_gate_case` | — | ✅ |
 
 ### Module 6 — সিনিয়র (11 lessons + rank gate)
 

@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import '../../design/slm_design.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_insets.dart';
@@ -29,12 +28,9 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
   final _scroll = ScrollController();
   final _search = TextEditingController();
   final _searchFocus = FocusNode();
-  final _speech = SpeechToText();
   String _query = '';
   String _group = _allGroup;
   bool _showPill = false;
-  bool _speechReady = false;
-  bool _listening = false;
 
   @override
   void initState() {
@@ -52,113 +48,10 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
 
   @override
   void dispose() {
-    if (_speech.isListening) {
-      _speech.stop();
-    }
     _scroll.dispose();
     _search.dispose();
     _searchFocus.dispose();
     super.dispose();
-  }
-
-  Future<bool> _ensureSpeech() async {
-    if (_speechReady) return true;
-    _speechReady = await _speech.initialize(
-      onError: (error) {
-        if (!mounted) return;
-        setState(() => _listening = false);
-        final bn = ref.read(languageProvider);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              tr(bn, 'কণ্ঠ শোনা যায়নি। আবার চেষ্টা করুন।', 'Could not hear that. Try again.'),
-            ),
-          ),
-        );
-      },
-      onStatus: (status) {
-        if (!mounted) return;
-        if (status == SpeechToText.notListeningStatus || status == SpeechToText.doneStatus) {
-          setState(() => _listening = false);
-        }
-      },
-    );
-    return _speechReady;
-  }
-
-  Future<String?> _voiceLocale(bool bn) async {
-    final locales = await _speech.locales();
-    if (locales.isEmpty) return null;
-    final prefer = bn ? const ['bn_BD', 'bn_IN', 'bn'] : const ['en_IN', 'en_US', 'en_GB', 'en'];
-    for (final id in prefer) {
-      for (final locale in locales) {
-        if (locale.localeId == id || locale.localeId.toLowerCase().startsWith(id.toLowerCase())) {
-          return locale.localeId;
-        }
-      }
-    }
-    return locales.first.localeId;
-  }
-
-  Future<void> _toggleVoiceSearch() async {
-    HapticFeedback.selectionClick();
-    _searchFocus.unfocus();
-    final bn = ref.read(languageProvider);
-
-    if (_listening) {
-      await _speech.stop();
-      if (mounted) setState(() => _listening = false);
-      return;
-    }
-
-    final ok = await _ensureSpeech();
-    if (!mounted) return;
-    if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            tr(bn, 'এই ফোনে ভয়েস সার্চ চালু নেই।', 'Voice search is not available on this phone.'),
-          ),
-        ),
-      );
-      return;
-    }
-
-    final localeId = await _voiceLocale(bn);
-    if (!mounted) return;
-    setState(() => _listening = true);
-
-    try {
-      await _speech.listen(
-        onResult: (result) {
-          if (!mounted) return;
-          final words = result.recognizedWords.trim();
-          _search.value = TextEditingValue(
-            text: words,
-            selection: TextSelection.collapsed(offset: words.length),
-          );
-          setState(() => _query = words);
-        },
-        listenOptions: SpeechListenOptions(
-          partialResults: true,
-          cancelOnError: true,
-          listenMode: ListenMode.search,
-          listenFor: const Duration(seconds: 12),
-          pauseFor: const Duration(seconds: 3),
-          localeId: localeId,
-        ),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _listening = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            tr(bn, 'ভয়েস সার্চ শুরু হয়নি।', 'Could not start voice search.'),
-          ),
-        ),
-      );
-    }
   }
 
   void _selectGroup(String id) {
@@ -235,14 +128,13 @@ class _IdentifyScreenState extends ConsumerState<IdentifyScreen> {
                       controller: _search,
                       focus: _searchFocus,
                       query: _query,
-                      listening: _listening,
+                      listening: false,
                       groups: groups,
                       counts: counts,
                       total: list.length,
                       active: _group,
                       onQuery: (v) => setState(() => _query = v),
                       onGroup: _selectGroup,
-                      onVoice: _toggleVoiceSearch,
                     ),
                   ),
                 ),
@@ -658,7 +550,6 @@ class _FilterBar extends StatelessWidget {
   final String active;
   final ValueChanged<String> onQuery;
   final ValueChanged<String> onGroup;
-  final VoidCallback onVoice;
 
   const _FilterBar({
     required this.bn,
@@ -672,7 +563,6 @@ class _FilterBar extends StatelessWidget {
     required this.active,
     required this.onQuery,
     required this.onGroup,
-    required this.onVoice,
   });
 
   @override
@@ -709,28 +599,6 @@ class _FilterBar extends StatelessWidget {
                           onQuery('');
                         },
                       ),
-                    IconButton(
-                      tooltip: listening
-                          ? tr(bn, 'থামান', 'Stop')
-                          : tr(bn, 'ভয়েস সার্চ', 'Voice search'),
-                      onPressed: onVoice,
-                      icon: AnimatedContainer(
-                        duration: SlmMotion.fast,
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: listening ? SlmColors.emerald500.withValues(alpha: 0.18) : Colors.transparent,
-                          shape: BoxShape.circle,
-                          boxShadow: listening
-                              ? [BoxShadow(color: SlmColors.emerald400.withValues(alpha: 0.5), blurRadius: 12)]
-                              : null,
-                        ),
-                        child: Icon(
-                          listening ? Icons.mic_rounded : Icons.mic_none_rounded,
-                          size: 22,
-                          color: listening ? SlmColors.emerald300 : SlmColors.mist,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
                 filled: true,

@@ -3,7 +3,9 @@
 // coworker's myths; the dressing only after shutdown, PTW, test and earth),
 // the deal, the option libraries, the tap zones, and the level in the shell:
 // idle perf, the guide first, a full clean play with the coworker refused,
-// the slip cards (a tidy part marked; a fault missed), the deadly plan.
+// the slip cards (a tidy part marked; a fault missed), three slips strike
+// out, the coworker on a fast play (writing the list waits for him), the
+// gesture hints, the deadly plan.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,6 +19,8 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m4_dp_survey.dart';
@@ -29,6 +33,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(rungId: '4.7/do/0', kind: CatalogRungKind.doKind, lessonId: '4.7', lessonTitleBn: '', ladderStep: 0, doIndex: 1, doCount: 2);
 
@@ -55,10 +60,12 @@ List<Finder> _onScreen(List<String> texts) => [
 ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -103,6 +110,7 @@ Future<void> _close(WidgetTester t, ProviderContainer c) async {
 
 Future<void> _refuse(WidgetTester t, CoworkerScript s) async {
   expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes');
+  expect(t.widget<CoworkerPeek>(find.byType(CoworkerPeek)).lineBn, s.line, reason: 'his myth fits what is listed');
   await _pumpUntil(t, find.byType(ChoiceDeck));
   await _pump(t, 600);
   await _pickRight(t, s.right);
@@ -121,10 +129,16 @@ Future<void> _playDp(WidgetTester t, M4DpSurveyDeal deal, int i) async {
     for (final f in M4DpSurveyFault.values)
       if (s.faults.contains(f)) f,
   ];
-  for (final (k, f) in faults.indexed) {
+  // On his DP the touching wires go on the list first (his insulated myth
+  // needs them listed).
+  final marks = [
+    ...faults.where((f) => f == M4DpSurveyFault.touch),
+    ...faults.where((f) => f != M4DpSurveyFault.touch),
+  ];
+  for (final (k, f) in (i == deal.callAt ? marks : faults).indexed) {
     await _tapPart(t, f);
     if (k == 0 && i == deal.callAt) {
-      await _refuse(t, deal.insulated ? M4DpSurveyLines.coworkerInsulated : M4DpSurveyLines.coworkerAsIs);
+      await _refuse(t, _scriptFor(deal, touchListed: f == M4DpSurveyFault.touch));
     }
   }
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'DP $i marks');
@@ -142,6 +156,13 @@ Future<void> _playDp(WidgetTester t, M4DpSurveyDeal deal, int i) async {
   await _pickRight(t, M4DpSurveyLines.whyRight(s.topic));
   await _pump(t, 6000);
 }
+
+/// The words of an option (split on spaces and punctuation).
+Iterable<String> _words(String s) => s.split(RegExp(r'[\s,—\-–!?।:;“”]+')).where((w) => w.isNotEmpty);
+
+/// His script: the insulated myth only once the touching wires are listed.
+CoworkerScript _scriptFor(M4DpSurveyDeal d, {required bool touchListed}) =>
+    d.insulated && touchListed ? M4DpSurveyLines.coworkerInsulated : M4DpSurveyLines.coworkerAsIs;
 
 M4DpSurveyRun _run1(Set<M4DpSurveyFault> faults, {bool insulated = false}) => M4DpSurveyRun(
   M4DpSurveyDeal(
@@ -173,7 +194,7 @@ void main() {
         if (d.insulated) {
           insulated++;
           final f = d.structures[d.callAt].faults;
-          expect(f.contains(M4DpSurveyFault.touch) || f.contains(M4DpSurveyFault.clearance), isTrue);
+          expect(f.contains(M4DpSurveyFault.touch), isTrue, reason: 'his "ছুঁয়ে আছে" line needs LT wires touching');
         }
         for (final x in d.structures) {
           expect(x.faults.length, inInclusiveRange(0, 3));
@@ -193,6 +214,12 @@ void main() {
       expect(kinds, M4DpSurveyFault.values.toSet());
       expect(tidyPlays, inInclusiveRange(20, 60));
       expect(insulated, greaterThan(0));
+    });
+
+    test('a wrong mark is costed with a neutral card (never "ঠিক আছে" about a part)', () {
+      expect(M4DpSurveyMistakes.falseMark.textBn.contains('পরিপাটিই ছিল'), isFalse);
+      expect(M4DpSurveyMistakes.falseMark.deadly, isFalse);
+      expect(M4DpSurveyLines.putRight.contains('ঠিক আছে'), isFalse);
     });
 
     test('mark: an untidy part goes on the list; a tidy part marked is a slip; twice is nothing', () {
@@ -250,7 +277,20 @@ void main() {
 
     test('his myths are slips; the plan: dressing live is deadly, the safe way ends the play', () {
       expect(_run1({M4DpSurveyFault.touch}).listen(), M4DpSurveyMistakes.asIsMyth);
-      expect(_run1({M4DpSurveyFault.touch}, insulated: true).listen(), M4DpSurveyMistakes.insulatedMyth);
+      final ins = _run1({M4DpSurveyFault.touch}, insulated: true)
+        ..mark(M4DpSurveyFault.touch)
+        ..aimCall();
+      expect(ins.callInsulated, isTrue);
+      expect(ins.listen(), M4DpSurveyMistakes.insulatedMyth);
+      // His insulated line names the touching wires: never before they are on
+      // the list (a first mark elsewhere, or no mark at all, gets the as-is myth).
+      final early = _run1({M4DpSurveyFault.tail, M4DpSurveyFault.touch}, insulated: true)..aimCall();
+      expect(early.callInsulated, isFalse);
+      early
+        ..mark(M4DpSurveyFault.tail)
+        ..aimCall();
+      expect(early.callInsulated, isFalse);
+      expect(early.listen(), M4DpSurveyMistakes.asIsMyth);
       M4DpSurveyRun toPlan() {
         final r = _run1({M4DpSurveyFault.jumper})
           ..mark(M4DpSurveyFault.jumper)
@@ -306,7 +346,7 @@ void main() {
       final all = <String>[
         M4DpSurveyLines.intro,
         ...M4DpSurveyLines.tasks,
-        for (final tp in M4DpSurveyTopic.values) ...[M4DpSurveyLines.why(tp), ...M4DpSurveyLines.whyRight(tp)],
+        for (final tp in M4DpSurveyTopic.values) ...[M4DpSurveyLines.why(tp), ...M4DpSurveyLines.whyRight(tp), ...M4DpSurveyLines.whyWrongTopic(tp)],
         ...M4DpSurveyLines.whyWrong,
         ...M4DpSurveyLines.planRight,
         ...M4DpSurveyLines.planWrong,
@@ -315,6 +355,9 @@ void main() {
         for (final f in M4DpSurveyFault.values) M4DpSurveyLines.nameOf(f),
         M4DpSurveyLines.allSet,
         M4DpSurveyLines.fail,
+        M4DpSurveyLines.putRight,
+        M4DpSurveyLines.callHeld,
+        M4DpSurveyLines.callHeldList,
       ];
       for (final l in all) {
         expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
@@ -335,20 +378,44 @@ void main() {
     });
 
     test('reasons, plan and his choices: same length, big enough, one right per deal', () {
-      expectSameLength('why', [for (final tp in M4DpSurveyTopic.values) ...M4DpSurveyLines.whyRight(tp), ...M4DpSurveyLines.whyWrong]);
+      expectSameLength('why', [
+        for (final tp in M4DpSurveyTopic.values) ...[...M4DpSurveyLines.whyRight(tp), ...M4DpSurveyLines.whyWrongTopic(tp)],
+        ...M4DpSurveyLines.whyWrong,
+      ]);
       for (final tp in M4DpSurveyTopic.values) {
         final right = M4DpSurveyLines.whyRight(tp);
         final wrong = M4DpSurveyLines.whyWrongFor(tp);
         expectLibrary('$tp', right, wrong);
         for (var s = 0; s < 10; s++) {
-          final deal = dealChoices(right, wrong, math.Random(s));
+          final deal = dealM4DpSurveyWhy(tp, math.Random(s));
           expect(deal.where((o) => o.correct).length, 1);
           expect(deal.map((o) => o.textBn).toSet().length, 3);
+          expect(deal.where((o) => M4DpSurveyLines.whyWrongTopic(tp).contains(o.textBn)), hasLength(1), reason: 'a wrong card names the same part');
+          expect(deal.where((o) => !o.correct).every((o) => wrong.contains(o.textBn)), isTrue);
         }
       }
       expect(M4DpSurveyLines.whyWrongFor(M4DpSurveyTopic.tidy), isNot(contains(M4DpSurveyLines.whyWrong[1])));
       expectSameLength('plan', [...M4DpSurveyLines.planRight, ...M4DpSurveyLines.planWrong]);
       expectLibrary('plan', M4DpSurveyLines.planRight, M4DpSurveyLines.planWrong);
+      // No giveaway word: every word a right card uses also turns up on a
+      // wrong card the same question can deal (and the same for the plan).
+      for (final tp in M4DpSurveyTopic.values) {
+        final pool = M4DpSurveyLines.whyWrongFor(tp);
+        for (final w in {for (final r in M4DpSurveyLines.whyRight(tp)) ..._words(r)}) {
+          expect(pool.any((x) => x.contains(w)), isTrue, reason: '$tp: "$w" only on a right card');
+        }
+      }
+      for (final w in {for (final r in M4DpSurveyLines.planRight) ..._words(r)}) {
+        expect(M4DpSurveyLines.planWrong.any((x) => x.contains(w)), isTrue, reason: 'plan: "$w" only on a right plan');
+      }
+      for (final w in ['শর্ট', 'নিয়ম']) {
+        expect(M4DpSurveyLines.whyWrong.any((x) => x.contains(w)), isTrue, reason: w);
+      }
+      // "শুধু দেখতে" and "সুপারভাইজার" are not a wrong-card stamp: at most
+      // one wrong card per question can carry them besides the general ones.
+      for (final tp in M4DpSurveyTopic.values) {
+        expect(M4DpSurveyLines.whyWrongTopic(tp).where((x) => x.contains('শুধু দেখতে') || x.contains('সুপারভাইজার')), isEmpty, reason: '$tp');
+      }
       for (final s in [M4DpSurveyLines.coworkerAsIs, M4DpSurveyLines.coworkerInsulated]) {
         expectSameLength('choice', [...s.right, ...s.wrong]);
         expectLibrary('choice', s.right, s.wrong);
@@ -409,7 +476,7 @@ void main() {
         }
         debugPrint('PERF m4_dp_survey ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -536,6 +603,185 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('three slips strike the level out', (t) async {
+      final seed = seedWhere((d) => d.callAt != 0);
+      final s0 = dealM4DpSurvey(math.Random(seed)).structures[0];
+      final tidyParts = [
+        for (final f in M4DpSurveyFault.values)
+          if (!s0.faults.contains(f)) f,
+      ];
+      expect(tidyParts.length, greaterThanOrEqualTo(3));
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        await _tapPart(t, tidyParts[i]);
+        await _pump(t, 600);
+        if (i < 2) {
+          expect(find.byType(MistakeCard), findsOneWidget);
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 600);
+        }
+      }
+      await _pump(t, 1500);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      expect(c.read(gameSaveProvider).rungProgress['4.7/do/0'], isNot('cleared'));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play still meets him: writing the list at once waits for him, then works', (t) async {
+      final seed = seedWhere((d) => d.callAt == 0 && !d.structures[0].needsOrder);
+      final deal = dealM4DpSurvey(math.Random(seed));
+      final s0 = deal.structures[0];
+      final faults = [
+        for (final f in M4DpSurveyFault.values)
+          if (s0.faults.contains(f)) f,
+      ];
+      final script = deal.insulated ? M4DpSurveyLines.coworkerInsulated : M4DpSurveyLines.coworkerAsIs;
+      final c = await _open(t, seed);
+      for (final f in faults) {
+        await t.tapAt(_screen(_geo.zoneOf(f).center));
+        await t.pump(const Duration(milliseconds: 40));
+      }
+      await t.tap(find.text(M4DpSurveyLines.submit));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in before the list is written');
+      expect(find.byKey(const ValueKey('why-deck')), findsNothing);
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 600);
+      await _pickRight(t, script.right);
+      await _pump(t, 2000);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(await _pumpUntil(t, find.byKey(const ValueKey('why-deck'))), isTrue, reason: 'the held list goes in once he has gone, no second press');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    // The held press is a commitment: "সব পরিপাটি" cannot be used to see
+    // whether he comes (he only comes on a DP with faults) and then go back.
+    testWidgets('"সব পরিপাটি" before any mark on his DP: he comes first, then the list goes in as pressed (the missed slip)', (t) async {
+      final seed = seedWhere((d) => d.callAt == 0 && !d.structures[0].needsOrder);
+      final s0 = dealM4DpSurvey(math.Random(seed)).structures[0];
+      final first = M4DpSurveyFault.values.firstWhere(s0.faults.contains);
+      final c = await _open(t, seed);
+      await t.tap(find.text(M4DpSurveyLines.allTidy));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(t.widget<CoworkerPeek>(find.byType(CoworkerPeek)).lineBn, M4DpSurveyLines.coworkerAsIs.line, reason: 'nothing listed: never the "ছুঁয়ে আছে" line');
+      expect(find.byType(MistakeCard), findsNothing, reason: 'the list waits for him');
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 600);
+      await _pickRight(t, M4DpSurveyLines.coworkerAsIs.right);
+      expect(await _pumpUntil(t, find.byType(MistakeCard), maxMs: 6000), isTrue, reason: 'the list went in: a fault was missed');
+      expect(find.text(M4DpSurveyLines.allTidy), findsNothing, reason: 'no going back to the survey');
+      expect(c.read(gameSaveProvider).mistakes.single.key, M4DpSurveyMistakes.missed(first).key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      expect(await _pumpUntil(t, find.byKey(const ValueKey('why-deck'))), isTrue, reason: 'on to the reason');
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'once a play');
+      await _close(t, c);
+    });
+
+    testWidgets('"সব পরিপাটি" pressed, then listening to him: the myth slip, then the list goes in as pressed', (t) async {
+      final seed = seedWhere((d) => d.callAt == 0 && !d.structures[0].needsOrder);
+      final s0 = dealM4DpSurvey(math.Random(seed)).structures[0];
+      final first = M4DpSurveyFault.values.firstWhere(s0.faults.contains);
+      final c = await _open(t, seed);
+      await t.tap(find.text(M4DpSurveyLines.allTidy));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(M4DpSurveyLines.coworkerAsIs.wrong);
+      expect(wrong, isNotEmpty);
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 900);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M4DpSurveyMistakes.asIsMyth.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 800);
+      expect(find.byType(MistakeCard), findsOneWidget, reason: 'the held list: a fault was missed');
+      expect(c.read(gameSaveProvider).mistakes.map((m) => m.key), containsAll([M4DpSurveyMistakes.asIsMyth.key, M4DpSurveyMistakes.missed(first).key]));
+      await t.tap(find.text(MistakeLines.gotIt));
+      expect(await _pumpUntil(t, find.byKey(const ValueKey('why-deck'))), isTrue, reason: 'on to the reason');
+      await _close(t, c);
+    });
+
+    testWidgets('insulated deal, first mark not the touching wires: his line is the as-is myth', (t) async {
+      final seed = seedWhere((d) => d.callAt == 0 && d.insulated && d.structures[0].faults.length > 1);
+      final s0 = dealM4DpSurvey(math.Random(seed)).structures[0];
+      final other = M4DpSurveyFault.values.firstWhere((f) => f != M4DpSurveyFault.touch && s0.faults.contains(f));
+      final c = await _open(t, seed);
+      await _tapPart(t, other);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes');
+      expect(t.widget<CoworkerPeek>(find.byType(CoworkerPeek)).lineBn, M4DpSurveyLines.coworkerAsIs.line, reason: 'his line must not name the touching wires before they are found');
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(M4DpSurveyLines.coworkerAsIs.wrong);
+      expect(wrong, isNotEmpty);
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 900);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M4DpSurveyMistakes.asIsMyth.key, reason: 'the slip matches the myth he said');
+      await _close(t, c);
+    });
+
+    group('gesture hints', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      IdleHintState sceneHint(WidgetTester t) => t.state<IdleHintState>(find.byWidgetPredicate((w) => w is IdleHint && w.controller != null));
+
+      testWidgets('surveying: after idle the hand sweeps over all six parts; none over a card', (t) async {
+        final seed = seedWhere((d) => d.callAt != 0 && d.structures[0].faults.length < 3);
+        final s0 = dealM4DpSurvey(math.Random(seed)).structures[0];
+        final c = await _open(t, seed);
+        expect(sceneHint(t).showing, isFalse);
+        await _pump(t, 9000);
+        final h = sceneHint(t);
+        expect(h.showing, isTrue, reason: 'idle: the hand comes');
+        expect(h.debugOptions, hasLength(M4DpSurveyFault.values.length), reason: 'every part, tidy or not');
+        expect(h.debugFrame!.press, 0, reason: 'a sweep presses nothing');
+        await _tapPart(t, M4DpSurveyFault.values.firstWhere((f) => !s0.faults.contains(f)));
+        await _pump(t, 9000);
+        expect(find.byType(MistakeCard), findsOneWidget);
+        expect(sceneHint(t).showing, isFalse, reason: 'no hand over a card');
+        await t.tap(find.text(MistakeLines.gotIt));
+        await _pump(t, 600);
+        await _close(t, c);
+      });
+
+      testWidgets('taps on the sky are misses: three bring the hand at once, at no cost', (t) async {
+        final seed = seedWhere((d) => d.callAt != 0);
+        final c = await _open(t, seed);
+        final sky = [const Offset(330, 140), const Offset(20, 140), const Offset(340, 200)].firstWhere((p) => _geo.zoneAt(p) == null);
+        for (var i = 0; i < 3; i++) {
+          await t.tapAt(_screen(sky));
+          await t.pump(const Duration(milliseconds: 200));
+        }
+        await t.pump(const Duration(milliseconds: 300));
+        expect(sceneHint(t).showing, isTrue);
+        expect(find.byType(MistakeCard), findsNothing, reason: 'a miss costs nothing');
+        await _close(t, c);
+      });
+
+      testWidgets('ordering: the hand sweeps over the cards not yet picked', (t) async {
+        final seed = seedWhere((d) => d.callAt != 0 && d.structures[0].needsOrder);
+        final s0 = dealM4DpSurvey(math.Random(seed)).structures[0];
+        final c = await _open(t, seed);
+        for (final f in s0.faults) {
+          await _tapPart(t, f);
+        }
+        await t.tap(find.text(M4DpSurveyLines.submit));
+        await _pump(t, 600);
+        expect(find.byKey(ValueKey('order-${s0.faults.firstWhere((f) => f.isHt).name}')), findsOneWidget);
+        await _pump(t, 9000);
+        final h = sceneHint(t);
+        expect(h.showing, isTrue);
+        expect(h.debugOptions, hasLength(s0.faults.length));
+        await _close(t, c);
+      });
+    });
+
     testWidgets('dressing it live: the structure freezes first, then the card (near-miss)', (t) async {
       final seed = seedWhere((d) => true);
       final deal = dealM4DpSurvey(math.Random(seed));
@@ -545,9 +791,11 @@ void main() {
       }
       expect(await _pumpUntil(t, find.byKey(const ValueKey('plan-deck'))), isTrue);
       await _pump(t, 700);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M4DpSurveyLines.planWrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 900);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);

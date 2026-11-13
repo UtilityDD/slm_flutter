@@ -1,0 +1,374 @@
+{
+ "module": "5",
+ "deadlySlipTable": [
+  {
+   "act": "R1 Touching or climbing a tripped line, or doing any hands-on work, before a written PTW (incl. phone 'line off')",
+   "cls": "deadly",
+   "source": "5.1 myth reality 'মারাত্মক ভুল'; M1 step 17 — do_5_1_b, do_5_6_b, do_5_10_a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R2 Hands, tool or climb on isolated line or equipment before the tester shows 0 V",
+   "cls": "deadly",
+   "source": "M1 step 18; 2.6/do/0; 2.9/do/1 — do_5_1_b, do_5_8_a, do_5_8_b (both raised from slip), do_5_10_a, gate",
+   "needsOwner": true
+  },
+  {
+   "act": "R3 Earth set applied before the tester has proved the line dead",
+   "cls": "slip",
+   "source": "4.1a ruling — do_5_1_b, do_5_3_b",
+   "needsOwner": false
+  },
+  {
+   "act": "R4 Climbing or cutting after the test but before the earth is on (personal earth / both ends)",
+   "cls": "deadly",
+   "source": "5.1 'PTW এবং ব্যক্তিগত আর্থিং'; 4.1a, 4.2b — do_5_1_b, do_5_3_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R5 Earth clamp on the line before the spike is in",
+   "cls": "deadly",
+   "source": "M1 step 15 — do_5_1_b",
+   "needsOwner": false
+  },
+  {
+   "act": "R6 Patrol (no touch) of a tripped or locked-out feeder before the PTW",
+   "cls": "slip",
+   "source": "5.1 'পেট্রোলিং বা কাজ শুরুর আগে অবশ্যই একটি বৈধ PTW' — do_5_1_b, gate; do_5_2_a and do_5_7_a start with a PTW docket",
+   "needsOwner": true
+  },
+  {
+   "act": "R7 Ground-only patrol of an in-service (reclosing) line without a PTW is allowed; any climb or touch of it is deadly",
+   "cls": "deadly",
+   "source": "5.2 myth 2 / pro tip 2, 5.7 corona — do_5_2_b, do_5_7_b, gate case F",
+   "needsOwner": true
+  },
+  {
+   "act": "R8 Re-energizing a faulted line to test or burn it: asking the control room to charge a tripped or locked-out feeder before the fault is found; re-fitting a DO after an instant blast with arc; closing a DO with the blowing LT way still in; re-charging a DTR whose HT fuse blew with all LT open (own act or by listening)",
+   "cls": "deadly",
+   "source": "5.4 'মারাত্মক ভুল' and myth 1 'কঠোরভাবে নিষিদ্ধ'; 5.8 'বিস্ফোরিত হতে পারে'; 5.1 myth 2; M1 rule 'lesson মারাত্মক ভুল → deadly' — do_5_1_a (raised from slip), do_5_4_a, do_5_4_b, do_5_8_b (LT site raised), gate. Conflicts with M4 do_4_4_b 'reclosing after a re-blow = slip'",
+   "needsOwner": true
+  },
+  {
+   "act": "R9 First DO re-fit on a fresh blow with no history",
+   "cls": "slip",
+   "source": "Allowed, not scored (5.4 mission briefing; M4 do_4_4_b) — do_5_4_b",
+   "needsOwner": true
+  },
+  {
+   "act": "R10 Re-fitting after a delayed (transient) blow before checking sag and branch spots",
+   "cls": "slip",
+   "source": "5.4 'বিপজ্জনক হতে পারে, যদি না … নিশ্চিত' — do_5_4_b",
+   "needsOwner": false
+  },
+  {
+   "act": "R11 Charging the HT with only some LT ways opened",
+   "cls": "slip",
+   "source": "5.4 step 1 'সমস্ত আউটগোয়িং' — do_5_4_a",
+   "needsOwner": false
+  },
+  {
+   "act": "R12 Charging with a crew member at the work spot or before line clear",
+   "cls": "deadly",
+   "source": "1.6 / M1 step 18 line clear + 5.1 myth reality — gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R13 Walking into the 10 m zone of a fallen wire (trainee or crew)",
+   "cls": "deadly",
+   "source": "5.2 'কমপক্ষে ১০ মিটার'; M1 step 5 analogy — do_5_2_b, do_5_6_b (trainee held at the rope), gate",
+   "needsOwner": true
+  },
+  {
+   "act": "R14 Touching, lifting or moving a fallen or broken wire by hand, foot, stick or dry bamboo, or joining the broken ends",
+   "cls": "deadly",
+   "source": "5.2 myth 1 'স্পর্শ করা মানেই মৃত্যু'; 5.6 myth 2; M1 step 6 — do_5_2_b, do_5_6_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R15 Leaving the step-potential zone with a normal long stride",
+   "cls": "deadly",
+   "source": "5.2 step potential (rule only; death not stated); M1 gate and board 1.9 — do_5_2_b",
+   "needsOwner": true
+  },
+  {
+   "act": "R16 Cordon ring under 10 m with the trainee standing outside it",
+   "cls": "slip",
+   "source": "5.2 'এলাকাটি ঘিরে দিন' — do_5_2_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R17 A bystander reaches a live-treated object because the player did not stop them",
+   "cls": "deadly",
+   "source": "5.6 pro tip 1 (no M1 precedent for bystander harm) — do_5_6_b",
+   "needsOwner": true
+  },
+  {
+   "act": "R18 Late stop (bystander already under the rope or reaching)",
+   "cls": "slip",
+   "source": "Game-timing threshold — do_5_6_b",
+   "needsOwner": true
+  },
+  {
+   "act": "R19 Climbing a live pole or DTR platform to look closer",
+   "cls": "deadly",
+   "source": "3.2/do/1, 3.6/do/1, 4.5a — do_5_7_b, do_5_8_a, gate F",
+   "needsOwner": false
+  },
+  {
+   "act": "R20 Bamboo poke at a live insulator",
+   "cls": "deadly",
+   "source": "M1 step 6 — do_5_7_b, gate F",
+   "needsOwner": false
+  },
+  {
+   "act": "R21 Turning the off-load tap changer while live",
+   "cls": "deadly",
+   "source": "do_3_6_b — do_5_5_a",
+   "needsOwner": false
+  },
+  {
+   "act": "R22 Plain spanner on live terminals; bare-hand neutral",
+   "cls": "deadly",
+   "source": "do_3_8_b, do_4_10_a — do_5_5_b",
+   "needsOwner": false
+  },
+  {
+   "act": "R23 Megger or meter lead on a cable with an end not isolated",
+   "cls": "deadly",
+   "source": "2.7/do/0, 3.7 কাজ 2 — do_5_9_a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R24 Lifting a megger clip after TEST without discharging",
+   "cls": "deadly",
+   "source": "2.7/do/1 — do_5_9_a",
+   "needsOwner": false
+  },
+  {
+   "act": "R25 First test lead on before the pre-test discharge",
+   "cls": "slip",
+   "source": "2.7/do/0 — do_5_9_a",
+   "needsOwner": false
+  },
+  {
+   "act": "R26 Thick wire or wrong link in place of a fuse",
+   "cls": "deadly",
+   "source": "do_3_4_a, do_4_4_b — do_5_4_b order deck, gate aftershock, board 5.4",
+   "needsOwner": false
+  },
+  {
+   "act": "R27 Night patrol alone / one person driving and watching",
+   "cls": "slip",
+   "source": "5.7 pro tip 4 — do_5_7_a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R28 Low battery, dark jacket at the roadside, unfamiliar field track",
+   "cls": "slip",
+   "source": "5.7 pro tips 2–3; M1 PPE slips — do_5_7_a",
+   "needsOwner": true
+  },
+  {
+   "act": "R29 Listening to the coworker: same class as the act he pushes; a myth or shortcut with no immediate danger is a slip",
+   "cls": "slip",
+   "source": "Playbook; M1 steps 15/18 precedent for deadly pushes — all levels",
+   "needsOwner": false
+  },
+  {
+   "act": "R30 Tagging, pinning or snapping a sound item as a fault",
+   "cls": "slip",
+   "source": "M1 steps 8–9 'reporting a sound pole = slip' — 5.2b, 5.3a, 5.7a, 5.7b, 5.8b, 5.9b, 5.10a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R31 Closing a search or list with a real finding missed",
+   "cls": "slip",
+   "source": "4.6 কাজ 1 'one missed = slip' — 5.1a, 5.2b, 5.7a, 5.8b, 5.10a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R32 Accepting water in DTR oil as harmless (5.8 myth 2, which the lesson calls 'মারাত্মক ভুল!')",
+   "cls": "slip",
+   "source": "No one is endangered on the spot and the DTR is already isolated; differs from the M1 'মারাত্মক ভুল → deadly' rule — do_5_8_b",
+   "needsOwner": true
+  },
+  {
+   "act": "R33 Driving the peg or digging before the local-authority call",
+   "cls": "slip",
+   "source": "5.9 'খোঁড়ার আগে সাবধান' (no death stated) — do_5_9_b, gate",
+   "needsOwner": true
+  }
+ ],
+ "ownerDecisions": [
+  "R8, the biggest call: re-energizing a faulted line to test or burn it is DEADLY across Module 5. This covers 5.1a's coworker (raised from slip), 5.4a/b, 5.8b's LT site (raised from slip) and the gate. Source: lesson 5.4's own 'মারাত্মক ভুল' and the M1 rule that the lesson's 'মারাত্মক ভুল' means deadly. Either confirm it, or rule it a slip module-wide. Then align M4 do_4_4_b, which books 'reclosing after a re-blow' as a slip; the clean split is instant blast with arc = deadly, unspecified re-blow = slip.",
+  "R2: working on isolated equipment before the tester shows 0 V is DEADLY. This raises do_5_8_a and do_5_8_b from slip and matches M1 step 18 and 2.6/2.9. Earthing before the test stays a slip (4.1a).",
+  "R7: an in-service line (tripping and reclosing) may be patrolled from the ground without a PTW. Every climb or touch on it is deadly. Lessons 5.2b and 5.7b and gate case F all depend on this. R6: patrolling a tripped or locked-out feeder before the PTW is a slip. do_5_2_a and do_5_7_a now start with a PTW docket chip.",
+  "Fallen wire: entering 10 m = deadly (R13), a long stride out of the zone = deadly (R15; lesson gives the rule, not death), a cordon under 10 m = slip (R16).",
+  "do_5_6_b: a bystander's contact is deadly for the player (R17; no M1 precedent) and a late stop is a slip (R18).",
+  "R32: listening to 5.8's water myth stays a slip, although the lesson calls it 'মারাত্মক ভুল!'.",
+  "R33: peg or dig before the local-authority call = slip, not deadly.",
+  "R9: the first DO re-fit on a fresh blow with no history is allowed.",
+  "Verb changes for distinctness: 5.4b patrol cut; 5.5a flag and thermal cut (engineType renamed m5_lv_street_read); 5.7a thermal cut; 5.7b and 5.2b sound homing cut; 5.2b binocular circle replaced; 5.3a open/short stamps moved to 5.6a. Approve as a set.",
+  "Evidence-gated verdicts (a right answer without its readings = slip) are used in 5.5a, 5.5b and 5.9a, and 'ask before choosing' in 5.5a. Approve this as a general rule.",
+  "Boards trimmed to 5 rounds each (dropped rounds listed in changes).",
+  "Gate: rank অ্যাডভান্সড (unlockRank(5)); content_catalog gate_m5 engineType changes from 'gate_field' to 'm5_gate_case'; badge (reuse 'ফল্ট ফাইন্ডার'?); length 5–7 min, so drop the aftershock or the history field if it runs long; case F only if R7 is accepted.",
+  "Source-text fixes in tool/all_training_chapters_bn.json: 5.6 (प्रचंड, टकराলে, টকরানো, شدید), 5.7 ('дорогу', '보이는'), 5.8 ('শদিদ'), 5.10 ('அவை', 'निरीक्षण, परीक्षण … विश्लेषण'), 5.1 ('टकरा'). On-screen text uses clean Bangla until these are fixed.",
+  "Audio: new rival clips are needed for every coworker line that is new or a myth (tool/rival_clip.py). Guide, operator, neighbour and villager lines use device TTS. No YouTube ids yet for 5.x Learn boards.",
+  "Content to confirm with a lineman: the hand bend-test for annealing (5.3b); judging thermal hotspots against the same joint on the other two phases (5.10a); measuring at the LTDB instead of the LT bushing (5.5a)."
+ ],
+ "allVerbs": [
+  [
+   "5.1",
+   "do_5_1_a",
+   "interview the operator, probe vague answers"
+  ],
+  [
+   "5.1",
+   "do_5_1_b",
+   "count recloser shots against decoys"
+  ],
+  [
+   "5.2",
+   "do_5_2_a",
+   "drive the feeder, read FPIs, bracket"
+  ],
+  [
+   "5.2",
+   "do_5_2_b",
+   "hold-walk, release-stop, check senses"
+  ],
+  [
+   "5.3",
+   "do_5_3_a",
+   "photograph clues, thread to culprit"
+  ],
+  [
+   "5.3",
+   "do_5_3_b",
+   "bend-test the conductor, tape and cut"
+  ],
+  [
+   "5.4",
+   "do_5_4_a",
+   "pull every LT way, restore one by one"
+  ],
+  [
+   "5.4",
+   "do_5_4_b",
+   "read and run the re-blow clock"
+  ],
+  [
+   "5.5",
+   "do_5_5_a",
+   "ask the street, read the voltage pattern"
+  ],
+  [
+   "5.5",
+   "do_5_5_b",
+   "switch loads on, watch the sag"
+  ],
+  [
+   "5.6",
+   "do_5_6_a",
+   "spend two clues, file the enemy"
+  ],
+  [
+   "5.6",
+   "do_5_6_b",
+   "swipe to stop people reaching live metal"
+  ],
+  [
+   "5.7",
+   "do_5_7_a",
+   "steer the searchlight, call the speed"
+  ],
+  [
+   "5.7",
+   "do_5_7_b",
+   "lights off, wait, then mark"
+  ],
+  [
+   "5.8",
+   "do_5_8_a",
+   "run a test, strike causes off"
+  ],
+  [
+   "5.8",
+   "do_5_8_b",
+   "gather proof, pin to workshop slip"
+  ],
+  [
+   "5.9",
+   "do_5_9_a",
+   "plan meter tests, deduce fault type"
+  ],
+  [
+   "5.9",
+   "do_5_9_b",
+   "trace the route, sweep for the thump"
+  ],
+  [
+   "5.10",
+   "do_5_10_a",
+   "sweep a thermal camera, snap hotspots"
+  ]
+ ],
+ "kind": "do",
+ "lessonId": "5.9",
+ "lessonTitleBn": "কেবিল ফল্ট খোঁজার প্রাথমিক ধারণা",
+ "level": {
+  "packId": "do_5_9_a",
+  "engineType": "m5_cable_fault_type",
+  "titleBn": "কোর থেকে কোরে: ফল্টের ধরন",
+  "verb": "plan meter tests, deduce fault type",
+  "scene": "Substation cable room (panel switch with hasp and tag, open cable box R/Y/B lugs and armour clamp, earth bar with discharge lead, megger and multimeter) and, a pan away, the far-end box with its switch and lugs. A handwritten notebook logs raw rows. Round 3: street strip with 3 or 5 joint pits and chainage marks.",
+  "flow": [
+   "Guide first: 'ইউজি কেবিল ট্রিপ করেছে! খোঁড়ার আগে বলুন — কী ধরনের ফল্ট?'",
+   "Isolate: pan to both ends, switch any ON end OFF, hold the hasp, hang the tag → ◆ → reason.",
+   "Discharge each core (test lead before discharge = slip). Coworker A1 if dealt.",
+   "Tests in any order: pick an instrument, drag two leads onto two points; megger: hold TEST, read, discharge before lifting a clip; multimeter: continuity end to end. Rows write raw readings. Coworker A2 on the first low/silent reading if dealt.",
+   "Verdict sheet (type chips, core picker) after all 9 tests → ◆ → reason.",
+   "Round 2: a second cable (double fault in about half).",
+   "Round 3: open the pit nearest the middle; megger the faulted core each way; tap the low half → ◆. Pass panel."
+  ],
+  "dealtVariety": "Fault from 9 singles, round 2 double in about half; ON end (none 60 %); megger face; location art; coworker pool; pits, chainage and length.",
+  "deadly": [
+   "Lead on a core with either end ON (R23).",
+   "Lifting a megger clip after TEST without discharge (R24)."
+  ],
+  "slips": [
+   "First lead before discharge (R25).",
+   "Multimeter on an insulation pair.",
+   "Megger across one core's ends.",
+   "Core-armour with L and E swapped.",
+   "Verdict with tests missing.",
+   "Wrong type, core or half a double fault.",
+   "Wrong pit; wrong half.",
+   "Listening to the coworker."
+  ],
+  "coworkerPushBn": "A1 before the first test: 'টাইপ-ফাইপ জেনে কী হবে? চলো, সোজা মাঠে গিয়ে খুঁড়ি!' or A2 on the first low reading, before the row is written: 'একটাতেই তো কম পেয়েছ — বাকি জোড়া মাপার দরকার নেই, রায় দিয়ে দাও!' Guide 'কী করবেন?'. Listening = slip.",
+  "reasonQuestionsBn": [
+   "পরীক্ষার আগে দুই প্রান্তের সুইচ কেন দেখলেন?",
+   "ক্লিপ খোলার আগে কেন আবার ডিসচার্জ?",
+   "কেন এটা আর্থ ফল্ট?",
+   "কেন বলছেন কোরটা ভেতরে কাটা?",
+   "কেন মাঝের পিটেই কেবিল ভাগ করলেন?"
+  ],
+  "gestureHints": "Neutral glyph beside the guide only: swipe until the far end is seen, tap for switches, hold ring after an early hasp release, two-step drag after an instrument is lifted, TEST hold only after an early release. No hint after TEST (unclipping is the deadly test).",
+  "lessonPoints": [
+   "যদি দুটি কোরের (যেমন R এবং Y) মধ্যে মেগার দিয়ে রেজিস্ট্যান্স মেপে 'শূন্য' বা খুব কম রিডিং পাওয়া যায়, তবে এটি একটি শর্ট সার্কিট।",
+   "যদি একটি কোর এবং কেবিলের বাইরের আর্মার বা আর্থের মধ্যে মেগার দিয়ে খুব কম রিডিং পাওয়া যায়, তবে এটি একটি আর্থ ফল্ট।",
+   "যদি একটি কোরের দুই প্রান্তের মধ্যে মাল্টিমিটার দিয়ে কন্টিনিউটি পরীক্ষা করে কোনো 'বিপ' শব্দ না হয়, তবে কোরটি ভেতর থেকে কেটে গেছে।",
+   "কেবিলটিকে মাঝখান থেকে খুলে দুটি সেকশনে ভাগ করে মেগার দিয়ে পরীক্ষা করতে পারেন।"
+  ],
+  "giveawayRisks": "No test template; verdict sheet always offers everything; ON switch shown only in place; raw rows; A2 in single and double plays alike; identical pits with uneven chainage. Distinct from 2.7 (single IR reading) by the test-planning matrix and deduction."
+ },
+ "unsupported": [
+  "Cable and megger voltages are not in 5.9; megger preset, no kV shown.",
+  "Far-end access for continuity, isolation/discharge (from 2.7), the 9-test rule, pits and chainage, TDR tolerance and peak radius are game data.",
+  "TDR distance along the route is a physical inference.",
+  "The trainee holding the thump microphone is a design choice."
+ ],
+ "file": "m5_cable_fault_type.dart"
+}

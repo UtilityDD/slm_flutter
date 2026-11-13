@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'helmet_check.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
@@ -110,17 +111,29 @@ abstract final class GloveLines {
   static const askSpare = 'শেষে একটা বাড়তি জোড়া।';
   static const testFirst = 'আগে হাওয়া দিয়ে দেখুন!';
   static const guessed = 'ঠিক, কিন্তু আন্দাজে নয়—আগে হাওয়া দিয়ে দেখুন।';
-  static const holds = 'হাওয়া ধরে রাখছে—ঠিক আছে।';
+  /// Neutral: the air test finds leaks only (a wet or cracked pair holds air too).
+  static const holds = 'হাওয়া ধরে রাখছে—লিক নেই।';
   static const leaks = 'হাওয়া বেরিয়ে যাচ্ছে—ফুটো আছে!';
   static const pressMore = 'আরও একটু চেপে ধরে রাখুন।';
   static const caught = 'ঠিক ধরেছেন!';
-  static const rejectedGood = 'এটা তো ঠিক ছিল!';
+  /// A sound pair sent back: neutral replies (never "it was fine").
+  static const rejectedGood = 'আন্দাজে বাদ নয়—আগে হাওয়া দিয়ে দেখুন।';
+  static const rejectedTested = 'পরীক্ষা আর চোখের দেখা মিলিয়ে তবে বাদ দিন।';
   static const callHeld = 'ঠিক। দশ সেকেন্ডের পরীক্ষাই জীবন বাঁচায়।';
   static const callRushed = 'না! পরীক্ষা ছাড়া গ্লাভস মানে খালি হাত।';
   static const allSet = 'তিন জোড়া গ্লাভস পরীক্ষিত, হেলমেটও দেখা হলো। এবার বেরোনো যায়।';
   static const fail = 'এবার হলো না। ভালো করে দেখে আবার চেষ্টা করুন।';
   static const quick = 'ঝটপট আর নির্ভুল! বোনাস পেলেন।';
   static const testButton = 'চেপে ধরে হাওয়া দিন';
+
+  /// Mistakes-book lines (glove slips are booked like the helmet's).
+  static const uncheckedCard = 'রাবার গ্লাভস হাওয়া না দিয়েই নিলেন। নতুন হোক বা পুরোনো—প্রতিবার পরার আগে হাওয়া দিয়ে দেখুন।';
+  static const rejectedCard = 'বাদ দেওয়ার আগে হাওয়া-পরীক্ষা আর চোখের দেখা মিলিয়ে নিন—আন্দাজে নয়।';
+  static const listenCard = 'তাড়ার চাপে হাওয়া-পরীক্ষা বাদ দিতে রাজি হলেন। নতুন হোক বা জরুরি ডাক—প্রতিবার পরার আগে হাওয়া দিয়ে দেখুন।';
+
+  /// Listening to the coworker (skip the air test) — a slip (playbook row 8;
+  /// Module 1's deadly list does not include it).
+  static const listenMistake = DoMistake(key: '1.1/glove/listened', textBn: listenCard, art: '$_d/tray_rubber_gloves.webp', lessonPoint: kGloveLessonPoint);
 
 
   // The reason after each pair packed (lesson 1.1): one right, two wrong.
@@ -179,6 +192,12 @@ abstract final class GloveLines {
 }
 
 const _d = 'assets/duty_slip/dress';
+
+/// Lesson 1.1's point on rubber gloves (0-based: "৪. রাবার গ্লাভস").
+const kGloveLessonPoint = 3;
+
+/// Lesson 1.1's point on cut-resistant gloves ("৫. কাট-প্রতিরোধী গ্লাভস").
+const kCutGloveLessonPoint = 4;
 const _ppe = 'assets/safety/library/ppe';
 
 const _pinholeLine = 'চোখে না-দেখা ফুটো দিয়েই কারেন্ট হাতে ঢুকবে।';
@@ -348,7 +367,8 @@ GloveOutcome judgeGlove(GloveItem g, GloveChoice c, {required bool tested}) {
       }
       return const GloveOutcome(right: true, clean: true, delta: 10, packs: true, leavesTray: true, stampBn: gloveStampRight);
     case (GloveKind.good, GloveChoice.reject):
-      return const GloveOutcome(right: false, clean: false, delta: -5, packs: false, leavesTray: false, stampBn: gloveStampWrong, wordBn: GloveLines.rejectedGood);
+      return GloveOutcome(
+          right: false, clean: false, delta: -5, packs: false, leavesTray: false, stampBn: gloveStampWrong, wordBn: needsTest ? GloveLines.rejectedGood : GloveLines.rejectedTested);
     case (_, GloveChoice.wear):
       return GloveOutcome(right: false, clean: false, delta: -5, packs: false, leavesTray: true, stampBn: gloveStampWrong, reasonBn: g.lineBn);
     case (_, GloveChoice.reject):
@@ -357,6 +377,20 @@ GloveOutcome judgeGlove(GloveItem g, GloveChoice c, {required bool tested}) {
       }
       return GloveOutcome(right: true, clean: true, delta: 5, packs: false, leavesTray: true, stampBn: gloveStampReject, wordBn: GloveLines.caught, reasonBn: g.lineBn);
   }
+}
+
+/// The slip booked for a wrong decision on [g] (mistakes book, strike-out card).
+DoMistake gloveMistake(GloveItem g, GloveOutcome o) {
+  final key = switch (g.kind) {
+    GloveKind.good => o.wordBn == GloveLines.testFirst ? 'untested' : 'rejected-good',
+    GloveKind.flawed => g.flaw!.kind.name,
+    GloveKind.wrong => g.id,
+  };
+  final text = switch (g.kind) {
+    GloveKind.good => o.wordBn == GloveLines.testFirst ? GloveLines.uncheckedCard : GloveLines.rejectedCard,
+    _ => o.reasonBn.isNotEmpty ? o.reasonBn : g.lineBn,
+  };
+  return DoMistake(key: '1.1/glove/$key', textBn: text, art: g.asset, lessonPoint: g.id == 'cut' ? kCutGloveLessonPoint : kGloveLessonPoint);
 }
 
 class GloveRound {
@@ -411,8 +445,9 @@ class GloveRound {
 Iterable<String> gloveCheckLines(GloveCheckPack p) sync* {
   yield* [
     GloveLines.intro, GloveLines.askOwn, GloveLines.askMate, GloveLines.askSpare, GloveLines.testFirst, GloveLines.guessed,
-    GloveLines.holds, GloveLines.leaks, GloveLines.pressMore, GloveLines.caught, GloveLines.rejectedGood, GloveLines.callHeld,
-    GloveLines.callRushed, GloveLines.allSet, GloveLines.fail, GloveLines.quick,
+    GloveLines.holds, GloveLines.leaks, GloveLines.pressMore, GloveLines.caught, GloveLines.rejectedGood, GloveLines.rejectedTested,
+    GloveLines.callHeld, GloveLines.callRushed, GloveLines.allSet, GloveLines.fail, GloveLines.quick, GloveLines.uncheckedCard,
+    GloveLines.rejectedCard, GloveLines.listenCard,
   ];
   for (final g in p.pool) {
     if (g.lineBn.isNotEmpty) yield g.lineBn;
@@ -515,6 +550,15 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
 
   String get _rungId => widget.ctx.rungId;
 
+  // Gesture hints (how to interact, never which item): the tray, the air
+  // test's hold, the two decision buttons. Decks and the helmet's close look
+  // carry their own.
+  final _hints = IdleHintController();
+  final _trayKey = GlobalKey();
+  final _testKey = GlobalKey();
+  final _rejectKey = GlobalKey();
+  final _wearKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -595,9 +639,15 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     if (_overlay == _Overlay.none && _card == null && line != null) await _sayChain([line]);
   }
 
+  /// Nothing else on screen holds the player (praise window, deck, card …).
+  bool get _handsFree => !_busy && !_ended && !struckOut && _overlay == _Overlay.none && !coworkerOpen && !tableBusy && _card == null;
+
   void _pickUp(GloveItem g) {
     if (coworkerOpen && !coworkerChoiceUp) unawaited(answerCoworker(true, _screenCentre, direct: true));
-    if (_busy || _ended || _overlay != _Overlay.none || coworkerOpen || reasonOpen) return;
+    if (!_handsFree) return;
+    // His push round: he speaks before the first pair is touched (a fast play
+    // cannot skip him).
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
     _chain++;
@@ -613,7 +663,8 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
 
   void _pickHelmet(HelmetItem h) {
     if (coworkerOpen && !coworkerChoiceUp) unawaited(answerCoworker(true, _screenCentre, direct: true));
-    if (_busy || _ended || _overlay != _Overlay.none || coworkerOpen || reasonOpen || _card != null) return;
+    if (!_handsFree) return;
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
     _chain++;
@@ -641,7 +692,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   /// its card (picture + the lesson's line + পাঠে দেখুন) follows.
   Future<void> _decideHelmet(GloveChoice c, Offset origin) async {
     final h = _heldHelmet;
-    if (h == null || _busy || _verdict != null) return;
+    if (h == null || _busy || _ended || _verdict != null) return;
     _busy = true;
     final o = _h.decide(h, c);
     DoMistake? slip;
@@ -683,8 +734,8 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
       _verdict = null;
       _leaving = false;
       _card = slip;
+      _busy = false;
     });
-    _busy = false;
     if (slip != null) {
       final speak = await SpokenOnce.first('helmet/${slip.key}');
       if (!mounted || _card != slip) return;
@@ -698,6 +749,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   }
 
   void _cardGo() {
+    if (_card == null || _ended) return;
     HapticFeedback.selectionClick();
     setState(() => _card = null);
     unawaited(_askRound());
@@ -731,13 +783,18 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
 
   Future<void> _decide(GloveChoice c, Offset origin) async {
     final g = _held;
-    if (g == null || _busy || _verdict != null) return;
+    if (g == null || _busy || _ended || _verdict != null) return;
     _busy = true;
     final roundBefore = _r.round;
     final o = _r.decide(g, c);
-    if (!o.right && strike(DoMistake(key: 'glove/${g.id}', textBn: o.reasonBn, art: g.asset))) {
-      await _struckOut();
-      return;
+    if (!o.right) {
+      // Booked like the helmet's slips (mistakes book, পাঠে দেখুন).
+      final slip = gloveMistake(g, o);
+      unawaited(bookMistake(ref, widget.ctx, slip));
+      if (strike(slip)) {
+        await _struckOut();
+        return;
+      }
     }
     if (o.right) {
       HapticFeedback.lightImpact();
@@ -764,8 +821,8 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
       _held = null;
       _verdict = null;
       _leaving = false;
+      _busy = false;
     });
-    _busy = false;
     if (_r.round != roundBefore) {
       // "কেন এই জোড়াটা নিলেন?" — the right reason pays the table, then the next pair.
       unawaited(askReason(
@@ -816,9 +873,21 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _r.callDone || _r.round != _deal.callBefore) return null;
-    if (_overlay != _Overlay.none || _busy || reasonOpen || _introCard || _card != null) return false;
+    if (_ended || struckOut || _r.callDone || _r.round != _deal.callBefore) return null;
+    // His push is to skip the air test / the helmet's looks: once the station's
+    // work has begun it no longer fits the moment.
+    if (_pushStationTouched) return null;
+    if (_overlay != _Overlay.none || _busy || tableBusy || _introCard || _card != null) return false;
     return true;
+  }
+
+  /// The push station has been worked on (a pair tested or decided, a helmet
+  /// opened or decided).
+  bool get _pushStationTouched {
+    if (_helmetPush) return _heldHelmet != null || _h.asked > 0;
+    if (_r.done) return true;
+    final round = _r.round;
+    return _r.tested.any((k) => k.startsWith('$round/')) || _r.tray.length < _deal.rounds[round].length;
   }
 
   @override
@@ -833,18 +902,62 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     _r.answerCall(heldCheck: held);
     unawaited(_levelDelta(held ? 5 : -10, origin, mood: held ? GuideMood.glad : GuideMood.warn));
+    if (!held) {
+      // Listening to him is a slip (playbook row 8): booked, counted, its card.
+      final slip = _helmetPush ? HelmetLines.listenMistake : GloveLines.listenMistake;
+      unawaited(bookMistake(ref, widget.ctx, slip));
+      if (strike(slip)) {
+        await _struckOut();
+        return;
+      }
+      HapticFeedback.heavyImpact();
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+      if (!mounted) return;
+      setState(() => _card = slip);
+      unawaited(_sayChain([_helmetPush ? HelmetLines.callRushed : GloveLines.callRushed], mood: GuideMood.warn));
+      return;
+    }
     if (direct) return;
     final next = [?_taskLine];
-    if (held) {
-      final chain = _chain;
-      unawaited(() async {
-        await coworkerSnarl();
-        if (!mounted || chain != _chain) return;
-        await _sayChain([_helmetPush ? HelmetLines.callHeld : GloveLines.callHeld, ...next], mood: GuideMood.glad);
-      }());
-    } else {
-      unawaited(_sayChain([_helmetPush ? HelmetLines.callRushed : GloveLines.callRushed, ...next], mood: GuideMood.warn));
+    final chain = _chain;
+    unawaited(() async {
+      await coworkerSnarl();
+      if (!mounted || chain != _chain) return;
+      await _sayChain([_helmetPush ? HelmetLines.callHeld : GloveLines.callHeld, ...next], mood: GuideMood.glad);
+    }());
+  }
+
+  // --- gesture hints -----------------------------------------------------------
+
+  /// The level waits for the player's touch (no intro, card, deck, coworker,
+  /// praise window, stamp or result). The helmet's close look hints by itself.
+  bool get _hintWaiting {
+    if (_introCard || _busy || _ended || struckOut || _mark != null || _card != null) return false;
+    if (coworkerOnScreen || tableBusy) return false;
+    if (_overlay == _Overlay.inspect) return _held != null && _verdict == null;
+    return !_allDone;
+  }
+
+  Object get _hintKey => '$_station/${_overlay.name}/${_held?.id}/${_held != null && _r.isTested(_held!)}/${_tray.length}/${_h.shelf.length}';
+
+  HintSpec? _hint() {
+    if (_overlay == _Overlay.inspect) {
+      final g = _held;
+      if (g == null || _verdict != null) return null;
+      // The air test is a press-and-hold (shown the same on every rubber pair).
+      if (g.rubber && !_r.isTested(g)) return HintSpec.holdOn(_testKey);
+      return HintSpec.sweepOver([_rejectKey, _wearKey]);
     }
+    final tray = HintSpec.globalRectOf(_trayKey);
+    final n = _r.done ? _h.shelf.length : _tray.length;
+    if (tray == null || n == 0) return null;
+    final cells = gloveTrayCells(tray, n);
+    return n == 1 ? HintSpec.tap(cells.single.center) : HintSpec.sweep(cells);
+  }
+
+  /// A tap on the open yard (not a card): counts toward the confusion hint.
+  void _missTap() {
+    if (_overlay == _Overlay.none && _hintWaiting) _hints.missTap();
   }
 
   /// Tap the guide: the task on screen again, a different way each time.
@@ -984,6 +1097,10 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
               unawaited(MascotSpeechLibrary.stop());
               setState(() => _muted = !_muted);
             },
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             progress: DoProgress(
               labels: const [...GloveLines.rounds, HelmetLines.station],
               done: {for (var i = 0; i < _r.packed.length; i++) i, if (_h.done) 3},
@@ -1002,32 +1119,39 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
                     children: [
                       const SizedBox(height: 80),
                       Expanded(
-                        child: _Bag(
-                          packed: [for (final g in _r.packed) g.asset, ?_h.packed?.asset],
-                          quiet: quiet,
-                          // With a deck up the corner guide stands higher: lift the
-                          // bag to just under the ◆ so its last place stays in view.
-                          liftTo: deckUp ? size.height * 0.22 + 30 - pad.top - 80 : null,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: _missTap,
+                          child: _Bag(
+                            packed: [for (final g in _r.packed) g.asset, ?_h.packed?.asset],
+                            quiet: quiet,
+                            // With a deck up the corner guide stands higher: lift the
+                            // bag to just under the ◆ so its last place stays in view.
+                            liftTo: deckUp ? size.height * 0.22 + 30 - pad.top - 80 : null,
+                          ),
                         ),
                       ),
                       if (_mark == null)
                         Padding(
                           padding: EdgeInsets.only(bottom: pad.bottom),
-                          child: _r.done
-                              ? DoTray(
-                                  key: ValueKey('tray-$_wave'),
-                                  entries: [for (final h in shelf) DoTrayEntry(id: h.id, asset: h.asset)],
-                                  quiet: quiet,
-                                  muted: _muted,
-                                  onPick: (n) => _pickHelmet(shelf[n]),
-                                )
-                              : DoTray(
-                                  key: ValueKey('tray-$_wave'),
-                                  entries: [for (final g in tray) DoTrayEntry(id: g.id, asset: g.asset)],
-                                  quiet: quiet,
-                                  muted: _muted,
-                                  onPick: (n) => _pickUp(tray[n]),
-                                ),
+                          child: KeyedSubtree(
+                            key: _trayKey,
+                            child: _r.done
+                                ? DoTray(
+                                    key: ValueKey('tray-$_wave'),
+                                    entries: [for (final h in shelf) DoTrayEntry(id: h.id, asset: h.asset)],
+                                    quiet: quiet,
+                                    muted: _muted,
+                                    onPick: (n) => _pickHelmet(shelf[n]),
+                                  )
+                                : DoTray(
+                                    key: ValueKey('tray-$_wave'),
+                                    entries: [for (final g in tray) DoTrayEntry(id: g.id, asset: g.asset)],
+                                    quiet: quiet,
+                                    muted: _muted,
+                                    onPick: (n) => _pickUp(tray[n]),
+                                  ),
+                          ),
                         ),
                     ],
                   ),
@@ -1058,6 +1182,9 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
                   verdict: _verdict,
                   leaving: _leaving,
                   quiet: quiet,
+                  testKey: _testKey,
+                  rejectKey: _rejectKey,
+                  wearKey: _wearKey,
                   onTested: (leaked) => _onTested(_held!, leaked: leaked),
                   onPressMore: () => unawaited(_sayChain([GloveLines.pressMore])),
                   onDecide: (c, o) => unawaited(_decide(c, o)),
@@ -1160,6 +1287,17 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   }
 }
 
+/// Where [n] tray cards sit inside the tray's global rect [tray] (DoTray: a
+/// centred row, 10 px side padding, cards up to 80 wide with 4 px each side,
+/// 88 high under a 12 px top pad) — the sweep hint's stops.
+List<Rect> gloveTrayCells(Rect tray, int n) {
+  if (n <= 0) return const [];
+  final inner = math.max(0.0, tray.width - 20);
+  final w = math.min(88.0, inner / n);
+  final left = tray.left + 10 + (inner - w * n) / 2;
+  return [for (var i = 0; i < n; i++) Rect.fromLTWH(left + i * w + 4, tray.top + 12, math.max(1.0, w - 8), 88)];
+}
+
 // ============================================================================
 // Pieces
 // ============================================================================
@@ -1253,6 +1391,9 @@ class _GloveInspect extends StatefulWidget {
     required this.onTapCard,
     required this.onTapShade,
     required this.onGone,
+    this.testKey,
+    this.rejectKey,
+    this.wearKey,
   });
 
   final GloveItem item;
@@ -1266,6 +1407,11 @@ class _GloveInspect extends StatefulWidget {
   final VoidCallback onTapCard;
   final VoidCallback onTapShade;
   final VoidCallback onGone;
+
+  /// Where the hold button and the two decisions are (the level's gesture hint).
+  final GlobalKey? testKey;
+  final GlobalKey? rejectKey;
+  final GlobalKey? wearKey;
 
   @override
   State<_GloveInspect> createState() => _GloveInspectState();
@@ -1283,6 +1429,8 @@ class _GloveInspectState extends State<_GloveInspect> with TickerProviderStateMi
   @override
   void initState() {
     super.initState();
+    // Opened again after its air test: the result stays in view.
+    if (widget.tested && widget.item.rubber) _leaked = widget.item.leaks;
     if (widget.quiet) {
       _lift.value = 1;
     } else {
@@ -1431,6 +1579,7 @@ class _GloveInspectState extends State<_GloveInspect> with TickerProviderStateMi
           if (canTest) ...[
             // Raw pointer events: a long hold must not be cancelled as a "tap".
             Listener(
+              key: widget.testKey,
               onPointerDown: (_) => _pressStart(),
               onPointerUp: (_) => _pressEnd(),
               onPointerCancel: (_) => _pressEnd(),
@@ -1459,9 +1608,19 @@ class _GloveInspectState extends State<_GloveInspect> with TickerProviderStateMi
           if (v == null)
             Row(
               children: [
-                Expanded(child: DoBigButton(label: 'বাদ দিন', filled: false, onTapUp: (d) => widget.onDecide(GloveChoice.reject, d.globalPosition))),
+                Expanded(
+                  child: KeyedSubtree(
+                    key: widget.rejectKey,
+                    child: DoBigButton(label: 'বাদ দিন', filled: false, onTapUp: (d) => widget.onDecide(GloveChoice.reject, d.globalPosition)),
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: DoBigButton(label: 'নিয়ে নিন', filled: true, onTapUp: (d) => widget.onDecide(GloveChoice.wear, d.globalPosition))),
+                Expanded(
+                  child: KeyedSubtree(
+                    key: widget.wearKey,
+                    child: DoBigButton(label: 'নিয়ে নিন', filled: true, onTapUp: (d) => widget.onDecide(GloveChoice.wear, d.globalPosition)),
+                  ),
+                ),
               ],
             )
           else

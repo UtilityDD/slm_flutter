@@ -1007,3 +1007,118 @@ class M2GaugePainter extends CustomPainter {
   @override
   bool shouldRepaint(M2GaugePainter old) => old.p != p;
 }
+
+// ============================================================================
+// The van's side bay at day's end (station 7)
+// ============================================================================
+
+/// Where things sit in the tool-care bay, for a scene [h] high: the wall
+/// hooks and the waterproof bag up on the wall, the tool in hand, the
+/// toolbox and the bench, and the van's floor.
+class M2CareGeo {
+  const M2CareGeo(this.h);
+  final double h;
+
+  Rect get hooks => Rect.fromLTWH(14, h * 0.19, 160, h * 0.115);
+  Rect get bag => Rect.fromLTWH(188, h * 0.19, 158, h * 0.115);
+  Rect get hand => Rect.fromLTWH(40, h * 0.33, 280, h * 0.135);
+  double get benchY => h * 0.59;
+  Rect get toolbox => Rect.fromLTWH(206, benchY - h * 0.11, 140, h * 0.11);
+  Rect slot(int i) => Rect.fromLTWH(14 + i * 112.0, benchY + h * 0.018, 106, h * 0.11);
+  Rect get floor => Rect.fromLTWH(0, benchY + h * 0.15, 360, h * 0.14);
+
+  /// Where the [n]th tool put away at a spot is drawn.
+  Rect storedAt(Rect spot, int n) => Rect.fromLTWH(spot.left + 10 + n * 14, spot.top + spot.height * 0.28 + n * 6, spot.width * 0.62, spot.height * 0.5);
+}
+
+class M2CareBayPainter extends CustomPainter {
+  const M2CareBayPainter({required this.geo});
+  final M2CareGeo geo;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final g = geo;
+    final w = size.width;
+    // Van wall (perforated panel).
+    final wall = Rect.fromLTWH(0, 0, w, g.benchY);
+    canvas.drawRect(
+      wall,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF233041), Color(0xFF34465C)],
+        ).createShader(wall),
+    );
+    final hole = Paint()..color = const Color(0xFF1A2431);
+    for (var y = 110.0; y < g.benchY - 10; y += 18) {
+      for (var x = 12.0; x < w; x += 18) {
+        canvas.drawCircle(Offset(x, y), 1.6, hole);
+      }
+    }
+    // Hook rail.
+    final hr = g.hooks;
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(hr.left, hr.top + 6, hr.width, 8), const Radius.circular(3)), Paint()..color = const Color(0xFF9AA4AE));
+    final hook = Paint()
+      ..color = const Color(0xFFC9D1D9)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 4; i++) {
+      final x = hr.left + 22 + i * (hr.width - 44) / 3;
+      canvas.drawPath(
+        Path()
+          ..moveTo(x, hr.top + 14)
+          ..lineTo(x, hr.top + 26)
+          ..quadraticBezierTo(x, hr.top + 34, x + 7, hr.top + 30),
+        hook,
+      );
+    }
+    // Waterproof bag hanging on the wall.
+    final b = g.bag;
+    final body = RRect.fromRectAndRadius(Rect.fromLTWH(b.left + 6, b.top + 14, b.width - 12, b.height - 16), const Radius.circular(12));
+    canvas.drawRRect(body, Paint()..color = const Color(0xFF1F5F8F));
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(b.left + 6, b.top + 14, b.width - 12, 12), const Radius.circular(6)), Paint()..color = const Color(0xFF184C73));
+    canvas.drawLine(Offset(b.left + 20, b.top + 4), Offset(b.left + 20, b.top + 16), hook);
+    canvas.drawLine(Offset(b.right - 20, b.top + 4), Offset(b.right - 20, b.top + 16), hook);
+    canvas.drawLine(Offset(b.left + 20, b.top + 4), Offset(b.right - 20, b.top + 4), hook..strokeWidth = 2);
+    hook.strokeWidth = 3;
+    // Bench.
+    final bench = Rect.fromLTWH(0, g.benchY, w, g.floor.top - g.benchY);
+    canvas.drawRect(
+      bench,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFB07A48), Color(0xFF7A4E2A)],
+        ).createShader(bench),
+    );
+    canvas.drawRect(Rect.fromLTWH(0, g.benchY, w, 5), Paint()..color = const Color(0xFFD39A62));
+    // Toolbox on the bench.
+    final t = g.toolbox;
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(t.left, t.top + 16, t.width, t.height - 16), const Radius.circular(6)), Paint()..color = const Color(0xFFC62828));
+    canvas.drawRect(Rect.fromLTWH(t.left, t.top + 30, t.width, 4), Paint()..color = const Color(0xFF8E1B1B));
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Rect.fromLTWH(t.center.dx - 26, t.top + 4, 52, 14), const Radius.circular(6)),
+      Paint()
+        ..color = const Color(0xFF3B3F45)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4,
+    );
+    canvas.drawRect(Rect.fromCenter(center: Offset(t.center.dx, t.top + 32), width: 18, height: 8), Paint()..color = const Color(0xFFB0B8C0));
+    // Van floor (ribbed metal) down to the bottom edge.
+    final f = Rect.fromLTWH(0, g.floor.top, w, size.height - g.floor.top);
+    canvas.drawRect(f, Paint()..color = const Color(0xFF3A4048));
+    final rib = Paint()
+      ..color = const Color(0xFF4F5761)
+      ..strokeWidth = 3;
+    for (var y = f.top + 10; y < size.height; y += 16) {
+      canvas.drawLine(Offset(0, y), Offset(w, y), rib);
+    }
+    canvas.drawRect(Rect.fromLTWH(0, f.top, w, 6), Paint()..color = const Color(0xFF262B31));
+  }
+
+  @override
+  bool shouldRepaint(M2CareBayPainter old) => old.geo.h != geo.h;
+}

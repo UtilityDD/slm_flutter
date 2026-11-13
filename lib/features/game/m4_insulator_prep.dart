@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -60,15 +61,24 @@ export 'm4_insulator_prep_world.dart' show M4InsulatorPrepFault, M4InsulatorPrep
 // Deadly: climbing a line with no PTW / shutdown, or with the earth not on
 // both sides (also by listening to the coworker, "এক দিকে আর্থ দিলেই হবে").
 // Slips: a good insulator called faulty, the wrong kind of insulator, a
-// cracked spare, an earth on a live / untested line, climbing without helmet
+// fitting for the other kind, a cracked spare, an earth on a live / untested line, climbing without helmet
 // + harness or without the full kit. Three slips strike the level out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m4_insulator_prep_world.dart), corner guide, ◆ on the table →
 // "কেন …?" → the next pole by itself; the careless coworker once a play, on
-// one pole, after the line is proven dead. Voice: the guide by device TTS; the
-// coworker's new push by device TTS until recorded (his exit line is his
-// existing recorded clip).
+// one pole, after the line is proven dead — the second earth and the climb
+// wait for him (holdForCoworker), so a fast play cannot skip him; he never
+// comes once both earths are on. Voice: the guide by device TTS; the
+// coworker's push stays silent with its caption held until it is recorded
+// (his exit line is his existing recorded clip).
+//
+// No giveaways: the tool row is dealt in a fresh order each pole (never
+// PTW → tester → earth → harness), the kit button lights for "something
+// packed", not for "the right kit", and a good insulator called faulty costs
+// a slip with a neutral reply. Gesture hints (how, never what) for each
+// waiting state: a sweep over the insulators, over the tools and the pole,
+// over the shelf, or over the line and the pole while the earth is in hand.
 
 // ============================================================================
 // Content
@@ -80,6 +90,20 @@ enum M4InsulatorPrepWhy { earth, ptw, kit, spare }
 /// The hands-on tool in hand.
 enum M4InsulatorPrepTool { none, earth }
 
+/// The buttons on the tool row (dealt in a fresh order each pole).
+enum M4InsulatorPrepButton { kit, ptw, tester, earth, harness }
+
+/// True when [row] shows the safe order PTW → tester → earth → harness left
+/// to right (the kit anywhere): a row like that would give the order away.
+bool m4InsulatorPrepRowInOrder(List<M4InsulatorPrepButton> row) {
+  const order = [M4InsulatorPrepButton.ptw, M4InsulatorPrepButton.tester, M4InsulatorPrepButton.earth, M4InsulatorPrepButton.harness];
+  final seen = [for (final b in row) if (b != M4InsulatorPrepButton.kit) b];
+  for (var i = 0; i < order.length; i++) {
+    if (seen[i] != order[i]) return false;
+  }
+  return true;
+}
+
 @immutable
 class M4InsulatorPrepSite {
   const M4InsulatorPrepSite({
@@ -90,7 +114,17 @@ class M4InsulatorPrepSite {
     required this.why,
     required this.shelf,
     required this.poleNo,
+    this.tools = const [
+      M4InsulatorPrepButton.harness,
+      M4InsulatorPrepButton.earth,
+      M4InsulatorPrepButton.kit,
+      M4InsulatorPrepButton.ptw,
+      M4InsulatorPrepButton.tester,
+    ],
   });
+
+  /// The tool row, left to right (never the safe order: [m4InsulatorPrepRowInOrder]).
+  final List<M4InsulatorPrepButton> tools;
   final String id;
   final M4InsulatorPrepKind kind;
   final M4InsulatorPrepFault fault;
@@ -158,16 +192,67 @@ abstract final class M4InsulatorPrepLines {
   static const ptwWhy = ['বৈধ PTW আর শাটডাউন ছাড়া লাইনে হাত নয়', 'কাজের প্রথম শর্ত বৈধ PTW, তারপর বাকি সব'];
   static const kitWhy = ['সরঞ্জাম না থাকলে কাজের মাঝপথে বিপদ হতে পারে', 'ইনসুলেটর, বাইন্ডিং, সাপোর্ট — সব নিচেই মেলাই'];
   static const spareWhy = ['ফাটা নতুনটা লাগালে লাইনে আবার ফল্ট হবে', 'নতুনটাতেও ফাটল বা পোড়া দাগ থাকতে পারে'];
+  static const _mythNoEarth = 'লাইন বন্ধ থাকলে আর্থের কোনো দরকারই নেই';
+  static const _mythOneEarth = 'এক দিকে আর্থ দিলেই পুরো লাইন নিরাপদ হয়';
+  static const _mythTwoLong = 'দুই দিকে আর্থ শুধু লম্বা লাইনের কাজে লাগে';
+  static const _mythOldHand = 'অভিজ্ঞ লোকের PTW ছাড়াও কাজ চলে যায়';
+  static const _mythVerbal = 'মুখে বলে দিলেই চলে, PTW কাগজ পরে নিলেই হবে';
+  static const _mythWhatever = 'যা আছে নিয়ে উঠি, বাকিটা পরে দেখা যাবে';
+  static const _mythAskUp = 'সরঞ্জাম কম পড়লে পোলে উঠে চেয়ে নেওয়া যায়';
+  static const _mythNotAll = 'সব সরঞ্জাম লাগে না, যা আছে তা নিয়েই উঠি';
+  static const _mythSmallCrack = 'অল্প ফাটা ইনসুলেটর আরও কিছুদিন চলে যায়';
+  static const _mythBoxed = 'নতুন ইনসুলেটর বাক্স থেকে এলে দেখার কিছু নেই';
   static const myths = [
-    'লাইন বন্ধ থাকলে আর্থের কোনো দরকারই নেই',
-    'এক দিকে আর্থ দিলেই পুরো লাইন নিরাপদ হয়',
-    'অভিজ্ঞ লোকের PTW ছাড়াও কাজ চলে যায়',
-    'যা আছে নিয়ে উঠি, বাকিটা পরে দেখা যাবে',
-    'অল্প ফাটা ইনসুলেটর আরও কিছুদিন চলে যায়',
+    _mythNoEarth,
+    _mythOneEarth,
+    _mythTwoLong,
+    _mythOldHand,
+    _mythVerbal,
+    _mythWhatever,
+    _mythAskUp,
+    _mythNotAll,
+    _mythSmallCrack,
+    _mythBoxed,
     'কাজ ছোট, তাই তাড়াতাড়ি সেরে ফেললাম',
     'পিন আর ডিস্ক — যেকোনোটা লাগালেই চলে',
   ];
   static const allRight = [...earthWhy, ...ptwWhy, ...kitWhy, ...spareWhy];
+
+  /// The myths on the same topic as a reason (they share its key words).
+  static List<String> nearMyths(M4InsulatorPrepWhy w) => switch (w) {
+        M4InsulatorPrepWhy.earth => const [_mythTwoLong, _mythOneEarth, _mythNoEarth],
+        M4InsulatorPrepWhy.ptw => const [_mythOldHand, _mythVerbal],
+        M4InsulatorPrepWhy.kit => const [_mythAskUp, _mythNotAll],
+        M4InsulatorPrepWhy.spare => const [_mythSmallCrack, _mythBoxed],
+      };
+
+  /// The words of a card or question (punctuation dropped).
+  static Set<String> cardWords(String s) => {
+        for (final w in s.split(RegExp(r'[\s,?!।—–]+')))
+          if (w.isNotEmpty) w,
+      };
+
+  /// The reason deck: one right card, one myth on the same topic, one other —
+  /// dealt so that every word of the question the right card repeats is on a
+  /// wrong card too (no word shows only on the right card).
+  static List<ChoiceOption> dealWhy(M4InsulatorPrepSite s, math.Random rng) {
+    final right = whyRight(s);
+    final r = right[rng.nextInt(right.length)];
+    final echo = cardWords(whyQuestion(s)).intersection(cardWords(r));
+    final near = nearMyths(s.why);
+    bool covers(String a, String b) {
+      final w = {...cardWords(a), ...cardWords(b)};
+      return echo.every(w.contains);
+    }
+
+    final hands = <(String, String)>[
+      for (final a in near)
+        for (final b in myths)
+          if (a != b && covers(a, b)) (a, b),
+    ];
+    final (a, b) = hands.isEmpty ? (near[0], near[1]) : hands[rng.nextInt(hands.length)];
+    return [ChoiceOption(r, true), ChoiceOption(a, false), ChoiceOption(b, false)]..shuffle(rng);
+  }
 
   static List<String> whyRight(M4InsulatorPrepSite s) => switch (s.why) {
         M4InsulatorPrepWhy.earth => earthWhy,
@@ -225,15 +310,21 @@ abstract final class M4InsulatorPrepMistakes {
   static const _kit = '$_dir/kit_ready.svg';
   static const _ppe = '$_dir/harness_on.svg';
 
+  /// The key prefix (the Module 4 pattern `<lesson>/m4_<level>/…`).
+  static const prefix = '4.1/m4_insulator_prep/';
+
+  /// Keys saved before 2026-11-11 (`4.1/insulator_prep/…`).
+  static const legacyPrefix = '4.1/insulator_prep/';
+
   static const climbLive = DoMistake(
-    key: '4.1/insulator_prep/climb-live',
+    key: '${prefix}climb-live',
     textBn: 'লাইন চালু! বৈধ PTW আর শাটডাউন ছাড়া পোলে ওঠা নয় — তারপর মৃত প্রমাণ, দুই দিকে আর্থ।',
     art: _live,
     deadly: true,
     lessonPoint: 0,
   );
   static const earthBoth = DoMistake(
-    key: '4.1/insulator_prep/earth-both-sides',
+    key: '${prefix}earth-both-sides',
     textBn: 'দুই দিকে আর্থ ছাড়া পোলে ওঠা নয়! বন্ধ লাইনেও ইন্ডুসড ভোল্টেজ থাকতে পারে — কাজের জায়গার দুই দিকেই আর্থ।',
     art: _earth,
     deadly: true,
@@ -242,46 +333,70 @@ abstract final class M4InsulatorPrepMistakes {
   // Earthing a line that is still on / not yet proven dead: the module's
   // rule (lesson 1.6), not lesson 4.1's text.
   static const earthLive = DoMistake(
-    key: '4.1/insulator_prep/earth-live',
+    key: '${prefix}earth-live',
     textBn: 'লাইন এখনো চালু! আগে PTW নিয়ে শাটডাউন, টেস্টারে মৃত প্রমাণ — তবে আর্থ।',
     art: _earth,
     lessonPoint: 0,
   );
   static const earthUntested = DoMistake(
-    key: '4.1/insulator_prep/earth-untested',
+    key: '${prefix}earth-untested',
     textBn: 'আর্থ লাগানোর আগে টেস্টারে দেখে নিন লাইন সত্যিই মৃত।',
     art: _earth,
   );
   static const noHarness = DoMistake(
-    key: '4.1/insulator_prep/no-harness',
+    key: '${prefix}no-harness',
     textBn: 'পোলে ওঠার আগে হেলমেট আর হার্নেস পরে নিন, হার্নেস ঠিক আছে কি না দেখে নিন।',
     art: _ppe,
   );
   static const noKit = DoMistake(
-    key: '4.1/insulator_prep/kit-not-ready',
+    key: '${prefix}kit-not-ready',
     textBn: 'সঠিক নতুন ইনসুলেটর, বাইন্ডিং তার বা সাপোর্ট, কাম-অ্যালং — যা লাগে সব নিচেই মেলান। নইলে কাজের মাঝপথে বিপদ।',
     art: _kit,
     lessonPoint: 0,
   );
   static const wrongKind = DoMistake(
-    key: '4.1/insulator_prep/wrong-kind',
+    key: '${prefix}wrong-kind',
     textBn: 'এটা অন্য ধরনের ইনসুলেটর। পোলে যেটা ভেঙেছে, ঠিক সেই ধরনের আর সাইজের নতুনটা নিন।',
     art: _kit,
     lessonPoint: 0,
   );
+  // Packing a fitting for the other kind of insulator (a rope on a disc job,
+  // a come-along on a pin job): the over-call of the shelf (audit item 5).
+  static const wrongFitting = DoMistake(
+    key: '${prefix}wrong-fitting',
+    textBn: 'এটা অন্য ধরনের ইনসুলেটরের কাজের জিনিস। পোলে যেটা ভেঙেছে, সেই কাজের সরঞ্জামই মেলান।',
+    art: _kit,
+    lessonPoint: 0,
+  );
   static const crackedSpare = DoMistake(
-    key: '4.1/insulator_prep/cracked-spare',
+    key: '${prefix}cracked-spare',
     textBn: 'নতুনটাও দেখে নিন! ফাটা বা চলটা ওঠা ইনসুলেটর লাগালে লাইনে আবার ফল্ট হবে।',
     art: _spare,
     lessonPoint: 0,
   );
   static const misSpot = DoMistake(
-    key: '4.1/insulator_prep/good-one-called-bad',
-    textBn: 'এটা ভালো আছে। ফাটল (মেকানিক্যাল) আর পোড়া দাগ বা পাংচার (ইলেকট্রিক্যাল) — দুটোই খুঁজে দেখুন।',
+    key: '${prefix}good-one-called-bad',
+    textBn: 'ভালো করে আবার দেখুন। ফাটল (মেকানিক্যাল) আর পোড়া দাগ বা পাংচার (ইলেকট্রিক্যাল) — দুটোই খুঁজুন।',
     art: _spot,
   );
 
-  static const all = [climbLive, earthBoth, earthLive, earthUntested, noHarness, noKit, wrongKind, crackedSpare, misSpot];
+  static const all = [climbLive, earthBoth, earthLive, earthUntested, noHarness, noKit, wrongKind, wrongFitting, crackedSpare, misSpot];
+
+  /// The same cards under their old keys, so mistakes saved before the
+  /// rename still show their picture in the mistakes book.
+  static final List<DoMistake> legacy = [
+    for (final m in all)
+      DoMistake(key: legacyPrefix + m.key.substring(prefix.length), textBn: m.textBn, art: m.art, deadly: m.deadly, lessonPoint: m.lessonPoint),
+  ];
+
+  /// The current card for a saved key (old or new), or null.
+  static DoMistake? byKey(String key) {
+    final k = key.startsWith(legacyPrefix) ? prefix + key.substring(legacyPrefix.length) : key;
+    for (final m in all) {
+      if (m.key == k) return m;
+    }
+    return null;
+  }
 }
 
 @immutable
@@ -310,9 +425,19 @@ M4InsulatorPrepDeal m4InsulatorPrepDeal(math.Random rng) {
         why: whys[i],
         shelf: [...M4InsulatorPrepItem.values]..shuffle(rng),
         poleNo: firstPole + i * (2 + rng.nextInt(3)),
+        tools: m4InsulatorPrepDealRow(rng),
       ),
   ];
   return M4InsulatorPrepDeal(sites: sites, callAt: rng.nextInt(3));
+}
+
+/// A tool row in a random order that never shows the safe order.
+List<M4InsulatorPrepButton> m4InsulatorPrepDealRow(math.Random rng) {
+  final row = [...M4InsulatorPrepButton.values]..shuffle(rng);
+  while (m4InsulatorPrepRowInOrder(row)) {
+    row.shuffle(rng);
+  }
+  return List.unmodifiable(row);
 }
 
 /// The play state (pure logic).
@@ -386,6 +511,7 @@ class M4InsulatorPrepRun {
         bag.add(it);
         _tag(M4InsulatorPrepLines.caughtSpare);
       default:
+        if (!site.fittings.contains(it)) return _slip(M4InsulatorPrepMistakes.wrongFitting);
         bag.add(it);
     }
     if (kitReady) _tag(M4InsulatorPrepLines.caughtFittings);
@@ -560,6 +686,14 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how to play, never the answer).
+  final _hints = IdleHintController();
+  final _toolKeys = {for (final b in M4InsulatorPrepButton.values) b: GlobalKey()};
+  final _shelfKeys = {for (final i in M4InsulatorPrepItem.values) i: GlobalKey()};
+  final _shelfDoneKey = GlobalKey();
+  final _poleKey = GlobalKey();
+  final _earthKeys = [GlobalKey(), GlobalKey()];
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -602,7 +736,8 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
     _startSite();
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.climbed && !_freeze;
+  /// Hands-on controls answer now (never in the praise window: tableBusy).
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.climbed && !_freeze;
 
   String get _task => _run.spotted ? M4InsulatorPrepLines.askPrep : M4InsulatorPrepLines.askSpot;
 
@@ -632,6 +767,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
   }
 
   void _closeShelf() {
+    if (!_canPlay) return;
     _tick('sounds/intro/click.ogg', 0.4);
     setState(() {
       _shelfOpen = false;
@@ -697,6 +833,8 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
   }
 
   void _placeEarth(int side, Offset global) {
+    // The second earth would end his moment: on his pole he comes first.
+    if (_run.earths.length == 1 && !_run.earths.contains(side) && _run.tested && holdForCoworker()) return;
     _tick('sounds/intro/impact_metal.ogg', 0.5);
     final m = _run.tapEarth(side);
     setState(() => _wake++);
@@ -704,7 +842,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
   }
 
   void _tapScene(Offset p, M4InsulatorPrepGeo geo, Offset global) {
-    if (_intro || _ended || _card != null || reasonOpen || _freeze || _run.climbed || _shelfOpen) return;
+    if (_intro || _ended || _card != null || tableBusy || _freeze || _run.climbed || _shelfOpen) return;
     final s = _run.site;
     // While he talks, only the earth on the other side answers him (it refuses him).
     if (coworkerOpen) {
@@ -735,6 +873,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
           return;
         }
       }
+      _hints.missTap();
       return;
     }
     if (_run.tool == M4InsulatorPrepTool.earth) {
@@ -745,15 +884,19 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
         }
       }
     }
-    if (geo.poleHit.contains(p)) {
-      _tick('sounds/intro/click.ogg', 0.6);
-      final m = _run.climb();
-      setState(() => _wake++);
-      if (m != null) {
-        unawaited(_mistake(m, global));
-      } else if (_run.climbed) {
-        unawaited(_siteDone());
-      }
+    if (!geo.poleHit.contains(p)) {
+      _hints.missTap();
+      return;
+    }
+    // The climb: on his pole he comes first.
+    if (holdForCoworker()) return;
+    _tick('sounds/intro/click.ogg', 0.6);
+    final m = _run.climb();
+    setState(() => _wake++);
+    if (m != null) {
+      unawaited(_mistake(m, global));
+    } else if (_run.climbed) {
+      unawaited(_siteDone());
     }
   }
 
@@ -766,7 +909,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
     final s = _run.site;
     final idx = _run.index;
     unawaited(askReason(
-      deal: () => dealChoices(M4InsulatorPrepLines.whyRight(s), M4InsulatorPrepLines.myths, widget.rng),
+      deal: () => M4InsulatorPrepLines.dealWhy(s, widget.rng),
       question: M4InsulatorPrepLines.whyQuestion(s),
       stillValid: () => _run.index == idx && !_ended,
     ));
@@ -818,8 +961,9 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("one earth is enough") makes sense only until both are on.
     if (_ended || _run.index != _run.deal.callAt || _run.climbed || _run.earths.length >= 2) return null;
-    if (_intro || _card != null || reasonOpen || _shelfOpen || _tester != null) return false;
+    if (_intro || _card != null || tableBusy || _shelfOpen || _tester != null) return false;
     return true;
   }
 
@@ -831,7 +975,9 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Listened to him: up the pole with the earth on one side only.
+      // Listened to him: up the pole with the earth on one side only. Deadly
+      // (not the playbook's usual slip) because the act he pushes is itself on
+      // the Module 4 deadly list (MODULE4_LADDER.md row 2) — an owner question.
       _run.failDeadly(M4InsulatorPrepMistakes.earthBoth);
       await _deadly(M4InsulatorPrepMistakes.earthBoth);
       return;
@@ -867,6 +1013,11 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
     if (mounted) setState(() {});
   }
 
+  /// "Heard this card's full text" stays under the pre-rename key, so the
+  /// key rename does not replay cards a player already heard.
+  static String _spokenKey(DoMistake m) =>
+      'insulator_prep/${m.key.replaceFirst(M4InsulatorPrepMistakes.prefix, M4InsulatorPrepMistakes.legacyPrefix)}';
+
   Future<void> _slip(DoMistake m) async {
     if (strike(m)) {
       await _struckOut(m);
@@ -881,7 +1032,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
       _wake++;
     });
     unawaited(bookMistake(ref, widget.ctx, m));
-    final speak = await SpokenOnce.first('insulator_prep/${m.key}');
+    final speak = await SpokenOnce.first(_spokenKey(m));
     if (!mounted || _card != m) return;
     await _sayChain([speak ? m.textBn : _wrongBag.next().shownBn], mood: GuideMood.warn);
   }
@@ -912,7 +1063,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
       _card = m;
       _cardTone = death ? MistakeTone.deadly : MistakeTone.nearMiss;
     });
-    final speak = await SpokenOnce.first('insulator_prep/${m.key}');
+    final speak = await SpokenOnce.first(_spokenKey(m));
     if (!mounted) return;
     await _sayChain([death ? M4InsulatorPrepLines.deadlyWord : M4InsulatorPrepLines.nearMissWord, if (speak) m.textBn], mood: GuideMood.warn);
   }
@@ -1022,7 +1173,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M4InsulatorPrepGeo.forScene(m.height, m.inset);
+    final geo = _geo = M4InsulatorPrepGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final view = _view;
@@ -1069,6 +1220,23 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
           top: geo.crossY + 110,
           child: IgnorePointer(child: _StampPop(text: M4InsulatorPrepLines.stampUp, quiet: quiet)),
         ),
+      // Invisible anchors for the gesture hint (the pole and both sides of
+      // the line): no paint, no touch.
+      Positioned.fill(
+        key: const ValueKey('hint-anchors'),
+        child: IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned.fromRect(rect: geo.poleHit, child: SizedBox(key: _poleKey)),
+              for (var side = 0; side < 2; side++)
+                Positioned.fromRect(
+                  rect: Rect.fromCenter(center: Offset(M4InsulatorPrepGeo.earthX[side], geo.crossY), width: 52, height: 90),
+                  child: SizedBox(key: _earthKeys[side]),
+                ),
+            ],
+          ),
+        ),
+      ),
       Positioned.fill(
         key: const ValueKey('touch'),
         child: Semantics(
@@ -1102,6 +1270,50 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
     ];
   }
 
+  /// One button of the tool row. The kit lights once something is packed —
+  /// never for "the right kit" (that would give the fittings away).
+  Widget _toolButton(M4InsulatorPrepButton b) {
+    final key = _toolKeys[b]!;
+    return switch (b) {
+      M4InsulatorPrepButton.kit => _ToolButton(anchor: key, icon: Icons.inventory_2_rounded, label: M4InsulatorPrepLines.kit, on: _run.bag.isNotEmpty, onTap: _openShelf),
+      M4InsulatorPrepButton.ptw => _ToolButton(anchor: key, icon: Icons.assignment_turned_in_rounded, label: M4InsulatorPrepLines.ptw, on: _run.ptw, onTap: _takePtw),
+      M4InsulatorPrepButton.tester => _ToolButton(anchor: key, icon: Icons.flash_on_rounded, label: M4InsulatorPrepLines.tester, on: _tester != null, onTap: _useTester),
+      M4InsulatorPrepButton.earth => _ToolButton(
+          anchor: key,
+          icon: Icons.link_rounded,
+          label: M4InsulatorPrepLines.earth,
+          on: _run.tool == M4InsulatorPrepTool.earth || _run.earths.length == 2,
+          onTap: _holdEarth,
+        ),
+      M4InsulatorPrepButton.harness => _ToolButton(anchor: key, icon: Icons.health_and_safety_rounded, label: M4InsulatorPrepLines.harness, on: _run.harness, onTap: _putHarness),
+    };
+  }
+
+  /// The gesture hint for the waiting state (how to play, never the answer):
+  /// before the spot a sweep over every insulator; the shelf open, a sweep
+  /// over every item and its done button; the earth in hand, a sweep over both
+  /// sides of the line, the pole and the tools; otherwise over the tools and
+  /// the pole.
+  HintSpec? _hint() {
+    if (!_run.spotted) {
+      final s = _run.site;
+      final geo = _geo;
+      if (geo == null) return null;
+      return HintSpec.sweep([for (var i = 0; i < geo.spots(s.kind); i++) geo.spotHit(s.kind, i)], space: HintSpace.scene);
+    }
+    if (_shelfOpen) {
+      return HintSpec.sweepOver([for (final it in _run.site.shelf) _shelfKeys[it]!, _shelfDoneKey]);
+    }
+    final tools = [for (final b in _run.site.tools) _toolKeys[b]!];
+    if (_run.tool == M4InsulatorPrepTool.earth) {
+      return HintSpec.sweepOver([_earthKeys[0], _poleKey, _earthKeys[1], ...tools]);
+    }
+    return HintSpec.sweepOver([...tools, _poleKey]);
+  }
+
+  /// The scene's geometry from the last layout (for the scene-space hint).
+  M4InsulatorPrepGeo? _geo;
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1109,7 +1321,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.climbed && !deckUp && !coworkerOpen && _card == null;
+    final handsOn = playing && !_run.climbed && !deckUp && !coworkerOpen && _card == null && !tableBusy;
     final s = _run.site;
     return PopScope(
       canPop: false,
@@ -1138,6 +1350,10 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && !_ended,
+            hintKey: '${_run.index}-${_run.spotted}-$_shelfOpen-${_run.tool.name}-${_run.earths.length}',
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1155,13 +1371,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
                   bottom: pad.bottom + 8,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _ToolButton(icon: Icons.inventory_2_rounded, label: M4InsulatorPrepLines.kit, on: _run.kitReady, onTap: _openShelf),
-                      _ToolButton(icon: Icons.assignment_turned_in_rounded, label: M4InsulatorPrepLines.ptw, on: _run.ptw, onTap: _takePtw),
-                      _ToolButton(icon: Icons.flash_on_rounded, label: M4InsulatorPrepLines.tester, on: _tester != null, onTap: _useTester),
-                      _ToolButton(icon: Icons.link_rounded, label: M4InsulatorPrepLines.earth, on: _run.tool == M4InsulatorPrepTool.earth || _run.earths.length == 2, onTap: _holdEarth),
-                      _ToolButton(icon: Icons.health_and_safety_rounded, label: M4InsulatorPrepLines.harness, on: _run.harness, onTap: _putHarness),
-                    ],
+                    children: [for (final b in s.tools) _toolButton(b)],
                   ),
                 ),
               if (handsOn && _shelfOpen)
@@ -1172,6 +1382,8 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
                   bottom: pad.bottom + 8,
                   child: _Shelf(
                     items: s.shelf,
+                    anchors: _shelfKeys,
+                    doneAnchor: _shelfDoneKey,
                     bag: _run.bag,
                     onPick: _pick,
                     onDone: _closeShelf,
@@ -1316,8 +1528,12 @@ class _DocketChip extends StatelessWidget {
 
 /// The van's shelf: every item drawn, its name under it; lit while in the bag.
 class _Shelf extends StatelessWidget {
-  const _Shelf({required this.items, required this.bag, required this.onPick, required this.onDone, required this.quiet});
+  const _Shelf({required this.items, required this.anchors, required this.doneAnchor, required this.bag, required this.onPick, required this.onDone, required this.quiet});
   final List<M4InsulatorPrepItem> items;
+
+  /// Gesture-hint anchors (one per item, and the done button).
+  final Map<M4InsulatorPrepItem, GlobalKey> anchors;
+  final GlobalKey doneAnchor;
   final Set<M4InsulatorPrepItem> bag;
   final void Function(M4InsulatorPrepItem, Offset) onPick;
   final VoidCallback onDone;
@@ -1353,6 +1569,7 @@ class _Shelf extends StatelessWidget {
                     behavior: HitTestBehavior.opaque,
                     onTap: onDone,
                     child: Container(
+                      key: doneAnchor,
                       constraints: const BoxConstraints(minHeight: 40, minWidth: 64),
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1375,6 +1592,7 @@ class _Shelf extends StatelessWidget {
                         child: _ShelfTile(
                           key: ValueKey('shelf-${items[row * 4 + col].name}'),
                           item: items[row * 4 + col],
+                          anchor: anchors[items[row * 4 + col]],
                           inBag: bag.contains(items[row * 4 + col]),
                           onPick: onPick,
                         ),
@@ -1391,8 +1609,9 @@ class _Shelf extends StatelessWidget {
 }
 
 class _ShelfTile extends StatelessWidget {
-  const _ShelfTile({super.key, required this.item, required this.inBag, required this.onPick});
+  const _ShelfTile({super.key, required this.item, this.anchor, required this.inBag, required this.onPick});
   final M4InsulatorPrepItem item;
+  final GlobalKey? anchor;
   final bool inBag;
   final void Function(M4InsulatorPrepItem, Offset) onPick;
 
@@ -1407,6 +1626,7 @@ class _ShelfTile extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTapUp: (d) => onPick(item, d.globalPosition),
         child: Container(
+          key: anchor,
           height: 92,
           padding: const EdgeInsets.fromLTRB(4, 4, 4, 3),
           decoration: BoxDecoration(
@@ -1471,7 +1691,8 @@ class _TesterChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap});
+  const _ToolButton({this.anchor, required this.icon, required this.label, required this.on, required this.onTap});
+  final GlobalKey? anchor;
   final IconData icon;
   final String label;
   final bool on;
@@ -1488,6 +1709,7 @@ class _ToolButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: SizedBox(
+          key: anchor,
           width: 68,
           child: Column(
             mainAxisSize: MainAxisSize.min,

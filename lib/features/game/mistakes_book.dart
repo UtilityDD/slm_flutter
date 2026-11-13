@@ -12,7 +12,7 @@ import 'distance_spot.dart';
 import 'fire_choose.dart';
 import 'fire_pass.dart';
 import 'game_save.dart';
-import 'gate_field.dart';
+import 'gate_watch.dart';
 import 'golden_minute.dart';
 import 'harness_check.dart';
 import 'harness_fit.dart';
@@ -48,6 +48,26 @@ import 'm3_service_drop.dart' as m3_service_drop;
 import 'm3_crossarm_pick.dart' as m3_crossarm_pick;
 import 'm3_conductor_id.dart' as m3_conductor_id;
 import 'm4_oil_level.dart' as m4_oil_level;
+import 'm5_trip_call.dart' as m5_trip_call;
+import 'm5_recloser_watch.dart' as m5_recloser_watch;
+import 'm5_fault_address.dart' as m5_fault_address;
+import 'm5_sense_walk.dart' as m5_sense_walk;
+import 'm5_culprit_case.dart' as m5_culprit_case;
+import 'm5_anneal_cut.dart' as m5_anneal_cut;
+import 'm5_feeder_sectionalize.dart' as m5_feeder_sectionalize;
+import 'm5_reblow_clock.dart' as m5_reblow_clock;
+import 'm5_lv_street_read.dart' as m5_lv_street_read;
+import 'm5_lv_load_test.dart' as m5_lv_load_test;
+import 'm5_fault_casebook.dart' as m5_fault_casebook;
+import 'm5_live_wire_guard.dart' as m5_live_wire_guard;
+import 'm5_searchlight_patrol.dart' as m5_searchlight_patrol;
+import 'm5_dark_eyes.dart' as m5_dark_eyes;
+import 'm5_cause_strike.dart' as m5_cause_strike;
+import 'm5_workshop_referral.dart' as m5_workshop_referral;
+import 'm5_cable_fault_type.dart' as m5_cable_fault_type;
+import 'm5_cable_route_locate.dart' as m5_cable_route_locate;
+import 'm5_pm_thermal_round.dart' as m5_pm_thermal_round;
+import 'm5_gate_case.dart' as m5_gate_case;
 import 'm4_dp_survey.dart' as m4_dp_survey;
 import 'm4_do_refuse.dart' as m4_do_refuse;
 import 'm4_insulator_prep.dart' as m4_insulator_prep;
@@ -158,6 +178,26 @@ final Map<String, DoMistake> knownMistakes = {
     ...m4_streetlight_fix.M4StreetlightFixMistakes.all,
     ...m4_phase_balance.M4PhaseBalanceMistakes.all,
     ...m4_service_connect.M4ServiceConnectMistakes.all,
+    ...m5_trip_call.M5TripMistakes.all,
+    ...m5_recloser_watch.M5RecloserMistakes.all,
+    ...m5_fault_address.M5FaMistakes.all,
+    ...m5_sense_walk.SenseWalkMistakes.all,
+    ...m5_culprit_case.M5CulpritMistakes.all,
+    ...m5_anneal_cut.M5AnnealMistakes.all,
+    ...m5_feeder_sectionalize.M5FeederMistakes.all,
+    ...m5_reblow_clock.M5ReblowMistakes.all,
+    ...m5_lv_street_read.M5LvMistakes.all,
+    ...m5_lv_load_test.M5LvLoadMistakes.all,
+    ...m5_fault_casebook.M5CasebookMistakes.all,
+    ...m5_live_wire_guard.M5LiveWireMistakes.all,
+    ...m5_searchlight_patrol.M5SearchlightMistakes.all,
+    ...m5_dark_eyes.M5DarkEyesMistakes.all,
+    ...m5_cause_strike.M5CauseStrikeMistakes.all,
+    ...m5_workshop_referral.M5WrMistakes.all,
+    ...m5_cable_fault_type.M5CableMistakes.all,
+    ...m5_cable_route_locate.M5CrlMistakes.all,
+    ...m5_pm_thermal_round.M5PmMistakes.all,
+    ...m5_gate_case.M5GateMistakes.all,
     ...m2_comealong_pick.M2ComeAlongMistakes.all,
     ...m2_comealong_pull.PullMistakes.all,
     ...m2_crimp_steps.CrimpMistakes.all,

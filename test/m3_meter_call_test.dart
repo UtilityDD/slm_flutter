@@ -4,8 +4,10 @@
 // the seal; the burnt call: the LT line's neutral, shutdown first, never a
 // bare hand), the deal, the libraries, and the level in the shell: idle perf,
 // the guide first, tapping the guide, a full clean play (the coworker
-// refused), a slip card (acting before looking), and the deadly freeze (a
-// plain tool on the live terminals).
+// refused), a slip card (acting before looking), the deadly freeze (a
+// plain tool on the live terminals), three slips strike out, the coworker
+// comes even on a fast decision, and on the burnt call only once the LT line
+// was looked at (his push about the neutral fits then).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,8 +20,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/do_parts.dart' show DoBigButton;
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m3_meter_call.dart';
@@ -32,6 +37,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.8/do/1',
@@ -79,10 +85,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -93,6 +101,17 @@ Future<void> _look(WidgetTester t, M3MeterCallSpot s) async {
   await t.tapAt(_geo.spotHit(s).center * _k);
   await _pump(t, 400);
 }
+
+/// The first seed whose deal passes [ok].
+int _seedWhere(bool Function(M3MeterCallDeal d) ok) {
+  var s = 0;
+  while (!ok(dealM3MeterCall(math.Random(s)))) {
+    s++;
+  }
+  return s;
+}
+
+CoworkerScript _script(M3MeterCallDeal d) => d.cases[d.callAt].kind == M3MeterCallKind.burnt ? M3MeterCallLines.coworkerNeutral : M3MeterCallLines.coworkerSeal;
 
 Future<ProviderContainer> _open(WidgetTester t, int seed) async {
   t.view.physicalSize = const Size(784, 1700);
@@ -196,19 +215,42 @@ void main() {
       expect(run1(fast).inspect(M3MeterCallSpot.meter), contains('সিল অক্ষত'));
     });
 
-    test('flicker: the terminals answer only after the meter was looked at; the others are tight; a tool is needed', () {
+    test('flicker: the terminals answer only after the meter was looked at; without a tool every terminal is the same (no reveal)', () {
       final a = run1(flicker);
       expect(a.tapTerminal(M3MeterCallTerm.nIn), isNull);
       a.inspect(M3MeterCallSpot.meter);
-      expect(a.tapTerminal(M3MeterCallTerm.pIn), M3MeterCallTap.tight);
-      expect(a.tapTerminal(M3MeterCallTerm.nIn), M3MeterCallTap.needTool);
+      for (final t in M3MeterCallTerm.values) {
+        expect(a.tapTerminal(t), M3MeterCallTap.needTool, reason: t.name);
+      }
       expect(a.shown, isFalse);
+      expect(a.needless, 0);
       a
         ..toggleSupply()
         ..pickTool(M3MeterCallTool.insulated);
+      // Safely on a sound terminal: only needless (no slip, the round goes on).
+      expect(a.tapTerminal(M3MeterCallTerm.pIn), M3MeterCallTap.tight);
+      expect(a.needless, 1);
+      expect(a.slips, 0);
+      expect(a.shown, isFalse);
       expect(a.tapTerminal(M3MeterCallTerm.nIn), M3MeterCallTap.fixed);
       expect(a.fixed, isTrue);
       expect(a.caught, containsAll([M3MeterCallLines.caughtLoose, M3MeterCallLines.caughtSafeTool]));
+    });
+
+    test('flicker: the live panel is live at every terminal — a plain tool on a sound one is deadly too; supply ON there is a slip', () {
+      final a = run1(flicker)
+        ..inspect(M3MeterCallSpot.meter)
+        ..pickTool(M3MeterCallTool.plain);
+      expect(a.tapTerminal(M3MeterCallTerm.pOut), M3MeterCallTap.mistake);
+      expect(a.mistake, M3MeterCallMistakes.livePlainTool);
+      expect(a.deadly, M3MeterCallMistakes.livePlainTool);
+      final b = run1(flicker)
+        ..inspect(M3MeterCallSpot.meter)
+        ..pickTool(M3MeterCallTool.insulated);
+      expect(b.tapTerminal(M3MeterCallTerm.pOut), M3MeterCallTap.mistake);
+      expect(b.mistake, M3MeterCallMistakes.supplyOn);
+      expect(b.slips, 1);
+      expect(b.needless, 0);
     });
 
     test('flicker: a plain tool on the live panel is deadly; a plain tool switched off, or supply ON, is a slip', () {
@@ -243,7 +285,11 @@ void main() {
       expect(b.slips, 1);
       expect(run1(fast).choose(M3MeterCallLines.fastNewMeter), M3MeterCallMistakes.meterBlamed);
       expect(run1(fast).choose(M3MeterCallLines.fastSeal), M3MeterCallMistakes.sealCut);
-      expect(run1(fast).choose(M3MeterCallLines.fastScold), M3MeterCallMistakes.rude);
+      expect(run1(fast).choose(M3MeterCallLines.fastScoldLeak), M3MeterCallMistakes.rude);
+      // The other load's polite explanation is wrong (the window shows which).
+      final w = run1(fast)..inspect(M3MeterCallSpot.house);
+      expect(w.choose(M3MeterCallLines.fastFridge.last), M3MeterCallMistakes.noLook);
+      expect(w.slips, 1);
       expect(run1(burnt).choose(M3MeterCallLines.burntDrop), M3MeterCallMistakes.dropNeutral);
       expect(run1(burnt).choose(M3MeterCallLines.burntMeter), M3MeterCallMistakes.neutralMissed);
       final d = run1(burnt);
@@ -267,6 +313,31 @@ void main() {
       expect(b.ended, isTrue);
     });
 
+    test('no giveaway word: what the right cards say also sits on the wrong ones', () {
+      const fridge = M3MeterCallCase(id: 'x', kind: M3MeterCallKind.fastMeter);
+      Set<String> words(String o) => o.split(RegExp(r'[\s,—\-!?]+')).where((w) => w.isNotEmpty).toSet();
+      // Every word of every right card (dealChoices deals either) also sits,
+      // as a whole word, on at least one wrong card of the same deck.
+      for (final c in const [fast, fridge, burnt]) {
+        final wrongWords = M3MeterCallLines.actWrong(c).expand(words).toSet();
+        for (final r in M3MeterCallLines.actRight(c)) {
+          expect(words(r).difference(wrongWords), isEmpty, reason: '${c.kind.name}/${c.cause.name}: "$r"');
+        }
+      }
+      int inWrong(M3MeterCallCase c, String word) => M3MeterCallLines.actWrong(c).where((o) => o.contains(word)).length;
+      expect(inWrong(burnt, 'শাটডাউন'), greaterThanOrEqualTo(2));
+      expect(inWrong(burnt, 'লাইনের'), greaterThanOrEqualTo(1));
+      expect(inWrong(burnt, 'এলটি'), greaterThanOrEqualTo(1));
+      expect(inWrong(burnt, 'নিউট্রাল'), greaterThanOrEqualTo(2));
+      expect(inWrong(burnt, 'সারাই'), greaterThanOrEqualTo(1));
+      for (final c in const [fast, fridge]) {
+        expect(inWrong(c, 'ভদ্রভাবে'), greaterThanOrEqualTo(1), reason: c.cause.name);
+        expect(inWrong(c, 'ধীরে বুঝিয়ে'), greaterThanOrEqualTo(1), reason: c.cause.name);
+        expect(inWrong(c, 'মিটার নয়'), greaterThanOrEqualTo(1), reason: c.cause.name);
+        expect(inWrong(c, c.cause == M3MeterCallCause.leak ? 'লিকেজ' : 'ফ্রিজ'), greaterThanOrEqualTo(1), reason: c.cause.name);
+      }
+    });
+
     test('every spot looked at = thorough (+5)', () {
       final a = run1(burnt);
       for (final s in M3MeterCallSpot.values) {
@@ -275,7 +346,7 @@ void main() {
       expect(a.thorough, isTrue);
     });
 
-    test('three slips fail the level (percent below 55 after a 4th; 55 after 3)', () {
+    test('the mark: 15 off per slip (55 after three; the page strikes out at the third)', () {
       final run = M3MeterCallRun(const M3MeterCallDeal(cases: [fast, fast, fast], callAt: 0));
       for (var i = 0; i < 3; i++) {
         expect(run.choose(M3MeterCallLines.fastNewMeter), M3MeterCallMistakes.meterBlamed);
@@ -284,6 +355,7 @@ void main() {
       expect(run.done, isTrue);
       expect(run.percent, 55);
       expect(run.slips, 3);
+      // (On the page the third slip strikes out first: see 'three slips'.)
     });
 
     test('libraries: decks of three, one right; lengths within 1.3×; the coworker; his exit line recorded; the mistakes book', () {
@@ -364,7 +436,7 @@ void main() {
         }
         debugPrint('PERF m3_meter_call ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -452,6 +524,146 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('three slips strike out: the StruckOutCard, no pass', (t) async {
+      const seed = 2;
+      final deal = dealM3MeterCall(math.Random(seed));
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        final k = deal.cases[i];
+        if (k.kind == M3MeterCallKind.flicker) {
+          // The insulated tool with the supply left ON: a slip.
+          await _look(t, M3MeterCallSpot.meter);
+          await t.tap(_label(M3MeterCallLines.insulated));
+          await _pump(t, 200);
+          await t.tapAt(_geo.terminal(k.loose) * _k);
+          await _pump(t, 1500);
+        } else {
+          await t.tap(find.text(M3MeterCallLines.decide));
+          await _pump(t, 900);
+          if (i == deal.callAt) {
+            expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 3000), isTrue);
+            await _pickRight(t, _script(deal).right);
+            await _pump(t, 2500);
+            await t.tap(find.text(M3MeterCallLines.decide));
+            await _pump(t, 900);
+          }
+          // The right action before looking: a slip.
+          await _pickRight(t, M3MeterCallLines.actRight(k));
+          await _pump(t, 1500);
+        }
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'call $i ${k.kind}');
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 1500);
+        }
+      }
+      expect(await _pumpUntil(t, find.byType(StruckOutCard), maxMs: 4000), isTrue);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['3.8/do/1'], isNot('cleared'));
+      expect(s.mistakes, isNotEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast decision cannot skip the coworker: সিদ্ধান্ত নিই waits for him', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 0);
+      final deal = dealM3MeterCall(math.Random(seed));
+      final k = deal.cases[0];
+      final c = await _open(t, seed);
+      // No look at all: straight to the decision.
+      await t.tap(find.text(M3MeterCallLines.decide));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in before the deck');
+      expect(_onScreen(M3MeterCallLines.actRight(k)), isEmpty, reason: 'the action deck waits');
+      await _pickRight(t, _script(deal).right);
+      await _pump(t, 2500);
+      await t.tap(find.text(M3MeterCallLines.decide));
+      await _pump(t, 900);
+      await waitChoiceDeck(t);
+      expect(_onScreen(M3MeterCallLines.actRight(k)), hasLength(1), reason: 'now the action deck');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('the burnt call: his push about the neutral waits for a look at the LT line', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 0 && d.cases[0].kind == M3MeterCallKind.burnt);
+      final c = await _open(t, seed);
+      for (final s in [M3MeterCallSpot.house, M3MeterCallSpot.cable, M3MeterCallSpot.meter]) {
+        await _look(t, s);
+      }
+      await _pump(t, 4000);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _look(t, M3MeterCallSpot.line);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('no giveaway: every look tag looks the same; the praise window takes no input', (t) async {
+      final seed = _seedWhere((d) => d.callAt != 0 && d.cases[0].kind != M3MeterCallKind.flicker);
+      final k = dealM3MeterCall(math.Random(seed)).cases[0];
+      final c = await _open(t, seed);
+      for (final s in M3MeterCallSpot.values) {
+        await _look(t, s);
+      }
+      // One neutral tag for the fault and the sound spots alike (no red/green verdict).
+      expect(find.byIcon(Icons.visibility_rounded), findsNWidgets(4));
+      expect(find.byIcon(Icons.error_rounded), findsNothing);
+      expect(find.byIcon(Icons.check_circle_rounded), findsNothing);
+      await t.tap(find.text(M3MeterCallLines.decide));
+      await _pump(t, 900);
+      await waitChoiceDeck(t);
+      final r = _onScreen(M3MeterCallLines.actRight(k));
+      expect(r, hasLength(1));
+      await t.tap(r.single, warnIfMissed: false);
+      await confirmChoice(t);
+      // The ◆ on the table: no decision button, no scene hint, taps do nothing.
+      await _pump(t, 500);
+      expect(find.text(M3MeterCallLines.decide), findsNothing);
+      expect(t.widget<IdleHint>(find.byType(IdleHint).first).waiting, isFalse);
+      await t.tapAt(_geo.spotHit(M3MeterCallSpot.meter).center * _k);
+      await _pump(t, 200);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      // Then the reason deck as usual; the play goes on to the next call.
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pickRight(t, M3MeterCallLines.whyRight(k));
+      await _pump(t, 4000);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: taps on nothing call a sweep over all four spots; then a tap on সিদ্ধান্ত নিই only', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      t.platformDispatcher.accessibilityFeaturesTestValue = FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      const hand = ValueKey('gesture-hint');
+      final seed = _seedWhere((d) => d.callAt != 0 && d.cases[0].kind != M3MeterCallKind.flicker);
+      final c = await _open(t, seed);
+      IdleHintState hint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      // Three taps on empty ground left of the trainee: the hand shows now.
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(const Offset(20, 400) * _k);
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(find.byKey(hand), findsOneWidget, reason: 'confused taps call the hand');
+      expect(hint().debugOptions, hasLength(4), reason: 'it glides over every spot alike, never the fault alone');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      // Every spot looked at: after a quiet spell the hand taps the decision button.
+      for (final s in M3MeterCallSpot.values) {
+        await _look(t, s);
+      }
+      expect(find.byKey(hand), findsNothing, reason: 'any touch hides it');
+      for (var ms = 0; ms < 12000 && !hint().showing; ms += 100) {
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      expect(find.byKey(hand), findsOneWidget);
+      expect(t.getRect(find.byType(DoBigButton)).inflate(4).contains(hint().debugFrame!.tip), isTrue);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'a hint never presses');
+      await _close(t, c);
+    });
+
     testWidgets('a plain tool on the live terminals: deadly — freeze first, then the card', (t) async {
       var seed = 0;
       while (dealM3MeterCall(math.Random(seed)).cases[0].kind != M3MeterCallKind.flicker) {
@@ -474,6 +686,22 @@ void main() {
       expect(s.mistakes.single.deadly, isTrue);
       expect(t.takeException(), isNull);
       await _close(t, c);
+    });
+
+    testWidgets('no giveaway order: the two tools change sides across calls', (t) async {
+      final sides = <bool>{};
+      var seed = 0;
+      for (var opened = 0; opened < 8 && sides.length < 2; seed++) {
+        if (dealM3MeterCall(math.Random(seed)).cases[0].kind != M3MeterCallKind.flicker) continue;
+        opened++;
+        final c = await _open(t, seed);
+        final ins = t.getCenter(_label(M3MeterCallLines.insulated));
+        final plain = t.getCenter(_label(M3MeterCallLines.plain));
+        sides.add(ins.dx < plain.dx);
+        expect(t.takeException(), isNull);
+        await _close(t, c);
+      }
+      expect(sides, {true, false}, reason: 'the insulated tool must not always sit left of the plain one');
     });
   });
 }

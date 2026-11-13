@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -43,20 +44,34 @@ export 'm3_service_drop_world.dart' show M3ServiceDropDrum, M3ServiceDropEntry, 
 //     bearer wire from the pole's service bracket to the wall hook, then the
 //     cable along it, then the clips — the bearer takes all the tension, the
 //     cable none; the careless coworker pushes "no bearer, tie the cable
-//     taut" (he comes as the station starts; the tools come out after him);
+//     taut" (he comes as the station starts; the first tool laid on the span
+//     waits for him — holdForCoworker — and once a bearer or the cable is up
+//     his push no longer fits, so he does not come). The tool bag is dealt in
+//     a shuffled order, never the lesson's order;
 //   গ loop — pro tip 1: before the meter box the cable makes a U drip loop
 //     and comes up into the box from below (not straight in from the top or
 //     the side: rain runs down the cable into the meter).
 //
 // Slips only (no deadly move): a drum with the wrong cores, a drum with cut
-// insulation, the cable before the bearer, listening to him, no drip loop.
+// insulation, the cable before the bearer, the clips before the cable (a
+// wrong-order probe is never free), listening to him, no drip loop.
 // Three slips strike the level out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, the
 // full scene (m3_service_drop_world.dart), corner guide, ◆ on the table →
 // "কেন …?" → the next station by itself; the coworker once a play.
-// Voice: the guide's lines by device TTS; the coworker's push by device TTS
-// until it is recorded in his voice (his exit line is already recorded).
+// Kit (2026-11-11): no scene control works in a praise window (`tableBusy`
+// in `_canPlay`, and he never comes then); gesture hints (how, never what):
+// a sweep over the drums / the tools / the three ways into the meter box, a
+// tap only on the single way forward (the last tool, then the span); taps on
+// nothing call the hand. A won station's control never fires again
+// (`_stationWon` in `_canPlay`). Each reason deck deals one station-specific
+// wrong reason beside the excuse, so the station's own subject is never on
+// the right card alone (a deck may still show one word, e.g. ইনসুলেশন, only
+// on the right card).
+// Voice: the guide's lines by device TTS; the coworker's push is silent with
+// its caption held until it is recorded in his voice (his exit line is
+// already recorded).
 
 // ============================================================================
 // Content
@@ -135,6 +150,42 @@ abstract final class M3ServiceDropLines {
         M3ServiceDropStation.loop => loopWhy,
       };
 
+  // Station-specific wrong reasons (field myths in the station's own words,
+  // so "কোর" / "বিয়ারার" / "লুপ" never appear on the right card alone).
+  static const cableWrongSingle = [
+    'ফোর-কোর নিলেই ভালো, পরে কাজে লাগতে পারে',
+    'যে কোরের কেবিলই হোক, বাতি তো জ্বলবেই',
+    'ইনসুলেশনে একটু কাটা থাকলেও কিছু হয় না',
+  ];
+  static const cableWrongThree = [
+    'টুইন-কোরেই তিন ফেজ চলে, কোর কম হলেও চলে',
+    'যে কোরের কেবিলই হোক, বাতি তো জ্বলবেই',
+    'ইনসুলেশনে একটু কাটা থাকলেও কিছু হয় না',
+  ];
+  static const bearerWrong = [
+    'কেবিল টানটান থাকলে বিয়ারার না দিলেও চলে',
+    'বিয়ারার শুধু দেখানোর জন্য, টান কেবিলই নেয়',
+    'ক্লিপ আর বিয়ারার তো কেবিল সাজানোর জিনিস',
+  ];
+  static const loopWrong = [
+    'ড্রিপ লুপ শুধু দেখতে সুন্দর লাগে বলে দিলাম',
+    'মিটার বক্স তো ঢাকা, জল ঢোকার কোনো ভয় নেই',
+    'কেবিল বেশি লম্বা ছিল, তাই বাঁক দিয়ে রাখলাম',
+  ];
+  static List<String> whyWrong(M3ServiceDropStation s, {bool three = false}) => switch (s) {
+        M3ServiceDropStation.cable => three ? cableWrongThree : cableWrongSingle,
+        M3ServiceDropStation.bearer => bearerWrong,
+        M3ServiceDropStation.loop => loopWrong,
+      };
+
+  /// The reason deck: one right, one station-specific wrong, and one more
+  /// wrong from the rest (station-specific or a field excuse).
+  static List<ChoiceOption> dealWhy(M3ServiceDropStation s, math.Random rng, {bool three = false}) {
+    final own = [...whyWrong(s, three: three)]..shuffle(rng);
+    final rest = [...own.skip(1), ...excuses];
+    return dealChoices(whyRight(s, three: three), [own.first, rest[rng.nextInt(rest.length)]], rng);
+  }
+
   /// Field excuses (wrong on every deck; one is the lesson's neutral myth).
   static const excuses = [
     'তাড়াতাড়ি শেষ হবে, তাই এভাবেই করলাম',
@@ -150,8 +201,10 @@ abstract final class M3ServiceDropLines {
   static const coworker = CoworkerScript(
     line: 'আরে! বিয়ারার লাগবে না, কেবিল টানটান করে বেঁধে দাও।',
     exitLine: coworkerExit,
-    right: ['না, সব টান বিয়ারার তারই নেবে', 'না, কেবিলে টান দিলে ছিঁড়ে যাবে', 'না, আগে বিয়ারার, তারপর কেবিল'],
-    wrong: ['ঠিক, কেবিলটাই টানটান করে বাঁধি', 'আচ্ছা, বিয়ারার ছাড়াই ঝুলিয়ে দিই', 'হ্যাঁ, কেবিল তো শক্ত, ছিঁড়বে না', 'ঠিক আছে, বিয়ারার পরে লাগালেই হবে', 'ঝটপট হবে, বিয়ারারটা বাদ দিই'],
+    // No lead word ("না" / "ঠিক") marks a side: both sides speak of the
+    // bearer, the cable and the pull.
+    right: ['সব টান বিয়ারার তারই নেবে, ওটা আগে', 'কেবিলে টান পড়লে ছিঁড়ে যেতে পারে', 'আগে বিয়ারার, তারপর কেবিল ক্লিপে'],
+    wrong: ['কেবিলটাই টানটান করে বেঁধে দিই', 'বিয়ারার ছাড়াই কেবিল ঝুলিয়ে দিই', 'কেবিল তো শক্ত, টানে ছিঁড়বে না', 'বিয়ারার পরে লাগালেও কিছু হবে না', 'ঝটপট হবে, বিয়ারারটা বাদ দিই'],
     asks: ['ও বলছে বিয়ারার লাগবে না। আপনি কী করবেন?', 'বিয়ারার দেবেন, না কেবিল টানটান বাঁধবেন?', 'ওর কথা শুনবেন, না নিয়ম?'],
   );
 
@@ -188,6 +241,13 @@ abstract final class M3ServiceDropMistakes {
     art: '$_dir/bearer.svg',
     lessonPoint: 0,
   );
+  /// The clips before the cable is along the bearer (the order again).
+  static const clipFirst = DoMistake(
+    key: '3.8/m3_service_drop/clip-before-cable',
+    textBn: 'ক্লিপ শেষে: আগে জিআই বিয়ারার তার, তারপর কেবিল তার পাশে পাশে, তারপর ক্লিপে কেবিল বিয়ারারে আটকান — টান নেবে বিয়ারার।',
+    art: '$_dir/bearer.svg',
+    lessonPoint: 0,
+  );
   static const tautCable = DoMistake(
     key: '3.8/m3_service_drop/taut-cable',
     textBn: 'কেবিল টানটান করে বাঁধলে সব টান কেবিলের ওপর পড়ে — ছিঁড়ে যেতে পারে। সমস্ত টান নেবে বিয়ারার তার।',
@@ -203,18 +263,24 @@ abstract final class M3ServiceDropMistakes {
     art: '$_dir/loop.svg',
   );
 
-  static const all = [wrongCore, cutInsulation, noBearer, tautCable, noDripLoop];
+  static const all = [wrongCore, cutInsulation, noBearer, clipFirst, tautCable, noDripLoop];
 }
 
 /// One play: single- or three-phase, the three drums on the lane (one right,
 /// one of the right cores with cut insulation, one of the wrong cores).
 @immutable
 class M3ServiceDropDeal {
-  const M3ServiceDropDeal({required this.three, required this.drums});
+  const M3ServiceDropDeal({required this.three, required this.drums, this.tools = const [M3ServiceDropTool.cable, M3ServiceDropTool.clip, M3ServiceDropTool.bearer]});
 
   /// The docket's connection is three-phase (else single-phase).
   final bool three;
   final List<M3ServiceDropDrum> drums;
+
+  /// The tool bag's order on screen (never the lesson's order).
+  final List<M3ServiceDropTool> tools;
+
+  /// The lesson's order (bearer → cable → clips): the bag is never laid out so.
+  static const lessonOrder = [M3ServiceDropTool.bearer, M3ServiceDropTool.cable, M3ServiceDropTool.clip];
 
   int get right => drums.indexWhere((d) => d.four == three && !d.cut);
   int get cut => drums.indexWhere((d) => d.cut);
@@ -229,7 +295,18 @@ M3ServiceDropDeal m3ServiceDropDeal(math.Random rng) {
     M3ServiceDropDrum(four: three, cut: true, cutAngle: angle),
     M3ServiceDropDrum(four: !three, cut: false),
   ]..shuffle(rng);
-  return M3ServiceDropDeal(three: three, drums: drums);
+  final tools = [...M3ServiceDropDeal.lessonOrder];
+  do {
+    tools.shuffle(rng);
+  } while (_sameOrder(tools, M3ServiceDropDeal.lessonOrder));
+  return M3ServiceDropDeal(three: three, drums: drums, tools: tools);
+}
+
+bool _sameOrder(List<M3ServiceDropTool> a, List<M3ServiceDropTool> b) {
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
 }
 
 /// The play state (pure logic).
@@ -301,12 +378,14 @@ class M3ServiceDropRun {
     return null;
   }
 
-  /// The clips (only once the cable is along the bearer); true = hung.
-  bool clip() {
-    if (station != M3ServiceDropStation.bearer || !cableOn || clipped) return false;
+  /// The clips: before the cable is along the bearer it is a slip (not
+  /// hung); else the cable is hung ([clipped]).
+  DoMistake? clip() {
+    if (station != M3ServiceDropStation.bearer || clipped) return null;
+    if (!cableOn) return _slip(M3ServiceDropMistakes.clipFirst);
     clipped = true;
     _tag(M3ServiceDropLines.caughtBearer);
-    return true;
+    return null;
   }
 
   /// Listened to him: the cable tied taut, no bearer.
@@ -438,6 +517,13 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// Gesture hints (how, never what) and the tool chips they sweep over.
+  final _hints = IdleHintController();
+  final _toolKeys = {for (final t in M3ServiceDropTool.values) t: GlobalKey()};
+
+  /// The scene's geometry as last laid out (the hint anchors on it).
+  M3ServiceDropGeo? _geoNow;
+
   String get _rungId => widget.ctx.rungId;
   bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
 
@@ -480,10 +566,52 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
     unawaited(_sayChain([_task]));
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !struckOut && !_move.isAnimating;
+  /// The scene takes a move now: never in a right move's praise window
+  /// (`tableBusy`: its ◆ wait on the table, or its reason deck).
+  /// Nor once this station is won and waits for the walk on ([_stationWon]:
+  /// the gap between এগিয়ে যান and [_nextStation]).
+  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !struckOut && !_move.isAnimating && !tableBusy && !_stationWon;
 
-  /// The tools for the span come out once he has been.
-  bool get _trayReady => _run.station == M3ServiceDropStation.bearer && coworkerDone && !_run.clipped;
+  /// This station's right move is made: a second tap on its control (another
+  /// drum, another way into the box) must never count again.
+  bool get _stationWon => switch (_run.station) {
+        M3ServiceDropStation.cable => _run.taken != null,
+        M3ServiceDropStation.bearer => _run.clipped,
+        M3ServiceDropStation.loop => _run.done,
+      };
+
+  /// The tool bag is out for the whole span station (the first tool laid on
+  /// the span waits for the coworker: [holdForCoworker] in [_tapSpan]).
+  bool get _trayReady => _run.station == M3ServiceDropStation.bearer && !_run.clipped;
+
+  bool _used(M3ServiceDropTool t) => switch (t) {
+        M3ServiceDropTool.bearer => _run.bearer,
+        M3ServiceDropTool.cable => _run.cableOn,
+        M3ServiceDropTool.clip => _run.clipped,
+      };
+
+  /// The hand for now: a sweep over every drum / tool / way into the box (never
+  /// one of them). A tap only on the single way forward: the last tool left,
+  /// then the span once it is in hand. While two or more tools are left the
+  /// hand sweeps over them, tool in hand or not, so it never tells a right
+  /// tool from a wrong one and never pushes a wrong-order lay (a slip).
+  HintSpec? _hint() {
+    final geo = _geoNow;
+    if (geo == null) return null;
+    switch (_run.station) {
+      case M3ServiceDropStation.cable:
+        return HintSpec.sweep([for (var i = 0; i < _run.deal.drums.length; i++) geo.drumRect(i)], space: HintSpace.scene);
+      case M3ServiceDropStation.bearer:
+        final left = [for (final t in _run.deal.tools) if (!_used(t)) t];
+        if (left.isEmpty) return null;
+        if (left.length == 1) {
+          return _tool == left.single ? HintSpec.tap(geo.spanRect.center, space: HintSpace.scene) : HintSpec.tapOn(_toolKeys[left.single]!);
+        }
+        return HintSpec.sweepOver([for (final t in left) _toolKeys[t]!]);
+      case M3ServiceDropStation.loop:
+        return HintSpec.sweep([for (final e in M3ServiceDropEntry.values) geo.entryRect(e)], space: HintSpace.scene);
+    }
+  }
 
   // --- taps on the scene ---------------------------------------------------------
   void _pickTool(M3ServiceDropTool t) {
@@ -518,6 +646,7 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
   }
 
   void _plainTap(Offset p) {
+    _hints.missTap();
     HapticFeedback.selectionClick();
     _cue('sounds/intro/tick.ogg', volume: 0.4);
     setState(() {
@@ -539,10 +668,13 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
   }
 
   void _tapSpan(Offset p, M3ServiceDropGeo geo, Offset global) {
-    if (!_trayReady || !geo.spanRect.contains(p)) {
+    if (!_trayReady || !geo.spanRect.contains(p) || _tool == null) {
       _plainTap(p);
       return;
     }
+    // The decisive control: a tool laid on the span waits for him (a fast
+    // player still meets him before anything is hung).
+    if (holdForCoworker()) return;
     final r = _run;
     switch (_tool) {
       case M3ServiceDropTool.bearer:
@@ -562,7 +694,13 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
           return;
         }
       case M3ServiceDropTool.clip:
-        if (r.clip()) {
+        // The clips before the cable: a wrong-order probe costs a slip.
+        final m = r.clip();
+        if (m != null) {
+          unawaited(_slipOut(m, global));
+          return;
+        }
+        if (r.clipped) {
           _placed('sounds/intro/click.ogg');
           _stationRight(global);
           return;
@@ -607,6 +745,9 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
     } else {
       await _move.forward(from: 0);
     }
+    // The walk is over: rebuild the overlays that wait on it (the tool bag,
+    // the hint's waiting state, the trainee's pose).
+    if (mounted) setState(() => _wake++);
   }
 
   // --- a station done right: the ◆ and the reason ---------------------------------
@@ -616,7 +757,7 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
     final station = _run.station;
     putOnTable(15 + (_run.clean ? 5 : 0));
     unawaited(askReason(
-      deal: () => dealChoices(M3ServiceDropLines.whyRight(station, three: _run.deal.three), M3ServiceDropLines.excuses, widget.rng),
+      deal: () => M3ServiceDropLines.dealWhy(station, widget.rng, three: _run.deal.three),
       question: M3ServiceDropLines.why(station),
       stillValid: () => _run.station == station && !_ended,
     ));
@@ -633,10 +774,12 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
       _tool = null;
       _wake++;
     });
+    // He is armed before the climb (he waits out the walk: coworkerCanCome),
+    // so the span's first tool always finds him due.
+    if (_run.station == M3ServiceDropStation.bearer) scheduleCoworker();
     await _moveTo(_run.station == M3ServiceDropStation.bearer ? M3ServiceDropSpot.pole : M3ServiceDropSpot.wall);
     if (!mounted || _ended) return;
     unawaited(_sayChain([_task]));
-    if (_run.station == M3ServiceDropStation.bearer) scheduleCoworker();
   }
 
   // --- the shared success beat (ReasonTable) ---------------------------------
@@ -669,7 +812,11 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
   bool? coworkerCanCome() {
     if (_ended || _run.station.index > M3ServiceDropStation.bearer.index) return null;
     if (_run.station != M3ServiceDropStation.bearer) return false;
-    if (_intro || _card != null || reasonOpen || struckOut || _move.isAnimating) return false;
+    // His push ("no bearer, tie the cable taut") no longer fits once a bearer
+    // or the cable is up.
+    if (_run.bearer || _run.cableOn || _run.clipped) return null;
+    // Never in a praise window (tableBusy), a card, a deck or the walk.
+    if (_intro || _card != null || reasonOpen || struckOut || _move.isAnimating || tableBusy) return false;
     return true;
   }
 
@@ -694,6 +841,12 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
   /// Tap the guide: the task again, a different way each time.
   void _tapGuide() {
     if (_intro || _ended) return;
+    // Beat 1 is his alone (playbook §1.8): the guide stays idle until he has
+    // spoken and the deck rises.
+    if (coworkerOpen && !coworkerChoiceUp) return;
+    // Nor over the praise line (the ◆ on the table, no deck yet), nor in the
+    // gap after এগিয়ে যান while the station is won and the walk is due.
+    if (!reasonOpen && (tableBusy || _stationWon)) return;
     final String line = coworkerOpen
         ? nextCoworkerAsk()
         : reasonOpen
@@ -830,7 +983,7 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M3ServiceDropGeo.forScene(m.height, m.inset);
+    final geo = _geoNow = M3ServiceDropGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final tb = _traineeBox(geo);
     final onPole = _to == M3ServiceDropSpot.pole && !_move.isAnimating;
@@ -908,7 +1061,7 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !deckUp && !coworkerOpen && _card == null && !_run.ended && !_move.isAnimating;
+    final handsOn = playing && !deckUp && !coworkerOpen && _card == null && !_run.ended && !_move.isAnimating && !tableBusy && !_stationWon;
     final st = _run.station;
     final tray = handsOn && _trayReady;
     return PopScope(
@@ -938,6 +1091,10 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
               quiet: quiet,
             ),
             animation: _move,
+            hint: _hint,
+            hintWaiting: handsOn && !coworkerOnScreen,
+            hintKey: '${st.name}/${_tool?.name}/${_run.bearer}/${_run.cableOn}/${_run.slips}',
+            hintController: _hints,
             layers: (context, m) => _scene(m),
             overlays: [
               if (playing && !coworkerOpen)
@@ -956,15 +1113,27 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
                   bottom: pad.bottom + 14,
                   child: Row(
                     children: [
-                      for (final (t, label, icon, used) in [
-                        (M3ServiceDropTool.bearer, M3ServiceDropLines.bearer, Icons.linear_scale_rounded, _run.bearer),
-                        (M3ServiceDropTool.cable, M3ServiceDropLines.cable, Icons.cable_rounded, _run.cableOn),
-                        (M3ServiceDropTool.clip, M3ServiceDropLines.clip, Icons.attach_file_rounded, _run.clipped),
-                      ]) ...[
+                      // Dealt in a shuffled order (never bearer → cable → clips).
+                      for (final (i, t) in _run.deal.tools.indexed) ...[
+                        if (i > 0) const SizedBox(width: 6),
                         Expanded(
-                          child: _ToolChip(label: label, icon: icon, selected: _tool == t, used: used, onTap: () => _pickTool(t)),
+                          child: _ToolChip(
+                            key: _toolKeys[t],
+                            label: switch (t) {
+                              M3ServiceDropTool.bearer => M3ServiceDropLines.bearer,
+                              M3ServiceDropTool.cable => M3ServiceDropLines.cable,
+                              M3ServiceDropTool.clip => M3ServiceDropLines.clip,
+                            },
+                            icon: switch (t) {
+                              M3ServiceDropTool.bearer => Icons.linear_scale_rounded,
+                              M3ServiceDropTool.cable => Icons.cable_rounded,
+                              M3ServiceDropTool.clip => Icons.attach_file_rounded,
+                            },
+                            selected: _tool == t,
+                            used: _used(t),
+                            onTap: () => _pickTool(t),
+                          ),
                         ),
-                        if (t != M3ServiceDropTool.clip) const SizedBox(width: 6),
                       ],
                     ],
                   ),
@@ -1111,7 +1280,7 @@ class _DrumTag extends StatelessWidget {
 
 /// A tool from the bag: tap to take it, then tap the span.
 class _ToolChip extends StatelessWidget {
-  const _ToolChip({required this.label, required this.icon, required this.selected, required this.used, required this.onTap});
+  const _ToolChip({super.key, required this.label, required this.icon, required this.selected, required this.used, required this.onTap});
   final String label;
   final IconData icon;
   final bool selected;

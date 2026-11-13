@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -51,12 +52,15 @@ export 'm3_crossarm_check_world.dart' show M3CrossarmBoltLook, M3CrossarmFault, 
 // — also on the coworker's say-so ("একটু হেলে আছে, চলবে!"). Slips: climbing
 // to a slipped or rusty clamp, climbing without looking from below, a bolt
 // left untried, a loose nut left, a nut left without a spring washer,
-// over-tightening (the bolt snaps). Three slips strike out. A report where
-// nothing is wrong (or before looking) is not scored: the guide says the rule
-// and the pole stays (as m2_dead_test's needless stop).
+// over-tightening (the bolt snaps), a report on a sound pole (a needless
+// stop), a report before arm and clamp were looked at (a guess). A report is
+// a decision: a wrong one costs a slip and the pole ends — no free probe, and
+// the guide never says before the decision whether the pole is sound. Three
+// slips strike out.
 //
 // The careless coworker comes once a play, on the rusty/bent-arm pole, right
-// after the player has looked at the arm.
+// after the player has looked at the arm; report and climb wait for him
+// (holdForCoworker), so a fast player cannot skip him.
 //
 // Flagged to the owner: the shutdown + earth set on the line is the project's
 // line-work rule (BRIEF_M34), not lesson 3.3's text; a slipped or rusty clamp
@@ -157,14 +161,19 @@ abstract final class M3CrossarmCheckLines {
   static const whyReport = 'কেন রিপোর্ট করলেন?';
   static const whyDone = 'কেন নিশ্চিন্তে নামলেন?';
   static const rustWhy = ['মরিচা ধরা ক্রস-আর্মে দাঁড়ানো বা হারনেস নয়', 'মরিচা ভেতর থেকে আর্মের শক্তি খেয়ে ফেলে'];
-  static const bentWhy = ['বাঁকা আর্ম ভর নেবে না, ক্লিয়ারেন্সও কমেছে', 'বাঁকা ক্রস-আর্মে দাঁড়ানো বা হারনেস নয়'];
+  static const bentWhy = ['আর্ম বেঁকে গেছে, ফেজ ক্লিয়ারেন্সও কমে গেছে', 'বাঁকা ক্রস-আর্মে দাঁড়ানো বা হারনেস নয়'];
   static const slipWhy = ['ক্ল্যাম্প পিছলে নেমেছে, আর্ম ঠিক ধরা নেই', 'ক্ল্যাম্প পোল বরাবর নেমে গেছে, আর্ম আলগা'];
   static const rustClampWhy = ['মরিচা ধরা ক্ল্যাম্প পুরো কাঠামো দুর্বল করে', 'ক্ল্যাম্পে মরিচা, আর্ম ধরে রাখার জোর কম'];
+  // The wrong ones name the arm, the clamp, rust and the harness too, so the
+  // right card is not the only one about the structure.
   static const reportExcuses = [
     'উঠতে ইচ্ছে করছিল না, তাই রিপোর্ট করে দিলাম',
     'রোদ খুব বেশি, তাই আজ না উঠে রিপোর্ট করলাম',
+    'মরিচা তো শুধু বাইরের স্তরে, তবু রিপোর্ট দিলাম',
+    'ক্ল্যাম্প বদলালে বেশি নম্বর মেলে, তাই রিপোর্ট',
+    'ব্রেসের রং পুরোনো, তাই আর্ম বদলাতে বললাম',
+    'হারনেস আনিনি, তাই আর্মটা খারাপ বলে দিলাম',
     'সুপারভাইজার নেই, তাই কাজটা ফেলে রাখলাম',
-    'রিপোর্ট লিখলেই বেশি নম্বর মেলে, তাই করলাম',
     'পাশের পোলে কাজ বেশি, এটা পরে দেখা যাবে',
   ];
   static const checkedWhy = 'নিচ থেকে দেখে, সব নাট-বল্টু পরখ করে নিলাম';
@@ -193,10 +202,6 @@ abstract final class M3CrossarmCheckLines {
           ],
       };
   static List<String> whyWrong(M3CrossarmPole p) => p.report ? reportExcuses : climbMyths;
-
-  /// A report where nothing is wrong, or before looking: not scored.
-  static const needlessSound = 'থামা আপনার অধিকার। তবে আর্ম সোজা, মরিচা নেই, ক্ল্যাম্প জায়গায় — উঠে নাট-বল্টু দেখুন।';
-  static const needlessUnseen = 'কী দেখে রিপোর্ট? আগে নিচ থেকে ক্রস-আর্ম আর ক্ল্যাম্প ভালো করে দেখুন।';
 
   /// The careless coworker: the arm is weak, he wants it climbed.
   static const _cwRight = ['না, এই আর্মে উঠব না, আগে রিপোর্ট করব', 'না, দুর্বল আর্মে ভর বা হারনেস নয়', 'উঠব না — এই আর্ম বদলাতে হবে, রিপোর্ট'];
@@ -244,7 +249,7 @@ abstract final class M3CrossarmCheckMistakes {
   );
   static const climbBent = DoMistake(
     key: '3.3/m3_crossarm_check/climb-bent-arm',
-    textBn: 'বাঁকা ক্রস-আর্মে উঠলেন! বাঁকা আর্ম ভর নিতে পারে না, ফেজ ক্লিয়ারেন্সও কমে — ওতে দাঁড়ানো বা হারনেস আটকানো নয়, রিপোর্ট করুন।',
+    textBn: 'বাঁকা ক্রস-আর্মে উঠলেন! বেঁকে যাওয়া আর্মে ফেজ ক্লিয়ারেন্স কমে যায় — বাঁকা বা মরিচা ধরা আর্মে দাঁড়ানো বা হারনেস আটকানো নয়, রিপোর্ট করুন।',
     art: '$_dir/climb_bent.svg',
     deadly: true,
     lessonPoint: 3,
@@ -292,7 +297,25 @@ abstract final class M3CrossarmCheckMistakes {
     art: '$_dir/over_torque.svg',
   );
 
-  static List<DoMistake> get all => const [climbRust, climbBent, climbSlipped, climbRustClamp, noLook, missedBolt, looseLeft, noWasher, overTorque];
+  /// A report where the arm is straight, rust-free and the clamp in place (a
+  /// needless stop). Said only after the decision.
+  static const reportSound = DoMistake(
+    key: '3.3/m3_crossarm_check/report-sound-pole',
+    textBn: 'এই পোলে আর্ম সোজা, মরিচা নেই, ক্ল্যাম্প জায়গায় ছিল। দেখে যা পান তা-ই রিপোর্ট করুন — এমন পোলে উঠে প্রতিটা নাট-বল্টু পরখ করুন।',
+    art: '$_dir/report_sound.svg',
+    lessonPoint: 0,
+  );
+
+  /// A report before arm and clamp were looked at (a guess) — the same words
+  /// whatever the pole was.
+  static const reportUnseen = DoMistake(
+    key: '3.3/m3_crossarm_check/report-unseen',
+    textBn: 'নিচ থেকে ভালো করে না দেখেই রিপোর্ট করলেন। আগে দেখুন ক্রস-আর্ম বেঁকে, মুচড়ে বা হেলে গেছে কিনা, মরিচা আর ক্ল্যাম্প কেমন — দেখে তবে সিদ্ধান্ত।',
+    art: '$_dir/no_look.svg',
+    lessonPoint: 0,
+  );
+
+  static List<DoMistake> get all => const [climbRust, climbBent, climbSlipped, climbRustClamp, noLook, reportSound, reportUnseen, missedBolt, looseLeft, noWasher, overTorque];
 }
 
 @immutable
@@ -334,8 +357,18 @@ class M3CrossarmBoltNow {
   M3CrossarmBoltLook get look => M3CrossarmBoltLook(loose: loose, washer: washer, checked: checked);
 }
 
-/// What a report did.
+/// What a report did: right, a needless stop on a sound pole, or a guess
+/// before arm and clamp were looked at (both wrong ones are slips).
 enum M3CrossarmReport { done, needlessSound, needlessUnseen }
+
+extension M3CrossarmReportMistake on M3CrossarmReport {
+  /// The slip card of a wrong report (null for a right one).
+  DoMistake? get mistake => switch (this) {
+        M3CrossarmReport.done => null,
+        M3CrossarmReport.needlessSound => M3CrossarmCheckMistakes.reportSound,
+        M3CrossarmReport.needlessUnseen => M3CrossarmCheckMistakes.reportUnseen,
+      };
+}
 
 /// The play state (pure logic).
 class M3CrossarmCheckRun {
@@ -355,7 +388,6 @@ class M3CrossarmCheckRun {
 
   var shown = false;
   int slips = 0;
-  int needless = 0;
   DoMistake? deadly;
   final List<String> caught = [];
 
@@ -418,20 +450,18 @@ class M3CrossarmCheckRun {
     }
   }
 
-  /// Report from the ground. Not scored where nothing is wrong, or before the
-  /// faulty part was looked at (the pole stays).
+  /// Report from the ground — a decision: the pole ends either way. Right
+  /// when the faulty part was looked at; a guess (arm and clamp not both
+  /// looked at) or a needless stop (a sound pole) is a slip. The guess is
+  /// judged first, so its card is the same whatever the pole was.
   M3CrossarmReport? report() {
     if (!_open || up) return null;
     final c = current;
-    if (!c.report) {
-      needless++;
-      return M3CrossarmReport.needlessSound;
-    }
-    if (!looked.contains(c.faultPart)) {
-      needless++;
-      return M3CrossarmReport.needlessUnseen;
-    }
     shown = true;
+    if (!c.report || !looked.contains(c.faultPart)) {
+      slips++;
+      return looked.containsAll(m3CrossarmMustLook) ? M3CrossarmReport.needlessSound : M3CrossarmReport.needlessUnseen;
+    }
     _tag(M3CrossarmCheckLines.caughtLook);
     _tag(c.faultPart == M3CrossarmPart.arm ? M3CrossarmCheckLines.caughtArm : M3CrossarmCheckLines.caughtClamp);
     return M3CrossarmReport.done;
@@ -617,6 +647,17 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// Gesture hints (how to touch, never what): taps on nothing count.
+  final _hints = IdleHintController();
+  final _reportKey = GlobalKey();
+  final _climbKey = GlobalKey();
+  final _washerKey = GlobalKey();
+  final _torqueKey = GlobalKey();
+  final _doneKey = GlobalKey();
+
+  /// The scene's geometry as last laid out (for the hints).
+  M3CrossarmGeo? _geo;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -659,7 +700,9 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
     _startPole();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown;
+  /// Hands on: not in the praise window of a right move ([tableBusy]), not
+  /// while he talks, no card, the pole not decided.
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown;
 
   void _startPole() {
     _torque.value = 0;
@@ -675,7 +718,10 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
   void _tapGround(Offset p, M3CrossarmGeo geo) {
     if (!_canPlay || _run.up) return;
     final part = geo.partAt(p);
-    if (part == null) return;
+    if (part == null) {
+      _hints.missTap();
+      return;
+    }
     HapticFeedback.selectionClick();
     final first = _run.look(part);
     setState(() {
@@ -698,6 +744,7 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
 
   Future<void> _climb(Offset origin) async {
     if (!_canPlay || _run.up) return;
+    if (holdForCoworker()) return;
     await _commitClimb(origin);
   }
 
@@ -725,16 +772,19 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
     await _slip(m);
   }
 
-  void _report(Offset origin) {
+  Future<void> _report(Offset origin) async {
     if (!_canPlay || _run.up) return;
+    if (holdForCoworker()) return;
     _hush();
     final r = _run.report();
     if (r == null) return;
-    if (r != M3CrossarmReport.done) {
-      HapticFeedback.selectionClick();
-      _cue('sounds/intro/click.ogg', volume: 0.5);
+    final m = r.mistake;
+    if (m != null) {
+      // A needless stop or a guess: a slip, and the pole ends.
+      HapticFeedback.mediumImpact();
       setState(() => _wake++);
-      unawaited(_sayChain([r == M3CrossarmReport.needlessSound ? M3CrossarmCheckLines.needlessSound : M3CrossarmCheckLines.needlessUnseen]));
+      unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
+      await _slip(m);
       return;
     }
     HapticFeedback.mediumImpact();
@@ -762,7 +812,10 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
   void _tapUp(Offset p, M3CrossarmGeo geo) {
     if (!_canPlay || !_run.up || _holding) return;
     final i = geo.boltAt(p);
-    if (i == null) return;
+    if (i == null) {
+      _hints.missTap();
+      return;
+    }
     final b = _run.check(i);
     if (b == null) return;
     HapticFeedback.selectionClick();
@@ -871,8 +924,10 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("climb this arm") makes sense only on his pole, from the
+    // ground, before the pole is decided.
     if (_ended || _run.index != _run.deal.callAt || _run.shown || _run.up) return null;
-    if (_intro || _busy || _card != null || reasonOpen) return false;
+    if (_intro || _busy || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -1057,7 +1112,7 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M3CrossarmGeo.forScene(m.height, m.inset);
+    final geo = _geo = M3CrossarmGeo.forScene(m.height, m.inset);
     final c = _run.current;
     final quiet = _quiet;
     final up = _run.up && !_freeze;
@@ -1136,6 +1191,43 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
     ];
   }
 
+  // --- gesture hints (how to touch, never which) -------------------------------
+  /// A scene rect (design px) on screen: FullSceneFrame's cover fit of the
+  /// 360-wide scene over the whole page.
+  Rect _onScreen(Rect r) {
+    final size = MediaQuery.sizeOf(context);
+    final w = math.max(1.0, size.width);
+    final sh = (360 * size.height / w).clamp(560.0, 900.0);
+    final scale = math.max(size.width / 360, size.height / sh);
+    final dx = (size.width - 360 * scale) / 2;
+    final dy = (size.height - sh * scale) / 2;
+    return Rect.fromLTWH(dx + r.left * scale, dy + r.top * scale, r.width * scale, r.height * scale);
+  }
+
+  /// From the ground: a sweep over the three parts and both decisions (every
+  /// choice, in a fixed order). Up the pole: a sweep over the bolts; with a
+  /// bolt in hand, over the bolts and every tool — except a nut the spanner
+  /// has shown loose that already has its spring washer, where the one way on
+  /// is to hold the wrench.
+  HintSpec? _hint() {
+    final geo = _geo;
+    if (geo == null) return null;
+    Rect? at(GlobalKey k) => HintSpec.globalRectOf(k);
+    if (!_run.up) {
+      return HintSpec.sweep([
+        for (final p in M3CrossarmPart.values) _onScreen(geo.hit(p)),
+        ?at(_reportKey),
+        ?at(_climbKey),
+      ]);
+    }
+    final bolts = [for (var i = 0; i < _run.bolts.length; i++) _onScreen(geo.boltHit(i))];
+    final s = _run.selected;
+    if (s == null) return HintSpec.sweep(bolts);
+    final b = _run.bolts[s];
+    if (b.checked && b.loose && b.washer) return HintSpec.holdOn(_torqueKey);
+    return HintSpec.sweep([...bolts, ?at(_washerKey), ?at(_torqueKey), ?at(_doneKey)]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1173,6 +1265,10 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && !_busy && !_holding && !tableBusy && !coworkerOnScreen,
+            hintKey: '${_run.index}-$up-${_run.selected}-${_run.looked.length}-${_run.fixes}',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (playing && !up && _looking != null && !deckUp && !_run.done)
@@ -1196,9 +1292,9 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
                   bottom: pad.bottom + 72,
                   child: Row(
                     children: [
-                      _ToolButton(icon: Icons.radio_button_unchecked_rounded, label: M3CrossarmCheckLines.washer, enabled: b != null && !_holding, onTap: _fitWasher),
+                      _ToolButton(key: _washerKey, icon: Icons.radio_button_unchecked_rounded, label: M3CrossarmCheckLines.washer, enabled: b != null && !_holding, onTap: _fitWasher),
                       const SizedBox(width: 8),
-                      Expanded(child: _HoldButton(label: M3CrossarmCheckLines.torque, enabled: b != null, progress: _torque, onDown: _press, onUp: _release)),
+                      Expanded(child: _HoldButton(key: _torqueKey, label: M3CrossarmCheckLines.torque, enabled: b != null, progress: _torque, onDown: _press, onUp: _release)),
                     ],
                   ),
                 ),
@@ -1207,7 +1303,7 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
                   left: 12,
                   right: 12,
                   bottom: pad.bottom + 12,
-                  child: DoBigButton(label: M3CrossarmCheckLines.done, filled: true, onTapUp: (d) => unawaited(_finishPole(d.globalPosition))),
+                  child: DoBigButton(key: _doneKey, label: M3CrossarmCheckLines.done, filled: true, onTapUp: (d) => unawaited(_finishPole(d.globalPosition))),
                 ),
               ],
               if (handsOn && !up)
@@ -1218,9 +1314,9 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(child: DoBigButton(label: M3CrossarmCheckLines.report, filled: false, onDark: true, onTapUp: (d) => _report(d.globalPosition))),
+                      Expanded(child: DoBigButton(key: _reportKey, label: M3CrossarmCheckLines.report, filled: false, onDark: true, onTapUp: (d) => unawaited(_report(d.globalPosition)))),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: M3CrossarmCheckLines.climb, filled: true, onTapUp: (d) => unawaited(_climb(d.globalPosition)))),
+                      Expanded(child: DoBigButton(key: _climbKey, label: M3CrossarmCheckLines.climb, filled: true, onTapUp: (d) => unawaited(_climb(d.globalPosition)))),
                     ],
                   ),
                 ),
@@ -1424,7 +1520,7 @@ class _GaugePainter extends CustomPainter {
 
 /// Hold to pull the wrench; let go to stop.
 class _HoldButton extends StatelessWidget {
-  const _HoldButton({required this.label, required this.enabled, required this.progress, required this.onDown, required this.onUp});
+  const _HoldButton({super.key, required this.label, required this.enabled, required this.progress, required this.onDown, required this.onUp});
   final String label;
   final bool enabled;
   final Animation<double> progress;
@@ -1474,7 +1570,7 @@ class _HoldButton extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool enabled;

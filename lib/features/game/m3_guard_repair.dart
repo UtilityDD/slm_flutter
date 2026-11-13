@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -60,16 +61,25 @@ export 'm3_guard_repair_world.dart' show M3GuardFault, M3GuardFaultKind, M3Guard
 // Deadly: going up on the cradle with the line live (also by listening to the
 // coworker); the portable earth on a live line. Slips: the PTW before the
 // shutdown; up without the PTW, the test, the earth or the traffic held; the
-// earth before the test; a fault missed; a wrong fix; a rope for a lacing;
-// pulling the guard wire too tight; a bare earth lead (no pipe); down without
-// the clearance check; the earth off while still up; the line clear while
-// still up or with the earth on. Three slips strike the level out.
+// earth before the test; a fault missed; a tag on a sound part (a wrong flag:
+// tapping everywhere costs); a wrong fix; a rope for a lacing; pulling the
+// guard wire too tight, or calling "টান ঠিক" while it still sags; a bare earth
+// lead (no pipe); down without the clearance check; the earth off while still
+// up; the line clear while still up or with the earth on. Three slips strike
+// the level out. The tool trays are dealt in a shuffled order (never the
+// order of the job), so the tray never spells out the steps.
+//
+// Listening to the coworker stays deadly: what he pushes (working on the
+// cradle with the line live) is this rung's own 💀 in MODULE3_LADDER.md
+// (row 27). Once the shutdown is asked for, the prep's next tap waits for him
+// (holdForCoworker), so a fast player cannot run past him.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, the
 // full scene (m3_guard_repair_world.dart), corner guide, ◆ on the table →
-// "কেন …?" → the next station by itself. Voice: the guide's lines by device
-// TTS; the coworker's push by device TTS until recorded (his exit line is
-// already recorded).
+// "কেন …?" → the next station by itself. Gesture hints (how, never what):
+// a sweep over the tray or over the whole cradle. Voice: the guide's lines by
+// device TTS; the coworker's push is silent with its caption held until it is
+// recorded (his exit line is already recorded).
 
 // ============================================================================
 // Content
@@ -96,9 +106,6 @@ abstract final class M3GuardRepairLines {
   static const askClose = 'মেরামত শেষ। এবার কাজ গুটিয়ে লাইন ফেরত দিন।';
   static const tasks = [askPrep, askInspect, askRepair, askTension, askClose];
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
-
-  /// Not scored: "টান ঠিক" while it still sags.
-  static const stillSlack = 'তারটা এখনো পেছনের তারের চেয়ে ঝুলে আছে।';
 
   // Labels a worker reads (tools, the docket).
   static const sceneLabel = 'রাস্তা ক্রসিং-এর গার্ডিং';
@@ -152,16 +159,46 @@ abstract final class M3GuardRepairLines {
   static const earthWhy = ['আর্থ তার প্রায়ই চুরি যায়, পাইপে তা ঠেকানো যায়', 'জাল আর্থ থাকলে তবেই ফল্টে ব্রেকার ট্রিপ করে'];
   static const clearanceWhy = ['লাইভ তার আর জালের উল্লম্ব দূরত্ব আইনত জরুরি', 'দূরত্ব কম হলে আর্ক বা শর্ট সার্কিট হতে পারে'];
   static const orderWhy = ['সবাই নেমে, যন্ত্র সরিয়ে তবেই লাইন ক্লিয়ার', 'পোর্টেবল আর্থ লাগানো রেখে লাইন ফেরত নয়'];
+  // Each question's own myths: they carry the question's key words (and the
+  // right cards' echo of them), so a word shared with the question never
+  // names the right card. One of them is always dealt with its question.
+  static const prepMyths = ['ফোনে লাইন বন্ধ শুনলেই জালে উঠে পড়া যায়', 'গার্ডের জালে কারেন্ট থাকে না, খালি হাতেই চলে'];
+  static const inspectMyths = ['পুরো জাল দেখা সময় নষ্ট, চোখে পড়াটুকু সারলেই হয়', 'দু-একটা তার ছিঁড়লেও পুরো জালের কিছু হয় না'];
+  static const sagMyths = ['জাল যত টানটান তত ভালো, তাই যত পারি টানি', 'একটু ঝুলে থাকলেও ক্ষতি নেই, টান আন্দাজেই চলে'];
+  static const lacingMyths = ['ছেঁড়া লেসিং থাকুক, GI তারে বোনা জাল এমনিতেই শক্ত', 'GI তারে না বেঁধে ছেঁড়া লেসিং দড়িতে বাঁধলেও চলে'];
+  static const clampMyths = ['ক্ল্যাম্প একটু ঢিলে থাকলেও চলে, তার তো বাঁধা আছে', 'একটা ঢিলে ক্ল্যাম্পে পুরো গার্ডিং-এর কিছু হয় না'];
+  static const earthMyths = ['আর্থ তার পাইপে ভরা বাড়তি ঝামেলা, খোলাই ভালো', 'জালের আর্থ তার না থাকলেও চলে, পাইপে লাভ নেই'];
+  static const clearanceMyths = ['একবার দূরত্ব ঠিক ছিল, নামার আগে আর মাপা লাগে না', 'লাইভ তার আর জালের দূরত্ব একটু কম হলেও চলে'];
+  static const orderMyths = ['আর্থ পরে খুললেও চলে, তবে আগে লাইন ক্লিয়ার দিই', 'আগে লাইন ক্লিয়ার দিলে তবেই সময় বাঁচে, আর্থ পরে'];
+
+  /// Field excuses that fit any station (the second wrong card's pool, with
+  /// the other questions' myths).
+  static const generalMyths = ['তাড়াতাড়ি সারলে রাস্তার লোকের কষ্ট কমে', 'রাস্তায় গাড়ি কম, তাই নিয়ম না মানলেও চলে'];
+
+  /// Every wrong reason card.
   static const myths = [
-    'গার্ডের তারে কারেন্ট থাকে না, খালি হাতেই চলে',
-    'দু-একটা তার ছিঁড়লে কিছু হয় না, বাকিগুলো আছে',
-    'ফোনে লাইন বন্ধ শুনলেই কাজ শুরু করা যায়',
-    'জাল যত টানটান তত ভালো, তাই যত পারি টানি',
-    'তাড়াতাড়ি সারলে রাস্তার লোকের কষ্ট কমে',
-    'অভিজ্ঞ লাইনম্যান চোখের আন্দাজেই সব সারে',
-    'রাস্তায় গাড়ি কম, তাই নিয়ম না মানলেও চলে',
+    ...prepMyths,
+    ...inspectMyths,
+    ...sagMyths,
+    ...lacingMyths,
+    ...clampMyths,
+    ...earthMyths,
+    ...clearanceMyths,
+    ...orderMyths,
+    ...generalMyths,
   ];
   static const allRight = [...prepWhy, ...inspectWhy, ...sagWhy, ...lacingWhy, ...clampWhy, ...earthWhy, ...clearanceWhy, ...orderWhy];
+
+  static List<String> repairMyths(M3GuardFaultKind k) => switch (k) {
+        M3GuardFaultKind.sag => sagMyths,
+        M3GuardFaultKind.lacing => lacingMyths,
+        M3GuardFaultKind.clamp => clampMyths,
+        M3GuardFaultKind.earth => earthMyths,
+      };
+  static List<String> closeMyths(M3GuardCloseWhy w) => switch (w) {
+        M3GuardCloseWhy.clearance => clearanceMyths,
+        M3GuardCloseWhy.order => orderMyths,
+      };
 
   static List<String> repairWhy(M3GuardFaultKind k) => switch (k) {
         M3GuardFaultKind.sag => sagWhy,
@@ -266,6 +303,14 @@ abstract final class M3GuardRepairMistakes {
     art: '$_dir/traffic.svg',
     lessonPoint: 1,
   );
+  // A wrong flag: neutral (it names the four things to look for, never
+  // which ones this cradle has).
+  static const falseFlag = DoMistake(
+    key: '3.9/m3_guard_repair/false-flag',
+    textBn: 'আন্দাজে ট্যাগ নয় — আগে খুঁটিয়ে দেখুন: তার ঝুলেছে কি, লেসিং ছিঁড়েছে কি, ক্ল্যাম্প ঢিলে কি, আর্থ তার আছে কি।',
+    art: '$_dir/faults.svg',
+    lessonPoint: 3,
+  );
   static const missedFault = DoMistake(
     key: '3.9/m3_guard_repair/fault-missed',
     textBn: 'একটা খুঁত বাদ গেল। গার্ডিং একসঙ্গে কাজ করে — একটা ছেঁড়া, ঝুলে পড়া বা ঢিলে অংশেই পুরো জাল দুর্বল হয়।',
@@ -288,6 +333,11 @@ abstract final class M3GuardRepairMistakes {
   static const overTension = DoMistake(
     key: '3.9/m3_guard_repair/over-tension',
     textBn: 'বেশি টানলেন — অতিরিক্ত টানে গার্ডিং-এর তার ছিঁড়ে যেতে পারে। পেছনের তারের সমান টানে থামুন।',
+    art: '$_dir/tension.svg',
+  );
+  static const underTension = DoMistake(
+    key: '3.9/m3_guard_repair/under-tension',
+    textBn: 'তার এখনো ঢিলে — ঝুলে থাকলে লাইভ তারের সঙ্গে দূরত্ব কমে যায়। পেছনের তারের সমান টানে থামুন।',
     art: '$_dir/tension.svg',
   );
   static const bareEarth = DoMistake(
@@ -325,10 +375,12 @@ abstract final class M3GuardRepairMistakes {
     earthUntested,
     noEarth,
     noTraffic,
+    falseFlag,
     missedFault,
     wrongFix,
     rope,
     overTension,
+    underTension,
     bareEarth,
     noClearance,
     earthOffUp,
@@ -339,15 +391,79 @@ abstract final class M3GuardRepairMistakes {
 
 /// One play: the faults (the sag always, two of the other three, each in a
 /// dealt place), how many pulls bring the slack wire right, the PTW number,
-/// which fault the repair reason asks about, and what the close one asks.
+/// which fault the repair reason asks about, what the close one asks, and the
+/// order of the three trays (indices into [M3GuardRepairDeal.prepSteps],
+/// [M3GuardTool.values] and [M3GuardRepairDeal.closeSteps]; never the job's
+/// own order).
 @immutable
 class M3GuardRepairDeal {
-  const M3GuardRepairDeal({required this.faults, required this.need, required this.permit, required this.repairAsk, required this.closeAsk});
+  const M3GuardRepairDeal({
+    required this.faults,
+    required this.need,
+    required this.permit,
+    required this.repairAsk,
+    required this.closeAsk,
+    this.prepOrder = const [1, 3, 0, 5, 2, 4],
+    this.toolOrder = const [2, 4, 1, 5, 0, 3],
+    this.closeOrder = const [1, 3, 0, 2],
+  });
   final List<M3GuardFault> faults;
   final int need;
   final int permit;
   final M3GuardFaultKind repairAsk;
   final M3GuardCloseWhy closeAsk;
+  final List<int> prepOrder;
+  final List<int> toolOrder;
+  final List<int> closeOrder;
+
+  /// The prep steps in the job's order (the tray shows them shuffled).
+  static const prepSteps = [
+    M3GuardRepairLines.shutdown,
+    M3GuardRepairLines.ptw,
+    M3GuardRepairLines.tester,
+    M3GuardRepairLines.earthSet,
+    M3GuardRepairLines.traffic,
+    M3GuardRepairLines.climb,
+  ];
+
+  /// The close steps in the job's order (the tray shows them shuffled).
+  static const closeSteps = [
+    M3GuardRepairLines.measure,
+    M3GuardRepairLines.comeDown,
+    M3GuardRepairLines.earthOff,
+    M3GuardRepairLines.lineClear,
+  ];
+}
+
+/// A tray order that does not spell out the job: no step in its own place, no
+/// two neighbours in the job's order (k then k + 1), and not the job reversed.
+bool m3GuardTrayOrderOk(List<int> o) {
+  final n = o.length;
+  for (var i = 0; i < n; i++) {
+    if (o[i] == i) return false;
+    if (i + 1 < n && o[i + 1] == o[i] + 1) return false;
+  }
+  return ![for (var i = 0; i < n; i++) o[i] == n - 1 - i].every((x) => x);
+}
+
+/// 0..n-1 shuffled into an order [m3GuardTrayOrderOk] accepts.
+List<int> _shuffledOrder(int n, math.Random rng) {
+  final o = List<int>.generate(n, (i) => i);
+  do {
+    o.shuffle(rng);
+  } while (!m3GuardTrayOrderOk(o));
+  return o;
+}
+
+/// The reason cards for a station: its right card, one of its own myths (the
+/// one that carries the question's words) and one more from the rest.
+List<ChoiceOption> m3GuardDealWhy(List<String> right, List<String> own, math.Random rng) {
+  final mine = own[rng.nextInt(own.length)];
+  final rest = [
+    for (final m in M3GuardRepairLines.myths)
+      if (!own.contains(m)) m,
+  ];
+  return dealChoices(right, [mine, rest[rng.nextInt(rest.length)]], rng);
 }
 
 M3GuardRepairDeal m3GuardRepairDeal(math.Random rng) {
@@ -369,11 +485,11 @@ M3GuardRepairDeal m3GuardRepairDeal(math.Random rng) {
     permit: 1000 + rng.nextInt(9000),
     repairAsk: kinds[rng.nextInt(kinds.length)],
     closeAsk: M3GuardCloseWhy.values[rng.nextInt(2)],
+    prepOrder: _shuffledOrder(M3GuardRepairDeal.prepSteps.length, rng),
+    toolOrder: _shuffledOrder(M3GuardTool.values.length, rng),
+    closeOrder: _shuffledOrder(M3GuardRepairDeal.closeSteps.length, rng),
   );
 }
-
-/// What "টান ঠিক" found.
-enum M3GuardTensionCheck { slack, ok }
 
 /// The play state (pure logic).
 class M3GuardRepairRun {
@@ -484,13 +600,22 @@ class M3GuardRepairRun {
   }
 
   /// Listened to the coworker: up on the live cradle.
-  void failDeadly(DoMistake m) => deadly = m;
+  void failDeadly(DoMistake m) {
+    if (!ended) deadly = m;
+  }
 
   // --- খ inspect ----------------------------------------------------------------
   /// Tags fault [i]; true = newly tagged.
   bool tagFault(int i) {
     if (!_at(M3GuardStation.inspect) || i < 0 || i >= faults.length) return false;
     return tagged.add(i);
+  }
+
+  /// A tag on a sound part of the cradle: a wrong flag costs a slip (tapping
+  /// everywhere must not find the faults for free).
+  DoMistake? flagSound() {
+    if (!_at(M3GuardStation.inspect)) return null;
+    return _slip(M3GuardRepairMistakes.falseFlag);
   }
 
   /// "দেখা শেষ": a fault left untagged is a slip (and it is tagged now, so
@@ -565,13 +690,14 @@ class M3GuardRepairRun {
     return null;
   }
 
-  /// "টান ঠিক": still slack = not scored.
-  M3GuardTensionCheck? tensionDone() {
+  /// "টান ঠিক": while it still sags = a slip (stopping short; the wire stays
+  /// in hand to pull on); at the right tension = fixed (null).
+  DoMistake? tensionDone() {
     if (!_at(M3GuardStation.repair) || !tensioning) return null;
-    if (strokes < deal.need) return M3GuardTensionCheck.slack;
+    if (strokes < deal.need) return _slip(M3GuardRepairMistakes.underTension);
     tensioning = false;
     _fix(faults.indexWhere((f) => f.kind == M3GuardFaultKind.sag));
-    return M3GuardTensionCheck.ok;
+    return null;
   }
 
   // --- ঘ close ----------------------------------------------------------------------
@@ -733,6 +859,11 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The gesture hint (how to tap, never what) and the keys it sweeps over.
+  final _hints = IdleHintController();
+  final Map<String, GlobalKey> _keys = {};
+  GlobalKey _key(String id) => _keys.putIfAbsent(id, GlobalKey.new);
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -782,7 +913,9 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
     unawaited(_sayChain([_task]));
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !struckOut && !_freeze && !_stationPaid;
+  /// Scene controls are live: no intro, card, deck, coworker, freeze, and not
+  /// in a right move's praise window ([tableBusy]).
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !reasonOpen && !coworkerOpen && !struckOut && !_freeze && !_stationPaid;
 
   void _tick([String file = 'sounds/intro/tick.ogg', double volume = 0.45]) {
     HapticFeedback.selectionClick();
@@ -797,6 +930,9 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
   // --- ক prep --------------------------------------------------------------------
   void _prep(String what, Offset global) {
     if (!_canPlay || _run.station != M3GuardStation.prep) return;
+    // The shutdown is asked for and he is on his way: the next step waits
+    // for him (a fast player cannot run past him).
+    if (what != M3GuardRepairLines.shutdown && holdForCoworker()) return;
     DoMistake? m;
     switch (what) {
       case M3GuardRepairLines.shutdown:
@@ -866,19 +1002,54 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
     return best;
   }
 
+  /// A sound part of the cradle under [p]: a place where a fault could be,
+  /// but none was dealt. Forgiving: a tap within [_nearFault] of a dealt
+  /// fault's area is a near miss, never a wrong flag; the slack half is all
+  /// the sag's (its lacings are not checked there — the wire droops through
+  /// them); and the sound half's wire is not a "sag" spot (that would blanket
+  /// its lacings, where the snapped one is dealt).
+  bool _soundAt(Offset p) {
+    if (_run.faults.any((f) => _geo.hit(f, t: _run.tension).inflate(_nearFault).contains(p))) return false;
+    final slackSides = {
+      for (final f in _run.faults)
+        if (f.kind == M3GuardFaultKind.sag) f.side,
+    };
+    for (final s in M3GuardGeo.spots) {
+      if (_run.faults.contains(s)) continue;
+      if (s.kind == M3GuardFaultKind.sag) continue;
+      if (s.kind == M3GuardFaultKind.lacing && slackSides.contains(M3GuardGeo.lacingSide(s.lacing))) continue;
+      if (_geo.hit(s, t: 1).deflate(4).contains(p)) return true;
+    }
+    return false;
+  }
+
+  /// How far beside a dealt fault a tap is still a near miss (design px).
+  static const _nearFault = 16.0;
+
   void _tapScene(Offset p, Offset global) {
     if (!_canPlay) return;
     final i = _faultAt(p);
     switch (_run.station) {
       case M3GuardStation.inspect:
-        if (i != null && _run.tagFault(i)) {
-          _placed();
+        if (i != null) {
+          if (_run.tagFault(i)) {
+            _placed();
+            setState(() => _wake++);
+          } else {
+            _tick('sounds/intro/tick.ogg', 0.3);
+          }
+        } else if (_soundAt(p)) {
+          // A tag on a sound part: a wrong flag costs (no free sweep-tapping).
+          final m = _run.flagSound();
           setState(() => _wake++);
+          if (m != null) unawaited(_mistake(m, global));
         } else {
+          _hints.missTap();
           _tick('sounds/intro/tick.ogg', 0.3);
         }
       case M3GuardStation.repair:
         if (i == null || _run.tool == null) {
+          _hints.missTap();
           _tick('sounds/intro/tick.ogg', 0.3);
           return;
         }
@@ -902,6 +1073,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
         if (_run.allFixed) _stationRight(global);
       case M3GuardStation.prep:
       case M3GuardStation.close:
+        _hints.missTap();
         _tick('sounds/intro/tick.ogg', 0.3);
     }
   }
@@ -937,11 +1109,11 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
 
   void _tensionDone(Offset global) {
     if (!_canPlay || !_run.tensioning) return;
-    final r = _run.tensionDone();
+    final m = _run.tensionDone();
     setState(() => _wake++);
-    if (r == M3GuardTensionCheck.slack) {
-      _tick('sounds/intro/click.ogg', 0.5);
-      unawaited(_sayChain([M3GuardRepairLines.stillSlack]));
+    if (m != null) {
+      // Stopped while it still sags: a slip (no free pull-and-check probing).
+      unawaited(_mistake(m, global));
       return;
     }
     _placed();
@@ -985,14 +1157,22 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
     setState(() => _stationPaid = true);
     putOnTable(15 + (_run.clean ? 5 : 0));
     final d = _run.deal;
-    final (List<String> right, String q) = switch (station) {
-      M3GuardStation.prep => (M3GuardRepairLines.prepWhy, M3GuardRepairLines.whyPrepQ),
-      M3GuardStation.inspect => (M3GuardRepairLines.inspectWhy, M3GuardRepairLines.whyInspectQ),
-      M3GuardStation.repair => (M3GuardRepairLines.repairWhy(d.repairAsk), M3GuardRepairLines.whyRepairQ(d.repairAsk)),
-      M3GuardStation.close => (M3GuardRepairLines.closeWhy(d.closeAsk), M3GuardRepairLines.whyCloseQ(d.closeAsk)),
+    final (List<String> right, List<String> own, String q) = switch (station) {
+      M3GuardStation.prep => (M3GuardRepairLines.prepWhy, M3GuardRepairLines.prepMyths, M3GuardRepairLines.whyPrepQ),
+      M3GuardStation.inspect => (M3GuardRepairLines.inspectWhy, M3GuardRepairLines.inspectMyths, M3GuardRepairLines.whyInspectQ),
+      M3GuardStation.repair => (
+          M3GuardRepairLines.repairWhy(d.repairAsk),
+          M3GuardRepairLines.repairMyths(d.repairAsk),
+          M3GuardRepairLines.whyRepairQ(d.repairAsk),
+        ),
+      M3GuardStation.close => (
+          M3GuardRepairLines.closeWhy(d.closeAsk),
+          M3GuardRepairLines.closeMyths(d.closeAsk),
+          M3GuardRepairLines.whyCloseQ(d.closeAsk),
+        ),
     };
     unawaited(askReason(
-      deal: () => dealChoices(right, M3GuardRepairLines.myths, widget.rng),
+      deal: () => m3GuardDealWhy(right, own, widget.rng),
       question: q,
       stillValid: () => _run.station == station && !_ended,
     ));
@@ -1049,8 +1229,10 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("no need to switch off") only fits while the shutdown call is
+    // pending; once it went through, the moment has passed.
     if (_ended || _run.station != M3GuardStation.prep || _run.shutdown || _stationPaid || !_calling) return null;
-    if (_intro || _card != null || reasonOpen || _tester != null || struckOut) return false;
+    if (_intro || _card != null || tableBusy || reasonOpen || _tester != null || struckOut) return false;
     return true;
   }
 
@@ -1317,40 +1499,70 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
 
   Widget _tray(List<Widget> children) => Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: children);
 
+  // The trays come in the play's dealt order (never the job's order).
+  List<String> get _prepShown => [for (final i in _run.deal.prepOrder) M3GuardRepairDeal.prepSteps[i]];
+  List<M3GuardTool> get _toolsShown => [for (final i in _run.deal.toolOrder) M3GuardTool.values[i]];
+  List<String> get _closeShown => [for (final i in _run.deal.closeOrder) M3GuardRepairDeal.closeSteps[i]];
+
   Widget _prepTray() {
     final r = _run;
-    Widget b(IconData icon, String label, bool on) => _ToolButton(icon: icon, label: label, on: on, onTapUp: (d) => _prep(label, d.globalPosition));
+    (IconData, bool) look(String label) => switch (label) {
+          M3GuardRepairLines.shutdown => (Icons.phone_in_talk_rounded, r.shutdown || _calling),
+          M3GuardRepairLines.ptw => (Icons.description_rounded, r.ptw),
+          M3GuardRepairLines.tester => (Icons.flash_on_rounded, _tester != null),
+          M3GuardRepairLines.earthSet => (Icons.link_rounded, r.earthed),
+          M3GuardRepairLines.traffic => (Icons.traffic_rounded, r.traffic),
+          _ => (Icons.north_rounded, r.up),
+        };
     return _tray([
-      b(Icons.phone_in_talk_rounded, M3GuardRepairLines.shutdown, r.shutdown || _calling),
-      b(Icons.description_rounded, M3GuardRepairLines.ptw, r.ptw),
-      b(Icons.flash_on_rounded, M3GuardRepairLines.tester, _tester != null),
-      b(Icons.link_rounded, M3GuardRepairLines.earthSet, r.earthed),
-      b(Icons.traffic_rounded, M3GuardRepairLines.traffic, r.traffic),
-      b(Icons.north_rounded, M3GuardRepairLines.climb, r.up),
+      for (final label in _prepShown)
+        _ToolButton(key: _key('prep:$label'), icon: look(label).$1, label: label, on: look(label).$2, onTapUp: (d) => _prep(label, d.globalPosition)),
     ]);
   }
 
   Widget _repairTray() {
-    Widget b(IconData icon, M3GuardTool t) => _ToolButton(icon: icon, label: M3GuardRepairLines.toolBn(t), on: _run.tool == t, onTapUp: (_) => _hold(t));
+    IconData icon(M3GuardTool t) => switch (t) {
+          M3GuardTool.tension => Icons.unfold_less_rounded,
+          M3GuardTool.gi => Icons.cable_rounded,
+          M3GuardTool.spanner => Icons.build_rounded,
+          M3GuardTool.pipe => Icons.view_column_rounded,
+          M3GuardTool.earthLead => Icons.electrical_services_rounded,
+          M3GuardTool.rope => Icons.gesture_rounded,
+        };
     return _tray([
-      b(Icons.unfold_less_rounded, M3GuardTool.tension),
-      b(Icons.cable_rounded, M3GuardTool.gi),
-      b(Icons.build_rounded, M3GuardTool.spanner),
-      b(Icons.view_column_rounded, M3GuardTool.pipe),
-      b(Icons.electrical_services_rounded, M3GuardTool.earthLead),
-      b(Icons.gesture_rounded, M3GuardTool.rope),
+      for (final t in _toolsShown)
+        _ToolButton(key: _key('tool:${t.name}'), icon: icon(t), label: M3GuardRepairLines.toolBn(t), on: _run.tool == t, onTapUp: (_) => _hold(t)),
     ]);
   }
 
   Widget _closeTray() {
     final r = _run;
-    Widget b(IconData icon, String label, bool on) => _ToolButton(icon: icon, label: label, on: on, onTapUp: (d) => _close(label, d.globalPosition));
+    (IconData, bool) look(String label) => switch (label) {
+          M3GuardRepairLines.measure => (Icons.straighten_rounded, r.measured),
+          M3GuardRepairLines.comeDown => (Icons.south_rounded, r.down),
+          M3GuardRepairLines.earthOff => (Icons.link_off_rounded, r.earthOff),
+          _ => (Icons.call_rounded, false),
+        };
     return _tray([
-      b(Icons.straighten_rounded, M3GuardRepairLines.measure, r.measured),
-      b(Icons.south_rounded, M3GuardRepairLines.comeDown, r.down),
-      b(Icons.link_off_rounded, M3GuardRepairLines.earthOff, r.earthOff),
-      b(Icons.call_rounded, M3GuardRepairLines.lineClear, false),
+      for (final label in _closeShown)
+        _ToolButton(key: _key('close:$label'), icon: look(label).$1, label: label, on: look(label).$2, onTapUp: (d) => _close(label, d.globalPosition)),
     ]);
+  }
+
+  /// The gesture hint for now: how to interact, never the answer — a sweep
+  /// over the whole tray (in its on-screen order) or along the whole cradle.
+  HintSpec? _hint() {
+    final cradle = HintSpec.sweep(_geo.cradleSweep, space: HintSpace.scene);
+    return switch (_run.station) {
+      M3GuardStation.prep => HintSpec.sweepOver([for (final l in _prepShown) _key('prep:$l')]),
+      M3GuardStation.inspect => cradle,
+      M3GuardStation.repair => _run.tensioning
+          ? HintSpec.sweepOver([_key('pull'), _key('tension-ok')])
+          : _run.tool == null
+              ? HintSpec.sweepOver([for (final t in _toolsShown) _key('tool:${t.name}')])
+              : cradle,
+      M3GuardStation.close => HintSpec.sweepOver([for (final l in _closeShown) _key('close:$l')]),
+    };
   }
 
   @override
@@ -1375,9 +1587,11 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
                       children: [
-                        Expanded(child: DoBigButton(label: M3GuardRepairLines.pull, filled: true, onTapUp: (d) => _pull(d.globalPosition))),
+                        Expanded(child: DoBigButton(key: _key('pull'), label: M3GuardRepairLines.pull, filled: true, onTapUp: (d) => _pull(d.globalPosition))),
                         const SizedBox(width: 10),
-                        Expanded(child: DoBigButton(label: M3GuardRepairLines.tensionOk, filled: false, onDark: true, onTapUp: (d) => _tensionDone(d.globalPosition))),
+                        Expanded(
+                            child: DoBigButton(
+                                key: _key('tension-ok'), label: M3GuardRepairLines.tensionOk, filled: false, onDark: true, onTapUp: (d) => _tensionDone(d.globalPosition))),
                       ],
                     ),
                   )
@@ -1411,6 +1625,10 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && !coworkerOnScreen && !tableBusy,
+            hintKey: '${st.name}-${_run.tensioning}-${_run.tool?.name}',
+            hintController: _hints,
             overlays: [
               if (playing && !coworkerOpen)
                 Positioned(
@@ -1598,7 +1816,7 @@ class _TesterChip extends StatelessWidget {
 /// A hands-on tool or step: a round icon with its name under it; lit while
 /// in hand or once done.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTapUp});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTapUp});
   final IconData icon;
   final String label;
   final bool on;

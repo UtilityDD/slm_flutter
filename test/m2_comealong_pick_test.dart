@@ -3,7 +3,8 @@
 // the job), the close look (a flaw shows only where the hand has been), deal
 // variety, fair reason libraries that fit what the rack had, the coworker's
 // lines, and the level in the shell (idle perf; a full clean flow; slips;
-// the deadly freeze; the coworker deadly and slip pushes; three slips).
+// the deadly freeze; the coworker deadly and slip pushes; three slips; the
+// coworker on a fast play; gesture hints).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -16,6 +17,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart' show FreezeFrame;
@@ -32,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.4/do/0',
@@ -67,22 +70,14 @@ List<Finder> _onScreen(List<String> texts) => [
         if (_label(x).evaluate().isNotEmpty) _label(x),
     ];
 
-/// Taps the one right card on the deck now up.
+/// Taps the one right card on the deck now up (and the reason's proceed).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
 }
 
 const _d = CaDocket(wire: CaWire.acsr, loadTenths: 15, feederBn: '');
@@ -170,6 +165,33 @@ void main() {
       expect(b.heed(CaPush.grip).mistake, M2ComeAlongMistakes.wrongGrip);
       expect(b.slips, 1);
       expect(b.ended, isFalse);
+    });
+
+    test('after the end (a deadly freeze) listening books nothing more', () {
+      final a = M2ComeAlongRun(dealComeAlong(math.Random(2)));
+      a.take(a.current.items.firstWhere(a.current.underRated));
+      expect(a.ended, isTrue);
+      final o = a.heed(CaPush.grip);
+      expect(o.mistake, isNull);
+      expect(a.slips, 0);
+      expect(a.deadly, M2ComeAlongMistakes.underRated);
+    });
+
+    test('his deck gives nothing away: no marker word only on the refusals; his grip push never means the grip in hand', () {
+      for (final p in CaPush.values) {
+        final c = M2ComeAlongLines.coworker(p);
+        for (final r in c.right) {
+          expect(r.startsWith('না'), isFalse, reason: r);
+          expect(r.contains('—'), isFalse, reason: r);
+        }
+        // A word on every refusal is on a "listen" card too.
+        final words = [for (final r in c.right) r.split(RegExp(r'[\s,—]+')).toSet()];
+        final common = words.reduce((a, b) => a.intersection(b))..removeWhere((w) => w.isEmpty);
+        for (final w in common) {
+          expect(c.wrong.any((x) => x.contains(w)), isTrue, reason: '"$w" only on the refusals');
+        }
+      }
+      expect(M2ComeAlongLines.coworkerGrip.line.contains('হাতে'), isFalse, reason: 'he may cut in while the right grip is in hand');
     });
 
     test('a damaged tool taken is a slip and goes aside; holding the job too early is a slip', () {
@@ -360,14 +382,31 @@ void main() {
       }
     }
 
-    Future<void> takeRight(WidgetTester t, CaRoundDeal r) async {
+    Future<void> takeRight(WidgetTester t, CaRoundDeal r, {int after = 3500}) async {
       await lift(t, r, _right(r));
       await t.tap(find.text(M2ComeAlongLines.take));
       await _pump(t, 3500);
       expect(find.text(MistakeLines.slipHead), findsNothing);
       await _pickRight(t, r.kind == CaKind.puller ? M2ComeAlongLines.pullerRight(r.docket) : M2ComeAlongLines.gripRight(r.docket.wire));
-      await _pump(t, 3500);
+      await _pump(t, after);
     }
+
+    testWidgets('the rack hides every flaw: a damaged tool hangs like a sound one until the hand finds it', (t) async {
+      final (c, deal) = await open(t, _seedCalling(2));
+      expect(deal.rounds[0].items.where((x) => x.flaw != CaFlaw.none), isNotEmpty);
+      final rack = [
+        for (final e in find.byType(CustomPaint).evaluate())
+          if ((e.widget as CustomPaint).painter case final CaToolPainter p) p,
+      ];
+      expect(rack.where((p) => p.item.flaw != CaFlaw.none), isNotEmpty, reason: 'a damaged tool hangs on the rack');
+      for (final p in rack) {
+        expect(p.seenTop, isNotNull, reason: 'null would mean all looked at');
+        expect(p.seenLow, isNotNull);
+        expect(CaToolPainter.flawSeen(p.item, p.seenTop, p.seenLow), isFalse, reason: '${p.item.flaw} shows on the rack');
+      }
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
 
     for (final reduce in [false, true]) {
       testWidgets('waits quietly at the van (${reduce ? 'reduce' : 'anim'})', (t) async {
@@ -392,7 +431,7 @@ void main() {
         }
         debugPrint('PERF comealong ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(M2ComeAlongLines.docket), findsOneWidget);
         expect(find.text(M2ComeAlongLines.hold), findsOneWidget);
         expect(perSec, lessThan(20));
@@ -415,7 +454,7 @@ void main() {
       ));
       await _pump(t, 400);
       expect(find.byType(GuideIntro), findsOneWidget);
-      expect(find.text('শুরু'), findsNothing);
+      expect(find.textContaining(RegExp('শুরু')), findsNothing, reason: 'no start button of any wording');
       await t.tapAt(const Offset(360, 800));
       await _pump(t, 600);
       expect(find.byType(GuideIntro), findsOneWidget, reason: 'a tap does not skip');
@@ -503,6 +542,7 @@ void main() {
       final wrong = _onScreen(M2ComeAlongLines.coworkerRating.wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 700);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3000);
@@ -519,6 +559,7 @@ void main() {
       final wrong = _onScreen(M2ComeAlongLines.coworkerGrip.wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 900);
       expect(find.byType(FreezeFrame), findsNothing);
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
@@ -590,6 +631,133 @@ void main() {
       expect(s.rungProgress['2.4/do/0'], isNot('cleared'));
       expect(t.takeException(), isNull);
       await close(t, c);
+    });
+
+    testWidgets('a fast take cannot skip him: he cuts in on the take, then the take works', (t) async {
+      final (c, deal) = await open(t, _seedCalling(0));
+      final r1 = deal.rounds[0];
+      // Straight to the right puller and take, before his timer.
+      await t.tap(tools.at(r1.items.indexOf(_right(r1))), warnIfMissed: false);
+      await _pump(t, 300);
+      await t.tap(find.text(M2ComeAlongLines.take));
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he comes on the decisive tap');
+      expect(find.byKey(const ValueKey('why-deck')), findsNothing, reason: 'the take waited for him');
+      await _pickRight(t, M2ComeAlongLines.coworkerRating.right);
+      await _pump(t, 1500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // The tool is still in hand: now the take goes through to its reason.
+      await t.tap(find.text(M2ComeAlongLines.take));
+      await _pump(t, 3500);
+      await _pickRight(t, M2ComeAlongLines.pullerRight(r1.docket));
+      await _pump(t, 1500);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('a fast take on the grips: he cuts in; listening with the grip in hand puts it back (a slip)', (t) async {
+      final (c, deal) = await open(t, _seedCalling(1));
+      await takeRight(t, deal.rounds[0], after: 300);
+      final r2 = deal.rounds[1];
+      // At once on docket 2: the right grip in hand, take — he cuts in.
+      await t.tap(tools.at(r2.items.indexOf(_right(r2))), warnIfMissed: false);
+      await _pump(t, 300);
+      await t.tap(find.text(M2ComeAlongLines.take));
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(M2ComeAlongLines.coworkerGrip.wrong);
+      expect(wrong, hasLength(2));
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 900);
+      expect(find.text(M2ComeAlongMistakes.wrongGrip.textBn), findsOneWidget);
+      expect(find.text(M2ComeAlongLines.take), findsNothing, reason: 'the grip in hand went back');
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      await takeRight(t, r2);
+      expect(c.read(gameSaveProvider).mistakes, isNotEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('a fast hold on the last docket cannot skip him: he cuts in on the hold', (t) async {
+      final (c, deal) = await open(t, _seedCalling(2));
+      await takeRight(t, deal.rounds[0]);
+      await takeRight(t, deal.rounds[1], after: 300);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(M2ComeAlongLines.hold));
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the hold waited for him');
+      expect(find.byKey(const ValueKey('why-deck')), findsNothing);
+      final push = deal.rounds[2].kind == CaKind.puller ? M2ComeAlongLines.coworkerRating : M2ComeAlongLines.coworkerGrip;
+      await _pickRight(t, push.right);
+      await _pump(t, 1500);
+      await t.tap(find.text(M2ComeAlongLines.hold));
+      await _pump(t, 3500);
+      await _pickRight(t, M2ComeAlongLines.holdRight(deal.rounds[2], flawKnown: false));
+      await _pump(t, 6000);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['2.4/do/0'], 'cleared');
+      expect(s.mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    group('gesture hints', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      IdleHintState hand(WidgetTester t) => t.state<IdleHintState>(find.byType(IdleHint).first);
+
+      testWidgets('a sweep over every tool and the hold button; a sideways nudge on the tool in hand; then put back / take', (t) async {
+        final (c, deal) = await open(t, _seedCalling(2));
+        final r1 = deal.rounds[0];
+        expect(hand(t).showing, isFalse);
+        await _pump(t, 9000);
+        expect(hand(t).showing, isTrue, reason: 'idle at the van');
+        expect(hand(t).debugOptions, hasLength(r1.items.length + 1), reason: 'every tool and the hold button, the same way');
+        await t.tap(tools.at(0), warnIfMissed: false);
+        await _pump(t, 600);
+        expect(hand(t).showing, isFalse, reason: 'a touch hides it');
+        await _pump(t, 9000);
+        expect(hand(t).showing, isTrue);
+        expect(hand(t).debugOptions, isEmpty, reason: 'a drag nudge, not a sweep');
+        await slide(t);
+        await _pump(t, 9000);
+        expect(hand(t).showing, isTrue);
+        expect(hand(t).debugOptions, hasLength(2), reason: 'put back and take, the same way');
+        await t.tap(find.text(M2ComeAlongLines.putBack));
+        await _pump(t, 600);
+        expect(t.takeException(), isNull);
+        await close(t, c);
+      });
+
+      testWidgets('no hand while his deck or the reason deck is up (the decks carry their own)', (t) async {
+        final (c, _) = await open(t, _seedCalling(0));
+        await _pump(t, 3500);
+        expect(find.byType(CoworkerPeek), findsOneWidget);
+        await _pump(t, 9000);
+        expect(hand(t).showing, isFalse);
+        expect(t.takeException(), isNull);
+        await close(t, c);
+      });
+
+      testWidgets('no hand while the why-deck is up after a right take', (t) async {
+        final (c, deal) = await open(t, _seedCalling(2));
+        final r1 = deal.rounds[0];
+        await lift(t, r1, _right(r1));
+        await t.tap(find.text(M2ComeAlongLines.take));
+        await _pump(t, 3500);
+        await waitChoiceDeck(t);
+        expect(find.byType(ChoiceDeck), findsOneWidget);
+        await _pump(t, 9000);
+        expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the why-deck waits');
+        expect(hand(t).showing, isFalse);
+        expect(t.takeException(), isNull);
+        await close(t, c);
+      });
     });
   });
 }

@@ -6,6 +6,10 @@
 // libraries, and the level in the shell: idle perf, the guide first, a full
 // clean play with the coworker refused, a slip card that keeps the station,
 // three slips, the deadly freeze (climbing live; listening to him).
+// Audit 2026-11-11: a tag on a sound part and "টান ঠিক" while it sags cost a
+// slip; the trays are shuffled (never the job's order); the coworker comes
+// even on a fast play (the next prep tap waits for him); no input in the
+// praise window; gesture hints sweep the tray.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -19,6 +23,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -33,6 +38,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.9/do/1',
@@ -84,10 +90,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -99,6 +107,25 @@ Future<void> _tapAt(WidgetTester t, Offset design) async {
 }
 
 Future<void> _tapFault(WidgetTester t, M3GuardFault f) => _tapAt(t, _geo.hit(f).center);
+
+/// A sound place on the cradle (a lacing, clamp or earth spot where none was
+/// dealt, not in the slack half), well clear of every dealt fault's tap area.
+Offset _soundSpot(M3GuardRepairDeal d, [M3GuardGeo? g]) {
+  final geo = g ?? _geo;
+  final slack = {
+    for (final f in d.faults)
+      if (f.kind == M3GuardFaultKind.sag) f.side,
+  };
+  for (final s in M3GuardGeo.spots) {
+    if (d.faults.contains(s) || s.kind == M3GuardFaultKind.sag) continue;
+    if (s.kind == M3GuardFaultKind.lacing && slack.contains(M3GuardGeo.lacingSide(s.lacing))) continue;
+    final p = geo.hit(s, t: 1).center;
+    if (d.faults.every((f) => !geo.hit(f).inflate(20).contains(p))) return p;
+  }
+  throw StateError('no sound spot');
+}
+
+final _hand = find.byKey(const ValueKey('gesture-hint'));
 
 Future<void> _tool(WidgetTester t, String label) async {
   await t.tap(_label(label));
@@ -295,13 +322,15 @@ void main() {
               r.hold(M3GuardTool.tension);
               expect(r.apply(i), isNull);
               expect(r.tensioning, isTrue);
-              expect(r.tensionDone(), M3GuardTensionCheck.slack);
+              expect(r.tensionDone(), _M.underTension, reason: 'stopping while it sags is a slip');
+              expect(r.tensioning, isTrue, reason: 'the wire stays in hand');
               for (var k = 0; k < r.deal.need; k++) {
                 expect(r.pullOnce(), isNull);
               }
               expect(r.pullOnce(), _M.overTension);
               expect(r.tension, 1);
-              expect(r.tensionDone(), M3GuardTensionCheck.ok);
+              expect(r.tensionDone(), isNull);
+              expect(r.tensioning, isFalse);
             case M3GuardFaultKind.lacing:
               r.hold(M3GuardTool.rope);
               expect(r.apply(i), _M.rope);
@@ -325,8 +354,60 @@ void main() {
         }
         expect(r.allFixed, isTrue);
         expect(r.stationDone, isTrue);
-        expect(r.slips, 4, reason: 'one slip per fault (the sag: two)');
+        expect(r.slips, 5, reason: 'one slip per fault (the sag: three)');
       }
+    });
+
+    test('inspect: a tag on a sound part is a slip (no free sweep-tapping); only in the inspect', () {
+      final r = run()..callShutdown();
+      expect(r.flagSound(), isNull, reason: 'not in the prep');
+      final u = upRun(3);
+      expect(u.flagSound(), _M.falseFlag);
+      expect(u.slips, 1);
+      expect(_M.falseFlag.deadly, isFalse);
+      // Neutral: it names what to look for, never this cradle's faults.
+      expect(_M.falseFlag.textBn, isNot(contains('ঠিক আছে')));
+      // Every dealt fault is one of the spots; the sound spots are the rest.
+      for (var s = 0; s < 40; s++) {
+        final d = m3GuardRepairDeal(math.Random(s));
+        for (final f in d.faults) {
+          expect(M3GuardGeo.spots, contains(f));
+        }
+        expect(() => _soundSpot(d, M3GuardGeo.forScene(780, 0)), returnsNormally);
+      }
+    });
+
+    test('trays: dealt shuffled, never in the job order, and they vary', () {
+      final prep = <String>{}, tools = <String>{}, close = <String>{};
+      for (var s = 0; s < 60; s++) {
+        final d = m3GuardRepairDeal(math.Random(s));
+        for (final (o, n) in [(d.prepOrder, 6), (d.toolOrder, 6), (d.closeOrder, 4)]) {
+          expect(o.toSet(), {for (var i = 0; i < n; i++) i});
+          expect(o, isNot(List.generate(n, (i) => i)));
+          // No step in its own place, no two neighbours in the job's order,
+          // not the job reversed.
+          for (var i = 0; i < n; i++) {
+            expect(o[i], isNot(i), reason: '$o');
+            if (i + 1 < n) expect(o[i + 1], isNot(o[i] + 1), reason: '$o');
+          }
+          expect(o, isNot(List.generate(n, (i) => n - 1 - i)));
+          expect(m3GuardTrayOrderOk(o), isTrue);
+        }
+        prep.add(d.prepOrder.join());
+        tools.add(d.toolOrder.join());
+        close.add(d.closeOrder.join());
+      }
+      expect(prep.length, greaterThan(30));
+      expect(tools.length, greaterThan(30));
+      expect(close, hasLength(3), reason: 'every allowed close order comes up');
+      // The constructor's defaults follow the same rule.
+      const d0 = M3GuardRepairDeal(faults: [], need: 3, permit: 1000, repairAsk: M3GuardFaultKind.sag, closeAsk: M3GuardCloseWhy.order);
+      for (final o in [d0.prepOrder, d0.toolOrder, d0.closeOrder]) {
+        expect(m3GuardTrayOrderOk(o), isTrue, reason: '$o');
+      }
+      expect(m3GuardTrayOrderOk([0, 1, 3, 2]), isFalse);
+      expect(m3GuardTrayOrderOk([1, 0, 2, 3]), isFalse);
+      expect(m3GuardTrayOrderOk([3, 2, 1, 0]), isFalse);
     });
 
     test('close: clearance, down, earth off, then the line clear', () {
@@ -395,16 +476,76 @@ void main() {
       ];
       for (final right in libs) {
         expectLibrary(right.first, right, _L.myths);
-        for (var k = 0; k < 10; k++) {
-          final deal = dealChoices(right, _L.myths, math.Random(k));
-          expect(deal.where((o) => o.correct), hasLength(1));
-          expect(deal.map((o) => o.textBn).toSet(), hasLength(3));
-        }
       }
+      final ownMyths = {
+        ..._L.prepMyths,
+        ..._L.inspectMyths,
+        for (final k in M3GuardFaultKind.values) ..._L.repairMyths(k),
+        for (final w in M3GuardCloseWhy.values) ..._L.closeMyths(w),
+        ..._L.generalMyths,
+      };
+      expect(ownMyths, _L.myths.toSet());
+      expect(_L.myths.toSet(), hasLength(_L.myths.length));
       final cw = _L.coworker;
       expectSameLength('choice', [...cw.right, ...cw.wrong]);
       expectLibrary('choice', cw.right, cw.wrong);
       expect(LearnVoice.resolve(cw.exitLine, rival: true), isNotNull);
+    });
+
+    test('reasons: no word shared with the question names the right card', () {
+      // (question, right cards, own myths, word stems the right cards echo
+      // from the question).
+      final qs = <(String, List<String>, List<String>, List<String>)>[
+        (_L.whyPrepQ, _L.prepWhy, _L.prepMyths, ['জাল']),
+        (_L.whyInspectQ, _L.inspectWhy, _L.inspectMyths, ['পুরো', 'জাল']),
+        for (final k in M3GuardFaultKind.values)
+          (
+            _L.whyRepairQ(k),
+            _L.repairWhy(k),
+            _L.repairMyths(k),
+            switch (k) {
+              M3GuardFaultKind.sag => ['টান'],
+              M3GuardFaultKind.lacing => ['ছেঁড়া', 'লেসিং', 'GI', 'তারে'],
+              M3GuardFaultKind.clamp => ['ক্ল্যাম্প'],
+              M3GuardFaultKind.earth => ['আর্থ', 'তার', 'পাইপ'],
+            },
+          ),
+        for (final w in M3GuardCloseWhy.values)
+          (
+            _L.whyCloseQ(w),
+            _L.closeWhy(w),
+            _L.closeMyths(w),
+            switch (w) {
+              M3GuardCloseWhy.clearance => ['দূরত্ব'],
+              M3GuardCloseWhy.order => ['আর্থ', 'লাইন', 'ক্লিয়ার'],
+            },
+          ),
+      ];
+      for (final (q, right, own, stems) in qs) {
+        final words = [
+          for (final w in q.replaceAll('?', '').split(' '))
+            if (w != 'কেন') w,
+          ...stems,
+        ];
+        for (var k = 0; k < 200; k++) {
+          final deal = m3GuardDealWhy(right, own, math.Random(k));
+          expect(deal.where((o) => o.correct), hasLength(1));
+          expect(deal.map((o) => o.textBn).toSet(), hasLength(3));
+          final r = deal.firstWhere((o) => o.correct).textBn;
+          final wrong = [for (final o in deal) if (!o.correct) o.textBn];
+          expect(wrong.where(own.contains), isNotEmpty, reason: q);
+          for (final w in words) {
+            if (!r.contains(w)) continue;
+            expect(wrong.any((x) => x.contains(w)), isTrue, reason: '$q: "$w" only on "$r"');
+          }
+        }
+        // Every own myth carries every echoed word.
+        for (final m in own) {
+          for (final w in words) {
+            if (right.any((r) => r.contains(w))) expect(m, contains(w), reason: '$q: $m');
+          }
+        }
+      }
     });
   });
 
@@ -445,7 +586,7 @@ void main() {
         }
         debugPrint('PERF m3_guard_repair ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -549,6 +690,141 @@ void main() {
       }
       await _pump(t, 1500);
       expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      expect(c.read(gameSaveProvider).rungProgress['3.9/do/1'], isNot('cleared'));
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him: the next prep tap after the shutdown call waits for him', (t) async {
+      final c = await _open(t, 9);
+      await t.tap(_label(_L.shutdown));
+      await t.pump(const Duration(milliseconds: 120));
+      // Straight on to the PTW, before his 1.2 s: no slip, he comes now.
+      await t.tap(_label(_L.ptw));
+      await t.pump(const Duration(milliseconds: 200));
+      expect(find.byType(MistakeCard), findsNothing, reason: 'not a PTW-before-shutdown slip');
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cut in at once');
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 600);
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2600);
+      await _tool(t, _L.ptw);
+      expect(find.byType(MistakeCard), findsNothing, reason: 'the shutdown went through after him');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a tag on a sound part of the cradle costs a slip with a neutral card', (t) async {
+      final deal = m3GuardRepairDeal(math.Random(13));
+      final c = await _open(t, 13);
+      await _refuse(t);
+      await _prepRight(t);
+      await _reason(t, _L.prepWhy);
+      await _tapAt(t, _soundSpot(deal));
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(_M.falseFlag.textBn), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, _M.falseFlag.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      // Empty sky: nothing happens (only the hint counts it).
+      await _tapAt(t, const Offset(300, 90));
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, hasLength(1));
+      await _close(t, c);
+    });
+
+    testWidgets('near misses are free: beside the snapped lacing, on the drooping wire by the half\'s edge', (t) async {
+      var seed = 0;
+      while (!m3GuardRepairDeal(math.Random(seed)).faults.any((f) => f.kind == M3GuardFaultKind.lacing)) {
+        seed++;
+      }
+      final deal = m3GuardRepairDeal(math.Random(seed));
+      final lacing = deal.faults.firstWhere((f) => f.kind == M3GuardFaultKind.lacing);
+      final sag = deal.faults.firstWhere((f) => f.kind == M3GuardFaultKind.sag);
+      final c = await _open(t, seed);
+      await _refuse(t);
+      await _prepRight(t);
+      await _reason(t, _L.prepWhy);
+      final at = _geo.hit(lacing).center;
+      for (final dx in const [-20.0, -16.0, 16.0, 20.0]) {
+        await _tapAt(t, at.translate(dx, 0));
+        expect(find.byType(MistakeCard), findsNothing, reason: 'beside the lacing by $dx');
+      }
+      final (a, b) = M3GuardGeo.half(sag.side);
+      for (final x in [a + 6, a + 14, b - 14, b - 6]) {
+        await _tapAt(t, Offset(x, _geo.frontY(x, slack: sag.side, t: 0)));
+        expect(find.byType(MistakeCard), findsNothing, reason: 'on the drooping wire at $x');
+      }
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      // The real ones still tag, and the station goes on clean.
+      for (final f in deal.faults) {
+        await _tapFault(t, f);
+      }
+      await _button(t, _L.doneLooking);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('praise window: a tap on the cradle while the ◆ waits does nothing', (t) async {
+      final deal = m3GuardRepairDeal(math.Random(13));
+      final c = await _open(t, 13);
+      await _refuse(t);
+      await _prepRight(t);
+      await _reason(t, _L.prepWhy);
+      for (final f in deal.faults) {
+        await _tapFault(t, f);
+      }
+      await t.tap(find.text(_L.doneLooking));
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tapAt(_soundSpot(deal) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the reason still comes');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('"টান ঠিক" while the wire still sags: a slip; then pull on and finish', (t) async {
+      final deal = m3GuardRepairDeal(math.Random(7));
+      final sag = deal.faults.firstWhere((f) => f.kind == M3GuardFaultKind.sag);
+      final c = await _open(t, 7);
+      await _refuse(t);
+      await _prepRight(t);
+      await _reason(t, _L.prepWhy);
+      for (final f in deal.faults) {
+        await _tapFault(t, f);
+      }
+      await _button(t, _L.doneLooking);
+      await _reason(t, _L.inspectWhy);
+      await _tool(t, _L.toolBn(M3GuardTool.tension));
+      await _tapFault(t, sag);
+      await _button(t, _L.tensionOk);
+      expect(find.text(_M.underTension.textBn), findsOneWidget);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      for (var i = 0; i < deal.need; i++) {
+        await _button(t, _L.pull);
+      }
+      await _button(t, _L.tensionOk);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes.single.key, _M.underTension.key);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over the whole prep tray, left to right', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 4);
+      expect(_hand, findsNothing);
+      await _pump(t, 9000);
+      expect(_hand, findsOneWidget);
+      final opts = t.state<IdleHintState>(find.byType(IdleHint).first).debugOptions;
+      expect(opts, hasLength(6), reason: 'every tool, never one');
+      for (var i = 1; i < opts.length; i++) {
+        expect(opts[i].center.dx, greaterThan(opts[i - 1].center.dx), reason: 'on-screen order, not the job order');
+      }
       await _close(t, c);
     });
 
@@ -573,9 +849,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);

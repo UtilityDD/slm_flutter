@@ -78,10 +78,11 @@ LevelContext? levelContextFor(BuiltLadder? built, String rungId) {
 /// Rank of a finished Do play from its first-try mark (same words as before).
 String doRankBn(int mark) => mark >= 90 ? 'দারুণ' : (mark >= 60 ? 'মোটামুটি' : 'আবার');
 
-/// The one top bar every level uses (owner's brief): close · "ধাপ N" (the
+/// The one top bar every level uses (owner's brief): close · "L12" (the
 /// ladder step — lesson and কাজ numbers are internal) · this level's score
-/// (chips fly into it) · 💀 · an optional clock ([trailing]) · mute. The
-/// title stays for screen readers only.
+/// (chips fly into it) · 💀 · an optional clock ([trailing]). The title
+/// stays for screen readers only. [muted]/[onToggleMute] are kept so callers
+/// compile, but the bar no longer draws a speaker button.
 class LevelShellBar extends StatelessWidget {
   const LevelShellBar({
     super.key,
@@ -112,22 +113,20 @@ class LevelShellBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: titleBn,
-      child: UnifiedGameTopHud(
-        scoreKey: scoreKey,
-        deathKey: deathKey,
-        badgeText: 'ধাপ ${context_.ladderStep}',
-        titleText: titleBn,
-        stepOnly: true,
+    // The HUD reads [titleBn] to screen readers on the level badge.
+    return UnifiedGameTopHud(
+      scoreKey: scoreKey,
+      deathKey: deathKey,
+      badgeText: 'L${context_.ladderStep}',
+      titleText: titleBn,
+      stepOnly: true,
       closeIcon: Icons.close_rounded,
       muted: muted,
       levelScore: levelScore,
       onClose: onClose,
-        onToggleMute: onToggleMute,
-        trailingExtra: trailing,
-        bare: bare,
-      ),
+      onToggleMute: onToggleMute,
+      trailingExtra: trailing,
+      bare: bare,
     );
   }
 }

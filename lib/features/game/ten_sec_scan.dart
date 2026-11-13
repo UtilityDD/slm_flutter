@@ -19,289 +19,856 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'kit_check.dart' show KitDeath, KitDeathView;
 import 'level_frame.dart';
-import 'level_juice.dart' show starsFor;
+import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
 import 'reason_table.dart';
 import 'scene_kit.dart' show GuideIntro;
 
-// Lesson 1.10, কাজ 1: "১০ সেকেন্ডের স্ক্যান" (Ladder step 29).
-// The capstone Do level of Module 1. A rapid-fire 10-check field checklist
-// before feet leave the ground, testing the entire Module 1 curriculum:
-//   1. Clothing & Boots (1.1)
-//   2. Helmet & Chin Strap (1.1)
-//   3. Rubber Gloves (1.2)
-//   4. Full Body Harness (1.4)
-//   5. Tools & Bag (1.5)
-//   6. Pole Base & Stability (1.5)
-//   7. Lakshman Rekha / Clearance (1.6)
-//   8. PTW & Team Briefing (1.6)
-//   9. Weather & Surroundings (1.8, 1.9)
-//  10. Rescue & Mindset (1.7, 1.10)
+// Lesson 1.10, কাজ 1: "10 সেকেন্ডের স্ক্যান" (ladder step 29).
 //
-// Hands-on: inspect the item/condition, decide whether to GO (চালিয়ে যান)
-// or STOP (থামুন). 10 checks dealt fresh every play.
-// Coworker pressure moment appears mid-run with recorded voice clips
-// (r_2054ee9516.mp3 push, r_b3d015de00.mp3 snarl).
-// Mistakes link directly to lesson reader points. Deadly mistakes trigger
-// DoDeathGuard freeze.
+// The lesson's own 10-second safety scan (lesson 1.10, point 2), one check
+// per question, in the lesson's order — the first five personal, the next
+// five the surroundings:
+//    1. PPE (helmet to sole: lesson 1.1)
+//    2. harness worn and secure (lesson 1.4)
+//    3. tools in order and at hand (the discharge rod: lesson 1.5)
+//    4. the permit number and conditions (lesson 1.6)
+//    5. state of mind — tired, distracted, rushed (lesson 1.10)
+//    6. the pole, checked myself (lesson 1.3)
+//    7. the লক্ষ্মণ রেখা (lesson 1.2)
+//    8. other dangers: water, traffic, bees (lessons 1.3, 1.10)
+//    9. the weather (lesson 1.9)
+//   10. escape route and rescue plan (lesson 1.10)
+//
+// Each check shows one picture and the lesson's question (never the answer);
+// the player presses GO or STOP. Every play deals which checks are safe and
+// which fault each other check has, with at least one deadly-class fault and
+// at least four safe checks. Owner rulings 2026-11-08: a nail in the sole,
+// polyester/synthetic clothing and cut or frayed harness webbing are deadly;
+// an expired harness label with no damage is a slip. A deadly GO freezes the
+// scene grey, plays the consequence in colour, then DoDeathGuard.bookDeadly.
+// Scoring is the shared Do rule: 100 − 15 per slip, pass ≥ 55, 3 slips strike
+// out. The careless coworker comes once (recorded voice), on a dealt check of
+// either kind; after him the same check is asked.
 
 // ============================================================================
-// Content & Models
+// Content & models
 // ============================================================================
+
+const kTenSecQuickMs = 45000;
 
 @immutable
 class TenSecPack {
-  const TenSecPack({required this.id, required this.titleBn});
+  const TenSecPack({required this.id, required this.titleBn, this.quickMs = kTenSecQuickMs});
   final String id;
   final String titleBn;
+  final int quickMs;
 }
 
 const tenSecPacks = {
   'do_1_10_a': TenSecPack(id: 'do_1_10_a', titleBn: TenSecLines.title),
 };
 
+/// The lesson's ten questions, in the lesson's order.
+enum ScanTopic { ppe, harness, tools, permit, mind, pole, rekha, around, weather, escape }
+
+/// What a deadly GO does, played in colour over the frozen scene.
+enum ScanDeath { synthetic, nail, shock, arc, fall, collapse, strike }
+
+@immutable
+class TenSecTopic {
+  const TenSecTopic({required this.topic, required this.nameBn, required this.askBn, required this.whyWrong});
+  final ScanTopic topic;
+
+  /// The short name on the card's header.
+  final String nameBn;
+
+  /// The lesson's own question (the card's caption; never the answer).
+  final String askBn;
+
+  /// Wrong reasons (myths and excuses) for every check of this question.
+  final List<String> whyWrong;
+}
+
 @immutable
 class TenSecCheck {
   const TenSecCheck({
     required this.id,
-    required this.categoryBn,
-    required this.labelBn,
-    required this.svgArt,
-    required this.isSafe,
-    required this.mistake,
+    required this.topic,
+    required this.art,
     required this.whyRight,
-    required this.whyWrong,
     required this.caughtTag,
+    this.fault,
+    this.death,
   });
 
   final String id;
-  final String categoryBn;
-  final String labelBn;
-  final String svgArt;
-  final bool isSafe;
-  final DoMistake mistake;
+  final ScanTopic topic;
+  final String art;
+
+  /// Null = safe (GO is right); else the fault STOP catches.
+  final DoMistake? fault;
+
+  /// How a GO on a deadly fault kills (null unless the fault is deadly).
+  final ScanDeath? death;
   final List<String> whyRight;
-  final List<String> whyWrong;
   final String caughtTag;
+
+  bool get isSafe => fault == null;
+  bool get deadly => fault?.deadly ?? false;
 }
 
+const _art = 'assets/game/art/scan_board';
+
 abstract final class TenSecMistakes {
+  // 1 — PPE (lesson 1.1)
+  static const helmetCrack = DoMistake(
+    key: '1.10/scan/helmet-crack',
+    textBn: 'ফাটল ধরা হেলমেট মানে ফুটো ছাতা — আঘাতের শক আর নিতে পারে না। তখনই বদলান।',
+    art: '$_art/kit_helmet_crack.svg',
+    lessonPoint: 1,
+  );
   static const bootsNail = DoMistake(
     key: '1.10/scan/boots-nail',
-    textBn: 'বুটের তলায় পেরেক থাকলে বা তলা ফাটা হলে আর্দিং হয়ে মারাত্মক শক লাগতে পারে।',
-    art: 'assets/game/art/scan_board/ppe_nail_sole.svg',
-    lessonPoint: 2,
+    textBn: 'সোলে পেরেক বা মেটাল ঢুকে থাকলে কারেন্ট মাটিতে নামার রাস্তা পায় — সাক্ষাৎ মৃত্যুফাঁদ।',
+    art: '$_art/kit_nail_sole.svg',
+    deadly: true,
+    lessonPoint: 1,
   );
-
-  static const dirtyPolyester = DoMistake(
+  static const polyester = DoMistake(
     key: '1.10/scan/dirty-polyester',
-    textBn: 'ঢিলেঢালা পলিয়েস্টার কাপড়ে আর্কের তাপে আগুন ধরে ত্বকে গলে লেগে যায় — সুতির ফুলহাতা পরা বাধ্যতামূলক।',
-    art: 'assets/game/art/scan_board/ppe_dirty_cut.svg',
-    lessonPoint: 0,
-  );
-
-  static const unstrappedHelmet = DoMistake(
-    key: '1.10/scan/unstrapped-helmet',
-    textBn: 'চিবুকের ফিতে শক্তভাবে না বাঁধলে ঝাঁকুনিতে হেলমেট খসে পড়ে মাথায় মারাত্মক আঘাত লাগতে পারে।',
-    art: 'assets/game/art/scan_board/ppe_unstrapped.svg',
+    textBn: 'পলিয়েস্টার বা সিন্থেটিক জামা স্পার্কে গলে চামড়ায় সেঁটে যায় — 100% সুতি বা FR কাপড় চাই।',
+    art: '$_art/kit_polyester.svg',
+    deadly: true,
     lessonPoint: 1,
   );
-
-  static const noAirTest = DoMistake(
+  static const gloveLeak = DoMistake(
     key: '1.10/scan/no-air-test',
-    textBn: 'এয়ার টেস্ট ছাড়া গ্লাভস পরা মারাত্মক — সুঁইয়ের মতো সূক্ষ্ম ফুটো দিয়েও প্রাণঘাতী শক ঢুকে যায়।',
-    art: 'assets/game/art/scan_board/ppe_no_check.svg',
+    textBn: 'এয়ার টেস্টে সামান্য লিক থাকলেও সেই গ্লাভস নয় — পিনের ডগার মতো ফুটোতেও মৃত্যু নিশ্চিত।',
+    art: '$_art/kit_glove_leak.svg',
     deadly: true,
     lessonPoint: 1,
   );
 
-  static const looseHarness = DoMistake(
+  // 2 — harness (lesson 1.4)
+  static const looseChest = DoMistake(
     key: '1.10/scan/loose-harness',
-    textBn: 'হারনেসের বুকের বাকল আলগা থাকলে পড়ে গেলে শরীর ছিটকে বেরিয়ে মৃত্যু হতে পারে।',
-    art: 'assets/game/art/scan_board/harness_loose_chest.svg',
+    textBn: 'ঢিলেঢালা হারনেস পতনের সময় শরীর থেকে খুলে যেতে পারে — বুকের ফিতে আঁটুন।',
+    art: '$_art/harness_loose_chest.svg',
     lessonPoint: 1,
   );
-
-  static const expiredHarness = DoMistake(
+  static const chestHigh = DoMistake(
+    key: '1.10/scan/chest-strap-high',
+    textBn: 'বুকের ফিতে থাকবে বুকের মাঝ বরাবর — ভুল জায়গায় চাপে গুরুতর আঘাত হয়।',
+    art: '$_art/harness_chest_high.svg',
+    lessonPoint: 1,
+  );
+  static const twisted = DoMistake(
+    key: '1.10/scan/twisted-strap',
+    textBn: 'ফিতে পেঁচিয়ে থাকলে ফিটিং ভুল — পড়লে ভুল জায়গায় চাপ পড়ে গুরুতর আঘাত হয়।',
+    art: '$_art/harness_twisted.svg',
+    lessonPoint: 1,
+  );
+  static const frayedWebbing = DoMistake(
+    key: '1.10/scan/frayed-webbing',
+    textBn: 'ছোট কাটা বা ছেঁড়া ফিতেই হারনেসের শক্তি 50% পর্যন্ত কমিয়ে দেয় — সেই হারনেস বাতিল।',
+    art: '$_art/harness_frayed.svg',
+    deadly: true,
+    lessonPoint: 1,
+  );
+  static const expiredLabel = DoMistake(
     key: '1.10/scan/expired-harness',
-    textBn: 'ঘষা খাওয়া বা মেয়াদোত্তীর্ণ হারনেস পতনের প্রবল টান সহ্য করতে না পেরে ছিঁড়ে যায়।',
-    art: 'assets/game/art/scan_board/harness_expired.svg',
-    lessonPoint: 2,
+    textBn: 'লেবেলের মেয়াদ পেরিয়ে গেছে — দেখতে মজবুত হলেও মেয়াদ উত্তীর্ণ হারনেস ব্যবহার করা যাবে না।',
+    art: '$_art/harness_label_expired.svg',
+    lessonPoint: 1,
   );
 
-  static const toolHandClimb = DoMistake(
-    key: '1.10/scan/tool-hand-climb',
-    textBn: 'হাতে সরঞ্জাম নিয়ে পোলে উঠবেন না — দুই হাত ও পা সব সময় তিন বিন্দু সংযোগে থাকবে। সরঞ্জাম ব্যাগে তুলুন।',
-    art: 'assets/game/art/scan_board/tool_hand_climb.svg',
-    lessonPoint: 2,
+  // 3 — tools (lesson 1.5)
+  static const rodCracked = DoMistake(
+    key: '1.10/scan/rod-cracked',
+    textBn: 'রডের ইনসুলেটিং স্টিক হবে পরিষ্কার, শুকনো আর ফাটলমুক্ত — ভাঙা রড নিজেই পরিবাহী হতে পারে।',
+    art: '$_art/tool_rod_cracked.svg',
+    lessonPoint: 1,
   );
-
-  static const toolOverload = DoMistake(
-    key: '1.10/scan/tool-overload',
-    textBn: 'পকেটে বা বেল্টে আলগা ভারী সরঞ্জাম ঝোলালে তা নিচে সহকর্মীর গায়ে পড়ে দুর্ঘটনা ঘটে।',
-    art: 'assets/game/art/scan_board/tool_overload.svg',
-    lessonPoint: 2,
-  );
-
-  static const rustedPole = DoMistake(
-    key: '1.10/scan/rusted-pole',
-    textBn: 'গোড়া ক্ষয়প্রাপ্ত বা ফাঁপা পোলে কখনোই উঠবেন না — লাইনম্যানের ভারে গোড়া ভেঙে পড়ে নিশ্চিত মৃত্যু।',
-    art: 'assets/game/art/scan_board/pole_rusted_base.svg',
+  static const rodPvc = DoMistake(
+    key: '1.10/scan/rod-pvc',
+    textBn: 'পিভিসি পাইপে মেটাল হুক লাগানো জুগাড় ডিসচার্জ রড নয় — স্ট্যান্ডার্ড রড ছাড়া কাজ নয়।',
+    art: '$_art/tool_rod_pvc.svg',
     deadly: true,
     lessonPoint: 1,
   );
 
-  static const leaningPole = DoMistake(
-    key: '1.10/scan/leaning-pole',
-    textBn: 'হেলে থাকা পোল অতিরিক্ত টানে থাকে — উপরে ওঠার আগে সাপোর্ট বা গাইড তার ঠিক করা জরুরি।',
-    art: 'assets/game/art/scan_board/pole_hug_lean.svg',
-    deadly: true,
-    lessonPoint: 1,
-  );
-
-  static const insideClearance = DoMistake(
-    key: '1.10/scan/inside-clearance',
-    textBn: 'লক্ষ্মণ রেখা বা ন্যূনতম নিরাপদ দূরত্ব লঙ্ঘন মারাত্মক — স্পর্শ না করলেও ১১ কেভি আর্ক লাফিয়ে এসে পুড়িয়ে দেয়।',
-    art: 'assets/game/art/scan_board/clearance_inside.svg',
-    deadly: true,
-    lessonPoint: 2,
-  );
-
+  // 4 — permit (lesson 1.6)
   static const verbalPtw = DoMistake(
     key: '1.10/scan/verbal-ptw',
-    textBn: 'মৌখিক বা ফোনে পারমিট নয় — লিখিত পিটিডব্লিউ ও ডিসচার্জ ছাড়া লাইনে হাত দেওয়া নিষিদ্ধ।',
-    art: 'assets/game/art/scan_board/ptw_verbal_phone.svg',
+    textBn: 'ফোনে "লাইন বন্ধ আছে" শুনে কাজ শুরু করা মারাত্মক ভুল — লিখিত, সই করা পারমিট চাই।',
+    art: '$_art/ptw_verbal_phone.svg',
     deadly: true,
-    lessonPoint: 0,
+    lessonPoint: 1,
   );
-
   static const ptwNoRead = DoMistake(
     key: '1.10/scan/ptw-no-read',
-    textBn: 'পিটিডব্লিউ না পড়ে ও ফিডার নম্বর না মিলিয়ে অনুমান করে কাজ শুরু করা মারাত্মক ঝুঁকিপূর্ণ।',
-    art: 'assets/game/art/scan_board/ptw_no_read.svg',
+    textBn: 'পারমিটের নম্বর, শর্ত আর ফিডারের নাম না মিলিয়ে কাজে নামা মারাত্মক ভুল।',
+    art: '$_art/ptw_no_read.svg',
     deadly: true,
     lessonPoint: 1,
   );
 
-  static const stormSky = DoMistake(
-    key: '1.10/scan/storm-sky',
-    textBn: 'মেঘের গর্জন বা বজ্র দেখলে পোলে কাজ বন্ধ — কোনো পিপিই বজ্রপাত আটকাতে পারে না।',
-    art: 'assets/game/art/scan_board/hazard_storm_sky.svg',
-    deadly: true,
-    lessonPoint: 1,
-  );
-
-  static const beehiveCrossarm = DoMistake(
-    key: '1.10/scan/beehive-crossarm',
-    textBn: 'পোলে বা ক্রসআর্মে বলতার চাক থাকলে আগে উপযুক্ত ব্যবস্থা নিন, পোলে উঠে কামড় খেলে ভারসাম্য হারাবেন।',
-    art: 'assets/game/art/scan_board/hazard_beehive.svg',
-    lessonPoint: 3,
-  );
-
-  static const trafficNoBarrier = DoMistake(
-    key: '1.10/scan/traffic-no-barrier',
-    textBn: 'রাস্তার পাশে কাজের জায়গায় ট্র্যাফিক কোণ ও ব্যারিকেড ছাড়া কাজ বিপজ্জনক — চলমান গাড়ি মইয়ে ধাক্কা দিতে পারে।',
-    art: 'assets/game/art/scan_board/hazard_traffic.svg',
-    lessonPoint: 2,
-  );
-
-  static const rescueBlocked = DoMistake(
-    key: '1.10/scan/rescue-blocked',
-    textBn: 'জরুরি উদ্ধারের ব্যবস্থা ও ফার্স্ট এইড কিট ছাড়া কাজ শুরু করবেন না — গোল্ডেন মিনিটে সাহায্য না পেলে প্রাণ যায়।',
-    art: 'assets/game/art/scan_board/rescue_blocked.svg',
-    lessonPoint: 0,
-  );
-
+  // 5 — state of mind (lesson 1.10)
   static const mindTired = DoMistake(
     key: '1.10/scan/mind-tired',
-    textBn: 'শারীরিক অসুস্থতা বা ক্লান্তিতে মনোযোগ হারায় — সুস্থ বোধ না করলে স্টপ ওয়ার্ক বলুন।',
-    art: 'assets/game/art/scan_board/mind_tired.svg',
-    lessonPoint: 1,
+    textBn: 'ক্লান্ত বা বিক্ষিপ্ত মন ছোট কিন্তু জরুরি ধাপ ভুলে যায় — সন্দেহ হলে থামুন।',
+    art: '$_art/mind_tired.svg',
+    lessonPoint: 0,
   );
-
   static const mindRushed = DoMistake(
     key: '1.10/scan/mind-rushed',
-    textBn: 'তাড়াহুড়ো বা সহকর্মীর চাপে সুরক্ষা ধাপ বাদ দেবেন না — শান্ত মনে ১০ সেকেন্ডের স্ক্যান শেষ করুন।',
-    art: 'assets/game/art/scan_board/mind_rushed.svg',
+    textBn: 'তাড়াহুড়ো চেকলিস্টের প্রধান শত্রু — এটা রেস নয়, আগে নিরাপদে বাড়ি ফেরা।',
+    art: '$_art/mind_rushed.svg',
+    lessonPoint: 0,
+  );
+
+  // 6 — pole (lesson 1.3)
+  static const rustedPole = DoMistake(
+    key: '1.10/scan/rusted-pole',
+    textBn: 'মাটির সংযোগস্থলে মরিচা আর ভোঁতা শব্দ মানে পোল বিপজ্জনকভাবে দুর্বল — এই পোলে ওঠা নয়।',
+    art: '$_art/pole_rusted_base.svg',
+    deadly: true,
+    lessonPoint: 1,
+  );
+  static const leaningPole = DoMistake(
+    key: '1.10/scan/leaning-pole',
+    textBn: 'হেলে থাকা পোল আপনার শরীরের ভারে ভেঙে পড়তে পারে — গোড়ায় ফাটল থাকলে ওঠা নয়।',
+    art: '$_art/pole_lean.svg',
+    deadly: true,
     lessonPoint: 1,
   );
 
+  // 7 — লক্ষ্মণ রেখা (lesson 1.2)
+  static const insideClearance = DoMistake(
+    key: '1.10/scan/inside-clearance',
+    textBn: 'লম্বা টুলের ডগাও আপনার হাত — না ছুঁয়েও বিদ্যুৎ বাতাস ভেদ করে লাফিয়ে আসে।',
+    art: '$_art/clearance_inside.svg',
+    deadly: true,
+    lessonPoint: 1,
+  );
+
+  // 8 — other dangers (lessons 1.3, 1.10)
+  static const beehive = DoMistake(
+    key: '1.10/scan/beehive-crossarm',
+    textBn: 'পোলে বোলতা বা মৌমাছির চাক মানেই বিপদ — না উঠে আগে জানান।',
+    art: '$_art/hazard_beehive.svg',
+    lessonPoint: 1,
+  );
+  static const traffic = DoMistake(
+    key: '1.10/scan/traffic-no-barrier',
+    textBn: 'আশেপাশের ট্র্যাফিকও বিপদ — চারপাশ না দেখে পা মাটি ছাড়বেন না।',
+    art: '$_art/hazard_traffic.svg',
+    lessonPoint: 1,
+  );
+  static const water = DoMistake(
+    key: '1.10/scan/water-at-base',
+    textBn: 'পোলের গোড়ায় জল জমে আছে — মাটি ক্ষয়েছে কিনা আগে গোড়া পরীক্ষা করুন।',
+    art: '$_art/hazard_water.svg',
+    lessonPoint: 1,
+  );
+
+  // 9 — weather (lesson 1.9)
+  static const stormSky = DoMistake(
+    key: '1.10/scan/storm-sky',
+    textBn: 'বজ্রপাতে কোনো PPE কাজ করে না — এটা রেড লাইন। কাজ বন্ধ, ওঠা নয়।',
+    art: '$_art/hazard_storm_sky.svg',
+    deadly: true,
+    lessonPoint: 1,
+  );
+
+  // 10 — escape and rescue (lesson 1.10)
+  static const rescueBlocked = DoMistake(
+    key: '1.10/scan/rescue-blocked',
+    textBn: 'নামার পথ আটকানো — কিছু ভুল হলে কীভাবে নামবেন? আগে পথ ফাঁকা করুন।',
+    art: '$_art/rescue_blocked.svg',
+    lessonPoint: 1,
+  );
+
+  /// A STOP on a safe check (the picture shown is that check's own).
   static const safeStopped = DoMistake(
     key: '1.10/scan/safe-stopped',
-    textBn: 'সবকিছু সম্পূর্ণ নিরাপদ ও নিয়ম মেনে ছিল — এখানে অযথা কাজ থামানোর প্রয়োজন ছিল না।',
-    art: 'assets/game/art/scan_board/ppe_head_toe.svg',
-    lessonPoint: 0,
+    textBn: 'এখানে সব ঠিক ছিল — ছবিটা আরেকবার দেখুন, লেখা প্রশ্নের উত্তর মিলিয়ে নিন।',
+    art: '$_art/mind_calm.svg',
+    lessonPoint: 1,
   );
 
   static const all = [
+    helmetCrack,
     bootsNail,
-    dirtyPolyester,
-    unstrappedHelmet,
-    noAirTest,
-    looseHarness,
-    expiredHarness,
-    toolHandClimb,
-    toolOverload,
+    polyester,
+    gloveLeak,
+    looseChest,
+    chestHigh,
+    twisted,
+    frayedWebbing,
+    expiredLabel,
+    rodCracked,
+    rodPvc,
+    verbalPtw,
+    ptwNoRead,
+    mindTired,
+    mindRushed,
     rustedPole,
     leaningPole,
     insideClearance,
-    verbalPtw,
-    ptwNoRead,
+    beehive,
+    traffic,
+    water,
     stormSky,
-    beehiveCrossarm,
-    trafficNoBarrier,
     rescueBlocked,
-    mindTired,
-    mindRushed,
     safeStopped,
   ];
+
+  /// Where the level's "পাঠে দেখুন" opens: the lesson and 0-based point that
+  /// teach the fault. ([DoMistake.lessonPoint] is lesson 1.10's own point 1
+  /// — the 10-second scan — which the mistakes book opens.)
+  static const sourceOf = <String, (String, int)>{
+    '1.10/scan/helmet-crack': ('1.1', 1),
+    '1.10/scan/boots-nail': ('1.1', 2),
+    '1.10/scan/dirty-polyester': ('1.1', 0),
+    '1.10/scan/no-air-test': ('1.1', 3),
+    '1.10/scan/loose-harness': ('1.4', 2),
+    '1.10/scan/chest-strap-high': ('1.4', 2),
+    '1.10/scan/twisted-strap': ('1.4', 2),
+    '1.10/scan/frayed-webbing': ('1.4', 1),
+    '1.10/scan/expired-harness': ('1.4', 1),
+    '1.10/scan/rod-cracked': ('1.5', 2),
+    '1.10/scan/rod-pvc': ('1.5', 4),
+    '1.10/scan/verbal-ptw': ('1.6', 1),
+    '1.10/scan/ptw-no-read': ('1.6', 1),
+    '1.10/scan/mind-tired': ('1.10', 0),
+    '1.10/scan/mind-rushed': ('1.10', 0),
+    '1.10/scan/rusted-pole': ('1.3', 1),
+    '1.10/scan/leaning-pole': ('1.3', 0),
+    '1.10/scan/inside-clearance': ('1.2', 2),
+    '1.10/scan/beehive-crossarm': ('1.3', 2),
+    '1.10/scan/traffic-no-barrier': ('1.10', 1),
+    '1.10/scan/water-at-base': ('1.3', 0),
+    '1.10/scan/storm-sky': ('1.9', 1),
+    '1.10/scan/rescue-blocked': ('1.10', 1),
+    '1.10/scan/safe-stopped': ('1.10', 1),
+  };
 }
 
 abstract final class TenSecLines {
-  static const title = '১০ সেকেন্ডের স্ক্যান';
-  static const intro = 'পা মাটি ছাড়ার আগে ১০ সেকেন্ডের স্ক্যান! পোশাক, হারনেস, পোল থেকে শুরু করে আকাশ ও পারমিট — সব দেখে Go বা Stop চাপুন।';
-  static const ask = 'স্ক্যান করুন — কাজ চালিয়ে যাবেন, না থামবেন?';
+  static const title = '10 সেকেন্ডের স্ক্যান';
+  static const intro = 'পা মাটি ছাড়ার আগে 10 সেকেন্ডের স্ক্যান! প্রতিটা প্রশ্নে ছবি দেখুন — GO, না STOP?';
+  static const ask = 'ছবিটা দেখুন — চালিয়ে যাবেন, না থামবেন?';
   static const stopBtn = 'থামুন · STOP';
   static const goBtn = 'চালিয়ে যান · GO';
+  static const why = 'কেন এই সিদ্ধান্ত?';
+  static const coworkerWhy = 'কেন ওর কথায় চেকলিস্ট বাদ দেবেন না?';
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
-  static const taskNudges = [ask, '১০ সেকেন্ডের স্ক্যান — শান্ত মাথায় সিদ্ধান্ত নিন।', 'Go নাকি Stop? ঠিক বোতামটি বাছুন।'];
+  static const taskNudges = [ask, 'প্রশ্নটা পড়ুন, ছবিটা মিলিয়ে নিন।', 'সব ঠিক থাকলে GO, কিছু ভুল থাকলে STOP।'];
+  static const deadlyWord = 'থামুন!';
+  static const nearMissWord = 'অল্পের জন্য!';
+  static const caughtCall = 'চাপেও চেকলিস্ট শেষ করেছেন';
 
   static const coworker = CoworkerScript(
     line: 'কী ভাবছেন দাঁড়িয়ে? 20 বছর ধরে তো কাজ করছি, এসব চেকলিস্টের কী দরকার!',
     exitLine: 'আমি 20 বছর ধরে এই কাজ করছি, আমার এসব চেকলিস্টের দরকার নেই। সবকিছু আমার মাথায় আছে।',
     right: [
-      'অভিজ্ঞতা ভালো, কিন্তু এই ১০ সেকেন্ডের স্ক্যানই জীবন বাঁচায়।',
+      'অভিজ্ঞতা ভালো, কিন্তু এই 10 সেকেন্ডের স্ক্যানই জীবন বাঁচায়।',
       'মাঠে আত্মবিশ্বাস ভালো, কিন্তু নিয়ম না মানলে একবারের ভুলেই শেষ।',
-      'চেকলিস্ট নিয়ম — পা মাটি ছাড়ার আগে ১০ সেকেন্ড দেখতেই হবে।',
+      'চেকলিস্ট নিয়ম — পা মাটি ছাড়ার আগে 10 সেকেন্ড দেখতেই হবে।',
     ],
     wrong: [
-      'ঠিকই তো, এত বছর যখন কিছু হয়নি, আজ আর দেখে কী হবে!',
+      'ঠিকই তো, এত বছর যখন কিছুই হয়নি, আজ আর দেখে কী হবে!',
       'সময় নষ্ট করে লাভ নেই, চেকলিস্ট ছাড়াই কাজ শুরু করে দিই।',
       'সিনিয়র যখন বলছে, তখন আর চেকলিস্টে সময় নষ্ট না করাই ভালো।',
+      'মাঠে এত ভাবার সময় নেই, বাকি প্রশ্নগুলো পরে দেখা যাবে।',
+      'ওর কথাই ঠিক, 20 বছরের অভিজ্ঞ লোকের মাথায় তো সবই থাকে।',
     ],
     asks: [
       'সহকর্মীর কথায় চেকলিস্ট বাদ দেবেন, নাকি স্ক্যান শেষ করবেন?',
-      '২০ বছরের অহংকারে নিয়ম ভুলবেন, না ১০ সেকেন্ডের স্ক্যান চালাবেন?',
+      '20 বছরের অহংকারে নিয়ম ভুলবেন, না 10 সেকেন্ডের স্ক্যান চালাবেন?',
     ],
   );
 
   static const coworkerWhyRight = [
-    '১০ সেকেন্ডের স্ক্যান যে কোনো ভুলের ফাঁদ আগেই ধরে ফেলে',
-    'দীর্ঘদিনের অভ্যাসেও অসাবধানতা ঘটতে পারে, চেকলিস্ট রক্ষা করে',
+    'অভিজ্ঞতা চেকলিস্টের জায়গা নেয় না, তাকে আরও শক্ত করে',
+    'রুটিন কাজ করতে করতেই মানুষ সবচেয়ে বেশি ভুল করে',
+    'মাত্র 10 সেকেন্ড — দুর্ঘটনার ক্ষতির তুলনায় কিছুই না',
   ];
 
   static const coworkerWhyWrong = [
-    'সিনিয়র লাইনম্যান যা বলেন তা না দেখে মেনে নেওয়াই নিয়ম',
-    'কাজের গতি বাড়াতে মাঝে মাঝে চেকলিস্ট এড়িয়ে যাওয়া যায়',
-    '২০ বছরের অভিজ্ঞতার পর আর সুরক্ষা চেকলিস্টের দরকার পড়ে না',
+    'সিনিয়র যা বলেন তা না দেখে মেনে নেওয়াই মাঠের নিয়ম',
+    'কাজের গতি বাড়াতে মাঝে মাঝে চেকলিস্ট বাদ দেওয়া যায়',
+    '20 বছরের অভিজ্ঞতার পর আর চেকলিস্টের দরকার পড়ে না',
+    'মাঠে এত ভাবার সময় নেই, চেকলিস্ট অফিসের জিনিস',
+    'চেকলিস্ট শুধু নতুন আর আনাড়ি কর্মীদের শেখার জন্য',
   ];
 
-  static const allSet = '১০ সেকেন্ডের মানসিক চেকলিস্ট সফল! মাটিতে দাঁড়িয়ে সব যাচাই করলেই মাঠে নিরাপদ।';
-  static const fail = 'আরেকবার — পা মাটি ছাড়ার আগে ১০ সেকেন্ডের সব কয়টি ধাপ নিখুঁতভাবে দেখুন।';
+  static const allSet = '10 সেকেন্ডের স্ক্যান সফল! মাটিতে দাঁড়িয়ে সব যাচাই — তবেই পোলে।';
+  static const quick = 'নিখুঁত আর ঝটপট — স্ক্যান এখন অভ্যাস!';
+  static const fail = 'আরেকবার — পা মাটি ছাড়ার আগে 10টা প্রশ্নই মন দিয়ে দেখুন।';
 }
+
+const tenSecTopics = <ScanTopic, TenSecTopic>{
+  ScanTopic.ppe: TenSecTopic(
+    topic: ScanTopic.ppe,
+    nameBn: 'পিপিই',
+    askBn: 'আমার PPE কি 100% ঠিক আছে?',
+    whyWrong: [
+      'রোজকার চেনা পিপিই আলাদা করে দেখার দরকার নেই',
+      'সাথী তো দেখেই নিয়েছে, নিজে আর দেখার কী দরকার',
+      'একটু ফাটা হেলমেটেও মাথা ঠিকই বেঁচে যায় সব সময়',
+      'পলিয়েস্টার জামা পরলেও ছোটখাটো কাজে ক্ষতি হয় না',
+      'নতুন গ্লাভস হলে আর এয়ার টেস্ট করার দরকার নেই',
+    ],
+  ),
+  ScanTopic.harness: TenSecTopic(
+    topic: ScanTopic.harness,
+    nameBn: 'হারনেস',
+    askBn: 'আমার হারনেস কি সঠিকভাবে পরা এবং সুরক্ষিত?',
+    whyWrong: [
+      'বুকের ফিতে খোলা রাখলে পোলে কাজ করতে সুবিধা হয়',
+      'হারনেসের ফিতে ঢিলেঢালা রাখলে শরীরে আরাম থাকে',
+      'সামান্য সুতো উঠলেও হারনেসের জোর একই থেকে যায়',
+      'দেখতে মজবুত হলে মেয়াদ পেরোলেও হারনেস দিব্যি চলে',
+      'কোমর-রশা থাকলে হারনেসের ফিটিং দেখার দরকার নেই',
+    ],
+  ),
+  ScanTopic.tools: TenSecTopic(
+    topic: ScanTopic.tools,
+    nameBn: 'টুলস',
+    askBn: 'আমার টুলস কি ঠিকঠাক এবং হাতের কাছে আছে?',
+    whyWrong: [
+      'রড দেখতে রডের মতো হলেই হলো, স্টিক দেখার দরকার নেই',
+      'পিভিসি পাইপ তো প্লাস্টিক, তাই জুগাড় রডও নিরাপদ',
+      'টুলস ওপরে গিয়েই খুঁজে নেওয়া যাবে, আগে ভাবার কী',
+      'ফাটা স্টিকে টেপ জড়ালে রড আবার নতুনের মতো হয়',
+      'স্টোরের রড না পেলে যা হাতে আছে তা দিয়েই কাজ চলে',
+    ],
+  ),
+  ScanTopic.permit: TenSecTopic(
+    topic: ScanTopic.permit,
+    nameBn: 'পারমিট',
+    askBn: 'আমি কি পারমিট নম্বর এবং শর্তগুলো জানি?',
+    whyWrong: [
+      'ফোনে কেউ লাইন বন্ধ বললে সরাসরি কাজ শুরু করা যায়',
+      'পারমিট পকেটে থাকলেই হলো, পড়ে দেখার দরকার নেই',
+      'সুপারভাইজার জানলেই হলো, কাগজে সইয়ের দরকার নেই',
+      'চেনা লাইনে ফিডারের নাম মেলানোর দরকার পড়ে না',
+      'পারমিট মানেই লাইন 100% নিরাপদ, আর কিছু দেখার নেই',
+    ],
+  ),
+  ScanTopic.mind: TenSecTopic(
+    topic: ScanTopic.mind,
+    nameBn: 'মনের অবস্থা',
+    askBn: 'আমার মানসিক অবস্থা কি স্থিতিশীল?',
+    whyWrong: [
+      'দেরি হয়ে যাচ্ছে ভেবে দ্রুত গতিতে কাজে নামা উচিত',
+      'খুব ক্লান্ত লাগলেও কাজ ফেলে বিশ্রাম নেওয়া বোকামি',
+      'অভিজ্ঞ লোকের মন সবসময় স্থির, দেখার দরকার নেই',
+      'যে আগে কাজ শেষ করে, সেই আসল দক্ষ লাইনম্যান',
+      'মাথা ভার লাগলেও পোলে উঠলে সব ঠিক হয়ে যায়',
+    ],
+  ),
+  ScanTopic.pole: TenSecTopic(
+    topic: ScanTopic.pole,
+    nameBn: 'পোল',
+    askBn: 'আমি কি পোলটি নিজে পরীক্ষা করেছি?',
+    whyWrong: [
+      'রোজকার চেনা পোল পরীক্ষা না করে উঠলেও বিপদ হয় না',
+      'একটু হেলে থাকা পোলে সাবধানে কাজ করলে কিছুই হয় না',
+      'স্টিলের পোল শুধু বাঁকে, জং ধরলেও কখনো ভাঙে না',
+      'চোখ দিয়ে পোল দেখলেই হয়, হাতুড়ি ঠোকার কাজ নেই',
+      'চুলের মতো ফাটল তো সব পোলেই থাকে, ওতে কিছু হয় না',
+    ],
+  ),
+  ScanTopic.rekha: TenSecTopic(
+    topic: ScanTopic.rekha,
+    nameBn: 'লক্ষ্মণ রেখা',
+    askBn: "আমার চারপাশের 'লক্ষ্মণ রেখা' কোনটি?",
+    whyWrong: [
+      'লক্ষ্মণ রেখার ভেতর হাত বাড়ালেও তার না ছুঁলে চলে',
+      'টুলের ডগা তারে না ছুঁলে দূরত্বের হিসেব লাগে না',
+      'রাবারের বুট থাকলে বাতাস দিয়ে আর্ক শরীরে আসে না',
+      'একটু কাছে গিয়ে কাজ সারলে কারেন্ট টের পায় না',
+      'দূরত্ব শুধু বর্ষাকালের নিয়ম, শুকনো দিনে লাগে না',
+    ],
+  ),
+  ScanTopic.around: TenSecTopic(
+    topic: ScanTopic.around,
+    nameBn: 'চারপাশ',
+    askBn: 'আশেপাশে অন্য কোনো বিপদ (জল, ট্র্যাফিক, মৌমাছি) আছে কি?',
+    whyWrong: [
+      'নিচে গাড়ি চলাচল করলেও পোলে উঠে কাজ করা নিরাপদ',
+      'মৌচাক থাকলেও বিরক্ত না করলে কোনো হুল ফোটে না',
+      'গোড়ায় একটু জল জমলে পোলের কিছুই যায় আসে না',
+      'চারপাশ দেখার কাজ সঙ্গীর, আমার কাজ শুধু পোলে ওঠা',
+      'ওপরে উঠে গেলে নিচের বিপদ আর ছুঁতে পারে না',
+    ],
+  ),
+  ScanTopic.weather: TenSecTopic(
+    topic: ScanTopic.weather,
+    nameBn: 'আবহাওয়া',
+    askBn: 'আবহাওয়া কি নিরাপদ এবং স্থিতিশীল?',
+    whyWrong: [
+      'রাবারের জুতো-গ্লাভস থাকলে বাজেও কিছু হয় না',
+      'ভারী বৃষ্টি না নামা পর্যন্ত ওপরে কাজ চালানো যায়',
+      'মেঘ ডাকলে তাড়াতাড়ি কাজ সেরে নামাই বুদ্ধিমানের',
+      'দূরে বাজ পড়লে পোলের কাছে তার কোনো বিপদ নেই',
+      'আকাশ দেখা অফিসের কাজ, লাইনম্যানের কাজ নয়',
+    ],
+  ),
+  ScanTopic.escape: TenSecTopic(
+    topic: ScanTopic.escape,
+    nameBn: 'নামার পথ',
+    askBn: 'আমার পালানোর পথ এবং রেসকিউ প্ল্যান কী?',
+    whyWrong: [
+      'নামার পথ বন্ধ থাকলেও কাজের কোনো ক্ষতি হয় না',
+      'রেসকিউর কথা আগে ভাবলে কাজে অমঙ্গল ডেকে আনে',
+      'কিছু হলে তখন ভাবা যাবে, আগে প্ল্যান লাগে না',
+      'নিচে কেউ না থাকলেও একা উঠে কাজ সারা যায়',
+      'পালানোর পথ শুধু আগুনে লাগে, পোলের কাজে নয়',
+    ],
+  ),
+};
+
+/// Every check the dealer can use: per question, the safe pictures first,
+/// then the faults.
+abstract final class TenSecChecks {
+  static const ppe = [
+    TenSecCheck(
+      id: 'ppe_ok_a',
+      topic: ScanTopic.ppe,
+      art: '$_art/kit_ok_a.svg',
+      whyRight: ['হেলমেট থেকে সোল পর্যন্ত নিজে দেখেছি — সব অক্ষত', 'এয়ার টেস্টে লিক নেই, সোলে পেরেক নেই, জামা সুতির'],
+      caughtTag: 'পিপিই নিজে যাচাই',
+    ),
+    TenSecCheck(
+      id: 'ppe_ok_b',
+      topic: ScanTopic.ppe,
+      art: '$_art/kit_ok_b.svg',
+      whyRight: ['হেলমেট থেকে সোল পর্যন্ত নিজে দেখেছি — সব অক্ষত', 'এয়ার টেস্টে লিক নেই, সোলে পেরেক নেই, জামা সুতির'],
+      caughtTag: 'পিপিই নিজে যাচাই',
+    ),
+    TenSecCheck(
+      id: 'ppe_helmet_crack',
+      topic: ScanTopic.ppe,
+      art: '$_art/kit_helmet_crack.svg',
+      fault: TenSecMistakes.helmetCrack,
+      whyRight: ['ফাটল ধরা হেলমেট ফুটো ছাতা — আঘাত আর ঠেকায় না', 'হেলমেটে সূক্ষ্ম ফাটল দেখলেই তখনই বদলাতে হয়'],
+      caughtTag: 'ফাটা হেলমেট ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'ppe_nail',
+      topic: ScanTopic.ppe,
+      art: '$_art/kit_nail_sole.svg',
+      fault: TenSecMistakes.bootsNail,
+      death: ScanDeath.nail,
+      whyRight: ['সোলে পেরেক মানে কারেন্টের মাটিতে নামার রাস্তা', 'পেরেক বা তার গাঁথা জুতো তখনই বাতিল করতে হয়'],
+      caughtTag: 'সোলে পেরেক ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'ppe_glove_leak',
+      topic: ScanTopic.ppe,
+      art: '$_art/kit_glove_leak.svg',
+      fault: TenSecMistakes.gloveLeak,
+      death: ScanDeath.shock,
+      whyRight: ['এয়ার টেস্টে লিক মানে ফুটো — সেই গ্লাভস নয়', 'পিনের ডগার মতো ফুটোতেও শক ঢুকে প্রাণ যায়'],
+      caughtTag: 'গ্লাভসের লিক ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'ppe_polyester',
+      topic: ScanTopic.ppe,
+      art: '$_art/kit_polyester.svg',
+      fault: TenSecMistakes.polyester,
+      death: ScanDeath.synthetic,
+      whyRight: ['সিন্থেটিক কাপড় স্পার্কে গলে চামড়ায় সেঁটে যায়', 'লাইনের কাজে 100% সুতি বা FR কাপড়ই চাই'],
+      caughtTag: 'পলিয়েস্টার জামা ধরেছেন',
+    ),
+  ];
+
+  static const harness = [
+    TenSecCheck(
+      id: 'harness_snug',
+      topic: ScanTopic.harness,
+      art: '$_art/harness_snug.svg',
+      whyRight: ['ফিতের নিচে 4 আঙুল, বুকের ফিতে মাঝ বরাবর', 'বকলস লক, ফিতে সোজা আর অক্ষত — ফিটিং ঠিক'],
+      caughtTag: 'হারনেসের ফিটিং যাচাই',
+    ),
+    TenSecCheck(
+      id: 'harness_tail',
+      topic: ScanTopic.harness,
+      art: '$_art/harness_tail.svg',
+      whyRight: ['ফিতের নিচে 4 আঙুল, বুকের ফিতে মাঝ বরাবর', 'বকলস লক, ফিতে সোজা আর অক্ষত — ফিটিং ঠিক'],
+      caughtTag: 'হারনেসের ফিটিং যাচাই',
+    ),
+    TenSecCheck(
+      id: 'harness_loose',
+      topic: ScanTopic.harness,
+      art: '$_art/harness_loose_chest.svg',
+      fault: TenSecMistakes.looseChest,
+      whyRight: ['বুকের ফিতে খোলা থাকলে পড়ার সময় হারনেস খোলে', 'ঢিলেঢালা হারনেস শরীর থেকে খুলে যেতে পারে'],
+      caughtTag: 'খোলা বুকের ফিতে ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'harness_high',
+      topic: ScanTopic.harness,
+      art: '$_art/harness_chest_high.svg',
+      fault: TenSecMistakes.chestHigh,
+      whyRight: ['বুকের ফিতে থাকে বুকের মাঝে, গলার কাছে নয়', 'ভুল জায়গার ফিতে পড়ার সময় গুরুতর আঘাত দেয়'],
+      caughtTag: 'ফিতের ভুল জায়গা ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'harness_twisted',
+      topic: ScanTopic.harness,
+      art: '$_art/harness_twisted.svg',
+      fault: TenSecMistakes.twisted,
+      whyRight: ['পেঁচানো ফিতে মানে ভুল ফিটিং, ওঠার আগে ঠিক চাই', 'ফিতে পেঁচিয়ে থাকলে পড়ার চাপ ভুল জায়গায় পড়ে'],
+      caughtTag: 'পেঁচানো ফিতে ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'harness_frayed',
+      topic: ScanTopic.harness,
+      art: '$_art/harness_frayed.svg',
+      fault: TenSecMistakes.frayedWebbing,
+      death: ScanDeath.fall,
+      whyRight: ['ছোট কাটাতেই হারনেসের শক্তি 50% পর্যন্ত কমে যায়', 'কাটা বা সুতো ওঠা ফিতের হারনেস বাতিল করতে হয়'],
+      caughtTag: 'কাটা ফিতে ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'harness_expired',
+      topic: ScanTopic.harness,
+      art: '$_art/harness_label_expired.svg',
+      fault: TenSecMistakes.expiredLabel,
+      whyRight: ['মেয়াদ উত্তীর্ণ হারনেস দেখতে ভালো হলেও চলে না', 'রোদ-ঘামে ফিতে ভেতর থেকে দুর্বল, তাই মেয়াদ মানা'],
+      caughtTag: 'মেয়াদ পেরোনো লেবেল ধরেছেন',
+    ),
+  ];
+
+  static const tools = [
+    TenSecCheck(
+      id: 'tools_ready',
+      topic: ScanTopic.tools,
+      art: '$_art/tool_ready.svg',
+      whyRight: ['রড পরিষ্কার, শুকনো, ফাটলহীন — টুলস হাতের কাছে', 'যা লাগবে সব ব্যাগে তৈরি, রডের স্টিকও অক্ষত'],
+      caughtTag: 'টুলস আর রড যাচাই',
+    ),
+    TenSecCheck(
+      id: 'tools_rod_cracked',
+      topic: ScanTopic.tools,
+      art: '$_art/tool_rod_cracked.svg',
+      fault: TenSecMistakes.rodCracked,
+      whyRight: ['রডের স্টিক হবে পরিষ্কার, শুকনো আর ফাটলমুক্ত', 'ভাঙা রড নিজেই বিদ্যুৎ পরিবাহী হয়ে উঠতে পারে'],
+      caughtTag: 'ফাটা রড ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'tools_rod_pvc',
+      topic: ScanTopic.tools,
+      art: '$_art/tool_rod_pvc.svg',
+      fault: TenSecMistakes.rodPvc,
+      death: ScanDeath.shock,
+      whyRight: ['পিভিসি জুগাড় সার্টিফায়েড ডিসচার্জ রড নয়', 'জুগাড়ের হুক মেটাল — লাইনের কাছে নেওয়া বিপদ'],
+      caughtTag: 'জুগাড় রড ধরেছেন',
+    ),
+  ];
+
+  static const permit = [
+    TenSecCheck(
+      id: 'permit_signed',
+      topic: ScanTopic.permit,
+      art: '$_art/ptw_signed.svg',
+      whyRight: ['লিখিত, সই করা পারমিট — নম্বর আর শর্ত জানি', 'কাগজে ফিডারের নাম মিলিয়েছি, তবেই কাজের দিকে'],
+      caughtTag: 'লিখিত পারমিট যাচাই',
+    ),
+    TenSecCheck(
+      id: 'permit_phone',
+      topic: ScanTopic.permit,
+      art: '$_art/ptw_verbal_phone.svg',
+      fault: TenSecMistakes.verbalPtw,
+      death: ScanDeath.shock,
+      whyRight: ['ফোনে "লাইন বন্ধ" শোনা পারমিট নয় — কাগজ চাই', 'লিখিত পারমিট ছাড়া লাইন আবার চালু হতে পারে'],
+      caughtTag: 'ফোনের "পারমিট" ফিরিয়েছেন',
+    ),
+    TenSecCheck(
+      id: 'permit_unread',
+      topic: ScanTopic.permit,
+      art: '$_art/ptw_no_read.svg',
+      fault: TenSecMistakes.ptwNoRead,
+      death: ScanDeath.shock,
+      whyRight: ['পারমিটের নম্বর, শর্ত না জেনে কাজে নামা নয়', 'পারমিটের ফিডার আর কাজের ফিডার মেলাতেই হবে'],
+      caughtTag: 'না-পড়া পারমিট ধরেছেন',
+    ),
+  ];
+
+  static const mind = [
+    TenSecCheck(
+      id: 'mind_calm',
+      topic: ScanTopic.mind,
+      art: '$_art/mind_calm.svg',
+      whyRight: ['মন শান্ত, ক্লান্তি নেই, কোনো তাড়াহুড়োও নেই', 'স্থির মনে চেকলিস্ট চালালে ছোট ধাপও বাদ পড়ে না'],
+      caughtTag: 'মনের অবস্থা যাচাই',
+    ),
+    TenSecCheck(
+      id: 'mind_rushed',
+      topic: ScanTopic.mind,
+      art: '$_art/mind_rushed.svg',
+      fault: TenSecMistakes.mindRushed,
+      whyRight: ['তাড়াহুড়ো চেকলিস্টের প্রধান শত্রু — এটা রেস নয়', 'গতি নয়, নিরাপদে বাড়ি ফেরাই আসল দক্ষতার পরিচয়'],
+      caughtTag: 'তাড়াহুড়ো থামিয়েছেন',
+    ),
+    TenSecCheck(
+      id: 'mind_tired',
+      topic: ScanTopic.mind,
+      art: '$_art/mind_tired.svg',
+      fault: TenSecMistakes.mindTired,
+      whyRight: ['ক্লান্ত মন ছোট কিন্তু জরুরি ধাপ ভুলে যায়', 'ক্লান্ত বা বিক্ষিপ্ত থাকলে আগে থামা, পরে ওঠা'],
+      caughtTag: 'ক্লান্তিতে থেমেছেন',
+    ),
+  ];
+
+  static const pole = [
+    TenSecCheck(
+      id: 'pole_sound',
+      topic: ScanTopic.pole,
+      art: '$_art/pole_sound.svg',
+      whyRight: ['গোড়ায় হাতুড়িতে নিরেট "ঠক্" — পোল ভেতরে মজবুত', 'পোল সোজা, গোড়া অক্ষত — নিজে পরীক্ষা করেছি'],
+      caughtTag: 'পোল নিজে পরীক্ষা',
+    ),
+    TenSecCheck(
+      id: 'pole_rusted',
+      topic: ScanTopic.pole,
+      art: '$_art/pole_rusted_base.svg',
+      fault: TenSecMistakes.rustedPole,
+      death: ScanDeath.collapse,
+      whyRight: ['মাটির কাছে জং আর ভোঁতা শব্দ মানে পোল দুর্বল', 'স্টিলের মরিচা বাইরে না বুঝলেও ভেতর শেষ করে'],
+      caughtTag: 'জং ধরা গোড়া ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'pole_lean',
+      topic: ScanTopic.pole,
+      art: '$_art/pole_lean.svg',
+      fault: TenSecMistakes.leaningPole,
+      death: ScanDeath.collapse,
+      whyRight: ['হেলে থাকা পোল শরীরের ভারে ভেঙে পড়তে পারে', 'গোড়ায় ফাটল মানে ভিত দুর্বল — এই পোলে নয়'],
+      caughtTag: 'হেলে থাকা পোল ধরেছেন',
+    ),
+  ];
+
+  static const rekha = [
+    TenSecCheck(
+      id: 'rekha_out',
+      topic: ScanTopic.rekha,
+      art: '$_art/clearance_spot.svg',
+      whyRight: ['টুলের ডগাও লক্ষ্মণ রেখার বাইরে — দূরত্ব ঠিক', 'ডগাসহ পুরো শরীর লাইভ তার থেকে নিরাপদ দূরে আছে'],
+      caughtTag: 'লক্ষ্মণ রেখা চিনেছেন',
+    ),
+    TenSecCheck(
+      id: 'rekha_in',
+      topic: ScanTopic.rekha,
+      art: '$_art/clearance_inside.svg',
+      fault: TenSecMistakes.insideClearance,
+      death: ScanDeath.arc,
+      whyRight: ['টুলের ডগাও হাত — রেখার ভেতরে ঢোকা নিষিদ্ধ', 'না ছুঁয়েও আর্ক বাতাস ভেদ করে লাফিয়ে আসে'],
+      caughtTag: 'রেখার ভেতরে ডগা ধরেছেন',
+    ),
+  ];
+
+  static const around = [
+    TenSecCheck(
+      id: 'around_clear',
+      topic: ScanTopic.around,
+      art: '$_art/site_clear.svg',
+      whyRight: ['গোড়া শুকনো, রাস্তা ফাঁকা, পোলে কোনো চাক নেই', 'জল, ট্র্যাফিক, মৌমাছি — চারপাশে কিছুই নেই'],
+      caughtTag: 'চারপাশ দেখে নিয়েছেন',
+    ),
+    TenSecCheck(
+      id: 'around_hive',
+      topic: ScanTopic.around,
+      art: '$_art/hazard_beehive.svg',
+      fault: TenSecMistakes.beehive,
+      whyRight: ['পোলে বোলতা বা মৌমাছির চাক — না উঠে আগে জানাই', 'চাক থাকা পোলে ওঠা নয়, আগে ব্যবস্থা চাই'],
+      caughtTag: 'মৌচাক ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'around_traffic',
+      topic: ScanTopic.around,
+      art: '$_art/hazard_traffic.svg',
+      fault: TenSecMistakes.traffic,
+      whyRight: ['গা ঘেঁষে গাড়ি চলছে — ট্র্যাফিকও বড় বিপদ', 'চারপাশের বিপদ না সামলে পা মাটি ছাড়া নয়'],
+      caughtTag: 'ট্র্যাফিক ধরেছেন',
+    ),
+    TenSecCheck(
+      id: 'around_water',
+      topic: ScanTopic.around,
+      art: '$_art/hazard_water.svg',
+      fault: TenSecMistakes.water,
+      whyRight: ['গোড়ায় জল জমা — মাটি ক্ষয়েছে কিনা আগে দেখা চাই', 'জলও বিপদ — ভেজা গোড়া পরীক্ষা না করে ওঠা নয়'],
+      caughtTag: 'গোড়ায় জল ধরেছেন',
+    ),
+  ];
+
+  static const weather = [
+    TenSecCheck(
+      id: 'weather_clear',
+      topic: ScanTopic.weather,
+      art: '$_art/weather_clear.svg',
+      whyRight: ['আকাশ পরিষ্কার, বাতাস শান্ত — আবহাওয়া স্থির', 'মেঘ নেই, বাজ নেই, হাওয়াও শান্ত — ওঠা যায়'],
+      caughtTag: 'আকাশ দেখে নিয়েছেন',
+    ),
+    TenSecCheck(
+      id: 'weather_storm',
+      topic: ScanTopic.weather,
+      art: '$_art/hazard_storm_sky.svg',
+      fault: TenSecMistakes.stormSky,
+      death: ScanDeath.strike,
+      whyRight: ['বজ্রপাতে কোনো PPE কাজ করে না — এটা রেড লাইন', 'বাজ দেখলে কাজ বন্ধ, নিরাপদ জায়গায় যেতে হয়'],
+      caughtTag: 'বাজে কাজ থামিয়েছেন',
+    ),
+  ];
+
+  static const escape = [
+    TenSecCheck(
+      id: 'escape_ready',
+      topic: ScanTopic.escape,
+      art: '$_art/rescue_mate.svg',
+      whyRight: ['নামার পথ ফাঁকা, সঙ্গী নিচে তৈরি — প্ল্যান আছে', 'কিছু হলে কীভাবে নামব জানি, সঙ্গীও দেখছে'],
+      caughtTag: 'নামার পথ ও রেসকিউ প্ল্যান',
+    ),
+    TenSecCheck(
+      id: 'escape_blocked',
+      topic: ScanTopic.escape,
+      art: '$_art/rescue_blocked.svg',
+      fault: TenSecMistakes.rescueBlocked,
+      whyRight: ['নামার পথ আটকানো — কিছু হলে নামব কীভাবে?', 'পালানোর পথ ফাঁকা না করে পোলে ওঠা নয়'],
+      caughtTag: 'আটকানো পথ ধরেছেন',
+    ),
+  ];
+
+  /// Per question, in the lesson's order.
+  static const byTopic = <ScanTopic, List<TenSecCheck>>{
+    ScanTopic.ppe: ppe,
+    ScanTopic.harness: harness,
+    ScanTopic.tools: tools,
+    ScanTopic.permit: permit,
+    ScanTopic.mind: mind,
+    ScanTopic.pole: pole,
+    ScanTopic.rekha: rekha,
+    ScanTopic.around: around,
+    ScanTopic.weather: weather,
+    ScanTopic.escape: escape,
+  };
+
+  static List<TenSecCheck> get all => [for (final l in byTopic.values) ...l];
+}
+
+/// Safe checks in a deal: at least [kMinSafe], at most [kMaxSafe].
+const kMinSafe = 4;
+const kMaxSafe = 6;
 
 @immutable
 class TenSecDeal {
@@ -310,468 +877,41 @@ class TenSecDeal {
   final int coworkerRound;
 }
 
+/// A fresh play: one check per question in the lesson's order; 4–6 of them
+/// safe; at least one fault is deadly; the coworker comes on check 3–6
+/// (0-based 2–5), safe or not, so his arrival tells nothing.
 TenSecDeal dealTenSec(math.Random rng) {
-  // 10 categories
-  // 1. Clothing & Boots
-  const c1Safe = TenSecCheck(
-    id: 'c1_ppe',
-    categoryBn: 'পোশাক ও বুট',
-    labelBn: 'সুতির ফুল হাতা জামা ও খাঁজকাটা অক্ষত বুট',
-    svgArt: 'assets/game/art/scan_board/ppe_head_toe.svg',
-    isSafe: true,
-    mistake: TenSecMistakes.safeStopped,
-    whyRight: ['সুতির পোশাক ও আর্দিং-মুক্ত বুট বিদ্যুৎ শক থেকে রক্ষা করে'],
-    whyWrong: [
-      'সাধারণ কাপড়ে কাজ করা যায়, আলাদা পোশাকের দরকার পড়ে না',
-      'সুতির ফুলহাতা পোশাক শুধু রোদের তাপ থেকে শরীর বাঁচাতে পরা হয়',
-    ],
-    caughtTag: 'সুতির পোশাক ও আর্দিং-মুক্ত বুট',
-  );
-  const c1Hazard1 = TenSecCheck(
-    id: 'c1_nail',
-    categoryBn: 'পোশাক ও বুট',
-    labelBn: 'বুটের তলায় পেরেক ঢুকে আছে বা তলা ফাটা',
-    svgArt: 'assets/game/art/scan_board/ppe_nail_sole.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.bootsNail,
-    whyRight: ['ফাটা বুট বা পেরেকের মাধ্যমে মাটিতে প্রাণঘাতী কারেন্ট যেতে পারে'],
-    whyWrong: [
-      'রাবারের ভারী জুতোয় পেরেক ফুটে থাকলেও কোনো ইলেকট্রিক শক লাগে না',
-      'ছোট পেরেক কখনো বুটের মোটা সোল ভেদ করে লাইনম্যানের পায়ে লাগে না',
-    ],
-    caughtTag: 'ফাটা বুটের বিপদ চিহ্নিতকরণ',
-  );
-  const c1Hazard2 = TenSecCheck(
-    id: 'c1_polyester',
-    categoryBn: 'পোশাক ও বুট',
-    labelBn: 'পলিয়েস্টার ঢিলেঢালা জামা ও তেলচিটে পোশাক',
-    svgArt: 'assets/game/art/scan_board/ppe_dirty_cut.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.dirtyPolyester,
-    whyRight: ['পলিয়েস্টার কাপড়ে আর্কের আঁচে আগুন ধরে ত্বকে গলে লেগে যায়'],
-    whyWrong: [
-      'পলিয়েস্টার জামা যথেষ্ট মজবুত তাই বৈদ্যুতিক কাজে সম্পূর্ণ নিরাপদ',
-      'তেলচিটে ময়লা দাগের সাথে বিদ্যুতের মারাত্মক শকের কোনো সম্পর্ক নেই',
-    ],
-    caughtTag: 'পলিয়েস্টার পোশাক বর্জন',
-  );
-
-  // 2. Helmet & Chin Strap
-  const c2Safe = TenSecCheck(
-    id: 'c2_helmet_ok',
-    categoryBn: 'হেলমেট ও ফিতে',
-    labelBn: 'নন-ভেন্টেড আইএসআই হেলমেট, চিবুকের ফিতে শক্ত বাঁধা',
-    svgArt: 'assets/game/art/scan_board/ppe_strap_sole.svg',
-    isSafe: true,
-    mistake: TenSecMistakes.safeStopped,
-    whyRight: ['ফিতে শক্ত করে বাঁধা হেলমেট মাথায় ওপর থেকে পড়া ভারী বস্তু ঠেকায়'],
-    whyWrong: [
-      'ফিতে একটু আলগা রাখলে মাথায় বাতাস খেলে এবং কাজ করার সময় আরাম লাগে',
-      'হেলমেটের সাইজ ঠিক থাকলে ফিতে না বাঁধলেও মাথার ওপর সুন্দর ব্যালান্স থাকে',
-    ],
-    caughtTag: 'চিবুকের ফিতে বাঁধা হেলমেট',
-  );
-  const c2Hazard = TenSecCheck(
-    id: 'c2_helmet_open',
-    categoryBn: 'হেলমেট ও ফিতে',
-    labelBn: 'হেলমেটের চিবুকের ফিতে খোলা ঝুলছে',
-    svgArt: 'assets/game/art/scan_board/ppe_unstrapped.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.unstrappedHelmet,
-    whyRight: ['ফিতে না বাঁধলে পোলের ঝাঁকুনিতে হেলমেট খসে নিচে পড়ে যেতে পারে'],
-    whyWrong: [
-      'হেলমেট মাথার মাপে ঠিক থাকলে চিবুকের ফিতে আলাদা বাঁধার দরকার নেই',
-      'ফিতে ছাড়া হেলমেট পরলে প্রয়োজনের সময় দ্রুত মাথা থেকে খুলে ফেলা যায়',
-    ],
-    caughtTag: 'খোলা হেলমেট ফিতে আটকানো',
-  );
-
-  // 3. Rubber Gloves
-  const c3Safe = TenSecCheck(
-    id: 'c3_gloves_ok',
-    categoryBn: 'রবার গ্লাভস',
-    labelBn: 'এয়ার টেস্ট করে যাচাই করা অক্ষত রবার গ্লাভস',
-    svgArt: 'assets/game/art/scan_board/ppe_head_toe.svg',
-    isSafe: true,
-    mistake: TenSecMistakes.safeStopped,
-    whyRight: ['এয়ার টেস্ট করে সূক্ষ্ম লিক না থাকলে তবেই হাত বৈদ্যুতিক শকে নিরাপদ'],
-    whyWrong: [
-      'প্যাকেট থেকে বের করা নতুন গ্লাভস হলে আলাদা এয়ার টেস্টের দরকার নেই',
-      'চামড়ার সাধারণ ওয়ার্কিং গ্লাভস রবারের চেয়ে বেশি ভোল্টেজ শক আটকায়',
-    ],
-    caughtTag: 'এয়ার টেস্ট করা রবার গ্লাভস',
-  );
-  const c3Hazard = TenSecCheck(
-    id: 'c3_gloves_no_test',
-    categoryBn: 'রবার গ্লাভস',
-    labelBn: 'এয়ার টেস্ট না করে না দেখে গ্লাভস পরা হয়েছে',
-    svgArt: 'assets/game/art/scan_board/ppe_no_check.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.noAirTest,
-    whyRight: ['না-দেখা সূক্ষ্ম পিনহোল দিয়েও ১১ কেভি বিদ্যুৎ ঢুকে জীবনহানি ঘটাতে পারে'],
-    whyWrong: [
-      'চোখে ফাটল বা দাগ না দেখলে গ্লাভস সম্পূর্ণ ঠিক বলে ধরে নেওয়া নিয়ম',
-      'এয়ার টেস্ট কাজের মাঠে হয় না, ওটা শুধু ল্যাবরেটরিতে করার নিয়মকানুন',
-    ],
-    caughtTag: 'এয়ার টেস্টবিহীন গ্লাভস শনাক্ত',
-  );
-
-  // 4. Full Body Harness
-  const c4Safe = TenSecCheck(
-    id: 'c4_harness_ok',
-    categoryBn: 'ফুল বডি হারনেস',
-    labelBn: 'বুক ও উরুর বাকল ঠিকভাবে আঁটা ফুল বডি হারনেস',
-    svgArt: 'assets/game/art/scan_board/harness_snug.svg',
-    isSafe: true,
-    mistake: TenSecMistakes.safeStopped,
-    whyRight: ['সঠিকভাবে আঁটা ফুল বডি হারনেস পতনের সময় শরীরের আঘাত সমান ছড়ায়'],
-    whyWrong: [
-      'কোমর-বেল্ট পরা ফুল বডি হারনেসের চেয়ে অনেক বেশি আরামদায়ক ও সহজ',
-      'হারনেস একটু ঢিলেঢালা করে পরলে পোলের ওপরে শরীর নাড়াচাড়া করা সহজ হয়',
-    ],
-    caughtTag: 'স্ন্যাগ ফিট ফুল বডি হারনেস',
-  );
-  const c4Hazard1 = TenSecCheck(
-    id: 'c4_harness_loose',
-    categoryBn: 'ফুল বডি হারনেস',
-    labelBn: 'হারনেসের বুকের বাকল আলগা বা খোলা রাখা হয়েছে',
-    svgArt: 'assets/game/art/scan_board/harness_loose_chest.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.looseHarness,
-    whyRight: ['বুকের ফিতে খোলা থাকলে পা পিছলে উল্টে গেলে শরীর হারনেস থেকে ছিটকে পড়ে'],
-    whyWrong: [
-      'উরুর বাকল শক্ত আঁটা থাকলে বুকের আলাদা বাকল বাঁধার কোনো দরকার হয় না',
-      'বুকের বাকল খোলা রেখে কাজ করলে পোলের ওপরে দাঁড়িয়ে শ্বাস নিতে সুবিধা হয়',
-    ],
-    caughtTag: 'আলগা বুকের বাকল শুধরানো',
-  );
-  const c4Hazard2 = TenSecCheck(
-    id: 'c4_harness_expired',
-    categoryBn: 'ফুল বডি হারনেস',
-    labelBn: 'ঘষা খাওয়া সুতো ওঠা মেয়াদোত্তীর্ণ হারনেস ল্যানিয়ার্ড',
-    svgArt: 'assets/game/art/scan_board/harness_expired.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.expiredHarness,
-    whyRight: ['ক্ষয়প্রাপ্ত বা পুরনো ল্যানিয়ার্ড পতনের প্রবল টান সহ্য না করে ছিঁড়ে যায়'],
-    whyWrong: [
-      'সামান্য সুতো উঠলেও হারনেসের আসল বুনন ও ধারণক্ষমতা সম্পূর্ণ ঠিক থাকে',
-      'ল্যানিয়ার্ড যতই ঘষা বা পুরনো হোক না কেন তা লাইফলাইনে কখনও ছিঁড়ে না',
-    ],
-    caughtTag: 'ক্ষয়প্রাপ্ত ল্যানিয়ার্ড বর্জন',
-  );
-
-  // 5. Tools & Bag
-  const c5Safe = TenSecCheck(
-    id: 'c5_tools_ok',
-    categoryBn: 'টুলব্যাগ ও সরঞ্জাম',
-    labelBn: 'সরঞ্জাম পাউচে রাখা এবং দড়ি দিয়ে ব্যাগে তোলা',
-    svgArt: 'assets/game/art/scan_board/tool_bagged.svg',
-    isSafe: true,
-    mistake: TenSecMistakes.safeStopped,
-    whyRight: ['সরঞ্জাম ব্যাগে তোলায় দুই হাত খালি থাকে এবং ৩-পয়েন্ট কন্টাক্ট ঠিক থাকে'],
-    whyWrong: [
-      'হাতে স্প্যানার নিয়ে সরাসরি পোলে উঠলে উপরে গিয়ে দ্রুত কাজ শুরু করা যায়',
-      'টুলব্যাগ সবসময় ভারী বোঝা তাই ওটা মাটিতে রেখে পোলে ওঠাই বুদ্ধিমানের কাজ',
-    ],
-    caughtTag: 'সরঞ্জাম ব্যাগে ৩-পয়েন্ট কন্টাক্ট',
-  );
-  const c5Hazard1 = TenSecCheck(
-    id: 'c5_tools_hand',
-    categoryBn: 'টুলব্যাগ ও সরঞ্জাম',
-    labelBn: 'হাতে ভারী রেঞ্চ ধরে পোলে ওঠার চেষ্টা',
-    svgArt: 'assets/game/art/scan_board/tool_hand_climb.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.toolHandClimb,
-    whyRight: ['হাতে ভারী যন্ত্রপাতি ধরলে পোলে ওঠার সময় তিন বিন্দু সংযোগ নষ্ট হয়ে পড়ে'],
-    whyWrong: [
-      'এক হাতে শক্ত পোল ধরে অন্য হাতে রেঞ্চ নিয়ে ওঠা পোলের কাজে খুব সাধারণ নিয়ম',
-      'হাতে সরঞ্জাম রাখলে নিচে দাঁড়িয়ে থাকা সহকর্মীকে সহজে ছুড়ে দেওয়া যায়',
-    ],
-    caughtTag: 'হাতে সরঞ্জাম নিয়ে ওঠা বন্ধ',
-  );
-  const c5Hazard2 = TenSecCheck(
-    id: 'c5_tools_overload',
-    categoryBn: 'টুলব্যাগ ও সরঞ্জাম',
-    labelBn: 'পকেটে ও বেল্টে আলগাভাবে ঝুলিয়ে রাখা ভারী যন্ত্রপাতি',
-    svgArt: 'assets/game/art/scan_board/tool_overload.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.toolOverload,
-    whyRight: ['পকেটে ঝুলন্ত ভারী যন্ত্রপাতি নিচে পড়লে সহকর্মীর মারাত্মক আঘাত লাগতে পারে'],
-    whyWrong: [
-      'প্যান্টের পকেটে সব যন্ত্রপাতি রাখলে উপরে উঠে আর আলাদা ব্যাগ খুঁজতে হয় না',
-      'শরীরে ভারী ভারী যন্ত্রপাতি ঝুলিয়ে রাখা কাজের দক্ষতা ও শক্তির বড় প্রমাণ',
-    ],
-    caughtTag: 'আলগা ঝুলন্ত যন্ত্রপাতি নিরোধ',
-  );
-
-  // 6. Pole Base & Stability
-  const c6Safe = TenSecCheck(
-    id: 'c6_pole_ok',
-    categoryBn: 'পোলের গোড়া',
-    labelBn: 'গোড়া সম্পূর্ণ শক্ত, ফাটল নেই এবং মাটিতে নিরেট গাঁথা',
-    svgArt: 'assets/game/art/scan_board/pole_sound.svg',
-    isSafe: true,
-    mistake: TenSecMistakes.safeStopped,
-    whyRight: ['মাটিতে শক্ত পোক্ত ভিত নিশ্চিত করে যে উপরে উঠলে পোল ভেঙে মাটিতে পড়বে না'],
-    whyWrong: [
-      'পোলে টানা তার বাঁধা থাকলেই পোলের মাটির গোড়া পরীক্ষা করার কোনো দরকার নেই',
-      'কংক্রিটের শক্ত পোল মাটিতে সহজে ভাঙে না তাই গোড়া দেখার কোনো প্রয়োজন নেই',
-    ],
-    caughtTag: 'পোলের সুদৃঢ় ভিত্তি যাচাই',
-  );
-  const c6Hazard1 = TenSecCheck(
-    id: 'c6_pole_rusted',
-    categoryBn: 'পোলের গোড়া',
-    labelBn: 'পোলের গোড়ায় মারাত্মক মরিচা ও মাটি ক্ষয়ে ফাঁপা',
-    svgArt: 'assets/game/art/scan_board/pole_rusted_base.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.rustedPole,
-    whyRight: ['গোড়া ক্ষয়প্রাপ্ত ফাঁপা পোলে উঠলে লাইনম্যানের ভারে গোড়া মটকে আছড়ে পড়ে'],
-    whyWrong: [
-      'উপরে তারের বাঁধন থাকলে গোড়া ভাঙলেও পোল কখনোই নিচে পড়ে যেতে পারে না',
-      'বাইরে শুধু হালকা রঙের মরিচা লেগেছে, ভেতরের লোহা এখনও সম্পূর্ণ শক্ত আছে',
-    ],
-    caughtTag: 'মরিচা ধরা ফাঁপা পোল চিহ্নিত',
-  );
-  const c6Hazard2 = TenSecCheck(
-    id: 'c6_pole_lean',
-    categoryBn: 'পোলের গোড়া',
-    labelBn: 'পোল বিপজ্জনকভাবে একপাশে হেলে আছে এবং তারে টান বেশি',
-    svgArt: 'assets/game/art/scan_board/pole_hug_lean.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.leaningPole,
-    whyRight: ['বেশি হেলে থাকা পোলে মারাত্মক বাড়তি টান থাকে, উঠলে পোল উপড়ে পড়তে পারে'],
-    whyWrong: [
-      'পোল একটু হেলে থাকলে মই লাগিয়ে উপরে দ্রুত ওঠার ক্ষেত্রে বেশ সুবিধা হয়',
-      'গ্রামের সাধারণ ১১ কেভি লাইনে পোল একটু বাঁকা বা হেলে থাকা খুব স্বাভাবিক ব্যাপার',
-    ],
-    caughtTag: 'ঝুঁকিপূর্ণ হেলে থাকা পোল নিরোধ',
-  );
-
-  // 7. Lakshman Rekha / Clearance
-  const c7Safe = TenSecCheck(
-    id: 'c7_clearance_ok',
-    categoryBn: 'লক্ষ্মণ রেখা',
-    labelBn: '১১ কেভি লাইভ লাইনের লক্ষ্মণ রেখা ও নিরাপদ ব্যবধান নিশ্চিত',
-    svgArt: 'assets/game/art/scan_board/clearance_spot.svg',
-    isSafe: true,
-    mistake: TenSecMistakes.safeStopped,
-    whyRight: ['১১ কেভি লাইভ লাইনের নিরাপদ ব্যবধান বজায় রাখলে আর্ক জাম্পের ঝুঁকি থাকে না'],
-    whyWrong: [
-      'কাছে গিয়ে হাত দিয়ে তার না ছোঁয়া পর্যন্ত কোনো ইলেকট্রিক শকের ভয় নেই',
-      '১.২ মিটারের নিরাপদ লক্ষ্মণ রেখা দূরত্ব শুধুমাত্র ঘোর বর্ষার দিনের নিয়ম',
-    ],
-    caughtTag: '১১ কেভি লক্ষ্মণ রেখা পালন',
-  );
-  const c7Hazard = TenSecCheck(
-    id: 'c7_clearance_inside',
-    categoryBn: 'লক্ষ্মণ রেখা',
-    labelBn: 'কাজের পরিধি লাইভ ১১ কেভি লাইনের নিরাপদ সীমার ভেতরে',
-    svgArt: 'assets/game/art/scan_board/clearance_inside.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.insideClearance,
-    whyRight: ['লক্ষ্মণ রেখা লঙ্ঘন মারাত্মক — তার স্পর্শ না করলেও বিদ্যুৎ বাতাসে লাফিয়ে আসে'],
-    whyWrong: [
-      'হাত না লাগিয়ে শরীর সাবধানে একটু লাইনের ভেতরে নিলে কোনো কারেন্ট আসে না',
-      'পায়ে রাবারের আর্দিং-মুক্ত বুট থাকলে বাতাস দিয়ে আর্ক শরীরে ঢুকতে পারে না',
-    ],
-    caughtTag: 'আর্ক দূরত্বের সীমা রক্ষা',
-  );
-
-  // 8. PTW & Team Briefing
-  const c8Safe = TenSecCheck(
-    id: 'c8_ptw_ok',
-    categoryBn: 'পিটিডব্লিউ ও ব্রিফিং',
-    labelBn: 'লিখিত সাইন করা পিটিডব্লিউ হাতে এবং টিমে কাজের ব্রিফিং সম্পন্ন',
-    svgArt: 'assets/game/art/scan_board/ptw_signed.svg',
-    isSafe: true,
-    mistake: TenSecMistakes.safeStopped,
-    whyRight: ['লিখিত পারমিট ও ব্রিফিং দলের সবাইকে শাটডাউনের নির্দিষ্ট সীমা স্পষ্ট করে'],
-    whyWrong: [
-      'ব্রিফিংয়ে সময় নষ্ট না করে সরাসরি লাইনে কাজ শুরু করাই কাজের আসল গতি',
-      'পিটিডব্লিউ কেবল অফিসের কাগজ, মাঠের লাইনের কাজে ওসবের কোনো গুরুত্ব নেই',
-    ],
-    caughtTag: 'লিখিত পিটিডব্লিউ ও ব্রিফিং',
-  );
-  const c8Hazard1 = TenSecCheck(
-    id: 'c8_ptw_verbal',
-    categoryBn: 'পিটিডব্লিউ ও ব্রিফিং',
-    labelBn: 'কোনো লিখিত পিটিডব্লিউ নেই, শুধু ফোনে মৌখিক অনুমতিতে কাজ শুরু',
-    svgArt: 'assets/game/art/scan_board/ptw_verbal_phone.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.verbalPtw,
-    whyRight: ['মৌখিক কথায় কাজ শুরু নিষিদ্ধ — লিখিত পারমিট ছাড়া লাইন চার্জ হতে পারে'],
-    whyWrong: [
-      'সাবস্টেশনের ডিউটি অপারেটরের মুখের কথাই লাইনম্যানের জন্য সবচেয়ে নির্ভরযোগ্য',
-      'জরুরি ফল্ট মেরামতে ফোনে ফোনে অনুমতি নিয়ে কাজ সারলে দ্রুত বিদ্যুৎ চালু হয়',
-    ],
-    caughtTag: 'মৌখিক অনুমানের ভিত্তিতে কাজ বন্ধ',
-  );
-  const c8Hazard2 = TenSecCheck(
-    id: 'c8_ptw_no_read',
-    categoryBn: 'পিটিডব্লিউ ও ব্রিফিং',
-    labelBn: 'পিটিডব্লিউ না পড়ে ও ফিডার নম্বর না মিলিয়ে অনুমান করে কাজ শুরু',
-    svgArt: 'assets/game/art/scan_board/ptw_no_read.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.ptwNoRead,
-    whyRight: ['ফিডার নম্বর না মেলালে ভুলবশত লাইভ ফিডারে কাজ শুরু করার চরম ঝুঁকি তৈরি হয়'],
-    whyWrong: [
-      'কাছের ট্রান্সফরমার দেখেই অভিজ্ঞ লাইনে কোন ফিডার তা সহজে অনুমান করা যায়',
-      'এলাকার সব ফিডারের কাজ একইরকম তাই আলাদা করে নম্বর মিলিয়ে দেখার দরকার নেই',
-    ],
-    caughtTag: 'ফিডার নম্বর যাচাইকরণ',
-  );
-
-  // 9. Weather & Surroundings
-  const c9Safe = TenSecCheck(
-    id: 'c9_env_ok',
-    categoryBn: 'পরিবেশ ও ব্যারিকেড',
-    labelBn: 'রাস্তার পাশে ট্র্যাফিক কোণ ও লাল-সাদা ব্যারিকেড টেপ লাগানো',
-    svgArt: 'assets/game/art/scan_board/site_barricade.svg',
-    isSafe: true,
-    mistake: TenSecMistakes.safeStopped,
-    whyRight: ['ব্যারিকেড চলমান দ্রুতগামী যানবাহন ও পথচারীদের কাজের এলাকা থেকে দূরে রাখে'],
-    whyWrong: [
-      'গ্রামের ফাঁকা শান্ত রাস্তায় আলাদা কোনো ট্র্যাফিক ব্যারিকেডের দরকার হয় না',
-      'কাজের মই নিজেই অনেক দূর থেকে দেখা যায় তাই আলাদা ট্র্যাফিক কোণ রাখা অপচয়',
-    ],
-    caughtTag: 'সাইট ব্যারিকেড ও ট্র্যাফিক কোণ',
-  );
-  const c9Hazard1 = TenSecCheck(
-    id: 'c9_storm_sky',
-    categoryBn: 'পরিবেশ ও আবহাওয়া',
-    labelBn: 'আকাশে কালো মেঘ ও বিদ্যুৎ চমকাচ্ছে',
-    svgArt: 'assets/game/art/scan_board/hazard_storm_sky.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.stormSky,
-    whyRight: ['বজ্রপাত দেখা বা শোনা মাত্র কাজ বন্ধ — কোনো পিপিই বজ্রপাত ঠেকাতে পারে না'],
-    whyWrong: [
-      'পোলে রাবারের জুতো পরা থাকলে বজ্রপাতের প্রবল বিদ্যুৎ কখনোই শরীরে ধরে না',
-      'ভারী বৃষ্টি শুরু না হওয়া পর্যন্ত পোলের উঁচুতে কাজ অনায়াসে চালিয়ে যাওয়া যায়',
-    ],
-    caughtTag: 'বজ্রপাতে কাজ বন্ধের সিদ্ধান্ত',
-  );
-  const c9Hazard2 = TenSecCheck(
-    id: 'c9_beehive',
-    categoryBn: 'পরিবেশ ও বাধা',
-    labelBn: 'পোলের মাথায় ক্রসআর্মে বলতা বা মৌমাছির বিশাল চাক',
-    svgArt: 'assets/game/art/scan_board/hazard_beehive.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.beehiveCrossarm,
-    whyRight: ['বলতার কামড়ে পোলের ওপর ভারসাম্য হারিয়ে মারাত্মক পতনের চরম ঝুঁকি তৈরি হয়'],
-    whyWrong: [
-      'ধোঁয়া না দিয়ে চুপচাপ সাবধানে কাজ করলে বলতা কখনোই মানুষকে কামড় দেয় না',
-      'বলতার হুলে সামান্য জ্বালাপোড়া ছাড়া লাইনের কাজে কোনো বড় বিপদ হতে পারে না',
-    ],
-    caughtTag: 'বলতার চাক এড়িয়ে চলা',
-  );
-  const c9Hazard3 = TenSecCheck(
-    id: 'c9_traffic',
-    categoryBn: 'পরিবেশ ও ট্র্যাফিক',
-    labelBn: 'ব্যস্ত রাস্তায় কোনো ট্র্যাফিক কোণ বা সিগন্যাল ছাড়াই মই লাগানো',
-    svgArt: 'assets/game/art/scan_board/hazard_traffic.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.trafficNoBarrier,
-    whyRight: ['ব্যস্ত সড়কে ব্যারিকেড না থাকলে চলন্ত গাড়ির ধাক্কায় মই ভেঙে দুর্ঘটনা ঘটে'],
-    whyWrong: [
-      'গাড়ির ড্রাইভাররা দূর থেকেই উঁচু মই দেখতে পেয়ে নিজ দায়িত্বে গাড়ি থামাবে',
-      'রাস্তার একেবারে কিনারায় কাজ করলে কোনো ট্র্যাফিক ব্যারিকেড টেপ দরকার হয় না',
-    ],
-    caughtTag: 'ট্র্যাফিক নিরাপত্তা নিশ্চিতকরণ',
-  );
-
-  // 10. Rescue & Mindset
-  const c10Safe = TenSecCheck(
-    id: 'c10_rescue_ok',
-    categoryBn: 'উদ্ধার ও প্রস্তুতি',
-    labelBn: 'উদ্ধারের দড়ি, প্রাথমিক চিকিৎসার কিট ও জরুরি নম্বর রেডি',
-    svgArt: 'assets/game/art/scan_board/rescue_ready.svg',
-    isSafe: true,
-    mistake: TenSecMistakes.safeStopped,
-    whyRight: ['দুর্ঘটনা ঘটলে গোল্ডেন মিনিটে দ্রুত উদ্ধার করতে সরঞ্জাম হাতের কাছে থাকা চাই'],
-    whyWrong: [
-      'কাজ শুরুর আগে বিপদের কথা ভেবে উদ্ধার কিট রেডি রাখলে কাজে অমঙ্গল ডেকে আনে',
-      'প্রাথমিক চিকিৎসার বক্স কেবল হাসপাতালে থাকে, কাজের মাঠে ওসব বয়ে নেওয়া বাড়তি',
-    ],
-    caughtTag: 'জরুরি উদ্ধার প্রস্তুতি',
-  );
-  const c10Hazard1 = TenSecCheck(
-    id: 'c10_rescue_blocked',
-    categoryBn: 'উদ্ধার ও প্রস্তুতি',
-    labelBn: 'উদ্ধারের রাস্তা অবরুদ্ধ এবং ফার্স্ট এইড কিট গায়েব',
-    svgArt: 'assets/game/art/scan_board/rescue_blocked.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.rescueBlocked,
-    whyRight: ['উদ্ধারের পথ আটকানো থাকলে বিপদের সময় গোল্ডেন মিনিটের অমূল্য মুহূর্ত নষ্ট হয়'],
-    whyWrong: [
-      'জরুরি অ্যাম্বুলেন্স নম্বর জানা থাকলে মাঠে আলাদা উদ্ধার সরঞ্জামের প্রয়োজন নেই',
-      'উদ্ধার মহড়ার নিয়মকানুন শুধুমাত্র বড় সাবস্টেশনের জন্য প্রযোজ্য, মাঠে নয়',
-    ],
-    caughtTag: 'অবরুদ্ধ উদ্ধার পথ পরিহার',
-  );
-  const c10Hazard2 = TenSecCheck(
-    id: 'c10_mind_tired',
-    categoryBn: 'মানসিক স্থিতি',
-    labelBn: 'লাইনম্যানের শরীর অসুস্থ, মাথা ঘুরছে এবং মারাত্মক ক্লান্তি',
-    svgArt: 'assets/game/art/scan_board/mind_tired.svg',
-    isSafe: false,
-    mistake: TenSecMistakes.mindTired,
-    whyRight: ['শারীরিক অসুস্থতা বা ক্লান্তি থাকলে মনোযোগ হারিয়ে উঁচুতে মারাত্মক দুর্ঘটনা ঘটে'],
-    whyWrong: [
-      'কাজের চাপে একটু মাথা ঘুরলে চা খেয়ে কাজ চালিয়ে নেওয়া সাহসী লাইনম্যানের দায়িত্ব',
-      'শরীর যেমনই লাগুক না কেন নির্ধারিত কাজ ফেলে বাড়ি ফেরা অপেশাদার আচরণের লক্ষণ',
-    ],
-    caughtTag: 'অসুস্থ অবস্থায় স্টপ ওয়ার্ক',
-  );
-
-  // Assemble candidate pools per category: [safe, hazard...]
-  final pools = <List<TenSecCheck>>[
-    [c1Safe, c1Hazard1, c1Hazard2],
-    [c2Safe, c2Hazard],
-    [c3Safe, c3Hazard],
-    [c4Safe, c4Hazard1, c4Hazard2],
-    [c5Safe, c5Hazard1, c5Hazard2],
-    [c6Safe, c6Hazard1, c6Hazard2],
-    [c7Safe, c7Hazard],
-    [c8Safe, c8Hazard1, c8Hazard2],
-    [c9Safe, c9Hazard1, c9Hazard2, c9Hazard3],
-    [c10Safe, c10Hazard1, c10Hazard2],
-  ];
-
-  // Guarantee exactly 4 to 6 safe items (balanced mix of Go/Stop)
-  final numSafe = 4 + rng.nextInt(3); // 4, 5, or 6
-  final allIndices = List.generate(pools.length, (i) => i)..shuffle(rng);
-  final safeIndices = allIndices.take(numSafe).toSet();
-
-  final selected = <TenSecCheck>[];
-  var deadlyCount = 0;
-
-  for (var i = 0; i < pools.length; i++) {
-    final pool = pools[i];
-    if (safeIndices.contains(i)) {
-      selected.add(pool.first);
-    } else {
-      final hazards = pool.sublist(1);
-      final pick = hazards[rng.nextInt(hazards.length)];
-      if (pick.mistake.deadly) deadlyCount++;
-      selected.add(pick);
-    }
+  final topics = ScanTopic.values;
+  bool canKill(ScanTopic t) => TenSecChecks.byTopic[t]!.any((c) => c.deadly);
+  final numSafe = kMinSafe + rng.nextInt(kMaxSafe - kMinSafe + 1);
+  final order = [...topics]..shuffle(rng);
+  final faulty = order.skip(numSafe).toSet();
+  if (!faulty.any(canKill)) {
+    // Swap one safe question that can kill with a faulty one that cannot:
+    // the counts stay, and a deadly fault becomes possible.
+    final inKill = order.take(numSafe).where(canKill).toList();
+    final out = faulty.toList();
+    faulty
+      ..remove(out[rng.nextInt(out.length)])
+      ..add(inKill[rng.nextInt(inKill.length)]);
   }
-
-  // Ensure at least one deadly hazard is present
-  if (deadlyCount == 0) {
-    selected[5] = c6Hazard1; // Rusted pole base
+  final picks = <ScanTopic, TenSecCheck>{};
+  for (final t in topics) {
+    final pool = TenSecChecks.byTopic[t]!;
+    final from = pool.where((c) => faulty.contains(t) ? !c.isSafe : c.isSafe).toList();
+    picks[t] = from[rng.nextInt(from.length)];
   }
-
-  // Coworker arrives at check 4 or 5
-  final coworkerRound = rng.nextBool() ? 4 : 5;
-
-  return TenSecDeal(checks: selected, coworkerRound: coworkerRound);
+  if (!picks.values.any((c) => c.deadly)) {
+    final killers = faulty.where(canKill).toList();
+    final t = killers[rng.nextInt(killers.length)];
+    final deadly = TenSecChecks.byTopic[t]!.where((c) => c.deadly).toList();
+    picks[t] = deadly[rng.nextInt(deadly.length)];
+  }
+  return TenSecDeal(checks: [for (final t in topics) picks[t]!], coworkerRound: 2 + rng.nextInt(4));
 }
 
-
 // ============================================================================
-// TenSecRun (Logic Engine)
+// TenSecRun (pure rules)
 // ============================================================================
 
 class TenSecRun {
@@ -787,14 +927,19 @@ class TenSecRun {
   bool get ended => done || deadly != null;
   TenSecCheck get current => deal.checks[index.clamp(0, deal.checks.length - 1)];
 
+  /// The shared Do rule: 100 − 15 per slip, pass ≥ 55.
   int get percent => (100 - slips * 15).clamp(0, 100);
-  bool get passed => done && deadly == null && percent >= 70;
+  bool get passed => done && deadly == null && percent >= 55;
 
   void tag(String t) {
     if (!caught.contains(t)) caught.add(t);
   }
 
-  /// Evaluates player decision: returns null if correct, or DoMistake if wrong.
+  /// A slip that is not a check's answer (listening to the coworker).
+  void slip() => slips++;
+
+  /// The player's call on the current check: null when right, else the
+  /// mistake (a STOP on a safe check is a slip; GO on a fault is its fault).
   DoMistake? evaluate(bool chooseGo) {
     if (ended) return null;
     final c = current;
@@ -802,32 +947,26 @@ class TenSecRun {
       tag(c.caughtTag);
       return null;
     }
-    // Player made a wrong choice
-    if (c.isSafe && !chooseGo) {
-      // Stopped on a completely safe check
+    if (c.isSafe) {
       slips++;
       return TenSecMistakes.safeStopped;
-    } else {
-      // Pressed GO on a hazard!
-      final m = c.mistake;
-      if (m.deadly) {
-        deadly = m;
-      } else {
-        slips++;
-      }
-      return m;
     }
+    final m = c.fault!;
+    if (m.deadly) {
+      deadly = m;
+    } else {
+      slips++;
+    }
+    return m;
   }
 
   void advance() {
-    if (index < deal.checks.length) {
-      index++;
-    }
+    if (index < deal.checks.length) index++;
   }
 }
 
 // ============================================================================
-// Widgets & Pages
+// The page
 // ============================================================================
 
 class TenSecScanPage extends StatefulWidget {
@@ -880,8 +1019,7 @@ class _TenSecRunPage extends ConsumerStatefulWidget {
   ConsumerState<_TenSecRunPage> createState() => _TenSecRunPageState();
 }
 
-class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
-    with DoDeathGuard, DoStrikeOut, ReasonTable, CoworkerMoment {
+class _TenSecRunPageState extends ConsumerState<_TenSecRunPage> with DoDeathGuard, DoStrikeOut, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
   late final TenSecRun _run = TenSecRun(dealTenSec(widget.rng));
   final _clock = Stopwatch();
@@ -892,35 +1030,35 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
   int _chain = 0;
   DoMistake? _card;
   MistakeTone _cardTone = MistakeTone.slip;
+
+  /// The card came from listening to the coworker: the same check is asked after it.
+  var _cardFromCoworker = false;
+
+  /// The open reason deck is the coworker's: the same check is asked after it.
+  var _coworkerReason = false;
   var _busy = false;
   var _ended = false;
   var _popped = false;
+  var _passed = false;
   var _quickBonus = false;
   int _stars = 0;
   int? _mark;
   int _totalDelta = 0;
 
+  // The deadly freeze.
+  var _freeze = false;
+  Completer<void>? _frozen;
+  ScanDeath? _death;
+
   var _ready = false;
   int _stepTok = 0;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
-  String get _task => TenSecLines.ask;
 
-  void _tapGuide() {
-    if (_intro || _ended) return;
-    final String line = coworkerOpen
-        ? nextCoworkerAsk()
-        : reasonOpen
-            ? TenSecLines.tapWhy[_nudgeN++ % TenSecLines.tapWhy.length]
-            : _nudge.next(_task);
-    ref.read(guideDirectorProvider.notifier).say(mood: GuideMood.talk, line: line);
-    unawaited(MascotSpeechLibrary.speak(line, muted: _muted));
-  }
+  bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
 
   @override
   LevelContext get deathCtx => widget.ctx;
-
-  bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
 
   @override
   void dispose() {
@@ -931,6 +1069,7 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
     super.dispose();
   }
 
+  // --- speech ----------------------------------------------------------------
   Future<void> _say(String line, {GuideMood mood = GuideMood.talk}) async {
     if (line.trim().isEmpty || !mounted) return;
     ref.read(guideDirectorProvider.notifier).say(mood: mood, line: line);
@@ -950,107 +1089,151 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
     unawaited(MascotSpeechLibrary.stop());
   }
 
-  Future<void> _start() async {
+  void _cue(String path, {double volume = 0.7}) {
+    if (!_muted) unawaited(ZlFx.cue(path, volume: volume, muted: false));
+  }
+
+  /// Tap the guide: the task again, a different way each time.
+  void _tapGuide() {
+    if (_intro || _ended) return;
+    final String line = coworkerOpen
+        ? nextCoworkerAsk()
+        : reasonOpen
+            ? TenSecLines.tapWhy[_nudgeN++ % TenSecLines.tapWhy.length]
+            : _nudge.next(TenSecLines.taskNudges[_nudgeN++ % TenSecLines.taskNudges.length]);
+    HapticFeedback.selectionClick();
+    _cue('sounds/intro/tick.ogg', volume: 0.5);
+    unawaited(_sayChain([line]));
+  }
+
+  // --- the run ---------------------------------------------------------------
+  void _start() {
+    if (!mounted) return;
     setState(() => _intro = false);
     _clock.start();
     _beginCheck();
   }
 
+  /// Arms the current check (again, after the coworker).
   void _beginCheck() {
     final tok = ++_stepTok;
     setState(() => _ready = false);
-
-    // If coworker moment should happen at this round
-    if (_run.index == _run.deal.coworkerRound && !coworkerDone) {
-      scheduleCoworker();
-    }
-
+    if (_run.index == _run.deal.coworkerRound && !coworkerDone) scheduleCoworker();
     unawaited(() async {
-      await Future<void>.delayed(_quiet ? const Duration(milliseconds: 50) : const Duration(milliseconds: 200));
+      await Future<void>.delayed(Duration(milliseconds: _quiet ? 50 : 220));
       if (!mounted || tok != _stepTok || _ended) return;
       setState(() => _ready = true);
-      if (!coworkerOpen && !_waitingForCoworker) {
-        await _say(TenSecLines.ask);
-      }
+      if (!coworkerOpen && !_waitingForCoworker) await _sayChain([_run.current.topicData.askBn]);
     }());
   }
 
-  bool get _waitingForCoworker => _run.index == _run.deal.coworkerRound && !coworkerDone && !coworkerOpen;
+  bool get _waitingForCoworker => _run.index == _run.deal.coworkerRound && !coworkerDone;
 
   bool get _canDecide =>
-      !_intro && _ready && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_waitingForCoworker;
+      !_intro && _ready && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_waitingForCoworker;
 
-  // --- Decision Handler ------------------------------------------------------
   Future<void> _decide(bool chooseGo, Offset origin) async {
     if (!_canDecide) return;
     _busy = true;
     _hush();
-
-    final mistake = _run.evaluate(chooseGo);
-    if (mistake == null) {
-      // CORRECT DECISION!
+    final c = _run.current;
+    final m = _run.evaluate(chooseGo);
+    if (m == null) {
       HapticFeedback.lightImpact();
-      if (!_muted) {
-        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: false));
-      }
+      _cue('sounds/quiz_right.wav', volume: 0.65);
+      _coworkerReason = false;
       putOnTable(15);
-      final c = _run.current;
+      _busy = false;
       await askReason(
-        deal: () => dealChoices(c.whyRight, c.whyWrong, widget.rng),
-        question: 'কেন এই সিদ্ধান্ত নেওয়া জরুরি?',
+        deal: () => dealChoices(c.whyRight, c.topicData.whyWrong, widget.rng),
+        question: TenSecLines.why,
         stillValid: () => mounted && !_ended,
       );
-      _busy = false;
-    } else {
-      // MISTAKE!
-      HapticFeedback.mediumImpact();
-      if (!_muted) {
-        unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
-      }
-      if (mistake.deadly) {
-        final outcome = await bookDeadly(mistake, runScore: _runScore);
-        setState(() {
-          _card = mistake;
-          _cardTone = outcome == DeadlyOutcome.nearMiss ? MistakeTone.nearMiss : MistakeTone.deadly;
-          _busy = false;
-        });
-      } else {
-        final out = strike(mistake);
-        setState(() {
-          _card = mistake;
-          _cardTone = MistakeTone.slip;
-          _busy = false;
-        });
-        if (out) {
-          unawaited(recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore));
-        }
-      }
+      return;
     }
+    if (m.deadly) {
+      await _deadly(m, c.death ?? ScanDeath.shock);
+      return;
+    }
+    // A STOP on a safe check shows that check's own picture.
+    final shown = c.isSafe
+        ? DoMistake(key: m.key, textBn: m.textBn, art: c.art, lessonPoint: m.lessonPoint)
+        : m;
+    _busy = false;
+    await _slip(shown, counted: true);
   }
 
-  // --- ReasonTable Hooks -----------------------------------------------------
-  @override
-  bool get reasonMuted => _muted;
-
-  @override
-  bool get reasonEnded => _ended;
-
-  @override
-  Future<void> reasonSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
-
-  @override
-  void reasonHush() => _hush();
-
-  @override
-  Future<void> reasonScore(int delta, Offset origin, {GuideMood? mood}) async {
-    _totalDelta += delta;
-    _runScore += delta;
-    await BeatFx.levelDelta(ref, delta, originGlobal: origin, mood: mood, muted: _muted);
+  /// A slip: the card (the third → struck out). [counted]: the run already counted it.
+  Future<void> _slip(DoMistake m, {required bool counted, bool fromCoworker = false}) async {
+    if (!counted) _run.slip();
+    if (strike(m)) {
+      await _struckOut(m);
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    _cue('sounds/quiz_wrong.wav');
+    setState(() {
+      _card = m;
+      _cardTone = MistakeTone.slip;
+      _cardFromCoworker = fromCoworker;
+    });
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await _sayChain([m.textBn], mood: GuideMood.warn);
   }
 
-  @override
-  void onReasonPaid() {
-    _advance();
+  Future<void> _struckOut(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _hush();
+    _clock.stop();
+    unawaited(bookMistake(ref, widget.ctx, m));
+    await recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore);
+    if (mounted) setState(() {});
+  }
+
+  /// GO on a deadly fault: the scene freezes grey, the consequence plays in
+  /// colour, then near-miss or death (DoDeathGuard).
+  Future<void> _deadly(DoMistake m, ScanDeath how) async {
+    if (_ended) return;
+    _ended = true;
+    _busy = true;
+    _clock.stop();
+    _hush();
+    HapticFeedback.heavyImpact();
+    _cue(how == ScanDeath.strike ? 'sounds/learn/thunder_near.wav' : 'sounds/accident.wav', volume: 0.9);
+    final frozen = _frozen = Completer<void>();
+    setState(() {
+      _freeze = true;
+      _death = how;
+    });
+    await frozen.future;
+    if (!mounted) return;
+    final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
+    if (!mounted) return;
+    setState(() {
+      _card = m;
+      _cardTone = death ? MistakeTone.deadly : MistakeTone.nearMiss;
+    });
+    await _sayChain([death ? TenSecLines.deadlyWord : TenSecLines.nearMissWord, m.textBn], mood: GuideMood.warn);
+  }
+
+  void _cardGo() {
+    switch (_cardTone) {
+      case MistakeTone.slip:
+        _hush();
+        final again = _cardFromCoworker;
+        setState(() {
+          _card = null;
+          _cardFromCoworker = false;
+        });
+        again ? _beginCheck() : _advance();
+      case MistakeTone.nearMiss:
+        _hush();
+        widget.onRetry(_muted);
+      case MistakeTone.deadly:
+        _popped = true;
+        unawaited(dieAndLeave());
+    }
   }
 
   void _advance() {
@@ -1062,100 +1245,120 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
     }
   }
 
+  Future<void> _levelDelta(int delta, Offset origin, {GuideMood? mood}) async {
+    final next = math.max(0, _runScore + delta);
+    final real = next - _runScore;
+    if (real == 0 || !mounted) return;
+    setState(() => _runScore = next);
+    await BeatFx.levelDelta(ref, real, mood: mood, originGlobal: origin, muted: _muted);
+  }
+
+  /// The shared end of play (as sky_read): result, clear, bonuses, score, time, stars.
   Future<void> _finish() async {
+    if (_ended) return;
+    _ended = true;
     _clock.stop();
+    final rung = widget.ctx.rungId;
+    final save = ref.read(gameSaveProvider.notifier);
+    final size = MediaQuery.sizeOf(context);
+    final centre = Offset(size.width / 2, size.height * 0.45);
     final ms = _clock.elapsedMilliseconds;
     final mark = _run.percent;
-    final passed = _run.passed;
-    final quick = passed && ms <= 45000 && _run.slips == 0;
-    final stars = starsFor(passed: passed, strikes: _run.slips, quick: quick);
-
-    final save = ref.read(gameSaveProvider.notifier);
-    await save.recordLevelResult(widget.ctx.rungId, mark);
-    await save.commitLevelScore(widget.ctx.rungId, _runScore);
-
+    await save.recordLevelResult(rung, mark);
+    if (!mounted) return;
+    if (_run.passed) {
+      await save.markRungCleared(rung);
+      _passed = true;
+      await _levelDelta(20, centre, mood: GuideMood.celebrate);
+      if (mark == 100 && ms < widget.pack.quickMs) {
+        _quickBonus = true;
+        await _levelDelta(10, centre, mood: GuideMood.celebrate);
+      }
+    }
+    final delta = await save.commitLevelScore(rung, _runScore);
+    if (_run.passed) await save.recordBestTime(rung, ms);
+    final stars = starsFor(passed: _run.passed, strikes: strikes, quick: ms < widget.pack.quickMs);
+    if (stars > 0) await save.recordStars(rung, stars);
+    if (!mounted) return;
     setState(() {
-      _ended = true;
-      _mark = mark;
       _stars = stars;
-      _quickBonus = quick;
+      _mark = mark;
+      _totalDelta = delta;
     });
-
-    if (passed) {
-      if (!_muted) unawaited(ZlFx.cue('sounds/level_done.wav', volume: 0.8, muted: false));
-      await _say(TenSecLines.allSet, mood: GuideMood.celebrate);
+    if (_passed) {
+      _cue('sounds/level_done.wav', volume: 0.8);
     } else {
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/level_fail.wav', volume: 0.7, muted: false));
-      await _say(TenSecLines.fail, mood: GuideMood.warn);
+      _cue('sounds/learn/level_fail.wav');
+    }
+    await _say(!_passed ? TenSecLines.fail : (_quickBonus ? TenSecLines.quick : TenSecLines.allSet),
+        mood: _passed ? GuideMood.celebrate : GuideMood.warn);
+  }
+
+  // --- ReasonTable hooks -------------------------------------------------------
+  @override
+  bool get reasonMuted => _muted;
+  @override
+  bool get reasonEnded => _ended;
+  @override
+  Future<void> reasonSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
+  @override
+  void reasonHush() => _hush();
+  @override
+  Future<void> reasonScore(int delta, Offset origin, {GuideMood? mood}) => _levelDelta(delta, origin, mood: mood);
+
+  @override
+  void onReasonPaid() {
+    if (_coworkerReason) {
+      // He came in on this check: now it is asked.
+      _coworkerReason = false;
+      _beginCheck();
+    } else {
+      _advance();
     }
   }
 
-  // --- CoworkerMoment Hooks --------------------------------------------------
+  // --- CoworkerMoment hooks ----------------------------------------------------
   @override
   CoworkerScript get coworkerScript => TenSecLines.coworker;
-
   @override
   math.Random get coworkerRng => widget.rng;
-
   @override
   bool get coworkerMuted => _muted;
 
   @override
   bool? coworkerCanCome() {
-    if (_ended || _intro || _card != null || reasonOpen || _run.done) return null;
-    return _run.index == _run.deal.coworkerRound;
+    if (_ended || _run.done || _run.index != _run.deal.coworkerRound) return null;
+    if (_intro || _busy || _card != null || tableBusy) return false;
+    return true;
   }
 
   @override
   Future<void> coworkerGuideSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
-
   @override
   void coworkerHush() => _hush();
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
-    if (held) {
-      _run.tag('সহকর্মীর চাপে "না" বলা');
-      putOnTable(20);
-      await askReason(
-        deal: () => dealChoices(TenSecLines.coworkerWhyRight, TenSecLines.coworkerWhyWrong, widget.rng),
-        question: 'কেন সহকর্মীর কথায় চেকলিস্ট বাদ দেওয়া যাবে না?',
-        stillValid: () => mounted && !_ended,
-      );
-    } else {
-      final out = strike(TenSecMistakes.mindRushed);
-      setState(() {
-        _card = TenSecMistakes.mindRushed;
-        _cardTone = MistakeTone.slip;
-      });
-      if (out) {
-        unawaited(recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore));
-      }
+    if (!held) {
+      await _slip(TenSecMistakes.mindRushed, counted: false, fromCoworker: true);
+      return;
     }
+    _run.tag(TenSecLines.caughtCall);
+    unawaited(coworkerSnarl());
+    _coworkerReason = true;
+    putOnTable(20);
+    await askReason(
+      deal: () => dealChoices(TenSecLines.coworkerWhyRight, TenSecLines.coworkerWhyWrong, widget.rng),
+      question: TenSecLines.coworkerWhy,
+      stillValid: () => mounted && !_ended,
+    );
   }
 
-  // --- Dismissals & Exits ----------------------------------------------------
-  void _dismissCard() {
-    if (_card == null) return;
-    final tone = _cardTone;
-    setState(() => _card = null);
-    if (tone == MistakeTone.deadly) {
-      unawaited(dieAndLeave());
-    } else if (tone == MistakeTone.nearMiss) {
-      widget.onRetry(_muted);
-    } else {
-      if (struckOut) {
-        widget.onRetry(_muted);
-      } else {
-        // Continue to next check after small slip
-        _advance();
-      }
-    }
-  }
-
+  // --- leaving -----------------------------------------------------------------
   Future<void> _leave() async {
     _hush();
     if (deathPending) {
+      _popped = true;
       await dieAndLeave();
       return;
     }
@@ -1172,15 +1375,28 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
     Navigator.of(context).pop(passed);
   }
 
-  // --- UI Build --------------------------------------------------------------
+  void _openLesson(DoMistake m) {
+    final src = TenSecMistakes.sourceOf[m.key];
+    unawaited(openLessonPoint(
+      context,
+      ref,
+      lessonId: src?.$1 ?? widget.ctx.lessonId,
+      point: src?.$2 ?? m.lessonPoint,
+      muted: _muted,
+    ));
+  }
+
+  // --- build -------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
     final pad = MediaQuery.paddingOf(context);
     final size = MediaQuery.sizeOf(context);
-    final playing = !_intro && _mark == null && !struckOut && _card == null;
+    final playing = !_intro && _mark == null && !struckOut && _card == null && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !deckUp && !coworkerOpen && _ready;
+    final handsOn = playing && !deckUp && !coworkerOpen && _ready && !_waitingForCoworker && !tableBusy;
+    final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
+    final showCard = !_intro && _mark == null && !struckOut && !_run.done;
 
     return PopScope(
       canPop: false,
@@ -1203,45 +1419,46 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
               setState(() => _muted = !_muted);
             },
             progress: DoProgress(
-              labels: const ['১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯', '১০'],
-              done: {for (var i = 0; i < math.min(_run.index, 10); i++) i},
+              labels: [for (var i = 1; i <= _run.deal.checks.length; i++) enDigits('$i')],
+              done: {for (var i = 0; i < math.min(_run.index, _run.deal.checks.length); i++) i},
               current: _run.done ? null : _run.index,
               quiet: quiet,
             ),
             layers: (context, m) => [
-              // 1. Photographic backdrop
-              const Positioned.fill(
-                child: DoBackdrop(
-                  asset: 'assets/zero_loss/scene/bg_span_two_poles.webp',
-                  alignment: Alignment(0, -0.2),
-                ),
-              ),
-
-              // 2. Center Inspection Card
-              if (playing && !_run.done)
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  top: pad.top + 64,
-                  bottom: pad.bottom + (deckUp ? 280 : 160),
-                  child: Center(
-                    child: AnimatedOpacity(
-                      opacity: deckUp ? 0.75 : 1.0,
-                      duration: const Duration(milliseconds: 250),
-                      child: _ScanCard(
-                        check: _run.current,
-                        stepIndex: _run.index + 1,
-                        totalSteps: _run.deal.checks.length,
-                      ),
-                    ),
+              Positioned.fill(
+                key: const ValueKey('scene'),
+                child: ColorFiltered(
+                  colorFilter: grey,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      const DoBackdrop(asset: 'assets/zero_loss/scene/bg_span_two_poles.webp', alignment: Alignment(0, -0.2)),
+                      if (showCard)
+                        Positioned(
+                          key: ValueKey('scan-card-${_run.index}'),
+                          left: 16,
+                          right: 16,
+                          top: pad.top + 64,
+                          bottom: pad.bottom + (deckUp ? 280 : 160),
+                          child: Center(
+                            child: AnimatedOpacity(
+                              opacity: deckUp ? 0.75 : 1.0,
+                              duration: const Duration(milliseconds: 250),
+                              child: ScanCard(
+                                check: _run.current,
+                                step: _run.index + 1,
+                                total: _run.deal.checks.length,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
+              ),
             ],
             overlays: [
-              // Reason table tokens
               ...tableLayers(at: Offset(size.width / 2, pad.top + 130), quiet: quiet),
-
-              // Hands-on Go / Stop Action Buttons
               if (handsOn)
                 Positioned(
                   key: const ValueKey('hud-decide'),
@@ -1250,7 +1467,6 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      // STOP BUTTON
                       Expanded(
                         flex: 3,
                         child: _StopButton(
@@ -1259,7 +1475,6 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
                         ),
                       ),
                       const SizedBox(width: 10),
-                      // GO BUTTON
                       Expanded(
                         flex: 2,
                         child: DoBigButton(
@@ -1271,8 +1486,6 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
                     ],
                   ),
                 ),
-
-              // Options & Coworker Deck (bottom sheet)
               if (deckUp)
                 Positioned(
                   key: const ValueKey('hud-deck'),
@@ -1286,53 +1499,50 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
                         : coworkerDeck(quiet: quiet, key: const ValueKey('choice-deck')),
                   ),
                 ),
-
-              // Mascot in corner
-              if (playing && _card == null)
+              if (playing)
                 cornerGuide(
                   onTap: _tapGuide,
                   bottom: pad.bottom + (deckUp ? 236 : 72),
                   onLeft: coworkerFromRight,
                 ),
-
               ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
-
-              // Mistake Card
+              if (_freeze && _card == null && _death != null)
+                FreezeFrame(
+                  key: const ValueKey('freeze'),
+                  muted: _muted,
+                  ms: quiet ? 300 : 2400,
+                  consequence: ScanDeathView(
+                    key: ValueKey('death-${_death!.name}'),
+                    how: _death!,
+                    quiet: quiet,
+                  ),
+                  onDone: () {
+                    final f = _frozen;
+                    if (f != null && !f.isCompleted) f.complete();
+                  },
+                ),
               if (_card != null)
                 MistakeCard(
                   key: ValueKey('card-${_card!.key}-${_run.index}'),
                   mistake: _card!,
                   tone: _cardTone,
                   quiet: quiet,
-                  onRead: _card!.lessonPoint == null
-                      ? null
-                      : () => unawaited(
-                            openLessonPoint(
-                              context,
-                              ref,
-                              lessonId: widget.ctx.lessonId,
-                              point: _card!.lessonPoint,
-                              muted: _muted,
-                            ),
-                          ),
-                  onGo: _dismissCard,
+                  onRead: _card!.lessonPoint == null ? null : () => _openLesson(_card!),
+                  onGo: _cardGo,
                 ),
-
-              // 3 Strikes Out Card
               if (struckOut && _card == null)
                 StruckOutCard(
                   key: const ValueKey('struck'),
-                  mistake: strikeOutBy ?? TenSecMistakes.safeStopped,
+                  mistake: strikeOutBy!,
                   lessonId: widget.ctx.lessonId,
                   sound: FailSound.electric,
                   muted: _muted,
                   onRetry: () => widget.onRetry(_muted),
                   onLeave: () => _popOnce(false),
                 ),
-
-              // Result Panels
               if (_mark != null)
                 Positioned.fill(
+                  key: const ValueKey('result'),
                   child: ColoredBox(
                     color: const Color(0xE6050A16),
                     child: SafeArea(
@@ -1356,33 +1566,26 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
                                   muted: _muted,
                                   onRetry: () => widget.onRetry(_muted),
                                   onLeave: () => _popOnce(false),
-                                  onRead: () => unawaited(
-                                    openLessonPoint(
-                                      context,
-                                      ref,
-                                      lessonId: widget.ctx.lessonId,
-                                      point: 0,
-                                      muted: _muted,
-                                    ),
-                                  ),
+                                  onRead: () => unawaited(openLessonPoint(
+                                    context,
+                                    ref,
+                                    lessonId: widget.ctx.lessonId,
+                                    point: 1,
+                                    muted: _muted,
+                                  )),
                                 ),
                         ),
                       ),
                     ),
                   ),
                 ),
-
-              // Intro Overlay
               if (_intro)
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: TenSecLines.intro,
                   alarm: 'sounds/learn/rush_in.wav',
                   muted: _muted,
-                  onDone: () {
-                    setState(() => _intro = false);
-                    unawaited(_start());
-                  },
+                  onDone: _start,
                 ),
             ],
           ),
@@ -1392,33 +1595,34 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage>
   }
 }
 
+extension on TenSecCheck {
+  TenSecTopic get topicData => tenSecTopics[topic]!;
+}
+
 // ============================================================================
-// Visual Components
+// Pieces
 // ============================================================================
 
-class _ScanCard extends StatelessWidget {
-  const _ScanCard({
-    required this.check,
-    required this.stepIndex,
-    required this.totalSteps,
-  });
+/// One check: the question's short name, its picture and the lesson's
+/// question — never the answer.
+class ScanCard extends StatelessWidget {
+  const ScanCard({super.key, required this.check, required this.step, required this.total});
 
   final TenSecCheck check;
-  final int stepIndex;
-  final int totalSteps;
+  final int step;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
+    final topic = tenSecTopics[check.topic]!;
     return Container(
       width: 310,
-      constraints: const BoxConstraints(maxHeight: 310),
+      constraints: const BoxConstraints(maxHeight: 330),
       decoration: BoxDecoration(
         color: SlmColors.navy900.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.4), width: 1.5),
-        boxShadow: const [
-          BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 8)),
-        ],
+        boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 8))],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
@@ -1426,7 +1630,6 @@ class _ScanCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Pill: Step N/10 · Category
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               color: SlmColors.navy800,
@@ -1440,14 +1643,14 @@ class _ScanCard extends StatelessWidget {
                       border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
                     ),
                     child: Text(
-                      enDigits('ধাপ $stepIndex/$totalSteps'),
+                      enDigits('$step/$total'),
                       style: bangla(fontSize: 12, fontWeight: FontWeight.w800, color: SlmColors.gold300),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      check.categoryBn,
+                      topic.nameBn,
                       style: bangla(fontSize: 14, fontWeight: FontWeight.w800, color: SlmColors.ivory),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1455,29 +1658,23 @@ class _ScanCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Artwork Area
-            Expanded(
+            Flexible(
               child: Container(
                 color: const Color(0xFF09101F),
-                padding: const EdgeInsets.all(12),
-                child: Center(
-                  child: SvgPicture.asset(
-                    check.svgArt,
-                    fit: BoxFit.contain,
-                  ),
+                padding: const EdgeInsets.all(10),
+                child: AspectRatio(
+                  aspectRatio: 200 / 220,
+                  child: SvgPicture.asset(check.art, fit: BoxFit.contain),
                 ),
               ),
             ),
-
-            // Caption Pill
             Container(
               padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
               color: SlmColors.navy950,
               child: Text(
-                check.labelBn,
+                enDigits(topic.askBn),
                 textAlign: TextAlign.center,
-                style: bangla(fontSize: 13, fontWeight: FontWeight.w700, color: SlmColors.ivory, height: 1.3),
+                style: bangla(fontSize: 14, fontWeight: FontWeight.w700, color: SlmColors.ivory, height: 1.3),
               ),
             ),
           ],
@@ -1518,4 +1715,152 @@ class _StopButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// What the deadly GO does, in colour over the grey scene: the synthetic
+/// shirt or the nail (lesson 1.1, the step-2 death views), the current
+/// through the body, the arc jumping to the tool tip, the fall, the strike.
+/// One short animation, then a still frame.
+class ScanDeathView extends StatelessWidget {
+  const ScanDeathView({super.key, required this.how, required this.quiet});
+  final ScanDeath how;
+  final bool quiet;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (how) {
+      case ScanDeath.synthetic:
+        return KitDeathView(kind: KitDeath.synthetic, quiet: quiet);
+      case ScanDeath.nail:
+        return KitDeathView(kind: KitDeath.nail, quiet: quiet);
+      case ScanDeath.shock:
+      case ScanDeath.arc:
+      case ScanDeath.fall:
+      case ScanDeath.collapse:
+      case ScanDeath.strike:
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: quiet ? 1 : 0, end: 1),
+          duration: const Duration(milliseconds: 1800),
+          builder: (_, t, _) => Opacity(
+            opacity: (t * 5).clamp(0.0, 1.0),
+            child: CustomPaint(painter: ScanDeathPainter(how, t), child: const SizedBox.expand()),
+          ),
+        );
+    }
+  }
+}
+
+class ScanDeathPainter extends CustomPainter {
+  ScanDeathPainter(this.how, this.t);
+  final ScanDeath how;
+  final double t;
+
+  static const _bolt = Color(0xFFBFE8FF);
+  static const _hot = Color(0xFFFFF4B0);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height * 0.42);
+    final s = math.min(size.width, size.height) / 360;
+    final glow = Paint()..shader = RadialGradient(colors: [_hot.withValues(alpha: 0.9), _hot.withValues(alpha: 0)]).createShader(Rect.fromCircle(center: c, radius: 150 * s));
+    final bolt = Paint()
+      ..color = _bolt
+      ..strokeWidth = 5 * s
+      ..style = PaintingStyle.stroke
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    final body = Paint()..color = const Color(0xFF1F5F8F);
+    final skin = Paint()..color = const Color(0xFFA86E48);
+    final helmet = Paint()..color = const Color(0xFFFACC15);
+
+    void figure(Offset feet, double tilt) {
+      canvas.save();
+      canvas.translate(feet.dx, feet.dy);
+      canvas.rotate(tilt);
+      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(-14 * s, -96 * s, 28 * s, 44 * s), Radius.circular(6 * s)), body);
+      canvas.drawRect(Rect.fromLTWH(-12 * s, -52 * s, 10 * s, 52 * s), Paint()..color = const Color(0xFF2A3442));
+      canvas.drawRect(Rect.fromLTWH(2 * s, -52 * s, 10 * s, 52 * s), Paint()..color = const Color(0xFF2A3442));
+      canvas.drawCircle(Offset(0, -110 * s), 13 * s, skin);
+      canvas.drawArc(Rect.fromCircle(center: Offset(0, -112 * s), radius: 15 * s), math.pi, math.pi, true, helmet);
+      canvas.restore();
+    }
+
+    Path zig(Offset a, Offset b, int n, double amp) {
+      final p = Path()..moveTo(a.dx, a.dy);
+      for (var i = 1; i < n; i++) {
+        final f = i / n;
+        final side = (i.isEven ? 1 : -1) * amp;
+        final d = b - a;
+        final nrm = Offset(-d.dy, d.dx) / d.distance;
+        final q = a + d * f + nrm * side;
+        p.lineTo(q.dx, q.dy);
+      }
+      p.lineTo(b.dx, b.dy);
+      return p;
+    }
+
+    final grow = Curves.easeOut.transform(t.clamp(0.0, 1.0));
+    switch (how) {
+      case ScanDeath.shock:
+        final feet = Offset(c.dx, c.dy + 120 * s);
+        figure(feet, 0);
+        canvas.drawCircle(c, 150 * s * grow, glow);
+        final top = Offset(c.dx - 10 * s, c.dy - 160 * s);
+        final hand = Offset(c.dx - 18 * s, c.dy - 30 * s);
+        canvas.drawPath(zig(top, hand, 7, 10 * s), bolt);
+        canvas.drawPath(zig(hand, feet, 6, 8 * s), bolt..color = _bolt.withValues(alpha: 0.8));
+        canvas.drawCircle(feet, 26 * s * grow, Paint()..color = _hot.withValues(alpha: 0.7));
+      case ScanDeath.arc:
+        final wireY = c.dy - 120 * s;
+        canvas.drawLine(Offset(0, wireY), Offset(size.width, wireY), Paint()
+          ..color = const Color(0xFF2B3138)
+          ..strokeWidth = 4 * s);
+        final feet = Offset(c.dx + 50 * s, c.dy + 120 * s);
+        figure(feet, 0);
+        final tip = Offset(c.dx - 20 * s, wireY + 50 * s);
+        canvas.drawLine(Offset(feet.dx - 10 * s, feet.dy - 70 * s), tip, Paint()
+          ..color = const Color(0xFFFBC02D)
+          ..strokeWidth = 5 * s);
+        canvas.drawCircle(tip, 90 * s * grow, glow);
+        canvas.drawPath(zig(Offset(tip.dx + 6 * s, wireY), tip, 4, 7 * s), bolt);
+      case ScanDeath.fall:
+        // The webbing parts: he drops from the pole top to the ground.
+        final pole = Paint()..color = const Color(0xFFBDBAB2);
+        canvas.drawRect(Rect.fromLTWH(c.dx - 70 * s, c.dy - 200 * s, 22 * s, 340 * s), pole);
+        final top = Offset(c.dx - 30 * s, c.dy - 60 * s);
+        final ground = Offset(c.dx + 30 * s, c.dy + 140 * s);
+        figure(Offset.lerp(top, ground, Curves.easeIn.transform(grow))!, 1.4 * grow);
+        final strap = Paint()
+          ..color = const Color(0xFFF7811F)
+          ..strokeWidth = 5 * s
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(Offset(c.dx - 48 * s, c.dy - 150 * s), Offset(c.dx - 30 * s, c.dy - 120 * s), strap);
+        canvas.drawLine(Offset(c.dx - 30 * s, c.dy - 106 * s), Offset(c.dx - 22 * s, c.dy - 92 * s), strap);
+        canvas.drawOval(Rect.fromCenter(center: Offset(ground.dx, ground.dy + 6 * s), width: 140 * s * grow, height: 16 * s), Paint()..color = const Color(0x667A5C3A));
+      case ScanDeath.collapse:
+        final base = Offset(c.dx - 30 * s, c.dy + 140 * s);
+        final lean = -0.08 - 0.55 * grow;
+        canvas.save();
+        canvas.translate(base.dx, base.dy);
+        canvas.rotate(lean);
+        canvas.drawRect(Rect.fromLTWH(-10 * s, -280 * s, 20 * s, 280 * s), Paint()..color = const Color(0xFFBDBAB2));
+        canvas.restore();
+        final from = Offset(base.dx + math.sin(-lean) * -200 * s, base.dy - math.cos(lean) * 200 * s);
+        final feet = Offset.lerp(from, Offset(c.dx + 60 * s, c.dy + 140 * s), grow)!;
+        figure(feet, 1.2 * grow);
+        canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + 40 * s, c.dy + 146 * s), width: 160 * s * grow, height: 18 * s), Paint()..color = const Color(0x667A5C3A));
+      case ScanDeath.strike:
+        canvas.drawRect(Offset.zero & size, Paint()..color = _hot.withValues(alpha: 0.25 * (1 - grow)));
+        final feet = Offset(c.dx + 20 * s, c.dy + 120 * s);
+        figure(feet, 0);
+        canvas.drawCircle(Offset(feet.dx, feet.dy - 100 * s), 140 * s * grow, glow);
+        canvas.drawPath(zig(Offset(c.dx + 40 * s, 0), Offset(feet.dx, feet.dy - 120 * s), 8, 14 * s), bolt..strokeWidth = 7 * s);
+      case ScanDeath.synthetic:
+      case ScanDeath.nail:
+        break;
+    }
+  }
+
+  @override
+  bool shouldRepaint(ScanDeathPainter old) => old.t != t || old.how != how;
 }

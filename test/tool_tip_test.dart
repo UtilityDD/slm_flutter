@@ -14,17 +14,22 @@ import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/distance_spot.dart' show StreetGeo;
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
+import 'package:slm_flutter/features/game/level_juice.dart' show FreezeFrame;
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/rod_pick.dart' show RodRating;
 import 'package:slm_flutter/features/game/spoken_once.dart';
 import 'package:slm_flutter/features/game/tool_tip.dart';
+import 'package:slm_flutter/features/guide/guide_director.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 Offset _kite(KiteRound r) => Offset(250, StreetGeo.y(r.gapM));
 
@@ -54,22 +59,71 @@ List<Finder> _onScreen(List<String> texts) => [
         if (_label(x).evaluate().isNotEmpty) _label(x),
     ];
 
-/// Taps the one right card on the deck now up.
+/// Taps the one right card on the deck now up (a reason card then waits for
+/// এগিয়ে যান; the coworker's deck closes by itself).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
+  await tapReasonProceed(t);
+}
+
+/// The first seed whose deal matches [ok].
+int _seedWhere(bool Function(KiteDeal d) ok) {
+  for (var s = 0;; s++) {
+    if (ok(dealKites(math.Random(s)))) return s;
+  }
+}
+
+/// Pumps in short steps until the scene's hand is up (true) or [maxMs] pass.
+Future<bool> _waitHand(WidgetTester t, IdleHintState Function() hint, {int maxMs = 12000}) async {
+  for (var ms = 0; ms < maxMs; ms += 50) {
+    if (hint().showing) return true;
     await t.pump(const Duration(milliseconds: 50));
   }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  return hint().showing;
+}
+
+final _tools = find.byWidgetPredicate((w) => w is Semantics && w.properties.label == 'টুল');
+
+/// The level in the shell, past the guide's intro.
+Future<ProviderContainer> _open(WidgetTester t, int seed) async {
+  t.view.physicalSize = const Size(720, 1600);
+  t.view.devicePixelRatio = 2.0;
+  final c = ProviderContainer();
+  final nav = GlobalKey<NavigatorState>();
+  await t.pumpWidget(UncontrolledProviderScope(
+    container: c,
+    child: MaterialApp(navigatorKey: nav, home: const Scaffold(body: SizedBox())),
+  ));
+  unawaited(nav.currentState!.push(MaterialPageRoute<bool>(
+    builder: (_) => ToolTipPage(ctx: _ctx, pack: toolTipPack12, muted: true, seed: seed),
+  )));
+  await _pump(t, 2000);
+  await _skipIntro(t);
+  // The tray's cards have dealt in (a card still flying in sits partly
+  // outside the tray and misses a tap) — still long before his 1.2 s timer.
+  await _pump(t, 450);
+  return c;
+}
+
+Future<void> _close(WidgetTester t, ProviderContainer c) async {
+  expect(t.takeException(), isNull);
+  await t.pumpWidget(const SizedBox());
+  await t.pump(const Duration(seconds: 15));
+  MascotTalk.reset();
+  c.dispose();
+  t.view.reset();
+}
+
+/// Round 1: the hot stick, then its reason — the kite is next.
+Future<void> _firstTool(WidgetTester t, KiteDeal d) async {
+  await t.tap(_tools.at(d.rounds[0].tools.indexOf(LongTool.hotStick)), warnIfMissed: false);
+  await _pump(t, 200);
+  await _pickRight(t, ToolTipLines.toolRight);
+  await _pump(t, 3000);
 }
 
 /// Drags the stick's tip to [to] (design px of the street) and lets go.
@@ -159,6 +213,20 @@ void main() {
         expect(LearnVoice.resolve(l, rival: true), isNotNull, reason: l);
       }
     });
+
+    test('no giveaway words: the key words of the right cards also sit on wrong cards', () {
+      bool onWrong(List<String> wrong, String w) => wrong.any((x) => x.contains(w));
+      for (final w in ['বিদ্যুৎ', 'ফাইবারগ্লাস', 'জুগাড়', 'বাঁশ', 'পিভিসি', 'আর্দ্রতা', 'ফাট']) {
+        expect(onWrong(ToolTipLines.toolWrong, w), isTrue, reason: w);
+      }
+      for (final w in ['বাইরে', 'ভেতরে', 'লক্ষ্মণ', 'নিরাপদ', 'লাইন বন্ধ', 'ডগা']) {
+        expect(onWrong(ToolTipLines.decideWrong, w), isTrue, reason: w);
+      }
+      // His deck: the refusals name the hot stick, and so do some ways to listen.
+      for (final w in ['হট স্টিক', 'গাড়ি', 'পরীক্ষিত', 'বাঁশ']) {
+        expect(onWrong(ToolTipLines.coworker.wrong, w), isTrue, reason: w);
+      }
+    });
   });
 
   group('page', () {
@@ -199,7 +267,7 @@ void main() {
         }
         debugPrint('PERF tool tip ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -227,7 +295,7 @@ void main() {
       await _pump(t, 2000);
       await _skipIntro(t);
       await _pump(t, 300);
-      final tools = find.byWidgetPredicate((w) => w is Semantics && w.properties.label == 'টুল');
+      final tools = _tools;
       for (var i = 0; i < 3; i++) {
         final r = deal.rounds[i];
         if (i == deal.callRound) {
@@ -263,6 +331,169 @@ void main() {
       MascotTalk.reset();
       c.dispose();
       t.view.reset();
+    });
+
+    testWidgets('a fast pick on his round waits for him: he comes, then the pick works', (t) async {
+      final seed = _seedWhere((d) => d.callRound == 0);
+      final d = dealKites(math.Random(seed));
+      final c = await _open(t, seed);
+      // Long before his timer: the hot stick at once — twice, fast.
+      final stick = t.getCenter(_tools.at(d.rounds[0].tools.indexOf(LongTool.hotStick)));
+      await t.tapAt(stick);
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in now');
+      expect(_tools, findsNothing, reason: 'the tray is away while he is on');
+      await t.tapAt(stick);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.text(ToolTipLines.shutdown), findsNothing, reason: 'the pick did not go through');
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'a second fast tap does not answer him');
+      // Beat 2: the guide asks, his deck rises (not the tool's reason); refuse him.
+      await waitChoiceDeck(t);
+      expect(_onScreen(ToolTipLines.toolRight), isEmpty);
+      expect(_onScreen(ToolTipLines.coworker.right), hasLength(1));
+      await _pickRight(t, ToolTipLines.coworker.right);
+      await _pump(t, 2500);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      // Now the pick works: the ◆ waits, then the tool's reason deck.
+      await t.tap(_tools.at(d.rounds[0].tools.indexOf(LongTool.hotStick)), warnIfMissed: false);
+      await _pump(t, 200);
+      await waitChoiceDeck(t);
+      expect(_onScreen(ToolTipLines.toolRight), hasLength(1));
+      await _close(t, c);
+    });
+
+    testWidgets('beat 1 is his alone: a guide tap stays quiet while he talks, then asks once his deck is up', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      final seed = _seedWhere((d) => d.callRound == 0);
+      final c = await _open(t, seed);
+      for (var i = 0; i < 80 && find.byType(CoworkerPeek).evaluate().isEmpty; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'beat 1: he is still talking');
+      final guide = find.byKey(const ValueKey('hud-guide'));
+      final before = c.read(guideDirectorProvider).line;
+      await t.tapAt(t.getBottomRight(guide) - const Offset(50, 50));
+      await t.pump(const Duration(milliseconds: 200));
+      expect(c.read(guideDirectorProvider).line, before, reason: 'the guide never talks over his push');
+      expect(find.byType(ChoiceDeck), findsNothing);
+      await waitChoiceDeck(t, maxMs: 20000);
+      expect(find.byType(ChoiceDeck), findsOneWidget);
+      await t.tapAt(t.getBottomRight(guide) - const Offset(50, 50));
+      await _pump(t, 300);
+      expect(ToolTipLines.coworker.asks, contains(c.read(guideDirectorProvider).line), reason: 'beat 2: the guide asks');
+      await _pickRight(t, ToolTipLines.coworker.right);
+      await _pump(t, 2500);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('praise window: no শাটডাউন button while the ◆ waits on the table', (t) async {
+      final seed = _seedWhere((d) => d.callRound != 0);
+      final d = dealKites(math.Random(seed));
+      final c = await _open(t, seed);
+      await t.tap(_tools.at(d.rounds[0].tools.indexOf(LongTool.hotStick)), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 150));
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'still the praise window');
+      expect(find.text(ToolTipLines.shutdown), findsNothing, reason: 'no control in the praise window');
+      await _pickRight(t, ToolTipLines.toolRight);
+      await _pump(t, 3000);
+      expect(find.text(ToolTipLines.shutdown), findsOneWidget, reason: 'after the reason, the kite');
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike out: needless shutdowns on an outside kite', (t) async {
+      final seed = _seedWhere((d) => d.callRound != 0 && !d.rounds[0].inside);
+      final d = dealKites(math.Random(seed));
+      final c = await _open(t, seed);
+      await _firstTool(t, d);
+      for (var i = 0; i < 3; i++) {
+        await t.tap(find.text(ToolTipLines.shutdown));
+        await _pump(t, 1500);
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${i + 1}');
+          expect(find.byType(StruckOutCard), findsNothing);
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 600);
+        }
+      }
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.text(ToolTipLines.shutdown), findsNothing, reason: 'nothing more to play');
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['1.2/do/1'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key), contains(ToolTipMistakes.needlessShutdown.key));
+      await _close(t, c);
+    });
+
+    testWidgets('listening to him (the dry bamboo) is deadly: freeze, then the card', (t) async {
+      final seed = _seedWhere((d) => d.callRound == 0);
+      final c = await _open(t, seed);
+      await _pump(t, 3500);
+      await waitChoiceDeck(t);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      final wrong = _onScreen(ToolTipLines.coworker.wrong);
+      expect(wrong, hasLength(2));
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 600);
+      expect(find.byType(FreezeFrame), findsOneWidget, reason: 'the street freezes first');
+      await _pump(t, 4000);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over the tools; on the kite a sweep over both ways; taps on the street call it', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      t.platformDispatcher.accessibilityFeaturesTestValue = FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      const hand = ValueKey('gesture-hint');
+      final seed = _seedWhere((d) => d.callRound != 0 && !d.rounds[0].inside);
+      final d = dealKites(math.Random(seed));
+      final c = await _open(t, seed);
+      final sceneHint = find.byType(IdleHint).first;
+      IdleHintState hint() => t.state<IdleHintState>(sceneHint);
+
+      // Idle at the tray: the hand glides over all three tools, presses none.
+      // (Under "remove animations" the still hand's controller runs at
+      // Flutter's reduced speed, so it is up only briefly: poll for it.)
+      expect(await _waitHand(t, hint), isTrue, reason: 'idle at the tray calls the hand');
+      expect(find.byKey(hand), findsOneWidget);
+      expect(hint().debugOptions, hasLength(3), reason: 'every tool, the same way');
+      expect(find.text(ToolTipLines.shutdown), findsNothing, reason: 'a hint picks nothing');
+
+      // On the kite: confused taps on the street call the hand at once, a
+      // sweep over the stick's tip and the শাটডাউন button (both ways).
+      await _firstTool(t, d);
+      expect(find.byKey(hand), findsNothing);
+      final street = t.getRect(_label(ToolTipLines.stickLabel).first);
+      final k = street.height / StreetGeo.size.height;
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(street.topLeft + const Offset(60, 170) * k);
+        await t.pump();
+        if (i < 2) {
+          expect(hint().showing, isFalse, reason: 'tap ${i + 1}: not yet');
+          await t.pump(const Duration(milliseconds: 200));
+        }
+      }
+      expect(find.byKey(hand), findsOneWidget, reason: 'confused taps call the hand');
+      final opts = hint().debugOptions;
+      expect(opts, hasLength(2));
+      final kiteLocal = street.topLeft + _kite(d.rounds[0]) * k - t.getTopLeft(sceneHint);
+      for (final r in opts) {
+        expect(r.contains(kiteLocal), isFalse, reason: 'never on the kite');
+      }
+      expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'taps on nothing cost nothing');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+
+      // A card is up: no scene hand.
+      await t.tap(find.text(ToolTipLines.shutdown));
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(await _waitHand(t, hint, maxMs: 10000), isFalse, reason: 'no scene hint over the mistake card');
+      expect(hint().shows, 0);
+      await _close(t, c);
     });
   });
 }

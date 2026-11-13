@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -29,7 +30,7 @@ import 'reason_table.dart';
 import 'scene_kit.dart' show GuideIntro, LinemanFigure, LinemanLook, LinemanMode;
 import 'spoken_once.dart';
 
-export 'm3_la_earth_world.dart' show M3LaEarthGeo, M3LaEarthSpot, M3LaEarthFault, m3LaEarthJoint;
+export 'm3_la_earth_world.dart' show M3LaEarthGeo, M3LaEarthSpot, M3LaEarthFault, M3LaEarthKit, m3LaEarthJoint;
 
 // Lesson 3.5 "লাইটনিং অ্যারেস্টার (LA): বজ্রপাতের কবচ", কাজ 2 "কবচের মাটি"
 // (pack do_3_5_b, engine m3_la_earth). A roadside 11 kV DP transformer
@@ -40,22 +41,27 @@ export 'm3_la_earth_world.dart' show M3LaEarthGeo, M3LaEarthSpot, M3LaEarthFault
 //  2. inspect the earth path from the LAs' bottom terminals down the pole to
 //     the earth rod (point 3: firmly connected, not cut or torn anywhere;
 //     film: "বডি ও আর্থিং রড নিয়মিত চোখে পরখ করুন"): tag the two faults
-//     dealt — one cut lead piece, one loose joint. A healthy spot is only a
-//     nudge (no cost). The careless coworker pushes the lesson's own myth:
-//     "একটু কাটা তো কী, বাকিটা ঠিক আছে" — listening is a slip (myth 2: a
-//     small cut raises the resistance many times; the surge goes through the
-//     transformer — damage to equipment, so not deadly);
+//     dealt — one cut lead piece, one loose joint. A tag on a sound spot is a
+//     slip (once per spot) and the reply comes only on the mistake card. The
+//     careless coworker pushes the lesson's own myth once the cut is tagged
+//     (never before: his words would name it): "একটু কাটা তো কী, বাকিটা ঠিক
+//     আছে" — listening is a slip (myth 2: a small cut raises the resistance
+//     many times; the surge goes through the transformer — damage to
+//     equipment, so not deadly). If the last fault is tagged before he came,
+//     the round's reason waits for him (holdForCoworker);
 //  3. order the repair: ডকেট/শাটডাউন → prove dead (HT tester) → earth the
 //     line → the work (replace the bad LA, mend each tagged fault, any
 //     order); helmet + harness before any work up the pole (the rod clamp is
-//     at the ground).
+//     at the ground). The kit lies on the tarp in a dealt order.
 // Deadly: hands on the LA (replacing it) before the shutdown — it sits on the
 // 11 kV line (point 2: "স্বাভাবিক সিস্টেম ভোল্টেজে (যেমন ১১ কেভি)"). The
 // shutdown → test → earth order is the house safety rule, not in lesson 3.5
 // (flagged). Not in the sources, left out (flagged): a target earth
 // resistance value, earth-tester use, a separate LA earth pit, lead routing.
 // Shared kit: guide first, full scene, corner guide, ◆ on the table → "কেন …?"
-// → the next round by itself; mistake cards; the deadly freeze.
+// → the next round by itself (no scene input in the praise window: tableBusy);
+// mistake cards; the deadly freeze; gesture hints (a sweep over what the hands
+// can reach, a tap only when one control is left).
 
 // ============================================================================
 // Content
@@ -100,11 +106,6 @@ abstract final class M3LaEarthLines {
   static const laFound = 'ঠিক! ডিসকানেক্টর ফেটে তার ঝুলছে।';
   static const looseFound = 'আলগা জোড় — লাল ট্যাগ দিলাম।';
   static const cutFound = 'তার কাটা, তামা বেরিয়ে — ট্যাগ দিলাম।';
-  static const spotFine = [
-    FeedbackLine('এই জোড়টা মজবুত আছে।'),
-    FeedbackLine('এখানে কিছু নেই — আরও দেখুন।'),
-    FeedbackLine('এটা ঠিক আছে।'),
-  ];
   static const docketIn = 'ডকেট হাতে, শাটডাউন — ডিও খোলা।';
   static const proved = 'টেস্টারে সাড়া নেই — লাইন মৃত।';
   static const earthed = 'তিন ফেজে আর্থ লাগল।';
@@ -135,10 +136,10 @@ abstract final class M3LaEarthLines {
   static const laWrong = [
     'ওটার রং বাকি দুটোর চেয়ে একটু ফিকে',
     'মাঝের এল এ সবসময় সবার আগে খারাপ হয়',
-    'ঝুলন্ত তারটা বেঁধে দিলেই এল এ ঠিক হবে',
+    'ঝুলন্ত আর্থ তারটা বেঁধে দিলেই এল এ ঠিক হবে',
     'বাজ না পড়লে এল এ কখনো খারাপ হয় না',
-    'তার ঝুলে থাকলে সার্জ আরও সহজে নামে',
-    'ওটা ট্রান্সফরমার থেকে একটু বেশি দূরে',
+    'আর্থ তার ঝুলে থাকলে সার্জ সহজে নামে',
+    'ডিসকানেক্টর খুললে এল এ আবার নিজেই জোড়ে',
   ];
 
   static const pathAsk = 'কেন ছোট ত্রুটিগুলোও ধরলেন?';
@@ -149,29 +150,30 @@ abstract final class M3LaEarthLines {
   ];
   static const pathWrong = [
     'বেশিরভাগ তার ভালো থাকলেই আর্থ ঠিক থাকে',
-    'আর্থ তার শুধু দেখতে ভালো রাখার জন্য',
+    'আর্থ তার শুধু খুঁটিটা দেখতে ভালো রাখার জন্য',
     'এল এ নিজেই বাজ আটকায়, আর্থ তো বাড়তি',
     'ট্যাগ বেশি দিলে অফিসে কাজ বেশি দেখায়',
     'আলগা জোড়ে সার্জ আরও তাড়াতাড়ি নামে',
-    'কাটা তারে টেপ জড়ালেই আগের মতো চলে',
+    'কাটা তারে একটু টেপ জড়ালেই আগের মতোই চলে',
   ];
 
   static const fixAsk = 'কেন হাত দেওয়ার আগে শাটডাউন, টেস্ট আর আর্থ?';
   static const fixRight = [
     'এল এ 11 কেভি লাইনে জোড়া, আগে লাইন মৃত চাই',
-    'শাটডাউন, মৃত প্রমাণ আর আর্থ — তবেই লাইনে কাজ',
-    'ডকেট ছাড়া, টেস্ট আর আর্থ ছাড়া লাইনে হাত নয়',
+    'শাটডাউন, টেস্ট আর আর্থ ছাড়া লাইনে হাত নয়',
+    'ফিরতি কারেন্ট এলেও লাগানো আর্থই বাঁচায়',
   ];
   static const fixWrong = [
-    'এল এ তো ইনসুলেটর, চালু লাইনেও ছোঁয়া যায়',
+    'এল এ তো ইনসুলেটর, চালু লাইনে ছোঁয়া যায়',
     'বাজ না পড়লে এল এ-তে কোনো ভোল্টেজ থাকে না',
-    'ডকেট শুধু অফিসের খাতা মেলানোর জন্য লাগে',
+    'ডকেট আর টেস্ট শুধু অফিসের খাতা মেলানোর জন্য',
     'আর্থ লাগালে নতুন এল এ ভালো করে বসে যায়',
     'টেস্টার দিয়ে আসলে শুধু ব্যাটারি দেখা হয়',
-    'শাটডাউন নিলে কাজটা একটু ধীরে করা যায়',
+    'শাটডাউন হলেই লাইন মৃত, আলাদা টেস্ট বাড়তি',
   ];
 
-  /// The careless coworker's push (new: device TTS until recorded in his voice).
+  /// The careless coworker's push, once the cut is tagged (no clip yet: silent
+  /// with his caption held until it is recorded in his voice).
   static const coworkerLine = 'আর্থ তারটা একটু কাটা তো কী, বাকিটা ঠিক আছে — চলবে!';
 
   /// His snarl when refused (his recorded clip).
@@ -185,9 +187,9 @@ abstract final class M3LaEarthLines {
       'না, তাহলে সার্জ ট্রান্সফরমারে ঢুকবে',
     ],
     wrong: [
-      'ঠিক, তারের বেশিরভাগটাই তো ভালো আছে',
+      'ঠিক বলেছে, তারের বেশিরভাগটাই তো ভালো',
       'একটু টেপ জড়িয়ে দিলেই চলে যাবে',
-      'কাটাটা ছোট, ট্যাগ না দিলেও চলে যায়',
+      'কাটাটা ছোট, না বদলালেও চলে যাবে',
       'ও পুরোনো লোক, ওর কথাই তো ঠিক হবে',
       'বাজ তো রোজ পড়ে না, পরে দেখা যাবে',
     ],
@@ -249,7 +251,13 @@ abstract final class M3LaEarthMistakes {
     textBn: 'খুঁটিতে উঠতে হলে আগে হেলমেট আর হারনেস — তারপর ওপরের কাজ।',
     art: '$_art/harness.svg',
   );
-  static const all = [wrongLa, smallCut, liveLa, noShutdown, noTest, noEarth, noHarness];
+  static const soundSpot = DoMistake(
+    key: '3.5/m3_la_earth/sound-spot',
+    textBn: 'এই জায়গাটা মজবুত ছিল — ট্যাগ শুধু ত্রুটিতে। আর্থ তার কোথাও কাটা-ছেঁড়া বা জোড় আলগা কিনা খুঁটিয়ে দেখুন।',
+    art: '$_art/sound_spot.svg',
+    lessonPoint: 2,
+  );
+  static const all = [wrongLa, smallCut, soundSpot, liveLa, noShutdown, noTest, noEarth, noHarness];
 }
 
 /// Ids of the repair steps.
@@ -264,7 +272,12 @@ abstract final class M3LaEarthIds {
 /// One play's variation.
 @immutable
 class M3LaEarthDeal {
-  const M3LaEarthDeal({required this.badLa, required this.loose, required this.cut});
+  const M3LaEarthDeal({
+    required this.badLa,
+    required this.loose,
+    required this.cut,
+    this.kit = const [M3LaEarthKit.harness, M3LaEarthKit.earthSet, M3LaEarthKit.tester],
+  });
 
   /// The LA whose disconnector has gone (0 R, 1 Y, 2 B).
   final int badLa;
@@ -274,6 +287,9 @@ class M3LaEarthDeal {
 
   /// The cut lead piece on the pole.
   final M3LaEarthSpot cut;
+
+  /// The tarp's layout, left to right (never the order of use).
+  final List<M3LaEarthKit> kit;
 
   Map<M3LaEarthSpot, M3LaEarthFault> get faults => {loose: M3LaEarthFault.loose, cut: M3LaEarthFault.cut};
 
@@ -294,11 +310,21 @@ M3LaEarthDeal m3LaEarthDealFor(math.Random rng) {
       if (i != bad) m3LaEarthJoint(i),
     M3LaEarthSpot.rodClamp,
   ];
-  return M3LaEarthDeal(
-    badLa: bad,
-    loose: looseFrom[rng.nextInt(looseFrom.length)],
-    cut: rng.nextBool() ? M3LaEarthSpot.leadUpper : M3LaEarthSpot.leadLower,
-  );
+  final loose = looseFrom[rng.nextInt(looseFrom.length)];
+  final cut = rng.nextBool() ? M3LaEarthSpot.leadUpper : M3LaEarthSpot.leadLower;
+  final kit = [...M3LaEarthKit.values];
+  do {
+    kit.shuffle(rng);
+  } while (_inUseOrder(kit));
+  return M3LaEarthDeal(badLa: bad, loose: loose, cut: cut, kit: List.unmodifiable(kit));
+}
+
+/// The kit laid out exactly in the order of use (tester, earth set, harness).
+bool _inUseOrder(List<M3LaEarthKit> kit) {
+  for (var i = 0; i < kit.length; i++) {
+    if (kit[i] != M3LaEarthKit.values[i]) return false;
+  }
+  return true;
 }
 
 /// The order of the repair (one board).
@@ -326,6 +352,9 @@ class M3LaEarthRun {
   final OrderRun order;
   var laFound = false;
   final Set<M3LaEarthSpot> flagged = {};
+
+  /// Sound spots wrongly tagged (each costs once).
+  final Set<M3LaEarthSpot> wrongTags = {};
   var harnessOn = false;
   int _ownSlips = 0;
 
@@ -358,18 +387,27 @@ class M3LaEarthRun {
     return M3LaEarthMistakes.wrongLa;
   }
 
-  /// Round 2: a look at a spot. The fault there (newly tagged), or null
-  /// (healthy, already tagged, or not the time).
-  M3LaEarthFault? look(M3LaEarthSpot s) {
-    if (stage != 1) return null;
+  /// Round 2: a tag on a spot: the fault newly tagged, or the slip of a tag
+  /// on a sound spot (once per spot); both null when it is not the time or
+  /// the spot was already tagged.
+  ({M3LaEarthFault? fault, DoMistake? mistake}) tag(M3LaEarthSpot s) {
+    if (stage != 1 || ended || !deal.spots.contains(s)) return (fault: null, mistake: null);
     final f = deal.faults[s];
-    if (f == null || flagged.contains(s)) return null;
-    flagged.add(s);
-    return f;
+    if (f == null) {
+      if (!wrongTags.add(s)) return (fault: null, mistake: null);
+      _ownSlips++;
+      return (fault: null, mistake: M3LaEarthMistakes.soundSpot);
+    }
+    if (!flagged.add(s)) return (fault: null, mistake: null);
+    return (fault: f, mistake: null);
   }
 
-  /// Gave in to him: "a little cut is fine".
-  DoMistake listened() {
+  /// [tag]'s fault only.
+  M3LaEarthFault? look(M3LaEarthSpot s) => tag(s).fault;
+
+  /// Gave in to him: "a little cut is fine" (null once the play has ended).
+  DoMistake? listened() {
+    if (ended) return null;
     _ownSlips++;
     return M3LaEarthMistakes.smallCut;
   }
@@ -461,7 +499,6 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
   late final M3LaEarthRun _run = M3LaEarthRun(_deal);
   final _clock = Stopwatch();
   late bool _muted = widget.muted;
-  final _fineBag = LineBag(M3LaEarthLines.spotFine);
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
   final _nudge = TaskNudge();
   int _nudgeN = 0;
@@ -470,6 +507,15 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
 
   var _intro = true;
   var _callHeld = false;
+
+  /// Both faults are tagged and the round's reason waits for the coworker.
+  var _pathWaiting = false;
+  final _hints = IdleHintController();
+
+  /// Gesture-hint anchors of what the hands can reach now (set in the build).
+  final _hintKeys = <String, GlobalKey>{};
+  final List<String> _live = [];
+  GlobalKey _hk(String id) => _hintKeys.putIfAbsent(id, GlobalKey.new);
   var _climbed = false;
 
   int _oks = 0;
@@ -528,7 +574,10 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
     unawaited(MascotSpeechLibrary.stop());
   }
 
-  String get _task => switch (_run.stage) {
+  /// The round on screen: the earth path until its reason is asked.
+  int get _stage => _pathWaiting ? 1 : _run.stage;
+
+  String get _task => switch (_stage) {
         0 => M3LaEarthLines.askLa,
         1 => M3LaEarthLines.askPath,
         _ => !_run.isDone(M3LaEarthIds.docket)
@@ -543,7 +592,7 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
     await _sayChain([M3LaEarthLines.askLa]);
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || struckOut;
+  bool get _blocked => _intro || _busy || _ended || _freeze || _card != null || tableBusy || struckOut;
 
   // ---- the hands --------------------------------------------------------------------
 
@@ -567,7 +616,7 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
   }
 
   void _pickLa(int i, Offset global) {
-    if (!_canTouch(global) || _run.stage != 0) return;
+    if (_stage != 0 || !_canTouch(global)) return;
     final g = _geo;
     final at = g == null ? Offset.zero : g.laBox(i).center;
     final m = _run.pickLa(i);
@@ -585,45 +634,65 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
   }
 
   void _look(M3LaEarthSpot s, Offset global) {
-    if (_run.stage != 1) return;
-    // The last fault waits for his moment (no cost).
-    final last = _run.flagged.length == _deal.faults.length - 1 && _deal.faults.containsKey(s) && !_run.flagged.contains(s);
-    if (last && !coworkerDone && !coworkerOpen) return;
+    if (_stage != 1 || _pathWaiting) return;
     if (!_canTouch(global)) return;
     final g = _geo;
     final at = g == null ? Offset.zero : g.spotAt(s);
-    final f = _run.look(s);
+    final r = _run.tag(s);
+    if (r.mistake != null) {
+      // A tag on a sound spot: a slip; the card says why (after the call).
+      unawaited(_slip(r.mistake!, at));
+      return;
+    }
+    final f = r.fault;
     if (f == null) {
-      HapticFeedback.selectionClick();
-      if (!_muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.5, muted: false));
-      unawaited(_sayChain([_fineBag.next().shownBn]));
+      _hints.missTap();
       return;
     }
     _ok(at);
     unawaited(_levelDelta(5, global, mood: GuideMood.glad));
     final line = f == M3LaEarthFault.cut ? M3LaEarthLines.cutFound : M3LaEarthLines.looseFound;
+    unawaited(_sayChain([line], mood: GuideMood.glad));
     if (!_run.pathDone) {
-      unawaited(_sayChain([line], mood: GuideMood.glad));
+      setState(() {});
       return;
     }
-    unawaited(_sayChain([line], mood: GuideMood.glad));
+    // The last fault: the round's reason waits for him if he has not come
+    // (his push fits now — the cut is tagged).
+    _pathWaiting = true;
+    if (holdForCoworker()) {
+      setState(() {});
+      return;
+    }
+    _pathWaiting = false;
+    _askPath();
+  }
+
+  void _askPath() {
     _ask(10, M3LaEarthLines.pathRight, M3LaEarthLines.pathWrong, M3LaEarthLines.pathAsk, then: () {
       setState(() {});
       unawaited(_sayChain([M3LaEarthLines.askFix]));
     });
   }
 
+  /// He has gone: the earth path's reason now.
+  void _resumePath() {
+    if (!mounted || _ended || !_pathWaiting) return;
+    setState(() => _pathWaiting = false);
+    _askPath();
+  }
+
   void _wearHarness(Offset global) {
-    if (!_canTouch(global) || _run.stage != 2 || _run.harnessOn) return;
+    if (_stage != 2 || _run.harnessOn || !_canTouch(global)) return;
     _run.wearHarness();
     final g = _geo;
-    _ok(g?.harness.center ?? Offset.zero);
+    _ok(g?.kitBox(M3LaEarthKit.harness, _deal.kit).center ?? Offset.zero);
     unawaited(_levelDelta(5, global, mood: GuideMood.glad));
     unawaited(_sayChain([M3LaEarthLines.harnessOn], mood: GuideMood.glad));
   }
 
   void _step(String id, Offset at, Offset global) {
-    if (!_canTouch(global) || _run.stage != 2) return;
+    if (_stage != 2 || !_canTouch(global)) return;
     final t = _run.tap(id);
     switch (t.kind) {
       case OrderTapKind.ignored:
@@ -699,8 +768,13 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.ended || _run.stage > 1) return null;
-    if (_run.stage < 1 || _blocked) return false;
+    if (_ended || _run.ended) return null;
+    // The round's reason waits for him.
+    if (_pathWaiting) return true;
+    if (_run.stage > 1) return null;
+    // His push names the cut: not before the player has tagged it, and never
+    // in a praise window or over a card.
+    if (_run.stage < 1 || _blocked || !_run.flagged.contains(_deal.cut)) return false;
     return true;
   }
 
@@ -712,7 +786,9 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      await _slip(_run.listened(), origin, own: true);
+      // Listening is a slip; the card's "got it" resumes the round.
+      final m = _run.listened();
+      if (m != null) await _slip(m, origin, own: true);
       return;
     }
     _callHeld = true;
@@ -721,7 +797,13 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
     final chain = _chain;
     unawaited(() async {
       await coworkerSnarl();
-      if (!mounted || chain != _chain) return;
+      if (!mounted) return;
+      if (_pathWaiting) {
+        await _sayChain([M3LaEarthLines.callHeld], mood: GuideMood.glad);
+        _resumePath();
+        return;
+      }
+      if (chain != _chain) return;
       await _sayChain([M3LaEarthLines.callHeld, _task], mood: GuideMood.glad);
     }());
   }
@@ -810,6 +892,10 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
           _card = null;
           _wake++;
         });
+        if (_pathWaiting && !coworkerOpen) {
+          _resumePath();
+          return;
+        }
         unawaited(_sayChain([_task]));
       case MistakeTone.nearMiss:
         _hush();
@@ -900,28 +986,46 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
   LinemanMode get _mood {
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
     if (_cheer) return LinemanMode.cheer;
-    return _run.stage < 2 ? LinemanMode.point : LinemanMode.hold;
+    return _stage < 2 ? LinemanMode.point : LinemanMode.hold;
   }
 
   /// A see-through tap area over something in the yard (labelled for screen readers).
-  Widget _spot(String key, Rect r, String label, void Function(Offset global) onTap) => Positioned.fromRect(
-        key: ValueKey('spot-$key'),
-        rect: r,
-        child: Semantics(
-          label: label,
-          button: true,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapUp: (d) => onTap(d.globalPosition),
-            child: const SizedBox.expand(),
-          ),
+  /// Each is a gesture-hint anchor while it is on screen.
+  Widget _spot(String key, Rect r, String label, void Function(Offset global) onTap) {
+    _live.add(key);
+    return Positioned.fromRect(
+      key: ValueKey('spot-$key'),
+      rect: r,
+      child: Semantics(
+        label: label,
+        button: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (d) => onTap(d.globalPosition),
+          child: SizedBox.expand(key: _hk(key)),
         ),
-      );
+      ),
+    );
+  }
+
+  /// How to touch now (never what): a sweep over everything the hands can
+  /// reach, in screen order (the layout itself is dealt); a tap only when a
+  /// single control is the one way forward.
+  HintSpec? _hint() {
+    final rects = [
+      for (final id in _live) ?HintSpec.globalRectOf(_hk(id)),
+    ]..sort((a, b) => a.top != b.top ? a.top.compareTo(b.top) : a.left.compareTo(b.left));
+    if (rects.isEmpty) return null;
+    if (rects.length == 1) return HintSpec.tap(rects.single.center);
+    return HintSpec.sweep(rects);
+  }
 
   List<Widget> _scene(SceneMetrics m, bool quiet) {
     final g = _geo = M3LaEarthGeo.forScene(m.height, m.inset);
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
-    final stage = _run.stage;
+    final stage = _pathWaiting ? -1 : _stage;
+    final kit = _deal.kit;
+    _live.removeWhere((id) => id != 'docket');
     final mended = {
       for (final s in _deal.faults.keys)
         if (_run.isDone(M3LaEarthIds.mend(s))) s,
@@ -952,6 +1056,7 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
                 proved: _run.isDone(M3LaEarthIds.test),
                 earthed: _run.isDone(M3LaEarthIds.earth),
                 harnessOn: _run.harnessOn,
+                kit: kit,
               ),
             ),
           ),
@@ -1004,10 +1109,10 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
         for (final s in _deal.spots) _spot('look-${s.name}', g.spotBox(s), M3LaEarthLines.spotLabel(s), (p) => _look(s, p)),
       if (stage == 2) ...[
         if (!_run.isDone(M3LaEarthIds.test))
-          _spot('tester', g.tester, M3LaEarthLines.testerLabel, (p) => _step(M3LaEarthIds.test, Offset(g.phaseX(1), g.topY), p)),
+          _spot('tester', g.kitBox(M3LaEarthKit.tester, kit), M3LaEarthLines.testerLabel, (p) => _step(M3LaEarthIds.test, Offset(g.phaseX(1), g.topY), p)),
         if (!_run.isDone(M3LaEarthIds.earth))
-          _spot('earthset', g.earthSet, M3LaEarthLines.earthSetLabel, (p) => _step(M3LaEarthIds.earth, Offset(g.phaseX(1), g.topY), p)),
-        if (!_run.harnessOn) _spot('harness', g.harness, M3LaEarthLines.harnessLabel, _wearHarness),
+          _spot('earthset', g.kitBox(M3LaEarthKit.earthSet, kit), M3LaEarthLines.earthSetLabel, (p) => _step(M3LaEarthIds.earth, Offset(g.phaseX(1), g.topY), p)),
+        if (!_run.harnessOn) _spot('harness', g.kitBox(M3LaEarthKit.harness, kit), M3LaEarthLines.harnessLabel, _wearHarness),
         if (!_run.isDone(M3LaEarthIds.replace))
           _spot('replace', Rect.fromLTWH(g.phaseX(_deal.badLa) - 22, g.laTop - 6, 44, 84), M3LaEarthLines.laLabel(_deal.badLa),
               (p) => _step(M3LaEarthIds.replace, g.laBox(_deal.badLa).center, p)),
@@ -1036,8 +1141,12 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final stage = _run.stage;
-    final docketOpen = stage == 2 && !_run.isDone(M3LaEarthIds.docket);
+    final stage = _stage;
+    final docketOpen = stage == 2 && !_pathWaiting && !_run.isDone(M3LaEarthIds.docket);
+    final docketUp = playing && !coworkerOpen;
+    _live.remove('docket');
+    if (docketUp && docketOpen) _live.add('docket');
+    final waiting = playing && !deckUp && !coworkerOnScreen && _card == null && !tableBusy && !_busy && !_ended && !_pathWaiting;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1065,8 +1174,13 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m, quiet),
+            hint: _hint,
+            hintWaiting: waiting,
+            hintKey: 'la-$stage-${_run.flagged.length}-${_run.wrongTags.length}-${_run.doneIds.length}-${_run.harnessOn}',
+            hintController: _hints,
+            hintAutoMiss: true,
             overlays: [
-              if (playing && !coworkerOpen)
+              if (docketUp)
                 Positioned(
                   key: const ValueKey('docket'),
                   left: 12,
@@ -1078,7 +1192,7 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTapUp: docketOpen ? (d) => _step(M3LaEarthIds.docket, d.globalPosition, d.globalPosition) : null,
-                      child: _DocketChip(taken: _run.isDone(M3LaEarthIds.docket)),
+                      child: KeyedSubtree(key: _hk('docket'), child: _DocketChip(taken: _run.isDone(M3LaEarthIds.docket))),
                     ),
                   ),
                 ),

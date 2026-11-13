@@ -3,7 +3,8 @@
 // deal variety, fair reason libraries that fit what the player did, his
 // lines, and the level in the shell (idle perf; guide first; a full clean
 // flow with the coworker, the bamboo aside, the slide, the wipe and the
-// reasons; slip cards; deadly freezes; three slips fail).
+// reasons; the coworker on a fast play; take dead while the cloth wipes;
+// gesture hints; slip cards; deadly freezes; three slips fail).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -16,6 +17,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart' show FreezeFrame;
@@ -32,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.5/do/0',
@@ -70,19 +73,22 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
+  await confirmChoice(t);
+  // A right reason zooms and waits for এগিয়ে যান; his deck closes by itself.
+  await tapReasonProceed(t);
+}
+
+/// The first seed whose docket [round]'s good rod is wet, with the coworker
+/// on a later docket (so nothing else moves in).
+int _seedWet(int round) {
+  for (var s = 0;; s++) {
+    final d = _deal(s);
+    if (d.rounds[round].good.flaw == StickMark.wet && d.callRound > round) return s;
   }
 }
 
@@ -253,6 +259,31 @@ void main() {
       }
       expect(LearnVoice.resolve(HotStickLines.coworkerBamboo.line, rival: true), isNotNull);
     });
+
+    test('no giveaway word: nothing on two or more right cards is missing from every wrong card', () {
+      Set<String> words(String s) => s.split(RegExp(r'[\s,—।!?"\x27·:]+')).where((w) => w.isNotEmpty).toSet();
+      void noTell(String name, List<String> right, List<String> wrong) {
+        final inWrong = {for (final w in wrong) ...words(w)};
+        final count = <String, int>{};
+        for (final r in right) {
+          for (final w in words(r)) {
+            count[w] = (count[w] ?? 0) + 1;
+          }
+        }
+        final tells = [for (final e in count.entries) if (e.value >= 2 && !inWrong.contains(e.key)) e.key];
+        expect(tells, isEmpty, reason: '$name: words only the right cards share');
+      }
+
+      for (final p in StickPush.values) {
+        final c = HotStickLines.coworker(p);
+        noTell('coworker ${p.name}', c.right, c.wrong);
+      }
+      for (final r in StickRating.values) {
+        for (final w in [true, false]) {
+          noTell('pack ${r.name} $w', HotStickLines.packRight(r, wiped: w), HotStickLines.packWrong(r, wiped: w));
+        }
+      }
+    });
   });
 
   group('page', () {
@@ -353,7 +384,7 @@ void main() {
         }
         debugPrint('PERF hotstick ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(HotStickLines.docket), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
@@ -440,9 +471,11 @@ void main() {
       final (c, _) = await open(t, _seedCalling(0, push: StickPush.wet));
       await _pump(t, 3500);
       expect(find.byType(CoworkerPeek), findsOneWidget);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(HotStickLines.coworkerWet.wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 700);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3000);
@@ -475,6 +508,107 @@ void main() {
       expect(c.read(gameSaveProvider).mistakes.length, greaterThanOrEqualTo(1));
       expect(t.takeException(), isNull);
       await close(t, c);
+    });
+
+    testWidgets('coworker comes even on a fast play: the first reach for a rod waits for him', (t) async {
+      final (c, deal) = await open(t, _seedCalling(0));
+      final r1 = deal.rounds[0];
+      // Straight after the guide, before his timer: reach for a rod.
+      await t.tap(rods.at(0), warnIfMissed: false);
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in now');
+      expect(find.text(HotStickLines.take), findsNothing, reason: 'the reach did nothing');
+      // His line fits: what he pushes is still on the stand, untouched.
+      final push = stickPushFor(r1, const {}, const {}, preferWet: deal.preferWet)!;
+      expect(find.byWidgetPredicate((w) => w is CoworkerPeek && w.lineBn == HotStickLines.coworker(push).line), findsOneWidget);
+      // The stand waits while he is on screen.
+      await t.tap(rods.at(1), warnIfMissed: false);
+      await _pump(t, 300);
+      expect(find.text(HotStickLines.take), findsNothing);
+      await _pickRight(t, HotStickLines.coworker(push).right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await lift(t, r1, r1.good);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('the cloth: take and put back are dead until it has gone along the stick (a wiped rod is dry)', (t) async {
+      final (c, deal) = await open(t, _seedWet(0));
+      final r1 = deal.rounds[0];
+      await lift(t, r1, r1.good);
+      await slide(t);
+      await t.tap(find.text(HotStickLines.cloth));
+      await t.pump(const Duration(milliseconds: 150));
+      await t.tap(find.text(HotStickLines.take), warnIfMissed: false);
+      await t.tap(find.text(HotStickLines.putBack), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(FreezeFrame), findsNothing, reason: 'mid-wipe take does nothing (was: deadly wet rod)');
+      expect(find.text(HotStickLines.take), findsOneWidget, reason: 'still in hand');
+      await _pump(t, 1200);
+      await t.tap(find.text(HotStickLines.take));
+      await t.pump(const Duration(milliseconds: 200));
+      expect(find.byType(FreezeFrame), findsNothing);
+      // The praise window: the stand takes no touch.
+      await t.tap(rods.at(r1.rods.indexOf(r1.rods.firstWhere((x) => x != r1.good))), warnIfMissed: false);
+      await _pump(t, 300);
+      expect(find.text(HotStickLines.take), findsNothing);
+      await _pump(t, 3200);
+      await _pickRight(t, HotStickLines.packRight(r1.docket.line, wiped: true));
+      await _pump(t, 1500);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    group('gesture hints', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      testWidgets('a sweep over every rod at the stand, a nudge along the stick in hand, never during the intro', (t) async {
+        t.view.physicalSize = const Size(720, 1600);
+        t.view.devicePixelRatio = 2.0;
+        final seed = _seedCalling(2);
+        final deal = _deal(seed);
+        final c = ProviderContainer();
+        await t.pumpWidget(UncontrolledProviderScope(container: c, child: MaterialApp(home: page(seed))));
+        await _pump(t, 400);
+        expect(find.byKey(const ValueKey('gesture-hint')), findsNothing, reason: 'not over the guide');
+        await waitIntro(t);
+        IdleHintState hint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+        await _pump(t, 9000);
+        expect(hint().showing, isTrue, reason: 'idle at the stand');
+        expect(hint().debugOptions.length, deal.rounds[0].rods.length, reason: 'a sweep over every rod, none singled out');
+        // Any touch hides it; lift a rod.
+        final r1 = deal.rounds[0];
+        await lift(t, r1, r1.good);
+        expect(hint().showing, isFalse);
+        await _pump(t, 9000);
+        expect(hint().showing, isTrue, reason: 'idle in hand');
+        expect(hint().debugOptions, isEmpty, reason: 'a drag nudge, not a choice');
+        await slide(t);
+        await _pump(t, 9000);
+        expect(hint().showing, isTrue);
+        expect(hint().debugOptions.length, 3, reason: 'cloth, put back, take — all three');
+        // Take it: while the reason deck is up the scene's hand stays away;
+        // only the deck's own sweep (over every open card, never one) shows.
+        if (r1.good.flaw == StickMark.wet) await wipe(t);
+        await t.tap(find.text(HotStickLines.take));
+        await waitChoiceDeck(t);
+        expect(find.byType(ChoiceDeck), findsOneWidget);
+        await _pump(t, 9000);
+        expect(hint().showing, isFalse, reason: 'the scene hint waits while the reason deck is up');
+        final deckHints = t.stateList<IdleHintState>(find.descendant(of: find.byType(ChoiceDeck), matching: find.byType(IdleHint)));
+        for (final h in deckHints.where((h) => h.showing)) {
+          expect(h.debugOptions.length, greaterThanOrEqualTo(2), reason: 'a sweep over the cards, none singled out');
+        }
+        await t.pumpWidget(const SizedBox());
+        await t.pump(const Duration(seconds: 15));
+        MascotTalk.reset();
+        c.dispose();
+        t.view.reset();
+      });
     });
 
     testWidgets('three slips fail the level: the struck-out card insists on the lesson', (t) async {

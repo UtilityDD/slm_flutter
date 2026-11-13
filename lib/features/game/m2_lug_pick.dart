@@ -19,6 +19,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -49,8 +50,15 @@ import 'spoken_once.dart';
 // cracked or dirty lug, a wrong strip) a bad connection that heats and fails
 // later, not a death on the spot. Every fault is a slip; 3 slips fail.
 //
-// Voice: the guide's lines on device TTS; the coworker's push is new (device
-// TTS in his voice settings until recorded); his exit line is recorded.
+// The coworker: a decisive control (এটাই নিন, স্টোর থেকে আনাই) waits for him
+// while he is due (holdForCoworker), so a fast play never skips him; listening
+// takes the lug he pushes — a slip. He never comes in a praise window.
+// Gesture hints: a sweep over the tray lugs and the store button, a nudge
+// along the barrel, a sweep over the close look's choices, a nudge on the
+// strip bench, then a tap on ছিলুন; a tap to put the cable print back.
+//
+// Voice: the guide's lines on device TTS; the coworker's pushes are new (no
+// clip yet: silent, caption held, until recorded); his exit line is recorded.
 // Art: the scene, the lugs and the strip bench are drawn in code
 // (m2_lug_pick_world.dart); the mistake cards use assets/game/art/m2_lug_pick/.
 
@@ -169,12 +177,18 @@ abstract final class LugLines {
     'মাপ আর ধাতু মিলেছে, ব্যারেলেও কোনো ফাটল নেই',
     'একই সাইজ, একই ধাতু — ব্যারেলের ভেতরটাও পরিষ্কার',
   ];
+  // The myths carry the right cards' words too (ব্যারেল, ফাটল, ভেতর, ধাতু,
+  // সাইজ, পরিষ্কার, মিলেছে, নেই), so no word gives the right card away.
   static const packMyths = [
-    'একটু বড় ল্যাগ চেপে দিলেই ঠিক হয়ে যায়',
+    'ব্যারেল একটু বড় হলে চেপে দিলেই ঠিক হয়ে যায়',
     'তামা ভালো, তাই যেকোনো তারে তামার ল্যাগ চলে',
-    'ল্যাগ তো ল্যাগই, মাপে কিছু আসে যায় না',
+    'ল্যাগ তো ল্যাগই, মাপ-ধাতুতে কিছু আসে যায় না',
     'হাতের কাছে ছিল, তাই এটাই তুলে নিয়ে নিলাম',
     'পরে সোল্ডার করে দিলে সব মজবুত হয়ে যাবে',
+    'ব্যারেলের ছোট ফাটল ক্রিম্পের চাপে বুজে যায়',
+    'ভেতরের তেল-ময়লা ক্রিম্পের চাপে সরে যায়',
+    'ধাতু মিলেছে, তাই এক সাইজ বড় হলেও চলবে',
+    'পরিষ্কার করার সময় নেই, ময়লা থাকলেও চলে',
   ];
 
   /// Why this lug on a [m] cable: metal and size matched, and it was sound.
@@ -193,7 +207,10 @@ abstract final class LugLines {
     'স্টোরকিপার বকবে, তাই কোনো ল্যাগ নিইনি',
     'টুলটা ভারী, আজ ক্রিম্প করার ইচ্ছে নেই',
     'সুপারভাইজার না এলে কাজ শুরুই হয় না',
-    'দুপুর হয়ে গেছে, পরে করলেই চলে যাবে',
+    'ট্রের ল্যাগ মাপতে দেরি, পরে করলেই চলবে',
+    // These two carry the right cards' ধাতু, ভালো, নেই and আনি.
+    'ভালো ল্যাগ ট্রেতে নেই বলে আজ কাজই বন্ধ',
+    'স্টোর থেকে আনি, ধাতু যা-ই হোক চলবে',
   ];
 
   /// Why the right lug was sent for: the rule, and — only when the player
@@ -216,35 +233,39 @@ abstract final class LugLines {
 
   /// The careless coworker: the shortcuts the lesson warns of.
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
+  // No marker word on one side only ("না —" on the refusals, "ঠিক," on the
+  // listening cards): the words of the right cards (মাপ, ল্যাগ, চাপ, সংযোগ,
+  // ধাতু, গ্যালভানিক, অ্যালুমিনিয়াম) are on the wrong ones too.
   static const coworkerBigger = CoworkerScript(
     line: 'একটু বড় ল্যাগ, চেপে দিলেই হবে!',
     exitLine: coworkerExit,
-    right: ['না — তারের মাপের ল্যাগই নেব', 'বড় ল্যাগ চাপলেও সংযোগ ঢিলা থাকে', 'মাপ না মিললে ক্রিম্প করব না'],
+    right: ['তারের মাপের ল্যাগই নেব, বড়টা চাপব না', 'বড় ল্যাগ চাপলেও সংযোগ ঢিলা থাকে', 'মাপ না মিললে ল্যাগ চেপে বসাব না'],
     wrong: [
-      'ঠিক, বড়টাই চেপে বসিয়ে দিই',
-      'একটু বড়তে কিছু হয় না, নিই',
-      'জোরে চাপলেই তো টাইট হয়ে যাবে',
+      'বড়টাই চেপে বসিয়ে দিই, মাপ লাগবে না',
+      'একটু বড় ল্যাগে কিছু হয় না, নিই',
+      'জোরে চাপলেই সংযোগ টাইট হয়ে যাবে',
       'এবারটা বড় ল্যাগেই চালিয়ে নিই',
-      'সবাই তো হাতের কাছেরটাই নেয়',
+      'সবাই তো হাতের কাছের ল্যাগটাই নেয়',
     ],
     asks: ['ও বলছে বড় ল্যাগ চেপে দিলেই হবে। কী করবেন?', 'বড় ল্যাগ নেবেন, না তারের মাপের?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
   );
   static const coworkerMetal = CoworkerScript(
     line: 'অ্যালুমিনিয়ামের তারে তামার ল্যাগই দাও, তামা তো ভালো!',
     exitLine: coworkerExit,
-    right: ['না — অ্যালুমিনিয়ামে অ্যালুমিনিয়াম', 'দুই ধাতু মেশালে গ্যালভানিক ক্ষয় হয়', 'ধাতু না মিললে ল্যাগ নেব না, ভাই'],
+    right: ['তারের ধাতুর ল্যাগই নেব, তামাটা নয়', 'দুই ধাতু মেশালে গ্যালভানিক ক্ষয় হয়', 'ধাতু না মিললে ল্যাগ নেব না, ভাই'],
     wrong: [
-      'ঠিক, তামার ল্যাগটাই লাগিয়ে দিই',
-      'তামা তো ভালো, ওটাই নিয়ে নিই',
-      'ধাতুতে কিছু আসে যায় না, নিয়ে নিই',
-      'এবারটা তামাতেই চালিয়ে নিই, ভাই',
-      'সবাই তো যেটা পায় সেটাই নেয়',
+      'তামার ল্যাগটাই লাগিয়ে দিই, ভাই',
+      'তামা তো ভালো ধাতু, ওটাই নিয়ে নিই',
+      'দুই ধাতুতে গ্যালভানিক ক্ষয় হয় না',
+      'অ্যালুমিনিয়ামে তামা আরও ভালো চলে',
+      'সবাই তো যে ল্যাগ পায় সেটাই নেয়',
     ],
     asks: ['ও বলছে তামার ল্যাগই ভালো। কী করবেন?', 'তামার ল্যাগ নেবেন, না তারের ধাতুর?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
   );
   static CoworkerScript coworker(LugPush p) => p == LugPush.bigger ? coworkerBigger : coworkerMetal;
 
-  /// His new lines (device TTS until recorded in his voice).
+  /// His new lines (no clip yet: silent with the caption held until the
+  /// director records them in his voice).
   static const newRivalLines = [
     'একটু বড় ল্যাগ, চেপে দিলেই হবে!',
     'অ্যালুমিনিয়ামের তারে তামার ল্যাগই দাও, তামা তো ভালো!',
@@ -586,6 +607,27 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how to touch, never which lug).
+  final _hints = IdleHintController();
+  final _lugKeys = <String, GlobalKey>{};
+  final _holdKey = GlobalKey();
+  final _zoomKey = GlobalKey();
+  final _barrelKey = GlobalKey();
+  final _mouthKey = GlobalKey();
+  final _putBackKey = GlobalKey();
+  final _takeKey = GlobalKey();
+  final _benchKey = GlobalKey();
+  final _stripKey = GlobalKey();
+
+  /// The finger has run along the held lug's barrel.
+  var _slid = false;
+
+  /// The knife has been moved on the strip bench / the strip is under way.
+  var _knifeMoved = false;
+  var _cutting = false;
+
+  GlobalKey _lugKey(LugItem l) => _lugKeys.putIfAbsent(l.id, GlobalKey.new);
+
   String get _rungId => widget.ctx.rungId;
 
   @override
@@ -631,7 +673,8 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || _run.shown || _run.stripping;
+  /// No tray input now (also in a right move's praise window: [tableBusy]).
+  bool get _blocked => _intro || _busy || _ended || _card != null || tableBusy || reasonOpen || _run.shown || _run.stripping;
 
   void _setMode(LinemanMode m) {
     _mode = m;
@@ -640,16 +683,16 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
 
   /// A lug comes out of the tray into the trainee's hands.
   void _pick(LugItem l, Offset origin) {
-    // Taking another lug while he is still talking refuses him too.
-    if (coworkerOpen && !coworkerChoiceUp && lugPushed(_run.current, _run.rejected, _push)?.id != l.id) {
-      unawaited(answerCoworker(true, origin, direct: true));
-    }
+    // While he is on (his line, then the deck) the tray is dead: he must be
+    // answered on the deck, and a tap can neither skip him nor show which
+    // lug he means.
     if (_blocked || coworkerOpen || _held != null || _cableOpen || _run.rejected.contains(l.id)) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/click.ogg', volume: 0.5, muted: false));
     _hush();
     setState(() {
       _held = l;
+      _slid = false;
       _setMode(LinemanMode.hold);
     });
     unawaited(_sayChain([LugLines.inspectAsk]));
@@ -683,7 +726,9 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
 
   void _take(Offset origin) {
     final l = _held;
-    if (l == null || _blocked) return;
+    if (l == null || _blocked || coworkerOpen) return;
+    // He is due on this cable: he cuts in now (the lug stays in hand).
+    if (holdForCoworker()) return;
     setState(() => _held = null);
     _judgeTake(l, origin);
   }
@@ -705,11 +750,14 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
   /// The knife went through at [u] barrel depths; the lug has been pushed on.
   void _cut(double u, Offset origin) {
     if (!_run.stripping || _ended) return;
+    _cutting = false;
+    _knifeMoved = false;
     final o = _run.strip(u);
     if (o.verdict == LugVerdict.right) {
       HapticFeedback.lightImpact();
       if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
       setState(() => _setMode(LinemanMode.cheer));
+      // +5 for the strip: outside the shared rules, kept (owner decision).
       unawaited(_levelDelta(5, origin, mood: GuideMood.glad));
       final metal = _run.current.cable.metal;
       _ask(15, () => dealChoices(LugLines.packRight(metal), LugLines.packWrong(metal), widget.rng), LugLines.packAsk, lead: LugLines.stripRight);
@@ -725,6 +773,8 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
 
   void _holdJob(Offset origin) {
     if (_blocked || coworkerOpen || _held != null || _cableOpen) return;
+    // He is due on this cable: he cuts in before the job is sent for.
+    if (holdForCoworker()) return;
     _hush();
     final o = _run.holdJob();
     if (o.verdict == LugVerdict.right) {
@@ -801,10 +851,12 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
-    if (_blocked || _held != null || _cableOpen) return false;
+    // Nothing left in the tray for him to push on this cable: his moment on
+    // it has passed (he is armed again on the next cable).
     final push = lugPushFor(_run.current, _run.rejected, preferMetal: _run.deal.callMetal);
-    if (push == null) return false;
+    if (push == null) return null;
     _push = push;
+    if (_blocked || tableBusy || _held != null || _cableOpen) return false;
     return true;
   }
 
@@ -816,9 +868,15 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Took what he pushed: the bigger lug, or copper on aluminium.
+      // Took what he pushed: the bigger lug, or copper on aluminium — a slip.
       final l = lugPushed(_run.current, _run.rejected, _push);
-      if (l != null) _judgeTake(l, origin);
+      if (_held != null) setState(() => _held = null);
+      if (l != null) {
+        _judgeTake(l, origin);
+      } else {
+        setState(() => _setMode(LinemanMode.worried));
+        unawaited(_slip(_push == LugPush.bigger ? LugMistakes.wrongSize : LugMistakes.wrongMetal, origin));
+      }
       return;
     }
     _run.caught.add(LugLines.caughtCall);
@@ -828,13 +886,14 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
     unawaited(() async {
       await coworkerSnarl();
       if (!mounted || chain != _chain) return;
-      await _sayChain([LugLines.callHeld, LugLines.ask], mood: GuideMood.glad);
+      await _sayChain([LugLines.callHeld, _task], mood: GuideMood.glad);
     }());
   }
 
   /// Tap the guide: the task again, a different way each time.
   void _tapGuide() {
-    if (_intro || _ended) return;
+    // Beat 1 is his alone: the guide waits for the deck.
+    if (_intro || _ended || (coworkerOpen && !coworkerChoiceUp)) return;
     final String line = coworkerOpen
         ? nextCoworkerAsk()
         : reasonOpen
@@ -941,13 +1000,52 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
     if (leave == true) _popOnce(false);
   }
 
+  // ---- gesture hints -----------------------------------------------------------------
+
+  /// The level waits for the player's hands now (no intro, card, deck, coworker,
+  /// praise window, strip under way or result).
+  bool get _hintWaiting =>
+      !_intro &&
+      !_ended &&
+      !_busy &&
+      _mark == null &&
+      !struckOut &&
+      _card == null &&
+      !tableBusy &&
+      !coworkerOnScreen &&
+      !_run.shown &&
+      !_cutting;
+
+  Object get _hintKey => (_run.round, _held?.id, _cableOpen, _run.stripping, _stripTry, _slid, _knifeMoved);
+
+  /// How to touch now — never which lug, never where to cut.
+  HintSpec? _hint() {
+    if (_cableOpen) return HintSpec.tapOn(_zoomKey);
+    if (_held != null) {
+      if (_slid) return HintSpec.sweepOver([_mouthKey, _putBackKey, _takeKey]);
+      // Run a finger along the barrel (from its bottom end), as every lug is felt.
+      final r = HintSpec.globalRectOf(_barrelKey);
+      return r == null ? null : HintSpec.drag(Offset(r.left + r.width * 0.1, r.center.dy), toward: const Offset(1, 0), travel: 80);
+    }
+    if (_run.stripping) {
+      // The same short nudge on every bench, wherever the knife starts.
+      return _knifeMoved ? HintSpec.tapOn(_stripKey) : HintSpec.dragFrom(_benchKey, toward: const Offset(1, 0), travel: 48);
+    }
+    final r = _run.current;
+    return HintSpec.sweepOver([
+      for (final l in r.lugs)
+        if (!_run.rejected.contains(l.id)) _lugKey(l),
+      _holdKey,
+    ]);
+  }
+
   // ---- build ------------------------------------------------------------------------
 
   List<Widget> _layers(BuildContext context, SceneMetrics m, bool quiet) {
     final geo = LugBenchGeo(m.height);
     final r = _run.current;
     final aside = [for (final x in r.lugs) if (_run.rejected.contains(x.id)) x];
-    final canPick = !_blocked && _held == null && !_cableOpen;
+    final canPick = !_blocked && !coworkerOpen && _held == null && !_cableOpen;
     final al = r.cable.metal == LugMetal.al;
     final fitted = _run.fitted;
     return [
@@ -985,6 +1083,7 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
             quiet: quiet,
             muted: true,
             child: _TrayLug(
+              key: _lugKey(r.lugs[i]),
               lug: r.lugs[i],
               gone: _run.rejected.contains(r.lugs[i].id) || _held?.id == r.lugs[i].id || fitted?.id == r.lugs[i].id,
               enabled: canPick,
@@ -1038,6 +1137,11 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
+            hintAutoMiss: true,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (holdUp)
@@ -1046,7 +1150,7 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
                   left: 12,
                   right: 128,
                   bottom: pad.bottom + 18,
-                  child: _HoldButton(onTapUp: (d) => _holdJob(d.globalPosition)),
+                  child: _HoldButton(key: _holdKey, onTapUp: (d) => _holdJob(d.globalPosition)),
                 ),
               if (held != null && playing)
                 _Inspect(
@@ -1054,7 +1158,13 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
                   lug: held,
                   cable: _run.current.cable,
                   quiet: quiet,
+                  // Kept (not rebuilt) while the coworker cuts in on এটাই নিন.
+                  hidden: coworkerOpen,
+                  keys: (barrel: _barrelKey, mouth: _mouthKey, putBack: _putBackKey, take: _takeKey),
                   onFound: _found,
+                  onSlid: () {
+                    if (!_slid && mounted) setState(() => _slid = true);
+                  },
                   onTake: _take,
                   onPutBack: _putBack,
                 ),
@@ -1065,11 +1175,20 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
                   cable: _run.current.cable,
                   start: (_run.round + _stripTry).isEven ? 0.45 : 1.8,
                   quiet: quiet,
+                  benchKey: _benchKey,
+                  stripKey: _stripKey,
+                  onMoved: () {
+                    if (!_knifeMoved && mounted) setState(() => _knifeMoved = true);
+                  },
+                  onCutStart: () {
+                    if (mounted) setState(() => _cutting = true);
+                  },
                   onCut: _cut,
                 ),
               if (_cableOpen && playing)
                 _CableZoom(
                   key: const ValueKey('cable-zoom'),
+                  cardKey: _zoomKey,
                   cable: _run.current.cable,
                   quiet: quiet,
                   onClose: () => setState(() => _cableOpen = false),
@@ -1204,7 +1323,8 @@ class _CableTap extends StatelessWidget {
 
 /// The cable's print held up close (tap anywhere to put it back).
 class _CableZoom extends StatelessWidget {
-  const _CableZoom({super.key, required this.cable, required this.quiet, required this.onClose});
+  const _CableZoom({super.key, required this.cardKey, required this.cable, required this.quiet, required this.onClose});
+  final GlobalKey cardKey;
   final LugCable cable;
   final bool quiet;
   final VoidCallback onClose;
@@ -1225,6 +1345,7 @@ class _CableZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: cardKey,
                 width: 300,
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                 decoration: BoxDecoration(
@@ -1266,7 +1387,7 @@ class _CableZoom extends StatelessWidget {
 /// A lug lying in its tray compartment, palm up. At this distance its stamp
 /// cannot be read and its faults do not show. Tap it to take it in hand.
 class _TrayLug extends StatelessWidget {
-  const _TrayLug({required this.lug, required this.gone, required this.enabled, required this.onTake});
+  const _TrayLug({super.key, required this.lug, required this.gone, required this.enabled, required this.onTake});
   final LugItem lug;
   final bool gone;
   final bool enabled;
@@ -1329,7 +1450,7 @@ class _AsideLug extends StatelessWidget {
 
 /// "ঠিক ল্যাগ নেই — স্টোর থেকে আনাই".
 class _HoldButton extends StatelessWidget {
-  const _HoldButton({required this.onTapUp});
+  const _HoldButton({super.key, required this.onTapUp});
   final GestureTapUpCallback onTapUp;
 
   @override
@@ -1399,14 +1520,26 @@ class _Inspect extends StatefulWidget {
     required this.lug,
     required this.cable,
     required this.quiet,
+    required this.hidden,
+    required this.keys,
     required this.onFound,
+    required this.onSlid,
     required this.onTake,
     required this.onPutBack,
   });
   final LugItem lug;
   final LugCable cable;
   final bool quiet;
+
+  /// Offstage (state kept) while the coworker is on.
+  final bool hidden;
+
+  /// For the gesture hint: the barrel, the mouth and the two buttons.
+  final ({GlobalKey barrel, GlobalKey mouth, GlobalKey putBack, GlobalKey take}) keys;
   final VoidCallback onFound;
+
+  /// The finger first ran along the barrel.
+  final VoidCallback onSlid;
   final ValueChanged<Offset> onTake;
   final VoidCallback onPutBack;
 
@@ -1442,6 +1575,7 @@ class _InspectState extends State<_Inspect> {
       }
     }
     final grew = _barrel.length != before;
+    if (grew && before == 0) widget.onSlid();
     _check();
     if (grew || _hand != p) setState(() => _hand = p);
   }
@@ -1458,6 +1592,7 @@ class _InspectState extends State<_Inspect> {
           final s = Size(box.maxWidth, box.maxHeight);
           final al = lug.metal == LugMetal.al;
           return Semantics(
+            key: widget.keys.barrel,
             label: LugLines.handLabel,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -1496,6 +1631,15 @@ class _InspectState extends State<_Inspect> {
     final lug = widget.lug;
     final al = lug.metal == LugMetal.al;
     return Positioned.fill(
+      child: Offstage(
+        offstage: widget.hidden,
+        child: _card(lug, al),
+      ),
+    );
+  }
+
+  Widget _card(LugItem lug, bool al) {
+    return SizedBox.expand(
       child: ColoredBox(
         color: const Color(0xC0050A16),
         child: Align(
@@ -1540,6 +1684,7 @@ class _InspectState extends State<_Inspect> {
                             AspectRatio(
                               aspectRatio: 1,
                               child: Semantics(
+                                key: widget.keys.mouth,
                                 button: true,
                                 label: LugLines.mouthLabel,
                                 child: GestureDetector(
@@ -1565,9 +1710,9 @@ class _InspectState extends State<_Inspect> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Expanded(child: DoBigButton(label: LugLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
+                      Expanded(child: DoBigButton(key: widget.keys.putBack, label: LugLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
                       const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: LugLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
+                      Expanded(child: DoBigButton(key: widget.keys.take, label: LugLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
                     ],
                   ),
                 ],
@@ -1615,9 +1760,30 @@ class _Puck extends StatelessWidget {
 /// mouth; too short leaves the barrel's bottom empty; too long leaves bare
 /// strands outside.
 class _StripBench extends StatefulWidget {
-  const _StripBench({super.key, required this.lug, required this.cable, required this.start, required this.quiet, required this.onCut});
+  const _StripBench({
+    super.key,
+    required this.lug,
+    required this.cable,
+    required this.start,
+    required this.quiet,
+    required this.benchKey,
+    required this.stripKey,
+    required this.onMoved,
+    required this.onCutStart,
+    required this.onCut,
+  });
   final LugItem lug;
   final LugCable cable;
+
+  /// For the gesture hint: the bench (drag) and the ছিলুন button.
+  final GlobalKey benchKey;
+  final GlobalKey stripKey;
+
+  /// The knife was first moved.
+  final VoidCallback onMoved;
+
+  /// ছিলুন was pressed (the cut and the push-on play).
+  final VoidCallback onCutStart;
 
   /// Where the knife starts, in barrel depths.
   final double start;
@@ -1637,6 +1803,7 @@ class _StripBenchState extends State<_StripBench> {
     if (_cut != null) return;
     HapticFeedback.mediumImpact();
     setState(() => _cut = _u);
+    widget.onCutStart();
     await Future<void>.delayed(Duration(milliseconds: widget.quiet ? 250 : 1300));
     if (!mounted) return;
     widget.onCut(_u, origin);
@@ -1689,13 +1856,17 @@ class _StripBenchState extends State<_StripBench> {
                           final from = g.lugRect(g.cableEnd - g.depth, g.lugY);
                           final to = cut == null ? from : g.lugRect(g.cableEnd - g.depth * math.min(cut, 1.0), g.cableY);
                           return Semantics(
+                            key: widget.benchKey,
                             label: LugLines.stripLabel,
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               dragStartBehavior: DragStartBehavior.down,
                               onHorizontalDragUpdate: cut != null
                                   ? null
-                                  : (d) => setState(() => _u = (_u - d.delta.dx / g.depth).clamp(0.15, _maxU)),
+                                  : (d) {
+                                      setState(() => _u = (_u - d.delta.dx / g.depth).clamp(0.15, _maxU));
+                                      widget.onMoved();
+                                    },
                               child: Stack(
                                 children: [
                                   Positioned.fill(child: CustomPaint(painter: LugStripPainter(geo: g, al: al, knife: _u, cut: cut))),
@@ -1722,7 +1893,7 @@ class _StripBenchState extends State<_StripBench> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  DoBigButton(label: LugLines.strip, filled: true, onTapUp: (d) => unawaited(_strip(d.globalPosition))),
+                  DoBigButton(key: widget.stripKey, label: LugLines.strip, filled: true, onTapUp: (d) => unawaited(_strip(d.globalPosition))),
                 ],
               ),
             ),

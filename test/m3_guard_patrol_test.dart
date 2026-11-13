@@ -1,10 +1,11 @@
 // Lesson 3.9 (গার্ড ওয়্যার ও ক্রেডল গার্ডিং), কাজ 1 "জালের পাহারা": the rules
 // (tag every fault on the guard and its earths, then report — or "all fine" on
-// a sound crossing; a missed fault = slip; a wrong tag = not scored, the round
-// stays; a bare hand on the guard = deadly), the deal, the reason libraries,
-// and the level in the shell: idle perf, the guide first, tapping the guide, a
-// full clean play (the coworker refused), a wrong tag, a slip card, and the
-// deadly freeze (listening to him).
+// a sound crossing; a missed fault = slip; a tag on a sound spot = slip; a bare
+// hand on the guard = deadly), the deal, the reason libraries, and the level in
+// the shell: idle perf, the guide first, tapping the guide, a full clean play
+// (the coworker refused), the coworker on a fast play (the report waits for
+// him), a wrong tag (slip card), a missed fault (slip card), the 3-slip
+// strike-out, the gesture hint, and the deadly freeze (listening to him).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,7 +19,9 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m3_guard_patrol.dart';
@@ -31,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.9/do/0',
@@ -81,10 +85,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -213,18 +219,26 @@ void main() {
       expect(b.report(), M3GuardPatrolMistakes.missedEarthBare);
     });
 
-    test('a tag on a sound spot alone is not scored: the round stays; untag and report', () {
+    test('a tag on a sound spot costs a slip (its own card); a missed fault is named first; untagging is free', () {
       final a = run1({_S.spanL: _F.broken})
         ..toggle(_S.spanL)
         ..toggle(_S.earthR);
-      expect(a.report(), isNull);
-      expect(a.shown, isFalse);
-      expect(a.needless, 1);
-      expect(a.slips, 0);
-      expect(a.toggle(_S.earthR), isFalse, reason: 'tap again takes the tag off');
-      expect(a.report(), isNull);
+      expect(a.report(), M3GuardPatrolMistakes.needlessTag);
       expect(a.shown, isTrue);
-      expect(a.thorough, isFalse);
+      expect(a.slips, 1);
+      expect(a.report(), isNull, reason: 'once per crossing');
+      final ok = run1({})..toggle(_S.spanM);
+      expect(ok.report(), M3GuardPatrolMistakes.needlessTag, reason: 'a tag on a sound crossing too');
+      final miss = run1({_S.earthL: _F.earthBare})..toggle(_S.spanR);
+      expect(miss.report(), M3GuardPatrolMistakes.missedEarthBare);
+      expect(miss.slips, 1);
+      final undo = run1({_S.spanL: _F.broken})
+        ..toggle(_S.spanL)
+        ..toggle(_S.earthR);
+      expect(undo.toggle(_S.earthR), isFalse, reason: 'tap again takes the tag off');
+      expect(undo.report(), isNull);
+      expect(undo.slips, 0);
+      expect(undo.thorough, isFalse);
     });
 
     test('a bare hand on the guard is always deadly (the stolen earth named when so)', () {
@@ -274,7 +288,32 @@ void main() {
       expect(LearnVoice.resolve(cw.exitLine, rival: true), isNotNull);
       final all = M3GuardPatrolMistakes.all;
       expect(all.map((m) => m.key).toSet().length, all.length);
-      expect(all.length, M3GuardPatrolFault.values.length + 2);
+      expect(all.length, M3GuardPatrolFault.values.length + 3);
+      expect(all.where((m) => m.deadly), [M3GuardPatrolMistakes.touchNoEarth, M3GuardPatrolMistakes.touchGuard]);
+      // No word on 2 or more right reasons is missing from every wrong one
+      // (it would mark the right card), for both decks.
+      List<String> words(String t) => t.split(RegExp(r'[\s,—-]+')).where((w) => w.isNotEmpty).toList();
+      void noRightOnlyWord(String name, List<String> right, List<String> wrong) {
+        final counts = <String, int>{};
+        for (final t in right) {
+          for (final w in words(t).toSet()) {
+            counts[w] = (counts[w] ?? 0) + 1;
+          }
+        }
+        final wrongWords = {for (final t in wrong) ...words(t)};
+        final tells = [for (final e in counts.entries) if (e.value >= 2 && !wrongWords.contains(e.key)) e.key];
+        expect(tells, isEmpty, reason: '$name: words only on right cards');
+      }
+
+      noRightOnlyWord('ok', M3GuardPatrolLines.okWhy, M3GuardPatrolLines.okMyths);
+      noRightOnlyWord('report', [for (final l in M3GuardPatrolLines.faultWhy.values) ...l], M3GuardPatrolLines.reportExcuses);
+      // No ending shared by every excuse.
+      final ends = M3GuardPatrolLines.reportExcuses.map((t) => words(t).last).toSet();
+      expect(ends.length, greaterThan(3));
+      // English digits only.
+      for (final l in [M3GuardPatrolLines.intro, M3GuardPatrolLines.ask, ...all.map((m) => m.textBn)]) {
+        expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
+      }
       for (final m in all) {
         expect(m.key, startsWith('3.9/m3_guard_patrol/'));
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
@@ -331,7 +370,7 @@ void main() {
         }
         debugPrint('PERF m3_guard_patrol ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -396,7 +435,7 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('a tag on a sound spot: no card, the guide says so, the round stays', (t) async {
+    testWidgets('a tag on a sound spot: a slip with its own card (no free probe)', (t) async {
       var seed = 0;
       while (true) {
         final d = m3GuardPatrolDeal(math.Random(seed));
@@ -410,12 +449,14 @@ void main() {
       }
       await _tag(t, _S.spanL);
       await t.tap(find.text(M3GuardPatrolLines.report));
-      await _pump(t, 600);
-      expect(find.byType(MistakeCard), findsNothing);
+      await _pump(t, 800);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
       expect(find.byType(ChoiceDeck), findsNothing);
-      expect(c.read(guideDirectorProvider).line, M3GuardPatrolLines.needless);
-      expect(find.text(M3GuardPatrolLines.report), findsOneWidget);
-      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M3GuardPatrolMistakes.needlessTag.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 1500);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.text(M3GuardPatrolLines.allOk), findsOneWidget, reason: 'the next crossing');
       await _close(t, c);
     });
 
@@ -439,6 +480,87 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('a fast play cannot skip him: the report on his crossing waits for him', (t) async {
+      var seed = 0;
+      while (m3GuardPatrolDeal(math.Random(seed)).callAt != 0) {
+        seed++;
+      }
+      final deal = m3GuardPatrolDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      for (final s in deal.cases[0].faults.keys) {
+        await t.tapAt(_geo.hit(s).center * _k);
+        await t.pump(const Duration(milliseconds: 60));
+      }
+      await t.tap(find.text(M3GuardPatrolLines.report));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the report brings him in now');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(find.text(M3GuardPatrolLines.stampReport), findsNothing, reason: 'the report waited');
+      await _pickRight(t, M3GuardPatrolLines.coworker.right);
+      await _pump(t, 1500);
+      await t.tap(find.text(M3GuardPatrolLines.report));
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the reason deck');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips: the level is struck out (StruckOutCard)', (t) async {
+      const seed = 7;
+      final deal = m3GuardPatrolDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        final cs = deal.cases[i];
+        if (i == deal.callAt) {
+          await t.tap(find.text(M3GuardPatrolLines.allOk));
+          await _pickRight(t, M3GuardPatrolLines.coworker.right);
+          await _pump(t, 1500);
+        }
+        if (cs.healthy) {
+          await _tag(t, _S.spanL);
+          await t.tap(find.text(M3GuardPatrolLines.report));
+        } else {
+          await t.tap(find.text(M3GuardPatrolLines.allOk));
+        }
+        await _pump(t, 800);
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${i + 1}');
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 1500);
+        }
+      }
+      await _pump(t, 600);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes, hasLength(3));
+      expect(s.rungProgress['3.9/do/0'], isNot('cleared'));
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: a sweep over all five spots while the crossing waits; taps on nothing bring it', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, quietSeed());
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      expect(hand, findsNothing);
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget, reason: 'idle while the crossing waits');
+      final st = t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(st.debugOptions, hasLength(5), reason: 'every spot, never one');
+      await t.tapAt(const Offset(180, 120) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(st.showing, isFalse, reason: 'a touch hides it');
+      for (var i = 0; i < 2; i++) {
+        await t.tapAt(const Offset(180, 120) * _k);
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      await _pump(t, 300);
+      expect(st.showing, isTrue, reason: 'three taps on nothing');
+      await _close(t, c);
+    });
+
     testWidgets('listening to him = a bare hand on the hanging wire: deadly — freeze first, then the card', (t) async {
       var seed = 0;
       while (m3GuardPatrolDeal(math.Random(seed)).callAt != 0) {
@@ -449,9 +571,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 9000), isTrue, reason: 'he comes even with no tag');
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M3GuardPatrolLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1400);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);

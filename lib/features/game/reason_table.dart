@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ import '../../design/slm_design.dart';
 import '../guide/guide_director.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'choice_deck.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 
 // Level 1's success beat for any Do level (GAME_LEVEL_PLAYBOOK.md §1.6):
@@ -18,6 +20,12 @@ import 'learn_feedback_lines.dart';
 // (a right retry still pays 5) → the chosen card zooms with full text and a
 // proceed button; the level moves only when the player taps proceed.
 // A wrong reason is not a strike; the field mistakes are the strikes.
+//
+// From [ReasonTable.putOnTable] until the deck opens (the praise line + a
+// breath) the scene takes no input: [FullSceneFrame] finds this mixin above it
+// and shields its scene and overlays (the header's close and mute stay live).
+// Levels gate their own handlers on [ReasonTable.tableBusy] as well, so a
+// second tap in that window can never score twice or slip.
 
 /// The reason pays what waited on the table; after a wrong reason burned it,
 /// the right one still pays 5 (the level 1 rule).
@@ -44,6 +52,8 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   int _burnAmt = 0;
   int _burnTok = 0;
   var reasonOpen = false;
+  /// Praise window: the ◆ is on the table, the deck is not up yet.
+  var _tableHold = false;
   var _reasonBusy = false;
   var _reasonRetry = false;
   List<ChoiceOption> _reasonOpts = const [];
@@ -61,11 +71,21 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// True while the zoomed proceed card is up (tests can wait on this).
   bool get reasonAwaitingProceed => _reasonReveal;
 
+  /// The praise window: from [putOnTable] until the reason deck opens. The
+  /// scene must take no input now ([FullSceneFrame] shields it by itself).
+  bool get tableHolding => _tableHold && !reasonEnded;
+
+  /// A right move is being rewarded: from [putOnTable] until the reason deck
+  /// has closed ([proceedReason]). Gate the level's scene controls on it
+  /// (`!tableBusy` in `_canPlay`); the deck itself stays live.
+  bool get tableBusy => tableHolding || reasonOpen;
+
   /// A right move: its ◆ go on the table (call inside the level's setState
   /// or on its own — it sets state).
   void putOnTable(int amount) {
     setState(() {
       tablePending = amount;
+      _tableHold = true;
       _tableTok++;
       _reasonRetry = false;
       _reasonWrong.clear();
@@ -80,9 +100,14 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   Future<void> askReason({required List<ChoiceOption> Function() deal, required String question, bool Function()? stillValid}) async {
     await reasonSay([_praise.next().shownBn], mood: GuideMood.celebrate);
     await Future<void>.delayed(const Duration(milliseconds: 650));
-    if (!mounted || reasonEnded || reasonOpen || (stillValid != null && !stillValid())) return;
+    if (!mounted) return;
+    if (reasonEnded || reasonOpen || (stillValid != null && !stillValid())) {
+      if (_tableHold) setState(() => _tableHold = false);
+      return;
+    }
     setState(() {
       _reasonOpts = deal();
+      _tableHold = false;
       reasonOpen = true;
       _reasonReveal = false;
       _reasonRevealText = '';
@@ -150,6 +175,7 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (!reasonMuted) unawaited(ZlFx.cue('sounds/intro/click.ogg', volume: 0.55, muted: false));
     setState(() {
       reasonOpen = false;
+      _tableHold = false;
       _reasonReveal = false;
       _reasonBusy = false;
       _reasonPicked = null;
@@ -264,6 +290,20 @@ class _ReasonProceedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Stuck on the zoomed card: the hand taps the one button (how, not what).
+    return IdleHint(
+      waiting: true,
+      waitKey: textBn,
+      spec: (size) => HintSpec.tap(Offset(size.width / 2, size.height - 14 - 25), space: HintSpace.local),
+      child: _card(context),
+    );
+  }
+
+  Widget _card(BuildContext context) {
+    // Never taller than the screen under the header: a long reason scrolls
+    // inside the card and এগিয়ে যান stays in reach (320×568, landscape).
+    final mq = MediaQuery.of(context);
+    final maxH = math.max(160.0, mq.size.height - mq.padding.top - mq.padding.bottom - 54 - 12);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: quiet ? 1 : 0.82, end: 1),
       duration: Duration(milliseconds: quiet ? 1 : 420),
@@ -271,6 +311,7 @@ class _ReasonProceedCard extends StatelessWidget {
       builder: (_, t, child) => Transform.scale(scale: t, alignment: Alignment.bottomCenter, child: child),
       child: Container(
         width: double.infinity,
+        constraints: BoxConstraints(maxHeight: maxH),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -311,9 +352,13 @@ class _ReasonProceedCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Text(
-              enDigits(textBn),
-              style: bangla(fontSize: 16.5, fontWeight: FontWeight.w800, height: 1.4, color: SlmColors.ivory),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Text(
+                  enDigits(textBn),
+                  style: bangla(fontSize: 16.5, fontWeight: FontWeight.w800, height: 1.4, color: SlmColors.ivory),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Material(

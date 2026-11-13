@@ -4,7 +4,10 @@
 // handle, the load let off slowly), the deal, the reason libraries, and the
 // level in the shell: idle perf, the guide first, the guide's tap, a full
 // clean play to a pass (with the coworker refused and the pawl seated), a
-// slip card, and the deadly freeze (standing in the line of pull).
+// slip card, "done" while it sags = a slip, three slips strike out, the
+// coworker comes even on a fast pull, listening to him is a slip, a second
+// spot tap after the station is won does nothing (audit 2026-11-11), the
+// gesture hint, and the deadly freeze (standing in the line of pull).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,7 +21,9 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m2_comealong_pull.dart';
@@ -31,6 +36,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.4/do/1',
@@ -80,20 +86,14 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await confirmChoice(t);
+  // The reason's zoom + এগিয়ে যান (coworker decks have no proceed).
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -149,11 +149,41 @@ Future<void> _rig(WidgetTester t) async {
   await _reason(t, PullStation.rig);
 }
 
-Future<void> _hold(WidgetTester t, String label, int ms) async {
+Future<void> _hold(WidgetTester t, String label, int ms, {int after = 300}) async {
   final g = await t.startGesture(t.getCenter(find.text(label)));
   await _pump(t, ms);
   await g.up();
-  await _pump(t, 300);
+  await _pump(t, after);
+}
+
+/// Takes the come-along and taps a weak anchor: one slip.
+Future<void> _weakAnchor(WidgetTester t, PullAnchor a) async {
+  await t.tap(_label(PullLines.comeAlong));
+  await _pump(t, 200);
+  await t.tapAt(_screen(_geo.anchorRect(a).center));
+  await _pump(t, 600);
+}
+
+/// Rig, stand beside, the spot's reason: the pull is next.
+Future<void> _toPull(WidgetTester t) async {
+  await _rig(t);
+  await t.tapAt(_screen(_geo.spotRect(PullSpot.side).center));
+  await _pump(t, 1000);
+  await _reason(t, PullStation.spot);
+}
+
+/// Strokes (fast or slow) until he is dealt; seats the pawl when it slips.
+Future<void> _strokeToCall(WidgetTester t, PullDeal deal, {required bool fast}) async {
+  final mirror = PullRun(deal)..station = PullStation.pull;
+  while (mirror.strokes < deal.callAt) {
+    await _hold(t, PullLines.pull, fast ? 950 : 1000, after: fast ? 50 : 300);
+    expect(mirror.stroke(), isNull);
+    if (mirror.slipping) {
+      await t.tap(_label(PullLines.ratchet));
+      await t.pump(Duration(milliseconds: fast ? 50 : 300));
+      mirror.seatPawl();
+    }
+  }
 }
 
 void main() {
@@ -166,9 +196,13 @@ void main() {
         expect(d.lostAt, inInclusiveRange(2, d.need - 1));
         expect(d.callAt, inInclusiveRange(1, d.need - 1));
         expect(d.notches, inInclusiveRange(3, 4));
-        seen.add('${d.need}${d.lostAt}${d.callAt}${d.notches}');
+        expect(d.tray.toSet(), PullTool.values.toSet());
+        seen.add('${d.need}${d.lostAt}${d.callAt}${d.notches}${d.gripLeft}');
       }
       expect(seen.length, greaterThan(20));
+      // The tool tray is not laid out in the lesson's order every play.
+      final firsts = {for (var s = 0; s < 40; s++) dealPull(math.Random(s)).tray.first};
+      expect(firsts, PullTool.values.toSet());
     });
 
     PullRun run([PullDeal d = const PullDeal(need: 4, lostAt: 2, callAt: 2, notches: 3)]) => PullRun(d);
@@ -208,7 +242,7 @@ void main() {
       expect(ok.caught, contains(PullLines.caughtSpot));
     });
 
-    test('pull: the lost stroke runs back; a stroke or done with the pawl off is a slip; past the right sag is a slip', () {
+    test('pull: the lost stroke runs back; a stroke or done with the pawl off is a slip; done while it sags is a slip; past the right sag is a slip', () {
       final r = run()..station = PullStation.pull;
       expect(r.stroke(), isNull);
       expect(r.strokes, 1);
@@ -220,8 +254,10 @@ void main() {
       expect(r.slips, 2);
       r.seatPawl();
       expect(r.caught, contains(PullLines.caughtPawl));
-      expect(r.check().$1, PullCheck.slack, reason: 'not scored');
-      expect(r.slips, 2);
+      final early = r.check();
+      expect(early.$1, PullCheck.slack);
+      expect(early.$2, PullMistakes.stoppedSlack, reason: 'a stop before the right sag costs a slip (no free probing)');
+      expect(r.slips, 3);
       for (var i = 0; i < 3; i++) {
         expect(r.stroke(), isNull);
       }
@@ -229,7 +265,7 @@ void main() {
       expect(r.tension, 1);
       expect(r.stroke(), PullMistakes.overPull);
       expect(r.strokes, 4, reason: 'let back to the right sag');
-      expect(r.check().$1, PullCheck.ok);
+      expect(r.check(), (PullCheck.ok, null));
       expect(r.caught, contains(PullLines.caughtSag));
       expect(PullGeo.sagAt(1), PullGeo.okSag);
       expect(PullGeo.sagAt(1.25), lessThan(PullGeo.okSag));
@@ -252,6 +288,19 @@ void main() {
       expect(r.passed, isTrue);
       final p = run()..listenPipe();
       expect(p.slips, 1);
+      expect(PullMistakes.pipe.deadly, isFalse, reason: 'listening to him is a slip');
+    });
+
+    test('after the deadly every rule is closed (ended guards)', () {
+      final r = run()..station = PullStation.spot;
+      expect(r.stand(PullSpot.front), PullMistakes.inLine);
+      expect(r.stand(PullSpot.side), isNull);
+      expect(r.spot, isNull);
+      r.station = PullStation.pull;
+      expect(r.stroke(), isNull);
+      expect(r.check(), (null, null));
+      expect(r.strokes, 0);
+      expect(r.slips, 0);
     });
 
     test('English digits only; every mistake has its picture and its lesson point; one deadly', () {
@@ -274,8 +323,9 @@ void main() {
       }
       expect(PullMistakes.all.where((m) => m.deadly), [PullMistakes.inLine]);
       expect(PullMistakes.pipe.lessonPoint, isNull, reason: 'pro tip');
+      expect(PullMistakes.stoppedSlack.lessonPoint, isNull, reason: 'the mission briefing');
       for (final m in PullMistakes.all) {
-        if (m != PullMistakes.pipe) expect(m.lessonPoint, inInclusiveRange(0, 2), reason: m.key);
+        if (m != PullMistakes.pipe && m != PullMistakes.stoppedSlack) expect(m.lessonPoint, inInclusiveRange(0, 2), reason: m.key);
         expect(m.key, startsWith('2.4/pull/'));
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
       }
@@ -323,7 +373,7 @@ void main() {
         t.platformDispatcher.accessibilityFeaturesTestValue = FakeAccessibilityFeatures(disableAnimations: reduce);
         await t.pumpWidget(ProviderScope(child: _app(M2ComealongPullPage(ctx: _ctx, pack: _pack, muted: true, seed: 4))));
         await t.pump(const Duration(milliseconds: 100));
-        expect(find.text('শুরু'), findsNothing);
+        expect(find.textContaining(RegExp('শুরু')), findsNothing);
         await waitIntro(t);
         await _pump(t, 14000);
         rebuilds = 0;
@@ -338,7 +388,7 @@ void main() {
         }
         debugPrint('PERF m2_comealong_pull ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -355,6 +405,7 @@ void main() {
       await t.pumpWidget(ProviderScope(child: _app(M2ComealongPullPage(ctx: _ctx, pack: _pack, muted: true, seed: 1))));
       await t.pump(const Duration(milliseconds: 300));
       expect(find.byType(GuideIntro), findsOneWidget);
+      expect(find.textContaining(RegExp('শুরু')), findsNothing);
       await t.tapAt(const Offset(200, 400));
       await t.pump(const Duration(milliseconds: 400));
       expect(find.byType(GuideIntro), findsOneWidget);
@@ -408,8 +459,6 @@ void main() {
         if (!met && mirror.strokes >= deal.callAt) {
           met = true;
           expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes');
-          await _pumpUntil(t, find.byType(ChoiceDeck));
-          await _pump(t, 600);
           await _pickRight(t, PullLines.coworker.right);
           await _pump(t, 2600);
         }
@@ -435,7 +484,7 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('a weak anchor: the slip card, booked; "done" while it sags is not scored', (t) async {
+    testWidgets('a weak anchor: the slip card, booked; "done" while it sags is a slip too', (t) async {
       final c = await _open(t, 5);
       await t.tap(_label(PullLines.comeAlong));
       await _pump(t, 200);
@@ -452,10 +501,116 @@ void main() {
       await _pump(t, 1000);
       await _reason(t, PullStation.spot);
       await t.tap(find.text(PullLines.done));
-      await _pump(t, 400);
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.map((m) => m.key), contains(PullMistakes.stoppedSlack.key));
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
       expect(find.byType(MistakeCard), findsNothing);
-      expect(c.read(guideDirectorProvider).line, PullLines.stillSlack);
-      expect(c.read(gameSaveProvider).mistakes, hasLength(1));
+      expect(find.text(PullLines.pull), findsOneWidget, reason: 'the pull goes on');
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike the level out: the struck-out card, not cleared', (t) async {
+      final c = await _open(t, 7);
+      for (final a in [PullAnchor.insulator, PullAnchor.armTip]) {
+        await _weakAnchor(t, a);
+        expect(find.byType(MistakeCard), findsOneWidget);
+        await t.tap(find.text(MistakeLines.gotIt));
+        await _pump(t, 600);
+      }
+      await _weakAnchor(t, PullAnchor.bracket);
+      await _pump(t, 1500);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['2.4/do/1'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key), contains(PullMistakes.weakAnchor.key));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a second spot tap after the station is won does nothing (no walk into the line, no second ◆)', (t) async {
+      final c = await _open(t, 8);
+      await _rig(t);
+      await t.tapAt(_screen(_geo.spotRect(PullSpot.side).center));
+      await _pump(t, 1000);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pump(t, 700);
+      await _pickRight(t, PullLines.whyRight(PullStation.spot));
+      // At once, before the next station starts: the line of pull.
+      await t.tapAt(_screen(_geo.spotRect(PullSpot.front).center));
+      await _pump(t, 1500);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.byKey(const ValueKey('hud-token')), findsNothing, reason: 'no second reward');
+      expect(find.byType(ChoiceDeck), findsNothing);
+      expect(find.text(PullLines.pull), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('the coworker comes even on a fast pull: the next stroke waits for him', (t) async {
+      const seed = 11;
+      final deal = dealPull(math.Random(seed));
+      final c = await _open(t, seed);
+      await _toPull(t);
+      await _strokeToCall(t, deal, fast: true);
+      // He is dealt now (his own timer is 1.2–2.4 s away): pull again at once.
+      expect(find.byType(CoworkerPeek), findsNothing);
+      final g = await t.startGesture(t.getCenter(find.text(PullLines.pull)));
+      await _pump(t, 250);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the stroke waited for him');
+      await g.up();
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pickRight(t, PullLines.coworker.right);
+      await _pump(t, 2600);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.text(PullLines.pull), findsOneWidget);
+      await _close(t, c);
+    });
+
+    testWidgets('listening to the coworker is a slip (the pipe card), not deadly', (t) async {
+      const seed = 12;
+      final deal = dealPull(math.Random(seed));
+      final c = await _open(t, seed);
+      await _toPull(t);
+      await _strokeToCall(t, deal, fast: false);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(PullLines.coworker.wrong);
+      expect(wrong, hasLength(2));
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 1500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, PullMistakes.pipe.key);
+      expect(c.read(gameSaveProvider).mistakes.single.deadly, isFalse);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: a sweep over both tools (never one), then over every place on the pole', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 9);
+      IdleHintState frame() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      Future<bool> shows() async {
+        for (var ms = 0; ms < 12000; ms += 100) {
+          if (frame().showing) return true;
+          await t.pump(const Duration(milliseconds: 100));
+        }
+        return false;
+      }
+
+      expect(await shows(), isTrue);
+      expect(frame().debugFrame, isNotNull);
+      expect(frame().debugOptions, hasLength(2), reason: 'both tools, the same way');
+      await t.tap(_label(PullLines.comeAlong));
+      await _pump(t, 300);
+      expect(await shows(), isTrue);
+      expect(frame().debugOptions, hasLength(PullAnchor.values.length + 1), reason: 'every place, the grip spot too');
       await _close(t, c);
     });
 

@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -51,8 +52,17 @@ import 'spoken_once.dart';
 // teeth); the wrong grip for the conductor (the lesson's myth: it damages the
 // conductor for good); holding the job when the right tool was there.
 //
-// Voice: the guide's lines on device TTS; the coworker's new lines on device
-// TTS too (to be recorded; listed in M2ComeAlongLines.toRecord). Art: drawn
+// Listening to him on the rating push stays deadly: the act he pushes (a
+// puller below the pull) is on this step's deadly list (MODULE2_LADDER.md
+// row 11); his grip push is a slip. He cannot be skipped by a fast play: the
+// take and the hold wait for him (holdForCoworker), and he never cuts into
+// the praise window (tableBusy). Gesture hints: a sweep over the rack and the
+// hold button, a short sideways nudge on the tool in hand, a sweep over put
+// back / take, a tap on the zoomed docket.
+//
+// Voice: the guide's lines on device TTS; the coworker's two push lines have
+// no recorded clip yet (silent, caption held; listed in
+// M2ComeAlongLines.toRecord). Art: drawn
 // in code (m2_comealong_world.dart); the mistake cards use the existing tool
 // photos in assets/safety/library/tools/.
 
@@ -270,26 +280,31 @@ abstract final class M2ComeAlongLines {
   static const coworkerRating = CoworkerScript(
     line: 'বড় তার? ছোটটাতেই হবে! এক টনেরটা নাও, হ্যান্ডেলে পাইপ গুঁজলেই টানবে।',
     exitLine: coworkerExit,
-    right: ['না — প্লেটের সীমার বেশি টান নয়', 'হ্যান্ডেলে পাইপ গুঁজে জোর নয়', 'টানের চেয়ে কম টনেরটা নেব না'],
+    // No marker word ("না —") only on the refusals: the words of the right
+    // cards (প্লেট, টান, টন, পাইপ, নেব) are on the wrong ones too; none names
+    // the 2-tonne one (on the last docket it may be the damaged one).
+    right: ['প্লেটের সীমার মধ্যেই টান, কম টনে নয়', 'হ্যান্ডেলে পাইপ গুঁজে জোর নিষেধ', 'টানের চেয়ে বেশি টনের প্লেটটাই নেব'],
     wrong: [
       'ঠিক বলেছ, এক টনেরটাই নিয়ে যাই',
-      'পাইপ গুঁজলে তো জোর এমনিই বাড়ে',
-      'একবার এক টনেরটায় চালিয়ে নিই',
-      'টন-টন সব এক, যেটা হোক নিয়ে নিই',
-      'হালকাটাই নিই, বয়ে নিতে সুবিধা',
+      'পাইপ গুঁজলে টান বাড়ে, এক টনেই হবে',
+      'একবার এক টনেরটায় চালিয়ে নেব',
+      'প্লেট দেখার দরকার নেই, যেটা হোক',
+      'হালকাটাই নেব, বয়ে নিতে সুবিধা',
     ],
     asks: ['ও বলছে এক টনেরটাতেই হবে। আপনি কী করবেন?', 'কম টনেরটা নেবেন, না প্লেট মিলিয়ে?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
   );
   static const coworkerGrip = CoworkerScript(
-    line: 'গ্রিপ তো গ্রিপই! ACSR আর AAAC-তে আর কী তফাৎ? যেটা হাতে আছে লাগাও।',
+    // "Any one" — never "the one in your hand": he may cut in while the
+    // right grip is in the trainee's hand (his push must still be wrong).
+    line: 'গ্রিপ তো গ্রিপই! ACSR আর AAAC-তে আর কী তফাৎ? যেকোনো একটা লাগিয়ে দাও।',
     exitLine: coworkerExit,
-    right: ['না — তারের ধরন মিলিয়ে গ্রিপ নেব', 'ভুল গ্রিপে তারের স্ট্র্যান্ড কাটে', 'লেবেল না মিললে গ্রিপ নেব না'],
+    right: ['তারের ধরন মিলিয়েই গ্রিপটা নেব', 'ভুল গ্রিপে তারের স্ট্র্যান্ড কাটে', 'লেবেলে ডকেটের তার লেখা গ্রিপটাই নেব'],
     wrong: [
-      'ঠিক, যেটা হাতে আছে সেটাই নিই',
-      'গ্রিপ তো গ্রিপই, কী আর তফাৎ',
-      'একবার ভুল গ্রিপেই চালিয়ে নিই',
-      'সবাই তো যেটা পায় সেটাই নেয়',
-      'তার শক্ত, একটু ঘষায় কিছু হয় না',
+      'ঠিক, যেকোনো একটা গ্রিপ নিয়ে নিই',
+      'তারের ধরন যা-ই হোক, গ্রিপ তো গ্রিপই',
+      'একবার ভুল গ্রিপেই চালিয়ে নেব',
+      'লেবেল দেখার দরকার নেই, যেটা পাই নেব',
+      'তার শক্ত, ঘষায় স্ট্র্যান্ড কাটে না',
     ],
     asks: ['ও বলছে যেকোনো গ্রিপেই চলবে। আপনি কী করবেন?', 'যেকোনো গ্রিপ, না তার মিলিয়ে?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
   );
@@ -475,6 +490,7 @@ class M2ComeAlongRun {
   /// Listened to the careless coworker: the too-small puller is deadly; the
   /// wrong grip is a slip.
   CaOutcome heed(CaPush p) {
+    if (ended || shown) return const CaOutcome(CaVerdict.slip);
     if (p == CaPush.rating) return _deadly(M2ComeAlongMistakes.underRated);
     slips++;
     return const CaOutcome(CaVerdict.slip, mistake: M2ComeAlongMistakes.wrongGrip);
@@ -622,6 +638,20 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// Gesture hints (how to touch, never what): the scene's waiting states.
+  final _hints = IdleHintController();
+  final Map<String, GlobalKey> _toolKeys = {};
+  final _holdKey = GlobalKey();
+  final _closeUpKey = GlobalKey();
+  final _putBackKey = GlobalKey();
+  final _takeKey = GlobalKey();
+  final _zoomKey = GlobalKey();
+
+  /// The hand has touched the tool in the close look.
+  var _slid = false;
+
+  GlobalKey _toolKey(String id) => _toolKeys.putIfAbsent(id, GlobalKey.new);
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -671,7 +701,8 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || _run.shown || _freeze;
+  /// The scene takes no move now (also the praise window: tableBusy).
+  bool get _blocked => _intro || _busy || _ended || _card != null || tableBusy || _run.shown || _freeze;
 
   void _setMode(LinemanMode m) {
     _mode = m;
@@ -681,13 +712,21 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
   /// A tool comes off the rack into the trainee's hands.
   void _pick(CaItem r, Offset origin) {
     // Taking another tool while he is still talking refuses him too.
-    if (coworkerOpen && !coworkerChoiceUp && !_isPushed(r)) unawaited(answerCoworker(true, origin, direct: true));
+    if (coworkerOpen && !coworkerChoiceUp) {
+      if (!_isPushed(r)) {
+        unawaited(answerCoworker(true, origin, direct: true));
+      } else if (!_blocked) {
+        // His push stays on the rack until he has finished: the tap is felt.
+        HapticFeedback.selectionClick();
+      }
+    }
     if (_blocked || coworkerOpen || _held != null || _docketOpen || _run.rejected.contains(r.id) || _packed == r.id) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/impact_metal.ogg', volume: 0.45, muted: false));
     _hush();
     setState(() {
       _held = r;
+      _slid = false;
       _setMode(LinemanMode.hold);
     });
     unawaited(_sayChain([M2ComeAlongLines.inspect(r.kind)]));
@@ -703,9 +742,27 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
     if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.wav', volume: 0.6, muted: false));
   }
 
-  void _putBack() {
+  /// The hand first touched the tool in the close look.
+  void _touched() {
+    if (!_slid && mounted) setState(() => _slid = true);
+  }
+
+  /// The coworker is up while the tool is in hand: his deck must be answered
+  /// first (false); while he is still talking (beat 1) going on working
+  /// answers him — taking what he pushes is listening, anything else refuses
+  /// him (true = carry on, unless the tool in hand was his push).
+  bool _goOnPastCoworker(CaItem r, Offset origin, {required bool taking}) {
+    if (!coworkerOpen) return true;
+    if (coworkerChoiceUp) return false;
+    final heed = taking && _isPushed(r);
+    unawaited(answerCoworker(!heed, origin, direct: true));
+    return !heed;
+  }
+
+  void _putBack(Offset origin) {
     final r = _held;
     if (r == null || _blocked) return;
+    if (!_goOnPastCoworker(r, origin, taking: false)) return;
     final aside = _run.putBack(r);
     HapticFeedback.selectionClick();
     setState(() {
@@ -724,6 +781,12 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
   void _take(Offset origin) {
     final r = _held;
     if (r == null || _blocked) return;
+    if (coworkerOpen) {
+      if (!_goOnPastCoworker(r, origin, taking: true)) return;
+    } else if (holdForCoworker()) {
+      // He is due on this docket: he cuts in now (a fast take cannot skip him).
+      return;
+    }
     setState(() => _held = null);
     final o = _run.take(r);
     switch (o.verdict) {
@@ -756,6 +819,7 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
 
   void _holdJob(Offset origin) {
     if (_blocked || coworkerOpen || _held != null || _docketOpen) return;
+    if (holdForCoworker()) return;
     _hush();
     final o = _run.holdJob();
     if (o.verdict == CaVerdict.right) {
@@ -830,11 +894,14 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
-    if (_blocked || _held != null || _docketOpen) return false;
-    // Nothing left on the rack to push: he tries again later (the next docket).
+    // His push is worked out first, so a decisive control that lets him in
+    // (holdForCoworker, with a tool in hand) gets the line for this docket.
+    // Nothing left on the rack to push: his moment has passed on this docket
+    // (the next docket arms him again).
     final push = caPushFor(_run.current, _run.rejected);
-    if (push == null) return false;
+    if (push == null) return null;
     _push = push;
+    if (_blocked || tableBusy || _held != null || _docketOpen) return false;
     return true;
   }
 
@@ -846,13 +913,19 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Took what he pushed: the too-small puller (deadly), or the wrong grip (a slip).
+      // Took what he pushed: the too-small puller (deadly: on this step's
+      // deadly list), or the wrong grip (a slip). A tool in hand goes back.
       final o = _run.heed(_push);
+      final m = o.mistake;
+      if (m == null) return;
       if (o.verdict == CaVerdict.deadly) {
-        await _deadly(o.mistake!);
+        await _deadly(m);
       } else {
-        setState(() => _setMode(LinemanMode.worried));
-        await _slip(o.mistake!, origin);
+        setState(() {
+          _held = null;
+          _setMode(LinemanMode.worried);
+        });
+        await _slip(m, origin);
       }
       return;
     }
@@ -863,7 +936,7 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
     unawaited(() async {
       await coworkerSnarl();
       if (!mounted || chain != _chain) return;
-      await _sayChain([M2ComeAlongLines.callHeld, _askLine], mood: GuideMood.glad);
+      await _sayChain([M2ComeAlongLines.callHeld, _task], mood: GuideMood.glad);
     }());
   }
 
@@ -880,6 +953,34 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
     unawaited(_sayChain([line]));
   }
 
+  // ---- gesture hints ------------------------------------------------------------------
+
+  /// A tap on nothing (the van's paint, the dim round the close look).
+  void _missTap() {
+    if (!_blocked) _hints.missTap();
+  }
+
+  /// How to touch now — never which tool: a sweep over every tool still on
+  /// the rack and the hold button; with a tool in hand, a short sideways
+  /// nudge along it until the hand has touched it, then a sweep over put
+  /// back / take; on the zoomed docket, a tap (its one way forward).
+  HintSpec? _hint() {
+    if (_docketOpen) return HintSpec.tapOn(_zoomKey);
+    if (_held != null) {
+      if (!_slid) {
+        final r = HintSpec.globalRectOf(_closeUpKey);
+        return r == null ? null : HintSpec.drag(Offset(r.left + r.width * 0.12, r.top + r.height * 0.3), toward: const Offset(1, 0), travel: 80);
+      }
+      return HintSpec.sweepOver([_putBackKey, _takeKey]);
+    }
+    final r = _run.current;
+    return HintSpec.sweepOver([
+      for (final x in r.items)
+        if (!_run.rejected.contains(x.id) && _packed != x.id) _toolKey(x.id),
+      _holdKey,
+    ]);
+  }
+
   // ---- mistakes ---------------------------------------------------------------------
 
   /// The third small mistake: the level fails and the lesson card insists.
@@ -894,6 +995,8 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
   }
 
   Future<void> _slip(DoMistake m, Offset origin) async {
+    // Never over a deadly freeze (a card would lift it) or after the end.
+    if (_ended) return;
     if (strike(m)) {
       await _struckOut(m);
       return;
@@ -1036,7 +1139,11 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
     return [
       Positioned.fill(
         key: const ValueKey('van'),
-        child: ColorFiltered(colorFilter: grey, child: RepaintBoundary(child: CustomPaint(painter: RodVanPainter(geo)))),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) => _missTap(),
+          child: ColorFiltered(colorFilter: grey, child: RepaintBoundary(child: CustomPaint(painter: RodVanPainter(geo)))),
+        ),
       ),
       // The docket on the left door (tap to read it close).
       Positioned.fromRect(
@@ -1059,6 +1166,7 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
               muted: true,
               child: _RackTool(
+                key: _toolKey(r.items[i].id),
                 item: r.items[i],
                 gone: _run.rejected.contains(r.items[i].id) || _packed == r.items[i].id || _held?.id == r.items[i].id,
                 enabled: canPick,
@@ -1094,6 +1202,9 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
     final deckUp = reasonOpen || coworkerChoiceUp;
     final holdUp = playing && _held == null && !_docketOpen && _card == null && !deckUp && !_run.shown && !coworkerOpen;
     final held = _held;
+    // The hand shows only while the scene waits for a move (the decks carry
+    // their own sweep; never in the coworker's beats or the praise window).
+    final hintWaiting = playing && !_blocked && !deckUp && !coworkerOnScreen;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1121,6 +1232,10 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: '${_run.round}/${held?.id}/$_docketOpen/$_slid/${_run.rejected.length}',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (holdUp)
@@ -1129,7 +1244,7 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
                   left: 12,
                   right: 128,
                   bottom: pad.bottom + 18,
-                  child: _HoldButton(onTapUp: (d) => _holdJob(d.globalPosition)),
+                  child: KeyedSubtree(key: _holdKey, child: _HoldButton(onTapUp: (d) => _holdJob(d.globalPosition))),
                 ),
               if (held != null && playing)
                 _Inspect(
@@ -1137,6 +1252,11 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
                   item: held,
                   docket: _run.current.docket,
                   quiet: quiet,
+                  closeUpKey: _closeUpKey,
+                  putBackKey: _putBackKey,
+                  takeKey: _takeKey,
+                  onTouch: _touched,
+                  onMiss: _missTap,
                   onFound: _found,
                   onTake: _take,
                   onPutBack: _putBack,
@@ -1144,6 +1264,7 @@ class _CaRunPageState extends ConsumerState<_CaRunPage> with DoDeathGuard, DoStr
               if (_docketOpen && playing)
                 _DocketZoom(
                   key: const ValueKey('docket-zoom'),
+                  cardKey: _zoomKey,
                   docket: _run.current.docket,
                   quiet: quiet,
                   onClose: () => setState(() => _docketOpen = false),
@@ -1339,7 +1460,8 @@ class _DocketSheet extends StatelessWidget {
 
 /// The docket held up close (tap anywhere to put it back on the door).
 class _DocketZoom extends StatelessWidget {
-  const _DocketZoom({super.key, required this.docket, required this.quiet, required this.onClose});
+  const _DocketZoom({super.key, required this.cardKey, required this.docket, required this.quiet, required this.onClose});
+  final GlobalKey cardKey;
   final CaDocket docket;
   final bool quiet;
   final VoidCallback onClose;
@@ -1360,6 +1482,7 @@ class _DocketZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: cardKey,
                 width: 280,
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
                 decoration: BoxDecoration(
@@ -1395,10 +1518,15 @@ class _DocketZoom extends StatelessWidget {
 }
 
 /// A tool drawn upright as it hangs: the come-along by its anchor hook, the
-/// grip by its eye (from the top of the box).
+/// grip by its eye (from the top of the box). On the rack nothing has been
+/// looked at, so its flaw does not show; only a tool already set aside
+/// ([showFlaw]) shows what the hand or the slip card found.
 class _Hanging extends StatelessWidget {
-  const _Hanging({required this.item});
+  const _Hanging({required this.item, this.showFlaw = false});
   final CaItem item;
+  final bool showFlaw;
+
+  static const Set<int> _unseen = {};
 
   @override
   Widget build(BuildContext context) {
@@ -1415,7 +1543,7 @@ class _Hanging extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 Positioned.fill(
-                  child: RotatedBox(quarterTurns: grip ? 3 : 1, child: CustomPaint(painter: CaToolPainter(item))),
+                  child: RotatedBox(quarterTurns: grip ? 3 : 1, child: CustomPaint(painter: showFlaw ? CaToolPainter(item) : CaToolPainter(item, seenTop: _unseen, seenLow: _unseen))),
                 ),
               ],
             ),
@@ -1430,7 +1558,7 @@ class _Hanging extends StatelessWidget {
 /// label is too small to read and its flaws do not show. Tap it, or pull it
 /// down off the rail, to take it in hand.
 class _RackTool extends StatefulWidget {
-  const _RackTool({required this.item, required this.gone, required this.enabled, required this.onTake});
+  const _RackTool({super.key, required this.item, required this.gone, required this.enabled, required this.onTake});
   final CaItem item;
   final bool gone;
   final bool enabled;
@@ -1496,7 +1624,7 @@ class _AsideTool extends StatelessWidget {
           clipBehavior: Clip.none,
           alignment: Alignment.topCenter,
           children: [
-            Positioned.fill(child: _Hanging(item: item)),
+            Positioned.fill(child: _Hanging(item: item, showFlaw: true)),
             Positioned(
               top: 40,
               child: Container(
@@ -1522,6 +1650,11 @@ class _Inspect extends StatefulWidget {
     required this.item,
     required this.docket,
     required this.quiet,
+    required this.closeUpKey,
+    required this.putBackKey,
+    required this.takeKey,
+    required this.onTouch,
+    required this.onMiss,
     required this.onFound,
     required this.onTake,
     required this.onPutBack,
@@ -1529,9 +1662,20 @@ class _Inspect extends StatefulWidget {
   final CaItem item;
   final CaDocket docket;
   final bool quiet;
+
+  /// For the page's gesture hint (the close-up, the two buttons).
+  final GlobalKey closeUpKey;
+  final GlobalKey putBackKey;
+  final GlobalKey takeKey;
+
+  /// The hand touched the tool (once per close look).
+  final VoidCallback onTouch;
+
+  /// A tap on the dim round the card (nothing there).
+  final VoidCallback onMiss;
   final VoidCallback onFound;
   final ValueChanged<Offset> onTake;
-  final VoidCallback onPutBack;
+  final ValueChanged<Offset> onPutBack;
 
   @override
   State<_Inspect> createState() => _InspectState();
@@ -1552,6 +1696,7 @@ class _InspectState extends State<_Inspect> {
       if (x >= 0 && x < kCaBins) set.add(x);
     }
     final grew = set.length != before;
+    widget.onTouch();
     if (!_found && CaToolPainter.flawSeen(widget.item, _top, _low)) {
       _found = true;
       widget.onFound();
@@ -1565,6 +1710,7 @@ class _InspectState extends State<_Inspect> {
           final plate = CaToolPainter.plate(s, item.kind);
           final tool = CaToolPainter.box(s, item.kind);
           return Semantics(
+            key: widget.closeUpKey,
             label: M2ComeAlongLines.handLabel,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -1585,8 +1731,10 @@ class _InspectState extends State<_Inspect> {
                     child: IgnorePointer(child: _Tag(text: item.tag, plate: item.kind == CaKind.puller)),
                   ),
                   // Where to run the hand: along the top, along the bottom.
-                  if (_top.isEmpty) _Puck(at: Offset(tool.left + tool.width * 0.08, s.height * 0.3)),
-                  if (_low.isEmpty) _Puck(at: Offset(tool.left + tool.width * 0.6, s.height * 0.78)),
+                  // Both at the start of their strip, the same on every tool
+                  // (never on a stretch where a fault sits further along).
+                  if (_top.isEmpty) _Puck(at: Offset(tool.left + tool.width * 0.04, s.height * 0.3)),
+                  if (_low.isEmpty) _Puck(at: Offset(tool.left + tool.width * 0.04, s.height * 0.78)),
                   if (_hand != null) _Puck(at: _hand!, live: true),
                 ],
               ),
@@ -1599,83 +1747,102 @@ class _InspectState extends State<_Inspect> {
   Widget build(BuildContext context) {
     final item = widget.item;
     return Positioned.fill(
-      child: ColoredBox(
-        color: const Color(0xC0050A16),
-        child: Align(
-          alignment: const Alignment(0, -0.42),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
-            duration: const Duration(milliseconds: 360),
-            curve: Curves.easeOutBack,
-            builder: (_, t, child) => Transform.translate(
-              offset: Offset(0, 80 * (1 - t)),
-              child: Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
+      child: Stack(
+        children: [
+          // The dim round the card: a tap there touches nothing.
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (_) => widget.onMiss(),
+              child: const ColoredBox(color: Color(0xC0050A16)),
             ),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-              decoration: BoxDecoration(
-                color: SlmColors.ivory,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+          ),
+          Align(
+            alignment: const Alignment(0, -0.42),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
+              duration: const Duration(milliseconds: 360),
+              curve: Curves.easeOutBack,
+              builder: (_, t, child) => Transform.translate(
+                offset: Offset(0, 80 * (1 - t)),
+                child: Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // The docket, clipped beside the tool.
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
-                      decoration: BoxDecoration(
-                        color: _paper,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFB59B62)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.receipt_long_rounded, color: _brown, size: 16),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text('${M2ComeAlongLines.docket} · ${M2ComeAlongLines.line(widget.docket)}',
-                                maxLines: 1, overflow: TextOverflow.ellipsis, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  AspectRatio(
-                    aspectRatio: 2.1,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFF3A4654), _bench],
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+                decoration: BoxDecoration(
+                  color: SlmColors.ivory,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // The docket, clipped beside the tool.
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
+                        decoration: BoxDecoration(
+                          color: _paper,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFB59B62)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.receipt_long_rounded, color: _brown, size: 16),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text('${M2ComeAlongLines.docket} · ${M2ComeAlongLines.line(widget.docket)}',
+                                  maxLines: 1, overflow: TextOverflow.ellipsis, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 30, 10, 4),
-                        child: _closeUp(item),
+                    ),
+                    const SizedBox(height: 6),
+                    AspectRatio(
+                      aspectRatio: 2.1,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFF3A4654), _bench],
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(10, 30, 10, 4),
+                          child: _closeUp(item),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(child: DoBigButton(label: M2ComeAlongLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
-                      const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: M2ComeAlongLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: KeyedSubtree(
+                            key: widget.putBackKey,
+                            child: DoBigButton(label: M2ComeAlongLines.putBack, filled: false, onTapUp: (d) => widget.onPutBack(d.globalPosition)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: KeyedSubtree(
+                            key: widget.takeKey,
+                            child: DoBigButton(label: M2ComeAlongLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

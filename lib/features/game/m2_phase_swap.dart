@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -58,7 +59,9 @@ import 'spoken_once.dart';
 // to swap their wires) · START on the starter.
 //
 // Deadly: a screwdriver on the terminals with the main switch ON (also by
-// listening to the coworker, "লাইন চালু রেখেই দুটো তার বদলে দাও!"). Slips:
+// listening to the coworker, "লাইন চালু রেখেই দুটো তার বদলে দাও!" — the act he
+// pushes is itself this level's deadly, MODULE2_LADDER.md step 24; owner to
+// confirm against playbook row 8, listening = slip). Slips:
 // clipping the meter without gloves, a probe on the earth bar, misreading the
 // meter, starting the pump untested / reversed / not tested again after the
 // swap, the swap without the lock and tag or without proving dead, a swap
@@ -68,9 +71,13 @@ import 'spoken_once.dart';
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m2_phase_swap_world.dart), corner guide, ◆ on the table → "কেন …?"
 // → the next pump house by itself; the careless coworker once a play, on a
-// reversed site, as the fix begins. Voice: the guide by device TTS; the
-// coworker's new push by device TTS until recorded (his exit line is his
-// existing recorded clip).
+// reversed site, as the fix begins (the main switch's OFF waits for him:
+// holdForCoworker). The tool row is dealt in a fresh order each play (never
+// the procedure's order); a gesture hint sweeps over every tool and spot
+// when the player seems stuck (how to touch, never which). Voice: the guide
+// by device TTS; the coworker's push has no clip yet, so it is silent with
+// its caption held for a reading time (never the device voice); his exit
+// line is his recorded clip.
 
 // ============================================================================
 // Content
@@ -90,6 +97,25 @@ enum PhaseWhy { keep, swap, isolate, retest }
 
 /// The hands-on tools.
 enum PhaseTool { none, meter, driver }
+
+/// The buttons of the tool row (dealt in a fresh order every play).
+enum PhaseKit { gloves, meter, tester, lock, driver }
+
+/// The order a reversed site uses them in: the row is never laid out so.
+const kPhaseKitProcedure = [PhaseKit.gloves, PhaseKit.meter, PhaseKit.lock, PhaseKit.tester, PhaseKit.driver];
+
+/// The tool row for a play: shuffled, never in [kPhaseKitProcedure]'s order.
+List<PhaseKit> dealPhaseKit(math.Random rng) {
+  final kit = [...PhaseKit.values];
+  for (;;) {
+    kit.shuffle(rng);
+    var same = true;
+    for (var i = 0; i < kit.length; i++) {
+      if (kit[i] != kPhaseKitProcedure[i]) same = false;
+    }
+    if (!same) return kit;
+  }
+}
 
 @immutable
 class PhaseSite {
@@ -581,7 +607,7 @@ class _PhaseRunPage extends ConsumerStatefulWidget {
 class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
     with DoDeathGuard, DoStrikeOut, TickerProviderStateMixin, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
-  late final PhaseRun _run = PhaseRun(dealPhase(widget.rng));
+  late final PhaseRun _run;
   final _clock = Stopwatch();
   late bool _muted = widget.muted;
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
@@ -599,7 +625,15 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
   int? _mark;
   int _totalDelta = 0;
   int _wake = 0;
-  var _coworkerArmed = false;
+  /// He is scheduled this play (once, on the reversed site he is dealt to).
+  var _coworkerSet = false;
+
+  /// The tool row, dealt in a fresh order (never the procedure's order).
+  late final List<PhaseKit> _kit;
+  final _kitKeys = {for (final k in PhaseKit.values) k: GlobalKey()};
+  final _sayKeys = [GlobalKey(), GlobalKey()];
+  final _touchKey = GlobalKey();
+  final _hints = IdleHintController();
 
   /// The tester's lamp, a moment after it touches the terminals.
   bool? _tester;
@@ -610,6 +644,14 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
   Completer<void>? _frozen;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // The deal first (tests rebuild it from the seed), then the tool row.
+    _run = PhaseRun(dealPhase(widget.rng));
+    _kit = dealPhaseKit(widget.rng);
+  }
 
   @override
   LevelContext get deathCtx => widget.ctx;
@@ -654,7 +696,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
     _startSite();
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.pumpOn && !_freeze;
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.pumpOn && !_freeze;
 
   String get _task {
     if (_run.readingUp) return PhaseLines.askRead;
@@ -722,7 +764,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
   }
 
   void _tapScene(Offset p, PhaseGeo geo, Offset global) {
-    if (_intro || _ended || _card != null || reasonOpen || _freeze || _run.pumpOn) return;
+    if (_intro || _ended || _card != null || tableBusy || _freeze || _run.pumpOn) return;
     // While he talks, only the main switch answers him (going OFF refuses him).
     if (coworkerOpen) {
       if (coworkerChoiceUp && geo.handleHit.contains(p) && _run.switchOn && _run.toggleSwitch()) {
@@ -733,6 +775,9 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
       return;
     }
     if (geo.handleHit.contains(p)) {
+      // Going OFF is what makes his push pointless: on his site it waits
+      // for him (a fast player cannot switch off before he comes).
+      if (_run.switchOn && holdForCoworker()) return;
       if (_run.toggleSwitch()) {
         _tick('sounds/intro/impact_metal.ogg', 0.6);
       } else {
@@ -787,7 +832,10 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
       } else if (_run.pumpOn) {
         unawaited(_siteDone());
       }
+      return;
     }
+    // A tap on nothing: three of them soon show how to touch.
+    _hints.missTap();
   }
 
   void _answer(bool sayForward, Offset origin) {
@@ -801,8 +849,8 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
     }
     HapticFeedback.lightImpact();
     _cue('sounds/quiz_right.wav', volume: 0.5);
-    if (!_coworkerArmed && _run.index == _run.deal.callAt && _run.fixing) {
-      _coworkerArmed = true;
+    if (!_coworkerSet && _run.index == _run.deal.callAt && _run.fixing) {
+      _coworkerSet = true;
       scheduleCoworker();
     }
     unawaited(_sayChain([_task]));
@@ -870,7 +918,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.index != _run.deal.callAt || _run.swapped || _run.pumpOn || !_run.switchOn) return null;
-    if (_intro || _card != null || reasonOpen || _run.readingUp || _tester != null) return false;
+    if (_intro || _card != null || tableBusy || _run.readingUp || _tester != null) return false;
     return true;
   }
 
@@ -897,7 +945,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
 
   /// Tap the guide: the task again, a different way each time.
   void _tapGuide() {
-    if (_intro || _ended) return;
+    if (_intro || _ended || tableHolding) return;
     final String line = coworkerOpen
         ? nextCoworkerAsk()
         : reasonOpen
@@ -1066,6 +1114,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
 
   List<Widget> _scene(SceneMetrics m) {
     final geo = PhaseGeo.forScene(m.height, m.inset);
+    _inset = m.inset;
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final tb = geo.trainee;
@@ -1123,7 +1172,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: PhaseLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
+          child: GestureDetector(key: _touchKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
         ),
       ),
       if (_freeze)
@@ -1152,6 +1201,47 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
     ];
   }
 
+  // --- the gesture hint (how to touch, never which) ----------------------------
+  /// A scene rect (design px) in global pixels, through the touch layer.
+  Rect? _sceneRect(Rect r) {
+    final box = _touchKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight));
+  }
+
+  /// Reading: a sweep over both answers. Hands on: a sweep over every tool
+  /// and every spot of the panel (switch, terminals, earth bar, START) — the
+  /// same for every site and step, so it never points at the next move.
+  HintSpec? _hint() {
+    if (_run.readingUp) return HintSpec.sweepOver(_sayKeys);
+    final rects = <Rect>[
+      for (final k in _kit) ?HintSpec.globalRectOf(_kitKeys[k]!),
+    ];
+    final h = _touchKey.currentContext?.size?.height;
+    if (h != null) {
+      final geo = PhaseGeo.forScene(h, _inset);
+      for (final r in [geo.handleHit, geo.terminalBlock, geo.earthBar, geo.startHit]) {
+        final g = _sceneRect(r);
+        if (g != null) rects.add(g);
+      }
+    }
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
+  /// The scene's bottom inset (design px), as the frame passes it to the layers.
+  double _inset = 0;
+
+  String get _hintKey =>
+      '${_run.index}|${_run.readingUp}|${_run.tool.name}|${_run.switchOn}|${_run.locked}|${_run.proved}|${_run.swapped}|${_run.readSinceChange}|$strikes';
+
+  Widget _kitButton(PhaseKit k) => switch (k) {
+        PhaseKit.gloves => _ToolButton(key: _kitKeys[k], icon: Icons.back_hand_rounded, label: PhaseLines.gloves, on: _run.gloves, onTap: _putGloves),
+        PhaseKit.meter => _ToolButton(key: _kitKeys[k], icon: Icons.speed_rounded, label: PhaseLines.meter, on: _run.tool == PhaseTool.meter, onTap: () => _hold(PhaseTool.meter)),
+        PhaseKit.tester => _ToolButton(key: _kitKeys[k], icon: Icons.flash_on_rounded, label: PhaseLines.tester, on: _tester != null, onTap: _useTester),
+        PhaseKit.lock => _ToolButton(key: _kitKeys[k], icon: Icons.lock_rounded, label: PhaseLines.lock, on: _run.locked, onTap: _toggleLock),
+        PhaseKit.driver => _ToolButton(key: _kitKeys[k], icon: Icons.construction_rounded, label: PhaseLines.driver, on: _run.tool == PhaseTool.driver, onTap: () => _hold(PhaseTool.driver)),
+      };
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1159,7 +1249,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.pumpOn && !deckUp && !coworkerOpen && _card == null;
+    final handsOn = playing && !_run.pumpOn && !deckUp && !coworkerOpen && _card == null && !tableBusy;
     final s = _run.site;
     final meterUp = playing && _card == null && (_run.readingUp || _run.blank);
     return PopScope(
@@ -1189,6 +1279,10 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && !_ended,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1215,9 +1309,9 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(child: DoBigButton(label: PhaseLines.sayFwd, filled: true, onTapUp: (d) => _answer(true, d.globalPosition))),
+                      Expanded(child: DoBigButton(key: _sayKeys[0], label: PhaseLines.sayFwd, filled: true, onTapUp: (d) => _answer(true, d.globalPosition))),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: PhaseLines.sayRev, filled: true, onTapUp: (d) => _answer(false, d.globalPosition))),
+                      Expanded(child: DoBigButton(key: _sayKeys[1], label: PhaseLines.sayRev, filled: true, onTapUp: (d) => _answer(false, d.globalPosition))),
                     ],
                   ),
                 ),
@@ -1229,13 +1323,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
                   bottom: pad.bottom + 8,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _ToolButton(icon: Icons.back_hand_rounded, label: PhaseLines.gloves, on: _run.gloves, onTap: _putGloves),
-                      _ToolButton(icon: Icons.speed_rounded, label: PhaseLines.meter, on: _run.tool == PhaseTool.meter, onTap: () => _hold(PhaseTool.meter)),
-                      _ToolButton(icon: Icons.flash_on_rounded, label: PhaseLines.tester, on: _tester != null, onTap: _useTester),
-                      _ToolButton(icon: Icons.lock_rounded, label: PhaseLines.lock, on: _run.locked, onTap: _toggleLock),
-                      _ToolButton(icon: Icons.construction_rounded, label: PhaseLines.driver, on: _run.tool == PhaseTool.driver, onTap: () => _hold(PhaseTool.driver)),
-                    ],
+                    children: [for (final k in _kit) _kitButton(k)],
                   ),
                 ),
               if (deckUp)
@@ -1436,7 +1524,7 @@ class _TesterChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;

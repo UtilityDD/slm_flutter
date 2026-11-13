@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show Combo, ComboPop, FreezeFrame, RescueBurst, freezeFilter, starsFor;
 import 'level_result_parts.dart';
@@ -79,7 +80,7 @@ enum M4JumperAct { brush, twoWrench, oneWrench }
 
 enum M4Cut { under, top, finish, topping }
 
-enum M4BalCall { shiftDead, wrongWay, shiftLive }
+enum M4BalCall { shiftDead, wrongWay, shiftLive, liveBack }
 
 const _art = 'assets/game/art/m4_gate_field';
 const _m2Art = 'assets/game/art/m2_gate_field';
@@ -94,14 +95,13 @@ abstract final class M4GateMistakes {
   );
   static const doUnder = DoMistake(
     key: '4.4/m4_gate_field/do-under',
-    textBn: 'ফিউজের ঠিক নিচে দাঁড়িয়ে টানা মারাত্মক — আর্কের গলিত ধাতু মুখে-শরীরে পড়ে। পাশে, কোণাকুণি দাঁড়ান।',
+    textBn: 'ফিউজের ঠিক নিচে বা সামনে দাঁড়িয়ে টানবেন না — ফিউজ যেন পাশে বা কোণাকুণি থাকে, মুখ একপাশে সরিয়ে দ্রুত টান দিন।',
     art: '$_m2Art/do_stance.svg',
-    deadly: true,
     lessonPoint: 2,
   );
   static const doNoPpe = DoMistake(
     key: '4.4/m4_gate_field/do-no-ppe',
-    textBn: 'DO চালাতে ফেস শিল্ড আর ইনসুলেটেড গ্লাভস বাধ্যতামূলক — আর্ক ফ্ল্যাশ চোখ-মুখ পুড়িয়ে দেয়।',
+    textBn: 'DO চালাতে ফেস শিল্ড আর ইনসুলেটেড গ্লাভস বাধ্যতামূলক — ফেস শিল্ডই আর্কের ফ্ল্যাশ থেকে চোখ-মুখ বাঁচায়।',
     art: '$_m2Art/do_ppe.svg',
     lessonPoint: 0,
   );
@@ -129,6 +129,12 @@ abstract final class M4GateMistakes {
     art: '$_art/oil_gauge.svg',
     lessonPoint: 0,
   );
+  static const oilUnread = DoMistake(
+    key: '4.5/m4_gate_field/oil-unread',
+    textBn: 'না দেখে সিদ্ধান্ত নয় — আগে কনজারভেটরের গেজে তেলের লেভেল পড়ুন, দূর থেকে IR-এ তাপ মাপুন, তারপর ঠিক করুন।',
+    art: '$_art/oil_gauge.svg',
+    lessonPoint: 0,
+  );
   static const earthSpikes = DoMistake(
     key: '4.6/m4_gate_field/earth-spikes',
     textBn: 'আর্থ টেস্টারে মাপার আগে দুটো স্পাইক মাটিতে পুঁতে লিড লাগান — ফল অব পটেনশিয়াল পদ্ধতি।',
@@ -137,7 +143,13 @@ abstract final class M4GateMistakes {
   );
   static const earthHigh = DoMistake(
     key: '4.6/m4_gate_field/earth-high',
-    textBn: 'লাইনের আর্থ 5-8 ওহমের কম চাই। বেশি থাকলে ফল্টে ব্রেকার ট্রিপ না করে মানুষ পুড়তে পারে — ঠিক করে আবার মাপুন।',
+    textBn: 'লাইনের আর্থ 5-8 ওহমের কম চাই। রেজিস্ট্যান্স বেশি মানে আর্থিং অকেজো, ফিউজ-ব্রেকার ঠিকমতো কাজ করে না — ঠিক করে আবার মাপুন।',
+    art: '$_art/earth_ohm.svg',
+    lessonPoint: 2,
+  );
+  static const earthUntested = DoMistake(
+    key: '4.6/m4_gate_field/earth-untested',
+    textBn: 'চোখে দেখে আর্থিং ঠিক বলা যায় না — আর্থ টেস্টারে মেপে রেজিস্ট্যান্স সীমার নিচে, তা প্রমাণ করে তবে লিখুন।',
     art: '$_art/earth_ohm.svg',
     lessonPoint: 2,
   );
@@ -165,6 +177,12 @@ abstract final class M4GateMistakes {
     textBn: 'ধাপ মেনে চলুন: বাইন্ডিং খোলা → দড়িতে কন্ডাক্টর → পুরনো ইনসুলেটর খোলা → নতুনটা বসিয়ে বাঁধা।',
     art: '$_art/ins_rope.svg',
     lessonPoint: 1,
+  );
+  static const jumperWrongClamp = DoMistake(
+    key: '4.2/m4_gate_field/jumper-wrong-clamp',
+    textBn: 'ভুল ক্ল্যাম্প ধরলেন। ঢিলা কানেকশনই হটস্পট — রাতে লাল হয়ে জ্বলে, স্পার্ক বা হিসহিস শব্দ আসে। লক্ষণ দেখে তবে হাত দিন।',
+    art: '$_art/jumper_hotspot.svg',
+    lessonPoint: 2,
   );
   static const jumperDirty = DoMistake(
     key: '4.2/m4_gate_field/jumper-dirty',
@@ -261,12 +279,15 @@ abstract final class M4GateMistakes {
         engineOil,
         oilIgnored,
         oilNeedless,
+        oilUnread,
         earthSpikes,
         earthHigh,
+        earthUntested,
         noEarth,
         earthSkip,
         insNoRope,
         insOrder,
+        jumperWrongClamp,
         jumperDirty,
         jumperOneWrench,
         dpOrder,
@@ -363,17 +384,14 @@ abstract final class M4GateLines {
     M4OilCall.report: 'সুপারভাইজারকে রিপোর্ট',
     M4OilCall.engineOil: 'ইঞ্জিন অয়েল ঢালি',
   };
-  static const lookFirst = 'আগে গেজ দেখুন, তাপও মাপুন।';
   static const test = 'TEST';
   static const earthOk = 'আর্থিং ঠিক';
-  static const testFirst = 'আগে মেপে দেখুন।';
   static const steps = {
     M4InsStep.unbind: 'বাইন্ডিং খোলা',
     M4InsStep.rope: 'দড়িতে কন্ডাক্টর ধরা',
     M4InsStep.removeOld: 'পুরনো ইনসুলেটর খোলা',
     M4InsStep.fitNew: 'নতুনটা বসিয়ে বাঁধা',
   };
-  static const coldClamp = 'এই ক্ল্যাম্পটা ঠিক আছে।';
   static const jumperActs = {
     M4JumperAct.brush: 'ব্রাশে ঘষে পেস্ট',
     M4JumperAct.twoWrench: 'দুই রেঞ্চে টাইট',
@@ -393,11 +411,15 @@ abstract final class M4GateLines {
   static const newLamp = 'ল্যাম্প বদলান';
   static const measureAll = 'আগে চারটে তারই মাপুন।';
   static const balanced = 'ব্যালেন্স হয়েছে';
+  /// Four calls: shutdown or live × heavy→light or light→heavy, so no option
+  /// shares a part with every other one (no "odd one in" giveaway).
   static String balCall(M4BalCall c, String heavy, String light) => switch (c) {
         M4BalCall.shiftDead => 'শাটডাউন নিয়ে $heavy → $light',
         M4BalCall.wrongWay => 'শাটডাউন নিয়ে $light → $heavy',
         M4BalCall.shiftLive => 'চালু লাইনেই $heavy → $light',
+        M4BalCall.liveBack => 'চালু লাইনেই $light → $heavy',
       };
+  static const docketClose = 'ডকেট বন্ধ করুন';
   static const shifted = 'শাটডাউন নিয়ে কয়েকটা সার্ভিস লাইন সরানো হলো, গ্রাহককে জানানো হয়েছিল। লাইন চালু — আবার মাপুন।';
 
   static const praise = {
@@ -416,13 +438,13 @@ abstract final class M4GateLines {
   static const whyDoQ = 'কেন লোড বন্ধ করে, পাশে দাঁড়িয়ে DO খুললেন?';
   static const whyDoRight = [
     'অফ-লোডে আর্ক ছোট, পাশে থাকলে ফ্ল্যাশ মুখে লাগে না',
-    'নিচে দাঁড়ালে আর্কের গলিত ধাতু সোজা শরীরে পড়ে',
+    'ফিউজ মাথার ওপরে নয়, পাশে রাখলে ফ্ল্যাশ থেকে বাঁচি',
   ];
   static const whyDoWrong = [
-    'হট স্টিক থাকলে কোথায় দাঁড়াই তাতে কিছু যায় না',
+    'হট স্টিক থাকলে পাশে না নিচে, তাতে কিছু যায় না',
     'ঠিক নিচে দাঁড়ালে ফিউজের রিং ভালো দেখা যায়',
     'লোড চালু রাখলেও DO নিজেই আর্ক নিভিয়ে নেয়',
-    'ফেস শিল্ড পরা থাকলে ঠিক নিচেও কোনো ভয় নেই',
+    'ফেস শিল্ড থাকলে ঠিক নিচেও ফ্ল্যাশ লাগে না',
     'ধীরে ধীরে আলতো করে টানলে আর্ক সবচেয়ে কম হয়',
   ];
 
@@ -459,8 +481,8 @@ abstract final class M4GateLines {
   ];
   static const whyInsWrong = [
     'শাটডাউন থাকলে দুদিকে আর্থ লাগানো শুধুই সময় নষ্ট',
-    'কন্ডাক্টর খালি হাতে ধরে সরিয়ে রাখাই সবচেয়ে সহজ',
-    'একদিকে আর্থ দিলেই পুরো লাইন নিরাপদ হয়ে যায়',
+    'দড়ি লাগে না, কন্ডাক্টর খালি হাতে ধরে রাখাই সহজ',
+    'একদিকে আর্থ দিলেই পুরো লাইনকে নিরাপদ রাখে',
     'পুরনো ইনসুলেটর আগে খুললে কাজ অনেক দ্রুত হয়',
     'নতুন ইনসুলেটর একটু ঢিলা থাকলেও তার ঠিক থাকে',
   ];
@@ -498,7 +520,7 @@ abstract final class M4GateLines {
   ];
   static const whyTreeWrong = [
     'গাছের মাথা গোল করে কেটে দিলেই সব ঝামেলা শেষ',
-    'এক কোপে ডাল কাটলেই কাজ সবচেয়ে দ্রুত হয়',
+    'এক কাটে ডাল নামালেই কাজ সবচেয়ে দ্রুত হয়',
     'ডাল যেদিকে খুশি পড়ুক, নিচে তো কেউ থাকে না',
     'লাইনের একদম কাছে ডাল কাটতেও শাটডাউন লাগে না',
     'ইচ্ছে হলেই অনুমতি ছাড়া গোটা গাছ কেটে ফেলা যায়',
@@ -536,7 +558,7 @@ abstract final class M4GateLines {
     exitLine: 'হুঁ! আর্থ আর্থ করেই দিন কাবার।',
     right: [
       'না, দুদিকে আর্থ না দিয়ে পোলে উঠব না',
-      'না, বন্ধ লাইনেও ইন্ডুসড ভোল্টেজ থাকে',
+      'বন্ধ লাইনেও ইন্ডুসড ভোল্টেজ — আগে আর্থ',
       'না, আগে দুই প্রান্তে আর্থিং, তারপর কাজ',
     ],
     wrong: [
@@ -563,9 +585,6 @@ abstract final class M4GateLines {
         for (final l in tasks.values) ...l,
         ...praise.values,
         standFirst,
-        lookFirst,
-        testFirst,
-        coldClamp,
         measureAll,
         shifted,
         whyDoQ,
@@ -604,6 +623,7 @@ class M4GateRun {
     mid = phases[1];
     light = phases[2];
     balOpts = [...M4BalCall.values]..shuffle(_rng);
+    rowFlips = _rng.nextInt(16);
   }
 
   final int seed;
@@ -623,6 +643,22 @@ class M4GateRun {
   late final int light;
   late final List<M4BalCall> balOpts;
 
+  /// Dealt left/right order of the two-button rows (bit per row), so the
+  /// right move is never always on the same side.
+  late final int rowFlips;
+
+  /// The heat row (IR gun / hand on the tank) is dealt swapped.
+  bool get flipTemp => rowFlips & 1 != 0;
+
+  /// The earth row (TEST / earthing OK) is dealt swapped.
+  bool get flipEarth => rowFlips & 2 != 0;
+
+  /// The DP row (nuts / dressing done) is dealt swapped.
+  bool get flipDp => rowFlips & 4 != 0;
+
+  /// The lamp row (tester / new lamp) is dealt swapped.
+  bool get flipLamp => rowFlips & 8 != 0;
+
   M4GateStation station = M4GateStation.doOpen;
   final Set<M4GateStation> completed = {};
   int slips = 0;
@@ -632,7 +668,8 @@ class M4GateRun {
   bool get done => completed.length == M4GateStation.values.length;
   bool get ended => done || deadly != null;
   int get percent => (100 - 15 * slips).clamp(0, 100);
-  bool get passed => done && deadly == null && percent >= 55;
+  /// Three slips strike the play out (kit [kStrikesToFail]), so a pass has fewer.
+  bool get passed => done && deadly == null && slips < kStrikesToFail && percent >= 55;
 
   void tag(String t) {
     if (!caught.contains(t)) caught.add(t);
@@ -663,9 +700,10 @@ class M4GateRun {
   }
 
   DoMistake? pullDo(int i) {
-    if (stance == null || doOpen[i]) return null;
+    if (ended || stance == null || doOpen[i]) return null;
     if (ltOn) return deadly = M4GateMistakes.doOnLoad;
-    if (stance == M4GateStance.under) return deadly = M4GateMistakes.doUnder;
+    // A slip here as in m4_do_open (4.4a): the same act, one class.
+    if (stance == M4GateStance.under) return slip(M4GateMistakes.doUnder);
     if (!faceShield || !doGloves) return slip(M4GateMistakes.doNoPpe);
     doOpen[i] = true;
     if (doDone) tag('পাশে দাঁড়িয়ে হট স্টিকে DO');
@@ -682,7 +720,7 @@ class M4GateRun {
   void readGauge() => gaugeRead = true;
 
   DoMistake? measureTemp({required bool ir}) {
-    if (tempRead) return null;
+    if (ended || tempRead) return null;
     if (!ir) return slip(M4GateMistakes.touchTank);
     tempRead = true;
     tag('দূর থেকে IR-এ তাপ মাপা');
@@ -692,8 +730,10 @@ class M4GateRun {
   bool get oilReady => gaugeRead && tempRead;
 
   DoMistake? callOil(M4OilCall c) {
-    if (!oilReady || oilDone) return null;
+    if (ended || oilDone) return null;
     if (c == M4OilCall.engineOil) return slip(M4GateMistakes.engineOil);
+    // A call before the gauge is read and the heat measured is an over-call.
+    if (!oilReady) return slip(M4GateMistakes.oilUnread);
     if (oilLow && c != M4OilCall.report) return slip(M4GateMistakes.oilIgnored);
     if (!oilLow && c != M4OilCall.normal) return slip(M4GateMistakes.oilNeedless);
     oilDone = true;
@@ -715,6 +755,7 @@ class M4GateRun {
 
   /// One test: the reading the tester shows (null = a slip, see [slips]).
   DoMistake? runEarthTest() {
+    if (ended || earthDone) return null;
     if (spikes.length < 2) return slip(M4GateMistakes.earthSpikes);
     earthTested = true;
     earthGood = pitWet && clampTight;
@@ -724,7 +765,9 @@ class M4GateRun {
   double get earthOhm => earthGood ? earthGoodOhm : earthHighOhm;
 
   DoMistake? confirmEarth() {
-    if (!earthTested || earthDone) return null;
+    if (ended || earthDone) return null;
+    // "Earthing OK" with no reading is an over-call, never a free reminder.
+    if (!earthTested) return slip(M4GateMistakes.earthUntested);
     if (!earthGood) return slip(M4GateMistakes.earthHigh);
     earthDone = true;
     tag('আর্থ মেপে, পিট সারিয়ে আবার মাপা');
@@ -743,7 +786,7 @@ class M4GateRun {
   }
 
   DoMistake? insStep(M4InsStep s) {
-    if (insDone.contains(s) || insDoneAll) return null;
+    if (ended || insDone.contains(s) || insDoneAll) return null;
     if (!earthsBoth) return deadly = M4GateMistakes.noEarth;
     final expected = M4InsStep.values[insDone.length];
     if (s != expected) {
@@ -762,15 +805,17 @@ class M4GateRun {
   var jumperClean = false;
   var jumperTight = false;
 
-  /// Tapping a clamp: true when it is the one that ran hot.
-  bool spotClamp(int side) {
-    if (side != hotSide) return false;
+  /// Tapping a clamp: null when it is the one that ran hot; the cool one is a
+  /// wrong flag and costs a slip (never a free "this one is fine").
+  DoMistake? spotClamp(int side) {
+    if (ended || hotFound) return null;
+    if (side != hotSide) return slip(M4GateMistakes.jumperWrongClamp);
     hotFound = true;
-    return true;
+    return null;
   }
 
   DoMistake? jumperAct(M4JumperAct a) {
-    if (!hotFound || jumperTight) return null;
+    if (ended || !hotFound || jumperTight) return null;
     if (a == M4JumperAct.brush) {
       jumperClean = true;
       return null;
@@ -788,7 +833,7 @@ class M4GateRun {
   var dpDone = false;
 
   DoMistake? fixDp(M4DpFault f) {
-    if (dpFixed.contains(f)) return null;
+    if (ended || dpDone || dpFixed.contains(f)) return null;
     if (f.index != dpFixed.length) return slip(M4GateMistakes.dpOrder);
     dpFixed.add(f);
     return null;
@@ -797,7 +842,7 @@ class M4GateRun {
   void tightenNuts() => nutsTight = true;
 
   DoMistake? finishDp() {
-    if (dpDone) return null;
+    if (ended || dpDone) return null;
     if (dpFixed.length < M4DpFault.values.length) return slip(M4GateMistakes.dpUnfinished);
     if (!nutsTight) return slip(M4GateMistakes.dpLoose);
     dpDone = true;
@@ -811,7 +856,7 @@ class M4GateRun {
   final List<M4Cut> cutsDone = [];
 
   DoMistake? cut(M4Cut c) {
-    if (treeDone) return null;
+    if (ended || treeDone) return null;
     if (c == M4Cut.topping) return slip(M4GateMistakes.treeTopping);
     if (!cordoned) return slip(M4GateMistakes.treeCordon);
     if (!roped) return slip(M4GateMistakes.treeRope);
@@ -831,6 +876,7 @@ class M4GateRun {
   bool get lit => mcbOn && lampNew;
 
   void toggleMcb() {
+    if (ended || lit) return;
     mcbOn = !mcbOn;
     if (mcbOn) fixtureTested = false;
     if (lit) tag('MCB নামিয়ে, টেস্ট করে ল্যাম্প বদল');
@@ -843,7 +889,7 @@ class M4GateRun {
   }
 
   DoMistake? replaceLamp() {
-    if (lampNew) return null;
+    if (ended || lampNew) return null;
     if (mcbOn) return deadly = M4GateMistakes.lampLive;
     if (!fixtureTested) return slip(M4GateMistakes.lampUntested);
     lampNew = true;
@@ -872,8 +918,8 @@ class M4GateRun {
   bool get allMeasured => measured.length == 4;
 
   DoMistake? callBalance(M4BalCall c) {
-    if (!allMeasured || balShifted) return null;
-    if (c == M4BalCall.shiftLive) return deadly = M4GateMistakes.balLive;
+    if (ended || !allMeasured || balShifted) return null;
+    if (c == M4BalCall.shiftLive || c == M4BalCall.liveBack) return deadly = M4GateMistakes.balLive;
     if (c == M4BalCall.wrongWay) return slip(M4GateMistakes.balWrongWay);
     balShifted = true;
     measured.clear();
@@ -881,7 +927,7 @@ class M4GateRun {
   }
 
   DoMistake? confirmBalance() {
-    if (!balShifted || balDone) return null;
+    if (ended || !balShifted || balDone) return null;
     if (!allMeasured) return slip(M4GateMistakes.balNoRecheck);
     balDone = true;
     tag('টং টেস্টারে মেপে ফেজ ব্যালেন্স');
@@ -976,6 +1022,16 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   var _bloomActive = false;
   int _bloomRound = 0;
 
+  /// The station whose win is being paid (a second tap never pays again).
+  M4GateStation? _won;
+
+  // Gesture hints (how to touch, never what).
+  final _hints = IdleHintController();
+  final _sceneKey = GlobalKey();
+  final _docketBtnKey = GlobalKey();
+  final Map<String, GlobalKey> _boxKeys = {};
+  GlobalKey _bk(String id) => _boxKeys.putIfAbsent(id, GlobalKey.new);
+
   // Scene state.
   Offset? _stickTo;
   Offset? _sparkAt;
@@ -1020,11 +1076,10 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     if (!_muted) unawaited(ZlFx.cue(s, volume: volume, muted: false));
   }
 
+  // Guide first: no docket modal with a start button; the docket stays one tap
+  // away on the station chip.
   Future<void> _start() async {
-    setState(() {
-      _intro = false;
-      _docketOpen = true;
-    });
+    setState(() => _intro = false);
     _clock.start();
     await _enterStation();
   }
@@ -1043,7 +1098,8 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   void _tapGuide() {
-    if (_intro || _ended) return;
+    // The reason deck or the coworker's question stays in the bubble.
+    if (_intro || _ended || tableBusy || coworkerOpen) return;
     final lines = M4GateLines.tasks[_run.station]!;
     _tapN++;
     _cue('sounds/learn/tick.wav', volume: 0.5);
@@ -1052,8 +1108,132 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     unawaited(MascotSpeechLibrary.speak(line, muted: _muted));
   }
 
-  bool get _canAct =>
-      !_busy && !_ended && _card == null && !reasonOpen && !coworkerChoiceUp && !_intro && !_docketOpen && !struckOut;
+  /// The scene takes input, the coworker aside (his beat 1 is refused by
+  /// placing an earth, see [_onEarthSet]).
+  bool get _canActBase =>
+      !_busy && !_ended && !_freeze && !_run.ended && _card == null && !tableBusy && !_intro && !_docketOpen && !struckOut;
+
+  bool get _canAct => _canActBase && !coworkerOpen;
+
+  /// The level waits for the player's touch now (the gesture hint may show).
+  bool get _hintWaiting => (_canAct && _mark == null) || (_docketOpen && !_intro && !_ended && _card == null);
+
+  void _onMissTap() {
+    if (_hintWaiting) _hints.missTap();
+  }
+
+  /// A scene rect (design pixels) on the screen, or null before layout.
+  Rect? _sceneRect(Rect r) {
+    final box = _sceneKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight));
+  }
+
+  /// The gesture hint: the docket's one close button (tap), otherwise a sweep
+  /// over every live control of the station — in screen order, never the
+  /// order of the work — and a tap only when a single control is left.
+  HintSpec? _hint() {
+    if (_docketOpen) return HintSpec.tapOn(_docketBtnKey);
+    final out = <Rect>[];
+    void scene(Rect r) {
+      final g = _sceneRect(r);
+      if (g != null) out.add(g);
+    }
+
+    void btn(String id) {
+      final g = HintSpec.globalRectOf(_bk(id));
+      if (g != null) out.add(g);
+    }
+
+    final h = _sceneH;
+    switch (_run.station) {
+      case M4GateStation.doOpen:
+        final g = M4DtrGeo(h);
+        if (_run.ltOn) scene(g.ltBox.inflate(10));
+        if (!_run.faceShield) btn('ppe-shield');
+        if (!_run.doGloves) btn('ppe-gloves');
+        for (final s in M4GateStance.values) {
+          if (_run.stance != s) scene(Rect.fromCenter(center: (s == M4GateStance.under ? g.underSpot : g.sideSpot).translate(0, 10), width: 64, height: 34));
+        }
+        for (var i = 0; i < 3; i++) {
+          if (!_run.doOpen[i]) scene(Rect.fromLTWH(g.doX(i) - 17, g.doTopY - 12, 34, g.doLen + 28));
+        }
+      case M4GateStation.oilTemp:
+        final g = M4DtrGeo(h);
+        if (!_run.gaugeRead) scene(g.gauge.inflate(18));
+        if (!_run.tempRead) {
+          btn('temp-ir');
+          btn('temp-hand');
+        }
+        for (final c in M4OilCall.values) {
+          btn('oil-${c.name}');
+        }
+      case M4GateStation.earth:
+        final g = M4DtrGeo(h);
+        for (var i = 0; i < 2; i++) {
+          if (!_run.spikes.contains(i)) scene(g.spikeHit(i));
+        }
+        if (!_run.pitWet) scene(g.pitHit);
+        if (!_run.clampTight) scene(g.clampHit);
+        btn('earth-test');
+        btn('earth-ok');
+      case M4GateStation.insulator:
+        final g = M4PoleGeo(h);
+        for (var s = 0; s < 2; s++) {
+          if (!_run.earths.contains(s)) scene(g.earthHit(s));
+        }
+        for (final s in M4InsStep.values) {
+          if (!_run.insDone.contains(s)) btn('ins-${s.name}');
+        }
+      case M4GateStation.jumper:
+        final g = M4PoleGeo(h);
+        if (!_run.hotFound) {
+          for (var s = 0; s < 2; s++) {
+            scene(g.clampHit(s));
+          }
+        } else {
+          for (final a in M4JumperAct.values) {
+            btn('jumper-${a.name}');
+          }
+        }
+      case M4GateStation.dpDress:
+        final g = M4DpGeo(h);
+        for (final f in M4DpFault.values) {
+          if (!_run.dpFixed.contains(f)) scene(g.faultHit(f));
+        }
+        if (!_run.nutsTight) btn('dp-nuts');
+        btn('dp-done');
+      case M4GateStation.tree:
+        if (!_run.cordoned) btn('tree-cordon');
+        if (!_run.roped) btn('tree-rope');
+        for (final c in M4Cut.values) {
+          if (!_run.cutsDone.contains(c)) btn('cut-${c.name}');
+        }
+      case M4GateStation.streetLight:
+        scene(M4StreetGeo(h).mcbHit);
+        btn('lamp-test');
+        if (!_run.lampNew) btn('lamp-new');
+      case M4GateStation.balance:
+        final g = M4PillarGeo(h);
+        for (var i = 0; i < 4; i++) {
+          scene(g.cableHit(i));
+        }
+        if (_run.balShifted) {
+          btn('bal-ok');
+        } else if (_run.allMeasured) {
+          for (final c in M4BalCall.values) {
+            btn('bal-${c.name}');
+          }
+        }
+    }
+    if (out.isEmpty) return null;
+    if (out.length == 1) return HintSpec.tap(out.single.center);
+    out.sort((a, b) {
+      final dx = a.center.dx.compareTo(b.center.dx);
+      return dx != 0 ? dx : a.center.dy.compareTo(b.center.dy);
+    });
+    return HintSpec.sweep(out);
+  }
 
   // --- scoring ------------------------------------------------------------------
   int _scored(int base) {
@@ -1084,20 +1264,18 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   /// A station's last right move: ◆ on the table, praise, the reason deck.
+  /// The ◆ wait on the table and are paid only by the right reason
+  /// ([reasonScore]); a second tap on the station's last control is ignored.
   Future<void> _stationWon(Offset origin, String question, List<String> right, List<String> wrong, int salt) async {
-    _busy = true;
+    final st = _run.station;
+    if (_won == st || _run.completed.contains(st) || _ended) return;
+    _won = st;
     HapticFeedback.lightImpact();
     _cue('sounds/quiz_right.wav', volume: 0.7);
-    final delta = _scored(20);
-    _totalDelta += delta;
-    setState(() => _runScore += delta);
-    await BeatFx.levelDelta(ref, delta, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
-    if (!mounted) return;
-    final praise = M4GateLines.praise[_run.station];
+    putOnTable(_scored(20));
+    final praise = M4GateLines.praise[st];
     if (praise != null) await _say(praise, mood: GuideMood.celebrate);
     if (!mounted) return;
-    putOnTable(delta);
-    _busy = false;
     await askReason(
       deal: () => dealChoices(right, wrong, math.Random(widget.seed + salt)),
       question: question,
@@ -1121,6 +1299,8 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     _cue('sounds/quiz_wrong.wav');
     _combo.miss();
     if (m.deadly) {
+      _busy = true;
+      _ended = true;
       final frozen = _frozen = Completer<void>();
       setState(() => _freeze = true);
       final outcome = await bookDeadly(m, runScore: _runScore);
@@ -1130,7 +1310,6 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
         _freeze = false;
         _card = m;
         _cardTone = outcome == DeadlyOutcome.nearMiss ? MistakeTone.nearMiss : MistakeTone.deadly;
-        _busy = false;
       });
     } else {
       final out = strike(m);
@@ -1196,8 +1375,10 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
 
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.station != M4GateStation.insulator || _run.earthsBoth || _run.insDone.isNotEmpty) return null;
-    if (_busy || _card != null || reasonOpen || _docketOpen) return false;
+    // His push ("skip the earths, climb") fits only before any earth is on and
+    // before the work on the pole has begun.
+    if (_ended || _run.ended || _run.station != M4GateStation.insulator || _run.earths.isNotEmpty || _run.insDone.isNotEmpty) return null;
+    if (_busy || _freeze || _card != null || tableBusy || _docketOpen || struckOut) return false;
     return true;
   }
 
@@ -1309,11 +1490,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   Future<void> _onOilCall(M4OilCall c, Offset origin) async {
-    if (!_canAct) return;
-    if (!_run.oilReady) {
-      unawaited(_say(M4GateLines.lookFirst));
-      return;
-    }
+    if (!_canAct || _run.oilDone) return;
     if (await _check(_run.callOil(c))) return;
     await _stationWon(origin, M4GateLines.whyOilQ, M4GateLines.whyOilRight, M4GateLines.whyOilWrong, 22);
   }
@@ -1349,25 +1526,25 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   Future<void> _onEarthTest() async {
-    if (!_canAct) return;
+    if (!_canAct || _run.earthDone) return;
     if (await _check(_run.runEarthTest())) return;
     _cue('sounds/intro/tick.ogg', volume: 0.8);
     setState(() => _reading = '${_run.earthOhm.toStringAsFixed(1)} Ω');
   }
 
   Future<void> _onEarthOk(Offset origin) async {
-    if (!_canAct) return;
-    if (!_run.earthTested) {
-      unawaited(_say(M4GateLines.testFirst));
-      return;
-    }
+    if (!_canAct || _run.earthDone) return;
     if (await _check(_run.confirmEarth())) return;
     await _stationWon(origin, M4GateLines.whyEarthQ, M4GateLines.whyEarthRight, M4GateLines.whyEarthWrong, 33);
   }
 
   // --- 4 insulator -------------------------------------------------------------------------
-  void _onEarthSet(int side) {
-    if (!_canAct || _run.earths.contains(side)) return;
+  void _onEarthSet(int side, Offset origin) {
+    // While he is still talking (beat 1), placing an earth refuses him.
+    final beat1 = coworkerOpen && !coworkerChoiceUp;
+    if (!(beat1 ? _canActBase : _canAct) || _run.earths.contains(side)) return;
+    if (holdForCoworker()) return;
+    if (beat1) unawaited(answerCoworker(true, origin, direct: true));
     HapticFeedback.mediumImpact();
     _cue('sounds/intro/impact_metal.ogg', volume: 0.7);
     setState(() {
@@ -1377,7 +1554,8 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   Future<void> _onInsStep(M4InsStep s, Offset origin) async {
-    if (!_canAct) return;
+    if (!_canAct || _run.insDoneAll) return;
+    if (holdForCoworker()) return;
     final g = M4PoleGeo(_sceneH);
     if (await _check(_run.insStep(s), sparkAt: g.ins(_run.broken).translate(0, -24))) return;
     _cue('sounds/intro/click.ogg', volume: 0.7);
@@ -1388,19 +1566,17 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   // --- 5 jumper ---------------------------------------------------------------------------
-  void _onClampSpot(int side) {
+  Future<void> _onClampSpot(int side) async {
     if (!_canAct || _run.hotFound) return;
     HapticFeedback.selectionClick();
-    if (!_run.spotClamp(side)) {
-      unawaited(_say(M4GateLines.coldClamp));
-      return;
-    }
+    // The cool clamp is a wrong flag: a slip, and the card stays neutral.
+    if (await _check(_run.spotClamp(side))) return;
     _cue('sounds/learn/tag_slap.wav', volume: 0.7);
     setState(() => _wake++);
   }
 
   Future<void> _onJumper(M4JumperAct a, Offset origin) async {
-    if (!_canAct) return;
+    if (!_canAct || _run.jumperTight) return;
     if (await _check(_run.jumperAct(a))) return;
     _cue('sounds/intro/impact_metal.ogg', volume: 0.7);
     setState(() => _wake++);
@@ -1411,7 +1587,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
 
   // --- 6 DP dressing -----------------------------------------------------------------------
   Future<void> _onDpFault(M4DpFault f) async {
-    if (!_canAct) return;
+    if (!_canAct || _run.dpDone) return;
     if (await _check(_run.fixDp(f))) return;
     _cue('sounds/intro/click.ogg', volume: 0.7);
     setState(() => _wake++);
@@ -1427,7 +1603,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   Future<void> _onDpDone(Offset origin) async {
-    if (!_canAct) return;
+    if (!_canAct || _run.dpDone) return;
     if (await _check(_run.finishDp())) return;
     await _stationWon(origin, M4GateLines.whyDpQ, M4GateLines.whyDpRight, M4GateLines.whyDpWrong, 66);
   }
@@ -1452,7 +1628,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   Future<void> _onCut(M4Cut c, Offset origin) async {
-    if (!_canAct) return;
+    if (!_canAct || _run.treeDone) return;
     if (await _check(_run.cut(c))) return;
     HapticFeedback.mediumImpact();
     _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
@@ -1464,7 +1640,8 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
 
   // --- 8 street light ---------------------------------------------------------------------
   Future<void> _onMcb() async {
-    if (!_canAct) return;
+    // Once the lamp is lit the station is won: a second tap never switches it off.
+    if (!_canAct || _run.lit) return;
     HapticFeedback.mediumImpact();
     _cue('sounds/intro/click.ogg', volume: 0.9);
     setState(() {
@@ -1478,13 +1655,13 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   void _onTester() {
-    if (!_canAct) return;
+    if (!_canAct || _run.lit) return;
     _cue('sounds/intro/tick.ogg', volume: 0.8);
     setState(() => _reading = _run.testFixture());
   }
 
   Future<void> _onLamp() async {
-    if (!_canAct) return;
+    if (!_canAct || _run.lampNew) return;
     final g = M4StreetGeo(_sceneH);
     if (await _check(_run.replaceLamp(), sparkAt: g.head)) return;
     _cue('sounds/intro/drop.ogg', volume: 0.7);
@@ -1504,7 +1681,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   Future<void> _onBalCall(M4BalCall c) async {
-    if (!_canAct) return;
+    if (!_canAct || _run.balShifted) return;
     if (!_run.allMeasured) {
       unawaited(_say(M4GateLines.measureAll));
       return;
@@ -1522,7 +1699,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   Future<void> _onBalanced(Offset origin) async {
-    if (!_canAct) return;
+    if (!_canAct || _run.balDone) return;
     if (await _check(_run.confirmBalance())) return;
     await _stationWon(origin, M4GateLines.whyBalQ, M4GateLines.whyBalRight, M4GateLines.whyBalWrong, 99);
   }
@@ -1619,6 +1796,11 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     };
     final spark = _sparkAt;
     return [
+      // A tap on nothing (the sky, the road) counts toward the gesture hint.
+      Positioned.fill(
+        key: const ValueKey('scene-miss'),
+        child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: _onMissTap),
+      ),
       ...out,
       if (spark != null)
         Positioned.fill(
@@ -1669,17 +1851,19 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('yard'),
-        child: RepaintBoundary(
-          child: CustomPaint(
-            painter: M4DtrPainter(
-              geo: g,
-              doOpen: [..._run.doOpen],
-              ltOn: _run.ltOn,
-              oilLow: _run.oilLow,
-              spikes: {..._run.spikes},
-              wet: _run.pitWet,
-              tight: _run.clampTight,
-              tester: st == M4GateStation.earth,
+        child: IgnorePointer(
+          child: RepaintBoundary(
+            child: CustomPaint(
+              painter: M4DtrPainter(
+                geo: g,
+                doOpen: [..._run.doOpen],
+                ltOn: _run.ltOn,
+                oilLow: _run.oilLow,
+                spikes: {..._run.spikes},
+                wet: _run.pitWet,
+                tight: _run.clampTight,
+                tester: st == M4GateStation.earth,
+              ),
             ),
           ),
         ),
@@ -1740,18 +1924,20 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('pole'),
-        child: RepaintBoundary(
-          child: CustomPaint(
-            painter: M4PolePainter(
-              geo: g,
-              broken: ins ? _run.broken : null,
-              replaced: _run.insDone.contains(M4InsStep.fitNew),
-              earths: ins ? {..._run.earths} : const {0, 1},
-              jumper: !ins,
-              hotSide: _run.hotSide,
-              clean: _run.jumperClean,
-              tight: _run.jumperTight,
-              roped: _run.insDone.contains(M4InsStep.rope) && !_run.insDone.contains(M4InsStep.fitNew),
+        child: IgnorePointer(
+          child: RepaintBoundary(
+            child: CustomPaint(
+              painter: M4PolePainter(
+                geo: g,
+                broken: ins ? _run.broken : null,
+                replaced: _run.insDone.contains(M4InsStep.fitNew),
+                earths: ins ? {..._run.earths} : const {0, 1},
+                jumper: !ins,
+                hotSide: _run.hotSide,
+                clean: _run.jumperClean,
+                tight: _run.jumperTight,
+                roped: _run.insDone.contains(M4InsStep.rope) && !_run.insDone.contains(M4InsStep.fitNew),
+              ),
             ),
           ),
         ),
@@ -1761,9 +1947,9 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
         up ? LinemanMode.hold : LinemanMode.idle,
       ),
       if (ins)
-        for (var s = 0; s < 2; s++) _hit('earth-$s', g.earthHit(s), () => _onEarthSet(s))
+        for (var s = 0; s < 2; s++) _hitAt('earth-$s', g.earthHit(s), (p) => _onEarthSet(s, p))
       else
-        for (var s = 0; s < 2; s++) _hit('jclamp-$s', g.clampHit(s), () => _onClampSpot(s)),
+        for (var s = 0; s < 2; s++) _hit('jclamp-$s', g.clampHit(s), () => unawaited(_onClampSpot(s))),
       if (!ins && _run.hotFound)
         Positioned(
           key: const ValueKey('hot-mark'),
@@ -1785,7 +1971,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('dp'),
-        child: RepaintBoundary(child: CustomPaint(painter: M4DpPainter(geo: g, fixed: {..._run.dpFixed}, nutsTight: _run.nutsTight))),
+        child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: M4DpPainter(geo: g, fixed: {..._run.dpFixed}, nutsTight: _run.nutsTight)))),
       ),
       _figure(Rect.fromLTWH(M4DpGeo.poleR + 6, g.armY + 70, 59, 118), LinemanMode.hold),
       for (final f in M4DpFault.values)
@@ -1798,8 +1984,10 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('tree'),
-        child: RepaintBoundary(
-          child: CustomPaint(painter: M4TreePainter(geo: g, cordon: _run.cordoned, rope: _run.roped, cuts: _run.cutsDone.length)),
+        child: IgnorePointer(
+          child: RepaintBoundary(
+            child: CustomPaint(painter: M4TreePainter(geo: g, cordon: _run.cordoned, rope: _run.roped, cuts: _run.cutsDone.length)),
+          ),
         ),
       ),
       _figure(Rect.fromLTWH(120, g.groundY - 100, 59, 118), _run.roped ? LinemanMode.hold : LinemanMode.idle),
@@ -1811,7 +1999,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('street'),
-        child: RepaintBoundary(child: CustomPaint(painter: M4StreetPainter(geo: g, mcbOn: _run.mcbOn, lit: _run.lit, newLamp: _run.lampNew))),
+        child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: M4StreetPainter(geo: g, mcbOn: _run.mcbOn, lit: _run.lit, newLamp: _run.lampNew)))),
       ),
       _meter(Rect.fromLTWH(12, g.groundY - 170, 84, 104), M4GateMeterKind.tester),
       _figure(Rect.fromLTWH(M4StreetGeo.postX - 100, g.groundY - 112, 59, 118), _run.lampNew ? LinemanMode.hold : LinemanMode.idle),
@@ -1828,7 +2016,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('pillar'),
-        child: RepaintBoundary(child: CustomPaint(painter: M4PillarPainter(geo: g, clampOn: _clampOn))),
+        child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: M4PillarPainter(geo: g, clampOn: _clampOn)))),
       ),
       _meter(Rect.fromLTWH(12, g.box.bottom + 18, 84, 100), M4GateMeterKind.tong),
       if (log.isNotEmpty)
@@ -1854,6 +2042,12 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
         child: Row(children: [for (var i = 0; i < kids.length; i++) ...[if (i > 0) const SizedBox(width: 8), Expanded(child: kids[i])]]),
       );
 
+  /// The two buttons of a row in their dealt order, with [gap] between.
+  List<Widget> _deal(bool flip, List<Widget> kids, {Widget? gap}) {
+    final o = flip ? kids.reversed.toList() : kids;
+    return [for (var i = 0; i < o.length; i++) ...[if (i > 0 && gap != null) gap, o[i]]];
+  }
+
   List<Widget> _controls(EdgeInsets pad) {
     final b = pad.bottom + 12;
     switch (_run.station) {
@@ -1865,9 +2059,9 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
             bottom: b,
             child: Row(
               children: [
-                _ToolButton(icon: Icons.face_retouching_natural, label: M4GateLines.faceShield, on: _run.faceShield, onTap: () => _onWear(shield: true)),
+                _ToolButton(boxKey: _bk('ppe-shield'), icon: Icons.face_retouching_natural, label: M4GateLines.faceShield, on: _run.faceShield, onTap: () => _onWear(shield: true)),
                 const SizedBox(width: 8),
-                _ToolButton(icon: Icons.back_hand_rounded, label: M4GateLines.gloves, on: _run.doGloves, onTap: () => _onWear(shield: false)),
+                _ToolButton(boxKey: _bk('ppe-gloves'), icon: Icons.back_hand_rounded, label: M4GateLines.gloves, on: _run.doGloves, onTap: () => _onWear(shield: false)),
               ],
             ),
           ),
@@ -1879,11 +2073,10 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
             left: 12,
             bottom: b + 160,
             child: Row(
-              children: [
-                _ToolButton(icon: Icons.thermostat_rounded, label: M4GateLines.irGun, on: _run.tempRead, onTap: () => unawaited(_onTemp(ir: true))),
-                const SizedBox(width: 8),
-                _ToolButton(icon: Icons.back_hand_rounded, label: M4GateLines.handOnTank, on: false, onTap: () => unawaited(_onTemp(ir: false))),
-              ],
+              children: _deal(_run.flipTemp, [
+                _ToolButton(boxKey: _bk('temp-ir'), icon: Icons.thermostat_rounded, label: M4GateLines.irGun, on: _run.tempRead, onTap: () => unawaited(_onTemp(ir: true))),
+                _ToolButton(boxKey: _bk('temp-hand'), icon: Icons.back_hand_rounded, label: M4GateLines.handOnTank, on: false, onTap: () => unawaited(_onTemp(ir: false))),
+              ], gap: const SizedBox(width: 8)),
             ),
           ),
           Positioned(
@@ -1896,7 +2089,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (final c in M4OilCall.values) ...[
-                  _ActionButton(key: ValueKey('oil-${c.name}'), label: M4GateLines.oilCalls[c]!, compact: true, onTapUp: (p) => unawaited(_onOilCall(c, p))),
+                  _ActionButton(key: ValueKey('oil-${c.name}'), boxKey: _bk('oil-${c.name}'), label: M4GateLines.oilCalls[c]!, compact: true, onTapUp: (p) => unawaited(_onOilCall(c, p))),
                   if (c != M4OilCall.values.last) const SizedBox(height: 4),
                 ],
               ],
@@ -1905,10 +2098,10 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
         ];
       case M4GateStation.earth:
         return [
-          _row('earth-row', [
-            _ActionButton(key: const ValueKey('earth-test'), label: M4GateLines.test, mono: true, onTapUp: (_) => unawaited(_onEarthTest())),
-            _ActionButton(key: const ValueKey('earth-ok'), label: M4GateLines.earthOk, onTapUp: (p) => unawaited(_onEarthOk(p))),
-          ], b, right: 130),
+          _row('earth-row', _deal(_run.flipEarth, [
+            _ActionButton(key: const ValueKey('earth-test'), boxKey: _bk('earth-test'), label: M4GateLines.test, mono: true, onTapUp: (_) => unawaited(_onEarthTest())),
+            _ActionButton(key: const ValueKey('earth-ok'), boxKey: _bk('earth-ok'), label: M4GateLines.earthOk, onTapUp: (p) => unawaited(_onEarthOk(p))),
+          ]), b, right: 130),
         ];
       case M4GateStation.insulator:
         final o = _run.insOrder;
@@ -1929,7 +2122,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
                         if (k > 0) const SizedBox(width: 6),
                         Expanded(
                           child: _ActionButton(
-                            key: ValueKey('ins-${o[r * 2 + k].name}'),
+                            key: ValueKey('ins-${o[r * 2 + k].name}'), boxKey: _bk('ins-${o[r * 2 + k].name}'),
                             label: M4GateLines.steps[o[r * 2 + k]]!,
                             done: _run.insDone.contains(o[r * 2 + k]),
                             compact: true,
@@ -1958,7 +2151,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
               children: [
                 for (final a in _run.jumperOpts) ...[
                   _ActionButton(
-                    key: ValueKey('jumper-${a.name}'),
+                    key: ValueKey('jumper-${a.name}'), boxKey: _bk('jumper-${a.name}'),
                     label: M4GateLines.jumperActs[a]!,
                     done: a == M4JumperAct.brush && _run.jumperClean,
                     compact: true,
@@ -1972,10 +2165,10 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
         ];
       case M4GateStation.dpDress:
         return [
-          _row('dp-row', [
-            _ActionButton(key: const ValueKey('dp-nuts'), label: M4GateLines.nuts, done: _run.nutsTight, onTapUp: (_) => _onNuts()),
-            _ActionButton(key: const ValueKey('dp-done'), label: M4GateLines.dpDone, onTapUp: (p) => unawaited(_onDpDone(p))),
-          ], b, right: 130),
+          _row('dp-row', _deal(_run.flipDp, [
+            _ActionButton(key: const ValueKey('dp-nuts'), boxKey: _bk('dp-nuts'), label: M4GateLines.nuts, done: _run.nutsTight, onTapUp: (_) => _onNuts()),
+            _ActionButton(key: const ValueKey('dp-done'), boxKey: _bk('dp-done'), label: M4GateLines.dpDone, onTapUp: (p) => unawaited(_onDpDone(p))),
+          ]), b, right: 130),
         ];
       case M4GateStation.tree:
         final o = _run.cutOpts;
@@ -1990,9 +2183,9 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
               children: [
                 Row(
                   children: [
-                    Expanded(child: _ActionButton(key: const ValueKey('tree-cordon'), label: M4GateLines.cordon, done: _run.cordoned, compact: true, onTapUp: (_) => _onCordon())),
+                    Expanded(child: _ActionButton(key: const ValueKey('tree-cordon'), boxKey: _bk('tree-cordon'), label: M4GateLines.cordon, done: _run.cordoned, compact: true, onTapUp: (_) => _onCordon())),
                     const SizedBox(width: 6),
-                    Expanded(child: _ActionButton(key: const ValueKey('tree-rope'), label: M4GateLines.rope, done: _run.roped, compact: true, onTapUp: (_) => _onRope())),
+                    Expanded(child: _ActionButton(key: const ValueKey('tree-rope'), boxKey: _bk('tree-rope'), label: M4GateLines.rope, done: _run.roped, compact: true, onTapUp: (_) => _onRope())),
                   ],
                 ),
                 for (var r = 0; r < 2; r++) ...[
@@ -2003,7 +2196,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
                         if (k > 0) const SizedBox(width: 6),
                         Expanded(
                           child: _ActionButton(
-                            key: ValueKey('cut-${o[r * 2 + k].name}'),
+                            key: ValueKey('cut-${o[r * 2 + k].name}'), boxKey: _bk('cut-${o[r * 2 + k].name}'),
                             label: M4GateLines.cuts[o[r * 2 + k]]!,
                             done: _run.cutsDone.contains(o[r * 2 + k]),
                             compact: true,
@@ -2020,10 +2213,10 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
         ];
       case M4GateStation.streetLight:
         return [
-          _row('lamp-row', [
-            _ActionButton(key: const ValueKey('lamp-test'), label: M4GateLines.tester, onTapUp: (_) => _onTester()),
-            _ActionButton(key: const ValueKey('lamp-new'), label: M4GateLines.newLamp, done: _run.lampNew, onTapUp: (_) => unawaited(_onLamp())),
-          ], b, right: 130),
+          _row('lamp-row', _deal(_run.flipLamp, [
+            _ActionButton(key: const ValueKey('lamp-test'), boxKey: _bk('lamp-test'), label: M4GateLines.tester, onTapUp: (_) => _onTester()),
+            _ActionButton(key: const ValueKey('lamp-new'), boxKey: _bk('lamp-new'), label: M4GateLines.newLamp, done: _run.lampNew, onTapUp: (_) => unawaited(_onLamp())),
+          ]), b, right: 130),
         ];
       case M4GateStation.balance:
         final heavy = M4GateRun.phaseNames[_run.heavy];
@@ -2031,29 +2224,39 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
         if (_run.balShifted) {
           return [
             _row('bal-done-row', [
-              _ActionButton(key: const ValueKey('bal-ok'), label: M4GateLines.balanced, onTapUp: (p) => unawaited(_onBalanced(p))),
+              _ActionButton(key: const ValueKey('bal-ok'), boxKey: _bk('bal-ok'), label: M4GateLines.balanced, onTapUp: (p) => unawaited(_onBalanced(p))),
             ], b, right: 130),
           ];
         }
         if (!_run.allMeasured) return const [];
+        final o = _run.balOpts;
         return [
           Positioned(
-            key: const ValueKey('bal-col'),
+            key: const ValueKey('bal-grid'),
             left: 12,
             right: 130,
             bottom: b,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final c in _run.balOpts) ...[
-                  _ActionButton(
-                    key: ValueKey('bal-${c.name}'),
-                    label: M4GateLines.balCall(c, heavy, light),
-                    compact: true,
-                    onTapUp: (_) => unawaited(_onBalCall(c)),
+                for (var r = 0; r < 2; r++) ...[
+                  if (r > 0) const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      for (var k = 0; k < 2; k++) ...[
+                        if (k > 0) const SizedBox(width: 6),
+                        Expanded(
+                          child: _ActionButton(
+                            key: ValueKey('bal-${o[r * 2 + k].name}'),
+                            boxKey: _bk('bal-${o[r * 2 + k].name}'),
+                            label: M4GateLines.balCall(o[r * 2 + k], heavy, light),
+                            compact: true,
+                            onTapUp: (_) => unawaited(_onBalCall(o[r * 2 + k])),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  if (c != _run.balOpts.last) const SizedBox(height: 4),
                 ],
               ],
             ),
@@ -2070,7 +2273,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
           M4GateStation.insulator => 112,
           M4GateStation.jumper => _run.hotFound ? 150 : 72,
           M4GateStation.tree => 166,
-          M4GateStation.balance => _run.allMeasured && !_run.balShifted ? 150 : 72,
+          M4GateStation.balance => _run.allMeasured && !_run.balShifted ? 112 : 72,
           _ => 72,
         };
   }
@@ -2082,7 +2285,8 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     final size = MediaQuery.sizeOf(context);
     final playing = !_intro && _mark == null && !struckOut && _card == null;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !deckUp && !_docketOpen;
+    // The death freeze takes in every touch: no controls, no docket chip.
+    final handsOn = playing && !deckUp && !_docketOpen && !_freeze && !_ended;
 
     return PopScope(
       canPop: false,
@@ -2110,12 +2314,16 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
               current: _run.done ? null : _run.station.index,
               quiet: quiet,
             ),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: '${_run.station.index}:$_wake:$_docketOpen',
+            hintController: _hints,
             layers: (c, m) => [
               Positioned.fill(
                 key: const ValueKey('scene'),
                 child: ColorFiltered(
                   colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
-                  child: Stack(children: _layers(c, m)),
+                  child: Stack(key: _sceneKey, children: _layers(c, m)),
                 ),
               ),
             ],
@@ -2144,7 +2352,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
                   child: Center(child: ComboPop(key: ValueKey('combo-$_comboN'), mult: _comboMult)),
                 ),
               ...tableLayers(at: Offset(size.width / 2, pad.top + 130), quiet: quiet),
-              if (playing)
+              if (playing && !_freeze && !_ended)
                 Positioned(
                   key: const ValueKey('station-chip'),
                   top: pad.top + 86,
@@ -2153,6 +2361,8 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
                     num: 'কাজ ${_run.station.index + 1}/${M4GateStation.values.length}',
                     title: M4GateLines.stationTitles[_run.station]!,
                     onDocket: () {
+                      // Not while praise, the reason deck or the coworker is up.
+                      if (!_canAct) return;
                       _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
                       setState(() => _docketOpen = true);
                     },
@@ -2255,6 +2465,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
                 Positioned.fill(
                   key: const ValueKey('docket-modal'),
                   child: _DocketSheet(
+                    buttonKey: _docketBtnKey,
                     onClose: () {
                       _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
                       setState(() => _docketOpen = false);
@@ -2418,7 +2629,8 @@ class _StationChip extends StatelessWidget {
 }
 
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap});
+  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap, this.boxKey});
+  final GlobalKey? boxKey;
   final IconData icon;
   final String label;
   final bool on;
@@ -2427,6 +2639,7 @@ class _ToolButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      key: boxKey,
       button: true,
       label: label,
       excludeSemantics: true,
@@ -2466,7 +2679,8 @@ class _ToolButton extends StatelessWidget {
 }
 
 class _ActionButton extends StatelessWidget {
-  const _ActionButton({super.key, required this.label, required this.onTapUp, this.mono = false, this.done = false, this.compact = false});
+  const _ActionButton({super.key, required this.label, required this.onTapUp, this.mono = false, this.done = false, this.compact = false, this.boxKey});
+  final GlobalKey? boxKey;
   final String label;
   final ValueChanged<Offset> onTapUp;
   final bool mono;
@@ -2476,6 +2690,7 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      key: boxKey,
       button: true,
       label: label,
       excludeSemantics: true,
@@ -2530,8 +2745,9 @@ class _RankStamp extends StatelessWidget {
 }
 
 class _DocketSheet extends StatelessWidget {
-  const _DocketSheet({required this.onClose});
+  const _DocketSheet({required this.onClose, this.buttonKey});
   final VoidCallback onClose;
+  final GlobalKey? buttonKey;
 
   static const _rows = [
     (Icons.place_rounded, 'ফিডার', '11 kV বটতলা ফিডার · DTR-23 আর তার সেকশন', Color(0xFF1565C0)),
@@ -2607,10 +2823,12 @@ class _DocketSheet extends StatelessWidget {
                         ),
                       const SizedBox(height: 12),
                       SizedBox(
+                        key: buttonKey,
                         width: double.infinity,
                         child: ElevatedButton.icon(
+                          key: const ValueKey('docket-close'),
                           icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 18),
-                          label: Text('ডকেট বুঝে নিলাম · কাজ শুরু', style: bangla(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white)),
+                          label: Text(M4GateLines.docketClose, style: bangla(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1B3A57),
                             padding: const EdgeInsets.symmetric(vertical: 12),

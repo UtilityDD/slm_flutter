@@ -4,8 +4,10 @@
 // with a load; a live phase), the deal, the reason libraries, and the level
 // in the shell: idle perf, the guide first, a full clean play (bad meters
 // swapped, the ghost checked, the live line stopped, the coworker refused), a
-// needless stop that is not scored, a slip card, and the deadly freeze
-// (touching on an unproven meter's zero on his say-so; touching untested).
+// needless stop and a guessed stop (a slip, neutral card, the round stays),
+// listening to the coworker (a slip, never a hand on the line), the coworker
+// on a fast play, three slips striking out, a slip card, the gesture hint, and
+// the deadly freeze (touching on an unproven meter's zero).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -19,7 +21,9 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard, kStrikesToFail;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m2_dead_test.dart';
@@ -32,6 +36,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.2/do/1',
@@ -83,16 +88,15 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await confirmChoice(t);
+  // A right reason zooms and waits for এগিয়ে যান; a coworker deck closes.
+  await tapReasonProceed(t);
+}
+
+/// Taps the slip card's বুঝেছি.
+Future<void> _gotIt(WidgetTester t) async {
+  await t.tap(find.text(MistakeLines.gotIt));
+  await _pump(t, 900);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -155,8 +159,7 @@ Future<void> _playRight(WidgetTester t, DeadDeal deal, int i) async {
     if (i != deal.callAt || cwDone) return;
     if (!await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 3500)) return;
     cwDone = true;
-    await _pumpUntil(t, find.byType(ChoiceDeck));
-    await _pump(t, 600);
+    await waitChoiceDeck(t);
     await _pickRight(t, DeadLines.coworker.right);
     await _pump(t, 1500);
   }
@@ -197,7 +200,7 @@ Future<void> _playRight(WidgetTester t, DeadDeal deal, int i) async {
   await _pump(t, 1500);
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'round $i ${c.line} ${c.fault}');
   expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'round $i');
-  await _pump(t, 700);
+  await waitChoiceDeck(t);
   await _pickRight(t, DeadLines.whyRight(c));
   await _pump(t, 4000);
 }
@@ -222,7 +225,7 @@ void main() {
           }
         }
         final call = d.cases[d.callAt];
-        expect(call.site == DeadSite.single && call.live, isFalse, reason: 'he needs a 0.0 on his round');
+        expect(call.site == DeadSite.single && call.line != DeadLine.dead, isFalse, reason: 'he needs a 0.0 on his round before the test is done');
         calls.add(d.callAt);
         seen.add(d.cases.map((c) => '${c.site.name}${c.fault.name}${c.line.name}${c.livePoint}${c.ghostPair}').join('|') + d.callAt.toString());
       }
@@ -273,10 +276,99 @@ void main() {
       expect(a.prove()!.volts, kProverVolts);
       expect(a.test(const DeadPair(DeadPoint.p, n))!.volts, kLiveVolts);
       expect(a.decide(touch: true), DeadMistakes.touchLive);
-      final ok = run1(const DeadCase(id: 'x', site: DeadSite.single, fault: DeadFault.none, line: DeadLine.live, livePoint: DeadPoint.p));
+      final ok = run1(const DeadCase(id: 'x', site: DeadSite.single, fault: DeadFault.none, line: DeadLine.live, livePoint: DeadPoint.p))..prove();
+      expect(ok.test(const DeadPair(DeadPoint.p, n))!.volts, kLiveVolts);
+      expect(ok.liveRead, isTrue);
       expect(ok.decide(touch: false), isNull);
       expect(ok.shown, isTrue);
       expect(ok.caught, contains(DeadLines.caughtLive));
+    });
+
+    test('bug: a stop on a live line with zero tests no longer counts — a slip, the round stays', () {
+      const c = DeadCase(id: 'x', site: DeadSite.threePhase, fault: DeadFault.none, line: DeadLine.live, livePoint: DeadPoint.y);
+      final a = run1(c);
+      expect(a.decide(touch: false), DeadMistakes.needlessStop);
+      expect(a.shown, isFalse);
+      expect(a.ended, isFalse);
+      expect(a.slips, 1);
+      // A reading of 0.0 (no voltage seen yet) is no reason to stop either.
+      expect(a.test(const DeadPair(r, b))!.volts, 0);
+      expect(a.liveRead, isFalse);
+      expect(a.decide(touch: false), DeadMistakes.needlessStop);
+      expect(a.slips, 2);
+      // Real voltage on the meter, even one not proven yet (a meter cannot
+      // fake 230 V): the stop counts, never a slip.
+      expect(a.proven, isFalse);
+      expect(a.test(const DeadPair(y, n))!.volts, kLiveVolts);
+      expect(a.liveRead, isTrue);
+      expect(a.decide(touch: false), isNull);
+      expect(a.shown, isTrue);
+      expect(a.slips, 2);
+      // The same with a proven meter.
+      final p = run1(c)..prove();
+      expect(p.test(const DeadPair(r, y))!.volts, kLiveVolts);
+      expect(p.decide(touch: false), isNull);
+      expect(p.slips, 0);
+      // A cut lead never reads the voltage: a stop on its 0.0 is a guess.
+      final cut = run1(const DeadCase(id: 'x', site: DeadSite.threePhase, fault: DeadFault.cutLead, line: DeadLine.live, livePoint: DeadPoint.y));
+      expect(cut.test(const DeadPair(y, n))!.volts, 0);
+      expect(cut.liveRead, isFalse);
+      expect(cut.decide(touch: false), DeadMistakes.needlessStop);
+      // A voltage read with the load counts too.
+      final ld = run1(c)..test(const DeadPair(r, b));
+      expect(ld.liveRead, isFalse);
+      ld.test(const DeadPair(r, y));
+      ld.liveRead = false; // isolate the load path
+      expect(ld.loadTest()!.volts, kLiveVolts);
+      expect(ld.liveRead, isTrue);
+      // Only a pair across the live phase reads it.
+      final l = run1(c)..prove();
+      l.test(const DeadPair(r, b));
+      expect(l.liveRead, isFalse);
+      l.test(const DeadPair(b, y));
+      expect(l.liveRead, isTrue);
+    });
+
+    test('listening to the coworker is always a slip: never deadly, never right, the round stays', () {
+      for (final line in DeadLine.values) {
+        for (final fault in [DeadFault.none, DeadFault.cutLead]) {
+          final c = DeadCase(
+              id: 'x',
+              site: DeadSite.threePhase,
+              fault: fault,
+              line: line,
+              livePoint: line == DeadLine.live ? r : null,
+              ghostPair: line == DeadLine.ghost ? const DeadPair(y, n) : null,
+              ghostVolts: 24);
+          // Proven and every pair tested (a proven-dead line too): still a slip.
+          final a = run1(c)..prove();
+          allPairs(a);
+          a.prove();
+          final m = a.listen();
+          expect(m, DeadMistakes.listened, reason: '$line $fault');
+          expect(m!.deadly, isFalse);
+          expect(a.slips, 1);
+          expect(a.shown, isFalse);
+          expect(a.ended, isFalse);
+          expect(a.deadly, isNull);
+        }
+      }
+    });
+
+    test('complete: every pair proven, proven again, the ghost checked', () {
+      const c = DeadCase(id: 'x', site: DeadSite.single, fault: DeadFault.none, line: DeadLine.ghost, ghostPair: DeadPair(DeadPoint.p, n), ghostVolts: 18);
+      final a = run1(c)..prove();
+      allPairs(a);
+      a.prove();
+      expect(a.complete, isFalse, reason: 'the ghost is not checked');
+      // The load re-test of the last pair checks the ghost; it does not void
+      // the proof (only a new circuit test does).
+      a.loadTest();
+      expect(a.complete, isTrue);
+      a.test(const DeadPair(DeadPoint.p, n));
+      expect(a.complete, isFalse, reason: 'a circuit test after the proof');
+      a.prove();
+      expect(a.complete, isTrue);
     });
 
     test('a lead that breaks mid-test: the proof after fails and voids the tests (touch = deadly); skipping it = slip', () {
@@ -337,15 +429,31 @@ void main() {
       expect(live.loadTest()!.volts, kLiveVolts);
     });
 
-    test('a stop on a dead line is not scored: no mistake, the round stays', () {
-      final a = run1(const DeadCase(id: 'x', site: DeadSite.single, fault: DeadFault.none, line: DeadLine.dead));
-      expect(a.decide(touch: false), isNull);
+    test('bug: a needless stop on a dead line costs a slip; the round stays', () {
+      final a = run1(const DeadCase(id: 'x', site: DeadSite.single, fault: DeadFault.none, line: DeadLine.dead))..prove();
+      allPairs(a);
+      a.prove();
+      expect(a.decide(touch: false), DeadMistakes.needlessStop);
       expect(a.shown, isFalse);
       expect(a.needless, 1);
-      expect(a.slips, 0);
+      expect(a.slips, 1);
+      expect(a.decide(touch: true), isNull, reason: 'the round goes on');
+      // A ghost reading is no reason to stop either.
+      final g = run1(const DeadCase(id: 'x', site: DeadSite.single, fault: DeadFault.none, line: DeadLine.ghost, ghostPair: DeadPair(DeadPoint.p, n), ghostVolts: 31))..prove();
+      allPairs(g);
+      expect(g.decide(touch: false), DeadMistakes.needlessStop);
     });
 
-    test('three slips fail the level (percent below 55)', () {
+    test('the needless-stop card never says what the line is', () {
+      final t = DeadMistakes.needlessStop.textBn;
+      for (final w in ['ঠিক আছে', 'ডেড ছিল', 'লাইভ ছিল', 'ভূতুড়ে']) {
+        expect(t.contains(w), isFalse, reason: w);
+      }
+      // It never suggests a voltage on an unproven meter may be ignored.
+      expect(t.contains('প্রমাণিত মিটারে ভোল্টেজ'), isFalse);
+    });
+
+    test('three slips: 55 % — the page strikes out on the third (kStrikesToFail)', () {
       final d = DeadDeal(cases: [
         for (var i = 0; i < 3; i++) const DeadCase(id: 'x', site: DeadSite.threePhase, fault: DeadFault.none, line: DeadLine.dead),
       ], callAt: 0);
@@ -359,6 +467,7 @@ void main() {
       expect(run.done, isTrue);
       expect(run.percent, 55);
       expect(run.slips, 3);
+      expect(kStrikesToFail, 3, reason: 'the third slip ends the play on the page (StruckOutCard)');
     });
 
     test('libraries: decks of three, one right; lengths within 1.3×; the coworker; his exit line recorded', () {
@@ -385,6 +494,18 @@ void main() {
       expectSameLength('choice', [...cw.right, ...cw.wrong]);
       expectLibrary('choice', cw.right, cw.wrong);
       expect(LearnVoice.resolve(cw.exitLine, rival: true), isNotNull);
+      // No giveaway word: the right cards' key words are on wrong cards too.
+      bool onWrong(List<String> wrong, String w) => wrong.any((x) => x.contains(w));
+      expect(onWrong(DeadLines.touchMyths, 'প্রমাণ'), isTrue);
+      expect(onWrong(DeadLines.touchMyths, 'টেস্ট'), isTrue);
+      expect(onWrong(DeadLines.touchMyths, 'ভূতুড়ে'), isTrue);
+      expect(onWrong(DeadLines.stopExcuses, 'ভোল্টেজ'), isTrue);
+      expect(onWrong(DeadLines.stopExcuses, 'মিটার'), isTrue);
+      expect(onWrong(DeadLines.stopExcuses, 'লোড'), isTrue);
+      expect(onWrong(cw.wrong, 'প্রমাণ'), isTrue);
+      expect(onWrong(cw.wrong, 'টেস্ট'), isTrue);
+      expect(cw.wrong.where((x) => x.startsWith('না')), isNotEmpty, reason: '"না" is not only on the refusals');
+      expect(DeadMistakes.all.map((m) => m.key).toSet().length, DeadMistakes.all.length);
       for (final m in DeadMistakes.all) {
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
       }
@@ -431,7 +552,7 @@ void main() {
         }
         debugPrint('PERF m2_dead_test ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -515,19 +636,170 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('a stop on a dead line is not scored: no card, the guide says the rule, the round stays', (t) async {
+    testWidgets('bug: a needless stop on a dead line costs a slip; the card is neutral; the round stays', (t) async {
       var seed = 0;
-      while (dealDead(math.Random(seed)).cases[0].line != DeadLine.dead || dealDead(math.Random(seed)).callAt == 0) {
+      while (true) {
+        final d = dealDead(math.Random(seed));
+        if (d.callAt != 0 && d.cases[0].line == DeadLine.dead && d.cases[0].fault == DeadFault.none) break;
+        seed++;
+      }
+      final c0 = dealDead(math.Random(seed)).cases[0];
+      final c = await _open(t, seed);
+      // The whole test done right, then a stop.
+      await _prove(t);
+      for (final p in c0.pairs) {
+        await _testPair(t, c0.site, p);
+      }
+      await _prove(t);
+      await t.tap(find.text(DeadLines.stop));
+      await _pump(t, 800);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes.single.key, DeadMistakes.needlessStop.key);
+      final said = c.read(guideDirectorProvider).line;
+      expect(said.contains('ঠিক আছে'), isFalse, reason: said);
+      await _gotIt(t);
+      // The round stays: the work so far counts, touch is now right.
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.text(DeadLines.touch), findsOneWidget);
+      await t.tap(find.text(DeadLines.touch));
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the reason deck of the same round');
+      await _close(t, c);
+    });
+
+    testWidgets('bug: a stop on a live line with no test is a slip; once the meter reads the voltage (even unproven) it counts', (t) async {
+      var seed = 0;
+      while (true) {
+        final d = dealDead(math.Random(seed));
+        if (d.callAt != 0 && d.cases[0].live && d.cases[0].fault == DeadFault.none) break;
+        seed++;
+      }
+      final c0 = dealDead(math.Random(seed)).cases[0];
+      final c = await _open(t, seed);
+      await t.tap(find.text(DeadLines.stop));
+      await _pump(t, 800);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'a guess never reaches the reason deck');
+      expect(c.read(gameSaveProvider).mistakes.single.key, DeadMistakes.needlessStop.key);
+      await _gotIt(t);
+      expect(find.text(DeadLines.stop), findsOneWidget, reason: 'the round stays');
+      // No proof first: real voltage on the display is reason enough to stop.
+      await _testPair(t, c0.site, DeadPair(c0.livePoint!, DeadPoint.n));
+      expect(_meter(), DeadLines.volts(kLiveVolts));
+      await t.tap(find.text(DeadLines.stop));
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike out: the StruckOutCard', (t) async {
+      var seed = 0;
+      while (dealDead(math.Random(seed)).callAt == 0) {
         seed++;
       }
       final c = await _open(t, seed);
+      for (var i = 0; i < 2; i++) {
+        await t.tap(find.text(DeadLines.stop));
+        await _pump(t, 800);
+        expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${i + 1}');
+        await _gotIt(t);
+      }
+      expect(find.byType(StruckOutCard), findsNothing);
       await t.tap(find.text(DeadLines.stop));
-      await _pump(t, 600);
+      await _pump(t, 1200);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.text(FrameLines.struckHead), findsOneWidget);
+      expect(find.text(DeadLines.touch), findsNothing, reason: 'the play is over');
+      expect(c.read(gameSaveProvider).rungProgress['2.2/do/1'], isNot('cleared'));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the coworker comes even on a fast play: the next move waits for him', (t) async {
+      var seed = 0;
+      while (true) {
+        final d = dealDead(math.Random(seed));
+        final c0 = d.cases[0];
+        if (d.callAt == 0 && c0.site == DeadSite.single && c0.line == DeadLine.dead && c0.fault == DeadFault.none) break;
+        seed++;
+      }
+      final c = await _open(t, seed);
+      await _prove(t);
+      await _testPair(t, DeadSite.single, const DeadPair(DeadPoint.p, DeadPoint.n));
+      expect(_meter(), DeadLines.volts(0));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet: he is due in 1.2–2.4 s');
+      // At once onto the proving unit (this would finish the test).
+      await t.tapAt(_geo.prover.center * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in now');
+      await waitChoiceDeck(t);
+      await _pickRight(t, DeadLines.coworker.right);
+      await _pump(t, 1500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(_meter(), DeadLines.volts(0), reason: 'the tap waited for him: no proof ran, his 0.0 is still on the display');
+      // Then the move works as usual.
+      await _prove(t);
+      expect(_meter(), DeadLines.volts(kProverVolts));
+      await t.tap(find.text(DeadLines.touch));
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('bug: listening on a proven-dead line is a slip — no hand on the line, the round stays', (t) async {
+      var seed = 0;
+      late DeadDeal deal;
+      while (true) {
+        deal = dealDead(math.Random(seed));
+        final c0 = deal.cases[0];
+        if (deal.callAt == 0 && c0.line == DeadLine.dead && c0.fault == DeadFault.none) break;
+        seed++;
+      }
+      final c0 = deal.cases[0];
+      final c = await _open(t, seed);
+      await _prove(t);
+      await _testPair(t, c0.site, c0.pairs.first);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(DeadLines.coworker.wrong);
+      expect(wrong, isNotEmpty);
+      await t.tap(wrong.first, warnIfMissed: false);
+      await tapReasonProceed(t);
+      await _pump(t, 800);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'listening never scores right');
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, DeadMistakes.listened.key);
+      expect(s.mistakes.single.deadly, isFalse);
+      await _gotIt(t);
       expect(find.byType(MistakeCard), findsNothing);
-      expect(find.byType(ChoiceDeck), findsNothing);
-      expect(c.read(guideDirectorProvider).line, DeadLines.needlessDead);
-      expect(find.text(DeadLines.touch), findsOneWidget);
-      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(find.text(DeadLines.touch), findsOneWidget, reason: 'the round stays');
+      expect(find.text(DeadLines.caughtCall), findsNothing);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: idle hands-on shows a sweep over every terminal, the proving unit, the tools and both decisions', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final d = dealDead(math.Random(5));
+      final c = await _open(t, 5);
+      await _pump(t, 9500);
+      final st = t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(st.showing, isTrue);
+      // Terminals + the proving unit + অন্য মিটার + both decisions (লোড waits
+      // for a first test).
+      expect(st.debugOptions, hasLength(_geo.points(d.cases[0].site).length + 4), reason: 'a sweep over all targets, never a tap on one');
+      final prover = _geo.prover;
+      expect(st.debugOptions.any((r) => (r.center - prover.center * _k).distance < 2), isTrue, reason: 'scene rects mapped to the screen');
+      // Any touch hides it.
+      await t.tapAt(const Offset(30, 300));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(st.showing, isFalse);
       await _close(t, c);
     });
 
@@ -553,26 +825,25 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('his zero on an unproven meter: listening = deadly — freeze first, then the card', (t) async {
+    testWidgets('touching on an unproven meter\'s zero: deadly — freeze first, then the card', (t) async {
       var seed = 0;
       late DeadDeal deal;
       while (true) {
         deal = dealDead(math.Random(seed));
-        if (deal.callAt == 0 && deal.cases[0].fault == DeadFault.cutLead && deal.cases[0].site == DeadSite.threePhase) break;
+        if (deal.callAt != 0 && deal.cases[0].fault == DeadFault.cutLead && deal.cases[0].site == DeadSite.threePhase) break;
         seed++;
       }
       final c = await _open(t, seed);
       // Straight onto the circuit: no proof.
       await _testPair(t, DeadSite.threePhase, const DeadPair(DeadPoint.r, DeadPoint.n));
       expect(_meter(), DeadLines.volts(0));
-      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 600);
-      final wrong = _onScreen(DeadLines.coworker.wrong);
-      expect(wrong, isNotEmpty);
-      await t.tap(wrong.first, warnIfMissed: false);
+      await t.tap(find.text(DeadLines.touch));
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
+      // The frozen scene takes no touch: a probe tap changes nothing.
+      await t.tapAt(_geo.prover.center * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.text(MistakeLines.slipHead), findsNothing);
       expect(find.byType(MistakeCard), findsNothing);
       await _pump(t, 3500);
       expect(find.byType(MistakeCard), findsOneWidget);

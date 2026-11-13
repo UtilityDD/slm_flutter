@@ -4,7 +4,9 @@
 // libraries that fit the situation, the supervisor's recorded lines, and the
 // level in the shell: idle perf, the guide first, a full clean play (the
 // supervisor refused, gloves, the ladder, the reasons, the shelter), slips
-// (one card, three strike out) and the deadly freeze.
+// (one card, three strike out), the deadly freeze, the supervisor on a fast
+// play (the ladder waits for him), a needless stop (no ◆, neutral reply, no
+// third star) and the gesture hints (how, never what).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -18,6 +20,7 @@ import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -32,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _rung = '1.9/do/1';
 final _pack = stormPushPacks['do_1_9_b']!;
@@ -59,21 +63,33 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await confirmChoice(t);
+  // A right reason zooms and waits for এগিয়ে যান; a coworker deck just closes.
+  await tapReasonProceed(t);
 }
+
+/// Words (Bangla runs) found in every right option and in no wrong one: a
+/// tell that picks the answer without reading it.
+Set<String> _rightOnlyWords(List<String> right, List<String> wrong) {
+  Set<String> words(String l) => RegExp('[\u0980-\u09FF]+').allMatches(l).map((m) => m.group(0)!).toSet();
+  final common = right.map(words).reduce((a, b) => a.intersection(b));
+  final inWrong = wrong.map(words).fold(<String>{}, (a, b) => a..addAll(b));
+  return common.difference(inWrong);
+}
+
+/// Pieces of words (Bangla runs, 3+ letters, found inside other words too)
+/// on every wrong option but missing from some right one: when that right
+/// card is dealt it is the only one without them (e.g. "বাতাস" on every gale
+/// excuse but not on one gale reason).
+Set<String> _wrongEverywhereWords(List<String> right, List<String> wrong) => {
+      for (final w in [...right, ...wrong].expand((l) => RegExp('[ঀ-৿]+').allMatches(l).map((m) => m.group(0)!)))
+        if (w.length >= 3 && wrong.every((l) => l.contains(w)) && right.any((l) => !l.contains(w))) w,
+    };
 
 /// The first seed from [from] whose deal passes [ok].
 int _seed(bool Function(StormDeal d) ok, {int from = 0}) {
@@ -84,7 +100,7 @@ int _seed(bool Function(StormDeal d) ok, {int from = 0}) {
   return s;
 }
 
-Future<ProviderContainer> _open(WidgetTester t, int seed) async {
+Future<ProviderContainer> _open(WidgetTester t, int seed, {int settleMs = 1900}) async {
   t.view.physicalSize = const Size(784, 1700);
   t.view.devicePixelRatio = 2.0;
   final c = ProviderContainer();
@@ -98,7 +114,7 @@ Future<ProviderContainer> _open(WidgetTester t, int seed) async {
   )));
   await _pump(t, 1000);
   await waitIntro(t);
-  await _pump(t, 1900);
+  await _pump(t, settleMs);
   return c;
 }
 
@@ -172,21 +188,33 @@ void main() {
       expect(bare.caught, contains(StormLines.caughtEmergency));
     });
 
-    test('saying no: right in drizzle-routine, gale and thunder (then the shelter); "না" to the emergency costs nothing', () {
+    test('saying no: right in drizzle-routine, gale and thunder (then the shelter); "না" to the emergency is a needless stop', () {
       for (final c in [_routine, _gale, _storm]) {
         final r = _runOf(c);
         expect(r.stop(), StormStop.right, reason: '$c');
         expect(r.slips, 0);
+        expect(r.needless, 0);
         expect(r.phase, c.needsShelter ? StormPhase.shelter : StormPhase.shown);
       }
+      // One "না" ends it: no second try that would show it may go on.
       final e = _runOf(_emergency);
-      expect(e.stop(), StormStop.mayGoOn, reason: 'the lesson allows it: it stays');
-      expect(e.phase, StormPhase.judge);
-      expect(e.stop(), StormStop.declined, reason: 'a second "না" is his right');
+      expect(e.stop(), StormStop.declined, reason: 'his right, but needless');
       expect(e.phase, StormPhase.shown);
-      expect(e.slips, 0);
+      expect(e.needless, 1, reason: 'it costs the clean play');
+      expect(e.slips, 0, reason: 'never a slip: Stop Work is his right');
       expect(e.percent, 100);
       expect(e.caught, isEmpty, reason: 'no ◆ tag for it');
+      expect(e.climb(), isNull, reason: 'the situation is over');
+    });
+
+    test('after a deadly the rules take nothing more', () {
+      final r = StormRun(const StormDeal(cases: [_storm, _routine, _emergency], callRound: 1));
+      expect(r.climb(), StormMistakes.lightningClimb);
+      r.next();
+      expect(r.round, 0, reason: 'no next situation after a death');
+      expect(r.stop(), StormStop.ignored);
+      expect(r.shelter(StormPlace.van), isNull);
+      expect(r.slips, 0);
     });
 
     test('shelter: the van is right; the lone tree or the pole\'s foot a slip, choose again', () {
@@ -226,6 +254,20 @@ void main() {
       }
       expect(StormLines.whyRight(_gale), StormLines.windRight, reason: 'an emergency docket in a gale is still a stop');
       expect(StormLines.whyRight(_emergency), StormLines.goRight);
+      // No giveaway word: nothing found on every right card and no wrong one
+      // (e.g. "জরুরি" only on the go-on reasons, "বজ্র" only on the storm's).
+      for (final c in [_routine, _emergency, _gale, _storm]) {
+        expect(_rightOnlyWords(StormLines.whyRight(c), StormLines.whyWrong(c)), isEmpty, reason: '$c');
+      }
+      expect(StormLines.whyWrong(_storm).every((l) => l.contains('বজ্র')), isTrue, reason: 'every storm card names the sky');
+      expect(StormLines.whyWrong(_gale).every((l) => l.contains('বাতাস')), isTrue);
+      expect(StormLines.whyRight(_gale).every((l) => l.contains('বাতাস')), isTrue, reason: 'the right ones name it too');
+      // And the reverse: nothing on every wrong card that a right one lacks.
+      for (final c in [_routine, _emergency, _gale, _storm]) {
+        expect(_wrongEverywhereWords(StormLines.whyRight(c), StormLines.whyWrong(c)), isEmpty, reason: '$c');
+      }
+      expect(_wrongEverywhereWords(StormLines.shelterRight, StormLines.shelterWrong), isEmpty);
+      expect(_rightOnlyWords(StormLines.shelterRight, StormLines.shelterWrong), isEmpty);
       expectSameLength('shelter', [...StormLines.shelterRight, ...StormLines.shelterWrong]);
       expectLibrary('shelter', StormLines.shelterRight, StormLines.shelterWrong);
       // A myth is never a right reason.
@@ -259,6 +301,7 @@ void main() {
         // "না" opens cards on both sides: no tell.
         expect(s.right.every((r) => r.startsWith('না')), isFalse, reason: '$cue');
         expect(s.wrong.any((r) => r.startsWith('না')), isTrue);
+        expect(_rightOnlyWords(s.right, s.wrong), isEmpty, reason: '$cue');
       }
       expect(StormLines.pushLines, hasLength(3));
     });
@@ -271,6 +314,8 @@ void main() {
         ...StormLines.windRight,
         ...StormLines.thunderRight,
         ...StormLines.stopWrong,
+        ...StormLines.windWrong,
+        ...StormLines.thunderWrong,
         ...StormLines.goRight,
         ...StormLines.goWrong,
         ...StormLines.shelterRight,
@@ -279,8 +324,6 @@ void main() {
         ...StormLines.refuseAny,
         ...StormLines.listen,
         ...StormLines.asks,
-        StormLines.mayGoOn,
-        StormLines.mayGoOnStill,
         StormLines.declined,
         for (final m in StormMistakes.all) m.textBn,
       ];
@@ -332,7 +375,7 @@ void main() {
         }
         debugPrint('PERF storm_push ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -380,11 +423,9 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('flow: refuse the supervisor, gloves for the emergency, the ladder down in the storms, reasons, the van → pass', (t) async {
-      // A play with the go-on situation, and him in a later round.
-      final seed = _seed((d) => d.cases.any((c) => c.mayGoOn) && d.callRound > 0);
-      final deal = dealStorm(math.Random(seed));
-      final c = await _open(t, seed);
+    /// Plays a whole deal clean; [needless] lays the ladder down on the
+    /// go-on situation instead of climbing it gloved.
+    Future<void> playAll(WidgetTester t, StormDeal deal, {bool needless = false}) async {
       for (var i = 0; i < 3; i++) {
         final k = deal.cases[i];
         if (i == deal.callRound) {
@@ -393,6 +434,11 @@ void main() {
           expect(find.text(StormLines.supervisorTag), findsOneWidget);
           await _pickRight(t, StormLines.coworker(k.cue).right);
           await _pump(t, 2500);
+        }
+        if (k.mayGoOn && needless) {
+          await _down(t);
+          await _pump(t, i == 2 ? 6000 : 3500);
+          continue;
         }
         if (k.mayGoOn) {
           await t.tap(_label(StormLines.glovesLabel));
@@ -416,15 +462,95 @@ void main() {
         }
         await _pump(t, i == 2 ? 4000 : 1900);
       }
+    }
+
+    testWidgets('flow: refuse the supervisor, gloves for the emergency, the ladder down in the storms, reasons, the van → pass', (t) async {
+      // A play with the go-on situation, and him in a later round.
+      final seed = _seed((d) => d.cases.any((c) => c.mayGoOn) && d.callRound > 0);
+      final deal = dealStorm(math.Random(seed));
+      final c = await _open(t, seed);
+      await playAll(t, deal);
       final s = c.read(gameSaveProvider);
       expect(s.rungProgress[_rung], 'cleared');
       expect(s.mistakes, isEmpty);
-      expect(s.starsByRung[_rung], greaterThan(0));
+      expect(s.starsByRung[_rung], 3, reason: 'clean and quick');
       expect(find.byType(LevelPassPanel), findsOneWidget);
       expect(find.text(StormLines.caughtCall), findsOneWidget);
       expect(find.text(StormLines.caughtShelter), findsOneWidget);
       expect(find.text(StormLines.caughtEmergency), findsOneWidget);
       expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a needless stop costs the clean play: a pass, but no third star and no quick bonus', (t) async {
+      final seed = _seed((d) => d.cases.any((c) => c.mayGoOn) && d.callRound > 0);
+      final deal = dealStorm(math.Random(seed));
+      final c = await _open(t, seed);
+      await playAll(t, deal, needless: true);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress[_rung], 'cleared');
+      expect(s.mistakes, isEmpty, reason: 'never a slip');
+      expect(s.starsByRung[_rung], 2);
+      final panel = t.widget<LevelPassPanel>(find.byType(LevelPassPanel));
+      expect(panel.quickBonus, isFalse);
+      expect(panel.caughtBn, isNot(contains(StormLines.caughtEmergency)));
+      await _close(t, c);
+    });
+
+    testWidgets('the supervisor comes even on a fast play: the ladder waits for him', (t) async {
+      // His situation first, and the hands are quicker than his timer (1.2–2.4 s
+      // from the docket): step through seeds until one where the ladder is
+      // ready (1.5 s) and he has not come yet.
+      late int seed;
+      late ProviderContainer c;
+      var from = 0;
+      for (var tries = 0;; tries++) {
+        expect(tries, lessThan(40), reason: 'a seed where he is still on his way');
+        seed = _seed((d) => d.callRound == 0 && !d.cases.first.mayGoOn, from: from);
+        c = await _open(t, seed, settleMs: 1550);
+        if (find.byType(CoworkerPeek).evaluate().isEmpty) break;
+        await _close(t, c);
+        from = seed + 1;
+      }
+      final k = dealStorm(math.Random(seed)).cases.first;
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not come yet');
+      await _down(t);
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the drag brings him in now');
+      await _pump(t, 600);
+      expect(find.text(StormLines.whyAsk(k)), findsNothing, reason: 'the ladder did not act');
+      await _pickRight(t, StormLines.coworker(k.cue).right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _down(t);
+      await _pump(t, 2500);
+      expect(find.text(StormLines.whyAsk(k)), findsWidgets, reason: 'after him the ladder works');
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike out: the lone tree, the pole, the tree again', (t) async {
+      final seed = _seed((d) => d.cases.first.cue == StormCue.thunder && d.callRound != 0);
+      final c = await _open(t, seed);
+      await _down(t);
+      await _pump(t, 2500);
+      await _pickRight(t, StormLines.thunderRight);
+      await _pump(t, 3000);
+      for (final p in [StormPlace.tree, StormPlace.pole]) {
+        await t.tap(_label(StormLines.placeLabel(p)));
+        await _pump(t, 1800);
+        expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: '$p');
+        await t.tap(find.text(MistakeLines.gotIt));
+        await _pump(t, 900);
+      }
+      expect(find.byType(StruckOutCard), findsNothing);
+      await t.tap(_label(StormLines.placeLabel(StormPlace.tree)));
+      await _pump(t, 1800);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress[_rung], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key), containsAll([StormMistakes.shelterTree.key, StormMistakes.shelterPole.key]));
+      expect(_label(StormLines.placeLabel(StormPlace.van)), findsNothing, reason: 'the play is over');
       await _close(t, c);
     });
 
@@ -444,25 +570,26 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('"না" to the emergency in plain drizzle: no card, no cost; the guide says it may go on; a second "না" moves on', (t) async {
+    testWidgets('"না" to the emergency in plain drizzle: no card, no ◆, a neutral reply (never "it may go on"); it moves on', (t) async {
       final seed = _seed((d) => d.cases.first.mayGoOn);
       final c = await _open(t, seed);
       int score() => t.widget<FullSceneFrame>(find.byType(FullSceneFrame)).levelScore;
       final before = score();
       await _down(t);
-      await _pump(t, 1200);
+      await _pump(t, 300);
       expect(find.byType(MistakeCard), findsNothing);
       expect(find.byType(ChoiceDeck), findsNothing, reason: 'no ◆, no why');
-      expect(c.read(guideDirectorProvider).line, anyOf(StormLines.mayGoOn, StormLines.mayGoOnStill));
-      expect(_label(StormLines.ladderLabel), findsOneWidget, reason: 'the same situation');
-      expect(find.text(StormLines.job(StormJob.emergency)), findsOneWidget);
-      await _down(t);
+      final line = c.read(guideDirectorProvider).line;
+      expect(line, StormLines.declined);
+      for (final tell in ['সারা যায়', 'জরুরি', 'গ্লাভস', 'পাঠ বলে']) {
+        expect(line, isNot(contains(tell)), reason: 'the reply never tells it could go on');
+      }
       await _pump(t, 2600);
       expect(find.byType(MistakeCard), findsNothing);
       expect(find.byType(StruckOutCard), findsNothing);
       final s = c.read(gameSaveProvider);
       expect(s.mistakes, isEmpty);
-      expect(score(), before, reason: 'no −10');
+      expect(score(), before, reason: 'no −10, no ◆');
       expect(find.text(StormLines.job(dealStorm(math.Random(seed)).cases[1].job)), findsOneWidget, reason: 'on to the next situation');
       await _close(t, c);
     });
@@ -502,6 +629,91 @@ void main() {
       await _close(t, c);
     });
 
+    group('gesture hints', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      // The scene's own hand (the frame's, with the level's controller), never
+      // a deck's.
+      IdleHintState hand(WidgetTester t) =>
+          t.state<IdleHintState>(find.byWidgetPredicate((w) => w is IdleHint && w.controller != null).first);
+
+      /// The vertical way of the ladder nudge now showing: −1 up, +1 down.
+      Future<double> nudgeWay(WidgetTester t) async {
+        for (var i = 0; i < 200; i++) {
+          final f = hand(t).debugFrame;
+          if (f != null && f.trailFrom != null && (f.tip - f.trailFrom!).distance > 6) {
+            return (f.tip.dy - f.trailFrom!.dy).sign;
+          }
+          await t.pump(const Duration(milliseconds: 50));
+        }
+        fail('no ladder nudge moved');
+      }
+
+      testWidgets('judge: a short nudge on the ladder after idle, up and down by turns; the shelter: a sweep over all three places', (t) async {
+        final seed = _seed((d) => d.cases.first.cue == StormCue.thunder && d.callRound != 0);
+        final c = await _open(t, seed);
+        expect(hand(t).showing, isFalse);
+        await _pump(t, 8600);
+        expect(hand(t).showing, isTrue, reason: 'idle while the ladder waits');
+        final f = hand(t).debugFrame!;
+        expect(f.trailFrom, isNotNull, reason: 'a drag');
+        expect((f.tip - f.trailFrom!).distance, lessThanOrEqualTo(HintSpec.maxDragTravel * 1.2), reason: 'a short nudge, never to a target');
+        final first = await nudgeWay(t);
+        expect(first, isNot(0));
+        // Any touch hides it.
+        await t.tapAt(const Offset(40, 300));
+        await t.pump();
+        expect(hand(t).showing, isFalse);
+        // The next show goes the other way (both are moves).
+        await _pump(t, 8600);
+        expect(hand(t).showing, isTrue, reason: 'idle again');
+        expect(await nudgeWay(t), -first, reason: 'up and down by turns');
+        await t.tapAt(const Offset(40, 300));
+        await t.pump();
+        // The ladder down, the reason, then the shelter: a sweep.
+        await _down(t);
+        await _pump(t, 2500);
+        await _pickRight(t, StormLines.thunderRight);
+        await _pump(t, 3000);
+        expect(_label(StormLines.placeLabel(StormPlace.van)), findsOneWidget);
+        await _pump(t, 8600);
+        expect(hand(t).showing, isTrue);
+        expect(hand(t).debugOptions, hasLength(StormPlace.values.length), reason: 'every place, the same way');
+        await _close(t, c);
+      });
+
+      testWidgets('no hand over a mistake card; taps on the ladder count as misses', (t) async {
+        final seed = _seed((d) => d.cases.first == _routine && d.callRound != 0);
+        final c = await _open(t, seed);
+        // Three taps on the ladder (it must be dragged): the hand at once.
+        for (var i = 0; i < 3; i++) {
+          await t.tap(_label(StormLines.ladderLabel), warnIfMissed: false);
+          await t.pump(const Duration(milliseconds: 120));
+        }
+        expect(hand(t).showing, isTrue);
+        await _up(t);
+        await _pump(t, 1200);
+        expect(find.text(MistakeLines.slipHead), findsOneWidget);
+        await _pump(t, 9000);
+        expect(hand(t).showing, isFalse, reason: 'never over a mistake card');
+        await _close(t, c);
+      });
+
+      testWidgets('no scene hand while the supervisor is on screen, however long he waits', (t) async {
+        final seed = _seed((d) => d.callRound == 0 && !d.cases.first.mayGoOn);
+        final c = await _open(t, seed, settleMs: 3000);
+        expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he has come');
+        // Longer than the idle wait: the ladder's nudge never shows over him.
+        for (var i = 0; i < 200; i++) {
+          await t.pump(const Duration(milliseconds: 50));
+          expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he waits for an answer');
+          expect(hand(t).showing, isFalse, reason: 'tick $i');
+        }
+        await _close(t, c);
+      });
+    });
+
     testWidgets('listening to the supervisor in a storm: up the ladder, frozen, deadly', (t) async {
       final seed = _seed((d) => d.callRound == 0 && d.cases.first.stormy);
       final c = await _open(t, seed);
@@ -511,6 +723,7 @@ void main() {
       final wrong = _onScreen(StormLines.listen);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 900);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);

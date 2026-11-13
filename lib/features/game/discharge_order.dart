@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -45,6 +47,12 @@ import 'spoken_once.dart';
 // place of the rod (before the earth); skipping the discharge (listening to
 // him). Slips: a rusty earth point; the chain before all three phases; the
 // earth off first.
+//
+// The kit's timing rules: no drop counts in a right move's praise window
+// ([ReasonTable.tableBusy] in `_blocked`); the last phase waits for him
+// ([CoworkerMoment.holdForCoworker]), so a fast player still meets him; a
+// gesture hint nudges one of the things the hands can take (a short way, never
+// toward where it goes; which one rotates, so it never shows the order).
 //
 // Voice: the guide's lines use device TTS; the coworker speaks in his
 // recorded voice. Art: drawn in code (the mistake cards keep their SVGs
@@ -102,10 +110,10 @@ abstract final class DischargeLines {
   static const earthWrong = [
     'আগে আর্থ দিলে কাজটা একটু তাড়াতাড়ি হয়',
     'পারমিট আছে, ক্রম যা খুশি হলেও চলে',
-    'ক্ল্যাম্পটা হাতের কাছে ছিল, তাই আগে',
+    'শরীর ক্লান্ত, তাই সহজটা আগে সারলাম',
     'আর্থ আগে দিলে পরে আর চেইন লাগে না',
     'নিয়মের খাতায় লেখা আছে, তাই দিয়েছি',
-    'মাটিতে ক্ল্যাম্প থাকলে রড হালকা লাগে',
+    'চার্জ তো থাকে না, ক্ল্যাম্প শুধু নিয়ম',
   ];
   static const phaseAsk = 'কেন তিনটে ফেজেই হুক ছোঁয়ালেন?';
   static const phaseRight = [
@@ -117,7 +125,7 @@ abstract final class DischargeLines {
     'একটা ফেজ নামালেই বাকি দুটোও নেমে যায়',
     'লাইন 5 মিনিট বন্ধ, চার্জ থাকার কথা না',
     'পারমিট হাতে থাকলে চার্জের ভয় থাকে না',
-    'স্পার্ক দেখতে ভালো লাগে, তাই ছোঁয়ালাম',
+    'প্রতিটা ছুঁলে সময় নষ্ট, একটাই যথেষ্ট',
     'চেইন ছুড়লে এমনিতেই সব চার্জ নেমে যায়',
     'তিনটে ছোঁয়ানো শুধু অফিসের খাতার নিয়ম',
   ];
@@ -132,8 +140,8 @@ abstract final class DischargeLines {
     'চেইনটা ভারী, তাই সবার শেষে ছুড়েছি',
     'চেইন দিয়েই আসলে চার্জ মাটিতে নামে',
     'চেইন আগে দিলে স্পার্কটা দেখা যায় না',
-    'লোহার যে কোনো চেইনেও একই কাজ হয়',
-    'চেইন ছুড়লে লাইনে আর হাত দিতে হয় না',
+    'শর্ট করা চেইনই আসল, রড শুধু নিয়ম',
+    'চেইন ছোড়া কঠিন নয়, তাই পরে রেখেছি',
   ];
   static const lastAsk = 'কেন আর্থ সবার শেষে খুললেন?';
   static const lastRight = [
@@ -147,7 +155,7 @@ abstract final class DischargeLines {
     'আর্থ আগে খুললে চেইনটা নিচে পড়ে যেত',
     'মাটির ক্ল্যাম্প নোংরা, তাই শেষে ধরেছি',
     'লাইন তো এখনও বন্ধ, ক্রমে কিছু যায় না',
-    'ক্ল্যাম্পটা নিচে ছিল, তাই শেষে হাত গেল',
+    'হুক ভারী, তাই আগে ওটাই নিচে নামিয়েছি',
   ];
 
   /// The careless coworker (his recorded voice) pushes the lesson's myth.
@@ -165,7 +173,7 @@ abstract final class DischargeLines {
       'ঠিক, 5 মিনিটে আর কী চার্জ জমবে',
       'পারমিট তো আছে, সরাসরি উঠে পড়ি',
       'লাইন ডেড, আজ আর রড লাগবে না',
-      'একবার বাদ দিলে কিছুই হবে না',
+      'একবার ডিসচার্জ বাদ দিলে কিছু হবে না',
       'ও পুরোনো লোক, ওর কথাই তো ঠিক',
     ],
     asks: [
@@ -530,6 +538,12 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The gesture hint: which of the things in reach it nudges rotates from a
+  /// dealt start, so the hand never shows the order.
+  final _hints = IdleHintController();
+  int _hintN = 0;
+  late final int _hintFrom = (_deal.view * 1000).floor();
+
   int _runScore = 0;
 
   /// The guide's full-screen intro is up; the game starts when it is done.
@@ -616,7 +630,32 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
     await _sayChain([DischargeLines.askOn]);
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || struckOut;
+  /// No drop counts now: the intro, a card, a deck, the end — or a right
+  /// move's praise window ([tableBusy]: its ◆ wait on the table).
+  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || tableBusy || struckOut;
+
+  /// The hands wait for the player (the gesture hint may show).
+  bool get _handsWaiting => !_blocked && !_freeze && _mark == null && !_run.ended && !coworkerOnScreen && _drag.value == null;
+
+  /// Nudge directions per thing: a short way, never toward where it goes
+  /// (round 1: shorter than any take-off counts).
+  static const _hintTravel = 28.0;
+
+  Offset _hintToward(_Item i) => switch ((i, _run.round == 0)) {
+        (_Item.clamp, true) => const Offset(0.6, -1), // the spikes are to the left
+        (_Item.hook, true) => const Offset(1, 0.5), // the wires are above
+        (_Item.chain, true) => const Offset(1, -0.2), // the span is up and left
+        _ => const Offset(1, 0),
+      };
+
+  HintSpec? _hint() {
+    final g = _geo;
+    if (g == null || !_handsWaiting) return null;
+    final items = _grabs(g);
+    if (items.isEmpty) return null;
+    final (item, at) = items[(_hintFrom + _hintN++) % items.length];
+    return HintSpec.drag(at, toward: _hintToward(item), travel: _hintTravel, space: HintSpace.scene);
+  }
 
   Offset _hookPoint(DischargeGeo g) {
     final p = _hookOn;
@@ -664,7 +703,11 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
         at = hook;
       }
     }
-    if (item == null) return;
+    if (item == null) {
+      // A drag from nothing: the player may not see what the hands can take.
+      _hints.missTap();
+      return;
+    }
     // Going on with the work while he is still talking refuses him.
     if (coworkerOpen && !coworkerChoiceUp) unawaited(answerCoworker(true, d.globalPosition, direct: true));
     HapticFeedback.selectionClick();
@@ -735,8 +778,15 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
           if ((at - _goodSpike).distance > 36) id = DischargeIds.clampOff;
       }
     }
-    if (id == null || _holdForHim(id)) {
+    if (id == null) {
       // Back where it was (no cost).
+      setState(() {});
+      return;
+    }
+    // The last phase is the decisive control: while his moment is due it
+    // waits for him (the hook goes back, nothing counts, no cost) and he cuts
+    // in now, so a fast player still meets the push before the discharge.
+    if (_lastPhase(id) && holdForCoworker()) {
       setState(() {});
       return;
     }
@@ -899,10 +949,13 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
   @override
   bool? coworkerCanCome() {
     // Too late once the three phases are discharged (or the play is over).
+    // His push ("ডিসচার্জ লাগবে না") makes sense only while a phase is
+    // still to discharge.
     if (_ended || _run.ended || _run.round != 0 || DischargeIds.phases.every(_run.isDone)) return null;
-    // His moment is dealt (after this many steps); not over a card or a deck.
-    // Mid-drag is fine: the hands stop when he comes (_panUpdate / _panEnd).
-    if (_run.stepsDone < _deal.callAfter || _blocked) return false;
+    // His moment is dealt (after this many steps); never over a card, a deck
+    // or a right move's praise window (_blocked has tableBusy). Mid-drag is
+    // fine: the hands stop when he comes (_panUpdate / _panEnd).
+    if (_run.stepsDone < _deal.callAfter || _blocked || tableBusy) return false;
     return true;
   }
 
@@ -910,21 +963,17 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
   /// calls him); the mixin then waits for his dealt moment and a free screen.
   /// Later drops do not restart his timer, so a player who keeps working
   /// still meets him.
-  var _coworkerArmed = false;
+  var _coworkerSent = false;
 
   void _armCoworker() {
-    if (_coworkerArmed || coworkerDone || _run.round != 0 || _moves == 0) return;
-    _coworkerArmed = true;
+    if (_coworkerSent || coworkerDone || _run.round != 0 || _moves == 0) return;
+    _coworkerSent = true;
     scheduleCoworker();
   }
 
-  /// His moment is due and he has not come yet: the last phase waits for
-  /// him (the hook goes back, nothing counts, no cost), so a fast player
-  /// still meets the push before the discharge is done.
-  bool _holdForHim(String id) =>
+  /// [id] would discharge the last of the three phases (the decisive control).
+  bool _lastPhase(String id) =>
       _run.round == 0 &&
-      !coworkerDone &&
-      !coworkerOpen &&
       _run.isDone(DischargeIds.earth) &&
       DischargeIds.phases.contains(id) &&
       !_run.isDone(id) &&
@@ -1218,6 +1267,14 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
           label: DischargeLines.sceneLabel,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
+            // The grab is where the finger went down (the tap below joins
+            // the arena, so the pan is only accepted after the slop).
+            dragStartBehavior: DragStartBehavior.down,
+            // A plain tap does nothing here (the hands drag): three in a
+            // row show the gesture hint now.
+            onTapUp: (_) {
+              if (_handsWaiting) _hints.missTap();
+            },
             onPanStart: _panStart,
             onPanUpdate: _panUpdate,
             onPanEnd: (_) => _panEnd(),
@@ -1280,6 +1337,11 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m, quiet),
+            // How to use the hands (drag), never which thing goes first.
+            hint: _hint,
+            hintWaiting: playing && !deckUp && _handsWaiting,
+            hintKey: '${_run.round}/${_run.stepsDone}/$strikes',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (deckUp)

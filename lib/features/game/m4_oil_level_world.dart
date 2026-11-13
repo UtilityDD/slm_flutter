@@ -106,7 +106,8 @@ class M4OilLevelGeo {
 }
 
 /// The whole place. [leak]: the spot that leaks (null = none); [looked]: spots
-/// the trainee has looked at (a soft ring; the leak, once found, a gold ring);
+/// the trainee has looked at (the same soft ring on every one, the leaking
+/// part too — the oil streak is the evidence, the ring is not);
 /// [gaugeLit]: the gauge is being read; [doOpen]: the DO fuses hang open
 /// (shutdown); [earthed]: the earthing set is on; [climbed]: he is up (his
 /// harness lanyard to the pole); [drums]: the drums in their slots (null = no
@@ -117,7 +118,6 @@ class M4OilLevelWorldPainter extends CustomPainter {
     required this.weather,
     this.leak,
     this.looked = const {},
-    this.found = false,
     this.gaugeLit = false,
     this.doOpen = false,
     this.earthed = false,
@@ -131,7 +131,6 @@ class M4OilLevelWorldPainter extends CustomPainter {
   final M4OilLevelWeather weather;
   final M4OilLevelSpot? leak;
   final Set<M4OilLevelSpot> looked;
-  final bool found;
   final bool gaugeLit;
   final bool doOpen;
   final bool earthed;
@@ -461,15 +460,12 @@ class M4OilLevelWorldPainter extends CustomPainter {
   }
 
   void _rings(Canvas c) {
+    final ring = Paint()
+      ..color = const Color(0x99FFFFFF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6;
     for (final s in looked) {
-      final isLeak = found && s == leak;
-      c.drawCircle(
-          geo.spot(s),
-          isLeak ? 17 : 14,
-          Paint()
-            ..color = isLeak ? const Color(0xFFFFD34E) : const Color(0x99FFFFFF)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = isLeak ? 2.8 : 1.6);
+      c.drawCircle(geo.spot(s), 14, ring);
     }
   }
 
@@ -518,6 +514,15 @@ class M4OilLevelWorldPainter extends CustomPainter {
     }
   }
 
+  /// The label painted on a drum. Both transformer-oil drums carry the same
+  /// label (the wet one is the same filtered oil, spoiled by rain), so only
+  /// the sealed bung versus the open lid and rain water tell them apart.
+  static (String, String) drumLabel(M4OilLevelDrum d) => switch (d) {
+        M4OilLevelDrum.fresh || M4OilLevelDrum.wet => ('TRANSFORMER', 'OIL · FILTERED'),
+        M4OilLevelDrum.engine => ('ENGINE', 'OIL'),
+        M4OilLevelDrum.used => ('USED', 'OIL'),
+      };
+
   void _drum(Canvas c, Rect r, M4OilLevelDrum d, bool out, bool inUse) {
     final (Color a, Color b) = switch (d) {
       M4OilLevelDrum.fresh => (const Color(0xFF1F5FA8), const Color(0xFF123E73)),
@@ -563,12 +568,7 @@ class M4OilLevelWorldPainter extends CustomPainter {
         c.drawOval(Rect.fromCenter(center: Offset(r.center.dx, r.bottom + 3), width: r.width + 14, height: 6), Paint()..color = const Color(0x669ED3EE));
     }
     // The label a worker reads.
-    final (String l1, String l2) = switch (d) {
-      M4OilLevelDrum.fresh => ('TRANSFORMER', 'OIL · FILTERED'),
-      M4OilLevelDrum.engine => ('ENGINE', 'OIL'),
-      M4OilLevelDrum.used => ('USED', 'OIL'),
-      M4OilLevelDrum.wet => ('TRANSFORMER', 'OIL'),
-    };
+    final (String l1, String l2) = drumLabel(d);
     final lab = Rect.fromLTWH(r.left + 3, r.top + r.height * 0.38, r.width - 6, 16);
     c.drawRect(lab, Paint()..color = const Color(0xFFF2F0E8));
     _label(c, l1, Offset(lab.center.dx, lab.top + 4.5), 5.0, const Color(0xFF1B1E22));
@@ -609,7 +609,6 @@ class M4OilLevelWorldPainter extends CustomPainter {
       old.weather != weather ||
       old.leak != leak ||
       !setEquals(old.looked, looked) ||
-      old.found != found ||
       old.gaugeLit != gaugeLit ||
       old.doOpen != doOpen ||
       old.earthed != earthed ||

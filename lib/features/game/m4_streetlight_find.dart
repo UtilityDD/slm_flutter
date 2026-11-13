@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -68,9 +69,20 @@ import 'spoken_once.dart';
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m4_streetlight_find_world.dart), corner guide, ◆ on the table →
 // "কেন …?" → the next light by itself; the careless coworker once a play, on a
-// light with supply, after the reading. Voice: the guide by device TTS; the
-// coworker's new push by device TTS until recorded (his exit line is his
-// existing recorded clip).
+// light with supply, after the reading. The praise window takes no input
+// ([ReasonTable.tableBusy]); switching the MCB OFF on his light before he
+// came waits for him ([CoworkerMoment.holdForCoworker]) — his push ("no need
+// to switch off") only fits while the MCB is ON and the old lamp is in. The
+// tool row is never laid out in the lesson's order (meter → lamp → ballast).
+// Idle hands get a gesture hint: a sweep over the tools and the MCB, over the
+// fitting's parts with a tool in hand, or over the two answers — never the
+// answer itself. Voice: the guide by device TTS; the coworker's new push is
+// silent with its caption held until recorded (his exit line is his existing
+// recorded clip).
+//
+// Listening to the coworker is deadly here, not the playbook's slip: the act
+// he pushes (a lamp out of a live fitting) is this level's own deadly
+// (MODULE4_LADDER step 26 lists both) — owner to confirm.
 
 // ============================================================================
 // Content
@@ -87,6 +99,26 @@ enum M4StreetlightFindTool { none, meter, lamp, gear }
 
 /// What the multimeter on the terminal block did.
 enum M4StreetlightFindProbe { none, reading, dead, live }
+
+/// The lesson's order of the tools (step 1 → 2 → 3): the tool row is never
+/// laid out like this.
+const m4StreetlightFindToolSteps = [M4StreetlightFindTool.meter, M4StreetlightFindTool.lamp, M4StreetlightFindTool.gear];
+
+/// The tool row for a play: shuffled, never in the lesson's order.
+List<M4StreetlightFindTool> m4StreetlightFindToolRow(math.Random rng) {
+  final row = [...m4StreetlightFindToolSteps];
+  do {
+    row.shuffle(rng);
+  } while (_inStepOrder(row));
+  return row;
+}
+
+bool _inStepOrder(List<M4StreetlightFindTool> row) {
+  for (var i = 0; i < row.length; i++) {
+    if (row[i] != m4StreetlightFindToolSteps[i]) return false;
+  }
+  return true;
+}
 
 @immutable
 class M4StreetlightFindPost {
@@ -249,17 +281,20 @@ abstract final class M4StreetlightFindMistakes {
 
 @immutable
 class M4StreetlightFindDeal {
-  const M4StreetlightFindDeal({required this.posts, required this.callAt});
+  const M4StreetlightFindDeal({required this.posts, required this.callAt, this.tools = const [M4StreetlightFindTool.lamp, M4StreetlightFindTool.gear, M4StreetlightFindTool.meter]});
   final List<M4StreetlightFindPost> posts;
 
   /// The light the careless coworker comes to (one with supply).
   final int callAt;
+
+  /// The tool row, left to right (never the lesson's order).
+  final List<M4StreetlightFindTool> tools;
 }
 
 /// Three dark lights: one with no supply, one with a dead lamp, one with a
 /// dead ballast (any order), so changing the lamp everywhere cannot win; one
 /// of the two repairs asks why the line went off first; lamps and pole
-/// numbers vary.
+/// numbers vary; the tool row is shuffled (never meter → lamp → ballast).
 M4StreetlightFindDeal m4StreetlightFindDeal(math.Random rng) {
   final faults = [...M4StreetlightFindFault.values]..shuffle(rng);
   final isolateOnLamp = rng.nextBool();
@@ -285,7 +320,7 @@ M4StreetlightFindDeal m4StreetlightFindDeal(math.Random rng) {
     for (final (i, p) in posts.indexed)
       if (p.fault != M4StreetlightFindFault.noSupply) i,
   ];
-  return M4StreetlightFindDeal(posts: posts, callAt: fixes[rng.nextInt(fixes.length)]);
+  return M4StreetlightFindDeal(posts: posts, callAt: fixes[rng.nextInt(fixes.length)], tools: m4StreetlightFindToolRow(rng));
 }
 
 /// The play state (pure logic).
@@ -559,6 +594,14 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints: the scene's touch layer (design → screen) and the buttons.
+  final _hints = IdleHintController();
+  final _touchKey = GlobalKey();
+  final _toolKeys = {for (final t in m4StreetlightFindToolSteps) t: GlobalKey()};
+  final _readKeys = [GlobalKey(), GlobalKey()];
+  final _gearKeys = [GlobalKey(), GlobalKey()];
+  M4StreetlightFindGeo? _geo;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -601,7 +644,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     _startPost();
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.finished && !_freeze;
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.finished && !_freeze;
 
   String get _task {
     if (_run.readingUp) return M4StreetlightFindLines.askRead;
@@ -661,7 +704,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
   }
 
   void _tapScene(Offset p, M4StreetlightFindGeo geo, Offset global) {
-    if (_intro || _ended || _card != null || reasonOpen || _freeze || _run.finished) return;
+    if (_intro || _ended || _card != null || tableBusy || _freeze || _run.finished) return;
     // While he talks, only the MCB answers him (going OFF refuses him).
     if (coworkerOpen) {
       if (coworkerChoiceUp && geo.mcbHit.contains(p) && _run.mcbOn && _run.toggleMcb()) {
@@ -671,8 +714,17 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
       }
       return;
     }
-    if (_run.readingUp || _run.choosingGear) return;
+    if (_run.readingUp || _run.choosingGear) {
+      _hints.missTap();
+      return;
+    }
     if (geo.mcbHit.contains(p)) {
+      // Switching OFF ends his moment ("no need to switch off"): on his light
+      // a fast OFF waits for him; he cuts in now.
+      if (_run.mcbOn && holdForCoworker()) {
+        setState(() => _wake++);
+        return;
+      }
       _toggleMcb();
       if (_run.lit) {
         unawaited(_postDone());
@@ -681,8 +733,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
       }
       return;
     }
-    if (geo.terminalHit.contains(p)) {
-      if (_run.tool != M4StreetlightFindTool.meter) return;
+    if (geo.terminalHit.contains(p) && _run.tool == M4StreetlightFindTool.meter) {
       _tick();
       switch (_run.tapTerminals()) {
         case M4StreetlightFindProbe.none:
@@ -719,7 +770,10 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
         _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
         unawaited(_sayChain([M4StreetlightFindLines.askPick]));
       }
+      return;
     }
+    // A tap on nothing (or a part with no tool for it in hand).
+    _hints.missTap();
   }
 
   void _answer(bool sayLive, Offset origin) {
@@ -820,8 +874,10 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("open the lamp without switching off") fits only while the
+    // MCB is ON and the old lamp is still in, after the step-1 reading.
     if (_ended || _run.index != _run.deal.callAt || _run.relamped || _run.finished || !_run.mcbOn || !_run.measured) return null;
-    if (_intro || _card != null || reasonOpen || _run.readingUp || _run.choosingGear || _flash != null) return false;
+    if (tableBusy || _intro || _card != null || _run.readingUp || _run.choosingGear || _flash != null) return false;
     return true;
   }
 
@@ -1020,7 +1076,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
       );
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M4StreetlightFindGeo.forScene(m.height, m.inset);
+    final geo = _geo = M4StreetlightFindGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final pole = _pole;
@@ -1074,7 +1130,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
         key: const ValueKey('touch'),
         child: Semantics(
           label: M4StreetlightFindLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
+          child: GestureDetector(key: _touchKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
         ),
       ),
       if (_freeze)
@@ -1103,6 +1159,36 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     ];
   }
 
+  // --- gesture hints -----------------------------------------------------------
+  /// A scene rect (design px) on the screen, through the touch layer.
+  Rect? _sceneRect(Rect r) {
+    final box = _touchKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight));
+  }
+
+  /// How to interact now, never what is right: the reading and the ballast
+  /// sweep over both answers; empty hands sweep over the tools and the MCB;
+  /// a tool in hand sweeps over every part of the fitting and the MCB.
+  HintSpec? _hint() {
+    if (_run.readingUp) return HintSpec.sweepOver(_readKeys);
+    if (_run.choosingGear) return HintSpec.sweepOver(_gearKeys);
+    final geo = _geo;
+    if (geo == null) return null;
+    final options = _run.tool == M4StreetlightFindTool.none
+        ? [
+            for (final t in _run.deal.tools) ?HintSpec.globalRectOf(_toolKeys[t]!),
+            ?_sceneRect(geo.mcbHit),
+          ]
+        : [
+            ?_sceneRect(geo.terminalHit),
+            ?_sceneRect(geo.lampHit),
+            ?_sceneRect(geo.gearHit),
+            ?_sceneRect(geo.mcbHit),
+          ];
+    return options.isEmpty ? null : HintSpec.sweep(options);
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1110,7 +1196,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.finished && !deckUp && !coworkerOpen && _card == null;
+    final handsOn = playing && !_run.finished && !deckUp && !coworkerOpen && _card == null && !tableBusy;
     final p = _run.post;
     final other = p.lamp == M4StreetlightFindLamp.hpsv70 ? M4StreetlightFindLamp.mh150 : M4StreetlightFindLamp.hpsv70;
     final gears = p.matchFirst ? [(p.lamp, true), (other, false)] : [(other, false), (p.lamp, true)];
@@ -1141,6 +1227,10 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn,
+            hintKey: '${_run.index}-${_run.tool.name}-${_run.readingUp}-${_run.choosingGear}-${_run.mcbOn}-${_run.measured}-${_run.relamped}',
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1158,9 +1248,9 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(child: DoBigButton(label: M4StreetlightFindLines.sayLive, filled: true, onTapUp: (d) => _answer(true, d.globalPosition))),
+                      Expanded(child: DoBigButton(key: _readKeys[0], label: M4StreetlightFindLines.sayLive, filled: true, onTapUp: (d) => _answer(true, d.globalPosition))),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: M4StreetlightFindLines.sayDead, filled: true, onTapUp: (d) => _answer(false, d.globalPosition))),
+                      Expanded(child: DoBigButton(key: _readKeys[1], label: M4StreetlightFindLines.sayDead, filled: true, onTapUp: (d) => _answer(false, d.globalPosition))),
                     ],
                   ),
                 ),
@@ -1174,7 +1264,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
                     children: [
                       for (final (i, (lamp, match)) in gears.indexed) ...[
                         if (i > 0) const SizedBox(width: 10),
-                        Expanded(child: DoBigButton(label: M4StreetlightFindLines.gearPick(lamp), filled: true, onTapUp: (d) => _pickGear(match, d.globalPosition))),
+                        Expanded(child: DoBigButton(key: _gearKeys[i], label: M4StreetlightFindLines.gearPick(lamp), filled: true, onTapUp: (d) => _pickGear(match, d.globalPosition))),
                       ],
                     ],
                   ),
@@ -1188,9 +1278,23 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _ToolButton(icon: Icons.speed_rounded, label: M4StreetlightFindLines.meter, on: _run.tool == M4StreetlightFindTool.meter, onTap: () => _hold(M4StreetlightFindTool.meter)),
-                      _ToolButton(icon: Icons.lightbulb_rounded, label: M4StreetlightFindLines.newLamp, on: _run.tool == M4StreetlightFindTool.lamp, onTap: () => _hold(M4StreetlightFindTool.lamp)),
-                      _ToolButton(icon: Icons.memory_rounded, label: M4StreetlightFindLines.ballast, on: _run.tool == M4StreetlightFindTool.gear, onTap: () => _hold(M4StreetlightFindTool.gear)),
+                      // Shuffled each play: never in the lesson's order.
+                      for (final t in _run.deal.tools)
+                        _ToolButton(
+                          key: _toolKeys[t],
+                          icon: switch (t) {
+                            M4StreetlightFindTool.lamp => Icons.lightbulb_rounded,
+                            M4StreetlightFindTool.gear => Icons.memory_rounded,
+                            _ => Icons.speed_rounded,
+                          },
+                          label: switch (t) {
+                            M4StreetlightFindTool.lamp => M4StreetlightFindLines.newLamp,
+                            M4StreetlightFindTool.gear => M4StreetlightFindLines.ballast,
+                            _ => M4StreetlightFindLines.meter,
+                          },
+                          on: _run.tool == t,
+                          onTap: () => _hold(t),
+                        ),
                     ],
                   ),
                 ),
@@ -1350,7 +1454,7 @@ class _MeterCard extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;

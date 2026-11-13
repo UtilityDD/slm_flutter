@@ -16,6 +16,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -169,7 +170,13 @@ abstract final class KitLines {
   static const askLegs = 'এবার প্যান্ট। দেখে তবেই পরুন।';
   static const askFeet = 'এবার জুতো। সোলটা দেখতে ভুলবেন না।';
   static const caught = 'ঠিক ধরেছেন!';
+
+  /// The mistakes book's line for a sound item sent back (after the play).
   static const rejectedGood = 'এটা তো ঠিক ছিল!';
+
+  /// What the guide says and the card shows when a sound item is sent back:
+  /// neutral (audit 2026-11-11) — it never says the item was fine.
+  static const lookAgain = 'থামুন, ভালো করে দেখুন।';
   static const callHeld = 'ঠিক। তাড়াহুড়োতেই দুর্ঘটনা হয়।';
   static const callRushed = 'না! চেক বাদ দেওয়া মানেই ঝুঁকি।';
   static const allSet = 'সব ঠিক আছে। এবার কাজে নামা যায়।';
@@ -273,7 +280,7 @@ abstract final class KitLines {
         KitSlot.feet => askFeet,
       };
 
-  static const coach = [askTorso, askLegs, askFeet, caught, rejectedGood, callHeld, callRushed, allSet, fail, quick, deadlyWord, nearMissWord];
+  static const coach = [askTorso, askLegs, askFeet, caught, rejectedGood, lookAgain, callHeld, callRushed, allSet, fail, quick, deadlyWord, nearMissWord];
 }
 
 /// The two kit mistakes that end a play (lesson 1.1, owner decision
@@ -299,6 +306,17 @@ abstract final class KitMistakes {
   );
 
   static const all = [synthetic, nail];
+
+  /// Listening to the careless coworker (playbook row 8): a slip, never
+  /// deadly. Lesson 1.1's daily check (clothes = point 1, shoes = point 3).
+  static const rushedKey = '1.1/kit/rushed';
+  static const rushedBn = 'তাড়ার কথায় চেক বাদ নয়। কাজ শুরুর আগে পোশাক আর জুতো রোজ দেখে নিন।';
+  static DoMistake rushed(KitSlot before) => DoMistake(
+        key: rushedKey,
+        textBn: rushedBn,
+        art: '$_d/myth_rival_bad.webp',
+        lessonPoint: before == KitSlot.feet ? 2 : 0,
+      );
 }
 
 const _d = 'assets/duty_slip/dress';
@@ -533,8 +551,13 @@ class KitCheckRound {
           if (i.slot == slot && !_gone.contains(i.id)) i,
       ];
 
+  /// The play is over (a deadly item worn, or every slot dressed).
+  bool get ended => deadly != null || done;
+
+  /// Judges [item]; once the play has [ended] nothing more is recorded.
   KitOutcome decide(KitItem item, KitChoice choice) {
     final o = judgeKit(item, choice);
+    if (ended) return o;
     deadly ??= o.deadly;
     if (_tried.add(item.id)) {
       asked++;
@@ -547,6 +570,7 @@ class KitCheckRound {
   }
 
   void answerCall({required bool heldCheck}) {
+    if (callDone || ended) return;
     callDone = true;
     asked++;
     if (heldCheck) clean++;
@@ -575,6 +599,7 @@ Iterable<String> kitCheckSpokenLines(KitCheckPack p) sync* {
   for (final m in KitMistakes.all) {
     yield m.textBn;
   }
+  yield KitMistakes.rushedBn;
   for (final i in p.pool) {
     if (i.lineBn.isNotEmpty) yield i.lineBn;
     for (final f in i.flaws) {
@@ -648,6 +673,13 @@ enum _Overlay { none, inspect, consequence }
 
 class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, DoStrikeOut, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
+
+  /// Gesture hints: the tray (its cards are found under this key) and the
+  /// inspect card's two buttons.
+  final _hints = IdleHintController();
+  final _trayKey = GlobalKey();
+  final _rejectKey = GlobalKey();
+  final _wearKey = GlobalKey();
   late final KitDeal _deal = dealKit(widget.pack, widget.rng);
   late final KitCheckRound _r = KitCheckRound(_deal);
   late final List<KitItem> _order = [..._deal.items]..shuffle(widget.rng);
@@ -773,9 +805,15 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
     });
   }
 
+  /// The tray takes a pick: nothing else on screen, and never in the praise
+  /// window of a right move ([tableBusy]).
+  bool get _canPick => !_busy && !_ended && !_introCard && _overlay == _Overlay.none && !coworkerOpen && !tableBusy;
+
   void _pickUp(KitItem item) {
     if (coworkerOpen && !coworkerChoiceUp) unawaited(answerCoworker(true, _screenCentre, direct: true));
-    if (_busy || _ended || _overlay != _Overlay.none || coworkerOpen || reasonOpen) return;
+    if (!_canPick) return;
+    // He is due before this piece: he cuts in now (a fast play never skips him).
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
     _chain++;
@@ -792,7 +830,16 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
 
   Future<void> _decide(KitChoice choice, Offset origin) async {
     final item = _held;
-    if (item == null || _busy || _verdict != null) return;
+    if (item == null || _busy || _ended || _verdict != null || tableBusy) return;
+    // Still due (the card was opened before his moment): the card goes back
+    // and he cuts in before anything is decided.
+    if (holdForCoworker()) {
+      setState(() {
+        _overlay = _Overlay.none;
+        _held = null;
+      });
+      return;
+    }
     _busy = true;
     final o = _r.decide(item, choice);
     if (o.deadly != null) {
@@ -908,7 +955,8 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
   @override
   bool? coworkerCanCome() {
     if (_ended || _r.callDone || _r.slot != _deal.callBefore) return null;
-    if (_overlay != _Overlay.none || _busy || reasonOpen || _introCard) return false;
+    // Never in the praise window of a right move, nor over a card.
+    if (_overlay != _Overlay.none || _busy || tableBusy || _introCard) return false;
     return true;
   }
 
@@ -922,8 +970,18 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
+    if (_ended) return;
     _r.answerCall(heldCheck: held);
     unawaited(_levelDelta(held ? 5 : -10, origin, mood: held ? GuideMood.glad : GuideMood.warn));
+    if (!held) {
+      // Listening to him is a slip (playbook row 8): booked; the third ends the play.
+      final slip = KitMistakes.rushed(_deal.callBefore);
+      unawaited(bookMistake(ref, widget.ctx, slip));
+      if (strike(slip)) {
+        await _struckOut();
+        return;
+      }
+    }
     if (direct) return;
     final s = _r.slot;
     final next = [if (s != null) KitLines.ask(s)];
@@ -963,7 +1021,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
     final chain = ++_chain;
     final goodRejected = item.kind == KitKind.good && choice == KitChoice.reject;
     final word = goodRejected
-        ? KitLines.rejectedGood
+        ? KitLines.lookAgain
         : (o.right ? (choice == KitChoice.reject ? KitLines.caught : _rightBag.next().shownBn) : _wrongBag.next().shownBn);
     final mood = o.right ? GuideMood.glad : GuideMood.warn;
     final reason = o.reasonBn == KitLines.rejectedGood ? '' : o.reasonBn;
@@ -1109,6 +1167,49 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
     if (leave == true) _popOnce(false);
   }
 
+  // ---- gesture hints (how to interact, never which item) ----------------------
+
+  /// The level waits for the player: the tray to pick from, or the inspect
+  /// card's two buttons — no intro, card, deck, praise window or verdict.
+  bool get _hintWaiting {
+    if (_introCard || _ended || _mark != null || _freeze || _card != null || struckOut) return false;
+    if (_busy || coworkerOnScreen || tableBusy) return false;
+    return switch (_overlay) {
+      _Overlay.none => _tray.isNotEmpty,
+      _Overlay.inspect => _held != null && _verdict == null,
+      _Overlay.consequence => false,
+    };
+  }
+
+  /// A new waiting state resets the count of hints shown.
+  Object get _hintKey => '${_r.slot?.name}|${_overlay.name}|${_held?.id}|${_tray.length}';
+
+  /// Inspect card: glide over both buttons. Tray: glide over every card (one
+  /// card left: tap it to look — the single way forward).
+  HintSpec? _hint() {
+    if (_overlay == _Overlay.inspect) return HintSpec.sweepOver([_rejectKey, _wearKey]);
+    if (_overlay != _Overlay.none) return null;
+    final rects = _trayCardRects();
+    if (rects.isEmpty) return null;
+    return rects.length == 1 ? HintSpec.tap(rects.single.center) : HintSpec.sweep(rects);
+  }
+
+  /// The tray's cards on screen (global), in the order they are shown.
+  List<Rect> _trayCardRects() {
+    final rects = <Rect>[];
+    void visit(Element e) {
+      if (e.widget is DoTrayCard) {
+        final box = e.renderObject;
+        if (box is RenderBox && box.attached && box.hasSize) rects.add(box.localToGlobal(Offset.zero) & box.size);
+        return;
+      }
+      e.visitChildElements(visit);
+    }
+
+    _trayKey.currentContext?.visitChildElements(visit);
+    return rects;
+  }
+
   // ---- build -------------------------------------------------------------------
 
   @override
@@ -1134,6 +1235,11 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
             scoreKey: _scoreKey,
             levelScore: _runScore,
             muted: _muted,
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
+            hintAutoMiss: true,
             onClose: () => unawaited(_leave()),
             onToggleMute: () {
               unawaited(MascotSpeechLibrary.stop());
@@ -1176,12 +1282,15 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
                         if (_mark == null)
                           Padding(
                             padding: EdgeInsets.only(bottom: pad.bottom),
-                            child: DoTray(
-                              key: ValueKey('tray-$_wave'),
-                              entries: [for (final i in _tray) DoTrayEntry(id: i.id, asset: i.asset)],
-                              quiet: quiet,
-                              muted: _muted,
-                              onPick: (n) => _pickUp(_tray[n]),
+                            child: KeyedSubtree(
+                              key: _trayKey,
+                              child: DoTray(
+                                key: ValueKey('tray-$_wave'),
+                                entries: [for (final i in _tray) DoTrayEntry(id: i.id, asset: i.asset)],
+                                quiet: quiet,
+                                muted: _muted,
+                                onPick: (n) => _pickUp(_tray[n]),
+                              ),
                             ),
                           ),
                       ],
@@ -1214,6 +1323,8 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
                   verdict: _verdict,
                   leaving: _leaving,
                   quiet: quiet,
+                  rejectKey: _rejectKey,
+                  wearKey: _wearKey,
                   onDecide: (c, o) => unawaited(_decide(c, o)),
                   onTapCard: _skipDwell,
                   onTapShade: _putBack,
@@ -1376,6 +1487,8 @@ class _InspectCard extends StatefulWidget {
     required this.verdict,
     required this.leaving,
     required this.quiet,
+    required this.rejectKey,
+    required this.wearKey,
     required this.onDecide,
     required this.onTapCard,
     required this.onTapShade,
@@ -1386,6 +1499,10 @@ class _InspectCard extends StatefulWidget {
   final KitOutcome? verdict;
   final bool leaving;
   final bool quiet;
+
+  /// The two buttons, for the gesture hint's sweep.
+  final GlobalKey rejectKey;
+  final GlobalKey wearKey;
   final void Function(KitChoice choice, Offset origin) onDecide;
 
   /// After a decision: move on now instead of waiting out the stamp.
@@ -1500,9 +1617,19 @@ class _InspectCardState extends State<_InspectCard> with TickerProviderStateMixi
           if (v == null)
             Row(
               children: [
-                Expanded(child: DoBigButton(label: 'বাদ দিন', filled: false, onTapUp: (d) => widget.onDecide(KitChoice.reject, d.globalPosition))),
+                Expanded(
+                  child: KeyedSubtree(
+                    key: widget.rejectKey,
+                    child: DoBigButton(label: 'বাদ দিন', filled: false, onTapUp: (d) => widget.onDecide(KitChoice.reject, d.globalPosition)),
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: DoBigButton(label: 'পরে নিন', filled: true, onTapUp: (d) => widget.onDecide(KitChoice.wear, d.globalPosition))),
+                Expanded(
+                  child: KeyedSubtree(
+                    key: widget.wearKey,
+                    child: DoBigButton(label: 'পরে নিন', filled: true, onTapUp: (d) => widget.onDecide(KitChoice.wear, d.globalPosition)),
+                  ),
+                ),
               ],
             )
           else
@@ -1517,7 +1644,7 @@ class _InspectCardState extends State<_InspectCard> with TickerProviderStateMixi
               ),
               alignment: Alignment.center,
               child: Text(
-                v.reasonBn.isNotEmpty ? v.reasonBn : (v.wears ? 'পরে নিলেন।' : KitLines.rejectedGood),
+                v.reasonBn.isNotEmpty ? v.reasonBn : (v.wears ? 'পরে নিলেন।' : KitLines.lookAgain),
                 textAlign: TextAlign.center,
                 style: bangla(fontSize: 14, fontWeight: FontWeight.w800, color: SlmColors.ink, height: 1.35),
               ),

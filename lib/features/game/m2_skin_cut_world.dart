@@ -308,7 +308,8 @@ class SkinKnifePainter extends CustomPainter {
   bool shouldRepaint(SkinKnifePainter old) => old.at != at || old.blunt != blunt || old.angle != angle;
 }
 
-/// The bench round: three stripped ends (somebody's work, to be checked).
+/// The bench round: three stripped ends (somebody's work, to be checked),
+/// alike from afar ([faults] only sets how many).
 class SkinBenchPainter extends CustomPainter {
   const SkinBenchPainter({required this.geo, required this.faults, required this.colours});
   final SkinGeo geo;
@@ -330,23 +331,8 @@ class SkinBenchPainter extends CustomPainter {
         ]).createShader(Rect.fromLTRB(0, y - r, 360, y + r));
       c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTRB(SkinGeo.endLeft, y - r, bareLeft, y + r), const Radius.circular(3)), ins);
       paintStrands(c, Rect.fromLTRB(bareLeft, y - 6, SkinGeo.endRight, y + 6), stripe: 4);
-      // The small sign of the fault (seen properly only under the lens).
-      switch (faults[i]) {
-        case SkinFault.none:
-          break;
-        case SkinFault.nick:
-          c.drawLine(Offset(bareLeft + 20, y - 6), Offset(bareLeft + 23, y - 1), Paint()..color = const Color(0xFF5A2E0E)..strokeWidth = 1.4);
-        case SkinFault.strand:
-          c.drawLine(Offset(bareLeft + 30, y - 5), Offset(bareLeft + 38, y - 12), Paint()..color = const Color(0xFFD9893F)..strokeWidth = 1.4);
-        case SkinFault.black:
-          c.drawCircle(Offset(bareLeft + 26, y), 3, Paint()..color = const Color(0xCC1A1410));
-        case SkinFault.edge:
-          final e = Path()..moveTo(bareLeft, y - r);
-          for (var k = 0; k < 6; k++) {
-            e.lineTo(bareLeft + (k.isEven ? 5 : -2), y - r + (k + 1) * (2 * r / 6));
-          }
-          c.drawPath(e, Paint()..color = Color.lerp(col, Colors.black, 0.5)!..strokeWidth = 1.4..style = PaintingStyle.stroke);
-      }
+      // From the bench every end looks alike: a fault shows only under the
+      // lens (no giveaway before the inspection).
     }
   }
 

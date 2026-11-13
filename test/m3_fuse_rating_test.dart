@@ -3,7 +3,8 @@
 // a slack tie), deal variety, fair reason libraries, and the level in the
 // shell (idle perf; the guide first; a full clean flow with the plate, a reel
 // put back, the barrel, the reasons and the coworker; listening to him is
-// deadly — freeze first; slip cards; three slips fail).
+// deadly — freeze first; a fast take waits for him; slip cards; three slips
+// fail; gesture hints only while the level waits).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,6 +18,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart' show FreezeFrame;
@@ -32,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.4/do/0',
@@ -85,10 +88,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 void main() {
@@ -219,6 +224,69 @@ void main() {
       }
       expect(m3FuseRatingPacks['do_3_4_a'], m3FuseRatingPack34);
     });
+
+    test('no giveaway word in any dealt hand (1 right + 2 wrong)', () {
+      void check(String name, List<String> right, List<String> wrong, List<String> echo, List<String> keys) {
+        // Library: the question's own word on all wrong cards but one at most;
+        // every other key word on at least half of them.
+        for (final w in echo) {
+          expect(wrong.where((x) => !x.contains(w)).length, lessThanOrEqualTo(1), reason: '$name echo $w');
+        }
+        for (final w in keys) {
+          expect(right.any((x) => x.contains(w)), isTrue, reason: '$name key $w is on a right card');
+          expect(wrong.where((x) => x.contains(w)).length * 2, greaterThanOrEqualTo(wrong.length), reason: '$name key $w');
+        }
+        // Every possible hand: count the hands where a word sits on the right
+        // card alone. The question's word never; a key word at most 1 in 5.
+        final alone = <String, int>{};
+        var hands = 0;
+        for (final r in right) {
+          for (var i = 0; i < wrong.length; i++) {
+            for (var j = i + 1; j < wrong.length; j++) {
+              hands++;
+              for (final w in [...echo, ...keys]) {
+                if (r.contains(w) && !wrong[i].contains(w) && !wrong[j].contains(w)) alone[w] = (alone[w] ?? 0) + 1;
+              }
+            }
+          }
+        }
+        for (final w in echo) {
+          expect(alone[w] ?? 0, 0, reason: '$name echo $w alone');
+        }
+        for (final w in keys) {
+          expect((alone[w] ?? 0) * 5, lessThanOrEqualTo(hands), reason: '$name key $w alone in ${alone[w]}/$hands');
+        }
+        // And the real dealer agrees over many seeds.
+        for (var seed = 0; seed < 200; seed++) {
+          final hand = dealChoices(right, wrong, math.Random(seed));
+          final r = hand.firstWhere((o) => o.correct).textBn;
+          final ws = [for (final o in hand) if (!o.correct) o.textBn];
+          for (final w in echo) {
+            if (r.contains(w)) expect(ws.any((x) => x.contains(w)), isTrue, reason: '$name seed $seed: $w');
+          }
+        }
+      }
+
+      check('contacts', M3FuseRatingLines.contactsRight, M3FuseRatingLines.contactsWrong,
+          M3FuseRatingLines.contactsEcho, M3FuseRatingLines.contactsKeys);
+      check('tie', M3FuseRatingLines.tieRight, M3FuseRatingLines.tieWrong, M3FuseRatingLines.tieEcho,
+          M3FuseRatingLines.tieKeys);
+      // The words the reviewer flagged are among the checked ones.
+      expect(M3FuseRatingLines.contactsEcho, contains('কন্টাক্ট'));
+      expect(M3FuseRatingLines.contactsKeys, containsAll(['স্পার্কিং', 'ময়লা', 'কার্বন', 'নষ্ট']));
+      expect(M3FuseRatingLines.tieKeys, containsAll(['ঠিকমতো', 'কাজ']));
+      // The question's word really is in the question.
+      expect(M3FuseRatingLines.whyContacts, contains('কন্টাক্ট'));
+      expect(M3FuseRatingLines.whyTie, allOf(contains('লিঙ্ক'), contains('বাঁধ')));
+    });
+
+    test('claims stay within lesson 3.4: thick wire "can" burn the transformer (পারে), never a certainty', () {
+      expect(M3FuseRatingMistakes.thickCopper.textBn, contains('পারে'));
+      expect(M3FuseRatingMistakes.thickCopper.textBn, isNot(contains('আগুন লাগে')));
+      for (final x in M3FuseRatingLines.coworker.right) {
+        expect(x, isNot(contains('পুড়ে যাবে')), reason: x);
+      }
+    });
   });
 
   group('page', () {
@@ -316,7 +384,7 @@ void main() {
         }
         debugPrint('PERF fuse rating ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(reels, findsNWidgets(4));
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
@@ -407,9 +475,11 @@ void main() {
       final (c, _) = await open(t, _seedCalling(0));
       await _pump(t, 3500);
       expect(find.byType(CoworkerPeek), findsOneWidget);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M3FuseRatingLines.coworker.wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);
@@ -419,6 +489,67 @@ void main() {
       final s = c.read(gameSaveProvider);
       expect(s.mistakes.single.key, M3FuseRatingMistakes.thickCopper.key);
       expect(s.mistakes.single.deadly, isTrue);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker: a fast take waits for him (the reel stays in hand), then the look comes back', (t) async {
+      final (c, deal) = await open(t, _seedCalling(0));
+      final r1 = deal.rounds[0];
+      await t.tap(reels.at(r1.reels.indexOf(r1.right)), warnIfMissed: false);
+      await _pump(t, 400);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he has not come yet');
+      await t.tap(find.text(M3FuseRatingLines.take));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the take waits for him');
+      expect(find.text(M3FuseRatingLines.tie), findsNothing, reason: 'no barrel yet');
+      expect(find.text(M3FuseRatingLines.take), findsNothing, reason: 'the close look steps aside while he talks');
+      await _pickRight(t, M3FuseRatingLines.coworker.right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(find.text(M3FuseRatingLines.take), findsOneWidget, reason: 'the reel is still in hand');
+      await t.tap(find.text(M3FuseRatingLines.take));
+      await _pump(t, 800);
+      expect(find.text(M3FuseRatingLines.tie), findsOneWidget, reason: 'now the barrel');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('gesture hints: none during the intro; after idle at the van and over the close look; none on a slip card', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      t.view.physicalSize = const Size(720, 1600);
+      t.view.devicePixelRatio = 2.0;
+      final seed = _seedCalling(2);
+      final deal = m3FuseRatingDeal(math.Random(seed));
+      final c = ProviderContainer();
+      await t.pumpWidget(UncontrolledProviderScope(
+        container: c,
+        child: _app(M3FuseRatingPage(ctx: _ctx, pack: m3FuseRatingPack34, muted: true, seed: seed)),
+      ));
+      await _pump(t, 400);
+      expect(find.byType(GuideIntro), findsOneWidget);
+      expect(hand, findsNothing, reason: 'not during the intro');
+      await waitIntro(t);
+      await _pump(t, 6000);
+      expect(hand, findsNothing, reason: 'not before the idle wait');
+      await _pump(t, 2800);
+      expect(hand, findsOneWidget, reason: 'a sweep over the plate and the reels');
+
+      final r1 = deal.rounds[0];
+      await t.tap(reels.at(r1.reels.indexOf(_of(r1, M3FuseRatingKind.plain))), warnIfMissed: false);
+      await t.pump();
+      expect(hand, findsNothing, reason: 'any touch hides it');
+      await _pump(t, 8800);
+      expect(hand, findsOneWidget, reason: 'over put back / take');
+
+      await t.tap(find.text(M3FuseRatingLines.take));
+      await _pump(t, 600);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      await _pump(t, 9000);
+      expect(hand, findsNothing, reason: 'never over a slip card');
       expect(t.takeException(), isNull);
       await close(t, c);
     });

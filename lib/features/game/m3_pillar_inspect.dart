@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -62,7 +63,16 @@ export 'm3_pillar_inspect_world.dart'
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, the
 // full scene (m3_pillar_inspect_world.dart), corner guide, ◆ on the table →
 // "কেন …?" → the next station by itself. Voice: the guide's lines by device
-// TTS; the coworker's push by TTS until recorded (his exit line is recorded).
+// TTS; the coworker's push is silent with its caption held until recorded
+// (his exit line is recorded).
+//
+// Kit (2026-11-11): no scene control works in a praise window (`tableBusy`)
+// and the coworker never cuts into one; the lock button shows as soon as the
+// cable is tested and waits for the coworker (`holdForCoworker`), so a fast
+// player still meets him. Listening to him (the door left open) is a slip.
+// Gesture hints: a sweep over every spot at ক/খ, over every control at গ
+// (gloves, the three switches, fuses and cables — never only the docket's),
+// a tap on the lock button once it is the only way forward.
 
 // ============================================================================
 // Content
@@ -124,20 +134,22 @@ abstract final class M3PillarInspectLines {
     M3PillarInspectFault.wireFuse: 'ফিউজের বদলে তার — ফল্টে কেবিল পুড়ে যাবে',
   };
   static const outsideWrong = [
-    'দেখতে খারাপ লাগে, তাই রং করাতে লিখলাম',
-    'রিপোর্ট বেশি লিখলে সাহেব খুশি হন, তাই',
-    'পাশের দোকানদার বলল, তাই লিখে দিলাম',
-    'সব কিছুই লিখে দিই, দেখার দরকার হয় না',
-    'নতুন বাক্স চাই, তাই একটু বাড়িয়ে লিখলাম',
-    'ওপরওয়ালাকে কাজ দেখাতে হয়, তাই লিখলাম',
+    'মরিচা দেখতে খারাপ, তাই রং করাতে লিখলাম',
+    'বৃষ্টির জল ঢুকলে শর্ট হয় না, শুধু রং ওঠে',
+    'সিল ছেঁড়া হলে শুধু ধুলো ঢোকে, তাই লিখলাম',
+    'দরজা পুরনো দেখায়, তাই নতুন দরজা চাইলাম',
+    'দরজায় তালা না থাকলে সাহেব রাগ করেন, তাই',
+    'ইঁদুর আর জল ঢুকলে শুধু গন্ধ হয়, তাই লিখি',
+    'কেবিলের ফাঁকে ইঁদুর ঢুকলে লোকে ভয় পায়',
   ];
   static const insideWrong = [
     'কালো দাগ মানে রং চটে গেছে, নতুন রং চাই',
-    'জল ঢুকলে শুধু বাক্সের রং নষ্ট হয়, তাই লিখি',
-    'ইঁদুর ঢুকলে লোকে ভয় পায়, তাই লিখলাম',
+    'জল ঢুকলে শুধু একটু মরিচা পড়ে, তাই লিখি',
+    'কেবিলে ইঁদুর দেখলে লোকে ভয় পায়, তাই লিখি',
     'পোড়া গন্ধে মাথা ধরে, তাই কাজ করা যায় না',
-    'বাক্স পুরনো হয়েছে, নতুন বাক্স পাওয়ার জন্য',
+    'শর্ট সার্কিটে শুধু বাতি কাঁপে, তাই লিখলাম',
     'সাথী বলল বিপদ, তাই না দেখেই লিখলাম',
+    'শর্ট সার্কিট হলে ফিউজ নিজেই সব সামলে নেয়',
   ];
   static const meggerRight = [
     'লাইন বন্ধ, ফিউজ খোলা — তবেই কেবিলে মেগার',
@@ -171,7 +183,7 @@ abstract final class M3PillarInspectLines {
   static const coworker = CoworkerScript(
     line: 'দরজা খোলা থাক, কাল আবার আসব। চলো, দেরি হচ্ছে!',
     exitLine: 'হুঁ! যা খুশি করুন।',
-    right: ['না, পিলারের দরজা লক করেই যাব', 'খোলা দরজা বাচ্চাদের বিপদ, লক করছি', 'না, কাজ শেষে দরজায় তালা দিতেই হবে'],
+    right: ['না, পিলারের দরজায় তালা দিয়েই যাব', 'খোলা দরজা বাচ্চাদের বিপদ, তালা দিচ্ছি', 'না, কাজ শেষে দরজায় তালা দিতেই হবে'],
     wrong: ['ঠিক আছে, কাল এসে দরজা বন্ধ করব', 'হ্যাঁ, এক রাত খোলা থাকলে কী হবে', 'চলো, তালা লাগানোটা কাল এসে হবে', 'ঠিক, এদিকে তো রাতে কেউ আসে না', 'আচ্ছা, দরজা ভেজিয়ে দিলেই হবে'],
     asks: ['ও বলছে দরজা খোলা রেখে চলে যেতে। কী করবেন?', 'দরজা খোলা রেখে যাবেন?', 'তালা দেবেন, না চলে যাবেন?'],
   );
@@ -280,7 +292,7 @@ abstract final class M3PillarInspectMistakes {
   );
   static const liveMegger = DoMistake(
     key: '$_k/live-megger',
-    textBn: 'চালু কেবিলে মেগারের লিড! ৪১৫ ভোল্ট মারাত্মক শক দেয়, আর্ক ফ্ল্যাশও হতে পারে। আগে সুইচ বন্ধ, ফিউজ খোলা।',
+    textBn: 'চালু কেবিলে মেগারের লিড! 415 ভোল্ট মারাত্মক শক দেয়, আর্ক ফ্ল্যাশও হতে পারে। আগে সুইচ বন্ধ, ফিউজ খোলা।',
     art: '$_dir/live_megger.svg',
     deadly: true,
   );
@@ -333,6 +345,17 @@ class M3PillarInspectDeal {
   /// The docket's feeder (0–2): never one with a fuse fault.
   final int feeder;
 }
+
+/// Station গ's gesture-hint sweep: every control, in an order that is not the
+/// procedure (gloves → switch → fuses → cable) nor its reverse — the cables
+/// left to right, the gloves, the switches right to left, the fuse units left
+/// to right. It shows what can be tapped, never what comes first.
+List<Rect> m3PillarInspectMeggerSweep(M3PillarInspectGeo g) => [
+      for (var k = 0; k < 3; k++) g.cable(k),
+      g.gloves,
+      for (var k = 2; k >= 0; k--) g.handle(k),
+      for (var k = 0; k < 3; k++) g.fuses(k),
+    ];
 
 /// Two outside faults, two inside faults (the hotspot at the busbar or a fuse
 /// unit, the wire in another unit), the docket's feeder — fresh every play.
@@ -603,8 +626,10 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
   int _totalDelta = 0;
   int _wake = 0;
   String? _stamp;
-  var _coworkerArmed = false;
+  var _coworkerScheduled = false;
   int? _zapCable;
+  final _hints = IdleHintController();
+  final _lockKey = GlobalKey();
 
   var _freeze = false;
   Completer<void>? _frozen;
@@ -652,7 +677,9 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
     _startStation();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown;
+  /// The scene takes a move now: never in a right move's praise window
+  /// (`tableBusy`: its ◆ wait on the table or its reason is asked).
+  bool get _canPlay => !_intro && !_busy && !_ended && !_freeze && _card == null && !reasonOpen && !tableBusy && !coworkerOpen && !_run.shown;
 
   /// The current task (what the guide says and repeats).
   String get _task => switch (_run.station) {
@@ -683,7 +710,10 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
         break;
       }
     }
-    if (hit == null) return;
+    if (hit == null) {
+      _hints.missTap();
+      return;
+    }
     final on = _run.toggle(hit);
     if (on == null) return;
     HapticFeedback.selectionClick();
@@ -708,7 +738,11 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
         }
       }
     }
-    if (r == null || r.kind == OrderTapKind.ignored) return;
+    if (r == null) {
+      _hints.missTap();
+      return;
+    }
+    if (r.kind == OrderTapKind.ignored) return;
     final origin = geo.trainee.center;
     if (r.kind == OrderTapKind.mistake) {
       final m = r.mistake!;
@@ -728,8 +762,8 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
     if (_run.tested) {
       _cue('sounds/quiz_select.wav', volume: 0.4);
       unawaited(_sayChain([M3PillarInspectLines.askLock]));
-      if (!_coworkerArmed) {
-        _coworkerArmed = true;
+      if (!_coworkerScheduled) {
+        _coworkerScheduled = true;
         scheduleCoworker();
       }
     }
@@ -759,6 +793,8 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
 
   Future<void> _lock(Offset origin) async {
     if (!_canPlay || !_run.tested) return;
+    // He comes before the door is locked, however fast the hands are.
+    if (holdForCoworker()) return;
     _hush();
     if (!_run.lock()) return;
     HapticFeedback.mediumImpact();
@@ -821,8 +857,10 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.station != M3PillarInspectStation.megger || _run.shown) return null;
-    if (_intro || _busy || _card != null || reasonOpen || !_run.tested) return false;
+    // His push ("leave it open") only makes sense while the door is open:
+    // once it is locked (or left open) the moment has passed.
+    if (_ended || _run.station != M3PillarInspectStation.megger || _run.shown || _run.locked) return null;
+    if (_intro || _busy || _freeze || _card != null || reasonOpen || tableBusy || !_run.tested) return false;
     return true;
   }
 
@@ -1010,8 +1048,28 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
     return _run.station == M3PillarInspectStation.megger ? LinemanMode.hold : LinemanMode.point;
   }
 
+  /// The scene's geometry as last laid out (for the gesture hint).
+  M3PillarInspectGeo? _geo;
+
+  /// The hands wait for the player (the gesture hint may show).
+  bool get _handsWaiting => _canPlay && _mark == null && !struckOut && !_run.done && !coworkerOnScreen;
+
+  /// How to interact, never the answer: at ক/খ a sweep over every spot (the
+  /// fine ones too); at গ before the test a sweep over every control (all
+  /// three feeders, see [m3PillarInspectMeggerSweep]); once tested, a tap on
+  /// the lock button (the only way on).
+  HintSpec? _hint() {
+    final g = _geo;
+    if (g == null || !_handsWaiting) return null;
+    if (_run.station != M3PillarInspectStation.megger) {
+      return HintSpec.sweep([for (final s in _run.spotsHere) g.spot(s)], space: HintSpace.scene);
+    }
+    if (_run.tested) return HintSpec.tapOn(_lockKey);
+    return HintSpec.sweep(m3PillarInspectMeggerSweep(g), space: HintSpace.scene);
+  }
+
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M3PillarInspectGeo.forScene(m.height, m.inset);
+    final geo = _geo = M3PillarInspectGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final st = _run.station;
     final megger = st == M3PillarInspectStation.megger && !_run.done;
@@ -1118,9 +1176,11 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_run.done;
+    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && !tableBusy && _card == null && !_run.done;
     final spotting = handsOn && _run.station != M3PillarInspectStation.megger;
-    final locking = handsOn && _run.station == M3PillarInspectStation.megger && _run.tested && coworkerDone;
+    // The lock shows once the cable is tested; a tap before he has come
+    // brings him in (holdForCoworker).
+    final locking = handsOn && _run.station == M3PillarInspectStation.megger && _run.tested;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1148,6 +1208,10 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: playing && !deckUp && _handsWaiting,
+            hintKey: '${_run.index}/${_run.tested}/${_run.gloves}/${_run.off.length}/${_run.fusesOut.length}/$strikes',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (spotting || locking)
@@ -1157,6 +1221,7 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
                   right: 12,
                   bottom: pad.bottom + 12,
                   child: DoBigButton(
+                    key: spotting ? null : _lockKey,
                     label: spotting ? M3PillarInspectLines.report : M3PillarInspectLines.lock,
                     filled: true,
                     onTapUp: (d) => unawaited(spotting ? _report(d.globalPosition) : _lock(d.globalPosition)),

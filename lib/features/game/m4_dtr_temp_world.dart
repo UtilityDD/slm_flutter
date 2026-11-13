@@ -60,6 +60,18 @@ class M4DtrTempGeo {
 
   bool onTank(Offset p) => tank.inflate(6).contains(p) || fins.contains(p);
 
+  /// The spots that can be looked at while finding the cause (a fixed order,
+  /// whatever the cause is).
+  static const spots = [M4DtrTempLook.gauge, M4DtrTempLook.fins, M4DtrTempLook.load];
+
+  /// Where a spot sits (the gesture hint sweeps over these).
+  Rect spotRect(M4DtrTempLook l) => switch (l) {
+    M4DtrTempLook.gauge => Rect.fromCircle(center: gauge, radius: 20),
+    M4DtrTempLook.fins => fins,
+    M4DtrTempLook.load => Rect.fromCircle(center: load, radius: 20),
+    M4DtrTempLook.ir => tank,
+  };
+
   @override
   bool operator ==(Object other) => other is M4DtrTempGeo && other.height == height && other.groundY == groundY;
 

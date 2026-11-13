@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -56,15 +57,23 @@ export 'm2_hydraulic_use_world.dart' show HydGeo, HydZone, hydZoneRect;
 // also on the coworker's say-so ("এটাই তো মরা কেবল, কেটে দাও!"). Slips: the
 // earth lead on a cable that reads voltage, the wrong die, pumping the cutter
 // without the safety lock, the free hand in the jaws or on the cable at them,
-// letting go of the crimper before the valve clicks. Three slips strike out.
-// Stopping where the cable tested dead (or before testing) is not scored: the
-// guide says why, the job stays (as sky_read).
+// letting go of the crimper before the valve clicks, and a needless stop (the
+// docket's cable not read LIVE on the tester: untested, or tested dead — a
+// stop must cost something, audit 2026-11-11; the card says why only after
+// the decision). Three slips strike out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m2_hydraulic_use_world.dart), corner guide, ◆ on the table → "কেন …?"
 // → the next job by itself; the careless coworker once a play, on a cut job,
-// before the cable is tested. Voice: the guide by device TTS; the coworker's
-// two lines have no clip yet (device TTS until recorded — see HydLines.coworker).
+// before anything is tested — every tool step and the stop wait for him
+// (`holdForCoworker`), so a fast play cannot skip him; his push fits only
+// until a cable is tested or the tool is on. Listening stays deadly: the act
+// he pushes (the cutter on a cable not proved dead) is this rung's deadly in
+// MODULE2_LADDER.md. Gesture hints (how, never what): a sweep over the
+// cables, the tool row, the close-up's zones or the die tray; a tap only on
+// "ছাড়ুন" once the valve has clicked (the one way forward). Voice: the guide
+// by device TTS; the coworker's two lines have no clip yet (silent, caption
+// held — see HydLines.coworker).
 
 // ============================================================================
 // Content
@@ -177,8 +186,6 @@ abstract final class HydLines {
   static const handFirst = 'আগে অন্য হাতটা ঠিক জায়গায় রাখুন।';
   static const toolOn = 'টুল বসানো আছে — এখন কেবল বা ডাই বদলানো যায় না।';
   static const pumpFirst = 'এখনো পাম্পই করা হয়নি।';
-  static const stopUntested = 'থামা আপনার অধিকার। তবে থামার কারণ কী — কেবলটা যাচাই করেছেন?';
-  static const stopDead = 'থামা আপনার অধিকার। তবে টেস্টারে ভোল্টেজ নেই — এই কেবলে কাজ চলে।';
 
   // The reasons (lesson 2.9 + the prove-dead rule): the right ones fit what
   // the player did; the wrong ones are the lesson's myths and field excuses.
@@ -231,7 +238,8 @@ abstract final class HydLines {
         HydEnd.stop => whyStop,
       };
 
-  /// The careless coworker. No clip of his yet: device TTS until recorded.
+  /// The careless coworker. No clip of his yet: silent, caption held (never
+  /// the device voice) until the director records them.
   static const coworker = CoworkerScript(
     line: 'এটাই তো মরা কেবল, কেটে দাও! টেস্ট-ফেস্ট লাগবে না।',
     exitLine: 'হুঁ! যত সব ঝামেলা।',
@@ -260,7 +268,7 @@ abstract final class HydLines {
   /// Every fixed line of the guide (for recording later).
   static const guideLines = [
     intro, askCut, askCrimp, askHand, ...tapWhy, pickFirst, placeFirst, handFirst, toolOn, pumpFirst,
-    stopUntested, stopDead, whyCut, whyCrimp, whyStop, callHeld, allSet, quick, fail, deadlyWord, nearMissWord,
+    whyCut, whyCrimp, whyStop, callHeld, allSet, quick, fail, deadlyWord, nearMissWord,
   ];
 }
 
@@ -320,7 +328,16 @@ abstract final class HydMistakes {
     lessonPoint: 1,
   );
 
-  static const all = [cutUnproved, crimpUnproved, earthLive, wrongDie, noLock, fingersCrimp, fingersCut, halfCrimp];
+  /// A stop without a LIVE reading on the docket's cable (untested, or it
+  /// tested dead): not in lesson 2.9 (the prove-dead rule) — no lesson point.
+  /// Neutral: it names the rule, not which case it was.
+  static const needlessStop = DoMistake(
+    key: '2.9/hyd/needless-stop',
+    textBn: 'ডকেটের কেবলে টেস্টার LIVE না দেখাতেই কাজ বন্ধ হলো। আগে ডকেটের কেবলটাই টেস্ট করুন — LIVE পেলে থামিয়ে রিপোর্ট, মরা প্রমাণ হলে আর্থ দিয়ে কাজ।',
+    art: '$_dir/needless_stop.svg',
+  );
+
+  static const all = [cutUnproved, crimpUnproved, earthLive, wrongDie, noLock, fingersCrimp, fingersCut, halfCrimp, needlessStop];
 }
 
 /// Pump strokes to cut through, or to the valve's click.
@@ -531,12 +548,12 @@ class HydRun {
     return const HydAct(end: HydEnd.crimp);
   }
 
-  /// Stop and report: right when the docket's cable tested live.
+  /// Stop and report: right only when the docket's cable tested live; any
+  /// other stop (untested, or tested dead) is a needless stop: a slip.
   HydAct stop() {
     if (_idle) return HydAct.ok;
     final t = current.target;
-    if (!tested.contains(t)) return _note(HydLines.stopUntested);
-    if (!current.live(t)) return _note(HydLines.stopDead);
+    if (!tested.contains(t) || !current.live(t)) return _slip(HydMistakes.needlessStop);
     shown = true;
     _tag(HydLines.caughtLive);
     return const HydAct(end: HydEnd.stop);
@@ -657,8 +674,15 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
   /// The die tray is open.
   var _tray = false;
 
-  /// A step was pressed on his job before he came: he comes now.
-  var _held = false;
+  // Gesture hints (how to touch, never what): the frame's hand and the keys
+  // of what it may sweep over.
+  final _hints = IdleHintController();
+  final _stepKeys = {for (final s in HydStep.values) s: GlobalKey(debugLabel: 'hyd-step-${s.name}')};
+  final _stopKey = GlobalKey(debugLabel: 'hyd-stop');
+  final _releaseKey = GlobalKey(debugLabel: 'hyd-release');
+  final _zoneKeys = {for (final z in HydZone.values) z: GlobalKey(debugLabel: 'hyd-zone-${z.name}')};
+  final _dieKeys = <int, GlobalKey>{};
+  HydGeo? _geo;
 
   /// A spark on the trench (the earth lead on a live cable): its cable.
   int? _spark;
@@ -709,7 +733,8 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
     if (!_muted) unawaited(ZlFx.cue(file, volume: volume, muted: false));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && !_tray;
+  bool get _canPlay =>
+      !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown && !_tray;
 
   // --- a job --------------------------------------------------------------------
   void _startJob() {
@@ -722,18 +747,6 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
     unawaited(_sayChain([HydLines.ask(_run.current)]));
   }
 
-  /// On his job, the first step before he came holds: he cuts in now.
-  bool _holdForCoworker() {
-    if (_run.index != _run.deal.callAt || coworkerDone || coworkerOpen) return false;
-    _hush();
-    HapticFeedback.selectionClick();
-    setState(() {
-      _held = true;
-      _busy = true;
-    });
-    return true;
-  }
-
   void _tapScene(Offset p, HydGeo geo) {
     if (!_canPlay) return;
     for (var i = 0; i < 3; i++) {
@@ -744,11 +757,14 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
         return;
       }
     }
+    _hints.missTap();
   }
 
+  /// Every tool step and the stop wait for him on his job (he comes now):
+  /// a fast play cannot finish his item before his push.
   void _step(HydStep s, Offset origin) {
     if (!_canPlay) return;
-    if (_holdForCoworker()) return;
+    if (holdForCoworker()) return;
     switch (s) {
       case HydStep.test:
         final a = _run.test();
@@ -806,7 +822,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
   }
 
   void _pickDie(int size, Offset origin) {
-    if (!_tray) return;
+    if (!_tray || _ended) return;
     _cue('sounds/intro/click.ogg', volume: 0.5);
     setState(() => _tray = false);
     _apply(_run.pickDie(size), origin);
@@ -833,6 +849,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
 
   void _stopJob(Offset origin) {
     if (!_canPlay) return;
+    if (holdForCoworker()) return;
     _apply(_run.stop(), origin);
   }
 
@@ -927,9 +944,10 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    if (_held) return true;
-    if (_run.tested.contains(_run.current.target) || _run.placed) return null;
-    if (_intro || _busy || _card != null || reasonOpen || _tray) return false;
+    // His push ("no test needed") fits only before anything is tested and
+    // before the tool is on.
+    if (_run.tested.isNotEmpty || _run.placed) return null;
+    if (_intro || _busy || _card != null || tableBusy || _tray) return false;
     return true;
   }
 
@@ -940,12 +958,10 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
-    setState(() {
-      _held = false;
-      _busy = false;
-    });
+    if (!mounted || _ended) return;
     if (!held) {
-      // Listened to him: the cutter goes on a cable not proved dead.
+      // Listened to him: the cutter goes on a cable not proved dead — this
+      // rung's deadly (MODULE2_LADDER.md step 27), so listening stays deadly.
       _apply(_run.pushedCut(), origin);
       return;
     }
@@ -1108,7 +1124,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
   // --- the scene ---------------------------------------------------------------
   LinemanMode get _mode {
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
-    if (_held || coworkerOpen) return LinemanMode.worried;
+    if (coworkerHeld || coworkerOpen) return LinemanMode.worried;
     if (_verdict != null) return LinemanMode.cheer;
     if (_run.selected != null) return LinemanMode.point;
     return LinemanMode.idle;
@@ -1134,7 +1150,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = HydGeo.forScene(m.height, m.inset);
+    final geo = _geo = HydGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final j = _run.current;
@@ -1252,6 +1268,33 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
     };
   }
 
+  GlobalKey _dieKey(int size) => _dieKeys.putIfAbsent(size, () => GlobalKey(debugLabel: 'hyd-die-$size'));
+
+  /// The hand for now: how to touch, never what. A sweep passes over every
+  /// option the same way (the cables, the tool row and the stop, the
+  /// close-up's zones, the dies); a tap only on "ছাড়ুন" once the valve has
+  /// clicked — then it is the one way forward.
+  HintSpec? _hint() {
+    if (_run.ended) return null;
+    final j = _run.current;
+    if (_tray) return HintSpec.sweepOver([for (final d in j.dies) _dieKey(d)]);
+    final crimpOn = _run.placed && !j.cut;
+    if (_run.placed && _run.hand == null) {
+      return HintSpec.sweepOver([for (final z in const [HydZone.cable, HydZone.jaws, HydZone.handle]) _zoneKeys[z]!]);
+    }
+    if (crimpOn && _run.clicked) return HintSpec.tapOn(_releaseKey);
+    if (_run.selected == null) {
+      final g = _geo;
+      if (g == null) return null;
+      return HintSpec.sweep([for (var i = 0; i < 3; i++) Rect.fromCenter(center: g.tagAt(i), width: 52, height: 28)], space: HintSpace.scene);
+    }
+    return HintSpec.sweepOver([for (final s in j.steps) _stepKeys[s]!, _stopKey, if (crimpOn) _releaseKey]);
+  }
+
+  /// A new waiting state (resets the count of hints shown).
+  String get _hintKey =>
+      '${_run.index}|${_run.selected}|${_run.tested.length}|${_run.earthed.length}|${_run.die}|${_run.placed}|${_run.locked}|${_run.hand}|${_run.clicked}|$_tray';
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1259,7 +1302,8 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_held;
+    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null;
+    final waiting = handsOn && !_run.done && !_ended && !_busy && !coworkerOnScreen && !tableBusy;
     final j = _run.current;
     final closeup = playing && _run.placed && !_run.shown && _card == null && !deckUp;
     final cardW = math.min(300.0, size.width - 32);
@@ -1290,6 +1334,10 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: waiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen && !closeup)
                 Positioned(
@@ -1312,6 +1360,8 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
                     hand: _run.hand,
                     locked: _run.locked,
                     quiet: quiet,
+                    zoneKeys: _zoneKeys,
+                    releaseKey: _releaseKey,
                     onZone: (z, at) => _putHand(z, at),
                     onRelease: j.cut ? null : (at) => _release(at),
                   ),
@@ -1322,7 +1372,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
                   left: 12,
                   width: math.min(210.0, size.width - 150),
                   bottom: pad.bottom + 94,
-                  child: _StopButton(onTapUp: (d) => _stopJob(d.globalPosition)),
+                  child: _StopButton(key: _stopKey, onTapUp: (d) => _stopJob(d.globalPosition)),
                 ),
                 Positioned(
                   key: ValueKey('hud-steps-${_run.index}'),
@@ -1334,7 +1384,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
                     children: [
                       for (final s in j.steps)
                         _ToolButton(
-                          key: ValueKey('step-${s.name}'),
+                          key: _stepKeys[s],
                           icon: _stepIcon(s),
                           label: HydLines.stepBn(s, j.kind),
                           on: _stepOn(s),
@@ -1356,7 +1406,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
                     child: reasonOpen ? reasonDeck(quiet: quiet, key: const ValueKey('why-deck')) : coworkerDeck(quiet: quiet, key: const ValueKey('choice-deck')),
                   ),
                 ),
-              if (_tray && playing) _DieTray(key: const ValueKey('tray'), dies: j.dies, quiet: quiet, onPick: _pickDie, onClose: _closeTray),
+              if (_tray && playing) _DieTray(key: const ValueKey('tray'), dies: j.dies, quiet: quiet, keyOf: _dieKey, onPick: _pickDie, onClose: _closeTray),
               if (playing && _card == null && !_tray) cornerGuide(onTap: _tapGuide, bottom: pad.bottom + (deckUp ? 236 : 86), onLeft: coworkerFromRight),
               ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
               if (_card != null)
@@ -1577,6 +1627,8 @@ class _Closeup extends StatelessWidget {
     required this.hand,
     required this.locked,
     required this.quiet,
+    required this.zoneKeys,
+    required this.releaseKey,
     required this.onZone,
     required this.onRelease,
   });
@@ -1587,6 +1639,8 @@ class _Closeup extends StatelessWidget {
   final HydZone? hand;
   final bool locked;
   final bool quiet;
+  final Map<HydZone, GlobalKey> zoneKeys;
+  final GlobalKey releaseKey;
   final void Function(HydZone z, Offset at) onZone;
   final ValueChanged<Offset>? onRelease;
 
@@ -1625,6 +1679,7 @@ class _Closeup extends StatelessWidget {
                         width: hydZoneRect(z).width * k,
                         height: hydZoneRect(z).height * k,
                         child: Semantics(
+                          key: zoneKeys[z],
                           label: HydLines.zoneBn(z),
                           button: true,
                           child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => onZone(z, d.globalPosition)),
@@ -1646,6 +1701,7 @@ class _Closeup extends StatelessWidget {
         if (onRelease != null) ...[
           const SizedBox(height: 8),
           SizedBox(
+            key: releaseKey,
             width: 150,
             child: DoBigButton(label: HydLines.release, filled: false, onDark: true, onTapUp: (d) => onRelease!(d.globalPosition)),
           ),
@@ -1675,9 +1731,10 @@ class _ClickWord extends StatelessWidget {
 
 /// The die tray: the dies, each stamped with its size. Tap outside to close.
 class _DieTray extends StatelessWidget {
-  const _DieTray({super.key, required this.dies, required this.quiet, required this.onPick, required this.onClose});
+  const _DieTray({super.key, required this.dies, required this.quiet, required this.keyOf, required this.onPick, required this.onClose});
   final List<int> dies;
   final bool quiet;
+  final GlobalKey Function(int size) keyOf;
   final void Function(int size, Offset at) onPick;
   final VoidCallback onClose;
 
@@ -1719,6 +1776,7 @@ class _DieTray extends StatelessWidget {
                         children: [
                           for (final d in dies)
                             Semantics(
+                              key: keyOf(d),
                               label: HydLines.dieOf(d),
                               button: true,
                               excludeSemantics: true,
@@ -1774,7 +1832,7 @@ class _DieChip extends StatelessWidget {
 }
 
 class _StopButton extends StatelessWidget {
-  const _StopButton({required this.onTapUp});
+  const _StopButton({super.key, required this.onTapUp});
   final GestureTapUpCallback onTapUp;
 
   @override

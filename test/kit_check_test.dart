@@ -131,6 +131,42 @@ void main() {
       }
     });
 
+    test('audit 2026-11-11: after a deadly item nothing more is recorded; the call counts once', () {
+      final d = _deal();
+      final r = KitCheckRound(d);
+      expect(r.decide(_in(d, 'poly'), KitChoice.wear).deadly, KitMistakes.synthetic);
+      expect(r.ended, isTrue);
+      final asked = r.asked;
+      r.decide(_in(d, 'shirt'), KitChoice.wear);
+      r.answerCall(heldCheck: true);
+      expect(r.asked, asked, reason: 'the play is over');
+      expect(r.worn, isEmpty);
+
+      final r2 = KitCheckRound(_deal());
+      r2.answerCall(heldCheck: false);
+      r2.answerCall(heldCheck: true);
+      expect(r2.asked, 1, reason: 'one call per play');
+      expect(r2.clean, 0);
+    });
+
+    test('listening to the coworker is a slip (never deadly) with the daily-check lesson point', () {
+      final legs = KitMistakes.rushed(KitSlot.legs);
+      final feet = KitMistakes.rushed(KitSlot.feet);
+      expect(legs.key, KitMistakes.rushedKey);
+      expect(legs.deadly, isFalse);
+      expect(legs.lessonPoint, 0);
+      expect(feet.lessonPoint, 2);
+      expect(File(legs.art).existsSync(), isTrue, reason: legs.art);
+      expect(KitMistakes.all.map((m) => m.key), isNot(contains(KitMistakes.rushedKey)), reason: 'all = the deadly pair only');
+      expect(kitCheckSpokenLines(kitCheckPack11), contains(KitMistakes.rushedBn), reason: 'the booked slip text is in the voice list');
+    });
+
+    test('the reply to a sound item sent back is neutral (never "it was fine")', () {
+      expect(KitLines.lookAgain, isNot(KitLines.rejectedGood));
+      expect(KitLines.lookAgain.contains('ঠিক'), isFalse);
+      expect(KitLines.coach, contains(KitLines.lookAgain));
+    });
+
     test('a slip is booked with a stable key and its lesson point', () {
       final shirt = _pool('shirt');
       final greasy = shirt.withFlaw(shirt.flaws.first);
@@ -235,9 +271,9 @@ void main() {
       final second = ladder.rungs.firstWhere((r) => r.id == '1.1/do/1');
       expect(second.pack.engineType, 'glove_check');
       expect(doGameFor(second.pack), isNotNull);
-      // A Do rung that is not built yet has no shell game. Modules 1–4 are built
-      // (2026-11-11), so the check uses Module 5's first Do rung, still a placeholder.
-      final later = ladder.rungs.firstWhere((r) => r.id == '5.1/do/0');
+      // A Do rung that is not built yet has no shell game. Modules 1–5 are built
+      // (Module 5 wired 2026-11-12), so the check uses Module 6's first Do rung, still a placeholder.
+      final later = ladder.rungs.firstWhere((r) => r.id == '6.1/do/0');
       expect(later.pack.engineType, 'placeholder');
       expect(doGameFor(later.pack), isNull);
       final scan = ladder.rungs.firstWhere((r) => r.id == '1.10/do/0');

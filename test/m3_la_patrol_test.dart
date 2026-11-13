@@ -3,7 +3,10 @@
 // deal, the tap geometry, the libraries, and the level in the shell: idle
 // perf, the guide first, a full clean play (the coworker refused at the
 // hanging lead), a missed fault (slip card), and the deadly freeze (listening
-// to him: a hand on the hanging lead).
+// to him: a hand on the hanging lead). Audit 2026-11-11: no word or dash
+// gives a right card away, three slips strike out, he comes even on a fast
+// play, the praise window takes no tap, and the looking hint sweeps over all
+// three LAs and "সব ঠিক আছে" alike.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,7 +20,9 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m3_la_patrol.dart';
@@ -30,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.5/do/0',
@@ -77,10 +83,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -215,7 +223,7 @@ void main() {
       expect(run1(M3LaPatrolFault.dropped).act(M3LaPatrolAct.report), isNull, reason: 'no act before the spot');
     });
 
-    test('three slips: percent 55', () {
+    test('three slips: percent 55 (the page strikes out at the third: see the page test)', () {
       final d = M3LaPatrolDeal(cases: [
         for (var i = 0; i < 4; i++) const M3LaPatrolCase(id: 'x', dtrNo: 3, body: M3LaPatrolBody.polymer, fault: M3LaPatrolFault.burnt),
       ], callAt: 0);
@@ -272,6 +280,40 @@ void main() {
       expect(m3LaPatrolPacks.keys, ['do_3_5_a']);
       expect(M3LaPatrolLines.intro.length, lessThan(70), reason: 'the guide\'s first line is short');
     });
+
+    test('no giveaways: the right cards\' words are on wrong cards too; no dash or "না," only on the right ones', () {
+      Set<String> words(Iterable<String> xs) => {
+            for (final x in xs)
+              for (final w in x.replaceAll(RegExp(r'[,।!?—]'), ' ').split(RegExp(r'\s+')))
+                if (w.isNotEmpty) w,
+          };
+      final actWrong = M3LaPatrolLines.actWrong.keys;
+      expect(words(M3LaPatrolLines.actRight).difference(words(actWrong)), isEmpty, reason: 'act deck: a word only on the right cards');
+      for (final w in ['রিপোর্ট', 'লিখে', 'অফিসে', 'খাতায়', 'দূর']) {
+        expect(actWrong.any((x) => x.contains(w)), isTrue, reason: 'act deck: "$w" on a wrong card too');
+      }
+      final cw = M3LaPatrolLines.coworker;
+      expect(cw.right.where((x) => x.startsWith('না')), isEmpty, reason: 'a refusal must not be spotted by its first word');
+      for (final w in ['রিপোর্ট', 'লিখে', 'হাত', 'লাইনে', 'খাতায়', 'ঝুলন্ত']) {
+        expect(cw.wrong.any((x) => x.contains(w)), isTrue, reason: 'coworker deck: "$w" on a listening card too');
+      }
+      for (final f in M3LaPatrolFault.values) {
+        final c = M3LaPatrolCase(id: 'x', dtrNo: 1, body: M3LaPatrolBody.porcelain, fault: f);
+        final rightDash = M3LaPatrolLines.whyRight(c).any((x) => x.contains('—'));
+        final wrongDash = M3LaPatrolLines.whyWrong(c).any((x) => x.contains('—'));
+        expect(!rightDash || wrongDash, isTrue, reason: 'why ${f.name}: a dash only on the right cards');
+        expect(words(M3LaPatrolLines.whyRight(c)).difference(words(M3LaPatrolLines.whyWrong(c))), isEmpty,
+            reason: 'why ${f.name}: a word only on the right cards');
+        // The usual excuse frame must not mark the wrong cards: it sits on a
+        // right card too, or on at most half of the wrong ones.
+        final wrong = M3LaPatrolLines.whyWrong(c);
+        for (final w in ['তাই', 'ধরলাম', 'খারাপ']) {
+          final onRight = M3LaPatrolLines.whyRight(c).any((x) => words([x]).contains(w));
+          final share = wrong.where((x) => words([x]).contains(w)).length / wrong.length;
+          expect(onRight || share <= 0.5, isTrue, reason: 'why ${f.name}: "$w" only on the wrong cards, on ${(share * 100).round()}%');
+        }
+      }
+    });
   });
 
   group('page', () {
@@ -313,7 +355,7 @@ void main() {
         }
         debugPrint('PERF m3_la_patrol ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -404,9 +446,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M3LaPatrolLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);
@@ -417,6 +461,141 @@ void main() {
       expect(s.mistakes.single.key, M3LaPatrolMistakes.touchLead.key);
       expect(s.mistakes.single.deadly, isTrue);
       expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips: the struck-out card, the level not cleared', (t) async {
+      const seed = 7;
+      final deal = dealM3LaPatrol(math.Random(seed));
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        final ci = deal.cases[i];
+        if (ci.healthy) {
+          // A false alarm: an LA marked on a healthy DTR.
+          await _tapLa(t, M3LaPatrolPhase.r);
+        } else {
+          await t.tap(find.text(M3LaPatrolLines.allOk));
+          await _pump(t, 800);
+        }
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${i + 1}');
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 1500);
+        }
+      }
+      await _pump(t, 800);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.text(M3LaPatrolLines.allOk), findsNothing, reason: 'no more play after the strike-out');
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['3.5/do/0'], isNot('cleared'));
+      expect(s.mistakes.length, 3);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast play: the action deck is up at once, and its first pick brings him in', (t) async {
+      var seed = 0;
+      while (dealM3LaPatrol(math.Random(seed)).callAt != 0) {
+        seed++;
+      }
+      final c0 = dealM3LaPatrol(math.Random(seed)).cases[0];
+      final c = await _open(t, seed);
+      await t.tapAt(_geo.laBody(c0.phase).center * _k);
+      await t.pump(const Duration(milliseconds: 60));
+      // Rushing on: the other LAs, the same LA, where "সব ঠিক" was.
+      for (final p in M3LaPatrolPhase.values) {
+        await t.tapAt(_geo.laBody(p).center * _k);
+        await t.pump(const Duration(milliseconds: 60));
+      }
+      final actDeck = find.byWidgetPredicate((w) => w is ChoiceDeck && w.options.any((o) => M3LaPatrolLines.actRight.contains(o.textBn)));
+      expect(await _pumpUntil(t, actDeck, maxMs: 1000), isTrue, reason: 'something to do right after "এবার কী করবেন?"');
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he has not come yet');
+      expect(find.byType(MistakeCard), findsNothing);
+      // A fast pick — even a wrong one — before he came: he cuts in, no slip.
+      await waitChoiceDeck(t);
+      final wrongAct = _onScreen(M3LaPatrolLines.actWrong.keys.toList());
+      expect(wrongAct, isNotEmpty);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'the pick comes before his timer');
+      await t.tap(wrongAct.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the pick brings him in now');
+      expect(actDeck, findsNothing, reason: 'his deck replaces the action deck');
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _pickRight(t, M3LaPatrolLines.coworker.right);
+      await _pump(t, 1500);
+      final whyDeck = find.byWidgetPredicate((w) => w is ChoiceDeck && w.options.any((o) => M3LaPatrolLines.whyRight(c0).contains(o.textBn)));
+      expect(await _pumpUntil(t, whyDeck), isTrue, reason: 'refusing him reports the LA: the reason');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the praise window takes no tap: no slip, no second score', (t) async {
+      var seed = 0;
+      while (!dealM3LaPatrol(math.Random(seed)).cases[0].healthy) {
+        seed++;
+      }
+      final c0 = dealM3LaPatrol(math.Random(seed)).cases[0];
+      final c = await _open(t, seed);
+      await t.tap(find.text(M3LaPatrolLines.allOk));
+      await t.pump(const Duration(milliseconds: 80));
+      // Taps on the LAs and on the button's place while the ◆ waits on the table.
+      for (final p in M3LaPatrolPhase.values) {
+        await t.tapAt(_geo.laBody(p).center * _k);
+        await t.pump(const Duration(milliseconds: 60));
+      }
+      await t.tapAt(const Offset(150, 800));
+      await t.pump(const Duration(milliseconds: 60));
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      final whyDeck = find.byWidgetPredicate((w) => w is ChoiceDeck && w.options.any((o) => M3LaPatrolLines.whyRight(c0).contains(o.textBn)));
+      expect(await _pumpUntil(t, whyDeck), isTrue, reason: 'the reason deck still comes');
+      expect(find.byType(MistakeCard), findsNothing);
+      await _close(t, c);
+    });
+
+    testWidgets('looking hint: a sweep over the three LAs and "সব ঠিক আছে"; off while a deck is up', (t) async {
+      var seed = 0;
+      while (dealM3LaPatrol(math.Random(seed)).cases[0].healthy || dealM3LaPatrol(math.Random(seed)).callAt == 0) {
+        seed++;
+      }
+      final c0 = dealM3LaPatrol(math.Random(seed)).cases[0];
+      final c = await _open(t, seed);
+      final sceneHint = find.ancestor(of: find.byKey(const ValueKey('touch')), matching: find.byType(IdleHint));
+      expect(sceneHint, findsOneWidget);
+      var w = t.widget<IdleHint>(sceneHint);
+      expect(w.waiting, isTrue, reason: 'the level waits for a look');
+      final spec = w.spec(t.getSize(sceneHint))!;
+      expect(spec.kind, HintKind.sweep);
+      expect(spec.space, HintSpace.global);
+      expect(spec.options, hasLength(4));
+      for (final p in M3LaPatrolPhase.values) {
+        expect((spec.options[p.index].center - _geo.laBody(p).center * _k).distance, lessThan(2), reason: 'LA ${p.name}');
+      }
+      expect(spec.options.last.contains(t.getCenter(find.text(M3LaPatrolLines.allOk))), isTrue, reason: 'the button too');
+      await _tapLa(t, c0.phase);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      w = t.widget<IdleHint>(sceneHint);
+      expect(w.waiting, isFalse, reason: 'the deck has its own sweep');
+      await _close(t, c);
+    });
+
+    testWidgets('three taps on nothing while looking show the hand', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 3);
+      final sceneHint = find.ancestor(of: find.byKey(const ValueKey('touch')), matching: find.byType(IdleHint));
+      expect(t.state<IdleHintState>(sceneHint).showing, isFalse);
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(const Offset(340, 180) * _k);
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      await t.pump(const Duration(milliseconds: 100));
+      expect(t.state<IdleHintState>(sceneHint).showing, isTrue);
+      expect(find.byType(MistakeCard), findsNothing, reason: 'a tap on the sky costs nothing');
       await _close(t, c);
     });
   });

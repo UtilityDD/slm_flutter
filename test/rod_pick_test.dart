@@ -2,7 +2,8 @@
 // shows only where the hand has been), deal variety, fair reason libraries
 // that fit what the rack had, his recorded lines, and the level in the shell
 // (idle perf; a full clean flow with the docket, a rod set aside, the slide,
-// the reasons and the coworker; a slip card; a deadly freeze).
+// the reasons and the coworker; a slip card; a deadly freeze; three slips;
+// the coworker on a fast play; the praise window; the gesture hints).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -15,6 +16,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart' show FreezeFrame;
@@ -30,6 +32,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '1.5/do/0',
@@ -62,23 +65,19 @@ List<Finder> _onScreen(List<String> texts) => [
         if (_label(x).evaluate().isNotEmpty) _label(x),
     ];
 
-/// Taps the one right card on the deck now up.
+/// Taps the one right card on the deck now up (a right reason's zoomed card
+/// is then proceeded; the coworker's deck closes by itself).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
 }
+
+/// The scene's own gesture hint (the decks have their own, without a controller).
+Finder get _sceneHint => find.byWidgetPredicate((w) => w is IdleHint && w.controller != null);
 
 /// Every stick and lead fault a hold reason can name, on 11 and 33 kV dockets.
 List<RodRoundDeal> get _holdCases => [
@@ -364,7 +363,7 @@ void main() {
         }
         debugPrint('PERF rod pick ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(RodLines.docket), findsOneWidget);
         expect(find.text(RodLines.hold), findsOneWidget);
         expect(perSec, lessThan(20));
@@ -481,6 +480,7 @@ void main() {
       final wrong = _onScreen(RodLines.coworkerJugaad.wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 700);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3000);
@@ -541,6 +541,113 @@ void main() {
       final s = c.read(gameSaveProvider);
       expect(s.levelScoreByRung.containsKey('1.5/do/0'), isTrue);
       expect(s.rungProgress['1.5/do/0'], isNot('cleared'));
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker: a fast play never skips him — a rod lifted at once stays on the rack until he has spoken', (t) async {
+      final (c, deal) = await open(t, _seedCalling(0));
+      final r1 = deal.rounds[0];
+      // Well before his timer (1.2–2.4 s): the decisive control waits for him.
+      await t.tap(rods.at(r1.rods.indexOf(_right(r1))), warnIfMissed: false);
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in now');
+      expect(find.text(RodLines.take), findsNothing, reason: 'the rod stays on the rack');
+      await _pickRight(t, [...RodLines.coworkerJugaad.right, ...RodLines.coworkerRating.right]);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // After him the rack works as usual.
+      await lift(t, r1, _right(r1));
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker: a fast hold on his (last) docket waits for him, then the job is held → pass', (t) async {
+      final (c, deal) = await open(t, _seedCalling(2));
+      for (var i = 0; i < 2; i++) {
+        final r = deal.rounds[i];
+        await lift(t, r, _right(r));
+        await t.tap(find.text(RodLines.take));
+        await _pickRight(t, RodLines.packRight(r.docket.line));
+        await _pump(t, 400);
+      }
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(RodLines.hold));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the hold waits for him');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(c.read(guideDirectorProvider).line, isNot(contains(RodLines.holdAsk)), reason: 'the job is not held yet');
+      await _pickRight(t, [...RodLines.coworkerJugaad.right, ...RodLines.coworkerRating.right]);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(RodLines.hold));
+      await _pickRight(t, RodLines.holdRight(deal.rounds[2], flawKnown: false));
+      await _pump(t, 6000);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['1.5/do/0'], 'cleared');
+      expect(find.text(RodLines.caughtCall), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('praise window: after a right take the rack takes no hand until the reason is done', (t) async {
+      final (c, deal) = await open(t, _seedCalling(2));
+      final r1 = deal.rounds[0];
+      final other = r1.rods.firstWhere((x) => x.id != _right(r1).id && !x.jugaad);
+      await lift(t, r1, _right(r1));
+      await t.tap(find.text(RodLines.take));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.text(RodLines.hold), findsNothing, reason: 'the docket is decided');
+      await t.tap(rods.at(r1.rods.indexOf(other)), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(RodLines.take), findsNothing, reason: 'no rod lifted in the praise');
+      await waitChoiceDeck(t);
+      await t.tap(rods.at(r1.rods.indexOf(other)), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(RodLines.take), findsNothing, reason: 'nor with the reason deck up');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pickRight(t, RodLines.packRight(r1.docket.line));
+      await _pump(t, 600);
+      await lift(t, deal.rounds[1], _right(deal.rounds[1]));
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over every choice at the van, a slide nudge in the close look, none over a deck', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final (c, deal) = await open(t, _seedCalling(1));
+      final r1 = deal.rounds[0];
+      final hint = t.state<IdleHintState>(_sceneHint);
+      expect(t.widget<IdleHint>(_sceneHint).waiting, isTrue);
+      expect(hint.showing, isFalse);
+      // Idle: the hand sweeps over the docket, every rod and the hold button alike.
+      await _pump(t, 9000);
+      expect(hint.showing, isTrue);
+      expect(t.widget<IdleHint>(_sceneHint).spec(Size.zero)!.kind, HintKind.sweep);
+      expect(hint.debugOptions, hasLength(r1.rods.length + 2));
+      // Taps on the empty sky: the hand comes back at once.
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(const Offset(180, 200));
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(find.text(RodLines.line(r1.docket)), findsNothing, reason: 'the sky is not the docket');
+      expect(hint.showing, isTrue, reason: 'three taps on nothing');
+      // The close look: a short nudge along the rod (never to a fault), then put back / take.
+      await lift(t, r1, _right(r1));
+      final drag = t.widget<IdleHint>(_sceneHint).spec(Size.zero)!;
+      expect(drag.kind, HintKind.drag);
+      expect(drag.travel, lessThanOrEqualTo(HintSpec.maxDragTravel));
+      expect(drag.toward, const Offset(1, 0));
+      await slide(t);
+      final pick = t.widget<IdleHint>(_sceneHint).spec(Size.zero)!;
+      expect(pick.kind, HintKind.sweep);
+      expect(pick.options, hasLength(2));
+      // A deck has its own hint: the scene's waits.
+      await t.tap(find.text(RodLines.take));
+      await waitChoiceDeck(t);
+      expect(t.widget<IdleHint>(_sceneHint).waiting, isFalse);
       expect(t.takeException(), isNull);
       await close(t, c);
     });

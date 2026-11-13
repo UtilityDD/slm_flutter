@@ -20,6 +20,7 @@ import 'fire_world.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart';
@@ -37,7 +38,8 @@ import 'spoken_once.dart';
 // dry grass under a pole). The guide first (what burns, "now"); then the yard,
 // full screen, with the wind showing (a windsock, streaks, the smoke drifting)
 // and a wall. Where to stand: three places on the ground — upwind with the way
-// out open (right), upwind against the wall (cornered), downwind in the smoke.
+// out open (right), against the wall (cornered; the wall is dealt behind the
+// far upwind or the far downwind place), downwind in the smoke.
 // Then PASS with the hands: drag the pin out (P), tap the fire's base, not the
 // flames (A), hold the handle (S) and slide side to side (S: sweep — only a
 // moving jet puts it out). Each fire out → its ◆ on the table → "কেন …?"
@@ -47,7 +49,23 @@ import 'spoken_once.dart';
 // Deadly: none (owner-approved list: cornered without escape costs points).
 // Slips: standing downwind or cornered; a PASS step out of order (squeezing
 // with the pin in, aiming before the pin); aiming at the flames; keeping a
-// used extinguisher. Points as before; the fire-out points wait on the table.
+// used extinguisher (listening to the coworker). Points as before; the
+// fire-out points wait on the table, and the scene takes no input while a
+// right move is praised (`tableBusy`).
+//
+// No giveaways (audit 2026-11-11): each fire deals its own wind side, where
+// the wall stands (behind the far upwind place, or behind the far downwind
+// place) and which side the windsock is on, so the right place is found by
+// reading the wind, not by "next to the wall", "by the sock" or "the other
+// side from the last fire".
+// The reason and refill libraries share their key words with the wrong
+// options. Gesture hints: a sweep over the places, a sweep over the
+// extinguisher's head, the fire and the handle (never one of them), and a
+// hold-and-slide nudge on the handle once it is the only way forward.
+//
+// The coworker comes only after the last fire (his push is the refill, and
+// no player control can finish that item before him), so the level needs no
+// `holdForCoworker` gate.
 //
 // Voice: device TTS for the guide; the coworker's lines are clips in his voice.
 
@@ -59,9 +77,23 @@ enum StandSpot { upwind, cornered, downwind }
 
 @immutable
 class PassRound {
-  const PassRound({required this.kind, required this.windFromLeft});
+  const PassRound({required this.kind, required this.windFromLeft, this.wallUpwind = true, this.sockUpwind = true});
   final FireKind kind;
   final bool windFromLeft;
+
+  /// The wall stands behind the far upwind place (that place is cornered) or
+  /// behind the far downwind place (cornered and in the smoke).
+  final bool wallUpwind;
+
+  /// The windsock's pole stands on the upwind side (else the downwind side);
+  /// it always points downwind.
+  final bool sockUpwind;
+
+  /// The wall is on the left of the fire.
+  bool get wallOnLeft => wallUpwind == windFromLeft;
+
+  /// The windsock is on the left of the fire.
+  bool get sockOnLeft => sockUpwind == windFromLeft;
 }
 
 abstract final class PassIds {
@@ -132,14 +164,15 @@ abstract final class PassLines {
   ];
   static const whyStandWrong = [
     'আগুনের যত কাছে, তত তাড়াতাড়ি নেভে',
-    'দেয়ালের পাশে দাঁড়ালে আড়াল পাওয়া যায়',
+    'পেছনে দেয়াল থাকলে আড়াল পাওয়া যায়',
     'ধোঁয়ার দিক থেকে আগুন ভালো দেখা যায়',
-    'বাতাসের দিক দেখার কোনো দরকার নেই',
+    'বাতাস যেদিকেই থাক, কিছু যায় আসে না',
     'যেখানে খুশি দাঁড়ালেই কাজ হয়ে যায়',
+    'পথ খোলা রাখার চেয়ে কাছে যাওয়া জরুরি',
   ];
   static const whyAimRight = [
     'জ্বালানি জ্বলছে গোড়ায় — সেখানেই তাক',
-    'শিখায় তাক করলে পাউডার উড়ে যায়',
+    'শিখায় নয়, গোড়াতেই স্প্রে চাই',
     'গোড়ায় এপাশ-ওপাশ ঝাড়লে পুরো নেভে',
   ];
   static const whyAimWrong = [
@@ -148,6 +181,8 @@ abstract final class PassLines {
     'ধোঁয়ার দিকে স্প্রে করলেই হয়ে যায়',
     'যত দূর থেকে স্প্রে, তত ভালো কাজ',
     'একটু চেপে ছেড়ে দিলেই আগুন নেভে',
+    'গোড়ায় একবার ছিটালেই আগুন নিজে নেভে',
+    'গোড়ায় তাক করলে কাছে যেতে হয় না',
   ];
 
   /// The careless coworker at the end: keep the half-used cylinder.
@@ -164,6 +199,9 @@ abstract final class PassLines {
     'অর্ধেক তো আছে, কাজ চলে যাবে',
     'গেজ দেখার দরকার নেই, রাখি',
     'স্টোরে এমনিই ফেরত রেখে দিই',
+    'রিফিল পরে হবে, এখন তুলে রাখি',
+    'রিফিলের দরকার নেই, অর্ধেক আছে',
+    'রিফিলে পাঠানো ঝামেলা, রেখে দিই',
   ];
   static const refillAsks = [
     'ও বলছে রেখে দিতে। আপনি কী করবেন?',
@@ -192,6 +230,12 @@ abstract final class PassMistakes {
     art: 'assets/game/art/fire/wind_exit.svg',
     lessonPoint: 3,
   );
+  static const downwindWall = DoMistake(
+    key: '1.8/pass/downwind-wall',
+    textBn: 'বাতাস মুখের দিকে, পেছনে দেয়াল — ধোঁয়া-তাপ আপনার দিকে, সরার পথও নেই। বাতাস পেছনে, পথ খোলা রেখে দাঁড়ান।',
+    art: 'assets/game/art/fire/wind_exit.svg',
+    lessonPoint: 3,
+  );
   static const order = DoMistake(
     key: '1.8/pass/order',
     textBn: 'ক্রম উল্টে গেল — P: পিন টানুন, A: গোড়ায় তাক, S: হ্যান্ডেল চাপুন, S: এপাশ-ওপাশ ঝাড়ুন।',
@@ -200,7 +244,7 @@ abstract final class PassMistakes {
   );
   static const aimTip = DoMistake(
     key: '1.8/pass/aim-tip',
-    textBn: 'শিখায় তাক করলে পাউডার উড়ে যায় — আগুনের গোড়ায় তাক করুন, যেখানে জ্বালানি জ্বলছে।',
+    textBn: 'শিখায় স্প্রে করলে আগুন নেভে না — আগুনের গোড়ায় তাক করুন, যেখানে জ্বালানি জ্বলছে।',
     art: 'assets/game/art/fire/aim_base.svg',
     lessonPoint: 3,
   );
@@ -210,15 +254,25 @@ abstract final class PassMistakes {
     art: 'assets/game/art/fire/refill.svg',
     lessonPoint: 2,
   );
-  static const all = [downwind, cornered, order, aimTip, keep];
+  static const all = [downwind, cornered, downwindWall, order, aimTip, keep];
+
+  /// The slip for standing at [s] in round [r] (null: the right place).
+  static DoMistake? forSpot(StandSpot s, PassRound r) => switch (s) {
+        StandSpot.upwind => null,
+        StandSpot.downwind => downwind,
+        StandSpot.cornered => r.wallUpwind ? cornered : downwindWall,
+      };
 }
 
+/// Two fires. Each fire deals its own wind side, wall side (upwind or
+/// downwind) and windsock side, so the second fire cannot be worked out from
+/// the first (a fixed "the wind turns" or "the wall swaps" would give it
+/// away): the wind has to be read every time.
 List<PassRound> dealPass(math.Random rng) {
   final kinds = [FireKind.oil, FireKind.grass]..shuffle(rng);
-  final left = rng.nextBool();
   return [
-    PassRound(kind: kinds[0], windFromLeft: left),
-    PassRound(kind: kinds[1], windFromLeft: !left),
+    for (final k in kinds)
+      PassRound(kind: k, windFromLeft: rng.nextBool(), wallUpwind: rng.nextBool(), sockUpwind: rng.nextBool()),
   ];
 }
 
@@ -241,21 +295,32 @@ const passPacks = {'do_1_8_b': passPack18};
 
 /// The fire stands at x 180 of the 360-wide scene; the three places to stand
 /// on the ground in front of it (design pixels, before the lift). With the
-/// wind from the left the upwind side is the left; the wall is behind the
-/// far-left place (cornered); downwind is in the smoke.
+/// wind from the left the upwind side is the left. The wall is behind the
+/// far upwind place ([wallUpwind]: cornered, two places upwind) or behind
+/// the far downwind place (cornered in the smoke, two places downwind);
+/// downwind is in the smoke.
 abstract final class PassStage {
   static const fireX = 180.0;
 
   /// Just above the guide's bubble band on the bottom right.
   static const spotY = 322.0;
-  static double spotX(StandSpot s, bool windFromLeft) {
-    final left = switch (s) {
-      StandSpot.cornered => 24.0,
-      StandSpot.upwind => 88.0,
-      StandSpot.downwind => 300.0,
-    };
+  static double spotX(StandSpot s, bool windFromLeft, {bool wallUpwind = true}) {
+    final left = wallUpwind
+        ? switch (s) {
+            StandSpot.cornered => 24.0,
+            StandSpot.upwind => 88.0,
+            StandSpot.downwind => 300.0,
+          }
+        : switch (s) {
+            StandSpot.upwind => 64.0,
+            StandSpot.downwind => 248.0,
+            StandSpot.cornered => 330.0,
+          };
     return windFromLeft ? left : 360 - left;
   }
+
+  /// [spotX] for round [r]'s wind and wall.
+  static double spotXIn(StandSpot s, PassRound r) => spotX(s, r.windFromLeft, wallUpwind: r.wallUpwind);
 
   /// The fire's base (world pixels) and a smaller size than step 23's, so
   /// there is room to stand back and spray across.
@@ -373,11 +438,21 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
   int? _mark;
   int _totalDelta = 0;
 
+  /// The gesture hint (how to touch, never what): misses come from taps on
+  /// the bare yard.
+  final _hints = IdleHintController();
+
+  /// The scene's design height (for the PASS panel's place in hints).
+  double _sceneH = 640;
+
   String get _rungId => widget.ctx.rungId;
   PassRound get _r => _rounds[_round];
   int get _percent => (100 - 15 * _slips).clamp(0, 100);
   bool get _passedRun => _percent >= 55;
-  bool get _idle => !_ended && _card == null && !coworkerOpen;
+
+  /// The scene takes a move: not ended, no card, no coworker, and not while a
+  /// right move is praised or its reason is asked (`tableBusy`).
+  bool get _idle => !_ended && _card == null && !coworkerOpen && !tableBusy;
 
   int _scored(int base) {
     final (mult, up) = _combo.hit();
@@ -443,7 +518,8 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
   @override
   bool? coworkerCanCome() {
     if (_ended || _phase != PassPhase.refill) return null;
-    return _card == null && !reasonOpen;
+    if (tableBusy) return false;
+    return _card == null;
   }
 
   @override
@@ -492,12 +568,13 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
   }
 
   Future<void> _stand(StandSpot s, Offset origin) async {
-    if (!_idle || _phase != PassPhase.stand) return;
+    if (!_idle || _phase != PassPhase.stand || _cam.isAnimating) return;
     _hush();
-    if (s != StandSpot.upwind) {
+    final wrong = PassMistakes.forSpot(s, _r);
+    if (wrong != null) {
       _slips++;
       unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
-      await _slip(s == StandSpot.downwind ? PassMistakes.downwind : PassMistakes.cornered);
+      await _slip(wrong);
       return;
     }
     HapticFeedback.lightImpact();
@@ -574,7 +651,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
 
   /// S — sweeping side to side while squeezing: only a moving jet puts it out.
   void _sweep(double dx, Offset origin) {
-    if (!_squeezing || _phase != PassPhase.pass) return;
+    if (!_squeezing || _phase != PassPhase.pass || !_idle) return;
     if (dx.abs() < 0.8) return;
     if (!_swept) {
       _swept = true;
@@ -663,6 +740,8 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
     _ended = true;
     _hush();
     _clock.stop();
+    // The jet stops: nothing keeps spraying under the strike-out card.
+    if (mounted) setState(() => _squeezing = false);
     unawaited(bookMistake(ref, widget.ctx, m));
     await recordStrikeOut(widget.ctx, percent: _percent, runScore: _runScore);
     if (mounted) setState(() {});
@@ -770,12 +849,12 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
 
   /// The trainee's box at his place (feet on the place's line).
   Rect get _traineeBox {
-    final x = PassStage.spotX(_spot ?? StandSpot.upwind, _r.windFromLeft);
+    final x = PassStage.spotXIn(_spot ?? StandSpot.upwind, _r);
     return Rect.fromLTWH(x - 36, PassStage.spotY + _lift - 140, 72, 144);
   }
 
   /// He faces the fire (mirror him on the right of it).
-  bool get _traineeFlipped => PassStage.spotX(_spot ?? StandSpot.upwind, _r.windFromLeft) > PassStage.fireX;
+  bool get _traineeFlipped => PassStage.spotXIn(_spot ?? StandSpot.upwind, _r) > PassStage.fireX;
 
   List<Widget> _scene(bool quiet) {
     final r = _r;
@@ -816,16 +895,17 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
                           ),
                         ),
                         // The wind: a windsock and streaks blowing downwind.
-                        CustomPaint(painter: _WindPainter(fromLeft: r.windFromLeft, t: v, lift: _lift)),
+                        CustomPaint(painter: _WindPainter(fromLeft: r.windFromLeft, sockLeft: r.sockOnLeft, t: v, lift: _lift)),
                       ],
                     ),
                   ),
                 ),
               ),
-              // The wall behind the far upwind place (no way out there).
+              // The wall behind the far upwind place or the far downwind place,
+              // as dealt in PassRound.wallUpwind (no way out at that place).
               Positioned(
                 key: const ValueKey('wall'),
-                left: r.windFromLeft ? 0 : 332,
+                left: r.wallOnLeft ? 0 : 332,
                 top: PassStage.spotY + _lift - 112,
                 width: 28,
                 height: 126,
@@ -878,12 +958,19 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
           ),
         ),
       ),
+      // A tap on the bare yard: a miss for the gesture hint (three soon after
+      // each other show the hand at once). Everything that takes a move sits
+      // above this layer.
+      Positioned.fill(
+        key: const ValueKey('yard-miss'),
+        child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (_) => _hints.missTap()),
+      ),
       // Where to stand: three places on the ground.
       if (_phase == PassPhase.stand && !walking && !_intro)
         for (final s in StandSpot.values)
           Positioned(
             key: ValueKey('spot-${s.name}'),
-            left: PassStage.spotX(s, r.windFromLeft) - 30,
+            left: PassStage.spotXIn(s, r) - 30,
             top: PassStage.spotY + _lift - 16,
             width: 60,
             height: 32,
@@ -940,6 +1027,42 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
           child: Stack(children: [FxBeam(a: tip, b: aim, thick: 1.8, child: FxLoop(FireAnim.sprayDcp, wake: _wake, quiet: quiet, still: 0.5))]),
         ),
     ];
+  }
+
+  // --- gesture hints (how to touch, never what) ------------------------------
+
+  /// The level waits for a move on the scene (not during the intro, the
+  /// camera walk, a card, the praise window, a deck or the coworker; not
+  /// while the handle is held).
+  bool get _hintWaiting =>
+      !_intro && _idle && !_cam.isAnimating && !_squeezing && (_phase == PassPhase.stand || _phase == PassPhase.pass);
+
+  /// The three places to stand (scene pixels).
+  List<Rect> get _spotRects => [
+        for (final s in StandSpot.values) Rect.fromLTWH(PassStage.spotXIn(s, _r) - 30, PassStage.spotY + _lift - 16, 60, 32),
+      ]..sort((a, b) => a.left.compareTo(b.left));
+
+  /// The PASS panel's pin head and handle (scene pixels).
+  Rect get _headRect => Rect.fromLTWH(8, _sceneH - _inset - 8 - 112, 104, 112);
+  Rect get _handleRect => Rect.fromLTWH(120, _sceneH - _inset - 8 - 112, 360 - 126 - 120, 112);
+
+  /// Where to stand: a sweep over all three places. PASS: a sweep over every
+  /// part that still takes a touch (the fire's flames and base, the pin head,
+  /// the handle — top to bottom, never in PASS order); once only the handle
+  /// is left (pin out, aimed), a short hold-and-slide nudge on it.
+  HintSpec? _hint() {
+    if (_phase == PassPhase.stand) return HintSpec.sweep(_spotRects, space: HintSpace.scene);
+    if (_phase != PassPhase.pass) return null;
+    if (_pinOut && _aimed) return HintSpec.drag(_handleRect.center, toward: const Offset(1, 0), travel: 56, space: HintSpace.scene);
+    final (base, _) = _fireOnScreen;
+    return HintSpec.sweep([
+      if (!_aimed) ...[
+        Rect.fromLTWH(base.dx - 80, base.dy - 120, 160, 96),
+        Rect.fromLTWH(base.dx - 80, base.dy - 24, 160, 40),
+      ],
+      if (!_pinOut) _headRect,
+      _handleRect,
+    ], space: HintSpace.scene);
   }
 
   /// The bottom edge: the PASS panel, the table, the decks, the guide.
@@ -1012,9 +1135,14 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
               current: _phase == PassPhase.refill ? null : _round,
               quiet: quiet,
             ),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: 'pass-$_round-${_phase.name}-$_pinOut-$_aimed',
+            hintController: _hints,
             layers: (context, m) {
               _lift = m.lift;
               _inset = m.inset;
+              _sceneH = m.height;
               return [..._scene(quiet), ..._hud(quiet)];
             },
             overlays: [
@@ -1304,16 +1432,19 @@ class _WallPainter extends CustomPainter {
 /// The wind: a windsock on a short pole (it points downwind) and streaks
 /// drifting downwind (they move only while the scene is awake).
 class _WindPainter extends CustomPainter {
-  _WindPainter({required this.fromLeft, required this.t, required this.lift});
+  _WindPainter({required this.fromLeft, required this.sockLeft, required this.t, required this.lift});
   final bool fromLeft;
+
+  /// The windsock's pole is on the left (it always points downwind).
+  final bool sockLeft;
   final double t;
   final double lift;
 
   @override
   void paint(Canvas c, Size s) {
     final dir = fromLeft ? 1.0 : -1.0;
-    // Windsock (upwind side, near the top of the yard).
-    final px = fromLeft ? 70.0 : 290.0;
+    // Windsock (either side, near the top of the yard).
+    final px = sockLeft ? 70.0 : 290.0;
     final top = 150 + lift;
     c.drawLine(Offset(px, top), Offset(px, top + 112), Paint()
       ..color = const Color(0xFF8D98A3)
@@ -1345,5 +1476,5 @@ class _WindPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_WindPainter old) => old.t != t || old.fromLeft != fromLeft || old.lift != lift;
+  bool shouldRepaint(_WindPainter old) => old.t != t || old.fromLeft != fromLeft || old.sockLeft != sockLeft || old.lift != lift;
 }

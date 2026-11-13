@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -46,9 +47,20 @@ export 'm2_skin_tools_world.dart' show BladeFlaw, SkinCable, SkinTool, SkinToolP
 // itself.
 //
 // Deadly: cutting a live cable (with or without testing; also by listening to
-// "টেস্ট লাগবে না" on the live job). Slips: cutting untested (dead cable), the
-// kitchen knife, the wrong tool for the cable, a blunt or dirty blade, no
-// gloves, the teeth, holding a job the tester proved dead.
+// "টেস্ট লাগবে না" on the live job — MODULE2_LADDER's deadly column). Slips:
+// cutting untested (dead cable), the kitchen knife, the wrong tool for the
+// cable, a blunt or dirty blade, no gloves, the teeth, holding a job the
+// tester proved dead, setting a sound right tool aside (a guess costs).
+//
+// Audit 2026-11-11: no scene control works in a praise window (`tableBusy` in
+// `_blocked`); the tester and the roll wait for the coworker
+// (`holdForCoworker`, his push pinned to the tap: "টেস্ট লাগবে না" on the
+// tester, the teeth or the skipped test on a tool), so a fast play still meets
+// him, and he never pushes the teeth on a cable that tested LIVE. The close-up
+// names no tool (the look tells it); "বাতিল করুন" sets a tool aside (a sound
+// one costs a slip) and "ফেরত রাখুন" puts it back without telling anything.
+// Gesture hints: a sweep over the scene's controls, a short lens drag on the
+// blade, a sweep over the close-up's buttons, a tap to put the ডকেট back.
 //
 // Content flag: "prove dead before you cut" is not in lesson 2.6's text; it is
 // the Module 1 rule (1.5/1.6: test before work, even after a shutdown).
@@ -124,13 +136,13 @@ abstract final class SkinLines {
   static const title = 'সঠিক ছুরি, সঠিক প্রস্তুতি';
   static const intro = 'জয়েন্টের জন্য কেবিলের মুখ ছিলতে হবে! আগে প্রস্তুতি, ঠিক টুল — তারপর ছুরি।';
   static const rounds = ['প্রথম কাজ', 'দ্বিতীয় কাজ', 'শেষ কাজ'];
-  static const ask = 'কাজের কার্ড দেখুন। কেবিলটা ছিলতে তৈরি হোন।';
+  static const ask = 'ডকেট দেখুন। কেবিলটা ছিলতে তৈরি হোন।';
   static const inspectAsk = 'ব্লেডটা ভালো করে দেখুন। এটা দিয়েই ছিলবেন?';
   static const tasks = [ask, inspectAsk];
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
 
   // Labels a worker reads.
-  static const jobCard = 'কাজের কার্ড';
+  static const jobCard = 'ডকেট';
   static const shutdown = 'শাটডাউন নেওয়া হয়েছে';
   static String jobLine(SkinJob j) => 'কেবিল: ${j.cable.nameBn}';
   static const forJoint = 'জয়েন্টের জন্য মুখ ছিলুন';
@@ -143,6 +155,7 @@ abstract final class SkinLines {
   static const dead = '0 V';
   static const take = 'এটা দিয়েই ছিলব';
   static const putBack = 'ফেরত রাখুন';
+  static const reject = 'বাতিল করুন';
   static const hold = 'কাটব না — কাজ স্থগিত';
   static const rejected = 'বাতিল';
 
@@ -162,6 +175,17 @@ abstract final class SkinLines {
     'জোর দিলে ভোঁতা ব্লেডেও ইনসুলেশন কাটা যায়',
     'নতুন টুল, তাই ব্লেড খুঁটিয়ে দেখার দরকার নেই',
     'সামান্য আঁচড় তো ক্রিম্পিং-এর পরে ঢেকে যায়',
+    // Every tool's and cable's name also on a wrong card, so matching the
+    // ডকেট's cable to a word never picks the reason by itself.
+    'স্ট্রিপার দিয়ে যেকোনো মাপের কেবিল ছিলা যায়',
+    'এবি কেবিলেও সাধারণ ছুরি চলে, শুধু জোর লাগে',
+    'স্কিনিং নাইফে জোরে চাপ দিলে কাজ দ্রুত হয়',
+    'শক্ত XLPE হলেও যেকোনো ছুরিতে ছিলা যায়',
+    // The small wire's words (ছোট, তারে, ওয়্যার; the ডকেট reads "ছোট
+    // সার্ভিস তার") and the AB cards' কেবিলের, on wrong cards as well.
+    'ছোট তারে তো যেকোনো ছুরিতেই কাজ চলে যায়',
+    'ওয়্যার স্ট্রিপার ছাড়াও ছোট তারে নাইফ চলে',
+    'কেবিলের মাপ দেখা জরুরি নয়, যেকোনো টুলই চলে',
   ];
 
   /// Why this tool, on a [c] job; the blade line only when it was looked over.
@@ -181,6 +205,13 @@ abstract final class SkinLines {
     'গ্লাভস ঢিলে ছিল, তাই কাজ বন্ধ রাখলাম',
     'রোদ বেশি, দুপুরে কাজ না করাই ভালো',
     'সুপারভাইজার না এলে কাজ শুরু হয় না',
+    // The right cards' words (টেস্টার, লাইভ, ডেড) on wrong ones too, so no
+    // word alone marks the right card.
+    'টেস্টারে ডেড না লাইভ, ঠিক বোঝা যাচ্ছিল না',
+    'লাইভ লাইন একটু পরে নিজেই বন্ধ হয়ে যায়',
+    // Both right cards say নয়; so do these, with ছুরি and কেবিলে.
+    'শাটডাউন থাকলে কেবিলে বিপদ নয়, তবু থামলাম',
+    'ছুরি ভোঁতা নয়, তবু আজ কাজ না করাই ভালো',
   ];
 
   /// The careless coworker: the lesson's myth, and the skipped test.
@@ -195,6 +226,7 @@ abstract final class SkinLines {
       'একবার দাঁতে ছিললে কিছু হবে না',
       'সবাই তো দাঁত দিয়েই ছিলে নেয়',
       'স্ট্রিপার খোঁজার সময় নেই, দাঁতেই',
+      'বিপজ্জনক কিছু না, দাঁতেই ছিলি',
     ],
     asks: ['ও বলছে দাঁত দিয়েই ছিলতে। আপনি কী করবেন?', 'দাঁত, না ঠিক টুল?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
   );
@@ -208,6 +240,7 @@ abstract final class SkinLines {
       'একবার টেস্ট ছাড়া কাটলে কী হবে',
       'সবাই তো টেস্ট ছাড়াই কেটে নেয়',
       'কাগজে শাটডাউন আছে, টেস্ট বাদ',
+      'ডেড তো হবেই, ছুরি চালিয়ে দিই',
     ],
     asks: ['ও বলছে টেস্ট লাগবে না। আপনি কী করবেন?', 'টেস্ট করবেন, না সোজা কাটবেন?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
   );
@@ -288,7 +321,13 @@ abstract final class SkinMistakes {
     textBn: 'টেস্টারে কোনো ভোল্টেজ ছিল না — কেবিল ডেড প্রমাণিত, কাজ থামানোর দরকার ছিল না।',
     art: '$_dir/test_dead.svg',
   );
-  static const all = [liveCut, untested, kitchen, mismatch, blunt, dirty, noGloves, teeth, heldWhenDead];
+  static const goodRejected = DoMistake(
+    key: '2.6/skin/good-rejected',
+    textBn: 'এই টুলটা কেবিলের মাপেই, ব্লেডও ধারালো আর পরিষ্কার ছিল। লেন্সে পুরো ব্লেড দেখে তবেই বাতিল করুন।',
+    art: '$_dir/blade_check.svg',
+    lessonPoint: 0,
+  );
+  static const all = [liveCut, untested, kitchen, mismatch, blunt, dirty, noGloves, teeth, heldWhenDead, goodRejected];
 }
 
 BladeFlaw _anyFlaw(math.Random rng) => rng.nextBool() ? BladeFlaw.blunt : BladeFlaw.dirty;
@@ -321,10 +360,11 @@ SkinDeal dealSkin(math.Random rng) {
   return SkinDeal(jobs: jobs, callRound: rng.nextInt(3), callTeeth: rng.nextBool());
 }
 
-/// What he can push on [job] now: the teeth only on the small wire; the
-/// skipped test only before the tester has been used. The dealt push first.
+/// What he can push on [job] now: the teeth only on the small wire (never once
+/// it tested LIVE — that job is held, not skinned); the skipped test only
+/// before the tester has been used. The dealt push first.
 SkinPush? skinPushFor(SkinJob job, {required bool tested, required bool shown, required bool preferTeeth}) {
-  if (shown) return null;
+  if (shown || (tested && job.live)) return null;
   final teeth = job.cable == SkinCable.wire;
   final skip = !tested;
   if (preferTeeth && teeth) return SkinPush.teeth;
@@ -381,13 +421,14 @@ class SkinRun {
   }
 
   void wearGloves() {
-    if (gloves) return;
+    if (gloves || ended) return;
     gloves = true;
     _tag(SkinLines.caughtGloves);
   }
 
   /// The tester on this job's cable: true = LIVE.
   bool test() {
+    if (ended) return current.live;
     if (!tested && !current.live) _tag(SkinLines.caughtTest);
     tested = true;
     return current.live;
@@ -417,17 +458,24 @@ class SkinRun {
 
   void lookedOver(SkinItem it) => looked.add(it.id);
 
-  /// Puts [it] back: the kitchen knife and the wrong-size tool (they show to
-  /// the eye), or a blade whose flaw was found, go aside (true); anything
-  /// else back in the roll (false) — putting back never tells which blade is
-  /// bad. Never costs anything.
-  bool putBack(SkinItem it) {
-    if (ended || shown || rejected.contains(it.id)) return false;
-    final plain = it.tool == SkinTool.kitchen || it.tool != current.cable.rightTool;
-    if (!plain && !spotted.contains(it.id)) return false;
+  /// "বাতিল করুন": sets [it] aside. The kitchen knife, the wrong size or a
+  /// flawed blade go aside for free (tagged; the blade only counts as caught
+  /// once its flaw was seen); a sound right tool is a slip and stays in the
+  /// roll — rejecting is never a free probe.
+  SkinOutcome reject(SkinItem it) {
+    if (ended || shown || rejected.contains(it.id)) return const SkinOutcome(SkinVerdict.slip);
+    final kitchen = it.tool == SkinTool.kitchen;
+    final wrongSize = !kitchen && it.tool != current.cable.rightTool;
+    if (!kitchen && !wrongSize && it.flaw == BladeFlaw.none) return _slip(SkinMistakes.goodRejected);
     rejected.add(it.id);
-    _tag(it.tool == SkinTool.kitchen ? SkinLines.caughtKnife : (plain ? SkinLines.caughtTool : SkinLines.caughtBlade));
-    return true;
+    if (kitchen) {
+      _tag(SkinLines.caughtKnife);
+    } else if (wrongSize) {
+      _tag(SkinLines.caughtTool);
+    } else if (spotted.contains(it.id)) {
+      _tag(SkinLines.caughtBlade);
+    }
+    return const SkinOutcome(SkinVerdict.right, aside: true);
   }
 
   /// "কাটব না — কাজ স্থগিত" (offered once the tester was used).
@@ -570,6 +618,27 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// His push was pinned by the control that called him in ([_holdFor]).
+  var _pushPinned = false;
+
+  // Gesture hints (how to touch, never what): the scene's controls, the
+  // close-up's lens and buttons, the ডকেট held up close.
+  final _hints = IdleHintController();
+  final _glovesKey = GlobalKey();
+  final _testerKey = GlobalKey();
+  final _jobKey = GlobalKey();
+  final _holdKey = GlobalKey();
+  final _zoomKey = GlobalKey();
+  final _bladeKey = GlobalKey();
+  final _rejectKey = GlobalKey();
+  final _takeKey = GlobalKey();
+  final _backKey = GlobalKey();
+  final _toolKeys = <String, GlobalKey>{};
+  GlobalKey _toolKey(SkinItem it) => _toolKeys.putIfAbsent(it.id, GlobalKey.new);
+
+  /// The lens has touched the blade of the tool in hand.
+  var _lensUsed = false;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -617,7 +686,66 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || _run.shown || _freeze;
+  /// No scene control works now — also never in a right move's praise window
+  /// ([tableBusy]: its ◆ wait on the table, or the reason is asked).
+  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || tableBusy || _run.shown || _freeze || struckOut;
+
+  /// The scene's own controls (the roll, the gloves, the tester, the hold, the ডকেট) take a tap.
+  bool get _canAct => !_blocked && !coworkerOpen && _held == null && !_cardOpen;
+
+  /// He is due on this job and [push] fits the tap: he comes now, saying
+  /// [push], and the tap does nothing ([holdForCoworker]).
+  bool _holdFor(SkinPush? push) {
+    if (push == null || !coworkerDue || _run.round < _run.deal.callRound) return false;
+    final before = _push;
+    _push = push;
+    _pushPinned = true;
+    if (holdForCoworker()) return true;
+    _pushPinned = false;
+    _push = before;
+    return false;
+  }
+
+  /// The level waits for a touch on the scene or the close-up (the decks and
+  /// the zoomed reason card carry their own hints; none during the intro, a
+  /// card, his talk, a praise window, the freeze or the result).
+  bool get _hintWaiting {
+    if (_intro || _ended || _busy || _freeze || struckOut || _mark != null || _card != null) return false;
+    if (coworkerOnScreen || reasonOpen || tableBusy || _run.shown) return false;
+    return true;
+  }
+
+  /// The ডকেট up close: tap to put it back (the one way on). The close-up:
+  /// a short lens drag along the blade first, then a sweep over its three
+  /// buttons. The scene: a sweep over every control left — never one alone.
+  HintSpec? _hint() {
+    if (_cardOpen) return HintSpec.tapOn(_zoomKey);
+    if (_held != null) {
+      if (!_lensUsed) {
+        final r = HintSpec.globalRectOf(_bladeKey);
+        return r == null ? null : HintSpec.drag(Offset(r.left + r.width * 0.12, r.center.dy), toward: const Offset(1, 0), travel: 80);
+      }
+      return HintSpec.sweepOver([_backKey, _rejectKey, _takeKey]);
+    }
+    final j = _run.current;
+    final keys = [
+      if (!_run.gloves) _glovesKey,
+      if (!_run.tested) _testerKey,
+      for (final it in j.items)
+        if (!_run.rejected.contains(it.id) && _used != it.id) _toolKey(it),
+      if (_run.tested) _holdKey,
+      _jobKey,
+    ];
+    return keys.length < 2 ? null : HintSpec.sweepOver(keys);
+  }
+
+  Object get _hintKey =>
+      'skin-${_run.round}-${_held?.id}-$_lensUsed-$_cardOpen-${_run.gloves}-${_run.tested}-${_run.rejected.length}-${_run.slips}';
+
+  /// A tap on nothing (the bare scene, the dim round the close-up).
+  void _missTap() {
+    if (_hintWaiting) _hints.missTap();
+  }
 
   void _setMode(LinemanMode m) {
     _mode = m;
@@ -631,7 +759,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
 
   void _wearGloves(Offset origin) {
     _refuseByWork(origin);
-    if (_blocked || coworkerOpen || _held != null || _cardOpen || _run.gloves) return;
+    if (!_canAct || _run.gloves) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/click.ogg', volume: 0.5, muted: false));
     setState(() {
@@ -643,7 +771,9 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
 
   void _test(Offset origin) {
     if (_push == SkinPush.skipTest) _refuseByWork(origin);
-    if (_blocked || coworkerOpen || _held != null || _cardOpen || _run.tested) return;
+    if (!_canAct || _run.tested) return;
+    // The tester would settle "টেস্ট লাগবে না" before he says it: he comes now.
+    if (_holdFor(SkinPush.skipTest)) return;
     HapticFeedback.mediumImpact();
     final live = _run.test();
     if (!_muted) unawaited(ZlFx.cue(live ? 'sounds/quiz_wrong.wav' : 'sounds/intro/click.ogg', volume: 0.6, muted: false));
@@ -653,15 +783,23 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
 
   void _pick(SkinItem it, Offset origin) {
     if (_push == SkinPush.teeth) _refuseByWork(origin);
-    if (_blocked || coworkerOpen || _held != null || _cardOpen || _run.rejected.contains(it.id) || _used == it.id) return;
+    if (!_canAct || _run.rejected.contains(it.id) || _used == it.id) return;
+    // A tool in hand would finish the job before he speaks: he comes now
+    // (the teeth on the small wire, or the skipped test before the tester).
+    if (_holdFor(skinPushFor(_run.current, tested: _run.tested, shown: _run.shown, preferTeeth: _run.deal.callTeeth))) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/impact_metal.ogg', volume: 0.4, muted: false));
     _hush();
     setState(() {
       _held = it;
+      _lensUsed = false;
       _setMode(LinemanMode.hold);
     });
     unawaited(_sayChain([SkinLines.inspectAsk]));
+  }
+
+  void _lensOn() {
+    if (!_lensUsed && mounted) setState(() => _lensUsed = true);
   }
 
   void _found() {
@@ -676,22 +814,36 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
     if (it != null) _run.lookedOver(it);
   }
 
+  /// Back in the roll: tells nothing, costs nothing.
   void _putBack() {
-    final it = _held;
-    if (it == null || _blocked) return;
-    final aside = _run.putBack(it);
+    if (_held == null || _blocked) return;
     HapticFeedback.selectionClick();
     setState(() {
       _held = null;
       _setMode(LinemanMode.idle);
     });
-    if (aside) {
+    if (!_muted) unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.4, muted: false));
+    unawaited(_sayChain([SkinLines.ask]));
+  }
+
+  /// Set aside, tagged বাতিল: free for a tool that is wrong here; a sound
+  /// right tool is a slip (and stays in the roll).
+  void _reject(Offset origin) {
+    final it = _held;
+    if (it == null || _blocked) return;
+    final o = _run.reject(it);
+    setState(() {
+      _held = null;
+      _setMode(o.aside ? LinemanMode.idle : LinemanMode.worried);
+    });
+    if (o.aside) {
+      HapticFeedback.selectionClick();
       if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
       unawaited(_sayChain([SkinLines.asideBad, SkinLines.ask], mood: GuideMood.glad));
-    } else {
-      if (!_muted) unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.4, muted: false));
-      unawaited(_sayChain([SkinLines.ask]));
+      return;
     }
+    final m = o.mistake;
+    if (m != null) unawaited(_slip(m, origin));
   }
 
   void _take(Offset origin) {
@@ -724,7 +876,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
   }
 
   void _holdJob(Offset origin) {
-    if (_blocked || coworkerOpen || _held != null || _cardOpen) return;
+    if (!_canAct) return;
     _hush();
     final o = _run.holdJob();
     if (o.verdict == SkinVerdict.right) {
@@ -761,7 +913,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
   }
 
   void _openCard() {
-    if (_blocked || coworkerOpen || _held != null) return;
+    if (!_canAct) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: false));
     setState(() => _cardOpen = true);
@@ -791,6 +943,9 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
+    // A control called him in with a push that fits that tap.
+    if (_pushPinned) return true;
+    if (tableBusy) return false;
     final push = skinPushFor(_run.current, tested: _run.tested, shown: _run.shown, preferTeeth: _run.deal.callTeeth);
     if (push == null) return _run.round >= _run.deal.jobs.length - 1 ? null : false;
     if (_blocked || _held != null || _cardOpen) return false;
@@ -805,6 +960,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
+    _pushPinned = false;
     if (!held) {
       final o = _run.listen(_push);
       if (o.verdict == SkinVerdict.deadly) {
@@ -851,6 +1007,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
   }
 
   Future<void> _slip(DoMistake m, Offset origin) async {
+    if (_ended) return;
     if (strike(m)) {
       await _struckOut(m);
       return;
@@ -992,7 +1149,11 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
     return [
       Positioned.fill(
         key: const ValueKey('world'),
-        child: ColorFiltered(colorFilter: grey, child: RepaintBoundary(child: CustomPaint(painter: SkinWorldPainter(geo)))),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (_) => _missTap(),
+          child: ColorFiltered(colorFilter: grey, child: RepaintBoundary(child: CustomPaint(painter: SkinWorldPainter(geo)))),
+        ),
       ),
       Positioned.fill(
         key: ValueKey('cable-${_run.round}'),
@@ -1005,7 +1166,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
       Positioned.fromRect(
         key: ValueKey('job-${_run.round}'),
         rect: geo.jobCard,
-        child: ColorFiltered(colorFilter: grey, child: _JobSheet(job: j, quiet: quiet, onTap: _openCard)),
+        child: ColorFiltered(colorFilter: grey, child: KeyedSubtree(key: _jobKey, child: _JobSheet(job: j, quiet: quiet, onTap: _openCard))),
       ),
       // The roll: one pocket per tool (the pocket stays, empty, once it is gone).
       for (var i = 0; i < j.items.length; i++)
@@ -1019,6 +1180,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
               quiet: quiet,
               muted: true,
               child: _RollTool(
+                key: _toolKey(j.items[i]),
                 item: j.items[i],
                 gone: _run.rejected.contains(j.items[i].id) || _used == j.items[i].id || _held?.id == j.items[i].id,
                 enabled: canAct,
@@ -1040,6 +1202,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
           child: ColorFiltered(
             colorFilter: grey,
             child: _Tappable(
+              key: _glovesKey,
               label: SkinLines.glovesLabel,
               onTapUp: canAct ? _wearGloves : null,
               child: const CustomPaint(painter: SkinGlovesPainter()),
@@ -1058,6 +1221,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
         child: ColorFiltered(
           colorFilter: grey,
           child: _Tappable(
+            key: _testerKey,
             label: SkinLines.testerLabel,
             onTapUp: canAct && !_run.tested ? _test : null,
             child: CustomPaint(painter: SkinTesterPainter(state: testerState)),
@@ -1124,6 +1288,10 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (holdUp)
@@ -1132,7 +1300,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
                   left: 12,
                   right: 128,
                   bottom: pad.bottom + 18,
-                  child: _HoldButton(onTapUp: (d) => _holdJob(d.globalPosition)),
+                  child: _HoldButton(key: _holdKey, onTapUp: (d) => _holdJob(d.globalPosition)),
                 ),
               if (held != null && playing)
                 _Inspect(
@@ -1140,14 +1308,19 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage> with DoDeathGuard, D
                   item: held,
                   job: _run.current,
                   quiet: quiet,
+                  keys: (blade: _bladeKey, back: _backKey, reject: _rejectKey, take: _takeKey),
+                  onLens: _lensOn,
                   onFound: _found,
                   onAllSeen: _allSeen,
                   onTake: _take,
+                  onReject: _reject,
                   onPutBack: _putBack,
+                  onMiss: _missTap,
                 ),
               if (_cardOpen && playing)
                 _JobZoom(
                   key: const ValueKey('job-zoom'),
+                  cardKey: _zoomKey,
                   job: _run.current,
                   quiet: quiet,
                   onClose: () => setState(() => _cardOpen = false),
@@ -1262,7 +1435,7 @@ const _bench = Color(0xFF26303B);
 
 /// A tappable scene thing with a screen-reader label.
 class _Tappable extends StatelessWidget {
-  const _Tappable({required this.label, required this.onTapUp, required this.child});
+  const _Tappable({super.key, required this.label, required this.onTapUp, required this.child});
   final String label;
   final void Function(Offset at)? onTapUp;
   final Widget child;
@@ -1352,7 +1525,8 @@ class _JobSheet extends StatelessWidget {
 
 /// The job card held up close (tap anywhere to put it back).
 class _JobZoom extends StatelessWidget {
-  const _JobZoom({super.key, required this.job, required this.quiet, required this.onClose});
+  const _JobZoom({super.key, required this.cardKey, required this.job, required this.quiet, required this.onClose});
+  final GlobalKey cardKey;
   final SkinJob job;
   final bool quiet;
   final VoidCallback onClose;
@@ -1373,6 +1547,7 @@ class _JobZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: cardKey,
                 width: 290,
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
                 decoration: BoxDecoration(
@@ -1412,7 +1587,7 @@ class _JobZoom extends StatelessWidget {
 /// A tool standing in its pocket, blade up. From a step away a blade's flaw
 /// does not show. Tap it to take it under the lens.
 class _RollTool extends StatelessWidget {
-  const _RollTool({required this.item, required this.gone, required this.enabled, required this.onTake});
+  const _RollTool({super.key, required this.item, required this.gone, required this.enabled, required this.onTake});
   final SkinItem item;
   final bool gone;
   final bool enabled;
@@ -1466,7 +1641,7 @@ class _AsideTool extends StatelessWidget {
 }
 
 class _HoldButton extends StatelessWidget {
-  const _HoldButton({required this.onTapUp});
+  const _HoldButton({super.key, required this.onTapUp});
   final GestureTapUpCallback onTapUp;
 
   @override
@@ -1503,27 +1678,37 @@ class _HoldButton extends StatelessWidget {
   }
 }
 
-/// The close look: the tool held up big under the lens; drag the lens along
-/// the blade — a blunt edge or grime shows only where it has been. Then cut
-/// with it or put it back.
+/// The close look: the tool held up big under the lens (no name on it — the
+/// look tells it); drag the lens along the blade — a blunt edge or grime shows
+/// only where it has been. Then cut with it, set it aside, or put it back.
 class _Inspect extends StatefulWidget {
   const _Inspect({
     super.key,
     required this.item,
     required this.job,
     required this.quiet,
+    required this.keys,
+    required this.onLens,
     required this.onFound,
     required this.onAllSeen,
     required this.onTake,
+    required this.onReject,
     required this.onPutBack,
+    required this.onMiss,
   });
   final SkinItem item;
   final SkinJob job;
   final bool quiet;
+
+  /// Where the gesture hint finds the blade and the buttons.
+  final ({GlobalKey blade, GlobalKey back, GlobalKey reject, GlobalKey take}) keys;
+  final VoidCallback onLens;
   final VoidCallback onFound;
   final VoidCallback onAllSeen;
   final ValueChanged<Offset> onTake;
+  final ValueChanged<Offset> onReject;
   final VoidCallback onPutBack;
+  final VoidCallback onMiss;
 
   @override
   State<_Inspect> createState() => _InspectState();
@@ -1538,6 +1723,7 @@ class _InspectState extends State<_Inspect> {
   void _touch(Offset p, Size s) {
     final b = SkinToolPainter.binAt(widget.item.tool, p.dx / s.width);
     final before = _seen.length;
+    if (b != null && _seen.isEmpty) widget.onLens();
     if (b != null) {
       for (final x in [b - 1, b, b + 1]) {
         if (x >= 0 && x < kBladeBins) _seen.add(x);
@@ -1559,6 +1745,7 @@ class _InspectState extends State<_Inspect> {
           final s = Size(box.maxWidth, box.maxHeight);
           final (a, _) = SkinToolPainter.bladeSpan(widget.item.tool);
           return Semantics(
+            key: widget.keys.blade,
             label: SkinLines.handLabel,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -1584,78 +1771,101 @@ class _InspectState extends State<_Inspect> {
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: ColoredBox(
-        color: const Color(0xC0050A16),
-        child: Align(
-          alignment: const Alignment(0, -0.42),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
-            duration: const Duration(milliseconds: 360),
-            curve: Curves.easeOutBack,
-            builder: (_, t, child) => Transform.translate(
-              offset: Offset(0, 80 * (1 - t)),
-              child: Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
-            ),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-              decoration: BoxDecoration(
-                color: SlmColors.ivory,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapUp: (_) => widget.onMiss(),
+        child: ColoredBox(
+          color: const Color(0xC0050A16),
+          child: Align(
+            alignment: const Alignment(0, -0.42),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
+              duration: const Duration(milliseconds: 360),
+              curve: Curves.easeOutBack,
+              builder: (_, t, child) => Transform.translate(
+                offset: Offset(0, 80 * (1 - t)),
+                child: Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
-                          decoration: BoxDecoration(color: _paper, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFB59B62))),
-                          child: Text(SkinLines.jobLine(widget.job),
-                              maxLines: 1, overflow: TextOverflow.ellipsis, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  AspectRatio(
-                    aspectRatio: 2.3,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF3A4654), _bench]),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned.fill(child: Padding(padding: const EdgeInsets.fromLTRB(8, 10, 8, 10), child: _closeUp())),
-                          Positioned(
-                            right: 10,
-                            top: 8,
-                            child: IgnorePointer(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(3), border: Border.all(color: const Color(0xFF31363C))),
-                                child: Text(widget.item.tool.nameBn, style: bangla(fontSize: 12, fontWeight: FontWeight.w900, color: _ink, height: 1.1)),
-                              ),
-                            ),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+                decoration: BoxDecoration(
+                  color: SlmColors.ivory,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
+                            decoration: BoxDecoration(color: _paper, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFB59B62))),
+                            child: Text(SkinLines.jobLine(widget.job),
+                                maxLines: 1, overflow: TextOverflow.ellipsis, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
                           ),
-                        ],
+                        ),
+                        const SizedBox(width: 8),
+                        _BackChip(key: widget.keys.back, onTap: widget.onPutBack),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    AspectRatio(
+                      aspectRatio: 2.3,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF3A4654), _bench]),
+                        ),
+                        child: Padding(padding: const EdgeInsets.fromLTRB(8, 10, 8, 10), child: _closeUp()),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(child: DoBigButton(label: SkinLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
-                      const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: SkinLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(child: DoBigButton(key: widget.keys.reject, label: SkinLines.reject, filled: false, onTapUp: (d) => widget.onReject(d.globalPosition))),
+                        const SizedBox(width: 12),
+                        Expanded(child: DoBigButton(key: widget.keys.take, label: SkinLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "ফেরত রাখুন": back in the roll (tells nothing).
+class _BackChip extends StatelessWidget {
+  const _BackChip({super.key, required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0x553A4660))),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.undo_rounded, size: 16, color: _ink),
+              const SizedBox(width: 4),
+              Text(SkinLines.putBack, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
+            ],
           ),
         ),
       ),

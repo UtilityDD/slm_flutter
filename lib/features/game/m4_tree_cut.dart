@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -59,8 +60,16 @@ export 'm4_tree_cut_world.dart' show M4TreeCutGeo, M4TreeCutMark, M4TreeCutPiece
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, the
 // full scene (m4_tree_cut_world.dart), corner guide, ◆ on the table →
 // "কেন …?" → the next station by itself; the coworker once a play.
-// Voice: the guide's lines and the coworker's push by device TTS until
-// recorded (his exit line is already recorded).
+// Voice: the guide's lines by device TTS until recorded; the coworker's push
+// has no clip yet (silent, caption held — kit rule); his exit line is recorded.
+//
+// Audit 2026-11-11: no scene control works in a praise window (`tableBusy` in
+// `_canPlay`), so a limb tap after the last twig no longer books a false
+// "small first" slip; the tool on the limb waits for the coworker
+// (`holdForCoworker`) and he no longer comes once the rope is tied (his push
+// is "no rope"); the tool tray's order is dealt; the cut places carry no
+// chalk ticks (the world draws only kerfs already made); a gesture hint for
+// every waiting state (how to touch, never which one).
 
 // ============================================================================
 // Content
@@ -160,7 +169,7 @@ abstract final class M4TreeCutLines {
     right: ['না, দড়ি ছাড়া ডাল লাইনের ওপর পড়বে', 'না, দড়ি বেঁধে ধীরে নামিয়ে আনব', 'না, পতনের দিক দড়িতেই ঠিক রাখব'],
     wrong: [
       'ঠিক, কেটে ফেলে দিলেই তাড়াতাড়ি হয়',
-      'আচ্ছা, দড়িটা খুলে এক কাটে ফেলি',
+      'আচ্ছা, দড়ি রেখে এক কাটেই ফেলি',
       'ডাল তো নিচেই পড়বে, দড়ি লাগে না',
       'লাইন বন্ধ, ডাল পড়লেও কিছু হবে না',
       'ঠিক আছে, এবার দড়ি ছাড়াই কাটি',
@@ -246,7 +255,7 @@ abstract final class M4TreeCutMistakes {
 /// how many lengths of rope let the limb down.
 @immutable
 class M4TreeCutDeal {
-  const M4TreeCutDeal({required this.twigs, required this.toward, required this.notches});
+  const M4TreeCutDeal({required this.twigs, required this.toward, required this.notches, this.sawFirst = false});
 
   /// The small twigs this play (2–3 of tip / twig A / twig B).
   final Set<M4TreeCutPiece> twigs;
@@ -254,6 +263,11 @@ class M4TreeCutDeal {
   /// The shoot that grows at the conductors (low or mid).
   final M4TreeCutShoot toward;
   final int notches;
+
+  /// The tool tray's order this play (never always the rope first).
+  final bool sawFirst;
+
+  List<M4TreeCutTool> get tray => sawFirst ? const [M4TreeCutTool.saw, M4TreeCutTool.rope] : const [M4TreeCutTool.rope, M4TreeCutTool.saw];
 
   /// Everything trimmed in station ক (the twigs and the side branch).
   Set<M4TreeCutPiece> get trimmed => {...twigs, M4TreeCutPiece.side};
@@ -266,6 +280,7 @@ M4TreeCutDeal dealM4TreeCut(math.Random rng) {
     twigs: {for (var i = 0; i < 3; i++) if (i != drop) all[i]},
     toward: rng.nextBool() ? M4TreeCutShoot.low : M4TreeCutShoot.mid,
     notches: 3 + rng.nextInt(2),
+    sawFirst: rng.nextBool(),
   );
 }
 
@@ -329,7 +344,7 @@ class M4TreeCutRun {
 
   /// Cut [p] in station ক: a bigger piece while a smaller one stands is a slip.
   DoMistake? trim(M4TreeCutPiece p) {
-    if (station != M4TreeCutStation.trim || gone.contains(p)) return null;
+    if (ended || station != M4TreeCutStation.trim || gone.contains(p) || trimDone) return null;
     if (p != M4TreeCutPiece.limb && !deal.trimmed.contains(p)) return null;
     final r = m4TreeCutRank(p);
     final smaller = deal.trimmed.any((q) => !gone.contains(q) && m4TreeCutRank(q) < r);
@@ -341,7 +356,7 @@ class M4TreeCutRun {
 
   /// A tool on the heavy limb in station খ: the saw before the rope is a slip.
   DoMistake? useOnLimb(M4TreeCutTool t) {
-    if (station != M4TreeCutStation.rope || roped) return null;
+    if (ended || station != M4TreeCutStation.rope || roped) return null;
     if (t == M4TreeCutTool.saw) return _slip(M4TreeCutMistakes.noRope);
     roped = true;
     _tag(M4TreeCutLines.caughtRope);
@@ -349,11 +364,11 @@ class M4TreeCutRun {
   }
 
   /// Listened to him: cut it without the rope.
-  DoMistake listen() => _slip(M4TreeCutMistakes.listened);
+  DoMistake? listen() => ended ? null : _slip(M4TreeCutMistakes.listened);
 
   /// Where he stands for the big cut: in its fall line is deadly.
   DoMistake? stand(M4TreeCutSpot s) {
-    if (station != M4TreeCutStation.spot || spot != null) return null;
+    if (ended || station != M4TreeCutStation.spot || spot != null) return null;
     if (s != M4TreeCutSpot.beside) return deadly = M4TreeCutMistakes.fallLine;
     spot = s;
     _tag(M4TreeCutLines.caughtSpot);
@@ -362,7 +377,7 @@ class M4TreeCutRun {
 
   /// One of the three cuts. Out of order: a slip (the cut is not made).
   DoMistake? cut(M4TreeCutMark m) {
-    if (station != M4TreeCutStation.cut || cuts.contains(m)) return null;
+    if (ended || station != M4TreeCutStation.cut || cuts.contains(m)) return null;
     switch (m) {
       case M4TreeCutMark.under:
         cuts.add(m);
@@ -382,7 +397,7 @@ class M4TreeCutRun {
 
   /// The freed limb on the rope: one length down; true = on the ground.
   bool lowerOne() {
-    if (station != M4TreeCutStation.cut || !freed || lowered) return false;
+    if (ended || station != M4TreeCutStation.cut || !freed || lowered) return false;
     lengthsDown++;
     if (lengthsDown >= deal.notches) {
       lowered = true;
@@ -394,7 +409,7 @@ class M4TreeCutRun {
 
   /// Let the rope go: a slip (the ground mate keeps hold).
   DoMistake? letGo() {
-    if (station != M4TreeCutStation.cut || !freed || lowered) return null;
+    if (ended || station != M4TreeCutStation.cut || !freed || lowered) return null;
     return _slip(M4TreeCutMistakes.letGo);
   }
 
@@ -402,7 +417,7 @@ class M4TreeCutRun {
 
   /// Cut a crown shoot: one growing away from the line is a slip.
   DoMistake? cutShoot(M4TreeCutShoot s) {
-    if (station != M4TreeCutStation.clear || shootCut) return null;
+    if (ended || station != M4TreeCutStation.clear || shootCut) return null;
     if (s != deal.toward) return _slip(M4TreeCutMistakes.overCut);
     shootCut = true;
     return null;
@@ -410,7 +425,7 @@ class M4TreeCutRun {
 
   /// "ক্লিয়ারেন্স ঠিক": with the shoot at the line left, a slip.
   DoMistake? checkClear() {
-    if (station != M4TreeCutStation.clear || cleared) return null;
+    if (ended || station != M4TreeCutStation.clear || cleared) return null;
     if (!shootCut) return _slip(M4TreeCutMistakes.missed);
     cleared = true;
     _tag(M4TreeCutLines.caughtClear);
@@ -554,6 +569,14 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The gesture hint (how to touch, never which one).
+  final _hints = IdleHintController();
+  final _sceneKey = GlobalKey();
+  final _lowerKey = GlobalKey();
+  final _letGoKey = GlobalKey();
+  final _clearKey = GlobalKey();
+  final Map<M4TreeCutTool, GlobalKey> _toolKeys = {for (final t in M4TreeCutTool.values) t: GlobalKey()};
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -605,7 +628,11 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
     unawaited(_sayChain([_task]));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !struckOut && !_move.isAnimating;
+  /// The scene takes a move now: never in a right move's praise window
+  /// (`tableBusy`: its ◆ waits on the table / its reason is asked), nor while
+  /// he talks, a card shows or the scene is frozen.
+  bool get _canPlay =>
+      !_intro && !_busy && !_ended && !_freeze && _card == null && !reasonOpen && !tableBusy && !coworkerOpen && !struckOut && !_move.isAnimating;
 
   /// The nearest of [rects] whose area holds [p].
   static T? _nearest<T>(Offset p, Map<T, Rect> rects) {
@@ -641,6 +668,9 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
         }
       case M4TreeCutStation.rope:
         if (_tool != null && geo.limbRect.contains(p)) {
+          // His push is about this very step: he comes first (a fast player
+          // still meets him); the tool stays in hand.
+          if (holdForCoworker()) return;
           final m = r.useOnLimb(_tool!);
           if (m != null) {
             unawaited(_slipOut(m, global));
@@ -703,6 +733,7 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
   }
 
   void _plainTap(Offset p) {
+    _hints.missTap();
     HapticFeedback.selectionClick();
     _cue('sounds/intro/tick.ogg', volume: 0.4);
     setState(() {
@@ -853,11 +884,14 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
   math.Random get coworkerRng => widget.rng;
   @override
   bool get coworkerMuted => _muted;
+  /// His push is "no rope, just cut it": only while the rope station waits
+  /// for the rope. Once it is tied (or the station is past) it makes no sense
+  /// any more — too late for this play.
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.station.index > M4TreeCutStation.spot.index) return null;
+    if (_ended || _run.roped || _run.station.index > M4TreeCutStation.rope.index) return null;
     if (_run.station == M4TreeCutStation.trim) return false;
-    if (_intro || _busy || _card != null || reasonOpen || struckOut || _move.isAnimating) return false;
+    if (_intro || _busy || _freeze || _card != null || reasonOpen || tableBusy || struckOut || _move.isAnimating) return false;
     return true;
   }
 
@@ -869,7 +903,8 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      await _slipOut(_run.listen(), origin);
+      final m = _run.listen();
+      if (m != null) await _slipOut(m, origin);
       return;
     }
     _run.caught.add(M4TreeCutLines.caughtCall);
@@ -1056,11 +1091,14 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
       lower: r.lowered ? 1 : ((r.lengthsDown + live) / r.deal.notches).clamp(0.0, 1.0),
       toward: r.deal.toward,
       shootCut: r.shootCut,
-      marks: r.station == M4TreeCutStation.cut && !r.cutDone,
     );
   }
 
+  /// The scene's bottom inset (design px), for the hint's geometry.
+  double _inset = 0;
+
   List<Widget> _scene(SceneMetrics m) {
+    _inset = m.inset;
     final geo = M4TreeCutGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
@@ -1138,6 +1176,7 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
         child: Semantics(
           label: M4TreeCutLines.sceneLabel,
           child: GestureDetector(
+            key: _sceneKey,
             behavior: HitTestBehavior.opaque,
             onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition),
           ),
@@ -1156,6 +1195,73 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
         ),
     ];
   }
+
+  // --- the gesture hint ----------------------------------------------------------
+  /// The level waits for a touch on the scene or its controls (the decks and
+  /// the zoomed reason card carry their own hints).
+  bool get _hintWaiting {
+    if (_intro || _ended || _busy || _freeze || struckOut || _card != null) return false;
+    if (reasonOpen || tableBusy || coworkerOnScreen || _move.isAnimating || _holding || _run.ended) return false;
+    return !(_run.station == M4TreeCutStation.clear && _stamp);
+  }
+
+  /// A scene rect (design px) in global pixels, through the touch layer.
+  Rect? _global(Rect r) {
+    final box = _sceneKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight));
+  }
+
+  /// A sweep over every open option the same way (left to right on the
+  /// scene, then the buttons); a tap only on the one way forward.
+  HintSpec? _hint() {
+    final box = _sceneKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return null;
+    final geo = M4TreeCutGeo.forScene(box.size.height, _inset);
+    final r = _run;
+    // With animations off the kit rests a still hand between the first two
+    // options. That fits a row of buttons, but on this scattered scene it
+    // would sit on one answer, so the scene sweeps show no hint then.
+    final still = MediaQuery.disableAnimationsOf(context);
+    List<Rect> scene(Iterable<Rect> rects) => [for (final x in rects) ?_global(x)]..sort((a, b) => a.center.dx.compareTo(b.center.dx));
+    List<Rect> keys(Iterable<GlobalKey> ks) => [for (final k in ks) ?HintSpec.globalRectOf(k)];
+    HintSpec? sweep(List<Rect> opts) => opts.length < 2 ? null : HintSpec.sweep(opts);
+    HintSpec? sceneSweep(List<Rect> opts) => still ? null : sweep(opts);
+    switch (r.station) {
+      case M4TreeCutStation.trim:
+        return sceneSweep(scene([for (final q in r.standing) geo.pieceRect(q)]));
+      case M4TreeCutStation.rope:
+        if (_tool == null) return sweep(keys([for (final t in r.deal.tray) _toolKeys[t]!]));
+        // A tool in hand: how to use it (tap the limb) — the same for either tool.
+        final limb = _global(geo.limbRect);
+        return limb == null ? null : HintSpec.tap(limb.center);
+      case M4TreeCutStation.spot:
+        return sceneSweep(scene([for (final s in M4TreeCutSpot.values) geo.spotRect(s)]));
+      case M4TreeCutStation.cut:
+        if (r.freed && !r.lowered) return sweep(keys([_lowerKey, _letGoKey]));
+        final open = [
+          for (final m in M4TreeCutMark.values)
+            if (!r.cuts.contains(m) && (!r.freed || m == M4TreeCutMark.collar)) geo.markRect(m),
+        ];
+        if (open.length == 1) {
+          final one = _global(open.single);
+          return one == null ? null : HintSpec.tap(one.center);
+        }
+        // A plain span along the base of the limb, not the hidden cut places.
+        return sceneSweep(scene([for (final k in const [0.0, 0.2, 0.4]) Rect.fromCenter(center: geo.limbAt(k), width: 24, height: 24)]));
+      case M4TreeCutStation.clear:
+        return sceneSweep([
+          ...scene([
+            for (final s in M4TreeCutShoot.values)
+              if (!(r.shootCut && s == r.deal.toward)) geo.shootRect(s, toward: s == r.deal.toward),
+          ]),
+          ...keys([_clearKey]),
+        ]);
+    }
+  }
+
+  Object get _hintKey =>
+      'tc-${_run.station.name}-${_run.gone.length}-${_tool?.name}-${_run.cuts.length}-${_run.lengthsDown}-${_run.shootCut}-${_run.slips}-$coworkerDone';
 
   @override
   Widget build(BuildContext context) {
@@ -1197,6 +1303,10 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
               quiet: quiet,
             ),
             animation: _sceneMotion,
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             layers: (context, m) => _scene(m),
             overlays: [
               if (playing && !coworkerOpen)
@@ -1212,21 +1322,19 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
                   key: const ValueKey('hud-tray'),
                   left: 10,
                   bottom: pad.bottom + 14,
+                  // The tray's order is dealt (never always the rope first).
                   child: Row(
                     children: [
-                      _ToolChip(
-                        label: M4TreeCutLines.rope,
-                        icon: Icons.gesture_rounded,
-                        selected: _tool == M4TreeCutTool.rope,
-                        onTap: () => _pickTool(M4TreeCutTool.rope),
-                      ),
-                      const SizedBox(width: 8),
-                      _ToolChip(
-                        label: M4TreeCutLines.saw,
-                        icon: Icons.carpenter_rounded,
-                        selected: _tool == M4TreeCutTool.saw,
-                        onTap: () => _pickTool(M4TreeCutTool.saw),
-                      ),
+                      for (final (i, t) in _run.deal.tray.indexed) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        _ToolChip(
+                          key: _toolKeys[t],
+                          label: t == M4TreeCutTool.rope ? M4TreeCutLines.rope : M4TreeCutLines.saw,
+                          icon: t == M4TreeCutTool.rope ? Icons.gesture_rounded : Icons.carpenter_rounded,
+                          selected: _tool == t,
+                          onTap: () => _pickTool(t),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1240,12 +1348,13 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
                     children: [
                       Expanded(
                         flex: 3,
-                        child: _HoldButton(label: M4TreeCutLines.lower, progress: _hold, onDown: _holdStart, onUp: _holdEnd),
+                        child: _HoldButton(key: _lowerKey, label: M4TreeCutLines.lower, progress: _hold, onDown: _holdStart, onUp: _holdEnd),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         flex: 3,
                         child: DoBigButton(
+                          key: _letGoKey,
                           label: M4TreeCutLines.letGo,
                           filled: false,
                           onDark: true,
@@ -1262,6 +1371,7 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
                   bottom: pad.bottom + 12,
                   width: math.min(220, size.width * 0.55),
                   child: DoBigButton(
+                    key: _clearKey,
                     label: M4TreeCutLines.clearOk,
                     filled: true,
                     onTapUp: (d) => unawaited(_checkClear(d.globalPosition)),
@@ -1396,7 +1506,7 @@ class _DocketChip extends StatelessWidget {
 
 /// A tool from his belt: tap to take it, then tap the limb.
 class _ToolChip extends StatelessWidget {
-  const _ToolChip({required this.label, required this.icon, required this.selected, required this.onTap});
+  const _ToolChip({super.key, required this.label, required this.icon, required this.selected, required this.onTap});
   final String label;
   final IconData icon;
   final bool selected;
@@ -1439,7 +1549,7 @@ class _ToolChip extends StatelessWidget {
 
 /// Hold to let the rope out: it fills while held (one length).
 class _HoldButton extends StatelessWidget {
-  const _HoldButton({required this.label, required this.progress, required this.onDown, required this.onUp});
+  const _HoldButton({super.key, required this.label, required this.progress, required this.onDown, required this.onUp});
   final String label;
   final Animation<double> progress;
   final VoidCallback onDown;

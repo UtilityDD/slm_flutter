@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -49,12 +50,17 @@ export 'm2_skin_cut_world.dart' show SkinFault, SkinGeo, skinFaultRect;
 // Every slip on a cut: the end is cut back and skinned again (as the lesson:
 // a nicked end is redone). Cutting towards the body is a slip with an injury
 // shown (the lesson: "মারাত্মক আঘাত" — a serious injury, not a death), so this
-// level has no deadly move. Passing a clean end for redo is not scored (the
-// guide says why it is fine; the end stays to judge).
-// The careless coworker once a play: on a cut ("নিজের দিকে টেনে কাটো") or on
-// a faulty end at the bench (the lesson's myth: "ক্রিম্পিং-এ সব ঠিক হয়ে যায়").
-// Voice: the guide by device TTS; the coworker's new pushes by TTS until
-// recorded (his exit line is his recorded clip).
+// level has no deadly move. Sending a clean end back is a slip too (a wrong
+// call costs; the card explains only after the decision).
+// The pressure isn't preset: a stroke away waits until one is picked.
+// The careless coworker once a play: on a cut, once he has seen a stroke away
+// ("নিজের দিকে টেনে কাটো"), or on the nicked end at the bench (the lesson's
+// myth: "সামান্য আঁচড় … ক্রিম্পিং-এ সব ঠিক হয়ে যায়"). The next stroke away /
+// the verdict on that end waits for him (holdForCoworker). Listening = a slip.
+// Voice: the guide by device TTS; his exit line is his recorded clip; his two
+// pushes have no clip yet (silent, caption held — the kit) until recorded.
+// +5 thorough bonuses (blade looked at; fault found under the lens) are this
+// level's own, kept by the owner's decision.
 
 // ============================================================================
 // Content
@@ -99,6 +105,9 @@ abstract final class SkinLines {
   static const askBench = 'প্রান্তগুলো দেখুন — কোনটা চলবে?';
   static const tasks = [askCut, askBench];
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
+
+  /// A stroke with no pressure picked yet (the task again, no answer).
+  static const askPress = 'চাপ কতটা দেবেন — আগে বেছে নিন।';
 
   // Labels a worker reads.
   static const sceneLabel = 'বেঞ্চে কেবিল';
@@ -194,10 +203,8 @@ abstract final class SkinLines {
         SkinFault.none => cleanWhy,
       };
 
-  static const needless = 'ভালো করে দেখুন — কন্ডাক্টর মসৃণ, উজ্জ্বল, প্রান্ত সোজা। এটা চলবে।';
-
   /// The careless coworker: his exit line is his recorded clip; the two
-  /// pushes go through device TTS until recorded.
+  /// pushes have no clip yet (silent, caption held) until recorded.
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
   static const coworkerCut = CoworkerScript(
     line: 'উল্টো দিকে কেন? নিজের দিকে টেনে কাটো, জোর বেশি, কাজ তাড়াতাড়ি!',
@@ -305,7 +312,15 @@ abstract final class SkinMistakes {
     lessonPoint: 2,
   );
 
-  static const all = [towardBody, ringCut, noGroove, tooHard, noGloves, bluntBlade, wrongLength, passNick, passEdge];
+  /// A clean end sent back (a wrong call costs a slip).
+  static const needlessRedo = DoMistake(
+    key: '2.6/skin/needless-redo',
+    textBn: 'এই প্রান্তটা নিখুঁত ছিল — কন্ডাক্টর মসৃণ আর উজ্জ্বল, আঁচড়, কালো দাগ বা কাটা স্ট্র্যান্ড নেই, ইনসুলেশনের প্রান্ত 90-ডিগ্রিতে মসৃণ। লেন্সে ভালো করে দেখে তবে রায় দিন।',
+    art: '$_dir/clean_end.svg',
+    lessonPoint: 2,
+  );
+
+  static const all = [towardBody, ringCut, noGroove, tooHard, noGloves, bluntBlade, wrongLength, passNick, passEdge, needlessRedo];
 
   static DoMistake passed(SkinFault f) => f == SkinFault.edge ? passEdge : passNick;
 }
@@ -330,7 +345,8 @@ class SkinDeal {
 
 /// Two cables (different lugs; a blunt blade on one of them most plays),
 /// then three ends on the bench: one or two faults (never the same twice),
-/// the rest clean. He pushes on a cut or on a faulty end.
+/// the rest clean. He pushes on a cut or on the bench's nicked end (his line
+/// is the lesson's scratch myth, so a bench push always deals a nick).
 SkinDeal dealSkin(math.Random rng) {
   final barrels = [52.0, 62.0, 72.0]..shuffle(rng);
   final colours = [0, 1, 2, 3]..shuffle(rng);
@@ -340,18 +356,16 @@ SkinDeal dealSkin(math.Random rng) {
   ];
   final faults = [SkinFault.nick, SkinFault.strand, SkinFault.black, SkinFault.edge]..shuffle(rng);
   final nFault = 1 + rng.nextInt(2);
-  final ends = [...faults.take(nFault), for (var i = nFault; i < 3; i++) SkinFault.none]..shuffle(rng);
   final push = rng.nextBool() ? SkinPush.cut : SkinPush.bench;
-  final faulty = [
-    for (final (i, f) in ends.indexed)
-      if (f != SkinFault.none) i,
-  ];
+  final picked = faults.take(nFault).toList();
+  if (push == SkinPush.bench && !picked.contains(SkinFault.nick)) picked[0] = SkinFault.nick;
+  final ends = [...picked, for (var i = nFault; i < 3; i++) SkinFault.none]..shuffle(rng);
   return SkinDeal(
     cables: cables,
     ends: ends,
     push: push,
     callAt: push == SkinPush.cut ? rng.nextInt(2) : 2,
-    callEnd: push == SkinPush.bench ? faulty[rng.nextInt(faulty.length)] : -1,
+    callEnd: push == SkinPush.bench ? ends.indexOf(SkinFault.nick) : -1,
   );
 }
 
@@ -379,7 +393,7 @@ class SkinRun {
   final Set<int> spotted = {};
   int lensMisses = 0;
 
-  /// Clean ends sent back (not scored).
+  /// Clean ends sent back (each a slip).
   int needless = 0;
   final List<String> caught = [];
 
@@ -392,12 +406,14 @@ class SkinRun {
   int get percent => (100 - 15 * slips).clamp(0, 100);
   bool get passed => done && percent >= 55;
 
-  /// A thorough cut (+5): the blade looked at first.
-  bool get thoroughCut => bladeChecked;
+  /// A thorough cut (+5): the blade looked at first, and not swapped when it
+  /// was sharp (a needless swap loses the bonus, so swapping every time is
+  /// not a free play).
+  bool get thoroughCut => bladeChecked && !(bladeSwapped && !cable.blunt);
 
-  /// A thorough look at an end (+5): its fault tapped (a clean end: no
-  /// more than one stray tap).
-  bool thoroughEnd(int i) => deal.ends[i] == SkinFault.none ? lensMisses <= 1 : spotted.contains(i);
+  /// A thorough look at an end (+5): no more than one stray tap, and on a
+  /// faulty end its fault tapped (blind tapping all over is not paid).
+  bool thoroughEnd(int i) => lensMisses <= 1 && (deal.ends[i] == SkinFault.none || spotted.contains(i));
 
   void _tag(String t) {
     if (!caught.contains(t)) caught.add(t);
@@ -469,15 +485,17 @@ class SkinRun {
     }
   }
 
-  /// The verdict on end [i]. Sending a clean end back is not scored (no
-  /// verdict; see [needless]). Passing a faulty end is a slip (the end is
-  /// then sent back).
+  /// The verdict on end [i]. Sending a clean end back is a slip (a wrong
+  /// call; the end is then skinned again — see [needless]). Passing a faulty
+  /// end is a slip (the end is then sent back).
   DoMistake? judge(int i, {required bool redo}) {
     if (!onBench || verdicts.containsKey(i)) return null;
     final f = deal.ends[i];
     if (redo && f == SkinFault.none) {
       needless++;
-      return null;
+      slips++;
+      verdicts[i] = true;
+      return SkinMistakes.needlessRedo;
     }
     verdicts[i] = f != SkinFault.none;
     if (!redo && f != SkinFault.none) {
@@ -592,7 +610,6 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   var _intro = true;
   int _chain = 0;
   DoMistake? _card;
-  var _busy = false;
   var _ended = false;
   var _passed = false;
   var _popped = false;
@@ -603,7 +620,21 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   int _wake = 0;
   var _coworkerArmed = false;
 
-  SkinPress _press = SkinPress.light;
+  /// Not preset: the player picks it for each cable.
+  SkinPress? _press;
+
+  /// Gesture hints (how to touch, never what).
+  final _hints = IdleHintController();
+  final _glovesKey = GlobalKey(debugLabel: 'skin-gloves');
+  final _bladeKey = GlobalKey(debugLabel: 'skin-blade');
+  final _pressKeys = [for (final p in SkinPress.values) GlobalKey(debugLabel: 'skin-press-${p.name}')];
+  final _cableKey = GlobalKey(debugLabel: 'skin-cable');
+  final _endKeys = [for (var i = 0; i < 3; i++) GlobalKey(debugLabel: 'skin-end-$i')];
+  final _lensKey = GlobalKey(debugLabel: 'skin-lens');
+  final _passKey = GlobalKey(debugLabel: 'skin-pass');
+  final _redoKey = GlobalKey(debugLabel: 'skin-redo');
+  final _newBladeKey = GlobalKey(debugLabel: 'skin-new-blade');
+  final _keepBladeKey = GlobalKey(debugLabel: 'skin-keep-blade');
 
   /// The knife in the hand while a stroke is drawn (design px), or null.
   Offset? _dragFrom;
@@ -616,12 +647,6 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   int _lens = -1;
   final List<(int, Offset)> _lensTaps = [];
   int _lensTapN = 0;
-
-  /// A stroke made on his moment before he came: he comes now.
-  var _heldStroke = false;
-
-  /// A verdict (send back) given on his end before he came: he comes now.
-  var _heldRedo = false;
 
   /// The knife slipped towards him: the hurt flash.
   var _hurt = false;
@@ -679,6 +704,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
       _lensTaps.clear();
       _bladeOpen = false;
       _stampFor = -1;
+      _press = null;
     });
     _peel.value = 0;
     if (!_coworkerArmed && _run.index == _run.deal.callAt && _run.deal.push == SkinPush.cut) {
@@ -688,8 +714,13 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
     unawaited(_sayChain([_ask]));
   }
 
+  /// Hands on: not in a praise window or a deck ([tableBusy]), a card, his
+  /// moment, the blade close-up, the hurt or the peel.
   bool get _canPlay =>
-      !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_bladeOpen && !_hurt && !_peel.isAnimating && !struckOut;
+      !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_bladeOpen && !_hurt && !_peel.isAnimating && !struckOut;
+
+  /// The lens takes taps and verdicts.
+  bool get _lensLive => _lens >= 0 && !_ended && _card == null && !tableBusy && !coworkerOpen && !struckOut;
 
   bool get _cutting => _canPlay && !_run.onBench && !_run.cutDone && !_run.done;
 
@@ -715,6 +746,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   }
 
   void _swapBlade() {
+    if (!_bladeOpen || _ended) return;
     _cue('sounds/intro/click.ogg', volume: 0.6);
     HapticFeedback.lightImpact();
     setState(() {
@@ -725,6 +757,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   }
 
   void _closeBlade() {
+    if (!_bladeOpen) return;
     _cue('sounds/intro/click.ogg', volume: 0.4);
     setState(() => _bladeOpen = false);
   }
@@ -745,10 +778,14 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
           return;
         }
       }
+      _hints.missTap();
       return;
     }
-    if (_run.cutDone || _run.strokes > 0) return;
-    if (!geo.cableRect.contains(p)) return;
+    if (_run.cutDone) return;
+    if (_run.strokes > 0 || !geo.cableRect.contains(p)) {
+      _hints.missTap();
+      return;
+    }
     HapticFeedback.selectionClick();
     _cue('sounds/intro/tick.ogg', volume: 0.5);
     setState(() {
@@ -787,26 +824,28 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
     if (from == null || to == null || !_cutting) return;
     final way = skinStrokeOf(from, to);
     if (way == null) return;
-    // On his moment he cuts in the moment the knife first moves.
-    if (_run.deal.push == SkinPush.cut && _run.index == _run.deal.callAt && !coworkerDone) {
-      _hush();
-      HapticFeedback.selectionClick();
-      setState(() {
-        _heldStroke = true;
-        _busy = true;
-      });
-      return;
+    if (way == SkinStroke.away) {
+      // No pressure picked yet: the knife waits (the task again, no answer).
+      if (_press == null) {
+        HapticFeedback.selectionClick();
+        unawaited(_sayChain([SkinLines.askPress]));
+        return;
+      }
+      // On his cut he has seen a stroke away: the next one waits for him.
+      if (_run.strokes > 0 && holdForCoworker()) return;
     }
     unawaited(_commitStroke(way, Offset(SkinGeo.endX, 400)));
   }
 
   Future<void> _commitStroke(SkinStroke way, Offset origin) async {
     _hush();
-    final m = _run.stroke(way, _press);
+    // Direction mistakes come before the pressure (any pressure will do).
+    final m = _run.stroke(way, _press ?? SkinPress.light);
     if (m != null) {
       setState(() {});
       unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
       if (m == SkinMistakes.towardBody) await _hurtFlash();
+      if (!mounted || _ended) return;
       await _slip(m);
       return;
     }
@@ -861,7 +900,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   }
 
   void _closeLens() {
-    if (_busy || coworkerOpen) return;
+    if (!_lensLive) return;
     _cue('sounds/intro/click.ogg', volume: 0.4);
     setState(() {
       _lens = -1;
@@ -870,7 +909,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   }
 
   void _tapLens(Offset p, Size size) {
-    if (_lens < 0 || _busy || coworkerOpen || reasonOpen || _card != null) return;
+    if (!_lensLive) return;
     final f = _run.deal.ends[_lens];
     _run.spot(_lens, onFault: f != SkinFault.none && skinFaultRect(f, size).inflate(8).contains(p));
     HapticFeedback.selectionClick();
@@ -882,36 +921,22 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   }
 
   Future<void> _verdict(bool redo, Offset origin) async {
-    if (_lens < 0 || _busy || coworkerOpen || reasonOpen || _card != null || _ended) return;
+    if (!_lensLive) return;
     final i = _lens;
-    if (redo && _run.deal.push == SkinPush.bench && i == _run.deal.callEnd && !coworkerDone) {
-      _hush();
-      HapticFeedback.selectionClick();
-      setState(() {
-        _heldRedo = true;
-        _busy = true;
-      });
-      return;
-    }
+    // His end: the verdict (either way) waits for him.
+    if (_run.deal.push == SkinPush.bench && i == _run.deal.callEnd && holdForCoworker()) return;
     await _commitVerdict(i, redo, origin);
   }
 
   Future<void> _commitVerdict(int i, bool redo, Offset origin) async {
+    if (_ended || _run.verdicts.containsKey(i)) return;
     _hush();
-    _busy = false;
-    _heldRedo = false;
     final m = _run.judge(i, redo: redo);
-    if (m == null && !_run.verdicts.containsKey(i)) {
-      // A clean end sent back: not scored; the guide says why it is fine.
-      HapticFeedback.selectionClick();
-      _cue('sounds/intro/click.ogg', volume: 0.5);
-      unawaited(_sayChain([SkinLines.needless]));
-      return;
-    }
     if (m != null) {
       setState(() {
         _lens = -1;
         _lensTaps.clear();
+        _run.lensMisses = 0;
       });
       unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
       await _slip(m);
@@ -977,17 +1002,16 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt) return null;
+    if (_ended || struckOut || _run.done || _run.index != _run.deal.callAt) return null;
     if (_run.deal.push == SkinPush.cut) {
-      if (_run.cutDone) return null;
-      if (_heldStroke) return true;
-      // He cuts in once the knife is about to go in: the mark is on.
-      if (_intro || _busy || _card != null || reasonOpen || _bladeOpen || _hurt || _dragFrom != null || _run.mark == null) return false;
+      // "উল্টো দিকে কেন?" fits only mid-cut, after a stroke away.
+      if (_run.onBench || _run.cutDone) return null;
+      if (_intro || tableBusy || _card != null || _bladeOpen || _hurt || _dragFrom != null || _run.strokes == 0) return false;
       return true;
     }
+    // His scratch myth fits only the nicked end, under the lens, undecided.
     if (_run.verdicts.containsKey(_run.deal.callEnd)) return null;
-    if (_heldRedo) return true;
-    if (_lens != _run.deal.callEnd || _busy || _card != null || reasonOpen) return false;
+    if (tableBusy || _card != null || _lens != _run.deal.callEnd) return false;
     return true;
   }
 
@@ -998,11 +1022,8 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
+    if (!mounted || _ended) return;
     final cut = _run.deal.push == SkinPush.cut;
-    setState(() {
-      _busy = false;
-      _heldStroke = false;
-    });
     if (!held) {
       if (cut) {
         await _commitStroke(SkinStroke.toward, origin);
@@ -1138,10 +1159,52 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
     if (leave == true) _popOnce(false);
   }
 
+  // --- gesture hints (how to touch, never what) ---------------------------------
+  /// The level waits for the player's hands now (no intro, card, deck, his
+  /// moment, hurt, peel, praise window or result).
+  bool get _hintWaiting {
+    if (_intro || _ended || struckOut || _mark != null || _run.done || _card != null) return false;
+    if (tableBusy || coworkerOnScreen || coworkerHeld || _hurt || _peel.isAnimating || _dragFrom != null) return false;
+    if (_bladeOpen || _lens >= 0 || _run.onBench) return true;
+    return !_run.cutDone;
+  }
+
+  Object get _hintKey => (_run.index, _lens, _bladeOpen, _run.verdicts.length);
+
+  /// The blade card's two buttons in a dealt order (keep first when true).
+  bool get _bladeFlip => _run.cable.colour >= 2;
+
+  /// The lens card's two verdicts in a dealt order (redo first when true).
+  bool get _verdictFlip => (_lens + _run.deal.cables[1].colour).isOdd;
+
+  /// Blade close-up: a sweep over both buttons. Lens: a sweep over the lens
+  /// and both verdicts. Bench: a sweep over the ends still to judge (a tap
+  /// when one is left: opening it is the one way on, not a verdict). The cut:
+  /// a sweep over the tools, the pressure and the cable — no drag nudge, as
+  /// any direction on the cable would be an answer.
+  HintSpec? _hint() {
+    if (_bladeOpen) return HintSpec.sweepOver(_bladeFlip ? [_keepBladeKey, _newBladeKey] : [_newBladeKey, _keepBladeKey]);
+    if (_lens >= 0) return HintSpec.sweepOver([_lensKey, if (_verdictFlip) ...[_redoKey, _passKey] else ...[_passKey, _redoKey]]);
+    if (_run.onBench) {
+      final open = [
+        for (var i = 0; i < _run.deal.ends.length; i++)
+          if (!_run.verdicts.containsKey(i)) _endKeys[i],
+      ];
+      if (open.isEmpty) return null;
+      return open.length == 1 ? HintSpec.tapOn(open.single) : HintSpec.sweepOver(open);
+    }
+    final toolsFlip = _run.deal.cables[0].colour.isOdd;
+    return HintSpec.sweepOver([
+      if (toolsFlip) ...[_bladeKey, _glovesKey] else ...[_glovesKey, _bladeKey],
+      ..._pressKeys,
+      _cableKey,
+    ]);
+  }
+
   // --- the scene ---------------------------------------------------------------
   LinemanMode get _mode {
     if (_hurt || _card != null) return LinemanMode.worried;
-    if (coworkerOpen || _heldStroke || _heldRedo) return LinemanMode.worried;
+    if (coworkerOpen || coworkerHeld) return LinemanMode.worried;
     if (_stampFor == _run.index) return LinemanMode.cheer;
     return LinemanMode.hold;
   }
@@ -1194,8 +1257,24 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
       if (!bench && !_run.cutDone)
         Positioned.fill(
           key: const ValueKey('knife'),
-          child: IgnorePointer(child: CustomPaint(painter: SkinKnifePainter(at: knifeAt, blunt: _run.blunt, angle: _dragAt == null ? -0.1 : -0.18))),
+          // From afar every blade looks alike: a blunt one shows only in the
+          // close-up (no giveaway on the scene).
+          child: IgnorePointer(child: CustomPaint(painter: SkinKnifePainter(at: knifeAt, blunt: false, angle: _dragAt == null ? -0.1 : -0.18))),
         ),
+      // Hint anchors (no paint, no touch): the cable and the bench ends.
+      if (!bench && !_run.cutDone)
+        Positioned.fromRect(
+          key: const ValueKey('cable-anchor'),
+          rect: geo.cableRect,
+          child: IgnorePointer(child: SizedBox.expand(key: _cableKey)),
+        ),
+      if (bench)
+        for (var i = 0; i < _run.deal.ends.length; i++)
+          Positioned.fromRect(
+            key: ValueKey('end-anchor-$i'),
+            rect: geo.endRect(i),
+            child: IgnorePointer(child: SizedBox.expand(key: _endKeys[i])),
+          ),
       if (bench)
         Positioned.fill(
           key: const ValueKey('bench'),
@@ -1259,8 +1338,18 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.done && !_run.onBench && !_run.cutDone && !deckUp && !coworkerOpen && _card == null && !_bladeOpen && !_heldStroke;
+    final handsOn = playing && !_run.done && !_run.onBench && !_run.cutDone && !deckUp && !coworkerOpen && _card == null && !_bladeOpen && !coworkerHeld;
     final lensUp = playing && _lens >= 0 && _card == null;
+    final glovesBtn = KeyedSubtree(
+      key: _glovesKey,
+      child: _ToolButton(icon: Icons.back_hand_rounded, label: SkinLines.gloves, on: _run.gloves, onTap: _putGloves),
+    );
+    final bladeBtn = KeyedSubtree(
+      key: _bladeKey,
+      child: _ToolButton(icon: Icons.content_cut_rounded, label: SkinLines.blade, on: _run.bladeChecked, onTap: _openBlade),
+    );
+    // The two tools in a dealt order (no row in the order of the steps).
+    final toolsFlip = _run.deal.cables[0].colour.isOdd;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1288,6 +1377,10 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (handsOn) ...[
@@ -1297,9 +1390,9 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
                   bottom: pad.bottom + 76,
                   child: Row(
                     children: [
-                      _ToolButton(icon: Icons.back_hand_rounded, label: SkinLines.gloves, on: _run.gloves, onTap: _putGloves),
+                      if (toolsFlip) bladeBtn else glovesBtn,
                       const SizedBox(width: 6),
-                      _ToolButton(icon: Icons.content_cut_rounded, label: SkinLines.blade, on: _run.bladeChecked, onTap: _openBlade),
+                      if (toolsFlip) glovesBtn else bladeBtn,
                     ],
                   ),
                 ),
@@ -1308,7 +1401,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
                   left: 12,
                   right: 12,
                   bottom: pad.bottom + 12,
-                  child: _PressBar(value: _press, onPick: _setPress),
+                  child: _PressBar(value: _press, onPick: _setPress, keys: _pressKeys),
                 ),
               ],
               if (lensUp)
@@ -1318,14 +1411,27 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
                   colour: kSkinColours[const [2, 0, 1][_lens]],
                   taps: _lensTaps,
                   quiet: quiet,
-                  enabled: !_busy && !coworkerOpen && !reasonOpen,
+                  enabled: _lensLive,
+                  lensKey: _lensKey,
+                  passKey: _passKey,
+                  redoKey: _redoKey,
+                  flip: _verdictFlip,
                   onTap: _tapLens,
                   onPass: (d) => unawaited(_verdict(false, d.globalPosition)),
                   onRedo: (d) => unawaited(_verdict(true, d.globalPosition)),
                   onClose: _closeLens,
                 ),
               if (_bladeOpen && playing)
-                _BladeCard(key: const ValueKey('blade'), blunt: _run.blunt, quiet: quiet, onSwap: _swapBlade, onClose: _closeBlade),
+                _BladeCard(
+                  key: const ValueKey('blade'),
+                  blunt: _run.blunt,
+                  quiet: quiet,
+                  swapKey: _newBladeKey,
+                  keepKey: _keepBladeKey,
+                  flip: _bladeFlip,
+                  onSwap: _swapBlade,
+                  onClose: _closeBlade,
+                ),
               if (deckUp)
                 Positioned(
                   key: const ValueKey('hud-deck'),
@@ -1446,9 +1552,14 @@ class _KnitGlovePainter extends CustomPainter {
 
 /// The pressure lever: হালকা · মাঝারি · জোরে.
 class _PressBar extends StatelessWidget {
-  const _PressBar({required this.value, required this.onPick});
-  final SkinPress value;
+  const _PressBar({required this.value, required this.onPick, required this.keys});
+
+  /// Null: none picked yet.
+  final SkinPress? value;
   final ValueChanged<SkinPress> onPick;
+
+  /// One per segment (gesture-hint anchors).
+  final List<GlobalKey> keys;
 
   @override
   Widget build(BuildContext context) {
@@ -1474,6 +1585,7 @@ class _PressBar extends StatelessWidget {
                 label: SkinLines.pressBn(p),
                 excludeSemantics: true,
                 child: GestureDetector(
+                  key: keys[p.index],
                   behavior: HitTestBehavior.opaque,
                   onTap: () => onPick(p),
                   child: Container(
@@ -1587,14 +1699,30 @@ class _CardButton extends StatelessWidget {
 
 /// The blade close-up: sharp and clean, or blunt; swap it or put it back.
 class _BladeCard extends StatelessWidget {
-  const _BladeCard({super.key, required this.blunt, required this.quiet, required this.onSwap, required this.onClose});
+  const _BladeCard({
+    super.key,
+    required this.blunt,
+    required this.quiet,
+    required this.swapKey,
+    required this.keepKey,
+    required this.flip,
+    required this.onSwap,
+    required this.onClose,
+  });
   final bool blunt;
   final bool quiet;
+  final GlobalKey swapKey;
+  final GlobalKey keepKey;
+
+  /// Keep first (a dealt order; both buttons look the same).
+  final bool flip;
   final VoidCallback onSwap;
   final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
+    final swap = Expanded(child: KeyedSubtree(key: swapKey, child: _CardButton(label: SkinLines.newBlade, filled: false, onTapUp: (_) => onSwap())));
+    final keep = Expanded(child: KeyedSubtree(key: keepKey, child: _CardButton(label: SkinLines.keepBlade, filled: false, onTapUp: (_) => onClose())));
     return Positioned.fill(
       child: ColoredBox(
         color: const Color(0x66050A16),
@@ -1608,9 +1736,9 @@ class _BladeCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    Expanded(child: _CardButton(label: SkinLines.newBlade, filled: true, onTapUp: (_) => onSwap())),
+                    if (flip) keep else swap,
                     const SizedBox(width: 8),
-                    Expanded(child: _CardButton(label: SkinLines.keepBlade, filled: false, onTapUp: (_) => onClose())),
+                    if (flip) swap else keep,
                   ],
                 ),
               ],
@@ -1632,16 +1760,26 @@ class _LensCard extends StatelessWidget {
     required this.taps,
     required this.quiet,
     required this.enabled,
+    required this.lensKey,
+    required this.passKey,
+    required this.redoKey,
+    required this.flip,
     required this.onTap,
     required this.onPass,
     required this.onRedo,
     required this.onClose,
   });
+
+  /// Redo first (a dealt order; both verdicts look the same).
+  final bool flip;
   final SkinFault fault;
   final Color colour;
   final List<(int, Offset)> taps;
   final bool quiet;
   final bool enabled;
+  final GlobalKey lensKey;
+  final GlobalKey passKey;
+  final GlobalKey redoKey;
   final void Function(Offset p, Size size) onTap;
   final GestureTapUpCallback onPass;
   final GestureTapUpCallback onRedo;
@@ -1652,6 +1790,8 @@ class _LensCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pad = MediaQuery.paddingOf(context);
+    final pass = Expanded(child: KeyedSubtree(key: passKey, child: _CardButton(label: SkinLines.pass, filled: false, onTapUp: onPass)));
+    final redo = Expanded(child: KeyedSubtree(key: redoKey, child: _CardButton(label: SkinLines.redo, filled: false, onTapUp: onRedo)));
     return Positioned(
       left: 0,
       right: 0,
@@ -1668,6 +1808,7 @@ class _LensCard extends StatelessWidget {
                   behavior: HitTestBehavior.opaque,
                   onTapUp: enabled ? (d) => onTap(d.localPosition, lensSize) : null,
                   child: SizedBox.fromSize(
+                    key: lensKey,
                     size: lensSize,
                     child: Stack(
                       children: [
@@ -1697,9 +1838,9 @@ class _LensCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: _CardButton(label: SkinLines.pass, filled: true, onTapUp: onPass)),
+                  if (flip) redo else pass,
                   const SizedBox(width: 8),
-                  Expanded(child: _CardButton(label: SkinLines.redo, filled: false, onTapUp: onRedo)),
+                  if (flip) pass else redo,
                 ],
               ),
               const SizedBox(height: 4),

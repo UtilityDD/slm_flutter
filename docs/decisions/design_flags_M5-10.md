@@ -1,0 +1,24 @@
+# Design-wave flags (collected from designer updates, 2026-11-11)
+- Cross-module repeats: 7.1B ~ 7.10A (crew cards to jobs); 7.2A ~ 7.4B (timeline scrub); hold-to-stop in 10.2/10.5/10.9/10.15 (steered others away); dispatch drag 10.9/10.15; phone-camera 6.10B ~ 8.2B ~ 8.6B; phrase-tile replies 7.9B ~ 8.6A; timer-wait 6.7A ~ 9.9A.
+- Lesson content overlaps: 6.9 nearly duplicates lesson 3.7; 10.16 overlaps 1.8 (fire); 10.1 is only an overview of module 10.
+- Lesson inconsistency: 11 kV road clearance 6.5 m in 10.13 vs 6.1 m in 3.9 / 7.3 — owner/lesson fix.
+- Owner rulings: Module 8 proposes no deadly (8.1, 8.4, 8.6, 8.9 all slips); 10.13 public-harm deadly?; 8.9 right-of-way margin.
+- More M10 repeats for the judge: finger-trace hidden feeds 10.7A ~ 10.11A ~ 10.12B; draw a barricade/cordon 10.7B ~ 10.13A.
+- Cross-module: drag-the-sun time scrub 8.7B ~ 10.14B.
+- Cross-module: finger-trace 7.5A (+10.7A/10.11A/10.12B); camera evidence 7.5B (+6.10B/8.2B/8.6B). => After all judges: one cross-module verb-dedupe agent over M5–M10 final specs.
+- Paperwork/logbook verbs repeat: 7.4A carbon copy, 8.10A live logbook + carbon copy, 9.10A write report live, 10.8B repeat-back + log book, 7.6B pocket diary. Module 7 also proposes no deadly (7.1, 7.9).
+- Lesson conflict: AB switch — 2.5 says turn slowly, 6.4 says quick and firm (owner call). More repeats: hold-to-warn/stop 7.3B, 6.5B (+M10); finger-trace 6.5B.
+- Phone-camera evidence again: 6.1A (now 5 levels: 6.1A, 6.10B, 7.5B, 8.2B, 8.6B).
+- Revised specs after the director's steer (use these in the cross-module pass, not the earlier workflow results): look in scratchpad/m10design/*spec*.md (e.g. l103_spec.md for 10.3; also 10.13, 10.8 revised).
+- 9.1A 're-patch megger pairs' — check vs M2.7 megger read/prep (2.7 already did megger).
+- 10.13 revised spec saved at scratchpad/m10design/l1013.json (use it). Its decisions: public-harm deadly (open pit at night) vs slip, consistency with 3.7b pillar door; 11 kV road height 6.5 m (10.4/10.13) vs 6.1 m (3.9/7.3); LT 5.8 m used.
+- HIGH: burns. Lesson 10.17 says pour water for 20 min on burns; lesson 1.7 pro tip says no water on burns, and the 1.7 board + step 21 coworker teach 'no water'. Mainstream first aid agrees with 10.17. Owner ruling (and likely fix lesson 1.7 + its board/level).
+- Revised M10 copies' full specs are also in tasks/<agentId>.output (10.1 a8296cc0c8f012db9, 10.13 aeb74d72397dc3319, 10.14 a5d43104f47c51ee4) + scratchpad/m10design/*.json|md. 10.14 decisions: deadly for signing off a hidden pinholed glove etc. (flash-forward) vs all slips; decoy pin = slip.
+- 10.18 copy spec in tasks/a342101724ea61ca7.output. Decisions: lesson typos ('রিদাইন্ডার', 'ওষুষধের') — quote verbatim or fix source; manual's van list says 'সেফটি বেল্ট' vs M1 rule (waist belt never fall arrest) — draw full-body harness?; no deadly; overlap with 10.14 audit.
+- l101_spec.md wrongly switched the coworker to device TTS — rule: only the GUIDE uses device TTS; the coworker/rival always uses his recorded voice (tool/rival_clip.py). Enforce in the dedupe/build pass.
+- 10.16 copy spec in tasks/a7ebad72a8327d33d.output (fire point ready + smoke escape trace). Decisions: foam/water after power off on electrical fire (kept deadly); fire brigade number not in lesson; CO2 judged by seal only.
+- 10.17 spec in tasks/a58a8a1d906586618.output (burn-cool pour by wall clock; splint wrap). Burns proposal: 10.17 water = fire/flash burns; 1.7 'no water' = shock entry/exit wounds — reword the 1.7 board trap to 'শকের Entry/Exit পোড়ায় জল ঢালা'. Owner still to confirm (mainstream first aid cools all burns).
+- 10.4 copy spec in tasks/a58a01fe371878632.output (measure sag + table lookup; trace yard route + stance). Decisions: 11 kV plate → 12 kV substation row?; rain/fog margin number (none in lesson); house service under low roof gap = slip?; crossing start without permit + short gap = deadly (matches step 17); myth 3 says '১০.৩' for a 10.4 table (lesson typo).
+- 10.11 copy spec in tasks/ad6f12fccbcf837a7.output (tester-trace live path at consumer premises; tape-wrap + close-up). Decisions: cross-wired house → stop & tell office; fuse ratings (no numbers in lesson); consumer as a non-voiced caption character; badge 'কোম্পানির সেফটি MANUAL' mixed script.
+- Gates: M7 'authorize/halt each step as PTW receiver' is close to M1's approved hazard-spotting gate (stop unsafe moments) — check in the cross-module pass. M6 storm-night feeder; M8 breakdown docket + CGRF hearing; M9 witness-and-sign.
+- Gates overlap: M10 'sign each hand-over only after seeing proof yourself' ≈ M9 'witness-and-sign' — differentiate in the cross-module pass.

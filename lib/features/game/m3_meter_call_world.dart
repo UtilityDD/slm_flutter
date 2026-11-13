@@ -111,8 +111,8 @@ class M3MeterCallGeo {
 }
 
 /// The lane, the LT line and pole, the drop cable, the house with its meter
-/// box, window and customer. [looked]: spots inspected (a soft ring, red when
-/// that is where the fault is); [hot]: a loose terminal shown hot (after the
+/// box, window and customer. [looked]: spots inspected (a soft ring, the same
+/// for every spot — no red/green verdict); [hot]: a loose terminal shown hot (after the
 /// meter was looked at); [fixed]: it was tightened; [neutralBreak]: the LT
 /// neutral is broken there (null = whole).
 class M3MeterCallWorldPainter extends CustomPainter {
@@ -121,7 +121,6 @@ class M3MeterCallWorldPainter extends CustomPainter {
     required this.room,
     required this.look,
     this.looked = const {},
-    this.fault,
     this.hot,
     this.fixed = false,
     this.neutralBreak,
@@ -134,7 +133,6 @@ class M3MeterCallWorldPainter extends CustomPainter {
   /// The house's colours (0–2).
   final int look;
   final Set<M3MeterCallSpot> looked;
-  final M3MeterCallSpot? fault;
   final M3MeterCallTerm? hot;
   final bool fixed;
   final double? neutralBreak;
@@ -463,18 +461,17 @@ class M3MeterCallWorldPainter extends CustomPainter {
   }
 
   void _rings(Canvas c) {
+    final p = Paint()
+      ..color = const Color(0xCCE8EEF5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4;
     for (final s in looked) {
-      final bad = s == fault;
       final r = switch (s) {
         M3MeterCallSpot.line => Rect.fromCircle(center: Offset(neutralBreak ?? 90, geo.neutralY), radius: 26),
         M3MeterCallSpot.cable => Rect.fromCircle(center: _quad(geo.poleEnd, Offset((geo.poleEnd.dx + geo.hook.dx) / 2, math.max(geo.poleEnd.dy, geo.hook.dy) + 22), geo.hook, 0.5), radius: 24),
         M3MeterCallSpot.meter => geo.box.inflate(3),
         M3MeterCallSpot.house => geo.window.inflate(4),
       };
-      final p = Paint()
-        ..color = bad ? const Color(0xE6FF5A4A) : const Color(0xCC7DE3A8)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.4;
       if (s == M3MeterCallSpot.line || s == M3MeterCallSpot.cable) {
         c.drawOval(r, p);
       } else {
@@ -497,7 +494,6 @@ class M3MeterCallWorldPainter extends CustomPainter {
       old.room != room ||
       old.look != look ||
       !setEquals(old.looked, looked) ||
-      old.fault != fault ||
       old.hot != hot ||
       old.fixed != fixed ||
       old.neutralBreak != neutralBreak ||

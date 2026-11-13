@@ -3,8 +3,12 @@
 // right connector by the metal → two spanners, a smooth U, no sharp strand),
 // the deal, the reason libraries, and the level in the shell: idle perf, the
 // guide first, the guide's tap, a full clean play to a pass (with the
-// coworker refused), slip cards (a thin piece, a too-long bend) and three
-// slips striking the level out.
+// coworker refused, saved once), slip cards (a thin piece, a too-long bend),
+// three slips striking the level out, the coworker coming before the brush
+// even on a fast play (listening is a slip), the same four connectors on
+// every tray, the tool and spanner rows in a dealt order with one look (no
+// main-action button), the one-spanner hold slipping, and the gesture hint
+// (a sweep over the choices; none under a slip card).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,6 +22,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
@@ -31,6 +36,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '4.2/do/0',
@@ -84,10 +90,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 Widget _app(Widget home, {GlobalKey<NavigatorState>? nav}) =>
@@ -116,11 +124,11 @@ Future<void> _close(WidgetTester t, ProviderContainer c) async {
   t.view.reset();
 }
 
-Future<void> _reason(WidgetTester t, List<String> right) async {
+Future<void> _reason(WidgetTester t, List<String> right, {int settleMs = 4500}) async {
   expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'deck ${right.first}');
   await _pump(t, 700);
   await _pickRight(t, right);
-  await _pump(t, 4500);
+  await _pump(t, settleMs);
 }
 
 Future<void> _hold(WidgetTester t, String label, int ms) async {
@@ -140,16 +148,36 @@ Future<void> _wire(WidgetTester t, M4JumperMakeDeal d) async {
   await _reason(t, _L.wireWhy);
 }
 
-Future<void> _joint(WidgetTester t, M4JumperMakeConn right, List<String> why) async {
+/// The panel a tool button draws (its look at rest).
+Decoration? _face(WidgetTester t, String label) =>
+    t.widget<Container>(find.descendant(of: _label(label), matching: find.byType(Container)).first).decoration;
+
+/// Left of [b] on screen?
+bool _leftOf(WidgetTester t, String a, String b) => t.getCenter(_label(a)).dx < t.getCenter(_label(b)).dx;
+
+Future<void> _joint(WidgetTester t, M4JumperMakeConn right, List<String> why, {int settleMs = 4500, M4JumperMakeDeal? deal}) async {
+  if (deal != null) {
+    // The tool row: the dealt order, one look (no main-action button).
+    expect(_leftOf(t, _L.brush, _L.paste), deal.brushFirst);
+    expect(_face(t, _L.brush), _face(t, _L.paste));
+  }
   await _hold(t, _L.brush, 1700);
   await t.tap(_label(_L.paste));
   await _pump(t, 300);
   await t.tap(_label(_L.conn(right)));
   await _pump(t, 400);
   expect(find.byType(MistakeCard), findsNothing);
+  if (deal != null) {
+    expect(_leftOf(t, _L.twoWrench, _L.oneWrench), deal.twoWrenchFirst);
+    expect(_face(t, _L.oneWrench), _face(t, _L.twoWrench));
+    // Both spanner buttons are the same hold button (held the same way).
+    for (final l in [_L.oneWrench, _L.twoWrench]) {
+      expect(find.ancestor(of: _label(l), matching: find.byWidgetPredicate((w) => w.runtimeType.toString() == '_HoldButton')), findsOneWidget, reason: l);
+    }
+  }
   await _hold(t, _L.twoWrench, 1300);
   expect(find.byType(MistakeCard), findsNothing);
-  await _reason(t, why);
+  await _reason(t, why, settleMs: settleMs);
 }
 
 void main() {
@@ -158,14 +186,21 @@ void main() {
       final seen = <String>{};
       var copper = 0;
       var stray = 0;
+      var brushFirst = 0;
+      var twoFirst = 0;
       for (var s = 0; s < 120; s++) {
         final d = m4JumperMakeDeal(math.Random(s));
+        // The tool rows are shuffled: the layout never reads out the order.
+        if (d.brushFirst) brushFirst++;
+        if (d.twoWrenchFirst) twoFirst++;
         expect(d.pieces, hasLength(4));
         expect(d.pieces.where((p) => p >= 1), isNotEmpty);
         expect(d.pieces.where((p) => p < 1), isNotEmpty);
-        expect(d.tray1.toSet(), {M4JumperMakeConn.pgAl, M4JumperMakeConn.pgCu, M4JumperMakeConn.twist});
-        expect(d.tray2, contains(d.copperRight ? M4JumperMakeConn.bimetal : M4JumperMakeConn.pgAl));
-        expect(d.tray2, contains(M4JumperMakeConn.pgAl));
+        // The same four on every tray: the bi-metallic one never marks the copper joint.
+        expect(d.tray1, hasLength(4));
+        expect(d.tray2, hasLength(4));
+        expect(d.tray1.toSet(), M4JumperMakeConn.values.toSet());
+        expect(d.tray2.toSet(), M4JumperMakeConn.values.toSet());
         expect(d.shapes.toSet(), M4JumperMakeShape.values.toSet());
         if (d.copperRight) copper++;
         if (d.stray) stray++;
@@ -174,16 +209,16 @@ void main() {
       expect(seen.length, greaterThan(80));
       expect(copper, inInclusiveRange(25, 75));
       expect(stray, inInclusiveRange(55, 105));
+      expect(brushFirst, inInclusiveRange(35, 85));
+      expect(twoFirst, inInclusiveRange(35, 85));
     });
 
     M4JumperMakeDeal deal({bool copper = false, bool stray = true}) => M4JumperMakeDeal(
           pieces: const [0.65, 1.0, 0.5, 1.3],
           acsr: true,
           copperRight: copper,
-          tray1: const [M4JumperMakeConn.pgCu, M4JumperMakeConn.twist, M4JumperMakeConn.pgAl],
-          tray2: copper
-              ? const [M4JumperMakeConn.bimetal, M4JumperMakeConn.pgAl, M4JumperMakeConn.twist]
-              : const [M4JumperMakeConn.pgAl, M4JumperMakeConn.twist, M4JumperMakeConn.pgCu],
+          tray1: const [M4JumperMakeConn.pgCu, M4JumperMakeConn.twist, M4JumperMakeConn.bimetal, M4JumperMakeConn.pgAl],
+          tray2: const [M4JumperMakeConn.bimetal, M4JumperMakeConn.pgAl, M4JumperMakeConn.twist, M4JumperMakeConn.pgCu],
           shapes: M4JumperMakeShape.values,
           stray: stray,
         );
@@ -214,8 +249,9 @@ void main() {
       expect(r.paste(), isNull);
       expect(r.fit(M4JumperMakeConn.pgCu), _M.wrongMetal);
       expect(r.fit(M4JumperMakeConn.twist), _M.twist);
+      expect(r.fit(M4JumperMakeConn.bimetal), _M.bimetalOnAl, reason: 'both sides aluminium');
       expect(r.conn, isNull);
-      expect(r.slips, 5);
+      expect(r.slips, 6);
       expect(r.tighten(), isFalse, reason: 'nothing on yet');
       expect(r.fit(M4JumperMakeConn.pgAl), isNull);
       expect(r.caught, contains(_L.caughtClean));
@@ -253,6 +289,7 @@ void main() {
         ..brushDone()
         ..paste();
       expect(al.copperJoint, isFalse);
+      expect(al.fit(M4JumperMakeConn.bimetal), _M.bimetalOnAl);
       expect(al.fit(M4JumperMakeConn.pgAl), isNull);
       expect(M4JumperMakeRun(deal()).listenNoBrush(), _M.noClean);
     });
@@ -318,6 +355,13 @@ void main() {
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
       }
       expect([_M.noBimetal, _M.oneWrench, _M.sharpEnd].every((m) => m.lessonPoint == null), isTrue, reason: 'pro tips / film rule');
+      // The reasons say what lesson 4.2 says (no "heats up" / "touches nothing" claims).
+      expect(_L.jointWhy.first, 'ময়লা থাকলে ভালো কানেক্টরও ব্যর্থ হয়');
+      expect(_L.shapeWhy.first, 'জাম্পারকে মসৃণ U বা C আকার দিতে হয়');
+      for (final l in [..._L.jointWhy, ..._L.shapeWhy, ..._L.coworker.right]) {
+        expect(l.contains('গরম হয়ে') || l.contains('কিছুতে ঠেকে না'), isFalse, reason: l);
+      }
+      expect(_L.coworker.right, contains('না, ময়লা থাকলে কানেক্টর ব্যর্থ হয়'));
       expect(m4JumperMakePacks.keys, ['do_4_2_a']);
       expect(_pack.quickMs, kM4JumperMakeQuickMs);
     });
@@ -379,7 +423,7 @@ void main() {
         }
         debugPrint('PERF m4_jumper_make ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -430,7 +474,8 @@ void main() {
         final d = m4JumperMakeDeal(math.Random(seed));
         final c = await _open(t, seed);
         await _wire(t, d);
-        await _joint(t, M4JumperMakeConn.pgAl, _L.jointWhy);
+        expect(_label(_L.conn(M4JumperMakeConn.bimetal)), findsOneWidget, reason: 'every tray has the bi-metallic one');
+        await _joint(t, M4JumperMakeConn.pgAl, _L.jointWhy, deal: d);
         // The right joint: he comes first.
         expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes');
         await _pumpUntil(t, find.byType(ChoiceDeck));
@@ -438,7 +483,9 @@ void main() {
         await _pickRight(t, _L.coworker.right);
         await _pump(t, 2600);
         expect(find.byType(MistakeCard), findsNothing);
-        await _joint(t, d.copperRight ? M4JumperMakeConn.bimetal : M4JumperMakeConn.pgAl, d.copperRight ? _L.copperWhy : _L.jointWhy);
+        expect(_label(_L.conn(M4JumperMakeConn.bimetal)), findsOneWidget);
+        expect(_label(_L.conn(M4JumperMakeConn.pgCu)), findsOneWidget);
+        await _joint(t, d.copperRight ? M4JumperMakeConn.bimetal : M4JumperMakeConn.pgAl, d.copperRight ? _L.copperWhy : _L.jointWhy, deal: d);
         // The bend and the strand.
         await t.tap(find.byKey(const ValueKey('shape-smooth')));
         await _pump(t, 400);
@@ -453,6 +500,7 @@ void main() {
         await _pump(t, 3000);
         final s = c.read(gameSaveProvider);
         expect(s.rungProgress['4.2/do/0'], 'cleared');
+        expect(s.playsByRung['4.2/do/0'], 1, reason: 'the result is saved once');
         expect(s.mistakes, isEmpty);
         expect(s.starsByRung['4.2/do/0'], greaterThan(0));
         expect(find.byType(LevelPassPanel), findsOneWidget);
@@ -511,6 +559,99 @@ void main() {
         }
       }
       expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.map((m) => m.key), contains(_M.noClean.key));
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play: a press on the brush at the right joint brings him first (no brush yet); listening is a slip; he never comes back', (t) async {
+      const seed = 8;
+      final d = m4JumperMakeDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await _wire(t, d);
+      // The left joint, then straight on: no waiting for his timer.
+      await _joint(t, M4JumperMakeConn.pgAl, _L.jointWhy, settleMs: 0);
+      expect(await _pumpUntil(t, find.byKey(const ValueKey('hud-tray-joint2')), maxMs: 3000), isTrue);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'his timer has not run yet');
+      final g = await t.startGesture(t.getCenter(_label(_L.brush)));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the brush waits for him');
+      await _pump(t, 1500);
+      await g.up();
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(_L.coworker.wrong);
+      expect(wrong, isNotEmpty);
+      await t.tap(wrong.first, warnIfMissed: false);
+      await tapReasonProceed(t);
+      await _pump(t, 800);
+      expect(find.byType(MistakeCard), findsOneWidget, reason: 'listening is a slip');
+      expect(c.read(gameSaveProvider).mistakes.map((m) => m.key), [_M.noClean.key]);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 1200);
+      // The joint is still to be brushed (his push did not brush it), and he is gone for good.
+      await _joint(t, d.copperRight ? M4JumperMakeConn.bimetal : M4JumperMakeConn.pgAl, d.copperRight ? _L.copperWhy : _L.jointWhy);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, hasLength(1));
+      expect(find.byKey(const ValueKey('hud-shapes')), findsOneWidget);
+      await _close(t, c);
+    });
+
+    testWidgets('one spanner: its hold fills like the other, then slips (booked, still loose); the joint hint sweeps all six tools', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      const seed = 3;
+      final d = m4JumperMakeDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await _wire(t, d);
+      // The left joint (he only comes at the right one): idle, then a sweep
+      // over the brush, the paste and the four connectors.
+      await _pump(t, 9000);
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      expect(hand, findsOneWidget);
+      final st = t.state<IdleHintState>(find.ancestor(of: hand, matching: find.byType(IdleHint)).first);
+      expect(st.debugOptions, hasLength(6), reason: 'every tool, not the next step');
+      await _hold(t, _L.brush, 1700);
+      await t.tap(_label(_L.paste));
+      await _pump(t, 300);
+      await t.tap(_label(_L.conn(M4JumperMakeConn.pgAl)));
+      await _pump(t, 400);
+      // A short press on one spanner: nothing yet.
+      await _hold(t, _L.oneWrench, 300);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _hold(t, _L.oneWrench, 1300);
+      expect(find.byType(MistakeCard), findsOneWidget, reason: 'one spanner is a slip');
+      expect(c.read(gameSaveProvider).mistakes.map((m) => m.key), [_M.oneWrench.key]);
+      await _pump(t, 9000);
+      expect(hand, findsNothing, reason: 'no scene hand while the slip card is up');
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsNothing);
+      // Still loose: the two spanners finish it.
+      expect(_label(_L.twoWrench), findsOneWidget);
+      await _hold(t, _L.twoWrench, 1300);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: after idle a sweep over all four pieces (none in the intro); a touch hides it', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      t.view.physicalSize = const Size(784, 1700);
+      t.view.devicePixelRatio = 2.0;
+      final c = ProviderContainer();
+      await t.pumpWidget(UncontrolledProviderScope(container: c, child: _app(M4JumperMakePage(ctx: _ctx, pack: _pack, muted: true, seed: 2))));
+      await _pump(t, 9000);
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      if (find.byType(GuideIntro).evaluate().isNotEmpty) expect(hand, findsNothing, reason: 'no hand while the guide talks');
+      await waitIntro(t);
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget);
+      final st = t.state<IdleHintState>(find.ancestor(of: hand, matching: find.byType(IdleHint)).first);
+      expect(st.debugOptions, hasLength(4), reason: 'every piece, not the right one');
+      await t.tapAt(const Offset(200, 260));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(hand, findsNothing);
+      expect(find.byType(MistakeCard), findsNothing);
       await _close(t, c);
     });
   });

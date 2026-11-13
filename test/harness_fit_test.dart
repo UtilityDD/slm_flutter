@@ -3,7 +3,8 @@
 // his three shortcuts, fair reason libraries that fit the climb, his recorded
 // lines, and the level in the shell: idle perf, the guide first, a full clean
 // play with the reasons and the coworker refused, a slip, listening to him,
-// the 3-slip strike-out and the deadly freeze.
+// the 3-slip strike-out (one strike per strap left), the coworker on a fast
+// play, the gesture hints and the deadly freeze.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,6 +18,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/harness_fit.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
@@ -31,6 +33,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '1.4/do/1',
@@ -55,22 +58,15 @@ List<Finder> _onScreen(List<String> texts) => [
         if (_label(x).evaluate().isNotEmpty) _label(x),
     ];
 
-/// Taps the one right card on the deck now up.
+/// Taps the one right card on the deck now up (and এগিয়ে যান after a reason;
+/// coworker decks have no proceed).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
 }
 
 /// A seed whose deal passes [ok].
@@ -177,6 +173,15 @@ Future<void> _refuse(WidgetTester t, FitPush push) async {
   expect(find.byType(CoworkerPeek), findsOneWidget);
   await _pickRight(t, FitLines.coworker(push).right);
   await _pump(t, 2500);
+}
+
+/// Up to the pole top of the climb now: fix the fit, "উঠি", its reason.
+Future<void> _upThePole(WidgetTester t, ClimbRound r) async {
+  await _fixFit(t, r.faults);
+  await t.tap(find.text(FitLines.climb));
+  await _pump(t, 2500);
+  expect(find.text(MistakeLines.slipHead), findsNothing);
+  await _pickRight(t, FitLines.fitWhy(FitLines.reasonFault(r.faults)));
 }
 
 void main() {
@@ -297,6 +302,50 @@ void main() {
       expect(ClimbRun(d).noTieOff().deadly, isTrue);
     });
 
+    test('his line fits the moment: on his "ঢিলে রাখো" climb the leg strap is never dealt loose', () {
+      var seen = 0;
+      for (var s = 0; s < 300; s++) {
+        final d = dealClimbs(math.Random(s));
+        if (d.push != FitPush.looseStraps) continue;
+        seen++;
+        expect(d.rounds[d.pushRound].faults, isNot(contains(FitFault.loose)), reason: 'seed $s');
+      }
+      expect(seen, greaterThan(40));
+      // The loose fault still shows up on other climbs.
+      expect(
+        [for (var s = 0; s < 300; s++) dealClimbs(math.Random(s))].any((d) => d.rounds.any((r) => r.faults.contains(FitFault.loose))),
+        isTrue,
+      );
+    });
+
+    test('after a deadly the run stays put (ended guards): no next climb, no second death, no anchor phase', () {
+      final d = dealClimbs(math.Random(4));
+      final run = ClimbRun(d)
+        ..fit.fixAll()
+        ..checkFit()
+        ..toAnchor();
+      final first = run.tieOff(AnchorPoint.crackedArm);
+      expect(first!.deadly, isTrue);
+      expect(run.noTieOff(), first, reason: 'the first death stands');
+      run.next();
+      expect(run.round, 0);
+      expect(run.done, isFalse);
+      final b = ClimbRun(d)..noTieOff();
+      b
+        ..fit.fixAll()
+        ..checkFit()
+        ..toAnchor();
+      expect(b.phase, ClimbPhase.fit, reason: 'nothing moves after the death');
+      expect(b.tieOff(AnchorPoint.sling), isNull);
+      expect(b.phase, ClimbPhase.fit);
+    });
+
+    test('anchor reasons: the right cards\' key words show up on wrong cards too', () {
+      for (final w in ['দুর্বল', 'কখনো']) {
+        expect(FitLines.anchorMyths.any((m) => m.contains(w)), isTrue, reason: w);
+      }
+    });
+
     test('every mistake has its picture (on disk) and a lesson point (2 = fitting, 3 = anchoring)', () {
       for (final m in FitMistakes.all) {
         expect(m.art, startsWith('assets/game/art/harness/'));
@@ -385,7 +434,7 @@ void main() {
         }
         debugPrint('PERF fit ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -465,6 +514,7 @@ void main() {
 
     testWidgets('a fault left: the slip card (পাঠে দেখুন), then up the pole by itself', (t) async {
       final seed = _seedWhere((d) => d.rounds[0].faults.isNotEmpty && (d.pushRound != 0 || d.push != FitPush.looseStraps));
+      final faults = dealClimbs(math.Random(seed)).rounds[0].faults;
       final c = await _open(t, seed);
       await t.tap(find.text(FitLines.climb));
       await _pump(t, 1200);
@@ -475,7 +525,8 @@ void main() {
       await _pump(t, 2500);
       expect(_key('spot-sling'), findsOneWidget);
       final s = c.read(gameSaveProvider);
-      expect(s.mistakes, hasLength(1));
+      // One entry per strap left (one card on screen).
+      expect(s.mistakes, hasLength(faults.length));
       await _close(t, c);
     });
 
@@ -489,6 +540,7 @@ void main() {
       expect(find.byType(CoworkerPeek), findsOneWidget);
       final wrong = _onScreen(FitLines.coworkerLoose.wrong);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1200);
       expect(find.byType(FreezeFrame), findsNothing);
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
@@ -502,8 +554,10 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('three slips strike the level out (the lesson card insists)', (t) async {
-      final seed = _seedWhere((d) => d.push != FitPush.looseStraps);
+    testWidgets('three slips strike the level out, one strike per strap left (the lesson card insists)', (t) async {
+      // One strap wrong on each of the first two checks (the D-ring climb, with
+      // two faults, comes last).
+      final seed = _seedWhere((d) => d.push != FitPush.looseStraps && d.rounds.take(2).every((r) => r.faults.length <= 1));
       final deal = dealClimbs(math.Random(seed));
       final c = await _open(t, seed);
       for (var i = 0; i < 3; i++) {
@@ -516,13 +570,134 @@ void main() {
         await _pump(t, 1200);
         if (i == 2) break;
         expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip $i');
+        expect(find.byType(StruckOutCard), findsNothing);
         await t.tap(find.text(MistakeLines.gotIt));
         await _pump(t, 2500);
         if (i == deal.pushRound) await _refuse(t, deal.push);
         await _tieToSling(t, deal.rounds[i], last: false);
       }
       expect(find.byType(StruckOutCard), findsOneWidget);
-      expect(c.read(gameSaveProvider).mistakes.length, greaterThanOrEqualTo(2));
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.length, greaterThanOrEqualTo(2));
+      expect(s.rungProgress['1.4/do/1'], isNot('cleared'));
+      expect(s.bestMarkByRung['1.4/do/1'] ?? 0, lessThanOrEqualTo(55));
+      await _close(t, c);
+    });
+
+    testWidgets('two straps left at one check are two strikes: the next slip strikes the level out', (t) async {
+      final seed = _seedWhere((d) => d.rounds[0].faults.length == 2 && d.pushRound == 2 && d.rounds[1].faults.isNotEmpty);
+      final deal = dealClimbs(math.Random(seed));
+      final c = await _open(t, seed);
+      await t.tap(find.text(FitLines.climb));
+      await _pump(t, 1200);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.byType(StruckOutCard), findsNothing);
+      // Both straps reach the mistakes book (one card on screen).
+      expect(
+        c.read(gameSaveProvider).mistakes.map((m) => m.key).toSet(),
+        {for (final f in deal.rounds[0].faults) FitMistakes.missed(f).key},
+      );
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 2500);
+      await _tieToSling(t, deal.rounds[0], last: false);
+      // Climb 2: one strap left = the third slip (it used to pass at 55 with
+      // only two strikes counted).
+      await t.tap(find.text(FitLines.climb));
+      await _pump(t, 1200);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(c.read(gameSaveProvider).rungProgress['1.4/do/1'], isNot('cleared'));
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him at the fit: "উঠি" with no move waits for "ঢিলে রাখো"', (t) async {
+      final seed = _seedWhere((d) => d.push == FitPush.looseStraps && d.pushRound == 0);
+      final r = dealClimbs(math.Random(seed)).rounds[0];
+      final c = await _open(t, seed);
+      // Straight to "উঠি", no touch on the harness: he cuts in now, no check.
+      await t.tap(find.text(FitLines.climb));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(find.text(FitLines.fitAsk(FitLines.reasonFault(r.faults))), findsNothing);
+      await _pickRight(t, FitLines.coworkerLoose.right);
+      await _pump(t, 2500);
+      await _fixFit(t, r.faults);
+      await t.tap(find.text(FitLines.climb));
+      await _pump(t, 2500);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(find.text(FitLines.fitAsk(FitLines.reasonFault(r.faults))), findsWidgets);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'once a play');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    for (final push in [FitPush.pinClip, FitPush.twentyYears]) {
+      testWidgets('a fast play cannot skip him at the pole top (${push.name}): the first look waits for him', (t) async {
+        final seed = _seedWhere((d) => d.push == push && d.pushRound == 0);
+        final r = dealClimbs(math.Random(seed)).rounds[0];
+        final c = await _open(t, seed);
+        await _upThePole(t, r);
+        // As soon as the pole top is in view (before his 1.2 s+ timer), a tap
+        // on the sling: he comes now, no lens.
+        await _pump(t, 950);
+        expect(find.byType(CoworkerPeek), findsNothing);
+        await t.tap(_key('spot-sling'));
+        await t.pump();
+        expect(_label(FitLines.lensLabel), findsNothing);
+        expect(find.byType(CoworkerPeek), findsOneWidget);
+        await _pump(t, 200);
+        expect(find.byType(CoworkerPeek), findsOneWidget);
+        expect(_label(FitLines.lensLabel), findsNothing);
+        await _pickRight(t, FitLines.coworker(push).right);
+        await _pump(t, 2500);
+        await _tieToSling(t, r, last: false);
+        expect(find.byType(FreezeFrame), findsNothing);
+        expect(c.read(gameSaveProvider).mistakes, isEmpty);
+        await _close(t, c);
+      });
+    }
+
+    testWidgets('gesture hints: a hand at the fit and a sweep over every anchor point, only while the level waits', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = _seedWhere((d) => d.pushRound != 0);
+      final r = dealClimbs(math.Random(seed)).rounds[0];
+      final c = await _open(t, seed);
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget, reason: 'idle at the fit');
+      final atFit = t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(atFit.debugOptions, isEmpty, reason: 'a short drag nudge, not a pick');
+      await t.tapAt(const Offset(380, 300));
+      await t.pump();
+      expect(hand, findsNothing, reason: 'any touch hides it');
+      await _upThePole(t, r);
+      await _pump(t, 1500);
+      expect(hand, findsNothing);
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget, reason: 'idle at the pole top');
+      final atTop = t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(atTop.debugOptions, hasLength(r.anchors.length), reason: 'the sweep passes over every point');
+      // The lens: a sweep over its two buttons.
+      await t.tap(_key('spot-sling'));
+      await _pump(t, 500);
+      expect(hand, findsNothing);
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget);
+      expect(t.state<IdleHintState>(find.byType(IdleHint).first).debugOptions, hasLength(2));
+      await _close(t, c);
+    });
+
+    testWidgets('three taps on nothing show the hand at once', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 2);
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(const Offset(370, 260));
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(hand, findsOneWidget);
       await _close(t, c);
     });
 
@@ -566,6 +741,7 @@ void main() {
       expect(find.byType(CoworkerPeek), findsOneWidget);
       final wrong = _onScreen(FitLines.coworkerYears.wrong);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);

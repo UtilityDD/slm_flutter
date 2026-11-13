@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -50,12 +51,18 @@ export 'm3_insulator_patrol_world.dart'
 // then "সব ঠিক" or "রিপোর্ট".
 //
 // Slips: a fault left unmarked (or "সব ঠিক" on a faulty pole), a sound pole
-// reported, a sound insulator marked. Deadly (the careless coworker, once a
-// play, on a faulty pole): "ওপরে উঠে কাছ থেকে দেখে নাও!" — listening = the
-// climb onto a live pole whose insulator has failed (point 1: "ইনসুলেটর …
-// না থাকলে কারেন্ট পোল হয়ে মাটিতে নামত, আর যে পোলে হাত দিত, সে ওখানেই
-// শেষ"). Three slips strike out. A report with nothing marked is not
-// scored: the guide asks for the marks first.
+// reported, a sound insulator marked (an over-call costs a slip; the guide's
+// replies before the decision never say which pole is sound). Deadly (the careless coworker, once a
+// play, on any of the three poles, the sound one too, so his arrival gives
+// nothing away): "ওপরে উঠে কাছ থেকে দেখে নাও!" — listening = the climb onto
+// a live pole before shutdown (the brief: line work only after shutdown,
+// PTW, test and earth; point 1: "ইনসুলেটর … না থাকলে কারেন্ট পোল হয়ে
+// মাটিতে নামত, আর যে পোলে হাত দিত, সে ওখানেই শেষ"). Three slips strike out. A report with nothing marked is not
+// scored: the guide asks for the marks first (the same neutral line on any
+// pole). On his pole the decision waits for him (holdForCoworker): a fast
+// "সব ঠিক"/"রিপোর্ট" brings him in first. Gesture hints: a sweep over the
+// insulators and both buttons while the pole waits; none during cards,
+// decks, the freeze or the coworker's visit (the decks bring their own).
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m3_insulator_patrol_world.dart), corner guide, ◆ on the table →
@@ -120,7 +127,7 @@ abstract final class M3InsulatorPatrolLines {
   static const rounds = ['ক', 'খ', 'গ'];
   static const ask = 'খারাপ ইনসুলেটরে দাগ দিন, নয়তো বলুন সব ঠিক।';
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
-  static const markFirst = 'কোনটা খারাপ? দূরবিনে দেখে আগে দাগ দিন।';
+  static const markFirst = 'দাগ ছাড়া রিপোর্ট হয় না — দূরবিনে আবার দেখুন, তারপর ঠিক করুন।';
 
   // Labels a worker reads.
   static const sceneLabel = 'দূরবিনে পোলের মাথা';
@@ -185,7 +192,8 @@ abstract final class M3InsulatorPatrolLines {
     asks: ['ও বলছে উঠে দেখতে। আপনি কী করবেন?', 'লাইভ পোলে উঠে দেখবেন?', 'উঠবেন, না নিচ থেকেই দেখবেন?'],
   );
 
-  static const callHeld = 'ঠিক! লাইভ পোলে ওঠা নয় — নিচ থেকে দেখে রিপোর্ট।';
+  /// Said while the pole is still undecided: nothing about the verdict.
+  static const callHeld = 'ঠিক! লাইভ পোলে ওঠা নয় — নিচ থেকে দূরবিনেই দেখুন।';
   static const allSet = 'টহল শিখে গেছেন — নিচ থেকে দূরবিনে দেখা, খারাপটা রিপোর্ট।';
   static const quick = 'নিখুঁত আর ঝটপট!';
   static const fail = 'আরেকবার — দূরবিনে প্রতিটা ইনসুলেটর খুঁটিয়ে দেখুন।';
@@ -270,7 +278,7 @@ abstract final class M3InsulatorPatrolMistakes {
   );
   static const climbLive = DoMistake(
     key: '$_k/climb-live',
-    textBn: 'ইনসুলেটর ফেইল করলে পোলটাই লাইভ হয়ে যায় — যে হাত দেয়, সে ওখানেই শেষ। লাইভ লাইনে উঠে দেখা নয়: নিচ থেকে দূরবিনে দেখে রিপোর্ট।',
+    textBn: 'লাইভ লাইনের পোলে ওঠা শুধু শাটডাউনের পরে। একটা ইনসুলেটর ফেইল করলেই পোলটাই লাইভ — যে হাত দেয়, সে ওখানেই শেষ। টহলে ওঠা নয়: নিচ থেকে দূরবিনে দেখুন।',
     art: '$_dir/climb_live.svg',
     deadly: true,
     lessonPoint: 0,
@@ -299,7 +307,9 @@ class M3InsulatorPatrolDeal {
   const M3InsulatorPatrolDeal({required this.poles, required this.callAt});
   final List<M3InsulatorPatrolPole> poles;
 
-  /// The pole the careless coworker comes at (a faulty one).
+  /// The pole the careless coworker comes at: any of the three, the sound
+  /// one too, so his arrival never tells the verdict. Climbing a live pole
+  /// before shutdown is deadly on any pole.
   final int callAt;
 }
 
@@ -345,8 +355,7 @@ M3InsulatorPatrolDeal m3InsulatorPatrolDeal(math.Random rng) {
       units: [for (var i = 0; i < n; i++) M3InsulatorPatrolUnit(bodies[i], faults[i])],
     ));
   }
-  final faulty = [0, 1, 2]..remove(soundAt);
-  return M3InsulatorPatrolDeal(poles: poles, callAt: faulty[rng.nextInt(2)]);
+  return M3InsulatorPatrolDeal(poles: poles, callAt: rng.nextInt(3));
 }
 
 /// The play state (pure logic).
@@ -534,6 +543,12 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// Gesture hints: taps on nothing are reported here.
+  final _hints = IdleHintController();
+  final _touchKey = GlobalKey();
+  final _okKey = GlobalKey();
+  final _reportKey = GlobalKey();
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -575,7 +590,8 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown;
+  bool get _canPlay =>
+      !_intro && !_busy && !_ended && !_freeze && _card == null && !tableBusy && !coworkerOpen && !_run.shown && !_run.ended;
 
   void _startRound() {
     setState(() {
@@ -588,7 +604,11 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
 
   // --- hands on -----------------------------------------------------------------------
   void _tapScene(Offset p) {
-    if (!_canPlay || !M3InsulatorPatrolGeo.inLens(p)) return;
+    if (!_canPlay) return;
+    if (!M3InsulatorPatrolGeo.inLens(p)) {
+      _hints.missTap();
+      return;
+    }
     final kind = _run.current.kind;
     for (var i = 0; i < M3InsulatorPatrolGeo.count(kind); i++) {
       if (!M3InsulatorPatrolGeo.unitHit(kind, i).contains(p)) continue;
@@ -598,11 +618,14 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
       setState(() => _wake++);
       return;
     }
+    _hints.missTap();
   }
 
   // --- the decision ----------------------------------------------------------------
   Future<void> _decide(bool report, Offset origin) async {
     if (!_canPlay) return;
+    // On his pole the call waits for him: a fast tap brings him in first.
+    if (holdForCoworker()) return;
     _hush();
     final m = _run.decide(report: report);
     if (m == null && !_run.shown) {
@@ -672,8 +695,8 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    if (_intro || _busy || _card != null || reasonOpen) return false;
+    if (_ended || _run.ended || _run.index != _run.deal.callAt || _run.shown) return null;
+    if (_intro || _busy || _freeze || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -842,6 +865,27 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     if (leave == true) _popOnce(false);
   }
 
+  // --- gesture hints -------------------------------------------------------
+  /// While the pole waits: a sweep over every insulator in the view and both
+  /// buttons (how to answer, never which). Never over a card.
+  HintSpec? _hint() {
+    if (_card != null) return null;
+    final rects = <Rect>[];
+    final box = _touchKey.currentContext?.findRenderObject();
+    if (box is RenderBox && box.attached && box.hasSize) {
+      final kind = _run.current.kind;
+      for (var i = 0; i < M3InsulatorPatrolGeo.count(kind); i++) {
+        final b = M3InsulatorPatrolGeo.unitBody(kind, i);
+        rects.add(Rect.fromPoints(box.localToGlobal(b.topLeft), box.localToGlobal(b.bottomRight)));
+      }
+    }
+    for (final k in [_okKey, _reportKey]) {
+      final r = HintSpec.globalRectOf(k);
+      if (r != null) rects.add(r);
+    }
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
   // --- the scene ---------------------------------------------------------------
   LinemanMode get _mode {
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
@@ -910,7 +954,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: M3InsulatorPatrolLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition)),
+          child: GestureDetector(key: _touchKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition)),
         ),
       ),
       if (_freeze)
@@ -945,7 +989,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null;
+    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !tableBusy;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -973,6 +1017,11 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            // Off during cards, decks, the freeze and his whole visit (exit too).
+            hintWaiting: handsOn && !coworkerOnScreen,
+            hintKey: 'pole-${_run.index}',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (handsOn)
@@ -983,9 +1032,12 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(child: DoBigButton(label: M3InsulatorPatrolLines.ok, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
+                      Expanded(
+                          child: DoBigButton(
+                              key: _okKey, label: M3InsulatorPatrolLines.ok, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: M3InsulatorPatrolLines.report, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
+                      Expanded(
+                          child: DoBigButton(key: _reportKey, label: M3InsulatorPatrolLines.report, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
                     ],
                   ),
                 ),

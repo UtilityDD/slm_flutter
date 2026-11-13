@@ -4,10 +4,14 @@
 // directional pruning), the deal, the reason libraries, and the level in the
 // shell: idle perf, the guide first, the guide's tap, a full clean play to a
 // pass (with the coworker refused), a slip card, and the deadly freeze
-// (standing in the fall line).
+// (standing in the fall line). Audit 2026-11-11: no false slip in the praise
+// window, the coworker comes on a fast play (the tool waits for him) and
+// listening is a slip, 3 slips strike out, the tray's order is dealt, no chalk
+// ticks mark the cuts, and the gesture hint sweeps (never points at one).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,11 +21,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m4_tree_cut.dart';
+import 'package:slm_flutter/features/game/m4_tree_cut_world.dart' show M4TreeCutTree, M4TreeCutWorldPainter;
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro;
 import 'package:slm_flutter/features/game/spoken_once.dart';
@@ -31,6 +39,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '4.8/do/1',
@@ -80,10 +89,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -144,15 +155,19 @@ void main() {
   group('rules', () {
     test('deals: 2–3 twigs, the shoot at the line low or mid, 3–4 lengths; fresh every play', () {
       final seen = <String>{};
+      final trays = <M4TreeCutTool>{};
       for (var s = 0; s < 80; s++) {
         final d = dealM4TreeCut(math.Random(s));
         expect(d.twigs.length, inInclusiveRange(2, 3));
         expect(d.twigs.contains(M4TreeCutPiece.side) || d.twigs.contains(M4TreeCutPiece.limb), isFalse);
         expect(d.toward, isNot(M4TreeCutShoot.back));
         expect(d.notches, inInclusiveRange(3, 4));
+        expect(d.tray.toSet(), M4TreeCutTool.values.toSet());
         seen.add('${d.twigs}${d.toward}${d.notches}');
+        trays.add(d.tray.first);
       }
       expect(seen.length, greaterThan(8));
+      expect(trays, M4TreeCutTool.values.toSet(), reason: 'the tray order is dealt: never always the rope first');
     });
 
     const deal = M4TreeCutDeal(twigs: {M4TreeCutPiece.tipTwig, M4TreeCutPiece.twigA}, toward: M4TreeCutShoot.low, notches: 3);
@@ -174,6 +189,29 @@ void main() {
       expect(r.caught, contains(M4TreeCutLines.caughtOrder));
     });
 
+    test('trim done: the limb tap books no "small first" slip (the praise window bug)', () {
+      final r = run();
+      for (final p in deal.trimmed.toList()..sort((a, b) => m4TreeCutRank(a).compareTo(m4TreeCutRank(b)))) {
+        expect(r.trim(p), isNull, reason: '$p');
+      }
+      expect(r.trimDone, isTrue);
+      expect(r.trim(M4TreeCutPiece.limb), isNull);
+      expect(r.slips, 0);
+    });
+
+    test('after a deadly no rule takes a move', () {
+      final r = run()..station = M4TreeCutStation.spot;
+      expect(r.stand(M4TreeCutSpot.below)!.deadly, isTrue);
+      r.station = M4TreeCutStation.cut;
+      expect(r.cut(M4TreeCutMark.under), isNull);
+      expect(r.cuts, isEmpty);
+      r.station = M4TreeCutStation.clear;
+      expect(r.cutShoot(M4TreeCutShoot.back), isNull);
+      expect(r.checkClear(), isNull);
+      expect(r.listen(), isNull);
+      expect(r.slips, 0);
+    });
+
     test('rope: the saw before the rope is a slip; listening to him is a slip', () {
       final r = run()..station = M4TreeCutStation.rope;
       expect(r.useOnLimb(M4TreeCutTool.saw), M4TreeCutMistakes.noRope);
@@ -182,6 +220,7 @@ void main() {
       expect(r.roped, isTrue);
       expect(r.caught, contains(M4TreeCutLines.caughtRope));
       expect(r.listen(), M4TreeCutMistakes.listened);
+      expect(M4TreeCutMistakes.listened.deadly, isFalse, reason: 'listening is a slip (playbook row 8)');
       expect(r.slips, 2);
     });
 
@@ -303,6 +342,36 @@ void main() {
     });
   });
 
+  testWidgets('the cut station: no chalk ticks mark where a cut goes (bark only)', (t) async {
+    final g = _geo;
+    final w = 360, h = g.height.ceil();
+    final pixels = await t.runAsync(() async {
+      final rec = ui.PictureRecorder();
+      M4TreeCutWorldPainter(
+        geo: g,
+        tree: const M4TreeCutTree(present: {M4TreeCutPiece.tipTwig, M4TreeCutPiece.side}, gone: {M4TreeCutPiece.tipTwig, M4TreeCutPiece.side}, roped: true),
+      ).paint(Canvas(rec), Size(w.toDouble(), h.toDouble()));
+      final img = await rec.endRecording().toImage(w, h);
+      return (await img.toByteData())!;
+    });
+    final data = pixels!;
+    bool white(Offset p) {
+      final i = ((p.dy.round() * w) + p.dx.round()) * 4;
+      return data.getUint8(i) > 215 && data.getUint8(i + 1) > 215 && data.getUint8(i + 2) > 215;
+    }
+
+    for (final m in M4TreeCutMark.values) {
+      final k = M4TreeCutGeo.markK(m);
+      final half = M4TreeCutGeo.limbW(k) * 0.55 / 2;
+      final at = switch (m) {
+        M4TreeCutMark.under => g.markAt(m).translate(0, -half),
+        M4TreeCutMark.top => g.markAt(m).translate(0, half),
+        M4TreeCutMark.collar => g.markAt(m),
+      };
+      expect(white(at), isFalse, reason: '$m: no chalk tick on the limb');
+    }
+  });
+
   group('page', () {
     TestWidgetsFlutterBinding.ensureInitialized();
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -340,7 +409,7 @@ void main() {
         }
         debugPrint('PERF m4_tree_cut ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -453,6 +522,200 @@ void main() {
       expect(find.byType(MistakeCard), findsNothing);
       await _trim(t, deal);
       expect(c.read(gameSaveProvider).mistakes, hasLength(1));
+      await _close(t, c);
+    });
+
+    testWidgets('a limb tap in the praise window after the last twig books nothing', (t) async {
+      const seed = 7;
+      final deal = dealM4TreeCut(math.Random(seed));
+      final c = await _open(t, seed);
+      for (final p in [...deal.twigs, M4TreeCutPiece.side]) {
+        await t.tapAt(_screen(_geo.pieceRect(p).center));
+        await _pump(t, p == M4TreeCutPiece.side ? 50 : 400);
+      }
+      // The ◆ waits on the table: the limb tap must not count as "small first".
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(_screen(_geo.pieceRect(M4TreeCutPiece.limb).center));
+        await _pump(t, 150);
+      }
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _reason(t, M4TreeCutStation.trim);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    /// Trims, answers the reason, and waits only until the rope tray shows.
+    Future<void> trimFast(WidgetTester t, M4TreeCutDeal deal) async {
+      for (final p in [...deal.twigs, M4TreeCutPiece.side]) {
+        await t.tapAt(_screen(_geo.pieceRect(p).center));
+        await _pump(t, 400);
+      }
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pickRight(t, M4TreeCutLines.whyRight(M4TreeCutStation.trim));
+      for (var ms = 0; ms < 4000 && _label(M4TreeCutLines.rope).evaluate().isEmpty; ms += 50) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(_label(M4TreeCutLines.rope), findsOneWidget);
+    }
+
+    testWidgets('a fast play still meets the coworker: the rope on the limb waits for him; refused → roped', (t) async {
+      const seed = 8;
+      final deal = dealM4TreeCut(math.Random(seed));
+      final c = await _open(t, seed);
+      await trimFast(t, deal);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not come yet');
+      await t.tap(_label(M4TreeCutLines.rope));
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tapAt(_screen(_geo.limbRect.center));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the tool waits: he comes now');
+      expect(find.text(M4TreeCutLines.why(M4TreeCutStation.rope)), findsNothing, reason: 'the rope is not tied before he speaks');
+      await _pickRight(t, M4TreeCutLines.coworker.right);
+      await _pump(t, 2600);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // The rope is still in hand: now it goes on.
+      await t.tapAt(_screen(_geo.limbRect.center));
+      await _pump(t, 400);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _reason(t, M4TreeCutStation.rope);
+      // He never comes back once the rope is tied.
+      await _pump(t, 4000);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('listening to him is a slip (booked), not deadly; the play goes on', (t) async {
+      const seed = 9;
+      final deal = dealM4TreeCut(math.Random(seed));
+      final c = await _open(t, seed);
+      await trimFast(t, deal);
+      await t.tap(_label(M4TreeCutLines.saw));
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tapAt(_screen(_geo.limbRect.center));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the saw on the limb waits for him too');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty, reason: 'the held saw did not cut');
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(M4TreeCutLines.coworker.wrong);
+      expect(wrong, hasLength(2));
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 900);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, M4TreeCutMistakes.listened.key);
+      expect(s.mistakes.single.deadly, isFalse);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      await t.tap(_label(M4TreeCutLines.rope));
+      await _pump(t, 200);
+      await t.tapAt(_screen(_geo.limbRect.center));
+      await _pump(t, 400);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _reason(t, M4TreeCutStation.rope);
+      expect(c.read(gameSaveProvider).mistakes, hasLength(1));
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike the level out (StruckOutCard)', (t) async {
+      final c = await _open(t, 10);
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(_screen(_geo.pieceRect(M4TreeCutPiece.limb).center));
+        await _pump(t, 800);
+        if (i < 2) {
+          expect(find.byType(MistakeCard), findsOneWidget, reason: 'slip ${i + 1}');
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 600);
+        }
+      }
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      expect(c.read(gameSaveProvider).rungProgress['4.8/do/1'], isNot('cleared'));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: a sweep over every piece while stuck (never pressing one); none in a card', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      const seed = 11;
+      final deal = dealM4TreeCut(math.Random(seed));
+      final c = await _open(t, seed);
+      IdleHintState hint() => t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+      await _pump(t, 9500);
+      expect(hint().showing, isTrue, reason: 'stuck at the twigs: the hand shows');
+      expect(hint().debugOptions, hasLength(deal.twigs.length + 2), reason: 'every twig, the side branch and the limb');
+      for (var i = 0; i < 20; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+        final f = hint().debugFrame;
+        if (f != null) expect(f.press, 0, reason: 'a sweep never presses a piece');
+      }
+      // A slip card: no hand.
+      await t.tapAt(_screen(_geo.pieceRect(M4TreeCutPiece.limb).center));
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      await _pump(t, 9500);
+      expect(hint().showing, isFalse);
+      await _close(t, c);
+    });
+
+    testWidgets('reduced motion: no still hand on a scene answer (trim, spot); the tool chips still get one', (t) async {
+      GestureHints.debugEnableInTests = true;
+      t.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(() {
+        GestureHints.debugEnableInTests = false;
+        t.platformDispatcher.clearAccessibilityFeaturesTestValue();
+      });
+      const seed = 12;
+      final deal = dealM4TreeCut(math.Random(seed));
+      final c = await _open(t, seed);
+      final hintFinder = find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first;
+      IdleHintState hint() => t.state<IdleHintState>(hintFinder);
+      /// The still fingertip in global pixels, or null while no hand shows.
+      Offset? tip() {
+        final f = hint().debugFrame;
+        return f == null ? null : f.tip + t.getTopLeft(hintFinder);
+      }
+
+      /// Idles [ms]; every still tip seen must be outside each of [rects].
+      Future<bool> idle(int ms, List<Rect> rects, String what) async {
+        var shown = false;
+        for (var i = 0; i < ms; i += 100) {
+          await t.pump(const Duration(milliseconds: 100));
+          final p = tip();
+          if (p == null) continue;
+          shown = true;
+          for (final r in rects) {
+            expect(r.contains(p), isFalse, reason: '$what: the still hand sits on one answer at $p');
+          }
+        }
+        return shown;
+      }
+
+      final pieces = [for (final p in M4TreeCutPiece.values) _screen(_geo.pieceRect(p).topLeft) & (_geo.pieceRect(p).size * _k)];
+      expect(await idle(12000, pieces, 'trim'), isFalse, reason: 'no still hand over the scattered pieces');
+      await _trim(t, deal);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 600);
+      await _pickRight(t, M4TreeCutLines.coworker.right);
+      await _pump(t, 2600);
+      // The two tool chips side by side: the still hand rests between them.
+      final chips = [t.getRect(_label(M4TreeCutLines.rope)), t.getRect(_label(M4TreeCutLines.saw))];
+      expect(await idle(12000, chips, 'tray'), isTrue, reason: 'the chip row still gets its hint');
+      await t.tap(_label(M4TreeCutLines.rope));
+      await _pump(t, 200);
+      await t.tapAt(_screen(_geo.limbRect.center));
+      await _pump(t, 400);
+      await _reason(t, M4TreeCutStation.rope);
+      final spots = [for (final s in M4TreeCutSpot.values) _screen(_geo.spotRect(s).topLeft) & (_geo.spotRect(s).size * _k)];
+      expect(await idle(12000, spots, 'spot'), isFalse, reason: 'no still hand over the standing spots (beside is the one safe answer)');
+      expect(t.takeException(), isNull);
       await _close(t, c);
     });
 

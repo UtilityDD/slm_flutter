@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc3e2"/><stop offset="1" stop-color="#e6e2cc"/></linearGradient></defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+<!-- wrong -->
+<g transform="translate(0 0)">
+<rect x="12" y="16" width="140" height="168" rx="8" fill="url(#sky)"/>
+<rect x="12" y="160" width="140" height="24" fill="#a88b62"/>
+<rect x="58" y="74" width="44" height="66" rx="8" fill="#e2b85a" stroke="#e6eef3" stroke-width="3"/><rect x="64" y="68" width="32" height="7" rx="2" fill="#8c939a"/><line x1="80" y1="124" x2="80" y2="133" stroke="#3a3f45" stroke-width="2"/><circle cx="80" cy="124" r="5.5" fill="#d23a2e"/>
+</g>
+<!-- right -->
+<g transform="translate(160 0)">
+<rect x="12" y="16" width="140" height="168" rx="8" fill="url(#sky)"/>
+<rect x="12" y="160" width="140" height="24" fill="#a88b62"/>
+<rect x="58" y="74" width="44" height="66" rx="8" fill="#e2b85a" stroke="#e6eef3" stroke-width="3"/><rect x="64" y="68" width="32" height="7" rx="2" fill="#8c939a"/><circle cx="66" cy="132" r="3.4" fill="#bfe3f5" stroke="#6fa8c8" stroke-width="1"/><circle cx="73" cy="128" r="3.4" fill="#bfe3f5" stroke="#6fa8c8" stroke-width="1"/><circle cx="80" cy="132" r="3.4" fill="#bfe3f5" stroke="#6fa8c8" stroke-width="1"/><circle cx="87" cy="128" r="3.4" fill="#bfe3f5" stroke="#6fa8c8" stroke-width="1"/><circle cx="94" cy="132" r="3.4" fill="#bfe3f5" stroke="#6fa8c8" stroke-width="1"/><line x1="80" y1="124" x2="80" y2="133" stroke="#3a3f45" stroke-width="2"/><circle cx="80" cy="124" r="5.5" fill="#d23a2e"/>
+</g>
+<g transform="translate(140 30)"><circle r="11" fill="#d23a2e"/><path d="M-5 -5 L5 5 M5 -5 L-5 5" stroke="#fff" stroke-width="3"/></g>
+<g transform="translate(300 30)"><circle r="11" fill="#2e9e5b"/><path d="M-5 0 L-1 4 L6 -4" stroke="#fff" stroke-width="3" fill="none"/></g>
+</svg>

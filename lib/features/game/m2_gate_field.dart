@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show Combo, ComboPop, FreezeFrame, RescueBurst, freezeFilter, starsFor;
 import 'level_result_parts.dart';
@@ -36,15 +37,22 @@ import 'scene_kit.dart' show GuideIntro, LinemanFigure, LinemanLook, LinemanMode
 //   2 DO খোলা — LT switch OFF first (off-load), face shield + insulated gloves,
 //     stand to the side (not under), pull the three DO fuses with the hot stick (2.5).
 //   3 মৃত প্রমাণ — multimeter on V~, known live point → R, Y, B → known live
-//     point again (live-dead-live); never on the 11 kV side (2.1, 2.2).
+//     point again (live-dead-live); never on the 11 kV side (2.1, 2.2). The
+//     readings are dealt: on some plays one phase still shows voltage — the
+//     player must stop the work (the line is isolated again and re-tested);
+//     a needless stop is a slip.
 //   4 স্কিনিং ও ক্রিম্পিং — skin away from the body, AL 95 lug on the 95 sq mm
 //     aluminium cable, the hydraulic crimper with the 95 die, pump to the click (2.3, 2.6, 2.9).
 //   5 মেগার — discharge, LINE to the conductor and EARTH to the armour, 500V,
-//     hold the test, discharge again, leads off; the careless coworker pushes
-//     "the multimeter showed infinity, skip the megger" (2.7).
+//     hold the test, discharge again, leads off, then read the dealt IR value:
+//     at or above 1 MΩ the cable may go on; below it the cable stays off (the
+//     team replaces the piece and the player tests again). The careless
+//     coworker pushes "the multimeter showed infinity, skip the megger" (2.7).
 //   6 ফেজ সিকোয়েন্স — line back on: insulated gloves, clip R-Y-B, read FWD /
 //     REV (dealt); reversed → switch off and swap two phases dead (2.8).
-//   7 হাতিয়ারের যত্ন — hot stick, multimeter and pliers cleaned and put away (2.5, 2.10).
+//   7 হাতিয়ারের যত্ন — by hand, not a quiz: pick each tool up, wipe it (hold),
+//     switch the meter OFF, oil the pliers' joint (not the handle), and put it
+//     in its place (wall hooks, waterproof bag, toolbox — never the van floor) (2.5, 2.10).
 // Passing awards the Junior ("জুনিয়র") rank (unlockRank(2)) and the
 // "হাতিয়ারের ওস্তাদ" badge of Module 2.
 
@@ -74,6 +82,9 @@ enum M2PhaseCall { keep, swapDead, swapLive }
 
 enum M2Care { stick, meter, pliers }
 
+/// Where a tool can be put away at station 7.
+enum M2CareSpot { hooks, bag, toolbox, floor }
+
 const _art = 'assets/game/art/m2_gate_field';
 
 abstract final class M2GateMistakes {
@@ -88,6 +99,12 @@ abstract final class M2GateMistakes {
     key: 'm2/gate/damaged-tool',
     textBn: 'ফাটা হাতল, ফাটা স্টিক বা কাটা লিডের টুল ব্যাগে নয় — ইনসুলেশনের ফাটলেই শক। বাতিল করে "ব্যবহারের অযোগ্য" লেবেল দিন।',
     art: '$_art/damaged_tool.svg',
+    lessonPoint: 3,
+  );
+  static const goodRejected = DoMistake(
+    key: 'm2/gate/good-rejected',
+    textBn: 'ভালো টুল বাতিল করলে কাজের হাতিয়ার কম পড়ে — হাতে নিয়ে ফাটল, কাটা লিড, CAT রেটিং দেখে তবেই বাতিল।',
+    art: '$_art/good_rejected.svg',
     lessonPoint: 3,
   );
   static const catTwo = DoMistake(
@@ -144,6 +161,18 @@ abstract final class M2GateMistakes {
   static const allPhases = DoMistake(
     key: 'm2/gate/all-phases',
     textBn: 'তিনটে ফেজই মাপুন — একটা ফেজ শূন্য দেখালেই বাকিগুলো মৃত নয়।',
+    art: '$_art/live_dead_live.svg',
+    lessonPoint: 1,
+  );
+  static const deadCallLive = DoMistake(
+    key: 'm2/gate/dead-call-live',
+    textBn: 'একটা ফেজে এখনো ভোল্টেজ — লাইন মৃত নয়! কাজ থামিয়ে খবর দিন; মৃত প্রমাণ না হলে কেবিলে হাত নয়।',
+    art: '$_art/live_dead_live.svg',
+    lessonPoint: 1,
+  );
+  static const needlessStop = DoMistake(
+    key: 'm2/gate/needless-stop',
+    textBn: 'রিডিং-এ ভোল্টেজ নেই — থামার কারণ নেই। লাইভ-মৃত-লাইভ মেপে, রিডিং দেখে তবে সিদ্ধান্ত।',
     art: '$_art/live_dead_live.svg',
     lessonPoint: 1,
   );
@@ -207,6 +236,18 @@ abstract final class M2GateMistakes {
     art: '$_art/megger_vs_mm.svg',
     lessonPoint: 0,
   );
+  static const megLow = DoMistake(
+    key: 'm2/gate/megger-low',
+    textBn: 'IR 1 MΩ-এর কম মানে ইনসুলেশন দুর্বল বা আর্দ্র — এমন কেবিল চালু করা নিরাপদ নয়।',
+    art: '$_art/megger_ir.svg',
+    lessonPoint: 2,
+  );
+  static const megNeedless = DoMistake(
+    key: 'm2/gate/megger-needless',
+    textBn: 'IR 1 MΩ-এর অনেক বেশি — ইনসুলেশন ভালো। রিডিং পড়ে সিদ্ধান্ত; ভালো কেবিল আটকে রাখার কারণ নেই।',
+    art: '$_art/megger_ir.svg',
+    lessonPoint: 2,
+  );
   static const phaseNoGloves = DoMistake(
     key: 'm2/gate/phase-no-gloves',
     textBn: 'ফেজ সিকোয়েন্স মাপা লাইভ টেস্ট — ইনসুলেটেড গ্লাভস ছাড়া প্রোব লাগানো সাক্ষাৎ মৃত্যু।',
@@ -235,7 +276,7 @@ abstract final class M2GateMistakes {
   );
   static const careStick = DoMistake(
     key: 'm2/gate/care-stick',
-    textBn: 'হট স্টিক মুছে শুকিয়ে ওয়াটারপ্রুফ ব্যাগে বা দেওয়ালে ঝুলিয়ে — মেঝেতে বা ভেজা অবস্থায় নয়।',
+    textBn: 'হট স্টিক মুছে শুকিয়ে ওয়াটারপ্রুফ ব্যাগে বা দেওয়ালে ঝুলিয়ে — মেঝেতে, ভেজা বা মালের নিচে চাপা নয়।',
     art: '$_art/care_stick.svg',
     lessonPoint: 3,
   );
@@ -252,9 +293,17 @@ abstract final class M2GateMistakes {
     lessonPoint: 1,
   );
 
+  static const careFloor = DoMistake(
+    key: 'm2/gate/care-floor',
+    textBn: 'প্রতিটা টুলের একটা নিজের ঘর আছে — ভ্যানের মেঝেতে ফেলে রাখলে টুল ভাঙে, হারায়।',
+    art: '$_art/care_stick.svg',
+    lessonPoint: 0,
+  );
+
   static const all = [
     bambooStick,
     damagedTool,
+    goodRejected,
     catTwo,
     doOnLoad,
     doUnder,
@@ -264,6 +313,8 @@ abstract final class M2GateMistakes {
     liveFirst,
     liveAfter,
     allPhases,
+    deadCallLive,
+    needlessStop,
     skinToward,
     lugMetal,
     lugSize,
@@ -274,6 +325,8 @@ abstract final class M2GateMistakes {
     megVolt,
     megAfter,
     megSkip,
+    megLow,
+    megNeedless,
     phaseNoGloves,
     phaseLiveSwap,
     phaseIgnored,
@@ -281,12 +334,14 @@ abstract final class M2GateMistakes {
     careStick,
     careMeter,
     carePliers,
+    careFloor,
   ];
 
   /// The lesson that teaches each mistake ("পাঠে দেখুন" opens it, not 2.10).
   static const lessonOf = {
     'm2/gate/bamboo-stick': '2.5',
     'm2/gate/damaged-tool': '2.10',
+    'm2/gate/good-rejected': '2.10',
     'm2/gate/cat-two': '2.2',
     'm2/gate/do-on-load': '2.5',
     'm2/gate/do-under': '2.5',
@@ -296,6 +351,8 @@ abstract final class M2GateMistakes {
     'm2/gate/live-first': '2.1',
     'm2/gate/live-after': '2.1',
     'm2/gate/all-phases': '2.2',
+    'm2/gate/dead-call-live': '2.2',
+    'm2/gate/needless-stop': '2.2',
     'm2/gate/skin-toward': '2.6',
     'm2/gate/lug-metal': '2.3',
     'm2/gate/lug-size': '2.3',
@@ -306,6 +363,8 @@ abstract final class M2GateMistakes {
     'm2/gate/megger-volt': '2.7',
     'm2/gate/megger-after': '2.7',
     'm2/gate/megger-skip': '2.7',
+    'm2/gate/megger-low': '2.7',
+    'm2/gate/megger-needless': '2.7',
     'm2/gate/phase-no-gloves': '2.8',
     'm2/gate/phase-live-swap': '2.8',
     'm2/gate/phase-ignored': '2.8',
@@ -313,6 +372,7 @@ abstract final class M2GateMistakes {
     'm2/gate/care-stick': '2.5',
     'm2/gate/care-meter': '2.10',
     'm2/gate/care-pliers': '2.10',
+    'm2/gate/care-floor': '2.10',
   };
 }
 
@@ -341,7 +401,7 @@ abstract final class M2GateLines {
     M2GateStation.skinCrimp: [
       'পোড়া মাথা কাটা হয়েছে। কেবিল ছিলে নতুন ল্যাগ বসান।',
       'ইনসুলেশন ছিলুন, ল্যাগ বসিয়ে ক্রিম্প করুন।',
-      'নিখুঁত স্কিনিং, নিখুঁত ক্রিম্প — শুরু করুন।',
+      'নিখুঁত স্কিনিং, নিখুঁত ক্রিম্প — হাত লাগান।',
     ],
     M2GateStation.megger: [
       'চালুর আগে কেবিলের ইনসুলেশন মেগারে মাপুন।',
@@ -382,19 +442,24 @@ abstract final class M2GateLines {
   };
 
   static const pack = 'ব্যাগে নিন';
+  static const closeDocket = 'বন্ধ করুন';
   static const reject = 'বাতিল করুন';
   static const packed = 'ব্যাগে';
   static const rejected = 'ব্যবহারের অযোগ্য';
-  static const goodTool = 'এটা তো ঠিক আছে — ডকেটের কাজে লাগবে।';
   static const faceShield = 'ফেস শিল্ড';
   static const gloves = 'ইনসুলেটেড গ্লাভস';
   static const standFirst = 'হট স্টিক হাতে আগে জায়গা নিন।';
   static const knownLive = 'জানা লাইভ পয়েন্ট';
-  static const provenDead = 'মৃত প্রমাণিত';
+  static const provenDead = 'মৃত প্রমাণিত · কাজ চলবে';
+  static const stopLive = 'ভোল্টেজ আছে · কাজ থামান';
+  static const stoppedRight = 'ঠিক! কাজ থামালেন, খবর দিলেন। লাইন আবার বিচ্ছিন্ন করা হলো — এবার গোড়া থেকে আবার মাপুন।';
   static const pump = 'পাম্প করুন (চেপে ধরুন)';
   static const discharge = 'ডিসচার্জ';
   static const test = 'TEST (চেপে ধরুন)';
   static const leadsOff = 'লিড খুলুন';
+  static const megOk = 'IR ঠিক আছে · চালু করা যাবে';
+  static const megBad = 'IR কম · কেবিল চালু নয়';
+  static const megReplaced = 'ঠিক! 1 MΩ-এর কম — এ কেবিল চালু নয়। দল কেবিলের টুকরোটা বদলে ল্যাগ বসাল — এবার নতুনটা মাপুন।';
   static const leadsFirst = 'আগে দুটো লিড লাগান।';
   static const testFirst = 'আগে পুরো এক মিনিট টেস্ট করুন।';
   static const holdLonger = 'পুরো এক মিনিট ধরে রাখুন।';
@@ -403,6 +468,14 @@ abstract final class M2GateLines {
   static const phaseSwapLive = 'চালু অবস্থাতেই ফেজ বদল';
   static const swappedDead = 'DO খুলে, মৃত প্রমাণ করে Y আর B বদলানো হলো। আবার চালু — মিটার দেখুন।';
   static const careNames = {M2Care.stick: 'হট স্টিক', M2Care.meter: 'মাল্টিমিটার', M2Care.pliers: 'প্লায়ার্স'};
+  static const wipe = 'মুছুন (চেপে ধরুন)';
+  static const oilCan = 'তেলের ক্যান';
+  static const careSpots = {
+    M2CareSpot.hooks: 'দেওয়ালের হুক',
+    M2CareSpot.bag: 'ওয়াটারপ্রুফ ব্যাগ',
+    M2CareSpot.toolbox: 'টুলবক্স',
+    M2CareSpot.floor: 'ভ্যানের মেঝে',
+  };
 
   static const praise = {
     M2GateStation.pack: 'ব্যাগ তৈরি! ক্ষতিগ্রস্ত টুল বাদ, ঠিক হাতিয়ার সঙ্গে।',
@@ -492,50 +565,6 @@ abstract final class M2GateLines {
     'দুটো ল্যাম্প জ্বেলে দেখাই সবচেয়ে নিরাপদ পদ্ধতি',
   ];
 
-  // --- Tool care (station 7) --------------------------------------------------
-  static const careQ = {
-    M2Care.stick: 'হট স্টিকটা কীভাবে রাখবেন?',
-    M2Care.meter: 'মাল্টিমিটারটা কীভাবে রাখবেন?',
-    M2Care.pliers: 'প্লায়ার্সটার কী যত্ন নেবেন?',
-  };
-  static const careRight = {
-    M2Care.stick: [
-      'মুছে শুকিয়ে ওয়াটারপ্রুফ ব্যাগে রাখি',
-      'মুছে দেওয়ালে ঝুলিয়ে রাখি, মেঝেতে নয়',
-    ],
-    M2Care.meter: [
-      'যন্ত্র বন্ধ করে লিড আলতো গুটিয়ে রাখি',
-      'সুইচ অফ করে, প্রোব দেখে নিজের ঘরে রাখি',
-    ],
-    M2Care.pliers: [
-      'ময়লা মুছে শুধু ধাতব জয়েন্টে পাতলা তেল দিই',
-      'হাতল পরখ করে জয়েন্টে সামান্য তেল দিই',
-    ],
-  };
-  static const careWrong = {
-    M2Care.stick: [
-      'ভ্যানের মেঝেতে শুইয়ে রাখি, জায়গা বাঁচে',
-      'ভেজা অবস্থাতেই ব্যাগে ভরে রেখে দিই',
-      'গাড়ির পেছনে মালপত্রের নিচে চাপা দিই',
-      'সাধারণ লাঠির মতো ডাল নামাতে কাজে লাগাই',
-      'আঁচড় লাগলে বাড়িতে রং করে ঢেকে দিই',
-    ],
-    M2Care.meter: [
-      'চালু রেখেই বাক্সে রাখি, কাল লাগবে',
-      'লিড শক্ত করে পেঁচিয়ে গিঁট বেঁধে রাখি',
-      'ভোঁতা মরচে-ধরা প্রোবেও কোনো অসুবিধা নেই',
-      'নতুন কেনা মিটার, ক্যালিব্রেশন লাগে না',
-      'ভেজা কাপড়ে মুছে রোদে ফেলে রাখি',
-    ],
-    M2Care.pliers: [
-      'হাতলের ইনসুলেশনেও তেল মাখিয়ে চকচকে করি',
-      'পুরো টুলে মোটা গ্রিজ মাখাই, মরিচা ধরবে না',
-      'ভেজা অবস্থাতেই টুলবক্সে ঢুকিয়ে রাখি',
-      'নামী কোম্পানির টুল, যত্নের দরকারই নেই',
-      'হাতুড়ির কাজও এই প্লায়ার্সেই সেরে ফেলি',
-    ],
-  };
-
   // --- The careless coworker (station 5) ---------------------------------------
   static const coworker = CoworkerScript(
     line: 'আরে, মাল্টিমিটারে তো ইনফিনিটি দেখাচ্ছে! মেগার-টেগার ছাড়ো, লাগিয়ে চালু করে দাও।',
@@ -567,8 +596,9 @@ abstract final class M2GateLines {
         intro,
         for (final l in tasks.values) ...l,
         ...praise.values,
-        goodTool,
         standFirst,
+        stoppedRight,
+        megReplaced,
         leadsFirst,
         testFirst,
         holdLonger,
@@ -579,7 +609,6 @@ abstract final class M2GateLines {
         whyLugQ,
         whyMegQ,
         whyPhaseQ,
-        ...careQ.values,
         coworkerHeld,
         ...coworker.asks,
         allSet,
@@ -598,6 +627,19 @@ class M2GateRun {
     lugs = [...M2Lug.values]..shuffle(_rng);
     crimps = [...M2Crimp.values]..shuffle(_rng);
     phaseReversed = _rng.nextBool();
+    // Dealt after the older draws so a seed keeps its shelf, lugs and phase.
+    final live = _rng.nextInt(5) < 2;
+    final livePhase = _rng.nextInt(3);
+    liveLeft = live ? livePhase : null;
+    liveVolts = 226 + _rng.nextInt(12);
+    livePointVolts = 226 + _rng.nextInt(12);
+    deadVolts = [for (var i = 0; i < 3; i++) _rng.nextInt(5) / 10];
+    megLowFirst = _rng.nextInt(5) < 2;
+    megLowValue = const [0.3, 0.4, 0.6, 0.8][_rng.nextInt(4)];
+    megGoodValue = 120.0 + 10 * _rng.nextInt(80);
+    deadCallsSwapped = _rng.nextBool();
+    megCallsSwapped = _rng.nextBool();
+    phaseCalls = [...M2PhaseCall.values]..shuffle(_rng);
   }
 
   final int seed;
@@ -608,6 +650,25 @@ class M2GateRun {
   late final List<M2Lug> lugs;
   late final List<M2Crimp> crimps;
   late final bool phaseReversed;
+
+  /// Station 3: the phase (0 R, 1 Y, 2 B) that still shows voltage after the
+  /// DO fuses are out, or null (the line is dead). Cleared once the player
+  /// stops the work and the line is isolated again.
+  int? liveLeft;
+  late final int liveVolts;
+  late final int livePointVolts;
+  late final List<double> deadVolts;
+
+  /// Station 5: the first IR reading is below 1 MΩ.
+  late final bool megLowFirst;
+  late final double megLowValue;
+  late final double megGoodValue;
+
+  /// The order of the two-way calls on screen (dealt, so the right one is not
+  /// always in the same place).
+  late final bool deadCallsSwapped;
+  late final bool megCallsSwapped;
+  late final List<M2PhaseCall> phaseCalls;
 
   static const docketTools = {
     M2Tool.pliers,
@@ -640,7 +701,11 @@ class M2GateRun {
     return m;
   }
 
+  /// Listening to the careless coworker at station 5 (a slip).
+  DoMistake? listenedToCoworker() => ended ? null : _slip(M2GateMistakes.megSkip);
+
   void advanceStation() {
+    if (deadly != null) return;
     completed.add(station);
     final next = station.index + 1;
     if (next < M2GateStation.values.length) station = M2GateStation.values[next];
@@ -655,19 +720,20 @@ class M2GateRun {
   /// Puts [t] in the bag. The bamboo stick is deadly; the damaged twin a slip
   /// (it stays on the shelf to be rejected).
   DoMistake? packTool(M2Tool t) {
-    if (settled(t)) return null;
+    if (ended || settled(t)) return null;
     if (t == M2Tool.bamboo) return deadly = M2GateMistakes.bambooStick;
     if (t == M2Tool.flawed) return _slip(flaw == M2Flaw.catTwo ? M2GateMistakes.catTwo : M2GateMistakes.damagedTool);
     packed.add(t);
     return null;
   }
 
-  /// Rejects [t]; false (no cost) when it is a good docket tool.
-  bool rejectTool(M2Tool t) {
-    if (!traps.contains(t)) return false;
+  /// Rejects [t]. A good docket tool is a slip (it stays on the shelf).
+  DoMistake? rejectTool(M2Tool t) {
+    if (ended || settled(t)) return null;
+    if (!traps.contains(t)) return _slip(M2GateMistakes.goodRejected);
     rejected.add(t);
     tag(t == M2Tool.bamboo ? 'বাঁশের লাঠি বাতিল' : 'ক্ষতিগ্রস্ত টুল বাতিল');
-    return true;
+    return null;
   }
 
   bool get packDone => packed.containsAll(docketTools) && rejected.containsAll(traps);
@@ -680,14 +746,14 @@ class M2GateRun {
   final List<bool> doOpen = [false, false, false];
 
   void switchLtOff() {
-    if (!ltOn) return;
+    if (ended || !ltOn) return;
     ltOn = false;
     tag('অফ-লোডে DO খোলা');
   }
 
   /// Pulls DO [i] with the hot stick (needs a stance).
   DoMistake? pullDo(int i) {
-    if (stance == null || doOpen[i]) return null;
+    if (ended || stance == null || doOpen[i]) return null;
     if (ltOn) return deadly = M2GateMistakes.doOnLoad;
     if (stance == M2Stance.under) return deadly = M2GateMistakes.doUnder;
     if (!faceShield || !doGloves) return _slip(M2GateMistakes.doNoPpe);
@@ -705,9 +771,16 @@ class M2GateRun {
   final Set<int> tested = {};
   var provenDead = false;
 
+  /// A phase that still shows voltage has been read.
+  bool get sawLive {
+    final l = liveLeft;
+    return l != null && tested.contains(l);
+  }
+
   /// The known live point: before the phases it proves the meter; after all
   /// three it proves it again.
   DoMistake? probeLive() {
+    if (ended) return null;
     if (dial != M2Dial.acV) return _slip(M2GateMistakes.mmDial);
     if (tested.length == 3) {
       liveAfter = true;
@@ -719,25 +792,42 @@ class M2GateRun {
 
   /// Phase [i] (0 R, 1 Y, 2 B) to neutral.
   DoMistake? probePhase(int i) {
+    if (ended) return null;
     if (dial != M2Dial.acV) return _slip(M2GateMistakes.mmDial);
     if (!liveBefore) return _slip(M2GateMistakes.liveFirst);
     tested.add(i);
     return null;
   }
 
-  DoMistake? probeHt() => deadly = M2GateMistakes.mmOnHt;
+  DoMistake? probeHt() => ended ? null : deadly = M2GateMistakes.mmOnHt;
 
   DoMistake? confirmDead() {
+    if (ended || provenDead) return null;
     if (tested.length < 3) return _slip(M2GateMistakes.allPhases);
+    if (sawLive) return _slip(M2GateMistakes.deadCallLive);
     if (!liveAfter) return _slip(M2GateMistakes.liveAfter);
     provenDead = true;
     tag('লাইভ-মৃত-লাইভ পরীক্ষা');
     return null;
   }
 
+  /// "Voltage — stop the work": right only once a live phase has been read;
+  /// the line is then isolated again and the test starts over.
+  DoMistake? stopWork() {
+    if (ended || provenDead) return null;
+    if (!sawLive) return _slip(M2GateMistakes.needlessStop);
+    liveLeft = null;
+    tested.clear();
+    liveBefore = false;
+    liveAfter = false;
+    tag('ফেজে ভোল্টেজ পেয়ে কাজ থামানো');
+    return null;
+  }
+
   /// What the display shows for a probe of the known live point / a phase.
-  static String readingLive() => '230 V';
-  static String readingDead() => '0.0 V';
+  String readingLive() => '$livePointVolts V';
+  String readingPhase(int i) => i == liveLeft ? '$liveVolts V' : '${deadVolts[i].toStringAsFixed(1)} V';
+  static String readingNeutral() => '0.0 V';
 
   // 4. Skin and crimp ---------------------------------------------------------
   var skinned = false;
@@ -746,7 +836,7 @@ class M2GateRun {
   var crimped = false;
 
   DoMistake? skin({required bool awayFromBody}) {
-    if (skinned) return null;
+    if (ended || skinned) return null;
     if (!awayFromBody) return _slip(M2GateMistakes.skinToward);
     skinned = true;
     tag('শরীর থেকে বাইরে স্কিনিং');
@@ -754,7 +844,7 @@ class M2GateRun {
   }
 
   DoMistake? chooseLug(M2Lug l) {
-    if (!skinned || lug != null) return null;
+    if (ended || !skinned || lug != null) return null;
     if (l == M2Lug.cu95) return _slip(M2GateMistakes.lugMetal);
     if (l != M2Lug.al95) return _slip(M2GateMistakes.lugSize);
     lug = l;
@@ -762,7 +852,7 @@ class M2GateRun {
   }
 
   DoMistake? chooseCrimp(M2Crimp c) {
-    if (lug == null || crimpTool != null) return null;
+    if (ended || lug == null || crimpTool != null) return null;
     if (c == M2Crimp.pliers) return _slip(M2GateMistakes.crimpPliers);
     if (c == M2Crimp.hyd70) return _slip(M2GateMistakes.wrongDie);
     crimpTool = c;
@@ -770,7 +860,7 @@ class M2GateRun {
   }
 
   DoMistake? crimp({required bool fullCycle}) {
-    if (crimpTool == null || crimped) return null;
+    if (ended || crimpTool == null || crimped) return null;
     if (!fullCycle) return _slip(M2GateMistakes.underCrimp);
     crimped = true;
     tag('AL 95 ল্যাগ, পুরো চাপে ক্রিম্প');
@@ -785,8 +875,17 @@ class M2GateRun {
   var megTested = false;
   var dischargedAfter = false;
   var leadsOff = false;
+  var cableReplaced = false;
+  var megJudged = false;
+
+  /// The cable under test reads below 1 MΩ.
+  bool get megLow => megLowFirst && !cableReplaced;
+
+  /// The IR value (MΩ) of the cable under test.
+  double get megValue => megLow ? megLowValue : megGoodValue;
 
   void dischargeCable() {
+    if (ended) return;
     if (megTested) {
       dischargedAfter = true;
     } else {
@@ -795,6 +894,7 @@ class M2GateRun {
   }
 
   DoMistake? clipLead({required bool line}) {
+    if (ended || megTested) return null;
     if (!dischargedBefore) return _slip(M2GateMistakes.megUndischarged);
     line ? lineLead = true : earthLead = true;
     return null;
@@ -804,7 +904,7 @@ class M2GateRun {
 
   /// The one-minute test (needs both leads).
   DoMistake? runMegger() {
-    if (!leadsOn || megTested) return null;
+    if (ended || !leadsOn || megTested) return null;
     if (megV != M2MegV.v500) return _slip(M2GateMistakes.megVolt);
     megTested = true;
     tag('500V-এ মেগার, আগে-পরে ডিসচার্জ');
@@ -812,13 +912,36 @@ class M2GateRun {
   }
 
   DoMistake? removeLeads() {
-    if (!megTested || leadsOff) return null;
+    if (ended || !megTested || leadsOff) return null;
     if (!dischargedAfter) return _slip(M2GateMistakes.megAfter);
     leadsOff = true;
     return null;
   }
 
-  static String readingMegger() => '250 MΩ';
+  /// The call on the reading once the leads are off: [ok] = the cable may go
+  /// on. Below 1 MΩ the cable stays off — the team replaces the piece and the
+  /// test starts over.
+  DoMistake? judgeMegger({required bool ok}) {
+    if (ended || !leadsOff || megJudged) return null;
+    if (ok && megLow) return _slip(M2GateMistakes.megLow);
+    if (!ok && !megLow) return _slip(M2GateMistakes.megNeedless);
+    if (!ok) {
+      cableReplaced = true;
+      dischargedBefore = false;
+      lineLead = false;
+      earthLead = false;
+      megTested = false;
+      dischargedAfter = false;
+      leadsOff = false;
+      tag('1 MΩ-এর কম — কেবিল চালু নয়');
+      return null;
+    }
+    megJudged = true;
+    return null;
+  }
+
+  /// [v] MΩ as the megger shows it.
+  static String megText(double v) => v < 10 ? '${v.toStringAsFixed(1)} MΩ' : '${v.round()} MΩ';
 
   // 6. Phase sequence ------------------------------------------------------------
   var phaseGloves = false;
@@ -827,7 +950,7 @@ class M2GateRun {
   var phaseDone = false;
 
   DoMistake? clipPhase(int i) {
-    if (clips.contains(i)) return null;
+    if (ended || clips.contains(i)) return null;
     if (!phaseGloves) return deadly = M2GateMistakes.phaseNoGloves;
     clips.add(i);
     return null;
@@ -838,7 +961,7 @@ class M2GateRun {
 
   DoMistake? decidePhase(M2PhaseCall call) {
     final fwd = phaseFwd;
-    if (fwd == null || phaseDone) return null;
+    if (ended || fwd == null || phaseDone) return null;
     if (call == M2PhaseCall.swapLive) return deadly = M2GateMistakes.phaseLiveSwap;
     if (!fwd) {
       if (call == M2PhaseCall.keep) return _slip(M2GateMistakes.phaseIgnored);
@@ -852,19 +975,60 @@ class M2GateRun {
     return null;
   }
 
-  // 7. Tool care --------------------------------------------------------------
+  // 7. Tool care (by hand) -------------------------------------------------------
+  /// Put away right.
   final Set<M2Care> cared = {};
 
-  DoMistake? care(M2Care item, {required bool right}) {
-    if (cared.contains(item)) return null;
-    if (!right) {
-      return _slip(switch (item) {
+  /// The tool in the player's hand.
+  M2Care? careHeld;
+  final Set<M2Care> wiped = {};
+  var meterOff = false;
+  var pliersOiled = false;
+
+  /// Picks [c] up off the bench (a tool already in hand goes back).
+  void pickCare(M2Care c) {
+    if (ended || cared.contains(c)) return;
+    careHeld = c;
+  }
+
+  void wipeHeld() {
+    final c = careHeld;
+    if (ended || c == null) return;
+    wiped.add(c);
+  }
+
+  void switchMeterOff() {
+    if (ended || careHeld != M2Care.meter) return;
+    meterOff = true;
+  }
+
+  /// Oil on the pliers in hand: the metal joint, or the insulated handle (a slip).
+  DoMistake? oilPliers({required bool joint}) {
+    if (ended || careHeld != M2Care.pliers || pliersOiled) return null;
+    if (!joint) return _slip(M2GateMistakes.carePliers);
+    pliersOiled = true;
+    return null;
+  }
+
+  static DoMistake _careMistake(M2Care c) => switch (c) {
         M2Care.stick => M2GateMistakes.careStick,
         M2Care.meter => M2GateMistakes.careMeter,
         M2Care.pliers => M2GateMistakes.carePliers,
-      });
-    }
-    cared.add(item);
+      };
+
+  /// Puts the tool in hand at [spot]. A slip keeps it in hand.
+  DoMistake? storeHeld(M2CareSpot spot) {
+    final c = careHeld;
+    if (ended || c == null) return null;
+    if (spot == M2CareSpot.floor) return _slip(c == M2Care.stick ? M2GateMistakes.careStick : M2GateMistakes.careFloor);
+    final ready = switch (c) {
+      M2Care.stick => wiped.contains(c) && spot != M2CareSpot.toolbox,
+      M2Care.meter => meterOff,
+      M2Care.pliers => wiped.contains(c) && pliersOiled,
+    };
+    if (!ready) return _slip(_careMistake(c));
+    cared.add(c);
+    careHeld = null;
     if (careDone) tag('দিনের শেষে হাতিয়ারের যত্ন');
     return null;
   }
@@ -933,6 +1097,8 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   late final M2GateRun _run = M2GateRun(widget.seed);
   final _clock = Stopwatch();
   late bool _muted = widget.muted;
+  final _hints = IdleHintController();
+  final _gk = <String, GlobalKey>{};
 
   int _runScore = 0;
   int _totalDelta = 0;
@@ -972,15 +1138,17 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   Timer? _holdTimer;
   double _megProgress = 0;
   String _megReading = '- - -';
-  M2Care? _careItem;
-  List<ChoiceOption> _careOpts = const [];
-  final Set<String> _careWrong = {};
-  String? _carePicked;
+  double _wipe = 0;
+  var _oilMode = false;
+  final Map<M2Care, M2CareSpot> _stored = {};
 
   @override
   LevelContext get deathCtx => widget.ctx;
 
   bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
+
+  /// A global key per control id (the gesture hint sweeps over them).
+  GlobalKey _k(String id) => _gk.putIfAbsent(id, GlobalKey.new);
 
   @override
   void dispose() {
@@ -1016,10 +1184,9 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   }
 
   Future<void> _start() async {
-    setState(() {
-      _intro = false;
-      _docketOpen = true;
-    });
+    // Guide first: no docket to dismiss, no start button — the play begins
+    // when the intro ends (the docket opens from the station chip).
+    setState(() => _intro = false);
     _clock.start();
     await _enterStation();
   }
@@ -1038,7 +1205,8 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   }
 
   void _tapGuide() {
-    if (_intro || _ended) return;
+    // Never over the coworker's beats or a deck's question.
+    if (_intro || _ended || coworkerOpen || reasonOpen) return;
     final lines = M2GateLines.tasks[_run.station]!;
     _tapN++;
     _cue('sounds/learn/tick.wav', volume: 0.5);
@@ -1047,7 +1215,30 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     unawaited(MascotSpeechLibrary.speak(line, muted: _muted));
   }
 
-  bool get _canAct => !_busy && !_ended && _card == null && !reasonOpen && !coworkerChoiceUp && !_intro && !_docketOpen && !struckOut;
+  /// The scene takes input: not in the praise window, a card, a deck, the
+  /// coworker's beats, the death freeze or after the end.
+  bool get _canAct =>
+      !_busy &&
+      !_ended &&
+      !_freeze &&
+      _run.deadly == null &&
+      _card == null &&
+      !tableBusy &&
+      !reasonOpen &&
+      !coworkerOpen &&
+      !_intro &&
+      !_docketOpen &&
+      !struckOut;
+
+  /// A deadly move: from this moment nothing else in the scene counts.
+  void _lockForDeath() {
+    _busy = true;
+    _ended = true;
+    _holdTimer?.cancel();
+    _holdTimer = null;
+    _oilMode = false;
+    _hush();
+  }
 
   // --- scoring ------------------------------------------------------------------
   int _scored(int base) {
@@ -1079,20 +1270,16 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     });
   }
 
-  /// A station's last right move: ◆ on the table, praise, the reason deck.
+  /// A station's last right move: ◆ wait on the table (paid only by the
+  /// reason), praise, the reason deck.
   Future<void> _stationWon(Offset origin, String question, List<String> right, List<String> wrong, int salt) async {
     _busy = true;
     HapticFeedback.lightImpact();
     _cue('sounds/quiz_right.wav', volume: 0.7);
-    final delta = _scored(20);
-    _totalDelta += delta;
-    setState(() => _runScore += delta);
-    await BeatFx.levelDelta(ref, delta, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
-    if (!mounted) return;
+    putOnTable(_scored(20));
     final praise = M2GateLines.praise[_run.station];
     if (praise != null) await _say(praise, mood: GuideMood.celebrate);
-    if (!mounted) return;
-    putOnTable(delta);
+    if (!mounted || _ended) return;
     _busy = false;
     await askReason(
       deal: () => dealChoices(right, wrong, math.Random(widget.seed + salt)),
@@ -1102,13 +1289,21 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   }
 
   Future<void> _handleMistake(DoMistake m) async {
+    if (!mounted) return;
+    // Nothing but the death itself counts once a deadly move is made.
+    if (!m.deadly && (_run.deadly != null || _freeze)) return;
     HapticFeedback.heavyImpact();
     _cue('sounds/quiz_wrong.wav');
     _combo.miss();
     _holdTimer?.cancel();
+    _holdTimer = null;
     if (m.deadly) {
+      _lockForDeath();
       final frozen = _frozen = Completer<void>();
-      setState(() => _freeze = true);
+      setState(() {
+        _freeze = true;
+        _inspect = null;
+      });
       final outcome = await bookDeadly(m, runScore: _runScore);
       await frozen.future;
       if (!mounted) return;
@@ -1116,7 +1311,6 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
         _freeze = false;
         _card = m;
         _cardTone = outcome == DeadlyOutcome.nearMiss ? MistakeTone.nearMiss : MistakeTone.deadly;
-        _busy = false;
       });
     } else {
       final out = strike(m);
@@ -1125,9 +1319,23 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
         _card = m;
         _cardTone = MistakeTone.slip;
         _busy = false;
+        _oilMode = false;
       });
       if (out) unawaited(recordStrikeOut(widget.ctx, percent: _run.percent, runScore: _runScore));
     }
+  }
+
+  /// Plays the spark of a deadly move (the scene is locked first).
+  Future<void> _deathSpark(Offset at, {bool accident = true}) async {
+    _lockForDeath();
+    _cue('sounds/learn/spark.wav', volume: 0.95);
+    if (accident) _cue('sounds/accident.wav', volume: 0.7);
+    setState(() {
+      _sparkAt = at;
+      _sparkBig = true;
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    if (mounted) setState(() => _sparkAt = null);
   }
 
   // --- ReasonTable hooks ----------------------------------------------------------
@@ -1167,10 +1375,12 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   @override
   bool get coworkerMuted => _muted;
 
+  /// He pushes "skip the megger": only at station 5, before the test has run.
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.station != M2GateStation.megger || _run.megTested) return null;
-    if (_busy || _card != null || reasonOpen || _holdTimer != null || _docketOpen) return false;
+    // A strike-out ends his moment too (slips never end the run itself).
+    if (_ended || _run.ended || struckOut || _run.station != M2GateStation.megger || _run.megTested || _run.megJudged) return null;
+    if (tableBusy || _busy || _freeze || _card != null || _holdTimer != null || _docketOpen || _inspect != null) return false;
     return true;
   }
 
@@ -1190,7 +1400,9 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       await Future<void>.delayed(const Duration(milliseconds: 900));
       await _say(M2GateLines.coworkerHeld, mood: GuideMood.glad);
     } else {
-      await _handleMistake(_run._slip(M2GateMistakes.megSkip));
+      // Listening is the slip (playbook beat 8); the megger is still to do.
+      final m = _run.listenedToCoworker();
+      if (m != null) await _handleMistake(m);
     }
   }
 
@@ -1204,32 +1416,16 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
 
   Future<void> _onPack(bool pack, Offset origin) async {
     final t = _inspect;
-    if (t == null || _busy) return;
+    if (t == null || !_canAct) return;
     _hush();
     setState(() => _inspect = null);
-    if (pack) {
-      final m = _run.packTool(t);
-      if (m != null) {
-        if (m.deadly) {
-          _cue('sounds/learn/spark.wav', volume: 0.9);
-          setState(() {
-            _sparkAt = const Offset(180, 220);
-            _sparkBig = true;
-          });
-          await Future<void>.delayed(const Duration(milliseconds: 450));
-          if (mounted) setState(() => _sparkAt = null);
-        }
-        await _handleMistake(m);
-        return;
-      }
-      _cue('sounds/intro/drop.ogg', volume: 0.7);
-    } else {
-      if (!_run.rejectTool(t)) {
-        unawaited(_say(M2GateLines.goodTool));
-        return;
-      }
-      _cue('sounds/learn/tag_slap.wav', volume: 0.8);
+    final m = pack ? _run.packTool(t) : _run.rejectTool(t);
+    if (m != null) {
+      if (m.deadly) await _deathSpark(const Offset(180, 220), accident: false);
+      await _handleMistake(m);
+      return;
     }
+    _cue(pack ? 'sounds/intro/drop.ogg' : 'sounds/learn/tag_slap.wav', volume: pack ? 0.7 : 0.8);
     setState(() => _wake++);
     if (_run.packDone) {
       await _stationWon(origin, M2GateLines.whyPackQ, M2GateLines.whyPackRight, M2GateLines.whyPackWrong, 11);
@@ -1289,16 +1485,8 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     if (!mounted) return;
     final m = _run.pullDo(i);
     if (m != null) {
-      if (m.deadly) {
-        _cue('sounds/learn/spark.wav', volume: 0.95);
-        _cue('sounds/accident.wav', volume: 0.7);
-        setState(() {
-          _sparkAt = geo.doRing(i).translate(0, -18);
-          _sparkBig = true;
-        });
-        await Future<void>.delayed(const Duration(milliseconds: 500));
-        if (mounted) setState(() => _sparkAt = null);
-      }
+      if (m.deadly) await _deathSpark(geo.doRing(i).translate(0, -18));
+      if (!mounted) return;
       setState(() => _stickTo = null);
       await _handleMistake(m);
       return;
@@ -1314,25 +1502,32 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     setState(() {
       _sparkAt = null;
       _stickTo = null;
+      _busy = false;
     });
-    _busy = false;
     if (_run.doDone) {
       await _stationWon(origin, M2GateLines.whyDoQ, M2GateLines.whyDoRight, M2GateLines.whyDoWrong, 22);
     }
   }
 
   // --- station 3: prove dead ----------------------------------------------------------
+  static String _dialFace(M2Dial d) => switch (d) {
+        M2Dial.acV => '0.0 V',
+        M2Dial.dcV => '0.0 V⎓',
+        M2Dial.ohm => 'OL Ω',
+        M2Dial.beep => 'OL',
+      };
+
   void _onDial(M2Dial d) {
     if (!_canAct) return;
     HapticFeedback.selectionClick();
     _cue('sounds/intro/tick.ogg', volume: 0.8);
     setState(() {
       _run.dial = d;
-      _meterReading = d == M2Dial.acV ? '0.0 V' : (d == M2Dial.dcV ? '0.0 V⎓' : (d == M2Dial.ohm ? 'OL Ω' : 'OL'));
+      _meterReading = _dialFace(d);
     });
   }
 
-  Future<void> _onProbe(Offset at, Future<DoMistake?> Function() act, String reading) async {
+  Future<void> _onProbe(Offset at, DoMistake? Function() act, String Function() reading) async {
     if (!_canAct) return;
     if (_run.dial == null) {
       unawaited(_say(M2GateLines.tasks[M2GateStation.proveDead]!.first));
@@ -1341,37 +1536,43 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     _hush();
     HapticFeedback.selectionClick();
     _cue('sounds/intro/click.ogg', volume: 0.6);
-    final m = await act();
+    final m = act();
     if (m != null) {
       if (m.deadly) {
-        _cue('sounds/learn/spark.wav', volume: 0.95);
-        _cue('sounds/accident.wav', volume: 0.7);
-        setState(() {
-          _probeAt = at;
-          _sparkAt = at;
-          _sparkBig = true;
-        });
-        await Future<void>.delayed(const Duration(milliseconds: 450));
-        if (mounted) setState(() => _sparkAt = null);
+        setState(() => _probeAt = at);
+        await _deathSpark(at);
       }
       await _handleMistake(m);
       return;
     }
     setState(() {
       _probeAt = at;
-      _meterReading = reading;
+      _meterReading = reading();
     });
   }
 
-  Future<void> _onConfirmDead(Offset origin) async {
+  Future<void> _onDeadCall({required bool dead, required Offset origin}) async {
     if (!_canAct || _run.provenDead) return;
     _hush();
-    final m = _run.confirmDead();
+    final m = dead ? _run.confirmDead() : _run.stopWork();
     if (m != null) {
       await _handleMistake(m);
       return;
     }
-    await _stationWon(origin, M2GateLines.whyDeadQ, M2GateLines.whyDeadRight, M2GateLines.whyDeadWrong, 33);
+    if (dead) {
+      await _stationWon(origin, M2GateLines.whyDeadQ, M2GateLines.whyDeadRight, M2GateLines.whyDeadWrong, 33);
+      return;
+    }
+    // Stopped on a live reading: the line is isolated again; test it again.
+    _busy = true;
+    _cue('sounds/intro/impact_metal.ogg', volume: 0.6);
+    setState(() {
+      _probeAt = null;
+      _meterReading = _run.dial == null ? '- - -' : _dialFace(_run.dial!);
+      _wake++;
+    });
+    await _say(M2GateLines.stoppedRight, mood: GuideMood.glad);
+    if (mounted) setState(() => _busy = false);
   }
 
   // --- station 4: skin & crimp --------------------------------------------------------
@@ -1418,6 +1619,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   void _holdStart(void Function() tick) {
     if (!_canAct || _holdTimer != null) return;
     _hush();
+    _hints.hide();
     _holdTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
       if (!mounted) return;
       tick();
@@ -1452,7 +1654,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       await _handleMistake(m);
       return;
     }
-    if (!full) return;
+    if (!full || !mounted) return;
     HapticFeedback.heavyImpact();
     _cue('sounds/intro/click.ogg', volume: 1);
     final size = MediaQuery.sizeOf(context);
@@ -1487,13 +1689,15 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   }
 
   void _onMegV(M2MegV v) {
-    if (!_canAct) return;
+    if (!_canAct || _run.megTested) return;
     _cue('sounds/intro/tick.ogg', volume: 0.8);
     setState(() => _run.megV = v);
   }
 
   void _testStart() {
     if (!_canAct || _run.megTested) return;
+    // The coworker's push is about this test: he comes before it can run.
+    if (holdForCoworker()) return;
     if (!_run.leadsOn) {
       unawaited(_say(M2GateLines.leadsFirst));
       return;
@@ -1501,20 +1705,23 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     if (_run.megV != M2MegV.v500) {
       // Pressing TEST on the wrong voltage is the slip.
       _hush();
-      unawaited(_handleMistake(_run.runMegger()!));
+      final m = _run.runMegger();
+      if (m != null) unawaited(_handleMistake(m));
       return;
     }
+    final target = _run.megValue;
     _holdStart(() {
       setState(() {
         _megProgress = math.min(1, _megProgress + 0.03);
-        _megReading = '${(40 + 210 * _megProgress).round()} MΩ';
+        _megReading = M2GateRun.megText(target * (0.2 + 0.8 * _megProgress));
       });
       if (_megProgress >= 1) {
         _holdTimer?.cancel();
         _holdTimer = null;
         _run.runMegger();
-        _cue('sounds/quiz_right.wav', volume: 0.5);
-        setState(() => _megReading = M2GateRun.readingMegger());
+        // A neutral tick: the reading, not the sound, tells good from bad.
+        _cue('sounds/learn/tock.wav', volume: 0.6);
+        setState(() => _megReading = M2GateRun.megText(target));
       }
     });
   }
@@ -1534,7 +1741,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   }
 
   Future<void> _onLeadsOff(Offset origin) async {
-    if (!_canAct) return;
+    if (!_canAct || _run.leadsOff) return;
     if (!_run.megTested) {
       unawaited(_say(M2GateLines.testFirst));
       return;
@@ -1546,8 +1753,32 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       await _handleMistake(m);
       return;
     }
+    _cue('sounds/intro/click.ogg', volume: 0.7);
     setState(() => _wake++);
-    await _stationWon(origin, M2GateLines.whyMegQ, M2GateLines.whyMegRight, M2GateLines.whyMegWrong, 55);
+  }
+
+  Future<void> _onMegCall({required bool ok, required Offset origin}) async {
+    if (!_canAct || !_run.leadsOff || _run.megJudged) return;
+    _hush();
+    final m = _run.judgeMegger(ok: ok);
+    if (m != null) {
+      await _handleMistake(m);
+      return;
+    }
+    if (ok) {
+      await _stationWon(origin, M2GateLines.whyMegQ, M2GateLines.whyMegRight, M2GateLines.whyMegWrong, 55);
+      return;
+    }
+    // Below 1 MΩ: the cable stays off; the team replaces it; test again.
+    _busy = true;
+    _cue('sounds/intro/impact_metal.ogg', volume: 0.6);
+    setState(() {
+      _megProgress = 0;
+      _megReading = '- - -';
+      _wake++;
+    });
+    await _say(M2GateLines.megReplaced, mood: GuideMood.glad);
+    if (mounted) setState(() => _busy = false);
   }
 
   // --- station 6: phase ---------------------------------------------------------------
@@ -1556,22 +1787,12 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     _hush();
     final m = _run.clipPhase(i);
     if (m != null) {
-      if (m.deadly) {
-        _cue('sounds/learn/spark.wav', volume: 0.95);
-        _cue('sounds/accident.wav', volume: 0.7);
-        setState(() {
-          _sparkAt = at;
-          _sparkBig = true;
-        });
-        await Future<void>.delayed(const Duration(milliseconds: 450));
-        if (mounted) setState(() => _sparkAt = null);
-      }
+      if (m.deadly) await _deathSpark(at);
       await _handleMistake(m);
       return;
     }
     _cue('sounds/intro/click.ogg', volume: 0.7);
     setState(() => _wake++);
-    if (_run.clips.length == 3) _cue(_run.phaseFwd! ? 'sounds/intro/confirm.ogg' : 'sounds/learn/tick.wav', volume: 0.7);
   }
 
   Future<void> _onPhaseCall(M2PhaseCall c, Offset origin) async {
@@ -1580,17 +1801,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     final wasFwd = _run.phaseFwd;
     final m = _run.decidePhase(c);
     if (m != null) {
-      if (m.deadly) {
-        _cue('sounds/learn/spark.wav', volume: 0.95);
-        _cue('sounds/accident.wav', volume: 0.7);
-        final g = M2TermGeo(_sceneH);
-        setState(() {
-          _sparkAt = g.term(1);
-          _sparkBig = true;
-        });
-        await Future<void>.delayed(const Duration(milliseconds: 450));
-        if (mounted) setState(() => _sparkAt = null);
-      }
+      if (m.deadly) await _deathSpark(M2TermGeo(_sceneH).term(1));
       await _handleMistake(m);
       return;
     }
@@ -1599,50 +1810,96 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       _cue('sounds/intro/impact_metal.ogg', volume: 0.6);
       setState(() => _wake++);
       await _say(M2GateLines.swappedDead);
-      _busy = false;
+      if (mounted) setState(() => _busy = false);
       return;
     }
     await _stationWon(origin, M2GateLines.whyPhaseQ, M2GateLines.whyPhaseRight, M2GateLines.whyPhaseWrong, 66);
   }
 
-  // --- station 7: tool care ------------------------------------------------------------
+  // --- station 7: tool care (by hand) ---------------------------------------------------
   void _onCareTool(M2Care c) {
-    if (!_canAct || _run.cared.contains(c) || _careItem != null) return;
-    _hush();
+    if (!_canAct || _run.cared.contains(c) || _holdTimer != null) return;
+    HapticFeedback.selectionClick();
     _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
     setState(() {
-      _careItem = c;
-      _careWrong.clear();
-      _carePicked = null;
-      _careOpts = dealChoices(M2GateLines.careRight[c]!, M2GateLines.careWrong[c]!, math.Random(widget.seed + 70 + c.index));
+      _run.pickCare(c);
+      _oilMode = false;
+      _wipe = 0;
+      _wake++;
     });
-    unawaited(_say(M2GateLines.careQ[c]!));
   }
 
-  Future<void> _onCarePick(ChoiceOption o, Offset origin) async {
-    final c = _careItem;
-    if (c == null || _busy || _card != null || _careWrong.contains(o.textBn) || _carePicked != null) return;
+  void _wipeTick() {
+    setState(() => _wipe = math.min(1, _wipe + 0.06));
+    if (_wipe >= 1) {
+      _holdTimer?.cancel();
+      _holdTimer = null;
+      _cue('sounds/learn/card_deal_b.wav', volume: 0.6);
+      setState(() {
+        _run.wipeHeld();
+        _wipe = 0;
+        _wake++;
+      });
+    }
+  }
+
+  void _wipeRelease() {
+    final t = _holdTimer;
+    if (t == null) return;
+    t.cancel();
+    _holdTimer = null;
+    if (_wipe < 1) setState(() => _wipe = 0);
+  }
+
+  void _onMeterSwitch() {
+    if (!_canAct || _run.careHeld != M2Care.meter || _run.meterOff) return;
+    HapticFeedback.selectionClick();
+    _cue('sounds/intro/click.ogg', volume: 0.8);
+    setState(() {
+      _run.switchMeterOff();
+      _wake++;
+    });
+  }
+
+  void _onOilCan() {
+    if (!_canAct || _run.careHeld != M2Care.pliers || _run.pliersOiled) return;
+    HapticFeedback.selectionClick();
+    _cue('sounds/learn/tock.wav', volume: 0.5);
+    setState(() => _oilMode = !_oilMode);
+  }
+
+  Future<void> _onOilAt({required bool joint}) async {
+    if (!_canAct || !_oilMode) return;
     _hush();
-    if (!o.correct) {
-      setState(() => _careWrong.add(o.textBn));
-      await Future<void>.delayed(const Duration(milliseconds: 420));
-      if (!mounted) return;
-      final m = _run.care(c, right: false);
-      if (m != null) await _handleMistake(m);
+    setState(() => _oilMode = false);
+    final m = _run.oilPliers(joint: joint);
+    if (m != null) {
+      await _handleMistake(m);
+      return;
+    }
+    _cue('sounds/learn/tock.wav', volume: 0.6);
+    setState(() => _wake++);
+  }
+
+  Future<void> _onStore(M2CareSpot spot, Offset origin) async {
+    final c = _run.careHeld;
+    if (!_canAct || c == null || _holdTimer != null) return;
+    _hush();
+    final m = _run.storeHeld(spot);
+    if (m != null) {
+      await _handleMistake(m);
       return;
     }
     _busy = true;
-    setState(() => _carePicked = o.textBn);
-    _run.care(c, right: true);
-    _cue('sounds/quiz_right.wav', volume: 0.7);
-    await _pay(10, origin);
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
+    _cue('sounds/intro/drop.ogg', volume: 0.7);
     setState(() {
-      _careItem = null;
+      _stored[c] = spot;
+      _oilMode = false;
       _wake++;
     });
-    _busy = false;
+    await _pay(10, origin);
+    if (!mounted) return;
+    setState(() => _busy = false);
     if (_run.careDone) {
       _run.advanceStation();
       _triggerBloom();
@@ -1725,6 +1982,99 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   }
 
   // ============================================================================
+  // Gesture hint (how to touch, never what)
+  // ============================================================================
+
+  /// The control ids open now: a sweep passes over all of them alike; a hold
+  /// or tap hint only where there is one way forward.
+  HintSpec? _hint() {
+    if (!_canAct || _holdTimer != null) return null;
+    final ids = <String>[];
+    switch (_run.station) {
+      case M2GateStation.pack:
+        if (_inspect != null) {
+          ids.addAll(['reject', 'pack']);
+        } else {
+          ids.addAll([for (final t in _run.shelf) if (!_run.settled(t)) 'shelf-${t.name}']);
+        }
+      case M2GateStation.doOpen:
+        ids.addAll([
+          if (_run.ltOn) 'lt-switch',
+          if (!_run.faceShield) 'wear-shield',
+          if (!_run.doGloves) 'wear-gloves',
+          for (final s in M2Stance.values) 'stand-${s.name}',
+          for (var i = 0; i < 3; i++) if (!_run.doOpen[i]) 'do-$i',
+        ]);
+      case M2GateStation.proveDead:
+        if (_run.dial == null) {
+          ids.addAll([for (final d in M2Dial.values) 'dial-${d.name}']);
+        } else {
+          ids.addAll(['live-point', 'ht', for (var i = 0; i < 4; i++) 'term-$i', 'call-dead', 'call-stop']);
+        }
+      case M2GateStation.skinCrimp:
+        if (!_run.skinned) {
+          // A short generic nudge: the knife can be dragged (never which way).
+          return HintSpec.dragFrom(_k('skin-hit'), toward: const Offset(0, -1), travel: 40);
+        }
+        if (_run.lug == null) {
+          ids.addAll([for (final l in _run.lugs) 'lug-${l.name}']);
+        } else if (_run.crimpTool == null) {
+          ids.addAll([for (final c in _run.crimps) 'crimp-${c.name}']);
+        } else {
+          return HintSpec.holdOn(_k('pump'));
+        }
+      case M2GateStation.megger:
+        if (_run.leadsOff) {
+          ids.addAll(['meg-ok', 'meg-bad']);
+        } else {
+          ids.addAll(['discharge', 'leads-off', 'test', 'lead-line', 'lead-earth', for (final v in M2MegV.values) 'megv-${v.name}']);
+        }
+      case M2GateStation.phase:
+        if (_run.phaseFwd == null) {
+          ids.addAll([if (!_run.phaseGloves) 'wear-gloves', for (var i = 0; i < 3; i++) if (!_run.clips.contains(i)) 'clip-$i']);
+        } else {
+          ids.addAll([for (final c in _run.phaseCalls) 'call-${c.name}']);
+        }
+      case M2GateStation.toolCare:
+        final held = _run.careHeld;
+        if (held == null) {
+          ids.addAll([for (final c in M2Care.values) if (!_run.cared.contains(c)) 'care-${c.name}']);
+        } else if (_oilMode) {
+          ids.addAll(['oil-joint', 'oil-handle']);
+        } else {
+          ids.addAll([
+            'wipe',
+            if (held == M2Care.meter && !_run.meterOff) 'meter-switch',
+            if (held == M2Care.pliers && !_run.pliersOiled) 'oil-can',
+            for (final s in M2CareSpot.values) 'spot-${s.name}',
+          ]);
+        }
+    }
+    final keys = [for (final id in ids) _k(id)];
+    if (keys.isEmpty) return null;
+    return keys.length == 1 ? HintSpec.tapOn(keys.single) : HintSpec.sweepOver(keys);
+  }
+
+  String get _hintKey => [
+        _run.station.index,
+        _inspect?.name,
+        _run.packed.length + _run.rejected.length,
+        _run.dial?.name,
+        _run.tested.length,
+        _run.skinned,
+        _run.lug?.name,
+        _run.crimpTool?.name,
+        _run.leadsOff,
+        _run.cableReplaced,
+        _run.phaseFwd,
+        _run.careHeld?.name,
+        _oilMode,
+        _run.cared.length,
+        _run.slips,
+        coworkerDone,
+      ].join('|');
+
+  // ============================================================================
   // Scene layers (design pixels, 360 × m.height)
   // ============================================================================
 
@@ -1760,13 +2110,13 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   Widget _hit(String id, Rect r, VoidCallback onTap, {Widget? child}) => Positioned.fromRect(
         key: ValueKey(id),
         rect: r,
-        child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTap, child: child),
+        child: GestureDetector(key: _k(id), behavior: HitTestBehavior.opaque, onTap: onTap, child: child),
       );
 
-  Widget _hitAt(String id, Rect r, void Function(Offset global) onTap) => Positioned.fromRect(
+  Widget _hitAt(String id, Rect r, void Function(Offset global) onTap, {Widget? child}) => Positioned.fromRect(
         key: ValueKey(id),
         rect: r,
-        child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => onTap(d.globalPosition)),
+        child: GestureDetector(key: _k(id), behavior: HitTestBehavior.opaque, onTapUp: (d) => onTap(d.globalPosition), child: child),
       );
 
   List<Widget> _packLayers(double h, bool quiet) {
@@ -1774,7 +2124,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('bench'),
-        child: RepaintBoundary(child: CustomPaint(painter: M2BenchPainter(benchY: benchY))),
+        child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: M2BenchPainter(benchY: benchY)))),
       ),
       for (var i = 0; i < _run.shelf.length; i++)
         _hit(
@@ -1782,8 +2132,10 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
           Rect.fromLTWH(12.0 + (i % 3) * 114, 124.0 + (i ~/ 3) * 96, 108, 88),
           () => _onShelfTap(_run.shelf[i]),
           child: _ShelfCard(
-            tool: _run.shelf[i],
-            flaw: _run.flaw,
+            // On the shelf the damaged twin looks like its good twin; the
+            // flaw shows only when it is picked up and looked at.
+            tool: _run.shelf[i] == M2Tool.flawed ? _run.flaw.twin : _run.shelf[i],
+            flaw: null,
             packed: _run.packed.contains(_run.shelf[i]),
             rejected: _run.rejected.contains(_run.shelf[i]),
           ),
@@ -1803,7 +2155,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('yard'),
-        child: RepaintBoundary(child: CustomPaint(painter: M2YardPainter(geo: g, doOpen: [..._run.doOpen], ltOn: _run.ltOn))),
+        child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: M2YardPainter(geo: g, doOpen: [..._run.doOpen], ltOn: _run.ltOn)))),
       ),
       for (final s in M2Stance.values)
         _hit(
@@ -1838,7 +2190,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('terminals'),
-        child: RepaintBoundary(child: CustomPaint(painter: M2TerminalPainter(geo: g))),
+        child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: M2TerminalPainter(geo: g)))),
       ),
       Positioned(
         key: const ValueKey('live-tag'),
@@ -1857,7 +2209,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       Positioned.fromRect(
         key: const ValueKey('meter'),
         rect: meter,
-        child: CustomPaint(painter: M2MultimeterPainter(dial: _run.dial, reading: _meterReading)),
+        child: IgnorePointer(child: CustomPaint(painter: M2MultimeterPainter(dial: _run.dial, reading: _meterReading))),
       ),
       for (var i = 0; i < M2Dial.values.length; i++)
         _hit(
@@ -1869,11 +2221,11 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
           ),
           () => _onDial(M2Dial.values[i]),
         ),
-      _hit('live-point', g.liveHit, () => unawaited(_onProbe(g.liveHit.center, () async => _run.probeLive(), M2GateRun.readingLive()))),
-      _hit('ht', g.htHit, () => unawaited(_onProbe(g.htHit.center, () async => _run.probeHt(), ''))),
+      _hit('live-point', g.liveHit, () => unawaited(_onProbe(g.liveHit.center, _run.probeLive, _run.readingLive))),
+      _hit('ht', g.htHit, () => unawaited(_onProbe(g.htHit.center, _run.probeHt, () => ''))),
       for (var i = 0; i < 3; i++)
-        _hit('term-$i', g.termHit(i), () => unawaited(_onProbe(g.term(i), () async => _run.probePhase(i), M2GateRun.readingDead()))),
-      _hit('term-3', g.termHit(3), () => unawaited(_onProbe(g.term(3), () async => null, M2GateRun.readingDead()))),
+        _hit('term-$i', g.termHit(i), () => unawaited(_onProbe(g.term(i), () => _run.probePhase(i), () => _run.readingPhase(i)))),
+      _hit('term-3', g.termHit(3), () => unawaited(_onProbe(g.term(3), () => null, M2GateRun.readingNeutral))),
     ];
   }
 
@@ -1885,18 +2237,20 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('bench'),
-        child: RepaintBoundary(child: CustomPaint(painter: M2BenchPainter(benchY: benchY))),
+        child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: M2BenchPainter(benchY: benchY)))),
       ),
       Positioned.fill(
         key: const ValueKey('cable'),
-        child: CustomPaint(
-          painter: M2CablePainter(
-            geo: g,
-            skin: _run.skinned ? 1 : 0,
-            lug: _run.lug,
-            crimped: _run.crimped,
-            line: megger && _run.lineLead && !_run.leadsOff,
-            earth: megger && _run.earthLead && !_run.leadsOff,
+        child: IgnorePointer(
+          child: CustomPaint(
+            painter: M2CablePainter(
+              geo: g,
+              skin: _run.skinned ? 1 : 0,
+              lug: _run.lug,
+              crimped: _run.crimped,
+              line: megger && _run.lineLead && !_run.leadsOff,
+              earth: megger && _run.earthLead && !_run.leadsOff,
+            ),
           ),
         ),
       ),
@@ -1906,10 +2260,11 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
           key: const ValueKey('skin-hit'),
           rect: g.insulationHit,
           child: GestureDetector(
+            key: _k('skin-hit'),
             behavior: HitTestBehavior.opaque,
-            onHorizontalDragStart: (_) => _skinDrag = 0,
-            onHorizontalDragUpdate: (d) => _skinDrag += d.delta.dx,
-            onHorizontalDragEnd: (_) => unawaited(_onSkinEnd(Offset(MediaQuery.sizeOf(context).width / 2, MediaQuery.sizeOf(context).height / 2))),
+            onPanStart: (_) => _skinDrag = 0,
+            onPanUpdate: (d) => _skinDrag += d.delta.dx,
+            onPanEnd: (_) => unawaited(_onSkinEnd(Offset(MediaQuery.sizeOf(context).width / 2, MediaQuery.sizeOf(context).height / 2))),
             child: const _KnifeMark(),
           ),
         ),
@@ -1917,7 +2272,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
         Positioned.fromRect(
           key: const ValueKey('megger'),
           rect: megRect,
-          child: CustomPaint(painter: M2MeggerPainter(volt: _run.megV, reading: _megReading, progress: _megProgress)),
+          child: IgnorePointer(child: CustomPaint(painter: M2MeggerPainter(volt: _run.megV, reading: _megReading, progress: _megProgress))),
         ),
         for (var i = 0; i < M2MegV.values.length; i++)
           _hit(
@@ -1938,7 +2293,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     return [
       Positioned.fill(
         key: const ValueKey('terminals'),
-        child: RepaintBoundary(child: CustomPaint(painter: M2TerminalPainter(geo: g, clips: {..._run.clips}, live: true))),
+        child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: M2TerminalPainter(geo: g, clips: {..._run.clips}, live: true)))),
       ),
       if (_run.clips.isNotEmpty)
         Positioned.fill(
@@ -1950,7 +2305,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       Positioned.fromRect(
         key: const ValueKey('phase-meter'),
         rect: meter,
-        child: CustomPaint(painter: M2PhaseMeterPainter(fwd: _run.phaseFwd)),
+        child: IgnorePointer(child: CustomPaint(painter: M2PhaseMeterPainter(fwd: _run.phaseFwd))),
       ),
       if (_run.phaseGloves)
         Positioned(
@@ -1963,35 +2318,86 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     ];
   }
 
+  static const _careTools = {M2Care.stick: M2Tool.hotStick, M2Care.meter: M2Tool.multimeter, M2Care.pliers: M2Tool.pliers};
+
   List<Widget> _careLayers(double h, bool quiet) {
-    final benchY = h - 300;
-    const tools = {M2Care.stick: M2Tool.hotStick, M2Care.meter: M2Tool.multimeter, M2Care.pliers: M2Tool.pliers};
+    final g = M2CareGeo(h);
+    final held = _run.careHeld;
+    final spots = {M2CareSpot.hooks: g.hooks, M2CareSpot.bag: g.bag, M2CareSpot.toolbox: g.toolbox, M2CareSpot.floor: g.floor};
+    final byCount = <M2CareSpot, int>{};
+    final hand = g.hand;
+    // The pliers in hand, as M2ToolPainter fits them (100 × 60 units).
+    final s = math.min((hand.width - 16) / 100, (hand.height - 16) / 60);
+    final p0 = Offset(hand.left + 8 + (hand.width - 16 - 100 * s) / 2, hand.top + 8 + (hand.height - 16 - 60 * s) / 2);
+    Rect unit(double l, double t, double r, double b) => Rect.fromLTRB(p0.dx + l * s, p0.dy + t * s, p0.dx + r * s, p0.dy + b * s);
     return [
       Positioned.fill(
-        key: const ValueKey('bench'),
-        child: RepaintBoundary(child: CustomPaint(painter: M2BenchPainter(benchY: benchY))),
+        key: const ValueKey('care-bay'),
+        child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: M2CareBayPainter(geo: g)))),
       ),
+      for (final e in spots.entries)
+        _hitAt('spot-${e.key.name}', e.value, (p) => unawaited(_onStore(e.key, p)),
+            child: Semantics(label: M2GateLines.careSpots[e.key], excludeSemantics: true, child: const SizedBox.expand())),
+      for (final e in _stored.entries)
+        Positioned.fromRect(
+          key: ValueKey('stored-${e.key.name}'),
+          rect: g.storedAt(spots[e.value]!, byCount[e.value] = (byCount[e.value] ?? -1) + 1),
+          child: IgnorePointer(child: CustomPaint(painter: M2ToolPainter(_careTools[e.key]!))),
+        ),
       for (final c in M2Care.values)
-        _hit(
-          'care-${c.name}',
-          Rect.fromLTWH(20.0 + c.index * 110, benchY + 14, 104, 84),
-          () => _onCareTool(c),
-          child: _ShelfCard(
-            tool: tools[c]!,
-            flaw: null,
-            packed: _run.cared.contains(c),
-            rejected: false,
-            dirty: !_run.cared.contains(c),
-            name: M2GateLines.careNames[c],
+        if (!_run.cared.contains(c) && held != c)
+          _hit(
+            'care-${c.name}',
+            g.slot(c.index),
+            () => _onCareTool(c),
+            child: _ShelfCard(
+              tool: _careTools[c]!,
+              flaw: null,
+              packed: false,
+              rejected: false,
+              dirty: !_run.wiped.contains(c),
+              name: M2GateLines.careNames[c],
+            ),
+          ),
+      if (held != null) ...[
+        Positioned.fromRect(
+          key: const ValueKey('care-hand'),
+          rect: hand,
+          child: IgnorePointer(
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xCC0F1A2A),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6), width: 1.4),
+              ),
+              child: CustomPaint(size: Size.infinite, painter: M2ToolPainter(_careTools[held]!, dirty: !_run.wiped.contains(held))),
+            ),
           ),
         ),
-      _figure(Rect.fromLTWH(140, benchY - 128, 64, 128), _run.careDone ? LinemanMode.cheer : LinemanMode.idle),
+        if (held == M2Care.meter)
+          _hit(
+            'meter-switch',
+            Rect.fromLTWH(hand.right - 72, hand.top + 10, 60, 36),
+            _onMeterSwitch,
+            child: _PowerSwitch(on: !_run.meterOff),
+          ),
+        if (held == M2Care.pliers && _oilMode) ...[
+          // Two plain zones over the picture: the metal (jaws and joint) and
+          // the insulated handles. Nothing marks either.
+          _hitAt('oil-joint', unit(4, 10, 50, 50), (_) => unawaited(_onOilAt(joint: true))),
+          _hitAt('oil-handle', unit(50, 10, 98, 50), (_) => unawaited(_onOilAt(joint: false))),
+        ],
+      ],
+      _figure(Rect.fromLTWH(4, g.floor.top - 56, 56, 112), _run.careDone ? LinemanMode.cheer : (held == null ? LinemanMode.idle : LinemanMode.hold)),
     ];
   }
 
   // ============================================================================
   // Controls (screen pixels, page overlays)
   // ============================================================================
+
+  Widget _kid(String id, Widget child) => KeyedSubtree(key: _k(id), child: child);
 
   List<Widget> _controls(EdgeInsets pad) {
     final b = pad.bottom + 12;
@@ -2001,6 +2407,17 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
           right: 12,
           bottom: b,
           child: Row(children: [for (var i = 0; i < kids.length; i++) ...[if (i > 0) const SizedBox(width: 8), Expanded(child: kids[i])]]),
+        );
+    Widget stack(String key, List<Widget> kids) => Positioned(
+          key: ValueKey(key),
+          left: 130,
+          right: 12,
+          bottom: b,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [for (var i = 0; i < kids.length; i++) ...[if (i > 0) const SizedBox(height: 6), kids[i]]],
+          ),
         );
     switch (_run.station) {
       case M2GateStation.pack:
@@ -2013,29 +2430,23 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
             bottom: b,
             child: Row(
               children: [
-                _ToolButton(icon: Icons.face_retouching_natural, label: M2GateLines.faceShield, on: _run.faceShield, onTap: () => _onWear(shield: true)),
+                _kid('wear-shield', _ToolButton(icon: Icons.face_retouching_natural, label: M2GateLines.faceShield, on: _run.faceShield, onTap: () => _onWear(shield: true))),
                 const SizedBox(width: 8),
-                _ToolButton(icon: Icons.back_hand_rounded, label: M2GateLines.gloves, on: _run.doGloves, onTap: () => _onWear(shield: false)),
+                _kid('wear-gloves', _ToolButton(icon: Icons.back_hand_rounded, label: M2GateLines.gloves, on: _run.doGloves, onTap: () => _onWear(shield: false))),
               ],
             ),
           ),
         ];
       case M2GateStation.proveDead:
-        return [
-          Positioned(
-            key: const ValueKey('dead-row'),
-            left: 130,
-            right: 12,
-            bottom: b + 64,
-            child: _ActionButton(label: M2GateLines.provenDead, onTapUp: (p) => unawaited(_onConfirmDead(p))),
-          ),
-        ];
+        final dead = _kid('call-dead', _ActionButton(key: const ValueKey('dead-call'), label: M2GateLines.provenDead, onTapUp: (p) => unawaited(_onDeadCall(dead: true, origin: p))));
+        final stop = _kid('call-stop', _ActionButton(key: const ValueKey('stop-call'), label: M2GateLines.stopLive, onTapUp: (p) => unawaited(_onDeadCall(dead: false, origin: p))));
+        return [stack('dead-row', _run.deadCallsSwapped ? [stop, dead] : [dead, stop])];
       case M2GateStation.skinCrimp:
         if (!_run.skinned) return const [];
         if (_run.lug == null) {
           return [
             row('lug-row', [
-              for (final l in _run.lugs) _ActionButton(label: l.stamp, mono: true, onTapUp: (p) => unawaited(_onLug(l, p))),
+              for (final l in _run.lugs) _kid('lug-${l.name}', _ActionButton(label: l.stamp, mono: true, onTapUp: (p) => unawaited(_onLug(l, p)))),
             ]),
           ];
         }
@@ -2043,13 +2454,16 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
           return [
             row('crimp-row', [
               for (final c in _run.crimps)
-                _ActionButton(
-                  label: switch (c) {
-                    M2Crimp.hyd95 => 'হাইড্রোলিক · ডাই 95',
-                    M2Crimp.hyd70 => 'হাইড্রোলিক · ডাই 70',
-                    M2Crimp.pliers => 'প্লায়ার্সে চাপ',
-                  },
-                  onTapUp: (p) => unawaited(_onCrimpTool(c, p)),
+                _kid(
+                  'crimp-${c.name}',
+                  _ActionButton(
+                    label: switch (c) {
+                      M2Crimp.hyd95 => 'হাইড্রোলিক · ডাই 95',
+                      M2Crimp.hyd70 => 'হাইড্রোলিক · ডাই 70',
+                      M2Crimp.pliers => 'প্লায়ার্সে চাপ',
+                    },
+                    onTapUp: (p) => unawaited(_onCrimpTool(c, p)),
+                  ),
                 ),
             ]),
           ];
@@ -2065,11 +2479,14 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
                 SizedBox(width: 56, height: 56, child: CustomPaint(painter: M2GaugePainter(p: _pump))),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _HoldButton(
-                    key: const ValueKey('pump'),
-                    label: M2GateLines.pump,
-                    onDown: () => _holdStart(_pumpTick),
-                    onUp: () => unawaited(_pumpRelease()),
+                  child: _kid(
+                    'pump',
+                    _HoldButton(
+                      key: const ValueKey('pump'),
+                      label: M2GateLines.pump,
+                      onDown: () => _holdStart(_pumpTick),
+                      onUp: () => unawaited(_pumpRelease()),
+                    ),
                   ),
                 ),
               ],
@@ -2077,6 +2494,11 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
           ),
         ];
       case M2GateStation.megger:
+        if (_run.leadsOff) {
+          final ok = _kid('meg-ok', _ActionButton(key: const ValueKey('meg-ok-btn'), label: M2GateLines.megOk, onTapUp: (p) => unawaited(_onMegCall(ok: true, origin: p))));
+          final bad = _kid('meg-bad', _ActionButton(key: const ValueKey('meg-bad-btn'), label: M2GateLines.megBad, onTapUp: (p) => unawaited(_onMegCall(ok: false, origin: p))));
+          return [stack('meg-call-row', _run.megCallsSwapped ? [bad, ok] : [ok, bad])];
+        }
         final g = M2CableGeo(_sceneH - 400);
         return [
           Positioned(
@@ -2089,13 +2511,13 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
               children: [
                 Row(
                   children: [
-                    Expanded(child: _ActionButton(label: M2GateLines.discharge, onTapUp: (p) => unawaited(_onDischarge(p, g)))),
+                    Expanded(child: _kid('discharge', _ActionButton(label: M2GateLines.discharge, onTapUp: (p) => unawaited(_onDischarge(p, g))))),
                     const SizedBox(width: 8),
-                    Expanded(child: _ActionButton(label: M2GateLines.leadsOff, onTapUp: (p) => unawaited(_onLeadsOff(p)))),
+                    Expanded(child: _kid('leads-off', _ActionButton(label: M2GateLines.leadsOff, onTapUp: (p) => unawaited(_onLeadsOff(p))))),
                   ],
                 ),
                 const SizedBox(height: 8),
-                _HoldButton(key: const ValueKey('test'), label: M2GateLines.test, onDown: _testStart, onUp: _testRelease),
+                _kid('test', _HoldButton(key: const ValueKey('test'), label: M2GateLines.test, onDown: _testStart, onUp: _testRelease)),
               ],
             ),
           ),
@@ -2108,7 +2530,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
               key: const ValueKey('gloves-row'),
               left: 12,
               bottom: b,
-              child: _ToolButton(icon: Icons.back_hand_rounded, label: M2GateLines.gloves, on: _run.phaseGloves, onTap: () => _onWear(shield: false)),
+              child: _kid('wear-gloves', _ToolButton(icon: Icons.back_hand_rounded, label: M2GateLines.gloves, on: _run.phaseGloves, onTap: () => _onWear(shield: false))),
             )
           else
             Positioned(
@@ -2120,15 +2542,18 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (final c in M2PhaseCall.values) ...[
-                    _ActionButton(
-                      key: ValueKey('call-${c.name}'),
-                      label: switch (c) {
-                        M2PhaseCall.keep => M2GateLines.phaseKeep,
-                        M2PhaseCall.swapDead => M2GateLines.phaseSwapDead,
-                        M2PhaseCall.swapLive => M2GateLines.phaseSwapLive,
-                      },
-                      onTapUp: (p) => unawaited(_onPhaseCall(c, p)),
+                  for (final c in _run.phaseCalls) ...[
+                    _kid(
+                      'call-${c.name}',
+                      _ActionButton(
+                        key: ValueKey('call-${c.name}'),
+                        label: switch (c) {
+                          M2PhaseCall.keep => M2GateLines.phaseKeep,
+                          M2PhaseCall.swapDead => M2GateLines.phaseSwapDead,
+                          M2PhaseCall.swapLive => M2GateLines.phaseSwapLive,
+                        },
+                        onTapUp: (p) => unawaited(_onPhaseCall(c, p)),
+                      ),
                     ),
                     const SizedBox(height: 6),
                   ],
@@ -2137,16 +2562,43 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
             ),
         ];
       case M2GateStation.toolCare:
-        return const [];
+        final held = _run.careHeld;
+        if (held == null) return const [];
+        return [
+          Positioned(
+            key: const ValueKey('care-row'),
+            left: 12,
+            right: 130,
+            bottom: b,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (held == M2Care.pliers) ...[
+                  _kid(
+                    'oil-can',
+                    _ToolButton(key: const ValueKey('oil-can-btn'), icon: Icons.opacity_rounded, label: M2GateLines.oilCan, on: _run.pliersOiled, lit: _oilMode, onTap: _onOilCan),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                SizedBox(width: 48, height: 48, child: CustomPaint(painter: M2GaugePainter(p: _wipe))),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _kid('wipe', _HoldButton(key: const ValueKey('wipe'), label: M2GateLines.wipe, onDown: () => _holdStart(_wipeTick), onUp: _wipeRelease)),
+                ),
+              ],
+            ),
+          ),
+        ];
     }
   }
 
   double _guideBottom(EdgeInsets pad, bool deckUp) {
-    if (deckUp || _careItem != null) return pad.bottom + 236;
+    if (deckUp) return pad.bottom + 236;
     return pad.bottom + switch (_run.station) {
-          M2GateStation.proveDead => 140,
+          M2GateStation.proveDead => 130,
           M2GateStation.megger => 128,
           M2GateStation.phase => _run.phaseFwd == null ? 72 : 180,
+          M2GateStation.toolCare => _run.careHeld == null ? 72 : 100,
           _ => 72,
         };
   }
@@ -2187,17 +2639,26 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
               current: _run.done ? null : _run.station.index,
               quiet: quiet,
             ),
+            hint: _hint,
+            hintWaiting: handsOn && _canAct && _holdTimer == null && !coworkerOnScreen,
+            hintKey: _hintKey,
+            hintController: _hints,
             layers: (c, m) => [
               Positioned.fill(
                 key: const ValueKey('scene'),
                 child: ColorFiltered(
                   colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
-                  child: Stack(children: _layers(c, m)),
+                  child: GestureDetector(
+                    // A tap that lands on nothing counts towards the hint.
+                    behavior: HitTestBehavior.translucent,
+                    onTap: _hints.missTap,
+                    child: Stack(children: _layers(c, m)),
+                  ),
                 ),
               ),
             ],
             overlays: [
-              if (_freeze && _card == null)
+              if (_freeze)
                 FreezeFrame(
                   key: const ValueKey('freeze'),
                   muted: _muted,
@@ -2230,6 +2691,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
                     num: 'স্টেশন ${_run.station.index + 1}/7',
                     title: M2GateLines.stationTitles[_run.station]!,
                     onDocket: () {
+                      if (!_canAct) return;
                       _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
                       setState(() => _docketOpen = true);
                     },
@@ -2242,27 +2704,13 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
                   child: _InspectSheet(
                     tool: inspect,
                     flaw: _run.flaw,
+                    rejectKey: _k('reject'),
+                    packKey: _k('pack'),
                     onPack: (p) => unawaited(_onPack(true, p)),
                     onReject: (p) => unawaited(_onPack(false, p)),
-                    onClose: () => setState(() => _inspect = null),
-                  ),
-                ),
-              if (playing && _careItem != null && !deckUp)
-                Positioned(
-                  key: const ValueKey('care-deck'),
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: pad.bottom),
-                    child: ChoiceDeck(
-                      options: _careOpts,
-                      quiet: quiet,
-                      muted: _muted,
-                      wrong: _careWrong,
-                      picked: _carePicked,
-                      onPick: (o, at) => unawaited(_onCarePick(o, at)),
-                    ),
+                    onClose: () {
+                      if (_canAct) setState(() => _inspect = null);
+                    },
                   ),
                 ),
               if (deckUp)
@@ -2478,10 +2926,20 @@ class _ShelfCard extends StatelessWidget {
 
 /// A tool picked up off the shelf, large enough to see its state.
 class _InspectSheet extends StatelessWidget {
-  const _InspectSheet({required this.tool, required this.flaw, required this.onPack, required this.onReject, required this.onClose});
+  const _InspectSheet({
+    required this.tool,
+    required this.flaw,
+    required this.rejectKey,
+    required this.packKey,
+    required this.onPack,
+    required this.onReject,
+    required this.onClose,
+  });
 
   final M2Tool tool;
   final M2Flaw flaw;
+  final GlobalKey rejectKey;
+  final GlobalKey packKey;
   final ValueChanged<Offset> onPack;
   final ValueChanged<Offset> onReject;
   final VoidCallback onClose;
@@ -2515,9 +2973,13 @@ class _InspectSheet extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(child: _ActionButton(key: const ValueKey('reject'), label: M2GateLines.reject, onTapUp: onReject)),
+                      Expanded(
+                        child: KeyedSubtree(key: rejectKey, child: _ActionButton(key: const ValueKey('reject'), label: M2GateLines.reject, onTapUp: onReject)),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: _ActionButton(key: const ValueKey('pack'), label: M2GateLines.pack, filled: true, onTapUp: onPack)),
+                      Expanded(
+                        child: KeyedSubtree(key: packKey, child: _ActionButton(key: const ValueKey('pack'), label: M2GateLines.pack, onTapUp: onPack)),
+                      ),
                     ],
                   ),
                 ],
@@ -2627,11 +3089,14 @@ class _StationChip extends StatelessWidget {
 }
 
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap, this.lit = false});
   final IconData icon;
   final String label;
   final bool on;
   final VoidCallback onTap;
+
+  /// In use right now (the oil can raised).
+  final bool lit;
 
   @override
   Widget build(BuildContext context) {
@@ -2652,7 +3117,7 @@ class _ToolButton extends StatelessWidget {
                 height: 50,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: on ? const Color(0xFF1E5A33) : const Color(0xFF14233A),
+                  color: on ? const Color(0xFF1E5A33) : (lit ? const Color(0xFF6B5310) : const Color(0xFF14233A)),
                   border: Border.all(color: on ? const Color(0xFF41C463) : SlmColors.gold300, width: 1.8),
                 ),
                 child: Icon(on ? Icons.check_rounded : icon, size: 26, color: on ? const Color(0xFF9BE7B0) : SlmColors.gold300),
@@ -2675,10 +3140,9 @@ class _ToolButton extends StatelessWidget {
 }
 
 class _ActionButton extends StatelessWidget {
-  const _ActionButton({super.key, required this.label, required this.onTapUp, this.filled = false, this.mono = false});
+  const _ActionButton({super.key, required this.label, required this.onTapUp, this.mono = false});
   final String label;
   final ValueChanged<Offset> onTapUp;
-  final bool filled;
   final bool mono;
 
   @override
@@ -2695,7 +3159,7 @@ class _ActionButton extends StatelessWidget {
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
           decoration: BoxDecoration(
-            color: filled ? SlmColors.gold400 : const Color(0xE60B1324),
+            color: const Color(0xE60B1324),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: SlmColors.gold400, width: 1.6),
           ),
@@ -2704,7 +3168,7 @@ class _ActionButton extends StatelessWidget {
             textAlign: TextAlign.center,
             style: mono
                 ? const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: SlmColors.ivory, letterSpacing: 0.5)
-                : bangla(fontSize: 13, fontWeight: FontWeight.w900, color: filled ? SlmColors.navy950 : SlmColors.ivory),
+                : bangla(fontSize: 13, fontWeight: FontWeight.w900, color: SlmColors.ivory),
           ),
         ),
       ),
@@ -2745,6 +3209,35 @@ class _HoldButton extends StatelessWidget {
   }
 }
 
+/// The multimeter's power switch in the tool-care close-up.
+class _PowerSwitch extends StatelessWidget {
+  const _PowerSwitch({required this.on});
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: on ? 'ON' : 'OFF',
+        excludeSemantics: true,
+        child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: const Color(0xFF2B2F36),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: SlmColors.gold300, width: 1.4),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: on ? const Color(0xFFFFC928) : const Color(0xFF4A4F57))),
+              const SizedBox(width: 6),
+              Text(on ? 'ON' : 'OFF', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: SlmColors.ivory)),
+            ],
+          ),
+        ),
+      );
+}
+
 class _RankStamp extends StatelessWidget {
   const _RankStamp();
 
@@ -2783,7 +3276,10 @@ class _DocketSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onClose,
+      child: ColoredBox(
       color: Colors.black.withValues(alpha: 0.75),
       child: Center(
         child: SingleChildScrollView(
@@ -2849,8 +3345,8 @@ class _DocketSheet extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 18),
-                          label: Text('ডকেট বুঝে নিলাম · কাজ শুরু', style: bangla(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white)),
+                          icon: const Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                          label: Text(M2GateLines.closeDocket, style: bangla(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1B3A57),
                             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -2866,6 +3362,7 @@ class _DocketSheet extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

@@ -5,7 +5,9 @@
 // the tap of a live DTR or the earthing set on a live line = deadly), the
 // deal, the reason libraries, and the level in the shell: idle perf, the
 // guide first, a full clean play with the coworker refused, a slip card that
-// keeps the site, three slips, the deadly freeze, listening to him.
+// keeps the site, three slips, the deadly freeze, listening to him, a fast
+// play that cannot skip him, the praise window, the neutral house lamp, the
+// dealt tool row and the gesture hint.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,7 +20,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -34,6 +38,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.6/do/1',
@@ -83,10 +88,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -154,6 +161,30 @@ Future<void> _measure(WidgetTester t, {required bool low}) async {
   await _pump(t, 600);
 }
 
+/// A low site after its reading: isolate, lock, prove, earth, one notch,
+/// restore, measure again (right).
+Future<void> _fixLow(WidgetTester t, M3DtrTapSite s) async {
+  await _tapAt(t, _geo.abPivot); // AB open
+  await _tapAt(t, _geo.doHit.center); // DO dropped
+  await _tapAt(t, _geo.ltBox.center); // LT off
+  await _tool(t, M3DtrTapLines.lock);
+  await _tool(t, M3DtrTapLines.tester);
+  expect(find.text(M3DtrTapLines.testerDead), findsOneWidget);
+  await _tool(t, M3DtrTapLines.earth);
+  await _tapAt(t, _geo.dial);
+  expect(_label(M3DtrTapLines.dialLabel), findsOneWidget);
+  await _dialPin(t, s.startPos);
+  await _dialTurn(t);
+  await _dialPin(t, s.startPos + 1);
+  expect(_label(M3DtrTapLines.dialLabel), findsNothing);
+  await _tool(t, M3DtrTapLines.earth); // off
+  await _tool(t, M3DtrTapLines.lock); // off
+  await _tapAt(t, _geo.doHit.center);
+  await _tapAt(t, _geo.abPivot);
+  await _tapAt(t, _geo.ltBox.center);
+  await _measure(t, low: false);
+}
+
 /// Plays site [i] right (the coworker refused on his site).
 Future<void> _playRight(WidgetTester t, M3DtrTapDeal deal, int i) async {
   final s = deal.sites[i];
@@ -167,26 +198,13 @@ Future<void> _playRight(WidgetTester t, M3DtrTapDeal deal, int i) async {
       await _pickRight(t, M3DtrTapLines.coworker.right);
       await _pump(t, 2600);
     }
-    await _tapAt(t, _geo.abPivot); // AB open
-    await _tapAt(t, _geo.doHit.center); // DO dropped
-    await _tapAt(t, _geo.ltBox.center); // LT off
-    await _tool(t, M3DtrTapLines.lock);
-    await _tool(t, M3DtrTapLines.tester);
-    expect(find.text(M3DtrTapLines.testerDead), findsOneWidget);
-    await _tool(t, M3DtrTapLines.earth);
-    await _tapAt(t, _geo.dial);
-    expect(_label(M3DtrTapLines.dialLabel), findsOneWidget);
-    await _dialPin(t, s.startPos);
-    await _dialTurn(t);
-    await _dialPin(t, s.startPos + 1);
-    expect(_label(M3DtrTapLines.dialLabel), findsNothing);
-    await _tool(t, M3DtrTapLines.earth); // off
-    await _tool(t, M3DtrTapLines.lock); // off
-    await _tapAt(t, _geo.doHit.center);
-    await _tapAt(t, _geo.abPivot);
-    await _tapAt(t, _geo.ltBox.center);
-    await _measure(t, low: false);
+    await _fixLow(t, s);
   }
+  await _finishSite(t, s, i);
+}
+
+/// The right site's stamp, then the right reason and the next site.
+Future<void> _finishSite(WidgetTester t, M3DtrTapSite s, int i) async {
   await _pump(t, 1500);
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'site $i');
   await _pumpUntil(t, find.byType(ChoiceDeck));
@@ -214,6 +232,19 @@ void main() {
         seen.add(d.sites.map((x) => '${x.kind.name}${x.job.name}${x.why.name}${x.startPos}${x.lowVolts}').join('|') + d.callAt.toString());
       }
       expect(seen.length, greaterThan(40));
+    });
+
+    test('the tool row is dealt: never lock → tester → earth (the order of the work); orders vary', () {
+      final orders = <String>{};
+      for (var s = 0; s < 80; s++) {
+        final t = m3DtrTapDeal(math.Random(s)).tools;
+        expect(t.toSet(), M3DtrTapKit.values.toSet());
+        expect(t, hasLength(M3DtrTapKit.values.length));
+        final lock = t.indexOf(M3DtrTapKit.lock), tester = t.indexOf(M3DtrTapKit.tester), earth = t.indexOf(M3DtrTapKit.earth);
+        expect(lock < tester && tester < earth, isFalse, reason: '$t');
+        orders.add(t.map((k) => k.name).join(','));
+      }
+      expect(orders.length, greaterThan(8));
     });
 
     M3DtrTapRun run1(M3DtrTapKind k) => M3DtrTapRun(M3DtrTapDeal(sites: [
@@ -252,6 +283,21 @@ void main() {
       expect(l.fixing, isTrue);
       expect(l.over, isFalse);
       expect(l.lamp, M3DtrTapLamp.dim);
+    });
+
+    test('the house lamp gives nothing away before the reading', () {
+      for (final k in M3DtrTapKind.values) {
+        final r = run1(k);
+        expect(r.lamp, M3DtrTapLamp.lit, reason: '$k: the same plain light on a low and a right site');
+        r
+          ..holdMeter()
+          ..tapHouse();
+        expect(r.lamp, M3DtrTapLamp.lit, reason: '$k: still not read');
+        expect(r.answer(k == M3DtrTapKind.ok), isNotNull, reason: 'a misread');
+        expect(r.lamp, M3DtrTapLamp.lit, reason: '$k: a misread shows nothing either');
+        expect(r.answer(k == M3DtrTapKind.low), isNull);
+        expect(r.lamp, k == M3DtrTapKind.low ? M3DtrTapLamp.dim : M3DtrTapLamp.bright);
+      }
     });
 
     test('a hand on the tap changer of a live DTR is deadly (also before any reading)', () {
@@ -311,18 +357,20 @@ void main() {
       expect(r.slips, 5);
     });
 
-    test('no tap when the meter showed right', () {
+    test('no tap when the meter showed right: the site ends there, the dial stays shut', () {
       final r = run1(M3DtrTapKind.ok)
         ..holdMeter()
         ..tapHouse();
       expect(r.answer(false), isNull);
       expect(r.over, isTrue, reason: 'a right reading ends the site');
-      // The rule itself: the last reading said right, then a hand on the tap.
-      final f = run1(M3DtrTapKind.low);
-      f.readLow = false;
-      f.everRead = true;
+      expect(r.openDial(), isNull);
+      expect(r.dialOpen, isFalse);
+      expect(r.slips, 0);
+      // On a right site, switching off and touching the tap before reading.
+      final f = run1(M3DtrTapKind.ok);
       isolate(f);
-      expect(f.openDial(), M3DtrTapMistakes.needless);
+      expect(f.openDial(), M3DtrTapMistakes.unread);
+      expect(f.dialOpen, isFalse);
     });
 
     test('the dial: pin out, one notch, pin in; turning with the pin in or twice is a slip', () {
@@ -370,11 +418,12 @@ void main() {
       expect(r.blank, isTrue, reason: 'LT still off: 0 V');
       expect(r.readingUp, isFalse);
       r.toggleLt();
-      expect(r.lamp, M3DtrTapLamp.bright);
+      expect(r.lamp, M3DtrTapLamp.lit, reason: 'not measured again yet: no answer in the window');
       r.tapHouse();
       expect(r.volts, 236);
       expect(r.answer(false), isNull);
       expect(r.over, isTrue);
+      expect(r.lamp, M3DtrTapLamp.bright);
       expect(r.caught, contains(M3DtrTapLines.caughtRetest));
       expect(r.slips, 2);
     });
@@ -465,7 +514,7 @@ void main() {
         }
         debugPrint('PERF m3_dtr_tap ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -586,9 +635,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M3DtrTapLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
@@ -612,6 +663,75 @@ void main() {
       expect(find.byType(CoworkerPeek), findsNothing);
       expect(find.byType(FreezeFrame), findsNothing);
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him: the AB handle waits for him, then the site goes on clean', (t) async {
+      final seed = [for (var i = 0; i < 60; i++) i].firstWhere((i) => m3DtrTapDeal(math.Random(i)).callAt == 0);
+      final deal = m3DtrTapDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await _tool(t, M3DtrTapLines.meter);
+      await _tapAt(t, _geo.meterBoard.center);
+      await t.tap(find.text(M3DtrTapLines.sayLow));
+      await _pump(t, 100);
+      // Straight to the AB handle, well inside his 1.2–2.4 s wait.
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _tapAt(t, _geo.abPivot);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the hold brings him in now');
+      await _pickRight(t, M3DtrTapLines.coworker.right);
+      await _pump(t, 2600);
+      // The held tap did not move the handle: the clean sequence works as usual.
+      await _fixLow(t, deal.sites[0]);
+      await _pump(t, 800);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _finishSite(t, deal.sites[0], 0);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the praise window takes no input: taps on the dial and the AB handle do nothing', (t) async {
+      final seed = [for (var i = 0; i < 60; i++) i].firstWhere((i) => m3DtrTapDeal(math.Random(i)).sites[0].kind == M3DtrTapKind.ok);
+      final c = await _open(t, seed);
+      await _tool(t, M3DtrTapLines.meter);
+      await _tapAt(t, _geo.meterBoard.center);
+      await t.tap(find.text(M3DtrTapLines.sayOk));
+      await t.pump(const Duration(milliseconds: 80));
+      await t.tapAt(_geo.dial * _k);
+      await t.tapAt(_geo.abPivot * _k);
+      await _pump(t, 300);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.byType(MistakeCard), findsNothing);
+      await waitChoiceDeck(t);
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the reason still comes');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: a sweep over the parts and the tools; with the voltmeter in hand, a tap on the house', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 5);
+      final hint = find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first;
+      final st = t.state<IdleHintState>(hint);
+      expect(st.showing, isFalse);
+      await _pump(t, 9000);
+      expect(st.showing, isTrue, reason: 'idle while the level waits');
+      expect(st.debugOptions, hasLength(9), reason: 'five scene parts + four tools, none pressed');
+      await _tool(t, M3DtrTapLines.meter);
+      expect(st.showing, isFalse, reason: 'a touch hides it');
+      await _pump(t, 9000);
+      expect(st.showing, isTrue);
+      expect(st.debugOptions, isEmpty, reason: 'a tap (the voltmeter has one use), not a sweep');
+      // Three taps on nothing (the sky) within 4 s bring the hand back at once.
+      await t.tapAt(const Offset(300, 150) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(st.showing, isFalse);
+      await t.tapAt(const Offset(300, 150) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tapAt(const Offset(300, 150) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(st.showing, isTrue, reason: 'missTap from the scene');
       await _close(t, c);
     });
   });

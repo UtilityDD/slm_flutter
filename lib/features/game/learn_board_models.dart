@@ -39,6 +39,16 @@ import 'learn_board_pack26.dart';
 import 'learn_board_pack23.dart';
 import 'learn_board_pack22.dart';
 import 'learn_board_pack21.dart';
+import 'learn_board_pack51.dart';
+import 'learn_board_pack52.dart';
+import 'learn_board_pack53.dart';
+import 'learn_board_pack54.dart';
+import 'learn_board_pack55.dart';
+import 'learn_board_pack56.dart';
+import 'learn_board_pack57.dart';
+import 'learn_board_pack58.dart';
+import 'learn_board_pack59.dart';
+import 'learn_board_pack510.dart';
 
 export 'learn_board_pack13.dart' show learnBoardPack13, PoleBoardLines;
 export 'learn_board_pack14.dart' show learnBoardPack14;
@@ -78,6 +88,16 @@ export 'learn_board_pack26.dart' show learnBoardPack26, SkinBoardLines;
 export 'learn_board_pack23.dart' show learnBoardPack23, CrimpBoardLines;
 export 'learn_board_pack22.dart' show learnBoardPack22, MeterBoardLines;
 export 'learn_board_pack21.dart' show learnBoardPack21, ToolboxBoardLines;
+export 'learn_board_pack51.dart' show learnBoardPack51, M5Board51Lines;
+export 'learn_board_pack52.dart' show learnBoardPack52, M5Board52Lines;
+export 'learn_board_pack53.dart' show learnBoardPack53, M5Board53Lines;
+export 'learn_board_pack54.dart' show learnBoardPack54, M5Board54Lines;
+export 'learn_board_pack55.dart' show learnBoardPack55, M5Board55Lines;
+export 'learn_board_pack56.dart' show learnBoardPack56, M5Board56Lines;
+export 'learn_board_pack57.dart' show learnBoardPack57, M5Board57Lines;
+export 'learn_board_pack58.dart' show learnBoardPack58, M5Board58Lines;
+export 'learn_board_pack59.dart' show learnBoardPack59, M5Board59Lines;
+export 'learn_board_pack510.dart' show learnBoardPack510, M5Board510Lines;
 
 enum LearnBoardMode { pickGear, mythRival }
 
@@ -262,6 +282,16 @@ LearnBoardPack? learnBoardPackFor(String lessonId) {
   if (lessonId == '2.3') return learnBoardPack23;
   if (lessonId == '2.2') return learnBoardPack22;
   if (lessonId == '2.1') return learnBoardPack21;
+  if (lessonId == '5.1') return learnBoardPack51;
+  if (lessonId == '5.2') return learnBoardPack52;
+  if (lessonId == '5.3') return learnBoardPack53;
+  if (lessonId == '5.4') return learnBoardPack54;
+  if (lessonId == '5.5') return learnBoardPack55;
+  if (lessonId == '5.6') return learnBoardPack56;
+  if (lessonId == '5.7') return learnBoardPack57;
+  if (lessonId == '5.8') return learnBoardPack58;
+  if (lessonId == '5.9') return learnBoardPack59;
+  if (lessonId == '5.10') return learnBoardPack510;
   return null;
 }
 

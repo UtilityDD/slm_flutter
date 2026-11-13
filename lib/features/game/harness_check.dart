@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'harness_store.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
@@ -52,6 +53,12 @@ import 'spoken_once.dart';
 // without all four checks (or because he said so); rejecting a sound
 // harness (it stays on the stand, still to judge).
 // Three slips strike the level out.
+//
+// The coworker cannot be skipped by playing fast: পরব / বাতিল on his harness
+// waits for him (holdForCoworker). No scene input while a right call is being
+// rewarded (tableBusy). Gesture hints (how, never what): a sweep over the
+// harnesses on the board, over the tools still to use (then over পরব / বাতিল),
+// a short drag nudge in each close look and a tap on its X once it is done.
 //
 // Voice: the guide's lines by device TTS; the coworker in his recorded voice.
 // Art: the store and the harnesses are drawn in code; mistake pictures in
@@ -269,7 +276,7 @@ abstract final class HarnessMistakes {
     key: '1.4/harness/expired',
     textBn: 'লেবেলের মেয়াদ পেরিয়ে গেছে — রোদে ফিতে ভেতর থেকে দুর্বল হয়, বাইরে বোঝা যায় না। মেয়াদ উত্তীর্ণ হারনেস নয়।',
     art: 'assets/game/art/harness/harness_label.svg',
-        lessonPoint: 1,
+    lessonPoint: 1,
   );
   static const skipped = DoMistake(
     key: '1.4/harness/skipped-check',
@@ -441,6 +448,7 @@ class HarnessRun {
   }
 
   void next() {
+    if (ended) return;
     index++;
     checks.clear();
     shown = false;
@@ -555,13 +563,21 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
   /// It goes: into the crate (rejected) or off the stand (worn).
   var _leaving = false;
   int _wake = 0;
-  var _coworkerArmed = false;
 
   /// A deadly call: the store freezes grey while the fall plays in colour.
   var _freeze = false;
   Completer<void>? _frozen;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+
+  // Gesture hints: where the things to touch are on screen.
+  final _hints = IdleHintController();
+  final Map<String, GlobalKey> _pegKeys = {};
+  final _toolKeys = [for (var i = 0; i < HarnessCheck.values.length; i++) GlobalKey()];
+  final _rejectKey = GlobalKey();
+  final _wearKey = GlobalKey();
+  final _lensKey = GlobalKey();
+  final _lensCloseKey = GlobalKey();
 
   @override
   LevelContext get deathCtx => widget.ctx;
@@ -601,7 +617,8 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
     unawaited(_sayChain([HarnessLines.take]));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && _lens == null && !_leaving;
+  bool get _canPlay =>
+      !_intro && !_busy && !_ended && !tableBusy && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && _lens == null && !_leaving;
 
   // --- choose: take one down from its hook ---------------------------------------
   void _take(HarnessItem h, int peg) {
@@ -614,11 +631,9 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
       _fromPeg = peg;
       _wake++;
     });
-    // The coworker comes once, on his harness, a moment after a first check.
-    if (!_coworkerArmed && _run.pushOnHand) {
-      _coworkerArmed = true;
-      scheduleCoworker();
-    }
+    // The coworker comes once, on his harness, a moment after a first check
+    // (or at once if the call comes first: _decide waits for him).
+    if (!coworkerDone && _run.pushOnHand) scheduleCoworker();
     unawaited(_sayChain([HarnessLines.ask]));
   }
 
@@ -650,12 +665,18 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
   void _tapItem(Offset local, Size size) {
     if (!_canPlay || !_taken) return;
     final z = HarnessPainter.zoneAt(_run.current.shape, local, size);
-    if (z != null) _openLens(HarnessCheck.values[z]);
+    if (z == null) {
+      _hints.missTap();
+      return;
+    }
+    _openLens(HarnessCheck.values[z]);
   }
 
   // --- the decision ---------------------------------------------------------------
   Future<void> _decide(bool wear, Offset origin, {bool pushed = false}) async {
     if (!_canPlay || !_taken) return;
+    // On his harness the call waits for him (he cannot be skipped).
+    if (holdForCoworker()) return;
     _hush();
     final m = _run.decide(wear: wear, pushed: pushed);
     HapticFeedback.mediumImpact();
@@ -701,8 +722,9 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
 
   void _next() {
     _run.next();
-    // He was due but the call came first: he tries the next full body one.
-    if (_coworkerArmed && !coworkerDone && !coworkerOpen && _run.movePush()) _coworkerArmed = false;
+    // Safety net: his harness was judged without him (the call waits for him,
+    // so this should not happen) → he comes on the next full body one.
+    if (!coworkerDone && !coworkerOpen && !_run.onBoard.any((x) => x.id == _run.pushId)) _run.movePush();
     if (_run.done) {
       setState(() => _leaving = false);
       unawaited(_finish());
@@ -755,6 +777,8 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
   @override
   bool? coworkerCanCome() {
     if (_ended || !_run.pushOnHand || _run.shown) return null;
+    // Never into the praise window of a right move.
+    if (tableBusy) return false;
     if (_intro || _busy || !_taken || _card != null || reasonOpen || _lens != null || _leaving || _run.checks.isEmpty) return false;
     return true;
   }
@@ -942,6 +966,39 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
     if (leave == true) _popOnce(false);
   }
 
+  // --- gesture hints (how to touch, never the answer) -------------------------
+  HintSpec? _hint() {
+    final lens = _lens;
+    if (lens != null) {
+      // Done here: put it down (the X). Else a short nudge of the gesture.
+      if (_run.checks.contains(lens)) return HintSpec.tapOn(_lensCloseKey);
+      final r = HintSpec.globalRectOf(_lensKey);
+      if (r == null) return null;
+      final y = r.top + r.height * 0.42;
+      return switch (lens) {
+        // Short, from the far left: it ends before the 0.2 band where damage
+        // can sit, so the hand never glides over a hidden cut.
+        // The strip starts 5 (card border) + 14 (painter side) in; the band
+        // begins 0.2 of its length further. Stop 14 dp short of it at any width.
+        HarnessCheck.webbing => HintSpec.drag(Offset(r.left + 24, y),
+            toward: const Offset(1, 0), travel: math.max(8.0, 19 + 0.2 * (r.width - 38) - 14 - 24)),
+        HarnessCheck.stitch => HintSpec.drag(Offset(r.center.dx, y - 20), toward: const Offset(0, 1)),
+        HarnessCheck.hardware => HintSpec.drag(Offset(r.center.dx - 40, y), toward: const Offset(1, 0), travel: 80),
+        HarnessCheck.label => HintSpec.drag(Offset(r.left + 107, r.top + 112), toward: const Offset(0, -1)),
+      };
+    }
+    if (!_taken) {
+      final keys = [for (final x in _run.onBoard) ?_pegKeys[x.id]];
+      if (keys.isEmpty) return null;
+      return keys.length == 1 ? HintSpec.tapOn(keys.single) : HintSpec.sweepOver(keys);
+    }
+    final open = [
+      for (final c in HarnessCheck.values)
+        if (!_run.checks.contains(c)) _toolKeys[c.index],
+    ];
+    return HintSpec.sweepOver(open.isNotEmpty ? open : [_rejectKey, _wearKey]);
+  }
+
   // --- the scene ---------------------------------------------------------------
   LinemanMode get _mode {
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
@@ -976,7 +1033,14 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
     final world = <Widget>[
       Positioned.fill(
         key: const ValueKey('store'),
-        child: IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: HarnessStorePainter(geo: geo)))),
+        // A tap on the bare store hits nothing: it counts toward the hint.
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            if (_canPlay) _hints.missTap();
+          },
+          child: RepaintBoundary(child: CustomPaint(painter: HarnessStorePainter(geo: geo))),
+        ),
       ),
       Positioned.fromRect(
         key: const ValueKey('calendar'),
@@ -988,16 +1052,19 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
         Positioned.fromRect(
           key: ValueKey('peg-${x.id}'),
           rect: geo.pegItem(_pegOf(x)),
-          child: Semantics(
-            button: true,
-            label: HarnessLines.pegLabel(_pegOf(x)),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => _take(x, _pegOf(x)),
-              onVerticalDragEnd: (d) {
-                if ((d.primaryVelocity ?? 0) > 0) _take(x, _pegOf(x));
-              },
-              child: CustomPaint(painter: HarnessPainter(shape: x.shape, color: x.color)),
+          child: KeyedSubtree(
+            key: _pegKeys.putIfAbsent(x.id, GlobalKey.new),
+            child: Semantics(
+              button: true,
+              label: HarnessLines.pegLabel(_pegOf(x)),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _take(x, _pegOf(x)),
+                onVerticalDragEnd: (d) {
+                  if ((d.primaryVelocity ?? 0) > 0) _take(x, _pegOf(x));
+                },
+                child: CustomPaint(painter: HarnessPainter(shape: x.shape, color: x.color)),
+              ),
             ),
           ),
         ),
@@ -1109,7 +1176,11 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && _taken && !_run.shown && !deckUp && !coworkerOpen && _card == null && _lens == null && !_leaving;
+    final handsOn = playing && _taken && !_busy && !tableBusy && !_run.shown && !deckUp && !coworkerOpen && _card == null && _lens == null && !_leaving;
+    // The hand shows only while the level waits for a touch on the scene
+    // (the decks and the proceed card bring their own hints).
+    final boardWait = playing && !_taken && _canPlay;
+    final lensWait = playing && _lens != null && _card == null && !coworkerOpen && !_busy;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1137,6 +1208,10 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: boardWait || handsOn || lensWait,
+            hintKey: '${_run.index}|$_taken|${_lens?.name}|${_run.checks.length}|${_card?.key}|$coworkerDone',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (handsOn) ...[
@@ -1147,11 +1222,14 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
                   child: Row(
                     children: [
                       for (final c in HarnessCheck.values)
-                        _ToolButton(
-                          icon: _toolIcons[c.index],
-                          label: HarnessLines.checks[c.index],
-                          done: _run.checks.contains(c),
-                          onTap: () => _openLens(c),
+                        KeyedSubtree(
+                          key: _toolKeys[c.index],
+                          child: _ToolButton(
+                            icon: _toolIcons[c.index],
+                            label: HarnessLines.checks[c.index],
+                            done: _run.checks.contains(c),
+                            onTap: () => _openLens(c),
+                          ),
                         ),
                     ],
                   ),
@@ -1163,9 +1241,19 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(child: DoBigButton(label: HarnessLines.reject, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
+                      Expanded(
+                        child: KeyedSubtree(
+                          key: _rejectKey,
+                          child: DoBigButton(label: HarnessLines.reject, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition))),
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: HarnessLines.wear, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
+                      Expanded(
+                        child: KeyedSubtree(
+                          key: _wearKey,
+                          child: DoBigButton(label: HarnessLines.wear, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition))),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1189,6 +1277,8 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
                   today: widget.today,
                   quiet: quiet,
                   muted: _muted,
+                  cardKey: _lensKey,
+                  closeKey: _lensCloseKey,
                   onChecked: _checked,
                   onClose: _closeLens,
                 ),
@@ -1443,6 +1533,8 @@ class _Lens extends StatelessWidget {
     required this.today,
     required this.quiet,
     required this.muted,
+    required this.cardKey,
+    required this.closeKey,
     required this.onChecked,
     required this.onClose,
   });
@@ -1451,6 +1543,10 @@ class _Lens extends StatelessWidget {
   final DateTime today;
   final bool quiet;
   final bool muted;
+
+  /// Where the card and its X are (the gesture hint).
+  final GlobalKey cardKey;
+  final GlobalKey closeKey;
   final ValueChanged<HarnessCheck> onChecked;
   final VoidCallback onClose;
 
@@ -1482,6 +1578,7 @@ class _Lens extends StatelessWidget {
                 width: w,
                 height: h,
                 child: Semantics(
+                  key: cardKey,
                   label: HarnessLines.lensLabel(check),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -1508,6 +1605,7 @@ class _Lens extends StatelessWidget {
                 left: left + w - 38,
                 top: top - 10,
                 child: Semantics(
+                  key: closeKey,
                   button: true,
                   label: HarnessLines.close,
                   child: GestureDetector(

@@ -4,7 +4,9 @@
 // a report with nothing marked is not scored; climbing the live pole on his
 // say-so is deadly), the deal, the reason libraries, and the level in the
 // shell: idle perf, the guide first, a full clean play (the coworker
-// refused), the unscored report, a slip card, and the deadly freeze.
+// refused), the unscored report (a neutral line), a slip card, three slips
+// strike out, the coworker on a fast play and on the sound pole, the gesture
+// hint (and none over a card), and the deadly freeze.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,8 +19,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m3_insulator_patrol.dart';
@@ -31,6 +36,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.2/do/1',
@@ -78,10 +84,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -92,7 +100,7 @@ Future<void> _mark(WidgetTester t, M3InsulatorPatrolKind kind, int i) async {
   await _pump(t, 200);
 }
 
-Future<ProviderContainer> _open(WidgetTester t, int seed) async {
+Future<ProviderContainer> _open(WidgetTester t, int seed, {int settleMs = 1500}) async {
   t.view.physicalSize = const Size(784, 1700);
   t.view.devicePixelRatio = 2.0;
   final c = ProviderContainer();
@@ -109,7 +117,7 @@ Future<ProviderContainer> _open(WidgetTester t, int seed) async {
   )));
   await _pump(t, 1000);
   await waitIntro(t);
-  await _pump(t, 1500);
+  await _pump(t, settleMs);
   return c;
 }
 
@@ -148,9 +156,10 @@ M3InsulatorPatrolDeal _deal(int s) => m3InsulatorPatrolDeal(math.Random(s));
 
 void main() {
   group('rules', () {
-    test('deals: pin, disc and shackle once each; one sound pole; 1–2 faults on the others; he comes at a faulty one', () {
+    test('deals: pin, disc and shackle once each; one sound pole; 1–2 faults on the others; he comes at any pole, the sound one too', () {
       final seen = <String>{};
       final calls = <int>{};
+      var onSound = 0;
       final kinds = <M3InsulatorPatrolFault>{};
       var decoys = 0;
       for (var s = 0; s < 120; s++) {
@@ -168,12 +177,13 @@ void main() {
           if (p.hasPolymer || p.hasGlass) decoys++;
           kinds.addAll(p.faults);
         }
-        expect(d.poles[d.callAt].sound, isFalse);
+        if (d.poles[d.callAt].sound) onSound++;
         calls.add(d.callAt);
         seen.add(d.poles.map((p) => '${p.kind.name}${p.units.map((u) => '${u.body.index}${u.fault?.index}').join()}').join('|') + d.callAt.toString());
       }
       expect(seen.length, greaterThan(100), reason: 'every play is dealt fresh');
       expect(calls, {0, 1, 2});
+      expect(onSound, inInclusiveRange(20, 70), reason: 'his arrival must not mean a faulty pole (about a third on the sound one)');
       expect(kinds, M3InsulatorPatrolFault.values.toSet(), reason: 'every fault turns up');
       expect(decoys, greaterThan(40));
     });
@@ -246,7 +256,7 @@ void main() {
       expect(a.decide(report: true), isNull, reason: 'nothing after the end');
     });
 
-    test('three slips fail the level (percent below 55 after more)', () {
+    test('the pure run: three slips leave 55 % (the page strikes out at the third, see the page test)', () {
       final d = M3InsulatorPatrolDeal(poles: [
         for (var i = 0; i < 3; i++)
           const M3InsulatorPatrolPole(id: 'x', kind: M3InsulatorPatrolKind.pin, units: [
@@ -264,6 +274,14 @@ void main() {
       expect(run.done, isTrue);
       expect(run.percent, 55);
       expect(run.slips, 3);
+    });
+
+    test('the guide reply after he is refused is neutral: no verdict before the decision', () {
+      const held = M3InsulatorPatrolLines.callHeld;
+      for (final w in ['রিপোর্ট', 'সব ঠিক', 'খারাপ', 'ভালো']) {
+        expect(held.contains(w), isFalse, reason: w);
+      }
+      expect(M3InsulatorPatrolMistakes.climbLive.textBn, contains('শাটডাউন'), reason: 'the climb is deadly on any live pole, not only a faulty one');
     });
 
     test('the view: every insulator inside the lens, hit areas ≥ 48 and apart', () {
@@ -366,7 +384,7 @@ void main() {
         }
         debugPrint('PERF m3_insulator_patrol ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -457,6 +475,141 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('the empty-report line is neutral: it never says a fault is there (same on the sound pole)', (t) async {
+      expect(M3InsulatorPatrolLines.markFirst.contains('খারাপ'), isFalse);
+      var seed = 0;
+      while (_deal(seed).callAt == 0 || !_deal(seed).poles[0].sound) {
+        seed++;
+      }
+      final c = await _open(t, seed);
+      await t.tap(find.text(M3InsulatorPatrolLines.report));
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(guideDirectorProvider).line, M3InsulatorPatrolLines.markFirst);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike out: the StruckOutCard, no fourth card', (t) async {
+      var seed = 0;
+      while (_deal(seed).callAt == 0) {
+        seed++;
+      }
+      final deal = _deal(seed);
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        final p = deal.poles[i];
+        if (i == deal.callAt) {
+          expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
+          await _pickRight(t, M3InsulatorPatrolLines.coworker.right);
+          await _pump(t, 2000);
+        }
+        if (p.sound) {
+          await _mark(t, p.kind, 0);
+          await t.tap(find.text(M3InsulatorPatrolLines.report));
+        } else {
+          await t.tap(find.text(M3InsulatorPatrolLines.ok));
+        }
+        await _pump(t, 1000);
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${i + 1}');
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 1500);
+        }
+      }
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.text(M3InsulatorPatrolLines.report), findsNothing, reason: 'the play is over');
+      expect(c.read(gameSaveProvider).rungProgress['3.2/do/1'], isNot('cleared'));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast call on his pole does not skip him: he comes first, then the call counts', (t) async {
+      var seed = 0;
+      while (_deal(seed).callAt != 0) {
+        seed++;
+      }
+      final p = _deal(seed).poles[0];
+      final c = await _open(t, seed, settleMs: 100);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet come by himself');
+      await t.tap(find.text(M3InsulatorPatrolLines.ok));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the fast tap brings him in');
+      expect(find.byType(MistakeCard), findsNothing, reason: 'the call waited for him');
+      await _pickRight(t, M3InsulatorPatrolLines.coworker.right);
+      await _pump(t, 2000);
+      for (final f in p.faulty) {
+        await _mark(t, p.kind, f);
+      }
+      await t.tap(find.text(p.sound ? M3InsulatorPatrolLines.ok : M3InsulatorPatrolLines.report));
+      await _pump(t, 1500);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the reason deck');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('he also comes on the sound pole: refused, the guide stays neutral, then "সব ঠিক" is right', (t) async {
+      var seed = 0;
+      while (_deal(seed).callAt != 0 || !_deal(seed).poles[0].sound) {
+        seed++;
+      }
+      final c = await _open(t, seed);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue, reason: 'he comes on a sound pole too');
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 600);
+      await _pickRight(t, M3InsulatorPatrolLines.coworker.right);
+      await _pump(t, 2000);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he has left');
+      await t.tap(find.text(M3InsulatorPatrolLines.ok));
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the reason deck');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: three taps on nothing sweep the hand over every insulator and both buttons', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      var seed = 0;
+      while (_deal(seed).callAt == 0) {
+        seed++;
+      }
+      final p = _deal(seed).poles[0];
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(const Offset(330, 420) * _k);
+        await _pump(t, 150);
+      }
+      final hint = t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+      expect(hint.showing, isTrue);
+      expect(hint.debugOptions, hasLength(M3InsulatorPatrolGeo.count(p.kind) + 2));
+      await t.tapAt(const Offset(330, 420) * _k);
+      await _pump(t, 200);
+      expect(hint.showing, isFalse, reason: 'a touch hides it');
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: never while a slip card waits', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      var seed = 0;
+      while (_deal(seed).callAt == 0 || _deal(seed).poles[0].sound) {
+        seed++;
+      }
+      final c = await _open(t, seed);
+      await t.tap(find.text(M3InsulatorPatrolLines.ok));
+      await _pump(t, 800);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      await _pump(t, 12000);
+      final hint = t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+      expect(hint.showing, isFalse, reason: 'no hint over a card');
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      await _close(t, c);
+    });
+
     testWidgets('"সব ঠিক" on a faulty pole: the slip card names the missed fault', (t) async {
       var seed = 0;
       while (_deal(seed).callAt == 0 || _deal(seed).poles[0].sound) {
@@ -484,9 +637,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M3InsulatorPatrolLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);

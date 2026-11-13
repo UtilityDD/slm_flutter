@@ -2,12 +2,15 @@
 // cut rules (gloves, the mark at the lug barrel, away from the body, never a
 // ring cut, a light groove first, never hard, a blunt blade swapped), the
 // bench verdicts (a faulty end back, a clean end passed, a needless send-back
-// not scored), the deal, the reason libraries, and the level in the shell:
-// idle perf, the guide first, the guide's nudges, a full clean play with the
-// coworker refused, a slip (card, the end redone) and three slips striking out.
+// a slip), the deal, the reason libraries, and the level in the shell: idle
+// perf, the guide first, the guide's nudges, a full clean play with the
+// coworker refused, he comes on a fast play (cut and bench), listening is a
+// slip, no preset pressure, the praise window, the gesture hint, a slip (card,
+// the end redone), the hurt flash surviving a close, three slips striking out.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,10 +21,13 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
+import 'package:slm_flutter/features/game/do_parts.dart' show DoBigButton;
 import 'package:slm_flutter/features/game/m2_skin_cut.dart';
+import 'package:slm_flutter/features/game/m2_skin_cut_world.dart' show SkinBenchPainter, SkinKnifePainter;
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro;
 import 'package:slm_flutter/features/game/spoken_once.dart';
@@ -31,6 +37,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.6/do/1',
@@ -65,20 +72,20 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
+}
+
+Future<void> _pickWrong(WidgetTester t, List<String> wrong) async {
+  await waitChoiceDeck(t);
+  final w = _onScreen(wrong);
+  expect(w, isNotEmpty, reason: wrong.first);
+  await t.tap(w.first, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -119,7 +126,8 @@ Future<void> _stroke(WidgetTester t, double strip, {Offset by = const Offset(48,
 }
 
 /// Skins cable [i] right: gloves, blade, the mark, a light then a medium stroke
-/// (on his round he cuts in on the first stroke and is refused). Then the reason.
+/// (on his round he comes once he has seen the first stroke away and is
+/// refused). Then the reason.
 Future<void> _cutRight(WidgetTester t, SkinDeal deal, int i) async {
   final cable = deal.cables[i];
   if (i == 0) {
@@ -137,19 +145,15 @@ Future<void> _cutRight(WidgetTester t, SkinDeal deal, int i) async {
   await _stroke(t, cable.barrel);
   if (deal.push == SkinPush.cut && deal.callAt == i) {
     expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes on cut $i');
-    await _pumpUntil(t, find.byType(ChoiceDeck));
-    await _pump(t, 600);
     await _pickRight(t, SkinLines.coworkerCut.right);
     await _pump(t, 1500);
-    await _stroke(t, cable.barrel);
+    expect(find.byType(MistakeCard), findsNothing, reason: 'refused: no slip');
   }
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'cut $i');
   await t.tap(_label(SkinLines.medium));
   await _pump(t, 200);
   await _stroke(t, cable.barrel);
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'cut $i');
-  await _pumpUntil(t, find.byType(ChoiceDeck));
-  await _pump(t, 700);
   await _pickRight(t, SkinLines.cutWhy);
   await _pump(t, 5000);
 }
@@ -169,14 +173,10 @@ Future<void> _judgeRight(WidgetTester t, SkinDeal deal, int i) async {
   await _pump(t, 300);
   if (deal.push == SkinPush.bench && deal.callEnd == i) {
     expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes on end $i');
-    await _pumpUntil(t, find.byType(ChoiceDeck));
-    await _pump(t, 600);
     await _pickRight(t, SkinLines.coworkerBench.right);
     await _pump(t, 1500);
   }
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'end $i');
-  await _pumpUntil(t, find.byType(ChoiceDeck));
-  await _pump(t, 700);
   await _pickRight(t, SkinLines.faultWhy(f));
   await _pump(t, 5000);
 }
@@ -203,7 +203,7 @@ void main() {
           expect(d.callEnd, -1);
         } else {
           expect(d.callAt, 2);
-          expect(d.ends[d.callEnd], isNot(SkinFault.none));
+          expect(d.ends[d.callEnd], SkinFault.nick, reason: 'his scratch myth fits only the nicked end');
         }
         seen.add('${d.cables.map((c) => '${c.barrel}${c.blunt}').join()}${d.ends}${d.push}${d.callAt}${d.callEnd}');
       }
@@ -279,22 +279,27 @@ void main() {
       expect(skinStrokeOf(Offset.zero, const Offset(10, 6)), isNull);
     });
 
-    test('the bench: faulty ends back, clean ends pass; passing a fault is a slip; a clean end sent back is not scored', () {
+    test('the bench: faulty ends back, clean ends pass; passing a fault and sending a clean end back are slips', () {
       final r = SkinRun(deal1())
         ..next()
         ..next();
       expect(r.onBench, isTrue);
-      expect(r.judge(1, redo: true), isNull);
-      expect(r.verdicts.containsKey(1), isFalse, reason: 'needless: the end stays to judge');
+      expect(r.judge(1, redo: true), SkinMistakes.needlessRedo, reason: 'a wrong call costs');
+      expect(r.verdicts[1], isTrue, reason: 'decided: skinned again');
       expect(r.needless, 1);
-      expect(r.slips, 0);
-      expect(r.judge(1, redo: false), isNull);
-      expect(r.caught, contains(SkinLines.caughtClean));
+      expect(r.slips, 1);
+      expect(r.judge(1, redo: false), isNull, reason: 'decided once');
+      expect(r.caught, isNot(contains(SkinLines.caughtClean)));
       expect(r.judge(0, redo: false), SkinMistakes.passNick);
       expect(r.verdicts[0], isTrue, reason: 'sent back after the card');
       expect(r.judge(2, redo: false), SkinMistakes.passEdge);
-      expect(r.slips, 2);
+      expect(r.slips, 3);
       expect(r.benchDone, isTrue);
+      final c = SkinRun(deal1())
+        ..next()
+        ..next();
+      expect(c.judge(1, redo: false), isNull);
+      expect(c.caught, contains(SkinLines.caughtClean));
       final s = SkinRun(deal1())
         ..next()
         ..next();
@@ -309,6 +314,41 @@ void main() {
       }
     });
 
+    test('the +5 thorough bonuses cannot be farmed: a needless swap or blind lens taps lose them', () {
+      // The blade looked at and kept (sharp), or swapped when blunt: thorough.
+      expect((ready()..checkBlade()).thoroughCut, isTrue);
+      expect((ready(blunt: true)
+            ..checkBlade()
+            ..swapBlade())
+          .thoroughCut, isTrue);
+      // Swapping a sharp blade (the "always swap" play) loses the bonus.
+      expect((ready()
+            ..checkBlade()
+            ..swapBlade())
+          .thoroughCut, isFalse);
+      expect(ready().thoroughCut, isFalse, reason: 'never looked');
+      // A faulty end: its fault found with at most one stray tap.
+      SkinRun bench() => SkinRun(deal1())
+        ..next()
+        ..next();
+      expect((bench()..spot(0, onFault: true)).thoroughEnd(0), isTrue);
+      expect((bench()
+            ..spot(0, onFault: false)
+            ..spot(0, onFault: true))
+          .thoroughEnd(0), isTrue, reason: 'one stray tap is allowed');
+      final blind = bench()
+        ..spot(0, onFault: false)
+        ..spot(0, onFault: false)
+        ..spot(0, onFault: true);
+      expect(blind.thoroughEnd(0), isFalse, reason: 'tapping all over the lens is not paid');
+      // A clean end: at most one stray tap (unchanged).
+      expect((bench()..spot(1, onFault: false)).thoroughEnd(1), isTrue);
+      expect((bench()
+            ..spot(1, onFault: false)
+            ..spot(1, onFault: false))
+          .thoroughEnd(1), isFalse);
+    });
+
     test('the lesson\'s words, English digits only; every mistake has its picture and a lesson point (or the pro tip)', () {
       final all = <String>[
         SkinLines.intro,
@@ -318,7 +358,7 @@ void main() {
         for (final f in SkinFault.values) ...SkinLines.faultWhy(f),
         ...SkinLines.redoExcuses,
         ...SkinLines.passMyths,
-        SkinLines.needless,
+        SkinLines.askPress,
         for (final cw in [SkinLines.coworkerCut, SkinLines.coworkerBench]) ...[...cw.recordedLines, ...cw.right, ...cw.wrong, ...cw.asks],
         for (final m in SkinMistakes.all) m.textBn,
         SkinLines.allSet,
@@ -333,6 +373,7 @@ void main() {
       expect(SkinMistakes.noGroove.lessonPoint, isNull);
       for (final m in SkinMistakes.all) {
         if (m != SkinMistakes.noGroove) expect(m.lessonPoint, inInclusiveRange(0, 2), reason: m.key);
+        expect(m.deadly, isFalse, reason: m.key);
         expect(m.key, startsWith('2.6/skin/'));
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
       }
@@ -413,7 +454,7 @@ void main() {
         }
         debugPrint('PERF m2_skin_cut ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -539,7 +580,89 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('a clean end sent back is not scored: no card, the guide says why, the end stays', (t) async {
+    testWidgets('a clean end sent back costs a slip: a card after the decision, never a revealing reply', (t) async {
+      var seed = 0;
+      late SkinDeal deal;
+      while (true) {
+        deal = dealSkin(math.Random(seed));
+        if (deal.push == SkinPush.cut && deal.ends.contains(SkinFault.none)) break;
+        seed++;
+      }
+      final c = await _open(t, seed);
+      await _cutRight(t, deal, 0);
+      await _cutRight(t, deal, 1);
+      final clean = deal.ends.indexOf(SkinFault.none);
+      await t.tapAt(_screen(_geo.endRect(clean).center));
+      await _pump(t, 500);
+      await t.tap(find.text(SkinLines.redo));
+      await _pump(t, 900);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes.single.key, SkinMistakes.needlessRedo.key);
+      expect(_label(SkinLines.lensLabel), findsNothing, reason: 'decided: the lens closes');
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _close(t, c);
+    });
+
+    testWidgets('no preset pressure: a stroke away waits for a pick (no slip), the guide asks', (t) async {
+      var seed = 0;
+      while (dealSkin(math.Random(seed)).push == SkinPush.cut && dealSkin(math.Random(seed)).callAt == 0) {
+        seed++;
+      }
+      final deal = dealSkin(math.Random(seed));
+      final c = await _open(t, seed);
+      final cable = deal.cables[0];
+      await t.tap(_label(SkinLines.gloves));
+      await _pump(t, 300);
+      await t.tapAt(_screen(Offset(SkinGeo.endX - cable.barrel, _geo.cableY)));
+      await _pump(t, 300);
+      final names = SkinPress.values.map(SkinLines.pressBn).toSet();
+      final picked = find.byWidgetPredicate((w) => w is Semantics && (w.properties.selected ?? false) && names.contains(w.properties.label));
+      expect(picked, findsNothing, reason: 'no pressure preset');
+      await _stroke(t, cable.barrel);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(guideDirectorProvider).line, SkinLines.askPress);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast cut: the next stroke away waits for him; listening is a slip', (t) async {
+      var seed = 0;
+      late SkinDeal deal;
+      while (true) {
+        deal = dealSkin(math.Random(seed));
+        if (deal.push == SkinPush.cut && deal.callAt == 0 && !deal.cables[0].blunt) break;
+        seed++;
+      }
+      final c = await _open(t, seed);
+      final cable = deal.cables[0];
+      final from = _screen(Offset(SkinGeo.endX - cable.barrel + 8, _geo.cableY));
+      await t.tap(_label(SkinLines.gloves));
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tapAt(_screen(Offset(SkinGeo.endX - cable.barrel, _geo.cableY)));
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tap(_label(SkinLines.light));
+      await t.pump(const Duration(milliseconds: 50));
+      await t.dragFrom(from, const Offset(48, 0) * _k);
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tap(_label(SkinLines.medium));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet: the play is fast');
+      await t.dragFrom(from, const Offset(48, 0) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the stroke that would finish waits for him');
+      expect(find.text(SkinLines.stampDone), findsNothing, reason: 'the held stroke did not finish the cut');
+      await _pickWrong(t, SkinLines.coworkerCut.wrong);
+      await _pump(t, 1500);
+      expect(find.byType(MistakeCard), findsOneWidget, reason: 'listening = a slip');
+      expect(c.read(gameSaveProvider).mistakes.single.key, SkinMistakes.towardBody.key);
+      expect(SkinMistakes.towardBody.deadly, isFalse);
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast bench verdict on the nicked end', (t) async {
       var seed = 0;
       late SkinDeal deal;
       while (true) {
@@ -550,17 +673,199 @@ void main() {
       final c = await _open(t, seed);
       await _cutRight(t, deal, 0);
       await _cutRight(t, deal, 1);
-      final clean = deal.ends.indexOf(SkinFault.none);
-      await t.tapAt(_screen(_geo.endRect(clean).center));
-      await _pump(t, 500);
-      await t.tap(find.text(SkinLines.redo));
-      await _pump(t, 600);
+      await t.tapAt(_screen(_geo.endRect(deal.callEnd).center));
+      await t.pump(const Duration(milliseconds: 400));
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(SkinLines.pass));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the verdict waits for him');
+      expect(find.byType(MistakeCard), findsNothing, reason: 'the pass was held, not booked');
+      await _pickRight(t, SkinLines.coworkerBench.right);
+      await _pump(t, 1500);
       expect(find.byType(MistakeCard), findsNothing);
-      expect(find.byType(ChoiceDeck), findsNothing);
-      expect(c.read(guideDirectorProvider).line, SkinLines.needless);
-      expect(_label(SkinLines.lensLabel), findsOneWidget, reason: 'the end is still to judge');
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
       await _close(t, c);
+    });
+
+    testWidgets('the praise window takes no touch: a tap on another end right after a verdict opens nothing', (t) async {
+      var seed = 0;
+      late SkinDeal deal;
+      while (true) {
+        deal = dealSkin(math.Random(seed));
+        if (deal.push == SkinPush.cut && deal.ends.contains(SkinFault.none)) break;
+        seed++;
+      }
+      final c = await _open(t, seed);
+      await _cutRight(t, deal, 0);
+      await _cutRight(t, deal, 1);
+      final i = deal.ends.indexOf(SkinFault.none);
+      await t.tapAt(_screen(_geo.endRect(i).center));
+      await _pump(t, 500);
+      await t.tap(find.text(SkinLines.pass));
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tapAt(_screen(_geo.endRect((i + 1) % 3).center));
+      await t.pump(const Duration(milliseconds: 300));
+      expect(_label(SkinLines.lensLabel), findsNothing, reason: 'no lens in the praise window');
+      await _close(t, c);
+    });
+
+    testWidgets('the hurt flash survives the level closing mid-flash', (t) async {
+      var seed = 0;
+      while (dealSkin(math.Random(seed)).push == SkinPush.cut && dealSkin(math.Random(seed)).callAt == 0) {
+        seed++;
+      }
+      final c = await _open(t, seed);
+      await t.dragFrom(_screen(Offset(SkinGeo.endX - 20, _geo.cableY)), const Offset(-60, 0));
+      await t.pump(const Duration(milliseconds: 200));
+      expect(find.text(SkinLines.ouch), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 3));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    int seedWhere(bool Function(SkinDeal d) ok) {
+      var seed = 0;
+      while (!ok(dealSkin(math.Random(seed)))) {
+        seed++;
+      }
+      return seed;
+    }
+
+    bool quietCut0(SkinDeal d) => !(d.push == SkinPush.cut && d.callAt == 0);
+    DoBigButton bigButton(WidgetTester t, String label) => t.widget<DoBigButton>(find.byWidgetPredicate((w) => w is DoBigButton && w.label == label));
+    Finder bigButtonAt(String label) => find.byWidgetPredicate((w) => w is DoBigButton && w.label == label);
+
+    for (final flip in [false, true]) {
+      testWidgets('the blade card: both buttons look the same, in a dealt order (keep first: $flip)', (t) async {
+        final seed = seedWhere((d) => quietCut0(d) && (d.cables[0].colour >= 2) == flip);
+        final c = await _open(t, seed);
+        await t.tap(_label(SkinLines.blade));
+        await _pump(t, 500);
+        expect(bigButton(t, SkinLines.newBlade).filled, isFalse, reason: 'swap is not drawn as the answer');
+        expect(bigButton(t, SkinLines.keepBlade).filled, isFalse);
+        final keepLeft = t.getCenter(bigButtonAt(SkinLines.keepBlade)).dx < t.getCenter(bigButtonAt(SkinLines.newBlade)).dx;
+        expect(keepLeft, flip);
+        await _close(t, c);
+      });
+    }
+
+    testWidgets('the lens card: both verdicts look the same, in a dealt order', (t) async {
+      final seed = seedWhere((d) => d.push == SkinPush.cut);
+      final deal = dealSkin(math.Random(seed));
+      final c = await _open(t, seed);
+      await _cutRight(t, deal, 0);
+      await _cutRight(t, deal, 1);
+      await t.tapAt(_screen(_geo.endRect(0).center));
+      await _pump(t, 500);
+      expect(_label(SkinLines.lensLabel), findsOneWidget);
+      expect(bigButton(t, SkinLines.pass).filled, isFalse);
+      expect(bigButton(t, SkinLines.redo).filled, isFalse);
+      final redoLeft = t.getCenter(bigButtonAt(SkinLines.redo)).dx < t.getCenter(bigButtonAt(SkinLines.pass)).dx;
+      expect(redoLeft, deal.cables[1].colour.isOdd, reason: 'end 0: the order is dealt');
+      await _close(t, c);
+    });
+
+    testWidgets('no giveaway on the scene: the knife looks sharp from afar even when blunt', (t) async {
+      final seed = seedWhere((d) => quietCut0(d) && d.cables[0].blunt);
+      final c = await _open(t, seed);
+      final knife = find.byWidgetPredicate((w) => w is CustomPaint && w.painter is SkinKnifePainter);
+      expect(knife, findsOneWidget);
+      expect((t.widget<CustomPaint>(knife).painter! as SkinKnifePainter).blunt, isFalse, reason: 'a blunt blade shows only in the close-up');
+      await _close(t, c);
+    });
+
+    testWidgets('no giveaway on the bench: the overview paints the same whatever the faults', (t) async {
+      final colours = [for (final c in [2, 0, 1]) kSkinColours[c]];
+      Future<List<int>> render(List<SkinFault> faults) async {
+        final out = await t.runAsync(() async {
+          final rec = ui.PictureRecorder();
+          SkinBenchPainter(geo: _geo, faults: faults, colours: colours).paint(Canvas(rec), const Size(360, 800));
+          final img = await rec.endRecording().toImage(360, 800);
+          final bytes = await img.toByteData(format: ui.ImageByteFormat.rawRgba);
+          img.dispose();
+          return bytes!.buffer.asUint8List().toList();
+        });
+        return out!;
+      }
+
+      final clean = await render(const [SkinFault.none, SkinFault.none, SkinFault.none]);
+      for (final faults in const [
+        [SkinFault.nick, SkinFault.none, SkinFault.none],
+        [SkinFault.none, SkinFault.strand, SkinFault.edge],
+        [SkinFault.black, SkinFault.none, SkinFault.nick],
+      ]) {
+        expect(await render(faults), clean, reason: '$faults');
+      }
+    });
+
+    group('gesture hint', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      Future<IdleHintState> waitHint(WidgetTester t, {int maxMs = 16000}) async {
+        for (var ms = 0; ms < maxMs; ms += 100) {
+          final h = t.state<IdleHintState>(find.byType(IdleHint).first);
+          if (h.showing) return h;
+          await t.pump(const Duration(milliseconds: 100));
+        }
+        return t.state<IdleHintState>(find.byType(IdleHint).first);
+      }
+
+      testWidgets('idle under the lens: a sweep over the lens and both verdicts', (t) async {
+        final seed = seedWhere((d) => d.push == SkinPush.cut);
+        final deal = dealSkin(math.Random(seed));
+        final c = await _open(t, seed);
+        await _cutRight(t, deal, 0);
+        await _cutRight(t, deal, 1);
+        await t.tapAt(_screen(_geo.endRect(0).center));
+        await _pump(t, 500);
+        expect(_label(SkinLines.lensLabel), findsOneWidget);
+        final hint = await waitHint(t);
+        expect(hint.showing, isTrue);
+        expect(hint.debugOptions, hasLength(3), reason: 'the lens, চলবে, আবার ছিলতে হবে');
+        expect(hint.debugFrame?.press ?? 0, 0, reason: 'a sweep presses nothing');
+        await _close(t, c);
+      });
+
+      testWidgets('the bench with one end left: a tap on it (opening it is the only way on)', (t) async {
+        final seed = seedWhere((d) => d.push == SkinPush.cut);
+        final deal = dealSkin(math.Random(seed));
+        final c = await _open(t, seed);
+        await _cutRight(t, deal, 0);
+        await _cutRight(t, deal, 1);
+        await _judgeRight(t, deal, 0);
+        await _judgeRight(t, deal, 1);
+        await _pump(t, 200);
+        final hint = await waitHint(t);
+        expect(hint.showing, isTrue);
+        expect(hint.debugOptions, isEmpty, reason: 'a tap, not a sweep');
+        var rippled = false;
+        for (var ms = 0; ms < 1800 && !rippled; ms += 50) {
+          rippled = hint.debugFrame?.ripple != null;
+          await t.pump(const Duration(milliseconds: 50));
+        }
+        expect(rippled, isTrue, reason: 'the hand taps');
+        await _close(t, c);
+      });
+
+      testWidgets('idle on the cut: a sweep over the tools, the pressure and the cable (never a drag)', (t) async {
+        var seed = 0;
+        while (dealSkin(math.Random(seed)).push == SkinPush.cut && dealSkin(math.Random(seed)).callAt == 0) {
+          seed++;
+        }
+        final c = await _open(t, seed);
+        final hint = t.state<IdleHintState>(find.byType(IdleHint).first);
+        expect(hint.showing, isFalse);
+        await _pump(t, 9000);
+        expect(hint.showing, isTrue);
+        expect(hint.debugOptions, hasLength(6), reason: 'two tools, three pressures, the cable');
+        expect(hint.debugFrame?.press ?? 0, 0, reason: 'a sweep presses nothing');
+        await t.tap(_label(SkinLines.gloves));
+        await t.pump();
+        expect(hint.showing, isFalse, reason: 'any touch hides it');
+        await _close(t, c);
+      });
     });
   });
 }

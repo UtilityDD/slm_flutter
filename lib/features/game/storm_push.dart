@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -51,8 +52,14 @@ import 'storm_push_world.dart';
 // ladder in a gale or a thunderstorm (also by listening to him). Slips: a
 // routine job in drizzle; an emergency climb without the waterproof gloves;
 // a shelter under the lone tree or at the pole's foot. Laying the ladder down
-// on the emergency fault in plain drizzle costs nothing ("Stop Work আপনার
-// অধিকার"): the guide says the lesson allows it; a second "না" moves on, no ◆.
+// on the emergency fault in plain drizzle is the worker's right (no slip) but
+// a needless stop: the situation ends with no ◆, the guide's reply stays
+// neutral (it never says the job could go on), and the play loses its third
+// star and the quick bonus (not a clean play).
+// The supervisor can't be skipped: the ladder is the decisive control and
+// waits for him ([CoworkerMoment.holdForCoworker]); no control acts in the
+// praise window ([ReasonTable.tableBusy]). Gesture hints: a short nudge on
+// the ladder (up and down by turns), a sweep over the three shelter places.
 //
 // Voice: the guide's lines by device TTS; the supervisor in the rival's
 // recorded voice. Art: drawn in code (storm_push_world.dart); mistake
@@ -138,10 +145,8 @@ enum StormStop {
   /// The right call: ◆, then why.
   right,
 
-  /// The emergency in plain drizzle: the lesson allows it (no cost, stays).
-  mayGoOn,
-
-  /// "না" again to it: the worker's right; on, with no ◆ and no cost.
+  /// "না" to the emergency in plain drizzle: the worker's right, but a
+  /// needless stop — on, with no ◆ and no slip (it costs the clean play).
   declined,
 }
 
@@ -196,7 +201,7 @@ abstract final class StormLines {
   ];
   static const windRight = [
     'প্রবল বাতাসে পোলে ভারসাম্য থাকে না',
-    'তার দুলে নিরাপদ দূরত্ব কমে, তাই উঠিনি',
+    'বাতাসে তার দুলে দূরত্ব কমে, তাই উঠিনি',
     'এমন বাতাসে উঁচুতে কাজ বন্ধ রাখতে হয়',
   ];
   static const thunderRight = [
@@ -212,17 +217,39 @@ abstract final class StormLines {
     'মই ভিজলে রং উঠে যাবে, তাই থামলাম',
     'বৃষ্টি এলে কাজে আমার মনই বসে না',
   ];
+  // A gale or a thunderstorm deck: every option, right and wrong, names the
+  // sky (no word is found only on one side's cards).
+  static const windWrong = [
+    'বাতাসে ছাতা উড়ে যায়, ভিজে যাব যে',
+    'এমন বাতাসে ধুলো ওড়ে, চোখে লাগে',
+    'বাতাসে ঠান্ডা লাগবে, জ্বর আসতে পারে',
+    'বাতাসে আজ লোক কম, কাল সবাই মিলে করব',
+    'বাতাসে টুপি উড়ে যাবে, তাই থামলাম',
+    'এই বাতাসে চায়ের দোকানে বসাই ভালো',
+  ];
+  static const thunderWrong = [
+    'বজ্র-বৃষ্টিতে ভিজলে জ্বর আসতে পারে',
+    'বজ্রের দিনে লোক কম, কাল সেরে নেব',
+    'বজ্রের শব্দে আজ কাজে মন বসছে না',
+    'বজ্র এলে চায়ের দোকানে বসাই ভালো',
+    'বজ্রে মোবাইল ভিজবে, তাই থামলাম',
+    'বজ্রের দিনে সুপারভাইজার আসেন না',
+  ];
   static const goRight = [
     'বৃষ্টিতে কেবল জরুরি ফল্টের কাজ চলে',
-    'জরুরি কাজে ওয়াটারপ্রুফ গ্লাভস, সাবধানে',
+    'ওয়াটারপ্রুফ গ্লাভসে, সর্বোচ্চ সতর্ক হয়ে',
     'বাতাস নেই, বজ্র নেই — ডকেট জরুরি ফল্টের',
   ];
+  // The docket's words (জরুরি, ডকেট, ওয়াটারপ্রুফ) are on wrong cards too.
   static const goWrong = [
     'বৃষ্টিতে সব কাজই গ্লাভসে চালানো যায়',
-    'গ্লাভস পরে সাবধানে, বজ্রেও কাজ চলে',
+    'জরুরি ডাক হলে ঝড়ো হাওয়াতেও কাজ চলে',
+    'জরুরি কাজে গ্লাভস পরলে বজ্রেও চলে',
+    'জরুরি ফল্ট, তাই ভেজা মইও পিছল নয়',
     'সাবধানে উঠলে ঝড়ো হাওয়াতেও কাজ চলে',
     'সুপারভাইজার বলেছেন, তাই উঠে গেলাম',
-    'ভেজা পোল বা মইয়ে পিছলানোর ভয় নেই',
+    'ওয়াটারপ্রুফ গ্লাভসে বজ্রও আটকে যায়',
+    'ডকেট যা-ই হোক, বৃষ্টিতে সব কাজ চলে',
   ];
   // Lesson 1.9: a direct strike on a pole or in the open is deadly; a strike
   // nearby shocks through the ground; plan the shelter on arrival (pro tip 4).
@@ -246,7 +273,13 @@ abstract final class StormLines {
           StormCue.wind => windRight,
           StormCue.thunder => thunderRight,
         };
-  static List<String> whyWrong(StormCase c) => c.mayGoOn ? goWrong : stopWrong;
+  static List<String> whyWrong(StormCase c) => c.mayGoOn
+      ? goWrong
+      : switch (c.cue) {
+          StormCue.drizzle => stopWrong,
+          StormCue.wind => windWrong,
+          StormCue.thunder => thunderWrong,
+        };
   static String whyAsk(StormCase c) => c.mayGoOn
       ? whyGo
       : switch (c.cue) {
@@ -305,11 +338,9 @@ abstract final class StormLines {
         tag: supervisorTag,
       );
 
-  /// The go-on case (an emergency fault in plain drizzle) laid down: no cost.
-  /// The first time the guide says what the lesson allows; a second "না" is
-  /// the worker's right (pro tips 2–3) and the situation moves on, no ◆.
-  static const mayGoOn = 'শুধু হালকা বৃষ্টি, বাতাস-বজ্র নেই, ডকেট জরুরি ফল্টের — পাঠ বলে, ওয়াটারপ্রুফ গ্লাভস পরে সর্বোচ্চ সতর্ক হয়ে এটা সারা যায়।';
-  static const mayGoOnStill = 'তবু মন না চাইলে আবার মই নামান — থামা আপনার অধিকার।';
+  /// The go-on case (an emergency fault in plain drizzle) laid down: the
+  /// worker's right (pro tips 2–3); the situation moves on with no ◆. The
+  /// reply is neutral — it never tells that the job could have gone on.
   static const declined = 'ঠিক আছে — নিরাপদ মনে না হলে থামাই দায়িত্ব।';
 
   static const callHeld = 'ঠিক! কোনো কাজ জীবনের চেয়ে বড় নয়।';
@@ -383,6 +414,10 @@ class StormRun {
   /// The waterproof gloves are on (this situation).
   var gloved = false;
 
+  /// Needless stops this play (the go-on case laid down): no slip, but the
+  /// play is not clean (no third star, no quick bonus).
+  int needless = 0;
+
   bool get done => round >= deal.cases.length;
   bool get ended => done || deadly != null;
   StormCase get current => deal.cases[round.clamp(0, deal.cases.length - 1)];
@@ -420,17 +455,14 @@ class StormRun {
     return null;
   }
 
-  /// "না" to the go-on case this situation (no cost).
-  var declines = 0;
-
   /// Lay the ladder down: say no. Right in drizzle-routine, gale and thunder.
-  /// The emergency in plain drizzle costs nothing: the first time it stays
-  /// (the lesson allows it), a second "না" moves on with no ◆.
+  /// The emergency in plain drizzle: the worker's right (no slip), but a
+  /// needless stop — it moves on with no ◆.
   StormStop stop() {
     if (ended || phase != StormPhase.judge) return StormStop.ignored;
     final c = current;
     if (c.mayGoOn) {
-      if (++declines < 2) return StormStop.mayGoOn;
+      needless++;
       phase = StormPhase.shown;
       return StormStop.declined;
     }
@@ -462,10 +494,10 @@ class StormRun {
   }
 
   void next() {
+    if (ended) return;
     round++;
     phase = StormPhase.judge;
     gloved = false;
-    declines = 0;
   }
 }
 
@@ -576,6 +608,18 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The gesture hint (how to touch, never what): taps on nothing and short
+  /// ladder drags count as misses.
+  final _hints = IdleHintController();
+
+  /// The scene's geometry from the last build (the hint's anchors).
+  StormGeo? _geo;
+
+  /// The ladder nudge goes up and down by turns (both are moves), starting a
+  /// random way each situation.
+  final _hintRng = math.Random();
+  var _hintUp = true;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -623,6 +667,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
   void _beginRound() {
     final tok = ++_roundTok;
     final c = _run.current;
+    _hintUp = _hintRng.nextBool();
     setState(() {
       _ready = false;
       _lay = 0;
@@ -640,17 +685,38 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
       if (!mounted || tok != _roundTok || _ended) return;
       setState(() => _ready = true);
       // In his situation the guide waits for him (he asks after the deck).
-      if (!coworkerOpen && !_waitingForHim) await _sayChain([StormLines.askJudge]);
+      if (!coworkerOpen && !coworkerDue) await _sayChain([StormLines.askJudge]);
     }());
   }
 
-  /// In his situation he comes first: the hands wait for him.
-  bool get _waitingForHim => _run.round == _run.deal.callRound && !coworkerDone && !coworkerOpen;
-
+  /// The hands may judge (climb or lay the ladder down). Never in the praise
+  /// window ([tableBusy]); in his situation the ladder waits for him
+  /// ([holdForCoworker] in [_ladderEnd]).
   bool get _canDecide =>
-      !_intro && _ready && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_waitingForHim && _run.phase == StormPhase.judge;
+      !_intro && _ready && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && _run.phase == StormPhase.judge;
 
-  bool get _canShelter => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !_walking && _run.phase == StormPhase.shelter;
+  bool get _canShelter => !_intro && !_busy && !_ended && _card == null && !tableBusy && !_walking && _run.phase == StormPhase.shelter;
+
+  /// The level waits for the player's hands on the scene (the decks bring
+  /// their own hints).
+  bool get _hintWaiting => (_canDecide && !_dragging) || _canShelter;
+
+  /// How to touch now: a short nudge on the ladder (up or down, by turns —
+  /// never only the right way), or a sweep over the three shelter places.
+  HintSpec? _hint() {
+    final geo = _geo;
+    if (geo == null) return null;
+    if (_run.phase == StormPhase.shelter) {
+      // A fresh order each show: the hand never always enters over the van.
+      final places = [...StormPlace.values]..shuffle(_hintRng);
+      return HintSpec.sweep([for (final p in places) _placeRect(geo, p)], space: HintSpace.scene);
+    }
+    if (_run.phase != StormPhase.judge) return null;
+    final up = _hintUp;
+    _hintUp = !_hintUp;
+    final mid = Offset.lerp(geo.ladderFoot, geo.ladderTop, 0.45)!;
+    return HintSpec.drag(mid, toward: Offset(0, up ? -1 : 1), travel: 56, space: HintSpace.scene);
+  }
 
   // --- hands on: the ladder ----------------------------------------------------
   void _ladderStart(DragStartDetails _) {
@@ -682,6 +748,14 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
       }
       return;
     }
+    if (!up && !down) {
+      // Too short to mean up or down: a confused touch.
+      _hints.missTap();
+      return;
+    }
+    if (!_canDecide) return;
+    // The ladder is the decisive control: in his situation it waits for him.
+    if (holdForCoworker()) return;
     if (up) unawaited(_climbUp(origin));
     if (down && !up) unawaited(_layDown(origin));
   }
@@ -724,7 +798,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
     });
     await Future<void>.delayed(_quiet ? Duration.zero : const Duration(milliseconds: 700));
     _busy = false;
-    if (!mounted) return;
+    if (!mounted || _ended) return;
     unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
     await _slip(m);
   }
@@ -741,21 +815,9 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
       _lay = 1;
       _wake++;
     });
-    if (r == StormStop.mayGoOn) {
-      // The lesson allows this one; no cost. The ladder stands again.
-      _busy = true;
-      await Future<void>.delayed(_quiet ? Duration.zero : const Duration(milliseconds: 700));
-      _busy = false;
-      if (!mounted || _ended) return;
-      setState(() {
-        _lay = 0;
-        _wake++;
-      });
-      unawaited(_sayChain([StormLines.mayGoOn, StormLines.mayGoOnStill], mood: GuideMood.think));
-      return;
-    }
     if (r == StormStop.declined) {
-      // His right: on to the next situation, no ◆, no cost.
+      // His right, but needless: on to the next situation, no ◆, no slip; a
+      // neutral reply (never "it could have gone on").
       final round = _run.round;
       await Future.wait([
         _sayChain([StormLines.declined]),
@@ -778,7 +840,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
 
   // --- hands on: the gloves, the shelter -----------------------------------------
   void _takeGloves() {
-    if (_run.gloved || _intro || _ended || _card != null || reasonOpen || _run.phase != StormPhase.judge) return;
+    if (_run.gloved || _intro || _ended || _card != null || tableBusy || _run.phase != StormPhase.judge) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.5, muted: false));
     _run.takeGloves();
@@ -867,7 +929,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.round != _run.deal.callRound || _run.phase != StormPhase.judge) return null;
-    if (_intro || !_ready || _busy || _card != null || reasonOpen) return false;
+    if (_intro || !_ready || _busy || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -1015,14 +1077,15 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
       await save.markRungCleared(_rungId);
       _passed = true;
       await _levelDelta(20, centre, mood: GuideMood.celebrate);
-      if (mark == 100 && _clock.elapsedMilliseconds < widget.pack.quickMs) {
+      // A needless stop is no clean play: no quick bonus, no third star.
+      if (mark == 100 && _run.needless == 0 && _clock.elapsedMilliseconds < widget.pack.quickMs) {
         _quickBonus = true;
         await _levelDelta(10, centre, mood: GuideMood.celebrate);
       }
     }
     final delta = await save.commitLevelScore(_rungId, _runScore);
     if (_run.passed) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
-    final stars = starsFor(passed: _run.passed, strikes: strikes, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
+    final stars = starsFor(passed: _run.passed, strikes: strikes, quick: _run.needless == 0 && _clock.elapsedMilliseconds < widget.pack.quickMs);
     if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
     setState(() {
@@ -1112,7 +1175,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
       };
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = StormGeo.forScene(m.height, m.inset);
+    final geo = _geo = StormGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
@@ -1203,6 +1266,8 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
               label: StormLines.ladderLabel,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
+                // A tap on the ladder does nothing (it is dragged): a miss.
+                onTap: _hints.missTap,
                 onPanStart: _ladderStart,
                 onPanUpdate: _ladderUpdate,
                 onPanEnd: (_) {
@@ -1290,6 +1355,11 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: '${_run.round}-${_run.phase.name}',
+            hintController: _hints,
+            hintAutoMiss: true,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (playing && !_run.done)

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="220" viewBox="0 0 200 220">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#79AEDB"/><stop offset="1" stop-color="#C6DDEB"/></linearGradient>
+<linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A3ACB4"/><stop offset="1" stop-color="#5E6870"/></linearGradient>
+<linearGradient id="cu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E7A86A"/><stop offset="1" stop-color="#B86C2C"/></linearGradient>
+<linearGradient id="meg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A23A"/><stop offset="1" stop-color="#C56E1C"/></linearGradient>
+<linearGradient id="mm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2D14A"/><stop offset="1" stop-color="#C9A322"/></linearGradient>
+<radialGradient id="flash"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.5" stop-color="#9CCBFF" stop-opacity="0.8"/><stop offset="1" stop-color="#508CFF" stop-opacity="0"/></radialGradient>
+<linearGradient id="soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A5A3A"/><stop offset="1" stop-color="#4A3422"/></linearGradient>
+</defs>
+<rect width="200" height="220" rx="18" fill="url(#bg)"/>
+<rect x="0" y="80" width="200" height="60" fill="#8E877A"/><line x1="20" y1="110" x2="180" y2="110" stroke="#4B3A26" stroke-width="2" stroke-dasharray="7 5"/><rect x="30" y="98" width="30" height="24" fill="url(#steel)"/><rect x="34" y="102" width="22" height="16" fill="none" stroke="#45413B"/><rect x="84" y="98" width="30" height="24" fill="url(#steel)"/><rect x="88" y="102" width="22" height="16" fill="none" stroke="#45413B"/><rect x="150" y="98" width="30" height="24" fill="#1A140E"/><rect x="168" y="80" width="30" height="24" fill="url(#steel)"/><circle cx="168" cy="40" r="14" fill="#C8352C"/><path d="M160 32 L176 48 M176 32 L160 48" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>

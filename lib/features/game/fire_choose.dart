@@ -16,6 +16,7 @@ import 'coworker_moment.dart';
 import 'do_parts.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'fire_fx.dart';
 import 'fire_world.dart';
@@ -52,7 +53,14 @@ import 'spoken_once.dart';
 //
 // Deadly (owner-approved list): water on an oil or electrical fire. Slips:
 // the wrong tool otherwise; skipping power-off on the panel; using an empty
-// extinguisher; letting a small fire be.
+// extinguisher; putting back a full one (a needless stop, audit 2026-11-11);
+// letting a small fire be (listening to the coworker).
+//
+// Kit (2026-11-11): no scene control works in a praise window (`tableBusy`);
+// a tool tap on the push fire waits for the coworker (`holdForCoworker`), so a
+// fast play cannot skip him; a gesture hint shows how to touch in every
+// waiting state (a sweep over the tools / switch / gauge buttons, a hold on
+// the squeeze) — never which one.
 //
 // The scene is a place (fire_world.dart, scene_kit.dart): a substation yard
 // the camera pans along — sky, far village (parallax), fence, gantry,
@@ -144,6 +152,7 @@ abstract final class FireLines {
     'তেলের আগুন নিজে থেকেই নিভে যায়',
     'জল আর বালি আসলে একই কাজ করে',
     'ট্রান্সফরমারে জলই সবচেয়ে ভালো',
+    'ঢেকে দিলে তেলের আগুন আরও জ্বলে',
   ];
   static const whySwitchRight = [
     'পাওয়ার বন্ধ হলে শকের ভয় থাকে না',
@@ -151,11 +160,12 @@ abstract final class FireLines {
     'লাইভ প্যানেলে নেভাতে গেলে শক লাগে',
   ];
   static const whySwitchWrong = [
-    'সুইচ বন্ধ করা নেহাতই ঐচ্ছিক কাজ',
+    'পাওয়ার বন্ধ করা নেহাতই ঐচ্ছিক কাজ',
     'আলো নিভলে আগুন ভালো দেখা যায়',
     'সুইচ বন্ধ করলেই আগুন নিভে যায়',
     'বিদ্যুৎ থাকলে আগুন তাড়াতাড়ি নেভে',
     'নিয়ম আছে বলে, কারণ কিছু নেই',
+    'প্যানেলের আগুনে শকের ভয় থাকে না',
   ];
   static const whyGrassWater = [
     'ঘাস-কাঠের আগুন জল ঠান্ডা করে নেভায়',
@@ -171,6 +181,9 @@ abstract final class FireLines {
     'পোলের নিচের আগুনে কিছু করার নেই',
     'ঘাস পুড়লে ক্ষতি নেই, ছেড়ে দিই',
     'যে কোনো পাউডারেই ঘাসের আগুন নেভে',
+    'ABC পাউডার শুধু তেলের আগুনে চলে',
+    'জল দিলে ঘাসের আগুন আরও ছড়ায়',
+    'ঘাস-কাঠের আগুনে CO2-ই সবচেয়ে ভালো',
   ];
 
   /// Right reasons for this fire (and the tool used on it).
@@ -184,7 +197,31 @@ abstract final class FireLines {
         FireKind.electrical => whySwitchWrong,
         FireKind.grass => whyGrassWrong,
       };
-  static List<ChoiceOption> whyDeal(FireKind k, FireTool? used, math.Random rng) => dealChoices(whyRight(k, used), whyWrong(k), rng);
+  /// The key words of each fire's reasons — the tool just used (জল, ABC,
+  /// বালি), the switch (পাওয়ার, বন্ধ) and the fire itself. None of them may
+  /// stand on the dealt right card alone.
+  static const whyKeys = {
+    FireKind.oil: ['তেল', 'জল', 'ঢেকে', 'বালি'],
+    FireKind.electrical: ['পাওয়ার', 'বিদ্যুৎ', 'বন্ধ', 'শক', 'প্যানেল'],
+    FireKind.grass: ['জল', 'ABC', 'পাউডার', 'ঘাস-কাঠ'],
+  };
+
+  /// One right reason and two wrong ones, at random — but the two wrong ones
+  /// always carry every key word of the right one, so the tool just used (or
+  /// the switch) never points at the right card in the hand actually dealt.
+  static List<ChoiceOption> whyDeal(FireKind k, FireTool? used, math.Random rng) {
+    final rights = whyRight(k, used);
+    final right = rights[rng.nextInt(rights.length)];
+    final keys = [for (final w in whyKeys[k]!) if (right.contains(w)) w];
+    final wrong = whyWrong(k);
+    final pairs = [
+      for (var i = 0; i < wrong.length; i++)
+        for (var j = i + 1; j < wrong.length; j++)
+          if (keys.every((w) => wrong[i].contains(w) || wrong[j].contains(w))) [wrong[i], wrong[j]],
+    ];
+    final two = pairs.isNotEmpty ? pairs[rng.nextInt(pairs.length)] : ([...wrong]..shuffle(rng)).take(2).toList();
+    return [ChoiceOption(right, true), for (final t in two) ChoiceOption(t, false)]..shuffle(rng);
+  }
 
   static const powerOff = 'নিরাপদ হলে আগে পাওয়ার বন্ধ';
   static const rushIn = 'সোজা নেভাতে যাই';
@@ -216,19 +253,27 @@ abstract final class FireLines {
   static const coworkerLines = [coworkerLine, coworkerExit];
   /// After the coworker: one way to act now, two ways to listen to him.
   static const choiceRight = [
-    'এখনই নেভাই — ছোট থাকতেই',
-    'দেরি না করে এখনই নেভাই',
-    'ওর কথা নয়, আগুনটা নেভাই',
-    'ছোট আছে বলেই এখনই নেভাই',
+    'এখনই নেভাই — বাড়তে দেব না',
+    'দাঁড়িয়ে না থেকে এখনই নেভাই',
+    'ও যা-ই বলুক, আমি এখনই নেভাই',
+    'বড় হওয়ার আগে এখনই নেভাই',
   ];
+  /// The kit deals this deck (one right, two wrong at random), so the right
+  /// cards' key words — নেভাই, এখনই — stand on every wrong card, and ছোট /
+  /// দেরি / ওর কথা are on wrong cards only: no hand has a word on the right
+  /// card alone.
   static const choiceWrong = [
-    'ওর কথাই ঠিক, অপেক্ষা করি',
-    'একটু দেখি, নিজেই নিভবে',
-    'ছোট আগুন, ছেড়ে দিলেই হয়',
-    'ধোঁয়া কমুক, তারপর দেখব',
-    'সবাই বসে আছে, আমিও বসি',
-    'আগে চা খেয়ে আসি, পরে দেখব',
+    'ওর কথাই ঠিক — এখনই নেভাই না',
+    'এখনই না, নিজে না নিভলে নেভাই',
+    'ছোট আগুন — এখনই না, পরে নেভাই',
+    'ধোঁয়া কমলে নেভাই, এখনই না',
+    'চা খেয়ে এসে নেভাই, এখনই না',
+    'এখনই না — বড় হলে তবে নেভাই',
+    'একটু দেরিতে নেভাই, এখনই না',
+    'সবাই বসে আছে, এখনই কেন নেভাই?',
   ];
+  /// The key words of his deck (see [choiceWrong]).
+  static const choiceKeys = ['নেভাই', 'এখনই', 'ছোট', 'দেরি', 'ওর কথা'];
 
   /// The guide puts the coworker's push to the player (a different way each time).
   static const choiceAsk = [
@@ -305,7 +350,13 @@ abstract final class FireMistakes {
     art: 'assets/game/art/fire/fire_class.svg',
     lessonPoint: 0,
   );
-  static const all = [waterOil, waterElectric, wrongTool, noPowerOff, empty, waited];
+  static const fullBack = DoMistake(
+    key: '1.8/fire/full-back',
+    textBn: 'গেজের কাঁটা সবুজে — চাপ ঠিক আছে, এটাই কাজ করত। ফেরত রাখলে দেরি হয়, আগুন বাড়ে।',
+    art: 'assets/game/art/fire/gauge.svg',
+    lessonPoint: 2,
+  );
+  static const all = [waterOil, waterElectric, wrongTool, noPowerOff, empty, waited, fullBack];
 }
 
 enum FirePhase { power, tool, gauge, out }
@@ -374,7 +425,8 @@ class FireRun {
     return null;
   }
 
-  /// After reading the gauge: use it (true) or put it back.
+  /// After reading the gauge: use it (true) or put it back. Putting back a
+  /// full one (needle in the green) is a needless stop: a slip.
   DoMistake? useHeld({required bool use}) {
     final t = held;
     if (ended || phase != FirePhase.gauge || t == null) return null;
@@ -382,10 +434,12 @@ class FireRun {
     final empty = t == deal.empty;
     if (!use) {
       phase = FirePhase.tool;
-      if (empty) {
-        spent.add(t);
-        _tag(FireLines.caughtGauge);
+      if (!empty) {
+        slips++;
+        return FireMistakes.fullBack;
       }
+      spent.add(t);
+      _tag(FireLines.caughtGauge);
       return null;
     }
     if (empty) {
@@ -621,10 +675,11 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.round != _run.deal.pushRound) return null;
+    // His push ("it will go out by itself") fits only while this fire burns.
+    if (_ended || _run.ended || _run.round != _run.deal.pushRound) return null;
     final ph = _run.phase;
-    if (ph == FirePhase.out) return null;
-    if (_card != null || _busy || _intro || ph == FirePhase.gauge) return false;
+    if (ph == FirePhase.out || _spraying != null || _throwing != null) return null;
+    if (_card != null || _busy || _intro || _freeze || tableBusy || ph == FirePhase.gauge) return false;
     return true;
   }
 
@@ -676,7 +731,49 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
     unawaited(_sayChain([ways[_tapN++ % ways.length]]));
   }
 
-  bool get _idle => !_busy && !_ended && !coworkerOpen && _card == null;
+  /// The scene takes a move now: never in a praise window (`tableBusy`), a
+  /// freeze, a card or while the coworker is on.
+  bool get _idle => !_busy && !_ended && !_freeze && !_intro && !coworkerOpen && _card == null && !tableBusy;
+
+  // --- gesture hints (how to touch, never which) ------------------------------
+  final _hints = IdleHintController();
+  final Map<FireTool, GlobalKey> _toolKeys = {for (final t in FireTool.values) t: GlobalKey()};
+  final _switchKey = GlobalKey();
+  final _squeezeKey = GlobalKey();
+  final _gaugeUseKey = GlobalKey();
+  final _gaugeOtherKey = GlobalKey();
+
+  /// The level waits for the player's touch on the scene (the decks and the
+  /// zoomed reason card carry their own hints).
+  bool get _hintWaiting {
+    if (_intro || _ended || _busy || _freeze || _card != null || coworkerOnScreen || tableBusy) return false;
+    if (_cam.isAnimating || _throwing != null || _puff != null) return false;
+    if (_spraying != null) return !_holding;
+    return _run.phase != FirePhase.out;
+  }
+
+  /// Spraying: hold the squeeze (the one way on). The gauge: a sweep over both
+  /// buttons. Otherwise a sweep over every tool left on the stand (and the
+  /// switch while the panel is live) — never one of them alone.
+  HintSpec? _hint() {
+    if (_spraying != null) return HintSpec.holdOn(_squeezeKey);
+    // The sweep order is mixed per wait (from the deal and the state, not the
+    // level's rng), so a lap never always ends on the same — right — control.
+    final mix = math.Random(_run.deal.tools.fold<int>(_run.deal.empty.index + 1, (a, t) => a * 5 + t.index) * 97 +
+        _run.round * 31 +
+        _run.phase.index * 7 +
+        _run.spent.length * 3 +
+        _run.slips);
+    if (_run.phase == FirePhase.gauge) return HintSpec.sweepOver([_gaugeOtherKey, _gaugeUseKey]..shuffle(mix));
+    final keys = [
+      for (final t in _run.deal.tools)
+        if (!_run.spent.contains(t) && !_taken(t)) _toolKeys[t]!,
+      if (_run.phase == FirePhase.power) _switchKey,
+    ]..shuffle(mix);
+    return keys.length < 2 ? null : HintSpec.sweepOver(keys);
+  }
+
+  Object get _hintKey => '${_run.round}-${_run.phase.name}-${_spraying?.name}-${_run.spent.length}-${_run.slips}';
 
   Future<void> _power(bool off, Offset origin) async {
     if (coworkerOpen && _run.phase == FirePhase.power) await answerCoworker(true, origin, direct: true);
@@ -699,11 +796,14 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
   Future<void> _pick(FireTool t, Offset origin) async {
     if (coworkerOpen) await answerCoworker(true, origin, direct: true);
     if (!_idle) return;
+    // On the push fire a tool would settle it before he speaks: he comes now.
+    if (holdForCoworker()) return;
     _hush();
     final m = _run.phase == FirePhase.power ? _run.grabLive(t) : _run.pick(t);
     setState(() => _wake++);
     if (m != null && m.deadly) {
-      // The bucket flies first; the fire answers.
+      // The bucket flies first; the fire answers. Nothing else moves meanwhile.
+      _busy = true;
       setState(() => _throwing = FireTool.water);
       if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.5, muted: false));
       await Future<void>.delayed(const Duration(milliseconds: 450));
@@ -1084,8 +1184,10 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
                 width: 84,
                 height: 106,
                 child: _IsolatorSwitch(
+                  key: _switchKey,
                   on: _isolatorOn,
-                  live: k == FireKind.electrical && phase == FirePhase.power && !_intro,
+                  // Not while his choice deck is up (the tool stand is hidden then too).
+                  live: k == FireKind.electrical && phase == FirePhase.power && !_intro && !coworkerChoiceUp,
                   quiet: quiet,
                   onOff: (o) => unawaited(_power(true, o)),
                 ),
@@ -1173,7 +1275,13 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
     return [
       if (rackOn) Positioned(key: const ValueKey('hud-rack'), left: 6, bottom: b + 4, width: 214, height: 92, child: _rack(phase)),
       if (squeezeOn)
-        Positioned(key: const ValueKey('hud-squeeze'), left: 14, right: 128, bottom: b + 12, height: 62, child: _SqueezeButton(holding: _holding, onHold: (down, at) => _hold(down, at))),
+        Positioned(
+            key: const ValueKey('hud-squeeze'),
+            left: 14,
+            right: 128,
+            bottom: b + 12,
+            height: 62,
+            child: _SqueezeButton(key: _squeezeKey, holding: _holding, onHold: (down, at) => _hold(down, at))),
       // The fire's ◆ waiting on the table (or burning away).
       ...tableLayers(at: base.translate(0, -132), quiet: quiet),
       // The answers: one deck, level 1's cards — the coworker choice or the reason.
@@ -1206,6 +1314,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
           children: [
             for (final t in _run.deal.tools)
               Expanded(
+                key: _toolKeys[t],
                 child: Semantics(
                   button: true,
                   label: FireLines.tool(t),
@@ -1264,6 +1373,11 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
               setState(() => _muted = !_muted);
             },
             animation: _cam,
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
+            hintAutoMiss: true,
             progress: DoProgress(
               labels: FireLines.rounds,
               done: {for (var i = 0; i < math.min(_run.round, 3); i++) i},
@@ -1293,6 +1407,8 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
                   tool: _run.held!,
                   empty: _run.held == _run.deal.empty,
                   quiet: quiet,
+                  useKey: _gaugeUseKey,
+                  otherKey: _gaugeOtherKey,
                   onUse: (use, o) => unawaited(_useHeld(use, o)),
                 ),
               ?coworkerPeek(quiet: quiet, key: ValueKey('coworker-${_run.round}')),
@@ -1393,10 +1509,14 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
 
 /// The picked-up extinguisher's pressure gauge: green = ready, red = empty.
 class _GaugeCard extends StatelessWidget {
-  const _GaugeCard({super.key, required this.tool, required this.empty, required this.quiet, required this.onUse});
+  const _GaugeCard({super.key, required this.tool, required this.empty, required this.quiet, required this.onUse, this.useKey, this.otherKey});
   final FireTool tool;
   final bool empty;
   final bool quiet;
+
+  /// The two buttons (the gesture hint sweeps over both).
+  final GlobalKey? useKey;
+  final GlobalKey? otherKey;
   final void Function(bool use, Offset origin) onUse;
 
   @override
@@ -1424,9 +1544,9 @@ class _GaugeCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(child: DoBigButton(label: FireLines.other, filled: false, onTapUp: (d) => onUse(false, d.globalPosition))),
+                      Expanded(child: DoBigButton(key: otherKey, label: FireLines.other, filled: false, onTapUp: (d) => onUse(false, d.globalPosition))),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: FireLines.use, filled: true, onTapUp: (d) => onUse(true, d.globalPosition))),
+                      Expanded(child: DoBigButton(key: useKey, label: FireLines.use, filled: true, onTapUp: (d) => onUse(true, d.globalPosition))),
                     ],
                   ),
                 ],
@@ -1673,7 +1793,7 @@ class FireScenePainter extends CustomPainter {
 /// The isolator switch beside the panel: a grey box with a red lever, ON
 /// (up, red lamp) or OFF (down, green lamp). Tap it or pull it down.
 class _IsolatorSwitch extends StatelessWidget {
-  const _IsolatorSwitch({required this.on, required this.live, required this.quiet, required this.onOff});
+  const _IsolatorSwitch({super.key, required this.on, required this.live, required this.quiet, required this.onOff});
   final bool on;
 
   /// It can be switched now.
@@ -1758,7 +1878,7 @@ class _IsolatorPainter extends CustomPainter {
 
 /// The squeeze lever: hold it down to spray, let go to stop.
 class _SqueezeButton extends StatelessWidget {
-  const _SqueezeButton({required this.holding, required this.onHold});
+  const _SqueezeButton({super.key, required this.holding, required this.onHold});
   final bool holding;
   final void Function(bool down, Offset at) onHold;
 

@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -53,18 +54,25 @@ import 'spoken_once.dart';
 // never sits on the line. Phase-to-phase tests are NOT in the lesson (only
 // conductor-to-armour) and are left out (flagged in REGISTER.md).
 //
-// Deadly (candidate, flagged for the owner): taking the L clip off a core
-// still charged by the test — also on the coworker's "রিডিং হয়ে গেছে, তার খুলে
-// নাও". Slips: testing unchecked / with a cracked lead or a weak battery, the L
+// Deadly (MODULE2_LADDER.md row 21; flagged for the owner): taking the L clip
+// off a core still charged by the test — also on the coworker's "রিডিং হয়ে
+// গেছে, তার খুলে নাও" (the act he pushes is that deadly act itself). Slips:
+// testing unchecked / with a cracked lead or a weak battery, a needless fix on
+// the tester (a good lead or battery swapped: the check was not read), the L
 // clip on a core not discharged, the clips swapped, the wrong test voltage,
 // letting go of TEST before the minute, a wrong verdict. Three slips strike
-// out. Needless acts (a fix where nothing was wrong, discharging a core that
-// was not charged) are not scored.
+// out. Discharging a core that was not charged is not scored (always safe).
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m2_megger_read_world.dart), corner guide, ◆ on the table → "কেন …?"
-// → the next core by itself; the careless coworker once a play, on round 2 or
-// 3, right after the minute's test.
+// → the next core by itself (no scene input while the table is busy); the
+// careless coworker once a play, on round 2 or 3, right after the minute's
+// test — reaching for the rod first holds for him (holdForCoworker), and his
+// push is over once the core is discharged. Gesture hints: a sweep over the
+// tools, clips, selector and TEST (and the verdicts once a reading stands),
+// in a shuffled order so it never acts out the procedure;
+// a clip or the rod in hand → a sweep over the places it can go; the kit
+// close-up → a sweep over its three buttons.
 // Voice: the guide's lines by device TTS; the coworker's push is a new line
 // (device TTS until recorded, see M2MeggerLines.coworker); his exit line is
 // his recorded "হুঁ! যা খুশি করুন।".
@@ -127,11 +135,12 @@ abstract final class M2MeggerLines {
   ];
   static const goodWrong = [
     'মাল্টিমিটারে ইনফিনিটি দেখালেই কেবিল ঠিক',
-    'কেবিলটা দেখতে নতুন, তাই ঠিকই আছে ধরলাম',
+    'কেবিলটা দেখতে নতুন, তাই ঠিক ধরলাম',
     'পাম্প কাল পর্যন্ত চলছিল, তাই চিন্তা নেই',
-    'কাঁটা একটু নড়লেই ইনসুলেশন ভালো ধরা হয়',
-    'সুপারভাইজার তাড়া দিচ্ছেন, তাই ভালো লিখলাম',
-    'রিডিং দেখার দরকার নেই, তার তো অক্ষত',
+    'যেকোনো MΩ দেখালেই ইনসুলেশন ভালো ধরা হয়',
+    'সুপারভাইজারের তাড়া, তাই ভালো লিখলাম',
+    '1 MΩ-এর ওপরে উঠলেই কেবিল নতুনের মতো',
+    'MΩ দেখার দরকার নেই, তার তো দেখতে অক্ষত',
   ];
   static const weakRight = [
     '1 MΩ-এর কম মানে ইনসুলেশন দুর্বল বা ভেজা',
@@ -139,12 +148,12 @@ abstract final class M2MeggerLines {
     'কম আইআর আগেভাগে বড় ফল্টের সতর্কবার্তা',
   ];
   static const weakWrong = [
-    'রিডিং কম মানে মেগারটাই খারাপ হয়ে গেছে',
-    'কেবিলটা পুরনো দেখতে, তাই ফল্ট বললাম',
+    '1 MΩ-এর কম মানে মেগারটাই খারাপ হয়ে গেছে',
+    'কেবিলটা অনেক পুরনো দেখতে, তাই ফল্ট বললাম',
     'রিডিং যত বেশি, ইনসুলেশন তত খারাপ হয়',
-    'কম রিডিং মানে কেবিলে এখন কারেন্ট নেই',
+    'কম MΩ মানে কেবিলে এখন কারেন্ট নেই',
     'কাঁটা নড়েনি, তাই আন্দাজে ফল্ট বললাম',
-    'ফল্ট বললে আজ আর কাজ করতে হবে না',
+    'ফল্ট বললে আজ আর পাম্পে কাজ করতে হবে না',
   ];
   static const dischargeRight = [
     'টেস্টের ভোল্টেজ কেবিলে চার্জ হয়ে জমে থাকে',
@@ -153,8 +162,8 @@ abstract final class M2MeggerLines {
   ];
   static const dischargeWrong = [
     'মেগার ছেড়ে দিলেই কেবিলের সব চার্জ চলে যায়',
-    'রিডিং হয়ে গেলে কেবিলে আর কিছু থাকে না',
-    'ডিসচার্জ শুধু হাই-ভোল্টেজ লাইনেই লাগে',
+    'রিডিং হয়ে গেলে কেবিলে কিছুই জমে থাকে না',
+    'ডিসচার্জ শুধু হাই ভোল্টেজ লাইনেই লাগে',
     'ও দেখছিল, তাই নিয়মটা দেখিয়ে দিলাম',
     'রড হাতে নিলে কাজটা দেখতে বেশ ভালো লাগে',
     'কেবিল বিচ্ছিন্ন, তাতে চার্জ থাকতেই পারে না',
@@ -165,9 +174,9 @@ abstract final class M2MeggerLines {
   static const coworker = CoworkerScript(
     line: 'রিডিং তো হয়ে গেছে, তার খুলে নাও! ডিসচার্জ-টিসচার্জ লাগবে না।',
     exitLine: 'হুঁ! যা খুশি করুন।',
-    right: ['না, আগে ডিসচার্জ করে তবে লিড খুলব', 'না, কোরে চার্জ জমে আছে, আগে ডিসচার্জ', 'আগে রড ছোঁয়াব, তারপর ক্লিপ খুলব'],
-    wrong: ['ঠিক, রিডিং তো হয়েই গেছে, খুলে ফেলি', 'আচ্ছা, তাড়াতাড়ি ক্লিপটা খুলে নিই', 'কেবিল বিচ্ছিন্ন, ডিসচার্জ লাগবে না', 'ঠিক আছে, শুধু লাল ক্লিপটা খুলি', 'সবাই তো এভাবেই সোজা খুলে নেয়'],
-    asks: ['ও বলছে এখনই তার খুলতে। আপনি কী করবেন?', 'রিডিং হয়ে গেছে। এখন কী করবেন?', 'খুলবেন, নাকি আগে অন্য কিছু?'],
+    right: ['না, রড ছুঁইয়ে চার্জ নামাব, তারপর খুলব', 'কোরে টেস্টের চার্জ জমে আছে, রড আগে', 'রড না ছোঁয়ানো পর্যন্ত ক্লিপে হাত নয়'],
+    wrong: ['ঠিক, রিডিং তো হয়েই গেছে, খুলে ফেলি', 'আচ্ছা, আগে ক্লিপটা খুলে নিই, রড পরে দেখব', 'কেবিল বিচ্ছিন্ন, ডিসচার্জ লাগবে না', 'ঠিক আছে, শুধু লাল ক্লিপটা খুলে নিই', 'না না, মেগার ছাড়লেই চার্জ চলে গেছে'],
+    asks: ['ও বলছে এখনই তার খুলতে। আপনি কী করবেন?', 'রিডিং হয়ে গেছে। এখন কী করবেন?', 'ও তাড়া দিচ্ছে। আপনি কী বলবেন?'],
   );
 
   static const allSet = 'তিনটে কোরই নিয়ম মেনে মাপলেন — পড়লেন, ডিসচার্জ করলেন, তবে ছাড়লেন।';
@@ -199,6 +208,12 @@ abstract final class M2MeggerMistakes {
   static const badKit = DoMistake(
     key: '2.7/megger/bad-kit',
     textBn: 'ফাটা লিড বা দুর্বল ব্যাটারি নিয়ে টেস্ট নয়। মেগার নিজেই উচ্চ ভোল্টেজের উৎস — আগে বদলে নিন।',
+    art: '$_dir/kit_check.svg',
+    lessonPoint: 0,
+  );
+  static const needlessFix = DoMistake(
+    key: '2.7/megger/needless-fix',
+    textBn: 'বদলানোর আগে দেখুন — ব্যাটারির লেভেল আর লিডের ইনসুলেশন ভালো করে দেখে যেটা খারাপ, শুধু সেটাই বদলান।',
     art: '$_dir/kit_check.svg',
     lessonPoint: 0,
   );
@@ -240,7 +255,7 @@ abstract final class M2MeggerMistakes {
     lessonPoint: 2,
   );
 
-  static const all = [unchecked, badKit, dischargeFirst, wrongLead, wrongVolts, shortTest, misread, charged];
+  static const all = [unchecked, badKit, needlessFix, dischargeFirst, wrongLead, wrongVolts, shortTest, misread, charged];
 }
 
 /// Good readings (MΩ) — well above 1 MΩ; weak ones — well below.
@@ -277,6 +292,21 @@ MeggerDeal dealMegger(math.Random rng) {
   final fault = f < 2 ? MeggerFault.lead : (f < 3 ? MeggerFault.battery : MeggerFault.none);
   final volts = rng.nextInt(3) == 0 ? 500 : meggerVolts[1 + rng.nextInt(3)];
   return MeggerDeal(readings: readings, fault: fault, startVolts: volts, callAt: 1 + rng.nextInt(2));
+}
+
+/// The order the free-play hint sweeps its [n] targets in. Those targets are
+/// listed check, rod, L clip, E clip, selector, TEST (then the verdicts) —
+/// the procedure order — so they are shuffled, seeded from the waiting
+/// state's [key]: a fresh order for each state, stable while it lasts. It
+/// never opens with check then rod, so it can never act out the procedure.
+List<int> meggerHintOrder(String key, int n) {
+  final order = [for (var i = 0; i < n; i++) i]..shuffle(math.Random(key.hashCode));
+  if (n >= 2 && order[0] == 0 && order[1] == 1) {
+    order[1] = order[n - 1];
+    order[n - 1] = 1;
+    if (n == 2) order.setAll(0, [1, 0]);
+  }
+  return order;
 }
 
 /// The play state (pure logic).
@@ -329,9 +359,19 @@ class MeggerRun {
     if (!ended) checked = true;
   }
 
-  /// A fix on the tester; needless ones change nothing (not scored).
-  void fix(MeggerFault f) {
-    if (!ended && f == deal.fault) fixed = true;
+  /// The needless fixes made so far (each costs once).
+  final Set<MeggerFault> needless = {};
+
+  /// A fix on the tester: the dealt fault is fixed; swapping a good lead or
+  /// battery is a slip (the check was not read), once per part.
+  DoMistake? fix(MeggerFault f) {
+    if (ended || f == MeggerFault.none) return null;
+    if (f == deal.fault) {
+      fixed = true;
+      return null;
+    }
+    if (!needless.add(f)) return null;
+    return _slip(M2MeggerMistakes.needlessFix);
   }
 
   void turnKnob() {
@@ -542,13 +582,21 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
   Offset? _sparkAt;
   var _cheer = false;
 
-  /// The rod was reached for on his round before he came: he cuts in now.
-  var _heldRod = false;
   var _heldThisRound = false;
   var _freeze = false;
   Completer<void>? _frozen;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+
+  // Gesture hints (how to touch, never what): the frame's box maps the
+  // scene's design px to the screen; the HUD buttons are found by key.
+  final _hints = IdleHintController();
+  final _frameKey = GlobalKey();
+  final _checkKey = GlobalKey();
+  final _rodKey = GlobalKey();
+  final _goodKey = GlobalKey();
+  final _weakKey = GlobalKey();
+  final _kitKeys = [GlobalKey(), GlobalKey(), GlobalKey()];
 
   @override
   LevelContext get deathCtx => widget.ctx;
@@ -594,7 +642,9 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
     unawaited(_sayChain([M2MeggerLines.ask]));
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_kit && !_touch.isAnimating && !_heldRod && !_betweenRounds;
+  /// The scene takes input: never in a praise window or with the reason deck
+  /// up (tableBusy), nor while he is coming in or talking.
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !coworkerHeld && !_kit && !_touch.isAnimating && !_betweenRounds;
   var _betweenRounds = false;
 
   // --- hands on -----------------------------------------------------------------
@@ -617,9 +667,14 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
     // The rod in hand: it goes to the core tapped.
     if (_hold == MeggerHold.rod) {
       if (core != null) {
+        if (holdForCoworker()) {
+          setState(() => _hold = MeggerHold.none);
+          return;
+        }
         _dischargeCore(core);
       } else {
         _tick();
+        _hints.missTap();
         setState(() => _hold = MeggerHold.none);
       }
       return;
@@ -669,7 +724,11 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
       });
       return;
     }
-    if (_hold != MeggerHold.none) setState(() => _hold = MeggerHold.none);
+    if (_hold != MeggerHold.none) {
+      setState(() => _hold = MeggerHold.none);
+    } else {
+      _hints.missTap();
+    }
   }
 
   /// A clip or a verdict: right goes on; a slip shows its card.
@@ -697,13 +756,23 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
     });
   }
 
+  /// A fix on the tester: a needless one is a slip (neutral card, no tell
+  /// before the choice).
   void _fix(MeggerFault f) {
+    if (!_kit || _card != null || _ended) return;
+    final m = _run.fix(f);
+    if (m != null) {
+      final size = MediaQuery.sizeOf(context);
+      _apply(m, Offset(size.width / 2, size.height * 0.45));
+      return;
+    }
     _cue('sounds/learn/tag_slap.wav', volume: 0.5);
     HapticFeedback.selectionClick();
-    setState(() => _run.fix(f));
+    setState(() => _wake++);
   }
 
   void _closeKit() {
+    if (!_kit || _card != null || _ended) return;
     _cue('sounds/intro/click.ogg', volume: 0.4);
     setState(() {
       _kit = false;
@@ -714,17 +783,14 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
   void _takeRod() {
     if (!_canPlay || _run.testing) return;
     // On his round, right after the minute, he cuts in as the rod is reached for.
-    if (_hold != MeggerHold.rod && _coworkerDue) {
-      _hush();
-      HapticFeedback.selectionClick();
-      setState(() => _heldRod = true);
-      return;
-    }
+    if (holdForCoworker()) return;
     _tick();
     setState(() => _hold = _hold == MeggerHold.rod ? MeggerHold.none : MeggerHold.rod);
   }
 
-  bool get _coworkerDue => !coworkerDone && _run.round == _run.deal.callAt && _run.readFor != null && _run.lOn == _run.readFor && _run.charged.contains(_run.lOn);
+  /// His push ("the reading is done, pull the lead, no discharge") fits only
+  /// on his round while the tested core is still charged with the L clip on.
+  bool get _hisMoment => !coworkerDone && _run.round == _run.deal.callAt && _run.readFor != null && _run.lOn == _run.readFor && _run.charged.contains(_run.lOn);
 
   void _dischargeCore(int core) {
     final hadCharge = _run.discharge(core);
@@ -900,9 +966,8 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || !_coworkerDue) return null;
-    if (_heldRod) return true;
-    if (_intro || _card != null || reasonOpen || _kit || _run.testing || _touch.isAnimating) return false;
+    if (_ended || !_hisMoment) return null;
+    if (_intro || _card != null || tableBusy || _kit || _run.testing || _touch.isAnimating) return false;
     return true;
   }
 
@@ -913,7 +978,6 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
-    _heldRod = false;
     final core = _run.lOn;
     if (!held) {
       // Listened to him: the L clip comes off the charged core.
@@ -952,6 +1016,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
   }
 
   Future<void> _slip(DoMistake m) async {
+    if (_ended) return;
     if (strike(m)) {
       await _struckOut(m);
       return;
@@ -1078,10 +1143,62 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
     if (leave == true) _popOnce(false);
   }
 
+  // --- gesture hints (how to touch, never what) ---------------------------------
+  /// A scene rect (design px, 360 wide) on the screen, mapped as the frame
+  /// fits the scene (cover); null before layout.
+  Rect? _sceneToGlobal(Rect r) {
+    final box = _frameKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    final size = box.size;
+    final w = math.max(1.0, size.width);
+    final sh = (360 * size.height / w).clamp(560.0, 900.0);
+    final scale = math.max(size.width / 360, size.height / sh);
+    final dx = (size.width - 360 * scale) / 2;
+    final dy = (size.height - sh * scale) / 2;
+    Offset map(Offset p) => box.localToGlobal(Offset(dx + p.dx * scale, dy + p.dy * scale));
+    return Rect.fromPoints(map(r.topLeft), map(r.bottomRight));
+  }
+
+  /// The kit close-up: a sweep over its three buttons. A clip or the rod in
+  /// hand: a sweep over every place it can go (all cores, and the armour for
+  /// a clip). Otherwise a sweep over everything that can be used now (tools,
+  /// both clips, the selector, TEST, and the two verdicts once a reading
+  /// stands), shuffled per waiting state ([meggerHintOrder]) so the hand
+  /// never acts out the procedure order or points at the next step.
+  String get _hintKey => '${_run.round}|${_hold.name}|$_kit|${_run.verdictDue}|${_run.lOn}|${_run.eOn}|${_run.checked}';
+
+  HintSpec? _hintSpec() {
+    if (_kit) return HintSpec.sweepOver(_kitKeys);
+    final g = MeggerGeo.forScene(_lastH, _lastInset);
+    Rect dot(Offset c, double r) => Rect.fromCircle(center: c, radius: r);
+    final cores = [for (final e in g.coreEnds) ?_sceneToGlobal(dot(e, kCoreHit))];
+    final List<Rect> rects;
+    switch (_hold) {
+      case MeggerHold.rod:
+        rects = cores;
+      case MeggerHold.lClip || MeggerHold.eClip:
+        rects = [...cores, ?_sceneToGlobal(meggerArmourRect(g))];
+      case MeggerHold.none:
+        final lAt = _run.lOn != null ? g.coreEnds[_run.lOn!] : g.lPark;
+        final eAt = _run.eOn ? g.armourAt : g.ePark;
+        final listed = [
+          ?HintSpec.globalRectOf(_checkKey),
+          ?HintSpec.globalRectOf(_rodKey),
+          ?_sceneToGlobal(dot(lAt, kClipHit)),
+          ?_sceneToGlobal(dot(eAt, kClipHit)),
+          ?_sceneToGlobal(g.selector),
+          ?_sceneToGlobal(dot(g.testButton, MeggerGeo.testRadius)),
+          if (_run.verdictDue) ...[?HintSpec.globalRectOf(_goodKey), ?HintSpec.globalRectOf(_weakKey)],
+        ];
+        rects = [for (final i in meggerHintOrder(_hintKey, listed.length)) listed[i]];
+    }
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
   // --- the scene ---------------------------------------------------------------
   LinemanMode get _mode {
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
-    if (_heldRod || coworkerOpen) return LinemanMode.worried;
+    if (coworkerHeld || coworkerOpen) return LinemanMode.worried;
     if (_cheer) return LinemanMode.cheer;
     return LinemanMode.hold;
   }
@@ -1204,7 +1321,8 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !deckUp && !coworkerOpen && _card == null && !_kit && !_heldRod && !_betweenRounds;
+    final handsOn = playing && !_ended && !deckUp && !coworkerOpen && !coworkerHeld && _card == null && !_kit && !_betweenRounds && !tableBusy;
+    final hintWaiting = (handsOn && !_run.testing && !_pressed && _touchCore == null) || (playing && !_ended && _kit && _card == null);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1215,6 +1333,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
         body: ScoreFlyHost(
           scoreKey: _scoreKey,
           child: FullSceneFrame(
+            key: _frameKey,
             ctx: widget.ctx,
             titleBn: widget.pack.titleBn,
             scoreKey: _scoreKey,
@@ -1232,6 +1351,10 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
               quiet: quiet,
             ),
             animation: _sceneMotion,
+            hint: _hintSpec,
+            hintWaiting: hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             layers: (context, m) => _scene(m),
             overlays: [
               if (playing && !coworkerOpen)
@@ -1249,9 +1372,10 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
                   bottom: pad.bottom + 72,
                   child: Row(
                     children: [
-                      _ToolButton(icon: Icons.fact_check_rounded, label: M2MeggerLines.check, on: _run.checked, enabled: _canPlay, onTap: _openKit),
+                      // The rod first: the row never reads in procedure order.
+                      _ToolButton(key: _rodKey, icon: Icons.bolt_rounded, label: M2MeggerLines.rod, on: _hold == MeggerHold.rod, enabled: _canPlay, onTap: _takeRod),
                       const SizedBox(width: 4),
-                      _ToolButton(icon: Icons.bolt_rounded, label: M2MeggerLines.rod, on: _hold == MeggerHold.rod, enabled: _canPlay, onTap: _takeRod),
+                      _ToolButton(key: _checkKey, icon: Icons.fact_check_rounded, label: M2MeggerLines.check, on: _run.checked, enabled: _canPlay, onTap: _openKit),
                     ],
                   ),
                 ),
@@ -1263,9 +1387,9 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
                     bottom: pad.bottom + 12,
                     child: Row(
                       children: [
-                        Expanded(child: DoBigButton(label: M2MeggerLines.good, filled: true, onTapUp: (d) => _verdict(true, d.globalPosition))),
+                        Expanded(child: KeyedSubtree(key: _goodKey, child: DoBigButton(label: M2MeggerLines.good, filled: true, onTapUp: (d) => _verdict(true, d.globalPosition)))),
                         const SizedBox(width: 10),
-                        Expanded(child: DoBigButton(label: M2MeggerLines.weak, filled: false, onDark: true, onTapUp: (d) => _verdict(false, d.globalPosition))),
+                        Expanded(child: KeyedSubtree(key: _weakKey, child: DoBigButton(label: M2MeggerLines.weak, filled: false, onDark: true, onTapUp: (d) => _verdict(false, d.globalPosition)))),
                       ],
                     ),
                   ),
@@ -1282,7 +1406,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
                   ),
                 ),
               if (_kit && playing)
-                _KitCard(key: const ValueKey('kit'), run: _run, quiet: quiet, onFix: _fix, onClose: _closeKit),
+                _KitCard(key: const ValueKey('kit'), run: _run, quiet: quiet, buttonKeys: _kitKeys, onFix: _fix, onClose: _closeKit),
               if (playing && _card == null && !_kit)
                 cornerGuide(onTap: _tapGuide, bottom: pad.bottom + (deckUp ? 236 : 72), onLeft: !(coworkerOnScreen && !coworkerFromRight)),
               ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
@@ -1399,7 +1523,7 @@ class _DocketChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit once used / in hand.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;
@@ -1451,17 +1575,21 @@ class _ToolButton extends StatelessWidget {
 }
 
 /// The tester close up (the daily check): its battery and both test leads.
-/// The fixes are always offered (no tell); a needless fix changes nothing.
+/// The fixes are always offered (no tell); a needless fix is a slip.
 class _KitCard extends StatelessWidget {
-  const _KitCard({super.key, required this.run, required this.quiet, required this.onFix, required this.onClose});
+  const _KitCard({super.key, required this.run, required this.quiet, required this.buttonKeys, required this.onFix, required this.onClose});
   final MeggerRun run;
   final bool quiet;
+
+  /// The three buttons' keys (new lead, new battery, ঠিক আছে) for the hint.
+  final List<GlobalKey> buttonKeys;
   final ValueChanged<MeggerFault> onFix;
   final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
-    Widget button(String label, VoidCallback onTap, {bool filled = false}) => Expanded(
+    Widget button(String label, VoidCallback onTap, GlobalKey key, {bool filled = false}) => Expanded(
+          key: key,
           child: Material(
             color: filled ? SlmColors.gold700 : const Color(0x1AFFFFFF),
             borderRadius: BorderRadius.circular(12),
@@ -1514,12 +1642,12 @@ class _KitCard extends StatelessWidget {
                   SizedBox(height: 56, width: double.infinity, child: CustomPaint(painter: _LeadsPainter(cracked: run.leadCracked))),
                   const SizedBox(height: 10),
                   Row(children: [
-                    button(M2MeggerLines.newLead, () => onFix(MeggerFault.lead)),
+                    button(M2MeggerLines.newLead, () => onFix(MeggerFault.lead), buttonKeys[0]),
                     const SizedBox(width: 8),
-                    button(M2MeggerLines.newBattery, () => onFix(MeggerFault.battery)),
+                    button(M2MeggerLines.newBattery, () => onFix(MeggerFault.battery), buttonKeys[1]),
                   ]),
                   const SizedBox(height: 8),
-                  Row(children: [button(M2MeggerLines.kitOk, onClose, filled: true)]),
+                  Row(children: [button(M2MeggerLines.kitOk, onClose, buttonKeys[2], filled: true)]),
                 ],
               ),
             ),

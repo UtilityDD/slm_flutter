@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -53,15 +54,22 @@ export 'm2_comealong_pull_world.dart' show PullAnchor, PullGeo, PullSpot;
 //
 // Deadly (lesson point 2, the slingshot): standing in the line of pull.
 // Slips: a weak anchor, the grip before the anchor, a stroke (or "done") with
-// the pawl not seated, pulling past the right sag, the pipe on the handle,
-// letting the load off at once. Three slips strike the level out.
-// "Done" while it still sags is not scored (the guide says it still sags).
+// the pawl not seated, pulling past the right sag, "done" while it still sags
+// (a stop before the right sag: no free probing — audit 2026-11-11), the pipe
+// on the handle (listening to the coworker), letting the load off at once.
+// Three slips strike the level out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, the
 // full scene (m2_comealong_pull_world.dart), corner guide, ◆ on the table →
-// "কেন …?" → the next station by itself; the coworker once a play, mid-pull.
-// Voice: the guide's lines by device TTS; the coworker's push by device TTS
-// until it is recorded in his voice (his exit line is already recorded).
+// "কেন …?" → the next station by itself; the coworker once a play, mid-pull:
+// the next stroke (or "done") waits for him (holdForCoworker), and once the
+// conductor is at the right sag his push no longer fits (he does not come).
+// A station is won once: taps after it (e.g. a second spot) do nothing.
+// Gesture hints: a sweep over the choices (tools, places on the pole, spots,
+// the handle's controls); a tap only on the hook (the one way forward) or
+// the one tool left.
+// Voice: the guide's lines by device TTS; the coworker's push has no clip
+// yet (silent, caption held); his exit line is recorded.
 
 // ============================================================================
 // Content
@@ -92,7 +100,8 @@ abstract final class PullLines {
       };
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
 
-  /// Not scored: "done" while the conductor still sags more than the others.
+  /// "done" while the conductor still sags more than the others (the slip
+  /// card's head line idea; kept for the voice script).
   static const stillSlack = 'তারটা এখনো পাশের তারগুলোর চেয়ে বেশি ঝুলে আছে।';
 
   // Labels a worker reads.
@@ -219,6 +228,15 @@ abstract final class PullMistakes {
     lessonPoint: 0,
   );
 
+  /// "টান ঠিক আছে" while it still sags (the mission: bring the sagging
+  /// conductor to the right tension). No lesson point: "পাঠে দেখুন" opens the
+  /// lesson from its start (the mission briefing).
+  static const stoppedSlack = DoMistake(
+    key: '2.4/pull/stopped-slack',
+    textBn: 'তারটা এখনো পাশের তারগুলোর চেয়ে বেশি ঝুলে আছে, তবু থামলেন। পাশের দুটো তারের সাথে মিলিয়ে দেখুন — ঠিক স্যাগে এলে তবেই থামুন।',
+    art: '$_dir/slack.svg',
+  );
+
   /// Pro tip 4: the pro tips are not a lesson point, so "পাঠে দেখুন" opens
   /// the lesson from its start.
   static const pipe = DoMistake(
@@ -233,16 +251,23 @@ abstract final class PullMistakes {
     lessonPoint: 2,
   );
 
-  static const all = [weakAnchor, gripFirst, inLine, pawlOpen, overPull, pipe, suddenRelease];
+  static const all = [weakAnchor, gripFirst, inLine, pawlOpen, overPull, stoppedSlack, pipe, suddenRelease];
 }
 
 /// One play: how many strokes bring the conductor to the right sag, on which
 /// stroke the pawl fails to seat, after which stroke he comes, how many
-/// notches let the load off.
+/// notches let the load off, and the order of the two tools on his belt.
 @immutable
 class PullDeal {
-  const PullDeal({required this.need, required this.lostAt, required this.callAt, required this.notches});
+  const PullDeal({required this.need, required this.lostAt, required this.callAt, required this.notches, this.gripLeft = false});
   final int need;
+
+  /// The wire grip is on the left of the tool tray (the tray is never laid
+  /// out in the lesson's order every play).
+  final bool gripLeft;
+
+  /// The tools left to right.
+  List<PullTool> get tray => gripLeft ? const [PullTool.grip, PullTool.comeAlong] : const [PullTool.comeAlong, PullTool.grip];
 
   /// The stroke (counting every finished stroke, from 1) after which the pawl
   /// does not seat and the wheel runs back.
@@ -257,7 +282,8 @@ PullDeal dealPull(math.Random rng) {
   final need = 4 + rng.nextInt(3);
   final lostAt = 2 + rng.nextInt(need - 2);
   final callAt = 1 + rng.nextInt(need - 1);
-  return PullDeal(need: need, lostAt: lostAt, callAt: callAt, notches: 3 + rng.nextInt(2));
+  final notches = 3 + rng.nextInt(2);
+  return PullDeal(need: need, lostAt: lostAt, callAt: callAt, notches: notches, gripLeft: rng.nextBool());
 }
 
 /// What "done" found.
@@ -315,7 +341,7 @@ class PullRun {
 
   /// The come-along's fixed end on [a].
   DoMistake? placeComeAlong(PullAnchor a) {
-    if (station != PullStation.rig || anchor != null) return null;
+    if (ended || station != PullStation.rig || anchor != null) return null;
     if (!strong(a)) return _slip(PullMistakes.weakAnchor);
     anchor = a;
     return null;
@@ -323,7 +349,7 @@ class PullRun {
 
   /// The grip on the conductor (only after the anchor).
   DoMistake? placeGrip() {
-    if (station != PullStation.rig || grip) return null;
+    if (ended || station != PullStation.rig || grip) return null;
     if (anchor == null) return _slip(PullMistakes.gripFirst);
     grip = true;
     return null;
@@ -331,7 +357,7 @@ class PullRun {
 
   /// The hook on the grip's eye-bolt; true = rigged.
   bool hook() {
-    if (station != PullStation.rig || anchor == null || !grip || hooked) return false;
+    if (ended || station != PullStation.rig || anchor == null || !grip || hooked) return false;
     hooked = true;
     _tag(PullLines.caughtAnchor);
     return true;
@@ -339,7 +365,7 @@ class PullRun {
 
   /// Where he stands for the pull: in the line of pull is deadly.
   DoMistake? stand(PullSpot s) {
-    if (station != PullStation.spot || spot != null) return null;
+    if (ended || station != PullStation.spot || spot != null) return null;
     if (s != PullSpot.side) return deadly = PullMistakes.inLine;
     spot = s;
     _tag(PullLines.caughtSpot);
@@ -351,7 +377,7 @@ class PullRun {
   /// pawl stays off the teeth and the wheel runs back. Past the right sag: a
   /// slip, and it is let back to the right sag.
   DoMistake? stroke() {
-    if (station != PullStation.pull) return null;
+    if (ended || station != PullStation.pull) return null;
     if (!pawlSeated) return _slip(PullMistakes.pawlOpen);
     finished++;
     if (!_lost && finished == deal.lostAt) {
@@ -377,11 +403,12 @@ class PullRun {
     if (byHand) _tag(PullLines.caughtPawl);
   }
 
-  /// "টান ঠিক আছে": the pawl must be seated; still sagging = not scored.
+  /// "টান ঠিক আছে": the pawl must be seated; still sagging = a slip (a stop
+  /// before the right sag is a wrong call, never a free look).
   (PullCheck?, DoMistake?) check() {
-    if (station != PullStation.pull) return (null, null);
+    if (ended || station != PullStation.pull) return (null, null);
     if (!pawlSeated) return (null, _slip(PullMistakes.pawlOpen));
-    if (strokes < deal.need) return (PullCheck.slack, null);
+    if (strokes < deal.need) return (PullCheck.slack, _slip(PullMistakes.stoppedSlack));
     _tag(PullLines.caughtSag);
     return (PullCheck.ok, null);
   }
@@ -391,7 +418,7 @@ class PullRun {
 
   /// One notch of the load let off; true = all off.
   bool releaseNotch() {
-    if (station != PullStation.release || released) return false;
+    if (ended || station != PullStation.release) return false;
     notchesOff++;
     if (notchesOff >= deal.notches) {
       released = true;
@@ -403,7 +430,7 @@ class PullRun {
 
   /// The whole load at once: a slip (the load stays on).
   DoMistake? releaseAtOnce() {
-    if (station != PullStation.release || released) return null;
+    if (ended || station != PullStation.release) return null;
     return _slip(PullMistakes.suddenRelease);
   }
 
@@ -529,6 +556,10 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
   var _holding = false;
   var _stamp = false;
   var _coworkerArmed = false;
+
+  /// This station's right move is in (the ◆ is on the table or paid): the
+  /// station takes no more moves until the next one starts.
+  var _won = false;
   final List<(int, Offset)> _taps = [];
   int _tapN = 0;
 
@@ -540,6 +571,14 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
   Completer<void>? _frozen;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+
+  // Gesture hints (how to touch, never what).
+  final _hints = IdleHintController();
+  final Map<PullTool, GlobalKey> _toolKeys = {for (final t in PullTool.values) t: GlobalKey()};
+  final _pawlKey = GlobalKey();
+  final _handleKey = GlobalKey();
+  final _otherKey = GlobalKey();
+  PullGeo? _geoNow;
 
   @override
   LevelContext get deathCtx => widget.ctx;
@@ -586,7 +625,8 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
     unawaited(_sayChain([_task]));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !struckOut && !_move.isAnimating;
+  bool get _canPlay =>
+      !_intro && !_busy && !_ended && !_won && _card == null && !tableBusy && !coworkerOpen && !struckOut && !_move.isAnimating;
 
   // --- rig and spot: taps on the scene ---------------------------------------------
   void _pickTool(PullTool t) {
@@ -602,6 +642,8 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
       case PullStation.rig:
         _tapRig(p, geo, global);
       case PullStation.spot:
+        // One stand a play: once he is at a spot, more taps do not move him.
+        if (_run.spot != null) return;
         for (final s in PullSpot.values) {
           if (geo.spotRect(s).contains(p)) {
             unawaited(_stand(s, global));
@@ -616,6 +658,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
   }
 
   void _plainTap(Offset p) {
+    _hints.missTap();
     HapticFeedback.selectionClick();
     _cue('sounds/intro/tick.ogg', volume: 0.4);
     setState(() {
@@ -671,6 +714,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
 
   Future<void> _stand(PullSpot s, Offset global) async {
     final m = _run.stand(s);
+    if (m == null && _run.spot != s) return;
     HapticFeedback.selectionClick();
     setState(() {
       _to = s;
@@ -698,6 +742,8 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
       unawaited(_slipOut(_run.stroke()!, _handleCentre()));
       return;
     }
+    // The next stroke waits for the coworker (he can't be skipped by pulling fast).
+    if (_run.station == PullStation.pull && holdForCoworker()) return;
     _holding = true;
     HapticFeedback.selectionClick();
     _stroke.duration = Duration(milliseconds: _run.station == PullStation.pull ? 900 : 700);
@@ -747,10 +793,15 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
       _cue('sounds/intro/click.ogg', volume: 0.8);
     }
     setState(() => _wake++);
-    if (!_coworkerArmed && _run.strokes >= _run.deal.callAt && _run.pawlSeated) {
-      _coworkerArmed = true;
-      scheduleCoworker();
-    }
+    _armCoworker();
+  }
+
+  /// He is dealt to come once this many strokes hold (and the pawl is seated).
+  void _armCoworker() {
+    if (_coworkerArmed || _run.station != PullStation.pull || !_run.pawlSeated) return;
+    if (_run.strokes < _run.deal.callAt || _run.strokes >= _run.deal.need) return;
+    _coworkerArmed = true;
+    scheduleCoworker();
   }
 
   void _tapPawl() {
@@ -763,21 +814,18 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
       _cue('sounds/intro/tick.ogg', volume: 0.4);
     }
     setState(() => _wake++);
+    _armCoworker();
   }
 
   Future<void> _checkDone(Offset origin) async {
     if (!_canPlay || _run.station != PullStation.pull || _holding) return;
+    if (holdForCoworker()) return;
     final (res, m) = _run.check();
     if (m != null) {
       await _slipOut(m, origin);
       return;
     }
-    if (res == PullCheck.slack) {
-      HapticFeedback.selectionClick();
-      _cue('sounds/intro/click.ogg', volume: 0.5);
-      unawaited(_sayChain([PullLines.stillSlack]));
-      return;
-    }
+    if (res != PullCheck.ok) return;
     _hush();
     setState(() => _stamp = true);
     _stationRight(origin);
@@ -791,6 +839,8 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
 
   // --- a station done right: the ◆ and the reason ---------------------------------
   void _stationRight(Offset origin) {
+    if (_won) return;
+    _won = true;
     _hush();
     _cue('sounds/quiz_right.wav', volume: 0.6);
     final station = _run.station;
@@ -809,6 +859,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
     }
     _run.next();
     setState(() {
+      _won = false;
       _stamp = false;
       _taps.clear();
       _wake++;
@@ -845,9 +896,11 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.station.index > PullStation.pull.index) return null;
+    if (_ended || struckOut || _run.station.index > PullStation.pull.index) return null;
     if (_run.station != PullStation.pull) return false;
-    if (_intro || _busy || _holding || _card != null || reasonOpen || !_run.pawlSeated || struckOut) return false;
+    // "A pipe, one big pull and it's done" fits only while it still sags.
+    if (_won || _run.strokes >= _run.deal.need) return null;
+    if (_intro || _busy || _holding || _card != null || tableBusy || !_run.pawlSeated) return false;
     return true;
   }
 
@@ -954,10 +1007,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
           _wake++;
         });
         unawaited(_sayChain([_task]));
-        if (_run.station == PullStation.pull && !_coworkerArmed && _run.strokes >= _run.deal.callAt) {
-          _coworkerArmed = true;
-          scheduleCoworker();
-        }
+        _armCoworker();
       case MistakeTone.nearMiss:
         _hush();
         widget.onRetry(_muted);
@@ -1057,7 +1107,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = PullGeo.forScene(m.height, m.inset);
+    final geo = _geoNow = PullGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final tb = _traineeBox(geo);
@@ -1152,6 +1202,45 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
     ];
   }
 
+  // --- the gesture hint (how to touch, never what) ------------------------------
+  /// A design-px rect on the pole as it shows through the close-up camera.
+  static Rect _view(PullGeo geo, Rect r) => Rect.fromPoints(geo.view(r.topLeft), geo.view(r.bottomRight));
+
+  /// Left to right on the scene (never the enum's order, which starts with
+  /// the right answers).
+  static List<Rect> _leftToRight(Iterable<Rect> rects) => [...rects]..sort((a, b) => a.center.dx.compareTo(b.center.dx));
+
+  HintSpec? _hint() {
+    final r = _run;
+    final geo = _geoNow;
+    switch (r.station) {
+      case PullStation.rig:
+        if (geo == null) return null;
+        // The hook is the one way forward once the anchor and the grip are on.
+        if (r.anchor != null && r.grip) return HintSpec.tap(geo.view(geo.hookRect(r.anchor!).center), space: HintSpace.scene);
+        // A tool in hand: every place on the pole it could go, the same for either tool.
+        if (_tool != null) {
+          return HintSpec.sweep(
+            _leftToRight([for (final a in PullAnchor.values) _view(geo, geo.anchorRect(a)), _view(geo, geo.gripRect)]),
+            space: HintSpace.scene,
+          );
+        }
+        final open = [
+          for (final t in r.deal.tray)
+            if (!(t == PullTool.comeAlong ? r.anchor != null : r.grip)) _toolKeys[t]!,
+        ];
+        // One tool left (the anchor is on): tap it; both open: sweep over both.
+        return open.length == 1 ? HintSpec.tapOn(open.single) : HintSpec.sweepOver(open);
+      case PullStation.spot:
+        if (geo == null) return null;
+        return HintSpec.sweep(_leftToRight([for (final s in PullSpot.values) _view(geo, geo.spotRect(s))]), space: HintSpace.scene);
+      case PullStation.pull:
+        return HintSpec.sweepOver([_pawlKey, _handleKey, _otherKey]);
+      case PullStation.release:
+        return HintSpec.sweepOver([_handleKey, _otherKey]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1163,6 +1252,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
     final st = _run.station;
     final rigTray = handsOn && st == PullStation.rig && !(_run.anchor != null && _run.grip);
     final handle = handsOn && (st == PullStation.pull || st == PullStation.release) && !_stamp && !(st == PullStation.release && _run.released);
+    final hintWaiting = handsOn && _canPlay && !_holding;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1191,6 +1281,10 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
             ),
             animation: _sceneMotion,
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: '${st.name}|${_run.anchor != null}|${_run.grip}|${_tool?.name}',
+            hintController: _hints,
             overlays: [
               if (playing && !coworkerOpen)
                 Positioned(
@@ -1207,21 +1301,18 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
                   bottom: pad.bottom + 14,
                   child: Row(
                     children: [
-                      _ToolChip(
-                        label: PullLines.comeAlong,
-                        icon: Icons.settings_rounded,
-                        selected: _tool == PullTool.comeAlong,
-                        used: _run.anchor != null,
-                        onTap: () => _pickTool(PullTool.comeAlong),
-                      ),
-                      const SizedBox(width: 8),
-                      _ToolChip(
-                        label: PullLines.grip,
-                        icon: Icons.back_hand_rounded,
-                        selected: _tool == PullTool.grip,
-                        used: _run.grip,
-                        onTap: () => _pickTool(PullTool.grip),
-                      ),
+                      // Dealt order (never the lesson's order every play).
+                      for (final (i, t) in _run.deal.tray.indexed) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        _ToolChip(
+                          key: _toolKeys[t],
+                          label: t == PullTool.comeAlong ? PullLines.comeAlong : PullLines.grip,
+                          icon: t == PullTool.comeAlong ? Icons.settings_rounded : Icons.back_hand_rounded,
+                          selected: _tool == t,
+                          used: t == PullTool.comeAlong ? _run.anchor != null : _run.grip,
+                          onTap: () => _pickTool(t),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1238,6 +1329,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
                     turn: (st == PullStation.pull ? _run.finished : -_run.notchesOff).toDouble(),
                     release: st == PullStation.release,
                     onPawl: _tapPawl,
+                    pawlKey: _pawlKey,
                   ),
                 ),
                 Positioned(
@@ -1250,6 +1342,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
                       Expanded(
                         flex: 3,
                         child: _HoldButton(
+                          key: _handleKey,
                           label: st == PullStation.pull ? PullLines.pull : PullLines.slowRelease,
                           progress: _stroke,
                           onDown: _holdStart,
@@ -1260,6 +1353,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
                       Expanded(
                         flex: 3,
                         child: DoBigButton(
+                          key: _otherKey,
                           label: st == PullStation.pull ? PullLines.done : PullLines.fastRelease,
                           filled: false,
                           onDark: true,
@@ -1398,7 +1492,7 @@ class _DocketChip extends StatelessWidget {
 
 /// A tool from his belt: tap to take it, then tap where it goes.
 class _ToolChip extends StatelessWidget {
-  const _ToolChip({required this.label, required this.icon, required this.selected, required this.used, required this.onTap});
+  const _ToolChip({super.key, required this.label, required this.icon, required this.selected, required this.used, required this.onTap});
   final String label;
   final IconData icon;
   final bool selected;
@@ -1442,8 +1536,9 @@ class _ToolChip extends StatelessWidget {
 
 /// The come-along close up: the ratchet, its pawl (tap it), the handle.
 class _RatchetPanel extends StatelessWidget {
-  const _RatchetPanel({required this.handle, required this.pawlSeated, required this.turn, required this.release, required this.onPawl});
+  const _RatchetPanel({required this.handle, required this.pawlSeated, required this.turn, required this.release, required this.onPawl, this.pawlKey});
   final Animation<double> handle;
+  final Key? pawlKey;
   final bool pawlSeated;
   final double turn;
   final bool release;
@@ -1472,6 +1567,7 @@ class _RatchetPanel extends StatelessWidget {
             Positioned.fromRect(
               rect: area.inflate(4),
               child: Semantics(
+                key: pawlKey,
                 button: true,
                 label: PullLines.ratchet,
                 excludeSemantics: true,
@@ -1487,7 +1583,7 @@ class _RatchetPanel extends StatelessWidget {
 
 /// Hold to work the handle: it fills while held (one stroke / one notch).
 class _HoldButton extends StatelessWidget {
-  const _HoldButton({required this.label, required this.progress, required this.onDown, required this.onUp});
+  const _HoldButton({super.key, required this.label, required this.progress, required this.onDown, required this.onUp});
   final String label;
   final Animation<double> progress;
   final VoidCallback onDown;

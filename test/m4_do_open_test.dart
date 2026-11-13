@@ -3,7 +3,9 @@
 // side; hook, face aside, one quick pull; all three open; heavy load = the
 // load-break tool), the deal, the option libraries, and the level in the
 // shell: idle perf, the guide first, a full clean play with the coworker
-// refused, slip cards, the deadly freeze (heavy load pulled without the tool).
+// refused, slip cards, the deadly freeze (heavy load pulled without the tool),
+// listening = a slip (audit 2026-11-11), a fast pull waits for him, refusing
+// fits nothing, three slips strike out, the gesture hint.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,6 +19,8 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m4_do_open.dart';
@@ -29,6 +33,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(rungId: '4.4/do/0', kind: CatalogRungKind.doKind, lessonId: '4.4', lessonTitleBn: '', ladderStep: 0, doIndex: 1, doCount: 2);
 
@@ -55,10 +60,12 @@ List<Finder> _onScreen(List<String> texts) => [
 ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 Future<void> _reason(WidgetTester t, List<String> right) async {
@@ -305,19 +312,24 @@ void main() {
       expect(b.confirm(), (true, null));
       expect(b.caught, contains(M4DoOpenLines.caughtLbt));
       expect(b.clean, isTrue);
-      // His say-so: the tool comes off and cannot go back on; the pull is deadly.
-      final c = atFuses(M4DoOpenKind.heavy, head: M4DoOpenHead.loadBreak)..listenHeavy();
-      expect(c.head, M4DoOpenHead.puller);
+      // His say-so is a slip; nothing on the rod changes, the job goes on.
+      final c = atFuses(M4DoOpenKind.heavy, head: M4DoOpenHead.loadBreak);
+      expect(c.listenHeavy(), M4DoOpenMistakes.listenedNoTool);
+      expect(c.listenHeavy()!.deadly, isFalse);
+      expect(c.head, M4DoOpenHead.loadBreak);
+      expect(c.ended, isFalse);
       c
         ..hook(0)
         ..turnFace();
-      expect(c.pull(140, 300).$2, M4DoOpenMistakes.heavyNoTool);
+      expect(c.pull(140, 300), (M4DoOpenPull.done, null));
     });
 
-    test('listening on the fault job is the all-three slip (once a job); next() resets the job, keeps the kit', () {
+    test('listening on the fault job is a slip (once a job, and stands for the all-three slip); next() resets the job, keeps the kit', () {
       final r = atFuses(M4DoOpenKind.fault, blown: 0);
-      expect(r.listenAll(), M4DoOpenMistakes.notAllThree);
+      expect(r.listenAll(), M4DoOpenMistakes.listenedTwo);
       expect(r.listenAll(), isNull);
+      expect(r.confirm(), (false, null), reason: 'not booked twice');
+      expect(r.slips, 1);
       r.slips = 3;
       expect(r.percent, 55);
       final d = m4DoOpenDeal(math.Random(4));
@@ -325,11 +337,11 @@ void main() {
         ..stage = M4DoOpenStage.prep
         ..wear(M4DoOpenKit.gloves)
         ..fit(M4DoOpenHead.puller)
-        ..toolOff = true;
+        ..allBooked = true;
       n.next();
       expect(n.kit, {M4DoOpenKit.gloves});
       expect(n.head, M4DoOpenHead.none);
-      expect(n.toolOff, isFalse);
+      expect(n.allBooked, isFalse);
       expect(n.stage, M4DoOpenStage.prep);
       expect(n.open, [for (var i = 0; i < 3; i++) i == d.jobs[1].blown]);
     });
@@ -340,7 +352,9 @@ void main() {
         ...M4DoOpenLines.rodWhy,
         ...M4DoOpenLines.faultWhy,
         ...M4DoOpenLines.heavyWhy,
-        ...M4DoOpenLines.whyWrong,
+        ...M4DoOpenLines.rodWrong,
+        ...M4DoOpenLines.heavyWrong,
+        ...M4DoOpenLines.faultWrong,
         for (final s in [M4DoOpenLines.coworkerHeavy, M4DoOpenLines.coworkerFault]) ...[...s.recordedLines, ...s.right, ...s.wrong],
         for (final m in M4DoOpenMistakes.all) m.textBn,
         for (final j in m4DoOpenDeal(math.Random(1)).jobs) M4DoOpenLines.jobBn(j),
@@ -359,14 +373,41 @@ void main() {
       expect(m4DoOpenPacks.keys, ['do_4_4_a']);
       expect(_pack.quickMs, 70000);
       expect(M4DoOpenLines.intro.length, lessThan(60), reason: 'the intro stays short');
+      // Lesson 4.4 point 3: "ধীর গতিতে খুললে আর্কটি দীর্ঘস্থায়ী হতে পারে".
+      expect(M4DoOpenLines.slowPull, contains('দীর্ঘস্থায়ী হতে পারে'));
+      for (final m in [M4DoOpenMistakes.listenedTwo, M4DoOpenMistakes.listenedNoTool]) {
+        expect(m.deadly, isFalse, reason: 'listening to him is a slip');
+      }
     });
 
     test('reasons fit, same length, big enough; his choices too', () {
-      expectSameLength('why', [...M4DoOpenLines.rodWhy, ...M4DoOpenLines.faultWhy, ...M4DoOpenLines.heavyWhy, ...M4DoOpenLines.whyWrong]);
-      for (final right in [M4DoOpenLines.rodWhy, M4DoOpenLines.faultWhy, M4DoOpenLines.heavyWhy]) {
-        expectLibrary(right.first, right, M4DoOpenLines.whyWrong);
+      expectSameLength('why', [
+        ...M4DoOpenLines.rodWhy,
+        ...M4DoOpenLines.faultWhy,
+        ...M4DoOpenLines.heavyWhy,
+        ...M4DoOpenLines.rodWrong,
+        ...M4DoOpenLines.heavyWrong,
+        ...M4DoOpenLines.faultWrong,
+      ]);
+      // Each deck: right pool, wrong pool, and the question's key words.
+      final decks = <(String, List<String>, List<String>, List<String>)>[
+        (M4DoOpenLines.whyRod, M4DoOpenLines.rodWhy, M4DoOpenLines.rodWrong, ['রড']),
+        (M4DoOpenLines.why(M4DoOpenKind.heavy), M4DoOpenLines.whyRight(M4DoOpenKind.heavy), M4DoOpenLines.whyWrong(M4DoOpenKind.heavy), ['লোড', 'টুল']),
+        (M4DoOpenLines.why(M4DoOpenKind.fault), M4DoOpenLines.whyRight(M4DoOpenKind.fault), M4DoOpenLines.whyWrong(M4DoOpenKind.fault), ['ফল্ট', 'ফিউজ']),
+      ];
+      for (final (q, right, wrong, words) in decks) {
+        expectLibrary(q, right, wrong);
+        // No key word sits on a right card alone: a word any right card uses
+        // is on every wrong card too, so no deal can give it away.
+        for (final w in words) {
+          if (right.any((r) => r.contains(w))) {
+            for (final x in wrong) {
+              expect(x, contains(w), reason: '$q: "$w" is on a right card, so every wrong card needs it');
+            }
+          }
+        }
         for (var s = 0; s < 10; s++) {
-          final deal = dealChoices(right, M4DoOpenLines.whyWrong, math.Random(s));
+          final deal = dealChoices(right, wrong, math.Random(s));
           expect(deal.where((o) => o.correct).length, 1);
           expect(deal.map((o) => o.textBn).toSet().length, 3);
         }
@@ -430,7 +471,7 @@ void main() {
         }
         debugPrint('PERF m4_do_open ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -572,7 +613,7 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('listening to him on the heavy job: the tool comes off, the pull is deadly', (t) async {
+    testWidgets('listening to him on the heavy job: a slip, the tool stays on, the job goes on', (t) async {
       final seed = seedWhere((d) => d.jobs[0].kind == M4DoOpenKind.heavy && d.callAt == 0);
       final deal = m4DoOpenDeal(math.Random(seed));
       final j = deal.jobs[0];
@@ -582,17 +623,161 @@ void main() {
       await _prep(t, j);
       await _standDry(t, j);
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M4DoOpenLines.coworkerHeavy.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
-      await _pump(t, 1500);
-      await _pullOpen(t, 1);
+      await tapReasonProceed(t);
+      expect(await _pumpUntil(t, find.text(MistakeLines.slipHead), maxMs: 3000), isTrue, reason: 'listening is a slip');
+      expect(find.byType(FreezeFrame), findsNothing);
+      var s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, M4DoOpenMistakes.listenedNoTool.key);
+      expect(s.mistakes.single.deadly, isFalse);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 800);
+      for (var p = 0; p < 3; p++) {
+        await _pullOpen(t, p);
+        expect(find.byType(FreezeFrame), findsNothing, reason: 'the load-break tool is still on');
+        expect(find.text(MistakeLines.slipHead), findsNothing);
+      }
+      await t.tap(find.text(M4DoOpenLines.allOpen));
+      await _pump(t, 400);
+      await _reason(t, M4DoOpenLines.heavyWhy);
+      s = c.read(gameSaveProvider);
+      expect(s.mistakes, hasLength(1));
+      await _close(t, c);
+    });
+
+    testWidgets('plain puller on his heavy job: he does not come, no praise, the pull is deadly', (t) async {
+      final seed = seedWhere((d) => d.jobs[0].kind == M4DoOpenKind.heavy && d.callAt == 0);
+      final deal = m4DoOpenDeal(math.Random(seed));
+      final j = deal.jobs[0];
+      final c = await _open(t, seed);
+      await _takeRod(t, deal);
+      await _reason(t, M4DoOpenLines.rodWhy);
+      await _prep(t, j, head: M4DoOpenHead.puller);
+      await _standDry(t, j);
+      // "Skip the tool" no longer fits: the plain head is locked on.
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 5000), isFalse, reason: 'his push does not fit');
+      await _pullOpen(t, 0);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'the pull does not call him in either');
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
       final s = c.read(gameSaveProvider);
       expect(s.mistakes.last.key, M4DoOpenMistakes.heavyNoTool.key);
+      expect(s.mistakes.last.deadly, isTrue);
+      expect(find.text(M4DoOpenLines.callHeld), findsNothing, reason: 'no praise before a deadly pull');
+      expect(find.text(M4DoOpenLines.caughtCall), findsNothing);
+      await _close(t, c);
+    });
+
+    testWidgets('refusing him with the load-break tool on changes nothing: the pulls are clean', (t) async {
+      final seed = seedWhere((d) => d.jobs[0].kind == M4DoOpenKind.heavy && d.callAt == 0);
+      final deal = m4DoOpenDeal(math.Random(seed));
+      final j = deal.jobs[0];
+      final c = await _open(t, seed);
+      await _takeRod(t, deal);
+      await _reason(t, M4DoOpenLines.rodWhy);
+      await _prep(t, j);
+      await _standDry(t, j);
+      await _refuse(t, M4DoOpenLines.coworkerHeavy);
+      for (var p = 0; p < 3; p++) {
+        await _pullOpen(t, p);
+        expect(find.byType(FreezeFrame), findsNothing, reason: 'phase $p');
+        expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'phase $p');
+      }
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    for (final heavy in [true, false]) {
+      testWidgets('a fast pull does not skip him: the pull waits, he comes, then the play goes on (${heavy ? 'heavy' : 'fault'})', (t) async {
+        final seed = seedWhere((d) => d.callAt == 0 && (d.jobs[0].kind == M4DoOpenKind.heavy) == heavy);
+        final deal = m4DoOpenDeal(math.Random(seed));
+        final j = deal.jobs[0];
+        final c = await _open(t, seed);
+        await _takeRod(t, deal);
+        await _reason(t, M4DoOpenLines.rodWhy);
+        await _prep(t, j);
+        // Stand, hook, face aside and pull at once (before his 1.2 s timer).
+        final first = j.blown == 0 ? 1 : 0;
+        await t.tapAt(_screen(Offset(j.puddleLeft ? 80 : 130, _geo.groundY + 20)));
+        await _pump(t, 200);
+        await t.tapAt(_screen(_geo.ringOf(first)));
+        await _pump(t, 150);
+        await t.tap(_label(M4DoOpenLines.faceAside));
+        await _pump(t, 100);
+        expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet: the play is fast');
+        await t.dragFrom(_screen(const Offset(200, 380)), const Offset(0, 140));
+        await _pump(t, 100);
+        expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the pull waited for him');
+        expect(find.byType(FreezeFrame), findsNothing);
+        await _refuse(t, heavy ? M4DoOpenLines.coworkerHeavy : M4DoOpenLines.coworkerFault);
+        for (var p = 0; p < 3; p++) {
+          if (p == j.blown) continue;
+          await _pullOpen(t, p);
+          expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'phase $p');
+        }
+        await t.tap(find.text(M4DoOpenLines.allOpen));
+        await _pump(t, 400);
+        await _reason(t, M4DoOpenLines.whyRight(j.kind));
+        await _playRight(t, deal, 1);
+        final s = c.read(gameSaveProvider);
+        expect(s.rungProgress['4.4/do/0'], 'cleared');
+        expect(s.mistakes, isEmpty);
+        expect(find.text(M4DoOpenLines.caughtCall), findsOneWidget);
+        await _close(t, c);
+      });
+    }
+
+    testWidgets('three slips: the level strikes out', (t) async {
+      final seed = seedWhere((d) => d.callAt == 1);
+      final deal = m4DoOpenDeal(math.Random(seed));
+      final j = deal.jobs[0];
+      final c = await _open(t, seed);
+      await _takeRod(t, deal, rod: M4DoOpenRod.short);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip 1: the short rod');
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 800);
+      await _reason(t, M4DoOpenLines.rodWhy);
+      await _prep(t, j, kit: false);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip 2: no গ্লাভস');
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 800);
+      await t.tapAt(_screen(Offset(j.puddleLeft ? 134 : 320, _geo.groundY + 20)));
+      await _pump(t, 1500);
+      expect(find.byType(StruckOutCard), findsOneWidget, reason: 'slip 3: the puddle');
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['4.4/do/0'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key).toSet(), containsAll([M4DoOpenMistakes.shortRod.key, M4DoOpenMistakes.noGloves.key]));
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: after idle at the rack the hand shows; a touch hides it', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = seedWhere((d) => d.callAt == 1);
+      final deal = m4DoOpenDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      expect(hand, findsNothing, reason: 'not before the wait');
+      await _pump(t, GestureHints.idle.inMilliseconds + 1500);
+      expect(hand, findsOneWidget, reason: 'the rack waits: a sweep over the rods');
+      await _takeRod(t, deal);
+      expect(hand, findsNothing, reason: 'a touch hides it');
+      await _reason(t, M4DoOpenLines.rodWhy);
+      final j = deal.jobs[0];
+      await _prep(t, j);
+      await _standDry(t, j);
+      // At the rings: rings + confirm, then (hooked) ring + face + confirm.
+      await _pump(t, GestureHints.idle.inMilliseconds + 1500);
+      expect(hand, findsOneWidget, reason: 'the rings wait');
+      final ring = j.kind == M4DoOpenKind.fault && j.blown == 0 ? 1 : 0;
+      await t.tapAt(_screen(_geo.ringOf(ring)));
+      await _pump(t, 400);
+      expect(hand, findsNothing);
+      await _pump(t, GestureHints.idle.inMilliseconds + 1500);
+      expect(hand, findsOneWidget, reason: 'hooked: the hand sweeps the ring and both buttons');
       await _close(t, c);
     });
   });

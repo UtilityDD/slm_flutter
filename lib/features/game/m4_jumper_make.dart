@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -43,23 +44,29 @@ export 'm4_jumper_make_world.dart' show M4JumperMakeConn, M4JumperMakeGeo, M4Jum
 //     jumper is aluminium), the right connector (by the conductor's material:
 //     the aluminium PG clamp; where the right span is an old copper conductor,
 //     the bi-metallic one — pro tip 3), then tighten with two spanners (one
-//     holds the bolt's head, the other turns the nut — pro tip 1); the
-//     careless coworker pushes "no brush, just put it on" at the right joint;
+//     holds the bolt's head, the other turns the nut — pro tip 1); every
+//     tray carries the same four connectors (PG Al, PG Cu, bi-metallic, a
+//     twist of binding wire), so the bi-metallic one never marks the copper
+//     joint; the careless coworker pushes "no brush, just put it on" at the
+//     right joint, before its brush (the brush, the paste and the tray wait
+//     for him), never after it;
 //   ঘ the shape — a smooth U, long enough to stay clear of the cross-arm in a
 //     strong wind, not pulled straight (step 4); then no sharp edge: a strand
 //     sticking out of the cut end is trimmed (film rule 3, corona).
 //
 // No deadly move (the line is dead and earthed). Slips: a thin piece, a
-// connector before the brush, before the paste, the wrong metal, no
-// bi-metallic on copper, a twisted joint, one spanner, the jumper pulled
-// straight, too long, done with a sharp strand, listening to him. Three slips
-// strike the level out.
+// connector before the brush, before the paste, the wrong metal (a copper PG
+// or a bi-metallic on aluminium), no bi-metallic on copper, a twisted joint,
+// one spanner, the jumper pulled straight, too long, done with a sharp
+// strand, listening to him. Three slips strike the level out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, the
 // full scene (m4_jumper_make_world.dart), corner guide, ◆ on the table →
 // "কেন …?" → the next station by itself; the coworker once a play. Voice: the
-// guide's lines by device TTS; the coworker's push by device TTS until it is
-// recorded in his voice (his exit line is already recorded).
+// guide's lines by device TTS; the coworker's push is silent with its caption
+// held until it is recorded in his voice (his exit line is recorded). Gesture
+// hints: a sweep over the choices on screen in every waiting state (never a
+// tap on the right one).
 
 // ============================================================================
 // Content
@@ -138,7 +145,7 @@ abstract final class M4JumperMakeLines {
     'লাইনের পুরো কারেন্ট জাম্পার দিয়েই যায়',
   ];
   static const jointWhy = [
-    'ময়লা-অক্সাইড থাকলে জোড়া গরম হয়ে যায়',
+    'ময়লা থাকলে ভালো কানেক্টরও ব্যর্থ হয়',
     'অ্যালুমিনিয়ামে ব্রাশের পর পেস্ট দিতে হয়',
     'দুই রেঞ্চে ধরলে ক্ল্যাম্প ঠিক চেপে বসে',
   ];
@@ -148,7 +155,7 @@ abstract final class M4JumperMakeLines {
     'আলাদা ধাতুর জোড়ায় সাধারণ PG চলে না',
   ];
   static const shapeWhy = [
-    'মসৃণ U আকারে দুললেও কিছুতে ঠেকে না',
+    'জাম্পারকে মসৃণ U বা C আকার দিতে হয়',
     'ক্রস-আর্মে যেন না ঠেকে, তাই মাপমতো লম্বা',
     'ধারালো প্রান্তে করোনা হয়, তাই সব মসৃণ',
   ];
@@ -174,7 +181,7 @@ abstract final class M4JumperMakeLines {
   static const coworker = CoworkerScript(
     line: 'ব্রাশ-ট্রাশ লাগবে না, সোজা লাগিয়ে দাও!',
     exitLine: coworkerExit,
-    right: ['না, আগে ব্রাশে ঘষে পরিষ্কার করে নেব', 'না, ময়লা থাকলে জোড়া গরম হয়ে যাবে', 'না, পরিষ্কার না করলে জোড়া টিকবে না'],
+    right: ['না, আগে ব্রাশে ঘষে পরিষ্কার করে নেব', 'না, ময়লা থাকলে কানেক্টর ব্যর্থ হয়', 'না, পরিষ্কার না করলে জোড়া টিকবে না'],
     wrong: ['ঠিক, ব্রাশ ছাড়াই এখনই লাগিয়ে দিই', 'আচ্ছা, সোজা ক্ল্যাম্পটা বসিয়ে দিই', 'নতুন তার তো, ময়লা থাকার কথা না', 'টাইট দিলেই সব ঠিক হয়ে যাবে', 'ঠিক আছে, ব্রাশ পরের বার করব'],
     asks: ['ও বলছে ব্রাশ ছাড়াই লাগাতে। আপনি কী করবেন?', 'ব্রাশ করবেন, না সোজা লাগাবেন?', 'ওর কথা শুনবেন, না নিয়ম?'],
   );
@@ -221,6 +228,15 @@ abstract final class M4JumperMakeMistakes {
     lessonPoint: 1,
   );
 
+  /// Both sides aluminium, the bi-metallic connector taken (step 1: by the
+  /// conductors' metal).
+  static const bimetalOnAl = DoMistake(
+    key: '4.2/m4_jumper_make/bimetallic-on-aluminium',
+    textBn: 'দুই পাশই অ্যালুমিনিয়াম — এখানে বাই-মেটালিক কানেক্টর নয়। কন্ডাক্টরের মেটেরিয়াল (ACSR/AAAC) অনুযায়ী কানেক্টর বাছুন — এখানে অ্যালুমিনিয়ামের PG ক্ল্যাম্প।',
+    art: '$_dir/metal.svg',
+    lessonPoint: 1,
+  );
+
   /// Pro tip 3: the pro tips are not a lesson point (no "পাঠে দেখুন").
   static const noBimetal = DoMistake(
     key: '4.2/m4_jumper_make/no-bimetallic',
@@ -260,7 +276,7 @@ abstract final class M4JumperMakeMistakes {
     art: '$_dir/sharp.svg',
   );
 
-  static List<DoMistake> get all => const [thinWire, noClean, noPaste, wrongMetal, noBimetal, twist, oneWrench, tightShape, longShape, sharpEnd];
+  static List<DoMistake> get all => const [thinWire, noClean, noPaste, wrongMetal, bimetalOnAl, noBimetal, twist, oneWrench, tightShape, longShape, sharpEnd];
 }
 
 /// One play: the pieces on the rack, the line's conductor, which side is
@@ -276,6 +292,8 @@ class M4JumperMakeDeal {
     required this.tray2,
     required this.shapes,
     required this.stray,
+    this.brushFirst = true,
+    this.twoWrenchFirst = false,
   });
 
   /// Each piece's size relative to the line's conductor (≥ 1 is right).
@@ -288,6 +306,12 @@ class M4JumperMakeDeal {
   final List<M4JumperMakeConn> tray2;
   final List<M4JumperMakeShape> shapes;
   final bool stray;
+
+  /// The tool row's order at the joints (left to right): the brush or the
+  /// paste first, and one spanner or two first. Shuffled per play so the
+  /// layout never reads out the right order.
+  final bool brushFirst;
+  final bool twoWrenchFirst;
 }
 
 M4JumperMakeDeal m4JumperMakeDeal(math.Random rng) {
@@ -295,16 +319,18 @@ M4JumperMakeDeal m4JumperMakeDeal(math.Random rng) {
   final thin = [0.5, 0.65, 0.8]..shuffle(rng);
   final pieces = [...rights, ...thin.take(4 - rights.length)]..shuffle(rng);
   final copper = rng.nextInt(5) < 2;
-  const al = [M4JumperMakeConn.pgAl, M4JumperMakeConn.pgCu, M4JumperMakeConn.twist];
-  const cu = [M4JumperMakeConn.pgAl, M4JumperMakeConn.bimetal, M4JumperMakeConn.twist];
+  // The same four connectors on every tray (the bi-metallic one is no clue).
+  const all = M4JumperMakeConn.values;
   return M4JumperMakeDeal(
     pieces: List.unmodifiable(pieces),
     acsr: rng.nextBool(),
     copperRight: copper,
-    tray1: List.unmodifiable([...al]..shuffle(rng)),
-    tray2: List.unmodifiable([...(copper ? cu : al)]..shuffle(rng)),
+    tray1: List.unmodifiable([...all]..shuffle(rng)),
+    tray2: List.unmodifiable([...all]..shuffle(rng)),
     shapes: List.unmodifiable([...M4JumperMakeShape.values]..shuffle(rng)),
     stray: rng.nextInt(3) > 0,
+    brushFirst: rng.nextBool(),
+    twoWrenchFirst: rng.nextBool(),
   );
 }
 
@@ -385,7 +411,11 @@ class M4JumperMakeRun {
   DoMistake? _wrongConn(M4JumperMakeConn c) {
     if (c == M4JumperMakeConn.twist) return M4JumperMakeMistakes.twist;
     if (copperJoint) return c == M4JumperMakeConn.bimetal ? null : M4JumperMakeMistakes.noBimetal;
-    return c == M4JumperMakeConn.pgCu ? M4JumperMakeMistakes.wrongMetal : null;
+    return switch (c) {
+      M4JumperMakeConn.pgCu => M4JumperMakeMistakes.wrongMetal,
+      M4JumperMakeConn.bimetal => M4JumperMakeMistakes.bimetalOnAl,
+      _ => null,
+    };
   }
 
   /// Puts connector [c] on: the wrong one, or before the brush or the paste,
@@ -575,8 +605,14 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   int _wake = 0;
   var _stamp = false;
   var _coworkerArmed = false;
+  var _finishing = false;
   var _brushing = false;
   var _turning = false;
+
+  /// Which spanner button the turn belongs to (one spanner: a slip when its
+  /// hold fills), and where the finger went down.
+  var _turnOne = false;
+  Offset? _turnAt;
 
   /// The piece on the compare panel (station ক).
   int? _look;
@@ -587,6 +623,15 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
 
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+
+  /// The gesture hint (how to touch, never what) and its anchors.
+  final _hints = IdleHintController();
+  final _hintKeys = <String, GlobalKey>{};
+  GlobalKey _hk(String id) => _hintKeys.putIfAbsent(id, GlobalKey.new);
+
+  /// The joint rows left to right, as dealt.
+  List<String> get _toolIds => _run.deal.brushFirst ? const ['brush', 'paste'] : const ['paste', 'brush'];
+  List<String> get _wrenchIds => _run.deal.twoWrenchFirst ? const ['two-wrench', 'one-wrench'] : const ['one-wrench', 'two-wrench'];
 
   String get _rungId => widget.ctx.rungId;
   bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
@@ -632,7 +677,10 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     unawaited(_sayChain([_task]));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !struckOut;
+  /// Hands on the scene: no intro, card, deck or coworker, and not in a right
+  /// move's praise window ([tableBusy]: a second tap there pays or slips
+  /// nothing).
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !struckOut;
 
   Offset get _handsAt {
     final size = MediaQuery.sizeOf(context);
@@ -643,6 +691,44 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     if (!_canPlay) return;
     HapticFeedback.selectionClick();
     _cue('sounds/intro/tick.ogg', volume: 0.4);
+  }
+
+  /// A tap on the open scene (nothing there to work on).
+  void _sceneTap() {
+    if (!_canPlay) return;
+    _hints.missTap();
+    _plainTap();
+  }
+
+  /// The gesture hint for the waiting state: a sweep over every choice on
+  /// screen (the order of the joint's steps and the right one stay unsaid).
+  HintSpec? _hint() {
+    final r = _run;
+    switch (r.station) {
+      case M4JumperMakeStation.wire:
+        if (r.wire != null) return null;
+        if (_look != null) return HintSpec.sweepOver([_hk('put-back'), _hk('take')]);
+        return HintSpec.sweepOver([for (var i = 0; i < r.deal.pieces.length; i++) _hk('piece-$i')]);
+      case M4JumperMakeStation.joint1:
+      case M4JumperMakeStation.joint2:
+        if (r.tight) return null;
+        // In screen order (the rows are shuffled per play).
+        if (r.conn == null) {
+          return HintSpec.sweepOver([for (final id in _toolIds) _hk(id), for (final c in r.tray) _hk('conn-${c.name}')]);
+        }
+        return HintSpec.sweepOver([for (final id in _wrenchIds) _hk(id)]);
+      case M4JumperMakeStation.shape:
+        if (r.done) return null;
+        if (r.shape == null) return HintSpec.sweepOver([for (final s in r.deal.shapes) _hk('shape-${s.name}')]);
+        // The lens (with or without a strand) and done: never the strand itself.
+        return HintSpec.sweepOver([_hk('lens'), _hk('finish')]);
+    }
+  }
+
+  /// A new waiting state (a step done, a slip) resets the hint's count.
+  String get _hintState {
+    final r = _run;
+    return '${r.station.name}-${r.wire}-$_look-${r.brushed}-${r.pasted}-${r.conn}-${r.tight}-${r.shape}-${r.stray}-${r.slips}';
   }
 
   // --- ক the wire ----------------------------------------------------------------
@@ -661,7 +747,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
 
   void _take(Offset origin) {
     final i = _look;
-    if (!_canPlay || i == null) return;
+    if (!_canPlay || i == null || _run.wire != null) return;
     final m = _run.takePiece(i);
     if (m != null) {
       setState(() => _look = null);
@@ -677,6 +763,8 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   // --- খ গ the joints ------------------------------------------------------------
   void _brushDown() {
     if (!_canPlay || !_run.atJoint) return;
+    // He pushes "no brush" at the right joint: he comes before the brush.
+    if (holdForCoworker()) return;
     if (_run.brushed || _run.conn != null) {
       _plainTap();
       return;
@@ -706,6 +794,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
 
   void _paste(Offset origin) {
     if (!_canPlay || !_run.atJoint) return;
+    if (holdForCoworker()) return;
     if (_run.pasted || _run.conn != null) {
       _plainTap();
       return;
@@ -722,6 +811,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
 
   void _fit(M4JumperMakeConn c, Offset origin) {
     if (!_canPlay || !_run.atJoint || _run.conn != null) return;
+    if (holdForCoworker()) return;
     final m = _run.fit(c);
     if (m != null) {
       unawaited(_slipOut(m, origin));
@@ -734,16 +824,18 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     unawaited(_sayChain([M4JumperMakeLines.askTight]));
   }
 
-  void _oneWrench(Offset origin) {
-    if (!_canPlay || _run.conn == null || _turning) return;
-    final m = _run.oneWrench();
-    if (m != null) unawaited(_slipOut(m, origin));
-  }
-
-  void _turnDown() {
-    if (!_canPlay || _run.conn == null || _run.tight) return;
+  /// Both spanner buttons are held the same way; holding the one-spanner
+  /// button until it fills is the slip.
+  void _turnDown(Offset at, {required bool one}) {
+    if (!_canPlay || _run.conn == null || _run.tight || _turning) return;
     HapticFeedback.selectionClick();
-    setState(() => _turning = true);
+    // A switch of button starts the turn over.
+    if (one != _turnOne) _turn.value = 0;
+    setState(() {
+      _turning = true;
+      _turnOne = one;
+      _turnAt = at;
+    });
     unawaited(_turn.forward());
   }
 
@@ -755,6 +847,17 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
 
   void _turnDone() {
     if (!mounted || _ended) return;
+    if (_turnOne) {
+      // One spanner: the bolt turns with the nut. Back to loose, and the slip.
+      _turn.value = 0;
+      setState(() {
+        _turning = false;
+        _wake++;
+      });
+      final m = _run.oneWrench();
+      if (m != null) unawaited(_slipOut(m, _turnAt ?? _handsAt));
+      return;
+    }
     final done = _run.tighten();
     setState(() {
       _turning = false;
@@ -812,7 +915,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   }
 
   Future<void> _finishJob(Offset origin) async {
-    if (!_canPlay || _run.station != M4JumperMakeStation.shape || _run.shape == null) return;
+    if (!_canPlay || _run.station != M4JumperMakeStation.shape || _run.shape == null || _run.done) return;
     final m = _run.finish();
     if (m != null) {
       await _slipOut(m, origin);
@@ -886,9 +989,10 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.station.index > M4JumperMakeStation.joint2.index) return null;
-    if (_run.station == M4JumperMakeStation.joint2 && _run.conn != null) return null;
+    // "No brush, just put it on" fits only before the right joint's brush.
+    if (_run.station == M4JumperMakeStation.joint2 && (_run.brushed || _run.conn != null || _brushing || _brush.value > 0)) return null;
     if (_run.station != M4JumperMakeStation.joint2) return false;
-    if (_intro || _busy || _brushing || _card != null || reasonOpen || struckOut) return false;
+    if (_intro || _busy || _card != null || tableBusy || struckOut) return false;
     return true;
   }
 
@@ -903,7 +1007,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
       await _slipOut(_run.listenNoBrush(), origin);
       return;
     }
-    _run.caught.add(M4JumperMakeLines.caughtCall);
+    if (!_run.caught.contains(M4JumperMakeLines.caughtCall)) _run.caught.add(M4JumperMakeLines.caughtCall);
     unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
     await coworkerSnarl();
     if (mounted && !_ended) unawaited(_sayChain([_task]));
@@ -978,8 +1082,10 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   }
 
   Future<void> _finish() async {
-    if (_ended && !_run.done) return;
-    if (_mark != null) return;
+    // Once only: a second call (while the first awaits the save) must not
+    // record, pay or commit again.
+    if (_finishing || (_ended && !_run.done) || _mark != null) return;
+    _finishing = true;
     _ended = true;
     _clock.stop();
     setState(() => _wake++);
@@ -1080,7 +1186,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: M4JumperMakeLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: _plainTap),
+          child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: _sceneTap),
         ),
       ),
     ];
@@ -1097,7 +1203,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
       pasted: r.pasted,
       conn: r.conn,
       tight: r.tight ? 1 : _turn.value,
-      wrenches: _turning ? 2 : 0,
+      wrenches: _turning ? (_turnOne ? 1 : 2) : 0,
     );
   }
 
@@ -1120,6 +1226,8 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
                 acsr: r.deal.acsr,
                 onTake: _take,
                 onBack: _putBack,
+                takeKey: _hk('take'),
+                backKey: _hk('put-back'),
               ),
             ),
           Positioned(
@@ -1133,14 +1241,17 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: _CoilTile(
-                        key: ValueKey('piece-$i'),
-                        label: M4JumperMakeLines.piece(i),
-                        tag: M4JumperMakeLines.material(r.deal.acsr),
-                        piece: r.deal.pieces[i],
-                        acsr: r.deal.acsr,
-                        selected: _look == i,
-                        onTap: () => _lookAt(i),
+                      child: KeyedSubtree(
+                        key: _hk('piece-$i'),
+                        child: _CoilTile(
+                          key: ValueKey('piece-$i'),
+                          label: M4JumperMakeLines.piece(i),
+                          tag: M4JumperMakeLines.material(r.deal.acsr),
+                          piece: r.deal.pieces[i],
+                          acsr: r.deal.acsr,
+                          selected: _look == i,
+                          onTap: () => _lookAt(i),
+                        ),
                       ),
                     ),
                   ),
@@ -1151,7 +1262,8 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
       case M4JumperMakeStation.joint1:
       case M4JumperMakeStation.joint2:
         if (r.tight) return [_lens(pad, w)];
-        final chipW = (w - 16 - 12) / 3;
+        final n = r.tray.length;
+        final chipW = (w - 16 - 6 * (n - 1)) / n;
         return [
           _lens(pad, w),
           if (r.conn == null)
@@ -1163,25 +1275,30 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // The brush (held) and the paste (a tap) look alike, in
+                  // the dealt order: the row never reads out the steps.
                   Row(
                     children: [
-                      Expanded(
-                        child: _HoldButton(
-                          label: M4JumperMakeLines.brush,
-                          progress: _brush,
-                          done: r.brushed,
-                          onDown: _brushDown,
-                          onUp: _brushUp,
+                      for (final (i, id) in _toolIds.indexed) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        Expanded(
+                          child: id == 'brush'
+                              ? _HoldButton(
+                                  key: _hk('brush'),
+                                  label: M4JumperMakeLines.brush,
+                                  progress: _brush,
+                                  done: r.brushed,
+                                  onDown: (_) => _brushDown(),
+                                  onUp: _brushUp,
+                                )
+                              : _TapChip(
+                                  key: _hk('paste'),
+                                  label: M4JumperMakeLines.paste,
+                                  done: r.pasted,
+                                  onTapUp: (d) => _paste(d.globalPosition),
+                                ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _TapChip(
-                          label: M4JumperMakeLines.paste,
-                          done: r.pasted,
-                          onTapUp: (d) => _paste(d.globalPosition),
-                        ),
-                      ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -1191,7 +1308,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
                         if (i > 0) const SizedBox(width: 6),
                         SizedBox(
                           width: chipW,
-                          child: _ConnChip(conn: c, onTapUp: (d) => _fit(c, d.globalPosition)),
+                          child: _ConnChip(key: _hk('conn-${c.name}'), conn: c, onTapUp: (d) => _fit(c, d.globalPosition)),
                         ),
                       ],
                     ],
@@ -1205,26 +1322,23 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
               left: 12,
               right: 12,
               bottom: pad.bottom + 12,
+              // Two look-alike hold buttons in the dealt order; the one-spanner
+              // hold fills too, then slips.
               child: Row(
                 children: [
-                  Expanded(
-                    child: DoBigButton(
-                      label: M4JumperMakeLines.oneWrench,
-                      filled: false,
-                      onDark: true,
-                      onTapUp: (d) => _oneWrench(d.globalPosition),
+                  for (final (i, id) in _wrenchIds.indexed) ...[
+                    if (i > 0) const SizedBox(width: 10),
+                    Expanded(
+                      child: _HoldButton(
+                        key: _hk(id),
+                        label: id == 'one-wrench' ? M4JumperMakeLines.oneWrench : M4JumperMakeLines.twoWrench,
+                        progress: _turnOne == (id == 'one-wrench') ? _turn : kAlwaysDismissedAnimation,
+                        done: false,
+                        onDown: (at) => _turnDown(at, one: id == 'one-wrench'),
+                        onUp: _turnUp,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _HoldButton(
-                      label: M4JumperMakeLines.twoWrench,
-                      progress: _turn,
-                      done: false,
-                      onDown: _turnDown,
-                      onUp: _turnUp,
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -1243,11 +1357,14 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
                   for (final (i, s) in r.deal.shapes.indexed) ...[
                     if (i > 0) const SizedBox(width: 6),
                     Expanded(
-                      child: _ShapeTile(
-                        key: ValueKey('shape-${s.name}'),
-                        shape: s,
-                        selected: _tryShape == s,
-                        onTapUp: (d) => unawaited(_bend(s, d.globalPosition)),
+                      child: KeyedSubtree(
+                        key: _hk('shape-${s.name}'),
+                        child: _ShapeTile(
+                          key: ValueKey('shape-${s.name}'),
+                          shape: s,
+                          selected: _tryShape == s,
+                          onTapUp: (d) => unawaited(_bend(s, d.globalPosition)),
+                        ),
                       ),
                     ),
                   ],
@@ -1263,7 +1380,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
             left: 12,
             right: 12,
             bottom: pad.bottom + 12,
-            child: DoBigButton(label: M4JumperMakeLines.finish, filled: true, onTapUp: (d) => unawaited(_finishJob(d.globalPosition))),
+            child: DoBigButton(key: _hk('finish'), label: M4JumperMakeLines.finish, filled: true, onTapUp: (d) => unawaited(_finishJob(d.globalPosition))),
           ),
         ];
     }
@@ -1279,6 +1396,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
       width: lensW,
       height: lensW * 0.58,
       child: _Lens(
+        key: _hk('lens'),
         view: view,
         brushing: _brushing ? _brush : null,
         turning: _turning ? _turn : null,
@@ -1295,6 +1413,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     final playing = !_intro && _mark == null && !struckOut;
     final deckUp = reasonOpen || coworkerChoiceUp;
     final handsOn = playing && !deckUp && !coworkerOpen && _card == null && !_run.ended;
+    final hintWaiting = handsOn && !_busy && !_ended && !tableBusy && !coworkerOnScreen && !_brushing && !_turning;
     final st = _run.station;
     final guideBottom = deckUp
         ? 236.0
@@ -1332,6 +1451,10 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: _hintState,
+            hintController: _hints,
             overlays: [
               if (playing && !coworkerOpen)
                 Positioned(
@@ -1518,11 +1641,13 @@ class _CoilTile extends StatelessWidget {
 
 /// The two cut ends side by side, and take / put back.
 class _ComparePanel extends StatelessWidget {
-  const _ComparePanel({required this.piece, required this.acsr, required this.onTake, required this.onBack});
+  const _ComparePanel({required this.piece, required this.acsr, required this.onTake, required this.onBack, this.takeKey, this.backKey});
   final double piece;
   final bool acsr;
   final void Function(Offset) onTake;
   final VoidCallback onBack;
+  final Key? takeKey;
+  final Key? backKey;
 
   @override
   Widget build(BuildContext context) {
@@ -1550,9 +1675,9 @@ class _ComparePanel extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: DoBigButton(label: M4JumperMakeLines.putBack, filled: false, onDark: true, onTapUp: (_) => onBack())),
+              Expanded(child: DoBigButton(key: backKey, label: M4JumperMakeLines.putBack, filled: false, onDark: true, onTapUp: (_) => onBack())),
               const SizedBox(width: 10),
-              Expanded(child: DoBigButton(label: M4JumperMakeLines.take, filled: true, onTapUp: (d) => onTake(d.globalPosition))),
+              Expanded(child: DoBigButton(key: takeKey, label: M4JumperMakeLines.take, filled: true, onTapUp: (d) => onTake(d.globalPosition))),
             ],
           ),
         ],
@@ -1563,7 +1688,7 @@ class _ComparePanel extends StatelessWidget {
 
 /// The joint close up (and, at the end, the strand to trim).
 class _Lens extends StatelessWidget {
-  const _Lens({required this.view, this.brushing, this.turning, this.onStrand});
+  const _Lens({super.key, required this.view, this.brushing, this.turning, this.onStrand});
   final M4JumperMakeJointView view;
   final Animation<double>? brushing;
   final Animation<double>? turning;
@@ -1602,7 +1727,7 @@ class _Lens extends StatelessWidget {
 
 /// A connector on the tray.
 class _ConnChip extends StatelessWidget {
-  const _ConnChip({required this.conn, required this.onTapUp});
+  const _ConnChip({super.key, required this.conn, required this.onTapUp});
   final M4JumperMakeConn conn;
   final GestureTapUpCallback onTapUp;
 
@@ -1667,14 +1792,13 @@ class _ShapeTile extends StatelessWidget {
 
 /// A one-tap tool (the paste).
 class _TapChip extends StatelessWidget {
-  const _TapChip({required this.label, required this.done, required this.onTapUp});
+  const _TapChip({super.key, required this.label, required this.done, required this.onTapUp});
   final String label;
   final bool done;
   final GestureTapUpCallback onTapUp;
 
   @override
   Widget build(BuildContext context) {
-    final ring = done ? SlmColors.success : const Color(0x99FFFFFF);
     return Semantics(
       button: true,
       label: label,
@@ -1684,34 +1808,24 @@ class _TapChip extends StatelessWidget {
         onTapUp: onTapUp,
         child: Container(
           height: 52,
-          decoration: _panel(ring: ring, width: 1.6),
+          decoration: _toolPanel(done),
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (done) ...[
-                  const Icon(Icons.check_circle_rounded, size: 20, color: SlmColors.success),
-                  const SizedBox(width: 6),
-                ],
-                Text(label, style: bangla(fontSize: 15, fontWeight: FontWeight.w900, color: SlmColors.ivory)),
-              ],
-            ),
-          ),
+          child: _ToolFace(label: label, done: done),
         ),
       ),
     );
   }
 }
 
-/// Hold to work (brushing, tightening): it fills while held.
+/// Hold to work (brushing, tightening): it fills while held. At rest it looks
+/// just like a [_TapChip] (the same panel and label), so no tool or spanner
+/// stands out as the main action.
 class _HoldButton extends StatelessWidget {
-  const _HoldButton({required this.label, required this.progress, required this.done, required this.onDown, required this.onUp});
+  const _HoldButton({super.key, required this.label, required this.progress, required this.done, required this.onDown, required this.onUp});
   final String label;
   final Animation<double> progress;
   final bool done;
-  final VoidCallback onDown;
+  final ValueChanged<Offset> onDown;
   final VoidCallback onUp;
 
   @override
@@ -1721,46 +1835,60 @@ class _HoldButton extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       child: Listener(
-        onPointerDown: (_) => onDown(),
+        onPointerDown: (e) => onDown(e.position),
         onPointerUp: (_) => onUp(),
         onPointerCancel: (_) => onUp(),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: SizedBox(
-            height: 52,
+        child: Container(
+          height: 52,
+          decoration: _toolPanel(done),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(13),
             child: Stack(
               fit: StackFit.expand,
               children: [
-                ColoredBox(color: done ? const Color(0xFF1E6B3A) : SlmColors.gold700),
                 if (!done)
                   AnimatedBuilder(
                     animation: progress,
                     builder: (_, _) => FractionallySizedBox(
                       alignment: Alignment.centerLeft,
                       widthFactor: progress.value.clamp(0.0, 1.0),
-                      child: const ColoredBox(color: Color(0x55FFFFFF)),
+                      child: const ColoredBox(color: Color(0x44FFFFFF)),
                     ),
                   ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (done) ...[
-                          const Icon(Icons.check_circle_rounded, size: 20, color: Colors.white),
-                          const SizedBox(width: 6),
-                        ],
-                        Text(label, style: bangla(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white)),
-                      ],
-                    ),
-                  ),
+                  child: _ToolFace(label: label, done: done),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The shared look of the joint's tool buttons (hold or tap).
+BoxDecoration _toolPanel(bool done) => _panel(ring: done ? SlmColors.success : const Color(0x99FFFFFF), width: 1.6);
+
+class _ToolFace extends StatelessWidget {
+  const _ToolFace({required this.label, required this.done});
+  final String label;
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (done) ...[
+            const Icon(Icons.check_circle_rounded, size: 20, color: SlmColors.success),
+            const SizedBox(width: 6),
+          ],
+          Text(label, style: bangla(fontSize: 15, fontWeight: FontWeight.w900, color: SlmColors.ivory)),
+        ],
       ),
     );
   }

@@ -3,7 +3,9 @@
 // libraries, the coworker's recorded line, and the level in the shell: idle
 // perf, the guide first, a full play (every step by tapping the site, the
 // reasons, the coworker refused, a van slip), slips and the 3-slip
-// strike-out, and the deadly freeze (work before the permit, listening to him).
+// strike-out, and the deadly freeze (work before the permit, listening to him);
+// the kit timing (praise window, he can't be skipped by a fast play) and the
+// gesture hint (a sweep over the whole site, only while it waits).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -15,7 +17,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -31,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '1.6/do/1',
@@ -56,21 +61,19 @@ List<Finder> _onScreen(List<String> texts) => [
 
 /// Taps the one right card on the deck now up.
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await confirmChoice(t);
+  // A right reason zooms and waits for এগিয়ে যান; his deck just closes.
+  await tapReasonProceed(t);
 }
+
+/// The scene's gesture hint (the frame's own, outermost IdleHint).
+IdleHintState _sceneHint(WidgetTester t) =>
+    t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
 
 /// Taps a thing on the site.
 Future<void> _tap(WidgetTester t, String label, {int wait = 1500}) async {
@@ -357,7 +360,7 @@ void main() {
         }
         debugPrint('PERF steps ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.text('ধাপ 18'), findsOneWidget);
+        expect(find.text('L18'), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -494,6 +497,7 @@ void main() {
       final wrong = _onScreen(StepLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1600);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);
@@ -502,6 +506,117 @@ void main() {
       final s = c.read(gameSaveProvider);
       expect(s.mistakes.single.key, StepMistakes.skipTest.key);
       await _close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him: the rod tapped at once brings him in first; the test waits', (t) async {
+      final c = await _open(t, 5);
+      await _tap(t, StepLines.phone);
+      await _tapAndWhy(t, StepLines.breaker, PtwWhy.isolate);
+      await _tap(t, StepLines.book);
+      // The paper: its reason, proceed, and the rod at once (before his 1.2 s).
+      await _tap(t, StepLines.clipboard, wait: 2500);
+      await _pickRight(t, StepLines.whyRight(PtwWhy.receive));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he has not come by himself yet');
+      await t.tap(_label(StepLines.rod).first, warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 200));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the rod waits for him');
+      expect(find.text(StepLines.coworker.line), findsOneWidget);
+      expect(find.text(StepLines.whyAsk(PtwWhy.test)), findsNothing, reason: 'the test is not done yet');
+      expect(find.text(StepLines.dead), findsNothing);
+      await _pickRight(t, StepLines.coworker.right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // Now the rod works: the test and its reason.
+      await _tapAndWhy(t, StepLines.rod, PtwWhy.test);
+      expect(find.text(StepLines.dead), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast climb cannot skip him either; after refusing him, climbing untested is still deadly', (t) async {
+      final c = await _open(t, 7);
+      await _tap(t, StepLines.phone);
+      await _tapAndWhy(t, StepLines.breaker, PtwWhy.isolate);
+      await _tap(t, StepLines.book);
+      await _tap(t, StepLines.clipboard, wait: 2500);
+      await _pickRight(t, StepLines.whyRight(PtwWhy.receive));
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tap(_label(StepLines.crew).first, warnIfMissed: false);
+      // Let the button pop in (it starts at scale 0); still well before his
+      // own 1.2 s.
+      await t.pump(const Duration(milliseconds: 100));
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(StepLines.climbAsk), findsOneWidget, reason: 'a tap on the team raises the climb button');
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he has not come by himself yet');
+      await t.tap(find.text(StepLines.climbAsk));
+      await t.pump(const Duration(milliseconds: 200));
+      expect(find.byType(FreezeFrame), findsNothing, reason: 'the climb waited for him');
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      await _pickRight(t, StepLines.coworker.right);
+      await _pump(t, 2500);
+      await _startWork(t, wait: 1200);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      await _pump(t, 3500);
+      expect(c.read(gameSaveProvider).mistakes.single.key, StepMistakes.skipTest.key);
+      await _close(t, c);
+    });
+
+    testWidgets('praise window: a second tap right after a right step neither slips nor scores', (t) async {
+      final c = await _open(t, 3);
+      await _tap(t, StepLines.phone);
+      await t.tap(_label(StepLines.breaker).first, warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 120));
+      // Out of turn now (the test) and the next step (the book): both ignored.
+      await t.tap(_label(StepLines.rod).first, warnIfMissed: false);
+      await t.tap(_label(StepLines.book).first, warnIfMissed: false);
+      await _pump(t, 2400);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(find.text(StepLines.whyAsk(PtwWhy.isolate)), findsWidgets, reason: 'the reason deck still comes');
+      await _pickRight(t, StepLines.whyRight(PtwWhy.isolate));
+      await _pump(t, 1500);
+      // The book is still the next step.
+      await _tap(t, StepLines.book);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    group('gesture hint', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      testWidgets('the idle site gets a sweep over every thing on it (no single target); none under a card', (t) async {
+        final c = await _open(t, 3);
+        expect(_sceneHint(t).showing, isFalse);
+        await _pump(t, 9000);
+        final h = _sceneHint(t);
+        expect(h.showing, isTrue, reason: 'idle 8 s while the site waits');
+        // van, breaker, book, team, rod, phone, clipboard — all of them.
+        expect(h.debugOptions, hasLength(7));
+        expect(h.debugFrame!.ripple, isNull, reason: 'a sweep presses nothing');
+        // A slip card: the scene no longer waits, so no hand.
+        await _tap(t, StepLines.book, wait: 900);
+        expect(find.text(MistakeLines.slipHead), findsOneWidget);
+        expect(_sceneHint(t).showing, isFalse);
+        await _pump(t, 10000);
+        expect(_sceneHint(t).showing, isFalse, reason: 'no hand under a card');
+        await _close(t, c);
+      });
+
+      testWidgets('three taps on nothing show the hand at once', (t) async {
+        final c = await _open(t, 3);
+        expect(_sceneHint(t).showing, isFalse);
+        // The van means nothing before the job is done: a tap on nothing.
+        for (var i = 0; i < 3; i++) {
+          await t.tap(_label(StepLines.van).first, warnIfMissed: false);
+          await _pump(t, 300);
+        }
+        expect(_sceneHint(t).showing, isTrue);
+        expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'the van is free in round 1');
+        await _close(t, c);
+      });
     });
 
     testWidgets('he peeps in from either side (dealt per play)', (t) async {

@@ -19,6 +19,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -44,10 +45,17 @@ import 'spoken_once.dart';
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene, corner guide, ◆ on the table → "কেন …?" (the reasons fit what this
 // scene had: the switch, or the thing he pushed with) → the next scene comes
-// by itself; the careless coworker once a play ("হাত দিয়ে টেনে নাও").
+// by itself; the careless coworker once a play ("হাত দিয়ে টেনে নাও"). On his
+// scene the decisive move (the lever pulled, a thing pushed onto him) waits
+// for him ([CoworkerMoment.holdForCoworker]), so a fast play can't skip him;
+// he never comes once the colleague is free (his push no longer fits) nor in
+// a praise window ([ReasonTable.tableBusy]). Gesture hints: a sweep over the
+// things the hands can take beside a switch, a short nudge of a floor thing
+// elsewhere — never which one.
 //
 // Deadly (owner-approved list): touching the victim (a tap on him, or doing
-// what the coworker says); a wet or metal object on him. Slips: separating
+// what the coworker says — MODULE1_LADDER.md step 20: his push is the deadly
+// touch itself); a wet or metal object on him. Slips: separating
 // when the switch was right there, pushing the chest or head (owner decision
 // 2026-11-08: a slip — the scene stays to be done again), running out of time.
 // Three slips strike the level out.
@@ -115,17 +123,24 @@ abstract final class RescueLines {
 
   // The reasons (lesson 1.7 point 2). Every card is 35–45 letters, so none
   // stands out by its length, and the right ones are no longer than the wrong
-  // ones on average. The right ones fit what this scene had.
+  // ones on average. The right ones fit what this scene had. Every deal holds a
+  // "twin" — a wrong reason that names the same place or thing — and no word
+  // of a right card is missing from the wrong ones (no word gives it away).
   static const whySwitch = 'কেন সুইচ নামালেন?';
   static const whyPush = 'কেন এটা দিয়ে ঠেললেন?';
   static const switchHouse = ['মেইন সুইচ কাছেই, আগে সোর্স বন্ধ করেছি', 'সুইচ পাশেই ছিল, বিদ্যুৎ বন্ধই সেরা পথ'];
   static const switchPump = ['পাম্পের সুইচ কাছেই, আগে সোর্স বন্ধ করেছি', 'পাম্পের সুইচ পাশেই, বিদ্যুৎ বন্ধই সেরা পথ'];
+  /// Wrong reasons that start like the right ones of this place (so no
+  /// word or name sits on the right card only); one is dealt every time.
+  static const twinHouse = ['মেইন সুইচ কাছেই, আগে নামালেই কাজ শেষ', 'সুইচ পাশেই ছিল, ধাক্কার চেয়ে কম খাটুনি'];
+  static const twinPump = ['পাম্পের সুইচ কাছেই, আগে নামালেই কাজ শেষ', 'পাম্পের সুইচ পাশেই, ধাক্কার চেয়ে কম খাটুনি'];
   static const switchWrong = [
     'টেনে আনতে ভয় লাগল, তাই সুইচটা নামালাম',
-    'বোর্ডে ON দেখে এমনিই সুইচটা বন্ধ করে দিয়েছি',
-    'ধাক্কার চেয়ে সুইচে কম খাটুনি, তাই নামালাম',
-    'সুইচ নামালেই হলো, ওকে আর দেখার কিছু নেই',
-    'সুইচ নামালে শকের বিদ্যুৎ শরীর থেকে বেরোয়',
+    'বোর্ডে ON দেখে এমনিই সোর্স বন্ধ করেছি',
+    'সোর্স বন্ধ হলেই হলো, ওকে আর দেখার কিছু নেই',
+    'বিদ্যুৎ বন্ধ করলে শক শরীর থেকে বেরিয়ে যায়',
+    'আগে সুইচ নামালে ও নিজে থেকেই উঠে দাঁড়াবে',
+    'বিদ্যুৎ বন্ধই সেরা পথ, পরে আর কিছু দেখতে নেই',
   ];
   static List<String> objectWhy(RescueObject o) => switch (o) {
         RescueObject.bamboo => const ['সুইচ নেই, শুকনো বাঁশ দিয়ে হাত-পায়ে ঠেলেছি', 'শুকনো বাঁশ অপরিবাহী, তাই আমি সার্কিটে নেই'],
@@ -135,28 +150,91 @@ abstract final class RescueLines {
         // Never right: these are deadly.
         RescueObject.wetStick || RescueObject.ironRod || RescueObject.ladder => const [],
       };
+
+  /// Wrong reasons that name the thing he pushed with (see [twinHouse]).
+  static List<String> objectTwin(RescueObject o) => switch (o) {
+        RescueObject.bamboo => const ['বাঁশটা লম্বা, তাই দূর থেকে বুকে ঠেলে দিয়েছি', 'শুকনো বা ভেজা — বাঁশ তো বাঁশই, শক লাগে না'],
+        RescueObject.plank => const ['কাঠটা ভারী, তাই জোরে একটা ঘা দিয়ে দিয়েছি', 'শুকনো বা ভেজা — কাঠ তো কাঠই, শক লাগে না'],
+        RescueObject.chair => const ['প্লাস্টিকের চেয়ার, ভেজা হলেও তো চলত', 'প্লাস্টিক চেয়ারে বুকে ঠেলাই সবচেয়ে দ্রুত'],
+        RescueObject.hotStick => const ['হট স্টিক লম্বা, তাই দূর থেকে মাথায় ঠেলেছি', 'ফাইবারগ্লাস হট স্টিক ভেজা হলেও অপরিবাহী'],
+        RescueObject.wetStick || RescueObject.ironRod || RescueObject.ladder => const [],
+      };
   static const pushAny = 'সুইচ নেই, তাই শুকনো অপরিবাহী দিয়ে আলাদা';
   static const pushWrong = [
-    'হাতের কাছে যা পেয়েছি, তা দিয়েই ঠেলে দিয়েছি',
+    'হাতের কাছে যা পেয়েছি, তা দিয়েই আলাদা করেছি',
     'জোরে একটা ধাক্কা দিলেই হলো, জিনিস যা-ই হোক',
-    'ভেজা হলেও কাঠ তো কাঠই, তাতে শক লাগে না',
+    'সুইচ নেই, তাই যা পেলাম তা দিয়েই ঠেলেছি',
     'বুকে ধাক্কা দিলে এক ধাক্কাতেই ছেড়ে দেয়',
-    'লোহার রডও চলে, শক্ত জিনিসে জোরে ঠেলা যায়',
+    'অপরিবাহী হলে বুকে-মাথায় ঠেলাও নিরাপদ',
+    'লোহার রড দিয়ে ঠেললেও আমি সার্কিটে নেই',
+    'হাত-পায়ে ঠেললে ভেজা লাঠিতেও শক লাগে না',
     'সুইচ খোঁজার চেয়ে ঠেলে দেওয়াই অনেক দ্রুত',
+    'শুকনো হোক বা না হোক, শক্ত হলেই ঠেলা যায়',
+    'অপরিবাহী হলে ভেজা হলেও আমি সার্কিটে নেই',
+    'শুকনো অপরিবাহী খুঁজতে দেরি, হাতেই আলাদা করি',
+    'হাত-পায়ে হোক বা বুকে, ঠেলা দিলেই ছেড়ে দেয়',
+    'অপরিবাহী না হলেও এক ঝটকায় সার্কিটে ঢুকব না',
+    'রাবার জুতো পরা থাকলে খালি হাতেও নিরাপদ',
   ];
 
   /// The right reasons for what [scene] had: the switch ([used] null) or the thing pushed with.
   static List<String> whyRight(ShockScene scene, RescueObject? used) =>
       used == null ? (scene == ShockScene.pump ? switchPump : switchHouse) : [...objectWhy(used), pushAny];
-  static List<String> whyWrong(RescueObject? used) => used == null ? switchWrong : pushWrong;
+
+  /// The wrong reasons that look like this scene's right ones (one is dealt every time).
+  static List<String> whyTwins(ShockScene scene, RescueObject? used) =>
+      used == null ? (scene == ShockScene.pump ? twinPump : twinHouse) : objectTwin(used);
+
+  /// Every wrong reason that can be dealt for this scene.
+  static List<String> whyWrong(ShockScene scene, RescueObject? used) =>
+      [...whyTwins(scene, used), ...(used == null ? switchWrong : pushWrong)];
+
+  /// The key words of a reason (the place, the thing, and why it is safe).
+  /// Each one on the dealt right card is on a wrong card of the same deal too.
+  static const whyMarks = [
+    'শুকনো', 'অপরিবাহী', 'সোর্স', 'বন্ধ', 'বিদ্যুৎ', 'কাছেই', 'পাশেই', 'হাত-পায়ে', 'সার্কিটে', 'নিরাপদ', //
+    'আলাদা', 'আগে', 'ফাইবারগ্লাস', 'হট স্টিক', 'প্লাস্টিক', 'চেয়ার', 'বাঁশ', 'কাঠ', 'পাম্পের', 'মেইন',
+  ];
+  static Iterable<String> marksOf(String t) => whyMarks.where(t.contains);
+
+  /// One right reason, one twin and one other wrong one, in a random order.
+  /// The two wrong ones are picked so that every key word of the right one is
+  /// on one of them (no word in this deal sits on the right card only).
+  static List<ChoiceOption> dealWhy(ShockScene scene, RescueObject? used, math.Random rng) {
+    final right = whyRight(scene, used);
+    final pick = right[rng.nextInt(right.length)];
+    final twins = whyTwins(scene, used);
+    final rest = used == null ? switchWrong : pushWrong;
+    final marks = marksOf(pick).toList();
+    final all = [for (final t in twins) for (final x in rest) (t, x)];
+    final fair = all.where((p) => marks.every((m) => p.$1.contains(m) || p.$2.contains(m))).toList();
+    final (twin, other) = (fair.isEmpty ? all : fair)[rng.nextInt(fair.isEmpty ? all.length : fair.length)];
+    return [ChoiceOption(pick, true), ChoiceOption(twin, false), ChoiceOption(other, false)]..shuffle(rng);
+  }
 
   /// The careless coworker (his recorded voice): grab him by hand.
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
   static const coworker = CoworkerScript(
     line: 'হাত দিয়ে টেনে নাও, তাড়াতাড়ি!',
     exitLine: coworkerExit,
-    right: ['না, ছুঁলে আমিও সার্কিটে ঢুকে যাব', 'না, ছোঁব না — আগে নিজে বাঁচি', 'ছোঁব না, শুকনো কিছু বা সুইচ চাই'],
-    wrong: ['ঠিক, হাত দিয়েই এক্ষুনি টেনে আনি', 'জামা ধরে টানলে তো ছোঁয়া হয় না', 'এক ঝটকায় টানলে শক লাগবে না', 'সময় নেই, হাত দিয়েই ধরে ফেলি', 'ও তো সহকর্মী, ছুঁয়েই টেনে আনি'],
+    right: [
+      'না, ছুঁলে আমিও সার্কিটে ঢুকে যাব',
+      'না, ছোঁব না — আগে নিজে বাঁচি',
+      'ছোঁব না, শুকনো কিছু বা সুইচ চাই',
+      'না, টানব না — ছুঁলে আমিও সার্কিটে',
+    ],
+    wrong: [
+      'ঠিক, হাত দিয়েই এক্ষুনি টেনে আনি',
+      'জামা ধরে টানলে তো ছোঁয়া হয় না',
+      'এক ঝটকায় টানলে সার্কিটে ঢুকব না',
+      'ছুঁলে কিছু হবে না, হাত দিয়েই টানি',
+      'সুইচ খুঁজতে দেরি, হাত দিয়েই টানি',
+      'আগে ওকে টানি, নিজে বাঁচব পরে',
+      'ছোঁব না, শুধু জামা ধরে টেনে আনি',
+      'না, সময় নেই — হাত দিয়েই টানি',
+      'ও তো সহকর্মী, ছুঁয়েই টেনে আনি',
+      'শুকনো হাতে ধরলে তো শক লাগে না',
+    ],
     asks: ['ও বলছে হাত দিয়ে টানতে। আপনি কী করবেন?', 'হাত দিয়ে টানবেন, না অন্য পথ?', 'কার কথা শুনবেন — ওর, না পাঠের?'],
   );
 
@@ -436,6 +514,12 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
   var _leverDrag = false;
   _Reach? _reach;
 
+  /// The "how to touch" hand (taps on nothing are reported to it).
+  final _hints = IdleHintController();
+
+  /// Which thing on the floor the next drag hint nudges (round robin: no favourite).
+  int _hintN = 0;
+
   /// Wakes the spark, the tremor and the trainee for a few seconds.
   int _wake = 0;
   var _coworkerArmed = false;
@@ -565,7 +649,29 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
     return Offset(s.width / 2, s.height * 0.45);
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerChoiceUp && _run.open && !struckOut;
+  bool get _canPlay =>
+      !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerChoiceUp && _run.open && !struckOut;
+
+  /// The scene waits for the hands (no intro, card, deck, praise, coworker or freeze).
+  bool get _waitingForHands => _canPlay && !coworkerOnScreen && !_freeze && _mark == null;
+
+  /// How to touch (never what): beside a switch, a sweep over every thing the
+  /// hands can take (the floor and the switch alike); elsewhere a short
+  /// up-left nudge of one thing on the floor, round robin (never toward him).
+  HintSpec? _hint() {
+    if (!_run.open) return null;
+    final g = _geoNow();
+    final r = _run.current;
+    if (r.scene.switchNear) {
+      // The switch takes a new place in the lap each time, never the last one
+      // (the hand rests on the last one as it fades: that would point at it).
+      final at = _hintN++ % r.objects.length;
+      final opts = [for (var i = 0; i < r.objects.length; i++) g.slot(i)]..insert(at, g.switchRect);
+      return HintSpec.sweep(opts, space: HintSpace.scene);
+    }
+    final i = _hintN++ % r.objects.length;
+    return HintSpec.drag(g.slot(i).center, toward: const Offset(-0.5, -1), travel: 44, space: HintSpace.scene);
+  }
 
   /// Going on with the work while he is still talking refuses him.
   void _refuseByWorking(Offset at) {
@@ -597,6 +703,11 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
       _lever.value = 0;
       return;
     }
+    // His scene: the lever snaps back and he comes first (a fast pull can't skip him).
+    if (holdForCoworker()) {
+      _lever.value = 0;
+      return;
+    }
     _lever.value = 1;
     if (!_run.switchOff()) return;
     HapticFeedback.mediumImpact();
@@ -619,6 +730,8 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
         return;
       }
     }
+    // A drag that took nothing up.
+    if (g.zoneAt(p) == null) _hints.missTap();
   }
 
   void _panUpdate(DragUpdateDetails d) {
@@ -641,6 +754,8 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
     final g = _geoNow();
     final z = g.zoneAt(cur.at);
     if (z == null) return; // Put back down: nothing counts.
+    // His scene: the thing goes back down and he comes first (a fast push can't skip him).
+    if (holdForCoworker()) return;
     unawaited(_push(cur, z, g));
   }
 
@@ -648,7 +763,10 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
     if (!_canPlay) return;
     final g = _geoNow();
     final z = g.zoneAt(d.localPosition);
-    if (z == null) return;
+    if (z == null) {
+      _hints.missTap();
+      return;
+    }
     unawaited(_touch(z, d.localPosition));
   }
 
@@ -696,7 +814,7 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
     final used = _run.used;
     final idx = _run.round;
     unawaited(askReason(
-      deal: () => dealChoices(RescueLines.whyRight(r.scene, used), RescueLines.whyWrong(used), widget.rng),
+      deal: () => RescueLines.dealWhy(r.scene, used, widget.rng),
       question: used == null ? RescueLines.whySwitch : RescueLines.whyPush,
       stillValid: () => _run.round == idx && !_ended,
     ));
@@ -737,6 +855,8 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
   @override
   bool? coworkerCanCome() {
     if (_ended) return null;
+    // Never in a right move's praise window or over its reason deck.
+    if (tableBusy) return false;
     // He missed his scene while a later one is on: this one will do.
     if (_run.round > _callScene) _callScene = _run.round;
     if (!_run.open) {
@@ -1190,6 +1310,10 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
               ],
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: _waitingForHands,
+            hintKey: '${_run.round}-${_run.slips}',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 132), quiet: quiet),
               if (deckUp)

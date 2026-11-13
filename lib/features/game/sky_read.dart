@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -52,15 +53,28 @@ export 'sky_world.dart' show SkyBolt;
 // ফল্ট মেরামত).
 //
 // Deadly (owner-approved ladder row): staying on the pole in lightning (also
-// by listening to the coworker). Slips: working on in a strong wind, working
-// on at general maintenance in the rain, an emergency repair in the rain
-// without the waterproof gloves, working on without checking the weather.
+// by listening to the coworker; listening in wind or rain is a slip). Slips:
+// working on in a strong wind, working on at general maintenance in the rain,
+// an emergency repair in the rain without the waterproof gloves, working on
+// without checking the weather.
 // Three slips strike the level out.
 // Stopping where the lesson lets the work go on (a calm sky, an emergency
-// repair in a drizzle) is NOT scored — Stop Work is the worker's right (pro
-// tip 3; the wind rule: in doubt, stop) — the guide says the lesson's rule and
-// the moment stays, so always stopping cannot move the play on. Scoring it
-// would be a new scoring event: an owner decision (GAME_LEVEL_PLAYBOOK §6).
+// repair in a drizzle) is no slip — Stop Work is the worker's right (pro tip
+// 3; the wind rule: in doubt, stop) — but it is not free either (audit
+// 2026-11-11): the stop is final, he comes down, no ◆ for that moment, the
+// stars are capped at 1 (counted like a strike; no quick bonus) and the
+// recorded mark loses 5. The guide says the lesson's rule as he comes down,
+// in the past tense ("…কাজ চলত"), so a stop never tells the player what the
+// moment needed before it is decided.
+//
+// The coworker cannot be skipped by playing fast: a stop on his moment holds
+// for him ([CoworkerMoment.holdForCoworker]). "Work on" is not held: that
+// press is the call itself (deadly in lightning, a slip otherwise), and his
+// "finish first" no longer fits once it is made. Nothing scores in a praise
+// window (`!tableBusy`). Gesture hints: a sweep over the tools and
+// the two decisions while the moment waits, a tap on the open phone (the one
+// way on). Scene taps are all reading taps (sign or not), so none counts as a
+// miss — counting only the empty ones would tell which taps found a sign.
 //
 // Tapping the scene gives every tap the same plain mark (no tell before the
 // decision); which taps were real signs shows only once the reason is paid.
@@ -199,11 +213,25 @@ abstract final class SkyLines {
     'সবাই তো এমন আবহাওয়াতেই কাজ করে যায়',
   ];
 
-  /// Wrong reasons to stop: a false claim (the lesson: no PPE helps in
-  /// lightning; general maintenance stops in the rain whatever the gloves)
-  /// and the bad motives a field worker might have — none is a lesson rule.
+  /// Wrong reasons to stop that name this moment's weather but state a false
+  /// rule (audit 2026-11-11: the right cards all name the weather, so wrong
+  /// ones must too, or "pick the weather word" wins). Lightning: no PPE helps
+  /// and any bolt seen or heard stops the work. Wind: the line is 40–50 km/h,
+  /// not any breeze. Rain: an emergency repair goes on with waterproof
+  /// gloves, and general maintenance stops whatever the gloves.
+  static const boltFalse = ['রাবারের গ্লাভস নেই, তাই বজ্রে নামলাম', 'বজ্র মাথার ওপরে এলে তবেই কাজ বন্ধ করতে হয়'];
+  static const windFalse = ['বাতাস 20 km/h ছাড়ালেই উঁচুতে সব কাজ বন্ধ', 'যেকোনো বাতাসেই উঁচুতে কাজ নিষেধ, তাই নামলাম'];
+  static const rainJobFalse = ['বৃষ্টিতে জরুরি মেরামতও বন্ধ রাখতে হয়', 'গ্লাভস আনিনি, আনলে বৃষ্টিতেও এ কাজ চলত'];
+  static const cloudFalse = 'মেঘ জমলেই উঁচুতে সব কাজ বন্ধ, এটাই নিয়ম';
+  static List<String> falseStopRules(SkyHazard h) => switch (h) {
+        SkyHazard.bolt => boltFalse,
+        SkyHazard.wind => windFalse,
+        SkyHazard.rainJob => rainJobFalse,
+      };
+
+  /// Wrong reasons to stop: the bad motives a field worker might have — none
+  /// is a lesson rule.
   static const stopExcuses = [
-    'গ্লাভস আনিনি, নইলে এতেও কাজ চালানো যেত',
     'ভিজে গেলে জামা-জুতো নষ্ট হবে, তাই নামলাম',
     'সুপারভাইজার দেখছেন না, একটু জিরিয়ে নিই',
     'চা খাওয়ার সময় হয়ে গেছে, তাই নেমে এলাম',
@@ -221,15 +249,29 @@ abstract final class SkyLines {
         null => c.drizzle ? goRainWhy : goCalmWhy,
       };
 
-  /// The wrong cards for [c]'s deck: a stop, the false claims and bad
-  /// motives; working on, the myths and excuses.
-  static List<String> whyWrong(SkyCase c) => c.mustStop ? stopExcuses : goMyths;
+  /// The wrong cards for [c]'s deck: a stop, the false rules about this
+  /// weather, the cloud myth and the bad motives; working on, the myths and
+  /// excuses.
+  static List<String> whyWrong(SkyCase c) => switch (c.hazard) {
+        null => goMyths,
+        final h => [...falseStopRules(h), cloudFalse, ...stopExcuses],
+      };
 
-  /// A stop where the lesson lets the work go on: not scored (Stop Work is
-  /// the worker's right, pro tip 3); the guide says the lesson's rule and
-  /// the moment stays.
-  static const needlessCalm = 'থামা আপনার অধিকার। তবে বাতাস কম, বৃষ্টি বা বজ্র নেই — এখানে কাজ চলে।';
-  static const needlessUrgent = 'থামা আপনার অধিকার। তবে বৃষ্টিতে জরুরি ফল্ট মেরামত চলে — ওয়াটারপ্রুফ গ্লাভস পরে, খুব সাবধানে।';
+  /// The deck for [c]: the right card and two wrong ones. After a stop one
+  /// wrong card is always a false rule about this very weather, so the card
+  /// that names the weather is not by itself the answer.
+  static List<ChoiceOption> deal(SkyCase c, math.Random rng) {
+    final h = c.hazard;
+    if (h == null) return dealChoices(whyRight(c), goMyths, rng);
+    final rules = [...falseStopRules(h)]..shuffle(rng);
+    final rest = [...rules.skip(1), cloudFalse, ...stopExcuses]..shuffle(rng);
+    return dealChoices(whyRight(c), [rules.first, rest.first], rng);
+  }
+
+  /// A stop where the lesson lets the work go on (Stop Work is the worker's
+  /// right, pro tip 3; it caps the stars at 1): said as he comes down.
+  static const needlessCalm = 'থামা আপনার অধিকার। তবে বাতাস কম, বৃষ্টি বা বজ্র নেই — এখানে কাজ চলত।';
+  static const needlessUrgent = 'থামা আপনার অধিকার। তবে বৃষ্টিতে জরুরি ফল্ট মেরামত চলত — ওয়াটারপ্রুফ গ্লাভস পরে, খুব সাবধানে।';
   static String needless(SkyCase c) => c.drizzle ? needlessUrgent : needlessCalm;
 
   /// The careless coworker (his recorded voice): finish first.
@@ -376,7 +418,7 @@ class SkyRun {
   bool shown = false;
   int slips = 0;
 
-  /// Stops where the lesson lets the work go on (not scored).
+  /// Stops where the lesson lets the work go on (no slip; stars capped at 1, mark −5 each).
   int needless = 0;
   DoMistake? deadly;
   final List<String> caught = [];
@@ -385,6 +427,11 @@ class SkyRun {
   bool get ended => done || deadly != null;
   SkyCase get current => deal.cases[index.clamp(0, deal.cases.length - 1)];
   int get percent => (100 - 15 * slips).clamp(0, 100);
+
+  /// The recorded mark: [percent] less 5 per needless stop, so stopping at
+  /// every moment (no reading at all) never records a full mark. The pass
+  /// still goes by [percent] (a needless stop is no slip).
+  int get mark => (percent - 5 * needless).clamp(0, 100);
   bool get passed => done && deadly == null && percent >= 55;
 
   /// Read the sky fully (+5): every sign spotted, the weather checked, and no
@@ -411,17 +458,17 @@ class SkyRun {
   }
 
   /// Stop and come down ([stop]) or work on. Returns the mistake, if any.
-  /// Stopping where the lesson lets the work go on is not scored: no
-  /// mistake, nothing shown — [shown] stays false and the moment stays (see
-  /// [needless]). [pushed]: worked on because the coworker said so.
+  /// Stopping where the lesson lets the work go on is no mistake (Stop Work is
+  /// the worker's right) but it is final and counted in [needless].
+  /// [pushed]: worked on because the coworker said so.
   DoMistake? decide({required bool stop, bool pushed = false}) {
     if (ended || shown) return null;
     final c = current;
+    shown = true;
     if (stop && !c.mustStop) {
       needless++;
       return null;
     }
-    shown = true;
     if (!stop) {
       switch (c.hazard) {
         case SkyHazard.bolt:
@@ -594,6 +641,14 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
   var _revealed = false;
   var _coworkerArmed = false;
 
+  /// The gesture hint's anchors: the tools, the decisions, the open phone.
+  final _hints = IdleHintController();
+  final _phoneBtnKey = GlobalKey();
+  final _glovesKey = GlobalKey();
+  final _stopKey = GlobalKey();
+  final _goKey = GlobalKey();
+  final _phoneCardKey = GlobalKey();
+
   /// The phone's weather is open.
   var _phone = false;
 
@@ -614,9 +669,6 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
   /// A flash a moment ago: a tap does not bring another yet.
   Timer? _coolTimer;
   var _cool = false;
-
-  /// Stop was pressed on his moment before he came: he comes now.
-  Offset? _heldStop;
 
   var _freeze = false;
   Completer<void>? _frozen;
@@ -674,7 +726,16 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
   }
 
   bool get _canPlay =>
-      !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && !_phone && !_turning && !_downing;
+      !_intro &&
+      !_busy &&
+      !_ended &&
+      _card == null &&
+      !tableBusy &&
+      !coworkerOpen &&
+      !_run.shown &&
+      !_phone &&
+      !_turning &&
+      !_downing;
 
   // --- a moment: the weather turns ----------------------------------------------
   void _startMoment() {
@@ -813,31 +874,20 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
   // --- the decision ----------------------------------------------------------------
   Future<void> _decide(bool stop, Offset origin) async {
     if (!_canPlay) return;
-    // On his moment he cuts in the moment the trainee goes to come down.
-    if (stop && _run.index == _run.deal.callAt && !coworkerDone) {
-      _hush();
-      HapticFeedback.selectionClick();
-      setState(() {
-        _heldStop = origin;
-        _busy = true;
-      });
-      return;
-    }
+    // On his moment a stop, even a fast one, waits for him: he cuts in as the
+    // trainee starts down. "Work on" is never held: that press is the call
+    // (deadly in lightning, a slip in wind or rain at maintenance), and once
+    // it is made his "finish first" has nothing left to push.
+    if (stop && holdForCoworker()) return;
     await _commit(stop, origin);
   }
 
   Future<void> _commit(bool stop, Offset origin, {bool pushed = false}) async {
     _hush();
-    _busy = false;
-    _heldStop = null;
+    final needless = stop && !_run.current.mustStop;
     final m = _run.decide(stop: stop, pushed: pushed);
-    if (m == null && !_run.shown) {
-      // A stop where the lesson lets the work go on: not scored, he stays up;
-      // the guide says the lesson's rule and the moment is still to read.
-      HapticFeedback.selectionClick();
-      _cue('sounds/intro/click.ogg', volume: 0.5);
-      setState(() => _wake++);
-      unawaited(_sayChain([SkyLines.needless(_run.current)]));
+    if (needless) {
+      await _needlessStop();
       return;
     }
     _againTimer?.cancel();
@@ -860,7 +910,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
       final c = _run.current;
       final idx = _run.index;
       unawaited(askReason(
-        deal: () => dealChoices(SkyLines.whyRight(c), SkyLines.whyWrong(c), widget.rng),
+        deal: () => SkyLines.deal(c, widget.rng),
         question: stop ? SkyLines.whyStop : SkyLines.whyGo,
         stillValid: () => _run.index == idx && !_ended,
       ));
@@ -873,6 +923,29 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
     setState(() {});
     unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
     await _slip(m);
+  }
+
+  /// A stop where the lesson lets the work go on: final, no ◆, stars capped
+  /// at 1 (see the header). He comes down while the guide says the lesson's
+  /// rule in the past tense.
+  Future<void> _needlessStop() async {
+    _againTimer?.cancel();
+    HapticFeedback.mediumImpact();
+    _cue('sounds/intro/click.ogg', volume: 0.5);
+    final c = _run.current;
+    final idx = _run.index;
+    setState(() {
+      _revealed = c.signs.isNotEmpty;
+      _wake++;
+    });
+    if (_quiet) {
+      _down.value = 1;
+    } else {
+      unawaited(_down.forward(from: 0));
+    }
+    await _sayChain([SkyLines.needless(c)]);
+    await Future<void>.delayed(Duration(milliseconds: _quiet ? 700 : 1500));
+    if (mounted && !_ended && _card == null && _run.index == idx) _next();
   }
 
   void _next() {
@@ -914,9 +987,10 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("finish first") fits only while the trainee is still up on
+    // this moment's job: once he has decided, the moment has passed.
     if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    if (_heldStop != null) return true;
-    if (_intro || _busy || _turning || _card != null || reasonOpen || _phone) return false;
+    if (_intro || _busy || _turning || _card != null || tableBusy || _phone) return false;
     return true;
   }
 
@@ -1043,21 +1117,22 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
     final save = ref.read(gameSaveProvider.notifier);
     final size = MediaQuery.sizeOf(context);
     final centre = Offset(size.width / 2, size.height * 0.45);
-    final mark = _run.percent;
+    final mark = _run.mark;
     await save.recordLevelResult(_rungId, mark);
     if (!mounted) return;
     if (_run.passed) {
       await save.markRungCleared(_rungId);
       _passed = true;
       await _levelDelta(20, centre, mood: GuideMood.celebrate);
-      if (mark == 100 && _clock.elapsedMilliseconds < widget.pack.quickMs) {
+      if (mark == 100 && _run.needless == 0 && _clock.elapsedMilliseconds < widget.pack.quickMs) {
         _quickBonus = true;
         await _levelDelta(10, centre, mood: GuideMood.celebrate);
       }
     }
     final delta = await save.commitLevelScore(_rungId, _runScore);
     if (_run.passed) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
-    final stars = starsFor(passed: _run.passed, strikes: strikes, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
+    // A needless stop caps the stars at 1 (counted like a strike for the stars).
+    final stars = starsFor(passed: _run.passed, strikes: strikes + _run.needless, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
     if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
     setState(() {
@@ -1093,7 +1168,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
   LinemanMode get _mode {
     if (_downing) return LinemanMode.walk;
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
-    if (_heldStop != null || coworkerOpen) return LinemanMode.worried;
+    if (coworkerOpen) return LinemanMode.worried;
     if (_verdict == _Verdict.working) return LinemanMode.cheer;
     return LinemanMode.hold;
   }
@@ -1257,6 +1332,13 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
     return Rect.fromCenter(center: centre, width: 76, height: 76);
   }
 
+  /// How to touch now (never what): the open phone closes with a tap
+  /// anywhere (the one way on); otherwise a sweep over all four controls.
+  HintSpec? _hint() {
+    if (_phone) return HintSpec.tapOn(_phoneCardKey);
+    return HintSpec.sweepOver([_phoneBtnKey, _glovesKey, _stopKey, _goKey]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1264,8 +1346,11 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_phone && _heldStop == null;
+    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_phone;
     final c = _run.current;
+    // The hand waits for a stuck player: the moment's tools and decisions, or
+    // the open phone (decks show their own sweep; cards and results none).
+    final hintWaiting = _phone ? playing && _card == null : handsOn && _canPlay;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1293,6 +1378,10 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
               quiet: quiet,
             ),
             animation: _sceneMotion,
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: (_run.index, _phone),
+            hintController: _hints,
             layers: (context, m) => _scene(m),
             overlays: [
               // The docket (hidden while his speech bubble is up, which covers it).
@@ -1311,9 +1400,15 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
                   bottom: pad.bottom + 72,
                   child: Row(
                     children: [
-                      _ToolButton(icon: Icons.phone_android_rounded, label: SkyLines.phone, on: _run.checks.contains(SkyCheck.phone), enabled: _canPlay, onTap: _openPhone),
+                      _ToolButton(
+                          key: _phoneBtnKey,
+                          icon: Icons.phone_android_rounded,
+                          label: SkyLines.phone,
+                          on: _run.checks.contains(SkyCheck.phone),
+                          enabled: _canPlay,
+                          onTap: _openPhone),
                       const SizedBox(width: 6),
-                      _ToolButton(icon: Icons.back_hand_rounded, label: SkyLines.gloves, on: _gloved, enabled: _canPlay, onTap: _putGloves),
+                      _ToolButton(key: _glovesKey, icon: Icons.back_hand_rounded, label: SkyLines.gloves, on: _gloved, enabled: _canPlay, onTap: _putGloves),
                     ],
                   ),
                 ),
@@ -1324,9 +1419,15 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(flex: 3, child: _StopButton(onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
+                      Expanded(flex: 3, child: KeyedSubtree(key: _stopKey, child: _StopButton(onTapUp: (d) => unawaited(_decide(true, d.globalPosition))))),
                       const SizedBox(width: 10),
-                      Expanded(flex: 2, child: DoBigButton(label: SkyLines.go, filled: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
+                      Expanded(
+                        flex: 2,
+                        child: KeyedSubtree(
+                          key: _goKey,
+                          child: DoBigButton(label: SkyLines.go, filled: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition))),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1342,7 +1443,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
                     child: reasonOpen ? reasonDeck(quiet: quiet, key: const ValueKey('why-deck')) : coworkerDeck(quiet: quiet, key: const ValueKey('choice-deck')),
                   ),
                 ),
-              if (_phone && playing) _PhoneCard(key: const ValueKey('phone'), sky: c, quiet: quiet, onClose: _closePhone),
+              if (_phone && playing) _PhoneCard(key: const ValueKey('phone'), cardKey: _phoneCardKey, sky: c, quiet: quiet, onClose: _closePhone),
               if (playing && _card == null && !_phone) cornerGuide(onTap: _tapGuide, bottom: pad.bottom + (deckUp ? 236 : 72), onLeft: coworkerFromRight),
               ?coworkerPeek(quiet: quiet, key: const ValueKey('coworker')),
               if (_card != null)
@@ -1551,7 +1652,7 @@ class _StopButton extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit once used.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;
@@ -1608,7 +1709,8 @@ class _ToolButton extends StatelessWidget {
 /// The phone's weather: the wind and the rain now (lesson pro tip 1). Tap
 /// anywhere to put it away.
 class _PhoneCard extends StatelessWidget {
-  const _PhoneCard({super.key, required this.sky, required this.quiet, required this.onClose});
+  const _PhoneCard({super.key, required this.cardKey, required this.sky, required this.quiet, required this.onClose});
+  final GlobalKey cardKey;
   final SkyCase sky;
   final bool quiet;
   final VoidCallback onClose;
@@ -1642,6 +1744,7 @@ class _PhoneCard extends StatelessWidget {
                 curve: Curves.easeOutBack,
                 builder: (_, v, child) => Transform.translate(offset: Offset(0, 60 * (1 - v)), child: Opacity(opacity: v.clamp(0.0, 1.0), child: child)),
                 child: Container(
+                  key: cardKey,
                   width: 230,
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                   decoration: BoxDecoration(

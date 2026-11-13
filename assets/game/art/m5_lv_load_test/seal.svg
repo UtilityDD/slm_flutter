@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <!-- wrong -->
+  <g><rect x="40" y="30" width="80" height="70" rx="8" fill="#e9ecef"/><line x1="80" y1="100" x2="80" y2="116" stroke="#9aa0a6" stroke-width="2"/><circle cx="80" cy="120" r="5" fill="#9aa0a6"/><path d="M60 146 l20 -20 M100 146 l-20 -20" stroke="#6f7880" stroke-width="5"/></g>
+  <!-- right -->
+  <g transform="translate(160 0)"><rect x="40" y="30" width="80" height="70" rx="8" fill="#e9ecef"/><line x1="80" y1="100" x2="80" y2="116" stroke="#9aa0a6" stroke-width="2"/><circle cx="80" cy="120" r="5" fill="#9aa0a6"/><rect x="46" y="129" width="80" height="34" rx="5" fill="#5c3f25"/><line x1="58" y1="106" x2="58" y2="140" stroke="#b8322a" stroke-width="3"/><circle cx="58" cy="146" r="7" fill="#c9a04a"/><line x1="86" y1="106" x2="86" y2="140" stroke="#22242a" stroke-width="3"/><circle cx="86" cy="146" r="7" fill="#c9a04a"/><line x1="114" y1="106" x2="114" y2="140" stroke="#3f8a4a" stroke-width="3"/><circle cx="114" cy="146" r="7" fill="#c9a04a"/></g>
+  <g transform="translate(80 172)"><circle r="13" fill="#c0392b"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>
+  <g transform="translate(240 172)"><circle r="13" fill="#2e8b45"/><path d="M-7 0 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

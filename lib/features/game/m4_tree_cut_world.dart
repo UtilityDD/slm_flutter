@@ -12,7 +12,8 @@ import 'package:flutter/material.dart';
 // heavy limb reaches out over the conductors, a side branch and small twigs
 // on it, and the shoots of its crown. The trainee works from the tree (helmet,
 // harness, his lanyard round the trunk); his ground mate holds the rope below.
-// No text in the art.
+// No text in the art, and nothing marks where a cut goes (no chalk ticks —
+// audit 2026-11-11): only the kerfs of cuts already made are drawn.
 //
 // Design: 360 wide × the scene's height; the ground follows the bottom of the
 // screen (a tall phone gets more sky).
@@ -199,7 +200,6 @@ class M4TreeCutTree {
     this.lower = 0,
     this.toward = M4TreeCutShoot.low,
     this.shootCut = false,
-    this.marks = false,
   });
 
   /// The trimmable pieces dealt this play (twigs and the side branch).
@@ -219,9 +219,6 @@ class M4TreeCutTree {
   final M4TreeCutShoot toward;
   final bool shootCut;
 
-  /// Show where the three cuts go (the cut station).
-  final bool marks;
-
   bool get freed => cuts.contains(M4TreeCutMark.top) && cuts.contains(M4TreeCutMark.under);
 
   @override
@@ -233,11 +230,10 @@ class M4TreeCutTree {
       setEquals(other.cuts, cuts) &&
       other.lower == lower &&
       other.toward == toward &&
-      other.shootCut == shootCut &&
-      other.marks == marks;
+      other.shootCut == shootCut;
 
   @override
-  int get hashCode => Object.hash(Object.hashAllUnordered(present), Object.hashAllUnordered(gone), roped, Object.hashAllUnordered(cuts), lower, toward, shootCut, marks);
+  int get hashCode => Object.hash(Object.hashAllUnordered(present), Object.hashAllUnordered(gone), roped, Object.hashAllUnordered(cuts), lower, toward, shootCut);
 }
 
 Path _span(Offset p, Offset q, double sag) {
@@ -629,28 +625,6 @@ class M4TreeCutWorldPainter extends CustomPainter {
         const t = M4TreeCutPiece.tipTwig;
         _branch(c, geo.pieceRoot(t), geo.pieceEnd(t), 3, 1.2);
         _leaves(c, geo.pieceEnd(t), 11, seed: 9);
-      }
-    }
-
-    // Where the three cuts go (the cut station): chalk ticks across the limb.
-    if (tree.marks) {
-      final chalk = Paint()
-        ..color = const Color(0xEEFFFFFF)
-        ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round;
-      for (final m in M4TreeCutMark.values) {
-        if (cuts.contains(m)) continue;
-        if (m != M4TreeCutMark.collar && freed) continue;
-        final p = geo.markAt(m);
-        final h = M4TreeCutGeo.limbW(M4TreeCutGeo.markK(m)) * 0.55;
-        switch (m) {
-          case M4TreeCutMark.under:
-            c.drawLine(p.translate(0, 2), p.translate(0, -h), chalk);
-          case M4TreeCutMark.top:
-            c.drawLine(p.translate(0, -2), p.translate(0, h), chalk);
-          case M4TreeCutMark.collar:
-            c.drawLine(p.translate(0, -h - 2), p.translate(0, h + 2), chalk);
-        }
       }
     }
 

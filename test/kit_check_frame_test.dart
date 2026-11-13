@@ -13,8 +13,10 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/kit_check.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/mistake_kit.dart';
@@ -24,10 +26,12 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(rungId: '1.1/do/0', kind: CatalogRungKind.doKind, lessonId: '1.1', lessonTitleBn: '', ladderStep: 2, doIndex: 1, doCount: 2);
 
 final _cards = find.byWidgetPredicate((w) => w.runtimeType.toString() == 'DoTrayCard');
+final _inspect = find.byWidgetPredicate((w) => w.runtimeType.toString() == '_InspectCard');
 
 Future<void> _pump(WidgetTester t, int ms) async {
   for (var i = 0; i < ms; i += 50) {
@@ -103,12 +107,11 @@ Future<void> _wear(WidgetTester t, int seed, KitSlot slot, bool Function(KitItem
 
 /// Answers "কেন এটা পরলেন?" right.
 Future<void> _payReason(WidgetTester t, KitSlot slot) async {
-  await _pump(t, 3000);
+  await waitChoiceDeck(t);
   final right = _onScreen(KitLines.whyRight(slot));
   expect(right, hasLength(1), reason: 'reason deck for $slot');
   await t.tap(right.single, warnIfMissed: false);
-  await t.pump();
-  await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
+  await tapReasonProceed(t);
   await _pump(t, 2500);
 }
 
@@ -117,10 +120,11 @@ Future<void> _refuse(WidgetTester t) async {
   for (var i = 0; i < 40 && _onScreen(KitLines.choiceRight).isEmpty; i++) {
     await _pump(t, 250);
   }
-  await _pump(t, 1200); // the cards finish dealing in
+  await waitChoiceDeck(t); // the cards finish dealing in
   final refuse = _onScreen(KitLines.choiceRight);
   expect(refuse, hasLength(1), reason: 'the coworker came and the guide asked');
   await t.tap(refuse.single, warnIfMissed: false);
+  await tapReasonProceed(t);
   await _pump(t, 2000);
 }
 
@@ -173,22 +177,23 @@ void main() {
       await _pump(t, 1500);
 
       await _wearGood(t, seed, KitSlot.torso);
-      await _pump(t, 3000);
+      await waitChoiceDeck(t);
       expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the reason deck after a piece worn right');
       final right = _onScreen(KitLines.whyRight(KitSlot.torso));
       expect(right, hasLength(1));
       await t.tap(right.single, warnIfMissed: false);
-      await t.pump();
-      await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
+      await tapReasonProceed(t);
       await _pump(t, 2500);
       expect(_onScreen([...KitLines.whyTorsoRight, ...KitLines.whyTorsoWrong]), isEmpty, reason: 'the reason was paid');
 
       // The trousers: the coworker peeps in; the guide asks; refuse him.
       await _pump(t, 1500);
       expect(find.byType(CoworkerPeek), findsOneWidget);
+      await waitChoiceDeck(t);
       final refuse = _onScreen(KitLines.choiceRight);
       expect(refuse, hasLength(1));
       await t.tap(refuse.single, warnIfMissed: false);
+      await tapReasonProceed(t);
       await _pump(t, 1800);
       expect(find.byType(CoworkerPeek), findsNothing);
       expect(t.takeException(), isNull);
@@ -310,6 +315,115 @@ void main() {
       expect(find.byType(KitDeathView), findsOneWidget);
       await _pump(t, 2000);
       expect(find.byType(MistakeCard), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips end the play: the struck-out card, no pass', (t) async {
+      const seed = 0;
+      final c = await _open(t, seed);
+      final at = _trayFor(seed, KitSlot.torso).indexWhere((i) => i.kind == KitKind.good);
+      for (var n = 0; n < 3; n++) {
+        expect(find.byType(StruckOutCard), findsNothing, reason: 'slip $n');
+        await t.tap(_cards.at(at));
+        await _pump(t, 500);
+        await t.tap(find.text('বাদ দিন'));
+        await _pump(t, 200);
+        if (_inspect.evaluate().isNotEmpty) await t.tap(_inspect, warnIfMissed: false);
+        await _pump(t, 1500);
+      }
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.map((m) => m.key), contains('1.1/kit/rejected-good'));
+      expect(s.rungProgress['1.1/do/0'], isNot('cleared'));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a sound item sent back costs a slip and the guide stays neutral', (t) async {
+      const seed = 0;
+      final c = await _open(t, seed);
+      final at = _trayFor(seed, KitSlot.torso).indexWhere((i) => i.kind == KitKind.good);
+      await t.tap(_cards.at(at));
+      await _pump(t, 500);
+      await t.tap(find.text('বাদ দিন'));
+      await _pump(t, 300);
+      expect(find.text(KitLines.rejectedGood), findsNothing, reason: 'never "it was fine" during the play');
+      expect(find.text(KitLines.lookAgain), findsWidgets);
+      await _pump(t, 2500);
+      expect(c.read(gameSaveProvider).mistakes.single.key, '1.1/kit/rejected-good');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('praise window: a tray tap after a piece is worn opens nothing', (t) async {
+      const seed = 0;
+      final c = await _open(t, seed);
+      await _wear(t, seed, KitSlot.torso, (i) => i.kind == KitKind.good);
+      await _pump(t, 1100); // the card has gone; the ◆ waits on the table
+      await t.tap(_cards.first, warnIfMissed: false);
+      await _pump(t, 100);
+      expect(_inspect, findsNothing, reason: 'no pick while the right move is praised');
+      await _pump(t, 2500);
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the reason deck still follows');
+      expect(_inspect, findsNothing);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip the coworker; listening to him is a booked slip', (t) async {
+      final seed = _seedWhere((d) => d.callBefore == KitSlot.legs);
+      final c = await _open(t, seed);
+      await _wear(t, seed, KitSlot.torso, (i) => i.kind == KitKind.good);
+      await _pump(t, 3000);
+      final right = _onScreen(KitLines.whyRight(KitSlot.torso));
+      expect(right, hasLength(1));
+      await t.tap(right.single, warnIfMissed: false);
+      await tapReasonProceed(t);
+      // At once (well before his 1.2 s timer) reach for the trousers.
+      await _pump(t, 700);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not come yet');
+      await t.tap(_cards.first, warnIfMissed: false);
+      await _pump(t, 200);
+      expect(_inspect, findsNothing, reason: 'the pick waits for him');
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in now');
+      await waitChoiceDeck(t);
+      final listen = _onScreen(KitLines.choiceWrong);
+      expect(listen, hasLength(2));
+      await t.tap(listen.first, warnIfMissed: false);
+      await tapReasonProceed(t);
+      await _pump(t, 2000);
+      final s = c.read(gameSaveProvider);
+      final rushed = s.mistakes.where((m) => m.key == KitMistakes.rushedKey).toList();
+      expect(rushed, hasLength(1), reason: 'listening is booked');
+      expect(rushed.single.deadly, isFalse);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.byType(StruckOutCard), findsNothing);
+      await t.tap(_cards.first, warnIfMissed: false);
+      await _pump(t, 500);
+      expect(_inspect, findsOneWidget, reason: 'the play goes on');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over the tray, then over the two buttons', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      const seed = 0;
+      final c = await _open(t, seed);
+      IdleHintState hint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue, reason: 'idle on the tray');
+      expect(hint().debugOptions, hasLength(_trayFor(seed, KitSlot.torso).length), reason: 'every card, not one');
+      expect(_inspect, findsNothing, reason: 'the hand never presses');
+      await _pump(t, 6000);
+
+      await t.tap(_cards.first);
+      await _pump(t, 9000);
+      expect(_inspect, findsOneWidget);
+      expect(hint().showing, isTrue, reason: 'idle on the close look');
+      expect(hint().debugOptions, hasLength(2), reason: 'both buttons');
+      await _pump(t, 6000);
       expect(t.takeException(), isNull);
       await _close(t, c);
     });

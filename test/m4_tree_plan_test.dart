@@ -4,8 +4,10 @@
 // গগলস, a rope for heavy branches and the tool by branch size — all before
 // the first cut; the line live = deadly), the deal, the option libraries, and
 // the level in the shell: idle perf, the guide first, a full clean play with
-// the coworker refused, a slip card, the deadly freezes (no শাটডাউন; the line
-// kept on at his say-so).
+// the coworker refused (also on a fast play: শাটডাউন and কাটা শুরু wait for
+// him), listening = a slip, a slip card, 3 slips strike out, the deadly freeze
+// (no শাটডাউন), the drop off the tree = a slip with a neutral miss reply, the
+// rack dealt out of order, and the gesture hint (a sweep, never one answer).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -19,6 +21,8 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
+import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m4_tree_plan.dart';
@@ -31,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(rungId: '4.8/do/0', kind: CatalogRungKind.doKind, lessonId: '4.8', lessonTitleBn: '', ladderStep: 0, doIndex: 1, doCount: 2);
 
@@ -57,10 +62,12 @@ List<Finder> _onScreen(List<String> texts) => [
 ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -199,6 +206,22 @@ void main() {
       expect(calls, {0, 1, 2});
     });
 
+    test("the plan rack: every button once, dealt fresh, never in the plan's order", () {
+      final racks = <String>{};
+      final firsts = <M4TreePlanItem>{};
+      for (var s = 0; s < 40; s++) {
+        for (final t in m4TreePlanDeal(math.Random(s)).trees) {
+          expect(t.rack.toSet(), M4TreePlanItem.values.toSet());
+          expect(t.rack.length, M4TreePlanItem.values.length);
+          expect(t.rack, isNot(orderedEquals(M4TreePlanItem.values)));
+          racks.add(t.rack.map((i) => i.index).join());
+          firsts.add(t.rack.first);
+        }
+      }
+      expect(racks.length, greaterThan(100));
+      expect(firsts.length, greaterThan(5), reason: 'any button can come first');
+    });
+
     M4TreePlanRun run1({M4TreePlanSize size = M4TreePlanSize.small}) => M4TreePlanRun(
       M4TreePlanDeal(
         trees: [
@@ -260,11 +283,13 @@ void main() {
       final tr = run1().tree;
       expect(m4TreePlanDropOf(g, tr, 180, g.groundY + 30), M4TreePlanDrop.zone);
       expect(m4TreePlanDropOf(g, tr, 180, g.roadTop + 20), M4TreePlanDrop.road);
-      expect(m4TreePlanDropOf(g, tr, 40, g.groundY + 30), M4TreePlanDrop.far);
+      expect(m4TreePlanDropOf(g, tr, 40, g.groundY + 30), M4TreePlanDrop.away);
+      expect(m4TreePlanDropOf(g, tr, 330, g.groundY + 30), M4TreePlanDrop.away);
       expect(m4TreePlanDropOf(g, tr, 180, g.wireY), M4TreePlanDrop.far);
       final a = atDrop();
       expect(a.drop(M4TreePlanDrop.far, 40), isNull);
       expect(a.phase, M4TreePlanPhase.drop);
+      expect(a.slips, 0, reason: 'a tap off the ground is a miss, not a choice');
       expect(a.drop(M4TreePlanDrop.road, 180), M4TreePlanMistakes.roadDrop);
       expect(a.dropX, 180);
       expect(a.phase, M4TreePlanPhase.plan);
@@ -272,9 +297,14 @@ void main() {
       expect(b.drop(M4TreePlanDrop.zone, 300), isNull);
       expect(b.dropX, 240, reason: 'kept under the tree');
       expect(b.caught, contains(M4TreePlanLines.caughtDrop));
+      final w = atDrop();
+      expect(w.drop(M4TreePlanDrop.away, 40), M4TreePlanMistakes.awayDrop, reason: 'the cordon away from the tree costs');
+      expect(w.dropX, 180, reason: 'the guide moves it under the tree');
+      expect(w.phase, M4TreePlanPhase.plan);
+      expect(w.caught, isNot(contains(M4TreePlanLines.caughtDrop)));
     });
 
-    test('the plan: no tool = not started; no শাটডাউন = deadly (also on his say-so)', () {
+    test('the plan: no tool = not started; no শাটডাউন = deadly; listening to him = a slip, শাটডাউন still on offer', () {
       final a = toPlan();
       expect(a.start(), (false, null));
       expect(a.phase, M4TreePlanPhase.plan);
@@ -285,12 +315,21 @@ void main() {
       expect(a.start(), (true, M4TreePlanMistakes.liveLine));
       expect(a.deadly!.deadly, isTrue);
       expect(a.ended, isTrue);
-      final b = toPlan()..skippedShutdown = true;
+      final b = toPlan();
+      expect(b.listen(), M4TreePlanMistakes.listened);
+      expect(b.slips, 1);
+      expect(M4TreePlanMistakes.listened.deadly, isFalse, reason: 'playbook row 8: listening = the slip');
       b
         ..wear(M4TreePlanKit.shutdown)
+        ..wear(M4TreePlanKit.helper)
+        ..wear(M4TreePlanKit.ppe)
         ..pick(M4TreePlanTool.pruner);
-      expect(b.kit, isNot(contains(M4TreePlanKit.shutdown)), reason: 'he talked him out of it');
-      expect(b.start().$2, M4TreePlanMistakes.liveLine);
+      expect(b.kit, contains(M4TreePlanKit.shutdown), reason: 'he cannot take the শাটডাউন off the plan');
+      expect(b.start(), (true, null));
+      expect(b.deadly, isNull);
+      final c = toPlan()..listen();
+      c.pick(M4TreePlanTool.pruner);
+      expect(c.start().$2, M4TreePlanMistakes.liveLine, reason: 'cutting with the line live is still the deadly');
     });
 
     test('the plan: the most serious gap is the slip, the rest put right; a clean plan tags', () {
@@ -368,6 +407,14 @@ void main() {
         ...M4TreePlanLines.directionalWhy,
         ...M4TreePlanLines.abWhy,
         ...M4TreePlanLines.whyWrong,
+        ...M4TreePlanLines.shutdownWrong,
+        ...M4TreePlanLines.cordonWrong,
+        ...M4TreePlanLines.toolSmallWrong,
+        ...M4TreePlanLines.toolBigWrong,
+        ...M4TreePlanLines.directionalWrong,
+        ...M4TreePlanLines.abWrong,
+        M4TreePlanLines.dropFar,
+        M4TreePlanLines.noTool,
         ...M4TreePlanLines.coworker.recordedLines,
         ...M4TreePlanLines.coworker.right,
         ...M4TreePlanLines.coworker.wrong,
@@ -400,15 +447,24 @@ void main() {
         ...M4TreePlanLines.directionalWhy,
         ...M4TreePlanLines.abWhy,
         ...M4TreePlanLines.whyWrong,
+        ...M4TreePlanLines.shutdownWrong,
+        ...M4TreePlanLines.cordonWrong,
+        ...M4TreePlanLines.toolSmallWrong,
+        ...M4TreePlanLines.toolBigWrong,
+        ...M4TreePlanLines.directionalWrong,
+        ...M4TreePlanLines.abWrong,
       ]);
       for (var s = 0; s < 20; s++) {
         for (final tr in m4TreePlanDeal(math.Random(s)).trees) {
           final right = M4TreePlanLines.whyRight(tr);
-          expectLibrary('${tr.topic}', right, M4TreePlanLines.whyWrong);
+          expectLibrary('${tr.topic}', right, M4TreePlanLines.whyWrongFor(tr));
           if (tr.topic == M4TreePlanTopic.tool) expect(right, tr.big ? M4TreePlanLines.toolBigWhy : M4TreePlanLines.toolSmallWhy);
-          final deal = dealChoices(right, M4TreePlanLines.whyWrong, math.Random(s));
+          final deal = M4TreePlanLines.dealWhy(tr, math.Random(s));
           expect(deal.where((o) => o.correct).length, 1);
           expect(deal.map((o) => o.textBn).toSet().length, 3);
+          final wrongs = deal.where((o) => !o.correct).map((o) => o.textBn).toList();
+          expect(wrongs.where(M4TreePlanLines.topicWrong(tr).contains), hasLength(1), reason: "one wrong in the tree's own words");
+          expect(wrongs.where(M4TreePlanLines.whyWrong.contains), hasLength(1));
         }
       }
       final s = M4TreePlanLines.coworker;
@@ -470,7 +526,7 @@ void main() {
         }
         debugPrint('PERF m4_tree_plan ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -579,29 +635,178 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('listening to him = the line kept on: শাটডাউন cannot be taken; the cut freezes, deadly card', (t) async {
+    testWidgets('listening to him = a slip card; the শাটডাউন stays on offer and the tree passes', (t) async {
       final seed = seedWhere((d) => d.callAt == 0);
       final tree = m4TreePlanDeal(math.Random(seed)).trees[0];
       final c = await _open(t, seed);
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M4TreePlanLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'a slip, not a freeze');
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M4TreePlanMistakes.listened.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 800);
       await _survey(t, tree);
       await _dropRight(t, tree);
       await _plan(t, tree);
-      expect(find.text(M4TreePlanLines.shutdownOn), findsNothing);
+      expect(find.text(M4TreePlanLines.shutdownOn), findsWidgets, reason: 'the শাটডাউন could still be taken');
       await t.tap(find.text(M4TreePlanLines.start));
+      await _pump(t, 2200);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M4TreePlanMistakes.listened.key, reason: 'no deadly');
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the reason deck of the tree');
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast play: the শাটডাউন tap waits for him', (t) async {
+      final seed = seedWhere((d) => d.callAt == 0);
+      final tree = m4TreePlanDeal(math.Random(seed)).trees[0];
+      final c = await _open(t, seed);
+      // As fast as a finger goes: survey, done, drop, then শাটডাউন.
+      for (final i in tree.toward) {
+        await t.tapAt(_screen(_onBranch(tree, i)));
+        await t.pump(const Duration(milliseconds: 16));
+      }
+      await t.tap(find.text(M4TreePlanLines.surveyDone));
+      await t.pump(const Duration(milliseconds: 16));
+      await t.tapAt(_screen(Offset(tree.treeX, _geo.groundY + 30)));
+      await t.pump(const Duration(milliseconds: 16));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet come by himself');
+      await t.tap(_label(M4TreePlanLines.shutdown));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the decisive tap waits for him');
+      expect(find.text(M4TreePlanLines.shutdownOn), findsNothing, reason: 'the শাটডাউন tap did not go through under him');
+      await waitChoiceDeck(t);
+      await _pickRight(t, M4TreePlanLines.coworker.right);
+      await _pump(t, 2000);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _plan(t, tree);
+      await t.tap(find.text(M4TreePlanLines.start));
+      await _pump(t, 2200);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast play: কাটা শুরু before the শাটডাউন waits for him (no cut under him)', (t) async {
+      final seed = seedWhere((d) => d.callAt == 0);
+      final tree = m4TreePlanDeal(math.Random(seed)).trees[0];
+      final c = await _open(t, seed);
+      for (final i in tree.toward) {
+        await t.tapAt(_screen(_onBranch(tree, i)));
+        await t.pump(const Duration(milliseconds: 16));
+      }
+      await t.tap(find.text(M4TreePlanLines.surveyDone));
+      await t.pump(const Duration(milliseconds: 16));
+      await t.tapAt(_screen(Offset(tree.treeX, _geo.groundY + 30)));
+      await t.pump(const Duration(milliseconds: 16));
+      for (final l in [M4TreePlanLines.helper, M4TreePlanLines.ppe, if (tree.big) M4TreePlanLines.rope, tree.big ? M4TreePlanLines.chainsaw : M4TreePlanLines.pruner]) {
+        await t.tap(_label(l));
+        await t.pump(const Duration(milliseconds: 16));
+      }
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet come by himself');
+      await t.tap(find.text(M4TreePlanLines.start));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the cut waits for him');
+      expect(find.byType(FreezeFrame), findsNothing, reason: 'the tap did not start the cut');
+      await waitChoiceDeck(t);
+      await _pickRight(t, M4TreePlanLines.coworker.right);
+      await _pump(t, 2000);
+      await t.tap(_label(M4TreePlanLines.shutdown));
+      await _pump(t, 150);
+      await t.tap(find.text(M4TreePlanLines.start));
+      await _pump(t, 2200);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the reason deck of the tree');
+      await _close(t, c);
+    });
+
+    testWidgets('three slips: the level strikes out (StruckOutCard), the strikes booked', (t) async {
+      final seed = seedWhere((d) => d.callAt != 0);
+      final tree = m4TreePlanDeal(math.Random(seed)).trees[0];
+      final c = await _open(t, seed);
+      final clear = [for (var i = 0; i < tree.branches.length; i++) if (!tree.branches[i].toward) i];
+      expect(clear, hasLength(3));
+      for (var k = 0; k < 3; k++) {
+        await t.tapAt(_screen(_onBranch(tree, clear[k])));
+        await _pump(t, 900);
+        if (k < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${k + 1}');
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 800);
+        }
+      }
+      await _pump(t, 1500);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      expect(c.read(gameSaveProvider).rungProgress['4.8/do/0'], isNot('cleared'));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the drop: a tap off the ground is a neutral miss; the verge away from the tree = a slip', (t) async {
+      // The tree right of centre: the verge on the left is free (the guide stands bottom right).
+      final seed = seedWhere((d) => d.callAt != 0 && d.trees[0].treeX >= 180);
+      final tree = m4TreePlanDeal(math.Random(seed)).trees[0];
+      final c = await _open(t, seed);
+      await _survey(t, tree);
+      // Off the ground (the far bank): not a choice; the guide says the task again (never where).
+      await t.tapAt(_screen(Offset(30, _geo.groundY - 40)));
+      await _pump(t, 400);
+      final line = c.read(guideDirectorProvider).line;
+      expect(line, M4TreePlanLines.dropFar);
+      expect(line.contains('গাছের নিচে'), isFalse, reason: 'neutral');
+      expect(find.byType(MistakeCard), findsNothing);
+      // The verge far from the tree: the cordon would miss the falling branches.
+      const awayX = 30.0;
+      expect(m4TreePlanDropOf(_geo, tree, awayX, _geo.groundY + 30), M4TreePlanDrop.away);
+      await t.tapAt(_screen(Offset(awayX, _geo.groundY + 30)));
+      await _pump(t, 900);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M4TreePlanMistakes.awayDrop.key);
+      await t.tap(find.text(MistakeLines.gotIt));
       await _pump(t, 800);
-      expect(find.byType(FreezeFrame), findsOneWidget);
-      await _pump(t, 3500);
-      expect(find.byType(MistakeCard), findsOneWidget);
-      final s = c.read(gameSaveProvider);
-      expect(s.mistakes.last.key, M4TreePlanMistakes.liveLine.key);
-      expect(s.mistakes.last.deadly, isTrue);
+      expect(find.text(M4TreePlanLines.start), findsOneWidget, reason: 'the guide moved it under the tree; on to the plan');
+      await _close(t, c);
+    });
+
+    testWidgets('the gesture hint: idle in the survey → a sweep over every branch (never one answer)', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = seedWhere((d) => d.callAt != 0);
+      final tree = m4TreePlanDeal(math.Random(seed)).trees[0];
+      final c = await _open(t, seed);
+      final hint = t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(hint.showing, isFalse);
+      await _pump(t, 9000);
+      expect(hint.showing, isTrue, reason: 'stuck in the survey');
+      expect(hint.debugFrame, isNotNull);
+      expect(hint.debugOptions, hasLength(tree.branches.length + 1), reason: 'over the branches in the line and the clear ones alike, then জরিপ শেষ');
+      // Every in-line branch marked: the sweep never narrows to the ones left (the clear ones).
+      for (final i in tree.toward) {
+        await t.tapAt(_screen(_onBranch(tree, i)));
+        await _pump(t, 200);
+      }
+      await _pump(t, 9000);
+      expect(hint.showing, isTrue);
+      expect(hint.debugOptions, hasLength(tree.branches.length + 1), reason: 'the same set after marking');
+      // The plan: a sweep over every rack button and কাটা শুরু.
+      await t.tap(find.text(M4TreePlanLines.surveyDone));
+      await _pump(t, 600);
+      await _dropRight(t, tree);
+      expect(find.text(M4TreePlanLines.start), findsOneWidget);
+      await _pump(t, 9000);
+      expect(hint.showing, isTrue, reason: 'stuck on the plan');
+      expect(hint.debugOptions, hasLength(M4TreePlanItem.values.length + 1));
       await _close(t, c);
     });
   });

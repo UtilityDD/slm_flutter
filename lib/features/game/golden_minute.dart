@@ -19,6 +19,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'golden_field.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
@@ -55,6 +56,14 @@ import 'spoken_once.dart';
 // out of order (it stays to do); calling the ambulance yourself first;
 // stopping CPR before help comes; listening to the coworker. Three slips
 // strike the level out.
+//
+// Kit timing (audit 2026-11-11): no hand on the scene works in the praise
+// window (`tableBusy`); once he is scheduled, the move that would finish the
+// next step waits for him (`holdForCoworker`), so a fast play cannot skip
+// him; his before-CPR myths are dropped once CPR has begun (they no longer
+// fit), the "talking" myth comes only after he has come round. Gesture
+// hints: a sweep over every place to touch while a step waits (never the
+// next one), a tap on the chest while CPR waits for a compression.
 //
 // Voice: the guide's lines by device TTS; the coworker in his recorded voice.
 // Art: the field is drawn in code (golden_field.dart); mistake pictures in
@@ -142,14 +151,14 @@ abstract final class GoldenLines {
   static const responseRight = [
     'সাড়া দিলে বুঝি হৃৎপিণ্ড আর শ্বাস চলছে',
     'সাড়া দেখেই পরের পদক্ষেপ ঠিক হয়',
-    'সাড়া না দিলে বুঝি অবস্থা খুবই গুরুতর',
+    'সাড়া না পেলে অবস্থা খুবই গুরুতর',
   ];
   static const responseWrong = [
     'ঝাঁকালে শরীরের বিদ্যুৎ বেরিয়ে যায়',
     'জোরে ঝাঁকালেই সঙ্গে সঙ্গে জ্ঞান ফেরে',
-    'ডাকলে ভিড়ের লোকজন দূরে সরে যায়',
+    'সাড়া না দিলেও ভয়ের তেমন কিছু নেই',
     'ঝাঁকুনিতেই CPR-এর কাজটা হয়ে যায়',
-    'কথা বললে আর হাসপাতালে নিতে হয় না',
+    'সাড়া দিলে আর হাসপাতালে নিতে হয় না',
     'সাড়া দেখা শুধু নিয়ম, এর কাজ নেই',
   ];
   static const breathingRight = [
@@ -171,12 +180,14 @@ abstract final class GoldenLines {
     'কল আর চাপ একসাথে চললে সময় বাঁচে',
   ];
   static const callWrong = [
-    'ফোনে কথা বলা তো আমার কাজ নয়',
-    'অ্যাম্বুলেন্স তো এমনিতেই চলে আসবে',
-    'ভিড়ের লোকদের ব্যস্ত রাখতে হয়',
-    'ফোনে টাকা নেই, তাই ওকে বললাম',
-    'দরকার হলে পরে হাসপাতালে নেব',
+    'কল করা আমার কাজ নয়, ও-ই করুক',
+    'আমি না ডাকলেও অ্যাম্বুলেন্স আসবে',
+    'ভিড় সামলাক, আমি একটু জিরিয়ে নিই',
+    'আমার ফোনে টাকা নেই, তাই ও কল করুক',
+    'ওকে কাজটা দিই, নিজে ঝামেলায় যাব না',
     'CPR শেষে কল করলেও ক্ষতি নেই',
+    'কল হলে আর বুকে চাপ দিতে হয় না',
+    'আগে ভিড় সরাই, পরে বুকে চাপ দিই',
   ];
   static const cprRight = [
     'বুকে চাপে মস্তিষ্কে অক্সিজেন পৌঁছায়',
@@ -185,10 +196,11 @@ abstract final class GoldenLines {
   ];
   static const cprWrong = [
     'বুকে চাপে শরীরের বিদ্যুৎ বেরিয়ে যায়',
-    'জোরে চাপলেই সঙ্গে সঙ্গে জ্ঞান ফেরে',
+    'বুকে জোরে চাপলেই সাথে সাথে জ্ঞান ফেরে',
     'যত দ্রুত পারি চাপি, গোনার দরকার নেই',
     'মিনিটে 60 বার আস্তে চাপ দিলেই যথেষ্ট',
     'ভিড়কে দেখাতে হয় যে কিছু একটা করছি',
+    'চাপে নয়, বাতাসেই মস্তিষ্কে অক্সিজেন যায়',
   ];
   static const keepRightAmbulance = [
     'থামলে মস্তিষ্কে অক্সিজেন যাওয়া বন্ধ হয়',
@@ -202,10 +214,12 @@ abstract final class GoldenLines {
   ];
   static const keepWrong = [
     'দু-এক মিনিট CPR দিলেই কাজ হয়ে যায়',
-    'হাত ব্যথা করলে থেমে যাওয়াই ঠিক',
+    'হাত ব্যথা করলে একটু থেমে যেতে হয়',
     'জ্ঞান না ফিরলে আর চেষ্টা করে লাভ নেই',
-    'ভিড়ের সামনে থামলে খারাপ দেখায়',
+    'ভিড়ের সামনে থামলে খুব লজ্জা হয়',
     'অ্যাম্বুলেন্সের লোকেরা রাগ করবে, তাই',
+    'থামলে মস্তিষ্ক একটু বিশ্রাম পায়',
+    'মস্তিষ্কের ক্ষতি তো আগেই হয়ে গেছে',
   ];
 
   /// The right reasons for [s] as the player did it.
@@ -237,39 +251,44 @@ abstract final class GoldenLines {
   static const coworkerMud = CoworkerScript(
     line: 'ওকে মাটিতে পুঁতে দাও, কাদা মাখাও — ভেতরের বিদ্যুৎ বেরিয়ে যাবে!',
     exitLine: coworkerExit,
-    right: ['না, গুজব — অ্যাম্বুলেন্সই একমাত্র পথ', 'না, কাদায় সময় নষ্ট, ক্ষতে সংক্রমণ', 'না, পুঁতব না — ডাক্তার আর অ্যাম্বুলেন্স'],
+    right: ['না, গুজব — অ্যাম্বুলেন্সই একমাত্র পথ', 'কাদায় সময় নষ্ট, ক্ষতে সংক্রমণ বাড়ে', 'মাটি নয় — ডাক্তার আর অ্যাম্বুলেন্স চাই'],
     wrong: [
       'ঠিক, কাদা মাখালে বিদ্যুৎ বেরিয়ে যাবে',
       'আচ্ছা, একটু মাটিতে পুঁতে দেখি কী হয়',
       'সবাই যখন বলছে, তাহলে পুঁতেই দিই',
       'গ্রামে তো এভাবেই সারায়, ঠিক আছে',
       'আগে কাদা মাখাই, তারপর অ্যাম্বুলেন্স',
+      'অ্যাম্বুলেন্স না আসা পর্যন্ত কাদা দিই',
     ],
     asks: coworkerAsks,
   );
   static const coworkerIce = CoworkerScript(
     line: 'হাতের পোড়া জায়গায় বরফ ঘষো, মলম লাগাও — জ্বালা কমবে!',
     exitLine: coworkerExit,
-    right: ['না, পোড়ায় হাত নয় — ডাক্তার দেখবেন', 'না, বরফ, জল বা মলম কিছুই লাগাব না', 'না, পোড়া জায়গা ছোঁব না, ডাক্তারে নেব'],
+    right: ['না, পোড়ায় হাত নয় — ডাক্তার দেখবেন', 'বরফ, জল বা মলম — কিছুই লাগানো নয়', 'পোড়া জায়গা ছোঁব না, হাসপাতালে নেব'],
     wrong: [
       'ঠিক, বরফ ঘষলে জ্বালাটা কমে যাবে',
       'আচ্ছা, একটু মলম লাগিয়ে দিই তাহলে',
-      'জল ঢাললেই পোড়াটা ঠান্ডা হয়ে যাবে',
+      'জল ঢাললে ক্ষতি নয়, জ্বালা কমে যাবে',
       'সবাই তো পোড়ায় বরফ দেয়, আমিও দিই',
       'আগে মলম লাগাই, তারপর অ্যাম্বুলেন্স',
+      'ডাক্তার না আসা পর্যন্ত বরফটা ঘষি',
+      'বরফ ঘষা ক্ষতি নয়, না ঘষলে জ্বালা বাড়বে',
     ],
     asks: coworkerAsks,
   );
   static const coworkerHome = CoworkerScript(
     line: 'ওই তো কথা বলছে! হাসপাতাল লাগবে না, বাড়ি পাঠিয়ে দাও।',
     exitLine: coworkerExit,
-    right: ['না, কথা বললেও হাসপাতালে নিতেই হবে', 'না, ভেতরের ক্ষতি বাইরে দেখা যায় না', 'না, একা ছাড়ব না — হাসপাতালে নেব'],
+    right: ['কথা বললেও হাসপাতালে নিতেই হবে', 'ভেতরের ক্ষতি বাইরে দেখা যায় না', 'একা ছাড়ব না — অ্যাম্বুলেন্সে তুলব'],
     wrong: [
       'ঠিক, কথা বলছে মানে সব ঠিক আছে',
       'আচ্ছা, একটু জল খাইয়ে বাড়ি পাঠাই',
       'তাহলে অ্যাম্বুলেন্সটা ফিরিয়ে দিই',
       'একটু বিশ্রাম নিলেই সেরে যাবে',
       'কাল সকালে ডাক্তার দেখালেই হবে',
+      'অ্যাম্বুলেন্স লাগবে না, বাড়ি পাঠাই',
+      'হাসপাতাল লাগবে না, ভালোই তো আছে',
     ],
     asks: coworkerAsks,
   );
@@ -407,6 +426,9 @@ class GoldenRun {
   final List<String> caught = [];
 
   GoldenStep? get pending => next < GoldenStep.values.length ? GoldenStep.values[next] : null;
+
+  /// [a] would do the next step now (the move the coworker is held for).
+  bool advances(GoldenAct a) => !done && !inCpr && a != GoldenAct.phone && _stepOf(a) == next;
   bool get done => next >= GoldenStep.values.length;
 
   /// CPR has started and help has not come yet.
@@ -592,6 +614,10 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+  final _hints = IdleHintController();
+
+  /// The scene's geometry as last laid out (the gesture hint anchors on it).
+  GoldenGeo? _geo;
 
   /// Looking and listening by his face: 0 → 1 while the finger stays.
   late final AnimationController _hold = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))
@@ -643,7 +669,6 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
   var _noResponse = false;
   var _noBreath = false;
   var _holding = false;
-  int _hint = 0;
 
   // The beat.
   var _cpr = false;
@@ -654,7 +679,6 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
   bool? _rhythmGood;
   var _wrapping = false;
   GoldenStep? _paying;
-  var _coworkerArmed = false;
 
   String get _rungId => widget.ctx.rungId;
   bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
@@ -705,8 +729,8 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
 
   String get _ask => _run.inCpr ? GoldenLines.askCpr : (_run.next == 0 ? GoldenLines.askFirst : GoldenLines.askNext);
 
-  /// After the guide's intro: the clock runs (no glow: hints come only
-  /// after a mistake, or when the player taps the open field).
+  /// After the guide's intro: the clock runs (no glow on any place to touch;
+  /// the gesture hint shows how to touch after idle or missed taps).
   Future<void> _start() async {
     _clock.start();
     unawaited(_sayChain([GoldenLines.askFirst]));
@@ -717,17 +741,13 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
       !_busy &&
       !_ended &&
       _card == null &&
-      !reasonOpen &&
+      !tableBusy &&
       tablePending == 0 &&
       !coworkerOpen &&
-      !_coworkerDue &&
+      !_holding &&
       !_wrapping &&
       !_run.done &&
       !_run.inCpr;
-
-  /// His before-CPR myth is due and only the chest tap is left: the play
-  /// waits the moment till he walks in, so he never ends up after the beat.
-  bool get _coworkerDue => _coworkerArmed && !coworkerDone && !coworkerOpen && _run.pending == GoldenStep.cpr;
 
   // --- the hands ----------------------------------------------------------------
   void _touch(GoldenAct a, Offset origin, {int? who}) {
@@ -736,6 +756,9 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
       return;
     }
     if (!_canPlay) return;
+    // Once he is scheduled, the move that would do the next step waits for
+    // him: he comes now (a fast play cannot skip him).
+    if (_run.advances(a) && holdForCoworker()) return;
     if (a == GoldenAct.face && _run.pending == GoldenStep.breathing) {
       _startHold();
       return;
@@ -998,7 +1021,9 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
   Future<void> _wrapUp() async {
     if (_ended) return;
     _wrapping = true;
-    if (!coworkerDone) {
+    // Only the "talking" myth is left for the wrap-up (a before-CPR myth
+    // no longer fits once help is here).
+    if (!coworkerDone && _deal.mythAt == null) {
       setState(() {});
       scheduleCoworker();
       return; // onCoworkerAnswer comes back here.
@@ -1051,10 +1076,9 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
 
   /// Before CPR he comes once his step is next.
   void _armCoworker() {
-    if (_coworkerArmed || coworkerDone) return;
+    if (coworkerDue || coworkerDone) return;
     final at = _deal.mythAt;
     if (at == null || _run.next < at.index) return;
-    _coworkerArmed = true;
     scheduleCoworker();
   }
 
@@ -1068,10 +1092,15 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
   @override
   bool? coworkerCanCome() {
     if (_ended) return null;
-    if (_intro || _busy || _holding || _card != null || reasonOpen || tablePending > 0) return false;
-    // Never once CPR has started; after the beat only at the wrap-up. While
-    // the chest tap is still to do he may come (play waits for him then).
-    if ((_cpr || _beatOver) && !_wrapping) return false;
+    if (_deal.mythAt != null) {
+      // Mud / ice: before CPR only (the chest tap waits for him); once CPR
+      // has begun his push no longer fits the moment.
+      if (_cpr || _beatOver || _run.inCpr || _run.done) return null;
+    } else if (!_awake || !_wrapping) {
+      // "He is talking": only once he has come round, at the wrap-up.
+      return false;
+    }
+    if (_intro || _busy || _holding || _card != null || tableBusy || tablePending > 0) return false;
     return true;
   }
 
@@ -1117,11 +1146,36 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
     unawaited(_sayChain([line]));
   }
 
-  /// A tap on the field away from him, the crowd and the phone: every place
-  /// to touch glows once (all alike — never the next step).
+  /// A tap on the field away from him, the crowd and the phone: a miss for
+  /// the gesture hint (three quick misses show how to touch).
   void _tapField() {
-    if (!_canPlay) return;
-    setState(() => _hint++);
+    if (_canPlay || (_cpr && _card == null && !_ended)) _hints.missTap();
+  }
+
+  // --- the gesture hint (how to touch, never what) -----------------------------
+  /// Every place to touch on the scene, in design pixels.
+  List<Rect> _zoneRects(GoldenGeo geo) {
+    final feet = geo.crowdFeet;
+    return [
+      Rect.fromCircle(center: geo.face, radius: 24),
+      Rect.fromCircle(center: geo.shoulder, radius: 24),
+      Rect.fromCircle(center: geo.chest, radius: 26),
+      for (var i = 0; i < 3; i++) Rect.fromLTRB(feet[i].dx - 23, feet[i].dy - 100, feet[i].dx + 23, feet[i].dy + 6),
+      if (_run.next <= GoldenStep.call.index) Rect.fromCircle(center: geo.phone(_deal.phoneLeft), radius: 24),
+    ];
+  }
+
+  /// CPR waits for a compression (the chest is the one way forward).
+  bool get _cprWaits => _cpr && _card == null && !_ended;
+
+  bool get _hintWaiting => _cprWaits || (_canPlay && !coworkerOnScreen);
+
+  /// A step waits: a sweep over every place to touch alike; CPR: tap the chest.
+  HintSpec? _hintSpec() {
+    final geo = _geo;
+    if (geo == null) return null;
+    if (_cprWaits) return HintSpec.tap(geo.chest, space: HintSpace.scene);
+    return HintSpec.sweep(_zoneRects(geo), space: HintSpace.scene);
   }
 
   // --- mistakes ---------------------------------------------------------------
@@ -1238,11 +1292,12 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
       );
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = GoldenGeo.forScene(m.height, m.inset);
+    final geo = _geo = GoldenGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final feet = geo.crowdFeet;
     final showZones = !_intro && _mark == null && !struckOut;
     final phoneOnGrass = _run.next <= GoldenStep.call.index;
+    final rects = _zoneRects(geo);
     return [
       Positioned.fill(
         key: const ValueKey('field'),
@@ -1288,19 +1343,19 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
           ),
         ),
       ),
-      // A tap on the open field: the places to touch glow once.
+      // A tap on the open field: a miss for the gesture hint (counted on the
+      // finger's lift: the hint's own touch-down hides and re-arms first).
       if (showZones)
         Positioned.fill(
           key: const ValueKey('field-touch'),
-          child: Listener(behavior: HitTestBehavior.translucent, onPointerDown: (_) => _tapField()),
+          child: Listener(behavior: HitTestBehavior.translucent, onPointerUp: (_) => _tapField()),
         ),
       if (showZones) ...[
-        _zone('face', GoldenLines.zoneFace, Rect.fromCircle(center: geo.face, radius: 24), GoldenAct.face, hold: true),
-        _zone('shoulder', GoldenLines.zoneShoulder, Rect.fromCircle(center: geo.shoulder, radius: 24), GoldenAct.shoulder),
-        _zone('chest', GoldenLines.zoneChest, Rect.fromCircle(center: geo.chest, radius: 26), GoldenAct.chest),
-        for (var i = 0; i < 3; i++)
-          _zone('crowd-$i', GoldenLines.zoneCrowd, Rect.fromLTRB(feet[i].dx - 23, feet[i].dy - 100, feet[i].dx + 23, feet[i].dy + 6), GoldenAct.crowd, who: i),
-        if (phoneOnGrass) _zone('phone', GoldenLines.zonePhone, Rect.fromCircle(center: geo.phone(_deal.phoneLeft), radius: 24), GoldenAct.phone),
+        _zone('face', GoldenLines.zoneFace, rects[0], GoldenAct.face, hold: true),
+        _zone('shoulder', GoldenLines.zoneShoulder, rects[1], GoldenAct.shoulder),
+        _zone('chest', GoldenLines.zoneChest, rects[2], GoldenAct.chest),
+        for (var i = 0; i < 3; i++) _zone('crowd-$i', GoldenLines.zoneCrowd, rects[3 + i], GoldenAct.crowd, who: i),
+        if (phoneOnGrass) _zone('phone', GoldenLines.zonePhone, rects[6], GoldenAct.phone),
       ],
       // Looking and listening: a ring fills round his face.
       if (_holding)
@@ -1323,28 +1378,6 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
                 duration: const Duration(milliseconds: 420),
                 builder: (_, t, _) => CustomPaint(painter: _PulsePainter(t)),
               ),
-            ),
-          ),
-        ),
-      // Every place to touch glows once (all alike).
-      if (_hint > 0 && showZones)
-        Positioned.fill(
-          key: ValueKey('hint-$_hint'),
-          child: IgnorePointer(
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: quiet ? 1.0 : 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 1300),
-              builder: (_, t, _) => t >= 1
-                  ? const SizedBox.shrink()
-                  : CustomPaint(
-                      painter: _HintPainter(t: t, spots: [
-                        geo.face,
-                        geo.shoulder,
-                        geo.chest,
-                        for (final f in feet) f - const Offset(0, 50),
-                        if (phoneOnGrass) geo.phone(_deal.phoneLeft),
-                      ]),
-                    ),
             ),
           ),
         ),
@@ -1405,6 +1438,10 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hintSpec,
+            hintWaiting: _hintWaiting,
+            hintKey: 'golden-${_run.next}-$_cpr',
+            hintController: _hints,
             overlays: [
               if (meterUp)
                 Positioned(
@@ -1726,25 +1763,4 @@ class _PulsePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_PulsePainter old) => old.t != t;
-}
-
-/// The places to touch, all alike, glowing once.
-class _HintPainter extends CustomPainter {
-  const _HintPainter({required this.t, required this.spots});
-  final double t;
-  final List<Offset> spots;
-
-  @override
-  void paint(Canvas c, Size s) {
-    final a = math.sin(t * math.pi);
-    for (final p in spots) {
-      c.drawCircle(p, 14 + 10 * t, Paint()
-        ..color = Color.fromRGBO(255, 236, 160, 0.8 * a)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.4);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_HintPainter old) => old.t != t;
 }

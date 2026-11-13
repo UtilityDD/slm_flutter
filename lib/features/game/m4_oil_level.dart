@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -75,7 +76,15 @@ export 'm4_oil_level_world.dart'
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m4_oil_level_world.dart), corner guide, ◆ on the table → "কেন …?" →
 // the next transformer by itself. Voice: the guide by device TTS; the
-// coworker's push by device TTS until recorded (his exit line is recorded).
+// coworker's push is silent with its caption held until recorded (his exit
+// line is recorded).
+//
+// Fair play: the step buttons are dealt in a shuffled order (never the right
+// one); a looked-at part gets the same soft ring and the same tick whether it
+// leaks or not (the oil streak is the evidence); the praise window takes no
+// input ([ReasonTable.tableBusy]); a step tapped before the coworker came
+// waits for him ([CoworkerMoment.holdForCoworker]); idle hands get a gesture
+// hint (a sweep over the choices, a hold on the pour).
 
 // ============================================================================
 // Content
@@ -153,13 +162,23 @@ abstract final class M4OilLevelLines {
   static const fineWinter = ['শীতে তেল সংকুচিত, লেভেল তবু MIN-এর ওপরে', 'ঠান্ডায় লেভেল নামে, MIN পেরোয়নি, লিক নেই'];
   static const fineSummer = ['গরমে তেল প্রসারিত, লেভেল তবু MAX-এর নিচে', 'গরমে লেভেল একটু ওঠে, MAX ছাড়ায়নি, লিক নেই'];
   static const fineMild = ['লেভেল 30°C দাগের কাছেই, কোথাও লিক নেই', 'গেজে তেল দাগ বরাবর, বডিতে কোনো লিক নেই'];
+  // The wrong ones use the right ones' words too (লেভেল, লিক, গেজ, MIN,
+  // MAX, দাগ, শীতে, গরমে, তেল, 30°C, ফিল্টার, ওয়াইন্ডিং ...), so no word
+  // gives the right card away.
   static const fineWrong = [
-    'ট্রান্সফরমার তো চলছে, তাই সব ঠিকই আছে',
+    'ট্রান্সফরমার তো চলছে, তাই লেভেলও ঠিক আছে',
     'হামিং শুনেই বুঝেছি, গেজ দেখার দরকার নেই',
-    'রিপোর্ট লিখতে ঝামেলা, তাই সব ঠিক লিখলাম',
-    'গতবার ঠিক ছিল, তাই এবারও ঠিকই থাকবে',
-    'তেল কমলেও ট্রান্সফরমার নিজেই সামলে নেয়',
-    'সুপারভাইজার বকবেন, তাই রিপোর্ট দিইনি',
+    'রিপোর্ট লিখতে ঝামেলা, তাই লিক নেই লিখলাম',
+    'গতবার লেভেল ঠিক ছিল, এবারও ঠিকই থাকবে',
+    'লেভেল কমলেও ট্রান্সফরমার নিজেই সামলে নেয়',
+    'সুপারভাইজার বকবেন, তাই লিকের কথা লিখিনি',
+    'MIN-এর নিচে নামলেও চলে, তাই ঠিক লিখে দিলাম',
+    'MAX ছাড়িয়ে গেলেও ক্ষতি নেই, তাই ঠিক আছে',
+    'দাগ মেলানোর দরকার নেই, রং দেখেই বুঝেছি',
+    'শীতে-গরমে লেভেল একই থাকে, তাই দেখিনি',
+    '30°C দাগ দেখার দরকার নেই, তেল তো আছেই',
+    'ঠান্ডায় তেল সংকুচিত, তাই কম থাকলেও চলে',
+    'গরমে তেল প্রসারিত, তাই গেজ দেখা লাগে না',
   ];
   static const leakRight = [
     'লেভেল ঠিক হলেও লিক দেখলেই রিপোর্ট চাই',
@@ -173,6 +192,8 @@ abstract final class M4OilLevelLines {
     'লিক মানেই ট্রান্সফরমার এখনই ফেটে যাবে',
     'অল্প লিক, নিজেই চালু অবস্থায় তেল দেব',
     'লাইনের লোকেরা বলেছে, তাই রিপোর্ট দিলাম',
+    'তেল MIN ছুঁলেই ট্যাংক ফাটবে, তাই রিপোর্ট',
+    'লেভেল ঠিক আছে, তবু অভ্যাসে রিপোর্ট দিলাম',
   ];
   static const topupRight = [
     'বন্ধ, ডেড প্রমাণ, আর্থ — তারপর তেল ঢেলেছি',
@@ -186,6 +207,12 @@ abstract final class M4OilLevelLines {
     'বৃষ্টির জল একটু মিশলে তেলের ক্ষতি নেই',
     'সুপারভাইজার দেখছিলেন, তাই নিয়ম মানলাম',
     'ওপরে উঠে কাজ করতে ভালো লাগে, তাই উঠলাম',
+    'MIN-এর নিচে নামলেও ক্ষতি নেই, তবু ঢাললাম',
+    'বন্ধ করলেই হলো, ডেড প্রমাণ-আর্থ লাগে না',
+    'গ্রেড যা-ই হোক, নতুন তেল হলেই টপ-আপ চলে',
+    'ফিল্টার করা তেল দামি, খোলা ড্রামেরটাই চলে',
+    'ওয়াইন্ডিং ডুবে না থাকলেও চলে, তবু ঢাললাম',
+    'অন্য গ্রেডের তেল মেশালেও কোনো ক্ষতি নেই',
   ];
 
   static List<String> whyRight(M4OilLevelCase c) => switch (c.kind) {
@@ -683,8 +710,19 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
   int _wake = 0;
   String? _stamp;
   var _topupStarted = false;
-  var _held = false;
   var _pouring = false;
+
+  /// The step buttons, left to right: dealt fresh on the top-up, never in the
+  /// right order (the row must not give the order away).
+  List<M4OilLevelStep> _stepOrder = M4OilLevelStep.values;
+
+  // Gesture hints: the scene's touch layer (design → screen), the buttons.
+  final _hints = IdleHintController();
+  final _touchKey = GlobalKey();
+  final _okKey = GlobalKey();
+  final _reportKey = GlobalKey();
+  final _pourKey = GlobalKey();
+  final Map<M4OilLevelStep, GlobalKey> _stepKeys = {for (final s in M4OilLevelStep.values) s: GlobalKey()};
 
   var _freeze = false;
   Completer<void>? _frozen;
@@ -737,7 +775,7 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown;
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown;
   bool get _topup => _run.phase == M4OilLevelPhase.topup;
 
   void _startRound() {
@@ -755,7 +793,12 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
 
   void _startTopup() {
     if (_topupStarted || _ended) return;
+    final order = [...M4OilLevelStep.values];
+    do {
+      order.shuffle(widget.rng);
+    } while (_inRightOrder(order));
     setState(() {
+      _stepOrder = order;
       _topupStarted = true;
       _stamp = M4OilLevelLines.stampReport;
       _wake++;
@@ -769,15 +812,10 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
     }));
   }
 
-  /// On the top-up, the first move before he came holds: he cuts in now.
-  bool _holdForCoworker() {
-    if (!_topup || coworkerDone || coworkerOpen) return false;
-    _hush();
-    HapticFeedback.selectionClick();
-    setState(() {
-      _held = true;
-      _busy = true;
-    });
+  static bool _inRightOrder(List<M4OilLevelStep> order) {
+    for (var i = 0; i < order.length; i++) {
+      if (order[i] != M4OilLevelStep.values[i]) return false;
+    }
     return true;
   }
 
@@ -792,6 +830,7 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
           return;
         }
       }
+      _hints.missTap();
       return;
     }
     if (geo.gaugeHit.contains(p)) {
@@ -812,17 +851,20 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
         best = s;
       }
     }
-    if (best == null) return;
-    final hit = _run.look(best);
-    if (hit == null) return;
+    if (best == null) {
+      _hints.missTap();
+      return;
+    }
+    // The same tick for a leaking part and a sound one: the oil streak is
+    // the evidence, not the sound.
+    if (_run.look(best) == null) return;
     HapticFeedback.selectionClick();
-    _cue(hit ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/tick.ogg', volume: hit ? 0.45 : 0.4);
+    _cue('sounds/intro/tick.ogg', volume: 0.4);
     setState(() => _wake++);
   }
 
   void _pick(M4OilLevelDrum d, Offset at) {
     if (_run.oil != null || _run.rejected.contains(d)) return;
-    if (_holdForCoworker()) return;
     final m = _run.pick(d);
     if (m == null) {
       HapticFeedback.selectionClick();
@@ -836,7 +878,9 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
 
   Future<void> _step(M4OilLevelStep s, Offset origin, {bool force = false}) async {
     if (!force && (!_canPlay || !_topup || _run.stepDone(s))) return;
-    if (!force && _holdForCoworker()) return;
+    // Any step before he came (the shutdown ends his moment; a climb or an
+    // earth on the live line would skip him): he cuts in now.
+    if (!force && holdForCoworker()) return;
     final m = _run.step(s);
     if (m == null) {
       HapticFeedback.selectionClick();
@@ -963,9 +1007,9 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("live, no shutdown") makes sense only before the shutdown.
     if (_ended || !_topup || _run.isolated || _run.shown) return null;
-    if (_held) return true;
-    if (_intro || _busy || _card != null || reasonOpen) return false;
+    if (tableBusy || _intro || _busy || _card != null) return false;
     return true;
   }
 
@@ -976,10 +1020,10 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
-    _held = false;
-    _busy = false;
     if (!held) {
-      // Listened to him: up the live transformer with a can of oil.
+      // Listened to him: up the live transformer with a can of oil. Deadly,
+      // not the playbook's slip: climbing the live transformer is this
+      // level's own deadly move (MODULE4_LADDER step 14) — owner to confirm.
       await _step(M4OilLevelStep.climb, origin, force: true);
       return;
     }
@@ -1079,6 +1123,7 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
         _hush();
         widget.onRetry(_muted);
       case MistakeTone.deadly:
+        if (_popped) return;
         _popped = true;
         unawaited(dieAndLeave());
     }
@@ -1177,7 +1222,6 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
                       weather: c.weather,
                       leak: c.leak,
                       looked: {..._run.looked},
-                      found: _run.leakFound,
                       gaugeLit: _run.gaugeRead && !_topup,
                       doOpen: _run.isolated,
                       earthed: _run.earthed,
@@ -1210,7 +1254,7 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: M4OilLevelLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo)),
+          child: GestureDetector(key: _touchKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo)),
         ),
       ),
       if (_freeze && _zapAt != null)
@@ -1238,6 +1282,42 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
     ];
   }
 
+  // --- gesture hints -----------------------------------------------------------
+  /// A scene rect (design px) on the screen, through the touch layer.
+  Rect? _sceneRect(Rect r) {
+    final box = _touchKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight));
+  }
+
+  /// How to interact now, never what is right: the inspection sweeps over the
+  /// gauge, the tank's parts and both verdicts; the top-up over the steps
+  /// left and the drums; the pour (the one way on) is a hold.
+  HintSpec? _hint() {
+    final geo = _geo;
+    if (geo == null) return null;
+    final List<Rect> options;
+    if (!_topup) {
+      options = [
+        ?_sceneRect(geo.gaugeHit),
+        for (final s in M4OilLevelSpot.values) ?_sceneRect(geo.spotHit(s)),
+        ?HintSpec.globalRectOf(_okKey),
+        ?HintSpec.globalRectOf(_reportKey),
+      ];
+    } else if (_run.canPour) {
+      return HintSpec.holdOn(_pourKey);
+    } else {
+      options = [
+        for (final s in _stepOrder)
+          if (!_run.stepDone(s)) ?HintSpec.globalRectOf(_stepKeys[s]!),
+        if (_run.oil == null)
+          for (var i = 0; i < _run.deal.drums.length; i++)
+            if (!_run.rejected.contains(_run.deal.drums[i])) ?_sceneRect(geo.drum(i)),
+      ];
+    }
+    return options.isEmpty ? null : HintSpec.sweep(options);
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1245,7 +1325,7 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null;
+    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !tableBusy;
     final topup = _topup && _topupStarted;
     final c = _run.current;
     final cardBottom = pad.bottom + (topup ? 96 : 76);
@@ -1276,6 +1356,10 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && !_pouring && (!_topup || topup),
+            hintKey: '${_run.index}-${_run.phase.name}-${_run.canPour}-${_run.oil != null}',
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1307,9 +1391,9 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(child: DoBigButton(label: M4OilLevelLines.ok, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
+                      Expanded(child: DoBigButton(key: _okKey, label: M4OilLevelLines.ok, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: M4OilLevelLines.report, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
+                      Expanded(child: DoBigButton(key: _reportKey, label: M4OilLevelLines.report, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
                     ],
                   ),
                 ),
@@ -1322,9 +1406,10 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      for (final s in M4OilLevelStep.values)
+                      for (final s in _stepOrder)
                         _ToolButton(
                           key: ValueKey('step-${s.name}'),
+                          hintKey: _stepKeys[s]!,
                           icon: switch (s) {
                             M4OilLevelStep.shutdown => Icons.power_settings_new_rounded,
                             M4OilLevelStep.test => Icons.bolt_rounded,
@@ -1345,7 +1430,7 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
                   left: 12,
                   right: 12,
                   bottom: pad.bottom + 12,
-                  child: _HoldButton(label: M4OilLevelLines.pour, progress: _pour, onDown: _pourDown, onUp: _pourUp),
+                  child: KeyedSubtree(key: _pourKey, child: _HoldButton(label: M4OilLevelLines.pour, progress: _pour, onDown: _pourDown, onUp: _pourUp)),
                 ),
               if (deckUp)
                 Positioned(
@@ -1539,7 +1624,10 @@ class _TesterChip extends StatelessWidget {
 
 /// A hands-on step: a round icon with its name under it; a tick once done.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({super.key, required this.icon, required this.label, required this.enabled, required this.done, required this.onTapUp});
+  const _ToolButton({super.key, required this.hintKey, required this.icon, required this.label, required this.enabled, required this.done, required this.onTapUp});
+
+  /// Where the gesture hint finds the button's round.
+  final GlobalKey hintKey;
   final IconData icon;
   final String label;
   final bool enabled;
@@ -1557,6 +1645,7 @@ class _ToolButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTapUp: enabled ? onTapUp : null,
         child: SizedBox(
+          key: hintKey,
           width: 80,
           child: Column(
             mainAxisSize: MainAxisSize.min,

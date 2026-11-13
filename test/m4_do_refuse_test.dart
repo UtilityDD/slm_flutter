@@ -4,7 +4,9 @@
 // aside, one push; a normal spark is left alone, a re-blow means stop), the
 // deal, the option libraries, and the level in the shell: idle perf, the guide
 // first, full clean plays with the coworker refused (at the tray / at the
-// re-blow), slip cards, three strikes, the deadly freezes.
+// re-blow), he comes even on a fast play (the tray waits for him), a sound
+// fuse called dropped costs a slip, slip cards, three strikes, the deadly
+// freezes, the gesture hint (a sweep, never one fuse).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,6 +20,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
@@ -32,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(rungId: '4.4/do/2', kind: CatalogRungKind.doKind, lessonId: '4.4', lessonTitleBn: '', ladderStep: 0, doIndex: 2, doCount: 2);
 
@@ -58,17 +62,21 @@ List<Finder> _onScreen(List<String> texts) => [
 ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 Future<void> _pickWrong(WidgetTester t, List<String> wrong) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final w = _onScreen(wrong);
   expect(w, isNotEmpty);
   await t.tap(w.first, warnIfMissed: false);
+  await confirmChoice(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -229,7 +237,7 @@ void main() {
     );
 
     M4DoRefuseRun toLink(M4DoRefuseRun r) {
-      expect(r.spot(1), isTrue);
+      expect(r.spot(1).$1, isTrue);
       r.decide(right: true);
       r
         ..openOther(0)
@@ -239,14 +247,16 @@ void main() {
       return r;
     }
 
-    test('ক: only the dropped fuse is spotted; refit at once is a slip; the others open; the barrel comes down', () {
+    test('ক: a sound fuse called dropped is a slip; refit at once is a slip; the others open; the barrel comes down', () {
       final r = M4DoRefuseRun(deal());
-      expect(r.spot(0), isFalse);
+      expect(r.spot(0), (false, M4DoRefuseMistakes.wrongFuse));
+      expect(r.slips, 1, reason: 'a wrong flag costs a slip');
       expect(r.phase, M4DoRefusePhase.spot);
-      expect(r.spot(1), isTrue);
+      expect(r.spot(1), (true, null));
+      expect(r.spot(0), (false, null), reason: 'spotted: further taps do nothing');
       expect(r.barrels, [M4DoRefuseBarrel.closed, M4DoRefuseBarrel.open, M4DoRefuseBarrel.closed]);
       expect(r.decide(right: false), M4DoRefuseMistakes.refitAtOnce);
-      expect(r.slips, 1);
+      expect(r.slips, 2);
       expect(r.phase, M4DoRefusePhase.openOthers, reason: 'the guide put it right');
       expect(r.openOther(1), isFalse, reason: 'the blown one is already open');
       expect(r.lower(1), isFalse, reason: 'the others first');
@@ -434,6 +444,9 @@ void main() {
         expectLibrary('choice', s.right, s.wrong);
       }
       expect(M4DoRefuseLines.recordLines, hasLength(2));
+      // The free "too far" reply stays neutral: it never names the right spot.
+      expect(M4DoRefuseLines.tooFar, isNot(contains('পাশে')));
+      expect(M4DoRefuseLines.tooFar, isNot(contains('কাছে')));
     });
   });
 
@@ -488,7 +501,7 @@ void main() {
         }
         debugPrint('PERF m4_do_refuse ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -577,6 +590,98 @@ void main() {
       await t.tap(find.text(MistakeLines.gotIt));
       await _pump(t, 800);
       expect(c.read(guideDirectorProvider).line, M4DoRefuseLines.askOpenOthers);
+      await _close(t, c);
+    });
+
+    testWidgets('a sound fuse called dropped: the slip card, booked; the spot stays', (t) async {
+      final seed = seedWhere((d) => d.call == M4DoRefuseCall.reblow);
+      final d = m4DoRefuseDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await _tapUnit(t, (d.phase + 1) % 3);
+      await _pump(t, 800);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M4DoRefuseMistakes.wrongFuse.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 800);
+      expect(c.read(guideDirectorProvider).line, M4DoRefuseLines.askSpot);
+      await _tapUnit(t, d.phase);
+      await _pump(t, 600);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the decide deck');
+      await _close(t, c);
+    });
+
+    testWidgets('three wrong flags: the StruckOutCard', (t) async {
+      final seed = seedWhere((d) => d.call == M4DoRefuseCall.reblow);
+      final d = m4DoRefuseDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        await _tapUnit(t, (d.phase + 1 + i % 2) % 3);
+        await _pump(t, 800);
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget);
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 800);
+        }
+      }
+      await _pump(t, 600);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(c.read(gameSaveProvider).rungProgress['4.4/do/2'], isNot('cleared'));
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast play: a quick tray tap waits for him', (t) async {
+      final seed = seedWhere((d) => d.call == M4DoRefuseCall.link);
+      final d = m4DoRefuseDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await _tapUnit(t, d.phase);
+      await _pump(t, 600);
+      await _pickRight(t, M4DoRefuseLines.decideRight);
+      await _pump(t, 1200);
+      for (var i = 0; i < 3; i++) {
+        if (i == d.phase) continue;
+        await _tapUnit(t, i);
+        await _pump(t, 500);
+      }
+      await _pump(t, 400);
+      await _tapUnit(t, d.phase);
+      // Extra taps once the round is done change nothing.
+      for (var i = 0; i < 3; i++) {
+        await _tapUnit(t, i);
+        await t.pump(const Duration(milliseconds: 60));
+      }
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pickRight(t, M4DoRefuseLines.whyRight(0, d));
+      // Round খ: the docket's link tapped the moment the tray is up.
+      for (var ms = 0; ms < 3000 && _label(d.rating).evaluate().isEmpty; ms += 50) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet: he is due 1.2 s on');
+      await t.tap(_label(d.rating), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the pick waits for him: he cuts in now');
+      expect(_label(M4DoRefuseLines.cloth), findsNothing, reason: 'no link taken yet');
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 600);
+      await _pickRight(t, M4DoRefuseLines.coworkerLink.right);
+      await _pump(t, 2000);
+      await t.tap(_label(d.rating), warnIfMissed: false);
+      await _pump(t, 500);
+      await _steps(t);
+      await _pump(t, 400);
+      await _reason(t, 1, d);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: after idle, a sweep over all three fuses (never one)', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 3);
+      await _pump(t, 9000);
+      final st = t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(st.showing, isTrue);
+      expect(st.debugOptions, hasLength(3));
       await _close(t, c);
     });
 

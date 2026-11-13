@@ -74,7 +74,7 @@ void main() {
       debugPrint('PERF kit check $tag: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames in an idle second');
 
       expect(tester.takeException(), isNull);
-      expect(find.textContaining('ধাপ '), findsOneWidget, reason: 'shell step from the level context');
+      expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget, reason: 'shell step from the level context');
       // Same seed as the page: the first deal of this play.
       final torso = dealKit(kitCheckPack11, math.Random(7)).items.where((i) => i.slot == KitSlot.torso).length;
       expect(

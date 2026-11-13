@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show Combo, ComboPop, FreezeFrame, RescueBurst, freezeFilter, starsFor;
 import 'level_result_parts.dart';
@@ -43,10 +44,16 @@ import 'scene_kit.dart' show GuideIntro, LinemanFigure, LinemanLook, LinemanMode
 //   5 ফিডার পিলার — gloves + face shield, prove dead with the tester, a
 //     same-rating HRC fuse in the blown way (copper strip deadly), tighten the
 //     hot spot, lock the door (3.7, 3.10).
-//   6 সার্ভিস ড্রপ — twin/four core to match the connection, bearer wire,
-//     drip loop, neutral with gloves (bare hand deadly) (3.8).
+//   6 সার্ভিস ড্রপ — four choices on a deck, one per step: twin/four core to
+//     match the connection, bearer wire, drip loop, neutral with gloves (a
+//     bare hand deadly) (3.8).
 //   7 ক্রেডল গার্ডিং — gloves (bare hand deadly), find the dealt fault (an
 //     earth lead cut, or a broken wire), then the line goes back on (3.9).
+// Every over-call (a sound part flagged, a sound fuse pulled, a sound bolt or
+// guard spot worked on) is a slip; the guide never says "this one is fine"
+// before the decision. The careless coworker can't be skipped: the LT switch
+// and the tap wait for him (holdForCoworker). A gesture hint shows how to
+// touch in every waiting state (a sweep over the choices).
 // Passing awards the Technician ("টেকনিশিয়ান") rank (unlockRank(3)) and the
 // "লাইন চেনার জাদুকর" badge of Module 3.
 
@@ -89,7 +96,7 @@ abstract final class M3GateMistakes {
   );
   static const sourceAb = DoMistake(
     key: '3.10/m3_gate_field/source-ab',
-    textBn: 'কাজের এলাকার উৎসের দিকের আইসোলেটর (AB-1) আগে চিহ্নিত করুন — ওখানেই প্রথম বিচ্ছিন্ন।',
+    textBn: 'উৎসের দিকের আইসোলেটর AB-1-ও আইসোলেশন পয়েন্ট — ডায়াগ্রামে চিহ্নিত করুন। আইসোলেটর কখনো অন-লোডে খোলা যায় না।',
     art: '$_art/ring_backfeed.svg',
     lessonPoint: 2,
   );
@@ -135,6 +142,12 @@ abstract final class M3GateMistakes {
     art: '$_art/strand_cut.svg',
     lessonPoint: 1,
   );
+  static const soundFlagged = DoMistake(
+    key: '3.3/m3_gate_field/sound-flagged',
+    textBn: 'খুঁত চোখে না দেখে ফল্ট নয় — ফাটল, মরিচা, বাঁকা, পিছলে নামা বা কাটা স্ট্র্যান্ড খুঁজে তবেই রায়।',
+    art: '$_art/arm_rust.svg',
+    lessonPoint: 3,
+  );
   static const allThree = DoMistake(
     key: '3.4/m3_gate_field/all-three',
     textBn: 'থ্রি-ফেজ ট্রান্সফরমারে একটা ফিউজ উড়লে বাকি দুটো ফেজের DO-ও খুলুন — তবেই ট্রান্সফরমার পুরো বিচ্ছিন্ন।',
@@ -172,6 +185,12 @@ abstract final class M3GateMistakes {
     art: '$_art/la_check.svg',
     lessonPoint: 2,
   );
+  static const laSound = DoMistake(
+    key: '3.5/m3_gate_field/la-sound',
+    textBn: 'সুস্থ LA: আবরণে ফাটল বা পোড়া দাগ নেই, আর্থিং তার মজবুত জোড়া — তাহলে বদলানোর দরকার নেই।',
+    art: '$_art/la_check.svg',
+    lessonPoint: 2,
+  );
   static const gelPink = DoMistake(
     key: '3.6/m3_gate_field/gel-pink',
     textBn: 'গোলাপি সিলিকা জেল মানে বাষ্প শুষে ভিজে গেছে — বদলাতে হবে। শুকনো জেল নীল।',
@@ -181,6 +200,18 @@ abstract final class M3GateMistakes {
   static const oilLeak = DoMistake(
     key: '3.6/m3_gate_field/oil-leak',
     textBn: 'তেল লিক উপেক্ষা নয় — লেভেল কমলে কুলিং ও ইনসুলেশন দুর্বল হয়, লিক দিয়ে জলীয় বাষ্প ঢোকে।',
+    art: '$_art/dtr_health.svg',
+    lessonPoint: 2,
+  );
+  static const gelDry = DoMistake(
+    key: '3.6/m3_gate_field/gel-dry',
+    textBn: 'শুকনো সিলিকা জেল নীল বা কমলা — বদলাতে হয় গোলাপি বা সাদা হলে। রং দেখে তবেই রায়।',
+    art: '$_art/dtr_health.svg',
+    lessonPoint: 2,
+  );
+  static const oilDry = DoMistake(
+    key: '3.6/m3_gate_field/oil-dry',
+    textBn: 'লিক মানে গ্যাসকেট, জয়েন্ট বা ড্রেন ভাল্ভে তেলের দাগ — দাগ না দেখে লিক লেখা নয়।',
     art: '$_art/dtr_health.svg',
     lessonPoint: 2,
   );
@@ -222,6 +253,18 @@ abstract final class M3GateMistakes {
     art: '$_art/hrc_fuse.svg',
     lessonPoint: 1,
   );
+  static const wrongFuse = DoMistake(
+    key: '3.7/m3_gate_field/wrong-fuse',
+    textBn: 'প্রতিটা আউটগোয়িং লাইনের আলাদা ফিউজ — ভালো ফিউজ টানলে চালু লাইন অকারণে বন্ধ। উড়ে যাওয়াটা চিনে হাত দিন।',
+    art: '$_art/hrc_fuse.svg',
+    lessonPoint: 1,
+  );
+  static const wrongBolt = DoMistake(
+    key: '3.7/m3_gate_field/wrong-bolt',
+    textBn: 'হটস্পট চেনা যায় কালো হয়ে যাওয়া কানেকশনে — সেটা খুঁজে টাইট করুন, আন্দাজে নয়।',
+    art: '$_art/hotspot.svg',
+    lessonPoint: 2,
+  );
   static const hotspot = DoMistake(
     key: '3.7/m3_gate_field/hotspot',
     textBn: 'কালো দাগ মানে ঢিলা কানেকশনের হটস্পট — টাইট না করে দরজা বন্ধ নয়, ওখানেই স্পার্ক আর আগুন।',
@@ -230,7 +273,7 @@ abstract final class M3GateMistakes {
   );
   static const wrongCore = DoMistake(
     key: '3.8/m3_gate_field/wrong-core',
-    textBn: 'সিঙ্গেল-ফেজে টুইন-কোর, থ্রি-ফেজে ফোর-কোর সার্ভিস কেবিল — সংযোগ দেখে মিলিয়ে নিন।',
+    textBn: 'সার্ভিস কেবিল ইনসুলেটেড — সিঙ্গেল-ফেজে টুইন-কোর, থ্রি-ফেজে ফোর-কোর। সংযোগ দেখে মিলিয়ে নিন।',
     art: '$_art/service_drop.svg',
     lessonPoint: 0,
   );
@@ -273,6 +316,13 @@ abstract final class M3GateMistakes {
     lessonPoint: 3,
   );
 
+  static const guardSpot = DoMistake(
+    key: '3.9/m3_gate_field/guard-spot',
+    textBn: 'আগে দেখে নিন ক্ষতি কোথায় — ছেঁড়া তার, না কাটা আর্থিং। আন্দাজে জালে হাত দেওয়া নয়।',
+    art: '$_art/guard_live.svg',
+    lessonPoint: 3,
+  );
+
   static const all = [
     ringBackfeed,
     sourceAb,
@@ -283,20 +333,26 @@ abstract final class M3GateMistakes {
     armBent,
     clampSlip,
     strandCut,
+    soundFlagged,
     allThree,
     thickWire,
     anyWire,
     overRated,
     laCrack,
     laHanging,
+    laSound,
     gelPink,
     oilLeak,
+    gelDry,
+    oilDry,
     tapLive,
     coworkerLt,
     pillarPpe,
     noTest,
     copperStrip,
     hrcBigger,
+    wrongFuse,
+    wrongBolt,
     hotspot,
     wrongCore,
     noBearer,
@@ -305,6 +361,7 @@ abstract final class M3GateMistakes {
     guardBare,
     guardEarth,
     guardWire,
+    guardSpot,
   ];
 
   /// The lesson that teaches a mistake (its key starts with the lesson id).
@@ -339,7 +396,7 @@ abstract final class M3GateLines {
     M3GateStation.fuseLa: [
       'DTR-17-এর একটা DO ঝুলে পড়েছে। ট্রান্সফরমার সামলান।',
       'ফিউজ উড়েছে। এবার নিয়ম মেনে কী করবেন?',
-      'DO, ফিউজ লিঙ্ক আর LA — তিনটেই দেখুন।',
+      'ট্রান্সফরমারের মাথাটা ভালো করে দেখে সামলান।',
     ],
     M3GateStation.dtr: [
       'এবার ট্রান্সফরমারের স্বাস্থ্য দেখে ট্যাপ বদলান।',
@@ -349,7 +406,7 @@ abstract final class M3GateLines {
     M3GateStation.pillar: [
       'ফিডার পিলারে একটা ফিউজ উড়েছে। ঠিক করুন।',
       'পিলারের ভেতর কাজ। আগে নিজের সুরক্ষা।',
-      'উড়ে যাওয়া ফিউজ আর ঢিলা কানেকশন — খুঁজে সারান।',
+      'পিলারের ভেতরটা ভালো করে দেখে সারান।',
     ],
     M3GateStation.service: [
       'নতুন সংযোগ। পোল থেকে বাড়ির মিটারে সার্ভিস কেবিল দিন।',
@@ -385,9 +442,10 @@ abstract final class M3GateLines {
   };
 
   static const okLabel = 'ঠিক আছে';
+  static const docketOk = 'ডকেট বুঝে নিলাম';
   static const faultLabel = 'ফল্ট লিখুন';
   static const replaceLabel = 'বদলাতে হবে';
-  static const looksFine = 'ভালো করে দেখুন — এটা তো ঠিক আছে।';
+  static const leakLabel = 'লিক লিখুন';
   static const planOk = 'পরিকল্পনা পাকা';
   static const markFirst = 'আগে ডায়াগ্রামে আইসোলেশন পয়েন্ট গোল করুন।';
   static const openOthers = 'বাকি DO-গুলোর কী হবে?';
@@ -402,8 +460,6 @@ abstract final class M3GateLines {
   static const gloves = 'ইনসুলেটেড গ্লাভস';
   static const faceShield = 'ফেস শিল্ড';
   static const doorFirst = 'আগে পিলারের দরজা খুলুন।';
-  static const fuseFine = 'এই ফিউজ ঠিক আছে — উড়ে যাওয়াটা খুঁজুন।';
-  static const boltFine = 'এই বল্টু ঠিক আছে।';
   static const fitFirst = 'আগে উড়ে যাওয়া ফিউজটা বদলান।';
   static const lockDoor = 'দরজা লক';
   static const hrcNames = {
@@ -411,13 +467,35 @@ abstract final class M3GateLines {
     M3Hrc.bigger: 'বড় রেটিংয়ের HRC',
     M3Hrc.copperStrip: 'তামার পাত',
   };
-  static const serviceSteps = [
-    ('টুইন-কোর কেবিল', 'ফোর-কোর কেবিল'),
-    ('বিয়ারার তারে ঝুলিয়ে', 'কেবিল নিজেই টানটান'),
-    ('U ড্রিপ লুপ করে', 'সোজা মিটারে ঢুকিয়ে'),
-    ('গ্লাভস পরে নিউট্রাল', 'খালি হাতে নিউট্রাল'),
+
+  /// Station 6: one choice per step, dealt on a [ChoiceDeck] (the guide asks
+  /// [serviceAsks]; every option a real crew might do, about the same length).
+  static const serviceAsks = [
+    'এই সংযোগে কোন সার্ভিস কেবিল দেবেন?',
+    'পোল থেকে বাড়ি পর্যন্ত কেবিল টানবেন কীভাবে?',
+    'মিটারে কেবিল ঢোকাবেন কীভাবে?',
+    'এবার নিউট্রাল জোড়া — কীভাবে জুড়বেন?',
   ];
-  static const guardFine = 'এখানে জাল ঠিক আছে — অন্য জায়গা দেখুন।';
+  static const cableTwin = 'টুইন-কোর কেবিল, ফেজ ও নিউট্রাল';
+  static const cableFour = 'ফোর-কোর কেবিল, R-Y-B ও নিউট্রাল';
+  static const cableBare = 'খোলা তার, ইনসুলেশন ছাড়াই';
+  static const hangRight = 'বিয়ারার তারে বেঁধে, টান ওর ওপর';
+  static const hangWrong = ['কেবিল নিজেই টানটান করে বেঁধে', 'বিয়ারার ঢিলে, টান কেবিলের ওপর'];
+  static const dripRight = 'নিচে U লুপ রেখে মিটারে ঢোকানো';
+  // Wrong options share the right one's key words (U, নিচে, লুপ, লাইভ,
+  // গ্লাভস), so no word shows up on the right option alone.
+  static const dripWrong = ['U লুপ ওপরে তুলে মিটারে ঢোকানো', 'লুপ ছাড়াই নিচে সোজা মিটারে ঢোকানো'];
+  static const neutralRight = 'গ্লাভস পরে, নিউট্রালও লাইভ ধরে';
+  // Both wrong ones are a bare hand on the neutral (deadly), worded apart.
+  static const neutralWrong = ['খালি হাতে, নিউট্রাল তো লাইভ নয়', 'গ্লাভস খুলে চটপট, নিউট্রালে ভয় নেই'];
+
+  /// Step [step]'s right option and its wrong ones ([threePhase]: the dealt connection).
+  static (String, List<String>) serviceOptions(int step, {required bool threePhase}) => switch (step) {
+        0 => threePhase ? (cableFour, const [cableTwin, cableBare]) : (cableTwin, const [cableFour, cableBare]),
+        1 => (hangRight, hangWrong),
+        2 => (dripRight, dripWrong),
+        _ => (neutralRight, neutralWrong),
+      };
   static const guardOn = 'গার্ডিং ঠিক · লাইন চালু';
   static const guardFixed = {
     M3GuardFault.leftEarth: 'আর্থিং তার জুড়ে পাইপে ঢাকা হলো।',
@@ -558,15 +636,12 @@ abstract final class M3GateLines {
         intro,
         for (final l in tasks.values) ...l,
         ...praise.values,
-        looksFine,
         markFirst,
         openOthers,
         healthFirst,
         doorFirst,
-        fuseFine,
-        boltFine,
         fitFirst,
-        guardFine,
+        ...serviceAsks,
         ...guardFixed.values.toSet(),
         whySldQ,
         whyPatrolQ,
@@ -616,7 +691,6 @@ class M3GateRun {
     hotBolt = _rng.nextInt(6);
     hrcs = [...M3Hrc.values]..shuffle(_rng);
     threePhase = _rng.nextBool();
-    serviceFlip = [for (var i = 0; i < 4; i++) _rng.nextBool()];
     guardFault = M3GuardFault.values[_rng.nextInt(M3GuardFault.values.length)];
   }
 
@@ -636,9 +710,6 @@ class M3GateRun {
   late final int hotBolt;
   late final List<M3Hrc> hrcs;
   late final bool threePhase;
-
-  /// Per service step: true = the wrong option is dealt first.
-  late final List<bool> serviceFlip;
   late final M3GuardFault guardFault;
 
   static const tapFrom = 3;
@@ -674,7 +745,7 @@ class M3GateRun {
   var planned = false;
 
   DoMistake? markSym(M3SldSym s) {
-    if (planned || marked.contains(s)) return null;
+    if (ended || planned || marked.contains(s)) return null;
     if (s != M3SldSym.ab && s != M3SldSym.no) return slip(M3GateMistakes.wrongSymbol);
     marked.add(s);
     return null;
@@ -682,7 +753,7 @@ class M3GateRun {
 
   /// Null with [planned] still false means nothing is marked yet (no cost).
   DoMistake? confirmPlan() {
-    if (planned || marked.isEmpty) return null;
+    if (ended || planned || marked.isEmpty) return null;
     if (!marked.contains(M3SldSym.no)) return deadly = M3GateMistakes.ringBackfeed;
     if (!marked.contains(M3SldSym.ab)) return slip(M3GateMistakes.sourceAb);
     planned = true;
@@ -698,19 +769,20 @@ class M3GateRun {
 
   /// Calls [p] sound; a slip when it is faulty.
   DoMistake? partOk(M3Part p) {
-    if (judged(p)) return null;
+    if (ended || judged(p)) return null;
     final f = faults[p];
     if (f != null) return slip(M3GateMistakes.forFault(f));
     passedOk.add(p);
     return null;
   }
 
-  /// Flags [p] as a fault; false (no cost) when it is sound.
-  bool partFault(M3Part p) {
-    if (judged(p)) return true;
-    if (faults[p] == null) return false;
+  /// Flags [p] as a fault; an over-call on a sound part is a slip (it stays
+  /// to be judged again).
+  DoMistake? partFault(M3Part p) {
+    if (ended || judged(p)) return null;
+    if (faults[p] == null) return slip(M3GateMistakes.soundFlagged);
     flagged.add(p);
-    return true;
+    return null;
   }
 
   bool get patrolDone => M3Part.values.every(judged);
@@ -725,13 +797,13 @@ class M3GateRun {
   bool get allDoOpen => [0, 1, 2].every(isDoDown);
 
   void openDo(int i) {
-    if (isDoDown(i)) return;
+    if (ended || isDoDown(i)) return;
     doOpen[i] = true;
     if (allDoOpen) tag('একটা উড়লে তিনটে DO-ই খোলা');
   }
 
   DoMistake? chooseLink(M3Link l) {
-    if (link != null) return null;
+    if (ended || link != null) return null;
     if (l == M3Link.thickWire) return deadly = M3GateMistakes.thickWire;
     if (!allDoOpen) return slip(M3GateMistakes.allThree);
     if (l == M3Link.anyWire) return slip(M3GateMistakes.anyWire);
@@ -742,20 +814,21 @@ class M3GateRun {
   }
 
   DoMistake? laOk() {
-    if (laJudged) return null;
+    if (ended || laJudged) return null;
     final f = laFault;
     if (f != null) return slip(f == M3LaFault.crack ? M3GateMistakes.laCrack : M3GateMistakes.laHanging);
     laJudged = true;
     return null;
   }
 
-  bool laReplace() {
-    if (laJudged) return true;
-    if (laFault == null) return false;
+  /// Replaces the LA; a slip when it was healthy.
+  DoMistake? laReplace() {
+    if (ended || laJudged) return null;
+    if (laFault == null) return slip(M3GateMistakes.laSound);
     laJudged = true;
     laReplaced = true;
     tag('খারাপ LA চেনা');
-    return true;
+    return null;
   }
 
   bool get fuseLaDone => link != null && laJudged;
@@ -770,44 +843,48 @@ class M3GateRun {
   var tapped = false;
 
   DoMistake? gelOk() {
-    if (gelJudged) return null;
+    if (ended || gelJudged) return null;
     if (gelPinkDealt) return slip(M3GateMistakes.gelPink);
     gelJudged = true;
     return null;
   }
 
-  bool gelReplace() {
-    if (gelJudged) return true;
-    if (!gelPinkDealt) return false;
+  /// Replaces the gel; a slip when it was still dry (blue).
+  DoMistake? gelReplace() {
+    if (ended || gelJudged) return null;
+    if (!gelPinkDealt) return slip(M3GateMistakes.gelDry);
     gelJudged = true;
     gelNew = true;
     tag('গোলাপি জেল বদল');
-    return true;
+    return null;
   }
 
   DoMistake? oilOk() {
-    if (oilJudged) return null;
+    if (ended || oilJudged) return null;
     if (oilLeakDealt) return slip(M3GateMistakes.oilLeak);
     oilJudged = true;
     return null;
   }
 
-  bool oilReport() {
-    if (oilJudged) return true;
-    if (!oilLeakDealt) return false;
+  /// Reports a leak; a slip when the tank is dry.
+  DoMistake? oilReport() {
+    if (ended || oilJudged) return null;
+    if (!oilLeakDealt) return slip(M3GateMistakes.oilDry);
     oilJudged = true;
     oilFixed = true;
     tag('তেল লিক ধরা');
-    return true;
+    return null;
   }
 
   bool get healthDone => gelJudged && oilJudged;
 
-  void switchLtOff() => ltOn = false;
+  void switchLtOff() {
+    if (!ended) ltOn = false;
+  }
 
   /// Null with [tapped] false: the health check comes first (no cost).
   DoMistake? turnTap() {
-    if (tapped || !healthDone) return null;
+    if (ended || tapped || !healthDone) return null;
     if (ltOn) return deadly = M3GateMistakes.tapLive;
     tap = tapTo;
     tapped = true;
@@ -831,25 +908,26 @@ class M3GateRun {
   }
 
   DoMistake? testBus() {
-    if (tested) return null;
+    if (ended || tested) return null;
     final m = _inside();
     if (m != null) return m;
     tested = true;
     return null;
   }
 
-  /// Picks up fuse ([way], [ph]); null + no [pickingFuse] means a sound fuse.
+  /// Picks up fuse ([way], [ph]); pulling a sound fuse is a slip.
   DoMistake? tapFuse(int way, int ph) {
-    if (fitted) return null;
+    if (ended || fitted || pickingFuse) return null;
     final m = _inside();
     if (m != null) return m;
     if (!tested) return slip(M3GateMistakes.noTest);
-    if (way == blownWay && ph == blownPh) pickingFuse = true;
+    if (way != blownWay || ph != blownPh) return slip(M3GateMistakes.wrongFuse);
+    pickingFuse = true;
     return null;
   }
 
   DoMistake? fitHrc(M3Hrc h) {
-    if (!pickingFuse || fitted) return null;
+    if (ended || !pickingFuse || fitted) return null;
     if (h == M3Hrc.copperStrip) return deadly = M3GateMistakes.copperStrip;
     if (h == M3Hrc.bigger) return slip(M3GateMistakes.hrcBigger);
     fitted = true;
@@ -858,20 +936,20 @@ class M3GateRun {
     return null;
   }
 
+  /// Tightens [bolt]; a sound bolt is a slip (the hot spot is the black one).
   DoMistake? tighten(int bolt) {
-    if (tightened) return null;
+    if (ended || tightened) return null;
     final m = _inside();
     if (m != null) return m;
     if (!tested) return slip(M3GateMistakes.noTest);
-    if (bolt == hotBolt) {
-      tightened = true;
-      tag('হটস্পট টাইট');
-    }
+    if (bolt != hotBolt) return slip(M3GateMistakes.wrongBolt);
+    tightened = true;
+    tag('হটস্পট টাইট');
     return null;
   }
 
   DoMistake? lock() {
-    if (locked || !fitted) return null;
+    if (ended || locked || !fitted) return null;
     if (!tightened) return slip(M3GateMistakes.hotspot);
     locked = true;
     tag('কাজ শেষে পিলার লক');
@@ -883,7 +961,7 @@ class M3GateRun {
 
   /// Step [serviceStep] answered with its right option ([right]) or the wrong one.
   DoMistake? serviceChoose({required bool right}) {
-    if (serviceStep >= 4) return null;
+    if (ended || serviceStep >= 4) return null;
     if (!right) {
       return switch (serviceStep) {
         0 => slip(M3GateMistakes.wrongCore),
@@ -899,8 +977,11 @@ class M3GateRun {
     return null;
   }
 
-  /// The right option at step [i]: twin/four core by the connection, else the first.
-  bool serviceRightIsFirst(int i) => i == 0 ? !threePhase : true;
+  /// The three options of step [i] (one right), shuffled per play.
+  List<ChoiceOption> serviceDeal(int i) {
+    final (right, wrong) = M3GateLines.serviceOptions(i, threePhase: threePhase);
+    return dealChoices([right], wrong, math.Random(seed * 31 + i));
+  }
 
   bool get serviceDone => serviceStep >= 4;
 
@@ -909,18 +990,18 @@ class M3GateRun {
   var guardFixed = false;
   var guardDone = false;
 
+  /// Works on the guard at [spot]; a spot with nothing wrong is a slip.
   DoMistake? touchGuard(M3GuardFault spot) {
-    if (guardFixed) return null;
+    if (ended || guardFixed) return null;
     if (!gGloves) return deadly = M3GateMistakes.guardBare;
-    if (spot == guardFault) {
-      guardFixed = true;
-      tag(guardFault == M3GuardFault.brokenWire ? 'গার্ডিং-এর ছেঁড়া তার মেরামত' : 'গার্ডিং-এর আর্থিং জোড়া');
-    }
+    if (spot != guardFault) return slip(M3GateMistakes.guardSpot);
+    guardFixed = true;
+    tag(guardFault == M3GuardFault.brokenWire ? 'গার্ডিং-এর ছেঁড়া তার মেরামত' : 'গার্ডিং-এর আর্থিং জোড়া');
     return null;
   }
 
   DoMistake? energise() {
-    if (guardDone) return null;
+    if (ended || guardDone) return null;
     if (!guardFixed) return slip(guardFault == M3GuardFault.brokenWire ? M3GateMistakes.guardWire : M3GateMistakes.guardEarth);
     guardDone = true;
     return null;
@@ -1014,6 +1095,14 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
   var _bloomActive = false;
   int _bloomRound = 0;
 
+  // Gesture hints (how to touch, never what): keys of every tappable thing.
+  final _hints = IdleHintController();
+  final _gks = <String, GlobalKey>{};
+  GlobalKey _gk(String id) => _gks.putIfAbsent(id, GlobalKey.new);
+
+  /// Station 6: options already tried and wrong on the current step.
+  final Set<String> _serviceWrong = {};
+
   // Scene state.
   M3Look? _look;
   Offset? _sparkAt;
@@ -1074,12 +1163,15 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
       _look = null;
       _stickTo = null;
     });
-    unawaited(_sayChain([M3GateLines.tasks[_run.station]!.first]));
+    unawaited(_sayChain([
+      M3GateLines.tasks[_run.station]!.first,
+      if (_run.station == M3GateStation.service) M3GateLines.serviceAsks[_run.serviceStep],
+    ]));
     if (_run.station == M3GateStation.dtr && !coworkerDone) scheduleCoworker();
   }
 
   void _tapGuide() {
-    if (_intro || _ended) return;
+    if (_intro || _ended || _freeze || _run.ended) return;
     final lines = M3GateLines.tasks[_run.station]!;
     _tapN++;
     _cue('sounds/learn/tick.wav', volume: 0.5);
@@ -1088,7 +1180,19 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     unawaited(MascotSpeechLibrary.speak(line, muted: _muted));
   }
 
-  bool get _canAct => !_busy && !_ended && _card == null && !reasonOpen && !coworkerChoiceUp && !_intro && !_docketOpen && !struckOut;
+  /// The scene takes a move now: not during the praise window or the reason
+  /// deck (tableBusy), a death freeze, a card, the coworker, intro or docket.
+  bool get _canAct =>
+      !_busy &&
+      !_ended &&
+      !_freeze &&
+      !_run.ended &&
+      _card == null &&
+      !tableBusy &&
+      !coworkerOpen &&
+      !_intro &&
+      !_docketOpen &&
+      !struckOut;
 
   // --- scoring ------------------------------------------------------------------
   int _scored(int base) {
@@ -1139,15 +1243,11 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     _busy = true;
     HapticFeedback.lightImpact();
     _cue('sounds/quiz_right.wav', volume: 0.7);
-    final delta = _scored(20);
-    _totalDelta += delta;
-    setState(() => _runScore += delta);
-    await BeatFx.levelDelta(ref, delta, originGlobal: origin, mood: GuideMood.celebrate, muted: _muted);
-    if (!mounted) return;
+    // The station's ◆ wait on the table; the right reason pays them (once).
+    putOnTable(_scored(20));
     final praise = M3GateLines.praise[_run.station];
     if (praise != null) await _say(praise, mood: GuideMood.celebrate);
     if (!mounted) return;
-    putOnTable(delta);
     _busy = false;
     await askReason(
       deal: () => dealChoices(right, wrong, math.Random(widget.seed + 11 * (_run.station.index + 1))),
@@ -1168,6 +1268,8 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
   }
 
   Future<void> _handleMistake(DoMistake m, {Offset? at}) async {
+    _busy = true;
+    _hints.hide();
     HapticFeedback.heavyImpact();
     _cue('sounds/quiz_wrong.wav');
     _combo.miss();
@@ -1240,8 +1342,10 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
 
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.station != M3GateStation.dtr || _run.tapped) return null;
-    if (_busy || _card != null || reasonOpen || _docketOpen || _look != null) return false;
+    // His push is "the HT DOs are open, skip the LT, turn the tap": too late
+    // once the LT is off or the tap turned.
+    if (_ended || _run.ended || struckOut || _run.station != M3GateStation.dtr || _run.tapped || !_run.ltOn) return null;
+    if (_busy || _freeze || _card != null || tableBusy || _docketOpen || _look != null) return false;
     return true;
   }
 
@@ -1313,31 +1417,20 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
 
   Future<void> _onJudge(bool fault, Offset origin) async {
     final l = _look;
-    if (l == null || _busy) return;
+    if (l == null || !_canAct) return;
     _hush();
     setState(() => _look = null);
     final part = _partOf(l);
-    DoMistake? m;
-    var fine = false;
-    if (part != null) {
-      if (fault) {
-        fine = !_run.partFault(part);
-      } else {
-        m = _run.partOk(part);
-      }
-    } else if (l == M3Look.la) {
-      fault ? fine = !_run.laReplace() : m = _run.laOk();
-    } else if (l == M3Look.gel) {
-      fault ? fine = !_run.gelReplace() : m = _run.gelOk();
-    } else {
-      fault ? fine = !_run.oilReport() : m = _run.oilOk();
-    }
+    // A wrong verdict either way is a slip; its card teaches after the call.
+    final m = part != null
+        ? (fault ? _run.partFault(part) : _run.partOk(part))
+        : switch (l) {
+            M3Look.la => fault ? _run.laReplace() : _run.laOk(),
+            M3Look.gel => fault ? _run.gelReplace() : _run.gelOk(),
+            _ => fault ? _run.oilReport() : _run.oilOk(),
+          };
     if (m != null) {
       await _handleMistake(m);
-      return;
-    }
-    if (fine) {
-      unawaited(_say(M3GateLines.looksFine));
       return;
     }
     _cue(fault ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/confirm.ogg', volume: 0.7);
@@ -1384,6 +1477,8 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
   // --- station 4: DTR -------------------------------------------------------------------
   void _onLt() {
     if (!_canAct || !_run.ltOn) return;
+    // He pushes "skip the LT": switching it off before he came would skip him.
+    if (holdForCoworker()) return;
     HapticFeedback.mediumImpact();
     _cue('sounds/intro/click.ogg', volume: 0.9);
     setState(() {
@@ -1395,6 +1490,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
 
   Future<void> _onTap(Offset at) async {
     if (!_canAct || _run.tapped) return;
+    if (holdForCoworker()) return;
     _hush();
     if (!_run.healthDone) {
       unawaited(_say(M3GateLines.healthFirst));
@@ -1437,7 +1533,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     });
   }
 
-  Future<void> _onPillarAct(DoMistake? Function() act, {String? fineLine, bool Function()? fine}) async {
+  Future<void> _onPillarAct(DoMistake? Function() act) async {
     if (!_canAct) return;
     _hush();
     if (!_run.doorOpen) {
@@ -1447,10 +1543,6 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     final m = act();
     if (m != null) {
       await _handleMistake(m);
-      return;
-    }
-    if (fine != null && fine() && fineLine != null) {
-      unawaited(_say(fineLine));
       return;
     }
     _cue('sounds/intro/click.ogg', volume: 0.7);
@@ -1491,19 +1583,24 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
   }
 
   // --- station 6: service drop ----------------------------------------------------------
-  Future<void> _onService(bool right, Offset origin) async {
-    if (!_canAct || _run.serviceDone) return;
+  Future<void> _onService(ChoiceOption o, Offset origin) async {
+    if (!_canAct || _run.serviceDone || _serviceWrong.contains(o.textBn)) return;
     _hush();
-    final m = _run.serviceChoose(right: right);
+    final m = _run.serviceChoose(right: o.correct);
     if (m != null) {
+      setState(() => _serviceWrong.add(o.textBn));
       await _handleMistake(m, at: m.deadly ? M3ServiceGeo(_sceneH).meter.center : null);
       return;
     }
     _cue('sounds/intro/impact_metal.ogg', volume: 0.6);
-    setState(() => _wake++);
+    setState(() {
+      _serviceWrong.clear();
+      _wake++;
+    });
     if (_run.serviceDone) {
       await _stationWon(origin);
     } else {
+      unawaited(_sayChain([M3GateLines.serviceAsks[_run.serviceStep]]));
       await _pay(5, origin);
     }
   }
@@ -1514,11 +1611,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     _hush();
     final m = _run.touchGuard(spot);
     if (m != null) {
-      await _handleMistake(m, at: at);
-      return;
-    }
-    if (!_run.guardFixed) {
-      unawaited(_say(M3GateLines.guardFine));
+      await _handleMistake(m, at: m.deadly ? at : null);
       return;
     }
     _cue('sounds/intro/impact_metal.ogg', volume: 0.7);
@@ -1647,8 +1740,11 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
   Widget _hitAt(String id, Rect r, void Function(Offset global) onTap) => Positioned.fromRect(
         key: ValueKey(id),
         rect: r,
-        child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => onTap(d.globalPosition)),
+        child: GestureDetector(key: _gk(id), behavior: HitTestBehavior.opaque, onTapUp: (d) => onTap(d.globalPosition)),
       );
+
+  /// A control wrapped so the gesture hint can find it.
+  Widget _keyed(String id, Widget child) => KeyedSubtree(key: _gk(id), child: child);
 
   Rect _standing(double x, double groundY) => Rect.fromLTWH(x - 30, groundY - 112, 59, 118);
 
@@ -1753,14 +1849,14 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
           _hitAt(
             'bolt-$i',
             g.boltHit(i),
-            (_) => unawaited(_onPillarAct(() => _run.tighten(i), fineLine: M3GateLines.boltFine, fine: () => !_run.tightened)),
+            (_) => unawaited(_onPillarAct(() => _run.tighten(i))),
           ),
         for (var w = 0; w < 3; w++)
           for (var ph = 0; ph < 3; ph++)
             _hitAt(
               'fuse-$w-$ph',
               g.fuseHit(w, ph),
-              (_) => unawaited(_onPillarAct(() => _run.tapFuse(w, ph), fineLine: M3GateLines.fuseFine, fine: () => !_run.pickingFuse && !_run.fitted)),
+              (_) => unawaited(_onPillarAct(() => _run.tapFuse(w, ph))),
             ),
       ],
       _figure(Rect.fromLTWH(2, g.box.bottom - 100, 56, 112), _run.doorOpen ? LinemanMode.hold : LinemanMode.idle),
@@ -1819,7 +1915,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     switch (_run.station) {
       case M3GateStation.sld:
         return [
-          row('plan-row', [_ActionButton(label: M3GateLines.planOk, filled: true, onTapUp: (p) => unawaited(_onPlan(p)))], right: 130),
+          row('plan-row', [_keyed('plan', _ActionButton(label: M3GateLines.planOk, filled: true, onTapUp: (p) => unawaited(_onPlan(p))))], right: 130),
         ];
       case M3GateStation.patrol:
         return const [];
@@ -1841,10 +1937,13 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
                       for (var c = 0; c < 2; c++) ...[
                         if (c > 0) const SizedBox(width: 8),
                         Expanded(
-                          child: _ActionButton(
-                            key: ValueKey('link-${_run.links[r * 2 + c].name}'),
-                            label: M3GateLines.linkNames[_run.links[r * 2 + c]]!,
-                            onTapUp: (p) => unawaited(_onLink(_run.links[r * 2 + c], p)),
+                          child: _keyed(
+                            'link-${_run.links[r * 2 + c].name}',
+                            _ActionButton(
+                              key: ValueKey('link-${_run.links[r * 2 + c].name}'),
+                              label: M3GateLines.linkNames[_run.links[r * 2 + c]]!,
+                              onTapUp: (p) => unawaited(_onLink(_run.links[r * 2 + c], p)),
+                            ),
                           ),
                         ),
                       ],
@@ -1865,9 +1964,9 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
             bottom: b,
             child: Row(
               children: [
-                _ToolButton(icon: Icons.back_hand_rounded, label: M3GateLines.gloves, on: _run.pGloves, onTap: () => _onWear(shield: false)),
+                _keyed('ppe-gloves', _ToolButton(icon: Icons.back_hand_rounded, label: M3GateLines.gloves, on: _run.pGloves, onTap: () => _onWear(shield: false))),
                 const SizedBox(width: 8),
-                _ToolButton(icon: Icons.face_retouching_natural, label: M3GateLines.faceShield, on: _run.pShield, onTap: () => _onWear(shield: true)),
+                _keyed('ppe-shield', _ToolButton(icon: Icons.face_retouching_natural, label: M3GateLines.faceShield, on: _run.pShield, onTap: () => _onWear(shield: true))),
               ],
             ),
           ),
@@ -1882,10 +1981,13 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
                   for (var i = 0; i < _run.hrcs.length; i++) ...[
                     if (i > 0) const SizedBox(width: 8),
                     Expanded(
-                      child: _ActionButton(
-                        key: ValueKey('hrc-${_run.hrcs[i].name}'),
-                        label: M3GateLines.hrcNames[_run.hrcs[i]]!,
-                        onTapUp: (p) => unawaited(_onHrc(_run.hrcs[i], p)),
+                      child: _keyed(
+                        'hrc-${_run.hrcs[i].name}',
+                        _ActionButton(
+                          key: ValueKey('hrc-${_run.hrcs[i].name}'),
+                          label: M3GateLines.hrcNames[_run.hrcs[i]]!,
+                          onTapUp: (p) => unawaited(_onHrc(_run.hrcs[i], p)),
+                        ),
                       ),
                     ),
                   ],
@@ -1898,20 +2000,32 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
               left: 212,
               bottom: b + 8,
               width: 100,
-              child: _ActionButton(label: M3GateLines.lockDoor, filled: true, onTapUp: (p) => unawaited(_onLock(p))),
+              child: _keyed('lock', _ActionButton(label: M3GateLines.lockDoor, filled: true, onTapUp: (p) => unawaited(_onLock(p)))),
             ),
         ];
       case M3GateStation.service:
         final s = _run.serviceStep;
         if (s >= 4) return const [];
-        final (a, z) = M3GateLines.serviceSteps[s];
-        final aRight = _run.serviceRightIsFirst(s);
-        final opts = [(a, aRight), (z, !aRight)];
-        if (_run.serviceFlip[s]) opts.setAll(0, opts.reversed.toList());
+        // One choice per step on a deck (its own sweep hint); the options are
+        // shuffled per play, all of them things a crew might really do.
         return [
-          row('service-row', [
-            for (final (label, right) in opts) _ActionButton(label: label, onTapUp: (p) => unawaited(_onService(right, p))),
-          ]),
+          Positioned(
+            key: const ValueKey('service-deck'),
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Padding(
+              padding: EdgeInsets.only(bottom: pad.bottom),
+              child: ChoiceDeck(
+                key: ValueKey('service-deck-$s'),
+                options: _run.serviceDeal(s),
+                quiet: _quiet,
+                muted: _muted,
+                wrong: {..._serviceWrong},
+                onPick: (o, at) => unawaited(_onService(o, at)),
+              ),
+            ),
+          ),
         ];
       case M3GateStation.guard:
         return [
@@ -1922,9 +2036,9 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
             bottom: b,
             child: Row(
               children: [
-                _ToolButton(icon: Icons.back_hand_rounded, label: M3GateLines.gloves, on: _run.gGloves, onTap: () => _onWear(shield: false)),
+                _keyed('guard-gloves', _ToolButton(icon: Icons.back_hand_rounded, label: M3GateLines.gloves, on: _run.gGloves, onTap: () => _onWear(shield: false))),
                 const SizedBox(width: 8),
-                Expanded(child: _ActionButton(label: M3GateLines.guardOn, filled: true, onTapUp: (p) => unawaited(_onEnergise(p)))),
+                Expanded(child: _keyed('energise', _ActionButton(label: M3GateLines.guardOn, filled: true, onTapUp: (p) => unawaited(_onEnergise(p))))),
               ],
             ),
           ),
@@ -1939,8 +2053,101 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
           M3GateStation.fuseLa => _run.link == null ? 128 : 72,
           M3GateStation.pillar => _run.pickingFuse ? 168 : 96,
           M3GateStation.guard => 96,
+          M3GateStation.service => _run.serviceDone ? 72 : 236,
           _ => 72,
         };
+  }
+
+  // --- gesture hints ----------------------------------------------------------
+
+  /// The level waits for a touch on the scene or its controls now (not during
+  /// the intro, a card, a freeze, the praise window, a deck or the coworker).
+  bool get _hintWaiting =>
+      !_intro &&
+      _mark == null &&
+      !struckOut &&
+      _card == null &&
+      !_freeze &&
+      !_busy &&
+      !_ended &&
+      !_run.ended &&
+      !tableBusy &&
+      !coworkerOnScreen &&
+      // Station 6's deck carries its own sweep hint.
+      (_docketOpen || _look != null || _run.station != M3GateStation.service || _run.serviceDone);
+
+  Object get _hintKey => '${_run.station.name}|${_look?.name}|$_docketOpen|${_run.doorOpen}|${_run.pickingFuse}';
+
+  Rect? _rectOf(String id) {
+    final k = _gks[id];
+    return k == null ? null : HintSpec.globalRectOf(k);
+  }
+
+  /// One rect around several things (a bank of fuses, a row of bolts).
+  Rect? _bankOf(Iterable<String> ids) {
+    Rect? out;
+    for (final id in ids) {
+      final r = _rectOf(id);
+      if (r != null) out = out == null ? r : out.expandToInclude(r);
+    }
+    return out;
+  }
+
+  /// The ids of what can be touched now (every option, never just the right one).
+  List<String> _hintIds() => switch (_run.station) {
+        M3GateStation.sld => [for (final s in M3SldSym.values) 'sym-${s.name}', 'plan'],
+        M3GateStation.patrol => [
+            for (final p in M3Part.values)
+              if (!_run.judged(p)) 'part-${p.name}',
+          ],
+        M3GateStation.fuseLa => [
+            for (var i = 0; i < 3; i++)
+              if (!_run.isDoDown(i)) 'do-$i',
+            if (!_run.laJudged) 'la',
+            if (_run.link == null)
+              for (final l in _run.links) 'link-${l.name}',
+          ],
+        M3GateStation.dtr => [
+            if (!_run.gelJudged) 'gel',
+            if (!_run.oilJudged) 'oil',
+            if (_run.ltOn) 'lt-switch',
+            'tap',
+          ],
+        M3GateStation.pillar => _run.pickingFuse
+            ? [for (final h in _run.hrcs) 'hrc-${h.name}']
+            : [
+                if (!_run.pGloves) 'ppe-gloves',
+                if (!_run.pShield) 'ppe-shield',
+                if (!_run.doorOpen) 'door' else ...['bus', 'lock'],
+              ],
+        M3GateStation.service => const [],
+        M3GateStation.guard => [
+            if (!_run.gGloves) 'guard-gloves',
+            if (!_run.guardFixed)
+              for (final f in M3GuardFault.values) 'guard-${f.name}',
+            'energise',
+          ],
+      };
+
+  /// How to touch now: a tap on the one way forward, else a sweep over every
+  /// choice (it presses none and passes over the right one like the rest).
+  HintSpec? _hint() {
+    if (_docketOpen) return HintSpec.tapOn(_gk('docket-ok'));
+    if (_look != null) return HintSpec.sweepOver([_gk('judge-ok'), _gk('judge-bad')]);
+    final rects = [for (final id in _hintIds()) ?_rectOf(id)];
+    if (_run.station == M3GateStation.pillar && _run.doorOpen && !_run.pickingFuse) {
+      rects.addAll([
+        ?_bankOf([for (var w = 0; w < 3; w++) for (var ph = 0; ph < 3; ph++) 'fuse-$w-$ph']),
+        ?_bankOf([for (var i = 0; i < 6; i++) 'bolt-$i']),
+      ]);
+    }
+    if (rects.isEmpty) return null;
+    if (rects.length == 1) return HintSpec.tap(rects.single.center);
+    // The hand enters at the first rect and glides on in order, so the list
+    // must not follow the enum (AB-1 then NO, gel→oil→LT→tap is the answer).
+    // A fixed per-play shuffle: steady while idle, unrelated to the steps.
+    rects.shuffle(math.Random(widget.seed * 31 + 7 * _run.station.index + rects.length));
+    return HintSpec.sweep(rects);
   }
 
   CustomPainter _lookPainter(M3Look l) {
@@ -1960,9 +2167,15 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     final size = MediaQuery.sizeOf(context);
     final playing = !_intro && _mark == null && !struckOut && _card == null;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !deckUp && !_docketOpen;
+    // During a death freeze nothing but the header takes a touch.
+    final handsOn = playing && !deckUp && !_docketOpen && !_freeze;
     final look = _look;
-    final replaceWords = look == M3Look.la || look == M3Look.gel || look == M3Look.oil;
+    // A leak is reported, not replaced: only the LA and the gel are swapped.
+    final badLabel = switch (look) {
+      M3Look.la || M3Look.gel => M3GateLines.replaceLabel,
+      M3Look.oil => M3GateLines.leakLabel,
+      _ => M3GateLines.faultLabel,
+    };
 
     return PopScope(
       canPop: false,
@@ -1984,6 +2197,11 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
               unawaited(MascotSpeechLibrary.stop());
               setState(() => _muted = !_muted);
             },
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
+            hintAutoMiss: true,
             progress: DoProgress(
               labels: [for (final s in M3GateStation.values) M3GateLines.stationTitles[s]!],
               done: {for (final s in _run.completed) s.index},
@@ -2024,7 +2242,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
                   child: Center(child: ComboPop(key: ValueKey('combo-$_comboN'), mult: _comboMult)),
                 ),
               ...tableLayers(at: Offset(size.width / 2, pad.top + 130), quiet: quiet),
-              if (playing)
+              if (playing && !_freeze)
                 Positioned(
                   key: const ValueKey('station-chip'),
                   top: pad.top + 86,
@@ -2033,6 +2251,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
                     num: 'স্টেশন ${_run.station.index + 1}/7',
                     title: M3GateLines.stationTitles[_run.station]!,
                     onDocket: () {
+                      if (!_canAct) return;
                       _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
                       setState(() => _docketOpen = true);
                     },
@@ -2045,7 +2264,9 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
                   child: _JudgeSheet(
                     title: M3GateLines.lookNames[look]!,
                     painter: _lookPainter(look),
-                    badLabel: replaceWords ? M3GateLines.replaceLabel : M3GateLines.faultLabel,
+                    badLabel: badLabel,
+                    okKey: _gk('judge-ok'),
+                    badKey: _gk('judge-bad'),
                     onOk: (p) => unawaited(_onJudge(false, p)),
                     onBad: (p) => unawaited(_onJudge(true, p)),
                     onClose: () => setState(() => _look = null),
@@ -2149,6 +2370,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
                 Positioned.fill(
                   key: const ValueKey('docket-modal'),
                   child: _DocketSheet(
+                    okKey: _gk('docket-ok'),
                     tapTo: _run.tapTo,
                     threePhase: _run.threePhase,
                     onClose: () {
@@ -2266,10 +2488,14 @@ class _JudgeSheet extends StatelessWidget {
     required this.onOk,
     required this.onBad,
     required this.onClose,
+    this.okKey,
+    this.badKey,
   });
 
   final String title;
   final CustomPainter painter;
+  final GlobalKey? okKey;
+  final GlobalKey? badKey;
   final String badLabel;
   final ValueChanged<Offset> onOk;
   final ValueChanged<Offset> onBad;
@@ -2303,9 +2529,13 @@ class _JudgeSheet extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(child: _ActionButton(key: const ValueKey('judge-ok'), label: M3GateLines.okLabel, onTapUp: onOk)),
+                      Expanded(
+                        child: KeyedSubtree(key: okKey, child: _ActionButton(key: const ValueKey('judge-ok'), label: M3GateLines.okLabel, onTapUp: onOk)),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: _ActionButton(key: const ValueKey('judge-bad'), label: badLabel, filled: true, onTapUp: onBad)),
+                      Expanded(
+                        child: KeyedSubtree(key: badKey, child: _ActionButton(key: const ValueKey('judge-bad'), label: badLabel, filled: true, onTapUp: onBad)),
+                      ),
                     ],
                   ),
                 ],
@@ -2477,7 +2707,8 @@ abstract final class M3GateRankText {
 }
 
 class _DocketSheet extends StatelessWidget {
-  const _DocketSheet({required this.tapTo, required this.threePhase, required this.onClose});
+  const _DocketSheet({required this.tapTo, required this.threePhase, required this.onClose, this.okKey});
+  final GlobalKey? okKey;
   final int tapTo;
   final bool threePhase;
   final VoidCallback onClose;
@@ -2494,7 +2725,7 @@ class _DocketSheet extends StatelessWidget {
         'পেট্রোল · DO ও LA · DTR স্বাস্থ্য, ট্যাপ ${M3GateRun.tapFrom} → $tapTo · ফিডার পিলার · নতুন ${threePhase ? '3-ফেজ' : '1-ফেজ'} সার্ভিস সংযোগ · রাস্তার গার্ডিং',
         const Color(0xFF2E7D32),
       ),
-      (Icons.verified_user_rounded, 'সুরক্ষা', 'কাজের আগে টেস্টার · নিউট্রাল ও গার্ডিং সবসময় লাইভ ধরে · ট্যাপ শুধু HT-LT দুদিক বন্ধ করে', const Color(0xFF6A1B9A)),
+      (Icons.verified_user_rounded, 'সুরক্ষা', 'পুরো পিপিই আর ইনসুলেটেড টুল সঙ্গে · নিয়ম মেনে ধাপে ধাপে', const Color(0xFF6A1B9A)),
     ];
     return ColoredBox(
       color: Colors.black.withValues(alpha: 0.75),
@@ -2560,10 +2791,11 @@ class _DocketSheet extends StatelessWidget {
                         ),
                       const SizedBox(height: 12),
                       SizedBox(
+                        key: okKey,
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 18),
-                          label: Text('ডকেট বুঝে নিলাম · কাজ শুরু', style: bangla(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white)),
+                          label: Text(M3GateLines.docketOk, style: bangla(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1B3A57),
                             padding: const EdgeInsets.symmetric(vertical: 12),

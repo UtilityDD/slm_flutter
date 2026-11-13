@@ -4,7 +4,10 @@
 // perf, a full clean play (take each down, the four close looks by hand —
 // finger along the webbing, bend the stitches, turn the metal, unfold the
 // label — the call, the reason, the coworker refused), a slip that keeps the
-// harness on the stand, the 3-slip strike-out, and the deadly freeze.
+// harness on the stand, the 3-slip strike-out, and the deadly freeze. Audit
+// 2026-11-11: the coworker comes even on a fast play (the call waits for
+// him), no scene input in the praise window, a deadly run never moves on, and
+// gesture hints (a sweep over the harnesses / tools, a drag nudge in a look).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -18,6 +21,7 @@ import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/do_parts.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/harness_check.dart';
 import 'package:slm_flutter/features/game/harness_store.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
@@ -33,6 +37,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '1.4/do/0',
@@ -59,27 +64,30 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 Finder _button(String text) => find.widgetWithText(DoBigButton, text);
 
-/// Taps the one right card on the deck now up.
+/// Taps the one right card on the deck now up (and its proceed, if a reason).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
 }
 
+/// A seed whose deal passes [ok].
+int _seedWhere(bool Function(HarnessDeal d) ok) {
+  var seed = 0;
+  while (!ok(dealHarnesses(math.Random(seed), _today))) {
+    seed++;
+  }
+  return seed;
+}
+
+final _hand = find.byKey(const ValueKey('gesture-hint'));
+
 /// Opens the page on a navigator and waits for the guide.
-Future<ProviderContainer> _open(WidgetTester t, int seed) async {
-  t.view.physicalSize = const Size(784, 1700);
+Future<ProviderContainer> _open(WidgetTester t, int seed, {Size physical = const Size(784, 1700)}) async {
+  t.view.physicalSize = physical;
   t.view.devicePixelRatio = 2.0;
   final c = ProviderContainer();
   final nav = GlobalKey<NavigatorState>();
@@ -220,6 +228,19 @@ void main() {
         expect(b.decide(wear: false), isNull);
         expect(b.caught, isNotEmpty);
       }
+    });
+
+    test('a deadly call ends the run: next() and take() do nothing after it', () {
+      final d = dealHarnesses(math.Random(3), _today);
+      final belt = d.items.indexWhere((h) => h.kind == HarnessKind.waistBelt);
+      final run = HarnessRun(d)..index = belt;
+      expect(run.decide(wear: true)!.deadly, isTrue);
+      run.next();
+      expect(run.index, belt, reason: 'the run stays on the deadly harness');
+      expect(run.done, isFalse);
+      expect(run.take(d.items[(belt + 1) % 4].id), isFalse);
+      run.check(HarnessCheck.webbing);
+      expect(run.checks, isEmpty);
     });
 
     test('the sound harness: wear after all four checks; unchecked or pushed is a slip; a reject is a slip and it stays', () {
@@ -402,7 +423,7 @@ void main() {
         }
         debugPrint('PERF harness ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -518,15 +539,13 @@ void main() {
     });
 
     testWidgets('a wrong reason burns the table; the right one after it still pays 5', (t) async {
-      var seed = 0;
-      while (dealHarnesses(math.Random(seed), _today).items.first.sound) {
-        seed++;
-      }
+      // Not his harness (on his, the call would wait for him).
+      final seed = _seedWhere((d) => !d.items.first.sound && d.pushIndex != 0);
       final h = dealHarnesses(math.Random(seed), _today).items.first;
       final c = await _open(t, seed);
       int score() => t.widget<LevelShellBar>(find.byType(LevelShellBar)).levelScore;
       await _takeDown(t, 0);
-      // No checks: 15 waits on the table (no +5), and he cannot come.
+      // No checks: 15 waits on the table (no +5); not his harness.
       await t.tap(_button(HarnessLines.reject));
       await _pump(t, 2500);
       expect(find.text(HarnessLines.whyReject), findsWidgets);
@@ -534,6 +553,7 @@ void main() {
       final wrong = _onScreen(HarnessLines.whyWrong(h));
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1200);
       expect(score(), 0, reason: 'burnt, not paid');
       expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the deck stays for the retry');
@@ -545,10 +565,7 @@ void main() {
     });
 
     testWidgets('a sound harness rejected is a slip with its card; it stays on the stand; three strike out', (t) async {
-      var seed = 0;
-      while (!dealHarnesses(math.Random(seed), _today).items.first.sound) {
-        seed++;
-      }
+      final seed = _seedWhere((d) => d.items.first.sound && d.pushIndex != 0);
       final c = await _open(t, seed);
       await _takeDown(t, 0);
       for (var i = 0; i < 3; i++) {
@@ -563,8 +580,160 @@ void main() {
         }
       }
       expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
       final s = c.read(gameSaveProvider);
       expect(s.mistakes.map((m) => m.key), contains(HarnessMistakes.goodRejected.key));
+      expect(s.rungProgress['1.4/do/0'], isNot('cleared'));
+      await _close(t, c);
+    });
+
+    testWidgets('the coworker comes even on a fast play: পরব / বাতিল on his harness waits for him', (t) async {
+      for (final wantSound in [false, true]) {
+        final seed = _seedWhere((d) => d.items[d.pushIndex].sound == wantSound && d.items[d.pushIndex].flaw != HarnessFlaw.expired);
+        final deal = dealHarnesses(math.Random(seed), _today);
+        final h = deal.items[deal.pushIndex];
+        SharedPreferences.setMockInitialValues({});
+        final c = await _open(t, seed);
+        int score() => t.widget<LevelShellBar>(find.byType(LevelShellBar)).levelScore;
+        await _takeDown(t, deal.pushIndex);
+        // At once, without a single look: the call.
+        await t.tap(_button(h.sound ? HarnessLines.wear : HarnessLines.reject));
+        await t.pump();
+        expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in (sound: $wantSound)');
+        expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'the call waited');
+        expect(find.text(HarnessLines.whyReject), findsNothing);
+        expect(find.text(HarnessLines.whyWear), findsNothing);
+        await _pickRight(t, HarnessLines.coworker.right);
+        await _pump(t, 2500);
+        expect(score(), 10, reason: 'refused him');
+        // He has gone: the call now works.
+        if (h.sound) {
+          await _inspect(t);
+          await t.tap(_button(HarnessLines.wear));
+        } else {
+          await t.tap(_button(HarnessLines.reject));
+        }
+        await _pump(t, 2500);
+        expect(find.byType(CoworkerPeek), findsNothing);
+        expect(find.text(h.sound ? HarnessLines.whyWear : HarnessLines.whyReject), findsWidgets);
+        expect(t.takeException(), isNull);
+        await _close(t, c);
+      }
+    });
+
+    // Regression check of existing behaviour: here a right call sets
+    // _run.shown, which already blocks the stand and the board until the item
+    // is sent off. The added !tableBusy guard is defence in depth and is not
+    // what makes this test pass.
+    testWidgets('praise window (regression): a right call keeps the scene locked until the reason deck (no lens, no second take)', (t) async {
+      final seed = _seedWhere((d) => !d.items.first.sound && d.pushIndex != 0);
+      final h = dealHarnesses(math.Random(seed), _today).items.first;
+      final c = await _open(t, seed);
+      await _takeDown(t, 0);
+      await t.tap(_button(HarnessLines.reject));
+      await t.pump(const Duration(milliseconds: 60));
+      // In the praise window: tap the harness on the stand and another hook.
+      await t.tap(_label(HarnessLines.benchLabel), warnIfMissed: false);
+      await t.tap(_label(HarnessLines.pegLabel(1)), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 300));
+      for (final k in HarnessCheck.values) {
+        expect(_label(HarnessLines.lensLabel(k)), findsNothing);
+      }
+      await _pump(t, 2200);
+      expect(find.text(HarnessLines.whyReject), findsWidgets);
+      await _pickRight(t, HarnessLines.whyRight(h));
+      await _pump(t, 3000);
+      // Back to the board: hook 2 is still there, nothing was taken meanwhile.
+      expect(_label(HarnessLines.pegLabel(1)), findsOneWidget);
+      expect(_label(HarnessLines.benchLabel), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: the hand on the board, on the stand and in a close look', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = _seedWhere((d) => d.pushIndex != 0);
+      final c = await _open(t, seed);
+      // The board: a sweep over the harnesses.
+      expect(_hand, findsNothing);
+      await _pump(t, 9000);
+      expect(_hand, findsOneWidget, reason: 'board');
+      await _takeDown(t, 0);
+      expect(_hand, findsNothing, reason: 'a touch hides it');
+      // On the stand: a sweep over the tools.
+      await _pump(t, 9000);
+      expect(_hand, findsOneWidget, reason: 'stand');
+      // A close look: a short drag nudge inside the lens.
+      await t.tap(_label(HarnessLines.checks[HarnessCheck.stitch.index]), warnIfMissed: false);
+      await _pump(t, 450);
+      final lens = t.getRect(_label(HarnessLines.lensLabel(HarnessCheck.stitch)));
+      await _pump(t, 9000);
+      expect(_hand, findsOneWidget, reason: 'lens');
+      final tip = t.state<IdleHintState>(find.byType(IdleHint).first).debugFrame?.tip;
+      expect(tip, isNotNull);
+      expect(lens.inflate(4).contains(tip!), isTrue, reason: 'the nudge stays in the lens: $tip in $lens');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: the scene hand stays off while a deck, the coworker or a mistake card is up', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      // The scene's own hint is the outermost IdleHint (the decks bring theirs).
+      bool sceneHand() => t.state<IdleHintState>(find.byType(IdleHint).first).showing;
+      final cases = <(String, bool Function(HarnessDeal))>[
+        ('reason deck', (d) => !d.items.first.sound && d.pushIndex != 0),
+        ('mistake card', (d) => d.items.first.sound && d.pushIndex != 0),
+        ('coworker', (d) => d.pushIndex == 0),
+      ];
+      for (final (what, ok) in cases) {
+        SharedPreferences.setMockInitialValues({});
+        final c = await _open(t, _seedWhere(ok));
+        await _takeDown(t, 0);
+        await t.tap(_button(HarnessLines.reject));
+        await _pump(t, 2500);
+        switch (what) {
+          case 'reason deck':
+            expect(find.text(HarnessLines.whyReject), findsWidgets);
+          case 'mistake card':
+            expect(find.byType(MistakeCard), findsOneWidget);
+          default:
+            expect(find.byType(CoworkerPeek), findsOneWidget);
+        }
+        for (var i = 0; i < 6; i++) {
+          await _pump(t, 1500);
+          expect(sceneHand(), isFalse, reason: '$what is up ($i)');
+        }
+        expect(t.takeException(), isNull);
+        await _close(t, c);
+      }
+    });
+
+    testWidgets('gesture hints: on a 320-wide phone the webbing nudge stops short of the 0.2 band', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, _seedWhere((d) => d.pushIndex != 0), physical: const Size(640, 1700));
+      await _takeDown(t, 0);
+      await t.tap(_label(HarnessLines.checks[HarnessCheck.webbing.index]), warnIfMissed: false);
+      await _pump(t, 450);
+      final lens = t.getRect(_label(HarnessLines.lensLabel(HarnessCheck.webbing)));
+      expect(lens.width, lessThan(300));
+      // Card border 5 + painter side 14; the band starts 0.2 of the strip in.
+      final band = lens.left + 5 + 14 + 0.2 * (lens.width - 10 - 28);
+      await _pump(t, 9000);
+      expect(_hand, findsOneWidget);
+      var maxX = double.negativeInfinity;
+      for (var i = 0; i < 60; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+        final tip = t.state<IdleHintState>(find.byType(IdleHint).first).debugFrame?.tip;
+        if (tip != null) maxX = math.max(maxX, tip.dx);
+      }
+      expect(maxX, greaterThan(lens.left), reason: 'the hand was seen');
+      expect(maxX, lessThan(band - 6), reason: 'tip $maxX vs band $band');
+      expect(t.takeException(), isNull);
       await _close(t, c);
     });
 
@@ -606,6 +775,7 @@ void main() {
         final wrong = _onScreen(HarnessLines.coworker.wrong);
         expect(wrong, isNotEmpty);
         await t.tap(wrong.first, warnIfMissed: false);
+        await confirmChoice(t);
         await _pump(t, 1200);
         final s = c.read(gameSaveProvider);
         if (wantSound) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -189,6 +190,32 @@ class MascotSpeechLibrary {
   static FlutterTts? _tts;
   static bool _ttsReady = false;
   static int _speakToken = 0;
+
+  /// The silent reading hold of a rival line with no recorded clip (see
+  /// [speak]); a new line or [stop] ends it at once.
+  static Completer<void>? _silentHold;
+  static Timer? _silentTimer;
+
+  static void _endSilentHold() {
+    _silentTimer?.cancel();
+    _silentTimer = null;
+    final h = _silentHold;
+    _silentHold = null;
+    if (h != null && !h.isCompleted) h.complete();
+  }
+
+  /// Widget tests skip the silent reading hold of an unrecorded rival line
+  /// (the device voice returned at once there too); a test that checks the
+  /// hold sets this and resets it in tearDown.
+  static bool debugSilentHoldInTests = false;
+  static final bool _inWidgetTest = !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
+
+  /// A fair reading time for a caption of [textBn] (used when a line is not
+  /// voiced: muted, or a rival line with no recorded clip yet).
+  static Duration readHold(String textBn) {
+    final chars = textBn.trim().length;
+    return Duration(milliseconds: (900 + chars * 55).clamp(1800, 5200));
+  }
 
   // ===========================================================================
   // 1. LADDER PRESENCE, WELCOME, IDLE NUDGE & POKE LINES
@@ -950,6 +977,7 @@ class MascotSpeechLibrary {
     bool rival = false,
   }) async {
     final token = ++_speakToken;
+    _endSilentHold();
     if (muted || textBn.trim().isEmpty) {
       MascotTalk.reset();
       RivalTalk.reset();
@@ -1016,6 +1044,24 @@ class MascotSpeechLibrary {
           endLips();
         }
       }
+      return;
+    }
+
+    // 1c. The rival speaks only in his recorded voice: a line with no clip yet
+    // is never read by the device voice (that is the guide's voice, and his
+    // mouth would move with it). He stays silent and his caption is held for
+    // a reading time; a new line or [stop] ends the hold.
+    if (rival) {
+      DsVoice.stop();
+      LearnVoice.stop();
+      await _stopTts();
+      MascotTalk.reset();
+      RivalTalk.reset();
+      if (token != _speakToken) return;
+      if (_inWidgetTest && !debugSilentHoldInTests) return;
+      final hold = _silentHold = Completer<void>();
+      _silentTimer = Timer(readHold(cleanText), _endSilentHold);
+      await hold.future;
       return;
     }
 
@@ -1093,6 +1139,7 @@ class MascotSpeechLibrary {
   /// Stops any active mascot speech (both neural MP3 and TTS) and resets lip-sync immediately.
   static Future<void> stop() async {
     _speakToken++;
+    _endSilentHold();
     MascotTalk.reset();
     RivalTalk.reset();
     DsVoice.stop();

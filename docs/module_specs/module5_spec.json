@@ -1,0 +1,2466 @@
+{
+ "lessons": [
+  {
+   "lessonId": "5.1",
+   "titleBn": "'লাইন ট্রিপ করেছে'—প্রথম কাজ কী?",
+   "board": {
+    "artFolder": "assets/game/art/m5_board51/",
+    "mythBn": "লাইন তো ট্রিপ করেই আছে, তার মানে ওটা ডেড। তাড়াতাড়ি কাজ সারার জন্য পারমিটের দরকার নেই।",
+    "rounds": [
+     {
+      "promptBn": "ফোন এল: ফিডার ট্রিপ করেছে। মাঠে নামার আগে কী করবেন?",
+      "safe": [
+       "ask_trip: 'অপারেটরকে জিজ্ঞেস: তৎক্ষণাৎ ট্রিপ? ওভারকারেন্ট না আর্থ ফল্ট?'",
+       "ask_recloser: 'রিক্লোজার চেষ্টা করেছিল কি না, কতবার'",
+       "ask_weather: 'ট্রিপের সময়ের আবহাওয়া আর গ্রাহকের শব্দ-ঝলকানির খবর'",
+       "ask_logbook: 'কন্ট্রোল রুমকে ফিডারের পুরনো লগবুক দেখতে বলা'"
+      ],
+      "traps": [
+       {
+        "what": "go_blind: van speeds out while the phone rings",
+        "rejectBn": "ফিল্ডে যাওয়ার আগে কন্ট্রোল রুমের অপারেটরের কাছ থেকে যতটা সম্ভব তথ্য সংগ্রহ করুন — প্রতিটি তথ্যই সূত্র।"
+       },
+       {
+        "what": "charge_once: tells the operator to switch on once and see",
+        "rejectBn": "এটাই 'Fault Hunting by Re-energization' — স্থায়ী ফল্টে যন্ত্রপাতি আরও ক্ষতিগ্রস্ত হয়, আগুন লাগতে পারে।"
+       },
+       {
+        "what": "ignore_operator: waves off the operator",
+        "rejectBn": "অভিজ্ঞ অপারেটর অনেক সময় ফল্টের ধরন দেখেই উৎসের ভালো ধারণা দিতে পারেন — তাঁর অভিজ্ঞতাকে বিশ্বাস করুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "লাইন ট্রিপ করে বন্ধ আছে — এখন লাইনটাকে কী ধরবেন?",
+      "safe": [
+       "treat_live: 'ট্রিপ হওয়া লাইনকে লাইভ ধরে দূরে থাকা'",
+       "ptw_earth: 'বৈধ PTW নিয়ে লাইন আইসোলেট আর আর্থিং'",
+       "personal_earth: 'ব্যক্তিগত আর্থিং লাগিয়ে তবেই লাইনে হাত'"
+      ],
+      "traps": [
+       {
+        "what": "bare_grab: bare hand on the dark tripped line",
+        "rejectBn": "লাইন ট্রিপ করেছে মানে 'ডেড' নয় — যেকোনো মুহূর্তে আবার চালু হতে পারে, বিশেষ করে অটো-রিক্লোজার থাকলে।"
+       },
+       {
+        "what": "after_one_try: climbs thinking the recloser will not try again",
+        "rejectBn": "স্থায়ী ফল্টে রিক্লোজার কয়েকবার চেষ্টা করে — অনুমান নয়, নিশ্চিতকরণ।"
+       },
+       {
+        "what": "guess_dead: crew starts on 'লাইন তো বন্ধই'",
+        "rejectBn": "ট্রিপ হওয়া লাইনকে 'লাইভ' হিসেবে গণ্য করাই সবচেয়ে বড় সুরক্ষা নীতি।"
+       }
+      ]
+     },
+     {
+      "promptBn": "রওনার আগে গাড়ি আর টিম তৈরি?",
+      "safe": [
+       "torch_bino: torch and binoculars in the van",
+       "rod_ppe: discharge rod and PPE in the van",
+       "briefing: crew huddle with the notepad"
+      ],
+      "traps": [
+       {
+        "what": "no_torch: night patrol without a torch",
+        "rejectBn": "গাড়িতে টর্চলাইট, বাইনোকুলার, ডিসচার্জ রড আর PPE আছে কিনা — বেরোনোর আগেই নিশ্চিত করুন।"
+       },
+       {
+        "what": "rod_left: discharge rod left at the depot",
+        "rejectBn": "ফল্ট খোঁজার সরঞ্জামে ডিসচার্জ রড আর PPE থাকতেই হবে।"
+       },
+       {
+        "what": "solo_plan: drives off with the plan in his head",
+        "rejectBn": "টিম ব্রিফিং: প্রাপ্ত তথ্য আর কাজের পরিকল্পনা নিয়ে টিমের সাথে আলোচনা করুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "প্রবল বাতাস আর বৃষ্টি, রিলে বলছে আর্থ ফল্ট — কোথা থেকে খুঁজবেন?",
+      "safe": [
+       "tree_area: patrol starts on the wooded section",
+       "branch_insulator: look for a broken branch or punctured insulator"
+      ],
+      "traps": [
+       {
+        "what": "open_field: starts across open fields",
+        "rejectBn": "বাতাস-বৃষ্টি আর আর্থ ফল্ট মানে সম্ভবত ডাল ভেঙেছে বা ইনসুলেটর পাংচার — শুরু হোক গাছের জঙ্গলযুক্ত এলাকা দিয়ে।"
+       },
+       {
+        "what": "jumper_hunt: hunts a melted jumper on a storm night",
+        "rejectBn": "গলা জাম্পার বা পাখি-জন্তু সাধারণত পরিষ্কার দিনে ওভারকারেন্টের সূত্র।"
+       },
+       {
+        "what": "walk_all: walks the whole feeder pole by pole",
+        "rejectBn": "একটি ভালো অনুমান খোঁজার এলাকা ছোট করে আর সময় বাঁচায়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "রিক্লোজার কয়েকবার লাইন চালু করল, শেষে ফাইনাল ট্রিপ — কী বুঝবেন?",
+      "safe": [
+       "clash_permanent: wind-clashing conductors became permanent",
+       "lockout_hunt: LOCKOUT lamp, van leaving with PTW"
+      ],
+      "traps": [
+       {
+        "what": "lockout_dead: touches the locked-out line without permit",
+        "rejectBn": "কন্ট্রোল রুম ভুল করেও লাইন চালু করতে পারে — PTW আর ব্যক্তিগত আর্থিং ছাড়া ট্রিপ হওয়া লাইন স্পর্শ নয়।"
+       },
+       {
+        "what": "fault_gone: thinks the fault cleared itself",
+        "rejectBn": "ফল্ট চলে গেলে লাইন চালু থাকে; স্থায়ী হলে কয়েকবার চেষ্টার পর লক-আউট হয়।"
+       },
+       {
+        "what": "one_more_charge: asks for one more charge",
+        "rejectBn": "স্থায়ী ফল্টে বারবার লাইন চালু করলে যন্ত্রপাতি আরও ক্ষতিগ্রস্ত হয়, আগুন লাগতে পারে।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_5_1_a",
+     "engineType": "m5_trip_call",
+     "titleBn": "কন্ট্রোল রুমের ফোন",
+     "verb": "interview the operator, probe vague answers",
+     "scene": "Night section-office duty desk over the trainee's shoulder: ringing phone, notepad, cork board with a feeder map (4 dealt sections: trees, river, market, fields) and 3 suspect photo cards; window weather matches each call; van and crew outside; coworker can peep at the door. 2 calls per play, a time card between them.",
+     "flow": [
+      "Guide first (no skip): 'ফিডার ট্রিপ করেছে, চারদিক অন্ধকার! মাঠে নামার আগে কন্ট্রোল রুম থেকে খবর নিন।'",
+      "Drag the handset up. Operator (TTS): '11 কেভি ফিডার নম্বর 4 ট্রিপ করেছে, লাইন বন্ধ আছে।'",
+      "7 shuffled question tiles ('ট্রিপ কীভাবে হলো?' · 'রিলে কী দেখাল?' · 'রিক্লোজার?' · 'আবহাওয়া?' · 'গ্রাহকের খবর?' · 'লগবুক?' · 'আপনার কী মনে হয়?'); the notepad copies answers verbatim; 2 dealt topics answer vaguely first ('রিলে পড়েছে।') and a second tap probes ('ওভারকারেন্ট না আর্থ ফল্ট?').",
+      "Drag the handset down. In the coworker's call the operator first adds 'ফল্ট কোথায় বুঝতে পারছি না।' and the two-beat moment runs before the completeness check.",
+      "Completeness: any of the 4 lesson questions unasked or still vague = slip, call resumes ('হ্যালো? আর কিছু জানতে চান?'); else ◆ → 'ফোন রাখার আগে এত প্রশ্ন কেন করলেন?'.",
+      "Drag the red pin onto a suspect card (worker labels only) → ◆ → 'কোন সূত্রে এই সন্দেহ?'.",
+      "Drag the van token onto the start section (storm + earth fault → trees; clear OC or repeated recloses → the reported/logbook section) → ◆ → 'পেট্রোলিং এখান থেকে কেন শুরু?'.",
+      "Call 2, then the team briefing deck at the van (right: 'খবর, সন্দেহ, শুরুর জায়গা — আর আগে PTW, আইসোলেট, আর্থিং।'), then the pass panel."
+     ],
+     "dealtVariety": "2 of the 3 lesson examples in random order; feeder number; shift and weather; which topics answer vaguely; location clue source (customer, logbook, both; never conflicting); section names and positions; tile order; coworker call; phrasing libraries. Trip timing: storm calls always answer 'তৎক্ষণাৎ' (lesson: ঝড়ের সময় তৎক্ষণাৎ ট্রিপ = গাছ বা ডাল); other calls dealt freely.",
+     "deadly": [
+      "Listening to the coworker's myth 2 and asking the operator to charge the locked-out feeder (module rule R8: re-energizing a faulted line to test it = deadly, from 5.4 'মারাত্মক ভুল'). Freeze, then re-trip with flash and fire at the fault spot on the map. Raised from the designer's slip; needs owner yes."
+     ],
+     "slips": [
+      "Hanging up with a lesson question unasked or vague (one per attempt).",
+      "Wrong suspect for the clues.",
+      "Wrong patrol start section.",
+      "Wrong team-briefing card."
+     ],
+     "coworkerPushBn": "Once per play, in his pre-dealt call, on the first hang-up drag (mandatory every call). Beat 1, his voice, guide idle, lesson myth 2 word for word: 'কন্ট্রোল রুম বলছে ফল্ট খুঁজে পাওয়া যাচ্ছে না, লাইনটা একবার চার্জ করে দেখাই যাক কী হয়।' Beat 2: chip, guide 'অপারেটরকে কী বলবেন?'. Refuse: 'না — স্থায়ী ফল্ট থাকলে যন্ত্রপাতি আরও ক্ষতি হবে, আগুনও লাগতে পারে।' / 'চার্জ করে নয় — আগে পেট্রোলিং করে ফল্ট খুঁজি।' Listen: 'ঠিক আছে, একবার চার্জ করে দেখুন কী হয়।' (deadly).",
+     "reasonQuestionsBn": [
+      "ফোন রাখার আগে এত প্রশ্ন কেন করলেন?",
+      "কোন সূত্রে এই সন্দেহ?",
+      "পেট্রোলিং এখান থেকে কেন শুরু?"
+     ],
+     "gestureHints": "Phone: upward drag arc after 4 s. Tiles: tap glyph sweeping the whole row evenly after 6 s. Hang-up: downward arc after 10 s with at least one question asked, shown whether notes are complete or not. Pin and van: short drag to the board centre / map edge, never onto a card or section. Decks: pulse on the sheet after 8 s.",
+     "lessonPoints": [
+      "ফিল্ডে যাওয়ার আগে কন্ট্রোল রুমের অপারেটরের কাছ থেকে যতটা সম্ভব তথ্য সংগ্রহ করুন",
+      "ঝড়ের সময় তৎক্ষণাৎ ট্রিপ করা মানে সম্ভবত গাছ বা ডালপালা পড়েছে।",
+      "প্রবল বাতাস এবং বৃষ্টি + আর্থ ফল্ট ইন্ডিকেশন = সম্ভবত গাছের ডাল ভেঙে পড়েছে বা ইনসুলেটর পাংচার হয়েছে।",
+      "পরিষ্কার দিন + ওভারকারেন্ট ফল্ট = সম্ভবত কোনো পাখি বা জন্তু শর্ট সার্কিট ঘটিয়েছে, অথবা কোনো জাম্পার বা কানেক্টর গলে গেছে।",
+      "লগবুক দেখুন: … যদি একটি নির্দিষ্ট সেকশনে বারবার ফল্ট হয়, তবে সমস্যাটি সম্ভবত সেখানেই।",
+      "যদি লাইনে কোনো স্থায়ী ফল্ট থাকে, তবে বারবার লাইন চালু করলে যন্ত্রপাতি আরও বেশি ক্ষতিগ্রস্ত হতে পারে এবং আগুন লেগে যেতে পারে।"
+     ],
+     "giveawayRisks": "Asking every tile is the lesson's rule, so it is not a free flag; the skill is spotting vague answers (no badge, no tile change), linking clues to a suspect (cards show photos, not formulas) and the start section (all drawn with equal weight). The guide never names a clue, suspect or section. His call is chosen before play and hang-up is mandatory, so he cannot be outrun. Unique loop: no other level has a phone interview with probing."
+    },
+    {
+     "packId": "do_5_1_b",
+     "engineType": "m5_recloser_watch",
+     "titleBn": "ট্রিপ মানে ডেড নয়",
+     "verb": "count recloser shots against decoys",
+     "scene": "Village road at dusk then night, 11 kV feeder on 4 PCC spans, lit houses, tea stall, the van by pole 1; the crew is already in the area when the lights go out. Notepad bottom-left, radio bottom-right. The fault (branch, bird or melted jumper, clashed conductors; dealt) is drawn only in the instant of a flash, and fully under torchlight at the end.",
+     "flow": [
+      "Guide first: 'সন্ধে নামছে — হঠাৎ পুরো পাড়া অন্ধকার! লাইন ট্রিপ করেছে। চোখ রাখুন।'",
+      "Operator: 'ফিডার 4 ট্রিপ করেছে। আপনারা ওখানেই আছেন — কী দেখছেন, জানাবেন।' One-time demo: a tap puts a stroke on the notepad, then it is erased.",
+      "Watch (25–60 s): 2–3 recloser shots (every window and street light on together for about 1 s, bang and flash at the fault span, dark again) mixed with 1–2 decoys (lightning in storm plays, a motorbike headlight). Every tap adds a stroke. A plain 'পোলে উঠুন' button stays on the pole all along, never highlighted.",
+      "Lock-out: 'ফাইনাল ট্রিপ — লক-আউট। কতবার লাইন চালু হতে দেখলেন? ঝলক কোথায়?' Set the count wheel, tap the span. Wrong = slip; the operator then reads his record. Right → ◆ → 'লাইনটা এখন কী অবস্থায়?'.",
+      "Hold the radio to ask for the PTW (the coworker fires on the first press). 'ফিডার 4 আইসোলেট করা হলো। PTW নম্বর 472 — লিখে নিন।' Drag the PTW slip to the trainee → ◆ → 'গাড়ি ছাড়ার আগে PTW কেন?'.",
+      "Drag the van to the reported span (driving before the PTW is in hand = slip). Optional: locals at the tea stall: 'হ্যাঁ, ওই দিকেই আলো ঝলকে উঠে দপ করে নিভে গেল!'.",
+      "At the span: hold the tester on its stick to each phase → 0 V (added beat, M1 step 18); then hold to drive the earth spike and drag the clamp onto the conductors → ◆ → 'ওঠার আগে আর্থ কেন?'.",
+      "'পোলে উঠুন' → clear the fault → pass panel. Deadly path: freeze grey, the next recloser shot or 'ফিডার 4 চার্জ করছি…' arcs in colour."
+     ],
+     "dealtVariety": "Weather and fault set; 2–3 shots and intervals; lock-out silence length; fault span; decoys and timing; feeder and PTW numbers; coworker side; phrasing libraries.",
+     "deadly": [
+      "Climbing or touching the tripped line before the PTW (own tap or listening to myth 1) — M1 step 17.",
+      "Climbing after the PTW but before the tester shows 0 V — M1 step 18 (added).",
+      "Climbing before the personal earth is on the conductors.",
+      "Earth clamp on the line before the spike is in — M1 step 15."
+     ],
+     "slips": [
+      "Wrong shot count (missed taps or decoy taps).",
+      "Wrong flash span.",
+      "Driving off on patrol before the PTW is in hand.",
+      "Earth set applied before the tester has shown 0 V (4.1a ruling)."
+     ],
+     "coworkerPushBn": "On the first (mandatory) radio press for the PTW. Beat 1, lesson myth 1 word for word: 'লাইন তো ট্রিপ করেই আছে, তার মানে ওটা ডেড। তাড়াতাড়ি কাজ সারার জন্য পারমিটের দরকার নেই।' Beat 2: guide 'ওকে কী বলবেন?'. Refuse: 'না — রিক্লোজার বা কন্ট্রোল রুম যেকোনো মুহূর্তে আবার চালু করতে পারে।' / 'PTW আর আর্থিং ছাড়া ট্রিপ লাইনে হাত দেব না।' Listen: 'ঠিক, লাইন তো মরা — উঠে তাড়াতাড়ি সেরে ফেলি।' (deadly).",
+     "reasonQuestionsBn": [
+      "লাইনটা এখন কী অবস্থায়?",
+      "গাড়ি ছাড়ার আগে PTW কেন?",
+      "ওঠার আগে আর্থ কেন?"
+     ],
+     "gestureHints": "Watch: the one-time demo only, never after a shot. Count wheel: vertical swipe after 5 s. Span pick: tap glyph sweeping all spans evenly. Radio: hold glyph after 6 s. Tester, spike and clamp: hold and drag glyphs shown together with equal weight, so the order is not given. 'পোলে উঠুন' never hinted.",
+     "lessonPoints": [
+      "লাইন ট্রিপ করেছে মানে এটি 'ডেড' নয়। এটি যেকোনো মুহূর্তে (বিশেষ করে অটো-রিক্লোজার থাকলে) আবার চালু হতে পারে।",
+      "পেট্রোলিং বা কাজ শুরুর আগে অবশ্যই একটি বৈধ PTW নিন এবং লাইনটিকে সঠিকভাবে আইসোলেট ও আর্থিং করুন।",
+      "PTW এবং ব্যক্তিগত আর্থিং ছাড়া কোনো ট্রিপ হওয়া লাইনকে স্পর্শ করা যাবে না।",
+      "যদি ফল্টটি স্থায়ী হয়, তবে এটি কয়েকবার চেষ্টা করার পর স্থায়ীভাবে 'লক-আউট' বা বন্ধ হয়ে যায়।"
+     ],
+     "giveawayRisks": "All spans equally dark; the fault is drawn only in the flash. Decoy flashes and stray-tap strokes defeat tap-spam. Lock-out timing is dealt. The guide never says PTW, tester or earth before the player acts; 'পোলে উঠুন' is always present and plain. Unique loop: counting live events against decoys (sky_read 1.9 decides stop/continue instead)."
+    }
+   ],
+   "unsupported": [
+    "Number of recloser attempts and intervals (lesson: 'কয়েকবার', 'কয়েক সেকেন্ড বা মিনিট'): 2–3 shots in game seconds is a game choice.",
+    "How a reclose looks from the street and how each fault looks are illustration only.",
+    "Correction to the designer's note: the lesson DOES tie instant tripping in a storm to a tree or branch (importance line), so storm calls deal 'তৎক্ষণাৎ'; it ties nothing to delayed tripping.",
+    "Relay type and weather for the repeated-reclose case ('জোর বাতাস, বৃষ্টি নেই', overcurrent) are inferred.",
+    "The tester-then-earth order and the earth-first clamp come from lesson 1.5/1.6 and M1 steps 15/18, not 5.1.",
+    "Line clear after the repair is not in 5.1; do_5_1_b ends at the fault cleared.",
+    "Operator and locals' words are written for the scene; only the topics are from the lesson."
+   ],
+   "ownerDecisions": [
+    "do_5_1_a: listening to myth 2 is raised from slip to DEADLY under module rule R8 (see table). Confirm, or rule R8 down to slip module-wide.",
+    "do_5_1_b: added tester 0 V beat before the personal earth (M1 step 18); climbing untested = deadly, earth before test = slip.",
+    "do_5_1_a: 2 calls per play; no van-kit beat (kit taught on board round 3 and the briefing). OK?",
+    "do_5_1_b: crew already in the area sees the recloser; the watch is not patrol. Accept?",
+    "Board drops the designer's round 5 (clear-day overcurrent; taught by the do_5_1_a suspect pin) to keep 5 rounds.",
+    "No YouTube id for 5.1 yet; coworker myth clips need recording."
+   ]
+  },
+  {
+   "lessonId": "5.2",
+   "titleBn": "লাইন পেট্রোলিং-এর সঠিক নিয়ম",
+   "board": {
+    "artFolder": "assets/game/art/patrol_board/",
+    "mythBn": "মাটিতে পড়ে থাকা তারটি স্পার্ক করছে না, তার মানে ওটা ডেড।",
+    "rounds": [
+     {
+      "promptBn": "ফিডার ট্রিপ করেছে — পেট্রোলিং কীভাবে শুরু করবেন?",
+      "safe": [
+       "start_source: 'সাবস্টেশন থেকে লোডের দিকে'",
+       "start_split: 'দুই দল দুই মাথা থেকে, যোগাযোগ রেখে'",
+       "start_teeoff: 'আগে টি-অফ পয়েন্ট'"
+      ],
+      "traps": [
+       {
+        "what": "mid_start: starts mid-feeder",
+        "rejectBn": "মাঝখান থেকে শুরু করলে অংশ বাদ পড়ে — সোর্স থেকে লোডের দিকে চলুন।"
+       },
+       {
+        "what": "skip_tee: walks past a T-off",
+        "rejectBn": "টি-অফ পয়েন্টে ফল্টের সম্ভাবনা বেশি — আগে ওখানেই দেখুন।"
+       },
+       {
+        "what": "split_no_contact: two teams with no radio",
+        "rejectBn": "লাইন ভাগ করে দুই দিক থেকে চললে যোগাযোগ বজায় রাখুন।"
+       },
+       {
+        "what": "no_map: confused at a fork with no map",
+        "rejectBn": "ফিডারের ম্যাপ সাথে রাখুন — রুট আর টি-অফ সহজে মেলে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "পোলের ওপরে-নিচে ক্ষতি — কীভাবে দেখবেন?",
+      "safe": [
+       "eyes_bino: standing still with binoculars on the pole top",
+       "eyes_down: stopped, checking the pole base and stay anchor"
+      ],
+      "traps": [
+       {
+        "what": "climb_look: climbs to look at the insulator",
+        "rejectBn": "বাইনোকুলারে পোলে না চড়েই ওপরের সূক্ষ্ম ফাটল দেখা যায়।"
+       },
+       {
+        "what": "walk_up: walks with binoculars to his eyes, pothole ahead",
+        "rejectBn": "ওপরে তাকিয়ে হাঁটলে হোঁচট বা গর্ত — থামুন, দেখুন, তারপর হাঁটুন।"
+       },
+       {
+        "what": "only_up: stares up past a smashed pole base",
+        "rejectBn": "নিচেও দেখুন — গাড়ির ধাক্কার চিহ্ন, পোলের গোড়া বা অ্যাঙ্করের ক্ষতি।"
+       }
+      ]
+     },
+     {
+      "promptBn": "চোখে কিছু ভাঙা দেখা যাচ্ছে না — আর কীভাবে খুঁজবেন?",
+      "safe": [
+       "ear: stopped, hand cupped to ear",
+       "nose: stopped, smell lines from a scorched cable"
+      ],
+      "traps": [
+       {
+        "what": "earphones: patrols with music in",
+        "rejectBn": "সব ইন্দ্রিয় সজাগ রাখুন — হিসহিস্ বা ভনভন শব্দই সূত্র।"
+       },
+       {
+        "what": "nothing_broken: shrugs past an intact pole",
+        "rejectBn": "ময়লা জমা ইনসুলেটর বা ছোট পাখি-গিরগিটিও চিহ্ন ছাড়া ফল্ট ঘটায়।"
+       },
+       {
+        "what": "hold_nose: hurries past the smell",
+        "rejectBn": "পোড়া ইনসুলেশন বা তেলের গন্ধই ফল্টের দিকে নিয়ে যায়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "মাটিতে একটা তার পড়ে আছে, স্পার্ক নেই — কী করবেন?",
+      "safe": [
+       "cordon_far: '10 মিটার দূর দিয়ে দড়িতে ঘেরা'",
+       "stop_far: 'লাইভ ধরে নিয়ে দূরে থামা'"
+      ],
+      "traps": [
+       {
+        "what": "stick_lift: lifts it with a stick",
+        "rejectBn": "স্পার্ক না করলেও তার লাইভ থাকতে পারে — ছোঁয়া মানেই মৃত্যু।"
+       },
+       {
+        "what": "stand_close: bends over it on a dry road",
+        "rejectBn": "শুকনো মাটি বা পিচে লাইভ তারও স্পার্ক করে না — দূরে থাকুন।"
+       },
+       {
+        "what": "tight_rope: rope two steps from the wire",
+        "rejectBn": "কমপক্ষে 10 মিটার (প্রায় 33 ফুট) দূর দিয়ে এলাকা ঘিরে দিন।"
+       },
+       {
+        "what": "step_over: steps over it",
+        "rejectBn": "পড়ে থাকা তার সর্বশক্তি দিয়ে এড়িয়ে চলুন — ধরে নিন লাইভ।"
+       }
+      ]
+     },
+     {
+      "promptBn": "পড়ে থাকা তারের কাছেই দাঁড়িয়ে — কীভাবে বেরোবেন?",
+      "safe": [
+       "shuffle: 'দুই পা একসাথে, ছোট ছোট পা'",
+       "hop: 'দুই পা জোড়া করে লাফ'"
+      ],
+      "traps": [
+       {
+        "what": "stride: runs with long strides",
+        "rejectBn": "মাটিতেও ভোল্টেজ থাকতে পারে — ছোট পায়ে বা লাফিয়ে বেরোন।"
+       },
+       {
+        "what": "wide: stands with feet wide apart",
+        "rejectBn": "দুই পা ফাঁক নয় — পা একসাথে রেখে এলাকা থেকে বেরোন।"
+       },
+       {
+        "what": "toward: walks toward the wire",
+        "rejectBn": "তারের দিকে নয় — 10 মিটারের বাইরে বেরিয়ে আসুন।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_5_2_a",
+     "engineType": "m5_fault_address",
+     "titleBn": "ফল্টের ঠিকানা",
+     "verb": "drive the feeder, read FPIs, bracket",
+     "scene": "Aerial-oblique feeder landscape panning with the van: substation at one end, main line through paddy to the load end, 1–2 T-offs (one may hide under a mango grove), FPI boxes on some poles, a sectionalizer in some calls. Dashboard: folded map card, radio, tray with two bracket flags, and a docket chip 'ফিডার 4 · PTW 472 · আইসোলেটেড' (added: PTW held before patrol, module rule R6).",
+     "flow": [
+      "Guide first: 'ফিডার ট্রিপ করেছে! কোথায় ফল্ট, খুঁজে বের করুন।'",
+      "Van dealt at depot, mid-route or load end. Corner guide: 'কোথা থেকে শুরু করবেন?' Optional map card (identical symbols; the hidden T-off shows only here).",
+      "Drag the van along the road; tap an FPI box beside it for a close-up (bright flashing LED or dark); the reading is written on the map card. First reading away from the source end = slip.",
+      "Passing a T-off on the main line without reading its branch FPI = slip; reading it → ◆ → 'টি-অফে আগে কেন থামলেন?'.",
+      "Long-feeder call: drag van 2 to the far end → ◆ → 'লম্বা লাইনে দুই দল দুই মাথা থেকে কেন?'; driving off alone = slip.",
+      "Coworker on the 2nd FPI reading of the dealt call (driving pauses).",
+      "Bracket: once a bright and the next dark FPI are read, drag two flags onto read FPIs → ◆ → 'কেন এই অংশটাই?'. Wrong pair = slip.",
+      "Sectionalizer call (in-service line, ground only): one stretch stays dark; bracket from the sectionalizer to the next device on the dark side. History note in about half the plays: 'এই পোলে আগেও 3 বার ফল্ট' → deck (right: 'শুধু মেরামত নয় — মূল কারণ খুঁজি').",
+      "3 calls; pass panel; last line 'এবার ওই অংশটা হেঁটে দেখার পালা।'"
+     ],
+     "dealtVariety": "Route template (3–4, mirrored); FPI count and positions; T-offs and grove; fault location type; van start; long call; history note; coworker call and side; reason libraries.",
+     "deadly": [],
+     "slips": [
+      "First reading away from the source end.",
+      "Passing a T-off without reading it.",
+      "Long feeder: driving off alone.",
+      "Listening to the coworker.",
+      "Wrong bracket.",
+      "History note: repair only."
+     ],
+     "coworkerPushBn": "On the 2nd FPI reading of one dealt call (every call needs ≥2 readings). Line: 'ফল্ট মানেই তার ছিঁড়ে যাওয়া বা কিছু ভেঙে যাওয়া। কিছুই তো ভাঙা নেই — ফিরে চলো!' (first sentence is myth 2). Guide 'ওঁর কথা শুনবেন?'. Right: 'না — চিহ্ন ছাড়াও ফল্ট হয়, FPI ধরে এগোই'. Wrong: 'ঠিকই, কিছু ভাঙা নেই — ফিরে চলি' / 'ভাঙা তার না দেখলে লাইনে ফল্ট নেই'. Listening = slip.",
+     "reasonQuestionsBn": [
+      "সাবস্টেশন থেকে কেন শুরু করলেন?",
+      "টি-অফে আগে কেন থামলেন?",
+      "কেন এই অংশটাই?",
+      "লম্বা লাইনে দুই দল দুই মাথা থেকে কেন?",
+      "শুধু মেরামত না করে কেন মূল কারণ খুঁজবেন?"
+     ],
+     "gestureHints": "Van idle: short back-and-forth drag, never toward an end. Beside an unread FPI: tap pulse on that box (any FPI the van stands beside). Van 2: short wiggle, no destination. Flags: lift and drop back, no target. Decks: pulse over all cards equally. The map card is never hinted.",
+     "lessonPoints": [
+      "সোর্স থেকে শুরু: সাধারণত, সাবস্টেশন বা ফিডারের শুরু থেকে পেট্রোলিং শুরু করা হয় এবং লোডের দিকে এগিয়ে যাওয়া হয়।",
+      "টি-অফ পয়েন্টে মনোযোগ: … প্রথমে এই জায়গাগুলো পরীক্ষা করুন।",
+      "ভাগ করে নিন: … দুই দিক থেকে পেট্রোলিং শুরু করুন। যোগাযোগ বজায় রাখুন।",
+      "যে দুটি FPI-এর মাঝখানে ফল্টটি হয়েছে, তা সহজেই বোঝা যায়।",
+      "শুধু মেরামত না করে, সমস্যার মূল কারণ খুঁজে বের করার চেষ্টা করুন।"
+     ],
+     "giveawayRisks": "Identical FPI symbols; LED state only in the close-up; T-offs unmarked; flags snap only to read FPIs; coworker on a reading index, not the faulty section; no cause caption. Owns the module's bracket-between-readings verb (5.5a no longer flags a span)."
+    },
+    {
+     "packId": "do_5_2_b",
+     "engineType": "m5_sense_walk",
+     "titleBn": "থামুন, দেখুন, শুনুন",
+     "verb": "hold-walk, release-stop, check senses",
+     "scene": "Side-scrolling daytime road beside the section between two FPI poles (5–7 poles, ruts, potholes, a culvert, maybe a DTR). The feeder is in service, tripping and reclosing (temporary faults); ground only, nothing touched (module rule R7). Corner chips: ear, nose. Coworker peeps from behind a pole.",
+     "flow": [
+      "Guide first: 'লাইন বারবার ট্রিপ করছে! হেঁটে সূত্রটা খুঁজুন।'",
+      "Hold the ground strip to walk (eyes down), release to stop. Forward only.",
+      "At a stop: swipe up to tilt to the pole tops and tap a part to tag it (CHANGED: no binocular circle-drag, which is 3.2/do/1's loop); hold the ear chip (sound is present or absent within this pole's span, no intensity meter — CHANGED so loudness homing stays 5.9b's verb); hold the nose chip (present/absent); tap the pole base or anchor to tag.",
+      "Clues per play: 1 eye-up, 1 eye-down, 1 hidden (ear: hiss/hum at one pole whose insulator shows only a dirt layer; or nose: burnt insulation / oil at the DTR). Right tag → ◆ → reason; false tag = slip.",
+      "Fallen wire AHEAD (no spark, dry soil or pitch): release before 10 m (no ground mark). Crossing in = freeze, step-potential consequence, deadly. Stopped outside: guide 'এবার কী করবেন?', coworker beat if dealt, then drag the rope reel out (distance readout only while dragging) → ring ≥10 m → ◆ → 'এত দূর দিয়ে কেন ঘিরলেন?'.",
+      "DROP variant (about 1/3): a conductor falls about 6 m away; short drags = feet-together steps, up-flick = hop, long drag = stride (deadly). Out beyond 10 m → cordon → 'পা জোড়া করে কেন বেরোলেন?'.",
+      "At the far FPI pole tap 'সেকশন শেষ': each untagged clue is a slip with its card. Pass panel."
+     ],
+     "dealtVariety": "Section layout; which clues on which poles; hidden ear or nose; decoys; potholes; wire spot and variant (AHEAD dry soil / pitch / DROP); coworker moment and side; reason libraries.",
+     "deadly": [
+      "Walking into the 10 m zone of a fallen wire (rule R13).",
+      "Touching or moving the fallen wire, including on the coworker's myth (R14).",
+      "DROP: a normal long stride out of the zone (R15)."
+     ],
+     "slips": [
+      "Looking up while walking (coworker shortcut or two-finger swipe) → pothole stumble.",
+      "Tagging a sound item.",
+      "Each clue untagged at 'সেকশন শেষ'.",
+      "Cordon under 10 m with the trainee outside (R16)."
+     ],
+     "coworkerPushBn": "Once per play at a gate every play passes. About 2/3: at the fallen wire after the stop, before the cordon: 'মাটিতে পড়ে থাকা তারটি স্পার্ক করছে না, তার মানে ওটা ডেড। সরিয়ে দিই, চলো!' (listening = deadly). About 1/3: passing pole 2: 'হাঁটতে হাঁটতেই ওপরে দেখো, সময় বাঁচবে!' (listening = slip). Guide 'ওঁর কথা শুনবেন?'. Right cards: 'না — স্পার্ক নেই মানে ডেড নয়, দূরে থাকি' / 'না — থামি, দেখি, তারপর হাঁটি'.",
+     "reasonQuestionsBn": [
+      "তারটা দেখেই কেন থামলেন?",
+      "এত দূর দিয়ে কেন ঘিরলেন?",
+      "পা জোড়া করে কেন বেরোলেন?",
+      "কিছু ভাঙা না দেখেও কেন এই পোল?",
+      "গন্ধটা কেন ধরলেন?"
+     ],
+     "gestureHints": "Stopped and idle 5 s: walk-hold, swipe-up, ear-hold and nose-hold glyphs cycle with equal time. No hint while walking toward the wire (stopping is the test). Rope reel: short drag in a random direction, no number. DROP: press pulse on the feet, no length or direction. 'সেকশন শেষ' pulse after 6 s.",
+     "lessonPoints": [
+      "চোখ দিয়ে দেখুন (নিচে): পোলের গায়ে গাড়ির ধাক্কার চিহ্ন, পোলের গোড়া বা অ্যাঙ্করে ক্ষতি, মাটিতে পড়ে থাকা তার।",
+      "কান দিয়ে শুনুন: অস্বাভাবিক হিসহিস্ বা ভনভন শব্দ (করোনা বা ট্র্যাকিং)",
+      "ধরে নিন এটি লাইভ আছে। এর চারপাশে কমপক্ষে ১০ মিটার (প্রায় ৩৩ ফুট) নিরাপদ দূরত্ব বজায় রাখুন এবং এলাকাটি ঘিরে দিন।",
+      "ওই এলাকা থেকে বেরোনোর সময় দুই পা একসাথে রেখে ছোট ছোট পদক্ষেপে বা লাফিয়ে বের হন।",
+      "হাঁটার সময় থামুন, দেখুন, তারপর আবার হাঁটুন।"
+     ],
+     "giveawayRisks": "No clue counter; senses are binary per stop with no direction; equal detail on every pole top; no wire highlight or 10 m mark; false tags cost; the coworker comes at fixed gates, never at a clue pole; captions never say 'পড়ে থাকা তার' before the stop."
+    }
+   ],
+   "unsupported": [
+    "FPI look and LED colour (lesson: 'উজ্জ্বল LED' only).",
+    "Sectionalizer look; lit/dark windows as its sign are inferred.",
+    "FPI behaviour on a branch is inferred.",
+    "Radio as the team link (lesson: 'যোগাযোগ বজায় রাখুন').",
+    "The hiss sound and the dirt layer's look.",
+    "The conductor-drop event (DROP variant).",
+    "Whether a long stride in the zone kills (lesson gives only the rule).",
+    "Rope reel and stakes; history note format."
+   ],
+   "ownerDecisions": [
+    "do_5_2_b in-service framing (ground-only patrol of a reclosing feeder, no PTW; rule R7) vs 5.1's 'PTW before patrol' for tripped feeders. Confirm, or drop the ear clue and patrol under PTW.",
+    "Inside 10 m = deadly (R13); long stride = deadly (R15); cordon under 10 m = slip (R16).",
+    "DROP variant allowed?",
+    "Starting away from the source = slip although the lesson says 'সাধারণত'.",
+    "do_5_2_a now carries a PTW docket chip (no beat). OK?"
+   ]
+  },
+  {
+   "lessonId": "5.3",
+   "titleBn": "সাধারণ ফল্ট: অপরাধীদের প্যারেড",
+   "board": {
+    "artFolder": "assets/game/art/m5_board53/",
+    "mythBn": "ইনসুলেটরটা তো শুধু একটু কালো হয়েছে, ওটা পরিষ্কার করে দিলেই আবার চলবে।",
+    "rounds": [
+     {
+      "promptBn": "কোন ছবিগুলো ফেজ-টু-ফেজ ফল্ট দেখাচ্ছে?",
+      "safe": [
+       "branch across two conductors",
+       "branch across all three conductors"
+      ],
+      "traps": [
+       {
+        "what": "branch from one conductor to the ground",
+        "rejectBn": "ডাল মাটিতে ঠেকে থাকলে সেটা ফেজ-টু-আর্থ ফল্ট।"
+       },
+       {
+        "what": "pin insulator with a carbon track",
+        "rejectBn": "ইনসুলেটর ফেলিওর একটা পরিষ্কার আর্থ ফল্ট তৈরি করে।"
+       },
+       {
+        "what": "snapped end hanging free",
+        "rejectBn": "তার ছিঁড়ে কিছু না ছুঁলে সেটা ওপেন সার্কিট।"
+       }
+      ]
+     },
+     {
+      "promptBn": "লাইনের ওপর বড় ডাল পড়েছে। ঠিক কাজ কোনগুলো?",
+      "safe": [
+       "crew planning the removal from the ground",
+       "forest-department / special team for a whole tree",
+       "after removal: conductor, insulators and pole checked"
+      ],
+      "traps": [
+       {
+        "what": "lone lineman yanks the branch off at once",
+        "rejectBn": "ডাল সরানোর কাজটাও অত্যন্ত ঝুঁকিপূর্ণ। আগে পরিকল্পনা করুন।"
+       },
+       {
+        "what": "branch cleared, already calling for charge",
+        "rejectBn": "ডাল সরানোর পর কন্ডাক্টর, ইনসুলেটর আর পোলের ক্ষতি পরীক্ষা করে মেরামত করুন।"
+       },
+       {
+        "what": "strike mark on the cross-arm ignored",
+        "rejectBn": "পোলের গায়ে বা ক্রস-আর্মে আঘাতের চিহ্নও সূত্র।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ফাটা ইনসুলেটর পাওয়া গেছে। ঠিক কাজ কোনগুলো?",
+      "safe": [
+       "new insulator fitted by the rule on the dead, earthed pole",
+       "cross-arm checked before the swap"
+      ],
+      "traps": [
+       {
+        "what": "tape round the cracked insulator",
+        "rejectBn": "ক্ষতিগ্রস্ত ইনসুলেটর নিয়ম অনুযায়ী বদলাতে হবে।"
+       },
+       {
+        "what": "carbon-tracked insulator wiped clean",
+        "rejectBn": "কালো দাগটি কার্বন ট্র্যাক — যেকোনো মুহূর্তে আবার ফ্ল্যাশওভার ঘটাবে। বদলানোই একমাত্র উপায়।"
+       },
+       {
+        "what": "new insulator on a split cross-arm",
+        "rejectBn": "বদলানোর আগে ক্রস-আর্মটাও দেখে নিন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "PG ক্ল্যাম্প গলে গেছে। হটস্পট সারাতে ঠিক কাজ কোনগুলো?",
+      "safe": [
+       "new connector",
+       "conductor beside the burn checked for softness",
+       "discoloured soft length cut away"
+      ],
+      "traps": [
+       {
+        "what": "melted clamp re-tightened",
+        "rejectBn": "ক্ষতিগ্রস্ত কানেক্টর বদলে দিতে হবে।"
+       },
+       {
+        "what": "new clamp on a blackened soft end",
+        "rejectBn": "বেশি গরমে অ্যালুমিনিয়াম তার নরম ও ভঙ্গুর হয় — ক্ষতিগ্রস্ত অংশও কেটে বাদ দিন।"
+       },
+       {
+        "what": "snapped ends twisted by hand",
+        "rejectBn": "ছেঁড়া তার নিয়ম অনুযায়ী জয়েন্ট করতে হবে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোন ছবিগুলো ফল্টের স্পষ্ট প্রমাণ?",
+      "safe": [
+       "burnt bird and blood stain on the conductor",
+       "burst LA with its earth lead hanging",
+       "metal manja across two wires"
+      ],
+      "traps": [
+       {
+        "what": "live bird on a far tree",
+        "rejectBn": "প্রমাণ হলো পোড়া পাখি বা জন্তুর দেহ আর তারে রক্তের দাগ।"
+       },
+       {
+        "what": "intact LA, earth lead bolted",
+        "rejectBn": "বজ্রপাতের পর বিস্ফোরিত বা ভাঙা LA আর ঝুলে থাকা আর্থিং সংযোগই সূত্র।"
+       },
+       {
+        "what": "kite in a tree away from the wires",
+        "rejectBn": "ঘুড়ি তখনই অপরাধী, যখন ধাতব মাঞ্জা দুটি তারকে ছুঁইয়ে দেয়।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_5_3_a",
+     "engineType": "m5_culprit_case",
+     "titleBn": "অপরাধী কে? সূত্রের সুতো",
+     "verb": "photograph clues, thread to culprit",
+     "scene": "Morning after a night trip on a rural 11 kV feeder, 3 fault spots; the van's rear door opens into a cork case board. Docket chip 'ফিডার 4 · ট্রিপ · PTW · আর্থ লাগানো'. Trainee on the road with a phone; villager at a tea stall.",
+     "flow": [
+      "Guide first: 'রাতে ফিডার ট্রিপ করেছে। লাইন বন্ধ, আর্থ লাগানো। এবার অপরাধী ধরুন!'",
+      "Each spot: 2–3 real clues and 2–3 same-kind decoys. Raise the phone; drag to aim, pinch to zoom, tap the shutter. A far shot comes out blurry and cannot be linked ('ছবিটা ঝাপসা। কাছে এনে তুলুন।' only after a blurry shot).",
+      "Optional villager: 'রাতে বিস্ফোরণের মতো শব্দ হয়েছিল!' adds a sound card.",
+      "Open 'কেস বোর্ড': drag threads from photo pins to culprit cards (4 dealt incl. the true one); ≥2 clues charge a culprit.",
+      "Slots by the picked culprit: 'ফল্টের ধরন?' (CHANGED: only ফেজ-আর্থ / ফেজ-ফেজ, and only for tree and insulator culprits; open vs short is 5.6a's job) and 'করণীয়?' (1 right + 2 wrong). Chain spots add a 'তারপর →' knob on every culprit.",
+      "'কেস বন্ধ': first wrong element → MistakeCard (max 1 slip per close); right → stamp, ◆ → reason deck.",
+      "Bird spot in every play: coworker beats when the board opens. Half the deals add collateral damage that changes the right remedy. Chain spot 1 play in 2 (cracked insulator → sagged wire → branch).",
+      "3 spots → pass panel."
+     ],
+     "dealtVariety": "Bird spot + 2 of tree / insulator / jumper-conductor / LA / kite; tree to ground or across wires; chain spot 50 %; bird collateral 50 %; decoys and positions; villager; light; culprit cards, remedies and reasons from libraries.",
+     "deadly": [],
+     "slips": [
+      "Threading a decoy as evidence.",
+      "Wrong culprit.",
+      "Chain spot: only the branch charged.",
+      "Wrong fault type (tree/insulator only).",
+      "Wrong remedy (e.g. 'কালো দাগ মুছে দিলেই চলবে').",
+      "Bird spot: 'ক্ষতি নেই' remedy when damage was there.",
+      "Listening to the coworker."
+     ],
+     "coworkerPushBn": "At the bird spot as the board opens, board locked until answered. Lesson myth 2 word for word: 'একটা পাখি মরে পড়ে আছে, ওটাকে সরিয়ে দিলেই লাইন চালু করা যাবে।' Guide 'ওঁর কথা মানবেন?'. Right: 'না, আগে দেখি পাখি ইনসুলেটর বা তারের ক্ষতি করেছে কিনা।' Wrong: 'হ্যাঁ, পাখিই তো কারণ, সরালেই হলো।' / 'চার্জ করে দেখি, আবার ট্রিপ করলে খুঁজব।' Listening = slip.",
+     "reasonQuestionsBn": [
+      "কেন এটাকেই অপরাধী ধরলেন?",
+      "কেন এটা ফেজ-টু-আর্থ, ফেজ-টু-ফেজ নয়?",
+      "কেন এই করণীয় বেছে নিলেন?",
+      "কেন ডালের আগে ইনসুলেটরকে দায়ী করলেন?",
+      "পাখি সরানোর পর আর কী দেখলেন, কেন?"
+     ],
+     "gestureHints": "Phone button tap; viewfinder: drag loop on empty sky then pinch-out at the centre (same path every deal); board: drag from the top pin into the empty gap, springing back; slots: short drag toward the slot area. Chain knob never hinted.",
+     "lessonPoints": [
+      "এটি ফেজ-টু-আর্থ ফল্ট (যদি ডাল মাটিতে ঠেকে থাকে) বা ফেজ-টু-ফেজ ফল্ট (যদি ডাল দুটি বা তিনটি তারকে একসাথে স্পর্শ করে) ঘটাতে পারে।",
+      "ইনসুলেটরের গায়ে ফ্ল্যাশওভারের স্পষ্ট কালো পোড়া দাগ (Carbon track)।",
+      "পোড়া পাখি বা জন্তুর দেহ এবং তারের ওপর রক্তের দাগ একটি স্পষ্ট প্রমাণ।",
+      "একটি ফল্ট অন্যটির জন্ম দেয় … সম্পূর্ণ চিত্রটি বোঝার চেষ্টা করুন।",
+      "ছবি তুলুন: ফল্টের একটি পরিষ্কার ছবি তুলে রাখা রিপোর্ট তৈরি করার জন্য … খুব সহায়ক।"
+     ],
+     "giveawayRisks": "No feedback while shooting; same-kind decoys; threaded decoys cost; slots keyed to the pick, not the truth; chain knob everywhere; coworker every play before any thread and collateral 50/50; remedies within 1.3×."
+    },
+    {
+     "packId": "do_5_3_b",
+     "engineType": "m5_anneal_cut",
+     "titleBn": "পোড়া জোড়, নরম তার",
+     "verb": "bend-test the conductor, tape and cut",
+     "scene": "Repair on one section (pole 7–9) under PTW; earth sets drawn at both ends, or missing at one end on some deals. Close-up workbench per spot: gloved hands, the conductor, tool belt, tray of 2 red tapes. Day, overcast or dusk.",
+     "flow": [
+      "Guide first: 'ফল্ট ধরা পড়েছে। এবার মেরামত — পোড়া জোড় সারান, ঠিকঠাক!'",
+      "Section view, guide 'কাজের জায়গা তৈরি তো? দেখে নিন।' A bare end: tester on R, Y, B (0 V), then drag the earth set there. Earthing before testing = slip.",
+      "Each of 3 spots: spanner off the old clamp or sleeve (coworker fires the instant the jumper clamp drops).",
+      "Bend test: press-hold anywhere; sound metal springs back, annealed stays kinked with splayed strands.",
+      "Drag up to 2 tapes, or tap 'কাটার দরকার নেই — শুধু কানেক্টর'; sweep the cutter. Dark or soft face = slip, re-cut.",
+      "Auto-finish, ◆ → reason; pass panel after 3 spots."
+     ],
+     "dealtVariety": "3 of 4 spot kinds (jumper always, annealed or sound); damaged length and side; order; light; earth state; reason and coworker libraries.",
+     "deadly": [
+      "Any cut while an earth set is missing at either end (R4; 4.1a/4.2b)."
+     ],
+     "slips": [
+      "Earth before the tester (R3, 4.1a).",
+      "Tape inside the soft length.",
+      "'শুধু কানেক্টর' on an annealed conductor.",
+      "Jointing over beaded snapped ends.",
+      "Jumper cut too short for a smooth U.",
+      "Listening to the coworker."
+     ],
+     "coworkerPushBn": "At the jumper spot every play, the instant the old clamp drops, before the bend test unlocks: 'নতুন ক্ল্যাম্প লাগিয়ে দাও, তার দেখার দরকার নেই।' Guide 'ওঁর কথা মানবেন?'. Right: 'না, আগে দেখি গরমে তার নরম হয়েছে কিনা।' Wrong: 'হ্যাঁ, নতুন ক্ল্যাম্পেই সব ঠিক হবে।' / 'তার তো ছেঁড়েনি, দেখার কী আছে।' Listening = slip.",
+     "reasonQuestionsBn": [
+      "কেন ঠিক এখানে কাটলেন?",
+      "কেন এবার তার কাটলেন না?",
+      "কাটার আগে কেন দুই দিকের আর্থ দেখলেন?",
+      "কেন আর্থ লাগানোর আগে টেস্টার ছোঁয়ালেন?"
+     ],
+     "gestureHints": "Belt pouch tap; circular drag round the nut; press-hold ring at a fixed screen point; tape lifted and faded above the centre line; cut sweep across the player's own tape. 'কাটার দরকার নেই' never hinted.",
+     "lessonPoints": [
+      "হটস্পটের কারণে কন্ডাক্টর নরম (Annealed) হয়ে গেছে কিনা তা পরীক্ষা করুন।",
+      "অ্যালুমিনিয়াম তার 'অ্যানিলিং' প্রক্রিয়ায় তার স্বাভাবিক যান্ত্রিক শক্তি হারিয়ে ফেলে এবং নরম ও ভঙ্গুর হয়ে যায়।",
+      "শুধু কানেক্টর নয়, তারের ক্ষতিগ্রস্ত অংশটিও কেটে বাদ দেওয়া উচিত।",
+      "ক্ষতিগ্রস্ত কানেক্টর বদলে দিতে হবে বা ছেঁড়া তার নিয়ম অনুযায়ী জয়েন্ট করতে হবে।"
+     ],
+     "giveawayRisks": "No edge outline; dusk deals make discoloration faint; bend test free and identical in feel; 2 tapes always offered; clamp-only variant defeats 'always cut'; coworker on both variants; 'both on' earth deals."
+    }
+   ],
+   "unsupported": [
+    "The hand bend-test as the annealing check is an interpretation.",
+    "Soft zone = discoloured zone, and how far to cut, are game rules.",
+    "LA and kite have no fault type or remedy in 5.3; their type slot is absent and the LA remedy slot omitted.",
+    "Conductor open/short typing is left to 5.6a (5.6 also says a conductor on the ground is a phase-to-earth short).",
+    "Earth-at-both-ends and tester-before-earth come from 5.1 and M4 rulings, not 5.3."
+   ],
+   "ownerDecisions": [
+    "do_5_3_a type stamps reduced to ফেজ-আর্থ/ফেজ-ফেজ (open/short moved to 5.6a to avoid duplicate classification). OK?",
+    "do_5_3_b's coworker line is new and needs a clip.",
+    "Over-cutting = no ◆, no strike (guide 'ভালো তারও কেটে ফেললেন।'). OK?",
+    "Confirm the bend test with a lineman.",
+    "Board drops round 6 (fault finder habits) to keep 5 rounds; myth 1 used in round 3's trap."
+   ]
+  },
+  {
+   "lessonId": "5.4",
+   "titleBn": "ফিউজ বারবার উড়ে যাওয়ার কারণ: অস্থায়ী বনাম স্থায়ী ফল্ট",
+   "board": {
+    "artFolder": "assets/game/art/m5_board54/",
+    "mythBn": "লাইনটা কয়েকবার চার্জ করে দেখলেই ফল্টটা জ্বলে গিয়ে নিজে থেকেই ঠিক হয়ে যাবে।",
+    "rounds": [
+     {
+      "promptBn": "ডিটিআর-এর এইচটি ডিও ফিউজ বারবার উড়ছে। ফল্ট কোথায় কোথায় থাকতে পারে?",
+      "safe": [
+       "HT line before the DTR",
+       "inside the DTR tank",
+       "LT side short"
+      ],
+      "traps": [
+       {
+        "what": "'শুধু এইচটি লাইন' with LT and DTR crossed out",
+        "rejectBn": "না। একটি বড় এলটি শর্ট সার্কিটও ট্রান্সফরমারের এইচটি ফিউজকে উড়িয়ে দিতে পারে।"
+       },
+       {
+        "what": "thick copper wound into the barrel",
+        "rejectBn": "মোটা তার বা ভুল রেটিং-এর ফিউজ নয় — এটি ডায়াগনস্টিক টুলকেই নষ্ট করে।"
+       },
+       {
+        "what": "closing again and again to burn it out",
+        "rejectBn": "এটা 'Fault Burning' — এই অভ্যাস কঠোরভাবে নিষিদ্ধ।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ফিউজ লাগানোর পর লাইন কিছুক্ষণ ঠিক চলল, তারপর আবার উড়ল। কোনগুলো এমন অস্থায়ী ফল্টের কারণ?",
+      "safe": [
+       "lightning near the line",
+       "two conductors clashing in wind",
+       "a bird or small animal across conductors"
+      ],
+      "traps": [
+       {
+        "what": "snapped conductor on the ground",
+        "rejectBn": "ছিঁড়ে পড়া তার নিজে থেকে ঠিক হয় না — স্থায়ী ফল্ট।"
+       },
+       {
+        "what": "broken pin insulator",
+        "rejectBn": "ভাঙা ইনসুলেটর স্থায়ী ফল্ট — মেরামত লাগে।"
+       },
+       {
+        "what": "smoke on a DTR tank",
+        "rejectBn": "ট্রান্সফরমারের ভেতরের ফল্ট স্থায়ী ফল্ট।"
+       }
+      ]
+     },
+     {
+      "promptBn": "লাগানোর সাথে সাথেই বড় বিস্ফোরণ আর আর্ক সহ ফিউজ আবার উড়ল। এখন কী করবেন?",
+      "safe": [
+       "patrol along the line",
+       "found fault repaired before charging"
+      ],
+      "traps": [
+       {
+        "what": "lifts the rod to close the same fuse once more",
+        "rejectBn": "এই ক্ষেত্রে লাইন পুনরায় চার্জ করার চেষ্টা করা একটি মারাত্মক ভুল।"
+       },
+       {
+        "what": "thicker wire tied in",
+        "rejectBn": "মোটা তার কখনো নয় — এটি ডায়াগনস্টিক টুলকেই নষ্ট করে।"
+       },
+       {
+        "what": "waiting for it to clear itself",
+        "rejectBn": "স্থায়ী ফল্ট নিজে থেকে ঠিক হয় না — পেট্রোলিং করে খুঁজে মেরামত করুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ফিউজ কয়েক ঘণ্টা ঠিক চলে আবার উড়ল। কোথায় নজর দেবেন?",
+      "safe": [
+       "span hanging much lower than its neighbours",
+       "branches very close to the conductors",
+       "logbook page with past blows and weather"
+      ],
+      "traps": [
+       {
+        "what": "re-fits again and again without looking",
+        "rejectBn": "কারণ সম্পর্কে নিশ্চিত না হয়ে বারবার লাইন চার্জ করা বিপজ্জনক হতে পারে।"
+       },
+       {
+        "what": "drives away: 'চলছে তো'",
+        "rejectBn": "ইতিহাস, আবহাওয়া আর চাক্ষুষ পরিদর্শন দিয়ে ঝোলা তার, কাছের ডাল পরীক্ষা করুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ফল্ট কোথায় নিশ্চিত নন। সেকশনালাইজিং-এর সঠিক ধাপ?",
+      "safe": [
+       "all LT outgoing fuses out, then HT closed and holding",
+       "LT fuses back one at a time",
+       "megger on the suspected feeder after sectionalizing"
+      ],
+      "traps": [
+       {
+        "what": "HT closed with all LT in, DTR roaring",
+        "rejectBn": "আগে এলটি-র সমস্ত আউটগোয়িং খুলুন। জোরালো অস্বাভাবিক শব্দ বিপদের সংকেত।"
+       },
+       {
+        "what": "all LT fuses pushed back together",
+        "rejectBn": "একটি একটি করে এলটি ফিডার লাগান — যেটা লাগাতেই এইচটি উড়বে, ফল্ট সেখানেই।"
+       },
+       {
+        "what": "guessing a feeder in a hurry",
+        "rejectBn": "ফল্ট খোঁজা ধৈর্যের কাজ — তাড়াহুড়ো নয়।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_5_4_a",
+     "engineType": "m5_feeder_sectionalize",
+     "titleBn": "একে একে ফিডার — ফল্ট কোথায়?",
+     "verb": "pull every LT way, restore one by one",
+     "scene": "Dusk village crossroads, 2 DTRs per play. DP structure with one DO barrel dropped and sooty; LT box with 3–4 carriers (road labels; the 4th on a lower row). Van with docket 'ডিটিআর-7 · এইচটি ডিও ফিউজ · আজ 2 বার — লাগাতেই বিস্ফোরণ' and a megger case. Trainee in PPE.",
+     "flow": [
+      "Guide first: 'গ্রামের ট্রান্সফরমারের এইচটি ফিউজ লাগাতেই বিস্ফোরণে উড়ে যাচ্ছে! ফল্টটা কোথায় — খুঁজে বের করুন।'",
+      "Free play: tap the LT door; swipe a carrier down to pull, drag up to restore; hold the DO 1 s to close it (automatic animation).",
+      "Close with no carrier out = deadly. With some out = slip; the charge plays honestly.",
+      "Coworker on the door opening or first pull (input held).",
+      "All out and HT holds (LT fault) → ◆ → 'এইচটি ফিউজ টিকে গেল — কী বোঝা গেল?'. Restore one by one; the faulty way blasts → ◆ → 'কেন ফল্ট এই ফিডারেই?'. Pull it and hang the red tag.",
+      "DTR/HT case (round 2, 40 %): blasts with all LT out → ◆ → choose van (patrol HT) or megger (test DTR); closing again = deadly.",
+      "Pass panel."
+     ],
+     "dealtVariety": "3 or 4 ways; labels; faulty way; round 2 LT vs DTR/HT (60/40); place and time; coworker round, trigger and side; reason libraries.",
+     "deadly": [
+      "DO closed with no LT way opened after an instant-blast docket (R8).",
+      "DO closed again with the blowing carrier still in (R8).",
+      "DO closed again after it blew with every LT way out (R8)."
+     ],
+     "slips": [
+      "HT closed with only some LT ways out (R11).",
+      "Listening to the coworker.",
+      "Tag on the wrong way."
+     ],
+     "coworkerPushBn": "Once per play on the door opening or first pull, input held. Myth 2 + push: 'ট্রান্সফরমারের এইচটি ফিউজ উড়েছে, তার মানে সমস্যাটা এইচটি লাইনেই আছে। চলো, লাইন ধরে হাঁটি!' Guide 'কী করবেন?'. Right: 'না — আগে এলটি খুলে পরীক্ষা, এলটি শর্টেও এইচটি উড়ে।' Wrong: 'ঠিক, চলো এইচটি লাইন ধরে হাঁটি।' / 'এইচটি ফিউজ মানেই এইচটি লাইনের দোষ।' Listening = slip.",
+     "reasonQuestionsBn": [
+      "এইচটি ফিউজ টিকে গেল — কী বোঝা গেল?",
+      "কেন ফল্ট এই ফিডারেই?",
+      "সব এলটি খোলা, তবু উড়ল — কী বোঝা গেল?"
+     ],
+     "gestureHints": "Idle laps over every interactive item with equal weight (door, DO hold-ring, docket; inside: swipe-down on a random in-carrier, drag-up on a random out-carrier, DO ring). Confusion hints only on the item touched. Never favours the faulty way.",
+     "lessonPoints": [
+      "ট্রান্সফরমারের এলটি সাইড থেকে সমস্ত আউটগোয়িং ফিডার বা ফিউজ খুলে দিন।",
+      "যদি ফিউজটি ঠিক থাকে, তবে সমস্যাটি ট্রান্সফরমার বা এইচটি লাইনে নয়, বরং এলটি নেটওয়ার্কে।",
+      "যে ফিডারটি লাগানোর সাথে সাথে এইচটি ফিউজ উড়ে যাবে, ফল্টটি সেই ফিডারেই আছে।",
+      "এলটি সাইডে ফল্ট থাকা অবস্থায় ট্রান্সফরমার চার্জ করলে সেটি একটি অস্বাভাবিক এবং জোরালো শব্দ করবে।"
+     ],
+     "giveawayRisks": "Carriers identical and the faulty one random; docket gives facts only; 4th way on a lower row; 1 s hold prevents accidental deadly taps; case (b) breaks the 'always LT' habit. Unique loop: test-charge bisection with the HT DO as the meter."
+    },
+    {
+     "packId": "do_5_4_b",
+     "engineType": "m5_reblow_clock",
+     "titleBn": "লাগাতেই, না পরে?",
+     "verb": "read and run the re-blow clock",
+     "scene": "11 kV spur with two DTRs per play; dropped DO barrel; van bonnet with the logbook (stopwatch dial in the corner) and two identical stamps 'স্থায়ী' / 'অস্থায়ী'; time-lapse sky layer.",
+     "flow": [
+      "Guide first: 'একই লাইনে ফিউজ বারবার উড়ছে! কী ধরনের ফল্ট — বুঝে তবে কাজ।'",
+      "Today's page dealt: empty / 'লাগানো · ধরে রাখল 0 সে · বিকট শব্দ, আগুনের ঝলক' / 'লাগানো · ধরে রাখল 3 ঘ 30 মি · ঝড়ো হাওয়া'. Swipe back for older pages (noise).",
+      "Hold the DO to re-fit, or drag a stamp onto today's line. Re-fit on an instant-blast page = deadly; on a delayed page = slip.",
+      "Fresh page: re-fit allowed; the clock starts. Permanent: instant blast, 0 সে written. Transient: hold the clock to run the time-lapse; a weather sign comes and the barrel drops; held time written.",
+      "Stamp → ◆ → 'কেন স্থায়ী ফল্ট?' / 'কেন অস্থায়ী ফল্ট?'.",
+      "Permanent call: coworker after the stamp's reason. Then (CHANGED, pole-to-pole patrol cut as a 3.2/do/1 and 5.7a look-alike) an order deck: 'পেট্রোলিং দল পাঠাও' (right) / 'আরেকবার লাগাও' (deadly) / 'মোটা তার দিয়ে বাঁধো' (deadly) → ◆ → 'কেন আবার চার্জ না করে পেট্রোলিং?'.",
+      "Transient call: a 3-picture 'কোথায় দেখবেন?' deck built from the dealt spans (one sag-or-branch picture right) → ◆ → 'কেন এই জায়গাগুলো দেখলেন?'.",
+      "Pass panel."
+     ],
+     "dealtVariety": "Order of permanent and transient; page state (history in ≥50 % of plays); held time and weather sign; picture deals; place and time; coworker side; libraries.",
+     "deadly": [
+      "Re-fitting after an instant blast with arc, from the page or just seen (R8).",
+      "Listening to the Fault Burning coworker (R8).",
+      "Choosing 'আরেকবার লাগাও' or the thick wire in the order deck (R8, R26)."
+     ],
+     "slips": [
+      "Re-fitting after a delayed blow before checking (R10).",
+      "Wrong stamp.",
+      "Wrong 'কোথায় দেখবেন?' picture."
+     ],
+     "coworkerPushBn": "Permanent call, right after the stamp's reason, input held. Myth 1 word for word: 'লাইনটা কয়েকবার চার্জ করে দেখলেই ফল্টটা জ্বলে গিয়ে নিজে থেকেই ঠিক হয়ে যাবে।' Guide 'কী করবেন?'. Right: 'না — এটা ফল্ট বার্নিং, কঠোরভাবে নিষিদ্ধ। আগে পেট্রোলিং।' Wrong: 'ঠিক, দু-তিনবার লাগিয়ে দেখি।' / 'ছোট ফল্ট, পুড়ে গেলে লাইন চলবে।' Listening = deadly.",
+     "reasonQuestionsBn": [
+      "কেন স্থায়ী ফল্ট?",
+      "কেন অস্থায়ী ফল্ট?",
+      "কেন আবার চার্জ না করে পেট্রোলিং?",
+      "কেন এই জায়গাগুলো দেখলেন?"
+     ],
+     "gestureHints": "Page-flip swipe then an equal lap over DO hold-ring and the stamp pad (both stamps wiggle together). Clock: hold-ring when it is the only control. Decks: pulse over all cards.",
+     "lessonPoints": [
+      "লক্ষণ: ফিউজ লাগানোর পর লাইনটি কিছু সময় (কয়েক সেকেন্ড থেকে কয়েক ঘন্টা) ধরে ঠিকঠাক চলে এবং তারপর আবার উড়ে যায়।",
+      "লক্ষণ: ফিউজ লাগানোর সাথে সাথেই একটি বড় বিস্ফোরণ এবং আর্ক সহ ফিউজটি আবার উড়ে যায়।",
+      "এই ক্ষেত্রে, লাইন পুনরায় চার্জ করার চেষ্টা করা একটি মারাত্মক ভুল।",
+      "লাইনের যে অংশে তারগুলো খুব বেশি ঝুলে আছে বা গাছের ডাল খুব কাছাকাছি, সেই জায়গাগুলো ভালোভাবে পরীক্ষা করুন।"
+     ],
+     "giveawayRisks": "Logbook writes facts only; identical stamps; history-page plays make 're-fit first' wrong; 1 s hold; picture cards dealt with real decoys (normal sag, safe trees). Distinct from M4 do_4_4_b (spark vs re-blow at one DO): here the hands-on is reading and running the clock."
+    }
+   ],
+   "unsupported": [
+    "LT carrier handling on a live box and DO closing technique are not taught here (automatic animations).",
+    "Putting healthy LT ways back and the red tag are game devices.",
+    "The abnormal sound's character is synthesized.",
+    "The time-lapse is a game device for the line history.",
+    "Fixes for a transient spot (trimming, re-sagging) are not in 5.4."
+   ],
+   "ownerDecisions": [
+    "Rule R8 (re-energizing a faulted line to test or burn it = deadly) and alignment of M4 do_4_4_b, which books 'reclosing after a re-blow' as a slip.",
+    "First re-fit on a fresh blow allowed (R9). Confirm.",
+    "do_5_4_b pole-to-pole patrol replaced by order and picture decks. OK?",
+    "Board drops round 6 (relay coordination, advanced section).",
+    "DTR/case (b): both patrol and megger accepted."
+   ]
+  },
+  {
+   "lessonId": "5.5",
+   "titleBn": "'লো-ভোল্টেজ' সমস্যার সমাধান",
+   "board": {
+    "artFolder": "assets/game/art/lowvolt_board/",
+    "mythBn": "একটু লো-ভোল্টেজ হলে কিছু হয় না, যন্ত্রপাতি তো চলছেই।",
+    "rounds": [
+     {
+      "promptBn": "লো-ভোল্টেজের ফোন এল। প্রথমে কোন কাজটা ঠিক?",
+      "safe": [
+       "asks the neighbour",
+       "street sketch of which houses complain"
+      ],
+      "traps": [
+       {
+        "what": "climbs and tightens every joint first",
+        "rejectBn": "আগে জানুন: সমস্যা একজনের, না অনেকের?"
+       },
+       {
+        "what": "tells the customer the company sends less",
+        "rejectBn": "ভুল। কোম্পানি নির্দিষ্ট ভোল্টেজ রাখে; কারণ স্থানীয় নেটওয়ার্ক বা সার্ভিস কানেকশন।"
+       },
+       {
+        "what": "one house dim, goes to the DTR tap",
+        "rejectBn": "শুধু একজনের সমস্যা হলে কারণ সম্ভবত তার সার্ভিস কানেকশন বা বাড়ির ওয়্যারিং।"
+       }
+      ]
+     },
+     {
+      "promptBn": "শুধু এই বাড়িতেই ভোল্টেজ কম। কোথায়, কীভাবে মাপবেন?",
+      "safe": [
+       "probes on the meter's incoming terminals",
+       "reading taken with the pump running"
+      ],
+      "traps": [
+       {
+        "what": "all switches OFF, reads normal",
+        "rejectBn": "লোড ছাড়া ভোল্টেজ ঠিকই দেখাতে পারে। সবসময় লোড থাকা অবস্থায় মাপুন।"
+       },
+       {
+        "what": "measures at the DTR for one house",
+        "rejectBn": "একজনের সমস্যা: প্রথমে মিটারের ইনকামিং টার্মিনালে মাপুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "মিটারের ইনকামিং-এও ভোল্টেজ কম। এবার কোন কাজ?",
+      "safe": [
+       "pole joint tightened with supply off",
+       "meter terminal tightened with supply off",
+       "thermal camera shows one hot joint"
+      ],
+      "traps": [
+       {
+        "what": "only the hot joint tightened",
+        "rejectBn": "সার্ভিস কানেকশনের প্রতিটি জয়েন্ট, পোলে এবং মিটারে, পরীক্ষা করে টাইট দিন।"
+       },
+       {
+        "what": "works on the inside wiring",
+        "rejectBn": "মিটারেও কম মানে সমস্যা ভেতরে নয়।"
+       },
+       {
+        "what": "thin cable for a new AC left as is",
+        "rejectBn": "লোড অনুযায়ী সার্ভিস কেবিল খুব সরু হলে ভোল্টেজ ড্রপ বেড়ে যায়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ফেজ-নিউট্রাল মাপা হলো। পাশাপাশি আর কোথায় মাপবেন?",
+      "safe": [
+       "probes across neutral and earth",
+       "high N-E reading noted on the docket"
+      ],
+      "traps": [
+       {
+        "what": "N-E reads 18 V, he shrugs",
+        "rejectBn": "নিউট্রাল-আর্থে 5-10 ভোল্টের বেশি মানে নিউট্রাল লাইনে সমস্যার ইঙ্গিত।"
+       },
+       {
+        "what": "only phase-neutral measured",
+        "rejectBn": "নিউট্রাল আর আর্থের মধ্যেও ভোল্টেজ মাপুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "সন্ধ্যায় পুরো পাড়ায় ভোল্টেজ কম। প্রথমে কোথায় দেখবেন?",
+      "safe": [
+       "probes on the DTR's LT terminals",
+       "clamp meter vs nameplate",
+       "tap position read with the DTR off"
+      ],
+      "traps": [
+       {
+        "what": "house to house tightening",
+        "rejectBn": "পুরো এলাকার সমস্যা হলে কারণ সম্ভবত ট্রান্সফরমার বা এলটি নেটওয়ার্কে।"
+       },
+       {
+        "what": "'সন্ধ্যায় তো একটু কম হবেই'",
+        "rejectBn": "পিক-লোডে ট্রান্সফরমারের আউটপুট ভোল্টেজ কমে — পরীক্ষা করুন।"
+       },
+       {
+        "what": "hand on the tap changer while live",
+        "rejectBn": "এটা অফ-লোড ট্যাপ চেঞ্জার: ট্রান্সফরমার বন্ধ করে তবেই।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_5_5_a",
+     "engineType": "m5_lv_street_read",
+     "titleBn": "ড্রপ কোথায়?",
+     "verb": "ask the street, read the voltage pattern",
+     "scene": "Evening street: DP transformer with its LTDB at ground level, LT line on 6 poles (R/Y/B tags), about 10 houses with veranda meter boards, shuttered alike. Notebook tab top-right.",
+     "flow": [
+      "Guide first: 'সন্ধ্যায় পাড়া থেকে লো-ভোল্টেজের ফোন! কার সমস্যা, খুঁজে বের করুন।'",
+      "Tap houses to ask neighbours (TTS replies), then a chip 'শুধু এই বাড়ি' / 'অনেক বাড়ি'. Chip before any ask = slip.",
+      "One-house → action deck (right: 'সার্ভিস কানেকশন পরীক্ষার ডকেট লিখি') → ◆ → reason.",
+      "Area → probes at the LTDB (R/Y/B to N). Decision deck; 'ঠিক' needs all 3 phases; 'চালু অবস্থাতেই ট্যাপ এক ঘর ঘুরাই' = deadly.",
+      "Line readings: tap a meter board to walk there, probe its incoming; rows logged as plain numbers. Coworker on a dealt reading (probes locked).",
+      "Evidence-gated verdict deck: 'শেষের দিকে ক্রমশ কমছে' / 'একটা ফেজেই কম' / 'দুই পোলের মাঝে হঠাৎ ড্রপ' / 'কোম্পানিই কম পাঠাচ্ছে'.",
+      "Action docket deck (CHANGED: no red flag on the map and no thermal sweep; sudden-drop picks from 3 dealt span cards like 'P3–P4 জয়েন্ট শাটডাউনে টাইট'). ◆ → reason. 3 complaints; pass panel."
+     ],
+     "dealtVariety": "3 complaints from one-house / DTR low / gradual / one-phase / sudden drop (easy to hard); caller position; replies; phase per house; ±2 V jitter; card order; coworker complaint and reading.",
+     "deadly": [
+      "Live off-load tap change (R21, do_3_6_b)."
+     ],
+     "slips": [
+      "Scope chip before asking.",
+      "Wrong scope.",
+      "Wrong route for the scope.",
+      "DTR 'ঠিক' without 3 phases.",
+      "Verdict without its evidence.",
+      "Wrong verdict or docket.",
+      "'কোম্পানিই কম পাঠাচ্ছে'.",
+      "Listening to the coworker."
+     ],
+     "coworkerPushBn": "On a dealt 1st or 2nd probe placement of one area complaint, probes locked. Myth 1 in his mouth: 'ভোল্টেজ কম মানে কোম্পানিই কম বিদ্যুৎ পাঠাচ্ছে! মাপামাপি করে লাভ নেই, চলো ফিরি।' Guide 'কী করবেন?'. Right: 'না, কোম্পানি ভোল্টেজ ঠিক রাখে; কারণ লাইনেই, মেপে খুঁজি।' Wrong: 'ঠিকই, ওপর থেকেই কম আসছে, ফিরে যাই।' / 'সন্ধ্যায় সবারই কম, কাল সকালে দেখব।' Listening = slip.",
+     "reasonQuestionsBn": [
+      "কেন আগে প্রতিবেশীকে জিজ্ঞেস করলেন?",
+      "কেন একজনের সমস্যায় সার্ভিস কানেকশনের ডকেট?",
+      "কেন আগে ট্রান্সফরমারের এলটি দিকে মাপলেন?",
+      "কেন এটাকে লোড আনব্যালেন্স বললেন?",
+      "কেন লাইনের অনেক জায়গায় মাপলেন?"
+     ],
+     "gestureHints": "Tap-ripple on empty road (tap a house); probe lifted toward the terminal row and back; pan swipe then a tap on the van's own spot. Decks unhinted.",
+     "lessonPoints": [
+      "যদি শুধু একজন গ্রাহকের লো-ভোল্টেজের সমস্যা হয়, তবে কারণটি সম্ভবত তার সার্ভিস কানেকশন বা বাড়ির ভেতরের ওয়্যারিং-এ সীমাবদ্ধ।",
+      "ট্রান্সফরমারের এলটি বুশিং-এ ভোল্টেজ মাপুন। যদি সেখানেই ভোল্টেজ কম থাকে, তবে … ওভারলোডেড কিনা বা এর ট্যাপ সেটিং ঠিক আছে কিনা তা পরীক্ষা করুন।",
+      "যদি ট্রান্সফরমারে ভোল্টেজ ঠিক থাকে, তবে এলটি লাইনের বিভিন্ন পয়েন্টে ভোল্টেজ মেপে দেখুন কোথায় ড্রপ হচ্ছে।",
+      "লোড আনব্যালেন্স: একটি ফেজের ওপর অতিরিক্ত লোড থাকলে সেই ফেজের গ্রাহকরা লো-ভোল্টেজ পান।"
+     ],
+     "giveawayRisks": "Shuttered windows; identical boards; plain-number notebook; evidence gates; dealt equal-length cards; coworker on a reading count. Bracketing on a map stays 5.2a's; thermal sweep stays 5.10a's."
+    },
+    {
+     "packId": "do_5_5_b",
+     "engineType": "m5_lv_load_test",
+     "titleBn": "লোড দিয়ে মাপুন",
+     "verb": "switch loads on, watch the sag",
+     "scene": "One house at dusk: service pole with its joint, veranda meter board (incoming P/N under a clear cover, earth terminal), switchboard with 3–4 appliances, customer at the door, analogue-style needle.",
+     "flow": [
+      "Guide first: 'একটা বাড়িতেই পাম্প চলে না, পাশের বাড়ি ঠিক। কারণ খুঁজুন!'",
+      "Probes on the incoming P and N; reading stays live while held.",
+      "With probes held, tap switches on; the needle sags under the complaint appliance in service-fault deals, holds in inside-house deals.",
+      "Neutral-earth check (1–3 V normal, 15–22 V fault). Optional: ask the customer.",
+      "Evidence-gated verdict deck → ◆ → reason. Method deck (right: 'সাপ্লাই বন্ধ, টেস্টারে 0 V, ইনসুলেটেড স্প্যানারে টাইট'; deadly: live plain spanner, bare-hand neutral).",
+      "Tap every joint (pole end, meter P and N) to tighten; 'হয়ে গেছে' with one untouched = slip.",
+      "Re-measure under load; load-grew deals still sag → ask → 'লোড বেড়েছে: কেবিলের সাইজ যাচাইয়ের রিপোর্ট'. Coworker on the first reading of a dealt call. 3 calls; pass panel."
+     ],
+     "dealtVariety": "3 calls from loose joint / weak neutral / inside fault / load grew; appliance; small load already on; reading bands; replies; coworker call.",
+     "deadly": [
+      "Plain spanner on live terminals (R22).",
+      "Bare-hand neutral (R22)."
+     ],
+     "slips": [
+      "Verdict without a reading under load.",
+      "Verdict without N-E.",
+      "Wrong verdict.",
+      "'কোম্পানি কম পাঠাচ্ছে'.",
+      "A joint left untouched.",
+      "Cutting the meter seal.",
+      "Neutral joined to earth.",
+      "Skipping joints for 'load grew'.",
+      "No loaded re-measure.",
+      "Listening to the coworker."
+     ],
+     "coworkerPushBn": "On the first reading of a dealt call, controls locked. No-load normal reading: 'মিটারে তো ঠিকই দেখাচ্ছে! পাম্প চালিয়ে মাপার দরকার নেই, চলো।' Loaded low reading, myth 2: 'একটু লো-ভোল্টেজ হলে কিছু হয় না, যন্ত্রপাতি তো চলছেই। চলো, পরের কলে যাই।' Right: 'না, লোড চালিয়েই মাপব; লোড ছাড়া ঠিক দেখাতে পারে।' / 'না, লো-ভোল্টেজে মোটর গরম হয়ে আয়ু কমে; কারণ খুঁজি।' Listening = slip.",
+     "reasonQuestionsBn": [
+      "কেন যন্ত্রটা চালিয়ে তবেই মাপলেন?",
+      "কেন নিউট্রাল আর আর্থের মধ্যেও মাপলেন?",
+      "কেন সমস্যাটা সার্ভিস কানেকশনে বললেন?",
+      "কেন পোলে ও মিটারে প্রতিটি জয়েন্ট টাইট দিলেন?"
+     ],
+     "gestureHints": "Probe lifted toward the board area, no terminal touched; idle alternates a doorway ripple and a probe lift (switches never singled out); tap-and-twist at screen centre for tightening.",
+     "lessonPoints": [
+      "প্রথমে, গ্রাহকের মিটারের ইনকামিং টার্মিনালে ভোল্টেজ মাপুন। … যদি মিটারেও ভোল্টেজ কম থাকে, তবে সার্ভিস কানেকশনের প্রতিটি জয়েন্ট (পোলে এবং মিটারে) পরীক্ষা করে টাইট দিন।",
+      "সবসময় লোড থাকা অবস্থায় ভোল্টেজ মাপুন। লোড ছাড়া অবস্থায় ভোল্টেজ ঠিকই দেখাতে পারে।",
+      "যদি এখানে উল্লেখযোগ্য ভোল্টেজ (সাধারণত ৫-১০ ভোল্টের বেশি) দেখা যায়, তবে এটি নিউট্রাল লাইনে কোনো সমস্যার ইঙ্গিত দেয়।",
+      "অনেক সময় গ্রাহকের লোড বেড়ে যাওয়াটাই লো-ভোল্টেজের কারণ হয়।"
+     ],
+     "giveawayRisks": "Switchboard unhighlighted and the guide never says 'লোড'; earth terminal drawn like the others; no red zone on the needle; evidence gates; joints untagged; coworker line depends on how the first reading was taken."
+    }
+   ],
+   "unsupported": [
+    "All voltage numbers are illustrative; bands kept clear of the 5–10 V threshold.",
+    "Reading at the LTDB instead of the LT bushing avoids climbing a live DTR.",
+    "Shutdown, tester and insulated spanner for joints come from M3/M4 rulings.",
+    "Step-drop and one-phase patterns along the line are physics inferences.",
+    "Remedies for long line, thin wire and thin service cable are not in 5.5 (reports only)."
+   ],
+   "ownerDecisions": [
+    "Evidence-gated verdicts (right but unproven = slip) as a general rule.",
+    "Asking no neighbour before the scope chip = slip.",
+    "Thermal sweep removed from do_5_5_a (kept on the board; the sweep is 5.10a's verb). OK?",
+    "Board drops round 6 (line points; played in do_5_5_a).",
+    "Loaded re-measure required (slip)."
+   ]
+  },
+  {
+   "lessonId": "5.6",
+   "titleBn": "শর্ট সার্কিট এবং ওপেন সার্কিট ফল্ট: দুই ভিন্ন শত্রু",
+   "board": {
+    "artFolder": "assets/game/art/fault_kinds_board/",
+    "mythBn": "একটি ওপেন সার্কিটে কোনো বিপদ নেই কারণ বিদ্যুৎ তো বন্ধই আছে।",
+    "rounds": [
+     {
+      "promptBn": "কোন ছবিতে শর্ট সার্কিট?",
+      "safe": [
+       "two wires slapping with a flash",
+       "branch across two wires with a flash",
+       "bird across two wires, burn mark"
+      ],
+      "traps": [
+       {
+        "what": "jumper hanging open, bulb dark",
+        "rejectBn": "জাম্পার খুলে যাওয়া ওপেন সার্কিট — পথ ভেঙেছে, ঝলক নেই।"
+       },
+       {
+        "what": "connector pulled apart",
+        "rejectBn": "জয়েন্ট বা কানেক্টর খুলে গেলে পথ ভাঙে — এটা ওপেন সার্কিট।"
+       },
+       {
+        "what": "pump with one phase disconnected",
+        "rejectBn": "একটা ফেজ বিচ্ছিন্ন — এটা সিঙ্গেল-ফেজিং, এক ধরনের ওপেন সার্কিট।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোন ছবিতে ওপেন সার্কিট?",
+      "safe": [
+       "jumper loose, bulb dark",
+       "connector apart, houses dark",
+       "fuse wire broken, house dark"
+      ],
+      "traps": [
+       {
+        "what": "two wires touching with a flash",
+        "rejectBn": "দুটো তার ঠোকাঠুকি শর্ট সার্কিট — প্রচণ্ড কারেন্ট, বড় ঝলক।"
+       },
+       {
+        "what": "blackened cable end after a bang",
+        "rejectBn": "পোড়া দাগ আর বিস্ফোরণের মতো শব্দ — শর্ট সার্কিটের লক্ষণ।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ছেঁড়া তার মাটিতে, গলিতে আলো নেই — কোনটা ঠিক?",
+      "safe": [
+       "trainee keeps a child back",
+       "trainee stops a cyclist"
+      ],
+      "traps": [
+       {
+        "what": "worker lifts the wire bare-handed",
+        "rejectBn": "ছেঁড়া তার মাটিতে পড়ে থাকা মানেই নিরাপদ নয় — সবসময় লাইভ ধরুন।"
+       },
+       {
+        "what": "villager pushes it with dry bamboo",
+        "rejectBn": "শুকনো কাঠও অর্ধ-পরিবাহী — লাইভ তারে ঠেকানো চলে না।"
+       },
+       {
+        "what": "man joins the two broken ends",
+        "rejectBn": "দুই মাথার মাঝে পুরো সিস্টেম ভোল্টেজ — জুড়তে গেলে মারাত্মক শক।"
+       },
+       {
+        "what": "laundry on a GI fence the wire lies on",
+        "rejectBn": "তার পরিবাহী বস্তুতে ঠেকলে সেটাও লাইভ হতে পারে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোন ছবিতে সিঙ্গেল-ফেজিং?",
+      "safe": [
+       "pump house, one of three wires off, motor groaning",
+       "one of three jumpers open, pump stalled"
+      ],
+      "traps": [
+       {
+        "what": "all three connected, water flowing",
+        "rejectBn": "তিন ফেজই জোড়া — কোনো ফল্ট নেই।"
+       },
+       {
+        "what": "two phases touching with a flash",
+        "rejectBn": "ঝলক আর প্রচণ্ড কারেন্ট — এটা শর্ট সার্কিট।"
+       },
+       {
+        "what": "all three jumpers open",
+        "rejectBn": "সিঙ্গেল-ফেজিং মানে তিনটির মধ্যে একটি ফেজ বিচ্ছিন্ন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোথায় লুকোনো শর্ট — ফিউজ পড়েনি, তবু ফল্ট?",
+      "safe": [
+       "dry branch on a live wire, smoke wisp, houses lit",
+       "dry bamboo awning pole on a wire, faint smoke"
+      ],
+      "traps": [
+       {
+        "what": "big flash, DO dropped",
+        "rejectBn": "বড় ঝলক, ফিউজ উড়েছে — এটা সাধারণ শর্ট, সুরক্ষা কাজ করেছে।"
+       },
+       {
+        "what": "jumper open, houses dark",
+        "rejectBn": "আলো নেই, পথ ভাঙা — এটা ওপেন সার্কিট।"
+       },
+       {
+        "what": "clean span, tree well clear",
+        "rejectBn": "কিছুই তারে ঠেকে নেই — ফল্টের ছাপ নেই।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_5_6_a",
+     "engineType": "m5_fault_casebook",
+     "titleBn": "দুই শত্রুর খাতা",
+     "verb": "spend two clues, file the enemy",
+     "scene": "Village edge in late afternoon; every case place has the same four clue spots (a person, the pole top, the ground strip, the pump house). Trainee holds the গোয়েন্দার নোটবুক with a case slip; HUD shows two clue pips.",
+     "flow": [
+      "Guide first: 'চার জায়গায় লাইনের গোলমাল — সূত্র ধরে শত্রু চিনুন!'",
+      "Case slip shows the place and protection state only ('ফিডার ট্রিপ করেছে' / 'ডিও ফিউজ উড়েছে' / 'ট্রিপ নেই, ফিউজ ঠিক').",
+      "Spend 2 clues by gesture: tap the person, swipe up the pole, sweep the ground, hold the pump-house door.",
+      "Drag the slip into 'শর্ট সার্কিট' · 'ওপেন সার্কিট' · 'ট্রিপ — শর্টের প্রমাণ নেই'.",
+      "Right → ◆ → reason; wrong = slip, then unopened clues are revealed.",
+      "Coworker once on a trip case at the first clue gesture; 4 cases; pass panel."
+     ],
+     "dealtVariety": "4 cases from T1–T6 (SC phase-phase, SC via branch/bird, OC jumper, OC single-phasing, trip with no SC sign, high-resistance dry-wood short); place variant; witness phrasing; open phase; coworker case and line; reasons.",
+     "deadly": [],
+     "slips": [
+      "Wrong box.",
+      "Listening to the coworker."
+     ],
+     "coworkerPushBn": "Once on a trip case at the first clue gesture (reveal waits). 'লাইন ট্রিপ করেছে মানেই কোথাও শর্ট সার্কিট হয়েছে। শর্ট লিখে দিন, আর খোঁজার দরকার নেই!' Guide 'ওর কথা শুনবেন?'. Right: 'না — ওভারলোড বা রিলের ভুলেও ট্রিপ হয়, সূত্র দেখি'. Listen: 'ঠিক, ট্রিপ মানেই শর্ট — লিখে দিই' / 'ও যখন বলছে, খোঁজার দরকার নেই'. Slip.",
+     "reasonQuestionsBn": [
+      "কেন শর্ট সার্কিট লিখলেন?",
+      "কেন ওপেন সার্কিট লিখলেন?",
+      "কেন শর্ট লিখলেন না, ট্রিপ তো করেছে?",
+      "ফিউজ তো পড়েনি — তবু কেন শর্ট?"
+     ],
+     "gestureHints": "All four spot glyphs together for 2 s after 6 s idle; wrong gesture replays only that spot's glyph; slip drag to the notebook spine, never a box.",
+     "lessonPoints": [
+      "লক্ষণ: … বড় আর্ক ফ্ল্যাশ, বিস্ফোরণের মতো শব্দ, ফিউজ উড়ে যাওয়া বা ব্রেকার তৎক্ষণাৎ ট্রিপ করা, পোড়া দাগ।",
+      "বিদ্যুৎ প্রবাহ সম্পূর্ণ বন্ধ হয়ে যাওয়া (পাওয়ার কাট), কিন্তু কোনো বড় আর্ক বা বিস্ফোরণ হয় না। … (Single-phasing)।",
+      "এক্ষেত্রে ফল্ট কারেন্ট খুব বেশি হয় না এবং ফিউজ বা ব্রেকার অপারেট করতে পারে না।",
+      "একটি বড় ওভারলোডও (শর্ট সার্কিট নয়) ফিউজ বা ব্রেকারকে ট্রিপ করাতে পারে।"
+     ],
+     "giveawayRisks": "Protection state printed on every slip; all spots always present; witness lines name symptoms only; fixed box order; clue budget prevents opening everything. Owns the module's short-vs-open classification."
+    },
+    {
+     "packId": "do_5_6_b",
+     "engineType": "m5_live_wire_guard",
+     "titleBn": "ছেঁড়া তার, তবু লাইভ",
+     "verb": "swipe to stop people reaching live metal",
+     "scene": "Lane after a storm, overcast day, 415 V LT span snapped: end A hanging low, end B on a GI fence, a tin shed or bare road (dealt); metal in real contact or with visible gaps; the crew's rope ring already up. The trainee stays outside the ring (CHANGED: a swipe toward a target inside the ring stops him at the rope, matching 5.2b).",
+     "flow": [
+      "Guide first: 'ঝড়ে গলির তার ছিঁড়ে পড়েছে — কাউকে বিপদে পড়তে দেবেন না!'",
+      "Opening deck: right 'ছোঁব না — লাইভ ধরে সবাইকে দূরে রাখি'; deadly 'শুকনো বাঁশে তুলে বেড়া থেকে সরাই' / 'আলো নেই, হাতে তুলে পাশে রাখি'.",
+      "Guard: one-time demo, then 3 waves of people walking to targets; swipe from the trainee to a person to stop them, one at a time.",
+      "Late stop = slip; contact with a live-treated object = freeze before contact, deadly.",
+      "After each wave a ◆ reason on the subtlest stop; coworker after wave 1 or 2 (clock paused).",
+      "Control room: 'লাইন বন্ধ করা হয়েছে, তারটা সরিয়ে দাও।' Deck: right 'না — লিখিত পারমিট, টেস্ট, আর্থ — তারপর'; deadly phone pickup / bare hand. Pass panel."
+     ],
+     "dealtVariety": "Where end B rests; contact chains and gaps; lane layout; people and targets; wave makeup; coworker timing and line; deck order; call wording.",
+     "deadly": [
+      "Lifting or moving the wire by hand (R14).",
+      "Dry bamboo push (R14, M1 step 6).",
+      "Listening to the coworker and joining the ends (R14).",
+      "Picking up on a phone 'line off' (R1, M1 step 17).",
+      "A bystander reaching a live-treated object unstopped (R17)."
+     ],
+     "slips": [
+      "Late stop (R18).",
+      "Stopping a person headed to an unconnected object is not a slip; it only costs time."
+     ],
+     "coworkerPushBn": "After the last person of wave 1 or 2, clock paused. 'আলো তো নেই, লাইন মরা — দুটো মাথা হাতে ধরে জুড়ে দিই, গলিতে আলো ফিরবে!' Guide 'ওকে কী বলবেন?'. Right: 'না — দুই মাথার মাঝে পুরো ভোল্টেজ, ছুঁলেই মারাত্মক শক'. Listen: 'ঠিক, আলো নেই মানে কারেন্টও নেই' / 'একবার জুড়ে দেখি, কিছু হবে না'. Deadly.",
+     "reasonQuestionsBn": [
+      "কেন তার ছুঁলেন না?",
+      "সাইকেলটার কাছে কেন যেতে দিলেন না?",
+      "দড়ির বাইরে বেড়ার কাছেও কেন থামালেন?",
+      "লাইন বন্ধের ফোন এল — তবু কেন ধরলেন না?"
+     ],
+     "gestureHints": "One-time demo toward a grey silhouette; then a rotating outward chevron circling the trainee himself, pointing at nobody.",
+     "lessonPoints": [
+      "একটি ছেঁড়া তার মাটিতে পড়ে আছে মানেই সেটি নিরাপদ নয়। এটি যেকোনো মুহূর্তে কোনো পরিবাহী বস্তুর সংস্পর্শে এসে লাইভ হতে পারে।",
+      "ওপেন সার্কিটের দুটি বিচ্ছিন্ন বিন্দুর মধ্যে সম্পূর্ণ সিস্টেম ভোল্টেজ উপস্থিত থাকে।",
+      "উচ্চ রেজিস্ট্যান্স ফল্ট … একটি অর্ধ-পরিবাহী (যেমন শুকনো কাঠ)"
+     ],
+     "giveawayRisks": "No highlight on live objects; the fence is not always live; walkers look alike; one-at-a-time triage defeats 'stop everyone'."
+    }
+   ],
+   "unsupported": [
+    "Keep-away distance and cordon come from 5.2, not 5.6.",
+    "Chain contact is inferred from pro tip 1.",
+    "How to tell overload from relay maloperation is not in 5.6 (box 3 says only 'শর্টের প্রমাণ নেই').",
+    "Smoke wisp, scorched leaves and the pump groan are illustrations.",
+    "Source defect: Devanagari/Arabic words in 5.6 (प्रचंड, टकराলে, شدید); on-screen uses প্রচণ্ড, ঠোকাঠুকি."
+   ],
+   "ownerDecisions": [
+    "Bystander contact = deadly (R17) vs slip with the same freeze.",
+    "Clue budget 2 of 4.",
+    "Board drops the ammeter round (6 → 5).",
+    "LT 415 V span in do_5_6_b."
+   ]
+  },
+  {
+   "lessonId": "5.7",
+   "titleBn": "রাতের বেলা ফল্ট খোঁজার কৌশল",
+   "board": {
+    "artFolder": "assets/game/art/night_patrol_board/",
+    "mythBn": "রাতে কিছু দেখা যায় না, তাই পেট্রোলিং করে লাভ নেই। সকাল হওয়ার জন্য অপেক্ষা করাই ভালো।",
+    "rounds": [
+     {
+      "promptBn": "রাতের টহলে বেরোনোর আগে কোন ছবিটা ঠিক?",
+      "safe": [
+       "torch, headlamp and phone checked charged",
+       "two linemen in reflective jackets"
+      ],
+      "traps": [
+       {
+        "what": "sets off alone",
+        "rejectBn": "রাতে ফল্ট খুঁজতে কখনোই একা নয়।"
+       },
+       {
+        "what": "dark jacket at the roadside",
+        "rejectBn": "রাস্তার পাশে প্রতিফলক জ্যাকেট অপরিহার্য।"
+       },
+       {
+        "what": "torch flickers as they leave",
+        "rejectBn": "বেরোনোর আগে টর্চ, হেডল্যাম্প আর ফোনের ব্যাটারি সম্পূর্ণ চার্জড কিনা দেখে নিন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "গাড়ি নিয়ে রাতের টহল — কোনটা ঠিক?",
+      "safe": [
+       "slow van, one drives, one aims the searchlight",
+       "binoculars on a searchlit pole top"
+      ],
+      "traps": [
+       {
+        "what": "headlights only",
+        "rejectBn": "গাড়ির হেডলাইট শুধু রাস্তা আলোকিত করে — পোলের ওপরে সার্চলাইট লাগে।"
+       },
+       {
+        "what": "driver cranes up himself",
+        "rejectBn": "দুজন একসাথে: একজন চালাবেন, অন্যজন লাইন দেখবেন।"
+       },
+       {
+        "what": "speeding",
+        "rejectBn": "রাতে গাড়ির গতি কম রাখুন।"
+       },
+       {
+        "what": "unknown muddy track",
+        "rejectBn": "সম্ভব হলে পরিচিত ও নিরাপদ রাস্তা দিয়ে চলুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "দূরের হালকা আভা দেখতে কী করবেন?",
+      "safe": [
+       "lights off, standing still",
+       "after waiting, a faint blue glow shows"
+      ],
+      "traps": [
+       {
+        "what": "torch held on the insulators",
+        "rejectBn": "আলো নিভিয়ে কিছুক্ষণ অপেক্ষা করুন — চোখ অভ্যস্ত হলে হালকা করোনা দেখা যায়।"
+       },
+       {
+        "what": "flicking the torch on and off",
+        "rejectBn": "আলো নিভিয়ে কিছুক্ষণ অপেক্ষা করুন।"
+       },
+       {
+        "what": "looking for corona at midday",
+        "rejectBn": "করোনা দিনের বেলায় অদৃশ্য থাকে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোন ছবিতে ফল্টের সূত্র ঠিক চেনা হয়েছে?",
+      "safe": [
+       "faint blue-purple glow round a damaged insulator",
+       "bluish tracking lines marked bad",
+       "pole where a resident saw a flash"
+      ],
+      "traps": [
+       {
+        "what": "torch glint called corona",
+        "rejectBn": "করোনা হলো হালকা নীল বা বেগুনি আভা — টর্চের প্রতিফলন নয়।"
+       },
+       {
+        "what": "tracking seen, called fine",
+        "rejectBn": "ট্র্যাকিং প্রমাণ করে ইনসুলেটরটি খারাপ হয়ে গেছে।"
+       },
+       {
+        "what": "flash ignored",
+        "rejectBn": "আলোর ঝলকানি ফল্টের সঠিক অবস্থান নির্দেশ করতে পারে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "রাতের নিস্তব্ধতায় আর কী কাজে আসে?",
+      "safe": [
+       "listens to a hiss from a pole",
+       "asks an awake resident"
+      ],
+      "traps": [
+       {
+        "what": "walks past a calling resident",
+        "rejectBn": "স্থানীয়দের জিজ্ঞাসা করুন কোনো শব্দ বা আলো দেখেছেন কিনা।"
+       },
+       {
+        "what": "crosses a dark field without light",
+        "rejectBn": "রাতে হোঁচট বা গর্তে পড়ার ঝুঁকি বাড়ে।"
+       },
+       {
+        "what": "runs to finish quickly",
+        "rejectBn": "রাতে তাড়াহুড়ো বা শর্টকাট চলবে না।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_5_7_a",
+     "engineType": "m5_searchlight_patrol",
+     "titleBn": "সার্চলাইটের টহল",
+     "verb": "steer the searchlight, call the speed",
+     "scene": "Night depot (shelf with torch, headlamp, phone; charging dock; jacket pegs; van; docket chip 'ফিডার 4 · PTW 472' added for rule R6), then a side-scrolling road beside an 11 kV line with poles on both sides; pole tops black until the roof searchlight rests on them.",
+     "flow": [
+      "Guide first: 'রাতে ফিডার ট্রিপ করেছে! গাড়ি নিয়ে লাইন ধরে ফল্ট খুঁজুন।'",
+      "Depot: hold each device (beam or battery %), swap a low one at the dock; tap a jacket peg; drag both figures into driver and searchlight seats. One depot reason deck.",
+      "Fork: 'চেনা পাকা রাস্তা' vs 'অচেনা মাঠের পথ' (field = slip).",
+      "Patrol: speed lever থামো · ধীরে · জোরে; at ধীরে drag the cone onto a pole top to resolve detail; long-press to pin. Coworker as pole 2 comes level (van halts).",
+      "Pin a fault → ◆ → 'কেন এই পোলে চিহ্ন দিলেন?'; pin a sound pole or let a fault pass = slip.",
+      "Step out at the last pin: depot choices bite (truck passes a dark jacket, a low torch dies). Hold binoculars, read the plate, tap the phone to send. Pass panel. (CHANGED: thermal imager removed; the IR sweep is 5.10a's verb.)"
+     ],
+     "dealtVariety": "Low device or none; peg order; fork side; 8 poles both sides; 1–2 faults; coworker side; depot question; libraries.",
+     "deadly": [],
+     "slips": [
+      "Low battery left unswapped.",
+      "Dark jacket.",
+      "One person drives and watches.",
+      "Field track.",
+      "Fault pole passes unpinned.",
+      "Pin on a sound pole.",
+      "Listening to the coworker (headlights only)."
+     ],
+     "coworkerPushBn": "As pole 2 comes level, van halted. Myth 2 word for word: 'আমার গাড়ির হেডলাইটই যথেষ্ট, আলাদা টর্চের দরকার নেই।' Right: 'হেডলাইট শুধু রাস্তা দেখায় — পোলের মাথা দেখতে সার্চলাইট লাগবে।' Listening: searchlight off for the next 2 poles, one slip.",
+     "reasonQuestionsBn": [
+      "কেন বেরোনোর আগে ব্যাটারি দেখলেন?",
+      "কেন প্রতিফলক জ্যাকেট পরলেন?",
+      "কেন দুজন একসাথে গেলেন?",
+      "কেন গাড়ি ধীরে চালাতে বললেন?",
+      "কেন এই পোলে চিহ্ন দিলেন?"
+     ],
+     "gestureHints": "Equal press-hold over every device; dock drag only after a low reading; lever swipe across all stops; cone sweep across the sky band on both sides, never stopping on a pole; hold at the beam centre after 3 s on any pole.",
+     "lessonPoints": [
+      "রাতের বেলায় গাড়ির গতি কম রাখুন এবং দুজন ব্যক্তি একসাথে পেট্রোলিং করুন—একজন গাড়ি চালাবেন, অন্যজন দুই পাশের লাইন পর্যবেক্ষণ করবেন।",
+      "সম্ভব হলে, পরিচিত এবং নিরাপদ রাস্তা দিয়ে পেট্রোলিং করুন।",
+      "একটি উজ্জ্বল এবং প্রতিফলক (Reflective) জ্যাকেট পরা আপনার সুরক্ষার জন্য অপরিহার্য",
+      "পেট্রোলিং-এ বেরোনোর আগে নিশ্চিত করুন আপনার টর্চলাইট, হেডল্যাম্প এবং ফোনের ব্যাটারি সম্পূর্ণ চার্জড আছে।"
+     ],
+     "giveawayRisks": "Silhouettes until lit at slow speed; pins cost; devices identical until pressed; a quarter of plays have no low device; depot consequences show later. Distinct from 3.2/do/1 by real-time speed and cone control."
+    },
+    {
+     "packId": "do_5_7_b",
+     "engineType": "m5_dark_eyes",
+     "titleBn": "আঁধারে চোখ-কান",
+     "verb": "lights off, wait, then mark",
+     "scene": "About 2 a.m. at a village edge; in-service line tripping and reclosing, ground only (R7); three stretches with landmarks (pond, bamboo grove, temple); trainee with headlamp and torch switches; partner beside him.",
+     "flow": [
+      "Guide first: 'গ্রামের দিকে লাইন ট্রিপ করছে! রাতেই ফল্ট খুঁজে বের করুন।'",
+      "Optional: tap the lit door; the resident gives a landmark ('বাঁশঝাড়ের ওদিকে একটা ঝলকানি দেখেছি').",
+      "Drag along the path with the headlamp on (off = stumble slip; hole = slip).",
+      "Coworker on entering the first stretch (adaptation clock held).",
+      "Switch torch and headlamp off and keep still: stars come out; after the wait a glow, tracking or intermittent flash fades in on the fault stretch only. Light or movement resets. (CHANGED: no head-turn sound homing; a hiss or খটখট is simply present or absent at a stretch, with a wordless waveform icon.)",
+      "Long-press the exact insulator → ◆ → 'কেন এই ইনসুলেটরটাই খারাপ?'; then 'কেন আলো নিভিয়ে অপেক্ষা করলেন?'.",
+      "Torch on, read the plate; final deck 'এখন কী করবেন?' (right: report the pole from the ground; deadly: climb or bamboo poke). Pass panel."
+     ],
+     "dealtVariety": "Fault stretch; resident clue and landmark; clue type; pole and phase; sound or none; hole positions; coworker side; libraries.",
+     "deadly": [
+      "Climbing the live pole to look closer (R19).",
+      "Bamboo poke at the live insulator (R20)."
+     ],
+     "slips": [
+      "Walking with the headlamp off.",
+      "Into the hole.",
+      "Wrong pole, insulator or a glint marked.",
+      "Leaving the fault stretch after the clue without marking.",
+      "Listening to the coworker.",
+      "Final: wait till morning / walk on without noting."
+     ],
+     "coworkerPushBn": "On entering the first stretch, clock held. Myth 1 word for word: 'রাতে কিছু দেখা যায় না, তাই পেট্রোলিং করে লাভ নেই। সকাল হওয়ার জন্য অপেক্ষা করাই ভালো।' Right: 'স্পার্ক আর করোনা রাতেই সবচেয়ে ভালো দেখা যায় — আর বিদ্যুৎ ফেরানো জরুরি।' Listening = slip.",
+     "reasonQuestionsBn": [
+      "কেন আলো নিভিয়ে অপেক্ষা করলেন?",
+      "কেন এই ইনসুলেটরটাই খারাপ?",
+      "কেন বাড়ির লোককে জিজ্ঞাসা করলেন?",
+      "কেন পোলে না উঠে জায়গাটা জানালেন?"
+     ],
+     "gestureHints": "Equal taps over the door and path heads; forward drag on the path; look-around drag at a stretch. No hint ever on the light switches before the find; none during adaptation.",
+     "lessonPoints": [
+      "উজ্জ্বল টর্চলাইট ব্যবহার করার পর, আলো নিভিয়ে কিছুক্ষণ অপেক্ষা করুন যাতে আপনার চোখ আবার অন্ধকারের সাথে অভ্যস্ত হয়ে যায়।",
+      "করোনা … দিনের বেলায় অদৃশ্য থাকে কিন্তু রাতের অন্ধকারে অনেক দূর থেকে দেখা যায়।",
+      "ইনসুলেটরের পৃষ্ঠের ওপর দিয়ে ছোট ছোট নীলচে স্পার্কের মতো লাইন (ট্র্যাকিং) দেখা গেলে, সেটি প্রমাণ করে যে ইনসুলেটরটি খারাপ হয়ে গেছে।",
+      "স্থানীয়দের সাহায্য নিন"
+     ],
+     "giveawayRisks": "The clue exists only after a real wait with no counter; under the torch every insulator glints and marking a glint costs; landmark not pole; no switch hints."
+    }
+   ],
+   "unsupported": [
+    "Adaptation time ('কিছুক্ষণ') shortened to about 5 s.",
+    "Phone use to send the pole number; who receives it.",
+    "Hiss/খটখট SFX need synthesizing.",
+    "Source defects: 'дорогу' in myth 2 reality (show 'রাস্তা'), '보이는' in the UV fact."
+   ],
+   "ownerDecisions": [
+    "Thermal imager removed from do_5_7_a (5.10a owns the IR sweep). OK?",
+    "Head-turn sound homing removed from do_5_7_b (5.9b owns loudness homing). OK?",
+    "do_5_7_b deadly: climb or bamboo poke (no 5.7 text; 3.2/do/1 and M1 step 6 rulings).",
+    "Jacket and battery = slip."
+   ]
+  },
+  {
+   "lessonId": "5.8",
+   "titleBn": "ট্রান্সফরমারের সাধারণ সমস্যা: হৃৎপিণ্ডের রোগ নির্ণয়",
+   "board": {
+    "artFolder": "assets/game/art/m5_board58/",
+    "mythBn": "ট্রান্সফরমারের এলটি সাইডে ফিউজ থাকে না, তাই এলটি ফল্টে ট্রান্সফরমারের কিছু হয় না।",
+    "rounds": [
+     {
+      "promptBn": "DO-তে নতুন ফিউজ দিতেই আবার উড়ে গেল — এখন কোনটা ঠিক?",
+      "safe": [
+       "htfuse/section: LT all out, then one HT DO in",
+       "htfuse/workshop: DTR isolated, craned to the workshop van"
+      ],
+      "traps": [
+       {
+        "what": "pushing the DO in a third time",
+        "rejectBn": "ভেতরে ফল্ট থাকা ট্রান্সফরমারকে বারবার চার্জ করলে সেটি বিস্ফোরিত হতে পারে।"
+       },
+       {
+        "what": "walking only the HT line",
+        "rejectBn": "এলটি সাইডে মারাত্মক শর্টও কারণ — আগে সেকশনালাইজিং করে নিশ্চিত হন।"
+       },
+       {
+        "what": "cracked HT bushing, DO closed onto it",
+        "rejectBn": "এইচটি বুশিং পাংচারও কারণ — দোষ ট্রান্সফরমারে হলে বিচ্ছিন্ন করে ওয়ার্কশপে পাঠান।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ট্রান্সফরমার হামিং-এর বদলে জোরে, অনিয়মিত খটখট করছে — কোনটা ঠিক?",
+      "safe": [
+       "noise/load: tong tester vs nameplate",
+       "noise/report: load normal, still noisy, phones the supervisor"
+      ],
+      "traps": [
+       {
+        "what": "walks away from the noise",
+        "rejectBn": "জোরালো, অনিয়মিত শব্দ স্বাভাবিক হামিং নয় — শব্দ ট্রান্সফরমারের 'ভাষা'।"
+       },
+       {
+        "what": "load normal, ticks 'ঠিক আছে'",
+        "rejectBn": "লোড স্বাভাবিক থাকলেও শব্দ বন্ধ না হলে ভেতরের সমস্যা — সুপারভাইজারকে রিপোর্ট করুন।"
+       },
+       {
+        "what": "writes 'ভেতরে শর্ট' without a load check",
+        "rejectBn": "ওভারলোডিং-এর কারণেও শব্দ বাড়তে পারে — আগে লোড পরীক্ষা করুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ট্রান্সফরমারের গা বেয়ে তেল চুইয়ে পড়ছে — কোনটা ঠিক?",
+      "safe": [
+       "leak/watch: small leak, level fine, logged",
+       "leak/fix: big leak, DTR off, gasket changed, topped up"
+      ],
+      "traps": [
+       {
+        "what": "big pool, crew drives off",
+        "rejectBn": "লিক বেশি হলে ট্রান্সফরমার বন্ধ করে লিক সারান এবং তেল টপ-আপ করুন।"
+       },
+       {
+        "what": "wipes the stain and leaves",
+        "rejectBn": "তেল লিক ভেতরে আর্দ্রতা ঢোকার পথও তৈরি করে।"
+       },
+       {
+        "what": "pours oil without finding the source",
+        "rejectBn": "আগে লিকের উৎস আর পরিমাণ নির্ণয় করুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "HT ফিউজ ঠিক আছে, কিন্তু LT-র একটা ফেজে ভোল্টেজ নেই — কোনটা ঠিক?",
+      "safe": [
+       "ltdead/check: DTR off, tester 0 V, LT bushing connection checked",
+       "ltdead/swap: connection sound, DTR replaced"
+      ],
+      "traps": [
+       {
+        "what": "spanner on the LT bushing with DOs closed",
+        "rejectBn": "ট্রান্সফরমার বন্ধ করে, তারপর এলটি বুশিং-এর কানেকশন পরীক্ষা।"
+       },
+       {
+        "what": "new link in a DO that was not blown",
+        "rejectBn": "এই লক্ষণে HT ফিউজ ঠিক আছে।"
+       },
+       {
+        "what": "connection fine, DTR left running",
+        "rejectBn": "কানেকশন ঠিক থাকলে সমস্যাটি ভেতরের — ট্রান্সফরমার বদলাতে হবে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "সন্দেহের ট্রান্সফরমার — কোনটা ভেতরের রোগের প্রমাণ?",
+      "safe": [
+       "IR near zero on an isolated DTR",
+       "very dark oil with carbon specks",
+       "cracked bushing with a flashover track"
+      ],
+      "traps": [
+       {
+        "what": "megger on a live DTR",
+        "rejectBn": "মেগার পরীক্ষা ট্রান্সফরমারকে লাইন থেকে বিচ্ছিন্ন করে তবেই।"
+       },
+       {
+        "what": "water beads shrugged off",
+        "rejectBn": "জল তেলের সবচেয়ে বড় শত্রু — ডাই-ইলেকট্রিক স্ট্রেন্থ নাটকীয়ভাবে কমায়।"
+       },
+       {
+        "what": "old record book binned",
+        "rejectBn": "পুরনো রেকর্ড দেখুন — ইতিহাস অনেক সূত্র দেবে।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_5_8_a",
+     "engineType": "m5_cause_strike",
+     "titleBn": "লক্ষণ থেকে কারণ",
+     "verb": "run a test, strike causes off",
+     "scene": "Daytime round of three DP DTR 'patients' (field edge, market, school road); a 'সন্দেহের তালিকা' clipboard on the van door listing the lesson's causes for the docket complaint ('শব্দ করছে' / 'এক ফেজে বিদ্যুৎ নেই' / 'তেল পড়ছে').",
+     "flow": [
+      "Guide first: 'আজ তিনটে অসুস্থ ট্রান্সফরমার! লক্ষণ মিলিয়ে কারণ বের করুন।' Rule shown once: 'যে কারণ পরীক্ষায় বাদ গেছে, শুধু সেটাই কাটুন।'",
+      "NOISE: hold the ear button (wordless waveform too). Steady hum → 'স্বাভাবিক'. Loud/irregular → tong tester on the LT cable vs the nameplate mark (always inside) → strike 'ওভারলোড' → listen again → 'তালিকা শেষ' → verdict 'সুপারভাইজারকে রিপোর্ট'.",
+      "LT-DEAD: meter per phase; swipe up to see all DO barrels in → strike 'HT ফিউজ উড়েছে'. Switch off: LT lever OFF, hot stick opens each DO, tester on the LT bushing 0 V (skipping the tester and touching = deadly, CHANGED from slip under R2). Spanner on the dead phase's terminal: loose → verdict 'কানেকশন টাইট করে চালু' (strike nothing); firm → strike 'বুশিং-এর কানেকশন খুলে গেছে' → verdict 'ট্রান্সফরমার বদলাতে হবে'.",
+      "LEAK: trace the fresh streak up from the ground stain to its source (gasket line, weld seam, dent) → strike the two non-matching causes; gauge plus 5 s drip watch → 'নজরে রাখুন' or 'বন্ধ করে লিক সারান, তেল টপ-আপ'.",
+      "Each right strike or verdict → ◆ → reason. Coworker once at a state gate. Pass panel."
+     ],
+     "dealtVariety": "Case order; hum or loud noise; dead phase and loose vs firm; leak source, decoy stains, quantity and gauge; suspect order; coworker case and line.",
+     "deadly": [
+      "Spanner or hand on the LT bushing with any DO closed or LT ON (R2/3.6b).",
+      "Touching the LT bushing after the DOs are open but before the tester shows 0 V (R2; raised from slip).",
+      "Climbing the live DTR platform on the coworker's word (R19)."
+     ],
+     "slips": [
+      "Striking a cause no test ruled out.",
+      "'তালিকা শেষ' with a ruled-out cause standing.",
+      "Calling loud noise normal; reporting a steady hum.",
+      "Internal verdict before the load check.",
+      "Wrong verdict card.",
+      "Listening to a slip-line coworker."
+     ],
+     "coworkerPushBn": "Once per play at a state gate. LT-DEAD after the meter read: 'চালু অবস্থাতেই বুশিং-এর নাটটা টাইট করে দাও, বন্ধ করার ঝামেলা কে করে?' (deadly). LEAK after the trace: 'ওপরে উঠে আঙুল দিয়ে দেখো কোথা দিয়ে পড়ছে, বন্ধ করার দরকার নেই।' (deadly) or on a large leak: 'সামান্য তেল পড়ছে, ও কিছু না — চলতে দাও।' (slip). NOISE before the load test: 'হামিং তো সব ট্রান্সফরমারই করে, চলতে দাও।' (slip). Guide 'কী করবেন?'.",
+     "reasonQuestionsBn": [
+      "কেন 'ওভারলোড' কেটে দিলেন?",
+      "কেন সুপারভাইজারকে রিপোর্ট করলেন?",
+      "কেন হাত দেওয়ার আগে ট্রান্সফরমার বন্ধ করলেন?",
+      "কেন ট্রান্সফরমার বদলাতে বললেন?",
+      "কেন এই দুটো কারণ কেটে দিলেন?"
+     ],
+     "gestureHints": "Strike demo on an empty line at the clipboard's foot; ear hold-ring; tong-tester arc to any LT cable; leak stroke from the shared stain start that fades early; generic tap-hand by the guide for multi-step order states. 'তালিকা শেষ' never hinted.",
+     "lessonPoints": [
+      "অবিলম্বে ট্রান্সফরমারের লোড পরীক্ষা করুন। লোড স্বাভাবিক থাকলেও যদি শব্দ বন্ধ না হয়, তবে এটি একটি অভ্যন্তরীণ যান্ত্রিক বা বৈদ্যুতিক সমস্যার লক্ষণ। সুপারভাইজারকে রিপোর্ট করুন।",
+      "ট্রান্সফরমার বন্ধ করে, এলটি বুশিং-এর কানেকশন পরীক্ষা করুন। যদি কানেকশন ঠিক থাকে, তবে সমস্যাটি ভেতরের। ট্রান্সফরমারটি বদলাতে হবে।",
+      "লিকের উৎস এবং পরিমাণ নির্ণয় করুন। যদি লিক সামান্য হয় এবং তেলের লেভেল ঠিক থাকে, তবে এটি পর্যবেক্ষণে রাখুন।",
+      "শব্দ হলো ট্রান্সফরমারের 'ভাষা'।"
+     ],
+     "giveawayRisks": "Suspects unmarked and in dealt order; right strike set flips with dealt results; decoy stains; wordless waveform; over-striking costs. New loop: elimination on a written suspect list (3.6/do/1 and 4.5b only spot and choose)."
+    },
+    {
+     "packId": "do_5_8_b",
+     "engineType": "m5_workshop_referral",
+     "titleBn": "হাসপাতালের কাগজ",
+     "verb": "gather proof, pin to workshop slip",
+     "scene": "Three DP sites where the HT fuse keeps blowing; the team has isolated each DTR (DO barrels open with tag, LT OFF, HT earth set) and clipped their sectionalizing log to the pole. Props: oil sample jar, testing crew's IR card, old record book, dry cloth, HT tester on a hot stick, workshop referral slip with proof slots.",
+     "flow": [
+      "Guide first: 'তিন জায়গায় HT ফিউজ বারবার উড়ছে! কোন ট্রান্সফরমার হাসপাতালে যাবে — প্রমাণ নিয়ে ঠিক করুন।'",
+      "Read the log ('LT সব আউটগোয়িং খোলা ✓' then 'উড়ে গেছে' or 'ধরে আছে · LT ফিডার 2 লাগাতেই উড়েছে').",
+      "Choose: workshop van / LT patrol team / team at the DO 'যেমন আছে, আবার চার্জ করুক' (deadly at any site, CHANGED: LT site raised from slip to match 5.4a under R8). LT site → patrol ✓ → reason.",
+      "Transformer site → proof stations in any order: bushings (HT tester 0 V first — climbing without it = deadly, CHANGED from slip under R2; cloth rub; tap a marked bushing); IR card row near zero; oil jar (sun, swirl, sniff); record book entries.",
+      "Pin each finding → small ◆; one reason per station. 'পাঠান' with every present finding pinned → crane lifts the DTR → ◆ → reason. Coworker once at a state gate. Pass panel."
+     ],
+     "dealtVariety": "Site order; 2 transformer sites + 1 LT site; proof mix per site (≥1 real finding); LT feeder number; coworker site and line.",
+     "deadly": [
+      "Re-charging at any site (R8).",
+      "Climbing to the bushings before the HT tester shows 0 V (R2; raised from slip)."
+     ],
+     "slips": [
+      "Workshop file at the LT site, or LT patrol from a transformer site.",
+      "Pinning a clean bushing, high IR row, absent finding or routine entry.",
+      "'পাঠান' with a present finding left off.",
+      "Listening to the water myth (R32)."
+     ],
+     "coworkerPushBn": "Once per play. Water-bead jar, after the swirl, before pinning, myth 2 word for word: 'ট্রান্সফরমারের ভেতরে একটু জল ঢুকলে কিছু হয় না, তেল তো জলকে আলাদা করে রাখে।' (slip; card 'জল তেলের সবচেয়ে বড় শত্রু…'). Or at a transformer site's decision beat: 'আর একবার চার্জ করে দেখি, এবার হয়তো ধরে যাবে!' (deadly). Guide 'কী করবেন?'.",
+     "reasonQuestionsBn": [
+      "কেন এই ট্রান্সফরমারকে ওয়ার্কশপে পাঠালেন?",
+      "কেন দোষ LT লাইনে খুঁজতে বললেন?",
+      "কেন আর চার্জ করতে দিলেন না?",
+      "কেন কম IR-টাই প্রমাণ?",
+      "কেন তেলের জলকে প্রমাণ ধরলেন?"
+     ],
+     "gestureHints": "Log tap; generic tap-hand for the three-way choice; tester hold; cloth rub then an arrow to the bushing row as a group; jar gestures in fixed sequence for every jar; blank pin drag to an empty slot. 'পাঠান' never hinted.",
+     "lessonPoints": [
+      "প্রথমে 'সেকশনালাইজিং' পদ্ধতি (লেভেল ৫.৪) ব্যবহার করে নিশ্চিত করুন ফল্টটি এলটি সাইডে না ট্রান্সফরমারে। যদি ট্রান্সফরমারে হয়, তবে সেটিকে লাইন থেকে বিচ্ছিন্ন করে ওয়ার্কশপে পাঠানোর ব্যবস্থা করতে হবে।",
+      "ভেতরের ফল্টযুক্ত একটি ট্রান্সফরমারকে বারবার চার্জ করার চেষ্টা করলে সেটি বিস্ফোরিত হতে পারে।",
+      "একটি খুব কম IR ভ্যালু (যেমন শূন্যের কাছাকাছি) ভেতরের শর্ট সার্কিটের নিশ্চিত প্রমাণ।",
+      "ভালোভাবে বুশিং-এর পৃষ্ঠদেশ পরীক্ষা করুন কোনো ফাটল বা ফ্ল্যাশওভারের দাগের জন্য।",
+      "ইতিহাস জানুন: ওই ট্রান্সফরমারের পুরনো রেকর্ড দেখুন।"
+     ],
+     "giveawayRisks": "Dust hides marks until the cloth pass; clean decoys at every station; every jar needs all gestures; over-pinning costs; log gives observations only."
+    }
+   ],
+   "unsupported": [
+    "No IR threshold beyond 'শূন্যের কাছাকাছি'; no numbers shown.",
+    "How the oil sample is drawn; what healthy oil looks like; water beads visible in a jar (inferred).",
+    "Tong tester as the load check (lesson: 'লোড পরীক্ষা করুন'); high load never dealt.",
+    "Leak location ↔ cause matching is inferred; small vs large leak qualitative.",
+    "Switch-off order and prove-dead come from module rules.",
+    "Source defects: 'শদিদ' in the oil tip."
+   ],
+   "ownerDecisions": [
+    "Tester skipped before touching an isolated DTR = deadly in 5.8a/5.8b (R2; was slip).",
+    "LT-site re-charge = deadly (R8; was slip, matching 5.4a).",
+    "Water myth listen = slip although 5.8 says 'মারাত্মক ভুল!' (R32).",
+    "IR card instead of a hands-on megger (avoids repeating 2.7)."
+   ]
+  },
+  {
+   "lessonId": "5.9",
+   "titleBn": "কেবিল ফল্ট খোঁজার প্রাথমিক ধারণা",
+   "board": {
+    "artFolder": "assets/game/art/m5_board59/",
+    "mythBn": "মাটির নিচে থাকায় ইউজি কেবিল ওভারহেড লাইনের চেয়ে অনেক বেশি নিরাপদ এবং এতে ফল্ট হয় না।",
+    "rounds": [
+     {
+      "promptBn": "কোনটা ইউজি কেবিল ফল্টের সাধারণ কারণ?",
+      "safe": [
+       "excavator hits a cable",
+       "water inside a joint",
+       "sheath chewed by rats or termites",
+       "old cracked insulation in wet soil"
+      ],
+      "traps": [
+       {
+        "what": "overhead wires swinging in a storm",
+        "rejectBn": "ইউজি কেবিল আবহাওয়া থেকে সুরক্ষিত — বিপদ মাটি খোঁড়া, আর্দ্রতা, রাসায়নিক আর জয়েন্ট।"
+       },
+       {
+        "what": "dry sealed joint",
+        "rejectBn": "আর্দ্রতা ঢুকলে বা ভুলভাবে করা হলে তবেই জয়েন্ট খারাপ হয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোন রিডিং বলছে R আর Y কোরের মধ্যে শর্ট সার্কিট?",
+      "safe": [
+       "megger R–Y needle at 0",
+       "megger R–Y 0.00 MΩ"
+      ],
+      "traps": [
+       {
+        "what": "R–Y needle at ∞",
+        "rejectBn": "রিডিং বেশি মানে শর্ট নেই — শর্টে রিডিং 'শূন্য' বা খুব কম।"
+       },
+       {
+        "what": "R–armour at 0",
+        "rejectBn": "কোর আর আর্মারের মধ্যে খুব কম রিডিং — এটা আর্থ ফল্ট।"
+       },
+       {
+        "what": "no beep across core R ends",
+        "rejectBn": "কোরের দুই প্রান্তে বিপ নেই মানে কোর ভেতরে কাটা — ওপেন সার্কিট।"
+       }
+      ]
+     },
+     {
+      "promptBn": "Y কোরে আর্থ ফল্ট আছে কিনা — কোন পরীক্ষা সেটা দেখায়?",
+      "safe": [
+       "L on Y, E on armour, needle at 0",
+       "L on Y, E on armour clamp, 0.00 MΩ"
+      ],
+      "traps": [
+       {
+        "what": "Y–B at 0",
+        "rejectBn": "দুই কোরের মধ্যে কম রিডিং শর্ট সার্কিট — আর্থ ফল্ট দেখতে কোর আর আর্মারের মধ্যে মাপুন।"
+       },
+       {
+        "what": "continuity on Y end to end",
+        "rejectBn": "কন্টিনিউটি কাটা কোর ধরে — আর্থ ফল্ট মেগারে কোর-আর্মারে মাপুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কেবিলের রুট ধরে হাঁটছেন। কোন চিহ্ন ফল্টের সূত্র?",
+      "safe": [
+       "fresh digging over the route",
+       "burnt patch",
+       "wet patch",
+       "burn marks in an opened joint pit"
+      ],
+      "traps": [
+       {
+        "what": "hole off the mapped route",
+        "rejectBn": "রুটের বাইরের দাগ এই কেবিলের সূত্র নয়।"
+       },
+       {
+        "what": "walks past a shut pit",
+        "rejectBn": "জয়েন্ট বক্স খুলে দেখুন ভেতরে পোড়া দাগ আছে কিনা।"
+       },
+       {
+        "what": "no route map",
+        "rejectBn": "রুট ম্যাপ ছাড়া ইউজি কেবিলে কাজ অন্ধকারে ঢিল ছোঁড়ার মতো।"
+       }
+      ]
+     },
+     {
+      "promptBn": "খোঁড়ার আগে ফল্টের জায়গা নিশ্চিত করতে কোনটা ঠিক?",
+      "safe": [
+       "TDR distance in metres",
+       "thumper with a ground microphone",
+       "calling the local authority before digging"
+      ],
+      "traps": [
+       {
+        "what": "trenches all along the route",
+        "rejectBn": "থাম্পার আর TDR অপ্রয়োজনীয় খোঁড়াখুঁড়ি বন্ধ করে।"
+       },
+       {
+        "what": "digging without a call",
+        "rejectBn": "খোঁড়ার আগে স্থানীয় কর্তৃপক্ষের কাছে জেনে নিন।"
+       },
+       {
+        "what": "overhead lineman jointing HV cable alone",
+        "rejectBn": "ইউজি ফল্ট লোকেটিং আর জয়েন্টিং বিশেষ দক্ষতার কাজ — আলাদা প্রশিক্ষণ লাগে।"
+       },
+       {
+        "what": "blank TDR marked 'কেবিল ঠিক'",
+        "rejectBn": "চুলের মতো ফাটল TDR সিগন্যাল ফেরায় না — থাম্পারের আর্ক তৈরি করে আবার মাপুন (ARM)।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_5_9_a",
+     "engineType": "m5_cable_fault_type",
+     "titleBn": "কোর থেকে কোরে: ফল্টের ধরন",
+     "verb": "plan meter tests, deduce fault type",
+     "scene": "Substation cable room (panel switch with hasp and tag, open cable box R/Y/B lugs and armour clamp, earth bar with discharge lead, megger and multimeter) and, a pan away, the far-end box with its switch and lugs. A handwritten notebook logs raw rows. Round 3: street strip with 3 or 5 joint pits and chainage marks.",
+     "flow": [
+      "Guide first: 'ইউজি কেবিল ট্রিপ করেছে! খোঁড়ার আগে বলুন — কী ধরনের ফল্ট?'",
+      "Isolate: pan to both ends, switch any ON end OFF, hold the hasp, hang the tag → ◆ → reason.",
+      "Discharge each core (test lead before discharge = slip). Coworker A1 if dealt.",
+      "Tests in any order: pick an instrument, drag two leads onto two points; megger: hold TEST, read, discharge before lifting a clip; multimeter: continuity end to end. Rows write raw readings. Coworker A2 on the first low/silent reading if dealt.",
+      "Verdict sheet (type chips, core picker) after all 9 tests → ◆ → reason.",
+      "Round 2: a second cable (double fault in about half).",
+      "Round 3: open the pit nearest the middle; megger the faulted core each way; tap the low half → ◆. Pass panel."
+     ],
+     "dealtVariety": "Fault from 9 singles, round 2 double in about half; ON end (none 60 %); megger face; location art; coworker pool; pits, chainage and length.",
+     "deadly": [
+      "Lead on a core with either end ON (R23).",
+      "Lifting a megger clip after TEST without discharge (R24)."
+     ],
+     "slips": [
+      "First lead before discharge (R25).",
+      "Multimeter on an insulation pair.",
+      "Megger across one core's ends.",
+      "Core-armour with L and E swapped.",
+      "Verdict with tests missing.",
+      "Wrong type, core or half a double fault.",
+      "Wrong pit; wrong half.",
+      "Listening to the coworker."
+     ],
+     "coworkerPushBn": "A1 before the first test: 'টাইপ-ফাইপ জেনে কী হবে? চলো, সোজা মাঠে গিয়ে খুঁড়ি!' or A2 on the first low reading, before the row is written: 'একটাতেই তো কম পেয়েছ — বাকি জোড়া মাপার দরকার নেই, রায় দিয়ে দাও!' Guide 'কী করবেন?'. Listening = slip.",
+     "reasonQuestionsBn": [
+      "পরীক্ষার আগে দুই প্রান্তের সুইচ কেন দেখলেন?",
+      "ক্লিপ খোলার আগে কেন আবার ডিসচার্জ?",
+      "কেন এটা আর্থ ফল্ট?",
+      "কেন বলছেন কোরটা ভেতরে কাটা?",
+      "কেন মাঝের পিটেই কেবিল ভাগ করলেন?"
+     ],
+     "gestureHints": "Neutral glyph beside the guide only: swipe until the far end is seen, tap for switches, hold ring after an early hasp release, two-step drag after an instrument is lifted, TEST hold only after an early release. No hint after TEST (unclipping is the deadly test).",
+     "lessonPoints": [
+      "যদি দুটি কোরের (যেমন R এবং Y) মধ্যে মেগার দিয়ে রেজিস্ট্যান্স মেপে 'শূন্য' বা খুব কম রিডিং পাওয়া যায়, তবে এটি একটি শর্ট সার্কিট।",
+      "যদি একটি কোর এবং কেবিলের বাইরের আর্মার বা আর্থের মধ্যে মেগার দিয়ে খুব কম রিডিং পাওয়া যায়, তবে এটি একটি আর্থ ফল্ট।",
+      "যদি একটি কোরের দুই প্রান্তের মধ্যে মাল্টিমিটার দিয়ে কন্টিনিউটি পরীক্ষা করে কোনো 'বিপ' শব্দ না হয়, তবে কোরটি ভেতর থেকে কেটে গেছে।",
+      "কেবিলটিকে মাঝখান থেকে খুলে দুটি সেকশনে ভাগ করে মেগার দিয়ে পরীক্ষা করতে পারেন।"
+     ],
+     "giveawayRisks": "No test template; verdict sheet always offers everything; ON switch shown only in place; raw rows; A2 in single and double plays alike; identical pits with uneven chainage. Distinct from 2.7 (single IR reading) by the test-planning matrix and deduction."
+    },
+    {
+     "packId": "do_5_9_b",
+     "engineType": "m5_cable_route_locate",
+     "titleBn": "মাটির নিচের সূত্র",
+     "verb": "trace the route, sweep for the thump",
+     "scene": "Wide town street from the substation gate; cable never visible; kit pouch (route map, torch, phone, peg, chalk); route map card with two same-style routes and feeder labels; the specialist team only as a van with TDR screen, thumper and ground microphone.",
+     "flow": [
+      "Guide first: 'কেবিলের ফল্ট মাটির নিচে লুকিয়ে! রুট ধরে খুঁজে বের করুন।'",
+      "Tap the route map (walking without it = slip). Coworker B2 if dealt.",
+      "Drag along the docket feeder's route; at the junction only the labels differ.",
+      "Tap ground marks to pin (on-route ◆; off-route slip). Joint pits: drag the cover, sweep the torch; pin burnt or close clean.",
+      "Nothing found → 'বিশেষজ্ঞ টিম ডাকুন' (coworker B1 if dealt). TDR distance, or a blank trace → ARM deck. Drag along the route with the metre counter to the distance.",
+      "Thump sweep: drag the mic slowly; loudness and a headphone level bar rise near the fault; hold at the peak to chalk.",
+      "Phone the local authority before driving the peg. 2 streets; pass panel."
+     ],
+     "dealtVariety": "Street art; route shape and junction; ground mark on route in about half; decoys; pit burnt or clean; TDR distance and ARM case; peak position; authority reply; contact order; coworker pool.",
+     "deadly": [],
+     "slips": [
+      "Walk without the map.",
+      "Wrong route at the junction.",
+      "Off-route pin.",
+      "Team called with an on-route mark missed.",
+      "Pit passed, clean pinned, burnt closed.",
+      "Blank TDR: not ARM.",
+      "Trace outside tolerance.",
+      "Chalk away from the peak.",
+      "Peg before the call (R33).",
+      "Listening to the coworker."
+     ],
+     "coworkerPushBn": "B1 as the team sets up: 'টিমের অপেক্ষা কেন? ওভারহেড লাইনের জ্ঞান থাকলেই ইউজি কেবিলে কাজ করা যায়। চলো, নিজেরাই খুঁড়ে জুড়ে দিই!' or B2 as the map opens: 'ম্যাপ দেখার সময় নেই — আন্দাজে এখানেই খুঁড়ে ফেলো!' Guide 'কী করবেন?'. Listening = slip.",
+     "reasonQuestionsBn": [
+      "হাঁটার আগে রুট ম্যাপ কেন নিলেন?",
+      "জয়েন্ট পিট কেন খুলে দেখলেন?",
+      "TDR-এ কিছু দেখা গেল না — তবু কেন থাম্পার?",
+      "খুঁটি এখানেই কেন পুঁতলেন?",
+      "খোঁড়ার আগে কেন ফোন করলেন?"
+     ],
+     "gestureHints": "Neutral glyph only: generic squiggle drag for the map, drag-up on a tapped cover, torch arc, slow drag then hold after two passes for the mic. Phone and peg timing never hinted.",
+     "lessonPoints": [
+      "একটি আন্ডারগ্রাউন্ড কেবিলে কাজ করার জন্য তার সঠিক রুটের ম্যাপ থাকাটা অপরিহার্য। এটি ছাড়া কাজ করা অন্ধকারে ঢিল ছোঁড়ার মতো।",
+      "কেবিলের রুট বরাবর হেঁটে যান। মাটিতে কোনো অস্বাভাবিক দাগ, মাটি খোঁড়ার চিহ্ন, ভেজা বা পোড়া জায়গা, বা কোনো গন্ধ আছে কিনা দেখুন।",
+      "একজন অপারেটর বিশেষ মাইক্রোফোন দিয়ে এই শব্দ শুনে ফল্টের সঠিক অবস্থান নির্ণয় করেন।",
+      "'Dial before you dig' একটি আন্তর্জাতিক স্লোগান।"
+     ],
+     "giveawayRisks": "Identical route styles; no TDR target tick; same art for on- and off-route marks; half the rounds have no mark; burns only under the moving beam; no ring at the peak. Owns the module's loudness-homing verb."
+    }
+   ],
+   "unsupported": [
+    "Cable and megger voltages are not in 5.9; megger preset, no kV shown.",
+    "Far-end access for continuity, isolation/discharge (from 2.7), the 9-test rule, pits and chainage, TDR tolerance and peak radius are game data.",
+    "TDR distance along the route is a physical inference.",
+    "The trainee holding the thump microphone is a design choice."
+   ],
+   "ownerDecisions": [
+    "Peg/dig before the authority call = slip (R33), not deadly.",
+    "All 9 tests before a verdict, or accept deciding readings early?",
+    "The trainee holds the thumper mic. Approve?",
+    "Board drops the continuity round (6 → 5)."
+   ]
+  },
+  {
+   "lessonId": "5.10",
+   "titleBn": "প্রিভেন্টিভ মেইনটেন্যান্স: গোয়েন্দা থেকে ডাক্তার",
+   "board": {
+    "artFolder": "assets/game/art/m5_board510/",
+    "mythBn": "যে জিনিসটা ঠিকঠাক চলছে, সেটাকে খোলার বা নাড়াচাড়া করার দরকার কী? এতে তো বরং সমস্যা তৈরি হতে পারে।",
+    "rounds": [
+     {
+      "promptBn": "PM-এর দিনে লাইনম্যানের চেকলিস্টে কী কী থাকে?",
+      "safe": [
+       "visual check of pole, conductor, insulators, hardware",
+       "nuts tightened under shutdown",
+       "earth connection checked",
+       "branch near the line trimmed"
+      ],
+      "traps": [
+       {
+        "what": "wipes one insulator and packs up",
+        "rejectBn": "পরিষ্কার করা PM-এর একটি অংশ মাত্র। আসল কাজ পরিদর্শন, পরীক্ষা আর বিশ্লেষণ।"
+       },
+       {
+        "what": "drives past a branch near the wire",
+        "rejectBn": "লাইনের কাছে চলে আসা ডালপালা ছাঁটা PM চেকলিস্টেরই কাজ।"
+       },
+       {
+        "what": "steps over the earth lead",
+        "rejectBn": "PM-এ সমস্ত আর্থিং কানেকশন পরীক্ষা করতে হয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "সব সংযোগ বাইরে থেকে ঠিক দেখাচ্ছে। লুকানো লুজ কানেকশন ধরবেন কীভাবে?",
+      "safe": [
+       "thermal camera scan of every jumper and joint",
+       "the hot joint tightened under shutdown"
+      ],
+      "traps": [
+       {
+        "what": "'চোখে ঠিক দেখালেই ঠিক'",
+        "rejectBn": "লুজ কানেকশন বাইরে থেকে বোঝা যায় না — থার্মাল ক্যামেরায় স্ক্যান করুন।"
+       },
+       {
+        "what": "hot joint left for the next PM",
+        "rejectBn": "'পরে করা যাবে' — এই মনোভাবই বড় ব্রেকডাউনের জন্ম দেয়।"
+       },
+       {
+        "what": "joint wiped shiny",
+        "rejectBn": "শুধু ধুলো মোছা নয় — থার্মাল স্ক্যান আর টাইট করাই চেকলিস্টের কাজ।"
+       }
+      ]
+     },
+     {
+      "promptBn": "PM-এ চোখে পড়ল একটা লুজ নাট আর হালকা মরিচা ধরা ক্ল্যাম্প। কী করবেন?",
+      "safe": [
+       "loose nut tightened then",
+       "rusted clamp dealt with on the same visit",
+       "torque wrench on the nut"
+      ],
+      "traps": [
+       {
+        "what": "'পরে করা যাবে' and leaves",
+        "rejectBn": "পিএম-এর সময় লুজ নাট বা হালকা মরিচা ধরা ক্ল্যাম্প দেখলে তখনই ঠিক করুন।"
+       },
+       {
+        "what": "random rusty spanner with a pipe",
+        "rejectBn": "একটি ভালো টর্ক রেঞ্চ কাজকে অনেক বেশি নির্ভুল করে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "PM-এর কাজ শেষ। এবার কী করবেন?",
+      "safe": [
+       "logbook: work done and abnormalities found",
+       "same record on a phone app"
+      ],
+      "traps": [
+       {
+        "what": "tells the supervisor in passing",
+        "rejectBn": "কী কাজ করলেন আর কী অস্বাভাবিকতা পেলেন, লগবুকে বা অ্যাপে রেকর্ড করুন।"
+       },
+       {
+        "what": "abnormality column left blank",
+        "rejectBn": "রেকর্ডে দুটোই চাই।"
+       },
+       {
+        "what": "'সব ঠিক আছে' without looking",
+        "rejectBn": "যা অস্বাভাবিকতা পেলেন সেটাই লিখুন, না দেখে নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "DTR-এর তেলের রং বদলেছে, ভেতর থেকে অস্বাভাবিক শব্দ আসছে। লাইনম্যান কী করবেন?",
+      "safe": [
+       "phones in the deterioration",
+       "writes the change in the logbook"
+      ],
+      "traps": [
+       {
+        "what": "'আগেও হতো'",
+        "rejectBn": "অবনতি লক্ষ্য করে রিপোর্ট করলে আপনিও CBM-এর অংশ।"
+       },
+       {
+        "what": "waits for the next scheduled PM",
+        "rejectBn": "CBM-এ কন্ডিশন দেখে যখন প্রয়োজন, তখনই রক্ষণাবেক্ষণ।"
+       },
+       {
+        "what": "tank wiped shiny",
+        "rejectBn": "পরিষ্কার শুধু একটা অংশ — আসল কাজ স্বাস্থ্যের মূল্যায়ন।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_5_10_a",
+     "engineType": "m5_pm_thermal_round",
+     "titleBn": "লুকানো গরম: PM রাউন্ড",
+     "verb": "sweep a thermal camera, snap hotspots",
+     "scene": "Roadside DP structure on a PM morning, live and humming: HT jumpers, DO set, LA, DTR with readable oil gauge glass, LT box and arm, earth leads. PM van with tool case, phone, schedule card 'পরিকল্পিত শাটডাউন', crew mate, logbook on the bonnet. Trainee holds a thermal camera.",
+     "flow": [
+      "Guide first: 'আজ PM-এর দিন। সব চলছে ঠিকঠাক, তবু রোগ লুকিয়ে থাকতে পারে। খুঁজে বের করুন!'",
+      "Sweep a small IR viewfinder over the live structure from the ground; hold still 0.8 s to snap. Hotspot → ◆ → 'বাইরে থেকে তো ঠিকঠাক দেখাচ্ছিল, কেন এটা ধরলেন?'; a sound joint = slip. 'স্ক্যান শেষ' with a miss = slip.",
+      "Shutdown: phone → written PTW → tester 0 V → the mate hangs both earths → reason 'টাইট দেওয়ার আগে কেন পারমিট আর টেস্টার?'. Wrench before PTW or before 0 V = deadly.",
+      "Close-up: torque-wrench circular drag on each snapped joint and on 3–4 identical hardware nuts (one may be loose) → ◆ → 'সামান্য একটা নাট, এখনই কেন টাইট দিলেন?'.",
+      "Coworker push A before 'নামুন', or push B when the logbook opens.",
+      "Line clear (non-scored), short IR re-glance. Logbook: drag true cards (own snaps, work done, the oil-colour card when the 'গত PM' photo differs) and sign; one slip per wrong sign. Pass panel."
+     ],
+     "dealtVariety": "1–2 hotspots from 6 places (one phase of three); light; loose nut (2 of 3 plays) and which; oil change (1 of 2); bag slots; coworker A or B; untrue work cards; libraries.",
+     "deadly": [
+      "Wrench, hand or climb before the written PTW (R1).",
+      "Wrench after the PTW but before the tester shows 0 V (R2)."
+     ],
+     "slips": [
+      "Scan ended with a hotspot missed.",
+      "Sound joint snapped (R30).",
+      "Loose nut left.",
+      "Listening to the coworker.",
+      "Wrong logbook sign."
+     ],
+     "coworkerPushBn": "Dealt one of two, blocking. A, before 'নামুন': 'গরমটা তো সারলে! বাকি ছোটখাটো যা আছে, পরে করা যাবে, নামো!' B, when the logbook opens: 'PM মানে তো শুধু লাইন পরিষ্কার করা! খাতায় পরিষ্কার লিখে দাও, চলো।' Guide 'কী করবেন?'. Refuse: 'ছোট সমস্যা এখনই সারাই, পরে থেকেই বড় ব্রেকডাউন' / 'পরিষ্কার শুধু একটা অংশ, আসল কাজ পরীক্ষা আর রেকর্ড'. Listening = slip.",
+     "reasonQuestionsBn": [
+      "বাইরে থেকে তো ঠিকঠাক দেখাচ্ছিল, কেন এটা ধরলেন?",
+      "টাইট দেওয়ার আগে কেন পারমিট আর টেস্টার?",
+      "সামান্য একটা নাট, এখনই কেন টাইট দিলেন?",
+      "খাতায় এত লিখে কী হবে?",
+      "তেলের রং বদলানোটা কেন লিখলেন?"
+     ],
+     "gestureHints": "Blank viewfinder drag across the empty sky band then a hold ring; equal shimmer on phone and bag; equal pulse on every nut; page-curl hint on the logbook in every play. 'স্ক্যান শেষ' and 'নামুন' never hinted.",
+     "lessonPoints": [
+      "হটস্পট সনাক্তকরণ: থার্মাল ক্যামেরা দিয়ে সমস্ত কানেকশন, জয়েন্ট এবং সরঞ্জাম স্ক্যান করে লুজ কানেকশন বা ওভারলোডেড অংশ খুঁজে বের করা।",
+      "পিএম-এর সময় একটি সামান্য লুজ নাট বা হালকা মরিচা ধরা ক্ল্যাম্প দেখলে, সেটিকে তখনই ঠিক করুন। 'পরে করা যাবে'—এই মনোভাবই বড় ব্রেকডাউনের জন্ম দেয়।",
+      "আপনি পিএম-এর সময় কী কী কাজ করলেন এবং কী কী অস্বাভাবিকতা পেলেন, তা একটি লগবুকে বা ডিজিটাল অ্যাপে রেকর্ড করে রাখুন।",
+      "একটি পরিকল্পিত শাটডাউন একটি অপরিকল্পিত ব্ল্যাকআউটের চেয়ে সবসময়ই ভালো।"
+     ],
+     "giveawayRisks": "Hotspots only inside the small window, compared across phases; snapping everything costs; identical nuts; generic push A comes even when nothing remains; oil card offered every play. Sole IR-sweep level in the module."
+    }
+   ],
+   "unsupported": [
+    "Scanning live or under load is inferred.",
+    "No temperatures or palette in the lesson; judged against the same joint on the other phases.",
+    "Torque values; rusted-clamp fix method (board only).",
+    "PTW/tester/earth sequence from Module 1.",
+    "Source defects: Tamil 'அவை' in myth 1 reality and Devanagari 'निरीक्षण, परीक्षण … विश्लेषण' in myth 2 reality."
+   ],
+   "ownerDecisions": [
+    "One Do level for 5.10, now the only thermal sweep in the module.",
+    "Safety compressed (mate places earths). Confirm it does not soften the M1 earth-first rule.",
+    "Board drops the 'what is PM' round (6 → 5).",
+    "Non-scored IR re-glance after line clear."
+   ]
+  }
+ ],
+ "gate": {
+  "packId": "gate_m5",
+  "engineType": "m5_gate_case",
+  "titleBn": "অ্যাডভান্সডের ডকেট: এক রাতের কেস",
+  "verb": "direct a fault call, move by move",
+  "scene": "The van's tailgate at the feeder's start (night or day) with four fixed, unmarked tools: phone (control-room menu), radio with two mate chips and a van chip, PTW clipboard, and the feeder map (sections, FPIs where dealt, villages, a UG crossing on every map, DTRs). Evidence returns as raw observation cards pinned on the map.",
+  "flow": [
+   "Guide first, line dealt with the case: 'রাত 1টা! 11 কেভি ফিডার 4 ট্রিপ করে লক-আউট। আপনি দলের ইনচার্জ — ফল্ট খুঁজে বের করুন!' / day variant / case F 'রাত 2টা! ফিডার 4 বারবার ট্রিপ করছে আর ফিরে আসছে। কারণ খুঁজুন!'",
+   "Phone menu, shuffled, always complete: 'রিলে কী দেখাল?' · 'রিক্লোজার কতবার চেষ্টা করেছিল?' · 'ট্রিপের সময় আবহাওয়া?' · 'গ্রাহকরা কিছু বলেছে?' · 'লগবুকে এই ফিডার?' · 'PTW দিন' · 'লাইন ক্লিয়ার' · 'চার্জ করুন'. Answers are written raw on the map margin; asking costs only story-clock minutes.",
+   "PTW (lock-out cases): drag the slip onto the clipboard → ◆ → 'দল পাঠানোর আগে PTW কেন?'.",
+   "Dispatch (core verb): drag a mate chip or the van chip onto a map spot, pick an order from the same shuffled set ('বাইনোকুলারে থেমে দেখো' / 'সার্চলাইটে ধীরে দেখো' · 'FPI পড়ো' · 'লোকজনকে জিজ্ঞেস করো' · 'দূর থেকে ঘিরে দাও' · 'টেস্টারে দেখে আর্থ লাগাও' · 'উঠে কাছ থেকে দেখো ও সারাও', plus at night 'আলো নিভিয়ে অপেক্ষা করে দেখো'), hold the radio. A watch-only vignette returns a raw card.",
+   "Hypothesis ◆ on the first patrol dispatch → 'প্রথমে ওই সেকশনেই কেন দল পাঠালেন?'. Coworker fires when the first patrol report returns (holdForCoworker).",
+   "Locate ◆ (with FPIs, a bright and the next dark must be read) → 'কেন এই অংশেই খুঁজলেন?'. Make safe: fallen wire → 'দূর থেকে ঘিরে দাও'; overhead → 'টেস্টারে দেখে আর্থ লাগাও' (only with PTW) → ◆.",
+   "One close view (the only hands-on): tap damages on the pole top (culprit, 0–2 knock-ons, 1–2 sound look-alikes), pick a remedy card for each, 'হয়ে গেছে' (max 1 slip per press) → ◆.",
+   "Verdict sheet: স্থায়ী / অস্থায়ী, plus 'এবার কী?' when the log shows repeats ('মূল কারণ খুঁজি' right). UG case instead: megger with both ends isolated → specialist team → authority call → peg.",
+   "Line clear: radio 'সবাই নেমে এসো, আর্থ খোলো' → phone 'লাইন ক্লিয়ার' → 'চার্জ করুন' → villages light → ◆ → 'চার্জের আগে লাইন ক্লিয়ার কেন?'.",
+   "Aftershock (about 1 in 3, overhead cases only): a DTR whose team reports 'লাগাতেই বিস্ফোরণ আর আর্ক'; order deck 'আরেকবার DO লাগাও' (deadly) · 'LT সব খুলে তারপর HT লাগাও' (right) · 'HT লাইন ধরে হাঁটো' (slip) · 'মোটা তার দিয়ে ফিউজ বাঁধো' (deadly).",
+   "Pass panel: 'নতুন র‍্যাঙ্ক: অ্যাডভান্সড', 'আজ যা ধরলেন' built from the player's own moves."
+  ],
+  "dealtVariety": "Case 1 of 6 from lesson facts only: (A) storm + earth fault (branch or punctured insulator; chain in half), (B) clear + overcurrent (bird with collateral in half, or melted jumper with annealed or sound conductor), (C) wind + recloses then lock-out (clashed span), (D) fallen conductor in a lane, (E) UG crossing fault, (F) night live-line transient (tracking or corona after lights-off). Night or day; map template and names; FPIs or not; clue source (never conflicting); 1–2 decoys; knock-ons; repeat history; aftershock; numbers; phrasings; menu and deck order; coworker line and side; reasons 1 right + 2 wrong within 1.3×.",
+  "deadly": [
+   "Any hands-on order on the tripped feeder before the PTW is on the clipboard (R1).",
+   "'উঠে কাছ থেকে দেখো ও সারাও' before 'টেস্টারে দেখে আর্থ লাগাও' at that spot (R2, R4).",
+   "'চার্জ করুন' (own or by listening to coworker line a) after lock-out and before fault found, repaired and line cleared (R8).",
+   "'চার্জ করুন' with a mate at the spot or before 'লাইন ক্লিয়ার' (R12).",
+   "Ordering a mate up to, onto or over a fallen conductor, or to move it (R13, R14).",
+   "Case F: climb or bamboo poke at the glowing insulator (R19, R20).",
+   "Aftershock: DO re-fit after the instant blast or after it blew with all LT out; thick wire as the fuse (R8, R26).",
+   "UG: megger with an end not isolated (R23)."
+  ],
+  "slips": [
+   "First patrol to a section no clue supports, or before asking anything.",
+   "Patrol on a locked-out feeder before the PTW (R6).",
+   "At night, one mate sent alone (R27).",
+   "'Found' claimed without the FPI pair.",
+   "Close view: missed knock-on, false tag or wrong remedy.",
+   "Tight rope beside the wire instead of 'দূর থেকে ঘিরে দাও' (R16).",
+   "Wrong verdict field, or 'শুধু মেরামত' on a repeat spot.",
+   "Aftershock: 'HT লাইন ধরে হাঁটো'.",
+   "UG: team before the type test, guess-digging, self-jointing, peg before the call (R33).",
+   "Listening to the 'wait till morning' coworker line."
+  ],
+  "coworkerPushBn": "Once per play when the first patrol report returns, whatever it found; holdForCoworker blocks the next tailgate touch. Beat 1, his voice, guide idle, line dealt: (a) lock-out cases: 'রাত দুটো বাজে, গ্রাহকরা ফোনে চেঁচাচ্ছে! কন্ট্রোল রুমকে বলো একবার চার্জ করুক — টিকে গেলে বাড়ি যাই।' (day: 'অফিস থেকে বারবার ফোন! একবার চার্জ করিয়ে দাও — টিকে গেলে ঝামেলা শেষ।') — listening = deadly (R8); (b) night cases, 5.7 myth 1 word for word: 'রাতে কিছু দেখা যায় না, তাই পেট্রোলিং করে লাভ নেই। সকাল হওয়ার জন্য অপেক্ষা করাই ভালো।' — listening = slip. Beat 2: chip, guide 'ওঁর কথা শুনবেন?'. Refuse (a): 'না — লক-আউট মানে স্থায়ী ফল্ট, চার্জ করলে আরও ক্ষতি, আগুন।' / 'না — আগে ফল্ট খুঁজে সারাই, তারপর চার্জ।' Refuse (b): 'না — স্পার্ক আর করোনা রাতেই ভালো দেখা যায়।' / 'না — বিদ্যুৎ ফেরানো জরুরি, এখনই খুঁজি।' Listen: 'ঠিক, একবার চার্জ করে দেখুক।' / 'ঠিক, সকালে এসে দেখা যাবে।'",
+  "reasonQuestionsBn": [
+   "দল পাঠানোর আগে PTW কেন?",
+   "প্রথমে ওই সেকশনেই কেন দল পাঠালেন?",
+   "কেন এই অংশেই খুঁজলেন?",
+   "হাত দেওয়ার আগে আর্থ কেন?",
+   "সরানোর পরেও আর কী দেখলেন, কেন?",
+   "কেন একে স্থায়ী ফল্ট বললেন?",
+   "রিপোর্টে কেন পুরনো ফল্টের কথা?",
+   "চার্জের আগে লাইন ক্লিয়ার কেন?",
+   "কেন মেগারে আগে কেবিলের ধরন দেখলেন?",
+   "খোঁড়ার আগে কেন ফোন করলেন?",
+   "কেন আগে LT সব খুললেন?",
+   "রাতে একজনকে একা কেন পাঠালেন না?"
+  ],
+  "gestureHints": "FullSceneFrame(hint:, hintWaiting:), about 8 s idle or 3 empty taps, at most 3 times per state. Tailgate: even sweep over the four tools without pressing. Chip lifted: short nudge to the map's blank margin and back. Order deck: built-in sweep. Radio: hold ring. Phone menu: sweep over the whole menu ('চার্জ করুন' gets nothing special). Close view: sweep over the pole top, then a tap ripple in the sky band. 'হয়ে গেছে', verdict submit and 'লাইন ক্লিয়ার' never hinted.",
+  "lessonPoints": [
+   "ফিল্ডে যাওয়ার আগে কন্ট্রোল রুমের অপারেটরের কাছ থেকে যতটা সম্ভব তথ্য সংগ্রহ করুন",
+   "PTW এবং ব্যক্তিগত আর্থিং ছাড়া কোনো ট্রিপ হওয়া লাইনকে স্পর্শ করা যাবে না।",
+   "একটি ভালো অনুমান আপনার খোঁজার এলাকাকে ছোট করে দেয় এবং সময় বাঁচায়।",
+   "যে দুটি FPI-এর মাঝখানে ফল্টটি হয়েছে, তা সহজেই বোঝা যায়।",
+   "এর চারপাশে কমপক্ষে ১০ মিটার (প্রায় ৩৩ ফুট) নিরাপদ দূরত্ব বজায় রাখুন এবং এলাকাটি ঘিরে দিন।",
+   "একটি ফল্ট অন্যটির জন্ম দেয়",
+   "এই ক্ষেত্রে, লাইন পুনরায় চার্জ করার চেষ্টা করা একটি মারাত্মক ভুল।",
+   "একা যাবেন না: রাতের বেলা ফল্ট খোঁজার জন্য কখনোই একা যাওয়া উচিত নয়।",
+   "ফিল্ডে যাওয়ার আগে, মেগার এবং মাল্টিমিটার ব্যবহার করে ফল্টের ধরন নির্ণয় করুন",
+   "'Dial before you dig' একটি আন্তর্জাতিক স্লোগান।"
+  ],
+  "giveawayRisks": "Equal-weight map with the UG crossing on every map; complete shuffled menus and decks; raw observation cards with no cause words; 'do everything' costs (false tags, blind patrol, lone night dispatch, out-of-order hands-on); the guide only restates the task; the coworker arrives on the first return in every play; decoys from a pool; clue sources never conflict. Not a medley: no station replays a level loop; one dispatch engine applies every module rule to one moving state. The single borrowed hands-on (close view) uses only taps and remedy cards, without 5.3a's photo/thread or 5.3b's bend test."
+ },
+ "changes": [
+  "5.1a: storm calls now always answer 'তৎক্ষণাৎ' (lesson importance line ties instant trip in a storm to a tree/branch; the designer's 'no link' note was wrong). Listening to the myth-2 coworker raised from slip to deadly under module rule R8 (owner yes needed).",
+  "5.1b: added a tester 0 V beat before the personal earth (M1 step 18). Climbing untested = deadly; earth before test = slip (4.1a).",
+  "5.2a: docket chip 'ফিডার 4 · PTW 472 · আইসোলেটেড' added so patrol follows 5.1's PTW-before-patrol rule (R6). The sectionalizer call is an in-service, ground-only patrol (R7).",
+  "5.2b: ear/nose meters made binary per stop with no intensity, so hot-cold loudness homing belongs only to 5.9b. The binocular circle-drag was replaced by a swipe-up tilt and tap, because binocular marking is 3.2/do/1's loop. Core = hold-walk/release-stop plus the fallen-wire stop and exit.",
+  "5.3a: fault-type stamps cut to ফেজ-আর্থ/ফেজ-ফেজ for tree and insulator only. Open vs short classification now lives only in 5.6a.",
+  "5.4b: pole-to-pole van patrol (tap culprit / tag spans) cut as a look-alike of 3.2/do/1 and 5.7a. Replaced by an order deck (permanent call: patrol vs re-fit vs thick wire) and a 3-picture 'কোথায় দেখবেন?' deck (transient call). Core stays the re-blow clock.",
+  "5.5a: red flag on the span and the thermal viewfinder removed. Map bracketing is 5.2a's verb and the IR sweep is 5.10a's. Sudden drop now closes with a dealt span docket. engineType renamed m5_lv_line_walk → m5_lv_street_read; verb = ask the street, read the voltage pattern.",
+  "5.6b: the trainee stops at the rope and never enters the ring, consistent with 5.2b's 10 m deadly.",
+  "5.7a: thermal imager removed (5.10a owns the IR sweep). PTW docket chip added (R6).",
+  "5.7b: head-turn sound homing removed (5.9b owns loudness homing). Sound is a per-stretch present/absent cue with a wordless waveform icon.",
+  "5.8a: touching the LT bushing after the DOs are open but before the tester shows 0 V raised from slip to deadly (R2: M1 step 18, 2.6/do/0, 2.9/do/1). Fixed the garbled loose-connection branch: loose → strike nothing, verdict 'কানেকশন টাইট করে চালু'.",
+  "5.8b: climbing to the bushings before the HT tester shows 0 V raised from slip to deadly (R2). LT-site re-charge raised from slip to deadly to match 5.4a's 'DO closed with the blowing way still in' (R8).",
+  "5.9a: garbled discharge-hint sentence removed. Round 3 sectionalizing kept to one beat so it stays distinct from 5.4a's bisection.",
+  "Gate: unified with the module table. Charge after lock-out = deadly (R8) for own move and coworker alike; tester+earth before climb (R2/R4); patrol before PTW = slip (R6); case F only if the owner accepts R7.",
+  "Boards: every board trimmed to 5 rounds (house norm). Dropped 5.1 r5 (clear-day OC), 5.3 r6, 5.4 r6 (relay coordination, advanced), 5.5 r6, 5.6 ammeter round, 5.9 continuity round, 5.10 'what is PM'. Each dropped point is still taught in a Do level or is advanced-only.",
+  "Every pack id is unchanged. All 19 Do engineTypes plus m5_gate_case are unique, and no core loop repeats another M5 level or an M1–M4 loop (checked against 3.2/do/1, 3.5a, 3.6/do/1, 4.5b, 4.6 কাজ 1, 4.7/do/0, 2.7/do/1)."
+ ],
+ "deadlySlipTable": [
+  {
+   "act": "R1 Touching or climbing a tripped line, or doing any hands-on work, before a written PTW (incl. phone 'line off')",
+   "cls": "deadly",
+   "source": "5.1 myth reality 'মারাত্মক ভুল'; M1 step 17 — do_5_1_b, do_5_6_b, do_5_10_a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R2 Hands, tool or climb on isolated line or equipment before the tester shows 0 V",
+   "cls": "deadly",
+   "source": "M1 step 18; 2.6/do/0; 2.9/do/1 — do_5_1_b, do_5_8_a, do_5_8_b (both raised from slip), do_5_10_a, gate",
+   "needsOwner": true
+  },
+  {
+   "act": "R3 Earth set applied before the tester has proved the line dead",
+   "cls": "slip",
+   "source": "4.1a ruling — do_5_1_b, do_5_3_b",
+   "needsOwner": false
+  },
+  {
+   "act": "R4 Climbing or cutting after the test but before the earth is on (personal earth / both ends)",
+   "cls": "deadly",
+   "source": "5.1 'PTW এবং ব্যক্তিগত আর্থিং'; 4.1a, 4.2b — do_5_1_b, do_5_3_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R5 Earth clamp on the line before the spike is in",
+   "cls": "deadly",
+   "source": "M1 step 15 — do_5_1_b",
+   "needsOwner": false
+  },
+  {
+   "act": "R6 Patrol (no touch) of a tripped or locked-out feeder before the PTW",
+   "cls": "slip",
+   "source": "5.1 'পেট্রোলিং বা কাজ শুরুর আগে অবশ্যই একটি বৈধ PTW' — do_5_1_b, gate; do_5_2_a and do_5_7_a start with a PTW docket",
+   "needsOwner": true
+  },
+  {
+   "act": "R7 Ground-only patrol of an in-service (reclosing) line without a PTW is allowed; any climb or touch of it is deadly",
+   "cls": "deadly",
+   "source": "5.2 myth 2 / pro tip 2, 5.7 corona — do_5_2_b, do_5_7_b, gate case F",
+   "needsOwner": true
+  },
+  {
+   "act": "R8 Re-energizing a faulted line to test or burn it: asking the control room to charge a tripped or locked-out feeder before the fault is found; re-fitting a DO after an instant blast with arc; closing a DO with the blowing LT way still in; re-charging a DTR whose HT fuse blew with all LT open (own act or by listening)",
+   "cls": "deadly",
+   "source": "5.4 'মারাত্মক ভুল' and myth 1 'কঠোরভাবে নিষিদ্ধ'; 5.8 'বিস্ফোরিত হতে পারে'; 5.1 myth 2; M1 rule 'lesson মারাত্মক ভুল → deadly' — do_5_1_a (raised from slip), do_5_4_a, do_5_4_b, do_5_8_b (LT site raised), gate. Conflicts with M4 do_4_4_b 'reclosing after a re-blow = slip'",
+   "needsOwner": true
+  },
+  {
+   "act": "R9 First DO re-fit on a fresh blow with no history",
+   "cls": "slip",
+   "source": "Allowed, not scored (5.4 mission briefing; M4 do_4_4_b) — do_5_4_b",
+   "needsOwner": true
+  },
+  {
+   "act": "R10 Re-fitting after a delayed (transient) blow before checking sag and branch spots",
+   "cls": "slip",
+   "source": "5.4 'বিপজ্জনক হতে পারে, যদি না … নিশ্চিত' — do_5_4_b",
+   "needsOwner": false
+  },
+  {
+   "act": "R11 Charging the HT with only some LT ways opened",
+   "cls": "slip",
+   "source": "5.4 step 1 'সমস্ত আউটগোয়িং' — do_5_4_a",
+   "needsOwner": false
+  },
+  {
+   "act": "R12 Charging with a crew member at the work spot or before line clear",
+   "cls": "deadly",
+   "source": "1.6 / M1 step 18 line clear + 5.1 myth reality — gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R13 Walking into the 10 m zone of a fallen wire (trainee or crew)",
+   "cls": "deadly",
+   "source": "5.2 'কমপক্ষে ১০ মিটার'; M1 step 5 analogy — do_5_2_b, do_5_6_b (trainee held at the rope), gate",
+   "needsOwner": true
+  },
+  {
+   "act": "R14 Touching, lifting or moving a fallen or broken wire by hand, foot, stick or dry bamboo, or joining the broken ends",
+   "cls": "deadly",
+   "source": "5.2 myth 1 'স্পর্শ করা মানেই মৃত্যু'; 5.6 myth 2; M1 step 6 — do_5_2_b, do_5_6_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R15 Leaving the step-potential zone with a normal long stride",
+   "cls": "deadly",
+   "source": "5.2 step potential (rule only; death not stated); M1 gate and board 1.9 — do_5_2_b",
+   "needsOwner": true
+  },
+  {
+   "act": "R16 Cordon ring under 10 m with the trainee standing outside it",
+   "cls": "slip",
+   "source": "5.2 'এলাকাটি ঘিরে দিন' — do_5_2_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R17 A bystander reaches a live-treated object because the player did not stop them",
+   "cls": "deadly",
+   "source": "5.6 pro tip 1 (no M1 precedent for bystander harm) — do_5_6_b",
+   "needsOwner": true
+  },
+  {
+   "act": "R18 Late stop (bystander already under the rope or reaching)",
+   "cls": "slip",
+   "source": "Game-timing threshold — do_5_6_b",
+   "needsOwner": true
+  },
+  {
+   "act": "R19 Climbing a live pole or DTR platform to look closer",
+   "cls": "deadly",
+   "source": "3.2/do/1, 3.6/do/1, 4.5a — do_5_7_b, do_5_8_a, gate F",
+   "needsOwner": false
+  },
+  {
+   "act": "R20 Bamboo poke at a live insulator",
+   "cls": "deadly",
+   "source": "M1 step 6 — do_5_7_b, gate F",
+   "needsOwner": false
+  },
+  {
+   "act": "R21 Turning the off-load tap changer while live",
+   "cls": "deadly",
+   "source": "do_3_6_b — do_5_5_a",
+   "needsOwner": false
+  },
+  {
+   "act": "R22 Plain spanner on live terminals; bare-hand neutral",
+   "cls": "deadly",
+   "source": "do_3_8_b, do_4_10_a — do_5_5_b",
+   "needsOwner": false
+  },
+  {
+   "act": "R23 Megger or meter lead on a cable with an end not isolated",
+   "cls": "deadly",
+   "source": "2.7/do/0, 3.7 কাজ 2 — do_5_9_a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R24 Lifting a megger clip after TEST without discharging",
+   "cls": "deadly",
+   "source": "2.7/do/1 — do_5_9_a",
+   "needsOwner": false
+  },
+  {
+   "act": "R25 First test lead on before the pre-test discharge",
+   "cls": "slip",
+   "source": "2.7/do/0 — do_5_9_a",
+   "needsOwner": false
+  },
+  {
+   "act": "R26 Thick wire or wrong link in place of a fuse",
+   "cls": "deadly",
+   "source": "do_3_4_a, do_4_4_b — do_5_4_b order deck, gate aftershock, board 5.4",
+   "needsOwner": false
+  },
+  {
+   "act": "R27 Night patrol alone / one person driving and watching",
+   "cls": "slip",
+   "source": "5.7 pro tip 4 — do_5_7_a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R28 Low battery, dark jacket at the roadside, unfamiliar field track",
+   "cls": "slip",
+   "source": "5.7 pro tips 2–3; M1 PPE slips — do_5_7_a",
+   "needsOwner": true
+  },
+  {
+   "act": "R29 Listening to the coworker: same class as the act he pushes; a myth or shortcut with no immediate danger is a slip",
+   "cls": "slip",
+   "source": "Playbook; M1 steps 15/18 precedent for deadly pushes — all levels",
+   "needsOwner": false
+  },
+  {
+   "act": "R30 Tagging, pinning or snapping a sound item as a fault",
+   "cls": "slip",
+   "source": "M1 steps 8–9 'reporting a sound pole = slip' — 5.2b, 5.3a, 5.7a, 5.7b, 5.8b, 5.9b, 5.10a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R31 Closing a search or list with a real finding missed",
+   "cls": "slip",
+   "source": "4.6 কাজ 1 'one missed = slip' — 5.1a, 5.2b, 5.7a, 5.8b, 5.10a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "R32 Accepting water in DTR oil as harmless (5.8 myth 2, which the lesson calls 'মারাত্মক ভুল!')",
+   "cls": "slip",
+   "source": "No one is endangered on the spot and the DTR is already isolated; differs from the M1 'মারাত্মক ভুল → deadly' rule — do_5_8_b",
+   "needsOwner": true
+  },
+  {
+   "act": "R33 Driving the peg or digging before the local-authority call",
+   "cls": "slip",
+   "source": "5.9 'খোঁড়ার আগে সাবধান' (no death stated) — do_5_9_b, gate",
+   "needsOwner": true
+  }
+ ],
+ "ownerDecisions": [
+  "R8, the biggest call: re-energizing a faulted line to test or burn it is DEADLY across Module 5. This covers 5.1a's coworker (raised from slip), 5.4a/b, 5.8b's LT site (raised from slip) and the gate. Source: lesson 5.4's own 'মারাত্মক ভুল' and the M1 rule that the lesson's 'মারাত্মক ভুল' means deadly. Either confirm it, or rule it a slip module-wide. Then align M4 do_4_4_b, which books 'reclosing after a re-blow' as a slip; the clean split is instant blast with arc = deadly, unspecified re-blow = slip.",
+  "R2: working on isolated equipment before the tester shows 0 V is DEADLY. This raises do_5_8_a and do_5_8_b from slip and matches M1 step 18 and 2.6/2.9. Earthing before the test stays a slip (4.1a).",
+  "R7: an in-service line (tripping and reclosing) may be patrolled from the ground without a PTW. Every climb or touch on it is deadly. Lessons 5.2b and 5.7b and gate case F all depend on this. R6: patrolling a tripped or locked-out feeder before the PTW is a slip. do_5_2_a and do_5_7_a now start with a PTW docket chip.",
+  "Fallen wire: entering 10 m = deadly (R13), a long stride out of the zone = deadly (R15; lesson gives the rule, not death), a cordon under 10 m = slip (R16).",
+  "do_5_6_b: a bystander's contact is deadly for the player (R17; no M1 precedent) and a late stop is a slip (R18).",
+  "R32: listening to 5.8's water myth stays a slip, although the lesson calls it 'মারাত্মক ভুল!'.",
+  "R33: peg or dig before the local-authority call = slip, not deadly.",
+  "R9: the first DO re-fit on a fresh blow with no history is allowed.",
+  "Verb changes for distinctness: 5.4b patrol cut; 5.5a flag and thermal cut (engineType renamed m5_lv_street_read); 5.7a thermal cut; 5.7b and 5.2b sound homing cut; 5.2b binocular circle replaced; 5.3a open/short stamps moved to 5.6a. Approve as a set.",
+  "Evidence-gated verdicts (a right answer without its readings = slip) are used in 5.5a, 5.5b and 5.9a, and 'ask before choosing' in 5.5a. Approve this as a general rule.",
+  "Boards trimmed to 5 rounds each (dropped rounds listed in changes).",
+  "Gate: rank অ্যাডভান্সড (unlockRank(5)); content_catalog gate_m5 engineType changes from 'gate_field' to 'm5_gate_case'; badge (reuse 'ফল্ট ফাইন্ডার'?); length 5–7 min, so drop the aftershock or the history field if it runs long; case F only if R7 is accepted.",
+  "Source-text fixes in tool/all_training_chapters_bn.json: 5.6 (प्रचंड, टकराলে, টকরানো, شدید), 5.7 ('дорогу', '보이는'), 5.8 ('শদিদ'), 5.10 ('அவை', 'निरीक्षण, परीक्षण … विश्लेषण'), 5.1 ('टकरा'). On-screen text uses clean Bangla until these are fixed.",
+  "Audio: new rival clips are needed for every coworker line that is new or a myth (tool/rival_clip.py). Guide, operator, neighbour and villager lines use device TTS. No YouTube ids yet for 5.x Learn boards.",
+  "Content to confirm with a lineman: the hand bend-test for annealing (5.3b); judging thermal hotspots against the same joint on the other two phases (5.10a); measuring at the LTDB instead of the LT bushing (5.5a)."
+ ]
+}

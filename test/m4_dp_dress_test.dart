@@ -4,7 +4,10 @@
 // line clear in reverse), the deal, the libraries, and the level in the
 // shell: idle perf, the guide first, a full clean play with the coworker
 // refused, a slip card that keeps the round, three slips, the deadly freeze
-// (climbing without earth; listening to him).
+// (climbing without earth; listening to him); the kit rules (audit
+// 2026-11-11): tool rows never in a working order, the next place waits for
+// the coworker on a fast play, the praise window takes no touch, and the
+// gesture hand sweeps over every choice (never one) only while the level waits.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,6 +21,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -33,6 +37,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '4.7/do/1',
@@ -82,10 +87,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -306,6 +313,25 @@ void main() {
       expect(r.passed, isFalse, reason: '4 slips = 40 %');
     });
 
+    test('tool rows: every tool, never laid out left to right in a working order; rows differ', () {
+      expect(m4DpDressInWorkOrder(const [M4DpDressTool.permit, M4DpDressTool.tester, M4DpDressTool.harness, M4DpDressTool.climb]), isTrue);
+      expect(m4DpDressInWorkOrder(const [M4DpDressTool.harness, M4DpDressTool.permit, M4DpDressTool.tester, M4DpDressTool.climb]), isTrue);
+      expect(m4DpDressInWorkOrder(const [M4DpDressTool.down, M4DpDressTool.look, M4DpDressTool.lineClear]), isTrue);
+      final rows = <String>{};
+      for (var s = 0; s < 60; s++) {
+        final rng = math.Random(s);
+        final prep = m4DpDressToolRow(M4DpDressRound.prep, rng);
+        final clear = m4DpDressToolRow(M4DpDressRound.clear, rng);
+        expect(prep.toSet(), {M4DpDressTool.permit, M4DpDressTool.tester, M4DpDressTool.harness, M4DpDressTool.climb});
+        expect(clear.toSet(), {M4DpDressTool.down, M4DpDressTool.look, M4DpDressTool.lineClear});
+        expect(m4DpDressInWorkOrder(prep), isFalse, reason: '$prep');
+        expect(m4DpDressInWorkOrder(clear), isFalse, reason: '$clear');
+        expect(m4DpDressToolRow(M4DpDressRound.dress, rng), isEmpty);
+        rows.add('${prep.map((t) => t.name)}|${clear.map((t) => t.name)}');
+      }
+      expect(rows.length, greaterThan(8));
+    });
+
     test('English digits only; every mistake has its picture; one deadly; keys unique', () {
       final all = <String>[
         M4DpDressLines.intro,
@@ -313,7 +339,7 @@ void main() {
         ...M4DpDressLines.allWhyRight,
         ...M4DpDressLines.myths,
         ...M4DpDressLines.allFixRight,
-        ...M4DpDressLines.fixWrong,
+        ...M4DpDressLines.allFixWrong,
         ...M4DpDressLines.coworker.recordedLines,
         ...M4DpDressLines.coworker.right,
         ...M4DpDressLines.coworker.wrong,
@@ -351,10 +377,24 @@ void main() {
           }
         }
       }
-      expectSameLength('fix', [...M4DpDressLines.allFixRight, ...M4DpDressLines.fixWrong]);
-      expect(M4DpDressLines.fixWrong.toSet().intersection(M4DpDressLines.allFixRight.toSet()), isEmpty);
+      expectSameLength('fix', [...M4DpDressLines.allFixRight, ...M4DpDressLines.allFixWrong]);
+      expect(M4DpDressLines.allFixWrong.toSet().intersection(M4DpDressLines.allFixRight.toSet()), isEmpty);
+      // The part a place is about is named on its wrong cards too: the card
+      // that names the part is not a giveaway.
+      const part = <M4DpDressSlot, String>{
+        M4DpDressSlot.tangle: 'জাম্পার',
+        M4DpDressSlot.clearance: 'জাম্পার',
+        M4DpDressSlot.tail: 'তার',
+        M4DpDressSlot.tilt: 'ক্রস-আর্ম',
+        M4DpDressSlot.loose: 'নাট',
+        M4DpDressSlot.ltCable: 'কেবিল',
+      };
       for (final s in M4DpDressSlot.values) {
-        expectLibrary('fix $s', M4DpDressLines.fixRight[s]!, M4DpDressLines.fixWrong);
+        expectLibrary('fix $s', M4DpDressLines.fixRight[s]!, M4DpDressLines.fixWrong[s]!);
+        expectSameLength('fix $s', [...M4DpDressLines.fixRight[s]!, ...M4DpDressLines.fixWrong[s]!]);
+        for (final w in M4DpDressLines.fixWrong[s]!) {
+          expect(w.contains(part[s]!) || (s == M4DpDressSlot.loose && w.contains('লাগ')), isTrue, reason: '$s: $w');
+        }
       }
       final cw = M4DpDressLines.coworker;
       expectSameLength('choice', [...cw.right, ...cw.wrong]);
@@ -418,7 +458,7 @@ void main() {
         }
         debugPrint('PERF m4_dp_dress ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -443,6 +483,12 @@ void main() {
       await _pump(t, 1200);
       expect(_label(M4DpDressLines.permit), findsOneWidget);
       expect(_label(M4DpDressLines.climb), findsOneWidget);
+      const tools = [M4DpDressTool.permit, M4DpDressTool.tester, M4DpDressTool.harness, M4DpDressTool.climb];
+      final row = [...tools]..sort((a, b) => t
+          .getCenter(_label(M4DpDressLines.toolLabel(a)))
+          .dx
+          .compareTo(t.getCenter(_label(M4DpDressLines.toolLabel(b))).dx));
+      expect(m4DpDressInWorkOrder(row), isFalse, reason: 'the row on screen: $row');
       await t.pumpWidget(const SizedBox());
       await t.pump(const Duration(seconds: 15));
       MascotTalk.reset();
@@ -507,9 +553,11 @@ void main() {
       await _tapAt(t, _geo.slotHit(s).center);
       expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
       await _pump(t, 700);
-      final wrong = _onScreen(M4DpDressLines.fixWrong);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(M4DpDressLines.fixWrong[s]!);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.text(M4DpDressMistakes.wrongFix(s).textBn), findsOneWidget);
       await t.tap(find.text(MistakeLines.gotIt));
@@ -533,6 +581,113 @@ void main() {
       }
       await _pump(t, 1500);
       expect(find.byType(StruckOutCard), findsOneWidget);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play: the next place waits for the coworker; he comes before the dressing can finish', (t) async {
+      // One seed with him after the first place, one after the second.
+      int seedFor(int after) => [for (var s = 0; s < 200; s++) s].firstWhere((s) => m4DpDressDeal(math.Random(s)).callAfter == after);
+      final seeds = [seedFor(1), seedFor(2)];
+      expect(seeds.map((s) => m4DpDressDeal(math.Random(s)).callAfter).toSet(), {1, 2});
+      for (final seed in seeds) {
+        final deal = m4DpDressDeal(math.Random(seed));
+        final c = await _open(t, seed);
+        await _prep(t);
+        final order = _order(deal);
+        for (var i = 0; i < deal.callAfter; i++) {
+          await _tapAt(t, _geo.slotHit(order[i]).center);
+          await _pickRight(t, M4DpDressLines.fixRight[order[i]]!);
+          await t.pump(const Duration(milliseconds: 100));
+        }
+        // At once on the next place: well inside his 1.2–2.4 s timer.
+        final next = order[deal.callAfter];
+        await t.tapAt(_geo.slotHit(next).center * _k);
+        await t.pump(const Duration(milliseconds: 100));
+        expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'seed $seed: he cuts in');
+        expect(find.byKey(ValueKey('fix-deck-${next.name}')), findsNothing, reason: 'the place waits for him');
+        await _pumpUntil(t, find.byType(ChoiceDeck));
+        await _pickRight(t, M4DpDressLines.coworker.right);
+        await _pump(t, 2600);
+        for (final s in order.skip(deal.callAfter)) {
+          await _fix(t, s);
+        }
+        await _reason(t, M4DpDressLines.dressWhy[deal.dressWhy]!);
+        expect(find.byType(CoworkerPeek), findsNothing);
+        expect(c.read(gameSaveProvider).mistakes, isEmpty);
+        expect(t.takeException(), isNull);
+        await _close(t, c);
+      }
+    });
+
+    testWidgets('the praise window and the reason deck take no touch: a tidy place tapped then is no slip', (t) async {
+      const seed = 7;
+      final deal = m4DpDressDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await _prep(t);
+      final order = _order(deal);
+      final tidy = M4DpDressSlot.values.firstWhere((s) => !deal.untidy.contains(s));
+      for (final (i, s) in order.indexed) {
+        await _tapAt(t, _geo.slotHit(s).center);
+        await _pickRight(t, M4DpDressLines.fixRight[s]!);
+        if (i + 1 == deal.callAfter) {
+          await _pump(t, 1200);
+          expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
+          await _pumpUntil(t, find.byType(ChoiceDeck));
+          await _pickRight(t, M4DpDressLines.coworker.right);
+          await _pump(t, 2600);
+        } else {
+          await _pump(t, 300);
+        }
+      }
+      // The dressing is done: the ◆ wait on the table, then the reason deck.
+      for (var k = 0; k < 6; k++) {
+        await t.tapAt(_geo.slotHit(tidy).center * _k);
+        await t.pump(const Duration(milliseconds: 250));
+      }
+      expect(find.byType(MistakeCard), findsNothing);
+      await _reason(t, M4DpDressLines.dressWhy[deal.dressWhy]!);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hand: idle → a sweep over every tool and both earths, then over all six places; none while a deck is up', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      const seed = 7;
+      final deal = m4DpDressDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      IdleHintState scene() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      await _pump(t, 9000);
+      expect(scene().showing, isTrue, reason: 'idle in the shutdown round');
+      expect(scene().debugOptions, hasLength(6), reason: '4 tools + 2 earth points');
+      expect(scene().debugFrame?.ripple, isNull, reason: 'a sweep presses nothing');
+      await _prep(t);
+      expect(scene().showing, isFalse);
+      await _pump(t, 9000);
+      expect(scene().showing, isTrue, reason: 'idle in the dressing');
+      expect(scene().debugOptions, hasLength(M4DpDressSlot.values.length), reason: 'every place, tidy or not');
+      // A place opened: the fix deck has its own sweep; the scene's hand stays away.
+      await _tapAt(t, _geo.slotHit(_order(deal).first).center);
+      await waitChoiceDeck(t);
+      await _pump(t, 9000);
+      expect(scene().showing, isFalse);
+      // Three taps on nothing (the ground far right) while waiting show the hand at once.
+      await _pickRight(t, M4DpDressLines.fixRight[_order(deal).first]!);
+      await _pump(t, 600);
+      if (deal.callAfter == 1) {
+        expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
+        await _pumpUntil(t, find.byType(ChoiceDeck));
+        await _pickRight(t, M4DpDressLines.coworker.right);
+        await _pump(t, 2600);
+      }
+      final empty = Offset(352, _geo.groundY - 150) * _k;
+      for (var k = 0; k < 3; k++) {
+        await t.tapAt(empty);
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      await t.pump(const Duration(milliseconds: 300));
+      expect(scene().showing, isTrue, reason: 'three misses');
+      expect(find.byType(MistakeCard), findsNothing);
       await _close(t, c);
     });
 
@@ -562,9 +717,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M4DpDressLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);

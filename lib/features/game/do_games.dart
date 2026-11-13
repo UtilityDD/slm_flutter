@@ -5,7 +5,7 @@ import 'discharge_order.dart';
 import 'distance_spot.dart';
 import 'fire_choose.dart';
 import 'fire_pass.dart';
-import 'gate_field.dart';
+import 'gate_watch.dart';
 import 'glove_check.dart';
 import 'golden_minute.dart';
 import 'harness_check.dart';
@@ -81,6 +81,26 @@ import 'm4_insulator_prep.dart';
 import 'm4_do_refuse.dart';
 import 'm4_dp_survey.dart';
 import 'm4_oil_level.dart';
+import 'm5_trip_call.dart' show M5TripCallPage, m5TripCallPacks;
+import 'm5_recloser_watch.dart' show M5RecloserPage, m5RecloserPacks;
+import 'm5_fault_address.dart' show M5FaultAddressPage, m5FaultAddressPacks;
+import 'm5_sense_walk.dart' show SenseWalkPage, senseWalkPacks;
+import 'm5_culprit_case.dart' show M5CulpritCasePage, m5CulpritPacks;
+import 'm5_anneal_cut.dart' show M5AnnealPage, m5AnnealPacks;
+import 'm5_feeder_sectionalize.dart' show M5FeederSectionalizePage, m5FeederPacks;
+import 'm5_reblow_clock.dart' show M5ReblowPage, m5ReblowPacks;
+import 'm5_lv_street_read.dart' show M5LvStreetReadPage, m5LvStreetReadPacks;
+import 'm5_lv_load_test.dart' show M5LvLoadTestPage, m5LvLoadTestPacks;
+import 'm5_fault_casebook.dart' show M5FaultCasebookPage, m5FaultCasebookPacks;
+import 'm5_live_wire_guard.dart' show M5LiveWireGuardPage, m5LiveWirePacks;
+import 'm5_searchlight_patrol.dart' show M5SearchlightPage, m5SearchlightPacks;
+import 'm5_dark_eyes.dart' show M5DarkEyesPage, m5DarkEyesPacks;
+import 'm5_cause_strike.dart' show M5CauseStrikePage, m5CauseStrikePacks;
+import 'm5_workshop_referral.dart' show M5WorkshopReferralPage, m5WorkshopReferralPacks;
+import 'm5_cable_fault_type.dart' show M5CableFaultTypePage, m5CableFaultTypePacks;
+import 'm5_cable_route_locate.dart' show M5CableRouteLocatePage, m5CrlPacks;
+import 'm5_pm_thermal_round.dart' show M5PmThermalRoundPage, m5PmThermalRoundPacks;
+import 'm5_gate_case.dart' show M5GateCasePage, m5GateCasePacks;
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -163,10 +183,10 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = tenSecPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => TenSecScanPage(ctx: ctx, pack: content, muted: muted);
-    case 'gate_field':
-      final content = gateFieldPacks[pack.id];
+    case 'gate_watch':
+      final content = gateWatchPacks[pack.id];
       if (content == null) return null;
-      return (ctx, muted) => GateFieldPage(ctx: ctx, pack: content, muted: muted);
+      return (ctx, muted) => GateWatchPage(ctx: ctx, pack: content, muted: muted);
     case 'm2_toolbox_pack':
       final content = m2ToolboxPacks[pack.id];
       if (content == null) return null;
@@ -407,6 +427,86 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m4OilLevelPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M4OilLevelPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_trip_call':
+      final content = m5TripCallPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5TripCallPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_recloser_watch':
+      final content = m5RecloserPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5RecloserPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_fault_address':
+      final content = m5FaultAddressPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5FaultAddressPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_sense_walk':
+      final content = senseWalkPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => SenseWalkPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_culprit_case':
+      final content = m5CulpritPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5CulpritCasePage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_anneal_cut':
+      final content = m5AnnealPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5AnnealPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_feeder_sectionalize':
+      final content = m5FeederPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5FeederSectionalizePage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_reblow_clock':
+      final content = m5ReblowPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5ReblowPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_lv_street_read':
+      final content = m5LvStreetReadPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5LvStreetReadPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_lv_load_test':
+      final content = m5LvLoadTestPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5LvLoadTestPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_fault_casebook':
+      final content = m5FaultCasebookPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5FaultCasebookPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_live_wire_guard':
+      final content = m5LiveWirePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5LiveWireGuardPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_searchlight_patrol':
+      final content = m5SearchlightPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5SearchlightPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_dark_eyes':
+      final content = m5DarkEyesPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5DarkEyesPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_cause_strike':
+      final content = m5CauseStrikePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5CauseStrikePage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_workshop_referral':
+      final content = m5WorkshopReferralPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5WorkshopReferralPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_cable_fault_type':
+      final content = m5CableFaultTypePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5CableFaultTypePage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_cable_route_locate':
+      final content = m5CrlPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5CableRouteLocatePage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_pm_thermal_round':
+      final content = m5PmThermalRoundPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5PmThermalRoundPage(ctx: ctx, pack: content, muted: muted);
+    case 'm5_gate_case':
+      final content = m5GateCasePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M5GateCasePage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

@@ -8,8 +8,9 @@ import 'package:flutter/material.dart';
 // the AB switch (its operating handle low on the left pole), the three DO
 // fuses, the tank on its platform with the off-load tap changer dial and the
 // nameplate on the front, the LT box with its lever on the right pole, the LT
-// line to the last house of the para (its lamp shows the voltage: dim when
-// low, bright when right, dark when off) and the consumer's meter board on
+// line to the last house of the para (its lamp burns a plain steady light
+// until the voltmeter has been read — it never gives the reading away — then
+// dim when low, bright when right; dark when off) and the consumer's meter board on
 // its wall. Code-drawn, gradients, no bitmaps. Design space 360 wide; the
 // ground sits [M3DtrTapGeo.floorUp] above the bottom so the controls sit on it.
 
@@ -82,8 +83,10 @@ class M3DtrTapGeo {
   int get hashCode => Object.hash(height, groundY);
 }
 
-/// The lamp in the house: 0 dark (no supply), 1 dim (low), 2 bright (right).
-enum M3DtrTapLamp { dark, dim, bright }
+/// The lamp in the house: dark (no supply), lit (supplied, not read yet: the
+/// same plain light on a low and a right site), dim (read low), bright (read
+/// right).
+enum M3DtrTapLamp { dark, lit, dim, bright }
 
 /// What the structure shows now.
 @immutable
@@ -467,6 +470,7 @@ class M3DtrTapYardPainter extends CustomPainter {
     final flick = s.lamp == M3DtrTapLamp.dim ? 0.75 + 0.25 * math.sin(t.value * 23).abs() : 1.0;
     final (Color glass, double glow) = switch (s.lamp) {
       M3DtrTapLamp.dark => (const Color(0xFF2A2E3A), 0.0),
+      M3DtrTapLamp.lit => (const Color(0xFFF0CF86), 0.42),
       M3DtrTapLamp.dim => (Color.fromRGBO(196, 120, 52, flick), 0.28 * flick),
       M3DtrTapLamp.bright => (const Color(0xFFFFE89A), 0.6),
     };

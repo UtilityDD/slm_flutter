@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -56,15 +57,24 @@ import 'spoken_once.dart';
 //
 // Deadly: any work on a fuse with no PPE (an arc flash); a copper strip or a
 // thick wire in the fuse's place (also by listening to the coworker, "তামার
-// পাত লাগিয়ে দাও, আর উড়বে না!"). Slips: a hand on a fuse (no puller),
-// pulling a healthy feeder's fuse, a new fuse before the cause is found,
-// signing off with the door open or unlocked. Three slips strike out.
+// পাত লাগিয়ে দাও, আর উড়বে না!" — the act he pushes is on MODULE3_LADDER.md
+// row 20's deadly list, so listening stays deadly here). Slips: a hand on a
+// fuse (no puller), pulling a healthy feeder's fuse, calling a sound spot the
+// cause (a wrong flag: once per spot a pillar), a new fuse before the cause is
+// found, signing off with the door open or unlocked. Three slips strike out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m3_pillar_fuse_world.dart), corner guide, ◆ on the table → "কেন …?"
 // → the next pillar by itself; the careless coworker once a play, as the new
-// fuse is about to go in. Voice: the guide by device TTS; the coworker's new
-// push by device TTS until recorded (his exit line is his existing clip).
+// fuse is about to go in. Kit (2026-11-11): no scene control works in a praise
+// window (`tableBusy`); the tray waits for the coworker (`holdForCoworker`), so
+// a fast fit cannot skip him; the tool row is dealt in a shuffled order (never
+// the job's order); each reason deck carries one myth that shares the
+// question's key word (no word only on the right card); gesture hints sweep
+// over every tool / tray item and the pillar (never one), and a tap on nothing
+// counts as a miss. Voice: the guide by device TTS; the coworker's push has
+// no clip yet (silent, caption held — the director records it); his exit line
+// is his existing clip.
 
 // ============================================================================
 // Content
@@ -76,9 +86,20 @@ enum M3PillarFuseWhy { hrc, cause, ppe, lock }
 /// What can go in the empty fuse slot (the tray).
 enum M3PillarFuseItem { hrc, strip, wire }
 
+/// The hands-on tool row (dealt in a shuffled order, never the job's order).
+enum M3PillarFuseTool { ppe, puller, lock, signOff }
+
 @immutable
 class M3PillarFuseRound {
-  const M3PillarFuseRound({required this.id, required this.feeder, required this.phase, required this.cause, required this.why, required this.tray});
+  const M3PillarFuseRound({
+    required this.id,
+    required this.feeder,
+    required this.phase,
+    required this.cause,
+    required this.why,
+    required this.tray,
+    this.tools = const [M3PillarFuseTool.lock, M3PillarFuseTool.ppe, M3PillarFuseTool.signOff, M3PillarFuseTool.puller],
+  });
   final String id;
 
   /// The dead feeder (0..2 = F1..F3) and the phase of its blown fuse (0..2 = R, Y, B).
@@ -89,6 +110,9 @@ class M3PillarFuseRound {
 
   /// The tray's order.
   final List<M3PillarFuseItem> tray;
+
+  /// The tool row's order.
+  final List<M3PillarFuseTool> tools;
 }
 
 abstract final class M3PillarFuseLines {
@@ -147,7 +171,36 @@ abstract final class M3PillarFuseLines {
     'রোজকার চেনা বক্স, পিপিই ছাড়াই কাজ চলে',
     'দরজা ভেজিয়ে রাখলেই হলো, তালার দরকার নেই',
     'পাড়ার লোক তাড়া দিচ্ছেন, তাই তাড়াতাড়ি সারলাম',
+    ...hrcEcho,
+    ...causeEcho,
+    'পিপিই শুধু এইচটি লাইনে লাগে, পিলারে নয়',
+    'দরজা খোলা থাকলে বাতাসে বক্স ঠান্ডা থাকে',
   ];
+
+  // Myths that share the question's key word (HRC · কারণ · পিপিই · দরজা):
+  // one is dealt on every reason deck, so that word is never on the right
+  // card alone.
+  static const hrcEcho = ['HRC ফিউজ দামি, পাত দিলেও একই কাজ হয়ে যায়', 'HRC ফিউজ না পেলে মোটা তারেই কাজ চলে যায়'];
+  static const causeEcho = ['কারণ খোঁজা সময় নষ্ট, নতুন ফিউজই যথেষ্ট', 'কারণ যা-ই হোক, নতুন ফিউজ দিলেই সব ঠিক হয়'];
+  static const ppeEcho = ['রোজকার চেনা বক্স, পিপিই ছাড়াই কাজ চলে', 'পিপিই শুধু এইচটি লাইনে লাগে, পিলারে নয়'];
+  static const lockEcho = ['দরজা ভেজিয়ে রাখলেই হলো, তালার দরকার নেই', 'দরজা খোলা থাকলে বাতাসে বক্স ঠান্ডা থাকে'];
+  static List<String> whyEcho(M3PillarFuseRound r) => switch (r.why) {
+        M3PillarFuseWhy.hrc => hrcEcho,
+        M3PillarFuseWhy.cause => causeEcho,
+        M3PillarFuseWhy.ppe => ppeEcho,
+        M3PillarFuseWhy.lock => lockEcho,
+      };
+
+  /// The reason deck: one right card, one myth sharing the question's key
+  /// word, one more myth — in a random order.
+  static List<ChoiceOption> dealWhy(M3PillarFuseRound r, math.Random rng) {
+    final right = whyRight(r);
+    final echo = whyEcho(r);
+    final e = echo[rng.nextInt(echo.length)];
+    final rest = [for (final m in myths) if (m != e) m]..shuffle(rng);
+    return [ChoiceOption(right[rng.nextInt(right.length)], true), ChoiceOption(e, false), ChoiceOption(rest.first, false)]..shuffle(rng);
+  }
+
   static const allRight = [...hrcWhy, ...causeWhy, ...ppeWhy, ...lockWhy];
 
   static List<String> whyRight(M3PillarFuseRound r) => switch (r.why) {
@@ -253,7 +306,15 @@ abstract final class M3PillarFuseMistakes {
     lessonPoint: 0,
   );
 
-  static List<DoMistake> get all => const [noPpe, bodgeStrip, bodgeWire, noPuller, wrongFuse, noCause, doorOpen, noLock];
+  // A wrong flag: a sound spot called the cause (point 3's causes).
+  static const wrongSpot = DoMistake(
+    key: '3.7/m3_pillar_fuse/wrong-spot',
+    textBn: 'কারণটা ভালো করে দেখে নিন — কালো দাগ, জল না ইঁদুর?',
+    art: '$_dir/no_cause.svg',
+    lessonPoint: 2,
+  );
+
+  static List<DoMistake> get all => const [noPpe, bodgeStrip, bodgeWire, noPuller, wrongFuse, noCause, wrongSpot, doorOpen, noLock];
 }
 
 @immutable
@@ -265,8 +326,21 @@ class M3PillarFuseDeal {
   final int callAt;
 }
 
+/// The tool row in a shuffled order that is never the job's order
+/// (PPE → puller → lock → sign off).
+List<M3PillarFuseTool> m3PillarFuseTools(math.Random rng) {
+  while (true) {
+    final t = [...M3PillarFuseTool.values]..shuffle(rng);
+    var same = true;
+    for (var i = 0; i < t.length; i++) {
+      if (t[i] != M3PillarFuseTool.values[i]) same = false;
+    }
+    if (!same) return t;
+  }
+}
+
 /// Three pillars: each a different cause, a different reason question; the
-/// dead feeder/phase and the tray's order vary.
+/// dead feeder/phase, the tray's order and the tool row's order vary.
 M3PillarFuseDeal m3PillarFuseDeal(math.Random rng) {
   final causes = [...M3PillarFuseCause.values]..shuffle(rng);
   final whys = [...M3PillarFuseWhy.values]..shuffle(rng);
@@ -279,6 +353,7 @@ M3PillarFuseDeal m3PillarFuseDeal(math.Random rng) {
         cause: causes[i],
         why: whys[i],
         tray: [...M3PillarFuseItem.values]..shuffle(rng),
+        tools: m3PillarFuseTools(rng),
       ),
   ];
   return M3PillarFuseDeal(rounds: rounds, callAt: rng.nextInt(3));
@@ -375,6 +450,16 @@ class M3PillarFuseRun {
     return true;
   }
 
+  /// The spots called the cause this pillar although they were sound.
+  final Set<int> _flagged = {};
+
+  /// A sound spot ([zone], see [M3PillarFuseGeo.causeZones]) called the
+  /// cause before it was found: a slip, once per spot a pillar.
+  DoMistake? flagSound(int zone) {
+    if (!_open || !doorOpen || causeFound || !_flagged.add(zone)) return null;
+    return _slip(M3PillarFuseMistakes.wrongSpot);
+  }
+
   /// Something from the tray into the empty slot. Null and [fitted] = the new HRC fuse is in.
   DoMistake? fit(M3PillarFuseItem item) {
     if (!_open || !trayUp) return null;
@@ -402,7 +487,7 @@ class M3PillarFuseRun {
   }
 
   /// Fails the play (listening to the coworker).
-  void failDeadly(DoMistake m) => deadly = m;
+  void failDeadly(DoMistake m) => deadly ??= m;
 
   void next() {
     index++;
@@ -412,6 +497,7 @@ class M3PillarFuseRun {
     locked = false;
     puller = false;
     causeFound = false;
+    _flagged.clear();
     slotEmpty = false;
     fitted = false;
     signedOff = false;
@@ -504,7 +590,15 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
   int? _mark;
   int _totalDelta = 0;
   int _wake = 0;
-  var _coworkerArmed = false;
+  /// He was scheduled for this play (once, as the tray comes up on his pillar).
+  var _coworkerScheduled = false;
+
+  // Gesture hints: how to touch (a sweep over every tool / tray item and the
+  // pillar), never which one.
+  final _hints = IdleHintController();
+  final _touchKey = GlobalKey();
+  final Map<M3PillarFuseTool, GlobalKey> _toolKeys = {for (final t in M3PillarFuseTool.values) t: GlobalKey()};
+  final Map<M3PillarFuseItem, GlobalKey> _trayKeys = {for (final i in M3PillarFuseItem.values) i: GlobalKey()};
 
   /// The cause is still to be seen in the box (it goes once put right).
   var _causeShown = true;
@@ -561,7 +655,9 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.signedOff && !_freeze;
+  /// The scene takes a move now: never in a praise window (`tableBusy`), a
+  /// death freeze, a card or while he is on.
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.signedOff && !_freeze;
 
   String get _task {
     if (_run.fitted) return M3PillarFuseLines.askClose;
@@ -630,6 +726,8 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
   void _fit(M3PillarFuseItem item, Offset global) {
     final geo = _geo;
     if (!_canPlay || !_run.trayUp) return;
+    // The fit is the decisive move on his pillar: he comes first.
+    if (holdForCoworker()) return;
     _tick('sounds/intro/impact_metal.ogg', 0.5);
     final m = _run.fit(item);
     setState(() {
@@ -657,6 +755,8 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
           _tick('sounds/intro/click.ogg', 0.3);
         }
         setState(() => _wake++);
+      } else {
+        _hints.missTap();
       }
       return;
     }
@@ -679,8 +779,8 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
           unawaited(_mistake(m, global));
         } else if (_run.trayUp) {
           _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
-          if (!_coworkerArmed && _run.index == _run.deal.callAt) {
-            _coworkerArmed = true;
+          if (!_coworkerScheduled && _run.index == _run.deal.callAt) {
+            _coworkerScheduled = true;
             scheduleCoworker();
           }
           unawaited(_sayChain([M3PillarFuseLines.askFit]));
@@ -688,7 +788,23 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
         return;
       }
     }
-    final onCause = geo.causeHits(r.cause, r.feeder).any((h) => h.contains(p));
+    final zones = geo.causeZones;
+    final real = M3PillarFuseGeo.causeZone(r.cause, r.feeder);
+    final onCause = zones[real].any((h) => h.contains(p));
+    if (!onCause) {
+      // A sound spot called the cause (before it was found): a slip.
+      for (var z = 0; z < zones.length; z++) {
+        if (z == real || !zones[z].any((h) => h.contains(p))) continue;
+        final m = _run.flagSound(z);
+        if (m == null) break;
+        _tick('sounds/intro/click.ogg', 0.4);
+        setState(() => _wake++);
+        unawaited(_mistake(m, global));
+        return;
+      }
+      _hints.missTap();
+      return;
+    }
     if (_run.spot(onCause)) {
       HapticFeedback.lightImpact();
       _cue('sounds/quiz_right.wav', volume: 0.5);
@@ -715,7 +831,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
     final r = _run.round;
     final idx = _run.index;
     unawaited(askReason(
-      deal: () => dealChoices(M3PillarFuseLines.whyRight(r), M3PillarFuseLines.myths, widget.rng),
+      deal: () => M3PillarFuseLines.dealWhy(r, widget.rng),
       question: M3PillarFuseLines.whyQuestion(r),
       stillValid: () => _run.index == idx && !_ended,
     ));
@@ -767,8 +883,10 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt || !_run.trayUp) return null;
-    if (_intro || _card != null || reasonOpen || _freeze) return false;
+    // His push (a copper strip in the empty slot) fits only while the slot
+    // is empty on his pillar; once the new fuse is in, his moment has passed.
+    if (_ended || _run.ended || _run.index != _run.deal.callAt || !_run.trayUp) return null;
+    if (_intro || _card != null || tableBusy || _freeze) return false;
     return true;
   }
 
@@ -1014,7 +1132,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: M3PillarFuseLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
+          child: GestureDetector(key: _touchKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
         ),
       ),
       if (_freeze)
@@ -1043,6 +1161,32 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
     ];
   }
 
+  // --- gesture hints ------------------------------------------------------------
+  /// A design rect of the scene in global pixels (the touch layer's local
+  /// space is the design space; the frame scales it).
+  Rect? _sceneRect(Rect design) {
+    final box = _touchKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return Rect.fromPoints(box.localToGlobal(design.topLeft), box.localToGlobal(design.bottomRight));
+  }
+
+  /// How to touch now: a sweep over every control on screen (the tools or
+  /// the tray, and the pillar), never one of them.
+  HintSpec? _hint() {
+    final geo = _geo;
+    final rects = <Rect>[
+      if (_run.trayUp)
+        for (final it in _run.round.tray) ?HintSpec.globalRectOf(_trayKeys[it]!)
+      else
+        for (final t in _run.round.tools) ?HintSpec.globalRectOf(_toolKeys[t]!),
+      ?_sceneRect(geo.body),
+      if (_run.doorOpen) ?_sceneRect(geo.openDoorHit),
+    ];
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
+  String get _hintStage => _run.trayUp ? 'tray' : (_run.doorOpen ? 'open' : 'shut');
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1050,7 +1194,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.signedOff && !deckUp && !coworkerOpen && _card == null;
+    final handsOn = playing && !_run.signedOff && !deckUp && !coworkerOpen && _card == null && !tableBusy;
     final r = _run.round;
     return PopScope(
       canPop: false,
@@ -1079,6 +1223,10 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && !_run.done && !coworkerOnScreen,
+            hintKey: '${_run.index}-$_hintStage-${_run.slips}',
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1099,7 +1247,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
                     children: [
                       for (final it in r.tray)
                         _TrayItem(
-                          key: ValueKey('tray-${it.name}'),
+                          key: _trayKeys[it],
                           item: it,
                           quiet: quiet,
                           onTapUp: (d) => _fit(it, d.globalPosition),
@@ -1116,10 +1264,17 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _ToolButton(icon: Icons.health_and_safety_rounded, label: M3PillarFuseLines.ppe, on: _run.ppe, onTap: _putPpe),
-                      _ToolButton(icon: Icons.handyman_rounded, label: M3PillarFuseLines.puller, on: _run.puller, onTap: _holdPuller),
-                      _ToolButton(icon: Icons.lock_rounded, label: M3PillarFuseLines.lock, on: _run.locked, onTap: _toggleLock),
-                      _ToolButton(icon: Icons.task_alt_rounded, label: M3PillarFuseLines.signOff, on: false, onTapUp: _signOff),
+                      for (final tool in r.tools)
+                        switch (tool) {
+                          M3PillarFuseTool.ppe => _ToolButton(
+                              key: _toolKeys[tool], icon: Icons.health_and_safety_rounded, label: M3PillarFuseLines.ppe, on: _run.ppe, onTap: _putPpe),
+                          M3PillarFuseTool.puller => _ToolButton(
+                              key: _toolKeys[tool], icon: Icons.handyman_rounded, label: M3PillarFuseLines.puller, on: _run.puller, onTap: _holdPuller),
+                          M3PillarFuseTool.lock => _ToolButton(
+                              key: _toolKeys[tool], icon: Icons.lock_rounded, label: M3PillarFuseLines.lock, on: _run.locked, onTap: _toggleLock),
+                          M3PillarFuseTool.signOff => _ToolButton(
+                              key: _toolKeys[tool], icon: Icons.task_alt_rounded, label: M3PillarFuseLines.signOff, on: false, onTapUp: _signOff),
+                        },
                     ],
                   ),
                 ),
@@ -1250,7 +1405,7 @@ class _DocketChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, this.onTap, this.onTapUp});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, this.onTap, this.onTapUp});
   final IconData icon;
   final String label;
   final bool on;

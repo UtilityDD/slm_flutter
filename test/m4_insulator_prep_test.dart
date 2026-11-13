@@ -5,7 +5,10 @@
 // deal, the reason libraries, and the level in the shell: idle perf, the
 // guide first, a full clean play with the coworker refused, a slip card that
 // keeps the pole, three slips, the deadly freeze (climbing a live line;
-// listening to him), refusing him by putting on the second earth.
+// listening to him), refusing him by putting on the second earth; he comes
+// even on a fast play; the tool row never shows the safe order; the reason
+// deck always holds a myth on the same topic; old mistake keys still resolve;
+// the gesture hint shows after idle and after taps on nothing.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -19,6 +22,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -34,6 +38,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '4.1/do/0',
@@ -86,10 +91,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -190,10 +197,29 @@ void main() {
         for (final x in d.sites) {
           expect(x.faulty, inInclusiveRange(0, x.kind == M4InsulatorPrepKind.pin ? 2 : 5));
           expect(x.shelf.toSet(), _I.values.toSet());
+          expect(x.tools.toSet(), M4InsulatorPrepButton.values.toSet());
+          expect(x.tools, hasLength(M4InsulatorPrepButton.values.length));
+          expect(m4InsulatorPrepRowInOrder(x.tools), isFalse, reason: 'the tool row gives the order away: ${x.tools}');
         }
         seen.add(d.sites.map((x) => '${x.kind.name}${x.fault.name}${x.faulty}${x.why.name}${x.shelf.first.name}').join('|') + d.callAt.toString());
       }
       expect(seen.length, greaterThan(60));
+    });
+
+    test('tool row: the safe order is spotted; the default row and every dealt row avoid it', () {
+      const b = M4InsulatorPrepButton.values;
+      expect(m4InsulatorPrepRowInOrder([b[0], b[1], b[2], b[3], b[4]]), isTrue);
+      expect(m4InsulatorPrepRowInOrder([b[1], b[2], b[0], b[3], b[4]]), isTrue, reason: 'the kit anywhere');
+      expect(m4InsulatorPrepRowInOrder([b[2], b[1], b[3], b[4], b[0]]), isFalse);
+      final def = M4InsulatorPrepSite(id: 'x', kind: M4InsulatorPrepKind.pin, fault: M4InsulatorPrepFault.crack, faulty: 0, why: M4InsulatorPrepWhy.ptw, shelf: _I.values, poleNo: 1);
+      expect(m4InsulatorPrepRowInOrder(def.tools), isFalse);
+      final firsts = <M4InsulatorPrepButton>{};
+      for (var k = 0; k < 200; k++) {
+        final row = m4InsulatorPrepDealRow(math.Random(k));
+        expect(m4InsulatorPrepRowInOrder(row), isFalse);
+        firsts.add(row.first);
+      }
+      expect(firsts, hasLength(M4InsulatorPrepButton.values.length), reason: 'rows differ');
     });
 
     M4InsulatorPrepRun run1(M4InsulatorPrepKind k) => M4InsulatorPrepRun(M4InsulatorPrepDeal(sites: [
@@ -229,6 +255,24 @@ void main() {
         expect(r.kitReady, isFalse);
         expect(r.slips, 2);
       }
+    });
+
+    test('over-packing: a fitting for the other kind of insulator is a slip and stays on the shelf', () {
+      for (final k in M4InsulatorPrepKind.values) {
+        final r = run1(k)..tapInsulator(1);
+        final other = [for (final i in [_I.binding, _I.rope, _I.comeAlong, _I.turnbuckle]) if (!r.site.fittings.contains(i)) i];
+        expect(other, hasLength(2));
+        for (final (n, i) in other.indexed) {
+          expect(r.pick(i), _M.wrongFitting, reason: '$k ${i.name}');
+          expect(r.bag.contains(i), isFalse);
+          expect(r.slips, n + 1);
+        }
+        for (final i in r.site.fittings) {
+          expect(r.pick(i), isNull);
+        }
+        expect(r.slips, 2, reason: 'the right fittings cost nothing');
+      }
+      expect(_M.wrongFitting.deadly, isFalse);
     });
 
     test('earth: not on a live line, not before the tester; then both sides', () {
@@ -291,6 +335,29 @@ void main() {
       expect(r.passed, isTrue);
     });
 
+    test('a good insulator called faulty: a slip with a neutral reply (never "it is fine")', () {
+      expect(_M.misSpot.deadly, isFalse);
+      for (final w in ['ভালো আছে', 'ঠিক আছে', 'এটা তো']) {
+        expect(_M.misSpot.textBn.contains(w), isFalse, reason: w);
+      }
+    });
+
+    test('old mistake keys (4.1/insulator_prep/…) still resolve to the renamed cards', () {
+      expect(_M.legacy, hasLength(_M.all.length));
+      for (final (i, m) in _M.all.indexed) {
+        final old = _M.legacy[i];
+        expect(old.key, startsWith(_M.legacyPrefix));
+        expect(old.key.substring(_M.legacyPrefix.length), m.key.substring(_M.prefix.length));
+        expect(old.textBn, m.textBn);
+        expect(old.art, m.art);
+        expect(old.deadly, m.deadly);
+        expect(_M.byKey(old.key), same(m));
+        expect(_M.byKey(m.key), same(m));
+      }
+      expect(_M.byKey('4.1/insulator_prep/climb-live'), same(_M.climbLive));
+      expect(_M.byKey('nope'), isNull);
+    });
+
     test('English digits only; every mistake has its picture; two deadly', () {
       final all = <String>[
         _L.intro,
@@ -313,7 +380,7 @@ void main() {
       expect(_M.all.where((m) => m.deadly), [_M.climbLive, _M.earthBoth]);
       expect(_M.all.map((m) => m.key).toSet(), hasLength(_M.all.length));
       for (final m in _M.all) {
-        expect(m.key, startsWith('4.1/insulator_prep/'));
+        expect(m.key, startsWith('4.1/m4_insulator_prep/'));
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
         if (m.lessonPoint != null) expect(m.lessonPoint, inInclusiveRange(0, 2));
       }
@@ -327,11 +394,38 @@ void main() {
         final right = _L.whyRight(s);
         expectLibrary('$w', right, _L.myths);
         expect(_L.myths.toSet().intersection(_L.allRight.toSet()), isEmpty);
-        for (var k = 0; k < 10; k++) {
-          final deal = dealChoices(right, _L.myths, math.Random(k));
+        final near = _L.nearMyths(w);
+        expect(near, hasLength(greaterThanOrEqualTo(2)));
+        expect(_L.myths.toSet().containsAll(near), isTrue);
+        final rights = <String>{};
+        for (var k = 0; k < 40; k++) {
+          final deal = _L.dealWhy(s, math.Random(k));
+          expect(deal, hasLength(3));
           expect(deal.where((o) => o.correct), hasLength(1));
+          expect(right, contains(deal.firstWhere((o) => o.correct).textBn));
           expect(deal.map((o) => o.textBn).toSet(), hasLength(3));
+          expect(deal.where((o) => near.contains(o.textBn)), isNotEmpty, reason: 'a myth on the same topic');
+          rights.add(deal.firstWhere((o) => o.correct).textBn);
         }
+        expect(rights, hasLength(right.length));
+      }
+    });
+
+    test('reasons: no word of the question shows only on the right card', () {
+      for (final w in M4InsulatorPrepWhy.values) {
+        final s = M4InsulatorPrepSite(id: 'x', kind: M4InsulatorPrepKind.disc, fault: M4InsulatorPrepFault.crack, faulty: 0, why: w, shelf: _I.values, poleNo: 5);
+        final q = _L.cardWords(_L.whyQuestion(s));
+        final seen = <String>{};
+        for (var k = 0; k < 200; k++) {
+          final deal = _L.dealWhy(s, math.Random(k));
+          final right = deal.firstWhere((o) => o.correct).textBn;
+          final wrong = {for (final o in deal.where((o) => !o.correct)) ..._L.cardWords(o.textBn)};
+          for (final word in q.intersection(_L.cardWords(right))) {
+            expect(wrong, contains(word), reason: '$w: "$word" only on "$right"');
+          }
+          seen.add(right);
+        }
+        expect(seen, hasLength(_L.whyRight(s).length), reason: 'every right card can come');
       }
       final cw = _L.coworker;
       expectSameLength('choice', [...cw.right, ...cw.wrong]);
@@ -377,7 +471,7 @@ void main() {
         }
         debugPrint('PERF m4_insulator_prep ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -508,9 +602,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 8000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
@@ -537,6 +633,100 @@ void main() {
       expect(find.byType(FreezeFrame), findsNothing);
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
       await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast play: the second earth waits for him', (t) async {
+      final deal = m4InsulatorPrepDeal(math.Random(11));
+      final c = await _open(t, 11);
+      for (var i = 0; i < deal.callAt; i++) {
+        await _playRight(t, deal, i);
+      }
+      final s = deal.sites[deal.callAt];
+      await _prepToDead(t, s);
+      // Earth, both sides, at once — well before his 1.2 s timer.
+      await t.tap(_label(_L.earth));
+      await t.pump(const Duration(milliseconds: 60));
+      await t.tapAt(_earthAt(0) * _k);
+      await t.pump(const Duration(milliseconds: 60));
+      await t.tapAt(_earthAt(1) * _k);
+      await t.pump(const Duration(milliseconds: 60));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the second earth brought him in');
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2600);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // The earth is still in hand: the other side now, then up.
+      await _tapAt(t, _earthAt(1));
+      await _tool(t, _L.harness);
+      await _tapAt(t, _geo.poleHit.center);
+      await _pump(t, 2200);
+      expect(find.byType(FreezeFrame), findsNothing, reason: 'both earths were on');
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'up the pole: the reason deck');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast climb: the pole waits for him', (t) async {
+      final deal = m4InsulatorPrepDeal(math.Random(11));
+      final c = await _open(t, 11);
+      for (var i = 0; i < deal.callAt; i++) {
+        await _playRight(t, deal, i);
+      }
+      await _prepToDead(t, deal.sites[deal.callAt]);
+      await t.tapAt(_geo.poleHit.center * _k);
+      await t.pump(const Duration(milliseconds: 60));
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byType(FreezeFrame), findsNothing, reason: 'the climb tap only called him in');
+      await _close(t, c);
+    });
+
+    testWidgets('the tool row follows the dealt order (never the safe order)', (t) async {
+      final deal = m4InsulatorPrepDeal(math.Random(7));
+      final c = await _open(t, 7);
+      final s = deal.sites[0];
+      await _tapAt(t, _geo.spotCentre(s.kind, s.faulty));
+      String name(M4InsulatorPrepButton b) => switch (b) {
+            M4InsulatorPrepButton.kit => _L.kit,
+            M4InsulatorPrepButton.ptw => _L.ptw,
+            M4InsulatorPrepButton.tester => _L.tester,
+            M4InsulatorPrepButton.earth => _L.earth,
+            M4InsulatorPrepButton.harness => _L.harness,
+          };
+      final xs = [for (final b in s.tools) t.getCenter(_label(name(b))).dx];
+      for (var i = 1; i < xs.length; i++) {
+        expect(xs[i], greaterThan(xs[i - 1]), reason: '${s.tools}');
+      }
+      expect(m4InsulatorPrepRowInOrder(s.tools), isFalse);
+      await _close(t, c);
+    });
+
+    group('gesture hints', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      IdleHintState frameHint(WidgetTester t) => t.state<IdleHintState>(find.byType(IdleHint).first);
+
+      testWidgets('the hand shows after idle while the level waits; a touch hides it', (t) async {
+        final c = await _open(t, 5);
+        expect(find.byType(IdleHint), findsOneWidget);
+        expect(frameHint(t).showing, isFalse);
+        await _pump(t, 9000);
+        expect(frameHint(t).showing, isTrue);
+        await t.tapAt(const Offset(250, 140) * _k);
+        await t.pump(const Duration(milliseconds: 50));
+        expect(frameHint(t).showing, isFalse);
+        await _close(t, c);
+      });
+
+      testWidgets('three taps on nothing show the hand at once', (t) async {
+        final c = await _open(t, 5);
+        for (var i = 0; i < 3; i++) {
+          await t.tapAt(const Offset(250, 140) * _k);
+          await t.pump(const Duration(milliseconds: 200));
+        }
+        expect(frameHint(t).showing, isTrue);
+        expect(c.read(gameSaveProvider).mistakes, isEmpty, reason: 'a tap on the sky costs nothing');
+        await _close(t, c);
+      });
     });
   });
 }

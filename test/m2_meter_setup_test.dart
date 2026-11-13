@@ -2,7 +2,9 @@
 // jobs (dial, sockets, isolator, the fuse's reading), deal variety, the close
 // look (a lead's flaw shows only where the hand has been), fair reason
 // libraries, and the level in the shell (idle perf; guide first; a full clean
-// flow with the coworker refused; a slip card; a deadly freeze; 3 slips fail).
+// flow with the coworker refused; a slip card; a deadly freeze; 3 slips fail;
+// the coworker can't be skipped by a fast play; a tap that does nothing never
+// refuses him; gesture hints show how, never what).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -14,7 +16,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart' show FreezeFrame;
@@ -31,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.2/do/0',
@@ -93,20 +98,25 @@ List<Finder> _onScreen(List<String> texts) => [
         if (_label(x).evaluate().isNotEmpty) _label(x),
     ];
 
+/// Waits for the deck, taps the one right card on it, then the reason's
+/// এগিয়ে যান (a coworker deck closes by itself).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
+  await tapReasonProceed(t);
+}
+
+IdleHintState _sceneHint(WidgetTester t) =>
+    t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+
+/// No word may sit only on the right cards (it would give the answer away).
+void _noTellWords(String name, List<String> right, List<String> wrong, List<String> words) {
+  for (final w in words) {
+    if (!right.any((r) => r.contains(w))) continue;
+    expect(wrong.any((x) => x.contains(w)), isTrue, reason: '$name: "$w" is only on the right cards');
   }
 }
 
@@ -239,17 +249,34 @@ void main() {
       expect(s.rejected, contains(_flawed(s.deal).id));
     });
 
-    test('the coworker pushes only what is still there', () {
+    test('the coworker pushes only what is still there (his line fits the moment)', () {
       final a = MeterRun(dealMeter(math.Random(_seedWhere((d) => d.push == MeterPush.anyMeter))));
       expect(meterPushOpen(a), isTrue);
       a.putBack(_cat2(a.deal));
       expect(meterPushOpen(a), isFalse, reason: 'the CAT II meter lies aside');
-      final s = _seedWhere((d) => d.push == MeterPush.socket);
+      final s = _seedWhere((d) => d.push == MeterPush.socket && d.jobs[d.leftover] != MeterJob.acLt);
       final b = _runTo(s, MeterJob.acLt);
+      expect(meterPushOpen(b), isTrue);
+      b.plug(MeterLead.red, MeterSock.vohm);
+      expect(meterPushOpen(b), isTrue, reason: 'the black lead is still loose');
+      b.plug(MeterLead.black, MeterSock.com);
+      expect(meterPushOpen(b), isFalse, reason: '"যেকোনো সকেটে লাগাও" after both leads went in right would not fit');
+      b.plug(MeterLead.red, MeterSock.a10);
       expect(meterPushOpen(b), isTrue);
       _setRight(b);
       b.probe();
       expect(meterPushOpen(b), isFalse);
+    });
+
+    test('after a deadly move the run takes nothing more (no next round, no spot)', () {
+      final r = MeterRun(dealMeter(math.Random(6)));
+      r.take(_cat2(r.deal));
+      expect(r.ended, isTrue);
+      r.next();
+      expect(r.round, 0);
+      r.spot(_flawed(r.deal));
+      expect(r.spotted, isEmpty);
+      expect(r.take(_fit(r.deal)).verdict, MeterVerdict.nudge);
     });
 
     test('deals vary', () {
@@ -297,9 +324,62 @@ void main() {
         expect(LearnVoice.resolve(c.exitLine, rival: true), isNotNull, reason: 'his exit line is a recorded clip');
         expect(M2MeterLines.toRecord, contains(c.line));
       }
+      // No answer giveaways: the right cards' key words are on wrong cards too.
+      for (final c in [MeterCat.cat3, MeterCat.cat4]) {
+        _noTellWords('meter', M2MeterLines.meterRight(c), M2MeterLines.meterMyths, ['CAT', 'III', 'IV', 'রেটিং', 'প্রোব', 'লিড', 'লিডও', 'ব্যাটারি', 'ব্যাটারিও', 'অক্ষত', 'লাইনের কাজে']);
+      }
+      _noTellWords('ac', M2MeterLines.acRight, M2MeterLines.acWrong, ['AC', 'V~', 'COM', 'VΩmA', 'ডায়াল', 'লাল', 'লাইনে', 'তাই', 'রেখেছি']);
+      _noTellWords('dc', M2MeterLines.dcRight, M2MeterLines.dcWrong, ['DC', 'COM', 'VΩmA', 'ডায়াল', 'লাল', 'ব্যাটারিতে', 'তাই', 'ভোল্টে']);
+      for (final g in [true, false]) {
+        _noTellWords('fuse $g', M2MeterLines.fuseRight(g), M2MeterLines.fuseWrong(g),
+            ['বন্ধ', 'কন্টিনিউটি', 'ফিউজ', 'ফিউজে', 'সুইচ', 'প্রোব', 'পাওয়ার', 'আগে', 'তারপর', 'তবেই', 'করে']);
+      }
+      // His deck: the socket and meter words on a refuse card are on a listen card too
+      // (only the refusal itself — না / নয় — may differ).
+      for (final p in MeterPush.values) {
+        final c = M2MeterLines.coworker(p);
+        _noTellWords('choice ${p.name}', c.right, c.wrong,
+            ['VΩmA', '10A', 'লাল', 'লিড', 'সকেট', 'ভোল্টে', 'আন্দাজে', 'দেখে', 'থাকবে', 'লাগাব', 'কখনো', 'CAT', 'III', 'IV', 'রেটিং', 'মিটার', 'লাইনে', 'নেব']);
+      }
       expect(M2MeterMistakes.all.map((m) => m.key).toSet().length, M2MeterMistakes.all.length);
       expect(M2MeterMistakes.all.where((m) => m.deadly), [M2MeterMistakes.catTwo, M2MeterMistakes.tenALive]);
       expect(m2MeterSetupPacks['do_2_2_a'], m2MeterPack22a);
+    });
+
+    test('English digits only: no Bangla digit in any line, card or label', () {
+      final bnDigit = RegExp('[০-৯]');
+      final texts = [
+        M2MeterLines.title,
+        M2MeterLines.intro,
+        M2MeterLines.askMeter,
+        M2MeterLines.inspectAsk,
+        for (final j in MeterJob.values) ...[M2MeterLines.askJob(j), j.docketBn, j.dot],
+        for (final c in MeterCat.values) ...[c.label, c.short],
+        for (final s in MeterSock.values) s.label,
+        M2MeterLines.batteryTag,
+        ...M2MeterLines.meterMyths,
+        ...M2MeterLines.acRight,
+        ...M2MeterLines.acWrong,
+        ...M2MeterLines.dcRight,
+        ...M2MeterLines.dcWrong,
+        for (final g in [true, false]) ...[...M2MeterLines.fuseRight(g), ...M2MeterLines.fuseWrong(g)],
+        for (final p in MeterPush.values) ...[
+          M2MeterLines.coworker(p).line,
+          ...M2MeterLines.coworker(p).right,
+          ...M2MeterLines.coworker(p).wrong,
+          ...M2MeterLines.coworker(p).asks,
+        ],
+        for (final m in M2MeterMistakes.all) m.textBn,
+        M2MeterLines.allSet,
+        M2MeterLines.fail,
+      ];
+      for (final x in texts) {
+        expect(bnDigit.hasMatch(x), isFalse, reason: x);
+      }
+      for (var s = 0; s < 20; s++) {
+        final d = dealMeter(math.Random(s));
+        expect(bnDigit.hasMatch(d.acVolts) || bnDigit.hasMatch(d.dcVolts), isFalse);
+      }
     });
   });
 
@@ -418,7 +498,7 @@ void main() {
         }
         debugPrint('PERF meter setup ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(M2MeterLines.docket), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
@@ -529,6 +609,7 @@ void main() {
       final wrong = _onScreen(M2MeterLines.coworkerAnyMeter.wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 700);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3000);
@@ -591,6 +672,139 @@ void main() {
       expect(find.text(M2MeterMistakes.tenALive.textBn), findsOneWidget);
       expect(t.takeException(), isNull);
       await close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him at the case: the first pick waits for him, then works', (t) async {
+      final (c, deal) = await open(t, _seedWhere((d) => d.push == MeterPush.anyMeter));
+      // Straight after the guide's line (before his 1.2–2.4 s timer): pick a meter.
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(meters.at(0), warnIfMissed: false);
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the pick waits for him; he comes now');
+      expect(find.text(M2MeterLines.take), findsNothing, reason: 'nothing lifted while he cuts in');
+      await _pickRight(t, M2MeterLines.coworkerAnyMeter.right);
+      await _pump(t, 1500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await lift(t, deal, _fit(deal));
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him on the terminals: the first lead touch waits for him', (t) async {
+      final seed = _seedWhere((d) => d.push == MeterPush.socket && d.jobs.first == MeterJob.acLt && d.leftover != 0);
+      final (c, deal) = await open(t, seed);
+      await lift(t, deal, _fit(deal));
+      await t.tap(find.text(M2MeterLines.take));
+      await _pump(t, 3500);
+      await _pickRight(t, M2MeterLines.meterRight(_fit(deal).cat));
+      // The terminal job is up; at once (well before his timer) lift the red lead.
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await tapL(t, M2MeterLines.redLead);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'touching a lead waits for him; he comes now');
+      await _pickRight(t, M2MeterLines.coworkerSocket.right);
+      await _pump(t, 2500);
+      // Then the job goes on as usual, and the probe is not held again.
+      await setJob(t, MeterJob.acLt, false);
+      await t.tap(find.text(M2MeterLines.probe));
+      await _pump(t, 3000);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _pickRight(t, M2MeterLines.acRight);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('while he talks, a tap that does nothing (the isolator at the case) never refuses him; a real move does', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      final (c, deal) = await open(t, _seedWhere((d) => d.push == MeterPush.anyMeter));
+      await _pump(t, 2600);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'beat 1: his caption is held for reading');
+      await tapL(t, M2MeterLines.isolatorLabel);
+      await _pump(t, 1200);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the isolator is no part of the case: not a refusal');
+      expect(find.text(M2MeterLines.take), findsNothing);
+      // A real move: pick a meter up to read its label — refuses him, and the close look opens.
+      await t.tap(meters.at(deal.meters.indexOf(_cat2(deal))), warnIfMissed: false);
+      await _pump(t, 1500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(find.text(M2MeterLines.take), findsOneWidget, reason: 'any meter (even the CAT II) lifts: his leaving tells nothing');
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    group('gesture hint', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      testWidgets('the case gets a sweep over every meter; the close look a drag along the leads, then a sweep over put back / take', (t) async {
+        final (c, deal) = await open(t, _seedWhere((d) => d.push == MeterPush.socket));
+        expect(_sceneHint(t).showing, isFalse);
+        await _pump(t, 9000);
+        var h = _sceneHint(t);
+        expect(h.showing, isTrue, reason: 'idle 8 s at the case');
+        expect(h.debugOptions, hasLength(3), reason: 'all three meters, none singled out');
+        expect(h.debugFrame!.ripple, isNull, reason: 'a sweep presses nothing');
+        await lift(t, deal, _fit(deal));
+        await _pump(t, 9000);
+        h = _sceneHint(t);
+        expect(h.showing, isTrue, reason: 'idle in the close look');
+        expect(h.debugOptions, isEmpty, reason: 'a drag along the lead — not a sweep, never a tap on take or put back');
+        await slide(t);
+        await _pump(t, 9000);
+        h = _sceneHint(t);
+        expect(h.showing, isTrue);
+        expect(h.debugOptions, hasLength(2), reason: 'put back and take, swept alike');
+        expect(t.takeException(), isNull);
+        await close(t, c);
+      });
+
+      testWidgets('three taps on nothing (the isolator at the case) show the hand at once; none under a card', (t) async {
+        final (c, deal) = await open(t, _seedWhere((d) => d.push == MeterPush.socket));
+        expect(_sceneHint(t).showing, isFalse);
+        for (var i = 0; i < 3; i++) {
+          await tapL(t, M2MeterLines.isolatorLabel);
+        }
+        expect(_sceneHint(t).showing, isTrue);
+        await _pump(t, 6000);
+        // A slip card: the level no longer waits, so no hand.
+        await lift(t, deal, _flawed(deal));
+        await t.tap(find.text(M2MeterLines.take));
+        await _pump(t, 600);
+        expect(find.text(MistakeLines.slipHead), findsOneWidget);
+        await _pump(t, 10000);
+        expect(_sceneHint(t).showing, isFalse, reason: 'no hand under a card');
+        expect(t.takeException(), isNull);
+        await close(t, c);
+      });
+
+      testWidgets('no hand while he talks, under his deck, or under the reason deck', (t) async {
+        final (c, deal) = await open(t, _seedWhere((d) => d.push == MeterPush.anyMeter));
+        // He peeps in and his deck comes up; idle well past the hint delay.
+        var sawDeck = false;
+        for (var i = 0; i < 26; i++) {
+          await _pump(t, 500);
+          final up = find.byType(CoworkerPeek).evaluate().isNotEmpty || find.byType(ChoiceDeck).evaluate().isNotEmpty;
+          if (find.byType(ChoiceDeck).evaluate().isNotEmpty) sawDeck = true;
+          if (up) expect(_sceneHint(t).showing, isFalse, reason: 'no hand while he is on screen (${i * 500} ms)');
+        }
+        expect(sawDeck, isTrue, reason: 'his deck came up');
+        await _pickRight(t, M2MeterLines.coworkerAnyMeter.right);
+        await _pump(t, 2500);
+        // The meter taken: the reason deck comes up; idle under it.
+        await lift(t, deal, _fit(deal));
+        await t.tap(find.text(M2MeterLines.take));
+        await waitChoiceDeck(t);
+        for (var i = 0; i < 24; i++) {
+          await _pump(t, 500);
+          expect(find.byType(ChoiceDeck), findsOneWidget);
+          expect(_sceneHint(t).showing, isFalse, reason: 'no hand under the reason deck (${i * 500} ms)');
+        }
+        expect(t.takeException(), isNull);
+        await close(t, c);
+      });
     });
 
     testWidgets('three slips fail the level: the struck-out card insists on the lesson', (t) async {

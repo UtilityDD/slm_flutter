@@ -64,7 +64,7 @@ void main() {
       debugPrint('PERF glove check $tag: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames in an idle second');
 
       expect(t.takeException(), isNull);
-      expect(find.textContaining('ধাপ '), findsOneWidget);
+      expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
       for (final g in gloveCheckPack11.pool) {
         expect(find.text(g.labelBn), findsNothing, reason: 'no names in the tray: "${g.labelBn}"');
       }

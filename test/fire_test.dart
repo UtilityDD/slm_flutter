@@ -29,6 +29,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 LevelContext _ctx(int doIndex) => LevelContext(
       rungId: '1.8/do/${doIndex - 1}',
@@ -186,7 +187,8 @@ void main() {
       }
       expect(r.done, isTrue);
       final rounds = dealPass(math.Random(3));
-      expect(rounds[0].windFromLeft, isNot(rounds[1].windFromLeft));
+      // Each fire deals its own wind (audit 2026-11-11: no fixed turn), so
+      // only the kinds are pinned here; test/fire_pass_test.dart checks the deal.
       expect(rounds.map((x) => x.kind).toSet().length, 2);
     });
   });
@@ -393,6 +395,7 @@ void main() {
       expect(find.byType(ChoiceDeck), findsOneWidget);
       expect(_onScreen(FireLines.choiceRight + FireLines.choiceWrong).length, 3, reason: 'three options dealt');
       await t.tap(_onScreen(FireLines.choiceRight).single, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1800);
       expect(find.byType(CoworkerPeek), findsNothing);
       expect(t.takeException(), isNull);
@@ -412,6 +415,7 @@ void main() {
           expect(find.byType(CoworkerPeek), findsOneWidget);
           expect(find.text(FireLines.coworkerLine), findsOneWidget);
           await t.tap(_onScreen(FireLines.choiceRight).single, warnIfMissed: false);
+          await confirmChoice(t);
           await _pump(t, 1800);
           expect(find.byType(CoworkerPeek), findsNothing, reason: 'he leaves');
         }
@@ -455,6 +459,7 @@ void main() {
         final right = _onScreen(FireLines.whyRight(k, pickTool));
         expect(right.length, 1, reason: 'one right reason dealt for fire $i');
         await t.tap(right.single, warnIfMissed: false);
+        await confirmChoice(t);
         await t.pump();
         await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
         await _pump(t, i == 2 ? 5000 : 3500);
@@ -497,6 +502,7 @@ void main() {
         final right = _onScreen(i == 0 ? PassLines.whyStandRight : PassLines.whyAimRight);
         expect(right, hasLength(1), reason: 'one right reason dealt, fire $i');
         await t.tap(right.single, warnIfMissed: false);
+        await confirmChoice(t);
         await t.pump();
         await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
         await _pump(t, 3500);
@@ -508,6 +514,7 @@ void main() {
       final refill = _onScreen(PassLines.refillRight);
       expect(refill, hasLength(1));
       await t.tap(refill.single, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 4000);
       final s = c.read(gameSaveProvider);
       expect(s.rungProgress['1.8/do/1'], 'cleared');

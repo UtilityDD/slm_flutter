@@ -4,7 +4,7 @@
 
 Flutter app for West Bengal distribution linemen. Bangla first. Built for budget Android phones that are often offline. Sister of the web site [smartlineman.in](https://smartlineman.in), but this is **not** `slm-web`: game loops, levels and copy live here.
 
-Package `slm_flutter`. Android application id `com.smartlineman.app.slm_flutter`. Launcher label **SmartLineman**.
+Package `slm_flutter`. Android application id `com.smartlineman.app`. Launcher label **SmartLineman**.
 
 ## What the app is
 
@@ -43,7 +43,7 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 flutter pub get
 flutter build apk --debug
 adb -s 8012f054 install -r -t -d build/app/outputs/flutter-apk/app-debug.apk
-adb -s 8012f054 shell am start -n com.smartlineman.app.slm_flutter/.MainActivity
+adb -s 8012f054 shell am start -n com.smartlineman.app/com.smartlineman.app.slm_flutter.MainActivity
 ```
 
 ### Windows (PowerShell)
@@ -54,7 +54,7 @@ $env:GRADLE_USER_HOME = "$env:USERPROFILE\.gradle"
 flutter build apk --debug
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 & $adb -s 8012f054 install -r -t -d build\app\outputs\flutter-apk\app-debug.apk
-& $adb -s 8012f054 shell am start -n com.smartlineman.app.slm_flutter/.MainActivity
+& $adb -s 8012f054 shell am start -n com.smartlineman.app/com.smartlineman.app.slm_flutter.MainActivity
 ```
 
 If the wrapper download times out, set `GRADLE_OPTS=-Dorg.gradle.offline=true` with a filled Gradle folder.
@@ -80,7 +80,7 @@ For a visual check without the phone, render a temporary widget test with `match
 - **Stage files by name. Never `git add -A`.** Leave out other work in progress, root `phone_*.png` screenshots, keystores, `key.properties` and answer keys. Scan the staged diff for keys and tokens.
 - **Pushing to `master` needs the owner's approval.**
 - **Bangla editing:** edit Bangla Dart and JSON in the editor or with a UTF-8 tool. Never PowerShell `Set-Content`: it corrupts the text.
-- **Phone privacy:** take a screenshot only after `dumpsys window` shows `com.smartlineman.app.slm_flutter` in focus. If the owner is using the phone, stop and ask.
+- **Phone privacy:** take a screenshot only after `dumpsys window` shows `com.smartlineman.app` in focus. If the owner is using the phone, stop and ask.
 - Hourly answer keys (`tool/hourly_answer_keys.json` / `.sql`) never go in git (see `.gitignore`).
 
 ## Design rules

@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -41,13 +42,18 @@ import 'spoken_once.dart';
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene, corner guide, ◆ on the table → "কেন …?" (the reasons fit what this
 // climb had) → up the pole / the next climb by itself; the careless coworker
-// once a play, with one of three lesson shortcuts (dealt).
+// once a play, with one of three lesson shortcuts (dealt). He can't be skipped
+// by playing fast: "উঠি" (his fit) and the first look through the lens (his
+// pole top) wait for him (holdForCoworker). Gesture hints (how to touch, never
+// what): the hand nudged up, a swipe to turn him, a sweep over every anchor
+// point and over the lens' two buttons.
 //
 // Deadly (owner-approved list: weak anchor): a broken cross-arm, an insulator
 // pin or a loose bracket as the anchor (also by listening to him about the
 // pin); climbing on without tying off (listening to "হারনেস লাগে না").
 // Slips: a fit fault left; a strap moved from right to wrong; letting him
-// loosen the straps "for comfort". Three slips strike the level out.
+// loosen the straps "for comfort". Each strap still wrong at "উঠি" is one
+// slip and one strike; three slips strike the level out.
 //
 // Voice: the guide's lines by device TTS; the coworker in his recorded voice.
 // Art: the roadside is pole_yard.dart's; the trainee, the harness, the pole
@@ -220,6 +226,9 @@ abstract final class FitLines {
     'ক্রস-আর্ম একটু ফাটা হলেও ভার ঠিকই নেয়',
     'জায়গা নয়, ল্যানিয়ার্ড লাগানোটাই আসল',
     'ব্র্যাকেট একটু নড়বড়ে হলেও কিছু হয় না',
+    // The right cards' words ("দুর্বল", "কখনো") show up on wrong cards too.
+    'দুর্বল দেখালেও লোহার জিনিস ভার নেয়ই',
+    'ব্র্যাকেট কখনো খোলে না, ওতেই ক্লিপ চলে',
   ];
 
   // The careless coworker (his recorded voice): one of three shortcuts.
@@ -349,8 +358,9 @@ abstract final class FitMistakes {
 
 /// Three climbs: fit faults vary (one climb is clean; the D-ring fault shows
 /// up once), the weak anchors vary; he comes once, with a dealt shortcut (the
-/// pin is on his pole top when he pushes the pin); the sling sits at a
-/// different height on each climb.
+/// pin is on his pole top when he pushes the pin; the leg strap is snug on his
+/// climb when he pushes loose straps); the sling sits at a different height on
+/// each climb.
 ClimbDeal dealClimbs(math.Random rng) {
   final clean = rng.nextInt(3);
   final slings = [0, 1, 2]..shuffle(rng);
@@ -363,6 +373,9 @@ ClimbDeal dealClimbs(math.Random rng) {
     if (i != clean) {
       if (i == dRing) faults.add(FitFault.dRingLow);
       final others = [FitFault.twisted, FitFault.chestHigh, FitFault.loose]..shuffle(rng);
+      // His climb when he pushes "ঢিলে রাখো": the leg strap is snug, so his
+      // "এত টাইট কেন?" fits what the player sees.
+      if (push == FitPush.looseStraps && i == pushRound) others.remove(FitFault.loose);
       faults.add(others.first);
       if (faults.length < 2 && rng.nextBool()) faults.add(others[1]);
     }
@@ -503,7 +516,7 @@ class ClimbRun {
   int get fixedCount => owed.where((f) => !fit.isWrong(f)).length;
 
   void toAnchor() {
-    if (phase == ClimbPhase.fitShown) phase = ClimbPhase.anchor;
+    if (!ended && phase == ClimbPhase.fitShown) phase = ClimbPhase.anchor;
   }
 
   /// Ties off at [a]; null = strong point, else the deadly mistake.
@@ -516,9 +529,13 @@ class ClimbRun {
   }
 
   /// Gave in to "হারনেস লাগে না".
-  DoMistake noTieOff() => deadly = FitMistakes.noTieOff;
+  DoMistake noTieOff() {
+    if (ended) return deadly ?? FitMistakes.noTieOff;
+    return deadly = FitMistakes.noTieOff;
+  }
 
   void next() {
+    if (ended) return;
     round++;
     phase = ClimbPhase.fit;
     sawBack = false;
@@ -638,6 +655,20 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // --- gesture hints (how to touch, never what) ---
+  final _hints = IdleHintController();
+  final _lensCloseKey = GlobalKey();
+  final _lensClipKey = GlobalKey();
+
+  /// The scene's metrics from the last layout (the hint's anchors).
+  SceneMetrics? _metrics;
+
+  /// The order the sweep passes over the pole top's points this climb (dealt,
+  /// so the sling is never "the first one the hand visits").
+  List<AnchorPoint> _sweep = const [];
+  int _sweepRound = -1;
+  final _hintRng = math.Random();
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -678,7 +709,9 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
     await _sayChain([FitLines.askFit]);
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || coworkerOpen;
+  /// No scene input: the intro, a beat in progress, the end, a card, the
+  /// praise window or the reason deck ([tableBusy]), or the coworker.
+  bool get _blocked => _intro || _busy || _ended || _card != null || tableBusy || coworkerOpen;
 
   /// His climb and his moment: the fit (loose straps) or the pole top.
   bool get _hisTurn =>
@@ -803,14 +836,13 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
   // --- "ঠিক আছে — উঠি" -----------------------------------------------------------
   Future<void> _checkFit(Offset origin) async {
     if (!_canFit) return;
-    if (_hisTurn) {
-      // He is about to come in (his climb): he catches the trainee first.
+    // His climb (loose straps): he catches the trainee before the climb, even
+    // on a fast play with no move on the harness yet.
+    if (_hisTurn && !coworkerDue) {
       _moved = true;
-      HapticFeedback.selectionClick();
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tick.wav', volume: 0.4, muted: false));
       scheduleCoworker();
-      return;
     }
+    if (holdForCoworker()) return;
     _hush();
     final owedN = _run.owed.length;
     final fixed = _run.fixedCount;
@@ -839,13 +871,24 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
       ));
       return;
     }
-    final gain = 10 * fixed - 10 * (c.missed.length + c.falseMarks.length);
+    final wrongN = c.missed.length + c.falseMarks.length;
+    final gain = 10 * fixed - 10 * wrongN;
     if (gain != 0) unawaited(_levelDelta(gain, origin, mood: gain > 0 ? GuideMood.glad : GuideMood.warn));
     _busy = true;
     await Future<void>.delayed(_quiet ? Duration.zero : const Duration(milliseconds: 900));
     _busy = false;
     if (!mounted) return;
-    await _slip(c.missed.isNotEmpty ? FitMistakes.missed(c.missed.first) : FitMistakes.falseMark);
+    // One strike per strap still wrong — the same count as the mark's slips,
+    // so three slips always strike the level out.
+    // Every wrong strap reaches the mistakes book; one card shows (the first).
+    final wrong = <DoMistake>[
+      for (final f in c.missed) FitMistakes.missed(f),
+      if (c.falseMarks.isNotEmpty) FitMistakes.falseMark,
+    ];
+    for (final extra in wrong.skip(1)) {
+      unawaited(bookMistake(ref, widget.ctx, extra));
+    }
+    await _slip(wrong.first, count: wrongN);
   }
 
   /// Up the pole (after the fit's reason, or its slip card).
@@ -873,7 +916,9 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
 
   void _openLens(AnchorPoint a) {
     if (!_canAnchor || _lens != null) return;
-    if (_hisTurn) return; // he is about to call out
+    // His pole top: he calls out before the first look, even on a fast play.
+    if (_hisTurn && !coworkerDue) scheduleCoworker();
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.45, muted: false));
     setState(() => _lens = a);
@@ -887,6 +932,11 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
   Future<void> _tieOff(Offset origin) async {
     final a = _lens;
     if (a == null || !_canAnchor) return;
+    if (coworkerDue) {
+      // He has not had his say on this pole top yet: the lens closes, he comes.
+      setState(() => _lens = null);
+      if (holdForCoworker()) return;
+    }
     _hush();
     final m = _run.tieOff(a);
     setState(() {
@@ -914,6 +964,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
 
   /// The next climb (or the result) — by itself, after the anchor's reason.
   void _next() {
+    if (_ended) return;
     _run.next();
     if (_run.done) {
       unawaited(_finish());
@@ -961,6 +1012,17 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
   @override
   bool? coworkerCanCome() {
     if (!_hisTurn) return null;
+    // His push must fit what the player sees: "এত টাইট কেন?" makes no sense
+    // on a leg strap that hangs loose, nor "পিনেই ক্লিপ করো" with no pin.
+    switch (_run.deal.push) {
+      case FitPush.looseStraps:
+        if (_run.fit.loose) return null;
+      case FitPush.pinClip:
+        if (!_run.current.anchors.contains(AnchorPoint.insulatorPin)) return null;
+      case FitPush.twentyYears:
+        break;
+    }
+    // Never in the praise window or over the reason deck (tableBusy, via _blocked).
     if (_blocked || _lens != null || _grab != null || _hand != null) return false;
     return true;
   }
@@ -1026,8 +1088,13 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
     if (mounted) setState(() {});
   }
 
-  Future<void> _slip(DoMistake m) async {
-    if (strike(m)) {
+  /// A slip card; [count] strikes (one per strap still wrong at one check).
+  Future<void> _slip(DoMistake m, {int count = 1}) async {
+    var out = false;
+    for (var i = 0; i < count && !out; i++) {
+      out = strike(m);
+    }
+    if (out) {
       await _struckOut(m);
       return;
     }
@@ -1159,7 +1226,49 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
   }
 
   // --- the scene ---------------------------------------------------------------
+  /// The pole top's points in this climb's sweep order.
+  List<AnchorPoint> _sweepOrder() {
+    if (_sweepRound != _run.round) {
+      _sweepRound = _run.round;
+      _sweep = [..._run.current.anchors]..shuffle(_hintRng);
+    }
+    return _sweep;
+  }
+
+  /// The gesture hint for the waiting state now (how to touch, never what):
+  /// the lens' two buttons → a sweep over both; the pole top → a sweep over
+  /// every point (dealt order); the harness from the front → the hand nudged a
+  /// short way up (away from every strap); from the back → a swipe to turn him.
+  HintSpec? _hint() {
+    if (_lens != null) return HintSpec.sweepOver([_lensCloseKey, _lensClipKey]);
+    final m = _metrics;
+    if (m == null) return null;
+    switch (_run.phase) {
+      case ClimbPhase.anchor:
+        final geo = _topGeo(m);
+        return HintSpec.sweep([for (final a in _sweepOrder()) geo.spot(a)], space: HintSpace.scene);
+      case ClimbPhase.fit:
+        final geo = _FitGeo.of(m.height, m.inset);
+        // From the hips/legs (y 330), clear of the D-ring band (112–198) and
+        // the leg straps (236–306), so it never rests on a fault.
+        if (_back) return HintSpec.swipe(geo.p(100, 330), toward: const Offset(-1, 0), travel: 90, space: HintSpace.scene);
+        return HintSpec.drag(geo.handHome, toward: const Offset(0, -1), travel: 52, space: HintSpace.scene);
+      case ClimbPhase.fitShown:
+      case ClimbPhase.anchored:
+        return null;
+    }
+  }
+
+  /// A tap on nothing in the scene (three in a row show the hand).
+  Widget _missLayer(String key) => Positioned.fill(
+        key: ValueKey(key),
+        child: ExcludeSemantics(
+          child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: _hints.missTap),
+        ),
+      );
+
   List<Widget> _scene(SceneMetrics m) {
+    _metrics = m;
     final quiet = _quiet;
     final fitting = _run.phase == ClimbPhase.fit || _run.phase == ClimbPhase.fitShown;
     final stageKey = ValueKey('${fitting ? 'fit' : 'top'}-${_run.round}');
@@ -1264,6 +1373,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
           ),
         ),
       ),
+      _missLayer('miss-fit'),
       // Swipe across him to turn him round.
       Positioned.fromRect(
         key: const ValueKey('h-man'),
@@ -1354,6 +1464,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
           ),
         ),
       ),
+      if (_run.phase == ClimbPhase.anchor && _clip == null) _missLayer('miss-top'),
       if (_run.phase == ClimbPhase.anchor && _clip == null)
         for (final a in r.anchors)
           Positioned.fromRect(
@@ -1376,6 +1487,17 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
     final fitUp = playing && _run.phase == ClimbPhase.fit && !deckUp && _card == null && !coworkerOpen;
+    // The level waits for a touch on the scene (decks and cards have their own
+    // hints or none; nothing while a beat plays).
+    final hintWaiting = playing &&
+        _card == null &&
+        !deckUp &&
+        !coworkerOnScreen &&
+        !tableBusy &&
+        !_busy &&
+        _grab == null &&
+        _hand == null &&
+        ((_run.phase == ClimbPhase.fit && _shown == null) || (_run.phase == ClimbPhase.anchor && _clip == null));
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1403,6 +1525,10 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: '${_run.round}-${_run.phase.name}-${_back ? 'back' : 'front'}-${_lens?.name}',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (fitUp) ...[
@@ -1436,6 +1562,8 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
                   key: const ValueKey('lens'),
                   point: _lens!,
                   quiet: quiet,
+                  closeKey: _lensCloseKey,
+                  clipKey: _lensClipKey,
                   onClip: (o) => unawaited(_tieOff(o)),
                   onClose: _closeLens,
                 ),
@@ -2400,9 +2528,13 @@ class _TopPainter extends CustomPainter {
 /// A close look at one anchor point: a big lens over the dimmed scene, with
 /// "এখানে লাগাই" and "বন্ধ".
 class _Lens extends StatelessWidget {
-  const _Lens({super.key, required this.point, required this.quiet, required this.onClip, required this.onClose});
+  const _Lens({super.key, required this.point, required this.quiet, required this.onClip, required this.onClose, this.closeKey, this.clipKey});
   final AnchorPoint point;
   final bool quiet;
+
+  /// The two buttons (the gesture hint sweeps over both).
+  final GlobalKey? closeKey;
+  final GlobalKey? clipKey;
   final ValueChanged<Offset> onClip;
   final VoidCallback onClose;
 
@@ -2457,13 +2589,19 @@ class _Lens extends StatelessWidget {
                         button: true,
                         label: FitLines.lensClose,
                         excludeSemantics: true,
-                        child: DoBigButton(label: FitLines.lensClose, filled: false, onDark: true, onTapUp: (_) => onClose()),
+                        child: KeyedSubtree(
+                          key: closeKey,
+                          child: DoBigButton(label: FitLines.lensClose, filled: false, onDark: true, onTapUp: (_) => onClose()),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
-                      child: DoBigButton(label: FitLines.clipHere, filled: true, onTapUp: (dt) => onClip(dt.globalPosition)),
+                      child: KeyedSubtree(
+                        key: clipKey,
+                        child: DoBigButton(label: FitLines.clipHere, filled: true, onTapUp: (dt) => onClip(dt.globalPosition)),
+                      ),
                     ),
                   ],
                 ),

@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -60,7 +61,16 @@ export 'm2_hotstick_operate_world.dart' show HsGeo, HsGripPainter;
 // the grip ("রডের মাথার দিকে ধরো" — listening puts a hand above the guard, a
 // slip) or on the AB job before the call ("ব্রেকারের খবর লাগবে না" — listening
 // means turning it on-load: deadly). His new lines go by device TTS until
-// recorded (listed in [HsLines.recordLines]).
+// recorded (listed in [HsLines.recordLines]). He cannot be skipped by a fast
+// play: the first hand on the grip (DO), the breaker call and the raise (AB)
+// wait for him ([CoworkerMoment.holdForCoworker]); he never cuts into the
+// praise window ([ReasonTable.tableBusy]).
+// Gesture hints (gesture_hint.dart) for every waiting state: a sweep over the
+// kit / the ground / the rod / the three rings, a tap on the AB handle (the
+// one way forward); at a DO stroke, a sweep over the stroke spot and the
+// face-aside button alike until the face is aside, then a short drag nudge
+// (the AB turn: a short, unhurried nudge). After listening on the AB job the
+// call button leaves the row (no dead control).
 
 // ============================================================================
 // Content
@@ -159,7 +169,7 @@ abstract final class HsLines {
   };
 
   // Not scored: the guide says the rule, the step stays.
-  static const tooFar = 'এত দূর থেকে রড ঠিকমতো আটকানো যায় না। পাশে থাকুন, তবে কাছে।';
+  static const tooFar = 'এত দূর থেকে রড ঠিকমতো আটকানো যায় না। আরেকটু কাছে যান।';
   static const missHook = 'রিং-এ দৃঢ়ভাবে আটকান — রডের মাথা ঠিক জায়গায় নিন।';
   static const missHandle = 'সকেটটা হ্যান্ডেলের সাথে ঠিকমতো লাগান।';
   static const shortStroke = 'আধা টান হলো। একটি দ্রুত আর নিয়ন্ত্রিত টানে — পুরোটা।';
@@ -207,13 +217,14 @@ abstract final class HsLines {
   static const coworkerDo = CoworkerScript(
     line: 'রডের মাথার দিকে ধরো, জোর বেশি পাবে! নিচে ধরে কী হবে?',
     exitLine: coworkerExit,
-    right: ['না, দুই হাতে গার্ডের নিচেই ধরব', 'না, জোর নয়, মসৃণ টানই আসল কথা', 'গার্ডের ওপরে হাত নয়, নিচেই ধরছি'],
+    right: ['দুই হাতেই ধরব, গার্ডের নিচে', 'না, জোর নয়, মসৃণ টানই আসল কথা', 'গার্ডের ওপরে হাত নয়, নিচেই ধরছি'],
     wrong: [
-      'ঠিক, মাথার দিকে ধরলে জোর বেশি',
+      'না না, মাথার দিকেই জোর বেশি',
       'আচ্ছা, ওপরের দিকে ধরেই টানছি',
       'এক হাতে মাথার কাছে ধরলেই হবে',
       'জোরে ঝাঁকুনি দিলেই খুলে যাবে',
       'ঠিক আছে, গার্ড-টার্ড লাগে না',
+      'নিচে ধরলে জোর কম, মাথার দিকেই ধরি',
     ],
     asks: ['ও বলছে মাথার দিকে ধরতে। আপনি?', 'কোথায় ধরবেন — ওর কথায়, না নিয়মে?', 'ওর কথা শুনবেন, না নিয়ম মানবেন?'],
   );
@@ -222,13 +233,14 @@ abstract final class HsLines {
   static const coworkerAb = CoworkerScript(
     line: 'ব্রেকারের খবর নিতে হবে না, সোজা ঘুরিয়ে দাও!',
     exitLine: coworkerExit,
-    right: ['না, আগে ব্রেকার খোলা নিশ্চিত করব', 'না, অফ-লোড না করে আমি ঘোরাব না', 'আগে ফোন করে ব্রেকার খোলাচ্ছি'],
+    right: ['আগে ব্রেকার খোলা নিশ্চিত করব', 'না, অফ-লোড না করে আমি ঘোরাব না', 'আগে ফোন করে ব্রেকার খোলাচ্ছি'],
     wrong: [
-      'ঠিক, সোজা ঘুরিয়েই দিচ্ছি',
+      'না না, সোজা ঘুরিয়েই দিচ্ছি',
       'আচ্ছা, ফোনের কোনো দরকার নেই',
       'লোড থাকলেও সুইচটা খুলে যাবে',
       'তাড়াতাড়ি ঘুরিয়ে কাজ সারি',
       'ঠিক আছে, খবর পরে নিয়ে নেব',
+      'ব্রেকার পরে দেখব, আগে ঘুরিয়ে নিই',
     ],
     asks: ['ও বলছে ব্রেকারের খবর ছাড়াই ঘোরাতে। আপনি?', 'ওর কথায় ঘোরাবেন, না আগে ব্রেকার?', 'ওর কথা শুনবেন, না নিয়ম মানবেন?'],
   );
@@ -284,7 +296,7 @@ abstract final class HsMistakes {
   );
   static const onLoadAb = DoMistake(
     key: '2.5/hotstick-op/ab-on-load',
-    textBn: 'ব্রেকার খোলা নিশ্চিত না করেই AB সুইচ ঘোরালেন। অন-লোডে বিশাল আর্ক তৈরি হয় — সুইচ আর মানুষ, দুজনেই শেষ। আগে ব্রেকার খুলে লাইন অফ-লোড।',
+    textBn: 'ব্রেকার খোলা নিশ্চিত না করেই AB সুইচ ঘোরালেন। অন-লোডে বিশাল আর্ক তৈরি হয় — সুইচ আর ব্যবহারকারী, দুজনকেই মারাত্মকভাবে ক্ষতিগ্রস্ত করতে পারে। আগে ব্রেকার খুলে লাইন অফ-লোড।',
     art: '$_dir/hs_offload.svg',
     deadly: true,
     lessonPoint: 2,
@@ -601,6 +613,16 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints: the kit buttons (shuffled per job), the raise, the rod.
+  final _hints = IdleHintController();
+  final _toolKeys = List.generate(6, (_) => GlobalKey());
+  final _raiseKey = GlobalKey();
+  final _gripKey = GlobalKey();
+  final _faceKey = GlobalKey();
+
+  /// The kit row's order this job (no row laid out as a checklist).
+  List<int> _toolOrder = const [0, 1, 2, 3, 4, 5];
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -638,7 +660,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
     if (!_muted) unawaited(ZlFx.cue(file, volume: volume, muted: false));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen;
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen;
 
   void _start() {
     _clock.start();
@@ -653,6 +675,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
       _flashAt = null;
       _open = [for (var i = 0; i < 3; i++) j.kind == HsKind.doClose];
       _abOff = false;
+      _toolOrder = [0, 1, 2, 3, 4, 5]..shuffle(widget.rng);
       _wake++;
     });
     if (_run.index == _run.deal.callAt && !j.isDo) scheduleCoworker();
@@ -663,6 +686,8 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
   void _wear(HsKit k) {
     if (!_canPlay || _run.phase != HsPhase.prep) return;
     if (k == HsKit.offload && _run.skippedCall) return;
+    // The call is his moment on the AB job: he speaks first.
+    if (k == HsKit.offload && holdForCoworker()) return;
     HapticFeedback.selectionClick();
     _cue(k == HsKit.offload ? 'sounds/quiz_select.wav' : 'sounds/learn/tag_slap.wav', volume: 0.45);
     setState(() {
@@ -683,6 +708,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
 
   Future<void> _raise(Offset origin) async {
     if (!_canPlay || _run.phase != HsPhase.prep) return;
+    if (holdForCoworker()) return;
     _hush();
     final m = _run.raise();
     if (m != null && m.deadly) {
@@ -714,7 +740,10 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
     final j = _job;
     switch (_run.phase) {
       case HsPhase.stand:
-        if (p.dy < geo.groundY - 30) return;
+        if (p.dy < geo.groundY - 30) {
+          _hints.missTap();
+          return;
+        }
         final x = p.dx.clamp(16.0, 344.0);
         final (s, m) = _run.stand(x - HsGeo.phaseX[j.phase]);
         HapticFeedback.selectionClick();
@@ -736,6 +765,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
       case HsPhase.hook:
         final target = hsTargetOf(geo, j, open: _open[j.phase]);
         if ((p - target).distance > 30) {
+          _hints.missTap();
           HapticFeedback.selectionClick();
           unawaited(_sayChain([j.isDo ? HsLines.missHook : HsLines.missHandle]));
           return;
@@ -748,7 +778,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
         });
         _askStep();
       case HsPhase.prep || HsPhase.grip || HsPhase.operate || HsPhase.done:
-        break;
+        _hints.missTap();
     }
   }
 
@@ -760,6 +790,8 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
   // --- 3. the grip ----------------------------------------------------------------
   Future<void> _placeHand(double frac) async {
     if (!_canPlay || _run.phase != HsPhase.grip || _hands.length >= 2) return;
+    // His moment on a DO job is the grip: a fast hand waits for him.
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     _cue('sounds/intro/tick.ogg', volume: 0.5);
     setState(() => _hands.add(frac.clamp(0.04, 0.96)));
@@ -773,9 +805,16 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
   Future<void> _gripDone(bool above, Offset origin) async {
     _hush();
     final m = _run.grip(above: above);
+    // The beat before the slip card / the next ask: nothing else plays (a
+    // hook tap in this window used to skip ahead of the grip's card).
+    _busy = true;
     await Future<void>.delayed(const Duration(milliseconds: 350));
     if (!mounted) return;
-    setState(() => _wake++);
+    setState(() {
+      if (!_ended) _busy = false;
+      _wake++;
+    });
+    if (_ended) return;
     if (m != null) {
       unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
       await _slip(m);
@@ -922,7 +961,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
     } else {
       if (_run.phase != HsPhase.prep || _run.kit.contains(HsKit.offload)) return null;
     }
-    if (_intro || _busy || _card != null || reasonOpen) return false;
+    if (_intro || _busy || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -1279,26 +1318,85 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
 
   Widget _prepTools() {
     final k = _run.kit;
-    Widget b(String label, IconData icon, bool on, VoidCallback tap, {Key? key}) =>
-        _ToolButton(key: key, icon: icon, label: label, on: on, enabled: _canPlay, onTap: tap);
+    Widget b(int i, String label, IconData icon, bool on, VoidCallback tap) =>
+        _ToolButton(key: _toolKeys[i], icon: icon, label: label, on: on, enabled: _canPlay, onTap: tap);
+    final tools = [
+      b(0, HsLines.gloves, Icons.back_hand_rounded, k.contains(HsKit.gloves), () => _wear(HsKit.gloves)),
+      b(1, HsLines.shield, Icons.masks_rounded, k.contains(HsKit.shield), () => _wear(HsKit.shield)),
+      b(2, HsLines.lock, Icons.lock_rounded, k.contains(HsKit.lock), () => _wear(HsKit.lock)),
+      b(3, HsLines.puller, Icons.hardware_rounded, _run.head == HsHead.puller, () => _fit(HsHead.puller)),
+      b(4, HsLines.socket, Icons.settings_rounded, _run.head == HsHead.socket, () => _fit(HsHead.socket)),
+      b(
+        5,
+        k.contains(HsKit.offload) ? HsLines.offloadDone : HsLines.offload,
+        Icons.phone_in_talk_rounded,
+        k.contains(HsKit.offload),
+        () => _wear(HsKit.offload),
+      ),
+    ];
+    // Dealt fresh each job: the row is never a checklist in the right order.
+    // After listening to him on the AB job the call is gone from the row (no
+    // dead control that looks live; the turn will come on-load).
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 4,
       runSpacing: 6,
       children: [
-        b(HsLines.gloves, Icons.back_hand_rounded, k.contains(HsKit.gloves), () => _wear(HsKit.gloves)),
-        b(HsLines.shield, Icons.masks_rounded, k.contains(HsKit.shield), () => _wear(HsKit.shield)),
-        b(HsLines.lock, Icons.lock_rounded, k.contains(HsKit.lock), () => _wear(HsKit.lock)),
-        b(HsLines.puller, Icons.hardware_rounded, _run.head == HsHead.puller, () => _fit(HsHead.puller)),
-        b(HsLines.socket, Icons.settings_rounded, _run.head == HsHead.socket, () => _fit(HsHead.socket)),
-        b(
-          k.contains(HsKit.offload) ? HsLines.offloadDone : HsLines.offload,
-          Icons.phone_in_talk_rounded,
-          k.contains(HsKit.offload),
-          () => _wear(HsKit.offload),
-        ),
+        for (final i in _toolOrder)
+          if (!(i == 5 && _run.skippedCall)) tools[i],
       ],
     );
+  }
+
+  /// The player can act on the scene now (the gesture hint may show).
+  bool get _waitingForPlayer =>
+      _canPlay && !_freeze && _mark == null && !struckOut && !coworkerOnScreen && !_run.done && _run.phase != HsPhase.done;
+
+  /// How to interact now — never which answer (gesture_hint.dart).
+  HintSpec? _hint() {
+    final geo = _geoNow;
+    final j = _job;
+    switch (_run.phase) {
+      case HsPhase.prep:
+        // Every kit button and the raise: one of these is yours to pick.
+        return HintSpec.sweepOver([for (final i in _toolOrder) _toolKeys[i], _raiseKey]);
+      case HsPhase.stand:
+        // Spots along the ground, under and beside the pole alike.
+        return HintSpec.sweep([
+          for (final x in const [40.0, 120.0, 200.0, 280.0]) Rect.fromCenter(center: Offset(x, geo.groundY + 24), width: 48, height: 28),
+        ], space: HintSpace.scene);
+      case HsPhase.grip:
+        // The whole rod, bottom to top (the guard is the player's call).
+        final r = HintSpec.globalRectOf(_gripKey);
+        if (r == null) return null;
+        return HintSpec.sweep([for (final f in const [0.85, 0.5, 0.15]) Rect.fromCenter(center: Offset(r.center.dx, r.top + r.height * f), width: 40, height: 40)]);
+      case HsPhase.hook:
+        if (!j.isDo) return HintSpec.tap(geo.handle, space: HintSpace.scene);
+        // The three DO rings alike; the docket names the phase.
+        return HintSpec.sweep([
+          for (var p = 0; p < 3; p++) Rect.fromCenter(center: hsTargetOf(geo, HsJob(kind: j.kind, phase: p, topic: j.topic), open: _open[p]), width: 30, height: 30),
+        ], space: HintSpace.scene);
+      case HsPhase.operate:
+        final from = Offset(180, geo.groundY - 120);
+        if (j.isDo && !_run.faceAside) {
+          // Two controls now (the stroke on the scene, the face-aside button):
+          // sweep over both alike — a drag nudge here would lead straight
+          // into a stroke with the face in.
+          final face = HintSpec.globalRectOf(_faceKey);
+          final k = MediaQuery.sizeOf(context).width / 360;
+          final stroke = Rect.fromCenter(center: _toGlobal(from), width: 56 * k, height: 56 * k);
+          return HintSpec.sweep([stroke, ?face]);
+        }
+        // A short drag nudge on the scene: pull (open), push (close), across
+        // (AB: a short, unhurried nudge — rushing the turn is a slip).
+        return switch (j.kind) {
+          HsKind.doOpen => HintSpec.drag(from, toward: const Offset(0, 1), space: HintSpace.scene),
+          HsKind.doClose => HintSpec.drag(from, toward: const Offset(0, -1), space: HintSpace.scene),
+          HsKind.abOff => HintSpec.drag(from, toward: const Offset(1, 0), travel: 36, space: HintSpace.scene),
+        };
+      case HsPhase.done:
+        return null;
+    }
   }
 
   @override
@@ -1338,6 +1436,10 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: _waitingForPlayer,
+            hintKey: (_run.index, phase, _hands.length, _run.faceAside, _run.skippedCall),
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1360,7 +1462,10 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
                       const SizedBox(height: 8),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 40),
-                        child: DoBigButton(label: HsLines.raise, filled: true, onTapUp: (d) => unawaited(_raise(d.globalPosition))),
+                        child: KeyedSubtree(
+                          key: _raiseKey,
+                          child: DoBigButton(label: HsLines.raise, filled: true, onTapUp: (d) => unawaited(_raise(d.globalPosition))),
+                        ),
                       ),
                     ],
                   ),
@@ -1371,6 +1476,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
                   left: 12,
                   bottom: pad.bottom + 16,
                   child: _ToolButton(
+                    key: _faceKey,
                     icon: Icons.face_retouching_off_rounded,
                     label: _run.faceAside ? HsLines.faceAsideOn : HsLines.faceAside,
                     on: _run.faceAside,
@@ -1381,6 +1487,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
               if (playing && phase == HsPhase.grip && _card == null && !reasonOpen && !coworkerOnScreen)
                 _GripCard(
                   key: const ValueKey('grip'),
+                  rodKey: _gripKey,
                   hands: _hands,
                   locked: _run.kit.contains(HsKit.lock),
                   quiet: quiet,
@@ -1581,7 +1688,10 @@ class _ToolButton extends StatelessWidget {
 /// The grip: the rod's lower part close up (butt at the bottom, the red hand
 /// guard); tap to put a hand on it, two hands.
 class _GripCard extends StatelessWidget {
-  const _GripCard({super.key, required this.hands, required this.locked, required this.quiet, required this.onTap});
+  const _GripCard({super.key, required this.rodKey, required this.hands, required this.locked, required this.quiet, required this.onTap});
+
+  /// The rod's box (the gesture hint sweeps along it).
+  final GlobalKey rodKey;
   final List<double> hands;
   final bool locked;
   final bool quiet;
@@ -1620,6 +1730,7 @@ class _GripCard extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTapUp: (d) => onTap(1 - (d.localPosition.dy - 6) / (rodH - 12)),
                 child: SizedBox(
+                  key: rodKey,
                   width: 150,
                   height: rodH,
                   child: CustomPaint(

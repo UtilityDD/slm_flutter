@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import '../guide/ai_lineman_guide.dart';
+import 'gesture_hint.dart';
 import 'level_shell.dart';
+import 'reason_table.dart';
 
 // The full-screen level frame every Do level uses (GAME_LEVEL_PLAYBOOK.md §1–2):
 // the scene runs edge to edge — under the status bar and the header, to the
@@ -13,6 +15,14 @@ import 'level_shell.dart';
 //
 // The scene is designed 360 wide; its height follows the screen (a tall phone
 // gets more sky, never a stretched picture). Layers get [SceneMetrics].
+//
+// Input shield: while a right move's ◆ waits on the table and the praise
+// plays ([ReasonTable.tableHolding], found above this frame by itself, or
+// [FullSceneFrame.inputBlocked]) the scene and the overlays take no touch;
+// the header (close, mute) stays live.
+//
+// Gesture hint: pass [FullSceneFrame.hint] + [FullSceneFrame.hintWaiting] and
+// the frame shows the hand after idle / confusion (gesture_hint.dart).
 
 @immutable
 class SceneMetrics {
@@ -43,6 +53,12 @@ class FullSceneFrame extends StatelessWidget {
     this.animation,
     this.overlays = const [],
     this.liftBaseline = 532,
+    this.inputBlocked,
+    this.hint,
+    this.hintWaiting = false,
+    this.hintKey,
+    this.hintController,
+    this.hintAutoMiss = false,
   });
 
   final LevelContext ctx;
@@ -70,8 +86,60 @@ class FullSceneFrame extends StatelessWidget {
   /// The ground row moves down by `height − liftBaseline`.
   final double liftBaseline;
 
+  /// Block every touch on the scene and overlays (not the header). Null =
+  /// automatic: blocked during a [ReasonTable]'s praise window.
+  final bool? inputBlocked;
+
+  /// The gesture hint for now (how to interact, never the answer); anchors in
+  /// global, local or scene ([HintSpace.scene], design pixels) space.
+  final HintSpec? Function()? hint;
+
+  /// The level waits for the player's input now (no intro, card, deck,
+  /// voice-locked beat or animation). The hand shows only while true.
+  final bool hintWaiting;
+
+  /// A new value (e.g. the round) resets the count of hints shown.
+  final Object? hintKey;
+
+  /// Lets the level report taps on nothing ([IdleHintController.missTap]).
+  final IdleHintController? hintController;
+
+  /// Count taps that hit no small widget as misses (see [IdleHint.autoMiss]).
+  final bool hintAutoMiss;
+
+  /// Header band (status bar + the floating HUD) that stays live under the shield.
+  static const double headerBand = 62;
+
+  /// Whether input is blocked now (explicit, or a [ReasonTable] above is in its
+  /// praise window).
+  bool _blocked(BuildContext context) => inputBlocked ?? (context.findAncestorStateOfType<ReasonTable>()?.tableHolding ?? false);
+
   @override
   Widget build(BuildContext context) {
+    final blocked = _blocked(context);
+    final pad = MediaQuery.paddingOf(context);
+    final h = hint;
+    return LayoutBuilder(
+      builder: (context, box) {
+        final w = math.max(1.0, box.maxWidth);
+        final sh = (360 * box.maxHeight / w).clamp(560.0, 900.0);
+        final scale = math.max(box.maxWidth / 360, box.maxHeight / sh);
+        final dx = (box.maxWidth - 360 * scale) / 2;
+        final dy = (box.maxHeight - sh * scale) / 2;
+        return IdleHint(
+          waiting: hintWaiting && h != null && !blocked,
+          waitKey: hintKey,
+          controller: hintController,
+          autoMiss: hintAutoMiss,
+          sceneToLocal: (p) => Offset(dx + p.dx * scale, dy + p.dy * scale),
+          spec: (_) => h?.call(),
+          child: _frame(context, blocked, pad),
+        );
+      },
+    );
+  }
+
+  Widget _frame(BuildContext context, bool blocked, EdgeInsets pad) {
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -133,8 +201,70 @@ class FullSceneFrame extends StatelessWidget {
           ),
         ),
         ...overlays,
+        // The praise-window shield: over the scene and the overlays, never
+        // over the header band.
+        Positioned.fill(
+          key: const ValueKey('scene-input-shield'),
+          child: _SceneShield(active: blocked, passTop: pad.top + headerBand),
+        ),
       ],
     );
+  }
+}
+
+/// Swallows every touch on the scene and the overlays while [active]. Inside a
+/// [FullSceneFrame] the header band (status bar + [FullSceneFrame.headerBand]:
+/// close, mute) stays live; outside one the whole box absorbs. [child] is
+/// decoration only and never takes a touch. Used by the death freeze
+/// ([FreezeFrame]) so the heartbeat can still be muted and the level closed.
+class HeaderSafeShield extends StatelessWidget {
+  const HeaderSafeShield({super.key, required this.active, this.child});
+  final bool active;
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    final inFrame = context.findAncestorWidgetOfExactType<FullSceneFrame>() != null;
+    final passTop = inFrame ? MediaQuery.paddingOf(context).top + FullSceneFrame.headerBand : double.negativeInfinity;
+    return _SceneShield(active: active, passTop: passTop, global: true, child: child);
+  }
+}
+
+/// Swallows every touch below [passTop] while [active] (a full-screen
+/// AbsorbPointer with a hole for the header). [global]: [passTop] is a screen
+/// y (the box may not start at the top of the screen); else a local y. The
+/// child never takes touches.
+class _SceneShield extends SingleChildRenderObjectWidget {
+  const _SceneShield({required this.active, required this.passTop, this.global = false, super.child});
+  final bool active;
+  final double passTop;
+  final bool global;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderSceneShield(active, passTop, global);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderSceneShield renderObject) {
+    renderObject
+      ..active = active
+      ..passTop = passTop
+      ..global = global;
+  }
+}
+
+class _RenderSceneShield extends RenderProxyBox {
+  _RenderSceneShield(this.active, this.passTop, this.global);
+  bool active;
+  double passTop;
+  bool global;
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if (!active || !size.contains(position)) return false;
+    final y = global ? localToGlobal(position).dy : position.dy;
+    if (y < passTop) return false;
+    result.add(BoxHitTestEntry(this, position));
+    return true;
   }
 }
 

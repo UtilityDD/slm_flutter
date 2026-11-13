@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <radialGradient id="hot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.5" stop-color="#ffb347" stop-opacity="0.7"/><stop offset="1" stop-color="#ff6a00" stop-opacity="0"/></radialGradient>
+    <radialGradient id="warm" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#d0486e"/><stop offset="1" stop-color="#b0306a" stop-opacity="0"/></radialGradient>
+    <radialGradient id="zap" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fffbe0"/><stop offset="0.5" stop-color="#8caaff" stop-opacity="0.6"/><stop offset="1" stop-color="#ffc24a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <!-- wrong -->
+  <g><rect x="36" y="24" width="8" height="130" fill="#9aa2a8"/><rect x="16" y="40" width="96" height="6" fill="#4e565d"/><polygon points="50.3,63.8 41.9,70.8 31.6,67.1 29.7,56.2 38.1,49.2 48.4,52.9" fill="#8c949b" stroke="#3e454b" stroke-width="1.2"/><circle cx="40" cy="60" r="4.6" fill="#5a6168"/><polygon points="51.0,100.0 45.5,109.5 34.5,109.5 29.0,100.0 34.5,90.5 45.5,90.5" fill="#8c949b" stroke="#3e454b" stroke-width="1.2"/><circle cx="40" cy="100" r="4.6" fill="#5a6168"/><path d="M58 60 h10" stroke="#c0392b" stroke-width="3"/><circle cx="110" cy="92" r="7" fill="#a86e48"/><path d="M102 90 a8 8 0 0 1 16 0 z" fill="#ffd34e"/><rect x="103" y="99" width="14" height="22" rx="4" fill="#1f5f8f"/><rect x="104" y="121" width="5" height="16" fill="#26303d"/><rect x="111" y="121" width="5" height="16" fill="#26303d"/><path d="M110 70 v-20 M104 56 l6 -6 l6 6" stroke="#c0392b" stroke-width="2.5" fill="none"/></g>
+  <!-- right -->
+  <g transform="translate(160 0)"><rect x="36" y="24" width="8" height="130" fill="#9aa2a8"/><rect x="16" y="40" width="96" height="6" fill="#4e565d"/><polygon points="51.0,60.0 45.5,69.5 34.5,69.5 29.0,60.0 34.5,50.5 45.5,50.5" fill="#8c949b" stroke="#3e454b" stroke-width="1.2"/><circle cx="40" cy="60" r="4.6" fill="#5a6168"/><polygon points="51.0,100.0 45.5,109.5 34.5,109.5 29.0,100.0 34.5,90.5 45.5,90.5" fill="#8c949b" stroke="#3e454b" stroke-width="1.2"/><circle cx="40" cy="100" r="4.6" fill="#5a6168"/><g transform="translate(58 52) rotate(-60)"><rect x="-3" y="0" width="6" height="34" rx="2" fill="#5a6066"/><path d="M-8 -2 a8 8 0 1 1 16 0 l-4 0 l0 -6 l-8 0 l0 6 z" fill="#5a6066"/></g><circle cx="40" cy="60" r="15" fill="none" stroke="#2e8b45" stroke-width="2.5"/></g>
+  <g transform="translate(80 172)"><circle r="13" fill="#c0392b"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>
+  <g transform="translate(240 172)"><circle r="13" fill="#2e8b45"/><path d="M-7 0 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

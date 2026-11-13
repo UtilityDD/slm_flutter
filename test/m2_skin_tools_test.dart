@@ -3,6 +3,10 @@
 // only where it has been), deal variety, fair reason libraries that fit the
 // cable, the coworker's pushes, and the level in the shell (idle perf; guide
 // first; a full clean flow; a slip card; a deadly freeze; three slips).
+// Audit 2026-11-11: he comes even on a fast play (the tester / a tool wait for
+// him, his push fits the tap); no tool named in the close-up; rejecting a sound
+// tool costs a slip, putting back tells nothing; the praise window takes no
+// tap; gesture hints sweep, never point.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -15,7 +19,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart' show FreezeFrame;
@@ -31,6 +37,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.6/do/0',
@@ -58,6 +65,15 @@ class _DiskBundle extends CachingAssetBundle {
 SkinItem _right(SkinJob j) => j.items.firstWhere((x) => x.tool == j.cable.rightTool && x.flaw == BladeFlaw.none);
 int _liveAt(SkinDeal d) => d.jobs.indexWhere((j) => j.live);
 
+Set<String> _words(String s) => s.split(RegExp(r'[\s,—!?।\-]+')).where((w) => w.isNotEmpty).toSet();
+
+/// No word on every right card is missing from every wrong card.
+void _expectNoMarkWord(String name, List<String> right, List<String> wrong) {
+  final onWrong = {for (final x in wrong) ..._words(x)};
+  final common = right.map(_words).reduce((a, b) => a.intersection(b));
+  expect(common.difference(onWrong), isEmpty, reason: '$name: these words mark the right card');
+}
+
 Future<void> _pump(WidgetTester t, int ms) async {
   for (var i = 0; i < ms; i += 50) {
     await t.pump(const Duration(milliseconds: 50));
@@ -77,20 +93,14 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await confirmChoice(t);
+  // A right reason zooms and waits for এগিয়ে যান; his deck closes by itself.
+  await tapReasonProceed(t);
 }
 
 void main() {
@@ -174,22 +184,35 @@ void main() {
       expect(ab.take(ab.current.items.firstWhere((x) => x.tool == SkinTool.stripper)).mistake, SkinMistakes.mismatch);
     });
 
-    test('putting back: the kitchen knife and the wrong size go aside for free; a bad blade only once found', () {
+    test('rejecting: the kitchen knife, the wrong size and a bad blade go aside for free; a sound right tool is a slip', () {
       final seed = _seedWhere((d) => d.jobs.first.cable == SkinCable.ab && d.jobs.first.items.any((x) => x.flaw != BladeFlaw.none));
       final run = SkinRun(dealSkin(math.Random(seed)));
       final j = run.current;
       final twin = j.items.firstWhere((x) => x.flaw != BladeFlaw.none);
-      expect(run.putBack(_right(j)), isFalse);
-      expect(run.putBack(j.items.firstWhere((x) => x.tool == SkinTool.kitchen)), isTrue);
-      expect(run.putBack(j.items.firstWhere((x) => x.tool == SkinTool.stripper)), isTrue);
-      expect(run.putBack(twin), isFalse, reason: 'not looked at: putting back gives nothing away');
+      final good = run.reject(_right(j));
+      expect(good.mistake, SkinMistakes.goodRejected, reason: 'flagging everything is not free');
+      expect(good.aside, isFalse);
+      expect(run.rejected, isNot(contains(_right(j).id)), reason: 'the sound tool stays in the roll');
+      expect(run.slips, 1);
+      expect(run.reject(j.items.firstWhere((x) => x.tool == SkinTool.kitchen)).aside, isTrue);
+      expect(run.reject(j.items.firstWhere((x) => x.tool == SkinTool.stripper)).aside, isTrue);
       run.spot(_right(j));
       expect(run.spotted, isEmpty);
       run.spot(twin);
-      expect(run.putBack(twin), isTrue);
+      expect(run.reject(twin).aside, isTrue);
       expect(run.rejected.length, 3);
+      expect(run.slips, 1);
+      expect(run.caught, containsAll([SkinLines.caughtKnife, SkinLines.caughtTool, SkinLines.caughtBlade]));
+      expect(run.take(_right(j)).mistake, SkinMistakes.untested, reason: 'the job goes on after a wrong reject');
+    });
+
+    test('a bad blade set aside unseen goes aside but is not counted as caught', () {
+      final seed = _seedWhere((d) => d.jobs.first.items.any((x) => x.flaw != BladeFlaw.none));
+      final run = SkinRun(dealSkin(math.Random(seed)));
+      final twin = run.current.items.firstWhere((x) => x.flaw != BladeFlaw.none);
+      expect(run.reject(twin).aside, isTrue);
       expect(run.slips, 0);
-      expect(run.caught, containsAll([SkinLines.caughtKnife, SkinLines.caughtBlade]));
+      expect(run.caught, isNot(contains(SkinLines.caughtBlade)));
     });
 
     test('hold: nothing before the test; a slip when the tester showed 0 V', () {
@@ -219,6 +242,9 @@ void main() {
       expect(skinPushFor(ab, tested: false, shown: false, preferTeeth: true), SkinPush.skipTest);
       expect(skinPushFor(ab, tested: true, shown: false, preferTeeth: true), isNull);
       expect(skinPushFor(wire, tested: false, shown: true, preferTeeth: true), isNull);
+      const liveWire = SkinJob(cable: SkinCable.wire, items: [], live: true);
+      expect(skinPushFor(liveWire, tested: true, shown: false, preferTeeth: true), isNull, reason: 'a LIVE cable is held, not skinned');
+      expect(skinPushFor(liveWire, tested: false, shown: false, preferTeeth: false), SkinPush.skipTest);
     });
 
     test('deals vary', () {
@@ -263,6 +289,34 @@ void main() {
       }
       expectSameLength('hold', [...SkinLines.holdRight, ...SkinLines.holdWrong]);
       expectLibrary('hold', SkinLines.holdRight, SkinLines.holdWrong);
+      // No word alone marks the right card: the right cards' key words are on
+      // wrong ones too.
+      for (final w in ['টেস্টার', 'লাইভ', 'ডেড']) {
+        expect(SkinLines.holdWrong.any((x) => x.contains(w)), isTrue, reason: 'hold: "$w" also on a wrong card');
+      }
+      for (final c in SkinCable.values) {
+        for (final w in ['স্ট্রিপার', 'নাইফ', 'এবি', 'XLPE', 'ব্লেড']) {
+          expect(SkinLines.toolWrong(c).any((x) => x.contains(w)), isTrue, reason: 'tool ${c.name}: "$w" also on a wrong card');
+        }
+      }
+      // The small wire's ডকেট words and the hold cards' নয় on wrong cards too.
+      for (final w in ['ছোট', 'তারে', 'ওয়্যার']) {
+        expect(SkinLines.toolWrong(SkinCable.wire).any((x) => x.contains(w)), isTrue, reason: 'tool wire: "$w" also on a wrong card');
+      }
+      for (final w in ['নয়', 'ছুরি', 'কেবিলে']) {
+        expect(SkinLines.holdWrong.any((x) => x.contains(w)), isTrue, reason: 'hold: "$w" also on a wrong card');
+      }
+      // Deck fairness: one right card is dealt with two wrong ones, so no word
+      // on every right card may be missing from every wrong card.
+      for (final c in SkinCable.values) {
+        for (final looked in [true, false]) {
+          _expectNoMarkWord('tool ${c.name} $looked', SkinLines.toolRight(c, looked: looked), SkinLines.toolWrong(c));
+        }
+      }
+      _expectNoMarkWord('hold', SkinLines.holdRight, SkinLines.holdWrong);
+      for (final p in SkinPush.values) {
+        _expectNoMarkWord('choice ${p.name}', SkinLines.coworker(p).right, SkinLines.coworker(p).wrong);
+      }
       for (final p in SkinPush.values) {
         final c = SkinLines.coworker(p);
         expectSameLength('choice ${p.name}', [...c.right, ...c.wrong]);
@@ -385,7 +439,7 @@ void main() {
         }
         debugPrint('PERF skin tools ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(SkinLines.jobCard), findsOneWidget);
         expect(find.text(SkinLines.hold), findsNothing, reason: 'the hold comes only after the test');
         expect(perSec, lessThan(20));
@@ -406,7 +460,7 @@ void main() {
       await t.pumpWidget(app(c, M2SkinToolsPage(ctx: _ctx, pack: m2SkinToolsPack26, muted: true, seed: _seedWhere((d) => d.callRound == 2))));
       await _pump(t, 400);
       expect(find.byType(GuideIntro), findsOneWidget);
-      expect(find.text('শুরু'), findsNothing);
+      expect(find.textContaining(RegExp('শুরু')), findsNothing, reason: 'no start button of any wording');
       await t.tapAt(const Offset(360, 800));
       await _pump(t, 600);
       expect(find.byType(GuideIntro), findsOneWidget, reason: 'a tap does not skip');
@@ -447,12 +501,13 @@ void main() {
       await _pump(t, 600);
       expect(_label(SkinLines.glovesLabel), findsNothing, reason: 'the gloves are on');
 
-      // The kitchen knife put back without a cut goes aside, tagged.
+      // The kitchen knife set aside without a cut goes aside, tagged.
       await testCable(t);
       await lift(t, j1, j1.items.firstWhere((x) => x.tool == SkinTool.kitchen));
-      await t.tap(find.text(SkinLines.putBack));
+      await t.tap(find.text(SkinLines.reject));
       await _pump(t, 800);
       expect(find.text(SkinLines.rejected), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
       await lift(t, j1, _right(j1));
       await slide(t);
       await t.tap(find.text(SkinLines.take));
@@ -520,11 +575,130 @@ void main() {
       final wrong = _onScreen(SkinLines.coworkerSkip.wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 900);
       expect(find.text(SkinMistakes.untested.textBn), findsOneWidget);
       expect(find.byType(FreezeFrame), findsNothing);
       expect(t.takeException(), isNull);
       await close(t, c);
+    });
+
+    testWidgets('coworker comes even on a fast play: the tester waits for him and he says "টেস্ট লাগবে না"', (t) async {
+      final seed = _seedWhere((d) => d.callRound == 0);
+      final (c, _) = await open(t, seed);
+      // At once, before his timer: the tester does nothing, he cuts in now.
+      await testCable(t);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'a fast tap cannot skip him');
+      expect(find.text(SkinLines.dead), findsNothing);
+      expect(find.text(SkinLines.live), findsNothing);
+      await _pickRight(t, SkinLines.coworkerSkip.right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await testCable(t);
+      expect(find.text(SkinLines.dead), findsOneWidget, reason: 'after him the tester works');
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker on a fast tool tap on the small wire: the teeth, and no close-up opens', (t) async {
+      final seed = _seedWhere((d) => d.callRound == 0 && d.callTeeth && d.jobs.first.cable == SkinCable.wire);
+      final (c, deal) = await open(t, seed);
+      final j1 = deal.jobs[0];
+      await t.tap(tools.at(j1.items.indexOf(_right(j1))), warnIfMissed: false);
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.text(SkinLines.take), findsNothing, reason: 'the tool waits for him');
+      await waitChoiceDeck(t);
+      expect(_onScreen(SkinLines.coworkerTeeth.right), hasLength(1), reason: 'his push fits the tap: the teeth');
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('the close-up names no tool; rejecting a sound right tool is a slip, putting back tells nothing', (t) async {
+      final (c, deal) = await open(t, _seedWhere((d) => d.callRound == 2));
+      final j1 = deal.jobs[0];
+      await t.tap(_label(SkinLines.glovesLabel), warnIfMissed: false);
+      await _pump(t, 600);
+      await testCable(t);
+      for (final it in j1.items) {
+        await lift(t, j1, it);
+        for (final tool in SkinTool.values) {
+          expect(find.text(tool.nameBn), findsNothing, reason: 'no name in the close-up (${tool.name})');
+        }
+        await t.tap(find.text(SkinLines.putBack));
+        await _pump(t, 500);
+        expect(find.text(SkinLines.rejected), findsNothing, reason: 'putting back never sets aside');
+        expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'putting back never costs');
+      }
+      await lift(t, j1, _right(j1));
+      await t.tap(find.text(SkinLines.reject));
+      await _pump(t, 600);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.text(SkinMistakes.goodRejected.textBn), findsOneWidget);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 400);
+      expect(find.text(SkinLines.rejected), findsNothing, reason: 'the sound tool stays in the roll');
+      await lift(t, j1, _right(j1));
+      await t.tap(find.text(SkinLines.take));
+      await _pump(t, 3500);
+      await _pickRight(t, SkinLines.toolRight(j1.cable, looked: false));
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('praise window: after a right cut no scene control takes a tap until the reason', (t) async {
+      final (c, deal) = await open(t, _seedWhere((d) => d.callRound == 2));
+      final j1 = deal.jobs[0];
+      await t.tap(_label(SkinLines.glovesLabel), warnIfMissed: false);
+      await _pump(t, 600);
+      await testCable(t);
+      await lift(t, j1, _right(j1));
+      await t.tap(find.text(SkinLines.take));
+      await t.pump(const Duration(milliseconds: 200));
+      final other = j1.items.firstWhere((x) => x.id != _right(j1).id);
+      await t.tap(tools.at(j1.items.indexOf(other)), warnIfMissed: false);
+      await t.tap(find.text(SkinLines.jobCard), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(SkinLines.take), findsNothing, reason: 'no close-up in the praise window');
+      expect(find.byKey(const ValueKey('job-zoom')), findsNothing);
+      await _pickRight(t, SkinLines.toolRight(j1.cable, looked: false));
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    group('gesture hint', () {
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      testWidgets('a sweep over the scene\'s controls while waiting, a lens drag in the close-up, none on a card', (t) async {
+        GestureHints.debugEnableInTests = true;
+        final (c, deal) = await open(t, _seedWhere((d) => d.callRound == 2));
+        IdleHintState hint() => t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+        expect(hint().showing, isFalse);
+        await _pump(t, 9000);
+        expect(hint().showing, isTrue, reason: 'stuck at the pole: the hand shows');
+        expect(hint().debugOptions.length, greaterThanOrEqualTo(4), reason: 'a sweep over gloves, tester, every tool, the ডকেট');
+        for (var i = 0; i < 20; i++) {
+          await t.pump(const Duration(milliseconds: 120));
+          final f = hint().debugFrame;
+          if (f != null) expect(f.press, 0, reason: 'a sweep never presses a control');
+        }
+        // The close-up: first a short drag on the blade (how to use the lens).
+        final j1 = deal.jobs[0];
+        await lift(t, j1, j1.items.first);
+        await _pump(t, 9000);
+        expect(hint().showing, isTrue);
+        expect(hint().debugOptions, isEmpty, reason: 'a drag, not a pick');
+        // A slip card: no hand.
+        await t.tap(find.text(SkinLines.take));
+        await _pump(t, 600);
+        expect(find.text(MistakeLines.slipHead), findsOneWidget);
+        await _pump(t, 9000);
+        expect(hint().showing, isFalse, reason: 'never on a card');
+        expect(t.takeException(), isNull);
+        await close(t, c);
+      });
     });
 
     testWidgets('three slips fail the level: the struck-out card insists on the lesson', (t) async {

@@ -5,7 +5,9 @@
 // load = deadly), the deal, the reason libraries, and the level in the
 // shell: idle perf, the guide first, a full clean play with the coworker
 // refused, a slip card that keeps the pole, three slips, the deadly freeze,
-// listening to him = a slip.
+// listening to him = a slip, he comes even on a fast play (the binding waits
+// for him), the tool rows are shuffled, the wrong-flag card stays neutral,
+// and the gesture hints sweep over the choices.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -19,6 +21,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -34,6 +37,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '4.1/do/1',
@@ -87,10 +91,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -273,15 +279,46 @@ void main() {
       expect(r.tool, _T.spare);
       expect(r.tapPhase(1), isNull);
       expect(r.newOn, isTrue);
-      r.holdBind = true;
       expect(use(r, _T.bindWire), isNull);
-      expect(r.fixed, isFalse, reason: 'held while the coworker comes');
-      r.holdBind = false;
-      expect(r.tapPhase(1), isNull);
       expect(r.fixed, isTrue);
       expect(r.roped, isFalse, reason: 'the rope comes off');
       expect(r.slips, 4);
       expect(r.caught, containsAll([_L.caughtSupport, _L.caughtCheck, _L.caughtBind]));
+    });
+
+    test('tool rows: shuffled per pole, never laid out in an order of use', () {
+      final rows = <String>{};
+      for (var s = 0; s < 120; s++) {
+        final d = m4InsulatorSwapDeal(math.Random(s));
+        for (var i = 0; i < d.poles.length; i++) {
+          final row = d.toolsAt(i);
+          final k = d.poles[i].kind;
+          expect(row.toSet(), m4InsulatorSwapTools(k).toSet());
+          expect(row, hasLength(5));
+          for (final use in m4InsulatorSwapUseOrders(k)) {
+            expect(row, isNot(orderedEquals(use)), reason: 'seed $s pole $i');
+          }
+          rows.add('${k.name}:${row.map((t) => t.name).join(',')}');
+        }
+      }
+      expect(rows.length, greaterThan(40), reason: 'the rows vary');
+    });
+
+    test('tool row past the last pole (while the level finishes) does not throw', () {
+      for (var s = 0; s < 10; s++) {
+        final d = m4InsulatorSwapDeal(math.Random(s));
+        final n = d.poles.length;
+        expect(() => d.toolsAt(n), returnsNormally, reason: 'seed $s');
+        expect(d.toolsAt(n), orderedEquals(d.toolsAt(n - 1)));
+        expect(d.toolsAt(n + 2), orderedEquals(d.toolsAt(n - 1)));
+      }
+      final plain = M4InsulatorSwapDeal(poles: m4InsulatorSwapDeal(math.Random(1)).poles, callAt: 0);
+      expect(() => plain.toolsAt(plain.poles.length), returnsNormally);
+    });
+
+    test('the wrong-flag card stays neutral: it never says the tapped one is sound', () {
+      expect(_M.wrongOne.textBn.contains('ভালো ইনসুলেটর!'), isFalse);
+      expect(_M.wrongOne.textBn.contains('ঠিক আছে'), isFalse);
     });
 
     test('roping before unbinding is not a slip', () {
@@ -446,7 +483,7 @@ void main() {
         }
         debugPrint('PERF m4_insulator_swap ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -575,9 +612,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1200);
       expect(find.byType(FreezeFrame), findsNothing);
       expect(find.byType(MistakeCard), findsOneWidget);
@@ -588,6 +627,60 @@ void main() {
       await _tapPhase(t, p.kind, p.bad);
       await _pump(t, 1500);
       expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play still meets him: binding at once waits for him, then the deck', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 0);
+      final deal = m4InsulatorSwapDeal(math.Random(seed));
+      final p = deal.poles[0];
+      final c = await _open(t, seed);
+      await _work(t, deal, 0);
+      // Straight on to the binding, well before his 1.2 s timer.
+      await t.tap(_label(_L.bindWire));
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tapAt(_geo.phaseTap(p.kind, p.bad) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the binding tap brings him in now');
+      expect(find.text(_L.stampDone), findsNothing, reason: 'not bound past him');
+      await waitChoiceDeck(t);
+      expect(_onScreen(_L.coworker.right), hasLength(1));
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2600);
+      // The binding wire is still in hand.
+      await _tapPhase(t, p.kind, p.bad);
+      await _pump(t, 1500);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'bound: the reason comes');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over the tool row, then over the three phases with a tool in hand', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final deal = m4InsulatorSwapDeal(math.Random(5));
+      final c = await _open(t, 5);
+      IdleHintState frameHint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      await _pump(t, 9000);
+      expect(frameHint().showing, isTrue, reason: 'idle with the tools up');
+      expect(frameHint().debugOptions, hasLength(deal.toolsAt(0).length));
+      final first = deal.toolsAt(0).first;
+      final firstLabel = switch (first) {
+        _T.pliers => _L.pliers,
+        _T.rope => _L.rope,
+        _T.spanner => _L.spanner,
+        _T.spare => deal.poles[0].kind == M4InsulatorSwapKind.pin ? _L.spareIns : _L.spareDisc,
+        _T.bindWire => _L.bindWire,
+        _T.comeAlong => _L.comeAlong,
+        _T.turnbuckle => _L.turnbuckle,
+        _T.splitPin => _L.splitPin,
+        _T.none => '',
+      };
+      await t.tap(_label(firstLabel));
+      await _pump(t, 9000);
+      expect(frameHint().showing, isTrue);
+      expect(frameHint().debugOptions, hasLength(3), reason: 'three phases (or the three spares on the tray)');
       await _close(t, c);
     });
 

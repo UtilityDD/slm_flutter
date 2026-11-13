@@ -1,10 +1,11 @@
 // Lesson 3.6 (ডিস্ট্রিবিউশন ট্রান্সফরমার), কাজ 1 "ডাক্তারের চোখে DTR": the rules
 // (the full check-up from the ground first; the call — OK / repair docket /
-// urgent shutdown — fits the signs; over-calls are not scored; the coworker's
-// two pushes), the deal, the reason libraries, and the level in the shell:
-// idle perf, the guide first, a full clean play (coworker refused), an
-// over-call that is not scored, a slip card, his leak push (a slip) and his
-// climb push (deadly: freeze first, then the card).
+// urgent shutdown — fits the signs; an over-call is a slip; the coworker's
+// two pushes), the deal, the reason libraries, the gel colours of the lesson
+// (pink / whitish), and the level in the shell: idle perf, the guide first, a
+// full clean play (coworker refused), an over-call slip card, a slip card,
+// three slips strike out, the coworker on a fast call, his leak push (a slip),
+// his climb push (deadly: freeze first, then the card), the gesture hint.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,6 +19,8 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
+import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
@@ -31,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.6/do/1',
@@ -78,17 +82,21 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 Future<void> _pickWrong(WidgetTester t, List<String> wrong) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final w = _onScreen(wrong);
   expect(w, isNotEmpty);
   await t.tap(w.first, warnIfMissed: false);
+  await confirmChoice(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -176,7 +184,7 @@ void main() {
   const healthy = M3DtrCheckupLook(gel: M3DtrCheckupGel.orange, oilLow: false, leak: M3DtrCheckupLeak.none, rattle: false, kva: 100);
   const pinkGel = M3DtrCheckupLook(gel: M3DtrCheckupGel.pink, oilLow: false, leak: M3DtrCheckupLeak.none, rattle: false, kva: 63);
   const leaky = M3DtrCheckupLook(gel: M3DtrCheckupGel.blue, oilLow: true, leak: M3DtrCheckupLeak.drain, rattle: false, kva: 250);
-  const rattly = M3DtrCheckupLook(gel: M3DtrCheckupGel.green, oilLow: false, leak: M3DtrCheckupLeak.none, rattle: true, kva: 25);
+  const rattly = M3DtrCheckupLook(gel: M3DtrCheckupGel.white, oilLow: false, leak: M3DtrCheckupLeak.none, rattle: true, kva: 25);
 
   group('rules', () {
     M3DtrCheckupRun run1(M3DtrCheckupLook l, {M3DtrCheckupPush push = M3DtrCheckupPush.climb}) =>
@@ -261,18 +269,46 @@ void main() {
       }
     });
 
-    test('over-calls are not scored: no mistake, the DTR stays', () {
-      for (final (l, call) in [
-        (healthy, M3DtrCheckupCall.repair),
-        (healthy, M3DtrCheckupCall.urgent),
-        (pinkGel, M3DtrCheckupCall.urgent),
+    test('an over-call is a slip (audit 2026-11-11): the DTR closes, the card teaches', () {
+      for (final (l, call, m) in [
+        (healthy, M3DtrCheckupCall.repair, M3DtrCheckupMistakes.overCall),
+        (healthy, M3DtrCheckupCall.urgent, M3DtrCheckupMistakes.overCall),
+        (pinkGel, M3DtrCheckupCall.urgent, M3DtrCheckupMistakes.overCallGel),
       ]) {
         final r = run1(l);
         lookAll(r);
-        expect(r.decide(call), isNull);
-        expect(r.shown, isFalse);
-        expect(r.needless, 1);
-        expect(r.slips, 0);
+        expect(r.decide(call), m, reason: '$call on $l');
+        expect(r.shown, isTrue);
+        expect(r.slips, 1);
+        expect(r.decide(M3DtrCheckupCall.ok), isNull, reason: 'no second try on the same DTR');
+        expect(r.slips, 1);
+      }
+    });
+
+    test('gel colours are the lesson\'s: blue / orange good, pink / whitish spent (no green)', () {
+      expect(M3DtrCheckupGel.values.map((g) => g.name).toSet(), {'blue', 'orange', 'pink', 'white'});
+      expect(m3DtrCheckupGelSpent(M3DtrCheckupGel.blue), isFalse);
+      expect(m3DtrCheckupGelSpent(M3DtrCheckupGel.orange), isFalse);
+      expect(m3DtrCheckupGelSpent(M3DtrCheckupGel.pink), isTrue);
+      expect(m3DtrCheckupGelSpent(M3DtrCheckupGel.white), isTrue);
+      final all = [
+        ...M3DtrCheckupLines.okWhy,
+        ...M3DtrCheckupLines.okWrong,
+        ...M3DtrCheckupLines.faultWrong,
+        M3DtrCheckupLines.gelPinkWhy,
+        M3DtrCheckupLines.gelWhiteWhy,
+        M3DtrCheckupLines.gelWhy,
+        ...M3DtrCheckupMistakes.all.map((m) => m.textBn),
+      ];
+      for (final t in all) {
+        expect(t.contains('সবুজ'), isFalse, reason: t);
+      }
+      const whiteGel = M3DtrCheckupLook(gel: M3DtrCheckupGel.white, oilLow: false, leak: M3DtrCheckupLeak.none, rattle: false, kva: 63);
+      expect(M3DtrCheckupLines.whyRight(const M3DtrCheckupCase(id: 'x', look: whiteGel), M3DtrCheckupCall.repair), contains(M3DtrCheckupLines.gelWhiteWhy));
+      for (var s = 0; s < 60; s++) {
+        for (final c in m3DtrCheckupDeal(math.Random(s)).cases) {
+          if (m3DtrCheckupGelSpent(c.look.gel)) expect(c.findings, contains(M3DtrCheckupFinding.gel));
+        }
       }
     });
 
@@ -286,7 +322,7 @@ void main() {
       expect(M3DtrCheckupMistakes.climbLive.deadly, isTrue);
     });
 
-    test('three slips fail the level (percent 55)', () {
+    test('three slips: the mark drops to 55 (the page strikes out on the third — see the widget test)', () {
       final run = M3DtrCheckupRun(M3DtrCheckupDeal(
         cases: [for (var i = 0; i < 3; i++) const M3DtrCheckupCase(id: 'x', look: pinkGel)],
         callAt: 0,
@@ -382,7 +418,7 @@ void main() {
         }
         debugPrint('PERF m3_dtr_checkup ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -448,19 +484,163 @@ void main() {
       });
     }
 
-    testWidgets('an over-call on a healthy DTR is not scored: no card, the guide says the rule, the DTR stays', (t) async {
-      final seed = _seedWhere((d) => d.cases[0].verdict == M3DtrCheckupCall.ok && d.push == M3DtrCheckupPush.leak);
+    testWidgets('an over-call on a healthy DTR costs a slip: the card, no reason deck, the next DTR', (t) async {
+      final seed = _seedWhere((d) => d.cases[0].verdict == M3DtrCheckupCall.ok && d.push == M3DtrCheckupPush.leak && d.callAt != 0);
       final c = await _open(t, seed);
       for (final s in M3DtrCheckupSpot.values) {
         await _look(t, s);
       }
       await t.tap(find.text(M3DtrCheckupLines.callRepair));
-      await _pump(t, 600);
-      expect(find.byType(MistakeCard), findsNothing);
+      await _pump(t, 800);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
       expect(find.byType(ChoiceDeck), findsNothing);
-      expect(c.read(guideDirectorProvider).line, M3DtrCheckupLines.needlessOk);
-      expect(find.text(M3DtrCheckupLines.callOk), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M3DtrCheckupMistakes.overCall.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 1500);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.text(M3DtrCheckupLines.callOk), findsOneWidget, reason: 'the next DTR is open');
+      await _close(t, c);
+    });
+
+    testWidgets('three slips: the level strikes out (StruckOutCard)', (t) async {
+      // The leak push: he comes only once the tank is seen — never here.
+      final seed = _seedWhere((d) => d.push == M3DtrCheckupPush.leak);
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        await _look(t, M3DtrCheckupSpot.breather);
+        await t.tap(find.text(M3DtrCheckupLines.callOk));
+        await _pump(t, 800);
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${i + 1}');
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 1500);
+        }
+      }
+      await _pump(t, 1500);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      expect(c.read(gameSaveProvider).rungProgress['3.6/do/1'], isNot('cleared'));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    for (final push in M3DtrCheckupPush.values) {
+      testWidgets('a fast call can\'t skip the coworker (${push.name} push): the call waits, he comes', (t) async {
+        final seed = _seedWhere((d) => d.push == push && d.callAt == 0);
+        final deal = m3DtrCheckupDeal(math.Random(seed));
+        final verdict = M3DtrCheckupLines.callLabel(deal.cases[0].verdict);
+        final c = await _open(t, seed);
+        // Every look in a rush (the tank last, so the leak push is set just
+        // before the call), then the call at once.
+        for (final s in [M3DtrCheckupSpot.breather, M3DtrCheckupSpot.gauge, M3DtrCheckupSpot.nameplate, M3DtrCheckupSpot.sound, M3DtrCheckupSpot.tank]) {
+          if (s == M3DtrCheckupSpot.sound) {
+            await t.tap(_label(M3DtrCheckupLines.listen));
+          } else {
+            await t.tapAt(_geo.spotAt(s) * _k);
+          }
+          await t.pump(const Duration(milliseconds: 60));
+        }
+        expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet (his timer is 1.2–2.4 s)');
+        await t.tap(find.text(verdict));
+        await t.pump(const Duration(milliseconds: 100));
+        expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he comes in on the call');
+        expect(find.byType(MistakeCard), findsNothing);
+        await _pumpUntil(t, find.byType(ChoiceDeck));
+        await _pump(t, 600);
+        await _pickRight(t, M3DtrCheckupLines.coworker(push).right);
+        await _pump(t, 1500);
+        // The call was held, not taken: the DTR is still open.
+        expect(find.text(verdict), findsOneWidget);
+        await t.tap(find.text(verdict));
+        await _pump(t, 1500);
+        expect(find.text(MistakeLines.slipHead), findsNothing);
+        expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the reason deck after the right call');
+        await _pump(t, 700);
+        await _pickRight(t, M3DtrCheckupLines.whyRight(deal.cases[0], deal.cases[0].verdict));
+        await _pump(t, 3000);
+        expect(c.read(gameSaveProvider).mistakes, isEmpty);
+        expect(t.takeException(), isNull);
+        await _close(t, c);
+      });
+    }
+
+    testWidgets('a call on his DTR before any look can\'t skip the climb push: he comes, the call waits', (t) async {
+      final seed = _seedWhere((d) => d.push == M3DtrCheckupPush.climb && d.callAt == 0);
+      final c = await _open(t, seed);
+      await t.tap(find.text(M3DtrCheckupLines.callOk));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he comes in on the call');
+      expect(find.byType(MistakeCard), findsNothing, reason: 'the call was held, not taken');
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 600);
+      await _pickRight(t, M3DtrCheckupLines.coworkerClimb.right);
+      await _pump(t, 1500);
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      // Now the call is taken: unchecked (no look yet) — the usual slip.
+      await t.tap(find.text(M3DtrCheckupLines.callOk));
+      await _pump(t, 800);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M3DtrCheckupMistakes.unchecked.key);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('praise window: taps on the DTR or where the calls were do nothing until the reason deck', (t) async {
+      final seed = _seedWhere((d) => d.callAt != 0);
+      final deal = m3DtrCheckupDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      for (final s in M3DtrCheckupSpot.values) {
+        await _look(t, s);
+      }
+      final right = find.text(M3DtrCheckupLines.callLabel(deal.cases[0].verdict));
+      final okAt = t.getCenter(find.text(M3DtrCheckupLines.callOk));
+      final urgentAt = t.getCenter(find.text(M3DtrCheckupLines.callUrgent));
+      await t.tap(right);
+      await confirmChoice(t);
+      await t.pump(const Duration(milliseconds: 120));
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'still the praise window');
+      // Taps in the praise window: on a part of the DTR and where the calls were.
+      await t.tapAt(_geo.spotAt(M3DtrCheckupSpot.breather) * _k);
+      await t.tapAt(okAt);
+      await t.tapAt(urgentAt);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(_lensName(), '', reason: 'no look while the ◆ waits on the table');
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pump(t, 700);
+      await _pickRight(t, M3DtrCheckupLines.whyRight(deal.cases[0], deal.cases[0].verdict));
+      await _pump(t, 3000);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(find.text(M3DtrCheckupLines.callOk), findsOneWidget, reason: 'the next DTR is open');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: a sweep while the DTR waits; taps on the sky show it sooner; none over a card', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      final seed = _seedWhere((d) => d.push == M3DtrCheckupPush.leak);
+      final c = await _open(t, seed);
+      expect(hand, findsNothing);
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget, reason: 'idle while the DTR waits');
+      final spec = t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(spec.showing, isTrue);
+      await _look(t, M3DtrCheckupSpot.breather);
+      expect(hand, findsNothing, reason: 'a touch hides it');
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(const Offset(40, 250) * _k);
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      await _pump(t, 600);
+      expect(hand, findsOneWidget, reason: 'three taps on nothing');
+      // Never over a card.
+      await t.tap(find.text(M3DtrCheckupLines.callOk));
+      await _pump(t, 800);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      await _pump(t, 9000);
+      expect(hand, findsNothing, reason: 'no hand over a card');
+      expect(t.takeException(), isNull);
       await _close(t, c);
     });
 

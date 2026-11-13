@@ -19,6 +19,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart' show HintSpace, HintSpec, IdleHintController;
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -55,8 +56,15 @@ import 'spoken_once.dart';
 // Slips: starting on a permit with the wrong pole range or another team's
 // name (the play moves on); stopping on a field that matches — on a valid
 // permit or on the wrong field of a faulty one — is a slip and the permit is
-// still to judge (the rule pattern approved for the pole levels, 2026-11-08).
-// Three slips strike the level out.
+// still to judge (the rule pattern approved for the pole levels, 2026-11-08);
+// both get the same neutral card, so it never tells whether the permit has a
+// fault elsewhere. Three slips strike the level out.
+//
+// Gesture hints (how, never what): a short drag nudge on the clipboard, a
+// sweep over the six fields and the start button, a sweep over the lens's two
+// buttons, a tap on the ringing phone (the one way forward). None while the
+// coworker is due or on screen, or during cards, decks, the drive or the
+// praise window.
 //
 // Voice: the guide's lines by device TTS; the coworker in his recorded voice.
 // Art: the site is drawn in code (ptw_site.dart over the pole levels'
@@ -210,19 +218,21 @@ abstract final class PtwLines {
     'সুপারভাইজার পারমিট নিয়েছেন, আমার ভাবনা নেই',
     'পারমিট হাতে মানেই লাইন পুরোপুরি নিরাপদ',
     'কন্ট্রোল রুম ফোনে বলেছে লাইন বন্ধ আছে',
-    'কাগজে একটা পারমিট নম্বর তো লেখা আছেই',
+    'ফিডারের ঘর মিলেছে, বাকি ঘর দেখার দরকার নেই',
     'সবাই তো পারমিট না পড়েই কাজে নেমে পড়ে',
   ];
 
   /// Wrong reasons not to start on the phone's word: field excuses that miss
   /// the rule (each would make the phone's word enough once it is out of the
   /// way). The paper faults are no reason here: there is no paper at all.
+  /// Four of the five name the permit and four say "নয়", like both right
+  /// cards, so a dealt deck never marks the right card by those words.
   static const phoneExcuses = [
-    'ফোনের লাইনে কথাটা ঠিকমতো শোনা যায়নি',
-    'যে ফোন করেছে, তার গলাটা আমি চিনি না',
-    'আকাশ মেঘলা, বৃষ্টি নামলে কাজটা কঠিন হবে',
-    'টিমের সবাই এখনও সাইটে এসে পৌঁছায়নি',
-    'গাড়ি থেকে যন্ত্রপাতি এখনও নামানো হয়নি',
+    'ফোনে পারমিট নম্বরটা ঠিকমতো শোনা যায়নি',
+    'যে ফোনে পারমিট দিল, তার গলা আমার চেনা নয়',
+    'আকাশ মেঘলা, বৃষ্টিতে পারমিটের কাজ সহজ নয়',
+    'টিমের সবাই সাইটে না এলে পারমিটের কাজ নয়',
+    'যন্ত্রপাতি নামানো হয়নি, এখনই কাজ নয়',
   ];
 
   /// The fault kinds a reason can name (an expired date or time is one reason).
@@ -277,7 +287,7 @@ abstract final class PtwLines {
     right: ['না, হাতে লিখিত পারমিট এলে তবেই কাজ', 'ফোনের কথায় নয়, স্বাক্ষরিত কাগজ চাই', 'কাগজ না আসা পর্যন্ত লাইনে হাত নয়'],
     wrong: [
       'ঠিক, কন্ট্রোল রুম বলেছে, শুরু করি',
-      'কাগজ তো পরে আসছেই, শুরু করে দিই',
+      'কাগজ তো পরে আসছেই, আর দেরি নয়',
       'ফোনেই তো বলল লাইন বন্ধ, চলো উঠি',
       'সময় নষ্ট না করে কাজটা সেরে ফেলি',
       'সুপারভাইজার জানেন, আমাদের ভাবনা কী',
@@ -351,18 +361,26 @@ abstract final class PtwMistakes {
     art: 'assets/game/art/ptw/team_match.svg',
     lessonPoint: 0,
   );
+  /// A stop on a field that matches the site: on a valid permit, or on the
+  /// wrong field of a faulty one. Both get the same neutral card (audit
+  /// 2026-11-11), so the card never tells whether the permit has a fault
+  /// in another field.
   static const falseStop = DoMistake(
     key: '1.6/ptw/false-stop',
-    textBn: 'এই ঘরটা সাইটের সঙ্গে মিলেছিল। প্রতিটি শব্দ মন দিয়ে পড়ুন — তারপর শুরু, নয়তো বন্ধ।',
+    textBn: _wrongStopBn,
     art: 'assets/game/art/ptw/read_every_word.svg',
     lessonPoint: 0,
   );
+
+  /// The old key of the faulty-permit case (saved mistakes may carry it);
+  /// the play books [falseStop] for both cases now.
   static const wrongField = DoMistake(
     key: '1.6/ptw/wrong-field',
-    textBn: 'এই ঘরটা মেলে — অমিল অন্য কোনো ঘরে। প্রতিটি ঘর সাইটের সঙ্গে মিলিয়ে পড়ুন।',
+    textBn: _wrongStopBn,
     art: 'assets/game/art/ptw/read_every_word.svg',
     lessonPoint: 0,
   );
+  static const _wrongStopBn = 'এই ঘরে থামার মতো অমিল নেই। প্রতিটি ঘর সাইটের সঙ্গে মিলিয়ে পড়ুন — তারপর শুরু, নয়তো বন্ধ।';
   static DoMistake started(PtwFault f) => switch (f) {
         PtwFault.feeder => wrongFeeder,
         PtwFault.unsigned => unsigned,
@@ -457,13 +475,11 @@ class PtwRun {
       slips++;
       return m;
     }
-    if (f.fault == PtwFault.none) {
+    // A stop on a field that matches (on a valid permit or on the wrong
+    // field of a faulty one): one neutral slip, the permit stays.
+    if (f.fault == PtwFault.none || flagged != f.fault.field) {
       slips++;
       return PtwMistakes.falseStop;
-    }
-    if (flagged != f.fault.field) {
-      slips++;
-      return PtwMistakes.wrongField;
     }
     shown = true;
     _tag(switch (f.fault) {
@@ -637,6 +653,14 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // The gesture hint (how to touch, never what): the frame's hand, and the
+  // things a sweep passes over.
+  final _hints = IdleHintController();
+  final _startKey = GlobalKey(debugLabel: 'ptw-start');
+  final _matchKey = GlobalKey(debugLabel: 'ptw-lens-match');
+  final _stopKey = GlobalKey(debugLabel: 'ptw-lens-stop');
+  final Map<PtwField, GlobalKey> _rowKeys = {for (final f in ptwLensFields) f: GlobalKey(debugLabel: 'ptw-row-${f.name}')};
+
   // Where the permit sits (design px), from the last layout.
   PtwGeo? _geo;
   Rect _trayR = Rect.zero;
@@ -682,7 +706,33 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
     _arrived();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _here && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && !_driving;
+  /// Hands on the scene now. Never in the praise window ([tableBusy]: from
+  /// the ◆ on the table until the reason is paid), so nothing scores twice.
+  bool get _canPlay =>
+      !_intro && !_busy && !_ended && _here && _card == null && !tableBusy && !reasonOpen && !coworkerOpen && !_run.shown && !_driving;
+
+  /// The level waits for the player's touch (the gesture hint may show):
+  /// not while the coworker is due or on screen (his round waits for him).
+  bool get _hintWaiting => _canPlay && !coworkerDue && !coworkerOnScreen && !(_run.current.phone && _callUp);
+
+  /// The hand for the state now: how to touch, never what.
+  HintSpec? _hint() {
+    final r = _run.current;
+    final geo = _geo;
+    if (r.phone) {
+      // The ringing phone is the one way forward: tap it.
+      return _ringing && geo != null ? HintSpec.tap(geo.phoneRect.center, space: HintSpace.scene) : null;
+    }
+    // The clipboard: a short generic nudge up (it can be lifted).
+    if (!_held) return HintSpec.drag(_trayR.center, toward: const Offset(0, -1), travel: 64, space: HintSpace.scene);
+    // The lens: both buttons alike.
+    if (_lens != null) return HintSpec.sweepOver([_matchKey, _stopKey]);
+    // The held permit: every field and the start button alike.
+    return HintSpec.sweepOver([for (final f in ptwLensFields) _rowKeys[f]!, _startKey]);
+  }
+
+  /// One hint count per waiting state.
+  String get _hintKey => '${_run.index}-$_held-${_lens?.name}-$_ringing';
 
   // --- the round ---------------------------------------------------------------
   void _arrived() {
@@ -824,7 +874,10 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
       _callUp = true;
       _wake++;
     });
-    // He comes in on the phone's word, a moment after the call.
+    // He comes in on the phone's word, a moment after the call. His round
+    // has no decisive control of its own (no start button, no permit): it
+    // ends only through his deck, so a fast play cannot skip him and there
+    // is nothing for holdForCoworker to guard.
     scheduleCoworker();
   }
 
@@ -887,8 +940,10 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("start on the phone's word") fits only the phone round, after
+    // the call and before it is answered: later it makes no sense.
     if (_ended || !_run.current.phone || _run.shown) return null;
-    if (_intro || _busy || _card != null || reasonOpen || !_callUp) return false;
+    if (_intro || _busy || _card != null || tableBusy || reasonOpen || !_callUp) return false;
     return true;
   }
 
@@ -1235,6 +1290,7 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
           ? null
           : (_verdict == _Verdict.stopped ? PtwLines.stampStop : (form.fault == PtwFault.none ? PtwLines.stampValid : null)),
       quiet: _quiet,
+      rowKeys: _rowKeys,
       onTap: _held && _canPlay && _lens == null ? _openLens : null,
     );
     return AnimatedPositioned.fromRect(
@@ -1297,6 +1353,13 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
               quiet: quiet,
             ),
             animation: _walkIn,
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
+            // No big tap detector on this scene: a tap that hits no control
+            // counts as a miss by itself (three in 4 s show the hand).
+            hintAutoMiss: true,
             layers: (context, m) => _scene(m),
             overlays: [
               ...tableLayers(at: Offset(58, pad.top + 128), quiet: quiet),
@@ -1306,7 +1369,10 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
                   left: 12,
                   right: 12,
                   bottom: pad.bottom + 12,
-                  child: DoBigButton(label: PtwLines.start, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition))),
+                  child: KeyedSubtree(
+                    key: _startKey,
+                    child: DoBigButton(label: PtwLines.start, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition))),
+                  ),
                 ),
               if (deckUp)
                 Positioned(
@@ -1337,6 +1403,8 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
                     onMatch: () => _closeLens(tick: true),
                     onStop: (o) => unawaited(_stopOnLens(o)),
                     onClose: _closeLens,
+                    matchKey: _matchKey,
+                    stopKey: _stopKey,
                   ),
                 ),
               ],
@@ -1442,8 +1510,19 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
 /// place). Fields the lens can compare carry a small magnifier; the player's
 /// own ticks show; once decided, the field that did not match is marked.
 class _PermitSheet extends StatelessWidget {
-  const _PermitSheet({required this.form, required this.checked, required this.decided, required this.stamp, required this.quiet, required this.onTap});
+  const _PermitSheet({
+    required this.form,
+    required this.checked,
+    required this.decided,
+    required this.stamp,
+    required this.quiet,
+    required this.onTap,
+    this.rowKeys = const {},
+  });
   final PtwForm form;
+
+  /// A key per lens field (the gesture hint's sweep finds the rows by them).
+  final Map<PtwField, GlobalKey> rowKeys;
   final Set<PtwField> checked;
   final bool decided;
   final String? stamp;
@@ -1574,12 +1653,15 @@ class _PermitSheet extends StatelessWidget {
       ),
     );
     final tap = onTap;
-    if (tap == null || !lensable) return row;
-    return Semantics(
-      button: true,
-      label: PtwLines.labels[f],
-      child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => tap(f), child: row),
-    );
+    final key = rowKeys[f];
+    final Widget out = tap == null || !lensable
+        ? row
+        : Semantics(
+            button: true,
+            label: PtwLines.labels[f],
+            child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => tap(f), child: row),
+          );
+    return key == null ? out : KeyedSubtree(key: key, child: out);
   }
 }
 
@@ -1666,9 +1748,15 @@ class _FieldLens extends StatelessWidget {
     required this.onMatch,
     required this.onStop,
     required this.onClose,
+    this.matchKey,
+    this.stopKey,
   });
 
   final PtwField field;
+
+  /// The two buttons' keys (the gesture hint sweeps over both alike).
+  final GlobalKey? matchKey;
+  final GlobalKey? stopKey;
   final PtwForm form;
   final PtwSite site;
   final bool quiet;
@@ -1770,9 +1858,19 @@ class _FieldLens extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _LensButton(icon: Icons.check_rounded, label: PtwLines.matchOk, color: SlmColors.emerald500, onTapUp: (_) => onMatch())),
+                  Expanded(
+                    child: KeyedSubtree(
+                      key: matchKey,
+                      child: _LensButton(icon: Icons.check_rounded, label: PtwLines.matchOk, color: SlmColors.emerald500, onTapUp: (_) => onMatch()),
+                    ),
+                  ),
                   const SizedBox(width: 10),
-                  Expanded(child: _LensButton(icon: Icons.back_hand_rounded, label: PtwLines.stop, color: SlmColors.danger, onTapUp: (d) => onStop(d.globalPosition))),
+                  Expanded(
+                    child: KeyedSubtree(
+                      key: stopKey,
+                      child: _LensButton(icon: Icons.back_hand_rounded, label: PtwLines.stop, color: SlmColors.danger, onTapUp: (d) => onStop(d.globalPosition)),
+                    ),
+                  ),
                 ],
               ),
             ],

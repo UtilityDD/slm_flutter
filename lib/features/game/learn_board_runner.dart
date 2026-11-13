@@ -30,6 +30,7 @@ import 'lesson_promise_card.dart';
 import 'spoken_once.dart';
 import 'level_result_parts.dart';
 import 'read_lesson_offer.dart';
+import 'gesture_hint.dart';
 import 'myth_rival_puppet.dart';
 
 /// Learn choice-board: mission-first → PickGear → pending ◆ → Why → MythRival.
@@ -98,6 +99,25 @@ class _LearnBoardRun extends ConsumerStatefulWidget {
 
 enum _Beat { intro, pick, why, mythSay, mythBelieve, mythWhy, award, done }
 
+/// A board card opened for a closer look: the item, its place on the board
+/// (the reason's number) and where it was tapped (where the ◆ fly from).
+class _Look {
+  const _Look({required this.item, required this.index, required this.origin});
+  final LearnPick item;
+  final int index;
+  final Offset origin;
+}
+
+/// Feedback for a confirmed card: the right/wrong word, the card's name (a
+/// picture card) and the reason. It stays until "এগিয়ে যান".
+class _Verdict {
+  const _Verdict({required this.good, required this.headline, this.name = '', this.body = ''});
+  final bool good;
+  final String headline;
+  final String name;
+  final String body;
+}
+
 class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     with TickerProviderStateMixin {
   final _scoreKey = GlobalKey();
@@ -117,6 +137,11 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   late final CurvedAnimation _readCurve;
   final _readPillKey = GlobalKey();
   final _boardKey = GlobalKey();
+
+  /// Reason chips on the why board, for the sweep hint. Keyed by
+  /// beat-slot-wave-chip so an outgoing board (still fading in the stage
+  /// switcher) never shares a key with the incoming one.
+  final _whyKeys = <String, GlobalKey>{};
   Offset _readFrom = Offset.zero;
   var _readOpen = false;
   var _readAtStart = false;
@@ -206,6 +231,28 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   /// Ids already on the table for the current question (never swapped back in).
   final Set<String> _seen = {};
 
+  /// The card opened for a closer look (null = none). A tap on a card only
+  /// opens it; ✓ (বেছে নিন) runs the pick, ✕ (বাদ দিন) sets it aside.
+  _Look? _look;
+
+  /// One-shot opening pop of the look; its buttons wait until it has landed.
+  late final AnimationController _lookIn;
+
+  /// One-shot pop (right) or shake (wrong) of the look once confirmed.
+  late final AnimationController _lookHit;
+  var _lookReady = false;
+
+  /// Cards set aside with ✕ on the board on screen ('beat-wave-id').
+  final Set<String> _aside = {};
+
+  /// What the confirmed pick earned: shown under the card until Continue.
+  _Verdict? _verdict;
+  Completer<void>? _verdictDone;
+  Timer? _continueArm;
+  var _continueArmed = false;
+  final _confirmKey = GlobalKey();
+  final _rejectKey = GlobalKey();
+
   LearnBoardPack get _pack => widget.pack;
   LearnBoardSlot get _cur => _pack.slots[_slot];
 
@@ -241,6 +288,13 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       reverseDuration: const Duration(milliseconds: 460),
     );
     _readCurve = CurvedAnimation(parent: _readFly, curve: Curves.easeOutBack, reverseCurve: Curves.easeInCubic);
+    _lookIn = AnimationController(vsync: this, duration: const Duration(milliseconds: 260));
+    _lookIn.addStatusListener((s) {
+      if (s == AnimationStatus.completed && mounted && _look != null && !_lookReady) {
+        setState(() => _lookReady = true);
+      }
+    });
+    _lookHit = AnimationController(vsync: this, duration: const Duration(milliseconds: 480));
     _life = AppLifecycleListener(
       onHide: () => _clockHold(keepWanted: true),
       onShow: _clockResume,
@@ -284,6 +338,12 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     _scorePunch.dispose();
     _readCurve.dispose();
     _readFly.dispose();
+    _lookIn.dispose();
+    _lookHit.dispose();
+    _continueArm?.cancel();
+    final gate = _verdictDone;
+    _verdictDone = null;
+    if (gate != null && !gate.isCompleted) gate.complete();
     super.dispose();
   }
 
@@ -321,7 +381,8 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
 
   void _clockResume() {
     // The app coming back must not restart the clock behind the পাঠ card or the reader.
-    if (!_clockWanted || _clockTimer != null || !mounted || _readOpen || _openingLesson) return;
+    // Nor while the player reads a pick's feedback (only thinking time counts).
+    if (!_clockWanted || _clockTimer != null || !mounted || _readOpen || _openingLesson || _verdict != null) return;
     _levelClock.start();
     _choiceClock.start();
     _clockTimer = Timer.periodic(const Duration(milliseconds: 250), (_) => _clockPoll());
@@ -377,13 +438,12 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     return hand;
   }
 
-  /// Once the wrong card has shaken: an unseen trap takes its place and the
-  /// whole board is dealt again in a new order, so positions can't be learnt.
-  Future<void> _redealAfterMiss(LearnPick missed) async {
-    final wave = _cardWave;
+  /// Once the player has read why the card was wrong: an unseen trap takes its
+  /// place and the whole board is dealt again in a new order, so positions
+  /// can't be learnt.
+  void _redealAfterMiss(LearnPick missed) {
+    if (!mounted) return;
     final beat = _beat;
-    await Future<void>.delayed(const Duration(milliseconds: 520));
-    if (!mounted || _cardWave != wave || _beat != beat || _locked || _busy) return;
     setState(() {
       if (missed is LearnBoardOption) {
         _pickOpts = _dealer.afterMiss(_pickOpts, missed, _cur.options, _seen);
@@ -451,17 +511,130 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     // Counted before any speech, so a quick next tap can't skip the offer.
     final offer = LessonMissTally.miss(_pack.lessonId);
     final opener = _missStreak >= 2 ? _againBag.next() : _wrongBag.next();
+    final heard = await _speakMiss(opener, reason: reason, key: key);
+    if (offer && mounted && _boardBeat) {
+      if (heard) await _say(LearnCoachLines.threeMisses, mood: GuideMood.inspire);
+      await _showReadCard();
+    }
+    return heard;
+  }
+
+  Future<bool> _speakMiss(FeedbackLine opener, {String reason = '', String key = ''}) async {
     var heard = await _sayLine(opener, GuideMood.warn);
     if (heard && reason.trim().isNotEmpty) {
       final speak = key.isEmpty || await SpokenOnce.first('board/${_pack.lessonId}/$key');
       if (!mounted) return false;
       heard = speak ? await _say(reason, mood: GuideMood.warn) : await _show(reason, mood: GuideMood.warn);
     }
-    if (offer && mounted && _boardBeat) {
-      if (heard) await _say(LearnCoachLines.threeMisses, mood: GuideMood.inspire);
-      await _showReadCard();
-    }
     return heard;
+  }
+
+  /// A confirmed wrong card: the short word and the reason are said and stay
+  /// written under the card until the player presses Continue; then the board
+  /// is dealt again (and, after three misses, the lesson is offered).
+  Future<void> _missOnCard(LearnPick missed, {String name = '', required String reason, required String key}) async {
+    _missStreak++;
+    // Counted before any speech, so a quick Continue can't skip the offer.
+    final offer = LessonMissTally.miss(_pack.lessonId);
+    final opener = _missStreak >= 2 ? _againBag.next() : _wrongBag.next();
+    unawaited(_speakMiss(opener, reason: reason, key: key));
+    await _awaitContinue(_Verdict(good: false, headline: opener.shownBn, name: name, body: reason));
+    if (!mounted) return;
+    await _stopVoice();
+    if (!mounted) return;
+    _busy = false;
+    _closeLook();
+    _redealAfterMiss(missed);
+    _clockResume();
+    if (offer && mounted && _boardBeat) {
+      await _say(LearnCoachLines.threeMisses, mood: GuideMood.inspire);
+      if (mounted && _look == null) await _showReadCard();
+    }
+  }
+
+  /// Shows [v] under the open card and waits for Continue (never advances on
+  /// its own: the player reads at their own pace). The decision clock waits too.
+  Future<void> _awaitContinue(_Verdict v) async {
+    if (!mounted) return;
+    _clockHold(keepWanted: true);
+    final done = Completer<void>();
+    _verdictDone = done;
+    _continueArmed = false;
+    _continueArm?.cancel();
+    // Only arms the button (no rebuild, no frame): a double tap on ✓ can't skip the feedback.
+    _continueArm = Timer(const Duration(milliseconds: 350), () => _continueArmed = true);
+    setState(() => _verdict = v);
+    if (!_quietMotion) _lookHit.forward(from: 0);
+    await done.future;
+  }
+
+  /// "এগিয়ে যান".
+  void _onContinue() {
+    final done = _verdictDone;
+    if (_verdict == null || done == null || done.isCompleted || !_continueArmed) return;
+    HapticFeedback.selectionClick();
+    _verdictDone = null;
+    done.complete();
+  }
+
+  void _closeLook() {
+    if (!mounted) return;
+    _lookIn.value = 0;
+    _lookHit.value = 0;
+    setState(() {
+      _look = null;
+      _verdict = null;
+      _lookReady = false;
+    });
+  }
+
+  String _asideId(String id) => '$_beat-$_cardWave-$id';
+
+  bool _isAside(String id) => _aside.contains(_asideId(id));
+
+  /// A tap on a board card: open it large to read; nothing is judged yet.
+  void _openLook(LearnPick item, int index, Offset global) {
+    if (!_boardBeat || _locked || _busy || _look != null || _readOpen || _openingLesson) return;
+    HapticFeedback.selectionClick();
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    final quiet = _quietMotion;
+    setState(() {
+      _look = _Look(item: item, index: index, origin: global);
+      _verdict = null;
+      _lookReady = quiet;
+    });
+    _lookHit.value = 0;
+    if (quiet) {
+      _lookIn.value = 1;
+    } else {
+      _lookIn.forward(from: 0);
+    }
+  }
+
+  /// ✕ বাদ দিন: the card goes back to the board marked as set aside (not
+  /// wrong — nothing was judged); it can be opened again.
+  void _rejectLook() {
+    final look = _look;
+    if (look == null || !_lookReady || _verdict != null || _busy) return;
+    HapticFeedback.selectionClick();
+    _aside.add(_asideId(look.item.id));
+    _closeLook();
+  }
+
+  /// ✓ বেছে নিন: the card is chosen; the board's usual pick logic runs.
+  void _confirmLook() {
+    final look = _look;
+    if (look == null || !_lookReady || _verdict != null || _busy || _locked) return;
+    _aside.remove(_asideId(look.item.id));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    switch (look.item) {
+      case LearnBoardOption o:
+        unawaited(_onPick(o, look.origin));
+      case LearnWhyChip c when _beat == _Beat.mythWhy:
+        unawaited(_onMythWhy(c, look.origin));
+      case LearnWhyChip c:
+        unawaited(_onWhy(c, look.origin));
+    }
   }
 
   bool get _quietMotion => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
@@ -622,22 +795,26 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   }
 
   /// A right "why": the first time, the coach says the rule itself; after
-  /// that one short word (the tapped chip already shows the rule).
-  Future<bool> _sayRule(String rule, {required String key}) async {
-    if (await SpokenOnce.first('board/${_pack.lessonId}/rule/$key')) {
-      _missStreak = 0;
-      LessonMissTally.hit(_pack.lessonId);
-      if (!mounted) return false;
-      return _say(rule, mood: GuideMood.glad);
+  /// that one short word (the card already shows the rule). Says nothing if
+  /// the player has moved on meanwhile.
+  Future<void> _speakRule(String rule, FeedbackLine praise, {required String key}) async {
+    final run = _voiceRun;
+    final first = await SpokenOnce.first('board/${_pack.lessonId}/rule/$key');
+    if (!mounted || run != _voiceRun) return;
+    if (first) {
+      await _say(rule, mood: GuideMood.glad);
+    } else {
+      await _sayLine(praise, GuideMood.glad);
     }
-    if (!mounted) return false;
-    return _sayRight();
   }
 
-  Future<bool> _sayRight() {
+  Future<bool> _sayRight() => _sayLine(_rightLine(), GuideMood.glad);
+
+  /// A right answer: the miss streak ends; the next praise wording.
+  FeedbackLine _rightLine() {
     _missStreak = 0;
     LessonMissTally.hit(_pack.lessonId);
-    return _sayLine(_rightBag.next(), GuideMood.glad);
+    return _rightBag.next();
   }
 
   /// Adds [delta] to this play's level score and flies the chip into it.
@@ -693,14 +870,9 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   }) async {
     final run = ++_voiceRun;
     final clock = Stopwatch()..start();
-    await MascotSpeechLibrary.speak(
-      spoken ?? line,
-      voiceKey: voiceKey,
-      muted: _muted,
-      pitch: rival ? 0.78 : 1.0,
-      rate: rival ? 0.56 : 0.48,
-      rival: rival,
-    );
+    // The rival speaks only in his recorded voice; a line with no clip stays
+    // silent with its bubble held for reading (as in the Do levels).
+    await MascotSpeechLibrary.speak(spoken ?? line, voiceKey: voiceKey, muted: _muted, rival: rival);
     if (!mounted) return false;
     // Muting mid-line still leaves the bubble up long enough to read.
     final floor = (_muted || run != _voiceRun) ? _readTime(line) : _readTime(line) * 0.55;
@@ -801,10 +973,8 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       ref.read(guideDirectorProvider.notifier).react(GuideMood.warn);
       _marks.miss();
       await _penalize(global);
-      _busy = false;
       if (!mounted) return;
-      unawaited(_redealAfterMiss(opt));
-      await _sayMistake(reason: opt.rejectBn, key: 'pick/${opt.id}');
+      await _missOnCard(opt, name: opt.labelBn, reason: opt.rejectBn, key: 'pick/${opt.id}');
       return;
     }
 
@@ -821,9 +991,14 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       });
       _celebrate.forward(from: 0);
       _scorePunch.forward(from: 0);
-      // The praise line also lets the picked card's pop read before the board changes.
-      await _sayRight();
+      final praise = _rightLine();
+      unawaited(_sayLine(praise, GuideMood.glad));
+      // The praise and the card's name stay under the card until Continue.
+      await _awaitContinue(_Verdict(good: true, headline: praise.shownBn, name: opt.labelBn));
       if (!mounted) return;
+      await _stopVoice();
+      if (!mounted) return;
+      _closeLook();
       setState(() {
         _beat = _Beat.why;
         _pickedWhy = null;
@@ -835,6 +1010,8 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     });
     _busy = false;
     if (!mounted) return;
+    // Rebuild once unlocked so the reason board's idle hint can arm.
+    setState(() {});
     _clockGo(reset: true);
     await _askFrom(_whyAskBag);
   }
@@ -878,10 +1055,8 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       setState(() => _whyRetry = true);
       _marks.miss();
       await _penalize(global);
-      _busy = false;
       if (!mounted) return;
-      unawaited(_redealAfterMiss(chip));
-      await _sayMistake(reason: LearnCoachLines.notThisReason, key: 'why');
+      await _missOnCard(chip, reason: LearnCoachLines.notThisReason, key: 'why');
       return;
     }
 
@@ -890,8 +1065,14 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     await _scripted(() async {
       final bank = _pending > 0 ? _pending : (_whyRetry ? 5 : 0);
       if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.8, muted: false));
-      await _bankPending(bank, global);
-      await _sayRule(chip.textBn, key: '${_cur.id}/${chip.id}');
+      final banked = _bankPending(bank, global);
+      final praise = _rightLine();
+      unawaited(_speakRule(chip.textBn, praise, key: '${_cur.id}/${chip.id}'));
+      await _awaitContinue(_Verdict(good: true, headline: praise.shownBn));
+      await banked;
+      if (!mounted) return;
+      await _stopVoice();
+      _closeLook();
       await _pause(240);
     });
     _busy = false;
@@ -1035,6 +1216,8 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       });
       _busy = false;
       if (!mounted) return;
+      // Rebuild once unlocked so the reason board's idle hint can arm.
+      setState(() {});
       _clockGo(reset: true);
       await _askFrom(_mythAskBag);
       return;
@@ -1071,10 +1254,8 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       setState(() => _whyRetry = true);
       _marks.miss();
       await _penalize(global);
-      _busy = false;
       if (!mounted) return;
-      unawaited(_redealAfterMiss(chip));
-      await _sayMistake(reason: LearnCoachLines.notThisReason, key: 'why');
+      await _missOnCard(chip, reason: LearnCoachLines.notThisReason, key: 'why');
       return;
     }
     _settle('myth/why');
@@ -1082,12 +1263,20 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     _clockHold();
     await _scripted(() async {
       final bank = _pending > 0 ? _pending : (_whyRetry ? 5 : 0);
-      await _bankPending(bank, global);
-      await _say(LearnCoachLines.realPoint, mood: GuideMood.celebrate);
-      // The first time, the reason is spoken too; after that the chip shows it.
-      if (mounted && !_popped && await SpokenOnce.first('board/${_pack.lessonId}/rule/myth')) {
-        if (mounted) await _say(chip.textBn, mood: GuideMood.glad);
-      }
+      final banked = _bankPending(bank, global);
+      unawaited(() async {
+        if (!await _say(LearnCoachLines.realPoint, mood: GuideMood.celebrate) || _popped) return;
+        // The first time, the reason is spoken too; after that the card shows it.
+        final run = _voiceRun;
+        if (await SpokenOnce.first('board/${_pack.lessonId}/rule/myth') && mounted && run == _voiceRun) {
+          await _say(chip.textBn, mood: GuideMood.glad);
+        }
+      }());
+      await _awaitContinue(const _Verdict(good: true, headline: LearnCoachLines.realPoint));
+      await banked;
+      if (!mounted) return;
+      await _stopVoice();
+      _closeLook();
       if (!await _pause(260)) return;
       await _award();
     });
@@ -1284,14 +1473,10 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                             _LearnBoardChrome(
                               scoreKey: _scoreKey,
                               step: widget.ladderIndex + 1,
+                              title: _pack.titleBn,
                               levelScore: _runScore,
-                              muted: _muted,
                               dimmed: _beat == _Beat.intro,
                               onClose: _leave,
-                              onToggleMute: () async {
-                                await _stopVoice();
-                                setState(() => _muted = !_muted);
-                              },
                               onReadLesson: () {
                                 if (_readOpen) {
                                   unawaited(_tuckReadCard());
@@ -1310,8 +1495,6 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                                 clipBehavior: Clip.none,
                                 children: [
                                   Positioned.fill(child: _stage(quiet, palette)),
-                                  if (_boardBeat) _stepPips(palette),
-                                  if (_pending > 0 || _burning) _pendingDock(quiet, palette),
                                   // Corner coach steps aside while the rival owns the
                                   // stage, and while he stands center to ask.
                                   if (!_missionHero && !_rivalOnStage && _beat != _Beat.mythBelieve)
@@ -1327,6 +1510,11 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                                         onTap: () => unawaited(_onMascotTap()),
                                       ),
                                     ),
+                                  // The opened card sits under the top lane, so the
+                                  // step pips and the pending ◆ stay in view.
+                                  if (_look case final look?) Positioned.fill(child: _lookLayer(look, quiet)),
+                                  if (_boardBeat) _stepPips(palette),
+                                  if (_pending > 0 || _burning) _pendingDock(quiet, palette),
                                   if (_readOpen) Positioned.fill(child: _readCardLayer()),
                                 ],
                               ),
@@ -1362,6 +1550,348 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     );
   }
 
+  /// The opened card, large and readable over the dimmed board. ✕ and ✓ look
+  /// the same for every card; after ✓ the feedback stays under the card until
+  /// the player presses "এগিয়ে যান".
+  Widget _lookLayer(_Look look, bool quiet) {
+    final v = _verdict;
+    return Stack(
+      children: [
+        // Taps on the dimmed board do nothing: the card is decided by its buttons.
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {},
+            child: const ColoredBox(color: Color(0xD9050C1C)),
+          ),
+        ),
+        Positioned.fill(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, _laneHeight - 6, 12, 10),
+            // Idle on the open card: the hand sweeps over ✕ and ✓ as a pair.
+            child: IdleHint(
+              waiting: v == null && _lookReady && !_readOpen,
+              waitKey: 'look-${_asideId(look.item.id)}',
+              spec: (_) => HintSpec.sweepOver([_rejectKey, _confirmKey]),
+              child: LayoutBuilder(
+                builder: (context, box) => Center(child: _lookCard(look, v, box, quiet)),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _lookCard(_Look look, _Verdict? v, BoxConstraints box, bool quiet) {
+    final item = look.item;
+    final opt = item is LearnBoardOption ? item : null;
+    final chip = item is LearnWhyChip ? item : null;
+    // Landscape: the picture beside the words and buttons.
+    final wide = opt != null && box.maxWidth > box.maxHeight * 1.25;
+    final width = math.min(box.maxWidth, wide ? 760.0 : 460.0);
+    final small = width < 340;
+    final pad = small ? 12.0 : 14.0;
+    const buttonsH = 52.0;
+    final border = v == null ? SlmColors.gold400.withValues(alpha: 0.7) : (v.good ? SlmColors.emerald400 : SlmColors.danger);
+    final decoration = BoxDecoration(
+      borderRadius: BorderRadius.circular(22),
+      gradient: const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFA1B2A48), Color(0xFA0D1630)],
+      ),
+      border: Border.all(color: border, width: 1.6),
+      boxShadow: const [BoxShadow(color: Color(0xA6000000), blurRadius: 24, offset: Offset(0, 10))],
+    );
+
+    final ask = _ask.trim().isEmpty
+        ? null
+        : Text(
+            enDigits(_ask),
+            textAlign: TextAlign.center,
+            style: bangla(fontSize: small ? 13.5 : 14.5, fontWeight: FontWeight.w800, height: 1.3, color: SlmColors.gold200),
+          );
+    final words = <Widget>[
+      if (chip != null)
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: SlmColors.navy950.withValues(alpha: 0.7),
+                border: Border.all(color: SlmColors.gold300.withValues(alpha: 0.7)),
+              ),
+              child: Text(
+                enDigits('${look.index + 1}'),
+                style: bangla(fontSize: 16, fontWeight: FontWeight.w900, color: SlmColors.gold200),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                enDigits(chip.textBn),
+                style: bangla(fontSize: small ? 17.5 : 19, fontWeight: FontWeight.w800, height: 1.4, color: SlmColors.ivory),
+              ),
+            ),
+          ],
+        ),
+      if (v != null) ...[
+        const SizedBox(height: 12),
+        _verdictPanel(v, small),
+      ],
+    ];
+
+    Widget scroll(List<Widget> children) => SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          ),
+        );
+
+    final Widget card;
+    if (wide) {
+      final h = math.min(box.maxHeight, 360.0);
+      final artW = math.min((h - 2 * pad) * 0.92, width * 0.46);
+      card = Container(
+        width: width,
+        height: h,
+        padding: EdgeInsets.all(pad),
+        decoration: decoration,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(width: artW, child: _lookArt(opt)),
+            SizedBox(width: pad),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: scroll([?ask, ...words])),
+                  const SizedBox(height: 10),
+                  SizedBox(height: buttonsH, child: _lookButtons(v)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      final avail = math.max(0.0, box.maxHeight - 2 * pad - buttonsH - 12 - (ask == null ? 0 : 44));
+      Widget? art;
+      if (opt != null) {
+        // With the feedback up, the picture gives it room.
+        final cap = v == null ? avail : avail * 0.42;
+        final artH = math.max(96.0, math.min((width - 2 * pad) / 0.92, cap));
+        art = AnimatedContainer(
+          duration: quiet ? Duration.zero : const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          height: artH,
+          child: _lookArt(opt),
+        );
+      }
+      card = Container(
+        width: width,
+        constraints: BoxConstraints(maxHeight: box.maxHeight),
+        padding: EdgeInsets.all(pad),
+        decoration: decoration,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: scroll([
+                if (ask != null) ...[ask, const SizedBox(height: 10)],
+                ?art,
+                ...words,
+              ]),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(height: buttonsH, child: _lookButtons(v)),
+          ],
+        ),
+      );
+    }
+
+    final framed = Semantics(
+      container: true,
+      label: chip != null ? enDigits(chip.textBn) : 'ছবিটা বড় করে দেখুন',
+      child: KeyedSubtree(
+        key: const ValueKey('board-choice-preview'),
+        // Taps wait until the card has landed (no accidental ✓ on the way in).
+        child: IgnorePointer(ignoring: !_lookReady, child: card),
+      ),
+    );
+    if (quiet) return framed;
+    return AnimatedBuilder(
+      animation: Listenable.merge([_lookIn, _lookHit]),
+      child: framed,
+      builder: (_, child) {
+        final t = _lookIn.value;
+        var scale = 0.86 + 0.14 * Curves.easeOutBack.transform(t);
+        var dx = 0.0;
+        final h = _lookHit.value;
+        if (v != null && h > 0 && h < 1) {
+          if (v.good) {
+            scale *= 1 + 0.04 * math.sin(h * math.pi);
+          } else {
+            dx = math.sin(h * math.pi * 7) * 9 * (1 - h);
+          }
+        }
+        return Opacity(
+          opacity: (t * 2).clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(dx, 0),
+            child: Transform.scale(scale: scale, child: child),
+          ),
+        );
+      },
+    );
+  }
+
+  /// The card's picture, whole (the board crops scene cards to fill a tile).
+  Widget _lookArt(LearnBoardOption opt) {
+    if (!opt.scene) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: const Color(0x660A1226),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 10, 8, 4),
+          child: _ItemPedestal(asset: opt.asset, accent: SlmColors.gold300),
+        ),
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, box) {
+        final px = (box.maxWidth * MediaQuery.devicePixelRatioOf(context)).round().clamp(1, 1024);
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: ColoredBox(
+            color: const Color(0xFF0A1226),
+            child: opt.asset.endsWith('.svg')
+                ? SvgPicture.asset(opt.asset, fit: BoxFit.contain)
+                : Image.asset(
+                    opt.asset,
+                    fit: BoxFit.contain,
+                    cacheWidth: px,
+                    gaplessPlayback: true,
+                    errorBuilder: (_, _, _) => const Icon(Icons.image_not_supported_rounded, color: SlmColors.gold300),
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// The correct / incorrect word, the card's name and the reason.
+  Widget _verdictPanel(_Verdict v, bool small) {
+    final c = v.good ? SlmColors.emerald400 : SlmColors.danger;
+    return Container(
+      key: const ValueKey('board-choice-feedback'),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: c.withValues(alpha: 0.8), width: 1.4),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+                child: Icon(v.good ? Icons.check_rounded : Icons.close_rounded, size: 17, color: Colors.white),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  enDigits(v.headline),
+                  style: bangla(
+                    fontSize: small ? 15.5 : 16.5,
+                    fontWeight: FontWeight.w900,
+                    height: 1.3,
+                    color: v.good ? SlmColors.emerald300 : SoftDanger.ink,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (v.name.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              enDigits(v.name),
+              style: bangla(fontSize: small ? 14.5 : 15.5, fontWeight: FontWeight.w900, height: 1.3, color: SlmColors.ivory),
+            ),
+          ],
+          if (v.body.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              enDigits(v.body),
+              style: bangla(fontSize: small ? 14.5 : 15.5, fontWeight: FontWeight.w700, height: 1.4, color: SlmColors.ivory),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Before the choice: ✕ বাদ দিন · ✓ বেছে নিন (the same for every card).
+  /// After it: one clear "এগিয়ে যান".
+  Widget _lookButtons(_Verdict? v) {
+    if (v != null) {
+      return _LookButton(
+        key: const ValueKey('board-choice-continue'),
+        icon: Icons.arrow_forward_rounded,
+        label: 'এগিয়ে যান',
+        primary: true,
+        iconAfter: true,
+        onTap: _onContinue,
+      );
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: KeyedSubtree(
+            key: _rejectKey,
+            child: _LookButton(
+              key: const ValueKey('board-choice-reject'),
+              icon: Icons.close_rounded,
+              label: 'বাদ দিন',
+              primary: false,
+              onTap: _rejectLook,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: KeyedSubtree(
+            key: _confirmKey,
+            child: _LookButton(
+              key: const ValueKey('board-choice-confirm'),
+              icon: Icons.check_rounded,
+              label: 'বেছে নিন',
+              primary: true,
+              onTap: _confirmLook,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _stage(bool quiet, SlmPalette palette) {
     return AnimatedSwitcher(
       duration: quiet ? Duration.zero : SlmMotion.page,
@@ -1383,9 +1913,9 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
         child: switch (_beat) {
           _Beat.intro => _missionStage(palette, quiet),
           _Beat.pick => _pickBoard(palette, quiet),
-          _Beat.why => _whyBoard(_whyOpts, _onWhy, palette, quiet),
+          _Beat.why => _whyBoard(_whyOpts, palette, quiet),
           _Beat.mythSay || _Beat.mythBelieve => _rivalEncounter(palette, quiet),
-          _Beat.mythWhy => _whyBoard(_whyOpts, _onMythWhy, palette, quiet),
+          _Beat.mythWhy => _whyBoard(_whyOpts, palette, quiet),
           _Beat.award || _Beat.done => _failed ? _failStage() : _awardStage(palette, quiet),
         },
       ),
@@ -1393,6 +1923,21 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   }
 
   Widget _missionStage(SlmPalette palette, bool quiet) {
+    // A short (landscape) stage shows the same scene scaled down, never overflowing.
+    return LayoutBuilder(
+      builder: (context, box) {
+        const minH = 460.0;
+        final stage = _missionColumn(palette, quiet);
+        if (box.maxHeight >= minH) return stage;
+        return FittedBox(
+          fit: BoxFit.scaleDown,
+          child: SizedBox(width: math.min(box.maxWidth, 520), height: minH, child: stage),
+        );
+      },
+    );
+  }
+
+  Widget _missionColumn(SlmPalette palette, bool quiet) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       child: Column(
@@ -1431,18 +1976,37 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   Widget _pickBoard(SlmPalette palette, bool quiet) {
     final opts = _pickOpts.isEmpty ? _cur.options : _pickOpts;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, _laneHeight, 14, 168),
+      padding: _boardPad(14),
       child: Column(
         children: [
           Expanded(
-            child: GridView.builder(
+            child: LayoutBuilder(builder: (context, box) {
+            // Portrait: two columns. Landscape: one row beside the coach, sized to fit.
+            final wide = _landscape;
+            final cols = wide ? opts.length.clamp(2, 4) : 2;
+            final rows = (opts.length / cols).ceil();
+            final cellW = (box.maxWidth - 14 * (cols - 1)) / cols;
+            final cellH = (box.maxHeight - 14 * (rows - 1)) / rows;
+            final aspect = wide && cellH > 0 ? (cellW / cellH).clamp(0.7, 1.8).toDouble() : 0.9;
+            // Stuck on the pick: a hand sweeps over the cards, pressing none.
+            return IdleHint(
+              waiting: _beat == _Beat.pick && !_locked && !_busy && _look == null,
+              waitKey: 'pick-$_slot-$_cardWave',
+              spec: (size) => HintSpec.sweep(
+                [
+                  for (final r in HintSpec.gridCells(size: size, count: opts.length, columns: cols, aspect: aspect))
+                    if (r.top < size.height - 40) r,
+                ],
+                space: HintSpace.local,
+              ),
+              child: GridView.builder(
               clipBehavior: Clip.none,
               physics: const BouncingScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: cols,
                 mainAxisSpacing: 14,
                 crossAxisSpacing: 14,
-                childAspectRatio: 0.9,
+                childAspectRatio: aspect,
               ),
               itemCount: opts.length,
               itemBuilder: (_, i) {
@@ -1455,27 +2019,39 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                   hitToken: _hitFor(o.id),
                   hitGood: _hitGood,
                   onLaunch: () => _dealCue(i),
-                  child: _optionTile(
-                    asset: o.asset,
-                    scene: o.scene,
-                    // The picture must carry the cue; the name shows only on the card tapped.
-                    label: _hitId == o.id ? o.labelBn : '',
-                    palette: palette,
-                    onTapUp: (d) {
-                      if (!_muted) {
-                        unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
-                      }
-                      _onPick(o, d.globalPosition);
-                    },
+                  child: _AsideMark(
+                    aside: _isAside(o.id),
+                    quiet: quiet,
+                    child: _optionTile(
+                      asset: o.asset,
+                      scene: o.scene,
+                      // The picture must carry the cue; the name shows only on the card chosen.
+                      label: _hitId == o.id ? o.labelBn : '',
+                      palette: palette,
+                      // A tap only opens the card large; ✓ there chooses it.
+                      onTapUp: (d) => _openLook(o, i, d.globalPosition),
+                    ),
                   ),
                 );
               },
             ),
+            );
+            }),
           ),
         ],
       ),
     );
   }
+
+  bool get _landscape {
+    final s = MediaQuery.sizeOf(context);
+    return s.width > s.height;
+  }
+
+  /// Board padding: in portrait the cards keep clear of the coach's corner
+  /// below them; on a landscape phone they stand beside him instead.
+  EdgeInsets _boardPad(double side) =>
+      _landscape ? EdgeInsets.fromLTRB(190, _laneHeight, side, 10) : EdgeInsets.fromLTRB(side, _laneHeight, side, 168);
 
   /// A scene card: the picture edge to edge (the gap to the wire must read at
   /// card size); the name slides up over it only on the card tapped.
@@ -1522,19 +2098,24 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     );
   }
 
-  Widget _whyBoard(
-    List<LearnWhyChip> chips,
-    Future<void> Function(LearnWhyChip, Offset) onPick,
-    SlmPalette palette,
-    bool quiet,
-  ) {
+  Widget _whyBoard(List<LearnWhyChip> chips, SlmPalette palette, bool quiet) {
     final list = chips;
+    final wave = 'why-$_beat-$_slot-$_cardWave';
+    String keyId(LearnWhyChip c) => '$wave-${c.id}';
+    _whyKeys.removeWhere((id, _) => !id.startsWith('$wave-'));
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, _laneHeight, 16, 168),
+      padding: _boardPad(16),
       child: Column(
         children: [
           Expanded(
-            child: ListView.separated(
+            // Stuck on the reason: a hand sweeps over the chips, pressing none.
+            child: IdleHint(
+              waiting: (_beat == _Beat.why || _beat == _Beat.mythWhy) && !_locked && !_busy && _look == null,
+              waitKey: wave,
+              spec: (_) => HintSpec.sweepOver([
+                for (final c in list) ?_whyKeys[keyId(c)],
+              ]),
+              child: ListView.separated(
               clipBehavior: Clip.none,
               itemCount: list.length,
               separatorBuilder: (_, _) => const SizedBox(height: 14),
@@ -1549,16 +2130,16 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                   hitToken: _hitFor(c.id),
                   hitGood: _hitGood,
                   onLaunch: () => _dealCue(i),
-                  child: Material(
+                  child: _AsideMark(
+                    aside: _isAside(c.id),
+                    quiet: quiet,
+                    child: Material(
+                    key: _whyKeys.putIfAbsent(keyId(c), GlobalKey.new),
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(20),
-                      onTapUp: (d) {
-                        if (!_muted) {
-                          unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
-                        }
-                        onPick(c, d.globalPosition);
-                      },
+                      // A tap only opens the reason large; ✓ there chooses it.
+                      onTapUp: (d) => _openLook(c, i, d.globalPosition),
                       child: AnimatedContainer(
                         duration: quiet ? Duration.zero : SlmMotion.fast,
                         padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
@@ -1634,8 +2215,10 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                       ),
                     ),
                   ),
+                  ),
                 );
               },
+            ),
             ),
           ),
         ],
@@ -2931,19 +3514,134 @@ class _ItemPedestal extends StatelessWidget {
   }
 }
 
-/// Slim Learn chrome: close · live ◆ · mute. No title / badge / death clutter.
+/// A card set aside with ✕: dimmed with a grey "বাদ" tag — not red, since
+/// nothing was judged. Tapping it opens it again.
+class _AsideMark extends StatelessWidget {
+  const _AsideMark({required this.aside, required this.quiet, required this.child});
+
+  final bool aside;
+  final bool quiet;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.passthrough,
+      clipBehavior: Clip.none,
+      children: [
+        AnimatedOpacity(
+          opacity: aside ? 0.42 : 1,
+          duration: quiet ? Duration.zero : SlmMotion.fast,
+          child: child,
+        ),
+        if (aside)
+          Positioned(
+            top: 6,
+            right: 6,
+            child: IgnorePointer(
+              child: Container(
+                key: const ValueKey('board-card-aside'),
+                padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xE6202A3C),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: SlmColors.mist.withValues(alpha: 0.6)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.close_rounded, size: 13, color: SlmColors.mist),
+                    const SizedBox(width: 3),
+                    Text('বাদ', style: bangla(fontSize: 11.5, fontWeight: FontWeight.w800, color: SlmColors.mist, height: 1.1)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// ✕ / ✓ / এগিয়ে যান on the opened card: 52 dp tall, one look for every card.
+class _LookButton extends StatelessWidget {
+  const _LookButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.primary,
+    required this.onTap,
+    this.iconAfter = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool primary;
+  final bool iconAfter;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ink = primary ? SlmColors.navy950 : SlmColors.ivory;
+    final glyph = Icon(icon, size: 22, color: ink);
+    final text = Text(label, maxLines: 1, style: bangla(fontSize: 17, fontWeight: FontWeight.w900, color: ink, height: 1.1));
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Ink(
+            height: 52,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: primary ? SlmGradients.gold : null,
+              color: primary ? null : SlmColors.navy900,
+              border: Border.all(
+                color: primary ? SlmColors.gold200 : SlmColors.ivory.withValues(alpha: 0.55),
+                width: 1.4,
+              ),
+            ),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: iconAfter
+                        ? [text, const SizedBox(width: 8), glyph]
+                        : [glyph, const SizedBox(width: 6), text],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Slim Learn chrome: close · `L<n>` · live ◆ · 💀 · পাঠ. The level's name is
+/// for screen readers only; sound is not toggled here. Everything scales with
+/// the width (320 dp phones to landscape) and never overflows.
 class _LearnBoardChrome extends ConsumerStatefulWidget {
   final GlobalKey scoreKey;
 
-  /// The ladder step shown at the left ("ধাপ N"), the same on every level.
+  /// The ladder step, shown as `L<n>` (the same number on every level).
   final int step;
+
+  /// The level's name: read out by screen readers, never drawn.
+  final String title;
 
   /// This play's score: the pill shows it; the main total sits beside it.
   final int levelScore;
-  final bool muted;
   final bool dimmed;
   final VoidCallback onClose;
-  final VoidCallback onToggleMute;
   final VoidCallback onReadLesson;
 
   /// The coach has suggested reading: the পাঠ button lights up.
@@ -2952,11 +3650,10 @@ class _LearnBoardChrome extends ConsumerStatefulWidget {
   const _LearnBoardChrome({
     required this.scoreKey,
     required this.step,
+    required this.title,
     required this.levelScore,
-    required this.muted,
     required this.dimmed,
     required this.onClose,
-    required this.onToggleMute,
     required this.onReadLesson,
     required this.readPillKey,
     this.readHot = false,
@@ -3001,27 +3698,59 @@ class _LearnBoardChromeState extends ConsumerState<_LearnBoardChrome>
     return AnimatedOpacity(
       duration: SlmMotion.base,
       opacity: widget.dimmed ? 0.45 : 1,
-      child: SizedBox(
-        height: 48,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: widget.onClose,
-                icon: const Icon(Icons.close_rounded, color: SlmColors.ivory, size: 22),
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          // 400 dp and wider: full size; a 320 dp phone: 82 %.
+          final f = UnifiedGameTopHud.scaleFor(box.maxWidth);
+          final target = math.max(40.0, 44 * f);
+          return SizedBox(
+            height: math.max(48.0, 52 * f),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 6 * f),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: widget.onClose,
+                    tooltip: 'বন্ধ করুন',
+                    icon: Icon(Icons.close_rounded, color: SlmColors.ivory, size: 24 * f),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints.tightFor(width: target, height: target),
+                  ),
+                  SizedBox(width: 4 * f),
+                  LadderStepBadge(key: const ValueKey('board-level-tag'), step: widget.step, title: widget.title, scale: f),
+                  SizedBox(width: 8 * f),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      // Last resort on a very narrow screen: the cluster shrinks, never overflows.
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _scorePill(shown, f),
+                            SizedBox(width: 6 * f),
+                            DeathCountChip(deaths: save.deaths, scale: f),
+                            SizedBox(width: 2 * f),
+                            // Icon-only, with its own 44 dp touch target.
+                            ReadLessonPill(key: widget.readPillKey, hot: widget.readHot, onTap: widget.onReadLesson),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: LadderStepBadge(step: widget.step),
-                ),
-              ),
-              AnimatedBuilder(
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _scorePill(int shown, double f) {
+    return AnimatedBuilder(
                 animation: _bump,
                 builder: (_, child) {
                   final wave = math.sin(_bump.value * math.pi);
@@ -3051,7 +3780,7 @@ class _LearnBoardChromeState extends ConsumerState<_LearnBoardChrome>
                 },
                 child: Container(
                   key: widget.scoreKey,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: EdgeInsets.symmetric(horizontal: 12 * f, vertical: 6 * f),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFF1E2B45), Color(0xFF111A2E)],
@@ -3069,12 +3798,12 @@ class _LearnBoardChromeState extends ConsumerState<_LearnBoardChrome>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('◆', style: TextStyle(color: SlmColors.gold300, fontSize: 13)),
-                      const SizedBox(width: 5),
+                      Text('◆', style: TextStyle(color: SlmColors.gold300, fontSize: 13 * f)),
+                      SizedBox(width: 5 * f),
                       Text(
                         enDigits('$shown'),
                         style: bangla(
-                          fontSize: 15,
+                          fontSize: 15 * f,
                           fontWeight: FontWeight.w900,
                           color: SlmColors.ivory,
                         ),
@@ -3082,27 +3811,6 @@ class _LearnBoardChromeState extends ConsumerState<_LearnBoardChrome>
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              DeathCountChip(deaths: save.deaths),
-              const SizedBox(width: 4),
-              ReadLessonPill(key: widget.readPillKey, hot: widget.readHot, onTap: widget.onReadLesson),
-              const SizedBox(width: 4),
-              IconButton(
-                onPressed: widget.onToggleMute,
-                icon: Icon(
-                  widget.muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                  color: widget.muted ? SlmColors.mist : SlmColors.gold300,
-                  size: 20,
-                ),
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

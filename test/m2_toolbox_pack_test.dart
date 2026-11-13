@@ -3,7 +3,10 @@
 // deal variety, fair reason libraries, and the level in the shell (idle perf;
 // guide first; a full clean flow with the docket, a plain tool set aside, the
 // slide, the live-point test, the reasons, the coworker and the replacement;
-// a slip card; a deadly freeze; three slips).
+// a slip card; a deadly freeze; three slips; the coworker on a fast play, his
+// line fitting the moment, no tap skipping him; the praise window; the
+// gesture hints; putting back tells nothing, setting a sound tool aside costs
+// a slip).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -16,6 +19,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart' show FreezeFrame;
@@ -31,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.1/do/0',
@@ -52,11 +57,14 @@ Future<void> _pump(WidgetTester t, int ms) async {
   }
 }
 
-int _seedCalling(int round) {
+int _seedCalling(int round, {bool? tape}) {
   for (var s = 0;; s++) {
-    if (dealToolbox(math.Random(s)).callRound == round) return s;
+    final d = dealToolbox(math.Random(s));
+    if (d.callRound == round && (tape == null || d.preferTape == tape)) return s;
   }
 }
+
+Finder _peekSaying(String line) => find.byWidgetPredicate((w) => w is CoworkerPeek && w.lineBn == line);
 
 Finder _label(String l) => find.byWidgetPredicate((w) => w is Semantics && w.properties.label == l);
 List<Finder> _onScreen(List<String> texts) => [
@@ -65,20 +73,14 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await confirmChoice(t);
+  // A right reason zooms and waits for এগিয়ে যান; his deck just closes.
+  await tapReasonProceed(t);
 }
 
 void main() {
@@ -160,34 +162,40 @@ void main() {
       expect(b.pack(g).verdict, TbVerdict.right);
     });
 
-    test('putting back: a plain tool, or a damaged one whose fault was found, goes aside for free', () {
+    test('setting aside is a decision: a plain or damaged tool goes in the crate; a sound one is a wrong flag (a slip) and stays', () {
       final run = TbRun(dealToolbox(math.Random(5)));
       final r = run.current;
-      final bad = _flawed(r);
-      expect(run.putBack(_good(r)), isFalse);
-      expect(run.putBack(bad), isFalse, reason: 'not looked for: putting back gives nothing away');
-      expect(run.putBack(_plain(r)), isTrue, reason: 'no mark shows to the eye');
-      run.spot(_good(r));
-      expect(run.spotted, isEmpty);
-      run.spot(bad);
-      expect(run.putBack(bad), isTrue);
-      expect(run.slips, 0);
+      final good = _good(r);
+      final o = run.setAside(good);
+      expect(o.verdict, TbVerdict.slip, reason: 'a wrong flag costs a slip');
+      expect(o.mistake!.key, TbMistakes.asideSound(r.kind).key);
+      expect(o.mistake!.deadly, isFalse);
+      expect(run.rejected, isNot(contains(good.id)), reason: 'the good tool goes back on the board');
+      expect(run.slips, 1);
+      expect(run.setAside(_plain(r)).verdict, TbVerdict.right);
+      expect(run.setAside(_flawed(r)).verdict, TbVerdict.right, reason: 'the decision counts, found or not');
+      expect(run.rejected, containsAll([_plain(r).id, _flawed(r).id]));
+      expect(run.setAside(_plain(r)).mistake, isNull, reason: 'already in the crate: nothing');
+      expect(run.slips, 1);
       expect(run.caught, containsAll([TbLines.caughtPlain, TbLines.caughtFlaw]));
-      expect(run.pack(_good(r)).verdict, TbVerdict.right);
+      expect(run.pack(good).verdict, TbVerdict.right);
       run.next();
       expect(run.spotted, isEmpty);
       expect(run.rejected, isEmpty);
     });
 
-    test('a dead tester is found only by the live-point test', () {
+    test('a dead tester is found only by the live-point test; a good tester set aside is a slip', () {
       final run = TbRun(dealToolbox(math.Random(9)));
       run.round = run.deal.rounds.indexWhere((r) => r.kind == TbKind.tester);
       final dead = run.current.tools.firstWhere((x) => x.flaw == TbFlaw.deadNeon);
       run.spot(dead);
-      expect(run.putBack(dead), isFalse, reason: 'the eye cannot see a dead neon');
+      expect(run.spotted, isEmpty, reason: 'the eye cannot see a dead neon');
       expect(run.test(dead), isFalse);
-      expect(run.putBack(dead), isTrue);
+      expect(run.spotted, contains(dead.id));
+      expect(run.setAside(dead).verdict, TbVerdict.right);
       expect(ToolPainter.flawSeen(dead, null), isFalse);
+      final good = _good(run.current);
+      expect(run.setAside(good).mistake!.key, TbMistakes.asideSound(TbKind.tester).key);
     });
 
     test('the coworker pushes only a tool still on the board', () {
@@ -207,6 +215,52 @@ void main() {
       expect(tbPushFor(blunt, {}, preferTape: true), isNull, reason: 'tape is for a damaged handle only');
       const tester = TbRound(kind: TbKind.tester, tools: [TbTool(id: 't', kind: TbKind.tester, flaw: TbFlaw.deadNeon)]);
       expect(tbPushFor(tester, {}, preferTape: true), isNull);
+    });
+
+    test('his line fits the moment: tape only for a damaged handle in hand whose fault was found', () {
+      const r = TbRound(kind: TbKind.pliers, tools: [
+        TbTool(id: 'g', kind: TbKind.pliers),
+        TbTool(id: 'c', kind: TbKind.pliers, flaw: TbFlaw.crack),
+        TbTool(id: 'p', kind: TbKind.pliers, insulated: false),
+      ]);
+      final good = r.tools[0], cracked = r.tools[1], plain = r.tools[2];
+      // The dealt tape push waits while the cracked one still hangs unfound.
+      expect(tbPushNow(r, held: null, rejected: {}, spotted: {}, preferTape: true), isNull);
+      expect(tbPushNow(r, held: good, rejected: {}, spotted: {}, preferTape: true), isNull);
+      // A decisive control waiting for him: what fits now (the plain one is there).
+      expect(tbPushNow(r, held: good, rejected: {}, spotted: {}, preferTape: true, forced: true), TbPush.gloves);
+      // In hand but not found: he never names a fault the player has not seen.
+      expect(tbPushNow(r, held: cracked, rejected: {}, spotted: {}, preferTape: true, forced: true), TbPush.gloves);
+      expect(tbPushNow(r, held: cracked, rejected: {'p'}, spotted: {}, preferTape: true, forced: true), isNull);
+      // Found in hand: the tape push.
+      expect(tbPushNow(r, held: cracked, rejected: {}, spotted: {'c'}, preferTape: true), TbPush.tape);
+      expect(tbPushNow(r, held: cracked, rejected: {'p'}, spotted: {'c'}, preferTape: false), TbPush.tape);
+      // The gloves push while the plain tool is still there; nothing once it is aside.
+      expect(tbPushNow(r, held: null, rejected: {}, spotted: {}, preferTape: false), TbPush.gloves);
+      expect(tbPushNow(r, held: plain, rejected: {}, spotted: {}, preferTape: false), TbPush.gloves);
+      expect(tbPushNow(r, held: null, rejected: {'p'}, spotted: {}, preferTape: false), isNull);
+      expect(tbPushNow(r, held: null, rejected: {'p', 'c'}, spotted: {'c'}, preferTape: true, forced: true), isNull);
+    });
+
+    test('English digits on everything the scene shows', () {
+      final bnDigit = RegExp('[০-৯]');
+      final shown = [
+        ...TbLines.times,
+        ...TbLines.jobs,
+        ...TbLines.feeders,
+        for (final k in TbKind.values) ...[k.mark, k.nameBn, ...TbLines.packRight(k), ...TbLines.packWrong(k), TbLines.ask(k)],
+        ...TbLines.holdRight,
+        ...TbLines.holdWrong,
+        for (final p in TbPush.values) ...[TbLines.coworker(p).line, ...TbLines.coworker(p).right, ...TbLines.coworker(p).wrong, ...TbLines.coworker(p).asks],
+        TbLines.intro,
+        TbLines.callHeld,
+        TbLines.callHeldTape,
+        TbLines.caughtMark,
+        for (final m in TbMistakes.all) m.textBn,
+      ];
+      for (final l in shown) {
+        expect(bnDigit.hasMatch(l), isFalse, reason: l);
+      }
     });
 
     test('deals vary', () {
@@ -352,7 +406,7 @@ void main() {
         }
         debugPrint('PERF m2 toolbox ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(TbLines.docket), findsOneWidget);
         expect(find.text(TbLines.hold), findsOneWidget);
         expect(perSec, lessThan(20));
@@ -395,11 +449,11 @@ void main() {
     });
 
     testWidgets('flow: refuse the coworker, docket, plain tool aside, slide and pack, test the tester, replace → pass', (t) async {
-      final (c, deal) = await open(t, _seedCalling(0));
+      final (c, deal) = await open(t, _seedCalling(0, tape: false));
 
       await _pump(t, 3500);
-      expect(find.byType(CoworkerPeek), findsOneWidget);
-      await _pickRight(t, [...TbLines.coworkerTape.right, ...TbLines.coworkerGloves.right]);
+      expect(_peekSaying(TbLines.coworkerGloves.line), findsOneWidget, reason: 'the plain tool hangs: the gloves push');
+      await _pickRight(t, TbLines.coworkerGloves.right);
       await _pump(t, 2500);
       expect(find.byType(CoworkerPeek), findsNothing);
 
@@ -415,7 +469,7 @@ void main() {
         if (r.kind != TbKind.tester) {
           await lift(t, r, _plain(r));
           expect(find.text(TbKind.pliers.mark), findsNothing, reason: 'no mark on a plain tool');
-          await t.tap(find.text(TbLines.putBack));
+          await t.tap(find.text(TbLines.aside));
           await _pump(t, 800);
           expect(find.text(TbLines.rejected), findsOneWidget, reason: 'the plain tool goes into the crate, tagged');
         }
@@ -423,7 +477,7 @@ void main() {
           // Feel one damaged tool: its fault shows, so it goes aside too.
           await lift(t, r, _flawed(r));
           await slide(t);
-          await t.tap(find.text(TbLines.putBack));
+          await t.tap(find.text(TbLines.aside));
           await _pump(t, 800);
           expect(find.text(TbLines.rejected), findsNWidgets(2));
           await t.tap(find.text(TbLines.hold));
@@ -458,19 +512,127 @@ void main() {
     });
 
     testWidgets('coworker: listening to him is deadly (freeze, then the card)', (t) async {
-      final seed = _seedCalling(0);
-      final (c, deal) = await open(t, seed);
+      final seed = _seedCalling(0, tape: false);
+      final (c, _) = await open(t, seed);
       await _pump(t, 3500);
       expect(find.byType(CoworkerPeek), findsOneWidget);
-      final push = tbPushFor(deal.rounds.first, {}, preferTape: deal.preferTape)!;
+      await waitChoiceDeck(t);
+      const push = TbPush.gloves;
       final wrong = _onScreen(TbLines.coworker(push).wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 700);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3000);
-      final m = push == TbPush.tape ? TbMistakes.tape(TbKind.pliers) : TbMistakes.noMark(TbKind.pliers);
+      final m = TbMistakes.noMark(TbKind.pliers);
       expect(find.text(m.textBn), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker comes even on a fast play: packing waits for him, then works', (t) async {
+      // The dealt push is the tape: he waits for a found handle, so a player
+      // who packs the good tool at once would never meet him without the hold.
+      final (c, deal) = await open(t, _seedCalling(0, tape: true));
+      final r = deal.rounds.first;
+      await lift(t, r, _good(r));
+      await t.tap(find.text(TbLines.take));
+      await t.pump(const Duration(milliseconds: 300));
+      expect(_peekSaying(TbLines.coworkerGloves.line), findsOneWidget, reason: 'nothing found in hand: the gloves push, never the tape');
+      expect(find.text(TbLines.take), findsOneWidget, reason: 'the tool is still in hand, not packed');
+      await _pickRight(t, TbLines.coworkerGloves.right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(TbLines.take));
+      await _pump(t, 3500);
+      await _pickRight(t, TbLines.packRight(TbKind.pliers));
+      await _pump(t, 3500);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('his tape push comes only once the hand has found the damaged handle; refused, it goes aside', (t) async {
+      final (c, deal) = await open(t, _seedCalling(0, tape: true));
+      final r = deal.rounds.first;
+      await lift(t, r, _flawed(r));
+      await _pump(t, 3000);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he never names a fault the player has not seen');
+      await slide(t);
+      await _pump(t, 2500);
+      expect(_peekSaying(TbLines.coworkerTape.line), findsOneWidget);
+      await _pickRight(t, TbLines.coworkerTape.right);
+      await _pump(t, 2500);
+      await t.tap(find.text(TbLines.aside));
+      await _pump(t, 800);
+      expect(find.text(TbLines.rejected), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('a tap on a tool while he talks neither skips nor refuses him', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      final (c, deal) = await open(t, _seedCalling(0, tape: false));
+      for (var i = 0; i < 80 && find.byType(CoworkerPeek).evaluate().isEmpty; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'beat 1: his line alone');
+      final r = deal.rounds.first;
+      await t.tap(tools.at(r.tools.indexOf(_good(r))), warnIfMissed: false);
+      await _pump(t, 400);
+      expect(find.text(TbLines.take), findsNothing, reason: 'no tool comes off the board while he talks');
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he is still there');
+      await _pickRight(t, TbLines.coworkerGloves.right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('the praise window takes no touch: the docket stays on its nail', (t) async {
+      final (c, deal) = await open(t, _seedCalling(3));
+      final r = deal.rounds.first;
+      await lift(t, r, _good(r));
+      await t.tap(find.text(TbLines.take));
+      await t.pump(const Duration(milliseconds: 200));
+      await t.tap(find.text(TbLines.docket), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 200));
+      expect(find.byKey(const ValueKey('docket-zoom')), findsNothing);
+      await t.tap(tools.at(r.tools.indexOf(_plain(r))), warnIfMissed: false);
+      await _pump(t, 300);
+      expect(find.text(TbLines.take), findsNothing, reason: 'no tool comes off the board in the praise window');
+      await _pump(t, 3000);
+      await _pickRight(t, TbLines.packRight(TbKind.pliers));
+      await _pump(t, 3000);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over the board, a slide nudge in hand, then a sweep over the controls', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final (c, deal) = await open(t, _seedCalling(3));
+      final scene = find.byWidgetPredicate((w) => w is IdleHint && w.controller != null);
+      expect(scene, findsOneWidget);
+      await _pump(t, 9000);
+      expect(find.byKey(const ValueKey('gesture-hint')), findsOneWidget);
+      final r = deal.rounds.first;
+      expect(t.state<IdleHintState>(scene).debugOptions, hasLength(r.tools.length + 1), reason: 'every tool and the replacement button, never one');
+      await lift(t, r, _good(r));
+      expect(find.byKey(const ValueKey('gesture-hint')), findsNothing, reason: 'a touch hides it');
+      await _pump(t, 9000);
+      expect(t.state<IdleHintState>(scene).showing, isTrue);
+      expect(t.state<IdleHintState>(scene).debugOptions, isEmpty, reason: 'a slide nudge, not a sweep');
+      await slide(t);
+      await _pump(t, 9000);
+      expect(t.state<IdleHintState>(scene).showing, isTrue);
+      expect(t.state<IdleHintState>(scene).debugOptions, hasLength(3), reason: 'put back, set aside and pack alike');
       expect(t.takeException(), isNull);
       await close(t, c);
     });
@@ -495,6 +657,49 @@ void main() {
       expect(find.byType(MistakeCard), findsOneWidget);
       expect(find.text(TbMistakes.noMark(TbKind.pliers).textBn), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes.length, greaterThanOrEqualTo(1));
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('putting back tells nothing: a sound and a damaged tool, felt all over, both go back on the board the same way', (t) async {
+      final (c, deal) = await open(t, _seedCalling(3));
+      final r = deal.rounds.first;
+      final heard = <String>[];
+      for (final tool in [_good(r), _flawed(r)]) {
+        await lift(t, r, tool);
+        await slide(t);
+        await t.tap(find.text(TbLines.putBack));
+        await _pump(t, 800);
+        expect(find.text(TbLines.take), findsNothing);
+        expect(find.text(TbLines.rejected), findsNothing, reason: 'nothing goes into the crate on a put-back');
+        expect(find.text(MistakeLines.slipHead), findsNothing);
+        heard.add(c.read(guideDirectorProvider).line);
+      }
+      expect(heard.toSet(), hasLength(1), reason: 'the same reply for either');
+      expect(heard.first, contains(TbLines.ask(TbKind.pliers)));
+      // Both still hang: either can be lifted again.
+      await lift(t, r, _flawed(r));
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('setting a sound tool aside is a wrong flag: a slip card, and it goes back on the board', (t) async {
+      final (c, deal) = await open(t, _seedCalling(3));
+      final r = deal.rounds.first;
+      await lift(t, r, _good(r));
+      await t.tap(find.text(TbLines.aside));
+      await _pump(t, 600);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.text(TbMistakes.asideSound(TbKind.pliers).textBn), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.map((e) => e.key), contains(TbMistakes.asideSound(TbKind.pliers).key));
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      expect(find.text(TbLines.rejected), findsNothing, reason: 'the good tool is not in the crate');
+      await lift(t, r, _good(r));
+      await t.tap(find.text(TbLines.take));
+      await _pump(t, 3500);
+      await _pickRight(t, TbLines.packRight(TbKind.pliers));
+      await _pump(t, 3000);
       expect(t.takeException(), isNull);
       await close(t, c);
     });

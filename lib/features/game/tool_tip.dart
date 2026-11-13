@@ -19,6 +19,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter;
@@ -42,9 +43,18 @@ import 'spoken_once.dart';
 // scene, corner guide, ◆ on the table → "কেন …?" (the tool once, every
 // decision) → next kite by itself.
 //
-// Deadly (owner-approved list): bamboo / PVC near a live line (also by
-// listening to him); the tool tip resting inside the distance. Slip: asking
-// for a shutdown that was not needed (then the kite is still to do).
+// Deadly (owner-approved list, MODULE1_LADDER.md step 6): bamboo / PVC near a
+// live line (also by listening to him — the act he pushes is on that list);
+// the tool tip resting inside the distance. Slip: asking for a shutdown that
+// was not needed (−10 ◆, the kite is still to do).
+//
+// He can't be skipped: on his round, picking a tool waits for him
+// (holdForCoworker), and the tray is away while he is on — he is answered only
+// on his deck (listening = taking the bamboo he pushes); a guide tap stays
+// quiet while he talks (beat 1). Nothing reacts in the praise window (tableBusy). Gesture
+// hints (how, never what): a sweep over the three tools; on the kite, a sweep
+// over both ways (the stick's tip and শাটডাউন চাই) taking turns with a short
+// sideways nudge of the tip (away from the kite). Taps on nothing count.
 //
 // Voice: device TTS only. The street art is shared with কাজ 1; tools, tree
 // and kite are drawn in code to scale.
@@ -96,10 +106,13 @@ abstract final class ToolTipLines {
   ];
   static const toolWrong = [
     'বাঁশ শুকনো হলে লাইনের কাছে কোনো ভয় নেই',
-    'প্লাস্টিকের পাইপ তো কারেন্ট আটকায়ই',
+    'পিভিসি পাইপ তো সব সময় বিদ্যুৎ আটকায়',
     'যে টুল যত লম্বা, সেটা তত বেশি নিরাপদ',
     'হট স্টিক ভারী, তাই বাঁশেই কাজ সহজ',
     'হাতে গ্লাভস থাকলে যে কোনো টুলই চলে',
+    'ফাইবারগ্লাস হোক বা বাঁশ, শুকনো হলেই চলে',
+    'জুগাড় পাইপ নতুন হলে ফাটার ভয় নেই',
+    'রোদে শুকানো বাঁশে আর্দ্রতা থাকে না',
   ];
   static const reachAsk = 'কেন ডগা দিয়ে নামালেন?';
   static const reachRight = [
@@ -117,6 +130,9 @@ abstract final class ToolTipLines {
     'তাড়াতাড়ি সারলে দূরত্ব না মানলেও চলে',
     'ঘুড়ি তো কাগজের, তাতে কারেন্ট আসে না',
     'লাইন বন্ধ চাইলে লোকে রাগ করবে, তাই',
+    'হাত রেখার বাইরে, ডগা নিয়ে ভাবনা নেই',
+    'লক্ষ্মণ রেখা শরীরের, টুলের ডগার নয়',
+    'শুকনো হট স্টিক হলে ভেতরেও নিরাপদ',
   ];
 
   /// The careless coworker (his recorded voice) pushes the dry bamboo.
@@ -125,16 +141,19 @@ abstract final class ToolTipLines {
     line: helperLine,
     exitLine: coworkerExit,
     right: [
-      'না — হট স্টিক এনেই কাজ করব',
+      'হট স্টিক এনেই তবে কাজটা করব',
       'বাঁশ নয়, পরীক্ষিত হট স্টিক আনি',
       'গাড়ি দূরে হোক, হট স্টিকই আনব',
     ],
     wrong: [
       'ঠিক, শুকনো বাঁশই নিয়ে নিই',
       'বাঁশ তো শুকনো, এতেই চলবে',
-      'পিভিসি পাইপটাই নিই তাহলে',
       'একবার বাঁশ দিয়ে চেষ্টা করি',
       'সবাই তো বাঁশ দিয়েই নামায়',
+      'হট স্টিক থাক, বাঁশেই সারি',
+      'হট স্টিক আনতে দেরি, বাঁশই নিই',
+      'গাড়ি তো দূরে, বাঁশই নিয়ে নিই',
+      'পরীক্ষিত না হোক, বাঁশেই চলবে',
     ],
     asks: [
       'ও বলছে বাঁশেই চলবে। আপনি কী করবেন?',
@@ -378,6 +397,14 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
   int? _mark;
   int _totalDelta = 0;
 
+  /// Gesture hints (how to touch, never what): the tools, the stick's tip and
+  /// the shutdown button are their anchors; taps on nothing count.
+  final _hints = IdleHintController();
+  final _toolKeys = [GlobalKey(), GlobalKey(), GlobalKey()];
+  final _tipKey = GlobalKey();
+  final _shutKey = GlobalKey();
+  int _hintN = 0;
+
   /// The stick's tip under the finger (design px), while dragging.
   Offset? _tip;
   final _nudge = TaskNudge();
@@ -423,12 +450,16 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
     await _sayChain([ToolTipLines.askTool]);
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen;
+  /// The scene takes no input: never in the praise window ([tableBusy]: the ◆
+  /// on the table, the reason deck), a card, a freeze or the end.
+  bool get _blocked => _intro || _busy || _ended || _freeze || _card != null || tableBusy;
 
   void _pickTool(LongTool t, Offset origin) {
-    // Taking the hot stick while he is still talking refuses him too.
-    if (coworkerOpen && !coworkerChoiceUp && t == LongTool.hotStick) unawaited(answerCoworker(true, origin, direct: true));
+    // While he is on (both beats) the tray is away: he is answered on his deck,
+    // never by a second fast tap.
     if (_blocked || coworkerOpen || _run.phase != KitePhase.tool) return;
+    // His round: the pick waits for him (a fast tap never slips past him).
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     final m = _run.pickTool(t);
     if (m != null) {
@@ -452,6 +483,28 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
 
   // --- the hands-on reach: drag the tip ---------------------------------------
   bool get _canReach => !_blocked && _run.phase == KitePhase.decide;
+
+  // --- gesture hint (how to touch, never what) --------------------------------
+  /// The level waits for a touch on the scene (the tray or the kite); decks
+  /// show their own sweep, cards and the coworker's beats show none.
+  bool get _hintWaiting =>
+      !_blocked && !coworkerOnScreen && _mark == null && !struckOut && _tip == null && _run.phase != KitePhase.shown;
+
+  Object get _hintKey => ('tool-tip', _run.round, _run.phase, _run.slips);
+
+  HintSpec? _hint() {
+    if (_run.phase == KitePhase.tool) return HintSpec.sweepOver(_toolKeys);
+    // Two ways forward (reach or call): a sweep over both, taking turns with
+    // a short sideways nudge of the tip that points away from the kite.
+    return (_hintN++).isEven
+        ? HintSpec.sweepOver([_tipKey, _shutKey])
+        : HintSpec.dragFrom(_tipKey, toward: const Offset(-1, 0), travel: 48);
+  }
+
+  /// A tap that hit nothing to work with (a hint after a few).
+  void _missTap() {
+    if (_hintWaiting) _hints.missTap();
+  }
 
   void _dragTip(Offset p) {
     if (!_canReach) return;
@@ -589,6 +642,8 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
   /// Tap the guide: the task again, a different way each time.
   void _tapGuide() {
     if (_intro || _ended) return;
+    // Beat 1 is his alone: the guide never talks over the coworker's push.
+    if (coworkerOpen && !coworkerChoiceUp) return;
     final String line = coworkerOpen
         ? nextCoworkerAsk()
         : reasonOpen
@@ -735,8 +790,8 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
     final phase = _run.phase;
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final trayUp = playing && phase == KitePhase.tool && !reasonOpen && !coworkerChoiceUp;
-    final callUp = playing && phase == KitePhase.decide && _card == null && !reasonOpen && _tip == null;
+    final trayUp = playing && phase == KitePhase.tool && !reasonOpen && !coworkerOpen;
+    final callUp = playing && phase == KitePhase.decide && _card == null && !tableBusy && _tip == null;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -763,6 +818,11 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
               current: _run.done ? null : _run.round,
               quiet: quiet,
             ),
+            hint: _hint,
+            hintWaiting: playing && _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
+            hintAutoMiss: true,
             layers: (context, m) {
               final top = StreetGeo.topIn(m.height);
               return [
@@ -788,7 +848,9 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
                       reached: _run.reached,
                       reveal: phase == KitePhase.shown || (_card != null && _cardTone == MistakeTone.slip),
                       tip: _tip,
+                      tipKey: _tipKey,
                       quiet: quiet,
+                      onMiss: _missTap,
                       onDrag: _dragTip,
                       onRelease: () => unawaited(_releaseTip(Offset(size.width / 2, size.height / 2))),
                     ),
@@ -815,7 +877,7 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
                   right: 0,
                   bottom: pad.bottom + 12,
                   height: 92,
-                  child: _ToolTray(key: ValueKey('tray-${_run.round}'), tools: r.tools, quiet: quiet, onPick: _pickTool),
+                  child: _ToolTray(key: ValueKey('tray-${_run.round}'), tools: r.tools, cardKeys: _toolKeys, quiet: quiet, onPick: _pickTool),
                 ),
               if (callUp)
                 Positioned(
@@ -823,7 +885,10 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
                   left: 16,
                   right: 136,
                   bottom: pad.bottom + 22,
-                  child: DoBigButton(label: ToolTipLines.shutdown, filled: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition))),
+                  child: KeyedSubtree(
+                    key: _shutKey,
+                    child: DoBigButton(label: ToolTipLines.shutdown, filled: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition))),
+                  ),
                 ),
               if (deckUp)
                 Positioned(
@@ -924,8 +989,11 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
 
 /// The three long tools as picture cards (no names: look at them).
 class _ToolTray extends StatelessWidget {
-  const _ToolTray({super.key, required this.tools, required this.quiet, required this.onPick});
+  const _ToolTray({super.key, required this.tools, required this.cardKeys, required this.quiet, required this.onPick});
   final List<LongTool> tools;
+
+  /// One per card, in screen order (the gesture hint's sweep anchors).
+  final List<GlobalKey> cardKeys;
   final bool quiet;
   final void Function(LongTool t, Offset origin) onPick;
 
@@ -947,6 +1015,7 @@ class _ToolTray extends StatelessWidget {
                     button: true,
                     label: 'টুল',
                     child: GestureDetector(
+                      key: cardKeys[i],
                       behavior: HitTestBehavior.opaque,
                       onTapUp: (d) => onPick(tools[i], d.globalPosition),
                       child: Container(
@@ -1049,7 +1118,9 @@ class _KiteScene extends StatelessWidget {
     required this.reached,
     required this.reveal,
     required this.tip,
+    required this.tipKey,
     required this.quiet,
+    required this.onMiss,
     required this.onDrag,
     required this.onRelease,
   });
@@ -1058,7 +1129,13 @@ class _KiteScene extends StatelessWidget {
   final bool? reached;
   final bool reveal;
   final Offset? tip;
+
+  /// Marks the ready stick's tip (the gesture hint's anchor; draws nothing).
+  final GlobalKey tipKey;
   final bool quiet;
+
+  /// A tap on the street that moved nothing.
+  final VoidCallback onMiss;
   final ValueChanged<Offset> onDrag;
   final VoidCallback onRelease;
 
@@ -1162,6 +1239,16 @@ class _KiteScene extends StatelessWidget {
               ),
             ),
           ),
+        // The ready tip's spot (an invisible anchor for the gesture hint).
+        if (holding && reached == null && t == null)
+          Positioned(
+            key: const ValueKey('tip-anchor'),
+            left: _KitePainter.readyTip.dx - 22,
+            top: _KitePainter.readyTip.dy - 22,
+            width: 44,
+            height: 44,
+            child: IgnorePointer(child: SizedBox.expand(key: tipKey)),
+          ),
         // Drag on the street: the tip follows the finger.
         if (holding && reached == null)
           Positioned.fill(
@@ -1170,6 +1257,7 @@ class _KiteScene extends StatelessWidget {
               label: ToolTipLines.stickLabel,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
+                onTap: onMiss,
                 onPanStart: (e) => onDrag(e.localPosition),
                 onPanUpdate: (e) => onDrag(e.localPosition),
                 onPanEnd: (_) => onRelease(),
@@ -1206,6 +1294,10 @@ class _KitePainter extends CustomPainter {
   /// 0..1: the kite falling after a safe reach.
   final double fall;
 
+  /// The lineman's hand, and the hot stick's tip held ready (design px).
+  static const hand = Offset(160, StreetGeo.groundY - 50);
+  static final readyTip = hand + Offset.fromDirection(-1.1, 3.4 * StreetGeo.ppm);
+
   @override
   void paint(Canvas c, Size size) {
     paintWireAndRuler(c, size, withRuler: false);
@@ -1241,12 +1333,10 @@ class _KitePainter extends CustomPainter {
     final head = const Offset(x, g - h + 7);
     c.drawCircle(head, 7, Paint()..color = const Color(0xFFF0C9A0));
     c.drawArc(Rect.fromCircle(center: head.translate(0, -2), radius: 8), math.pi, math.pi, true, Paint()..color = const Color(0xFFF2B632));
-    const hand = Offset(x + 10, g - 50);
     c.drawLine(const Offset(x + 6, g - h + 20), hand, limb..color = const Color(0xFFF0C9A0));
     if (!holding) return;
     // The hot stick: held ready (pointing up toward the tree), or reaching.
-    final ready = hand + Offset.fromDirection(-1.1, 3.4 * StreetGeo.ppm);
-    final tip = this.tip ?? ready;
+    final tip = this.tip ?? readyTip;
     c.drawLine(hand, tip, Paint()..color = const Color(0xFFE9B949)..strokeWidth = 5..strokeCap = StrokeCap.round);
     c.drawLine(hand, Offset.lerp(hand, tip, 0.14)!, Paint()..color = const Color(0xFF3B3F45)..strokeWidth = 6..strokeCap = StrokeCap.round);
     final g0 = Offset.lerp(hand, tip, 0.24)!;

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="220" viewBox="0 0 200 220">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9CC3E0"/><stop offset="1" stop-color="#D9E6EE"/></linearGradient>
+<linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A3ACB4"/><stop offset="1" stop-color="#5E6870"/></linearGradient>
+<linearGradient id="cu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E7A86A"/><stop offset="1" stop-color="#B86C2C"/></linearGradient>
+<linearGradient id="meg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A23A"/><stop offset="1" stop-color="#C56E1C"/></linearGradient>
+<linearGradient id="mm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2D14A"/><stop offset="1" stop-color="#C9A322"/></linearGradient>
+<radialGradient id="flash"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.5" stop-color="#9CCBFF" stop-opacity="0.8"/><stop offset="1" stop-color="#508CFF" stop-opacity="0"/></radialGradient>
+<linearGradient id="soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A5A3A"/><stop offset="1" stop-color="#4A3422"/></linearGradient>
+</defs>
+<rect width="200" height="220" rx="18" fill="url(#bg)"/>
+<rect x="0" y="120" width="200" height="100" fill="url(#soil)"/><path d="M60 120 Q100 90 140 120 Z" fill="#6A4A2C"/><line x1="120" y1="40" x2="96" y2="130" stroke="#7A5530" stroke-width="6"/><path d="M86 124 L106 136 L96 152 L78 140 Z" fill="url(#steel)"/><path d="M0 170 Q100 160 200 172" stroke="#1E2228" stroke-width="12" fill="none"/><circle cx="160" cy="40" r="16" fill="#C8352C"/><path d="M152 32 L168 48 M168 32 L152 48" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>

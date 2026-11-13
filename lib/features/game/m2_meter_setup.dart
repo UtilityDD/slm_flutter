@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart' show HintSpec, IdleHintController;
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -47,6 +48,17 @@ import 'spoken_once.dart';
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene, corner guide, ◆ on the table → "কেন …?" → next job by itself.
+// The scene takes no move in the praise window ([ReasonTable.tableBusy]).
+// He can't be skipped by playing fast: picking a meter up / taking it (at
+// the case) and touching a lead / the probe (on the terminals) wait for him
+// ([CoworkerMoment.holdForCoworker]); while he is still talking only a real
+// move refuses him — a tap that changes nothing never does. Listening does
+// the act he pushes, which is on this rung's deadly list (MODULE2_LADDER.md).
+// Gesture hints (how, never what): a sweep over the meters in the case, a
+// drag along the leads in the close look, then a sweep over put back / take;
+// on a job a short nudge on a loose plug, a sweep over the sockets with a
+// lead in hand, else over the sockets, dial, isolator and probe; a sweep over
+// good / blown once the fuse is read; a tap to close the docket.
 // Voice: the guide's lines on device TTS; the coworker's two new pushes on
 // device TTS too until recorded (listed in M2MeterLines.toRecord); his exit
 // line is an existing clip.
@@ -190,7 +202,10 @@ abstract final class M2MeterLines {
   static const batteryTag = '12V';
 
   // The reasons (lesson 2.2). Within a set, every card is about the same
-  // length (test: within 1.3×).
+  // length (test: within 1.3×), and no word sits only on the right cards
+  // (V~ / AC / DC / COM / VΩmA / রেটিং / প্রোব / অক্ষত / ভোল্টে / পাওয়ার /
+  // আগে-তারপর are on wrong cards too). The fuse reading itself (সংযোগ
+  // পাওয়া গেল / নেই) is the one thing that must differ.
   static const meterAsk = 'কেন এই মিটারটা নিলেন?';
   static String catMatch(MeterCat c) => 'লাইনের কাজে ${c.short} মিটার, লিডও অক্ষত';
   static const meterSound = ['CAT রেটিং ঠিক, লিড-প্রোব-ব্যাটারিও ঠিক'];
@@ -201,6 +216,10 @@ abstract final class M2MeterLines {
     'ব্যাটারি কম হলেও রিডিং ঠিকই আসে',
     'লিডের তার একটু কাটা হলে কিছু হয় না',
     'হাতের কাছে ছিল, তাই এটাই তুলে নিলাম',
+    'রেটিং যা-ই হোক, মিটার তো মিটারই',
+    'প্রোবে একটু মরিচা থাকলে কিছু হয় না',
+    'লিড অক্ষত দেখলেই CAT দেখার দরকার নেই',
+    'CAT III/IV হলে লিডও ব্যাটারিও দেখি না',
   ];
   static List<String> meterRight(MeterCat c) => [catMatch(c), ...meterSound];
 
@@ -212,6 +231,10 @@ abstract final class M2MeterLines {
     'যেকোনো সকেটে দিলে মিটারই বুঝে নেয়',
     'ভোল্ট মাপতে কন্টিনিউটি মোডই যথেষ্ট',
     'ডায়াল যেখানেই থাক, প্রোব ছোঁয়ালেই হয়',
+    'ডায়াল V~ হলে লিড যেকোনো সকেটে চলে',
+    'কালো VΩmA-তে, লাল COM-এ — একই কথা',
+    'AC মাপতে লাল লিড 10A-তেই নিরাপদ',
+    'ডায়াল ওহমে রেখেছি, ভোল্টও তাতে আসে',
   ];
   static const dcRight = ['ব্যাটারিতে DC, তাই ডায়াল DC ভোল্টে', 'কালো COM-এ, লাল VΩmA-তে, ডায়াল DC'];
   static const dcWrong = [
@@ -220,6 +243,10 @@ abstract final class M2MeterLines {
     'যেকোনো সকেটে দিলে মিটারই বুঝে নেয়',
     'ব্যাটারি মাপতে ওহম মোডই সবচেয়ে ভালো',
     'ডায়াল যেখানেই থাক, প্রোব ছোঁয়ালেই হয়',
+    'ডায়াল DC হলে লিড যেকোনো সকেটে চলে',
+    'কালো VΩmA-তে, লাল COM-এ — একই কথা',
+    'DC মাপতে লাল লিড 10A-তেই নিরাপদ',
+    'ব্যাটারি ছোট, তাই ডায়াল AC ভোল্টে',
   ];
   static const fuseAsk = 'কেন ফিউজটা এভাবে যাচাই করলেন?';
   static String fuseResult(bool good) => good ? 'সংযোগ পাওয়া গেল — ফিউজটা ভালো' : 'সংযোগ নেই — ফিউজটা উড়ে গেছে';
@@ -230,6 +257,8 @@ abstract final class M2MeterLines {
     'ফিউজ দেখতে লাল লিড 10A-তেই ঠিক',
     'সুইচ বন্ধের দরকার নেই, ফিউজ তো ছোট',
     'বিপ না হলেও ফিউজটা ভালোই থাকে',
+    'আগে ফিউজে প্রোব, তারপর সুইচ বন্ধ',
+    'পাওয়ার চালু করে তবেই কন্টিনিউটি',
   ];
   static List<String> fuseRight(bool good) => [fuseResult(good), ...fuseSound];
   static List<String> fuseWrong(bool good) => [fuseResult(!good), ...fuseMyths];
@@ -241,7 +270,7 @@ abstract final class M2MeterLines {
     line: 'যেকোনো সকেটে লাগাও, মিটারই বুঝে নেবে!',
     exitLine: coworkerExit,
     right: ['না — লাল লিড VΩmA-তেই থাকবে', 'ভোল্টে 10A সকেট কখনো নয়', 'সকেট দেখে লাগাব, আন্দাজে নয়'],
-    wrong: ['ঠিক, মিটার নিজেই বুঝে নেবে', 'যেটা কাছে, সেটাতেই লাগাই', 'লাল লিড 10A-তেই গুঁজে দিই', 'একবার 10A দিয়েই মেপে নিই', 'সবাই তো যেকোনো সকেটে দেয়'],
+    wrong: ['ঠিক, মিটার নিজেই বুঝে নেবে', 'যেটা কাছে, সেটাতেই লাগাই', 'লাল লিড 10A-তেই গুঁজে দিই', 'একবার 10A দিয়েই মেপে নিই', 'সবাই তো যেকোনো সকেটে দেয়', 'VΩmA না 10A — যেকোনোটাতেই চলে', 'সকেট না দেখে আন্দাজেই লাগাব', 'ভোল্টেও লাল লিড 10A-তে থাকবে', 'কখনো তো কিছু হয়নি, লাগিয়ে দিই'],
     asks: ['ও বলছে যেকোনো সকেটেই চলবে। আপনি কী করবেন?', 'আন্দাজে সকেট, না দেখে শুনে?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
   );
   static const coworkerAnyMeter = CoworkerScript(
@@ -254,6 +283,9 @@ abstract final class M2MeterLines {
       'একবার CAT II দিয়েই মেপে নিই',
       'রেটিং দেখার সময় নেই, চলো',
       'সবাই তো যেটা পায় সেটাই নেয়',
+      'লাইনে CAT II নিলেও কিছু হয় না',
+      'III না IV, দেখে নেব না, চলো',
+      'কখনো তো কিছু হয়নি, এটাই নিই',
     ],
     asks: ['ও বলছে যেকোনো মিটারেই চলবে। আপনি কী করবেন?', 'রেটিং দেখবেন, না চকচকে দেখে?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
   );
@@ -504,6 +536,7 @@ class MeterRun {
 
   /// The player's hand (or the switched-on display) found [m]'s flaw.
   void spot(MeterItem m) {
+    if (ended) return;
     if (m.flaw != MeterFlaw.none) spotted.add(m.id);
   }
 
@@ -625,6 +658,7 @@ class MeterRun {
 
   /// The next round (after the reason).
   void next() {
+    if (ended) return;
     round++;
     shown = false;
     _setUpJob();
@@ -642,11 +676,13 @@ class MeterRun {
   }
 }
 
-/// May the coworker come now? Only with something to push: the CAT II meter
-/// still in the case (round 0), or the terminal job not yet done.
+/// May the coworker come now? Only while his push still fits: the CAT II
+/// meter still in the case (round 0), or the terminal job not yet done with
+/// the leads not yet both in their right sockets ("যেকোনো সকেটে লাগাও" after
+/// the player plugged them right would not fit).
 bool meterPushOpen(MeterRun r) => switch (r.deal.push) {
   MeterPush.anyMeter => r.round == 0 && !r.shown && r.deal.meters.any((m) => m.cat == MeterCat.cat2 && !r.rejected.contains(m.id)),
-  MeterPush.socket => r.job == MeterJob.acLt && !r.shown,
+  MeterPush.socket => r.job == MeterJob.acLt && !r.shown && !(r.red == MeterSock.vohm && r.black == MeterSock.com),
 };
 
 @immutable
@@ -745,6 +781,23 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints: the controls' rects.
+  final _hints = IdleHintController();
+  late final _slotKeys = [for (final _ in _run.deal.meters) GlobalKey()];
+  final _isolatorKey = GlobalKey();
+  final _leadsKey = GlobalKey();
+  final _takeKey = GlobalKey();
+  final _backKey = GlobalKey();
+  final _probeKey = GlobalKey();
+  final _okKey = GlobalKey();
+  final _blownKey = GlobalKey();
+  final _dialKey = GlobalKey();
+  final _sockKeys = {for (final s in MeterSock.values) s: GlobalKey()};
+  final _plugKeys = {for (final l in MeterLead.values) l: GlobalKey()};
+
+  /// In the close look, a finger has run along both leads.
+  var _slid = false;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -800,29 +853,42 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || _run.shown || _freeze;
+  /// No move now: intro, a card, the praise window or the reason deck
+  /// ([tableBusy]), a decided round, the death freeze.
+  bool get _blocked => _intro || _busy || _ended || _card != null || tableBusy || _run.shown || _freeze;
 
   void _setMode(LinemanMode m) {
     _mode = m;
     _wake++;
   }
 
-  /// Any hands-on move while he is still talking (not the one he pushes)
-  /// refuses him.
+  /// He is still talking (beat 1): no deck yet.
+  bool get _coworkerTalking => coworkerOpen && !coworkerChoiceUp;
+
+  /// A real hands-on move while he is still talking (not the one he pushes)
+  /// refuses him. Callers check first that the move changes something: a tap
+  /// that does nothing (the dial already there, an empty socket with no lead
+  /// in hand, the isolator off the fuse job, the probe with a lead loose)
+  /// never refuses him.
   void _refuseByWork(Offset at) {
-    if (coworkerOpen && !coworkerChoiceUp) unawaited(answerCoworker(true, at, direct: true));
+    if (_coworkerTalking) unawaited(answerCoworker(true, at, direct: true));
   }
 
   // Round 0: the case.
 
   void _pick(MeterItem m, Offset at) {
-    if (coworkerOpen && !coworkerChoiceUp && m.cat != MeterCat.cat2) _refuseByWork(at);
-    if (_blocked || coworkerOpen || _held != null || _docketOpen || _run.rejected.contains(m.id)) return;
+    if (_blocked || coworkerChoiceUp || _held != null || _docketOpen || _run.rejected.contains(m.id)) return;
+    if (holdForCoworker()) return;
+    // Picking a meter up to read its label is the refusal — whichever it is
+    // (so his leaving never tells which one is the CAT II).
+    _refuseByWork(at);
+    if (coworkerOpen) return;
     HapticFeedback.selectionClick();
     _cue('sounds/intro/impact_metal.ogg', volume: 0.4);
     _hush();
     setState(() {
       _held = m;
+      _slid = false;
       _setMode(LinemanMode.hold);
     });
     unawaited(_sayChain([M2MeterLines.inspectAsk]));
@@ -837,7 +903,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
 
   void _putBack() {
     final m = _held;
-    if (m == null || _blocked) return;
+    if (m == null || _blocked || coworkerOpen) return;
     final aside = _run.putBack(m);
     HapticFeedback.selectionClick();
     setState(() {
@@ -855,7 +921,8 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
 
   void _take(Offset at) {
     final m = _held;
-    if (m == null || _blocked) return;
+    if (m == null || _blocked || coworkerOpen) return;
+    if (holdForCoworker()) return;
     setState(() => _held = null);
     final o = _run.take(m);
     switch (o.verdict) {
@@ -876,17 +943,24 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
 
   // Rounds 1–3: the meter in hand.
 
-  bool get _jobLive => !_blocked && !coworkerOpen && _run.job != null && !_run.judging && !_docketOpen;
+  /// The meter in hand could take a move (he may still be talking: beat 1).
+  bool get _handsFree => !_blocked && !coworkerChoiceUp && _run.job != null && !_run.judging && !_docketOpen;
+
+  /// The meter in hand takes a move now.
+  bool get _jobLive => _handsFree && !coworkerOpen;
 
   void _turnDial(MeterDial d, Offset at) {
+    if (!_handsFree || _run.dial == d) return;
     _refuseByWork(at);
-    if (!_jobLive || _run.dial == d) return;
+    if (!_jobLive) return;
     HapticFeedback.selectionClick();
     _cue('sounds/intro/click.ogg', volume: 0.5);
     setState(() => _run.setDial(d));
   }
 
   void _liftLead(MeterLead lead, Offset at) {
+    if (!_handsFree) return;
+    if (holdForCoworker()) return;
     _refuseByWork(at);
     if (!_jobLive) return;
     HapticFeedback.selectionClick();
@@ -898,26 +972,40 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
   }
 
   void _tapSocket(MeterSock s, Offset at) {
+    if (!_handsFree) return;
     final lifted = _lifted;
-    // Plugging into 10A while he talks is what he pushes — not a refusal.
-    if (!(lifted == MeterLead.red && s == MeterSock.a10)) _refuseByWork(at);
-    if (!_jobLive) return;
-    if (lifted == null) {
-      // Tap a plugged socket: pull its lead out into the hand.
-      final there = _run.red == s ? MeterLead.red : (_run.black == s ? MeterLead.black : null);
-      if (there == null) return;
-      HapticFeedback.selectionClick();
-      _cue('sounds/intro/click.ogg', volume: 0.4);
-      setState(() {
-        _run.unplug(there);
-        _lifted = there;
-      });
+    if (lifted != null) {
+      _dropLead(lifted, s, at: at);
       return;
     }
-    _dropLead(lifted, s);
+    // Tap a plugged socket: pull its lead out into the hand. An empty socket
+    // with no lead in hand does nothing (a miss for the gesture hint).
+    final there = _run.red == s ? MeterLead.red : (_run.black == s ? MeterLead.black : null);
+    if (there == null) {
+      _hints.missTap();
+      return;
+    }
+    if (holdForCoworker()) return;
+    _refuseByWork(at);
+    if (!_jobLive) return;
+    HapticFeedback.selectionClick();
+    _cue('sounds/intro/click.ogg', volume: 0.4);
+    setState(() {
+      _run.unplug(there);
+      _lifted = there;
+    });
   }
 
-  void _dropLead(MeterLead lead, MeterSock s) {
+  /// A lead into a socket (a tap with the lead in hand, or a drag).
+  void _dropLead(MeterLead lead, MeterSock s, {Offset? at}) {
+    if (!_handsFree) return;
+    if (holdForCoworker()) return;
+    if (_coworkerTalking) {
+      // A lead into 10A while he talks is what he pushes: not a refusal, and
+      // not now (he is still talking).
+      if (s == MeterSock.a10) return;
+      _refuseByWork(at ?? HintSpec.globalRectOf(_sockKeys[s]!)?.center ?? Offset.zero);
+    }
     if (!_jobLive) return;
     HapticFeedback.mediumImpact();
     _cue('sounds/intro/impact_metal.ogg', volume: 0.35);
@@ -928,7 +1016,14 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
   }
 
   void _toggleIsolator(Offset at) {
-    _refuseByWork(at);
+    if (!_handsFree) {
+      // At the case the isolator is no part of the job: a tap on nothing.
+      if (_run.job == null && !_blocked) _hints.missTap();
+      return;
+    }
+    // It matters only on the fuse job: elsewhere a throw is no work and never
+    // refuses him (he talks only at the case or on the terminals).
+    if (_run.job == MeterJob.fuse) _refuseByWork(at);
     if (!_jobLive) return;
     HapticFeedback.heavyImpact();
     _cue('sounds/intro/impact_metal.ogg', volume: 0.6);
@@ -938,7 +1033,18 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
   }
 
   void _probe(Offset at) {
-    _refuseByWork(at);
+    if (!_handsFree) return;
+    if (holdForCoworker()) return;
+    if (_coworkerTalking) {
+      // A lead loose or the meter off: the probe does nothing — no refusal.
+      if (_run.red == null || _run.black == null || _run.dial == MeterDial.off) return;
+      // Touching on with a lead in 10A is doing what he pushes: listening.
+      if (_run.red == MeterSock.a10 || _run.black == MeterSock.a10) {
+        unawaited(answerCoworker(false, at, direct: true));
+        return;
+      }
+      _refuseByWork(at);
+    }
     if (!_jobLive) return;
     _hush();
     final o = _run.probe();
@@ -1047,8 +1153,10 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round > _run.deal.callRound) return null;
     if (_run.round < _run.deal.callRound) return false;
-    if (_blocked || _held != null || _docketOpen || _lifted != null) return false;
-    if (!meterPushOpen(_run)) return _run.round == _run.deal.callRound && !_run.shown ? false : null;
+    // His push no longer fits (the CAT II aside, the leads already right, the
+    // job done): he does not come this play.
+    if (!meterPushOpen(_run)) return null;
+    if (_blocked || tableBusy || _held != null || _docketOpen || _lifted != null) return false;
     return true;
   }
 
@@ -1062,7 +1170,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
     if (!held) {
       // Took what he pushed: the CAT II meter, or the red lead into 10A on the live terminals.
       final m = _run.deal.push == MeterPush.anyMeter ? M2MeterMistakes.catTwo : M2MeterMistakes.tenALive;
-      if (m == M2MeterMistakes.tenALive) {
+      if (m == M2MeterMistakes.tenALive && _run.black != MeterSock.a10) {
         _run.red = MeterSock.a10;
       }
       _run.deadly = m;
@@ -1081,7 +1189,8 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
   }
 
   void _tapGuide() {
-    if (_intro || _ended) return;
+    // Not while he is still talking (beat 1: only he speaks).
+    if (_intro || _ended || _coworkerTalking) return;
     final String line = coworkerOpen
         ? nextCoworkerAsk()
         : reasonOpen
@@ -1238,6 +1347,45 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
     if (leave == true) _popOnce(false);
   }
 
+  // ---- gesture hint -------------------------------------------------------------------
+
+  /// The level waits for the player's input now (no intro, card, praise,
+  /// deck, coworker, freeze or result; the decks show their own sweep).
+  bool get _waiting =>
+      !_intro && _mark == null && !struckOut && !_freeze && !_busy && !_ended && _card == null && !tableBusy && !coworkerOnScreen && !_run.shown;
+
+  /// How to touch now — never what (gesture_hint.dart).
+  HintSpec? _hint() {
+    if (_docketOpen) {
+      // A tap anywhere puts the docket back: the one way forward.
+      final s = MediaQuery.sizeOf(context);
+      return HintSpec.tap(Offset(s.width / 2, s.height * 0.72));
+    }
+    if (_held != null) {
+      if (!_slid) {
+        // Run a finger along the leads: a short drag along the red lead.
+        final r = HintSpec.globalRectOf(_leadsKey);
+        return r == null ? null : HintSpec.drag(r.topLeft + LeadsPainter.at(r.size, true, 0.12), toward: const Offset(1, 0), travel: 80);
+      }
+      return HintSpec.sweepOver([_backKey, _takeKey]);
+    }
+    if (_run.job == null) {
+      final open = [
+        for (var i = 0; i < _run.deal.meters.length; i++)
+          if (!_run.rejected.contains(_run.deal.meters[i].id)) _slotKeys[i],
+      ];
+      return open.length < 2 ? null : HintSpec.sweepOver(open);
+    }
+    if (_run.judging) return HintSpec.sweepOver([_okKey, _blownKey]);
+    if (_lifted != null) return HintSpec.sweepOver(_sockKeys.values);
+    final loose = _run.red == null ? MeterLead.red : (_run.black == null ? MeterLead.black : null);
+    // A plug can be lifted or dragged: a short nudge up, never toward a socket.
+    if (loose != null) return HintSpec.dragFrom(_plugKeys[loose]!, toward: const Offset(0, -1), travel: 56);
+    return HintSpec.sweepOver([..._sockKeys.values, _dialKey, _isolatorKey, _probeKey]);
+  }
+
+  String get _hintKey => '${_run.round}-${_held?.id}-$_slid-${_lifted?.name}-${_run.judging}-$_docketOpen-${_run.red?.name}-${_run.black?.name}';
+
   // ---- build --------------------------------------------------------------------------
 
   Rect? _targetRect(MeterSceneGeo geo) => switch (_run.job) {
@@ -1267,7 +1415,10 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
       Positioned.fromRect(
         key: const ValueKey('isolator'),
         rect: geo.isolator,
-        child: g(_IsolatorSwitch(on: _run.isolatorOn, onTapUp: (d) => _toggleIsolator(d.globalPosition))),
+        child: KeyedSubtree(
+          key: _isolatorKey,
+          child: g(_IsolatorSwitch(on: _run.isolatorOn, onTapUp: (d) => _toggleIsolator(d.globalPosition))),
+        ),
       ),
       Positioned(
         key: const ValueKey('battery-tag'),
@@ -1305,6 +1456,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
                 quiet: quiet,
                 muted: true,
                 child: _CaseMeter(
+                  key: _slotKeys[i],
                   meter: meters[i],
                   gone: _run.rejected.contains(meters[i].id) || _held?.id == meters[i].id || _run.meter?.id == meters[i].id,
                   enabled: canPick,
@@ -1366,6 +1518,11 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: _waiting,
+            hintKey: _hintKey,
+            hintController: _hints,
+            hintAutoMiss: true,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (panelUp)
@@ -1387,10 +1544,27 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
                     onDropLead: _dropLead,
                     onProbe: _probe,
                     onJudge: _judge,
+                    socketKeys: _sockKeys,
+                    plugKeys: _plugKeys,
+                    dialKey: _dialKey,
+                    probeKey: _probeKey,
+                    okKey: _okKey,
+                    blownKey: _blownKey,
                   ),
                 ),
               if (held != null && playing)
-                _Inspect(key: ValueKey('inspect-${held.id}'), meter: held, quiet: quiet, onFound: _found, onTake: _take, onPutBack: _putBack),
+                _Inspect(
+                  key: ValueKey('inspect-${held.id}'),
+                  meter: held,
+                  quiet: quiet,
+                  onFound: _found,
+                  onTake: _take,
+                  onPutBack: _putBack,
+                  onSlid: () => setState(() => _slid = true),
+                  leadsKey: _leadsKey,
+                  takeKey: _takeKey,
+                  backKey: _backKey,
+                ),
               if (_docketOpen && playing)
                 _DocketZoom(
                   key: const ValueKey('docket-zoom'),
@@ -1412,7 +1586,8 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
                         : coworkerDeck(quiet: quiet, key: const ValueKey('choice-deck')),
                   ),
                 ),
-              if (playing && _card == null && !_docketOpen && held == null)
+              // The guide stays for the coworker's deck even over the close look.
+              if (playing && _card == null && !_docketOpen && (held == null || coworkerOpen))
                 cornerGuide(
                   onTap: _tapGuide,
                   bottom: pad.bottom + (deckUp ? 236 : (panelUp ? panelH + 14 : 8)),
@@ -1714,7 +1889,7 @@ class _DocketZoom extends StatelessWidget {
 
 /// A meter lying in the case: from a step away its label is a blank strip.
 class _CaseMeter extends StatelessWidget {
-  const _CaseMeter({required this.meter, required this.gone, required this.enabled, required this.onTake});
+  const _CaseMeter({super.key, required this.meter, required this.gone, required this.enabled, required this.onTake});
   final MeterItem meter;
   final bool gone;
   final bool enabled;
@@ -1870,6 +2045,8 @@ class _MeterFace extends StatelessWidget {
     this.onKnob,
     this.lowBattery = false,
     this.beep = false,
+    this.socketKeys,
+    this.dialKey,
   });
   final MeterItem meter;
   final double w;
@@ -1884,6 +2061,10 @@ class _MeterFace extends StatelessWidget {
   final VoidCallback? onKnob;
   final bool lowBattery;
   final bool beep;
+
+  /// Gesture-hint anchors (the live meter only).
+  final Map<MeterSock, GlobalKey>? socketKeys;
+  final GlobalKey? dialKey;
 
   @override
   Widget build(BuildContext context) {
@@ -1995,6 +2176,7 @@ class _MeterFace extends StatelessWidget {
       final drop = onDropLead;
       if (tap == null) return body;
       return Semantics(
+        key: socketKeys?[s],
         button: true,
         label: s.label,
         child: DragTarget<MeterLead>(
@@ -2026,6 +2208,7 @@ class _MeterFace extends StatelessWidget {
           ),
         ),
         SizedBox(
+          key: dialKey,
           width: dialBox,
           height: dialBox * 0.86,
           child: Stack(
@@ -2166,6 +2349,12 @@ class _MeterPanel extends StatelessWidget {
     required this.onDropLead,
     required this.onProbe,
     required this.onJudge,
+    required this.socketKeys,
+    required this.plugKeys,
+    required this.dialKey,
+    required this.probeKey,
+    required this.okKey,
+    required this.blownKey,
   });
   final MeterItem meter;
   final MeterRun run;
@@ -2178,6 +2367,14 @@ class _MeterPanel extends StatelessWidget {
   final void Function(MeterLead, MeterSock) onDropLead;
   final void Function(Offset) onProbe;
   final void Function(bool, Offset) onJudge;
+
+  /// Gesture-hint anchors.
+  final Map<MeterSock, GlobalKey> socketKeys;
+  final Map<MeterLead, GlobalKey> plugKeys;
+  final GlobalKey dialKey;
+  final GlobalKey probeKey;
+  final GlobalKey okKey;
+  final GlobalKey blownKey;
 
   @override
   Widget build(BuildContext context) {
@@ -2230,6 +2427,8 @@ class _MeterPanel extends StatelessWidget {
                           onDial: onDial,
                           onSocket: onSocket,
                           onDropLead: onDropLead,
+                          socketKeys: socketKeys,
+                          dialKey: dialKey,
                         ),
                       ),
                     ),
@@ -2243,16 +2442,19 @@ class _MeterPanel extends StatelessWidget {
                             runSpacing: 8,
                             children: [
                               for (final l in loose)
-                                _LeadPlug(key: ValueKey('plug-${l.name}'), lead: l, up: lifted == l, onTapUp: (d) => onLead(l, d.globalPosition)),
+                                KeyedSubtree(
+                                  key: plugKeys[l],
+                                  child: _LeadPlug(key: ValueKey('plug-${l.name}'), lead: l, up: lifted == l, onTapUp: (d) => onLead(l, d.globalPosition)),
+                                ),
                             ],
                           ),
                           const Spacer(),
                           if (run.judging) ...[
-                            DoBigButton(label: M2MeterLines.fuseOk, filled: true, onTapUp: (d) => onJudge(true, d.globalPosition)),
+                            DoBigButton(key: okKey, label: M2MeterLines.fuseOk, filled: true, onTapUp: (d) => onJudge(true, d.globalPosition)),
                             const SizedBox(height: 8),
-                            DoBigButton(label: M2MeterLines.fuseBlown, filled: false, onDark: true, onTapUp: (d) => onJudge(false, d.globalPosition)),
+                            DoBigButton(key: blownKey, label: M2MeterLines.fuseBlown, filled: false, onDark: true, onTapUp: (d) => onJudge(false, d.globalPosition)),
                           ] else
-                            DoBigButton(label: M2MeterLines.probe, filled: true, onTapUp: (d) => onProbe(d.globalPosition)),
+                            DoBigButton(key: probeKey, label: M2MeterLines.probe, filled: true, onTapUp: (d) => onProbe(d.globalPosition)),
                         ],
                       ),
                     ),
@@ -2272,12 +2474,31 @@ class _MeterPanel extends StatelessWidget {
 /// both leads to the probe tips (a cut or rust shows only where the hand has
 /// been). Then take it or put it back.
 class _Inspect extends StatefulWidget {
-  const _Inspect({super.key, required this.meter, required this.quiet, required this.onFound, required this.onTake, required this.onPutBack});
+  const _Inspect({
+    super.key,
+    required this.meter,
+    required this.quiet,
+    required this.onFound,
+    required this.onTake,
+    required this.onPutBack,
+    required this.onSlid,
+    required this.leadsKey,
+    required this.takeKey,
+    required this.backKey,
+  });
   final MeterItem meter;
   final bool quiet;
   final VoidCallback onFound;
   final ValueChanged<Offset> onTake;
   final VoidCallback onPutBack;
+
+  /// A finger has now run along both leads (the gesture hint moves on).
+  final VoidCallback onSlid;
+
+  /// Gesture-hint anchors.
+  final GlobalKey leadsKey;
+  final GlobalKey takeKey;
+  final GlobalKey backKey;
 
   @override
   State<_Inspect> createState() => _InspectState();
@@ -2289,6 +2510,7 @@ class _InspectState extends State<_Inspect> {
   Offset? _hand;
   var _on = false;
   var _found = false;
+  var _slid = false;
 
   bool? get _cutOn => widget.meter.flaw == MeterFlaw.cutLead ? widget.meter.onRed : null;
   bool? get _rustOn => widget.meter.flaw == MeterFlaw.rustyTip ? widget.meter.onRed : null;
@@ -2309,6 +2531,10 @@ class _InspectState extends State<_Inspect> {
     final set = red ? _red : _black;
     for (final x in [b - 1, b, b + 1]) {
       if (x >= 0 && x < kLeadBins) set.add(x);
+    }
+    if (!_slid && _red.isNotEmpty && _black.isNotEmpty) {
+      _slid = true;
+      widget.onSlid();
     }
     _check();
     setState(() => _hand = p);
@@ -2357,6 +2583,7 @@ class _InspectState extends State<_Inspect> {
                   ),
                   const SizedBox(height: 10),
                   AspectRatio(
+                    key: widget.leadsKey,
                     aspectRatio: 3.0,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -2397,11 +2624,11 @@ class _InspectState extends State<_Inspect> {
                   Row(
                     children: [
                       Expanded(
-                        child: DoBigButton(label: M2MeterLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack()),
+                        child: DoBigButton(key: widget.backKey, label: M2MeterLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack()),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: DoBigButton(label: M2MeterLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition)),
+                        child: DoBigButton(key: widget.takeKey, label: M2MeterLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition)),
                       ),
                     ],
                   ),

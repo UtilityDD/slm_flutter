@@ -4,7 +4,10 @@
 // libraries that fit the pole, his recorded lines, and both levels in the
 // shell: idle perf, a full clean play per pack (walk round — by swipe and by
 // the button — look close with the lens, knock, decide, the reasons, the
-// coworker refused), a slip, the 3-slip strike-out and the deadly freeze.
+// coworker refused), a slip, the 3-slip strike-out and the deadly freeze;
+// the coworker on a fast call (holdForCoworker), the praise window taking no
+// input, no tell words on the right cards, English digits, and the gesture
+// hint (a sweep over the tools and both calls alike, a nudge of the lens).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -17,6 +20,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -31,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 LevelContext _ctx(int doIndex) => LevelContext(
       rungId: '1.3/do/${doIndex - 1}',
@@ -60,6 +65,7 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await confirmChoice(t);
   await t.pump();
   // Wait for reason zoom (coworker decks have no proceed).
   for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
@@ -319,6 +325,18 @@ void main() {
       expect(run.percent, 55);
     });
 
+    test('a false report costs a slip and its card stays neutral (the pole is still to read)', () {
+      final d = dealPoles(math.Random(5), PoleKind.steel);
+      final run = PoleRun(d)..index = d.poles.indexWhere((p) => !p.mustReport);
+      expect(run.decide(climb: false), PoleMistakes.falseReport);
+      expect(run.slips, 1);
+      expect(run.shown, isFalse);
+      // Never "it was fine" before the player decides again.
+      expect(PoleMistakes.falseReport.textBn, isNot(contains('ঠিক')));
+      expect(PoleMistakes.falseReport.textBn, isNot(contains('ভালো')));
+      expect(PoleMistakes.falseReport.deadly, isFalse);
+    });
+
     test('a right report tags what was caught (back side, sound)', () {
       const back = PoleCase(id: 'b', kind: PoleKind.pcc, flaws: [PoleFlaw(PoleDefect.hairline, PoleSide.back)]);
       const hollow = PoleCase(id: 'h', kind: PoleKind.pcc, flaws: [PoleFlaw(PoleDefect.hollow, PoleSide.front)]);
@@ -418,6 +436,66 @@ void main() {
     }
   });
 
+  test('no tell words: a word on two right cards is on a wrong card too (his deck, the climb deck)', () {
+    Set<String> words(String s) => {for (final w in s.split(RegExp(r'[\s,—!?।]+'))) if (w.isNotEmpty) w};
+    void noTell(String name, List<String> right, List<String> wrong) {
+      final onWrong = {for (final w in wrong) ...words(w)};
+      final n = <String, int>{};
+      for (final r in right) {
+        for (final w in words(r)) {
+          n[w] = (n[w] ?? 0) + 1;
+        }
+      }
+      final tells = [for (final e in n.entries) if (e.value >= 2 && !onWrong.contains(e.key)) e.key];
+      expect(tells, isEmpty, reason: '$name: only on the right cards');
+    }
+
+    for (final k in PoleKind.values) {
+      final c = PoleLines.coworker(k);
+      noTell('coworker $k', c.right, c.wrong);
+      noTell('climbed $k', k == PoleKind.pcc ? PoleLines.soundPcc : PoleLines.soundSteel, PoleLines.myths(k));
+    }
+  });
+
+  test('English digits only on screen (no Bangla digits in any line)', () {
+    final all = <String>[
+      PoleLines.titlePcc,
+      PoleLines.titleSteel,
+      PoleLines.introPcc,
+      PoleLines.introSteel,
+      PoleLines.ask,
+      ...PoleLines.tapWhy,
+      PoleLines.walk,
+      PoleLines.look,
+      PoleLines.tap,
+      PoleLines.climb,
+      PoleLines.report,
+      PoleLines.stampReport,
+      PoleLines.stampClimb,
+      PoleLines.told,
+      PoleLines.whyClimb,
+      PoleLines.whyReport,
+      ...PoleLines.soundPcc,
+      ...PoleLines.soundSteel,
+      ...PoleLines.mythsPcc,
+      ...PoleLines.mythsSteel,
+      for (final d in PoleDefect.values) ...PoleLines.defectWhy(d),
+      for (final d in PoleDefect.values) PoleLines.defectBn(d),
+      for (final m in PoleMistakes.all) m.textBn,
+      for (final k in PoleKind.values) ...PoleLines.coworker(k).recordedLines,
+      for (final k in PoleKind.values) ...PoleLines.coworker(k).right,
+      for (final k in PoleKind.values) ...PoleLines.coworker(k).wrong,
+      ...PoleLines.coworkerAsks,
+      PoleLines.callHeld,
+      PoleLines.allSet,
+      PoleLines.quick,
+      PoleLines.fail,
+    ];
+    for (final l in all) {
+      expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
+    }
+  });
+
   group('page', () {
     TestWidgetsFlutterBinding.ensureInitialized();
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -459,7 +537,7 @@ void main() {
           }
           debugPrint('PERF ${pack.id} ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
           expect(t.takeException(), isNull);
-          expect(find.textContaining('ধাপ '), findsOneWidget);
+          expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
           expect(perSec, lessThan(20));
           expect(frames, lessThan(12));
           await t.pumpWidget(const SizedBox());
@@ -565,10 +643,126 @@ void main() {
       });
     }
 
-    testWidgets('a false report is a slip with its card; the pole stays; three of them strike out', (t) async {
+    for (final (packId, climbFirst) in const [('do_1_3_a', true), ('do_1_3_b', false)]) {
+      testWidgets('he comes even on a fast play ($packId): a ${climbFirst ? 'climb' : 'report'} before any check waits for him', (t) async {
+        final pack = poleReadPacks[packId]!;
+        var seed = 0;
+        while (dealPoles(math.Random(seed), pack.kind).callPole != 0) {
+          seed++;
+        }
+        final deal = dealPoles(math.Random(seed), pack.kind);
+        final p = deal.poles.first;
+        final c = await _open(t, pack, seed);
+        expect(find.byType(CoworkerPeek), findsNothing, reason: 'no check yet: he has not come by himself');
+        // The call at once, before any check: it waits; he cuts in now.
+        await t.tap(find.text(climbFirst ? PoleLines.climb : PoleLines.report));
+        await _pump(t, 300);
+        expect(find.byType(CoworkerPeek), findsOneWidget);
+        expect(find.byType(FreezeFrame), findsNothing);
+        expect(find.byType(MistakeCard), findsNothing);
+        expect(find.byKey(const ValueKey('stamp-0')), findsNothing, reason: 'the call was not made');
+        await waitChoiceDeck(t);
+        final right = _onScreen(PoleLines.coworker(pack.kind).right);
+        expect(right, hasLength(1));
+        await t.tap(right.single, warnIfMissed: false);
+        await tapReasonProceed(t);
+        await _pump(t, 2500);
+        expect(find.byType(CoworkerPeek), findsNothing);
+        // The pole is still to read; the right call now goes through.
+        expect(find.text(PoleLines.report), findsOneWidget);
+        await _readPole(t, swipe: false);
+        await t.tap(find.text(p.mustReport ? PoleLines.report : PoleLines.climb));
+        await _pump(t, 2500);
+        expect(find.text(MistakeLines.slipHead), findsNothing);
+        expect(find.text(p.mustReport ? PoleLines.whyReport : PoleLines.whyClimb), findsWidgets);
+        expect(c.read(gameSaveProvider).mistakes, isEmpty);
+        await _close(t, c);
+      });
+    }
+
+    testWidgets('the praise window takes no input: no lens, no tools, nothing scores twice', (t) async {
       final pack = poleReadPacks['do_1_3_a']!;
       var seed = 0;
-      while (dealPoles(math.Random(seed), pack.kind).poles.first.mustReport) {
+      while (true) {
+        final d = dealPoles(math.Random(seed), pack.kind);
+        if (d.poles.first.condemned && d.callPole != 0) break;
+        seed++;
+      }
+      final deal = dealPoles(math.Random(seed), pack.kind);
+      final c = await _open(t, pack, seed);
+      final scene = t.getCenter(_label(PoleLines.poleLabel));
+      await t.tap(find.text(PoleLines.report));
+      await t.pump(const Duration(milliseconds: 60));
+      expect(find.byKey(const ValueKey('hud-tools')), findsNothing);
+      expect(find.byKey(const ValueKey('hud-decide')), findsNothing);
+      await t.tapAt(scene);
+      await t.pump(const Duration(milliseconds: 60));
+      expect(_label(PoleLines.lensLabel), findsNothing, reason: 'a scene tap in the praise window opens no lens');
+      await waitChoiceDeck(t);
+      final r = _onScreen(PoleLines.whyRight(deal.poles.first));
+      expect(r, hasLength(1));
+      await t.tap(r.single, warnIfMissed: false);
+      await tapReasonProceed(t);
+      await _pump(t, 4000);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: idle sweeps the tools and both calls alike; misses call it; the lens is nudged', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      const hand = ValueKey('gesture-hint');
+      final pack = poleReadPacks['do_1_3_a']!;
+      var seed = 0;
+      while (dealPoles(math.Random(seed), pack.kind).callPole == 0) {
+        seed++;
+      }
+      final c = await _open(t, pack, seed);
+      IdleHintState hint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(find.byKey(hand), findsNothing);
+      expect(hint().widget.waiting, isTrue, reason: 'the pole waits for the player');
+      // No touch for the idle time: the hand comes by itself.
+      for (var i = 0; i < 190; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byKey(hand), findsOneWidget, reason: 'idle while the pole waits');
+      final opts = hint().debugOptions;
+      expect(opts, hasLength(5), reason: 'three tools and both calls');
+      for (final f in [find.text(PoleLines.walk), find.text(PoleLines.look), find.text(PoleLines.tap), find.text(PoleLines.report), find.text(PoleLines.climb)]) {
+        final at = t.getCenter(f);
+        expect(opts.any((r) => r.inflate(30).contains(at)), isTrue, reason: '$f is swept');
+      }
+      expect(find.byType(MistakeCard), findsNothing, reason: 'a hint presses nothing');
+      expect(find.byKey(const ValueKey('stamp-0')), findsNothing);
+      // Any touch hides it; three taps on the sky bring it back.
+      await t.tapAt(const Offset(20, 140));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byKey(hand), findsNothing);
+      await t.tapAt(const Offset(20, 160));
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tapAt(const Offset(20, 180));
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(hand), findsOneWidget, reason: 'three taps on nothing');
+      // The lens: a short nudge on the lens itself.
+      await t.tap(find.text(PoleLines.look));
+      await _pump(t, 400);
+      expect(_label(PoleLines.lensLabel), findsOneWidget);
+      await _pump(t, 9000);
+      expect(find.byKey(hand), findsOneWidget, reason: 'idle in the lens');
+      final lens = t.getRect(_label(PoleLines.lensLabel));
+      expect(lens.inflate(8).contains(hint().debugFrame!.tip), isTrue, reason: 'it nudges the lens');
+      await t.tap(_label(PoleLines.lensClose), warnIfMissed: false);
+      await _pump(t, 400);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('a false report is a slip with its card; the pole stays; three of them strike out', (t) async {
+      final pack = poleReadPacks['do_1_3_a']!;
+      // (Not his pole: there a call before any check waits for him.)
+      var seed = 0;
+      while (dealPoles(math.Random(seed), pack.kind).poles.first.mustReport || dealPoles(math.Random(seed), pack.kind).callPole == 0) {
         seed++;
       }
       final c = await _open(t, pack, seed);
@@ -578,6 +772,8 @@ void main() {
         if (i < 2) {
           expect(find.text(MistakeLines.slipHead), findsOneWidget);
           expect(find.text(MistakeLines.readLesson), findsOneWidget);
+          // Neutral: the pole is still to read, so nothing says it was sound.
+          expect(find.textContaining('ঠিক'), findsNothing, reason: 'the reply never tells the answer');
           await t.tap(find.text(MistakeLines.gotIt));
           await _pump(t, 600);
           expect(find.text(PoleLines.report), findsOneWidget, reason: 'the same pole is still to read');
@@ -652,6 +848,7 @@ void main() {
       expect(find.byType(CoworkerPeek), findsOneWidget);
       final wrong = _onScreen(PoleLines.coworker(pack.kind).wrong);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1200);
       expect(find.byType(FreezeFrame), findsNothing);
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
@@ -687,6 +884,7 @@ void main() {
       final wrong = _onScreen(PoleLines.coworker(pack.kind).wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);

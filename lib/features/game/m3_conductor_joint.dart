@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -197,9 +198,6 @@ class M3ConductorJointRun {
   // The inspection.
   final Set<int> rejected = {};
 
-  /// Good joints marked to reject on this tray (put back, not scored).
-  int needless = 0;
-
   /// The round is over (the reason or the card is up).
   var shown = false;
 
@@ -209,7 +207,7 @@ class M3ConductorJointRun {
   int get percent => (100 - 15 * slips).clamp(0, 100);
   bool get passed => done && percent >= 55;
   bool get fullyIn => inserted >= 1;
-  bool get thorough => current.inspect ? needless == 0 : roundSlips == 0;
+  bool get thorough => roundSlips == 0;
   bool get _open => !done && !shown;
   bool get _make => _open && !current.inspect;
 
@@ -309,27 +307,22 @@ class M3ConductorJointRun {
           if (current.samples[i].kind == M3ConductorJointKind.good) i,
       ]..sort();
 
-  void unreject(Iterable<int> ids) {
-    if (ids.isEmpty) return;
-    needless++;
-    rejected.removeAll(ids);
-  }
-
   List<int> get missed => [
         for (final (i, s) in current.samples.indexed)
           if (s.kind != M3ConductorJointKind.good && !rejected.contains(i)) i,
       ];
 
-  /// The tray is judged: the mistake for the first bad joint let through
-  /// (one slip however many), or null. Call only with no [falseRejects].
+  /// The tray is judged once (no free probes): a bad joint let through or a
+  /// good joint thrown out is one slip however many — the card names the
+  /// first bad joint let through, else the good one rejected. null = right.
   DoMistake? passTray() {
     if (!_open || !current.inspect) return null;
     shown = true;
     final m = missed;
-    if (m.isNotEmpty) {
+    if (m.isNotEmpty || falseRejects.isNotEmpty) {
       slips++;
       roundSlips++;
-      return M3ConductorJointMistakes.passed(current.samples[m.first].kind);
+      return m.isNotEmpty ? M3ConductorJointMistakes.passed(current.samples[m.first].kind) : M3ConductorJointMistakes.rejectedGood;
     }
     for (final s in current.samples) {
       if (s.kind != M3ConductorJointKind.good) _tag(M3ConductorJointLines.caughtKind(s.kind));
@@ -343,7 +336,6 @@ class M3ConductorJointRun {
     magnetDone = false;
     roundSlips = 0;
     rejected.clear();
-    needless = 0;
   }
 }
 
@@ -410,25 +402,89 @@ abstract final class M3ConductorJointLines {
     'একটা স্ট্র্যান্ড কাটলে কিছু যায় আসে না',
     'চুম্বক লাগে না, তার দেখেই বোঝা যায় সব',
     'আন্দাজে স্লিভ নিলেও শেষে ঠিক হয়ে যায়',
-    'AAAC-তেও স্টিল আছে, তাই চুম্বক আটকায়',
+    'কোড না মিললেও স্লিভ ঢুকে গেলেই জোড় পাকা',
   ];
 
-  static List<String> whyRight(M3ConductorJointRound r) {
-    if (r.inspect) return trayWhy;
-    return [...(r.job!.type == M3ConductorJointType.acsr ? acsrWhy : aaacWhy), ...makeWhy];
+  /// Wrong reasons naming the job's own type, each the mirror of the right
+  /// card at the same place in [acsrWhy] + [makeWhy] (and [aaacWhy] +
+  /// [makeWhy]): it carries that card's key words (চুম্বক, কোড, the type
+  /// names), so no word is on the right card alone.
+  static const acsrMyths = [
+    'চুম্বক আটকালেও ACSR-এ যেকোনো স্লিভই চলে',
+    'ACSR-এর ভেতরে স্টিল নেই, চুম্বক আটকায় না',
+    'ACSR হলেই হলো, স্লিভের কোড মেলানো লাগে না',
+    'ACSR-এ ভুল স্লিভ দিলেও জোড় গরম হয় না, চলে',
+    'ACSR-এ AAAC-এর স্লিভ দিলেও জোড় ঠিক ধরে',
+  ];
+  static const aaacMyths = [
+    'চুম্বক না আটকালেও AAAC-এ যেকোনো স্লিভ চলে',
+    'AAAC-তেও স্টিল আছে, তাই চুম্বক আটকায়',
+    'AAAC হলেই হলো, স্লিভের কোড মেলানো লাগে না',
+    'AAAC-এ ভুল স্লিভ দিলেও জোড় গরম হয় না, চলে',
+    'AAAC-এ ACSR-এর স্লিভ দিলেও জোড় ঠিক ধরে',
+  ];
+
+  /// Wrong reasons for the tray, each the mirror of the [trayWhy] card at the
+  /// same place (স্ট্র্যান্ড, হটস্পট, ট্যাগ + বাতিল).
+  static const trayMyths = [
+    'কাটা স্ট্র্যান্ড স্লিভে ঢেকে গেলে আর ভয় নেই',
+    'ঢিলে জোড়েও হটস্পট হয় না, ক\'দিন দিব্যি চলে',
+    'স্লিভের লেখা আর ট্যাগ না মিললেও বাতিল নয়',
+  ];
+
+  /// Which bad kind each [trayWhy] card names.
+  static const trayWhyKinds = [
+    M3ConductorJointKind.cutStrand,
+    M3ConductorJointKind.halfPress,
+    M3ConductorJointKind.wrongSleeve,
+  ];
+
+  /// (right card, its mirror) pairs for [r]. The tray's only name the bad
+  /// kinds actually on the tray.
+  static List<(String, String)> whyPairs(M3ConductorJointRound r) {
+    if (r.inspect) {
+      final kinds = {for (final s in r.samples) s.kind};
+      return [
+        for (var i = 0; i < trayWhy.length; i++)
+          if (kinds.contains(trayWhyKinds[i])) (trayWhy[i], trayMyths[i]),
+      ];
+    }
+    final acsr = r.job!.type == M3ConductorJointType.acsr;
+    final right = [...(acsr ? acsrWhy : aaacWhy), ...makeWhy];
+    final own = acsr ? acsrMyths : aaacMyths;
+    return [for (var i = 0; i < right.length; i++) (right[i], own[i])];
   }
 
-  /// A good joint marked to reject (not scored): the guide says why it is good.
-  static const goodJoint = 'এটা ভালো জোড় — ট্যাগ আর স্লিভের লেখা মিলেছে, চাপ পুরো, স্ট্র্যান্ড অক্ষত। আবার দেখুন।';
+  static List<String> whyRight(M3ConductorJointRound r) => [for (final p in whyPairs(r)) p.$1];
+
+  /// The round's own wrong reasons (the tray's, or the job's type's).
+  static List<String> whyWrongOwn(M3ConductorJointRound r) {
+    if (r.inspect) return trayMyths;
+    return r.job!.type == M3ConductorJointType.acsr ? acsrMyths : aaacMyths;
+  }
+
+  /// The reason deck: one right card, its mirror (a wrong card in the round's
+  /// own words with the same key words) and one general myth, shuffled.
+  static List<ChoiceOption> dealWhy(M3ConductorJointRound r, math.Random rng) {
+    final pairs = whyPairs(r);
+    final (right, mirror) = pairs[rng.nextInt(pairs.length)];
+    return [
+      ChoiceOption(right, true),
+      ChoiceOption(mirror, false),
+      ChoiceOption(myths[rng.nextInt(myths.length)], false),
+    ]..shuffle(rng);
+  }
 
   /// The careless coworker: let it off half-pressed (the seed's "একটু ঢিলে").
-  /// His push is new (device TTS until recorded); his snarl is recorded.
+  /// He comes once both ends are fully in, as the compressor is next (the
+  /// press waits for him). His push has no clip yet (silent, caption held);
+  /// his snarl is recorded. No refusal starts with a giveaway word.
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
   static const coworker = CoworkerScript(
     line: 'একটু ঢিলে থাকলে কিছু হয় না! অর্ধেক চাপেই ছেড়ে দাও।',
     exitLine: coworkerExit,
-    right: ['না, ভালভ ক্লিক না করা পর্যন্ত চাপ দেব', 'না, ঢিলে জোড় গরম হয়ে ক\'দিনেই কেটে পড়ে', 'না, পুরো চাপ না দিলে জোড় ঠিক ধরে না'],
-    wrong: ['ঠিক, অর্ধেক চাপেই যথেষ্ট, ছেড়ে দিই', 'আচ্ছা, একটু ঢিলে থাকলে কিছু হয় না', 'লাইন তো চলবে, এত চাপের দরকার নেই', 'সবাই তো তাড়াতাড়ি ছেড়ে দেয়, আমিও দিই', 'ঠিক আছে, পরে দরকার হলে আবার চাপব'],
+    right: ['ভালভ ক্লিক না করা পর্যন্ত চাপ দিয়ে যাব', 'ঢিলে জোড় গরম হয়ে ক\'দিনেই কেটে পড়ে', 'পুরো চাপ না দিলে জোড় ঠিক ধরে না'],
+    wrong: ['অর্ধেক চাপেই যথেষ্ট, এখনই ছেড়ে দিই', 'একটু ঢিলে থাকলে কিছু হবে না, ছাড়ি', 'লাইন তো চলবে, এত চাপের দরকার নেই', 'সবাই তো তাড়াতাড়ি ছেড়ে দেয়, আমিও দিই', 'পরে দরকার হলে না হয় আবার চাপ দেব'],
     asks: ['ও বলছে একটু ঢিলেই চলবে। আপনি কী করবেন?', 'পুরো চাপ দেবেন, না ওর কথায় ছেড়ে দেবেন?', 'ওর কথা শুনবেন, না পাঠের?'],
   );
 
@@ -459,7 +515,6 @@ abstract final class M3ConductorJointLines {
         ...tapWhy,
         whyMake,
         whyTray,
-        goodJoint,
         ...coworker.asks,
         callHeld,
         redo,
@@ -541,6 +596,15 @@ abstract final class M3ConductorJointMistakes {
     lessonPoint: 3,
   );
 
+  /// A good joint thrown out on the tray (judged once; the card comes only
+  /// after the decision).
+  static const rejectedGood = DoMistake(
+    key: '3.1/m3_conductor_joint/rejected-good',
+    textBn: 'ভালো জোড়ও বাতিল হয়েছে — ট্যাগ আর স্লিভের লেখা মিলেছে, চাপের দাগ পুরো, স্ট্র্যান্ড অক্ষত হলে সেই জোড় ভালো। আন্দাজে নয়, প্রতিটা মিলিয়ে দেখে বাতিল।',
+    art: '$_dir/joint_code.svg',
+    lessonPoint: 3,
+  );
+
   static DoMistake passed(M3ConductorJointKind k) => switch (k) {
         M3ConductorJointKind.wrongSleeve => passWrongSleeve,
         M3ConductorJointKind.cutStrand => passCutStrand,
@@ -550,7 +614,7 @@ abstract final class M3ConductorJointMistakes {
   /// A bad joint was made: it glows under load, then this job starts again.
   static const ruins = {notIn, halfPress, wrongType, wrongCode, loose};
 
-  static const all = [guess, noSleeve, noClean, notIn, halfPress, wrongType, wrongCode, loose, passWrongSleeve, passCutStrand, passHalfPress];
+  static const all = [guess, noSleeve, noClean, notIn, halfPress, wrongType, wrongCode, loose, passWrongSleeve, passCutStrand, passHalfPress, rejectedGood];
 }
 
 /// The quick bonus: a little under a thorough play (~85 %, rounded to 10 s).
@@ -656,7 +720,6 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
   var _intro = true;
   int _chain = 0;
   DoMistake? _card;
-  var _busy = false;
   var _ended = false;
   var _passed = false;
   var _popped = false;
@@ -675,11 +738,17 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
   var _heatOn = false;
   int? _pressCue;
 
-  /// The press was asked for on his round before he came: he comes now.
-  Offset? _heldPress;
-  var _coworkerArmed = false;
+  /// The compressor went on on his round and the press waits for him
+  /// ([holdForCoworker]); refused, the pump opens.
+  var _pressWaiting = false;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+
+  /// The gesture hint (how to touch, never what): a sweep over the steps,
+  /// the kit's sleeves or the tray's joints; a hold on the hold pad.
+  final _hints = IdleHintController();
+  final _stepKeys = {for (final s in M3ConductorJointStep.values) s: GlobalKey()};
+  final _padKey = GlobalKey();
 
   @override
   LevelContext get deathCtx => widget.ctx;
@@ -733,7 +802,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && !_heatOn;
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown && !_heatOn;
 
   void _startRound() {
     setState(() {
@@ -811,24 +880,26 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
         if (m != null) {
           return M3ConductorJointMistakes.ruins.contains(m) ? unawaited(_ruin(m, origin)) : unawaited(_slip(m, origin));
         }
-        _tick();
-        if (_run.index == _run.deal.callAt && !coworkerDone) {
-          // On his round he cuts in the moment the compressor goes on.
-          _hush();
+        // On his round he cuts in as the compressor goes on: the press waits
+        // for him, so a fast play cannot skip him.
+        if (_run.index == _run.deal.callAt) _armCoworker();
+        if (holdForCoworker()) {
+          _press.value = 0;
           setState(() {
-            _heldPress = origin;
-            _busy = true;
+            _pressWaiting = true;
             _mode = _Mode.press;
           });
-          _press.value = 0;
-          if (!_coworkerArmed) {
-            _coworkerArmed = true;
-            scheduleCoworker();
-          }
           return;
         }
+        _tick();
         _toPress();
     }
+  }
+
+  /// He is due on this play once both ends are fully in (his push is about
+  /// the pump); never re-armed after he came.
+  void _armCoworker() {
+    if (!coworkerDone && !coworkerDue && !coworkerOpen) scheduleCoworker();
   }
 
   void _toPress() {
@@ -894,6 +965,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
       _mode = _Mode.idle;
       _wake++;
     });
+    if (_run.index == _run.deal.callAt) _armCoworker();
   }
 
   void _pressEnd({Offset? origin}) {
@@ -930,18 +1002,12 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
 
   void _trayDone(Offset origin) {
     if (!_canPlay || !_round.inspect) return;
-    final f = _run.falseRejects;
-    if (f.isNotEmpty) {
-      // A good joint set aside: not scored; the guide says why it is good.
-      _run.unreject(f);
-      _tick();
-      setState(() {});
-      unawaited(_sayChain([M3ConductorJointLines.goodJoint]));
-      return;
-    }
+    // Judged once: a good joint thrown out costs a slip like a bad one let
+    // through (no free probing; the guide says nothing before the card).
     final miss = _run.missed;
     final m = _run.passTray();
     if (m != null) {
+      if (miss.isEmpty) return unawaited(_slip(m, origin));
       final at = M3ConductorJointGeo.forScene(_sceneH).trayAt(miss.first);
       unawaited(_ruin(m, origin, at: at + const Offset(22, 8), counted: true));
       return;
@@ -961,7 +1027,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     final r = _round;
     final idx = _run.index;
     unawaited(askReason(
-      deal: () => dealChoices(M3ConductorJointLines.whyRight(r), M3ConductorJointLines.myths, widget.rng),
+      deal: () => M3ConductorJointLines.dealWhy(r, widget.rng),
       question: question,
       stillValid: () => _run.index == idx && !_ended,
     ));
@@ -1004,9 +1070,11 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt || _run.shown || _run.pressed) return null;
-    if (_heldPress != null) return true;
-    if (_intro || _busy || _holding || _card != null || reasonOpen || _heatOn) return false;
+    if (_ended || _run.done || _run.index != _run.deal.callAt || _run.pressed) return null;
+    // His push ("let it off half-pressed") fits only once both ends are fully
+    // in and the pump is next; a bad joint being cut out waits too.
+    if (!_run.fullyIn || _run.shown) return false;
+    if (_intro || _holding || _card != null || tableBusy || _heatOn) return false;
     return true;
   }
 
@@ -1017,11 +1085,8 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
-    final waiting = _heldPress != null;
-    setState(() {
-      _heldPress = null;
-      _busy = false;
-    });
+    final waiting = _pressWaiting;
+    setState(() => _pressWaiting = false);
     if (!held) {
       // Listened to him: let off half-pressed.
       setState(() {
@@ -1187,7 +1252,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
   double _sceneH = 780;
 
   LinemanMode get _figure {
-    if (_card != null || _heatOn || coworkerOpen || _heldPress != null) return LinemanMode.worried;
+    if (_card != null || _heatOn || coworkerOpen || _pressWaiting) return LinemanMode.worried;
     if (_stamp != null) return LinemanMode.cheer;
     return LinemanMode.hold;
   }
@@ -1294,6 +1359,33 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     ];
   }
 
+  /// How to touch now (never what): a sweep over all the choices on show —
+  /// the tray's joints, the kit's sleeves, or the steps; a hold on the hold
+  /// pad (the one way forward while it is up).
+  HintSpec? _hint() {
+    final geo = M3ConductorJointGeo.forScene(_sceneH);
+    final r = _round;
+    if (r.inspect) {
+      const s = M3ConductorJointGeo.traySize;
+      return HintSpec.sweep([
+        for (var i = 0; i < r.samples.length; i++) Rect.fromCenter(center: geo.trayAt(i), width: s.width, height: s.height),
+      ], space: HintSpace.scene);
+    }
+    switch (_mode) {
+      case _Mode.kit:
+        const s = M3ConductorJointGeo.kitSize;
+        final rects = [
+          for (final (i, k) in r.job!.sleeves.indexed)
+            if (k != _run.sleeve) Rect.fromCenter(center: geo.kitAt(i), width: s.width, height: s.height),
+        ];
+        return rects.length < 2 ? null : HintSpec.sweep(rects, space: HintSpace.scene);
+      case _Mode.insert || _Mode.press:
+        return HintSpec.holdOn(_padKey);
+      case _Mode.idle:
+        return HintSpec.sweepOver([for (final s in _tray) _stepKeys[s]!]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1301,8 +1393,9 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && _heldPress == null && !_heatOn;
+    final handsOn = playing && !_run.shown && !deckUp && !tableBusy && !coworkerOpen && _card == null && !_pressWaiting && !_heatOn;
     final hold = handsOn && (_mode == _Mode.insert || _mode == _Mode.press);
+    final waiting = handsOn && _canPlay && !_holding && !_magneting && !_brushing;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1331,6 +1424,11 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
             ),
             animation: _sceneMotion,
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: waiting,
+            hintKey: (_run.index, _mode, _run.magnetDone, _run.sleeve, _run.brushed, _run.fullyIn),
+            hintController: _hints,
+            hintAutoMiss: true,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (handsOn && !_round.inspect)
@@ -1347,6 +1445,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
                       for (final s in _tray)
                         _StepButton(
                           key: ValueKey('step-${s.name}'),
+                          boxKey: _stepKeys[s],
                           label: M3ConductorJointLines.stepBn(s),
                           lit: (_mode == _Mode.kit && s == M3ConductorJointStep.sleeve) ||
                               (_mode == _Mode.insert && s == M3ConductorJointStep.insert) ||
@@ -1372,6 +1471,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
                   bottom: pad.bottom + 132,
                   child: Center(
                     child: _HoldPad(
+                      boxKey: _padKey,
                       label: _mode == _Mode.insert ? M3ConductorJointLines.holdInsert : M3ConductorJointLines.holdPress,
                       progress: _mode == _Mode.insert ? _ins : _press,
                       holding: _holding,
@@ -1472,7 +1572,8 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
 
 /// A step on the tray (lit while its hands-on part is open).
 class _StepButton extends StatelessWidget {
-  const _StepButton({super.key, required this.label, required this.lit, required this.onTapUp});
+  const _StepButton({super.key, this.boxKey, required this.label, required this.lit, required this.onTapUp});
+  final GlobalKey? boxKey;
   final String label;
   final bool lit;
   final GestureTapUpCallback onTapUp;
@@ -1487,6 +1588,7 @@ class _StepButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTapUp: onTapUp,
         child: Container(
+          key: boxKey,
           width: 84,
           height: 50,
           alignment: Alignment.center,
@@ -1510,7 +1612,8 @@ class _StepButton extends StatelessWidget {
 
 /// Press and hold: a ring fills while held (the ends going in, or the pump).
 class _HoldPad extends StatelessWidget {
-  const _HoldPad({required this.label, required this.progress, required this.holding, required this.onDown, required this.onUp});
+  const _HoldPad({this.boxKey, required this.label, required this.progress, required this.holding, required this.onDown, required this.onUp});
+  final GlobalKey? boxKey;
   final String label;
   final Animation<double> progress;
   final bool holding;
@@ -1529,6 +1632,7 @@ class _HoldPad extends StatelessWidget {
         onPointerUp: (e) => onUp(e.position),
         onPointerCancel: (e) => onUp(e.position),
         child: SizedBox(
+          key: boxKey,
           width: 150,
           height: 76,
           child: RepaintBoundary(

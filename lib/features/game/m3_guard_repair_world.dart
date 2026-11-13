@@ -78,6 +78,9 @@ class M3GuardGeo {
   static const midX = 180.0;
   static (double, double) half(int side) => side == 0 ? (frontL, midX) : (midX, frontR);
 
+  /// Which half lacing [i] is in.
+  static int lacingSide(int i) => lacingX[i] < midX ? 0 : 1;
+
   /// The extra sag of a slack guard wire at mid-half (tension 0).
   double get slackExtra => poleH * 0.09;
 
@@ -110,6 +113,30 @@ class M3GuardGeo {
         M3GuardFaultKind.clamp => Offset(f.side == 0 ? frontL : frontR, guardY),
         M3GuardFaultKind.earth => Offset(poleX(f.side) + (f.side == 0 ? 6 : -6), guardY + poleH * 0.17),
       };
+
+  /// Every place a fault can be dealt (the page treats a tap on a sound
+  /// lacing, clamp or earth spot, well clear of the dealt faults, as a wrong
+  /// flag).
+  static const spots = [
+    M3GuardFault(M3GuardFaultKind.sag),
+    M3GuardFault(M3GuardFaultKind.sag, side: 1),
+    M3GuardFault(M3GuardFaultKind.lacing),
+    M3GuardFault(M3GuardFaultKind.lacing, lacing: 1),
+    M3GuardFault(M3GuardFaultKind.lacing, lacing: 2),
+    M3GuardFault(M3GuardFaultKind.lacing, lacing: 3),
+    M3GuardFault(M3GuardFaultKind.lacing, lacing: 4),
+    M3GuardFault(M3GuardFaultKind.lacing, lacing: 5),
+    M3GuardFault(M3GuardFaultKind.clamp),
+    M3GuardFault(M3GuardFaultKind.clamp, side: 1),
+    M3GuardFault(M3GuardFaultKind.earth),
+    M3GuardFault(M3GuardFaultKind.earth, side: 1),
+  ];
+
+  /// A generic sweep along the whole cradle (both poles' ends, both halves):
+  /// the gesture hint's "tap on the net", never pointing at a fault.
+  List<Rect> get cradleSweep => [
+        for (final x in const [frontL + 6, 124.0, 236.0, frontR - 6]) Rect.fromCenter(center: Offset(x, guardY + 8), width: 44, height: 40),
+      ];
 
   /// The tap area of a fault.
   Rect hit(M3GuardFault f, {double t = 0}) {

@@ -4,9 +4,13 @@
 // fit the moment's weather, his recorded lines, and the level in the shell:
 // idle perf, the guide first, a full clean play (spot the signs, the phone,
 // the gloves, the decision, the reasons, the coworker refused), a needless
-// stop that is not scored (the guide says the rule, the moment stays), taps
-// that all look the same, and the deadly freeze (working on in lightning,
-// also on his say-so).
+// stop that is final, caps the stars at 1 and takes 5 off the mark (the guide
+// says the rule in the past tense as he comes down), taps that all look the
+// same, the deadly freeze (working on in lightning, also on his say-so),
+// listening in the wind = a slip, three slips strike out, a fast stop on his
+// moment waits for him while a fast "work on" is the call itself (deadly in
+// lightning, a slip in wind, no coworker), reason decks where a wrong card
+// names the weather too, and the gesture hint.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -20,6 +24,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -35,6 +40,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '1.9/do/0',
@@ -73,16 +79,9 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await confirmChoice(t);
+  // A right reason zooms and waits for এগিয়ে যান; his deck just closes.
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen (the scene fits it).
@@ -123,8 +122,7 @@ Future<void> _playRight(WidgetTester t, SkyDeal deal, int i) async {
   final c = deal.cases[i];
   if (i == deal.callAt) {
     expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes on moment $i');
-    await _pumpUntil(t, find.byType(ChoiceDeck));
-    await _pump(t, 600);
+    await waitChoiceDeck(t);
     await _pickRight(t, SkyLines.coworker.right);
     await _pump(t, 2600);
   } else {
@@ -146,8 +144,7 @@ Future<void> _playRight(WidgetTester t, SkyDeal deal, int i) async {
     await _pump(t, 2600);
   }
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'moment $i');
-  await _pumpUntil(t, find.byType(ChoiceDeck));
-  await _pump(t, 700);
+  await waitChoiceDeck(t);
   await _pickRight(t, SkyLines.whyRight(c));
   await _pump(t, i == 3 ? 7000 : 6500);
 }
@@ -243,26 +240,24 @@ void main() {
       expect(d.caught, contains(SkyLines.caughtGloves));
     });
 
-    test('a needless stop is not scored: no slip, nothing shown, the moment stays', () {
+    test('a needless stop is final and no slip, but it is counted (stars capped at 1, mark less 5): no second try at the moment', () {
       final a = run1(sky(SkyKind.calm));
       expect(a.decide(stop: true), isNull);
-      expect(a.shown, isFalse);
+      expect(a.shown, isTrue, reason: 'the stop is final');
       expect(a.slips, 0);
+      expect(a.needless, 1);
+      expect(a.caught, isEmpty, reason: 'nothing caught for a needless stop');
+      // Decided: pressing "work on" now does nothing (no free retry).
+      a.check(SkyCheck.phone);
+      expect(a.decide(stop: false), isNull);
       expect(a.needless, 1);
       expect(a.caught, isEmpty);
       final b = run1(sky(SkyKind.rainUrgent, job: SkyJob.emergency));
-      for (var i = 0; i < 3; i++) {
-        expect(b.decide(stop: true), isNull);
-      }
-      expect(b.slips, 0);
-      expect(b.percent, 100);
-      expect(b.shown, isFalse);
-      // Still to decide: working on (read and gloved) is right.
-      b
-        ..check(SkyCheck.phone)
-        ..check(SkyCheck.gloves);
-      expect(b.decide(stop: false), isNull);
-      expect(b.shown, isTrue);
+      expect(b.decide(stop: true), isNull);
+      expect(b.decide(stop: true), isNull);
+      expect(b.needless, 1, reason: 'one stop per moment');
+      expect(b.percent, 100, reason: 'no slip: stopping is the worker\'s right');
+      expect(b.mark, 95, reason: 'but the recorded mark is not full');
       expect(SkyLines.needless(sky(SkyKind.calm)), SkyLines.needlessCalm);
       expect(SkyLines.needless(sky(SkyKind.rainUrgent, job: SkyJob.emergency)), SkyLines.needlessUrgent);
     });
@@ -310,6 +305,10 @@ void main() {
         ...SkyLines.goRainWhy,
         ...SkyLines.goMyths,
         ...SkyLines.stopExcuses,
+        ...SkyLines.boltFalse,
+        ...SkyLines.windFalse,
+        ...SkyLines.rainJobFalse,
+        SkyLines.cloudFalse,
         SkyLines.needlessCalm,
         SkyLines.needlessUrgent,
         ...SkyLines.coworker.recordedLines,
@@ -354,6 +353,10 @@ void main() {
         ...SkyLines.goRainWhy,
         ...SkyLines.goMyths,
         ...SkyLines.stopExcuses,
+        ...SkyLines.boltFalse,
+        ...SkyLines.windFalse,
+        ...SkyLines.rainJobFalse,
+        SkyLines.cloudFalse,
       }.toList();
       expectSameLength('why', every, ratio: 1.25);
       final samples = [
@@ -373,16 +376,26 @@ void main() {
         final rules = {...SkyLines.rainJobWhy, ...SkyLines.wetWhy, ...SkyLines.windWhy, ...SkyLines.allBoltWhy, ...SkyLines.goCalmWhy, ...SkyLines.goRainWhy};
         expect(wrong.toSet().intersection(rules), isEmpty, reason: '${c.kind}');
         if (c.mustStop) {
-          expect(wrong, SkyLines.stopExcuses);
+          expect(wrong, containsAll([...SkyLines.falseStopRules(c.hazard!), SkyLines.cloudFalse, ...SkyLines.stopExcuses]));
         } else {
           expect(wrong, SkyLines.goMyths);
         }
         if (c.bolt == SkyBolt.far) expect(right, contains(SkyLines.boltFarWhy));
         if (c.bolt == SkyBolt.near) expect(right, contains(SkyLines.boltNearWhy));
         for (var s = 0; s < 10; s++) {
-          final deal = dealChoices(right, wrong, math.Random(s));
+          final deal = SkyLines.deal(c, math.Random(s));
           expect(deal.where((o) => o.correct).length, 1);
           expect(deal.map((o) => o.textBn).toSet().length, 3);
+          expect(right, contains(deal.firstWhere((o) => o.correct).textBn));
+          for (final o in deal.where((o) => !o.correct)) {
+            expect(wrong, contains(o.textBn));
+          }
+          // After a stop the weather word is no tell: one wrong card always
+          // states a false rule about this very weather.
+          if (c.mustStop) {
+            final rules = SkyLines.falseStopRules(c.hazard!);
+            expect(deal.where((o) => !o.correct && rules.contains(o.textBn)), isNotEmpty, reason: '${c.kind}');
+          }
         }
       }
       final cw = SkyLines.coworker;
@@ -433,7 +446,7 @@ void main() {
         }
         debugPrint('PERF sky_read ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -534,26 +547,218 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('a needless stop is not scored: no card, no strike, the guide says the rule, the moment stays', (t) async {
+    testWidgets('a needless stop is final and caps the stars at 1: no card, no ◆, the rule in the past tense as he comes down', (t) async {
       var seed = 0;
-      while (dealSky(math.Random(seed)).cases.first.mustStop) {
+      while (true) {
+        final d = dealSky(math.Random(seed));
+        if (!d.cases.first.mustStop && d.callAt != 0) break;
         seed++;
       }
       final deal = dealSky(math.Random(seed));
       final c = await _open(t, seed);
-      for (var i = 0; i < 3; i++) {
-        await t.tap(find.text(SkyLines.stop));
-        await _pump(t, 900);
-        expect(find.byType(MistakeCard), findsNothing);
-        expect(find.byType(StruckOutCard), findsNothing);
-        expect(find.byType(ChoiceDeck), findsNothing, reason: 'no ◆ on the table');
-        expect(c.read(guideDirectorProvider).line, SkyLines.needless(deal.cases.first));
-        expect(find.text(SkyLines.stop), findsOneWidget, reason: 'the same moment is still to read');
+      expect(c.read(guideDirectorProvider).line, isNot(SkyLines.needless(deal.cases.first)));
+      await t.tap(find.text(SkyLines.stop));
+      await _pump(t, 300);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.byType(StruckOutCard), findsNothing);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'no ◆ on the table');
+      expect(find.text(SkyLines.stop), findsNothing, reason: 'the stop is final: no second try');
+      expect(find.text(SkyLines.go), findsNothing);
+      expect(c.read(guideDirectorProvider).line, SkyLines.needless(deal.cases.first));
+      // The next job comes by itself.
+      await _pump(t, 4500);
+      expect(find.text(SkyLines.stop), findsOneWidget);
+      for (var i = 1; i < 4; i++) {
+        await _playRight(t, deal, i);
       }
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes, isEmpty, reason: 'no slip');
+      expect(s.rungProgress['1.9/do/0'], 'cleared');
+      expect(s.starsByRung['1.9/do/0'], 1, reason: 'a needless stop caps the stars at 1');
+      expect(find.byType(LevelPassPanel), findsOneWidget);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike the level out', (t) async {
+      var seed = 0;
+      late SkyDeal deal;
+      while (true) {
+        deal = dealSky(math.Random(seed));
+        if (deal.cases[3].bolt != SkyBolt.none && deal.callAt == 3) break;
+        seed++;
+      }
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        // Work on without even checking the weather: a slip whatever the sky.
+        await t.tap(find.text(SkyLines.go));
+        await _pump(t, 600);
+        expect(find.byType(FreezeFrame), findsNothing, reason: 'moment $i is no lightning');
+        if (i < 2) {
+          expect(find.byType(MistakeCard), findsOneWidget, reason: 'slip ${i + 1}');
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 2800);
+        }
+      }
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['1.9/do/0'], isNot('cleared'));
+      expect(s.mistakes.where((m) => m.deadly), isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    /// Opens with reduced motion (the weather turns at once) and returns right
+    /// after the guide's intro, before he would come by himself (1.2–2.4 s).
+    Future<ProviderContainer> openFast(WidgetTester t, int seed) async {
+      t.view.physicalSize = const Size(784, 1700);
+      t.view.devicePixelRatio = 2.0;
+      t.platformDispatcher.accessibilityFeaturesTestValue = FakeAccessibilityFeatures(disableAnimations: true);
+      final c = ProviderContainer();
+      await t.pumpWidget(UncontrolledProviderScope(
+        container: c,
+        child: MaterialApp(home: SkyReadPage(ctx: _ctx, pack: _pack, muted: true, seed: seed)),
+      ));
+      await t.pump(const Duration(milliseconds: 100));
+      await waitIntro(t);
+      return c;
+    }
+
+    Future<void> closeFast(WidgetTester t, ProviderContainer c) async {
+      await _close(t, c);
+      t.platformDispatcher.clearAccessibilityFeaturesTestValue();
+    }
+
+    testWidgets('a fast stop on his moment waits for him: he comes before the trainee comes down', (t) async {
+      var seed = 0;
+      while (dealSky(math.Random(seed)).callAt != 0) {
+        seed++;
+      }
+      final deal = dealSky(math.Random(seed));
+      final c = await openFast(t, seed);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not here yet');
+      await t.tap(find.text(SkyLines.stop));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the press brings him in now');
+      expect(find.text(SkyLines.whyStop), findsNothing, reason: 'no reason deck before he has spoken');
+      await waitChoiceDeck(t);
+      await _pickRight(t, SkyLines.coworker.right);
+      await _pump(t, 2600);
+      await waitChoiceDeck(t);
+      expect(find.text(SkyLines.whyStop), findsWidgets);
+      await _pickRight(t, SkyLines.whyRight(deal.cases[0]));
+      await _pump(t, 1500);
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
-      // Then read it and work on: right, the ◆ and the reason.
-      await _playRight(t, deal, 0);
-      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await closeFast(t, c);
+    });
+
+    testWidgets('a fast "work on" on his lightning moment is the call: the deadly freeze, no coworker', (t) async {
+      var seed = 0;
+      while (true) {
+        final d = dealSky(math.Random(seed));
+        if (d.callAt == 2 && d.cases[2].bolt != SkyBolt.none && !d.cases[0].mustStop && !d.cases[1].mustStop) break;
+        seed++;
+        expect(seed, lessThan(5000));
+      }
+      final c = await openFast(t, seed);
+      // Two calm moments first: stop needlessly (fast, final), on to moment 3.
+      for (var i = 0; i < 2; i++) {
+        expect(await _pumpUntil(t, find.text(SkyLines.stop)), isTrue, reason: 'moment $i');
+        await t.tap(find.text(SkyLines.stop));
+        await _pump(t, 300);
+        expect(find.text(SkyLines.stop), findsNothing, reason: 'the stop is final');
+      }
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not here yet');
+      expect(await _pumpUntil(t, find.text(SkyLines.go)), isTrue);
+      await t.tap(find.text(SkyLines.go));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: '"work on" is never held for him');
+      expect(find.byType(FreezeFrame), findsOneWidget, reason: 'working on in lightning is deadly');
+      await _pump(t, 3000);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'his moment has passed');
+      await closeFast(t, c);
+    });
+
+    testWidgets('a fast "work on" on his wind moment is a slip with no coworker', (t) async {
+      var seed = 0;
+      while (true) {
+        final d = dealSky(math.Random(seed));
+        if (d.callAt == 0 && d.cases[0].kind == SkyKind.wind) break;
+        seed++;
+      }
+      // Pressed fast: the press is the call (a slip), he never comes.
+      final c = await openFast(t, seed);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(SkyLines.go));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: '"work on" is never held for him');
+      await _pump(t, 800);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, SkyMistakes.stayWind.key);
+      await _pump(t, 3000);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'his moment has passed');
+      await closeFast(t, c);
+    });
+
+    testWidgets('a stop on his wind moment brings him in; listening to him there is a slip, not deadly', (t) async {
+      var seed = 0;
+      while (true) {
+        final d = dealSky(math.Random(seed));
+        if (d.callAt == 0 && d.cases[0].kind == SkyKind.wind) break;
+        seed++;
+      }
+      final c = await openFast(t, seed);
+      await t.tap(find.text(SkyLines.stop));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(SkyLines.coworker.wrong);
+      expect(wrong, isNotEmpty);
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 900);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, SkyMistakes.stayWind.key);
+      expect(s.mistakes.single.deadly, isFalse);
+      await closeFast(t, c);
+    });
+
+    testWidgets('gesture hint: the hand shows after idle on a waiting moment and on the open phone, never in the intro', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      var seed = 0;
+      while (dealSky(math.Random(seed)).callAt == 0) {
+        seed++;
+      }
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      t.view.physicalSize = const Size(784, 1700);
+      t.view.devicePixelRatio = 2.0;
+      final c = ProviderContainer();
+      await t.pumpWidget(UncontrolledProviderScope(
+        container: c,
+        child: MaterialApp(home: SkyReadPage(ctx: _ctx, pack: _pack, muted: true, seed: seed)),
+      ));
+      for (var i = 0; i < 20 && find.byType(GuideIntro).evaluate().isNotEmpty; i++) {
+        await t.pump(const Duration(milliseconds: 500));
+        expect(hand, findsNothing, reason: 'no hand during the guide\'s intro');
+      }
+      await waitIntro(t);
+      await _pump(t, 2600);
+      expect(hand, findsNothing);
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget, reason: 'a stuck player gets the sweep');
+      await t.tap(_label(SkyLines.phone));
+      await _pump(t, 300);
+      expect(hand, findsNothing, reason: 'a touch hides it');
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget, reason: 'the open phone: tap to put it away');
+      await t.tap(_label(SkyLines.phoneClose));
+      await _pump(t, 300);
+      expect(hand, findsNothing);
       await _close(t, c);
     });
 
@@ -583,8 +788,7 @@ void main() {
       await _pump(t, 400);
       await t.tap(find.text(SkyLines.stop));
       await _pump(t, 2600);
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 700);
+      await waitChoiceDeck(t);
       expect(marks, findsNothing, reason: 'the marks go with the decision');
       await _pickRight(t, SkyLines.whyRight(sky0));
       expect(await _pumpUntil(t, find.text(SkyLines.signBn(SkySign.wind, sky0)), maxMs: 3000), isTrue);
@@ -631,11 +835,11 @@ void main() {
         await _playRight(t, deal, i);
       }
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(SkyLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
@@ -658,8 +862,7 @@ void main() {
         expect(find.byType(ChoiceDeck), findsNothing, reason: 'no reason deck before he has spoken');
       }
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 600);
+      await waitChoiceDeck(t);
       await _pickRight(t, SkyLines.coworker.right);
       await _pump(t, 2600);
       expect(find.text(SkyLines.whyStop), findsWidgets);

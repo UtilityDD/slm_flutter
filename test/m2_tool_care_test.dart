@@ -2,7 +2,11 @@
 // its place, or the tag), the deal, fair reason libraries that fit the tool,
 // the coworker's choices, and the level in the shell (idle perf; guide first;
 // a full clean flow; a slip card; three slips; the deadly freeze; the
-// coworker's deadly push).
+// coworker's deadly push). Audit 2026-11-11: he comes even on a fast play
+// (holdForCoworker), a tap that does nothing does not refuse him, his crack
+// line waits for the crack to show, the bench items lie in a dealt order, the
+// wipe cue plays on every tool, the praise window takes no move, and the
+// gesture hint shows only while the bench waits.
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -15,6 +19,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart' show FreezeFrame;
 import 'package:slm_flutter/features/game/level_shell.dart';
@@ -29,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.10/do/0',
@@ -59,21 +65,24 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
+  await confirmChoice(t);
+  // A reason zooms and waits for এগিয়ে যান; the coworker's deck just closes.
+  await tapReasonProceed(t);
+}
+
+/// Pumps until the coworker peeps in (or [maxMs] passes).
+Future<void> _waitCoworker(WidgetTester t, {int maxMs = 6000}) async {
+  for (var ms = 0; ms < maxMs && find.byType(CoworkerPeek).evaluate().isEmpty; ms += 50) {
     await t.pump(const Duration(milliseconds: 50));
   }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
 }
+
+final _hand = find.byKey(const ValueKey('gesture-hint'));
 
 const _pliersWet = CareTool(id: 'a', kind: CareKind.pliers, need: CareNeed.wet);
 const _spannerRust = CareTool(id: 'b', kind: CareKind.spanner, need: CareNeed.rusty);
@@ -98,8 +107,8 @@ void main() {
         for (final t in d.tools) {
           expect(t.kind == CareKind.meter, t.need == CareNeed.meter);
           if (t.kind == CareKind.meter) expect(t.flawed, isFalse);
-          if (t.flawed) expect(t.need, CareNeed.plain);
           if (t.need == CareNeed.rusty) expect(t.kind, CareKind.spanner);
+          if (t.need == CareNeed.wet) expect(t.kind, anyOf(CareKind.pliers, CareKind.screwdriver, CareKind.crimper));
           if (t.flaw == CareFlaw.crack) expect(t.kind, anyOf(CareKind.pliers, CareKind.screwdriver), reason: 'only insulated grips crack');
         }
         expect(d.tools.any((t) => t.need == CareNeed.wet || t.need == CareNeed.rusty), isTrue);
@@ -114,6 +123,37 @@ void main() {
       expect({for (final d in deals) for (final t in d.tools) t.flaw}, containsAll(CareFlaw.values));
       expect(deals.map((d) => d.callRound).toSet(), {0, 1, 2, 3});
       expect(deals.map((d) => d.tools.where((t) => t.flawed).length).toSet(), {1, 2});
+    });
+
+    test('no scene giveaway: rust or water on a tool says nothing about its fault', () {
+      // (kind, need, flawed) combinations seen over many deals.
+      final seen = <(CareKind, CareNeed, bool)>{};
+      var rustyFlawed = 0, rustySound = 0, spannerFlawed = 0, spanners = 0;
+      for (var s = 0; s < 600; s++) {
+        for (final t in dealCare(math.Random(s)).tools) {
+          seen.add((t.kind, t.need, t.flawed));
+          if (t.kind != CareKind.spanner) continue;
+          spanners++;
+          if (t.flawed) spannerFlawed++;
+          if (t.need == CareNeed.rusty) t.flawed ? rustyFlawed++ : rustySound++;
+        }
+      }
+      // A spanner: rusty or bare, sound or widened — all four happen.
+      for (final need in [CareNeed.rusty, CareNeed.plain]) {
+        for (final flawed in [true, false]) {
+          expect(seen, contains((CareKind.spanner, need, flawed)), reason: 'spanner $need flawed=$flawed');
+        }
+      }
+      // A wet grip or crimper: sound or damaged, both happen.
+      for (final k in [CareKind.pliers, CareKind.screwdriver, CareKind.crimper]) {
+        expect(seen, contains((k, CareNeed.wet, true)), reason: '$k wet and damaged');
+        expect(seen, contains((k, CareNeed.wet, false)), reason: '$k wet and sound');
+      }
+      // Rust does not shift the odds: the share of widened spanners among the
+      // rusty ones is close to the share among all spanners.
+      final all = spannerFlawed / spanners;
+      final rusty = rustyFlawed / (rustyFlawed + rustySound);
+      expect((rusty - all).abs(), lessThan(0.08), reason: 'rusty $rusty vs all $all');
     });
 
     test('a clean play: dry, de-rust then oil, meter off and coiled, the leaking crimper tagged', () {
@@ -191,7 +231,13 @@ void main() {
       expect(leak.flawShows, isFalse);
       expect(leak.wipe(0.3), isFalse);
       expect(leak.wipe(0.3), isTrue, reason: 'the leak comes into view');
+      expect(leak.flawShows, isTrue);
       expect(leak.wipe(0.3), isFalse, reason: 'only once');
+      // The same cue on a sound tool: no sound tells a damaged tool apart.
+      final sound = _runOf([_driver]);
+      expect(sound.wipe(0.3), isFalse);
+      expect(sound.wipe(0.3), isTrue);
+      expect(sound.wipe(0.3), isFalse);
       expect(leak.store().mistake, CareMistakes.leakKept);
       expect(leak.ended, isFalse);
       expect(leak.retire().verdict, CareVerdict.right);
@@ -214,7 +260,10 @@ void main() {
     });
 
     test('the coworker pushes what fits the tool; listening is a slip, or deadly on a cracked grip', () {
-      expect(_runOf([_pliersCrack]).push, CarePush.crack);
+      final cracked = _runOf([_pliersCrack]);
+      expect(cracked.push, CarePush.toss, reason: 'the crack is still under the grime: naming it would give it away');
+      cracked.wipe(1);
+      expect(cracked.push, CarePush.crack, reason: 'the crack shows now');
       final r = _runOf([_spannerRust]);
       expect(r.push, CarePush.grease);
       r.brush(1);
@@ -224,9 +273,27 @@ void main() {
       expect(a.listen(CarePush.toss).mistake, CareMistakes.skipCare);
       expect(a.listen(CarePush.grease).mistake, CareMistakes.overOil);
       expect(a.slips, 2);
-      final b = _runOf([_pliersCrack]);
+      final b = _runOf([_pliersCrack, _driver]);
       expect(b.listen(CarePush.crack).verdict, CareVerdict.deadly);
       expect(b.deadly, CareMistakes.crackKept);
+      // Ended: nothing more counts, and the round does not move on.
+      expect(b.listen(CarePush.toss).verdict, CareVerdict.none);
+      expect(b.slips, 0);
+      b.next();
+      expect(b.round, 0);
+    });
+
+    test('the bench items lie in a dealt order, never cloth → brush → oil', () {
+      final orders = <String>{};
+      for (var s = 0; s < 120; s++) {
+        final k = dealCare(math.Random(s)).kitOrder;
+        expect([...k]..sort(), [0, 1, 2, 3]);
+        expect(careKitInRoutineOrder(k), isFalse, reason: '$k');
+        orders.add(k.join());
+      }
+      expect(orders.length, greaterThanOrEqualTo(8));
+      expect(careKitInRoutineOrder(const [0, 1, 2, 3]), isTrue);
+      expect(careKitInRoutineOrder(const [3, 0, 1, 2]), isTrue);
     });
 
     test('the tool\'s space maps both ways', () {
@@ -383,7 +450,7 @@ void main() {
         }
         debugPrint('PERF tool care ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(CareLines.store), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
@@ -405,7 +472,7 @@ void main() {
       ));
       await _pump(t, 400);
       expect(find.byType(GuideIntro), findsOneWidget);
-      expect(find.text('শুরু'), findsNothing);
+      expect(find.textContaining(RegExp('শুরু')), findsNothing);
       await t.tapAt(const Offset(360, 800));
       await _pump(t, 600);
       expect(find.byType(GuideIntro), findsOneWidget, reason: 'a tap does not skip');
@@ -425,7 +492,7 @@ void main() {
     });
 
     testWidgets('flow: refuse the coworker, care for every tool (tag the damaged), reasons → pass', (t) async {
-      final seed = _seed((d) => d.callRound == 0 && d.tools.first.flaw != CareFlaw.crack && d.tools.any((x) => x.need == CareNeed.rusty) && d.tools.any((x) => x.kind == CareKind.meter));
+      final seed = _seed((d) => d.callRound == 0 && d.tools.first.flaw != CareFlaw.crack && d.tools.any((x) => x.need == CareNeed.rusty && !x.flawed) && d.tools.any((x) => x.kind == CareKind.meter));
       final (c, deal) = await open(t, seed);
 
       await _pump(t, 3500);
@@ -499,15 +566,116 @@ void main() {
 
     testWidgets('coworker: listening to "একটু ফাটা তো" is deadly (freeze, then the card)', (t) async {
       final (c, _) = await open(t, _seed((d) => d.callRound == 0 && d.tools.first.flaw == CareFlaw.crack));
-      await _pump(t, 3500);
+      // He waits while the cloth works (never between two strokes), then
+      // names the crack only once it shows.
+      await chip(t, 0);
+      await rub(t);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _waitCoworker(t);
       expect(find.byType(CoworkerPeek), findsOneWidget);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(CareLines.coworkerCrack.wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 700);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3000);
       expect(find.text(CareMistakes.crackKept.textBn), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker: listening to the toss is a slip (a card, no freeze), and the bench goes on', (t) async {
+      final (c, _) = await open(t, _seed((d) => d.callRound == 0 && !d.tools.first.flawed && d.tools.first.need != CareNeed.rusty));
+      await _waitCoworker(t);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(CareLines.coworkerToss.wrong);
+      expect(wrong, hasLength(2));
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 1500);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.text(CareMistakes.skipCare.textBn), findsOneWidget);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 2500);
+      expect(find.text(CareLines.store), findsOneWidget, reason: 'the same tool waits on the bench');
+      expect(c.read(gameSaveProvider).mistakes, isNotEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker comes even on a fast play: "তার ঘরে রাখুন" waits for him', (t) async {
+      final (c, _) = await open(t, _seed((d) => d.callRound == 0 && !d.tools.first.flawed));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'his timer has not run yet');
+      await t.tap(find.text(CareLines.store));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the decisive control brought him in');
+      expect(find.byType(MistakeCard), findsNothing, reason: 'the tap did nothing else');
+      await _pickRight(t, [for (final p in CarePush.values) ...CareLines.coworker(p).right]);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // He has gone: the button works again (a dirty tool put away = a slip).
+      await t.tap(find.text(CareLines.store));
+      await _pump(t, 600);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('a tap that does nothing (a bench item, an empty spot) does not refuse him', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      final (c, _) = await open(t, _seed((d) => d.callRound == 0 && d.tools.first.kind != CareKind.meter && !d.tools.first.flawed));
+      await _waitCoworker(t);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'beat 1: his line alone');
+      await chip(t, 0);
+      await tapTool(t, const Offset(150, 60)); // the cloth tapped, not rubbed: nothing
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'still talking: not refused');
+      await waitChoiceDeck(t);
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the deck still rises');
+      expect(find.text(CareLines.caughtCall), findsNothing);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('praise window: taps while the ◆ waits on the table cost nothing; the deck still pays', (t) async {
+      final (c, deal) = await open(t, _seed((d) => d.callRound == 3 && !d.tools.first.flawed && d.tools.first.need == CareNeed.plain));
+      final right = await care(t, deal.tools.first);
+      await t.pump(const Duration(milliseconds: 120));
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'the ◆ waits on the table first');
+      await t.tapAt(const Offset(180, 400));
+      await t.tapAt(const Offset(120, 560));
+      await _pump(t, 300);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pickRight(t, right);
+      await _pump(t, 2000);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('gesture hint: a hand after idle at the bench (sweep, or a rub nudge with the cloth); none on a card', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final (c, _) = await open(t, _seed((d) => d.callRound == 3 && !d.tools.first.flawed));
+      expect(_hand, findsNothing);
+      await _pump(t, 9000);
+      expect(_hand, findsOneWidget, reason: 'idle at the bench');
+      await chip(t, 0);
+      expect(_hand, findsNothing, reason: 'a touch hides it');
+      await _pump(t, 9000);
+      expect(_hand, findsOneWidget, reason: 'the cloth in hand: how to rub');
+      await chip(t, 0);
+      await t.tap(find.text(CareLines.store));
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      await _pump(t, 10000);
+      expect(_hand, findsNothing, reason: 'never over a card');
       expect(t.takeException(), isNull);
       await close(t, c);
     });

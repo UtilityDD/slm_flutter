@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -51,7 +52,10 @@ import 'spoken_once.dart';
 //   • myths: ordinary pliers can't give the right pressure or shape; solder
 //     after a crimp makes it worse;
 //   • pro tip 3: anti-oxidant paste on aluminium is "a good habit" — so it
-//     earns the +5 but leaving it out is not a slip.
+//     earns the +5 but leaving it out is not a slip; it goes on the cleaned
+//     conductor before it enters the barrel (after that it is a no-op).
+// The tray: a good lug set aside is an over-call — a slip (audit 2026-11-11:
+// a wrong flag costs), its card shows what a good crimp looks like.
 // Not in the lesson (left out, flagged in REGISTER.md): how many crimps a
 // barrel takes and where along it to start; a hammer; any rating or size
 // threshold for a hand vs a hydraulic tool (both jobs here are small lugs on
@@ -184,7 +188,7 @@ class CrimpRun {
   /// The +5: the aluminium got its anti-oxidant paste (a copper job: always).
   bool get thorough => current.inspect ? needless == 0 : (!job.al || pasted);
 
-  /// Good lugs marked to reject on this tray (put back, not scored).
+  /// Times good lugs were marked to reject on this tray (each a slip).
   int needless = 0;
 
   bool get _open => !ended && !shown;
@@ -214,9 +218,11 @@ class CrimpRun {
     return null;
   }
 
-  /// Aluminium only (a copper job has no paste).
+  /// Aluminium only (a copper job has no paste), on the bare conductor:
+  /// once it is in the barrel (or crimped) the paste can't go on — a no-op,
+  /// and no +5.
   DoMistake? paste() {
-    if (!_open || current.inspect || pasted || !job.al) return null;
+    if (!_open || current.inspect || pasted || !job.al || inserted > 0 || crimped) return null;
     if (!cleaned) return _slip(CrimpMistakes.prep);
     pasted = true;
     return null;
@@ -305,17 +311,23 @@ class CrimpRun {
     if (!rejected.remove(i)) rejected.add(i);
   }
 
-  /// Good lugs marked to reject: not scored (redoing is never wrong), the
-  /// guide says why they are good and they are put back ([unreject]).
+  /// Good lugs marked to reject (an over-call: [rejectGood]).
   List<int> get falseRejects => [
         for (final i in rejected)
           if (current.lugs[i] == LugKind.good) i,
       ]..sort();
 
-  void unreject(Iterable<int> ids) {
-    if (ids.isEmpty) return;
+  /// The tray was handed in with good lugs set aside: one slip (however many).
+  /// Every mark comes off — good and bad alike — so the tray is judged again
+  /// from scratch and the slip never sorts it for the player (marking all
+  /// four must not pay). null = none set aside.
+  DoMistake? rejectGood() {
+    if (!_open || !current.inspect) return null;
+    if (falseRejects.isEmpty) return null;
     needless++;
-    rejected.removeAll(ids);
+    rejected.clear();
+    slips++;
+    return CrimpMistakes.rejectedGood;
   }
 
   /// Bad lugs not marked.
@@ -326,7 +338,7 @@ class CrimpRun {
 
   /// The tray is checked. Returns the mistake for the first bad lug let
   /// through (one slip however many), or null when every bad one was caught.
-  /// Call only with no [falseRejects] (the page handles them first).
+  /// Call only with no [falseRejects] ([rejectGood] first).
   DoMistake? passTray() {
     if (!_open || !current.inspect) return null;
     shown = true;
@@ -415,11 +427,10 @@ abstract final class CrimpLines {
   static List<String> whyRight(CrimpRound r, {bool pasted = false}) =>
       r.inspect ? trayWhy : [...makeWhy, if (pasted && r.job!.al) pasteWhy];
 
-  /// Good lugs marked to reject (not scored): the guide says why they are good.
-  static const goodLug = 'এটা ভালো ক্রিম্প — মসৃণ ষড়ভুজ, ফাটল নেই, সব স্ট্র্যান্ড ভেতরে। আবার দেখুন।';
-
-  /// The careless coworker: squeeze it with pliers (the lesson's myth). His
-  /// push is new (device TTS until recorded); his snarl is recorded.
+  /// The careless coworker: squeeze it with pliers (the lesson's myth). He
+  /// comes once the conductor is in (before the crimp); his push has no clip
+  /// yet (silent, caption held, until the director records it); his snarl is
+  /// recorded.
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
   static const coworker = CoworkerScript(
     line: 'এত ঝামেলা কেন? ছোট ল্যাগ তো — প্লায়ার্স দিয়ে চেপে দাও!',
@@ -460,7 +471,6 @@ abstract final class CrimpLines {
         whyMake,
         whyTray,
         slidOut,
-        goodLug,
         ...coworker.asks,
         callHeld,
         redo,
@@ -529,6 +539,14 @@ abstract final class CrimpMistakes {
     art: '$_dir/crimp_pliers.svg',
   );
 
+  /// A good lug set aside on the tray (an over-call).
+  static const rejectedGood = DoMistake(
+    key: '2.3/crimp/rejected-good',
+    textBn: 'একটা ভালো ল্যাগও বাতিল করেছেন। ভালো ক্রিম্প: মসৃণ, প্রতিসম ষড়ভুজ, ডাই-এর চিহ্ন স্পষ্ট, ফাটল নেই, সব স্ট্র্যান্ড ভেতরে। সব চিহ্ন উঠে গেছে — ট্রে আবার দেখুন।',
+    art: '$_dir/crimp_good.svg',
+    lessonPoint: 3,
+  );
+
   static const passCracked = DoMistake(
     key: '2.3/crimp/passed-cracked',
     textBn: 'ফাটা ল্যাগ পাস করলেন — অতিরিক্ত চাপে (ওভার-ক্রিম্প) ল্যাগ ফেটেছে। এটা কেটে আবার করতে হয়।',
@@ -564,7 +582,7 @@ abstract final class CrimpMistakes {
   /// A bad crimp was made: the joint glows under load, then this job starts again.
   static const ruins = {notIn, wrongDie, onPalm, halfPress, pliers};
 
-  static const all = [prep, stripLength, notIn, noDie, wrongDie, onPalm, halfPress, noPull, pliers, passCracked, passStrands, passUnder, passPliers];
+  static const all = [prep, stripLength, notIn, noDie, wrongDie, onPalm, halfPress, noPull, pliers, rejectedGood, passCracked, passStrands, passUnder, passPliers];
 }
 
 /// The quick bonus: a little under a thorough play (~85 %, rounded to 10 s).
@@ -677,7 +695,6 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
   var _intro = true;
   int _chain = 0;
   DoMistake? _card;
-  var _busy = false;
   var _ended = false;
   var _passed = false;
   var _popped = false;
@@ -697,11 +714,13 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
   Offset? _heatAt;
   var _heatOn = false;
   int? _pressCue;
-
-  /// Crimp was pressed on his round before he came: he comes now.
-  Offset? _heldCrimp;
-  var _coworkerArmed = false;
   final _nudge = TaskNudge();
+
+  /// The gesture hint (how to touch, never what): the step buttons and the
+  /// hold pad are found by these keys.
+  final _hints = IdleHintController();
+  final _stepKeys = {for (final s in CrimpStep.values) s: GlobalKey()};
+  final _holdKey = GlobalKey();
   int _nudgeN = 0;
 
   @override
@@ -756,11 +775,18 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && !_heatOn;
+  /// The scene takes a move now: not in the praise window ([tableBusy]), not
+  /// while he talks, not while the brush or the tug runs.
+  bool get _canPlay =>
+      !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown && !_heatOn && !_brushing && !_tugging;
 
   void _startRound() {
+    _press.removeListener(_ratchet);
     setState(() {
       _mode = _Mode.idle;
+      _holding = false;
+      _brushing = false;
+      _tugging = false;
       _stamp = null;
       _bad = null;
       _pliered = false;
@@ -796,13 +822,17 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
         if (_quiet) {
           setState(() => _brushing = false);
         } else {
-          unawaited(_act.forward(from: 0).then((_) {
-            if (mounted) setState(() => _brushing = false);
-          }));
+          // Cleared however the sweep ends (a reset cancels it too).
+          _act.forward(from: 0).whenCompleteOrCancel(() {
+            if (mounted && _brushing) setState(() => _brushing = false);
+          });
         }
       case CrimpStep.paste:
+        final was = _run.pasted;
         final m = _run.paste();
         if (m != null) return unawaited(_slip(m, origin));
+        // Already on, or the conductor is in the barrel: nothing to paste.
+        if (was || !_run.pasted) return _tick();
         _cue('sounds/quiz_select.wav', volume: 0.45);
         HapticFeedback.selectionClick();
         setState(() => _wake++);
@@ -820,22 +850,11 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
         unawaited(_sayChain([CrimpLines.askDie]));
       case CrimpStep.crimp:
         if (_run.crimped) return _tick();
+        // The decisive control: on his round the tool waits for him.
+        if (holdForCoworker()) return;
         final m = _run.startCrimp();
         if (m != null) return unawaited(_slip(m, origin));
         _tick();
-        if (_run.index == _run.deal.callAt && !coworkerDone) {
-          // On his round he cuts in the moment the tool comes off the hook.
-          _hush();
-          setState(() {
-            _heldCrimp = origin;
-            _busy = true;
-          });
-          if (!_coworkerArmed) {
-            _coworkerArmed = true;
-            scheduleCoworker();
-          }
-          return;
-        }
         _toPlace();
       case CrimpStep.pull:
         final r = _run.pull();
@@ -847,9 +866,9 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
         if (_quiet) {
           setState(() => _tugging = false);
         } else {
-          unawaited(_act.forward(from: 0).then((_) {
-            if (mounted) setState(() => _tugging = false);
-          }));
+          _act.forward(from: 0).whenCompleteOrCancel(() {
+            if (mounted && _tugging) setState(() => _tugging = false);
+          });
         }
         if (r == PullResult.slidOut) unawaited(_sayChain([CrimpLines.slidOut]));
       case CrimpStep.fit:
@@ -904,7 +923,10 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
     } else if (_mode == _Mode.press) {
       setState(() => _holding = true);
       _pressCue = 0;
-      _press.addListener(_ratchet);
+      // One ratchet listener, never stacked.
+      _press
+        ..removeListener(_ratchet)
+        ..addListener(_ratchet);
       unawaited(_press.forward());
     }
   }
@@ -941,11 +963,14 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
       _mode = _Mode.idle;
       _wake++;
     });
+    // His round: the conductor is in, the crimp is next — he turns up now
+    // (and the crimp waits for him: [holdForCoworker]).
+    if (_run.index == _run.deal.callAt && !coworkerDone) scheduleCoworker();
   }
 
   void _pressEnd({Offset? origin}) {
-    if (!mounted || _mode != _Mode.press) return;
     _press.removeListener(_ratchet);
+    if (!mounted || _mode != _Mode.press) return;
     final reached = _press.value;
     final m = _run.press(reached >= 0.999 ? 1 : reached);
     final o = origin ?? Offset(MediaQuery.sizeOf(context).width / 2, MediaQuery.sizeOf(context).height * 0.5);
@@ -982,13 +1007,11 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
 
   void _trayDone(Offset origin) {
     if (!_canPlay || !_round.inspect) return;
-    final f = _run.falseRejects;
-    if (f.isNotEmpty) {
-      // A good lug set aside: not scored; the guide says why it is good.
-      _run.unreject(f);
-      _tick();
-      setState(() {});
-      unawaited(_sayChain([CrimpLines.goodLug]));
+    // A good lug set aside: an over-call — a slip; every mark comes off and
+    // the whole tray is judged again (nothing is sorted for the player).
+    final over = _run.rejectGood();
+    if (over != null) {
+      unawaited(_slip(over, origin));
       return;
     }
     final miss = _run.missed;
@@ -1058,9 +1081,9 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt || _run.shown || _run.crimped) return null;
-    if (_heldCrimp != null) return true;
-    if (_intro || _busy || _holding || _card != null || reasonOpen || _heatOn) return false;
+    // "Squeeze it with pliers" fits only until the crimp is made.
+    if (_ended || _run.done || _run.index != _run.deal.callAt || _run.crimped) return null;
+    if (_intro || _holding || _brushing || _tugging || _card != null || tableBusy || _heatOn || _run.shown || _mode != _Mode.idle) return false;
     return true;
   }
 
@@ -1071,11 +1094,6 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
-    final waiting = _heldCrimp != null;
-    setState(() {
-      _heldCrimp = null;
-      _busy = false;
-    });
     if (!held) {
       // Listened to him: the lug squeezed flat with pliers.
       setState(() => _pliered = true);
@@ -1083,15 +1101,11 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
       await _ruin(_run.pliers(), origin);
       return;
     }
-    _run.caught.add(CrimpLines.caughtCall);
+    if (!_run.caught.contains(CrimpLines.caughtCall)) _run.caught.add(CrimpLines.caughtCall);
     unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
     await coworkerSnarl();
     if (!mounted || _ended) return;
-    if (waiting) {
-      _toPlace();
-    } else {
-      unawaited(_sayChain([CrimpLines.callHeld]));
-    }
+    unawaited(_sayChain([CrimpLines.callHeld]));
   }
 
   /// Tap the guide: the task again, a different way each time.
@@ -1239,7 +1253,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
   double _sceneH = 780;
 
   LinemanMode get _figure {
-    if (_card != null || _heatOn || coworkerOpen || _heldCrimp != null) return LinemanMode.worried;
+    if (_card != null || _heatOn || coworkerOpen) return LinemanMode.worried;
     if (_stamp != null) return LinemanMode.cheer;
     return LinemanMode.hold;
   }
@@ -1292,7 +1306,14 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
       ),
       Positioned.fill(
         key: const ValueKey('bench'),
-        child: CustomPaint(painter: CrimpBenchPainter(geo: geo, view: view)),
+        // A tap on the bench itself hits nothing (the gesture hint counts it).
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) {
+            if (_canPlay) _hints.missTap();
+          },
+          child: CustomPaint(painter: CrimpBenchPainter(geo: geo, view: view)),
+        ),
       ),
       // The strip marks.
       if (open && _mode == _Mode.strip && job != null)
@@ -1380,6 +1401,32 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
     ];
   }
 
+  /// The gesture hint for now — how to touch, never which: a sweep over every
+  /// step on the tray (shuffled), every strip mark, every die, both places
+  /// on the lug (left to right), every lug on the inspection tray; a hold on
+  /// the hold pad (the one way to push the conductor in / close the tool).
+  HintSpec? _hint() {
+    final geo = CrimpGeo.forScene(_sceneH);
+    if (_round.inspect) {
+      return HintSpec.sweep([
+        for (var i = 0; i < _round.lugs.length; i++) Rect.fromCenter(center: geo.trayAt(i), width: CrimpGeo.traySize.width, height: CrimpGeo.traySize.height),
+      ], space: HintSpace.scene);
+    }
+    final job = _round.job!;
+    return switch (_mode) {
+      _Mode.idle => HintSpec.sweepOver([for (final s in _tray) _stepKeys[s]!]),
+      _Mode.strip => HintSpec.sweep([for (final f in job.marks) Rect.fromLTWH(geo.markX(f) - 16, geo.cableY - 28, 32, 56)], space: HintSpace.scene),
+      _Mode.die => HintSpec.sweep([for (var i = 0; i < job.dies.length; i++) Rect.fromCenter(center: geo.dieAt(i), width: 56, height: 48)], space: HintSpace.scene),
+      _Mode.place => HintSpec.sweep(
+          [
+            for (final (at, w) in [(geo.barrelSpot, CrimpGeo.barrel), (geo.palmSpot, CrimpGeo.palm)]) Rect.fromLTWH(at.dx - w / 2, geo.cableY - 26, w, 52),
+          ]..sort((a, b) => a.left.compareTo(b.left)),
+          space: HintSpace.scene,
+        ),
+      _Mode.insert || _Mode.press => HintSpec.holdOn(_holdKey),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1387,8 +1434,9 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && _heldCrimp == null && !_heatOn;
+    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_heatOn && !tableBusy;
     final hold = handsOn && (_mode == _Mode.insert || _mode == _Mode.press);
+    final hintWaiting = handsOn && !_ended && !_holding && !_brushing && !_tugging;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1417,6 +1465,10 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
             ),
             animation: _sceneMotion,
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: (_run.index, _round.inspect, _mode),
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (handsOn && !_round.inspect)
@@ -1431,11 +1483,14 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
                     runSpacing: 6,
                     children: [
                       for (final s in _tray)
-                        _StepButton(
-                          key: ValueKey('step-${s.name}'),
-                          label: CrimpLines.stepBn(s),
-                          lit: _mode == _Mode.strip && s == CrimpStep.strip || _mode == _Mode.die && s == CrimpStep.die || (_mode == _Mode.insert && s == CrimpStep.insert) || ((_mode == _Mode.place || _mode == _Mode.press) && s == CrimpStep.crimp),
-                          onTapUp: (d) => _step(s, d.globalPosition),
+                        KeyedSubtree(
+                          key: _stepKeys[s],
+                          child: _StepButton(
+                            key: ValueKey('step-${s.name}'),
+                            label: CrimpLines.stepBn(s),
+                            lit: _mode == _Mode.strip && s == CrimpStep.strip || _mode == _Mode.die && s == CrimpStep.die || (_mode == _Mode.insert && s == CrimpStep.insert) || ((_mode == _Mode.place || _mode == _Mode.press) && s == CrimpStep.crimp),
+                            onTapUp: (d) => _step(s, d.globalPosition),
+                          ),
                         ),
                     ],
                   ),
@@ -1455,12 +1510,15 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
                   right: 0,
                   bottom: pad.bottom + 132,
                   child: Center(
-                    child: _HoldPad(
-                      label: _mode == _Mode.insert ? CrimpLines.holdInsert : CrimpLines.holdCrimp,
-                      progress: _mode == _Mode.insert ? _ins : _press,
-                      holding: _holding,
-                      onDown: _holdDown,
-                      onUp: _holdUp,
+                    child: KeyedSubtree(
+                      key: _holdKey,
+                      child: _HoldPad(
+                        label: _mode == _Mode.insert ? CrimpLines.holdInsert : CrimpLines.holdCrimp,
+                        progress: _mode == _Mode.insert ? _ins : _press,
+                        holding: _holding,
+                        onDown: _holdDown,
+                        onUp: _holdUp,
+                      ),
                     ),
                   ),
                 ),

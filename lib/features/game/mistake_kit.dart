@@ -227,6 +227,13 @@ class MistakeCard extends StatelessWidget {
     final art = mistake.art.endsWith('.svg')
         ? SvgPicture.asset(mistake.art, fit: BoxFit.contain)
         : Image.asset(mistake.art, fit: BoxFit.contain);
+    // The card stays on until the player's button (no timer ever closes it).
+    // It always fits the screen: the picture shrinks on a short screen, the
+    // words scroll inside if long, and the buttons stay in reach (320×568,
+    // landscape).
+    final mq = MediaQuery.of(context);
+    final maxH = (mq.size.height - mq.padding.vertical - 32).clamp(200.0, double.infinity);
+    final artMaxH = mq.size.height * 0.3;
     return Positioned.fill(
       child: ColoredBox(
         color: deadly ? const Color(0xD9200608) : const Color(0xC0050A16),
@@ -242,7 +249,7 @@ class MistakeCard extends StatelessWidget {
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: BoxConstraints(maxWidth: 420, maxHeight: maxH),
               decoration: BoxDecoration(
                 color: SlmColors.ivory,
                 borderRadius: BorderRadius.circular(22),
@@ -263,21 +270,34 @@ class MistakeCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  AspectRatio(aspectRatio: 1.6, child: art),
-                  const SizedBox(height: 12),
-                  Text(
-                    mistake.textBn,
-                    textAlign: TextAlign.center,
-                    style: bangla(fontSize: 16.5, fontWeight: FontWeight.w800, color: SlmColors.ink, height: 1.4),
-                  ),
-                  if (deadly || near) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      deadly ? MistakeLines.deadlySub : MistakeLines.nearMissSub,
-                      textAlign: TextAlign.center,
-                      style: bangla(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFF5A4636), height: 1.35),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      key: const ValueKey('mistake-card-scroll'),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxHeight: artMaxH),
+                            child: AspectRatio(aspectRatio: 1.6, child: art),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            mistake.textBn,
+                            textAlign: TextAlign.center,
+                            style: bangla(fontSize: 16.5, fontWeight: FontWeight.w800, color: SlmColors.ink, height: 1.4),
+                          ),
+                          if (deadly || near) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              deadly ? MistakeLines.deadlySub : MistakeLines.nearMissSub,
+                              textAlign: TextAlign.center,
+                              style: bangla(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFF5A4636), height: 1.35),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                   const SizedBox(height: 14),
                   Row(
                     children: [

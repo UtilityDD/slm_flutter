@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -50,6 +51,12 @@ export 'm3_la_patrol_world.dart' show M3LaPatrolBody, M3LaPatrolFault, M3LaPatro
 // Deadly: a hand on the hanging / cut earth lead (listening to him, or the
 // choice); climbing the live structure to fix it. Slips: a failed LA missed or
 // the wrong one marked, a healthy DTR reported, a failed LA not reported.
+// (Listening is deadly here, not the playbook's slip, because the act he
+// pushes is on Module 3's deadly list — MODULE3_LADDER.md row 14; flagged to
+// the owner.)
+//
+// Gesture hint (looking): a sweep over the three LAs and "সব ঠিক আছে" alike —
+// how to answer, never which. The decks bring their own sweep.
 //
 // Flagged to the owner: "never touch a hanging earth lead — the LA above is on
 // the line, a failed LA's lead may be live" and "write it down and report"
@@ -101,62 +108,96 @@ abstract final class M3LaPatrolLines {
   static const stampBad = 'এল এ খারাপ — রিপোর্ট';
   static const stampOk = 'এল এ ঠিক আছে';
 
-  // What to do: 33–42 letters each.
+  // What to do: 36–43 letters each. The right cards' words (লিখে, রিপোর্ট,
+  // অফিসে, খাতায়, দূর থেকে …) also appear on wrong ones — no word gives the
+  // right card away.
   static const actRight = [
-    'না ছুঁয়ে দূর থেকে লিখি, রিপোর্ট করি',
+    'দূর থেকে ডিটিআর নম্বর লিখে রিপোর্ট করি',
     'ডিটিআর নম্বর আর ফেজ লিখে অফিসে জানাই',
     'কাছে না গিয়ে খাতায় লিখে রিপোর্ট পাঠাই',
   ];
   static const actWrong = {
-    'আর্থ তারটা হাতে ধরে টেনে দেখি শক্ত কিনা': M3LaPatrolAct.touchLead,
-    'আর্থ তারটা হাতে খুলে আবার কষে জুড়ে দিই': M3LaPatrolAct.touchLead,
-    'খুঁটিতে উঠে এখনই এল এ-টা খুলে নামাই': M3LaPatrolAct.climb,
-    'শাটডাউন ছাড়াই উঠে এল এ-টা ঠিক করে দিই': M3LaPatrolAct.climb,
-    'লাইন তো চলছে, কাউকে জানানোর দরকার নেই': M3LaPatrolAct.ignore,
-    'এখন থাক, পরের মাসের টহলে দেখে নেব': M3LaPatrolAct.ignore,
+    'কাছে গিয়ে তারটা টেনে দেখি, পরে খাতায় লিখি': M3LaPatrolAct.touchLead,
+    'তারটা হাতে খুলে কষে জুড়ে, পরে রিপোর্ট করি': M3LaPatrolAct.touchLead,
+    'খুঁটিতে উঠে এল এ খুলে, পরে অফিসে জানাই': M3LaPatrolAct.climb,
+    'শাটডাউন না করেই উঠে এল এ-টা ঠিক করে দিই': M3LaPatrolAct.climb,
+    'লাইন তো চলছে, নম্বর লিখে রাখার দরকার নেই': M3LaPatrolAct.ignore,
+    'দূর থেকে সব চালু লাগছে, রিপোর্ট পাঠাই না': M3LaPatrolAct.ignore,
+    'এখন থাক, পরের টহলে ফেজ আর ডিটিআর দেখব': M3LaPatrolAct.ignore,
   };
 
   /// The act a dealt option stands for.
   static M3LaPatrolAct actOf(ChoiceOption o) => o.correct ? M3LaPatrolAct.report : (actWrong[o.textBn] ?? M3LaPatrolAct.ignore);
 
   // The reasons: the right ones fit what this DTR had; the wrong ones are
-  // field excuses and the lesson's myths. 30–42 letters each.
+  // field excuses and the lesson's myths. 35–46 letters each. No word sits
+  // only on a fault's right cards: every word of them (the fault's own words
+  // too) is on that fault's wrong cards, and তাই / ধরলাম / খারাপ are on both
+  // sides, so neither a word nor punctuation gives the right card away.
   static const whyBad = 'কেন এটাকে খারাপ ধরলেন?';
   static const whyOk = 'কেন সব ঠিক ধরলেন?';
   static const badRight = {
-    M3LaPatrolFault.dropped: ['ডিসকানেক্টর ফেটে আর্থ তার ঝুলছে — এল এ খারাপ', 'ঝুলন্ত আর্থ তার মানে এল এ ভেতরে বিগড়ে গেছে'],
-    M3LaPatrolFault.cracked: ['বডিতে ফাটল — এমন এল এ কোনো সুরক্ষা দেয় না', 'পোর্সেলিন ফাটা — ক্ষতিগ্রস্ত এল এ কাজের নয়'],
-    M3LaPatrolFault.burnt: ['বডিতে পোড়া দাগ — এই এল এ আর অক্ষত নেই', 'গায়ে পোড়া কালো দাগ — এই এল এ ভরসার নয়'],
-    M3LaPatrolFault.burst: ['এল এ ফেটে ভেঙেছে — লাইনে বড় সার্জ এসেছিল', 'ভাঙা, বিস্ফোরিত এল এ — সুরক্ষা আর নেই'],
-    M3LaPatrolFault.leadCut: ['আর্থ তার কাটা — আর্থিং ছাড়া এল এ অকেজো', 'আর্থ তার ছেঁড়া — সার্জ মাটিতে যাওয়ার পথ নেই'],
+    M3LaPatrolFault.dropped: ['ডিসকানেক্টর ফেটে আর্থ তার ঝুলছে, এল এ খারাপ', 'আর্থ তার ঝুলছে মানে এল এ ভেতরে বিগড়ে গেছে'],
+    M3LaPatrolFault.cracked: ['বডিতে ফাটল, এমন এল এ কোনো সুরক্ষা দেয় না', 'পোর্সেলিন ফাটা, তাই এই এল এ খারাপ ধরলাম'],
+    M3LaPatrolFault.burnt: ['বডিতে পোড়া দাগ, এই এল এ আর অক্ষত নেই', 'গায়ে পোড়া কালো দাগ, তাই খারাপ ধরলাম'],
+    M3LaPatrolFault.burst: ['এল এ ফেটে ভেঙেছে, লাইনে বড় সার্জ এসেছিল', 'এল এ ভেঙে ফেটে আছে, কোনো সুরক্ষা দেয় না'],
+    M3LaPatrolFault.leadCut: ['আর্থ তার কাটা, আর্থিং ছাড়া এল এ অকেজো', 'আর্থ তার কাটা, তাই সার্জ মাটিতে যাওয়ার পথ নেই'],
   };
+
+  /// Excuses dealt on every faulty DTR.
   static const badWrong = [
     'ঝড়ে ভিজেছে, তাই এল এ-টাকে খারাপ ধরলাম',
-    'রং একটু পুরোনো লাগছে, তাই খারাপ ধরলাম',
+    'রং একটু পুরোনো লাগছে, এমন এল এ আর ভরসার নয়',
     'ঝড়ের পরে সব এল এ এমনিতেই বদলাতে হয়',
-    'পাশের ডিটিআর-এ খারাপ ছিল, তাই এটাও ধরলাম',
-    'এল এ বজ্রপাত আটকায়, ঝড়ে তাই ক্ষয়ে গেছে',
-    'সাথী বলল খারাপ, তাই আমিও খারাপ ধরলাম',
+    'পাশের ডিটিআর-এ খারাপ ছিল, এটাও একই হবে',
+    'এল এ বজ্রপাত আটকায়, ঝড়ে ক্ষয়ে গেছে',
+    'সাথী বলল খারাপ, আমিও তাই খারাপ ধরলাম',
+    'বডিতে বৃষ্টির জলের দাগ, এল এ আর ভরসার নয়',
+    'আর্থ তার ভেজা, এমন এল এ কোনো সুরক্ষা দেয় না',
+    'এই এল এ-র গায়ে পাখি বসে, ওতেই নষ্ট হয়',
+    'রং ছাড়া আর কিছু দেখিনি, তবু খারাপ ধরলাম',
   ];
+
+  /// Excuses that borrow this fault's own words but give a wrong reason.
+  static const badWrongFor = {
+    M3LaPatrolFault.dropped: ['ডিসকানেক্টর পুরোনো, রং ফেটে উঠেছে, তাই ধরলাম', 'ঝড়ে ভিজেছে মানে ভেতরে জল ঢুকে বিগড়ে গেছে', 'খুঁটিতে পোস্টার ঝুলছে, এল এ-ও ঢিলে হয়েছে'],
+    M3LaPatrolFault.cracked: ['খুঁটির গায়ে ফাটল, এমন এল এ ভরসার নয়', 'পোর্সেলিন তো পুরোনো ধাঁচের, তাই খারাপ ধরলাম', 'ঝড়ে ফাটা ডাল নিচে পড়ে আছে, এল এ-ও গেছে'],
+    M3LaPatrolFault.burnt: ['খুঁটির গায়ে কালো আলকাতরা, তাই খারাপ ধরলাম', 'পাশের ঝোপ পোড়া, এই এল এ আর অক্ষত নেই'],
+    M3LaPatrolFault.burst: ['পাশের বেড়া ভেঙেছে, লাইনে বড় সার্জ এসেছিল', 'ঝড়ে ডাল ভেঙে পড়েছে, এল এ-ও ফেটে আছে নিশ্চয়ই'],
+    M3LaPatrolFault.leadCut: ['পাশের গাছের ডাল কাটা, এল এ-র ক্ষতি হয়েছেই', 'ঝড়ে মাটিতে জল জমেছে, সার্জ যাওয়ার পথ নেই', 'বৃষ্টিতে আর্থিং ভিজেছে, এমন এল এ অকেজো'],
+  };
   static const okRight = ['তিনটের বডি অক্ষত, আর্থ তার জোড়া, ঝুলছে না', 'ফাটল বা পোড়া দাগ নেই, আর্থ তার মজবুত জোড়া'];
   static const okWrong = [
-    'লাইন তো চলছে, তাই এল এ নিশ্চয়ই ঠিক আছে',
-    'ঝড় থেমে গেছে, তাই আর দেখার কিছু নেই',
-    'এল এ বজ্রপাত আটকায়, তাই ওর কিছু হয় না',
+    'লাইন তো দিব্যি চলছে, নিশ্চয়ই সব ঠিক আছে',
+    'ঝড় থেমেছে, তিনটের দিকে আর দেখার কিছু নেই',
+    'এল এ বজ্রপাত আটকায়, ওর নিজের কিছু হয় না',
     'আর্থ তার সামান্য কাটা থাকলেও এল এ চলে',
-    'নিচ থেকে ভালো দেখা যায় না, তাই ঠিক ধরলাম',
-    'নতুন লাগানো এল এ, ওটা কখনো খারাপ হয় না',
+    'নিচ থেকে বডি ভালো দেখা যায় না, ঠিকই হবে',
+    'নতুন লাগানো, ওতে ফাটল বা পোড়া হয় না',
+    'আর্থ তার জোড়া দেখেই আর কিছু দেখিনি',
+    'আর্থ তার একটু ঝুলছে, তবু লাইন তো চলছে',
+    'দূর থেকে অক্ষত লাগছে, দাগ খোঁজার দরকার নেই',
+    'খুঁটি মজবুত দাঁড়িয়ে, তাই এল এ ঠিক আছে',
   ];
 
   static List<String> whyRight(M3LaPatrolCase c) => c.healthy ? okRight : badRight[c.fault]!;
-  static List<String> whyWrong(M3LaPatrolCase c) => c.healthy ? okWrong : badWrong;
+  static List<String> whyWrong(M3LaPatrolCase c) => c.healthy ? okWrong : [...badWrong, ...badWrongFor[c.fault]!];
 
   /// The careless coworker at the hanging lead.
   static const coworker = CoworkerScript(
     line: 'আরে, ঝুলন্ত তারটা টেনে খুলে নাও! ঝামেলা মিটে যাক।',
     exitLine: 'হুঁ! যা খুশি করুন।',
-    right: ['না, ঝুলন্ত তার ছোঁব না, রিপোর্ট করব', 'না, ওপরের এল এ লাইনে জোড়া, হাত নয়', 'না, দূর থেকে লিখে অফিসে জানাব'],
-    wrong: ['ঠিক, টেনে খুলে গুটিয়ে রেখে দিই', 'আচ্ছা, ওটা তো আর্থের তার, ধরা যায়', 'হ্যাঁ, শুকনো হাতে ধরলে কিছু হবে না', 'ঠিক আছে, এক টানে খুলে নিচ্ছি', 'তাড়া আছে, টেনে ফেলে পরেরটায় যাই'],
+    // No card opens with "না," and the refusals' words (রিপোর্ট, লিখে, হাত,
+    // লাইনে …) appear on the listening cards too.
+    right: ['ঝুলন্ত তার ছোঁব না, আগে রিপোর্ট করব', 'ওপরের এল এ লাইনে জোড়া, ওতে হাত দেব না', 'তারে হাত নয়, খাতায় লিখে রিপোর্ট দেব'],
+    wrong: [
+      'ঠিক, ঝুলন্ত তার টেনে খুলে পরে রিপোর্ট করব',
+      'আচ্ছা, ওটা তো আর্থের তার, হাত দেওয়াই যায়',
+      'এল এ তো খারাপ, লাইনে আর জোড়া নেই, খুলি',
+      'শুকনো হাতে ধরলে কিছু হবে না, খুলে নিই',
+      'ঠিক আছে, এক টানে খুলে খাতায় লিখে দেব',
+      'তাড়া আছে, তারটা টেনে ফেলে পরেরটায় যাই',
+    ],
     asks: ['ও বলছে তারটা টেনে খুলতে। কী করবেন?', 'ঝুলন্ত তারে হাত দেবেন?', 'টেনে খুলবেন, না রিপোর্ট করবেন?'],
   );
 
@@ -475,6 +516,13 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // The gesture hint (looking): the scene layer (to map the LAs to the
+  // screen), the "সব ঠিক আছে" button and the geometry last drawn.
+  final _hints = IdleHintController();
+  final _sceneKey = GlobalKey();
+  final _okKey = GlobalKey();
+  M3LaPatrolGeo? _geoNow;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -511,7 +559,22 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
     if (!_muted) unawaited(ZlFx.cue(file, volume: volume, muted: false));
   }
 
-  bool get _canLook => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_actOpen && !_run.shown && _run.stage == M3LaPatrolStage.look;
+  bool get _canLook =>
+      !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_actOpen && !_run.shown && _run.stage == M3LaPatrolStage.look;
+
+  /// Looking: a sweep over the three LAs and the "সব ঠিক আছে" button, in a
+  /// fixed order on every DTR (healthy or not) — never a tap on one of them.
+  HintSpec? _hint() {
+    final geo = _geoNow;
+    final box = _sceneKey.currentContext?.findRenderObject();
+    if (geo == null || box is! RenderBox || !box.hasSize || !box.attached) return null;
+    Rect toGlobal(Rect r) => Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight));
+    final ok = HintSpec.globalRectOf(_okKey);
+    return HintSpec.sweep([
+      for (final p in M3LaPatrolPhase.values) toGlobal(geo.laBody(p)),
+      ?ok,
+    ]);
+  }
 
   void _startRound() {
     setState(() {
@@ -528,7 +591,10 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
     if (!_canLook) return;
     final c = _run.current;
     final p = geo.hit(d.localPosition, dropped: c.fault == M3LaPatrolFault.dropped ? c.phase : null);
-    if (p == null) return;
+    if (p == null) {
+      _hints.missTap();
+      return;
+    }
     unawaited(_spot(p, d.globalPosition));
   }
 
@@ -553,14 +619,12 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
       _success(origin);
       return;
     }
-    // A failed LA found: what now?
+    // A failed LA found: what now? At the hanging lead the same deck opens
+    // and he is armed: he peeps in a moment later, or at once on the first
+    // pick (holdForCoworker in _pickAct) — never a gap with nothing to do.
     _cue('sounds/quiz_select.wav', volume: 0.5);
     setState(() => _wake++);
-    if (_run.index == _run.deal.callAt && !coworkerDone) {
-      unawaited(_sayChain([M3LaPatrolLines.actAsk]));
-      scheduleCoworker();
-      return;
-    }
+    if (_run.index == _run.deal.callAt && !coworkerDone) scheduleCoworker();
     _openAct();
   }
 
@@ -576,7 +640,10 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
   }
 
   Future<void> _pickAct(ChoiceOption o, Offset origin) async {
-    if (!_actOpen || _actWrong != null || _actPicked != null || _ended) return;
+    if (!_actOpen || coworkerOpen || _actWrong != null || _actPicked != null || _ended || _busy || tableBusy) return;
+    // The decisive control: at the hanging lead a pick before he has come
+    // does nothing but bring him in now (his deck takes this one's place).
+    if (holdForCoworker()) return;
     _hush();
     setState(() => o.correct ? _actPicked = o.textBn : _actWrong = o.textBn);
     await Future<void>.delayed(const Duration(milliseconds: 420));
@@ -656,8 +723,11 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // Only at the hanging lead, after the trainee found it and before he has
+    // settled it: his push ("pull the hanging lead off") fits nowhere else.
+    // The action deck may be up (he replaces it), but not mid-pick.
     if (_ended || _run.index != _run.deal.callAt || _run.stage != M3LaPatrolStage.act || _run.shown) return null;
-    if (_intro || _busy || _card != null || reasonOpen || _actOpen) return false;
+    if (_intro || _busy || _card != null || tableBusy || _actWrong != null || _actPicked != null) return false;
     return true;
   }
 
@@ -668,6 +738,8 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
+    // His answer settles this DTR's "what now": the action deck under him goes.
+    if (_actOpen) setState(() => _actOpen = false);
     if (!held) {
       // Listened to him: a hand on the hanging lead.
       await _commitAct(M3LaPatrolAct.touchLead, origin);
@@ -854,7 +926,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M3LaPatrolGeo.forScene(m.height, m.inset);
+    final geo = _geoNow = M3LaPatrolGeo.forScene(m.height, m.inset);
     final c = _run.current;
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
@@ -919,7 +991,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
         key: const ValueKey('touch'),
         child: Semantics(
           label: M3LaPatrolLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d, geo)),
+          child: GestureDetector(key: _sceneKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d, geo)),
         ),
       ),
       if (_freeze)
@@ -953,7 +1025,8 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
     final size = MediaQuery.sizeOf(context);
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
-    final deckUp = reasonOpen || coworkerChoiceUp || _actOpen;
+    // While he is in, his deck (beat 2) replaces the action deck.
+    final deckUp = reasonOpen || coworkerChoiceUp || (_actOpen && !coworkerOpen);
     final looking = playing && _canLook;
     return PopScope(
       canPop: false,
@@ -982,6 +1055,10 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: looking,
+            hintKey: _run.index,
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (looking)
@@ -990,7 +1067,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
                   left: 12,
                   right: 96,
                   bottom: pad.bottom + 12,
-                  child: DoBigButton(label: M3LaPatrolLines.allOk, filled: false, onDark: true, onTapUp: (d) => unawaited(_spot(null, d.globalPosition))),
+                  child: DoBigButton(key: _okKey, label: M3LaPatrolLines.allOk, filled: false, onDark: true, onTapUp: (d) => unawaited(_spot(null, d.globalPosition))),
                 ),
               if (deckUp)
                 Positioned(
@@ -1002,7 +1079,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
                     padding: EdgeInsets.only(bottom: pad.bottom),
                     child: reasonOpen
                         ? reasonDeck(quiet: quiet, key: const ValueKey('why-deck'))
-                        : _actOpen
+                        : _actOpen && !coworkerOpen
                             ? ChoiceDeck(
                                 key: ValueKey('act-deck-${_run.index}'),
                                 options: _actOpts,

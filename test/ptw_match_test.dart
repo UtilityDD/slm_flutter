@@ -4,6 +4,9 @@
 // full clean play (hold the permit up, the lens on each field, stop or start,
 // the reasons, the coworker refused on the phone round), slips (a false stop
 // keeps the permit; three strike out), a deadly start and listening to him.
+// Audit 2026-11-11: one neutral card for every wrong stop, no word that marks
+// every right card, the praise window takes no touch, the coworker comes even
+// on a fast play, and the gesture hint (how, never what).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -16,7 +19,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -31,6 +36,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '1.6/do/0',
@@ -56,23 +62,22 @@ List<Finder> _onScreen(List<String> texts) => [
         if (_label(x).evaluate().isNotEmpty) _label(x),
     ];
 
-/// Taps the one right card on the deck now up.
+/// Taps the one right card on the deck now up (then এগিয়ে যান on a reason;
+/// the coworker's deck has none).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
 }
+
+/// The words of [text] (split on spaces and punctuation).
+Set<String> _words(String text) => {for (final w in text.split(RegExp(r'[\s,—।?!]+'))) if (w.isNotEmpty) w};
+
+/// The level's score on the header now.
+int _levelScore(WidgetTester t) => t.widget<FullSceneFrame>(find.byType(FullSceneFrame)).levelScore;
 
 /// A seed whose deal satisfies [ok].
 int _seedWhere(bool Function(List<PtwRound> r) ok, {int from = 0}) {
@@ -203,7 +208,7 @@ void main() {
       expect(a.shown, isTrue);
       final b = PtwRun(r)..index = bad;
       final wrong = ptwLensFields.firstWhere((f) => f != r[bad].form!.fault.field);
-      expect(b.decide(start: false, flagged: wrong), PtwMistakes.wrongField);
+      expect(b.decide(start: false, flagged: wrong), PtwMistakes.falseStop, reason: 'the same neutral slip as on a valid permit');
       expect(b.shown, isFalse, reason: 'still to judge');
       expect(b.decide(start: false, flagged: r[bad].form!.fault.field), isNull);
       expect(b.slips, 1);
@@ -219,6 +224,26 @@ void main() {
       final held = PtwRun(r)..index = phone;
       expect(held.answerPhone(held: true), isNull);
       expect(held.caught, contains(PtwLines.caughtPhone));
+    });
+
+    test('a wrong stop: one neutral card whether or not the permit has a fault elsewhere', () {
+      // The card must not tell the player that the permit is faulty (so start
+      // would kill) or valid: a stop on a matching field reads the same.
+      for (var s = 0; s < 30; s++) {
+        final r = dealPermits(math.Random(s), _today);
+        final ok = r.indexWhere((x) => x.form?.fault == PtwFault.none);
+        final bad = r.indexWhere((x) => x.form != null && x.form!.fault != PtwFault.none);
+        final f = r[bad].form!.fault.field;
+        final a = (PtwRun(r)..index = ok).decide(start: false, flagged: PtwField.feeder);
+        final b = (PtwRun(r)..index = bad).decide(start: false, flagged: ptwLensFields.firstWhere((x) => x != f));
+        expect(a, isNotNull);
+        expect(b, isNotNull);
+        expect(a!.key, b!.key);
+        expect(a.textBn, b.textBn);
+        expect(a.art, b.art);
+      }
+      expect(PtwMistakes.wrongField.textBn, PtwMistakes.falseStop.textBn, reason: 'the old key reads the same');
+      expect(PtwMistakes.falseStop.textBn, isNot(contains('অন্য কোনো ঘরে')));
     });
 
     test('three false stops on a valid permit: 3 slips (55 %)', () {
@@ -303,6 +328,35 @@ void main() {
       expect(PtwLines.whyRight(PtwRound(site: site)), PtwLines.whyVerbal);
     });
 
+    test('no word marks every right card (phone, valid permit, coworker decks)', () {
+      void check(String name, List<String> right, List<String> wrong) {
+        final common = right.map(_words).reduce((a, b) => a.intersection(b));
+        final wrongWords = wrong.map(_words).reduce((a, b) => a.union(b));
+        expect(common.difference(wrongWords), isEmpty, reason: '$name: a word only the right cards share');
+      }
+
+      check('phone', PtwLines.whyVerbal, PtwLines.phoneExcuses);
+      check('valid', PtwLines.whyValid, PtwLines.mythsStart);
+      check('coworker', PtwLines.coworker.right, PtwLines.coworker.wrong);
+
+      // A dealt phone deck: "পারমিট" and "নয়" are never on the right card
+      // alone (the library check above cannot see what one deal shows).
+      final site = PtwSite(feederBn: 'x', pole: 50, nameBn: 'y', teamBn: 'z', today: _today, nowBn: '11:20');
+      final phone = PtwRound(site: site);
+      for (var s = 0; s < 200; s++) {
+        final rng = math.Random(s);
+        final deal = dealChoices(PtwLines.whyRight(phone), PtwLines.whyWrongDeal(phone, rng), rng);
+        final right = deal.firstWhere((o) => o.correct).textBn;
+        final wrong = [for (final o in deal) if (!o.correct) o.textBn];
+        if (right.contains('পারমিট')) {
+          expect(wrong.any((w) => w.contains('পারমিট')), isTrue, reason: 'seed $s: only the right card says পারমিট: $deal');
+        }
+        if (_words(right).contains('নয়')) {
+          expect(wrong.any((w) => _words(w).contains('নয়')), isTrue, reason: 'seed $s: only the right card says নয়');
+        }
+      }
+    });
+
     test('the coworker: same-length cards, a big enough library, his lines recorded', () {
       const c = PtwLines.coworker;
       expectSameLength('coworker', [...c.right, ...c.wrong]);
@@ -352,7 +406,7 @@ void main() {
         }
         debugPrint('PERF ptw ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -458,15 +512,19 @@ void main() {
         await _lens(t, ptwLensFields[i], stop: true);
         if (i < 2) {
           expect(find.text(MistakeLines.slipHead), findsOneWidget);
+          expect(find.text(PtwMistakes.falseStop.textBn), findsOneWidget);
           expect(find.text(MistakeLines.readLesson), findsOneWidget);
           await t.tap(find.text(MistakeLines.gotIt));
           await _pump(t, 600);
           expect(find.text(PtwLines.start), findsOneWidget, reason: 'the same permit is still to judge');
         }
       }
+      await _pump(t, 600);
       expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.text(PtwLines.start), findsNothing, reason: 'the level is over');
       final s = c.read(gameSaveProvider);
       expect(s.mistakes.map((m) => m.key), contains(PtwMistakes.falseStop.key));
+      expect(s.rungProgress['1.6/do/0'], isNot('cleared'));
       await _close(t, c);
     });
 
@@ -478,6 +536,7 @@ void main() {
       final wrong = ptwLensFields.firstWhere((f) => f != r0.form!.fault.field);
       await _lens(t, wrong, stop: true);
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.text(PtwMistakes.falseStop.textBn), findsOneWidget, reason: 'the same neutral card as a stop on a valid permit');
       await t.tap(find.text(MistakeLines.gotIt));
       await _pump(t, 600);
       await _lens(t, r0.form!.fault.field!, stop: true);
@@ -485,7 +544,7 @@ void main() {
       expect(find.text(MistakeLines.slipHead), findsNothing);
       expect(find.text(PtwLines.whyStop), findsWidgets);
       final s = c.read(gameSaveProvider);
-      expect(s.mistakes.single.key, PtwMistakes.wrongField.key);
+      expect(s.mistakes.single.key, PtwMistakes.falseStop.key);
       await _close(t, c);
     });
 
@@ -505,6 +564,117 @@ void main() {
       expect(find.byKey(const ValueKey('sheet-drag')), next.phone ? findsNothing : findsOneWidget, reason: 'the next job');
       final s = c.read(gameSaveProvider);
       expect(s.mistakes.single.key, anyOf(PtwMistakes.wrongPlace.key, PtwMistakes.wrongName.key));
+      await _close(t, c);
+    });
+
+    // Here `_run.shown` (set before putOnTable) already closes `_canPlay`, so
+    // this guards the behaviour, not the `!tableBusy` term on its own; that
+    // term matches the kit rule and keeps the window shut if the order changes.
+    testWidgets('the praise window takes no touch: no second score, no lens, no slip', (t) async {
+      final seed = _seedWhere((r) => r.first.form!.fault == PtwFault.none);
+      final c = await _open(t, seed);
+      await _lift(t);
+      final sheet = t.getCenter(find.byKey(const ValueKey('sheet-0')));
+      final startAt = t.getCenter(find.text(PtwLines.start));
+      await t.tap(find.text(PtwLines.start));
+      await t.pump(const Duration(milliseconds: 120));
+      // The ◆ waits on the table; the deck has not opened yet.
+      expect(find.byType(ChoiceDeck), findsNothing);
+      final score = _levelScore(t);
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(sheet);
+        await t.tapAt(startAt);
+        await t.pump(const Duration(milliseconds: 80));
+      }
+      expect(_label(PtwLines.lensLabel), findsNothing);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(_levelScore(t), score);
+      await _pickRight(t, PtwLines.whyValid);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the coworker comes even on a fast play, and his round waits for him', (t) async {
+      final seed = _seedWhere((r) => r[1].phone && r[0].form!.fault == PtwFault.none);
+      final c = await _open(t, seed);
+      await _lift(t);
+      await t.tap(find.text(PtwLines.start));
+      await _pickRight(t, PtwLines.whyValid);
+      // The phone round: answer the instant it rings, then hammer the scene.
+      for (var i = 0; i < 120 && find.textContaining(PtwLines.phoneLine).evaluate().isEmpty; i++) {
+        if (_label(PtwLines.phoneLabel).evaluate().isNotEmpty) await t.tap(_label(PtwLines.phoneLabel), warnIfMissed: false);
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.textContaining(PtwLines.phoneLine), findsOneWidget);
+      for (var i = 0; i < 4; i++) {
+        await t.tap(_label(PtwLines.phoneLabel), warnIfMissed: false);
+        await t.pump(const Duration(milliseconds: 60));
+      }
+      // No start button and no permit: nothing can end his round but him.
+      expect(find.text(PtwLines.start), findsNothing);
+      expect(find.byKey(const ValueKey('sheet-drag')), findsNothing);
+      await waitChoiceDeck(t);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsOneWidget);
+      await _pickRight(t, PtwLines.coworker.right);
+      await _pump(t, 2800);
+      expect(find.text(PtwLines.whyPhone), findsWidgets);
+      await _pickRight(t, PtwLines.whyRight(dealPermits(math.Random(seed), _today)[1]));
+      await _pump(t, 4000);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: the hand shows only while the level waits; a sweep presses nothing', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = _seedWhere((r) => r.first.form!.fault == PtwFault.none);
+      t.view.physicalSize = const Size(784, 1700);
+      t.view.devicePixelRatio = 2.0;
+      final c = ProviderContainer();
+      final nav = GlobalKey<NavigatorState>();
+      await t.pumpWidget(UncontrolledProviderScope(
+        container: c,
+        child: MaterialApp(navigatorKey: nav, home: const Scaffold(body: SizedBox())),
+      ));
+      unawaited(nav.currentState!.push(MaterialPageRoute<bool>(
+        builder: (_) => PtwMatchPage(ctx: _ctx, pack: ptwPack16, muted: true, seed: seed, today: _today),
+      )));
+      await _pump(t, 1000);
+      IdleHintState hint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      // During the guide's intro: no hand.
+      expect(find.byType(GuideIntro), findsOneWidget);
+      expect(hint().showing, isFalse);
+      await waitIntro(t);
+      Future<bool> waitShow() async {
+        for (var ms = 0; ms < 12000; ms += 100) {
+          if (hint().showing) return true;
+          await t.pump(const Duration(milliseconds: 100));
+        }
+        return false;
+      }
+
+      // The clipboard waits: the hand shows (a nudge), and moves nothing.
+      expect(await waitShow(), isTrue, reason: 'idle on the clipboard');
+      await _pump(t, 3000);
+      expect(find.byKey(const ValueKey('sheet-drag')), findsOneWidget, reason: 'the nudge lifts nothing');
+      await _lift(t);
+      expect(hint().showing, isFalse, reason: 'a touch hides it');
+      // The held permit: a sweep over every field and start, pressing none.
+      expect(await waitShow(), isTrue, reason: 'idle on the held permit');
+      await _pump(t, 4000);
+      expect(_label(PtwLines.lensLabel), findsNothing);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(find.byType(ChoiceDeck), findsNothing);
+      // A slip card is up: the level does not wait for the scene, no hand.
+      await _lens(t, PtwField.feeder, stop: true);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      await _pump(t, 10000);
+      expect(hint().showing, isFalse);
+      expect(t.takeException(), isNull);
       await _close(t, c);
     });
 
@@ -538,6 +708,7 @@ void main() {
       final wrong = _onScreen(PtwLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);

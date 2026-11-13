@@ -19,9 +19,11 @@ import 'package:flutter/material.dart';
 // Design: 360 wide × the scene's height; the ground row follows the bottom of
 // the screen (a tall phone gets more sky).
 
-/// The silica gel's colour: blue / orange = dry and good; pink (from blue) /
-/// green (from orange) = it has soaked up moisture — change it (film 3.6).
-enum M3DtrCheckupGel { blue, orange, pink, green }
+/// The silica gel's colour: blue / orange = dry and good; pink / whitish =
+/// it has soaked up moisture — change it (lesson 3.6 point 3: "গোলাপি (Pink)
+/// বা সাদা"). Drawn as blue → pink and orange → whitish (the band of the
+/// fresh colour is left on top).
+enum M3DtrCheckupGel { blue, orange, pink, white }
 
 /// Where the oil leaks from (lesson point 3: bushing gasket, weld joint,
 /// drain valve).
@@ -30,19 +32,19 @@ enum M3DtrCheckupLeak { none, gasket, weld, drain }
 /// What the trainee looks at (from the ground) — or listens to.
 enum M3DtrCheckupSpot { breather, gauge, tank, nameplate, sound }
 
-bool m3DtrCheckupGelSpent(M3DtrCheckupGel g) => g == M3DtrCheckupGel.pink || g == M3DtrCheckupGel.green;
+bool m3DtrCheckupGelSpent(M3DtrCheckupGel g) => g == M3DtrCheckupGel.pink || g == M3DtrCheckupGel.white;
 
 Color m3DtrCheckupGelColor(M3DtrCheckupGel g) => switch (g) {
       M3DtrCheckupGel.blue => const Color(0xFF2F6FD8),
       M3DtrCheckupGel.orange => const Color(0xFFF08A1C),
       M3DtrCheckupGel.pink => const Color(0xFFF08DB4),
-      M3DtrCheckupGel.green => const Color(0xFF3FA34D),
+      M3DtrCheckupGel.white => const Color(0xFFF3EFE6),
     };
 
 /// The fresh colour a spent gel started from (the band still left on top).
 M3DtrCheckupGel m3DtrCheckupGelFresh(M3DtrCheckupGel g) => switch (g) {
       M3DtrCheckupGel.pink => M3DtrCheckupGel.blue,
-      M3DtrCheckupGel.green => M3DtrCheckupGel.orange,
+      M3DtrCheckupGel.white => M3DtrCheckupGel.orange,
       _ => g,
     };
 
@@ -553,7 +555,8 @@ class M3DtrCheckupLensPainter extends CustomPainter {
   }
 
   void _sound(Canvas c, Size s) {
-    // What the ear hears: a soft steady hum, or rattling bursts.
+    // What the ear hears: a soft steady hum, or rattling bursts (one neutral
+    // colour for both — the player judges the sound, not a red/blue cue).
     final mid = s.height / 2 - 6;
     final wave = Path()..moveTo(8, mid);
     final rnd = math.Random(4);
@@ -564,7 +567,7 @@ class M3DtrCheckupLensPainter extends CustomPainter {
       wave.lineTo(x, y);
     }
     c.drawPath(wave, Paint()
-      ..color = look.rattle ? const Color(0xFFD23A2E) : const Color(0xFF2F6FD8)
+      ..color = const Color(0xFF2B3440)
       ..strokeWidth = 2.4
       ..style = PaintingStyle.stroke);
   }

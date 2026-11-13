@@ -1,0 +1,3066 @@
+{
+ "lessons": [
+  {
+   "lessonId": "6.1",
+   "titleBn": "ডিস্ট্রিবিউশন ট্রান্সফরমার (DTR): লাইনের হৃৎপিণ্ড",
+   "board": {
+    "artFolder": "assets/game/art/m6_board61/ (tool/m6_board61_art.py, learn_board_pack61.dart). A pole-mounted DTR. Board 3.6 (plinth DTR: side/gel/sign/tap/earth) is not repeated round for round.",
+    "mythBn": "মাঠে পোলের ওপরে ঝুলন্ত অবস্থাতেই ট্রান্সফরমারের ট্যাঙ্ক খুলে কয়েল ঠিক করে ফেলা যায়।",
+    "rounds": [
+     {
+      "promptBn": "DTR-এর বাইরের কোন অংশগুলো ভেতরের তেলের যত্ন নেয়?",
+      "safe": [
+       "Conservator drum on top of the tank — 'কনজারভেটর ড্রাম (বাড়তি তেলের জায়গা)'",
+       "Breather with the silica gel window — 'সিলিকা জেলের ব্রিদার'",
+       "Radiator fins — 'রেডিয়েটর ফিন (তেল ঠান্ডা করে)'"
+      ],
+      "traps": [
+       {
+        "what": "Nameplate on the tank",
+        "rejectBn": "নেমপ্লেটে kVA রেটিং, সিরিয়াল নম্বর আর Dyn11 লেখা থাকে। তেলের যত্ন নেওয়া এর কাজ নয়।"
+       },
+       {
+        "what": "The tall HT bushings",
+        "rejectBn": "বুশিং চিনেমাটির ইনসুলেটর। এর ভেতর দিয়ে লাইনের কানেকশন ট্যাঙ্কে ঢোকে আর বের হয়, তেল এর কাজ নয়।"
+       },
+       {
+        "what": "The short LT bushings",
+        "rejectBn": "এগুলো 415 V দিকের LT বুশিং। কানেকশন বের করে আনে, তেল ঠান্ডা বা শুকনো রাখে না।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ট্রিপের পর 6 দফার চেক — কোনগুলো আপনি নিচে দাঁড়িয়ে দেখবেন?",
+      "safe": [
+       "Wet oil patch under the tank — 'ট্যাঙ্কের নিচে মাটিতে তেলের দাগ'",
+       "Gauge with oil between MIN and MAX — 'MIN আর MAX-এর মাঝে তেল'",
+       "Breather gel colour — 'ব্রিদারের জেলের রং'",
+       "Bushing crack or flash mark — 'বুশিংয়ে ফাটল বা পোড়া দাগ'",
+       "Phone photo of a readable nameplate — 'নেমপ্লেটের স্পষ্ট ছবি'"
+      ],
+      "traps": [
+       {
+        "what": "Lineman unbolting the tank lid on the pole",
+        "rejectBn": "ট্যাঙ্ক খোলা লাইনম্যানের কাজ নয়। এ কাজ শুধু মেরামত শপে বা টেস্টিং ল্যাবে হয়।"
+       },
+       {
+        "what": "Looking for a Buchholz relay on a small pole DTR",
+        "rejectBn": "ছোট পোলের DTR-এ বুখলজ রিলে থাকে না। ব্রিদারের রং, তেলের লেভেল আর হামিং শব্দই আপনার ভরসা।"
+       },
+       {
+        "what": "Unwrapping the paper on the coil",
+        "rejectBn": "কয়েল দেখতে হলে ট্যাঙ্ক খুলতে হয়। সেটা শুধু অফ-লাইনে, মেরামত শপে হয়, মাঠে কখনো নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "বাইরের কোন লক্ষণ বলছে, ভেতরে কয়েলের কাগজ বিপদে আছে?",
+      "safe": [
+       "Oil dripping, gauge below MIN",
+       "Pink silica gel",
+       "Dark, burnt-smelling drain-valve oil in a glass bottle"
+      ],
+      "traps": [
+       {
+        "what": "Sound icon: soft steady hum",
+        "rejectBn": "কোরে বারবার চুম্বকত্ব তৈরি হয় বলে হালকা, একটানা গুনগুন শব্দ একদম স্বাভাবিক।"
+       },
+       {
+        "what": "Blue, dry silica gel",
+        "rejectBn": "শুকনো সিলিকা জেল নীল বা কমলা রঙের হয়। এটা ঠিক আছে।"
+       },
+       {
+        "what": "Oil halfway between MIN and MAX",
+        "rejectBn": "তেল MIN আর MAX চিহ্নের মাঝামাঝি থাকাটাই ঠিক লেভেল।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ট্যাঙ্কের ভেতরে আসলে কী কী থাকে?",
+      "safe": [
+       "Laminated soft-iron core",
+       "HT and LT copper coils",
+       "Kraft paper between coil layers",
+       "Core and coils sunk in mineral oil"
+      ],
+      "traps": [
+       {
+        "what": "A spinning fan or rotor inside",
+        "rejectBn": "DTR একটা স্থির মেশিন। এর ভেতরে কোনো ঘূর্ণায়মান অংশ বা মুভিং পার্টস নেই।"
+       },
+       {
+        "what": "A wire joining HT coil straight to LT coil",
+        "rejectBn": "দুই ওয়াইন্ডিংয়ের মধ্যে সরাসরি কোনো তারের কানেকশন থাকে না। চৌম্বক আবেশে ভোল্টেজ বদলায়।"
+       },
+       {
+        "what": "Tank filled with water",
+        "rejectBn": "ভেতরে থাকে খনিজ তেল। তেলে জল ঢুকলে কারেন্ট সহ্য করার ক্ষমতা কমে যায়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "শপে কয়েল খোলার ছবি — কোনগুলো বড় ক্ষতির প্রমাণ?",
+      "safe": [
+       "Paper black at the top of the coil",
+       "Copper melted into lumps, splattered",
+       "Coil bent, bulged, pushed out of place",
+       "Turns burst open at one spot"
+      ],
+      "traps": [
+       {
+        "what": "Yellow-brown unburnt paper",
+        "rejectBn": "ইনসুলেশন কাগজের স্বাভাবিক রং হলুদ-বাদামি। পুড়লে তবে কালো কার্বন হয়।"
+       },
+       {
+        "what": "A straight coil in its place",
+        "rejectBn": "কয়েল বাঁকেনি, ফোলেনি, সরেনি। শর্ট-সার্কিটের ধাক্কার কোনো প্রমাণ নেই।"
+       },
+       {
+        "what": "Smooth, whole copper conductor",
+        "rejectBn": "তামা গলেনি বা ছিটকে যায়নি। ভেতরে তীব্র আর্কের কোনো চিহ্ন নেই।"
+       }
+      ]
+     },
+     {
+      "promptBn": "DTR-এ ভেতরের গোলমালের লক্ষণ দেখলেন — আপনার কাজ কোনগুলো?",
+      "safe": [
+       "Report to the JE / control room — 'দ্রুত রিপোর্ট আর পরীক্ষার অনুরোধ'",
+       "Fresh blue gel into the breather — 'গোলাপি জেল দ্রুত বদলানো'",
+       "Off-load and send oil for DGA/BDV — 'অফ-লোড করে DGA/BDV পরীক্ষা'",
+       "Nameplate photo with the report"
+      ],
+      "traps": [
+       {
+        "what": "Opening the tank on the pole",
+        "rejectBn": "ভুল আর মারাত্মক বিপজ্জনক! ট্যাঙ্ক খোলা যায় শুধু মেরামত শপে বা টেস্টিং ল্যাবের সুরক্ষিত পরিবেশে।"
+       },
+       {
+        "what": "Opening the tank in roadside dust",
+        "rejectBn": "ধুলোবালি আর খোলা বাতাসে ট্যাঙ্ক খোলা একেবারেই বারণ।"
+       },
+       {
+        "what": "Putting a burnt DTR back on charge",
+        "rejectBn": "তামা গলা বা কাগজ পোড়া ধরা পড়লে আবার চার্জ করার ঝুঁকি নেবেন না। টেস্ট ল্যাবের রিপোর্টের ওপর ভরসা রাখুন।"
+       },
+       {
+        "what": "Ignoring a small oil drip",
+        "rejectBn": "সামান্য লিক মানেও তেল কমছে আর কয়েল গরম হচ্ছে। ওই ফাঁক দিয়ে জলীয় বাষ্পও ঢুকতে পারে।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_1_a",
+     "engineType": "m6_dtr_photo_report",
+     "titleBn": "দু'মিনিটের ছবি-রিপোর্ট",
+     "verb": "frame requested parts with a phone viewfinder",
+     "scene": "Roadside pole-mounted DTR on a two-pole structure, layered (sky, far houses parallax, structure, DTR): tank + fins, conservator with MIN/MAX glass gauge, breather with gel window, 3 tall HT bushings, short LT bushings, nameplate (HV 11000 V · LV 415 V · kVA · serial · Dyn11), drain valve, ground under the tank. Trainee on the ground with a phone. In play: a movable viewfinder over the scene with zoom rail and shutter; the JE's chat bubble at the top of the phone; report tray of photo slots at the bottom. Only real labels (MIN/MAX, plate text).",
+     "flow": [
+      "GuideIntro with a dealt trigger: 'লাইন ট্রিপ করেছে! DTR দেখে JE সাহেবকে 2 মিনিটে ছবি-রিপোর্ট পাঠান।' / 'গ্রাহকের অভিযোগ এসেছে — DTR-টা দেখে ছবি-রিপোর্ট পাঠান।' / 'টহলে DTR-টা দেখে JE সাহেবকে রিপোর্ট পাঠান।' No start, no skip.",
+      "Corner guide 'JE সাহেব কী চাইছেন, দেখুন।' JE request names a part by its job or voltage, never by pointer.",
+      "Drag the viewfinder to pan, drag the zoom rail / pinch to zoom; frame border never changes over the target.",
+      "Shutter judges: requested part ≥ 70 % in frame at readable zoom (gauge: MIN, MAX and oil line all in; nameplate: kVA, serial, Dyn11 rows at ≥ 2.5x). Wrong part = slip + MistakeCard; right part too far = JE 'পড়া যাচ্ছে না — আরও কাছে জুম করে আবার তুলুন।' (time only).",
+      "Accepted shot flies to its slot → praise → ◆ on the table → reason deck about what the shot shows (runs after every shot, healthy or faulty).",
+      "Sound slot (position dealt): JE 'আওয়াজটা কেমন? শুনে লিখুন।' Hold the ear button, then 3 readings: 'হালকা একটানা গুনগুন — স্বাভাবিক' / 'খটখট-গরগর — সতর্ক হওয়ার শব্দ' / 'ছড়ছড় স্পার্কিংয়ের শব্দ — সতর্ক'. Wrong reading = slip.",
+      "Coworker two-beat moment on his dealt slot (see coworkerPushBn); the shutter or the sound deck waits for him (holdForCoworker).",
+      "5 slots (4 photos incl. the nameplate + sound) → 'রিপোর্ট পাঠান' → JE 'পেয়েছি, ধন্যবাদ।' → pass panel; quick bonus < 120 s (owner)."
+     ],
+     "dealtVariety": "Trigger; which 4 photo requests (nameplate always) from stain / gauge / gel / HT or LT bushings / fins / drum, and their order; phrasing from ≥ 2 per part (job/voltage wording, e.g. '11 kV যে বুশিং দিয়ে ঢোকে, সেগুলোর ছবি দিন', 'বাড়তি তেল যেখানে জায়গা পায়, তার পাশের কাঁচে তেল কোথায় — ছবি দিন'); DTR state (gel blue/orange vs pink/white; oil in band vs below MIN; ground dry vs wet with leak source at gasket/joint/drain valve; bushing clean vs crack/flash on HT or LT; sound hum/rattle/crackle; 1–3 faults, fully healthy only on patrol ≤ 1 in 4); which coworker variant (at least one of stain or normal hum always dealt); light; peep side.",
+     "deadly": [
+      "None (ground-level, no-touch check; lesson 6.1 names no fatal act here). Owner option: a climb push ('মাচায় উঠে নেমপ্লেটটা মুছে ছবি তোলো!') would be DEADLY to match step 3.6a; off by default."
+     ],
+     "slips": [
+      "Shooting the wrong part for the request",
+      "Wrong sound reading (normal hum called a fault, rattle/crackle called normal)",
+      "Listening to myth 1 and dropping the stain photo",
+      "Listening to myth 2 and writing 'বড় গোলমাল' for a normal hum"
+     ],
+     "coworkerPushBn": "Once per play, after the player has already seen what he talks about. (a) At the stain shutter (stain dealt): 'ট্রান্সফরমার থেকে সামান্য তেল চুইয়ে পড়লে কিছু যায় আসে না, যতক্ষণ না পুরো তেল ফুরিয়ে যাচ্ছে। ও ছবি বাদ দাও!' (b) After listening to a normal hum, before the sound deck: 'ট্রান্সফরমার থেকে গুনগুন (হামিং) শব্দ হলেই বুঝতে হবে ভেতরে বড় কোনো গোলমাল হয়েছে। লিখে দাও — বড় গোলমাল!' Refuse e.g. 'না, সামান্য লিক মানেও তেল কমছে — ছবি যাবে' / 'হালকা একটানা গুনগুন স্বাভাবিক — মিথ্যে রিপোর্ট নয়'. Listening = slip. Shutter / sound deck hold for him.",
+     "reasonQuestionsBn": [
+      "এই ছবিটা রিপোর্টে কেন জরুরি?",
+      "কেন এগুলোকেই HT (11 kV) বুশিং ধরলেন?",
+      "কেন এগুলোকেই LT (415 V) বুশিং ধরলেন?",
+      "নেমপ্লেটের ছবি রিপোর্টে কেন লাগে?",
+      "আওয়াজটা নিয়ে এমন লিখলেন কেন?",
+      "ও যা বলছে, করবেন?"
+     ],
+     "gestureHints": "Pan waiting: drag nudge from the viewfinder centre 64 dp up-left (fixed, unrelated to target). After one move, idle: drag nudge up on the zoom thumb. Shutter: tap hint only after the frame has moved and zoom changed once. Ear button: hold ring. Decks: built-in sweep; zoomed card tap on এগিয়ে যান. After the last slot: tap on 'রিপোর্ট পাঠান'. Off during intro, JE voice beat, praise window, decks, coworker beats, cards, results. hintKey = request index.",
+     "lessonPoints": [
+      "৬. নেমপ্লেট পরিষ্কার বোঝা যাচ্ছে কি? (kVA রেটিং, Dyn11 ভেক্টর গ্রুপ) — মোবাইলে একটা স্পষ্ট ছবি তুলে রাখুন।",
+      "মাত্র ২ মিনিটে সম্পন্ন করা এই চেকলিস্ট আপনার কন্ট্রোল রুম বা জুনিয়র ইঞ্জিনিয়ারকে একেবারে সঠিক ও খাঁটি রিপোর্ট পাঠাতে সাহায্য করবে।",
+      "১–৫ of the 6-point checklist (stain, MIN/MAX, gel colour, bushing crack/flash, sound)",
+      "মনে রাখবেন, ১১ কেভি সাইডের HT বুশিংগুলো সবসময় ৪১৫ ভোল্ট সাইডের LT বুশিংয়ের চেয়ে আকারে বড় হয়।",
+      "Conservator/breather and fin functions; nameplate photo for every fault report",
+      "Myth 1 and Myth 2 with their realities"
+     ],
+     "giveawayRisks": "Requests name parts by job/voltage; all parts drawn with equal detail; HT vs LT by size only. Frame never snaps or recolours; nothing judged before the shutter. Faults and healthy states drawn with equal prominence. Reason deck after every shot. Coworker comes only after the player framed/heard his subject; variant comes from the deal. Sound readings equal length, shuffled. No free flag-all: wrong part = slip. No scene captions."
+    },
+    {
+     "packId": "do_6_1_b",
+     "engineType": "m6_dtr_coil_forensic",
+     "titleBn": "ক্ষতির খোঁজে কয়েল",
+     "verb": "turn the opened coil, read damage to cause",
+     "scene": "Two places. (1) Field (2 short cases): a pole-mounted DTR close up; a swipe on the tank opens an X-ray cutaway (core, HT/LT coils, kraft paper, oil; outside: breather, conservator + gauge, bushings with gaskets, joints, drain valve, fins). The sign is drawn, never captioned (wet patch + low gauge, pink gel, dark oil in a glass bottle with smell lines, a sound after listening, or a steady hum). Action-tag rail on the right, shuffled. (2) Repair shop (2 cases, the core): an opened coil on a turntable bench that the player rotates; damage drawn on one dealt face only; beside it a damage-family rail and a cause rail.",
+     "flow": [
+      "GuideIntro: 'বাইরের লক্ষণ ভেতরের কোন ক্ষতির খবর দিচ্ছে? খুঁজে দেখান।' No start, no skip.",
+      "Field case 1 and 2 (dealt from F0 hum, F1 leak + low oil, F2 pink gel, F3 dark burnt drain oil after a trip, F4 popping/crackling; at most one F0). Sound cases: hold the ear button first. Swipe the tank to open the X-ray.",
+      "Link (single link, not a path): drag the sign's pin and release it on the ONE inner thing it harms (oil · paper · coil · a loose connection/winding) or on 'স্বাভাবিক — রিপোর্ট নয়' for F0. Accepted: F1 → coil (heat, low oil) or paper (moisture through the leak gap); F2 → paper/oil (moisture); F3 → paper/coil (burnt to carbon); F4 → connection/winding.",
+      "Then drag one action tag (trap 'পোলেই ট্যাঙ্ক খুলে দেখি' on every rail): F1 'দ্রুত খবর + লিক বন্ধের ব্যবস্থা'; F2 'সিলিকা জেল দ্রুত বদলান'; F3 'দ্রুত অফ-লোড + DGA/BDV পরীক্ষা'; F4 'তড়িৎ রিপোর্ট + পরীক্ষার অনুরোধ'. Judged on the drop: right → harm animation along the link → praise → ◆ → reason deck → এগিয়ে যান; wrong → slip + MistakeCard (symptom map, পাঠে দেখুন section 6).",
+      "Coworker on field case 1 or 2 (dealt, non-F0) after the link and before the action drop (holdForCoworker on the rail). Listening = deadly freeze.",
+      "Shop cases 1 and 2 (core): guide 'এই DTR-টা শপে খোলা হয়েছে — কয়েল ঘুরিয়ে দেখুন, ক্ষতি কোথায়, কেন।' Drag to rotate the coil round; tap the damage when it faces the player; drag a family tag ('তাপীয় ক্ষতি' / 'তীব্র আর্ক' / 'ইন্টার-টার্ন ফল্ট' / 'যান্ত্রিক ধাক্কা'), then a cause tag (all 7 shown: 'দীর্ঘ ওভারলোড' · 'ট্যাঙ্কে তেল কম' · 'বাতাসের পথ বন্ধ' · 'তেলে জল' · 'ঘনঘন কড়া শর্ট সার্কিট' · 'লাইনে বাজ' · 'আর্থিং খুব দুর্বল'). Right family + a cause from its lesson group → ◆ → reason → এগিয়ে যান.",
+      "Pass panel ('আজ যা ধরলেন': signs read, damage named)."
+     ],
+     "dealtVariety": "2 field cases from F0–F4 (never two the same, ≤ 1 F0); F1 leak source (gasket/joint/drain valve); gel pink or white; F4 popping or crackling; 2 shop coils from S1 thermal (top paper black), S2 arc (melted copper lumps), S3 inter-turn (burst turns), S4 mechanical (bent/bulged/displaced), never the same family twice; which face carries the damage and the coil's start angle; rails shuffled; coworker case and variant (tank myth on any non-F0, recharge push only on F3); peep side; light.",
+     "deadly": [
+      "Opening the DTR tank in the field — own drop on 'পোলেই ট্যাঙ্ক খুলে দেখি' or listening to myth 3 (lesson: 'ভুল ও মারাত্মক বিপজ্জনক!').",
+      "Re-charging the tripped DTR with dark, burnt-smelling drain oil — listening to the recharge push (F3); lesson sections 6 + 8 'পুনরায় কোনোভাবে চার্জ করার ঝুঁকি নেবেন না' (owner to confirm)."
+     ],
+     "slips": [
+      "Linking a sign to the wrong inner part (e.g. pink gel → coil heat only)",
+      "Wrong action for a right link",
+      "Treating F0 hum as a fault / calling F1–F4 'স্বাভাবিক'",
+      "Shop: wrong family, or a cause from the other family's group",
+      "Shop: naming a family before the damaged face was ever turned to view (guessing) — tap on an undamaged face"
+     ],
+     "coworkerPushBn": "Once per play, field case 1 or 2, after the link, before the action drop (rail held). (a) Any non-F0: 'মাঠে পোলের ওপরে ঝুলন্ত অবস্থাতেই ট্রান্সফরমারের ট্যাঙ্ক খুলে কয়েল ঠিক করে ফেলা যায়। চলো, ঢাকনাটা খুলি!' (b) F3 only: 'তেল একটু কালো তো কী! ফিউজ লাগিয়ে আবার চার্জ করে দেখি, চলবে।' Refuse e.g. 'না, ট্যাঙ্ক খোলা শুধু শপে বা ল্যাবে' / 'না, পোড়া তেল মানে কাগজ পুড়েছে — চার্জ নয়'. Listening = deadly in both.",
+     "reasonQuestionsBn": [
+      "লক্ষণটা ভেতরে কোথায় ক্ষতি করছে, কেন?",
+      "এই লক্ষণে এই কাজটাই কেন?",
+      "গুনগুন শব্দে রিপোর্ট করলেন না কেন?",
+      "শপের কয়েলে এটাকে কেন এই ক্ষতি ধরলেন?",
+      "এই কারণটাই কেন বাছলেন?",
+      "ও যা বলছে, করবেন?"
+     ],
+     "gestureHints": "Ear button: hold ring. X-ray: swipe left-to-right on the tank (fixed). Link waiting: drag nudge from the sign's pin straight up 64 dp (fixed direction). Action rail: sweep over all tags. Shop: a rotate drag hint (short arc both ways) on the coil; then sweep over the coil faces, then the family rail, then the cause rail. Decks built-in. Off during intro, listening, harm animation, praise window, decks, coworker beats, freeze, cards, results. hintKey = caseIndex*10 + stage.",
+     "lessonPoints": [
+      "Section 6 symptom map: leak + low oil → coil overheats → report + stop the leak; pink gel → moisture weakens oil and paper → change gel; burnt/dark drain oil → arc/overheating, paper to carbon → off-load, DGA/BDV; popping/crackling → loose connection or early winding fault → report + test request",
+      "হালকা ও একটানা গুনগুন আওয়াজ হওয়া সম্পূর্ণ স্বাভাবিক। (Myth 2 reality)",
+      "যে ফাঁক দিয়ে তেল চুইয়ে পড়ছে, সেই পথ দিয়ে জলীয় বাষ্প ঢুকে কয়েলের ইনসুলেশন পেপার পুরোপুরি নষ্ট করে দিতে পারে। (Myth 1 reality)",
+      "ভুল ও মারাত্মক বিপজ্জনক! … ধুলোবালি ও খোলা বাতাসে ট্যাঙ্ক খোলা একেবারেই বারণ। (Myth 3 reality)",
+      "Section 8: thermal (paper black, top of coil; overload / low oil / blocked air / water in oil); melted copper, burst turns, bent coil (heavy shorts / lightning / weak earthing)",
+      "পুনরায় কোনোভাবে চার্জ করার ঝুঁকি নেবেন না।"
+     ],
+     "giveawayRisks": "All cutaway parts drawn equal and always visible; nothing reacts before the action drop. The pin is the sign itself. Rails shuffled, tags equal length; the trap and 'স্বাভাবিক' tags on every rail. Shop: damage only on one face, start angle dealt, so turning is required; all 7 causes always shown. Coworker variant from the deal; recharge line only after the dark oil is seen. No captions."
+    }
+   ],
+   "unsupported": [
+    "Board 3.6 / step 3.6a / 4.5b already cover gel, oil, leak, sound, IR, off-load tap; 6.1 repeats much of 3.6 in its own text.",
+    "Hot-spot on one tank side has no detection method in 6.1 (hand on tank deadly in 4.5b; IR from 4.5) — left out.",
+    "Spent gel colour: lesson says pink/white; the Module 3 film said orange → green — only pink/white used.",
+    "Viewfinder legibility thresholds, the MIN/MAX drawing, kVA and serial values, the two-pole structure and bushing counts are art staging.",
+    "JE phone chat is staging (lesson: report to control room / JE; nameplate photo on mobile).",
+    "Sounds are synthesised (lesson gives only গুনগুন / খটখট / গরগর / ছড়ছড় / পটপট).",
+    "Leak-stopping and gel-changing procedures not in the lesson — named as actions only.",
+    "Oil sampling (9.2), megger (9.1), DGA gases, Duval triangle, Dyn11 parallel running — out of play.",
+    "Deadly consequence animations (tank opened, burnt DTR recharged) drawn generically.",
+    "Arc / inter-turn / mechanical share one cause group (lesson lists causes jointly).",
+    "Clean oil colour not in the lesson — no 'clean oil' picture; the F3 bottle shows only damaged oil.",
+    "Turning the coil on a shop turntable is staging; the lesson only describes what the opened coil shows."
+   ],
+   "ownerDecisions": [
+    "Board rival = myth 3 (tank on the pole), since board 3.6 used the oil-leak myth.",
+    "do_6_1_a has no deadly; add the climb push (deadly, matching 3.6a)?",
+    "do_6_1_b: re-charging the burnt-oil DTR = deadly — confirm.",
+    "do_6_1_b: field tank opening = deadly — confirm.",
+    "Myth 1 / myth 2 listening in do_6_1_a = slip — confirm.",
+    "do_6_1_a quick bonus 120 s; far shot costs time only.",
+    "F1 leak accepts two links (heat via low oil; moisture via the gap).",
+    "Pole-mounted DTR art (Module 3 drew plinth).",
+    "Board round 3 repeats signs board 3.6 showed (framed as 'paper at risk') — accept?"
+   ]
+  },
+  {
+   "lessonId": "6.2",
+   "titleBn": "সার্কিট ব্রেকার: চূড়ান্ত রক্ষাকর্তা",
+   "board": {
+    "artFolder": "assets/game/art/m6_board62/",
+    "mythBn": "সার্কিট ব্রেকার ট্রিপ করেছে মানে লাইনটি সম্পূর্ণ বন্ধ। এতে কোনো ভোল্টেজ নেই।",
+    "rounds": [
+     {
+      "promptBn": "ফল্ট হলে সার্কিট কেটে দেয়, পরে আবার চালু করা যায় — কোনটা?",
+      "safe": [
+       "Indoor VCB panel on its trolley with red/green lamps",
+       "OCB panel with its oil tank"
+      ],
+      "traps": [
+       {
+        "what": "Blown fuse wire in a carrier",
+        "rejectBn": "ফিউজ একবার উড়ে গেলে বদলে ফেলতে হয় — ব্রেকারের মতো রিসেট হয় না।"
+       },
+       {
+        "what": "Isolator with blades open",
+        "rejectBn": "আইসোলেটর শুধু স্বাভাবিক লোড কারেন্ট বন্ধ করতে পারে — ফল্ট কারেন্ট বাধার জন্য তৈরি নয়।"
+       },
+       {
+        "what": "Relay panel on its own",
+        "rejectBn": "রিলে হলো মস্তিষ্ক, নির্দেশ দেয় — সার্কিট কাটে ব্রেকার, তার পেশী।"
+       },
+       {
+        "what": "An ordinary wall switch",
+        "rejectBn": "সাধারণ সুইচ ফল্টের প্রচণ্ড আর্ক আর ফল্ট কারেন্ট সামলাতে তৈরি নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কন্টাক্ট ভ্যাকুয়াম চেম্বারে — আধুনিক, কম রক্ষণাবেক্ষণের VCB কোনটা?",
+      "safe": [
+       "VCB trolley with three sealed vacuum bottles",
+       "Cutaway: contacts parting in vacuum, arc gone at once"
+      ],
+      "traps": [
+       {
+        "what": "OCB: contacts in oil inside a tank",
+        "rejectBn": "এটা OCB — কন্টাক্ট তেলে ডোবানো, পুরনো প্রযুক্তি, রক্ষণাবেক্ষণ বেশি।"
+       },
+       {
+        "what": "OCB cutaway: arc boils oil into a bubble",
+        "rejectBn": "তেল গ্যাস হয়ে উচ্চ চাপের বুদবুদে আর্ক নেভে — এটা OCB-র পদ্ধতি।"
+       },
+       {
+        "what": "Fuse carrier with a melted link",
+        "rejectBn": "ফিউজ নিজে উড়ে গিয়ে সিস্টেম বাঁচায় — এটা ব্রেকার নয়, বদলাতে হয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ব্রেকার এখন খোলা (OFF) — প্যানেলের বাতি কেমন হবে?",
+      "safe": [
+       "Green lit, red dark, spring CHARGED",
+       "Second layout: green lit, red dark, spring DISCHARGED, counter number"
+      ],
+      "traps": [
+       {
+        "what": "Red lit, green dark",
+        "rejectBn": "লাল বাতি মানে ON — ব্রেকার চালু, সার্কিটে যুক্ত।"
+       },
+       {
+        "what": "Red lit + TRIP CIRCUIT HEALTHY lit",
+        "rejectBn": "লাল জ্বলছে মানে ON — হেলদি বাতি শুধু ট্রিপ সার্কিট ঠিক থাকার খবর।"
+       },
+       {
+        "what": "Red lit + spring CHARGED",
+        "rejectBn": "লাল মানে ON — স্প্রিং চার্জড শুধু পরের অপারেশনের প্রস্তুতি।"
+       }
+      ]
+     },
+     {
+      "promptBn": "পরের অপারেশনের জন্য ব্রেকার তৈরি — কোন ইন্ডিকেটর তা দেখাচ্ছে?",
+      "safe": [
+       "Flag window SPRING CHARGED",
+       "Lamp SPRING CHARGED lit"
+      ],
+      "traps": [
+       {
+        "what": "Flag SPRING DISCHARGED",
+        "rejectBn": "স্প্রিং ডিসচার্জড — পরের অপারেশনের সঞ্চিত শক্তি এখনও জমা নেই।"
+       },
+       {
+        "what": "Counter window 04127",
+        "rejectBn": "কাউন্টার শুধু গোনে জীবনে কতবার অপারেট করেছে — প্রস্তুতি নয়।"
+       },
+       {
+        "what": "TRIP CIRCUIT HEALTHY lit",
+        "rejectBn": "এটা দেখায় ট্রিপ করানোর সার্কিট ঠিক আছে — স্প্রিং চার্জ নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ব্রেকারের ওপর হাতে রক্ষণাবেক্ষণ — ট্রলি কোথায় থাকবে?",
+      "safe": [
+       "Trolley racked out on the floor, window ISOLATED",
+       "Side view: drawn fully out, ISOLATED"
+      ],
+      "traps": [
+       {
+        "what": "Trolley in, window SERVICE",
+        "rejectBn": "সার্ভিস পজিশনে ব্রেকার সার্কিটের সাথে সম্পূর্ণ যুক্ত।"
+       },
+       {
+        "what": "Trolley partly in, TEST",
+        "rejectBn": "টেস্টে মূল পাওয়ার কাটা, কিন্তু কন্ট্রোল সার্কিট যুক্ত — সম্পূর্ণ বিচ্ছিন্ন নয়।"
+       },
+       {
+        "what": "SERVICE + green lit, worker opening the cover",
+        "rejectBn": "সবুজ মানে শুধু ব্রেকার খোলা — সার্ভিসে সে এখনও সার্কিটে যুক্ত।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ফিডার ব্রেকার ট্রিপ, সবুজ জ্বলছে — লাইনে কাজের আগে কোনটা চাই?",
+      "safe": [
+       "Isolators open at both ends of the line",
+       "Earth set on all three phases at the work pole"
+      ],
+      "traps": [
+       {
+        "what": "Crew climbing as soon as green shows",
+        "rejectBn": "সবুজ বাতি মানে শুধু ব্রেকার খোলা — লাইন কাজের জন্য নিরাপদ নয়।"
+       },
+       {
+        "what": "Far end tied to another live feeder",
+        "rejectBn": "অন্য ফিডার থেকে ব্যাক-ফিডিং-এ লাইনে তখনও বিপজ্জনক ভোল্টেজ থাকতে পারে।"
+       },
+       {
+        "what": "Only near end open, no earth",
+        "rejectBn": "এক প্রান্ত খোলা যথেষ্ট নয় — দুই প্রান্তে আইসোলেটর খোলা ও আর্থিং চাই।"
+       },
+       {
+        "what": "Green breaker, line not earthed, hand near conductor",
+        "rejectBn": "ইন্ডুসড ভোল্টেজে লাইনে তখনও বিপদ থাকতে পারে — আর্থিং ছাড়া নয়।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_2_a",
+     "engineType": "m6_trip_log",
+     "titleBn": "ট্রিপের খাতা",
+     "verb": "copy relay flags into the trip log",
+     "scene": "Night duty at a distribution substation: control room (relay cases with R/Y/B drop flags and a fault-type window, desk with the trip register, radio), glass door to the breaker room (3–4 indoor panels, VCB/OCB faces, feeder plates, red ON / green OFF lamps same size, spring flag, TRIP CIRCUIT HEALTHY lamp, counter). Trainee walks between rooms; camera pans the panel row. Alarm buzzer opens.",
+     "flow": [
+      "GuideIntro: 'রাতের ডিউটিতে অ্যালার্ম! একটা ফিডার ট্রিপ করেছে — প্যানেল পড়ে খাতা লিখুন।'",
+      "Tap the breaker-room door. Swipe along panels; task 'কোন কোন ব্রেকার খোলা?' — tap each panel read as open (chalk mark), then দেখা শেষ. Red marked or green unmarked = slip. Some plays deal a second open breaker (planned OFF, lock + tag).",
+      "◆ → reason 'সবুজ বাতি দেখে কী বুঝলেন?' → এগিয়ে যান.",
+      "Back to the control room (coworker variant c may hold the door). Tap a relay; lens opens. A relay with no flags picked as the trip = slip.",
+      "Copy beat (core): the register slides up beside the lens — ফিডার stamp, ফেজ R · Y · B ticks, ফল্ট ওভারলোড · শর্ট সার্কিট; tap খাতায় লিখি. Wrong phase/type = slip. ◆ → reason 'রিলের খবর কেন লিখে রাখলেন?' (variant b holds খাতায় লিখি).",
+      "Radio: crew 'ফল্টের জায়গা পেয়েছি। ব্রেকার ট্রিপ, সবুজ জ্বলছে — উঠে কাজ ধরি?' Guide 'কী বলবেন?' 3-card reply deck (1 right: both ends isolated + earth first; 2 deadly). Variant a speaks first; the reply waits for him.",
+      "Deadly reply → freeze, backfeed hits the crew member; right → crew 'দুই প্রান্ত খুলে আর্থিং দিচ্ছি' → ◆ → reason → pass panel."
+     ],
+     "dealtVariety": "Feeder names, 3–4 panels; tripped feeder; second planned-OFF breaker or not; VCB/OCB faces; flags 1–3 of R/Y/B and fault type; counters/springs (shown, not scored); coworker beat (a ~50 %); crew wording; deck options from libraries.",
+     "deadly": [
+      "Telling the crew to work on the line on the trip / green lamp alone (deck or listening to the myth)",
+      "Telling the crew to start with one end isolated, or locked and tagged but not earthed"
+     ],
+     "slips": [
+      "Marking a red panel as open / leaving a green panel unmarked",
+      "Picking a relay with no flags as the tripped feeder",
+      "Wrong phase(s) or fault type in the log",
+      "Staying in the breaker room on the coworker's word",
+      "Closing/resetting the breaker before the fault is found on the coworker's word"
+     ],
+     "coworkerPushBn": "Once per play, the next decisive control waits (holdForCoworker): (a) radio — 'সার্কিট ব্রেকার ট্রিপ করেছে মানে লাইনটি সম্পূর্ণ বন্ধ। এতে কোনো ভোল্টেজ নেই। উঠে পড়ুক!' (deadly); (b) log — 'লিখে কী হবে? ব্রেকার তো রিসেট হয় — আবার চালু করে দাও!' (slip, breaker re-trips with a bang); (c) breaker-room exit — 'ব্রেকার রুমেই একটু বসি, এখানে ঠান্ডা।' (slip, bang from a neighbour panel).",
+     "reasonQuestionsBn": [
+      "সবুজ বাতি দেখে কী বুঝলেন?",
+      "কোন ব্রেকার ট্রিপ, তা রিলেতে কেন দেখলেন?",
+      "রিলের খবর কেন লিখে রাখলেন?",
+      "সবুজ দেখেও কেন উঠতে দিলেন না?"
+     ],
+     "gestureHints": "Single door: tap ripple. Panel row: swipe hint, then sweep over every panel and দেখা শেষ. Relay row: sweep over all cases. Register: sweep over ticks, stamps and খাতায় লিখি (no tap). Decks built-in. Off during intro, coworker beat 1, praise, cards, freezes, results.",
+     "lessonPoints": [
+      "লাল বাতি (ON) এবং সবুজ বাতি (OFF) … সবুজ বাতি জ্বলা মানে ব্রেকারটি খোলা বা 'ট্রিপ' অবস্থায় আছে।",
+      "ব্রেকার নিজে 'চিন্তা' করে না … রিলে হলো সিস্টেমের মস্তিষ্ক, আর ব্রেকার তার পেশী।",
+      "সুরক্ষা রিলের ইন্ডিকেশন (কোন ফেজে ফল্ট, কী ধরনের ফল্ট) নোট করাটা ফল্ট খোঁজার জন্য অত্যন্ত জরুরি।",
+      "সবুজ মানেই নিরাপদ নয় … দুই প্রান্তে আইসোলেটর খোলা এবং লাইনটি আর্থিং করার পরই সেটি নিরাপদ হয়।",
+      "Myth reality: back-feeding / induced voltage",
+      "ব্রেকার রুমের ভেতরে অপ্রয়োজনে থাকা উচিত নয়।"
+     ],
+     "giveawayRisks": "Lamps equal size and brightness; two-open plays force the relay read; দেখা শেষ live from the start; relay flags need the lens; register in fixed order; no captions; radio options within 1.3×; coworker held on door / খাতায় লিখি / reply."
+    },
+    {
+     "packId": "do_6_2_b",
+     "engineType": "m6_breaker_rack",
+     "titleBn": "তিন অবস্থান",
+     "verb": "crank the trolley to the right position",
+     "scene": "Daytime breaker room, one panel close up (VCB, OCB variant face): red/green lamps, spring flag, TRIP CIRCUIT HEALTHY lamp, counter, ON/OFF buttons, manual spring-handle socket; racking crank and a position window rolling SERVICE · TEST · ISOLATED; the trolley visibly travels. Docket clipped to the next panel.",
+     "flow": [
+      "GuideIntro: 'ব্রেকারের তিনটে কাজ — প্রতিটার জন্য ট্রলি ঠিক জায়গায় আনুন।'",
+      "3 jobs per play in dealt order: রক্ষণাবেক্ষণ · বাইরে থেকে অন-অফ পরীক্ষা · সার্ভিসে ফেরত; breaker OFF per docket. Tap the docket.",
+      "Crank (core): circular drag; window rolls; stop anywhere; re-cranking free.",
+      "Action row: কাজ শুরু · পরীক্ষা · সার্ভিসে দিলাম · রিপোর্ট — judged here.",
+      "রক্ষণাবেক্ষণ: ISOLATED + কাজ শুরু right; SERVICE = deadly; TEST = slip.",
+      "অন-অফ পরীক্ষা: TEST + পরীক্ষা; press ON/OFF; some plays the spring stays DISCHARGED → fit the handle, downward swipe strokes to CHARGED. ON while DISCHARGED = slip; test in SERVICE or ISOLATED = slip.",
+      "সার্ভিসে ফেরত: HEALTHY lit → crank to SERVICE + সার্ভিসে দিলাম; HEALTHY dark → রিপোর্ট (owner). Each right job → ◆ → reason → এগিয়ে যান.",
+      "Coworker at the start of a dealt job; the crank waits. Pass panel after job 3."
+     ],
+     "dealtVariety": "Job order; VCB/OCB face; first job's start position; counter; spring self-charges or not; HEALTHY lit or dark; coworker job and line; reason libraries.",
+     "deadly": [
+      "Hands-on work on the breaker with the trolley in SERVICE (own crank or the coworker's 'সবুজ জ্বলছে, এখানেই খুলে কাজ সারো')"
+     ],
+     "slips": [
+      "Hands-on work in TEST",
+      "ON/OFF test in SERVICE or ISOLATED",
+      "ON pressed while the spring reads DISCHARGED",
+      "Racking a dark-HEALTHY breaker into service",
+      "Reporting a lit-HEALTHY breaker (needless stop)",
+      "সার্ভিসে দিলাম not in SERVICE",
+      "Listening to myth 2 (feed the line through an isolator)"
+     ],
+     "coworkerPushBn": "One per play at a job's start (crank held): (a) রক্ষণাবেক্ষণ 'ঝামেলা কোরো না, ব্রেকার তো অফ — সবুজ জ্বলছে, এখানেই খুলে কাজ সারো!' (deadly); (b) রক্ষণাবেক্ষণ 'টেস্ট পর্যন্ত টানলেই হবে, পাওয়ার তো কাটা — কাজ ধরো।' (slip); (c) 'ব্রেকার মেরামতে থাক, আইসোলেটর দিয়েই ফিডার চালিয়ে দাও — যেকোনো সুইচই তো সার্কিট ব্রেকার।' (myth 2, slip).",
+     "reasonQuestionsBn": [
+      "কেন র‍্যাক-আউট করে তবেই হাত দিলেন?",
+      "অন-অফ পরীক্ষা কেন টেস্ট পজিশনে?",
+      "অন টেপার আগে কেন স্প্রিং চার্জ করলেন?",
+      "সার্ভিসে দেওয়ার আগে কেন হেলদি বাতি দেখলেন?"
+     ],
+     "gestureHints": "Docket: tap ripple. Crank: rocking arc both ways (never a full turn). After letting go: sweep over crank + four actions. Test: sweep over ON, OFF, handle socket. Handle fitted: downward swipe. Decks built-in. Off during intro, coworker beat 1, praise, cards, freezes, results.",
+     "lessonPoints": [
+      "Service / Test / Isolated position definitions",
+      "র‍্যাকিং ব্যবস্থাটি … সম্পূর্ণ নিরাপদ পরিবেশে ব্রেকারের ওপর কাজ করার সুযোগ দেয়।",
+      "স্প্রিং-এর সঞ্চিত শক্তি … ইন্ডিকেটর দেখায় … চার্জড বা প্রস্তুত",
+      "স্বয়ংক্রিয়ভাবে স্প্রিং চার্জ না হলে বিশেষ হ্যান্ডেল দিয়ে ম্যানুয়ালি",
+      "Trip Circuit Healthy; operation counter",
+      "Myth 2 reality: only a circuit breaker can break fault current"
+     ],
+     "giveawayRisks": "Window rolls with no detent/colour/click; crank free both ways; four actions always shown equal; docket names the job not the position; spring socket always drawn; HEALTHY one lamp among many; coworker held at job start."
+    }
+   ],
+   "unsupported": [
+    "Fault types beyond 'ওভারলোড বা শর্ট সার্কিট' not used.",
+    "Interlocks / breaker OFF before racking: silent — jobs start OFF, unscored.",
+    "What the spring-charging 'সতর্কতা' is: not given.",
+    "Action for TRIP CIRCUIT HEALTHY dark: 'report' is a proposal.",
+    "Only the relay indication is logged.",
+    "When a tripped breaker may be reclosed: only 'সমস্যা সমাধান হওয়ার পর'.",
+    "No kV numbers on screen.",
+    "Source of induced voltage not named.",
+    "Planned-work lock + tag uses Module 1.6 (LOTO).",
+    "Position-window labels and crank are staging.",
+    "Source typos: 'प्रचंड' in myth 2 reality, 'Vaccum' — screen uses প্রচণ্ড and VCB.",
+    "SF6 and break times not used."
+   ],
+   "ownerDecisions": [
+    "Deadly: crew on the line on trip/green alone, one end isolated, or LOTO without earth (matches 1.6, 3.10).",
+    "Deadly: hands-on in SERVICE; slip in TEST.",
+    "ON/OFF test in SERVICE = slip.",
+    "Reclose before fault found (coworker) = slip; staying in the breaker room = slip.",
+    "HEALTHY dark → report (lesson silent); reporting a lit one = slip.",
+    "ON with spring DISCHARGED = slip.",
+    "Board rival myth 1; myth 2 only as a do_6_2_b coworker slip.",
+    "Trip log = feeder + phase(s) + fault type only.",
+    "Myth-1 radio push in ~50 % of plays."
+   ]
+  },
+  {
+   "lessonId": "6.3",
+   "titleBn": "ফিউজ: নীরব প্রহরী ও তারের সঠিক হিসাব",
+   "board": {
+    "artFolder": "assets/game/art/m6_board63/",
+    "mythBn": "কিট-ক্যাট ফিউজে যত মোটা তার বাঁধা যাবে, ফিউজ তত মজবুত হবে এবং বারবার ফিউজ ওড়ার ঝামেলা থাকবে না।",
+    "rounds": [
+     {
+      "promptBn": "পশ্চিমবঙ্গের 11 kV DTR পোলে হর্ন গ্যাপ ফিউজ — কোন ছবিটা ঠিক?",
+      "safe": [
+       "hg_taut — two curved arcing horns on porcelain, thin tinned-copper wire taut between",
+       "hg_arc — wire melting, arc stretching up the horns and dying in air"
+      ],
+      "traps": [
+       {
+        "what": "hg_gi — GI binding wire between the horns",
+        "rejectBn": "জিআই তারের গলনাঙ্ক প্রায় 1535° সেলসিয়াস — ফল্টেও গলে না, পুরো ফল্ট কারেন্ট ট্রান্সফরমারে আঘাত করে।"
+       },
+       {
+        "what": "hg_slack — fuse wire sagging",
+        "rejectBn": "হর্ন দুটোর মাঝে ফিউজ তার টানটান করে বাঁধতে হয় — ঢিলে করে নয়।"
+       },
+       {
+        "what": "hg_alu — ACSR aluminium strand tied between",
+        "rejectBn": "অ্যালুমিনিয়াম তার ফল্টে গলে না, আর অক্সিডেশনে কানেকশন ঢিলে হয়ে স্পার্কিং বাড়ে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ট্রান্সফরমারের ক্ষমতা দেখে HG-তে ফিউজ তার — কোন জুটি ঠিক?",
+      "safe": [
+       "25 kVA nameplate + '3 A' tag",
+       "63 kVA + '5 A'",
+       "100 kVA + '10 A'"
+      ],
+      "traps": [
+       {
+        "what": "25 kVA + '10 A'",
+        "rejectBn": "25 kVA-তে 2A বা 3A — বেশি রেটিংয়ের তার দিলে ফল্টে ফিউজ গলবে না, ট্রান্সফরমার পুড়বে।"
+       },
+       {
+        "what": "63 kVA + '10 A'",
+        "rejectBn": "63 kVA-তে 5A ফিউজ তার — বেশি রেটিংয়ে ফল্টের সময় ফিউজ গলবে না।"
+       },
+       {
+        "what": "100 kVA + thick copper conductor",
+        "rejectBn": "100 kVA-তে 8A বা 10A তার — মোটা তার গলবে না, ট্রান্সফরমার পুড়ে যাবে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "এলটি বক্সে HRC ফিউজ — কোন ছবিটা ঠিক?",
+      "safe": [
+       "Sealed HRC cartridge with its red dot showing",
+       "Main switch OFF; gloves + goggles; insulated fuse puller"
+      ],
+      "traps": [
+       {
+        "what": "Copper strip across an empty HRC base",
+        "rejectBn": "HRC কেটে গেলে তামার পাত দিয়ে ডাইরেক্ট করা চরম বিপজ্জনক — ফিডার পিলার বা ট্রান্সফরমারে আগুন লাগতে পারে।"
+       },
+       {
+        "what": "Pulling HRC with ordinary pliers",
+        "rejectBn": "প্লায়ার্স বা খালি হাতে নয় — HRC খোলা-লাগানোয় সবসময় ইনসুলেটেড ফিউজ পুলার।"
+       },
+       {
+        "what": "Main switch ON while pulling",
+        "rejectBn": "অন-লোডে ফিউজ টানলে মারাত্মক আর্ক ফ্ল্যাশ হতে পারে — আগে মেইন সুইচ বন্ধ করুন।"
+       },
+       {
+        "what": "Puller but bare hands, no goggles",
+        "rejectBn": "এলটি/এইচটি ইনসুলেটেড হ্যান্ড গ্লাভস আর সেফটি গগলস ছাড়া ফিউজে হাত নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "100 A এলটি বক্সের ফিউজ তার মাপছেন — কোনটা ঠিক?",
+      "safe": [
+       "Bare wire snug in gauge slot '18'",
+       "Micrometer reading '1.219 mm'"
+      ],
+      "traps": [
+       {
+        "what": "Snug in '29', taken as thick",
+        "rejectBn": "গেজ নম্বর যত বাড়ে তার তত চিকন — 29 SWG হল 16 A গ্রাহক মিটারের তার।"
+       },
+       {
+        "what": "Insulated wire pushed into a slot",
+        "rejectBn": "ইনসুলেশন ছাড়িয়ে খালি কন্ডাক্টর গেজের খাঁজে ঢুকিয়ে নম্বর দেখুন।"
+       },
+       {
+        "what": "Judging two coils by eye",
+        "rejectBn": "আন্দাজে মোটা তার লাগালে ফিউজ তারের আসল উদ্দেশ্যই নষ্ট হয় — গেজে মাপুন।"
+       },
+       {
+        "what": "Snug in '12', picked for 100 A",
+        "rejectBn": "12 SWG হল 300 A ফিডার পিলারের তার — 100 A বক্সে 18 SWG।"
+       }
+      ]
+     },
+     {
+      "promptBn": "63 A বক্স, হাতে 20 SWG তার নেই — কী করবেন?",
+      "safe": [
+       "Two 22 SWG strands twisted together",
+       "Spare 20 SWG reel from the van kit"
+      ],
+      "traps": [
+       {
+        "what": "Aluminium strand from ACSR",
+        "rejectBn": "অ্যালুমিনিয়াম ফল্টেও গলে না, অক্সিডেশনে কানেকশন লুজ হয়ে স্পার্কিং আর আগুন — সাময়িক জুগাড়ও বিপদ।"
+       },
+       {
+        "what": "GI binding wire in a kit-kat",
+        "rejectBn": "লোহার রেজিস্ট্যান্স বেশি, গলনাঙ্ক প্রায় 1535° — শর্ট সার্কিটেও গলে না, ট্রান্সফরমার পুড়ে ছাই।"
+       },
+       {
+        "what": "Four thin strands by guess",
+        "rejectBn": "আন্দাজে পেঁচানো যাবে না — হিসাব নিখুঁত হতে হবে: দুটো 22 SWG মিলে প্রায় 63 A।"
+       },
+       {
+        "what": "Thick copper wire on a kit-kat",
+        "rejectBn": "তার অতিরিক্ত মোটা হলে ফিউজ উড়বে না — ট্রান্সফরমার বা দামি টিভি-ফ্রিজ পুড়ে ছাই।"
+       }
+      ]
+     },
+     {
+      "promptBn": "একটা বাড়িতে শর্ট সার্কিট হয়েছিল — কোন ছবিটা ঠিক?",
+      "safe": [
+       "Only the house fuse blown; LT box dot and HG intact",
+       "HG blew on a house fault; lineman opens house and LT box fuses to find the wrong wire before charging"
+      ],
+      "traps": [
+       {
+        "what": "HG blown, lineman just charges again",
+        "rejectBn": "আসল কারণ না খুঁজে বারবার ফিউজ চার্জ করবেন না — ফল্ট আরও বড় আকার নিতে পারে।"
+       },
+       {
+        "what": "LT box blown, house intact, ticked 'ঠিক আছে'",
+        "rejectBn": "বাড়ির ফল্টে বাড়ির ফিউজ বা MCB সবার আগে উড়বে — না উড়লে কো-অর্ডিনেশন বা তারের সাইজ ভুল।"
+       },
+       {
+        "what": "Closing HG with the rod standing in a puddle",
+        "rejectBn": "HG লাগাতে ইনসুলেটেড অপারেটিং রড, আর দাঁড়ান শুকনো ইনসুলেটিং ম্যাটের ওপর।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_3_a",
+     "engineType": "m6_fuse_gauge",
+     "titleBn": "মেপে তবেই বাঁধো",
+     "verb": "measure wire in gauge slots, twist strands",
+     "scene": "Village lane by a DTR pole; van tailgate bench: round wire gauge plate (slots 12 · 14 · 18 · 20 · 22 · 29 only), micrometer, tray of 4–5 tinned-copper reels with worn-off tags (same look at screen scale), and on every play an ACSR offcut and a GI binding coil at the bench edge. Docket clip. Kit-kat carriers come from the LT box (main switch OFF + tag), a rural DB and a meter board. Trainee in gloves and goggles.",
+     "flow": [
+      "GuideIntro: 'তিনটে ক্যারিয়ারে নতুন ফিউজ তার বাঁধতে হবে — রিলের গায়ে লেখা নেই, মেপে নিন।'",
+      "Job 1 docket shows place + amps (from the lesson table 16/32/63/100/200 A).",
+      "Measure (core): tap a reel → drag its end onto any slot; too narrow bounces, loose rattles, snug seats with a click; the player's chalk number appears on that reel.",
+      "Fit: drag the end to the top screw then to the bottom screw (taut). Right SWG → praise → ◆ → reason → এগিয়ে যান.",
+      "Job 2 docket gives place only (recall amps and SWG).",
+      "Job 3 dealt: micrometer (drag round the thimble to the ratchet click; mm readout only) or twist (63 A, no 20 SWG; drag strands into the two-hand twist, circular drag to twist; only two 22 SWG right).",
+      "Coworker on his dealt job; the first slot probe (or the twist grip) holds for him.",
+      "Pass panel ('আজ যা ধরলেন': SWG per job, the inverse rule, the two-22 rule)."
+     ],
+     "dealtVariety": "Which 3 of 5 table jobs and order (job 1 amps shown, job 2 place only, job 3 micrometer or twist ~50/50); reels (right one except twist plays, decoys one thicker, one thinner, one far off); reel positions; coworker line and job; old melted wire.",
+     "deadly": [
+      "Fitting or twisting in an ACSR aluminium strand or GI binding wire (own pick or the coworker) — 'এটি একটি চরম অপরাধ!'; same class as M3 3.4a / 3.7a."
+     ],
+     "slips": [
+      "A tinned-copper fuse wire of the wrong SWG (incl. the thickest reel on 'মোটাটাই বাঁধো')",
+      "Fitting a reel never measured snug",
+      "Any twist bundle other than two 22 SWG"
+     ],
+     "coworkerPushBn": "Twist plays, after every reel is measured or the first strand loaded (twist grip held): 'বিশ নম্বর নেই তো ACSR-এর একটা অ্যালুমিনিয়াম সুতো খুলে পেঁচিয়ে দাও — সাময়িক!' (myth 2; deadly). Other plays, job 2 or 3 before the first slot probe (probe held): 'গেজ-টেজ লাগবে না, চোখেই বোঝা যায় — মোটাটাই বাঁধো, বারবার উড়বে না!' (myth 1 as shortcut; slip).",
+     "reasonQuestionsBn": [
+      "কেন এই তারটা বাঁধলেন?",
+      "মাইক্রোমিটারে যে মাপ পেলেন, সেটা কোন কাজের তার?",
+      "কেন দুটো 22 SWG একসাথে পেঁচালেন?"
+     ],
+     "gestureHints": "Tray: sweep over reels + micrometer. Wire in hand: drag nudge toward the plate's centre hub (not a slot). After a probe: sweep over slot ring, tray, carrier. Micrometer: swipe along the thimble arc. Measured reel: sweep over carrier and tray. Tie: short downward drag. Twist bench: sweep over reels, ACSR, GI coil, grips. Decks built-in. Off during intro, coworker beat 1, praise, freezes, cards, results.",
+     "lessonPoints": [
+      "গেজ নম্বর যত বাড়ে, তার তত চিকন হয় … যত কমে, তার তত মোটা হয়",
+      "পকেট 'ওয়্যার গেজ' টুল বা মাইক্রোমিটার দিয়ে তারের ব্যাস মাপা যায়",
+      "16 A → 29 SWG … 200 A → 14 SWG (lesson table with diameters)",
+      "দুটি ২২ SWG তার একসাথে পেঁচালে তা প্রায় ৬৩ এম্পিয়ারের কাজ করতে পারে। কিন্তু আন্দাজে পেঁচানো যাবে না।",
+      "ইনসুলেশন ছাড়িয়ে খালি কন্ডাক্টর গেজের খাঁজে",
+      "আন্দাজে মোটা তার লাগালে ফিউজ তারের আসল উদ্দেশ্যই নষ্ট হয়ে যায়।",
+      "ACSR … অ্যালুমিনিয়ামের সুতো বা জিআই বাইন্ডিং তার কিট-ক্যাটে … চরম অপরাধ!"
+     ],
+     "giveawayRisks": "Reels identical, untagged, shuffled; plate shows numbers only; no slot highlighted; docket never shows SWG; decoys bracket the answer; ACSR + GI on every bench; coworker timing independent of the answer; micrometer mm only; chalk number is the player's own measurement."
+    },
+    {
+     "packId": "do_6_3_b",
+     "engineType": "m6_fuse_chain",
+     "titleBn": "কোন প্রহরী পড়ল?",
+     "verb": "read guards up the chain, deduce the failed one",
+     "scene": "Daylight lane: DTR with three HG sets, LT box (door, three HRC cartridges with red dots, main switch levers), LT line to 6 houses with veranda meter boards (kit-kat + main switch). Van: hook with gloves + goggles, tool belt (insulated puller, pliers, insulated operating rod), insulating mat, spares (labelled 29/22/20/18 reels, spare HRC). Puddles dealt. Docket board with a 3-tier sketch বাড়ি → এলটি বক্স → HG.",
+     "flow": [
+      "GuideIntro: 'একটা বাড়িতে শর্ট হয়েছিল, মিস্ত্রি সারিয়েছেন — কোন প্রহরী পড়েছে পড়ে দেখুন, তারপর লাইন চালু।'",
+      "PPE at the van hook (drag gloves and goggles onto the worker).",
+      "Call (3 per play) names the house (short repaired). Read with eyes: HG wires, LT box HRC dots; house kit-kat unreadable without pulling.",
+      "Deduce (core): chalk ✗ on every guard that should have fallen first but did not, or tap 'ক্রম ঠিক'; then 'দেখতে যাই'. Right → ◆ → reason → এগিয়ে যান.",
+      "Open each chalked guard: main switch OFF (swipe down), the right tool (HRC → puller; kit-kat → gloved hand), draw out; contents shown (correct melted wire or a jugaad).",
+      "Replace: jugaad to the scrap pile; right spare (meter board kit-kat = 29 SWG; HRC base = spare HRC with the puller); switch back ON.",
+      "If the HG fell: lay the mat on a dry patch, rod in hand, hold to close the staged spare HG carrier. Charging HG before suspects are fixed = slip, it blows again.",
+      "Coworker at a guard opening; every control of that guard holds for him. Pass panel."
+     ],
+     "dealtVariety": "House (1 of 6); tier fallen per call (house only 0–1 per play; ≥ 1 broken chain); HRC phase; jugaad type per culprit; HG set; puddles; call order; coworker wording and guard.",
+     "deadly": [
+      "Drawing an HRC or kit-kat with that guard's main switch ON (own act or coworker) — arc flash",
+      "Touching any fuse without gloves and goggles (same as M3 3.7a)"
+     ],
+     "slips": [
+      "Chalking/opening a guard that needs no work (needless stop)",
+      "'ক্রম ঠিক' on a broken chain, or charging HG / switching back before every suspect is fixed",
+      "Wrong spare reel in a meter-board kit-kat",
+      "Closing HG without the mat or with the mat in a puddle",
+      "Pulling an HRC with pliers (gloves on, switch OFF) instead of the puller — changed from deadly to slip; owner decision"
+     ],
+     "coworkerPushBn": "As the player first touches any guard (culprit or healthy), before the main switch: 'মেইন সুইচ নামানোর ঝামেলা কেন? এক টানে খুলে নাও!' or 'লোড থাকলে কী, হাতে গ্লাভস তো আছে — চটপট টেনে নাও!' Listening = on-load draw = deadly. Lever, belt and draw-out all hold for him.",
+     "reasonQuestionsBn": [
+      "কেন এই প্রহরীগুলোতে দাগ দিলেন?",
+      "HRC ফিউজ উড়েছে কি না কীভাবে বুঝলেন?",
+      "কেন আগে মেইন সুইচ বন্ধ করলেন?",
+      "কেন ফিউজ পুলার নিলেন?",
+      "কেন জিআই / অ্যালুমিনিয়াম তার খুলে ফেললেন?"
+     ],
+     "gestureHints": "PPE hook: sweep over gloves, goggles, worker. Reading: sweep over HG, LT box door, meter boards. Verdict: sweep over guard icons + 'ক্রম ঠিক'; chalk held idle → upward drag. Guard: sweep over lever, belt, fuse. Belt: sweep over tools. Replace: sweep over spares + scrap. HG: sweep over mat, rod, ground; mat down + rod in hand → hold ring on raise. Decks built-in.",
+     "lessonPoints": [
+      "বাড়ির ফিউজ বা MCB সবার আগে উড়বে, তারপর এলটি বক্সের ফিউজ, এবং সবশেষে ট্রান্সফরমারের এইচজি ফিউজ … ফিউজ কো-অর্ডিনেশন বা তারের সাইজ ভুল আছে।",
+      "লাল বা হলুদ ডট উধাও বা কালো হয়ে গেলে … ফিউজ কেটে গেছে।",
+      "অন-লোডে ফিউজ টানলে মারাত্মক আর্ক ফ্ল্যাশ হতে পারে।",
+      "ইনসুলেটেড হ্যান্ড গ্লাভস এবং সেফটি গগলস",
+      "ইনসুলেটেড ফিউজ পুলার … প্লায়ার্স বা খালি হাত দিয়ে টানার চেষ্টা করবেন না।",
+      "ইনসুলেটেড অপারেটিং রড … শুকনো ইনসুলেটিং ম্যাটের ওপর দাঁড়ান।",
+      "আসল কারণ … না খুঁজে … কখনই বারবার ফিউজ চার্জ করবেন না।",
+      "তামার পাত বা মোটা তার দিয়ে ডাইরেক্ট … চরম বিপজ্জনক!",
+      "১৬ এম্পিয়ার (গ্রাহক মিটার): ২৯ SWG"
+     ],
+     "giveawayRisks": "Daylight; call always one house, short repaired; guards drawn identically; kit-kat state hidden; 'ক্রম ঠিক' every call and needless chalk costs; jugaad only after opening; coworker on any guard; belt shuffled."
+    }
+   ],
+   "unsupported": [
+    "HRC ratings per box not given — spare HRCs carry none.",
+    "Which HG sets blow on an LT fault — one set dealt as staging.",
+    "HG re-wiring before closing not in 6.3 — staged spare carrier.",
+    "Gauge plate limited to the lesson's six gauges.",
+    "Too-thin wire consequence not stated.",
+    "12 SWG pillar holder type not stated — decoy only.",
+    "Micrometer operation is UI staging.",
+    "Whether the lineman fixes a consumer's kit-kat is not stated.",
+    "No feeder-pillar tier in the chain (lesson names three tiers).",
+    "I²t, quarter-cycle limiting, rupturing capacities unused.",
+    "Insulation stripping shown only on the board."
+   ],
+   "ownerDecisions": [
+    "Non-fuse conductor in a fuse's place = deadly; wrong-SWG tinned fuse wire = slip (so 'মোটাটাই বাঁধো' = slip).",
+    "HRC with pliers (gloves on, switch off) = slip, not deadly (judge changed it: the lesson forbids it but names no injury; bare-hand cases are already deadly as no-PPE).",
+    "HG without mat / mat in puddle = slip.",
+    "Needless chalk or opening = slip; unmeasured reel = slip; only two 22 SWG for the twist.",
+    "do_6_3_a stages switch OFF and PPE worn (tested in do_6_3_b).",
+    "Worn-off reel tags as staging.",
+    "Lesson conflict: 6.3 says WBSEDCL 11 kV DTRs 'সাধারণত ড্রপ আউট (DO) ফিউজ ব্যবহার করা হয় না' while M3 3.4 and M4 4.4 play DO fuses — Module 6 avoids DO; owner to reconcile."
+   ]
+  },
+  {
+   "lessonId": "6.4",
+   "titleBn": "AB সুইচ ও আইসোলেটর: ট্র্যাফিক কন্ট্রোলার",
+   "board": {
+    "artFolder": "assets/game/art/m6_board64/",
+    "mythBn": "সামান্য লোড থাকলে আইসোলেটর খোলা যায়, কিছু হয় না।",
+    "rounds": [
+     {
+      "promptBn": "কোন ছবিতে খালি চোখেই দেখা যায় লাইন বিচ্ছিন্ন?",
+      "safe": [
+       "Horizontal-break AB: all three blades clear of jaws",
+       "Vertical-break AB: all blades lifted, gap on every phase"
+      ],
+      "traps": [
+       {
+        "what": "Same AB closed",
+        "rejectBn": "কন্টাক্ট লেগে আছে — কোনো গ্যাপ নেই, সার্কিট এখনও জোড়া।"
+       },
+       {
+        "what": "A breaker tank with ON/OFF flag, no switch",
+        "rejectBn": "ব্রেকার খোলা কিনা খালি চোখে বোঝা যায় না — দৃশ্যমান গ্যাপ দেয় আইসোলেটর।"
+       },
+       {
+        "what": "Two blades clear, middle phase still in its jaw",
+        "rejectBn": "একটি ফেজ আটকে আছে — তিনটি ফেজই সম্পূর্ণ খুলেছে কিনা নিশ্চিত করুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "AB সুইচ খোলার আগে কোনটা ঠিক?",
+      "safe": [
+       "Lineman at the handle; inset breaker OFF",
+       "Lineman on the phone, AB closed, hand off the handle"
+      ],
+      "traps": [
+       {
+        "what": "Opening with breaker ON: big long arc",
+        "rejectBn": "লোডে খুললে কন্টাক্টে প্রচণ্ড ও দীর্ঘস্থায়ী আর্ক — সুইচ, অপারেটর দুজনেরই মারাত্মক ক্ষতি।"
+       },
+       {
+        "what": "Breaker ON, one house lamp lit, opening",
+        "rejectBn": "সামান্য লোড কারেন্টও বিপজ্জনক আর্ক তৈরি করার জন্য যথেষ্ট।"
+       },
+       {
+        "what": "Pulling the AB to stop a downstream fault",
+        "rejectBn": "ফল্ট কারেন্ট বাধা দেওয়ার ক্ষমতা শুধু সার্কিট ব্রেকারের — আইসোলেটরের নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "লাইন আবার চালু করার সময় কোনটা ঠিক?",
+      "safe": [
+       "Closing the AB while the breaker shows OFF",
+       "AB fully closed on all phases, then breaker ON"
+      ],
+      "traps": [
+       {
+        "what": "Breaker ON while closing the AB: flash",
+        "rejectBn": "চালু করার ক্রম উল্টো: প্রথমে আইসোলেটর লাগান, তারপর সার্কিট ব্রেকার অন করুন।"
+       },
+       {
+        "what": "One blade half seated, glowing",
+        "rejectBn": "আংশিকভাবে লাগা কন্টাক্ট একটি হটস্পট তৈরি করবে।"
+       },
+       {
+        "what": "Handle stopped halfway",
+        "rejectBn": "হ্যান্ডেলটি দ্রুত এবং দৃঢ়ভাবে ঘোরাতে হয় — তিন ফেজই পুরো লাগল কিনা দেখুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "AB সুইচ চালানোর আগে কী ঠিক থাকা চাই?",
+      "safe": [
+       "Handle earth lead clamped and running to earth",
+       "Lineman on the ground with both hands on the handle, lead intact"
+      ],
+      "traps": [
+       {
+        "what": "Earth lead cut and hanging",
+        "rejectBn": "হ্যান্ডেল ঠিকমতো আর্থিং করা না থাকলে অপারেটরের সুরক্ষা থাকে না।"
+       },
+       {
+        "what": "Clamp off, bolt missing",
+        "rejectBn": "অপারেট করার আগে নিশ্চিত করুন হ্যান্ডেলটি সঠিকভাবে আর্থিং করা আছে।"
+       },
+       {
+        "what": "Lineman at the switch head pushing a blade",
+        "rejectBn": "AB সুইচ সাধারণত মাটি থেকে লম্বা অপারেটিং রড বা হ্যান্ডেল দিয়ে চালানো হয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোন AB সুইচ ভালো অবস্থায় আছে?",
+      "safe": [
+       "Clean jaws, blades fully seated",
+       "Contacts with small arcing horns, clean insulators"
+      ],
+      "traps": [
+       {
+        "what": "Blackened jaws with arcing marks",
+        "rejectBn": "কন্টাক্টে আর্কিং-এর চিহ্ন — টহলে ঠিক এটাই খুঁজতে হয়।"
+       },
+       {
+        "what": "Insulators crusted with dirt",
+        "rejectBn": "ইনসুলেটরগুলো পরিষ্কার রাখা রক্ষণাবেক্ষণের প্রধান কাজ।"
+       },
+       {
+        "what": "Stiff grimy pivot, handle won't move",
+        "rejectBn": "জ্যাম হয়ে যাওয়া মেকানিজম লুব্রিকেট করতে হয়।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_4_a",
+     "engineType": "m6_ab_gap_log",
+     "titleBn": "এক টানে তিন ফেজ",
+     "verb": "swing the handle, sight and log each gap",
+     "scene": "Roadside 11 kV DP with a gang-operated AB (horizontal-break in one job, vertical in the other), operating rod to a ground handle with an earth lead to earth. Trainee by the handle, phone in pocket, docket on the van door with blank boxes R · Y · B under 'গ্যাপ দেখা'. A tilt-up gap view shows one phase at a time.",
+     "flow": [
+      "GuideIntro: 'ফিডারে কাজ হবে — AB সুইচ খুলে লাইন আলাদা করুন।'",
+      "Two jobs at two AB switches.",
+      "Earth look (changed from a finger trace, to keep tracing unique to do_6_8_b): swipe the view down the handle's lead to the earth; a dealt cut lead or loose clamp shows only in that view; fix by hand (drag the spare lead / hold the spanner on the clamp nut). Grabbing the handle before looking or with the fault = slip.",
+      "Off-load: phone the substation; text reply 'ফিডার ব্রেকার OFF করা হয়েছে।' or 'এক মিনিট — ব্রেকার খুলছি।' then 'ব্রেকার OFF হয়েছে।' (one wait job per play). Handle before the OFF reply = deadly.",
+      "Coworker during the wait job; the OFF reply AND the handle are held until his deck closes.",
+      "Stroke: hold, then drag along the arc to the end stop in one motion; stalling = slip.",
+      "Sight (core): tilt up, pan R → Y → B; ~40 % of jobs a phase is stuck or barely clear.",
+      "Log: tick each phase seen open, or phone in the stuck phase. Tick on a stuck or unviewed phase = slip; needless stuck report = slip. ◆ → reason → এগিয়ে যান. Pass panel."
+     ],
+     "dealtVariety": "Wait job; reply wording; switch type and order; earth state per job; stuck phase and degree; coworker side and second; reason libraries.",
+     "deadly": [
+      "Opening the AB before the breaker OFF is confirmed",
+      "Listening to 'সামান্য লোড' and opening during the wait"
+     ],
+     "slips": [
+      "Handle grabbed before looking at the earth lead, or with it cut/loose",
+      "Stalling mid-stroke",
+      "Ticking a stuck phase as open",
+      "Ticking a phase never viewed",
+      "Reporting a stuck phase when all three are clear"
+     ],
+     "coworkerPushBn": "'সামান্য লোড থাকলে আইসোলেটর খোলা যায়, কিছু হয় না।' — word for word during the wait job; reply and handle held. Refuse: 'না — ব্রেকার OFF-এর খবর না পেলে হ্যান্ডেলে হাত নয়।' / 'সামান্য লোডেও আর্ক হয় — খবর আসা পর্যন্ত থামব।' Listen = deadly.",
+     "reasonQuestionsBn": [
+      "কেন ব্রেকারের খবর আসা পর্যন্ত থামলেন?",
+      "কেন হ্যান্ডেলে হাত দেওয়ার আগে আর্থের তার দেখলেন?",
+      "কেন তিন ফেজই নিজের চোখে দেখলেন?",
+      "কেন আটকে থাকা ফেজটা খোলা লিখলেন না?",
+      "কেন হ্যান্ডেল এক টানে পুরো ঘোরালেন?"
+     ],
+     "gestureHints": "Earth look: swipe-down hint on the view. Fix: drag nudge on the spare lead / hold ring on the spanner. Before the call: sweep over handle, phone, docket. Reply pending: no hint. After OFF: hold-then-drag on the first part of the arc. Gap view: alternating horizontal swipe. Docket: sweep over boxes and phone. Decks built-in.",
+     "lessonPoints": [
+      "প্রথমে সার্কিট ব্রেকার খুলে লাইনকে 'অফ-লোড' করুন, তারপর আইসোলেটর খুলুন।",
+      "লোড থাকা অবস্থায় … প্রচণ্ড এবং দীর্ঘস্থায়ী আর্ক",
+      "খালি চোখে দেখতে পান যে সার্কিটটি বিচ্ছিন্ন",
+      "অপারেটিং হ্যান্ডেলটি সঠিকভাবে আর্থিং করা আছে",
+      "দ্রুত এবং দৃঢ়ভাবে হ্যান্ডেলটি ঘোরানো উচিত।",
+      "তিনটি ফেজই সম্পূর্ণভাবে খুলেছে … একটি ফেজ আটকে যেতে পারে।",
+      "Myth + reality"
+     ],
+     "giveawayRisks": "Phone, handle, docket all live from the start; earth fault seen only in the player's look; stuck phase is a real blade position, one phase per view; blank boxes; costs for wrong ticks and needless reports; no captions; operator text gives only breaker status; coworker on the dealt wait job, reply held."
+    },
+    {
+     "packId": "do_6_4_b",
+     "engineType": "m6_ab_unjam",
+     "titleBn": "জ্যাম ছাড়াও, লাইন জোড়ো",
+     "verb": "oil and rock a jammed switch free",
+     "scene": "Same kind of DP under শাটডাউন (docket 'শাটডাউন · PTW · আর্থ', earths drawn), trainee on the platform in harness. Side close-up of the switch head (blades, jaws, insulators, common rod, pivots), tool pouch (cloth, oil can). Ground spot: handle + phone + tilt-up phase view. Dark houses light on restore.",
+     "flow": [
+      "GuideIntro: 'টহলে খবর এসেছে — AB সুইচটা ঠিকমতো চলছে না। শাটডাউনে সারিয়ে লাইন ফেরান।'",
+      "Feel: rock the lever left/right; the jam (one pivot or the bearing) lags with a creak.",
+      "Oil (core): drag the spout to any pivot, hold to drip; rock 3–5 times until all blades swing together (unoiled never frees).",
+      "Rub the cloth over jaws/blades (arcing marks fade); wipe dirty insulators.",
+      "Hold the lanyard to come down (dirty part left = slip). Line-clear cutscene.",
+      "Close: hold + one firm swing; swipe up to see phases; part-seated blade (jam left) → open again, back up. Breaker ON asked while AB open, then AB closed = deadly; ask-then-cancel = slip; ON with part-seated phase = slip.",
+      "Coworker at the handle (good work) or at the phone (part-seated), each held. Breaker ON → houses light → ◆ → reason → pass."
+     ],
+     "dealtVariety": "Switch type; jam location; arcing marks (1–3 phases); dirty insulators (0–2); coworker place (from player's work); reply wording; reason libraries.",
+     "deadly": [
+      "Breaker ON asked while the AB is open, then closing the AB (closing on load)",
+      "Listening to 'আগে ব্রেকার দিতে বলো' at the handle"
+     ],
+     "slips": [
+      "Coming down with dirt or arcing marks left",
+      "Breaker asked with a part-seated phase (own or coworker)",
+      "Stalling mid-stroke",
+      "Breaker ON asked first, then cancelled before the stroke"
+     ],
+     "coworkerPushBn": "(1) At the handle: 'আইসোলেটর আর ব্রেকার একই জিনিস — আগে ব্রেকার দিতে বলো।' (built on myth 2; deadly). (2) At the phone with a part-seated phase: 'একটু আলগা লেগেছে, ও চলবে — লাইন দিয়ে দাও।' (slip). Both controls held.",
+     "reasonQuestionsBn": [
+      "কেন মেকানিজমে লুব্রিকেন্ট দিলেন?",
+      "কেন জ আর ব্লেড পরিষ্কার করলেন?",
+      "কেন আগে আইসোলেটর লাগালেন, পরে ব্রেকার?",
+      "কেন আলগা ফেজে লাইন দিলেন না?",
+      "কেন ইনসুলেটর মুছলেন?"
+     ],
+     "gestureHints": "Lever: left/right swipe. Pouch: sweep over cloth, can, lanyard. Can in hand: short upward drag, then sweep over all pivots. Cloth: back-and-forth on the cloth itself. Insulators: sweep. Ground: sweep over handle and phone. Handle held: drag along the arc. Phase check: swipe up. Decks built-in. Off in cutscenes, voice beats, freezes, results.",
+     "lessonPoints": [
+      "Maintenance: clean jaws and blades, lubricate a jammed mechanism, clean insulators",
+      "লাইন চালু করার সময়, ক্রমটি উল্টো: প্রথমে আইসোলেটর লাগান, তারপর সার্কিট ব্রেকার অন করুন।",
+      "আংশিকভাবে লাগা কন্টাক্ট একটি হটস্পট তৈরি করবে।",
+      "একটি ফেজ আটকে যেতে পারে।",
+      "টহলে আর্কিং-এর চিহ্ন",
+      "Myth 2: আইসোলেটর এবং সার্কিট ব্রেকার একই জিনিস। — দুটি সম্পূর্ণ ভিন্ন যন্ত্র।"
+     ],
+     "giveawayRisks": "Jam found only by feel; oiling extra pivots free; grime drawn real, no ticks; no done button; leftovers shown as consequences; handle and phone equal; coworker place from the player's work, held."
+    }
+   ],
+   "unsupported": [
+    "How a lineman confirms the breaker is open — phone text is staging.",
+    "Earth-lead fault kinds and fixes not in the lesson.",
+    "Action for a stuck phase ('report') is a choice.",
+    "Lubricant, pivots, cleaning cloth not named; rocking is a game way of showing lubrication.",
+    "Shutdown/PTW/earths for switch servicing come from Module 1.",
+    "House lights as load illustration.",
+    "Arcing horns only on the board (advanced-fact conflict on charging current).",
+    "Interlocks not drawn.",
+    "TRV and magnetising current unused.",
+    "Horizontal/vertical break only as blade direction.",
+    "No viewing distance / binoculars."
+   ],
+   "ownerDecisions": [
+    "Speed conflict: 2.5/do/1 scores a rushed hot-stick turn as a slip; 6.4 says 'দ্রুত এবং দৃঢ়ভাবে' for the AB's own handle — proposal: only a stalled stroke is a slip here; note in MODULE2_LADDER.",
+    "Opening on load (own or coworker) = deadly (matches 2.5/do/1, 3.10).",
+    "Closing on load = deadly.",
+    "Handle earth unchecked/faulty = slip; stuck phase logged open = slip; part-seated closed in = slip; needless stuck report = slip; ask-then-cancel = slip.",
+    "Operator as phone text only (no voice)?",
+    "New rival clips needed (myth word for word, the two push lines)."
+   ]
+  },
+  {
+   "lessonId": "6.5",
+   "titleBn": "আন্ডারগ্রাউন্ড (UG) কেবিল: লুকানো নেটওয়ার্ক",
+   "board": {
+    "artFolder": "assets/game/art/ug_cable_board/ (tool/ug_cable_board_art.py)",
+    "mythBn": "ইউজি কেবিল তো ইনসুলেটেড এবং আর্মার্ড, তাই এটা লাইভ থাকা অবস্থায় মাটি খোঁড়ার মেশিনের আঘাতে কিছু হবে না।",
+    "rounds": [
+     {
+      "promptBn": "মাটির নিচে যাবে এমন কেবিল — কোনটার সব সুরক্ষা-স্তর অটুট?",
+      "safe": [
+       "Cut end of 3-core HT XLPE, every layer whole",
+       "Same cable stepped back layer by layer, intact"
+      ],
+      "traps": [
+       {
+        "what": "Outer PVC jacket split",
+        "rejectBn": "বাইরের জ্যাকেট ছেঁড়া — এই PVC স্তরই আর্দ্রতা আর রাসায়নিক থেকে কেবিল বাঁচায়।"
+       },
+       {
+        "what": "Steel armour gashed",
+        "rejectBn": "আর্মার কাটা — এই স্টিলের স্তরই আঘাত আর খোঁড়াখুঁড়ি থেকে কেবিল বাঁচায়।"
+       },
+       {
+        "what": "Copper screen wires broken",
+        "rejectBn": "মেটালিক স্ক্রিন ছেঁড়া — আর্থ ফল্ট কারেন্টের পথ তো এটাই।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কাটা মুখ দেখে চিনুন — কোন কেবিলের পাশে ঠিক জয়েন্টিং কিট?",
+      "safe": [
+       "XLPE end + 'XLPE জয়েন্টিং কিট'",
+       "PILC end (paper + lead) + 'PILC জয়েন্টিং কিট'"
+      ],
+      "traps": [
+       {
+        "what": "XLPE end + PILC kit",
+        "rejectBn": "XLPE আর PILC-র জয়েন্টিং কিট, টুলস আর পদ্ধতি সম্পূর্ণ আলাদা।"
+       },
+       {
+        "what": "PILC end + XLPE kit",
+        "rejectBn": "PILC কেবিলে XLPE-র কিট নয় — দুটির কিট আর পদ্ধতি সম্পূর্ণ আলাদা।"
+       },
+       {
+        "what": "UG end with an overhead joint sleeve",
+        "rejectBn": "ওভারহেডের জয়েন্ট আর ইউজির জয়েন্ট এক নয় — স্তর পুনর্গঠন আর আর্দ্রতা রোধ লাগে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "হাই-ভোল্টেজ কেবিল জয়েন্টিং চলছে — কোন ছবিতে কাজ ঠিক পথে?",
+      "safe": [
+       "Certified jointer (ID card) in a dry clean pit",
+       "Same jointer under a cover, wiping hands dry first"
+      ],
+      "traps": [
+       {
+        "what": "Muddy water and rain on the open joint",
+        "rejectBn": "আর্দ্রতা ঢুকলেই পুরো জয়েন্ট নষ্ট হয়ে যেতে পারে।"
+       },
+       {
+        "what": "Dust and sweat on the prepared cable",
+        "rejectBn": "সামান্য ধুলো বা ঘামও হাই-ভোল্টেজ জয়েন্ট নষ্ট করে দিতে পারে।"
+       },
+       {
+        "what": "Helper with no ID doing the HT joint",
+        "rejectBn": "এই কাজে আলাদা প্রশিক্ষণ আর সার্টিফিকেশন লাগে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কেবিল মাটি থেকে উঠে লাইনে বা ট্রান্সফরমারে যাচ্ছে — কোন মুখটা ঠিক?",
+      "safe": [
+       "Riser pole end sealed in a termination kit",
+       "Cable into a DTR, sealed termination"
+      ],
+      "traps": [
+       {
+        "what": "Bare open end on the pole",
+        "rejectBn": "খোলা মুখে আর্দ্রতা ঢোকে, চাপও নিয়ন্ত্রণ হয় না — এন্ড টার্মিনেশন কিট লাগে।"
+       },
+       {
+        "what": "Screen cut back, nothing over its edge, sparks",
+        "rejectBn": "স্ক্রিন যেখানে শেষ, সেখানে চাপ জমে ইনসুলেশন পাংচার করতে পারে — স্ট্রেস কন্ট্রোল টিউবিং লাগে।"
+       },
+       {
+        "what": "Cracked termination with water inside",
+        "rejectBn": "টার্মিনেশন আর জয়েন্টেই 90% ফল্ট হয় — আর্দ্রতা ঢুকলে সব নষ্ট।"
+       }
+      ]
+     },
+     {
+      "promptBn": "নতুন কেবিল পাতা হচ্ছে — কোন কাজটা ঠিক?",
+      "safe": [
+       "Wide gentle bend at a corner",
+       "Armour earth bonded at both ends",
+       "Reading the jacket print '11 kV · A2XFY' against the docket"
+      ],
+      "traps": [
+       {
+        "what": "Sharp kink at the trench corner",
+        "rejectBn": "ন্যূনতম বেন্ডিং রেডিয়াসের চেয়ে বেশি বাঁকালে ভেতরের ইনসুলেশন বা স্ক্রিন ক্ষতিগ্রস্ত হতে পারে।"
+       },
+       {
+        "what": "Sharp bend at the riser foot",
+        "rejectBn": "পোলের গোড়ায় তীক্ষ্ণ বাঁক — ভেতরের ইনসুলেশন বা স্ক্রিন ক্ষতিগ্রস্ত হতে পারে।"
+       },
+       {
+        "what": "Armour earthed at one end only",
+        "rejectBn": "আর্মার আর্থিং দুই প্রান্তেই — ফল্ট কারেন্টের নিরাপদ পথ চাই।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_5_a",
+     "engineType": "m6_ug_cable_lay",
+     "titleBn": "বাঁক বুঝে কেবিল পাতা",
+     "verb": "drag-shape cable bends against a radius ring",
+     "scene": "Town lane trench from a DTR plinth (entry pipe, earth bar) round a corner, under a culvert, to a riser pole (pole earth). New XLPE cable off a drum. Docket '11 kV · XLPE · A2XFY' with the minimum bending radius drawn as a ring (no number). Armour earth leads hanging at both ends; termination kit box and phone at the riser foot. Camera pans by swipe.",
+     "flow": [
+      "GuideIntro: 'নতুন ইউজি কেবিল পাততে হবে — বাঁকে সাবধান, ভেতরের স্তর যেন না ভাঙে!'",
+      "Hold the docket any time; its ring floats under the finger to compare.",
+      "3 of 4 bends: drag the cable's belly handle to widen/tighten (wall stops it), tap 'বসান'. ≥ ring → ◆ → reason; < ring → slip, cutaway crease, ring ghosted for the retry.",
+      "Armour earth: drag each lug onto the earth point; 'কাজ শেষ — জয়েন্টার ডাকুন' chip live from the bends' end; sign-off with one end = slip.",
+      "Termination: kit box vs phone (equal); calling the certified jointer right, self-fitting slip.",
+      "Coworker once, held on his item's decisive control. Pass panel."
+     ],
+     "dealtVariety": "Which 3 bends and order; room and starting curve (tight or already wide); two ring scales by cable size (placeholder); start end; coworker push and item; reason libraries.",
+     "deadly": [
+      "None (cable new, not energised; lesson names no fatal act here)."
+     ],
+     "slips": [
+      "A bend tighter than the ring (incl. 'টাইট করে বাঁকিয়ে দাও')",
+      "Tightening a bend that was already wide enough below the ring",
+      "Signing off with armour earthed at one end or none (incl. coworker)",
+      "Fitting the HT termination himself (incl. myth 2)"
+     ],
+     "coworkerPushBn": "One per play: (1) before 'বসান' on a dealt bend: 'জায়গা কম, কোণে টাইট করে বাঁকিয়ে দাও — মোটা কেবিল, কিছু হবে না!' (2) first armour-lead pick-up: 'আর্মার এক দিকে আর্থ করলেই চলবে, চলো ফিরি!' (3) termination: 'ওভারহেড লাইনের জয়েন্টিং আর ইউজি কেবিলের জয়েন্টিং একই।' + 'কিটটা তুমিই লাগিয়ে দাও!'. Listening = slip; control held.",
+     "reasonQuestionsBn": [
+      "কেন বাঁকটা এমন রাখলেন?",
+      "আর্মার আর্থ কেন দিলেন?",
+      "টার্মিনেশন কেন জয়েন্টারের হাতে?"
+     ],
+     "gestureHints": "Bend idle: hold ring on the docket, then a short fixed upward drag on the belly handle. After a drag: sweep over handle and 'বসান'. Armour station: sweep over both leads, pan arrows and the chip. Tapped lead: upward drag on that lead. Termination: sweep over kit and phone. Decks built-in.",
+     "lessonPoints": [
+      "বেন্ডিং রেডিয়াসকে সম্মান দিন … ইনসুলেশন বা স্ক্রিন ক্ষতিগ্রস্ত হতে পারে।",
+      "আর্মার আর্থিং: কেবিলের দুই প্রান্তেই … ফল্ট কারেন্টের জন্য একটি নিরাপদ পথ",
+      "হাই-ভোল্টেজ কেবিল জয়েন্টিং একটি বিশেষায়িত কাজ … প্রশিক্ষণ এবং সার্টিফিকেশন",
+      "টার্মিনেশন … 'এন্ড টার্মিনেশন কিট' দিয়ে সিল",
+      "Myth 2 + reality"
+     ],
+     "giveawayRisks": "No radius number, strain colour or snap; ring only under the held docket or after a slip; start curves dealt both ways; sign-off chip visible from the start; ends identical; kit and phone equal; coworker on any bend."
+    },
+    {
+     "packId": "do_6_5_b",
+     "engineType": "m6_ug_dig_guard",
+     "titleBn": "খোঁড়ার আগে কেবিলের পথ",
+     "verb": "peg the hidden route, then flag-stop the digger",
+     "scene": "Town street: riser pole with termination, cable into the ground at its foot; DTR plinth across where it goes back in; 2–3 identical unlabelled iron covers (1–2 joints, 1 drain); excavator and operator; 3 identical chalk dig circles. Cable LIVE. Red flag hold control in the dig stage.",
+     "flow": [
+      "GuideIntro: 'রাস্তা খোঁড়া হবে — নিচে লাইভ ইউজি কেবিল! আগে ওর পথ বুঝুন।'",
+      "Look (unscored): tap the riser top, the plinth entry; drag covers up to look under, back down.",
+      "Peg (changed from a freehand trace so do_6_8_b stays the only trace level): tap anchors in order (pole foot, chosen covers, DTR entry) to lay straight chalk legs; 'মুছুন' clears; 'পথ আঁকা শেষ'. Right → ◆ → reason; wrong (missed joint, through the drain, straight across) → slip, true route drawn in.",
+      "Guide teaches the flag once: 'লাল পতাকা চেপে ধরে রাখলে মেশিন থামে।'",
+      "Dig rulings (core), 3 spots: bucket descends over 5–7 s; over the route the player must hold the flag (1 s ring) before it touches → ◆ → reason; doing nothing = deadly; flag on a clear spot = slip.",
+      "Coworker on a dealt spot of either kind, before the descent (held). Pass panel."
+     ],
+     "dealtVariety": "Layout; 1–2 joint covers; drain place; 3 spots (1–2 over the route) and order; descent time; coworker spot; reason libraries.",
+     "deadly": [
+      "Letting the bucket strike the live cable (lesson myth reality: 'মারাত্মক ভুল!')",
+      "Listening to myth 1 on a spot over the route"
+     ],
+     "slips": [
+      "Pegging a route that misses the real path",
+      "Flag held on a clearly clear spot (needless stop)",
+      "Listening to myth 1 on a clear spot"
+     ],
+     "coworkerPushBn": "Myth 1 word for word (same clip as the board): 'ইউজি কেবিল তো ইনসুলেটেড এবং আর্মার্ড, তাই এটা লাইভ থাকা অবস্থায় মাটি খোঁড়ার মেশিনের আঘাতে কিছু হবে না।' Once per play at a dealt spot, bucket raised, descent held until his deck closes.",
+     "reasonQuestionsBn": [
+      "পথটা এভাবে আঁকলেন কেন?",
+      "কেন মেশিন থামালেন?"
+     ],
+     "gestureHints": "Look/peg idle: sweep over pole top, DTR entry, covers. Tapped cover: upward drag on it. No anchor yet: tap ripple at a neutral spot on the road? No — sweep only. With legs laid: sweep over 'মুছুন' and 'পথ আঁকা শেষ'. Dig stage: no hint ever; the flag never gets a hint. Decks built-in.",
+     "lessonPoints": [
+      "Myth 1 + reality: excavator tears armour and insulation, explosion or arc flash, operator's life at risk",
+      "টার্মিনেশন … মাটির নিচ থেকে ওপরে উঠে",
+      "জয়েন্টিং … দুটি ইউজি কেবিলকে জোড়া",
+      "আর্মার … যান্ত্রিক আঘাত বা খোঁড়াখুঁড়ি থেকে বাঁচায়"
+     ],
+     "giveawayRisks": "No route paint or labels; covers must be lifted; no snapping; true route only after a wrong peg; dig circles identical, order dealt; coworker on either kind and refusing does not stop the machine; flag never hinted, needless stops cost; spots clearly on or clearly off."
+    }
+   ],
+   "unsupported": [
+    "Bending radius value and where to find it — ring with no number.",
+    "Jacket code decoding not given.",
+    "Cable sizes on dockets are placeholders.",
+    "Route-finding methods (records, markers, tape, locators, trial holes) not in the lesson; route inferred from termination and joints, straight legs.",
+    "Safe digging distance not given.",
+    "After-stop procedure not given.",
+    "Joints under road covers is a scene choice.",
+    "Armour bond hardware not described.",
+    "Material looks generic.",
+    "PD testing unused.",
+    "Lesson typo 'प्रचंड' → use প্রচণ্ড."
+   ],
+   "ownerDecisions": [
+    "do_6_5_a has no deadly.",
+    "Armour at one end = slip (M4.6b made a cut DTR earth strip deadly on sign-off; different act — confirm).",
+    "Self-fitted termination / myth 2 = slip.",
+    "Digger strike / myth 1 on the route = deadly; myth 1 on a clear spot = slip.",
+    "Needless flag = slip.",
+    "Wrong peg = slip, then route revealed.",
+    "Letting clear spots dig is the 'right' default (abstraction).",
+    "Board rival myth 1 shared with do_6_5_b; myth 2 to do_6_5_a.",
+    "Radius ring with no number — give a figure?",
+    "New clips: bend push, armour push, myth 2 + push.",
+    "Quick-bonus times; YouTube id."
+   ]
+  },
+  {
+   "lessonId": "6.6",
+   "titleBn": "এবি কেবিল (AB Cable): ঝঞ্ঝাটমুক্ত আধুনিক লাইন",
+   "board": {
+    "artFolder": "assets/game/art/abc_cable_board/",
+    "mythBn": "এবি কেবিল তো সম্পূর্ণ ইনসুলেটেড, তাই এটাতে খালি হাতে কাজ করা যায়।",
+    "rounds": [
+     {
+      "promptBn": "কোনটা এবি কেবিল?",
+      "safe": [
+       "Three insulated cores twisted round a bare messenger",
+       "Three insulated cores with an insulated messenger of a different size"
+      ],
+      "traps": [
+       {
+        "what": "Four bare conductors on a cross-arm",
+        "rejectBn": "এটা খোলা বেয়ার লাইন — এবি কেবিলে ইনসুলেটেড ফেজ তার আর মেসেঞ্জার একসাথে পেঁচানো থাকে।"
+       },
+       {
+        "what": "Four separate insulated wires spaced apart",
+        "rejectBn": "এবি কেবিল একটি বান্ডিল — তারগুলো একসাথে পেঁচানো থাকে, আলাদা আলাদা ঝোলে না।"
+       },
+       {
+        "what": "Three cores twisted with no messenger",
+        "rejectBn": "এবি কেবিলে নিউট্রাল-কাম-মেসেঞ্জার তার থাকে — সেটিই পুরো কেবিলের টান বা ওজন বহন করে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ক্ল্যাম্প কোন তারে লাগবে?",
+      "safe": [
+       "Jaw on the bare messenger",
+       "Jaw on the insulated messenger (its mark)"
+      ],
+      "traps": [
+       {
+        "what": "Jaw on a 1-ridge phase core",
+        "rejectBn": "ফেজ কন্ডাক্টরের ওপর ক্ল্যাম্প লাগালে কেবিল মারাত্মকভাবে ক্ষতিগ্রস্ত হবে এবং ছিঁড়ে যেতে পারে।"
+       },
+       {
+        "what": "Jaw on a 3-ridge core",
+        "rejectBn": "সব ক্ল্যাম্প মেসেঞ্জার তারের ওপরই লাগাতে হয় — টান বহন করে মেসেঞ্জার, ফেজ তার নয়।"
+       },
+       {
+        "what": "Clamp squeezing the whole bundle",
+        "rejectBn": "ক্ল্যাম্প ধরবে শুধু মেসেঞ্জার তারটিকে — এর ওপরই সমস্ত ক্ল্যাম্প লাগাতে হয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোন পোলে ঠিক ক্ল্যাম্প লেগেছে?",
+      "safe": [
+       "Straight run: suspension clamp",
+       "Dead end: tension clamp",
+       "Turning pole: tension clamp"
+      ],
+      "traps": [
+       {
+        "what": "Dead end with only a suspension clamp",
+        "rejectBn": "লাইন যেখানে শেষ হচ্ছে, সেখানে টেনশন ক্ল্যাম্প পুরো টান সহ্য করে — নইলে কেবিল ঝুলে পড়তে পারে।"
+       },
+       {
+        "what": "Turning pole with a suspension clamp",
+        "rejectBn": "লাইন যেখানে মোড় নিচ্ছে, সেখানে টেনশন ক্ল্যাম্প মেসেঞ্জারকে শক্ত করে ধরে পুরো টান নেয়।"
+       },
+       {
+        "what": "Bare-line bolted clamp biting the insulation",
+        "rejectBn": "সাধারণ বেয়ার কন্ডাক্টরের ক্ল্যাম্প এবি কেবিলের ইনসুলেশন কেটে দেবে, সঠিক গ্রিপও দেবে না।"
+       },
+       {
+        "what": "Loose tension clamp, span sagging",
+        "rejectBn": "টেনশন ক্ল্যাম্প ঠিকমতো না লাগালে কেবিল ঝুলে পড়তে পারে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "সার্ভিস সংযোগের জোড় কোনটা ঠিক?",
+      "safe": [
+       "IPC with its shear head broken off",
+       "Cutaway: IPC teeth through the insulation into the conductor"
+      ],
+      "traps": [
+       {
+        "what": "IPC with the shear head still on",
+        "rejectBn": "শেয়ার-হেড না ভাঙা পর্যন্ত টাইট না দিলে IPC কানেকশন লুজ থেকে যায়।"
+       },
+       {
+        "what": "Service wire twisted round a core",
+        "rejectBn": "সার্ভিস কানেকশনের জন্য IPC লাগে — এর ধারালো দাঁত ইনসুলেশন ভেদ করে সংযোগ দেয়।"
+       },
+       {
+        "what": "Bare-line bolted connector on the core",
+        "rejectBn": "এবি কেবিলে সাধারণ হার্ডওয়্যার কাজ করে না — এর জন্য বিশেষ ফিটিংস লাগে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "নতুন কেবিল টানার সময় কোনটা ঠিক?",
+      "safe": [
+       "Over a roller on each pole",
+       "Gliding on rollers off the drum"
+      ],
+      "traps": [
+       {
+        "what": "Dragged over a sharp bracket",
+        "rejectBn": "এবি কেবিল টানার সময় বিশেষ রোলার লাগে, যাতে এর ইনসুলেশন ক্ষতিগ্রস্ত না হয়।"
+       },
+       {
+        "what": "Dragged on a stony road",
+        "rejectBn": "ধারালো বস্তুর আঘাতে ইনসুলেশন কেটে গেলে সেখানে জল ঢুকে ফল্ট হতে পারে।"
+       },
+       {
+        "what": "Pulled round a wall corner",
+        "rejectBn": "রোলার ছাড়া টানলে ইনসুলেশনে কাটা বা নিক হয় — পরে সেখানে জল ঢুকে ফল্ট।"
+       }
+      ]
+     },
+     {
+      "promptBn": "আবরণে সামান্য কাটা পেলে কী করবেন?",
+      "safe": [
+       "Gloved hands wrapping waterproof tape over the nick",
+       "Heat-shrink tube over the nick end to end"
+      ],
+      "traps": [
+       {
+        "what": "Nick left open in rain",
+        "rejectBn": "ইনসুলেশনে কাটা থাকলে সেখানে জল ঢুকে ফল্ট হতে পারে — মেরামত করুন।"
+       },
+       {
+        "what": "Tape beside the nick, half open",
+        "rejectBn": "কাটা জায়গাটাই ঢাকতে হবে — খোলা অংশ দিয়ে জল ঢুকে ফল্ট হবে।"
+       },
+       {
+        "what": "Bare hands taping",
+        "rejectBn": "ইনসুলেটেড হলেও এবি কেবিলকে সবসময় লাইভ ধরে PPE পরে কাজ করতে হয়।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_6_a",
+     "engineType": "m6_abc_clamp_seat",
+     "titleBn": "মেসেঞ্জারে ঝোলাও",
+     "verb": "roll the twisted bundle, clamp the messenger",
+     "scene": "Town lane replacing a bare LT run with AB cable; signed PTW at pole 1 (given); drum at the source; 3–4 PCC poles, straight or bending at one, last a dead end; kit bag (rollers, gloves, clamp pouch) in a dealt layout. Pole work in a side lens: four black cores twisted, open clamp jaw above.",
+     "flow": [
+      "GuideIntro: 'নতুন এবি কেবিল ঝোলাতে হবে — ঠিক ক্ল্যাম্প, ঠিক তারে।'",
+      "Stage 1: drag rollers onto brackets; gloves may be dragged onto the trainee (never prompted); hold 'টানুন' to pull. A pole without a roller scuffs = slip. Reason once after a clean pull.",
+      "Stage 2 per pole: read its place (straight/bend/end, no label); open the pouch (suspension, tension, ordinary bare-line clamp, dealt order); drag one up.",
+      "Lens (core): swipe up/down to roll the bundle; read ridges (1/2/3) vs the messenger (bare, or a different size/mark); hold the bolt to close.",
+      "Right type + messenger → ◆ → reason → এগিয়ে যান; phase core / suspension at end or bend / ordinary clamp / tension on straight = slip, redo.",
+      "First jaw closing with no gloves = deadly.",
+      "Coworker on pole 2 or 3 when the pouch opens (held). End: tensioned run; pass panel."
+     ],
+     "dealtVariety": "3 or 4 poles; bend position; messenger type; twist phase per pole; bag layout; pouch order; coworker pole; reason libraries.",
+     "deadly": [
+      "Any hand on the AB cable without gloves (first jaw closing bare-handed) — lesson myth 1"
+     ],
+     "slips": [
+      "Pulling over a pole with no roller",
+      "Jaw on a phase core",
+      "Suspension clamp at a dead end or bend",
+      "Ordinary bare-line clamp (own or coworker)",
+      "Tension clamp on a straight run (inference; owner)"
+     ],
+     "coworkerPushBn": "'যেকোনো ক্ল্যাম্প দিয়েই এবি কেবিল লাগানো যায়।' (myth 2 word for word), holding out a bare-line clamp, on pole 2 or 3 when the pouch opens; pouch held. Listening = slip.",
+     "reasonQuestionsBn": [
+      "টানার আগে কেন রোলার দিলেন?",
+      "কেন ক্ল্যাম্পটা মেসেঞ্জারেই লাগালেন?",
+      "এই পোলে কেন টেনশন ক্ল্যাম্প?",
+      "সোজা লাইনের পোলে কেন সাসপেনশন ক্ল্যাম্প?",
+      "কোনটা মেসেঞ্জার — কী দেখে চিনলেন?",
+      "গ্লাভস পরে কেবিল ধরলেন কেন?"
+     ],
+     "gestureHints": "Bag: sweep over items, then upward drag out of the bag. Rollers: sweep over brackets. 'টানুন': no hint. Next pole: tap. Pouch: sweep. Lens: alternating vertical swipe; after 3 empty taps hold ring on the bolt (whatever core is under). Decks built-in.",
+     "lessonPoints": [
+      "মেসেঞ্জার তারটিই পুরো কেবিলের যান্ত্রিক টান বা ওজন বহন করে।",
+      "মেসেঞ্জার … আকারে ভিন্ন হতে পারে বা … বিশেষ চিহ্ন … এর ওপরই সমস্ত ক্ল্যাম্প",
+      "রিজ বা লাইনের সংখ্যা (১, ২, ৩) দিয়ে ফেজ চিহ্নিত",
+      "Suspension for straight lines; tension at dead end / turn",
+      "ভুল হার্ডওয়্যার বা ফেজ কন্ডাক্টরে ক্ল্যাম্প → মারাত্মকভাবে ক্ষতিগ্রস্ত … ছিঁড়ে যেতে পারে।",
+      "বিশেষ রোলার",
+      "দুর্বল অ্যাঙ্করিং",
+      "Myth 2 reality",
+      "সবসময় 'লাইভ' হিসেবেই গণ্য … PTW, PPE"
+     ],
+     "giveawayRisks": "No pole labels; pouch/bag dealt; clamps equal; messenger mark subtle and unlike ridges; nothing highlights the core under the jaw; twist changes per pole; bolt hint regardless of core; gloves unprompted; coworker on any pole type."
+    },
+    {
+     "packId": "do_6_6_b",
+     "engineType": "m6_abc_nick_seal",
+     "titleBn": "কাটা আবরণ সিল করো",
+     "verb": "zoom to find, wrap the nick shut",
+     "scene": "Residential road with a 3-span AB run (branch near one span, shop sign, service drop with IPC). Patrol names the span only. Trainee up the pole in harness with gloves on; PTW given. Span pinch/double-tap zoom 1×–3×; at 3× decoys (ridges, print, dust, dropping, branch) and the nick. Repair material dealt: waterproof tape or heat-shrink tube.",
+     "flow": [
+      "GuideIntro: 'টহলে এবি কেবিলের আবরণে কাটা পাওয়া গেছে — খুঁজে সিল করুন।'",
+      "3 jobs, nick smaller and decoys more each time. Zoom and pan; double-tap to chalk the spot. Repair started on a wrong spot = slip.",
+      "Coworker on a dealt job at the first touch of the material (held). Listening = deadly.",
+      "Seal (core): tape — draw circles round the cable, drifting to move along; tube — drag to sit over the mark, hold the heat control. Tap 'শেষ'.",
+      "Whole nick covered → drizzle beads off → ◆ → reason → next; part open → water creeps in → slip, add turns / re-seat.",
+      "Pass panel after 3 jobs."
+     ],
+     "dealtVariety": "3 of ~6 spans; nick place/size/core; decoys; tape or tube per job; coworker job; reason libraries.",
+     "deadly": [
+      "Gloves off / bare hands on the AB cable (listening to the coworker)"
+     ],
+     "slips": [
+      "Repair on a spot that is not the nick",
+      "'শেষ' with part of the nick uncovered",
+      "Tube shrunk off-centre"
+     ],
+     "coworkerPushBn": "'এবি কেবিল তো ইনসুলেটেড — গ্লাভস খুলে খালি হাতে পেঁচাও, তাড়াতাড়ি হবে।' On a dealt job at the first touch of the tape/tube; held. Listening = deadly.",
+     "reasonQuestionsBn": [
+      "কাটা জায়গাটা কেন পুরো ঢাকতে হবে?",
+      "কেন জলরোধী টেপ বা হিট-স্রিঙ্ক দিয়ে মেরামত?",
+      "ইনসুলেটেড কেবিলেও কেন লাইভ ধরে কাজ করলেন?",
+      "টহলে আবরণের কাটা কেন খুঁজতে হয়?"
+     ],
+     "gestureHints": "1×: sweep along the whole span + pinch-open hint at centre (needs HintSpec.pinch; fallback double-tap ripple). Zoomed idle: alternating horizontal swipe. Tape: circle-drag on the player's own chalk mark (needs HintSpec.circle; fallback arc). Tube: alternating drag nudge, then hold ring on heat. 'শেষ': no hint. Decks built-in.",
+     "lessonPoints": [
+      "টহলে আবরণে গভীর কাটা বা ক্ষতি",
+      "ইনসুলেশন কেটে গেলে সেখানে জল ঢুকে ফল্ট হতে পারে।",
+      "বিশেষ ওয়াটারপ্রুফ ইনসুলেটিং টেপ বা হিট-স্রিঙ্ক টিউব দিয়ে মেরামত",
+      "সবসময় 'লাইভ' হিসেবেই গণ্য … PTW, PPE",
+      "Myth 1 + reality (invisible pin-hole, fatal shock)"
+     ],
+     "giveawayRisks": "Span named, never the spot; nick invisible at 1×; no glow/ring; decoys at 3×; hints on the player's mark, never the nick; no coverage bar; 'শেষ' unhinted; coworker on any job."
+    }
+   ],
+   "unsupported": [
+    "Messenger mark look not described.",
+    "Ridge-to-R/Y/B mapping not given.",
+    "Roller placement not detailed — one per bracket.",
+    "Installation sequence is game order.",
+    "Tension clamp on straight run as wrong is an inference.",
+    "Live vs shutdown practice for LT ABC — PTW drawn as given; gloves always required.",
+    "Taping technique and heat method not given — only full coverage judged.",
+    "Deep cuts out of scope.",
+    "Ordinary tape as wrong not stated — omitted.",
+    "Branch on the bundle only a decoy.",
+    "11 kV ABC, XLPE specs, reactance unused.",
+    "No tension or clamp numbers.",
+    "IPC on the messenger not covered; IPC shear only on the board (hands-on in m4_service_connect)."
+   ],
+   "ownerDecisions": [
+    "Clamp on phase core, ordinary clamp, suspension at end/bend, no rollers = slip (cable harm, not a shock).",
+    "Bare hand on AB cable = deadly in both levels and the gate.",
+    "Unprompted gloves kill on first touch (DoDeathGuard near-miss once) — keep?",
+    "Tension clamp on a straight pole = slip?",
+    "Coworker lines need clips.",
+    "Kit: HintSpec.pinch and HintSpec.circle (or fallbacks)."
+   ]
+  },
+  {
+   "lessonId": "6.7",
+   "titleBn": "ক্যাপাসিটর ব্যাংক: পাওয়ার বুস্টার",
+   "board": {
+    "artFolder": "assets/game/art/m6_board67/",
+    "mythBn": "লাইন তো বন্ধ এবং আর্থ করা আছে, তাই ক্যাপাসিটর ব্যাংকে কাজ করতে কোনো ভয় নেই।",
+    "rounds": [
+     {
+      "promptBn": "পাওয়ার ফ্যাক্টর কম — ক্যাপাসিটর ব্যাংক চালু হলে লাইনে কী হয়?",
+      "safe": [
+       "Ammeter falls, kW unchanged — 'একই কাজ, লাইনে কারেন্ট কম'",
+       "Tail-end voltage steadier — 'লাইনের শেষ মাথায় ভোল্টেজ ড্রপ কম'",
+       "DTR loading bar drops — 'ট্রান্সফরমারে আরও লোড নেওয়ার জায়গা'"
+      ],
+      "traps": [
+       {
+        "what": "kW jumps up",
+        "rejectBn": "ক্যাপাসিটর আসল কাজ (kW) বাড়ায় না — রিয়্যাক্টিভ পাওয়ার জুগিয়ে বাড়তি কারেন্ট (kVA) কমায়।"
+       },
+       {
+        "what": "Ammeter rises, conductor warm",
+        "rejectBn": "কম পাওয়ার ফ্যাক্টরেই লাইন বেশি কারেন্ট বয় — ক্যাপাসিটর সেই বাড়তি কারেন্ট কমায়, I²R লস কমে।"
+       },
+       {
+        "what": "PF needle falls below 0.8",
+        "rejectBn": "ক্যাপাসিটর পাওয়ার ফ্যাক্টর উন্নত করে — আদর্শ 1.0-এর দিকে তোলে, নিচে নামায় না।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ব্যাংকের গঠন, সুইচ আর সুরক্ষা — কোন ছবিটা ঠিক?",
+      "safe": [
+       "Cans in star with own switch and fuse",
+       "Cans in delta with own switch and fuses",
+       "APFC panel switching steps by load"
+      ],
+      "traps": [
+       {
+        "what": "Cans tapped straight on the line",
+        "rejectBn": "প্রতিটি ক্যাপাসিটর ব্যাংকের সাথে একটি ডেডিকেটেড সুইচ আর ফিউজ থাকে — এটাই ফল্ট থেকে রক্ষা করে।"
+       },
+       {
+        "what": "Hourly manual ON/OFF marks",
+        "rejectBn": "ক্যাপাসিটর ব্যাংককে ঘন ঘন অন-অফ করা উচিত নয়।"
+       },
+       {
+        "what": "Domestic switch on the bank",
+        "rejectBn": "ব্যাংকের জন্য বিশেষ সুইচ বা ব্রেকার লাগে, যা সুইচিং সার্জ সহ্য করতে পারে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ব্যাংকের সুইচ অফ হলো — এরপর কোন ছবিটা ঠিক?",
+      "safe": [
+       "Standing back, watch, plate 'বিপদ! সঞ্চিত শক্তি। স্পর্শ করার আগে 5-10 মিনিট অপেক্ষা করুন'",
+       "After the wait, rod earth on earth, hook on a terminal, small spark"
+      ],
+      "traps": [
+       {
+        "what": "Bare hand on a terminal the moment the switch opens",
+        "rejectBn": "সুইচ অফের পরও ক্যাপাসিটর চার্জড ব্যাটারির মতো বিপজ্জনক ভোল্টেজ ধরে রাখে — ডিসচার্জ না করে ছুঁলে প্রাণঘাতী শক।"
+       },
+       {
+        "what": "Rod up while the switch is still swinging",
+        "rejectBn": "সুইচ অফ করার পর কাজের আগে কমপক্ষে 5-10 মিনিট অপেক্ষা বাধ্যতামূলক — তারপর রড।"
+       },
+       {
+        "what": "10 minutes passed, hand without rod",
+        "rejectBn": "অপেক্ষার পরেও উপযুক্ত ডিসচার্জ রডে টার্মিনাল ডিসচার্জ আর আর্থিং করে নিতে হয় — বাড়তি সুরক্ষা।"
+       },
+       {
+        "what": "Tools straight on like a lamp load",
+        "rejectBn": "ক্যাপাসিটর ব্যাংক সাধারণ লোড নয় — এটি একটি শক্তি সঞ্চয়কারী ডিভাইস।"
+       }
+      ]
+     },
+     {
+      "promptBn": "লাইন বন্ধ, লাইনে আর্থ লাগানো — ব্যাংকে হাত দেওয়ার আগে কোনটা ঠিক?",
+      "safe": [
+       "Separate rod on the bank's own terminals with the line earth on",
+       "Rod on a small power capacitor before the hand"
+      ],
+      "traps": [
+       {
+        "what": "Line earth above the bank's fuse, hand on the can",
+        "rejectBn": "ব্যাংক লাইনের ফিউজের পরে লাগানো থাকলে লাইন আর্থ করা সত্ত্বেও ক্যাপাসিটর চার্জড থাকতে পারে।"
+       },
+       {
+        "what": "Bare hand unscrewing a small capacitor",
+        "rejectBn": "আকার দিয়ে বিপদ মাপা যায় না — ছোট পাওয়ার ক্যাপাসিটরও মারাত্মক শক দেওয়ার মতো শক্তি ধরে রাখে।"
+       },
+       {
+        "what": "Rod only on the line conductor",
+        "rejectBn": "ক্যাপাসিটরকে সবসময় আলাদাভাবে এবং সরাসরি ডিসচার্জ করা অপরিহার্য — লাইন ডিসচার্জে ব্যাংক খালি হয় না।"
+       }
+      ]
+     },
+     {
+      "promptBn": "লাইন পেট্রোলিং-এ ব্যাংক দেখলেন — কোন ছবিতে ঠিক কাজ হচ্ছে?",
+      "safe": [
+       "Straight cans, dry — patrol goes on",
+       "Bulged can: bank switch open, report phoned",
+       "Blown bank fuse: looking for the cause, new fuse still in the bag"
+      ],
+      "traps": [
+       {
+        "what": "Bulged leaking can left in service",
+        "rejectBn": "ফুলে যাওয়া বা লিক করা ইউনিট যেকোনো মুহূর্তে বিস্ফোরিত হতে পারে — অবিলম্বে লাইন থেকে বিচ্ছিন্ন করুন।"
+       },
+       {
+        "what": "New fuse straight in",
+        "rejectBn": "কারণ খুঁজে বের না করে আবার ফিউজ লাগানো উচিত নয় — খারাপ ইউনিট বা ভেতরের শর্ট থাকতে পারে।"
+       },
+       {
+        "what": "External fuses fine, so all units fine",
+        "rejectBn": "ক্যাপাসিটরের ফিউজ প্রায়ই ভেতরে গলে যায়, বাইরে থেকে বোঝা যায় না — সন্দেহ হলে ফিউজ পরীক্ষা করুন।"
+       },
+       {
+        "what": "Old rusty bank tagged as new",
+        "rejectBn": "সময়ের সাথে ক্যাপাসিট্যান্স কমে যায় — পাওয়ার ফ্যাক্টর উন্নত করার ক্ষমতাও কমে।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_7_a",
+     "engineType": "m6_capbank_wait",
+     "titleBn": "ঘড়ি ধরে অপেক্ষা",
+     "verb": "set a watch bezel, wait out the stored charge",
+     "scene": "Roadside 11 kV pole with a capacitor bank (3 or 6 cans, star or delta busbars, own switch and fuse, the lesson's plate in English + Bangla). Some plays: line earth set above the bank's fuse. Pole foot: trainee (gloves), van with discharge rod, pole earth point. Big wristwatch with minute hand and rotating bezel. Optional job: small LT power capacitor in a ground panel with the same plate.",
+     "flow": [
+      "GuideIntro with dealt job line, e.g. 'ব্যাংকের ফিউজ উড়েছে — কারণ খুঁজতে কাছে যেতে হবে। হাত বাঁচিয়ে কাজ।'",
+      "Switch flips OFF with a clunk; corner guide 'সুইচ অফ হলো। এবার আপনার পালা।' Game clock ~1 min per 2.5 s; only the watch hands show time.",
+      "Bezel (optional tool, core gesture): turn the triangle onto the minute hand; judging always uses the real switch-off time.",
+      "Wait: all controls live; useful prep = read plate/watch, carry the rod, clamp its earth on earth.",
+      "Coworker once inside the wait (game-minute 1–4), or earlier at the first reach for the bank; hook drag and hand tap held.",
+      "Step in when the player decides: hook on a terminal before the earth clamp = deadly; before 5 game-minutes = slip (still discharges).",
+      "Discharge: touch every bank terminal (spark once each); touching the earthed line conductor gives no spark and discharges nothing.",
+      "'নিরাপদ — ক্রুকে দিন': any terminal untouched = deadly; all done → ◆ → reason → next job (2–3 jobs) → pass panel."
+     ],
+     "dealtVariety": "Jobs and order; 3 or 6 cans; star/delta; line earth present or not; switch-off moment; coworker job, minute, line, side; reason libraries.",
+     "deadly": [
+      "Hand or tool other than the earthed rod on a terminal/can before every terminal has had the rod (line earthed, small capacitor, or full wait passed)",
+      "Rod hook on a terminal before its earth clamp is on earth (M1 step 15)",
+      "Listening to the coworker (acted out as a hand on the can)"
+     ],
+     "slips": [
+      "Hook on the bank before 5 game-minutes from switch-off (or 10, if the owner picks 10)"
+     ],
+     "coworkerPushBn": "Bank jobs: 'লাইন তো বন্ধ এবং আর্থ করা আছে, তাই ক্যাপাসিটর ব্যাংকে কাজ করতে কোনো ভয় নেই।' Small-capacitor job: 'একটি ছোট ক্যাপাসিটর তেমন বিপজ্জনক নয়।' Refuse: 'না, আগে অপেক্ষা — তারপর রডে সরাসরি ডিসচার্জ'. Listening = deadly.",
+     "reasonQuestionsBn": [
+      "সুইচ অফের পরও অপেক্ষা করলেন কেন?",
+      "অপেক্ষার পরও রড লাগালেন কেন?",
+      "লাইনে আর্থ থাকা সত্ত্বেও ব্যাংকে আলাদা রড কেন?",
+      "ছোট ক্যাপাসিটরেও রড কেন?"
+     ],
+     "gestureHints": "First job: short rotate arc on the bezel (never ending on the hand). Wait state: sweep over watch, plate, rod, same cadence before and after the window; never a drag on the rod. Earth clamp: generic drag. Discharge: sweep over terminals and line conductor. Hand-over: sweep over remaining terminals and the button. Decks built-in.",
+     "lessonPoints": [
+      "সুইচ অফ করা হলে … চার্জড ব্যাটারির মতো বিপজ্জনক ভোল্টেজ ধরে রাখে।",
+      "ডিসচার্জ না করে স্পর্শ … মারাত্মক বা প্রাণঘাতী শক",
+      "ইন্টারনাল ডিসচার্জ রেসিস্টর … ৫ মিনিটের মধ্যে … ৫০ ভোল্টের নিচে",
+      "কমপক্ষে ৫-১০ মিনিট অপেক্ষা করা বাধ্যতামূলক",
+      "অপেক্ষার পরেও … ডিসচার্জ রড দিয়ে … ডিসচার্জ এবং আর্থিং",
+      "লাইনের ফিউজের পরে লাগানো থাকলে … লাইন আর্থ করা সত্ত্বেও … চার্জড",
+      "আকার দিয়ে বিপদ মাপা যায় না",
+      "শক্তি সঞ্চয়কারী ডিভাইস"
+     ],
+     "giveawayRisks": "No countdown or time-up cue; guide never says when; hint identical before and after the window; terminals unmarked, spark only as feedback; line conductor gives no spark; bezel unchecked; coworker scheduled inside the wait and guarded."
+    },
+    {
+     "packId": "do_6_7_b",
+     "engineType": "m6_capbank_meter",
+     "titleBn": "মিটারে ব্যাংকের নাড়ি",
+     "verb": "log meters, switch once, compare the swing",
+     "scene": "33/11 kV substation at dusk; yard with Bank 1–3 (cans, own switch and fuses); panel with feeder ammeter, PF meter, each bank's control switch, 'চালু করবেন না' tags; log sheet with A and PF strips and a pencil.",
+     "flow": [
+      "GuideIntro: 'সন্ধ্যা নামছে, লোড বাড়ছে। ব্যাংকগুলো লাইনে আনার দায়িত্ব আপনার।'",
+      "Yard walk: swipe; tap any bank to zoom (all zoom the same). Dealt: bulged can with oil streak, a blown external fuse; maybe one bank already in service.",
+      "Panel: for each bank — bring in, keep out with a tag, or switch OFF + tag (swollen in service first).",
+      "Bring in (core): drag the pencil to where each needle stands (misread asks again, free); flick ON once; needles swing (locked); log after-readings.",
+      "Judge: clear amp drop + PF toward 1.0 → leave ON; little change → OFF + tag. Re-switching = slip. Blown fuse → tag + report, never refit. Swollen → never switch in.",
+      "Each decision → ◆ → reason → এগিয়ে যান. Coworker on a dealt bank (switch and tag held). Pass panel."
+     ],
+     "dealtVariety": "Bank states (healthy / weak with fuses intact / external fuse blown / swollen; ≤ 1 swollen, ≥ 1 healthy); bank in service; which can/phase; illustrative values; sky; coworker bank and line; reason libraries.",
+     "deadly": [
+      "Hand on a can or fuse holder of a bank not switched off, waited and rod-discharged (only via the swollen-bank coworker push)"
+     ],
+     "slips": [
+      "Switching in a swollen/leaking bank or leaving it in service (owner may raise)",
+      "Refitting a blown fuse without the cause",
+      "Switching a bank OFF and ON again to re-test",
+      "Leaving a bank that barely moved the meters in service",
+      "Tagging a sound bank (needless isolation)"
+     ],
+     "coworkerPushBn": "Held on his bank's decisive control. Healthy/weak: 'আরেকবার অফ-অন করে দেখো, ঠিক চালু হয়ে যাবে।' (slip). Blown fuse: 'ফিউজ উড়েছে? নতুন একটা লাগিয়ে চালিয়ে দাও।' (slip). Swollen: 'ফোলা ক্যানটা হাত দিয়ে টিপে দেখো তো কতটা ফুলেছে।' (deadly).",
+     "reasonQuestionsBn": [
+      "ব্যাংক চালু রাখলেন কেন?",
+      "ব্যাংক বন্ধ রেখে ট্যাগ দিলেন কেন?",
+      "নতুন ফিউজ লাগালেন না কেন?",
+      "ফোলা ইউনিটের ব্যাংক বিচ্ছিন্ন রাখলেন কেন?",
+      "আবার অফ-অন করলেন না কেন?"
+     ],
+     "gestureHints": "Yard: swipe, then sweep over all banks; 'প্যানেলে যান' tap. Pencil: alternating generic drag. Decision: sweep over switch and tag hook. Swing: none. Decks built-in.",
+     "lessonPoints": [
+      "কম পাওয়ার ফ্যাক্টর … বেশি কারেন্ট (kVA) … ব্যাংক এই অতিরিক্ত কারেন্টকে কমিয়ে দেয়",
+      "আদর্শ ১.০ … (যেমন ০.৮)",
+      "সময়ের সাথে … ক্যাপাসিট্যান্স কমে যায়",
+      "ইন্টারনাল ফিউজ … বাইরে থেকে বোঝা যায় না",
+      "ফুলে যাওয়া বা লিক করা ইউনিট … অবিলম্বে বিচ্ছিন্ন … কারণ খুঁজে বের না করে আবার ফিউজ লাগানো উচিত নয়।",
+      "ঘন ঘন অন-অফ করা উচিত নয়"
+     ],
+     "giveawayRisks": "No ঠিক/রিপোর্ট buttons; decision is the switch itself from the player's own two marks; banks unmarked; swings vary in size; tagging a sound bank costs; misread never shows the value; coworker held."
+    }
+   ],
+   "unsupported": [
+    "Meter values illustrative except 1.0 and 0.8.",
+    "Panel/log layout not described.",
+    "Earth-clamp-before-hook comes from lesson 1.5.",
+    "Every can's terminal vs phase terminals not specified.",
+    "Who opens the pole bank switch not stated.",
+    "Small capacitor placement not stated.",
+    "Switching in a blown-fuse bank to look not addressed.",
+    "How a unit feels 'ঠান্ডা' not stated.",
+    "Unit replacement not described.",
+    "Bystander distance not stated.",
+    "Harmonics/resonance unused.",
+    "Compressed game clock is a convention."
+   ],
+   "ownerDecisions": [
+    "Wait minimum: 5 game-minutes (recommended) or 10.",
+    "Wait cut short with rod = slip.",
+    "Touching before rod discharge = deadly everywhere.",
+    "Swollen unit in service = slip (raise to deadly in all M6 levels and the gate together if chosen).",
+    "Refit without cause and re-switching = slips.",
+    "Earth-clamp-first rod rule carried from M1.",
+    "Discharge target: every can terminal or phase terminals.",
+    "Keep the small-capacitor third job?",
+    "Illustrative meter values.",
+    "Coworker reuses the board myth clip — ok?"
+   ]
+  },
+  {
+   "lessonId": "6.8",
+   "titleBn": "অটো-রিক্লোজার ও সেকশনালাইজার: লাইনের স্মার্ট ব্রেন",
+   "board": {
+    "artFolder": "assets/game/art/m6_board68/ (tool/recloser_board_art.py, learn_board_pack68.dart); safe-card colours also appear on traps in every hand; only worker labels (R, S-1, S-2, ON/OFF, counter digits).",
+    "mythBn": "লাইনটা তো ট্রিপ করে আছে, রিক্লোজার নিশ্চয়ই লক-আউট হয়ে গেছে। কাজ করতে কোনো ভয় নেই।",
+    "rounds": [
+     {
+      "promptBn": "গাছের ডাল লাইনে ছুঁয়ে সরে গেল। এরপর ঠিক কী হয়?",
+      "safe": [
+       "Recloser trips, waits, closes; branch gone, lights stay on",
+       "Wind touch: one trip, line holds, van stays parked"
+      ],
+      "traps": [
+       {
+        "what": "Feeder dark, crew patrolling for a gone fault",
+        "rejectBn": "অস্থায়ী ফল্টে রিক্লোজার নিজেই লাইন আবার চালু করে — অপ্রয়োজনীয় পেট্রোলিং লাগে না।"
+       },
+       {
+        "what": "Handle down after the first trip",
+        "rejectBn": "প্রথম ট্রিপেই লক-আউট নয় — স্থায়ী ফল্টে সাধারণত 3-4 বার চেষ্টার পরে লক-আউট হয়।"
+       },
+       {
+        "what": "Sectionalizer open after a brief touch",
+        "rejectBn": "সেকশনালাইজার খোলে রিক্লোজার লক-আউট হওয়ার ঠিক আগে — অস্থায়ী ফল্টে লাইন চালু থাকে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "একটা শাখায় গাছ পড়েছে — স্থায়ী ফল্ট। শেষে লাইনের ছবিটা কেমন?",
+      "safe": [
+       "Faulty branch's sectionalizer open, main + healthy branch lit",
+       "Three branches: faulty one cut off, two lit"
+      ],
+      "traps": [
+       {
+        "what": "Endless close-trip, flicker",
+        "rejectBn": "রিক্লোজার সাধারণত 3-4 বার চেষ্টার পর স্থায়ীভাবে লক-আউট হয়ে যায় — থামাহীন চেষ্টা করে না।"
+       },
+       {
+        "what": "Healthy branch's sectionalizer open",
+        "rejectBn": "সেকশনালাইজার ফল্টি শাখাটিকেই বাকি সিস্টেম থেকে বিচ্ছিন্ন করে।"
+       },
+       {
+        "what": "Faulty branch isolated but all dark",
+        "rejectBn": "ফল্টি শাখা বিচ্ছিন্ন হলে রিক্লোজার শেষবার চালু হয় — সুস্থ শাখাগুলো বিদ্যুৎ পায়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "সেকশনালাইজার কখন কী করে? ঠিক ছবিগুলো বাছুন।",
+      "safe": [
+       "Recloser open, sectionalizer shows one count, blade closed",
+       "Line dead again, blade opens with no arc before the last try"
+      ],
+      "traps": [
+       {
+        "what": "Opens with a big arc under fault current",
+        "rejectBn": "সেকশনালাইজার ফল্ট কারেন্টকে বাধা দেয় না — শুধু লাইন 'ডেড' থাকলে খোলে।"
+       },
+       {
+        "what": "Trips by itself, recloser closed",
+        "rejectBn": "সেকশনালাইজারের নিজের ফল্ট সনাক্ত করার ক্ষমতা নেই — রিক্লোজার খুললে তবেই গোনে।"
+       },
+       {
+        "what": "Opens at its first count",
+        "rejectBn": "প্রথম গোনায় সেকশনালাইজার আগের মতোই থাকে — খোলে রিক্লোজার লক-আউটের ঠিক আগে।"
+       },
+       {
+        "what": "Drawn melted like a fuse",
+        "rejectBn": "ফিউজ ফল্ট কারেন্টে গলে যায়; সেকশনালাইজার একটি 'লোড ব্রেক' সুইচ, গলে না।"
+       }
+      ]
+     },
+     {
+      "promptBn": "রিক্লোজারযুক্ত লাইনে কাজ শুরুর আগে — ঠিক কোনগুলো?",
+      "safe": [
+       "Lineman with PTW on the radio asking for Non-Reclose",
+       "Control box Non-Reclose / Hot Line Tag switch ON"
+      ],
+      "traps": [
+       {
+        "what": "Climbing because houses went dark",
+        "rejectBn": "রিক্লোজার হয়তো চেষ্টার মাঝখানে — কয়েক সেকেন্ড পরেই আবার লাইন চালু করবে।"
+       },
+       {
+        "what": "Climbing on handle-down, no PTW, no Non-Reclose",
+        "rejectBn": "'Non-Reclose' নিশ্চিত না করে আর PTW না নিয়ে রিক্লোজারযুক্ত লাইন নিরাপদ নয়।"
+       },
+       {
+        "what": "Working with the switch at auto",
+        "rejectBn": "Non-Reclose চালু না থাকলে রিক্লোজার কোনো সতর্কবার্তা ছাড়াই লাইন আবার চালু করতে পারে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "রিক্লোজারের সামনে দাঁড়িয়ে — প্রো লাইনম্যান কোনগুলো করেন?",
+      "safe": [
+       "Reading the operation counter",
+       "Reading lock-out from a distance: handle hanging down"
+      ],
+      "traps": [
+       {
+        "what": "Manual handle pulled on a live line",
+        "rejectBn": "ম্যানুয়াল হ্যান্ডেল দিয়ে খোলা-বন্ধ অবশ্যই 'ডেড' লাইনে করতে হবে।"
+       },
+       {
+        "what": "Calling lock-out only because the line is dead",
+        "rejectBn": "শুধু লাইন বন্ধ দেখে লক-আউট ধরা যায় না — লক-আউটে হ্যান্ডেল সাধারণত নিচে ঝোলে।"
+       },
+       {
+        "what": "Waiting under a sectionalizer for it to blow",
+        "rejectBn": "সেকশনালাইজার ফল্ট ব্রেকিং ডিভাইস নয় — শুধু 'ডেড' লাইনে খোলে।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_8_a",
+     "engineType": "m6_reclose_count",
+     "titleBn": "চেষ্টা গুনুন",
+     "verb": "count reclose tries live with a tally clicker",
+     "scene": "Storm-dusk farmland; van at a junction pole with sectionalizer S-A; village A behind, village B across a paddy; recloser R out of sight. Tally clicker (player's taps only). Van door: docket (রিক্লোজার R · চেষ্টা: 3 or 4) and a magnet board with the crew sketch R → S-A / S-B and magnets চালু · লক-আউট · শাখা বন্ধ. Windows and lamps are the live cue.",
+     "flow": [
+      "GuideIntro: 'ঝড়ে লাইন ট্রিপ করছে! রিক্লোজার কতবার চেষ্টা করে — গুনে বলুন।'",
+      "Docket slides up; tap to tuck it away (cycle starts after).",
+      "Fault flash; all lights out; tap the clicker at each try (lights flick on). Guide 'কতবার চেষ্টা করল, গুনতে থাকুন।'",
+      "Outcomes: transient holds; permanent dies at once; dead pauses vary. Own branch A: S-A opens in the pause before the last try, B lights. Branch B: A lights. Main: dark after the setting's tries.",
+      "Coworker in a permanent round's dead pause (tries < setting); next try and board held. Listen → climb → re-energised → deadly.",
+      "Drag a magnet onto the board any time (premature = slip). Right → ◆ → reason → এগিয়ে যান; wrong → slip, cycle plays on.",
+      "Round close: radio counter '+N' beside the tally (non-scoring). 3 rounds (≥ 1 permanent, ≥ 1 isolated or locked out). Pass panel."
+     ],
+     "dealtVariety": "Setting 3/4; outcome; pause lengths; fault cue; light; mirrored layout; coworker side and pause; outcome order; reason libraries.",
+     "deadly": [
+      "Listening at a dead pause ('লক-আউট হয়ে গেছে') and going up mid-cycle — one 6.8 rule: climbing/working on a recloser line without Non-Reclose confirmed + PTW is deadly"
+     ],
+     "slips": [
+      "লক-আউট while tries < setting",
+      "লক-আউট when one branch was isolated and the rest came back",
+      "চালু while a branch stays dark",
+      "শাখা বন্ধ on the wrong branch",
+      "শাখা বন্ধ or লক-আউট after a transient that held (needless patrol)"
+     ],
+     "coworkerPushBn": "'লাইনটা তো ট্রিপ করে আছে, রিক্লোজার নিশ্চয়ই লক-আউট হয়ে গেছে। কাজ করতে কোনো ভয় নেই।' (myth, word for word; board clip). Once per play in a permanent round's dead pause after try 1 or 2; next try and board held. Listening = deadly.",
+     "reasonQuestionsBn": [
+      "লক-আউট বললেন — কেন নিশ্চিত?",
+      "লাইন চালু বললেন — কেন?",
+      "এই শাখা বন্ধ বললেন — কেন?",
+      "ওর কথায় উঠলেন না কেন?"
+     ],
+     "gestureHints": "Docket: tap ripple. Cycle: idle-timer tap ripple on the clicker (never synced to a try). Board: sweep over magnets and both branch lines. Decks built-in. Off during intro, coworker beat 1, praise, freeze, results.",
+     "lessonPoints": [
+      "Trip → wait a few seconds → automatic reclose",
+      "অস্থায়ী হলে চালু থাকে; স্থায়ী হলে … ৩-৪ বার চেষ্টার পর লক-আউট",
+      "সেকশনালাইজার 'ডেড' লাইনে খুলে ফল্টি শাখা বিচ্ছিন্ন",
+      "শেষবার চালু হলে সুস্থ শাখা বিদ্যুৎ পায়",
+      "অপ্রয়োজনীয় পেট্রোলিং থেকে মুক্তি",
+      "Pro tips 1–2 (counter; settings)",
+      "Myth reality: mid-cycle"
+     ],
+     "giveawayRisks": "Recloser out of sight; random pauses; same fault cue for all types; magnets fixed and unlit; board live from the first trip; tally shows only the player's taps; counter after the call; coworker always with tries left."
+    },
+    {
+     "packId": "do_6_8_b",
+     "engineType": "m6_upstream_trace",
+     "titleBn": "তার ধরে সোর্সের দিকে",
+     "verb": "trace the wire upstream by dragging",
+     "scene": "Panning panorama 2–3 screens: work pole on a branch line, back through a cut-out fuse, the branch sectionalizer, forks, to the feeder's recloser (tank, control box, plate R-xx) at a junction or just outside the substation. A neighbour feeder with different tags runs parallel; its recloser is drawn physically nearest but not wired to the work pole. Red 'Non-Reclose' flag can hang on any device. Walkie PTT bottom corner. This is the module's only finger-trace level.",
+     "flow": [
+      "GuideIntro: 'শাখা লাইনে কাজ! আগে খুঁজুন কোন রিক্লোজার লাইন আবার চালু করতে পারে।'",
+      "Docket names job and work pole only.",
+      "Trace (core): finger on the conductor at the work pole; drag along it; camera follows; chalk trace only on-wire; forks chosen by direction.",
+      "Tap any device to hang the flag. Right = upstream recloser on the work pole's feeder → ◆ → reason; wrong flag → slip, flag drops.",
+      "Coworker in one job at the FIRST of (trace reaches the sectionalizer, any flag tap); dragging past S and all flags held. Listen → flag on S = slip.",
+      "Hold PTT to request 'ফিডার-2, R-12: PTW দিন, Non-Reclose চালু করুন।' Reply dealt: full / no Non-Reclose / wrong recloser / no permit (same length).",
+      "Climb (drag boot onto the step) or ask again (PTT). Full + climb → ◆ → reason; incomplete + climb = deadly; full + ask again = slip. 2 jobs; pass panel."
+     ],
+     "dealtVariety": "Panorama mirror; recloser location; forks; sub-branch fuse; neighbour side; numbers; work pole; reply type (≥ 1 incomplete per play); coworker job and side; reason libraries.",
+     "deadly": [
+      "Climbing after a reply lacking Non-Reclose confirmation, naming another recloser, or with no PTW (same rule as do_6_8_a)"
+     ],
+     "slips": [
+      "Flag on the sectionalizer (incl. coworker)",
+      "Flag on the fuse",
+      "Flag on the neighbour recloser",
+      "Asking again after a full confirmation (needless stop)"
+     ],
+     "coworkerPushBn": "'সেকশনালাইজার একটি ফিউজের মতোই কাজ করে।' (myth 2) + 'ওটাতেই ফ্ল্যাগ দাও, আর এগোনোর দরকার নেই।' Once per play as above; listening = slip (no one on the line).",
+     "reasonQuestionsBn": [
+      "কেন এই রিক্লোজারেই Non-Reclose চাইলেন?",
+      "সেকশনালাইজারে থামলেন না কেন?",
+      "এখনই উঠলেন না কেন?",
+      "এখন উঠতে পারেন কেন?"
+     ],
+     "gestureHints": "Trace stalled: ≤ 60 dp drag nudge, direction alternating per play. Fork: sweep over all stubs. Flag: sweep over every device. After a right flag: hold ring on PTT. Reply decision: sweep over boot and PTT. Decks built-in.",
+     "lessonPoints": [
+      "আপস্ট্রিম (সোর্সের দিকের) রিক্লোজারটি খোলে।",
+      "সাবস্টেশনের বাইরে, লাইনের শুরুতে বা গুরুত্বপূর্ণ জংশনে",
+      "সেকশনালাইজার … নিজের কোনো ফল্ট সনাক্ত করার ক্ষমতা নেই … শাখায়",
+      "Non-Reclose / Hot Line Tag অ্যাক্টিভেট করা অপরিহার্য",
+      "PTW নেওয়ার সময় … Non-Reclose … অনুরোধ … নিশ্চিত",
+      "Myth 2 reality",
+      "SCADA remote operation"
+     ],
+     "giveawayRisks": "No highlighted path; neighbour recloser always nearest; both reclosers carry R plates; devices unmarked; all tappable, wrong flags cost; nudge alternates; reply uncoloured; coworker at S every play."
+    }
+   ],
+   "unsupported": [
+    "Wait seconds not given.",
+    "No feeder voltage.",
+    "Sectionalizer blade/count look is art.",
+    "Non-Reclose switch look not described.",
+    "Plates, tags, PTW numbers, reply wording are staging.",
+    "Counting semantics vs real 'operations to lockout' not in the lesson.",
+    "Sectionalizer opening moment staged in the last pause.",
+    "Radio counter read-back is framing.",
+    "Trace-to-pick-recloser inferred; one recloser per feeder.",
+    "Injury details not given.",
+    "Manual handle consequence not given; no Do level uses it."
+   ],
+   "ownerDecisions": [
+    "6.8 deadly/slip as above in both levels and the gate.",
+    "Coworker listen: slip in 6.8b (no one climbs), deadly in 6.8a (he climbs) — act-based split.",
+    "Tally accuracy non-scoring.",
+    "Myth use and clip sharing.",
+    "6.8b framing inferred from 'upstream recloser' + PTW protocol.",
+    "Latin plates on screen.",
+    "Needless call-back = slip.",
+    "Handle-down cue only on the board.",
+    "New clip for myth 2 + shortcut."
+   ]
+  },
+  {
+   "lessonId": "6.9",
+   "titleBn": "এলটি ডিস্ট্রিবিউশন পিলার: শেষ প্রবেশদ্বার",
+   "board": {
+    "artFolder": "assets/game/art/m6_board69/",
+    "mythBn": "ফিউজের জায়গায় একটা মোটা তার বা পাত লাগিয়ে দিলে আর বারবার ফিউজ যাওয়ার সমস্যা থাকবে না।",
+    "rounds": [
+     {
+      "promptBn": "পাড়ার একটা গলির লাইনে ফল্ট — পিলার ঠিক থাকলে কী হবে?",
+      "safe": [
+       "One lane dark, the rest lit; only that way's fuse out",
+       "Each outgoing cable through its own fuse unit"
+      ],
+      "traps": [
+       {
+        "what": "Whole neighbourhood dark from one fault",
+        "rejectBn": "পিলারে প্রতিটি আউটগোয়িং ফিডার আলাদাভাবে ফিউজ করা থাকে — একটা লাইনে ফল্ট হলে পুরো এলাকা নয়, শুধু সেই লাইনটাই বন্ধ হয়।"
+       },
+       {
+        "what": "Cables bolted to busbars without fuses",
+        "rejectBn": "প্রতিটি আউটগোয়িং ফিডারের ফেজ কানেকশন ফিউজ ইউনিটের মাধ্যমে বাসবার থেকে নেওয়া হয় — ফিউজ ছাড়া ফল্টের লাইন আলাদা হয় না।"
+       },
+       {
+        "what": "One common fuse for all lanes",
+        "rejectBn": "প্রতিটি আউটগোয়িং ফিডারকে আলাদাভাবে সুইচিং আর ফিউজিং দিতে হয় — একটা ফিউজে সব লাইন থাকলে এক ফল্টে সবাই অন্ধকার।"
+       }
+      ]
+     },
+     {
+      "promptBn": "পিলারের দরজা খুলেছেন — ভেতরটা ঠিকঠাক সাজানো কোনটায়?",
+      "safe": [
+       "Separate R, Y, B, N bars firmly bolted",
+       "All neutrals on one common link N",
+       "Body and armour on the earthing terminal"
+      ],
+      "traps": [
+       {
+        "what": "Neutral through a fuse unit",
+        "rejectBn": "ফিউজ ইউনিট দিয়ে নেওয়া হয় ফেজ কানেকশন — সমস্ত ইনকামিং আর আউটগোয়িং নিউট্রাল যায় কমন নিউট্রাল লিঙ্কে।"
+       },
+       {
+        "what": "Armour hanging, not earthed",
+        "rejectBn": "বক্সের ধাতব বডি আর কেবিলের আর্মার আর্থ করার জন্যই আর্থিং টার্মিনাল থাকে — আর্মার ঝুলিয়ে রাখা চলে না।"
+       },
+       {
+        "what": "Busbar on one loose bolt",
+        "rejectBn": "শর্ট সার্কিটের সময় দুটো বাসবারের মধ্যে প্রচণ্ড বিকর্ষণ বল তৈরি হয় — দুর্বলভাবে লাগানো বাসবার বেঁকে বা ভেঙে যেতে পারে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "প্রিভেন্টিভ মেইনটেন্যান্স — ঢিলা কানেকশন আগেভাগে ধরবেন কীভাবে?",
+      "safe": [
+       "Thermal camera in full PPE: a red-white spot on a normal-looking joint",
+       "Blackened joint noted for tightening"
+      ],
+      "traps": [
+       {
+        "what": "Bare hand feeling a joint",
+        "rejectBn": "ফিডার পিলারের ভেতরটা একটা লাইভ প্যানেলের মতোই বিপজ্জনক — সম্পূর্ণ PPE আর ইনসুলেটেড টুলস ছাড়া হাত নয়।"
+       },
+       {
+        "what": "Water splashed on a hot joint",
+        "rejectBn": "বক্সের ভেতরে জল শর্ট সার্কিট ঘটাতে পারে — আর এখানে শর্ট সার্কিট মানে আর্ক ফ্ল্যাশ, যা মুহূর্তে পুড়িয়ে দেয়।"
+       },
+       {
+        "what": "Walking away until it gets worse",
+        "rejectBn": "ঢিলা কানেকশনে স্পার্কিং হয়, জায়গাটা অতিরিক্ত গরম হয় — থার্মাল ক্যামেরা চোখে দেখার আগেই হটস্পট ধরে, অপেক্ষা নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "পিলারে সমস্যা ধরা পড়েছে — ঠিক সমাধান কোনটা?",
+      "safe": [
+       "Top seal replaced, inside dry",
+       "Rat nest cleared",
+       "Loose lug tightened with an insulated spanner, gloved"
+      ],
+      "traps": [
+       {
+        "what": "Same phase fuse replaced again, load unbalanced",
+        "rejectBn": "একটা ফেজে অন্যগুলোর চেয়ে অনেক বেশি লোড হলে সেই ফেজের ফিউজ বারবার উড়ে যায় — লোড ব্যালেন্স করুন।"
+       },
+       {
+        "what": "Puddle wiped, broken seal left",
+        "rejectBn": "ভাঙা দরজা বা ওপরের নষ্ট সিল দিয়েই বৃষ্টির জল ঢোকে — পথ বন্ধ না করলে আবার শর্ট সার্কিট আর মরিচা।"
+       },
+       {
+        "what": "Rat nest left by gnawed cable",
+        "rejectBn": "ইঁদুর বা অন্য প্রাণী কেবিলের ইনসুলেশন কেটে শর্ট সার্কিট ঘটায় — বক্সের ভেতরটা পরিষ্কার রাখুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "নতুন কানেকশন বা মেরামতি শেষ — যাওয়ার আগে কোনটা ঠিক?",
+      "safe": [
+       "New way landed R on R, Y on Y, B on B",
+       "Door shut and padlocked"
+      ],
+      "traps": [
+       {
+        "what": "Y and B swapped",
+        "rejectBn": "নতুন কানেকশন বা মেরামতির পর ফেজ সিকোয়েন্স (R-Y-B) ঠিক না রাখলে গ্রাহকের থ্রি-ফেজ যন্ত্রপাতি ক্ষতিগ্রস্ত হতে পারে।"
+       },
+       {
+        "what": "Door open, children nearby",
+        "rejectBn": "কাজ শেষে দরজা লক করা অত্যন্ত জরুরি — খোলা দরজা জনসাধারণ, বিশেষ করে বাচ্চাদের জন্য, আর সিস্টেমের জন্য মারাত্মক বিপদ।"
+       },
+       {
+        "what": "Door on a broken hinge, not latching",
+        "rejectBn": "দরজা ঠিকমতো বন্ধ হচ্ছে কিনা, ভাঙা বা মরিচা ধরা অংশ আছে কিনা দেখুন — ভাঙা দরজা দিয়ে জল ঢোকে।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_9_a",
+     "engineType": "m6_pillar_thermal",
+     "titleBn": "তাপের চোখ",
+     "verb": "sweep a thermal camera, compare R-Y-B joints",
+     "scene": "Lane corner by a DTR; feeder pillar (metal or polycarbonate) open for preventive maintenance: R, Y, B, N busbars, incomer lugs, 3–5 outgoing fuse ways (busbar-side and lug-side joints per phase), N link, earthing terminal, armoured cables. Trainee in full PPE holding a thermal camera whose live false-colour screen (an inset) shows only what is under its aim frame. Eye view all joints alike unless a 'late' hotspot (blackened lug + smell wisp). Job card strip for tagged joints. No shutter, no photo strip (changed so this level no longer mirrors do_6_1_a's photo loop).",
+     "flow": [
+      "GuideIntro: 'প্রিভেন্টিভ মেইনটেন্যান্স — চোখে দেখার আগে গরম জোড়া খুঁজে বের করুন।'",
+      "Sweep (core): drag the camera across the pillar; live screen shows dull even warm tones; a loose joint shows red-white. Guide 'ক্যামেরা ঘুরিয়ে প্রতিটা ওয়ে দেখুন।' A way counts as scanned after the frame dwells on it ~1 s (not shown).",
+      "Compare and tag: while a way is under the frame, tap the joint hotter than its sisters on the live screen; job card writes 'F2 · Y · কেবিল লাগ'. Tagging an even joint = slip.",
+      "First correct tag → ◆ → reason 'কেন এই জোড়াটা ধরলেন?' → এগিয়ে যান.",
+      "Coworker after the frame has dwelt on the 1st or 2nd clean way, always while a hotspot way is unscanned; camera, tag and 'স্ক্যান শেষ' held. Listening = slip, scan ends, missed hotspot plays its consequence.",
+      "'স্ক্যান শেষ' always live; any unscanned way = slip (missed hotspot shown) or plain 'একটা ওয়ে না দেখেই শেষ'.",
+      "Fix deck per tagged hotspot: right 'জোড়াটা টাইট দেওয়ার কাজ লিখুন' / 'ঢিলা কানেকশন টাইট দেওয়ার কাজ'; wrong 'জল ঢেলে এখনই ঠান্ডা করুন' (deadly), 'এখনই খালি হাতে নাটটা ঘুরিয়ে দিন' (deadly), 'ফিউজের জায়গায় মোটা তার বা পাত লাগিয়ে দিন' (deadly, myth 2 class), 'চলছে তো, ছেড়ে দিন' (slip). Right → ◆ → reason.",
+      "Hand in the job card → pass panel."
+     ],
+     "dealtVariety": "3–5 ways; body; mirror; 1–2 hotspots on any joint (incomer, busbar side, lug side, N link); early or late; phase; ambient tone varies per joint; coworker side and timing; deck options from libraries.",
+     "deadly": [
+      "Fix 'tighten now with bare hand / uninsulated tool' (live panel)",
+      "Fix 'pour water on the hot joint' (inferred chain; owner)",
+      "Fix 'thick wire or strip in the fuse's place' (non-fuse conductor rule)"
+     ],
+     "slips": [
+      "Tagging a joint not hotter than its sisters (needless report)",
+      "Ending with a way unscanned",
+      "Listening to the coworker",
+      "'চলছে তো, ছেড়ে দিন' for a tagged hotspot"
+     ],
+     "coworkerPushBn": "Shortcut: 'চোখে তো কিছু দেখা যাচ্ছে না, ক্যামেরা রাখো — সব ঠিক আছে।' After the 1st or 2nd clean way, before any further control (camera, tag, স্ক্যান শেষ held). Refuse: 'না, চোখে দেখার আগেই ক্যামেরা হটস্পট ধরে — সব ওয়ে দেখব।' Listen = slip.",
+     "reasonQuestionsBn": [
+      "কেন এই জোড়াটা ধরলেন?",
+      "কেন টাইট দেওয়ার কাজ লিখলেন?",
+      "কেন সব ক'টা ওয়ে স্ক্যান করলেন?"
+     ],
+     "gestureHints": "Camera idle: fixed left-to-right drag nudge ≤ 96 dp. Frame still on a way ~8 s: sweep over the joints on the live screen + 'সব সমান' + 'স্ক্যান শেষ' equally. Decks built-in.",
+     "lessonPoints": [
+      "থার্মাল ক্যামেরা দিয়ে … চোখে দেখার আগেই লুজ কানেকশন বা হটস্পট",
+      "লুজ কানেকশন … স্পার্কিং … হটস্পট … পোড়া গন্ধ বা কালো রং",
+      "লুজ কানেকশন টাইট দিন, জল ঢোকার পথ বন্ধ করুন, লোড ব্যালেন্স করুন, ভেতর পরিষ্কার",
+      "লো-ভোল্টেজ, পাওয়ার কাট",
+      "লাইভ প্যানেলের মতোই বিপজ্জনক … সম্পূর্ণ PPE এবং ইনসুলেটেড টুলস",
+      "Image note: hotspot red or white"
+     ],
+     "giveawayRisks": "Hotspot only on the instrument; coverage and comparison are the skill; job card never says how many; 'স্ক্যান শেষ' never unlocks; eye view unmarked except the lesson's own late signs; coworker before a hidden hotspot, held; wrong tags cost; sweeps equal."
+    },
+    {
+     "packId": "do_6_9_b",
+     "engineType": "m6_pillar_newway",
+     "titleBn": "নতুন লাইন জুড়ুন",
+     "verb": "pluck droppers, land cores by phase",
+     "scene": "Feeder pillar by a DTR; new lane's 4-core armoured cable into the spare way. Docket 'নতুন আউটগোয়িং: গলি 4 · স্পেয়ার ওয়ে'. Inside: busbars marked R, Y, B, N; three spare fuse units (SFU at ON, labels worn off) each fed by a copper dropper that bends and may cross; N link, earthing terminal; cores with ferrule tags R, Y, B, N; armour earth lead. PPE stand beside the van.",
+     "flow": [
+      "GuideIntro: 'নতুন গলির কেবিল পিলারে জুড়তে হবে — ফেজ সিকোয়েন্স যেন ঠিক থাকে।'",
+      "Get ready: PPE stand, SFU handle, cores all touchable; hands in before PPE = deadly. Coworker moment A or B holds the first control.",
+      "SFU OFF (drag); landing a core with it ON = deadly. ◆ → reason.",
+      "Pluck (changed from a finger trace): tap a dropper — it twangs along its full length and the busbar mark it meets lights for that fuse unit; free.",
+      "Land (core): drag each lug onto a terminal (R/Y/B → fuse unit fed from that bar; N → N link; armour → earthing terminal). Wrong = slip, lug springs back.",
+      "Tighten: hold the insulated spanner until the nut seats; early release leaves it loose (no message).",
+      "After phases: ◆ → reason; after N + armour: ◆ → reason.",
+      "SFU ON; lane lights; loose lug shows red-white in a one-beat camera glance = slip, fix and switch again.",
+      "Shut and padlock (drag + hold); leaving before = slip. ◆ → reason. Pass panel."
+     ],
+     "dealtVariety": "Dropper permutation (6, crossing); spare way position; N link and earth sides; cable entry side; core order; SFU start; coworker moment and side; body; reason libraries.",
+     "deadly": [
+      "Hands into the live pillar without full PPE (incl. myth 1)",
+      "Landing a core on the spare way with its SFU ON (incl. 'চালু রেখেই জুড়ে দাও'; matches 3.7b)"
+     ],
+     "slips": [
+      "Phase core on a fuse unit fed from another bar",
+      "N core on a fuse unit or earth terminal",
+      "Armour on the N link or not landed",
+      "Loose lug found at switch-on",
+      "Leaving the door open or unlocked"
+     ],
+     "coworkerPushBn": "Myth 1 with English digits: 'এলটি বক্সের ভেতরে তো শুধু 415 ভোল্ট থাকে, এটা তেমন বিপজ্জনক নয়।' A: at the first reach before PPE (deadly). B: at the SFU — 'SFU বন্ধ করার দরকার নেই, চালু রেখেই জুড়ে দাও — 415 ভোল্টই তো।' (deadly). Next decisive control held.",
+     "reasonQuestionsBn": [
+      "কেন আগে এই ওয়েটা বন্ধ করলেন?",
+      "কেন এই ক্রমে জুড়লেন?",
+      "নিউট্রাল আর আর্মার কেন ওখানে?",
+      "কেন নাট পুরো টাইট দিলেন?",
+      "কেন দরজায় তালা দিলেন?"
+     ],
+     "gestureHints": "Get ready: sweep over PPE, SFU, cores. SFU waiting: sweep over SFU and cores. Pluck state: sweep over all droppers. Land: upward drag on a lug; sweep over all terminals. Tighten: hold ring on the spanner. Switch-on: sweep over SFU and door. Door: drag in its closing direction; padlock hold ring. Leave: sweep over van and door. Decks built-in.",
+     "lessonPoints": [
+      "বাসবার … R, Y, B এবং নিউট্রালের জন্য আলাদা",
+      "ফিউজ ইউনিট … ফেজ কানেকশন … বাসবার থেকে … HRC বা SFU",
+      "নিউট্রাল লিঙ্ক: সমস্ত … নিউট্রাল … কমন নিউট্রাল লিঙ্কে",
+      "আর্থিং টার্মিনাল: বডি এবং আর্মার",
+      "ফেজ সিকোয়েন্স (R-Y-B) ঠিক রাখুন",
+      "প্রতিটি আউটগোয়িং ফিডারকে আলাদাভাবে সুইচিং এবং ফিউজিং",
+      "লাইভ প্যানেলের মতোই বিপজ্জনক … PPE এবং ইনসুলেটেড টুলস",
+      "Myth 1 + reality",
+      "দরজা বন্ধ রাখুন",
+      "লুজ কানেকশন ও হটস্পট"
+     ],
+     "giveawayRisks": "Labels worn, droppers permuted and crossing; mark appears only on the plucked dropper; cores carry only ferrule tags; cross-traps cost; loose lug shows only at switch-on; PPE stand never tap-hinted; coworker held."
+    }
+   ],
+   "unsupported": [
+    "No temperature numbers for the thermal camera.",
+    "PPE for scanning not stated; drawn worn, unscored.",
+    "Water = deadly is an inferred chain.",
+    "SFU OFF before landing inferred; busbars stay live.",
+    "Worn labels and crossed droppers are premises.",
+    "Core colours not given — ferrule tags only.",
+    "Armour gland connection generic.",
+    "Torque, seat click, instant hotspot are depictions.",
+    "3-phase damage mechanism not given.",
+    "IR/megger (2.7, 3.7b), HRC sand, phase balance (4.10), busbar stress (board only) not in Do."
+   ],
+   "ownerDecisions": [
+    "6.9 nearly duplicates 3.7 — keep full, shorten, or merge?",
+    "Board rival myth 2 (bypass) — note 6.3 board and M3 3.4 board also teach the thick-wire myth; 6.9's other myth (415 V) was M3 3.7's board rival.",
+    "Water on a live joint = deadly (inferred) — or slip?",
+    "Landing a core with SFU ON = deadly.",
+    "Thick wire/strip in a fuse's place as a fix = deadly.",
+    "Slips listed; wrong R-Y-B = slip.",
+    "Two dealt coworker moments in do_6_9_b.",
+    "Art folders m6_board69 / m6_pillar_thermal / m6_pillar_newway."
+   ]
+  },
+  {
+   "lessonId": "6.10",
+   "titleBn": "এনার্জি মিটার: ক্যাশ রেজিস্টার",
+   "board": {
+    "artFolder": "assets/game/art/m6_board610/",
+    "mythBn": "মিটারের ওপর চুম্বক রাখলে মিটার স্লো হয়ে যায়।",
+    "rounds": [
+     {
+      "promptBn": "পুরনো আর আধুনিক মিটার — কোন ছবিটা ঠিক?",
+      "safe": [
+       "Electronic meter with LCD, chip board, no disc",
+       "Push-button cycling V then A",
+       "Smart meter signalling the office"
+      ],
+      "traps": [
+       {
+        "what": "Disc meter called modern",
+        "rejectBn": "ঘোরা অ্যালুমিনিয়ামের চাকতি পুরনো ইলেক্ট্রো-মেকানিক্যাল মিটারের চিহ্ন। আধুনিক ইলেকট্রনিক মিটারের ভেতরে কোনো চলমান অংশ নেই।"
+       },
+       {
+        "what": "Only kWh read on a fault call",
+        "rejectBn": "আধুনিক মিটার শুধু kWh নয় — ভোল্টেজ, কারেন্ট, পাওয়ার ফ্যাক্টর আর সর্বোচ্চ চাহিদাও রেকর্ড করে। এগুলো ফল্ট নির্ণয়ে সাহায্য করে।"
+       },
+       {
+        "what": "Disc meter put back as 'more accurate'",
+        "rejectBn": "ইলেকট্রনিক মিটার মাইক্রোপ্রসেসর দিয়ে হিসাব করে — অনেক বেশি নির্ভুল আর ট্যাম্পার-প্রুফ।"
+       }
+      ]
+     },
+     {
+      "promptBn": "মিটারের লাল বাতিটা কী বলছে — কোন ছবিটা ঠিক পড়া?",
+      "safe": [
+       "Loads on, CAL LED blinking",
+       "Many loads fast, one lamp slow",
+       "Face printed '3200 imp/kWh'"
+      ],
+      "traps": [
+       {
+        "what": "All switches off, LED fast, ticked 'সব ঠিক'",
+        "rejectBn": "লোড বন্ধ থাকা সত্ত্বেও CAL LED খুব দ্রুত ব্লিঙ্ক করলে বাড়িতে আর্থ লিকেজ বা বিদ্যুৎ চুরির সম্ভাবনা থাকে।"
+       },
+       {
+        "what": "Normal blinking written as faulty",
+        "rejectBn": "CAL LED বিদ্যুৎ খরচের সাথে সাথে ব্লিঙ্ক করে — এটাই মিটারের ভাষা, খারাপের চিহ্ন নয়।"
+       },
+       {
+        "what": "'Tamper' on the LCD shrugged off",
+        "rejectBn": "ডিসপ্লেতে 'Tamper' বা 'Error' লেখা দেখানো মিটারের অস্বাভাবিক আচরণ — ট্যাম্পারিং-এর লক্ষণ।"
+       }
+      ]
+     },
+     {
+      "promptBn": "গ্রাহক বলছেন 'মিটার দ্রুত চলছে' — কোনগুলো ঠিক কাজ?",
+      "safe": [
+       "All loads off, then the LED",
+       "LED steady; 100 W bulb run for an hour",
+       "Explaining the old fridge and pump"
+      ],
+      "traps": [
+       {
+        "what": "Verdict with fan and TV still on",
+        "rejectBn": "প্রথমে গ্রাহকের বাড়ির সমস্ত লোড বন্ধ করুন, তারপর দেখুন CAL LED ব্লিঙ্ক করছে কিনা।"
+       },
+       {
+        "what": "Unscrewing the meter with no check",
+        "rejectBn": "পদ্ধতিগতভাবে পরীক্ষা করলেই মূল কারণ বেরোয় — লোড বন্ধে LED, তারপর জানা লোডের পরীক্ষা।"
+       },
+       {
+        "what": "Verdict after five minutes",
+        "rejectBn": "জানা ওয়াটের লোড (যেমন 100 ওয়াটের বাল্ব) এক ঘণ্টা চালিয়ে দেখুন রিডিং ঠিকমতো বাড়ছে কিনা।"
+       },
+       {
+        "what": "Blaming the weather",
+        "rejectBn": "ভুল। এনার্জি মিটারের কার্যকারিতা আবহাওয়ার ওপর নির্ভর করে না। এটি শুধুমাত্র ব্যবহৃত শক্তির পরিমাণ পরিমাপ করে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ডিসপ্লে ফাঁকা, বা বাড়িতে আলো নেই — কোন পরীক্ষাটা ঠিক?",
+      "safe": [
+       "Blank LCD: tester on the incoming terminals",
+       "No voltage: look up the service cable",
+       "Meter on, house dark: check the neutral"
+      ],
+      "traps": [
+       {
+        "what": "New meter fitted without measuring",
+        "rejectBn": "প্রথমে মিটারের ইনকামিং টার্মিনালে ভোল্টেজ পরীক্ষা করুন। ভোল্টেজ না থাকলে সমস্যা সার্ভিস কেবিল বা পোলের কানেকশনে — মিটারে নয়।"
+       },
+       {
+        "what": "Voltage present, yet heading to the pole",
+        "rejectBn": "ইনকামিংয়ে ভোল্টেজ ঠিক থাকলে মিটারের ভেতরের ফিউজ বা সার্কিট খারাপ হতে পারে।"
+       },
+       {
+        "what": "Meter on, house dark, written 'মিটার খারাপ'",
+        "rejectBn": "'পাওয়ার নেই, কিন্তু মিটার অন' — এটি সাধারণত নিউট্রাল কেটে যাওয়ার লক্ষণ।"
+       }
+      ]
+     },
+     {
+      "promptBn": "মিটার বক্সে চুরির লক্ষণ — কোন কাজগুলো ঠিক?",
+      "safe": [
+       "Broken seal reported",
+       "Bypass wire seen, reported from a distance",
+       "Magnet on the meter reported"
+      ],
+      "traps": [
+       {
+        "what": "Walking off from a missing seal",
+        "rejectBn": "মিটারের বডি বা টার্মিনাল কভারের সিল ভাঙা বা না থাকা ট্যাম্পারিং-এর প্রথম এবং প্রধান লক্ষণ — অবিলম্বে কর্তৃপক্ষকে রিপোর্ট করুন।"
+       },
+       {
+        "what": "Pulling the bypass bare-handed",
+        "rejectBn": "চোরেরা প্রায়ই বিপজ্জনক, অপেশাদার ওয়্যারিং করে — এটা আপনার জন্যও ঝুঁকি। সন্দেহজনক জায়গায় অতিরিক্ত সতর্ক থাকুন, রিপোর্ট করুন।"
+       },
+       {
+        "what": "Pocketing the magnet",
+        "rejectBn": "বিদ্যুৎ চুরি দণ্ডনীয় অপরাধ — সন্দেহজনক কিছু দেখলে অবিলম্বে কর্তৃপক্ষকে রিপোর্ট করুন। অনেক মিটার ট্যাম্পারের চেষ্টা রেকর্ডও করে রাখে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "পুরনো মিটার খুলে নতুন বসাবেন — কোনগুলো ঠিক?",
+      "safe": [
+       "Incoming switch down before hands in",
+       "Photo of the old final reading",
+       "Photo of the new first reading"
+      ],
+      "traps": [
+       {
+        "what": "Screwdriver on terminals with the switch ON",
+        "rejectBn": "মিটার বক্সে কাজের আগে, সম্ভব হলে পোলের ফিউজ খুলে বা মিটারের ইনকামিং সুইচ বন্ধ করে লাইনটিকে সম্পূর্ণ বিচ্ছিন্ন করুন।"
+       },
+       {
+        "what": "Old meter bagged, no reading",
+        "rejectBn": "পুরনো মিটারের ফাইনাল রিডিং আর নতুন মিটারের প্রাথমিক রিডিং-এর ছবি তুলে রাখুন — বিলিং-এর সমস্যা এড়ায়।"
+       },
+       {
+        "what": "'রিডিং মনে আছে'",
+        "rejectBn": "মিটার বদলের সময় দুই রিডিং-এর ছবিই প্রমাণ — মুখে মনে রাখা রিডিং নিয়ে পরে বিলিং-এর ঝামেলা হয়।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_10_a",
+     "engineType": "m6_meter_pulse",
+     "titleBn": "মিটারের নাড়ি",
+     "verb": "switch off every load, read the pulse",
+     "scene": "Evening house call: cutaway village house panned by swipe; veranda meter (LCD, push-button, red CAL LED with '3200 imp/kWh', sealed cover); rooms with fan, tube light, TV, old fridge behind a curtain, yard pump with its own switch; wall clock; customer with a bill. Trainee with a 100 W bulb on a lead and an insulated tester.",
+     "flow": [
+      "GuideIntro: 'গ্রাহক বলছেন মিটার দ্রুত চলছে — নিজে মেপে দেখুন!'",
+      "3 calls: 1–2 fast calls (≥ 1 with a steady LED) + 1 blank or dark-house call.",
+      "Fast — load hunt (core): swipe through rooms, tap each appliance switch off; running loads show only real cues; one load out of the first view. Tap 'মিটারে যাই'.",
+      "Watch the pulse: CAL LED shown ~6 s (input locked); steady, or blinking with all off (leak), or blinking from a load left on.",
+      "Verdict deck: 'লোড বন্ধেও বাতি চলছে — লিকেজ বা বন্ধ যন্ত্রও টানছে' / 'বাতি স্থির — জানা লোডে এক ঘণ্টা পরীক্ষা' / 'মিটারই খারাপ — বদলের রিপোর্ট'. Verdict with a load on = slip. Leak → ◆ → reason → explain the customer's appliances.",
+      "Known load (steady): drag the bulb's plug to the socket; coworker comes here (clock held); drag the minute hand a full turn (short = slip). The LCD's kWh rises; judge deck 'ঠিকমতো বেড়েছে — মিটার ঠিক, গ্রাহককে বুঝিয়ে বলি' vs wrongs → ◆ → reason. (Note-taking and LCD screen cycling removed — they repeated do_6_7_b's read-act-read loop; screen cycling lives in do_6_10_b.)",
+      "Blank call: drag tester probes to the incoming terminals; lamp lit/dark; tap the fault place (meter vs service cable/pole). Dark-house: deck 'নিউট্রাল কেটে গেছে' vs wrongs. ◆ → reason.",
+      "Pass panel or fail with পাঠ."
+     ],
+     "dealtVariety": "Loads (3–5) and the hidden one; LED truth; second call type and tester result; coworker side, call and wording; mirror; customer line.",
+     "deadly": [],
+     "slips": [
+      "Verdict while any load runs",
+      "'মিটারই খারাপ' before the lesson's checks",
+      "Wrong LED reading",
+      "Ending the known-load test before a full hour",
+      "Listening to the coworker",
+      "Blank call: wrong fault place",
+      "Dark-house: not the neutral"
+     ],
+     "coworkerPushBn": "Once per play on a steady-LED call after the bulb is plugged in, before the clock (held): 'এক ঘণ্টা কে বসে থাকবে? পাঁচ মিনিট দেখেই লিখে দাও মিটার খারাপ!' (alt 'ঘড়ি ঘোরানোর দরকার নেই, বাল্ব জ্বলছে মানেই মিটার ঠিক — চলো!'). Refuse 'পুরো এক ঘণ্টা চালিয়ে রিডিং দেখব'. Listening = slip.",
+     "reasonQuestionsBn": [
+      "কেন আগে বাড়ির সব লোড বন্ধ করলেন?",
+      "লোড বন্ধেও বাতি জ্বলছে-নিভছে — এর মানে কী?",
+      "কেন জানা লোড পুরো এক ঘণ্টা চালালেন?",
+      "ডিসপ্লে ফাঁকা — কেন আগে ইনকামিংয়ে ভোল্টেজ দেখলেন?",
+      "মিটার অন, অথচ আলো নেই — কেন নিউট্রাল?"
+     ],
+     "gestureHints": "Load hunt: swipe hint, then sweep over every switch (on and off alike); no tap on 'মিটারে যাই'. LED window: none. Decks built-in. Bulb: generic drag nudge. Clock: short arc only. Probes: generic nudge; fault spot: sweep over meter, cable, pole top. Off during intro, coworker beat 1, cards, results.",
+     "lessonPoints": [
+      "প্রথমে, গ্রাহকের বাড়ির সমস্ত লোড বন্ধ করুন। এবার দেখুন CAL LED ব্লিঙ্ক করছে কিনা।",
+      "যদি করে … আর্থ লিকেজ বা … বন্ধ অবস্থায়ও বিদ্যুৎ টানছে।",
+      "যদি না করে … ১০০ ওয়াটের বাল্ব … এক ঘন্টা চালিয়ে দেখুন",
+      "CAL LED … সমানুপাতিক (3200 imp/kWh)",
+      "ইনকামিং টার্মিনালে ভোল্টেজ … ভোল্টেজ না থাকলে … সার্ভিস কেবিল বা পোলের কানেকশনে",
+      "'পাওয়ার নেই, কিন্তু মিটার অন': নিউট্রাল কেটে যাওয়ার লক্ষণ",
+      "গ্রাহককে তার নিজের যন্ত্রপাতি … বুঝিয়ে বললে"
+     ],
+     "giveawayRisks": "No load counter; hidden load only by real cues; LED never captioned, same window every truth; clock has no target arc; blank-call spot unhighlighted, tester lamp only; decks from libraries; coworker held on the clock."
+    },
+    {
+     "packId": "do_6_10_b",
+     "engineType": "m6_meter_swap_proof",
+     "titleBn": "মিটার বদল, ছবিতে প্রমাণ",
+     "verb": "tug seals, then snap readings around switch-off",
+     "scene": "A lane of three house walls: meter box (old disc meter with drum counter, or old electronic with LCD + push-button), seals on body and terminal cover, service cable from a pole (pole fuse not operable), incoming switch, consumer's main switch box, harmless dark decoys. Phone in hand (auto-framed on the meter face: one tap, no viewfinder/zoom — framing stays unique to do_6_1_a). New meter in its carton; insulated screwdriver; docket 'মিটার বদল'.",
+     "flow": [
+      "GuideIntro: 'আজ তিনটে মিটার বদল — প্রতিটা রিডিংয়ের ছবি চাই!'",
+      "Look before touching: hold a finger on each seal to tug (intact stays tight; broken swings or hole empty); press the push-button to scroll (a 'Tamper'/'Error' screen may appear); look for a bypass before the incoming terminal or a magnet (top/side/under). Then 'বদল শুরু' or 'অফিসে রিপোর্ট'.",
+      "Tamper job (1–2 of 3): report → action deck 'কর্তৃপক্ষকে রিপোর্ট করে দূরে থাকি' (right) / 'চুম্বক সরিয়ে বদল শুরু করি' / 'বাইপাসের তারটা টেনে খুলে দিই' (deadly) / 'সিল তো পুরনো, বদলে দিই' → ◆ → reason; job closes. 'বদল শুরু' on a tampered meter = slip; a false report = slip.",
+      "Clean job — proof (core): press to the kWh screen, tap the phone; the photo shows exactly that screen. Electronic old meter goes blank once the incoming switch is OFF, so snap first (switching off first costs time + combo to switch back).",
+      "Isolate: drag the incoming switch OFF before 'বক্স খুলুন' (ON = slip). Swap cutaway (unscored).",
+      "Switch ON; new LCD wakes; scroll to kWh; snap.",
+      "Job card shows both photos; missing or non-kWh photo = slip. ◆ → reason → next wall.",
+      "Coworker once; pass/fail panel."
+     ],
+     "dealtVariety": "Old meter type; tamper jobs and sign; start screen; kWh values; decoys; coworker line, job, side; wall order.",
+     "deadly": [
+      "Pulling a suspected bypass wire with bare hands (deck or coworker) — consistent with M3 3.8b bare hand on a live neutral"
+     ],
+     "slips": [
+      "Starting a change on a tampered meter",
+      "Reporting a clean meter as tampered",
+      "Removing the magnet / resealing yourself",
+      "Opening the box with the incoming switch ON (insulated tool)",
+      "Missing old-final or new-initial photo",
+      "A photo of a non-kWh screen",
+      "Listening to the coworker (skip photos / hide magnet)"
+     ],
+     "coworkerPushBn": "Magnet job, at 'অফিসে রিপোর্ট' (deck held): 'মিটারের ওপর চুম্বক রাখলে মিটার স্লো হয়ে যায় — ও পুরনো কথা! চুম্বকটা সরিয়ে দাও, রিপোর্টের ঝামেলা কে করে?' Otherwise on a clean job as the phone is raised for the old reading (phone held): 'ছবি-টবি ছাড়ো, রিডিং মুখে মনে রাখো — তাড়াতাড়ি বদলাও!' Listening = slip.",
+     "reasonQuestionsBn": [
+      "কেন পুরনো মিটারের শেষ রিডিংয়ের ছবি তুললেন?",
+      "কেন সুইচ বন্ধের আগেই ছবি তুললেন?",
+      "কেন সিল ভাঙা দেখে বদল না করে রিপোর্ট করলেন?",
+      "কেন বক্স খোলার আগে ইনকামিং সুইচ বন্ধ করলেন?",
+      "কেন বাইপাসের তারে হাত দিলেন না?"
+     ],
+     "gestureHints": "Look: sweep over seals, body, cable run, decoys, ending in a hold ring on empty wall. 'বদল শুরু'/'অফিসে রিপোর্ট': sweep. Phone vs switch: sweep over both. Push-button: tap ripple. Incoming switch when the only way forward: short drag. Decks built-in.",
+     "lessonPoints": [
+      "পুরনো মিটারের ফাইনাল রিডিং এবং নতুন মিটারের প্রাথমিক রিডিং-এর ছবি",
+      "যদি সম্ভব হয়, পোলের ফিউজ খুলে বা মিটারের ইনকামিং সুইচ বন্ধ করে … বিচ্ছিন্ন",
+      "ভাঙা বা অনুপস্থিত সিল … প্রথম এবং প্রধান লক্ষণ",
+      "মিটার বাইপাস",
+      "'Tamper' বা 'Error'",
+      "শক্তিশালী চুম্বক",
+      "অবিলম্বে কর্তৃপক্ষকে রিপোর্ট",
+      "বিপজ্জনক এবং অপেশাদার পদ্ধতিতে ওয়্যারিং",
+      "Push-button shows kWh, kW, V, A",
+      "Myth + reality"
+     ],
+     "giveawayRisks": "Seals alike until tugged; bypass matches real wiring; magnet place varies among harmless dark objects; 'Tamper' only when scrolled; false reports cost; photo shows the raw screen with no label; snap-before-switch order unmarked; coworker held."
+    }
+   ],
+   "unsupported": [
+    "Known-load rise size (0.1 kWh) and action when it does not rise are not in the lesson — the check always ends 'ঠিক' until the owner says.",
+    "After-leak action not given beyond explaining appliances.",
+    "Reaching incoming terminals without breaking the seal not described.",
+    "No voltage values; tester lamp only.",
+    "LCD blanking on isolation is inferred.",
+    "After-report steps not given; photos only for billing.",
+    "New-meter wiring/sealing not described.",
+    "Pole fuse operation not described.",
+    "Gloves for meter-box work are an M3 house rule.",
+    "Neutral repair out of scope.",
+    "Smart meter remote, CT/PT factors, tamper log, Reverse/Earth Leakage indicators unused.",
+    "kWh numbers are game data."
+   ],
+   "ownerDecisions": [
+    "do_6_10_a has no deadly.",
+    "Bare-hand bypass pull = deadly.",
+    "Opening the box with incoming ON (insulated tool) = slip.",
+    "Known-load test: deal a bad rise sometimes? If yes, what is the right action?",
+    "Switch-off before the old photo: time only (as designed) or slip?",
+    "Board rival myth 1; myth 2 as a board trap.",
+    "Reporting tamper ends the job (no change)?",
+    "Overlap with 3.8b fast-meter call accepted (deeper load hunt)."
+   ]
+  },
+  {
+   "lessonId": "6.11",
+   "titleBn": "আর্থিং সিস্টেম: অদৃশ্য অভিভাবক",
+   "board": {
+    "artFolder": "assets/game/art/m6_board611/",
+    "mythBn": "যেকোনো একটি লোহার রড মাটিতে পুঁতে দিলেই ভালো আর্থিং হয়ে যায়।",
+    "rounds": [
+     {
+      "promptBn": "ফল্ট হলে সুরক্ষা ঠিক কাজ করবে — কোন ব্যবস্থা ঠিক?",
+      "safe": [
+       "Pillar body bonded by strip (equipment earthing)",
+       "DTR neutral earthed (system earthing)",
+       "Double earthing from two separate pits"
+      ],
+      "traps": [
+       {
+        "what": "New breaker, body unearthed",
+        "rejectBn": "আর্থিং ছাড়া কোনো সুরক্ষা ডিভাইস (ফিউজ, ব্রেকার, LA) সঠিকভাবে কাজ করতে পারে না — এটিই সুরক্ষার ভিত্তি।"
+       },
+       {
+        "what": "Pole earth wire cut, line running",
+        "rejectBn": "লাইন স্বাভাবিক চলবে, কিন্তু ফল্টের সময় আর্থিং কাজ না করলে সার্কিট ব্রেকার ট্রিপ করবে না।"
+       },
+       {
+        "what": "LA with no earth below",
+        "rejectBn": "আর্থিং ছাড়া LA-ও কাজ করতে পারে না — আর্থিং-ই পুরো সুরক্ষা সিস্টেমের ভিত্তি।"
+       }
+      ]
+     },
+     {
+      "promptBn": "নতুন আর্থিং বসছে — কোনটা ঠিক পদ্ধতি?",
+      "safe": [
+       "Perforated GI pipe 2.5-3 m driven vertical",
+       "Copper plate (60cm x 60cm) buried deep where very low resistance is needed (wording changed from 'সাবস্টেশনে', which the lesson does not say)"
+      ],
+      "traps": [
+       {
+        "what": "Any rusty iron rod",
+        "rejectBn": "কার্যকর আর্থিং-এ সঠিক উপাদান (GI বা কপার) চাই — শুধু একটা রড পুঁতে দেওয়া নয়, এটা বিজ্ঞান।"
+       },
+       {
+        "what": "GI pipe laid flat",
+        "rejectBn": "পাইপ আর্থিং-এ GI পাইপ মাটিতে উল্লম্বভাবে পোঁতা হয় — সঠিক ইনস্টলেশন পদ্ধতিও জরুরি।"
+       },
+       {
+        "what": "Short stub, half above ground",
+        "rejectBn": "মাটির সাথে বিশাল পৃষ্ঠতলের সংযোগ চাই — তাই সঠিক দৈর্ঘ্যের (সাধারণত 2.5-3 মিটার) পাইপ মাটিতে পুঁততে হয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "পেট্রোলিং-এ পোলের আর্থ জোড় দেখছেন — কোনটা ঠিক?",
+      "safe": [
+       "Clean tight brass nut-bolt joint",
+       "Welded joint"
+      ],
+      "traps": [
+       {
+        "what": "Rusty ordinary iron nut",
+        "rejectBn": "সাধারণ নাট-বল্টুতে মরিচা ধরে — আর্থিং-এ পিতল বা স্টেইনলেস স্টিলের নাট-বল্টু দিন।"
+       },
+       {
+        "what": "Earth wire only twisted",
+        "rejectBn": "জোড় অত্যন্ত মজবুত, পরিষ্কার ও টাইট চাই — লুজ জোড় আর্থিং-এর রেজিস্ট্যান্স বহুগুণ বাড়ায়।"
+       },
+       {
+        "what": "Torn strip hanging",
+        "rejectBn": "আর্থিং তার বা পাত কোথাও কাটা, ছেঁড়া বা অতিরিক্ত মরিচা ধরা উচিত নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "আর্থ পিট গড়ছেন ও যত্ন নিচ্ছেন — কোনটা ঠিক?",
+      "safe": [
+       "Charcoal and salt layers round the electrode",
+       "Water by funnel on a dry day",
+       "Concrete chamber, clean, lid on"
+      ],
+      "traps": [
+       {
+        "what": "Only sand fill",
+        "rejectBn": "বালুকাময় মাটির রেজিস্ট্যান্স বেশি — ইলেক্ট্রোড ঘিরে কাঠকয়লা ও লবণ পরিবাহিতা বাড়ায়, আর্দ্রতা ধরে রাখে।"
+       },
+       {
+        "what": "Broken chamber, no lid, rubbish",
+        "rejectBn": "আর্থ পিটের চারপাশ পরিষ্কার, কংক্রিটের চেম্বারে সুরক্ষিত আর ঢাকনা ঠিকমতো লাগানো থাকবে।"
+       },
+       {
+        "what": "Cracked dry pit never watered",
+        "rejectBn": "শুকনো আবহাওয়ায় পিটে জল দিলে চারপাশের মাটির আর্দ্রতা বাড়ে, আর্থ রেজিস্ট্যান্স কমে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "পাথুরে মাটিতে নতুন আর্থিং — মান ঠিক রাখতে কোনটা ঠিক?",
+      "safe": [
+       "Several electrodes joined in rocky soil",
+       "Bentonite treatment in sandy soil",
+       "Earth megger within 5 ohm"
+      ],
+      "traps": [
+       {
+        "what": "One electrode, no treatment, rocky soil",
+        "rejectBn": "পাথুরে বা বালির মাটিতে রেজিস্ট্যান্স বেশি — একাধিক ইলেক্ট্রোড বা বেন্টোনাইট ট্রিটমেন্ট লাগে।"
+       },
+       {
+        "what": "Left unmeasured",
+        "rejectBn": "আর্থ মেগারে রেজিস্ট্যান্স মাপাই আর্থিং-এর স্বাস্থ্য পরীক্ষার সবচেয়ে নির্ভরযোগ্য উপায়।"
+       },
+       {
+        "what": "High reading signed off",
+        "rejectBn": "আর্থ রেজিস্ট্যান্স নির্দিষ্ট সীমার (যেমন 5 ওহম) মধ্যে থাকা উচিত — বেশি হলে আর্থিং দুর্বল।"
+       }
+      ]
+     },
+     {
+      "promptBn": "সাবস্টেশনে ফল্টের বিপদ কমানো — কোনটা ঠিক ব্যবস্থা?",
+      "safe": [
+       "Gravel spread in the switchyard",
+       "Buried copper/steel earth mat"
+      ],
+      "traps": [
+       {
+        "what": "Touching faulty equipment during a fault",
+        "rejectBn": "ফল্টের সময় হাত আর পায়ের মধ্যে ভোল্টেজ পার্থক্য — টাচ পটেনশিয়াল — মারাত্মক শক দিতে পারে।"
+       },
+       {
+        "what": "Walking by an electrode during a fault",
+        "rejectBn": "ইলেক্ট্রোডের চারপাশের মাটিতে ভোল্টেজ গ্রেডিয়েন্ট — দুই পায়ের মাঝে স্টেপ পটেনশিয়াল মারাত্মক।"
+       },
+       {
+        "what": "Gravel cleared to bare soil",
+        "rejectBn": "পাথরের কুচি মাটির পৃষ্ঠের রেজিস্ট্যান্স বাড়িয়ে টাচ ও স্টেপ পটেনশিয়ালের বিপদ কমায়।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_6_11_a",
+     "engineType": "m6_earth_build",
+     "titleBn": "মাটির ভেতরে রক্ষক",
+     "verb": "build an earth pit in cut-away soil",
+     "scene": "New installation not yet charged (pole / LT pillar / new DTR). Ground as a cut-away slab (loam, rocky or sandy texture; dry season cracked). Tarp with electrodes, tape, sledge hammer, plumb line on a tripod, sacks, nut tray, spanner, chamber ring + lid, earth megger.",
+     "flow": [
+      "GuideIntro: 'নতুন আর্থিং বসাতে হবে — মাটি বুঝে ঠিকঠাক গড়ুন।'",
+      "Electrode: 3 unlabelled (perforated GI 2.7 m + two of plain rusty rod / short GI 1.2 m / unperforated bent bar); drag the tape to read length; drag one into the hole. Wrong = slip. ◆ → reason.",
+      "Coworker A (half the plays) at the first electrode touch (hammer and drag held).",
+      "Drive: hold the hammer; drift tips the pipe; drag it back to the plumb line. Blow while off-plumb = slip (once per play).",
+      "Layers: sacks কাঠকয়লা, লবণ, বালি, পাথরের কুচি, বেন্টোনাইট on EVERY deal (judge fix: bentonite appearing only on rocky/sandy deals gave the soil away). Charcoal + salt required (order free); sand/gravel = slip; bentonite on any soil not scored. ◆ → reason.",
+      "Joints: nut packets পিতল / স্টেইনলেস / লোহা; circle-swipe the spanner until snug. Iron = slip. ◆ → reason. Coworker B (other half) after the bottom joint, top spanner held.",
+      "Seal: ring + lid. DTR deal: tap a separate spot for the second pit (same pit = slip); fast replay.",
+      "Test: TEST on the megger (bare number). 'সই করুন' / 'মান কমান'. Good deals 1.8–3.9 Ω (signing right); high deals 12–28 Ω (signing = slip). Remedy tray (always all four): জল, বেন্টোনাইট, আরেকটা ইলেক্ট্রোড, পাথরের কুচি; fitting one → under 5 Ω → ◆ → reason; gravel = slip.",
+      "Sign-off → 'ফল্ট হলে' replay → pass panel; deadly path replays frozen then in colour."
+     ],
+     "dealtVariety": "Site; soil and weather (~half need a remedy); decoy electrodes and positions; sack and nut order; drift; coworker A or B and side; DTR dig spots; megger readings never 5–8 Ω.",
+     "deadly": [
+      "Signing off / charging with the earth path broken (a joint left unbolted), incl. listening to coworker B — myth 1 reality; same as 4.6b"
+     ],
+     "slips": [
+      "Wrong electrode (incl. coworker A)",
+      "Driving off-plumb (once per play)",
+      "Sand or gravel fill",
+      "Iron nut on an earth joint",
+      "No chamber or lid at sign-off",
+      "DTR second earth in the same pit",
+      "Signing a high reading",
+      "Gravel as a remedy"
+     ],
+     "coworkerPushBn": "A (before the first blow): 'যেকোনো একটি লোহার রড মাটিতে পুঁতে দিলেই ভালো আর্থিং হয়ে যায়।' (slip). B (before the top joint): 'আর্থিং তারটা তো শুধু সুরক্ষার জন্য, ওটা একটু কাটা বা আলগা থাকলেও লাইন চলতে কোনো অসুবিধা হয় না।' (deadly). Next decisive control held.",
+     "reasonQuestionsBn": [
+      "কেন এই ইলেক্ট্রোড নিলেন?",
+      "ইলেক্ট্রোড ঘিরে এই স্তর কেন?",
+      "কেন এই নাট-বল্টু?",
+      "দ্বিতীয় পিট আলাদা কেন?",
+      "মান কমাতে এটা কেন করলেন? / কেন এই মানে সই করলেন?"
+     ],
+     "gestureHints": "Tarp: sweep over electrodes; tape end generic right drag. Hammer: hold ring. Tipped pipe: left-right wiggle (both ways). Sacks: sweep; picked: hold ring on pour. Nuts: sweep; placed: circular swipe. Ring/lid: upward drag. Dig spots: sweep. Megger: tap TEST. Sign/lower: sweep. Remedies: sweep. Decks built-in.",
+     "lessonPoints": [
+      "আর্থিং ছাড়া কোনো সুরক্ষা ডিভাইস … কাজ করতে পারে না।",
+      "লো-রেজিস্ট্যান্স পথ … ফিউজ বা ব্রেকার ট্রিপ করে।",
+      "২.৫-৩ মিটার … GI ছিদ্রযুক্ত পাইপ … উল্লম্বভাবে",
+      "কাঠকয়লা এবং লবণের স্তর",
+      "কানেকশনগুলো অত্যন্ত মজবুত, পরিষ্কার এবং টাইট",
+      "পিতল বা স্টেইনলেস স্টিলের নাট-বল্টু",
+      "কংক্রিটের চেম্বার … ঢাকনা",
+      "দুটি আলাদা আর্থ পিট থেকে ডাবল আর্থিং",
+      "পাথুরে বা বালুকাময় … একাধিক ইলেক্ট্রোড … বেন্টোনাইট",
+      "শুকনো আবহাওয়ায় … জল",
+      "আর্থ মেগার … যেমন ৫ ওহম",
+      "Myths 1 and 2"
+     ],
+     "giveawayRisks": "Electrodes unlabelled, dealt order; sacks/nuts plain words, shuffled; bentonite and full remedy tray on every deal; soil never named; megger number only; ~half deals need no remedy; gravel costs; plumb line real; coworker held."
+    }
+   ],
+   "unsupported": [
+    "Who builds an earth pit and whether shutdown is needed — site drawn uncharged.",
+    "Depth, pit size, layer quantities, layer order not given.",
+    "Plumb tolerance not given.",
+    "1.2 m / 2.7 m pipes and megger readings are scene values (6.11 '5 ওহম' vs 4.6 '5–8 Ω').",
+    "Megger connection (4.6a) left out.",
+    "Remedy effects and non-fitting remedies are scene behaviour.",
+    "Gravel as a wrong fill inferred.",
+    "Double-earthing layout (6.11 two pits vs 4.6 film four).",
+    "Grease only for maintenance.",
+    "Plate earthing and copper only on the board; plate site wording not tied to substations.",
+    "Safe movement near a faulted earth not given.",
+    "Device that trips in the replay generic."
+   ],
+   "ownerDecisions": [
+    "Broken earth path signed off = deadly (4.6b); weak but connected = slips (4.6a). Conflict: 3.5b scored listening to 'একটু কাটা' as a slip — settle one rule for Modules 3, 4 and 6.",
+    "Board myth 2 (4.6 board used myth 1).",
+    "One Do level enough given 4.6?",
+    "Lineman builds the pit, or supervises a contractor?",
+    "Limit shown: 5 Ω vs 5–8 Ω.",
+    "Needless 'মান কমান' costs time and bonus only?",
+    "DTR: two pits or four?"
+   ]
+  }
+ ],
+ "gate": {
+  "packId": "gate_m6",
+  "engineType": "m6_gate_storm_feeder",
+  "titleBn": "ঝড়ের রাত: ফিডার ফেরান",
+  "verb": "drag crew tools onto feeder equipment",
+  "scene": "One feeder after a stormy night, a ~4-screen panorama panned by swipe (wet sky, far roofs parallax, the feeder, van and crew). Left to right: substation window (feeder breaker panel with equal red/green lamps; relay case with R/Y/B flags and a fault-type window 'ওভারলোড'/'শর্ট সার্কিট', lens needed); recloser R-12 just outside with control box, counter and handle (up = normal, down = locked out); road crossing where the main line dips into a UG cable between two riser terminations (excavator in some deals); AB-1 on a DP with ground handle and earth lead; pole capacitor bank with its plate 'বিপদ! সঞ্চিত শক্তি। স্পর্শ করার আগে 5-10 মিনিট অপেক্ষা করুন'; junction pole with sectionalizer S-3 and branch A; AB-2; tie AB-T to ফিডার-5 (normally open); DTR with HG sets, drain valve, earth strip, LT box with HRC dots and main switches; LT pillar with 3–4 ways; one AB-cable lane to houses with veranda meters. Windows/lamps are the live cue. Bottom: six fixed same-size toolbelt tokens চোখ · রেডিও · হাতল · আর্থ সেট · ডিসচার্জ রড · ক্রু. Top left: ডকেট with the call only ('ফিডার-2 ট্রিপ · এলাকা অন্ধকার · নিরাপদে আলো ফেরান') and a plain section sketch without states. Wristwatch shows game time. No countdown, no captions; only worker-readable plates and labels.",
+  "flow": [
+   "GuideIntro over the live scene: 'ঝড়ে ফিডার বন্ধ! ফল্ট খুঁজুন, নিরাপদে সারান, ঠিক ক্রমে আলো ফেরান।'",
+   "One verb: drag a token onto any device = one step (van drives, crew acts, game minutes pass). All tokens live on all devices from the first second. চোখ = lens; রেডিও = hold PTT then a 3-chip request pick (all of the device's requests always offered); হাতল = the device's own control; আর্থ সেট; ডিসচার্জ রড; ক্রু = climb/work + 'কী কাজ?' deck.",
+   "Beat A find: 'ফল্টটা কোথায়? যন্ত্রগুলো কী বলছে, দেখুন।' Read states with চোখ, drag the ডকেট chalk onto one section. Wrong = slip; right → ◆ → reason 'কী দেখে বুঝলেন?' → এগিয়ে যান.",
+   "Beat B make it dead: 'ক্রু কাজ ধরবে — লাইনটা সত্যি মরা তো?' Rules applied to the dealt path, order free where the lesson gives none: relay indication logged after a breaker trip; recloser line → Non-Reclose + PTW (reply complete or incomplete); isolators open at both ends only after OFF is confirmed; চোখ on all three gaps (stuck phase ~1 in 4); AB-T checked (sometimes left closed); earths both sides; capacitor bank switched off, ≥ 5 game minutes on the watch, rod on every terminal; LT way: main switch OFF, PPE + puller in the ক্রু deck.",
+   "Coworker two-beat moment once per play on the path's decisive control (that control calls holdForCoworker first).",
+   "Beat C fix the cause: ক্রু on the faulty device → 'কী কাজ?' deck dealt to the cause (e.g. burnt oil → 'অফ-লোড রেখে DGA/BDV পরীক্ষার রিপোর্ট' vs 'নতুন HG তার বেঁধে আবার চার্জ' (deadly) / 'ট্যাঙ্ক খুলে কয়েলটা দেখি' (deadly); UG struck → 'সার্টিফায়েড জয়েন্টার ডাকুন' vs 'আমরাই জয়েন্ট করে দিই' (slip); AB nick → 'গ্লাভস পরে জলরোধী টেপে সিল' vs 'ইনসুলেটেড তো, খালি হাতেই টেপ' (deadly) / 'কাটা থাক, ফিউজ বদলাই' (slip); coordination fault → remove the jugaad first, then the right fuse wire). ◆ → reason.",
+   "Beat D restore: 'আলো ফেরানোর পালা — কোনটা আগে?' Crew down, earths off; isolators closed first with চোখ on all blades seated; then breaker ON or R-12 back to normal by radio; fuses back only after the cause is fixed, right rating. Windows light section by section.",
+   "Twist (~half the plays): one house stays dark — LCD lit ('মিটার অন, আলো নেই') or blank; ক্রু → deck 'নিউট্রাল কাটা — নিউট্রাল দেখি' / 'আগে ইনকামিংয়ে ভোল্টেজ দেখি' vs 'মিটারই খারাপ, বদলে দিই' (slip).",
+   "Pass panel (rank + badge from the module plan, mark 100 − 15 × slips, game and real time, ◆, 'আজ যা ধরলেন', stars); 3 slips → StruckOutCard; deadly → FreezeFrame, consequence, DoDeathGuard, fall C."
+  ],
+  "dealtVariety": "Fault family (one of six; never the same twice in a row, best effort): F-A permanent on branch A (S-3 open, rest lit, counter moved, handle up); F-B permanent on the main section (R-12 locked out, handle down; sometimes still mid-cycle on arrival); F-C UG crossing struck (breaker green, 1–3 flags + 'শর্ট সার্কিট'); F-D DTR internal (one HG gone, dark burnt drain oil, only the DTR's lanes dark); F-E coordination fault (HG gone, oil not dark, house short repaired, jugaad hidden in LT box or kit-kat); F-F one LT way dark (HRC dot gone, AB-cable nick with water). Device states: AB-T open/closed; bank in section or not, swollen or sound; handle earth leads intact/cut/loose; stuck phase; DTR earth strip whole/cut (F-D/F-E); flags and type. Operator reply complete or incomplete (≥ 1 incomplete where a permit is needed). Twist yes/no and kind. Coworker variant, timing, side. Mirror, branch side, 3–4 LT ways, plate numbers, sky. Deck phrasings from libraries.",
+  "deadly": [
+   "Crew up/working on an 11 kV section on the breaker's green/trip alone, without isolators open at both ends and earth sets on (incl. AB-T left closed, or the 6.2 myth)",
+   "Crew up on a recloser line without Non-Reclose on the right recloser confirmed + PTW (mid-cycle, incomplete/wrong reply, or the 6.8 myth)",
+   "Opening an AB before the breaker/recloser is confirmed OFF, or closing an AB after the breaker is back ON",
+   "Hand or tool other than the earthed rod on the capacitor bank before every terminal is rod-discharged; rod hook before its earth clamp",
+   "Non-fuse conductor in a fuse's place (thick copper, strip, GI, ACSR strand) — own pick or coworker",
+   "Drawing an HRC/kit-kat with the way's main switch ON, or touching a fuse without gloves and goggles",
+   "Re-charging the burnt-oil DTR or opening its tank in the field (owner to confirm, as do_6_1_b)",
+   "Bare hands on the AB cable",
+   "Charging the DTR with its earth strip still cut (F-D/F-E)",
+   "Hanging an earth set on a section still live (Module 1 earthing rule, not a Module 6 lesson — owner to confirm carry-over)"
+  ],
+  "slips": [
+   "Wrong section marked as the fault",
+   "Needless outage (isolating healthy sections; whole feeder off for a branch fault S-3 already isolated)",
+   "Asking the operator again after a complete confirmation",
+   "Not asking for / logging the relay indication, or logging it wrong",
+   "Operating an AB with its handle earth lead cut or loose",
+   "Earths on or crew up without looking at all three gaps when a phase stuck",
+   "Closing in a part-seated phase",
+   "Rod on the bank before 5 game minutes",
+   "Leaving a swollen capacitor unit in service or switching it back in (owner may raise)",
+   "Re-fusing before the cause is found and fixed (incl. jugaad still in the LT box)",
+   "Wrong SWG / rating of a standard tinned fuse wire",
+   "Crew doing the HT cable joint instead of calling the certified jointer",
+   "Leaving the AB-cable nick open and only replacing the fuse",
+   "Twist: calling the meter faulty (neutral cut / blank display)",
+   "Listening to the coworker where his line leads to a non-fatal act"
+  ],
+  "coworkerPushBn": "Once per play, from the variants that fit the fault family, just before that path's decisive control (held; never in a praise window). (a) F-C at the ক্রু drop: 'সার্কিট ব্রেকার ট্রিপ করেছে মানে লাইনটি সম্পূর্ণ বন্ধ। এতে কোনো ভোল্টেজ নেই। উঠে পড়ো!' (b) F-A/F-B at the ক্রু drop: 'লাইনটা তো ট্রিপ করে আছে, রিক্লোজার নিশ্চয়ই লক-আউট হয়ে গেছে। কাজ করতে কোনো ভয় নেই।' (c) bank in section, at the ক্রু drop on the bank pole: 'লাইন তো বন্ধ এবং আর্থ করা আছে, তাই ক্যাপাসিটর ব্যাংকে কাজ করতে কোনো ভয় নেই।' (d) F-C at the হাতল drop on AB-1 before OFF is confirmed: 'সামান্য লোড থাকলে আইসোলেটর খোলা যায়, কিছু হয় না।' (e) restore, at the radio for breaker ON with an AB still open: 'আইসোলেটর আর ব্রেকার একই জিনিস — আগে ব্রেকার দিতে বলো।' (f) F-E/F-F at the fuse fit: 'ফিউজের জায়গায় একটা মোটা তার বা পাত লাগিয়ে দিলে আর বারবার ফিউজ যাওয়ার সমস্যা থাকবে না।' (g) NEW (judge: F-D had no own variant) F-D at the HG fit: 'তেল একটু কালো তো কী! ফিউজ লাগিয়ে আবার চার্জ করে দেখি, চলবে।' (same line as do_6_1_b). Listening is deadly in every variant. Refuse cards ≥ 2 per variant (e.g. 'না — দুই প্রান্ত খোলা আর আর্থ ছাড়া কেউ উঠবে না।' / 'না — Non-Reclose আর PTW নিশ্চিত না হলে ওঠা নয়।' / 'না — পোড়া তেল মানে কাগজ পুড়েছে — চার্জ নয়।'); listen cards ≥ 5, similar length. Clips reuse level clips; (a) and (f) need new ones.",
+  "reasonQuestionsBn": [
+   "ফল্টটা এই সেকশনেই — কী দেখে বুঝলেন?",
+   "রিলের খবর কেন লিখে রাখলেন?",
+   "সবুজ বাতি দেখেও কেন ক্রু তুললেন না?",
+   "কেন দুই প্রান্তের আইসোলেটরই খুললেন?",
+   "টাই সুইচটা কেন দেখলেন?",
+   "অপারেটর পুরো নিশ্চিত না করায় কেন থামলেন?",
+   "তিনটে ফেজের গ্যাপ কেন নিজের চোখে দেখলেন?",
+   "লাইনে আর্থ থাকা সত্ত্বেও ব্যাংকে কেন আলাদা রড?",
+   "ফিউজ বাঁধার আগে কেন কারণ খুঁজলেন?",
+   "কালো, পোড়া গন্ধের তেল দেখে কেন আবার চার্জ করলেন না?",
+   "লাইন ফেরাতে কেন আগে আইসোলেটর, পরে ব্রেকার?",
+   "মিটার অন অথচ আলো নেই — কেন নিউট্রাল দেখলেন?",
+   "ও যা বলছে, করবেন?"
+  ],
+  "gestureHints": "~8 s idle or 3 empty taps in 4 s, twice, back after ~25 s, max 3 per state. Main state: alternating swipe across the panorama, then a sweep over all six tokens (never a tap on one token or device). Token held idle: ≤ 64 dp drag straight up out of the belt. Lens: sweep over its parts and close. Radio dropped: hold ring on PTT; chips get a sweep. Chalk: sweep over every sketch section. Reply decision: main-state sweep. Decks built-in. Off during intro, van/crew animations, radio caption beat, light-up beats, praise window, coworker beat 1, cards, freezes, results. hintKey = stage*100 + judgedMomentIndex.",
+  "lessonPoints": [
+   "6.2: সবুজ মানেই নিরাপদ নয় … দুই প্রান্তে আইসোলেটর খোলা এবং … আর্থিং; myth 1 reality (back-feeding, induced voltage); pro tip 3 (relay indication)",
+   "6.4: off-load first; restore in reverse; all three phases open; part-seated contact = hotspot",
+   "6.8: sectionalizer isolates the faulty branch before lock-out; last reclose powers healthy branches; Non-Reclose request and confirmation; myth reality (mid-cycle)",
+   "6.7: 5-10 minute wait; separate direct discharge even with the line earthed; swollen unit isolated at once",
+   "6.3: discrimination order; never re-charge without the cause; on-load pull = arc flash",
+   "6.9: per-way switching and fusing; myth 2",
+   "6.1: burnt drain oil → off-load, DGA/BDV; do not re-charge",
+   "6.5: certified jointing",
+   "6.6: nick lets water in; treat as live, PTW + PPE",
+   "6.10: meter on, no power = neutral cut; check incoming voltage first",
+   "6.11 myth 1 reality: earthing failure → breaker will not trip"
+  ],
+  "giveawayRisks": "(1) No stations or unlock order; fixed belt; the fault decides which 4–6 devices matter. (2) States only as real equipment shows them; flags and dots need the lens. (3) ডকেট names only the call; sketch has no states; guide stage lines never name a device or step. (4) Needless outage, needless call-back, wrong section and re-fusing without cause all cost — over-caution punished; honest signs are honest about half the time. (5) Operator replies plain, equal length. (6) Capacitor wait uses the watch only (the rule, not do_6_7_a's bezel mechanic). (7) Stuck/part-seated blades only in the lens. (8) Decks from libraries, equal length, shuffled. (9) Coworker variant from the deal, always before a still-open decision, held. (10) Hints sweep all, nudges straight up. NOT A MEDLEY: no stations and no Module 6 level mechanic replayed (no crank, tally, thermal sweep, photo framing, route trace, wrap, core landing, pit build, meter clock); one verb on one feeder tests feeder-scale protection coordination — read which device operated, isolate/confirm/earth so 'off' means dead, restore in order after the cause is fixed — and only the 4–6 devices the dealt fault involves are touched."
+ },
+ "changes": [
+  "6.1b do_6_1_b: verb changed from a multi-part harm-path finger trace to 'turn the opened coil, read damage to cause' (engineType renamed m6_dtr_harm_trace → m6_dtr_coil_forensic). Field cases cut from 3 to 2 and use a single sign → inner-part link (no path); shop cases raised from 1 to 2 and become the core (rotate the coil to find the damaged face, then family → cause). Reason: four levels (6.1b, 6.5b, 6.8b, 6.9b) all had 'drag a finger along a path'. 6.8b keeps the only finger trace.",
+  "6.5b do_6_5_b: freehand route trace replaced by tapping anchors to lay straight chalk legs ('peg'). The core is the timed flag-hold against the digger. Verb is now 'peg the hidden route, then flag-stop the digger'.",
+  "6.9b do_6_9_b: dropper finger-trace replaced by a 'pluck' tap (the dropper twangs and its busbar mark lights). The core is landing cores by phase. Verb is now 'pluck droppers, land cores by phase'.",
+  "6.4a do_6_4_a: earth-lead finger trace replaced by swiping the view down the lead. Also, the operator's OFF reply is now held until the coworker's deck closes, so a player who just waits cannot miss him.",
+  "6.9a do_6_9_a: removed the shutter and photo-chip strip. Tagging now happens on the live thermal screen, with coverage measured by how long the frame dwells on each way. Reason: frame → shutter → strip → judge was the same loop as do_6_1_a's photo report. The coworker now holds the camera, the tagging and 'স্ক্যান শেষ'. The fix card 'ফিউজটা আরও মোটা তারে বদলে দিন' is reworded to 'ফিউজের জায়গায় মোটা তার বা পাত লাগিয়ে দিন' so that it clearly belongs to the deadly non-fuse-conductor class.",
+  "6.10a do_6_10_a: removed the LCD note-taking and the screen-cycling beats, and the compare-two-notes judgement. Reason: the 'read → act → read → compare' loop duplicated do_6_7_b. The known-load test is now plug the bulb + turn the clock a full hour. This also removes the unsupported '0.1 kWh rise' judgement. The coworker is moved to after the bulb is plugged in (clock held).",
+  "6.10b do_6_10_b: viewfinder framing, zoom and focus removed. The phone is auto-framed and needs one tap, so framing stays unique to do_6_1_a. The core is now tugging the seals, then snapping the kWh readings around the switch-off (the old electronic display goes blank once isolated). engineType renamed m6_meter_change_photo → m6_meter_swap_proof. A reason question was added: 'কেন সুইচ বন্ধের আগেই ছবি তুললেন?'.",
+  "6.11a do_6_11_a: the bentonite sack and the full remedy tray now appear on every deal. Before, bentonite showed up only on rocky or sandy soil, which revealed the soil type. Bentonite on loam is not scored. Board round 2 plate-earthing wording no longer says 'সাবস্টেশনে', because the lesson does not say it.",
+  "6.3b do_6_3_b: pulling an HRC with pliers (gloves on, switch off) changed from deadly to slip, to match the Module 1 rule that an act is deadly only when the lesson gives a fatal mechanism. The bare-hand case stays deadly under the no-PPE rule. The coworker now holds every control on the guard, not only the draw-out.",
+  "6.3a do_6_3_a: holdForCoworker is now stated on the first slot probe and on the twist grip.",
+  "6.8b do_6_8_b: the coworker now triggers at the first of (trace reaches the sectionalizer, any flag tap). Before, a player who flagged without tracing could skip him.",
+  "Gate gate_m6: added coworker variant (g) for F-D (the 6.1 recharge push at the HG fit), because the DTR-internal family had no variant of its own. Noted that the gate's capacitor wait reuses the rule but not do_6_7_a's bezel mechanic. Folded 'whyNotMedley' into giveawayRisks.",
+  "Every level was checked against M1–M4 loops; no Module 6 core verb repeats one. Accepted overlaps of content only, where the verbs differ: 6.1a vs 3.6a (same DTR checklist), 6.3b vs 3.7a and 4.4b (fuse handling sub-beats), 6.10a vs 3.8b (fast-meter call), 6.11a vs 4.6a (final megger read), 6.7a vs M1 step 15 (rod discharge sub-beat). Shared sub-beats inside Module 6 (phone or radio to the substation in 6.2a, 6.4a, 6.4b and 6.8b; the AB stroke in 6.4a and 6.4b; the push-button in 6.10b only) are not the core loop of more than one level.",
+  "Unique engineTypes: m6_dtr_photo_report, m6_dtr_coil_forensic, m6_trip_log, m6_breaker_rack, m6_fuse_gauge, m6_fuse_chain, m6_ab_gap_log, m6_ab_unjam, m6_ug_cable_lay, m6_ug_dig_guard, m6_abc_clamp_seat, m6_abc_nick_seal, m6_capbank_wait, m6_capbank_meter, m6_reclose_count, m6_upstream_trace, m6_pillar_thermal, m6_pillar_newway, m6_meter_pulse, m6_meter_swap_proof, m6_earth_build, m6_gate_storm_feeder. All pack ids were kept.",
+  "Lesson check: these facts were spot-verified in tool/all_training_chapters_bn.json: the SWG table and diameters, the HG ratings (25/63/100 kVA → 2-3/5/8-10 A), the GI melting point 1535°, tinned copper, DO not used on WBSEDCL 11 kV DTRs, the Buchholz relay absent on small pole DTRs, pink/white spent gel, Dyn11, 2 minutes, the UG cable layers and the 90% figure, stress control, A2XFY, the AB-cable bare/insulated messenger, ridges, rollers, IPC shear head, heat-shrink, bentonite, the 60x60 copper plate, earth mat and gravel, the capacitor plate text, star/delta, the 50 V figure, APFC, 3200 imp/kWh and the smart meter. No new invented fact was found beyond those the designers already listed under unsupported."
+ ],
+ "deadlySlipTable": [
+  {
+   "act": "Crew up / work on an 11 kV line on the breaker's trip or green lamp alone (no isolators open at both ends, no earths), incl. backfeed tie left closed or listening to the 6.2 myth",
+   "cls": "deadly",
+   "source": "6.2 pro tip 1 + myth reality; matches M1.6, M3.10 — do_6_2_a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Crew told to start with one end isolated, or LOTO on the breaker but no earth",
+   "cls": "deadly",
+   "source": "6.2 pro tip 1 — do_6_2_a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Climb/work on a recloser line without Non-Reclose confirmed on the right recloser + PTW (mid-cycle, incomplete/wrong reply, 6.8 myth)",
+   "cls": "deadly",
+   "source": "6.8 safety protocol + myth reality; matches M1 step 17 — do_6_8_a, do_6_8_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Opening an AB/isolator before the breaker is confirmed OFF (incl. 'সামান্য লোড' myth)",
+   "cls": "deadly",
+   "source": "6.4 point 2; matches 2.5/do/1, 3.10 — do_6_4_a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Closing an AB after the breaker is already ON (closing on load), incl. 'আগে ব্রেকার দিতে বলো'",
+   "cls": "deadly",
+   "source": "6.4 restore order (consequence inferred) — do_6_4_b, gate",
+   "needsOwner": true
+  },
+  {
+   "act": "Hands-on work on a breaker with the trolley in SERVICE",
+   "cls": "deadly",
+   "source": "6.2 racking positions — do_6_2_b",
+   "needsOwner": false
+  },
+  {
+   "act": "Hands-on work on a breaker in TEST",
+   "cls": "slip",
+   "source": "6.2 (control circuit connected) — do_6_2_b",
+   "needsOwner": true
+  },
+  {
+   "act": "Touching a capacitor terminal/can before every terminal is rod-discharged (line earthed, small capacitor or full wait passed)",
+   "cls": "deadly",
+   "source": "6.7 'মারাত্মক বা প্রাণঘাতী শক'; matches M1 step 15 — do_6_7_a, do_6_7_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Discharge-rod hook on a terminal before its earth clamp is on earth",
+   "cls": "deadly",
+   "source": "M1 step 15 (lesson 1.5) carried into 6.7 — do_6_7_a, gate",
+   "needsOwner": true
+  },
+  {
+   "act": "Rod on the capacitor before the 5-minute minimum (rod still used)",
+   "cls": "slip",
+   "source": "6.7 'কমপক্ষে ৫-১০ মিনিট' — do_6_7_a, gate",
+   "needsOwner": true
+  },
+  {
+   "act": "Swollen/leaking capacitor unit left in service or switched in",
+   "cls": "slip",
+   "source": "6.7 'বিস্ফোরিত হতে পারে' (no fatal word) — do_6_7_b, gate",
+   "needsOwner": true
+  },
+  {
+   "act": "Non-fuse conductor in a fuse's place (ACSR strand, GI wire, thick copper conductor, copper strip, 'মোটা তার বা পাত'), own pick or coworker",
+   "cls": "deadly",
+   "source": "6.3 'চরম অপরাধ', 6.9 myth 2; matches M3 3.4a/3.7a, M4 4.4b — do_6_3_a, do_6_9_a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Standard tinned-copper fuse wire of the wrong SWG/rating (incl. thickest reel on 'মোটাটাই বাঁধো')",
+   "cls": "slip",
+   "source": "6.3 table; matches M3 over-rated link — do_6_3_a, gate",
+   "needsOwner": true
+  },
+  {
+   "act": "Drawing an HRC/kit-kat with the way's main switch ON",
+   "cls": "deadly",
+   "source": "6.3 point 6 arc flash — do_6_3_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Any hands on a fuse / inside a live pillar without gloves + goggles / full PPE",
+   "cls": "deadly",
+   "source": "6.3 PPE, 6.9 safety tip; matches M3 3.7a — do_6_3_b, do_6_9_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Pulling an HRC with pliers (gloves on, switch off) instead of the insulated puller",
+   "cls": "slip",
+   "source": "6.3 forbids, no consequence — do_6_3_b (changed by the judge from deadly)",
+   "needsOwner": true
+  },
+  {
+   "act": "Landing a core / working on a pillar way whose SFU is still ON",
+   "cls": "deadly",
+   "source": "inferred from 6.9 per-way switching; matches M3 3.7b — do_6_9_b",
+   "needsOwner": true
+  },
+  {
+   "act": "Bare hand or uninsulated tool tightening a live pillar joint",
+   "cls": "deadly",
+   "source": "6.9 safety tip + myth 1 reality — do_6_9_a",
+   "needsOwner": false
+  },
+  {
+   "act": "Pouring water on a live hot joint",
+   "cls": "deadly",
+   "source": "inferred chain 6.9 (water → short → arc flash) — do_6_9_a",
+   "needsOwner": true
+  },
+  {
+   "act": "Opening a DTR tank in the field",
+   "cls": "deadly",
+   "source": "6.1 myth 3 'ভুল ও মারাত্মক বিপজ্জনক' — do_6_1_b, gate",
+   "needsOwner": true
+  },
+  {
+   "act": "Re-charging a tripped DTR with dark, burnt-smelling drain oil",
+   "cls": "deadly",
+   "source": "6.1 sections 6 + 8 'চার্জ করার ঝুঁকি নেবেন না' — do_6_1_b, gate",
+   "needsOwner": true
+  },
+  {
+   "act": "Climbing a live DTR's platform on a coworker's word (optional push in do_6_1_a)",
+   "cls": "deadly",
+   "source": "M3 3.6a ruling — do_6_1_a (off by default)",
+   "needsOwner": true
+  },
+  {
+   "act": "Bare hands on AB cable (forgetting gloves, or on the coworker's word)",
+   "cls": "deadly",
+   "source": "6.6 myth 1 'মারাত্মক ভুল … মারাত্মক শক' — do_6_6_a, do_6_6_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Clamp on a phase core / ordinary bare-line clamp / suspension clamp at end or bend / no rollers",
+   "cls": "slip",
+   "source": "6.6 (cable damage, sag, later fault) — do_6_6_a",
+   "needsOwner": true
+  },
+  {
+   "act": "Letting an excavator strike a live UG cable (incl. myth 1 on the route)",
+   "cls": "deadly",
+   "source": "6.5 myth reality 'মারাত্মক ভুল' — do_6_5_b",
+   "needsOwner": false
+  },
+  {
+   "act": "Tight bend / armour earthed one end / termination fitted by an uncertified person",
+   "cls": "slip",
+   "source": "6.5 pro tips (cable new, not energised) — do_6_5_a, gate (HT joint)",
+   "needsOwner": true
+  },
+  {
+   "act": "Signing off / charging equipment with its earth path broken (unbolted joint, cut strip), incl. myth 1 'একটু কাটা'",
+   "cls": "deadly",
+   "source": "6.11 myth 1 reality; matches 4.6b; CONFLICTS with 3.5b (slip) — do_6_11_a, gate",
+   "needsOwner": true
+  },
+  {
+   "act": "Weak but connected earth (wrong electrode, off-plumb, sand/gravel, iron nut, no lid, single DTR pit, high reading signed)",
+   "cls": "slip",
+   "source": "6.11 pro tips; matches 4.6a — do_6_11_a",
+   "needsOwner": false
+  },
+  {
+   "act": "Hanging an earth set on a section still live",
+   "cls": "deadly",
+   "source": "Module 1 earthing rule; M3 3.6b/3.9b — gate only",
+   "needsOwner": true
+  },
+  {
+   "act": "Pulling a suspected meter bypass wire with bare hands",
+   "cls": "deadly",
+   "source": "6.10 safety tip; matches M3 3.8b bare hand on live neutral — do_6_10_b",
+   "needsOwner": true
+  },
+  {
+   "act": "Opening a meter box with the incoming switch ON (insulated tool)",
+   "cls": "slip",
+   "source": "6.10 'যদি সম্ভব হয়' — do_6_10_b",
+   "needsOwner": true
+  },
+  {
+   "act": "Needless stop / report / isolation / call-back (sound pole analogue): healthy breaker reported, stuck phase reported when clear, flag on a clear dig, sound bank tagged, even joint tagged, clean meter reported, needless chalk, needless outage, ask again after full confirmation",
+   "cls": "slip",
+   "source": "M1 sound-pole ruling — 6.2b, 6.3b, 6.4a, 6.5b, 6.7b, 6.8b, 6.9a, 6.10b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Re-fusing / refitting a fuse before the cause is found",
+   "cls": "slip",
+   "source": "6.3 'কখনই বারবার ফিউজ চার্জ করবেন না', 6.7 — do_6_3_b, do_6_7_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Reclosing a tripped breaker before the fault is found (coworker)",
+   "cls": "slip",
+   "source": "6.2 briefing — do_6_2_a",
+   "needsOwner": true
+  },
+  {
+   "act": "Stuck phase logged open / earths on without seeing all three gaps; part-seated phase closed in; handle earth unchecked or faulty; stalled stroke",
+   "cls": "slip",
+   "source": "6.4 — do_6_4_a, do_6_4_b, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "ON/OFF breaker test in SERVICE or ISOLATED; ON with spring DISCHARGED; dark-HEALTHY breaker racked in",
+   "cls": "slip",
+   "source": "6.2 — do_6_2_b",
+   "needsOwner": true
+  },
+  {
+   "act": "Wrong R-Y-B sequence, N or armour on the wrong terminal, loose lug, pillar door left open",
+   "cls": "slip",
+   "source": "6.9 pro tips — do_6_9_b",
+   "needsOwner": true
+  },
+  {
+   "act": "Wrong diagnosis / reading / log (relay flags, meter LED, neutral cut, DTR sign, recloser state, coil family)",
+   "cls": "slip",
+   "source": "lesson diagnostics — 6.1a/b, 6.2a, 6.8a, 6.10a, gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Listening to the coworker: deadly when his line acts out a deadly act above, slip otherwise",
+   "cls": "deadly",
+   "source": "M1 ruling — all levels",
+   "needsOwner": false
+  }
+ ],
+ "ownerDecisions": [
+  "EARTH CONFLICT ACROSS MODULES: 6.11a and the gate make signing off with a broken earth path deadly (as 4.6b does), but 3.5b scored listening to 'আর্থ তারটা একটু কাটা তো কী' as a slip. Pick one rule for Modules 3, 4 and 6.",
+  "DO-FUSE CONFLICT: lesson 6.3 says WBSEDCL 11 kV DTRs and AB switches 'সাধারণত ড্রপ আউট (DO) ফিউজ ব্যবহার করা হয় না', while M3 3.4 and M4 4.4 play DO fuses on DTRs. Module 6 uses HG only. Decide how the ladder reconciles this.",
+  "SPEED CONFLICT: 2.5/do/1 slips a rushed hot-stick AB turn, but 6.4 says 'দ্রুত এবং দৃঢ়ভাবে' for the AB's own ground handle. Proposal: only a stalled stroke is a slip in 6.4, and add a note in MODULE2_LADDER.",
+  "Confirm the deadly rows marked needsOwner: closing an AB on load; the rod-hook-before-clamp rule carried from M1; field tank opening and re-charging a burnt-oil DTR (6.1b and gate); landing a core with the SFU ON and water on a live joint (6.9); a bare-hand bypass pull (6.10b); an earth set on a live section (gate, M1 rule); the optional 6.1a climb push.",
+  "Confirm the slip rows marked needsOwner, in particular: pliers on an HRC (judge changed it from deadly to slip); a swollen capacitor unit left in service (if raised to deadly, raise it in 6.7b and the gate together); armour earthed at one end only (6.5a, unlike 4.6b's strip); hands-on in TEST; the capacitor wait cut short; reclosing before the fault is found; a broken R-Y-B sequence; a wrong-SWG tinned fuse wire.",
+  "Capacitor wait minimum: 5 game minutes (recommended) or 10. This applies to 6.7a and the gate.",
+  "Accept the judge's verb changes: 6.1b becomes coil forensics; 6.5b uses pegged straight legs; 6.9b uses a dropper pluck; 6.9a has no shutter; 6.10a drops note-taking; 6.10b is auto-framed and renamed m6_meter_swap_proof. 6.8b remains the module's only finger-trace level.",
+  "Lesson overlap: 6.9 almost duplicates 3.7, and 6.1 repeats much of 3.6. Keep both as full lessons or shorten them? Both board myths about thick wire (6.3 board, 6.9 board) repeat M3 3.4's idea.",
+  "Should a lineman build an earth pit (6.11a), or should the level frame him as inspecting a contractor's pit? Also: is one Do level enough for 6.11, given 4.6?",
+  "Gate items not in any single lesson: the combined feeder layout, 'needless outage = slip', the radio to the control room for breaker and recloser, AB-T as the backfeed source, 'both sides' earthing (Module 1), the game-time ratio, and the rank name and badge from the module plan.",
+  "Kit additions requested: HintSpec.pinch and HintSpec.circle for 6.6b (or the listed fallbacks).",
+  "New rival clips needed via tool/rival_clip.py: 6.1a myths 1 and 2; 6.1b myth 3 + push and the recharge push (shared with gate variant g); 6.2 myth 1 + push (gate a); the 6.2b pushes; the 6.3a pushes; 6.4 myth word for word and the two 6.4b pushes; the 6.5a pushes; the 6.6a/b lines; 6.7b's pushes; 6.8b myth 2 + shortcut; 6.9a shortcut; 6.9b myth 1 and SFU variant; 6.9 myth 2 (gate f); 6.10a/b pushes; 6.11 myths A/B. Board rival clips are shared where the words match.",
+  "Illustrative numbers that need sign-off: the 6.7b meter values, the 6.11a megger bands (the reason cards say '5 ওহমের মধ্যে'), the 6.1a quick bonus of 120 s, and the 6.5a ring scales.",
+  "YouTube explainer ids for 6.1–6.11 (null until given)."
+ ]
+}

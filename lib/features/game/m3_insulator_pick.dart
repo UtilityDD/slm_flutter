@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -57,7 +58,14 @@ export 'm3_insulator_pick_world.dart' show M3InsulatorPickKind, M3InsulatorPickS
 // pole carries it.
 //
 // Voice: the guide's lines on device TTS; the coworker's pushes are new
-// (device TTS in his voice settings until recorded); his exit line is recorded.
+// (silent with the caption held until recorded); his exit line is recorded.
+//
+// Kit timing (audit 2026-11-11): the scene takes no input in the praise
+// window ([ReasonTable.tableBusy]); lifting an insulator off the tarp waits
+// for the coworker when he is due ([CoworkerMoment.holdForCoworker]) — he
+// always comes before anything is in hand, so his push is about the tarp;
+// gesture hints: a sweep over the tarp, a rub-and-turn on the insulator in
+// hand, then a sweep over its two buttons; a tap to close the board.
 // Art: the scene and the insulators are drawn in code
 // (m3_insulator_pick_world.dart); the mistake cards use
 // assets/game/art/m3_insulator_pick/.
@@ -189,12 +197,50 @@ abstract final class M3InsulatorPickLines {
         M3InsulatorPickSite.endHt => [s.discsNeeded == 3 ? _disc33 : _disc11, 'লাইনের শেষের প্রচণ্ড টানে ডিস্কের মালাই টেকে'],
       };
 
-  /// The other spots' rules (true elsewhere, not here) and the myths.
-  static List<String> packWrong(M3InsulatorPickSpot s) => switch (s.site) {
-        M3InsulatorPickSite.straightHt => const [_shackle, _endNot, ...packMyths],
-        M3InsulatorPickSite.endLt => const [_pin, _straightNot, _disc11, ...packMyths],
-        M3InsulatorPickSite.endHt => [_pin, _straightNot, _shackle, s.discsNeeded == 3 ? _disc11 : _disc33, ...packMyths],
+  /// Wrong reasons that name the very kind fitted at [s] (a wrong
+  /// rationale): the right card is never the only one with that word.
+  static List<String> packDecoys(M3InsulatorPickSpot s) => switch (s.site) {
+        M3InsulatorPickSite.straightHt => const [
+            'পিন নিলাম, কারণ ওটাই সবচেয়ে হালকা আর ছোট',
+            'পিন সব পোলেই চলে, তাই কিছু না দেখেই পিন নিলাম',
+            'পিন নিলাম — নতুন জিনিস, গা দেখার দরকার নেই',
+          ],
+        M3InsulatorPickSite.endLt => const [
+            'শ্যাকল নিলাম, দেখতে গোল তাই সব জায়গায় চলে',
+            'শ্যাকল সবচেয়ে সস্তা, তাই শ্যাকলই তুলে নিলাম',
+            'শ্যাকল নিলাম — ছোট জিনিস, ভাঙলেও কিছু হয় না',
+          ],
+        M3InsulatorPickSite.endHt => const [
+            'ডিস্কের মালা লম্বা, তাই গুনে দেখার দরকার নেই',
+            'ডিস্কের মালা দেখতে বড়, তাই সেটাই নিয়ে নিলাম',
+            'ডিস্ক নিলাম — চিনামাটি মোটা, ফাটল দেখিনি',
+          ],
       };
+
+  /// The decoys, the other spots' rules (true elsewhere, not here) and the myths.
+  static List<String> packWrong(M3InsulatorPickSpot s) => [
+        ...packDecoys(s),
+        ...switch (s.site) {
+          M3InsulatorPickSite.straightHt => const [_shackle, _endNot, ...packMyths],
+          M3InsulatorPickSite.endLt => const [_pin, _straightNot, _disc11, ...packMyths],
+          M3InsulatorPickSite.endHt => [_pin, _straightNot, _shackle, s.discsNeeded == 3 ? _disc11 : _disc33, ...packMyths],
+        },
+      ];
+
+  /// The "কেন?" hand at [s]: one right reason, one decoy that names the
+  /// same kind, and one more wrong one — so the kind's name never picks
+  /// the right card.
+  static List<ChoiceOption> dealPack(M3InsulatorPickSpot s, math.Random rng) {
+    final decoys = packDecoys(s);
+    final decoy = decoys[rng.nextInt(decoys.length)];
+    final rest = [for (final w in packWrong(s)) if (w != decoy) w]..shuffle(rng);
+    final right = packRight(s);
+    return [
+      ChoiceOption(right[rng.nextInt(right.length)], true),
+      ChoiceOption(decoy, false),
+      ChoiceOption(rest.first, false),
+    ]..shuffle(rng);
+  }
 
   /// The careless coworker: the shortcuts the lesson warns of.
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
@@ -241,7 +287,7 @@ abstract final class M3InsulatorPickLines {
       ? coworkerChip
       : (site == M3InsulatorPickSite.endHt ? coworkerPinDisc : coworkerPinShackle);
 
-  /// His new lines (device TTS until recorded in his voice).
+  /// His new lines (no clip yet: silent with the caption held until recorded).
   static const newRivalLines = [
     'এক কোণা একটু ভেঙেছে তো কী হয়েছে? লাগিয়ে দাও!',
     'পিন ইনসুলেটরেই চলবে, শ্যাকল লাগবে না!',
@@ -249,7 +295,6 @@ abstract final class M3InsulatorPickLines {
   ];
 
   static const callHeld = 'ঠিক! জায়গা বুঝে, ভালো ইনসুলেটরই লাগান।';
-  static const asideFlaw = 'ঠিক — ভাঙা-ফাটা ইনসুলেটর বাদ।';
   static const fitted = 'ঠিক জায়গায় ঠিক ইনসুলেটর!';
   static const allSet = 'ইনসুলেটর বাছাইয়ে পাকা হাত! জায়গা, ডিস্ক আর অবস্থা — সবই দেখেছেন।';
   static const quick = 'নিখুঁত আর ঝটপট!';
@@ -260,7 +305,7 @@ abstract final class M3InsulatorPickLines {
   static const caughtCall = 'চাপে “না” বলেছেন';
 
   /// Every fixed line the guide says (for recording).
-  static const guideLines = [intro, ask, inspectAsk, ...tapWhy, packAsk, callHeld, asideFlaw, fitted, allSet, quick, fail];
+  static const guideLines = [intro, ask, inspectAsk, ...tapWhy, packAsk, callHeld, fitted, allSet, quick, fail];
 }
 
 abstract final class M3InsulatorPickMistakes {
@@ -268,48 +313,50 @@ abstract final class M3InsulatorPickMistakes {
   static const _count = 'assets/game/art/m3_insulator_pick/disc_count.svg';
   static const _flaws = 'assets/game/art/m3_insulator_pick/flaws.svg';
 
-  // Lesson 3.2's points: 1 = what an insulator is, 2 = pin, 3 = shackle, 4 = disc.
+  // Lesson 3.2's points (0-based, as DoMistake.lessonPoint): 0 = what an
+  // insulator is, 1 = pin, 2 = shackle, 3 = disc (its daily check: the
+  // hairline crack).
   static const pinAtEnd = DoMistake(
     key: '3.2/m3_insulator_pick/pin-at-end',
     textBn: 'লাইন যেখানে শেষ হয় বা মোড় নেয়, সেখানে পিন ইনসুলেটর চলবে না — প্রচণ্ড টানে ভেঙে যাবে। এলটিতে শ্যাকল, এইচটিতে ডিস্কের মালা।',
     art: _where,
-    lessonPoint: 3,
+    lessonPoint: 2,
   );
   static const shackleOnStraight = DoMistake(
     key: '3.2/m3_insulator_pick/shackle-on-straight',
     textBn: 'লাইন এখানে সোজা গেছে — 33 কেভি পর্যন্ত সোজা লাইনে পিন ইনসুলেটরই রাজা। শ্যাকল লাগে লাইনের শেষে বা মোড়ে, মূলত এলটিতে।',
     art: _where,
-    lessonPoint: 2,
+    lessonPoint: 1,
   );
   static const shackleOnHt = DoMistake(
     key: '3.2/m3_insulator_pick/shackle-on-ht',
     textBn: 'এটা এইচটি লাইনের শেষ প্রান্ত — 11 কেভি বা তার ওপরের লাইনে টানের জায়গায় ডিস্কের মালা লাগে। শ্যাকল মূলত এলটি লাইনের।',
     art: _where,
-    lessonPoint: 4,
+    lessonPoint: 3,
   );
   static const discOnLt = DoMistake(
     key: '3.2/m3_insulator_pick/disc-on-lt',
     textBn: 'এটা এলটি লাইনের শেষ — এখানে শ্যাকল ইনসুলেটর, ডি-আয়রন ক্ল্যাম্পে। ডিস্কের মালা 11 কেভি বা তার ওপরের লাইনের।',
     art: _where,
-    lessonPoint: 3,
+    lessonPoint: 2,
   );
   static const fewDiscs = DoMistake(
     key: '3.2/m3_insulator_pick/few-discs',
     textBn: 'ডিস্ক গুনুন: একটা ডিস্ক 11 কেভির, তিনটে 33 কেভির। 33 কেভির লাইনে এক ডিস্কের মালা কম পড়বে।',
     art: _count,
-    lessonPoint: 4,
+    lessonPoint: 3,
   );
   static const chip = DoMistake(
     key: '3.2/m3_insulator_pick/chipped',
     textBn: 'এক কোণা ভাঙা — ভাঙা খাঁজে জল-ধুলো জমে, সেখান থেকেই লিকেজ কারেন্ট শুরু হয়। ভাঙা ইনসুলেটর লাগানো নয়, বদলাতেই হবে।',
     art: _flaws,
-    lessonPoint: 1,
+    lessonPoint: 0,
   );
   static const crack = DoMistake(
     key: '3.2/m3_insulator_pick/cracked',
     textBn: 'সরু চুলের মতো ফাটল (Hairline Crack) — হাই ভোল্টেজে ওই ফাটল দিয়েই ব্লাস্ট হয়। ফাটা ইনসুলেটর কখনো লাগাবেন না।',
     art: _flaws,
-    lessonPoint: 4,
+    lessonPoint: 3,
   );
   static List<DoMistake> get all => const [pinAtEnd, shackleOnStraight, shackleOnHt, discOnLt, fewDiscs, chip, crack];
 
@@ -406,7 +453,9 @@ class M3InsulatorPickRun {
   M3InsulatorPickItem? fitted;
   bool get shown => fitted != null;
 
-  /// Insulators set aside on this pole (wrong ones taken by mistake, or put aside).
+  /// Insulators set aside on this pole (wrong ones taken by mistake). Putting
+  /// one back never sets it aside: it goes back on the tarp, whatever it is,
+  /// so the reply stays neutral before the decision.
   final Set<String> rejected = {};
 
   /// Insulators on this pole whose fault the player has seen.
@@ -441,23 +490,15 @@ class M3InsulatorPickRun {
     fitted = i;
     _tag(M3InsulatorPickLines.caughtMatch);
     if (i.kind == _Kind.disc && i.discs > 1) _tag(M3InsulatorPickLines.caughtDiscs);
+    // The pole closes: a fault the player found and did not fit (the faulty
+    // ones fitted went aside as slips) was a flaw caught.
+    if (spotted.any((id) => !rejected.contains(id))) _tag(M3InsulatorPickLines.caughtFlaw);
     return const M3InsulatorPickOutcome(M3InsulatorPickVerdict.right);
   }
 
   /// The player's hand or eye found [i]'s fault in the close look.
   void spot(M3InsulatorPickItem i) {
     if (i.flaw != _Flaw.none) spotted.add(i.id);
-  }
-
-  /// Puts [i] back: a faulty one whose fault the player found goes aside
-  /// (true); anything else back on the tarp (false) — putting back never
-  /// tells which are faulty. Never costs anything.
-  bool putBack(M3InsulatorPickItem i) {
-    if (done || shown || rejected.contains(i.id)) return false;
-    if (!spotted.contains(i.id)) return false;
-    rejected.add(i.id);
-    _tag(M3InsulatorPickLines.caughtFlaw);
-    return true;
   }
 
   /// The next pole (after the reason).
@@ -560,6 +601,13 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how to touch, never what).
+  final _hints = IdleHintController();
+  final _itemKeys = <String, GlobalKey>{};
+  /// A fresh key per lift (the close look of one insulator).
+  var _inspectKey = GlobalKey<_InspectState>();
+  final _plateZoomKey = GlobalKey();
+
   String get _rungId => widget.ctx.rungId;
 
   @override
@@ -605,7 +653,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || _run.shown;
+  bool get _blocked => _intro || _busy || _ended || _card != null || tableBusy || reasonOpen || _run.shown;
 
   void _setMode(LinemanMode m) {
     _mode = m;
@@ -614,45 +662,44 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
 
   /// An insulator comes off the tarp into the trainee's hands.
   void _pick(_Item i, Offset origin) {
-    // Taking another one while he is still talking refuses him too.
-    if (coworkerOpen && !coworkerChoiceUp && m3InsulatorPickPushed(_run.current, _run.rejected, _push)?.id != i.id) {
-      unawaited(answerCoworker(true, origin, direct: true));
-    }
+    // While he is on screen every tarp tap is ignored alike (the one he
+    // pushes too): a tap that did something on some insulators and nothing
+    // on his would point him out. The player answers him on the deck.
     if (_blocked || coworkerOpen || _held != null || _plateOpen || _run.rejected.contains(i.id)) return;
+    // The decisive control: while he is due, he comes in now (with nothing
+    // in hand, so his push is about the tarp) and this lift waits.
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/click.ogg', volume: 0.5, muted: false));
     _hush();
     setState(() {
       _held = i;
+      _inspectKey = GlobalKey<_InspectState>(debugLabel: 'inspect-${i.id}');
       _setMode(LinemanMode.hold);
     });
     unawaited(_sayChain([_L.inspectAsk]));
   }
 
-  /// A fault came into view under the hand or the eye.
+  /// A fault came into view under the hand or the eye. Silent on purpose:
+  /// a sound or buzz here would tell a fault the eye has not seen.
   void _found() {
     final i = _held;
     if (i != null) _run.spot(i);
-    HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.wav', volume: 0.6, muted: false));
   }
 
+  /// Back on the tarp — every insulator the same way, sound or faulty, with
+  /// the same neutral reply (never a hint before the decision; a fault found
+  /// is credited when the pole closes on a right fit).
   void _putBack() {
     final i = _held;
     if (i == null || _blocked) return;
-    final aside = _run.putBack(i);
     HapticFeedback.selectionClick();
     setState(() {
       _held = null;
       _setMode(LinemanMode.idle);
     });
-    if (aside) {
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
-      unawaited(_sayChain([_L.asideFlaw, _L.ask], mood: GuideMood.glad));
-    } else {
-      if (!_muted) unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.4, muted: false));
-      unawaited(_sayChain([_L.ask]));
-    }
+    if (!_muted) unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.4, muted: false));
+    unawaited(_sayChain([_L.ask]));
   }
 
   void _take(Offset origin) {
@@ -669,7 +716,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
       if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
       setState(() => _setMode(LinemanMode.cheer));
       final s = _run.current.spot;
-      _ask(15, () => dealChoices(_L.packRight(s), _L.packWrong(s), widget.rng), _L.packAsk, lead: _L.fitted);
+      _ask(15, () => _L.dealPack(s, widget.rng), _L.packAsk, lead: _L.fitted);
       return;
     }
     setState(() => _setMode(LinemanMode.worried));
@@ -734,9 +781,11 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
-    if (_blocked || _held != null || _plateOpen) return false;
     final push = m3InsulatorPickPushFor(_run.current, _run.rejected, preferChip: _run.deal.callChip);
-    if (push == null) return false;
+    // Nothing left on this pole for him to push (insulators only leave the
+    // tarp): his moment on this pole has passed; the next pole re-arms him.
+    if (push == null) return null;
+    if (_blocked || tableBusy || _held != null || _plateOpen) return false;
     _push = push;
     return true;
   }
@@ -763,6 +812,31 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
       if (!mounted || chain != _chain) return;
       await _sayChain([_L.callHeld, _L.ask], mood: GuideMood.glad);
     }());
+  }
+
+  // ---- gesture hints (how to touch, never which one) -------------------------
+
+  /// The level waits for the player's hands now (no intro, card, deck,
+  /// praise window, coworker or result).
+  bool get _hintWaiting => !_intro && _mark == null && !struckOut && !_blocked && !coworkerOnScreen;
+
+  /// A new waiting state resets the count of hints shown.
+  Object get _hintKey => '${_run.round}|${_held?.id}|$_plateOpen|${_run.rejected.length}';
+
+  GlobalKey _itemKey(_Item i) => _itemKeys.putIfAbsent(i.id, GlobalKey.new);
+
+  /// The board up close: tap to look away. An insulator in hand: rub it,
+  /// turn it, then a sweep over its two buttons. At the tarp: a sweep over
+  /// every insulator still on it (never one of them alone).
+  HintSpec? _hint() {
+    if (_plateOpen) return HintSpec.tapOn(_plateZoomKey);
+    if (_held != null) return _inspectKey.currentState?.hint();
+    final r = _run.current;
+    final keys = [
+      for (final x in r.items)
+        if (!_run.rejected.contains(x.id) && _run.fitted?.id != x.id) _itemKey(x),
+    ];
+    return keys.length < 2 ? null : HintSpec.sweepOver(keys);
   }
 
   /// Tap the guide: the task again, a different way each time.
@@ -886,10 +960,15 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
         key: const ValueKey('field'),
         child: RepaintBoundary(child: CustomPaint(painter: M3InsulatorPickFieldPainter(geo))),
       ),
+      // The pole layer covers the field: a tap on it hit nothing (hints).
       Positioned.fill(
         key: ValueKey('pole-${_run.round}-${fitted?.id}'),
-        child: RepaintBoundary(
-          child: CustomPaint(painter: M3InsulatorPickPolePainter(geo, site: r.spot.site, fitted: fitted?.kind, discs: fitted?.discs ?? 0)),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _hints.missTap,
+          child: RepaintBoundary(
+            child: CustomPaint(painter: M3InsulatorPickPolePainter(geo, site: r.spot.site, fitted: fitted?.kind, discs: fitted?.discs ?? 0)),
+          ),
         ),
       ),
       // The danger board's text (tap it to read it close).
@@ -912,6 +991,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
             quiet: quiet,
             muted: true,
             child: _TarpItem(
+              key: _itemKey(r.items[i]),
               item: r.items[i],
               gone: _run.rejected.contains(r.items[i].id) || _held?.id == r.items[i].id || fitted?.id == r.items[i].id,
               enabled: canPick,
@@ -963,21 +1043,27 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (held != null && playing)
                 _Inspect(
-                  key: ValueKey('inspect-${held.id}'),
+                  key: _inspectKey,
                   item: held,
                   spot: _run.current.spot,
                   quiet: quiet,
                   onFound: _found,
                   onTake: _take,
                   onPutBack: _putBack,
+                  onMiss: _hints.missTap,
                 ),
               if (_plateOpen && playing)
                 _PlateZoom(
                   key: const ValueKey('plate-zoom'),
+                  cardKey: _plateZoomKey,
                   spot: _run.current.spot,
                   quiet: quiet,
                   onClose: () => setState(() => _plateOpen = false),
@@ -1056,7 +1142,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
                                 muted: _muted,
                                 onRetry: () => widget.onRetry(_muted),
                                 onLeave: () => _popOnce(false),
-                                onRead: () => unawaited(openLessonPoint(context, ref, lessonId: widget.ctx.lessonId, point: 1, muted: _muted)),
+                                onRead: () => unawaited(openLessonPoint(context, ref, lessonId: widget.ctx.lessonId, point: 0, muted: _muted)),
                               ),
                       ),
                     ),
@@ -1107,7 +1193,8 @@ class _PlateTap extends StatelessWidget {
 
 /// The danger board up close (tap anywhere to look away).
 class _PlateZoom extends StatelessWidget {
-  const _PlateZoom({super.key, required this.spot, required this.quiet, required this.onClose});
+  const _PlateZoom({super.key, required this.cardKey, required this.spot, required this.quiet, required this.onClose});
+  final GlobalKey cardKey;
   final M3InsulatorPickSpot spot;
   final bool quiet;
   final VoidCallback onClose;
@@ -1128,6 +1215,7 @@ class _PlateZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: cardKey,
                 width: 260,
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                 decoration: BoxDecoration(
@@ -1171,7 +1259,7 @@ class _PlateZoom extends StatelessWidget {
 /// An insulator standing on the tarp. At this distance its faults do not
 /// show. Tap it to take it in hand.
 class _TarpItem extends StatelessWidget {
-  const _TarpItem({required this.item, required this.gone, required this.enabled, required this.onTake});
+  const _TarpItem({super.key, required this.item, required this.gone, required this.enabled, required this.onTake});
   final _Item item;
   final bool gone;
   final bool enabled;
@@ -1285,6 +1373,7 @@ class _Inspect extends StatefulWidget {
     required this.onFound,
     required this.onTake,
     required this.onPutBack,
+    required this.onMiss,
   });
   final _Item item;
   final M3InsulatorPickSpot spot;
@@ -1292,6 +1381,9 @@ class _Inspect extends StatefulWidget {
   final VoidCallback onFound;
   final ValueChanged<Offset> onTake;
   final VoidCallback onPutBack;
+
+  /// A tap on the backdrop (nothing to press there).
+  final VoidCallback onMiss;
 
   @override
   State<_Inspect> createState() => _InspectState();
@@ -1302,6 +1394,26 @@ class _InspectState extends State<_Inspect> {
   var _back = false;
   Offset? _hand;
   var _found = false;
+  final _faceKey = GlobalKey();
+  final _backKey = GlobalKey();
+  final _putKey = GlobalKey();
+  final _takeKey = GlobalKey();
+
+  /// The gesture hint in hand, the same for every insulator: rub it (a short
+  /// stroke along its face), turn it, then a sweep over both buttons.
+  HintSpec? hint() {
+    if (_seen.isEmpty) {
+      final r = HintSpec.globalRectOf(_faceKey);
+      if (r == null) return null;
+      return HintSpec.drag(
+        Offset(r.left + r.width * 0.1, r.center.dy),
+        toward: const Offset(1, 0),
+        travel: math.min(HintSpec.maxDragTravel, r.width * 0.5),
+      );
+    }
+    if (!_back) return HintSpec.tapOn(_backKey);
+    return HintSpec.sweepOver([_putKey, _takeKey]);
+  }
 
   void _check() {
     final i = widget.item;
@@ -1374,84 +1486,93 @@ class _InspectState extends State<_Inspect> {
   Widget build(BuildContext context) {
     final item = widget.item;
     return Positioned.fill(
-      child: ColoredBox(
-        color: const Color(0xC0050A16),
-        child: Align(
-          alignment: const Alignment(0, -0.42),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
-            duration: const Duration(milliseconds: 360),
-            curve: Curves.easeOutBack,
-            builder: (_, t, child) => Transform.translate(
-              offset: Offset(0, 80 * (1 - t)),
-              child: Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
-            ),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-              decoration: BoxDecoration(
-                color: SlmColors.ivory,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onMiss,
+        child: ColoredBox(
+          color: const Color(0xC0050A16),
+          child: Align(
+            alignment: const Alignment(0, -0.42),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
+              duration: const Duration(milliseconds: 360),
+              curve: Curves.easeOutBack,
+              builder: (_, t, child) => Transform.translate(
+                offset: Offset(0, 80 * (1 - t)),
+                child: Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _SpotPill(spot: widget.spot),
-                  const SizedBox(height: 8),
-                  AspectRatio(
-                    aspectRatio: 2.3,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFF3A4654), _slate],
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+                decoration: BoxDecoration(
+                  color: SlmColors.ivory,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _SpotPill(spot: widget.spot),
+                    const SizedBox(height: 8),
+                    AspectRatio(
+                      aspectRatio: 2.3,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFF3A4654), _slate],
+                          ),
                         ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 10, 10, 10),
-                        child: Row(
-                          children: [
-                            // Turn it round: its back.
-                            AspectRatio(
-                              aspectRatio: 1,
-                              child: Semantics(
-                                button: true,
-                                label: _L.backLabel,
-                                child: GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onTapDown: (_) => _turn(),
-                                  child: Stack(
-                                    children: [
-                                      Positioned.fill(
-                                        child: CustomPaint(
-                                          painter: M3InsulatorPickBackPainter(kind: item.kind, chip: item.flaw == _Flaw.chip, seen: _back),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 10, 10, 10),
+                          child: Row(
+                            children: [
+                              // Turn it round: its back.
+                              AspectRatio(
+                                aspectRatio: 1,
+                                child: Semantics(
+                                  key: _backKey,
+                                  button: true,
+                                  label: _L.backLabel,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTapDown: (_) => _turn(),
+                                    child: Stack(
+                                      children: [
+                                        Positioned.fill(
+                                          child: CustomPaint(
+                                            painter: M3InsulatorPickBackPainter(kind: item.kind, chip: item.flaw == _Flaw.chip, seen: _back),
+                                          ),
                                         ),
-                                      ),
-                                      if (!_back) const Center(child: Icon(Icons.flip_camera_android_rounded, color: Color(0xFFFF851B), size: 26)),
-                                    ],
+                                        if (!_back) const Center(child: Icon(Icons.flip_camera_android_rounded, color: Color(0xFFFF851B), size: 26)),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(child: _side(item)),
-                          ],
+                              const SizedBox(width: 8),
+                              Expanded(child: KeyedSubtree(key: _faceKey, child: _side(item))),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(child: DoBigButton(label: _L.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
-                      const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: _L.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: KeyedSubtree(key: _putKey, child: DoBigButton(label: _L.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: KeyedSubtree(key: _takeKey, child: DoBigButton(label: _L.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

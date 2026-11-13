@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -46,15 +47,20 @@ export 'm4_dp_survey_world.dart' show M4DpSurveyFault, M4DpSurveyFaultSide, M4Dp
 //   2. order — a list with HT and LT work: HT first, then LT (pro tip 1).
 //   3. the ◆ on the table → "কেন …?" (a reason dealt from what this DP had).
 //   4. say no — the careless coworker once a play, on a DP with faults, after
-//      the first mark: the lesson's myth 1 ("যা আছে চলছে তো, হাত দেওয়ার দরকার
-//      কী") or, on a DP with wires touching / too close, myth 2 ("ওগুলো তো
-//      ইনসুলেটেড"). Listening = a slip.
+//      the first mark (or at once when the list is written first: writing it
+//      waits for him, [CoworkerMoment.holdForCoworker], and the press counts:
+//      after him the list goes in exactly as it was pressed): the lesson's
+//      myth 1 ("যা আছে চলছে তো, হাত দেওয়ার দরকার কী") or, once the touching
+//      LT wires are on the list, myth 2 ("ওগুলো তো ইনসুলেটেড"). Listening = a
+//      slip.
 //   5. choose — the list is done: how will the dressing be done? Only after
 //      shutdown, PTW, test and earth (the project's safety rule — the lesson
 //      text does not say it: flagged). Dressing a live structure = deadly.
 // Shared kit: guide first, full scene, corner guide, ◆ on the table, coworker
-// once, mistake cards, freeze on the deadly choice. His new lines go by
-// device TTS until recorded ([M4DpSurveyLines.recordLines]).
+// once, mistake cards, freeze on the deadly choice, gesture hints (a sweep
+// over every part while surveying, over the open cards while ordering). His
+// new lines have no clip yet ([M4DpSurveyLines.recordLines]): silent with the
+// caption held until the director records them.
 
 // ============================================================================
 // Content
@@ -90,8 +96,11 @@ class M4DpSurveyDeal {
   /// The DP the careless coworker comes on (always one with faults).
   final int callAt;
 
-  /// He pushes the insulated-wire myth (only on a DP with wires touching or
-  /// too close); otherwise "যা আছে চলছে তো".
+  /// He may push the insulated-wire myth (only on a DP with LT wires
+  /// touching: his line "তার একটু ছুঁয়ে আছে" must fit what is up there). He
+  /// says it only once the touching wires are already on the list (his line
+  /// never names a part the player has not found: [M4DpSurveyRun.aimCall]);
+  /// otherwise "যা আছে চলছে তো".
   final bool insulated;
 }
 
@@ -124,7 +133,7 @@ M4DpSurveyDeal dealM4DpSurvey(math.Random rng) {
   ];
   final callAt = withFaults[rng.nextInt(withFaults.length)];
   final f = structures[callAt].faults;
-  final insulated = (f.contains(M4DpSurveyFault.touch) || f.contains(M4DpSurveyFault.clearance)) && rng.nextBool();
+  final insulated = f.contains(M4DpSurveyFault.touch) && rng.nextBool();
   return M4DpSurveyDeal(structures: structures, callAt: callAt, insulated: insulated);
 }
 
@@ -164,25 +173,27 @@ abstract final class M4DpSurveyLines {
   };
 
   // The reasons (lesson 4.7): the right ones fit what this DP had; the wrong
-  // ones are the lesson's myths and field excuses.
+  // ones are the lesson's myths and field excuses. The questions fit a part
+  // the player listed and one the guide added after a miss ("উঠল", not
+  // "তুললেন"), and the order after the guide put it right.
   static String why(M4DpSurveyTopic t) => switch (t) {
-    M4DpSurveyTopic.tail => 'কেন বাইন্ডিং তারের লেজটা লিস্টে তুললেন?',
-    M4DpSurveyTopic.jumper => 'কেন জট পাকানো জাম্পারটা লিস্টে তুললেন?',
-    M4DpSurveyTopic.tilt => 'কেন বাঁকা ক্রস-আর্মটা লিস্টে তুললেন?',
-    M4DpSurveyTopic.clearance => 'কেন কাছাকাছি জাম্পারটা লিস্টে তুললেন?',
-    M4DpSurveyTopic.ltCables => 'কেন ঝোলা এলটি কেবিলগুলো লিস্টে তুললেন?',
-    M4DpSurveyTopic.touch => 'কেন ছুঁয়ে থাকা তার দুটো লিস্টে তুললেন?',
-    M4DpSurveyTopic.order => 'কেন ওপরের কাজগুলো আগে রাখলেন?',
+    M4DpSurveyTopic.tail => 'কেন বাইন্ডিং তারের লেজটা লিস্টে উঠল?',
+    M4DpSurveyTopic.jumper => 'কেন জট পাকানো জাম্পারটা লিস্টে উঠল?',
+    M4DpSurveyTopic.tilt => 'কেন বাঁকা ক্রস-আর্মটা লিস্টে উঠল?',
+    M4DpSurveyTopic.clearance => 'কেন কাছাকাছি জাম্পারটা লিস্টে উঠল?',
+    M4DpSurveyTopic.ltCables => 'কেন ঝোলা এলটি কেবিলগুলো লিস্টে উঠল?',
+    M4DpSurveyTopic.touch => 'কেন ছুঁয়ে থাকা তার দুটো লিস্টে উঠল?',
+    M4DpSurveyTopic.order => 'কেন ওপরের কাজগুলো আগে হবে?',
     M4DpSurveyTopic.tidy => 'কেন এই ডিপি-কে পরিপাটি বললেন?',
   };
 
-  static const tailWhy = ['বাতাসে উড়ে বাড়তি লেজটাই শর্ট করায়', 'বাড়তি বাইন্ডিং তার কেটে ফেলাই নিয়ম'];
+  static const tailWhy = ['বাতাসে উড়ে বাড়তি লেজ পাশের তারে লাগে', 'বাড়তি বাইন্ডিং তার কেটে ফেলাই নিয়ম'];
   static const jumperWhy = ['জট পাকানো জাম্পার শর্ট সার্কিটের ফাঁদ', 'জাম্পার চাই মসৃণ U বা C আকৃতির বাঁক'];
   static const tiltWhy = ['ক্রস-আর্ম নিখুঁত অনুভূমিক রাখাই নিয়ম', 'সোজা, প্রতিসম স্ট্রাকচারে লোড সমান ভাগ হয়'];
-  static const clearanceWhy = ['বাতাসে দুলে ছুঁয়ে গেলেই শর্ট সার্কিট', 'ফেজে-ফেজে, ফেজে-বডিতে নিরাপদ দূরত্ব চাই'];
+  static const clearanceWhy = ['বাতাসে দুলে ছুঁয়ে গেলে শর্ট সার্কিট হয়', 'ফেজে-ফেজে, ফেজে-বডিতে নিরাপদ দূরত্ব চাই'];
   static const ltCablesWhy = ['ক্ল্যাম্প বা টাই দিয়ে বেঁধে নামানোই নিয়ম', 'গোছানো কেবিলে ফল্ট খোঁজা অনেক সহজ হয়'];
   static const touchWhy = ['ঘষা লেগে ইনসুলেশন ক্ষয়ে শর্ট সার্কিট হয়', 'ইনসুলেটেড হলেও তার ছুঁয়ে থাকা চলে না'];
-  static const orderWhy = ['ড্রেসিং চলে ওপরের HT থেকে নিচের LT-তে', 'ওপর থেকে শুরু করে নিচে নামাই ভালো অভ্যাস'];
+  static const orderWhy = ['ড্রেসিং চলে ওপরের HT থেকে নিচের LT-তে', 'ওপর থেকে শুরু করে নিচে আসাই ভালো অভ্যাস'];
   static const tidyWhy = ['জাম্পার মসৃণ বাঁকে, দূরত্বও ঠিক আছে', 'কেবিল বাঁধা আছে, বাড়তি তারও কাটা আছে'];
   static List<String> whyRight(M4DpSurveyTopic t) => switch (t) {
     M4DpSurveyTopic.tail => tailWhy,
@@ -195,27 +206,47 @@ abstract final class M4DpSurveyLines {
     M4DpSurveyTopic.tidy => tidyWhy,
   };
 
-  /// Wrong reasons (the lesson's two myths and field excuses).
+  /// Wrong reasons for any DP (the lesson's myth 1 and field excuses). Some
+  /// carry the words the right ones use ("শর্ট", "নিয়ম"), so no word is a tell.
   static const whyWrong = [
     'ড্রেসিং তো শুধু দেখতে ভালো লাগার জন্য',
     'লাইন চলছে, তাই হাত দেওয়ার দরকার নেই',
-    'ইনসুলেটেড তার ছুঁয়ে থাকলে কিছু হয় না',
     'সুপারভাইজার দেখবে, তাই সাজিয়ে রাখি',
-    'লম্বা লেজ থাকলে পরে জোড়া দিতে সুবিধা',
     'তাড়াতাড়ি সারতে হবে, মাপার সময় নেই',
+    'শর্ট তো কালেভদ্রে হয়, ভয়ের কিছু নেই',
+    'নিয়ম তো কাগজে থাকে, মাঠে চললেই হলো',
   ];
 
-  /// For a tidy DP "no need to touch it" is not a wrong reason: left out.
-  static List<String> whyWrongFor(M4DpSurveyTopic t) => t == M4DpSurveyTopic.tidy ? [for (final w in whyWrong) if (w != whyWrong[1]) w] : whyWrong;
+  /// Wrong reasons that name the same part as the question (so the right card
+  /// is never the only one echoing it); one of them is dealt every time. Each
+  /// is wrong as a whole (a myth or an excuse, no true rule in it), and
+  /// together with [whyWrong] they carry every word the right cards use.
+  static List<String> whyWrongTopic(M4DpSurveyTopic t) => switch (t) {
+    M4DpSurveyTopic.tail => const ['বাতাসে উড়ে লেজ পাশের তারে লাগলেও ক্ষতি নেই', 'বাড়তি তার কেটে ফেলাই ভুল, বাঁধন ঢিলে হয়', 'বাইন্ডিং তারের লম্বা লেজ পরে কাজে লাগে'],
+    M4DpSurveyTopic.jumper => const ['জট পাকানো জাম্পারে শর্ট সার্কিটের ভয় নেই', 'জাম্পার চাই টানটান, U বা C আকৃতির বাঁক বাড়তি', 'মসৃণ বাঁক বানানো সময় নষ্ট, ফাঁদ তো নেই'],
+    M4DpSurveyTopic.tilt => const ['নিখুঁত অনুভূমিক রাখাই বাড়াবাড়ি, বাঁকাও চলে', 'বাঁকা স্ট্রাকচারেও লোড সমান ভাগ হয়ে যায়', 'ক্রস-আর্ম সোজা বা প্রতিসম না হলেও চলে'],
+    M4DpSurveyTopic.clearance => const ['বাতাসে দুলে ছুঁয়ে গেলে শর্ট সার্কিট হয় না', 'ফেজে-ফেজে কাছাকাছি থাকলেও নিরাপদ দূরত্ব', 'ফেজে-বডিতে দূরত্ব চাই না, বডি তো আর্থ করা'],
+    M4DpSurveyTopic.ltCables => const ['ক্ল্যাম্প বা টাই দিয়ে বেঁধে নামানোই ভুল', 'ঝোলা কেবিলে ফল্ট খোঁজা অনেক বেশি সহজ হয়', 'গোছানো হোক বা ঝোলা, কেবিলে কিছু যায় আসে না'],
+    M4DpSurveyTopic.touch => const ['ঘষা লেগে ইনসুলেশন ক্ষয়ে না, মজবুত হয়', 'ইনসুলেটেড হলেও তার ছুঁয়ে থাকা চলে, ভয় নেই', 'ইনসুলেশন আছে, তাই শর্ট সার্কিটের ভয় নেই'],
+    M4DpSurveyTopic.order => const ['নিচ থেকে শুরু করে ওপরে আসাই ভালো অভ্যাস', 'নিচের LT-তে কাজ কম, তাই ওপরের HT পরে', 'ড্রেসিং চলে যেকোনো ক্রমে, ওপর-নিচ সমান'],
+    M4DpSurveyTopic.tidy => const ['জাম্পার মসৃণ বাঁকে কি না, দেখার সময় নেই', 'কেবিল বাঁধা আছে কি না, ঠিক বোঝার দরকার নেই', 'বাড়তি তারও কাটা হয়নি, দূরত্বও মাপিনি — চলবে'],
+  };
+
+  /// The general wrong reasons for [t]: for a tidy DP "no need to touch it"
+  /// is not a wrong reason, so it is left out.
+  static List<String> whyWrongGeneral(M4DpSurveyTopic t) => t == M4DpSurveyTopic.tidy ? [for (final w in whyWrong) if (w != whyWrong[1]) w] : whyWrong;
+
+  /// Every wrong reason that can be dealt for [t].
+  static List<String> whyWrongFor(M4DpSurveyTopic t) => [...whyWrongTopic(t), ...whyWrongGeneral(t)];
 
   // The plan: how the dressing on the list gets done.
   static const planRight = ['শাটডাউন, PTW, টেস্ট, আর্থ — তারপর ড্রেসিং', 'PTW নিয়ে, লাইন টেস্ট করে আর্থ দিয়ে তবেই'];
   static const planWrong = [
-    'লাইন চালু রেখেই উঠে একটু গুছিয়ে দিই',
-    'গ্লাভস পরে চালু লাইনেই কাজটা সেরে ফেলি',
-    'শাটডাউন লাগবে না, সাবধানে করলেই হবে',
+    'লাইন চালু রেখেই ড্রেসিংটা সেরে ফেলি',
+    'রাবার গ্লাভস দিয়ে তবেই চালু লাইনে উঠি',
+    'শাটডাউন লাগবে না, সাবধানে করে নিলেই হবে',
     'শাটডাউন পেলেই উঠি, টেস্ট-আর্থ লাগবে না',
-    'ছোট কাজ, পারমিট ছাড়াই উঠে পড়ি এখনই',
+    'PTW নিয়ে ভাবছি না, আগে উঠি তারপর দেখি',
   ];
 
   /// The careless coworker (lesson 4.7, myth 1).
@@ -250,11 +281,16 @@ abstract final class M4DpSurveyLines {
     asks: ['ও বলছে ইনসুলেটেড, তাই চলবে। আপনি?', 'ছুঁয়ে থাকা তার — ওর কথায়, না নিয়মে?', 'ওর কথা শুনবেন, না নিয়ম মানবেন?'],
   );
 
-  /// New lines for him (device TTS until recorded in his voice).
+  /// New lines for him with no recorded clip yet (silent, caption held, until
+  /// the director records them in his voice).
   static List<String> get recordLines => [coworkerAsIs.line, coworkerInsulated.line];
 
   static const callHeld = 'ঠিক! পরিপাটি ড্রেসিং সুরক্ষার কাজ — লিস্ট শেষ করুন।';
-  static const putRight = 'ঠিক আছে, এবার বাকিটা দেখুন।';
+  /// He came as the list was being written: refused, the list goes in as it
+  /// was pressed (neutral: never hints whether it was complete).
+  static const callHeldList = 'ঠিক! চাপে নিয়ম ছাড়লেন না। এবার লিস্টটা দেখা যাক।';
+  /// After a slip card (neutral: never "ঠিক আছে" about a part).
+  static const putRight = 'চলুন, বাকিটা খুঁটিয়ে দেখুন।';
   static const allSet = 'তিনটে ডিপি, পুরো লিস্ট — একজন পাকা লাইনম্যানের চোখ!';
   static const quick = 'নিখুঁত আর ঝটপট!';
   static const fail = 'আরেকবার — ওপর থেকে নিচে, প্রতিটা অংশ খুঁটিয়ে দেখুন।';
@@ -266,6 +302,19 @@ abstract final class M4DpSurveyLines {
   static const caughtOrder = 'ওপরের HT আগে, তারপর LT';
   static const caughtPlan = 'শাটডাউন, PTW, টেস্ট, আর্থ — তারপর ড্রেসিং';
   static const caughtCall = 'চাপে “না” বলেছেন';
+}
+
+/// The reason cards for [t]: one right, one wrong that names the same part,
+/// one general wrong — shuffled.
+List<ChoiceOption> dealM4DpSurveyWhy(M4DpSurveyTopic t, math.Random rng) {
+  final right = M4DpSurveyLines.whyRight(t);
+  final topic = M4DpSurveyLines.whyWrongTopic(t);
+  final general = M4DpSurveyLines.whyWrongGeneral(t);
+  return [
+    ChoiceOption(right[rng.nextInt(right.length)], true),
+    ChoiceOption(topic[rng.nextInt(topic.length)], false),
+    ChoiceOption(general[rng.nextInt(general.length)], false),
+  ]..shuffle(rng);
 }
 
 abstract final class M4DpSurveyMistakes {
@@ -318,7 +367,7 @@ abstract final class M4DpSurveyMistakes {
 
   static const falseMark = DoMistake(
     key: '4.7/m4_dp_survey/tidy-part-marked',
-    textBn: 'এই অংশটা পরিপাটিই ছিল — মসৃণ বাঁকের জাম্পার, সোজা ক্রস-আর্ম, বাঁধা কেবিল। শুধু যা এলোমেলো, তা-ই লিস্টে তুলুন।',
+    textBn: 'যা পরিপাটি, তা লিস্টে তোলার কিছু নেই — মসৃণ বাঁকের জাম্পার, সোজা ক্রস-আর্ম, বাঁধা কেবিল। দাগ দেওয়ার আগে খুঁটিয়ে মিলিয়ে নিন।',
     art: '$_dir/dp_tidy.svg',
     lessonPoint: 1,
   );
@@ -462,10 +511,22 @@ class M4DpSurveyRun {
     return null;
   }
 
+  /// Which myth he pushes: the insulated one only on an insulated deal, on
+  /// his DP, with the touching wires already on the list (his line must not
+  /// tell the player a fault he has not found). Set by [aimCall].
+  bool callInsulated = false;
+
+  /// Aim his myth at what is on the list now. The page calls it each time it
+  /// checks whether he may come; nothing can be marked while he is on, so the
+  /// last aim before he comes is the one he and [listen] use.
+  void aimCall() {
+    callInsulated = deal.insulated && index == deal.callAt && marked.contains(M4DpSurveyFault.touch);
+  }
+
   /// Listened to the careless coworker (on this DP): a slip.
   DoMistake? listen() {
     if (ended) return null;
-    return _slip(deal.insulated ? M4DpSurveyMistakes.insulatedMyth : M4DpSurveyMistakes.asIsMyth);
+    return _slip(callInsulated ? M4DpSurveyMistakes.insulatedMyth : M4DpSurveyMistakes.asIsMyth);
   }
 
   /// How the dressing will be done: only the safe way is right; the rest =
@@ -579,6 +640,11 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
   int _totalDelta = 0;
   int _wake = 0;
 
+  /// The list button was pressed while he was due: he came first; the press
+  /// stands and the list goes in after him exactly as it was ([_writeList]).
+  var _listHeld = false;
+  Offset _listOrigin = Offset.zero;
+
   /// The order card's items (shuffled once per DP).
   List<M4DpSurveyFault> _orderItems = const [];
 
@@ -593,6 +659,10 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
   Completer<void>? _frozen;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+
+  /// Gesture hints (how to touch, never what): misses come from [_tapScene].
+  final _hints = IdleHintController();
+  final _orderKeys = <M4DpSurveyFault, GlobalKey>{};
   M4DpSurveyGeo _geoNow = M4DpSurveyGeo.forScene(780, 0);
 
   @override
@@ -631,7 +701,7 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
     if (!_muted) unawaited(ZlFx.cue(file, volume: volume, muted: false));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_planOpen;
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_planOpen;
 
   Offset _toGlobal(Offset design) {
     final size = MediaQuery.sizeOf(context);
@@ -644,6 +714,7 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
   }
 
   void _startDp() {
+    _listHeld = false;
     setState(() => _wake++);
     if (_run.index == _run.deal.callAt) scheduleCoworker();
     unawaited(_sayChain([M4DpSurveyLines.askSurvey]));
@@ -651,9 +722,13 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
 
   // --- 1. spot ---------------------------------------------------------------------
   Future<void> _tapScene(Offset p) async {
-    if (!_canPlay || _run.phase != M4DpSurveyPhase.survey) return;
-    final zone = _geoNow.zoneAt(p);
-    if (zone == null) return;
+    if (!_canPlay) return;
+    final zone = _run.phase == M4DpSurveyPhase.survey ? _geoNow.zoneAt(p) : null;
+    if (zone == null) {
+      // A tap on sky or ground (or on the scene while the order card waits).
+      if (_run.phase == M4DpSurveyPhase.survey || _run.phase == M4DpSurveyPhase.order) _hints.missTap();
+      return;
+    }
     final (hit, m) = _run.mark(zone);
     if (m != null) {
       unawaited(_levelDelta(-10, _toGlobal(p), mood: GuideMood.warn));
@@ -669,6 +744,21 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
   // --- the list ----------------------------------------------------------------------
   Future<void> _submit(Offset origin) async {
     if (!_canPlay || _run.phase != M4DpSurveyPhase.survey) return;
+    // Writing the list finishes his DP: a fast player still meets him first.
+    // The press is a commitment: after him the list goes in as pressed (so
+    // "সব পরিপাটি" cannot be used to see whether he comes).
+    if (holdForCoworker()) {
+      _listHeld = true;
+      _listOrigin = origin;
+      return;
+    }
+    await _writeList(origin);
+  }
+
+  /// The list goes in as it stands (the button, or the held press after him).
+  Future<void> _writeList(Offset origin) async {
+    _listHeld = false;
+    if (_ended || _run.phase != M4DpSurveyPhase.survey) return;
     _hush();
     final m = _run.submit();
     HapticFeedback.mediumImpact();
@@ -724,7 +814,7 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
     putOnTable(15 + (_run.clean ? 5 : 0));
     unawaited(
       askReason(
-        deal: () => dealChoices(M4DpSurveyLines.whyRight(s.topic), M4DpSurveyLines.whyWrongFor(s.topic), widget.rng),
+        deal: () => dealM4DpSurveyWhy(s.topic, widget.rng),
         question: M4DpSurveyLines.why(s.topic),
         stillValid: () => _run.index == idx && _run.phase == M4DpSurveyPhase.why && !_ended,
       ),
@@ -799,7 +889,7 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
 
   // --- the shared pressure moment (CoworkerMoment) ----------------------------
   @override
-  CoworkerScript get coworkerScript => _run.deal.insulated ? M4DpSurveyLines.coworkerInsulated : M4DpSurveyLines.coworkerAsIs;
+  CoworkerScript get coworkerScript => _run.callInsulated ? M4DpSurveyLines.coworkerInsulated : M4DpSurveyLines.coworkerAsIs;
   @override
   math.Random get coworkerRng => widget.rng;
   @override
@@ -807,8 +897,13 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.index != _run.deal.callAt || _run.phase != M4DpSurveyPhase.survey) return null;
-    if (_intro || _busy || _card != null || reasonOpen || _run.marked.isEmpty) return false;
-    return true;
+    // His myth fits what is on the list right now (the kit asks this just
+    // before he comes; nothing is marked while he is on).
+    _run.aimCall();
+    // Never into the praise window; the held list (writing it waits for him)
+    // lets him in even before the first mark.
+    if (_intro || _busy || _card != null || tableBusy) return false;
+    return _run.marked.isNotEmpty || coworkerHeld;
   }
 
   @override
@@ -828,6 +923,18 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
     _run.caught.add(M4DpSurveyLines.caughtCall);
     unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
     unawaited(coworkerSnarl());
+    if (_listHeld) {
+      // The list was pressed as he came: it goes in as it was pressed (no
+      // marks can be added in between), with a neutral word first.
+      setState(() => _busy = true);
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      if (!mounted || _ended) return;
+      await _sayChain([M4DpSurveyLines.callHeldList]);
+      if (!mounted || _ended) return;
+      setState(() => _busy = false);
+      await _writeList(_listOrigin);
+      return;
+    }
     await Future<void>.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
     unawaited(_sayChain([M4DpSurveyLines.callHeld, M4DpSurveyLines.ask(_run.phase)]));
@@ -912,7 +1019,10 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
         _hush();
         setState(() => _card = null);
         // The guide put it right; the DP goes on.
-        if (_run.phase == M4DpSurveyPhase.survey) {
+        if (_run.phase == M4DpSurveyPhase.survey && _listHeld) {
+          // Listened to him after pressing the list: the press stands.
+          unawaited(_writeList(_listOrigin));
+        } else if (_run.phase == M4DpSurveyPhase.survey) {
           unawaited(_sayChain([M4DpSurveyLines.putRight, M4DpSurveyLines.askSurvey]));
         } else {
           _goOn();
@@ -988,6 +1098,28 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
     }
     final leave = await showGameExitSheet(context, scope: GameExitScope.level, bn: true);
     if (leave == true) _popOnce(false);
+  }
+
+  // --- gesture hints ---------------------------------------------------------
+  /// Surveying: the hand glides over every part of the structure (tidy and
+  /// untidy alike, top to bottom — never one part). Ordering: over the cards
+  /// not yet picked (the last one is the only way forward: a tap).
+  HintSpec? _hint() {
+    switch (_run.phase) {
+      case M4DpSurveyPhase.survey:
+        final g = _geoNow;
+        final zones = [for (final f in M4DpSurveyFault.values) g.zoneOf(f)]..sort((a, b) => a.top.compareTo(b.top));
+        return HintSpec.sweep(zones, space: HintSpace.scene);
+      case M4DpSurveyPhase.order:
+        final open = [
+          for (final f in _orderItems)
+            if (!_run.order.contains(f)) _orderKeys.putIfAbsent(f, GlobalKey.new),
+        ];
+        if (open.isEmpty) return null;
+        return open.length == 1 ? HintSpec.tapOn(open.single) : HintSpec.sweepOver(open);
+      case M4DpSurveyPhase.why || M4DpSurveyPhase.plan || M4DpSurveyPhase.done:
+        return null;
+    }
   }
 
   // --- the scene ---------------------------------------------------------------
@@ -1092,6 +1224,7 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
     final deckUp = reasonOpen || coworkerChoiceUp || _planOpen;
     final handsOn = playing && !deckUp && !coworkerOpen && _card == null;
     final phase = _run.phase;
+    final hintWaiting = handsOn && !_busy && !tableBusy && (phase == M4DpSurveyPhase.survey || phase == M4DpSurveyPhase.order);
     final s = _run.structure;
     return PopScope(
       canPop: false,
@@ -1123,6 +1256,10 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: '${_run.index}-${phase.name}',
+            hintController: _hints,
             overlays: [
               if (handsOn && phase == M4DpSurveyPhase.survey)
                 Positioned(
@@ -1150,6 +1287,7 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
                 _OrderCard(
                   key: ValueKey('order-${_run.index}'),
                   items: _orderItems,
+                  itemKeys: {for (final f in _orderItems) f: _orderKeys.putIfAbsent(f, GlobalKey.new)},
                   picked: _run.order,
                   quiet: quiet,
                   onPick: (f, o) => unawaited(_pick(f, o)),
@@ -1309,8 +1447,11 @@ class _ListChip extends StatelessWidget {
 
 /// The order: the list's items as cards; tap them in the dressing order.
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({super.key, required this.items, required this.picked, required this.quiet, required this.onPick});
+  const _OrderCard({super.key, required this.items, required this.itemKeys, required this.picked, required this.quiet, required this.onPick});
   final List<M4DpSurveyFault> items;
+
+  /// Where each card is on screen (the sweep hint).
+  final Map<M4DpSurveyFault, GlobalKey> itemKeys;
   final List<M4DpSurveyFault> picked;
   final bool quiet;
   final void Function(M4DpSurveyFault f, Offset origin) onPick;
@@ -1350,6 +1491,7 @@ class _OrderCard extends StatelessWidget {
               const SizedBox(height: 6),
               for (final f in items)
                 Padding(
+                  key: itemKeys[f],
                   padding: const EdgeInsets.only(top: 6),
                   child: _OrderItem(
                     key: ValueKey('order-${f.name}'),

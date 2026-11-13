@@ -2,7 +2,9 @@
 // rules and the deadly/slip split, the deal, the drawn scene's geometry, fair
 // reason libraries, his recorded voice, and the level in the shell — idle
 // perf, the guide first, the hands-on drags, the reasons, the coworker, a
-// slip, three slips, the deadly freeze (near-miss, then death) and a clean pass.
+// slip, three slips, the deadly freeze (near-miss, then death) and a clean pass;
+// the kit's timing (no drop counts in the praise window, the last phase waits
+// for him) and the gesture hint (a short nudge, never toward the target).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,6 +19,7 @@ import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/discharge_order.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -31,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '1.5/do/1',
@@ -90,8 +94,9 @@ Offset _hookNow(WidgetTester t) {
   return (w.painter! as dynamic).hook as Offset;
 }
 
-/// Taps the one right card on the deck now up.
+/// Taps the one right card on the deck (waits for it), then its proceed.
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = [
     for (final x in right)
@@ -99,16 +104,22 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   ];
   expect(r, hasLength(1), reason: right.first);
   await t.tap(find.descendant(of: find.byType(ChoiceDeck), matching: find.text(r.single)), warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
+  // A right reason zooms and waits for proceed; his deck closes by itself.
+  await tapReasonProceed(t);
+}
+
+/// Words (2+ letters) that two or more right options share but no wrong
+/// option has: a reader could pick the answer by the word alone.
+List<String> _rightOnlyWords(List<String> right, List<String> wrong) {
+  Set<String> words(String l) => {for (final w in l.split(RegExp(r'[\s,—।-]+'))) if (w.length >= 2) w};
+  final inWrong = {for (final l in wrong) ...words(l)};
+  final n = <String, int>{};
+  for (final l in right) {
+    for (final w in words(l)) {
+      n[w] = (n[w] ?? 0) + 1;
+    }
   }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  return [for (final MapEntry(:key, :value) in n.entries) if (value >= 2 && !inWrong.contains(key)) key];
 }
 
 void main() {
@@ -198,6 +209,7 @@ void main() {
         for (final l in [...right, ...wrong]) {
           expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
         }
+        expect(_rightOnlyWords(right, wrong), isEmpty, reason: '$name: a word only the right options use gives the answer away');
       }
       expect(DischargeLines.coworker.asks.length, greaterThanOrEqualTo(2));
       for (final l in DischargeLines.coworker.recordedLines) {
@@ -274,7 +286,7 @@ void main() {
         }
         debugPrint('PERF discharge order ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -462,7 +474,7 @@ void main() {
       final save = c.read(gameSaveProvider.notifier);
       await save.markRungCleared('1.1/learn');
       await save.markRungCleared('1.1/do/0');
-      expect(find.textContaining('ধাপ '), findsOneWidget);
+      expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
 
       // The hook on Y before the earth: the scene freezes first.
       var g = _geo(t);
@@ -510,11 +522,136 @@ void main() {
       ];
       expect(wrong, hasLength(2));
       await t.tap(find.descendant(of: find.byType(ChoiceDeck), matching: find.text(wrong.first)), warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3000);
       expect(_onCard(DischargeMistakes.skipDischarge.textBn), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes.single.key, DischargeMistakes.skipDischarge.key);
+      await close(t, c);
+    });
+
+    testWidgets('the praise window: a drop while the ◆ wait on the table counts nothing', (t) async {
+      final seed = _seedWhere((d) => d.callAfter == 2);
+      final deal = dealDischarge(math.Random(seed));
+      final (c, _) = await open(t, seed);
+      final g = _geo(t);
+      await _drag(t, g.clampRest, g.spike(good: true, goodLeft: deal.goodLeft), 0);
+      // At once, before the reason deck: the hook to a wire.
+      final hx = g.hands.dx - 60;
+      await _drag(t, g.hookRest, Offset(hx, g.wireY(DischargeIds.r, hx)), 0);
+      expect(_hookNow(t), g.hookRest, reason: 'nothing counts in the praise window');
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pickRight(t, DischargeLines.earthRight);
+      await _pump(t, 2500);
+      expect(_hookNow(t), g.hookRest);
+      expect(find.text(DischargeLines.phaseAsk), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('the last phase waits for him: he cuts in at once, the hook goes back, then the phase counts', (t) async {
+      final seed = _seedWhere((d) => d.callAfter == 2);
+      final deal = dealDischarge(math.Random(seed));
+      final (c, _) = await open(t, seed);
+      final g = _geo(t);
+      await _drag(t, g.clampRest, g.spike(good: true, goodLeft: deal.goodLeft), 2500);
+      // His retry ticks every 900 ms while the deck is up. Picking a card now
+      // takes its ✓ (ChoiceDeck.armDelay = 300 ms) on top of the tap: wait
+      // 600 ms first, so the right reason closes at the same point of his
+      // cadence as before (his next try is not due during the fast hands).
+      await _pump(t, 600);
+      await _pickRight(t, DischargeLines.earthRight);
+      await _pump(t, 200);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'his moment is after two steps');
+      // R, B, Y as fast as the hands go (his retry is up to 900 ms away).
+      final hx = g.hands.dx - 60;
+      var at = g.hookRest;
+      for (final p in [DischargeIds.r, DischargeIds.b, DischargeIds.y]) {
+        if (find.byType(CoworkerPeek).evaluate().isNotEmpty) break;
+        final to = Offset(hx, g.wireY(p, hx));
+        await _drag(t, at, to, 0);
+        at = _hookNow(t);
+      }
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he comes before the discharge is done');
+      expect(find.text(DischargeLines.phaseAsk), findsNothing, reason: 'the last phase did not count');
+      await _pickRight(t, DischargeLines.coworker.right);
+      await _pump(t, 3000);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // Now the phase that is left counts.
+      for (final p in DischargeIds.phases) {
+        if (find.text(DischargeLines.phaseAsk).evaluate().isNotEmpty) break;
+        await _drag(t, _hookNow(t), Offset(hx + 8, g.wireY(p, hx + 8)), 900);
+      }
+      await _pump(t, 1500);
+      expect(find.text(DischargeLines.phaseAsk), findsWidgets);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('gesture hint: after idle a short nudge on a thing in reach, never toward its target; taps on nothing call it', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = _seedWhere((d) => d.callAfter == 2);
+      final (c, _) = await open(t, seed);
+      final g = _geo(t);
+      final hint = find.byType(IdleHint).first;
+      IdleHintState state() => t.state<IdleHintState>(hint);
+      expect(state().showing, isFalse);
+      await _pump(t, GestureHints.idle.inMilliseconds + 400);
+      expect(state().showing, isTrue, reason: 'the hand shows after idle');
+      // Over one lap: the frame where the nudge has moved its full (short) way.
+      HintFrame? f;
+      for (var ms = 0; ms < 2400; ms += 50) {
+        await t.pump(const Duration(milliseconds: 50));
+        final now = state().debugFrame;
+        if (now?.trailFrom == null) continue;
+        if (f == null || (now!.tip - now.trailFrom!).distance > (f.tip - f.trailFrom!).distance) f = now;
+      }
+      expect(f, isNotNull, reason: 'a drag nudge');
+      final box = t.renderObject<RenderBox>(hint);
+      final from = box.localToGlobal(f!.trailFrom!);
+      final to = box.localToGlobal(f.tip);
+      final scale = t.getRect(_label(DischargeLines.sceneLabel)).width / 360;
+      expect((to - from).distance, lessThanOrEqualTo(28 * scale + 1), reason: 'a short nudge');
+      final starts = {
+        'clamp': _screen(t, g.clampRest),
+        'hook': _screen(t, g.hookRest),
+        'chain': _screen(t, g.coilRest),
+      };
+      final which = [for (final e in starts.entries) if ((e.value - from).distance < 3) e.key];
+      expect(which, hasLength(1), reason: 'it starts on a thing the hands can take: $from');
+      switch (which.single) {
+        case 'clamp':
+          for (final sp in [g.spikeLeft, g.spikeRight]) {
+            expect((to - _screen(t, sp)).distance, greaterThan((from - _screen(t, sp)).distance), reason: 'never toward a spike');
+          }
+        case 'hook':
+          final wire = _screen(t, Offset(g.hookRest.dx, g.wireY(DischargeIds.b, g.hookRest.dx)));
+          expect(to.dy - wire.dy, greaterThan(from.dy - wire.dy), reason: 'never up toward the wires');
+        case 'chain':
+          expect(to.dx, greaterThan(from.dx), reason: 'away from the span');
+      }
+      // A touch hides it.
+      await t.tapAt(_screen(t, const Offset(300, 300)));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(state().showing, isFalse);
+      await _pump(t, GestureHints.missWindow.inMilliseconds + 500);
+      expect(state().showing, isFalse);
+      // Three taps on nothing in a row: the hand at once.
+      for (var i = 0; i < 2; i++) {
+        await t.tapAt(_screen(t, Offset(280 - 20.0 * i, 320)));
+        await t.pump(const Duration(milliseconds: 300));
+        expect(state().showing, isFalse);
+      }
+      await t.tapAt(_screen(t, const Offset(240, 320)));
+      await t.pump(const Duration(milliseconds: 300));
+      expect(state().showing, isTrue, reason: 'three taps on nothing show the hand');
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(t.takeException(), isNull);
       await close(t, c);
     });
 

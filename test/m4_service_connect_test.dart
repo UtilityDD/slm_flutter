@@ -5,7 +5,11 @@
 // read right, offcuts cleared; a tool or the earth on the live LT line =
 // deadly), the deal, the reason libraries, and the level in the shell: idle
 // perf, the guide first, a full clean play with the coworker refused, a slip
-// card that keeps the house, the deadly freeze, three slips.
+// card that keeps the house, the deadly freeze, three slips; audit 2026-11-11:
+// the tool bar dealt out of the job's order, each reason dealt with its own
+// myth (no key word only on the right card), the coworker comes even on a
+// fast play (holdForCoworker at the meter), gesture hints on idle and on taps
+// on nothing.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -19,6 +23,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -34,6 +39,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '4.3/do/1',
@@ -49,6 +55,7 @@ final _pack = m4ServiceConnectPacks['do_4_3_b']!;
 typedef _L = M4ServiceConnectLines;
 typedef _M = M4ServiceConnectMistakes;
 typedef _T = M4ServiceConnectTool;
+typedef _B = M4ServiceConnectButton;
 
 /// The new art is not in pubspec yet (the director adds the folder): tests
 /// read it from disk when the bundle does not have it.
@@ -86,10 +93,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -404,6 +413,57 @@ void main() {
       expect(m4ServiceConnectPacks.keys, ['do_4_3_b']);
     });
 
+    test('the tool bar: all ten, dealt per play, neither row in the job order', () {
+      expect(m4ServiceConnectRowInOrder(const [_B.strap, _B.harness, _B.pliers, _B.shutdown, _B.tester]), isTrue);
+      expect(m4ServiceConnectRowInOrder(const [_B.earth, _B.ipc, _B.fuse, _B.multimeter, _B.handover]), isTrue);
+      expect(m4ServiceConnectRowInOrder(const [_B.ipc, _B.earth, _B.fuse, _B.multimeter, _B.handover]), isFalse);
+      final seen = <String>{};
+      for (var s = 0; s < 200; s++) {
+        final bar = m4ServiceConnectToolBar(math.Random(s));
+        expect(bar.toSet(), M4ServiceConnectButton.values.toSet());
+        expect(bar, hasLength(10));
+        expect(m4ServiceConnectRowInOrder(bar.sublist(0, 5)), isFalse, reason: '$bar');
+        expect(m4ServiceConnectRowInOrder(bar.sublist(5)), isFalse, reason: '$bar');
+        seen.add(bar.join());
+      }
+      expect(seen.length, greaterThan(190));
+    });
+
+    test('each reason is dealt with its own myth: its key word is never only on the right card', () {
+      // Every word of the question that a right card repeats sits on the
+      // question's own myth too.
+      const keys = {
+        M4ServiceConnectWhy.strap: ['জিআই', 'কেবিল'],
+        M4ServiceConnectWhy.drip: ['ড্রিপ লুপ', 'মিটারের মুখে'],
+        M4ServiceConnectWhy.pn: ['ফেজ-নিউট্রাল', 'চিহ্ন'],
+        M4ServiceConnectWhy.dead: ['শাটডাউন', 'আর্থ', 'আগে'],
+        M4ServiceConnectWhy.ipc: ['IPC'],
+        M4ServiceConnectWhy.test: ['ভোল্টেজ', 'মিটারে'],
+      };
+      for (final w in M4ServiceConnectWhy.values) {
+        final s = M4ServiceConnectSite(id: 'x', ltOrder: const [0, 1, 2, 3], meterLeftIsL: true, volts: 230, scraps: const [236, 262], why: w);
+        for (final key in keys[w]!) {
+          expect(_L.whyQuestion(s), contains(key));
+          expect(_L.topicMyths(w).any((m) => m.contains(key)), isTrue, reason: '$w: $key');
+        }
+        for (var k = 0; k < 20; k++) {
+          final wrong = _L.whyWrong(s, math.Random(k));
+          expect(wrong, hasLength(2));
+          expect(wrong.toSet(), hasLength(2));
+          expect(wrong, containsAll(_L.topicMyths(w)));
+          expect(wrong.every(_L.myths.contains), isTrue);
+          final deal = dealChoices(_L.whyRight(s), wrong, math.Random(k));
+          expect(deal.where((o) => !o.correct).map((o) => o.textBn).toSet(), wrong.toSet());
+        }
+      }
+      // His refusals: not all open with "না", and their key words sit on a listening card too.
+      final cw = _L.coworker;
+      expect(cw.right.every((r) => r.startsWith('না')), isFalse);
+      for (final word in ['চিহ্ন', 'টার্মিনাল', 'বিপদ', 'L']) {
+        if (cw.right.any((r) => r.contains(word))) expect(cw.wrong.any((r) => r.contains(word)), isTrue, reason: word);
+      }
+    });
+
     test('reasons: same length, big enough, never a rule marked wrong; his exit is recorded', () {
       expectSameLength('why', [..._L.allRight, ..._L.myths]);
       for (final w in M4ServiceConnectWhy.values) {
@@ -461,7 +521,7 @@ void main() {
         }
         debugPrint('PERF m4_service_connect ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -556,6 +616,32 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('hands off in the praise window: a slip tap and a tool tap after the right reason change nothing', (t) async {
+      final deal = m4ServiceConnectDeal(math.Random(7));
+      final c = await _open(t, 7);
+      final s = deal.sites[0];
+      await _houseEnd(t, deal, 0);
+      await _poleEnd(t, s);
+      await _tool(t, _L.handover);
+      await _pump(t, 1500);
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 700);
+      await _pickRight(t, _L.whyRight(s));
+      // The praise window (tableBusy): the drip loop before strapping would be
+      // a slip, and the strap tool would arm — neither may land.
+      await t.tapAt(_geo.entryHit.center * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      if (_label(_L.strap).evaluate().isNotEmpty) await t.tap(_label(_L.strap).first, warnIfMissed: false);
+      await _pump(t, 6000);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      // The next house starts clean and plays through as usual.
+      await _playRight(t, deal, 1);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
     testWidgets('an IPC on the live LT line: the scene freezes first, then the card (near-miss)', (t) async {
       final c = await _open(t, 2);
       await _tool(t, _L.harness);
@@ -573,6 +659,61 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('a fast play cannot skip him: the first core at the meter waits for him', (t) async {
+      final seed = [for (var s = 0; s < 200; s++) s].firstWhere((s) => m4ServiceConnectDeal(math.Random(s)).callAt == 0);
+      final deal = m4ServiceConnectDeal(math.Random(seed));
+      final s = deal.sites[0];
+      final c = await _open(t, seed);
+      await _tool(t, _L.strap);
+      await _tapAt(t, _geo.spanHit.center);
+      await t.tapAt(_geo.entryHit.center * _k);
+      await t.pump(const Duration(milliseconds: 50));
+      // Both cores in as fast as a finger goes (well before his 1.2 s timer).
+      for (final p in [_geo.houseCores[0], _geo.terminals[_term(s, l: true)], _geo.houseCores[1], _geo.terminals[_term(s, l: false)]]) {
+        await t.tapAt(p * _k);
+        await t.pump(const Duration(milliseconds: 60));
+      }
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cut in on the first core');
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2600);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // No core went in while he talked: the meter is still to do, and goes in now.
+      await _tapAt(t, _geo.houseCores[0]);
+      await _tapAt(t, _geo.terminals[_term(s, l: true)]);
+      await _tapAt(t, _geo.houseCores[1]);
+      await _tapAt(t, _geo.terminals[_term(s, l: false)]);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: idle sweeps over every tool; three taps on the sky show it at once', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 6);
+      final hint = find.byKey(const ValueKey('gesture-hint'));
+      expect(hint, findsNothing);
+      await _pump(t, 9000);
+      expect(hint, findsOneWidget);
+      final idle = t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(idle.debugOptions, hasLength(10), reason: 'a sweep over the whole tool bar, never one tool');
+      await _pump(t, 16000);
+      expect(hint, findsNothing, reason: 'it plays twice, then the screen is idle again');
+      // Taps on the empty sky (nothing there to press).
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(const Offset(150, 190) * _k);
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(hint, findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      await t.tap(_label(_L.strap));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(hint, findsNothing, reason: 'a touch hides it');
+      await _close(t, c);
+    });
+
     testWidgets('listening to him: phase and neutral swapped — a slip card, the house goes on', (t) async {
       final deal = m4ServiceConnectDeal(math.Random(11));
       final c = await _open(t, 11);
@@ -585,9 +726,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1200);
       expect(find.byType(FreezeFrame), findsNothing);
       expect(find.text(_M.pnSwap.textBn), findsOneWidget);

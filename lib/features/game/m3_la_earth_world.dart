@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show mapEquals;
+import 'package:flutter/foundation.dart' show listEquals, mapEquals;
 import 'package:flutter/material.dart';
 
 // The yard of lesson 3.5 কাজ 2 ("কবচের মাটি"), drawn in code: a roadside
@@ -10,7 +10,8 @@ import 'package:flutter/material.dart';
 // disconnector at the bottom (point 3), the earth leads from the LAs' bottom
 // terminals joined and run down the left pole to the earth rod in the ground
 // (film: "বডি ও আর্থিং রড"), the transformer on its platform below, and on a
-// tarp the kit: HT tester on a rod, the temporary earth set, the harness.
+// tarp the kit: HT tester on a rod, the temporary earth set, the harness
+// (in a dealt order — never laid out in the order of use).
 // Static layers repaint only when their state changes (an idle screen draws
 // zero frames); sparks and the deadly zap are one-shots.
 
@@ -22,6 +23,9 @@ M3LaEarthSpot m3LaEarthJoint(int i) => M3LaEarthSpot.values[i];
 
 /// What is wrong with a spot.
 enum M3LaEarthFault { loose, cut }
+
+/// The kit on the tarp (laid out in a dealt order, never the order of use).
+enum M3LaEarthKit { tester, earthSet, harness }
 
 /// Where things stand (design px, 360 wide × the scene's height).
 @immutable
@@ -74,9 +78,12 @@ class M3LaEarthGeo {
 
   // The kit on the tarp.
   Rect get tarp => Rect.fromLTWH(84, groundY + 76, 196, 78);
-  Rect get tester => Rect.fromLTWH(tarp.left + 6, tarp.top + 6, 60, 66);
-  Rect get earthSet => Rect.fromLTWH(tarp.left + 68, tarp.top + 6, 60, 66);
-  Rect get harness => Rect.fromLTWH(tarp.left + 132, tarp.top + 6, 60, 66);
+
+  /// Slot [k] (0 left … 2 right) on the tarp.
+  Rect kitSlot(int k) => Rect.fromLTWH(tarp.left + const [6.0, 68.0, 132.0][k], tarp.top + 6, 60, 66);
+
+  /// Where [item] lies in the dealt layout [order].
+  Rect kitBox(M3LaEarthKit item, List<M3LaEarthKit> order) => kitSlot(order.indexOf(item));
 
   /// The trainee: on the ground, or up a pole with the harness on — the left
   /// pole for the R-phase LA ([left]), else the right one.
@@ -257,9 +264,13 @@ class M3LaEarthGearPainter extends CustomPainter {
     required this.proved,
     required this.earthed,
     required this.harnessOn,
+    required this.kit,
   });
 
   final M3LaEarthGeo geo;
+
+  /// The tarp's layout, left to right.
+  final List<M3LaEarthKit> kit;
 
   /// The LA whose disconnector has gone (its lead hangs).
   final int badLa;
@@ -458,9 +469,9 @@ class M3LaEarthGearPainter extends CustomPainter {
 
   void _kit(Canvas canvas) {
     final g = geo;
-    if (!proved) _testerArt(canvas, g.tester);
-    if (!earthed) _earthSetArt(canvas, g.earthSet);
-    if (!harnessOn) _harnessArt(canvas, g.harness);
+    if (!proved) _testerArt(canvas, g.kitBox(M3LaEarthKit.tester, kit));
+    if (!earthed) _earthSetArt(canvas, g.kitBox(M3LaEarthKit.earthSet, kit));
+    if (!harnessOn) _harnessArt(canvas, g.kitBox(M3LaEarthKit.harness, kit));
   }
 
   void _testerArt(Canvas canvas, Rect b) {
@@ -504,6 +515,7 @@ class M3LaEarthGearPainter extends CustomPainter {
       old.harnessOn != harnessOn ||
       old.flagged.length != flagged.length ||
       old.mended.length != mended.length ||
+      !listEquals(old.kit, kit) ||
       !mapEquals(old.faults, faults);
 }
 

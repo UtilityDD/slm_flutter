@@ -1060,7 +1060,7 @@ class _Hud extends ConsumerWidget {
     required this.onMute,
   });
 
-  /// The same header as every level on the ladder: close · "ধাপ N" · ◆ · 💀 · mute.
+  /// The same header as every level on the ladder: close · "L12" · ◆ · 💀.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final e = engine;
@@ -1069,7 +1069,7 @@ class _Hud extends ConsumerWidget {
     final ctx = levelContextFor(ref.watch(builtLadderProvider).value, save.currentRungId);
     return UnifiedGameTopHud(
       scoreKey: scoreKey,
-      badgeText: 'ধাপ ${ctx?.ladderStep ?? e.level.number}',
+      badgeText: 'L${ctx?.ladderStep ?? e.level.number}',
       titleText: onLevel ? e.briefOf().title : '',
       stepOnly: true,
       closeIcon: Icons.close_rounded,

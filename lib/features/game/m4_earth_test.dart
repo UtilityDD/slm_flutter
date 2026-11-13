@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -36,7 +37,9 @@ export 'm4_earth_test_world.dart' show M4EarthTestFault, M4EarthTestGeo, m4Earth
 // and the body, each to two separate pits — N-1 N-2 B-1 B-2). Three stations:
 //   ক look (spot) — lesson point 2, the visual check: an earth strip cut or
 //     stolen, a rusty / loose joint at the electrode, a pit with its cover
-//     off. 1–2 dealt a play; tap each, then "দেখা শেষ". Missing one = a slip.
+//     off. 1–2 dealt a play; tap a point to hang a tag (tap again to take it
+//     off — a tag looks the same on a sound point and never tells), then
+//     "দেখা শেষ". Missing a fault = a slip; a tag on a sound point = a slip.
 //   খ, গ test one neutral pit and one body pit (order) — lesson point 3,
 //     "শুধু চাক্ষুষ পরিদর্শন যথেষ্ট নয়": the earth tester, two temporary
 //     spikes driven into the soil (fall of potential), the leads, TEST; the
@@ -45,9 +48,13 @@ export 'm4_earth_test_world.dart' show M4EarthTestFault, M4EarthTestGeo, m4Earth
 //     lesson's value for a distribution line (less than 5–8 Ω). One pit a
 //     play reads good (≤ 4.2 Ω), the other high (≥ 12 Ω); a wrong mark = slip.
 // The careless coworker (one of two pushes, dealt): before the first test
-// "চোখে দেখেই হলো, মেগার লাগবে না" (lesson point 3), or on the high reading
-// "লাইন তো চলছে, ঠিক লিখে দাও" (myth 1). Listening = a slip.
+// "চোখে দেখেই হলো, মেগার লাগবে না" (lesson point 3; TEST waits for him), or
+// on a reading — either pit, dealt, so his arrival never tells which one is
+// high — "লাইন চলছে, মিটার যা-ই দেখাক, ঠিক লিখে দাও" (myth 1; the mark waits
+// for him). Listening = a slip. He never cuts into a praise window.
 // No deadly move: the lesson gives none for the test itself.
+// Gesture hints: a sweep over the earth points + "দেখা শেষ", over the spike
+// places + leads + TEST, over the two marks (never a tap on one of them).
 //
 // Flagged to the owner: the spike spacing, the tester's E/P/C terminals, and
 // whether the earth lead is disconnected for the test are not in the lesson
@@ -103,7 +110,7 @@ abstract final class M4EarthTestLines {
   ];
   static const highRight = [
     '5–8 ওহমের বেশি মানে আর্থিং দুর্বল হয়ে গেছে',
-    'বেশি রেজিস্ট্যান্সে ফল্টে ব্রেকার ট্রিপ করে না',
+    'আর্থের রেজিস্ট্যান্স যতটা সম্ভব কম হওয়া উচিত',
     'এমন আর্থে রক্ষণাবেক্ষণ লাগবে, ঠিক লেখা যাবে না',
   ];
 
@@ -112,9 +119,11 @@ abstract final class M4EarthTestLines {
     'লাইন তো চলছে, তাই আর্থ নিয়ে ভাবনা নেই',
     'টেস্টারে যা আসে, আন্দাজে লিখলেই তো চলে',
     'আর্থের মান যত বেশি, সুরক্ষাও তত বেশি',
-    'একটা লোহার রড পুঁতলেই তো ভালো আর্থ হয়',
+    'একটা লোহার রড পুঁতলেই তো ভালো আর্থিং হয়',
     'সুপারভাইজার দেখছেন না, এতেই কাজ চলবে',
     'সবাই তো এভাবেই করে, কিছু হয় না কখনো',
+    'মান 20 ওহমের নিচে হলেই তো যথেষ্ট ভালো',
+    'আর্থের জোড় একটু আলগা থাকলেও কিছু হয় না',
   ];
 
   /// The careless coworker's exit line (already recorded in his voice).
@@ -129,12 +138,13 @@ abstract final class M4EarthTestLines {
     asks: ['ও বলছে মাপার দরকার নেই। কী করবেন?', 'মাপবেন, না চোখে দেখেই ছাড়বেন?', 'ওর কথা শুনবেন, না নিয়ম?'],
   );
 
-  /// Push 2 (on the high reading): the line runs (myth 1).
+  /// Push 2 (on a reading, either pit): the line runs (myth 1). Every
+  /// option fits a good and a high reading alike (no giveaway).
   static const coworkerRuns = CoworkerScript(
-    line: 'লাইন তো দিব্যি চলছে! খাতায় মান ঠিক লিখে দাও, ঝামেলা কোরো না।',
+    line: 'লাইন তো দিব্যি চলছে! মিটার যা-ই দেখাক, খাতায় মান ঠিক লিখে দাও।',
     exitLine: coworkerExit,
-    right: ['না, বেশি মান মানে দুর্বল আর্থ', 'না, যা মাপলাম সেটাই খাতায় লিখব', 'না, ফল্টের সময় এ আর্থ কাজ করবে না'],
-    wrong: ['ঠিক, লাইন চলছে মানে আর্থও ঠিক', 'আচ্ছা, খাতায় মান ঠিক লিখে দিই', 'হ্যাঁ, একটু বেশিতে কিছু হয় না', 'ঠিক, পরে তো কেউ আর মাপবে না', 'চলো, ঝামেলা না করে ঠিকই লিখি'],
+    right: ['না, যা মাপলাম সেটাই খাতায় লিখব', 'না, লাইন চলা মানেই আর্থ ঠিক নয়', 'না, টেস্টারের মান দেখেই খাতায় লিখব'],
+    wrong: ['ঠিক, লাইন চলছে মানে আর্থও ঠিক', 'আচ্ছা, খাতায় মান ঠিক লিখে দিই', 'হ্যাঁ, মান যা-ই হোক, ঠিক লিখে দিই', 'ঠিক, পরে তো কেউ আর মাপবে না', 'চলো, ঝামেলা না করে ঠিকই লিখি'],
     asks: ['ও বলছে ঠিক লিখে দিতে। কী লিখবেন?', 'মাপা মান লিখবেন, না ওর কথা?', 'ওর কথা শুনবেন, না নিয়ম?'],
   );
 
@@ -177,6 +187,14 @@ abstract final class M4EarthTestMistakes {
         M4EarthTestFault.cover => missedCover,
       };
 
+  /// A tag hung on a sound earth point (an over-call costs a slip).
+  static const flaggedSound = DoMistake(
+    key: '4.6/m4_earth_test/flagged-sound-point',
+    textBn: 'ঠিক থাকা একটা আর্থ পয়েন্টে ট্যাগ দিলেন। ট্যাগ শুধু সেখানে, যেখানে আর্থ তার কাটা বা চুরি, জোড় জং ধরা বা ঢিলে, কিংবা পিটের কভার নেই।',
+    art: '$_dir/sound.svg',
+    lessonPoint: 1,
+  );
+
   static const leadsFirst = DoMistake(
     key: '4.6/m4_earth_test/leads-before-spikes',
     textBn: 'স্পাইক না পুঁতেই লিড জুড়তে গেলেন। আগে দুটি অস্থায়ী স্পাইক মাটিতে পুঁতুন, তারপর টেস্টারের লিড জুড়ে সার্কিট তৈরি করুন।',
@@ -216,7 +234,7 @@ abstract final class M4EarthTestMistakes {
     art: '$_dir/myth.svg',
   );
 
-  static List<DoMistake> get all => [missedCut, missedRust, missedCover, leadsFirst, testEarly, passedHigh, flaggedGood, eyesOnly, lineRuns];
+  static List<DoMistake> get all => [missedCut, missedRust, missedCover, flaggedSound, leadsFirst, testEarly, passedHigh, flaggedGood, eyesOnly, lineRuns];
 }
 
 /// Good readings (Ω) for a distribution line earth, and high ones.
@@ -231,7 +249,7 @@ bool m4EarthTestIsHigh(double ohms) => ohms > 8;
 /// in order) with their readings, and which push the coworker makes.
 @immutable
 class M4EarthTestDeal {
-  const M4EarthTestDeal({required this.faults, required this.pits, required this.ohms, required this.runsPush});
+  const M4EarthTestDeal({required this.faults, required this.pits, required this.ohms, required this.runsPush, this.pushAt = 0});
 
   final Map<int, M4EarthTestFault> faults;
 
@@ -241,9 +259,13 @@ class M4EarthTestDeal {
   /// Their readings (Ω), aligned with [pits]: one good, one high.
   final List<double> ohms;
 
-  /// true: "the line runs, write it OK" on the high reading; false: "eyes
-  /// are enough" before the first test.
+  /// true: "the line runs, write it OK" on the reading of pit [pushAt];
+  /// false: "eyes are enough" before the first test.
   final bool runsPush;
+
+  /// The "line runs" push: on which pit's reading (0 or 1) — dealt apart from
+  /// [highAt], so his arrival never tells which reading is high.
+  final int pushAt;
 
   int get highAt => m4EarthTestIsHigh(ohms[0]) ? 0 : 1;
 }
@@ -262,7 +284,7 @@ M4EarthTestDeal m4EarthTestDeal(math.Random rng) {
   final good = m4EarthTestGoodOhms[rng.nextInt(m4EarthTestGoodOhms.length)];
   final high = m4EarthTestHighOhms[rng.nextInt(m4EarthTestHighOhms.length)];
   final ohms = rng.nextBool() ? [good, high] : [high, good];
-  return M4EarthTestDeal(faults: faults, pits: pits, ohms: ohms, runsPush: rng.nextBool());
+  return M4EarthTestDeal(faults: faults, pits: pits, ohms: ohms, runsPush: rng.nextBool(), pushAt: rng.nextInt(2));
 }
 
 /// The play state (pure logic).
@@ -275,11 +297,12 @@ class M4EarthTestRun {
   int stationSlips = 0;
   final List<String> caught = [];
 
-  // look
+  // look: the points he tagged (a fault or not — a tag never tells).
   final Set<int> spotted = {};
 
-  // the pit under test
-  int spikes = 0;
+  // the pit under test: the spike places (0, 1) driven
+  final Set<int> spikeAt = {};
+  int get spikes => spikeAt.length;
   bool leads = false;
   bool tested = false;
   bool marked = false;
@@ -308,29 +331,33 @@ class M4EarthTestRun {
     return m;
   }
 
-  /// Tap earth point [i] while looking: true = a fault, tagged now.
+  /// Tap earth point [i] while looking: hangs a tag (true) or takes it off
+  /// (false). The same for a fault and a sound point — nothing is told here.
   bool tapEarth(int i) {
-    if (station != M4EarthTestStation.look) return false;
-    if (!deal.faults.containsKey(i) || spotted.contains(i)) return false;
+    if (station != M4EarthTestStation.look || i < 0 || i > 3) return false;
+    if (spotted.remove(i)) return false;
     spotted.add(i);
     return true;
   }
 
-  /// "দেখা শেষ": a fault not yet tagged is a slip.
+  /// "দেখা শেষ": a fault not tagged is a slip; so is a tag on a sound point.
   DoMistake? lookDone() {
     if (station != M4EarthTestStation.look) return null;
     for (final e in deal.faults.entries) {
       if (!spotted.contains(e.key)) return _slip(M4EarthTestMistakes.missed(e.value));
     }
+    if (spotted.any((i) => !deal.faults.containsKey(i))) return _slip(M4EarthTestMistakes.flaggedSound);
     _tag(M4EarthTestLines.caughtLook);
     return null;
   }
 
-  /// A spike driven into its place; true = driven.
-  bool driveSpike() {
+  /// A spike driven into place [at] (0 or 1; null = the first free one);
+  /// true = driven.
+  bool driveSpike([int? at]) {
     if (testPit == null || tested || spikes >= 2) return false;
-    spikes++;
-    return true;
+    final k = at ?? (spikeAt.contains(0) ? 1 : 0);
+    if (k < 0 || k > 1) return false;
+    return spikeAt.add(k);
   }
 
   /// The tester's leads to the electrode and the two spikes.
@@ -366,7 +393,7 @@ class M4EarthTestRun {
   /// On to the next station (after the last pit: the play is done).
   void next() {
     stationSlips = 0;
-    spikes = 0;
+    spikeAt.clear();
     leads = false;
     tested = false;
     marked = false;
@@ -480,6 +507,17 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// Gesture hints (how to touch, never what): the scene's tap layer maps
+  /// design px to the screen; the controls' rects come from their keys.
+  final _hints = IdleHintController();
+  final _touchKey = GlobalKey();
+  final _doneKey = GlobalKey();
+  final _leadsKey = GlobalKey();
+  final _testKey = GlobalKey();
+  final _okKey = GlobalKey();
+  final _highKey = GlobalKey();
+  M4EarthTestGeo? _geo;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -528,14 +566,11 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     unawaited(_sayChain([_task]));
   }
 
-  /// The coworker's moment is due now: the tools wait for him.
-  bool get _coworkerDue {
-    if (coworkerDone) return false;
-    if (_run.deal.runsPush) return _run.testIndex == _run.deal.highAt && _run.tested && _shown && !_run.marked && _run.testPit != null;
-    return _run.station == M4EarthTestStation.pitA && !_run.leads;
-  }
+  /// The "line runs" push is dealt on this pit's reading.
+  bool get _runsPushHere => _run.deal.runsPush && _run.testPit != null && _run.testIndex == _run.deal.pushAt;
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !struckOut && !_coworkerDue;
+  /// Hands on: no praise window ([tableBusy]), no card, deck or coworker.
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !struckOut;
 
   // --- taps on the scene -------------------------------------------------------------
   void _tapScene(Offset p, M4EarthTestGeo geo, Offset global) {
@@ -543,19 +578,18 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     if (_run.station == M4EarthTestStation.look) {
       for (var i = 0; i < 4; i++) {
         if (geo.earthRect(i).contains(p)) {
-          if (_run.tapEarth(i)) {
-            HapticFeedback.mediumImpact();
-            _cue('sounds/learn/tag_slap.wav', volume: 0.6);
-            setState(() => _wake++);
-            return;
-          }
-          break;
+          // A tag on or off: the same feel on a fault and a sound point.
+          final on = _run.tapEarth(i);
+          HapticFeedback.mediumImpact();
+          _cue(on ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/click.ogg', volume: 0.6);
+          setState(() => _wake++);
+          return;
         }
       }
     } else if (!_run.tested && _run.spikes < 2) {
       for (var k = 0; k < 2; k++) {
-        if (k == _run.spikes && geo.spikeRect(k).contains(p)) {
-          _run.driveSpike();
+        if (!_run.spikeAt.contains(k) && geo.spikeRect(k).contains(p)) {
+          _run.driveSpike(k);
           HapticFeedback.heavyImpact();
           _cue('sounds/intro/impact_metal.ogg', volume: 0.5);
           setState(() => _wake++);
@@ -567,6 +601,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   }
 
   void _plainTap(Offset p) {
+    _hints.missTap();
     HapticFeedback.selectionClick();
     _cue('sounds/intro/tick.ogg', volume: 0.4);
     setState(() {
@@ -599,6 +634,8 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
 
   Future<void> _test(Offset origin) async {
     if (!_canPlay || _run.testPit == null || _run.tested) return;
+    // "No tester needed": the measurement waits for him.
+    if (holdForCoworker()) return;
     final m = _run.pressTest();
     if (m != null) {
       await _slipOut(m, origin);
@@ -622,7 +659,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     if (!mounted || _shown || !_run.tested) return;
     _cue('sounds/intro/tick.ogg', volume: 0.6);
     setState(() => _shown = true);
-    if (_coworkerDue) {
+    if (_runsPushHere && !coworkerDone) {
       scheduleCoworker();
     } else {
       unawaited(_sayChain([M4EarthTestLines.askRead]));
@@ -631,6 +668,8 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
 
   Future<void> _markIt(bool high, Offset origin) async {
     if (!_canPlay || !_shown || _run.marked) return;
+    // "Write it OK": the mark waits for him.
+    if (holdForCoworker()) return;
     final m = _run.mark(high: high);
     if (m != null) {
       await _slipOut(m, origin);
@@ -712,9 +751,19 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended) return null;
-    if (!_coworkerDue) return _run.station == M4EarthTestStation.pitB && _run.marked ? null : false;
-    if (_intro || _card != null || reasonOpen || struckOut) return false;
+    if (_ended || struckOut) return null;
+    final d = _run.deal;
+    if (_run.testPit == null) return false;
+    if (d.runsPush) {
+      // "Write it OK" fits from the reading until the mark.
+      if (_run.testIndex < d.pushAt) return false;
+      if (_run.testIndex > d.pushAt || _run.marked) return null;
+      if (!_run.tested || !_shown) return false;
+    } else {
+      // "No tester needed" fits until the first TEST.
+      if (_run.testIndex > 0 || _run.tested) return null;
+    }
+    if (_intro || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -858,15 +907,14 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
         faults: _run.deal.faults,
         spotted: {..._run.spotted},
         testPit: _run.testPit,
-        spikes: _run.spikes,
+        spikeAt: {..._run.spikeAt},
         leads: _run.leads,
         marks: {..._run.marks},
       );
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M4EarthTestGeo.forScene(m.height, m.inset);
+    final geo = _geo = M4EarthTestGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
-    final spiking = _run.testPit != null && !_run.tested && _run.spikes < 2 && _canPlay;
     return [
       Positioned.fill(
         key: const ValueKey('land'),
@@ -886,23 +934,53 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
           height: 28,
           child: IgnorePointer(child: _Ring(quiet: quiet)),
         ),
-      if (spiking)
-        Positioned.fromRect(
-          key: ValueKey('spike-${_run.spikes}'),
-          rect: geo.spikeRect(_run.spikes),
-          child: IgnorePointer(child: _Ring(quiet: quiet, big: true)),
-        ),
       Positioned.fill(
         key: const ValueKey('touch'),
         child: Semantics(
           label: M4EarthTestLines.sceneLabel,
           child: GestureDetector(
+            key: _touchKey,
             behavior: HitTestBehavior.opaque,
             onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition),
           ),
         ),
       ),
     ];
+  }
+
+  /// A design-px rect of the scene on the screen (null before layout).
+  Rect? _sceneRect(Rect r) {
+    final box = _touchKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight));
+  }
+
+  /// The gesture hint for now: always a sweep over every option of the step
+  /// (never a tap on one of them, never the right order).
+  HintSpec? _hint() {
+    final geo = _geo;
+    if (geo == null || _run.ended) return null;
+    final rects = <Rect>[];
+    void add(Rect? r) {
+      if (r != null) rects.add(r);
+    }
+
+    if (_run.station == M4EarthTestStation.look) {
+      for (var i = 0; i < 4; i++) {
+        add(_sceneRect(geo.earthRect(i)));
+      }
+      add(HintSpec.globalRectOf(_doneKey));
+    } else if (!_run.tested) {
+      for (var k = 0; k < 2; k++) {
+        add(_sceneRect(geo.spikeRect(k)));
+      }
+      add(HintSpec.globalRectOf(_leadsKey));
+      add(HintSpec.globalRectOf(_testKey));
+    } else {
+      add(HintSpec.globalRectOf(_okKey));
+      add(HintSpec.globalRectOf(_highKey));
+    }
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
   }
 
   @override
@@ -912,12 +990,13 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !deckUp && !coworkerOpen && _card == null && !_run.ended && !_coworkerDue;
+    final handsOn = playing && !deckUp && !coworkerOpen && _card == null && !_run.ended && !tableBusy;
     final st = _run.station;
     final looking = handsOn && st == M4EarthTestStation.look && !reasonOpen;
     final testing = st != M4EarthTestStation.look && playing && !_run.ended;
     final rigTray = handsOn && testing && !_run.tested;
     final marking = handsOn && testing && _run.tested && _shown && !_run.marked;
+    final hintWaiting = looking || rigTray || marking;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -945,6 +1024,10 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: '${st.name}-${_run.tested}',
+            hintController: _hints,
             overlays: [
               if (playing && !coworkerOpen)
                 Positioned(
@@ -963,6 +1046,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
                     meter: _meter,
                     ohms: _run.tested ? _run.reading : null,
                     live: _run.leads,
+                    testKey: _testKey,
                     onTest: rigTray ? (d) => unawaited(_test(d.globalPosition)) : null,
                   ),
                 ),
@@ -978,10 +1062,13 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
                       const Spacer(flex: 2),
                       Expanded(
                         flex: 3,
-                        child: DoBigButton(
-                          label: M4EarthTestLines.lookDone,
-                          filled: true,
-                          onTapUp: (d) => unawaited(_lookDone(d.globalPosition)),
+                        child: KeyedSubtree(
+                          key: _doneKey,
+                          child: DoBigButton(
+                            label: M4EarthTestLines.lookDone,
+                            filled: true,
+                            onTapUp: (d) => unawaited(_lookDone(d.globalPosition)),
+                          ),
                         ),
                       ),
                     ],
@@ -993,6 +1080,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
                   right: 12,
                   bottom: pad.bottom + 12,
                   child: _Chip(
+                    key: _leadsKey,
                     label: M4EarthTestLines.leads,
                     icon: Icons.cable_rounded,
                     done: _run.leads,
@@ -1008,20 +1096,26 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
                   child: Row(
                     children: [
                       Expanded(
-                        child: DoBigButton(
-                          label: M4EarthTestLines.markOk,
-                          filled: false,
-                          onDark: true,
-                          onTapUp: (d) => unawaited(_markIt(false, d.globalPosition)),
+                        child: KeyedSubtree(
+                          key: _okKey,
+                          child: DoBigButton(
+                            label: M4EarthTestLines.markOk,
+                            filled: false,
+                            onDark: true,
+                            onTapUp: (d) => unawaited(_markIt(false, d.globalPosition)),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: DoBigButton(
-                          label: M4EarthTestLines.markHigh,
-                          filled: false,
-                          onDark: true,
-                          onTapUp: (d) => unawaited(_markIt(true, d.globalPosition)),
+                        child: KeyedSubtree(
+                          key: _highKey,
+                          child: DoBigButton(
+                            label: M4EarthTestLines.markHigh,
+                            filled: false,
+                            onDark: true,
+                            onTapUp: (d) => unawaited(_markIt(true, d.globalPosition)),
+                          ),
                         ),
                       ),
                     ],
@@ -1146,8 +1240,9 @@ class _DocketChip extends StatelessWidget {
 /// The earth tester close up: its display (counting, then the reading in Ω)
 /// and its TEST button.
 class _TesterPanel extends StatelessWidget {
-  const _TesterPanel({required this.meter, required this.ohms, required this.live, required this.onTest});
+  const _TesterPanel({required this.meter, required this.ohms, required this.live, required this.onTest, this.testKey});
   final Animation<double> meter;
+  final Key? testKey;
   final double? ohms;
   final bool live;
   final GestureTapUpCallback? onTest;
@@ -1199,6 +1294,7 @@ class _TesterPanel extends StatelessWidget {
               label: M4EarthTestLines.test,
               excludeSemantics: true,
               child: GestureDetector(
+                key: testKey,
                 behavior: HitTestBehavior.opaque,
                 onTapUp: onTest,
                 child: Container(
@@ -1223,7 +1319,7 @@ class _TesterPanel extends StatelessWidget {
 
 /// A tool chip (the leads).
 class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.icon, required this.done, required this.onTapUp});
+  const _Chip({super.key, required this.label, required this.icon, required this.done, required this.onTapUp});
   final String label;
   final IconData icon;
   final bool done;
@@ -1262,11 +1358,10 @@ class _Chip extends StatelessWidget {
   }
 }
 
-/// A plain white ring (a tap, or a place for a spike).
+/// A plain white ring where a tap landed (feedback only, never a target).
 class _Ring extends StatelessWidget {
-  const _Ring({required this.quiet, this.big = false});
+  const _Ring({required this.quiet});
   final bool quiet;
-  final bool big;
 
   @override
   Widget build(BuildContext context) {
@@ -1278,8 +1373,8 @@ class _Ring extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: big ? const Color(0x33FFFFFF) : const Color(0x22FFFFFF),
-          border: Border.all(color: const Color(0xEEFFFFFF), width: big ? 2.6 : 2),
+          color: const Color(0x22FFFFFF),
+          border: Border.all(color: const Color(0xEEFFFFFF), width: 2),
           boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 3)],
         ),
       ),

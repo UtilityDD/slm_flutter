@@ -4,7 +4,15 @@
 // the reason libraries, and the level in the shell: idle perf, the guide
 // first, the guide's tap, a full clean play to a pass (with the coworker
 // refused), slip cards (a wrong drum, the cable before the bearer, no drip
-// loop) and listening to him.
+// loop) and listening to him; the 3-slip strike-out; a fast player still
+// meets him (the first tool on the span waits for him); a tap in the praise
+// window does nothing; the tool bag never in the lesson's order; one
+// station-specific wrong reason on every deck; gesture hints (a sweep over
+// the drums, never pressing one; taps on nothing call the hand); the clips
+// before the cable cost a slip (no free wrong-order probe); his refuse cards
+// carry no lead word the listen cards lack; a wrong tool in hand never gets a
+// tap hint on the span; a won station takes no second tap (no praise, no
+// stale ◆ pill).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,11 +25,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m3_service_drop.dart';
+import 'package:slm_flutter/features/game/m3_service_drop_world.dart' show M3ServiceDropRig, M3ServiceDropWorldPainter;
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro;
 import 'package:slm_flutter/features/game/spoken_once.dart';
@@ -31,6 +42,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.8/do/0',
@@ -44,8 +56,8 @@ const _ctx = LevelContext(
 
 final _pack = m3ServiceDropPacks['do_3_8_a']!;
 
-/// The level's new art folder is not in pubspec.yaml yet (the director adds
-/// it): serve unbundled assets from the repo so the mistake cards draw.
+/// pubspec.yaml lists assets/game/art/m3_service_drop/; the test bundle may
+/// still miss a file, so fall back to the repo copy and the mistake cards draw.
 class _DiskBundle extends CachingAssetBundle {
   @override
   Future<ByteData> load(String key) async {
@@ -80,17 +92,21 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 Future<void> _pickWrong(WidgetTester t, List<String> wrong) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final w = _onScreen(wrong);
   expect(w, isNotEmpty);
   await t.tap(w.first, warnIfMissed: false);
+  await confirmChoice(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -156,6 +172,10 @@ Future<void> _coworker(WidgetTester t, {required bool held}) async {
   await _pump(t, 2600);
 }
 
+/// What the world painter draws now (the rig).
+M3ServiceDropRig _rig(WidgetTester t) =>
+    (t.widget<CustomPaint>(find.byWidgetPredicate((w) => w is CustomPaint && w.painter is M3ServiceDropWorldPainter)).painter! as M3ServiceDropWorldPainter).rig;
+
 Future<void> _use(WidgetTester t, String tool) async {
   await t.tap(_label(tool));
   await _pump(t, 200);
@@ -178,6 +198,17 @@ void main() {
         seen.add('${d.three}${d.right}${d.cut}');
       }
       expect(seen.length, greaterThan(8));
+    });
+
+    test('the tool bag: shuffled, never laid out in the lesson order (bearer → cable → clips)', () {
+      final orders = <String>{};
+      for (var s = 0; s < 80; s++) {
+        final d = m3ServiceDropDeal(math.Random(s));
+        expect(d.tools.toSet(), M3ServiceDropTool.values.toSet());
+        expect(d.tools, isNot(orderedEquals(M3ServiceDropDeal.lessonOrder)), reason: 'seed $s');
+        orders.add(d.tools.map((x) => x.name).join(','));
+      }
+      expect(orders.length, greaterThanOrEqualTo(4), reason: '$orders');
     });
 
     M3ServiceDropRun run([bool three = false]) => M3ServiceDropRun(M3ServiceDropDeal(
@@ -203,20 +234,40 @@ void main() {
       expect(clean.caught, contains(M3ServiceDropLines.caughtCut));
     });
 
-    test('bearer: the cable before the bearer is a slip; bearer → cable → clips; listening is a slip', () {
+    test('bearer: the cable or the clips out of order are slips; bearer → cable → clips; listening is a slip', () {
       final r = run()..next();
       expect(r.station, M3ServiceDropStation.bearer);
-      expect(r.clip(), isFalse, reason: 'nothing to clip');
+      expect(r.clip(), M3ServiceDropMistakes.clipFirst, reason: 'nothing to clip: a wrong-order probe is not free');
+      expect(r.clipped, isFalse);
       expect(r.layCable(), M3ServiceDropMistakes.noBearer);
       expect(r.cableOn, isFalse);
-      expect(r.stringBearer(), isTrue);
-      expect(r.clip(), isFalse, reason: 'no cable yet');
-      expect(r.layCable(), isNull);
-      expect(r.clip(), isTrue);
-      expect(r.caught, contains(M3ServiceDropLines.caughtBearer));
-      expect(r.slips, 1);
-      r.listenTaut();
       expect(r.slips, 2);
+      expect(r.stringBearer(), isTrue);
+      expect(r.clip(), M3ServiceDropMistakes.clipFirst, reason: 'no cable yet');
+      expect(r.clipped, isFalse);
+      expect(r.slips, 3);
+      expect(r.layCable(), isNull);
+      expect(r.clip(), isNull);
+      expect(r.clipped, isTrue);
+      expect(r.caught, contains(M3ServiceDropLines.caughtBearer));
+      expect(r.clip(), isNull, reason: 'already hung: no second slip');
+      expect(r.slips, 3);
+      r.listenTaut();
+      expect(r.slips, 4);
+    });
+
+    test('his deck: no lead word marks a side (the refuse cards do not all start "না", the listen cards not all "ঠিক/আচ্ছা/হ্যাঁ")', () {
+      final cw = M3ServiceDropLines.coworker;
+      String lead(String x) => x.split(RegExp(r'[ ,—]')).first;
+      final rightLeads = cw.right.map(lead).toSet();
+      final wrongLeads = cw.wrong.map(lead).toSet();
+      expect(rightLeads.length, greaterThan(1), reason: '$rightLeads');
+      expect(wrongLeads.length, greaterThan(1), reason: '$wrongLeads');
+      for (final x in cw.right) {
+        expect(x.startsWith('না'), isFalse, reason: x);
+      }
+      // His push fits the span station before anything is hung.
+      expect(cw.line, contains('বিয়ারার'));
     });
 
     test('loop: straight in from the top or the side is a slip; the U drip loop passes', () {
@@ -241,6 +292,8 @@ void main() {
         for (final s in M3ServiceDropStation.values) ...M3ServiceDropLines.whyRight(s),
         ...M3ServiceDropLines.cableWhyThree,
         ...M3ServiceDropLines.excuses,
+        for (final s in M3ServiceDropStation.values) ...M3ServiceDropLines.whyWrong(s),
+        ...M3ServiceDropLines.cableWrongThree,
         ...M3ServiceDropLines.coworker.recordedLines,
         ...M3ServiceDropLines.coworker.right,
         ...M3ServiceDropLines.coworker.wrong,
@@ -267,19 +320,27 @@ void main() {
 
     test('reasons: same length, big enough, one right per deal; his exit line is recorded', () {
       final every = [
-        for (final s in M3ServiceDropStation.values) ...M3ServiceDropLines.whyRight(s),
-        ...M3ServiceDropLines.cableWhyThree,
+        for (final three in [false, true])
+          for (final s in M3ServiceDropStation.values) ...[
+            ...M3ServiceDropLines.whyRight(s, three: three),
+            ...M3ServiceDropLines.whyWrong(s, three: three),
+          ],
         ...M3ServiceDropLines.excuses,
       ];
       expectSameLength('why', every);
       for (final three in [false, true]) {
         for (final s in M3ServiceDropStation.values) {
           final right = M3ServiceDropLines.whyRight(s, three: three);
-          expectLibrary('$s', right, M3ServiceDropLines.excuses);
-          for (var i = 0; i < 10; i++) {
-            final d = dealChoices(right, M3ServiceDropLines.excuses, math.Random(i));
+          final own = M3ServiceDropLines.whyWrong(s, three: three);
+          expectLibrary('$s', right, [...own, ...M3ServiceDropLines.excuses]);
+          for (var i = 0; i < 40; i++) {
+            final d = M3ServiceDropLines.dealWhy(s, math.Random(i), three: three);
+            expect(d, hasLength(3));
             expect(d.where((o) => o.correct).length, 1);
+            expect(right, contains(d.firstWhere((o) => o.correct).textBn));
             expect(d.map((o) => o.textBn).toSet().length, 3);
+            expect(d.where((o) => !o.correct && own.contains(o.textBn)), isNotEmpty,
+                reason: 'every deck has a wrong reason in its own station words ($s)');
           }
         }
       }
@@ -342,7 +403,7 @@ void main() {
         }
         debugPrint('PERF m3_service_drop ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -395,7 +456,6 @@ void main() {
       final deal = m3ServiceDropDeal(math.Random(seed));
       final c = await _open(t, seed);
       await _cable(t, deal);
-      expect(find.text(M3ServiceDropLines.bearer), findsNothing, reason: 'the tools come out after him');
       await _coworker(t, held: true);
       await _use(t, M3ServiceDropLines.bearer);
       await _use(t, M3ServiceDropLines.cable);
@@ -462,6 +522,250 @@ void main() {
       await _pump(t, 3000);
       expect(find.byType(LevelPassPanel), findsOneWidget);
       expect(c.read(gameSaveProvider).rungProgress['3.8/do/0'], 'cleared');
+      await _close(t, c);
+    });
+
+    testWidgets('a fast player still meets him: the first tool on the span waits for him; a praise-window tap does nothing', (t) async {
+      const seed = 3;
+      final deal = m3ServiceDropDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await t.tapAt(_screen(_geo.drumRect(deal.right).center));
+      await t.pump(const Duration(milliseconds: 120));
+      // The ◆ waits on the table: a tap on the cut drum now is no move.
+      await t.tapAt(_screen(_geo.drumRect(deal.cut).center));
+      await _pump(t, 300);
+      expect(find.byType(MistakeCard), findsNothing, reason: 'praise window');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pump(t, 700);
+      await _pickRight(t, M3ServiceDropLines.whyRight(M3ServiceDropStation.cable, three: deal.three));
+      // As soon as the bag is out — he has not come yet — lay the bearer.
+      final bag = _label(M3ServiceDropLines.bearer);
+      for (var ms = 0; ms < 4000 && bag.hitTestable().evaluate().isEmpty; ms += 50) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      // The bag comes out as the walk ends (the page rebuilds then), before he does.
+      expect(bag.hitTestable(), findsOneWidget, reason: 'the tool bag is out at the span station');
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not here yet');
+      await t.tap(bag);
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tapAt(_screen(_geo.spanRect.center));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in now');
+      expect(_rig(t).bearer, isFalse, reason: 'nothing is hung before he has spoken');
+      await waitChoiceDeck(t);
+      await _pickRight(t, M3ServiceDropLines.coworker.right);
+      await _pump(t, 2600);
+      // He has gone: the same tap hangs the bearer now.
+      await t.tapAt(_screen(_geo.spanRect.center));
+      await _pump(t, 400);
+      expect(_rig(t).bearer, isTrue);
+      await _use(t, M3ServiceDropLines.cable);
+      await _use(t, M3ServiceDropLines.clip);
+      await _reason(t, M3ServiceDropLines.bearerWhy);
+      await _pump(t, 1000);
+      await t.tapAt(_screen(_geo.entryRect(M3ServiceDropEntry.loop).center));
+      await _pump(t, 400);
+      await _reason(t, M3ServiceDropLines.loopWhy);
+      await _pump(t, 3000);
+      expect(find.byType(LevelPassPanel), findsOneWidget);
+      expect(find.text(M3ServiceDropLines.caughtCall), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('his beat 1 is his alone: a tap on the guide while he talks says nothing; once the deck is up it asks again', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      const seed = 3;
+      final deal = m3ServiceDropDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await t.tapAt(_screen(_geo.drumRect(deal.right).center));
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pump(t, 700);
+      await _pickRight(t, M3ServiceDropLines.whyRight(M3ServiceDropStation.cable, three: deal.three));
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes');
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'beat 1: his caption, no deck yet');
+      final guide = find.byKey(const ValueKey('hud-guide'));
+      final before = c.read(guideDirectorProvider).line;
+      await t.tapAt(t.getCenter(guide));
+      await t.pump(const Duration(milliseconds: 200));
+      final during = c.read(guideDirectorProvider).line;
+      expect(during, before, reason: 'the guide stays idle while he talks');
+      expect(M3ServiceDropLines.coworker.asks, isNot(contains(during)));
+      await waitChoiceDeck(t);
+      expect(find.byType(ChoiceDeck), findsOneWidget);
+      await _pump(t, 400);
+      await t.tapAt(t.getCenter(guide));
+      await t.pump(const Duration(milliseconds: 200));
+      expect(M3ServiceDropLines.coworker.asks, contains(c.read(guideDirectorProvider).line));
+      await _pickRight(t, M3ServiceDropLines.coworker.right);
+      await _pump(t, 2600);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the clips before the cable: a slip card (no free probe); nothing hung; then the right order passes', (t) async {
+      const seed = 11;
+      final deal = m3ServiceDropDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await _cable(t, deal);
+      await _coworker(t, held: true);
+      await _use(t, M3ServiceDropLines.clip);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M3ServiceDropMistakes.clipFirst.key);
+      expect(_rig(t).clipped, isFalse);
+      await _gotIt(t);
+      await _use(t, M3ServiceDropLines.bearer);
+      await _use(t, M3ServiceDropLines.cable);
+      await _use(t, M3ServiceDropLines.clip);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(_rig(t).clipped, isTrue);
+      await _reason(t, M3ServiceDropLines.bearerWhy);
+      await _pump(t, 1000);
+      await t.tapAt(_screen(_geo.entryRect(M3ServiceDropEntry.loop).center));
+      await _pump(t, 400);
+      await _reason(t, M3ServiceDropLines.loopWhy);
+      await _pump(t, 3000);
+      expect(find.byType(LevelPassPanel), findsOneWidget);
+      expect(c.read(gameSaveProvider).rungProgress['3.8/do/0'], 'cleared');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike the level out: the struck-out card, not cleared', (t) async {
+      const seed = 9;
+      final deal = m3ServiceDropDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await t.tapAt(_screen(_geo.drumRect(deal.wrong).center));
+      await _pump(t, 600);
+      await _gotIt(t);
+      await t.tapAt(_screen(_geo.drumRect(deal.cut).center));
+      await _pump(t, 600);
+      await _gotIt(t);
+      expect(find.byType(StruckOutCard), findsNothing);
+      await _cable(t, deal);
+      await _coworker(t, held: false);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['3.8/do/0'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key), containsAll([M3ServiceDropMistakes.wrongCore.key, M3ServiceDropMistakes.cutInsulation.key]));
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: taps on nothing call a sweep over the three drums that never presses one; any touch hides it', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 3);
+      IdleHintState hint() => t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+      expect(hint().showing, isFalse);
+      final sky = _screen(const Offset(250, 210));
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(sky);
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(hint().showing, isTrue, reason: 'confused taps call the hand');
+      expect(hint().debugOptions, hasLength(3), reason: 'a sweep over all three drums');
+      for (var i = 0; i < 20; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+        final f = hint().debugFrame;
+        if (f != null) expect(f.press, 0, reason: 'a sweep never presses a drum');
+      }
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'a hint takes no drum');
+      await t.tapAt(sky);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(hint().showing, isFalse, reason: 'any touch hides it');
+      // Idle at the drums: it comes back by itself.
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints at the span: a wrong tool in hand gets a sweep over the tools left, never a tap on the span', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      const seed = 3;
+      final deal = m3ServiceDropDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      IdleHintState hint() => t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+      await _cable(t, deal);
+      await _coworker(t, held: true);
+      Future<void> idleSweep(int n, String why) async {
+        await _pump(t, 9000);
+        expect(hint().showing, isTrue, reason: why);
+        expect(hint().debugOptions, hasLength(n), reason: '$why: a sweep over the $n tools left');
+        for (var i = 0; i < 20; i++) {
+          await t.pump(const Duration(milliseconds: 120));
+          final f = hint().debugFrame;
+          if (f != null) expect(f.press, 0, reason: '$why: the hand presses nothing');
+        }
+      }
+
+      // The cable before the bearer in hand: no tap on the span.
+      await t.tap(_label(M3ServiceDropLines.cable));
+      await t.pump(const Duration(milliseconds: 200));
+      await idleSweep(3, 'the cable in hand, no bearer');
+      expect(_rig(t).bearer, isFalse);
+      await _use(t, M3ServiceDropLines.bearer);
+      // The clips before the cable in hand: no tap on the span either.
+      await t.tap(_label(M3ServiceDropLines.clip));
+      await t.pump(const Duration(milliseconds: 200));
+      await idleSweep(2, 'the clips in hand, no cable');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty, reason: 'the hand led to no slip');
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a won station takes no second tap: another drum or way into the box after এগিয়ে যান is no move (no praise, no ◆ pill, no slip)', (t) async {
+      const seed = 3;
+      final deal = m3ServiceDropDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      final token = find.byKey(const ValueKey('hud-token'));
+      await t.tapAt(_screen(_geo.drumRect(deal.right).center));
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pump(t, 700);
+      await _pickRight(t, M3ServiceDropLines.whyRight(M3ServiceDropStation.cable, three: deal.three));
+      // The gap before the walk to the pole: the cut drum, the wrong-core drum.
+      expect(token, findsNothing);
+      await t.tapAt(_screen(_geo.drumRect(deal.cut).center));
+      await t.pump(const Duration(milliseconds: 60));
+      await t.tapAt(_screen(_geo.drumRect(deal.wrong).center));
+      await t.pump(const Duration(milliseconds: 300));
+      expect(token, findsNothing, reason: 'a second drum puts no ◆ on the table');
+      expect(c.read(guideDirectorProvider).mood, isNot(GuideMood.celebrate), reason: 'no praise for a second drum');
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pump(t, 1500);
+      expect(token, findsNothing, reason: 'no stale ◆ pill on the span station');
+      await _coworker(t, held: true);
+      await _use(t, M3ServiceDropLines.bearer);
+      await _use(t, M3ServiceDropLines.cable);
+      await _use(t, M3ServiceDropLines.clip);
+      await _reason(t, M3ServiceDropLines.bearerWhy);
+      await _pump(t, 1000);
+      await t.tapAt(_screen(_geo.entryRect(M3ServiceDropEntry.loop).center));
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pump(t, 700);
+      await _pickRight(t, M3ServiceDropLines.loopWhy);
+      // The gap before the result: straight in from the top, then the side.
+      await t.tapAt(_screen(_geo.entryRect(M3ServiceDropEntry.top).center));
+      await t.pump(const Duration(milliseconds: 60));
+      await t.tapAt(_screen(_geo.entryRect(M3ServiceDropEntry.side).center));
+      await t.pump(const Duration(milliseconds: 300));
+      expect(token, findsNothing, reason: 'a second way in puts no ◆ on the table');
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pump(t, 3000);
+      expect(find.byType(LevelPassPanel), findsOneWidget);
+      expect(token, findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
       await _close(t, c);
     });
   });

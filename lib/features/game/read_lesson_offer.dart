@@ -61,51 +61,50 @@ abstract final class ReadLessonNudges {
   }
 }
 
-/// "পাঠ" pill in a level's top bar. Gold while the offer is tucked away.
+/// The read-lesson button in a level's top bar: the book icon only (owner's
+/// brief, Nov 2026 — no "পাঠ" text), a 44 dp touch target around a smaller
+/// gold-rimmed disc. Glows gold while the offer is tucked away ([hot]).
 class ReadLessonPill extends StatelessWidget {
   const ReadLessonPill({super.key, required this.hot, required this.onTap});
 
   final bool hot;
   final VoidCallback onTap;
 
+  /// Touch target (dp), never smaller.
+  static const double tapSize = 44;
+
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'পাঠটা পড়ে নিন',
+      label: 'পাঠ পড়ুন',
+      excludeSemantics: true,
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: SlmMotion.base,
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            gradient: hot ? SlmGradients.gold : null,
-            color: hot ? null : SlmColors.navy950.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: hot ? SlmColors.gold700 : SlmColors.gold400.withValues(alpha: 0.55),
-              width: 1.2,
-            ),
-            boxShadow: hot
-                ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.6), blurRadius: 16)]
-                : const [],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.menu_book_rounded, size: 16, color: hot ? SlmColors.navy950 : SlmColors.gold200),
-              const SizedBox(width: 5),
-              Text(
-                'পাঠ',
-                style: bangla(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  color: hot ? SlmColors.navy950 : SlmColors.ivory,
+        child: SizedBox.square(
+          dimension: tapSize,
+          child: Center(
+            child: AnimatedContainer(
+              duration: SlmMotion.base,
+              curve: Curves.easeOut,
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: hot ? SlmGradients.gold : null,
+                color: hot ? null : SlmColors.navy950.withValues(alpha: 0.55),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: hot ? SlmColors.gold700 : SlmColors.gold400.withValues(alpha: 0.55),
+                  width: 1.2,
                 ),
+                boxShadow: hot
+                    ? [BoxShadow(color: SlmColors.gold400.withValues(alpha: 0.6), blurRadius: 16)]
+                    : const [],
               ),
-            ],
+              child: Icon(Icons.menu_book_rounded, size: 19, color: hot ? SlmColors.navy950 : SlmColors.gold200),
+            ),
           ),
         ),
       ),

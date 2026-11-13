@@ -5,7 +5,10 @@
 // coworker), reason libraries that fit the meter and the reading, and the
 // level in the shell: idle perf, the guide first, a full clean play (gloves,
 // leads, switch, clips, read, call, reasons, the fix, the coworker refused),
-// the deadly freeze, and three slips striking the level out.
+// the deadly freeze, three slips striking the level out, the coworker coming
+// even on a fast play (the clip and the call wait for him), a good meter
+// swapped costing a slip while the pump goes on, the praise window taking no
+// touch, no word only on the right reason card, and the gesture hint.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -21,11 +24,13 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m2_phase_meter.dart';
+import 'package:slm_flutter/features/game/m2_phase_meter_world.dart' show PmView, PmWorldPainter;
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro;
 import 'package:slm_flutter/features/game/spoken_once.dart';
@@ -35,6 +40,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.8/do/0',
@@ -69,27 +75,36 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
 }
 
 Future<void> _pickWrong(WidgetTester t, List<String> wrong) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final w = _onScreen(wrong);
   expect(w, isNotEmpty);
   await t.tap(w.first, warnIfMissed: false);
+  await confirmChoice(t);
+}
+
+/// What the world painter shows now (the switch, the clips, the lead in hand).
+PmView _view(WidgetTester t) {
+  final p = find.byWidgetPredicate((w) => w is CustomPaint && w.painter is PmWorldPainter);
+  return (t.widget<CustomPaint>(p).painter! as PmWorldPainter).view;
+}
+
+/// A seed whose deal passes [test].
+int _seedWhere(bool Function(PmDeal d) test) {
+  var seed = 0;
+  while (!test(dealPhase(math.Random(seed)))) {
+    seed++;
+  }
+  return seed;
 }
 
 /// Design px → screen px on the 392 × 850 test screen (the scene fits it).
@@ -111,7 +126,7 @@ void _serveAssets() {
   });
 }
 
-Future<ProviderContainer> _open(WidgetTester t, int seed) async {
+Future<ProviderContainer> _open(WidgetTester t, int seed, {int settleMs = 600}) async {
   t.view.physicalSize = const Size(784, 1700);
   t.view.devicePixelRatio = 2.0;
   final c = ProviderContainer();
@@ -125,7 +140,7 @@ Future<ProviderContainer> _open(WidgetTester t, int seed) async {
   )));
   await _pump(t, 1000);
   await waitIntro(t);
-  await _pump(t, 600);
+  await _pump(t, settleMs);
   return c;
 }
 
@@ -171,17 +186,18 @@ Future<void> _playRight(WidgetTester t, PmDeal deal, int i) async {
     await _clip(t, lead, c.order.indexOf(lead));
     if (n == 0 && his && deal.push == PmPush.anyClip) {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he cuts in on pump $i');
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 600);
       await _pickRight(t, PmLines.clipScript.right);
       await _pump(t, 1600);
+      // The clip waited for him: the lead is still in hand; clip it now.
+      expect(_view(t).clips, isEmpty);
+      expect(_view(t).selected, lead);
+      await t.tapAt(_screen(pmTerminalRect(_geo, c.order.indexOf(lead)).center));
+      await _pump(t, 300);
     }
   }
   await t.tap(find.text(c.fwd ? PmLines.fwd : PmLines.rev));
   await _pump(t, 300);
   expect(find.byType(MistakeCard), findsNothing, reason: 'pump $i');
-  await _pumpUntil(t, find.byType(ChoiceDeck));
-  await _pump(t, 700);
   await _pickRight(t, PmLines.whyRight(c));
   await _pump(t, c.fwd ? 6000 : 9500);
 }
@@ -276,13 +292,21 @@ void main() {
       expect(b.decide(fwd: true), isNull);
       expect(b.caught, contains(PmLines.caughtLead));
       expect(b.thorough, isTrue);
-      // Another meter when the leads were fine: harmless.
+      // Another meter when the leads were fine: an over-call — a slip, but
+      // the pump stays open (the same pump goes on).
       final c = run1(pump())
         ..putGloves()
-        ..takeSpare();
+        ..inspect();
+      expect(c.takeSpare(), PmMistakes.goodLeadSwapped);
+      expect(c.slips, 1);
+      expect(c.shown, isFalse, reason: 'the pump goes on');
+      expect(c.caught, isNot(contains(PmLines.caughtLead)));
       clipAll(c);
       expect(c.decide(fwd: true), isNull);
-      expect(c.thorough, isFalse, reason: 'not looked at');
+      // A second swap (the spare's leads are good) is an over-call again.
+      final d = run1(pump(bad: PmPhase.r))..putGloves();
+      expect(d.takeSpare(), isNull);
+      expect(d.takeSpare(), PmMistakes.goodLeadSwapped);
     });
 
     test('the call: blank, wrong clips, misreads are slips; right calls are caught', () {
@@ -352,6 +376,12 @@ void main() {
         ...PmLines.whyRight(pump(fwd: false, meter: PmMeter.digital)),
         ...PmLines.fwdMyths,
         ...PmLines.revMyths,
+        PmLines.fwdDiscMyth,
+        PmLines.fwdDigitalMyth,
+        PmLines.revDiscMyth,
+        PmLines.revDigitalMyth,
+        PmLines.goOn,
+        PmLines.swapped,
         for (final s in [PmLines.skipScript, PmLines.clipScript]) ...[...s.recordedLines, ...s.right, ...s.wrong, ...s.asks],
         for (final m in PmMistakes.all) m.textBn,
         PmLines.allSet,
@@ -380,6 +410,10 @@ void main() {
         ...PmLines.revSwap,
         ...PmLines.fwdMyths,
         ...PmLines.revMyths,
+        PmLines.fwdDiscMyth,
+        PmLines.fwdDigitalMyth,
+        PmLines.revDiscMyth,
+        PmLines.revDigitalMyth,
       }.toList();
       expectSameLength('why', every);
       final rules = {PmLines.fwdDisc, PmLines.fwdDigital, PmLines.fwdMatched, PmLines.revDisc, PmLines.revDigital, ...PmLines.revSwap};
@@ -392,17 +426,30 @@ void main() {
           expect(wrong.toSet().intersection(rules), isEmpty);
           expect(right.any((x) => x.contains(meter == PmMeter.disc ? 'ডিস্ক' : (fwd ? 'FWD' : 'REV'))), isTrue);
           expect(right.any((x) => x.contains(fwd ? 'R-Y-B' : 'R-B-Y')), isTrue);
-          for (var s = 0; s < 10; s++) {
-            final deal = dealChoices(right, wrong, math.Random(s));
+          final dealt = <String>{};
+          for (var s = 0; s < 60; s++) {
+            final deal = PmLines.dealWhy(c, math.Random(s));
             expect(deal.where((o) => o.correct).length, 1);
             expect(deal.map((o) => o.textBn).toSet().length, 3);
+            expect(deal.where((o) => o.correct).single.textBn, isIn(right));
+            expect(deal.where((o) => !o.correct).map((o) => o.textBn), everyElement(isIn(wrong)));
+            dealt.addAll(deal.map((o) => o.textBn));
+            // No word marks the right card: every tell on it is on a wrong one too.
+            final r = deal.firstWhere((o) => o.correct).textBn;
+            for (final tell in PmLines.tells) {
+              if (r.contains(tell)) {
+                expect(deal.where((o) => !o.correct && o.textBn.contains(tell)), isNotEmpty, reason: '"$tell" only on "$r"');
+              }
+            }
           }
+          expect(dealt.length, greaterThanOrEqualTo(5), reason: 'plays differ');
         }
       }
       for (final s in [PmLines.skipScript, PmLines.clipScript]) {
         expectSameLength('choice', [...s.right, ...s.wrong]);
         expectLibrary('choice', s.right, s.wrong);
-        // His exit line is recorded; his pushes go by TTS until recorded.
+        // His exit line is recorded; his pushes have no clip yet (silent,
+        // caption held — the director records them in one batch).
         expect(LearnVoice.resolve(s.exitLine, rival: true), isNotNull);
       }
     });
@@ -450,7 +497,7 @@ void main() {
         }
         debugPrint('PERF m2_phase_meter ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -583,6 +630,115 @@ void main() {
       expect(s.rungProgress['2.8/do/0'], isNot('cleared'));
       expect(t.takeException(), isNull);
       await _close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him ("no meter"): the clip waits for him, then works', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 0 && d.push == PmPush.skipTest && d.cases[0].badLead == null);
+      final c = await _open(t, seed, settleMs: 0);
+      final pump0 = dealPhase(math.Random(seed)).cases[0];
+      // Before his 1.2 s timer: gloves, a lead, a terminal.
+      await t.tap(_label(PmLines.gloves));
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tapAt(_screen(pmParkRect(_geo, PmPhase.r).center));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not come yet');
+      await t.tapAt(_screen(pmTerminalRect(_geo, pump0.order.indexOf(PmPhase.r)).center));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the clip called him in');
+      expect(_view(t).clips, isEmpty, reason: 'the clip waited');
+      await _pickRight(t, PmLines.skipScript.right);
+      await _pump(t, 1600);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(_view(t).selected, PmPhase.r, reason: 'the lead is still in hand');
+      await t.tapAt(_screen(pmTerminalRect(_geo, pump0.order.indexOf(PmPhase.r)).center));
+      await _pump(t, 300);
+      expect(_view(t).clips, {PmPhase.r: PmPhase.r});
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him ("any clip"): the call waits for him; listening is a slip', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 0 && d.push == PmPush.anyClip);
+      final c = await _open(t, seed, settleMs: 0);
+      await t.tap(find.text(PmLines.fwd));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the call called him in');
+      expect(find.byType(MistakeCard), findsNothing, reason: 'no call was made');
+      await _pickWrong(t, PmLines.clipScript.wrong);
+      expect(await _pumpUntil(t, find.byType(MistakeCard), maxMs: 3000), isTrue);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'listening is a slip, not deadly');
+      expect(c.read(gameSaveProvider).mistakes.single.key, PmMistakes.anyClip.key);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a good meter swapped costs a slip; the same pump goes on and can still be passed', (t) async {
+      final seed = _seedWhere((d) => d.callAt != 0 && d.cases[0].badLead == null && d.cases[0].liveAtStart);
+      final c = await _open(t, seed);
+      final pump0 = dealPhase(math.Random(seed)).cases[0];
+      await t.tap(_label(PmLines.gloves));
+      await _pump(t, 300);
+      await t.tap(_label(PmLines.inspect));
+      await _pump(t, 500);
+      await t.tap(_label(PmLines.leadsSwap));
+      await _pump(t, 400);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, PmMistakes.goodLeadSwapped.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      // Still pump 0: the docket and the calls are back.
+      expect(find.text(PmLines.jobBn(pump0.job)), findsOneWidget);
+      for (final lead in PmPhase.values) {
+        await _clip(t, lead, pump0.order.indexOf(lead));
+      }
+      await t.tap(find.text(pump0.fwd ? PmLines.fwd : PmLines.rev));
+      await _pump(t, 300);
+      expect(find.byType(MistakeCard), findsNothing);
+      // The praise window takes no touch: the switch stays ON.
+      await t.tapAt(_screen(_geo.mainSwitch.center));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(_view(t).live, isTrue, reason: 'no touch while the table holds');
+      await _pickRight(t, PmLines.whyRight(pump0));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    group('gesture hint', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+
+      testWidgets('shows while he waits for a touch (and with a lead in hand); never over a mistake card', (t) async {
+        final seed = _seedWhere((d) => d.callAt != 0);
+        final c = await _open(t, seed);
+        expect(hand, findsNothing);
+        await _pump(t, 9000);
+        expect(hand, findsOneWidget, reason: 'idle: a sweep over what he can touch');
+        await t.tapAt(_screen(pmParkRect(_geo, PmPhase.y).center));
+        await t.pump(const Duration(milliseconds: 50));
+        expect(hand, findsNothing, reason: 'a touch hides it');
+        await _pump(t, 9000);
+        expect(hand, findsOneWidget, reason: 'a lead in hand: a sweep over the terminals');
+        // Three taps on nothing show it at once.
+        await t.tapAt(_screen(pmParkRect(_geo, PmPhase.y).center));
+        await _pump(t, 300);
+        for (var i = 0; i < 3; i++) {
+          await t.tapAt(_screen(Offset(110, _geo.y(500)))); // bare wall
+          await t.pump(const Duration(milliseconds: 100));
+        }
+        await t.pump(const Duration(milliseconds: 100));
+        expect(hand, findsOneWidget, reason: 'confused taps');
+        // A call with no reading: the card is up, no hand.
+        await t.tap(find.text(PmLines.fwd));
+        await _pump(t, 400);
+        expect(find.byType(MistakeCard), findsOneWidget);
+        await _pump(t, 10000);
+        expect(hand, findsNothing, reason: 'not over a card');
+        expect(t.takeException(), isNull);
+        await _close(t, c);
+      });
     });
   });
 }

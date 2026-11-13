@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -57,7 +58,8 @@ import 'spoken_once.dart';
 // 1.6); a helmet and harness for anyone on a pole (the brief).
 //
 // Deadly: climbing to work without both earth sets on — also by listening to
-// the coworker's "এক দিকের আর্থ খুলে কাজ সেরে ফেলো" while up the pole.
+// the coworker's "এক দিকের আর্থ খুলে কাজ সেরে ফেলো" while up the pole (the
+// act he pushes is this deadly; MODULE4_LADDER.md row 21 — owner to confirm).
 // Slips: a step out of order (test before the permit, earth before the
 // test), climbing without the harness, a tidy place "fixed", LT before HT, a
 // wrong fix (one per place), the earth off while still up, looking over the
@@ -67,7 +69,9 @@ import 'spoken_once.dart';
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m4_dp_dress_world.dart), corner guide, ◆ on the table → "কেন …?"
 // after each round → the next round by itself; the careless coworker once a
-// play, during the dressing. Voice: the guide by device TTS; the coworker's
+// play, during the dressing; the next place waits for him
+// (holdForCoworker). The tool rows are dealt in no working order; a gesture
+// hand sweeps over every tool / place when the player is stuck. Voice: the guide by device TTS; the coworker's
 // new push by device TTS until recorded (his exit line is his existing clip).
 
 // ============================================================================
@@ -115,7 +119,9 @@ abstract final class M4DpDressLines {
       };
 
   // How to put each place right (the choose deck, lesson 4.7 points 1–2).
-  // The wrong ones are field shortcuts and the lesson's myths. 33–41 letters.
+  // The wrong ones are field shortcuts and the lesson's myths, each naming the
+  // same part as the right ones (no word only the right card carries). 33–42
+  // letters.
   static const fixRight = <M4DpDressSlot, List<String>>{
     M4DpDressSlot.tangle: ['দৈর্ঘ্য মেপে জাম্পারে মসৃণ U বাঁক দিই', 'জট খুলে মাপমতো কেটে সুষম C আকার দিই'],
     M4DpDressSlot.clearance: ['জাম্পার সরিয়ে ক্রস-আর্ম থেকে দূরত্ব রাখি', 'ফেজ আর বডির মাঝে নিরাপদ দূরত্ব রেখে বাঁধি'],
@@ -124,16 +130,52 @@ abstract final class M4DpDressLines {
     M4DpDressSlot.loose: ['নাট-বল্টু রেঞ্চে সঠিক টর্কে টাইট দিই', 'লাগের নাট পুরো বসিয়ে ঠিকমতো টাইট দিই'],
     M4DpDressSlot.ltCable: ['এলটি কেবিল ক্ল্যাম্পে গুছিয়ে বেঁধে নামাই', 'কেবিল টাই দিয়ে এলটি কেবিল বাঞ্চিং করি'],
   };
-  static const fixWrong = [
-    'টেপ পেঁচিয়ে দিই, ওতেই কাজ চলে যাবে',
-    'যেমন আছে থাক, লাইন তো দিব্যি চলছে',
-    'ইনসুলেটেড তার, ছুঁয়ে থাকলেও ক্ষতি নেই',
-    'দেখতে খারাপ, তবে কাজে কোনো সমস্যা নেই',
-    'পরের শাটডাউনে এসে এটা ঠিক করে দেব',
-    'একটু ঢিলা থাক, পরে নিজে থেকেই বসে যাবে',
-    'বাড়তি তার রেখে দিই, পরে কাজে লাগবে',
-  ];
+  static const fixWrong = <M4DpDressSlot, List<String>>{
+    M4DpDressSlot.tangle: [
+      'জাম্পার টেনে টানটান সোজা করে বেঁধে দিই',
+      'মাপ ছাড়াই জাম্পারে লম্বা ঢিলা লুপ রাখি',
+      'জট পাকানো জাম্পারে টেপ পেঁচিয়ে দিই',
+      'জাম্পার ধারালো কোণে ভাঁজ করে বসিয়ে দিই',
+      'জাম্পারের জট থাক, কারেন্ট তো দিব্যি যায়',
+    ],
+    M4DpDressSlot.clearance: [
+      'জাম্পার টেপ দিয়ে ক্রস-আর্মে আটকে দিই',
+      'জাম্পার পোলের গায়ে বেঁধে দিই, আর দুলবে না',
+      'ইনসুলেটেড জাম্পার, পোল ছুঁলেও ক্ষতি নেই',
+      'জাম্পার আর ক্রস-আর্মের ফাঁকে টেপ জড়াই',
+      'জাম্পার যেখানে আছে থাক, দূরত্ব লাগে না',
+    ],
+    M4DpDressSlot.tail: [
+      'বাইন্ডিং তারের লেজ পাশের তারে পেঁচিয়ে দিই',
+      'বাইন্ডিং তারের লেজ না কেটে মুড়িয়ে রাখি',
+      'বাইন্ডিং তারের লেজে টেপ মুড়ে ঝুলিয়ে রাখি',
+      'বাঁধনের বাড়তি তার রেখে দিই, পরে লাগবে',
+      'বাইন্ডিং তারের লেজ বাঁকিয়ে উপরে তুলে দিই',
+    ],
+    M4DpDressSlot.tilt: [
+      'ক্রস-আর্ম লেভেল না করে শুধু ফিউজ ঘুরাই',
+      'বাঁকা ক্রস-আর্ম তার দিয়ে পোলে বেঁধে রাখি',
+      'ক্রস-আর্ম বাঁকা থাক, ইনসুলেটর তো বসানো',
+      'বাঁকা ক্রস-আর্ম পরের শাটডাউনে সোজা করব',
+      'ক্রস-আর্মের নিচে কাঠের গোঁজ ঠুকে দিই',
+    ],
+    M4DpDressSlot.loose: [
+      'ঢিলা নাট-বল্টুতে টেপ পেঁচিয়ে আটকে দিই',
+      'লাগের নাট হাতে আধা ঘুরিয়ে রেখে দিই',
+      'নাট-বল্টু হাতুড়ি ঠুকে বসিয়ে দিই',
+      'ঢিলা লাগ থাক, পরে নিজে থেকেই বসে যাবে',
+      'ঢিলা লাগের ফাঁকে তার গুঁজে টাইট করি',
+    ],
+    M4DpDressSlot.ltCable: [
+      'ক্ল্যাম্প ছাড়াই এলটি কেবিল ঝুলিয়ে নামাই',
+      'এলটি কেবিল পোলের গায়ে এলোমেলো পেঁচাই',
+      'এলটি কেবিল টেনে টানটান করে বেঁধে দিই',
+      'এলটি কেবিল এলোমেলো থাক, লাইন তো চলছে',
+      'এলটি কেবিলের বাড়তি অংশ গোল করে ঝোলাই',
+    ],
+  };
   static List<String> get allFixRight => [for (final l in fixRight.values) ...l];
+  static List<String> get allFixWrong => [for (final l in fixWrong.values) ...l];
 
   // The reasons: the right ones fit what was done this round; the wrong ones
   // are the lesson's myths and field excuses. 38–49 letters.
@@ -523,6 +565,30 @@ class M4DpDressRun {
 /// 85 % ≈ 65000 → 70 s.
 const m4DpDressQuickMs = 70000;
 
+/// A round's tool row, shuffled so that it never reads left to right in a
+/// working order (no answer in the layout). The dressing round has none.
+List<M4DpDressTool> m4DpDressToolRow(M4DpDressRound r, math.Random rng) {
+  final tools = switch (r) {
+    M4DpDressRound.prep => [M4DpDressTool.permit, M4DpDressTool.tester, M4DpDressTool.harness, M4DpDressTool.climb],
+    M4DpDressRound.dress => <M4DpDressTool>[],
+    M4DpDressRound.clear => [M4DpDressTool.down, M4DpDressTool.look, M4DpDressTool.lineClear],
+  };
+  if (tools.length < 2) return tools;
+  do {
+    tools.shuffle(rng);
+  } while (m4DpDressInWorkOrder(tools));
+  return tools;
+}
+
+/// True if tapping [row] from left to right would be a right play.
+bool m4DpDressInWorkOrder(List<M4DpDressTool> row) {
+  int at(M4DpDressTool t) => row.indexOf(t);
+  if (row.contains(M4DpDressTool.permit)) {
+    return at(M4DpDressTool.permit) < at(M4DpDressTool.tester) && row.last == M4DpDressTool.climb;
+  }
+  return at(M4DpDressTool.down) < at(M4DpDressTool.look) && at(M4DpDressTool.look) < at(M4DpDressTool.lineClear);
+}
+
 @immutable
 class M4DpDressPack {
   const M4DpDressPack({required this.id, required this.titleBn, this.quickMs = m4DpDressQuickMs});
@@ -585,7 +651,9 @@ class _DressRunPage extends ConsumerStatefulWidget {
 class _DressRunPageState extends ConsumerState<_DressRunPage>
     with DoDeathGuard, DoStrikeOut, TickerProviderStateMixin, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
-  late final M4DpDressRun _run = M4DpDressRun(m4DpDressDeal(widget.rng));
+  late final M4DpDressRun _run;
+  late final List<M4DpDressTool> _prepTools;
+  late final List<M4DpDressTool> _clearTools;
   late final int _seed = _run.deal.callAfter * 7 + _run.deal.dressWhy.index;
   final _clock = Stopwatch();
   late bool _muted = widget.muted;
@@ -624,6 +692,22 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
   Completer<void>? _frozen;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+
+  /// The gesture hand (how to touch, never what): the tool buttons and the
+  /// scene's touch layer (design px → screen) for its sweep.
+  final _hints = IdleHintController();
+  final _touchKey = GlobalKey();
+  final Map<M4DpDressTool, GlobalKey> _toolKeys = {for (final t in M4DpDressTool.values) t: GlobalKey()};
+  M4DpDressGeo? _geoNow;
+
+  @override
+  void initState() {
+    super.initState();
+    // The deal first (a seed's play is the same), then the tool rows.
+    _run = M4DpDressRun(m4DpDressDeal(widget.rng));
+    _prepTools = m4DpDressToolRow(M4DpDressRound.prep, widget.rng);
+    _clearTools = m4DpDressToolRow(M4DpDressRound.clear, widget.rng);
+  }
 
   @override
   LevelContext get deathCtx => widget.ctx;
@@ -664,7 +748,8 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
 
   bool get _fixUp => _run.picking != null && _fixOpts.isNotEmpty;
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.roundDone && !_freeze;
+  bool get _canPlay =>
+      !_intro && !_ended && _card == null && !reasonOpen && !tableBusy && !coworkerOpen && !_run.roundDone && !_freeze;
 
   String get _task => switch (_run.round) {
         M4DpDressRound.prep => M4DpDressLines.askPrep,
@@ -726,13 +811,21 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
         } else if (before != after) {
           _tick('sounds/intro/impact_metal.ogg', 0.55);
           setState(() => _wake++);
+        } else {
+          _hints.missTap();
         }
         return;
       }
     }
-    if (_run.round != M4DpDressRound.dress) return;
+    if (_run.round != M4DpDressRound.dress) {
+      _hints.missTap();
+      return;
+    }
     for (final s in M4DpDressSlot.values) {
       if (geo.slotHit(s).contains(p)) {
+        // The next place waits for the coworker once he is due (a fast play
+        // can not finish the dressing before he comes).
+        if (holdForCoworker()) return;
         _tick();
         final m = _run.tapSlot(s);
         setState(() => _wake++);
@@ -744,11 +837,12 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
         return;
       }
     }
+    _hints.missTap();
   }
 
   void _dealFix(M4DpDressSlot s) {
     setState(() {
-      _fixOpts = dealChoices(M4DpDressLines.fixRight[s]!, M4DpDressLines.fixWrong, widget.rng);
+      _fixOpts = dealChoices(M4DpDressLines.fixRight[s]!, M4DpDressLines.fixWrong[s]!, widget.rng);
       _fixWrong.clear();
       _fixPicked = null;
     });
@@ -851,7 +945,7 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.round != M4DpDressRound.dress || _run.roundDone) return null;
-    if (_intro || _card != null || reasonOpen || _run.picking != null || _freeze) return false;
+    if (_intro || _card != null || tableBusy || _run.picking != null || _freeze) return false;
     return true;
   }
 
@@ -1041,10 +1135,37 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
   M4DpDressRig get _rig => M4DpDressRig(untidy: _run.untidy, earthL: _run.earthL, earthR: _run.earthR, aloft: _run.aloft);
 
   List<M4DpDressTool> get _tools => switch (_run.round) {
-        M4DpDressRound.prep => const [M4DpDressTool.permit, M4DpDressTool.tester, M4DpDressTool.harness, M4DpDressTool.climb],
+        M4DpDressRound.prep => _prepTools,
         M4DpDressRound.dress => const [],
-        M4DpDressRound.clear => const [M4DpDressTool.down, M4DpDressTool.look, M4DpDressTool.lineClear],
+        M4DpDressRound.clear => _clearTools,
       };
+
+  /// A design-px rect of the scene on screen (null before layout).
+  Rect? _sceneRect(Rect r) {
+    final box = _touchKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight));
+  }
+
+  /// The gesture hand: a sweep over every choice of the moment, never one of
+  /// them — the round's tool row and both earth points; in the dressing all
+  /// six places (tidy, untidy or already put right alike, left to right).
+  HintSpec? _hint() {
+    final geo = _geoNow;
+    if (geo == null) return null;
+    final List<Rect> rects;
+    if (_run.round == M4DpDressRound.dress) {
+      final places = [...M4DpDressSlot.values]..sort((a, b) => geo.slotHit(a).center.dx.compareTo(geo.slotHit(b).center.dx));
+      rects = [for (final s in places) ?_sceneRect(geo.slotHit(s))];
+    } else {
+      rects = [
+        for (final t in _tools) ?HintSpec.globalRectOf(_toolKeys[t]!),
+        ?_sceneRect(geo.earthHit(true)),
+        ?_sceneRect(geo.earthHit(false)),
+      ];
+    }
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
 
   bool _toolOn(M4DpDressTool t) => switch (t) {
         M4DpDressTool.permit => _run.permit,
@@ -1067,7 +1188,7 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
   };
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M4DpDressGeo.forScene(m.height, m.inset);
+    final geo = _geoNow = M4DpDressGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final tb = _run.aloft ? geo.aloft : geo.ground;
@@ -1140,7 +1261,11 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: M4DpDressLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
+          child: GestureDetector(
+            key: _touchKey,
+            behavior: HitTestBehavior.opaque,
+            onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition),
+          ),
         ),
       ),
       // The photo of the finished work: a short white flash.
@@ -1217,6 +1342,10 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && !tableBusy && !_fixBusy,
+            hintKey: '${_run.index}/${_run.fixed.length}',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (handsOn && tools.isNotEmpty)
@@ -1230,6 +1359,7 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
                     children: [
                       for (final t in tools)
                         _ToolButton(
+                          key: _toolKeys[t],
                           icon: _icons[t]!,
                           label: M4DpDressLines.toolLabel(t),
                           on: _toolOn(t),
@@ -1375,7 +1505,7 @@ class _TesterChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit once done.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;

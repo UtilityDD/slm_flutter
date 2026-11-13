@@ -4,7 +4,9 @@
 // left or no measuring after the fix = slips), the deal, the libraries, and
 // the level in the shell: idle perf, the guide first, a full clean play (the
 // coworker refused), a wrong fix (the round goes on), signing off without
-// measuring, and the deadly freeze (listening to him).
+// measuring, the deadly freeze (listening to him), three slips strike out,
+// the coworker on a fast play (the fix deck and "কাজ শেষ" wait for him), the
+// near-miss decks and the dealt weather (no giveaways), gesture hints.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,8 +19,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m4_earth_fix.dart';
@@ -31,6 +36,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '4.6/do/1',
@@ -78,10 +84,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -210,6 +218,67 @@ void main() {
       expect(looseAt, {M4EarthFixSpot.joint, M4EarthFixSpot.pit});
     });
 
+    test('the dry spell in the sky never names the dry pit: dealt on other rounds too', () {
+      var hotOther = 0, coolOther = 0;
+      for (var s = 0; s < 80; s++) {
+        for (final c in m4EarthFixDeal(math.Random(s)).cases) {
+          if (c.fault == M4EarthFixFault.dry) {
+            expect(c.hot, isTrue, reason: 'a dry pit comes in dry weather');
+          } else {
+            c.hot ? hotOther++ : coolOther++;
+          }
+        }
+      }
+      expect(hotOther, greaterThan(30), reason: 'loose and cut rounds get the dry spell too');
+      expect(coolOther, greaterThan(30));
+    });
+
+    test('decks: the right card, one near miss sharing its words, one other wrong', () {
+      for (final f in M4EarthFixFault.values) {
+        for (var s = 0; s < 40; s++) {
+          final fix = m4EarthFixFixDeal(f, math.Random(s));
+          expect(fix, hasLength(3));
+          expect(fix.where((o) => o.correct).map((o) => o.textBn), everyElement(isIn(M4EarthFixLines.fixRight(f))));
+          expect(fix.where((o) => o.correct), hasLength(1));
+          expect(fix.where((o) => M4EarthFixLines.fixNear(f).contains(o.textBn)), hasLength(1), reason: 'fix ${f.name} seed $s');
+          expect(fix.where((o) => M4EarthFixLines.fixOther(f).contains(o.textBn)), hasLength(1));
+          final why = m4EarthFixWhyDeal(f, math.Random(s));
+          expect(why.where((o) => o.correct), hasLength(1));
+          expect(why.where((o) => M4EarthFixLines.whyNear(f).contains(o.textBn)), hasLength(1), reason: 'why ${f.name} seed $s');
+          expect(why.where((o) => M4EarthFixLines.whyWrong.contains(o.textBn)), hasLength(1));
+        }
+      }
+      // The key words of each right fix also stand on a wrong card.
+      for (final (f, word) in [(M4EarthFixFault.loose, 'গ্রিজ'), (M4EarthFixFault.cut, 'নতুন'), (M4EarthFixFault.dry, 'জল')]) {
+        expect(M4EarthFixLines.fixRight(f).every((t) => t.contains(word)), isTrue);
+        expect(M4EarthFixLines.fixNear(f).every((t) => t.contains(word)), isTrue, reason: '$word on every near miss');
+      }
+      for (final f in M4EarthFixFault.values) {
+        expect(M4EarthFixLines.whyNear(f).any((t) => t.contains('Ω')), isTrue, reason: 'the ohms are not only on the right reason');
+        // A high-reading near miss sits above the lesson's 5–8 Ω band, so it is
+        // plainly wrong (never "over 5 Ω", which a 6 Ω reading would fit).
+        for (final t in M4EarthFixLines.whyNear(f).where((t) => t.contains('Ω'))) {
+          expect(t, contains('8 Ω-এর বেশি'), reason: t);
+        }
+      }
+      // The cover near miss on the dry round: its slip card says to put the cover back.
+      expect(M4EarthFixLines.fixNear(M4EarthFixFault.dry).any((t) => t.contains('ঢাকনা খোলা')), isTrue);
+      expect(M4EarthFixMistakes.wrongFixDry.textBn, contains('ঢাকনা ঠিকমতো লাগান'));
+    });
+
+    test('the step tray: no two chips side by side in their right order', () {
+      for (final f in M4EarthFixFault.values) {
+        final steps = m4EarthFixSteps(f);
+        for (var s = 0; s < 60; s++) {
+          final o = m4EarthFixTrayDeal(steps, math.Random(s));
+          expect([...o]..sort(), [...steps]..sort());
+          for (var i = 0; i + 1 < o.length; i++) {
+            expect(steps.indexOf(o[i + 1]), isNot(steps.indexOf(o[i]) + 1), reason: '${f.name} seed $s: $o');
+          }
+        }
+      }
+    });
+
     M4EarthFixRun run1(M4EarthFixFault f, {M4EarthFixSpot? at}) => M4EarthFixRun(M4EarthFixDeal(cases: [
           M4EarthFixCase(
             id: 'x',
@@ -291,7 +360,7 @@ void main() {
       expect(run1(M4EarthFixFault.cut).step('clean'), isNull, reason: 'no steps before the fix is chosen');
     });
 
-    test('three slips fail the level (percent 55)', () {
+    test('three slips: the run counts percent 55 (the page strikes out on the third — see the page test)', () {
       final d = M4EarthFixDeal(cases: [
         for (var i = 0; i < 3; i++) const M4EarthFixCase(id: 'x', fault: M4EarthFixFault.dry, at: M4EarthFixSpot.pit, before: 22.4, after: 3.4),
       ], callAt: 0);
@@ -312,8 +381,11 @@ void main() {
         expectLibrary('fix ${f.name}', fr, fw);
         expectSameLength('fix ${f.name}', [...fr, ...fw]);
         final wr = M4EarthFixLines.whyRight(f);
-        expectLibrary('why ${f.name}', wr, M4EarthFixLines.whyWrong);
-        expectSameLength('why ${f.name}', [...wr, ...M4EarthFixLines.whyWrong]);
+        final ww = [...M4EarthFixLines.whyNear(f), ...M4EarthFixLines.whyWrong];
+        expectLibrary('why ${f.name}', wr, ww);
+        expectSameLength('why ${f.name}', [...wr, ...ww]);
+        expect(M4EarthFixLines.fixNear(f), hasLength(2));
+        expect(M4EarthFixLines.whyNear(f), hasLength(2));
         for (var s = 0; s < 10; s++) {
           final deal = dealChoices(fr, fw, math.Random(s));
           expect(deal.where((o) => o.correct).length, 1);
@@ -381,7 +453,7 @@ void main() {
         }
         debugPrint('PERF m4_earth_fix ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -452,9 +524,11 @@ void main() {
       await _look(t, c0.at);
       expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
       await _pump(t, 700);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M4EarthFixLines.fixWrong(c0.fault));
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1200);
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes.single.key, M4EarthFixMistakes.wrongFix(c0.fault).key);
@@ -491,9 +565,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M4EarthFixLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);
@@ -504,6 +580,100 @@ void main() {
       expect(s.mistakes.single.key, M4EarthFixMistakes.cutLeft.key);
       expect(s.mistakes.single.deadly, isTrue);
       expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him: "কাজ শেষ" right after the cut brings him in, no freeze', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 0);
+      final c = await _open(t, seed);
+      await t.tapAt(_geo.spotHit(M4EarthFixSpot.strip).center * _k);
+      await _pump(t, 100);
+      await t.tap(find.text(M4EarthFixLines.signOff));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in at once (his own timer is 1.2–2.4 s)');
+      expect(find.byType(FreezeFrame), findsNothing, reason: 'the sign-off waited for him');
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pickRight(t, M4EarthFixLines.coworker.right);
+      await _pump(t, 1500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'refused: the fix deck');
+      await waitChoiceDeck(t);
+      expect(_onScreen(M4EarthFixLines.fixRight(M4EarthFixFault.cut)), hasLength(1));
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast re-tap on the cut also brings him in (the fix deck waits for him)', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 0);
+      final c = await _open(t, seed);
+      final at = _geo.spotHit(M4EarthFixSpot.strip).center * _k;
+      await t.tapAt(at);
+      await _pump(t, 100);
+      await t.tapAt(at);
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike out: the StruckOutCard, the play is not cleared', (t) async {
+      final seed = _seedWhere((d) => d.callAt != 0);
+      final c0 = m4EarthFixDeal(math.Random(seed)).cases[0];
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        await _look(t, c0.at);
+        expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the fix deck, try $i');
+        await _pump(t, 700);
+        await waitChoiceDeck(t);
+        final wrong = _onScreen(M4EarthFixLines.fixWrong(c0.fault));
+        expect(wrong, isNotEmpty);
+        await t.tap(wrong.first, warnIfMissed: false);
+        await confirmChoice(t);
+        await _pump(t, 1200);
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${i + 1}');
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 800);
+        }
+      }
+      await _pump(t, 800);
+      expect(find.byType(StruckOutCard), findsOneWidget, reason: 'the third slip strikes out');
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.text(M4EarthFixLines.signOff), findsNothing, reason: 'hands off');
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['4.6/do/1'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key), contains(M4EarthFixMistakes.wrongFix(c0.fault).key));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over the three spots and both buttons; over the open steps', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = _seedWhere((d) => d.callAt != 0);
+      final c0 = m4EarthFixDeal(math.Random(seed)).cases[0];
+      final c = await _open(t, seed);
+      final frameHint = find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first;
+      HintSpec? spec() => t.widget<IdleHint>(frameHint).spec(Size.zero);
+      final s1 = spec();
+      expect(s1?.kind, HintKind.sweep);
+      expect(s1!.options, hasLength(5), reason: 'three spots + মাপুন + কাজ শেষ');
+      await _pump(t, 9000);
+      expect(find.byKey(const ValueKey('gesture-hint')), findsOneWidget, reason: 'idle → the hand');
+      // Find and fix up to the steps: the tray's open chips are swept.
+      await _look(t, c0.at);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pump(t, 700);
+      await _pickRight(t, M4EarthFixLines.fixRight(c0.fault));
+      await _pump(t, 1200);
+      final s2 = spec();
+      expect(s2?.kind, HintKind.sweep);
+      expect(s2!.options, hasLength(c0.steps.length), reason: 'every open step, never one');
+      for (final id in c0.steps.take(c0.steps.length - 1)) {
+        await t.tap(_label(M4EarthFixLines.step(id)), warnIfMissed: false);
+        await _pump(t, 300);
+      }
+      expect(spec(), isNull, reason: 'one step left: a sweep would point at it');
       await _close(t, c);
     });
   });

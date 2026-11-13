@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="220" viewBox="0 0 200 220">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2C3846"/><stop offset="1" stop-color="#1A222C"/></linearGradient>
+<linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A3ACB4"/><stop offset="1" stop-color="#5E6870"/></linearGradient>
+<linearGradient id="cu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E7A86A"/><stop offset="1" stop-color="#B86C2C"/></linearGradient>
+<linearGradient id="meg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A23A"/><stop offset="1" stop-color="#C56E1C"/></linearGradient>
+<linearGradient id="mm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2D14A"/><stop offset="1" stop-color="#C9A322"/></linearGradient>
+<radialGradient id="flash"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.5" stop-color="#9CCBFF" stop-opacity="0.8"/><stop offset="1" stop-color="#508CFF" stop-opacity="0"/></radialGradient>
+<linearGradient id="soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A5A3A"/><stop offset="1" stop-color="#4A3422"/></linearGradient>
+</defs>
+<rect width="200" height="220" rx="18" fill="url(#bg)"/>
+<rect x="20" y="40" width="56" height="74" rx="6" fill="url(#steel)"/><line x1="48" y1="74" x2="48" y2="90" stroke="#26292E" stroke-width="6" stroke-linecap="round"/><circle cx="48" cy="90" r="6" fill="#2F9A4C"/><text x="48" y="110" font-family="sans-serif" font-size="9" font-weight="900" fill="#fff" text-anchor="middle">OFF</text><rect x="124" y="40" width="56" height="74" rx="6" fill="url(#steel)"/><line x1="152" y1="74" x2="152" y2="90" stroke="#26292E" stroke-width="6" stroke-linecap="round"/><circle cx="152" cy="90" r="6" fill="#2F9A4C"/><text x="152" y="110" font-family="sans-serif" font-size="9" font-weight="900" fill="#fff" text-anchor="middle">OFF</text><rect x="36" y="124" width="24" height="18" rx="3" fill="#E8B830"/><rect x="140" y="124" width="24" height="18" rx="3" fill="#E8B830"/><rect x="28" y="152" width="40" height="26" rx="3" fill="#D9342B"/><rect x="132" y="152" width="40" height="26" rx="3" fill="#D9342B"/><circle cx="100" cy="196" r="14" fill="#2F9A4C"/><path d="M92 196 L98 203 L109 189" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg>

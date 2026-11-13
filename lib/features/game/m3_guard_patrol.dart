@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -49,20 +50,27 @@ export 'm3_guard_patrol_world.dart'
 // Hands on: tap a spot (the earth at either pole, or a third of the span) to
 // hang a red tag on it (tap again to take it off), then "রিপোর্ট পাঠাই" — or,
 // with no tag, "সব ঠিক আছে". A fault left untagged = a slip. A tag on a
-// sound spot is not scored: the guide says one tag is wrong and the round
-// stays.
+// sound spot (an over-call) = a slip too (its own card after the report; the
+// guide never says which tag was wrong before the decision).
 //
 // Deadly (the myth): touching the guard bare-handed. The careless coworker
 // comes once a play, on the crossing with the snapped wire hanging down:
 // "গার্ডের তারে কারেন্ট নেই, হাত দিয়ে টেনে দেখো!" — listening = the trainee
 // grabs the hanging wire bare-handed. Always deadly (safety tip of point 4:
-// treat the guard as live); the card says so, and when that crossing's earth
-// was stolen it says that too.
+// treat the guard as live; MODULE3_LADDER.md step 26's deadly column); the card
+// says so, and when that crossing's earth was stolen it says that too. The
+// report on his crossing waits for him (`holdForCoworker`), so a fast play
+// cannot skip him; once the report is in, his push no longer fits and he
+// does not come.
+//
+// Gesture hint: while the crossing waits for tags, a sweep over the five spots
+// (both earths, the span's thirds) — how to touch, never which spot.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m3_guard_patrol_world.dart), corner guide, ◆ on the table → "কেন …?"
 // → the next crossing by itself. Voice: the guide's lines by device TTS; the
-// coworker's push by TTS until recorded (his exit line is recorded).
+// coworker's push is silent with its caption held until recorded (his exit
+// line is recorded).
 //
 // Flagged to the owner: no minimum vertical clearance or ground clearance
 // figure is used (the lesson gives the ground clearance 5.8 m LT / 6.1 m HT
@@ -123,7 +131,7 @@ abstract final class M3GuardPatrolLines {
       };
 
   // The reasons: the right ones fit what this crossing had; the wrong ones are
-  // bad motives (to report) or myths (to pass it as fine). 33–43 letters.
+  // bad motives (to report) or myths (to pass it as fine). 35–50 letters.
   static const whyReport = 'কেন রিপোর্ট করলেন?';
   static const whyOk = 'কেন সব ঠিক বললেন?';
   static const faultWhy = {
@@ -134,33 +142,35 @@ abstract final class M3GuardPatrolLines {
     M3GuardPatrolFault.sag: ['ঝুলে পড়া জাল বাতাসে লাইভ তার ছুঁতে পারে', 'আলগা জাল লাইভ তার আর জালের দূরত্ব কমায়'],
     M3GuardPatrolFault.gap: ['লাইভ তার আর জালের দূরত্ব কমলে আর্ক হতে পারে', 'উল্লম্ব দূরত্ব কম হলে শর্ট সার্কিট হতে পারে'],
   };
+  // No shared ending or word that marks the wrong ones as a set, and the
+  // words the right ones share (লাইভ, পারে, যায়, দূরত্ব, আর্থ, জাল…) appear
+  // here too.
   static const reportExcuses = [
-    'রিপোর্ট লিখলে ওভারটাইম মেলে, তাই লিখলাম',
-    'সুপারভাইজার খুশি হবেন, তাই কিছু লিখে দিলাম',
-    'জালটা দেখতে পুরোনো লাগছিল, তাই লিখলাম',
-    'রাস্তার লোক দেখছিল, তাই একটা কিছু লিখলাম',
-    'খাতায় কিছু না লিখলে বকুনি খাব, তাই লিখলাম',
-    'হাতে সময় ছিল, তাই যা মনে এল লিখে দিলাম',
+    'রিপোর্ট হলে ওভারটাইম হয়ে যায়, তাই লিখলাম',
+    'সুপারভাইজার খুশি হতে পারে, এজন্যই লিখে দিয়েছি',
+    'জালের রং পুরোনো, দূরত্ব না মেপেই রিপোর্ট দিলাম',
+    'লাইভ লাইনের কাছে আর যেতে হবে না, সেজন্য লিখলাম',
+    'খাতা ফাঁকা থাকলে বকুনি, তাই চুরি-ছেঁড়া কিছু লিখি',
+    'অন্য পোলে আর্থ-তার দুর্বল, জাল ঝুলে — এখানেও দিলাম',
   ];
   static const okWhy = [
     'আর্থ পাইপে, জাল টানটান, দূরত্বও ঠিক আছে',
     'দুই পোলেই আর্থ আছে, জালে মরিচা বা ঝুল নেই',
     'আর্থ, জাল, টান আর দূরত্ব — সবই ঠিক দেখলাম',
   ];
+  // The words of the right ones (আর্থ, জাল, ঠিক, দূরত্ব, আছে) are spread over
+  // these too.
   static const okMyths = [
-    'গার্ডে কারেন্ট থাকে না, তাই দেখার কিছু নেই',
-    'দু-একটা তার ছিঁড়লেও বাকিগুলো তো আছেই',
+    'গার্ডে কারেন্ট নেই, তাই জাল দেখার কিছু নেই',
+    'দু-একটা তার ছিঁড়লেও জালের বাকিগুলো তো আছেই',
     'আর্থ তার না থাকলেও জাল ঠিকই কাজ করে',
-    'দূর থেকে এক ঝলক দেখেই সব বুঝে গেছি আমি',
-    'গতবার ঠিক ছিল, তাই এবারও নিশ্চয়ই ঠিক আছে',
+    'দূর থেকে এক ঝলকে দূরত্ব আর জাল বুঝেছি',
+    'গতবার আর্থ ঠিক ছিল, তাই আজও আছে নিশ্চয়ই',
     'একটু মরিচা থাকলে জালের কিছুই হয় না',
   ];
 
   static List<String> whyRight(M3GuardPatrolCase c) => c.healthy ? okWhy : [for (final f in c.faults.values) ...faultWhy[f]!];
   static List<String> whyWrong(M3GuardPatrolCase c) => c.healthy ? okMyths : reportExcuses;
-
-  /// A tag on a sound spot: not scored; the round stays.
-  static const needless = 'একটা দাগ ভুল জায়গায় — ওখানে ত্রুটি নেই। আবার দেখুন।';
 
   /// The careless coworker: the guard is dead to him.
   static const coworker = CoworkerScript(
@@ -239,6 +249,15 @@ abstract final class M3GuardPatrolMistakes {
     art: '$_dir/gap.svg',
   );
 
+  /// A tag on a sound spot (an over-call): lesson point 1's daily check —
+  /// look for what is really broken or sagging at the crossing.
+  static const needlessTag = DoMistake(
+    key: '3.9/m3_guard_patrol/needless-tag',
+    textBn: 'ত্রুটি নেই এমন জায়গায় দাগ দিলেন। পেট্রোলিং-এ জাল অক্ষত কিনা, কোনো তার ছেঁড়া বা ঝুলে পড়া কিনা — ভালো করে দেখে তবেই রিপোর্ট করুন।',
+    art: '$_dir/needless_tag.svg',
+    lessonPoint: 0,
+  );
+
   static const touchNoEarth = DoMistake(
     key: '3.9/m3_guard_patrol/touch-no-earth',
     textBn: 'খালি হাতে গার্ডের তার ধরলেন — এই ক্রসিং-এ আর্থই ছিল না! আর্থ নষ্ট হলে পুরো জাল লাইভ হতে পারে। গার্ডকে সবসময় লাইভ ধরুন।',
@@ -265,6 +284,7 @@ abstract final class M3GuardPatrolMistakes {
 
   static List<DoMistake> get all => [
         for (final f in M3GuardPatrolFault.values) missed(f),
+        needlessTag,
         touchNoEarth,
         touchGuard,
       ];
@@ -345,9 +365,6 @@ class M3GuardPatrolRun {
   /// The trainee's tags on this crossing.
   final Set<M3GuardPatrolSpot> tags = {};
 
-  /// Reports sent this crossing with a tag on a sound spot.
-  int needless = 0;
-
   var shown = false;
   int slips = 0;
   DoMistake? deadly;
@@ -360,8 +377,8 @@ class M3GuardPatrolRun {
   bool get passed => done && deadly == null && percent >= 55;
   bool get _open => !ended && !shown;
 
-  /// The +5: two faults caught on the first report.
-  bool get thorough => needless == 0 && current.faults.length >= 2;
+  /// The +5: two faults caught on the report.
+  bool get thorough => current.faults.length >= 2;
 
   /// Tag or untag [s]; true = tagged now.
   bool toggle(M3GuardPatrolSpot s) {
@@ -376,8 +393,8 @@ class M3GuardPatrolRun {
   }
 
   /// Send the report (no tags = "all fine"). A fault left untagged = a slip
-  /// (the first one, by spot order); a tag on a sound spot alone = not scored,
-  /// the round stays ([needless]).
+  /// (the first one, by spot order); else a tag on a sound spot = a slip
+  /// ([M3GuardPatrolMistakes.needlessTag]). Either way the crossing is done.
   DoMistake? report() {
     if (!_open) return null;
     final c = current;
@@ -390,8 +407,9 @@ class M3GuardPatrolRun {
       }
     }
     if (tags.any((s) => !c.faults.containsKey(s))) {
-      needless++;
-      return null;
+      shown = true;
+      slips++;
+      return M3GuardPatrolMistakes.needlessTag;
     }
     shown = true;
     if (c.healthy) {
@@ -414,7 +432,6 @@ class M3GuardPatrolRun {
   void next() {
     index++;
     tags.clear();
-    needless = 0;
     shown = false;
   }
 }
@@ -508,8 +525,16 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
 
   /// The stamp after a right report: true = report, false = all fine.
   bool? _stamp;
-  var _coworkerArmed = false;
+
+  /// He has been scheduled on his crossing ([scheduleCoworker]).
+  var _coworkerScheduled = false;
   Timer? _armTimer;
+
+  /// The gesture hint (a sweep over the spots while the crossing waits).
+  final _hints = IdleHintController();
+
+  /// The scene's geometry as last laid out (for the hint's sweep).
+  M3GuardPatrolGeo? _geo;
 
   /// He reached for the hanging wire (walking there, then the freeze).
   var _grab = false;
@@ -561,7 +586,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown;
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown;
 
   void _startRound() {
     setState(() {
@@ -577,8 +602,8 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
   }
 
   void _arm() {
-    if (!mounted || _coworkerArmed || _run.index != _run.deal.callAt) return;
-    _coworkerArmed = true;
+    if (!mounted || _coworkerScheduled || _run.index != _run.deal.callAt) return;
+    _coworkerScheduled = true;
     _armTimer?.cancel();
     scheduleCoworker();
   }
@@ -595,7 +620,10 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
         if (geo.hit(s).contains(p)) hit = s;
       }
     }
-    if (hit == null) return;
+    if (hit == null) {
+      _hints.missTap();
+      return;
+    }
     HapticFeedback.selectionClick();
     final on = _run.toggle(hit);
     _cue(on ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/tick.ogg', volume: on ? 0.45 : 0.5);
@@ -606,16 +634,12 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
   // --- the report ----------------------------------------------------------------
   Future<void> _report(Offset origin) async {
     if (!_canPlay) return;
+    // His crossing: the report waits for him (a fast play cannot skip him).
+    if (_run.index == _run.deal.callAt) _arm();
+    if (holdForCoworker()) return;
     _hush();
     final tagged = _run.tags.isNotEmpty;
     final m = _run.report();
-    if (m == null && !_run.shown) {
-      HapticFeedback.selectionClick();
-      _cue('sounds/intro/click.ogg', volume: 0.5);
-      setState(() => _wake++);
-      unawaited(_sayChain([M3GuardPatrolLines.needless]));
-      return;
-    }
     HapticFeedback.mediumImpact();
     if (m == null) {
       _cue('sounds/learn/tag_slap.wav', volume: 0.7);
@@ -676,8 +700,9 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // After the report his push ("pull it by hand") no longer fits.
     if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    if (_intro || _busy || _card != null || reasonOpen) return false;
+    if (_intro || _busy || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -853,6 +878,15 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     if (leave == true) _popOnce(false);
   }
 
+  /// How to touch, never where the fault is: a sweep over all five spots,
+  /// left to right.
+  HintSpec? _hint() {
+    final geo = _geo;
+    if (geo == null) return null;
+    const order = [_Spot.earthL, _Spot.spanL, _Spot.spanM, _Spot.spanR, _Spot.earthR];
+    return HintSpec.sweep([for (final s in order) geo.hit(s)], space: HintSpace.scene);
+  }
+
   // --- the scene ---------------------------------------------------------------
   LinemanMode get _mode {
     if (_grab) return _freeze ? LinemanMode.hold : LinemanMode.walk;
@@ -864,7 +898,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M3GuardPatrolGeo.forScene(m.height, m.inset);
+    final geo = _geo = M3GuardPatrolGeo.forScene(m.height, m.inset);
     final c = _run.current;
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
@@ -947,7 +981,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_grab;
+    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_grab && !tableBusy;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -975,6 +1009,10 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && !_busy && !_ended && !coworkerOnScreen,
+            hintKey: _run.index,
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (handsOn)

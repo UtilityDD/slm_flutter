@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -37,13 +38,19 @@ import 'spoken_once.dart';
 // rod on the rack is right — hold the job (lesson: মিল না থাকলে কাজ শুরু নয়).
 // Once a play the careless coworker (level 1's rival, his recorded voice)
 // peeps in with the lesson's shortcut: the PVC jugaad, or the 11 kV rod for a
-// 33 kV line. Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide
-// first, full scene, corner guide, ◆ on the table → "কেন …?" → next docket
-// by itself.
+// 33 kV line. He is dealt a docket; on it the decisive controls (lifting a rod
+// off the rack, holding the job) wait for him (holdForCoworker), so a fast
+// play never skips him. Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md):
+// guide first, full scene, corner guide, ◆ on the table → "কেন …?" → next
+// docket by itself; the scene takes no input in the praise window (tableBusy).
+// Gesture hints (how, never what): a sweep over the docket, every rod on the
+// rack and the hold button; in the close look a short slide nudge along the
+// rod, then a sweep over put back / take; a tap on the zoomed docket.
 //
-// Deadly (owner-approved list): a rod rated below the line; the jugaad (also
-// by listening to him). Slips: taking a damaged rod; holding the job when the
-// right rod was there.
+// Deadly (owner-approved list, MODULE1_LADDER.md step 14): a rod rated below
+// the line; the jugaad — so listening to him (he pushes exactly one of those)
+// is deadly too. Slips: taking a damaged rod; holding the job when the right
+// rod was there (a needless stop costs a slip; the reply stays neutral).
 //
 // Voice: the guide's lines on device TTS (owner's decision 2026-11-06); the
 // coworker in his recorded voice. Art: the van is drawn in code
@@ -112,8 +119,8 @@ class RodDeal {
   const RodDeal({required this.rounds, required this.callRound, required this.callRating});
   final List<RodRoundDeal> rounds;
 
-  /// The docket on which the careless coworker peeps in (or the next one, if
-  /// that docket was done before he could).
+  /// The docket on which the careless coworker peeps in (its decisive controls
+  /// wait for him; only if he had nothing left to push would he try the next).
   final int callRound;
 
   /// He pushes the 11 kV rod for a 33 kV line (when that docket is 33 kV);
@@ -411,6 +418,7 @@ class RodRun {
 
   /// The player's hand found [rod]'s flaw in the close look.
   void spot(RodItem rod) {
+    if (ended || shown) return;
     if (rod.flaw != RodFlaw.none) spotted.add(rod.id);
   }
 
@@ -554,6 +562,20 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The gesture hint (how to touch, never what): taps on nothing count.
+  final _hints = IdleHintController();
+  final Map<String, GlobalKey> _sceneKeys = {};
+  GlobalKey _sceneKey(String id) => _sceneKeys.putIfAbsent(id, GlobalKey.new);
+  final _holdKey = GlobalKey();
+  final _zoomKey = GlobalKey();
+  final _closeUpKey = GlobalKey();
+  final _takeKey = GlobalKey();
+  final _backKey = GlobalKey();
+
+  /// The hand has run along the stick / the lead of the rod in the close look.
+  var _slidStick = false;
+  var _slidLead = false;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -602,7 +624,16 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || _run.shown || _freeze;
+  bool get _blocked => _intro || _busy || _ended || _card != null || tableBusy || _run.shown || _freeze;
+
+  /// The decisive controls of his docket wait for him (when he has a rod on
+  /// the rack to push; else his moment moves on).
+  bool _waitForHim() => rodPushFor(_run.current, _run.rejected, preferRating: _run.deal.callRating) != null && holdForCoworker();
+
+  /// A tap that hit nothing to work with (gesture hint after a few).
+  void _missTap() {
+    if (!_blocked && !coworkerOnScreen) _hints.missTap();
+  }
 
   void _setMode(LinemanMode m) {
     _mode = m;
@@ -614,11 +645,15 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
     // Taking another rod while he is still talking refuses him too.
     if (coworkerOpen && !coworkerChoiceUp && !_isPushed(r)) unawaited(answerCoworker(true, origin, direct: true));
     if (_blocked || coworkerOpen || _held != null || _docketOpen || _run.rejected.contains(r.id) || _packed == r.id) return;
+    // His docket: the rod stays on the rack until he has spoken.
+    if (_waitForHim()) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/impact_metal.ogg', volume: 0.45, muted: false));
     _hush();
     setState(() {
       _held = r;
+      _slidStick = false;
+      _slidLead = false;
       _setMode(LinemanMode.hold);
     });
     unawaited(_sayChain([RodLines.inspectAsk]));
@@ -683,6 +718,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
 
   void _holdJob(Offset origin) {
     if (_blocked || coworkerOpen || _held != null || _docketOpen) return;
+    if (_waitForHim()) return;
     _hush();
     final o = _run.holdJob();
     if (o.verdict == RodVerdict.right) {
@@ -757,10 +793,14 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
-    if (_blocked || _held != null || _docketOpen) return false;
-    // Nothing left on the rack to push: he tries again later (the next docket).
+    // He pushes only a rod still on the rack (never the jugaad once it hangs
+    // on the door tagged বাতিল, the 11 kV rod only on a 33 kV docket). With
+    // nothing left to push he tries the next docket; after the last, never.
     final push = rodPushFor(_run.current, _run.rejected, preferRating: _run.deal.callRating);
-    if (push == null) return false;
+    if (push == null) return _run.round >= _run.deal.rounds.length - 1 ? null : false;
+    // Never in the praise window (tableBusy is in _blocked), nor once this
+    // docket is decided, nor over a rod in hand or the docket held up close.
+    if (_blocked || _held != null || _docketOpen) return false;
     _push = push;
     return true;
   }
@@ -949,6 +989,39 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
     if (leave == true) _popOnce(false);
   }
 
+  // ---- gesture hint (how to touch, never what) -------------------------------------
+
+  /// The level waits for the player's hands now (no intro, card, deck, his
+  /// beat, praise window, freeze or result).
+  bool get _hintWaiting =>
+      !_intro && _mark == null && !struckOut && !_freeze && !_busy && !_ended && _card == null && !tableBusy && !_run.shown && !coworkerOnScreen;
+
+  Object get _hintKey => '${_run.round}·${_held?.id}·$_docketOpen·${_run.rejected.length}';
+
+  HintSpec? _hintNow() {
+    if (_docketOpen) return HintSpec.tapOn(_zoomKey);
+    if (_held != null) {
+      // Not felt along yet: a short slide nudge from the hook end (a generic
+      // direction along the rod; it never travels to a fault).
+      if (!_slidStick || !_slidLead) {
+        final r = HintSpec.globalRectOf(_closeUpKey);
+        if (r == null) return null;
+        final y = r.top + r.height * (!_slidStick ? 0.36 : 0.8);
+        return HintSpec.drag(Offset(r.left + r.width * 0.14, y), toward: const Offset(1, 0), travel: 72);
+      }
+      return HintSpec.sweepOver([_backKey, _takeKey]);
+    }
+    // At the van: every choice the same way — the docket, each rod still on
+    // the rack (in its rack order), the hold button.
+    final r = _run.current;
+    return HintSpec.sweepOver([
+      _sceneKey('docket-${_run.round}'),
+      for (final x in r.rods)
+        if (!_run.rejected.contains(x.id) && _packed != x.id) _sceneKey(x.id),
+      _holdKey,
+    ]);
+  }
+
   // ---- build ------------------------------------------------------------------------
 
   List<Widget> _layers(BuildContext context, SceneMetrics m, bool quiet) {
@@ -960,13 +1033,18 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
     return [
       Positioned.fill(
         key: const ValueKey('van'),
-        child: ColorFiltered(colorFilter: grey, child: RepaintBoundary(child: CustomPaint(painter: RodVanPainter(geo)))),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _missTap,
+          child: ColorFiltered(colorFilter: grey, child: RepaintBoundary(child: CustomPaint(painter: RodVanPainter(geo)))),
+        ),
       ),
       // The docket on the left door (tap to read it close).
       Positioned.fromRect(
         key: ValueKey('docket-${_run.round}'),
         rect: geo.docket,
         child: ColorFiltered(
+          key: _sceneKey('docket-${_run.round}'),
           colorFilter: grey,
           child: _DocketSheet(docket: r.docket, quiet: quiet, onTap: _openDocket),
         ),
@@ -977,6 +1055,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
           key: ValueKey('slot-${_run.round}-$i'),
           rect: geo.slot(i, r.rods.length),
           child: ColorFiltered(
+            key: _sceneKey(r.rods[i].id),
             colorFilter: grey,
             child: DoDealIn(
               index: i,
@@ -1045,6 +1124,10 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hintNow,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (holdUp)
@@ -1053,7 +1136,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
                   left: 12,
                   right: 128,
                   bottom: pad.bottom + 18,
-                  child: _HoldButton(onTapUp: (d) => _holdJob(d.globalPosition)),
+                  child: _HoldButton(key: _holdKey, onTapUp: (d) => _holdJob(d.globalPosition)),
                 ),
               if (held != null && playing)
                 _Inspect(
@@ -1064,10 +1147,16 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
                   onFound: _found,
                   onTake: _take,
                   onPutBack: _putBack,
+                  onSlid: (stick) => stick ? _slidStick = true : _slidLead = true,
+                  onMiss: _missTap,
+                  closeUpKey: _closeUpKey,
+                  takeKey: _takeKey,
+                  backKey: _backKey,
                 ),
               if (_docketOpen && playing)
                 _DocketZoom(
                   key: const ValueKey('docket-zoom'),
+                  cardKey: _zoomKey,
                   docket: _run.current.docket,
                   quiet: quiet,
                   onClose: () => setState(() => _docketOpen = false),
@@ -1256,7 +1345,8 @@ class _DocketSheet extends StatelessWidget {
 
 /// The docket held up close (tap anywhere to put it back on the door).
 class _DocketZoom extends StatelessWidget {
-  const _DocketZoom({super.key, required this.docket, required this.quiet, required this.onClose});
+  const _DocketZoom({super.key, required this.cardKey, required this.docket, required this.quiet, required this.onClose});
+  final GlobalKey cardKey;
   final RodDocket docket;
   final bool quiet;
   final VoidCallback onClose;
@@ -1277,6 +1367,7 @@ class _DocketZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: cardKey,
                 width: 280,
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
                 decoration: BoxDecoration(
@@ -1433,7 +1524,7 @@ class _AsideRod extends StatelessWidget {
 
 /// "কোনোটাই ঠিক নয় — কাজ স্থগিত", readable on the road.
 class _HoldButton extends StatelessWidget {
-  const _HoldButton({required this.onTapUp});
+  const _HoldButton({super.key, required this.onTapUp});
   final GestureTapUpCallback onTapUp;
 
   @override
@@ -1482,6 +1573,11 @@ class _Inspect extends StatefulWidget {
     required this.onFound,
     required this.onTake,
     required this.onPutBack,
+    required this.onSlid,
+    required this.onMiss,
+    required this.closeUpKey,
+    required this.takeKey,
+    required this.backKey,
   });
   final RodItem rod;
   final RodDocket docket;
@@ -1489,6 +1585,15 @@ class _Inspect extends StatefulWidget {
   final VoidCallback onFound;
   final ValueChanged<Offset> onTake;
   final VoidCallback onPutBack;
+
+  /// The hand ran along the stick (true) or the lead (false).
+  final ValueChanged<bool> onSlid;
+
+  /// A tap on the dim backdrop (nothing to work with there).
+  final VoidCallback onMiss;
+  final GlobalKey closeUpKey;
+  final GlobalKey takeKey;
+  final GlobalKey backKey;
 
   @override
   State<_Inspect> createState() => _InspectState();
@@ -1510,6 +1615,7 @@ class _InspectState extends State<_Inspect> {
       if (x >= 0 && x < kRodBins) set.add(x);
     }
     final grew = set.length != before;
+    if (grew && set.length >= 6) widget.onSlid(stick);
     if (!_found && RodPainter.flawSeen(widget.rod, _stick, _lead)) {
       _found = true;
       widget.onFound();
@@ -1521,6 +1627,7 @@ class _InspectState extends State<_Inspect> {
       builder: (context, box) {
         final s = Size(box.maxWidth, box.maxHeight);
         return Semantics(
+          key: widget.closeUpKey,
           label: RodLines.handLabel,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -1555,79 +1662,83 @@ class _InspectState extends State<_Inspect> {
   Widget build(BuildContext context) {
     final rod = widget.rod;
     return Positioned.fill(
-      child: ColoredBox(
-        color: const Color(0xC0050A16),
-        child: Align(
-          alignment: const Alignment(0, -0.42),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
-            duration: const Duration(milliseconds: 360),
-            curve: Curves.easeOutBack,
-            builder: (_, t, child) => Transform.translate(
-              offset: Offset(0, 80 * (1 - t)),
-              child: Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
-            ),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-              decoration: BoxDecoration(
-                color: SlmColors.ivory,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onMiss,
+        child: ColoredBox(
+          color: const Color(0xC0050A16),
+          child: Align(
+            alignment: const Alignment(0, -0.42),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
+              duration: const Duration(milliseconds: 360),
+              curve: Curves.easeOutBack,
+              builder: (_, t, child) => Transform.translate(
+                offset: Offset(0, 80 * (1 - t)),
+                child: Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // The docket, clipped beside the rod.
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
-                      decoration: BoxDecoration(
-                        color: _paper,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFB59B62)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.receipt_long_rounded, color: _brown, size: 16),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text('${RodLines.docket} · ${RodLines.line(widget.docket)}',
-                                maxLines: 1, overflow: TextOverflow.ellipsis, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  AspectRatio(
-                    aspectRatio: 2.1,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFF3A4654), _bench],
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+                decoration: BoxDecoration(
+                  color: SlmColors.ivory,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // The docket, clipped beside the rod.
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
+                        decoration: BoxDecoration(
+                          color: _paper,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFB59B62)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.receipt_long_rounded, color: _brown, size: 16),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text('${RodLines.docket} · ${RodLines.line(widget.docket)}',
+                                  maxLines: 1, overflow: TextOverflow.ellipsis, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(6, 18, 16, 2),
-                        child: _closeUp(rod),
+                    ),
+                    const SizedBox(height: 6),
+                    AspectRatio(
+                      aspectRatio: 2.1,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFF3A4654), _bench],
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(6, 18, 16, 2),
+                          child: _closeUp(rod),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(child: DoBigButton(label: RodLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
-                      const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: RodLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(child: DoBigButton(key: widget.backKey, label: RodLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
+                        const SizedBox(width: 12),
+                        Expanded(child: DoBigButton(key: widget.takeKey, label: RodLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

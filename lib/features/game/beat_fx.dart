@@ -102,9 +102,12 @@ class BeatFx {
 /// its score lands in the total, the number counts to the new value once
 /// (one-shot tween, nothing runs while idle).
 class ScoreTotalTicker extends StatelessWidget {
-  const ScoreTotalTicker({super.key, required this.total});
+  const ScoreTotalTicker({super.key, required this.total, this.scale = 1.0});
 
   final int total;
+
+  /// Shrinks with the top bar on narrow phones.
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
@@ -117,10 +120,10 @@ class ScoreTotalTicker extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('মোট', style: bangla(fontSize: 9.5, fontWeight: FontWeight.w700, color: SlmColors.mist, height: 1)),
+          Text('মোট', style: bangla(fontSize: 9.5 * scale, fontWeight: FontWeight.w700, color: SlmColors.mist, height: 1)),
           Text(
             enDigits('◆ ${v.round()}'),
-            style: bangla(fontSize: 11.5, fontWeight: FontWeight.w800, color: SlmColors.gold200, height: 1.15),
+            style: bangla(fontSize: 11.5 * scale, fontWeight: FontWeight.w800, color: SlmColors.gold200, height: 1.15),
           ),
         ],
       ),
@@ -128,41 +131,53 @@ class ScoreTotalTicker extends StatelessWidget {
   }
 }
 
-/// "ধাপ N": the one place a level's number shows (lesson numbers are internal).
+/// `L<n>`: the one place a level's number shows (lesson numbers are internal).
+/// Short so the top bar fits a 320 dp phone; screen readers hear "ধাপ N" and
+/// the level's [title] (never drawn). [scale] shrinks it with the bar.
 class LadderStepBadge extends StatelessWidget {
-  const LadderStepBadge({super.key, required this.step});
+  const LadderStepBadge({super.key, required this.step, this.title = '', this.scale = 1.0});
   final int step;
+  final String title;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: SlmColors.gold400.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
-      ),
-      child: Text(
-        enDigits('ধাপ $step'),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: bangla(fontSize: 15, fontWeight: FontWeight.w900, color: SlmColors.gold200),
+    final f = scale;
+    return Semantics(
+      label: enDigits(title.trim().isEmpty ? 'ধাপ $step' : 'ধাপ $step · ${title.trim()}'),
+      excludeSemantics: true,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10 * f, vertical: 4 * f),
+        decoration: BoxDecoration(
+          color: SlmColors.gold400.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
+        ),
+        child: Text(
+          enDigits('L$step'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: bangla(fontSize: 16 * f, fontWeight: FontWeight.w900, color: SlmColors.gold200, height: 1.1),
+        ),
       ),
     );
   }
 }
 
-/// The 💀 count, the same chip on every level.
+/// The 💀 count, the same chip on every level. [scale] shrinks it with the
+/// top bar on narrow phones (see [UnifiedGameTopHud.scaleFor]).
 class DeathCountChip extends StatelessWidget {
-  const DeathCountChip({super.key, required this.deaths, this.chipKey});
+  const DeathCountChip({super.key, required this.deaths, this.chipKey, this.scale = 1.0});
   final int deaths;
   final Key? chipKey;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
+    final s = scale;
     return Container(
       key: chipKey,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 5 * s),
       decoration: BoxDecoration(
         color: const Color(0xFF1A1524),
         borderRadius: BorderRadius.circular(999),
@@ -173,11 +188,18 @@ class DeathCountChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('💀', style: TextStyle(fontSize: 11.5)),
-          const SizedBox(width: 4),
+          Text('💀', style: TextStyle(fontSize: 11.5 * s)),
+          SizedBox(width: 4 * s),
           Text(
             enDigits('$deaths'),
-            style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: deaths > 0 ? SoftDanger.ink : SlmColors.mist, height: 1),
+            maxLines: 1,
+            softWrap: false,
+            style: bangla(
+              fontSize: 13 * s,
+              fontWeight: FontWeight.w800,
+              color: deaths > 0 ? SoftDanger.ink : SlmColors.mist,
+              height: 1,
+            ),
           ),
         ],
       ),
@@ -185,27 +207,51 @@ class DeathCountChip extends StatelessWidget {
   }
 }
 
+/// The one top bar of every level (owner's brief, Nov 2026): close · "L12"
+/// (the ladder step only — the level's name is read to screen readers, never
+/// drawn) · ◆ score (chips fly into [scoreKey]) · 💀 · [trailingExtra].
+///
+/// One row of fixed height ([height]) on every phone: icons, fonts, padding
+/// and gaps scale with the bar's width ([scaleFor]); touch targets stay
+/// ≥ 40 dp; the level badge is the only part that gives way.
 class UnifiedGameTopHud extends ConsumerStatefulWidget {
   final GlobalKey scoreKey;
   final GlobalKey? deathKey;
+
+  /// The level badge, e.g. "L12" (`'L${ctx.ladderStep}'`).
   final String badgeText;
+
+  /// The level's name: Semantics only, never drawn in the bar.
   final String titleText;
   final VoidCallback onClose;
   final IconData closeIcon;
+
+  /// The speaker/mute button was removed from the bar (owner's brief, Nov
+  /// 2026). [muted] and [onToggleMute] stay so callers compile, but the bar
+  /// draws nothing for them; muting elsewhere is unchanged.
   final bool muted;
+
+  /// Not drawn — see [muted].
   final VoidCallback? onToggleMute;
   final Widget? trailingExtra;
 
   /// This level's running score. When set, the pill shows it (chips fly into
-  /// it) and the main ◆ total sits small beside it.
+  /// it) and the main ◆ total sits small beside it (unless [stepOnly]).
   final int? levelScore;
 
-  /// The clean level header: only the badge (the ladder step), the score pill
-  /// and the 💀 count — no title, no running total.
+  /// The clean level header: only the badge, the score pill and the 💀 count
+  /// — no running total.
   final bool stepOnly;
 
   /// No bar behind the chips: they float on a full-screen scene (as level 1).
   final bool bare;
+
+  /// Bar height on every phone (scenes place captions under it).
+  static const double height = 54;
+
+  /// Size factor for a bar [width] dp wide: 1.0 from 400 dp up, down to 0.82
+  /// on the narrowest phones.
+  static double scaleFor(double width) => (width / 400).clamp(0.82, 1.0).toDouble();
 
   const UnifiedGameTopHud({
     super.key,
@@ -256,210 +302,143 @@ class _UnifiedGameTopHudState extends ConsumerState<UnifiedGameTopHud>
     }
     _lastPoints = shown;
 
-    return Container(
-      height: 54,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: widget.bare
-          ? null
-          : BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  SlmColors.navy950.withValues(alpha: 0.94),
-                  SlmColors.navy900.withValues(alpha: 0.82),
-                ],
-              ),
-              border: Border(
-                bottom: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.22)),
-              ),
-            ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: widget.onClose,
-            icon: Icon(widget.closeIcon, color: SlmColors.ivory, size: 22),
-            visualDensity: VisualDensity.compact,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-          ),
-          const SizedBox(width: 6),
-          if (widget.stepOnly)
-            // The step badge takes the free space and may shrink, so a big
-            // score never pushes the bar over the edge.
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: SlmColors.gold400.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
-                  ),
-                  child: Text(
-                    enDigits(widget.badgeText),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: bangla(fontSize: 15, fontWeight: FontWeight.w900, color: SlmColors.gold200),
-                  ),
-                ),
-              ),
-            )
-          // With a level score the bar carries more, so the chip sits above
-          // the title and both shrink to fit a 360 dp phone.
-          else if (widget.levelScore != null)
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    enDigits(widget.badgeText),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: bangla(fontSize: 11.5, fontWeight: FontWeight.w800, color: SlmColors.gold300, height: 1.1),
-                  ),
-                  Text(
-                    enDigits(widget.titleText),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: bangla(fontSize: 13, fontWeight: FontWeight.w700, color: SlmColors.ivory, height: 1.15),
-                  ),
-                ],
-              ),
-            )
-          else ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: SlmColors.gold400.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.45)),
-              ),
-              child: Text(
-                enDigits(widget.badgeText),
-                style: bangla(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w800,
-                  color: SlmColors.gold300,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                enDigits(widget.titleText),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: bangla(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  color: SlmColors.ivory,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(width: 6),
-          // Unified Live ◆ Score Chip
-          AnimatedBuilder(
-            animation: _bump,
-            builder: (_, child) {
-              final s = 1.0 + 0.18 * math.sin(_bump.value * math.pi);
-              return Transform.scale(scale: s, child: child);
-            },
-            child: Container(
-              key: widget.scoreKey,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1E2B45), Color(0xFF111A2E)],
-                ),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.65), width: 1.2),
-                boxShadow: [
-                  BoxShadow(
-                    color: SlmColors.gold400.withValues(alpha: 0.18),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    '◆',
-                    style: TextStyle(
-                      color: SlmColors.gold300,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
+    // A fixed-height HUD: system text scaling past 1.0 would push it over
+    // the edge on a 320 dp phone, so the bar keeps its own sizes.
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.0,
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final w = box.maxWidth.isFinite ? box.maxWidth : MediaQuery.sizeOf(context).width;
+          final s = UnifiedGameTopHud.scaleFor(w);
+          final gap = 6 * s;
+          final tap = math.max(40.0, 44 * s);
+          final title = enDigits(widget.titleText);
+          return Container(
+            height: UnifiedGameTopHud.height,
+            padding: EdgeInsets.symmetric(horizontal: 10 * s),
+            decoration: widget.bare
+                ? null
+                : BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        SlmColors.navy950.withValues(alpha: 0.94),
+                        SlmColors.navy900.withValues(alpha: 0.82),
+                      ],
+                    ),
+                    border: Border(
+                      bottom: BorderSide(color: SlmColors.gold400.withValues(alpha: 0.22)),
                     ),
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    enDigits('$shown'),
-                    style: bangla(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: SlmColors.ivory,
-                      height: 1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (widget.levelScore != null && !widget.stepOnly) ...[
-            const SizedBox(width: 6),
-            ScoreTotalTicker(total: save.points),
-          ],
-          const SizedBox(width: 6),
-          // Unified 💀 Death Counter Chip
-          Container(
-            key: widget.deathKey,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1524),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: save.deaths > 0
-                    ? SoftDanger.ink.withValues(alpha: 0.55)
-                    : Colors.white.withValues(alpha: 0.16),
-              ),
-            ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('💀', style: TextStyle(fontSize: 11.5)),
-                const SizedBox(width: 4),
-                Text(
-                  enDigits('${save.deaths}'),
-                  style: bangla(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: save.deaths > 0 ? SoftDanger.ink : SlmColors.mist,
-                    height: 1,
+                IconButton(
+                  onPressed: widget.onClose,
+                  icon: Icon(widget.closeIcon, color: SlmColors.ivory, size: 22 * s),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints.tightFor(width: tap, height: tap),
+                ),
+                SizedBox(width: gap),
+                // The level badge takes the free space and shrinks (never
+                // cut) when it runs out, so a big score never pushes the bar
+                // over the edge.
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Semantics(
+                      label: title.isEmpty ? null : title,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10 * s, vertical: 4 * s),
+                        decoration: BoxDecoration(
+                          color: SlmColors.gold400.withValues(alpha: 0.16),
+                          borderRadius: BorderRadius.circular(10 * s),
+                          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
+                        ),
+                        child: Text(
+                          enDigits(widget.badgeText),
+                          maxLines: 1,
+                          softWrap: false,
+                          style: bangla(fontSize: 15 * s, fontWeight: FontWeight.w900, color: SlmColors.gold200, height: 1.2),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
+                SizedBox(width: gap),
+                // Unified Live ◆ Score Chip
+                AnimatedBuilder(
+                  animation: _bump,
+                  builder: (_, child) {
+                    final k = 1.0 + 0.18 * math.sin(_bump.value * math.pi);
+                    return Transform.scale(scale: k, child: child);
+                  },
+                  child: Container(
+                    key: widget.scoreKey,
+                    padding: EdgeInsets.symmetric(horizontal: 10 * s, vertical: 5 * s),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF1E2B45), Color(0xFF111A2E)],
+                      ),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.65), width: 1.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: SlmColors.gold400.withValues(alpha: 0.18),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '◆',
+                          style: TextStyle(
+                            color: SlmColors.gold300,
+                            fontSize: 13 * s,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(width: 5 * s),
+                        Text(
+                          enDigits('$shown'),
+                          maxLines: 1,
+                          softWrap: false,
+                          style: bangla(
+                            fontSize: 14 * s,
+                            fontWeight: FontWeight.w900,
+                            color: SlmColors.ivory,
+                            height: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (widget.levelScore != null && !widget.stepOnly) ...[
+                  SizedBox(width: gap),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: ScoreTotalTicker(total: save.points, scale: s),
+                    ),
+                  ),
+                ],
+                SizedBox(width: gap),
+                // Unified 💀 Death Counter Chip
+                DeathCountChip(deaths: save.deaths, chipKey: widget.deathKey, scale: s),
+                if (widget.trailingExtra != null) ...[
+                  SizedBox(width: 2 * s),
+                  widget.trailingExtra!,
+                ],
               ],
             ),
-          ),
-          if (widget.onToggleMute != null) ...[
-            const SizedBox(width: 2),
-            IconButton(
-              onPressed: widget.onToggleMute,
-              icon: Icon(
-                widget.muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                color: widget.muted ? SlmColors.mist : SlmColors.gold300,
-                size: 20,
-              ),
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-            ),
-          ],
-          if (widget.trailingExtra != null) widget.trailingExtra!,
-        ],
+          );
+        },
       ),
     );
   }

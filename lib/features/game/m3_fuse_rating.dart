@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -44,8 +45,14 @@ import 'spoken_once.dart';
 //
 // Deadly: a thick copper wire in the barrel (taken from the van, or on his
 // word) — the lesson calls it "আত্মহত্যার সামিল": the fuse can never blow,
-// the transformer burns. A wrong rating, plain GI wire, a sooty contact or a
-// slack tie is a slip; 3 slips fail.
+// and the transformer or the whole line can burn ("পুড়িয়ে দিতে পারে").
+// Listening to him stays deadly because the act he pushes is on Module 3's
+// deadly list (MODULE3_LADDER.md row 11). A wrong rating, plain GI wire, a
+// sooty contact or a slack tie is a slip; 3 slips fail.
+// He cannot be skipped by a fast play: taking a reel waits for him
+// (holdForCoworker). Gesture hints: a sweep over the plate and the reels, over
+// put back / take, over the barrel's contacts, tail and tie; a tap to put the
+// plate down.
 //
 // Voice: the guide's lines on device TTS; the coworker's push is new (device
 // TTS in his voice settings until recorded); his exit line is recorded.
@@ -173,28 +180,38 @@ abstract final class M3FuseRatingLines {
           if (x != a) ratingMatch(x),
         ...ratingMyths,
       ];
+  // No giveaway word: every key word of a right card (see
+  // [contactsKeys]/[tieKeys]) also sits on at least half the wrong cards,
+  // and the question's own word (কন্টাক্ট, লিঙ্ক, বাঁধ) on all but one at
+  // most, so a dealt hand of 1 right + 2 wrong never singles it out.
   static const contactsRight = [
-    'ময়লা-কার্বন জমলে কন্টাক্টে স্পার্কিং হয়',
-    'নোংরা কন্টাক্ট স্পার্কিংয়ে নষ্ট হতে পারে',
+    'কন্টাক্টে ময়লা-কার্বন থাকলে স্পার্কিং হয়',
+    'ময়লা-কার্বনে স্পার্কিং হয়ে কন্টাক্ট নষ্ট',
   ];
   static const contactsWrong = [
-    'ঝকঝকে দেখালে সুপারভাইজার খুশি হয়ে যান',
-    'কাপড়টা হাতেই ছিল, তাই একটু মুছে দিলাম',
-    'মুছে না দিলে ব্যারেল পোলে ঢোকানোই যায় না',
-    'কালো দাগে কোন ফেজের ব্যারেল বোঝা যায় না',
-    'পরিষ্কার ব্যারেল দেখতে নতুনের মতো লাগে',
+    'ময়লা-কার্বনে কন্টাক্ট নষ্ট দেখায় বলে মুছি',
+    'কার্বন মুছলে কন্টাক্টে স্পার্কিং দেখা যায়',
+    'ময়লা-কার্বন থাকলে ব্যারেল কন্টাক্টে বসে না',
+    'স্পার্কিংয়ের দাগে কন্টাক্ট নষ্ট দেখায়',
+    'ময়লায় কন্টাক্টের স্পার্কিং চোখে পড়ে না',
+    'মুছলে নষ্ট কন্টাক্টেও আর স্পার্কিং হয় না',
   ];
+  static const contactsEcho = ['কন্টাক্ট'];
+  static const contactsKeys = ['স্পার্কিং', 'ময়লা', 'কার্বন', 'নষ্ট'];
   static const tieRight = [
-    'ঢিলা বাঁধা ফিউজ লিঙ্ক ঠিকমতো কাজ করে না',
+    'ঢিলা করে বাঁধা লিঙ্ক ঠিকমতো কাজ করে না',
     'সঠিক টানে বাঁধা লিঙ্কই ঠিকমতো কাজ করে',
   ];
   static const tieWrong = [
-    'টেনে বাঁধলে লিঙ্কে বেশি কারেন্ট যেতে পারে',
-    'শক্ত করে বাঁধলে ফিউজ আর কখনো উড়ে না',
-    'ঢিলা থাকলেও চলে, শুধু দেখতে খারাপ লাগে',
-    'টানটান লিঙ্কের রেটিং দ্বিগুণ হয়ে যায়',
-    'সুপারভাইজার দেখবেন বলে টেনে বেঁধেছি',
+    'ঢিলা লিঙ্কও ঠিকমতো কাজ করে, দেখতে খারাপ',
+    'ঢিলা লিঙ্কের রেটিং কমে, তাই সঠিক টানে বাঁধা',
+    'সঠিক টানে বাঁধলে লিঙ্ক দ্বিগুণ লোডে কাজ করে',
+    'ঢিলা নয়, টানটান বাঁধা লিঙ্ক কখনো গলে না',
+    'সুপারভাইজার দেখবেন বলে লিঙ্ক ঠিকমতো বাঁধা',
+    'সঠিক কাজ দেখাতে লিঙ্কটা ঠিকমতো বাঁধলাম',
   ];
+  static const tieEcho = ['লিঙ্ক', 'বাঁধ'];
+  static const tieKeys = ['ঠিকমতো', 'কাজ', 'ঢিলা', 'সঠিক', 'টান'];
 
   static String question(M3FuseRatingAsk a) => switch (a) {
         M3FuseRatingAsk.rating => whyRating,
@@ -218,7 +235,7 @@ abstract final class M3FuseRatingLines {
   static const coworker = CoworkerScript(
     line: coworkerLine,
     exitLine: coworkerExit,
-    right: ['না — প্লেটের রেটিংয়ের লিঙ্কই দেব', 'বারবার উড়লে লাইনে ফল্ট, আগে খুঁজব', 'মোটা তারে ট্রান্সফরমার পুড়ে যাবে'],
+    right: ['না — প্লেটের রেটিংয়ের লিঙ্কই দেব', 'বারবার উড়লে লাইনে ফল্ট, আগে খুঁজব', 'মোটা তারে ট্রান্সফরমার পুড়তে পারে'],
     wrong: [
       'ঠিক, মোটা তামার তারই জুড়ে দিই',
       'বারবার ওঠা-নামার চেয়ে মোটাই ভালো',
@@ -271,7 +288,7 @@ abstract final class M3FuseRatingMistakes {
   );
   static const thickCopper = DoMistake(
     key: '3.4/m3_fuse_rating/thick-copper',
-    textBn: 'মোটা তামার তার জুড়লে ফিউজের সুরক্ষাই শেষ — ওভারলোড বা শর্ট সার্কিটে ফিউজ উড়বে না, ট্রান্সফরমার পুড়ে আগুন লাগে। বারবার উড়লে আগে ফল্ট খুঁজুন।',
+    textBn: 'মোটা তামার তার জুড়লে ফিউজের সুরক্ষাই শেষ — ওভারলোড বা শর্ট সার্কিটে ফিউজ উড়বে না, ট্রান্সফরমার বা পুরো লাইন পুড়ে যেতে পারে। বারবার উড়লে আগে ফল্ট খুঁজুন।',
     art: _bodge,
     deadly: true,
     lessonPoint: 3,
@@ -512,6 +529,18 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how to touch, never what): the scene's design height (for
+  // the reels' rects) and the close looks' controls.
+  final _hints = IdleHintController();
+  double? _sceneH;
+  final _putBackKey = GlobalKey();
+  final _takeKey = GlobalKey();
+  final _plateCardKey = GlobalKey();
+  final _topKey = GlobalKey();
+  final _bottomKey = GlobalKey();
+  final _tailKey = GlobalKey();
+  final _tieKey = GlobalKey();
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -563,7 +592,9 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _freeze || _card != null || reasonOpen || _run.shown || _run.tying;
+  /// No scene control works: intro, a card, the praise window or the reason
+  /// deck ([tableBusy]), the barrel bench, the freeze or the end.
+  bool get _blocked => _intro || _busy || _ended || _freeze || _card != null || tableBusy || _run.shown || _run.tying;
 
   void _setMode(LinemanMode m) {
     _mode = m;
@@ -600,7 +631,10 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
 
   void _take(Offset origin) {
     final r = _held;
-    if (r == null || _blocked) return;
+    if (r == null || _blocked || coworkerOpen) return;
+    // Taking a reel decides his item: if he is due, he cuts in now (the reel
+    // stays in hand; the close look comes back after him).
+    if (holdForCoworker()) return;
     setState(() => _held = null);
     _judgeTake(r, origin);
   }
@@ -710,6 +744,9 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.ended || _run.round < _run.deal.callRound) return null;
+    // "মোটা তার জুড়ে দাও" fits only while a reel is still to be chosen: once
+    // the last DTR's link is in, his moment has passed.
+    if (_run.fitted != null && _run.round >= _run.deal.rounds.length - 1) return null;
     if (_blocked || _held != null || _plateOpen) return false;
     return true;
   }
@@ -733,7 +770,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
     unawaited(() async {
       await coworkerSnarl();
       if (!mounted || chain != _chain) return;
-      await _sayChain([M3FuseRatingLines.callHeld, M3FuseRatingLines.ask], mood: GuideMood.glad);
+      await _sayChain([M3FuseRatingLines.callHeld, _task], mood: GuideMood.glad);
     }());
   }
 
@@ -895,9 +932,34 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
     if (leave == true) _popOnce(false);
   }
 
+  // ---- gesture hints ------------------------------------------------------------------
+
+  /// The hand shows HOW to touch, never which reel or contact is right: a
+  /// sweep over every choice, a tap only on the one way forward.
+  HintSpec? _hint() {
+    if (_plateOpen) return HintSpec.tapOn(_plateCardKey);
+    if (_run.tying) return HintSpec.sweepOver([_topKey, _bottomKey, _tailKey, _tieKey]);
+    if (_held != null) return HintSpec.sweepOver([_putBackKey, _takeKey]);
+    final h = _sceneH;
+    if (h == null) return null;
+    final geo = M3FuseRatingGeo(h);
+    final reels = _run.current.reels;
+    return HintSpec.sweep([
+      geo.plateTap,
+      for (var i = 0; i < reels.length; i++)
+        if (!_run.rejected.contains(reels[i].id)) geo.slot(i, reels.length),
+    ], space: HintSpace.scene);
+  }
+
+  /// The level waits for the player's touch (no intro, card, deck, coworker,
+  /// praise window, freeze or result).
+  bool _hintWaiting(bool playing) =>
+      playing && _card == null && !reasonOpen && !coworkerOpen && !tableBusy && !_busy && !_run.shown;
+
   // ---- build ------------------------------------------------------------------------
 
   List<Widget> _layers(BuildContext context, SceneMetrics m, bool quiet) {
+    _sceneH = m.height;
     final geo = M3FuseRatingGeo(m.height);
     final r = _run.current;
     final aside = [for (final x in r.reels) if (_run.rejected.contains(x.id)) x];
@@ -907,7 +969,11 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
     return [
       Positioned.fill(
         key: const ValueKey('world'),
-        child: ColorFiltered(
+        // A tap on the yard (nothing to take there) counts towards the hint.
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _hints.missTap,
+          child: ColorFiltered(
           colorFilter: grey,
           child: Stack(
             children: [
@@ -957,6 +1023,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
                   child: _AsideReel(reel: aside[i], quiet: quiet),
                 ),
             ],
+          ),
           ),
         ),
       ),
@@ -1021,13 +1088,21 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: _hintWaiting(playing),
+            hintKey: '${_run.round}|${held?.id}|$_plateOpen|${_run.tying}|$_tieTry|${_run.rejected.length}',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
-              if (held != null && playing)
+              // The reel stays in hand while he talks; the close look comes back after him.
+              if (held != null && playing && !coworkerOpen)
                 _ReelLook(
                   key: ValueKey('look-${held.id}'),
                   reel: held,
                   quiet: quiet,
+                  putBackKey: _putBackKey,
+                  takeKey: _takeKey,
+                  onMiss: _hints.missTap,
                   onTake: _take,
                   onPutBack: _putBack,
                 ),
@@ -1039,6 +1114,11 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
                   dirty: r.dirty,
                   wiped: {..._run.wiped},
                   quiet: quiet,
+                  topKey: _topKey,
+                  bottomKey: _bottomKey,
+                  tailKey: _tailKey,
+                  tieKey: _tieKey,
+                  onMiss: _hints.missTap,
                   onWiped: _wiped,
                   onTie: _tie,
                 ),
@@ -1047,6 +1127,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
                   key: const ValueKey('plate-zoom'),
                   amps: r.amps,
                   quiet: quiet,
+                  cardKey: _plateCardKey,
                   onClose: () => setState(() => _plateOpen = false),
                 ),
               if (deckUp)
@@ -1213,14 +1294,20 @@ class _AsideReel extends StatelessWidget {
 
 /// A card rising over the scene (the close looks share it).
 class _CloseCard extends StatelessWidget {
-  const _CloseCard({required this.quiet, required this.child});
+  const _CloseCard({required this.quiet, required this.child, this.onMiss});
   final bool quiet;
   final Widget child;
+
+  /// A tap on the dim backdrop (nothing there): counts towards the hint.
+  final VoidCallback? onMiss;
 
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: ColoredBox(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onMiss,
+        child: ColoredBox(
         color: const Color(0xC0050A16),
         child: Align(
           alignment: const Alignment(0, -0.42),
@@ -1245,15 +1332,19 @@ class _CloseCard extends StatelessWidget {
           ),
         ),
       ),
+      ),
     );
   }
 }
 
 /// The plate read up close (tap anywhere to put it back).
 class _PlateZoom extends StatelessWidget {
-  const _PlateZoom({super.key, required this.amps, required this.quiet, required this.onClose});
+  const _PlateZoom({super.key, required this.amps, required this.quiet, required this.cardKey, required this.onClose});
   final int amps;
   final bool quiet;
+
+  /// The plate card (the hint's tap: putting it down is the one way on).
+  final GlobalKey cardKey;
   final VoidCallback onClose;
 
   @override
@@ -1272,6 +1363,7 @@ class _PlateZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: cardKey,
                 width: 300,
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                 decoration: BoxDecoration(
@@ -1346,9 +1438,21 @@ class _Rivet extends StatelessWidget {
 
 /// The reel held up: its tag (or none) readable now. Take it or put it back.
 class _ReelLook extends StatelessWidget {
-  const _ReelLook({super.key, required this.reel, required this.quiet, required this.onTake, required this.onPutBack});
+  const _ReelLook({
+    super.key,
+    required this.reel,
+    required this.quiet,
+    required this.putBackKey,
+    required this.takeKey,
+    required this.onMiss,
+    required this.onTake,
+    required this.onPutBack,
+  });
   final M3FuseRatingReel reel;
   final bool quiet;
+  final GlobalKey putBackKey;
+  final GlobalKey takeKey;
+  final VoidCallback onMiss;
   final ValueChanged<Offset> onTake;
   final VoidCallback onPutBack;
 
@@ -1356,6 +1460,7 @@ class _ReelLook extends StatelessWidget {
   Widget build(BuildContext context) {
     return _CloseCard(
       quiet: quiet,
+      onMiss: onMiss,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1402,9 +1507,9 @@ class _ReelLook extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: DoBigButton(label: M3FuseRatingLines.putBack, filled: false, onTapUp: (_) => onPutBack())),
+              Expanded(child: DoBigButton(key: putBackKey, label: M3FuseRatingLines.putBack, filled: false, onTapUp: (_) => onPutBack())),
               const SizedBox(width: 12),
-              Expanded(child: DoBigButton(label: M3FuseRatingLines.take, filled: true, onTapUp: (d) => onTake(d.globalPosition))),
+              Expanded(child: DoBigButton(key: takeKey, label: M3FuseRatingLines.take, filled: true, onTapUp: (d) => onTake(d.globalPosition))),
             ],
           ),
         ],
@@ -1426,6 +1531,11 @@ class _BarrelBench extends StatefulWidget {
     required this.dirty,
     required this.wiped,
     required this.quiet,
+    required this.topKey,
+    required this.bottomKey,
+    required this.tailKey,
+    required this.tieKey,
+    required this.onMiss,
     required this.onWiped,
     required this.onTie,
   });
@@ -1434,6 +1544,13 @@ class _BarrelBench extends StatefulWidget {
   final Set<M3FuseRatingSpot> dirty;
   final Set<M3FuseRatingSpot> wiped;
   final bool quiet;
+
+  /// The bench's controls, for the hint's sweep (both contacts alike).
+  final GlobalKey topKey;
+  final GlobalKey bottomKey;
+  final GlobalKey tailKey;
+  final GlobalKey tieKey;
+  final VoidCallback onMiss;
   final ValueChanged<M3FuseRatingSpot> onWiped;
   final void Function(double tension, Offset origin) onTie;
 
@@ -1478,6 +1595,7 @@ class _BarrelBenchState extends State<_BarrelBench> {
     return Positioned.fromRect(
       rect: box,
       child: Semantics(
+        key: s == M3FuseRatingSpot.top ? widget.topKey : widget.bottomKey,
         label: s == M3FuseRatingSpot.top ? M3FuseRatingLines.topLabel : M3FuseRatingLines.bottomLabel,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -1496,6 +1614,7 @@ class _BarrelBenchState extends State<_BarrelBench> {
     final reel = widget.reel;
     return _CloseCard(
       quiet: widget.quiet,
+      onMiss: widget.onMiss,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1539,6 +1658,7 @@ class _BarrelBenchState extends State<_BarrelBench> {
                       Positioned.fromRect(
                         rect: pull,
                         child: Semantics(
+                          key: widget.tailKey,
                           label: M3FuseRatingLines.tailLabel,
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
@@ -1565,7 +1685,7 @@ class _BarrelBenchState extends State<_BarrelBench> {
             ),
           ),
           const SizedBox(height: 10),
-          DoBigButton(label: M3FuseRatingLines.tie, filled: true, onTapUp: (d) => unawaited(_tie(d.globalPosition))),
+          DoBigButton(key: widget.tieKey, label: M3FuseRatingLines.tie, filled: true, onTapUp: (d) => unawaited(_tie(d.globalPosition))),
         ],
       ),
     );

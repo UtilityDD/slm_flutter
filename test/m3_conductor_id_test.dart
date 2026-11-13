@@ -3,7 +3,11 @@
 // store), deal variety, fair reason libraries, the close look (grime, magnet,
 // wraps), and the level in the shell (idle perf; guide first; a full clean
 // flow with the docket, the coworker refused, a cut drum set aside, the store
-// told, the reasons; slip cards; listening to him; three slips).
+// told, the reasons; slip cards; listening to him; three slips; he comes even
+// on a fast play and his push fits the moment — "at hand" is the drum in the
+// hands or, in the yard, the nearest; reason decks deal each right card with
+// its own near miss, so no key word is only on the right card; gesture hints,
+// none on a mistake card).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -16,6 +20,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_shell.dart';
@@ -31,6 +36,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.1/do/0',
@@ -55,12 +61,11 @@ Future<void> _pump(WidgetTester t, int ms) async {
   }
 }
 
-int _seed({int? call, int? hold, bool? strand}) {
+int _seed({int? call, int? hold}) {
   for (var s = 0;; s++) {
     final d = m3ConductorIdDeal(math.Random(s));
     if (call != null && d.callRound != call) continue;
     if (hold != null && !d.rounds[hold].noneFits) continue;
-    if (strand != null && d.preferStrand != strand) continue;
     return s;
   }
 }
@@ -72,10 +77,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 void main() {
@@ -180,23 +187,68 @@ void main() {
       expect(run.slips, 1);
     });
 
-    test('the coworker pushes only a drum still in the row', () {
+    test('his push fits what is in the hands: a cut strand only once it is found; "at hand" is the held other drum, else the nearest', () {
       const al = M3ConductorIdLayout(rings: [1, 6], steelRings: 0);
       const st = M3ConductorIdLayout(rings: [1, 6], steelRings: 1);
-      const r = M3ConductorIdRound(
-        job: M3ConductorIdJob(need: M3ConductorIdKind.aaac, feederBn: 'f', whereBn: 'w'),
-        drums: [
-          _Drum(id: 'o', kind: M3ConductorIdKind.acsr, layout: st),
-          _Drum(id: 'g', kind: M3ConductorIdKind.aaac, layout: al),
-          _Drum(id: 'c', kind: M3ConductorIdKind.aaac, layout: al, cutU: 0.4),
-        ],
-      );
-      expect(m3ConductorIdPushFor(r, {}, preferStrand: true), M3ConductorIdPush.strand);
-      expect(m3ConductorIdPushFor(r, {}, preferStrand: false), M3ConductorIdPush.nearest);
-      expect(m3ConductorIdPushFor(r, {'c'}, preferStrand: true), M3ConductorIdPush.nearest);
+      const o = _Drum(id: 'o', kind: M3ConductorIdKind.acsr, layout: st);
+      const o2 = _Drum(id: 'o2', kind: M3ConductorIdKind.acsr, layout: st);
+      const g = _Drum(id: 'g', kind: M3ConductorIdKind.aaac, layout: al);
+      const cut = _Drum(id: 'c', kind: M3ConductorIdKind.aaac, layout: al, cutU: 0.4);
+      const r = M3ConductorIdRound(job: M3ConductorIdJob(need: M3ConductorIdKind.aaac, feederBn: 'f', whereBn: 'w'), drums: [o, g, cut, o2]);
+      // In the yard: always "nearest" — the first other-conductor drum.
+      expect(m3ConductorIdPushFor(r, {}), M3ConductorIdPush.nearest);
+      expect(m3ConductorIdPushFor(r, {}, spotted: {'c'}), M3ConductorIdPush.nearest, reason: 'strand only for the cut drum in the hands');
       expect(m3ConductorIdPushed(r, M3ConductorIdPush.nearest, {})!.id, 'o');
-      expect(m3ConductorIdPushed(r, M3ConductorIdPush.strand, {})!.id, 'c');
-      expect(m3ConductorIdPushed(r, M3ConductorIdPush.strand, {'c'}), isNull);
+      // Holding the cut drum, not found yet: he never names a cut nobody saw.
+      expect(m3ConductorIdPushFor(r, {}, held: cut), M3ConductorIdPush.nearest);
+      expect(m3ConductorIdPushed(r, M3ConductorIdPush.strand, {}, held: cut), isNull);
+      // Found: the strand push, and it is that drum.
+      expect(m3ConductorIdPushFor(r, {}, held: cut, spotted: {'c'}), M3ConductorIdPush.strand);
+      expect(m3ConductorIdPushed(r, M3ConductorIdPush.strand, {}, held: cut, spotted: {'c'})!.id, 'c');
+      expect(m3ConductorIdPushed(r, M3ConductorIdPush.strand, {'c'}, held: cut, spotted: {'c'}), isNull, reason: 'already aside');
+      // Holding the other conductor: "the one at hand" is the drum in the hands, not the first in the row.
+      expect(m3ConductorIdPushFor(r, {}, held: o2), M3ConductorIdPush.nearest);
+      expect(m3ConductorIdPushed(r, M3ConductorIdPush.nearest, {}, held: o2)!.id, 'o2');
+      // Every dealt row has the other conductor: "nearest" is always there.
+      for (var s = 0; s < 60; s++) {
+        for (final row in m3ConductorIdDeal(math.Random(s)).rounds) {
+          expect(m3ConductorIdPushFor(row, {}), M3ConductorIdPush.nearest);
+        }
+      }
+    });
+
+    test('reason decks: each right card comes with its own near miss; no key word is ever only on the right card', () {
+      // The words a player could match against the question or the lesson.
+      const keys = ['চুম্বক', 'মাঝে', 'কোর', 'স্টিল', 'ভেতরে', 'অ্যালয়', 'ACSR', 'AAAC', 'ডকেট', 'ভালো', 'এখানে', 'স্ট্র্যান্ড', 'কাটা', 'স্টোর'];
+      void check(String name, List<String> right, List<String> near, List<String> rest) {
+        expect(near.length, right.length, reason: '$name: near misses parallel to the right cards');
+        // Every pairing the deal can produce: each key word of the right card is on its near miss.
+        for (var i = 0; i < right.length; i++) {
+          for (final w in keys) {
+            if (right[i].contains(w)) expect(near[i], contains(w), reason: '$name: "$w" of "${right[i]}" is on its near miss');
+          }
+        }
+        final seen = <String>{};
+        for (var s = 0; s < 200; s++) {
+          final d = m3ConductorIdWhyDeal(right, near, rest, math.Random(s));
+          expect(d, hasLength(3));
+          expect(d.map((o) => o.textBn).toSet().length, 3);
+          final r = d.singleWhere((o) => o.correct).textBn;
+          seen.add(r);
+          final wrong = d.where((o) => !o.correct).map((o) => o.textBn).toList();
+          expect(wrong, contains(near[right.indexOf(r)]), reason: '$name: dealt with its own near miss');
+          expect(wrong.where(rest.contains), hasLength(1));
+          for (final w in keys) {
+            if (r.contains(w)) expect(wrong.any((x) => x.contains(w)), isTrue, reason: '$name: "$w" only on the right card');
+          }
+        }
+        expect(seen, right.toSet(), reason: '$name: every right card is dealt');
+      }
+
+      for (final k in M3ConductorIdKind.values) {
+        check('load ${k.name}', M3ConductorIdLines.loadRight(k), M3ConductorIdLines.loadNear(k), M3ConductorIdLines.loadMyths);
+      }
+      check('hold', M3ConductorIdLines.holdRight, M3ConductorIdLines.holdNear, M3ConductorIdLines.holdRest);
     });
 
     test('deals vary', () {
@@ -204,7 +256,6 @@ void main() {
       expect(deals.map((d) => d.rounds.map((r) => r.job.need.index).join()).toSet().length, greaterThan(3));
       expect(deals.map((d) => d.rounds.indexWhere((r) => r.noneFits)).toSet(), {0, 1, 2});
       expect(deals.map((d) => d.callRound).toSet(), {0, 1, 2});
-      expect(deals.map((d) => d.preferStrand).toSet(), {true, false});
       expect(deals.map((d) => d.rounds.first.job.whereBn).toSet().length, greaterThan(3));
       expect(deals.expand((d) => d.rounds).expand((r) => r.drums).map((x) => x.layout).toSet().length, 4);
     });
@@ -244,6 +295,11 @@ void main() {
         expectLibrary('choice ${p.name}', c.right, c.wrong);
         expect(LearnVoice.resolve(c.exitLine, rival: true), isNotNull);
       }
+      expect(M3ConductorIdLines.holdWrong, containsAll([...M3ConductorIdLines.holdNear, ...M3ConductorIdLines.holdRest]));
+      for (final k in M3ConductorIdKind.values) {
+        expect(M3ConductorIdLines.loadWrong(k), containsAll(M3ConductorIdLines.loadNear(k)));
+        expect(M3ConductorIdLines.loadNear(k), everyElement(contains(k.tag)), reason: "near misses carry the docket's name");
+      }
       final all = M3ConductorIdMistakes.all;
       expect(all.map((m) => m.key).toSet().length, all.length);
       for (final m in all) {
@@ -268,7 +324,10 @@ void main() {
       SpokenOnce.resetForTest();
       debugOnRebuildDirtyWidget = (_, _) => rebuilds++;
     });
-    tearDown(() => debugOnRebuildDirtyWidget = null);
+    tearDown(() {
+      debugOnRebuildDirtyWidget = null;
+      GestureHints.debugEnableInTests = false;
+    });
 
     Future<(ProviderContainer, M3ConductorIdDeal)> open(WidgetTester t, int seed) async {
       t.view.physicalSize = const Size(720, 1600);
@@ -349,7 +408,7 @@ void main() {
         }
         debugPrint('PERF m3 conductor id ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(M3ConductorIdLines.docket), findsOneWidget);
         expect(find.text(M3ConductorIdLines.hold), findsOneWidget);
         expect(perSec, lessThan(20));
@@ -457,10 +516,13 @@ void main() {
       final (c, deal) = await open(t, seed);
       await _pump(t, 3500);
       expect(find.byType(CoworkerPeek), findsOneWidget);
-      final push = m3ConductorIdPushFor(deal.rounds.first, {}, preferStrand: deal.preferStrand)!;
+      final push = m3ConductorIdPushFor(deal.rounds.first, {})!;
+      expect(push, M3ConductorIdPush.nearest, reason: 'in the yard he pushes the nearest drum');
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M3ConductorIdLines.coworker(push).wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1500);
       final mk = push == M3ConductorIdPush.nearest ? M3ConductorIdMistakes.wrongKind(deal.rounds.first.job.need) : M3ConductorIdMistakes.cutStrand;
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
@@ -487,6 +549,131 @@ void main() {
       await _pump(t, 600);
       expect(find.text(M3ConductorIdMistakes.unchecked.textBn), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes.length, greaterThanOrEqualTo(2));
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him: load waits for him (the drum back in the row, "nearest" in the yard), then works once he is refused', (t) async {
+      final seed = _seed(call: 0, hold: 2);
+      final (c, deal) = await open(t, seed);
+      final r = deal.rounds[0];
+      final g = _good(r);
+      await lift(t, r, g);
+      await t.tap(_label(M3ConductorIdLines.magnetLabel));
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tap(find.text(M3ConductorIdLines.load));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in on the load');
+      expect(t.widget<CoworkerPeek>(find.byType(CoworkerPeek)).lineBn, M3ConductorIdLines.coworkerNearest.line);
+      expect(find.text(M3ConductorIdLines.load), findsNothing, reason: 'the good drum went back in the row: "at hand" means the row');
+      expect(find.byKey(const ValueKey('why-deck')), findsNothing, reason: 'the load waited');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pickRight(t, M3ConductorIdLines.coworkerNearest.right);
+      await _pump(t, 1500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await lift(t, r, g);
+      await t.tap(find.text(M3ConductorIdLines.load));
+      await _pump(t, 3500);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pickRight(t, M3ConductorIdLines.loadRight(r.job.need));
+      await _pump(t, 2000);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('holding the other conductor, "the one at hand" is that drum: listening loads it — the wrong-kind slip', (t) async {
+      final seed = _seed(call: 0, hold: 2);
+      final (c, deal) = await open(t, seed);
+      final r = deal.rounds[0];
+      final held = r.drums.lastWhere((d) => d.kind != r.job.need);
+      await lift(t, r, held);
+      await t.tap(find.text(M3ConductorIdLines.load));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(t.widget<CoworkerPeek>(find.byType(CoworkerPeek)).lineBn, M3ConductorIdLines.coworkerNearest.line);
+      expect(find.text(M3ConductorIdLines.load), findsOneWidget, reason: 'the drum at hand stays in the hands');
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(M3ConductorIdLines.coworkerNearest.wrong);
+      expect(wrong, hasLength(2));
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.text(M3ConductorIdMistakes.wrongKind(r.job.need).textBn), findsOneWidget);
+      expect(find.text(M3ConductorIdLines.load), findsNothing, reason: 'the close look is put away');
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      // The held drum got the chalk mark (the one listening loaded), not another.
+      final i = r.drums.indexOf(held);
+      expect(find.descendant(of: drums.at(i), matching: find.text(held.kind.tag)), findsWidgets);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('his cut-strand push comes only on a cut he found; listening loads it — a slip, not deadly', (t) async {
+      final seed = _seed(call: 0, hold: 0);
+      final (c, deal) = await open(t, seed);
+      final r = deal.rounds[0];
+      await lift(t, r, _cut(r));
+      await slideWrap(t);
+      await t.tap(find.text(M3ConductorIdLines.putBack));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'setting it aside waits for him');
+      expect(t.widget<CoworkerPeek>(find.byType(CoworkerPeek)).lineBn, M3ConductorIdLines.coworkerStrand.line);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(M3ConductorIdLines.coworkerStrand.wrong);
+      expect(wrong, hasLength(2));
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.text(M3ConductorIdMistakes.cutStrand.textBn), findsOneWidget);
+      expect(find.byType(StruckOutCard), findsNothing);
+      expect(find.text(M3ConductorIdLines.load), findsNothing, reason: 'the close look is put away');
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      expect(find.text(M3ConductorIdLines.rejected), findsOneWidget, reason: 'the cut drum went aside');
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('telling the store waits for him too', (t) async {
+      final (c, _) = await open(t, _seed(call: 0, hold: 0));
+      await t.tap(find.text(M3ConductorIdLines.hold));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byKey(const ValueKey('why-deck')), findsNothing);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('gesture hints: none on a mistake card', (t) async {
+      GestureHints.debugEnableInTests = true;
+      final (c, _) = await open(t, _seed(call: 2, hold: 2));
+      await t.tap(find.text(M3ConductorIdLines.hold));
+      await _pump(t, 600);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(t.widget<IdleHint>(find.byType(IdleHint).first).waiting, isFalse, reason: 'the card is not a wait for the scene');
+      await _pump(t, 9000);
+      expect(t.state<IdleHintState>(find.byType(IdleHint).first).showing, isFalse);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('gesture hints: a hand after idle in the yard and in the close look', (t) async {
+      GestureHints.debugEnableInTests = true;
+      final (c, deal) = await open(t, _seed(call: 2, hold: 2));
+      IdleHintState frameHint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(t.widget<IdleHint>(find.byType(IdleHint).first).waiting, isTrue);
+      await _pump(t, 9000);
+      expect(frameHint().showing, isTrue, reason: 'idle in the yard: the hand sweeps the drums');
+      final r = deal.rounds[0];
+      await lift(t, r, _good(r));
+      expect(frameHint().showing, isFalse, reason: 'a touch hides it');
+      await _pump(t, 9000);
+      expect(frameHint().showing, isTrue, reason: 'idle in the close look: rub the cut face');
       expect(t.takeException(), isNull);
       await close(t, c);
     });

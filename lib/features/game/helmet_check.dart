@@ -10,6 +10,7 @@ import '../../design/slm_design.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import 'coworker_moment.dart';
 import 'do_parts.dart';
+import 'gesture_hint.dart';
 import 'glove_check.dart';
 import 'mistake_kit.dart';
 
@@ -111,15 +112,19 @@ abstract final class HelmetLines {
   static const checkFirst = 'আগে খোলস, ভেতর আর ফিতে—তিনটেই দেখুন!';
   static const guessed = 'ঠিক, কিন্তু আন্দাজে নয়—আগে ভালো করে দেখুন।';
   static const caught = 'ঠিক ধরেছেন!';
-  static const rejectedGood = 'এই হেলমেটটা তো ঠিক ছিল!';
+  /// A sound helmet sent back: a neutral reply (never "it was fine").
+  static const rejectedGood = 'আন্দাজে বাদ নয়—তিনটে দিক মিলিয়ে তবে সিদ্ধান্ত নিন।';
   static const crackSpotted = 'ঠিক ধরেছেন—খোলসে সূক্ষ্ম ফাটল!';
   static const locked = 'ক্লিক—লক হলো।';
   static const noLock = 'লক হচ্ছে না!';
   static const packed = 'ব্যাগে তোলা হলো।';
 
   /// Slip cards (the line under the picture).
-  static const uncheckedCard = 'হেলমেটটা ঠিক ছিল—কিন্তু না দেখে নিলেন। খোলস, ভেতর, ফিতে—তিনটেই দেখে তবে নিন।';
-  static const goodCard = 'এই হেলমেটে ফাটল, মেটাল বা ভেন্ট নেই, স্ট্যাম্প আছে, ফিতেও লক হয়—এটাই নেওয়ার কথা।';
+  static const uncheckedCard = 'না দেখেই হেলমেট নিলেন। খোলস, ভেতর, ফিতে—তিনটেই দেখে তবে নিন।';
+  static const goodCard = 'খোলস, ভেতর আর ফিতে—তিনটে দেখে যা পেলেন, তা মিলিয়ে তবে বাদ দিন; আন্দাজে নয়।';
+
+  /// Listening to the coworker (take it without the looks) — a slip.
+  static const listenCard = 'ওর কথায় না দেখেই হেলমেট নিতে রাজি হলেন। খোলস, ভেতর, ফিতে—প্রতিবার দেখে তবেই মাথায় দিন।';
 
   // The reason after the helmet is packed (lesson 1.1): one right, two wrong.
   static const whyAsk = 'কেন এই হেলমেটটা নিলেন?';
@@ -173,9 +178,12 @@ abstract final class HelmetLines {
   static const callHeld = 'ঠিক। ফাটা হেলমেট মানে ফুটো ছাতা।';
   static const callRushed = 'না! ফাটা হেলমেট আর আঘাত নিতে পারে না।';
 
+  /// The slip for listening to him at the helmet station (playbook row 8).
+  static const listenMistake = DoMistake(key: '1.1/helmet/listened', textBn: listenCard, art: '$_dress/tray_elec_helmet.webp', lessonPoint: 1);
+
   static const all = [
     ask, torchTask, insideTask, strapTask, checkFirst, guessed, caught, rejectedGood, crackSpotted, locked, noLock, packed,
-    uncheckedCard, goodCard, callHeld, callRushed,
+    uncheckedCard, goodCard, listenCard, callHeld, callRushed,
   ];
 }
 
@@ -447,6 +455,14 @@ class _HelmetInspectState extends State<HelmetInspect> with TickerProviderStateM
   bool? _lock;
   var _snapping = false;
 
+  // Gesture hint (how, never which helmet): a short torch drag on the shell,
+  // a tap inside, a short slide of the strap; then a sweep over the looks and
+  // the two decisions.
+  final _tabKeys = {for (final c in HelmetCheck.values) c: GlobalKey()};
+  final _viewKey = GlobalKey();
+  final _rejectKey = GlobalKey();
+  final _wearKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -644,6 +660,27 @@ class _HelmetInspectState extends State<HelmetInspect> with TickerProviderStateM
     await _strap.animateTo(v, curve: Curves.easeOutBack);
   }
 
+  // ---- gesture hint -------------------------------------------------------------
+
+  bool get _hintWaiting => _open && !widget.leaving && !_snapping;
+
+  HintSpec? _hint() {
+    if (!_hintWaiting) return null;
+    final buttons = [_rejectKey, _wearKey];
+    if (!widget.item.lineHelmet) return HintSpec.sweepOver(buttons);
+    if (!widget.checks.contains(_tab)) {
+      final view = HintSpec.globalRectOf(_viewKey);
+      if (view == null) return null;
+      return switch (_tab) {
+        // A generic nudge of the torch (the crack's place is never shown).
+        HelmetCheck.shell => HintSpec.drag(Offset(view.left + view.width * 0.62, view.top + view.height * 0.62), toward: const Offset(-1, -0.4), travel: 72),
+        HelmetCheck.inside => HintSpec.tap(view.center),
+        HelmetCheck.strap => HintSpec.drag(Offset(view.left + view.width * 0.27, view.top + view.height * 0.70), toward: const Offset(1, 0), travel: 56),
+      };
+    }
+    return HintSpec.sweepOver([for (final c in HelmetCheck.values) _tabKeys[c]!, ...buttons]);
+  }
+
   // ---- build ------------------------------------------------------------------
 
   @override
@@ -669,6 +706,7 @@ class _HelmetInspectState extends State<HelmetInspect> with TickerProviderStateM
                 for (final c in HelmetCheck.values) ...[
                   if (c != HelmetCheck.shell) const SizedBox(width: 6),
                   Expanded(
+                    key: _tabKeys[c],
                     child: _Tab(
                       key: ValueKey('helmet-tab-${c.name}'),
                       check: c,
@@ -689,6 +727,7 @@ class _HelmetInspectState extends State<HelmetInspect> with TickerProviderStateM
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: SizedBox(
+              key: _viewKey,
               height: 236,
               width: double.infinity,
               child: Stack(
@@ -729,9 +768,15 @@ class _HelmetInspectState extends State<HelmetInspect> with TickerProviderStateM
           if (v == null)
             Row(
               children: [
-                Expanded(child: DoBigButton(label: 'বাদ দিন', filled: false, onTapUp: (d) => widget.onDecide(GloveChoice.reject, d.globalPosition))),
+                Expanded(
+                  key: _rejectKey,
+                  child: DoBigButton(label: 'বাদ দিন', filled: false, onTapUp: (d) => widget.onDecide(GloveChoice.reject, d.globalPosition)),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: DoBigButton(label: 'নিয়ে নিন', filled: true, onTapUp: (d) => widget.onDecide(GloveChoice.wear, d.globalPosition))),
+                Expanded(
+                  key: _wearKey,
+                  child: DoBigButton(label: 'নিয়ে নিন', filled: true, onTapUp: (d) => widget.onDecide(GloveChoice.wear, d.globalPosition)),
+                ),
               ],
             )
           else
@@ -755,6 +800,17 @@ class _HelmetInspectState extends State<HelmetInspect> with TickerProviderStateM
     );
 
     return Positioned.fill(
+      child: IdleHint(
+        waiting: _hintWaiting,
+        waitKey: '${h.id}/${_tab.name}/${widget.checks.length}',
+        spec: (_) => _hint(),
+        child: _scene(card, v),
+      ),
+    );
+  }
+
+  Widget _scene(Widget card, GloveOutcome? v) {
+    return SizedBox.expand(
       child: Stack(
         children: [
           Positioned.fill(

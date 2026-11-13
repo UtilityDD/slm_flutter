@@ -4,7 +4,9 @@
 // finished joints to judge, the deal, the reason libraries, and the level in
 // the shell: idle perf, the guide first, a full clean play with the coworker
 // refused, a bad joint that glows before its card and starts the job again,
-// listening to him, a good joint set aside (not scored), 3 slips.
+// listening to him, the coworker on a fast and on a slow play (only once both
+// ends are fully in), the tray judged once (a good joint thrown out is a
+// slip, no free probing), the praise window, gesture hints, 3 slips.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,6 +20,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
@@ -31,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.1/do/1',
@@ -73,10 +77,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 Future<void> _step(WidgetTester t, M3ConductorJointStep s, {int ms = 500}) async {
@@ -295,7 +301,7 @@ void main() {
       expect(m3ConductorJointTray(math.Random(1)).toSet(), _S.values.toSet());
     });
 
-    test('the tray: every bad joint rejected passes; one let through is one slip; a good one set aside is put back unscored', () {
+    test('the tray is judged once: every bad joint rejected passes; a bad one let through or a good one thrown out is one slip (no free probes)', () {
       M3ConductorJointRun tray(List<_K> k) =>
           M3ConductorJointRun(M3ConductorJointDeal(rounds: [M3ConductorJointRound.inspect([for (final x in k) M3ConductorJointSample(x, _T.acsr, _C.dog)])], callAt: 0));
       const kinds = [_K.good, _K.wrongSleeve, _K.cutStrand, _K.good];
@@ -306,17 +312,31 @@ void main() {
       expect(a.passTray(), isNull);
       expect(a.caught, containsAll([_L.caughtKind(_K.wrongSleeve), _L.caughtKind(_K.cutStrand)]));
       expect(a.thorough, isTrue);
+      // A good one thrown out with every bad one caught: a slip, the round ends.
       final b = tray(kinds)
         ..toggle(1)
-        ..toggle(0)
-        ..toggle(3);
-      expect(b.falseRejects, [0, 3]);
-      b.unreject(b.falseRejects);
-      expect(b.rejected, {1});
-      expect(b.slips, 0);
-      expect(b.thorough, isFalse);
-      expect(b.passTray(), _M.passCutStrand);
+        ..toggle(2)
+        ..toggle(0);
+      expect(b.falseRejects, [0]);
+      expect(b.passTray(), _M.rejectedGood);
       expect(b.slips, 1);
+      expect(b.shown, isTrue, reason: 'judged once: no second try with a hint');
+      expect(b.thorough, isFalse);
+      expect(b.passTray(), isNull, reason: 'once');
+      expect(b.slips, 1);
+      // Marking everything (the probe) costs the same slip.
+      final all = tray(kinds);
+      for (var i = 0; i < 4; i++) {
+        all.toggle(i);
+      }
+      expect(all.passTray(), _M.rejectedGood);
+      expect(all.slips, 1);
+      // A bad one let through outranks a good one thrown out; still one slip.
+      final m = tray(kinds)
+        ..toggle(1)
+        ..toggle(3);
+      expect(m.passTray(), _M.passCutStrand);
+      expect(m.slips, 1);
       final c = tray(const [_K.halfPress, _K.wrongSleeve, _K.good, _K.cutStrand]);
       expect(c.passTray(), _M.passHalfPress);
       expect(c.slips, 1, reason: 'one slip however many');
@@ -341,6 +361,9 @@ void main() {
         ..._L.makeWhy,
         ..._L.trayWhy,
         ..._L.myths,
+        ..._L.acsrMyths,
+        ..._L.aaacMyths,
+        ..._L.trayMyths,
         ..._L.coworker.recordedLines,
         ..._L.coworker.right,
         ..._L.coworker.wrong,
@@ -366,28 +389,70 @@ void main() {
     });
 
     test('reasons: same length, big enough, the right ones fit the conductor; the coworker deck; his snarl is recorded', () {
-      expectSameLength('why', [..._L.acsrWhy, ..._L.aaacWhy, ..._L.makeWhy, ..._L.trayWhy, ..._L.myths]);
+      expectSameLength('why', [..._L.acsrWhy, ..._L.aaacWhy, ..._L.makeWhy, ..._L.trayWhy, ..._L.myths, ..._L.acsrMyths, ..._L.aaacMyths, ..._L.trayMyths]);
+      const fullTray = M3ConductorJointRound.inspect([
+        M3ConductorJointSample(_K.good, _T.acsr, _C.dog),
+        M3ConductorJointSample(_K.wrongSleeve, _T.acsr, _C.dog),
+        M3ConductorJointSample(_K.cutStrand, _T.aaac, _C.rabbit),
+        M3ConductorJointSample(_K.halfPress, _T.acsr, _C.dog),
+      ]);
       for (final r in [
         M3ConductorJointRound.make(_job()),
         M3ConductorJointRound.make(_job(type: _T.aaac)),
-        const M3ConductorJointRound.inspect([M3ConductorJointSample(_K.good, _T.acsr, _C.dog)]),
+        fullTray,
       ]) {
         final right = _L.whyRight(r);
-        expectLibrary('why', right, _L.myths);
+        expectLibrary('why', right, [..._L.whyWrongOwn(r), ..._L.myths]);
         for (var s = 0; s < 10; s++) {
-          final deal = dealChoices(right, _L.myths, math.Random(s));
+          final deal = _L.dealWhy(r, math.Random(s));
           expect(deal.where((o) => o.correct), hasLength(1));
           expect(deal.map((o) => o.textBn).toSet(), hasLength(3));
+          expect(deal.where((o) => !o.correct && _L.whyWrongOwn(r).contains(o.textBn)), hasLength(1), reason: 'one wrong card in the round\'s own words');
         }
       }
+      // No giveaway word: the job's type name is on a wrong card every time.
+      for (final t in _T.values) {
+        final r = M3ConductorJointRound.make(_job(type: t));
+        for (var s = 0; s < 20; s++) {
+          final wrong = _L.dealWhy(r, math.Random(s)).where((o) => !o.correct);
+          expect(wrong.any((o) => o.textBn.contains(_L.typeEn(t))), isTrue, reason: t.name);
+        }
+      }
+      // No giveaway word: every key word on the right card is also on a wrong
+      // card in every deal (its mirror), for every right card of every round.
+      const keys = ['স্ট্র্যান্ড', 'কোড', 'চুম্বক', 'ট্যাগ', 'হটস্পট', 'বাতিল', 'ACSR', 'AAAC'];
+      for (final r in [M3ConductorJointRound.make(_job()), M3ConductorJointRound.make(_job(type: _T.aaac)), fullTray]) {
+        final seen = <String>{};
+        for (var s = 0; s < 200; s++) {
+          final deal = _L.dealWhy(r, math.Random(s));
+          final right = deal.singleWhere((o) => o.correct).textBn;
+          seen.add(right);
+          final wrong = deal.where((o) => !o.correct).map((o) => o.textBn).toList();
+          for (final k in keys.where(right.contains)) {
+            expect(wrong.any((w) => w.contains(k)), isTrue, reason: '"$k" only on the right card: $right');
+          }
+        }
+        expect(seen, _L.whyRight(r).toSet(), reason: 'every right card is dealt');
+      }
+      // The tray's right cards only name flaws that are on the tray.
+      Set<String> trayRight(List<_K> kinds) =>
+          _L.whyRight(M3ConductorJointRound.inspect([for (final k in kinds) M3ConductorJointSample(k, _T.acsr, _C.dog)])).toSet();
+      expect(trayRight([_K.good, _K.good, _K.halfPress, _K.cutStrand]), {_L.trayWhy[0], _L.trayWhy[1]});
+      expect(trayRight([_K.good, _K.good, _K.wrongSleeve, _K.halfPress]), {_L.trayWhy[1], _L.trayWhy[2]});
+      expect(trayRight([_K.good, _K.wrongSleeve, _K.cutStrand, _K.halfPress]), _L.trayWhy.toSet());
       expect(_L.whyRight(M3ConductorJointRound.make(_job())), isNot(contains(_L.aaacWhy.first)));
       expect(_L.whyRight(M3ConductorJointRound.make(_job(type: _T.aaac))), isNot(contains(_L.acsrWhy.first)));
       final cw = _L.coworker;
       expectSameLength('choice', [...cw.right, ...cw.wrong]);
       expectLibrary('choice', cw.right, cw.wrong);
       expect(LearnVoice.resolve(cw.exitLine, rival: true), isNotNull);
-      // His push is new: device TTS until recorded (listed in REGISTER.md).
-      expect(LearnVoice.resolve(cw.line, rival: true), isNull);
+      // His push is recorded in his own voice.
+      expect(LearnVoice.resolve(cw.line, rival: true), isNotNull);
+      // No giveaway: the refusals do not share an opening word ("না, …").
+      expect(cw.right.map((r) => r.split(' ').first).toSet(), hasLength(cw.right.length));
+      for (final r in cw.right) {
+        expect(r.startsWith('না'), isFalse, reason: r);
+      }
     });
   });
 
@@ -428,7 +493,7 @@ void main() {
         }
         debugPrint('PERF m3_conductor_joint ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -531,37 +596,197 @@ void main() {
       final deal = m3ConductorJointDeal(math.Random(seed));
       final c = await _open(t, seed);
       await _prepare(t, deal, 0, refuse: false);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 3200);
       expect(find.byType(MistakeCard), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes.single.key, _M.loose.key);
       await _close(t, c);
     });
 
-    testWidgets('the tray: a good joint set aside is put back, not scored; a bad one let through is a slip', (t) async {
+    int trayAfterHisRound() {
       var seed = 0;
       while (!m3ConductorJointDeal(math.Random(seed)).rounds[1].inspect || m3ConductorJointDeal(math.Random(seed)).callAt != 0) {
         seed++;
       }
+      return seed;
+    }
+
+    int hisRoundFirst() {
+      var seed = 0;
+      while (m3ConductorJointDeal(math.Random(seed)).callAt != 0) {
+        seed++;
+      }
+      return seed;
+    }
+
+    testWidgets('the tray is judged once: marking every joint (a probe) is a slip with its card, no hint before it; then the next round', (t) async {
+      final seed = trayAfterHisRound();
       final deal = m3ConductorJointDeal(math.Random(seed));
       final c = await _open(t, seed);
       await _playRight(t, deal, 0);
       final samples = deal.rounds[1].samples;
-      final good = samples.indexWhere((s) => s.kind == _K.good);
-      await t.tap(_key('joint-$good'));
-      await _pump(t, 300);
+      for (var i = 0; i < samples.length; i++) {
+        await t.tap(_key('joint-$i'));
+        await _pump(t, 200);
+      }
       await t.tap(find.text(_L.trayDone));
+      await t.pump();
+      expect(find.byType(MistakeCard), findsOneWidget, reason: 'a good joint thrown out costs a slip at once');
       await _pump(t, 600);
-      expect(find.byType(MistakeCard), findsNothing);
-      expect(c.read(guideDirectorProvider).line, _L.goodJoint);
-      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(c.read(gameSaveProvider).mistakes.single.key, _M.rejectedGood.key);
+      expect(find.text(_L.trayDone), findsNothing, reason: 'no second try on the same tray');
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 1500);
+      expect(_key('step-magnet'), findsOneWidget, reason: 'the next round');
+      await _close(t, c);
+    });
+
+    testWidgets('the tray: a bad joint let through is a slip (the glow first)', (t) async {
+      final seed = trayAfterHisRound();
+      final deal = m3ConductorJointDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await _playRight(t, deal, 0);
       await t.tap(find.text(_L.trayDone));
-      await _pump(t, 3200);
+      await _pump(t, 300);
+      expect(find.byType(MistakeCard), findsNothing, reason: 'the glow comes first');
+      await _pump(t, 3000);
       expect(find.byType(MistakeCard), findsOneWidget);
+      final samples = deal.rounds[1].samples;
       expect(c.read(gameSaveProvider).mistakes.single.key, _M.passed(samples.firstWhere((s) => s.kind != _K.good).kind).key);
       await _close(t, c);
+    });
+
+    testWidgets('the praise window: taps on the tray after a right judgment do nothing', (t) async {
+      final seed = trayAfterHisRound();
+      final deal = m3ConductorJointDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await _playRight(t, deal, 0);
+      final samples = deal.rounds[1].samples;
+      for (final (k, s) in samples.indexed) {
+        if (s.kind != _K.good) {
+          await t.tap(_key('joint-$k'));
+          await _pump(t, 200);
+        }
+      }
+      final done = t.getCenter(find.text(_L.trayDone));
+      await t.tap(find.text(_L.trayDone));
+      await _pump(t, 100);
+      for (var i = 0; i < samples.length; i++) {
+        await t.tap(_key('joint-$i'), warnIfMissed: false);
+      }
+      await t.tapAt(done);
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 700);
+      await _pickRight(t, _L.whyRight(deal.rounds[1]));
+      await _pump(t, 3000);
+      expect(_key('step-magnet'), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast play: the press waits for him; refused, the pump opens', (t) async {
+      final seed = hisRoundFirst();
+      final job = m3ConductorJointDeal(math.Random(seed)).rounds[0].job!;
+      final c = await _open(t, seed);
+      await _step(t, _S.magnet, ms: 1200);
+      await _step(t, _S.sleeve, ms: 100);
+      await t.tap(_key('sleeve-${job.right}'));
+      await _pump(t, 100);
+      await _step(t, _S.brush, ms: 1200);
+      await _step(t, _S.insert, ms: 100);
+      final g = await t.startGesture(t.getCenter(_key('hud-hold-insert')));
+      await _pump(t, 1400);
+      await g.up();
+      await t.pump();
+      // Straight to the press, well inside his 1.2 s delay.
+      await t.tap(_key('step-press'));
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the fast press calls him in now');
+      expect(_key('hud-hold-press'), findsNothing, reason: 'no pumping past him');
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2600);
+      expect(_key('hud-hold-press'), findsOneWidget);
+      await _hold(t, 'press', 2000);
+      await _pump(t, 1500);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the right joint: its reason');
+      await _close(t, c);
+    });
+
+    testWidgets('his push fits the moment: not before both ends are fully in; then he comes on a slow play too', (t) async {
+      final seed = hisRoundFirst();
+      final job = m3ConductorJointDeal(math.Random(seed)).rounds[0].job!;
+      final c = await _open(t, seed);
+      await _pump(t, 5000);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'nothing to let off yet');
+      await _step(t, _S.magnet, ms: 1400);
+      await _step(t, _S.sleeve);
+      await t.tap(_key('sleeve-${job.right}'));
+      await _pump(t, 400);
+      await _step(t, _S.brush, ms: 1400);
+      await _pump(t, 3000);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'the ends are not in yet');
+      await _step(t, _S.insert);
+      await _hold(t, 'insert', 1500);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue, reason: 'he comes on his own');
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2600);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _step(t, _S.press);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'once per play');
+      await _hold(t, 'press', 2000);
+      await _pump(t, 1500);
+      expect(find.byType(ChoiceDeck), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: a sweep over every step, over the kit, a hold on the pad; none during the intro', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      var seed = 0;
+      while (m3ConductorJointDeal(math.Random(seed)).callAt == 0) {
+        seed++;
+      }
+      final job = m3ConductorJointDeal(math.Random(seed)).rounds[0].job!;
+      t.view.physicalSize = const Size(784, 1700);
+      t.view.devicePixelRatio = 2.0;
+      final c = ProviderContainer();
+      await t.pumpWidget(UncontrolledProviderScope(container: c, child: MaterialApp(home: M3ConductorJointPage(ctx: _ctx, pack: _pack, muted: true, seed: seed))));
+      IdleHintState hint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      await _pump(t, 300);
+      expect(find.byType(GuideIntro), findsOneWidget);
+      await waitIntro(t);
+      await _pump(t, 1200);
+      expect(hint().showing, isFalse);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue, reason: 'idle on the steps');
+      expect(hint().debugOptions, hasLength(5), reason: 'a sweep over every step, none singled out');
+      await _step(t, _S.magnet, ms: 1400);
+      await _step(t, _S.sleeve);
+      expect(hint().showing, isFalse, reason: 'a touch hides it');
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, hasLength(3), reason: 'a sweep over the whole kit');
+      await t.tap(_key('sleeve-${job.right}'));
+      await _pump(t, 400);
+      await _step(t, _S.brush, ms: 1400);
+      await _step(t, _S.insert);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(hint().debugFrame?.ring, isNotNull, reason: 'hold the pad');
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 30));
+      MascotTalk.reset();
+      c.dispose();
+      t.view.reset();
     });
 
     testWidgets('three slips fail the level', (t) async {

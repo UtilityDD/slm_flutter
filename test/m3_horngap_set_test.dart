@@ -3,8 +3,10 @@
 // fault on the three sets; the plate's rating, tied taut; once the line is
 // back on: it holds, or it blows again → keep it off and find the fault),
 // the deal, the reason libraries, and the level in the shell: idle perf, the
-// guide first, full clean plays (the coworker refused), a slip card, and the
-// deadly freeze (listening to "লাইন চালু থাকতেই ফিউজটা বদলে দাও").
+// guide first, full clean plays (the coworker refused), a slip card, a
+// flagged sound part costs a slip, the 3-slip strike-out, the coworker comes
+// even on a fast play (ক and ঘ), and the deadly freeze (listening to "লাইন
+// চালু থাকতেই ফিউজটা বদলে দাও" — the ladder's climb-live deadly).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,7 +20,9 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m3_horngap_set.dart';
@@ -31,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.4/do/1',
@@ -83,10 +88,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -147,10 +154,18 @@ Future<void> _why(WidgetTester t, M3HorngapSetDeal d, int i) async {
   await _pump(t, 3000);
 }
 
-/// A whole play, right.
-Future<void> _playRight(WidgetTester t, M3HorngapSetDeal d) async {
+/// A whole play, right. [fast]: the decisive control is tapped before he
+/// comes (শাটডাউন in ক, the act in ঘ) — it must wait for him.
+Future<void> _playRight(WidgetTester t, M3HorngapSetDeal d, {bool fast = false}) async {
   // ক
-  if (d.callAt == 0) await _refuseHim(t);
+  if (d.callAt == 0) {
+    if (fast) {
+      await t.tap(_label(_L.step(_S.shutdown)));
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the শাটডাউন waits for him');
+    }
+    await _refuseHim(t);
+  }
   for (final s in _S.values) {
     await t.tap(_label(_L.step(s)));
     await _pump(t, 250);
@@ -183,7 +198,14 @@ Future<void> _playRight(WidgetTester t, M3HorngapSetDeal d) async {
   await _why(t, d, 2);
   // ঘ
   expect(await _pumpUntil(t, find.text(_L.actStop), maxMs: 6000), isTrue);
-  if (d.callAt == 3) await _refuseHim(t);
+  if (d.callAt == 3) {
+    if (fast) {
+      await t.tap(find.text(_L.actStop));
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the act waits for him');
+    }
+    await _refuseHim(t);
+  }
   await t.tap(find.text(d.blowsAgain ? _L.actStop : _L.actOk));
   await _pump(t, 800);
   await _why(t, d, 3);
@@ -211,6 +233,7 @@ void main() {
       final seen = <String>{};
       final calls = <int>{};
       final extras = <M3HorngapSetFault>{};
+      final acts = <String>{};
       var again = 0;
       for (var s = 0; s < 120; s++) {
         final d = m3HorngapSetDeal(math.Random(s));
@@ -225,6 +248,8 @@ void main() {
         }
         expect(d.tokens.toSet(), _S.values.toSet());
         expect(d.reels.toSet(), M3HorngapSetReel.values.toSet());
+        expect(d.acts.toSet(), M3HorngapSetAct.values.toSet());
+        acts.add(d.acts.join());
         expect([10, 25], contains(d.plateAmps));
         expect(d.otherAmps, isNot(d.plateAmps));
         if (d.callAt == 3) expect(d.blowsAgain, isTrue);
@@ -236,6 +261,7 @@ void main() {
       expect(calls, {0, 3});
       expect(extras, {_F.thick, _F.bent, _F.carbon});
       expect(again, inInclusiveRange(30, 90));
+      expect(acts.length, greaterThan(12), reason: 'the acts in ঘ lie in a fresh order (no fixed spot for the right one)');
     });
 
     const d0 = M3HorngapSetDeal(
@@ -273,18 +299,33 @@ void main() {
       expect(c.listened(), _M.liveClimb);
     });
 
-    test('খ: every fault found; a fine part is not scored (but no +5); a miss is a slip and shown', () {
+    test('খ: every fault found; a sound part flagged is a slip (once a part); a miss is a slip and shown', () {
       final r = M3HorngapSetRun(d0)..index = 1;
       expect(r.up, isTrue);
-      expect(r.spot(0, _P.wire), isFalse);
-      expect(r.slips, 0);
-      expect(r.spot(1, _P.wire), isTrue);
+      expect(r.spot(0, _P.wire), _M.falseFlag, reason: 'a guess costs');
+      expect(r.slips, 1);
+      expect(r.spot(0, _P.wire), isNull, reason: 'booked once a part');
+      expect(r.slips, 1);
+      expect(r.found, isEmpty);
       expect(r.spot(1, _P.wire), isNull);
-      expect(r.spot(2, _P.wire), isTrue);
+      expect(r.found.length, 1);
+      expect(r.spot(1, _P.wire), isNull);
+      expect(r.spot(2, _P.wire), isNull);
+      expect(r.found.length, 2);
       expect(r.spotDone(), _M.missedFault);
+      expect(r.slips, 2);
       expect(r.found.length, 4, reason: 'the missed ones are shown');
       expect(r.spotDone(), isNull);
       expect(r.shown, isTrue);
+      expect(r.thorough, isFalse);
+      // Sweep-tapping all nine parts no longer finds everything for free.
+      final sweep = M3HorngapSetRun(d0)..index = 1;
+      for (var ph = 0; ph < 3; ph++) {
+        for (final part in _P.values) {
+          sweep.spot(ph, part);
+        }
+      }
+      expect(sweep.slips, 9 - d0.faults.length);
       final clean = M3HorngapSetRun(d0)..index = 1;
       for (final f in d0.faults) {
         clean.spot(f.phase, f.part);
@@ -338,14 +379,15 @@ void main() {
       expect(t.pickReel(M3HorngapSetReel.other), _M.thinWire);
     });
 
-    test('ঘ held: "ঠিক আছে" is right; a stop is not scored; a thick wire is a slip; climbing is deadly', () {
+    test('ঘ held: "ঠিক আছে" is right; a needless stop is a slip; a thick wire is a slip; climbing is deadly', () {
       final r = M3HorngapSetRun(d0)..index = 3;
       expect(r.act(M3HorngapSetAct.ok), isNull, reason: 'not before it shows');
       expect(r.shown, isFalse);
       r.reveal();
       expect(r.lit, isTrue);
-      expect(r.act(M3HorngapSetAct.stopFind), isNull);
+      expect(r.act(M3HorngapSetAct.stopFind), _M.needlessStop, reason: 'a needless stop costs');
       expect(r.shown, isFalse);
+      expect(r.slips, 1);
       expect(r.act(M3HorngapSetAct.thickWire), _M.thickMyth);
       expect(r.act(M3HorngapSetAct.ok), isNull);
       expect(r.shown, isTrue);
@@ -376,6 +418,17 @@ void main() {
       expect(r.caught, contains(_L.caughtFault));
       final l = M3HorngapSetRun(d)..index = 3;
       expect(l.listened(), _M.liveRetie);
+    });
+
+    test('after a deadly the rules take nothing more (the line does not even come on)', () {
+      final r = M3HorngapSetRun(d0)..climb();
+      expect(r.ended, isTrue);
+      expect(r.tapStep(_S.shutdown), isNull);
+      expect(r.listened(), isNull);
+      r.index = 3;
+      r.reveal();
+      expect(r.revealed, isFalse);
+      expect(r.act(M3HorngapSetAct.ok), isNull);
     });
 
     test('three slips: 55 %', () {
@@ -470,7 +523,7 @@ void main() {
         }
         debugPrint('PERF m3_horngap_set ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -551,14 +604,115 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('gesture hint: after idle a hand shows how (a sweep), hidden on touch and while a card is up', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, _seedOf((d) => d.callAt == 3));
+      IdleHintState hint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue, reason: 'ক waits: the hand sweeps over the tokens and the climb');
+      await t.tap(_label(_L.stepEarth));
+      await _pump(t, 800);
+      expect(hint().showing, isFalse);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      await _pump(t, 9000);
+      expect(hint().showing, isFalse, reason: 'no hand while the slip card is up');
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 9500);
+      expect(hint().showing, isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike out: the struck-out card, no pass', (t) async {
+      final c = await _open(t, _seedOf((d) => d.callAt == 3));
+      for (var i = 0; i < 3; i++) {
+        await t.tap(_label(_L.stepEarth));
+        await _pump(t, 800);
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget);
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 1200);
+        }
+      }
+      await _pump(t, 1500);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['3.4/do/1'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key), contains(_M.wrongOrder.key));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the coworker comes even on a fast play: শাটডাউন tapped at once waits for him', (t) async {
+      final c = await _open(t, _seedOf((d) => d.callAt == 0));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet');
+      await t.tap(_label(_L.step(_S.shutdown)));
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the decisive control brings him in now');
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 600);
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 1500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // The held tap did nothing: the শাটডাউন is still to do, then works.
+      await t.tap(_label(_L.step(_S.shutdown)));
+      await _pump(t, 400);
+      await t.tap(_label(_L.step(_S.ptw)));
+      await _pump(t, 400);
+      expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'শাটডাউন then PTW is in order');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('fast play (the fuse blows again): the act in ঘ waits for him; then pass', (t) async {
+      bool ok(M3HorngapSetDeal d) => d.callAt == 3;
+      final c = await _open(t, _seedOf(ok));
+      await _playRight(t, _seedWhere(ok), fast: true);
+      await _pump(t, 3000);
+      expect(find.byType(LevelPassPanel), findsOneWidget);
+      expect(find.text(_L.caughtCall), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('খ: a sound part flagged costs a slip with the card (no free "it is fine" reply)', (t) async {
+      bool ok(M3HorngapSetDeal d) => d.callAt == 3;
+      final d = _seedWhere(ok);
+      final c = await _open(t, _seedOf(ok));
+      for (final s in _S.values) {
+        await t.tap(_label(_L.step(s)));
+        await _pump(t, 250);
+      }
+      await t.tap(find.text(_L.climb));
+      await _pump(t, 800);
+      await _why(t, d, 0);
+      final sound = [
+        for (var ph = 0; ph < 3; ph++)
+          for (final part in _P.values)
+            if (d.at(ph, part) == null) (ph, part),
+      ].first;
+      await _tapPart(t, sound.$1, sound.$2);
+      await _pump(t, 500);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, _M.falseFlag.key);
+      expect(c.read(guideDirectorProvider).line, isNot(contains('ঠিক আছে')));
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 1200);
+      expect(find.text(_L.spotDone), findsOneWidget, reason: 'the station stays');
+      await _close(t, c);
+    });
+
     testWidgets('listening to "লাইন চালু থাকতেই…" is deadly — freeze first, then the card', (t) async {
       final c = await _open(t, _seedOf((d) => d.callAt == 0));
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 5000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);

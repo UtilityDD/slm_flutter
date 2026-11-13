@@ -16,7 +16,6 @@ dependencies:
   google_sign_in: ^7.2.0
   flutter_tts: ^4.2.5
   shared_preferences: ^2.5.5
-  speech_to_text: ^7.5.0
   supabase_flutter: ^2.17.2
   url_launcher: ^6.3.2
   path_provider: ^2.1.6
@@ -81,6 +80,37 @@ flutter:
     - assets/game/art/discharge/
     - assets/game/art/harness/
     - assets/game/art/pole/
+    - assets/game/art/gate/
+    - assets/game/art/m5_board51/
+    - assets/game/art/m5_board52/
+    - assets/game/art/m5_board53/
+    - assets/game/art/m5_board54/
+    - assets/game/art/m5_board55/
+    - assets/game/art/m5_board56/
+    - assets/game/art/m5_board57/
+    - assets/game/art/m5_board58/
+    - assets/game/art/m5_board59/
+    - assets/game/art/m5_board510/
+    - assets/game/art/m5_pm_thermal_round/
+    - assets/game/art/m5_trip_call/
+    - assets/game/art/m5_recloser_watch/
+    - assets/game/art/m5_fault_address/
+    - assets/game/art/m5_sense_walk/
+    - assets/game/art/m5_culprit_case/
+    - assets/game/art/m5_anneal_cut/
+    - assets/game/art/m5_feeder_sectionalize/
+    - assets/game/art/m5_reblow_clock/
+    - assets/game/art/m5_lv_street_read/
+    - assets/game/art/m5_lv_load_test/
+    - assets/game/art/m5_fault_casebook/
+    - assets/game/art/m5_live_wire_guard/
+    - assets/game/art/m5_searchlight_patrol/
+    - assets/game/art/m5_dark_eyes/
+    - assets/game/art/m5_cause_strike/
+    - assets/game/art/m5_workshop_referral/
+    - assets/game/art/m5_cable_fault_type/
+    - assets/game/art/m5_cable_route_locate/
+    - assets/game/art/m5_gate_case/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
     - assets/game/art/m3_gate_field/

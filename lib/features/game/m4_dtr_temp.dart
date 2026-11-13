@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -42,16 +43,20 @@ export 'm4_dtr_temp_world.dart' show M4DtrTempCase, M4DtrTempGeo, M4DtrTempLook;
 //   3. read: normal warmth or overheating? (the thermometer's heat bar, the
 //      shimmer over the tank). Calling it wrong is a slip either way;
 //   4. overheating only — find the cause (spot): tap the oil gauge, the fins,
-//      the LT cables (clamp meter + nameplate); a fine spot shows fine and is
-//      not scored; the real cause opens 5;
+//      the LT cables (clamp meter + nameplate) to look (free, the guide stays
+//      neutral), then "এটাই কারণ" on the one that shows it: the real cause
+//      opens 5, a wrong one is a slip and the search goes on;
 //   5. decide (choose): report for load reduction / a bigger transformer;
 //      clean the fins (on a shutdown — flagged); report the low oil for the
 //      leak and the top-up. A wrong decision is a slip.
 // Shared kit: guide first, full scene, corner guide, ◆ on the table →
-// "কেন …?" → the next transformer by itself; the careless coworker once a
-// play at the measure step ("হাত দিয়ে ছুঁয়ে দেখো কত গরম") — listening is the
-// deadly hand on the tank. His new line goes by device TTS until recorded
-// (listed in [M4DtrTempLines.recordLines]).
+// "কেন …?" → the next transformer by itself (the scene is input-dead while
+// the ◆ waits: `!tableBusy`); the careless coworker once a play at the
+// measure step ("হাত দিয়ে ছুঁয়ে দেখো কত গরম") — the tool pick waits for him
+// (`holdForCoworker`); listening is the deadly hand on the tank (MODULE4_LADDER
+// step 15). His lines have no recorded clip yet (silent, caption held; listed
+// in [M4DtrTempLines.recordLines]). Gesture hints: a sweep over the tools,
+// the read buttons and the spots; a tap on the tank to aim.
 
 // ============================================================================
 // Content
@@ -68,9 +73,12 @@ enum M4DtrTempTool { ir, hand }
 
 @immutable
 class M4DtrTempJob {
-  const M4DtrTempJob({required this.kase, required this.topic});
+  const M4DtrTempJob({required this.kase, required this.topic, this.irLeft = true});
   final M4DtrTempCase kase;
   final M4DtrTempTopic topic;
+
+  /// The tool stand's order (dealt, so the safe tool is not always first).
+  final bool irLeft;
 
   bool get hot => kase != M4DtrTempCase.normal;
 
@@ -99,7 +107,7 @@ M4DtrTempDeal m4DtrTempDeal(math.Random rng) {
   final cases = [M4DtrTempCase.overload, rest[0], rest[1]]..shuffle(rng);
   return M4DtrTempDeal(
     jobs: [
-      for (final k in cases) M4DtrTempJob(kase: k, topic: rng.nextBool() ? M4DtrTempTopic.measure : M4DtrTempTopic.cause),
+      for (final k in cases) M4DtrTempJob(kase: k, topic: rng.nextBool() ? M4DtrTempTopic.measure : M4DtrTempTopic.cause, irLeft: rng.nextBool()),
     ],
     callAt: rng.nextInt(3),
   );
@@ -143,10 +151,18 @@ abstract final class M4DtrTempLines {
 
   // Not scored: the guide says what to do, the step stays.
   static const missAim = 'থার্মোমিটারটা ট্যাঙ্কের গায়েই তাক করুন।';
-  static const allFine = 'এখানে সব ঠিক আছে। আর কোথায় দেখবেন?';
+
+  /// After any look (the same for every spot — never a verdict).
+  static const askLook = 'এটাই কারণ, না অন্য কোথাও দেখবেন?';
+
+  /// The flag under a close-up (the same for every spot).
+  static const flagCause = 'এটাই কারণ';
 
   // The decision (step 5): the right ones are the lesson's actions for the
-  // cause found; the wrong ones are wrong for every cause.
+  // cause found. A dealt deck holds one of them, another cause's right action
+  // (so it can't be answered without the cause) and one line that is wrong
+  // for every cause — some use "রিপোর্ট" / "শাটডাউন" wrongly, so no word is
+  // only on the right card.
   static const actLoad = ['লোড কমাতে রিপোর্ট করি, দরকারে বড় ট্রান্সফরমার', 'লোড কমানো বা ক্ষমতা বাড়ানোর জন্য রিপোর্ট দিই'];
   static const actFins = ['শাটডাউন নিয়ে ফিনের লতাপাতা পরিষ্কার করাই', 'লাইন বন্ধ করিয়ে তারপর কুলিং ফিন সাফ করি'];
   static const actOil = ['সুপারভাইজারকে রিপোর্ট — লিক সারানো ও তেল টপ-আপ', 'এখনই রিপোর্ট করি, লিক সারিয়ে তেল টপ-আপ হবে'];
@@ -161,8 +177,32 @@ abstract final class M4DtrTempLines {
     'গরম তো হবেই, কাউকে কিছু না বলে চলে যাই',
     'ঠান্ডা করতে ট্যাঙ্কের গায়ে বালতি ভরে জল ঢালি',
     'বিকেলে ঠান্ডা পড়লে নিজে থেকেই ঠিক হয়ে যাবে',
-    'চালু অবস্থাতেই ঢাকনা খুলে তেল ভরে দিই',
+    'চালু অবস্থাতেই ঢাকনা খুলে তেল টপ-আপ করি',
+    'রিপোর্ট লিখে রাখি, লাইন চালু রেখেই তেল ঢালি',
+    'শাটডাউন নিয়ে বসে থাকি, রিপোর্ট পরে করব',
+    'লোড একটু বেশি তো কী, রিপোর্টের দরকার নেই',
+    'তেল একটু কম তো কী, পরের মাসে রিপোর্ট করব',
+    'লাইন বন্ধ করিয়ে লিক না দেখেই তেল ভরে দিই',
+    'শাটডাউন ছাড়াই লাঠি দিয়ে ফিনের লতা সরাই',
   ];
+
+  /// The other causes' right actions: wrong for [k] (a deck needs the cause).
+  static List<String> actOthers(M4DtrTempCase k) => [
+    for (final c in const [M4DtrTempCase.overload, M4DtrTempCase.fins, M4DtrTempCase.lowOil])
+      if (!identical(actRight(c), actRight(k))) ...actRight(c),
+  ];
+
+  /// The decision deck for [k]: one right action, one other cause's right
+  /// action, one action wrong for every cause; shuffled.
+  static List<ChoiceOption> dealAct(M4DtrTempCase k, math.Random rng) {
+    final right = actRight(k);
+    final others = actOthers(k);
+    return [
+      ChoiceOption(right[rng.nextInt(right.length)], true),
+      ChoiceOption(others[rng.nextInt(others.length)], false),
+      ChoiceOption(actWrong[rng.nextInt(actWrong.length)], false),
+    ]..shuffle(rng);
+  }
 
   // The reasons (lesson 4.5 + film): the right ones fit the step asked; the
   // wrong ones are the lesson's myths and field excuses — never a true rule.
@@ -202,6 +242,8 @@ abstract final class M4DtrTempLines {
     'সুপারভাইজার তাড়া দিচ্ছেন, তাই তাড়াতাড়ি',
     'রিপোর্ট লাগে না, মুখে বলে দিলেই হবে',
     'গরম হলে লোড নিজে থেকেই কমে যায়, চিন্তা নেই',
+    'ইনফ্রারেড থার্মোমিটার দেখালে সাহেব খুশি হন',
+    'দূর থেকে মাপলে কাজটা তাড়াতাড়ি শেষ হয়',
   ];
 
   /// The careless coworker, at the measure step.
@@ -216,11 +258,12 @@ abstract final class M4DtrTempLines {
       'যন্ত্র আনতে দেরি, হাতেই দেখি',
       'ঠিক আছে, তালু চেপে দেখে নিচ্ছি',
       'ট্যাঙ্কে হাত দিলে কিছু হয় না',
+      'দূর থেকে কী বোঝা যায়, হাতেই দেখি',
     ],
     asks: ['ও বলছে হাত দিয়ে ছুঁয়ে দেখতে। আপনি?', 'কী দিয়ে মাপবেন — ওর কথায়, না নিয়মে?', 'ওর কথা শুনবেন, না নিয়ম মানবেন?'],
   );
 
-  /// New lines for him (device TTS until recorded in his voice).
+  /// New lines for him (no recorded clip yet: silent, the caption held).
   static List<String> get recordLines => [coworker.line, coworkerExit];
 
   static const callHeld = 'ঠিক! চাপে পড়ে নিয়ম ভাঙবেন না।';
@@ -274,6 +317,12 @@ abstract final class M4DtrTempMistakes {
     art: '$_dir/dt_fins.svg',
     lessonPoint: 2,
   );
+  static const wrongCause = DoMistake(
+    key: '4.5/m4_dtr_temp/wrong-cause',
+    textBn: 'না মিলিয়েই কারণ ধরলেন। অতিরিক্ত গরমের কারণ ওভারলোড, লতাপাতায় ঢাকা কুলিং ফিন বা কম তেল — লোড, ফিন আর গেজ ভালো করে দেখে তবেই কারণ বলুন।',
+    art: '$_dir/dt_read.svg',
+    lessonPoint: 2,
+  );
   static const wrongOil = DoMistake(
     key: '4.5/m4_dtr_temp/low-oil-wrong-action',
     textBn: 'কম তেলের ভুল ব্যবস্থা নিলেন। অবিলম্বে সুপারভাইজারকে রিপোর্ট — লিক সারানো আর লাইন বন্ধ করে একই গ্রেডের ফিল্টার করা তেলে টপ-আপ।',
@@ -286,7 +335,7 @@ abstract final class M4DtrTempMistakes {
     M4DtrTempCase.lowOil || M4DtrTempCase.normal => wrongOil,
   };
 
-  static List<DoMistake> get all => const [handOnTank, missedHot, mythHot, wrongLoad, wrongFins, wrongOil];
+  static List<DoMistake> get all => const [handOnTank, missedHot, mythHot, wrongCause, wrongLoad, wrongFins, wrongOil];
 }
 
 /// The play state (pure logic).
@@ -343,13 +392,20 @@ class M4DtrTempRun {
     return null;
   }
 
-  /// Look at a spot: true when it shows the cause (on to the decision).
-  bool check(M4DtrTempLook l) {
+  /// Look at a spot (free, no verdict): true when it can be looked at now.
+  bool look(M4DtrTempLook l) {
     if (ended || phase != M4DtrTempPhase.find || l == M4DtrTempLook.ir) return false;
     checked.add(l);
-    if (l != job.cause) return false;
-    phase = M4DtrTempPhase.act;
     return true;
+  }
+
+  /// "এটাই কারণ" on a spot looked at: the real cause goes on to the
+  /// decision; a wrong one is a slip and the search goes on.
+  DoMistake? flag(M4DtrTempLook l) {
+    if (ended || phase != M4DtrTempPhase.find || !checked.contains(l)) return null;
+    if (l != job.cause) return _slip(M4DtrTempMistakes.wrongCause);
+    phase = M4DtrTempPhase.act;
+    return null;
   }
 
   /// The decision: a wrong one is a slip; the job is done either way.
@@ -367,6 +423,7 @@ class M4DtrTempRun {
   }
 
   void next() {
+    if (deadly != null) return;
     index++;
     phase = M4DtrTempPhase.measure;
     checked.clear();
@@ -375,9 +432,10 @@ class M4DtrTempRun {
 }
 
 /// The quick bonus (~85 % of a thorough play, rounded to 10 s). A hot job:
-/// tool 1500 + aim 2000 + read 3000 + find (two looks) 4000 + decide 6000
-/// + reason 8200 ≈ 24700; a normal one ≈ 14700. Three jobs (one may be
-/// normal) ≈ 64000–74000, + the coworker ≈ 9000 → ~80000; 85 % ≈ 68000 → 70 s.
+/// tool 1500 + aim 2000 + read 3000 + find (two looks + the flag) 5000 +
+/// decide 6000 + reason 8200 ≈ 25700; a normal one ≈ 14700. Three jobs (one
+/// may be normal) ≈ 66000–77000, + the coworker ≈ 9000 → ~83000; 85 % ≈
+/// 70500 → 70 s.
 const kM4DtrTempQuickMs = 70000;
 
 @immutable
@@ -443,7 +501,14 @@ class _DtRunPage extends ConsumerStatefulWidget {
   ConsumerState<_DtRunPage> createState() => _DtRunPageState();
 }
 
-class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStrikeOut, ReasonTable, CoworkerMoment {
+/// Test hook: the page's play gate (scene taps and the HUD count only while
+/// it is true — never in the praise window or while a card or deck is up).
+abstract interface class M4DtrTempPlayGate {
+  @visibleForTesting
+  bool get debugCanPlay;
+}
+
+class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStrikeOut, ReasonTable, CoworkerMoment implements M4DtrTempPlayGate {
   final _scoreKey = GlobalKey();
   late final M4DtrTempRun _run = M4DtrTempRun(m4DtrTempDeal(widget.rng));
   final _clock = Stopwatch();
@@ -487,6 +552,14 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// Gesture hints: the controller (taps on nothing) and the keys of the
+  /// things the hand sweeps over.
+  final _hints = IdleHintController();
+  final _touchKey = GlobalKey();
+  final _toolKeys = {M4DtrTempTool.ir: GlobalKey(), M4DtrTempTool.hand: GlobalKey()};
+  final _readKeys = [GlobalKey(), GlobalKey()];
+  final _flagKey = GlobalKey();
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -525,7 +598,10 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
     if (!_muted) unawaited(ZlFx.cue(file, volume: volume, muted: false));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_actOpen;
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_actOpen;
+
+  @override
+  bool get debugCanPlay => _canPlay;
 
   void _start() {
     _clock.start();
@@ -550,6 +626,8 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
   // --- 1. measure -----------------------------------------------------------------
   Future<void> _pick(M4DtrTempTool t) async {
     if (!_canPlay || _run.phase != M4DtrTempPhase.measure) return;
+    // His job: the pick waits for him (he can't be skipped by a fast tap).
+    if (holdForCoworker()) return;
     _hush();
     final m = _run.pick(t);
     if (m != null) {
@@ -566,13 +644,14 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
   }
 
   // --- 2. aim / 4. find -------------------------------------------------------------
-  Future<void> _tapScene(Offset p) async {
+  void _tapScene(Offset p) {
     if (!_canPlay) return;
     final geo = _geoNow;
     switch (_run.phase) {
       case M4DtrTempPhase.aim:
         if (!geo.onTank(p)) {
           HapticFeedback.selectionClick();
+          _hints.missTap();
           unawaited(_sayChain([M4DtrTempLines.missAim]));
           return;
         }
@@ -587,26 +666,41 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
         _askStep();
       case M4DtrTempPhase.find:
         final l = geo.spotAt(p);
-        if (l == null) return;
+        if (l == null || !_run.look(l)) {
+          _hints.missTap();
+          return;
+        }
         HapticFeedback.selectionClick();
         _cue('sounds/intro/click.ogg', volume: 0.5);
-        final cause = _run.check(l);
         setState(() {
           _look = l;
           _wake++;
         });
-        if (!cause) {
-          unawaited(_sayChain([M4DtrTempLines.allFine]));
-          return;
-        }
-        _hush();
-        final idx = _run.index;
-        await _sayChain([M4DtrTempLines.askAct]);
-        if (!mounted || _ended || _run.index != idx || _run.phase != M4DtrTempPhase.act || _actOpen) return;
-        _openAct();
+        // The same words for every spot: the close-up is the evidence.
+        unawaited(_sayChain([M4DtrTempLines.askLook]));
       case M4DtrTempPhase.measure || M4DtrTempPhase.read || M4DtrTempPhase.act || M4DtrTempPhase.done:
-        break;
+        _hints.missTap();
     }
+  }
+
+  /// "এটাই কারণ" under the close-up open now.
+  Future<void> _flag(Offset origin) async {
+    final l = _look;
+    if (!_canPlay || _run.phase != M4DtrTempPhase.find || l == null || l == M4DtrTempLook.ir) return;
+    _hush();
+    HapticFeedback.mediumImpact();
+    final m = _run.flag(l);
+    setState(() => _wake++);
+    if (m != null) {
+      unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
+      await _slip(m);
+      return;
+    }
+    _cue('sounds/intro/confirm.ogg', volume: 0.5);
+    final idx = _run.index;
+    await _sayChain([M4DtrTempLines.askAct]);
+    if (!mounted || _ended || _run.index != idx || _run.phase != M4DtrTempPhase.act || _actOpen) return;
+    _openAct();
   }
 
   // --- 3. read --------------------------------------------------------------------
@@ -633,7 +727,7 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
   // --- 5. decide ------------------------------------------------------------------
   void _openAct() {
     setState(() {
-      _actOpts = dealChoices(M4DtrTempLines.actRight(_job.kase), M4DtrTempLines.actWrong, widget.rng);
+      _actOpts = M4DtrTempLines.dealAct(_job.kase, widget.rng);
       _actWrong.clear();
       _actPicked = null;
       _actOpen = true;
@@ -715,8 +809,9 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("touch it by hand") fits only before the tool is picked.
     if (_ended || _run.index != _run.deal.callAt || _run.phase != M4DtrTempPhase.measure) return null;
-    if (_intro || _busy || _card != null || reasonOpen) return false;
+    if (_intro || _busy || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -823,13 +918,16 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
     switch (_cardTone) {
       case MistakeTone.slip:
         _hush();
+        final was = _card;
         setState(() => _card = null);
-        // The guide put it right; the job goes on (or is done).
+        // The guide put it right; the job goes on (or is done). After a wrong
+        // cause the search goes on with no hint of where.
         if (_run.phase == M4DtrTempPhase.done) {
           _jobDone();
         } else {
           setState(() => _look = null);
-          unawaited(_sayChain([if (_run.phase == M4DtrTempPhase.find) M4DtrTempLines.putRightHot else M4DtrTempLines.ask(_run.phase)]));
+          final line = _run.phase == M4DtrTempPhase.find && was != M4DtrTempMistakes.wrongCause ? M4DtrTempLines.putRightHot : M4DtrTempLines.ask(_run.phase);
+          unawaited(_sayChain([line]));
         }
       case MistakeTone.nearMiss:
         _hush();
@@ -968,8 +1066,9 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
         child: Semantics(
           label: M4DtrTempLines.sceneLabel,
           child: GestureDetector(
+            key: _touchKey,
             behavior: HitTestBehavior.opaque,
-            onTapUp: (d) => unawaited(_tapScene(d.localPosition)),
+            onTapUp: (d) => _tapScene(d.localPosition),
           ),
         ),
       ),
@@ -1002,6 +1101,41 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
     ];
   }
 
+  // --- gesture hints (how to touch, never what) -------------------------------
+  /// The tool stand's order for this job.
+  List<M4DtrTempTool> get _toolOrder => _job.irLeft ? const [M4DtrTempTool.ir, M4DtrTempTool.hand] : const [M4DtrTempTool.hand, M4DtrTempTool.ir];
+
+  /// A design-px rect of the scene on screen (the scene sits in a FittedBox).
+  Rect? _sceneRect(Rect r) {
+    final box = _touchKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight));
+  }
+
+  /// Measure and read: a sweep over both buttons; aim: the tank is the one
+  /// way forward (the guide asks for it); find: a sweep over every spot (and
+  /// the flag once a close-up is open). Decks have their own sweep.
+  HintSpec? _hint() {
+    final geo = _geoNow;
+    switch (_run.phase) {
+      case M4DtrTempPhase.measure:
+        return HintSpec.sweepOver([for (final t in _toolOrder) _toolKeys[t]!]);
+      case M4DtrTempPhase.aim:
+        final r = _sceneRect(geo.tank);
+        return r == null ? null : HintSpec.tap(r.center);
+      case M4DtrTempPhase.read:
+        return HintSpec.sweepOver(_readKeys);
+      case M4DtrTempPhase.find:
+        final rects = [
+          for (final l in M4DtrTempGeo.spots) ?_sceneRect(geo.spotRect(l)),
+          if (_look != null && _look != M4DtrTempLook.ir) ?HintSpec.globalRectOf(_flagKey),
+        ];
+        return rects.length < 2 ? null : HintSpec.sweep(rects);
+      case M4DtrTempPhase.act || M4DtrTempPhase.done:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1013,6 +1147,8 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
     final phase = _run.phase;
     final look = _look;
     final showLook = playing && look != null && _card == null && !reasonOpen && tablePending == 0 && !coworkerOnScreen;
+    final flagUp = handsOn && phase == M4DtrTempPhase.find && look != null && look != M4DtrTempLook.ir;
+    final hintWaiting = handsOn && _canPlay && phase != M4DtrTempPhase.act && phase != M4DtrTempPhase.done;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1040,6 +1176,10 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: '${_run.index}-${phase.name}-${look?.name}',
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen && !showLook)
                 Positioned(
@@ -1065,19 +1205,16 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _ToolButton(
-                        icon: Icons.sensors_rounded,
-                        label: M4DtrTempLines.ir,
-                        enabled: _canPlay,
-                        onTap: () => unawaited(_pick(M4DtrTempTool.ir)),
-                      ),
-                      const SizedBox(width: 18),
-                      _ToolButton(
-                        icon: Icons.back_hand_rounded,
-                        label: M4DtrTempLines.hand,
-                        enabled: _canPlay,
-                        onTap: () => unawaited(_pick(M4DtrTempTool.hand)),
-                      ),
+                      for (final (i, tool) in _toolOrder.indexed) ...[
+                        if (i > 0) const SizedBox(width: 18),
+                        _ToolButton(
+                          key: _toolKeys[tool],
+                          icon: tool == M4DtrTempTool.ir ? Icons.sensors_rounded : Icons.back_hand_rounded,
+                          label: tool == M4DtrTempTool.ir ? M4DtrTempLines.ir : M4DtrTempLines.hand,
+                          enabled: _canPlay,
+                          onTap: () => unawaited(_pick(tool)),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1089,14 +1226,28 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
                   bottom: pad.bottom + 14,
                   child: Row(
                     children: [
+                      // Both calls look the same (neither is the "main" one).
                       Expanded(
-                        child: DoBigButton(label: M4DtrTempLines.normal, filled: false, onDark: true, onTapUp: (d) => unawaited(_judge(false, d.globalPosition))),
+                        child: DoBigButton(key: _readKeys[0], label: M4DtrTempLines.normal, filled: false, onDark: true, onTapUp: (d) => unawaited(_judge(false, d.globalPosition))),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: DoBigButton(label: M4DtrTempLines.over, filled: true, onTapUp: (d) => unawaited(_judge(true, d.globalPosition))),
+                        child: DoBigButton(key: _readKeys[1], label: M4DtrTempLines.over, filled: false, onDark: true, onTapUp: (d) => unawaited(_judge(true, d.globalPosition))),
                       ),
                     ],
+                  ),
+                ),
+              if (flagUp)
+                Positioned(
+                  key: const ValueKey('hud-flag'),
+                  left: 0,
+                  right: 0,
+                  bottom: pad.bottom + 14,
+                  child: Center(
+                    child: SizedBox(
+                      width: 200,
+                      child: DoBigButton(key: _flagKey, label: M4DtrTempLines.flagCause, filled: false, onDark: true, onTapUp: (d) => unawaited(_flag(d.globalPosition))),
+                    ),
                   ),
                 ),
               if (deckUp)
@@ -1245,7 +1396,7 @@ class _DocketChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool enabled;

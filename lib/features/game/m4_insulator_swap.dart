@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -59,7 +60,8 @@ export 'm4_insulator_swap_world.dart' show M4InsulatorSwapKind, M4InsulatorSwapD
 // not a slip (it is not less safe): the slip is the spanner on an insulator
 // whose conductor is still bound, or free and unsupported.
 //
-// Hands on (tools under the scene; tap the faulty phase with a tool):
+// Hands on (tools under the scene, shuffled each pole and never laid out in
+// the order of use; tap the faulty phase with a tool):
 //   pin  — প্লায়ার্স · দড়ি · স্প্যানার · নতুন ইনসুলেটর (a tray of three to
 //          inspect: one cracked, one punctured, one sound) · বাইন্ডিং তার;
 //   disc — কাম-অ্যালং · টার্ন-বাকেল (take the load up / give it back) ·
@@ -70,12 +72,18 @@ export 'm4_insulator_swap_world.dart' show M4InsulatorSwapKind, M4InsulatorSwapD
 // conductor, a damaged spare picked, the new insulator on a rusted pin, the
 // load given back with a gap or without the split pin, listening to the
 // coworker ("বাঁধন একটু ঢিলে থাকুক, চলবে"). Three slips strike the level out.
+// A wrong flag (a tool on a sound insulator) costs a slip and the card stays
+// neutral (it never names which one is faulty).
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m4_insulator_swap_world.dart), corner guide, ◆ on the table →
 // "কেন …?" → the next pole by itself; the careless coworker once a play on a
-// pin pole, as the binding begins. Voice: the guide by device TTS; the
-// coworker's push by device TTS until recorded (his exit is a recorded clip).
+// pin pole, as the binding begins (the binding tap waits for him:
+// holdForCoworker, so a fast play still meets him; he never comes once it is
+// bound). Nothing takes a touch in the praise window (tableBusy). Gesture
+// hints: a sweep over the tools, the tray's spares or the three phases —
+// never the answer. Voice: the guide by device TTS; the coworker's push by
+// device TTS until recorded (his exit is a recorded clip).
 
 // ============================================================================
 // Content
@@ -236,7 +244,7 @@ abstract final class M4InsulatorSwapMistakes {
 
   static const wrongOne = DoMistake(
     key: '4.1/m4_insulator_swap/sound-one',
-    textBn: 'এটা তো ভালো ইনসুলেটর! আগে ভালো করে দেখুন — কোনটায় ফাটল বা পাংচারের পোড়া দাগ, সেটাই বদলান।',
+    textBn: 'আগে নষ্টটা চিনে নিন! তিনটে ইনসুলেটরই ভালো করে দেখুন — যেটায় ফাটল বা পাংচারের পোড়া দাগ, শুধু সেটাই বদলান।',
     art: '$_dir/find_bad.svg',
   );
   static const unbindFirst = DoMistake(
@@ -292,11 +300,51 @@ abstract final class M4InsulatorSwapMistakes {
 
 @immutable
 class M4InsulatorSwapDeal {
-  const M4InsulatorSwapDeal({required this.poles, required this.callAt});
+  const M4InsulatorSwapDeal({required this.poles, required this.callAt, this.toolOrders});
   final List<M4InsulatorSwapPole> poles;
 
   /// The pin pole the careless coworker comes to.
   final int callAt;
+
+  /// The tool row of each pole, shuffled (null = the plain set, for tests).
+  final List<List<M4InsulatorSwapTool>>? toolOrders;
+
+  /// The tool row under the scene on pole [i] (clamped to the last pole, so
+  /// the frames after the last pole while the level finishes never throw).
+  List<M4InsulatorSwapTool> toolsAt(int i) {
+    final j = i.clamp(0, poles.length - 1);
+    final o = toolOrders;
+    return o != null && j < o.length ? o[j] : m4InsulatorSwapTools(poles[j].kind);
+  }
+}
+
+/// The orders of use a tool row must never show (the pin's first two steps
+/// go either way round).
+List<List<M4InsulatorSwapTool>> m4InsulatorSwapUseOrders(M4InsulatorSwapKind k) => k == M4InsulatorSwapKind.pin
+    ? const [
+        [M4InsulatorSwapTool.pliers, M4InsulatorSwapTool.rope, M4InsulatorSwapTool.spanner, M4InsulatorSwapTool.spare, M4InsulatorSwapTool.bindWire],
+        [M4InsulatorSwapTool.rope, M4InsulatorSwapTool.pliers, M4InsulatorSwapTool.spanner, M4InsulatorSwapTool.spare, M4InsulatorSwapTool.bindWire],
+      ]
+    : const [
+        [M4InsulatorSwapTool.comeAlong, M4InsulatorSwapTool.turnbuckle, M4InsulatorSwapTool.pliers, M4InsulatorSwapTool.spare, M4InsulatorSwapTool.splitPin],
+      ];
+
+bool _sameOrder(List<M4InsulatorSwapTool> a, List<M4InsulatorSwapTool> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
+/// A tool row for [k] in a random order that is never an order of use.
+List<M4InsulatorSwapTool> m4InsulatorSwapShuffledTools(M4InsulatorSwapKind k, math.Random rng) {
+  final use = m4InsulatorSwapUseOrders(k);
+  final row = [...m4InsulatorSwapTools(k)];
+  do {
+    row.shuffle(rng);
+  } while (use.any((u) => _sameOrder(u, row)));
+  return List.unmodifiable(row);
 }
 
 /// Three poles: pin and tension both in every play; the faulty phase, its
@@ -333,10 +381,14 @@ M4InsulatorSwapDeal m4InsulatorSwapDeal(math.Random rng) {
     for (final (i, p) in poles.indexed)
       if (p.kind == M4InsulatorSwapKind.pin) i,
   ];
-  return M4InsulatorSwapDeal(poles: poles, callAt: pins[rng.nextInt(pins.length)]);
+  final callAt = pins[rng.nextInt(pins.length)];
+  // Drawn last so the poles of a seed stay as they were.
+  final toolOrders = [for (final p in poles) m4InsulatorSwapShuffledTools(p.kind, rng)];
+  return M4InsulatorSwapDeal(poles: poles, callAt: callAt, toolOrders: toolOrders);
 }
 
-/// The tools for [k], in the order they sit under the scene (not the order of use).
+/// The tools for [k] (the set; the row under the scene is shuffled per pole:
+/// [M4InsulatorSwapDeal.toolsAt]).
 List<M4InsulatorSwapTool> m4InsulatorSwapTools(M4InsulatorSwapKind k) => k == M4InsulatorSwapKind.pin
     ? const [M4InsulatorSwapTool.pliers, M4InsulatorSwapTool.rope, M4InsulatorSwapTool.spanner, M4InsulatorSwapTool.spare, M4InsulatorSwapTool.bindWire]
     : const [M4InsulatorSwapTool.comeAlong, M4InsulatorSwapTool.turnbuckle, M4InsulatorSwapTool.pliers, M4InsulatorSwapTool.spare, M4InsulatorSwapTool.splitPin];
@@ -358,9 +410,6 @@ class M4InsulatorSwapRun {
   var spareHeld = false;
   final Set<int> setAside = {};
   var fixed = false;
-
-  /// The page holds the binding while the coworker is on his way.
-  var holdBind = false;
 
   // Pin pole.
   var bound = true;
@@ -480,7 +529,7 @@ class M4InsulatorSwapRun {
         tool = M4InsulatorSwapTool.none;
         _tag(M4InsulatorSwapLines.caughtCheck);
       case M4InsulatorSwapTool.bindWire:
-        if (!newOn || newBound || holdBind) return null;
+        if (!newOn || newBound) return null;
         newBound = true;
         roped = false;
         fixed = true;
@@ -571,7 +620,6 @@ class M4InsulatorSwapRun {
     spareHeld = false;
     setAside.clear();
     fixed = false;
-    holdBind = false;
     bound = true;
     roped = false;
     oldOff = false;
@@ -701,8 +749,15 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
   int? _mark;
   int _totalDelta = 0;
   int _wake = 0;
-  var _coworkerArmed = false;
+  /// The coworker was scheduled on his pole (once a play).
+  var _coworkerSent = false;
   var _stamp = false;
+
+  // Gesture hints: how to interact, never the answer.
+  final _hints = IdleHintController();
+  final _toolKeys = {for (final t in M4InsulatorSwapTool.values) t: GlobalKey()};
+  final _spareKeys = [for (var j = 0; j < 3; j++) GlobalKey()];
+  M4InsulatorSwapGeo? _geoNow;
 
   var _freeze = false;
   Completer<void>? _frozen;
@@ -750,7 +805,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
     _startPole();
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.fixed && !_freeze;
+  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !tableBusy && !coworkerOpen && !_run.fixed && !_freeze;
 
   String get _task {
     final r = _run;
@@ -797,7 +852,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
   }
 
   void _tapScene(Offset p, M4InsulatorSwapGeo geo, Offset global) {
-    if (_intro || _ended || _card != null || reasonOpen || _freeze || _run.fixed) return;
+    if (_intro || _ended || _card != null || reasonOpen || tableBusy || _freeze || _run.fixed) return;
     // While he talks, going on to bind it tight with the wire refuses him.
     if (coworkerOpen) {
       if (coworkerChoiceUp && _run.tool == M4InsulatorSwapTool.bindWire && geo.phaseHit(_run.pole.kind, _run.pole.bad).contains(p)) {
@@ -807,14 +862,29 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
     }
     for (var i = 0; i < 3; i++) {
       if (!geo.phaseHit(_run.pole.kind, i).contains(p)) continue;
-      if (_run.tool == M4InsulatorSwapTool.none) return;
+      if (_run.tool == M4InsulatorSwapTool.none) {
+        _hints.missTap();
+        return;
+      }
       _act(i, global);
       return;
     }
+    _hints.missTap();
+  }
+
+  /// The binding tap on the new insulator: the decisive step he is dealt on.
+  bool _isBindTap(int i) {
+    final r = _run;
+    return r.isPin && r.tool == M4InsulatorSwapTool.bindWire && i == r.pole.bad && r.newOn && !r.newBound;
   }
 
   void _act(int i, Offset global) {
     final r = _run;
+    // On his pole the binding waits for him: a fast play still meets him.
+    if (_isBindTap(i) && holdForCoworker()) {
+      setState(() => _wake++);
+      return;
+    }
     final before = (r.bound, r.roped, r.oldOff, r.pinNew, r.newOn, r.rigOn, r.takenUp, r.discOut, r.newDisc, r.pinned);
     final m = r.tapPhase(i);
     setState(() => _wake++);
@@ -834,9 +904,8 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
     _cue(r.oldOff || r.discOut ? 'sounds/intro/impact_metal.ogg' : 'sounds/learn/tag_slap.wav', volume: 0.5);
     HapticFeedback.lightImpact();
     // The new insulator is on the pin: on his pole, the coworker comes now.
-    if (r.isPin && r.newOn && !_coworkerArmed && r.index == r.deal.callAt) {
-      _coworkerArmed = true;
-      r.holdBind = true;
+    if (r.isPin && r.newOn && !_coworkerSent && r.index == r.deal.callAt) {
+      _coworkerSent = true;
       scheduleCoworker();
     }
     final changedStep = before.$3 != after.$3 || before.$5 != after.$5 || before.$8 != after.$8 || before.$9 != after.$9;
@@ -907,8 +976,10 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt || _run.newBound || _run.fixed) return null;
-    if (_intro || _card != null || reasonOpen) return false;
+    // His push (leave the binding loose) fits only while the new insulator
+    // is on and not yet bound.
+    if (_ended || _run.index != _run.deal.callAt || !_run.isPin || !_run.newOn || _run.newBound || _run.fixed) return null;
+    if (_intro || _card != null || reasonOpen || tableBusy || _freeze) return false;
     return true;
   }
 
@@ -919,7 +990,6 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
-    _run.holdBind = false;
     if (!held) {
       // Listened to him: a slip; the binding is still to be done right.
       final m = _run.listened();
@@ -1099,7 +1169,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M4InsulatorSwapGeo.forScene(m.height, m.inset);
+    final geo = _geoNow = M4InsulatorSwapGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final tb = geo.trainee;
@@ -1169,6 +1239,27 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
     ];
   }
 
+  /// The gesture hint for now: a sweep over the spares on the tray, over the
+  /// three phases with a tool in hand, or over the tool row — never the answer.
+  HintSpec? _hint() {
+    final r = _run;
+    if (r.done) return null;
+    if (r.trayOpen) {
+      final open = [
+        for (var j = 0; j < 3; j++)
+          if (!r.setAside.contains(j)) _spareKeys[j],
+      ];
+      // A sweep over one card would point at it.
+      return open.length < 2 ? null : HintSpec.sweepOver(open);
+    }
+    if (r.tool != M4InsulatorSwapTool.none) {
+      final g = _geoNow;
+      if (g == null) return null;
+      return HintSpec.sweep([for (var i = 0; i < 3; i++) g.phaseHit(r.pole.kind, i)], space: HintSpace.scene);
+    }
+    return HintSpec.sweepOver([for (final t in r.deal.toolsAt(r.index)) _toolKeys[t]!]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1176,7 +1267,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.fixed && !deckUp && !coworkerOpen && _card == null;
+    final handsOn = playing && !_run.done && !_run.fixed && !deckUp && !coworkerOpen && _card == null;
     final p = _run.pole;
     return PopScope(
       canPop: false,
@@ -1205,6 +1296,10 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && !tableBusy,
+            hintKey: '${_run.index}-${_run.tool.name}-${_run.trayOpen}-${_run.setAside.length}-$_task',
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1224,6 +1319,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
                     kind: p.kind,
                     spares: p.spares,
                     setAside: {..._run.setAside},
+                    keys: _spareKeys,
                     quiet: quiet,
                     onPick: _pickSpare,
                   ),
@@ -1237,8 +1333,9 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      for (final t in m4InsulatorSwapTools(p.kind))
+                      for (final t in _run.deal.toolsAt(_run.index))
                         _ToolButton(
+                          key: _toolKeys[t],
                           icon: _toolIcon(t),
                           label: _toolLabel(t, p.kind),
                           on: _run.tool == t || (t == M4InsulatorSwapTool.spare && _run.trayOpen),
@@ -1375,10 +1472,13 @@ class _DocketChip extends StatelessWidget {
 
 /// The spares on a cloth on the cross-arm: three to inspect, one sound.
 class _SpareTray extends StatelessWidget {
-  const _SpareTray({required this.kind, required this.spares, required this.setAside, required this.quiet, required this.onPick});
+  const _SpareTray({required this.kind, required this.spares, required this.setAside, required this.keys, required this.quiet, required this.onPick});
   final M4InsulatorSwapKind kind;
   final List<M4InsulatorSwapDamage?> spares;
   final Set<int> setAside;
+
+  /// One key per spare (the gesture hint's sweep).
+  final List<GlobalKey> keys;
   final bool quiet;
   final void Function(int j, Offset global) onPick;
 
@@ -1404,6 +1504,7 @@ class _SpareTray extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Semantics(
+                    key: keys[j],
                     button: true,
                     label: '${M4InsulatorSwapLines.spare} ${j + 1}',
                     excludeSemantics: true,
@@ -1436,7 +1537,7 @@ class _SpareTray extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;

@@ -87,3 +87,6 @@ key.properties
 /tool/hourly_answer_keys.json
 /tool/hourly_answer_keys.sql
 
+
+# Flutter run slots for parallel agents (tool/flk.ps1)
+.flk/

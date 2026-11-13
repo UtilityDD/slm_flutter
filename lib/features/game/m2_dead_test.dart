@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -54,17 +55,28 @@ export 'm2_dead_test_world.dart' show DeadGeo, DeadPoint, DeadSite, deadPointBn;
 // Deadly (Module 2 ladder row): touching a line that has voltage; touching on
 // the word of an unproven meter (no successful proof before the tests, or the
 // proof after them failed). Slips: a pair left untested, no proof after the
-// tests, a ghost reading never checked with a load. Three slips strike out.
-// Stopping on a dead line is not scored (stopping is always allowed): the
-// guide says the lesson's rule and the round stays (as sky_read).
+// tests, a ghost reading never checked with a load, a stop without a voltage
+// reading (a needless stop on a dead or ghost line, or a guess with no test),
+// and listening to the coworker. Three slips strike out. A stop counts once
+// the meter read the line's voltage (proven or not: a meter cannot fake
+// 230 V, and stopping in front of real voltage is never wrong); any other
+// stop is a slip whose card says the rule without telling what the line is,
+// and the round stays.
 //
-// The careless coworker comes once a play, right after the first 0.0 on his
-// round: "মিটারে শূন্য দেখাচ্ছে, হাত দাও!" — listening = touching now.
+// The careless coworker comes once a play, right after the first 0.0 on the
+// circuit on his round: "মিটারে শূন্য দেখাচ্ছে, হাত দাও!". Every hands-on
+// control waits for him once he is due (holdForCoworker), so the 0.0 he points
+// at is still on the display and a fast play cannot skip him. Listening = a
+// slip (playbook row 8); the hand does not go on the line, the round stays.
+// His moment passes (he does not come) once a real voltage was read this round
+// or the test is already complete.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m2_dead_test_world.dart), corner guide, ◆ on the table → "কেন …?" →
-// the next round by itself. Voice: the guide's lines by device TTS; the
-// coworker's push by TTS until recorded (his exit line is recorded).
+// the next round by itself, gesture hints (a sweep over the terminals, the
+// proving unit, the tools and both decisions while the level waits). Voice: the guide's lines by device TTS;
+// the coworker's push is silent with its caption held until recorded (his exit
+// line is recorded).
 //
 // Flagged to the owner: "live-dead-live" (prove → test → prove) is from the
 // standards (HSE GS38; NFPA 70E 120.5), not the lesson text; the proving unit
@@ -203,30 +215,39 @@ abstract final class DeadLines {
     'সাথী বলল লাইন বন্ধ, তাই আর কিছু ভাবিনি',
     'তাড়া আছে, তাই একটা জোড়া দেখেই নিলাম',
     'অল্প ভোল্টেজ দেখালে ও সবসময় ভূতুড়েই হয়',
+    // Words of the right cards (প্রমাণ, টেস্ট) on wrong cards too.
+    'একবার প্রমাণ করেছি, শেষে আবার লাগে না',
+    'একটা জোড়ায় টেস্ট করেছি, ওতেই সব প্রমাণ',
   ];
-  static const liveWhy = ['প্রমাণিত মিটারে ভোল্টেজ, লোডেও কমেনি', 'সুইচ বন্ধ হলেও মিটার বলছে লাইনে ভোল্টেজ', 'ভোল্টেজ স্থির, লোডেও শূন্য হলো না — আসল'];
+  static const liveWhy = ['মিটারে পুরো ভোল্টেজ, লোড দিলেও কমেনি', 'সুইচ বন্ধ হলেও মিটার বলছে লাইনে ভোল্টেজ', 'ভোল্টেজ স্থির, লোডেও শূন্য হলো না — আসল'];
   static const stopExcuses = [
     'মিটারের ব্যাটারি বাঁচাতে কাজ থামিয়ে দিলাম',
-    'আজ মন ভালো নেই, তাই কাজটা বন্ধ রাখলাম',
+    'প্রমাণিত মিটার লাগে না, আন্দাজেই থামালাম',
     'সুপারভাইজার আসেননি, তাই কাজ থামালাম',
-    'রিডিং দেখার আগেই বুঝেছিলাম, তাই থামলাম',
-    'চা খাওয়ার সময় হয়ে গেছে, তাই থামালাম',
+    // Words of the right cards (ভোল্টেজ, মিটার, লোড) on wrong cards too.
+    'ভোল্টেজ না মেপেই বুঝেছিলাম, তাই থামলাম',
+    'মিটার প্রমাণের ঝামেলা না করেই থামলাম',
+    'লোড দিয়ে দেখার আগেই ভয়ে কাজ থামালাম',
+    'রিডিং স্থির হয়নি, তাই আসল ভেবে থামালাম',
   ];
 
   static List<String> whyRight(DeadCase c) => c.live ? liveWhy : (c.line == DeadLine.ghost ? [...deadWhy, ghostWhy] : deadWhy);
   static List<String> whyWrong(DeadCase c) => c.live ? stopExcuses : touchMyths;
-
-  /// A stop on a dead line: not scored (stopping is always allowed); the
-  /// guide says the lesson's rule and the round stays.
-  static const needlessDead = 'থামা আপনার অধিকার। তবে প্রমাণিত মিটারে সব জোড়ায় শূন্য — তবেই লাইন ডেড।';
-  static const needlessGhost = 'থামা আপনার অধিকার। তবে ভূতুড়ে ভোল্টেজ আসল নয় — লোড দিলে শূন্য হয়ে যায়।';
 
   /// The careless coworker: one zero is enough for him.
   static const coworker = CoworkerScript(
     line: 'মিটারে শূন্য দেখাচ্ছে, হাত দাও! আর মাপার কী আছে?',
     exitLine: 'হুঁ! যা খুশি করুন।',
     right: ['না, সব জোড়া মেপে আবার প্রমাণ করব', 'না, আগে-পরে প্রমাণ ছাড়া শূন্য মানি না', 'একটা শূন্যে হবে না, পুরো টেস্ট আগে'],
-    wrong: ['ঠিক, শূন্য মানেই লাইন ডেড, হাত দিই', 'আচ্ছা, বাকি জোড়া মাপার দরকার নেই', 'ঠিক আছে, মিটার তো ঠিকই আছে নিশ্চয়ই', 'হ্যাঁ, সুইচ বন্ধ, তাই আর ভয় নেই', 'তাড়া আছে, এখনই কাজ শুরু করে দিই'],
+    wrong: [
+      'ঠিক, শূন্য মানেই লাইন ডেড, হাত দিই',
+      'আচ্ছা, বাকি জোড়া মাপার দরকার নেই',
+      'ঠিক আছে, মিটার তো ঠিকই আছে নিশ্চয়ই',
+      'হ্যাঁ, সুইচ বন্ধ, তাই আর ভয় নেই',
+      'তাড়া আছে, এখনই কাজ শুরু করে দিই',
+      'না, প্রমাণ তো একবার হয়েছে, হাত দিই',
+      'না, পুরো টেস্টের সময় নেই, হাত দিই',
+    ],
     asks: ['ও বলছে হাত দিতে। আপনি কী করবেন?', 'একটা শূন্যে ভরসা করবেন?', 'হাত দেবেন, না টেস্ট শেষ করবেন?'],
   );
 
@@ -283,7 +304,26 @@ abstract final class DeadMistakes {
     art: '$_dir/ghost.svg',
   );
 
-  static const all = [touchLive, unproven, missedPair, noReprove, ghostUnchecked];
+  /// A stop without a voltage reading: a needless stop on a dead or ghost
+  /// line, or a guess before any test. The text says the rule, never what
+  /// this line is (the round stays).
+  static const needlessStop = DoMistake(
+    key: '2.2/dead/needless-stop',
+    textBn: 'কাজ বন্ধের সিদ্ধান্ত রিডিং দেখে। মিটারে ভোল্টেজ পেলেই থামুন; প্রমাণ, সব জোড়ায় শূন্য, আবার প্রমাণ হলে আর্থ দিয়ে কাজ।',
+    art: '$_dir/needless_stop.svg',
+    lessonPoint: 1,
+  );
+
+  /// Listened to the coworker (one zero is enough): the slip (playbook row 8);
+  /// the hand does not go on the line and the round stays.
+  static const listened = DoMistake(
+    key: '2.2/dead/listened',
+    textBn: 'সাথীর কথায় একটা শূন্য দেখেই হাত দিতে রাজি হলেন। একটা শূন্য কিছুই প্রমাণ করে না — মিটার প্রমাণ, সব জোড়ায় টেস্ট, আবার প্রমাণ।',
+    art: '$_dir/listened.svg',
+    lessonPoint: 1,
+  );
+
+  static const all = [touchLive, unproven, missedPair, noReprove, ghostUnchecked, needlessStop, listened];
 }
 
 @immutable
@@ -322,10 +362,13 @@ DeadDeal dealDead(math.Random rng) {
         );
       }(),
   ];
-  // He needs a 0.0 on the circuit: never the house board that is live.
+  // He needs a 0.0 on the circuit before the test is done: never the house
+  // board that is live (P–N reads 230) or has the ghost (P–N reads the ghost;
+  // its only 0.0 is the load check, which may come after the proof again, so
+  // he would never come). An LT box always has a 0.0 pair.
   final can = [
     for (final (i, c) in cases.indexed)
-      if (!(c.site == DeadSite.single && c.live)) i,
+      if (!(c.site == DeadSite.single && c.line != DeadLine.dead)) i,
   ];
   return DeadDeal(cases: cases, callAt: can[rng.nextInt(can.length)]);
 }
@@ -370,6 +413,10 @@ class DeadRun {
   var ghostSeen = false;
   var ghostChecked = false;
   var loadUsed = false;
+
+  /// The meter read the line's real voltage on the circuit this round, proven
+  /// or not (a meter cannot fake 230 V; a stop counts only then).
+  var liveRead = false;
   int _circuitTests = 0;
   DeadPair? lastPair;
 
@@ -389,6 +436,10 @@ class DeadRun {
   /// The +5: a bad meter caught and swapped, or a reading checked with a load.
   bool get thorough => (swapped && current.fault != DeadFault.none) || ghostChecked || (current.live && loadUsed);
 
+  /// The whole test is done: every pair on a proven meter, proven again, and
+  /// a ghost checked with a load (the coworker's push no longer fits).
+  bool get complete => valid.containsAll(current.pairs) && reproven && (current.line != DeadLine.ghost || ghostChecked);
+
   void _startRound() {
     meterOk = current.fault != DeadFault.cutLead;
     swapped = false;
@@ -399,6 +450,7 @@ class DeadRun {
     ghostSeen = false;
     ghostChecked = false;
     loadUsed = false;
+    liveRead = false;
     _circuitTests = 0;
     lastPair = null;
     shown = false;
@@ -427,6 +479,7 @@ class DeadRun {
     final c = current;
     final v = meterOk ? c.truth(p) : 0;
     if (proven) valid.add(p);
+    if (v == kLiveVolts) liveRead = true;
     reproven = false;
     lastPair = p;
     final ghost = meterOk && c.line == DeadLine.ghost && p == c.ghostPair;
@@ -443,7 +496,9 @@ class DeadRun {
     loadUsed = true;
     final c = current;
     if (meterOk && c.line == DeadLine.ghost && p == c.ghostPair) ghostChecked = true;
-    return DeadReading(whereBn: p.bn, volts: meterOk ? c.truthLoaded(p) : 0, loaded: true);
+    final v = meterOk ? c.truthLoaded(p) : 0;
+    if (v == kLiveVolts) liveRead = true;
+    return DeadReading(whereBn: p.bn, volts: v, loaded: true);
   }
 
   /// The other meter from the bag (good): it has to be proven again.
@@ -462,15 +517,19 @@ class DeadRun {
     if (!caught.contains(t)) caught.add(t);
   }
 
-  /// Touch (dead — earth it and work) or stop and report. A stop on a dead
-  /// line is not scored: no mistake, [shown] stays false (see [needless]).
+  /// Touch (dead — earth it and work) or stop and report. A stop counts only
+  /// on a live line whose voltage the meter read ([liveRead], proven or not);
+  /// any other stop (a dead or ghost line, or no reading yet) is a slip
+  /// ([DeadMistakes.needlessStop], counted in [needless]) and the round stays
+  /// ([shown] stays false).
   DoMistake? decide({required bool touch}) {
     if (!_open) return null;
     final c = current;
     if (!touch) {
-      if (!c.live) {
+      if (!c.live || !liveRead) {
         needless++;
-        return null;
+        slips++;
+        return DeadMistakes.needlessStop;
       }
       shown = true;
       _tag(DeadLines.caughtLive);
@@ -496,6 +555,14 @@ class DeadRun {
     if (swapped && c.fault != DeadFault.none) _tag(DeadLines.caughtBadMeter);
     if (c.line == DeadLine.ghost) _tag(DeadLines.caughtGhost);
     return null;
+  }
+
+  /// Listened to the coworker: always a slip, whatever the line and the meter
+  /// (the hand does not go on the line; the round stays).
+  DoMistake? listen() {
+    if (!_open) return null;
+    slips++;
+    return DeadMistakes.listened;
   }
 
   void next() {
@@ -593,7 +660,25 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
   int _totalDelta = 0;
   int _wake = 0;
   bool? _touched;
-  var _coworkerArmed = false;
+
+  /// He was scheduled this play (after the first 0.0 on his round).
+  var _coworkerCalled = false;
+
+  /// The slip card's round stays (a needless stop, listening to him).
+  var _cardStays = false;
+
+  final _hints = IdleHintController();
+
+  /// The scene's geometry from the last build (for the gesture hint).
+  DeadGeo? _geoNow;
+
+  // The gesture hint's anchors: the scene's touch layer (scene px → screen)
+  // and the hands-on buttons.
+  final _sceneKey = GlobalKey();
+  final _swapKey = GlobalKey();
+  final _loadKey = GlobalKey();
+  final _stopKey = GlobalKey();
+  final _touchKey = GlobalKey();
 
   // The probes: on terminals (red first, then black) or on the proving unit.
   DeadPoint? _red;
@@ -654,7 +739,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown;
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown;
 
   void _startRound() {
     _settleTimer?.cancel();
@@ -675,7 +760,18 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
   void _tapScene(Offset p, DeadGeo geo) {
     if (!_canPlay || _settling) return;
     final site = _run.current.site;
-    if (geo.proverHit.contains(p)) {
+    DeadPoint? hit;
+    for (final t in geo.points(site)) {
+      if (geo.terminalHit(site, t).contains(p)) hit = t;
+    }
+    final onProver = geo.proverHit.contains(p);
+    if (hit == null && !onProver) {
+      _hints.missTap();
+      return;
+    }
+    // Once he is due, the next move waits for him (his 0.0 is still shown).
+    if (holdForCoworker()) return;
+    if (onProver) {
       HapticFeedback.selectionClick();
       _cue('sounds/intro/tick.ogg', volume: 0.5);
       setState(() {
@@ -686,10 +782,6 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
       });
       _settle(() => _run.prove());
       return;
-    }
-    DeadPoint? hit;
-    for (final t in geo.points(site)) {
-      if (geo.terminalHit(site, t).contains(p)) hit = t;
     }
     if (hit == null) return;
     HapticFeedback.selectionClick();
@@ -740,8 +832,8 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
       if (r == null) return;
       _cue('sounds/quiz_select.wav', volume: 0.35);
       // His moment: the first 0.0 on the circuit on his round.
-      if (!_coworkerArmed && _run.index == _run.deal.callAt && r.volts == 0 && r.whereBn != DeadLines.prover) {
-        _coworkerArmed = true;
+      if (!_coworkerCalled && _run.index == _run.deal.callAt && r.volts == 0 && r.whereBn != DeadLines.prover) {
+        _coworkerCalled = true;
         scheduleCoworker();
       }
     });
@@ -749,6 +841,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
 
   void _loadTest() {
     if (!_canPlay || _settling || _run.lastPair == null) return;
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     _cue('sounds/learn/tag_slap.wav', volume: 0.35);
     final p = _run.lastPair!;
@@ -762,6 +855,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
 
   void _swap() {
     if (!_canPlay || _settling) return;
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     _cue('sounds/intro/click.ogg', volume: 0.5);
     _run.swap();
@@ -778,22 +872,17 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
   // --- the decision ----------------------------------------------------------------
   Future<void> _decide(bool touch, Offset origin) async {
     if (!_canPlay || _settling) return;
+    // The decisive control: he cannot be skipped by deciding fast.
+    if (holdForCoworker()) return;
     await _commit(touch, origin);
   }
 
   Future<void> _commit(bool touch, Offset origin) async {
     _hush();
-    _busy = false;
     _settleTimer?.cancel();
     _settling = false;
     final m = _run.decide(touch: touch);
-    if (m == null && !_run.shown) {
-      HapticFeedback.selectionClick();
-      _cue('sounds/intro/click.ogg', volume: 0.5);
-      setState(() => _wake++);
-      unawaited(_sayChain([_run.ghostSeen ? DeadLines.needlessGhost : DeadLines.needlessDead]));
-      return;
-    }
+    if (m == null && !_run.shown) return;
     HapticFeedback.mediumImpact();
     if (m == null) {
       _cue('sounds/learn/tag_slap.wav', volume: 0.7);
@@ -818,7 +907,19 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
     }
     setState(() {});
     unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
-    await _slip(m);
+    // A wrong stop: the card says the rule (never what the line is) and the
+    // round stays.
+    await _slip(m, stays: m == DeadMistakes.needlessStop);
+  }
+
+  /// Listened to him: a slip; the hand does not go on the line and the round
+  /// stays (the meter work so far is kept).
+  Future<void> _listened(Offset origin) async {
+    final m = _run.listen();
+    if (m == null) return;
+    HapticFeedback.mediumImpact();
+    unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
+    await _slip(m, stays: true);
   }
 
   void _next() {
@@ -859,7 +960,10 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    if (_intro || _busy || _card != null || reasonOpen || _settling) return false;
+    // "মিটারে শূন্য দেখাচ্ছে, হাত দাও! আর মাপার কী আছে?" no longer fits once a
+    // real voltage was read this round or the whole test is already done.
+    if (_run.liveRead || _run.complete) return null;
+    if (_intro || _busy || _card != null || tableBusy || _settling) return false;
     return true;
   }
 
@@ -871,8 +975,8 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Listened to him: a hand on the line now.
-      await _commit(true, origin);
+      // Listened to him: always a slip (playbook row 8).
+      await _listened(origin);
       return;
     }
     if (!_run.caught.contains(DeadLines.caughtCall)) _run.caught.add(DeadLines.caughtCall);
@@ -906,7 +1010,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
     if (mounted) setState(() {});
   }
 
-  Future<void> _slip(DoMistake m) async {
+  Future<void> _slip(DoMistake m, {bool stays = false}) async {
     if (strike(m)) {
       await _struckOut(m);
       return;
@@ -915,6 +1019,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
     _cue('sounds/quiz_wrong.wav');
     setState(() {
       _card = m;
+      _cardStays = stays;
       _cardTone = MistakeTone.slip;
       _wake++;
     });
@@ -957,8 +1062,17 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
     switch (_cardTone) {
       case MistakeTone.slip:
         _hush();
-        setState(() => _card = null);
-        _next();
+        final stays = _cardStays;
+        setState(() {
+          _card = null;
+          _cardStays = false;
+          _wake++;
+        });
+        if (stays) {
+          unawaited(_sayChain([DeadLines.ask]));
+        } else {
+          _next();
+        }
       case MistakeTone.nearMiss:
         _hush();
         widget.onRetry(_muted);
@@ -1030,6 +1144,22 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
   }
 
   // --- the scene ---------------------------------------------------------------
+  /// The gesture hint: a sweep over everything that takes a touch now — every
+  /// terminal and the proving unit, the meter tools, both decisions — in
+  /// reading order, never a tap on one of them (how, never what).
+  HintSpec? _hint() {
+    final g = _geoNow;
+    final box = _sceneKey.currentContext?.findRenderObject();
+    if (g == null || _run.done || box is! RenderBox || !box.attached || !box.hasSize) return null;
+    final site = _run.current.site;
+    Rect onScreen(Rect r) => Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight));
+    return HintSpec.sweep([
+      for (final p in g.points(site)) onScreen(g.terminalHit(site, p)),
+      onScreen(g.prover),
+      for (final k in [_swapKey, if (_run.lastPair != null) _loadKey, _stopKey, _touchKey]) ?HintSpec.globalRectOf(k),
+    ]);
+  }
+
   LinemanMode get _mode {
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
     if (coworkerOpen) return LinemanMode.worried;
@@ -1045,7 +1175,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = DeadGeo.forScene(m.height, m.inset);
+    final geo = _geoNow = DeadGeo.forScene(m.height, m.inset);
     final c = _run.current;
     final quiet = _quiet;
     final tb = geo.trainee;
@@ -1102,7 +1232,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: DeadLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo)),
+          child: GestureDetector(key: _sceneKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo)),
         ),
       ),
       if (_freeze)
@@ -1165,6 +1295,12 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            // How to touch, never what: a sweep over every terminal, the
+            // proving unit, the tools and both decisions while the level waits.
+            hint: _hint,
+            hintWaiting: handsOn && !_settling && !_ended && !tableBusy && !coworkerOnScreen,
+            hintKey: _run.index,
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (playing && !_run.done && !deckUp)
@@ -1187,9 +1323,9 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
                   bottom: pad.bottom + 72,
                   child: Row(
                     children: [
-                      _ToolButton(icon: Icons.swap_horiz_rounded, label: DeadLines.swap, enabled: _canPlay && !_settling, onTap: _swap),
+                      _ToolButton(key: _swapKey, icon: Icons.swap_horiz_rounded, label: DeadLines.swap, enabled: _canPlay && !_settling, onTap: _swap),
                       const SizedBox(width: 6),
-                      _ToolButton(icon: Icons.lightbulb_outline_rounded, label: DeadLines.load, enabled: _canPlay && !_settling && _run.lastPair != null, onTap: _loadTest),
+                      _ToolButton(key: _loadKey, icon: Icons.lightbulb_outline_rounded, label: DeadLines.load, enabled: _canPlay && !_settling && _run.lastPair != null, onTap: _loadTest),
                     ],
                   ),
                 ),
@@ -1200,9 +1336,9 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(child: DoBigButton(label: DeadLines.stop, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
+                      Expanded(key: _stopKey, child: DoBigButton(label: DeadLines.stop, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: DeadLines.touch, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
+                      Expanded(key: _touchKey, child: DoBigButton(label: DeadLines.touch, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
                     ],
                   ),
                 ),
@@ -1454,7 +1590,7 @@ class _GhostDigitsState extends State<_GhostDigits> {
 
 /// A hands-on tool: a round icon with its name under it.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool enabled;

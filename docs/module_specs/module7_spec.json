@@ -1,0 +1,2691 @@
+{
+ "lessons": [
+  {
+   "lessonId": "7.1",
+   "titleBn": "ইন্ডিয়ান ইলেকট্রিসিটি অ্যাক্ট ও রুলস: আপনার বাইবেল",
+   "board": {
+    "artFolder": "assets/game/art/law71_board/ (vector scenes from tool/law71_board_art.py; pack learn_board_pack71.dart, lines class M7Board71Lines)",
+    "mythBn": "এসব আইনকানুন তো শুধু কাগজের জন্য, মাঠে কেউ মানে না।",
+    "rounds": [
+     {
+      "promptBn": "বিদ্যুতের রুলবুক — লাইনম্যানের কাজ কোন নথি মেনে চলে?",
+      "safe": [
+       "act_book — Electricity Act 2003 book on a site-office shelf · label: ইলেকট্রিসিটি অ্যাক্ট · 2003",
+       "cea_book — CEA (Measures relating to Safety and Electric Supply) Regulations booklet in a lineman's hand · label: CEA সুরক্ষা রেগুলেশন"
+      ],
+      "traps": [
+       {
+        "what": "engineer_only — book locked in the office cupboard, slip 'শুধু ইঞ্জিনিয়ারদের' · label: শুধু ইঞ্জিনিয়ারদের নিয়ম",
+        "rejectBn": "এই নিয়ম শুধু ইঞ্জিনিয়ার বা ম্যানেজারদের জন্য নয় — আপনার মতো ফিল্ড কর্মীদের সুরক্ষার জন্যই তৈরি।"
+       },
+       {
+        "what": "senior_notebook — a senior's hand-written 'আমার নিয়ম' notebook · label: নিজের বানানো নিয়ম",
+        "rejectBn": "রুলবুকের প্রধান দুই অংশ ইলেকট্রিসিটি অ্যাক্ট আর CEA-র সুরক্ষা নিয়মাবলী — কারও নিজের খাতা নয়।"
+       },
+       {
+        "what": "contractor_rules — contractor's own 'আমাদের নিয়ম' board, CEA booklet pushed aside · label: ঠিকাদারের নিজের নিয়ম",
+        "rejectBn": "আইন অনুযায়ী, প্রতিটি বিদ্যুৎ কর্মী এবং ঠিকাদার এই সুরক্ষা নিয়মগুলো মানতে বাধ্য।"
+       },
+       {
+        "what": "dusty_file — dusty file stamped 'শুধু কাগজের জন্য' · label: শুধু কাগজের নিয়ম",
+        "rejectBn": "দুর্ঘটনার তদন্তে CEA নিয়মাবলীকেই স্ট্যান্ডার্ড ধরা হয় — এ নিয়ম কাগজে আটকে থাকে না।"
+       }
+      ]
+     },
+     {
+      "promptBn": "রেগুলেশন 15 — কোন ইনস্টলেশন নিয়ম মেনেছে?",
+      "safe": [
+       "dtr_plate — transformer with a danger plate fixed on its body · label: ট্রান্সফরমারে ডেঞ্জার প্লেট",
+       "pillar_plate — feeder pillar with a danger plate fixed on its door · label: ফিডার পিলারে ডেঞ্জার প্লেট"
+      ],
+      "traps": [
+       {
+        "what": "dtr_no_plate — same transformer, no plate anywhere · label: প্লেটহীন ট্রান্সফরমার",
+        "rejectBn": "ট্রান্সফরমারের গায়ে বিপদ চিহ্ন নেই — রেগুলেশন 15-এ ডেঞ্জার প্লেট লাগানো বাধ্যতামূলক।"
+       },
+       {
+        "what": "pillar_no_plate — feeder pillar with a bare door · label: প্লেটহীন ফিডার পিলার",
+        "rejectBn": "ফিডার পিলারেও ডেঞ্জার প্লেট বাধ্যতামূলক — প্রতিটি বিদ্যুৎ ইনস্টলেশনের গায়ে লাগাতে হয়।"
+       },
+       {
+        "what": "plate_on_ground — plate unscrewed, lying on the ground by the pillar · label: মাটিতে পড়ে থাকা প্লেট",
+        "rejectBn": "প্লেট ইনস্টলেশনের গায়ে লাগানো থাকতে হয় — মাটিতে পড়ে থাকা প্লেট নিয়ম মানে না।"
+       }
+      ]
+     },
+     {
+      "promptBn": "রেগুলেশন 18 — কোথায় আর্থিং নিয়ম মতো করা?",
+      "safe": [
+       "dtr_earthed — tank body and neutral, both with earth leads into the ground · label: বডি আর নিউট্রাল আর্থ করা",
+       "pillar_earthed — pillar's metal body with its earth lead into the ground · label: পিলারের বডি আর্থ করা"
+      ],
+      "traps": [
+       {
+        "what": "body_cut — tank body's earth lead cut in the middle · label: বডির আর্থ তার কাটা",
+        "rejectBn": "ধাতব বডির আর্থ তার কাটা — রেগুলেশন 18-এ যন্ত্রের ধাতব বডি আর্থ করা বাধ্যতামূলক।"
+       },
+       {
+        "what": "neutral_open — body earthed, neutral's earth lead hangs loose · label: নিউট্রালের আর্থ খোলা",
+        "rejectBn": "শুধু বডি নয় — সিস্টেমের নিউট্রালকেও আর্থ করা বাধ্যতামূলক।"
+       },
+       {
+        "what": "pillar_no_earth — pillar body with no earth lead · label: আর্থহীন পিলার",
+        "rejectBn": "পিলারের ধাতব বডিতে আর্থ নেই — সমস্ত যন্ত্রপাতির ধাতব বডি আর্থ করতে হয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "রেগুলেশন 3 — বিদ্যুৎ লাইনে কাজ করতে পারেন কে?",
+      "safe": [
+       "lineman_authorized_a — company lineman at the pole showing ID and authorization letter · label: প্রশিক্ষিত ও অনুমোদিত",
+       "lineman_authorized_b — lineman holding training certificate and authorization together · label: প্রশিক্ষণ আর অনুমোদন দুটোই"
+      ],
+      "traps": [
+       {
+        "what": "consumer_son — consumer's son climbing the pole with pliers · label: গ্রাহকের ছেলে",
+        "rejectBn": "শুধুমাত্র প্রশিক্ষিত এবং অনুমোদিত ব্যক্তিই বিদ্যুৎ লাইনে কাজ করতে পারবেন।"
+       },
+       {
+        "what": "trained_not_authorized — man with a training certificate, no authorization · label: প্রশিক্ষিত, অনুমোদন নেই",
+        "rejectBn": "উপযুক্ত মানে প্রশিক্ষিত এবং অনুমোদিত — অনুমোদন ছাড়া লাইনে কাজ নয়।"
+       },
+       {
+        "what": "watching_helper — helper who only learned by watching, reaching for the line · label: দেখে শেখা হেল্পার",
+        "rejectBn": "প্রশিক্ষণ আর অনুমোদন ছাড়া কেউ 'উপযুক্ত' নন — রেগুলেশন 3 সেটাই বলে।"
+       },
+       {
+        "what": "local_mistri — local electrician with the feeder pillar door open · label: পাড়ার মিস্ত্রি",
+        "rejectBn": "অনুমোদন নেই এমন কেউ লাইনের কাজে হাত দেবেন না — শুধু উপযুক্ত ব্যক্তি।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কাজটা CEA নিয়মে অসুরক্ষিত মনে হচ্ছে — কী করবেন?",
+      "safe": [
+       "ask_supervisor — lineman, rulebook in hand, talking to his supervisor before the job · label: সুপারভাইজারকে প্রশ্ন",
+       "ask_company_kit — lineman handing a requisition slip at the store for the right tools and PPE · label: সঠিক টুলস ও PPE চাওয়া"
+      ],
+      "traps": [
+       {
+        "what": "silent_go — climbing up quietly without a word · label: চুপচাপ উঠে যাওয়া",
+        "rejectBn": "প্রশ্ন করার অধিকার আপনার আছে — অসুরক্ষিত মনে হলে সুপারভাইজারের সাথে কথা বলুন।"
+       },
+       {
+        "what": "no_kit_go — starting with whatever is at hand · label: যা আছে তা দিয়েই শুরু",
+        "rejectBn": "আইন অনুযায়ী কোম্পানি সঠিক টুলস, PPE আর নিরাপদ পরিবেশ দিতে বাধ্য — চেয়ে নিন।"
+       },
+       {
+        "what": "excuse_later — after an accident, a worker telling the inquiry 'আইন জানতাম না' · label: 'আইন জানতাম না'",
+        "rejectBn": "'আমি আইনটি জানতাম না' — দুর্ঘটনার পর এটা অজুহাত হিসেবে গৃহীত হয় না।"
+       },
+       {
+        "what": "burden_view — worker tossing the rulebook aside as a burden · label: নিয়ম তো বোঝা",
+        "rejectBn": "আইন বোঝা চাপাতে নয় — আপনাকে আর সাধারণ মানুষকে বাঁচাতেই তৈরি।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_7_1_a",
+     "engineType": "m7_rule_tag",
+     "titleBn": "নিয়মের পাতা লাগান",
+     "verb": "drag a rulebook tab onto the breach",
+     "scene": "Drawn neighbourhood patrol at mid-morning; the camera pans across 3 sites dealt from 4: DTR on a double-pole structure by a lane, feeder pillar at a market corner, a lane where a new house's balcony has come up to the LT line, DTR on a plinth by a school wall. Trainee (LinemanFigure trainee) walks between them. Pocket CEA rulebook at the bottom edge with four fixed tabs in booklet order: 'রেগুলেশন 3 · উপযুক্ত ব্যক্তি', 'রেগুলেশন 15 · বিপজ্জনক নোটিশ', 'রেগুলেশন 18 · আর্থিং', 'রেগুলেশন 32 · ক্লিয়ারেন্স'. Inspection register clipboard by the corner guide. Each site has 3–4 checkable parts drawn in their dealt state (plate spot, body earth lead, neutral earth lead, person at the installation, line over the balcony). Only real words: 'বিপদ / DANGER' on a fixed plate, '11 kV' / '415 V' equipment plates.",
+     "flow": [
+      "Guide first (LevelIntro, no skip): 'আজ এলাকার টহল — CEA রুলবুক হাতে নিয়ম ভাঙা খুঁজে বের করুন।'",
+      "Pan to site 1. Corner guide (task only): 'এই সাইটে নিয়ম ভাঙা কোথায়? রুলবুকের পাতা টেনে লাগান।' Tap pool rotates from the start: 'রুলবুক হাতে সাইটটা পড়ুন।' / 'কোন নিয়ম কোথায় ভেঙেছে, পাতা লাগিয়ে দেখান।' / 'সব দেখা হলে রেজিস্টারে সই করুন।'",
+      "Optional: hold a tab to read its one-line rule from the lesson above the booklet (15: 'প্রতিটি বিদ্যুৎ ইনস্টলেশনের গায়ে ডেঞ্জার প্লেট লাগানো বাধ্যতামূলক'; 18: 'যন্ত্রের ধাতব বডি আর নিউট্রাল আর্থ করা বাধ্যতামূলক'; 3: 'শুধু প্রশিক্ষিত এবং অনুমোদিত ব্যক্তিই লাইনে কাজ করবেন'; 32: 'মাটি, বাড়ি আর অন্য লাইন থেকে ন্যূনতম ক্লিয়ারেন্সের চার্ট আছে'). No cost; never names a part.",
+      "Drag a tab onto a part. Breach + right regulation → red tag 'রেগুলেশন N' sticks, right sound, praise, ◆ on the table (scene shielded) → reason deck (3 cards) → zoomed right card → এগিয়ে যান.",
+      "Breach + wrong regulation → slip: tab springs back, MistakeCard with that part's picture ('ডেঞ্জার প্লেটের নিয়ম রেগুলেশন 15-এ') + পাঠে দেখুন; may pin again.",
+      "Tab on a compliant part → slip (needless flag), MistakeCard fitted to the part ('এখানে নিয়ম মানা আছে — প্লেট গায়ে লাগানো।'). Drop on empty scene → returns, counts as a missed tap for hints.",
+      "Close the site by swiping a signature on the register. Each breach left unpinned = one slip with its MistakeCard (owner decision on one-per-breach), then pan to the next site.",
+      "Pressure moment (site 2 or 3, dealt): the first time the player lifts a tab there, the drop is held (holdForCoworker on the drop handler). Beat 1: caption under the HUD + his recorded voice, myth 2 word for word. Beat 2: chip by his peep, guide 'ওঁকে কী বলবেন?', refuse/listen deck. Refuse → play resumes with the tab in hand; listen → slip.",
+      "After 3 sites: LevelPassPanel ('আজ যা ধরলেন': regulations pinned per site) or 3 slips → DoStrikeOut + StruckOutCard with পাঠ."
+     ],
+     "dealtVariety": "Which 3 of 4 sites and their order; each part compliant or breached (1–3 breaches per site, never all, count never shown); side of plates and earth leads; at the feeder pillar the person present (company crew with ID, local electrician with the door open, nobody); balcony lane: line clear above or resting on the new balcony; light; coworker site and side; reason options from libraries (≥ 2 right, ≥ 5 wrong per regulation, lengths within 1.3×).",
+     "deadly": [],
+     "slips": [
+      "Pinning a tab on a compliant part (needless flag)",
+      "Wrong regulation on a real breach",
+      "Signing the register with a breach unpinned (one slip per breach; owner decision)",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "'আইন তো শুধু বড় বড় ইঞ্জিনিয়ারদের জন্য, আমাদের এসব জেনে কী হবে?' — lesson myth 2 word for word. Site 2 or 3 (dealt), the moment the player first lifts a tab there; the drop waits for him. Refuse: 'বিপদের মুখে আমরাই — আইন আমাদের জন্যই বেশি দরকারি' / 'আইন জানলে আত্মবিশ্বাসী আর পেশাদার হওয়া যায়'. Listen: 'ঠিক, এসব ইঞ্জিনিয়ার সাহেবরাই দেখবেন' / 'রুলবুক পকেটে থাক, টহলটা সেরে ফেলি'.",
+     "reasonQuestionsBn": [
+      "কেন এখানে রেগুলেশন 15?",
+      "কেন এখানে রেগুলেশন 18?",
+      "কেন এখানে রেগুলেশন 3?",
+      "কেন এখানে রেগুলেশন 32?"
+     ],
+     "gestureHints": "Site waiting, no tab in hand (~8 s idle or 3 empty taps in 4 s): sweep over every checkable part equally (presses none), then a drag hint lifting from the booklet's centre 64 dp straight up (never toward a part, never from one tab). From the second hint of a site: hold hint on the booklet spine (tabs can be held to read). Tab in hand: none. Register: never hinted (signing is a decision). Decks: built-in sweep; zoomed card: tap এগিয়ে যান; MistakeCard: tap its continue. Off during intro, pans, praise window, coworker beat 1, cards, results. Twice, back after ~25 s, ≤ 3 per state; reduced motion = still hand + fade.",
+     "lessonPoints": [
+      "রেগুলেশন ১৫ (বিপজ্জনক নোটিশ): প্রতিটি বিদ্যুৎ ইনস্টলেশনের (যেমন ট্রান্সফরমার, ফিডার পিলার) গায়ে একটি বিপদ চিহ্ন বা 'ডেঞ্জার প্লেট' লাগানো বাধ্যতামূলক।",
+      "রেগুলেশন ১৮ (আর্থিং): সমস্ত যন্ত্রপাতির ধাতব বডি এবং সিস্টেমের নিউট্রালকে সঠিকভাবে আর্থিং করা বাধ্যতামূলক।",
+      "রেগুলেশন ৩ (উপযুক্ত ব্যক্তি): আইন অনুযায়ী, শুধুমাত্র 'উপযুক্ত' বা প্রশিক্ষিত এবং অনুমোদিত ব্যক্তিই বিদ্যুৎ লাইনে কাজ করতে পারবেন।",
+      "রেগুলেশন ৩২ (ক্লিয়ারেন্স): বিভিন্ন ভোল্টেজের লাইনের জন্য মাটি, বাড়ি এবং অন্যান্য লাইনের থেকে ন্যূনতম ক্লিয়ারেন্সের একটি নির্দিষ্ট চার্ট দেওয়া আছে।",
+      "একেবারেই নয়। যে ব্যক্তিটি সরাসরি বিপদের মুখে কাজ করছেন, তার জন্যই এই আইনগুলো সবচেয়ে বেশি প্রাসঙ্গিক।"
+     ],
+     "giveawayRisks": "Every part drawn in both states across plays; a breached part is never brighter, ringed, animated or captioned. Tabs always in fixed booklet order (3, 15, 18, 32). No 'breaches left' counter; the register can be signed any time. Needless pin and wrong regulation each cost a slip, so tagging everything is never free. Holding a tab shows rule text only. Guide lines never name a part or regulation. Answers appear only on a MistakeCard. Judge: distinct from do_7_6_a's stamps because the target must be found in the scene (spot) before it is classified; 7.6a has a single fixed register line."
+    },
+    {
+     "packId": "do_7_1_b",
+     "engineType": "m7_rule_question",
+     "titleBn": "প্রশ্ন করার অধিকার",
+     "verb": "page the rulebook to back a question",
+     "scene": "JUDGE REDESIGN (was a crew-card roster that duplicated do_7_10_a). A drawn LT lane under a shutdown job at morning: a DTR on a plinth, a feeder pillar, a new house whose balcony reaches toward the service line, the crew van with a kit crate and a helmet hook, and today's helper (one figure, his ID card on a lanyard). The trainee holds a phone (work orders arrive from the supervisor as phone texts, a real thing a worker reads) and the pocket CEA rulebook, a 5-page booklet in fixed order: 'রেগুলেশন 3 · উপযুক্ত ব্যক্তি', 'রেগুলেশন 15 · বিপজ্জনক নোটিশ', 'রেগুলেশন 18 · আর্থিং', 'রেগুলেশন 32 · ক্লিয়ারেন্স', 'নিজের অধিকার · টুলস, PPE, নিরাপদ পরিবেশ'. The supervisor is heard only through the phone (no new drawn character).",
+     "flow": [
+      "Guide first (no skip): 'আজ সুপারভাইজার ফোনে কাজের নির্দেশ দেবেন। নিয়মে না মিললে রুলবুক দেখিয়ে প্রশ্ন করুন।'",
+      "An order slides in as phone text (voice-locked until read). Its words are the same for the lawful and unlawful version; only the scene decides: 'ছোটন আজ পোলে উঠবে।' (helper's ID card back: প্রশিক্ষণ সম্পূর্ণ + অনুমোদন সই-সিল, or one of them missing) · 'পিলারটা চালু করে দাও।' (plate fixed on the door, or bare door / plate on the ground) · 'ট্রান্সফরমার চালুর জন্য রেডি করো।' (body and neutral earth leads both connected, or one cut/hanging) · 'বারান্দার পাশের সার্ভিস লাইনটা চালু রাখো।' (line clear above, or resting on the new balcony) · 'স্টোরের কিট নিয়েই কাজ শুরু করো।' (helmet in the crate, or crate and hook empty).",
+      "Look (free): tap any scene object for a close-up (ID card back, pillar door, earth leads, balcony, kit crate). Close-ups show real markings only.",
+      "Decide: tap 'ঠিক আছে' (the crew carries out the order) or hold 'সুপারভাইজারকে ফোন' 1.2 s. On a call the supervisor asks 'কোন নিয়মে?'; the rulebook opens; the player swipes its pages and drags the open page onto the phone (shows it).",
+      "Right page on an unlawful order → supervisor: 'ঠিক, আগে ওটা ঠিক করো।' → right sound, ◆ on the table → reason deck 'কেন প্রশ্ন করলেন?' → এগিয়ে যান → the lawful fix plays (a fit man climbs, the plate is fixed, the lead is joined, the line stays off, a helmet comes).",
+      "Wrong page → slip: 'এতে তো এ কথা নেই' + MistakeCard naming the right page; page again. Call on a lawful order → slip (needless stop): 'সব তো ঠিক আছে, দেখেছ?'. 'ঠিক আছে' on an unlawful order → slip: the act plays, MistakeCard + পাঠে দেখুন.",
+      "6 orders per play (5 types, one may repeat in its other version), 2–4 unlawful; the first right 'ঠিক আছে' of a play also asks 'কেন মেনে নিলেন?'.",
+      "Pressure moment (dealt order, lawful or unlawful version alike): the first touch on 'ঠিক আছে' or the phone button is held (holdForCoworker). Beat 1: caption + his voice, myth 1 word for word. Beat 2: chip, guide 'ওঁকে কী বলবেন?', refuse/listen deck. Then the order still waits for the player's own decision.",
+      "Pass panel ('আজ যা ধরলেন': each question asked and its page) or strike-out at 3 slips."
+     ],
+     "dealtVariety": "Which 6 orders and which version of each; helper's card state; which side the plate/earth leads are drawn; balcony state; crate contents; coworker's order and side; reason options from libraries (≥ 2 right, ≥ 5 wrong, within 1.3×).",
+     "deadly": [],
+     "slips": [
+      "'ঠিক আছে' on an unlawful order (unfit helper climbs under the shutdown; pillar charged with no plate; DTR readied with an earth lead open; line kept on against the balcony; work started without a helmet)",
+      "Wrong rulebook page shown",
+      "Calling on a lawful order (needless stop)",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "'এসব আইনকানুন তো শুধু কাগজের জন্য, মাঠে কেউ মানে না।' — myth 1 word for word (the board rival's clip reused). Comes on a dealt order at the first touch of either decision control; that control waits for him. Refuse: 'তদন্তে CEA নিয়মই স্ট্যান্ডার্ড — লঙ্ঘনে জরিমানা থেকে জেল' / 'অসুরক্ষিত মনে হলে প্রশ্ন করার অধিকার আমার আছে'. Listen: 'ঠিক, যা বলছে করে ফেলি' / 'কাগজে কী আসে যায়, কাজ সারি'.",
+     "reasonQuestionsBn": [
+      "কেন প্রশ্ন করলেন?",
+      "কেন মেনে নিলেন?"
+     ],
+     "gestureHints": "Order read, waiting: sweep over every tappable scene object and both decision controls equally (presses none; the phone button carries its own label 'চেপে ধরুন'). Close-up open: tap its close control. Rulebook open: swipe hint left then right on the booklet (both directions), then a drag hint from the booklet toward the phone (the only drop target, so it shows how, not which page). Supervisor reply / order arrival: voice-locked, no hint. Decks: built-in sweep; zoomed card: tap এগিয়ে যান. Off during intro, praise window, coworker beat 1, cards, results. Kit limits as usual.",
+     "lessonPoints": [
+      "এই নিয়মগুলো জানা আপনাকে শুধু সুরক্ষিতই রাখে না, বরং কোনো অনিরাপদ কাজের নির্দেশ দিলে আপনি আইনের ভিত্তিতে প্রশ্ন করার অধিকারও রাখেন।",
+      "৪. প্রশ্ন করতে শিখুন: যদি কোনো কাজকে আপনার কাছে CEA নিয়ম অনুযায়ী অসুরক্ষিত বলে মনে হয়, তবে আপনার সুপারভাইজারের সাথে কথা বলুন। আপনার প্রশ্ন করার অধিকার আছে।",
+      "২. নিজের অধিকার জানুন: আইন অনুযায়ী, আপনার কোম্পানি আপনাকে সঠিক টুলস, PPE এবং নিরাপদ কাজের পরিবেশ দিতে বাধ্য।",
+      "রেগুলেশন ৩ / ১৫ / ১৮ / ৩২ (as in 7.1 section 3)",
+      "৩. অজ্ঞতা কোনো অজুহাত নয়: 'আমি আইনটি জানতাম না'—এটি কোনো দুর্ঘটনার পর অজুহাত হিসেবে গৃহীত হয় না।"
+     ],
+     "giveawayRisks": "The order text is identical on lawful and unlawful versions, so only looking decides. 2–4 of 6 unlawful, so 'always call' and 'always obey' both strike out. The rulebook pages are in fixed order and all equal; showing the wrong page costs a slip, so paging through every page is not free. The supervisor never names the page before it is shown. Nothing in the scene is ringed. Distinct verb: no crew staffing (do_7_10_a owns that), no breach tagging in a scene (do_7_1_a); the act is questioning an order with the rule as backing."
+    }
+   ],
+   "unsupported": [
+    "Clearance numbers: Reg 32 has a chart but the lesson gives no values; the only Reg 32 breach drawn in 7.1 is a line resting on a new balcony (zero gap). Numbers belong to 7.3.",
+    "Earth resistance value: not given; earth leads are judged only connected / cut / missing.",
+    "Which PPE is mandatory for which job: not listed in 7.1; do_7_1_b's company-duty order uses only a missing helmet (slip class, Module 1 ruling).",
+    "After-accident steps: named only; belong to 7.7.",
+    "How authorization is shown in the field: the ID card back (training done / ongoing; authorization signed-stamped / blank) is a game device.",
+    "Faded plate as a breach: not in the lesson; only fixed / missing / lying on the ground.",
+    "Penalty details: only 'জরিমানা থেকে জেল'.",
+    "Theft sections and consumer rights: named, not explained (7.5, 7.9).",
+    "The supervisor agreeing after being shown the page is a game outcome; the lesson gives only the right to question."
+   ],
+   "ownerDecisions": [
+    "No deadly in 7.1 (both levels all slips). Confirm.",
+    "Missed breaches at the register = one slip each (or one per site).",
+    "Keep the Reg 32 'line resting on a new balcony' part (zero gap) in both 7.1 levels?",
+    "do_7_1_b redesign (questioning orders with the rulebook) replaces the crew-card roster, which now lives only in do_7_10_a. Approve.",
+    "Needless question in do_7_1_b = slip (same rule as every needless stop)."
+   ]
+  },
+  {
+   "lessonId": "7.2",
+   "titleBn": "ওয়ার্কম্যান কম্পেনসেশন অ্যাক্ট: দুর্ঘটনার পর আপনার অধিকার",
+   "board": {
+    "artFolder": "assets/game/art/comp_board/ (vector scenes from tool/comp_board_art.py; no amounts, no day counts; the death head is a garlanded photo frame held by the family at an office desk)",
+    "mythBn": "দুর্ঘটনাটি আমার নিজের ভুলেই হয়েছে, তাই আমি কোনো ক্ষতিপূরণ পাব না।",
+    "rounds": [
+     {
+      "promptBn": "কাজের সময় দুর্ঘটনা — এই আইন কাদের সুরক্ষা দেয়?",
+      "safe": [
+       "Permanent lineman on a pole, depot ID on his belt · label: স্থায়ী লাইনম্যান",
+       "Contract-crew worker stringing a line, contractor's vest · label: চুক্তিভিত্তিক কর্মী",
+       "Temporary helper carrying a cross-arm · label: অস্থায়ী কর্মী"
+      ],
+      "traps": [
+       {
+        "what": "Office clerk turning a contract worker away · label: 'চুক্তির কর্মী? আপনার জন্য নয়'",
+        "rejectBn": "ভুল — আইনটি স্থায়ী, অস্থায়ী, চুক্তিভিত্তিক অনেক ধরনের কর্মীর জন্যই প্রযোজ্য।"
+       },
+       {
+        "what": "Temporary helper with a bandaged arm told 'অস্থায়ী, তাই কিছু নেই'",
+        "rejectBn": "অস্থায়ী কর্মীও এই আইনের সুরক্ষা পান — শুধু স্থায়ী কর্মী নয়।"
+       },
+       {
+        "what": "Notice board: 'বিদ্যুতের কাজ এই আইনের বাইরে'",
+        "rejectBn": "ভুল — ঝুঁকিপূর্ণ কাজের মধ্যে বিদ্যুৎ-এর কাজও অন্তর্ভুক্ত।"
+       }
+      ]
+     },
+     {
+      "promptBn": "স্থায়ী আংশিক অক্ষমতা — কোন ছবিটা মেলে?",
+      "safe": [
+       "Lineman with a missing finger, now at the store counter · label: আঙুল নেই, অন্য কাজ করছেন",
+       "Lineman with one eye patched, now at a depot desk · label: এক চোখ নষ্ট, অফিসের কাজে"
+      ],
+      "traps": [
+       {
+        "what": "Leg in plaster, back on the pole after some weeks · label: কয়েক সপ্তাহ পরে আবার পোলে",
+        "rejectBn": "কয়েক সপ্তাহ পরে আবার কাজে ফিরেছেন — এটা অস্থায়ী অক্ষমতা।"
+       },
+       {
+        "what": "Worker at home in bed, no work possible · label: আর কোনো কাজই পারেন না",
+        "rejectBn": "কোনো ধরনের কাজ করার ক্ষমতাই হারালে — সেটা স্থায়ী সম্পূর্ণ অক্ষমতা।"
+       },
+       {
+        "what": "Burnt hand bandaged, back to the same job after months · label: কয়েক মাস পরে একই কাজে",
+        "rejectBn": "সাময়িকভাবে কাজে অক্ষম, পরে ফিরেছেন — এটা অস্থায়ী অক্ষমতা, আংশিক স্থায়ী নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "চিকিৎসার সময় আর অসুখে আপনার অধিকার — কোনটা ঠিক?",
+      "safe": [
+       "Hospital bill handed to the company officer, who pays · label: চিকিৎসার খরচ কোম্পানির",
+       "Worker in a hospital bed receiving his allowance envelope · label: চিকিৎসার সময় ভাতা",
+       "Worker with a long illness from chemical exposure handing in a claim · label: কাজের কারণে রোগ"
+      ],
+      "traps": [
+       {
+        "what": "Injured worker's wife paying at the hospital counter · label: বিল নিজেরাই দিচ্ছি",
+        "rejectBn": "দুর্ঘটনাজনিত চিকিৎসা ব্যয় সম্পূর্ণরূপে নিয়োগকর্তার দায়িত্ব।"
+       },
+       {
+        "what": "Pay slip stamped 'হাসপাতালের দিন: বেতন নেই'",
+        "rejectBn": "অস্থায়ী অক্ষমতায় চিকিৎসাধীন থাকার সময় নির্দিষ্ট হারে বেতন বা ভাতা পাওয়ার অধিকার আছে।"
+       },
+       {
+        "what": "Officer waving away a coughing worker: 'দুর্ঘটনা তো হয়নি'",
+        "rejectBn": "শুধু দুর্ঘটনা নয় — কাজের কারণে দীর্ঘস্থায়ী রোগ হলেও ক্ষতিপূরণ পাওয়া যায়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "দুর্ঘটনা ঘটল — প্রথমে কোনগুলো ঠিক?",
+      "safe": [
+       "Injured lineman (or his mate) phoning the supervisor at once · label: সাথে সাথে সুপারভাইজারকে",
+       "Government hospital doctor writing the injury report · label: সরকারি ডাক্তারের রিপোর্ট",
+       "Company dispensary doctor writing the report · label: কোম্পানির ডাক্তারের রিপোর্ট"
+      ],
+      "traps": [
+       {
+        "what": "Worker hiding his bandaged hand from the supervisor · label: কাউকে বলার দরকার নেই",
+        "rejectBn": "যেকোনো দুর্ঘটনা ঘটার সাথে সাথে সুপারভাইজার বা কর্তৃপক্ষকে জানান।"
+       },
+       {
+        "what": "Calendar pages flown past, only now telling the supervisor · label: অনেক দিন পরে জানানো",
+        "rejectBn": "জানাতে হয় অবিলম্বে — দুর্ঘটনার সাথে সাথে।"
+       },
+       {
+        "what": "Medicine-shop man scribbling a note · label: ওষুধের দোকানের কাগজ",
+        "rejectBn": "আঘাতের রিপোর্ট সরকারি বা কোম্পানির ডাক্তার দিয়ে করান — এটি গুরুত্বপূর্ণ আইনি নথি।"
+       },
+       {
+        "what": "Worker waving off a doctor: 'ব্যথা সেরে যাবে, রিপোর্ট লাগবে না'",
+        "rejectBn": "ডাক্তারি রিপোর্ট একটি অত্যন্ত গুরুত্বপূর্ণ আইনি নথি — বাদ দেবেন না।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কাগজপত্র ঠিক রাখুন — কোন ছবিগুলো ঠিক?",
+      "safe": [
+       "Written accident notice dropped in the company letter box, copy kept · label: লিখিত নোটিশ",
+       "Home folder with doctor's report, bills and company letters · label: সব কাগজের ফাইল",
+       "Worker updating the nominee in the company record · label: নমিনির তথ্য আপডেট"
+      ],
+      "traps": [
+       {
+        "what": "Worker only telling the gate guard in passing · label: মুখে বলে দিলাম",
+        "rejectBn": "আইন অনুযায়ী নির্দিষ্ট সময়ের মধ্যে কোম্পানিকে লিখিতভাবে নোটিশ দিতে হতে পারে।"
+       },
+       {
+        "what": "Treatment bills going into a dustbin · label: বিল রেখে কী হবে",
+        "rejectBn": "ডাক্তারের রিপোর্ট, চিকিৎসার বিল, সব যোগাযোগের কপি যত্ন করে সংরক্ষণ করুন।"
+       },
+       {
+        "what": "Record card with an old crossed-out nominee never changed · label: নমিনি পুরনোই আছে",
+        "rejectBn": "নমিনির নাম আর তথ্য কোম্পানির রেকর্ডে সবসময় আপডেট রাখুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোম্পানি ক্ষতিপূরণ দিল না বা কম দিল — এখন?",
+      "safe": [
+       "Worker handing his file at the Labour Commissioner's office · label: লেবার কমিশনারের কাছে আবেদন",
+       "Worker with a union representative going through the papers · label: ইউনিয়নের সাহায্য"
+      ],
+      "traps": [
+       {
+        "what": "Worker silently signing an 'এটুকুই পাবেন' letter",
+        "rejectBn": "ক্ষতিপূরণের পরিমাণ আইন দ্বারা নির্ধারিত — কম দিলে লেবার কমিশনারের কাছে আবেদন করতে পারেন।"
+       },
+       {
+        "what": "Worker tearing up his claim file · label: দাবি ছেড়ে দিলাম",
+        "rejectBn": "ক্ষতিপূরণ আপনার অধিকার, দয়া নয় — অস্বীকার করলে লেবার কমিশনারের কাছে যান।"
+       },
+       {
+        "what": "Letter 'চিকিৎসার বিল নিজে দিন' and the worker nodding",
+        "rejectBn": "চিকিৎসার খরচ সম্পূর্ণ নিয়োগকর্তার দায়িত্ব — এটা মেনে নেওয়ার কিছু নেই।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_7_2_a",
+     "engineType": "m7_comp_casebook",
+     "titleBn": "কোন খাতে ক্ষতিপূরণ?",
+     "verb": "tear calendar pages, file each case",
+     "scene": "Depot welfare room, full screen: wooden filing cabinet with four drawers labelled in the Act's words (মৃত্যু · স্থায়ী সম্পূর্ণ অক্ষমতা · স্থায়ী আংশিক অক্ষমতা · অস্থায়ী অক্ষমতা — positions shuffled), a steel বাতিল bin, a desk with 4 case files (photo clip, name, tag স্থায়ী / অস্থায়ী / চুক্তিভিত্তিক). Opening a file lifts a drawn story frame; beside it hangs the room's tear-off day calendar (JUDGE CHANGE: replaces the timeline scrubber, which duplicated do_7_4_b's photo scrub). Each page torn moves the story one stage: কয়েক সপ্তাহ পরে → কয়েক মাস পরে → অনেক পরে (no dates or numbers). Trainee at the desk; guide in a corner.",
+     "flow": [
+      "Guide first (no skip): 'দলের ক'জন কাজের সময় আহত হয়েছেন। কে কোন খাতে ক্ষতিপূরণ পাবেন — ফাইল সাজান।'",
+      "Tap any case file to open it (any order). The story frame shows the accident day at work (fall from a pole, burn at a DTR, hand caught in a come-along...).",
+      "Swipe down on the calendar pad to tear a page; the frame cross-fades to the next stage (hospital → recovering → 'অনেক পরে': back on the pole / at the store counter or depot desk with a finger, hand or eye lost / at home, unable to do any work). A death case opens on the family at the office desk with a garlanded photo; its calendar has no pages to tear. Pages return when the file is closed.",
+      "File it: drag the case file onto a drawer (or the বাতিল bin). Right drawer → drawer shuts, praise, ◆ on the table → reason deck 'কেন এই খাতে?' → এগিয়ে যান.",
+      "Wrong drawer → slip: file spat back, MistakeCard (wc72_types + the head's definition) + পাঠে দেখুন. বাতিল bin → slip (no-fault card); file comes back.",
+      "Own-fault case (one per play, never first): its accident frame shows the worker's own lapse. The first drag of this file is held (holdForCoworker). Beat 1: caption + voice. Beat 2: chip, guide 'কী করবেন?', refuse/listen deck. Listen = slip, the file drops in the bin, then comes back for a right filing.",
+      "After the last case: closing reason once per play 'ক্ষতিপূরণের পরিমাণ কীসে ঠিক হয়?' (right: আইন অনুযায়ী — বয়স আর মাসিক বেতনের ওপর).",
+      "Pass panel ('আজ যা ধরলেন': four heads + no-fault) or fail panel with পাঠ after 3 slips."
+     ],
+     "dealtVariety": "4 cases from ~11 vignettes (অস্থায়ী ×4, স্থায়ী আংশিক ×3 — finger, eye, hand, স্থায়ী সম্পূর্ণ ×2, মৃত্যু ×2); head mix random, not one per head (death at most once, about half the plays); drawer order shuffled; own-fault case and so the coworker's timing (2nd–4th); names, tags, accident kind; early frames of PPD and TD cases look alike.",
+     "deadly": [],
+     "slips": [
+      "Filing a case in the wrong head's drawer",
+      "Dropping any case in the বাতিল bin (no-fault rule)",
+      "Listening to the coworker on the own-fault case"
+     ],
+     "coworkerPushBn": "Myth 1 in field words: 'ওর নিজের ভুলেই তো হয়েছে! ও কিছুই পাবে না — ফাইলটা বাতিলে ফেলো।' Held on the first drag of the own-fault file, never during a praise window. Refuse: 'দোষ যারই হোক, কাজের সময় কাজের কারণে — ক্ষতিপূরণ পাবেন' / 'No-Fault নীতি — ফাইলটা খাতেই যাবে'. Listen: 'ঠিক, নিজের দোষে কিছু পাওয়া যায় না' / 'বাতিলেই ফেলি'.",
+     "reasonQuestionsBn": [
+      "কেন এই খাতে রাখলেন?",
+      "দোষ ওর নিজের হলেও কেন ফাইলটা রাখলেন?",
+      "ক্ষতিপূরণের পরিমাণ কীসে ঠিক হয়?"
+     ],
+     "gestureHints": "Desk waiting: sweep over all 4 files. Story open, calendar untouched: swipe-down hint on the calendar pad (the one way to see later; reveals nothing). After at least one tear, file not dropped: sweep over all four drawers and the বাতিল bin alike, then a ≤ 60 dp drag nudge of the file straight up into empty desk space (never toward a drawer). Decks: built-in sweep; zoomed card: tap এগিয়ে যান. Off during intro, coworker beat 1, praise window, cards, results.",
+     "lessonPoints": [
+      "এই আইনের অধীনে প্রধানত চারটি ক্ষেত্রে ক্ষতিপূরণ পাওয়া যায়: মৃত্যু … স্থায়ী সম্পূর্ণ অক্ষমতা … স্থায়ী আংশিক অক্ষমতা … অস্থায়ী অক্ষমতা",
+      "শরীরের কোনো অঙ্গ (যেমন আঙুল, হাত, চোখ) নষ্ট হয়ে যায়, কিন্তু কর্মী অন্য কাজ করতে সক্ষম থাকেন",
+      "কর্মী সাময়িকভাবে (যেমন কয়েক সপ্তাহ বা মাস) কাজ করতে অক্ষম হন",
+      "তা সে যার দোষেই দুর্ঘটনা ঘটুক না কেন ('No-Fault Liability' নীতি)",
+      "ক্ষতিপূরণের পরিমাণ আইন দ্বারা নির্ধারিত এবং এটি কর্মীর বয়স এবং মাসিক বেতনের ওপর নির্ভর করে"
+     ],
+     "giveawayRisks": "No caption names a head; drawer labels shuffled. Early frames of PPD and TD drawn alike, so only tearing to 'অনেক পরে' tells them apart. Head mix not one-per-drawer, so elimination fails. The drag hint never points at a drawer; the sweep covers the bin too. Reasons within 1.3×. The coworker is held on the decisive drag."
+    },
+    {
+     "packId": "do_7_2_b",
+     "engineType": "m7_claim_route",
+     "titleBn": "দাবির পথ",
+     "verb": "trace the claim route across town",
+     "scene": "Drawn small-town map, slight tilt: work site, roads, ambulance, সরকারি হাসপাতাল, কোম্পানির ডিসপেন্সারি, ওষুধের দোকান, company office (red ডাক বাক্স by the gate, guard booth), the worker's home (wall calendar, pages turning, no dates), শ্রমিক ইউনিয়ন office, লেবার কমিশনারের অফিস. The worker figure (arm in a sling) is dragged along roads; a claim folder rides in his bag. Judge: this is the module's only town-map route level (do_7_8_b no longer uses one).",
+     "flow": [
+      "Guide first: 'কাজের সময় চোট লেগেছে। চিকিৎসা হবে — কিন্তু আপনার অধিকারও রক্ষা করুন। পথটা ঠিক ধরুন।'",
+      "Ride: the ambulance carries him to hospital on its own (treatment never delayed). His phone glows; tap it, hold the call button on the supervisor / কর্তৃপক্ষ contact. No call by arrival → slip 'জানাতে দেরি', then he calls from bed. Right → praise, ◆, reason.",
+      "Report: drag him to সরকারি হাসপাতাল's desk or কোম্পানির ডিসপেন্সারি = right; ওষুধের দোকান = slip.",
+      "Papers slide out at stops (ডাক্তারি রিপোর্ট, চিকিৎসার বিল, নোটিশের কপি, the company letter); swipe down into the folder or walk on — never prompted; it matters at the end.",
+      "Notice: written notice into the ডাক বাক্স = right; telling the guard booth = slip; going home without a notice = slip (the calendar will not turn until one is given).",
+      "Home: calendar pages turn; a company letter arrives; swipe up to read (fair / refused 'নিজের ভুলে দুর্ঘটনা, ক্ষতিপূরণ দেওয়া হবে না' / less 'চিকিৎসার বিল নিজে দিন' or 'চিকিৎসার দিনগুলোর ভাতা নেই').",
+      "Coworker: bad-letter plays — the first drag after reading is held; myth 2 word for word. Fair-letter plays — held on the first walk-on drag at a paper stop: 'বিল-টিল রেখে কী হবে? ফেলে দাও, কোম্পানি তো দেবেই।'. Two beats, refuse/listen deck; listen = slip.",
+      "Claim: bad letter → drag to the লেবার কমিশনারের অফিস (a union stop on the way is always fine). Staying home or signing = slip. Fair letter → home is the right end; going to the commissioner = slip (needless claim).",
+      "At the commissioner's desk drag papers out of the folder one by one; any missing → one slip 'কাগজ নেই' with the pro-tip card. Final reason.",
+      "Pass / fail panel ('আজ যা ধরলেন': জানানো → রিপোর্ট → নোটিশ → দাবি, সব কাগজ রাখা)."
+     ],
+     "dealtVariety": "Injury (অস্থায়ী or স্থায়ী আংশিক) and paper set; company letter (fair ~1/3, refused or one of 3 'less' letters ~2/3); phone contact label; 3 mirrored/rotated town layouts; which doctor desk is nearer; coworker timing and side.",
+     "deadly": [],
+     "slips": [
+      "No call before the ambulance arrives (late informing)",
+      "Injury report from the ওষুধের দোকান",
+      "Notice told to the guard only, or no written notice",
+      "Accepting a refused/reduced offer",
+      "Going to the commissioner on a fair letter (needless claim)",
+      "A paper not kept (one slip in total)",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Bad-letter plays: myth 2 word for word 'কোম্পানি যা দেবে, সেটাই মেনে নিতে হবে। এর বিরুদ্ধে কিছু করার নেই।' held on the first drag after reading. Fair-letter plays: 'বিল-টিল রেখে কী হবে? ফেলে দাও, কোম্পানি তো দেবেই।' held on the first walk-on drag at a paper stop. Once per play, after any praise window. Refuse: 'না — পরিমাণ আইনে ঠিক করা, কম দিলে লেবার কমিশনারের কাছে যাব' / 'না — প্রতিটা কাগজ যত্ন করে রাখব'. Listen: 'ঠিক, সই করে মেনে নিই' / 'বিল ফেলে দিই'.",
+     "reasonQuestionsBn": [
+      "কেন সাথে সাথে সুপারভাইজারকে জানালেন?",
+      "কেন সরকারি বা কোম্পানির ডাক্তারের রিপোর্ট নিলেন?",
+      "কেন লিখিত নোটিশ দিলেন?",
+      "কেন লেবার কমিশনারের কাছে গেলেন?",
+      "কেন সব কাগজ ফাইলে রাখলেন?"
+     ],
+     "gestureHints": "Ambulance ride: none (timed judgement). Phone open: hold hint on the call button. Map node waiting: ≤ 72 dp drag nudge from the figure along a random road leaving his node. Paper slid out: sweep over paper, folder and figure alike (no swipe hint — keeping is the answer). Folded letter: swipe-up hint (only way to read). Commissioner's desk: drag nudge from the folder straight up. Decks: built-in. Off during intro, coworker beat 1, praise, cards, results.",
+     "lessonPoints": [
+      "ধাপ ১ (অবিলম্বে জানানো): যেকোনো দুর্ঘটনা ঘটার সাথে সাথে আপনার সুপারভাইজার বা কর্তৃপক্ষকে জানান।",
+      "ধাপ ২ (ডাক্তারি রিপোর্ট): সরকারি বা কোম্পানির ডাক্তার দিয়ে আঘাতের পুঙ্খানুপঙ্খ রিপোর্ট তৈরি করান।",
+      "ধাপ ৩ (নোটিশ): … একটি নির্দিষ্ট সময়ের মধ্যে কোম্পানিকে লিখিতভাবে দুর্ঘটনার নোটিশ দিতে হতে পারে।",
+      "ধাপ ৪ (দাবি): যদি কোম্পানি ক্ষতিপূরণ দিতে অস্বীকার করে বা কম দেয়, তবে আপনি লেবার কমিশনারের কাছে আবেদন করতে পারেন।",
+      "দুর্ঘটনাজনিত চিকিৎসা ব্যয় সম্পূর্ণরূপে নিয়োগকর্তার দায়িত্ব।",
+      "ডাক্তারের রিপোর্ট, চিকিৎসার বিল এবং কোম্পানির সাথে হওয়া সমস্ত যোগাযোগের কপি যত্ন করে সংরক্ষণ করুন।",
+      "আপনার শ্রমিক ইউনিয়ন বা এই বিষয়ে অভিজ্ঞ কোনো আইনজীবীর সাহায্য নিতে দ্বিধা করবেন না।"
+     ],
+     "giveawayRisks": "No path, arrow, glow or numbered stop; 3 layouts. Drag hint follows a random road. Paper keeping never prompted; its cost shows only at the desk. The letter is read by the player; no caption calls it unfair. Needless claim costs. The coworker is held on a decisive drag."
+    }
+   ],
+   "unsupported": [
+    "Written-notice deadline: only 'নির্দিষ্ট সময়ের মধ্যে'; no day count on screen.",
+    "Amounts and age-factor table: no figures anywhere.",
+    "Allowance rate: not given.",
+    "ESI Act rules: left out.",
+    "Which head an occupational disease falls under: board only, not filed.",
+    "Off-duty accidents and the intoxication exception: not used.",
+    "Medicine-shop note invalid: inferred from 'সরকারি বা কোম্পানির ডাক্তার দিয়ে'.",
+    "Court route: only the Labour Commissioner is used.",
+    "What happens after the commissioner takes the file: level ends there.",
+    "Calendar tear-off stages in do_7_2_a are a game device (no durations)."
+   ],
+   "ownerDecisions": [
+    "No deadly in 7.2. Confirm.",
+    "Death head drawn as a family with a garlanded photo, at most once per play. OK?",
+    "Notice told only to the guard = slip although the lesson says 'দিতে হতে পারে'.",
+    "Needless claim on a fair letter = slip.",
+    "Missing papers = one slip in total.",
+    "Drawer labels: Bangla heads only, or with the lesson's English in brackets?"
+   ]
+  },
+  {
+   "lessonId": "7.3",
+   "titleBn": "ন্যূনতম ক্লিয়ারেন্স: আইনত কতটা দূরত্ব?",
+   "board": {
+    "artFolder": "assets/game/art/clr73_board/ (generator tool/clr73_board_art.py; cards 200x220; only text: pole plate (415 V / 11 kV / 33 kV) and a measured dimension tag in English digits, e.g. '6.1 মি'; every colour on a safe card also on a trap in every hand)",
+    "mythBn": "ক্লিয়ারেন্স একটু কম হলে কিছু হয় না, কেউ তো আর মাপতে আসছে না।",
+    "rounds": [
+     {
+      "promptBn": "রাস্তার ওপর দিয়ে লাইন — কোনটা আইন মেনে উঁচুতে আছে?",
+      "safe": [
+       "ground_ht_ok — 11 kV plate; wire over the road tagged '6.1 মি'; a bus well below",
+       "ground_lt_ok — 415 V plate; wire tagged '5.8 মি'; a truck below",
+       "ground_ht33_ok — 33 kV plate; wire tagged '6.1 মি'"
+      ],
+      "traps": [
+       {
+        "what": "ground_ht_low — 11 kV plate, wire tagged '5.8 মি'",
+        "rejectBn": "HT লাইনের জন্য রাস্তার ওপর অন্তত 6.1 মিটার চাই — 5.8 মিটার শুধু LT লাইনের।"
+       },
+       {
+        "what": "ground_summer_sag — hot sky, span hangs low near a truck's roof",
+        "rejectBn": "গরমে তার ঝুলে গ্রাউন্ড ক্লিয়ারেন্স কমে যায় — এমন নিচু তার রিপোর্ট করতে হয়।"
+       },
+       {
+        "what": "ground_lt_low — 415 V plate, wire so low a bus roof nearly brushes it",
+        "rejectBn": "কম উচ্চতার তার উঁচু গাড়িতে লেগে মারাত্মক দুর্ঘটনা ঘটাতে পারে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "বাড়ির ছাদের ওপর দিয়ে লাইন — কোনটা নিয়ম মেনে?",
+      "safe": [
+       "roof_lt_ok — 415 V line over a flat roof, tagged '2.5 মি'",
+       "roof_ht_ok — 11 kV line over a চিলেকোঠা, tagged '3.7 মি' from its top"
+      ],
+      "traps": [
+       {
+        "what": "roof_ht_low — 11 kV line over a roof tagged '2.5 মি'",
+        "rejectBn": "HT লাইনের জন্য ছাদের ওপর অন্তত 3.7 মিটার — 2.5 মিটার শুধু LT লাইনের।"
+       },
+       {
+        "what": "roof_stair_close — চিলেকোঠা rising almost to the wire",
+        "rejectBn": "চিলেকোঠার ওপর দিয়ে গেলেও একই দূরত্ব চাই — এখানে তার খুব কাছে।"
+       },
+       {
+        "what": "roof_new_floor — masons raising a new floor under the line",
+        "rejectBn": "লাইনের নিচে নতুন নির্মাণ নিজেই বিপদ — দেখলেই সুপারভাইজারকে জানান।"
+       }
+      ]
+     },
+     {
+      "promptBn": "বাড়ির পাশ দিয়ে লাইন — কোনটা ঠিক দূরত্বে?",
+      "safe": [
+       "wall_lt_ok — 415 V line beside a balcony, tagged '1.2 মি'",
+       "wall_ht_ok — 33 kV line beside a wall, tagged '2.0 মি' (HT side cards use 33 kV only — owner decision)"
+      ],
+      "traps": [
+       {
+        "what": "wall_ht_close — 33 kV line beside a balcony tagged '1.2 মি'",
+        "rejectBn": "HT লাইনের জন্য পাশ থেকে অন্তত 2.0 মিটার — 1.2 মিটার শুধু LT লাইনের।"
+       },
+       {
+        "what": "wall_grill_touch — LT wire almost touching a balcony grill",
+        "rejectBn": "বাড়ির এত কাছে তার থেকে শক লাগা বা আগুন ধরার ঝুঁকি থাকে।"
+       },
+       {
+        "what": "wall_extension — new balcony slab cast out toward the line",
+        "rejectBn": "আইন ভেঙে লাইনের পাশে নির্মাণ করলে সেটিও বিপদ।"
+       }
+      ]
+     },
+     {
+      "promptBn": "একই পোলে কয়েকটা লাইন — কোনটা ঠিক আছে?",
+      "safe": [
+       "section_two_circuits_ok — two circuits with a wide even gap",
+       "section_cable_below_ok — telephone/internet cable well below the power line"
+      ],
+      "traps": [
+       {
+        "what": "section_wind_touch — windy sky, conductors swinging into each other, small spark",
+        "rejectBn": "দূরত্ব কম হলে বাতাসে তার একে অপরকে ছুঁয়ে শর্ট সার্কিট ঘটাতে পারে।"
+       },
+       {
+        "what": "section_cable_tied — internet cable tied against the LT wire",
+        "rejectBn": "বিদ্যুৎ লাইন আর ইন্টারনেট কেবিলের মধ্যে নির্দিষ্ট উল্লম্ব দূরত্ব বাধ্যতামূলক।"
+       },
+       {
+        "what": "section_phases_close — phase conductors bunched on a short arm",
+        "rejectBn": "ফেজ-টু-ফেজ ন্যূনতম দূরত্ব রাখতেই হয় — এখানে কন্ডাক্টর গায়ে গায়ে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "লাইনের কাছে বিপদ — লাইনম্যানের কোন কাজটা ঠিক?",
+      "safe": [
+       "duty_warn_rod — trainee raises a hand to stop a man carrying an iron rod toward the line",
+       "duty_call_build — trainee on the phone, looking at construction under the line",
+       "duty_report_sag — trainee on the phone under a sagging old span"
+      ],
+      "traps": [
+       {
+        "what": "duty_ignore_bamboo — man carries a long bamboo under the line, trainee looks away",
+        "rejectBn": "লাইনের নিচে বাঁশ বা রড নিয়ে গেলে তাঁকে বিপদের কথা জানানো উচিত।"
+       },
+       {
+        "what": "duty_wet_clothes — wet clothes hung on a roof line under the wire",
+        "rejectBn": "ভেজা কাপড় বিদ্যুৎ পরিবহন করতে পারে — তারের কাছে শুকোতে দেওয়া ভুল।"
+       },
+       {
+        "what": "duty_roof_bamboo — bamboo leaning toward the wire on a windy day",
+        "rejectBn": "বাতাসে তার দুলে দূর থেকেও আর্ক হতে পারে — ছাদে বাঁশ রাখা ভুল।"
+       },
+       {
+        "what": "duty_walk_past_sag — trainee walks past a low span over the lane",
+        "rejectBn": "আইন মেনে নেই এমন লাইন দেখলে রিপোর্ট করা আপনার দায়িত্ব।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_7_3_a",
+     "engineType": "m7_clearance_survey",
+     "titleBn": "আইনের মাপজোখ",
+     "verb": "stretch a measuring tape between points",
+     "scene": "Semi-urban patrol road drawn to one fixed scale, 3 dealt sites (road crossing span; two-storey house with a চিলেকোঠা under/near the line; house with a balcony beside the line). Small pole plates (415 V / 11 kV / 33 kV). Trainee on the footpath with the patrol register and a phone. A two-handled measuring tape parked in a neutral corner; its handles snap to every scene feature equally (any point on the wire, pole attachment, road, roof edge, চিলেকোঠা top, wall face, balcony edge, water tank).",
+     "flow": [
+      "Guide first (no skip): 'টহলে বেরিয়েছেন। লাইন কি আইন মেনে আছে? মেপে দেখুন।'",
+      "Site pan-in; corner guide 'এখানকার ক্লিয়ারেন্স মাপুন।' Tap the pole to zoom its plate (optional).",
+      "Drag one tape handle onto a point, then the other; the tape locks vertical/horizontal; the reading shows only on release (one decimal, e.g. '5.9 মি'). Re-drag freely.",
+      "Tap 'লিখুন'. Wrong pair (pole attachment instead of the span's lowest point; roof instead of চিলেকোঠা top; wall instead of balcony edge; tank) = slip + MistakeCard; tape returns.",
+      "Recall: the row's 'আইনের ন্যূনতম' drum holds only 1.2 · 2.0 · 2.5 · 3.7 · 5.8 · 6.1 মি, starts random; swipe to the rule for this place and voltage.",
+      "Verdict: drag 'আইন মেনে' or 'লঙ্ঘন' (equal stamps, sides swap per play). Drum checked first, then verdict.",
+      "On a 'লঙ্ঘন' row hold the phone to call the supervisor. At the first লঙ্ঘন row of a play the coworker comes before the phone works (holdForCoworker on the phone). Listen = slip; the guide still makes the call.",
+      "Each site: praise, ◆ → reason deck → এগিয়ে যান → next site. After 3 sites: pass/fail panel."
+     ],
+     "dealtVariety": "3 sites (one per place type) shuffled; voltages (side sites 415 V or 33 kV only); readings ±0.1–0.6 m around the threshold; ≥ 1 legal and ≥ 1 illegal site; ≥ 1 crossover value legal for LT but illegal for HT; চিলেকোঠা/balcony presence; sag depth; mirroring; drum start; coworker side; reason deals.",
+     "deadly": [],
+     "slips": [
+      "Measuring between the wrong two points",
+      "Wrong legal minimum on the drum",
+      "'আইন মেনে' on a breaking span (missed violation)",
+      "'লঙ্ঘন' on a legal span (false report)",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Myth 2 word for word (board clip reused): 'ক্লিয়ারেন্স একটু কম হলে কিছু হয় না, কেউ তো আর মাপতে আসছে না।' Once per play, after the first 'লঙ্ঘন' stamp lands and before the phone works. Guide ask: 'উনি বলছেন রিপোর্ট লাগবে না। আপনি কী করবেন?' Refuse: 'মাপ কম — এখনই সুপারভাইজারকে জানাব' / 'আইন মানা আমার কর্তব্য — রিপোর্ট করব'. Listen (≥ 5): 'একটু কম তো, থাক, লিখব না' / 'কেউ মাপবে না, ঠিক আছে লিখি' / 'পরে দেখা যাবে, এখন চলুন' / 'এতটুকুতে কিছু হয় না' / 'রিপোর্ট করলে ঝামেলা বাড়বে'.",
+     "reasonQuestionsBn": [
+      "কেন এটা লঙ্ঘন?",
+      "কেন এখানে 6.1 মিটার লাগবে?",
+      "কেন চিলেকোঠা থেকে মাপলেন?",
+      "কেন বারান্দার কিনারা থেকে মাপলেন?",
+      "কেন মাঝখানের সবচেয়ে নিচু জায়গায় মাপলেন?",
+      "কেন সুপারভাইজারকে জানালেন?",
+      "কেন এটা আইন মেনে আছে?"
+     ],
+     "gestureHints": "Tape parked: drag nudge of one handle ≤ 60 dp straight up (same at every site). One handle placed: same nudge on the free handle. 'লিখুন' waiting: tap hint. Drum: swipe hint up and down equally. Stamps: sweep over both. Phone after লঙ্ঘন: hold hint. Decks: built-in. None during intro, pan, coworker beat 1, cards, results.",
+     "lessonPoints": [
+      "রাস্তার ওপর দিয়ে … LT - 415V পর্যন্ত: ৫.৮ মিটার … HT - 11kV/33kV: ৬.১ মিটার",
+      "ভার্টিকাল ক্লিয়ারেন্স (বাড়ির ছাদ বা চিলেকোঠার ওপর দিয়ে গেলে): LT লাইন: ২.৫ মিটার - HT লাইন: ৩.৭ মিটার",
+      "হরাইজন্টাল ক্লিয়ারেন্স (বাড়ির বারান্দা বা দেওয়ালের পাশ দিয়ে গেলে): LT লাইন: ১.২ মিটার - HT লাইন: ২.০ মিটার",
+      "যদি দেখেন কোনো পুরনো লাইন আইন অনুযায়ী নেই (যেমন তার ঝুলে পড়েছে), তবে সেটি রিপোর্ট করা আপনার দায়িত্ব।",
+      "গরমকালে তার প্রসারিত হয়ে ঝুলে পড়ে, ফলে গ্রাউন্ড ক্লিয়ারেন্স কমে যায়।"
+     ],
+     "giveawayRisks": "No ring or tick on snap points; every feature snaps alike; reading only on release; drum random start and lesson values only; equal stamps swap sides; no caption names voltage or place; coworker arrives after the stamp; legal and illegal sites each play. Distinct from M1 step 5 (drag a band to judge people) and from every M7 level."
+    },
+    {
+     "packId": "do_7_3_b",
+     "engineType": "m7_street_warn",
+     "titleBn": "পাড়ার পাহারা",
+     "verb": "hold on moving people to warn",
+     "scene": "Breezy afternoon পাড়া lane with gentle parallax: 11 kV line along the main road, LT 415 V line into a side street, a second side lane with NO line overhead. Roof clutter, a vacant plot, a hand-cart path; wires sway (wake windows only). Trainee at the lane corner. People enter on a game clock that pauses for every table, deck, coworker beat, card and freeze. Holding ~0.6 s on any person, roof, plot or span opens a two-way chip 'সতর্ক করুন' / 'সুপারভাইজারকে জানান' (+ 'ছেড়ে দিন').",
+     "flow": [
+      "Guide first: 'পাড়ার ওপর দিয়ে লাইন গেছে। কেউ বিপদে গেলে চেপে ধরে থামান।'",
+      "Watch; corner guide 'চারদিকে নজর রাখুন।' (never names a person).",
+      "Moving hazard: a man with a long iron rod or two labourers with a long bamboo walk toward the stretch under the line. Hold → 'সতর্ক করুন' → shout 'দাঁড়ান! মাথার ওপর তার!' → he turns away. Load reaches the line unwarned → deadly freeze (owner decision).",
+      "Static hazards, any time before the lane clears: wet clothes on a roof line under the LT wire or a roof bamboo leaning to the wire → warn; construction under the 11 kV line → warn the masons AND report the plot; sagging LT span → report.",
+      "Coworker once per play when the roof clothes or roof bamboo item appears: clock pauses, item locked; two beats; refuse → item unlocks; listen = slip and the guide warns the owner.",
+      "Reason deck after the first right warning and the first right report only (pace). End after ~90 s game clock: each unresolved static hazard shown as a slip, then pass/fail. 3 slips = strike-out."
+     ],
+     "dealtVariety": "3–4 hazards from the pool (≥ 1 moving carrier, ≥ 1 report item); 2–3 decoys (cyclist, vendor, short bag, a long-bamboo carrier in the lane with no line, clothes on a roof with no wire); entry side, time and speed; which house; coworker item; sag position; reason cards. At least one decoy on screen whenever a moving hazard is.",
+     "deadly": [
+      "A member of the public's rod or bamboo reaching the line because the player did not warn in time (contact in the scene only; owner decision — same principle as do_7_7_a S2)."
+     ],
+     "slips": [
+      "Roof wet clothes or bamboo left unwarned at the end",
+      "Construction: masons not warned or supervisor not told (each)",
+      "Sag not reported",
+      "Wrong response type (report on a rod carrier, warn on the sag)",
+      "Needless warning or report on a decoy",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Myth 1 without 'আমার বাড়ির': 'ছাদ থেকে তারটা তো অনেক দূরেই আছে, ওখানে একটা বাঁশ রাখলে বা কাপড় শুকোতে দিলে কিছু হবে না।' Once, the moment the roof item appears; clock paused and item locked until his deck ends. Guide ask 'উনি বলছেন কিছু হবে না। আপনি কী করবেন?' Refuse: 'ভেজা কাপড় বিদ্যুৎ টানে — ওঁকে সাবধান করি' / 'বাতাসে তার দোলে — বাঁশ সরাতে বলি'. Listen (≥ 5): 'ঠিকই, তার তো দূরে, থাক' / 'ছাদ ওঁদের, আমাদের কী' / 'কাপড়ে আবার কারেন্ট কীসের' / 'একটা বাঁশে কিছু হয় না' / 'পরে বলব, এখন থাক'. New clip via tool/rival_clip.py.",
+     "reasonQuestionsBn": [
+      "কেন ওঁকে থামালেন?",
+      "কেন সুপারভাইজারকে জানালেন?",
+      "কেন ভেজা কাপড় সরাতে বললেন?",
+      "কেন ছাদের বাঁশ সরাতে বললেন?",
+      "কেন নির্মাণ দেখে ফোন করলেন?"
+     ],
+     "gestureHints": "Watching with ≥ 2 holdables visible, ~8 s idle: sweep over every holdable equally; on the first hint of a play it ends with a hold ring on empty road. None with < 2 holdables. Chip open: sweep over both options. Decks: built-in. None during intro, coworker beats, cards, freeze, results.",
+     "lessonPoints": [
+      "যদি কোনো ব্যক্তি লাইনের খুব কাছাকাছি নির্মাণ কাজ করেন বা লাইনের নিচে বাঁশ বা লোহার রড নিয়ে যান, তবে তাদের বিপদের বিষয়ে সতর্ক করা উচিত।",
+      "পেট্রোলিং-এর সময় … লাইনের নিচে বা খুব কাছাকাছি নতুন বাড়ি বা অন্য কোনো নির্মাণ কাজ চলছে, তবে অবিলম্বে আপনার সুপারভাইজারকে জানান।",
+      "মারাত্মক ভুল। … ভেজা বাঁশ বা কাপড় বিদ্যুৎ পরিবহন করতে পারে এবং বাতাসের কারণে তার দুলে দূর থেকেও আর্ক তৈরি হতে পারে।",
+      "কম উচ্চতায় থাকা তার ছিঁড়ে গিয়ে বা সংস্পর্শে এসে মারাত্মক দুর্ঘটনা ঘটাতে পারে।"
+     ],
+     "giveawayRisks": "No glow or caption on hazards; decoys drawn alike; the decoy bamboo carrier walks a lane with no line; every hold opens the same chip and wrong uses cost slips. Judge note: distinct from do_7_7_a (also timed) — here many free-roaming actors with decoys and a warn/report choice on a running clock; 7.7a is one reach at a time and a block/let choice by moving yourself."
+    }
+   ],
+   "unsupported": [
+    "No ground clearance numbers beside a road or elsewhere — every ground site is over the road.",
+    "No sectional or power-to-telecom numbers — board pictures only; no Do site.",
+    "No vehicle or house heights.",
+    "No summer sag amount; readings come from the drawing.",
+    "RoW width, field strength, induced voltage: not used.",
+    "No measuring tool named; the tape is a game overlay on a scaled drawing.",
+    "Measuring from the span's lowest point, the চিলেকোঠা top and the balcony edge is inferred.",
+    "HT = 11 kV/33 kV reused for building sites.",
+    "Report method: a phone call only.",
+    "Feet shown only beside the lesson's own rule values.",
+    "No penalty amounts.",
+    "Judge: the designer's citation of CEA 2010 Reg 61 (11 kV side = 1.2 m) is outside the lesson; it must not appear on screen; it stays only as the reason for the owner question."
+   ],
+   "ownerDecisions": [
+    "HT side-of-house sites and cards on 33 kV only (the lesson's 2.0 m figure may not match the standard for 11 kV). Confirm or correct the lesson.",
+    "do_7_3_b: a public rod/bamboo reaching the line = deadly freeze (module rule: letting another person contact a conductor you could have stopped = deadly).",
+    "Dimension tags in metres on art accepted as a worker-readable label?",
+    "Reason deck only after the first right warning and first right report in do_7_3_b.",
+    "No cross-reference card to 1.2's approach distances wanted?"
+   ]
+  },
+  {
+   "lessonId": "7.4",
+   "titleBn": "পারমিট-টু-ওয়ার্ক (PTW): একটি আইনি চুক্তি",
+   "board": {
+    "artFolder": "assets/game/art/m7_board74/ (tool/ptw_law_board_art.py; pack learn_board_pack74.dart). Board 1.6's rounds are not repeated.",
+    "mythBn": "সুপারভাইজার মুখে মুখে বলে দিয়েছেন লাইন বন্ধ আছে, তাই আর কাগজের পারমিটের দরকার নেই।",
+    "rounds": [
+     {
+      "promptBn": "PTW-তে দুটি সই — কোন সই ঠিক দায়িত্ব নিচ্ছে?",
+      "safe": [
+       "Operator signs the Issuer box; behind glass the feeder breaker OFF with padlock and tag · label: ইস্যুকারী: লাইন বিচ্ছিন্ন ও লক",
+       "Field supervisor signs the Receiver box with his crew looking at the paper · label: গ্রহণকারী: বিপদ জেনে, টিমের দায়িত্ব"
+      ],
+      "traps": [
+       {
+        "what": "Receiver signs one-handed on his phone, not reading · label: সই তো ফর্মালিটি",
+        "rejectBn": "PTW-এর প্রতিটি স্বাক্ষর একটি আইনি দায়িত্বের প্রমাণ। এটি কোনো সাধারণ ফর্মালিটি নয়।"
+       },
+       {
+        "what": "Receiver signs, walks to a tea stall while the crew climbs alone · label: সই করে চা খেতে",
+        "rejectBn": "সই করে গ্রহণকারী আইনত টিমের সুরক্ষা নিশ্চিত করার দায়িত্ব নেন।"
+       },
+       {
+        "what": "Issuer box blank, only the receiver signed · label: শুধু গ্রহণকারীর সই",
+        "rejectBn": "ইস্যুকারীর সই-ই আইনত নিশ্চিত করে লাইনটি বিচ্ছিন্ন ও লক করা — সেই সই নেই।"
+       },
+       {
+        "what": "Receiver signs the return while a man is still on the pole · label: পোলে লোক, PTW ফেরত",
+        "rejectBn": "কাজ শেষে লাইনটি নিরাপদ অবস্থায় ফেরত দেওয়া গ্রহণকারীর আইনি দায়িত্ব।"
+       }
+      ]
+     },
+     {
+      "promptBn": "PTW-র কপি — কোনগুলো ঠিকভাবে তৈরি?",
+      "safe": [
+       "Control-room and field copies side by side, same number, all filled, both signatures on both · label: দুই কপিই পূরণ ও সই করা",
+       "Crew holding their signed field copy while the operator files the control-room copy · label: ফিল্ড কপি টিমের হাতে"
+      ],
+      "traps": [
+       {
+        "what": "Field copy with the issuer box empty · label: ফিল্ড কপিতে সই নেই",
+        "rejectBn": "প্রতিটি কপি (কন্ট্রোল রুম, ফিল্ড টিম) সঠিকভাবে পূরণ ও স্বাক্ষর করা হয়েছে কিনা নিশ্চিত করুন।"
+       },
+       {
+        "what": "Two copies with two permit numbers · label: দুই কপিতে দুই নম্বর",
+        "rejectBn": "দুই কপিতে দুই নম্বর — প্রতিটি কপি সঠিকভাবে পূরণ হয়নি।"
+       },
+       {
+        "what": "Control-room copy with date and time blank · label: কন্ট্রোল রুমের কপি অর্ধেক ফাঁকা",
+        "rejectBn": "কন্ট্রোল রুমের কপিও গুরুত্বপূর্ণ — প্রতিটি কপি সঠিকভাবে পূরণ করতে হবে।"
+       },
+       {
+        "what": "Crew at the pole with no paper; both copies on the desk · label: টিমের হাতে কোনো কপি নেই",
+        "rejectBn": "PTW একাধিক কপিতে হয় — ফিল্ড টিমের কপিও ঠিকভাবে পূরণ ও সই হতে হয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "PTW-র লগবুক — কোন রেকর্ড ঠিক?",
+      "safe": [
+       "Bound logbook row with PTW number, issue date and time · label: ইস্যুর তারিখ ও সময় লেখা",
+       "Bound logbook row with cancellation date and time · label: বাতিলের তারিখ ও সময় লেখা"
+      ],
+      "traps": [
+       {
+        "what": "Issued permit's row with the time column empty · label: ইস্যুর সময় ফাঁকা",
+        "rejectBn": "প্রতিটি PTW ইস্যুর সময় ও তারিখ লগবুকে নথিভুক্ত হয়।"
+       },
+       {
+        "what": "Returned permit on the desk, cancellation column blank · label: বাতিলের ঘর ফাঁকা",
+        "rejectBn": "PTW বাতিলের সময় ও তারিখও লগবুকে নথিভুক্ত করতে হয়।"
+       },
+       {
+        "what": "Times scribbled on a loose chit · label: চিরকুটে সময় লেখা",
+        "rejectBn": "সময় লেখা হয় আনুষ্ঠানিক লগবুকে — এটি একটি গুরুত্বপূর্ণ আইনি নথি।"
+       }
+      ]
+     },
+     {
+      "promptBn": "PTW ইস্যু বা ফেরতের সময় — কোন কথাবার্তা ঠিক?",
+      "safe": [
+       "Receiver at the counter pointing at a line, asking the issuer again · label: সন্দেহ? আবার জিজ্ঞাসা",
+       "Receiver, pen capped, asking his supervisor to explain a condition · label: আগে বুঝে, পরে সই"
+      ],
+      "traps": [
+       {
+        "what": "Worker spreading his hands: 'আমি ভেবেছিলাম লাইন বন্ধ…' · label: ভেবেছিলাম…",
+        "rejectBn": "'আমি ভেবেছিলাম...'—এই কথাটির কোনো জায়গা এখানে নেই। সন্দেহ থাকলে বারবার জিজ্ঞাসা করুন।"
+       },
+       {
+        "what": "Receiver frowning at a condition, signing anyway · label: না বুঝেই সই",
+        "rejectBn": "যে শর্ত বুঝতে পারছেন না, স্বাক্ষর করার আগে সুপারভাইজারের কাছ থেকে তা বুঝে নিন।"
+       },
+       {
+        "what": "Noisy handset, receiver nodding 'হ্যাঁ হ্যাঁ ঠিক আছে' · label: আধা শুনে হ্যাঁ",
+        "rejectBn": "PTW ইস্যু ও ফেরতের কথা পরিষ্কার ও দ্ব্যর্থহীন হতে হবে — সন্দেহ থাকলে আবার জিজ্ঞাসা করুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কাজে নামার আগে — টিমের সদস্য হিসেবে কোনটা ঠিক?",
+      "safe": [
+       "Lineman reading the permit number on the field copy before climbing · label: কোন পারমিটে কাজ, জেনে নিই",
+       "Lineman standing back, no permit at the site · label: বৈধ PTW নেই, কাজে নেই"
+      ],
+      "traps": [
+       {
+        "what": "Lineman climbing: 'পারমিট সুপারভাইজারের ব্যাপার' · label: পারমিট জানি না",
+        "rejectBn": "টিমের প্রত্যেক সদস্যের জানা উচিত কোন পারমিটের অধীনে কাজ চলছে।"
+       },
+       {
+        "what": "Lineman who knows there is no PTW holding the ladder · label: PTW নেই জেনেও সাহায্য",
+        "rejectBn": "বৈধ PTW ছাড়া কাজ জেনেও অংশ নিলে দুর্ঘটনায় আপনিও সমানভাবে দায়ী হতে পারেন।"
+       },
+       {
+        "what": "Crew at an LT pole with no permit: 'এ তো LT লাইন' · label: LT-তে PTW লাগে না",
+        "rejectBn": "শুধু এইচটি নয়, সমস্ত ভোল্টেজের লাইনে কাজ করার জন্যই PTW নেওয়া উচিত।"
+       }
+      ]
+     },
+     {
+      "promptBn": "PTW না মেনে দুর্ঘটনা — কোন ছবিটা সত্যি হতে পারে?",
+      "safe": [
+       "Court summons beside the accident file · label: ফৌজদারি মামলা হতে পারে",
+       "Dismissal letter on company letterhead · label: বরখাস্ত পর্যন্ত শাস্তি",
+       "Compensation file stamped 'আইনি জটিলতা' · label: ক্ষতিপূরণে জটিলতা"
+      ],
+      "traps": [
+       {
+        "what": "Worker shrugging: 'কাগজের ব্যাপার, কিছু হবে না' · label: কিছুই হবে না",
+        "rejectBn": "PTW ছাড়া বা শর্ত ভেঙে দুর্ঘটনা গুরুতর গাফিলতি — ফৌজদারি মামলাও হতে পারে।"
+       },
+       {
+        "what": "Manager pointing only at the worker: 'দোষ শুধু ওর' · label: দায় শুধু কর্মীর",
+        "rejectBn": "PTW না মানায় দুর্ঘটনা হলে কোম্পানির ঊর্ধ্বতন কর্তৃপক্ষও আইনত দায়ী হতে পারেন।"
+       },
+       {
+        "what": "Supervisor waving the form: 'এটা তো শুধু অফিসের নিয়ম' · label: শুধু কোম্পানির নিয়ম",
+        "rejectBn": "PTW শুধু কোম্পানির অভ্যন্তরীণ নিয়ম নয়, এটি একটি শক্তিশালী আইনি নথি।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_7_4_a",
+     "engineType": "m7_ptw_sign",
+     "titleBn": "সইয়ের আগে",
+     "verb": "peel carbon copies, sign each copy",
+     "scene": "Drawn issuing counter of a 33/11 kV substation control room: the issuer behind it, a soft-focus panel (no readable breaker state), wall clock, door with the crew van outside. A carbon-copy PTW book: two sheets labelled 'কন্ট্রোল রুম কপি' / 'ফিল্ড কপি' (which is on top is dealt), boxes PTW নং, ফিডার, তারিখ, ইস্যুর সময়, ইস্যুকারীর সই, শর্ত (2–3 lines of lesson phrases), গ্রহণকারীর সই. The player is today's receiver.",
+     "flow": [
+      "Guide first: 'আজ পারমিট নেবেন আপনি। সব কপি দেখে, বুঝে, তবেই সই।'",
+      "The issuer slides the book over. Corner guide 'কপিগুলো মিলিয়ে নিন।'",
+      "Peel: drag the top sheet's corner up to see the copy beneath; free and unlimited; nothing side by side, nothing highlighted.",
+      "Ask: tap a condition line → 'বুঝিয়ে দিন' → the issuer reads it; a smudged line becomes clear; a clear line gets 'যেমন লেখা আছে, তেমনই' at no cost.",
+      "Decide: sign (trace the receiver's dotted line ≥ 80 %) or send back (swipe the book back; issuer asks 'কোথায় ভুল?'; tap the faulty box; a correct box = slip; right tap → fixed → continue to signing).",
+      "After signing: if the carbon slipped, peel, check and sign the lower copy too; going on without = slip.",
+      "Tear-off: swipe along the perforation of the 'ফিল্ড কপি'; the control-room copy (or both) = slip.",
+      "◆ → reason deck → এগিয়ে যান. Three permits per play ('সকালের কাজ', 'দুপুরের কাজ', 'বিকেলের কাজ').",
+      "Coworker once, on a random permit: held at the first touch of the pen, the send-back swipe or a condition line (holdForCoworker on each). Two beats, deck.",
+      "Leaving with a field copy whose issuer box is blank → deadly freeze (counter grey, colour inset of the crew on a line nobody certified, the fall)."
+     ],
+     "dealtVariety": "Which sheet on top; permit states: clean; issuer signature missing on the FIELD copy (deadly case, ≤ once, ~1 play in 3); missing on the control-room copy only; a blank date/time on one copy; different numbers; smudged condition; carbon slip. Every play ≥ 1 clean and ≥ 2 different faults. Feeder names, near-miss 4-digit numbers, dates, times, coworker permit and line.",
+     "deadly": [
+      "Signing for and tearing off a permit whose FIELD copy has no issuer signature, then leaving with it (module row 1; Module 1 step 17)."
+     ],
+     "slips": [
+      "Signing when the copies differ in a box",
+      "Signing when only the control-room copy lacks the issuer signature",
+      "Signing a smudged / not-understood condition without asking",
+      "Going on when your signature did not come through (carbon slip)",
+      "Tearing the control-room copy or taking both",
+      "Sending back a clean permit, or tapping a correct box",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Pro-tip shortcuts (myths are used by the board and do_7_4_b): 'ওপরের কপিতে সই করলেই হলো, নিচেরটা কে দেখে? চলো, দেরি হচ্ছে!' or 'পড়ার কী আছে? সই করে দাও, গাড়ি দাঁড়িয়ে আছে!' Random permit (clean or faulty). Refuse: 'সব কপি দেখে, বুঝে তবেই সই করব' / 'প্রতিটি কপি ঠিক না দেখে সই নয়'. Listen: 'ঠিক আছে, ওপরেরটায় সই করে চলি'. Third: 'অপারেটর তো দেখে দিয়েছেন, আমি সই করি'.",
+     "reasonQuestionsBn": [
+      "কপি ফেরত দিলেন কেন?",
+      "সই করার আগে কেন জিজ্ঞাসা করলেন?",
+      "এই সইয়ে আপনি কী দায়িত্ব নিলেন?",
+      "ইস্যুকারীর সই নেই — কেন নিলেন না?",
+      "নিচের কপিতেও কেন সই করলেন?"
+     ],
+     "gestureHints": "Book untouched: drag hint on the top corner, short nudge up (peeling is needed every permit). After a peek: sweep over pen, send-back edge and condition lines. Pen up: drag hint from the dotted line's start ≤ 96 dp right. 'কোথায় ভুল?': sweep over all boxes. After signing: the same peel nudge every permit. Tear-off: sweep over both perforated tabs; a touched tab gets a swipe hint on that same tab. Decks: built-in. None during intro, coworker beat 1, ◆ window, freezes, results.",
+     "lessonPoints": [
+      "PTW-এর প্রতিটি স্বাক্ষর একটি আইনি দায়িত্বের প্রমাণ। এটি কোনো সাধারণ ফর্মালিটি নয়।",
+      "পারমিট ইস্যুকারী (Issuer): … তিনি আইনত নিশ্চিত করছেন যে নির্দিষ্ট লাইনটি বিচ্ছিন্ন এবং লক করা হয়েছে।",
+      "পারমিট গ্রহণকারী (Receiver): … ১) তিনি কাজের বিপদ সম্পর্কে সচেতন, ২) তিনি তার টিমের সুরক্ষা নিশ্চিত করবেন, এবং ৩) কাজ শেষে তিনি লাইনটিকে নিরাপদ অবস্থায় ফেরত দেবেন।",
+      "প্রতিটি কপি (কন্ট্রোল রুম, ফিল্ড টিম) সঠিকভাবে পূরণ করা এবং স্বাক্ষর করা হয়েছে কিনা তা নিশ্চিত করুন।",
+      "যদি PTW-তে এমন কোনো শর্ত লেখা থাকে যা আপনি বুঝতে পারছেন না, তবে স্বাক্ষর করার আগে আপনার সুপারভাইজারের কাছ থেকে তা বুঝে নিন।"
+     ],
+     "giveawayRisks": "Copies compared only by peeling; no box ringed; blanks are just blank; panel soft-focus; coworker on random permits with a refuse card right either way; send-back requires a box tap and wrong taps cost; asking about a clear line is neutral; peel hint shown on every permit; field copy position dealt. Judge: the only sign-or-send-back level in the module (do_7_6_a uses claims, not accept/reject)."
+    },
+    {
+     "packId": "do_7_4_b",
+     "engineType": "m7_ptw_inquiry",
+     "titleBn": "বৈধ PTW ছিল কি?",
+     "verb": "scrub the day's photos against the logbook",
+     "scene": "Inquiry room at the division office (no injury shown): the bound PTW logbook (তারিখ · PTW নং · ফিডার · ইস্যুর সময় · বাতিলের সময়), case folder, the crew's field copy or an empty sleeve ('ফিল্ড কপি পাওয়া যায়নি'), a corkboard with a big photo frame and a film strip of 6–9 site photos with phone time stamps and a scrubber thumb, stamps 'সব কাজ PTW-এর মধ্যে' and 'লগবুকে নেই'. Inquiry officer NPC; trainee seated; coworker at the table as one of the crew. Judge: now the module's only scrubber level (do_7_2_a uses a calendar tear).",
+     "flow": [
+      "Guide first: 'দুর্ঘটনার তদন্ত। প্রথম প্রশ্ন — বৈধ PTW ছিল কি? রেকর্ড মিলিয়ে বলুন।'",
+      "Folder opens; corner guide 'লগবুকে এই পারমিট খুঁজুন।'",
+      "Find: swipe logbook pages (decoy rows: same feeder other date, same date other feeder, swapped digits). Tap the matching row to clip it; a wrong row is an unscored retry ('এই সারি এই পারমিটের নয়'). No row → hold 'লগবুকে নেই' (~0.8 s).",
+      "Scrub the film strip; the big photo changes with its time stamp; compare with the clipped row in your head.",
+      "Verdict: hold the big photo to pin 'এখানে PTW ছিল না' (right only if someone is up the pole at a time before issue or after cancellation) or hold 'সব কাজ PTW-এর মধ্যে'.",
+      "◆ → reason deck → এগিয়ে যান. Three cases per play.",
+      "Coworker once, random case, at the start of the first verdict hold (holdForCoworker on pin and both stamps); myth 2 word for word.",
+      "Pass/fail panel."
+     ],
+     "dealtVariety": "Case types: work before issue (10–25 min), work after cancellation, no row and no field copy, clean; two of a type can come; ~2 plays in 3 include a clean case; times to the minute; 6–9 photos; 1–2 photos in the gap; logbook pages, decoys; coworker case.",
+     "deadly": [],
+     "slips": [
+      "'সব কাজ PTW-এর মধ্যে' on a case with pole work outside the window",
+      "Pinning a valid-window photo or one with nobody at the line",
+      "'লগবুকে নেই' when the row exists, or a time verdict on a no-row case",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Myth 2 word for word: 'PTW তো শুধু সুপারভাইজারের দায়িত্ব, আমার এটা নিয়ে ভাবার দরকার নেই।' Random case, at the verdict hold. Refuse: 'টিমের সবারই জানা উচিত কোন পারমিটে কাজ' / 'PTW ছাড়া কাজে অংশ নিলে আমিও দায়ী'. Listen: 'ঠিকই, ওটা সুপারভাইজারের ব্যাপার'. Third: 'আমি কিছু জানতাম না বললেই হবে'.",
+     "reasonQuestionsBn": [
+      "এখানে PTW ছিল না কেন বললেন?",
+      "সব বৈধ বললেন কেন?",
+      "লগবুকে নেই — এর মানে কী?",
+      "এই গাফিলতিতে আইনত কী হতে পারে?"
+     ],
+     "gestureHints": "Logbook search: swipe hint on the page (every case). On a page: sweep over all rows. Scrub wait: drag nudge on the thumb ≤ 96 dp toward later times (earlier only at the right end). Verdict: sweep over the photo and both stamps; a tapped control gets a hold-ring hint on itself. Decks: built-in. None during intro, coworker beat 1, ◆ window, results.",
+     "lessonPoints": [
+      "এর মানে হলো, PTW ছাড়া এইচটি লাইনে কাজ করা সরাসরি আইনের লঙ্ঘন। যেকোনো দুর্ঘটনার পর, তদন্তের প্রথম প্রশ্নই হবে—'বৈধ PTW ছিল কি?'",
+      "লগবুক রেকর্ড: প্রতিটি PTW ইস্যু এবং বাতিলের সময় এবং তারিখ একটি আনুষ্ঠানিক লগবুকে নথিভুক্ত করা হয়। এটি একটি গুরুত্বপূর্ণ আইনি নথি।",
+      "… এটিকে একটি গুরুতর গাফিলতি (Negligence) হিসেবে গণ্য করা হয়। … ফৌজদারি মামলা (Criminal Proceedings) হতে পারে।",
+      "টিমের প্রত্যেক সদস্যের জানা উচিত কোন পারমিটের অধীনে কাজ চলছে।"
+     ],
+     "giveawayRisks": "No validity band or colour on the strip; times only on the clipped row and photo stamps; decoy rows; 10–25 min gaps; clean cases common and false pins cost; equal-weight hold controls; scrub hint never stops on a photo; coworker random."
+    }
+   ],
+   "unsupported": [
+    "CEA threshold: the lesson says PTW is mandatory above 18 kV but calls any HT work without PTW illegal; 11 kV is HT but below 18 kV. 18 kV never appears on screen; every job needs a PTW (the safety tip's all-voltage best practice).",
+    "Lesson text bugs to fix in tool/all_training_chapters_bn.json: Cyrillic 'работодаাতা' (7.4 advanced, 7.6 item name and section), Tamil 'முறையான' (7.4 briefing), 'এনফোর্cement' (7.5 section 3), Persian 'بخواهید' (7.6 pro tip 4 title), Hindi 'बिना सर्टिफिकेशन' (7.6 section 3).",
+    "Carbon book format and copy labels: game device.",
+    "Receiver signing every copy: inferred from 'প্রতিটি কপি … স্বাক্ষর'.",
+    "Condition wording: only lesson phrases.",
+    "Who writes the logbook: not stated.",
+    "Time-stamped photos as evidence: game device.",
+    "No legal section, fine or prison term.",
+    "No team-member signatures.",
+    "LOTO's legal backing: left to Module 1."
+   ],
+   "ownerDecisions": [
+    "do_7_4_a: issuer signature missing on the FIELD copy = deadly; on the control-room copy only = slip. Confirm.",
+    "Signing a not-understood condition and copies differing = slips.",
+    "do_7_4_b inquiry desk all slips (module rule: past acts judged at a desk are slips); 'after an accident' framing with no injury shown OK?",
+    "Wrong logbook row = unscored retry.",
+    "Board round 6 ('which is true' consequences) keep, or cut to 5 rounds?",
+    "Board LT trap rests on the safety tip's best practice, not law. OK?"
+   ]
+  },
+  {
+   "lessonId": "7.5",
+   "titleBn": "বিদ্যুৎ চুরি: একটি অপরাধ এবং তার বিপদ",
+   "board": {
+    "artFolder": "assets/game/art/theft_board/ (tool/theft_board_art.py, learn_board_pack75.dart); dim/bright bulbs, copper hook wire and grey service cable, calm and hot DTR all appear on both sides; only worker-readable text (OFF tag, kWh face)",
+    "mythBn": "বিদ্যুৎ চোরকে ধরা আমার কাজ নয়, ওটা পুলিশের কাজ।",
+    "rounds": [
+     {
+      "promptBn": "কোন সংযোগটা বৈধ? মিটার হয়ে আসা ঠিক সংযোগ বাছুন।",
+      "safe": [
+       "Pole → service cable → outdoor meter board with lead seals intact → house",
+       "AB cable with a proper service connector → sealed meter → house"
+      ],
+      "traps": [
+       {
+        "what": "Hook on the bare LT conductor, thin wire straight into a house",
+        "rejectBn": "লাইন থেকে হুকিং করে বিদ্যুৎ নেওয়া — ধারা 135-এ চুরি।"
+       },
+       {
+        "what": "Magnet stuck on the meter face",
+        "rejectBn": "মিটারে চুম্বক লাগিয়ে রিডিং প্রভাবিত করা — চুরি।"
+       },
+       {
+        "what": "Second wire joined onto the service cable before the meter",
+        "rejectBn": "মিটারের আগে থেকে (Upstream) সংযোগ নেওয়া — চুরি।"
+       },
+       {
+        "what": "Wire loop around the meter from incoming to outgoing",
+        "rejectBn": "মিটার বাইপাস করা মানে মিটার ট্যাম্পারিং — চুরি।"
+       }
+      ]
+     },
+     {
+      "promptBn": "চুরির তার থেকে আসল বিপদ কোনগুলো? ঠিক ছবি বাছুন।",
+      "safe": [
+       "Loose hook sparking, thatch or wall below catching fire",
+       "The lane's DTR overloaded, DO fuse dropped, lane dark"
+      ],
+      "traps": [
+       {
+        "what": "Neat taped theft joint shown as if safe",
+        "rejectBn": "চুরির তার-সরঞ্জাম সাধারণত নিম্নমানের, অনিরাপদ — লুজ কানেকশন হয়।"
+       },
+       {
+        "what": "Honest neighbours' bulbs bright while hooks run on the line",
+        "rejectBn": "চুরির ওভারলোড আর ব্রেকডাউনে সৎ গ্রাহকরাই বিদ্যুৎ পান না।"
+       },
+       {
+        "what": "Cool, calm DTR with many hooks on its line",
+        "rejectBn": "অবৈধ সংযোগ ট্রান্সফরমারে অতিরিক্ত, অজানা লোড চাপায়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোন এলাকায় বড় চুরির সম্ভাবনা? লক্ষণ বাছুন।",
+      "safe": [
+       "DTR showing overload (DO fuse dropped, heat shimmer) feeding only a few houses",
+       "Few houses on the DTR, bulbs dim in the evening"
+      ],
+      "traps": [
+       {
+        "what": "Crowded lane, bright bulbs, calm DTR",
+        "rejectBn": "ওভারলোড বা লো-ভোল্টেজ নেই — লক্ষণ মেলে না।"
+       },
+       {
+        "what": "Few houses, bright bulbs, calm DTR",
+        "rejectBn": "গ্রাহক কম, কিন্তু লোডের সমস্যা নেই — লক্ষণ মেলে না।"
+       },
+       {
+        "what": "Brand-new calm DTR, normal bulbs",
+        "rejectBn": "নতুন-পুরনো নয় — লক্ষণ হলো কম গ্রাহকে বারবার ওভারলোড।"
+       }
+      ]
+     },
+     {
+      "promptBn": "চুরির সংযোগ চোখে পড়ল, লোকটা দরজায় দাঁড়িয়ে। আপনি কী করবেন?",
+      "safe": [
+       "Lineman across the road photographing the hook from a distance",
+       "Lineman at the van phoning to report (supervisor / vigilance)"
+      ],
+      "traps": [
+       {
+        "what": "Lineman arguing with the owner at his door",
+        "rejectBn": "চোরেরা আক্রমণাত্মক হতে পারে — সরাসরি বিবাদে জড়াবেন না।"
+       },
+       {
+        "what": "Lineman climbing to yank the hook off himself",
+        "rejectBn": "আইন নিজের হাতে নয় — বিচ্ছিন্ন শুধু কর্তৃপক্ষের নির্দেশে।"
+       },
+       {
+        "what": "Lineman walking away",
+        "rejectBn": "চুরি সনাক্ত করে রিপোর্ট করা কর্মীদেরই দায়িত্ব।"
+       },
+       {
+        "what": "Close-up photo under the window while the man glares",
+        "rejectBn": "নিরাপদে সম্ভব হলে তবেই — দূর থেকে ছবি তুলুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ভিজিল্যান্সের জন্য রিপোর্টে কোন প্রমাণ যাবে?",
+      "safe": [
+       "Sharp zoomed photo of the hook and the wire leaving it",
+       "Clear photo of the stolen wire into the house, house visible"
+      ],
+      "traps": [
+       {
+        "what": "Far-off blurry photo",
+        "rejectBn": "পর্যবেক্ষণ নির্ভুল ও বিস্তারিত চাই — ঝাপসা ছবিতে চলে না।"
+       },
+       {
+        "what": "Photo of the neighbour's legal sealed meter",
+        "rejectBn": "ভুল বাড়ির ছবি — আপনার তথ্যেই অভিযান, তাই নির্ভুল চাই।"
+       },
+       {
+        "what": "Roof and sky, hook out of frame",
+        "rejectBn": "চুরির জায়গাটাই ছবিতে নেই — এটা প্রমাণ হলো না।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কর্তৃপক্ষের নির্দেশ এসেছে। হুক খোলার ঠিক ছবি কোনগুলো?",
+      "safe": [
+       "Line switched off (OFF tag) and a lineman in full PPE removing the hook",
+       "Vigilance officer with the order paper and a constable beside a crew in PPE"
+      ],
+      "traps": [
+       {
+        "what": "Lineman pulling the hook off the live line bare-handed",
+        "rejectBn": "তার কীভাবে লাগানো জানেন না — লাইন বন্ধ আর পুরো PPE অপরিহার্য।"
+       },
+       {
+        "what": "Lineman in gloves removing the hook on a live line",
+        "rejectBn": "PPE থাকলেও লাইন বন্ধ না করে হুক খোলা নয়।"
+       },
+       {
+        "what": "Lineman alone at night, no order, no team",
+        "rejectBn": "শুধু কর্তৃপক্ষের নির্দেশে বিচ্ছিন্ন করুন — নিজে থেকে নয়।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_7_5_a",
+     "engineType": "m7_theft_trace",
+     "titleBn": "তারের পিছু পিছু",
+     "verb": "trace each wire by finger, pin theft",
+     "scene": "Evening lane: one LT pole with bare conductors or AB cable (dealt), a DTR at the lane's end, a tangle of 4–5 service wires to 3–4 houses (some via meter boards), crossing, sagging behind a branch and a shop sign; legal cables also old and patched. Trainee below with a notebook. Round 3: one house's meter board close-up for a meter-change job.",
+     "flow": [
+      "Guide first: 'এই ট্রান্সফরমার বারবার ওভারলোড, অথচ গ্রাহক কম! তার ধরে খুঁজুন, চুরি কোথায়।'",
+      "Round 1: put a finger on a wire where it leaves the line and drag along it; the trace follows only while the finger stays on that wire; slipping onto a crossing wire stops it (no cost); camera pans.",
+      "At the wire's end the notebook sketches the path; drag the red pin onto the exact theft point (hook, upstream joint, loop) or tap 'ঠিক আছে' for a proper metered wire. Pins only on fully traced wires.",
+      "Right → praise, ◆ → reason deck → এগিয়ে যান. Pin on a legal wire = slip; 'ঠিক আছে' on a theft = slip; right wire but far from the point = bounce, no strike.",
+      "Round 2: the other conductor type, fresh tangle, 1–2 thefts.",
+      "Round 3 (pro tip 2): trace incoming → through the meter terminals → outgoing, passing each seal; a bypass lets the finger skip the meter. Dealt: intact (~25 %), cut seal, magnet, bypass. Pin or 'ঠিক আছে'.",
+      "Report: tap both recipients সুপারভাইজার and ভিজিল্যান্স, then রিপোর্ট পাঠান.",
+      "Coworker two-beat moment: right after the first pin's reason deck (next trace start held) or at the send (held).",
+      "Pass panel ('আজ যা ধরলেন': theft types found)."
+     ],
+     "dealtVariety": "Conductor type per lane; which houses steal and how; 1–2 thefts per lane; tangle layout; hidden wire; patched legal cables; round-3 meter case; coworker timing; house order.",
+     "deadly": [],
+     "slips": [
+      "Pin on a legal wire or intact meter (false report)",
+      "'ঠিক আছে' on a theft wire or meter",
+      "Missing a cut seal or magnet in the meter-change check",
+      "Sending without both supervisor and vigilance",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Myth 2 word for word: 'বিদ্যুৎ চোরকে ধরা আমার কাজ নয়, ওটা পুলিশের কাজ।' After the first right pin's deck (next trace held) or at রিপোর্ট পাঠান (held). Refuse: 'না, চুরি ধরিয়ে দেওয়া আমাদেরই দায়িত্ব।' / 'প্রযুক্তিগত দিক সনাক্ত করা কোম্পানির কর্মীর কাজ।' Listen: 'ঠিক, পুলিশই বুঝুক।' / 'রিপোর্ট না দিলেও চলে।'",
+     "reasonQuestionsBn": [
+      "এটা চুরি কেন?",
+      "এই তারটা ঠিক কেন?",
+      "মিটারের এই গোলমাল রিপোর্ট কেন?",
+      "রিপোর্টটা কাকে, কেন পাঠালেন?",
+      "লক্ষণ দেখে চুরি সন্দেহ কেন?"
+     ],
+     "gestureHints": "Round start: sweep over every wire root equally. Finger lifted mid-trace: ≤ 60 dp drag nudge from the trace head outward (never bending at a crossing). Trace finished: sweep over the pin and 'ঠিক আছে'. Meter close-up: drag nudge from the incoming cable (the only start) downward. Report: sweep over both toggles; tap on রিপোর্ট পাঠান only once both are ticked. Decks: built-in. None during intro, cards, pin drag, results.",
+     "lessonPoints": [
+      "ইলেকট্রিসিটি অ্যাক্ট, ২০০৩-এর ১৩৫ নম্বর ধারা অনুযায়ী ... হুকিং … ট্যাম্পার … মিটারের আগে থেকে (Upstream) সংযোগ … মিটারের রিডিং-কে প্রভাবিত করা।",
+      "মিটার ট্যাম্পারিং: মিটারের সিল ভেঙে ভেতরে কারচুপি করা, চুম্বক লাগানো বা মিটারকে বাইপাস করা।",
+      "একটি এলাকায় যদি ট্রান্সফরমার বারবার ওভারলোডেড হয় বা লো-ভোল্টেজের সমস্যা থাকে, কিন্তু গ্রাহকের সংখ্যা সেই তুলনায় কম …",
+      "নতুন সংযোগ বা মিটার বদলানোর সময়, মিটারের সিলগুলো ভালোভাবে পরীক্ষা করুন। কোনো অস্বাভাবিকতা দেখলে রিপোর্ট করুন।",
+      "অবিলম্বে আপনার সুপারভাইজার এবং কোম্পানির ভিজিল্যান্স (Vigilance) বা এনফোর্সমেন্ট (Enforcement) বিভাগকে জানান।"
+     ],
+     "giveawayRisks": "Theft wires drawn like legal ones; pins locked until traced; false pins cost; no rings; round-3 meter intact ~25 %; equal sweeps; coworker held on a decisive control. Judge: trace-along-a-fixed-wire differs from do_7_8_a (free drawing of a closed ring) and M3 3.5 (tagging an earth path)."
+    },
+    {
+     "packId": "do_7_5_b",
+     "engineType": "m7_theft_evidence",
+     "titleBn": "দূর থেকে প্রমাণ",
+     "verb": "aim, zoom and shoot evidence",
+     "scene": "Phase 1: long dusk lane, van at the near end, a tea stall across the road, one stealing house far down (dealt method), owner on the roof or in the doorway, legal neighbours; the trainee's phone: viewfinder, zoom slider (1x–5x), shutter. Phase 2: same pole next morning: vigilance officer with an order paper, sometimes a constable (scenery), the crew phone, a PPE bag, the hook still on the line; the switch that carries the OFF tag once the shutdown is called.",
+     "flow": [
+      "Guide first: 'ওই বাড়ির হুক থেকে লাইনে চুরি! দূর থেকে পরিষ্কার ছবি তুলুন।'",
+      "Frame: drag the viewfinder, slide zoom, tap the shutter; each shot lands in the roll exactly as framed.",
+      "Walking closer into the house's zone brings the owner out shouting: slip ('বিবাদে জড়াবেন না'), walked back. Zoom from a safe spot is always enough.",
+      "Report: drag exactly 2 photos into the evidence slots (theft point legible; wire into that house) and tap পাঠান. Blurry/empty/neighbour's meter = slip; slot empties.",
+      "Coworker script (i) held on পাঠান.",
+      "Phase 2: guide 'ভিজিল্যান্স এসেছে। এবার হুকটা নিয়মে খুলুন।' Four things scattered (dealt layout, no list): officer (take and read the order 'বিচ্ছিন্ন করুন'), phone (call শাটডাউন → OFF tag appears), PPE bag (drag each item onto the trainee), hook (drag off).",
+      "Hook dragged while live = deadly (any PPE). Line off, no order = slip. Line off + order, PPE incomplete (non-glove item missing) = slip. গ্লাভস not on = deadly (module row 11). All done → praise, ◆, reason.",
+      "Coworker script (ii) instead of (i): held on the phone's শাটডাউন call; listening = the hook pulled live = deadly.",
+      "Pass panel."
+     ],
+     "dealtVariety": "Theft method; which house and how far; owner's state; vantage (van / tea stall); neighbours; light; phase-2 layout; constable present; coworker script and timing.",
+     "deadly": [
+      "Dragging the hook off while the line is still live, with or without PPE",
+      "Listening to 'লাইন বন্ধ করার দরকার নেই, হুকটা টেনে খুলে দাও।'",
+      "Removing the hook with no গ্লাভস on (module row 11; owner to confirm with row 14b)"
+     ],
+     "slips": [
+      "Walking up to the stealing house (confrontation)",
+      "Attaching a blurry/empty frame or a neighbour's meter",
+      "Listening to the 'একটু চুরি' myth (report not sent)",
+      "Removing the hook (line off) before taking the order",
+      "Removing the hook (line off, order taken) with a non-glove PPE item missing"
+     ],
+     "coworkerPushBn": "One per play. (i) Myth 1 word for word: 'একটু বিদ্যুৎ চুরি করলে কোম্পানির কিছু হয় না, ওদের তো অনেক টাকা।' held on পাঠান; listen = slip. (ii) 'লাইন বন্ধ করার দরকার নেই, হুকটা টেনে খুলে দাও।' held on the শাটডাউন call; listen = deadly. Refuse: 'না, চুরির ক্ষতি সৎ গ্রাহকের ঘাড়েই পড়ে।' / 'না, আগে লাইন বন্ধ, পুরো PPE।' Builders: myth 1 contains 'কোম্পানির' — use the word-boundary check for 'পানি'.",
+     "reasonQuestionsBn": [
+      "দূর থেকেই ছবি কেন তুললেন?",
+      "এই ছবি রিপোর্টে কেন দিলেন?",
+      "হুক খোলার আগে লাইন বন্ধ কেন?",
+      "নির্দেশ না পেয়ে খোলেননি কেন?",
+      "পুরো PPE কেন পরলেন?"
+     ],
+     "gestureHints": "Phase 1 untouched: viewfinder drag nudge ~60 dp alternating left/right. Moved once, zoom 1x, 8 s idle: short upward drag nudge on the slider. Framed and idle: tap on the shutter. Walk-closer ground never hinted. Roll: sweep over all thumbnails; tap on পাঠান when both slots full. Phase 2: sweep over officer, phone, bag and hook equally. Phone open: tap the শাটডাউন call. Bag open: sweep + generic upward drag nudge of the first item. Hook drag hint only once order, shutdown and full PPE are done. Decks: built-in.",
+     "lessonPoints": [
+      "নিজেকে বিপদে ফেলবেন না: বিদ্যুৎ চোরেরা প্রায়ই আক্রমণাত্মক হতে পারে। সরাসরি তাদের সাথে বিবাদে জড়াবেন না।",
+      "প্রমাণ সংগ্রহ করুন: যদি নিরাপদে সম্ভব হয়, তবে দূর থেকে অবৈধ সংযোগের ছবি বা ভিডিও তুলুন।",
+      "সংযোগ বিচ্ছিন্ন করা: শুধুমাত্র কর্তৃপক্ষের নির্দেশে এবং পুলিশি সহায়তায় (যদি প্রয়োজন হয়) অবৈধ সংযোগটি বিচ্ছিন্ন করুন।",
+      "অবৈধ সংযোগ বিচ্ছিন্ন করার কাজটি অত্যন্ত বিপজ্জনক হতে পারে। … লাইনটি বন্ধ করে নেওয়া এবং সম্পূর্ণ PPE ব্যবহার করা অপরিহার্য।",
+      "এই 'একটু একটু' চুরি মিলেই … সৎ গ্রাহকদের ওপরই বিলের মাধ্যমে চাপানো হয়।"
+     ],
+     "giveawayRisks": "Photo quality judged from the actual frame; 2 slots and wrong attachments cost; house unmarked; phase 2 scattered with no order and the hook draggable from the start; equal sweeps; coworker held on পাঠান or the শাটডাউন call."
+    }
+   ],
+   "unsupported": [
+    "No numbers for 'few' consumers or 'repeated' overload.",
+    "Vigilance phone number and procedure not given.",
+    "Test-and-earth before hook removal: not in 7.5 (Module 2.2 rules would require it — owner question).",
+    "Contents of 'সম্পূর্ণ PPE' not listed; Module 1's set used (cross-lesson).",
+    "Removal tool not stated.",
+    "Look of a broken seal, magnet, upstream joint: inferred.",
+    "When police are needed: scenery only.",
+    "Penalties and assessment formula: not used.",
+    "Raid/seizure powers: not playable.",
+    "Harm of a false report: inferred from 'নির্ভুল'."
+   ],
+   "ownerDecisions": [
+    "Confronting the thief = slip.",
+    "Hook removal, line off + order, non-glove PPE missing = slip; no গ্লাভস = deadly (module rule).",
+    "Removing an illegal hook from a live line = deadly in every Module 7 level (7.5b and the gate).",
+    "Should do_7_5_b phase 2 add a tester proof after the শাটডাউন call (Module 2.2's live-dead-live rule), or keep 7.5's words only?",
+    "False report / wrong evidence = slip.",
+    "quickMs for both levels."
+   ]
+  },
+  {
+   "lessonId": "7.6",
+   "titleBn": "ব্যক্তিগত সুরক্ষা সরঞ্জাম (PPE) সংক্রান্ত আইন",
+   "board": {
+    "artFolder": "assets/game/art/ppe_law_board/ (tool/ppe_law_board_art.py; one drawn scene per card with one thing changed; neutral labels like 'স্টোরের হেলমেট ক / খ' that never name the flaw)",
+    "mythBn": "কোম্পানি ভালো PPE দেয় না, তাই আমি বাজার থেকে সস্তার একটা কিনে ব্যবহার করি।",
+    "rounds": [
+     {
+      "promptBn": "কাজের PPE কোথা থেকে আসবে? কোন ছবিটা আইন মেনে?",
+      "safe": [
+       "Store counter: storekeeper hands a new helmet and rubber gloves; lineman signs the issue register, no money (label 'স্টোরের কাউন্টার ক')",
+       "Supervisor at the van gives boxed safety shoes with the IS mark (label 'ভ্যানের পাশে')"
+      ],
+      "traps": [
+       {
+        "what": "Lineman paying cash at a roadside shop for a helmet",
+        "rejectBn": "কাজের জন্য নিজের টাকায় হেলমেট বা গ্লাভস কিনতে বলা বেআইনি — সঠিক PPE পাওয়া আপনার মৌলিক অধিকার।"
+       },
+       {
+        "what": "Shiny unbranded market helmet with no IS mark",
+        "rejectBn": "বাজারের সস্তা নন-সার্টিফায়েড PPE সুরক্ষার মিথ্যা আশ্বাস দেয় মাত্র — কোম্পানি না দিলে রিপোর্ট করুন।"
+       },
+       {
+        "what": "Store shelf empty; lineman heads to a risky job with no gloves",
+        "rejectBn": "সঠিক PPE না থাকলে ঝুঁকিপূর্ণ কাজটি করতে অস্বীকার করার সম্পূর্ণ অধিকার আপনার আছে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ডকেটে লেখা '11 kV লাইনের কাজ' — কোন গ্লাভস ঝুঁকি অনুযায়ী ঠিক?",
+      "safe": [
+       "Rubber gloves with a '11 kV' cuff label beside an '11 kV' docket (label 'গ্লাভস ক')",
+       "Storekeeper holding a pair with an '11 kV' label and IS mark (label 'গ্লাভস খ')"
+      ],
+      "traps": [
+       {
+        "what": "Plain rubber gloves, no rating, no mark",
+        "rejectBn": "কাজের ঝুঁকি অনুযায়ী PPE চাই — 11 kV লাইনের জন্য 11 kV রেটেড গ্লাভস।"
+       },
+       {
+        "what": "11 kV rated glove with a tear across the palm",
+        "rejectBn": "ক্ষতিগ্রস্ত PPE বদলে দেওয়ার ব্যবস্থা করা কোম্পানির আইনি দায়িত্ব — ছেঁড়াটা বদলে নিন।"
+       },
+       {
+        "what": "Cheap market pair in a shop bag, no label",
+        "rejectBn": "নন-ব্র্যান্ডেড বা সার্টিফিকেশন ছাড়া PPE ব্যবহার করা একটি বড় ঝুঁকি।"
+       }
+      ]
+     },
+     {
+      "promptBn": "গায়ের ছাপ পড়ুন — কোনটার মান ঠিক আছে?",
+      "safe": [
+       "Helmet with 'IS 2925' and the IS mark inside the shell (label 'হেলমেট ক')",
+       "Safety shoe with 'IS 15298' and the IS mark on the side tag (label 'জুতো ক')"
+      ],
+      "traps": [
+       {
+        "what": "Same helmet with no IS mark",
+        "rejectBn": "IS মার্ক নিশ্চিত করে সরঞ্জামটি সুরক্ষার ন্যূনতম মানদণ্ড পূরণ করেছে — মার্ক না থাকলে সেটা ঝুঁকি।"
+       },
+       {
+        "what": "Helmet stamped 'IS 15298'",
+        "rejectBn": "সেফটি হেলমেটের কোড IS 2925 — IS 15298 সেফটি জুতোর জন্য।"
+       },
+       {
+        "what": "Safety shoe with no IS mark",
+        "rejectBn": "সেফটি জুতোর জন্য IS 15298 — PPE-র গায়ে IS মার্ক আছে কিনা দেখে নিন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কোম্পানি PPE দিয়েছে — এবার কর্মীর দায়িত্ব কোন ছবিতে মানা হচ্ছে?",
+      "safe": [
+       "End of shift: wiping helmet and gloves clean, into the kit bag (label 'দিনের শেষে')",
+       "Showing a torn glove to the supervisor at the site (label 'সাইটে')",
+       "Wearing the issued helmet and gloves properly on a pole job (label 'পোলের নিচে')"
+      ],
+      "traps": [
+       {
+        "what": "Helmet hanging on the van mirror, lineman bareheaded at the pole",
+        "rejectBn": "কোম্পানির দেওয়া PPE সঠিকভাবে এবং সবসময় ব্যবহার করা আপনার দায়িত্ব।"
+       },
+       {
+        "what": "Cracked helmet slipped into the bag, nobody told",
+        "rejectBn": "PPE-তে ক্ষতি বা ত্রুটি দেখলে অবিলম্বে সুপারভাইজারকে রিপোর্ট করুন।"
+       },
+       {
+        "what": "Mud-caked gloves loose among spanners",
+        "rejectBn": "PPE-র সঠিক যত্ন নেওয়া এবং পরিষ্কার রাখা কর্মীর আইনি দায়িত্ব।"
+       },
+       {
+        "what": "Grey-haired senior on a risky job with no gloves or helmet",
+        "rejectBn": "আইন অনুযায়ী ঝুঁকিপূর্ণ কাজে প্রত্যেক কর্মীর জন্য PPE বাধ্যতামূলক — অভিজ্ঞ বা নতুন, পার্থক্য নেই।"
+       }
+      ]
+     },
+     {
+      "promptBn": "সাইজ, প্রশিক্ষণ, রেকর্ড — কোন ছবিগুলো ঠিক?",
+      "safe": [
+       "Gloves snug to the fingertips, boots fit (label 'মাপে মাপ')",
+       "Trainer showing a new-type harness to the crew on the ground (label 'নতুন সরঞ্জাম')",
+       "Diary: '14/11 — গ্লাভস ছেঁড়া — সুপারভাইজারকে বললাম' with the name (label 'ডায়েরি ক')"
+      ],
+      "traps": [
+       {
+        "what": "Gloves two sizes too big",
+        "rejectBn": "ভুল সাইজের PPE সুরক্ষার বদলে অসুবিধার কারণ হতে পারে — সঠিক সাইজ চাই।"
+       },
+       {
+        "what": "Brand-new type of PPE straight from the box to the pole",
+        "rejectBn": "নতুন ধরনের PPE বা টুল ব্যবহারের আগে সঠিক প্রশিক্ষণের দাবি জানান — এটা আপনার অধিকার।"
+       },
+       {
+        "what": "Diary 'গ্লাভস ছেঁড়া — বলেছি' with no date and no name",
+        "rejectBn": "ক্ষতিগ্রস্ত PPE রিপোর্টের রেকর্ডে তারিখ এবং কাকে বলেছেন — দুটোই লিখে রাখুন।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_7_6_a",
+     "engineType": "m7_ppe_counter_claim",
+     "titleBn": "কাউন্টারে দাবি",
+     "verb": "ink a legal claim on the register",
+     "scene": "Dawn at the section store: issue counter with the issue register (one ruled line per item), a stand of 6 rubber stamps and an ink pad, the day's docket (job + kit list), the storekeeper and shelves, the trainee at the counter edge with hand and foot visible for try-on, a wall calendar. Only real labels.",
+     "flow": [
+      "Guide first (no skip): 'আজকের কাজের কিট নিন — আইনে যা আপনার পাওনা, ঠিক তাই নিন।'",
+      "Docket: '11 kV লাইনের কাজ · পোলে ওঠা' or 'LT সার্ভিস লাইন · পোলে ওঠা'; kit list হেলমেট · সেফটি জুতো · গ্লাভস (11 kV jobs: '11 kV গ্লাভস') · হারনেস.",
+      "Storekeeper puts an item on the mat; corner guide 'কাউন্টারে যা এল, দেখে নিন।' Tap → close-up tray with all real markings at once (nothing circled). Optional try-on: drag onto the trainee's hand/foot/body to see the fit.",
+      "Corner guide 'রেজিস্টারে কী লিখবেন?' Drag one of 6 stamps (positions shuffled, all six always present: 'সই করে নিলাম' · 'বদলে দিন' · 'IS মার্ক চাই' · 'ঝুঁকি মতো রেটিং চাই' · 'ঠিক সাইজ চাই' · 'আগে প্রশিক্ষণ চাই') onto the item's line and hold ~0.6 s to ink.",
+      "Right stamp → praise + ◆ → reason deck → এগিয়ে যান. A right claim brings a replacement (good, or a second fault, on the next row) or 'এটার স্টক এখন নেই।' (once per play, non-glove item).",
+      "Out-of-stock = the coworker's two-beat moment; stamps and docket held until his deck. Then the storekeeper finds one 'পিছনের তাক থেকে পেলাম' (~50 %) or the item stays missing.",
+      "After 4 items: docket stamps 'কাজে যাচ্ছি' / 'PPE ছাড়া এই কাজ নয়' (drag + hold). Full valid kit → go; an item missing → refuse.",
+      "Deadly freeze when signing for a deadly-class item or going to an 11 kV job without rated gloves.",
+      "Pass panel ('আজ যা ধরলেন': each claim made)."
+     ],
+     "dealtVariety": "Job (glove-rating faults only on 11 kV jobs); item order; 2–3 faulty items from the pool (glove tear, cut harness webbing, cracked helmet, expired harness label vs the calendar, no IS mark, wrong IS code, no 11 kV rating, wrong size, 'এই প্রথম এল' new-type harness); ≥ 1 good item; replacement outcome; out-of-stock item and recovery; stamp positions; coworker side; reason deals.",
+     "deadly": [
+      "'সই করে নিলাম' on torn 11 kV gloves",
+      "Signing for gloves with no 11 kV rating for an 11 kV job",
+      "Signing for a harness with cut/frayed webbing",
+      "'কাজে যাচ্ছি' on an 11 kV job with rated gloves still missing"
+     ],
+     "slips": [
+      "Signing for a cracked helmet",
+      "Signing for an expired harness label with no damage",
+      "Signing for a helmet/shoe with no IS mark or the wrong IS code",
+      "Signing for the wrong size",
+      "Signing for a new-type harness without asking for training",
+      "A claim stamp on a good item (needless)",
+      "The wrong claim on a faulty item",
+      "'কাজে যাচ্ছি' with a non-glove item missing",
+      "'PPE ছাড়া এই কাজ নয়' with a full valid kit (needless)",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Once, right after 'এটার স্টক এখন নেই।' (helmet, shoe or harness only, never gloves). Beat 1: 'কোম্পানি ভালো PPE দেয় না, তাই আমি বাজার থেকে সস্তার একটা কিনে ব্যবহার করি। তুইও কিনে নে।' Beat 2: guide 'ওর কথা শুনবেন?'. Refuse: 'না — কোম্পানির কাছে রিপোর্ট করব, সস্তা জিনিস নয়।' Listen: 'হ্যাঁ, বাজারের একটা দিয়েই আজ চালিয়ে নিই।' / 'দাম কম হলেও দেখতে তো একই রকম।'",
+     "reasonQuestionsBn": [
+      "কেন সই করে নিলেন?",
+      "কেন বদলে দিতে বললেন?",
+      "কেন IS মার্ক চাইলেন?",
+      "কেন ঝুঁকি মতো রেটিং চাইলেন?",
+      "কেন ঠিক সাইজ চাইলেন?",
+      "কেন আগে প্রশিক্ষণ চাইলেন?",
+      "কেন আজ এই কাজে গেলেন না?",
+      "কেন কাজে গেলেন?"
+     ],
+     "gestureHints": "Item on the counter: tap ripple on it (only item). Close-up open: slow even sweep across the item, then a generic downward drag nudge (try-on), same on every item. Stamp stand: sweep over all 6. Stamp in hand: hold ring on the current register line (the only target). Docket decision: sweep over both docket stamps. Decks: built-in. Off during intro, storekeeper speech, coworker beats, praise, cards, freezes, results.",
+     "lessonPoints": [
+      "কাজের ঝুঁকি অনুযায়ী সঠিক PPE সরবরাহ করা (যেমন ১১ কেভি লাইনের জন্য ১১ কেভি রেটেড গ্লাভস)।",
+      "সরবরাহ করা PPE যেন অনুমোদিত স্ট্যান্ডার্ড (যেমন IS - Indian Standards) অনুযায়ী হয়।",
+      "ক্ষতিগ্রস্ত বা মেয়াদ উত্তীর্ণ PPE বদলে দেওয়ার ব্যবস্থা করা।",
+      "সেফটি হেলমেটের জন্য IS 2925 বা সেফটি জুতোর জন্য IS 15298।",
+      "ভুল সাইজের PPE সুরক্ষার বদলে অসুবিধার কারণ হতে পারে।",
+      "নতুন ধরনের PPE বা টুল ব্যবহার করতে দেওয়া হয়, তবে সেটি ব্যবহারের আগে সঠিক প্রশিক্ষণের দাবি জানান।",
+      "সঠিক PPE না থাকে, তবে আপনার কাজটি করতে অস্বীকার করার সম্পূর্ণ অধিকার আছে।"
+     ],
+     "giveawayRisks": "Six equal stamps, shuffled, always all six; markings drawn as real prints; all faces shown at once; try-on on every item; good items every play so claiming everything costs; wrong claims get only 'এটা তো সেই সমস্যা নয়।'. Judge: the module's only store-counter level; it differs from the audit's 'rack → take/reject' loop because the act is a specific legal claim with a replacement chain and a final refuse-the-job decision, and from do_7_1_a because there is no scene search (one fixed register line)."
+    },
+    {
+     "packId": "do_7_6_b",
+     "engineType": "m7_ppe_mishap_route",
+     "titleBn": "ক্ষতি হলে কার কাছে?",
+     "verb": "carry each PPE mishap to the right hands",
+     "scene": "Morning at a roadside 11 kV work site: van with the day's docket on its door (today's date), a notice board for the next job, the supervisor at his motorbike (name badge), the coworker (badge), a roadside hardware shop with its signboard, a dry cloth on the van step, the trainee's kit bag, and the trainee's pocket diary in his shirt pocket (a scene object, never prompted). JUDGE CHANGE: the diary-blank filling (drag a date and a name into blanks) was removed because it duplicated do_7_7_b's report form; the core is now routing each mishap and the work decision.",
+     "flow": [
+      "Guide first (no skip): 'কাজের মাঝে PPE-র কিছু হলে কী করবেন? দায়িত্ব নিয়ে সামলান।'",
+      "Incident 1 of 3 as a short wordless cutscene (dealt): glove snags a bolt and tears; helmet slips off the van roof (cracked, or only dusty); boot sole splits; harness webbing nicks on a cross-arm edge; or gloves come out muddy but whole. The item lands in the trainee's hands; tap to see it close (no circles).",
+      "Corner guide 'এটা নিয়ে কী করবেন?' Drag the item to the supervisor, the coworker, the hardware shop, the cloth (clean it), or back on/into the bag (keep using). Damaged → supervisor; dirty but whole → cloth; dusty, undamaged helmet → back on.",
+      "Right → praise + ◆ → reason deck → এগিয়ে যান. The supervisor answers (dealt): 'ভ্যানে নতুন আছে, এই নাও।' (a spare with its IS mark) or 'নতুনটা কাল পাবে।'.",
+      "Record (pro tip 5): after a report, holding the pocket diary ~0.6 s writes the line itself (today's date from the docket · the item · the person it was handed to). Not prompted; if the work decision is made after a damage report with no record written → slip 'রেকর্ড রাখুন'. The diary does nothing when no report was made.",
+      "Work decision: drag the work pin onto 'কাজ চালাই' or 'এই কাজ আজ নয়' on the docket and hold. Coworker moment on one dealt incident before this decision (held).",
+      "Incidents 2 and 3 with different items; deadly freeze per the table.",
+      "Pass panel ('আজ যা ধরলেন': each mishap and where it went)."
+     ],
+     "dealtVariety": "3 incidents (≥ 2 real damages, usually 1 no-damage case); supervisor reply per incident; names and badge positions; coworker incident and side; reason options.",
+     "deadly": [
+      "Going on with the 11 kV work in torn gloves with no spare, or putting torn gloves back in the bag",
+      "Going on in a harness with cut webbing, or bagging it"
+     ],
+     "slips": [
+      "Damaged item to the coworker or the shop instead of the supervisor",
+      "Bagging a cracked helmet or split sole and carrying on",
+      "'কাজ চালাই' with a cracked helmet or split sole and no spare",
+      "Reporting a dusty undamaged helmet or muddy whole gloves (needless report)",
+      "Wearing muddy gloves without cleaning",
+      "No diary record before the work decision after a damage report",
+      "'এই কাজ আজ নয়' after a good spare was given (needless stop)",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Once, on a dealt incident, before the work decision (the work pin is held). He pulls his own helmet off. Beat 1: myth 2 + 'তুইও খুলে রাখ।': 'আমি অভিজ্ঞ, আমার PPE লাগে না। এটা শুধু নতুনদের জন্য। তুইও খুলে রাখ।' Beat 2: guide 'আপনি কী করবেন?'. Refuse: 'না — ঝুঁকির কাজে PPE সবার জন্য বাধ্যতামূলক, পরেই থাকব।' Listen: 'ঠিকই তো, অভিজ্ঞ হলে একটু ছাড় চলে।' / 'আজ একবার খুলে রাখি, কেউ তো দেখছে না।'",
+     "reasonQuestionsBn": [
+      "কেন সঙ্গে সঙ্গে সুপারভাইজারকে বললেন?",
+      "কেন জিনিসটা পরিষ্কার করলেন?",
+      "কেন হেলমেটটা আবার পরলেন?",
+      "কেন ডায়েরিতে লিখে রাখলেন?",
+      "কেন আজ এই কাজ করলেন না?",
+      "কেন নতুনটা পরে কাজ চালালেন?"
+     ],
+     "gestureHints": "Item in hand: short generic upward drag nudge (never toward a person or place). Work decision: sweep over both docket marks and the pocket diary equally (the diary is in the sweep on every decision, report or not). Decks: built-in. Off during intro, cutscenes, supervisor's reply, coworker beats, praise, cards, freezes, results.",
+     "lessonPoints": [
+      "কোম্পানি দ্বারা সরবরাহ করা PPE সঠিকভাবে এবং সবসময় ব্যবহার করা।",
+      "PPE-এর সঠিক যত্ন নেওয়া এবং সেটিকে পরিষ্কার রাখা।",
+      "PPE-তে কোনো ক্ষতি বা ত্রুটি দেখা গেলে অবিলম্বে সুপারভাইজারকে রিপোর্ট করা।",
+      "যদি আপনি কোনো ক্ষতিগ্রস্ত PPE বদলানোর জন্য রিপোর্ট করেন, তবে তার একটি রেকর্ড (যেমন তারিখ এবং কাকে বলেছেন) নিজের কাছে রাখুন।",
+      "সঠিক PPE না থাকে, তবে আপনার কাজটি করতে অস্বীকার করার সম্পূর্ণ অধিকার আছে।",
+      "আইন অনুযায়ী, ঝুঁকিপূর্ণ কাজে নিযুক্ত প্রত্যেক কর্মীর জন্য PPE বাধ্যতামূলক।"
+     ],
+     "giveawayRisks": "Damage shown openly (fault finding is Module 1's); the judgement is where it goes and whether to work. No-damage incidents and the spare reply make 'always report' and 'always stop' cost. The diary is never prompted and sits in every decision sweep. Destinations are fixed scene places."
+    }
+   ],
+   "unsupported": [
+    "Glove classes other than 11 kV: not given.",
+    "IS codes only for helmets and shoes.",
+    "No size charts.",
+    "Which items carry a date: harness label (1.4) and helmet stamp (1.1) only.",
+    "Replacement timeframe and van spares: scene choice.",
+    "'Report to the authority' not named; supervisor and store used.",
+    "Product liability and third-party audit: not played.",
+    "Source glitches (Cyrillic, Persian, Hindi) listed under 7.4 unsupported.",
+    "Names, dates, dockets: scene details."
+   ],
+   "ownerDecisions": [
+    "7.6 deadly vs slip as in the module table (torn/unrated 11 kV gloves, cut webbing, 11 kV job without rated gloves = deadly; the rest slips). Confirm.",
+    "Coworker in do_7_6_a never on gloves, so a market glove is never ruled. Confirm.",
+    "Wrong IS code a fair trap, or 'no mark' only?",
+    "Missing non-glove item and going anyway = slip.",
+    "Muddy whole gloves: cleaning right, wearing muddy = slip. Keep?",
+    "do_7_6_b redesign (no diary blanks; one hold to record, missing record = slip). Approve."
+   ]
+  },
+  {
+   "lessonId": "7.7",
+   "titleBn": "দুর্ঘটনার রিপোর্ট (Accident Reporting): আপনার দায়িত্ব",
+   "board": {
+    "artFolder": "assets/game/art/accrep_board/ (tool/accrep_board_art.py; learn_board_pack77.dart); no colour/frame marks safe cards; the dead cow drawn without gore",
+    "mythBn": "দুর্ঘটনা রিপোর্ট করলে আমার বা আমার সুপারভাইজারের চাকরি চলে যেতে পারে, তাই চুপ করে থাকাই ভালো।",
+    "rounds": [
+     {
+      "promptBn": "কোন দুর্ঘটনার রিপোর্ট বাধ্যতামূলক — আর কোথায় ঠিকমতো খবর যাচ্ছে?",
+      "safe": [
+       "Dead cow by a fallen service wire; lineman phones his supervisor at once",
+       "Sooty burnt DTR; crew phones the control room",
+       "Colleague in hospital, 3 days crossed off the calendar, report being written"
+      ],
+      "traps": [
+       {
+        "what": "Crew walks away from the dead cow · 'গরু তো, মানুষ নয়'",
+        "rejectBn": "মানুষ হোক বা পশু — বৈদ্যুতিক দুর্ঘটনায় মৃত্যু হলেই রিপোর্ট বাধ্যতামূলক।"
+       },
+       {
+        "what": "DTR fire out, crew quietly locks the gate",
+        "rejectBn": "আগুন লাগা বা বিস্ফোরণের মতো বড় ঘটনাও রিপোর্ট করতে হয়।"
+       },
+       {
+        "what": "Colleague in bed 3 days; register says 'ছুটিতে'",
+        "rejectBn": "কেউ 24 ঘন্টার বেশি কাজ করতে অক্ষম থাকলে সেই দুর্ঘটনা রিপোর্ট করা বাধ্যতামূলক।"
+       }
+      ]
+     },
+     {
+      "promptBn": "দুর্ঘটনা ঘটে গেছে — লাইনম্যান হিসেবে আপনার কাজ কোনটা?",
+      "safe": [
+       "Lineman phones his supervisor right away",
+       "Lineman calls the control room the moment it happens"
+      ],
+      "traps": [
+       {
+        "what": "Packs up and goes home · 'কাল অফিসে গিয়ে বলব'",
+        "rejectBn": "নির্ধারিত সময়ের (সাধারণত 24-48 ঘন্টা) মধ্যে রিপোর্ট না হলে তা দণ্ডনীয় অপরাধ — খবর দিন সাথে সাথে।"
+       },
+       {
+        "what": "'রিপোর্ট তো কোম্পানির কাজ, আমার কী'",
+        "rejectBn": "আনুষ্ঠানিক রিপোর্ট কোম্পানির দায়িত্ব — কিন্তু আপনি সাথে সাথে না জানালে তারা সময়মতো রিপোর্ট করবে কীভাবে?"
+       },
+       {
+        "what": "Crew huddles · 'নিজেদের মধ্যেই মিটিয়ে নিই'",
+        "rejectBn": "দুর্ঘটনা লুকিয়ে রাখা একটি বড় আইনি অপরাধ — তাতে পরিস্থিতি আরও জটিল হয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "সুপারভাইজারকে পাঠানো কোন নোটটা ঠিকঠাক?",
+      "safe": [
+       "Note with date, time, pole number, injured person's name, age, address",
+       "Note with how it happened, the injury and who saw it"
+      ],
+      "traps": [
+       {
+        "what": "Note: 'আজ সকালে, লাইনের কাছে একটা ঘটনা'",
+        "rejectBn": "রিপোর্টে চাই দুর্ঘটনার তারিখ, সময় আর সঠিক স্থান — ভাসা-ভাসা কথায় তদন্ত চলে না।"
+       },
+       {
+        "what": "Note 'কেউ আহত হয়নি' while the hand is bandaged",
+        "rejectBn": "কোনো তথ্য লুকোবেন না — সৎ এবং নির্ভুল তথ্যই সঠিক তদন্তের ভিত্তি।"
+       },
+       {
+        "what": "Note 'পুরো ফিডার ফেটে গেছে, সবাই মরতে বসেছিল' for one burnt glove",
+        "rejectBn": "বাড়িয়ে বলবেন না — সৎ এবং নির্ভুল তথ্যই সঠিক তদন্তের ভিত্তি।"
+       }
+      ]
+     },
+     {
+      "promptBn": "দুর্ঘটনার পর ঘটনাস্থল — কোথায় ঠিক আছে?",
+      "safe": [
+       "Everything left as it was; crew waits by the van",
+       "Only a flaring ember by the oil drip covered with sand"
+      ],
+      "traps": [
+       {
+        "what": "Ladder stood up, tools packed",
+        "rejectBn": "ইন্সপেক্টর বা পুলিশের অনুমতি ছাড়া ঘটনাস্থল থেকে কিছু সরানো বা পরিবর্তন করা উচিত নয়।"
+       },
+       {
+        "what": "New fuse fitted in the scorched pillar",
+        "rejectBn": "ঘটনাস্থল পরিবর্তন করলে তদন্ত প্রক্রিয়া ব্যাহত হতে পারে।"
+       },
+       {
+        "what": "Burnt pieces swept into a sack",
+        "rejectBn": "ঘটনাস্থল সংরক্ষণ প্রমাণের জন্য অত্যন্ত জরুরি — ঝাড়পোঁছ মানে প্রমাণ নষ্ট।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ছোট শক লাগার পর সাথীর জন্য ঠিক কোনটা?",
+      "safe": [
+       "Colleague taken to the doctor after a small shock",
+       "Doctor checks him; the shock is written up for the supervisor"
+      ],
+      "traps": [
+       {
+        "what": "Drinks tea and climbs back up",
+        "rejectBn": "শকে শরীরের ভেতরের ক্ষতি অনেক সময় বাইরে থেকে বোঝা যায় না, পরে প্রকাশ পেতে পারে।"
+       },
+       {
+        "what": "'হাতে দাগ নেই, তাই ঠিক আছে'",
+        "rejectBn": "ভেতরের আঘাত বাইরে দেখা যায় না — যেকোনো বৈদ্যুতিক দুর্ঘটনার পর ডাক্তারি পরীক্ষা আবশ্যক।"
+       },
+       {
+        "what": "Saw a doctor, nobody tells the supervisor",
+        "rejectBn": "ডাক্তারি পরীক্ষা করা আর সেটি রিপোর্ট করা — দুটোই আবশ্যক।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কেউ আহত হয়নি — একটুর জন্য বেঁচে গেছেন। তারপর?",
+      "safe": [
+       "Spanner fell beside the helper; lineman tells the safety department · 'Near Miss'",
+       "Short written note about the near miss sent"
+      ],
+      "traps": [
+       {
+        "what": "Crew laughs it off · 'বেঁচে গেছি, ভুলে যাও'",
+        "rejectBn": "Near Miss জানালে ভবিষ্যতের বড় দুর্ঘটনা প্রতিরোধ করা যায়।"
+       },
+       {
+        "what": "Sign in the van: 'শুধু বড় দুর্ঘটনাই লিখি'",
+        "rejectBn": "কেউ আহত না হলেও ছোট দুর্ঘটনা কোম্পানির সেফটি ডিপার্টমেন্টকে জানানো উচিত।"
+       },
+       {
+        "what": "Meeting hunts someone to blame",
+        "rejectBn": "তদন্তের লক্ষ্য 'কে ভুল করেছে' নয়, 'কেন ভুলটি হলো' — যাতে পুরো সিস্টেমের উন্নতি হয়।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_7_7_a",
+     "engineType": "m7_scene_guard",
+     "titleBn": "যেমন ছিল, তেমন থাক",
+     "verb": "body-block reaching hands by dragging yourself",
+     "scene": "Accident aftermath, one of three sites: S1 roadside LT pole (ladder on its side, burnt glove, pliers, scorch mark, dazed colleague by the van); S2 village road (dead cow by a snapped service wire end on the grass, supply not known off, insulator piece); S3 feeder pillar (scorched open door, blown fuse carrier, soot, ember by an oil drip). Trainee by the van; coworker and anonymous onlookers' hands from frame edges; the supervisor's van arriving closes the level.",
+     "flow": [
+      "Guide first: 'দুর্ঘটনা ঘটে গেছে! সুপারভাইজারকে খবর দেওয়া হয়েছে, তিনি আসছেন — ততক্ষণ জায়গাটা আপনার দায়িত্বে।'",
+      "Take position: drag the worker along the ground band; first reach starts after this drag (or 8 s + hint).",
+      "6 reaches, one at a time, dealt order and side: 4 evidence, 2 care/danger-stopping; each 3.0–4.0 s (first 4.5 s). Corner pool: 'চোখ রাখুন — কে কী ধরছে?' etc.",
+      "Block: drag into the reach's lane before contact (palm up, hand withdraws). Let: do nothing. He walks back after every reach.",
+      "Evidence reaches (block right) per site; care/danger reaches (let right): colleague helped to the doctor, child led away, sand on the flaring ember.",
+      "Each right resolution → praise + ◆ → reason deck → এগিয়ে যান; next reach only after.",
+      "Coworker once, before the site's tied reach (held until his deck): S1 myth 2, S2 wire coil, S3 fuse swap.",
+      "Wrong → MistakeCard + strike; deadly → freeze. After 6 reaches the supervisor's van arrives → pass panel."
+     ],
+     "dealtVariety": "Site; which reaches and order; side, speed, object position; coworker side and tied reach; reason options.",
+     "deadly": [
+      "S2: dragging the worker onto the snapped wire or its ground zone (Module 1 step 5)",
+      "S2: letting the coworker coil the snapped wire not proven dead (not blocking, or listening) — module row 19, owner decision"
+     ],
+     "slips": [
+      "Letting an evidence item be moved (one each)",
+      "Blocking the colleague going to the doctor",
+      "Blocking a danger-stopping act",
+      "Listening to the coworker in S1 or S3"
+     ],
+     "coworkerPushBn": "S1 myth 2 word for word: 'এটা তো একটা ছোট শক ছিল, হাসপাতালে যাওয়ার বা রিপোর্ট করার দরকার নেই।' S2: 'গরু তো, মানুষ তো নয় — তারটা গুটিয়ে রাস্তা খুলে দিই।' S3: 'আগুন তো নিভেই গেছে — নতুন ফিউজ বসিয়ে দিই, রিপোর্টের ঝামেলা কেন?' Guide ask 'ওর কথা শুনবেন?'. Refuse: 'ভেতরের আঘাত বাইরে বোঝা যায় না — ডাক্তার দেখাতেই হবে' / 'পশুর মৃত্যুও রিপোর্ট বাধ্যতামূলক — কিছু সরানো চলবে না' / 'আগুন লাগাও রিপোর্ট করতে হয় — ঘটনাস্থল যেমন আছে থাক'. Listen: 'উনি নিজেই বলছেন ঠিক আছেন, থাক তবে' / 'ছোট ব্যাপার, গুছিয়ে নিলেই ঝামেলা শেষ'.",
+     "reasonQuestionsBn": [
+      "কেন আটকালেন?",
+      "কেন যেতে দিলেন?"
+     ],
+     "gestureHints": "Take-position wait: drag hint from the worker ≤ 72 dp up toward the scene centre. During reaches and between them: none. Decks: built-in. Off during intro, coworker beat 1, cards, freeze, results.",
+     "lessonPoints": [
+      "ইলেকট্রিক্যাল ইন্সপেক্টর বা পুলিশের অনুমতি ছাড়া দুর্ঘটনার ঘটনাস্থল থেকে কোনো কিছু সরানো বা পরিবর্তন করা উচিত নয় (যদি না অন্য কোনো বিপদ আটকানোর জন্য প্রয়োজন হয়)।",
+      "এটি প্রমাণ সংরক্ষণের জন্য অত্যন্ত জরুরি। ঘটনাস্থল পরিবর্তন করলে তদন্ত প্রক্রিয়া ব্যাহত হতে পারে।",
+      "যেকোনো বৈদ্যুতিক দুর্ঘটনার পর ডাক্তারি পরীক্ষা করা এবং সেটি রিপোর্ট করা আবশ্যক।",
+      "যেকোনো দুর্ঘটনা যার ফলে কোনো মানুষের বা পশুর মৃত্যু হয়েছে। / আগুন লাগা বা বিস্ফোরণের মতো বড় ঘটনাগুলোও রিপোর্ট করতে হয়।"
+     ],
+     "giveawayRisks": "Same detail on all objects; evidence and care reaches share art, speed and sound; worker returns after each reach; no 'আটকান' lines; block-all and let-all both strike out; wire zone not marked. Judge: timed like do_7_3_b but a different act (place your own body; block vs let) and one reach at a time."
+    },
+    {
+     "packId": "do_7_7_b",
+     "engineType": "m7_report_note",
+     "titleBn": "সৎ রিপোর্ট",
+     "verb": "write the report from a replay",
+     "scene": "A street with three LT poles whose number plates are readable only under a lens (one digit apart), a tea stall with a wall clock, the crew van with two crew ID cards, the worker, the coworker, two silent figures (tea-stall man, cyclist). The accident plays once; then the scene is preserved and a report sheet slides up over the lower half. Judge: now the module's only form-filling record (do_7_6_b no longer fills blanks).",
+     "flow": [
+      "Guide first: 'মন দিয়ে দেখুন — একটু পরে খবর আর লিখিত রিপোর্ট আপনাকেই দিতে হবে।'",
+      "The moment (8–10 s, voice-locked): T1 shock on the LT pole (hand), T2 flash at the pillar (forearm burn), T3 shock + slip off the ladder (ankle); 1–2 figures turn to watch.",
+      "Time jumps (+10 to +25 min); corner guide 'ঘটনা ঘটে গেছে — প্রথম কাজ?'; hold the phone to call the supervisor — held for the coworker (myth 1). Listen = slip, call again. Refuse → call connects; guide 'মুখে জানানো হলো — এবার লিখে পাঠান।'",
+      "Report lines any order: 'তারিখ · সময় · স্থান' (clock dial from NOW back to the accident time; lens over plates, drag the number), 'নাম · বয়স · ঠিকানা' (drag the injured man's card), 'কীভাবে ঘটল' (the coworker's pre-written draft: hiding / exaggerating / honest → 'রাখুন' or 'কাটুন'; after a strike, order three replay stills), 'কী আঘাত' (body outline + kind picker; 'কোনো আঘাত নেই' always there), 'প্রত্যক্ষদর্শী' (tokens + 'কেউ দেখেনি').",
+      "Each right line → praise + ◆ → reason deck; wrong → MistakeCard + strike, line reopens.",
+      "All five filled → 'পাঠান' → guide 'মুখে আর লিখে — দুটোই জানানো হলো।' → pass panel."
+     ],
+     "dealtVariety": "Accident type and body parts; clock time (5-min slot 08:00–16:00) and now-offset; pole numbers and which is the accident pole; crew names/ages/addresses; draft type (~1 in 3 honest); witnesses; coworker side; reason options.",
+     "deadly": [],
+     "slips": [
+      "Listening to myth 1 at the call",
+      "Time left at NOW or wrong",
+      "Wrong pole number",
+      "Coworker's card instead of the injured man's",
+      "Keeping a hiding/exaggerating draft",
+      "Striking an honest draft, or wrong still order",
+      "Injury marked wrong",
+      "Witness list wrong"
+     ],
+     "coworkerPushBn": "At the phone hold, myth 1 word for word: 'দুর্ঘটনা রিপোর্ট করলে আমার বা আমার সুপারভাইজারের চাকরি চলে যেতে পারে, তাই চুপ করে থাকাই ভালো।' Guide 'ফোনটা করবেন?'. Refuse: 'লুকোনোটাই বড় আইনি অপরাধ — খবর দেব এখনই' / 'কোম্পানি দুর্ঘটনা আটকাতে চায়, শাস্তি দিতে নয়'. Listen: 'চাকরি বাঁচাতে চুপ থাকাই ভালো' / 'ছোট ব্যাপার, নিজেরাই সামলে নেব'.",
+     "reasonQuestionsBn": [
+      "সময় আর পোল নম্বর কেন এত খুঁটিয়ে?",
+      "কেন আহতের নাম-বয়স-ঠিকানা?",
+      "ওর লেখাটা কেন কাটলেন? / কেন রাখলেন?",
+      "আঘাত কেন যেমন দেখেছেন তেমনই লিখলেন?",
+      "প্রত্যক্ষদর্শীর নাম কেন লাগে?"
+     ],
+     "gestureHints": "Replay and coworker beat 1: off. Phone: hold hint. Sheet, no line open: sweep over the five headers. Clock: drag hint on the minute hand, fixed ~30° clockwise. Lens: ≤ 72 dp upward nudge. Cards: sweep. Keep/strike: one sweep over both. Stills: upward nudge from a random still toward the slot row. Body: sweep; picker: sweep. Witnesses: sweep incl. 'কেউ দেখেনি'. 'পাঠান': tap once enabled. Decks: built-in.",
+     "lessonPoints": [
+      "একজন লাইনম্যান হিসেবে, আপনার দায়িত্ব হলো যেকোনো দুর্ঘটনা ঘটার সাথে সাথে কোনো দেরি না করে আপনার সুপারভাইজার বা নিয়ন্ত্রণ কর্তৃপক্ষকে জানানো …",
+      "দুর্ঘটনার তারিখ, সময় এবং সঠিক স্থান। আহত বা মৃত ব্যক্তির নাম, বয়স এবং ঠিকানা। দুর্ঘটনার সংক্ষিপ্ত বিবরণ (কীভাবে ঘটল)। কী ধরনের আঘাত লেগেছে তার বিবরণ। কোনো প্রত্যক্ষদর্শী থাকলে তার বিবরণ।",
+      "দুর্ঘটনার বিবরণ দেওয়ার সময় কোনো তথ্য লুকানোর বা বাড়িয়ে বলার চেষ্টা করবেন না।",
+      "সুপারভাইজারকে মুখে জানানোর পাশাপাশি, সম্ভব হলে একটি ছোট লিখিত নোট বা মেসেজও পাঠিয়ে দিন।"
+     ],
+     "giveawayRisks": "Clock starts at NOW; plates alike until read; ID cards equal in dealt order; honest draft ~1 in 3; keep/strike share one hint; no body highlights; 'none' options always present; any line order; coworker sits on the call itself."
+    }
+   ],
+   "unsupported": [
+    "No lesson example of 'অন্য কোনো বিপদ আটকানো'; the design uses medical care (myth 2 reality), leading people away, and sand on an oil ember (from 1.8).",
+    "Whether moving the injured counts as changing the scene: medical care allowed.",
+    "Cordon tape and scene photos: not used.",
+    "24–48 h is the company's formal deadline; the lineman's duty is 'সাথে সাথে'; no timer invented.",
+    "All narratives, names, pole numbers and times are dealt fiction.",
+    "S2 supply 'not yet confirmed off' is dressing so Module 1's ruling applies.",
+    "Near-miss receiver beyond 'সেফটি ডিপার্টমেন্ট': board only.",
+    "Mental-health support tip: no mechanic.",
+    "Inspector powers and RCA examples: reason wording only."
+   ],
+   "ownerDecisions": [
+    "do_7_7_a S2: letting the coworker coil a wire not proven dead = deadly (module rule shared with do_7_3_b). Confirm.",
+    "Entering the fallen wire's zone = deadly (Module 1 step 5).",
+    "Listening to myth 2 = slip in every module.",
+    "do_7_7_b all slips.",
+    "Anonymous hands and silent witnesses acceptable under 'no new characters'?",
+    "do_7_7_b: keep 5 reason decks or ask for 3 lines only?",
+    "do_7_7_a reach speed 3.0–4.0 s fair? slower under reduced motion?"
+   ]
+  },
+  {
+   "lessonId": "7.8",
+   "titleBn": "পরিবেশগত আইন: আমাদের দায়িত্ব",
+   "board": {
+    "artFolder": "assets/game/art/m7_board78/",
+    "mythBn": "একটু তেল মাটিতে পড়লে কিছু হয় না, মাটি তো শুষে নেয়।",
+    "rounds": [
+     {
+      "promptBn": "পুরনো ট্রান্সফরমার অয়েল বদলানো হচ্ছে — কোন ছবিতে কাজ ঠিক?",
+      "safe": [
+       "oil_drum — 'পুরনো তেল লিক-প্রুফ ড্রামে সংগ্রহ'",
+       "oil_agency — 'ড্রাম অনুমোদিত রিসাইক্লিং এজেন্সির গাড়িতে'"
+      ],
+      "traps": [
+       {
+        "what": "oil_soil — old oil poured on the soil",
+        "rejectBn": "'Hazardous Waste Management Rules' অনুযায়ী এই তেল মাটিতে ফেলা দণ্ডনীয় অপরাধ — লিক-প্রুফ ড্রামে সংগ্রহ করুন।"
+       },
+       {
+        "what": "oil_drain — old oil into the roadside drain",
+        "rejectBn": "এক লিটার তেল লক্ষ লক্ষ লিটার জলকে দূষিত করতে পারে — ড্রেনে ফেলাও দণ্ডনীয় অপরাধ।"
+       },
+       {
+        "what": "oil_bucket — old oil in an open bucket",
+        "rejectBn": "পুরনো তেল বিপজ্জনক বর্জ্য — খোলা বালতিতে নয়, লিক-প্রুফ ড্রামে সংগ্রহ করতে হবে।"
+       },
+       {
+        "what": "oil_stranger — drum onto an unmarked stranger's van",
+        "rejectBn": "ড্রাম শুধুমাত্র অনুমোদিত রিসাইক্লিং এজেন্সির কাছে হস্তান্তর করতে হবে, অন্য কারো হাতে নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "তেল বদলানোর সময় তেল লিক হয়ে মাটিতে গড়াচ্ছে — কোন ছবিতে ঠিক কাজ?",
+      "safe": [
+       "spill_boom — 'স্পিল কিটের বুম দিয়ে তেল ঘিরে রাখা'",
+       "spill_pads — 'তেল শোষণকারী প্যাড দিয়ে তেল শুষে নেওয়া'"
+      ],
+      "traps": [
+       {
+        "what": "spill_leave — puddle left to soak in",
+        "rejectBn": "মাটি শুষে নিলেও তেল মাটির গভীরে গিয়ে ভূগর্ভস্থ জলকে দূষিত করে — এটি দীর্ঘস্থায়ী ক্ষতি।"
+       },
+       {
+        "what": "spill_wash — hosing oil into the drain",
+        "rejectBn": "তেল ড্রেনে গেলে লক্ষ লক্ষ লিটার জল দূষিত হতে পারে — ড্রেনে ফেলা দণ্ডনীয় অপরাধ। স্পিল কিট ব্যবহার করুন।"
+       },
+       {
+        "what": "spill_cover — soil kicked over the puddle",
+        "rejectBn": "মাটি চাপা দিলেও তেল মাটিতেই থাকে, গভীরে গিয়ে ভূগর্ভস্থ জল দূষিত করে — প্যাড দিয়ে শুষে নিন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কন্ট্রোল প্যানেলের পুরনো ব্যাটারি আর খারাপ সার্কিট বোর্ড — কোন ছবিতে ঠিক?",
+      "safe": [
+       "ew_battery — 'পুরনো ব্যাটারি কোম্পানির নির্ধারিত সংগ্রহ কেন্দ্রে জমা'",
+       "ew_board — 'খারাপ সার্কিট বোর্ড সংগ্রহ কেন্দ্রে জমা'"
+      ],
+      "traps": [
+       {
+        "what": "ew_vat — battery in the municipal garbage vat",
+        "rejectBn": "'E-waste (Management) Rules' অনুযায়ী এই বর্জ্য সাধারণ ময়লার সাথে ফেলা যাবে না।"
+       },
+       {
+        "what": "ew_bury — battery and board buried in a field",
+        "rejectBn": "ই-ওয়েস্ট মাটির নিচে মিশে ক্ষতিকারক রাসায়নিক ছাড়ে, যা খাদ্য আর জলের মাধ্যমে শরীরে ঢোকে।"
+       },
+       {
+        "what": "ew_acid — battery cracked, acid on the ground",
+        "rejectBn": "ব্যাটারিতে সীসা আর অ্যাসিডের মতো ক্ষতিকারক পদার্থ থাকে — পুরোটাই সংগ্রহ কেন্দ্রে জমা দিন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "পুরনো টিউব লাইট, CFL আর সোডিয়াম ভেপার ল্যাম্প — কোন ছবিতে ঠিক?",
+      "safe": [
+       "lamp_box — 'ল্যাম্প না ভেঙে সাবধানে বাক্সে সংগ্রহ'",
+       "lamp_agency — 'ল্যাম্পের বাক্স অনুমোদিত ডিসপোজাল এজেন্সিতে পাঠানো'"
+      ],
+      "traps": [
+       {
+        "what": "lamp_snap — tubes snapped to fit a sack",
+        "rejectBn": "ল্যাম্পে পারদ থাকে, যা মারাত্মক নিউরোটক্সিন — না ভেঙে সাবধানে সংগ্রহ করতে হবে।"
+       },
+       {
+        "what": "lamp_bin — CFLs in the ordinary dustbin",
+        "rejectBn": "এই ল্যাম্পগুলোও বিপজ্জনক বর্জ্য হিসেবে গণ্য — অনুমোদিত ডিসপোজাল এজেন্সিতে পাঠাতে হবে।"
+       },
+       {
+        "what": "lamp_toss — lamps thrown loose on the van bed",
+        "rejectBn": "ছুঁড়ে দিলে ল্যাম্প ভাঙে, পারদ বেরোয় — না ভেঙে সাবধানে সংগ্রহ করুন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কাজ শেষ, বর্জ্য গোছানোর পালা — কোন ছবিতে ঠিক?",
+      "safe": [
+       "sep_rag — 'তেল-মাখা কাপড় আলাদা নির্দিষ্ট ডাস্টবিনে'",
+       "sep_two — 'বিপজ্জনক আর সাধারণ বর্জ্য আলাদা দুই ডাস্টবিনে'"
+      ],
+      "traps": [
+       {
+        "what": "sep_mixed — oily rags with tea cups and paper",
+        "rejectBn": "তেল-মাখা কাপড় বিপজ্জনক বর্জ্য — সাধারণ বর্জ্য থেকে আলাদা করে নির্দিষ্ট ডাস্টবিনে ফেলুন।"
+       },
+       {
+        "what": "sep_pads — oily pads in the general bin",
+        "rejectBn": "তেল-মাখা প্যাডও বিপজ্জনক বর্জ্য — সাধারণ ময়লায় নয়, নির্দিষ্ট ডাস্টবিনে।"
+       },
+       {
+        "what": "sep_smallcrew — small crew dumps everything ('law is for factories')",
+        "rejectBn": "আইন যে কোনো ব্যক্তি বা সংস্থার জন্য প্রযোজ্য — ব্যক্তিগতভাবে আর কোম্পানির, দুজনেরই বড় জরিমানা হতে পারে।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_7_8_a",
+     "engineType": "m7_spill_boom",
+     "titleBn": "এক ফোঁটাও মাটিতে নয়",
+     "verb": "draw a closed boom ring around the spill",
+     "scene": "Village roadside DTR plinth, dry afternoon: far tube well by a pond; DTR drawn de-energised as background state (DO open, earth set, PTW tag — never scored), drain valve at the tank bottom, a roadside drain with a grating, soil sloping to it; red spill kit box (pads, boom rolls), a closed leak-proof drum, a second drum (sound, or with a weeping seam), an open bucket, the hose, red hazardous-waste bag and green general bin. Trainee with গ্লাভস and a crew mate at the valve. Ground-slice inset only as a consequence picture.",
+     "flow": [
+      "Guide first: 'পুরনো ট্রান্সফরমার অয়েল বদলানো হবে — এক ফোঁটাও যেন মাটিতে বা নালায় না যায়!'",
+      "Set-up: tap the kit open; drag pads under the valve; draw the boom with a finger — a ring counts only if it closes and encloses the valve point and the drum spot (no outline). Opening the valve before pads + boom = slip.",
+      "◆ → reason 'কেন আগে স্পিল কিট বিছালেন?'.",
+      "Hose: drag its end to a container. Leak-proof drum = right; drain, soil, bucket or weeping drum = slip (oil starts to go there, the mate stops it).",
+      "Quarter-turn the valve; oil flows.",
+      "Dealt incident: coupling drip / bung spurt / knocked sample can / gasket weep; a puddle grows toward the drain; a gap in the set-up ring lets it escape = slip.",
+      "Coworker two beats as the puddle appears (or at the hose beat); the boom control is held until his deck. Listen = slip, ground-slice inset, bigger puddle.",
+      "Contain: draw a second ring ahead of the growing edge; soak with pads (hold until dark); bag used pads (red right, green = slip).",
+      "◆ → reason. Close the valve and the bung. Pass panel."
+     ],
+     "dealtVariety": "Drain side and slope; container positions; weeping drum present or swapped for a sound one; incident type, start and spread; growth rate band; coworker line and timing; light.",
+     "deadly": [],
+     "slips": [
+      "Opening the valve before pads and boom",
+      "Set-up ring open or not enclosing (found when the leak escapes)",
+      "Hose to the drain or soil",
+      "Hose to the bucket or weeping drum",
+      "Puddle reaching drain/soil past the boom",
+      "Oily pad in the general bin",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Dealt: myth 1 word for word 'একটু তেল মাটিতে পড়লে কিছু হয় না, মাটি তো শুষে নেয়।' or 'প্যাড-ট্যাড লাগবে না, জল দিয়ে নালায় ধুয়ে দাও।' The boom control waits. Refuse: 'না, মাটির গভীরে গিয়ে তেল ভূগর্ভস্থ জল দূষিত করে' / 'না, তেল নালায় গেলে বহু জল দূষিত হয়, এটা অপরাধ'. Listen (≥ 5): 'ঠিক, অল্প তেল মাটি নিজেই শুষে নেবে' / 'ঠিক, জল ঢাললেই তেল সরে যাবে' / 'ঠিক, এটুকু তেলে কারো ক্ষতি হয় না' / 'ঠিক, প্যাড বাঁচিয়ে রাখাই ভালো' / 'ঠিক, নালার জল তো এমনিই নোংরা'.",
+     "reasonQuestionsBn": [
+      "কেন আগে স্পিল কিট বিছালেন?",
+      "পুরনো তেল কেন এই ড্রামে?",
+      "কেন ঘিরে প্যাডে শুষলেন?",
+      "তেল-মাখা প্যাড কেন আলাদা ব্যাগে?"
+     ],
+     "gestureHints": "Set-up untouched: sweep over kit, valve, hose and containers (never a tap on the kit). Pads waiting: one pad nudged straight up out of the box. Boom waiting: a curved-path drag hint drawing a small closed loop in a neutral corner away from the valve/puddle (needs a curved path in HintSpec — wiring_needed). Hose: nudge straight out from the valve. Valve (only way forward once the hose is placed): drag arc on the handle. Pad on puddle: hold hint. Used pads: sweep over both bins. Bung: tap. Decks: built-in.",
+     "lessonPoints": [
+      "তেল বদলানোর সময়, পুরনো তেলটি একটি লিক-প্রুফ ড্রামে সংগ্রহ করতে হবে",
+      "'Hazardous Waste Management Rules' অনুযায়ী, এই তেল মাটিতে বা ড্রেনে ফেলা একটি দণ্ডনীয় অপরাধ।",
+      "এক লিটার তেল লক্ষ লক্ষ লিটার জলকে দূষিত করতে পারে।",
+      "তেল বদলানোর সময় বা তেল লিক হলে, মাটি দূষণ আটকাতে একটি 'স্পিল কিট' ব্যবহার করুন। এর মধ্যে তেল শোষণকারী প্যাড, বুম এবং অন্যান্য সামগ্রী থাকে।",
+      "বিপজ্জনক বর্জ্যকে (যেমন তেল-মাখা কাপড়) সাধারণ বর্জ্য থেকে আলাদা করে নির্দিষ্ট ডাস্টবিনে ফেলুন।"
+     ],
+     "giveawayRisks": "No outline shows where a boom goes; containers unlabelled; weeping seam is the only cue and some plays have two sound drums; drain not highlighted; corner lines name only the task; equal sweeps; spread direction dealt; coworker gates the boom control."
+    },
+    {
+     "packId": "do_7_8_b",
+     "engineType": "m7_waste_handover",
+     "titleBn": "ঠিক হাতে বর্জ্য",
+     "verb": "hand each waste to the right arriving vehicle",
+     "scene": "JUDGE REDESIGN (the town-map van route duplicated do_7_2_b's map route). The section depot yard at its gate, side view with depth: a trolley with the week's waste drawn as objects with no labels (sealed oil drum, control-panel battery, bad circuit board, tube lights / CFL / a vapour lamp lying loose, a padded lamp box, oily rags, used oily pads, tea cups and paper), a red hazardous bin and a green general bin. Vehicles pull in at the gate one at a time, each with only the signboard a worker reads: 'অনুমোদিত রিসাইক্লিং এজেন্সি', 'কোম্পানির সংগ্রহ কেন্দ্র', 'অনুমোদিত ডিসপোজাল এজেন্সি', the municipal garbage truck ('পৌরসভা'), and an unmarked van with no sign. Trainee by the trolley; coworker beside him.",
+     "flow": [
+      "Guide first (no skip): 'সপ্তাহের বর্জ্য জমেছে — প্রত্যেকটা ঠিক হাতে তুলে দিন!'",
+      "Before the first vehicle: loose lamps lie on the trolley; lift one by holding then dragging it into the padded lamp box (owner decision: a lamp released anywhere else falls and cracks = slip). Oily rags/pads go in the red bin; tea cups and paper in the green bin (not scored when right; hazardous in green = slip).",
+      "A vehicle pulls in; its driver waits. Drag items from the trolley (or a bin) onto its bed, then tap its 'যান' tab to send it off; tapping 'যান' with nothing loaded waves it off.",
+      "Right loads: oil drum → recycling agency; battery and circuit board → company collection centre; lamp box → disposal agency; green bin → municipal truck. The unmarked van → wave off.",
+      "Each right handover → praise + ◆ → reason deck for that waste → এগিয়ে যান. A wrong item on a vehicle → slip, the item comes back; anything to the unmarked van → slip (it drives off with it; consequence card). Waving off a legit vehicle whose waste is still on the trolley → the waste is undelivered at the end = slip.",
+      "Coworker: when the municipal truck arrives, the first drag is held (holdForCoworker). Beat 1 caption + voice; beat 2 chip, guide ask, refuse/listen deck. Listen = slip and the dealt hazardous item goes onto the municipal truck (consequence: battery seeping into a dump's ground).",
+      "After the last vehicle: pass panel ('আজ যা ধরলেন': lamps whole, oily apart, each waste to its authorised hand, the unmarked van refused)."
+     ],
+     "dealtVariety": "Which items on the trolley (always the oil drum, ≥ 1 lamp type, battery or board, an oily item, a general item, one more); vehicle order (5 per play; the unmarked van in about 2 plays of 3; a legit vehicle may arrive before its waste is ready in the box/bin); which lamp types; coworker line; light.",
+     "deadly": [],
+     "slips": [
+      "Oily rags or pads in the general bin",
+      "A hazardous item in the general bin or onto the municipal truck",
+      "A lamp released loose and cracked",
+      "A waste handed to the wrong authorised vehicle",
+      "Anything handed to the unmarked van",
+      "A legit vehicle waved off while its waste waits (undelivered at the end)",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "At the municipal truck's arrival (first drag held). Dealt line: myth 2 word for word 'পরিবেশের আইন তো শুধু বড় বড় ফ্যাক্টরির জন্য, আমাদের এসব মানার দরকার নেই।' or shortcut 'অত ঝামেলা কেন? সব এই ময়লার গাড়িতেই তুলে দাও।' Refuse: 'না, আইন সবার জন্য, ব্যক্তিগতভাবেও বড় জরিমানা হয়' / 'না, প্রত্যেক বর্জ্য শুধু তার অনুমোদিত হাতে যাবে'. Listen (≥ 5): 'ঠিক, আমাদের মতো ছোট দলে আইন খাটে না' / 'ঠিক, ময়লার গাড়িই সব নিয়ে যাক' / 'ঠিক, জরিমানা তো শুধু কোম্পানির হয়' / 'ঠিক, এত গাড়ির অপেক্ষা কে করে' / 'ঠিক, ব্যাটারি একটা গেলে কিছু হয় না'.",
+     "reasonQuestionsBn": [
+      "তেল-মাখা কাপড় কেন আলাদা বিনে?",
+      "ল্যাম্প কেন বাক্সে সাবধানে?",
+      "পুরনো তেল কেন এই গাড়িতে দিলেন?",
+      "ব্যাটারি আর বোর্ড কেন সংগ্রহ কেন্দ্রে?",
+      "ল্যাম্পের বাক্স কেন এই গাড়িতে?",
+      "ওই গাড়িকে কেন কিছু দিলেন না?"
+     ],
+     "gestureHints": "Before vehicles: sweep over trolley items, both bins and the lamp box equally; a touched lamp gets a hold-ring hint on itself (how to lift). Vehicle waiting: sweep over the trolley items, both bins and the vehicle's 'যান' tab equally, then a generic upward drag nudge of a random trolley item (never toward the vehicle). Decks: built-in. Off during intro, vehicle arrival, coworker beat 1, consequence card, cards, results.",
+     "lessonPoints": [
+      "… সেটিকে শুধুমাত্র অনুমোদিত রিসাইক্লিং এজেন্সির কাছে হস্তান্তর করতে হবে।",
+      "'E-waste (Management) Rules' অনুযায়ী, এই ধরনের বর্জ্য সাধারণ ময়লার সাথে ফেলা যাবে না।",
+      "পুরনো ব্যাটারি এবং অন্যান্য ইলেকট্রনিক যন্ত্রাংশ (যেমন খারাপ সার্কিট বোর্ড) কোম্পানির নির্ধারিত সংগ্রহ কেন্দ্রে জমা দিতে হবে।",
+      "এই ল্যাম্পগুলোকে না ভেঙে সাবধানে সংগ্রহ করতে হবে এবং অনুমোদিত ডিসপোজাল এজেন্সির কাছে পাঠাতে হবে।",
+      "বিপজ্জনক বর্জ্যকে (যেমন তেল-মাখা কাপড়) সাধারণ বর্জ্য থেকে আলাদা করে নির্দিষ্ট ডাস্টবিনে ফেলুন।",
+      "এই আইনগুলো যে কোনো ব্যক্তি বা সংস্থার জন্য প্রযোজ্য … ব্যক্তিগতভাবে এবং কোম্পানি—উভয়েরই বড় আকারের জরিমানা হতে পারে।"
+     ],
+     "giveawayRisks": "Items are pictures with no labels or colour codes; vehicles look alike except their signboards; vehicle order dealt so the matching waste is not always ready; waving off is a real choice (unmarked van) but costs when wrong; no glow on the right item; the coworker gates the first drag at the municipal truck. Distinct from do_7_2_b (no map, no route) and from 4.9b/2.10 sorting (the core is choosing whom to give each waste as receivers arrive, including refusing one)."
+    }
+   ],
+   "unsupported": [
+    "DTR shutdown/earthing before an oil change is not in 7.8: background only.",
+    "Drain valve comes from 4.5.",
+    "Closing the valve on a leak: done by the mate, unscored.",
+    "How an 'অনুমোদিত' agency is recognised: only its signboard ('শুধুমাত্র অনুমোদিত').",
+    "Open bucket / weeping drum as wrong containers: inferred from 'লিক-প্রুফ ড্রামে'.",
+    "Spread speed and ring tolerance: game feel.",
+    "Where the red bin goes: not in the lesson; the municipal truck takes only the green bin.",
+    "Spill-kit 'অন্যান্য সামগ্রী' not named.",
+    "No fines, PCB tests or sections shown.",
+    "Advanced section and pro tips 3–4: left out; no LED in the waste.",
+    "The unmarked van is the board's 'stranger's van' idea from 'শুধুমাত্র অনুমোদিত'; no price or scrap dealer is named.",
+    "Ground-slice and seepage pictures visualise the myth reality; no volumes or distances."
+   ],
+   "ownerDecisions": [
+    "No deadly in 7.8 (all slips, matching the board and the gate). Confirm.",
+    "do_7_8_a's growing puddle (time pressure inside one beat) OK?",
+    "do_7_8_b redesign (depot handover to arriving vehicles instead of a town-map route). Approve.",
+    "Wrong authorised receiver for a battery or lamp = slip (only oil has 'শুধুমাত্র').",
+    "Lamp handling: hold-to-lift, with a crack on a loose release = slip?",
+    "HintSpec curved-path drag for the boom trace (kit change)."
+   ]
+  },
+  {
+   "lessonId": "7.9",
+   "titleBn": "গ্রাহকের অধিকার এবং লাইনম্যানের দায়িত্ব",
+   "board": {
+    "artFolder": "assets/game/art/consumer_board/ (tool/consumer_board_art.py; 200 x 220 gradient SVG; one backdrop per round; only worker-read words: ID card strip, 'নোটিশ', 'জব শিট')",
+    "mythBn": "গ্রাহকের বাড়িতে কাজ করতে এসেছি, তার মানে আমি যেকোনো জায়গায় যেতে পারি এবং যেকোনো কিছু করতে পারি।",
+    "rounds": [
+     {
+      "promptBn": "গ্রাহকের দরজায় পৌঁছেছেন — প্রথমে কী করবেন?",
+      "safe": [
+       "id_show_door — trainee holds up his company ID before she speaks · 'নিজে থেকেই পরিচয়পত্র দেখাচ্ছেন'",
+       "id_show_gate — shows the ID across a closed gate to an elderly customer · 'গেটের বাইরে থেকে পরিচয়পত্র দেখাচ্ছেন'"
+      ],
+      "traps": [
+       {
+        "what": "id_walk_in — strides into the courtyard, ID in his pocket",
+        "rejectBn": "গ্রাহক চাওয়ার আগেই পরিচয়পত্র দেখান — অনুমতি ছাড়া বাড়িতে ঢোকা যায় না।"
+       },
+       {
+        "what": "id_after_demand — digs the card out only when demanded",
+        "rejectBn": "পরিচয়পত্র গ্রাহক চাওয়ার আগেই দেখান — কাজের সময় এটা দেখার অধিকার গ্রাহকের।"
+       },
+       {
+        "what": "id_uniform_only — points at his uniform and the van",
+        "rejectBn": "ইউনিফর্ম পরিচয়পত্র নয় — কাজের সময় পরিচয়পত্র দেখার অধিকার গ্রাহকের আছে।"
+       }
+      ]
+     },
+     {
+      "promptBn": "মিটার পরীক্ষার জন্য গ্রাহকের বাড়িতে ঢুকবেন — কোনটা ঠিক?",
+      "safe": [
+       "entry_invited — customer swings the gate open and waves him in · 'নোটিশ দেওয়া ছিল, গ্রাহক ভেতরে ডাকছেন'",
+       "entry_notice_slip — hands a 'নোটিশ' paper at the gate · 'আগে থেকে নোটিশ দিচ্ছেন'"
+      ],
+      "traps": [
+       {
+        "what": "entry_wall_climb — leg over the wall of a padlocked house",
+        "rejectBn": "জোর করে বা গ্রাহকের অনুমতি ছাড়া কারও বাড়িতে প্রবেশ করা যায় না।"
+       },
+       {
+        "what": "entry_push_gate — customer's palm up, he pushes in anyway",
+        "rejectBn": "গ্রাহক অনুমতি না দিলে ঢোকা যায় না — জোর করে প্রবেশ করা যায় না।"
+       },
+       {
+        "what": "entry_unannounced — already in the courtyard, customer surprised",
+        "rejectBn": "জরুরি অবস্থা ছাড়া, ঢোকার আগে গ্রাহককে যুক্তিসঙ্গত নোটিশ দিতে হয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "বাড়ির ভেতরে কাজ করছেন — আপনার জায়গা কোথায়?",
+      "safe": [
+       "zone_meter_box — working only at the meter box, other doors shut · 'শুধু মিটার বক্সে কাজ'",
+       "zone_wiring_route — following the conduit with the customer beside him · 'ওয়্যারিং-এর রুট ধরে দেখছেন'"
+      ],
+      "traps": [
+       {
+        "what": "zone_bedroom_door — pushes aside a bedroom curtain the conduit does not enter",
+        "rejectBn": "প্রবেশের অধিকার শুধু কাজের জায়গায় — মিটার বক্স আর ওয়্যারিং-এর রুট।"
+       },
+       {
+        "what": "zone_almirah — opens the steel almirah",
+        "rejectBn": "গ্রাহকের ব্যক্তিগত গোপনীয়তাকে সম্মান করা আপনার দায়িত্ব — কাজের বাইরে হাত নয়।"
+       },
+       {
+        "what": "zone_peek_window — peers into a family room",
+        "rejectBn": "কাজের সঙ্গে সম্পর্কহীন জায়গায় যাওয়া বা উঁকি দেওয়া — গোপনীয়তা ভঙ্গ।"
+       }
+      ]
+     },
+     {
+      "promptBn": "গ্রাহক রেগে বলছেন ট্রান্সফরমার বদলাতে হবে — কী করবেন?",
+      "safe": [
+       "talk_listen — calm, palms open, nodding · 'শান্তভাবে কথা শুনছেন'",
+       "talk_report_up — on the phone to his office, customer listening · 'ঊর্ধ্বতন কর্তৃপক্ষকে জানাচ্ছেন'"
+      ],
+      "traps": [
+       {
+        "what": "talk_argue — both jabbing fingers",
+        "rejectBn": "উত্তেজিত গ্রাহকের সাথে তর্কে জড়াবেন না — শান্তভাবে তাঁর কথা শুনুন।"
+       },
+       {
+        "what": "talk_promise — big handshake, pointing at the transformer",
+        "rejectBn": "ট্রান্সফরমার বদলানো আপনার হাতে নেই — মিথ্যা প্রতিশ্রুতি নয়, সঠিক তথ্য দিন।"
+       },
+       {
+        "what": "talk_wave_off — turns his back",
+        "rejectBn": "গ্রাহককে বোঝান যে আপনি তাঁর সমস্যা সমাধানের জন্যই এসেছেন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কী কাজ করতে এসেছেন — গ্রাহককে কীভাবে বলবেন?",
+      "safe": [
+       "explain_point — points at the meter and talks simply · 'সহজ ভাষায় কাজটা বোঝাচ্ছেন'",
+       "explain_docket — shows the docket and talks · 'কী কাজ, কেন — খুলে বলছেন'"
+      ],
+      "traps": [
+       {
+        "what": "explain_silent — already unscrewing the meter cover",
+        "rejectBn": "কী কাজ করতে এসেছেন এবং কেন, তা সহজ ভাষায় গ্রাহককে বোঝান।"
+       },
+       {
+        "what": "explain_dismiss — shrugs and laughs at the question",
+        "rejectBn": "'গ্রাহক কিছুই বোঝেন না' — অপেশাদার ও ভুল মনোভাব; সঠিক তথ্য দিন।"
+       },
+       {
+        "what": "explain_tangle — talks fast, scribble cloud",
+        "rejectBn": "ঘুরিয়ে-পেঁচিয়ে নয় — সহজ ভাষায় সঠিক এবং স্বচ্ছ তথ্য দিন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "মিটার বদলানো শেষ — বেরোনোর আগে কী করবেন?",
+      "safe": [
+       "finish_sweep — sweeps offcuts into a bag · 'কাজের জায়গা পরিষ্কার করছেন'",
+       "finish_job_sheet — customer signs a 'জব শিট' · 'জব শিটে গ্রাহকের সই নিচ্ছেন'"
+      ],
+      "traps": [
+       {
+        "what": "finish_mess — walks out, offcuts left",
+        "rejectBn": "কাজ শেষে আপনার কাজের জায়গাটি পরিষ্কার করে দিন।"
+       },
+       {
+        "what": "finish_pot_crushed — ladder on a crushed pot, scratched wall",
+        "rejectBn": "আপনার কাজের কারণে যেন গ্রাহকের সম্পত্তির কোনো ক্ষতি না হয়।"
+       },
+       {
+        "what": "finish_no_sheet — leaving with the old meter, no paper",
+        "rejectBn": "মিটার বদলের পর গ্রাহকের সই সহ জব শিট পূরণ করুন — এটাই কাজের প্রমাণ।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_7_9_a",
+     "engineType": "m7_doorstep_visit",
+     "titleBn": "দরজা থেকে মিটার বক্স",
+     "verb": "present ID, decide entry, walk the work zone",
+     "scene": "Drawn para lane at morning, three dealt house fronts (village courtyard house, two-storey town house, shop-front with a back store), the van with an unvoiced colleague and the visit docket on its door. Entering a house pans into a side-cut ground floor: veranda, hall, stairs, inner doors (curtained bedroom, puja room, kitchen, store), almirah, a real conduit from the meter box to the switchboard.",
+     "flow": [
+      "GuideIntro: 'আজ তিন বাড়িতে কাজ — নিয়ম মেনে ঢুকুন, নিয়ম মেনে বেরোন।'",
+      "Docket shows the job and one notice line ('নোটিশ: দেওয়া হয়েছে' / 'দেওয়া হয়নি' / 'জরুরি'); tap for a close-up.",
+      "Drag the trainee to the gate. Gate state: customer at the door / nobody home / a woman alone ('বাড়িতে আমি একা আছি').",
+      "Tray of three equal items (পরিচয়পত্র · ডকেট · নোটিশের কাগজ, dealt order): if someone answers, the ID must be shown first (drag to the customer); anything else first = slip. Right → ◆ → reason.",
+      "Consent ('আসুন' / 'এখন না' / no answer): drag through the gate (enter) or give the notice slip (to the customer / letterbox) and drag back to the van. Enter right only with consent AND (notice given OR জরুরি). Dropping him on the wall = slip. Needless refusal = slip.",
+      "Woman alone: tap the colleague to come as witness before entering; going in alone while he is there = slip (owner decision).",
+      "Inside: the customer says where the meter is; drag room to room; inspection/test jobs follow the conduit; a room off the meter place and route = slip. ◆ → reason.",
+      "Work beat (~2 s); offcuts fall; sweep with the broom, then leave the way you came; 'কাজ শেষ' with debris = slip.",
+      "3 visits per play (≥ 1 entry, ≥ 1 non-entry). Pass/fail panel."
+     ],
+     "dealtVariety": "Houses and order; job per docket; notice line; gate state; tray order; meter location and tempting doors; conduit route; debris spots; coworker visit, beat and side; reason deals.",
+     "deadly": [],
+     "slips": [
+      "First act at the door not the ID card",
+      "Entering without consent",
+      "Entering on a routine job with 'নোটিশ: দেওয়া হয়নি'",
+      "Climbing the wall / entering an empty house",
+      "Needless refusal",
+      "Walking into a private room off the meter place and route",
+      "Leaving debris",
+      "Woman alone: going in without calling the colleague (owner decision)",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Once per play on a dealt visit. Gate beat: 'পরিচয়পত্র-টত্র লাগবে না, ইউনিফর্ম দেখেই বুঝবে — ঢুকে পড়ো!' held at the first tray/gate drag. Or inside: myth 1 word for word held at the first room drag. Guide ask 'সাথী কী বলছে — শুনবেন?'. Refuse cards state the rule (পরিচয়পত্র দেখানো / শুধু কাজের জায়গা); listen = slip.",
+     "reasonQuestionsBn": [
+      "কেন আগে পরিচয়পত্র দেখালেন?",
+      "কেন ভেতরে ঢুকলেন না?",
+      "নোটিশ ছাড়াই কেন ঢুকলেন?",
+      "কেন সাথীকে সাক্ষী হিসেবে ডাকলেন?",
+      "কেন ওই ঘরে গেলেন না?",
+      "কেন জায়গাটা পরিষ্কার করলেন?"
+     ],
+     "gestureHints": "Lane: drag nudge from the trainee along the lane. Docket close-up: tap close. Tray: sweep over the three items. Consent: sweep over gate, wall, letterbox/customer and colleague. Inside: drag nudge always up-left. Cleanup: sweep over broom and 'কাজ শেষ'; broom in hand: swipe across the whole floor strip. Off during intro, work beat, caption beats, decks, cards, results.",
+     "lessonPoints": [
+      "পরিচয়পত্র দেখানো: গ্রাহক চাওয়ার আগেই আপনার কোম্পানির পরিচয়পত্র দেখান।",
+      "এই প্রবেশের জন্য আপনাকে একটি নির্দিষ্ট সময়ের আগে গ্রাহককে একটি যুক্তিসঙ্গত নোটিশ (Reasonable Notice) দিতে হবে (জরুরি অবস্থা ছাড়া)। আপনি জোর করে বা গ্রাহকের অনুমতি ছাড়া তার বাড়িতে প্রবেশ করতে পারেন না।",
+      "আপনার প্রবেশের অধিকার শুধুমাত্র আপনার কাজের সাথে সম্পর্কিত জায়গার (যেমন মিটার বক্স, ওয়্যারিং-এর রুট) মধ্যেই সীমাবদ্ধ।",
+      "যদি বাড়িতে কোনো মহিলা একা থাকেন … সম্ভব হলে, অন্য কোনো সহকর্মী বা স্থানীয় ব্যক্তিকে সাক্ষী হিসেবে সাথে রাখুন।",
+      "কাজ শেষে পরিচ্ছন্নতা: কাজ শেষে আপনার কাজের জায়গাটি পরিষ্কার করে দিন।"
+     ],
+     "giveawayRisks": "Equal tray items, shuffled; gate, wall and letterbox all live with no highlight; notice status only on the docket; private rooms not dimmed; debris not sparkling; coworker on any eligible visit; entry and non-entry visits every play. Judge: figure-walking is shared with do_7_2_b's map, but the loop here is a doorstep protocol (ID → consent → zone → cleanup), not a route."
+    },
+    {
+     "packId": "do_7_9_b",
+     "engineType": "m7_honest_reply",
+     "titleBn": "সৎ জবাব",
+     "verb": "build an honest reply from phrase tiles",
+     "scene": "Para lane at noon by a pole-mounted transformer; a veranda meter board where the trainee has changed a meter (old meter in a bag, a 'জব শিট' clipboard). Silent customers with caption bubbles come one at a time. Above the trainee a speech strip with two slots and 'বলুন'; a tray of six phrase tiles.",
+     "flow": [
+      "GuideIntro: 'পাড়ার লোক প্রশ্ন নিয়ে আসছেন — সত্যি কথা, শান্ত মাথায়।'",
+      "3 customers from 6 situations (ট্রান্সফরমার বদল, বিল ভুল, বারবার কারেন্ট যাওয়া, 'নালিশ করব', নতুন সংযোগ, 'মিটার খুললেন কেন?'); 2–3 bubbles each held for readHold.",
+      "Dropping a tile while bubbles still come = interrupting = slip.",
+      "When the customer stops, drag two tiles onto the strip: 2 honest + 4 traps (false promise, brush-off, argument, denied right), one colour and length band.",
+      "Tap 'বলুন'; only now the customer reacts. Both honest → calms, praise, ◆ → reason. Any trap → reaction + MistakeCard = slip; tiles re-deal.",
+      "The meter-change owner (always in the deal) is answered with a what-and-why pair, then drag the 'জব শিট' to him to sign; 'চলুন' without it = slip.",
+      "Coworker once at a dealt customer's 'বলুন' (held). Pass/fail panel."
+     ],
+     "dealtVariety": "Which 3 situations (the owner always one, placed 1st–3rd); customer look and side; bubble wording; six tiles per answer from libraries in shuffled positions; coworker customer; reason deals.",
+     "deadly": [],
+     "slips": [
+      "Interrupting",
+      "False promise",
+      "Brush-off",
+      "Arguing",
+      "Denying a right",
+      "Leaving without the job-sheet signature",
+      "Listening to the coworker"
+     ],
+     "coworkerPushBn": "Myth 2 word for word at a dealt customer's 'বলুন': 'গ্রাহক তো কিছুই বোঝেন না, তাকে যা-খুশি বুঝিয়ে দিলেই হলো।' Guide 'সাথীর কথা শুনবেন?'. Refuse: 'না — সঠিক আর স্বচ্ছ তথ্য দেওয়াই আমার দায়িত্ব' / 'সততাই কোম্পানির সম্মান বাড়ায়'. Listen: 'ঠিক, যা হোক বুঝিয়ে দিই' / 'উনি তো বুঝবেন না'.",
+     "reasonQuestionsBn": [
+      "কেন এই জবাব দিলেন?",
+      "কেন আগে পুরো কথা শুনলেন?",
+      "কেন কথা দিলেন না?",
+      "কেন জব শিটে সই নিলেন?"
+     ],
+     "gestureHints": "Bubbles coming: none. Tiles waiting: sweep over all six; next idle a ghost-tile drag nudge from the tray's top edge toward the strip. Strip full: tap 'বলুন'. Job sheet: sweep over clipboard and 'চলুন'. Off during intro, reactions, decks, cards, results.",
+     "lessonPoints": [
+      "অভিযোগ নথিভুক্ত করার এবং তার দ্রুত সমাধান পাওয়ার অধিকার।",
+      "বিতর্ক এড়িয়ে চলুন: … শান্তভাবে তার কথা শুনুন …",
+      "প্রতিশ্রুতি দেবেন না: যদি কোনো সমস্যার সমাধান আপনার হাতে না থাকে (যেমন ট্রান্সফরমার বদলানো), তবে সেই বিষয়ে কোনো মিথ্যা প্রতিশ্রুতি দেবেন না। … বলুন যে আপনি বিষয়টি আপনার ঊর্ধ্বতন কর্তৃপক্ষকে জানাবেন।",
+      "কাজের ব্যাখ্যা: আপনি কী কাজ করতে এসেছেন এবং কেন, তা সহজ ভাষায় গ্রাহককে বোঝান।",
+      "ডকুমেন্টেশন: কোনো বড় কাজ বা মিটার বদলানোর সময়, গ্রাহকের স্বাক্ষর সহ একটি জব শিট (Job Sheet) পূরণ করুন।"
+     ],
+     "giveawayRisks": "Tiles equal and shuffled; no reaction before 'বলুন'; both slots must be honest; re-deal swaps phrasings; coworker independent of the strip; equal weight for clipboard and 'চলুন'."
+    }
+   ],
+   "unsupported": [
+    "Length of 'reasonable notice': no number.",
+    "'জরুরি' undefined: docket word only; consent still needed.",
+    "Leaving a notice after refusal: inferred.",
+    "Where/how to apply or complain: generic tiles.",
+    "SoP limits and penalties: none.",
+    "Exceptions to uninterrupted supply: none named.",
+    "Job sheet fields beyond the signature: none.",
+    "Why a meter is changed: generic.",
+    "Board round 6 damage details illustrate the general rule."
+   ],
+   "ownerDecisions": [
+    "No deadly in 7.9. Confirm.",
+    "Woman alone: going in without the colleague = slip (or unscored).",
+    "Needless refusal = slip.",
+    "Interrupting = slip.",
+    "A জরুরি docket still needs consent.",
+    "quickMs (~150 s A, ~120 s B)."
+   ]
+  },
+  {
+   "lessonId": "7.10",
+   "titleBn": "একজন 'সার্টিফায়েড' লাইনম্যান: লাইসেন্স ও যোগ্যতার গুরুত্ব",
+   "board": {
+    "artFolder": "assets/game/art/cert_board/ (tool/cert_board_art.py; learn_board_pack710.dart, const learnBoardPack710). Only real document text; paper colours shared across safe and trap cards; ages and uniforms dealt across both (the round-1 boy is the only youth cue, and an adult with a young face is on a safe card).",
+    "mythBn": "একবার কাজ শিখে গেলে আর নতুন করে শেখার কিছু নেই।",
+    "rounds": [
+     {
+      "promptBn": "বিদ্যুৎ লাইনে কাজের জন্য আইন যাকে 'উপযুক্ত' বলে — কোনটা?",
+      "safe": [
+       "competent_a — grown lineman in full PPE, training certificate on a clipboard, a senior beside him · 'প্রশিক্ষিত, অভিজ্ঞ, প্রাপ্তবয়স্ক লাইনম্যান'",
+       "competent_b — grown lineman with a young face pointing at the danger plate, keeping his crew back · 'বিপদ চেনেন, এড়াতে জানেন'"
+      ],
+      "traps": [
+       {
+        "what": "teen_helper — a school-age boy handed a harness",
+        "rejectBn": "আইনে বয়স 18 বছরের বেশি হতে হবে — কিশোর লাইনের কাজে 'উপযুক্ত' নয়।"
+       },
+       {
+        "what": "untrained_sent — new man on his first day pointed up the pole",
+        "rejectBn": "প্রশিক্ষণ ছাড়া কাউকে ঝুঁকিপূর্ণ কাজে পাঠানো আইনের লঙ্ঘন।"
+       },
+       {
+        "what": "strong_only — muscular untrained labourer lifting a cross-arm",
+        "rejectBn": "গায়ের জোর নয় — চাই পর্যাপ্ত প্রশিক্ষণ ও অভিজ্ঞতা, যাতে বিপদ চিনে এড়াতে পারেন।"
+       },
+       {
+        "what": "self_learn — new joiner alone with only a booklet ('নিজে বুঝে নাও')",
+        "rejectBn": "সঠিক প্রশিক্ষণ দিতে কোম্পানি আইনত বাধ্য — নিজে বুঝে ঝুঁকির কাজে নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "ওয়ার্কম্যান পারমিট পাওয়ার ঠিক পথ কোনটা?",
+      "safe": [
+       "iti_exp_exam — ITI certificate, a logbook of years, an exam desk · 'ITI + কাজের অভিজ্ঞতা + পরীক্ষা'",
+       "board_interview — applicant at an interview table under 'লাইসেন্সিং বোর্ড' · 'রাজ্যের লাইসেন্সিং বোর্ডে ইন্টারভিউ'"
+      ],
+      "traps": [
+       {
+        "what": "exp_no_exam — grey-haired lineman waves the exam away",
+        "rejectBn": "অভিজ্ঞতার সাথে পরীক্ষা বা ইন্টারভিউ পাশও লাগে — তবেই পারমিট।"
+       },
+       {
+        "what": "exam_no_exp — fresh graduate with an empty logbook",
+        "rejectBn": "নির্দিষ্ট বছরের কাজের অভিজ্ঞতাও লাগে — শুধু পরীক্ষায় পারমিট হয় না।"
+       },
+       {
+        "what": "company_id — company ID held up as the permit",
+        "rejectBn": "পারমিট দেয় রাজ্য সরকারের লাইসেন্সিং বোর্ড — কোম্পানির পরিচয়পত্র নয়।"
+       }
+      ]
+     },
+     {
+      "promptBn": "বড় ঠিকাদারের কাজে ডাক পেলেন — কোন কাগজ আপনার যোগ্যতা প্রমাণ করবে?",
+      "safe": [
+       "permit_card — workman permit shown at a contractor's office · 'ওয়ার্কম্যান পারমিট'",
+       "permit_with_iti — permit card on top of an ITI file · 'পারমিট ও ITI-র কাগজ'"
+      ],
+      "traps": [
+       {
+        "what": "first_aid_only — only a first aid and fire safety certificate",
+        "rejectBn": "ফার্স্ট এইড প্রশিক্ষণ দামি, কিন্তু অনেক ঠিকাদারের শর্ত ওয়ার্কম্যান পারমিট।"
+       },
+       {
+        "what": "word_only — empty hands, 'বছরের পর বছর করছি'",
+        "rejectBn": "মুখের কথা নয় — লাইসেন্সই প্রমাণ করে আপনি আইনত যোগ্য ও দক্ষ।"
+       },
+       {
+        "what": "iti_only — only an ITI certificate",
+        "rejectBn": "ITI পারমিটের একটা যোগ্যতা মাত্র — অভিজ্ঞতা আর পরীক্ষা পেরিয়ে তবেই পারমিট।"
+       }
+      ]
+     },
+     {
+      "promptBn": "কাজ শিখে গেছেন — এরপর একজন ভালো পেশাদার কী করেন?",
+      "safe": [
+       "live_line_course — class at a practice rig with hot sticks ('লাইভ লাইন প্রশিক্ষণ')",
+       "hv_joint_cert — HV cable-jointing bench with an assessor · 'HV কেবিল জয়েন্টিং সার্টিফিকেশন'",
+       "first_aid_fire — CPR dummy and extinguisher session · 'ফার্স্ট এইড ও ফায়ার সেফটি'"
+      ],
+      "traps": [
+       {
+        "what": "skip_company_training — walks past the training notice toward home",
+        "rejectBn": "কোম্পানির প্রশিক্ষণের সুযোগ কখনো হাতছাড়া করবেন না।"
+       },
+       {
+        "what": "old_ways — new tool unopened while he works the old way",
+        "rejectBn": "নতুন সরঞ্জাম, নতুন নিয়ম আসছে — আপডেট না থাকলে কাজের মান ও সুরক্ষা কমে।"
+       },
+       {
+        "what": "know_it_all — old lineman outside a classroom, arms crossed",
+        "rejectBn": "শেখার কোনো শেষ নেই — নিজেকে আপডেট না করলে পিছিয়ে পড়বেন।"
+       }
+      ]
+     },
+     {
+      "promptBn": "নিজের পেশাকে গড়ে তোলার ঠিক অভ্যাস কোনটা?",
+      "safe": [
+       "logbook — writing the day's job, project and training in his logbook · 'নিজের লগবুক'",
+       "ask_senior — junior asking a senior at the pole base · 'সিনিয়রকে প্রশ্ন'",
+       "goal_training — circling a cable-jointing course notice · 'লক্ষ্য ঠিক করে প্রশিক্ষণ'"
+      ],
+      "traps": [
+       {
+        "what": "no_record — certificates scattered and torn in a van footwell",
+        "rejectBn": "কী কাজ, কোন প্রকল্প, কোন প্রশিক্ষণ — লগবুকে লিখুন; লাইসেন্স ও ইন্টারভিউতে কাজে দেয়।"
+       },
+       {
+        "what": "shy_silent — junior hiding his confusion behind the van",
+        "rejectBn": "সিনিয়ররা জ্ঞানের ভান্ডার — প্রশ্ন করতে কখনো লজ্জা পাবেন না।"
+       },
+       {
+        "what": "paper_only — wall of framed certificates, gloves still in their wrapper",
+        "rejectBn": "অভিজ্ঞতা অপরিহার্য — সার্টিফিকেট সেই অভিজ্ঞতারই আইনগত স্বীকৃতি।"
+       }
+      ]
+     }
+    ]
+   },
+   "doLevels": [
+    {
+     "packId": "do_7_10_a",
+     "engineType": "m7_crew_papers",
+     "titleBn": "যোগ্য হাতে কাজ",
+     "verb": "flip a worker's papers, staff the jobs",
+     "scene": "Morning roll-call in a sub-division store yard: office, poles, van, a notice board with today's job cards (header date '11-11-2026'), a wooden tray 'আজ নয় — প্রশিক্ষিত লোক চাই'. A gang of 3–4 plus the player's own figure (foreman's clipboard), name strips on shirts. A worker's papers open as a 5-sleeve card wallet: ID (নাম, জন্ম সাল), ITI, ওয়ার্কম্যান পারমিট (State Electrical Licensing Board), training certificates (লাইভ লাইন প্রশিক্ষণ, HV কেবিল জয়েন্টিং সার্টিফিকেশন, ফার্স্ট এইড ও ফায়ার সেফটি), logbook summary, empty sleeves. Job cards: 'শাটডাউনে লাইন মেরামত', 'ঠিকাদারের লাইন রক্ষণাবেক্ষণ — শর্ত: ওয়ার্কম্যান পারমিট', 'HV কেবিল জয়েন্ট', '11 kV লাইভ লাইন কাজ'. Judge: the module's only crew-papers/roster level (do_7_1_b no longer uses crew cards).",
+     "flow": [
+      "Guide first: 'আজ আপনি দলের ফোরম্যান! কাগজ দেখে ঠিক লোককে ঠিক কাজ দিন।'",
+      "Corner guide 'আগে কার কাগজ দেখবেন?'. Tap a worker (or yourself) → wallet; swipe the 5 sleeves (fresh order each play); a 'seen' dog-ear equal for all.",
+      "Drag a worker onto a job card (one per card, undo allowed). Drag a card into the 'আজ নয়' tray to hold it; undo allowed.",
+      "All cards filled or held → 'শিফট শুরু' rises; it and the live-line drop wait for the coworker if he has not come in his round.",
+      "Pressure moment once per play in the live-line round (2 or 3). Beat 1: myth 2 word for word, pointing at a dealt uncertified worker (or the player). Beat 2: chip, 'ওঁর কথা শুনবেন?', deck. Listening drops him on the live-line card and starts the shift (deadly).",
+      "'শিফট শুরু' → judged in board order: right → walks off, praise, ◆; right hold → stamped, ◆; wrong → MistakeCard + strike; deadly → freeze first.",
+      "One reason deck per round on its key decision.",
+      "Round 1: 3 workers, 2 jobs; round 2: 4 workers, 3 jobs; round 3: 4 + own wallet, 3 jobs, sometimes a job nobody can take.",
+      "Pass panel ('আজ যা ধরলেন': which certificate fitted which job)."
+     ],
+     "dealtVariety": "Gangs from ~10 profiles with looks dealt apart from papers; job cards and order; sleeve order; live-line round; coworker's target; whether anyone holds the live-line certificate; reason deals; a solver guarantees a correct roster and holds right only when no free qualified worker exists. JUDGE RULE: adults' জন্ম সাল ≤ 2006, minors 2009–2010, never 2007–2008 (so the board date decides cleanly).",
+     "deadly": [
+      "Anyone without the লাইভ লাইন প্রশিক্ষণ certificate on '11 kV লাইভ লাইন কাজ' (veteran, fresh ITI, under-18, or the player without it)",
+      "Listening to the coworker's push onto the live-line job"
+     ],
+     "slips": [
+      "'HV কেবিল জয়েন্ট' without the jointing certification",
+      "Contractor job without a workman permit (ITI, company ID or first-aid paper taken for it)",
+      "Any non-live line job to the under-18 helper",
+      "Any line job to the fresh joiner with an empty logbook",
+      "A needless hold"
+     ],
+     "coworkerPushBn": "Once, in the live-line round, at the first of: opening the target's wallet, touching the live-line card, or tapping 'শিফট শুরু' (held). Myth 2 word for word: 'লাইসেন্স বা সার্টিফিকেট তো শুধু কাগজে দেখানোর জন্য, আসল তো হলো কাজের অভিজ্ঞতা।' Refuse: 'না — সার্টিফিকেটই প্রমাণ উনি নিরাপদে করতে প্রশিক্ষিত' / 'না — লাইভ লাইনে প্রশিক্ষণের কাগজ ছাড়া কাউকে নয়'. Listen (≥ 5): 'হ্যাঁ — 20 বছরের হাত, কাগজ লাগে না' / 'হ্যাঁ — অভিজ্ঞতাই আসল, কাগজ পরে হবে' / 'হ্যাঁ — ফার্স্ট এইডের কাগজ তো আছেই' / 'হ্যাঁ — আজ একবার, কেউ দেখবে না' / 'হ্যাঁ — উনি নিজেই বলছেন পারবেন'.",
+     "reasonQuestionsBn": [
+      "লাইভ লাইনের কাজ কেন ওঁকে দিলেন?",
+      "লাইভ লাইনের কাজ কেন আজ 'আজ নয়' ট্রেতে রাখলেন?",
+      "HV কেবিল জয়েন্ট কেন ওঁকে দিলেন?",
+      "ঠিকাদারের কাজে কেন ওঁকে পাঠালেন?",
+      "ছেলেটাকে কেন লাইনের কাজ দিলেন না?",
+      "নতুন ছেলেটিকে কেন কাজে পাঠালেন না?"
+     ],
+     "gestureHints": "Yard, nothing placed: sweep over every gang figure incl. the player's. Wallet open: swipe hint right-to-left always. After a wallet seen, cards empty: drag nudge from the last-opened worker straight up ≤ 96 dp. Unfilled after that: sweep over job cards and the tray together. All filled: tap ripple on 'শিফট শুরু'. Decks: built-in. Off during intro, coworker beat 1, freeze, cards, results.",
+     "lessonPoints": [
+      "বিদ্যুৎ লাইনে কাজ করার জন্য একজন ব্যক্তিকে 'উপযুক্ত' (Competent) হতে হবে। এর মানে হলো, তার বয়স ১৮ বছরের বেশি হতে হবে এবং … পর্যাপ্ত প্রশিক্ষণ এবং অভিজ্ঞতা থাকতে হবে …",
+      "প্রশিক্ষণ ছাড়া আপনাকে কোনো ঝুঁকিপূর্ণ কাজে পাঠানোটা আইনের লঙ্ঘন।",
+      "রাজ্য সরকারের লাইসেন্সিং বোর্ড (State Electrical Licensing Board) থেকে একটি 'ওয়ার্কম্যান পারমিট' বা লাইসেন্স নিতে হয়।",
+      "অনেক বড় কোম্পানি বা ঠিকাদারের কাজ পাওয়ার জন্য এটি একটি আবশ্যক শর্ত।",
+      "উদাহরণ: লাইভ লাইন কাজের প্রশিক্ষণ, হাই-ভোল্টেজ কেবিল জয়েন্টিং-এর সার্টিফিকেশন, ফার্স্ট এইড এবং ফায়ার সেফটি ট্রেনিং।",
+      "লাইসেন্স বা সার্টিফিকেট আপনার সেই অভিজ্ঞতাকে একটি আনুষ্ঠানিক এবং আইনগত স্বীকৃতি দেয়।"
+     ],
+     "giveawayRisks": "Nothing judged before 'শিফট শুরু'; row, card and sleeve order shuffled; every wallet 5 sleeves; looks apart from papers; coworker not in the gang and his target dealt; no ticks; job cards never name the needed certificate except the contractor's printed condition; needless hold costs; guide lines restate only."
+    }
+   ],
+   "unsupported": [
+    "Whether West Bengal requires a workman permit: only 'ভারতের অনেক রাজ্যে'; the condition appears on one contractor card only.",
+    "Permit thresholds (years, qualifications): not given; only clear extremes dealt.",
+    "Licence expiry/renewal: not used.",
+    "NSQF certificates: kept out.",
+    "Under-18 on site as observer: only barred from line work.",
+    "Physical outcome of uncertified live-line work: the freeze is a game convention; the lesson says 'আইনের লঙ্ঘন'.",
+    "Foreman as the legal assigner: not stated.",
+    "Crew first-aid requirement: not used.",
+    "'11 kV' on the live-line card is scene data."
+   ],
+   "ownerDecisions": [
+    "Only the energised live-line card is deadly; every other mis-assignment a slip (module rows 8–10). Or all slips?",
+    "Foreman frame OK?",
+    "Myth split: myth 1 board rival, myth 2 Do coworker (also the gate's F2 line). OK?",
+    "Optional end beat: today's roster stamped into the player's logbook (pro tip 3).",
+    "Single Do level for 7.10 confirmed?"
+   ]
+  }
+ ],
+ "gate": {
+  "packId": "gate_m7",
+  "engineType": "m7_gate_permit_day",
+  "titleBn": "সুপারভাইজারের ডকেট: সইয়ের দায়",
+  "verb": "authorize or halt each job step",
+  "scene": "One continuous drawn world for one shutdown job, camera panning between three spots. (A) Morning, the issuing counter of a 33/11 kV substation control room: issuer, carbon PTW book, bound logbook, store hatch with the storekeeper and issue register, the crew van and the dealt crew (3–4 men, same uniform, ID cards on lanyards) seen through the window. (B) Midday, a para lane fed by the lane DTR on a plinth whose DO fuses are dropped open with a lock and tag as the job's isolation (shown as the film arrives; not a fork); the main-road LT line beside it is fed from a different DTR whose DO set is closed (normal, live); red spill kit, two drums, a roadside drain; service wires into 3 houses (one meter-change house with a veranda meter board, courtyard wall and gate, a curtained inner room); a neighbour's roof; ladder and van. (C) Late afternoon, back at the counter for the return. The trainee is today's permit receiver; the field copy of the PTW sits on a clipboard docked at the bottom edge all day — the single decision control. Corner guide top-left; header ধাপ N · ◆ · 💀. Only worker-read words: permit boxes, 'কন্ট্রোল রুম কপি' / 'ফিল্ড কপি', glove cuff '11 kV', helmet 'IS 2925', docket notice line, the agency truck's signboard, ID card fields.",
+  "flow": [
+   "Guide first (LevelIntro, no skip): 'আজ একটা পুরো কাজের দায় আপনার সইয়ে — পারমিট নেওয়া থেকে ফেরত দেওয়া পর্যন্ত। প্রতিটা পা আইন মেনে।'",
+   "The job runs as a short film in day order but never moves on by itself. At each step ('মোড়', 10 per play) someone is about to do the next thing and stops, looking at the player. Corner guide, same at every step: 'এগোতে দেবেন?' Tap pool rotating from the start: 'আপনার সইয়েই কাজ চলছে — দেখে সিদ্ধান্ত নিন।' / 'কাগজ, লোক, জায়গা — যা দেখার দেখে নিন।' / 'আইন মানা থাকলে এগোন, না থাকলে থামান।'",
+   "Look (free, any time while a step waits): tap anything for a close-up (either permit copy, an ID card, the glove cuff, the helmet print, the docket, the drum seam, the meter seals, the roof, the DO fuses of either DTR, the men on the ground). Real markings only, nothing ringed.",
+   "Decide with the field copy: swipe UP toward the scene = 'এগোন'; swipe DOWN into the pocket = 'থামান'.",
+   "Right 'এগোন': the act completes, short praise, points; only the first right 'এগোন' of a play also puts ◆ on the table and asks 'কেন এগোতে দিলেন?'.",
+   "Right 'থামান': the crew freezes; guide 'কোথায় আইন ভাঙছে?'; tap the breach (a tap on empty scene is ignored; a compliant object = slip 'এখানে তো আইন মানা আছে'). Right tap → ◆ (tableBusy) → fix deck 'আইন মতো এখন কী?' → zoomed card → এগিয়ে যান → the lawful fix plays.",
+   "Wrong 'থামান' on a lawful step = slip (needless stop): 'সব তো ঠিক আছে, দেখেছেন?' + MistakeCard; the step waits again.",
+   "Wrong 'এগোন' on a slip-class step: the act plays out, MistakeCard + strike, the job carries on. Wrong 'এগোন' on a deadly-class step: FreezeFrame grey → consequence in colour → near-miss/death and fall per DoDeathGuard.",
+   "Counter forks — F1 পারমিট (issuer: 'লাইন বন্ধ করা আছে, এই নিন।'): lawful both copies filled and signed; unlawful FIELD copy issuer box blank (deadly) · no paper, only his word (deadly) · two different PTW numbers (slip). F2 কে উঠবেন (leader: 'আজ উনি উঠবেন।'; the climb is on the shutdown span): lawful ID shows training complete, authorization signed and stamped, adult; unlawful training ongoing · authorization blank · জন্ম সাল under 18 (all slip). F3 কিটে সই (storekeeper: 'রেজিস্টারে সই করে নিয়ে যান।'): lawful '11 kV' cuff label + IS mark gloves, helmet IS 2925; unlawful torn glove palm (deadly) · gloves with no rating for the 11 kV docket (deadly) · helmet with no IS mark (slip) · out of stock and a market helmet in a shop bag offered (slip).",
+   "Lane forks — F4 গ্রাহকের দরজা ('ঢুকে পড়ি?'): lawful 'নোটিশ: দেওয়া হয়েছে', ID shown, 'আসুন'; unlawful 'এখন না' · nobody home, leg over the wall · routine 'নোটিশ: দেওয়া হয়নি' (slip). F5 ঘরের ভেতর ('এই দিকে যাই?'): lawful follows the conduit; unlawful pushes aside a curtain the conduit does not enter (slip). F6 মিটারের সিল ('পুরনোটা খুলে নতুনটা বসাই?'): lawful seals intact; unlawful a seal cut · a magnet on the face (slip; fix: report to the supervisor and vigilance). F7 চুরির হুক ('হুকটা টেনে খুলে দিই?'): JUDGE FIX — the live/dead cue is which line the hook hangs on: lawful = hook on the lane's span (fed by the DTR whose DOs are dropped and tagged for this job), vigilance officer with the order present, full PPE; unlawful = no order taken (slip) · he turns to march to the owner's door (slip) · the hook hangs on the main-road line fed from the other DTR whose DOs are closed, i.e. live (deadly). F8 লাইনের নিচে ('চলো, পোলের দিকে যাই।'): lawful masons on a roof with no line near; unlawful masons raising a floor under the LT line · wet clothes on a roof line under the wire (slip; fix: warn and inform).",
+   "DTR forks — F9 তেল বদল ('ভালভ খুলি?'): lawful pads, closed boom ring, hose into the closed leak-proof drum; unlawful no spill kit · hose to the drain · hose to an open bucket (slip). F10 বর্জ্য ('এগুলো তুলে দিই?'): lawful the 'অনুমোদিত রিসাইক্লিং এজেন্সি' truck, pads into the red bag; unlawful an unmarked van · oily pads into the green bin (slip). F11 দুর্ঘটনা (a near miss — spanner lands beside the helper — or a hand cut on a cross-arm edge; 'কাজ চালাই?'): lawful the hurt man heading to the doctor and the leader phoning the supervisor / the near miss being written up; unlawful bandaged and sent back up, nobody told · 'নিজের ভুলে কেটেছে, কাউকে বলার দরকার নেই' · a crewmate tidying the fallen tool and ladder before the supervisor comes (slip).",
+   "Return forks — F12 লাইন ফেরত (always last; 'কাজ শেষ — PTW ফেরত দিয়ে লাইন চালু করতে বলি?'): lawful every man from the morning line-up on the ground (count never shown); unlawful one man still up a pole half hidden behind the DTR or a tree (deadly, owner decision). F13 জব শিট ('চলুন?'): lawful customer signed; unlawful no signature (slip). F14 লগবুক ('ঠিক আছে, লিখে রাখছি।'): lawful cancellation date and time in the bound logbook; unlawful on a loose chit (slip).",
+   "Deal per play: F1 first, F12 last; 8 more from F2–F11/F13/F14 in day order; 4–6 of 10 lawful; 1–2 deadly-class unlawful versions (never more than 2).",
+   "Pressure moment once per play on a dealt slip-class fork type (lawful or unlawful version alike): the first touch on the field copy is held (holdForCoworker on the swipe). Beat 1: caption + recorded voice (that lesson's myth). Beat 2: chip, guide 'ওঁর কথা শুনবেন?', refuse/listen deck. Refuse → praise, then the step still waits for the player's swipe. Listen = slip and the step resolves as 'এগোন' (one slip in total).",
+   "After F12: closing reason once per play 'আজকের সইয়ে আপনি কী দায় নিয়েছিলেন?'.",
+   "Pass panel: rank সুপারভাইজার (unlockRank(7)), badge 'আইন কি বলে?', mark (100 − 15 × slips, pass ≥ 55), time, ◆, stars, 'আজ যা ধরলেন'. 3 slips → DoStrikeOut + StruckOutCard with পাঠ; deadly → freeze, consequence, fall."
+  ],
+  "dealtVariety": "Which 8 middle forks and which version of each (4–6 lawful, 1–2 deadly-class); crew line-up (3–4 of ~10, ID cards dealt apart from looks) and so the F12 head-count; the climber; the meter-change house, its meter box and conduit; drain side and drums; which line the F7 hook hangs on; where a man could be hidden at F12 (lawful plays sometimes park the van or a cart there); incident and version; light per spot; coworker fork, side and line; fix and reason options from libraries (≥ 2 right, ≥ 5 wrong, within 1.3×).",
+  "deadly": [
+   "F1: 'এগোন' on a permit whose FIELD copy has no issuer signature (= do_7_4_a; Module 1 step 17)",
+   "F1: 'এগোন' on the issuer's word alone, no paper (Module 1 step 17; 7.4 myth 1 reality)",
+   "F3: signing for torn 11 kV gloves, or gloves with no 11 kV rating, for the 11 kV docket (= do_7_6_a; Module 1 step 3)",
+   "F7: authorizing removal of a hook on a line that is still live (the other DTR's closed-DO line) (= do_7_5_b)",
+   "F12: authorizing the PTW return and line charge with a man still up a pole (owner decision)"
+  ],
+  "slips": [
+   "F1: copies with different PTW numbers",
+   "F2: a climber whose ID shows training ongoing, authorization blank, or under 18 (shutdown work; = do_7_1_b, do_7_10_a non-live jobs)",
+   "F3: helmet with no IS mark, or a market helmet",
+   "F4/F5: entering without consent or notice, the wall, a room off the route",
+   "F6: changing a meter with a cut seal or magnet unreported",
+   "F7: hook removal (dead line) without the order; confronting the owner",
+   "F8: walking past construction or wet clothes under the line",
+   "F9/F10: no spill kit; oil to the drain or a bucket; drum to an unmarked van; oily pads in the general bin",
+   "F11: sending an injured man back, not informing at once, near miss unreported, scene tidied",
+   "F13: no job-sheet signature",
+   "F14: cancellation on a loose chit",
+   "Any needless stop",
+   "Tapping a compliant object after 'থামান'",
+   "Listening to the coworker"
+  ],
+  "coworkerPushBn": "Once per play on a dealt slip-class fork type (F2, F3 market/IS versions, F4, F6, F8, F9, F11), lawful or unlawful version alike; at the first touch of the field copy (held); never during a praise window. His line is that lesson's myth word for word (Do-level clips reused): F2 'লাইসেন্স বা সার্টিফিকেট তো শুধু কাগজে দেখানোর জন্য, আসল তো হলো কাজের অভিজ্ঞতা।' · F3 'কোম্পানি ভালো PPE দেয় না, তাই আমি বাজার থেকে সস্তার একটা কিনে ব্যবহার করি।' · F4 'গ্রাহকের বাড়িতে কাজ করতে এসেছি, তার মানে আমি যেকোনো জায়গায় যেতে পারি এবং যেকোনো কিছু করতে পারি।' · F6 'বিদ্যুৎ চোরকে ধরা আমার কাজ নয়, ওটা পুলিশের কাজ।' · F8 'ক্লিয়ারেন্স একটু কম হলে কিছু হয় না, কেউ তো আর মাপতে আসছে না।' · F9 'একটু তেল মাটিতে পড়লে কিছু হয় না, মাটি তো শুষে নেয়।' · F11 'দুর্ঘটনা রিপোর্ট করলে আমার বা আমার সুপারভাইজারের চাকরি চলে যেতে পারে, তাই চুপ করে থাকাই ভালো।' Guide ask 'ওঁর কথা শুনবেন?'. Refuse (right on any version): 'না — নিজে দেখে, আইন মেনে তবেই এগোতে দেব' / 'না — আমার সইয়ে কাজ, আইন না মেনে নয়'. Listen (≥ 5): 'ঠিকই, এত দেখার দরকার নেই' / 'চলো, দেরি হয়ে যাচ্ছে' / 'আইন তো কাগজেই থাকে' / 'সবাই তো এভাবেই করে' / 'কেউ তো দেখছে না'. Listening = slip.",
+  "reasonQuestionsBn": [
+   "কেন এগোতে দিলেন?",
+   "আইন মতো এখন কী? (F1)",
+   "আইন মতো এখন কী? (F2)",
+   "আইন মতো এখন কী? (F3)",
+   "আইন মতো এখন কী? (F4/F5)",
+   "আইন মতো এখন কী? (F6/F7)",
+   "আইন মতো এখন কী? (F8)",
+   "আইন মতো এখন কী? (F9/F10)",
+   "আইন মতো এখন কী? (F11)",
+   "আইন মতো এখন কী? (F12/F13/F14)",
+   "আজকের সইয়ে আপনি কী দায় নিয়েছিলেন?"
+  ],
+  "gestureHints": "Step waiting, field copy untouched (~8 s idle or 3 taps on nothing in 4 s): first a sweep over every inspectable thing in the current spot at one speed; next idle a swipe hint on the field copy showing a short swipe up then a short swipe down. Close-up open: tap its close control. After 'থামান': the same equal sweep. Decks: built-in sweep; zoomed card: tap এগিয়ে যান; MistakeCard: tap continue. Off during intro, pans, the act playing out, praise window, coworker beat 1, freezes, cards, results. Kit limits as usual.",
+  "lessonPoints": [
+   "7.4: PTW-এর প্রতিটি স্বাক্ষর একটি আইনি দায়িত্বের প্রমাণ। এটি কোনো সাধারণ ফর্মালিটি নয়।",
+   "7.4: পারমিট গ্রহণকারী … কাজ শেষে তিনি লাইনটিকে নিরাপদ অবস্থায় ফেরত দেবেন।",
+   "7.4: লিখিত, স্বাক্ষরিত PTW ছাড়া কাজ শুরু করা মানেই আইন এবং সুরক্ষা—দুটোই লঙ্ঘন করা। · লগবুক রেকর্ড …",
+   "7.1 / 7.10: শুধুমাত্র 'উপযুক্ত' বা প্রশিক্ষিত এবং অনুমোদিত ব্যক্তিই বিদ্যুৎ লাইনে কাজ করতে পারবেন। · তার বয়স ১৮ বছরের বেশি হতে হবে",
+   "7.6: কাজের ঝুঁকি অনুযায়ী সঠিক PPE সরবরাহ করা (যেমন ১১ কেভি লাইনের জন্য ১১ কেভি রেটেড গ্লাভস)। · সেফটি হেলমেটের জন্য IS 2925",
+   "7.9: আপনি জোর করে বা গ্রাহকের অনুমতি ছাড়া তার বাড়িতে প্রবেশ করতে পারেন না। · প্রবেশের অধিকার … মিটার বক্স, ওয়্যারিং-এর রুট · জব শিট",
+   "7.5: মিটারের সিলগুলো ভালোভাবে পরীক্ষা করুন … · শুধুমাত্র কর্তৃপক্ষের নির্দেশে … · লাইনটি বন্ধ করে নেওয়া এবং সম্পূর্ণ PPE ব্যবহার করা অপরিহার্য।",
+   "7.3: লাইনের নিচে বা খুব কাছাকাছি নতুন … নির্মাণ কাজ চলছে, তবে অবিলম্বে আপনার সুপারভাইজারকে জানান।",
+   "7.8: লিক-প্রুফ ড্রামে … শুধুমাত্র অনুমোদিত রিসাইক্লিং এজেন্সির কাছে … · মাটিতে বা ড্রেনে ফেলা একটি দণ্ডনীয় অপরাধ। · spill kit · oily waste apart",
+   "7.7: সাথে সাথে … সুপারভাইজার বা নিয়ন্ত্রণ কর্তৃপক্ষকে জানানো · ঘটনাস্থল থেকে কোনো কিছু সরানো বা পরিবর্তন করা উচিত নয় · Near Miss",
+   "7.2: 'No-Fault Liability' নীতি · ধাপ ১ (অবিলম্বে জানানো)"
+  ],
+  "giveawayRisks": "Every step halts the same way with the same guide line; crew words are fixed per fork and identical on lawful and unlawful versions. 4–6 of 10 lawful, so 'always stop' and 'always go' both fail. After 'থামান' a breach tap is required and compliant taps cost; replies never name the real breach. Close-ups show real markings only (torn glove at the same detail, blank box just blank, closed and open DO sets drawn at the same size). F7's live cue is which line the hook hangs on, readable only by looking at both DTRs. F12 head-count never shown; lawful plays sometimes put a van or cart where a man could hide. Coworker on lawful and unlawful versions alike. Fix deck only after a right stop and tap. JUDGE MEDLEY CHECK: no Do level's verb returns (no tabs, rulebook pages, calendar tear, map route, tape, hold-to-warn, carbon peel, photo scrub, wire trace, camera, stamps, mishap routing, body block, report form, boom ring, vehicle handover, doorstep tray, phrase tiles, crew wallet); one job carries state end to end (the morning permit is the one returned; the morning line-up is the F12 count); a single grammar (look → authorize/halt → tap breach → lawful next step) asks one judgement — as the legally answerable receiver, is this step lawful? It differs from Module 1's hazard-watch gate (real-time interrupt) because here the job waits on the player's signature."
+ },
+ "changes": [
+  "do_7_1_b REDESIGNED (engineType m7_crew_roster → m7_rule_question): the crew ID-card roster duplicated do_7_10_a's crew-papers roster. New verb: an order arrives on the phone with identical words for its lawful and unlawful versions; the player obeys or holds the call and pages the pocket rulebook to show the regulation (Reg 3/15/18/32 or the company-duty page). Reg 3 staffing now lives only in do_7_10_a.",
+  "do_7_2_a reveal changed: the timeline-knob scrubber duplicated do_7_4_b's photo-strip scrub; it is now a tear-off day calendar (swipe down, one stage per page, no dates). Verb: 'tear calendar pages, file each case'.",
+  "do_7_8_b REDESIGNED (engineType m7_waste_route → m7_waste_handover): the bird's-eye town-map van route duplicated do_7_2_b's town-map route. New verb: at the depot gate, hand each waste to the right arriving vehicle (recycler, collection centre, disposal agency, municipal truck) and wave off the unmarked van. Coworker moved to the municipal truck's arrival.",
+  "do_7_6_b REDESIGNED (engineType m7_ppe_damage_record → m7_ppe_mishap_route; title 'ক্ষতি হলে কার কাছে?'): dragging a date and a name into diary blanks duplicated do_7_7_b's report form. Core is now routing each mishap to the right hands + the work decision; the record is one unprompted hold on the pocket diary (missing record after a damage report = slip).",
+  "Gate F7 fixed: the old live/dead cue (the job's own DO fuses still closed after a shutdown PTW) contradicted the permit's isolation. Now the hook hangs either on the lane span (fed by the job's isolated DTR) or on the main-road line fed by a different DTR whose DOs are closed (live = deadly).",
+  "do_7_5_b: removing a hook with no গ্লাভস on added as deadly, to match the module's glove rule (row 11); other missing PPE stays a slip.",
+  "do_7_10_a: birth-year rule added (adults ≤ 2006, minors 2009–2010, never 2007–2008) so the board date decides age without ambiguity.",
+  "do_7_3 / board: the designer's outside citation (CEA 2010 Reg 61) is kept off screen; only the owner question remains (HT side sites on 33 kV only).",
+  "do_7_8_a verb renamed 'draw a closed boom ring around the spill' to keep it apart from do_7_5_a's trace along a fixed wire.",
+  "Noted but kept: do_7_3_b and do_7_7_a are both timed. They differ in act (hold a moving person to warn or report, among decoys, vs drag your own body into one reach's lane, block vs let). do_7_1_a (tag a found breach with a regulation tab) and do_7_6_a (claim stamp on a fixed register line) both drag a labelled token. Kept because 7.1a needs a scene search and 7.6a has no search. do_7_6_a is also the module's only store-counter level, so it does not repeat the audit's 'rack → take/reject' look-alike loop.",
+  "Module-wide rules written into the table: deadly is set by the act, not the level; a past act judged at a desk (do_7_4_b) is always a slip; letting another person touch a conductor you could have stopped is deadly (do_7_3_b, do_7_7_a S2); listening to the coworker carries the class of the act he pushes; every needless stop, flag, claim, report or refusal is a slip.",
+  "Lesson text glitches to fix in tool/all_training_chapters_bn.json (never quoted on screen): Cyrillic 'работодаাতা' (7.4, 7.6), Tamil 'முறையான' (7.4 briefing), Latin 'এনফোর্cement' (7.5 section 3), Persian 'بخواهید' (7.6 pro tip 4), Hindi 'बिना सर्टिफिकेशन' (7.6 section 3).",
+  "All pack ids kept; engineTypes are unique: m7_rule_tag, m7_rule_question, m7_comp_casebook, m7_claim_route, m7_clearance_survey, m7_street_warn, m7_ptw_sign, m7_ptw_inquiry, m7_theft_trace, m7_theft_evidence, m7_ppe_counter_claim, m7_ppe_mishap_route, m7_scene_guard, m7_report_note, m7_spill_boom, m7_waste_handover, m7_doorstep_visit, m7_honest_reply, m7_crew_papers, m7_gate_permit_day."
+ ],
+ "deadlySlipTable": [
+  {
+   "act": "Starting or authorizing work on a PTW whose FIELD copy has no issuer signature",
+   "cls": "deadly",
+   "source": "do_7_4_a, gate F1, Module 1 step 17",
+   "needsOwner": true
+  },
+  {
+   "act": "Working on a verbal 'line off' with no paper permit",
+   "cls": "deadly",
+   "source": "gate F1, Module 1 step 17, 7.4 myth 1 reality",
+   "needsOwner": false
+  },
+  {
+   "act": "Issuer signature missing on the control-room copy only; copies with different numbers or a blank box; signing a condition not understood",
+   "cls": "slip",
+   "source": "do_7_4_a, gate F1",
+   "needsOwner": true
+  },
+  {
+   "act": "PTW return and line charge with a crew member still up a pole",
+   "cls": "deadly",
+   "source": "gate F12",
+   "needsOwner": true
+  },
+  {
+   "act": "Past PTW breaches judged at an inquiry desk (work before issue or after cancellation, no logbook row)",
+   "cls": "slip",
+   "source": "do_7_4_b",
+   "needsOwner": true
+  },
+  {
+   "act": "Issue or cancellation time on a loose chit instead of the logbook",
+   "cls": "slip",
+   "source": "gate F14, 7.4 board",
+   "needsOwner": false
+  },
+  {
+   "act": "Energised 11 kV live-line work given to anyone without the live-line training certificate (incl. listening to the coworker)",
+   "cls": "deadly",
+   "source": "do_7_10_a",
+   "needsOwner": true
+  },
+  {
+   "act": "Sending or accepting someone not trained and authorized, or under 18, for non-live (shutdown) line work",
+   "cls": "slip",
+   "source": "do_7_1_a, do_7_1_b, do_7_10_a, gate F2",
+   "needsOwner": true
+  },
+  {
+   "act": "Contractor job without a workman permit; HV joint without jointing certification; fresh joiner on a line job; needless hold",
+   "cls": "slip",
+   "source": "do_7_10_a",
+   "needsOwner": false
+  },
+  {
+   "act": "Signing for, packing or keeping in use torn 11 kV gloves or gloves with no 11 kV rating for an 11 kV job; going to an 11 kV job without rated gloves; touching a hook with no gloves on",
+   "cls": "deadly",
+   "source": "do_7_6_a, do_7_6_b, do_7_5_b, gate F3, Module 1 step 3",
+   "needsOwner": true
+  },
+  {
+   "act": "Signing for or keeping in use a harness with cut or frayed webbing",
+   "cls": "deadly",
+   "source": "do_7_6_a, do_7_6_b, Module 1 steps 11–12",
+   "needsOwner": false
+  },
+  {
+   "act": "Cracked helmet, split sole, no IS mark or wrong IS code, wrong size, no training asked, expired label with no damage, market PPE, going with a non-glove item missing",
+   "cls": "slip",
+   "source": "do_7_6_a, do_7_6_b, do_7_1_b, gate F3, Module 1 helmet station",
+   "needsOwner": true
+  },
+  {
+   "act": "Removing an illegal hook from a line that is still live (incl. listening to 'হুকটা টেনে খুলে দাও')",
+   "cls": "deadly",
+   "source": "do_7_5_b, gate F7",
+   "needsOwner": true
+  },
+  {
+   "act": "Hook removal on a dead line without the authority's order, or with a non-glove PPE item missing",
+   "cls": "slip",
+   "source": "do_7_5_b, gate F7",
+   "needsOwner": true
+  },
+  {
+   "act": "Approaching or confronting the electricity thief",
+   "cls": "slip",
+   "source": "do_7_5_b, gate F7",
+   "needsOwner": true
+  },
+  {
+   "act": "False theft report, missed theft, missed seal/magnet, unclear or wrong-house evidence, report not sent to both supervisor and vigilance",
+   "cls": "slip",
+   "source": "do_7_5_a, do_7_5_b, gate F6",
+   "needsOwner": false
+  },
+  {
+   "act": "A member of the public's rod or bamboo reaching a line because the player did not warn in time",
+   "cls": "deadly",
+   "source": "do_7_3_b",
+   "needsOwner": true
+  },
+  {
+   "act": "Letting the coworker coil a fallen wire not proven dead (not blocking, or listening)",
+   "cls": "deadly",
+   "source": "do_7_7_a S2",
+   "needsOwner": true
+  },
+  {
+   "act": "Player entering a fallen conductor's ground zone",
+   "cls": "deadly",
+   "source": "do_7_7_a, Module 1 step 5",
+   "needsOwner": false
+  },
+  {
+   "act": "Construction, wet clothes or roof bamboo near the line not warned; sag or construction not reported; wrong warn/report choice; needless warning",
+   "cls": "slip",
+   "source": "do_7_3_b, gate F8",
+   "needsOwner": false
+  },
+  {
+   "act": "Clearance survey errors (wrong points, wrong minimum, missed or false violation)",
+   "cls": "slip",
+   "source": "do_7_3_a",
+   "needsOwner": false
+  },
+  {
+   "act": "Accident: not informing at once, hiding it, scene evidence moved, injured man sent back, near miss unreported, listening to 'ছোট শক' myth",
+   "cls": "slip",
+   "source": "do_7_7_a, do_7_7_b, do_7_2_b, gate F11",
+   "needsOwner": true
+  },
+  {
+   "act": "Blocking a medical-care or danger-stopping act at an accident scene",
+   "cls": "slip",
+   "source": "do_7_7_a",
+   "needsOwner": false
+  },
+  {
+   "act": "Accident report errors (time, place, person, hidden or exaggerated account, injury, witnesses)",
+   "cls": "slip",
+   "source": "do_7_7_b",
+   "needsOwner": false
+  },
+  {
+   "act": "Oil on soil or into a drain or bucket; no spill kit; oily rags/pads in the general bin; a cracked lamp; waste to the wrong receiver, the municipal truck or an unmarked van",
+   "cls": "slip",
+   "source": "do_7_8_a, do_7_8_b, gate F9/F10, 7.8 board",
+   "needsOwner": true
+  },
+  {
+   "act": "Entering without consent or notice, climbing in, a private room, no ID first, leaving debris, no job-sheet signature, false promise, brush-off, arguing, interrupting, denying a right",
+   "cls": "slip",
+   "source": "do_7_9_a, do_7_9_b, gate F4/F5/F13",
+   "needsOwner": true
+  },
+  {
+   "act": "Compensation process errors (wrong head, binning a case, late informing, medicine-shop report, notice to the guard, accepting less, missing paper)",
+   "cls": "slip",
+   "source": "do_7_2_a, do_7_2_b",
+   "needsOwner": false
+  },
+  {
+   "act": "CEA installation breach missed or mis-tagged; obeying an unlawful order; wrong rulebook page",
+   "cls": "slip",
+   "source": "do_7_1_a, do_7_1_b",
+   "needsOwner": false
+  },
+  {
+   "act": "Any needless stop, flag, claim, report, refusal or claim at the commissioner",
+   "cls": "slip",
+   "source": "every level and the gate",
+   "needsOwner": false
+  },
+  {
+   "act": "Listening to the coworker",
+   "cls": "slip",
+   "source": "every level; carries the act's class, so deadly only in do_7_5_b push (ii), do_7_10_a and do_7_7_a S2",
+   "needsOwner": true
+  }
+ ],
+ "ownerDecisions": [
+  "Approve the four redesigns made to keep verbs distinct: do_7_1_b (question orders with the rulebook), do_7_2_a (calendar tear instead of a scrubber), do_7_6_b (route the mishap, one-hold record), do_7_8_b (depot handover to arriving vehicles).",
+  "Module deadly list: unsigned field copy or verbal permit; torn/unrated 11 kV gloves (and no gloves on a hook); cut harness webbing; live hook removal; uncertified person on energised live-line work; charging the line with a man up (F12); a public rod/bamboo reaching the line (7.3b); letting the coworker coil a wire not proven dead (7.7a S2); entering a fallen wire's zone. Everything else is a slip. Confirm each 'needsOwner' row.",
+  "Rule: letting another person touch a conductor you could have stopped = deadly (7.3b, 7.7a S2). Accept, or make both heavy slips?",
+  "Rule: past acts judged at an inquiry desk are always slips (do_7_4_b), while the same act done in the field carries its own class (F12). Accept?",
+  "Reg 3 split: non-live line work by an unfit person = slip everywhere; energised live-line work without its certificate = deadly (7.10a only). Accept, or make all Reg 3 cases slips?",
+  "Lessons with no deadly: 7.1, 7.2, 7.8, 7.9 (and do_7_3_a, do_7_4_b, do_7_5_a, do_7_7_b). Confirm.",
+  "HT side-of-house clearance dealt on 33 kV only (the lesson's 2.0 m for 11 kV may need correcting).",
+  "do_7_5_b phase 2: add a tester proof after the shutdown (Module 2.2's rule), or keep 7.5's words only?",
+  "Gate F7 cue (hook on the job's isolated span vs the other DTR's live line) and the drawn DO-isolation at the lane DTR. Approve.",
+  "Coworker clips to record with tool/rival_clip.py: every myth line used verbatim (7.1 ×2, 7.2 ×2, 7.3 ×2, 7.4 ×2, 7.5 ×2, 7.6 ×2, 7.7 ×2, 7.8 ×2, 7.9 ×2, 7.10 myth 2) plus the shortcut lines (7.2b bills, 7.3b roof variant, 7.4a ×2, 7.5b hook, 7.7a S2/S3, 7.8a hose, 7.8b municipal truck, 7.9a ID).",
+  "Fix the lesson JSON glitches (Cyrillic, Tamil, Persian, Hindi and Latin fragments in 7.4, 7.5 and 7.6).",
+  "Kit change needed: a curved-path drag hint for do_7_8_a's boom ring.",
+  "quickMs for every Module 7 level after playtest; rank সুপারভাইজার (unlockRank(7)) with badge 'আইন কি বলে?' at the gate."
+ ]
+}

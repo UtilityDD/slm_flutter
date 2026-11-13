@@ -3,8 +3,9 @@
 // the top-up: shutdown → test → earth → climb, the right drum, pour), the
 // deal, the reason libraries, and the level in the shell: idle perf, the
 // guide first, a full clean play (the coworker refused), a slip card, a wrong
-// drum (the top-up goes on), and the deadly freeze (listening to him: up the
-// live transformer).
+// drum (the top-up goes on), the deadly freeze (listening to him: up the
+// live transformer), the 3-slip strike-out, the coworker on a fast play, the
+// shuffled step row, the neutral rings, the praise lock and the idle hint.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,10 +19,13 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m4_oil_level.dart';
+import 'package:slm_flutter/features/game/m4_oil_level_world.dart' show M4OilLevelWorldPainter;
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro;
 import 'package:slm_flutter/features/game/spoken_once.dart';
@@ -31,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '4.5/do/0',
@@ -78,10 +83,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -326,7 +333,7 @@ void main() {
       expect(a.caught, containsAll([M4OilLevelLines.caughtSafe, M4OilLevelLines.caughtOil]));
     });
 
-    test('three slips fail the level (percent 55 is the line)', () {
+    test('three slips: percent 55 in the rules (the page strikes out on the third)', () {
       final d = M4OilLevelDeal(cases: [for (var i = 0; i < 3; i++) fine(M4OilLevelWeather.mild)], drums: M4OilLevelDrum.values);
       final run = M4OilLevelRun(d);
       for (var i = 0; i < 3; i++) {
@@ -369,6 +376,79 @@ void main() {
       expect(M4OilLevelMistakes.all.where((m) => m.deadly).toSet(), {M4OilLevelMistakes.climbLive, M4OilLevelMistakes.earthLive});
       expect(m4OilLevelPacks.keys, ['do_4_5_a']);
     });
+
+    test('no giveaway words: the gauge and safety words of the right reasons are on wrong cards too', () {
+      for (final w in ['লেভেল', 'লিক', 'গেজ', 'MIN', 'MAX', 'দাগ', 'শীতে', 'গরমে']) {
+        expect(M4OilLevelLines.fineWrong.any((x) => x.contains(w)), isTrue, reason: 'fine: $w');
+      }
+      for (final w in ['লিক', 'রিপোর্ট', 'MIN']) {
+        expect(M4OilLevelLines.leakWrong.any((x) => x.contains(w)), isTrue, reason: 'leak: $w');
+      }
+      for (final w in ['30°C', 'তেল', 'সংকুচিত', 'প্রসারিত', 'ঠান্ডায়']) {
+        expect(M4OilLevelLines.fineWrong.any((x) => x.contains(w)), isTrue, reason: 'fine: $w');
+      }
+      for (final w in ['লেভেল', 'ঠিক']) {
+        expect(M4OilLevelLines.leakWrong.any((x) => x.contains(w)), isTrue, reason: 'leak: $w');
+      }
+      for (final w in ['MIN', 'বন্ধ', 'ডেড প্রমাণ', 'আর্থ', 'গ্রেড', 'নতুন', 'চালু', 'ফিল্টার', 'ওয়াইন্ডিং', 'গ্রেডের']) {
+        expect(M4OilLevelLines.topupWrong.any((x) => x.contains(w)), isTrue, reason: 'top-up: $w');
+      }
+      // Every gauge term on a right card of any deck is on some wrong card of it.
+      for (final (right, wrong) in [
+        (M4OilLevelLines.fineWinter, M4OilLevelLines.fineWrong),
+        (M4OilLevelLines.fineSummer, M4OilLevelLines.fineWrong),
+        (M4OilLevelLines.fineMild, M4OilLevelLines.fineWrong),
+        (M4OilLevelLines.leakRight, M4OilLevelLines.leakWrong),
+        (M4OilLevelLines.topupRight, M4OilLevelLines.topupWrong),
+      ]) {
+        for (final w in ['MIN', 'MAX', 'দাগ', '30°C', 'তেল', 'লেভেল', 'লিক', 'গেজ', 'ফিল্টার', 'ওয়াইন্ডিং']) {
+          if (right.any((x) => x.contains(w))) expect(wrong.any((x) => x.contains(w)), isTrue, reason: '$w in $right');
+        }
+      }
+    });
+
+    test('drum labels: the fresh and the wet transformer-oil drums carry the same label', () {
+      expect(M4OilLevelWorldPainter.drumLabel(M4OilLevelDrum.wet), M4OilLevelWorldPainter.drumLabel(M4OilLevelDrum.fresh));
+      // The scene label never names the right drum: no word on the fresh drum
+      // that the wet one lacks.
+      final (f1, f2) = M4OilLevelWorldPainter.drumLabel(M4OilLevelDrum.fresh);
+      final (w1, w2) = M4OilLevelWorldPainter.drumLabel(M4OilLevelDrum.wet);
+      expect('$f1 $f2', '$w1 $w2');
+      expect('$w1 $w2', contains('FILTERED'));
+    });
+
+    testWidgets('a looked-at leak gets the same soft ring as a sound part (no gold ring)', (t) async {
+      final geo = M4OilLevelGeo.forScene(640, 0);
+      await t.pumpWidget(Directionality(
+        textDirection: TextDirection.ltr,
+        child: CustomPaint(
+          painter: M4OilLevelWorldPainter(
+            geo: geo,
+            weather: M4OilLevelWeather.mild,
+            leak: M4OilLevelSpot.drain,
+            looked: const {M4OilLevelSpot.drain, M4OilLevelSpot.fin},
+          ),
+        ),
+      ));
+      final leakAt = geo.spot(M4OilLevelSpot.drain);
+      final finAt = geo.spot(M4OilLevelSpot.fin);
+      final rings = <Offset, String>{};
+      final colours = <Color>{};
+      expect(
+          find.byType(CustomPaint),
+          paints
+            ..everything((m, a) {
+              if (m == #drawCircle) {
+                final p = a[2] as Paint;
+                colours.add(p.color);
+                if (p.style == PaintingStyle.stroke) rings[a[0] as Offset] = '${a[1]} ${p.color} ${p.strokeWidth}';
+              }
+              return true;
+            }));
+      expect(rings[leakAt], isNotNull, reason: 'the leak got its ring');
+      expect(rings[leakAt], rings[finAt], reason: 'the same ring on a leak and a sound part');
+      expect(colours, isNot(contains(const Color(0xFFFFD34E))), reason: 'no gold ring');
+    });
   });
 
   group('page', () {
@@ -410,7 +490,7 @@ void main() {
         }
         debugPrint('PERF m4_oil_level ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -509,6 +589,134 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('three slips strike the level out: the StruckOutCard, not cleared', (t) async {
+      final c = await _open(t, 6);
+      for (var i = 0; i < 3; i++) {
+        expect(await _pumpUntil(t, find.text(M4OilLevelLines.ok)), isTrue, reason: 'round $i');
+        await t.tap(find.text(M4OilLevelLines.ok));
+        await _pump(t, 800);
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget);
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 1500);
+        }
+      }
+      await _pump(t, 800);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['4.5/do/0'], isNot('cleared'));
+      expect(s.mistakes.where((m) => m.key == M4OilLevelMistakes.noGauge.key), isNotEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play does not skip the coworker: the shutdown waits for him, then works', (t) async {
+      var seed = 0;
+      while (dealM4OilLevel(math.Random(seed)).callAt != 0) {
+        seed++;
+      }
+      final deal = dealM4OilLevel(math.Random(seed));
+      final c = await _open(t, seed);
+      await _readGauge(t);
+      await _look(t, deal.cases[0].leak!);
+      await t.tap(find.text(M4OilLevelLines.report));
+      await t.pump(const Duration(milliseconds: 100));
+      await t.pump(const Duration(milliseconds: 100));
+      // Straight to the shutdown, before his timer (1.2–2.4 s).
+      expect(find.byType(CoworkerPeek), findsNothing);
+      final shut = find.byKey(const ValueKey('step-shutdown'));
+      expect(shut, findsOneWidget);
+      await t.tap(shut);
+      await t.pump(const Duration(milliseconds: 200));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in on the decisive step');
+      expect(find.descendant(of: shut, matching: find.byIcon(Icons.check_rounded)), findsNothing, reason: 'the DO stays closed until he is answered');
+      await _pickRight(t, M4OilLevelLines.coworker.right);
+      await _pump(t, 1800);
+      await _step(t, M4OilLevelStep.shutdown);
+      expect(find.descendant(of: shut, matching: find.byIcon(Icons.check_rounded)), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pump(t, 3000);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'once only');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('the step row is never laid out in the right order', (t) async {
+      final seeds = <int>[];
+      for (var seed = 0; seeds.length < 2; seed++) {
+        if (dealM4OilLevel(math.Random(seed)).callAt == 0) seeds.add(seed);
+      }
+      for (final seed in seeds) {
+        final deal = dealM4OilLevel(math.Random(seed));
+        final c = await _open(t, seed);
+        await _toTopup(t, deal.cases[0]);
+        final xs = {for (final s in M4OilLevelStep.values) s: t.getCenter(find.byKey(ValueKey('step-${s.name}'))).dx};
+        final shown = [...M4OilLevelStep.values]..sort((a, b) => xs[a]!.compareTo(xs[b]!));
+        expect(shown, isNot(orderedEquals(M4OilLevelStep.values)), reason: 'seed $seed: $shown');
+        await _close(t, c);
+      }
+    });
+
+    testWidgets('the praise window takes no input: a second verdict tap neither slips nor pays twice', (t) async {
+      var seed = 0;
+      while (dealM4OilLevel(math.Random(seed)).cases[0].kind != M4OilLevelKind.fine) {
+        seed++;
+      }
+      final c = await _open(t, seed);
+      await _readGauge(t);
+      for (final s in M4OilLevelSpot.values) {
+        await _look(t, s);
+      }
+      final ok = find.text(M4OilLevelLines.ok);
+      final okAt = t.getCenter(ok);
+      final reportAt = t.getCenter(find.text(M4OilLevelLines.report));
+      await t.tap(ok);
+      await t.pump(const Duration(milliseconds: 120));
+      await t.tapAt(reportAt);
+      await t.tapAt(okAt);
+      await t.tapAt(_geo.conservator.center * _k);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(find.text(M4OilLevelLines.ok), findsNothing);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the reason deck still comes');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: idle on the inspection, the hand sweeps over every choice (gauge, 4 parts, 2 verdicts)', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 3);
+      await _pump(t, 9000);
+      final hint = t.state<IdleHintState>(find.byType(IdleHint));
+      expect(hint.showing, isTrue);
+      expect(hint.debugOptions, hasLength(7));
+      await t.tapAt(const Offset(20, 300));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(hint.showing, isFalse, reason: 'any touch hides it');
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint on the top-up: a sweep over all four steps and all four drums (no tap on one)', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      var seed = 0;
+      while (dealM4OilLevel(math.Random(seed)).callAt != 0) {
+        seed++;
+      }
+      final deal = dealM4OilLevel(math.Random(seed));
+      final c = await _open(t, seed);
+      await _toTopup(t, deal.cases[0]);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
+      await _pickRight(t, M4OilLevelLines.coworker.right);
+      await _pump(t, 11000);
+      final hint = t.state<IdleHintState>(find.byType(IdleHint));
+      expect(hint.showing, isTrue);
+      expect(hint.debugOptions, hasLength(8), reason: 'four steps + four drums, the same pass over each');
+      await _close(t, c);
+    });
+
     testWidgets('listening to him (oil in, live): deadly — freeze first, then the card', (t) async {
       var seed = 0;
       while (dealM4OilLevel(math.Random(seed)).callAt != 0) {
@@ -522,9 +730,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M4OilLevelLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);

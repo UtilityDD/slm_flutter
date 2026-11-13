@@ -11,6 +11,7 @@ import '../../design/slm_design.dart';
 import '../guide/guide_director.dart';
 import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
+import 'full_scene_frame.dart';
 
 // Making a level feel like play (owner's brief, 2026-11-07):
 // - GuidedTour: the guide walks the real scene — a spotlight and a pulsing
@@ -332,6 +333,13 @@ class _CloudPainter extends CustomPainter {
 /// The deadly moment: the scene stays, frozen in grey under a red pulse with a
 /// heartbeat, while [consequence] (the level's own "what would happen")
 /// plays; [onDone] after [ms].
+///
+/// While it runs it swallows every touch under it (the scene must not play on
+/// during a death) — except, inside a [FullSceneFrame], the header band, so
+/// close and mute (the heartbeat) stay live ([HeaderSafeShield]). Layers
+/// listed after it in the Stack (a card, a continue button) stay live. Once
+/// done it lets touches through again. It fills its Stack whether or not it
+/// is wrapped in a [Positioned].
 class FreezeFrame extends StatefulWidget {
   const FreezeFrame({super.key, required this.muted, required this.onDone, this.consequence, this.ms = 2200});
   final bool muted;
@@ -352,7 +360,9 @@ class _FreezeFrameState extends State<FreezeFrame> with SingleTickerProviderStat
     HapticFeedback.heavyImpact();
     if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/heartbeat.wav', volume: 1, muted: false));
     _c.forward().whenComplete(() {
-      if (mounted) widget.onDone();
+      if (!mounted) return;
+      setState(() {}); // stop absorbing touches
+      widget.onDone();
     });
   }
 
@@ -362,11 +372,17 @@ class _FreezeFrameState extends State<FreezeFrame> with SingleTickerProviderStat
     super.dispose();
   }
 
+  /// True while the freeze runs and swallows touches (tests).
+  @visibleForTesting
+  bool get absorbing => !_c.isCompleted;
+
   @override
   Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Stack(
+    return SizedBox.expand(
+      child: HeaderSafeShield(
+        active: absorbing,
+        child: IgnorePointer(
+          child: Stack(
           fit: StackFit.expand,
           children: [
             if (widget.consequence != null) widget.consequence!,
@@ -385,6 +401,7 @@ class _FreezeFrameState extends State<FreezeFrame> with SingleTickerProviderStat
               },
             ),
           ],
+        ),
         ),
       ),
     );

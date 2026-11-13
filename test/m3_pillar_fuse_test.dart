@@ -5,6 +5,11 @@
 // deal, the reason libraries, and the level in the shell: idle perf, the
 // guide first, a full clean play with the coworker refused, a slip card that
 // keeps the pillar, three slips, the deadly freeze (no PPE; listening to him).
+// Kit 2026-11-11: he comes even on a fast fit (holdForCoworker); a sound spot
+// called the cause is a slip (once per spot); the tool row is never in the
+// job's order; each reason deck carries a myth with the question's key word;
+// a tap in the praise window does nothing; the gesture hint sweeps over every
+// control (never presses one).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,7 +22,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -33,6 +40,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.7/do/0',
@@ -84,10 +92,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -167,6 +177,13 @@ Future<void> _playRight(WidgetTester t, M3PillarFuseDeal deal, int i) async {
   await _pump(t, 6000);
 }
 
+int _seedWhere(bool Function(M3PillarFuseDeal d) ok) {
+  for (var s = 1; s < 500; s++) {
+    if (ok(m3PillarFuseDeal(math.Random(s)))) return s;
+  }
+  throw StateError('no seed');
+}
+
 void main() {
   group('rules', () {
     test('deals: three pillars, three causes, three reasons; he comes once; plays differ', () {
@@ -181,10 +198,17 @@ void main() {
           expect(r.feeder, inInclusiveRange(0, 2));
           expect(r.phase, inInclusiveRange(0, 2));
           expect(r.tray.toSet(), M3PillarFuseItem.values.toSet());
+          expect(r.tools.toSet(), M3PillarFuseTool.values.toSet());
+          expect(r.tools, isNot(orderedEquals(M3PillarFuseTool.values)), reason: "the tool row is never the job's order");
         }
         seen.add(d.rounds.map((r) => '${r.feeder}${r.phase}${r.cause.name}${r.why.name}${r.tray.first.name}').join('|') + d.callAt.toString());
       }
       expect(seen.length, greaterThan(60));
+      final rows = {
+        for (var s = 0; s < 40; s++)
+          for (final r in m3PillarFuseDeal(math.Random(s)).rounds) r.tools.map((t) => t.name).join(','),
+      };
+      expect(rows.length, greaterThan(8), reason: 'tool rows vary');
     });
 
     M3PillarFuseRun run1({int feeder = 1, int phase = 2}) => M3PillarFuseRun(M3PillarFuseDeal(rounds: [
@@ -241,6 +265,40 @@ void main() {
       expect(h.fitted, isTrue);
       expect(h.trayUp, isFalse);
       expect(h.caught, containsAll([_L.caughtCause, _L.caughtHrc]));
+    });
+
+    test('a sound spot called the cause is a slip, once per spot; none once the cause is found', () {
+      final r = run1();
+      expect(r.flagSound(0), isNull, reason: 'the door is shut');
+      r.toggleDoor();
+      expect(r.flagSound(0), _M.wrongSpot);
+      expect(r.flagSound(0), isNull, reason: 'the same spot again');
+      expect(r.flagSound(4), _M.wrongSpot);
+      expect(r.slips, 2);
+      expect(r.spot(true), isTrue);
+      expect(r.flagSound(1), isNull, reason: 'the cause is found');
+      expect(r.slips, 2);
+      expect(_M.wrongSpot.deadly, isFalse);
+    });
+
+    test('cause zones: each cause sits in its own spot; spots never overlap', () {
+      final g = _geo;
+      final zones = g.causeZones;
+      expect(zones, hasLength(5));
+      for (final c in M3PillarFuseCause.values) {
+        for (var f = 0; f < 3; f++) {
+          expect(zones[M3PillarFuseGeo.causeZone(c, f)], g.causeHits(c, f));
+        }
+      }
+      for (var a = 0; a < zones.length; a++) {
+        for (var b = a + 1; b < zones.length; b++) {
+          for (final x in zones[a]) {
+            for (final y in zones[b]) {
+              expect(x.overlaps(y), isFalse, reason: '$a/$b');
+            }
+          }
+        }
+      }
     });
 
     test('sign off: not before the fuse is in; door open and unlocked are slips; locked = done', () {
@@ -311,6 +369,28 @@ void main() {
           expect(deal.map((o) => o.textBn).toSet(), hasLength(3));
         }
       }
+      expect(_L.myths.toSet(), hasLength(_L.myths.length));
+      const key = {M3PillarFuseWhy.hrc: 'HRC', M3PillarFuseWhy.cause: 'কারণ', M3PillarFuseWhy.ppe: 'পিপিই', M3PillarFuseWhy.lock: 'দরজা'};
+      for (final w in M3PillarFuseWhy.values) {
+        final r = M3PillarFuseRound(id: 'x', feeder: 0, phase: 0, cause: M3PillarFuseCause.hotspot, why: w, tray: M3PillarFuseItem.values);
+        expect(_L.myths, containsAll(_L.whyEcho(r)));
+        for (final e in _L.whyEcho(r)) {
+          expect(e, contains(key[w]!), reason: e);
+        }
+        final seen = <String>{};
+        for (var k = 0; k < 40; k++) {
+          final deal = _L.dealWhy(r, math.Random(k));
+          expect(deal, hasLength(3));
+          expect(deal.where((o) => o.correct), hasLength(1));
+          expect(_L.whyRight(r), contains(deal.firstWhere((o) => o.correct).textBn));
+          expect(deal.map((o) => o.textBn).toSet(), hasLength(3));
+          final wrong = deal.where((o) => !o.correct).map((o) => o.textBn).toList();
+          expect(wrong.every(_L.myths.contains), isTrue);
+          expect(wrong.any((t) => t.contains(key[w]!)), isTrue, reason: 'the key word is not on the right card alone: $wrong');
+          seen.addAll(wrong);
+        }
+        expect(seen.length, greaterThan(5), reason: 'the myths vary');
+      }
       final cw = _L.coworker;
       expectSameLength('choice', [...cw.right, ...cw.wrong]);
       expectLibrary('choice', cw.right, cw.wrong);
@@ -334,6 +414,8 @@ void main() {
           for (final h in g.causeHits(c, f)) {
             expect(g.body.contains(h.center), isTrue);
             expect(fuses.any((x) => x.contains(h.center)), isFalse, reason: '$c F$f');
+            expect(fuses.any((x) => x.overlaps(h)), isFalse, reason: 'cause hit $c F$f touches a fuse hit');
+            expect(h.overlaps(g.openDoorHit), isFalse, reason: '$c F$f');
           }
         }
       }
@@ -377,7 +459,7 @@ void main() {
         }
         debugPrint('PERF m3_pillar_fuse ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -478,6 +560,102 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('he comes even on a fast fit: the tray waits for him, then the HRC fuse goes in', (t) async {
+      final seed = _seedWhere((d) => d.callAt == 0);
+      final deal = m3PillarFuseDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await _toTray(t, deal.rounds[0]);
+      // At once (well before his 1.2 s): the decisive fit.
+      await _tool(t, _L.itemBn(M3PillarFuseItem.hrc));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'a fast fit cannot skip him');
+      expect(find.text(_L.stampLights), findsNothing, reason: 'the fuse did not go in yet');
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2600);
+      expect(await _pumpUntil(t, _label(_L.itemBn(M3PillarFuseItem.hrc)), maxMs: 3000), isTrue);
+      await _tool(t, _L.itemBn(M3PillarFuseItem.hrc));
+      await _pump(t, 300);
+      expect(find.text(_L.stampLights), findsOneWidget);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'once a play');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a sound spot called the cause: a slip card (once per spot); the cause is still to find', (t) async {
+      final deal = m3PillarFuseDeal(math.Random(2));
+      final r = deal.rounds[0];
+      final c = await _open(t, 2);
+      await _tapAt(t, _geo.body.center); // open
+      final real = M3PillarFuseGeo.causeZone(r.cause, r.feeder);
+      final sound = _geo.causeZones[(real + 1) % 5].first.center;
+      await _tapAt(t, sound);
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(_M.wrongSpot.textBn), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, _M.wrongSpot.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      await _tapAt(t, sound);
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsNothing, reason: 'the same spot costs once');
+      await _tapAt(t, _geo.causeHits(r.cause, r.feeder).first.center);
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsNothing, reason: 'the cause itself');
+      expect(c.read(gameSaveProvider).mistakes, hasLength(1));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the praise window: taps on the scene and the tool row do nothing until the reason deck', (t) async {
+      final seed = _seedWhere((d) => d.callAt != 0);
+      final r = m3PillarFuseDeal(math.Random(seed)).rounds[0];
+      final c = await _open(t, seed);
+      await _toTray(t, r);
+      await _tool(t, _L.itemBn(M3PillarFuseItem.hrc));
+      await _pump(t, 600);
+      await _tapAt(t, _geo.openDoorHit.center); // shut
+      await _tool(t, _L.lock);
+      final lock = t.getCenter(_label(_L.lock));
+      final signOff = t.getCenter(_label(_L.signOff));
+      await t.tap(_label(_L.signOff));
+      await t.pump(const Duration(milliseconds: 50));
+      for (final at in [signOff, lock, _geo.body.center * _k, _geo.fuse(r.feeder, r.phase) * _k]) {
+        await t.tapAt(at);
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      await waitChoiceDeck(t);
+      expect(find.byType(ChoiceDeck), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: a sweep over every tool and the pillar while waiting (never presses one); the tray too', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = _seedWhere((d) => d.callAt != 0);
+      final r = m3PillarFuseDeal(math.Random(seed)).rounds[0];
+      final c = await _open(t, seed);
+      IdleHintState hint() => t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+      expect(hint().showing, isFalse);
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue, reason: 'stuck at the shut pillar: the hand shows');
+      expect(hint().debugOptions, hasLength(5), reason: 'all four tools and the pillar');
+      for (var i = 0; i < 20; i++) {
+        await t.pump(const Duration(milliseconds: 120));
+        final f = hint().debugFrame;
+        if (f != null) expect(f.press, 0, reason: 'a sweep never presses');
+      }
+      await _toTray(t, r);
+      expect(hint().showing, isFalse, reason: 'a touch hides it');
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, hasLength(5), reason: 'the three tray items, the pillar and its door');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
     testWidgets('no PPE in the box: the street freezes first, then the card (near-miss)', (t) async {
       final c = await _open(t, 2);
       await _tapAt(t, _geo.body.center);
@@ -505,9 +683,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);

@@ -1,10 +1,13 @@
 // Lesson 3.5 কাজ 2 (কবচের মাটি): the rules (the hanging lead marks the bad
-// LA; tag both earth-path faults; listening to "a little cut is fine" is a
-// slip; the repair: docket → test → earth → work, harness before work up the
-// pole), the deadly move (hands on the LA before the shutdown), the deal, the
-// option libraries, and the level in the shell: idle perf, the guide first,
-// tap-the-guide, a full clean play to the pass, a slip card, the deadly
-// freeze and the coworker.
+// LA; tag both earth-path faults, a tag on a sound spot is a slip; listening
+// to "a little cut is fine" is a slip; the repair: docket → test → earth →
+// work, harness before work up the pole), the deadly move (hands on the LA
+// before the shutdown), the deal (the kit never in the order of use), the
+// option libraries (no word only the right cards share), and the level in the
+// shell: idle perf, the guide first, tap-the-guide, a full clean play to the
+// pass, a slip card, a sound-spot tag, the praise window, the 3-slip
+// strike-out, the deadly freeze, the coworker (only after the cut is tagged,
+// even on a fast play) and the gesture hint.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,6 +21,8 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m3_la_earth.dart';
@@ -31,6 +36,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _rung = '3.5/do/2';
 final _pack = m3LaEarthPacks['do_3_5_b']!;
@@ -74,10 +80,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 Future<void> _tap(WidgetTester t, String label, {int ms = 900}) async {
@@ -133,18 +141,34 @@ Future<void> _laDone(WidgetTester t, int seed) async {
   await _pump(t, 2600);
 }
 
-/// Refuse him, tag both faults, the reason.
+/// Tag both faults (the cut last): the reason waits for him; refuse him,
+/// then the reason.
 Future<void> _pathDone(WidgetTester t, int seed) async {
-  await _pump(t, 2000);
-  expect(find.byType(CoworkerPeek), findsOneWidget);
-  await _pickRight(t, L.coworker.right);
-  await _pump(t, 2500);
   final d = _deal(seed);
   await _tap(t, L.spotLabel(d.loose));
-  await _tap(t, L.spotLabel(d.cut), ms: 2200);
+  expect(find.byType(CoworkerPeek), findsNothing, reason: 'not before the cut is tagged');
+  await _tap(t, L.spotLabel(d.cut), ms: 600);
+  expect(find.byType(CoworkerPeek), findsOneWidget);
+  expect(find.text(L.pathAsk), findsNothing);
+  await _pickRight(t, L.coworker.right);
+  await _pump(t, 2500);
   expect(find.text(L.pathAsk), findsWidgets);
   await _pickRight(t, L.pathRight);
   await _pump(t, 3000);
+}
+
+/// The words on two or more right cards that no wrong card has (a giveaway:
+/// a dealt card carrying one is always the right one).
+Set<String> _rightOnly(List<String> right, List<String> wrong) {
+  Set<String> words(String s) => s.split(RegExp(r'[\s,—।?!-]+')).where((w) => w.isNotEmpty).toSet();
+  final count = <String, int>{};
+  for (final r in right) {
+    for (final w in words(r)) {
+      count[w] = (count[w] ?? 0) + 1;
+    }
+  }
+  final inWrong = wrong.map(words).fold(<String>{}, (a, b) => a..addAll(b));
+  return {for (final e in count.entries) if (e.value >= 2 && !inWrong.contains(e.key)) e.key};
 }
 
 void main() {
@@ -163,24 +187,37 @@ void main() {
       expect(r.stage, 1);
     });
 
-    test('round 2: both faults tagged; a healthy spot costs nothing; listening is a slip', () {
+    test('round 2: both faults tagged; a tag on a sound spot is a slip (once per spot); listening is a slip', () {
       final d = _deal(5);
       final r = M3LaEarthRun(d)..pickLa(d.badLa);
       final healthy = d.spots.where((s) => !d.faults.containsKey(s)).toList();
       expect(healthy, hasLength(3));
       expect(d.spots, isNot(contains(m3LaEarthJoint(d.badLa))));
       for (final s in healthy) {
-        expect(r.look(s), isNull);
+        final t = r.tag(s);
+        expect(t.fault, isNull);
+        expect(t.mistake, M.soundSpot, reason: 'a wrong flag costs');
       }
-      expect(r.slips, 0);
+      expect(r.slips, 3);
+      expect(r.tag(healthy.first).mistake, isNull, reason: 'the same spot costs once');
+      expect(r.slips, 3);
+      expect(r.tag(m3LaEarthJoint(d.badLa)).mistake, isNull, reason: 'not a spot of this round');
       expect(r.look(d.cut), M3LaEarthFault.cut);
       expect(r.look(d.cut), isNull, reason: 'already tagged');
       expect(r.stage, 1);
       expect(r.listened(), M.smallCut);
-      expect(r.slips, 1);
+      expect(r.slips, 4);
       expect(r.ended, isFalse, reason: 'equipment damage, not deadly');
       expect(r.look(d.loose), M3LaEarthFault.loose);
       expect(r.stage, 2);
+      expect(r.tag(healthy.last).mistake, isNull, reason: 'the round is over');
+    });
+
+    test('listening after the play has ended costs nothing more', () {
+      final d = _deal(2);
+      final r = _atRepair(d);
+      expect(r.tap(I.replace).mistake, M.liveLa);
+      expect(r.listened(), isNull);
     });
 
     test('round 3: a clean repair — docket → test → earth → harness → LA and mends in any order', () {
@@ -269,6 +306,22 @@ void main() {
       expect(cuts, hasLength(2));
     });
 
+    test('the kit on the tarp: dealt, never laid out in the order of use', () {
+      const useOrder = [M3LaEarthKit.tester, M3LaEarthKit.earthSet, M3LaEarthKit.harness];
+      final layouts = <String>{};
+      final firstSlot = <M3LaEarthKit>{};
+      for (var s = 0; s < 60; s++) {
+        final kit = _deal(s).kit;
+        expect(kit.toSet(), hasLength(3));
+        expect(kit, isNot(orderedEquals(useOrder)));
+        layouts.add(kit.join(','));
+        firstSlot.add(kit.first);
+      }
+      expect(layouts, hasLength(5));
+      expect(firstSlot, hasLength(3));
+      expect(const M3LaEarthDeal(badLa: 0, loose: M3LaEarthSpot.rodClamp, cut: M3LaEarthSpot.leadLower).kit, isNot(orderedEquals(useOrder)));
+    });
+
     test('reasons and the coworker\'s deck: same length, big enough, one right per deal', () {
       final libs = {
         'la': (L.laRight, L.laWrong),
@@ -284,6 +337,15 @@ void main() {
           expect(deal.where((o) => o.correct), hasLength(1));
           expect(deal.map((o) => o.textBn).toSet(), hasLength(3));
         }
+      }
+      for (final MapEntry(key: name, value: (right, wrong)) in libs.entries) {
+        expect(_rightOnly(right, wrong), isEmpty, reason: '$name: a word only the right cards share');
+        // No length tell: the longest card of a set is never only a right one,
+        // and the shortest never only a wrong one.
+        int len(String s) => s.length;
+        final rl = right.map(len), wl = wrong.map(len);
+        expect(rl.reduce(math.max), lessThanOrEqualTo(wl.reduce(math.max)), reason: '$name: a right card is the longest');
+        expect(wl.reduce(math.min), lessThanOrEqualTo(rl.reduce(math.min)), reason: '$name: a wrong card is the shortest');
       }
       expect(L.coworker.line, L.coworkerLine);
       expect(L.coworker.recordedLines, contains('হুঁ! যা খুশি করুন।'));
@@ -342,7 +404,7 @@ void main() {
         }
         debugPrint('PERF m3_la_earth ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -454,30 +516,140 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('the coworker: once, on the earth path; the last fault waits for him; listening is a slip', (t) async {
+    testWidgets('the coworker on a fast play: both faults at once, the reason waits for him; listening is a slip', (t) async {
       const seed = 9;
       final d = _deal(seed);
       final c = await _open(t, seed);
-      await _laDone(t, seed);
-      // Both faults tapped at once: the last one waits for him.
+      // The LA and its reason; proceed starts his 1.2–2.4 s timer, so tag
+      // right away to beat him to it.
+      await _tap(t, L.laLabel(d.badLa), ms: 2200);
+      await _pickRight(t, L.laRight);
+      await _pump(t, 200);
       await _tap(t, L.spotLabel(d.loose), ms: 300);
       await _tap(t, L.spotLabel(d.cut), ms: 300);
-      expect(find.text(L.pathAsk), findsNothing);
-      await _pump(t, 2000);
-      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he comes even on a fast play');
       expect(find.text(L.coworkerLine), findsOneWidget);
+      expect(find.text(L.pathAsk), findsNothing, reason: 'the reason waits for him');
+      await waitChoiceDeck(t);
       final wrong = _onScreen(L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 900);
       expect(find.byType(FreezeFrame), findsNothing);
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes.single.key, M.smallCut.key);
       await t.tap(find.text(MistakeLines.gotIt));
-      await _pump(t, 900);
-      await _tap(t, L.spotLabel(d.cut), ms: 2200);
+      await _pump(t, 2200);
       expect(find.text(L.pathAsk), findsWidgets);
+      await _pickRight(t, L.pathRight);
+      await _pump(t, 2000);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'once per play');
       await _close(t, c);
+    });
+
+    testWidgets('the coworker never comes before the cut is tagged (his words would name it)', (t) async {
+      const seed = 13;
+      final d = _deal(seed);
+      final c = await _open(t, seed);
+      await _laDone(t, seed);
+      await _pump(t, 5000);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _tap(t, L.spotLabel(d.loose), ms: 4000);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(find.text(L.pathAsk), findsNothing);
+      await _tap(t, L.spotLabel(d.cut), ms: 600);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      await _close(t, c);
+    });
+
+    testWidgets('the cut tagged first: he comes on his own while the loose joint is still to find', (t) async {
+      const seed = 17;
+      final d = _deal(seed);
+      final c = await _open(t, seed);
+      await _laDone(t, seed);
+      await _tap(t, L.spotLabel(d.cut), ms: 400);
+      await _pump(t, 4000);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      await _pickRight(t, L.coworker.right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _tap(t, L.spotLabel(d.loose), ms: 2200);
+      expect(find.text(L.pathAsk), findsWidgets, reason: 'no second wait');
+      await _close(t, c);
+    });
+
+    testWidgets('a tag on a sound spot: a slip with its card (no verdict before the call); the same spot costs once', (t) async {
+      const seed = 6;
+      final d = _deal(seed);
+      final c = await _open(t, seed);
+      await _laDone(t, seed);
+      final sound = d.spots.firstWhere((s) => !d.faults.containsKey(s));
+      await _tap(t, L.spotLabel(sound), ms: 1200);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M.soundSpot.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 900);
+      await _tap(t, L.spotLabel(sound), ms: 1200);
+      expect(find.byType(MistakeCard), findsNothing, reason: 'once per spot');
+      expect(c.read(guideDirectorProvider).line, isNot(contains('ঠিক আছে')));
+      await _close(t, c);
+    });
+
+    testWidgets('a tap in the praise window books nothing', (t) async {
+      const seed = 7;
+      final c = await _open(t, seed);
+      final d = _deal(seed);
+      await t.tap(_label(L.laLabel(d.badLa)), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 100));
+      // The earth path's spots are drawn already, but the ◆ is on the table.
+      final sound = d.spots.firstWhere((s) => !d.faults.containsKey(s));
+      expect(_label(L.spotLabel(sound)), findsOneWidget);
+      await t.tap(_label(L.spotLabel(sound)), warnIfMissed: false);
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips: the level fails with the strike-out card', (t) async {
+      const seed = 7;
+      final c = await _open(t, seed);
+      final healthy = (_deal(seed).badLa + 1) % 3;
+      for (var i = 0; i < 2; i++) {
+        await _tap(t, L.laLabel(healthy), ms: 1200);
+        expect(find.text(MistakeLines.slipHead), findsOneWidget);
+        await t.tap(find.text(MistakeLines.gotIt));
+        await _pump(t, 900);
+      }
+      await _tap(t, L.laLabel(healthy), ms: 1500);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress[_rung], isNot('cleared'));
+      await _close(t, c);
+    });
+
+    group('gesture hint', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      testWidgets('idle on the LAs: a sweep over all three, no hand while a card is up', (t) async {
+        const seed = 7;
+        final c = await _open(t, seed);
+        await _pump(t, 9000);
+        final hand = find.byKey(const ValueKey('gesture-hint'));
+        expect(hand, findsOneWidget);
+        final st = t.state<IdleHintState>(find.byType(IdleHint).first);
+        expect(st.debugOptions, hasLength(3));
+        await _pump(t, 4000);
+        await _tap(t, L.laLabel((_deal(seed).badLa + 1) % 3), ms: 1200);
+        expect(find.byType(MistakeCard), findsOneWidget);
+        await _pump(t, 10000);
+        expect(hand, findsNothing, reason: 'not over a card');
+        await _close(t, c);
+      });
     });
   });
 }

@@ -66,7 +66,7 @@ void main() {
       debugPrint('PERF discharge order $tag: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames in an idle second');
 
       expect(t.takeException(), isNull);
-      expect(find.textContaining('ধাপ '), findsOneWidget);
+      expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
       for (final name in ['আর্থ পয়েন্ট', 'R ফেজ', 'Y ফেজ', 'B ফেজ', 'চেইন']) {
         expect(find.text(name), findsNothing, reason: 'no names on screen: "$name"');
       }

@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -51,12 +52,14 @@ export 'm4_do_open_world.dart' show M4DoOpenGeo, M4DoOpenHead, M4DoOpenRod;
 // Deadly: pulling a heavily loaded fuse without the load-break tool — the arc
 // is not quenched (pro tip 1; the film: an arc flash blinds or kills).
 // Slips: a cracked / short rod, no গ্লাভস, no shield, wet ground, under the
-// fuses, the face not aside, "done" with a fuse still in.
+// fuses, the face not aside, "done" with a fuse still in, listening to him.
 // Not scored (the guide says the rule, the step stays): no head on the rod,
 // standing too far, a miss on the ring, an already-open fuse, a short or slow pull.
-// The careless coworker once a play, before the first pull: on the heavy job
-// "লোড থাকলেও টেনে দাও" (listening takes the tool off: the pull is deadly);
-// on the fault job "বাকি দুটো খোলার দরকার নেই" (listening: the all-three slip).
+// The careless coworker once a play, before the first pull (the pull and
+// "সব ফিউজ খোলা" wait for him — holdForCoworker): on the heavy job "লোড
+// থাকলেও টেনে দাও", on the fault job "বাকি দুটো খোলার দরকার নেই". Listening
+// is a slip (playbook row 8); the guide puts it right and nothing on the rod
+// changes, refusing changes nothing either — the head is the player's own pick.
 
 // ============================================================================
 // Content
@@ -169,7 +172,7 @@ abstract final class M4DoOpenLines {
   static const missHook = 'পুলারটা ফিউজের রিং-এ ভালোভাবে আটকান।';
   static const already = 'ওটা আগেই খোলা।';
   static const shortPull = 'আধা টান হলো। একটি দ্রুত, দৃঢ় টানে — পুরোটা।';
-  static const slowPull = 'এত ধীরে নয় — ধীরে খুললে আর্ক দীর্ঘ হয়। দ্বিধা না করে এক টানে।';
+  static const slowPull = 'এত ধীরে নয় — ধীরে খুললে আর্ক দীর্ঘস্থায়ী হতে পারে। দ্বিধা না করে এক টানে।';
   static const restOpen = 'আরও ফিউজ লাগানো আছে — সেগুলোও খুলুন।';
   static const handRod = 'এই নিন — অক্ষত, ঠিক দৈর্ঘ্যের রড।';
 
@@ -185,15 +188,34 @@ abstract final class M4DoOpenLines {
   static const heavyWhy = ['ভারী লোডে এই টুলই আর্ককে নিরাপদে নেভায়', 'বেশি লোডের ফিউজ খুলতে এই টুলই নিয়ম'];
   static List<String> whyRight(M4DoOpenKind k) => k == M4DoOpenKind.fault ? faultWhy : heavyWhy;
 
-  /// Wrong reasons (the lesson's myths and field excuses).
-  static const whyWrong = [
+  // Wrong reasons (the lesson's myths and field excuses), one pool per deck.
+  // Every wrong line carries the deck's key word (রড / লোড + টুল / ফল্ট), so
+  // no word from the question shows up on the right card alone.
+  static const rodWrong = [
     'গ্লাভস থাকলে রড ছাড়াও ফিউজ খোলা যায়',
-    'ধীরে ধীরে টানলেই আর্ক অনেক কম হয়',
-    'সুপারভাইজার দাঁড়িয়ে, তাড়াতাড়ি সারি',
-    'অভ্যাস আছে, এত নিয়মের দরকার নেই',
-    'ভেজা দিনে আর্ক ছোট হয়, চিন্তা নেই',
-    'একটা ফেজ খুললেই পুরো লাইন বন্ধ হয়',
+    'হাতের কাছে যে রড পাই, সেটাই যথেষ্ট',
+    'ফাটা রডে টেপ মেরে দিলেই আবার চলে',
+    'ছোট রডে কাজটা দ্রুত আর সহজে হয়',
+    'রডের দৈর্ঘ্য নয়, গ্লাভসই আসল রক্ষা',
+    'রেটিং লেখা না থাকলেও রড ঠিক থাকে',
   ];
+  static const heavyWrong = [
+    'লোড কম মনে হলে টুল ছাড়াই খোলা চলে',
+    'তাড়া থাকলে লোড ব্রেক টুল বাদ চলে',
+    'লোড ব্রেক টুল থাকলে গ্লাভস লাগে না',
+    'লোড ব্রেক টুল শুধু সাহেব দেখলে লাগে',
+    'পুরোনো লাইনে লোড কম, টুল লাগে না',
+    'লোড ব্রেক টুল শুধু বর্ষার দিনে লাগে',
+  ];
+  static const faultWrong = [
+    'ফল্টে একটা উড়লেও বাকিগুলো ঠিকই থাকে',
+    'ফল্ট সারাতে একটা ফেজ খুললেই যথেষ্ট',
+    'ফল্টের লাইনে আর্ক হয় না, ভয় নেই',
+    'ফল্টের তাড়ায় নিয়ম একটু ছাড়া যায়',
+    'ফল্টের লাইনে গ্লাভস না হলেও চলে',
+    'একটা ফেজ খুললেই ফল্টের লাইন বন্ধ',
+  ];
+  static List<String> whyWrong(M4DoOpenKind k) => k == M4DoOpenKind.fault ? faultWrong : heavyWrong;
 
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
 
@@ -227,7 +249,8 @@ abstract final class M4DoOpenLines {
     asks: ['ও বলছে বাকি দুটো না খুলতে। আপনি?', 'ওর কথায় চলবেন, না তিনটিই খুলবেন?', 'ওর কথা শুনবেন, না নিয়ম মানবেন?'],
   );
 
-  /// New lines for him (device TTS until recorded in his voice).
+  /// New lines for him (silent, caption held for a reading time, until
+  /// recorded in his voice with tool/rival_clip.py).
   static List<String> get recordLines => [coworkerHeavy.line, coworkerFault.line];
 
   static const callHeld = 'ঠিক! চাপে পড়ে নিয়ম ভাঙবেন না।';
@@ -327,6 +350,21 @@ abstract final class M4DoOpenMistakes {
     art: '$_dir/do_three.svg',
   );
 
+  /// Listened to him on the fault job (pro tip 2; a slip, playbook row 8).
+  static const listenedTwo = DoMistake(
+    key: '4.4/m4_do_open/listened-skip-two',
+    textBn: 'চাপে পড়ে বাকি দুটো না খুলতে রাজি হলেন। ফল্টে একটা ফিউজ উড়ে গেলে বাকি দুটি ফেজের ফিউজও খুলে, তবে ফল্ট সারান।',
+    art: '$_dir/do_three.svg',
+  );
+
+  /// Listened to him on the heavy job (pro tip 1; a slip, playbook row 8 —
+  /// the pull itself without the tool stays the deadly one).
+  static const listenedNoTool = DoMistake(
+    key: '4.4/m4_do_open/listened-no-tool',
+    textBn: 'চাপে পড়ে টুল ছাড়াই টানতে রাজি হলেন। খুব বেশি লোডের ফিউজ খুলতে হট স্টিকের মাথায় লোড ব্রেক টুল লাগান — এটি আর্ককে নিরাপদে নিভিয়ে দেয়।',
+    art: '$_dir/do_lbt.svg',
+  );
+
   /// Pro tip 1 (and the film: an arc flash blinds or kills).
   static const heavyNoTool = DoMistake(
     key: '4.4/m4_do_open/heavy-load-no-tool',
@@ -335,7 +373,7 @@ abstract final class M4DoOpenMistakes {
     deadly: true,
   );
 
-  static List<DoMistake> get all => const [crackedRod, shortRod, noGloves, noShield, wetGround, underFuse, faceIn, notAllThree, heavyNoTool];
+  static List<DoMistake> get all => const [crackedRod, shortRod, noGloves, noShield, wetGround, underFuse, faceIn, notAllThree, listenedTwo, listenedNoTool, heavyNoTool];
 }
 
 /// The DO pull: one drag down of ≥ 70 design px within 1.2 s (quick and firm).
@@ -359,9 +397,6 @@ class M4DoOpenRun {
   /// The fuse the rod is hooked on.
   int? hooked;
   var faceAside = false;
-
-  /// Listened to him on the heavy job: the tool came off and stays off.
-  var toolOff = false;
 
   /// The all-three slip is booked for this job (once).
   var allBooked = false;
@@ -417,7 +452,6 @@ class M4DoOpenRun {
   /// Fit a head on the rod (the last one fitted counts).
   void fit(M4DoOpenHead h) {
     if (ended || stage != M4DoOpenStage.prep) return;
-    if (h == M4DoOpenHead.loadBreak && toolOff) return;
     head = h;
   }
 
@@ -483,17 +517,19 @@ class M4DoOpenRun {
     return (M4DoOpenPull.done, null);
   }
 
-  /// He listened on the fault job: the all-three slip (once a job).
+  /// He listened on the fault job: a slip (it also stands for the all-three
+  /// slip of this job, so "সব ফিউজ খোলা" too early is not booked again).
   DoMistake? listenAll() {
     if (ended || allBooked) return null;
     allBooked = true;
-    return _slip(M4DoOpenMistakes.notAllThree);
+    return _slip(M4DoOpenMistakes.listenedTwo);
   }
 
-  /// He listened on the heavy job: the tool comes off.
-  void listenHeavy() {
-    toolOff = true;
-    head = M4DoOpenHead.puller;
+  /// He listened on the heavy job: a slip. Nothing on the rod changes (the
+  /// guide puts it right); a pull without the tool is still the deadly one.
+  DoMistake? listenHeavy() {
+    if (ended) return null;
+    return _slip(M4DoOpenMistakes.listenedNoTool);
   }
 
   /// "সব ফিউজ খোলা": the job is done if all three are; else the all-three
@@ -516,7 +552,6 @@ class M4DoOpenRun {
     head = M4DoOpenHead.none;
     hooked = null;
     faceAside = false;
-    toolOff = false;
     allBooked = false;
     pulled = 0;
     jobSlips = 0;
@@ -655,6 +690,25 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how to touch, never what): the rack, the get-ready row,
+  // the ground, the rings, the face / confirm buttons, the pull.
+  final _hints = IdleHintController();
+  final _rackKey = GlobalKey();
+  final _raiseKey = GlobalKey();
+  final _faceKey = GlobalKey();
+  final _confirmKey = GlobalKey();
+  // Hint anchors over the three rings (scene widgets, so the hand can sweep
+  // rings and HUD buttons in one pass).
+  final _ringKeys = List.generate(3, (_) => GlobalKey());
+  final Map<_PrepTool, GlobalKey> _toolKeys = {for (final t in _PrepTool.values) t: GlobalKey()};
+
+  /// The get-ready row in a fresh order each play (dealt after the jobs, so
+  /// the deal stays the first draw from the play's random).
+  late final List<_PrepTool> _toolOrder = _dealTools(_run);
+
+  /// Takes the run so the deal is built (drawn) before the shuffle.
+  List<_PrepTool> _dealTools(M4DoOpenRun dealtFirst) => [..._PrepTool.values]..shuffle(widget.rng);
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -693,7 +747,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
     if (!_muted) unawaited(ZlFx.cue(file, volume: volume, muted: false));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen;
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen;
 
   String get _ask => M4DoOpenLines.ask(_run.stage, hooked: _run.hooked != null);
 
@@ -734,7 +788,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
     putOnTable(10);
     unawaited(
       askReason(
-        deal: () => dealChoices(M4DoOpenLines.rodWhy, M4DoOpenLines.whyWrong, widget.rng),
+        deal: () => dealChoices(M4DoOpenLines.rodWhy, M4DoOpenLines.rodWrong, widget.rng),
         question: M4DoOpenLines.whyRod,
         stillValid: () => _run.index == 0 && !_ended,
       ),
@@ -793,7 +847,10 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
     final geo = _geoNow;
     switch (_run.stage) {
       case M4DoOpenStage.stand:
-        if (p.dy < geo.groundY - 30) return;
+        if (p.dy < geo.groundY - 30) {
+          _hints.missTap();
+          return;
+        }
         final x = p.dx.clamp(16.0, 344.0);
         final (s, m) = _run.stand(x);
         HapticFeedback.selectionClick();
@@ -816,6 +873,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
         final hit = m4DoOpenRingAt(geo, _run.open, p);
         HapticFeedback.selectionClick();
         if (hit == null) {
+          _hints.missTap();
           unawaited(_sayChain([M4DoOpenLines.missHook]));
           return;
         }
@@ -830,7 +888,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
         });
         _askStep();
       case M4DoOpenStage.rod || M4DoOpenStage.prep || M4DoOpenStage.done:
-        break;
+        _hints.missTap();
     }
   }
 
@@ -866,6 +924,8 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
     final t0 = _panT0;
     _panT0 = null;
     if (t0 == null || !_canPlay || _run.stage != M4DoOpenStage.open || _run.hooked == null) return;
+    // A fast pull must not skip him: the first pull of his job waits for him.
+    if (holdForCoworker()) return;
     await _pull(_panSum.dy, (_panT1 - t0).inMilliseconds);
   }
 
@@ -906,6 +966,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
   // --- 4. confirm ---------------------------------------------------------------------
   Future<void> _confirm(Offset origin) async {
     if (!_canPlay || _run.stage != M4DoOpenStage.open) return;
+    if (holdForCoworker()) return;
     final (ok, m) = _run.confirm();
     HapticFeedback.selectionClick();
     if (m != null) {
@@ -930,7 +991,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
     putOnTable(15 + (_run.clean ? 5 : 0));
     unawaited(
       askReason(
-        deal: () => dealChoices(M4DoOpenLines.whyRight(k), M4DoOpenLines.whyWrong, widget.rng),
+        deal: () => dealChoices(M4DoOpenLines.whyRight(k), M4DoOpenLines.whyWrong(k), widget.rng),
         question: M4DoOpenLines.why(k),
         stillValid: () => _run.index == idx && !_ended,
       ),
@@ -984,9 +1045,19 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.index != _run.deal.callAt) return null;
-    if (_run.stage != M4DoOpenStage.open || _run.pulled > 0) return _run.stage.index > M4DoOpenStage.open.index || _run.pulled > 0 ? null : false;
-    if (_intro || _busy || _card != null || reasonOpen) return false;
+    // His push ("pull it anyway" / "leave the other two") fits only before the
+    // first pull of his job.
+    if (_ended || _run.ended || _run.index != _run.deal.callAt) return null;
+    if (_run.stage.index > M4DoOpenStage.open.index || _run.pulled > 0) return null;
+    // On the heavy job his "skip the tool" push fits only while the load-break
+    // head is on. With the plain puller the head is locked (fit() ends at
+    // prep), so neither answer could fit: he does not come, and the pull goes
+    // ahead as the player made it ready.
+    if (_job.kind == M4DoOpenKind.heavy && _run.stage.index >= M4DoOpenStage.stand.index && _run.head != M4DoOpenHead.loadBreak) {
+      return null;
+    }
+    if (_run.stage != M4DoOpenStage.open) return false;
+    if (_intro || _busy || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -999,24 +1070,21 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     final heavy = _job.kind == M4DoOpenKind.heavy;
     if (!held) {
-      if (heavy) {
-        // He takes the tool off: the pull will come on heavy load.
-        setState(() => _run.listenHeavy());
-        unawaited(_sayChain([_ask]));
+      // Listening is a slip; the guide puts it right and the job goes on with
+      // the rod as the player made it ready.
+      final m = heavy ? _run.listenHeavy() : _run.listenAll();
+      if (m != null) {
+        unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
+        await _slip(m);
       } else {
-        final m = _run.listenAll();
-        if (m != null) {
-          unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
-          await _slip(m);
-        }
+        unawaited(_sayChain([_ask]));
       }
       return;
     }
     _run.caught.add(M4DoOpenLines.caughtCall);
     unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
     unawaited(coworkerSnarl());
-    // Refused: the load-break tool is (or goes back) on the rod.
-    if (heavy) setState(() => _run.head = M4DoOpenHead.loadBreak);
+    // Refusing changes nothing on the rod: the head is the player's own pick.
     await Future<void>.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
     unawaited(_sayChain([heavy ? M4DoOpenLines.callHeld : M4DoOpenLines.heldFault, _ask]));
@@ -1294,6 +1362,14 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
           ),
         ),
       ),
+      // Invisible hint anchors on the rings (no paint, no touch).
+      if (_run.stage == M4DoOpenStage.open)
+        for (var i = 0; i < 3; i++)
+          Positioned.fromRect(
+            key: ValueKey('ring-anchor-$i'),
+            rect: Rect.fromCenter(center: _run.open[i] ? geo.ringOpenOf(i) : geo.ringOf(i), width: 30, height: 30),
+            child: IgnorePointer(child: SizedBox.expand(key: _ringKeys[i])),
+          ),
       // Tap the ground, a ring; draw the pull.
       Positioned.fill(
         key: const ValueKey('touch'),
@@ -1337,25 +1413,53 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
 
   Widget _prepTools() {
     final k = _run.kit;
-    Widget b(String label, IconData icon, bool on, VoidCallback tap, {bool enabled = true}) =>
-        _ToolButton(icon: icon, label: label, on: on, enabled: _canPlay && enabled, onTap: tap);
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 4,
-      runSpacing: 6,
-      children: [
-        b(M4DoOpenLines.gloves, Icons.back_hand_rounded, k.contains(M4DoOpenKit.gloves), () => _wear(M4DoOpenKit.gloves)),
-        b(M4DoOpenLines.shield, Icons.masks_rounded, k.contains(M4DoOpenKit.shield), () => _wear(M4DoOpenKit.shield)),
-        b(M4DoOpenLines.puller, Icons.hardware_rounded, _run.head == M4DoOpenHead.puller, () => _fit(M4DoOpenHead.puller)),
-        b(
-          M4DoOpenLines.loadBreak,
-          Icons.battery_charging_full_rounded,
-          _run.head == M4DoOpenHead.loadBreak,
-          () => _fit(M4DoOpenHead.loadBreak),
-          enabled: !_run.toolOff,
-        ),
-      ],
+    Widget b(_PrepTool t, String label, IconData icon, bool on, VoidCallback tap) => KeyedSubtree(
+      key: _toolKeys[t],
+      child: _ToolButton(icon: icon, label: label, on: on, enabled: _canPlay, onTap: tap),
     );
+    Widget tool(_PrepTool t) => switch (t) {
+      _PrepTool.gloves => b(t, M4DoOpenLines.gloves, Icons.back_hand_rounded, k.contains(M4DoOpenKit.gloves), () => _wear(M4DoOpenKit.gloves)),
+      _PrepTool.shield => b(t, M4DoOpenLines.shield, Icons.masks_rounded, k.contains(M4DoOpenKit.shield), () => _wear(M4DoOpenKit.shield)),
+      _PrepTool.puller => b(t, M4DoOpenLines.puller, Icons.hardware_rounded, _run.head == M4DoOpenHead.puller, () => _fit(M4DoOpenHead.puller)),
+      _PrepTool.loadBreak => b(
+        t,
+        M4DoOpenLines.loadBreak,
+        Icons.battery_charging_full_rounded,
+        _run.head == M4DoOpenHead.loadBreak,
+        () => _fit(M4DoOpenHead.loadBreak),
+      ),
+    };
+    return Wrap(alignment: WrapAlignment.center, spacing: 4, runSpacing: 6, children: [for (final t in _toolOrder) tool(t)]);
+  }
+
+  /// The hand for the waiting step: how to touch, never what to pick.
+  HintSpec? _hint() {
+    final geo = _geoNow;
+    switch (_run.stage) {
+      case M4DoOpenStage.rod:
+        // A sweep over the three rods in the rack.
+        final r = HintSpec.globalRectOf(_rackKey);
+        if (r == null) return null;
+        final w = r.width / 3;
+        return HintSpec.sweep([for (var i = 0; i < 3; i++) Rect.fromLTWH(r.left + i * w, r.top, w, r.height)]);
+      case M4DoOpenStage.prep:
+        // A sweep over the get-ready row and the raise button.
+        return HintSpec.sweepOver([for (final t in _toolOrder) _toolKeys[t]!, _raiseKey]);
+      case M4DoOpenStage.stand:
+        // A sweep along the ground, evenly spaced (under, puddle, side, far
+        // alike): "tap where you stand".
+        return HintSpec.sweep([
+          for (var i = 0; i < 6; i++) Rect.fromCenter(center: Offset(36 + 58.0 * i, geo.groundY + 14), width: 40, height: 28),
+        ], space: HintSpace.scene);
+      case M4DoOpenStage.open:
+        final h = _run.hooked;
+        // Unhooked: all three rings (open or in) and the confirm button.
+        // Hooked: that ring (the pull), face-aside and confirm — the same
+        // sweep whether or not the face is aside, so it never shows the order.
+        return HintSpec.sweepOver(h == null ? [..._ringKeys, _confirmKey] : [_ringKeys[h], _faceKey, _confirmKey]);
+      case M4DoOpenStage.done:
+        return null;
+    }
   }
 
   @override
@@ -1367,6 +1471,8 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
     final deckUp = reasonOpen || coworkerChoiceUp;
     final handsOn = playing && !deckUp && !coworkerOpen && _card == null;
     final stage = _run.stage;
+    // The level waits for a touch (not while the rod's reason is still up).
+    final hintWaiting = handsOn && _canPlay && !_run.done && (stage != M4DoOpenStage.prep || _rodPicked == null);
     final j = _job;
     return PopScope(
       canPop: false,
@@ -1395,6 +1501,10 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: '${_run.index}/${stage.name}/${_run.hooked}/${_run.open}',
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen && stage != M4DoOpenStage.rod)
                 Positioned(
@@ -1407,6 +1517,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
               if (playing && stage == M4DoOpenStage.rod || (_rodPicked != null && _run.index == 0 && stage == M4DoOpenStage.prep && playing))
                 _RackCard(
                   key: const ValueKey('rack'),
+                  boxKey: _rackKey,
                   rods: _run.deal.rods,
                   picked: _rodPicked,
                   enabled: _canPlay && stage == M4DoOpenStage.rod,
@@ -1426,7 +1537,10 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
                       const SizedBox(height: 8),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 40),
-                        child: DoBigButton(label: M4DoOpenLines.raise, filled: true, onTapUp: (d) => unawaited(_raise(d.globalPosition))),
+                        child: KeyedSubtree(
+                          key: _raiseKey,
+                          child: DoBigButton(label: M4DoOpenLines.raise, filled: true, onTapUp: (d) => unawaited(_raise(d.globalPosition))),
+                        ),
                       ),
                     ],
                   ),
@@ -1437,6 +1551,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
                   left: 12,
                   bottom: pad.bottom + 16,
                   child: _ToolButton(
+                    key: _faceKey,
                     icon: Icons.face_retouching_off_rounded,
                     label: _run.faceAside ? M4DoOpenLines.faceAsideOn : M4DoOpenLines.faceAside,
                     on: _run.faceAside,
@@ -1450,7 +1565,10 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
                   left: 130,
                   right: 130,
                   bottom: pad.bottom + 22,
-                  child: DoBigButton(label: M4DoOpenLines.allOpen, filled: false, onDark: true, onTapUp: (d) => unawaited(_confirm(d.globalPosition))),
+                  child: KeyedSubtree(
+                    key: _confirmKey,
+                    child: DoBigButton(label: M4DoOpenLines.allOpen, filled: false, onDark: true, onTapUp: (d) => unawaited(_confirm(d.globalPosition))),
+                  ),
                 ),
               if (deckUp)
                 Positioned(
@@ -1558,6 +1676,9 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
 // Pieces
 // ============================================================================
 
+/// The get-ready row (dealt in a fresh order each play).
+enum _PrepTool { gloves, shield, puller, loadBreak }
+
 class _DocketChip extends StatelessWidget {
   const _DocketChip({required this.text});
   final String text;
@@ -1592,7 +1713,7 @@ class _DocketChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit once used.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;
@@ -1653,7 +1774,8 @@ class _ToolButton extends StatelessWidget {
 
 /// The van's rack: three operating rods; tap one to take it.
 class _RackCard extends StatelessWidget {
-  const _RackCard({super.key, required this.rods, required this.picked, required this.enabled, required this.quiet, required this.onPick});
+  const _RackCard({super.key, required this.boxKey, required this.rods, required this.picked, required this.enabled, required this.quiet, required this.onPick});
+  final GlobalKey boxKey;
   final List<M4DoOpenRod> rods;
   final int? picked;
   final bool enabled;
@@ -1690,6 +1812,7 @@ class _RackCard extends StatelessWidget {
             child: Semantics(
               label: M4DoOpenLines.rackLabel,
               child: SizedBox(
+                key: boxKey,
                 width: w,
                 height: h,
                 child: Stack(

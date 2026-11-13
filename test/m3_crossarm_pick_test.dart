@@ -3,7 +3,9 @@
 // hand has been), deal variety, fair reason libraries, and the level in the
 // shell (idle perf; guide first; a full clean flow with the docket, a faulty
 // part to the drum, the reasons, the coworker and the replacement; a slip
-// card; listening to the coworker; three slips).
+// card; listening to the coworker; three slips; a fast take cannot skip the
+// coworker; he comes only with something to push; the praise window takes no
+// input; gesture hints in each waiting state).
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -16,6 +18,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_shell.dart';
@@ -30,6 +33,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.3/do/0',
@@ -67,10 +71,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 void main() {
@@ -331,7 +337,7 @@ void main() {
         }
         debugPrint('PERF m3 crossarm ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(M3CrossarmPickLines.docket), findsOneWidget);
         expect(find.text(M3CrossarmPickLines.hold), findsOneWidget);
         expect(perSec, lessThan(20));
@@ -433,9 +439,11 @@ void main() {
       expect(find.byType(CoworkerPeek), findsOneWidget);
       final r = deal.rounds.first;
       final push = m3CrossarmPickPushFor(r, {}, preferRust: deal.preferRust)!;
+      await waitChoiceDeck(t);
       final wrong = _onScreen(M3CrossarmPickLines.coworker(push).wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1500);
       final m = M3CrossarmPickMistakes.forPack(m3CrossarmPickPushed(r, push, {})!, r.want)!;
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
@@ -457,6 +465,152 @@ void main() {
       await _pump(t, 600);
       expect(find.text(M3CrossarmPickLines.rejected), findsNothing);
       expect(c.read(gameSaveProvider).mistakes.length, greaterThanOrEqualTo(1));
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker: a fast take cannot skip him — the take waits, he comes, the part goes back on its shelf', (t) async {
+      final seed = _seed((d) =>
+          d.callRound == 0 && !d.rounds.first.noneFits && m3CrossarmPickPushFor(d.rounds.first, {}, preferRust: d.preferRust) != null);
+      final (c, deal) = await open(t, seed);
+      final r = deal.rounds.first;
+      // In hand before he turns up (he is due 1.2–2.4 s after the start).
+      await lift(t, r, _good(r));
+      // He never talks over the close look ...
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // ... but loading is decisive: it waits for him, and he comes now.
+      await t.tap(find.text(M3CrossarmPickLines.take));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.text(M3CrossarmPickLines.take), findsNothing, reason: 'the part went back on its shelf, nothing judged');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pickRight(t, [...M3CrossarmPickLines.coworkerClamp.right, ...M3CrossarmPickLines.coworkerRust.right]);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // Now the take works.
+      await lift(t, r, _good(r));
+      await t.tap(find.text(M3CrossarmPickLines.take));
+      await _pump(t, 3500);
+      await _pickRight(t, M3CrossarmPickLines.packRight(r.want));
+      await _pump(t, 1500);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker: on a rack with nothing he could push he does not come; he comes on the next part', (t) async {
+      final seed = _seed((d) =>
+          d.callRound == 0 &&
+          d.rounds.first.slot == M3CrossarmPickSlot.crossarm &&
+          !d.rounds.first.noneFits &&
+          m3CrossarmPickPushFor(d.rounds.first, {}, preferRust: d.preferRust) == null);
+      final (c, deal) = await open(t, seed);
+      final r = deal.rounds.first;
+      await _pump(t, 3500);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'no rust and no clamp here: his line would not fit');
+      await lift(t, r, _good(r));
+      await t.tap(find.text(M3CrossarmPickLines.take));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'the take is not held for a push that does not fit');
+      await _pump(t, 3200);
+      await _pickRight(t, M3CrossarmPickLines.packRight(r.want));
+      await _pump(t, 4000);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the clamp rack always has a wrong clamp to push');
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker: sending his last push to the drum waits for him too — the part goes back on its shelf', (t) async {
+      // A fast player who rubs the rusty part first and drums it would leave
+      // him nothing to push (he never came on such a play before).
+      final seed = _seed((d) =>
+          d.callRound == 1 &&
+          d.rounds[0].slot == M3CrossarmPickSlot.clamp &&
+          !d.rounds[0].noneFits &&
+          m3CrossarmPickPushFor(d.rounds[1], {}, preferRust: d.preferRust) == M3CrossarmPickPush.rust &&
+          d.rounds[1].items.where((x) => x.flaw == M3CrossarmPickFlaw.rust).length == 1);
+      final (c, deal) = await open(t, seed);
+      final r0 = deal.rounds[0];
+      await lift(t, r0, _good(r0));
+      await t.tap(find.text(M3CrossarmPickLines.take));
+      await _pump(t, 3500);
+      await _pickRight(t, M3CrossarmPickLines.packRight(r0.want));
+      // Round 1 (he is armed now): the rusty part in hand at once, felt, put back.
+      // (The new rack deals in first, ~0.7 s; he is due 1.2–2.4 s after the
+      // next part comes up, and never while a part is in hand.)
+      await _pump(t, 900);
+      final r1 = deal.rounds[1];
+      final rusty = r1.items.firstWhere((x) => x.flaw == M3CrossarmPickFlaw.rust);
+      await lift(t, r1, rusty);
+      await slide(t);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he never talks over the close look');
+      await t.tap(find.text(M3CrossarmPickLines.putBack));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the put back waits for him: his last push');
+      expect(find.text(M3CrossarmPickLines.rejected), findsNothing, reason: 'back on its shelf, not in the drum yet');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pickRight(t, M3CrossarmPickLines.coworkerRust.right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      // Now it goes to the drum as usual.
+      await lift(t, r1, rusty);
+      await t.tap(find.text(M3CrossarmPickLines.putBack));
+      await _pump(t, 600);
+      expect(find.text(M3CrossarmPickLines.rejected), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    // The praise window (tableBusy) here always lies inside _run.shown: both
+    // right moves set it before putOnTable, so this guards the behaviour, not
+    // which of the two flags holds it.
+    testWidgets('praise window: taps on the replace button or the docket do nothing until the reason', (t) async {
+      final (c, deal) = await open(t, _seed((d) => d.callRound == 1 && !d.rounds.first.noneFits));
+      final r = deal.rounds.first;
+      final holdAt = t.getCenter(find.text(M3CrossarmPickLines.hold));
+      final docketAt = t.getCenter(find.text(M3CrossarmPickLines.docket));
+      await lift(t, r, _good(r));
+      await t.tap(find.text(M3CrossarmPickLines.take));
+      await t.pump(const Duration(milliseconds: 80));
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(holdAt);
+        await t.tapAt(docketAt);
+        await t.pump(const Duration(milliseconds: 120));
+      }
+      await _pump(t, 600);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(find.textContaining(deal.docket.feederBn), findsNothing, reason: 'the docket did not open');
+      await _pickRight(t, M3CrossarmPickLines.packRight(r.want));
+      await _pump(t, 1500);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over the rack and the replace button; a nudge along the part in hand; then a sweep over put back / load', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final (c, deal) = await open(t, late);
+      final r = deal.rounds.first;
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      IdleHintState frame() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget);
+      expect(frame().debugOptions, hasLength(r.items.length + 1), reason: 'every part on the rack and the replace button, alike');
+      await lift(t, r, _flawed(r));
+      expect(hand, findsNothing, reason: 'a touch hides it');
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget);
+      expect(frame().debugOptions, isEmpty, reason: 'a short drag nudge, not a sweep');
+      await slide(t);
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget);
+      expect(frame().debugOptions, hasLength(2), reason: 'put back and load, alike');
+      await t.tap(find.text(M3CrossarmPickLines.putBack));
+      await _pump(t, 400);
+      expect(hand, findsNothing);
       expect(t.takeException(), isNull);
       await close(t, c);
     });

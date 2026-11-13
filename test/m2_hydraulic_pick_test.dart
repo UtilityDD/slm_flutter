@@ -2,7 +2,14 @@
 // the close look, the die case, pump to the click, the cutter's safety lock),
 // deal variety, fair reason libraries, the coworker's pushes, and the level in
 // the shell (idle perf; a full clean flow; a slip card; the coworker heard;
-// three slips fail).
+// three slips fail). Audit 2026-11-11: listening is always a slip; a fast
+// take / last stroke waits for him; pumping on while he talks refuses him and
+// the reason deck never opens over his deck; letting go while he says so is
+// listening; the hold waits for him and a die put in while he talks is
+// listening; the leaking tool never summons him (no giveaway); with the die
+// lost he comes only on the hold, never on his timer at the die case; in his
+// beat 1 every pegboard hook answers the same; a put-back gets one neutral
+// line; the idle gesture hint sweeps over every tool.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -16,6 +23,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_shell.dart';
@@ -31,6 +39,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.9/do/0',
@@ -75,21 +84,19 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await confirmChoice(t);
+  // The reason card zooms and waits for proceed (coworker decks have none).
+  await tapReasonProceed(t);
 }
+
+/// A play where he comes on docket 1 to say "let go" mid-crimp (no leaking
+/// tool to push first).
+bool _releaseFirst(HydDeal d) => d.callRound == 0 && d.push == HydPush.release && _twin(d.rounds[0]).flaw != HydFlaw.leak;
 
 /// Plays one docket clean in pure logic.
 void _playClean(HydRun run) {
@@ -260,6 +267,44 @@ void main() {
       expect(hydPushFor(run, prefer: HydPush.die), HydPush.die);
     });
 
+    test('listening to him is always a slip, even when his act can no longer be done', () {
+      final seed = _seedWhere((d) => _twin(d.rounds[0]).flaw == HydFlaw.leak);
+      final run = HydRun(dealHyd(math.Random(seed)));
+      final leak = _twin(run.current);
+      expect(run.follow(HydPush.leak).mistake, HydMistakes.leak);
+      expect(run.rejected, contains(leak.id), reason: 'the leaking tool goes to servicing');
+      expect(run.follow(HydPush.leak).mistake, HydMistakes.leak, reason: 'no leaking tool left: still a slip');
+      run.take(_right(run.current));
+      run.pickDie(run.current.docket.size);
+      run.stroke();
+      expect(run.follow(HydPush.release).mistake, HydMistakes.halfCrimp);
+      expect(run.pressure, 0);
+      expect(run.follow(HydPush.release).verdict, HydVerdict.slip, reason: 'nothing pumped: still a slip');
+      expect(run.follow(HydPush.die).mistake, HydMistakes.wrongDie);
+      expect(run.slips, 5);
+    });
+
+    test('his moment: "let go" fits until the click; once nothing can fit on a docket he waits for the next', () {
+      final run = HydRun(dealHyd(math.Random(_seedWhere(_releaseFirst))));
+      expect(hydPushFor(run, prefer: HydPush.release), isNull);
+      expect(hydPushLater(run), isTrue, reason: 'a crimp: letting go is still ahead');
+      run.take(_right(run.current));
+      run.pickDie(run.current.docket.size);
+      expect(hydPushLater(run), isTrue);
+      for (var i = 1; i < kHydStrokes; i++) {
+        run.stroke();
+        expect(hydPushFor(run, prefer: HydPush.release), HydPush.release, reason: 'pressure $i');
+      }
+      run.stroke();
+      expect(run.shown, isTrue);
+      expect(hydPushFor(run, prefer: HydPush.release), isNull);
+      expect(hydPushLater(run), isFalse);
+      run.next();
+      expect(run.current.crimp, isFalse);
+      run.take(_right(run.current));
+      expect(hydPushLater(run), isFalse, reason: 'a cut: nothing more he can push');
+    });
+
     test('deals vary', () {
       final deals = [for (var s = 0; s < 60; s++) dealHyd(math.Random(s))];
       expect(deals.map((d) => d.rounds[0].docket.size).toSet().length, 4);
@@ -407,7 +452,7 @@ void main() {
         }
         debugPrint('PERF hydraulic pick ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(HydLines.docket), findsOneWidget);
         expect(tools, findsNWidgets(4));
         expect(perSec, lessThan(20));
@@ -430,7 +475,7 @@ void main() {
       ));
       await _pump(t, 400);
       expect(find.byType(GuideIntro), findsOneWidget);
-      expect(find.text('শুরু'), findsNothing);
+      expect(find.textContaining(RegExp('শুরু')), findsNothing, reason: 'no start button of any wording');
       await t.tapAt(const Offset(360, 800));
       await _pump(t, 600);
       expect(find.byType(GuideIntro), findsOneWidget, reason: 'a tap does not skip');
@@ -516,11 +561,290 @@ void main() {
       final wrong = _onScreen(HydLines.coworkerLeak.wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1500);
       expect(find.byType(MistakeCard), findsOneWidget);
       expect(find.text(HydMistakes.leak.textBn), findsOneWidget);
       expect(find.text(HydLines.serviceTag), findsOneWidget, reason: 'the leaking tool goes to servicing');
       expect(c.read(gameSaveProvider).mistakes, isNotEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('gesture hint: idle in the store, the hand sweeps over every tool on the board, never one', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final (c, _) = await open(t, _seedWhere((d) => d.callRound == 1));
+      expect(find.byType(IdleHint), findsWidgets);
+      await _pump(t, 9000);
+      final st = t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(st.showing, isTrue);
+      expect(st.debugOptions, hasLength(4), reason: 'a sweep over all four hooks');
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker: a fast take does not skip him — the take waits until he has been answered', (t) async {
+      final (c, deal) = await open(t, _seedWhere((d) => d.callRound == 0 && d.push == HydPush.leak));
+      final r = deal.rounds[0];
+      final tool = _right(r);
+      // Straight to the sound tool and take it, before his timer.
+      await t.tap(tools.at(r.tools.indexOf(tool)), warnIfMissed: false);
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(HydLines.take));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in on the decisive take');
+      expect(find.text(HydLines.coworkerLeak.line), findsWidgets);
+      expect(_label('${HydLines.dieLabel} ${r.docket.size}'), findsNothing, reason: 'the take waited');
+      await _pickRight(t, HydLines.coworkerLeak.right);
+      await _pump(t, 1500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(HydLines.take));
+      await _pump(t, 800);
+      expect(_label('${HydLines.dieLabel} ${r.docket.size}'), findsOneWidget, reason: 'now the take works');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker "let go": pumping on while he talks refuses him; the reason deck never opens over his deck', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      final (c, deal) = await open(t, _seedWhere(_releaseFirst));
+      final r = deal.rounds[0];
+      final tool = _right(r);
+      await lift(t, r, tool);
+      await t.tap(find.text(HydLines.take));
+      await _pump(t, 600);
+      await t.tap(_label('${HydLines.dieLabel} ${r.docket.size}'));
+      await _pump(t, 500);
+      final p = find.text(tool.kind == HydKind.batteryCrimper ? HydLines.trigger : HydLines.pump);
+      await t.tap(p);
+      await _pump(t, 50);
+      for (var i = 0; i < 80 && find.byType(CoworkerPeek).evaluate().isEmpty; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.text(HydLines.coworkerRelease.line), findsWidgets);
+      expect(find.byKey(const ValueKey('choice-deck')), findsNothing, reason: 'beat 1: he is still talking');
+      // Pump on to the click while he talks.
+      for (var i = 1; i < kHydStrokes; i++) {
+        await t.tap(p, warnIfMissed: false);
+        await _pump(t, 100);
+      }
+      expect(find.text(HydLines.click), findsOneWidget);
+      await _pump(t, 1500);
+      expect(find.byKey(const ValueKey('choice-deck')), findsNothing, reason: 'he left refused, no deck of his remains');
+      expect(find.byKey(const ValueKey('why-deck')), findsOneWidget);
+      // Taps in the praise / reason window never slip.
+      await t.tap(find.text(HydLines.release), warnIfMissed: false);
+      await _pump(t, 300);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pickRight(t, HydLines.crimpRight(r));
+      await _pump(t, 2000);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker "let go": letting go while he says so is listening — a slip with its card', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      final (c, deal) = await open(t, _seedWhere(_releaseFirst));
+      final r = deal.rounds[0];
+      final tool = _right(r);
+      await lift(t, r, tool);
+      await t.tap(find.text(HydLines.take));
+      await _pump(t, 600);
+      await t.tap(_label('${HydLines.dieLabel} ${r.docket.size}'));
+      await _pump(t, 500);
+      await t.tap(find.text(tool.kind == HydKind.batteryCrimper ? HydLines.trigger : HydLines.pump));
+      for (var i = 0; i < 80 && find.byType(CoworkerPeek).evaluate().isEmpty; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      await t.tap(find.text(HydLines.release), warnIfMissed: false);
+      await _pump(t, 1200);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(HydMistakes.halfCrimp.textBn), findsOneWidget);
+      expect(find.byKey(const ValueKey('choice-deck')), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isNotEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker "let go": a fast last stroke waits for him; listening on his deck is a slip', (t) async {
+      final (c, deal) = await open(t, _seedWhere(_releaseFirst));
+      final r = deal.rounds[0];
+      final tool = _right(r);
+      await t.tap(tools.at(r.tools.indexOf(tool)), warnIfMissed: false);
+      await _pump(t, 200);
+      await t.tap(find.text(HydLines.take));
+      await _pump(t, 200);
+      await t.tap(_label('${HydLines.dieLabel} ${r.docket.size}'));
+      await _pump(t, 200);
+      final p = find.text(tool.kind == HydKind.batteryCrimper ? HydLines.trigger : HydLines.pump);
+      var came = false;
+      for (var i = 0; i < kHydStrokes && !came; i++) {
+        await t.tap(p, warnIfMissed: false);
+        await t.pump(const Duration(milliseconds: 30));
+        came = find.byType(CoworkerPeek).evaluate().isNotEmpty;
+      }
+      expect(came, isTrue, reason: 'he comes before the click, however fast');
+      expect(find.text(HydLines.click), findsNothing);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(HydLines.coworkerRelease.wrong);
+      expect(wrong, hasLength(2));
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 1500);
+      expect(find.text(HydMistakes.halfCrimp.textBn), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes, isNotEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    /// Plays one docket clean on the page, its reason included.
+    Future<void> playDocket(WidgetTester t, HydRoundDeal r) async {
+      final tool = _right(r);
+      await lift(t, r, tool);
+      await t.tap(find.text(HydLines.take));
+      await _pump(t, 800);
+      await doJob(t, r, tool);
+      await _pump(t, 3500);
+      await _pickRight(t, r.crimp ? HydLines.crimpRight(r) : HydLines.cutRight);
+      await _pump(t, 4000);
+    }
+
+    testWidgets('coworker "near die": holding the job waits for him; a die put in while he talks is listening', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      final (c, deal) = await open(t, _seedWhere((d) => d.callRound == 2 && d.push == HydPush.die && _twin(d.rounds[2]).flaw != HydFlaw.leak));
+      await playDocket(t, deal.rounds[0]);
+      await playDocket(t, deal.rounds[1]);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he is dealt on the last docket');
+      final r = deal.rounds[2];
+      expect(r.dieMissing, isTrue);
+      await lift(t, r, _right(r));
+      await t.tap(find.text(HydLines.take));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'nothing he can push at the pegboard');
+      // A die tap before he comes is simply wrong (no hold that names the lost die).
+      // The hold is the decisive control: it waits for him.
+      await t.tap(find.text(HydLines.hold));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in on the hold');
+      expect(find.text(HydLines.coworkerDie.line), findsWidgets);
+      expect(find.byKey(const ValueKey('why-deck')), findsNothing, reason: 'the hold waited');
+      expect(find.byKey(const ValueKey('choice-deck')), findsNothing, reason: 'beat 1');
+      // He says "the near one will do" — the player puts a die in: listened.
+      await t.tap(_label('${HydLines.dieLabel} ${hydNearDie(r)}'), warnIfMissed: false);
+      await _pump(t, 1200);
+      expect(find.text(HydMistakes.wrongDie.textBn), findsOneWidget);
+      expect(find.byKey(const ValueKey('choice-deck')), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isNotEmpty);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 400);
+      // He has had his moment: the hold now goes straight to its reason.
+      await t.tap(find.text(HydLines.hold));
+      await _pump(t, 3500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _pickRight(t, HydLines.holdRight(r));
+      await _pump(t, 5000);
+      expect(c.read(gameSaveProvider).rungProgress['2.9/do/0'], 'cleared', reason: 'one slip: still a pass');
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    for (final push in [HydPush.die, HydPush.release]) {
+      testWidgets('coworker, lost die (${push.name} dealt): he never comes on his timer at the die case, only on the hold', (t) async {
+        CoworkerTiming.debugReadHoldInTests = true;
+        addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+        final (c, deal) = await open(
+          t,
+          _seedWhere((d) => d.callRound == 2 && d.push == push && d.rounds[2].dieMissing && _twin(d.rounds[2]).flaw != HydFlaw.leak),
+        );
+        await playDocket(t, deal.rounds[0]);
+        await playDocket(t, deal.rounds[1]);
+        final r = deal.rounds[2];
+        await lift(t, r, _right(r));
+        await t.tap(find.text(HydLines.take));
+        await _pump(t, 600);
+        expect(_label('${HydLines.dieLabel} ${hydNearDie(r)}'), findsOneWidget, reason: 'at the die case');
+        // Reading the die case a while: his "the right die isn't there?" would
+        // give the lost die away, so his timer never brings him in here.
+        await _pump(t, 4000);
+        expect(find.byType(CoworkerPeek), findsNothing, reason: 'no arrival on his timer at the die case');
+        expect(find.text(HydLines.coworkerDie.line), findsNothing);
+        // The hold is the decisive control: he cuts in on it.
+        await t.tap(find.text(HydLines.hold));
+        await t.pump(const Duration(milliseconds: 100));
+        expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in on the hold');
+        expect(find.text(HydLines.coworkerDie.line), findsWidgets);
+        expect(t.takeException(), isNull);
+        await close(t, c);
+      });
+    }
+
+    testWidgets('coworker beat 1: a tap on the leaking hook and on a sound hook answer the same — the pegboard waits', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      final (c, deal) = await open(t, _seedWhere((d) => d.callRound == 0 && d.push == HydPush.leak));
+      final r = deal.rounds[0];
+      for (var i = 0; i < 100 && find.byType(CoworkerPeek).evaluate().isEmpty; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byKey(const ValueKey('choice-deck')), findsNothing, reason: 'beat 1');
+      for (final tool in [_twin(r), _right(r)]) {
+        await t.tap(tools.at(r.tools.indexOf(tool)), warnIfMissed: false);
+        await _pump(t, 300);
+        expect(find.text(HydLines.take), findsNothing, reason: '${tool.flaw.name}: no close look while he talks');
+        expect(find.byType(CoworkerPeek), findsOneWidget, reason: '${tool.flaw.name}: he is still there');
+        expect(find.text(HydLines.coworkerLeak.line), findsWidgets, reason: '${tool.flaw.name}: still talking');
+        expect(find.byType(MistakeCard), findsNothing);
+      }
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      // His deck still decides.
+      await _pickRight(t, HydLines.coworkerLeak.right);
+      await _pump(t, 1500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await lift(t, r, _right(r));
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker: taking the leaking tool before he comes slips on its own — he never names its fault', (t) async {
+      final (c, deal) = await open(t, _seedWhere((d) => d.callRound == 0 && d.push == HydPush.leak));
+      final r = deal.rounds[0];
+      final twin = _twin(r);
+      expect(twin.flaw, HydFlaw.leak);
+      await t.tap(tools.at(r.tools.indexOf(twin)), warnIfMissed: false);
+      await _pump(t, 200);
+      await t.tap(find.text(HydLines.take));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'no hold on the leaking tool');
+      await _pump(t, 800);
+      expect(find.text(HydMistakes.leak.textBn), findsOneWidget);
+      expect(find.text(HydLines.coworkerLeak.line), findsNothing);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('putting back a tool not looked over gets the same neutral line for sound and faulty alike', (t) async {
+      // (A flat battery reads at a glance on its gauge, so that twin is left out.)
+      final (c, deal) = await open(t, _seedWhere((d) => d.callRound == 2 && _twin(d.rounds[0]).flaw != HydFlaw.battery));
+      final r = deal.rounds[0];
+      for (final tool in [_right(r), _twin(r)]) {
+        await lift(t, r, tool);
+        await t.tap(find.text(HydLines.putBack));
+        await _pump(t, 300);
+        expect(c.read(guideDirectorProvider).line, HydLines.putBackLine);
+        await _pump(t, 600);
+      }
+      expect(find.text(HydLines.serviceTag), findsNothing);
+      expect(find.text(HydLines.chargeTag), findsNothing);
       expect(t.takeException(), isNull);
       await close(t, c);
     });

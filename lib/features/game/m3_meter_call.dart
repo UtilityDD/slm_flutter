@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -52,19 +53,31 @@ export 'm3_meter_call_world.dart' show M3MeterCallGeo, M3MeterCallRoom, M3MeterC
 //
 // Deadly (lesson): a bare hand on the neutral ("নিউট্রাল তো মরা" — myth 2);
 // a bare-metal tool on the live meter terminals (the box is a live panel).
-// Slips: acting before the fault was found; the supply left ON; a plain tool;
-// blaming the meter; cutting the seal; being rude; the wrong neutral (the
-// drop's) or the wrong fix. Three slips strike out.
+// Slips: acting before the fault was found (or on the wrong load); the supply
+// left ON; a plain tool (on any terminal of the panel); blaming the meter;
+// cutting the seal; being rude; the wrong neutral (the drop's) or the wrong
+// fix. Three slips strike out. Tightening a sound terminal safely is only
+// needless: no slip, but the clean play loses its top stars.
 //
-// The careless coworker comes once a play, after the first look on his call:
-// on the fast-meter call "সিলটা কেটে দেখে নাও" (listening = the seal cut, a
-// slip); on the burnt call "নিউট্রাল তো মরা, খালি হাতে ধরো" (listening =
-// deadly).
+// The careless coworker comes once a play on his call, while his push still
+// fits: on the fast-meter call after the first look, "সিলটা কেটে দেখে নাও"
+// (listening = the seal cut, a slip); on the burnt call once the LT line was
+// looked at, "নিউট্রাল তো মরা, খালি হাতে ধরো" (listening = deadly: a bare hand
+// on the neutral is on MODULE3_LADDER's deadly list). সিদ্ধান্ত নিই waits for
+// him (holdForCoworker), so a fast decision cannot skip him.
+//
+// Gesture hints (how, never what): a sweep over the four spots, the HUD
+// controls or all four terminals alike; a tap only on সিদ্ধান্ত নিই once every
+// spot was looked at. Look tags and rings are one neutral colour.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m3_meter_call_world.dart), corner guide, ◆ on the table → "কেন …?" →
 // the next call by itself. Voice: the guide's lines by device TTS; the
-// coworker's pushes by TTS until recorded (his exit line is recorded).
+// coworker's exit line is recorded, his two pushes are not yet (the kit shows
+// an unrecorded push as a held caption, never in the device voice).
+//
+// Praise window: the scene, the HUD and his arrival all wait while a right
+// move's ◆ is on the table ([ReasonTable.tableBusy]).
 //
 // Flagged to the owner: how the meter's incoming supply is switched off is
 // not in the lesson (a HUD switch "ইনকামিং", no device drawn); where the
@@ -168,24 +181,29 @@ abstract final class M3MeterCallLines {
       };
   static const tight = 'টাইট আছে';
 
-  // The action deck (fast meter, burnt). 35–45 letters each.
+  // The action deck (fast meter, burnt). 35–45 letters each. No word sits
+  // only on the right cards (a test splits every right card into words):
+  // the wrong ones share the cause, "ধীরে বুঝিয়ে", the LT line, "কাটা" and
+  // "শাটডাউন, টেস্ট, আর্থ", so the pick is the real decision (the load seen
+  // at the window; polite or not; which neutral; bare hand or not).
   static const fastLeak = ['ঘরে আর্থ লিকেজ — গ্রাহককে ধীরে বুঝিয়ে বলি', 'মিটার নয়, লিকেজ — ভদ্রভাবে সহজ করে বোঝাই'];
-  static const fastFridge = ['পুরোনো ফ্রিজই খরচ বাড়ায় — ধীরে বোঝাই', 'মিটার নয়, ফ্রিজ — ভদ্রভাবে সহজ করে বোঝাই'];
-  static const fastNewMeter = 'মিটারটাই খারাপ — এখনই নতুন লাগিয়ে দিই';
+  static const fastFridge = ['পুরোনো ফ্রিজ খরচ বাড়ায় — ধীরে বুঝিয়ে বলি', 'মিটার নয়, ফ্রিজ — ভদ্রভাবে সহজ করে বোঝাই'];
+  static const fastNewMeter = 'মিটারই খারাপ — ধীরে বুঝিয়ে বলি, নতুন দিই';
   static const fastSeal = 'সিল কেটে মিটারের ভেতরটা খুলে দেখে নিই';
-  static const fastScold = 'ধমক দিই — আপনারাই বেশি বিদ্যুৎ পোড়ান';
+  static const fastScoldLeak = 'ঘরে আর্থ লিকেজ — গ্রাহককে ধমকে দোষ দিই';
+  static const fastScoldFridge = 'পুরোনো ফ্রিজ খরচ বাড়ায় — ধমকে দোষ দিই';
   static const fastWalk = 'কিছু না বলে চুপচাপ গাড়িতে ফিরে আসি';
-  static const fastCover = 'মিটারের কভার খুলে টার্মিনাল ঘেঁটে দেখি';
   static const burntRight = ['এলটি লাইনের নিউট্রাল কাটা — শাটডাউনে সারাই', 'লাইনের নিউট্রাল সারাই — শাটডাউন, টেস্ট, আর্থ'];
-  static const burntDrop = 'ড্রপ কেবিলের নিউট্রালটা বদলে দিলেই হবে';
-  static const burntBare = 'নিউট্রাল তো মরা — খালি হাতেই জুড়ে দিই';
-  static const burntMeter = 'মিটারটাই দোষী — নতুন মিটার লাগিয়ে দিই';
+  static const burntDrop = 'ড্রপের নিউট্রাল সারাই — শাটডাউন, টেস্ট, আর্থ';
+  static const burntBare = 'এলটি লাইনের নিউট্রাল কাটা — খালি হাতে জুড়ি';
+  static const burntMeter = 'শাটডাউনে মিটারটাই খুলে নতুন লাগিয়ে দিই';
   static const burntCustomer = 'গ্রাহকের যন্ত্রই খারাপ — ওঁরাই বদলে নিন';
 
   static List<String> actRight(M3MeterCallCase c) => c.kind == M3MeterCallKind.burnt ? burntRight : (c.cause == M3MeterCallCause.leak ? fastLeak : fastFridge);
   static List<String> actWrong(M3MeterCallCase c) => [...actWrongMistake(c).keys];
 
-  /// Each wrong action and the mistake it books.
+  /// Each wrong action and the mistake it books. On the fast meter the other
+  /// cause's polite explanation is wrong too (the window shows which load).
   static Map<String, DoMistake> actWrongMistake(M3MeterCallCase c) => c.kind == M3MeterCallKind.burnt
       ? {
           burntDrop: M3MeterCallMistakes.dropNeutral,
@@ -197,9 +215,9 @@ abstract final class M3MeterCallLines {
       : {
           fastNewMeter: M3MeterCallMistakes.meterBlamed,
           fastSeal: M3MeterCallMistakes.sealCut,
-          fastScold: M3MeterCallMistakes.rude,
+          (c.cause == M3MeterCallCause.leak ? fastScoldLeak : fastScoldFridge): M3MeterCallMistakes.rude,
+          (c.cause == M3MeterCallCause.leak ? fastFridge : fastLeak).last: M3MeterCallMistakes.noLook,
           fastWalk: M3MeterCallMistakes.rude,
-          fastCover: M3MeterCallMistakes.sealCut,
         };
 
   // The reasons: the right ones fit what was done; the wrong ones are field
@@ -426,6 +444,10 @@ class M3MeterCallRun {
   /// The +5: every spot looked at before acting.
   bool get thorough => looked.length == M3MeterCallSpot.values.length;
 
+  /// Needless work on a sound terminal (switched off, insulated tool): no
+  /// slip, but a clean play loses its top stars.
+  int needless = 0;
+
   void _startRound() {
     looked.clear();
     supplyOn = true;
@@ -456,13 +478,20 @@ class M3MeterCallRun {
   }
 
   /// The flicker call: the tool on terminal [t] (after the meter was looked
-  /// at). [mistake] is set when it went wrong.
+  /// at). [mistake] is set when it went wrong. Without a tool nothing happens
+  /// (and nothing is revealed). A tool on any terminal of the live panel
+  /// counts: a plain tool with the supply ON is deadly, a plain tool or the
+  /// supply ON a slip — on a sound terminal too. Done safely on a sound
+  /// terminal it is only needless ([needless]; "টাইট আছে").
   DoMistake? mistake;
   M3MeterCallTap? tapTerminal(M3MeterCallTerm t) {
     mistake = null;
     if (!_open || current.kind != M3MeterCallKind.flicker || !looked.contains(M3MeterCallSpot.meter)) return null;
-    if (t != current.loose) return M3MeterCallTap.tight;
     if (tool == M3MeterCallTool.none) return M3MeterCallTap.needTool;
+    if (t != current.loose && tool == M3MeterCallTool.insulated && !supplyOn) {
+      needless++;
+      return M3MeterCallTap.tight;
+    }
     shown = true;
     if (tool == M3MeterCallTool.plain && supplyOn) {
       mistake = deadly = M3MeterCallMistakes.livePlainTool;
@@ -636,6 +665,15 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // The gesture hint (how to touch, never what): the HUD controls it sweeps.
+  final _hints = IdleHintController();
+  final _supplyKey = GlobalKey();
+  final _insulatedKey = GlobalKey();
+  final _plainKey = GlobalKey();
+  final _decideKey = GlobalKey();
+  // Which side each tool sits on, shuffled per call (no giveaway order).
+  var _toolOrder = const [M3MeterCallTool.insulated, M3MeterCallTool.plain];
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -678,7 +716,7 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_actOpen && !_run.shown;
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_actOpen && !_run.shown;
 
   void _startRound() {
     _tightTimer?.cancel();
@@ -690,6 +728,9 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
       _actOpen = false;
       _actWrong = null;
       _actPicked = null;
+      _toolOrder = widget.rng.nextBool()
+          ? const [M3MeterCallTool.insulated, M3MeterCallTool.plain]
+          : const [M3MeterCallTool.plain, M3MeterCallTool.insulated];
       _wake++;
     });
     unawaited(_sayChain([M3MeterCallLines.ask(_run.current.kind)]));
@@ -714,23 +755,31 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
         return;
       }
     }
+    _hints.missTap();
   }
 
   void _look(M3MeterCallSpot s) {
     final tag = _run.inspect(s);
     if (tag == null) return;
     HapticFeedback.selectionClick();
-    final bad = s == _run.current.fault;
-    _cue(bad ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/tick.ogg', volume: 0.5);
+    // One sound for every look: the fault is read from the tag, not heard.
+    _cue('sounds/intro/tick.ogg', volume: 0.5);
     setState(() {
       _tags[s] = tag;
       _wake++;
     });
-    // His moment: after the first look on his call.
-    if (!_coworkerArmed && _run.index == _run.deal.callAt) {
-      _coworkerArmed = true;
-      scheduleCoworker();
-    }
+    // His moment, while his push still fits: on the fast meter after the
+    // first look; on the burnt call once the LT line was looked at (he talks
+    // about the neutral). A fast decision brings him in too ([_openAct]).
+    final burnt = _run.current.kind == M3MeterCallKind.burnt;
+    if (!burnt || s == M3MeterCallSpot.line) _armCoworker();
+  }
+
+  /// Schedules him once, on his call.
+  void _armCoworker() {
+    if (_coworkerArmed || _run.index != _run.deal.callAt) return;
+    _coworkerArmed = true;
+    scheduleCoworker();
   }
 
   void _terminal(M3MeterCallTerm t) {
@@ -747,6 +796,7 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
         });
       case M3MeterCallTap.needTool:
         _cue('sounds/intro/tick.ogg', volume: 0.5);
+        _hints.missTap();
         setState(() => _wake++);
       case M3MeterCallTap.mistake:
         setState(() => _toolAt = t);
@@ -782,6 +832,10 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
   // --- the action deck --------------------------------------------------------------
   void _openAct() {
     if (!_canPlay) return;
+    // The decisive control: on his call he comes before the deck, even when
+    // the player decides at once.
+    _armCoworker();
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     _cue('sounds/intro/click.ogg', volume: 0.5);
     final c = _run.current;
@@ -878,7 +932,7 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    if (_intro || _busy || _card != null || reasonOpen || _actOpen) return false;
+    if (_intro || _busy || _card != null || tableBusy || _actOpen) return false;
     return true;
   }
 
@@ -1008,14 +1062,15 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
       await save.markRungCleared(_rungId);
       _passed = true;
       await _levelDelta(20, centre, mood: GuideMood.celebrate);
-      if (mark == 100 && _clock.elapsedMilliseconds < widget.pack.quickMs) {
+      if (mark == 100 && _run.needless == 0 && _clock.elapsedMilliseconds < widget.pack.quickMs) {
         _quickBonus = true;
         await _levelDelta(10, centre, mood: GuideMood.celebrate);
       }
     }
     final delta = await save.commitLevelScore(_rungId, _runScore);
     if (_run.passed) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
-    final stars = starsFor(passed: _run.passed, strikes: strikes, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
+    // Needless work on a sound terminal costs the top stars (not a slip).
+    final stars = starsFor(passed: _run.passed, strikes: strikes + _run.needless, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
     if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
     setState(() {
@@ -1062,8 +1117,37 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
     return geo.terminal(c.loose);
   }
 
+  /// The scene's geometry as last laid out (for the gesture hint).
+  M3MeterCallGeo? _geo;
+
+  /// Which waiting state the hint is for (a new one resets its count).
+  String get _hintStage {
+    if (_run.done) return 'done';
+    final c = _run.current;
+    if (c.kind == M3MeterCallKind.flicker && _run.looked.contains(M3MeterCallSpot.meter)) {
+      return _run.tool == M3MeterCallTool.none ? 'hud' : 'terminals';
+    }
+    if (c.kind != M3MeterCallKind.flicker && _run.thorough) return 'decide';
+    return 'spots';
+  }
+
+  /// The gesture hint (how to touch, never what): a sweep over the four
+  /// spots, over the HUD controls, or over all four terminals alike; a tap
+  /// only on সিদ্ধান্ত নিই once every spot was looked at (the one way on).
+  HintSpec? _hint() {
+    final geo = _geo;
+    if (geo == null) return null;
+    return switch (_hintStage) {
+      'hud' => HintSpec.sweepOver([_supplyKey, for (final t in _toolOrder) t == M3MeterCallTool.insulated ? _insulatedKey : _plainKey]),
+      'terminals' => HintSpec.sweep([for (final t in M3MeterCallTerm.values) geo.terminalHit(t)], space: HintSpace.scene),
+      'decide' => HintSpec.tapOn(_decideKey),
+      'spots' => HintSpec.sweep([for (final s in M3MeterCallSpot.values) geo.spotHit(s).intersect(Rect.fromLTWH(0, 0, 360, geo.height))], space: HintSpace.scene),
+      _ => null,
+    };
+  }
+
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M3MeterCallGeo.forScene(m.height, m.inset);
+    final geo = _geo = M3MeterCallGeo.forScene(m.height, m.inset);
     final c = _run.current;
     final quiet = _quiet;
     final tb = geo.trainee;
@@ -1088,7 +1172,6 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
                       room: c.room,
                       look: c.look,
                       looked: {..._run.looked},
-                      fault: c.fault,
                       hot: flicker && meterLooked ? c.loose : null,
                       fixed: _run.fixed,
                       neutralBreak: c.kind == M3MeterCallKind.burnt ? geo.breakX(c.breakRight) : null,
@@ -1119,14 +1202,14 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
           key: ValueKey('tag-${_run.index}-${e.key.name}'),
           left: geo.tagAt(e.key, breakRight: c.kind == M3MeterCallKind.burnt && c.breakRight).dx,
           top: geo.tagAt(e.key, breakRight: c.kind == M3MeterCallKind.burnt && c.breakRight).dy,
-          child: IgnorePointer(child: _FindTag(text: e.value, bad: e.key == c.fault, quiet: quiet)),
+          child: IgnorePointer(child: _FindTag(text: e.value, quiet: quiet)),
         ),
       if (_tightAt != null)
         Positioned(
           key: ValueKey('tight-${_tightAt!.name}'),
           left: geo.terminal(_tightAt!).dx - 34,
           top: geo.termY - 46,
-          child: const IgnorePointer(child: _FindTag(text: M3MeterCallLines.tight, bad: false, quiet: true)),
+          child: const IgnorePointer(child: _FindTag(text: M3MeterCallLines.tight, quiet: true)),
         ),
       if (_stamped && !_freeze)
         Positioned(
@@ -1176,7 +1259,7 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp || _actOpen;
-    final handsOn = playing && !_run.done && !_run.shown && !deckUp && !coworkerOpen && _card == null;
+    final handsOn = playing && !_run.done && !_run.shown && !deckUp && !coworkerOpen && _card == null && !tableBusy;
     final flicker = !_run.done && _run.current.kind == M3MeterCallKind.flicker;
     return PopScope(
       canPop: false,
@@ -1205,6 +1288,10 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && !coworkerOnScreen,
+            hintKey: '${_run.index}-$_hintStage',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (handsOn && flicker)
@@ -1217,28 +1304,35 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       _ToolButton(
+                        key: _supplyKey,
                         icon: _run.supplyOn ? Icons.toggle_on_rounded : Icons.toggle_off_rounded,
                         label: _run.supplyOn ? M3MeterCallLines.supplyOn : M3MeterCallLines.supplyOff,
-                        active: !_run.supplyOn,
-                        warn: _run.supplyOn,
+                        active: false,
                         onTap: _toggleSupply,
                       ),
-                      const SizedBox(width: 4),
-                      _ToolButton(
-                        icon: Icons.build_rounded,
-                        label: M3MeterCallLines.insulated,
-                        active: _run.tool == M3MeterCallTool.insulated,
-                        tint: const Color(0xFFE2631B),
-                        onTap: () => _pickTool(M3MeterCallTool.insulated),
-                      ),
-                      const SizedBox(width: 4),
-                      _ToolButton(
-                        icon: Icons.build_rounded,
-                        label: M3MeterCallLines.plain,
-                        active: _run.tool == M3MeterCallTool.plain,
-                        tint: const Color(0xFFC9CED3),
-                        onTap: () => _pickTool(M3MeterCallTool.plain),
-                      ),
+                      // The two tools change sides per call: left to right is
+                      // never a fixed (or the right) order.
+                      for (final t in _toolOrder) ...[
+                        const SizedBox(width: 4),
+                        if (t == M3MeterCallTool.insulated)
+                          _ToolButton(
+                            key: _insulatedKey,
+                            icon: Icons.build_rounded,
+                            label: M3MeterCallLines.insulated,
+                            active: _run.tool == M3MeterCallTool.insulated,
+                            tint: const Color(0xFFE2631B),
+                            onTap: () => _pickTool(M3MeterCallTool.insulated),
+                          )
+                        else
+                          _ToolButton(
+                            key: _plainKey,
+                            icon: Icons.build_rounded,
+                            label: M3MeterCallLines.plain,
+                            active: _run.tool == M3MeterCallTool.plain,
+                            tint: const Color(0xFFC9CED3),
+                            onTap: () => _pickTool(M3MeterCallTool.plain),
+                          ),
+                      ],
                     ],
                   ),
                 ),
@@ -1248,7 +1342,7 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
                   left: 12,
                   right: 110,
                   bottom: pad.bottom + 12,
-                  child: DoBigButton(label: M3MeterCallLines.decide, filled: true, onTapUp: (_) => _openAct()),
+                  child: DoBigButton(key: _decideKey, label: M3MeterCallLines.decide, filled: true, onTapUp: (_) => _openAct()),
                 ),
               if (deckUp)
                 Positioned(
@@ -1361,11 +1455,11 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
 // Pieces
 // ============================================================================
 
-/// What a look showed: a small tag at the spot (red when it is the fault).
+/// What a look showed: a small tag at the spot. Every tag looks the same —
+/// the words say what was seen; no red/green verdict reads it for the player.
 class _FindTag extends StatelessWidget {
-  const _FindTag({required this.text, required this.bad, required this.quiet});
+  const _FindTag({required this.text, required this.quiet});
   final String text;
-  final bool bad;
   final bool quiet;
 
   @override
@@ -1379,15 +1473,15 @@ class _FindTag extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 170),
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
         decoration: BoxDecoration(
-          color: bad ? const Color(0xF2B3261E) : const Color(0xE60B3A2A),
+          color: const Color(0xEB13233A),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: bad ? const Color(0xFFFFC4BC) : const Color(0xFF7DE3A8), width: 1.2),
+          border: Border.all(color: const Color(0xFFC9D6E6), width: 1.2),
           boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 4, offset: Offset(0, 2))],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(bad ? Icons.error_rounded : Icons.check_circle_rounded, size: 13, color: bad ? const Color(0xFFFFE1DC) : const Color(0xFF9BF0BF)),
+            const Icon(Icons.visibility_rounded, size: 13, color: Color(0xFFDDE6F0)),
             const SizedBox(width: 4),
             Flexible(child: Text(text, style: bangla(fontSize: 11.5, fontWeight: FontWeight.w800, height: 1.15, color: SlmColors.ivory))),
           ],
@@ -1399,17 +1493,16 @@ class _FindTag extends StatelessWidget {
 
 /// A hands-on control: a round icon with its name under it.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.active, required this.onTap, this.tint, this.warn = false});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.active, required this.onTap, this.tint});
   final IconData icon;
   final String label;
   final bool active;
-  final bool warn;
   final Color? tint;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final ring = active ? SlmColors.gold300 : (warn ? const Color(0xFFFF8A7A) : const Color(0xFF8C96A3));
+    final ring = active ? SlmColors.gold300 : const Color(0xFF8C96A3);
     return Semantics(
       button: true,
       label: label,

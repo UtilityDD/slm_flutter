@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -55,18 +56,26 @@ import 'spoken_once.dart';
 // তালা-ট্যাগ · টেস্টার · আর্থিং · the tap dial (pin, handle, pin).
 //
 // Deadly: touching the tap changer with HT live (also by listening to the
-// coworker, "চালু অবস্থাতেই এক ঘর ঘুরিয়ে দাও!"), and putting the earthing set
-// on a live HT line. Slips: a misread voltmeter, the tap touched without a
-// reading or after a right reading, HT half off (AB or DO only), LT on, no
-// lock-tag, not proven dead, not earthed, earthing before proving dead,
-// turning with the pin in, a second notch, switching on with the earth on.
-// Three slips strike the level out.
+// coworker, "চালু অবস্থাতেই এক ঘর ঘুরিয়ে দাও!" — MODULE3_LADDER row 18), and
+// putting the earthing set on a live HT line. Slips: a misread voltmeter
+// (either way), the tap touched without a reading, HT half off (AB or DO
+// only), LT on, no lock-tag, not proven dead, not earthed, earthing before
+// proving dead, turning with the pin in, a second notch, switching on with
+// the earth on. Three slips strike the level out.
+//
+// No giveaways: the house lamp burns the same plain light on every site until
+// the voltmeter is read; the tool row is dealt in a fresh order each play.
+// Gesture hints (how, never what): a sweep over the scene's parts and the
+// tools, over the two reading buttons, over the dial's handle and pin; a tap
+// on the house only while the voltmeter is in hand (its one use).
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m3_dtr_tap_world.dart), corner guide, ◆ on the table → "কেন …?"
 // → the next DTR by itself; the careless coworker once a play, on a low site,
-// as the fix begins. Voice: the guide by device TTS; the coworker's new push
-// by device TTS until recorded (his exit line is his existing recorded clip).
+// as the fix begins — the AB handle and the DO fuses wait for him
+// (holdForCoworker), so a fast play cannot skip him. Voice: the guide by device
+// TTS; the coworker's push has no recorded clip yet (silent, caption held,
+// until the director records it); his exit line is his existing clip.
 
 // ============================================================================
 // Content
@@ -83,6 +92,9 @@ enum M3DtrTapWhy { keep, isolate, earth, retest }
 
 /// The tool in hand.
 enum M3DtrTapTool { none, meter }
+
+/// The buttons of the tool row (dealt in a fresh order each play).
+enum M3DtrTapKit { meter, lock, tester, earth }
 
 @immutable
 class M3DtrTapSite {
@@ -236,11 +248,6 @@ abstract final class M3DtrTapMistakes {
     textBn: 'আগে বাড়িতে ভোল্টমিটারে মেপে দেখুন ভোল্টেজ সত্যিই কম কি না — তবে ট্যাপ বদলের কথা।',
     art: _measure,
   );
-  static const needless = DoMistake(
-    key: '3.6/m3_dtr_tap/needless-tap',
-    textBn: 'ভোল্টমিটারে ভোল্টেজ ঠিক এসেছে — ট্যাপ ঘোরানোর দরকার নেই।',
-    art: _measure,
-  );
   static const misread = DoMistake(
     key: '3.6/m3_dtr_tap/misread',
     textBn: 'ভোল্টমিটার ভুল পড়লেন। বাড়িতে 240 V-এর কাছাকাছি = ঠিক; অনেক কম (যেমন 200 V) = ভোল্টেজ কম।',
@@ -294,21 +301,25 @@ abstract final class M3DtrTapMistakes {
     art: _notch,
   );
 
-  static List<DoMistake> get all => const [tapLive, earthLive, unread, needless, misread, htHalf, ltOn, noLock, noProve, noEarth, earthUnproved, energiseEarthed, pinIn, oneNotch];
+  static List<DoMistake> get all => const [tapLive, earthLive, unread, misread, htHalf, ltOn, noLock, noProve, noEarth, earthUnproved, energiseEarthed, pinIn, oneNotch];
 }
 
 @immutable
 class M3DtrTapDeal {
-  const M3DtrTapDeal({required this.sites, required this.callAt});
+  const M3DtrTapDeal({required this.sites, required this.callAt, this.tools = M3DtrTapKit.values});
   final List<M3DtrTapSite> sites;
 
   /// The site the careless coworker comes to (a low one).
   final int callAt;
+
+  /// The tool row, left to right (never the order of the work).
+  final List<M3DtrTapKit> tools;
 }
 
 /// Three DTRs: two low, one right (any order), so turning the tap everywhere
 /// cannot win; each low site asks a different reason; readings, dial and
-/// docket vary.
+/// docket vary; the tool row is shuffled (never meter → lock → tester → earth,
+/// the order of the work).
 M3DtrTapDeal m3DtrTapDeal(math.Random rng) {
   const lows = [198, 200, 202, 204];
   const oks = [234, 236, 238];
@@ -332,7 +343,20 @@ M3DtrTapDeal m3DtrTapDeal(math.Random rng) {
     for (final (i, s) in sites.indexed)
       if (s.kind == M3DtrTapKind.low) i,
   ];
-  return M3DtrTapDeal(sites: sites, callAt: low[rng.nextInt(low.length)]);
+  final callAt = low[rng.nextInt(low.length)];
+  var tools = [...M3DtrTapKit.values];
+  while (_inWorkOrder(tools)) {
+    tools = [...M3DtrTapKit.values]..shuffle(rng);
+  }
+  return M3DtrTapDeal(sites: sites, callAt: callAt, tools: tools);
+}
+
+/// The tools stand in the order the work uses them (a giveaway).
+bool _inWorkOrder(List<M3DtrTapKit> t) {
+  final lock = t.indexOf(M3DtrTapKit.lock);
+  final tester = t.indexOf(M3DtrTapKit.tester);
+  final earth = t.indexOf(M3DtrTapKit.earth);
+  return lock < tester && tester < earth;
 }
 
 /// The play state (pure logic).
@@ -386,7 +410,13 @@ class M3DtrTapRun {
   /// Done this site without a slip (+5 on the table).
   bool get thorough => siteSlips == 0;
 
-  M3DtrTapLamp get lamp => !supplied ? M3DtrTapLamp.dark : (low ? M3DtrTapLamp.dim : M3DtrTapLamp.bright);
+  /// The house lamp: a plain light until the voltmeter has been read (never
+  /// the answer before the reading), then dim / bright as read.
+  M3DtrTapLamp get lamp => !supplied
+      ? M3DtrTapLamp.dark
+      : (readLow == null && !over)
+          ? M3DtrTapLamp.lit
+          : (low ? M3DtrTapLamp.dim : M3DtrTapLamp.bright);
 
   bool get _open => !ended && !over;
   bool get _free => _open && !readingUp && !dialOpen;
@@ -499,8 +529,8 @@ class M3DtrTapRun {
     tool = M3DtrTapTool.none;
     blank = false;
     if (htLive) return deadly = M3DtrTapMistakes.tapLive;
+    // A right reading ends the site (no tap then), so a reading here was low.
     if (!everRead) return _slip(M3DtrTapMistakes.unread);
-    if (readLow != true) return _slip(M3DtrTapMistakes.needless);
     if (abClosed || doIn) return _slip(M3DtrTapMistakes.htHalf);
     if (ltOn) return _slip(M3DtrTapMistakes.ltOn);
     if (!locked) return _slip(M3DtrTapMistakes.noLock);
@@ -653,7 +683,16 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
   int? _mark;
   int _totalDelta = 0;
   int _wake = 0;
-  var _coworkerArmed = false;
+  /// He was scheduled for this play (once, on his site's low reading).
+  var _coworkerScheduled = false;
+
+  /// The gesture hint (how to touch, never what).
+  final _hints = IdleHintController();
+  final _toolKeys = {for (final k in M3DtrTapKit.values) k: GlobalKey()};
+  final _sayLowKey = GlobalKey();
+  final _sayOkKey = GlobalKey();
+  final _dialKey = GlobalKey();
+  static const _dialSize = Size(220, 220);
 
   /// The tester's lamp, a moment after it touches the bushings.
   bool? _tester;
@@ -711,7 +750,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
     _startSite();
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.over && !_freeze;
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.over && !_freeze;
 
   String get _task {
     if (_run.readingUp) return M3DtrTapLines.askRead;
@@ -804,7 +843,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
   }
 
   void _tapScene(Offset p, M3DtrTapGeo geo, Offset global) {
-    if (_intro || _ended || _card != null || reasonOpen || _freeze || _run.over) return;
+    if (_intro || _ended || _card != null || tableBusy || _freeze || _run.over) return;
     // While he talks, only the AB handle answers him (opening it refuses him).
     if (coworkerOpen) {
       if (coworkerChoiceUp && geo.abHit.contains(p) && _run.abClosed) {
@@ -818,11 +857,15 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
       return;
     }
     if (_run.dialOpen || _run.readingUp) return;
+    // The AB handle and the DO fuses end his moment (HT off): while he is due
+    // they wait for him, so a fast play cannot skip him.
     if (geo.abHit.contains(p)) {
+      if (holdForCoworker()) return;
       _switched(_run.toggleAb(), global);
       return;
     }
     if (geo.doHit.contains(p)) {
+      if (holdForCoworker()) return;
       _switched(_run.toggleDo(), global);
       return;
     }
@@ -844,26 +887,29 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
       }
       return;
     }
-    if (geo.houseHit.contains(p) && _run.tool == M3DtrTapTool.meter) {
-      _tick();
-      setState(() {
-        _run.tapHouse();
-        _wake++;
-      });
-      if (_run.readingUp) {
-        _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
-        unawaited(_sayChain([M3DtrTapLines.askRead]));
-      } else if (_run.blank) {
-        // No supply at the house: the meter reads 0, the leads come off.
-        _blankTimer?.cancel();
-        _blankTimer = Timer(const Duration(milliseconds: 1600), () {
-          if (!mounted) return;
-          setState(() {
-            _run.clearBlank();
-            _wake++;
-          });
+    if (!geo.houseHit.contains(p) || _run.tool != M3DtrTapTool.meter) {
+      // A tap on nothing to work (the sky, the house with empty hands).
+      _hints.missTap();
+      return;
+    }
+    _tick();
+    setState(() {
+      _run.tapHouse();
+      _wake++;
+    });
+    if (_run.readingUp) {
+      _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+      unawaited(_sayChain([M3DtrTapLines.askRead]));
+    } else if (_run.blank) {
+      // No supply at the house: the meter reads 0, the leads come off.
+      _blankTimer?.cancel();
+      _blankTimer = Timer(const Duration(milliseconds: 1600), () {
+        if (!mounted) return;
+        setState(() {
+          _run.clearBlank();
+          _wake++;
         });
-      }
+      });
     }
   }
 
@@ -882,8 +928,8 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
       unawaited(_siteDone());
       return;
     }
-    if (!_coworkerArmed && _run.index == _run.deal.callAt && _run.fixing) {
-      _coworkerArmed = true;
+    if (!_coworkerScheduled && _run.index == _run.deal.callAt && _run.fixing) {
+      _coworkerScheduled = true;
       scheduleCoworker();
     }
     unawaited(_sayChain([_task]));
@@ -905,7 +951,10 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
       return;
     }
     final c = M3DtrTapDialPainter.centreOf(size);
-    if ((local - c).distance > M3DtrTapDialPainter.radiusOf(size) * 1.35) return;
+    if ((local - c).distance > M3DtrTapDialPainter.radiusOf(size) * 1.35) {
+      _hints.missTap();
+      return;
+    }
     final m = _run.turn();
     setState(() => _wake++);
     if (m != null) {
@@ -976,8 +1025,10 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("turn it live") fits only while HT is still on and the tap
+    // not yet changed on his site; after that he does not come.
     if (_ended || _run.index != _run.deal.callAt || !_run.fixing || !_run.htLive || _run.over) return null;
-    if (_intro || _card != null || reasonOpen || _run.readingUp || _run.dialOpen || _tester != null) return false;
+    if (_intro || _card != null || tableBusy || _run.readingUp || _run.dialOpen || _tester != null) return false;
     return true;
   }
 
@@ -1252,6 +1303,63 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
     ];
   }
 
+  /// One button of the tool row.
+  Widget _toolButton(M3DtrTapKit k, Size size) {
+    final key = _toolKeys[k]!;
+    return switch (k) {
+      M3DtrTapKit.meter => _ToolButton(key: key, icon: Icons.speed_rounded, label: M3DtrTapLines.meter, on: _run.tool == M3DtrTapTool.meter, onTap: _holdMeter),
+      M3DtrTapKit.lock => _ToolButton(key: key, icon: Icons.lock_rounded, label: M3DtrTapLines.lock, on: _run.locked, onTap: _toggleLock),
+      M3DtrTapKit.tester => _ToolButton(key: key, icon: Icons.flash_on_rounded, label: M3DtrTapLines.tester, on: _tester != null, onTap: _useTester),
+      M3DtrTapKit.earth => _ToolButton(
+          key: key,
+          icon: Icons.vertical_align_bottom_rounded,
+          label: M3DtrTapLines.earth,
+          on: _run.earthed,
+          onTap: () => _toggleEarth(HintSpec.globalRectOf(key)?.center ?? Offset(size.width / 2, size.height - 80)),
+        ),
+    };
+  }
+
+  // --- the gesture hint (how to touch, never what) ------------------------------
+  /// A scene point (design px) on the screen: the frame fills the page and
+  /// covers it like [FullSceneFrame] does.
+  Offset _sceneToGlobal(Offset p) {
+    final box = MediaQuery.sizeOf(context);
+    final w = math.max(1.0, box.width);
+    final sh = (360 * box.height / w).clamp(560.0, 900.0);
+    final scale = math.max(box.width / 360, box.height / sh);
+    final dx = (box.width - 360 * scale) / 2;
+    final dy = (box.height - sh * scale) / 2;
+    return Offset(dx + p.dx * scale, dy + p.dy * scale);
+  }
+
+  Rect _sceneRectToGlobal(Rect r) => Rect.fromPoints(_sceneToGlobal(r.topLeft), _sceneToGlobal(r.bottomRight));
+
+  /// The waiting state: a new one restarts the hint count.
+  String get _hintKey => '${_run.index}:${_run.readingUp}:${_run.dialOpen}:${_run.tool.name}:${_run.everRead}:${_run.notched}';
+
+  HintSpec? _hintNow() {
+    // The reading: two answers — pass over both, press none.
+    if (_run.readingUp) return HintSpec.sweepOver([_sayLowKey, _sayOkKey]);
+    // The dial close-up: its handle and its pin are both live — pass over both.
+    if (_run.dialOpen) {
+      final r = HintSpec.globalRectOf(_dialKey);
+      if (r == null) return null;
+      final c = r.topLeft + M3DtrTapDialPainter.centreOf(_dialSize);
+      final rad = M3DtrTapDialPainter.radiusOf(_dialSize);
+      return HintSpec.sweep([Rect.fromCircle(center: c, radius: rad * 0.5), M3DtrTapDialPainter.pinHit(_dialSize, _run.pos).shift(r.topLeft)]);
+    }
+    final geo = _geoNow;
+    // The voltmeter in hand has one use: its leads on the house's meter board.
+    if (_run.tool == M3DtrTapTool.meter) return HintSpec.tap(_sceneToGlobal(geo.meterBoard.center));
+    // Otherwise every part that works, top to bottom, then the tool row as
+    // dealt — the same pass whatever the next step is.
+    return HintSpec.sweep([
+      for (final r in [geo.doHit, geo.dialHit, geo.ltBox, geo.abHit, geo.house]) _sceneRectToGlobal(r),
+      for (final k in _run.deal.tools) ?HintSpec.globalRectOf(_toolKeys[k]!),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1259,10 +1367,10 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.over && !deckUp && !coworkerOpen && _card == null;
+    final handsOn = playing && !_run.over && !deckUp && !coworkerOpen && _card == null && !tableBusy;
     final s = _run.site;
     final meterUp = playing && _card == null && (_run.readingUp || _run.blank);
-    const dialSize = Size(220, 220);
+    const dialSize = _dialSize;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1290,6 +1398,10 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hintNow,
+            hintWaiting: handsOn && !_ended && !_run.blank && !coworkerOnScreen,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1316,6 +1428,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
                   width: dialSize.width,
                   height: dialSize.height,
                   child: Semantics(
+                    key: _dialKey,
                     label: M3DtrTapLines.dialLabel,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
@@ -1332,9 +1445,9 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(child: DoBigButton(label: M3DtrTapLines.sayLow, filled: true, onTapUp: (d) => _answer(true, d.globalPosition))),
+                      Expanded(child: KeyedSubtree(key: _sayLowKey, child: DoBigButton(label: M3DtrTapLines.sayLow, filled: true, onTapUp: (d) => _answer(true, d.globalPosition)))),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: M3DtrTapLines.sayOk, filled: true, onTapUp: (d) => _answer(false, d.globalPosition))),
+                      Expanded(child: KeyedSubtree(key: _sayOkKey, child: DoBigButton(label: M3DtrTapLines.sayOk, filled: true, onTapUp: (d) => _answer(false, d.globalPosition)))),
                     ],
                   ),
                 ),
@@ -1346,22 +1459,8 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
                   bottom: pad.bottom + 8,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _ToolButton(icon: Icons.speed_rounded, label: M3DtrTapLines.meter, on: _run.tool == M3DtrTapTool.meter, onTap: _holdMeter),
-                      _ToolButton(icon: Icons.lock_rounded, label: M3DtrTapLines.lock, on: _run.locked, onTap: _toggleLock),
-                      _ToolButton(icon: Icons.flash_on_rounded, label: M3DtrTapLines.tester, on: _tester != null, onTap: _useTester),
-                      Builder(
-                        builder: (bc) => _ToolButton(
-                          icon: Icons.vertical_align_bottom_rounded,
-                          label: M3DtrTapLines.earth,
-                          on: _run.earthed,
-                          onTap: () {
-                            final box = bc.findRenderObject() as RenderBox?;
-                            _toggleEarth(box == null ? Offset(size.width / 2, size.height - 80) : box.localToGlobal(box.size.center(Offset.zero)));
-                          },
-                        ),
-                      ),
-                    ],
+                    // Dealt in a fresh order each play (never the order of the work).
+                    children: [for (final k in _run.deal.tools) _toolButton(k, size)],
                   ),
                 ),
               if (deckUp)
@@ -1581,7 +1680,7 @@ class _TesterChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;

@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -39,8 +40,8 @@ export 'm3_dtr_checkup_world.dart'
 // one healthy, one that needs a repair docket, one that needs an urgent
 // shutdown — in a fresh order, with fresh signs.
 // Hands on (inspect + spot): tap the breather (silica gel colour: blue /
-// orange good; blue → pink, orange → green = change it — the film's fix of
-// the lesson's "pink or white"), the oil level gauge on the conservator
+// orange good; pink or whitish = change it — the lesson's point 3), the oil
+// level gauge on the conservator
 // (MIN / MAX), the tank (an oil leak at the bushing gasket, a weld joint or the
 // drain valve — point 3), the nameplate (kVA, HV/LV, Dyn11 — pro tip 3), and
 // "কান পেতে শুনি" (a soft steady hum is normal; rattling/growling = a serious
@@ -50,18 +51,25 @@ export 'm3_dtr_checkup_world.dart'
 //   • signing a sick DTR off as fine = a slip (the sign that was missed);
 //   • a rattle called anything but urgent = a slip;
 //   • over-calling (a docket on a healthy DTR, an urgent shutdown for the gel
-//     alone) is not scored: the guide says the lesson's rule, the round stays;
-//     a leak or a low oil level may be called urgent (the film: a leak can
-//     burn the transformer).
+//     alone) is a slip too (audit 2026-11-11: a needless call costs, and the
+//     reply never hints the answer while the DTR is still open); a leak or a
+//     low oil level may be called urgent (the film: a leak can burn the
+//     transformer).
 // The careless coworker comes once a play, one of two pushes (dealt): on the
 // leak round after the leak was seen — "একটু তেল চুঁইছে, চলবে!" (listening =
 // signing it off: the leak slip); or after a first look on his round — "মাচায়
-// উঠে কাছ থেকে দেখো!" (listening = climbing a live DTR: deadly).
+// উঠে কাছ থেকে দেখো!" (listening = climbing a live DTR: deadly — the act is
+// on Module 3's deadly list, MODULE3_LADDER.md row 17). The call buttons wait
+// for him (holdForCoworker): a fast call can't skip him.
+// Gesture hint (how, never what): a sweep over every part, the listen button
+// and the three calls alike, after idle or taps on empty sky.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m3_dtr_checkup_world.dart), corner guide, ◆ on the table → "কেন …?"
 // → the next DTR by itself. Voice: the guide's lines by device TTS; the
-// coworker's pushes by TTS until recorded (his exit line is recorded).
+// coworker's pushes are silent with the caption held for a reading time until
+// recorded (the kit never gives him the guide's device voice); his exit line
+// is recorded.
 //
 // Flagged to the owner: the three-way call (OK / repair docket / urgent
 // shutdown) and which sign goes where are ours — the lesson names the signs
@@ -170,9 +178,11 @@ abstract final class M3DtrCheckupLines {
     'DTR তো চলছে, তাই নিশ্চয়ই সব ঠিক আছে',
     'বাইরে থেকে নতুন দেখাচ্ছে, তাই ঠিক ধরলাম',
     'গ্রামে আলো জ্বলছে, তাই আর দেখার কিছু নেই',
+    'হামিং শুনেছি, তাই জেল-তেল আর দেখিনি',
+    'জেলের রং দেখেছি, লিক-শব্দ দেখার দরকার নেই',
   ];
   static const gelPinkWhy = 'নীল জেল গোলাপি হয়েছে — এবার বদলাতে হবে';
-  static const gelGreenWhy = 'কমলা জেল সবুজ হয়েছে — এবার বদলাতে হবে';
+  static const gelWhiteWhy = 'জেলের রং সাদাটে হয়েছে — এবার বদলাতে হবে';
   static const gelWhy = 'জেল বাষ্প শুষে রং বদলেছে, বদলানোর সময়';
   static const leakWhy = ['তেল লিক হলে কুলিং আর ইনসুলেশন দুটোই কমে', 'সামান্য লিকও বড় দুর্ঘটনা ডেকে আনতে পারে'];
   static const oilLowWhy = ['তেলের লেভেল কম — DTR অতিরিক্ত গরম হবে', 'গেজে তেল MIN-এর নিচে, এভাবে চালানো ঠিক নয়'];
@@ -184,6 +194,8 @@ abstract final class M3DtrCheckupLines {
     'DTR পুরনো দেখাচ্ছে, তাই রিপোর্ট করলাম',
     'নেমপ্লেটে kVA লেখা আছে, তাই ডকেট লিখলাম',
     'ডকেট লিখলে ছুটি মেলে, তাই লিখে দিলাম',
+    'তেলের গেজ দেখিনি, আন্দাজে লিখে দিলাম',
+    'লিক বা শব্দ নয়, DTR-এর রং দেখে লিখলাম',
   ];
 
   static List<String> whyRight(M3DtrCheckupCase c, M3DtrCheckupCall call) {
@@ -193,15 +205,11 @@ abstract final class M3DtrCheckupLines {
     return [
       if (f.contains(M3DtrCheckupFinding.leak)) ...leakWhy,
       if (f.contains(M3DtrCheckupFinding.oilLow)) ...oilLowWhy,
-      if (f.contains(M3DtrCheckupFinding.gel)) ...[c.look.gel == M3DtrCheckupGel.pink ? gelPinkWhy : gelGreenWhy, gelWhy],
+      if (f.contains(M3DtrCheckupFinding.gel)) ...[c.look.gel == M3DtrCheckupGel.pink ? gelPinkWhy : gelWhiteWhy, gelWhy],
     ];
   }
 
   static List<String> whyWrong(M3DtrCheckupCall call) => call == M3DtrCheckupCall.ok ? okWrong : faultWrong;
-
-  /// An over-call: not scored; the guide says the lesson's rule, the DTR stays.
-  static const needlessOk = 'সাবধান থাকা ভালো। তবে নীল বা কমলা জেল ভালো, মৃদু হামিং স্বাভাবিক — আবার দেখুন।';
-  static const needlessGel = 'শুধু জেলের রং বদলেছে — মেরামতের ডকেটই যথেষ্ট। শাটডাউন ভেতরের ফল্টের লক্ষণে।';
 
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
 
@@ -237,7 +245,7 @@ abstract final class M3DtrCheckupLines {
 
   static CoworkerScript coworker(M3DtrCheckupPush p) => p == M3DtrCheckupPush.leak ? coworkerLeak : coworkerClimb;
 
-  /// His new lines (device TTS until recorded).
+  /// His new lines (no clip yet: silent, caption held, until recorded).
   static const recordLines = [
     'একটু তেল চুঁইছে, চলবে! খাতায় সব ঠিক লিখে দাও।',
     'নিচ থেকে কী বোঝা যায়? মাচায় উঠে কাছ থেকে দেখো!',
@@ -261,7 +269,7 @@ abstract final class M3DtrCheckupLines {
   static const caughtCall = 'চাপে “না” বলেছেন';
 
   /// Every fixed guide line (for recording).
-  static const guideLines = [intro, ask, needlessOk, needlessGel, callHeldLeak, callHeldClimb, allSet, quick, fail];
+  static const guideLines = [intro, ask, callHeldLeak, callHeldClimb, allSet, quick, fail];
 }
 
 abstract final class M3DtrCheckupMistakes {
@@ -275,7 +283,7 @@ abstract final class M3DtrCheckupMistakes {
   );
   static const gelSpent = DoMistake(
     key: '3.6/m3_dtr_checkup/gel-spent',
-    textBn: 'জেলের রং বদলে গেছে! নীল জেল গোলাপি বা কমলা জেল সবুজ হলে বদলাতে হবে — ডকেট লিখুন।',
+    textBn: 'জেলের রং বদলে গেছে! ভালো জেল নীল বা কমলা; গোলাপি বা সাদাটে হলে বদলাতে হবে — ডকেট লিখুন।',
     art: '$_dir/gel_spent.svg',
     lessonPoint: 2,
   );
@@ -297,6 +305,18 @@ abstract final class M3DtrCheckupMistakes {
     art: '$_dir/rattle_ignored.svg',
     lessonPoint: 2,
   );
+  static const overCall = DoMistake(
+    key: '3.6/m3_dtr_checkup/over-call',
+    textBn: 'এই DTR সুস্থ ছিল। নীল বা কমলা জেল, MIN-MAX-এর মাঝে তেল, লিক নেই, মৃদু হামিং — সব স্বাভাবিক। লক্ষণ যা বলে, রায় ততটুকুই।',
+    art: '$_dir/over_call.svg',
+    lessonPoint: 2,
+  );
+  static const overCallGel = DoMistake(
+    key: '3.6/m3_dtr_checkup/over-call-gel',
+    textBn: 'শুধু জেলের রং বদলেছিল — জেল বদলানোর মেরামতের ডকেটই যথেষ্ট। জরুরি শাটডাউন খটখট-গরগরের মতো ভেতরের ফল্টের লক্ষণে।',
+    art: '$_dir/over_call_gel.svg',
+    lessonPoint: 2,
+  );
   static const climbLive = DoMistake(
     key: '3.6/m3_dtr_checkup/climb-live',
     textBn: 'চালু DTR-এর মাচায় উঠলেন! এগারো কেভি বুশিং হাতের নাগালে। চেকআপ নিচ থেকে; উঠতে হলে আগে শাটডাউন, PTW, টেস্ট আর আর্থ।',
@@ -305,7 +325,7 @@ abstract final class M3DtrCheckupMistakes {
     lessonPoint: 0,
   );
 
-  static List<DoMistake> get all => const [unchecked, gelSpent, leakIgnored, oilLow, rattleIgnored, climbLive];
+  static List<DoMistake> get all => const [unchecked, gelSpent, leakIgnored, oilLow, rattleIgnored, overCall, overCallGel, climbLive];
 
   /// The slip for signing off a DTR that has [f].
   static DoMistake forFinding(M3DtrCheckupFinding f) => switch (f) {
@@ -359,7 +379,7 @@ M3DtrCheckupDeal m3DtrCheckupDeal(math.Random rng) {
         return M3DtrCheckupCase(
           id: 'd$i',
           look: M3DtrCheckupLook(
-            gel: has.contains(M3DtrCheckupFinding.gel) ? (fresh == M3DtrCheckupGel.blue ? M3DtrCheckupGel.pink : M3DtrCheckupGel.green) : fresh,
+            gel: has.contains(M3DtrCheckupFinding.gel) ? (fresh == M3DtrCheckupGel.blue ? M3DtrCheckupGel.pink : M3DtrCheckupGel.white) : fresh,
             oilLow: has.contains(M3DtrCheckupFinding.oilLow),
             leak: has.contains(M3DtrCheckupFinding.leak) ? pick(const [M3DtrCheckupLeak.gasket, M3DtrCheckupLeak.weld, M3DtrCheckupLeak.drain]) : M3DtrCheckupLeak.none,
             rattle: has.contains(M3DtrCheckupFinding.rattle),
@@ -384,7 +404,6 @@ class M3DtrCheckupRun {
   M3DtrCheckupCall? called;
   var shown = false;
   int slips = 0;
-  int needless = 0;
   DoMistake? deadly;
   final List<String> caught = [];
 
@@ -407,7 +426,7 @@ class M3DtrCheckupRun {
   }
 
   /// The call. [pushed]: on the coworker's word (no check-up asked for). An
-  /// over-call is not scored: no mistake, [shown] stays false (see [needless]).
+  /// over-call (more than the signs ask for) is a slip as well.
   DoMistake? decide(M3DtrCheckupCall call, {bool pushed = false}) {
     if (!_open) return null;
     final c = current;
@@ -431,13 +450,10 @@ class M3DtrCheckupRun {
       }
       return null;
     }
-    if (call.index < c.verdict.index) {
-      shown = true;
-      slips++;
-      return M3DtrCheckupMistakes.forFinding(c.findings.first);
-    }
-    needless++;
-    return null;
+    shown = true;
+    slips++;
+    if (call.index < c.verdict.index) return M3DtrCheckupMistakes.forFinding(c.findings.first);
+    return c.verdict == M3DtrCheckupCall.ok ? M3DtrCheckupMistakes.overCall : M3DtrCheckupMistakes.overCallGel;
   }
 
   /// Up onto the live DTR's platform (on the coworker's word): deadly.
@@ -541,7 +557,15 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
   int? _mark;
   int _totalDelta = 0;
   int _wake = 0;
-  var _coworkerArmed = false;
+  /// His timer is set for this play (the level's own once-flag; the kit's
+  /// [coworkerDue] says whether he is still to come).
+  var _coworkerSet = false;
+
+  final _hints = IdleHintController();
+  final _touchKey = GlobalKey();
+  final _listenKey = GlobalKey();
+  final _callKeys = {for (final c in M3DtrCheckupCall.values) c: GlobalKey()};
+  M3DtrCheckupGeo? _geoNow;
 
   /// The close-up being looked at, and the order things were seen in.
   M3DtrCheckupSpot? _lens;
@@ -596,7 +620,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
     _startRound();
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown;
+  bool get _canPlay => !_intro && !_busy && !_ended && !_freeze && _card == null && !tableBusy && !coworkerOpen && !_run.shown;
 
   void _startRound() {
     setState(() {
@@ -611,7 +635,11 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
   // --- hands on -----------------------------------------------------------------------
   void _tapScene(Offset p, M3DtrCheckupGeo geo) {
     final s = geo.hit(p);
-    if (s != null) _look(s);
+    if (s != null) {
+      _look(s);
+    } else if (_canPlay) {
+      _hints.missTap();
+    }
   }
 
   void _look(M3DtrCheckupSpot s) {
@@ -631,10 +659,10 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
     });
     // His moment: on his DTR — the leak push once the leak was seen, the
     // climb push after a first look.
-    if (!_coworkerArmed && _run.index == _run.deal.callAt) {
+    if (!_coworkerSet && _run.index == _run.deal.callAt) {
       final leakPush = _run.deal.push == M3DtrCheckupPush.leak;
       if (!leakPush || s == M3DtrCheckupSpot.tank) {
-        _coworkerArmed = true;
+        _coworkerSet = true;
         scheduleCoworker();
       }
     }
@@ -643,6 +671,16 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
   // --- the call ------------------------------------------------------------------------
   Future<void> _decide(M3DtrCheckupCall call, Offset origin) async {
     if (!_canPlay) return;
+    // A call on his DTR before any look: the climb push ("নিচ থেকে কী বোঝা
+    // যায়?") fits that moment too — set him now so the call can't skip him.
+    // (The leak push is set once the leak was seen; every call that is not
+    // already the "unchecked" slip has seen it.)
+    if (!_coworkerSet && _run.index == _run.deal.callAt && _run.deal.push == M3DtrCheckupPush.climb) {
+      _coworkerSet = true;
+      scheduleCoworker();
+    }
+    // A fast call can't skip him: the call waits while he comes in.
+    if (holdForCoworker()) return;
     await _commit(call, origin);
   }
 
@@ -651,13 +689,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
     _busy = false;
     final c = _run.current;
     final m = _run.decide(call, pushed: pushed);
-    if (m == null && !_run.shown) {
-      HapticFeedback.selectionClick();
-      _cue('sounds/intro/click.ogg', volume: 0.5);
-      setState(() => _wake++);
-      unawaited(_sayChain([c.verdict == M3DtrCheckupCall.ok ? M3DtrCheckupLines.needlessOk : M3DtrCheckupLines.needlessGel]));
-      return;
-    }
+    if (m == null && !_run.shown) return;
     HapticFeedback.mediumImpact();
     if (m == null) {
       _cue('sounds/learn/tag_slap.wav', volume: 0.7);
@@ -722,8 +754,9 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His pushes fit only while his DTR is still open (before its call).
     if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    if (_intro || _busy || _card != null || reasonOpen) return false;
+    if (_intro || _busy || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -912,7 +945,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M3DtrCheckupGeo.forScene(m.height, m.inset);
+    final geo = _geoNow = M3DtrCheckupGeo.forScene(m.height, m.inset);
     final c = _run.current;
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
@@ -952,7 +985,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: M3DtrCheckupLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo)),
+          child: GestureDetector(key: _touchKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo)),
         ),
       ),
       if (_freeze)
@@ -980,6 +1013,24 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
     ];
   }
 
+  /// The gesture hint (how, never what): one sweep over every part of the
+  /// DTR, the listen button and the three calls alike — never one of them.
+  HintSpec? _hint() {
+    final rects = <Rect>[];
+    final box = _touchKey.currentContext?.findRenderObject();
+    final geo = _geoNow;
+    if (box is RenderBox && box.hasSize && box.attached && geo != null) {
+      for (final r in [geo.breatherHit, geo.gaugeHit, geo.nameplateHit, geo.tank]) {
+        rects.add(Rect.fromPoints(box.localToGlobal(r.topLeft), box.localToGlobal(r.bottomRight)));
+      }
+    }
+    for (final k in [_listenKey, ..._callKeys.values]) {
+      final r = HintSpec.globalRectOf(k);
+      if (r != null) rects.add(r);
+    }
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -987,7 +1038,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null;
+    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !tableBusy;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1015,6 +1066,10 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn && _canPlay && !coworkerOnScreen,
+            hintKey: '${_run.index}-$_lensN-$coworkerDone',
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 150), quiet: quiet),
               if (playing && !_run.done && !deckUp && !coworkerOpen && _lens != null)
@@ -1029,7 +1084,8 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
                   key: const ValueKey('hud-tools'),
                   left: 10,
                   bottom: pad.bottom + 74,
-                  child: _ToolButton(icon: Icons.hearing_rounded, label: M3DtrCheckupLines.listen, enabled: _canPlay, onTap: () => _look(M3DtrCheckupSpot.sound)),
+                  child: _ToolButton(
+                      key: _listenKey, icon: Icons.hearing_rounded, label: M3DtrCheckupLines.listen, enabled: _canPlay, onTap: () => _look(M3DtrCheckupSpot.sound)),
                 ),
                 Positioned(
                   key: const ValueKey('hud-decide'),
@@ -1040,7 +1096,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
                     children: [
                       for (final (i, call) in M3DtrCheckupCall.values.indexed) ...[
                         if (i > 0) const SizedBox(width: 6),
-                        Expanded(child: _CallButton(call: call, onTapUp: (d) => unawaited(_decide(call, d.globalPosition)))),
+                        Expanded(child: _CallButton(key: _callKeys[call], call: call, onTapUp: (d) => unawaited(_decide(call, d.globalPosition)))),
                       ],
                     ],
                   ),
@@ -1172,7 +1228,7 @@ class _LensCard extends StatelessWidget {
               child: Text(look.rattle ? M3DtrCheckupLines.rattle : M3DtrCheckupLines.hum,
                   key: const ValueKey('lens-sound'),
                   textAlign: TextAlign.center,
-                  style: bangla(fontSize: 18, fontWeight: FontWeight.w900, color: look.rattle ? const Color(0xFFB0261C) : const Color(0xFF1F4F99))),
+                  style: bangla(fontSize: 18, fontWeight: FontWeight.w900, color: const Color(0xFF2B3440))),
             ),
         ],
       ),
@@ -1239,7 +1295,7 @@ class _LensCard extends StatelessWidget {
 
 /// One of the three calls.
 class _CallButton extends StatelessWidget {
-  const _CallButton({required this.call, required this.onTapUp});
+  const _CallButton({super.key, required this.call, required this.onTapUp});
   final M3DtrCheckupCall call;
   final GestureTapUpCallback onTapUp;
 
@@ -1271,7 +1327,7 @@ class _CallButton extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool enabled;

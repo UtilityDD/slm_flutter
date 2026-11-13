@@ -59,11 +59,31 @@ class M3PillarFuseGeo {
   /// The cable glands at the bottom right (where a rat gets in).
   Offset get gland => Offset(226, top + 234);
 
-  /// Where a tap counts as spotting the cause.
+  /// Where a tap counts as spotting the cause. The lugs' hit grows right,
+  /// up and down but barely left, so it never reaches the B-phase fuse.
   List<Rect> causeHits(M3PillarFuseCause c, int feeder) => switch (c) {
-        M3PillarFuseCause.hotspot => [lugs(feeder).inflate(8)],
+        M3PillarFuseCause.hotspot => [_lugHit(lugs(feeder))],
         M3PillarFuseCause.water => [Rect.fromCenter(center: leak + const Offset(0, 6), width: 76, height: 30), puddle.inflate(8)],
-        M3PillarFuseCause.rodent => [Rect.fromCenter(center: gland + const Offset(-6, -6), width: 60, height: 38)],
+        // 52 wide so it stops short of the open door's hit (x 248).
+        M3PillarFuseCause.rodent => [Rect.fromCenter(center: gland + const Offset(-6, -6), width: 52, height: 38)],
+      };
+
+  static Rect _lugHit(Rect l) => Rect.fromLTRB(l.left - 2, l.top - 8, l.right + 8, l.bottom + 8);
+
+  /// Every place a cause can show, as hit rects per spot: 0–2 the feeders'
+  /// lugs (a hotspot), 3 the roof seal and the floor (water), 4 the glands
+  /// (a rat). A tap on a sound one is a wrong flag.
+  List<List<Rect>> get causeZones => [
+        for (var f = 0; f < 3; f++) causeHits(M3PillarFuseCause.hotspot, f),
+        causeHits(M3PillarFuseCause.water, 0),
+        causeHits(M3PillarFuseCause.rodent, 0),
+      ];
+
+  /// The spot of [causeZones] where this pillar's cause is.
+  static int causeZone(M3PillarFuseCause c, int feeder) => switch (c) {
+        M3PillarFuseCause.hotspot => feeder,
+        M3PillarFuseCause.water => 3,
+        M3PillarFuseCause.rodent => 4,
       };
 
   /// The centre of the cause (for its ring and the flash).

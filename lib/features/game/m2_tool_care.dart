@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -50,6 +51,17 @@ export 'm2_tool_care_world.dart' show CareKind, CareFlaw, CareZones, careLocalPo
 // back as fit for use (lesson: "একটি ক্ষতিগ্রস্ত বা দুর্বল টুল ব্যবহার করা
 // নিজের এবং সহকর্মীদের জীবন নিয়ে খেলা করার সমান"). Everything else is a slip.
 //
+// Kit (audit 2026-11-11): no scene control works in a praise window
+// (`tableBusy`); "তার ঘরে রাখুন" and the tag wait for the coworker
+// (`holdForCoworker`), so a fast play cannot skip him; he says "একটু ফাটা তো"
+// only once the crack has come into view (before that he pushes the toss), and
+// only a real piece of work while he talks refuses him (picking up a bench
+// item or a tap on nothing does not). The bench items lie in a dealt order
+// (never cloth → brush → oil), and the wipe's "clean enough to look" cue plays
+// on every tool, so no sound tells a damaged tool from a sound one. Gesture
+// hints: a sweep over the tool, the bench items and "তার ঘরে রাখুন"; a short
+// rub nudge on the tool with the cloth or brush in hand.
+//
 // Voice: the guide's lines on device TTS; the coworker's new lines too (listed
 // in CareLines for recording; his exit line is already recorded). Art: all
 // drawn in code (m2_tool_care_world.dart); the mistake cards use
@@ -74,12 +86,19 @@ class CareTool {
 
 @immutable
 class CareDeal {
-  const CareDeal({required this.tools, required this.callRound});
+  const CareDeal({required this.tools, required this.callRound, this.kitOrder = const [3, 2, 0, 1]});
   final List<CareTool> tools;
 
   /// The tool on which the careless coworker peeps in.
   final int callRound;
+
+  /// How the bench items (0 cloth · 1 brush · 2 oil · 3 tag) lie in the tray
+  /// this play: dealt, never in the routine's order (cloth → brush → oil).
+  final List<int> kitOrder;
 }
+
+/// The routine's order would show in the tray (cloth before brush before oil).
+bool careKitInRoutineOrder(List<int> order) => order.indexOf(0) < order.indexOf(1) && order.indexOf(1) < order.indexOf(2);
 
 /// What the careless coworker pushes.
 enum CarePush { toss, grease, crack }
@@ -369,22 +388,29 @@ CareDeal dealCare(math.Random rng) {
   for (var i = 0; i < kinds.length; i++) {
     final k = kinds[i];
     final f = flaws[k] ?? CareFlaw.none;
+    // Rust and water are drawn from the first frame, so they are dealt with
+    // no regard to the fault: a rusty or wet tool may be sound or damaged,
+    // and only the wipe tells.
     final need = k == CareKind.meter
         ? CareNeed.meter
-        : f != CareFlaw.none
-            ? CareNeed.plain
-            : k == CareKind.spanner
-                ? CareNeed.rusty
-                : (rng.nextDouble() < 0.45 ? CareNeed.wet : CareNeed.plain);
+        : k == CareKind.spanner
+            ? (rng.nextDouble() < 0.75 ? CareNeed.rusty : CareNeed.plain)
+            : (rng.nextDouble() < 0.45 ? CareNeed.wet : CareNeed.plain);
     tools.add(CareTool(id: 't$i', kind: k, flaw: f, need: need));
   }
-  // Always one tool that needs more than the wipe (wet or rusty).
+  // Always one tool that needs more than the wipe: if nothing came wet or
+  // rusty, the spanner (always on the bench) gets the rust, fault or not.
   if (!tools.any((t) => t.need == CareNeed.wet || t.need == CareNeed.rusty)) {
-    final j = tools.indexWhere((t) => t.need == CareNeed.plain && !t.flawed);
-    if (j >= 0) tools[j] = CareTool(id: tools[j].id, kind: tools[j].kind, need: CareNeed.wet);
+    final j = tools.indexWhere((t) => t.kind == CareKind.spanner);
+    tools[j] = CareTool(id: tools[j].id, kind: tools[j].kind, flaw: tools[j].flaw, need: CareNeed.rusty);
   }
   tools = List.unmodifiable(tools);
-  return CareDeal(tools: tools, callRound: rng.nextInt(tools.length));
+  final callRound = rng.nextInt(tools.length);
+  final kit = [0, 1, 2, 3];
+  do {
+    kit.shuffle(rng);
+  } while (careKitInRoutineOrder(kit));
+  return CareDeal(tools: tools, callRound: callRound, kitOrder: List.unmodifiable(kit));
 }
 
 enum CareVerdict { none, ok, right, slip, deadly }
@@ -440,16 +466,16 @@ class CareRun {
 
   bool get _locked => ended || shown;
 
-  /// The cloth goes over the tool; true when a fault just came into view.
+  /// The cloth goes over the tool; true when the tool has just come clean
+  /// enough to look at (on every tool, damaged or sound — the cue gives
+  /// nothing away; a fault under the grime shows from then on).
   bool wipe(double amount) {
     if (_locked) return false;
-    final before = flawShows;
+    final before = wiped >= kCareFlawShows;
     wiped = math.min(1, wiped + amount);
-    if (current.flawed && !before && flawShows) {
-      flawSeen = true;
-      return true;
-    }
-    return false;
+    if (before || wiped < kCareFlawShows) return false;
+    if (current.flawed) flawSeen = true;
+    return true;
   }
 
   /// The steel brush scrubs (only rust comes off).
@@ -536,16 +562,20 @@ class CareRun {
     return const CareOutcome(CareVerdict.right);
   }
 
-  /// What the coworker pushes on this tool now.
+  /// What the coworker pushes on this tool now. "একটু ফাটা তো" only once the
+  /// crack shows (before that it would name the fault for the player).
   CarePush get push {
     final t = current;
-    if (t.flaw == CareFlaw.crack) return CarePush.crack;
+    if (t.flaw == CareFlaw.crack && flawShows) return CarePush.crack;
     if (t.need == CareNeed.rusty && rust > 0.3) return CarePush.grease;
     return CarePush.toss;
   }
 
-  /// The player listened to him.
+  /// The player listened to him. Listening is a slip; on the cracked grip
+  /// (the module table's deadly act: a cracked insulated grip kept as fit) it
+  /// is deadly — FLAGGED for the owner.
   CareOutcome listen(CarePush p) {
+    if (ended) return CareOutcome.none;
     if (p == CarePush.crack) {
       deadly = CareMistakes.crackKept;
       return const CareOutcome(CareVerdict.deadly, mistake: CareMistakes.crackKept);
@@ -555,6 +585,7 @@ class CareRun {
 
   /// The next tool (after the reason).
   void next() {
+    if (deadly != null || done) return;
     round++;
     shown = false;
     retiredNow = false;
@@ -663,6 +694,16 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The cloth / brush moved a moment ago (the coworker waits for a pause:
+  /// he never cuts in between two strokes).
+  Timer? _rubQuiet;
+
+  /// Gesture hints (how to touch, never what): the bench's waiting states.
+  final _hints = IdleHintController();
+  final _toolKey = GlobalKey();
+  final _storeKey = GlobalKey();
+  final _kitKeys = [for (var i = 0; i < 4; i++) GlobalKey()];
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -670,6 +711,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
   @override
   void dispose() {
     disposeCoworker();
+    _rubQuiet?.cancel();
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     super.dispose();
@@ -712,14 +754,16 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || _run.shown || _freeze;
+  /// The scene takes no move now (also the praise window: `tableBusy`).
+  bool get _blocked => _intro || _busy || _ended || _card != null || tableBusy || _run.shown || _freeze;
 
   void _setMode(LinemanMode m) {
     _mode = m;
     _wake++;
   }
 
-  /// Going on working while he is still talking refuses him.
+  /// Going on working while he is still talking refuses him (call it only
+  /// for a move that does something to the tool).
   bool _refusedByWork(Offset at) {
     if (coworkerOpen && !coworkerChoiceUp) {
       unawaited(answerCoworker(true, at, direct: true));
@@ -728,8 +772,9 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
     return coworkerOpen;
   }
 
-  void _pickHand(int i, Offset at) {
-    if (_refusedByWork(at) || _blocked) return;
+  /// Picking up a bench item is no work on the tool: it never refuses him.
+  void _pickHand(int i) {
+    if (_blocked || coworkerChoiceUp) return;
     HapticFeedback.selectionClick();
     _cue('sounds/intro/click.ogg', 0.4);
     setState(() {
@@ -740,7 +785,18 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
 
   /// The finger on the tool (its 300 × 120 space), a tap.
   void _toolTap(Offset p, Offset global) {
-    if (_refusedByWork(global) || _blocked) return;
+    if (_blocked) return;
+    final meter = _run.current.kind == CareKind.meter;
+    final acts = switch (_hand) {
+      2 || 3 => true,
+      _ => meter && ((CareZones.onDial(p) && _run.meterOn) || (CareZones.onLeads(p) && !_run.coiled)),
+    };
+    if (!acts) {
+      // A tap that does nothing: no work (he is not refused), a miss for the hint.
+      if (!coworkerOpen) _hints.missTap();
+      return;
+    }
+    if (_refusedByWork(global)) return;
     final CareOutcome o;
     switch (_hand) {
       case 2:
@@ -772,7 +828,9 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
   /// The cloth or the brush dragged over the tool.
   void _toolRub(Offset local, double distance, Offset global) {
     if (_hand != 0 && _hand != 1) return;
-    if (_refusedByWork(global) || _blocked) return;
+    if (_blocked || _refusedByWork(global)) return;
+    _rubQuiet?.cancel();
+    _rubQuiet = Timer(const Duration(milliseconds: 700), () => _rubQuiet = null);
     var found = false;
     if (_hand == 0) {
       found = _run.wipe(distance / 700);
@@ -796,7 +854,8 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
   }
 
   void _store(Offset at) {
-    if (_refusedByWork(at) || _blocked) return;
+    if (_blocked || _refusedByWork(at)) return;
+    if (holdForCoworker()) return;
     _hush();
     final o = _run.store();
     switch (o.verdict) {
@@ -820,6 +879,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
   }
 
   void _retire(Offset at) {
+    if (holdForCoworker()) return;
     final o = _run.retire();
     if (o.verdict == CareVerdict.right) {
       HapticFeedback.mediumImpact();
@@ -884,8 +944,10 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
-    if (_blocked || _rubAt != null) return false;
+    // Asked only before he arrives; refreshed on every ask so a held arrival
+    // (holdForCoworker on a fast play) still pushes what fits the moment.
     _push = _run.push;
+    if (_blocked || tableBusy || _rubAt != null || _rubQuiet != null) return false;
     return true;
   }
 
@@ -898,6 +960,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
       final o = _run.listen(_push);
+      if (o.verdict == CareVerdict.none) return;
       if (o.verdict == CareVerdict.deadly) {
         await _deadly(o.mistake!);
       } else {
@@ -928,6 +991,27 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
     _cue('sounds/intro/tick.ogg', 0.5);
     unawaited(_sayChain([line]));
   }
+
+  // ---- gesture hints ------------------------------------------------------------------
+
+  /// The bench waits for a move (no card, deck, coworker, praise window).
+  bool get _hintWaiting =>
+      !_blocked && _mark == null && !struckOut && !_run.done && !coworkerOnScreen && !_deckUp;
+
+  bool get _deckUp => reasonOpen || coworkerChoiceUp;
+
+  /// How to touch, never what: with the cloth or the brush in hand a short
+  /// rub nudge on the tool (it is the only thing to rub); otherwise a sweep
+  /// over the tool, every bench item and "তার ঘরে রাখুন", pressing none.
+  HintSpec? _hint() {
+    if (_hand == 0 || _hand == 1) {
+      final r = HintSpec.globalRectOf(_toolKey);
+      return r == null ? null : HintSpec.drag(Offset(r.left + r.width * 0.2, r.top + r.height * 0.55), toward: const Offset(1, 0), travel: 80);
+    }
+    return HintSpec.sweepOver([_toolKey, for (final i in _run.deal.kitOrder) _kitKeys[i], _storeKey]);
+  }
+
+  Object get _hintKey => '${_run.round}/$_hand/${_run.slips}/${_run.meterOn}/${_run.coiled}';
 
   // ---- mistakes ----------------------------------------------------------------------
 
@@ -1133,6 +1217,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
               quiet: quiet,
               muted: true,
               child: _BenchTool(
+                key: _toolKey,
                 tool: t,
                 run: _run,
                 hand: _hand,
@@ -1183,6 +1268,11 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
+            hintAutoMiss: true,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (trayUp)
@@ -1196,14 +1286,23 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
                     children: [
                       Row(
                         children: [
-                          for (var i = 0; i < 4; i++) ...[
-                            if (i > 0) const SizedBox(width: 6),
-                            Expanded(child: _KitChip(item: i, selected: _hand == i, onTapUp: (d) => _pickHand(i, d.globalPosition))),
+                          // The bench items in this play's dealt order.
+                          for (final (n, i) in _run.deal.kitOrder.indexed) ...[
+                            if (n > 0) const SizedBox(width: 6),
+                            Expanded(
+                              child: KeyedSubtree(
+                                key: _kitKeys[i],
+                                child: _KitChip(item: i, selected: _hand == i, onTapUp: (_) => _pickHand(i)),
+                              ),
+                            ),
                           ],
                         ],
                       ),
                       const SizedBox(height: 8),
-                      DoBigButton(label: CareLines.store, filled: true, onTapUp: (d) => _store(d.globalPosition)),
+                      KeyedSubtree(
+                        key: _storeKey,
+                        child: DoBigButton(label: CareLines.store, filled: true, onTapUp: (d) => _store(d.globalPosition)),
+                      ),
                     ],
                   ),
                 ),
@@ -1313,6 +1412,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
 /// tag, or turn the meter's dial / coil its leads.
 class _BenchTool extends StatelessWidget {
   const _BenchTool({
+    super.key,
     required this.tool,
     required this.run,
     required this.hand,

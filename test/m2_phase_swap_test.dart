@@ -4,7 +4,10 @@
 // again before START; swapping live = deadly), the deal, the reason
 // libraries, and the level in the shell: idle perf, the guide first, a full
 // clean play with the coworker refused, a slip card that keeps the site, the
-// deadly freeze (a screwdriver on live terminals; listening to him).
+// deadly freeze (a screwdriver on live terminals; listening to him); the
+// audit fixes of 2026-11-11: the tool row is dealt (never the procedure's
+// order), the main switch's OFF waits for him on a fast play, the praise
+// window takes no touch, and the gesture hint sweeps every tool and spot.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,6 +21,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -33,6 +37,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.8/do/1',
@@ -82,21 +87,20 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
 }
+
+/// The panel as the painter draws it now.
+PanelState _panelNow(WidgetTester t) =>
+    (t.widget<CustomPaint>(find.byWidgetPredicate((w) => w is CustomPaint && w.painter is PumpHousePainter)).painter! as PumpHousePainter).panel;
+
+/// The scene's gesture hint (the frame's, the outermost [IdleHint]).
+IdleHintState _sceneHint(WidgetTester t) => t.state<IdleHintState>(find.byType(IdleHint).first);
 
 /// Design px → screen px on the 392 × 850 test screen.
 const _k = 392 / 360;
@@ -159,8 +163,6 @@ Future<void> _playRight(WidgetTester t, PhaseDeal deal, int i) async {
   if (s.kind == PhaseKind.rev) {
     if (i == deal.callAt) {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes on site $i');
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 600);
       await _pickRight(t, PhaseLines.coworker.right);
       await _pump(t, 2600);
     }
@@ -178,8 +180,6 @@ Future<void> _playRight(WidgetTester t, PhaseDeal deal, int i) async {
   await _tapAt(t, _geo.startButton);
   await _pump(t, 2200);
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'site $i');
-  await _pumpUntil(t, find.byType(ChoiceDeck));
-  await _pump(t, 700);
   await _pickRight(t, PhaseLines.whyRight(s));
   await _pump(t, 6000);
 }
@@ -199,6 +199,17 @@ void main() {
           expect(x.why == PhaseWhy.keep, x.kind == PhaseKind.fwd);
         }
         seen.add(d.sites.map((x) => '${x.kind.name}${x.meter.name}${x.job.name}${x.why.name}').join('|') + d.callAt.toString());
+      }
+      expect(seen.length, greaterThan(40));
+    });
+
+    test('the tool row is dealt fresh and never in the order the job uses it', () {
+      final seen = <String>{};
+      for (var s = 0; s < 200; s++) {
+        final kit = dealPhaseKit(math.Random(s));
+        expect(kit.toSet(), PhaseKit.values.toSet());
+        expect(kit, isNot(kPhaseKitProcedure));
+        seen.add(kit.map((k) => k.name).join(','));
       }
       expect(seen.length, greaterThan(40));
     });
@@ -399,7 +410,7 @@ void main() {
         }
         debugPrint('PERF m2_phase_swap ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -490,7 +501,89 @@ void main() {
       }
       await _pump(t, 1500);
       expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      expect(c.read(gameSaveProvider).rungProgress['2.8/do/1'], isNot('cleared'));
+      expect(t.takeException(), isNull);
       await _close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him: OFF right after the REV reading waits for him', (t) async {
+      final deal = dealPhase(math.Random(11));
+      final c = await _open(t, 11);
+      for (var i = 0; i < deal.callAt; i++) {
+        await _playRight(t, deal, i);
+      }
+      await _testRight(t, forward: false);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not yet scheduled to arrive');
+      // Straight to the main switch, before his 1.2–2.4 s.
+      await _tapAt(t, _geo.handlePivot);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 1500), isTrue, reason: 'he cuts in at once');
+      expect(_panelNow(t).switchOn, isTrue, reason: 'the handle waited for him: his push still fits');
+      await _pickRight(t, PhaseLines.coworker.right);
+      await _pump(t, 2600);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _tapAt(t, _geo.handlePivot);
+      expect(_panelNow(t).switchOn, isFalse, reason: 'after him the switch works');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the praise window takes no touch: no second START, no switch, no coworker', (t) async {
+      var seed = 0;
+      while (dealPhase(math.Random(seed)).sites[0].kind != PhaseKind.fwd) {
+        seed++;
+      }
+      final c = await _open(t, seed);
+      await _testRight(t, forward: true);
+      await _tapAt(t, _geo.startButton);
+      expect(_panelNow(t).pumpOn, isTrue);
+      await t.tapAt(_geo.handlePivot * _k);
+      await t.tapAt(_geo.startButton * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(_panelNow(t).switchOn, isTrue);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await waitChoiceDeck(t);
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the reason deck after the praise');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    group('gesture hint', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+
+      testWidgets('idle: a sweep over every tool and every panel spot; reading: over both answers', (t) async {
+        final c = await _open(t, 3);
+        await _pump(t, 9000);
+        expect(find.byKey(const ValueKey('gesture-hint')), findsOneWidget, reason: 'the hand shows while the level waits');
+        expect(_sceneHint(t).debugOptions, hasLength(9), reason: '5 tools + switch, terminals, earth bar, START — nothing singled out');
+        await _pump(t, 6000);
+        await _tool(t, PhaseLines.gloves);
+        await _tool(t, PhaseLines.meter);
+        for (var i = 0; i < 3; i++) {
+          await _tapAt(t, _geo.terminals[i]);
+        }
+        expect(find.text(PhaseLines.sayFwd), findsOneWidget);
+        await _pump(t, 9000);
+        expect(find.byKey(const ValueKey('gesture-hint')), findsOneWidget);
+        expect(_sceneHint(t).debugOptions, hasLength(2), reason: 'both readings, the same way');
+        await _pump(t, 6000);
+        await _close(t, c);
+      });
+
+      testWidgets('three taps on nothing show the hand at once', (t) async {
+        final c = await _open(t, 3);
+        for (var i = 0; i < 3; i++) {
+          await t.tapAt(const Offset(300, 300));
+          await t.pump(const Duration(milliseconds: 200));
+        }
+        await _pump(t, 600);
+        expect(find.byKey(const ValueKey('gesture-hint')), findsOneWidget);
+        await _pump(t, 6000);
+        await _close(t, c);
+      });
     });
 
     testWidgets('a screwdriver on live terminals: the scene freezes first, then the card (near-miss)', (t) async {
@@ -517,11 +610,11 @@ void main() {
       }
       await _testRight(t, forward: false);
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(PhaseLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
@@ -538,8 +631,7 @@ void main() {
       }
       await _testRight(t, forward: false);
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      await _pump(t, 300);
+      await waitChoiceDeck(t);
       await _tapAt(t, _geo.handlePivot);
       await _pump(t, 1500);
       expect(find.byType(CoworkerPeek), findsNothing);

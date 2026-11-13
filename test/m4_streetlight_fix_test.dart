@@ -5,7 +5,10 @@
 // inside a live fixture = deadly), the deal, the reason libraries, and the
 // level in the shell: idle perf, the guide first, a full clean play with the
 // coworker refused, a slip card that keeps the job, the deadly freeze (a
-// hand inside untested and live; listening to him), "no tester" at the top.
+// hand inside untested and live; listening to him), "no tester" at the top,
+// a fast play that still meets him (the climb / the tester wait for him, his
+// line fits the MCB), the light kept on to the sign-off (no touch after the
+// last reason), the gesture hints, the old mistake keys as aliases.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,7 +21,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -34,6 +39,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 typedef _L = M4StreetlightFixLines;
 typedef _M = M4StreetlightFixMistakes;
@@ -86,10 +92,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -289,6 +297,19 @@ void main() {
       expect(r.proved, isTrue);
       expect(r.caught, containsAll([_L.caughtProve, _L.caughtLive]));
       expect(r.slips, 0);
+      expect(r.wideAtClimb, isTrue, reason: 'the neighbour was off at the first climb: no clean +5');
+      expect(atTop().wideAtClimb, isFalse, reason: 'only this light off: a clean base');
+      expect(atTop(isolate: false).wideAtClimb, isFalse);
+      final both = M4StreetlightFixRun(fixed())
+        ..toggleMcb(0)
+        ..toggleMcb(1)
+        ..hold(M4StreetlightFixTool.ladder)
+        ..placeLadder(M4StreetlightFixSide.right)
+        ..tie()
+        ..wearHarness();
+      expect(both.climb(), isNull);
+      expect(both.wideAtClimb, isTrue, reason: 'both off is over-wide too');
+      expect(both.slips, 0, reason: 'a lost bonus, not a slip (owner decision pending)');
     });
 
     test('dead but untested is a slip; a part before tightening is a slip; the wrong parts', () {
@@ -344,6 +365,43 @@ void main() {
       final live = atTop(isolate: false);
       expect(live.listenTop(), _M.touchLive);
       expect(live.ended, isTrue);
+      expect(live.listenTop(), isNull, reason: 'nothing more once the play has ended');
+      final slips = live.slips;
+      live
+        ..toTop()
+        ..failDeadly(_M.touchLive);
+      expect(live.slips, slips);
+    });
+
+    test('the sign-off needs the light burning: never with the MCB back OFF', () {
+      final r = atTop()
+        ..test()
+        ..hold(M4StreetlightFixTool.driver)
+        ..tighten(1)
+        ..fit(M4StreetlightFixPart.hpsv70)
+        ..descend()
+        ..toCrate();
+      expect(r.finish(), isFalse, reason: 'the MCB is still OFF');
+      expect(r.done, isFalse);
+      r.toggleMcb(0);
+      expect(r.finishReady, isTrue);
+      r.toggleMcb(0);
+      expect(r.finish(), isFalse, reason: 'switched OFF again');
+      r.toggleMcb(0);
+      expect(r.finish(), isTrue);
+      expect(r.passed, isTrue);
+    });
+
+    test('mistake keys follow the m4 pattern; the old keys stay readable as aliases', () {
+      final legacy = _M.legacy;
+      expect(legacy, hasLength(_M.caught.length));
+      for (final (i, m) in _M.caught.indexed) {
+        expect(legacy[i].key, '${_M.legacyPrefix}${m.key.split('/').last}');
+        expect(legacy[i].textBn, m.textBn);
+        expect(legacy[i].art, m.art);
+        expect(legacy[i].deadly, m.deadly);
+      }
+      expect(_M.all.map((m) => m.key), containsAll([..._M.caught.map((m) => m.key), ...legacy.map((m) => m.key)]));
     });
 
     test('English digits only; every mistake has its picture; one deadly', () {
@@ -353,7 +411,7 @@ void main() {
         ..._L.allRight,
         ..._L.myths,
         for (final cw in [_L.coworker, _L.coworkerTop]) ...[...cw.recordedLines, ...cw.right, ...cw.wrong, ...cw.asks],
-        for (final m in _M.all) m.textBn,
+        for (final m in _M.caught) m.textBn,
         for (final f in M4StreetlightFixFault.values) _L.docketBn(12, f),
         for (final p in M4StreetlightFixPart.values) _L.partBn(p),
         _L.allSet,
@@ -363,10 +421,10 @@ void main() {
         expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
         expect(l.contains('পানি'), isFalse, reason: l);
       }
-      expect(_M.all.where((m) => m.deadly), [_M.touchLive]);
+      expect(_M.caught.where((m) => m.deadly), [_M.touchLive]);
       expect(_M.all.map((m) => m.key).toSet(), hasLength(_M.all.length));
-      for (final m in _M.all) {
-        expect(m.key, startsWith('4.9/streetlight_fix/'));
+      for (final m in _M.caught) {
+        expect(m.key, startsWith('4.9/m4_streetlight_fix/'));
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
         if (m.lessonPoint != null) expect(m.lessonPoint, inInclusiveRange(0, 2));
       }
@@ -429,7 +487,7 @@ void main() {
         }
         debugPrint('PERF m4_streetlight_fix ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -568,9 +626,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
@@ -594,13 +654,212 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworkerTop.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1200);
       expect(find.byType(FreezeFrame), findsNothing);
       expect(find.text(_M.noProve.textBn), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes.single.key, _M.noProve.key);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play cannot skip him: the climb waits for him, with the footpath line (the MCB is ON)', (t) async {
+      final d = _deal(7);
+      final c = await _open(t, 7);
+      const beat = Duration(milliseconds: 50);
+      await t.tap(_label(_L.harness));
+      await t.pump(beat);
+      await t.tap(_label(_L.ladder));
+      await t.pump(beat);
+      await t.tapAt(_geo.spotHit(d.goodSide).center * _k);
+      await t.pump(beat);
+      await t.tap(_label(_L.rope));
+      await t.pump(beat);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'his timer runs 1.2–2.4 s: not yet');
+      await t.tapAt(_geo.ladderHit(d.goodSide).center * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the climb called him in');
+      expect(_label(_L.tester), findsNothing, reason: 'still on the footpath');
+      await waitChoiceDeck(t);
+      expect(_onScreen(_L.coworker.right), hasLength(1));
+      expect(_onScreen(_L.coworkerTop.right), isEmpty, reason: '"MCB তো নামিয়েছ" never while it is ON');
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2600);
+      await _tapAt(t, _geo.ladderHit(d.goodSide).center);
+      await _reason(t, d.badKind == M4StreetlightFixBadSpot.line ? _L.spotLineWhy : _L.spotSlabWhy);
+      expect(_label(_L.tester), findsOneWidget, reason: 'up after him');
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'once a play');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the MCB off and back ON: he is called again, and the climb waits for him with the footpath line', (t) async {
+      final d = _deal(9);
+      final c = await _open(t, 9);
+      const beat = Duration(milliseconds: 50);
+      // Everything below ready while the MCB is ON (he is called) …
+      await t.tap(_label(_L.harness));
+      await t.pump(beat);
+      await t.tap(_label(_L.ladder));
+      await t.pump(beat);
+      await t.tapAt(_geo.spotHit(d.goodSide).center * _k);
+      await t.pump(beat);
+      await t.tap(_label(_L.rope));
+      await t.pump(beat);
+      // … then the MCB OFF before he comes: his footpath moment passes.
+      await t.tapAt(_geo.mcb(d.mineSlot).center * _k);
+      await _pump(t, 3500);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'the MCB is off: not on the footpath');
+      // Back ON, and straight up the ladder: he must still come first.
+      await t.tapAt(_geo.mcb(d.mineSlot).center * _k);
+      await t.pump(beat);
+      await t.tapAt(_geo.ladderHit(d.goodSide).center * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'switched back ON: the climb calls him in');
+      expect(_label(_L.tester), findsNothing, reason: 'still on the footpath');
+      await waitChoiceDeck(t);
+      expect(_onScreen(_L.coworker.right), hasLength(1));
+      expect(_onScreen(_L.coworkerTop.right), isEmpty);
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2600);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play at the top: the tester waits for him ("no tester", the MCB is off)', (t) async {
+      final d = _deal(9);
+      final c = await _open(t, 9);
+      await _tapAt(t, _geo.mcb(d.mineSlot).center);
+      await _tool(t, _L.harness);
+      await _tool(t, _L.ladder);
+      await _tapAt(t, _geo.spotHit(d.goodSide).center);
+      await _tool(t, _L.rope);
+      await _tapAt(t, _geo.ladderHit(d.goodSide).center);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pump(t, 700);
+      await _pickRight(t, d.whyBase == M4StreetlightFixWhyBase.isolate ? _L.isolateWhy : (d.badKind == M4StreetlightFixBadSpot.line ? _L.spotLineWhy : _L.spotSlabWhy));
+      // The tester, again and again, from the moment the reason is paid.
+      var reading = false;
+      var came = false;
+      for (var ms = 0; ms < 4000 && !reading && !came; ms += 50) {
+        if (_label(_L.tester).hitTestable().evaluate().isNotEmpty) await t.tap(_label(_L.tester), warnIfMissed: false);
+        await t.pump(const Duration(milliseconds: 50));
+        reading = find.text(_L.testerDead).evaluate().isNotEmpty;
+        came = find.byType(CoworkerPeek).evaluate().isNotEmpty;
+      }
+      expect(reading, isFalse, reason: 'no reading before he has had his say');
+      expect(came, isTrue);
+      await waitChoiceDeck(t);
+      expect(_onScreen(_L.coworkerTop.right), hasLength(1));
+      await _pickRight(t, _L.coworkerTop.right);
+      await _pump(t, 2600);
+      await _tool(t, _L.tester);
+      expect(find.text(_L.testerDead), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('down at the top, MCB ON then OFF, back up: the tester still waits for him ("no tester")', (t) async {
+      final d = _deal(9);
+      final c = await _open(t, 9);
+      await _tapAt(t, _geo.mcb(d.mineSlot).center);
+      await _tool(t, _L.harness);
+      await _tool(t, _L.ladder);
+      await _tapAt(t, _geo.spotHit(d.goodSide).center);
+      await _tool(t, _L.rope);
+      await _tapAt(t, _geo.ladderHit(d.goodSide).center);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pump(t, 700);
+      await _pickRight(t, d.whyBase == M4StreetlightFixWhyBase.isolate ? _L.isolateWhy : (d.badKind == M4StreetlightFixBadSpot.line ? _L.spotLineWhy : _L.spotSlabWhy));
+      // Down as soon as the street takes a touch (his top push is then due).
+      const beat = Duration(milliseconds: 50);
+      var down = false;
+      for (var ms = 0; ms < 4000 && !down; ms += 50) {
+        if (_label(_L.down).hitTestable().evaluate().isNotEmpty) await t.tap(_label(_L.down), warnIfMissed: false);
+        await t.pump(beat);
+        down = _label(_L.tester).evaluate().isEmpty;
+      }
+      expect(down, isTrue);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not while the player is on the footpath');
+      // This light's MCB ON long enough for his timer to look (he must wait,
+      // not be dropped), then OFF again, and straight back up.
+      await t.tapAt(_geo.mcb(d.mineSlot).center * _k);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not while the player is on the footpath');
+      await t.tapAt(_geo.mcb(d.mineSlot).center * _k);
+      await t.pump(beat);
+      await t.tapAt(_geo.ladderHit(d.goodSide).center * _k);
+      await t.pump(beat);
+      expect(_label(_L.tester), findsOneWidget, reason: 'back up');
+      var reading = false;
+      var came = false;
+      for (var ms = 0; ms < 5000 && !reading && !came; ms += 50) {
+        if (_label(_L.tester).hitTestable().evaluate().isNotEmpty) await t.tap(_label(_L.tester), warnIfMissed: false);
+        await t.pump(beat);
+        reading = find.text(_L.testerDead).evaluate().isNotEmpty;
+        came = find.byType(CoworkerPeek).evaluate().isNotEmpty;
+      }
+      expect(reading, isFalse, reason: 'no reading before he has had his say');
+      expect(came, isTrue, reason: 'the MCB ON-then-OFF did not drop him');
+      await waitChoiceDeck(t);
+      expect(_onScreen(_L.coworkerTop.right), hasLength(1));
+      await _pickRight(t, _L.coworkerTop.right);
+      await _pump(t, 2600);
+      await _tool(t, _L.tester);
+      expect(find.text(_L.testerDead), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the light stays on to the sign-off: the MCB cannot go back OFF after the last reason', (t) async {
+      final d = _deal(8);
+      final c = await _open(t, 8);
+      await _base(t, d);
+      await _top(t, d);
+      await _tool(t, _L.down);
+      if (d.oldLamp) await _tapAt(t, _geo.crate.center);
+      await _tapAt(t, _geo.mcb(d.mineSlot).center);
+      expect(find.text(_L.stampOn), findsOneWidget);
+      // The praise window: the street takes no touch.
+      await _tapAt(t, _geo.mcb(d.mineSlot).center);
+      expect(find.text(_L.stampOn), findsOneWidget);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      await _pump(t, 700);
+      await _pickRight(t, d.oldLamp ? _L.disposeWhy : _L.testWhy);
+      // Between এগিয়ে যান and the sign-off (where the light could go off before).
+      await t.tapAt(_geo.mcb(d.mineSlot).center * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.text(_L.stampOn), findsOneWidget);
+      await _pump(t, 6000);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['4.9/do/1'], 'cleared');
+      expect(find.byType(LevelPassPanel), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over every footpath control (never one), a tap on the slip card', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final d = _deal(2);
+      final c = await _open(t, 2);
+      final frameHint = find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first;
+      HintSpec? spec() => t.widget<IdleHint>(frameHint).spec(Size.zero);
+      expect(t.widget<IdleHint>(frameHint).waiting, isTrue);
+      final s1 = spec();
+      expect(s1?.kind, HintKind.sweep);
+      expect(s1!.options, hasLength(5), reason: 'both MCBs + the three tools');
+      await _pump(t, 9000);
+      expect(find.byKey(const ValueKey('gesture-hint')), findsOneWidget, reason: 'idle → the hand');
+      await _tool(t, _L.ladder);
+      expect(spec()!.options, hasLength(7), reason: '+ both ladder spots alike');
+      await _tapAt(t, _geo.spotHit(d.badSide).center);
+      await _pump(t, 300);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(spec()?.kind, HintKind.tap, reason: 'the card has one way forward');
       await _close(t, c);
     });
   });

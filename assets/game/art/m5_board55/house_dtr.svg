@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B4D7A"/><stop offset="0.6" stop-color="#C98A6A"/><stop offset="1" stop-color="#E9B884"/></linearGradient>
+  <linearGradient id="day" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#D6E7F0"/></linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4D3B4"/><stop offset="1" stop-color="#CDB892"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9DBB72"/><stop offset="1" stop-color="#7E9C55"/></linearGradient>
+  <linearGradient id="road" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A7F6E"/><stop offset="1" stop-color="#6E6456"/></linearGradient>
+  <linearGradient id="house" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D9C3A0"/><stop offset="1" stop-color="#B9A07A"/></linearGradient>
+  <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A4E35"/><stop offset="1" stop-color="#743A28"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E979E"/><stop offset="0.5" stop-color="#C6CED4"/><stop offset="1" stop-color="#7C858C"/></linearGradient>
+  <linearGradient id="tank" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F8A78"/><stop offset="0.5" stop-color="#9DB5A5"/><stop offset="1" stop-color="#5E7766"/></linearGradient>
+  <linearGradient id="box" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9EDF0"/><stop offset="1" stop-color="#AEB8C0"/></linearGradient>
+  <linearGradient id="lcd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9E2B8"/><stop offset="1" stop-color="#A9C997"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="ir" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B2A6B"/><stop offset="0.6" stop-color="#3B3F9E"/><stop offset="1" stop-color="#6A3C9A"/></linearGradient>
+  <radialGradient id="heat" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF4B0"/><stop offset="0.35" stop-color="#FF9A2E"/><stop offset="1" stop-color="#E2402A" stop-opacity="0"/></radialGradient>
+  <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF6C8"/><stop offset="1" stop-color="#FFE08A" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#dusk)"/>
+<rect y="194" width="200" height="26" fill="url(#ground)"/>
+<rect x="10" y="160" width="34" height="34" fill="url(#house)"/><path d="M5 161 L27 144.7 L49 161 Z" fill="url(#roof)"/><rect x="15.4" y="167.5" width="9.5" height="10.2" fill="#8C6A2A"/><rect x="29.7" y="172.9" width="8.8" height="21.1" fill="#6B5B3E"/>
+<rect x="106.5" y="30" width="7" height="164" fill="url(#pole)"/><rect x="166.5" y="30" width="7" height="164" fill="url(#pole)"/>
+<rect x="120" y="70" width="40" height="44" rx="3" fill="url(#tank)"/>
+<rect x="104" y="114" width="74" height="4" fill="url(#steel)"/>
+<rect x="102" y="140" width="22" height="26" rx="2" fill="url(#box)" stroke="#4A5560" stroke-width="0.8"/>
+<g transform="translate(72 198) scale(1.3) translate(-72 -198)"><path d="M72 168 L73.4 183.7 L65 197" stroke="#222B37" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="61" y="193" width="11" height="5" rx="2" fill="#1C1F24"/><path d="M72 168 L79.9 181.5 L78 197" stroke="#2A3442" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="74" y="193" width="11" height="5" rx="2" fill="#1C1F24"/><path d="M71 145 L74.7 156.4 L85.8 161.1" stroke="#174A70" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="85.8" cy="161.1" r="3" fill="#2A2D33"/><path d="M64.5 167.7 L65.5 140.7 Q73 138 80.5 141.3 L79.5 168.3 Z" fill="url(#shirt)"/><path d="M64.5 164.7 L79.5 165.3" stroke="#222B37" stroke-width="2.4"/><g transform="rotate(-8 75 139)"><rect x="72" y="138" width="6" height="6" rx="2" fill="#8C5A3A"/><circle cx="75" cy="134" r="7" fill="#A86E48"/><path d="M68 135 Q68 140 72 141 L72 135 Z" fill="#2A1E16"/><circle cx="79" cy="135" r="1.1" fill="#2A1E16"/><path d="M67 133 A8 8 0 0 1 83 133 Z" fill="#FFD34E"/><rect x="67" y="131.6" width="20" height="2.8" rx="1.3" fill="#E5B92E"/></g><path d="M74 145 L79.1 155.4 L90.5 158" stroke="#1F5F8F" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="90.5" cy="158" r="3" fill="#2A2D33"/></g>
+<path d="M93.2 165.6 Q100.6 183.6 108 158" stroke="#C8352B" stroke-width="1.6" fill="none"/><path d="M108 158 l0 -0.1" stroke="#C8352B" stroke-width="3.4" stroke-linecap="round"/><path d="M93.2 165.6 Q104.6 183.6 116 158" stroke="#22262B" stroke-width="1.6" fill="none"/><path d="M116 158 l0 -0.1" stroke="#22262B" stroke-width="3.4" stroke-linecap="round"/>
+<rect x="82" y="132" width="22.4" height="33.6" rx="3.2" fill="#F2B630" stroke="#B9851A" stroke-width="1"/><rect x="84" y="134.8" width="18.4" height="12" rx="1.5" fill="url(#lcd)"/><path d="M85.4 136.8 L88.6 136.8 M89.4 137.6 L89.4 140.4 M85.4 140.8 L88.6 140.8 M84.6 141.2 L84.6 144 M85.4 144.8 L88.6 144.8 M91.6 136.8 L94.8 136.8 M95.6 137.6 L95.6 140.4 M91.6 140.8 L94.8 140.8 M95.6 141.2 L95.6 144 M91.6 144.8 L94.8 144.8 M101.8 137.6 L101.8 140.4 M101.8 141.2 L101.8 144" stroke="#1D2B22" stroke-width="1.2" stroke-linecap="round" fill="none"/><circle cx="93.2" cy="153.6" r="4.8" fill="#2B3138"/><path d="M93.2 153.6 l2.4 -3.2" stroke="#F4F1E6" stroke-width="1.2"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

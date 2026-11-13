@@ -2372,7 +2372,7 @@
       "lessonId": "5.1",
       "moduleId": "m5",
       "packId": "learn_5_1",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 0
     },
     {
@@ -2381,7 +2381,7 @@
       "lessonId": "5.1",
       "moduleId": "m5",
       "packId": "do_5_1_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 1
     },
     {
@@ -2390,7 +2390,7 @@
       "lessonId": "5.1",
       "moduleId": "m5",
       "packId": "do_5_1_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 2
     },
     {
@@ -2399,7 +2399,7 @@
       "lessonId": "5.2",
       "moduleId": "m5",
       "packId": "learn_5_2",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 3
     },
     {
@@ -2408,7 +2408,7 @@
       "lessonId": "5.2",
       "moduleId": "m5",
       "packId": "do_5_2_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 4
     },
     {
@@ -2417,7 +2417,7 @@
       "lessonId": "5.2",
       "moduleId": "m5",
       "packId": "do_5_2_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 5
     },
     {
@@ -2426,7 +2426,7 @@
       "lessonId": "5.3",
       "moduleId": "m5",
       "packId": "learn_5_3",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 6
     },
     {
@@ -2435,7 +2435,7 @@
       "lessonId": "5.3",
       "moduleId": "m5",
       "packId": "do_5_3_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 7
     },
     {
@@ -2444,7 +2444,7 @@
       "lessonId": "5.3",
       "moduleId": "m5",
       "packId": "do_5_3_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 8
     },
     {
@@ -2453,7 +2453,7 @@
       "lessonId": "5.4",
       "moduleId": "m5",
       "packId": "learn_5_4",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 9
     },
     {
@@ -2462,7 +2462,7 @@
       "lessonId": "5.4",
       "moduleId": "m5",
       "packId": "do_5_4_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 10
     },
     {
@@ -2471,7 +2471,7 @@
       "lessonId": "5.4",
       "moduleId": "m5",
       "packId": "do_5_4_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 11
     },
     {
@@ -2480,7 +2480,7 @@
       "lessonId": "5.5",
       "moduleId": "m5",
       "packId": "learn_5_5",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 12
     },
     {
@@ -2489,7 +2489,7 @@
       "lessonId": "5.5",
       "moduleId": "m5",
       "packId": "do_5_5_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 13
     },
     {
@@ -2498,7 +2498,7 @@
       "lessonId": "5.5",
       "moduleId": "m5",
       "packId": "do_5_5_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 14
     },
     {
@@ -2507,7 +2507,7 @@
       "lessonId": "5.6",
       "moduleId": "m5",
       "packId": "learn_5_6",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 15
     },
     {
@@ -2516,7 +2516,7 @@
       "lessonId": "5.6",
       "moduleId": "m5",
       "packId": "do_5_6_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 16
     },
     {
@@ -2525,7 +2525,7 @@
       "lessonId": "5.6",
       "moduleId": "m5",
       "packId": "do_5_6_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 17
     },
     {
@@ -2534,7 +2534,7 @@
       "lessonId": "5.7",
       "moduleId": "m5",
       "packId": "learn_5_7",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 18
     },
     {
@@ -2543,7 +2543,7 @@
       "lessonId": "5.7",
       "moduleId": "m5",
       "packId": "do_5_7_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 19
     },
     {
@@ -2552,7 +2552,7 @@
       "lessonId": "5.7",
       "moduleId": "m5",
       "packId": "do_5_7_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 20
     },
     {
@@ -2561,7 +2561,7 @@
       "lessonId": "5.8",
       "moduleId": "m5",
       "packId": "learn_5_8",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 21
     },
     {
@@ -2570,7 +2570,7 @@
       "lessonId": "5.8",
       "moduleId": "m5",
       "packId": "do_5_8_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 22
     },
     {
@@ -2579,7 +2579,7 @@
       "lessonId": "5.8",
       "moduleId": "m5",
       "packId": "do_5_8_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 23
     },
     {
@@ -2588,7 +2588,7 @@
       "lessonId": "5.9",
       "moduleId": "m5",
       "packId": "learn_5_9",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 24
     },
     {
@@ -2597,7 +2597,7 @@
       "lessonId": "5.9",
       "moduleId": "m5",
       "packId": "do_5_9_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 25
     },
     {
@@ -2606,7 +2606,7 @@
       "lessonId": "5.9",
       "moduleId": "m5",
       "packId": "do_5_9_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 26
     },
     {
@@ -2615,7 +2615,7 @@
       "lessonId": "5.10",
       "moduleId": "m5",
       "packId": "learn_5_10",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 27
     },
     {
@@ -2624,7 +2624,7 @@
       "lessonId": "5.10",
       "moduleId": "m5",
       "packId": "do_5_10_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 28
     },
     {
@@ -2633,7 +2633,7 @@
       "lessonId": "5.10",
       "moduleId": "m5",
       "packId": "gate_m5",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 29
     },
     {
@@ -4503,7 +4503,7 @@
     },
     {
       "id": "gate_m1",
-      "engineType": "gate_field",
+      "engineType": "gate_watch",
       "moduleId": "m1",
       "status": "playable",
       "assetRefs": {},
@@ -5329,242 +5329,295 @@
       "id": "learn_5_1",
       "engineType": "learn_cards",
       "lessonId": "5.1",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_1_a",
-      "engineType": "placeholder",
+      "engineType": "m5_trip_call",
       "lessonId": "5.1",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.1/m5_trip_call/recharge"
+      ]
     },
     {
       "id": "do_5_1_b",
-      "engineType": "placeholder",
+      "engineType": "m5_recloser_watch",
       "lessonId": "5.1",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.1/m5_recloser_watch/no-ptw",
+        "5.1/m5_recloser_watch/no-test",
+        "5.1/m5_recloser_watch/no-earth",
+        "5.1/m5_recloser_watch/clamp-first"
+      ]
     },
     {
       "id": "learn_5_2",
       "engineType": "learn_cards",
       "lessonId": "5.2",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_2_a",
-      "engineType": "placeholder",
+      "engineType": "m5_fault_address",
       "lessonId": "5.2",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_2_b",
-      "engineType": "placeholder",
+      "engineType": "m5_sense_walk",
       "lessonId": "5.2",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.2/m5_sense_walk/enter-zone",
+        "5.2/m5_sense_walk/touch-wire",
+        "5.2/m5_sense_walk/long-stride"
+      ]
     },
     {
       "id": "learn_5_3",
       "engineType": "learn_cards",
       "lessonId": "5.3",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_3_a",
-      "engineType": "placeholder",
+      "engineType": "m5_culprit_case",
       "lessonId": "5.3",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.3/m5_culprit_case/charge-test"
+      ]
     },
     {
       "id": "do_5_3_b",
-      "engineType": "placeholder",
+      "engineType": "m5_anneal_cut",
       "lessonId": "5.3",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.3/m5_anneal_cut/no-earth"
+      ]
     },
     {
       "id": "learn_5_4",
       "engineType": "learn_cards",
       "lessonId": "5.4",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_4_a",
-      "engineType": "placeholder",
+      "engineType": "m5_feeder_sectionalize",
       "lessonId": "5.4",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.4/m5_feeder_sectionalize/no-lt-open",
+        "5.4/m5_feeder_sectionalize/recharge-faulty",
+        "5.4/m5_feeder_sectionalize/recharge-same",
+        "5.4/m5_feeder_sectionalize/recharge-ht"
+      ]
     },
     {
       "id": "do_5_4_b",
-      "engineType": "placeholder",
+      "engineType": "m5_reblow_clock",
       "lessonId": "5.4",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.4/m5_reblow_clock/refit-blast",
+        "5.4/m5_reblow_clock/fault-burning",
+        "5.4/m5_reblow_clock/order-recharge",
+        "5.4/m5_reblow_clock/thick-wire"
+      ]
     },
     {
       "id": "learn_5_5",
       "engineType": "learn_cards",
       "lessonId": "5.5",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_5_a",
-      "engineType": "placeholder",
+      "engineType": "m5_lv_street_read",
       "lessonId": "5.5",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.5/m5_lv_street_read/live-tap"
+      ]
     },
     {
       "id": "do_5_5_b",
-      "engineType": "placeholder",
+      "engineType": "m5_lv_load_test",
       "lessonId": "5.5",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.5/m5_lv_load_test/live-spanner",
+        "5.5/m5_lv_load_test/bare-neutral"
+      ]
     },
     {
       "id": "learn_5_6",
       "engineType": "learn_cards",
       "lessonId": "5.6",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_6_a",
-      "engineType": "placeholder",
+      "engineType": "m5_fault_casebook",
       "lessonId": "5.6",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_6_b",
-      "engineType": "placeholder",
+      "engineType": "m5_live_wire_guard",
       "lessonId": "5.6",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.6/m5_live_wire_guard/hand-lift",
+        "5.6/m5_live_wire_guard/bamboo-push",
+        "5.6/m5_live_wire_guard/join-ends",
+        "5.6/m5_live_wire_guard/phone-off",
+        "5.6/m5_live_wire_guard/bystander"
+      ]
     },
     {
       "id": "learn_5_7",
       "engineType": "learn_cards",
       "lessonId": "5.7",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_7_a",
-      "engineType": "placeholder",
+      "engineType": "m5_searchlight_patrol",
       "lessonId": "5.7",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.7/m5_searchlight_patrol/climb"
+      ]
     },
     {
       "id": "do_5_7_b",
-      "engineType": "placeholder",
+      "engineType": "m5_dark_eyes",
       "lessonId": "5.7",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.7/m5_dark_eyes/climb-live",
+        "5.7/m5_dark_eyes/bamboo-poke"
+      ]
     },
     {
       "id": "learn_5_8",
       "engineType": "learn_cards",
       "lessonId": "5.8",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_8_a",
-      "engineType": "placeholder",
+      "engineType": "m5_cause_strike",
       "lessonId": "5.8",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.8/m5_cause_strike/live-spanner",
+        "5.8/m5_cause_strike/untested",
+        "5.8/m5_cause_strike/climb-live"
+      ]
     },
     {
       "id": "do_5_8_b",
-      "engineType": "placeholder",
+      "engineType": "m5_workshop_referral",
       "lessonId": "5.8",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.8/m5_workshop_referral/recharge-dtr",
+        "5.8/m5_workshop_referral/recharge-lt",
+        "5.8/m5_workshop_referral/no-test"
+      ]
     },
     {
       "id": "learn_5_9",
       "engineType": "learn_cards",
       "lessonId": "5.9",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_9_a",
-      "engineType": "placeholder",
+      "engineType": "m5_cable_fault_type",
       "lessonId": "5.9",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.9/m5_cable_fault_type/live-lead",
+        "5.9/m5_cable_fault_type/live-rod",
+        "5.9/m5_cable_fault_type/charged-clip"
+      ]
     },
     {
       "id": "do_5_9_b",
-      "engineType": "placeholder",
+      "engineType": "m5_cable_route_locate",
       "lessonId": "5.9",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
@@ -5572,25 +5625,29 @@
       "id": "learn_5_10",
       "engineType": "learn_cards",
       "lessonId": "5.10",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_5_10_a",
-      "engineType": "placeholder",
+      "engineType": "m5_pm_thermal_round",
       "lessonId": "5.10",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "5.10/m5_pm_thermal_round/no-permit",
+        "5.10/m5_pm_thermal_round/no-test",
+        "5.10/m5_pm_thermal_round/no-earth"
+      ]
     },
     {
       "id": "gate_m5",
-      "engineType": "gate_field",
+      "engineType": "m5_gate_case",
       "moduleId": "m5",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [
         "lethal_any_marked"

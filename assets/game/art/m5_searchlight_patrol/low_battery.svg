@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050a16"/><stop offset="1" stop-color="#1a2c4e"/></linearGradient>
+    <linearGradient id="beam" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#fff6d6" stop-opacity="0.65"/><stop offset="1" stop-color="#fff6d6" stop-opacity="0.12"/></linearGradient>
+    <radialGradient id="spot"><stop offset="0" stop-color="#fff8dc" stop-opacity="0.75"/><stop offset="1" stop-color="#fff8dc" stop-opacity="0"/></radialGradient>
+    <radialGradient id="flash"><stop offset="0" stop-color="#ffffff"/><stop offset="0.5" stop-color="#9cc8ff" stop-opacity="0.8"/><stop offset="1" stop-color="#78b4ff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <rect x="12" y="12" width="140" height="148" rx="8" fill="url(#sky)"/>
+  <rect x="168" y="12" width="140" height="148" rx="8" fill="url(#sky)"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <!-- wrong -->
+  <g transform="translate(12 12)">
+<circle cx="86" cy="46" r="1.0" fill="#dfe8ff" opacity="0.77"/><circle cx="102" cy="56" r="0.5" fill="#dfe8ff" opacity="0.53"/><circle cx="129" cy="41" r="1.0" fill="#dfe8ff" opacity="0.36"/><circle cx="66" cy="19" r="0.8" fill="#dfe8ff" opacity="0.59"/><circle cx="6" cy="18" r="0.7" fill="#dfe8ff" opacity="0.76"/><circle cx="105" cy="15" r="1.0" fill="#dfe8ff" opacity="0.37"/><circle cx="86" cy="13" r="0.5" fill="#dfe8ff" opacity="0.74"/><circle cx="32" cy="18" r="1.1" fill="#dfe8ff" opacity="0.74"/><circle cx="42" cy="58" r="0.8" fill="#dfe8ff" opacity="0.64"/><circle cx="31" cy="57" r="0.9" fill="#dfe8ff" opacity="0.78"/><circle cx="122" cy="22" r="0.7" fill="#dfe8ff" opacity="0.38"/><circle cx="23" cy="10" r="0.7" fill="#dfe8ff" opacity="0.60"/><circle cx="4" cy="43" r="0.7" fill="#dfe8ff" opacity="0.45"/><circle cx="112" cy="32" r="0.7" fill="#dfe8ff" opacity="0.54"/><rect x="0" y="122" width="140" height="26" fill="#1a2a1c"/><path d="M54 78 L80 72 L80 98 L54 92 Z" fill="#fff6d6" opacity="0.12"/><rect x="20" y="80" width="26" height="10" rx="3" fill="#cb3b2e"/><path d="M45 78 l9 -4 v18 l-9 -4 z" fill="#8c96a6"/><rect x="22" y="106" width="26" height="12" rx="2" fill="none" stroke="#e5483b" stroke-width="1.6"/><rect x="48" y="109.5" width="3" height="5" fill="#e5483b"/><rect x="24" y="108" width="3" height="8" fill="#e5483b"/>
+  </g>
+  <!-- right -->
+  <g transform="translate(168 12)">
+<circle cx="86" cy="46" r="1.0" fill="#dfe8ff" opacity="0.77"/><circle cx="102" cy="56" r="0.5" fill="#dfe8ff" opacity="0.53"/><circle cx="129" cy="41" r="1.0" fill="#dfe8ff" opacity="0.36"/><circle cx="66" cy="19" r="0.8" fill="#dfe8ff" opacity="0.59"/><circle cx="6" cy="18" r="0.7" fill="#dfe8ff" opacity="0.76"/><circle cx="105" cy="15" r="1.0" fill="#dfe8ff" opacity="0.37"/><circle cx="86" cy="13" r="0.5" fill="#dfe8ff" opacity="0.74"/><circle cx="32" cy="18" r="1.1" fill="#dfe8ff" opacity="0.74"/><circle cx="42" cy="58" r="0.8" fill="#dfe8ff" opacity="0.64"/><circle cx="31" cy="57" r="0.9" fill="#dfe8ff" opacity="0.78"/><circle cx="122" cy="22" r="0.7" fill="#dfe8ff" opacity="0.38"/><circle cx="23" cy="10" r="0.7" fill="#dfe8ff" opacity="0.60"/><circle cx="4" cy="43" r="0.7" fill="#dfe8ff" opacity="0.45"/><circle cx="112" cy="32" r="0.7" fill="#dfe8ff" opacity="0.54"/><rect x="0" y="122" width="140" height="26" fill="#1a2a1c"/><path d="M54 74 L120 50 L120 120 L54 96 Z" fill="#fff6d6" opacity="0.5"/><rect x="20" y="80" width="26" height="10" rx="3" fill="#cb3b2e"/><path d="M45 78 l9 -4 v18 l-9 -4 z" fill="#8c96a6"/><rect x="22" y="106" width="26" height="12" rx="2" fill="none" stroke="#52d27a" stroke-width="1.6"/><rect x="48" y="109.5" width="3" height="5" fill="#52d27a"/><rect x="24" y="108" width="22" height="8" fill="#52d27a"/>
+  </g>
+  <g transform="translate(80 178)"><circle r="13" fill="#c0392b"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>
+  <g transform="translate(240 178)"><circle r="13" fill="#2e8b45"/><path d="M-7 0 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

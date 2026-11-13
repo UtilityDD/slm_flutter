@@ -6,6 +6,10 @@
 // the deal, the reason libraries, and the level in the shell: idle perf, the
 // guide first, a full clean play with the coworker refused, a slip card that
 // keeps the stage, three slips, the deadly freeze.
+// Audit 2026-11-11: the tool row is dealt (never the job's order); the chart's
+// totals are one colour (no red "still heavy"); a fast chart cannot skip the
+// coworker (holdForCoworker on "চার্ট ঠিক আছে"); the praise window takes no
+// input; the death card leaves once; the gesture hint sweeps over the tools.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,7 +22,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -34,6 +40,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '4.10/do/0',
@@ -85,10 +92,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -104,11 +113,14 @@ Future<void> _tool(WidgetTester t, String label) async {
   await _pump(t, 300);
 }
 
-Future<ProviderContainer> _open(WidgetTester t, int seed) async {
+final _nav = GlobalKey<NavigatorState>();
+
+Future<ProviderContainer> _open(WidgetTester t, int seed, {Future<void> Function(ProviderContainer c)? before}) async {
   t.view.physicalSize = const Size(784, 1700);
   t.view.devicePixelRatio = 2.0;
   final c = ProviderContainer();
-  final nav = GlobalKey<NavigatorState>();
+  if (before != null) await before(c);
+  final nav = _nav;
   await t.pumpWidget(UncontrolledProviderScope(
     container: c,
     child: DefaultAssetBundle(
@@ -211,6 +223,21 @@ void main() {
       }
       expect(seen.length, greaterThan(40));
       expect(seen.map((x) => x[0]).toSet(), hasLength(3), reason: 'any phase can be the heavy one');
+    });
+
+    test('the tool row is dealt: the work row never in the job order; both measure orders; plays differ', () {
+      final seen = <String>{};
+      final firsts = <M4PhaseBalanceKit>{};
+      for (var s = 0; s < 200; s++) {
+        final order = dealM4PhaseBalanceKit(math.Random(s));
+        expect(order.toSet(), M4PhaseBalanceKit.values.toSet());
+        final work = [for (final k in order) if (k.index >= M4PhaseBalanceKit.notice.index) k];
+        expect(work, isNot([M4PhaseBalanceKit.notice, M4PhaseBalanceKit.ptw, M4PhaseBalanceKit.tester, M4PhaseBalanceKit.earth, M4PhaseBalanceKit.spanner]));
+        firsts.add(order.firstWhere((k) => k == M4PhaseBalanceKit.gloves || k == M4PhaseBalanceKit.tong));
+        seen.add(work.join(','));
+      }
+      expect(firsts, hasLength(2), reason: 'gloves is not always first');
+      expect(seen.length, greaterThan(40));
     });
 
     test('the neutral: zero when equal; the lesson example ≈ 62 A', () {
@@ -452,7 +479,7 @@ void main() {
         }
         debugPrint('PERF m4_phase_balance ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -545,6 +572,145 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('a fast chart cannot skip him: "চার্ট ঠিক আছে" waits, he comes first', (t) async {
+      final deal = dealM4PhaseBalance(math.Random(7));
+      final c = await _open(t, 7);
+      await _measure(t, deal);
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 700);
+      await _pickRight(t, _L.whyRight(M4PhaseBalanceStage.measure));
+      // The chart is up: play it at once, before his 1.2 s timer.
+      expect(await _pumpUntil(t, find.byKey(const ValueKey('tray')), maxMs: 3000), isTrue);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      for (final l in deal.loads) {
+        final to = deal.balanced[l.id]!;
+        if (!l.isNew && deal.wired[l.id] == to) continue;
+        await t.ensureVisible(find.byKey(ValueKey('chip-${l.id}')));
+        await t.tap(find.byKey(ValueKey('chip-${l.id}')));
+        await t.pump(const Duration(milliseconds: 16));
+        await t.tap(find.byKey(ValueKey('total-$to')));
+        await t.pump(const Duration(milliseconds: 16));
+      }
+      await t.tap(find.text(_L.planOk));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the confirm waits for him');
+      await waitChoiceDeck(t);
+      expect(_onScreen(_L.whyRight(M4PhaseBalanceStage.plan)), isEmpty, reason: 'not cleared yet');
+      expect(_onScreen([..._L.coworker(deal.heavy).right, ..._L.coworker(deal.heavy).wrong]), hasLength(3));
+      await _pickRight(t, _L.coworker(deal.heavy).right);
+      await _pump(t, 2600);
+      await t.tap(find.text(_L.planOk));
+      await _pump(t, 600);
+      await _reason(t, M4PhaseBalanceStage.plan);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(_label(_L.notice), findsOneWidget, reason: 'on to the work');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the chart: every column total in one colour (no "still heavy" mark)', (t) async {
+      final deal = dealM4PhaseBalance(math.Random(7));
+      final c = await _open(t, 7);
+      await _measure(t, deal);
+      await _reason(t, M4PhaseBalanceStage.measure);
+      expect(find.byKey(const ValueKey('tray')), findsOneWidget);
+      Color? colour(int p) => t.widget<Text>(find.byKey(ValueKey('total-$p'))).style?.color;
+      expect({for (var p = 0; p < 3; p++) colour(p)}, hasLength(1), reason: 'the heavy total is not red');
+      await _close(t, c);
+    });
+
+    // A regression guard: here `cleared` already blocks input after the right
+    // answer, so the `!tableBusy` guard in _canPlay is defensive (no bug was
+    // reproduced on this level).
+    testWidgets('the praise window takes no input: taps after the right answer book nothing', (t) async {
+      final deal = dealM4PhaseBalance(math.Random(5));
+      final c = await _open(t, 5);
+      await _tool(t, _L.gloves);
+      await _tool(t, _L.tong);
+      for (var i = 0; i < 4; i++) {
+        await _tapAt(t, _geo.clampAt(i));
+      }
+      final wrongBtn = find.text(_L.phaseBtn((deal.heavy + 1) % 3));
+      final at = t.getCenter(wrongBtn);
+      await t.tap(find.text(_L.phaseBtn(deal.heavy)));
+      // A second, wrong answer and scene taps in the praise window.
+      for (var k = 0; k < 4; k++) {
+        await t.tapAt(at);
+        await t.tapAt(_geo.handlePivot * _k);
+        await t.pump(const Duration(milliseconds: 80));
+      }
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _reason(t, M4PhaseBalanceStage.measure);
+      expect(find.byKey(const ValueKey('tray')), findsOneWidget);
+      await _close(t, c);
+    });
+
+    testWidgets('the death card leaves once (a second tap does not pop the ladder)', (t) async {
+      final deal = dealM4PhaseBalance(math.Random(13));
+      final c = await _open(t, 13, before: (c) => c.read(gameSaveProvider.notifier).useNearMiss());
+      await _measure(t, deal);
+      await _reason(t, M4PhaseBalanceStage.measure);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
+      await _pumpUntil(t, find.byType(ChoiceDeck));
+      await _pump(t, 600);
+      await _pickRight(t, _L.coworker(deal.heavy).right);
+      await _pump(t, 2600);
+      await _plan(t, deal);
+      await _reason(t, M4PhaseBalanceStage.plan);
+      await _tool(t, _L.spanner);
+      await _tapAt(t, _geo.barsHit.center);
+      await _pump(t, 4000);
+      expect(find.text(MistakeLines.deadlyHead), findsOneWidget);
+      final go = find.text(MistakeLines.toLadder);
+      await t.tap(go);
+      await t.tap(go, warnIfMissed: false);
+      await _pump(t, 1500);
+      expect(t.takeException(), isNull);
+      expect(find.byType(M4PhaseBalancePage), findsNothing);
+      expect(_nav.currentState, isNotNull);
+      expect(_nav.currentState!.canPop(), isFalse, reason: 'the ladder (home) is still there');
+      expect(find.byType(Scaffold), findsOneWidget);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: after idle the hand sweeps over the tools (never one answer)', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 3);
+      final hint = find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first;
+      expect(t.state<IdleHintState>(hint).showing, isFalse);
+      await _pump(t, 9000);
+      final st = t.state<IdleHintState>(hint);
+      expect(st.showing, isTrue);
+      expect(st.debugFrame, isNotNull);
+      expect(st.debugOptions, hasLength(2), reason: 'gloves and the tong — a sweep, not a tap');
+      // A touch hides it.
+      await _tool(t, _L.gloves);
+      expect(t.state<IdleHintState>(hint).showing, isFalse);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: R, Y, B read but not N — the sweep keeps all 4 cables with the 3 phases', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 3);
+      await _tool(t, _L.gloves);
+      await _tool(t, _L.tong);
+      for (var i = 0; i < 3; i++) {
+        await _tapAt(t, _geo.clampAt(i));
+      }
+      expect(find.text(_L.phaseBtn(0)), findsOneWidget, reason: 'the phase question is up');
+      final hint = find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first;
+      await _pump(t, 9000);
+      final st = t.state<IdleHintState>(hint);
+      expect(st.showing, isTrue);
+      expect(st.debugOptions, hasLength(7), reason: '3 phase buttons + 4 cables (N still reads; never only N)');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
     testWidgets('three slips strike the level out', (t) async {
       final c = await _open(t, 2);
       await _tool(t, _L.tong);
@@ -558,6 +724,7 @@ void main() {
       }
       await _pump(t, 1500);
       expect(find.byType(StruckOutCard), findsOneWidget);
+      expect(c.read(gameSaveProvider).rungProgress['4.10/do/0'], isNot('cleared'));
       await _close(t, c);
     });
 
@@ -569,9 +736,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker(deal.heavy).wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1200);
       expect(find.byType(MistakeCard), findsOneWidget);
       expect(find.byType(FreezeFrame), findsNothing);

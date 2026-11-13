@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -44,7 +45,16 @@ import 'spoken_once.dart';
 // of the right conductor stands in the row: he tells the store instead.
 // Once a play the careless coworker (level 1's rival) peeps in: "দুটোই তো তার
 // — যেটা হাতের কাছে আছে, ওটাই লাগাও!" (the nearest drum is the other
-// conductor), or "একটা সরু তার কাটা তো কী" for a drum with a cut strand.
+// conductor, or the other-conductor drum in the trainee's hands), or — only
+// when the trainee holds a drum whose cut strand he has just found — "একটা
+// সরু তার কাটা তো কী". Loading, setting a found cut drum aside, or telling
+// the store waits for him (holdForCoworker), so a fast play never skips him;
+// a drum of the docket's conductor (not a found cut) goes back in the row
+// first, so his "at hand" line always points at what he pushes. Listening is
+// a slip (the drum he pushed is loaded). Reason decks deal each right card
+// with its own near miss (same words, wrong fact).
+// Gesture hints: a sweep over the drums + the store button, a rub on the cut
+// face, a stroke along the wraps, a sweep over put back / load — never which.
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene, corner guide, ◆ on the table → "কেন …?" → the next job by itself.
 //
@@ -54,7 +64,8 @@ import 'spoken_once.dart';
 // (The joint sleeve — ACSR and AAAC sleeves differ — is কাজ 2's job.)
 //
 // Voice: the guide's lines on device TTS; the coworker's two pushes are new
-// (device TTS until recorded in his voice); his exit line is recorded.
+// (silent with the caption held until recorded in his voice); his exit line
+// is recorded.
 // Art: the yard, the drums, the cut face, the wraps and the magnet are drawn
 // in code (m3_conductor_id_world.dart); the mistake cards use
 // assets/game/art/m3_conductor_id/.
@@ -126,13 +137,12 @@ enum M3ConductorIdPush { nearest, strand }
 
 @immutable
 class M3ConductorIdDeal {
-  const M3ConductorIdDeal({required this.rounds, required this.callRound, required this.preferStrand});
+  const M3ConductorIdDeal({required this.rounds, required this.callRound});
   final List<M3ConductorIdRound> rounds;
 
   /// The job on which he peeps in (or a later one, if nothing he could push
   /// is still in the row).
   final int callRound;
-  final bool preferStrand;
 }
 
 abstract final class M3ConductorIdLines {
@@ -171,25 +181,37 @@ abstract final class M3ConductorIdLines {
     'মোটা দেখাচ্ছে, তাই বেশি কারেন্ট নেবে',
     'বাইরে চকচকে, তাই ভালো ধরে নিলাম',
   ];
-  static List<String> loadWrong(M3ConductorIdKind k) => [
-        k == M3ConductorIdKind.acsr ? 'চুম্বক ধরেনি, তাই এটাই হলো ACSR' : 'মাঝে স্টিল কোর আছে, তাই এটা AAAC',
-        ...loadMyths,
-      ];
+
+  /// Near misses, parallel to [loadRight] (index i goes with right card i):
+  /// the same words and this docket's name, the fact turned the wrong way —
+  /// so no word (চুম্বক, মাঝে, কোর, স্টিল, the tag) is only on the right card.
+  static List<String> loadNear(M3ConductorIdKind k) => switch (k) {
+        M3ConductorIdKind.acsr => const ['মাঝে স্টিলের কোর নেই — এটাই ACSR', 'চুম্বক আটকায়নি, ভেতরে স্টিল নেই — ACSR'],
+        M3ConductorIdKind.aaac => const ['মাঝে স্টিল, পুরোটা অ্যালয় নয় — AAAC', 'চুম্বক আটকেছে, স্টিল আছে — AAAC'],
+      };
+  static List<String> loadWrong(M3ConductorIdKind k) => [...loadNear(k), ...loadMyths];
 
   static const holdRight = [
     'ডকেটের তারের ভালো ড্রাম এখানে নেই',
     'স্ট্র্যান্ড কাটা ড্রাম নয়, স্টোরে বলি',
   ];
-  static const holdWrong = [
+  /// Near misses, parallel to [holdRight] (index i goes with right card i):
+  /// the same words (ডকেট, ভালো, এখানে / স্ট্র্যান্ড, কাটা, স্টোর), a lazy reason.
+  static const holdNear = [
+    'এখানে ডকেটের ভালো ড্রাম খোঁজা ঝামেলা',
+    'স্ট্র্যান্ড কাটা খুঁজব না, স্টোরে বলি',
+  ];
+  static const holdRest = [
     'দেরি হচ্ছে, তাই পরে এসে দেখে নেব',
     'ড্রামগুলো খুব ভারী, তাই তুলিনি',
     'অন্য তার দিয়েই কাজটা সেরে নেব',
     'কোনটা কী জানি না, তাই ছেড়ে দিলাম',
     'স্টোরকিপার বকবে, তাই রেখে দিলাম',
   ];
+  static const holdWrong = [...holdNear, ...holdRest];
 
   /// The careless coworker. His exit line is already recorded in his voice;
-  /// the two pushes go to device TTS until they are recorded.
+  /// the two pushes are silent (caption held) until they are recorded.
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
   static const coworkerNearest = CoworkerScript(
     line: 'আরে! দুটোই তো তার — যেটা হাতের কাছে আছে, ওটাই লাগাও!',
@@ -319,29 +341,52 @@ M3ConductorIdDeal m3ConductorIdDeal(math.Random rng) {
     final where = k == M3ConductorIdKind.aaac ? aaacWhere[ai++ % aaacWhere.length] : acsrWhere[ci++ % acsrWhere.length];
     rounds.add(M3ConductorIdRound(job: M3ConductorIdJob(need: k, feederBn: feeders[i], whereBn: where), drums: drums));
   }
-  return M3ConductorIdDeal(rounds: rounds, callRound: rng.nextInt(3), preferStrand: rng.nextBool());
+  return M3ConductorIdDeal(rounds: rounds, callRound: rng.nextInt(3));
 }
 
-/// What the careless coworker can push on round [r] now — only a drum still
-/// in the row: the nearest drum of the other conductor, or a drum of the
-/// docket's conductor with a cut strand. The dealt push first, else the
-/// other; null when neither is there.
-M3ConductorIdPush? m3ConductorIdPushFor(M3ConductorIdRound r, Set<String> rejected, {required bool preferStrand}) {
-  final strand = m3ConductorIdPushed(r, M3ConductorIdPush.strand, rejected) != null;
-  final nearest = m3ConductorIdPushed(r, M3ConductorIdPush.nearest, rejected) != null;
-  if (preferStrand && strand) return M3ConductorIdPush.strand;
-  if (nearest) return M3ConductorIdPush.nearest;
-  return strand ? M3ConductorIdPush.strand : null;
+/// What the careless coworker pushes on round [r] now, given the drum in the
+/// trainee's hands ([held]; null in the yard). His line fits the moment:
+/// holding a drum of the docket's conductor whose cut strand the trainee has
+/// found ([spotted]) → strand ("a thin strand cut, so what"); otherwise →
+/// nearest ("take whatever is at hand"). He never names a cut the trainee has
+/// not seen (that would give it away). Null when nothing fits.
+M3ConductorIdPush? m3ConductorIdPushFor(M3ConductorIdRound r, Set<String> rejected, {M3ConductorIdDrum? held, Set<String> spotted = const {}}) {
+  if (m3ConductorIdPushed(r, M3ConductorIdPush.strand, rejected, held: held, spotted: spotted) != null) return M3ConductorIdPush.strand;
+  if (m3ConductorIdPushed(r, M3ConductorIdPush.nearest, rejected, held: held) != null) return M3ConductorIdPush.nearest;
+  return null;
 }
 
-/// The drum he pushes on round [r] (the first such drum in the row — the one
-/// nearest the trainee).
-M3ConductorIdDrum? m3ConductorIdPushed(M3ConductorIdRound r, M3ConductorIdPush p, Set<String> rejected) {
+/// The drum he pushes on round [r] — the one listening loads. Strand: the
+/// found cut drum in the hands. Nearest: the drum in the hands when it is the
+/// other conductor ("the one at hand"), else the first other-conductor drum
+/// in the row (the one nearest the trainee). A drum of the docket's conductor
+/// in the hands that is not a found cut goes back in the row before he comes
+/// (the page does that), so "at hand" never points away from the hands.
+M3ConductorIdDrum? m3ConductorIdPushed(M3ConductorIdRound r, M3ConductorIdPush p, Set<String> rejected,
+    {M3ConductorIdDrum? held, Set<String> spotted = const {}}) {
+  final h = held != null && !rejected.contains(held.id) ? held : null;
+  if (p == M3ConductorIdPush.strand) {
+    return h != null && h.kind == r.job.need && h.cut && spotted.contains(h.id) ? h : null;
+  }
+  if (h != null && h.kind != r.job.need) return h;
   for (final d in r.drums) {
-    if (rejected.contains(d.id)) continue;
-    if (p == M3ConductorIdPush.nearest ? d.kind != r.job.need : (d.kind == r.job.need && d.cut)) return d;
+    if (!rejected.contains(d.id) && d.kind != r.job.need) return d;
   }
   return null;
+}
+
+/// A reason deck: one right card, ITS near miss ([near] is parallel to
+/// [right]: same words, the fact turned wrong) and one other wrong card,
+/// shuffled — no key word is only on the right card.
+List<ChoiceOption> m3ConductorIdWhyDeal(List<String> right, List<String> near, List<String> rest, math.Random rng) {
+  assert(right.length == near.length, 'near misses are dealt in pairs with the right cards');
+  final i = rng.nextInt(right.length);
+  final others = [...rest]..shuffle(rng);
+  return [
+    ChoiceOption(right[i], true),
+    ChoiceOption(near[i], false),
+    ChoiceOption(others.first, false),
+  ]..shuffle(rng);
 }
 
 enum M3ConductorIdVerdict { right, slip }
@@ -554,6 +599,21 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how to interact, never which drum).
+  final _hints = IdleHintController();
+  final Map<String, GlobalKey> _drumKeys = {};
+  final _holdKey = GlobalKey();
+  final _docketKey = GlobalKey();
+  final _faceKey = GlobalKey();
+  final _wrapKey = GlobalKey();
+  final _putBackKey = GlobalKey();
+  final _loadKey = GlobalKey();
+
+  /// The hand has run along the held drum's wraps.
+  var _wrapTouched = false;
+
+  GlobalKey _drumKey(String id) => _drumKeys.putIfAbsent(id, GlobalKey.new);
+
   String get _rungId => widget.ctx.rungId;
 
   @override
@@ -600,7 +660,7 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || _run.shown;
+  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || tableBusy || _run.shown;
 
   void _setMode(LinemanMode m) {
     _mode = m;
@@ -610,7 +670,7 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
   /// The trainee walks up to a drum for the close look.
   void _pick(M3ConductorIdDrum d, Offset origin) {
     // Going to another drum while he is still talking refuses him too.
-    if (coworkerOpen && !coworkerChoiceUp && m3ConductorIdPushed(_run.current, _push, _run.rejected)?.id != d.id) {
+    if (coworkerOpen && !coworkerChoiceUp && _pushedDrum?.id != d.id) {
       unawaited(answerCoworker(true, origin, direct: true));
     }
     if (_blocked || coworkerOpen || _held != null || _docketOpen || _run.rejected.contains(d.id)) return;
@@ -619,6 +679,7 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
     _hush();
     setState(() {
       _held = d;
+      _wrapTouched = false;
       _setMode(LinemanMode.hold);
     });
     unawaited(_sayChain([M3ConductorIdLines.inspectAsk]));
@@ -653,7 +714,9 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
 
   void _putBack() {
     final d = _held;
-    if (d == null || _blocked) return;
+    if (d == null || _blocked || coworkerOpen) return;
+    // Setting a found cut drum aside decides it: he cuts in first if due.
+    if (_run.spotted.contains(d.id) && _waitForCoworker()) return;
     final aside = _run.putBack(d);
     HapticFeedback.selectionClick();
     setState(() {
@@ -671,7 +734,10 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
 
   void _load(Offset origin) {
     final d = _held;
-    if (d == null || _blocked) return;
+    if (d == null || _blocked || coworkerOpen) return;
+    // Loading decides the job: he cuts in first if due (never skipped by a
+    // fast play).
+    if (_waitForCoworker()) return;
     setState(() => _held = null);
     _judgeLoad(d, origin);
   }
@@ -686,7 +752,8 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
       }
       setState(() => _setMode(LinemanMode.cheer));
       final k = d.kind;
-      _askWhy(15, () => dealChoices(M3ConductorIdLines.loadRight(k), M3ConductorIdLines.loadWrong(k), widget.rng), M3ConductorIdLines.loadAsk);
+      _askWhy(15, () => m3ConductorIdWhyDeal(M3ConductorIdLines.loadRight(k), M3ConductorIdLines.loadNear(k), M3ConductorIdLines.loadMyths, widget.rng),
+          M3ConductorIdLines.loadAsk);
       return;
     }
     setState(() => _setMode(LinemanMode.worried));
@@ -696,18 +763,38 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
 
   void _holdJob(Offset origin) {
     if (_blocked || coworkerOpen || _held != null || _docketOpen) return;
+    if (_waitForCoworker()) return;
     _hush();
     final o = _run.holdJob();
     if (o.verdict == M3ConductorIdVerdict.right) {
       HapticFeedback.mediumImpact();
       if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
       setState(() => _setMode(LinemanMode.cheer));
-      _askWhy(20, () => dealChoices(M3ConductorIdLines.holdRight, M3ConductorIdLines.holdWrong, widget.rng), M3ConductorIdLines.holdAsk);
+      _askWhy(20, () => m3ConductorIdWhyDeal(M3ConductorIdLines.holdRight, M3ConductorIdLines.holdNear, M3ConductorIdLines.holdRest, widget.rng),
+          M3ConductorIdLines.holdAsk);
       return;
     }
     setState(() => _setMode(LinemanMode.worried));
     final m = o.mistake;
     if (m != null) unawaited(_slip(m, origin));
+  }
+
+  /// A decisive control waits for him ([holdForCoworker]), and his line fits
+  /// what is in the hands: a found cut → "a strand cut, so what" (that drum);
+  /// the other conductor → "take the one at hand" (that drum). Any other drum
+  /// of the docket's conductor goes back in the row first, so "take the one
+  /// at hand" plays in the yard and listening loads the nearest drum there.
+  bool _waitForCoworker() {
+    if (!coworkerDue) return false;
+    final d = _held;
+    if (d != null && d.kind == _run.current.job.need && !_run.spotted.contains(d.id)) {
+      setState(() {
+        _held = null;
+        _wrapTouched = false;
+        _setMode(LinemanMode.idle);
+      });
+    }
+    return holdForCoworker();
   }
 
   void _askWhy(int points, List<ChoiceOption> Function() deal, String question) {
@@ -760,12 +847,23 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
-    if (_blocked || _held != null || _docketOpen) return false;
-    final push = m3ConductorIdPushFor(_run.current, _run.rejected, preferStrand: _run.deal.preferStrand);
+    // Never into the praise window or the reason deck of a right move.
+    if (tableBusy || _run.shown) return false;
+    // His push fits the moment: a cut strand only while the trainee holds the
+    // drum whose cut he found (setting it aside or loading it); otherwise
+    // "take the one at hand" (see [_waitForCoworker]). Chosen before the "not
+    // yet" checks, so a decisive control that waits for him gets it too.
+    final held = _held;
+    final push = m3ConductorIdPushFor(_run.current, _run.rejected, held: held, spotted: _run.spotted);
     if (push == null) return false;
     _push = push;
+    if (_blocked || held != null || _docketOpen) return false;
     return true;
   }
+
+  /// The drum he is pushing now (the found cut drum or the other-conductor
+  /// drum in the hands, else the nearest other-conductor drum in the row).
+  M3ConductorIdDrum? get _pushedDrum => m3ConductorIdPushed(_run.current, _push, _run.rejected, held: _held, spotted: _run.spotted);
 
   @override
   Future<void> coworkerGuideSay(List<String> lines, {GuideMood mood = GuideMood.talk}) => _sayChain(lines, mood: mood);
@@ -775,8 +873,15 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Loaded what he pushed: the nearest drum, or the one with a cut strand.
-      final d = m3ConductorIdPushed(_run.current, _push, _run.rejected);
+      // Loaded what he pushed: the drum at hand / nearest, or the found cut
+      // one in the hands — a slip (playbook row 8; nothing here is deadly).
+      final d = _pushedDrum;
+      if (_held != null) {
+        setState(() {
+          _held = null;
+          _setMode(LinemanMode.idle);
+        });
+      }
       if (d != null) _judgeLoad(d, origin);
       return;
     }
@@ -787,7 +892,7 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
     unawaited(() async {
       await coworkerSnarl();
       if (!mounted || chain != _chain) return;
-      await _sayChain([M3ConductorIdLines.callHeld, _ask], mood: GuideMood.glad);
+      await _sayChain([M3ConductorIdLines.callHeld, _task], mood: GuideMood.glad);
     }());
   }
 
@@ -803,6 +908,54 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/tick.ogg', volume: 0.5, muted: false));
     unawaited(_sayChain([line]));
   }
+
+  // ---- gesture hints ------------------------------------------------------------------
+
+  /// The on-screen rect of [k] (through the scene's scale).
+  static Rect? _rectOf(GlobalKey k) {
+    final box = k.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return null;
+    return MatrixUtils.transformRect(box.getTransformTo(null), Offset.zero & box.size);
+  }
+
+  /// The level waits for a touch on the scene (decks carry their own hint;
+  /// none during a mistake card).
+  bool get _hintWaiting =>
+      !_intro && !_ended && !_busy && _card == null && _mark == null && !struckOut && !reasonOpen && !tableBusy && !coworkerOnScreen && !_run.shown;
+
+  /// How to interact now — never which drum: a sweep over every drum still in
+  /// the row and the store button; in the close look a rub on the cut face, a
+  /// stroke along the wraps, then a sweep over put back / load; a tap to hang
+  /// the docket back.
+  HintSpec? _hint() {
+    if (_docketOpen) {
+      final r = _rectOf(_docketKey);
+      return r == null ? null : HintSpec.tap(r.center);
+    }
+    final held = _held;
+    if (held != null) {
+      if (!_run.checked.contains(held.id)) {
+        final f = _rectOf(_faceKey);
+        return f == null ? null : HintSpec.swipe(Offset(f.left + f.width * 0.25, f.center.dy), travel: f.width * 0.5);
+      }
+      if (!_wrapTouched) {
+        final w = _rectOf(_wrapKey);
+        return w == null ? null : HintSpec.swipe(Offset(w.left + 16, w.center.dy), travel: math.min(w.width * 0.6, 160));
+      }
+      final opts = [?_rectOf(_putBackKey), ?_rectOf(_loadKey)];
+      return opts.length < 2 ? null : HintSpec.sweep(opts);
+    }
+    final r = _run.current;
+    final opts = [
+      for (final d in r.drums)
+        if (!_run.rejected.contains(d.id) && _run.loaded[_run.round]?.id != d.id) ?_rectOf(_drumKey(d.id)),
+      ?_rectOf(_holdKey),
+    ];
+    return opts.length < 2 ? null : HintSpec.sweep(opts);
+  }
+
+  /// Which waiting state the hand is for (a new one resets its count).
+  Object get _hintState => (_run.round, _held?.id, _docketOpen, _run.slips, _run.rejected.length, _run.checked.length, _wrapTouched);
 
   // ---- mistakes ---------------------------------------------------------------------
 
@@ -911,7 +1064,12 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
     return [
       Positioned.fill(
         key: const ValueKey('yard'),
-        child: RepaintBoundary(child: CustomPaint(painter: M3ConductorIdYardPainter(geo))),
+        // A tap on the bare yard counts toward the gesture hint.
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _hints.missTap,
+          child: RepaintBoundary(child: CustomPaint(painter: M3ConductorIdYardPainter(geo))),
+        ),
       ),
       Positioned.fromRect(
         key: const ValueKey('docket'),
@@ -939,6 +1097,7 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
             quiet: quiet,
             muted: true,
             child: _YardDrum(
+              key: _drumKey(r.drums[i].id),
               drum: r.drums[i],
               gone: _run.loaded[_run.round]?.id == r.drums[i].id,
               aside: _run.rejected.contains(r.drums[i].id),
@@ -987,6 +1146,10 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintState,
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (holdUp)
@@ -995,7 +1158,7 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
                   left: 12,
                   right: 128,
                   bottom: pad.bottom + 18,
-                  child: _HoldButton(onTapUp: (d) => _holdJob(d.globalPosition)),
+                  child: _HoldButton(key: _holdKey, onTapUp: (d) => _holdJob(d.globalPosition)),
                 ),
               if (held != null && playing)
                 _Inspect(
@@ -1008,10 +1171,19 @@ class _CidRunPageState extends ConsumerState<_CidRunPage> with DoStrikeOut, Reas
                   onFound: _found,
                   onLoad: _load,
                   onPutBack: _putBack,
+                  onWrap: () {
+                    if (!_wrapTouched) setState(() => _wrapTouched = true);
+                  },
+                  onMiss: _hints.missTap,
+                  faceKey: _faceKey,
+                  wrapKey: _wrapKey,
+                  putBackKey: _putBackKey,
+                  loadKey: _loadKey,
                 ),
               if (_docketOpen && playing)
                 _DocketZoom(
                   key: const ValueKey('docket-zoom'),
+                  sheetKey: _docketKey,
                   deal: _run.deal,
                   done: {for (var i = 0; i < _run.round; i++) i},
                   quiet: quiet,
@@ -1115,7 +1287,7 @@ const _brown = Color(0xFF8C6A2A);
 const _grey = Color(0xFF5A6478);
 const _bench = Color(0xFF26303B);
 
-/// "১. AAAC" style numbering in English digits.
+/// "1. AAAC" style numbering in English digits.
 String _num(int i) => enDigits('${i + 1}.');
 
 /// The docket on its clipboard: the three jobs and their conductor, the done
@@ -1179,7 +1351,8 @@ class _DocketSheet extends StatelessWidget {
 
 /// The docket held up close (tap anywhere to hang it back).
 class _DocketZoom extends StatelessWidget {
-  const _DocketZoom({super.key, required this.deal, required this.done, required this.quiet, required this.onClose});
+  const _DocketZoom({super.key, required this.sheetKey, required this.deal, required this.done, required this.quiet, required this.onClose});
+  final GlobalKey sheetKey;
   final M3ConductorIdDeal deal;
   final Set<int> done;
   final bool quiet;
@@ -1201,6 +1374,7 @@ class _DocketZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: sheetKey,
                 width: 300,
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
                 decoration: BoxDecoration(
@@ -1262,7 +1436,7 @@ class _DocketZoom extends StatelessWidget {
 /// has identified it, his chalk mark says what it is; one he set aside wears
 /// a red বাতিল tag. Tap it to walk up for the close look.
 class _YardDrum extends StatelessWidget {
-  const _YardDrum({required this.drum, required this.gone, required this.aside, required this.chalk, required this.enabled, required this.onTake});
+  const _YardDrum({super.key, required this.drum, required this.gone, required this.aside, required this.chalk, required this.enabled, required this.onTake});
   final M3ConductorIdDrum drum;
   final bool gone;
   final bool aside;
@@ -1331,7 +1505,7 @@ class _OnVan extends StatelessWidget {
 }
 
 class _HoldButton extends StatelessWidget {
-  const _HoldButton({required this.onTapUp});
+  const _HoldButton({super.key, required this.onTapUp});
   final GestureTapUpCallback onTapUp;
 
   @override
@@ -1380,6 +1554,12 @@ class _Inspect extends StatefulWidget {
     required this.onFound,
     required this.onLoad,
     required this.onPutBack,
+    required this.onWrap,
+    required this.onMiss,
+    required this.faceKey,
+    required this.wrapKey,
+    required this.putBackKey,
+    required this.loadKey,
   });
   final M3ConductorIdDrum drum;
   final M3ConductorIdJob job;
@@ -1389,6 +1569,16 @@ class _Inspect extends StatefulWidget {
   final VoidCallback onFound;
   final ValueChanged<Offset> onLoad;
   final VoidCallback onPutBack;
+
+  /// The hand first ran along the wraps.
+  final VoidCallback onWrap;
+
+  /// A tap on the dark backdrop (nothing there).
+  final VoidCallback onMiss;
+  final GlobalKey faceKey;
+  final GlobalKey wrapKey;
+  final GlobalKey putBackKey;
+  final GlobalKey loadKey;
 
   @override
   State<_Inspect> createState() => _InspectState();
@@ -1425,6 +1615,7 @@ class _InspectState extends State<_Inspect> {
 
   void _touch(Offset p, Size s) {
     final b = m3ConductorIdBin(M3ConductorIdWrapPainter.uAt(s, p.dx));
+    if (_seen.isEmpty) widget.onWrap();
     final before = _seen.length;
     for (final x in [b - 1, b, b + 1]) {
       if (x >= 0 && x < kM3ConductorIdBins) _seen.add(x);
@@ -1458,6 +1649,7 @@ class _InspectState extends State<_Inspect> {
               width: side,
               height: side,
               child: Semantics(
+                key: widget.faceKey,
                 label: M3ConductorIdLines.faceLabel,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -1480,6 +1672,7 @@ class _InspectState extends State<_Inspect> {
   Widget _wrap() => LayoutBuilder(builder: (context, box) {
         final s = Size(box.maxWidth, box.maxHeight);
         return Semantics(
+          key: widget.wrapKey,
           label: M3ConductorIdLines.wrapLabel,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -1503,9 +1696,12 @@ class _InspectState extends State<_Inspect> {
   Widget build(BuildContext context) {
     final j = widget.job;
     return Positioned.fill(
-      child: ColoredBox(
-        color: const Color(0xC0050A16),
-        child: Align(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: widget.onMiss, child: const ColoredBox(color: Color(0xC0050A16))),
+          ),
+          Align(
           alignment: const Alignment(0, -0.42),
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
@@ -1569,9 +1765,13 @@ class _InspectState extends State<_Inspect> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Expanded(child: DoBigButton(label: M3ConductorIdLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
+                      Expanded(
+                          child: KeyedSubtree(
+                              key: widget.putBackKey, child: DoBigButton(label: M3ConductorIdLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack()))),
                       const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: M3ConductorIdLines.load, filled: true, onTapUp: (d) => widget.onLoad(d.globalPosition))),
+                      Expanded(
+                          child: KeyedSubtree(
+                              key: widget.loadKey, child: DoBigButton(label: M3ConductorIdLines.load, filled: true, onTapUp: (d) => widget.onLoad(d.globalPosition)))),
                     ],
                   ),
                 ],
@@ -1579,6 +1779,7 @@ class _InspectState extends State<_Inspect> {
             ),
           ),
         ),
+        ],
       ),
     );
   }

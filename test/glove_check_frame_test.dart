@@ -20,6 +20,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(rungId: '1.1/do/1', kind: CatalogRungKind.doKind, lessonId: '1.1', lessonTitleBn: '', ladderStep: 3, doIndex: 2, doCount: 2);
 
@@ -94,6 +95,7 @@ void main() {
       final right = _onScreen(GloveLines.whyRight);
       expect(right, hasLength(1));
       await t.tap(right.single, warnIfMissed: false);
+      await confirmChoice(t);
       await t.pump();
       await t.tap(find.byKey(const ValueKey('reason-proceed-btn')), warnIfMissed: false);
       await _pump(t, 2500);
@@ -105,6 +107,7 @@ void main() {
       final refuse = _onScreen(GloveLines.choiceRight);
       expect(refuse, hasLength(1));
       await t.tap(refuse.single, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1800);
       expect(find.byType(CoworkerPeek), findsNothing);
       expect(t.takeException(), isNull);

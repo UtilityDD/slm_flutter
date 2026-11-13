@@ -4,7 +4,8 @@
 // tried, the spring washer fitted, the right torque — too much snaps the
 // bolt), the deal, the reason libraries, and the level in the shell: idle
 // perf, the guide first, a full clean play (the coworker refused), a needless
-// report that is not scored, a slip card, an over-torque that keeps the pole,
+// report that costs a slip, the 3-slip strike-out, the coworker on a fast
+// play, the gesture hint, a slip card, an over-torque that keeps the pole,
 // and the deadly freeze (climbing the weak arm on his say-so).
 import 'dart:async';
 import 'dart:io';
@@ -18,8 +19,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/full_scene_frame.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
+import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m3_crossarm_check.dart';
@@ -32,6 +36,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '3.3/do/1',
@@ -79,10 +84,12 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -248,20 +255,58 @@ void main() {
       expect(a.deadly, isNull);
       final b = run1(const M3CrossarmPole(id: 'x', fault: M3CrossarmFault.rustClamp));
       expect(b.climb(), M3CrossarmCheckMistakes.climbRustClamp);
-      final ok = run1(const M3CrossarmPole(id: 'x', fault: M3CrossarmFault.rustClamp))..look(M3CrossarmPart.arm);
-      expect(ok.report(), M3CrossarmReport.needlessUnseen, reason: 'the clamp not looked at yet');
-      expect(ok.shown, isFalse);
-      ok.look(M3CrossarmPart.clamp);
+      final guess = run1(const M3CrossarmPole(id: 'x', fault: M3CrossarmFault.rustClamp))..look(M3CrossarmPart.arm);
+      expect(guess.report(), M3CrossarmReport.needlessUnseen, reason: 'the clamp not looked at yet: a guess');
+      expect(guess.slips, 1);
+      expect(guess.shown, isTrue, reason: 'a report is a decision: the pole ends');
+      final ok = run1(const M3CrossarmPole(id: 'x', fault: M3CrossarmFault.rustClamp))
+        ..look(M3CrossarmPart.arm)
+        ..look(M3CrossarmPart.clamp);
       expect(ok.report(), M3CrossarmReport.done);
+      expect(ok.slips, 0);
       expect(ok.caught, contains(M3CrossarmCheckLines.caughtClamp));
     });
 
-    test('a report on a sound pole is not scored: no mistake, the pole stays', () {
-      final a = run1(fixPole)..look(M3CrossarmPart.arm);
+    test('bug fix: a report is no free probe — a needless stop costs a slip and ends the pole', () {
+      final a = run1(fixPole)
+        ..look(M3CrossarmPart.arm)
+        ..look(M3CrossarmPart.clamp);
       expect(a.report(), M3CrossarmReport.needlessSound);
-      expect(a.shown, isFalse);
-      expect(a.needless, 1);
-      expect(a.slips, 0);
+      expect(a.shown, isTrue);
+      expect(a.slips, 1);
+      expect(a.up, isFalse);
+      expect(a.climb(), isNull, reason: 'no climbing after the decision');
+      expect(M3CrossarmReport.needlessSound.mistake, M3CrossarmCheckMistakes.reportSound);
+      expect(M3CrossarmReport.done.mistake, isNull);
+    });
+
+    test('bug fix: a report before looking is the same slip whatever the pole was (no reveal)', () {
+      final poles = [
+        for (final f in M3CrossarmFault.values) M3CrossarmPole(id: 'x', fault: f),
+        fixPole,
+      ];
+      for (final p in poles) {
+        for (final seen in [<M3CrossarmPart>{}, {M3CrossarmPart.brace}]) {
+          final r = run1(p);
+          seen.forEach(r.look);
+          expect(r.report(), M3CrossarmReport.needlessUnseen, reason: '${p.fault} $seen');
+          expect(r.slips, 1);
+          expect(r.shown, isTrue);
+        }
+      }
+      expect(M3CrossarmReport.needlessUnseen.mistake, M3CrossarmCheckMistakes.reportUnseen);
+      for (final m in [M3CrossarmCheckMistakes.reportUnseen]) {
+        for (final w in ['সোজা', 'ঠিক আছে', 'মরিচা ধরেছে', 'বাঁকা']) {
+          expect(m.textBn.contains(w), isFalse, reason: 'the guess card must not name what the pole was: $w');
+        }
+      }
+    });
+
+    test('bug fix: the bent-arm card says only what lesson 3.3 says (clearance), no weight claim', () {
+      for (final t in [M3CrossarmCheckMistakes.climbBent.textBn, ...M3CrossarmCheckLines.bentWhy]) {
+        expect(t.contains('ভর'), isFalse, reason: t);
+      }
+      expect(M3CrossarmCheckMistakes.climbBent.textBn, contains('ফেজ ক্লিয়ারেন্স'));
     });
 
     test('climbing a sound pole without looking at arm and clamp is a slip', () {
@@ -328,7 +373,7 @@ void main() {
       expect(d.torque(0.7), M3CrossarmTorque.right);
     });
 
-    test('three slips fail the level (percent below 55)', () {
+    test('three slips: the mark is 55 % (the page strikes out on the third — see the StruckOutCard test)', () {
       final run = M3CrossarmCheckRun(const M3CrossarmDeal(poles: [sound, sound, sound], callAt: 0));
       for (var i = 0; i < 3; i++) {
         expect(run.climb(), M3CrossarmCheckMistakes.noLook);
@@ -412,7 +457,7 @@ void main() {
         }
         debugPrint('PERF m3_crossarm_check ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -475,20 +520,86 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('a report on a sound pole is not scored: no card, the guide says the rule, the pole stays', (t) async {
+    testWidgets('bug fix: a report on a sound pole costs a slip card, then the next pole', (t) async {
       var seed = 0;
       while (m3CrossarmDeal(math.Random(seed)).poles[0].report) {
         seed++;
       }
       final c = await _open(t, seed);
       await _look(t, M3CrossarmPart.arm);
+      await _look(t, M3CrossarmPart.clamp);
       await t.tap(find.text(M3CrossarmCheckLines.report));
-      await _pump(t, 600);
+      await _pump(t, 800);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'no reason deck for a wrong report');
+      expect(c.read(gameSaveProvider).mistakes.single.key, M3CrossarmCheckMistakes.reportSound.key);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 1500);
       expect(find.byType(MistakeCard), findsNothing);
-      expect(find.byType(ChoiceDeck), findsNothing);
-      expect(c.read(guideDirectorProvider).line, M3CrossarmCheckLines.needlessSound);
-      expect(find.text(M3CrossarmCheckLines.climb), findsOneWidget);
+      expect(find.text(M3CrossarmCheckLines.report), findsOneWidget, reason: 'the next pole, from the ground');
+      expect(find.byKey(const ValueKey('hud-gauge')), findsNothing);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike out: the StruckOutCard', (t) async {
+      final c = await _open(t, 5);
+      for (var i = 0; i < 3; i++) {
+        // A report before looking: a guess, a slip, whatever the pole.
+        expect(await _pumpUntil(t, find.text(M3CrossarmCheckLines.report)), isTrue, reason: 'pole $i');
+        await t.tap(find.text(M3CrossarmCheckLines.report));
+        await _pump(t, 800);
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip ${i + 1}');
+          await t.tap(find.text(MistakeLines.gotIt));
+          await _pump(t, 1500);
+        }
+      }
+      expect(await _pumpUntil(t, find.byType(StruckOutCard)), isTrue);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['3.3/do/1'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key), contains(M3CrossarmCheckMistakes.reportUnseen.key));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('bug fix: he comes even on a fast play — report right after the arm waits for him', (t) async {
+      var seed = 0;
+      while (m3CrossarmDeal(math.Random(seed)).callAt != 0) {
+        seed++;
+      }
+      final deal = m3CrossarmDeal(math.Random(seed));
+      final c = await _open(t, seed);
+      await t.tapAt(_partAt(M3CrossarmPart.arm) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tapAt(_partAt(M3CrossarmPart.clamp) * _k);
+      await t.pump(const Duration(milliseconds: 100));
+      // Faster than his 1.2–2.4 s: the decision waits for him.
+      await t.tap(find.text(M3CrossarmCheckLines.report));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the decisive tap brings him in now');
+      expect(find.byType(MistakeCard), findsNothing);
+      await waitChoiceDeck(t);
+      final cw = deal.poles[0].fault == M3CrossarmFault.bentArm ? M3CrossarmCheckLines.coworkerBent : M3CrossarmCheckLines.coworkerRust;
+      await _pickRight(t, cw.right);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(M3CrossarmCheckLines.report));
+      await _pump(t, 1500);
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'now the report goes through: the reason');
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: idle on the ground → a sweep over the three parts and both decisions', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, 3);
+      await _pump(t, 9500);
+      final hint = t.state<IdleHintState>(find.descendant(of: find.byType(FullSceneFrame), matching: find.byType(IdleHint)).first);
+      expect(hint.showing, isTrue);
+      expect(hint.debugFrame, isNotNull);
+      expect(hint.debugOptions, hasLength(5));
       await _close(t, c);
     });
 
@@ -549,9 +660,11 @@ void main() {
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
       final cw = deal.poles[0].fault == M3CrossarmFault.bentArm ? M3CrossarmCheckLines.coworkerBent : M3CrossarmCheckLines.coworkerRust;
+      await waitChoiceDeck(t);
       final wrong = _onScreen(cw.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);

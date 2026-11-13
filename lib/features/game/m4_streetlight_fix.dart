@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart' show HintSpec, IdleHintController;
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -74,9 +75,16 @@ export 'm4_streetlight_fix_world.dart' show M4StreetlightFixGeo, M4StreetlightFi
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, the
 // full scene (m4_streetlight_fix_world.dart), corner guide, ◆ on the table →
 // "কেন …?" at each station's end; the careless coworker once a play, at the
-// pillar before the MCB is off. Voice: the guide by device TTS; the
-// coworker's new push by device TTS until recorded (his exit line is his
-// existing recorded clip).
+// pillar while this light's MCB is still ON ("no MCB") — or, when it was
+// off before he came, at the top before the tester ("no tester"). The climb
+// (footpath) and the tester / a terminal / a part (top) wait for him
+// (holdForCoworker), so a fast play cannot skip him, and his line always
+// fits the MCB as it stands. The scene takes no touch in the praise window
+// (tableBusy) nor in the beat after a reason; the job is signed off only with
+// the light burning. The tool rows are dealt in a fresh order; gesture hints
+// sweep over everything a hand can work (never one answer). Voice: the guide
+// by device TTS; his two pushes have no recorded clip yet (silent, caption
+// held); his exit line is his existing recorded clip.
 
 // ============================================================================
 // Content
@@ -104,7 +112,7 @@ abstract final class M4StreetlightFixLines {
   // The guide's task now (tap him: the same task, a different way).
   static const askBase = 'ওঠার আগে নিচের কাজ গুছিয়ে নিন।';
   static const askClimb = 'সব তৈরি? এবার ওপরে।';
-  static const askProve = 'ফিক্সচারে হাত দেওয়ার আগে কী করবেন?';
+  static const askProve = 'ওপরে পৌঁছেছেন — এবার নিরাপদে কাজ শুরু করুন।';
   static const askLive = 'লাইভ! হাত নয় — আগে লাইনটা বিচ্ছিন্ন।';
   static const askFix = 'ভেতরটা দেখে মেরামত করুন।';
   static const askDown = 'মেরামত শেষ — এবার নিচে।';
@@ -218,32 +226,32 @@ abstract final class M4StreetlightFixMistakes {
   static const _dir = 'assets/game/art/m4_streetlight_fix';
 
   static const touchLive = DoMistake(
-    key: '4.9/streetlight_fix/touch-live',
+    key: '4.9/m4_streetlight_fix/touch-live',
     textBn: 'হোল্ডার আর টার্মিনাল লাইভ ছিল! আগে ওই লাইটের MCB বন্ধ, তারপর টেস্টারে ভোল্টেজ নেই দেখে তবে হাত।',
     art: '$_dir/live_holder.svg',
     deadly: true,
     lessonPoint: 2,
   );
   static const noProve = DoMistake(
-    key: '4.9/streetlight_fix/not-proven-dead',
+    key: '4.9/m4_streetlight_fix/not-proven-dead',
     textBn: 'MCB নামানোই যথেষ্ট নয় — হাত দেওয়ার আগে টেস্টারে দেখুন ফিক্সচারে ভোল্টেজ নেই। অনুমান নয়, পরীক্ষা।',
     art: '$_dir/test_first.svg',
     lessonPoint: 2,
   );
   static const spotLine = DoMistake(
-    key: '4.9/streetlight_fix/ladder-by-line',
+    key: '4.9/m4_streetlight_fix/ladder-by-line',
     textBn: 'এদিকে মইয়ের মাথা ওভারহেড লাইনের একদম কাছে। মই রাখুন লাইন থেকে নিরাপদ দূরত্বে।',
     art: '$_dir/ladder_line.svg',
     lessonPoint: 2,
   );
   static const spotSlab = DoMistake(
-    key: '4.9/streetlight_fix/ladder-on-broken-slab',
+    key: '4.9/m4_streetlight_fix/ladder-on-broken-slab',
     textBn: 'ভাঙা স্ল্যাবে মই টলবে। মই দাঁড় করান শক্ত, সমান জায়গায় — প্ল্যাটফর্ম স্থিতিশীল চাই।',
     art: '$_dir/ladder_slab.svg',
     lessonPoint: 2,
   );
   static const noTie = DoMistake(
-    key: '4.9/streetlight_fix/ladder-untied',
+    key: '4.9/m4_streetlight_fix/ladder-untied',
     textBn: 'মই আগে খুঁটির সঙ্গে বেঁধে নিন — না-বাঁধা মই পিছলে যেতে পারে। প্ল্যাটফর্ম সুরক্ষিত চাই।',
     art: '$_dir/ladder_tie.svg',
     lessonPoint: 2,
@@ -251,42 +259,54 @@ abstract final class M4StreetlightFixMistakes {
   // Helmet + harness for anyone going up: the module's rule (the brief), not
   // lesson 4.9's text — no lesson point.
   static const noHarness = DoMistake(
-    key: '4.9/streetlight_fix/no-harness',
+    key: '4.9/m4_streetlight_fix/no-harness',
     textBn: 'ওপরে উঠতে হেলমেট আর সেফটি হারনেস চাই — হারনেস না পরে মইয়ে উঠবেন না।',
     art: '$_dir/harness.svg',
   );
   static const noTighten = DoMistake(
-    key: '4.9/streetlight_fix/part-before-tighten',
+    key: '4.9/m4_streetlight_fix/part-before-tighten',
     textBn: 'পার্ট বদলের আগে কানেকশন দেখে টাইট দিন — বেশিরভাগ সমস্যা ঢিলা বা ক্ষয়ে যাওয়া কানেকশনে।',
     art: '$_dir/loose_terminal.svg',
     lessonPoint: 1,
   );
   static const wrongLamp = DoMistake(
-    key: '4.9/streetlight_fix/wrong-lamp-for-ballast',
+    key: '4.9/m4_streetlight_fix/wrong-lamp-for-ballast',
     textBn: 'ব্যালাস্টে লেখা ধরন আর ওয়াটের ল্যাম্পই লাগান — ভুল জুটিতে ল্যাম্প জ্বলবে না বা দ্রুত নষ্ট হবে।',
     art: '$_dir/part_match.svg',
     lessonPoint: 0,
   );
   static const wrongKind = DoMistake(
-    key: '4.9/streetlight_fix/wrong-kind',
+    key: '4.9/m4_streetlight_fix/wrong-kind',
     textBn: 'ভেতরের গিয়ার দেখে পার্ট বাছুন: ব্যালাস্ট থাকলে মিলিয়ে ল্যাম্প, এলইডি ড্রাইভার থাকলে মডিউল আর ড্রাইভার।',
     art: '$_dir/part_match.svg',
     lessonPoint: 0,
   );
   static const wrongPhotocell = DoMistake(
-    key: '4.9/streetlight_fix/photocell-not-the-fault',
-    textBn: 'ফটোসেল খারাপ হলে লাইট দিন-রাত জ্বলে। এখানে তা নয় — সাপ্লাই ঠিক, তাই ল্যাম্প বা ড্রাইভার।',
+    key: '4.9/m4_streetlight_fix/photocell-not-the-fault',
+    textBn: 'লাইট দিন-রাত জ্বলতে থাকলে তবে ফটোসেল দেখা হয়। ডকেটের সমস্যা অন্য — আগে ল্যাম্প বদলে দেখা, এলইডি-তে মডিউল আর ড্রাইভার।',
     art: '$_dir/part_match.svg',
     lessonPoint: 1,
   );
   static const dustbin = DoMistake(
-    key: '4.9/streetlight_fix/lamp-in-dustbin',
+    key: '4.9/m4_streetlight_fix/lamp-in-dustbin',
     textBn: 'পুরনো ল্যাম্পে পারদ বা অন্য বিপজ্জনক পদার্থ থাকতে পারে — ডাস্টবিনে নয়, নিয়ম অনুযায়ী আলাদা জমা।',
     art: '$_dir/scrap_box.svg',
     lessonPoint: 2,
   );
 
-  static List<DoMistake> get all => const [touchLive, noProve, spotLine, spotSlab, noTie, noHarness, noTighten, wrongLamp, wrongKind, wrongPhotocell, dustbin];
+  /// Every mistake this level can catch.
+  static List<DoMistake> get caught => const [touchLive, noProve, spotLine, spotSlab, noTie, noHarness, noTighten, wrongLamp, wrongKind, wrongPhotocell, dustbin];
+
+  /// The keys before 2026-11-11 (`4.9/streetlight_fix/…`): saved mistakes
+  /// under them keep their picture and text in the mistakes book.
+  static const legacyPrefix = '4.9/streetlight_fix/';
+  static List<DoMistake> get legacy => [
+        for (final m in caught)
+          DoMistake(key: m.key.replaceFirst('4.9/m4_streetlight_fix/', legacyPrefix), textBn: m.textBn, art: m.art, deadly: m.deadly, lessonPoint: m.lessonPoint),
+      ];
+
+  /// What the mistakes book registers: the current keys and their old aliases.
+  static List<DoMistake> get all => [...caught, ...legacy];
 }
 
 @immutable
@@ -385,6 +405,10 @@ class M4StreetlightFixRun {
 
   /// MCB of this light was off at the first climb (the isolate reason fits).
   var isolatedAtClimb = false;
+
+  /// The neighbour's MCB was off at the first climb (an over-wide isolation:
+  /// the base station is then not clean, so no +5).
+  var wideAtClimb = false;
   var proved = false;
   var liveSeen = false;
   var tightened = false;
@@ -472,12 +496,14 @@ class M4StreetlightFixRun {
     if (!climbed) {
       climbed = true;
       isolatedAtClimb = !live;
+      wideAtClimb = !otherOn;
     }
     return null;
   }
 
   /// First climb done: the base station is over.
   void toTop() {
+    if (!_open) return;
     station = M4StreetlightFixStation.top;
     stationSlips = 0;
   }
@@ -560,17 +586,26 @@ class M4StreetlightFixRun {
     return _slip(M4StreetlightFixMistakes.dustbin);
   }
 
-  void finish() => done = true;
+  /// The job is signed off — only with the light burning, both MCBs ON and
+  /// the old lamp in the crate. False = not now (nothing changes).
+  bool finish() {
+    if (!_open || !finishReady) return false;
+    done = true;
+    return true;
+  }
 
   /// Fails the play (listening to the coworker): he climbs and touches it live.
   void failDeadly(DoMistake m) {
+    if (!_open) return;
     ladder ??= deal.goodSide;
     up = true;
     deadly = m;
   }
 
-  /// Listened to "no tester" at the top: a hand inside, untested.
-  DoMistake listenTop() {
+  /// Listened to "no tester" at the top: a hand inside, untested. Null =
+  /// the play has already ended (nothing changes).
+  DoMistake? listenTop() {
+    if (!_open) return null;
     if (live) return deadly = M4StreetlightFixMistakes.touchLive;
     return _slip(M4StreetlightFixMistakes.noProve);
   }
@@ -668,7 +703,7 @@ class _FixRunPage extends ConsumerStatefulWidget {
 class _FixRunPageState extends ConsumerState<_FixRunPage>
     with DoDeathGuard, DoStrikeOut, TickerProviderStateMixin, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
-  late final M4StreetlightFixRun _run = M4StreetlightFixRun(m4StreetlightFixDeal(widget.rng));
+  late final M4StreetlightFixRun _run;
   final _clock = Stopwatch();
   late bool _muted = widget.muted;
   final _wrongBag = LineBag(LearnFeedbackLines.wrong);
@@ -698,6 +733,29 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
   Completer<void>? _frozen;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
+
+  /// Gesture hints (how to touch, never what) and what they measure.
+  final _hints = IdleHintController();
+  final _touchKey = GlobalKey();
+  final _insideKey = GlobalKey();
+  final _baseKeys = List.generate(3, (_) => GlobalKey());
+  final _topKeys = List.generate(3, (_) => GlobalKey());
+  final _partKeys = {for (final p in M4StreetlightFixPart.values) p: GlobalKey()};
+  M4StreetlightFixGeo? _geo;
+
+  /// The tool rows are dealt in a fresh order each play (a row laid out in
+  /// the work's order would tell the order).
+  late final List<int> _baseOrder;
+  late final List<int> _topOrder;
+
+  @override
+  void initState() {
+    super.initState();
+    // The deal draws first (seeded plays keep their light), then the rows.
+    _run = M4StreetlightFixRun(m4StreetlightFixDeal(widget.rng));
+    _baseOrder = [0, 1, 2]..shuffle(widget.rng);
+    _topOrder = [0, 1, 2]..shuffle(widget.rng);
+  }
 
   @override
   LevelContext get deathCtx => widget.ctx;
@@ -742,7 +800,10 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
     unawaited(_sayChain([_task]));
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_freeze;
+  /// Hands on: no intro, card, deck, freeze, coworker, praise window
+  /// (tableBusy) — nor the beat after a station's reason (`_asking`), so the
+  /// MCB cannot go back OFF between the light coming on and the sign-off.
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && _asking == null && !coworkerOpen && !_freeze;
 
   String get _task {
     final r = _run;
@@ -770,13 +831,19 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
   /// (as the work starts), or else at the top before the tester.
   var _coworkerAtTop = false;
   void _armCoworker() {
-    if (coworkerDone || _coworkerArmed || _run.station != M4StreetlightFixStation.base || !_run.live) return;
-    _coworkerArmed = true;
+    if (coworkerDone || coworkerDue || _run.station != M4StreetlightFixStation.base || !_run.live) return;
     _coworkerAtTop = false;
     scheduleCoworker();
   }
 
-  var _coworkerArmed = false;
+  /// His top push was dropped (he found the MCB ON with the player up): once
+  /// this light's MCB is OFF again before anything is proven, he is called again.
+  void _rearmCoworkerTop() {
+    final r = _run;
+    if (!_coworkerAtTop || coworkerDone || coworkerDue) return;
+    if (r.station != M4StreetlightFixStation.top || r.live || r.proved || r.liveSeen || r.fitted != null) return;
+    scheduleCoworker();
+  }
 
   void _hold(M4StreetlightFixTool t) {
     if (!_canPlay) return;
@@ -823,6 +890,8 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
 
   void _useTester() {
     if (!_canPlay || !_run.up) return;
+    // "No tester" is his push at the top: he comes before the reading.
+    if (holdForCoworker()) return;
     _tick('sounds/intro/click.ogg', 0.5);
     final live = _run.test();
     _testerTimer?.cancel();
@@ -847,6 +916,8 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
       _maybeNextTask();
       return;
     }
+    // "No MCB, climb up" is his push on the footpath: he comes before the climb.
+    if (!_coworkerAtTop && holdForCoworker()) return;
     _tick('sounds/intro/click.ogg', 0.5);
     final m = _run.climb();
     setState(() => _wake++);
@@ -856,7 +927,8 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
     }
     if (_run.up && _run.station == M4StreetlightFixStation.base) {
       _run.toTop();
-      _stationDone(M4StreetlightFixStation.base, clean: _cleanBase);
+      // The neighbour's MCB off as well (or instead) is over-wide: no clean +5.
+      _stationDone(M4StreetlightFixStation.base, clean: _cleanBase && !_run.wideAtClimb);
       return;
     }
     if (_run.up) _maybeNextTask();
@@ -870,14 +942,17 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
   }
 
   void _tapScene(Offset p, M4StreetlightFixGeo geo, Offset global) {
-    if (_intro || _ended || _card != null || reasonOpen || _freeze) return;
+    // While he talks, the answer is on the deck; in the praise window and the
+    // beat after a reason the street takes no touch.
+    if (!_canPlay) return;
     final r = _run;
-    final mine = r.deal.mineSlot;
-    // While he talks, the answer is on the deck.
-    if (coworkerOpen) return;
     if (r.up) {
       final l = r.ladder;
-      if (l != null && geo.ladderHit(l).contains(p)) _climbOrDown();
+      if (l != null && geo.ladderHit(l).contains(p)) {
+        _climbOrDown();
+      } else {
+        _hints.missTap();
+      }
       return;
     }
     // The old lamp in hand: the crate or the bin.
@@ -915,12 +990,16 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
     }
     for (var s = 0; s < 2; s++) {
       if (geo.mcbHit(s).contains(p)) {
-        if (s != mine) _armCoworker();
         if (r.toggleMcb(s)) {
           _tick('sounds/intro/impact_metal.ogg', 0.5);
         } else {
           _tick('sounds/intro/click.ogg', 0.3);
         }
+        // Armed only while this light's MCB stands ON (after the switch): the
+        // neighbour's MCB, or this one switched back ON, still calls him; this
+        // one switched OFF leaves him for the top ("no tester").
+        _armCoworker();
+        _rearmCoworkerTop();
         setState(() => _wake++);
         if (r.lightOn && r.station == M4StreetlightFixStation.finish) _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
         _checkFinish();
@@ -928,14 +1007,22 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
       }
     }
     final l = r.ladder;
-    if (l != null && geo.ladderHit(l).contains(p)) {
-      if (r.station != M4StreetlightFixStation.finish) _climbOrDown();
+    if (l != null && geo.ladderHit(l).contains(p) && r.station != M4StreetlightFixStation.finish) {
+      _climbOrDown();
       return;
     }
+    _hints.missTap();
   }
 
   void _tapTerminal(int i, Offset global) {
     if (!_canPlay || !_run.up) return;
+    if (_run.tool != M4StreetlightFixTool.driver) {
+      // A bare finger on the block does nothing (the screwdriver works it).
+      _hints.missTap();
+      return;
+    }
+    // A hand inside is what he pushes at the top: he comes first.
+    if (holdForCoworker()) return;
     _tick();
     final was = _run.tightened;
     final m = _run.tighten(i);
@@ -952,6 +1039,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
 
   void _fit(M4StreetlightFixPart p, Offset global) {
     if (!_canPlay || !_run.up || _run.fitted != null) return;
+    if (holdForCoworker()) return;
     _tick('sounds/quiz_select.wav');
     final m = _run.fit(p);
     setState(() => _wake++);
@@ -1009,14 +1097,20 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
       if (!mounted || _ended || _asking != s) return;
       _asking = null;
       if (s == M4StreetlightFixStation.finish) {
-        setState(_run.finish);
-        unawaited(_finish());
-        return;
+        // Signed off only as the street stands: light on, both MCBs ON, the
+        // old lamp in the crate (the scene took no touch since it was so).
+        var signed = false;
+        setState(() => signed = _run.finish());
+        if (signed) {
+          unawaited(_finish());
+          return;
+        }
       }
       setState(() => _wake++);
       _lastTask = _task;
       unawaited(_sayChain([_task]));
-      if (s == M4StreetlightFixStation.base && !coworkerDone) {
+      // "MCB তো নামিয়েছ" only fits when this light's MCB is off.
+      if (s == M4StreetlightFixStation.base && !coworkerDone && !_run.live) {
         _coworkerAtTop = true;
         scheduleCoworker();
       }
@@ -1035,11 +1129,19 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
     final r = _run;
     if (_ended) return null;
     if (_coworkerAtTop) {
-      if (!r.up || r.station != M4StreetlightFixStation.top || r.proved || r.liveSeen || r.fitted != null) return null;
+      // "MCB তো নামিয়েছ — আবার টেস্টার কেন?": only while this light's MCB
+      // is off and nothing is proven or touched yet.
+      if (r.station != M4StreetlightFixStation.top || r.proved || r.liveSeen || r.fitted != null) return null;
+      // Down the ladder for a moment (perhaps at the MCBs): he waits until the
+      // player is back up, so an MCB ON-then-OFF on the footpath cannot drop him.
+      if (!r.up) return false;
+      // Up with this light's MCB ON: his line no longer fits; the tester reads LIVE.
+      if (r.live) return null;
     } else if (r.station != M4StreetlightFixStation.base || r.up || !r.live) {
+      // "কোনো দরকার নেই MCB নামানোর!": only on the footpath with it still ON.
       return null;
     }
-    if (_intro || _card != null || reasonOpen || _freeze || _tester != null) return false;
+    if (_intro || _card != null || tableBusy || _asking != null || _freeze || _tester != null) return false;
     return true;
   }
 
@@ -1055,7 +1157,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
         // Listened: a hand inside, untested (live = deadly; dead = a slip).
         final m = _run.listenTop();
         setState(() => _wake++);
-        await _mistake(m, origin);
+        if (m != null) await _mistake(m, origin);
         return;
       }
       // Listened to him: up the ladder, a hand on the live lamp holder.
@@ -1082,6 +1184,88 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
             : _nudge.next(_task);
     _tick('sounds/intro/tick.ogg', 0.5);
     unawaited(_sayChain([line]));
+  }
+
+  // --- gesture hints (how, never what) -----------------------------------------
+  /// While a card waits: a tap on its one way forward. On the footpath: a
+  /// sweep over everything a hand can work there (both MCBs, the tools, both
+  /// ladder spots, the ladder, the crate and the bin) — the same for each. At
+  /// the top: a sweep over the tools, the three terminals and the parts. The
+  /// decks bring their own sweep.
+  HintSpec? _hint() {
+    if (_card != null) {
+      final r = _cardGoRect();
+      return r == null ? null : HintSpec.tap(r.center);
+    }
+    final r = _run;
+    final rects = <Rect>[];
+    void key(GlobalKey k) {
+      final g = HintSpec.globalRectOf(k);
+      if (g != null) rects.add(g);
+    }
+
+    if (r.up) {
+      for (final k in _topKeys) {
+        key(k);
+      }
+      final box = _insideKey.currentContext?.findRenderObject();
+      if (box is RenderBox && box.attached && box.hasSize) {
+        for (var i = 0; i < 3; i++) {
+          final t = M4StreetlightFixInsideGeo.terminalHit(i, box.size);
+          rects.add(Rect.fromPoints(box.localToGlobal(t.topLeft), box.localToGlobal(t.bottomRight)));
+        }
+      }
+      for (final p in r.deal.parts) {
+        key(_partKeys[p]!);
+      }
+    } else {
+      final geo = _geo;
+      final box = _touchKey.currentContext?.findRenderObject();
+      if (geo != null && box is RenderBox && box.attached && box.hasSize) {
+        final scene = <Rect>[
+          geo.mcbHit(0),
+          geo.mcbHit(1),
+          if (r.tool == M4StreetlightFixTool.ladder && r.ladder == null)
+            for (final s in M4StreetlightFixSide.values) geo.spotHit(s),
+          if (r.ladder != null && r.station != M4StreetlightFixStation.finish) geo.ladderHit(r.ladder!),
+          if (r.oldInHand) ...[geo.crateHit, geo.dustbinHit],
+        ];
+        for (final s in scene) {
+          rects.add(Rect.fromPoints(box.localToGlobal(s.topLeft), box.localToGlobal(s.bottomRight)));
+        }
+      }
+      if (r.station != M4StreetlightFixStation.finish) {
+        for (final k in _baseKeys) {
+          key(k);
+        }
+      }
+    }
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
+  /// The card's go button (the shared card has no key: find its label).
+  Rect? _cardGoRect() {
+    final label = switch (_cardTone) {
+      MistakeTone.slip => MistakeLines.gotIt,
+      MistakeTone.nearMiss => MistakeLines.tryAgain,
+      MistakeTone.deadly => MistakeLines.toLadder,
+    };
+    Rect? out;
+    void visit(Element e, bool inCard) {
+      if (out != null) return;
+      final w = e.widget;
+      final here = inCard || w is MistakeCard;
+      if (here && w is Text && w.data == label) {
+        final b = e.findRenderObject();
+        if (b is RenderBox && b.attached && b.hasSize) out = b.localToGlobal(Offset.zero) & b.size;
+        return;
+      }
+      e.visitChildren((c) => visit(c, here));
+    }
+
+    if (!mounted) return null;
+    (context as Element).visitChildren((c) => visit(c, false));
+    return out;
   }
 
   // --- mistakes ---------------------------------------------------------------
@@ -1251,7 +1435,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
       );
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M4StreetlightFixGeo.forScene(m.height, m.inset);
+    final geo = _geo = M4StreetlightFixGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final l = _run.ladder;
@@ -1308,7 +1492,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: M4StreetlightFixLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
+          child: GestureDetector(key: _touchKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
         ),
       ),
       if (_freeze)
@@ -1335,6 +1519,21 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
     final handsOn = playing && !deckUp && !coworkerOpen && _card == null;
     final r = _run;
     final cardUp = playing && r.up && _card == null;
+    // The hand shows only while the level waits for a touch: not in the
+    // intro, the praise window, a deck, the coworker's beats, a freeze or the
+    // result; on a slip card it taps the one way forward.
+    final sceneWaits = handsOn && !tableBusy && _asking == null && !coworkerOnScreen;
+    final cardWaits = _card != null && !_freeze && !struckOut && _mark == null;
+    final baseTools = [
+      _ToolButton(key: _baseKeys[0], icon: Icons.stairs_rounded, label: M4StreetlightFixLines.ladder, on: r.tool == M4StreetlightFixTool.ladder || r.ladder != null, onTap: () => _hold(M4StreetlightFixTool.ladder)),
+      _ToolButton(key: _baseKeys[1], icon: Icons.link_rounded, label: M4StreetlightFixLines.rope, on: r.tied, onTap: _tie),
+      _ToolButton(key: _baseKeys[2], icon: Icons.accessibility_new_rounded, label: M4StreetlightFixLines.harness, on: r.harness, onTap: _harness),
+    ];
+    final topTools = [
+      _ToolButton(key: _topKeys[0], icon: Icons.flash_on_rounded, label: M4StreetlightFixLines.tester, on: _tester != null, onTap: _useTester),
+      _ToolButton(key: _topKeys[1], icon: Icons.construction_rounded, label: M4StreetlightFixLines.driver, on: r.tool == M4StreetlightFixTool.driver, onTap: () => _hold(M4StreetlightFixTool.driver)),
+      _ToolButton(key: _topKeys[2], icon: Icons.south_rounded, label: M4StreetlightFixLines.down, on: false, onTap: _climbOrDown),
+    ];
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1362,6 +1561,12 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: sceneWaits || cardWaits,
+            hintKey: _card != null
+                ? 'card-${_card!.key}-$strikes'
+                : 'play-${r.station.index}-${r.up}-${r.tool.name}-${r.ladder?.name}-${r.tied}-${r.harness}-${r.oldInHand}-${r.tightened}-${r.live}',
+            hintController: _hints,
             overlays: [
               if (playing && !r.up && !coworkerOpen)
                 Positioned(
@@ -1383,8 +1588,11 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
                     fitted: r.fitted,
                     enabled: handsOn,
                     quiet: quiet,
+                    insideKey: _insideKey,
+                    partKeys: _partKeys,
                     onTerminal: _tapTerminal,
                     onPart: _fit,
+                    onMiss: _hints.missTap,
                   ),
                 ),
               if (_tester != null && !_freeze && r.up)
@@ -1403,11 +1611,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
                   bottom: pad.bottom + 8,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _ToolButton(icon: Icons.stairs_rounded, label: M4StreetlightFixLines.ladder, on: r.tool == M4StreetlightFixTool.ladder || r.ladder != null, onTap: () => _hold(M4StreetlightFixTool.ladder)),
-                      _ToolButton(icon: Icons.link_rounded, label: M4StreetlightFixLines.rope, on: r.tied, onTap: _tie),
-                      _ToolButton(icon: Icons.accessibility_new_rounded, label: M4StreetlightFixLines.harness, on: r.harness, onTap: _harness),
-                    ],
+                    children: [for (final i in _baseOrder) baseTools[i]],
                   ),
                 ),
               if (handsOn && r.up)
@@ -1418,11 +1622,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
                   bottom: pad.bottom + 8,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _ToolButton(icon: Icons.flash_on_rounded, label: M4StreetlightFixLines.tester, on: _tester != null, onTap: _useTester),
-                      _ToolButton(icon: Icons.construction_rounded, label: M4StreetlightFixLines.driver, on: r.tool == M4StreetlightFixTool.driver, onTap: () => _hold(M4StreetlightFixTool.driver)),
-                      _ToolButton(icon: Icons.south_rounded, label: M4StreetlightFixLines.down, on: false, onTap: _climbOrDown),
-                    ],
+                    children: [for (final i in _topOrder) topTools[i]],
                   ),
                 ),
               if (deckUp)
@@ -1563,8 +1763,11 @@ class _FixtureCard extends StatelessWidget {
     required this.fitted,
     required this.enabled,
     required this.quiet,
+    required this.insideKey,
+    required this.partKeys,
     required this.onTerminal,
     required this.onPart,
+    required this.onMiss,
   });
   final String docket;
   final M4StreetlightFixInside inside;
@@ -1574,6 +1777,13 @@ class _FixtureCard extends StatelessWidget {
   final bool quiet;
   final void Function(int i, Offset global) onTerminal;
   final void Function(M4StreetlightFixPart p, Offset global) onPart;
+
+  /// The close-up (the hint measures the terminals on it) and the part chips.
+  final GlobalKey insideKey;
+  final Map<M4StreetlightFixPart, GlobalKey> partKeys;
+
+  /// A tap that hit no terminal.
+  final VoidCallback onMiss;
 
   @override
   Widget build(BuildContext context) {
@@ -1604,6 +1814,7 @@ class _FixtureCard extends StatelessWidget {
                 builder: (context, box) {
                   final s = Size(box.maxWidth, box.maxHeight);
                   return GestureDetector(
+                    key: insideKey,
                     behavior: HitTestBehavior.opaque,
                     onTapUp: (d) {
                       if (!enabled) return;
@@ -1613,6 +1824,7 @@ class _FixtureCard extends StatelessWidget {
                           return;
                         }
                       }
+                      onMiss();
                     },
                     child: RepaintBoundary(child: CustomPaint(size: s, painter: M4StreetlightFixInsidePainter(inside: inside))),
                   );
@@ -1624,7 +1836,7 @@ class _FixtureCard extends StatelessWidget {
               children: [
                 for (final (i, p) in parts.indexed) ...[
                   if (i > 0) const SizedBox(width: 6),
-                  Expanded(child: _PartChip(label: M4StreetlightFixLines.partBn(p), on: fitted == p, onTapUp: (d) => enabled ? onPart(p, d.globalPosition) : null)),
+                  Expanded(child: _PartChip(key: partKeys[p], label: M4StreetlightFixLines.partBn(p), on: fitted == p, onTapUp: (d) => enabled ? onPart(p, d.globalPosition) : null)),
                 ],
               ],
             ),
@@ -1636,7 +1848,7 @@ class _FixtureCard extends StatelessWidget {
 }
 
 class _PartChip extends StatelessWidget {
-  const _PartChip({required this.label, required this.on, required this.onTapUp});
+  const _PartChip({super.key, required this.label, required this.on, required this.onTapUp});
   final String label;
   final bool on;
   final GestureTapUpCallback onTapUp;
@@ -1717,7 +1929,7 @@ class _TesterChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;

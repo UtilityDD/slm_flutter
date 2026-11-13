@@ -4,11 +4,15 @@
 // breaker opened first + a slow turn), the deal, the option libraries, and the
 // level in the shell: idle perf, the guide first, a full clean play with the
 // coworker refused, a slip card, the deadly freezes (no gloves; the AB switch
-// on-load on his say-so).
+// on-load on his say-so), three slips strike out, he comes even on a fast play
+// (grip / call), the grip's beat takes no hook tap, gesture hints (the DO
+// stroke: a sweep over the stroke spot and the face button), the praise window
+// shuts the kit, the raise and his entry, no dead call button after listening.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,12 +21,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
+import 'package:slm_flutter/features/game/do_parts.dart' show DoBigButton;
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m2_hotstick_operate.dart';
 import 'package:slm_flutter/features/game/m2_hotstick_operate_world.dart';
 import 'package:slm_flutter/features/game/mistake_kit.dart';
+import 'package:slm_flutter/features/game/reason_table.dart';
 import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro;
 import 'package:slm_flutter/features/game/spoken_once.dart';
 import 'package:slm_flutter/features/guide/guide_director.dart';
@@ -31,6 +39,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(rungId: '2.5/do/1', kind: CatalogRungKind.doKind, lessonId: '2.5', lessonTitleBn: '', ladderStep: 0, doIndex: 2, doCount: 2);
 
@@ -61,16 +70,7 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -115,8 +115,7 @@ Future<void> _close(WidgetTester t, ProviderContainer c) async {
 
 Future<void> _refuse(WidgetTester t, CoworkerScript s) async {
   expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes');
-  await _pumpUntil(t, find.byType(ChoiceDeck));
-  await _pump(t, 600);
+  await waitChoiceDeck(t);
   await _pickRight(t, s.right);
   await _pump(t, 2000);
 }
@@ -168,8 +167,7 @@ Future<void> _playRight(WidgetTester t, HsDeal deal, int i) async {
   }
   await _pump(t, 600);
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'job $i');
-  await _pumpUntil(t, find.byType(ChoiceDeck));
-  await _pump(t, 700);
+  await waitChoiceDeck(t);
   await _pickRight(t, HsLines.whyRight(j));
   await _pump(t, 6000);
 }
@@ -377,6 +375,28 @@ void main() {
       }
       expect(HsLines.recordLines, hasLength(2));
     });
+
+    test('no giveaways: "না" is not only on his right cards; the too-far reply never names the side', () {
+      for (final s in [HsLines.coworkerDo, HsLines.coworkerAb]) {
+        expect(s.wrong.any((w) => w.startsWith('না')), isTrue, reason: s.line);
+        expect(s.right.every((r) => r.startsWith('না')), isFalse, reason: s.line);
+      }
+      expect(HsLines.tooFar, isNot(contains('পাশে')));
+      // The lesson's key words are on a wrong card too (no word-only-on-right tell).
+      for (final (s, words) in [
+        (HsLines.coworkerAb, ['ব্রেকার', 'আগে']),
+        (HsLines.coworkerDo, ['নিচে']),
+      ]) {
+        for (final w in words) {
+          expect(s.wrong.any((x) => x.contains(w)), isTrue, reason: w);
+        }
+      }
+    });
+
+    test('the AB on-load card follows the lesson ("মারাত্মকভাবে ক্ষতিগ্রস্ত", not "শেষ")', () {
+      expect(HsMistakes.onLoadAb.textBn, contains('মারাত্মকভাবে ক্ষতিগ্রস্ত'));
+      expect(HsMistakes.onLoadAb.textBn, isNot(contains('শেষ')));
+    });
   });
 
   group('page', () {
@@ -431,7 +451,7 @@ void main() {
         }
         debugPrint('PERF m2_hotstick_operate ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -551,12 +571,15 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(HsLines.coworkerAb.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await tapReasonProceed(t);
       await _pump(t, 1500);
       // He works on as told: ready, rod up, grip, hook, turn — no call.
       final j = deal.jobs[deal.callAt];
+      expect(_label(HsLines.offload), findsNothing, reason: 'no dead call button after listening');
       await _prep(t, j);
       expect(find.text(HsLines.offloadDone), findsNothing);
       await t.tap(find.text(HsLines.raise));
@@ -572,6 +595,210 @@ void main() {
       final s = c.read(gameSaveProvider);
       expect(s.mistakes.last.key, HsMistakes.onLoadAb.key);
       expect(s.mistakes.last.deadly, isTrue);
+      await _close(t, c);
+    });
+
+    Future<void> gotIt(WidgetTester t) async {
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 800);
+    }
+
+    Future<void> standAside(WidgetTester t, HsJob j) async {
+      await _prep(t, j);
+      await t.tap(find.text(HsLines.raise));
+      await _pump(t, 500);
+      await t.tapAt(_screen(Offset(HsGeo.phaseX[j.phase] - 70, _geo.groundY + 20)));
+    }
+
+    Future<void> gripAbove(WidgetTester t) async {
+      final r = t.getRect(find.byKey(const ValueKey('grip-rod')));
+      await t.tapAt(Offset(r.center.dx, r.top + r.height * 0.1));
+      await _pump(t, 200);
+      await t.tapAt(Offset(r.center.dx, r.top + r.height * 0.25));
+    }
+
+    testWidgets('three slips (wrong head, under the fuse, a hand above the guard): struck out', (t) async {
+      final seed = seedWhere((d) => d.jobs[0].isDo && d.callAt != 0);
+      final j = dealHotstick(math.Random(seed)).jobs[0];
+      final c = await _open(t, seed);
+      for (final l in [HsLines.gloves, HsLines.shield, HsLines.lock, HsLines.socket, HsLines.offload]) {
+        await t.tap(_label(l));
+        await _pump(t, 150);
+      }
+      await t.tap(find.text(HsLines.raise));
+      await _pump(t, 900);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'a socket on a DO fuse');
+      await gotIt(t);
+      await t.tapAt(_screen(Offset(HsGeo.phaseX[j.phase], _geo.groundY + 20)));
+      await _pump(t, 900);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'under the fuse');
+      await gotIt(t);
+      expect(await _pumpUntil(t, find.byKey(const ValueKey('grip-rod')), maxMs: 3000), isTrue);
+      await gripAbove(t);
+      await _pump(t, 1200);
+      expect(find.byType(StruckOutCard), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.map((m) => m.key).toSet(), {HsMistakes.badHead.key, HsMistakes.underFuse.key, HsMistakes.aboveGuard.key});
+      expect(s.rungProgress['2.5/do/1'], isNot('cleared'));
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast play: two quick hands on the grip wait for him (DO)', (t) async {
+      final seed = seedWhere((d) => d.jobs[0].isDo && d.callAt == 0);
+      final j = dealHotstick(math.Random(seed)).jobs[0];
+      final c = await _open(t, seed);
+      await standAside(t, j);
+      await _pump(t, 400);
+      // Well before his 1.2 s timer: both hands at once.
+      final r = t.getRect(find.byKey(const ValueKey('grip-rod')));
+      await t.tapAt(Offset(r.center.dx, r.bottom - r.height * 0.14));
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tapAt(Offset(r.center.dx, r.bottom - r.height * 0.32));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the first hand waited for him');
+      expect(find.byKey(const ValueKey('hud-face')), findsNothing);
+      await _refuse(t, HsLines.coworkerDo);
+      expect(await _pumpUntil(t, find.byKey(const ValueKey('grip-rod')), maxMs: 3000), isTrue, reason: 'back to the grip');
+      await _gripRight(t);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await t.tapAt(_screen(hsTargetOf(_geo, j, open: j.kind == HsKind.doClose)));
+      await _pump(t, 500);
+      expect(find.byKey(const ValueKey('hud-face')), findsOneWidget, reason: 'on to the stroke');
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast play: the breaker call at once waits for him (AB)', (t) async {
+      final seed = seedWhere((d) => !d.jobs[0].isDo && d.callAt == 0);
+      final c = await _open(t, seed);
+      await t.tap(_label(HsLines.offload));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the call waited for him');
+      expect(find.text(HsLines.offloadDone), findsNothing);
+      await _refuse(t, HsLines.coworkerAb);
+      expect(find.text(HsLines.offloadDone), findsOneWidget, reason: 'refused: the call is made');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    testWidgets('listening at the grip is a slip (not deadly); the job goes on', (t) async {
+      final seed = seedWhere((d) => d.jobs[0].isDo && d.callAt == 0);
+      final j = dealHotstick(math.Random(seed)).jobs[0];
+      final c = await _open(t, seed);
+      await standAside(t, j);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(HsLines.coworkerDo.wrong);
+      expect(wrong, isNotEmpty);
+      await t.tap(wrong.first, warnIfMissed: false);
+      await tapReasonProceed(t);
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes.single.key, HsMistakes.aboveGuard.key);
+      await gotIt(t);
+      await t.tapAt(_screen(hsTargetOf(_geo, j, open: j.kind == HsKind.doClose)));
+      await _pump(t, 500);
+      expect(find.byKey(const ValueKey('hud-face')), findsOneWidget, reason: 'hook, then the stroke');
+      await _close(t, c);
+    });
+
+    testWidgets('the grip beat takes no hook tap: the hook waits until the card is read', (t) async {
+      final seed = seedWhere((d) => d.jobs[0].isDo && d.callAt != 0);
+      final j = dealHotstick(math.Random(seed)).jobs[0];
+      final c = await _open(t, seed);
+      await standAside(t, j);
+      await _pump(t, 900);
+      await gripAbove(t);
+      // Inside the 350 ms beat: a quick tap on the ring.
+      await t.pump(const Duration(milliseconds: 60));
+      await t.tapAt(_screen(hsTargetOf(_geo, j, open: j.kind == HsKind.doClose)));
+      await _pump(t, 900);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      await gotIt(t);
+      expect(find.byKey(const ValueKey('hud-face')), findsNothing, reason: 'the hook tap in the beat did not count');
+      await t.tapAt(_screen(hsTargetOf(_geo, j, open: j.kind == HsKind.doClose)));
+      await _pump(t, 500);
+      expect(find.byKey(const ValueKey('hud-face')), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, HsMistakes.aboveGuard.key);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over the kit after idle; taps on the sky call it at the stand step', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      const hand = ValueKey('gesture-hint');
+      final seed = seedWhere((d) => d.jobs[0].isDo && d.callAt != 0);
+      final j = dealHotstick(math.Random(seed)).jobs[0];
+      final c = await _open(t, seed);
+      expect(find.byKey(hand), findsNothing);
+      await _pump(t, 9000);
+      expect(find.byKey(hand), findsOneWidget, reason: 'idle in the kit step');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty, reason: 'a hint never presses anything');
+      expect(find.text(HsLines.offloadDone), findsNothing);
+      await _prep(t, j);
+      expect(find.byKey(hand), findsNothing, reason: 'any touch hides it');
+      await t.tap(find.text(HsLines.raise));
+      await _pump(t, 1500);
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(_screen(Offset(60, _geo.armY - 60)));
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(find.byKey(hand), findsOneWidget, reason: 'taps on the sky call the hand');
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints at a DO stroke: a sweep over the stroke spot and the face button, never a lone drag', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = seedWhere((d) => d.jobs[0].isDo && d.callAt != 0);
+      final j = dealHotstick(math.Random(seed)).jobs[0];
+      final c = await _open(t, seed);
+      await standAside(t, j);
+      await _pump(t, 900);
+      await _gripRight(t);
+      await t.tapAt(_screen(hsTargetOf(_geo, j, open: j.kind == HsKind.doClose)));
+      await _pump(t, 500);
+      expect(find.byKey(const ValueKey('hud-face')), findsOneWidget);
+      final faceRect = t.getRect(find.byKey(const ValueKey('hud-face')));
+      final sceneHint = find.byType(IdleHint).first;
+      HintSpec spec() => t.widget<IdleHint>(sceneHint).spec(Size.zero)!;
+      // Before the face is aside: a sweep over the stroke spot and the face button alike.
+      final sweep = spec();
+      expect(sweep.kind, HintKind.sweep);
+      expect(sweep.options, hasLength(2));
+      expect(sweep.options.where((r) => r.overlaps(faceRect)), hasLength(1), reason: 'the face button is one of the two');
+      final hint = t.state<IdleHintState>(sceneHint);
+      await _pump(t, 9000);
+      expect(hint.showing, isTrue, reason: 'idle at the stroke');
+      expect(hint.debugOptions, hasLength(2));
+      // Face aside: now the stroke is the one way on — a short drag nudge.
+      await t.tap(_label(HsLines.faceAside));
+      await _pump(t, 200);
+      final drag = spec();
+      expect(drag.kind, HintKind.drag);
+      expect(drag.travel, lessThanOrEqualTo(HintSpec.maxDragTravel));
+      expect(c.read(gameSaveProvider).mistakes, isEmpty, reason: 'a hint never presses anything');
+      await _close(t, c);
+    });
+
+    testWidgets('praise window: while the ◆ table holds, the kit, the raise and his entry are shut', (t) async {
+      final seed = seedWhere((d) => !d.jobs[0].isDo && d.callAt == 0);
+      final c = await _open(t, seed);
+      final st = t.allStates.whereType<ReasonTable>().single;
+      final cw = st as CoworkerMoment;
+      expect(cw.coworkerCanCome(), isTrue, reason: 'his AB moment, before the call');
+      GestureDetector glovesTap() => t.widget<GestureDetector>(find.descendant(of: _label(HsLines.gloves), matching: find.byType(GestureDetector)));
+      expect(glovesTap().onTap, isNotNull);
+      st.putOnTable(15);
+      await t.pump();
+      expect(st.tableHolding, isTrue);
+      expect(cw.coworkerCanCome(), isFalse, reason: 'he never cuts into the praise window');
+      expect(glovesTap().onTap, isNull, reason: 'the kit is shut');
+      // The raise without গ্লাভস would be deadly — straight past the frame's shield, it does nothing.
+      t.widget<DoBigButton>(find.byType(DoBigButton)).onTapUp(TapUpDetails(kind: PointerDeviceKind.touch, globalPosition: const Offset(196, 700)));
+      await _pump(t, 1500);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
       await _close(t, c);
     });
   });

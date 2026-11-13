@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="220" viewBox="0 0 200 220">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A3428"/><stop offset="1" stop-color="#221E17"/></linearGradient>
+<linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A3ACB4"/><stop offset="1" stop-color="#5E6870"/></linearGradient>
+<linearGradient id="cu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E7A86A"/><stop offset="1" stop-color="#B86C2C"/></linearGradient>
+<linearGradient id="meg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A23A"/><stop offset="1" stop-color="#C56E1C"/></linearGradient>
+<linearGradient id="mm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2D14A"/><stop offset="1" stop-color="#C9A322"/></linearGradient>
+<radialGradient id="flash"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.5" stop-color="#9CCBFF" stop-opacity="0.8"/><stop offset="1" stop-color="#508CFF" stop-opacity="0"/></radialGradient>
+<linearGradient id="soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A5A3A"/><stop offset="1" stop-color="#4A3422"/></linearGradient>
+</defs>
+<rect width="200" height="220" rx="18" fill="url(#bg)"/>
+<rect x="24" y="30" width="152" height="160" rx="10" fill="#F4EEDC"/><rect x="34" y="48" width="80" height="7" rx="3" fill="#7A6A52"/><rect x="34" y="66" width="104" height="7" rx="3" fill="#7A6A52"/><rect x="34" y="84" width="128" height="7" rx="3" fill="#7A6A52"/><rect x="34" y="102" width="130" height="7" rx="3" fill="none" stroke="#B8A888" stroke-dasharray="4 3"/><rect x="34" y="120" width="130" height="7" rx="3" fill="none" stroke="#B8A888" stroke-dasharray="4 3"/><rect x="34" y="138" width="130" height="7" rx="3" fill="none" stroke="#B8A888" stroke-dasharray="4 3"/><rect x="34" y="156" width="130" height="7" rx="3" fill="none" stroke="#B8A888" stroke-dasharray="4 3"/><rect x="34" y="174" width="130" height="7" rx="3" fill="none" stroke="#B8A888" stroke-dasharray="4 3"/><circle cx="160" cy="186" r="16" fill="#C8352C"/><path d="M152 178 L168 194 M168 178 L152 194" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>

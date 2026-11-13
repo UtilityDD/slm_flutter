@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -57,9 +58,20 @@ export 'm2_hydraulic_pick_world.dart' show HydFlaw, HydJob, HydKind;
 // injury, not a death, and none of its faults kill on the spot — every
 // mistake here is a slip (flagged to the owner in REGISTER.md).
 //
-// Voice: the guide's lines on device TTS; the coworker's new pushes on
-// device TTS in his voice settings until recorded (HydLines.recordLines);
-// his exit line is the already recorded "হুঁ! যা খুশি করুন।".
+// Voice: the guide's lines on device TTS; the coworker's three pushes have no
+// clip yet (HydLines.recordLines — the kit holds his caption, silent, until
+// they are recorded); his exit line is the recorded "হুঁ! যা খুশি করুন।".
+//
+// The coworker (audit 2026-11-11): the decisive controls (taking a tool that
+// is not the leaking one, holding the job, the stroke that would click) wait
+// for him while he is due and his push fits now, so a fast play never skips
+// him; they never wait on a move his line would give away (the leaking tool,
+// a die when the right one is lost). Going on with the right work while he
+// talks (pumping on, holding the job, taking a sound tool) refuses him;
+// letting go while he says "let go", putting in a die while he says "the near
+// one", or taking the leaking tool, is listening. Listening is always a slip.
+// Nothing in the scene takes a touch while a right move is being praised
+// ([ReasonTable.tableBusy]).
 
 // ============================================================================
 // Content
@@ -266,7 +278,8 @@ abstract final class HydLines {
   static const callHeld = 'ঠিক! চাপে পড়ে নিয়ম ছাড়েননি।';
   static const asideService = 'ঠিক — লিক বা আটকানো টুল সার্ভিসিং-এ।';
   static const asideCharge = 'ঠিক — চার্জ নেই, চার্জে দিন।';
-  static const putBackLine = 'ঠিক আছে, অন্যটা দেখুন।';
+  /// Neutral: said for a sound tool and an unexamined faulty one alike.
+  static const putBackLine = 'হুকে রাখলেন। ডকেট মিলিয়ে বাছুন।';
   static const allSet = 'দানবের যত্নে পাকা হাত! টুল, ডাই আর পুরো চাপ — সব ঠিক।';
   static const quick = 'নিখুঁত আর ঝটপট!';
   static const fail = 'আরেকবার — টুল যাচাই, ঠিক ডাই, পুরো চাপ।';
@@ -541,6 +554,34 @@ class HydRun {
     return _slip(HydMistakes.halfCrimp);
   }
 
+  /// Does what the coworker pushed (the player listened to him): take the
+  /// leaking tool, put in the near-size die, or let go before the click.
+  /// Listening is always a slip, even if the act itself can no longer be
+  /// done (the docket moved on meanwhile).
+  HydOutcome follow(HydPush p) {
+    final r = current;
+    HydOutcome? o;
+    switch (p) {
+      case HydPush.leak:
+        for (final t in r.tools) {
+          if (t.flaw == HydFlaw.leak && r.fits(t) && !rejected.contains(t.id)) {
+            o = take(t);
+            break;
+          }
+        }
+      case HydPush.die:
+        if (r.crimp && r.dies.isNotEmpty) o = pickDie(hydNearDie(r));
+      case HydPush.release:
+        o = release();
+    }
+    if (o != null && o.verdict == HydVerdict.slip) return o;
+    return _slip(switch (p) {
+      HydPush.leak => HydMistakes.leak,
+      HydPush.die => HydMistakes.wrongDie,
+      HydPush.release => HydMistakes.halfCrimp,
+    });
+  }
+
   /// The next docket (after the reason).
   void next() {
     round++;
@@ -564,10 +605,21 @@ HydPush? hydPushFor(HydRun run, {required HydPush prefer}) {
   final can = <HydPush>{
     if (run.stage == HydStage.tool && r.tools.any((t) => t.flaw == HydFlaw.leak && r.fits(t) && !run.rejected.contains(t.id))) HydPush.leak,
     if (run.stage == HydStage.die && r.dieMissing) HydPush.die,
-    if (run.stage == HydStage.work && r.crimp && run.pressure >= 1 && run.pressure <= kHydStrokes - 2) HydPush.release,
+    if (run.stage == HydStage.work && r.crimp && run.pressure >= 1 && run.pressure < kHydStrokes) HydPush.release,
   };
   if (can.contains(prefer)) return prefer;
   return can.isEmpty ? null : can.first;
+}
+
+/// Could one of his pushes still fit later on this docket? (A crimp: the lost
+/// die or letting go mid-pump is still ahead. A cut: only the leaking tool,
+/// which fits now or never.)
+bool hydPushLater(HydRun run) {
+  if (run.done || run.shown || !run.current.crimp) return false;
+  return switch (run.stage) {
+    HydStage.tool || HydStage.die => true,
+    HydStage.work => run.pressure < kHydStrokes,
+  };
 }
 
 /// The die nearest the docket's size still in the case (what he pushes).
@@ -663,6 +715,24 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how to interact, never which tool / die is right).
+  final _hints = IdleHintController();
+  final _zoomKey = GlobalKey();
+  final _bodyKey = GlobalKey();
+  final _tryKey = GlobalKey();
+  final _backKey = GlobalKey();
+  final _takeKey = GlobalKey();
+  final _caseKey = GlobalKey();
+  final _holdKey = GlobalKey();
+  final _leftKey = GlobalKey();
+  final _pumpKey = GlobalKey();
+
+  /// The scene's design height (the pegboard hooks for the sweep hint).
+  double _sceneH = 640;
+
+  /// The finger has run along the held tool's body.
+  var _felt = false;
+
   String get _rungId => widget.ctx.rungId;
 
   @override
@@ -719,7 +789,20 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _ended || _card != null || reasonOpen || _run.shown || struckOut;
+  /// The scene takes no input: intro, a card, the result, a decided docket,
+  /// or a right move being praised ([tableBusy] covers the praise window and
+  /// the reason deck).
+  bool get _blocked => _intro || _ended || _card != null || tableBusy || _run.shown || struckOut;
+
+  /// A decisive control waits for him while he is due and his push fits now
+  /// (a fast play never skips him).
+  bool _waitForHim() => hydPushFor(_run, prefer: _run.deal.push) != null && holdForCoworker();
+
+  /// He is talking (beat 1, before his deck is up).
+  bool get _beatOne => coworkerOpen && !coworkerChoiceUp;
+
+  /// The leaking tool for this docket, still on the board.
+  bool _leaking(HydTool t) => t.flaw == HydFlaw.leak && _run.current.fits(t) && !_run.rejected.contains(t.id);
 
   void _setMode(LinemanMode m) {
     _mode = m;
@@ -731,15 +814,18 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
     if (coworkerOpen && !coworkerChoiceUp) unawaited(answerCoworker(true, at, direct: true));
   }
 
-  /// A tool comes off the pegboard into the trainee's hands.
+  /// A tool comes off the pegboard into the trainee's hands. While he talks
+  /// the pegboard waits, the same for every hook (a different answer on one
+  /// hook would mark the leaking tool); his deck follows.
   void _pick(HydTool t, Offset at) {
-    if (!(_push == HydPush.leak && t.flaw == HydFlaw.leak)) _goOn(at);
-    if (_blocked || coworkerOpen || _held != null || _docketOpen || _run.stage != HydStage.tool || _run.rejected.contains(t.id)) return;
+    if (_blocked || coworkerOpen) return;
+    if (_held != null || _docketOpen || _run.stage != HydStage.tool || _run.rejected.contains(t.id)) return;
     HapticFeedback.selectionClick();
     _cue('sounds/intro/impact_metal.ogg', 0.45);
     _hush();
     setState(() {
       _held = t;
+      _felt = false;
       _setMode(LinemanMode.hold);
     });
     unawaited(_sayChain([HydLines.inspectAsk]));
@@ -755,7 +841,11 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
 
   void _putBack() {
     final t = _held;
-    if (t == null || _blocked) return;
+    if (t == null || _blocked || coworkerChoiceUp) return;
+    // Sending the leaking tool he pushes to servicing refuses him.
+    if (_beatOne && _push == HydPush.leak && _leaking(t) && _run.spotted.contains(t.id)) {
+      _goOn(MediaQuery.sizeOf(context).center(Offset.zero));
+    }
     final aside = _run.putBack(t);
     HapticFeedback.selectionClick();
     setState(() {
@@ -773,7 +863,20 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
 
   void _take(Offset at) {
     final t = _held;
-    if (t == null || _blocked) return;
+    if (t == null || _blocked || coworkerChoiceUp) return;
+    if (_beatOne) {
+      if (_push == HydPush.leak && _leaking(t)) {
+        // Took the leaking tool while he said "it'll do": listened.
+        setState(() => _held = null);
+        unawaited(answerCoworker(false, at));
+        return;
+      }
+      _goOn(at);
+    }
+    // He waits on the take that would finish the tool step. Not on the
+    // leaking tool itself: his "it'll do" would name its fault before the
+    // player found it — that take slips on its own.
+    if (!_leaking(t) && _waitForHim()) return;
     setState(() => _held = null);
     final o = _run.take(t);
     if (o.verdict == HydVerdict.right) {
@@ -789,7 +892,14 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
   }
 
   void _pickDie(int size, Offset at) {
-    if (_blocked || coworkerOpen) return;
+    if (_blocked || coworkerChoiceUp) return;
+    if (_beatOne) {
+      // A die put in while he says "the near one will do": listened (a slip).
+      if (_push == HydPush.die) unawaited(answerCoworker(false, at));
+      return;
+    }
+    // No hold here: with the right die lost every die is wrong, and his "the
+    // right die isn't there?" would give that away. He waits on the hold.
     final o = _run.pickDie(size);
     if (o.verdict == HydVerdict.right) {
       HapticFeedback.lightImpact();
@@ -803,8 +913,10 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
   }
 
   void _holdJob(Offset at) {
+    if (_blocked) return;
     _goOn(at);
-    if (_blocked || coworkerOpen) return;
+    if (coworkerOpen) return;
+    if (_waitForHim()) return;
     _hush();
     final o = _run.holdJob();
     if (o.verdict == HydVerdict.right) {
@@ -821,15 +933,19 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
   }
 
   void _toggleLock() {
-    if (_blocked || coworkerChoiceUp) return;
+    if (_blocked || coworkerOpen) return;
     HapticFeedback.selectionClick();
     _cue('sounds/intro/click.ogg', 0.6);
     setState(_run.toggleLock);
   }
 
   void _stroke(Offset at) {
-    if (_push != HydPush.release) _goOn(at);
     if (_blocked || coworkerChoiceUp) return;
+    // Pumping on while he talks refuses him (for "let go" too: pumping to the
+    // click is the rule) — he leaves before the stroke, so the reason deck can
+    // never open over his deck.
+    _goOn(at);
+    if (_run.pressure >= kHydStrokes - 1 && _waitForHim()) return;
     final o = _run.stroke();
     switch (o.verdict) {
       case HydVerdict.more:
@@ -856,6 +972,11 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
 
   void _release(Offset at) {
     if (_blocked || coworkerChoiceUp) return;
+    if (_beatOne) {
+      // Let go while he says "let go": listened (a slip).
+      if (_push == HydPush.release) unawaited(answerCoworker(false, at));
+      return;
+    }
     final o = _run.release();
     final m = o.mistake;
     if (m != null) {
@@ -914,9 +1035,15 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
-    if (_blocked || _held != null || _docketOpen) return false;
+    // His push must fit now; once none can on this docket, he waits for the
+    // next one (re-armed in [_nextRound]).
     final p = hydPushFor(_run, prefer: _run.deal.push);
-    if (p == null) return false;
+    if (p == null) return hydPushLater(_run) ? false : null;
+    if (_blocked || _docketOpen || (_held != null && !coworkerHeld)) return false;
+    // The lost die: he comes only through the hold. Arriving on his timer
+    // while the player still reads the die case, his "the right die isn't
+    // there?" would give the lost die away (he stays armed for the hold).
+    if (p == HydPush.die && !coworkerHeld) return false;
     _push = p;
     return true;
   }
@@ -929,15 +1056,15 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Did what he said: the leaking tool, the near die, or let go early.
-      final r = _run.current;
-      final HydOutcome o = switch (_push) {
-        HydPush.leak => _run.take(r.tools.firstWhere((t) => t.flaw == HydFlaw.leak && r.fits(t) && !_run.rejected.contains(t.id))),
-        HydPush.die => _run.pickDie(hydNearDie(r)),
-        HydPush.release => _run.release(),
-      };
+      // Did what he said: the leaking tool, the near die, or let go early —
+      // always a slip.
+      final h = _held;
+      final o = _run.follow(_push);
+      setState(() {
+        if (h != null && _run.rejected.contains(h.id)) _held = null;
+        _setMode(LinemanMode.worried);
+      });
       final m = o.mistake;
-      setState(() => _setMode(LinemanMode.worried));
       if (m != null) await _slip(m, origin);
       return;
     }
@@ -1061,6 +1188,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
   // ---- build ------------------------------------------------------------------------
 
   List<Widget> _layers(BuildContext context, SceneMetrics m, bool quiet) {
+    _sceneH = m.height;
     final geo = HydStoreGeo(m.height);
     final r = _run.current;
     final aside = [for (final t in r.tools) if (_run.rejected.contains(t.id)) t];
@@ -1112,6 +1240,53 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
     ];
   }
 
+  // ---- gesture hints ------------------------------------------------------------
+
+  /// The level waits for the player's hands on the scene (the decks carry
+  /// their own sweep hint).
+  bool get _hintWaiting =>
+      !_intro && _mark == null && !struckOut && !_ended && _card == null && !tableBusy && !coworkerOnScreen && !_run.shown && !_run.done;
+
+  Object get _hintKey => '${_run.round}-${_run.stage.name}-${_held?.id}-$_docketOpen';
+
+  /// How to interact now: a sweep over every choice, a short generic slide
+  /// along the held tool, a tap to put the docket back. Never which one.
+  HintSpec? _hint() {
+    if (_docketOpen) return HintSpec.tapOn(_zoomKey);
+    final held = _held;
+    if (held != null) {
+      final body = HintSpec.globalRectOf(_bodyKey);
+      if (held.kind.hydraulic && !_felt && body != null) {
+        // From the middle toward the handle end: well clear of the seal
+        // (kHydLeakU), so tracing the hint never finds a fault for the player.
+        return HintSpec.drag(Offset(body.left + body.width * 0.5, body.top + body.height * 0.6), toward: const Offset(1, 0), travel: math.min(64, body.width * 0.2));
+      }
+      return HintSpec.sweepOver([if (held.kind.hydraulic) _tryKey, _backKey, _takeKey]);
+    }
+    final r = _run.current;
+    switch (_run.stage) {
+      case HydStage.tool:
+        final geo = HydStoreGeo(_sceneH);
+        final open = [
+          for (var i = 0; i < r.tools.length; i++)
+            if (!_run.rejected.contains(r.tools[i].id)) geo.slot(i, r.tools.length),
+        ];
+        return open.isEmpty ? null : HintSpec.sweep(open, space: HintSpace.scene);
+      case HydStage.die:
+        final box = HintSpec.globalRectOf(_caseKey);
+        final hold = HintSpec.globalRectOf(_holdKey);
+        if (box == null) return null;
+        final inner = box.deflate(16);
+        final w = inner.width / r.slots.length;
+        return HintSpec.sweep([
+          for (var i = 0; i < r.slots.length; i++) Rect.fromLTWH(inner.left + w * i, inner.top, w, inner.height),
+          ?hold,
+        ]);
+      case HydStage.work:
+        return HintSpec.sweepOver([_leftKey, _pumpKey]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
@@ -1150,6 +1325,11 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
+            hintAutoMiss: true,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (held != null && playing)
@@ -1159,6 +1339,11 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
                   docket: r.docket,
                   quiet: quiet,
                   muted: _muted,
+                  bodyKey: _bodyKey,
+                  tryKey: _tryKey,
+                  backKey: _backKey,
+                  takeKey: _takeKey,
+                  onFeel: () => _felt = true,
                   onFound: _found,
                   onTake: _take,
                   onPutBack: _putBack,
@@ -1172,11 +1357,12 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       AspectRatio(
+                        key: _caseKey,
                         aspectRatio: 1.9,
                         child: _DieCase(round: r, small: false, enabled: !_blocked && !coworkerChoiceUp, onPick: _pickDie, quiet: quiet),
                       ),
                       const SizedBox(height: 10),
-                      _HoldButton(onTapUp: _run.shown ? null : (d) => _holdJob(d.globalPosition)),
+                      KeyedSubtree(key: _holdKey, child: _HoldButton(onTapUp: _run.shown ? null : (d) => _holdJob(d.globalPosition))),
                     ],
                   ),
                 ),
@@ -1193,13 +1379,15 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
                     locked: _run.locked,
                     quiet: quiet,
                     enabled: !_blocked && !coworkerChoiceUp,
+                    leftKey: _leftKey,
+                    pumpKey: _pumpKey,
                     onStroke: _stroke,
                     onRelease: _release,
                     onLock: _toggleLock,
                   ),
                 ),
               if (_docketOpen && playing)
-                _DocketZoom(key: const ValueKey('docket-zoom'), docket: r.docket, quiet: quiet, onClose: () => setState(() => _docketOpen = false)),
+                _DocketZoom(key: const ValueKey('docket-zoom'), cardKey: _zoomKey, docket: r.docket, quiet: quiet, onClose: () => setState(() => _docketOpen = false)),
               if (deckUp)
                 Positioned(
                   key: const ValueKey('hud-deck'),
@@ -1371,7 +1559,8 @@ class _DocketSheet extends StatelessWidget {
 
 /// The docket held up close (tap anywhere to put it back).
 class _DocketZoom extends StatelessWidget {
-  const _DocketZoom({super.key, required this.docket, required this.quiet, required this.onClose});
+  const _DocketZoom({super.key, required this.cardKey, required this.docket, required this.quiet, required this.onClose});
+  final GlobalKey cardKey;
   final HydDocket docket;
   final bool quiet;
   final VoidCallback onClose;
@@ -1392,6 +1581,7 @@ class _DocketZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: cardKey,
                 width: 290,
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
                 decoration: BoxDecoration(
@@ -1756,6 +1946,11 @@ class _Inspect extends StatefulWidget {
     required this.docket,
     required this.quiet,
     required this.muted,
+    required this.bodyKey,
+    required this.tryKey,
+    required this.backKey,
+    required this.takeKey,
+    required this.onFeel,
     required this.onFound,
     required this.onTake,
     required this.onPutBack,
@@ -1764,6 +1959,13 @@ class _Inspect extends StatefulWidget {
   final HydDocket docket;
   final bool quiet;
   final bool muted;
+  final GlobalKey bodyKey;
+  final GlobalKey tryKey;
+  final GlobalKey backKey;
+  final GlobalKey takeKey;
+
+  /// The finger ran along the body (the slide hint is done with).
+  final VoidCallback onFeel;
   final VoidCallback onFound;
   final ValueChanged<Offset> onTake;
   final VoidCallback onPutBack;
@@ -1799,6 +2001,7 @@ class _InspectState extends State<_Inspect> {
   }
 
   void _touch(Offset p, Size s) {
+    widget.onFeel();
     final b = hydBin(p.dx / s.width);
     final before = _seen.length;
     for (final x in [b - 1, b, b + 1]) {
@@ -1863,6 +2066,7 @@ class _InspectState extends State<_Inspect> {
                           builder: (context, box) {
                             final s = Size(box.maxWidth, box.maxHeight);
                             return Semantics(
+                              key: widget.bodyKey,
                               label: HydLines.handLabel,
                               child: GestureDetector(
                                 behavior: HitTestBehavior.opaque,
@@ -1901,6 +2105,7 @@ class _InspectState extends State<_Inspect> {
                   if (hyd) ...[
                     const SizedBox(height: 8),
                     _PumpTry(
+                      key: widget.tryKey,
                       label: t.kind == HydKind.batteryCrimper ? HydLines.trigger : HydLines.pump,
                       onTap: _tryPump,
                     ),
@@ -1908,9 +2113,9 @@ class _InspectState extends State<_Inspect> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Expanded(child: DoBigButton(label: HydLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
+                      Expanded(child: DoBigButton(key: widget.backKey, label: HydLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
                       const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: HydLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
+                      Expanded(child: DoBigButton(key: widget.takeKey, label: HydLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
                     ],
                   ),
                 ],
@@ -1925,7 +2130,7 @@ class _InspectState extends State<_Inspect> {
 
 /// The pump arm / trigger to try in the close look.
 class _PumpTry extends StatelessWidget {
-  const _PumpTry({required this.label, required this.onTap});
+  const _PumpTry({super.key, required this.label, required this.onTap});
   final String label;
   final VoidCallback onTap;
 
@@ -1965,10 +2170,14 @@ class _Work extends StatelessWidget {
     required this.locked,
     required this.quiet,
     required this.enabled,
+    required this.leftKey,
+    required this.pumpKey,
     required this.onStroke,
     required this.onRelease,
     required this.onLock,
   });
+  final GlobalKey leftKey;
+  final GlobalKey pumpKey;
   final HydJob job;
   final bool battery;
   final int pressure;
@@ -2025,12 +2234,14 @@ class _Work extends StatelessWidget {
         Row(
           children: [
             Expanded(
+              key: leftKey,
               child: crimp
                   ? DoBigButton(label: HydLines.release, filled: false, onTapUp: enabled ? (d) => onRelease(d.globalPosition) : (_) {})
                   : _LockButton(locked: locked, onTap: enabled ? onLock : null),
             ),
             const SizedBox(width: 12),
             Expanded(
+              key: pumpKey,
               child: DoBigButton(label: battery ? HydLines.trigger : HydLines.pump, filled: true, onTapUp: enabled ? (d) => onStroke(d.globalPosition) : (_) {}),
             ),
           ],

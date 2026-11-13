@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -39,15 +40,21 @@ import 'spoken_once.dart';
 // কাপড়) — then it is fine; a damaged or overdue rod is set aside, tagged
 // বাতিল, as is the bamboo jugaad (lesson's myth). Three dockets, each with
 // one good rod. Once a play the careless coworker pushes a shortcut: the wet
-// rod unwiped ("একটু ভেজা, কিছু হবে না" — device TTS until recorded) or the
-// dry bamboo (his recorded line).
+// rod unwiped ("একটু ভেজা, কিছু হবে না") or the
+// dry bamboo (his recorded line). The wet line has no clip yet: the kit keeps it
+// silent and holds his caption for a reading time. On his docket the first
+// reach for a rod waits for him (holdForCoworker), so a fast player still
+// meets him while both his pushes are on the stand.
 //
-// Deadly: a rod rated below the line; the bamboo; a wet stick not wiped dry
-// (also by listening to him). Slips: taking a cracked / deeply scratched /
-// glaze-worn rod, or one past its test date.
+// Deadly (MODULE2_LADDER.md row 14): a rod rated below the line; the bamboo;
+// a wet stick not wiped dry (also by listening to him — the act he pushes is
+// on that deadly list). Slips: taking a cracked / deeply scratched /
+// glaze-worn rod, or one past its test date. The take / put-back buttons are
+// dead while the cloth is still going along the stick.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
-// scene, corner guide, ◆ on the table → "কেন …?" → next docket by itself.
+// scene, corner guide, ◆ on the table → "কেন …?" → এগিয়ে যান → next docket;
+// gesture hints (how to touch, never which rod) in every waiting state.
 // The rods and the site are drawn in code (m2_hotstick_check_world.dart).
 
 // ============================================================================
@@ -185,32 +192,34 @@ abstract final class HotStickLines {
   static const coworkerWet = CoworkerScript(
     line: 'একটু ভেজা, কিছু হবে না! মোছামুছি পরে, আগে ফিউজটা খোলো।',
     exitLine: coworkerExit,
-    right: ['না — আগে শুকনো কাপড়ে মুছে নেব', 'ভেজা রডে লাইভ ফিউজে হাত দেব না', 'স্টিক পুরো শুকনো হলে তবেই কাজ'],
+    right: ['আগে শুকনো কাপড়ে মুছে তবে নেব', 'ভেজা রডে লাইভ ফিউজে হাত দেব না', 'স্টিক পুরো শুকনো হলে তবেই কাজ'],
     wrong: [
       'ঠিক, একটু জলে কিছু হবে না',
       'মোছামুছি পরে, আগে ফিউজটা খুলি',
       'ভেজাটাই তুলে নিয়ে চলে যাই',
       'রড তো ফাইবারের, জলে কী হবে',
       'সবাই তো ভেজা রডেই কাজ সারে',
+      'কাজ করতে করতেই শুকনো হবে',
     ],
     asks: ['ও বলছে ভেজাতেই চলবে। আপনি কী করবেন?', 'ভেজা রড নেবেন, না মুছে শুকনো করে?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
   );
   static const coworkerBamboo = CoworkerScript(
     line: 'শুকনো বাঁশ তো, চলবে! হট স্টিক আনতে গাড়ি পর্যন্ত কে যাবে?',
     exitLine: coworkerExit,
-    right: ['না — রেটেড ফাইবারগ্লাস রডই নেব', 'বাঁশের ভেতরে আর্দ্রতা, ওটা নয়', 'জুগাড় নয়, পরীক্ষিত হট স্টিক চাই'],
+    right: ['রেটেড ফাইবারগ্লাস রডই তুলে নেব', 'বাঁশের ভেতরে আর্দ্রতা, ওটা চলবে না', 'জুগাড় নয়, পরীক্ষিত হট স্টিক চাই'],
     wrong: [
       'ঠিক, শুকনো বাঁশই তো ইনসুলেটর',
       'বাঁশটাই তুলে নিয়ে কাজ সারি',
-      'গাড়ি দূরে, বাঁশেই চালিয়ে নিই',
+      'গাড়ি দূরে, হট স্টিক জরুরি নয়',
       'একবার বাঁশ দিয়েই খুলে ফেলি',
       'সবাই তো বাঁশ দিয়েই কাজ সারে',
+      'শুকনো বাঁশ রেটেড রডের মতোই চলে',
     ],
     asks: ['ও বলছে বাঁশেই চলবে। আপনি কী করবেন?', 'বাঁশ নেবেন, না রেটেড হট স্টিক?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
   );
   static CoworkerScript coworker(StickPush p) => p == StickPush.wet ? coworkerWet : coworkerBamboo;
 
-  /// His lines that have no recording yet (device TTS until then).
+  /// His lines that have no recording yet (silent, caption held, until then).
   static const toRecord = [
     'একটু ভেজা, কিছু হবে না! মোছামুছি পরে, আগে ফিউজটা খোলো।',
   ];
@@ -435,8 +444,11 @@ class HotStickRun {
 
   /// Puts [rod] back: the bamboo, an overdue rod (its sticker is in plain
   /// sight in hand) or a damaged rod whose flaw the hand found go aside
-  /// (true); anything else back on the stand (false) — putting back never
-  /// tells which rods are bad. Never costs anything.
+  /// (true); anything else back on the stand (false). Never costs anything.
+  /// A hidden flaw is never told: a damaged rod goes aside only once the hand
+  /// has found it. The overdue rod's date is on screen whenever it is in hand,
+  /// so going aside confirms what the sticker already shows (an explicit
+  /// "বাতিল" with a slip for tagging a good rod is an open owner question).
   bool putBack(HotStick rod) {
     if (ended || shown || rejected.contains(rod.id)) return false;
     final String tag;
@@ -568,6 +580,22 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The cloth is still going along the held stick (take / put back wait).
+  var _wiping = false;
+
+  /// The hand has slid along the held stick at least once (for the hint).
+  var _slid = false;
+
+  // Gesture hints: how to touch, never which rod.
+  final _hints = IdleHintController();
+  final Map<String, GlobalKey> _rodKeys = {};
+  final _stickKey = GlobalKey();
+  final _clothKey = GlobalKey();
+  final _backKey = GlobalKey();
+  final _takeKey = GlobalKey();
+  final _docketCardKey = GlobalKey();
+  GlobalKey _rodKey(String id) => _rodKeys.putIfAbsent(id, GlobalKey.new);
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -615,24 +643,26 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _busy || _ended || _card != null || reasonOpen || _run.shown || _freeze;
+  bool get _blocked => _intro || _busy || _ended || _card != null || tableBusy || _run.shown || _freeze;
 
   void _setMode(LinemanMode m) {
     _mode = m;
     _wake++;
   }
 
-  bool _isPushed(HotStick r) => _push == StickPush.wet ? r.flaw == StickMark.wet : r.bamboo;
-
   void _pick(HotStick r, Offset origin) {
-    // Taking another rod while he is still talking refuses him too.
-    if (coworkerOpen && !coworkerChoiceUp && !_isPushed(r)) unawaited(answerCoworker(true, origin, direct: true));
+    // While he is on screen the stand waits: his deck is the only answer.
     if (_blocked || coworkerOpen || _held != null || _docketOpen || _run.rejected.contains(r.id) || _packed == r.id) return;
+    // On his docket the first reach for a rod waits for him (a fast player
+    // still meets him, with both his pushes still on the stand).
+    if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/impact_metal.ogg', volume: 0.45, muted: false));
     _hush();
     setState(() {
       _held = r;
+      _slid = false;
+      _wiping = false;
       _setMode(LinemanMode.hold);
     });
     unawaited(_sayChain([HotStickLines.inspectAsk]));
@@ -645,9 +675,23 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
     if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.wav', volume: 0.6, muted: false));
   }
 
+  void _slidOnce() {
+    if (_slid || !mounted) return;
+    setState(() => _slid = true);
+  }
+
+  void _wipeStarted() {
+    if (!mounted) return;
+    setState(() => _wiping = true);
+  }
+
   void _wiped() {
     final r = _held;
-    if (r == null || _blocked) return;
+    _wiping = false;
+    if (r == null || _blocked) {
+      if (mounted) setState(() {});
+      return;
+    }
     final dried = _run.wipe(r);
     setState(() {});
     if (dried) {
@@ -658,7 +702,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
 
   void _putBack() {
     final r = _held;
-    if (r == null || _blocked) return;
+    if (r == null || _blocked || _wiping) return;
     final aside = _run.putBack(r);
     HapticFeedback.selectionClick();
     setState(() {
@@ -677,7 +721,8 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
 
   void _take(Offset origin) {
     final r = _held;
-    if (r == null || _blocked) return;
+    // Not while the cloth is still going along the stick: it is not dry yet.
+    if (r == null || _blocked || _wiping) return;
     setState(() => _held = null);
     final o = _run.take(r);
     switch (o.verdict) {
@@ -760,10 +805,13 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
-    if (_blocked || _held != null || _docketOpen) return false;
     final push = stickPushFor(_run.current, _run.rejected, _run.wiped, preferWet: _run.deal.preferWet);
-    if (push == null) return false;
+    // Nothing of his left on this stand (the bamboo aside, the wet rod wiped):
+    // his push would no longer fit. His moment passes on this docket; the
+    // next docket arms him again ([_armCoworker]).
+    if (push == null) return null;
     _push = push;
+    if (_blocked || _held != null || _docketOpen || _wiping) return false;
     return true;
   }
 
@@ -789,6 +837,33 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
       if (!mounted || chain != _chain) return;
       await _sayChain([HotStickLines.callHeld, HotStickLines.ask], mood: GuideMood.glad);
     }());
+  }
+
+  // --- gesture hints (how to touch, never which rod) -------------------------
+
+  /// Waiting for the player's touch at the stand, in hand or on the docket.
+  bool get _hintWaiting => !_blocked && !_wiping && !coworkerOnScreen && !struckOut && _mark == null;
+
+  Object get _hintKey => '${_run.round}|${_held?.id}|$_docketOpen|$_slid';
+
+  HintSpec? _hintNow() {
+    // The docket up close: a tap anywhere puts it back (one way forward).
+    if (_docketOpen) return HintSpec.tapOn(_docketCardKey);
+    if (_held != null) {
+      if (!_slid) {
+        // Run a hand along the stick: a short nudge along it, from its end.
+        final r = HintSpec.globalRectOf(_stickKey);
+        return r == null ? null : HintSpec.drag(r.centerLeft + Offset(r.width * 0.12, 0), toward: const Offset(1, 0), travel: HintSpec.maxDragTravel);
+      }
+      // Then one of the three: cloth, put back, take — a sweep over all.
+      return HintSpec.sweepOver([_clothKey, _backKey, _takeKey]);
+    }
+    // At the stand: a sweep over every rod still hanging (none for one).
+    final keys = [
+      for (final x in _run.current.rods)
+        if (!_run.rejected.contains(x.id) && _packed != x.id) _rodKey(x.id),
+    ];
+    return keys.length < 2 ? null : HintSpec.sweepOver(keys);
   }
 
   void _tapGuide() {
@@ -953,11 +1028,15 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
     final r = _run.current;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final aside = [for (final x in r.rods) if (_run.rejected.contains(x.id)) x];
-    final canPick = !_blocked && _held == null && !_docketOpen;
+    final canPick = !_blocked && _held == null && !_docketOpen && !coworkerOpen;
     return [
       Positioned.fill(
         key: const ValueKey('site'),
-        child: ColorFiltered(colorFilter: grey, child: RepaintBoundary(child: CustomPaint(painter: StickSitePainter(geo)))),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _hints.missTap,
+          child: ColorFiltered(colorFilter: grey, child: RepaintBoundary(child: CustomPaint(painter: StickSitePainter(geo)))),
+        ),
       ),
       Positioned.fromRect(
         key: ValueKey('docket-${_run.round}'),
@@ -975,6 +1054,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
               quiet: quiet,
               muted: true,
               child: _StandRod(
+                key: _rodKey(r.rods[i].id),
                 rod: r.rods[i],
                 gone: _run.rejected.contains(r.rods[i].id) || _packed == r.rods[i].id || _held?.id == r.rods[i].id,
                 enabled: canPick,
@@ -1034,6 +1114,10 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
               current: _run.done ? null : _run.round,
               quiet: quiet,
             ),
+            hint: _hintNow,
+            hintWaiting: _hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             layers: (context, m) => _layers(context, m, quiet),
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
@@ -1045,14 +1129,21 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
                   wiped: _run.wiped.contains(held.id),
                   quiet: quiet,
                   onFound: _found,
+                  onSlid: _slidOnce,
+                  onWipeStart: _wipeStarted,
                   onWiped: _wiped,
                   muted: _muted,
                   onTake: _take,
                   onPutBack: _putBack,
+                  stickKey: _stickKey,
+                  clothKey: _clothKey,
+                  backKey: _backKey,
+                  takeKey: _takeKey,
                 ),
               if (_docketOpen && playing)
                 _DocketZoom(
                   key: const ValueKey('docket-zoom'),
+                  cardKey: _docketCardKey,
                   docket: _run.current.docket,
                   quiet: quiet,
                   onClose: () => setState(() => _docketOpen = false),
@@ -1217,7 +1308,8 @@ class _DocketSheet extends StatelessWidget {
 
 /// The docket held up close (tap anywhere to put it back).
 class _DocketZoom extends StatelessWidget {
-  const _DocketZoom({super.key, required this.docket, required this.quiet, required this.onClose});
+  const _DocketZoom({super.key, required this.cardKey, required this.docket, required this.quiet, required this.onClose});
+  final GlobalKey cardKey;
   final StickDocket docket;
   final bool quiet;
   final VoidCallback onClose;
@@ -1238,6 +1330,7 @@ class _DocketZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: cardKey,
                 width: 290,
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
                 decoration: BoxDecoration(
@@ -1278,7 +1371,7 @@ class _DocketZoom extends StatelessWidget {
 /// white tag too small to read and its surface does not show. Tap it, or pull
 /// it down off the hook, to take it in hand.
 class _StandRod extends StatefulWidget {
-  const _StandRod({required this.rod, required this.gone, required this.enabled, required this.onTake});
+  const _StandRod({super.key, required this.rod, required this.gone, required this.enabled, required this.onTake});
   final HotStick rod;
   final bool gone;
   final bool enabled;
@@ -1406,9 +1499,15 @@ class _Inspect extends StatefulWidget {
     required this.quiet,
     required this.muted,
     required this.onFound,
+    required this.onSlid,
+    required this.onWipeStart,
     required this.onWiped,
     required this.onTake,
     required this.onPutBack,
+    required this.stickKey,
+    required this.clothKey,
+    required this.backKey,
+    required this.takeKey,
   });
   final HotStick rod;
   final StickDocket docket;
@@ -1416,9 +1515,21 @@ class _Inspect extends StatefulWidget {
   final bool quiet;
   final bool muted;
   final VoidCallback onFound;
+
+  /// The hand has touched the stick (first time).
+  final VoidCallback onSlid;
+
+  /// The cloth starts along the stick (take / put back wait for [onWiped]).
+  final VoidCallback onWipeStart;
   final VoidCallback onWiped;
   final ValueChanged<Offset> onTake;
   final VoidCallback onPutBack;
+
+  // For the gesture hint (the page reads their rects).
+  final GlobalKey stickKey;
+  final GlobalKey clothKey;
+  final GlobalKey backKey;
+  final GlobalKey takeKey;
 
   @override
   State<_Inspect> createState() => _InspectState();
@@ -1441,6 +1552,7 @@ class _InspectState extends State<_Inspect> {
       if (x >= 0 && x < kStickBins) _seen.add(x);
     }
     final grew = _seen.length != before;
+    if (before == 0 && grew) widget.onSlid();
     final mark = widget.rod.flaw == StickMark.wet && widget.wiped ? StickMark.none : widget.rod.flaw;
     if (!_found && HotStickPainter.markFelt(mark, _seen)) {
       _found = true;
@@ -1462,6 +1574,7 @@ class _InspectState extends State<_Inspect> {
       _wiping = true;
       _wipes++;
     });
+    widget.onWipeStart();
   }
 
   Widget _closeUp(HotStick rod) => LayoutBuilder(
@@ -1472,6 +1585,7 @@ class _InspectState extends State<_Inspect> {
           final x0 = HotStickPainter.x0(s);
           final x1 = HotStickPainter.x1(s);
           return Semantics(
+            key: widget.stickKey,
             label: HotStickLines.handLabel,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -1583,16 +1697,46 @@ class _InspectState extends State<_Inspect> {
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
+                    key: widget.clothKey,
                     width: double.infinity,
                     child: _ClothButton(onTap: _wipe),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(child: DoBigButton(label: HotStickLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
-                      const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: HotStickLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
-                    ],
+                  // Dead (and dimmed) while the cloth is still going along.
+                  IgnorePointer(
+                    ignoring: _wiping,
+                    child: Opacity(
+                      opacity: _wiping ? 0.45 : 1,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: KeyedSubtree(
+                              key: widget.backKey,
+                              child: DoBigButton(
+                                label: HotStickLines.putBack,
+                                filled: false,
+                                onTapUp: (_) {
+                                  if (!_wiping) widget.onPutBack();
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: KeyedSubtree(
+                              key: widget.takeKey,
+                              child: DoBigButton(
+                                label: HotStickLines.take,
+                                filled: true,
+                                onTapUp: (d) {
+                                  if (!_wiping) widget.onTake(d.globalPosition);
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="al" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4e8eb"/><stop offset="1" stop-color="#8f979e"/></linearGradient>
+    <linearGradient id="soft" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5c3e22" stop-opacity="0"/><stop offset="0.3" stop-color="#5c3e22" stop-opacity="0.75"/><stop offset="0.7" stop-color="#5c3e22" stop-opacity="0.75"/><stop offset="1" stop-color="#5c3e22" stop-opacity="0"/></linearGradient>
+    <linearGradient id="newp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f8fa"/><stop offset="1" stop-color="#a7afb6"/></linearGradient>
+    <linearGradient id="glove" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b233"/><stop offset="1" stop-color="#c9861a"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <!-- wrong -->
+  <g>
+    <rect x="14" y="76" width="132" height="8" rx="2" fill="url(#al)" stroke="#4a5056" stroke-width="1"/><rect x="40" y="76" width="80" height="8" fill="url(#soft)"/><rect x="60" y="69" width="40" height="22" rx="4" fill="url(#newp)" stroke="#4a5056" stroke-width="1"/><circle cx="80" cy="80" r="5" fill="#8c939a"/>
+  </g>
+  <!-- right -->
+  <g transform="translate(160 0)">
+    <rect x="14" y="76" width="26" height="8" rx="2" fill="url(#al)" stroke="#4a5056" stroke-width="1"/><rect x="120" y="76" width="26" height="8" rx="2" fill="url(#al)" stroke="#4a5056" stroke-width="1"/><rect x="40" y="76" width="80" height="8" fill="url(#newp)"/><rect x="29" y="73" width="22" height="14" rx="3" fill="url(#newp)" stroke="#6f7880" stroke-width="1"/><rect x="109" y="73" width="22" height="14" rx="3" fill="url(#newp)" stroke="#6f7880" stroke-width="1"/>
+  </g>
+  <g transform="translate(80 172)"><circle r="13" fill="#c0392b"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>
+  <g transform="translate(240 172)"><circle r="13" fill="#2e8b45"/><path d="M-7 0 l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

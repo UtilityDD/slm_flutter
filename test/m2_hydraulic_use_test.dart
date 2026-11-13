@@ -5,7 +5,9 @@
 // cable that still reads voltage = stop and report), the deal, reason
 // libraries, and the level in the shell: idle perf, the guide first, a full
 // clean play with the coworker refused, a slip card, the deadly freeze (the
-// tool on a cable not proved dead, also on his say-so).
+// tool on a cable not proved dead, also on his say-so), the 3-slip strike-out,
+// the coworker on a fast play (every step waits for him), the needless stop
+// (a slip, audit 2026-11-11) and the gesture hints (a sweep, never the answer).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -19,6 +21,8 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard, kStrikesToFail;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m2_hydraulic_use.dart';
@@ -31,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.9/do/1',
@@ -78,21 +83,28 @@ List<Finder> _onScreen(List<String> texts) => [
         if (_label(x).evaluate().isNotEmpty) _label(x),
     ];
 
+/// Picks the right card on the deck that is up (a reason deck: then its
+/// এগিয়ে যান; a coworker deck closes by itself).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
+}
+
+/// Waits for him on his job and refuses him.
+Future<void> _refuseHim(WidgetTester t) async {
+  expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes');
+  await _pickRight(t, HydLines.coworker.right);
+  await _pump(t, 1800);
+}
+
+/// The slip card is up: read it and go on.
+Future<void> _gotIt(WidgetTester t) async {
+  await t.tap(find.text(MistakeLines.gotIt));
+  await _pump(t, 800);
 }
 
 Widget _app(Widget home, {GlobalKey<NavigatorState>? nav}) =>
@@ -129,13 +141,7 @@ Future<void> _step(WidgetTester t, HydJob j, HydStep s) async {
 /// Plays job [i] right (on his job: wait for him, refuse him first), then the reason.
 Future<void> _playRight(WidgetTester t, HydDeal deal, int i) async {
   final j = deal.jobs[i];
-  if (i == deal.callAt) {
-    expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue, reason: 'he comes on job $i');
-    await _pumpUntil(t, find.byType(ChoiceDeck));
-    await _pump(t, 600);
-    await _pickRight(t, HydLines.coworker.right);
-    await _pump(t, 1800);
-  }
+  if (i == deal.callAt) await _refuseHim(t);
   await t.tap(_label(HydLines.cableLabel(j.tags[j.target])), warnIfMissed: false);
   await _pump(t, 300);
   await _step(t, j, HydStep.test);
@@ -167,7 +173,6 @@ Future<void> _playRight(WidgetTester t, HydDeal deal, int i) async {
   await _pump(t, 600);
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'job $i');
   expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'reason deck, job $i');
-  await _pump(t, 700);
   await _pickRight(t, HydLines.whyRight(end));
   await _pump(t, 3200);
 }
@@ -330,21 +335,48 @@ void main() {
       expect(ok.caught, containsAll([HydLines.caughtDie, HydLines.caughtClick]));
     });
 
-    test('stop and report: right only when the docket cable tested live; otherwise not scored', () {
+    test('stop and report: right only when the docket cable tested live; any other stop is a needless-stop slip', () {
       final live = _runFor((j) => j.liveTarget);
-      expect(live.stop().note, HydLines.stopUntested);
-      expect(live.shown, isFalse);
       live.select(live.current.target);
       live.test();
       expect(live.stop().end, HydEnd.stop);
       expect(live.caught, contains(HydLines.caughtLive));
+      expect(live.slips, 0);
 
+      // Untested (even on the job whose cable is live): no reading, no reason.
+      final untested = _runFor((j) => j.liveTarget);
+      expect(untested.stop().mistake, HydMistakes.needlessStop);
+      expect(untested.slips, 1);
+      expect(untested.deadly, isNull);
+
+      // Tested dead: a needless stop costs a slip (it was free before).
       final dead = _runFor((j) => !j.liveTarget);
       dead.select(dead.current.target);
       dead.test();
-      expect(dead.stop().note, HydLines.stopDead);
-      expect(dead.slips, 0);
-      expect(dead.shown, isFalse);
+      expect(dead.stop().mistake, HydMistakes.needlessStop);
+      expect(dead.slips, 1);
+      expect(dead.deadly, isNull);
+
+      // Only the neighbour (in service) read live: still a needless stop.
+      final nb = _runFor((j) => !j.liveTarget);
+      nb.select((nb.current.target + 1) % 3);
+      nb.test();
+      expect(nb.stop().mistake, HydMistakes.needlessStop);
+
+      // Its card stays neutral: the rule, never which case it was.
+      expect(HydMistakes.needlessStop.textBn, isNot(contains('ঠিক আছে')));
+      expect(HydMistakes.needlessStop.deadly, isFalse);
+    });
+
+    test('three slips strike out; the third ends the play', () {
+      final r = HydRun(dealHyd(math.Random(5)));
+      for (var i = 0; i < 3; i++) {
+        expect(r.stop().mistake, HydMistakes.needlessStop);
+        r.next();
+      }
+      expect(r.slips, 3);
+      expect(r.percent, 55);
+      expect(kStrikesToFail, 3);
     });
 
     test('mark: 100 − 15 per slip; three jobs; pass ≥ 55', () {
@@ -358,11 +390,11 @@ void main() {
       expect(r.passed, isTrue);
     });
 
-    test('every mistake has its picture on disk; lesson points 1–2 (earth-on-live: none, not in 2.9)', () {
+    test('every mistake has its picture on disk; lesson points 1–2 (earth-on-live, needless stop: none, not in 2.9)', () {
       for (final m in HydMistakes.all) {
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
         expect(m.key, startsWith('2.9/hyd/'));
-        if (m == HydMistakes.earthLive) {
+        if (m == HydMistakes.earthLive || m == HydMistakes.needlessStop) {
           expect(m.lessonPoint, isNull);
         } else {
           expect(m.lessonPoint, inInclusiveRange(1, 2));
@@ -432,7 +464,7 @@ void main() {
         }
         debugPrint('PERF m2_hydraulic_use ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -582,12 +614,156 @@ void main() {
       final wrong = _onScreen(HydLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
       expect(find.byType(MistakeCard), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes.single.deadly, isTrue);
       await _close(t, c);
+    });
+
+    testWidgets('three slips strike out: the StruckOutCard, nothing cleared', (t) async {
+      var seed = 0;
+      late HydDeal deal;
+      while (true) {
+        deal = dealHyd(math.Random(seed));
+        if (deal.callAt != 2) break;
+        seed++;
+      }
+      final c = await _open(t, seed);
+      for (var i = 0; i < 3; i++) {
+        if (i == deal.callAt) await _refuseHim(t);
+        // A stop with no LIVE reading on the docket's cable: a needless stop.
+        await t.tap(find.text(HydLines.stop));
+        await _pump(t, 600);
+        if (i < 2) {
+          expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'slip $i');
+          await _gotIt(t);
+        }
+      }
+      expect(await _pumpUntil(t, find.byType(StruckOutCard), maxMs: 3000), isTrue);
+      expect(find.byType(LevelPassPanel), findsNothing);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['2.9/do/1'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key), contains(HydMistakes.needlessStop.key));
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a needless stop after a dead reading costs a slip (it was free)', (t) async {
+      var seed = 0;
+      late HydDeal deal;
+      while (true) {
+        deal = dealHyd(math.Random(seed));
+        if (deal.callAt != 0 && !deal.jobs[0].liveTarget) break;
+        seed++;
+      }
+      final j = deal.jobs[0];
+      final c = await _open(t, seed);
+      await t.tap(_label(HydLines.cableLabel(j.tags[j.target])), warnIfMissed: false);
+      await _pump(t, 300);
+      await _step(t, j, HydStep.test);
+      expect(find.text(HydLines.dead), findsOneWidget);
+      await t.tap(find.text(HydLines.stop));
+      await _pump(t, 600);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, HydMistakes.needlessStop.key);
+      await _gotIt(t);
+      expect(find.text(HydLines.ask(deal.jobs[1])), findsWidgets, reason: 'the next job');
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast play on a later job: the step waits, refuse him, then it works', (t) async {
+      var seed = 0;
+      late HydDeal deal;
+      while (true) {
+        deal = dealHyd(math.Random(seed));
+        if (deal.callAt == 1 && !deal.jobs[1].liveTarget) break;
+        seed++;
+      }
+      final c = await _open(t, seed);
+      // Job 0: a quick slip (a needless stop) to reach his job.
+      await t.tap(find.text(HydLines.stop));
+      await _pump(t, 600);
+      await _gotIt(t);
+      // His job: the cable and the tester at once, before his timer.
+      final j = deal.jobs[1];
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(_label(HydLines.cableLabel(j.tags[j.target])), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tap(_label(HydLines.stepBn(HydStep.test, j.kind)), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the step held: he came now');
+      expect(find.text(HydLines.dead), findsNothing, reason: 'the test waited for him');
+      await _pickRight(t, HydLines.coworker.right);
+      await _pump(t, 1800);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _step(t, j, HydStep.test);
+      expect(find.text(HydLines.dead), findsOneWidget, reason: 'after him the step works');
+      expect(c.read(gameSaveProvider).mistakes, hasLength(1), reason: 'only the needless stop');
+      await _close(t, c);
+    });
+
+    group('gesture hints', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      List<Rect> options(WidgetTester t) => t.state<IdleHintState>(find.byType(IdleHint).first).debugOptions;
+
+      testWidgets('a sweep over all three cables, then over the whole tool row; never one target', (t) async {
+        var seed = 0;
+        late HydDeal deal;
+        while (true) {
+          deal = dealHyd(math.Random(seed));
+          if (deal.callAt != 0) break;
+          seed++;
+        }
+        final j = deal.jobs[0];
+        t.view.physicalSize = const Size(784, 1700);
+        t.view.devicePixelRatio = 2.0;
+        final c = ProviderContainer();
+        await t.pumpWidget(UncontrolledProviderScope(container: c, child: _app(M2HydraulicUsePage(ctx: _ctx, pack: _pack, muted: true, seed: seed))));
+        await t.pump(const Duration(milliseconds: 300));
+        for (var ms = 0; ms < 20000 && find.byType(GuideIntro).evaluate().isNotEmpty; ms += 500) {
+          expect(hand, findsNothing, reason: 'not during the guide intro');
+          await t.pump(const Duration(milliseconds: 500));
+        }
+        await waitIntro(t);
+        await _pump(t, 9000);
+        expect(hand, findsOneWidget, reason: 'idle on the cables');
+        expect(options(t), hasLength(3), reason: 'all three cables');
+        await t.tap(_label(HydLines.cableLabel(j.tags[j.target])), warnIfMissed: false);
+        await t.pump();
+        expect(hand, findsNothing, reason: 'any touch hides it');
+        await _pump(t, 9000);
+        expect(hand, findsOneWidget);
+        expect(options(t), hasLength(j.steps.length + 1), reason: 'every step and the stop');
+        await t.pumpWidget(const SizedBox());
+        await t.pump(const Duration(seconds: 15));
+        MascotTalk.reset();
+        c.dispose();
+        t.view.reset();
+      });
+
+      testWidgets('three taps on nothing show the hand at once', (t) async {
+        var seed = 0;
+        while (dealHyd(math.Random(seed)).callAt == 0) {
+          seed++;
+        }
+        final c = await _open(t, seed);
+        await _pump(t, 1000);
+        expect(hand, findsNothing);
+        for (var i = 0; i < 3; i++) {
+          // The sky above the trench: no cable there.
+          await t.tapAt(const Offset(200, 260));
+          await t.pump(const Duration(milliseconds: 200));
+        }
+        await t.pump(const Duration(milliseconds: 100));
+        expect(hand, findsOneWidget);
+        await _close(t, c);
+      });
     });
   });
 }

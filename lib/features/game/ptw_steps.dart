@@ -18,6 +18,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart';
@@ -53,9 +54,15 @@ import 'spoken_once.dart';
 // Deadly (owner decisions 2026-11-08): starting work with no signed permit in
 // hand (a verbal permit), or before the discharge & test — also by listening
 // to the coworker's "permit = 100% safe" myth, which comes right after the
-// paper arrives. Slips: any other step out of order; leaving in the van
-// before the permit is returned (lesson: "a serious offence" — a slip with
-// its own card, by decision).
+// paper arrives (MODULE1_LADDER.md step 18: the act he pushes, skipping the
+// test, is on the owner's deadly list). He can't be skipped by playing fast:
+// the rod (the test) and the climb wait for him ([holdForCoworker]); after the
+// test his push no longer fits and he does not come. Slips: any other step
+// out of order; leaving in the van before the permit is returned (lesson: "a
+// serious offence" — a slip with its own card, by decision).
+//
+// Gesture hint: while the site waits, a sweep over every thing on it (left to
+// right, never the step order); taps on nothing count as misses.
 //
 // Voice: the guide on device TTS (every fixed line in StepLines); the
 // coworker in his recorded voice. Mistake pictures: assets/game/art/ptw/
@@ -470,8 +477,11 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
   /// After a paid reason: what comes next.
   VoidCallback? _afterPaid;
 
-  /// He is due (the permit is in hand): the site waits for him.
-  var _coworkerDue = false;
+  /// The gesture hint (taps on nothing are reported to it).
+  final _hints = IdleHintController();
+
+  /// The things on the site now (design px), left to right: the hint's sweep.
+  List<Rect> _hintRects = const [];
 
   /// A deadly start: the team goes up the ladder, then the site freezes.
   var _climbAll = false;
@@ -537,7 +547,9 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
     unawaited(_sayChain([StepLines.askPermit]));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_coworkerDue;
+  /// The site takes a tap: never in a praise window or while a deck is up
+  /// ([tableBusy]), nor while the coworker is in.
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen;
 
   // --- the moves ---------------------------------------------------------------
   /// A tap on the standing team: the button that sends them up (again: away).
@@ -552,10 +564,16 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
     if (!_canPlay) return;
     if (_climbAsk) setState(() => _climbAsk = false);
     final id = stepFor(thing, _run.round, worker: worker);
-    if (id == null) return;
+    if (id == null || _run.isDone(id)) {
+      _hints.missTap();
+      return;
+    }
+    // The test (or the climb) would end his moment: he comes first.
+    if ((id == StepIds.test || id == StepIds.start) && holdForCoworker()) return;
     final t = _run.tap(id);
     switch (t.kind) {
       case OrderTapKind.ignored:
+        _hints.missTap();
         return;
       case OrderTapKind.mistake:
         final m = t.mistake!;
@@ -658,7 +676,7 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
 
   /// Round 1 done: the team climbs, a moment of work, then line clear.
   Future<void> _toLineClear() async {
-    _busy = true;
+    setState(() => _busy = true);
     unawaited(_sayChain([StepLines.permitDone], mood: GuideMood.glad));
     await Future<void>.delayed(Duration(milliseconds: _quiet ? 300 : 2600));
     if (!mounted || _ended) return;
@@ -671,7 +689,7 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
 
   /// LOTO off: a beat on the clear site, then the result.
   Future<void> _wrapUp() async {
-    _busy = true;
+    setState(() => _busy = true);
     await Future<void>.delayed(Duration(milliseconds: _quiet ? 200 : 900));
     if (!mounted) return;
     await _finish();
@@ -701,13 +719,13 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
   }
 
   // --- the shared pressure moment (CoworkerMoment) ----------------------------
-  /// The permit is in hand: he comes a moment from now (the site waits).
+  /// The permit is in hand: he comes a moment from now; the test and the
+  /// climb wait for him ([holdForCoworker] in [_tapThing]).
   void _armCoworker() {
     if (coworkerDone) {
       unawaited(_sayChain([_task]));
       return;
     }
-    setState(() => _coworkerDue = true);
     scheduleCoworker();
   }
 
@@ -719,12 +737,9 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.round != 0 || _run.isDone(StepIds.test)) {
-      if (_coworkerDue && mounted) setState(() => _coworkerDue = false);
-      return null;
-    }
-    if (_intro || _busy || _card != null || reasonOpen) return false;
-    _coworkerDue = false;
+    // "Why test?" fits only between the paper in hand and the test.
+    if (_ended || _run.round != 0 || !_run.isDone(StepIds.receive) || _run.isDone(StepIds.test)) return null;
+    if (_intro || _busy || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -1193,6 +1208,24 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
       ],
     ];
 
+    _hintRects = playing
+        ? ([
+            geo.van,
+            geo.breaker,
+            geo.book.inflate(8),
+            if (r.round == 0) crewRect,
+            if (r.round == 0 && _climbAsk) Rect.fromLTWH(crewRect.center.dx - 66, crewRect.top - 62, 132, 48),
+            if (r.round == 1)
+              for (var i = 0; i < crew; i++)
+                if (_onLadder(i)) PtwYardGeo.figureAt(geo.crewLadder(i)),
+            hooked
+                ? Rect.fromLTRB(geo.hook.dx - 14, geo.hook.dy + 40, geo.hook.dx + 34, geo.ground - 12)
+                : Rect.fromLTRB(geo.tarp.left - 12, geo.tarp.top - 20, geo.tarp.right + 12, geo.tarp.bottom + 16),
+            geo.phone,
+            geo.clipboard,
+          ]..sort((a, b) => a.center.dx.compareTo(b.center.dx)))
+        : const [];
+
     final top = geo.crewLadder(0);
     return [
       Positioned.fill(
@@ -1254,6 +1287,12 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            // How to touch the site (a sweep over all of it), never which step.
+            hint: () => _hintRects.length < 2 ? null : HintSpec.sweep(_hintRects, space: HintSpace.scene),
+            hintWaiting: playing && _canPlay && !deckUp && !coworkerOnScreen,
+            hintKey: '${_run.round}-$_wake-$_climbAsk',
+            hintController: _hints,
+            hintAutoMiss: true,
             overlays: [
               // Empty sky top left, under the header and above the sun, the
               // wires and the rod's hook (not over the pole top or the test).

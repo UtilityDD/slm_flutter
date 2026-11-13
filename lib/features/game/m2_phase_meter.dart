@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -45,16 +46,24 @@ export 'm2_phase_meter_world.dart' show PmCables, PmGeo, PmMeter, PmPhase, PmRea
 //
 // Deadly: clipping a lead onto live terminals bare-handed (point 2 safety tip:
 // a live-line test instrument — full PPE, above all insulated gloves). Slips:
-// bare-handed on a dead box, a damaged lead used, a lead on the wrong phase,
-// a call with no reading (circuit off or a lead missing), the reading misread
-// (either way), and listening to the coworker (starting the motor untested —
-// myth 1; any clip on any phase). Three slips strike the level out.
+// bare-handed on a dead box, a damaged lead used, a good meter swapped for
+// another (an over-call on the leads: the slip card, then the same pump goes
+// on), a lead on the wrong phase, a call with no reading (circuit off or a
+// lead missing), the reading misread (either way), and listening to the
+// coworker (starting the motor untested — myth 1; any clip on any phase).
+// Three slips strike the level out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m2_phase_meter_world.dart), corner guide, ◆ on the table → "কেন …?"
-// (the reasons fit this meter and this reading) → the next pump by itself;
-// the careless coworker once a play: "মোটর চালিয়ে দাও…" (myth 1) or "রং মিলিয়ে
-// কী হবে…" (his push by device TTS until recorded; his exit line is recorded).
+// (the reasons fit this meter and this reading; the wrong cards use the same
+// words, so no word marks the right one) → the next pump by itself; the
+// careless coworker once a play: "মোটর চালিয়ে দাও…" (myth 1) or "রং মিলিয়ে কী
+// হবে…". He is due from the start of his pump and the clip and the call wait
+// for him (holdForCoworker), so a fast play cannot skip him. His pushes have
+// no recorded clip yet (silent, caption held); his exit line is recorded.
+// Gesture hints (how, never what): a sweep over the tools, the switch, the
+// meter's leads and the two calls; with a lead in hand a sweep over all three
+// terminals; on the leads card a sweep over both buttons.
 
 // ============================================================================
 // Content
@@ -135,6 +144,9 @@ abstract final class PmLines {
   static const runLine = 'ক্রম ঠিক — এবার মোটর চালু।';
   static const swapped = 'অন্য মিটার নিলেন — এর লিড ভালো।';
 
+  /// After a slip that leaves the pump open (a good meter swapped).
+  static const goOn = 'এবার এই মিটার দিয়েই কাজ চালিয়ে যান।';
+
   // The reasons (lesson 2.8): the right ones fit this meter and this
   // reading; the wrong ones are the lesson's myths and field guesses (the
   // colours, "run it and see", a cyclic shift) — never a true rule marked
@@ -148,32 +160,64 @@ abstract final class PmLines {
   static const revDigital = 'মিটারে REV জ্বলছে, তাই ফেজের ক্রম উল্টো R-B-Y';
   static const revSwap = ['যেকোনো দুটো ফেজ বদলালেই ক্রম ঠিক হয়ে যাবে', 'উল্টো ক্রমে মোটর উল্টো ঘুরবে, পাম্প নষ্ট হবে'];
 
-  /// Wrong reasons for a "right" call: the lesson's myths and guesses.
+  /// Wrong reasons for a "right" call: the lesson's myths and guesses (they
+  /// name R-Y-B as the right cards do).
   static const fwdMyths = [
-    'তারের রং লাল-হলুদ-নীল, তাই ক্রম ঠিকই আছে',
+    'তারের রং লাল-হলুদ-নীল, তাই ক্রম ঠিক R-Y-B',
     'ছোট মোটর, উল্টো ঘুরলে পরে তার বদলে নেব',
-    'আগের বার এই লাইনে ঠিক ছিল, এবারও ঠিকই',
-    'তিনটে বাতি জ্বললেই ফেজের ক্রম ঠিক ধরা যায়',
+    'আগের বার এই লাইনে R-Y-B ছিল, এবারও তাই হবে',
+    'তিনটে বাতি জ্বললেই ক্রম ঠিক R-Y-B ধরা যায়',
     'মোটর একবার চালিয়ে দেখলেই সব বোঝা যেত',
-    'নতুন লাইনে ফেজের ক্রম সবসময় ঠিকই থাকে',
+    'নতুন লাইনে ফেজের ক্রম সবসময় R-Y-B-ই থাকে',
   ];
 
   /// Wrong reasons for a "reversed" call.
   static const revMyths = [
     'তিনটে ফেজই একঘর করে সরালে ক্রম ঠিক হবে',
-    'তারের রং মিলছে না, তাই ক্রমটা উল্টো হয়েছে',
+    'তারের রং মিলছে না, তাই ক্রমটা উল্টো R-B-Y',
     'উল্টো ক্রমে মোটরের কিছু হয় না, শুধু ধীরে চলে',
     'মিটারটা পুরনো, তাই মাঝে মাঝে উল্টো দেখায়',
     'একবার মোটর চালিয়ে দেখি সত্যিই উল্টো কি না',
+    'আগের বার এই লাইনে R-B-Y ছিল, এবারও তাই হবে',
   ];
+
+  /// A misreading of this meter's own indicator (so the indicator's word —
+  /// ডিস্ক, FWD, REV — is never only on the right card).
+  static const fwdDiscMyth = 'ডিস্ক যেদিকেই ঘুরুক, ঘুরলেই ক্রম ঠিক R-Y-B';
+  static const fwdDigitalMyth = 'মিটারে FWD বা REV যা-ই জ্বলুক, ক্রম R-Y-B-ই';
+  static const revDiscMyth = 'ডিস্ক ধীরে ঘুরছে, তাই ফেজের ক্রম উল্টো R-B-Y';
+  static const revDigitalMyth = 'মিটারে REV জ্বলছে মানে কোনো একটা ফেজ নেই';
+  static String meterMyth(PmCase c) =>
+      c.meter == PmMeter.disc ? (c.fwd ? fwdDiscMyth : revDiscMyth) : (c.fwd ? fwdDigitalMyth : revDigitalMyth);
 
   static List<String> whyRight(PmCase c) => c.fwd
       ? [c.meter == PmMeter.disc ? fwdDisc : fwdDigital, fwdMatched]
       : [c.meter == PmMeter.disc ? revDisc : revDigital, ...revSwap];
-  static List<String> whyWrong(PmCase c) => c.fwd ? fwdMyths : revMyths;
+  static List<String> whyWrong(PmCase c) => [meterMyth(c), ...(c.fwd ? fwdMyths : revMyths)];
 
-  /// The careless coworker (his exit line is recorded; his pushes go by
-  /// device TTS until recorded — listed in REGISTER.md).
+  /// Words that could mark a card (the indicator, the sequence, "reversed").
+  static const tells = ['ডিস্ক', 'FWD', 'REV', 'R-Y-B', 'R-B-Y', 'মিটারে', 'উল্টো'];
+
+  /// The reason deck: one right card, this meter's misreading, and the field
+  /// myth that shares most of the right card's [tells] — so no word appears
+  /// only on the right card.
+  static List<ChoiceOption> dealWhy(PmCase c, math.Random rng) {
+    final right = whyRight(c);
+    final pick = right[rng.nextInt(right.length)];
+    final mine = meterMyth(c);
+    final missing = [
+      for (final t in tells)
+        if (pick.contains(t) && !mine.contains(t)) t,
+    ];
+    int cover(String x) => missing.where(x.contains).length;
+    final rest = [...(c.fwd ? fwdMyths : revMyths)]..shuffle(rng);
+    final best = rest.map(cover).fold<int>(0, math.max);
+    final other = rest.firstWhere((x) => cover(x) == best);
+    return dealChoices([pick], [mine, other], rng);
+  }
+
+  /// The careless coworker (his exit line is recorded; his pushes have no
+  /// clip yet: silent, the caption held for a reading time).
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
   static const skipLine = 'মিটার-টিটার লাগবে না! মোটর চালিয়ে দাও, উল্টো ঘুরলে তার বদলে দেবে।';
   static const clipLine = 'রং মিলিয়ে কী হবে? যেকোনো ক্লিপ যেকোনো তারে লাগাও!';
@@ -273,7 +317,15 @@ abstract final class PmMistakes {
     lessonPoint: 2,
   );
 
-  static const all = [bareLive, bareDead, badLead, wrongClip, missedReverse, falseReverse, blank, untested, anyClip];
+  /// A good meter put aside (the leads card read wrong the other way).
+  static const goodLeadSwapped = DoMistake(
+    key: '2.8/phase/good-lead-swapped',
+    textBn: 'এই মিটারের লিড ভালো ছিল — ইনসুলেশন ফাটা নয়, তামা দেখা যায় না। ব্যবহারের আগে প্রোব আর তার মন দিয়ে দেখুন; ক্ষতি থাকলে তবেই মিটার বদলান।',
+    art: _lead,
+    lessonPoint: 2,
+  );
+
+  static const all = [bareLive, bareDead, badLead, goodLeadSwapped, wrongClip, missedReverse, falseReverse, blank, untested, anyClip];
 }
 
 /// Three pump houses: at least one right (R-Y-B) and one reversed (R-B-Y)
@@ -383,12 +435,17 @@ class PmRun {
     return badNow != null;
   }
 
-  /// Another meter (all leads back on it).
-  void takeSpare() {
-    if (!_open) return;
-    if (badNow != null) _tag(PmLines.caughtLead);
+  /// Another meter (all leads back on it). Putting aside a meter whose leads
+  /// were good is an over-call: a slip, but the pump goes on (returned).
+  DoMistake? takeSpare() {
+    if (!_open) return null;
+    final needless = badNow == null;
+    if (!needless) _tag(PmLines.caughtLead);
     spare = true;
     clips.clear();
+    if (!needless) return null;
+    slips++;
+    return PmMistakes.goodLeadSwapped;
   }
 
   void toggleSwitch() {
@@ -577,8 +634,12 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
   String? _stamp;
   int _stamps = 0;
 
-  /// What he was about to do when the coworker cut in (done once refused).
-  VoidCallback? _held;
+  /// The slip card up now leaves the pump open (a good meter swapped).
+  var _cardResume = false;
+
+  /// The two tools' order on the bench (dealt per pump: never the lesson's
+  /// order every time).
+  var _toolsFlip = false;
 
   var _freeze = false;
   Offset? _arcAt;
@@ -586,11 +647,24 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how, never what).
+  final _hints = IdleHintController();
+  final _sceneKey = GlobalKey();
+  PmGeo? _lastGeo;
+  final _glovesKey = GlobalKey();
+  final _inspectKey = GlobalKey();
+  final _fwdKey = GlobalKey();
+  final _revKey = GlobalKey();
+  final _leadsOkKey = GlobalKey();
+  final _leadsSwapKey = GlobalKey();
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
   bool get _quiet => MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context);
-  bool get _hisMoment => _run.index == _run.deal.callAt && !coworkerDone;
+
+  /// This pump is the one he is dealt on.
+  bool get _hisPump => _run.index == _run.deal.callAt && !coworkerDone;
 
   @override
   void dispose() {
@@ -625,7 +699,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
 
   Future<void> _wait(int ms) => Future<void>.delayed(Duration(milliseconds: _quiet ? (ms ~/ 3) : ms));
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && !_leads;
+  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown && !_leads;
 
   // --- a pump house ------------------------------------------------------------------
   void _startMoment() {
@@ -633,10 +707,12 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
       _selected = null;
       _motor = 0;
       _stamp = null;
-      _held = null;
+      _toolsFlip = widget.rng.nextBool();
       _wake++;
     });
-    if (_hisMoment && _run.deal.push == PmPush.skipTest) scheduleCoworker();
+    // He is due from the start of his pump: the clip and the call wait for
+    // him (holdForCoworker), so a fast play cannot skip him.
+    if (_hisPump) scheduleCoworker();
     unawaited(_sayChain([PmLines.ask]));
   }
 
@@ -657,15 +733,22 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     setState(() => _leads = true);
   }
 
-  void _closeLeads({required bool swap}) {
-    if (!_leads) return;
+  void _closeLeads({required bool swap, Offset? at}) {
+    if (!_leads || _ended || tableBusy) return;
     _cue('sounds/intro/click.ogg', volume: 0.4);
-    if (swap) _run.takeSpare();
+    final m = swap ? _run.takeSpare() : null;
     setState(() {
       _leads = false;
       if (swap) _selected = null;
       _wake++;
     });
+    if (m != null) {
+      // A good meter put aside: the slip, then the same pump goes on.
+      final size = MediaQuery.sizeOf(context);
+      unawaited(_levelDelta(-10, at ?? Offset(size.width / 2, size.height / 2), mood: GuideMood.warn));
+      unawaited(_slip(m, resume: true));
+      return;
+    }
     if (swap) unawaited(_sayChain([PmLines.swapped]));
   }
 
@@ -698,6 +781,9 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
       final tag = order[slot];
       final sel = _selected;
       if (sel != null) {
+        // A clip is decisive: on his pump he cuts in first (the lead stays in
+        // hand; tap the terminal again after him).
+        if (holdForCoworker()) return;
         _tryClip(sel, tag, geo.terminal(slot));
         return;
       }
@@ -711,22 +797,22 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
           _selected = on;
           _wake++;
         });
+        return;
       }
+      _hints.missTap();
       return;
     }
     // The meter: look again (the disc turns a few seconds more).
     if (geo.meter.contains(p)) {
       HapticFeedback.selectionClick();
       setState(() => _wake++);
+      return;
     }
+    // Nothing there.
+    _hints.missTap();
   }
 
   void _tryClip(PmPhase lead, PmPhase tag, Offset at) {
-    // On his moment he cuts in as the trainee goes to clip.
-    if (_hisMoment && _run.deal.push == PmPush.anyClip && _run.gloves) {
-      _hold(() => _tryClip(lead, tag, at));
-      return;
-    }
     final m = _run.clip(lead, tag);
     if (m == null) {
       HapticFeedback.lightImpact();
@@ -747,23 +833,10 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     unawaited(_slip(m));
   }
 
-  void _hold(VoidCallback action) {
-    _hush();
-    HapticFeedback.selectionClick();
-    setState(() {
-      _held = action;
-      _busy = true;
-    });
-    scheduleCoworker();
-  }
-
   // --- the call ------------------------------------------------------------------------
   Future<void> _decide(bool fwd, Offset origin) async {
     if (!_canPlay) return;
-    if (_hisMoment) {
-      _hold(() => unawaited(_decide(fwd, origin)));
-      return;
-    }
+    if (holdForCoworker()) return;
     _hush();
     final m = _run.decide(fwd: fwd);
     HapticFeedback.mediumImpact();
@@ -775,7 +848,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
       final c = _run.current;
       final idx = _run.index;
       unawaited(askReason(
-        deal: () => dealChoices(PmLines.whyRight(c), PmLines.whyWrong(c), widget.rng),
+        deal: () => PmLines.dealWhy(c, widget.rng),
         question: fwd ? PmLines.whyFwdQ : PmLines.whyRevQ,
         stillValid: () => _run.index == idx && !_ended,
       ));
@@ -853,9 +926,14 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.index != _run.deal.callAt || _run.shown) return null;
-    if (_held != null) return true;
-    if (_run.deal.push == PmPush.anyClip) return false;
-    if (_intro || _busy || _card != null || reasonOpen || _leads) return false;
+    // His push must fit the moment: "any clip on any wire" only before the
+    // first clip, "no meter, start it" only before the meter is on. (The
+    // clip and the call wait for him, so neither has happened yet.)
+    if (_run.deal.push == PmPush.anyClip ? _run.clips.isNotEmpty : _run.clips.length == 3) return null;
+    if (_intro || _busy || _card != null || tableBusy || _leads) return false;
+    // "Any clip": he cuts in as the trainee goes to clip (a lead in hand, or
+    // the clip held for him).
+    if (_run.deal.push == PmPush.anyClip) return _selected != null;
     return true;
   }
 
@@ -866,11 +944,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
-    final action = _held;
-    setState(() {
-      _held = null;
-      _busy = false;
-    });
+    setState(() => _wake++);
     if (!held) {
       final m = _run.listen(_run.deal.push);
       if (m == null) return;
@@ -884,11 +958,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     _run.caught.add(PmLines.caughtCall);
     unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
     unawaited(coworkerSnarl());
-    if (action != null) {
-      action();
-    } else {
-      unawaited(_sayChain([PmLines.ask]));
-    }
+    unawaited(_sayChain([PmLines.ask]));
   }
 
   /// Tap the guide: the task again, a different way each time.
@@ -915,7 +985,9 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     if (mounted) setState(() {});
   }
 
-  Future<void> _slip(DoMistake m) async {
+  /// A slip: its card, then the next pump — or, with [resume], the same pump
+  /// goes on (a good meter swapped).
+  Future<void> _slip(DoMistake m, {bool resume = false}) async {
     if (strike(m)) {
       await _struckOut(m);
       return;
@@ -925,6 +997,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
+      _cardResume = resume;
       _wake++;
     });
     unawaited(bookMistake(ref, widget.ctx, m));
@@ -967,8 +1040,17 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     switch (_cardTone) {
       case MistakeTone.slip:
         _hush();
-        setState(() => _card = null);
-        _next();
+        final resume = _cardResume;
+        setState(() {
+          _card = null;
+          _cardResume = false;
+          _wake++;
+        });
+        if (resume) {
+          unawaited(_sayChain([PmLines.goOn, PmLines.ask]));
+        } else {
+          _next();
+        }
       case MistakeTone.nearMiss:
         _hush();
         widget.onRetry(_muted);
@@ -1042,7 +1124,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
   // --- the scene -------------------------------------------------------------------
   LinemanMode get _mode {
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
-    if (_held != null || coworkerOpen) return LinemanMode.worried;
+    if (coworkerHeld || coworkerOpen) return LinemanMode.worried;
     if (_motor == 1) return LinemanMode.cheer;
     return LinemanMode.hold;
   }
@@ -1069,7 +1151,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = PmGeo.forScene(m.height, m.inset);
+    final geo = _lastGeo = PmGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final tb = traineeBox(geo);
     final hand = tb.topLeft + LinemanFigure.tipOf(LinemanMode.hold, Carry.none, tb.size);
@@ -1120,7 +1202,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
         key: const ValueKey('touch'),
         child: Semantics(
           label: PmLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo)),
+          child: GestureDetector(key: _sceneKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo)),
         ),
       ),
       if (_freeze && _arcAt != null)
@@ -1148,6 +1230,35 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     ];
   }
 
+  // --- gesture hints (how, never what) ---------------------------------------------
+  /// A scene rect (design px) on the screen (through the frame's fit).
+  Rect? _sceneRect(Rect r) {
+    final box = _sceneKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return MatrixUtils.transformRect(box.getTransformTo(null), r);
+  }
+
+  /// Leads card: a sweep over both buttons. A lead in hand: a sweep over all
+  /// three terminals (never one). Otherwise a sweep over everything he can
+  /// touch — the switch, the meter's leads, the two tools, the two calls —
+  /// in screen order (top to bottom), pressing none.
+  HintSpec? _hint() {
+    if (_leads) return HintSpec.sweepOver([_leadsOkKey, _leadsSwapKey]);
+    final geo = _lastGeo;
+    if (geo == null) return null;
+    if (_selected != null) {
+      final rects = [for (var s = 0; s < 3; s++) ?_sceneRect(pmTerminalRect(geo, s))];
+      return rects.length < 3 ? null : HintSpec.sweep(rects);
+    }
+    final rects = <Rect>[
+      ?_sceneRect(geo.mainSwitch),
+      for (final lead in PmPhase.values)
+        if (!_run.clips.containsKey(lead)) ?_sceneRect(pmParkRect(geo, lead)),
+      for (final k in [_glovesKey, _inspectKey, _fwdKey, _revKey]) ?HintSpec.globalRectOf(k),
+    ]..sort((a, b) => a.top != b.top ? a.top.compareTo(b.top) : a.left.compareTo(b.left));
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1155,8 +1266,13 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_leads && _held == null;
+    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && !_leads && !coworkerHeld;
+    final leadsUp = _leads && playing && _card == null && !_ended;
     final c = _run.current;
+    final tools = [
+      _ToolButton(key: _glovesKey, icon: Icons.back_hand_rounded, label: PmLines.gloves, on: _run.gloves, enabled: _canPlay, onTap: _putGloves),
+      _ToolButton(key: _inspectKey, icon: Icons.search_rounded, label: PmLines.inspect, on: _run.inspected, enabled: _canPlay, onTap: _openLeads),
+    ];
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1184,6 +1300,10 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: ((handsOn && _canPlay) || leadsUp) && !coworkerOnScreen,
+            hintKey: '${_run.index}-${_selected != null}-$_leads-${_run.clips.length}',
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1200,9 +1320,9 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
                   bottom: pad.bottom + 72,
                   child: Row(
                     children: [
-                      _ToolButton(icon: Icons.back_hand_rounded, label: PmLines.gloves, on: _run.gloves, enabled: _canPlay, onTap: _putGloves),
+                      _toolsFlip ? tools[1] : tools[0],
                       const SizedBox(width: 6),
-                      _ToolButton(icon: Icons.search_rounded, label: PmLines.inspect, on: _run.inspected, enabled: _canPlay, onTap: _openLeads),
+                      _toolsFlip ? tools[0] : tools[1],
                     ],
                   ),
                 ),
@@ -1213,9 +1333,10 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(child: DoBigButton(label: PmLines.fwd, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
+                      // The same look for both calls (neither stands out).
+                      Expanded(child: DoBigButton(key: _fwdKey, label: PmLines.fwd, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
                       const SizedBox(width: 10),
-                      Expanded(child: DoBigButton(label: PmLines.rev, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
+                      Expanded(child: DoBigButton(key: _revKey, label: PmLines.rev, filled: false, onDark: true, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
                     ],
                   ),
                 ),
@@ -1236,6 +1357,8 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
                   key: const ValueKey('leads'),
                   bad: _run.badNow,
                   quiet: quiet,
+                  okKey: _leadsOkKey,
+                  swapKey: _leadsSwapKey,
                   onOk: () => _closeLeads(swap: false),
                   onSwap: () => _closeLeads(swap: true),
                 ),
@@ -1383,7 +1506,7 @@ class _DocketChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit once used.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;
@@ -1436,15 +1559,19 @@ class _ToolButton extends StatelessWidget {
 
 /// The meter's three leads up close: look, then keep it or take another.
 class _LeadsCard extends StatelessWidget {
-  const _LeadsCard({super.key, required this.bad, required this.quiet, required this.onOk, required this.onSwap});
+  const _LeadsCard({super.key, required this.bad, required this.quiet, required this.okKey, required this.swapKey, required this.onOk, required this.onSwap});
   final PmPhase? bad;
   final bool quiet;
+  final GlobalKey okKey;
+  final GlobalKey swapKey;
   final VoidCallback onOk;
   final VoidCallback onSwap;
 
   @override
   Widget build(BuildContext context) {
-    Widget button(String label, bool filled, VoidCallback onTap) => Expanded(
+    // Both choices look the same (neither is the suggested one).
+    Widget button(Key key, String label, bool filled, VoidCallback onTap) => Expanded(
+          key: key,
           child: Semantics(
             button: true,
             label: label,
@@ -1499,9 +1626,9 @@ class _LeadsCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      button(PmLines.leadsOk, true, onOk),
+                      button(okKey, PmLines.leadsOk, false, onOk),
                       const SizedBox(width: 10),
-                      button(PmLines.leadsSwap, false, onSwap),
+                      button(swapKey, PmLines.leadsSwap, false, onSwap),
                     ],
                   ),
                 ],

@@ -117,19 +117,21 @@ class M4EarthTestView {
     this.faults = const {},
     this.spotted = const {},
     this.testPit,
-    this.spikes = 0,
+    this.spikeAt = const {},
     this.leads = false,
     this.marks = const {},
   });
 
   final Map<int, M4EarthTestFault> faults;
 
-  /// Faults he has tagged (a red tag hangs there).
+  /// Points he has tagged (a red tag hangs there, fault or not).
   final Set<int> spotted;
 
   /// The pit under test (the leads go to it).
   final int? testPit;
-  final int spikes;
+
+  /// The spike places (0, 1) driven.
+  final Set<int> spikeAt;
   final bool leads;
   final Map<int, M4EarthTestMark> marks;
 
@@ -140,14 +142,15 @@ class M4EarthTestView {
       other.spotted.length == spotted.length &&
       other.spotted.containsAll(spotted) &&
       other.testPit == testPit &&
-      other.spikes == spikes &&
+      other.spikeAt.length == spikeAt.length &&
+      other.spikeAt.containsAll(spikeAt) &&
       other.leads == leads &&
       _mapEq(other.marks, marks);
 
   static bool _mapEq<K, V>(Map<K, V> a, Map<K, V> b) => a.length == b.length && a.entries.every((e) => b[e.key] == e.value);
 
   @override
-  int get hashCode => Object.hash(faults.length, spotted.length, testPit, spikes, leads, marks.length);
+  int get hashCode => Object.hash(faults.length, spotted.length, testPit, spikeAt.length, leads, marks.length);
 }
 
 /// "18.0" → "18", "2.5" → "2.5" (English digits).
@@ -392,7 +395,7 @@ class M4EarthTestWorldPainter extends CustomPainter {
     }
     // The pit's marking.
     _text(c, m4EarthTestPitNames[i], Offset(px, g + 20), 10.5, const Color(0xFFF7F1E1), bold: true, shadow: true);
-    // A red tag where he saw a fault.
+    // A red tag where he hung one (the same on a fault and a sound point).
     if (view.spotted.contains(i)) {
       final at = Offset(px + 12, g - 40);
       c.drawLine(at.translate(-12, 2), at.translate(-3, 0), Paint()
@@ -434,7 +437,7 @@ class M4EarthTestWorldPainter extends CustomPainter {
     for (var k = 0; k < 2; k++) {
       final s = geo.spike(k);
       c.drawOval(Rect.fromCenter(center: s.translate(0, 4), width: 26, height: 9), Paint()..color = const Color(0x55311F0E));
-      if (k < view.spikes) {
+      if (view.spikeAt.contains(k)) {
         c.drawRect(Rect.fromLTRB(s.dx - 2, s.dy - 26, s.dx + 2, s.dy + 4), Paint()..color = const Color(0xFFB9C0C4));
         c.drawRect(Rect.fromLTRB(s.dx - 5, s.dy - 30, s.dx + 5, s.dy - 25), Paint()..color = const Color(0xFF8C9398));
         c.drawCircle(s.translate(0, -18), 3, Paint()..color = k == 0 ? const Color(0xFFF2C230) : const Color(0xFFE53935));

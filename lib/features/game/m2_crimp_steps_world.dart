@@ -297,10 +297,10 @@ class CrimpBenchPainter extends CustomPainter {
       if (view.pasted) c.drawRect(cond, Paint()..color = const Color(0x5578828C));
       if (view.brush > 0 && view.brush < 1) _brush(c, Offset(cond.left + cond.width * view.brush, y - 26), 0.9);
     }
-    // The strip marks, and the lug laid beside the cable to measure.
+    // The strip marks. No measuring lug is laid against them (it would sit on
+    // the right mark): the real lug rests past the tip, and the player
+    // compares its barrel with the marks by eye.
     if (view.showMarks && !view.stripped) {
-      final ghost = Rect.fromLTRB(geo.markX(1), y - cr - 30, CrimpGeo.tipX, y - cr - 30 + br * 2);
-      _lug(c, ghost.left, ghost.center.dy, br, job, ghostly: true);
       for (final m in job.marks) {
         final x = geo.markX(m);
         c.drawLine(Offset(x, y - cr - 3), Offset(x, y + cr + 3), Paint()..color = const Color(0xFFFFFFFF)..strokeWidth = 2.2);
@@ -332,10 +332,9 @@ class CrimpBenchPainter extends CustomPainter {
     if (view.heat > 0) paintHeat(c, view.heatAt ?? Offset(mouth + CrimpGeo.barrel / 2, y), view.heat);
   }
 
-  void _lug(Canvas c, double mouth, double y, double br, CrimpJob job, {bool ghostly = false, bool crimped = false, LugKind? bad, bool flat = false}) {
-    final a = ghostly ? 0.55 : 1.0;
+  void _lug(Canvas c, double mouth, double y, double br, CrimpJob job, {bool crimped = false, LugKind? bad, bool flat = false}) {
     final metal = job.al ? [const Color(0xFFDDE2E6), const Color(0xFF8D979F)] : [const Color(0xFFE8ECEF), const Color(0xFFA9B0B6)];
-    paintLug(c, Rect.fromLTWH(mouth, y - br, CrimpGeo.barrel + CrimpGeo.palm, br * 2), metal, opacity: a, kind: crimped ? (bad ?? LugKind.good) : null, flat: flat, label: CrimpLines.mm(job.size));
+    paintLug(c, Rect.fromLTWH(mouth, y - br, CrimpGeo.barrel + CrimpGeo.palm, br * 2), metal, kind: crimped ? (bad ?? LugKind.good) : null, flat: flat, label: CrimpLines.mm(job.size));
   }
 
   @override

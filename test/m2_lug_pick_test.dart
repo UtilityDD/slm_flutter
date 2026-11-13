@@ -3,7 +3,8 @@
 // where the hand has been), deal variety, fair reason libraries that fit what
 // the tray had, and the level in the shell (idle perf; the guide first; a full
 // clean flow with the cable print, a faulty lug set aside, the strip, the
-// reasons and the coworker; slip cards; three slips fail).
+// reasons and the coworker; the coworker can't be skipped by a fast play on
+// এটাই নিন or on the store button; slip cards; three slips fail; gesture hints).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,6 +18,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart' show FrameLines, StruckOutCard;
 import 'package:slm_flutter/features/game/level_shell.dart';
@@ -32,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(
   rungId: '2.3/do/0',
@@ -85,20 +88,14 @@ List<Finder> _onScreen(List<String> texts) => [
     ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await confirmChoice(t);
+  // A reason zooms and waits for এগিয়ে যান; the coworker's deck just closes.
+  await tapReasonProceed(t);
 }
 
 /// A cable whose own-size lug has fault [f], for the hold reasons.
@@ -231,6 +228,28 @@ void main() {
         LugItem(id: 'c', metal: LugMetal.al, size: 16),
       ]);
       expect(lugPushFor(cu, {}, preferMetal: true), isNull, reason: 'no copper-on-aluminium push on a copper cable');
+    });
+
+    test('no marker word gives a card away: the right cards\' words are on wrong ones too', () {
+      for (final p in LugPush.values) {
+        final c = LugLines.coworker(p);
+        for (final x in c.right) {
+          expect(x.startsWith('না —'), isFalse, reason: x);
+        }
+        for (final x in c.wrong) {
+          expect(x.startsWith('ঠিক,'), isFalse, reason: x);
+        }
+      }
+      void shared(String name, List<String> words, List<String> wrong) {
+        for (final w in words) {
+          expect(wrong.any((x) => x.contains(w)), isTrue, reason: '$name: "$w" only on a right card');
+        }
+      }
+
+      shared('bigger', ['মাপ', 'ল্যাগ', 'চাপ', 'সংযোগ', 'বড়'], LugLines.coworkerBigger.wrong);
+      shared('metal', ['ধাতু', 'গ্যালভানিক', 'ল্যাগ', 'তামা'], LugLines.coworkerMetal.wrong);
+      shared('pack', ['ব্যারেল', 'ফাটল', 'ভেতর', 'মাপ', 'ধাতু', 'সাইজ', 'পরিষ্কার', 'মিলেছে', 'নেই'], LugLines.packWrong(LugMetal.al));
+      shared('hold', ['ল্যাগ', 'ক্রিম্প', 'ট্রে', 'মাপ', 'ধাতু', 'ভালো', 'নেই', 'আনি'], LugLines.holdExcuses);
     });
 
     test('deals vary', () {
@@ -400,7 +419,7 @@ void main() {
         }
         debugPrint('PERF lug pick ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(LugLines.hold), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
@@ -422,7 +441,7 @@ void main() {
       ));
       await _pump(t, 400);
       expect(find.byType(GuideIntro), findsOneWidget);
-      expect(find.text('শুরু'), findsNothing);
+      expect(find.textContaining(RegExp('শুরু')), findsNothing);
       await t.tapAt(const Offset(360, 800));
       await _pump(t, 600);
       expect(find.byType(GuideIntro), findsOneWidget, reason: 'a tap does not skip');
@@ -515,10 +534,67 @@ void main() {
       final wrong = _onScreen(LugLines.coworkerBigger.wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1500);
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
       expect(find.text(LugMistakes.wrongSize.textBn), findsOneWidget);
       expect(c.read(gameSaveProvider).mistakes, isNotEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker beat 1 is his alone: tapping the guide does not talk over him', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      final (c, _) = await open(t, _seedCalling(0));
+      for (var ms = 0; ms < 4000 && find.byType(CoworkerPeek).evaluate().isEmpty; ms += 50) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'beat 1: his caption only');
+      final guide = t.getRect(find.byType(AiLinemanGuide).last);
+      await t.tapAt(guide.center);
+      await _pump(t, 200);
+      expect(c.read(guideDirectorProvider).line, isNot(contains(LugLines.ask)), reason: 'the guide waits for the deck');
+      await waitChoiceDeck(t);
+      await _pickRight(t, [...LugLines.coworkerBigger.right, ...LugLines.coworkerMetal.right]);
+      await _pump(t, 2500);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker cannot be skipped from the tray: a tap there does nothing until he is answered; no hint while he is on', (t) async {
+      CoworkerTiming.debugReadHoldInTests = true;
+      addTearDown(() => CoworkerTiming.debugReadHoldInTests = false);
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final (c, deal) = await open(t, _seedCalling(0));
+      final r1 = deal.rounds[0];
+      for (var ms = 0; ms < 4000 && find.byType(CoworkerPeek).evaluate().isEmpty; ms += 50) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byType(ChoiceDeck), findsNothing, reason: 'beat 1: his caption only');
+      // A fast tap on the tray (the right lug, not the one he pushes).
+      await t.tap(lugs.at(r1.lugs.indexOf(_right(r1))), warnIfMissed: false);
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the tap did not send him off');
+      expect(find.text(LugLines.take), findsNothing, reason: 'no lug came into hand');
+      expect(find.text(LugLines.caughtCall), findsNothing);
+      await waitChoiceDeck(t);
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'he is still answered on the deck');
+      // The tray stays dead under the deck too, and no hand shows over him.
+      await t.tap(lugs.at(r1.lugs.indexOf(_right(r1))), warnIfMissed: false);
+      await _pump(t, 9000);
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.text(LugLines.take), findsNothing);
+      expect(t.state<IdleHintState>(find.byType(IdleHint).first).showing, isFalse, reason: 'no hint while he is on');
+      await _pickRight(t, [...LugLines.coworkerBigger.right, ...LugLines.coworkerMetal.right]);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await lift(t, r1, _right(r1));
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
       expect(t.takeException(), isNull);
       await close(t, c);
     });
@@ -548,6 +624,110 @@ void main() {
       await _pump(t, 3500);
       expect(find.text(LugLines.hold), findsOneWidget, reason: 'on to cable 2');
       expect(c.read(gameSaveProvider).mistakes.length, 2);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker comes even on a fast play: এটাই নিন waits for him; refused, the lug is still in hand', (t) async {
+      final (c, deal) = await open(t, _seedCalling(0));
+      final r1 = deal.rounds[0];
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'his timer has not run out yet');
+      await t.tap(lugs.at(r1.lugs.indexOf(_right(r1))), warnIfMissed: false);
+      await _pump(t, 400);
+      await t.tap(find.text(LugLines.take));
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in on the take');
+      expect(find.text(LugLines.strip), findsNothing, reason: 'the take waited for him');
+      expect(find.text(LugLines.take), findsNothing, reason: 'the close look steps aside while he talks');
+      await _pickRight(t, [...LugLines.coworkerBigger.right, ...LugLines.coworkerMetal.right]);
+      await _pump(t, 1500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(find.text(LugLines.take), findsOneWidget, reason: 'the lug is still in hand');
+      await t.tap(find.text(LugLines.take));
+      await _pump(t, 800);
+      expect(find.text(LugLines.strip), findsOneWidget, reason: 'after him, the take works');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker comes even on a fast play on the last cable: the store button waits for him', (t) async {
+      final (c, deal) = await open(t, _seedCalling(2));
+      for (var i = 0; i < 2; i++) {
+        final r = deal.rounds[i];
+        expect(find.byType(CoworkerPeek), findsNothing, reason: 'he is dealt on the last cable');
+        await lift(t, r, _right(r));
+        await t.tap(find.text(LugLines.take));
+        await _pump(t, 800);
+        await strip(t, _right(r), 1);
+        await _pump(t, 2500);
+        await _pickRight(t, LugLines.packRight(r.cable.metal));
+        if (i == 0) await _pump(t, 3500);
+      }
+      // Straight to the store, before his timer runs out.
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(LugLines.hold));
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he cuts in before the job is sent for');
+      await _pickRight(t, [...LugLines.coworkerBigger.right, ...LugLines.coworkerMetal.right]);
+      await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await t.tap(find.text(LugLines.hold));
+      await _pump(t, 3500);
+      await _pickRight(t, LugLines.holdRight(deal.rounds[2], flawKnown: false));
+      await _pump(t, 6000);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['2.3/do/0'], 'cleared');
+      expect(s.mistakes, isEmpty);
+      expect(find.text(LugLines.caughtCall), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('coworker on the store button: listening takes the lug he pushes — a slip', (t) async {
+      final (c, deal) = await open(t, _seedCalling(0));
+      expect(deal.rounds[0].cable.metal, LugMetal.cu);
+      // He is due on cable 1: the store button waits for him; listening is the slip.
+      await t.tap(find.text(LugLines.hold));
+      await t.pump();
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen([...LugLines.coworkerBigger.wrong, ...LugLines.coworkerMetal.wrong]);
+      expect(wrong, hasLength(2));
+      await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
+      await _pump(t, 1500);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.text(LugMistakes.wrongSize.textBn), findsOneWidget, reason: 'a copper cable: he pushes the bigger lug');
+      expect(c.read(gameSaveProvider).mistakes, hasLength(1));
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over every tray lug and the store button; a nudge along the barrel; none over a card', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final (c, deal) = await open(t, _seedCalling(2));
+      IdleHintState hint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      final r1 = deal.rounds[0];
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue, reason: 'idle at the tray');
+      expect(hint().debugOptions, hasLength(r1.lugs.length + 1), reason: 'every lug and the store button alike');
+      await _pump(t, 6000);
+      // In hand: a nudge along the barrel (not a sweep over answers).
+      await lift(t, r1, _otherMetal(r1));
+      expect(hint().showing, isFalse, reason: 'a touch hides it');
+      await _pump(t, 9000);
+      expect(hint().showing, isTrue);
+      expect(hint().debugOptions, isEmpty, reason: 'a drag nudge');
+      await _pump(t, 6000);
+      // A slip card: no hand while it is up.
+      await t.tap(find.text(LugLines.take));
+      await _pump(t, 600);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      await _pump(t, 10000);
+      expect(hint().showing, isFalse, reason: 'no hint over a card');
       expect(t.takeException(), isNull);
       await close(t, c);
     });

@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -67,8 +68,14 @@ export 'm4_jumper_tight_world.dart' show M4JumperTightKind;
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m4_jumper_tight_world.dart), corner guide, ◆ on the table → "কেন …?"
 // → the next pole by itself; the careless coworker once a play, after the spot,
-// before the shutdown. Voice: the guide by device TTS; the coworker's push by
-// device TTS until recorded (his exit line is his existing recorded clip).
+// before the shutdown; a fast শাটডাউন waits for him (holdForCoworker). Voice:
+// the guide by device TTS; the coworker's push has no clip yet (the kit holds
+// his caption silently) and his exit line is his existing recorded clip.
+//
+// No giveaways: the tool row is dealt in a fresh order for every pole (never
+// the work order); a wrong clamp costs a slip and its card stays neutral.
+// Gesture hints: a sweep over the clamps (spot) and over the tools, a tap on
+// the spotted clamp with a tool in hand / for the recheck, a hold on টাইট দিন.
 
 // ============================================================================
 // Content
@@ -79,6 +86,25 @@ enum M4JumperTightWhy { sign, isolate, clean, wrench, replace, recheck }
 
 /// The hands-on tools that go on the clamp.
 enum M4JumperTightTool { none, brush, clamp, wrench }
+
+/// The buttons of the tool row (declared in the work order; the row is dealt
+/// shuffled, never in this order).
+enum M4JumperTightControl { shutdown, tester, earth, brush, clamp, wrench }
+
+/// A tool row in a fresh order that is never the work order.
+List<M4JumperTightControl> m4JumperTightToolRow(math.Random rng) {
+  const work = M4JumperTightControl.values;
+  final row = [...work]..shuffle(rng);
+  var same = true;
+  for (var i = 0; i < row.length; i++) {
+    if (row[i] != work[i]) same = false;
+  }
+  if (same) {
+    final first = row.removeAt(0);
+    row.add(first);
+  }
+  return row;
+}
 
 @immutable
 class M4JumperTightSite {
@@ -217,7 +243,7 @@ abstract final class M4JumperTightMistakes {
   );
   static const misSpot = DoMistake(
     key: '4.2/m4_jumper_tight/wrong-clamp',
-    textBn: 'ওই জোড়াটা ঠিক আছে। খারাপ জাম্পারের লক্ষণ: রাতে লাল আভা, স্পার্কিং, গলা ক্ল্যাম্প।',
+    textBn: 'আন্দাজে নয় — লক্ষণ দেখে ধরুন। খারাপ জাম্পারের লক্ষণ: রাতে লাল আভা, স্পার্কিং, গলা ক্ল্যাম্প।',
     art: _spot,
     lessonPoint: 2,
   );
@@ -272,11 +298,18 @@ const kM4JumperTightHi = 0.84;
 
 @immutable
 class M4JumperTightDeal {
-  const M4JumperTightDeal({required this.sites, required this.callAt});
+  const M4JumperTightDeal({required this.sites, required this.callAt, this.tools = const []});
   final List<M4JumperTightSite> sites;
 
   /// The pole the careless coworker comes to.
   final int callAt;
+
+  /// The tool row of each pole (dealt shuffled).
+  final List<List<M4JumperTightControl>> tools;
+
+  /// The tool row of pole [i] (a hand-made deal without rows: one fixed
+  /// non-work order).
+  List<M4JumperTightControl> toolsAt(int i) => i < tools.length ? tools[i] : m4JumperTightToolRow(math.Random(i));
 }
 
 /// Three poles: a glowing, a sparking and a melted clamp (any order), each on
@@ -296,7 +329,8 @@ M4JumperTightDeal m4JumperTightDeal(math.Random rng) {
         why: k == M4JumperTightKind.melted ? M4JumperTightWhy.replace : whys[w++],
       ),
   ];
-  return M4JumperTightDeal(sites: sites, callAt: rng.nextInt(sites.length));
+  final callAt = rng.nextInt(sites.length);
+  return M4JumperTightDeal(sites: sites, callAt: callAt, tools: [for (var i = 0; i < sites.length; i++) m4JumperTightToolRow(rng)]);
 }
 
 /// The play state (pure logic).
@@ -585,6 +619,12 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how, never what).
+  final _hints = IdleHintController();
+  final _toolKeys = {for (final c in M4JumperTightControl.values) c: GlobalKey()};
+  final _tightKey = GlobalKey();
+  M4JumperTightGeo? _geo;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -628,7 +668,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     _startSite();
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.checked && !_freeze;
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.checked && !_freeze;
 
   String get _task {
     if (!_run.spotted) return M4JumperTightLines.askSpot;
@@ -680,6 +720,8 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
 
   void _shutdown(Offset origin) {
     if (!_canPlay) return;
+    // The shutdown ends his moment: he cuts in first, however fast the play.
+    if (holdForCoworker()) return;
     final wasLive = _run.live;
     final m = _run.toggleShutdown();
     setState(() => _wake++);
@@ -730,10 +772,12 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
           unawaited(_sayChain([_task]));
         } else {
           _tick();
+          _hints.missTap();
         }
         return;
       }
     }
+    _hints.missTap();
   }
 
   // --- the torque hold -------------------------------------------------------
@@ -831,7 +875,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.index != _run.deal.callAt || !_run.spotted || _run.shutdown || _run.back || _run.checked) return null;
-    if (_intro || _card != null || reasonOpen || _tester != null || _run.tool != M4JumperTightTool.none) return false;
+    if (_intro || _card != null || tableBusy || _tester != null || _run.tool != M4JumperTightTool.none) return false;
     return true;
   }
 
@@ -1007,6 +1051,90 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     if (leave == true) _popOnce(false);
   }
 
+  // --- gesture hints -----------------------------------------------------------
+  /// The waiting state now (a new one resets the hint count).
+  Object get _hintKey => (
+        _run.index,
+        _run.spotted,
+        _run.tool,
+        _run.wrenchOn,
+        _run.shutdown,
+        _run.proved,
+        _run.earthed,
+        _run.cleaned,
+        _run.replaced,
+        _run.tightened,
+        _run.back,
+      );
+
+  /// How to play now — never which clamp or which tool is right.
+  HintSpec? _hint() {
+    final geo = _geo;
+    if (geo == null) return null;
+    if (!_run.spotted) {
+      // One of these clamps is the bad one: glide over all six.
+      return HintSpec.sweep([
+        for (var i = 0; i < 3; i++)
+          for (var e = 0; e < 2; e++) geo.clampHit(i, e),
+      ], space: HintSpace.scene);
+    }
+    if (_run.wrenchOn) return HintSpec.holdOn(_tightKey);
+    final s = _run.site;
+    // A tool in hand goes on the (already found) clamp — but only once he is
+    // up (shut down, proved, earthed) and only when that tap books nothing:
+    // on a live or unearthed line it is death or a slip, and so is a clamp or
+    // the wrenches before the brush (or the wrenches on a melted one before
+    // the new clamp). Otherwise the hint stays a sweep over the tool row.
+    // The recheck (the line back on, empty-handed) is a tap on the clamp.
+    final held = _run.tool != M4JumperTightTool.none;
+    final safeTap = _run.up &&
+        switch (_run.tool) {
+          M4JumperTightTool.none => false,
+          M4JumperTightTool.brush => true,
+          M4JumperTightTool.clamp => _run.cleaned,
+          M4JumperTightTool.wrench => _run.cleaned && (!_run.melted || _run.replaced),
+        };
+    if (safeTap || (!held && _run.back && _run.fixed)) {
+      return HintSpec.tap(geo.clamp(s.phase, s.end), space: HintSpace.scene);
+    }
+    return HintSpec.sweepOver([for (final c in _run.deal.toolsAt(_run.index)) _toolKeys[c]!]);
+  }
+
+  Widget _toolButton(M4JumperTightControl c) => switch (c) {
+        M4JumperTightControl.shutdown => _ToolButton(
+            key: _toolKeys[c],
+            icon: Icons.power_settings_new_rounded,
+            label: M4JumperTightLines.shutdown,
+            on: _run.shutdown,
+            onTapUp: (d) => _shutdown(d.globalPosition)),
+        M4JumperTightControl.tester =>
+          _ToolButton(key: _toolKeys[c], icon: Icons.flash_on_rounded, label: M4JumperTightLines.tester, on: _tester != null, onTapUp: (_) => _useTester()),
+        M4JumperTightControl.earth => _ToolButton(
+            key: _toolKeys[c],
+            icon: Icons.vertical_align_bottom_rounded,
+            label: M4JumperTightLines.earth,
+            on: _run.earthed,
+            onTapUp: (d) => _earth(d.globalPosition)),
+        M4JumperTightControl.brush => _ToolButton(
+            key: _toolKeys[c],
+            icon: Icons.brush_rounded,
+            label: M4JumperTightLines.brush,
+            on: _run.tool == M4JumperTightTool.brush,
+            onTapUp: (_) => _hold(M4JumperTightTool.brush)),
+        M4JumperTightControl.clamp => _ToolButton(
+            key: _toolKeys[c],
+            icon: Icons.link_rounded,
+            label: M4JumperTightLines.clamp,
+            on: _run.tool == M4JumperTightTool.clamp,
+            onTapUp: (_) => _hold(M4JumperTightTool.clamp)),
+        M4JumperTightControl.wrench => _ToolButton(
+            key: _toolKeys[c],
+            icon: Icons.build_rounded,
+            label: M4JumperTightLines.wrench,
+            on: _run.tool == M4JumperTightTool.wrench,
+            onTapUp: (_) => _hold(M4JumperTightTool.wrench)),
+      };
+
   // --- the scene ---------------------------------------------------------------
   LinemanMode get _mode {
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
@@ -1032,7 +1160,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M4JumperTightGeo.forScene(m.height, m.inset);
+    final geo = _geo = M4JumperTightGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final s = _run.site;
@@ -1163,6 +1291,10 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: handsOn,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && _run.shutdown && !coworkerOpen)
                 Positioned(
@@ -1187,7 +1319,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
                   left: 12,
                   right: 12,
                   bottom: pad.bottom + 12,
-                  child: _HoldButton(label: M4JumperTightLines.tighten, progress: _torque, onDown: _press, onUp: _letGo),
+                  child: _HoldButton(key: _tightKey, label: M4JumperTightLines.tighten, progress: _torque, onDown: _press, onUp: _letGo),
                 ),
               if (handsOn && _run.spotted && !_run.wrenchOn)
                 Positioned(
@@ -1197,14 +1329,8 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
                   bottom: pad.bottom + 8,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _ToolButton(icon: Icons.power_settings_new_rounded, label: M4JumperTightLines.shutdown, on: _run.shutdown, onTapUp: (d) => _shutdown(d.globalPosition)),
-                      _ToolButton(icon: Icons.flash_on_rounded, label: M4JumperTightLines.tester, on: _tester != null, onTapUp: (_) => _useTester()),
-                      _ToolButton(icon: Icons.vertical_align_bottom_rounded, label: M4JumperTightLines.earth, on: _run.earthed, onTapUp: (d) => _earth(d.globalPosition)),
-                      _ToolButton(icon: Icons.brush_rounded, label: M4JumperTightLines.brush, on: _run.tool == M4JumperTightTool.brush, onTapUp: (_) => _hold(M4JumperTightTool.brush)),
-                      _ToolButton(icon: Icons.link_rounded, label: M4JumperTightLines.clamp, on: _run.tool == M4JumperTightTool.clamp, onTapUp: (_) => _hold(M4JumperTightTool.clamp)),
-                      _ToolButton(icon: Icons.build_rounded, label: M4JumperTightLines.wrench, on: _run.tool == M4JumperTightTool.wrench, onTapUp: (_) => _hold(M4JumperTightTool.wrench)),
-                    ],
+                    // Dealt in a fresh order each pole — never the work order.
+                    children: [for (final c in _run.deal.toolsAt(_run.index)) _toolButton(c)],
                   ),
                 ),
               if (deckUp)
@@ -1374,7 +1500,7 @@ class _TesterChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.onTapUp});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTapUp});
   final IconData icon;
   final String label;
   final bool on;
@@ -1431,7 +1557,7 @@ class _ToolButton extends StatelessWidget {
 
 /// Hold to turn the nut: the bar fills with the needle while held.
 class _HoldButton extends StatelessWidget {
-  const _HoldButton({required this.label, required this.progress, required this.onDown, required this.onUp});
+  const _HoldButton({super.key, required this.label, required this.progress, required this.onDown, required this.onUp});
   final String label;
   final Animation<double> progress;
   final VoidCallback onDown;

@@ -3,7 +3,9 @@
 // deadly; read normal vs overheating; find the cause; decide), the deal, the
 // option libraries, and the level in the shell: idle perf, the guide first,
 // the guide's tap, a full clean play with the coworker refused, a slip card,
-// the deadly freezes (the hand; the hand on his say-so).
+// the deadly freezes (the hand; the hand on his say-so), the 3-slip strike-out,
+// a wrong cause costing a slip with a neutral reply, the coworker on a fast
+// play (the tool pick waits for him), the praise window, the gesture hints.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,9 +19,12 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
+import 'package:slm_flutter/features/game/level_frame.dart' show StruckOutCard;
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m4_dtr_temp.dart';
+import 'package:slm_flutter/features/game/m4_dtr_temp_world.dart' show M4DtrTempGunPainter;
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro;
 import 'package:slm_flutter/features/game/spoken_once.dart';
@@ -29,6 +34,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 const _ctx = LevelContext(rungId: '4.5/do/1', kind: CatalogRungKind.doKind, lessonId: '4.5', lessonTitleBn: '', ladderStep: 0, doIndex: 2, doCount: 2);
 
@@ -56,10 +62,12 @@ List<Finder> _onScreen(List<String> texts) => [
 ];
 
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
+  await tapReasonProceed(t);
 }
 
 /// Design px → screen px on the 392 × 850 test screen.
@@ -67,7 +75,7 @@ const _k = 392 / 360;
 M4DtrTempGeo get _geo => M4DtrTempGeo.forScene(850 / _k, 0);
 Offset _screen(Offset design) => design * _k;
 
-Future<ProviderContainer> _open(WidgetTester t, int seed) async {
+Future<ProviderContainer> _open(WidgetTester t, int seed, {int settleMs = 600}) async {
   t.view.physicalSize = const Size(784, 1700);
   t.view.devicePixelRatio = 2.0;
   final c = ProviderContainer();
@@ -90,7 +98,7 @@ Future<ProviderContainer> _open(WidgetTester t, int seed) async {
   );
   await _pump(t, 1000);
   await waitIntro(t);
-  await _pump(t, 600);
+  await _pump(t, settleMs);
   return c;
 }
 
@@ -127,11 +135,14 @@ Future<void> _playRight(WidgetTester t, M4DtrTempDeal deal, int i) async {
   await t.tap(find.text(j.hot ? _L.over : _L.normal));
   await _pump(t, 600);
   if (j.hot) {
-    // A fine spot first (not scored), then the cause.
+    // A fine spot first (a free look, no verdict), then the cause, flagged.
     final fine = M4DtrTempLook.values.firstWhere((l) => l != M4DtrTempLook.ir && l != j.cause);
     await t.tapAt(_screen(_spotOf(fine)));
     await _pump(t, 500);
+    expect(find.text(_L.flagCause), findsOneWidget, reason: 'the flag under any look');
     await t.tapAt(_screen(_spotOf(j.cause!)));
+    await _pump(t, 500);
+    await t.tap(find.text(_L.flagCause));
     expect(await _pumpUntil(t, find.byType(ChoiceDeck), maxMs: 6000), isTrue, reason: 'the decision, job $i');
     await _pump(t, 700);
     await _pickRight(t, _L.actRight(j.kase));
@@ -149,6 +160,7 @@ void main() {
     test('deals three transformers: one overloaded, two of fins / low oil / normal; fresh each play', () {
       final seen = <String>{};
       final calls = <int>{};
+      final irLeft = <bool>{};
       for (var s = 0; s < 60; s++) {
         final d = m4DtrTempDeal(math.Random(s));
         expect(d.jobs.length, 3);
@@ -156,10 +168,12 @@ void main() {
         expect(d.jobs.map((j) => j.kase).toSet().length, 3);
         expect(d.jobs.where((j) => j.hot).length, greaterThanOrEqualTo(2));
         calls.add(d.callAt);
+        irLeft.addAll(d.jobs.map((j) => j.irLeft));
         seen.add(d.jobs.map((j) => '${j.kase.name}${j.topic.name}').join('|') + d.callAt.toString());
       }
       expect(seen.length, greaterThan(30));
       expect(calls, {0, 1, 2});
+      expect(irLeft, {true, false}, reason: 'the tool stand is shuffled (the safe tool is not always first)');
     });
 
     M4DtrTempRun run1(M4DtrTempCase k) => M4DtrTempRun(
@@ -203,25 +217,41 @@ void main() {
       expect(d.phase, M4DtrTempPhase.find);
     });
 
-    test('find: a fine spot is not scored; the cause opens the decision; a wrong decision is a slip', () {
+    test('find: looks are free and give no verdict; flagging a wrong spot is a slip; the cause opens the decision; a wrong decision is a slip', () {
       for (final k in [M4DtrTempCase.overload, M4DtrTempCase.fins, M4DtrTempCase.lowOil]) {
         final r = toRead(k)..judge(hot: true);
         final cause = r.job.cause!;
-        for (final l in [M4DtrTempLook.gauge, M4DtrTempLook.fins, M4DtrTempLook.load]) {
-          if (l == cause) continue;
-          expect(r.check(l), isFalse);
-          expect(r.phase, M4DtrTempPhase.find);
+        expect(r.flag(cause), isNull, reason: 'no flag before a look');
+        expect(r.phase, M4DtrTempPhase.find);
+        for (final l in M4DtrTempGeo.spots) {
+          expect(r.look(l), isTrue);
+          expect(r.phase, M4DtrTempPhase.find, reason: 'a look decides nothing');
         }
         expect(r.slips, 0);
-        expect(r.check(cause), isTrue);
+        expect(r.look(M4DtrTempLook.ir), isFalse);
+        for (final l in M4DtrTempGeo.spots) {
+          if (l == cause) continue;
+          expect(r.flag(l), M4DtrTempMistakes.wrongCause);
+          expect(r.phase, M4DtrTempPhase.find, reason: 'the search goes on');
+        }
+        expect(r.slips, 2);
+        expect(r.flag(cause), isNull);
         expect(r.phase, M4DtrTempPhase.act);
+        expect(r.clean, isFalse);
         final w = toRead(k)
           ..judge(hot: true)
-          ..check(cause);
+          ..look(cause)
+          ..flag(cause);
         expect(w.act(right: false), M4DtrTempMistakes.wrongAct(k));
         expect(w.phase, M4DtrTempPhase.done);
         expect(r.act(right: true), isNull);
-        expect(r.clean, isTrue);
+        final c = toRead(k)
+          ..judge(hot: true)
+          ..look(cause)
+          ..flag(cause)
+          ..act(right: true);
+        expect(c.clean, isTrue);
+        expect(c.phase, M4DtrTempPhase.done);
       }
       expect(M4DtrTempJob(kase: M4DtrTempCase.overload, topic: M4DtrTempTopic.cause).cause, M4DtrTempLook.load);
       expect(M4DtrTempJob(kase: M4DtrTempCase.fins, topic: M4DtrTempTopic.cause).cause, M4DtrTempLook.fins);
@@ -241,6 +271,9 @@ void main() {
       final all = <String>[
         _L.intro,
         ..._L.tasks,
+        _L.askLook,
+        _L.flagCause,
+        _L.missAim,
         ..._L.measureWhy,
         ..._L.normalWhy,
         ..._L.loadWhy,
@@ -296,6 +329,50 @@ void main() {
       expectLibrary('choice', _L.coworker.right, _L.coworker.wrong);
       expect(_L.recordLines, hasLength(2));
     });
+
+    test('the decision deck needs the cause: another cause\'s action is in it, no word gives the right one away', () {
+      const hot = [M4DtrTempCase.overload, M4DtrTempCase.fins, M4DtrTempCase.lowOil];
+      List<String> words(String s) => s.split(RegExp(r'[\s,—]+')).where((w) => w.isNotEmpty).toList();
+      for (final k in hot) {
+        final others = _L.actOthers(k);
+        expect(others, hasLength(4), reason: '$k: both other causes');
+        expect(others.toSet().intersection(_L.actRight(k).toSet()), isEmpty);
+        // The words every right card of k shares are also on some card that
+        // can be dealt wrong with it.
+        final shared = words(_L.actRight(k).first).toSet();
+        for (final r in _L.actRight(k).skip(1)) {
+          shared.retainAll(words(r));
+        }
+        for (final w in shared) {
+          expect([...others, ..._L.actWrong].any((o) => o.contains(w)), isTrue, reason: '$k: "$w" only on the right cards');
+        }
+        for (var s = 0; s < 40; s++) {
+          final d = _L.dealAct(k, math.Random(s));
+          expect(d, hasLength(3));
+          expect(d.map((o) => o.textBn).toSet().length, 3);
+          expect(d.where((o) => o.correct).map((o) => o.textBn).single, isIn(_L.actRight(k)));
+          expect(d.where((o) => !o.correct && others.contains(o.textBn)), hasLength(1), reason: 'another cause\'s action');
+          expect(d.where((o) => !o.correct && _L.actWrong.contains(o.textBn)), hasLength(1));
+        }
+      }
+      // Cause-blind play ("always the card with word w") stays near chance.
+      const tells = ['রিপোর্ট', 'শাটডাউন', 'বন্ধ', 'লোড', 'তেল', 'ফিন', 'লিক', 'টপ-আপ', 'লতা', 'লাইন'];
+      for (final w in tells) {
+        var wins = 0;
+        var n = 0;
+        for (final k in hot) {
+          for (var s = 0; s < 400; s++) {
+            final rng = math.Random(s * 7 + k.index);
+            final d = _L.dealAct(k, rng);
+            final has = d.where((o) => o.textBn.contains(w)).toList();
+            final pick = (has.isEmpty ? d : has)[rng.nextInt(has.isEmpty ? d.length : has.length)];
+            if (pick.correct) wins++;
+            n++;
+          }
+        }
+        expect(wins / n, lessThan(0.5), reason: '"$w" picks the right card ${(100 * wins / n).round()} % of the time');
+      }
+    });
   });
 
   group('page', () {
@@ -350,7 +427,7 @@ void main() {
         }
         debugPrint('PERF m4_dtr_temp ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -468,9 +545,11 @@ void main() {
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await _pumpUntil(t, find.byType(ChoiceDeck));
       await _pump(t, 600);
+      await waitChoiceDeck(t);
       final wrong = _onScreen(_L.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1500);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
@@ -478,6 +557,170 @@ void main() {
       final s = c.read(gameSaveProvider);
       expect(s.mistakes.last.key, M4DtrTempMistakes.handOnTank.key);
       expect(s.mistakes.last.deadly, isTrue);
+      await _close(t, c);
+    });
+
+    /// IR, aim, and the reading of job 0.
+    Future<void> toRead(WidgetTester t) async {
+      await t.tap(_label(_L.ir));
+      await _pump(t, 400);
+      await t.tapAt(_screen(_geo.tank.center));
+      await _pump(t, 600);
+    }
+
+    Future<void> gotIt(WidgetTester t) async {
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 800);
+    }
+
+    testWidgets('a wrong cause: the looks give no verdict, the flag costs a slip, the reply stays neutral', (t) async {
+      final seed = seedWhere((d) => d.jobs[0].hot && d.callAt != 0);
+      final deal = m4DtrTempDeal(math.Random(seed));
+      final cause = deal.jobs[0].cause!;
+      final fine = M4DtrTempGeo.spots.firstWhere((l) => l != cause);
+      final c = await _open(t, seed);
+      await toRead(t);
+      await t.tap(find.text(_L.over));
+      await _pump(t, 600);
+      // Any look gets the same words: no "all fine" before the call.
+      final said = <String>[];
+      for (final l in [fine, cause]) {
+        await t.tapAt(_screen(_spotOf(l)));
+        await _pump(t, 400);
+        said.add(c.read(guideDirectorProvider).line);
+        expect(find.byType(ChoiceDeck), findsNothing, reason: 'a look opens no decision');
+      }
+      expect(said, [_L.askLook, _L.askLook]);
+      await t.tapAt(_screen(_spotOf(fine)));
+      await _pump(t, 400);
+      await t.tap(find.text(_L.flagCause));
+      await _pump(t, 900);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M4DtrTempMistakes.wrongCause.key);
+      await gotIt(t);
+      expect(c.read(guideDirectorProvider).line, _L.askFind, reason: 'the search goes on with no hint of where');
+      expect(find.text(_L.flagCause), findsNothing, reason: 'the close-up is closed');
+      // The real cause still opens the decision.
+      await t.tapAt(_screen(_spotOf(cause)));
+      await _pump(t, 400);
+      await t.tap(find.text(_L.flagCause));
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck), maxMs: 6000), isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('three slips strike the level out', (t) async {
+      final seed = seedWhere((d) => d.jobs[0].hot && d.callAt != 0);
+      final deal = m4DtrTempDeal(math.Random(seed));
+      final fine = M4DtrTempGeo.spots.firstWhere((l) => l != deal.jobs[0].cause);
+      final c = await _open(t, seed);
+      await toRead(t);
+      // 1: overheating called normal.
+      await t.tap(find.text(_L.normal));
+      await _pump(t, 900);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      await gotIt(t);
+      // 2 and 3: a fine spot flagged as the cause, twice.
+      for (var k = 0; k < 2; k++) {
+        await t.tapAt(_screen(_spotOf(fine)));
+        await _pump(t, 400);
+        await t.tap(find.text(_L.flagCause));
+        await _pump(t, 900);
+        if (k == 0) {
+          expect(find.byType(MistakeCard), findsOneWidget);
+          await gotIt(t);
+        }
+      }
+      expect(await _pumpUntil(t, find.byType(StruckOutCard), maxMs: 4000), isTrue);
+      final s = c.read(gameSaveProvider);
+      expect(s.rungProgress['4.5/do/1'], isNot('cleared'));
+      expect(s.mistakes.map((m) => m.key).toSet(), {M4DtrTempMistakes.missedHot.key, M4DtrTempMistakes.wrongCause.key});
+      expect(find.byType(LevelPassPanel), findsNothing);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play: the tool pick waits for him, then works', (t) async {
+      final seed = seedWhere((d) => d.callAt == 0);
+      final c = await _open(t, seed, settleMs: 0);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not come yet');
+      await t.tap(_label(_L.ir));
+      await _pump(t, 300);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he comes at once on the pick');
+      expect(find.byType(CustomPaint).evaluate().where((e) => (e.widget as CustomPaint).painter is M4DtrTempGunPainter), isEmpty, reason: 'the pick did nothing yet');
+      await _pickRight(t, _L.coworker.right);
+      await _pump(t, 2000);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await t.tap(_label(_L.ir));
+      await _pump(t, 400);
+      expect(find.byType(CustomPaint).evaluate().where((e) => (e.widget as CustomPaint).painter is M4DtrTempGunPainter), isNotEmpty, reason: 'now the thermometer is in his hand');
+      await _close(t, c);
+    });
+
+    testWidgets('the praise window: the play gate is shut until the reason is paid; taps book nothing', (t) async {
+      final seed = seedWhere((d) => !d.jobs[0].hot && d.callAt != 0);
+      final c = await _open(t, seed);
+      M4DtrTempPlayGate gate() => t.allStates.whereType<M4DtrTempPlayGate>().single;
+      await toRead(t);
+      expect(gate().debugCanPlay, isTrue, reason: 'the reading is live');
+      final at = t.getCenter(find.text(_L.normal));
+      await t.tap(find.text(_L.normal));
+      await t.pump(const Duration(milliseconds: 50));
+      // The ◆ waits on the table: the gate itself is shut (not only the phase).
+      expect(gate().debugCanPlay, isFalse, reason: 'the praise window (tableBusy)');
+      for (final p in [at, _screen(_geo.tank.center), _screen(_geo.gauge), t.getCenter(find.byKey(const ValueKey('hud-guide')))]) {
+        await t.tapAt(p);
+        await t.pump(const Duration(milliseconds: 50));
+        expect(gate().debugCanPlay, isFalse);
+      }
+      await waitChoiceDeck(t);
+      expect(find.byType(ChoiceDeck), findsOneWidget);
+      expect(gate().debugCanPlay, isFalse, reason: 'the reason deck is up (tableBusy)');
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      // Paid: the next transformer is live again.
+      await _pickRight(t, _L.whyRight(m4DtrTempDeal(math.Random(seed)).jobs[0]));
+      expect(await _pumpUntil(t, _label(_L.ir), maxMs: 6000), isTrue);
+      expect(gate().debugCanPlay, isTrue, reason: 'the next job');
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hints: a sweep over both tools, a tap on the tank, a sweep over both calls and every spot', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final seed = seedWhere((d) => d.jobs[0].hot && d.callAt != 0);
+      final c = await _open(t, seed);
+      IdleHintState hint() => t.state<IdleHintState>(find.byType(IdleHint).first);
+      Future<void> idle() async {
+        for (var ms = 0; ms < 10000 && !hint().showing; ms += 100) {
+          await t.pump(const Duration(milliseconds: 100));
+        }
+      }
+
+      await idle();
+      expect(hint().showing, isTrue, reason: 'measure');
+      expect(hint().debugOptions, hasLength(2), reason: 'a sweep over both tools, pressing none');
+      await t.tap(_label(_L.ir));
+      await _pump(t, 400);
+      await idle();
+      expect(hint().showing, isTrue, reason: 'aim');
+      expect(hint().debugOptions, isEmpty, reason: 'a tap (the tank is the one way forward)');
+      await t.tapAt(_screen(_geo.tank.center));
+      await _pump(t, 600);
+      await idle();
+      expect(hint().debugOptions, hasLength(2), reason: 'a sweep over both calls');
+      await t.tap(find.text(_L.over));
+      await _pump(t, 600);
+      await idle();
+      expect(hint().debugOptions, hasLength(3), reason: 'a sweep over every spot, the cause no different');
+      final fine = M4DtrTempGeo.spots.firstWhere((l) => l != m4DtrTempDeal(math.Random(seed)).jobs[0].cause);
+      await t.tapAt(_screen(_spotOf(fine)));
+      await _pump(t, 500);
+      await idle();
+      expect(hint().debugOptions, hasLength(4), reason: 'every spot and the flag');
+      await t.tap(find.text(_L.flagCause));
+      await _pump(t, 900);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      await _pump(t, 6000);
+      expect(hint().showing, isFalse, reason: 'no hint over a card');
       await _close(t, c);
     });
   });

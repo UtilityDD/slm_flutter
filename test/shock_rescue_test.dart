@@ -4,7 +4,10 @@
 // clean play (pull the switch where it is at hand, elsewhere drag a dry
 // non-conductor onto his arm or leg, the reasons, the coworker refused), a
 // slip that keeps the scene, the 3-slip strike-out, and the deadly freeze
-// (a tap on him; listening to the coworker).
+// (a tap on him; listening to the coworker). Audit 2026-11-11: he comes even
+// on a fast play (the pull / push waits for him), nothing counts in a praise
+// window, every reason deal holds a look-alike wrong card and no word sits on
+// the right cards only, and the gesture hints (drag nudge, sweep, miss taps).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,6 +21,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
@@ -33,6 +37,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 LevelContext _ctx() => const LevelContext(
       rungId: '1.7/do/0',
@@ -56,23 +61,18 @@ List<Finder> _onScreen(List<String> texts) => [
         if (_label(x).evaluate().isNotEmpty) _label(x),
     ];
 
-/// Taps the one right card on the deck now up.
+/// Taps the one right card on the deck now up (and a right reason's proceed).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
-  }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
-  }
+  await tapReasonProceed(t);
 }
+
+/// The words of a card (a hyphen splits too).
+Set<String> _words(String t) => t.split(RegExp(r'[\s,—।!?-]+')).where((w) => w.isNotEmpty).toSet();
 
 /// A seed whose deal satisfies [ok].
 int _seedWhere(bool Function(RescueDeal d) ok, {int from = 0}) {
@@ -83,7 +83,7 @@ int _seedWhere(bool Function(RescueDeal d) ok, {int from = 0}) {
   return s;
 }
 
-Future<ProviderContainer> _open(WidgetTester t, int seed, {RescuePack pack = rescuePack17}) async {
+Future<ProviderContainer> _open(WidgetTester t, int seed, {RescuePack pack = rescuePack17, int settleMs = 600}) async {
   t.view.physicalSize = const Size(784, 1700);
   t.view.devicePixelRatio = 2.0;
   final c = ProviderContainer();
@@ -97,7 +97,7 @@ Future<ProviderContainer> _open(WidgetTester t, int seed, {RescuePack pack = res
   )));
   await _pump(t, 1000);
   await waitIntro(t);
-  await _pump(t, 600);
+  await _pump(t, settleMs);
   return c;
 }
 
@@ -233,13 +233,16 @@ void main() {
       expectSameLength('reasons', [
         ...RescueLines.switchHouse,
         ...RescueLines.switchPump,
+        ...RescueLines.twinHouse,
+        ...RescueLines.twinPump,
         ...RescueLines.switchWrong,
         for (final o in safe) ...RescueLines.objectWhy(o),
+        for (final o in safe) ...RescueLines.objectTwin(o),
         RescueLines.pushAny,
         ...RescueLines.pushWrong,
       ]);
-      expectLibrary('switch house', RescueLines.whyRight(ShockScene.house, null), RescueLines.whyWrong(null));
-      expectLibrary('switch pump', RescueLines.whyRight(ShockScene.pump, null), RescueLines.whyWrong(null));
+      expectLibrary('switch house', RescueLines.whyRight(ShockScene.house, null), RescueLines.whyWrong(ShockScene.house, null));
+      expectLibrary('switch pump', RescueLines.whyRight(ShockScene.pump, null), RescueLines.whyWrong(ShockScene.pump, null));
       expect(RescueLines.whyRight(ShockScene.pump, null).every((t) => t.contains('পাম্পের সুইচ')), isTrue);
       expect(RescueLines.whyRight(ShockScene.house, null).every((t) => t.contains('সুইচ')), isTrue);
       // No length tell: the right cards are not longer than the wrong ones on average.
@@ -249,19 +252,19 @@ void main() {
         (ShockScene.pump, null),
         for (final o in safe) (ShockScene.field, o),
       ]) {
-        expect(mean(RescueLines.whyRight(scene, used)), lessThanOrEqualTo(mean(RescueLines.whyWrong(used)) + 1.5), reason: '$scene $used');
+        expect(mean(RescueLines.whyRight(scene, used)), lessThanOrEqualTo(mean(RescueLines.whyWrong(scene, used)) + 1.5), reason: '$scene $used');
       }
       for (final o in safe) {
         for (final s in [ShockScene.field, ShockScene.roadside]) {
           final right = RescueLines.whyRight(s, o);
-          expectLibrary('$o', right, RescueLines.whyWrong(o));
+          expectLibrary('$o', right, RescueLines.whyWrong(s, o));
           for (final other in safe.where((x) => x != o)) {
             for (final t in RescueLines.objectWhy(other)) {
               expect(right, isNot(contains(t)), reason: '$o: a reason for $other');
             }
           }
           for (var k = 0; k < 12; k++) {
-            final deal = dealChoices(right, RescueLines.whyWrong(o), math.Random(k));
+            final deal = RescueLines.dealWhy(s, o, math.Random(k));
             expect(deal.where((x) => x.correct).length, 1);
             expect(deal.map((x) => x.textBn).toSet().length, 3);
           }
@@ -269,7 +272,60 @@ void main() {
       }
       for (final o in RescueObject.values.where((o) => !o.safe)) {
         expect(RescueLines.objectWhy(o), isEmpty);
+        expect(RescueLines.objectTwin(o), isEmpty);
       }
+    });
+
+    test('no giveaway: every deal holds a look-alike wrong card, and no word sits on the right cards only', () {
+      final safe = RescueObject.values.where((o) => o.safe).toList();
+      final cases = <(ShockScene, RescueObject?)>[
+        (ShockScene.house, null),
+        (ShockScene.pump, null),
+        for (final o in safe) (ShockScene.field, o),
+      ];
+      for (final (scene, used) in cases) {
+        final right = RescueLines.whyRight(scene, used);
+        final twins = RescueLines.whyTwins(scene, used);
+        final wrong = RescueLines.whyWrong(scene, used);
+        expect(twins, isNotEmpty);
+        expect(wrong, containsAll(twins));
+        // Every word of a right card is on some wrong card of this scene too.
+        final wrongWords = {for (final w in wrong) ..._words(w)};
+        for (final r in right) {
+          expect(_words(r).difference(wrongWords), isEmpty, reason: '$scene $used: "$r"');
+        }
+        // The place named on the right cards is named on every twin too.
+        final name = used == null ? (scene == ShockScene.pump ? 'পাম্পের' : 'সুইচ') : null;
+        if (name != null) expect(twins.every((t) => t.contains(name)), isTrue, reason: '$scene');
+        // Per deal (not just over the library): every key word of the dealt
+        // right card is on one of that deal's two wrong cards.
+        final dealtRight = <String>{};
+        for (var k = 0; k < 400; k++) {
+          final deal = RescueLines.dealWhy(scene, used, math.Random(k));
+          expect(deal, hasLength(3));
+          final good = deal.where((x) => x.correct).single.textBn;
+          expect(good, isIn(right));
+          dealtRight.add(good);
+          final bad = deal.where((x) => !x.correct).map((x) => x.textBn).toList();
+          expect(bad.where(twins.contains), hasLength(1), reason: 'one twin per deal');
+          expect(bad.where(wrong.contains), hasLength(2));
+          expect(bad.toSet().length, 2);
+          final marks = RescueLines.marksOf(good).toList();
+          expect(marks, isNotEmpty, reason: good);
+          for (final m in marks) {
+            expect(bad.any((b) => b.contains(m)), isTrue, reason: '$scene $used seed $k: "$m" only on "$good" (wrong: $bad)');
+          }
+        }
+        expect(dealtRight, right.toSet(), reason: 'every right card can be dealt');
+      }
+      // The coworker's refusals share their key words with the ways to listen.
+      const c = RescueLines.coworker;
+      final listenWords = {for (final w in c.wrong) ..._words(w)};
+      for (final k in ['না', 'ছোঁব', 'সার্কিটে', 'সুইচ', 'শুকনো', 'আগে', 'নিজে', 'ছুঁলে']) {
+        expect(listenWords, contains(k), reason: k);
+      }
+      // "Pull" is not a word only the ways to listen carry.
+      expect(c.right.any((r) => r.contains('টান')), isTrue);
     });
 
     test('the coworker: fair choice library; his lines are recorded in his voice', () {
@@ -336,7 +392,7 @@ void main() {
         }
         debugPrint('PERF shock_rescue ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(find.text(RescueLines.secs(46)), findsNothing, reason: 'the clock has moved on');
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
@@ -504,22 +560,113 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('his scene done before he came: he peeps in on the next one (once a play)', (t) async {
+    testWidgets('he comes even on a fast play: an early pull waits for him (lever back), then works', (t) async {
       final seed = _seedWhere((d) => d.callScene == 0 && d.rounds[0].scene.switchNear);
       final deal = dealRescues(math.Random(seed));
-      final c = await _open(t, seed);
+      final c = await _open(t, seed, settleMs: 0);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he is not due yet');
       await _pullSwitch(t);
-      expect(find.byType(CoworkerPeek), findsNothing);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the pull waited for him');
       await _pump(t, 2500);
-      expect(find.byType(CoworkerPeek), findsNothing, reason: 'not over the reason deck');
-      await _pickRight(t, RescueLines.whyRight(deal.rounds[0].scene, null));
-      await _pump(t, 3500);
-      await _pump(t, 3000);
-      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'he comes on scene 2');
+      expect(find.text(RescueLines.whySwitch), findsNothing, reason: 'the colleague is not free yet');
       await _pickRight(t, RescueLines.coworker.right);
       await _pump(t, 2500);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _pullSwitch(t);
+      await _pump(t, 2500);
+      expect(find.text(RescueLines.whySwitch), findsWidgets);
+      await _pickRight(t, RescueLines.whyRight(deal.rounds[0].scene, null));
+      await _pump(t, 3500);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'once a play');
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('he comes even on a fast play: an early push waits for him (the thing goes back down)', (t) async {
+      final seed = _seedWhere((d) => d.callScene == 0 && !d.rounds[0].scene.switchNear);
+      final deal = dealRescues(math.Random(seed));
+      final c = await _open(t, seed, settleMs: 0);
+      final k = deal.rounds[0].objects.indexWhere((o) => o.safe);
+      expect(find.byType(CoworkerPeek), findsNothing);
+      await _dragOnto(t, k, BodyZone.leg);
+      expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the push waited for him');
+      await _pump(t, 2500);
+      expect(find.text(RescueLines.whyPush), findsNothing);
+      await _pickRight(t, RescueLines.coworker.right);
+      await _pump(t, 2500);
+      await _dragOnto(t, k, BodyZone.leg);
+      await _pump(t, 2500);
+      expect(find.text(RescueLines.whyPush), findsWidgets);
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
       await _close(t, c);
+    });
+
+    testWidgets('the praise window and the reason deck: a tap on him counts for nothing', (t) async {
+      final seed = _seedWhere((d) => d.callScene != 0 && d.rounds[0].scene.switchNear);
+      final c = await _open(t, seed);
+      await _pullSwitch(t);
+      // Straight after the right move (praise) and once the deck is up.
+      for (final wait in [0, 2500]) {
+        await _pump(t, wait);
+        await t.tapAt(t.getCenter(find.byKey(const ValueKey('zone-head'))));
+        await _pump(t, 300);
+        expect(find.byType(FreezeFrame), findsNothing, reason: 'after $wait ms');
+        expect(find.byType(MistakeCard), findsNothing, reason: 'after $wait ms');
+      }
+      expect(find.text(RescueLines.whySwitch), findsWidgets);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _close(t, c);
+    });
+
+    group('gesture hints', () {
+      setUp(() => GestureHints.debugEnableInTests = true);
+      tearDown(() => GestureHints.debugEnableInTests = false);
+      const slow = RescuePack(id: 'do_1_7_a', titleBn: RescueLines.title, seconds: 60);
+      IdleHintState hand(WidgetTester t) => t.state<IdleHintState>(find.byType(IdleHint).first);
+
+      testWidgets('no switch: idle shows a short drag nudge on a floor thing (no sweep), never before 8 s', (t) async {
+        final seed = _seedWhere((d) => d.callScene != 0 && !d.rounds[0].scene.switchNear);
+        final c = await _open(t, seed, pack: slow);
+        await _pump(t, 4000);
+        expect(hand(t).showing, isFalse);
+        await _pump(t, 4600);
+        expect(hand(t).showing, isTrue);
+        expect(hand(t).debugOptions, isEmpty, reason: 'a drag, not a sweep');
+        final tip = hand(t).debugFrame!.tip;
+        final leg = t.getRect(find.byKey(const ValueKey('zone-leg')));
+        expect(tip.dy, greaterThan(leg.bottom), reason: 'it stays down by the floor, nowhere near him');
+        await _close(t, c);
+      });
+
+      testWidgets('beside a switch: idle sweeps over every thing the hands can take (4 + the switch)', (t) async {
+        final seed = _seedWhere((d) => d.callScene != 0 && d.rounds[0].scene.switchNear);
+        final c = await _open(t, seed, pack: slow);
+        await _pump(t, 8600);
+        expect(hand(t).showing, isTrue);
+        expect(hand(t).debugOptions, hasLength(5));
+        // The switch (the top one) is never the last stop, where the hand
+        // rests as it fades: the lap must not end on the answer.
+        final opts = hand(t).debugOptions;
+        final top = opts.reduce((a, b) => a.top < b.top ? a : b);
+        expect(opts.last, isNot(top), reason: 'the sweep ends on a floor thing, not the switch');
+        expect(opts.where((r) => r == top), hasLength(1));
+        await _close(t, c);
+      });
+
+      testWidgets('three taps on nothing show the hand at once', (t) async {
+        final seed = _seedWhere((d) => d.callScene != 0 && !d.rounds[0].scene.switchNear);
+        final c = await _open(t, seed, pack: slow);
+        final size = t.view.physicalSize / t.view.devicePixelRatio;
+        for (var i = 0; i < 3; i++) {
+          await t.tapAt(Offset(size.width * 0.9, size.height * 0.35));
+          await _pump(t, 200);
+        }
+        expect(hand(t).showing, isTrue);
+        expect(c.read(gameSaveProvider).mistakes, isEmpty);
+        await _close(t, c);
+      });
     });
 
     testWidgets('listening to him ("হাত দিয়ে টেনে নাও") is the deadly touch: freeze first, then the card', (t) async {
@@ -530,6 +677,7 @@ void main() {
       final wrong = _onScreen(RescueLines.coworker.wrong);
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);

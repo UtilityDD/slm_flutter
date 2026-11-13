@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -74,8 +75,15 @@ import 'spoken_once.dart';
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m4_phase_balance_world.dart), corner guide, ◆ on the table → "কেন …?"
 // → the next stage by itself; the careless coworker once a play, at the
-// chart. Voice: the guide by device TTS; the coworker's push by device TTS
-// until recorded (his exit line is his existing recorded clip).
+// chart ("চার্ট ঠিক আছে" waits for him: holdForCoworker). Voice: the guide by
+// device TTS; the coworker's push is silent with its caption held until it is
+// recorded (his exit line is his existing recorded clip).
+//
+// No giveaways: the tool row is in a dealt order (never the job's order),
+// the chart's column totals are all the same colour (no red "still heavy"
+// mark that would announce a balanced chart). Gesture hints sweep over what
+// can be touched now (tools, cables, the switch, chart chips/columns, the
+// phase buttons) — never one answer.
 
 // ============================================================================
 // Content
@@ -86,6 +94,27 @@ enum M4PhaseBalanceStage { measure, plan, work, done }
 
 /// The hands-on tools.
 enum M4PhaseBalanceTool { none, tong, spanner }
+
+/// The buttons of the tool row (every stage shows some of them).
+enum M4PhaseBalanceKit { gloves, tong, book, notice, ptw, tester, earth, spanner }
+
+/// The tool row's order for one play: dealt. The work row (notice, PTW,
+/// tester, earth, spanner) is never in the job's order; the two- and
+/// three-button rows (gloves · tong, + the record book) fall as dealt.
+List<M4PhaseBalanceKit> dealM4PhaseBalanceKit(math.Random rng) {
+  for (;;) {
+    final order = [...M4PhaseBalanceKit.values]..shuffle(rng);
+    final work = [for (final k in order) if (k.index >= M4PhaseBalanceKit.notice.index) k];
+    if (!_sorted(work)) return order;
+  }
+}
+
+bool _sorted(List<M4PhaseBalanceKit> ks) {
+  for (var i = 1; i < ks.length; i++) {
+    if (ks[i].index < ks[i - 1].index) return false;
+  }
+  return true;
+}
 
 /// A service connection on the chart.
 @immutable
@@ -206,12 +235,13 @@ abstract final class M4PhaseBalanceLines {
     return CoworkerScript(
       line: 'সব নতুন কানেকশন $p ফেজেই দিয়ে দাও! অত মাপামাপির কী দরকার?',
       exitLine: coworkerExit,
-      right: ['না, $p ফেজে আর ভার চাপালে ফিউজ উড়বে', 'না, মেপে দেখে কম ভারের ফেজেই দেব', 'না, তিন ফেজে সমান ভাগ করেই দেব'],
+      // No prefix tells: a right card may open without "না", a wrong one with it.
+      right: ['না, $p ফেজে আর ভার চাপালে ফিউজ উড়বে', 'আগে মেপে দেখি, কম ভারের ফেজেই দেব', 'তিন ফেজে সমান ভাগ করেই তবে দেব'],
       wrong: [
         'ঠিক, সব নতুন কানেকশন $p ফেজেই দিই',
         'আচ্ছা, মাপামাপি থাক, $p ফেজেই জুড়ি',
         'হ্যাঁ, এক ফেজে দিলেই কাজটা সোজা',
-        'ঠিক আছে, $p ফেজে দিলে কিছু হবে না',
+        'না না, মাপার দরকার নেই, $p ফেজেই দিই',
         'হ্যাঁ, পরে কেউ ব্যালেন্স করে নেবে',
       ],
       asks: ['ও বলছে সব নতুন কানেকশন এক ফেজে দিতে। কী করবেন?', 'ওর কথা শুনবেন, না মাপ?', 'সব নতুন কানেকশন এক ফেজে?'],
@@ -760,6 +790,21 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The tool row's order this play (from the deal, so the deal itself stays
+  /// the seed's).
+  late final List<M4PhaseBalanceKit> _kitOrder =
+      dealM4PhaseBalanceKit(math.Random(_run.deal.loads.fold<int>(_run.deal.heavy, (a, l) => (a * 31 + l.no) & 0x3fffffff)));
+
+  // Gesture hints (how to touch, never what).
+  final _hints = IdleHintController();
+  final _sceneKey = GlobalKey();
+  final Map<M4PhaseBalanceKit, GlobalKey> _kitKeys = {for (final k in M4PhaseBalanceKit.values) k: GlobalKey()};
+  final List<GlobalKey> _phaseKeys = [for (var p = 0; p < 3; p++) GlobalKey()];
+  final List<GlobalKey> _colKeys = [for (var p = 0; p < 3; p++) GlobalKey()];
+  final Map<String, GlobalKey> _chipKeys = {};
+  final _planOkKey = GlobalKey();
+  M4PhaseBalanceGeo? _geo;
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -803,7 +848,9 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
     _startStage();
   }
 
-  bool get _canPlay => !_intro && !_ended && _card == null && !reasonOpen && !_run.cleared && !_freeze;
+  /// The scene takes input. Not in the praise window or while the reason
+  /// deck is up ([tableBusy]), nor while the coworker is on.
+  bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.cleared && !_freeze;
 
   String get _task {
     switch (_run.stage) {
@@ -911,10 +958,11 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
   }
 
   void _tapScene(Offset p, M4PhaseBalanceGeo geo, Offset global) {
-    if (!_canPlay || coworkerOpen) return;
+    if (!_canPlay) return;
     if (geo.handleHit.contains(p)) {
       if (_run.stage != M4PhaseBalanceStage.work) {
         _tick('sounds/intro/click.ogg', 0.3);
+        _hints.missTap();
         return;
       }
       final was = _run.switchOn;
@@ -930,7 +978,10 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
     }
     for (var i = 0; i < 4; i++) {
       if (geo.cableHit(i).contains(p)) {
-        if (_run.tool != M4PhaseBalanceTool.tong) return;
+        if (_run.tool != M4PhaseBalanceTool.tong) {
+          _hints.missTap();
+          return;
+        }
         _tick('sounds/intro/click.ogg', 0.5);
         final wasReady = _run.readyToRead;
         final m = _run.clamp(i);
@@ -955,7 +1006,10 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
         setState(() => _shiftTok++);
         unawaited(_sayChain([M4PhaseBalanceLines.askNext]));
       }
+      return;
     }
+    // A tap on nothing that works now.
+    _hints.missTap();
   }
 
   void _answer(int p, Offset origin) {
@@ -971,19 +1025,22 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
   }
 
   void _tapChip(String id) {
-    if (!_canPlay || coworkerOpen) return;
+    if (!_canPlay) return;
     _tick('sounds/quiz_select.wav', 0.4);
     setState(() => _run.tapChip(id));
   }
 
   void _tapColumn(int p) {
-    if (!_canPlay || coworkerOpen || _run.picked == null) return;
+    if (!_canPlay || _run.picked == null) return;
     _tick('sounds/learn/card_deal_a.wav', 0.4);
     setState(() => _run.moveTo(p));
   }
 
   void _confirmPlan(Offset origin) {
-    if (!_canPlay || coworkerOpen || !_run.planReady) return;
+    if (!_canPlay || !_run.planReady) return;
+    // The decisive control: he comes first if he has not yet (a fast chart
+    // must not skip him).
+    if (holdForCoworker()) return;
     final m = _run.confirmPlan();
     setState(() => _wake++);
     if (m != null) {
@@ -1053,8 +1110,8 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
-    if (_ended || _run.stage != M4PhaseBalanceStage.plan || _run.cleared) return null;
-    if (_intro || _card != null || reasonOpen) return false;
+    if (_ended || _freeze || _run.stage != M4PhaseBalanceStage.plan || _run.cleared) return null;
+    if (_intro || _card != null || tableBusy) return false;
     return true;
   }
 
@@ -1166,6 +1223,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
         _hush();
         widget.onRetry(_muted);
       case MistakeTone.deadly:
+        if (_popped) return;
         _popped = true;
         unawaited(dieAndLeave());
     }
@@ -1258,7 +1316,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
   }
 
   List<Widget> _scene(SceneMetrics m) {
-    final geo = M4PhaseBalanceGeo.forScene(m.height, m.inset);
+    final geo = _geo = M4PhaseBalanceGeo.forScene(m.height, m.inset);
     final quiet = _quiet;
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     return [
@@ -1313,7 +1371,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
         key: const ValueKey('touch'),
         child: Semantics(
           label: M4PhaseBalanceLines.sceneLabel,
-          child: GestureDetector(behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
+          child: GestureDetector(key: _sceneKey, behavior: HitTestBehavior.opaque, onTapUp: (d) => _tapScene(d.localPosition, geo, d.globalPosition)),
         ),
       ),
       if (_freeze)
@@ -1330,27 +1388,111 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
     ];
   }
 
-  Widget _toolRow(List<Widget> tools) => Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: tools);
-
-  Widget _tools() {
+  /// The tool buttons on the row now, in this play's dealt order.
+  List<M4PhaseBalanceKit> get _kitNow {
     final r = _run;
-    final gloves = _ToolButton(icon: Icons.back_hand_rounded, label: M4PhaseBalanceLines.gloves, on: r.gloves, onTap: _putGloves);
-    final tong = _ToolButton(icon: Icons.speed_rounded, label: M4PhaseBalanceLines.tong, on: r.tool == M4PhaseBalanceTool.tong, onTap: () => _hold(M4PhaseBalanceTool.tong));
-    if (r.stage == M4PhaseBalanceStage.measure) return _toolRow([gloves, tong]);
-    if (r.checking) {
-      return _toolRow([
-        gloves,
-        tong,
-        _ToolButton(icon: Icons.menu_book_rounded, label: M4PhaseBalanceLines.book, on: false, onTapUp: _writeBook),
-      ]);
+    final Set<M4PhaseBalanceKit> on;
+    if (r.stage == M4PhaseBalanceStage.measure) {
+      on = {M4PhaseBalanceKit.gloves, M4PhaseBalanceKit.tong};
+    } else if (r.checking) {
+      on = {M4PhaseBalanceKit.gloves, M4PhaseBalanceKit.tong, M4PhaseBalanceKit.book};
+    } else {
+      on = {M4PhaseBalanceKit.notice, M4PhaseBalanceKit.ptw, M4PhaseBalanceKit.tester, M4PhaseBalanceKit.earth, M4PhaseBalanceKit.spanner};
     }
-    return _toolRow([
-      _ToolButton(icon: Icons.campaign_rounded, label: M4PhaseBalanceLines.notice, on: r.told, onTap: _tell),
-      _ToolButton(icon: Icons.assignment_rounded, label: M4PhaseBalanceLines.ptw, on: r.ptw, onTap: _togglePtw),
-      _ToolButton(icon: Icons.flash_on_rounded, label: M4PhaseBalanceLines.tester, on: _tester != null, onTap: _useTester),
-      _ToolButton(icon: Icons.link_rounded, label: M4PhaseBalanceLines.earth, on: r.earth, onTapUp: _toggleEarth),
-      _ToolButton(icon: Icons.build_rounded, label: M4PhaseBalanceLines.spanner, on: r.tool == M4PhaseBalanceTool.spanner, onTap: () => _hold(M4PhaseBalanceTool.spanner)),
-    ]);
+    return [for (final k in _kitOrder) if (on.contains(k)) k];
+  }
+
+  Widget _toolButton(M4PhaseBalanceKit k) {
+    final r = _run;
+    final key = _kitKeys[k];
+    return switch (k) {
+      M4PhaseBalanceKit.gloves => _ToolButton(key: key, icon: Icons.back_hand_rounded, label: M4PhaseBalanceLines.gloves, on: r.gloves, onTap: _putGloves),
+      M4PhaseBalanceKit.tong =>
+        _ToolButton(key: key, icon: Icons.speed_rounded, label: M4PhaseBalanceLines.tong, on: r.tool == M4PhaseBalanceTool.tong, onTap: () => _hold(M4PhaseBalanceTool.tong)),
+      M4PhaseBalanceKit.book => _ToolButton(key: key, icon: Icons.menu_book_rounded, label: M4PhaseBalanceLines.book, on: false, onTapUp: _writeBook),
+      M4PhaseBalanceKit.notice => _ToolButton(key: key, icon: Icons.campaign_rounded, label: M4PhaseBalanceLines.notice, on: r.told, onTap: _tell),
+      M4PhaseBalanceKit.ptw => _ToolButton(key: key, icon: Icons.assignment_rounded, label: M4PhaseBalanceLines.ptw, on: r.ptw, onTap: _togglePtw),
+      M4PhaseBalanceKit.tester => _ToolButton(key: key, icon: Icons.flash_on_rounded, label: M4PhaseBalanceLines.tester, on: _tester != null, onTap: _useTester),
+      M4PhaseBalanceKit.earth => _ToolButton(key: key, icon: Icons.link_rounded, label: M4PhaseBalanceLines.earth, on: r.earth, onTapUp: _toggleEarth),
+      M4PhaseBalanceKit.spanner => _ToolButton(
+          key: key, icon: Icons.build_rounded, label: M4PhaseBalanceLines.spanner, on: r.tool == M4PhaseBalanceTool.spanner, onTap: () => _hold(M4PhaseBalanceTool.spanner)),
+    };
+  }
+
+  Widget _tools() => Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [for (final k in _kitNow) _toolButton(k)]);
+
+  // --- gesture hints -------------------------------------------------------------
+  /// A scene rect (design px) in global pixels, through the touch layer.
+  Rect? _sceneRect(Rect r) {
+    final box = _sceneKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return MatrixUtils.transformRect(box.getTransformTo(null), r);
+  }
+
+  /// What the hand sweeps over now: everything that can be touched, never one
+  /// answer (a sweep over fewer than two things is no hint).
+  HintSpec? _hint() {
+    final r = _run;
+    final geo = _geo;
+    final rects = <Rect>[];
+    void key(GlobalKey k) {
+      final x = HintSpec.globalRectOf(k);
+      if (x != null) rects.add(x);
+    }
+
+    void scene(Rect s) {
+      final x = _sceneRect(s);
+      if (x != null) rects.add(x);
+    }
+
+    if (r.stage == M4PhaseBalanceStage.plan) {
+      if (r.picked != null) {
+        _colKeys.forEach(key);
+      } else {
+        // The new ones in the tray, and the top chip of every column.
+        for (final l in r.deal.newLoads) {
+          if (!r.plan.containsKey(l.id)) key(_chipKeys.putIfAbsent(l.id, GlobalKey.new));
+        }
+        for (var p = 0; p < 3; p++) {
+          for (final l in r.deal.loads) {
+            if (r.plan[l.id] == p) {
+              key(_chipKeys.putIfAbsent(l.id, GlobalKey.new));
+              break;
+            }
+          }
+        }
+        if (r.planReady) key(_planOkKey);
+      }
+    } else if (r.readyToRead) {
+      _phaseKeys.forEach(key);
+      // The tong is still on: all 4 cables still read (N too), so they stay in
+      // the sweep — never just the neutral, that would be the answer.
+      if (geo != null && r.tool == M4PhaseBalanceTool.tong) {
+        for (var i = 0; i < 4; i++) {
+          scene(geo.cableHit(i));
+        }
+      }
+    } else {
+      for (final k in _kitNow) {
+        key(_kitKeys[k]!);
+      }
+      if (geo != null) {
+        if (r.tool == M4PhaseBalanceTool.tong) {
+          for (var i = 0; i < 4; i++) {
+            scene(geo.cableHit(i));
+          }
+        }
+        if (r.stage == M4PhaseBalanceStage.work) scene(geo.handleHit);
+        if (r.tool == M4PhaseBalanceTool.spanner) scene(geo.barsHit);
+      }
+    }
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
+  /// A new waiting state (resets the count of hints shown).
+  String get _hintKey {
+    final r = _run;
+    return '${r.stage.index}-${r.readyToRead}-${r.tool.index}-${r.checking}-${r.picked != null}-${r.planReady}';
   }
 
   @override
@@ -1365,6 +1507,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
     final planUp = playing && stage == M4PhaseBalanceStage.plan && !_run.cleared && _card == null;
     final readUp = playing && _card == null && (stage == M4PhaseBalanceStage.measure || _run.checking) && !reasonOpen;
     final guideBottom = pad.bottom + (deckUp ? 236 : (planUp ? 72 : 84));
+    final hintWaiting = handsOn && !tableBusy && !_ended;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1392,6 +1535,10 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hint,
+            hintWaiting: hintWaiting,
+            hintKey: _hintKey,
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen && !planUp)
                 Positioned(
@@ -1419,7 +1566,12 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
                     children: [
                       for (var p = 0; p < 3; p++) ...[
                         if (p > 0) const SizedBox(width: 8),
-                        Expanded(child: DoBigButton(label: M4PhaseBalanceLines.phaseBtn(p), filled: true, onTapUp: (d) => _answer(p, d.globalPosition))),
+                        Expanded(
+                          child: KeyedSubtree(
+                            key: _phaseKeys[p],
+                            child: DoBigButton(label: M4PhaseBalanceLines.phaseBtn(p), filled: true, onTapUp: (d) => _answer(p, d.globalPosition)),
+                          ),
+                        ),
                       ],
                     ],
                   ),
@@ -1447,6 +1599,8 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
                     onChip: _tapChip,
                     onColumn: _tapColumn,
                     quiet: quiet,
+                    chipKeys: _chipKeys,
+                    colKeys: _colKeys,
                   ),
                 ),
               if (planUp && !deckUp)
@@ -1456,6 +1610,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
                   right: 12,
                   bottom: pad.bottom + 12,
                   child: Opacity(
+                    key: _planOkKey,
                     opacity: _run.planReady ? 1 : 0.45,
                     child: DoBigButton(label: M4PhaseBalanceLines.planOk, filled: true, onTapUp: (d) => _confirmPlan(d.globalPosition)),
                   ),
@@ -1649,6 +1804,8 @@ class _PlanBoard extends StatelessWidget {
     required this.onChip,
     required this.onColumn,
     required this.quiet,
+    required this.chipKeys,
+    required this.colKeys,
   });
 
   final List<M4PhaseBalanceLoad> loads;
@@ -1659,9 +1816,14 @@ class _PlanBoard extends StatelessWidget {
   final ValueChanged<int> onColumn;
   final bool quiet;
 
+  /// Gesture-hint anchors (the page's).
+  final Map<String, GlobalKey> chipKeys;
+  final List<GlobalKey> colKeys;
+
   Widget _chip(M4PhaseBalanceLoad l) {
     final on = picked == l.id;
     return Semantics(
+      key: chipKeys.putIfAbsent(l.id, GlobalKey.new),
       button: true,
       label: 'chip-${l.id}',
       excludeSemantics: true,
@@ -1696,8 +1858,6 @@ class _PlanBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tray = [for (final l in loads) if (l.isNew && !plan.containsKey(l.id)) l];
-    final maxA = amps.reduce(math.max);
-    final minA = amps.reduce(math.min);
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
       decoration: BoxDecoration(
@@ -1732,6 +1892,7 @@ class _PlanBoard extends StatelessWidget {
                 for (var p = 0; p < 3; p++) ...[
                   if (p > 0) const SizedBox(width: 6),
                   Expanded(
+                    key: colKeys[p],
                     child: GestureDetector(
                       key: ValueKey('col-$p'),
                       behavior: HitTestBehavior.opaque,
@@ -1753,12 +1914,10 @@ class _PlanBoard extends StatelessWidget {
                                   style: TextStyle(fontFamily: 'Roboto', fontSize: 14, fontWeight: FontWeight.w900, color: p == 1 ? const Color(0xFF3A2A00) : Colors.white)),
                             ),
                             const SizedBox(height: 3),
+                            // One colour for every total: no "still heavy" mark
+                            // that would announce a balanced chart.
                             Text('${M4PhaseBalanceLines.total} ${amps[p]}A',
-                                key: ValueKey('total-$p'),
-                                style: bangla(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w900,
-                                    color: amps[p] == maxA && maxA - minA > kM4PhaseBalanceSpread ? const Color(0xFFB0261C) : const Color(0xFF2B2416))),
+                                key: ValueKey('total-$p'), style: bangla(fontSize: 12.5, fontWeight: FontWeight.w900, color: const Color(0xFF2B2416))),
                             const SizedBox(height: 4),
                             Expanded(
                               child: SingleChildScrollView(
@@ -1822,7 +1981,7 @@ class _TesterChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in use.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, this.onTap, this.onTapUp});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, this.onTap, this.onTapUp});
   final IconData icon;
   final String label;
   final bool on;

@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show starsFor;
@@ -44,6 +45,12 @@ import 'spoken_once.dart';
 // or the lesson's other myth "হালকা মরিচা — ওতে কিছু হয় না". Built on the
 // shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full scene, corner
 // guide, ◆ on the table → "কেন …?" → the next part by itself.
+// He cannot be skipped by playing fast: the take and the replace buttons wait
+// for him (holdForCoworker), and so does putting back the last part he could
+// push (it would go to the drum); he comes only while something he could push
+// is still on the rack. Listening to him loads his part — a slip. A gesture
+// hint shows how to touch in every waiting state (a sweep over the rack, a
+// short nudge along the part in hand, a sweep over put back / load).
 //
 // Deadly: none — at the store a wrong or rusty part is a slip (it would fail
 // later on the pole; the lesson's "never stand on a rusty cross-arm" belongs
@@ -217,23 +224,23 @@ abstract final class M3CrossarmPickLines {
         _ => const ['স্প্রিং ওয়াশার আছে, কম্পনে আলগা হবে না', 'গ্যালভানাইজড, মরিচা নেই, ওয়াশারও আছে'],
       };
   static const packWrong = [
-    'দেখতে মজবুত লাগল, তাই এটাই নিলাম',
+    'দেখতে মজবুত লাগল, খুঁটিয়ে দেখার সময় নেই',
     'যেকোনো ক্ল্যাম্প যেকোনো পোলে চলে',
     'হালকা মরিচা তো, ওতে কিছুই হয় না',
-    'শক্ত করে টাইট দিলে সবকিছুই চলে যায়',
-    'হাতের কাছেই ছিল, তাই এটা তুলে নিলাম',
-    'ভারী জিনিস, তাই ভালো হবেই নিশ্চয়ই',
+    'শক্ত করে টাইট দিলে — সবকিছুই চলে যায়',
+    'চোখে তো মরিচা নেই, হাত বোলানোর দরকার নেই',
+    'ভারী জিনিস — তাই ভালো হবেই নিশ্চয়ই',
   ];
 
   static const holdRight = [
     'ডকেটের সাথে মেলে এমন ভালোটা নেই',
-    'ভালোটা নেই, স্টোর থেকে বদলে আনি',
+    'মেলে এমন সবগুলোতেই খুঁত, বদলে আনি',
   ];
   static const holdWrong = [
-    'দেরি হচ্ছে, তাই এটা বাদ দিলাম',
+    'সময় নেই, তাই বদলে আনতে পাঠালাম',
     'ভারী লাগছিল, তাই এটা নিলাম না',
     'স্টোরকিপার বকবে, তাই কিছু নিইনি',
-    'পুরোনো পোল থেকে খুলে এনে লাগাব',
+    'পুরোনো পোলের ভালোটা খুলে লাগাব',
     'এটা ছাড়াও কাজটা ঠিক চলে যাবে',
   ];
 
@@ -243,12 +250,12 @@ abstract final class M3CrossarmPickLines {
   static const coworkerClamp = CoworkerScript(
     line: 'আরে, যেকোনো ক্ল্যাম্পেই হবে — শক্ত করে টাইট দিলেই চলবে!',
     exitLine: coworkerExit,
-    right: ['না — পোল মিলিয়ে ক্ল্যাম্প নেব', 'ভুল ক্ল্যাম্প টাইটেও পিছলে যাবে', 'বেশি টাইটে বল্টু ছিঁড়বে — নেব না'],
+    right: ['পোল মিলিয়ে নেব, যেকোনোটা না', 'ভুল ক্ল্যাম্প টাইটেও পিছলে যাবে', 'বেশি টাইটে বল্টু ছিঁড়বে — চলবে না'],
     wrong: [
-      'ঠিক, শক্ত টাইটেই সব চলে যাবে',
-      'যেটা হাতের কাছে আছে সেটাই নিই',
-      'জোরে টাইট দিলে আর পিছলাবে না',
-      'ক্ল্যাম্প তো ক্ল্যাম্পই, নিই',
+      'শক্ত টাইট দিলে — সব কিছুই চলে যায়',
+      'যেটা হাতের কাছে আছে সেটাই নেব',
+      'জোরে টাইট দিলে আর তো পিছলাবে না',
+      'ক্ল্যাম্প তো ক্ল্যাম্পই — এটাই নেব',
       'সবাই তো যেটা পায় সেটাই লাগায়',
     ],
     asks: ['ও বলছে যেকোনো ক্ল্যাম্পেই হবে। আপনি কী করবেন?', 'যেকোনোটা নেবেন, না পোল মিলিয়ে?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
@@ -256,12 +263,12 @@ abstract final class M3CrossarmPickLines {
   static const coworkerRust = CoworkerScript(
     line: 'হালকা মরিচা — ওতে কিছু হয় না, তুলে নাও!',
     exitLine: coworkerExit,
-    right: ['না — হালকা মরিচাও বাতিল করব', 'মরিচা ভেতরে শক্তি খায়, নেব না', 'গ্যালভানাইজিং নষ্ট — বদলে নেব'],
+    right: ['হালকা মরিচাও বাতিল, এটা নেব না', 'মরিচা ভেতরে শক্তি খায় — বাদ দেব', 'গ্যালভানাইজিং নষ্ট, বদলে আনব'],
     wrong: [
-      'ঠিক, বাইরের মরিচায় কিছু হয় না',
+      'বাইরের মরিচা — ওতে কিছু হয় না',
       'একটু মরিচা থাকলে কী আর হবে',
       'রং করে দিলেই তো ঠিক চলে যাবে',
-      'নতুন খুঁজতে দেরি, এটাই নিই',
+      'নতুন খুঁজতে দেরি — এটাই নেব',
       'সবাই তো মরিচা দেখেও লাগায়',
     ],
     asks: ['ও বলছে মরিচায় কিছু হয় না। আপনি কী করবেন?', 'মরিচা ধরাটা নেবেন, না বাতিল?', 'কার কথা শুনবেন — ওর, না নিয়মের?'],
@@ -626,6 +633,19 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  // Gesture hints (how to touch, never what).
+  final _hints = IdleHintController();
+  final _sceneKey = GlobalKey();
+  final _holdKey = GlobalKey();
+  final _feelKey = GlobalKey();
+  final _putBackKey = GlobalKey();
+  final _takeKey = GlobalKey();
+  final _zoomKey = GlobalKey();
+  M3CrossarmPickStoreGeo? _geo;
+
+  /// The hand has touched the part in hand (the hint moves on to the buttons).
+  var _felt = false;
+
   String get _rungId => widget.ctx.rungId;
 
   @override
@@ -672,24 +692,23 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
     if (!coworkerDone && _run.round >= _run.deal.callRound) scheduleCoworker();
   }
 
-  bool get _blocked => _intro || _ended || _card != null || reasonOpen || _run.shown;
+  bool get _blocked => _intro || _ended || _card != null || tableBusy || _run.shown;
 
   void _setMode(LinemanMode m) {
     _mode = m;
     _wake++;
   }
 
-  bool _isPushed(M3CrossarmPickItem t) =>
-      _push == M3CrossarmPickPush.anyClamp ? t.shape != _run.current.want : t.flaw == M3CrossarmPickFlaw.rust;
-
   /// A part comes off the rack into the trainee's hands.
   void _pick(M3CrossarmPickItem t, Offset origin) {
-    // Taking another part while he is still talking refuses him too.
-    if (coworkerOpen && !coworkerChoiceUp && !_isPushed(t)) unawaited(answerCoworker(true, origin, direct: true));
+    // Going on working while he is still talking refuses him too — whichever
+    // part is touched (a part that did not respond would point at his).
+    if (coworkerOpen && !coworkerChoiceUp && !_ended) unawaited(answerCoworker(true, origin, direct: true));
     if (_blocked || coworkerOpen || _held != null || _docketOpen || _run.rejected.contains(t.id)) return;
     HapticFeedback.selectionClick();
     if (!_muted) unawaited(ZlFx.cue('sounds/intro/impact_metal.ogg', volume: 0.4, muted: false));
     _hush();
+    _felt = false;
     setState(() {
       _held = t;
       _setMode(LinemanMode.hold);
@@ -697,17 +716,26 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
     unawaited(_sayChain([_task]));
   }
 
-  /// A fault came into view under the hand.
+  /// A fault came into view under the hand. No sound or buzz: the eye must
+  /// catch it (a cue only on a fault would judge the part for the player).
   void _found() {
     final t = _held;
     if (t != null) _run.spot(t);
-    HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.wav', volume: 0.6, muted: false));
   }
 
   void _putBack() {
     final t = _held;
-    if (t == null || _blocked) return;
+    if (t == null || _blocked || coworkerOpen) return;
+    // Sending his last push to the drum would leave him nothing to say on
+    // this rack (and none at all on the last part): it waits for him like a
+    // take. The part goes back on its shelf, not rejected, while he talks.
+    if (_takesLastPush(t) && holdForCoworker()) {
+      setState(() {
+        _held = null;
+        _setMode(LinemanMode.idle);
+      });
+      return;
+    }
     final aside = _run.putBack(t);
     HapticFeedback.selectionClick();
     setState(() {
@@ -723,9 +751,28 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
     }
   }
 
+  /// Putting [t] back would send it to the drum and leave nothing he could
+  /// push on this rack.
+  bool _takesLastPush(M3CrossarmPickItem t) {
+    if (!coworkerDue || !_run.spotted.contains(t.id) || _run.rejected.contains(t.id)) return false;
+    final r = _run.current;
+    final rust = _run.deal.preferRust;
+    return m3CrossarmPickPushFor(r, _run.rejected, preferRust: rust) != null &&
+        m3CrossarmPickPushFor(r, {..._run.rejected, t.id}, preferRust: rust) == null;
+  }
+
   void _pack(Offset origin) {
     final t = _held;
-    if (t == null || _blocked) return;
+    if (t == null || _blocked || coworkerOpen) return;
+    if (holdForCoworker()) {
+      // He cuts in as the part is about to go on the trolley: it goes back
+      // on its shelf (nothing judged) while he talks.
+      setState(() {
+        _held = null;
+        _setMode(LinemanMode.idle);
+      });
+      return;
+    }
     setState(() => _held = null);
     _judgePack(t, origin);
   }
@@ -750,6 +797,7 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
 
   void _holdJob(Offset origin) {
     if (_blocked || coworkerOpen || _held != null || _docketOpen) return;
+    if (holdForCoworker()) return;
     _hush();
     final o = _run.holdJob();
     if (o.verdict == M3CrossarmPickVerdict.right) {
@@ -814,10 +862,12 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
   @override
   bool? coworkerCanCome() {
     if (_ended || _run.done || _run.round < _run.deal.callRound) return null;
-    if (_blocked || _held != null || _docketOpen) return false;
     final push = m3CrossarmPickPushFor(_run.current, _run.rejected, preferRust: _run.deal.preferRust);
-    if (push == null) return false;
+    // Nothing he could push is left on this rack (it only shrinks within a
+    // part): his line would not fit — he tries again on the next part.
+    if (push == null) return null;
     _push = push;
+    if (_blocked || _docketOpen || (_held != null && !coworkerHeld)) return false;
     return true;
   }
 
@@ -952,10 +1002,45 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
     if (leave == true) _popOnce(false);
   }
 
+  // ---- gesture hints ------------------------------------------------------------------
+
+  /// The level waits for a touch on the scene now (not during the intro, a
+  /// card, a deck — it has its own sweep —, the praise window, him, results).
+  bool get _hintWaiting =>
+      !_intro && !_ended && _mark == null && !struckOut && _card == null && !tableBusy && !_run.shown && !coworkerOnScreen;
+
+  /// A rect in the store's design pixels, on screen.
+  Rect? _sceneRect(Rect r) {
+    final box = _sceneKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return MatrixUtils.transformRect(box.getTransformTo(null), r);
+  }
+
+  HintSpec? _hint() {
+    if (_docketOpen) return HintSpec.tapOn(_zoomKey);
+    if (_held != null) {
+      if (!_felt) {
+        // A short nudge along the part from its near end: "run a hand along".
+        final r = HintSpec.globalRectOf(_feelKey);
+        return r == null ? null : HintSpec.drag(Offset(r.left + r.width * 0.08, r.center.dy), toward: const Offset(1, 0), travel: 80);
+      }
+      return HintSpec.sweepOver([_putBackKey, _takeKey]);
+    }
+    final geo = _geo;
+    if (geo == null) return null;
+    final r = _run.current;
+    final rects = <Rect>[
+      for (var i = 0; i < r.items.length; i++)
+        if (!_run.rejected.contains(r.items[i].id)) ?_sceneRect(geo.slot(i)),
+      ?HintSpec.globalRectOf(_holdKey),
+    ];
+    return rects.length < 2 ? null : HintSpec.sweep(rects);
+  }
+
   // ---- build ------------------------------------------------------------------------
 
   List<Widget> _layers(BuildContext context, SceneMetrics m, bool quiet) {
-    final geo = M3CrossarmPickStoreGeo(m.height);
+    final geo = _geo = M3CrossarmPickStoreGeo(m.height);
     final r = _run.current;
     final aside = [for (final x in r.items) if (_run.rejected.contains(x.id)) x];
     final canPick = !_blocked && _held == null && !_docketOpen;
@@ -963,7 +1048,12 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
     return [
       Positioned.fill(
         key: const ValueKey('store'),
-        child: RepaintBoundary(child: CustomPaint(painter: M3CrossarmPickStorePainter(geo))),
+        // A tap on the bare store hits nothing: it counts toward the hint.
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _hints.missTap,
+          child: RepaintBoundary(key: _sceneKey, child: CustomPaint(painter: M3CrossarmPickStorePainter(geo))),
+        ),
       ),
       Positioned.fromRect(
         key: const ValueKey('docket'),
@@ -1015,7 +1105,7 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
     final pad = MediaQuery.paddingOf(context);
     final playing = !_intro && _mark == null && !struckOut;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final holdUp = playing && _held == null && !_docketOpen && _card == null && !deckUp && !_run.shown && !coworkerOpen;
+    final holdUp = playing && _held == null && !_docketOpen && _card == null && !deckUp && !_run.shown && !tableBusy && !coworkerOpen;
     final held = _held;
     return PopScope(
       canPop: false,
@@ -1044,6 +1134,10 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
               quiet: quiet,
             ),
             layers: (context, m) => _layers(context, m, quiet),
+            hint: _hint,
+            hintWaiting: _hintWaiting,
+            hintKey: (_run.round, _held?.id, _docketOpen),
+            hintController: _hints,
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
               if (holdUp)
@@ -1052,7 +1146,7 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
                   left: 12,
                   right: 128,
                   bottom: pad.bottom + 18,
-                  child: _HoldButton(onTapUp: (d) => _holdJob(d.globalPosition)),
+                  child: _HoldButton(key: _holdKey, onTapUp: (d) => _holdJob(d.globalPosition)),
                 ),
               if (held != null && playing)
                 _Inspect(
@@ -1060,13 +1154,19 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
                   item: held,
                   slot: _run.current.slot,
                   quiet: quiet,
+                  feelKey: _feelKey,
+                  putBackKey: _putBackKey,
+                  takeKey: _takeKey,
                   onFound: _found,
+                  onTouch: () => _felt = true,
+                  onMiss: _hints.missTap,
                   onTake: _pack,
                   onPutBack: _putBack,
                 ),
               if (_docketOpen && playing)
                 _DocketZoom(
                   key: const ValueKey('docket-zoom'),
+                  cardKey: _zoomKey,
                   deal: _run.deal,
                   done: {for (var i = 0; i < _run.round; i++) i},
                   quiet: quiet,
@@ -1236,7 +1336,8 @@ class _DocketSheet extends StatelessWidget {
 
 /// The docket held up close (tap anywhere to hang it back).
 class _DocketZoom extends StatelessWidget {
-  const _DocketZoom({super.key, required this.deal, required this.done, required this.quiet, required this.onClose});
+  const _DocketZoom({super.key, required this.cardKey, required this.deal, required this.done, required this.quiet, required this.onClose});
+  final GlobalKey cardKey;
   final M3CrossarmPickDeal deal;
   final Set<int> done;
   final bool quiet;
@@ -1260,6 +1361,7 @@ class _DocketZoom extends StatelessWidget {
               curve: Curves.easeOutBack,
               builder: (_, t, child) => Transform.scale(scale: 0.6 + 0.4 * t, child: Opacity(opacity: t.clamp(0.0, 1.0), child: child)),
               child: Container(
+                key: cardKey,
                 width: 300,
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
                 decoration: BoxDecoration(
@@ -1397,7 +1499,7 @@ class _AsidePart extends StatelessWidget {
 }
 
 class _HoldButton extends StatelessWidget {
-  const _HoldButton({required this.onTapUp});
+  const _HoldButton({super.key, required this.onTapUp});
   final GestureTapUpCallback onTapUp;
 
   @override
@@ -1443,14 +1545,28 @@ class _Inspect extends StatefulWidget {
     required this.item,
     required this.slot,
     required this.quiet,
+    required this.feelKey,
+    required this.putBackKey,
+    required this.takeKey,
     required this.onFound,
+    required this.onTouch,
+    required this.onMiss,
     required this.onTake,
     required this.onPutBack,
   });
   final M3CrossarmPickItem item;
   final M3CrossarmPickSlot slot;
   final bool quiet;
+  final GlobalKey feelKey;
+  final GlobalKey putBackKey;
+  final GlobalKey takeKey;
   final VoidCallback onFound;
+
+  /// The hand touched the part (once per close look).
+  final VoidCallback onTouch;
+
+  /// A tap on the dim backdrop (nothing there).
+  final VoidCallback onMiss;
   final ValueChanged<Offset> onTake;
   final VoidCallback onPutBack;
 
@@ -1464,6 +1580,7 @@ class _InspectState extends State<_Inspect> {
   var _found = false;
 
   void _touch(Offset p, Size s) {
+    if (_seen.isEmpty) widget.onTouch();
     final b = m3CrossarmPickBin(M3CrossarmPickPainter.uAt(s, p.dx));
     final before = _seen.length;
     for (final x in [b - 1, b, b + 1]) {
@@ -1483,6 +1600,7 @@ class _InspectState extends State<_Inspect> {
           return Semantics(
             label: M3CrossarmPickLines.handLabel,
             child: GestureDetector(
+              key: widget.feelKey,
               behavior: HitTestBehavior.opaque,
               onPanDown: (d) => _touch(d.localPosition, s),
               onPanUpdate: (d) => _touch(d.localPosition, s),
@@ -1505,70 +1623,74 @@ class _InspectState extends State<_Inspect> {
   Widget build(BuildContext context) {
     final t = widget.item;
     return Positioned.fill(
-      child: ColoredBox(
-        color: const Color(0xC0050A16),
-        child: Align(
-          alignment: const Alignment(0, -0.42),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
-            duration: const Duration(milliseconds: 360),
-            curve: Curves.easeOutBack,
-            builder: (_, v, child) => Transform.translate(
-              offset: Offset(0, 80 * (1 - v)),
-              child: Transform.scale(scale: 0.85 + 0.15 * v, child: Opacity(opacity: v.clamp(0.0, 1.0), child: child)),
-            ),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-              decoration: BoxDecoration(
-                color: SlmColors.ivory,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onMiss,
+        child: ColoredBox(
+          color: const Color(0xC0050A16),
+          child: Align(
+            alignment: const Alignment(0, -0.42),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: widget.quiet ? 1 : 0, end: 1),
+              duration: const Duration(milliseconds: 360),
+              curve: Curves.easeOutBack,
+              builder: (_, v, child) => Transform.translate(
+                offset: Offset(0, 80 * (1 - v)),
+                child: Transform.scale(scale: 0.85 + 0.15 * v, child: Opacity(opacity: v.clamp(0.0, 1.0), child: child)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
-                      decoration: BoxDecoration(color: _paper, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFB59B62))),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.receipt_long_rounded, color: _brown, size: 16),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text('${M3CrossarmPickLines.docket} · ${widget.slot.nameBn}',
-                                maxLines: 1, overflow: TextOverflow.ellipsis, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
-                          ),
-                        ],
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+                decoration: BoxDecoration(
+                  color: SlmColors.ivory,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 10))],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
+                        decoration: BoxDecoration(color: _paper, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFB59B62))),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.receipt_long_rounded, color: _brown, size: 16),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text('${M3CrossarmPickLines.docket} · ${widget.slot.nameBn}',
+                                  maxLines: 1, overflow: TextOverflow.ellipsis, style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: _ink)),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  AspectRatio(
-                    aspectRatio: 2.5,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF3A4654), _bench]),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-                        child: Center(child: AspectRatio(aspectRatio: M3CrossarmPickPainter.aspectOf(t.shape), child: _closeUp(t))),
+                    const SizedBox(height: 6),
+                    AspectRatio(
+                      aspectRatio: 2.5,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF3A4654), _bench]),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                          child: Center(child: AspectRatio(aspectRatio: M3CrossarmPickPainter.aspectOf(t.shape), child: _closeUp(t))),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(child: DoBigButton(label: M3CrossarmPickLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
-                      const SizedBox(width: 12),
-                      Expanded(child: DoBigButton(label: M3CrossarmPickLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(child: DoBigButton(key: widget.putBackKey, label: M3CrossarmPickLines.putBack, filled: false, onTapUp: (_) => widget.onPutBack())),
+                        const SizedBox(width: 12),
+                        Expanded(child: DoBigButton(key: widget.takeKey, label: M3CrossarmPickLines.take, filled: true, onTapUp: (d) => widget.onTake(d.globalPosition))),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1675,10 +1797,7 @@ class M3CrossarmPickPainter extends CustomPainter {
       c.translate(-px, -py);
       _part(c, s);
       c.restore();
-      c.drawCircle(Offset(px, py), s.height * 0.32, Paint()
-        ..color = const Color(0x88FF851B)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4);
+      // No ring round the kink: the bend itself is the only sign.
     } else {
       _part(c, s);
     }

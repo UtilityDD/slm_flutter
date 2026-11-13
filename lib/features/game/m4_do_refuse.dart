@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -52,13 +53,19 @@ export 'm4_do_refuse_world.dart' show M4DoRefuseGeo, M4DoRefuseBarrel;
 //       fuse blows again at once (a fault is still there: stop, no reclosing —
 //       inferred from pro tip 2 + myth 2, flagged).
 // Deadly: a thick wire in place of the fuse link (point 1 / point 2's
-// "fails to drop out on a fault"; the deadly call is flagged). Slips: refit at
-// once, a wrong rating, a link step out of order, under the fuse, face not
-// aside, reopening on a normal spark, reclosing after a re-blow.
+// "fails to drop out on a fault"; the deadly call is flagged). Slips: a sound
+// fuse called the dropped one, refit at once, a wrong rating, a link step out
+// of order, under the fuse, face not aside, reopening on a normal spark,
+// reclosing after a re-blow.
 // The careless coworker once a play: at the tray ("মোটা তার দিয়ে বেঁধে দাও" —
-// listening is the deadly bodge) or at the re-blow ("যতবার উড়বে ততবার
-// লাগাও" — listening = reclosing on the fault, a slip). His new lines go by
-// device TTS until recorded ([M4DoRefuseLines.recordLines]).
+// listening is the deadly bodge, on Module 4's deadly list; owner to confirm)
+// or at the re-blow ("যতবার উড়বে ততবার লাগাও" — listening = reclosing on the
+// fault, a slip). The tray waits for him ([CoworkerMoment.holdForCoworker]).
+// His push lines have no recorded clip yet ([M4DoRefuseLines.recordLines]):
+// the kit shows them as a held caption until they are recorded.
+// Gesture hints (how, never what): a sweep over the fuses / the tray / the
+// barrel's parts, a sweep over the ground for the stance, a tap on the hinge,
+// an upward swipe for the push (never the face button).
 
 // ============================================================================
 // Content
@@ -166,8 +173,7 @@ abstract final class M4DoRefuseLines {
   static const teamBack = 'দল লাইনটা ঘুরে দেখে এল।';
 
   // Not scored: the guide says it, the step stays.
-  static const notThis = 'এটা নয়। আবার দেখুন।';
-  static const tooFar = 'এত দূর থেকে রড ঠিকমতো পৌঁছায় না। পাশে থাকুন, তবে কাছে।';
+  static const tooFar = 'এত দূর থেকে রড পৌঁছায় না। আবার জায়গাটা দেখান।';
   static const missSeat = 'ব্যারেলটা নিচের কব্জার ঠিক জায়গায় নিন।';
   static const shortPush = 'আধা ধাক্কা হলো। একটি দ্রুত, আত্মবিশ্বাসী ধাক্কায় — পুরোটা।';
   static const slowPush = 'এত ধীরে নয়। দ্বিধা করলে আর্ক দীর্ঘ হয় — এক ধাক্কায়।';
@@ -193,7 +199,9 @@ abstract final class M4DoRefuseLines {
     'বাকি দুটো চালু থাক, একটাই লাগাই',
     'মোটা তার দিয়ে সোজা লাগিয়ে দিই',
     'লোকে অন্ধকারে, আগে লাগিয়ে আলো ফেরাই',
-    'কারণ খোঁজার সময় নেই, লাগিয়ে দিই',
+    'ফল্ট পরে খুঁজব, আগে এটা লাগিয়ে দিই',
+    'বাকি দুটো খুলে রাখি, এটা এখনই লাগাই',
+    'ফল্ট পরে সারাব, আগে এটা লাগিয়ে দিই',
   ];
   static const settleRight = ['স্বাভাবিক ইনরাশ স্পার্ক — আর খুলব না', 'লক হয়েছে, স্পার্ক থেমেছে — ঠিক আছে'];
   static const settleWrong = [
@@ -201,15 +209,16 @@ abstract final class M4DoRefuseLines {
     'স্পার্ক মানেই ফল্ট — খুলে আবার লাগাই',
     'দু-তিনবার খুলে-লাগিয়ে পাকা করে নিই',
     'মোটা লিঙ্ক এনে আবার লাগিয়ে দিই',
-    'হাতে টেনে দেখি ঠিক বসেছে কি না',
+    'লক হলেও খুলে দেখি, ইনরাশ না ফল্ট',
   ];
   static const reblowRight = ['আর লাগাব না — ফল্ট এখনও রয়ে গেছে', 'থামি, আগে ফল্টটা খুঁজে সারাতে হবে'];
   static const reblowWrong = [
     'আরেকবার লাগিয়ে দেখি, এবার ধরবে',
     'মোটা তার দিয়ে লাগালে আর উড়বে না',
-    'জোরে ঠেলে লাগালে এবার টিকে যাবে',
+    'ফল্ট ছোট, আরেকবার লাগালেই ধরবে',
     'বড় রেটিং-এর লিঙ্ক দিয়ে আবার লাগাই',
     'লোকে অপেক্ষায়, যতবার উড়ুক লাগাই',
+    'থামার সময় নেই, ফল্ট পরে সারাব',
   ];
 
   // The reasons: the right ones fit the round just played.
@@ -235,7 +244,9 @@ abstract final class M4DoRefuseLines {
     _ => d.outcome == M4DoRefuseOutcome.settles ? settleWhy : reblowWhy,
   };
 
-  /// Wrong reasons (the field's excuses and myths).
+  /// Wrong reasons (the field's excuses and myths). Some carry the rounds'
+  /// own words (ফল্ট, রেটিং, স্পার্ক, পোর্ট, তিন ফেজ, গ্যাস, আবার) so no word
+  /// marks the right card.
   static const whyWrong = [
     'মোটা তার দিলে ফিউজ আর কোনো ঝামেলা করে না',
     'লোকে অন্ধকারে, তাড়াতাড়ি আলো ফেরাতে হবে',
@@ -243,6 +254,13 @@ abstract final class M4DoRefuseLines {
     'যতবার উড়ুক, লাগাতে থাকলে একসময় ধরে',
     'সুপারভাইজার দাঁড়িয়ে, তাড়াতাড়ি সারতে হবে',
     'ফিউজ ওড়া রোজকার ব্যাপার, কারণ লাগে না',
+    'ফল্ট খোঁজার চেয়ে আলো ফেরানো আগে জরুরি',
+    'বড় রেটিং-এর লিঙ্ক বেশিদিন টিকে যায়',
+    'স্পার্ক নিয়ে ভাবার সময় নেই, কাজ বাকি',
+    'পোর্ট দেখলে সুপারভাইজার খুশি থাকেন, তাই',
+    'তিন ফেজ খুলে রাখলে লোকে বোঝে কাজ হচ্ছে',
+    'গ্যাস বেরোলেও পোর্ট নিয়ে ভাবার দরকার নেই',
+    'আবার উড়লে আরও একবার লাগালেই ধরে যায়',
   ];
 
   static const coworkerExit = 'হুঁ! যা খুশি করুন।';
@@ -273,11 +291,12 @@ abstract final class M4DoRefuseLines {
       'জোরে ঠেললে এবার ধরে যাবে',
       'তাড়াতাড়ি আবার লাগিয়ে দিচ্ছি',
       'ঠিক আছে, ফল্ট-টল্ট পরে দেখব',
+      'ফল্ট পরে সারাব, আগে লাগিয়ে দিই',
     ],
     asks: ['ও বলছে আবার লাগাতে। আপনি?', 'আবার লাগাবেন, না থামবেন?', 'ওর কথা শুনবেন, না নিয়ম মানবেন?'],
   );
 
-  /// New lines for him (device TTS until recorded in his voice).
+  /// His push lines with no recorded clip yet (the director records them).
   static List<String> get recordLines => [coworkerLink.line, coworkerReblow.line];
 
   static const callHeld = 'ঠিক! চাপে পড়ে নিয়ম ভাঙবেন না।';
@@ -300,6 +319,13 @@ abstract final class M4DoRefuseLines {
 
 abstract final class M4DoRefuseMistakes {
   static const _dir = 'assets/game/art/m4_do_refuse';
+
+  /// A sound fuse called the dropped one (a wrong flag costs a slip).
+  static const wrongFuse = DoMistake(
+    key: '4.4/m4_do_refuse/wrong-fuse',
+    textBn: 'যে ফিউজটা ঠিকঠাক বসে আছে, সেটাকেই উড়ে যাওয়া বললেন। ডিও ফিউজ উড়লে ব্যারেলটা কব্জায় নিচে ঝুলে পড়ে — ভালো করে দেখে তবে রড তুলুন।',
+    art: '$_dir/spot.svg',
+  );
 
   /// Pro tip 2 (not a lesson point).
   static const refitAtOnce = DoMistake(
@@ -371,7 +397,7 @@ abstract final class M4DoRefuseMistakes {
     art: '$_dir/reblow.svg',
   );
 
-  static List<DoMistake> get all => [refitAtOnce, thickWire, wrongRating, noClean, noButton, noWrap, portUnchecked, underFuse, faceIn, reopen, reclose];
+  static List<DoMistake> get all => [wrongFuse, refitAtOnce, thickWire, wrongRating, noClean, noButton, noWrap, portUnchecked, underFuse, faceIn, reopen, reclose];
 }
 
 /// The link steps as an order board (point 2's four steps, then "ready").
@@ -445,11 +471,13 @@ class M4DoRefuseRun {
 
   bool _at(M4DoRefusePhase p) => !ended && phase == p;
 
-  /// ক: a tap on fuse [p]; true when it is the dropped one.
-  bool spot(int p) {
-    if (!_at(M4DoRefusePhase.spot) || p != deal.phase) return false;
+  /// ক: a tap on fuse [p]: (true, null) when it is the dropped one; a sound
+  /// fuse called dropped is a slip and the step stays.
+  (bool, DoMistake?) spot(int p) {
+    if (!_at(M4DoRefusePhase.spot)) return (false, null);
+    if (p != deal.phase) return (false, _slip(M4DoRefuseMistakes.wrongFuse));
     phase = M4DoRefusePhase.decide;
-    return true;
+    return (true, null);
   }
 
   /// ক: what comes first. A wrong choice is a slip; the guide puts it right.
@@ -719,6 +747,23 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// Gesture hints: the tray tiles, the bench box, the cloth and "ready".
+  final _hints = IdleHintController();
+  final _trayKeys = List.generate(4, (_) => GlobalKey());
+  final _benchKey = GlobalKey();
+  final _clothKey = GlobalKey();
+  final _readyKey = GlobalKey();
+
+  /// The bench sweep's order, shuffled once a play so the hand never glides
+  /// over the link steps in the lesson's order.
+  late final List<int> _fitSweep = () {
+    // Parts: 0 top contact, 1 bottom nut, 2 port, 3 cloth, 4 ready. The
+    // lesson's order is 3-0-1-2-4; the sweep never follows it.
+    final o = [0, 1, 2, 3, 4]..shuffle(math.Random(_deal.phase * 31 + _deal.tray.indexOf(null)));
+    if (o.join() == '30124') return [2, 4, 0, 3, 1];
+    return o;
+  }();
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -758,7 +803,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
     if (!_muted) unawaited(ZlFx.cue(file, volume: volume, muted: false));
   }
 
-  bool get _canPlay => !_intro && !_busy && !_ended && _card == null && _deck == null && !reasonOpen && !coworkerOpen;
+  bool get _canPlay => !_intro && !_busy && !_ended && !tableBusy && _card == null && _deck == null && !reasonOpen && !coworkerOpen;
 
   String get _task => M4DoRefuseLines.ask(_run.phase, _deal.outcome);
 
@@ -801,16 +846,25 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
     final unit = m4DoRefuseUnitAt(geo, p);
     switch (_run.phase) {
       case M4DoRefusePhase.spot:
-        if (unit == null) return;
-        HapticFeedback.selectionClick();
-        _cue('sounds/intro/tick.ogg', volume: 0.45);
-        if (!_run.spot(unit)) {
-          unawaited(_sayChain([M4DoRefuseLines.notThis]));
+        if (unit == null) {
+          _hints.missTap();
           return;
         }
+        HapticFeedback.selectionClick();
+        _cue('sounds/intro/tick.ogg', volume: 0.45);
+        final (hit, wrong) = _run.spot(unit);
+        if (wrong != null) {
+          // A sound fuse called dropped: a slip; the step stays.
+          _hush();
+          unawaited(_levelDelta(-10, _toGlobal(p), mood: GuideMood.warn));
+          await _slip(wrong, resume: _askStep);
+          return;
+        }
+        if (!hit) return;
         setState(() => _wake++);
         _openDeck(_Deck.decide);
       case M4DoRefusePhase.openOthers:
+        if (unit == null) _hints.missTap();
         if (unit == null || !_run.openOther(unit)) return;
         _hush();
         HapticFeedback.mediumImpact();
@@ -825,6 +879,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
           unawaited(_sayChain([M4DoRefuseLines.teamBack, M4DoRefuseLines.askLower]));
         }
       case M4DoRefusePhase.lower:
+        if (unit == null) _hints.missTap();
         if (unit != _blown || !_run.lower(unit!)) return;
         _hush();
         HapticFeedback.mediumImpact();
@@ -836,7 +891,10 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
         });
         _roundDone();
       case M4DoRefusePhase.stand:
-        if (p.dy < geo.groundY - 30) return;
+        if (p.dy < geo.groundY - 30) {
+          _hints.missTap();
+          return;
+        }
         final x = p.dx.clamp(16.0, 344.0);
         final (s, m) = _run.stand(x - M4DoRefuseGeo.phaseX[_blown]);
         HapticFeedback.selectionClick();
@@ -864,6 +922,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
         _askStep();
       case M4DoRefusePhase.seat:
         if ((p - geo.hingeOf(_blown)).distance > 34) {
+          _hints.missTap();
           HapticFeedback.selectionClick();
           unawaited(_sayChain([M4DoRefuseLines.missSeat]));
           return;
@@ -878,6 +937,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
         });
         _askStep();
       case M4DoRefusePhase.closeOthers:
+        if (unit == null) _hints.missTap();
         if (unit == null || !_run.closeOther(unit)) return;
         _hush();
         HapticFeedback.mediumImpact();
@@ -966,6 +1026,8 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
   // --- the link bench --------------------------------------------------------------
   Future<void> _pick(String? item, Offset origin) async {
     if (!_canPlay || _run.phase != M4DoRefusePhase.pick) return;
+    // He is due at the tray: the pick waits for him (no skipping by speed).
+    if (holdForCoworker()) return;
     _hush();
     final m = _run.pick(item);
     if (m != null && m.deadly) {
@@ -1128,7 +1190,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
     if (_ended) return null;
     final at = _deal.call == M4DoRefuseCall.link ? (1, M4DoRefusePhase.pick) : (2, M4DoRefusePhase.watch);
     if (_run.round != at.$1 || _run.phase != at.$2) return null;
-    if (_intro || _busy || _card != null || reasonOpen || _deck != null) return false;
+    if (_intro || _busy || tableBusy || _card != null || reasonOpen || _deck != null) return false;
     return true;
   }
 
@@ -1160,7 +1222,9 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
       unawaited(_sayChain([M4DoRefuseLines.callHeld, _task]));
     } else {
       _run.watch(right: true);
-      unawaited(_sayChain([M4DoRefuseLines.callHeld]));
+      // The praise is heard before the round's ◆ go on the table.
+      await _sayChain([M4DoRefuseLines.callHeld]);
+      if (!mounted || _ended) return;
       _afterWatch();
     }
   }
@@ -1490,6 +1554,45 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
     portBlocked: _deal.portBlocked,
   );
 
+  // --- gesture hints (how to interact, never which answer) ----------------------
+  /// The ground spots the stance sweep glides over (fixed, not the dealt fuse).
+  static const _groundXs = [60.0, 150.0, 240.0, 320.0];
+
+  HintSpec? _hintSpec() {
+    final geo = _geoNow;
+    HintSpec units() => HintSpec.sweep([for (var i = 0; i < 3; i++) geo.unitOf(i)], space: HintSpace.scene);
+    switch (_run.phase) {
+      case M4DoRefusePhase.spot || M4DoRefusePhase.openOthers || M4DoRefusePhase.lower || M4DoRefusePhase.closeOthers:
+        return units();
+      case M4DoRefusePhase.stand:
+        return HintSpec.sweep([
+          for (final x in _groundXs) Rect.fromCenter(center: Offset(x, geo.groundY + 14), width: 44, height: 28),
+        ], space: HintSpace.scene);
+      case M4DoRefusePhase.seat:
+        return HintSpec.tap(geo.hingeOf(_blown), space: HintSpace.scene);
+      case M4DoRefusePhase.push:
+        // How to push (an upward swipe); the face button is the player's call.
+        return HintSpec.swipe(geo.hingeOf(_blown) + const Offset(0, 40), toward: const Offset(0, -1), travel: 90, space: HintSpace.scene);
+      case M4DoRefusePhase.pick:
+        return HintSpec.sweepOver(_trayKeys.where((k) => k.currentContext != null));
+      case M4DoRefusePhase.fit:
+        final box = HintSpec.globalRectOf(_benchKey);
+        final cloth = HintSpec.globalRectOf(_clothKey);
+        final ready = HintSpec.globalRectOf(_readyKey);
+        if (box == null || cloth == null || ready == null) return null;
+        final parts = [
+          M4DoRefuseBenchPainter.topContact.shift(box.topLeft),
+          M4DoRefuseBenchPainter.bottomNut.shift(box.topLeft),
+          M4DoRefuseBenchPainter.port.shift(box.topLeft),
+          cloth,
+          ready,
+        ];
+        return HintSpec.sweep([for (final i in _fitSweep) parts[i]]);
+      case M4DoRefusePhase.decide || M4DoRefusePhase.watch || M4DoRefusePhase.done:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final quiet = _quiet;
@@ -1499,6 +1602,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
     final deckUp = reasonOpen || coworkerChoiceUp || _deck != null;
     final handsOn = playing && !deckUp && !coworkerOpen && _card == null;
     final phase = _run.phase;
+    final hintNow = handsOn && !_ended && !_busy && !tableBusy && !coworkerOnScreen && phase != M4DoRefusePhase.decide && phase != M4DoRefusePhase.watch && phase != M4DoRefusePhase.done;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1526,6 +1630,10 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
               quiet: quiet,
             ),
             layers: (context, m) => _scene(m),
+            hint: _hintSpec,
+            hintWaiting: hintNow,
+            hintKey: '${_run.round}-${phase.name}',
+            hintController: _hints,
             overlays: [
               if (playing && !_run.done && !coworkerOpen)
                 Positioned(
@@ -1544,6 +1652,10 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
                   child: Center(
                     child: _Bench(
                       bench: _bench,
+                      benchKey: _benchKey,
+                      trayKeys: _trayKeys,
+                      clothKey: _clothKey,
+                      readyKey: _readyKey,
                       tray: phase == M4DoRefusePhase.pick ? _deal.tray : null,
                       fitting: phase == M4DoRefusePhase.fit,
                       enabled: handsOn,
@@ -1711,7 +1823,7 @@ class _DocketChip extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit once used.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool on;
@@ -1772,6 +1884,10 @@ class _ToolButton extends StatelessWidget {
 class _Bench extends StatelessWidget {
   const _Bench({
     required this.bench,
+    required this.benchKey,
+    required this.trayKeys,
+    required this.clothKey,
+    required this.readyKey,
     required this.tray,
     required this.fitting,
     required this.enabled,
@@ -1780,6 +1896,10 @@ class _Bench extends StatelessWidget {
     required this.onFit,
   });
   final M4DoRefuseBench bench;
+  final GlobalKey benchKey;
+  final List<GlobalKey> trayKeys;
+  final GlobalKey clothKey;
+  final GlobalKey readyKey;
   final List<String?>? tray;
   final bool fitting;
   final bool enabled;
@@ -1826,6 +1946,7 @@ class _Bench extends StatelessWidget {
             Semantics(
               label: M4DoRefuseLines.benchLabel,
               child: SizedBox(
+                key: benchKey,
                 width: box.width,
                 height: box.height,
                 child: Stack(
@@ -1844,12 +1965,19 @@ class _Bench extends StatelessWidget {
             if (tray != null)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [for (final item in tray!) _TrayTile(item: item, enabled: enabled, onTap: (at) => onPick(item, at))],
+                children: [
+                  for (var i = 0; i < tray!.length; i++)
+                    KeyedSubtree(
+                      key: trayKeys[i],
+                      child: _TrayTile(item: tray![i], enabled: enabled, onTap: (at) => onPick(tray![i], at)),
+                    ),
+                ],
               ),
             if (fitting)
               Row(
                 children: [
                   _ToolButton(
+                    key: clothKey,
                     icon: Icons.cleaning_services_rounded,
                     label: M4DoRefuseLines.cloth,
                     on: bench.cleaned,
@@ -1859,6 +1987,7 @@ class _Bench extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Semantics(
+                      key: readyKey,
                       button: true,
                       label: M4DoRefuseLines.ready,
                       excludeSemantics: true,

@@ -17,6 +17,7 @@ import 'do_parts.dart';
 import 'full_scene_frame.dart';
 import 'game_exit_sheet.dart';
 import 'game_save.dart';
+import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
@@ -50,12 +51,19 @@ import 'spoken_once.dart';
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene, corner guide, ◆ on the table → "কেন …?" (the reasons fit what this
 // pole had; after a report the fault is shown only once the reason is paid)
-// → the next pole by itself; the careless coworker once a play, on any pole.
+// → the next pole by itself; the careless coworker once a play, on any pole
+// but the report-first one. He comes after the first check, or at once when
+// the player calls (climb or report) on his pole before checking anything
+// (holdForCoworker): a fast play never slips past him. Nothing reacts in the
+// praise window (tableBusy). A gesture hint shows how to touch when the player
+// is stuck: a sweep over the three tools and both calls alike, or a short
+// nudge of the lens — never which one.
 //
 // Deadly (owner-approved list): climbing a condemned pole (also by listening
 // to him). Slips: climbing a sound pole without walking round, looking at the
 // base and tapping it, or because he said so; climbing past a report-first
-// item; reporting a sound pole (then it is still to read).
+// item; reporting a sound pole (then it is still to read, and the card and the
+// guide stay neutral: they never say it was sound).
 // Three slips strike the level out.
 //
 // Voice: the guide's lines by device TTS; the coworker in his recorded voice.
@@ -232,14 +240,14 @@ abstract final class PoleLines {
     'নতুন দেখতে পোল কখনোই দুর্বল হতে পারে না',
     'পোল একটু হেলে থাকলে তাতে কিছু হয় না',
     'বাইরে ঠিক দেখালে পোলের ভেতরও ঠিক থাকে',
-    'ঠুকে শোনার দরকার নেই, চোখে দেখাই যথেষ্ট',
+    'শব্দ শোনার দরকার নেই, চোখে দেখাই যথেষ্ট',
   ];
   static const mythsSteel = [
     'স্টিলের পোল শুধু বাঁকে, কখনো ভাঙে না',
     'একটু-আধটু মরিচা তো সব স্টিলের পোলেই থাকে',
     'নতুন দেখতে পোল কখনোই দুর্বল হতে পারে না',
     'বাইরে ঠিক দেখালে পোলের ভেতরও ঠিক থাকে',
-    'ঠুকে শোনার দরকার নেই, চোখে দেখাই যথেষ্ট',
+    'শব্দ শোনার দরকার নেই, চোখে দেখাই যথেষ্ট',
   ];
   static List<String> myths(PoleKind k) => k == PoleKind.pcc ? mythsPcc : mythsSteel;
 
@@ -268,15 +276,15 @@ abstract final class PoleLines {
   static const coworkerPcc = CoworkerScript(
     line: 'চুলের মতো ফাটল তো থাকেই, ওতে কিছু হয় না! উঠে পড়ো।',
     exitLine: coworkerExit,
-    right: ['না, আগে পুরো পোলটা পড়ে নিই', 'ফাটলেই বিপদের শুরু, আগে দেখি', 'না দেখে কোনো পোলে উঠব না'],
-    wrong: ['ঠিক, চুলের ফাটলে কিছু হয় না', 'ঠিক আছে, তাড়াতাড়ি উঠে পড়ি', 'সবাই তো এমন পোলেই উঠে যায়', 'ফাটল ছোট, উঠলে কিছু হবে না', 'আচ্ছা, তাহলে একবার উঠেই দেখি'],
+    right: ['না, আগে পুরো পোলটা পড়ে নিই', 'ফাটলেই বিপদের শুরু, আগে দেখি', 'ঠিকমতো না দেখে পোলে উঠব না'],
+    wrong: ['ঠিক, চুলের ফাটলে কিছু হয় না', 'আগে উঠে কাজটা তাড়াতাড়ি সারি', 'সবাই তো এমন পোলেই উঠে যায়', 'ফাটল ছোট, উঠলে কিছু হবে না', 'আচ্ছা, তাহলে একবার উঠেই দেখি'],
     asks: coworkerAsks,
   );
   static const coworkerSteel = CoworkerScript(
     line: 'স্টিলের পোল তো শুধু বাঁকে, ভাঙে না! উঠে পড়ো।',
     exitLine: coworkerExit,
-    right: ['না, আগে পুরো পোলটা পড়ে নিই', 'স্টিলের পোলও ভাঙে, আগে দেখি', 'না দেখে কোনো পোলে উঠব না'],
-    wrong: ['ঠিক, স্টিলের পোল ভাঙে না', 'ঠিক আছে, তাড়াতাড়ি উঠে পড়ি', 'সবাই তো এমন পোলেই উঠে যায়', 'একটু মরিচায় কিছু হবে না', 'আচ্ছা, তাহলে একবার উঠেই দেখি'],
+    right: ['না, আগে পুরো পোলটা পড়ে নিই', 'স্টিলের পোলও ভাঙে, আগে দেখি', 'ঠিকমতো না দেখে পোলে উঠব না'],
+    wrong: ['ঠিক, স্টিলের পোল ভাঙে না', 'আগে উঠে কাজটা তাড়াতাড়ি সারি', 'সবাই তো এমন পোলেই উঠে যায়', 'একটু মরিচায় কিছু হবে না', 'আচ্ছা, তাহলে একবার উঠেই দেখি'],
     asks: coworkerAsks,
   );
   static CoworkerScript coworker(PoleKind k) => k == PoleKind.pcc ? coworkerPcc : coworkerSteel;
@@ -409,9 +417,11 @@ abstract final class PoleMistakes {
     art: 'assets/game/art/pole/check_first.svg',
     lessonPoint: 0,
   );
+  /// A report on a sound pole. The pole stays to be read, so the card and the
+  /// guide stay neutral: they never say the pole was sound (audit 2026-11-11).
   static const falseReport = DoMistake(
     key: '1.3/pole/false-report',
-    textBn: 'এই পোলটা ঠিক ছিল — চারপাশ, গোড়া, শব্দ, ওপর সব ঠিক। দেখে-শুনে সিদ্ধান্ত নিন।',
+    textBn: 'রিপোর্টের আগে পোলটা পুরো পড়ুন — চারপাশ, গোড়া, শব্দ, ওপর। যা দেখলেন আর শুনলেন, তা দিয়েই সিদ্ধান্ত নিন।',
     art: 'assets/game/art/pole/check_first.svg',
     lessonPoint: 1,
   );
@@ -717,6 +727,16 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
+  /// The gesture hint (how to touch, never what): the tools and both calls
+  /// are swept alike; the lens is nudged a short way.
+  final _hints = IdleHintController();
+  final _walkKey = GlobalKey(debugLabel: 'pole-walk');
+  final _lookKey = GlobalKey(debugLabel: 'pole-look');
+  final _tapKey = GlobalKey(debugLabel: 'pole-tap');
+  final _reportKey = GlobalKey(debugLabel: 'pole-report');
+  final _climbKey = GlobalKey(debugLabel: 'pole-climb');
+  final _lensKey = GlobalKey(debugLabel: 'pole-lens');
+
   @override
   LevelContext get deathCtx => widget.ctx;
   String get _rungId => widget.ctx.rungId;
@@ -760,8 +780,10 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
     _walkToPole();
   }
 
+  /// The scene takes input. Never in the praise window ([tableBusy]: the ◆ on
+  /// the table or the reason deck up), so nothing can score twice or slip in.
   bool get _canPlay =>
-      !_intro && !_busy && !_ended && _card == null && !reasonOpen && !coworkerOpen && !_run.shown && _lens == null && !_moving;
+      !_intro && !_busy && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.shown && _lens == null && !_moving;
 
   void _afterCheck(PoleCheck c) => _run.check(c);
 
@@ -783,8 +805,8 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
     if (!mounted || _ended) return;
     setState(() => _wake++);
     // The coworker comes once, on his pole: armed on arrival, he walks in a
-    // moment later, as soon as the player has made a first check (so a quick
-    // decision does not slip past him).
+    // moment later, as soon as the player has made a first check; a call
+    // made before that waits for him (holdForCoworker in _decide).
     if (!_coworkerArmed && _run.index == _run.deal.callPole) {
       _coworkerArmed = true;
       scheduleCoworker();
@@ -851,7 +873,11 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
   void _tapScene(Offset p, PoleGeo geo) {
     if (!_canPlay) return;
     final half = 30 * geo.s + 14;
-    if ((p.dx - PoleGeo.cx).abs() > half * 1.8 || p.dy < geo.y(9.6) || p.dy > geo.groundY + 30) return;
+    if ((p.dx - PoleGeo.cx).abs() > half * 1.8 || p.dy < geo.y(9.6) || p.dy > geo.groundY + 30) {
+      // A tap on nothing: three of them soon show how to touch.
+      _hints.missTap();
+      return;
+    }
     _openLens(geo.m(p.dy));
   }
 
@@ -902,6 +928,8 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
   // --- the decision ---------------------------------------------------------------
   Future<void> _decide(bool climb, Offset origin, {bool pushed = false}) async {
     if (!_canPlay) return;
+    // On his pole the call waits for him (he comes now), however fast it is.
+    if (holdForCoworker()) return;
     _hush();
     final m = _run.decide(climb: climb, pushed: pushed);
     HapticFeedback.mediumImpact();
@@ -1001,8 +1029,9 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
   bool get coworkerMuted => _muted;
   @override
   bool? coworkerCanCome() {
+    // His push ("climb now") makes sense only while this pole is undecided.
     if (_ended || _run.index != _run.deal.callPole || _run.shown) return null;
-    if (_intro || _busy || _card != null || reasonOpen || _lens != null || _moving || _run.checks.isEmpty) return false;
+    if (_intro || _busy || _card != null || tableBusy || _lens != null || _moving || _run.checks.isEmpty) return false;
     return true;
   }
 
@@ -1346,6 +1375,15 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
   static const _stampH = 58.0;
   static const _chipH = 30.0;
 
+  /// How to touch now, never what: in the lens a short nudge (away from the
+  /// end it is at, so it can be seen to move); on the scene a sweep over the
+  /// three tools and both calls alike.
+  HintSpec? _hint() {
+    final m = _lens;
+    if (m != null) return HintSpec.dragFrom(_lensKey, toward: Offset(0, m < 4.7 ? -1 : 1), travel: 56);
+    return HintSpec.sweepOver([_walkKey, _lookKey, _tapKey, _reportKey, _climbKey]);
+  }
+
   static Rect _zoneRect(PoleZone z, PoleGeo geo) {
     final s = geo.s;
     const cx = PoleGeo.cx;
@@ -1365,7 +1403,12 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
     final geo = PoleGeo.forScene(h, pad.bottom * 360 / math.max(1.0, size.width));
     final playing = !_intro && _mark == null && !struckOut && !_freeze;
     final deckUp = reasonOpen || coworkerChoiceUp;
-    final handsOn = playing && !_run.shown && !deckUp && !coworkerOpen && _card == null && _lens == null;
+    final handsOn = playing && !_run.shown && !tableBusy && !deckUp && !coworkerOpen && _card == null && _lens == null;
+    // The hand shows only while the level waits for the player's own touch
+    // (not under the coworker, a card, a deck — the deck has its own sweep —
+    // or while walking).
+    final waitHands = handsOn && !_ended && !_moving && !coworkerOnScreen;
+    final waitLens = _lens != null && playing && !_run.shown && _card == null && !coworkerOnScreen;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1393,6 +1436,10 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
               quiet: quiet,
             ),
             animation: _sceneMotion,
+            hint: _hint,
+            hintWaiting: waitHands || waitLens,
+            hintKey: '${_run.index}-${_lens != null}',
+            hintController: _hints,
             layers: (context, m) => _scene(m),
             overlays: [
               ...tableLayers(at: Offset(size.width / 2, pad.top + 112), quiet: quiet),
@@ -1403,11 +1450,11 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
                   bottom: pad.bottom + 72,
                   child: Row(
                     children: [
-                      _ToolButton(icon: Icons.threesixty_rounded, label: PoleLines.walk, enabled: !_moving, onTap: _walkRound),
+                      _ToolButton(key: _walkKey, icon: Icons.threesixty_rounded, label: PoleLines.walk, enabled: !_moving, onTap: _walkRound),
                       const SizedBox(width: 6),
-                      _ToolButton(icon: Icons.search_rounded, label: PoleLines.look, enabled: !_moving, onTap: () => _openLens(0.7)),
+                      _ToolButton(key: _lookKey, icon: Icons.search_rounded, label: PoleLines.look, enabled: !_moving, onTap: () => _openLens(0.7)),
                       const SizedBox(width: 6),
-                      _ToolButton(icon: Icons.hardware_rounded, label: PoleLines.tap, enabled: !_moving, onTap: _knockPole),
+                      _ToolButton(key: _tapKey, icon: Icons.hardware_rounded, label: PoleLines.tap, enabled: !_moving, onTap: _knockPole),
                     ],
                   ),
                 ),
@@ -1418,9 +1465,12 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
                   bottom: pad.bottom + 12,
                   child: Row(
                     children: [
-                      Expanded(flex: 3, child: _ReportButton(onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
+                      Expanded(flex: 3, child: _ReportButton(key: _reportKey, onTapUp: (d) => unawaited(_decide(false, d.globalPosition)))),
                       const SizedBox(width: 10),
-                      Expanded(flex: 2, child: DoBigButton(label: PoleLines.climb, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition)))),
+                      Expanded(
+                        flex: 2,
+                        child: DoBigButton(key: _climbKey, label: PoleLines.climb, filled: true, onTapUp: (d) => unawaited(_decide(true, d.globalPosition))),
+                      ),
                     ],
                   ),
                 ),
@@ -1439,6 +1489,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
               if (_lens != null && playing)
                 _Lens(
                   key: const ValueKey('lens'),
+                  lensKey: _lensKey,
                   pole: _run.current,
                   geo: geo,
                   orbit: _orbit.value,
@@ -1539,7 +1590,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
 // ============================================================================
 
 class _ReportButton extends StatelessWidget {
-  const _ReportButton({required this.onTapUp});
+  const _ReportButton({super.key, required this.onTapUp});
   final GestureTapUpCallback onTapUp;
 
   @override
@@ -1568,7 +1619,7 @@ class _ReportButton extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({required this.icon, required this.label, required this.enabled, required this.onTap});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.enabled, required this.onTap});
   final IconData icon;
   final String label;
   final bool enabled;
@@ -1851,6 +1902,7 @@ class _ToldChip extends StatelessWidget {
 class _Lens extends StatelessWidget {
   const _Lens({
     super.key,
+    required this.lensKey,
     required this.pole,
     required this.geo,
     required this.orbit,
@@ -1859,6 +1911,9 @@ class _Lens extends StatelessWidget {
     required this.onMove,
     required this.onClose,
   });
+
+  /// On the lens itself (where the gesture hint nudges).
+  final GlobalKey lensKey;
   final PoleCase pole;
   final PoleGeo geo;
   final double orbit;
@@ -1891,6 +1946,7 @@ class _Lens extends StatelessWidget {
                 width: d,
                 height: d,
                 child: Semantics(
+                  key: lensKey,
                   label: PoleLines.lensLabel,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,

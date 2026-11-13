@@ -3,9 +3,11 @@
 // each step, the coworker's recorded lines, and the level in the shell: idle
 // perf, the guide first, a full clean play for each ending (the ambulance
 // arrives / he comes round) with every reason and the coworker refused, his
-// call-step myth before CPR even after a fast bystander tap, the slips (out
-// of order, calling yourself, stopping CPR — a second stop only a reminder —
-// listening to him) and the 3-slip strike-out.
+// call-step myth on a fast play (the bystander tap waits for him), the slips
+// (out of order, calling yourself, stopping CPR — a second stop only a
+// reminder — listening to him), the 3-slip strike-out, the praise window, no
+// word that only the right cards carry, English digits and the gesture hint
+// (a sweep over every place to touch alike).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -19,6 +21,7 @@ import 'package:slm_flutter/features/game/choice_deck.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/coworker_moment.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/golden_minute.dart';
 import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
@@ -32,6 +35,7 @@ import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
 import 'support/intro_wait.dart';
 import 'support/option_lengths.dart';
+import 'support/reason_proceed.dart';
 
 final _ctx = LevelContext(
   rungId: '1.7/do/1',
@@ -55,21 +59,42 @@ List<Finder> _onScreen(List<String> texts) => [
         if (_label(x).evaluate().isNotEmpty) _label(x),
     ];
 
-/// Taps the one right card on the deck now up.
+/// Taps the one right card on the deck now up (and এগিয়ে যান after a
+/// reason; coworker decks have no proceed).
 Future<void> _pickRight(WidgetTester t, List<String> right) async {
+  await waitChoiceDeck(t);
   expect(find.byType(ChoiceDeck), findsOneWidget);
   final r = _onScreen(right);
   expect(r, hasLength(1), reason: right.first);
   await t.tap(r.single, warnIfMissed: false);
-  await t.pump();
-  // Wait for reason zoom (coworker decks have no proceed).
-  for (var i = 0; i < 40 && find.byKey(const ValueKey('reason-proceed-btn')).evaluate().isEmpty; i++) {
-    await t.pump(const Duration(milliseconds: 50));
+  await tapReasonProceed(t);
+}
+
+/// A crude Bangla stem: drops the case endings so 'মস্তিষ্কে' and
+/// 'মস্তিষ্কের' count as one word.
+String _stem(String w) {
+  if (w.length > 3) {
+    for (final suf in const ['ের', 'কে', 'ে', 'র']) {
+      if (w.endsWith(suf)) return w.substring(0, w.length - suf.length);
+    }
   }
-  final go = find.byKey(const ValueKey('reason-proceed-btn'));
-  if (go.evaluate().isNotEmpty) {
-    await t.tap(go, warnIfMissed: false);
-    await t.pump();
+  return w;
+}
+
+/// Word stems split for the "no tell" check.
+Set<String> _words(String s) => s.split(RegExp(r'[\s,—–\-।!?]+')).where((w) => w.isNotEmpty).map(_stem).toSet();
+
+/// No word sits on two or more right cards while fewer than two wrong cards
+/// carry it (else the right card is the only one with it in most deals).
+void _expectNoTell(String name, List<String> right, List<String> wrong) {
+  final onRight = <String, int>{};
+  for (final r in right) {
+    for (final w in _words(r)) {
+      onRight[w] = (onRight[w] ?? 0) + 1;
+    }
+  }
+  for (final e in onRight.entries.where((e) => e.value >= 2)) {
+    expect(wrong.where((x) => _words(x).contains(e.key)).length, greaterThanOrEqualTo(2), reason: '$name: "${e.key}" on ${e.value} right cards');
   }
 }
 
@@ -141,7 +166,7 @@ Future<void> _reason(WidgetTester t, List<String> right, {int after = 3200}) asy
 }
 
 Future<void> _refuse(WidgetTester t, CrowdMyth m) async {
-  await _pump(t, 3600);
+  await waitChoiceDeck(t);
   expect(find.byType(CoworkerPeek), findsOneWidget);
   await _pickRight(t, GoldenLines.coworker(m).right);
 }
@@ -298,6 +323,54 @@ void main() {
         expect(GoldenLines.coworker(m), isNotNull);
       }
     });
+
+    test('no giveaway word: no word stem sits on two right cards and on fewer than two wrong ones', () {
+      for (final s in GoldenStep.values) {
+        _expectNoTell('why $s', GoldenLines.whyRight(s), GoldenLines.whyWrong(s));
+        if (s == GoldenStep.keep) _expectNoTell('why keep awake', GoldenLines.whyRight(s, awake: true), GoldenLines.whyWrong(s));
+      }
+      for (final c in GoldenLines.coworkers) {
+        _expectNoTell('choice ${c.line}', c.right, c.wrong);
+        expect(c.right.every((l) => l.startsWith('না')), isFalse, reason: '"না" must not mark every refusal: ${c.line}');
+      }
+    });
+
+    test('English digits on every line on screen', () {
+      final bnDigit = RegExp('[০-৯]');
+      final lines = <String>[
+        GoldenLines.intro, ...GoldenLines.tasks, GoldenLines.holdOn, ...GoldenLines.tapWhy,
+        GoldenLines.shout, GoldenLines.askCall, GoldenLines.noResponse, GoldenLines.noBreath, GoldenLines.cameRoundSays,
+        GoldenLines.perMinute, GoldenLines.aha, GoldenLines.average(110), GoldenLines.helpCame, GoldenLines.cameRound,
+        GoldenLines.rhythmGood, GoldenLines.rhythmOff, GoldenLines.dontStop,
+        for (final s in GoldenStep.values) ...[GoldenLines.why(s), ...GoldenLines.whyRight(s), ...GoldenLines.whyRight(s, awake: true), ...GoldenLines.whyWrong(s)],
+        for (final c in GoldenLines.coworkers) ...[c.line, c.exitLine, ...c.right, ...c.wrong, ...c.asks],
+        for (final m in CrowdMyth.values) GoldenLines.held(m),
+        for (final m in GoldenMistakes.all) m.textBn,
+        GoldenLines.allSet, GoldenLines.quick, GoldenLines.fail,
+        GoldenLines.caughtOrder, GoldenLines.caughtRhythm, GoldenLines.caughtKeep, GoldenLines.caughtCrowd,
+      ];
+      for (final l in lines) {
+        expect(bnDigit.hasMatch(l), isFalse, reason: l);
+      }
+      expect(GoldenLines.average(110), contains('110'));
+    });
+
+    test('the move held for him: only the one that would do the next step', () {
+      final r = GoldenRun(dealGolden(math.Random(4)));
+      expect(r.advances(GoldenAct.shoulder), isTrue);
+      expect(r.advances(GoldenAct.face), isFalse);
+      expect(r.advances(GoldenAct.phone), isFalse, reason: 'calling yourself is a slip, never held');
+      r
+        ..act(GoldenAct.shoulder)
+        ..act(GoldenAct.face);
+      expect(r.advances(GoldenAct.crowd), isTrue);
+      expect(r.advances(GoldenAct.chest), isFalse);
+      r
+        ..act(GoldenAct.crowd)
+        ..act(GoldenAct.chest);
+      expect(r.inCpr, isTrue);
+      expect(GoldenAct.values.any(r.advances), isFalse, reason: 'nothing is held during CPR');
+    });
   });
 
   group('page', () {
@@ -339,7 +412,7 @@ void main() {
         }
         debugPrint('PERF golden ${reduce ? 'reduce' : 'anim'}: ${perSec.toStringAsFixed(0)} rebuilds/s, $frames frames idle');
         expect(t.takeException(), isNull);
-        expect(find.textContaining('ধাপ '), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^L\d+$')), findsOneWidget);
         expect(perSec, lessThan(20));
         expect(frames, lessThan(12));
         await t.pumpWidget(const SizedBox());
@@ -489,7 +562,7 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('his myth at the call: a fast bystander tap does not push him past CPR', (t) async {
+    testWidgets('a fast play: the bystander tap at his step waits for him — he comes before the call is made', (t) async {
       final seed = _seedWhere((d) => d.mythAt == GoldenStep.call && !d.comesRound);
       final deal = dealGolden(math.Random(seed));
       final c = await _open(t, seed);
@@ -497,26 +570,18 @@ void main() {
       await _reason(t, GoldenLines.whyRight(GoldenStep.response));
       await _face(t);
       await _pickRight(t, GoldenLines.whyRight(GoldenStep.breathing));
-      // The bystander the moment play opens, before he can walk in.
-      for (var i = 0; i < 60 && find.text(GoldenLines.askCall).evaluate().isEmpty; i++) {
+      // The bystander the moment play opens, before his timer brings him.
+      for (var i = 0; i < 60 && find.byType(CoworkerPeek).evaluate().isEmpty; i++) {
         await t.tap(_label(GoldenLines.zoneCrowd).at(1), warnIfMissed: false);
         await t.pump(const Duration(milliseconds: 100));
-      }
-      expect(find.text(GoldenLines.askCall), findsOneWidget);
-      expect(find.byType(CoworkerPeek), findsNothing, reason: 'too fast for him');
-      await _pump(t, 3400);
-      await _pickRight(t, GoldenLines.whyRight(GoldenStep.call));
-      // At once the chest: play waits for him, he comes before CPR.
-      for (var i = 0; i < 40 && find.byType(CoworkerPeek).evaluate().isEmpty; i++) {
-        await t.tap(_label(GoldenLines.zoneChest), warnIfMissed: false);
-        await t.pump(const Duration(milliseconds: 100));
+        expect(find.text(GoldenLines.askCall), findsNothing, reason: 'the call waits for him');
       }
       expect(find.byType(CoworkerPeek), findsOneWidget);
-      expect(find.text(GoldenLines.perMinute), findsNothing, reason: 'CPR has not started');
       expect(find.text(MistakeLines.slipHead), findsNothing);
-      await _pump(t, 3600);
-      await _pickRight(t, GoldenLines.coworker(deal.myth).right);
+      await _refuse(t, deal.myth);
       await _pump(t, 4000);
+      await _crowd(t, 1);
+      await _reason(t, GoldenLines.whyRight(GoldenStep.call));
       await _cpr(t);
       await _pump(t, 3500);
       await _reason(t, GoldenLines.whyRight(GoldenStep.cpr));
@@ -527,6 +592,70 @@ void main() {
       expect(s.rungProgress['1.7/do/1'], 'cleared');
       expect(s.mistakes, isEmpty);
       expect(find.text(GoldenLines.caughtCrowd), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a fast play at his breathing step: the face hold waits for him (no check before he comes)', (t) async {
+      final seed = _seedWhere((d) => d.mythAt == GoldenStep.breathing);
+      final c = await _open(t, seed);
+      await _shoulder(t);
+      await _pickRight(t, GoldenLines.whyRight(GoldenStep.response));
+      for (var i = 0; i < 60 && find.byType(CoworkerPeek).evaluate().isEmpty; i++) {
+        await t.tap(_label(GoldenLines.zoneFace), warnIfMissed: false);
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      expect(find.byType(CoworkerPeek), findsOneWidget);
+      expect(find.byKey(const ValueKey('hold-ring')), findsNothing);
+      expect(find.text(GoldenLines.noBreath), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the praise window: taps on the scene do nothing until the reason deck is up', (t) async {
+      final c = await _open(t, _seedWhere((d) => d.comesRound));
+      await t.tap(_label(GoldenLines.zoneShoulder), warnIfMissed: false);
+      // Through the check and the ◆ on the table: out-of-order taps and the
+      // phone would be slips, but no hand works now.
+      for (var i = 0; i < 80 && find.byType(ChoiceDeck).evaluate().isEmpty; i++) {
+        await t.tap(_label(i.isEven ? GoldenLines.zoneChest : GoldenLines.zonePhone), warnIfMissed: false);
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(ChoiceDeck), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
+      await _reason(t, GoldenLines.whyRight(GoldenStep.response));
+      await _face(t);
+      expect(find.text(GoldenLines.noBreath), findsOneWidget, reason: 'the play goes on');
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('gesture hint: idle or three missed taps show a sweep over every place to touch (none singled out)', (t) async {
+      GestureHints.debugEnableInTests = true;
+      addTearDown(() => GestureHints.debugEnableInTests = false);
+      final c = await _open(t, _seedWhere((d) => d.comesRound));
+      final hand = find.byKey(const ValueKey('gesture-hint'));
+      expect(hand, findsNothing);
+      await _pump(t, 9000);
+      expect(hand, findsOneWidget, reason: 'idle: the hand shows how to touch');
+      final state = t.state<IdleHintState>(find.byType(IdleHint).first);
+      expect(state.debugOptions, hasLength(7), reason: 'face, shoulder, chest, three in the crowd, the phone');
+      // Any touch hides it; three taps on the open sky bring it back.
+      await t.tapAt(const Offset(40, 240));
+      await t.pump();
+      expect(hand, findsNothing);
+      // Past the 4 s miss window (the hiding tap counted as a miss), but
+      // short of the 8 s idle.
+      await _pump(t, 4500);
+      expect(hand, findsNothing);
+      for (var i = 0; i < 3; i++) {
+        await t.tapAt(const Offset(40, 240));
+        await _pump(t, 300);
+      }
+      expect(hand, findsOneWidget, reason: 'three missed taps');
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
       expect(t.takeException(), isNull);
       await _close(t, c);
     });
@@ -568,6 +697,7 @@ void main() {
       final wrong = _onScreen(GoldenLines.coworker(deal.myth).wrong);
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
+      await confirmChoice(t);
       await _pump(t, 1200);
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
       expect(find.text(GoldenMistakes.myth(deal.myth).textBn), findsOneWidget);
