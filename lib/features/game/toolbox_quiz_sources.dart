@@ -6,18 +6,18 @@ import '../../core/network/supabase_service.dart';
 import 'game_save.dart';
 import 'lucky_toolbox.dart';
 
-// The lucky toolbox's quiz from Supabase (supabase/toolbox_quiz.sql):
-// toolbox_quiz_question() gives one random hourly-bank question without its
+// The lucky toolbox's quiz from Supabase (supabase/slm_app_20_toolbox_quiz.sql,
+// schema `slm_app`): toolbox_quiz_question() gives one random hourly-bank question without its
 // answer, toolbox_quiz_check(id, choice) grades it and awards nothing (no
 // hourly points). Fallback order (standardToolboxQuiz): Supabase → quizzes of
 // passed lessons cached on this phone (+ won life skills) → no quiz task.
 
-/// Calls a Supabase RPC (injectable for tests).
+/// Calls an RPC in the `slm_app` schema (injectable for tests).
 typedef ToolboxRpc = Future<Object?> Function(String fn, Map<String, dynamic> params);
 
 Future<Object?> _supabaseRpc(String fn, Map<String, dynamic> params) async {
   if (!SupabaseService.hasClient) throw StateError('no supabase');
-  return SupabaseService.client.rpc(fn, params: params);
+  return SupabaseService.client.schema('slm_app').rpc(fn, params: params);
 }
 
 class SupabaseToolboxQuizSource implements ToolboxQuizSource {

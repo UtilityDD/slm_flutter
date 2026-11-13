@@ -1,9 +1,10 @@
 -- Known rung ids for the league (made from assets/game/catalog/content_catalog.json,
--- 327 rungs on 2026-11-13). submit_level_result accepts only these while this
--- table has rows. Run after league.sql, and again whenever new levels ship
--- (add the new ids here). Safe to run again: existing ids are skipped.
+-- 327 rungs on 2026-11-13). Schema slm_app (Android app only).
+-- slm_app.submit_level_result accepts only these while this table has rows.
+-- RUN ORDER: after slm_app_10_league.sql, and again whenever new levels ship
+-- (add the new ids here first). Safe to run again: existing ids are skipped.
 
-INSERT INTO public.league_rungs (rung_id) VALUES
+INSERT INTO slm_app.league_rungs (rung_id) VALUES
   ('1.1/learn'),
   ('1.1/do/0'),
   ('1.1/do/1'),

@@ -17,6 +17,9 @@ class AppConfig {
   static const String supportEmail = 'support@example.com';
 
   /// Google accounts that may open the in-app admin panel. Matched to the session email.
+  /// The server has the same two emails: `slm_app.is_admin()` and the league /
+  /// delete-account functions (supabase/slm_app_00_schema.sql, slm_app_10_league.sql,
+  /// slm_app_30_delete_account.sql) and the web side's admin_* functions. Change them together.
   static const Set<String> adminEmails = {
     'dipnkr.das@gmail.com',
     'roumak.das@gmail.com',
@@ -29,7 +32,9 @@ class AppConfig {
   static const String googleWebClientId =
       '1062290108902-3slmum79r57rlf7d2hij7lfdmumjpr2t.apps.googleusercontent.com';
 
-  // Supabase Configuration
+  // Supabase Configuration. The project is shared with the website: app-only
+  // database objects live in the `slm_app` schema (supabase/README.md), and
+  // app RPCs are called as client.schema('slm_app').rpc(...).
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
     defaultValue: 'https://wkunyvomogeazjwtenck.supabase.co',

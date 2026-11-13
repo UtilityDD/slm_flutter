@@ -41,7 +41,7 @@ How the main reasons map to the code:
   in `supabase/fix_new_google_signup.sql`); stored in `public.profiles`.
 - Phone, district, block, job are typed/picked in Settings (`profile_edit.dart`) and used by admins to
   verify linemen (`verify_lineman.sql`, admin screen) and for the district league board.
-- Level results go to `submit_level_result` (`league.sql`); points/lessons to `profiles`; hourly quiz
+- Level results go to `slm_app.submit_level_result` (`slm_app_10_league.sql`); points/lessons to `profiles`; hourly quiz
   answers to `submit_flutter_hourly_quiz`.
 
 ### Not collected (answer "No" for each)
@@ -107,8 +107,11 @@ App functionality (already declared above, so no new line is needed).
 may be readable across users (check the SELECT policy) and clients write points directly. Before
 release, confirm in Supabase → Authentication → Policies that a signed-in user can read and update
 only their own `profiles` row (admins via the admin functions). Otherwise other users' phone
-numbers could be read, which would contradict the privacy policy.
+numbers could be read, which would contradict the privacy policy. `profiles` is the website's table:
+the fix (`supabase/HOLD_profiles_privacy.sql`) is on hold until the website reads other people through
+safe functions. The app reads other people only through `slm_app` functions (name, district, points).
 
 **H. Website account.** The same Supabase project serves smartlineman.in. If the website collects
 more (for example other tables or analytics), the privacy policy must cover it, and
-`delete_account.sql` must delete those tables (run its CHECK query).
+`slm_app_30_delete_account.sql` must delete those tables (run its CHECK query). Deleting in the app
+deletes the one shared account, so the website account goes too.

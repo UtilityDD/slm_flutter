@@ -2,7 +2,7 @@
 
 Play requires that a user who can create an account in the app can also start account deletion
 **inside the app**. This is the brief for whoever adds the button. Server side is ready in
-`supabase/delete_account.sql` (`public.delete_my_account()`); the owner must run it before this
+`supabase/slm_app_30_delete_account.sql` (`slm_app.delete_my_account()`); the owner must run it before this
 build ships. Public page: `docs/playstore/account-deletion.md` (its step list must match what you build).
 
 Follow AGENTS.md: Bangla copy rules, `tr(bn, ...)`, no raw exception text, small diffs in shared
@@ -39,7 +39,7 @@ While the call runs: button shows a spinner, both buttons disabled, dialog canno
 
 ```dart
 // 1. Call the RPC (needs network).
-final res = await SupabaseService.client.rpc('delete_my_account');
+final res = await SupabaseService.client.schema('slm_app').rpc('delete_my_account');
 // res is a Map: {'success': true, 'deleted': {...}}
 //   or {'success': false, 'reason': 'not_signed_in' | 'admin_account' | 'no_user'}
 ```

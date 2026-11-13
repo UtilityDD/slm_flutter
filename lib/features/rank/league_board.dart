@@ -9,9 +9,11 @@ import '../../core/network/supabase_service.dart';
 import '../auth/auth_provider.dart';
 import 'league_service.dart';
 
-// Read side of the league (supabase/league.sql): `league_board` (one month),
-// `league_board_all` (all-time best) and the `league_my_wins` view. Offline
-// the last real board seen on this phone is shown; nothing is invented.
+// Read side of the league (supabase/slm_app_10_league.sql, schema `slm_app`):
+// `league_board` (one month), `league_board_all` (all-time best),
+// `league_my_wins` and the member's own `my_league_settings` /
+// `set_league_show_name`. Offline the last real board seen on this phone is
+// shown; nothing is invented.
 
 /// One line of the board. [name] is what the server shows publicly (the
 /// approved name, or "লাইনম্যান #1234" when the member hides it).
@@ -106,6 +108,12 @@ abstract class LeagueBoardSource {
 
   /// The signed-in member's monthly top-3 finishes.
   Future<List<LeagueWin>> myWins();
+
+  /// The signed-in member's "বোর্ডে আমার নাম দেখান" choice (true when never set).
+  Future<bool> myShowName();
+
+  /// Saves that choice. True when the server took it.
+  Future<bool> setShowName(bool value);
 }
 
 List<LeagueRow> _rows(Object? res) => [
@@ -119,7 +127,7 @@ class SupabaseLeagueBoardSource extends LeagueBoardSource {
 
   @override
   Future<List<LeagueRow>> month({required int year, required int month, String? district}) async {
-    final res = await SupabaseService.client.rpc('league_board', params: {
+    final res = await SupabaseService.client.schema('slm_app').rpc('league_board', params: {
       'p_month': '$year-${month.toString().padLeft(2, '0')}-01',
       'p_district': district,
     });
@@ -128,20 +136,32 @@ class SupabaseLeagueBoardSource extends LeagueBoardSource {
 
   @override
   Future<List<LeagueRow>> allTime({String? district}) async {
-    final res = await SupabaseService.client.rpc('league_board_all', params: {'p_district': district});
+    final res =
+        await SupabaseService.client.schema('slm_app').rpc('league_board_all', params: {'p_district': district});
     return _rows(res);
   }
 
   @override
   Future<List<LeagueWin>> myWins() async {
-    final res = await SupabaseService.client
-        .from('league_my_wins')
-        .select('month, scope, district, place')
-        .order('month', ascending: false)
-        .limit(24);
+    final res = await SupabaseService.client.schema('slm_app').rpc('league_my_wins');
     return [
-      for (final m in res) ?LeagueWin.fromMap(m),
+      if (res is List)
+        for (final m in res)
+          if (m is Map) ?LeagueWin.fromMap(Map<String, dynamic>.from(m)),
     ];
+  }
+
+  @override
+  Future<bool> myShowName() async {
+    final res = await SupabaseService.client.schema('slm_app').rpc('my_league_settings');
+    if (res is Map && res['success'] == true) return res['show_name'] != false;
+    throw StateError('league settings unavailable');
+  }
+
+  @override
+  Future<bool> setShowName(bool value) async {
+    final res = await SupabaseService.client.schema('slm_app').rpc('set_league_show_name', params: {'p_show': value});
+    return res is Map && res['success'] == true;
   }
 }
 
@@ -228,3 +248,65 @@ final myLeagueWinsProvider = FutureProvider.autoDispose<List<LeagueWin>>(retry: 
     }
   }
 });
+
+const _showNameCacheKey = 'league_show_name_v1';
+
+/// The signed-in member's "বোর্ডে আমার নাম দেখান" choice, from
+/// `slm_app.my_league_settings` (not a profiles column). True for guests and
+/// while unknown; offline the last value saved for the same account.
+class LeagueShowNameNotifier extends AsyncNotifier<bool> {
+  String? _account() {
+    final auth = ref.read(authProvider);
+    final p = auth.profile;
+    if (!auth.isAuthenticated || p == null || p.isGuest) return null;
+    return p.id;
+  }
+
+  @override
+  Future<bool> build() async {
+    ref.watch(authProvider.select((a) => (a.isAuthenticated, a.profile?.id)));
+    final id = _account();
+    if (id == null) return true;
+    final key = '$_showNameCacheKey|$id';
+    try {
+      final show = await ref.read(leagueBoardSourceProvider).myShowName();
+      unawaited(_saveShowName(key, show));
+      return show;
+    } catch (_) {
+      return await _loadShowName(key) ?? true;
+    }
+  }
+
+  /// Saves [value] on the server first; the switch changes only if it took it.
+  Future<bool> set(bool value) async {
+    final id = _account();
+    if (id == null) return false;
+    try {
+      if (!await ref.read(leagueBoardSourceProvider).setShowName(value)) return false;
+    } catch (_) {
+      return false;
+    }
+    state = AsyncData(value);
+    await _saveShowName('$_showNameCacheKey|$id', value);
+    return true;
+  }
+}
+
+final leagueShowNameProvider =
+    AsyncNotifierProvider<LeagueShowNameNotifier, bool>(LeagueShowNameNotifier.new, retry: (_, _) => null);
+
+Future<void> _saveShowName(String key, bool value) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+  } catch (_) {}
+}
+
+Future<bool?> _loadShowName(String key) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(key);
+  } catch (_) {
+    return null;
+  }
+}

@@ -1,33 +1,35 @@
--- Lucky toolbox quiz ("ভাগ্যের টুলবক্স", Flutter app only). Safe to run again.
+-- Lucky toolbox quiz ("ভাগ্যের টুলবক্স", Android app only). Schema slm_app.
+-- RUN ORDER: after slm_app_00_schema.sql. Safe to run again.
 --
 -- The phone asks for one random question from the hourly bank WITHOUT its
 -- answer, shows it inside a toolbox chest, then sends the chosen option text
 -- back for a check. Nothing is awarded here: no hourly points, no profile or
--- quiz_attempts write (the chest's prize is local to the game).
+-- quiz_attempts write (the chest's prize is local to the game). Both
+-- functions only READ the shared tables; nothing in public is changed.
 --
--- Source table: public.hourly_questions (slm_web/quiz_management/
--- create_hourly_questions_table.sql; the same table tool/export_hourly_pack.mjs
--- reads): id uuid, question_text, options jsonb, correct_answer_index, language.
--- Only Bangla text questions are served. Picture questions from the visual
--- sheet are not in this table; for their ids the check falls back to
--- public.flutter_hourly_answer_keys (supabase/submit_flutter_hourly_quiz.sql),
--- if that table exists.
+-- Source table (web side, read-only here): public.hourly_questions
+-- (slm_web/quiz_management/create_hourly_questions_table.sql; the same table
+-- tool/export_hourly_pack.mjs reads): id uuid, question_text, options jsonb,
+-- correct_answer_index, language. Only Bangla text questions are served.
+-- Picture questions from the visual sheet are not in that table; for their
+-- ids the check falls back to public.flutter_hourly_answer_keys
+-- (supabase/submit_flutter_hourly_quiz.sql), if that table exists.
 --
--- ⚠ Note for the owner: hourly_questions has a public SELECT policy
--- ("Enable read access for all users"), so correct_answer_index is already
--- readable by anyone with the anon key. These functions do not make that
--- worse, but toolbox_quiz_check() returns the right option for any id, so a
--- player could look up an answer of the current hourly quiz through it.
--- If that matters, tighten hourly_questions' SELECT policy (the web app reads
--- it) and/or limit toolbox_quiz_check() to ids recently served.
+-- Note for the owner: hourly_questions has a public SELECT policy on the web
+-- side ("Enable read access for all users"), so correct_answer_index is
+-- already readable with the anon key. These functions do not make that worse,
+-- but toolbox_quiz_check() returns the right option for any id, so a player
+-- could look up an answer of the current hourly quiz through it. If that
+-- matters, limit toolbox_quiz_check() to ids recently served (and the web
+-- owner may tighten hourly_questions' policy on their side).
 
-CREATE OR REPLACE FUNCTION public.toolbox_quiz_question()
+CREATE OR REPLACE FUNCTION slm_app.toolbox_quiz_question()
 RETURNS json
 LANGUAGE plpgsql
 VOLATILE
 SECURITY DEFINER
-SET search_path = public
-AS $$
+SET search_path = slm_app, public
+AS $fn$
 DECLARE
   v_row record;
   v_opts jsonb;
@@ -59,15 +61,15 @@ BEGIN
   END LOOP;
   RETURN NULL;
 END;
-$$;
+$fn$;
 
-CREATE OR REPLACE FUNCTION public.toolbox_quiz_check(p_question_id text, p_choice text)
+CREATE OR REPLACE FUNCTION slm_app.toolbox_quiz_check(p_question_id text, p_choice text)
 RETURNS json
 LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
-SET search_path = public
-AS $$
+SET search_path = slm_app, public
+AS $fn$
 DECLARE
   v_id text := btrim(COALESCE(p_question_id, ''));
   v_choice text := btrim(COALESCE(p_choice, ''));
@@ -113,9 +115,11 @@ BEGIN
     'correct_choice', v_right
   );
 END;
-$$;
+$fn$;
 
-REVOKE ALL ON FUNCTION public.toolbox_quiz_question() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.toolbox_quiz_check(text, text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.toolbox_quiz_question() TO anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.toolbox_quiz_check(text, text) TO anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION slm_app.toolbox_quiz_question() FROM PUBLIC;
+REVOKE ALL ON FUNCTION slm_app.toolbox_quiz_check(text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION slm_app.toolbox_quiz_question() TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION slm_app.toolbox_quiz_check(text, text) TO anon, authenticated, service_role;
+
+NOTIFY pgrst, 'reload schema';

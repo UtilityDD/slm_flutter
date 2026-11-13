@@ -116,9 +116,9 @@ class _RankScreenState extends ConsumerState<RankScreen> {
 
 /// The member's own row shows the hidden-name form at once after the switch
 /// is turned off (the saved board may still carry the name).
-String _shownName(LeagueRow row, AuthState auth) {
+String _shownName(LeagueRow row, AuthState auth, {required bool showName}) {
   final p = auth.profile;
-  if (row.isMe && p != null && !p.isGuest && !p.leagueShowName) {
+  if (row.isMe && p != null && !p.isGuest && !showName) {
     return leagueMaskedName(slmId: p.slmId, id: p.id);
   }
   return row.name;
@@ -135,6 +135,7 @@ class _Board extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
+    final showName = ref.watch(leagueShowNameProvider).value ?? true;
     final head = [
       if (banner != null) ...[banner!, const SizedBox(height: SlmSpace.md)],
     ];
@@ -172,7 +173,7 @@ class _Board extends ConsumerWidget {
           padding: padding,
           children: [
             ...head,
-            SlmReveal(index: 1, child: _Podium(top: top, nameOf: (r) => _shownName(r, auth))),
+            SlmReveal(index: 1, child: _Podium(top: top, nameOf: (r) => _shownName(r, auth, showName: showName))),
             if (rest.isNotEmpty) ...[
               const SizedBox(height: SlmSpace.xl),
               SlmReveal(
@@ -193,7 +194,7 @@ class _Board extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: SlmSpace.xs),
                   child: SlmReveal(
                     index: 3 + (i < 8 ? i : 8),
-                    child: _RankRow(row: rest[i], name: _shownName(rest[i], auth), bn: bn),
+                    child: _RankRow(row: rest[i], name: _shownName(rest[i], auth, showName: showName), bn: bn),
                   ),
                 ),
               ],

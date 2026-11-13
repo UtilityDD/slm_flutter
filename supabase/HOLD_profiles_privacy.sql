@@ -1,3 +1,27 @@
+-- ############################################################################
+-- ##                                                                        ##
+-- ##   ON HOLD.  DO NOT RUN THIS FILE.                                       ##
+-- ##                                                                        ##
+-- ##   It changes the WEB APP's table public.profiles (drops its SELECT /    ##
+-- ##   UPDATE policies, adds own-row policies) and creates public objects    ##
+-- ##   (public.is_admin, public.profiles_public). The owner's decision of    ##
+-- ##   2026-11-13 ("Option B") is that the Android app never modifies       ##
+-- ##   anything in public; its own objects live in schema slm_app.           ##
+-- ##                                                                        ##
+-- ##   Run it ONLY after the web app (repo slm_web) reads other users'       ##
+-- ##   profiles through safe functions or views (no direct SELECT of other   ##
+-- ##   people's rows in public.profiles), and the web owner agrees.          ##
+-- ##   Otherwise the website's people lists, boards and admin pages break.   ##
+-- ##                                                                        ##
+-- ##   It is also out of date: it reads profiles.league_show_name /          ##
+-- ##   league_name / league_hidden, columns from the old league.sql that     ##
+-- ##   are never created now (league settings live in                        ##
+-- ##   slm_app.league_settings). As written it fails at STEP 3. Rewrite      ##
+-- ##   profiles_public against slm_app.league_settings before using it.     ##
+-- ##   The app does not read profiles_public any more.                       ##
+-- ##                                                                        ##
+-- ############################################################################
+--
 -- profiles privacy: each person can read and change only their own row.
 --
 -- Why: the privacy policy (docs/playstore/) says phone numbers, email, block

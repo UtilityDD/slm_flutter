@@ -77,7 +77,7 @@ SmartLineman (প্যাকেজ `com.smartlineman.lineman`) পশ্চি�
 
 ### 9. অ্যাকাউন্ট ও তথ্য মোছা
 
-- **অ্যাপে:** সেটিংস → "অ্যাকাউন্ট মুছুন" → নিশ্চিত করুন। সঙ্গে সঙ্গে মুছে যায়।
+- **অ্যাপে:** সেটিংস → "অ্যাকাউন্ট মুছুন" → নিশ্চিত করুন। সঙ্গে সঙ্গে মুছে যায়। এটা একটাই অ্যাকাউন্ট, তাই smartlineman.in ওয়েবসাইটের অ্যাকাউন্টও মুছে যায়।
 - **অ্যাপ ছাড়া:** [ACCOUNT_DELETION_URL] পাতার ফর্ম ([DELETION_FORM_URL]) পূরণ করুন, অথবা যে Google ইমেল দিয়ে লগইন করেছিলেন সেখান থেকে [CONTACT_EMAIL]-এ "Delete my SmartLineman account" লিখে পাঠান। 30 দিনের মধ্যে মুছে দেব।
 - অতিথির তথ্য শুধু ফোনে থাকে: অ্যাপ আনইনস্টল করলে বা অ্যাপের ডেটা মুছলে সব চলে যায়।
 - শুধু কিছু তথ্য (যেমন ফোন নম্বর) মুছতে চাইলে প্রোফাইলে ঘরটি খালি করুন বা আমাদের লিখুন।
@@ -162,7 +162,7 @@ We keep your data while your account exists. Deleting your account deletes your 
 
 ### 9. Deleting your account and data
 
-- **In the app:** Settings → "Delete account" → confirm. Deletion is immediate.
+- **In the app:** Settings → "Delete account" → confirm. Deletion is immediate. It is one shared account, so your smartlineman.in website account is deleted too.
 - **Without the app:** fill in the form on [ACCOUNT_DELETION_URL] ([DELETION_FORM_URL]), or email [CONTACT_EMAIL] from the Google address you signed in with, subject "Delete my SmartLineman account". We delete within 30 days.
 - Guest data lives only on your phone: uninstalling the app or clearing its data removes it.
 - To delete only some data (for example your phone number), clear that field in your profile or write to us.

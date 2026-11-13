@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
-import '../more/profile_edit.dart' show saveProfileFields;
 import '../shell/shell_providers.dart';
 import 'league_board.dart';
 import 'league_service.dart';
@@ -95,8 +94,8 @@ class _LeagueNameSwitchState extends ConsumerState<LeagueNameSwitch> {
     final profile = ref.read(authProvider).profile;
     if (profile == null || profile.isGuest || _saving) return;
     setState(() => _saving = true);
-    final ok = await saveProfileFields(profile.id, {'league_show_name': value});
-    if (ok) await ref.read(authProvider.notifier).refreshProfile();
+    // slm_app.set_league_show_name (supabase/slm_app_10_league.sql).
+    final ok = await ref.read(leagueShowNameProvider.notifier).set(value);
     if (!mounted) return;
     setState(() => _saving = false);
     if (!ok) {
@@ -113,6 +112,7 @@ class _LeagueNameSwitchState extends ConsumerState<LeagueNameSwitch> {
     final profile = ref.watch(authProvider).profile;
     if (profile == null || profile.isGuest) return const SizedBox.shrink();
     final masked = leagueMaskedName(slmId: profile.slmId, id: profile.id);
+    final showName = ref.watch(leagueShowNameProvider);
     return SlmCard(
       variant: SlmCardVariant.sunken,
       radius: SlmRadius.md,
@@ -130,10 +130,10 @@ class _LeagueNameSwitchState extends ConsumerState<LeagueNameSwitch> {
           tr(bn, 'বন্ধ থাকলে দেখাবে: $masked', 'When off, the board shows: $masked'),
           style: bangla(fontSize: 12.5, fontWeight: FontWeight.w500, color: SlmColors.mist, height: 1.35),
         ),
-        value: profile.leagueShowName,
+        value: showName.value ?? true,
         activeThumbColor: SlmColors.gold300,
         activeTrackColor: SlmColors.gold700,
-        onChanged: _saving ? null : _set,
+        onChanged: _saving || showName.isLoading ? null : _set,
         ),
       ),
     );

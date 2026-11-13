@@ -4,7 +4,8 @@ Owner notes (delete before publishing):
   Host account-deletion.html and paste its URL in Play Console.
 - Replace [OWNER_NAME], [CONTACT_EMAIL], [DELETION_FORM_URL], [BACKUP_DAYS].
 - The in-app button only exists after a Dart change (see account-deletion-app.md) and after
-  supabase/delete_account.sql has been run. Do not publish this page before both are live.
+  supabase/slm_app_30_delete_account.sql has been run (after slm_app_00_schema.sql, with slm_app
+  in the Exposed schemas). Do not publish this page before both are live.
 - Suggested Google Form fields: Google email used to sign in (required), name shown in the app,
   district, "I want my SmartLineman account and data deleted" (checkbox, required).
 -->

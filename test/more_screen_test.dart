@@ -41,8 +41,34 @@ final _member = const AuthState(profile: _me, email: 'me@example.com');
 final _admin = AuthState(profile: _me, email: AppConfig.adminEmails.first);
 final _guest = AuthState(profile: LinemanProfile.guest());
 
+/// League settings with no network (slm_app.my_league_settings / set_league_show_name).
+class _League extends LeagueBoardSource {
+  bool showName = true;
+  final saved = <bool>[];
+
+  @override
+  Future<List<LeagueRow>> month({required int year, required int month, String? district}) async => const [];
+
+  @override
+  Future<List<LeagueRow>> allTime({String? district}) async => const [];
+
+  @override
+  Future<List<LeagueWin>> myWins() async => const [];
+
+  @override
+  Future<bool> myShowName() async => showName;
+
+  @override
+  Future<bool> setShowName(bool value) async {
+    saved.add(value);
+    showName = value;
+    return true;
+  }
+}
+
 class _Harness {
   late _Auth auth;
+  final league = _League();
   var calls = 0;
   final opened = <Uri>[];
   late ProviderContainer container;
@@ -63,6 +89,7 @@ Future<_Harness> _pump(
     overrides: [
       authProvider.overrideWith(() => h.auth = _Auth(state)),
       myLeagueWinsProvider.overrideWith((ref) async => const <LeagueWin>[]),
+      leagueBoardSourceProvider.overrideWithValue(h.league),
       deleteAccountCallProvider.overrideWithValue(() async {
         h.calls++;
         return (call ?? () async => {'success': true})();
@@ -121,6 +148,19 @@ void main() {
     }
     expect(find.text('পরিচিতি'), findsNothing);
     expect(find.text('কুইজ'), findsNothing);
+  });
+
+  testWidgets('league name switch saves through slm_app, not the profile', (tester) async {
+    final h = await _pump(tester, _member);
+    final tile = find.widgetWithText(SwitchListTile, 'বোর্ডে আমার নাম দেখান');
+    expect(tester.widget<SwitchListTile>(tile).value, isTrue);
+
+    await tester.tap(tile);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(h.league.saved, [false]);
+    expect(tester.widget<SwitchListTile>(tile).value, isFalse);
+    expect(h.container.read(leagueShowNameProvider).value, isFalse);
   });
 
   testWidgets('privacy policy opens its URL', (tester) async {

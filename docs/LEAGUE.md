@@ -6,12 +6,13 @@ Owner-approved 2026-11-13. The Rank screen is now a league of **verified linemen
 ## Rules in plain words
 
 **Who is on the board**
-- Only verified linemen: the admin verified them, their role is not `pending`, they are not blocked,
-  `league_hidden` is off, and they are not an admin account.
+- Only verified linemen: the admin verified them, their role is not `pending`, they are not blocked
+  (all read from the website's `public.profiles`), they are not hidden (`slm_app.league_settings.hidden`),
+  and they are not an admin account.
 - Guests and members not yet verified can **look** at the board but never appear on it. They see
   "যাচাই হলে আপনিও বোর্ডে উঠবেন" and, if signed in, their verification status.
-- Blocking someone, or turning `league_hidden` on, takes them off every board at once (the board is
-  worked out every time it is read).
+- Blocking someone, or hiding them (`slm_app.admin_set_league_hidden`), takes them off every board at
+  once (the board is worked out every time it is read).
 
 **What counts**
 - Only finished levels. For every person and every rung (level), the **best play of the month** is kept.
@@ -39,10 +40,14 @@ Owner-approved 2026-11-13. The Rank screen is now a league of **verified linemen
 - Ties: more rungs cleared first, then whoever got there first.
 
 **Names**
-- The board shows the **admin-approved name**: the name the person had when the admin verified them
-  (people verified before the league keep their current name). If they change their name later, the
-  board keeps the approved one until an admin approves the new one (see below).
-- Anyone can turn off "বোর্ডে আমার নাম দেখান" in Settings → লাইনম্যান লিগ. The board then shows
+- The board shows the **approved name**: `slm_app.league_settings.approved_name` when an admin set one,
+  otherwise the profile's `full_name` (only verified people are on the board, so it is the name the admin
+  saw when verifying). Nothing on the website has to change for this.
+- Trade-off of Option B: there is no trigger on `public.profiles` any more, so a name edited after
+  verification reaches the board unless an admin pins one with `slm_app.admin_set_approved_name`.
+  The admin can block or hide anyone at once.
+- Anyone can turn off "বোর্ডে আমার নাম দেখান" in Settings → লাইনম্যান লিগ
+  (`slm_app.set_league_show_name`, read back with `slm_app.my_league_settings`). The board then shows
   "লাইনম্যান #" and the last 4 characters of their SLM id (or of their account id).
 - District comes from the profile.
 
@@ -53,39 +58,57 @@ Owner-approved 2026-11-13. The Rank screen is now a league of **verified linemen
 
 ## SQL to run (Supabase dashboard → SQL editor)
 
-Run in this order. Every file is safe to run again.
+Owner decision "Option B" (2026-11-13): everything the league needs lives in the schema **`slm_app`**;
+the website's objects in `public` are never changed. The league only reads `public.profiles`
+(verified, role, blocked, district, full_name, slm_id) and `auth.users`, inside `SECURITY DEFINER`
+functions. See `supabase/README.md`.
 
-1. `supabase/verify_lineman.sql` and `supabase/block_user.sql` – already run before; needed for the
-   `verified` and `blocked` columns (league.sql also adds them if missing, same defaults).
-2. **`supabase/league.sql`** – profile columns `league_hidden`, `league_show_name`, `league_name`;
-   the trigger that protects them; tables `league_level_best` (monthly) and `league_level_best_all`
-   (all-time), both with RLS on and no direct access; `league_rungs`; the functions
-   `submit_level_result`, `league_board`, `league_board_all`; the views `league_monthly_winners`
-   (internal) and `league_my_wins` (each member reads only their own wins).
-3. **`supabase/league_rungs_seed.sql`** – the 327 rung ids in today's catalog. While this table has rows,
-   the server accepts only these ids. **When new levels ship, add their ids and run it again**, or plays
-   of the new levels will be refused (`unknown_rung`). If the table is empty, any id matching the rung
-   pattern is accepted.
+Run in this order. Every file is safe to run again. Nothing has been run yet.
 
-Until league.sql is run, the Rank screen shows its offline state (or the last board saved on the phone),
+1. **`supabase/slm_app_00_schema.sql`** – the schema, grants, default privileges, `slm_app.is_admin()`
+   and `slm_app.me_verified()`.
+2. **`supabase/slm_app_10_league.sql`** – tables `league_level_best` (monthly), `league_level_best_all`
+   (all-time), `league_rungs` and `league_settings` (name switch, hidden, approved name), all with RLS on
+   and no direct access; the functions `submit_level_result`, `league_board`, `league_board_all`,
+   `set_league_show_name`, `my_league_settings`, `league_my_wins`, and the admin-only
+   `admin_set_league_hidden`, `admin_set_approved_name`; the internal views `league_people` and
+   `league_monthly_winners`.
+3. **`supabase/slm_app_11_league_rungs_seed.sql`** – the 327 rung ids in today's catalog. While this table
+   has rows, the server accepts only these ids. **When new levels ship, add their ids and run it again**,
+   or plays of the new levels will be refused (`unknown_rung`). If the table is empty, any id matching the
+   rung pattern is accepted.
+4. `supabase/slm_app_20_toolbox_quiz.sql`, `supabase/slm_app_30_delete_account.sql` – not league, but
+   the same run (00 → 10 → 11 → 20 → 30).
+5. **Dashboard → Project Settings → API (Data API) → Exposed schemas: add `slm_app`.** Without it the
+   app cannot reach any of these functions.
+
+`supabase/HOLD_profiles_privacy.sql` is **on hold, do not run** (it would change the website's
+`profiles` policies; see its header and `supabase/README.md`). The league does not need it.
+
+Until these are run, the Rank screen shows its offline state (or the last board saved on the phone),
 and finished plays wait in the phone's queue.
 
-### Owner tasks in the dashboard
+### Owner tasks
+
+In the SQL editor (it runs as the owner, so it may write the table directly; the admin functions
+refuse there because `auth.jwt()` is empty):
 
 ```sql
 -- Hide the Play reviewer test account (and any account that should not be on the board):
-UPDATE public.profiles SET league_hidden = true
-WHERE id = (SELECT id FROM auth.users WHERE email = 'reviewer@example.com');
+INSERT INTO slm_app.league_settings (user_id, hidden)
+SELECT id, true FROM auth.users WHERE email = 'reviewer@example.com'
+ON CONFLICT (user_id) DO UPDATE SET hidden = true, updated_at = now();
 
--- Approve a member's new name for the board:
-UPDATE public.profiles SET league_name = btrim(full_name) WHERE id = '<user id>';
-
--- Or set the board name directly:
-UPDATE public.profiles SET league_name = 'Rahim Mia' WHERE id = '<user id>';
+-- Pin a member's board name (NULL = use the profile's full_name again):
+INSERT INTO slm_app.league_settings (user_id, approved_name)
+VALUES ('<user id>', 'Rahim Mia')
+ON CONFLICT (user_id) DO UPDATE SET approved_name = EXCLUDED.approved_name, updated_at = now();
 ```
 
-Phones cannot change `league_hidden` or `league_name` (the trigger puts them back); the dashboard, the
-admin accounts and the admin functions can. Members can change `league_show_name` themselves.
+For a future admin screen (an admin email's session): `slm_app.admin_set_league_hidden(p_user_id, p_hidden)`
+and `slm_app.admin_set_approved_name(p_user_id, p_name)`. The admin screen does not call them yet. Phones cannot change `hidden` or `approved_name`
+(no table access, and those functions check `slm_app.is_admin()`). Members change only their own
+`show_name`.
 
 ## Play Store notes
 
@@ -98,7 +121,7 @@ admin accounts and the admin functions can. Members can change `league_show_name
   "লাইনম্যান #1234"), district, league points and number of levels cleared. Not shown: email, phone,
   SLM id, account id, photo. Mention this in the Data safety form ("name and district are shown on a
   public in-app leaderboard; the user can hide the name").
-- The Play reviewer test account should have `league_hidden = true` so it never appears.
+- The Play reviewer test account should be hidden (`slm_app.league_settings.hidden = true`) so it never appears.
 
 ## Limits to know
 
@@ -114,9 +137,12 @@ admin accounts and the admin functions can. Members can change `league_show_name
 ## Where the code is
 
 - `lib/features/rank/league_service.dart` – rules (month, points, Learn stars, hidden name, month label),
-  the offline queue and `submit_level_result`. Wired in `main.dart` (`LeagueService.install()`); hears plays
+  the offline queue and `slm_app.submit_level_result`. Wired in `main.dart` (`LeagueService.install()`); hears plays
   through `GameSaveController.onPlayResult` (`recordStars` for Do/gate, the two Learn runners for marks).
-- `lib/features/rank/league_board.dart` – reads the boards and wins, keeps the last real copy offline.
+- `lib/features/rank/league_board.dart` – reads the boards, wins and the name switch
+  (`leagueShowNameProvider`), keeps the last real copy offline. Every call is
+  `SupabaseService.client.schema('slm_app').rpc(...)`.
 - `lib/features/rank/rank_screen.dart` – the three tabs.
 - `lib/features/rank/league_profile.dart` – badges and the name switch in Settings.
-- Tests: `test/league_service_test.dart`, `test/rank_screen_test.dart`.
+- Tests: `test/league_service_test.dart`, `test/rank_screen_test.dart`, `test/more_screen_test.dart`,
+  `test/slm_app_schema_guard_test.dart` (schema rule).

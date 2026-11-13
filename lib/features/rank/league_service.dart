@@ -9,7 +9,7 @@ import '../game/game_save.dart';
 import '../game/level_result_parts.dart' show kLessonPassMark;
 
 // "মাসিক লাইনম্যান লিগ" (docs/LEAGUE.md). Only level clears count: every
-// finished play is sent to `submit_level_result` (supabase/league.sql), which
+// finished play is sent to `slm_app.submit_level_result` (supabase/slm_app_10_league.sql), which
 // keeps the best per rung per month (India time) and the best ever. Offline,
 // plays wait in SharedPreferences and go on the next app start or next play.
 // Lucky-toolbox coins, the hourly quiz and guest play never count.
@@ -124,7 +124,7 @@ class SupabaseLeagueSubmitter implements LeagueSubmitter {
 
   @override
   Future<String?> submit(LeagueResult r) async {
-    final res = await SupabaseService.client.rpc(
+    final res = await SupabaseService.client.schema('slm_app').rpc(
       'submit_level_result',
       params: {'p_rung_id': r.rungId, 'p_stars': r.stars, 'p_deaths': r.deaths},
     );

@@ -12,12 +12,15 @@ import 'package:slm_flutter/features/rank/rank_screen.dart';
 
 /// A board with no network: rows per query, and a log of what was asked.
 class _FakeBoard extends LeagueBoardSource {
-  _FakeBoard({List<LeagueRow> month = const [], List<LeagueRow> all = const []})
+  _FakeBoard({List<LeagueRow> month = const [], List<LeagueRow> all = const [], this.showName = true})
       : monthRows = month,
         allRows = all;
 
   final List<LeagueRow> monthRows;
   final List<LeagueRow> allRows;
+
+  /// What slm_app.my_league_settings answers for "show my name".
+  bool showName;
   final asked = <String>[];
 
   @override
@@ -34,6 +37,16 @@ class _FakeBoard extends LeagueBoardSource {
 
   @override
   Future<List<LeagueWin>> myWins() async => const [];
+
+  @override
+  Future<bool> myShowName() async => showName;
+
+  @override
+  Future<bool> setShowName(bool value) async {
+    asked.add('show:$value');
+    showName = value;
+    return true;
+  }
 }
 
 class _OfflineBoard extends _FakeBoard {
@@ -178,18 +191,10 @@ void main() {
   });
 
   testWidgets('name hidden: own row shows "লাইনম্যান #" + last 4 of the SLM id', (tester) async {
-    const hidden = LinemanProfile(
-      id: 'u1',
-      fullName: 'Real Me',
-      role: 'lineman',
-      slmId: 'SLM1234',
-      district: 'Howrah',
-      verified: true,
-      leagueShowName: false,
-    );
+    // The choice comes from slm_app.my_league_settings, not a profiles column.
     // The saved board may still carry the name from before the switch.
     final rows = [..._top, _row(5, 'Real Me', 90, me: true, gap: 30), _row(6, 'লাইনম্যান #9876', 60, gap: 30)];
-    await _pump(tester, auth: const AuthState(profile: hidden), board: _FakeBoard(month: rows));
+    await _pump(tester, auth: const AuthState(profile: _verified), board: _FakeBoard(month: rows, showName: false));
     expect(find.text('Real Me'), findsNothing);
     expect(find.text('লাইনম্যান #1234'), findsOneWidget);
     expect(find.text('লাইনম্যান #9876'), findsOneWidget, reason: "others' hidden names come from the server");

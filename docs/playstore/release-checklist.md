@@ -17,13 +17,19 @@ Placeholders used in them: `[OWNER_NAME]`, `[CONTACT_EMAIL]`, `[EFFECTIVE_DATE]`
       (AGENTS.md §7). Make it honour the flag (device TTS only). The privacy policy and Data safety
       answers assume this.
 - [ ] **Delete-account button** in Settings (`account-deletion-app.md`), and run
-      `supabase/delete_account.sql` (its CHECK query first). Play rejects apps with account creation
+      `supabase/slm_app_30_delete_account.sql` (its CHECK query first). Play rejects apps with account creation
       but no in-app deletion.
 - [ ] **Supabase RLS on `profiles`** (AGENTS.md §7): a signed-in user may read/update only their own
       row; anon cannot read profiles. Otherwise phone numbers leak and the privacy policy is wrong.
+      This is the website's table: `supabase/HOLD_profiles_privacy.sql` is **on hold** (do not run)
+      until the website reads other people's profiles through safe functions; agree it with the web
+      owner. The app itself reads other people only through `slm_app` functions.
 - [ ] `submit_flutter_hourly_quiz` ends with `json || json` (likely fails every submit). Fix it or hide
       the hourly quiz in this release.
-- [ ] League SQL run in Supabase (`league.sql`, `league_rungs_seed.sql`, see `docs/LEAGUE.md`).
+- [ ] App SQL run in Supabase, in order: `slm_app_00_schema.sql` → `slm_app_10_league.sql` →
+      `slm_app_11_league_rungs_seed.sql` → `slm_app_20_toolbox_quiz.sql` → `slm_app_30_delete_account.sql`,
+      and `slm_app` added under Dashboard → Project Settings → API → Exposed schemas
+      (see `supabase/README.md`, `docs/LEAGUE.md`).
 - [ ] Modules 6–10 show "শীঘ্রই আসছে"; nothing unfinished is reachable. Radio player stays unreachable.
 - [ ] Version: bump `version:` in `pubspec.yaml` (e.g. `1.0.0+1`; every upload needs a higher `+build`)
       (the pubspec comment mentions `AppConfig.appVersion`, but `app_config.dart` has no such field today).
@@ -134,10 +140,14 @@ flutter build appbundle --release
         ```sql
         UPDATE public.profiles
         SET verified = true, role = 'lineman', district = 'Kolkata', job = 'Others',
-            league_hidden = true, full_name = 'Play Reviewer'
+            full_name = 'Play Reviewer'
         WHERE id = (SELECT id FROM auth.users WHERE email = 'smartlineman.review@gmail.com');
+
+        INSERT INTO slm_app.league_settings (user_id, hidden)
+        SELECT id, true FROM auth.users WHERE email = 'smartlineman.review@gmail.com'
+        ON CONFLICT (user_id) DO UPDATE SET hidden = true, updated_at = now();
         ```
-        (`league_hidden` keeps it off every board; the trigger only lets the dashboard set it.)
+        (`hidden` keeps it off every board; phones cannot change it, only the dashboard or an admin.)
         ⚠ Use a district value that exists in `assets/data/wb_locations.json`.
   - [ ] Instructions for Play: "Guest mode needs no login: tap Home → মৃত্যুহীন পথ. To test sign-in:
         Home toolbox → Settings → Sign in with Google → use the account below. The account is
@@ -192,13 +202,13 @@ your log, in plain English:
 - [ ] **Staged rollout:** 10 % → watch Android vitals (crash rate, ANR) and sign-in for 2–3 days →
       50 % → 100 %.
 - [ ] Watch: Supabase Auth logs (sign-in errors), new profiles waiting for verification (admin panel),
-      league submits (`unknown_rung` means `league_rungs_seed.sql` needs new ids).
+      league submits (`unknown_rung` means `slm_app_11_league_rungs_seed.sql` needs new ids).
 - [ ] Reply to reviews; keep `[CONTACT_EMAIL]` monitored (deletion requests: answer within 30 days,
-      run `SELECT public.delete_user_data(...)` from `supabase/delete_account.sql`).
+      run `SELECT slm_app.delete_user_data(...)` from `supabase/slm_app_30_delete_account.sql`).
 
 ## After launch (keep in mind)
 
-- Every new level id must be added to `league_rungs_seed.sql` before the build ships.
+- Every new level id must be added to `slm_app_11_league_rungs_seed.sql` (and that file run) before the build ships.
 - Any new data collected, SDK added, or permission requested → update `privacy-policy.*` and
   Data safety **before** releasing that build.
 - Keep the target API level current every August (Play's yearly deadline).

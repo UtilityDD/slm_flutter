@@ -17,12 +17,13 @@ import '../rank/league_board.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_providers.dart';
 
-/// The server call (`public.delete_my_account()`, supabase/delete_account.sql).
+/// The server call (`slm_app.delete_my_account()`, supabase/slm_app_30_delete_account.sql).
+/// It deletes the shared account, so the website account goes too.
 /// Swapped for a fake in tests, so no network is touched.
 typedef DeleteAccountCall = Future<Object?> Function();
 
 final deleteAccountCallProvider = Provider<DeleteAccountCall>(
-  (ref) => () => SupabaseService.client.rpc('delete_my_account'),
+  (ref) => () => SupabaseService.client.schema('slm_app').rpc('delete_my_account'),
 );
 
 /// Opens a web page or mail link outside the app. Swappable in tests.
@@ -101,6 +102,7 @@ Future<void> forgetDeletedAccount(WidgetRef ref) async {
   ref.invalidate(localCompletedLessonsProvider);
   ref.invalidate(readPositionProvider);
   ref.invalidate(myLeagueWinsProvider);
+  ref.invalidate(leagueShowNameProvider);
 }
 
 enum _Phase { confirm, working, failed, admin }

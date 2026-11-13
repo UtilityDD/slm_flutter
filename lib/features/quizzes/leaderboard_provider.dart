@@ -37,25 +37,6 @@ class LeaderboardEntry {
   }
 }
 
-/// Other people's safe columns only (`supabase/profiles_privacy.sql`):
-/// `profiles` itself returns just the signed-in user's own row, and this view
-/// has no phone, email, block or job and leaves out blocked/hidden people.
-const _publicProfiles = 'profiles_public';
-
-/// The public row of each of [ids] that may be shown, by id. Asks only about
-/// the rows on the board.
-Future<Map<String, Map<String, dynamic>>> _shownAmong(List<String> ids) async {
-  if (ids.isEmpty) return {};
-  final rows = await SupabaseService.client
-      .from(_publicProfiles)
-      .select('id, display_name, avatar_url')
-      .inFilter('id', ids);
-  return {
-    for (final raw in rows)
-      if ((raw['id']?.toString() ?? '').isNotEmpty) raw['id'].toString(): raw,
-  };
-}
-
 List<LeaderboardEntry> _ranked(List<LeaderboardEntry> rows) {
   return [
     for (var i = 0; i < rows.length; i++)
@@ -74,55 +55,38 @@ List<LeaderboardEntry> _ranked(List<LeaderboardEntry> rows) {
 const _boardSize = 25;
 
 /// Network side of the board. Swappable in tests.
+///
+/// Reads this month's state-wide league board, `slm_app.league_board`
+/// (supabase/slm_app_10_league.sql, SECURITY DEFINER): approved names or
+/// "লাইনম্যান #1234", district and points of verified, unblocked, unhidden
+/// people only. Nothing is read from `profiles` directly, so it does not
+/// depend on the web app's profiles policies. The board has no ids or photos:
+/// the member's own row (`is_me`) gets their account id, others a rank key.
 class LeaderboardSource {
   const LeaderboardSource();
 
   Future<List<LeaderboardEntry>> fetch() async {
-    final now = DateTime.now();
+    final res = await SupabaseService.client
+        .schema('slm_app')
+        .rpc('league_board', params: {'p_month': null, 'p_district': null});
+    String? me;
     try {
-      // The view has no blocked flag, so read a few spare rows and drop
-      // blocked or hidden ones before cutting to the board size. Name and
-      // photo come from the public view (approved name or "লাইনম্যান #1234").
-      final monthlyData = await SupabaseService.client
-          .from('monthly_leaderboard_view')
-          .select('user_id, district, points')
-          .eq('year_num', now.year)
-          .eq('month_num', now.month)
-          .order('points', ascending: false)
-          .limit(_boardSize * 2);
-
-      if (monthlyData.isNotEmpty) {
-        final shown = await _shownAmong([
-          for (final row in monthlyData)
-            if ((row['user_id']?.toString() ?? '').isNotEmpty) row['user_id'].toString(),
-        ]);
-        final rows = [
-          for (final row in monthlyData)
-            if (shown[row['user_id']?.toString() ?? ''] case final p?)
-              LeaderboardEntry(
-                rank: 0,
-                id: row['user_id'].toString(),
-                name: p['display_name']?.toString() ?? 'লাইনম্যান',
-                district: row['district']?.toString() ?? 'পশ্চিমবঙ্গ',
-                points: (row['points'] as num?)?.toInt() ?? 0,
-                level: 1,
-                avatarUrl: p['avatar_url']?.toString(),
-              ),
-        ];
-        if (rows.isNotEmpty) return _ranked(rows.take(_boardSize).toList());
-      }
-    } catch (_) {
-      // Fall back to the public profiles view if the monthly view is missing or different.
-    }
-
-    // Blocked and hidden accounts are left out by the view, before the limit.
-    final profileData = await SupabaseService.client
-        .from(_publicProfiles)
-        .select('id, display_name, district, points, training_level, avatar_url')
-        .order('points', ascending: false)
-        .limit(_boardSize);
-
-    return _ranked([for (final row in profileData) LeaderboardEntry.fromMap(row, 0)]);
+      me = SupabaseService.client.auth.currentUser?.id;
+    } catch (_) {}
+    final rows = [
+      if (res is List)
+        for (final raw in res)
+          if (raw is Map)
+            LeaderboardEntry(
+              rank: 0,
+              id: raw['is_me'] == true && me != null ? me : 'rank_${raw['rank']}',
+              name: raw['display_name']?.toString() ?? 'লাইনম্যান',
+              district: raw['district']?.toString() ?? 'পশ্চিমবঙ্গ',
+              points: (raw['points'] as num?)?.toInt() ?? 0,
+              level: 1,
+            ),
+    ];
+    return _ranked(rows.take(_boardSize).toList());
   }
 }
 
