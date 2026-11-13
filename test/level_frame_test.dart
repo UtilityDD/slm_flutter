@@ -69,7 +69,7 @@ void main() {
     // does not skip); the game begins once he has said the task.
     expect(find.byType(GuideIntro), findsOneWidget);
     expect(find.text('শুরু'), findsNothing, reason: 'no start button');
-    expect(find.text('ধাপ 14'), findsOneWidget);
+    expect(find.text('L14'), findsOneWidget);
     expect(find.text('পাঠ 1.5 · কাজ 1/2'), findsNothing, reason: 'lesson numbers stay internal');
     await t.tapAt(const Offset(360, 800));
     await _pump(t, 600);

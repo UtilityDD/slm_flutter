@@ -12,7 +12,7 @@ import os, re, sys, json
 
 root = sys.argv[1]
 EXT = r'(?:webp|jpg|jpeg|png|gif|svg|mp3|wav|ogg|json|ttf|riv|lottie)'
-LIT = re.compile(r"""['"]((?:assets/)?(?:sounds|duty_slip|zero_loss|safety|quizzes|lineman|brand|data|game|fonts)/[^'"$\s]*?\.""" + EXT + r""")['"]""")
+LIT = re.compile(r"""['"]((?:assets/)?(?:sounds|duty_slip|zero_loss|safety|quizzes|lineman|brand|data|game|fonts|life_skills)/[^'"$\s]*?\.""" + EXT + r""")['"]""")
 JSON_LIT = re.compile(r'"((?:assets/)[^"$\s]*?\.' + EXT + r')"')
 # Known broken before this change (reported, not caused here)
 KNOWN_BROKEN = set()  # everything resolves as of the 2026-11 cleanup; keep it that way

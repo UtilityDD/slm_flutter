@@ -75,6 +75,17 @@ class LessonQuizStore {
     });
   }
 
+  /// The copy already on this phone (memory, then disk) — never the network.
+  /// Null when none is saved. Never throws.
+  Future<List<LessonQuizQuestion>?> cachedOnly(int module, int chapter) async {
+    final file = lessonQuizFileName(module, chapter);
+    final hot = _memory[file];
+    if (hot != null) return hot;
+    final disk = await _readDisk(file);
+    if (disk == null) return null;
+    return _memory[file] = disk.questions;
+  }
+
   /// Warm the cache while the lesson is being read. Never throws.
   Future<void> prefetch(int module, int chapter) async {
     try {

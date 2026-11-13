@@ -23,7 +23,7 @@ import '../game/learn_explainer_videos.dart';
 import '../game/learn_runner.dart';
 import '../game/learn_video_gate.dart';
 import '../game/level_shell.dart';
-import '../guide/ai_lineman_guide.dart';
+import '../game/lucky_toolbox.dart' show ChestTier, ToolboxLines, chestTierNamed;
 import '../guide/guide_director.dart';
 import '../guide/ladder_guide_host.dart';
 import '../guide/mascot_speech_library.dart';
@@ -35,6 +35,7 @@ import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'adventure_scenery.dart';
 import 'duty_slip_engine.dart';
+import 'lucky_toolbox_overlay.dart';
 
 /// Monumental golden ladder shell.
 /// Rung count + kinds come from [builtLadderProvider] (327).
@@ -57,41 +58,26 @@ class AdventureMap extends ConsumerStatefulWidget {
   ConsumerState<AdventureMap> createState() => _AdventureMapState();
 }
 
-enum _Station { tips, hourly, identify, gift, life, lesson }
-
-_Station? _stationAt(int index) => switch (index % 8) {
-      1 => _Station.tips,
-      2 => _Station.hourly,
-      3 => _Station.identify,
-      5 => _Station.gift,
-      6 => _Station.life,
-      7 => _Station.lesson,
-      _ => null,
-    };
-
-/// One-time side-item reward id, keyed by the rung the item stands beside —
-/// never by ladder position (AGENTS §3).
-String _stationClaimId(_Station s, BuiltLadder? built, int index) {
-  final rungId = built != null && index >= 0 && index < built.length ? built.rungs[index].id : null;
-  return rungId == null ? _stationLegacyClaimId(s, index) : 'station_${s.name}@$rungId';
+/// The sudden chests ("হঠাৎ উপহার") waiting on the ladder, by ladder index:
+/// each stands one rung above the rung whose first clear dropped it
+/// (game_save.dart: toolboxChestDrop). The ladder has no other side items
+/// (stations removed 2026-11-13); their old `station_*` claim ids stay in
+/// GameSave.giftsClaimed, so nothing is ever paid twice.
+Map<int, PendingChest> _chestsByIndex(BuiltLadder? built, GameSave save) {
+  final chests = save.toolbox.chests;
+  if (built == null || chests.isEmpty) return const {};
+  final out = <int, PendingChest>{};
+  for (final c in chests) {
+    if (save.giftsClaimed.contains(c.claimId)) continue;
+    final at = built.rungs.indexWhere((r) => r.id == c.rungId);
+    if (at < 0) continue;
+    final beside = math.min(at + 1, built.length - 1);
+    out.putIfAbsent(beside, () => c);
+  }
+  return out;
 }
 
-/// Old index-based id: still honoured so earlier claims are never paid twice.
-String _stationLegacyClaimId(_Station s, int index) => 'station_${s.name}_$index';
-
-bool _stationClaimed(GameSave save, _Station s, BuiltLadder? built, int index) =>
-    save.giftsClaimed.contains(_stationClaimId(s, built, index)) ||
-    save.giftsClaimed.contains(_stationLegacyClaimId(s, index));
-
-enum _GiftFace { none, missed, active, upcoming, opened }
-
-class _Flight {
-  final int index;
-  final _Station station;
-  final bool large;
-
-  const _Flight(this.index, this.station, this.large);
-}
+const _chestArt = 'assets/duty_slip/world3d/prop_chest.webp';
 
 class _Reply {
   final String title;
@@ -100,74 +86,12 @@ class _Reply {
   const _Reply(this.title, this.body);
 }
 
-class _ActiveSideChallenge {
-  final int index;
-  final _Station station;
-  final String asset;
-  final SideItemChallenge challenge;
+/// The lucky toolbox being opened ("ভাগ্যের টুলবক্স", lucky_toolbox_overlay.dart).
+class _ActiveToolbox {
+  final PendingChest chest;
 
-  /// Stable reward id ([_stationClaimId]) and the old index id it replaces.
-  final String claimId;
-  final String legacyClaimId;
-
-  const _ActiveSideChallenge({
-    required this.index,
-    required this.station,
-    required this.asset,
-    required this.challenge,
-    required this.claimId,
-    required this.legacyClaimId,
-  });
+  const _ActiveToolbox(this.chest);
 }
-
-const _tipHelmet = 'assets/duty_slip/world3d/prop_shield.webp';
-const _tipGloves = 'assets/duty_slip/world3d/prop_ppe_gloves.webp';
-const _tipHarness = 'assets/duty_slip/world3d/prop_ppe_harness.webp';
-const _tipBoots = 'assets/duty_slip/world3d/prop_ppe_boots.webp';
-const _tipVest = 'assets/duty_slip/world3d/prop_ppe_vest.webp';
-const _tipLock = 'assets/duty_slip/world3d/prop_ppe_lock.webp';
-const _tipRope = 'assets/duty_slip/world3d/prop_ppe_rope.webp';
-const _tipCone = 'assets/duty_slip/world3d/prop_ppe_cone.webp';
-const _tipGoggles = 'assets/duty_slip/world3d/prop_ppe_goggles.webp';
-
-const _tipCycle = <String>[
-  _tipHelmet,
-  _tipGloves,
-  _tipHarness,
-  _tipBoots,
-  _tipVest,
-  _tipLock,
-  _tipRope,
-  _tipCone,
-  _tipGoggles,
-];
-
-/// Safety-tip plaques follow the lesson on that rung: helmet, gloves, harness, and the rest of the kit.
-String _tipAsset(int index) {
-  final n = index + 1;
-  return switch (n) {
-    1 || 5 || 6 || 26 => _tipVest,
-    2 => _tipHelmet,
-    3 || 22 => _tipGloves,
-    4 || 7 || 11 || 12 || 13 => _tipHarness,
-    8 || 18 => _tipLock,
-    9 || 14 => _tipCone,
-    10 => _tipRope,
-    15 || 16 || 20 => _tipHelmet,
-    17 || 21 => _tipGoggles,
-    19 => _tipBoots,
-    _ => _tipCycle[index % _tipCycle.length],
-  };
-}
-
-String _assetFor(_Station station, int index) => switch (station) {
-      _Station.gift => 'assets/duty_slip/world3d/prop_chest.webp',
-      _Station.hourly => 'assets/duty_slip/world3d/prop_clock.webp',
-      _Station.identify => 'assets/duty_slip/world3d/prop_identify.webp',
-      _Station.lesson => 'assets/duty_slip/world3d/prop_books.webp',
-      _Station.life => 'assets/duty_slip/world3d/prop_tools.webp',
-      _Station.tips => _tipAsset(index),
-    };
 
 class _AdventureMapState extends ConsumerState<AdventureMap>
     with TickerProviderStateMixin {
@@ -229,10 +153,14 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   final _scoreKey = GlobalKey();
   final _deathKey = GlobalKey();
   final _scroll = ScrollController();
-  final _seen = <int>{};
-  _Flight? _flight;
   _Reply? _reply;
-  _ActiveSideChallenge? _sideChallenge;
+  _ActiveToolbox? _toolbox;
+
+  /// The lucky toolbox is open.
+  bool get _sideBusy => _toolbox != null;
+
+  /// The chest now dropping in (one shot after a first clear).
+  String? _dropClaim;
   Timer? _replyAutoClose;
   Timer? _springBackTimer;
   var _activePointers = 0;
@@ -257,6 +185,13 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   late final AnimationController _shake = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 420),
+  );
+
+  /// One-shot drop + shake of a new sudden chest; it ends still.
+  late final AnimationController _drop = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+    value: 1,
   );
 
   Timer? _idleTimer;
@@ -324,12 +259,12 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   void _scheduleAutoSpringBack(int focus) {
     _springBackTimer?.cancel();
     if (_activePointers > 0 || _programmaticScroll) return;
-    if (_flight != null || _reply != null || _sideChallenge != null) return;
+    if (_reply != null || _sideBusy) return;
     if (!_scrolledAwayFromFocus(focus)) return;
 
     _springBackTimer = Timer(const Duration(milliseconds: 520), () {
       if (!mounted || _activePointers > 0 || _programmaticScroll) return;
-      if (_flight != null || _reply != null || _sideChallenge != null) return;
+      if (_reply != null || _sideBusy) return;
       final built = ref.read(builtLadderProvider).value;
       final save = ref.read(gameSaveProvider);
       final currentFocus = _computeFocus(built, save);
@@ -382,22 +317,16 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     });
   }
 
-  /// Gift chests currently on-screen (any face except opened).
+  /// Waiting sudden chests currently on-screen.
   List<int> _visibleGiftIndices() {
     if (!_scroll.hasClients) return const [];
     final built = ref.read(builtLadderProvider).value;
     final save = ref.read(gameSaveProvider);
-    final live = math.min(_ladderLen(built), _playableSpan(built));
-    final focus = _computeFocus(built, save);
     final view = _scroll.position.viewportDimension;
     final scrolled = _scroll.offset;
     final bottomInset = MediaQuery.paddingOf(context).bottom + 18;
     final out = <int>[];
-    for (var i = 0; i < live; i++) {
-      if (_stationAt(i) != _Station.gift) continue;
-      final soon = !_isRungPlayable(i, built);
-      final face = _giftFace(_Station.gift, i, focus, soon, save);
-      if (face == _GiftFace.opened || face == _GiftFace.none) continue;
+    for (final i in _chestsByIndex(built, save).keys) {
       final fromBottom = bottomInset + i * _rowH + _rowH / 2 - scrolled;
       if (fromBottom > 36 && fromBottom < view - 36) out.add(i);
     }
@@ -458,7 +387,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
         guide.line.isNotEmpty ||
         guide.gesture != GuideGesture.none ||
         _reply != null ||
-        _sideChallenge != null;
+        _sideBusy;
 
     // Never overrule active lineman engagement with idle nudge speech/audio
     if (!isEngaged) {
@@ -481,7 +410,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
 
   void _startIdleNudge() {
     if (!mounted || !slmLoopsOn(context)) return;
-    if (_flight != null || _reply != null || _sideChallenge != null) return;
+    if (_reply != null || _sideBusy) return;
     if (MascotTalk.active.value) return;
     if (_nudgeIndex != null) return;
     if (!_ladderVisible()) {
@@ -489,11 +418,12 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       _armIdle();
       return;
     }
-    _nudgeOnGiftTurn = false;
+    // A waiting chest on screen gets the first nudge.
+    _nudgeOnGiftTurn = _visibleGiftIndices().isNotEmpty;
     _nudgePulse
       ..value = 0
       ..repeat();
-    _applyNudgeTarget(giftTurn: false);
+    _applyNudgeTarget(giftTurn: _nudgeOnGiftTurn);
     _nudgeCycleTimer?.cancel();
     _nudgeCycleTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted || _nudgeIndex == null) return;
@@ -502,7 +432,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
         _clearNudge();
         return;
       }
-      if (MascotTalk.active.value || _reply != null || _sideChallenge != null) {
+      if (MascotTalk.active.value || _reply != null || _sideBusy) {
         return;
       }
       _nudgeOnGiftTurn = !_nudgeOnGiftTurn;
@@ -518,7 +448,10 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   void didUpdateWidget(covariant AdventureMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.engine.unlocked != widget.engine.unlocked) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _pin());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _pin();
+        _maybePlayDrop();
+      });
     }
   }
 
@@ -571,6 +504,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     _nudgePulse.dispose();
     _mist.dispose();
     _shake.dispose();
+    _drop.dispose();
     super.dispose();
   }
 
@@ -736,6 +670,37 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       setState(() {});
       unawaited(_softScrollToIndex(index + 1));
     }
+    _maybePlayDrop();
+  }
+
+  /// A first clear dropped a sudden chest (GameSaveController.lastChestDrop):
+  /// once the ladder is visible again, it falls beside the next rung with one
+  /// existing sound and a single shake, then holds still until opened.
+  void _maybePlayDrop() {
+    if (!mounted || !_ladderVisible()) return;
+    final ctrl = ref.read(gameSaveProvider.notifier);
+    final drop = ctrl.lastChestDrop;
+    if (drop == null) return;
+    ctrl.lastChestDrop = null;
+    if (!ref.read(gameSaveProvider).toolbox.chests.any((c) => c.claimId == drop.claimId)) return;
+    setState(() => _dropClaim = drop.claimId);
+    HapticFeedback.mediumImpact();
+    if (!widget.muted) {
+      unawaited(ZlFx.cue('sounds/intro/impact_metal.ogg', volume: 0.5, muted: false));
+    }
+    if (!MascotTalk.active.value) {
+      ref.read(guideDirectorProvider.notifier).say(
+            mood: GuideMood.glad,
+            line: ToolboxLines.dropped,
+            speakVoice: true,
+            muted: widget.muted,
+          );
+    }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _drop.value = 1;
+    } else {
+      unawaited(_drop.forward(from: 0));
+    }
   }
 
   bool _scrolledAwayFromFocus(int focus) {
@@ -761,39 +726,6 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     if (focus != null) {
       _scheduleAutoSpringBack(focus);
     }
-  }
-
-  _GiftFace _giftFace(
-    _Station? station,
-    int index,
-    int focus,
-    bool soon,
-    GameSave save,
-  ) {
-    if (station != _Station.gift) return _GiftFace.none;
-    final claimed = _stationClaimed(save, station!, ref.read(builtLadderProvider).value, index);
-    if ((claimed || _seen.contains(index)) && !soon) return _GiftFace.opened;
-    if (soon || index > focus) return _GiftFace.upcoming;
-    if (index < focus) return _GiftFace.missed;
-    return _GiftFace.active;
-  }
-
-  void _present(_Station station, int index, {required bool large}) {
-    if (_flight != null || _reply != null || _sideChallenge != null) return;
-    _springBackTimer?.cancel();
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _openStation(station, index);
-      return;
-    }
-    HapticFeedback.lightImpact();
-    setState(() => _flight = _Flight(index, station, large));
-  }
-
-  void _finishFlight() {
-    final flight = _flight;
-    if (!mounted || flight == null) return;
-    setState(() => _flight = null);
-    _openStation(flight.station, flight.index);
   }
 
   void _showKinetic({
@@ -827,61 +759,29 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     _scheduleAutoSpringBack(_computeFocus(built, save));
   }
 
-  void _closeSideChallenge() {
-    if (_sideChallenge == null) return;
+  /// A waiting chest opens the lucky toolbox (once: opening takes it off the
+  /// ladder). With keys on and no key, a short note says how to get one.
+  void _openChest(PendingChest chest) {
+    if (_reply != null || _sideBusy) return;
+    _springBackTimer?.cancel();
+    final save = ref.read(gameSaveProvider);
+    if (save.giftsClaimed.contains(chest.claimId)) return;
+    if (ToolboxFlags.keysEnabled && save.toolbox.keys <= 0) {
+      _showKinetic(title: ToolboxLines.noKeyTitle, body: ToolboxLines.noKeyBody, speak: true);
+      return;
+    }
+    HapticFeedback.lightImpact();
+    setState(() => _toolbox = _ActiveToolbox(chest));
+  }
+
+  void _closeToolbox() {
+    if (_toolbox == null) return;
     unawaited(MascotSpeechLibrary.stop());
-    setState(() => _sideChallenge = null);
+    setState(() => _toolbox = null);
     _armIdle();
     final built = ref.read(builtLadderProvider).value;
     final save = ref.read(gameSaveProvider);
     _scheduleAutoSpringBack(_computeFocus(built, save));
-  }
-
-  void _openStation(_Station station, int index) {
-    HapticFeedback.lightImpact();
-    final built = ref.read(builtLadderProvider).value;
-    final save = ref.read(gameSaveProvider);
-    final focus = _computeFocus(built, save);
-    final openUpTo = dsPlayAllLevels ? _playableSpan(built) : focus + 2;
-
-    if (!_isRungPlayable(index, built) || index > openUpTo) {
-      ref.read(guideDirectorProvider.notifier).sayCue(
-            MascotCueId.ladderComingSoon,
-            speakVoice: true,
-            muted: widget.muted,
-          );
-      _showKinetic(
-        title: 'শীঘ্রই আসছে',
-        body: 'আগের ধাপগুলো পার করলে এই সরঞ্জামটি খুলবে।',
-        speak: false,
-      );
-      return;
-    }
-    setState(() => _seen.add(index));
-    final asset = _assetFor(station, index);
-    final challenge = MascotSpeechLibrary.challengeForSideItem(
-      stationKind: station.name,
-      propAsset: asset,
-      ladderIndex: index,
-    );
-    ref.read(guideDirectorProvider.notifier).say(
-          mood: challenge.mascotCue.mood,
-          line: challenge.mascotCue.displayBn,
-          gesture: challenge.mascotCue.gesture,
-          voiceKey: challenge.mascotCue.voiceKey,
-          speakVoice: true,
-          muted: widget.muted,
-        );
-    setState(() {
-      _sideChallenge = _ActiveSideChallenge(
-        index: index,
-        station: station,
-        asset: asset,
-        challenge: challenge,
-        claimId: _stationClaimId(station, built, index),
-        legacyClaimId: _stationLegacyClaimId(station, index),
-      );
-    });
   }
 
   void _hintComingSoon({int? focus}) {
@@ -931,6 +831,13 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
         dsPlayAllLevels ? math.max(0, _playableSpan(built) - 1) : focus;
     final quiet = MediaQuery.disableAnimationsOf(context);
     final chromeBoot = ladderAsync.isLoading && built == null;
+    final chests = _chestsByIndex(built, save);
+    // A new sudden chest: its one-shot drop plays once the ladder is in view.
+    ref.listen(gameSaveProvider.select((s) => s.toolbox.chests.length), (prev, next) {
+      if (next > (prev ?? next)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _maybePlayDrop());
+      }
+    });
 
     // Always bring the player to their achieved rung when the catalog settles or focus changes.
     ref.listen(builtLadderProvider, (prev, next) {
@@ -1049,22 +956,10 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                               : null;
                           final soon = !cap && !_isRungPlayable(i, built);
                           final fog = !cap && i > focus + 3;
-                          final station = cap || soon || fog ? null : _stationAt(i);
-                          final claimed = station != null &&
-                              _stationClaimed(save, station, built, i);
-                          final rested = station != null &&
-                              !soon &&
-                              (claimed || i < focus || _seen.contains(i));
-                          final fresh = station != null &&
-                              !soon &&
-                              !fog &&
-                              !rested &&
-                              station != _Station.gift;
-                          final giftFace =
-                              _giftFace(station, i, focus, soon, save);
+                          final chest = cap ? null : chests[i];
                           // Read on scroll ticks by the prop's own builder.
                           double zoom() {
-                            if (quiet || station == null) return 1.0;
+                            if (quiet || chest == null) return 1.0;
                             final view = _scroll.hasClients &&
                                     _scroll.position.hasViewportDimension
                                 ? _scroll.position.viewportDimension
@@ -1105,14 +1000,11 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                             locked: !cap && (soon || i > openUpTo),
                             glow: glow,
                             kind: rung?.kind ?? CatalogRungKind.doKind,
-                            station: station,
-                            fresh: fresh,
-                            rested: rested,
-                            claimed: claimed,
-                            giftFace: giftFace,
+                            chest: chest,
+                            chestDrop: chest != null && chest.claimId == _dropClaim ? _drop : null,
+                            keys: ToolboxFlags.keysEnabled ? save.toolbox.keys : null,
                             zoom: zoom,
                             scroll: quiet ? null : _scroll,
-                            hidden: _flight?.index == i,
                             motion: !quiet,
                             light: light,
                             journey: journey,
@@ -1126,17 +1018,12 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                                 : soon
                                     ? () => _hintComingSoon(focus: focus)
                                     : () => _openLevel(i, built: built),
-                            onStation: station == null
+                            onChest: chest == null
                                 ? null
                                 : () {
                                     _clearNudge();
                                     _armIdle();
-                                    _present(
-                                      station,
-                                      i,
-                                      large: station == _Station.gift &&
-                                          giftFace == _GiftFace.active,
-                                    );
+                                    _openChest(chest);
                                   },
                           );
                         },
@@ -1252,14 +1139,6 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                   Positioned.fill(
                     child: LadderGuideHost(muted: widget.muted),
                   ),
-                  if (_flight != null)
-                    Positioned.fill(
-                      child: _ObjectReveal(
-                        asset: _assetFor(_flight!.station, _flight!.index),
-                        endScale: _flight!.large ? 2.2 : 1.45,
-                        onDone: _finishFlight,
-                      ),
-                    ),
                   if (_reply != null)
                     Positioned.fill(
                       child: _KineticReply(
@@ -1269,12 +1148,15 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                         onClose: _closeKinetic,
                       ),
                     ),
-                  if (_sideChallenge != null)
+                  if (_toolbox != null)
                     Positioned.fill(
-                      child: _SideChallengeOverlay(
-                        active: _sideChallenge!,
+                      key: ValueKey('toolbox-${_toolbox!.chest.claimId}'),
+                      child: LuckyToolboxOverlay(
+                        claimId: _toolbox!.chest.claimId,
+                        gateChest: _toolbox!.chest.gate,
+                        startTier: chestTierNamed(_toolbox!.chest.tier),
                         muted: widget.muted,
-                        onClose: _closeSideChallenge,
+                        onClose: _closeToolbox,
                       ),
                     ),
                 ],
@@ -1735,14 +1617,17 @@ class _MapBand extends StatelessWidget {
   final bool locked;
   final Animation<double> glow;
   final CatalogRungKind kind;
-  final _Station? station;
-  final bool fresh;
-  final bool rested;
-  final bool claimed;
-  final _GiftFace giftFace;
+
+  /// A sudden chest waiting beside this rung, if any.
+  final PendingChest? chest;
+
+  /// Its one-shot drop (only the chest that just appeared).
+  final Animation<double>? chestDrop;
+
+  /// Lucky-toolbox keys in hand, shown small by a closed chest (null = keys off).
+  final int? keys;
   final double Function() zoom;
   final ScrollController? scroll;
-  final bool hidden;
   final bool motion;
   final Animation<double> light;
   final double journey;
@@ -1750,7 +1635,7 @@ class _MapBand extends StatelessWidget {
   final bool nudgeGift;
   final Animation<double> nudgePulse;
   final VoidCallback? onLevel;
-  final VoidCallback? onStation;
+  final VoidCallback? onChest;
 
   const _MapBand({
     required this.index,
@@ -1764,14 +1649,11 @@ class _MapBand extends StatelessWidget {
     required this.locked,
     required this.glow,
     required this.kind,
-    required this.station,
-    required this.fresh,
-    required this.rested,
-    required this.claimed,
-    required this.giftFace,
+    required this.chest,
+    this.chestDrop,
+    this.keys,
     required this.zoom,
     required this.scroll,
-    required this.hidden,
     required this.motion,
     required this.light,
     required this.journey,
@@ -1779,7 +1661,7 @@ class _MapBand extends StatelessWidget {
     required this.nudgeGift,
     required this.nudgePulse,
     required this.onLevel,
-    required this.onStation,
+    required this.onChest,
   });
 
   @override
@@ -1789,11 +1671,8 @@ class _MapBand extends StatelessWidget {
         final w = box.maxWidth;
         final h = box.maxHeight;
         final rungY = h * 0.58;
-        final gift = station == _Station.gift;
-        final sideLeft = gift ? (index ~/ 8).isEven : index.isEven;
-        final stationTop = gift
-            ? const [0.0, 8.0, 16.0][(index ~/ 8) % 3]
-            : 2.0 + (index % 3) * 4.0;
+        final sideLeft = index.isEven;
+        final chestTop = const [0.0, 8.0, 16.0][index % 3];
         final gleam = CustomPaint(
           size: Size(w, h),
           painter: _RailGleamPainter(
@@ -1870,30 +1749,25 @@ class _MapBand extends StatelessWidget {
                     child: _ClimberOnRungBadge(glow: glow, motion: motion),
                   ),
                 ),
-              if (station != null && !hidden)
+              if (chest != null)
                 Positioned(
                   left: sideLeft ? 10 : null,
                   right: sideLeft ? null : 18,
-                  top: stationTop,
+                  top: chestTop,
                   width: 92,
                   height: 82,
                   child: _StationZoom(
                     scroll: scroll,
                     zoom: zoom,
                     child: _IdleNudgeHalo(
-                      active:
-                          idleNudge && nudgeGift && station == _Station.gift,
+                      active: idleNudge && nudgeGift,
                       pulse: nudgePulse,
-                      child: _StationPlaque(
-                        station: station!,
-                        asset: _assetFor(station!, index),
-                        glow: glow,
-                        fresh: fresh,
-                        rested: rested,
-                        claimed: claimed,
-                        giftFace: giftFace,
-                        motion: motion,
-                        onTap: onStation,
+                      child: _ChestPlaque(
+                        key: ValueKey('toolbox-chest-$index'),
+                        chest: chest!,
+                        keys: keys,
+                        drop: chestDrop,
+                        onTap: onChest,
                       ),
                     ),
                   ),
@@ -1962,7 +1836,7 @@ class _ClimberOnRungBadge extends StatelessWidget {
   }
 }
 
-/// Scales a station prop with the scroll position; only this transform
+/// Scales a waiting chest with the scroll position; only this transform
 /// rebuilds while the ladder scrolls.
 class _StationZoom extends StatelessWidget {
   final ScrollController? scroll;
@@ -2627,166 +2501,119 @@ class _EmeraldRingPainter extends CustomPainter {
       oldDelegate.progress != progress;
 }
 
-class _StationPlaque extends StatelessWidget {
-  final _Station station;
-  final String asset;
-  final Animation<double> glow;
-  final bool fresh;
-  final bool rested;
-  final bool claimed;
-  final _GiftFace giftFace;
-  final bool motion;
+/// A sudden chest waiting beside a rung: a still picture (no idle loop) with
+/// a soft glow in its tier colour; a gate chest is a little bigger. It drops
+/// in and shakes once when it first appears ([drop]), then holds still.
+class _ChestPlaque extends StatelessWidget {
+  final PendingChest chest;
+  final int? keys;
+  final Animation<double>? drop;
   final VoidCallback? onTap;
 
-  const _StationPlaque({
-    required this.station,
-    required this.asset,
-    required this.glow,
-    required this.fresh,
-    required this.rested,
-    required this.claimed,
-    required this.giftFace,
-    required this.motion,
+  const _ChestPlaque({
+    super.key,
+    required this.chest,
+    this.keys,
+    this.drop,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final chest = station == _Station.gift;
-    final active = giftFace == _GiftFace.active;
-    final missed = giftFace == _GiftFace.missed;
-    final lively =
-        motion && !claimed && (active || (giftFace == _GiftFace.none && fresh));
-    double bob(double turn) => lively
-        ? switch (station) {
-            _Station.gift => -5 * turn,
-            _Station.identify => -2.2 * turn,
-            _Station.lesson => -1.6 * turn,
-            _ => -1.2 * turn,
-          }
-        : 0.0;
-    double tilt(double turn) =>
-        motion && fresh && station == _Station.life ? (turn - 0.5) * 0.1 : 0.0;
-    final picture = Image.asset(
-      asset,
+    final glow = switch (chestTierNamed(chest.tier)) {
+      ChestTier.wood => const Color(0xCCFFD56A),
+      ChestTier.silver => const Color(0xCCE4ECF5),
+      ChestTier.gold => const Color(0xCCFFC94A),
+    };
+    final size = chest.gate ? 1.0 : 0.88;
+    final still = SizedBox(
       width: 92,
       height: 82,
-      cacheWidth: 280,
-      fit: BoxFit.contain,
-      filterQuality: FilterQuality.medium,
-      gaplessPlayback: true,
-    );
-    final dull = rested || giftFace == _GiftFace.opened;
-    final art = missed
-        ? ColorFiltered(
-            colorFilter: const ColorFilter.matrix(<double>[
-              0.62, 0.2, 0.08, 0, 6,
-              0.16, 0.55, 0.08, 0, 6,
-              0.1, 0.16, 0.48, 0, 4,
-              0, 0, 0, 1, 0,
-            ]),
-            child: picture,
-          )
-        : dull
-            ? ColorFiltered(
-                colorFilter: const ColorFilter.matrix(<double>[
-                  0.55, 0.28, 0.12, 0, 10,
-                  0.18, 0.52, 0.12, 0, 10,
-                  0.12, 0.2, 0.48, 0, 8,
-                  0, 0, 0, 1, 0,
-                ]),
-                child: picture,
-              )
-            : picture;
-
-    Widget frame(double turn, Widget art) => Opacity(
-      opacity: missed ? 0.78 : dull ? 0.72 : 1,
-      child: Transform.translate(
-        offset: Offset(0, bob(turn)),
-        child: Transform.rotate(
-          angle: tilt(turn),
-          child: SizedBox(
-            width: 92,
-            height: 82,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                if (active)
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0x66FFE7A3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xCCFFD56A)
-                              .withValues(alpha: 0.55 + 0.35 * turn),
-                          blurRadius: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-                art,
-                if (station == _Station.hourly && fresh)
-                  Align(
-                    alignment: const Alignment(0, -0.16),
-                    child: CustomPaint(
-                      size: const Size(22, 22),
-                      painter: _ClockPainter(turn),
-                    ),
-                  ),
-                if (chest && motion && active)
-                  CustomPaint(
-                    size: const Size(92, 82),
-                    painter: _SparkPainter(turn),
-                  ),
-                if (claimed)
-                  Positioned(
-                    right: 10,
-                    bottom: 6,
-                    child: Container(
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: SlmColors.navy950,
-                        border: Border.all(
-                          color: SlmColors.emerald300,
-                          width: 1.3,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.check_rounded,
-                        size: 12,
-                        color: SlmColors.emerald300,
-                      ),
-                    ),
-                  ),
-              ],
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 64 * size,
+            height: 64 * size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: glow.withValues(alpha: 0.28),
+              boxShadow: [BoxShadow(color: glow, blurRadius: 16)],
             ),
           ),
-        ),
+          Image.asset(
+            _chestArt,
+            width: 92 * size,
+            height: 82 * size,
+            cacheWidth: 280,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+            gaplessPlayback: true,
+          ),
+          if (keys != null)
+            Positioned(
+              left: 2,
+              top: 0,
+              child: _ToolboxKeyPill(keys: keys!),
+            ),
+        ],
       ),
     );
-
-    // Only a lively prop follows the glow clock, on its own layer; the rest
-    // are built once.
-    final body = lively
-        ? RepaintBoundary(
+    final d = drop;
+    final body = d == null
+        ? still
+        : RepaintBoundary(
             child: AnimatedBuilder(
-              animation: glow,
-              child: art,
-              builder: (context, art) => frame(glow.value, art!),
+              animation: d,
+              child: still,
+              builder: (context, child) {
+                final v = d.value;
+                final fall = Curves.bounceOut.transform((v / 0.6).clamp(0.0, 1.0));
+                final shakeT = ((v - 0.6) / 0.4).clamp(0.0, 1.0);
+                final shake = math.sin(shakeT * math.pi * 6) * 5 * (1 - shakeT);
+                return Opacity(
+                  opacity: (v * 4).clamp(0.0, 1.0),
+                  child: Transform.translate(offset: Offset(shake, (1 - fall) * -140), child: child),
+                );
+              },
             ),
-          )
-        : frame(0.2, art);
-
+          );
     return SlmTactile(
       onTap: onTap,
-      builder: (context, press, child) =>
-          Transform.scale(scale: 1 - 0.05 * press, child: child),
+      semanticLabel: ToolboxLines.name,
+      builder: (context, press, child) => Transform.scale(scale: 1 - 0.05 * press, child: child),
       child: body,
+    );
+  }
+}
+
+/// Key count by a closed lucky toolbox (Material key icon; no key art).
+class _ToolboxKeyPill extends StatelessWidget {
+  final int keys;
+
+  const _ToolboxKeyPill({required this.keys});
+
+  @override
+  Widget build(BuildContext context) {
+    final edge = keys > 0 ? SlmColors.gold300 : const Color(0x99B8C6DC);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: const Color(0xE60A1426),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: edge, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.vpn_key_rounded, size: 11, color: edge),
+          const SizedBox(width: 2),
+          Text(
+            enDigits('$keys'),
+            style: zlText(10.5, weight: FontWeight.w900, color: SlmColors.ivory),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -2841,92 +2668,6 @@ class _FinishMark extends StatelessWidget {
       builder: (context, press, child) =>
           Transform.scale(scale: 1 - 0.05 * press, child: child),
       child: mark,
-    );
-  }
-}
-
-class _ObjectReveal extends StatefulWidget {
-  final String asset;
-  final double endScale;
-  final VoidCallback onDone;
-
-  const _ObjectReveal({
-    required this.asset,
-    required this.endScale,
-    required this.onDone,
-  });
-
-  @override
-  State<_ObjectReveal> createState() => _ObjectRevealState();
-}
-
-class _ObjectRevealState extends State<_ObjectReveal>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _move = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 620),
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    _move.forward().whenComplete(() async {
-      await Future<void>.delayed(const Duration(milliseconds: 140));
-      if (mounted) widget.onDone();
-    });
-  }
-
-  @override
-  void dispose() {
-    _move.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _move,
-      builder: (context, _) {
-        final t = Curves.easeOutBack.transform(_move.value.clamp(0.0, 1.0));
-        final scale = 0.22 + (widget.endScale - 0.22) * t;
-        return Stack(
-          children: [
-            ModalBarrier(
-              color: Colors.black.withValues(alpha: 0.5 * t.clamp(0.0, 1.0)),
-              dismissible: false,
-            ),
-            Center(
-              child: Transform.translate(
-                offset: Offset(0, (1 - t.clamp(0.0, 1.0)) * 120),
-                child: Transform.scale(
-                  scale: scale,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFFD56A)
-                              .withValues(alpha: 0.18 + 0.45 * t.clamp(0.0, 1.0)),
-                          blurRadius: widget.endScale > 1.8 ? 34 : 18,
-                          spreadRadius: 2 * t.clamp(0.0, 1.0),
-                        ),
-                      ],
-                    ),
-                    child: Image.asset(
-                      widget.asset,
-                      width: 96,
-                      height: 84,
-                      cacheWidth: 320,
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.medium,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }
@@ -3092,438 +2833,6 @@ class _KineticWord extends StatelessWidget {
       child: Transform.translate(
         offset: Offset(0, (1 - t) * 16),
         child: Text(word, textAlign: TextAlign.center, style: style),
-      ),
-    );
-  }
-}
-
-class _SparkPainter extends CustomPainter {
-  final double turn;
-
-  const _SparkPainter(this.turn);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Color.fromRGBO(255, 236, 180, 0.25 + 0.55 * turn);
-    canvas.drawCircle(Offset(size.width * 0.22, size.height * 0.18), 1.4, paint);
-    canvas.drawCircle(Offset(size.width * 0.78, size.height * 0.28), 1.1, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SparkPainter oldDelegate) =>
-      oldDelegate.turn != turn;
-}
-
-class _ClockPainter extends CustomPainter {
-  final double turn;
-
-  const _ClockPainter(this.turn);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = size.center(Offset.zero);
-    canvas.drawLine(
-      c,
-      c +
-          Offset(
-            math.cos(turn * math.pi * 2 - 1.2) * 7,
-            math.sin(turn * math.pi * 2 - 1.2) * 7,
-          ),
-      Paint()
-        ..strokeWidth = 1.4
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF1A2744),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _ClockPainter oldDelegate) =>
-      oldDelegate.turn != turn;
-}
-
-/// Interactive in-ladder overlay for touchable side items (_Station props)
-/// that awards live ◆ points into the top HUD and speaks with the Game Mascot.
-class _SideChallengeOverlay extends ConsumerStatefulWidget {
-  final _ActiveSideChallenge active;
-  final bool muted;
-  final VoidCallback onClose;
-
-  const _SideChallengeOverlay({
-    required this.active,
-    required this.muted,
-    required this.onClose,
-  });
-
-  @override
-  ConsumerState<_SideChallengeOverlay> createState() =>
-      _SideChallengeOverlayState();
-}
-
-class _SideChallengeOverlayState extends ConsumerState<_SideChallengeOverlay> {
-  int? _pickedOption;
-  bool _completed = false;
-
-  String get _claimKey => widget.active.claimId;
-
-  bool _claimedIn(GameSave save) =>
-      save.giftsClaimed.contains(_claimKey) || save.giftsClaimed.contains(widget.active.legacyClaimId);
-
-  bool get _alreadyClaimed => _claimedIn(ref.read(gameSaveProvider));
-
-  Future<void> _onCheckTap(Offset globalOrigin) async {
-    if (_completed) {
-      widget.onClose();
-      return;
-    }
-    final ch = widget.active.challenge;
-    final firstTime = !_alreadyClaimed;
-    setState(() => _completed = true);
-    if (firstTime) {
-      await ref.read(gameSaveProvider.notifier).claimGift(_claimKey);
-      await BeatFx.scoreDelta(
-        ref,
-        ch.points,
-        mood: GuideMood.celebrate,
-        originGlobal: globalOrigin,
-        muted: widget.muted,
-      );
-    }
-    ref.read(guideDirectorProvider.notifier).say(
-          mood: GuideMood.celebrate,
-          line: ch.rewardNoteBn,
-          voiceKey: 'ds_exp_right_1',
-          speakVoice: true,
-          muted: widget.muted,
-        );
-  }
-
-  Future<void> _onOptionTap(int index, Offset globalOrigin) async {
-    if (_completed) return;
-    final ch = widget.active.challenge;
-    final ok = index == ch.correctIndex;
-    setState(() {
-      _pickedOption = index;
-      if (ok) _completed = true;
-    });
-    if (ok) {
-      final firstTime = !_alreadyClaimed;
-      if (firstTime) {
-        await ref.read(gameSaveProvider.notifier).claimGift(_claimKey);
-        await BeatFx.scoreDelta(
-          ref,
-          ch.points,
-          mood: GuideMood.celebrate,
-          originGlobal: globalOrigin,
-          muted: widget.muted,
-        );
-      }
-      ref.read(guideDirectorProvider.notifier).say(
-            mood: GuideMood.celebrate,
-            line: ch.rewardNoteBn,
-            voiceKey: 'ds_exp_right_1',
-            speakVoice: true,
-            muted: widget.muted,
-          );
-    } else {
-      await BeatFx.scoreDelta(
-        ref,
-        -5,
-        mood: GuideMood.warn,
-        originGlobal: globalOrigin,
-        muted: widget.muted,
-      );
-      ref.read(guideDirectorProvider.notifier).say(
-            mood: GuideMood.warn,
-            line: ch.wrongFeedbackBn ?? 'আরেকবার ভেবে সঠিক উত্তরটি বেছে নিন!',
-            voiceKey: 'ds_wrong_bhabun',
-            speakVoice: true,
-            muted: widget.muted,
-          );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ch = widget.active.challenge;
-    final claimed = _claimedIn(ref.watch(gameSaveProvider));
-
-    return ColoredBox(
-      color: const Color(0xCC040914),
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(18, 24, 18, 24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 380),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF15243E), Color(0xFF0A1324)],
-                  ),
-                  borderRadius: BorderRadius.circular(26),
-                  border: Border.all(
-                    color:
-                        _completed ? SlmColors.emerald400 : SlmColors.gold400,
-                    width: 1.6,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0xAA000000),
-                      blurRadius: 28,
-                      offset: Offset(0, 12),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: SlmColors.gold400.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(99),
-                              border: Border.all(
-                                color: SlmColors.gold400.withValues(alpha: 0.55),
-                              ),
-                            ),
-                            child: Text(
-                              enDigits(ch.badgeBn),
-                              style: zlText(
-                                12,
-                                weight: FontWeight.w800,
-                                color: SlmColors.gold300,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: widget.onClose,
-                            visualDensity: VisualDensity.compact,
-                            icon: const Icon(
-                              Icons.close_rounded,
-                              color: SlmColors.ivory,
-                              size: 22,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Center(
-                        child: SizedBox(
-                          width: 84,
-                          height: 84,
-                          child: Image.asset(
-                            widget.active.asset,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        enDigits(ch.titleBn),
-                        textAlign: TextAlign.center,
-                        style: zlText(
-                          20,
-                          weight: FontWeight.w900,
-                          color: SlmColors.ivory,
-                          height: 1.22,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        enDigits(ch.bodyBn),
-                        textAlign: TextAlign.center,
-                        style: zlText(
-                          15,
-                          weight: FontWeight.w600,
-                          color: const Color(0xFFD6E0F0),
-                          height: 1.38,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      if (ch.isQuiz) ...[
-                        for (var i = 0; i < ch.optionsBn!.length; i++) ...[
-                          if (i > 0) const SizedBox(height: 8),
-                          Builder(
-                            builder: (_) {
-                              final selected = _pickedOption == i;
-                              final isRight = i == ch.correctIndex;
-                              final showRight = _completed && isRight;
-                              final showWrong = selected && !isRight;
-                              return GestureDetector(
-                                onTapDown: (d) =>
-                                    _onOptionTap(i, d.globalPosition),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 220),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: showRight
-                                        ? const Color(0xFF0F3D2C)
-                                        : showWrong
-                                            ? const Color(0xFF3E161B)
-                                            : const Color(0xFF1D2E4D),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: showRight
-                                          ? SlmColors.emerald300
-                                          : showWrong
-                                              ? SoftDanger.ink
-                                              : SlmColors.gold400
-                                                  .withValues(alpha: 0.45),
-                                      width: 1.4,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        showRight
-                                            ? Icons.check_circle_rounded
-                                            : showWrong
-                                                ? Icons.cancel_rounded
-                                                : Icons.bolt_rounded,
-                                        size: 20,
-                                        color: showRight
-                                            ? SlmColors.emerald300
-                                            : showWrong
-                                                ? SoftDanger.ink
-                                                : SlmColors.gold300,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          enDigits(ch.optionsBn![i]),
-                                          style: zlText(
-                                            14.5,
-                                            weight: FontWeight.w700,
-                                            color: SlmColors.ivory,
-                                            height: 1.3,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ] else ...[
-                        GestureDetector(
-                          onTapDown: (d) => _onCheckTap(d.globalPosition),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 220),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 13,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: _completed
-                                    ? const [
-                                        Color(0xFF124634),
-                                        Color(0xFF0B2B20),
-                                      ]
-                                    : const [
-                                        Color(0xFFF3C969),
-                                        Color(0xFFD4A037),
-                                      ],
-                              ),
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: _completed
-                                    ? SlmColors.emerald300
-                                    : SlmColors.gold200,
-                                width: 1.4,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  _completed
-                                      ? Icons.verified_rounded
-                                      : Icons.touch_app_rounded,
-                                  size: 20,
-                                  color: _completed
-                                      ? SlmColors.emerald300
-                                      : SlmColors.navy950,
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    _completed
-                                        ? enDigits(ch.rewardNoteBn)
-                                        : enDigits(
-                                            claimed
-                                                ? 'আবার যাচাই করুন'
-                                                : ch.checkActionBn,
-                                          ),
-                                    textAlign: TextAlign.center,
-                                    style: zlText(
-                                      14.5,
-                                      weight: FontWeight.w900,
-                                      color: _completed
-                                          ? SlmColors.emerald300
-                                          : SlmColors.navy950,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (_completed) ...[
-                        const SizedBox(height: 12),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: SlmColors.gold400,
-                            foregroundColor: SlmColors.navy950,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          onPressed: widget.onClose,
-                          child: Text(
-                            'মইয়ে ফিরুন',
-                            style: zlText(
-                              15,
-                              weight: FontWeight.w900,
-                              color: SlmColors.navy950,
-                            ),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 10),
-                      const Center(
-                        child: AiLinemanGuide(
-                          sprite: 88,
-                          bubbleWidth: 268,
-                          showBubble: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

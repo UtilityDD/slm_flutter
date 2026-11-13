@@ -148,38 +148,6 @@ class MascotCue {
   String get displayBn => enDigits(textBn);
 }
 
-/// Interactive mini-challenge or pro-tip payload for touchable ladder side items.
-@immutable
-class SideItemChallenge {
-  final String badgeBn;
-  final String titleBn;
-  final String bodyBn;
-  final String checkActionBn;
-  final String rewardNoteBn;
-  final int points;
-  final MascotCue mascotCue;
-
-  /// Optional 2-choice quick quiz for Gift / Identify / Rapid Call props.
-  final List<String>? optionsBn;
-  final int? correctIndex;
-  final String? wrongFeedbackBn;
-
-  const SideItemChallenge({
-    required this.badgeBn,
-    required this.titleBn,
-    required this.bodyBn,
-    required this.checkActionBn,
-    required this.rewardNoteBn,
-    required this.points,
-    required this.mascotCue,
-    this.optionsBn,
-    this.correctIndex,
-    this.wrongFeedbackBn,
-  });
-
-  bool get isQuiz => optionsBn != null && optionsBn!.length >= 2 && correctIndex != null;
-}
-
 /// Centralized natural field-Bangla speech library & voice player for the
 /// unified Game Mascot ("ওস্তাদ লাইনম্যান").
 class MascotSpeechLibrary {
@@ -296,17 +264,17 @@ class MascotSpeechLibrary {
   static const _idleGiftPool = <MascotCue>[
     MascotCue(
       id: 'ladder.idle.gift.1',
-      textBn: 'পাশের গিফট বক্সটা চকচক করছে! ট্যাপ করে বোনাস পয়েন্ট নিয়ে নিন।',
+      textBn: 'পাশে একটা টুলবক্স অপেক্ষা করছে! ট্যাপ করে খুলে দেখুন।',
       mood: GuideMood.glad,
     ),
     MascotCue(
       id: 'ladder.idle.gift.2',
-      textBn: 'ওই দেখুন সারপ্রাইজ বক্স খোলা আছে—ট্যাপ করলেই বোনাস চ্যালেঞ্জ!',
+      textBn: 'ওই দেখুন হঠাৎ উপহার—টুলবক্সটা খুলতে একবার ট্যাপ করুন!',
       mood: GuideMood.inspire,
     ),
     MascotCue(
       id: 'ladder.idle.gift.3',
-      textBn: 'পাশের সরঞ্জাম আর গিফট বক্স ছুঁয়ে দেখুন—ওস্তাদের টিপস ও পয়েন্ট পাবেন!',
+      textBn: 'টুলবক্সটা এখনো বন্ধ—ভেতরে কী আছে, একবার দেখে নিন!',
       mood: GuideMood.talk,
     ),
   ];
@@ -679,248 +647,6 @@ class MascotSpeechLibrary {
 
   /// Random natural idle gag cue for long quiet moments on the ladder.
   static MascotCue randomFunnyIdle() => _funnyIdlePool[_rng.nextInt(_funnyIdlePool.length)];
-
-  /// Builds a rich, interactive in-ladder challenge/tip card for any touchable side item
-  /// (`_Station`) so tapping a prop never kicks the player out to legacy screens.
-  static SideItemChallenge challengeForSideItem({
-    required String stationKind,
-    required String propAsset,
-    required int ladderIndex,
-  }) {
-    // 1. PPE & Equipment Tip Plaques
-    if (stationKind == 'tips') {
-      final key = _propKeyFromAsset(propAsset);
-      final cue = _sidePropCues[key] ?? _sidePropCues['helmet']!;
-      return switch (key) {
-        'gloves' => SideItemChallenge(
-            badgeBn: 'ওস্তাদের টিপস · PPE',
-            titleBn: 'HT Hand Gloves — পিন-হোল চেক',
-            bodyBn: cue.displayBn,
-            checkActionBn: 'হাওয়া ভরে লিক চেক করুন (+5 ◆)',
-            rewardNoteBn: 'এয়ার-লিক চেক সম্পন্ন! গ্লাভস সম্পূর্ণ নিরাপদ।',
-            points: 5,
-            mascotCue: cue,
-          ),
-        'harness' => SideItemChallenge(
-            badgeBn: 'ওস্তাদের টিপস · Fall Arrest',
-            titleBn: 'Full-Body Harness — ২ আঙুলের নিয়ম',
-            bodyBn: cue.displayBn,
-            checkActionBn: 'D-Ring ও বাকল লক চেক করুন (+5 ◆)',
-            rewardNoteBn: 'ডরসাল D-Ring ও ফিতের টান একদম ঠিক আছে!',
-            points: 5,
-            mascotCue: cue,
-          ),
-        'boots' => SideItemChallenge(
-            badgeBn: 'ওস্তাদের টিপস · Footwear',
-            titleBn: 'Dielectric Safety Boots',
-            bodyBn: cue.displayBn,
-            checkActionBn: 'ইনসুলেশন সোল ও গ্রিপ যাচাই করুন (+5 ◆)',
-            rewardNoteBn: 'হাই-ভোল্টেজ ইনসুলেশন সোল অক্ষত আছে!',
-            points: 5,
-            mascotCue: cue,
-          ),
-        'vest' => SideItemChallenge(
-            badgeBn: 'ওস্তাদের টিপস · Arc Safety',
-            titleBn: '100% Cotton Dress & Hi-Vis Vest',
-            bodyBn: cue.displayBn,
-            checkActionBn: 'ফুল-হাতা কটন ও রিফ্লেক্টর চেক করুন (+5 ◆)',
-            rewardNoteBn: 'আর্ক-ফ্ল্যাশ ও রাতের দৃশ্যমানতা নিশ্চিত!',
-            points: 5,
-            mascotCue: cue,
-          ),
-        'lock' => SideItemChallenge(
-            badgeBn: 'ওস্তাদের টিপস · LOTO & PTW',
-            titleBn: 'Padlock, Danger Tag ও লিখিত PTW',
-            bodyBn: cue.displayBn,
-            checkActionBn: 'ব্রেকার লক ও ট্যাগ নিশ্চিত করুন (+5 ◆)',
-            rewardNoteBn: 'LOTO সম্পূর্ণ—এখন কেউ ভুল করে ফিডার চালু করতে পারবে না।',
-            points: 5,
-            mascotCue: cue,
-          ),
-        'rope' => SideItemChallenge(
-            badgeBn: 'ওস্তাদের টিপস · Rigging',
-            titleBn: 'শুকনো Hand-Rope ও পুলি',
-            bodyBn: cue.displayBn,
-            checkActionBn: 'দড়ির গাঁট ও শুকনো ভাব যাচাই করুন (+5 ◆)',
-            rewardNoteBn: 'দড়ি শুকনো ও মজবুত—উপরে টুলস তোলার জন্য তৈরি।',
-            points: 5,
-            mascotCue: cue,
-          ),
-        'cone' => SideItemChallenge(
-            badgeBn: 'ওস্তাদের টিপস · লক্ষ্মণ রেখা',
-            titleBn: 'Traffic Cone ও সেফটি ব্যারিকেড',
-            bodyBn: cue.displayBn,
-            checkActionBn: 'কাজের চারপাশ ঘিরে দিন (+5 ◆)',
-            rewardNoteBn: 'ব্যারিকেড তৈরি! পথচারী ও আপনি দুজনেই নিরাপদ।',
-            points: 5,
-            mascotCue: cue,
-          ),
-        'goggles' => SideItemChallenge(
-            badgeBn: 'ওস্তাদের টিপস · Eye Shield',
-            titleBn: 'Arc-Rated Goggles ও Face Shield',
-            bodyBn: cue.displayBn,
-            checkActionBn: 'লেন্স ও শিল্ড লক যাচাই করুন (+5 ◆)',
-            rewardNoteBn: 'চোখ ও মুখের সুরক্ষা ১০০% নিশ্চিত!',
-            points: 5,
-            mascotCue: cue,
-          ),
-        _ => SideItemChallenge(
-            badgeBn: 'ওস্তাদের টিপস · Head Gear',
-            titleBn: 'Class-E Electrical Helmet',
-            bodyBn: cue.displayBn,
-            checkActionBn: 'চিন-স্ট্র্যাপ ও শেল চেক করুন (+5 ◆)',
-            rewardNoteBn: 'নিশ্ছিদ্র Class-E হেলমেট ও চিন-স্ট্র্যাপ লকড!',
-            points: 5,
-            mascotCue: cue,
-          ),
-      };
-    }
-
-    // 2. Surprise Gift Chest (1-Tap Bonus Field Riddle for +15 ◆)
-    if (stationKind == 'gift') {
-      const riddles = <({String q, List<String> opts, int ans, String ok, String bad})>[
-        (
-          q: '11 kV লাইনে Shutdown ও ব্রেকার অফ করার পর তার ছোঁয়ার আগে প্রথম কাজ কোনটি?',
-          opts: ['হাই-ভোল্টেজ ডিটেক্টরে টেস্ট ও ডিসচার্জ রড ছোঁয়ানো', 'সরাসরি মই লাগিয়ে জাম্পার খোলা'],
-          ans: 0,
-          ok: 'একদম ঠিক! ডেড লাইনেও ক্যাপাসিটিভ চার্জ থাকে—আগে টেস্ট ও ডিসচার্জ!',
-          bad: 'ব্রেকার অফ থাকলেও ক্যাপাসিটিভ চার্জ বা ব্যাক-ফিডে প্রাণঘাতী শক লাগতে পারে!',
-        ),
-        (
-          q: 'সিমেন্টের (PCC) পোলে ওঠার আগে হাতুড়ি ঠুকে কেমন শব্দ পেলে বুঝবেন পোলটি ভেতর থেকে ফাঁপা ও বিপজ্জনক?',
-          opts: ['পরিষ্কার নিরেট ঠক্-ঠক্ শব্দ', 'ভোঁতা ফাঁপা দপ্-দপ্ শব্দ'],
-          ans: 1,
-          ok: 'সাবাশ! ফাঁপা দপ্-দপ্ শব্দ মানেই ভেতরে ফাটল বা রড ক্ষয়—ওই পোলে ওঠা মানা!',
-          bad: 'ঠক্-ঠক্ মানে নিরেট পোল, কিন্তু ভোঁতা দপ্-দপ্ শব্দ মানেই পোল ভেতর থেকে ফাঁপা!',
-        ),
-        (
-          q: 'ডিসচার্জ রড ব্যবহারের সময় কোন ক্ল্যাম্পটি সবার আগে লাগাতে হয়?',
-          opts: ['আগে মাটির Earth Spike-এ ক্ল্যাম্প, পরে লাইনের তারে হুক', 'আগে লাইনের তারে হুক, পরে মাটিতে আর্থ ক্ল্যাম্প'],
-          ans: 0,
-          ok: 'ওস্তাদের জবাব! আগে মাটি, পরে লাইন—নইলে চার্জ আপনার শরীর দিয়ে নামবে!',
-          bad: 'সর্বনাশ! আগে মাটিতে আর্থ ক্ল্যাম্প না লাগিয়ে তার ছুঁলে চার্জ শরীর দিয়ে প্রবাহিত হবে!',
-        ),
-        (
-          q: 'সহকর্মী ছেঁড়া তারে শক খেয়ে আটকে থাকলে প্রথম কাজ কী?',
-          opts: ['খালি হাতে টেনে সরানো বা শরীরে কাদা মাখানো', 'মেইন সুইচ অফ করা বা শুকনো ফাইবারগ্লাস/কাঠ দিয়ে তার সরানো'],
-          ans: 1,
-          ok: 'একদম সঠিক! নিজে নিরাপদ থেকে শুকনো অপরিবাহী কাঠি দিয়ে উৎস আলাদা করে CPR শুরু করতে হবে।',
-          bad: 'খালি হাতে ছুঁলে আপনিও শক খাবেন, আর কাদা মাখানো মারাত্মক কুসংস্কার!',
-        ),
-      ];
-      final pick = riddles[ladderIndex % riddles.length];
-      return SideItemChallenge(
-        badgeBn: 'সারপ্রাইজ গিফট বক্স · +15 ◆',
-        titleBn: 'বোনাস ফিল্ড চ্যালেঞ্জ',
-        bodyBn: enDigits(pick.q),
-        checkActionBn: 'উত্তর লক করুন (+15 ◆)',
-        rewardNoteBn: enDigits(pick.ok),
-        points: 15,
-        mascotCue: cueFor(MascotCueId.sideGiftOpen),
-        optionsBn: pick.opts.map(enDigits).toList(growable: false),
-        correctIndex: pick.ans,
-        wrongFeedbackBn: enDigits(pick.bad),
-      );
-    }
-
-    // 3. Identify / Quick Call Station (In-Ladder 1-Tap Decision for +10 ◆)
-    if (stationKind == 'identify' || stationKind == 'hourly') {
-      const drills = <({String badge, String title, String q, List<String> opts, int ans, String ok, String bad})>[
-        (
-          badge: 'কুইক স্পটার · +10 ◆',
-          title: 'সঠিক টেস্টার চিনুন',
-          q: '11 kV ওভারহেড লাইন ডেড কি না দেখতে কোন টেস্টার ব্যবহার করবেন?',
-          opts: ['বাড়ির 230V নিয়ন স্ক্রু-ড্রাইভার টেস্টার', 'সেলফ-টেস্ট করা 11 kV HV Detector ও Hot Stick'],
-          ans: 1,
-          ok: 'সঠিক! নিয়ন টেস্টার 11 kV-এ ধরলে বিস্ফোরণ ঘটে—সবসময় HV Detector ও Hot Stick নেবেন।',
-          bad: '230V নিয়ন টেস্টার হাই-ভোল্টেজ লাইনে ধরলে আর্ক ফ্ল্যাশ ও বিস্ফোরণ ঘটবে!',
-        ),
-        (
-          badge: 'কুইক কল · +10 ◆',
-          title: 'হঠাৎ কালবৈশাখী ও বজ্রপাত',
-          q: 'পোলের ওপরে কাজ করার সময় হঠাৎ কালো মেঘ ও বজ্রপাত শুরু হলে কী করবেন?',
-          opts: ['তাড়াতাড়ি কাজ শেষ করে নামবেন', 'সঙ্গে সঙ্গে কাজ থামিয়ে টুলস নামিয়ে নিরাপদ আশ্রয়ে যাবেন'],
-          ans: 1,
-          ok: 'বুদ্ধিমানের সিদ্ধান্ত! বজ্রপাত লাইনের তার বেয়ে মুহূর্তে পোলে চলে আসে।',
-          bad: 'ঝড় ও বজ্রপাতের সময় পোলে থাকা চরম ঝুঁকিপূর্ণ—তৎক্ষণাৎ নিচে নেমে আসতে হয়!',
-        ),
-        (
-          badge: 'কুইক স্পটার · +10 ◆',
-          title: 'আর্থিং খোলার সঠিক ক্রম',
-          q: 'কাজ শেষে পোর্টেবল আর্থিং খোলার সময় কোন ক্রমটি মেনে চলবেন?',
-          opts: ['প্রথমে তারের ফেজ ক্ল্যাম্প খুলবেন, সবার শেষে মাটির আর্থ ক্ল্যাম্প', 'প্রথমে মাটির আর্থ ক্ল্যাম্প খুলে পরে তারের ক্ল্যাম্প খুলবেন'],
-          ans: 0,
-          ok: 'একদম নিখুঁত! লাগানোর সময় আগে মাটি পরে লাইন; খোলার সময় আগে লাইন, শেষে মাটি!',
-          bad: 'আগে মাটির ক্ল্যাম্প খুললে লাইনের ইনডাকশন কারেন্ট সরাসরি আপনার হাতে শক দেবে!',
-        ),
-      ];
-      final pick = drills[ladderIndex % drills.length];
-      return SideItemChallenge(
-        badgeBn: pick.badge,
-        titleBn: pick.title,
-        bodyBn: enDigits(pick.q),
-        checkActionBn: 'সিদ্ধান্ত নিন (+10 ◆)',
-        rewardNoteBn: enDigits(pick.ok),
-        points: 10,
-        mascotCue: cueFor(
-          stationKind == 'identify' ? MascotCueId.sideIdentifyPrompt : MascotCueId.sideHourlyPrompt,
-        ),
-        optionsBn: pick.opts.map(enDigits).toList(growable: false),
-        correctIndex: pick.ans,
-        wrongFeedbackBn: enDigits(pick.bad),
-      );
-    }
-
-    // 4. Life Skill / Pocket Rule Station (+5 ◆)
-    const rules = <({String title, String body, String check, String voice})>[
-      (
-        title: 'ফোনের কথায় কখনো লাইনে হাত নয়',
-        body: 'ফোনে কেউ "লাইন বন্ধ আছে" বললেও লিখিত PTW, ব্রেকারে LOTO তালা এবং নিজের চোখে ডিসচার্জ ও আর্থিং ছাড়া তার ছোঁবেন না।',
-        check: 'শপথ নিলাম — লিখিত PTW ছাড়া কাজ নয় (+5 ◆)',
-        voice: 'ds_l8_start',
-      ),
-      (
-        title: 'দুই প্রান্তে আর্থিং — Equipotential Zone',
-        body: 'কাজের জায়গার শুধু একদিকে আর্থিং করলে অন্য পাশের সোলার বা জেনারেটর ব্যাক-ফিড আটকাবে না। উজান ও ভাটি—দুই দিকেই আর্থিং করুন।',
-        check: 'বুঝেছি — দুদিকে আর্থিং বাধ্যতামূলক (+5 ◆)',
-        voice: 'ds_l6_no_earth',
-      ),
-      (
-        title: 'স্টিল পোলের গোড়ার মরিচা ও টন-টন শব্দ',
-        body: 'স্টিল পোল বাইরে থেকে শক্ত দেখালেও মাটির নিচে কলারের কাছে জং ধরে পাতলা হয়ে যায়। হাতুড়ি ঠুকে পরিষ্কার টন-টন শব্দ শুনে তবেই উঠুন।',
-        check: 'গোড়া ও শব্দ চেক করে উঠব (+5 ◆)',
-        voice: 'ds_l13_ok_hammer',
-      ),
-    ];
-    final pick = rules[ladderIndex % rules.length];
-    return SideItemChallenge(
-      badgeBn: 'সোনার নিয়ম · +5 ◆',
-      titleBn: pick.title,
-      bodyBn: enDigits(pick.body),
-      checkActionBn: enDigits(pick.check),
-      rewardNoteBn: 'সোনার নিয়মটি আপনার ঝুলিতে যোগ হলো!',
-      points: 5,
-      mascotCue: MascotCue(
-        id: 'side.rule.$ladderIndex',
-        textBn: pick.body,
-        mood: GuideMood.inspire,
-        voiceKey: pick.voice,
-      ),
-    );
-  }
-
-  static String _propKeyFromAsset(String asset) {
-    final lower = asset.toLowerCase();
-    if (lower.contains('gloves')) return 'gloves';
-    if (lower.contains('harness')) return 'harness';
-    if (lower.contains('boots')) return 'boots';
-    if (lower.contains('vest')) return 'vest';
-    if (lower.contains('lock')) return 'lock';
-    if (lower.contains('rope')) return 'rope';
-    if (lower.contains('cone')) return 'cone';
-    if (lower.contains('goggles')) return 'goggles';
-    return 'helmet';
-  }
 
   // ===========================================================================
   // 5. NATURAL FIELD BANGLA NORMALIZER (FOR LEARN CARDS & QUIZZES)

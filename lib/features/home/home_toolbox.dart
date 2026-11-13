@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
+import '../life_skills/life_skills_menu_row.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_providers.dart';
 import '../training/training_screen.dart';
@@ -77,7 +78,7 @@ Future<void> openHomeToolbox(BuildContext context) {
                   );
                 },
               ),
-              // LifeSkillsMenuRow goes here (director wires it)
+              const LifeSkillsMenuRow(),
               _ToolRow(
                 icon: Icons.phone_in_talk_rounded,
                 label: tr(bn, 'জরুরি নম্বর', 'Emergency'),

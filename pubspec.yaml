@@ -221,6 +221,11 @@ flutter:
     - assets/guide/mascot/
     - assets/guide/mascot/rival/
     - assets/duty_slip/world3d/
+    - assets/life_skills/
+    - assets/life_skills/lessons/
+    - assets/life_skills/questions/
+    - assets/life_skills/cards/
+    - assets/life_skills/images/
     - assets/brand/
     - assets/safety/library/ab-cable-items/
     - assets/safety/library/insulators/

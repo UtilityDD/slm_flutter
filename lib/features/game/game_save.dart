@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' show Offset;
 
@@ -51,6 +52,9 @@ class GameSave {
 
   /// Best stars (1–3) earned on each rung.
   final Map<String, int> starsByRung;
+
+  /// "ভাগ্যের টুলবক্স": keys from finished levels, pity counter, pending boosts.
+  final ToolboxSave toolbox;
   final bool migratedFromDs;
 
   const GameSave({
@@ -75,6 +79,7 @@ class GameSave {
     this.clearedSinceDeath = const [],
     this.nearMissUsed = false,
     this.starsByRung = const {},
+    this.toolbox = const ToolboxSave(),
     required this.migratedFromDs,
   });
 
@@ -116,6 +121,7 @@ class GameSave {
     List<String>? clearedSinceDeath,
     bool? nearMissUsed,
     Map<String, int>? starsByRung,
+    ToolboxSave? toolbox,
     bool? migratedFromDs,
   }) {
     return GameSave(
@@ -140,6 +146,7 @@ class GameSave {
       clearedSinceDeath: clearedSinceDeath ?? this.clearedSinceDeath,
       nearMissUsed: nearMissUsed ?? this.nearMissUsed,
       starsByRung: starsByRung ?? this.starsByRung,
+      toolbox: toolbox ?? this.toolbox,
       migratedFromDs: migratedFromDs ?? this.migratedFromDs,
     );
   }
@@ -166,6 +173,7 @@ class GameSave {
         'clearedSinceDeath': clearedSinceDeath,
         'nearMissUsed': nearMissUsed,
         'starsByRung': starsByRung,
+        'toolbox': toolbox.toJson(),
         'migratedFromDs': migratedFromDs,
       };
 
@@ -230,9 +238,205 @@ class GameSave {
           for (final e in (json['weakByLesson'] as Map).entries)
             if (e.value is List) e.key.toString(): [for (final v in e.value as List) v.toString()],
       },
+      toolbox: json['toolbox'] is Map
+          ? ToolboxSave.fromJson(Map<String, dynamic>.from(json['toolbox'] as Map))
+          : const ToolboxSave(),
       migratedFromDs: json['migratedFromDs'] as bool? ?? false,
     );
   }
+}
+
+/// Lucky-toolbox switches. Keys are paused (owner revising the design,
+/// 2026-11-13): while [keysEnabled] is false no level earns keys and a chest
+/// opens without one. Tests may flip it.
+abstract final class ToolboxFlags {
+  static bool keysEnabled = false;
+}
+
+/// Keys a rung's best result earns for the lucky toolbox: 1–2 stars = 1, 3 stars = 2.
+int toolboxKeysForStars(int stars) => stars <= 0 ? 0 : (stars >= 3 ? 2 : 1);
+
+/// A Learn rung has no stars: a pass = 1 key, a clean 100 % = 2 (its top result).
+int toolboxKeysForLearnMark(int? mark) => (mark ?? 0) >= 100 ? 2 : 1;
+
+/// A sudden chest ("হঠাৎ উপহার") waiting on the ladder until it is opened.
+/// It drops after the first clear of [rungId] and stands beside the NEXT
+/// rung; it never expires. Its one-time claim id is [claimId].
+@immutable
+class PendingChest {
+  const PendingChest({required this.rungId, this.tier = 'wood', this.gate = false});
+
+  /// The rung whose first clear dropped it (the chest stands one rung above).
+  final String rungId;
+
+  /// Starting tier name: `wood`, `silver` or `gold` (a gate chest starts at silver).
+  final String tier;
+
+  /// Dropped by a module gate: always holds a not-yet-won life skill.
+  final bool gate;
+
+  String get claimId => toolboxChestClaimId(rungId);
+
+  Map<String, dynamic> toJson() => {'rungId': rungId, 'tier': tier, if (gate) 'gate': true};
+
+  factory PendingChest.fromJson(Map<String, dynamic> j) => PendingChest(
+        rungId: j['rungId'] as String? ?? '',
+        tier: j['tier'] as String? ?? 'wood',
+        gate: j['gate'] as bool? ?? false,
+      );
+}
+
+/// The one-time id of the chest dropped by [rungId]'s first clear (kept in
+/// [GameSave.giftsClaimed] once opened, beside the old `station_*` ids).
+String toolboxChestClaimId(String rungId) => 'chest@$rungId';
+
+/// At most this many ordinary chests wait at once (a gate chest always drops).
+const kToolboxMaxWaiting = 3;
+
+/// A first clear drops a chest about 1 in [kToolboxDropOneIn] times…
+const kToolboxDropOneIn = 3;
+
+/// …and at least once every [kToolboxDropEvery] first clears.
+const kToolboxDropEvery = 4;
+
+/// Stable 32-bit FNV-1a hash (String.hashCode is not stable across runs).
+int toolboxSeed(String s) {
+  var h = 0x811c9dc5;
+  for (final c in s.codeUnits) {
+    h = ((h ^ c) * 0x01000193) & 0xffffffff;
+  }
+  return h;
+}
+
+/// Does the first clear of [rungId] drop a chest? Seeded by the rung id and
+/// the save's first-clear counter [clearNo], so the same save always gives
+/// the same answer. A gate always drops (silver); otherwise about 1 in 3,
+/// guaranteed when [sinceDrop] first clears in a row gave none (every 4th),
+/// and never while [waiting] ordinary chests already fill the ladder.
+PendingChest? toolboxChestDrop({
+  required String rungId,
+  required int clearNo,
+  required int sinceDrop,
+  required int waiting,
+}) {
+  if (rungId.endsWith('/gate')) return PendingChest(rungId: rungId, tier: 'silver', gate: true);
+  if (waiting >= kToolboxMaxWaiting) return null;
+  final due = sinceDrop >= kToolboxDropEvery - 1;
+  if (due || toolboxSeed('$rungId#$clearNo') % kToolboxDropOneIn == 0) return PendingChest(rungId: rungId);
+  return null;
+}
+
+/// "ভাগ্যের টুলবক্স" state (lucky toolbox on the ladder). Old saves load with zeros.
+@immutable
+class ToolboxSave {
+  const ToolboxSave({
+    this.keys = 0,
+    this.keysByRung = const {},
+    this.opens = 0,
+    this.sinceRare = 0,
+    this.shields = 0,
+    this.doubleNext = false,
+    this.badge = false,
+    this.chests = const [],
+    this.firstClears = 0,
+    this.sinceDrop = 0,
+    this.lifeSkills = const [],
+  });
+
+  /// Keys in hand (one opens one chest).
+  final int keys;
+
+  /// Keys already earned per rung id (best result only; a better replay pays the difference).
+  final Map<String, int> keysByRung;
+
+  /// Chests opened so far.
+  final int opens;
+
+  /// Opens since the last Rare-or-better prize (pity counter).
+  final int sinceRare;
+
+  /// Pending shields: each forgives one small slip in a Do level.
+  final int shields;
+
+  /// ×2 ◆ waits for the next completed level.
+  final bool doubleNext;
+
+  /// The rare toolbox badge is owned.
+  final bool badge;
+
+  /// Sudden chests waiting on the ladder (oldest first).
+  final List<PendingChest> chests;
+
+  /// First clears so far (seeds the drop roll).
+  final int firstClears;
+
+  /// First clears since the last drop (the every-4th guarantee).
+  final int sinceDrop;
+
+  /// Life skills won (ids from life_skills_data.dart), in the order won.
+  final List<String> lifeSkills;
+
+  ToolboxSave copyWith({
+    int? keys,
+    Map<String, int>? keysByRung,
+    int? opens,
+    int? sinceRare,
+    int? shields,
+    bool? doubleNext,
+    bool? badge,
+    List<PendingChest>? chests,
+    int? firstClears,
+    int? sinceDrop,
+    List<String>? lifeSkills,
+  }) =>
+      ToolboxSave(
+        keys: keys ?? this.keys,
+        keysByRung: keysByRung ?? this.keysByRung,
+        opens: opens ?? this.opens,
+        sinceRare: sinceRare ?? this.sinceRare,
+        shields: shields ?? this.shields,
+        doubleNext: doubleNext ?? this.doubleNext,
+        badge: badge ?? this.badge,
+        chests: chests ?? this.chests,
+        firstClears: firstClears ?? this.firstClears,
+        sinceDrop: sinceDrop ?? this.sinceDrop,
+        lifeSkills: lifeSkills ?? this.lifeSkills,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'keys': keys,
+        'keysByRung': keysByRung,
+        'opens': opens,
+        'sinceRare': sinceRare,
+        'shields': shields,
+        'doubleNext': doubleNext,
+        'badge': badge,
+        'chests': [for (final c in chests) c.toJson()],
+        'firstClears': firstClears,
+        'sinceDrop': sinceDrop,
+        'lifeSkills': lifeSkills,
+      };
+
+  factory ToolboxSave.fromJson(Map<String, dynamic> j) => ToolboxSave(
+        keys: (j['keys'] as num?)?.toInt() ?? 0,
+        keysByRung: {
+          if (j['keysByRung'] is Map)
+            for (final e in (j['keysByRung'] as Map).entries)
+              if (e.value is num) e.key.toString(): (e.value as num).toInt(),
+        },
+        opens: (j['opens'] as num?)?.toInt() ?? 0,
+        sinceRare: (j['sinceRare'] as num?)?.toInt() ?? 0,
+        shields: (j['shields'] as num?)?.toInt() ?? 0,
+        doubleNext: j['doubleNext'] as bool? ?? false,
+        badge: j['badge'] as bool? ?? false,
+        chests: [
+          for (final raw in (j['chests'] as List? ?? const []))
+            if (raw is Map && raw['rungId'] is String) PendingChest.fromJson(Map<String, dynamic>.from(raw)),
+        ],
+        firstClears: (j['firstClears'] as num?)?.toInt() ?? 0,
+        sinceDrop: (j['sinceDrop'] as num?)?.toInt() ?? 0,
+        lifeSkills: [for (final v in (j['lifeSkills'] as List? ?? const [])) v.toString()],
+      );
 }
 
 /// One entry in "আমার ভুলের খাতা".
@@ -428,7 +632,12 @@ class GameSaveController extends Notifier<GameSave> {
   /// score in [GameSave.points] (the latest play counts, not the sum of plays).
   /// Returns the change to the main ◆, which may be negative.
   Future<int> commitLevelScore(String rungId, int score, {Offset? originGlobal}) async {
-    final s = score < 0 ? 0 : score;
+    var s = score < 0 ? 0 : score;
+    // Lucky toolbox ×2: doubles one cleared level's committed score, once.
+    if (s > 0 && state.toolbox.doubleNext && state.rungProgress[rungId] == 'cleared') {
+      s *= 2;
+      state = state.copyWith(toolbox: state.toolbox.copyWith(doubleNext: false));
+    }
     final prev = state.levelScoreByRung[rungId] ?? 0;
     state = state.copyWith(levelScoreByRung: {...state.levelScoreByRung, rungId: s});
     final delta = s - prev;
@@ -520,7 +729,13 @@ class GameSaveController extends Notifier<GameSave> {
     await _persist();
   }
 
+  /// The sudden chest dropped by the latest first clear, for the ladder's
+  /// one-shot drop. The ladder takes it (sets it back to null) when it plays it.
+  PendingChest? lastChestDrop;
+
   Future<void> markRungCleared(String rungId, {int? score}) async {
+    // Only a rung's very first clear can drop a chest ('prove' = passed before a fall).
+    final firstClear = rungId.isNotEmpty && state.rungProgress[rungId] == null;
     final progress = Map<String, String>.from(state.rungProgress)..[rungId] = 'cleared';
     final since = isFallableRung(rungId) && !state.clearedSinceDeath.contains(rungId)
         ? [...state.clearedSinceDeath, rungId]
@@ -530,14 +745,104 @@ class GameSaveController extends Notifier<GameSave> {
       final prev = best[rungId] ?? 0;
       if (score > prev) best[rungId] = score;
     }
-    state = state.copyWith(
-      rungProgress: progress,
-      bestByRung: best,
-      safeStreak: state.safeStreak + 1,
-      currentRungId: rungId,
-      clearedSinceDeath: since,
+    state = _withToolboxKeys(
+      state.copyWith(
+        rungProgress: progress,
+        bestByRung: best,
+        safeStreak: state.safeStreak + 1,
+        currentRungId: rungId,
+        clearedSinceDeath: since,
+      ),
+      rungId,
+      // A Do/gate clear is worth at least 1 key; its stars may lift it to 2.
+      isFallableRung(rungId) ? 1 : toolboxKeysForLearnMark(state.bestMarkByRung[rungId]),
     );
+    if (firstClear) state = _withChestDrop(state, rungId);
     await _persist();
+  }
+
+  /// Rolls the sudden chest for [rungId]'s first clear ([toolboxChestDrop]).
+  GameSave _withChestDrop(GameSave s, String rungId) {
+    final t = s.toolbox;
+    if (s.giftsClaimed.contains(toolboxChestClaimId(rungId)) || t.chests.any((c) => c.rungId == rungId)) return s;
+    final drop = toolboxChestDrop(
+      rungId: rungId,
+      clearNo: t.firstClears,
+      sinceDrop: t.sinceDrop,
+      waiting: t.chests.where((c) => !c.gate).length,
+    );
+    if (drop != null) lastChestDrop = drop;
+    return s.copyWith(
+      toolbox: t.copyWith(
+        firstClears: t.firstClears + 1,
+        sinceDrop: drop == null ? t.sinceDrop + 1 : 0,
+        chests: drop == null ? null : [...t.chests, drop],
+      ),
+    );
+  }
+
+  /// Gives the keys [rungId]'s best result is worth ([target]) minus what it
+  /// already earned, so each rung pays once for its best result.
+  GameSave _withToolboxKeys(GameSave s, String rungId, int target) {
+    if (!ToolboxFlags.keysEnabled || rungId.isEmpty) return s;
+    final had = s.toolbox.keysByRung[rungId] ?? 0;
+    if (target <= had) return s;
+    return s.copyWith(
+      toolbox: s.toolbox.copyWith(
+        keys: s.toolbox.keys + (target - had),
+        keysByRung: {...s.toolbox.keysByRung, rungId: target},
+      ),
+    );
+  }
+
+  /// Uses one pending lucky-toolbox shield (a small slip is forgiven).
+  /// Synchronous so a strike can ask it; saves in the background.
+  bool useToolboxShield() {
+    final t = state.toolbox;
+    if (t.shields <= 0) return false;
+    state = state.copyWith(toolbox: t.copyWith(shields: t.shields - 1));
+    unawaited(_persist());
+    return true;
+  }
+
+  /// Opens the lucky toolbox [claimId]: marks it opened (never twice), takes
+  /// its waiting chest off the ladder, moves the pity counter and grants the
+  /// prize and any [lifeSkills]; [coins] go through [addPoints].
+  /// With keys on ([ToolboxFlags.keysEnabled]) it also spends one key and
+  /// refuses without one. Returns false and changes nothing when it cannot
+  /// open. The check and the mark happen before any await.
+  Future<bool> openToolbox(
+    String claimId, {
+    required bool rareOrBetter,
+    int coins = 0,
+    bool shield = false,
+    bool doubleNext = false,
+    bool badge = false,
+    List<String> lifeSkills = const [],
+    Offset? originGlobal,
+  }) async {
+    final t = state.toolbox;
+    final keys = ToolboxFlags.keysEnabled;
+    if ((keys && t.keys <= 0) || state.giftsClaimed.contains(claimId)) return false;
+    state = state.copyWith(
+      giftsClaimed: [...state.giftsClaimed, claimId],
+      toolbox: t.copyWith(
+        chests: [for (final c in t.chests) if (c.claimId != claimId) c],
+        lifeSkills: [...t.lifeSkills, for (final id in lifeSkills) if (!t.lifeSkills.contains(id)) id],
+        keys: keys ? t.keys - 1 : t.keys,
+        opens: t.opens + 1,
+        sinceRare: rareOrBetter ? 0 : t.sinceRare + 1,
+        shields: shield ? t.shields + 1 : t.shields,
+        doubleNext: t.doubleNext || doubleNext,
+        badge: t.badge || badge,
+      ),
+    );
+    if (coins > 0) {
+      await addPoints(coins, originGlobal: originGlobal);
+    } else {
+      await _persist();
+    }
+    return true;
   }
 
   Future<void> setCurrentRung(String rungId) async {
@@ -598,11 +903,21 @@ class GameSaveController extends Notifier<GameSave> {
     await _persist();
   }
 
+  /// Hears every finished play: a Do/gate play's stars (below) and a Learn
+  /// play's mark (from the Learn runners). Set by the monthly league
+  /// (`rank/league_service.dart`); null in tests.
+  static void Function(String rungId, {int? stars, int? mark})? onPlayResult;
+
   /// Keeps the best stars (1–3) of a rung; returns true when this is a new best.
   Future<bool> recordStars(String rungId, int stars) async {
     final s = stars.clamp(0, 3);
+    onPlayResult?.call(rungId, stars: s);
     if (s <= (state.starsByRung[rungId] ?? 0)) return false;
-    state = state.copyWith(starsByRung: {...state.starsByRung, rungId: s});
+    state = _withToolboxKeys(
+      state.copyWith(starsByRung: {...state.starsByRung, rungId: s}),
+      rungId,
+      toolboxKeysForStars(s),
+    );
     await _persist();
     return true;
   }

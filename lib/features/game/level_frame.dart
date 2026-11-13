@@ -14,6 +14,7 @@ import '../zero_loss/zero_loss_fx.dart';
 import 'game_save.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
+import 'toolbox_shield.dart';
 
 // The shared frame of every Do level (owner's brief, 2026-11-07):
 // - the guide comes first, full screen, and tells the task (like ladder
@@ -50,6 +51,8 @@ mixin DoStrikeOut<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// Counts a small mistake; true when it was the third.
   bool strike(DoMistake m) {
     if (struckOut) return true;
+    // A lucky-toolbox shield forgives this slip: not counted (toolbox_shield.dart).
+    if (toolboxShieldSaves(ref, context)) return false;
     strikes++;
     if (strikes >= kStrikesToFail) {
       strikeOutBy = m;
