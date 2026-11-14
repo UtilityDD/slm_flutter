@@ -1,15 +1,12 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../emergency/emergency_directory_screen.dart';
 import '../home/home_screen.dart';
 import '../identify/identify_screen.dart';
 import '../more/more_screen.dart';
 import '../quizzes/identify_quiz_screen.dart';
-import '../radio/radio_mini_player.dart';
-import '../radio/radio_player_provider.dart';
 import '../rank/rank_screen.dart';
 import '../sops/sops_screen.dart';
 import '../admin/admin_screen.dart';
@@ -19,20 +16,19 @@ import '../design_preview/premium_rank_preview.dart';
 import 'app_routes.dart';
 import 'shell_insets.dart';
 
-class MainShell extends ConsumerStatefulWidget {
+class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
   @override
-  ConsumerState<MainShell> createState() => _MainShellState();
+  State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends ConsumerState<MainShell> {
+class _MainShellState extends State<MainShell> {
   final _navKey = GlobalKey<NavigatorState>();
   final _heroController = MaterialApp.createMaterialHeroController();
 
   @override
   Widget build(BuildContext context) {
-    final radioOn = ref.watch(radioProvider).isVisible;
     final dockInset = MediaQuery.viewPaddingOf(context).bottom;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -56,16 +52,6 @@ class _MainShellState extends ConsumerState<MainShell> {
                 ),
               ),
             ),
-            if (radioOn)
-              const Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: SafeArea(
-                  top: false,
-                  child: RadioMiniPlayer(),
-                ),
-              ),
           ],
         ),
       ),
