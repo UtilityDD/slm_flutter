@@ -94,7 +94,17 @@ BEGIN
       ('public', 'user_lessons', 'user_id'),
       ('public', 'reading_progress', 'user_id'),
       ('public', 'notifications', 'user_id'),
-      ('public', 'feedback', 'user_id')
+      ('public', 'feedback', 'user_id'),
+      -- found by the CHECK query on the live project (2026-11-14): these point at
+      -- auth.users / profiles with NO ACTION, so they must go before the profile
+      ('public', 'safety_hero_entries', 'user_id'),
+      ('public', 'safety_reports', 'user_id'),
+      -- old admin backup copies that still hold the member's rows
+      ('public', 'backup_profiles_progress', 'user_id'),
+      ('public', 'backup_quiz_attempts', 'user_id'),
+      ('public', '_trash_backup_hourly_cheat_20260620', 'user_id'),
+      ('public', '_trash_score_repair_backup_attempts', 'user_id'),
+      ('public', '_trash_score_repair_backup_profiles', 'user_id')
     ) AS t(sch, tbl, col)
   LOOP
     -- Real tables only (r = table, p = partitioned); a view of the same name is skipped.
