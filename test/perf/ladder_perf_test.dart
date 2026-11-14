@@ -30,6 +30,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -57,6 +58,9 @@ class _CountingDirector extends GuideDirector {
 class _Rebuilds {
   final byType = <String, int>{};
   int total = 0;
+
+  /// Frames that had a frame scheduled before they were pumped.
+  int framesWanted = 0;
 
   void start() {
     byType.clear();
@@ -144,6 +148,7 @@ Future<_Rebuilds> _measureFrames(WidgetTester tester, {double seconds = 2}) asyn
   final r = _Rebuilds()..start();
   final frames = (seconds * 60).round();
   for (var i = 0; i < frames; i++) {
+    if (tester.binding.hasScheduledFrame) r.framesWanted++;
     await tester.pump(const Duration(milliseconds: 16));
   }
   r.stop();
@@ -174,7 +179,7 @@ Future<void> _idle(WidgetTester tester, Duration d) async {
 void _report(String label, _Rebuilds r) {
   final top = r.byType.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
   // ignore: avoid_print
-  print('[ladder-perf] $label: total=${r.total} '
+  print('[ladder-perf] $label: frames wanted ${r.framesWanted}, total=${r.total} '
       '_MapBand=${r.of('_MapBand')} _TopHeader=${r.of('_TopHeader')} '
       'LadderGuideHost=${r.of('LadderGuideHost')} AdventureWorld=${r.of('AdventureWorld')} '
       '_DepthStrip=${r.of('_DepthStrip')} top=${top.take(8).map((e) => '${e.key}:${e.value}').join(', ')}');
@@ -222,6 +227,31 @@ void main() {
     final r = await _measureFrames(tester);
     _report('after nudge ended, 2s', r);
     expect(r.of('_MapBand'), lessThanOrEqualTo(4));
+    // The spell is over and nobody touched the ladder: its loops rest
+    // (before the calm: 120/120 frames, ~7 rebuilds each). The guide's
+    // blinks run on a Timer and rebuild only its face.
+    expect(r.framesWanted, 0);
+    expect(r.total, lessThan(20));
+
+    // A touch wakes the ladder, and it calms again after the next spell.
+    await tester.tap(find.byType(ListView), warnIfMissed: false);
+    final woke = await _measureFrames(tester, seconds: 0.5);
+    _report('after a tap, 0.5s', woke);
+    expect(woke.framesWanted, greaterThan(20), reason: 'the coin and the glow move again');
+    await _idle(tester, const Duration(seconds: 75));
+    final calm = await _measureFrames(tester);
+    _report('calm again, 2s', calm);
+    expect(calm.framesWanted, 0);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('idle calm: the live coin rests too, 40 rungs in', (tester) async {
+    await _pumpLadder(tester, cleared: 40);
+    await _idle(tester, const Duration(seconds: 75));
+    final r = await _measureFrames(tester);
+    _report('40 cleared, after the spell, 2s', r);
+    expect(r.framesWanted, 0);
+    expect(SchedulerBinding.instance.transientCallbackCount, 0, reason: 'no ticker left running');
     await tester.pumpWidget(const SizedBox());
   });
 

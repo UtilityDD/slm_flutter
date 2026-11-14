@@ -169,6 +169,17 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   var _programmaticScroll = false;
   final _nudgeRng = math.Random();
 
+  /// The ladder's loops (glow, gleam, motes, the live coin, shimmer, the
+  /// finish shield) rest once an idle nudge spell ends untouched; the next
+  /// touch wakes them. An idle ladder then draws no frames (AGENTS §1).
+  final _calm = SlmMotionSettings();
+
+  void _setCalm(bool calm) {
+    if (_calm.paused == calm) return;
+    calm ? _calm.pause() : _calm.play();
+    _syncLoops();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -189,7 +200,11 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   /// Glow and gleam loop only while looping motion is allowed (slmLoopsOn);
   /// TickerMode already mutes them while another route covers the ladder.
   void _syncLoops() {
-    if (slmLoopsOn(context)) {
+    if (slmLoopsOn(context) && _calm.paused) {
+      // Idle calm: frozen where they are, no snap.
+      _glow.stop();
+      _ascent.stop();
+    } else if (slmLoopsOn(context)) {
       if (!_glow.isAnimating) _glow.repeat(reverse: true);
       if (!_ascent.isAnimating) _ascent.repeat();
     } else {
@@ -270,6 +285,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   }
 
   void _armIdle() {
+    _setCalm(false);
     _nudgeCycles = 0;
     _nudgeSounded = false;
     _idleTimer?.cancel();
@@ -373,7 +389,12 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   void _startIdleNudge() {
     if (!mounted || !slmLoopsOn(context)) return;
     if (_reply != null || _sideBusy) return;
-    if (MascotTalk.active.value) return;
+    if (MascotTalk.active.value) {
+      // The guide is talking: try again later (so the spell, and the calm
+      // after it, still come).
+      _armIdle();
+      return;
+    }
     if (_nudgeIndex != null) return;
     if (!_ladderVisible()) {
       // A lesson or quiz is on top: check again later, stay silent now.
@@ -392,6 +413,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       if (_nudgeCycles >= _nudgeMaxCycles || !_ladderVisible()) {
         // Done for this idle spell; the next touch re-arms it.
         _clearNudge();
+        if (_nudgeCycles >= _nudgeMaxCycles) _setCalm(true);
         return;
       }
       if (MascotTalk.active.value || _reply != null || _sideBusy) {
@@ -490,6 +512,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     _glow.dispose();
     _ascent.dispose();
     _nudgePulse.dispose();
+    _calm.dispose();
     _mist.dispose();
     _shake.dispose();
     _drop.dispose();
@@ -871,6 +894,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
               onPointerDown: (_) {
                 _activePointers++;
                 _springBackTimer?.cancel();
+                if (_calm.paused) _armIdle();
               },
               onPointerUp: (_) {
                 _activePointers = math.max(0, _activePointers - 1);
@@ -907,7 +931,8 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                                 (1 - _shake.value),
                         0,
                       ),
-                      child: child,
+                      // The bands' coins, shimmer and shield follow the calm.
+                      child: SlmMotionScope(settings: _calm, child: child!),
                     ),
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (n) {
@@ -2216,9 +2241,13 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 420),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _syncLoops();
-    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Also told when "remove animations" or the ladder's calm changes.
+    _syncLoops();
   }
 
   @override
@@ -2233,11 +2262,15 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
   }
 
   void _syncLoops() {
-    final quiet = !widget.motion || MediaQuery.disableAnimationsOf(context);
+    final quiet = !widget.motion || slmReduceMotion(context);
     final liveCurrent = widget.current && !widget.locked && !widget.soon;
-    if (liveCurrent && !quiet) {
+    if (liveCurrent && !quiet && slmLoopsOn(context)) {
       if (!_breath.isAnimating) _breath.repeat(reverse: true);
       if (!_spin.isAnimating) _spin.repeat();
+    } else if (liveCurrent && !quiet) {
+      // A paused motion scope (the ladder's calm) freezes it where it is.
+      _breath.stop();
+      _spin.stop();
     } else {
       _breath.stop();
       _breath.value = liveCurrent ? 0.55 : 0;
@@ -2255,7 +2288,7 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
   }
 
   void _onTap() {
-    final quiet = !widget.motion || MediaQuery.disableAnimationsOf(context);
+    final quiet = !widget.motion || slmReduceMotion(context);
     final live = !widget.locked && !widget.soon;
     if (!quiet && live && (widget.current || widget.cleared)) {
       _flash.forward(from: 0);
