@@ -13,6 +13,7 @@ class LinemanProfile {
   final String? district;
   final String? block;
   final String? job;
+  final String? phone;
 
   /// True after an admin verifies. Null means the column is not on this row yet.
   final bool? verified;
@@ -37,6 +38,7 @@ class LinemanProfile {
     this.district,
     this.block,
     this.job,
+    this.phone,
     this.verified,
     this.blocked = false,
     this.isGuest = false,
@@ -64,6 +66,7 @@ class LinemanProfile {
       district: json['district'] as String?,
       block: json['block'] as String?,
       job: json['job'] as String?,
+      phone: (json['phone_number'] ?? json['phone'])?.toString(),
       verified: json.containsKey('verified') ? json['verified'] == true : null,
       blocked: json['blocked'] == true,
       isGuest: false,
@@ -118,6 +121,7 @@ class LinemanProfile {
       district: district,
       block: block,
       job: job,
+      phone: phone,
       verified: value,
       blocked: blocked,
       isGuest: isGuest,

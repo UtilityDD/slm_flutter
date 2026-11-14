@@ -81,6 +81,7 @@ class MoreScreen extends ConsumerWidget {
                                     blockReady ? () => showBlockSheet(context, ref) : null,
                                   ),
                                   _TileSpec(tr(bn, 'কাজ', 'Job'), _shown(profile?.job), () => showJobSheet(context, ref)),
+                                  _TileSpec(tr(bn, 'ফোন', 'Phone'), _shown(profile?.phone), () => showPhoneSheet(context, ref)),
                                 ],
                         ),
                         if (!guest) ...[

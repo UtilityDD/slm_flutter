@@ -41,7 +41,15 @@ Future<bool> saveProfileFields(String id, Map<String, dynamic> fields) async {
     await SupabaseService.client.from('profiles').update(fields).eq('id', id);
     return true;
   } catch (_) {
-    return false;
+    if (!fields.containsKey('phone_number')) return false;
+    final next = Map<String, dynamic>.from(fields)..remove('phone_number');
+    next['phone'] = fields['phone_number'];
+    try {
+      await SupabaseService.client.from('profiles').update(next).eq('id', id);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }
 
@@ -61,6 +69,18 @@ Future<void> showNameSheet(BuildContext context, WidgetRef ref) {
     initial: ref.read(authProvider).profile?.fullName ?? '',
     field: 'full_name',
     keyboard: TextInputType.name,
+  );
+}
+
+Future<void> showPhoneSheet(BuildContext context, WidgetRef ref) {
+  return _showTextSheet(
+    context,
+    ref,
+    titleBn: 'ফোন',
+    titleEn: 'Phone',
+    initial: ref.read(authProvider).profile?.phone ?? '',
+    field: 'phone_number',
+    keyboard: TextInputType.phone,
   );
 }
 

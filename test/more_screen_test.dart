@@ -143,8 +143,7 @@ void main() {
       expect(ys[i], greaterThan(ys[i - 1]), reason: '${order[i]} comes after ${order[i - 1]}');
     }
     // Profile tiles and the league switch stay.
-    expect(find.text('ফোন'), findsNothing, reason: 'the app no longer asks for or shows a phone number');
-    for (final t in ['নাম', 'জেলা', 'ব্লক', 'কাজ', 'বোর্ডে আমার নাম দেখান']) {
+    for (final t in ['নাম', 'জেলা', 'ব্লক', 'কাজ', 'ফোন', 'বোর্ডে আমার নাম দেখান']) {
       expect(find.text(t), findsOneWidget, reason: t);
     }
     expect(find.text('পরিচিতি'), findsNothing);
