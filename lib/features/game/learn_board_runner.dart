@@ -1503,6 +1503,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                                       left: 4,
                                       bottom: 4,
                                       child: AiLinemanGuide(
+                                        keepBubble: true,
                                         sprite: 148,
                                         bubbleWidth: 210,
                                         showBubble: true,
@@ -1960,6 +1961,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
             index: 1,
             rise: 22,
             child: AiLinemanGuide(
+              keepBubble: true,
               sprite: 196,
               bubbleWidth: 280,
               showBubble: true,
@@ -2293,6 +2295,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
           index: 0,
           rise: 18,
           child: AiLinemanGuide(
+            keepBubble: true,
             sprite: 168,
             bubbleWidth: 240,
             showBubble: true,
@@ -2767,6 +2770,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
           ],
           const SizedBox(height: 20),
           AiLinemanGuide(
+            keepBubble: true,
             sprite: 168,
             bubbleWidth: 220,
             showBubble: true,

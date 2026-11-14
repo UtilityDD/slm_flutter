@@ -29,6 +29,10 @@ class AiLinemanGuide extends ConsumerStatefulWidget {
   final bool centered;
   final VoidCallback? onTap;
 
+  /// Keep the bubble up for as long as the line stands (a learn board asks
+  /// its round's question in it). Otherwise it fades after the voice.
+  final bool keepBubble;
+
   const AiLinemanGuide({
     super.key,
     this.sprite = 96,
@@ -40,6 +44,7 @@ class AiLinemanGuide extends ConsumerStatefulWidget {
     this.overrideLine,
     this.centered = true,
     this.onTap,
+    this.keepBubble = false,
   });
 
   @override
@@ -107,6 +112,14 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   /// Smooth transition weight between silent rest pose (0) and active speech rig (1).
   late final AnimationController _talkBlend;
   late final AnimationController _touchPop;
+
+  /// Speech bubble fade (1 = shown). It fades about 1.5 s after the voice
+  /// ends, or after a reading time when no voice plays; a new line or a tap
+  /// shows it again. [AiLinemanGuide.keepBubble] holds it.
+  late final AnimationController _bubbleFade;
+  Timer? _bubbleTimer;
+  var _bubbleGone = false;
+  String? _bubbleKey;
 
   String _faceA = 'coach_ready';
   String _faceB = 'coach_ready';
@@ -318,6 +331,11 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       vsync: this,
       duration: const Duration(milliseconds: 380),
     );
+    _bubbleFade = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+      value: 1,
+    )..addStatusListener(_onBubbleFade);
     _rig.addListener(_countLaps);
     _rig.addStatusListener(_onRigStatus);
     MascotTalk.active.addListener(_onTalkChanged);
@@ -346,7 +364,78 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     }
     _syncMouth();
     _syncRig();
+    _armBubble();
     if (mounted) setState(() {});
+  }
+
+  /// How long a line stays up when no voice plays (muted, no clip, no engine).
+  static Duration bubbleReadTime(String line) =>
+      Duration(milliseconds: (900 + line.trim().length * 70).clamp(2500, 7000));
+
+  /// After the voice ends the line stays this long, then fades.
+  static const bubbleAfterVoice = Duration(milliseconds: 1500);
+
+  /// The line on screen (set from the build).
+  var _activeLine = '';
+
+  /// A new line (or a tap): show the bubble and arm its fade.
+  void _showBubble() {
+    _bubbleTimer?.cancel();
+    _bubbleTimer = null;
+    _voiceSeen = false;
+    if (_bubbleGone) {
+      _bubbleGone = false;
+      if (mounted && SchedulerBinding.instance.schedulerPhase != SchedulerPhase.persistentCallbacks) {
+        setState(() {});
+      }
+    }
+    _bubbleFade.value = 1;
+    _armBubble();
+  }
+
+  /// The voice played for the line on screen.
+  var _voiceSeen = false;
+
+  /// While he speaks the bubble stays. When the voice ends it fades after
+  /// [bubbleAfterVoice]; when no voice plays, after [bubbleReadTime].
+  void _armBubble() {
+    if (widget.keepBubble || _bubbleGone || _activeLine.trim().isEmpty) {
+      _bubbleTimer?.cancel();
+      _bubbleTimer = null;
+      return;
+    }
+    if (_isSpeaking) {
+      _voiceSeen = true;
+      _bubbleTimer?.cancel();
+      _bubbleTimer = null;
+      if (_bubbleFade.status == AnimationStatus.reverse) _bubbleFade.value = 1;
+      return;
+    }
+    if (_voiceSeen) {
+      _bubbleTimer?.cancel();
+      _bubbleTimer = Timer(bubbleAfterVoice, _fadeBubble);
+    } else {
+      _bubbleTimer ??= Timer(bubbleReadTime(_activeLine), _fadeBubble);
+    }
+  }
+
+  void _fadeBubble() {
+    _bubbleTimer = null;
+    if (!mounted || widget.keepBubble) return;
+    if (!_loopsOn || slmReduceMotion(context)) {
+      _bubbleFade.value = 0;
+    } else {
+      unawaited(_bubbleFade.reverse());
+    }
+  }
+
+  /// The bubble under its fade (a held bubble needs none).
+  Widget _fading(Widget bubble) =>
+      widget.keepBubble ? bubble : FadeTransition(opacity: _bubbleFade, child: bubble);
+
+  void _onBubbleFade(AnimationStatus status) {
+    if (status != AnimationStatus.dismissed || !mounted || _bubbleGone) return;
+    setState(() => _bubbleGone = true);
   }
 
   var _talkChangePending = false;
@@ -443,13 +532,29 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     HapticFeedback.selectionClick();
     _touchPop.forward(from: 0);
     _syncRig(kick: true);
+    // The line again (most levels also re-say the task on a tap).
+    if (_activeLine.trim().isNotEmpty) _showBubble();
     widget.onTap?.call();
+  }
+
+  @override
+  void didUpdateWidget(AiLinemanGuide old) {
+    super.didUpdateWidget(old);
+    if (old.keepBubble != widget.keepBubble) {
+      if (widget.keepBubble) {
+        _bubbleGone = false;
+        _bubbleFade.value = 1;
+      }
+      _armBubble();
+    }
   }
 
   @override
   void dispose() {
     MascotTalk.active.removeListener(_onTalkChanged);
     _eyeTimer?.cancel();
+    _bubbleTimer?.cancel();
+    _bubbleFade.dispose();
     _rig.removeListener(_countLaps);
     _rig.removeStatusListener(_onRigStatus);
     _rig.dispose();
@@ -524,11 +629,20 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     String line,
     GuideGesture gesture,
     int token,
+    int lineToken,
     bool hasEntrance, {
     required bool reduce,
   }) {
     final targetFace = _baseFace(mood, speaking: _isSpeaking);
     _crossTo(targetFace);
+
+    // Every new line shows the bubble (a repeated say counts as new).
+    _activeLine = line;
+    final bubbleKey = line.trim().isEmpty ? null : (widget.overrideLine != null ? 'o:$line' : '$lineToken:$line');
+    if (bubbleKey != _bubbleKey) {
+      _bubbleKey = bubbleKey;
+      if (bubbleKey != null) _showBubble();
+    }
 
     final overrideChanged = widget.overrideMood != null &&
         (widget.overrideMood != _lastOverrideMood ||
@@ -683,6 +797,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       activeLine,
       activeGesture,
       guide.token,
+      guide.lineToken,
       guide.entrance != null,
       reduce: reduce,
     );
@@ -787,6 +902,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
               children: [
                 if (widget.showBubble &&
                     activeLine.isNotEmpty &&
+                    (widget.keepBubble || !_bubbleGone) &&
                     widget.bubbleOpacity > 0.02) ...[
                   Opacity(
                     opacity: widget.bubbleOpacity.clamp(0.0, 1.0),
@@ -795,7 +911,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
                         0,
                         (1 - widget.bubbleOpacity.clamp(0.0, 1.0)) * 8,
                       ),
-                      child: _GuideBubble(
+                      child: _fading(_GuideBubble(
                         key: ValueKey(activeLine),
                         line: enDigits(activeLine),
                         warn: warn,
@@ -805,7 +921,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
                         rigPhase: rigT,
                         maxWidth: widget.bubbleWidth,
                         tailRight: !widget.centered,
-                      ),
+                      )),
                     ),
                   ),
                   const SizedBox(height: 5),

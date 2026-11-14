@@ -67,6 +67,10 @@ class GuideState {
   final GuideEntranceKind? entrance;
   final bool levelFocus;
 
+  /// Bumped by every [GuideDirector.say] (not by react/gesture beats), so the
+  /// guide shows his bubble again for each new line, even a repeated one.
+  final int lineToken;
+
   const GuideState({
     required this.mood,
     required this.gesture,
@@ -74,6 +78,7 @@ class GuideState {
     required this.token,
     this.entrance,
     this.levelFocus = false,
+    this.lineToken = 0,
   });
 
   static const quiet = GuideState(
@@ -99,6 +104,7 @@ class GuideState {
         token: token ?? this.token,
         entrance: clearEntrance ? null : (entrance ?? this.entrance),
         levelFocus: levelFocus ?? this.levelFocus,
+        lineToken: lineToken,
       );
 }
 
@@ -106,6 +112,7 @@ class GuideDirector extends Notifier<GuideState> {
   static const _welcomeDayKey = 'guide_last_welcome_day_v1';
 
   int _token = 0;
+  int _lineToken = 0;
   DateTime _lastInspire = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastGag = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastPoke = DateTime.fromMillisecondsSinceEpoch(0);
@@ -194,6 +201,7 @@ class GuideDirector extends Notifier<GuideState> {
       token: _token,
       entrance: entrance,
       levelFocus: state.levelFocus,
+      lineToken: ++_lineToken,
     );
     if (speakVoice && cleanLine.trim().isNotEmpty && !muted) {
       unawaited(MascotSpeechLibrary.speak(cleanLine, voiceKey: voiceKey, muted: muted));
@@ -280,6 +288,7 @@ class GuideDirector extends Notifier<GuideState> {
       line: state.line,
       token: _token,
       levelFocus: state.levelFocus,
+      lineToken: state.lineToken,
     );
   }
 
