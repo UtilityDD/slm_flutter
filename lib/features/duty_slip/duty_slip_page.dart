@@ -745,6 +745,8 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
   }
 
   Future<void> _confirmExit() async {
+    // Back closes an open ladder card (reply card / lucky toolbox) before it asks to leave.
+    if (AdventureMap.closeOpenCard()) return;
     final e = _engine;
     final onLadder = e == null || e.onRoad || e.covering || e.listing || e.showingResult;
     final bn = ProviderScope.containerOf(context).read(languageProvider);
