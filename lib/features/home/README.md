@@ -1,12 +1,12 @@
 # Home
 
-One-button Home on the navy backdrop: name, verify tick, বাং / EN switch, score and death count in the corners, the toolbox button, and the **মৃত্যুহীন পথ** shield button (`AnimatedSafetyShield` + real Bangla text).
+One-tap Home on the navy backdrop: ◆ score and 💀 deaths (the level top bar's chips) and the toolbox button on top; the name with a status chip (`✓ যাচাইকৃত`, `⏳ যাচাই চলছে` → verify sheet, guests `সাইন ইন করুন` → `/login`); the "continue" card (the next rung `L<n>`, `মডিউল <m>`, the module's progress bar and stars, a still `AnimatedSafetyShield`); one gold button `চলুন, L<n>`; the line "ঘরে আপনার জন্য কেউ অপেক্ষা করছে।"; and chips shown only when true (`🎁 <n>টি উপহার অপেক্ষা করছে`, `🏆 জেলায় #<k>`). When every open rung is cleared the card says "সব খোলা ধাপ শেষ! নতুন মডিউল শীঘ্রই আসছে". An idle Home draws no frames.
 
 ## Flow
 
-Shield button → `PathIntroPage` → `PathFearPage` (first open of the day, or after 4 hours: `PathFearGate`) → `DutySlipPage(startOnRoad: true)`, which opens on the ladder. Home reloads `gameSaveProvider` when the player comes back.
+Brand splash (cold start only, ≤ 1.5 s, tap to skip; `lib/features/startup/brand_intro.dart`) → Home → gold button → `DutySlipPage`, which opens on the ladder already scrolled to the current rung (a waiting gift chest nearby stays in view). The gift chip opens the ladder at the chest (`DutySlipPage(anchor:)`). The next rung comes from `ladder_focus.dart` (`lib/features/duty_slip/`), the same code the ladder uses for its current rung. Home reloads `gameSaveProvider` when the player comes back. The intro and skull pages were removed on purpose (owner, Nov 2026).
 
-The toolbox (`home_toolbox.dart`) is one sheet shared by Home, the intro and the fear page. It opens `/rank`, `/identify`, `/emergency` and `/more`.
+The toolbox (`home_toolbox.dart`) is Home's sheet. It opens `/rank`, `/identify`, `/emergency` and `/more`.
 
 ## Files
 
@@ -14,7 +14,6 @@ The toolbox (`home_toolbox.dart`) is one sheet shared by Home, the intro and the
 |---|---|
 | `home_screen.dart` | Home layout |
 | `home_toolbox.dart` | Toolbox button and sheet |
-| `path_intro_page.dart`, `path_fear_page.dart`, `path_fear_gate.dart` | Pages before the ladder |
 | `lesson_reader_page.dart`, `lesson_rich_text.dart` | Lesson body and media markup (opened from `TrainingScreen`) |
 | `lesson_quiz_page.dart`, `quiz_turn_card.dart`, `lesson_quiz_sfx.dart` | End-of-lesson quiz |
 | `lesson_quiz_store.dart` | Lesson quiz download with a disk copy (works offline once fetched). A lesson never clears without its quiz |

@@ -8,7 +8,7 @@ Package `slm_flutter`. Android application id `com.smartlineman.lineman`. Launch
 
 ## What the app is
 
-One game. Home has one button, **মৃত্যুহীন পথ**. It opens a ladder of Learn and Do rungs with rank gates, a death count, falls back to the module checkpoint, and the emerald at the top. The full design is in [`GAME_DESIGN.md`](GAME_DESIGN.md).
+One game. Home shows the next rung and one button, **চলুন, L<n>**. It opens the **মৃত্যুহীন পথ** ladder of Learn and Do rungs with rank gates, a death count, falls back to the module checkpoint, and the emerald at the top. The full design is in [`GAME_DESIGN.md`](GAME_DESIGN.md).
 
 Around the game, from the Home toolbox or ladder stations: Identify (gear photo library and charts), Rank (monthly board), Emergency numbers, Settings, hourly quiz, identify quiz, Supabase lessons (`TrainingScreen`), PPE checklist and 8 মন্ত্র.
 

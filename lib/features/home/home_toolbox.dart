@@ -8,7 +8,7 @@ import '../shell/app_routes.dart';
 import '../shell/shell_providers.dart';
 import '../training/training_screen.dart';
 
-/// Same gold circle used on Home, the intro, and the fear page.
+/// Home's gold toolbox circle (36 dp drawn, 48 dp to tap).
 class HomeToolboxButton extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -19,21 +19,26 @@ class HomeToolboxButton extends StatelessWidget {
     return SlmPressable(
       onTap: onTap,
       semanticLabel: 'টুলবক্স',
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6)),
-          color: SlmColors.navy950.withValues(alpha: 0.45),
+      child: SizedBox.square(
+        dimension: slmTapTarget,
+        child: Center(
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6)),
+              color: SlmColors.navy950.withValues(alpha: 0.45),
+            ),
+            child: const Icon(Icons.apps_rounded, size: 18, color: SlmColors.gold200),
+          ),
         ),
-        child: const Icon(Icons.apps_rounded, size: 18, color: SlmColors.gold200),
       ),
     );
   }
 }
 
-/// Opens the shared toolbox sheet from any of the three path pages.
+/// Opens Home's toolbox sheet.
 Future<void> openHomeToolbox(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,

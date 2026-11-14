@@ -1,4 +1,4 @@
-// The toolbox sheet (Home, intro and fear pages): exactly four rows, in order
+// The toolbox sheet (Home): exactly four rows, in order
 // র‍্যাঙ্ক, আমার পাঠ, জরুরি নম্বর, সেটিংস. No language toggle, no পরিচিতি.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

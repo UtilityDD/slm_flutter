@@ -1,6 +1,7 @@
-// The brand intro over the app (drawn in code): it plays once with its sound,
-// then fades into the app; the skip chip, reduced motion and a missing sound
-// all end in the app; the drawing paints at every moment of its timeline.
+// The brand splash over the app (drawn in code): the lockup beat plays once
+// with its sound and fades into the app within 1.5 s; a tap anywhere, reduced
+// motion and a missing sound all end in the app; the drawing paints at every
+// moment of its timeline.
 import 'dart:async';
 import 'dart:ui' as ui;
 
@@ -10,8 +11,13 @@ import 'package:slm_flutter/features/startup/brand_intro.dart';
 
 class _Sound implements IntroSound {
   var played = 0, stopped = 0;
+  Duration? from;
   @override
-  Future<void> play() async => played++;
+  Future<void> play({Duration from = Duration.zero}) async {
+    played++;
+    this.from = from;
+  }
+
   @override
   Future<void> stop() async => stopped++;
 }
@@ -21,30 +27,31 @@ Widget _app(IntroSound sound, {Future<void> Function(BuildContext)? warmUp}) => 
     );
 
 void main() {
-  testWidgets('plays once with its sound, then fades into the app', (t) async {
+  testWidgets('plays once with its sound from the lockup, gone within 1.5 s', (t) async {
     final s = _Sound();
     await t.pumpWidget(_app(s));
     expect(find.byType(IntroOverlay), findsOneWidget);
     await t.pump();
     expect(s.played, 1);
-    await t.pump(const Duration(seconds: 3));
-    expect(find.byType(IntroOverlay), findsOneWidget, reason: 'still playing at 3 s');
-    await t.pump(const Duration(milliseconds: 2600));
-    await t.pumpAndSettle();
+    expect(s.from, Duration(milliseconds: (IntroOverlay.from * 1000).round()));
+    await t.pump(const Duration(milliseconds: 800));
+    expect(find.byType(IntroOverlay), findsOneWidget, reason: 'still playing at 0.8 s');
+    // Frame by frame, as a phone: the layer must be gone by 1.5 s.
+    for (var ms = 800; ms < IntroOverlay.total.inMilliseconds + 32; ms += 16) {
+      await t.pump(const Duration(milliseconds: 16));
+    }
     expect(find.byType(IntroOverlay), findsNothing);
     expect(find.text('app'), findsOneWidget);
     expect(s.stopped, 0, reason: 'the last hit plays on as the app appears');
   });
 
-  testWidgets('the skip chip comes after a moment, stops the sound and leaves', (t) async {
+  testWidgets('a tap anywhere stops the sound and leaves at once', (t) async {
     final s = _Sound();
     await t.pumpWidget(_app(s));
-    await t.pump(const Duration(milliseconds: 600));
-    expect(find.text(IntroGate.skipBn), findsNothing);
-    await t.pump(IntroGate.skipAfter);
-    expect(find.text(IntroGate.skipBn), findsOneWidget);
-    await t.tap(find.text(IntroGate.skipBn));
-    await t.pumpAndSettle();
+    await t.pump(const Duration(milliseconds: 100));
+    await t.tapAt(const Offset(40, 300));
+    await t.pump();
+    await t.pump(IntroOverlay.fade + const Duration(milliseconds: 50));
     expect(find.byType(IntroOverlay), findsNothing);
     expect(s.stopped, 1);
   });
@@ -69,8 +76,9 @@ void main() {
     }));
     await t.pump();
     expect(started, 1);
-    await t.pump(const Duration(seconds: 6));
+    await t.pump(const Duration(seconds: 2));
     await t.pumpAndSettle();
+    expect(find.byType(IntroOverlay), findsNothing, reason: 'Home shows while the warm-up runs on');
     expect(find.text('app'), findsOneWidget);
     expect(started, 1);
     warm.complete();

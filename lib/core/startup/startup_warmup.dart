@@ -9,12 +9,13 @@ import '../../features/training/training_provider.dart';
 import '../../features/zero_loss/zero_loss_fx.dart';
 import 'startup_trace.dart';
 
-/// The work the player would otherwise wait for on the first taps, done
-/// while the brand intro plays (~6 s on every cold start; `IntroGate`).
+/// The work the player would otherwise wait for on the first taps, started
+/// with the brand splash (≤ 1.5 s on a cold start; `IntroGate`) and running
+/// on under Home when it needs longer.
 /// Nothing here holds the app: each step has a time limit and swallows its
-/// errors, the network step runs on after the intro if it must, and every
+/// errors, steps run on after the splash if they must, and every
 /// step is timed in [StartupTrace.background] as `warm:<name>`.
-/// Local work goes first, with a frame's pause between steps so the video
+/// Local work goes first, with a frame's pause between steps so the splash
 /// keeps its frames.
 ///
 /// - `catalog`: the ladder's content catalog (170 KB JSON) — the map opens

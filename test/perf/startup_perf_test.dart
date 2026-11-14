@@ -183,10 +183,19 @@ void main() {
         'assets ${firstFrameAssets.length} ${firstFrameAssets.toSet()}, prefs loads $firstFramePrefs; '
         'first second: ${firstSecond.length} assets $firstSecond, prefs loads $_prefsLoads');
 
-    // Home shows the shield (3 layers) after AssetManifest; no JSON, sounds or
-    // other screens' art may load at startup.
+    // Home shows the shield (3 layers) after AssetManifest; no sounds or
+    // other screens' art may load at startup. One JSON is allowed since the
+    // Nov 2026 home redesign: Home's card names the next rung (`L<n>`, its
+    // module's progress), which needs the ladder catalog. Home reads it after
+    // its first frame (never in it, checked below) — the same file the
+    // warm-up preloads under the splash in the app.
+    const catalog = 'assets/game/catalog/content_catalog.json';
+    expect(firstFrameAssets, isNot(contains(catalog)), reason: 'the first frame stays light');
     final unexpected = firstSecond.where((k) =>
-        k != 'AssetManifest.bin' && !k.startsWith('assets/brand/') && !k.startsWith('assets/fonts/'));
+        k != 'AssetManifest.bin' &&
+        k != catalog &&
+        !k.startsWith('assets/brand/') &&
+        !k.startsWith('assets/fonts/'));
     expect(unexpected, isEmpty, reason: 'only Home art may load in the first second');
     expect(_prefsLoads, lessThanOrEqualTo(1), reason: 'SharedPreferences is loaded once and shared');
 

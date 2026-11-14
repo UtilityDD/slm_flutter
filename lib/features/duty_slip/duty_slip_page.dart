@@ -134,7 +134,10 @@ class DutySlipPage extends StatefulWidget {
   /// on the ladder; the old death cover is gone.
   final bool startOnRoad;
 
-  const DutySlipPage({super.key, this.startOnRoad = false});
+  /// Ladder index to open the map at (Home's gift chip); null: the current rung.
+  final int? anchor;
+
+  const DutySlipPage({super.key, this.startOnRoad = false, this.anchor});
 
   @override
   State<DutySlipPage> createState() => _DutySlipPageState();
@@ -303,6 +306,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     final engine = DutySlipEngine(pack);
     await engine.loadPersistedState();
     engine.openRoad();
+    engine.ladderAnchor = widget.anchor;
     if (!mounted) return;
     setState(() {
       _engine = engine;

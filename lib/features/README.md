@@ -5,7 +5,7 @@ One folder per product area. The app is one game: Home → the মৃত্য�
 | Folder | What |
 |---|---|
 | `shell` | `MainShell`: nested `Navigator`, Android back via `NavigatorPopHandler`, Hero controller, named routes (`app_routes.dart`), `languageProvider` + `tr()`, `ShellDockScope` bottom inset |
-| `home` | Home screen, toolbox sheet, path intro / fear pages, lesson reader + quiz, read-aloud TTS. See [`home/README.md`](home/README.md) |
+| `home` | Home screen (next-rung card → ladder), toolbox sheet, lesson reader + quiz, read-aloud TTS. See [`home/README.md`](home/README.md) |
 | `duty_slip` | The ladder (`adventure_map.dart`) and the 33 duty levels. See [`duty_slip/README.md`](duty_slip/README.md) |
 | `game` | Data-driven ladder: `content_catalog.dart` (reads `assets/game/catalog/content_catalog.json`), `ladder_builder.dart`, `game_save.dart` (local points, deaths, current rung), `learn_runner.dart` (Learn rungs), `beat_fx.dart` (score fly, death moment), `game_exit_sheet.dart` |
 | `guide` | AI Line Man guide face and its director on the ladder |

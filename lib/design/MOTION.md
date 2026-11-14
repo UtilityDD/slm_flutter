@@ -41,7 +41,7 @@ All in `motion/slm_motion_scope.dart`:
 
 `SlmMotionScope` / `SlmMotionSettings` (pause, loops off, `replayEntrances()`) exist, but no screen installs one. Without a scope, loops play unless "remove animations" is on.
 
-Not yet on the policy (fix when you touch them): about 20 `.repeat(` calls in `lib/features` (duty slip, dress-up, ladder, path fear, celebration, quiz turn card) and direct `MediaQuery.disableAnimationsOf` reads in `duty_slip_page.dart`, `path_fear_page.dart` and `learn_runner.dart`. Duty slip also has `DsMotionGate` (`duty_slip_page.dart`), which drops its own effects to a `lite` tier when frames run slow.
+Not yet on the policy (fix when you touch them): about 20 `.repeat(` calls in `lib/features` (duty slip, dress-up, ladder, celebration, quiz turn card) and direct `MediaQuery.disableAnimationsOf` reads in `duty_slip_page.dart` and `learn_runner.dart`. Duty slip also has `DsMotionGate` (`duty_slip_page.dart`), which drops its own effects to a `lite` tier when frames run slow.
 
 ## Keeping motion cheap
 

@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/theme/app_theme.dart';
 
-// The brand intro on every cold start, drawn in code (vector): crisp on any
+// The brand splash on a cold start, drawn in code (vector): crisp on any
 // screen and on exactly the app's navy, so the native launch screen (navy +
 // logo, tool/brand_assets.py), this intro and the app join without a seam.
 // It recreates the owner's intro video (blueprint dial → the gear's 12 teeth
@@ -17,9 +17,14 @@ import '../../core/theme/app_theme.dart';
 // that video). The logo geometry is measured from the app icon
 // (assets/brand/source/app_icon_512.png, 512 px units, centre 256).
 //
-// The app (Home) builds underneath meanwhile; [IntroGate.warmUp] loads what
-// the first taps would wait for. Skippable after a moment; reduced motion
-// shows the still lockup briefly; never blocks the app.
+// Since the "home → one tap → ladder" redesign (Nov 2026) only the last
+// beat plays: the logo settles into the lockup and the title and Bangla line
+// are revealed ([IntroOverlay.from] → [IntroOverlay.until], 1.2 s, then a
+// 0.3 s fade: at most 1.5 s), with the soundtrack from the same moment so
+// its last hit lands as Home appears. A tap anywhere skips it. The app
+// (Home) builds underneath meanwhile; [IntroGate.warmUp] loads what the
+// first taps would wait for and runs on after the splash if it needs to.
+// Reduced motion shows the still lockup briefly; never blocks the app.
 
 /// The brand navy (the logo's own background, as the native launch screen).
 const introNavy = Color(0xFF0E162B);
@@ -30,7 +35,8 @@ const _titleWhite = Color(0xFFF0F3FE);
 
 /// The intro's sound; swapped for a silent one in tests.
 abstract class IntroSound {
-  Future<void> play();
+  /// Plays the soundtrack from [from] (the splash starts late in it).
+  Future<void> play({Duration from = Duration.zero});
   Future<void> stop();
 }
 
@@ -38,13 +44,13 @@ class AssetIntroSound implements IntroSound {
   AudioPlayer? _player;
 
   @override
-  Future<void> play() async {
+  Future<void> play({Duration from = Duration.zero}) async {
     try {
       final p = _player = AudioPlayer()..positionUpdater = null;
       await p.setAudioContext(AudioContextConfig(focus: AudioContextConfigFocus.mixWithOthers).build());
       await p.setReleaseMode(ReleaseMode.release);
       await p.setVolume(0.8);
-      await p.play(AssetSource(IntroGate.soundAsset));
+      await p.play(AssetSource(IntroGate.soundAsset), position: from);
       unawaited(p.onPlayerComplete.first.then((_) {
         if (identical(_player, p)) _player = null;
         return p.dispose();
@@ -83,8 +89,6 @@ class IntroGate extends StatefulWidget {
   final IntroSound? sound;
 
   static const soundAsset = 'brand/intro.m4a';
-  static const skipAfter = Duration(milliseconds: 1200);
-  static const skipBn = 'এড়িয়ে যান';
 
   @override
   State<IntroGate> createState() => _IntroGateState();
@@ -132,17 +136,22 @@ class _IntroGateState extends State<IntroGate> {
   }
 }
 
-/// The intro layer: the drawn animation with its sound → fade out → [onDone].
+/// The splash layer: the lockup beat with its sound → fade out → [onDone].
+/// A tap anywhere ends it at once.
 class IntroOverlay extends StatefulWidget {
   const IntroOverlay({super.key, required this.sound, required this.onDone});
   final IntroSound sound;
   final VoidCallback onDone;
 
-  /// The animation's length (the soundtrack is 6.0 s).
-  static const length = Duration(milliseconds: 6000);
+  /// The drawing's timeline is 0–6 s (the soundtrack's length); the splash
+  /// plays [from] → [until] of it in real time, then fades for [fade].
+  static const from = 3.85;
+  static const until = 5.05;
+  static const length = Duration(milliseconds: 1200);
+  static const fade = Duration(milliseconds: 300);
 
-  /// It starts to fade into the app here (the last hit lands in the app).
-  static const exitAt = 5.5;
+  /// Splash start to the app fully shown, at most.
+  static const total = Duration(milliseconds: 1500);
 
   @override
   State<IntroOverlay> createState() => _IntroOverlayState();
@@ -151,10 +160,8 @@ class IntroOverlay extends StatefulWidget {
 class _IntroOverlayState extends State<IntroOverlay> with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(vsync: this, duration: IntroOverlay.length);
   var _leaving = false;
-  var _canSkip = false;
   var _done = false;
   var _still = false;
-  Timer? _skipTimer;
   Timer? _stillTimer;
 
   @override
@@ -169,18 +176,15 @@ class _IntroOverlayState extends State<IntroOverlay> with SingleTickerProviderSt
     // Reduced motion: the still lockup for a moment, no sound, a short fade.
     if (MediaQuery.disableAnimationsOf(context)) {
       setState(() => _still = true);
-      _stillTimer = Timer(const Duration(milliseconds: 900), _leave);
+      _stillTimer = Timer(const Duration(milliseconds: 700), _leave);
       return;
     }
-    unawaited(widget.sound.play());
+    unawaited(widget.sound.play(from: Duration(milliseconds: (IntroOverlay.from * 1000).round())));
     unawaited(_c.forward());
-    _skipTimer = Timer(IntroGate.skipAfter, () {
-      if (mounted && !_leaving) setState(() => _canSkip = true);
-    });
   }
 
   void _onTick() {
-    if (_c.value * IntroOverlay.length.inMilliseconds / 1000 >= IntroOverlay.exitAt) _leave();
+    if (_c.isCompleted) _leave();
   }
 
   void _skip() {
@@ -190,7 +194,6 @@ class _IntroOverlayState extends State<IntroOverlay> with SingleTickerProviderSt
 
   void _leave() {
     if (_leaving || !mounted) return;
-    _skipTimer?.cancel();
     _stillTimer?.cancel();
     setState(() => _leaving = true);
   }
@@ -204,7 +207,6 @@ class _IntroOverlayState extends State<IntroOverlay> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    _skipTimer?.cancel();
     _stillTimer?.cancel();
     _c.dispose();
     super.dispose();
@@ -217,15 +219,15 @@ class _IntroOverlayState extends State<IntroOverlay> with SingleTickerProviderSt
       value: SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent, systemNavigationBarColor: introNavy),
       child: AnimatedOpacity(
         opacity: _leaving ? 0 : 1,
-        duration: Duration(milliseconds: quiet ? 150 : 450),
+        duration: quiet ? const Duration(milliseconds: 150) : IntroOverlay.fade,
         curve: Curves.easeOut,
         onEnd: () {
           if (_leaving) _finish();
         },
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          // The layer swallows taps meanwhile (the app under it waits).
-          onTap: () {},
+          // A tap anywhere skips; the app under it waits meanwhile.
+          onTap: _leaving ? null : _skip,
           child: ColoredBox(
             color: introNavy,
             child: Stack(
@@ -236,20 +238,15 @@ class _IntroOverlayState extends State<IntroOverlay> with SingleTickerProviderSt
                     animation: _c,
                     builder: (context, _) => CustomPaint(
                       painter: BrandIntroPainter(
-                        t: _still ? 5.0 : _c.value * IntroOverlay.length.inMilliseconds / 1000,
+                        t: _still
+                            ? IntroOverlay.until
+                            : IntroOverlay.from + _c.value * (IntroOverlay.until - IntroOverlay.from),
                         title: _titleStyle,
                         subtitle: bangla(fontSize: 17, fontWeight: FontWeight.w600, color: _titleWhite),
                       ),
                     ),
                   ),
                 ),
-                if (_canSkip && !_leaving)
-                  Positioned(
-                    key: const ValueKey('intro-skip'),
-                    top: MediaQuery.paddingOf(context).top + 12,
-                    right: 12,
-                    child: _SkipChip(onTap: _skip),
-                  ),
               ],
             ),
           ),
@@ -259,40 +256,6 @@ class _IntroOverlayState extends State<IntroOverlay> with SingleTickerProviderSt
   }
 
   static const _titleStyle = TextStyle(fontFamily: 'PoppinsBrand', fontWeight: FontWeight.w800, letterSpacing: -0.5, height: 1.0);
-}
-
-class _SkipChip extends StatelessWidget {
-  const _SkipChip({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: IntroGate.skipBn,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 40, minWidth: 48),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0x33FFFFFF),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: const Color(0x55FFFFFF)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(IntroGate.skipBn, style: bangla(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right_rounded, size: 18, color: Colors.white),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ---------------------------------------------------------------------------

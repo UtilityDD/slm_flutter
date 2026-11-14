@@ -35,6 +35,7 @@ import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart';
 import 'adventure_scenery.dart';
 import 'duty_slip_engine.dart';
+import 'ladder_focus.dart';
 import 'lucky_toolbox_overlay.dart';
 
 /// Monumental golden ladder shell.
@@ -63,19 +64,7 @@ class AdventureMap extends ConsumerStatefulWidget {
 /// (game_save.dart: toolboxChestDrop). The ladder has no other side items
 /// (stations removed 2026-11-13); their old `station_*` claim ids stay in
 /// GameSave.giftsClaimed, so nothing is ever paid twice.
-Map<int, PendingChest> _chestsByIndex(BuiltLadder? built, GameSave save) {
-  final chests = save.toolbox.chests;
-  if (built == null || chests.isEmpty) return const {};
-  final out = <int, PendingChest>{};
-  for (final c in chests) {
-    if (save.giftsClaimed.contains(c.claimId)) continue;
-    final at = built.rungs.indexWhere((r) => r.id == c.rungId);
-    if (at < 0) continue;
-    final beside = math.min(at + 1, built.length - 1);
-    out.putIfAbsent(beside, () => c);
-  }
-  return out;
-}
+Map<int, PendingChest> _chestsByIndex(BuiltLadder? built, GameSave save) => chestsByLadderIndex(built, save);
 
 const _chestArt = 'assets/duty_slip/world3d/prop_chest.webp';
 
@@ -101,18 +90,10 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   static const _emeraldExtra = 1;
 
   /// Fallback when the catalog is not loaded yet (Module 1 + Module 2 = 60).
-  static const _playableFallbackSpan = 60;
+  static const _playableFallbackSpan = ladderFallbackSpan;
 
   /// Contiguous playable prefix from the catalog (stops at first comingSoon).
-  int _playableSpan(BuiltLadder? built) {
-    if (built == null) return _playableFallbackSpan;
-    var n = 0;
-    for (final r in built.rungs) {
-      if (r.isComingSoon) break;
-      n++;
-    }
-    return math.max(n, 1);
-  }
+  int _playableSpan(BuiltLadder? built) => ladderPlayableSpan(built);
 
   bool _isRungPlayable(int index, BuiltLadder? built) {
     if (index < 0) return false;
@@ -127,28 +108,9 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
 
   /// Computes the player's current active ladder rung (`focus`) by combining
   /// `engine.unlocked` and cleared rungs in `GameSave.rungProgress`.
-  int _computeFocus(BuiltLadder? built, GameSave save) {
-    final len = _ladderLen(built);
-    final maxPlayable = math.min(len, _playableSpan(built));
-    var focus =
-        widget.engine.unlocked.clamp(0, math.max(0, maxPlayable - 1)).toInt();
-    if (built != null) {
-      // After a death (fall option C) the climb resumes at the first Do level
-      // to prove again, whatever the old unlock counter says.
-      final prove = built.rungs.indexWhere((r) => save.rungProgress[r.id] == 'prove');
-      if (prove >= 0 && prove < focus) focus = prove;
-      for (var i = 0; i < maxPlayable; i++) {
-        final r = built.rungs[i];
-        final cleared = save.rungProgress[r.id] == 'cleared';
-        if (cleared && i >= focus) {
-          focus = (i + 1).clamp(0, math.max(0, maxPlayable - 1)).toInt();
-        } else if (!cleared && i >= focus) {
-          break;
-        }
-      }
-    }
-    return focus;
-  }
+  /// Shared with Home (ladder_focus.dart), so Home's `L<n>` is this rung.
+  int _computeFocus(BuiltLadder? built, GameSave save) =>
+      ladderFocus(built, save, widget.engine.unlocked);
 
   final _scoreKey = GlobalKey();
   final _deathKey = GlobalKey();
@@ -468,27 +430,53 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     final save = ref.read(gameSaveProvider);
     final focus = _computeFocus(built, save);
     final view = _scroll.position.viewportDimension;
+    if (initial) {
+      // Opens straight on the current rung (Home's "চলুন, L<n>"), or on the
+      // rung Home's gift chip asked for, with a waiting chest nearby in view.
+      final anchor = built == null ? null : widget.engine.ladderAnchor;
+      if (built != null) widget.engine.ladderAnchor = null;
+      final want = anchor != null
+          ? (anchor * _rowH) - (view * 0.40)
+          : _openOffset(focus, _chestsByIndex(built, save).keys, view);
+      // The jump's scroll notifications are not a finger: no spring-back.
+      _programmaticScroll = true;
+      _scroll.jumpTo(want.clamp(0.0, _scroll.position.maxScrollExtent));
+      _programmaticScroll = false;
+      return;
+    }
     final target = (focus * _rowH) - (view * 0.24);
     final clamped = target.clamp(0.0, _scroll.position.maxScrollExtent);
     _programmaticScroll = true;
-    if (initial) {
-      _scroll.jumpTo(0);
-      _scroll
-          .animateTo(
-            clamped,
-            duration: const Duration(milliseconds: 850),
-            curve: Curves.easeOutCubic,
-          )
-          .whenComplete(() => _programmaticScroll = false);
-    } else {
-      _scroll
-          .animateTo(
-            clamped,
-            duration: const Duration(milliseconds: 520),
-            curve: Curves.easeOutBack,
-          )
-          .whenComplete(() => _programmaticScroll = false);
+    _scroll
+        .animateTo(
+          clamped,
+          duration: const Duration(milliseconds: 520),
+          curve: Curves.easeOutBack,
+        )
+        .whenComplete(() => _programmaticScroll = false);
+  }
+
+  /// The opening scroll: [focus] a quarter up the screen; a chest waiting a
+  /// few rungs below or above shifts the view so both are seen.
+  double _openOffset(int focus, Iterable<int> chests, double view) {
+    final base = (focus * _rowH) - (view * 0.24);
+    final topRoom = MediaQuery.paddingOf(context).top + 58 + _rowH;
+    final bottomPad = MediaQuery.paddingOf(context).bottom + 88;
+    int? near;
+    for (final c in chests) {
+      if ((c - focus).abs() > 4) continue;
+      if (near == null || (c - focus).abs() < (near - focus).abs()) near = c;
     }
+    if (near == null || near == focus) return base;
+    // Item i's centre sits (bottomPad + i·row + row/2 − offset) above the bottom.
+    double fromBottom(int i, double off) => bottomPad + i * _rowH + _rowH / 2 - off;
+    final off = near < focus
+        ? math.min(base, near * _rowH - _rowH * 0.1)
+        : math.max(base, bottomPad + near * _rowH + _rowH / 2 - (view - topRoom));
+    final f = fromBottom(focus, off);
+    final c = fromBottom(near, off);
+    final fits = f > _rowH / 2 && f < view - topRoom && c > _rowH / 2 && c < view - topRoom;
+    return fits ? off : base;
   }
 
   @override

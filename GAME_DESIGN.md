@@ -34,12 +34,14 @@ There is nothing else to navigate. Everything the player needs comes to them on 
 
 ## 4. Home screen
 
-Only four things:
+Home → one tap → ladder (owner's redesign, Nov 2026). After a short brand splash (cold start only, ≤ 1.5 s, tap to skip):
 
-1. Player name and photo.
-2. Score `◆` and death count `💀`, with the current rank badge.
-3. The lineman character in his current mood.
-4. The large animated **মৃত্যুহীন পথ** shield button (`AnimatedSafetyShield`). Tap → ladder.
+1. Score `◆` and death count `💀` (the level top bar's chips), toolbox on the right.
+2. Player name with a status chip: verified, verification pending, or "সাইন ইন করুন" for guests.
+3. The "continue" card: the next rung `L<n>`, its module, the module's progress and stars, with the **মৃত্যুহীন পথ** shield.
+4. One gold button `চলুন, L<n>`: the ladder opens already scrolled to that rung. Under the card: "ঘরে আপনার জন্য কেউ অপেক্ষা করছে।" and chips only when true (gift chests waiting, district league rank).
+
+The old intro page and the skull ("fear") page before the ladder were removed.
 
 A small **toolbox** icon in a corner holds: emergency numbers, the identify library, settings. Emergency stays one tap away because it has real use on the job.
 

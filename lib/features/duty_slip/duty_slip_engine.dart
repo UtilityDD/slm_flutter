@@ -279,6 +279,10 @@ class DutySlipEngine {
 
   var levelIndex = 0;
   var unlocked = 0;
+
+  /// The ladder index the map opens at once (Home's gift chip); null: the
+  /// current rung. The map reads it on its first pin and clears it.
+  int? ladderAnchor;
   var nightTotal = 0;
 
   /// [nightTotal] when the field night started; the night's own score is
@@ -785,14 +789,34 @@ class DutySlipEngine {
     } catch (_) {}
   }
 
+  /// [unlocked] for a saved level number: the last level at or below it.
+  static int unlockedIndexOf(int levelNumber) {
+    var idx = 0;
+    for (var i = 0; i < dsLevels.length; i++) {
+      if (dsLevels[i].number <= levelNumber) idx = i;
+    }
+    return idx;
+  }
+
+  /// The saved [unlocked] without building an engine (Home reads it to name
+  /// the next rung the ladder will open on). 0 when nothing is saved.
+  static Future<int> savedUnlocked() async {
+    if (dsPlayAllLevels) return dsLevels.length - 1;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(progressKey);
+      if (raw == null || raw.isEmpty) return 0;
+      final no = ((jsonDecode(raw) as Map<String, dynamic>)['unlocked'] as num?)?.toInt();
+      return no == null ? 0 : unlockedIndexOf(no);
+    } catch (_) {
+      return 0;
+    }
+  }
+
   void _readProgress(Map<String, dynamic> json) {
     final unlockedNo = (json['unlocked'] as num?)?.toInt();
     if (unlockedNo != null && !dsPlayAllLevels) {
-      var idx = 0;
-      for (var i = 0; i < dsLevels.length; i++) {
-        if (dsLevels[i].number <= unlockedNo) idx = i;
-      }
-      unlocked = idx;
+      unlocked = unlockedIndexOf(unlockedNo);
     }
     final levels = json['levels'];
     if (levels is! Map) return;
