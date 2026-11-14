@@ -290,7 +290,7 @@ void main() {
     // Ruling M5-3: a PTW is never shown as the legal must for a ground-only patrol of an in-service line.
     for (final s in pack.slots) {
       for (final o in s.options) {
-        expect('${o.labelBn} ${o.rejectBn}', isNot(contains('টহলের আগে PTW')), reason: '${s.id}/${o.id}');
+        expect('${o.labelBn} ${o.rejectBn}', isNot(contains('টহলের আগে পারমিট (PTW)')), reason: '${s.id}/${o.id}');
       }
     }
     // Where a safe text pairs a PTW with the search or the patrol, the PTW is tied to a hand on (or a

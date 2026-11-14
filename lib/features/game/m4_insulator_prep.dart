@@ -189,14 +189,14 @@ abstract final class M4InsulatorPrepLines {
   static const whyKitQ = 'কেন ওঠার আগে সব সরঞ্জাম মিলিয়ে নিলেন?';
   static const whySpareQ = 'কেন নতুন ইনসুলেটরটাও দেখে নিলেন?';
   static const earthWhy = ['বন্ধ লাইনেও ইন্ডুসড ভোল্টেজ — দুই দিকে আর্থ', 'কাজের জায়গার দুই দিকেই আর্থ — তবেই পোলে ওঠা'];
-  static const ptwWhy = ['বৈধ পারমিট (PTW) আর শাটডাউন ছাড়া লাইনে হাত নয়', 'কাজের প্রথম শর্ত বৈধ পারমিট (PTW), তারপর বাকি সব'];
+  static const ptwWhy = ['বৈধ পারমিট আর শাটডাউন ছাড়া লাইনে হাত নয়', 'কাজের প্রথম শর্ত বৈধ পারমিট, তারপর বাকি সব'];
   static const kitWhy = ['সরঞ্জাম না থাকলে কাজের মাঝপথে বিপদ হতে পারে', 'ইনসুলেটর, বাইন্ডিং, সাপোর্ট — সব নিচেই মেলাই'];
   static const spareWhy = ['ফাটা নতুনটা লাগালে লাইনে আবার ফল্ট হবে', 'নতুনটাতেও ফাটল বা পোড়া দাগ থাকতে পারে'];
   static const _mythNoEarth = 'লাইন বন্ধ থাকলে আর্থের কোনো দরকারই নেই';
   static const _mythOneEarth = 'এক দিকে আর্থ দিলেই পুরো লাইন নিরাপদ হয়';
   static const _mythTwoLong = 'দুই দিকে আর্থ শুধু লম্বা লাইনের কাজে লাগে';
-  static const _mythOldHand = 'অভিজ্ঞ লোকের পারমিট (PTW) ছাড়াও কাজ চলে যায়';
-  static const _mythVerbal = 'মুখে বলে দিলেই চলে, পারমিট (PTW) কাগজ পরে নিলেই হবে';
+  static const _mythOldHand = 'অভিজ্ঞ লোকের পারমিট ছাড়াও কাজ চলে যায়';
+  static const _mythVerbal = 'মুখে বলে দিলেই চলে, পারমিট কাগজ পরে নিলেই হবে';
   static const _mythWhatever = 'যা আছে নিয়ে উঠি, বাকিটা পরে দেখা যাবে';
   static const _mythAskUp = 'সরঞ্জাম কম পড়লে পোলে উঠে চেয়ে নেওয়া যায়';
   static const _mythNotAll = 'সব সরঞ্জাম লাগে না, যা আছে তা নিয়েই উঠি';

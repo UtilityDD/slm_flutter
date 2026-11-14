@@ -240,13 +240,13 @@ abstract final class M4DpSurveyLines {
   static List<String> whyWrongFor(M4DpSurveyTopic t) => [...whyWrongTopic(t), ...whyWrongGeneral(t)];
 
   // The plan: how the dressing on the list gets done.
-  static const planRight = ['শাটডাউন, পারমিট (PTW), টেস্ট, আর্থ — তারপর ড্রেসিং', 'পারমিট (PTW) নিয়ে, লাইন টেস্ট করে আর্থ দিয়ে তবেই'];
+  static const planRight = ['শাটডাউন, পারমিট, টেস্ট, আর্থ — তারপর ড্রেসিং', 'পারমিট নিয়ে, লাইন টেস্ট করে আর্থ দিয়ে তবেই'];
   static const planWrong = [
     'লাইন চালু রেখেই ড্রেসিংটা সেরে ফেলি',
     'রাবার গ্লাভস দিয়ে তবেই চালু লাইনে উঠি',
     'শাটডাউন লাগবে না, সাবধানে করে নিলেই হবে',
     'শাটডাউন পেলেই উঠি, টেস্ট-আর্থ লাগবে না',
-    'পারমিট (PTW) নিয়ে ভাবছি না, আগে উঠি তারপর দেখি',
+    'পারমিট নিয়ে ভাবছি না, আগে উঠি তারপর দেখি',
   ];
 
   /// The careless coworker (lesson 4.7, myth 1).

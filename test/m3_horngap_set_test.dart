@@ -273,7 +273,7 @@ void main() {
       callAt: 0,
     );
 
-    test('ক: শাটডাউন → PTW → টেস্ট → আর্থ, then climb; out of order = slip (not done)', () {
+    test('ক: শাটডাউন → পারমিট (PTW) → টেস্ট → আর্থ, then climb; out of order = slip (not done)', () {
       final r = M3HorngapSetRun(d0);
       expect(r.tapStep(_S.ptw), _M.wrongOrder);
       expect(r.steps, isEmpty);
@@ -660,7 +660,7 @@ void main() {
       await _pump(t, 400);
       await t.tap(_label(_L.step(_S.ptw)));
       await _pump(t, 400);
-      expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'শাটডাউন then PTW is in order');
+      expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'শাটডাউন then পারমিট (PTW) is in order');
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
       await _close(t, c);
     });

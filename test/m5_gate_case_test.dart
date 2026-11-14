@@ -665,9 +665,9 @@ void main() {
         expect(x.m.deadly, deadly.contains(x), reason: x.m.key);
       }
       // Ruling texts carried word for word.
-      expect(M5GateMistakes.patrolNoPtw.m.textBn, contains('টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে PTW বাধ্যতামূলক'));
+      expect(M5GateMistakes.patrolNoPtw.m.textBn, contains('টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে পারমিট (PTW) বাধ্যতামূলক'));
       // M5-3: the PTW is never framed as a must for sending a ground patrol.
-      expect(M5GateMistakes.patrolNoPtw.m.textBn, isNot(startsWith('লক-আউট ফিডারে PTW ছাড়াই')));
+      expect(M5GateMistakes.patrolNoPtw.m.textBn, isNot(startsWith('লক-আউট ফিডারে পারমিট (PTW) ছাড়াই')));
       expect(M5GateLines.question(M5Reason.ptw), isNot(contains('দল পাঠানোর')));
       expect(M5GateMistakes.ugPegFirst.m.textBn, contains('খোঁড়ার আগে কেবিল রুট রেকর্ড দেখুন এবং অন্য ভূগর্ভস্থ লাইনের (টেলিফোন, জল, গ্যাস) মালিকদের জানান'));
       expect(M5GateMistakes.wireZone.m.textBn, contains('তার এবং তার ছুঁয়ে থাকা বেড়া/গাছ/গাড়ির চারপাশে কমপক্ষে 10 মিটার'));

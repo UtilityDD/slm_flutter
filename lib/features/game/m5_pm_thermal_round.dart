@@ -248,7 +248,7 @@ abstract final class M5PmMistakes {
   // 5.10 lesson point.
   static const noPermit = DoMistake(
     key: '5.10/m5_pm_thermal_round/no-permit',
-    textBn: 'লিখিত পারমিট ছাড়া লাইনে হাত নয় — ফোনের "লাইন বন্ধ" কথা পারমিট নয়। আগে লিখিত পারমিট (PTW), তারপর টেস্টার।',
+    textBn: 'লিখিত পারমিট ছাড়া লাইনে হাত নয়—ফোনে বলা কথায় ভরসা করবেন না! আগে পারমিট, তারপর টেস্টার।',
     art: '$_dir/no_permit.svg',
     deadly: true,
   );

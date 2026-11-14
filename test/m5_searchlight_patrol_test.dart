@@ -481,7 +481,7 @@ void main() {
       expect(files, {for (final m in _M.all) m.art.split('/').last}, reason: 'no unused art');
       expect(m5SearchlightPacks.keys, ['do_5_7_a']);
       // Ruling M5-3: the docket card, word for word; never a PTW as the patrol's must.
-      expect(_M.noDocket.textBn, contains('টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে PTW বাধ্যতামূলক'));
+      expect(_M.noDocket.textBn, contains('টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে পারমিট (PTW) বাধ্যতামূলক'));
       expect(_L.docket(4, 472), isNot(contains('PTW')));
     });
 

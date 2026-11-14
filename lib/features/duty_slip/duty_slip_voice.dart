@@ -17,7 +17,7 @@ class DsVoice {
     // ElevenLabs Studio Guide Voice
     // =========================================================
     'guide_welcome': 'sounds/guide_voice/guide_welcome.mp3',
-    'নমস্কার লাইনম্যান দাদা! কাজে নামার আগে প্রতিটি সুরক্ষা নিয়ম ঝালিয়ে নিন।': 'sounds/guide_voice/guide_welcome.mp3',
+    'নমস্কার! আমি সুব্রত, আপনার সেফটি গাইড। কাজে নামার আগে প্রতিটি সুরক্ষা নিয়ম ঝালিয়ে নিন।': 'sounds/guide_voice/guide_welcome.mp3',
     'guide_praise_great': 'sounds/guide_voice/guide_praise_great.mp3',
     'সাবাশ! একদম খাঁটি লাইনম্যানের মতো নিখুঁত কাজ হয়েছে!': 'sounds/guide_voice/guide_praise_great.mp3',
     'guide_warn_danger': 'sounds/guide_voice/guide_warn_danger.mp3',
@@ -207,7 +207,7 @@ class DsVoice {
     'সাবাশ! একদম ঠিক।': 'sounds/voice/ds_exp_right_1.mp3',
     'বাহবা! একদম ঠিক।': 'sounds/voice/ds_exp_right_1.mp3',
     'ds_exp_right_2': 'sounds/voice/ds_exp_right_2.mp3',
-    'বাঃ, একদম সঠিক পছন্দ!': 'sounds/voice/ds_exp_right_2.mp3',
+    'বাঃ, একদম নিখুঁত নির্বাচন!': 'sounds/voice/ds_exp_right_2.mp3',
     'বাঃ, একদম মানানসই!': 'sounds/voice/ds_exp_right_2.mp3',
     'ds_exp_right_3': 'sounds/voice/ds_exp_right_3.mp3',
     'সঠিক সিদ্ধান্ত, পরের ধাপে চলুন।': 'sounds/voice/ds_exp_right_3.mp3',

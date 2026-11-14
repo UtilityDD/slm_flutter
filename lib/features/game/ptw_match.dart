@@ -52,7 +52,7 @@ import 'spoken_once.dart';
 //
 // Deadly (owner-approved list): starting on the phone's word (listening to
 // him); starting on a permit for another feeder; starting on an unsigned or
-// an expired permit (lesson 1.6: "হাতে স্বাক্ষরিত PTW ছাড়া কাজ শুরু করবেন না").
+// an expired permit (lesson 1.6: "হাতে স্বাক্ষরিত পারমিট (PTW) ছাড়া কাজ শুরু করবেন না").
 // Slips: starting on a permit with the wrong pole range or another team's
 // name (the play moves on); stopping on a field that matches — on a valid
 // permit or on the wrong field of a faulty one — is a slip and the permit is

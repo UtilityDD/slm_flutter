@@ -296,7 +296,7 @@ void main() {
       // and the man-aloft reason under the lock.
       const pairs = {
         PtwWhy.receive: 'ভুল করে অন্য কোনো ফিডার বন্ধ হয়ে থাকতে পারে',
-        PtwWhy.test: 'PTW-তে লেখা ফিডার আর এই লাইন মিলিয়ে নিতে হবে',
+        PtwWhy.test: 'পারমিট (PTW)-তে লেখা ফিডার আর এই লাইন মিলিয়ে নিতে হবে',
         PtwWhy.isolate: 'কেউ পোলে থেকে গেলে লাইন চালু হবে তার ওপরেই',
       };
       pairs.forEach((w, card) {

@@ -146,10 +146,10 @@ const learnBoardPack51 = LearnBoardPack(
       whyChips: [
         LearnWhyChip(id: 'w1', textBn: 'ট্রিপ লাইন যেকোনো মুহূর্তে চালু হতে পারে', correct: true),
         LearnWhyChip(id: 'w2', textBn: 'রিক্লোজার থাকলে লাইন নিজেই আবার চালু হয়', correct: true),
-        LearnWhyChip(id: 'w3', textBn: 'পারমিট (PTW) আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয়', correct: true),
+        LearnWhyChip(id: 'w3', textBn: 'পারমিট আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয়', correct: true),
         LearnWhyChip(id: 'w4', textBn: 'ট্রিপ হওয়া লাইন পুরোপুরি ডেড হয়ে থাকে', correct: false),
         LearnWhyChip(id: 'w5', textBn: 'রিক্লোজার একবার চেষ্টা করেই থেমে যায়', correct: false),
-        LearnWhyChip(id: 'w6', textBn: 'বাড়ির আলো নিভে থাকলে লাইনও নিরাপদ', correct: false),
+        LearnWhyChip(id: 'w6', textBn: 'বাড়ির আলো নিভে থাকলে লাইনও নিশ্চয়ই নিরাপদ', correct: false),
         LearnWhyChip(id: 'w7', textBn: 'তাড়াতাড়ি সারলে পারমিট ছাড়াও কাজ চলে', correct: false),
         LearnWhyChip(id: 'w8', textBn: 'বন্ধ লাইনে আর্থিং লাগানো বাড়তি ঝামেলা', correct: false),
         LearnWhyChip(id: 'w9', textBn: 'ট্রিপ লাইনে খালি হাতে কাজ করলেও ক্ষতি নেই', correct: false),
@@ -337,12 +337,12 @@ const learnBoardPack51 = LearnBoardPack(
     stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
     dangerHints: [
       'রিক্লোজারে আবার চালু',
-      'পারমিট (PTW) ছাড়া হাত',
+      'পারমিট ছাড়া হাত',
     ],
     whyChips: [
       LearnWhyChip(id: 'm1', textBn: 'কন্ট্রোল রুম ভুল করে লাইন আবার চালু করতে পারে', correct: true),
       LearnWhyChip(id: 'm2', textBn: 'অটো-রিক্লোজার যেকোনো মুহূর্তে লাইন চালু করে', correct: true),
-      LearnWhyChip(id: 'm3', textBn: 'পারমিট (PTW) আর ব্যক্তিগত আর্থিং ছাড়া লাইন স্পর্শ নয়', correct: true),
+      LearnWhyChip(id: 'm3', textBn: 'পারমিট আর ব্যক্তিগত আর্থিং ছাড়া লাইন স্পর্শ নয়', correct: true),
       LearnWhyChip(id: 'm4', textBn: 'ট্রিপ হওয়া লাইনে কারেন্ট ফেরার ভয় নেই', correct: false),
       LearnWhyChip(id: 'm5', textBn: 'তাড়াতাড়ি কাজ সারলে পারমিটের দরকার পড়ে না', correct: false),
       LearnWhyChip(id: 'm6', textBn: 'অন্ধকার লাইন দেখলেই বোঝা যায় ওটা পুরো ডেড', correct: false),

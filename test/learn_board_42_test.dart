@@ -156,7 +156,7 @@ void main() {
     expect(_reject('patrol', 'spark'), contains('স্পার্কিং'));
     expect(_reject('patrol', 'corona'), contains('নীল আভা'));
     expect(_reject('patrol', 'fallen'), contains('আগুন'));
-    expect(_slot('patrol').whyChips.any((w) => w.correct && w.textBn.contains('PTW') && w.textBn.contains('PPE')), isTrue);
+    expect(_slot('patrol').whyChips.any((w) => w.correct && w.textBn.contains('পারমিট') && w.textBn.contains('PPE')), isTrue);
     expect(pack.earnedBn, contains('দুই রেঞ্চে'));
   });
 

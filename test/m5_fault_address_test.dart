@@ -689,7 +689,7 @@ void main() {
       // The docket is the control room's (ruling M5-3) — a PTW only in the
       // ruling's card ("before touching or climbing"), never for the ground patrol.
       expect(all.where((l) => l.contains('PTW')), [M5FaMistakes.noDocket.textBn]);
-      expect(M5FaMistakes.noDocket.textBn, startsWith('টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে PTW বাধ্যতামূলক'));
+      expect(M5FaMistakes.noDocket.textBn, startsWith('টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে পারমিট (PTW) বাধ্যতামূলক'));
       expect(M5FaMistakes.all, contains(M5FaMistakes.noDocket));
       expect(M5FaMistakes.all.where((m) => m.deadly), isEmpty);
       expect(M5FaMistakes.all.map((m) => m.key).toSet(), hasLength(M5FaMistakes.all.length));

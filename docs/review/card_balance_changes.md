@@ -1,0 +1,43 @@
+# Card length balance — changes for owner confirmation (2026-11-14)
+
+Rule: every card in a group within 1.3x of each other in length (anti-giveaway). Preference: (a) drop "(PTW)", (b) remove a filler word from the longest, (c) add a natural word to the shortest. No right/wrong flipped, no spoken line touched (learn-board right chips are spoken the first time, so their siblings were adjusted instead).
+
+| file:line | group | old text | new text | why |
+|---|---|---|---|---|
+| lib/features/game/learn_board_pack16.dart:82 | form why (wrong w7) | ফর্মে কী লেখা, তা পড়ার দরকার নেই (33) | ফর্মে কী লেখা আছে, তা পড়ার দরকার নেই (37) | shortest card 33 vs longest 43 (right w2, spoken): add 'আছে' (c) -> 37 |
+| lib/features/game/learn_board_pack16.dart:179 | feeder why (wrong w4) | নামের প্রথম অংশ মিললেই চলে যায় (31) | নামের প্রথম অংশটুকু মিললেই চলে যায় (35) | shortest 31 vs longest 42 (right w2, spoken): 'অংশ' -> 'অংশটুকু' (c) -> 35 |
+| lib/features/game/learn_board_pack16.dart:181 | feeder why (wrong w6) | পোলের প্লেট দেখার দরকার পড়ে না (31) | পোলের নম্বর প্লেট দেখার দরকার পড়ে না (37) | shortest 31 vs longest 42: add 'নম্বর' (c) -> 37 |
+| lib/features/game/learn_board_pack42.dart:323 | patrol why (wrong w4) | রাতে লাল আভা জাম্পারের স্বাভাবিক রং (35) | রাতে লাল আভা তো জাম্পারের স্বাভাবিক রং (38) | longest is the right chip w3 (48, spoken - not touched); cards under 37 lengthened: add 'তো' (c) -> 38 |
+| lib/features/game/learn_board_pack42.dart:324 | patrol why (wrong w5) | ছোট স্পার্ক হলে লাইনের কোনো বিপদ নেই (36) | ছোট্ট স্পার্ক হলে লাইনের কোনো বিপদ নেই (38) | same group: 'ছোট' -> 'ছোট্ট' (c) -> 38 |
+| lib/features/game/learn_board_pack42.dart:326 | patrol why (wrong w7) | নীল আভা মানে জাম্পার একদম ঠিকঠাক আছে (36) | রাতে নীল আভা মানে জাম্পার একদম ঠিকঠাক আছে (41) | same group: add 'রাতে' (as in the red-glow card) (c) -> 41 |
+| lib/features/game/learn_board_pack42.dart:327 | patrol why (wrong w8) | হিসহিস শব্দ হলে পরের মাসে দেখলেই চলে (36) | হিসহিস শব্দ হলে পরের মাসে এসে দেখলেই চলে (40) | same group: add 'এসে' (c) -> 40 |
+| lib/features/game/learn_board_pack51.dart:152 | treat why (wrong) | বাড়ির আলো নিভে থাকলে লাইনও নিরাপদ (34) | বাড়ির আলো নিভে থাকলে লাইনও নিশ্চয়ই নিরাপদ (43) | shortest 34 vs longest 46 (right w3, spoken): add 'নিশ্চয়ই' (c) -> 43 |
+| lib/features/game/m3_guard_repair.dart:219 | coworker choice (right) | না, শাটডাউন, পারমিট (PTW), টেস্ট, আর্থ — তবে কাজ (48) | না, শাটডাউন, পারমিট, টেস্ট, আর্থ — তবে কাজ (42) | longest 48: drop (PTW) (a) -> 42 |
+| lib/features/game/m3_guard_repair.dart:224 | coworker choice (wrong) | ঠিক আছে, গ্লাভস পরে চালুতেই করি (31) | ঠিক আছে, গ্লাভস পরে চালু লাইনেই করি (35) | still 42 vs 31 after (a): 'চালুতেই' -> 'চালু লাইনেই' (c) -> 35 |
+| lib/features/game/m3_horngap_set.dart:270 | coworker choice (right) | না, আগে শাটডাউন, পারমিট (PTW), টেস্ট আর আর্থ (44) | না, আগে শাটডাউন, পারমিট, টেস্ট আর আর্থ (38) | longest 44: drop (PTW) (a) -> 38 |
+| lib/features/game/m3_horngap_set.dart:271 | coworker choice (wrong) | ঠিক, চটপট বেঁধে দিলেই কাজ শেষ (29) | ঠিক, চটপট ফিউজ বেঁধে দিলেই কাজ শেষ (34) | still 38 vs 29 after (a): add 'ফিউজ' (c) -> 34 |
+| lib/features/game/m4_dp_survey.dart:243 | plan (right 1) | শাটডাউন, পারমিট (PTW), টেস্ট, আর্থ — তারপর ড্রেসিং (50) | শাটডাউন, পারমিট, টেস্ট, আর্থ — তারপর ড্রেসিং (44) | 50 vs 35: drop (PTW) (a) -> 44 |
+| lib/features/game/m4_dp_survey.dart:243 | plan (right 2) | পারমিট (PTW) নিয়ে, লাইন টেস্ট করে আর্থ দিয়ে তবেই (50) | পারমিট নিয়ে, লাইন টেস্ট করে আর্থ দিয়ে তবেই (44) | 50 vs 35: drop (PTW) (a) -> 44 |
+| lib/features/game/m4_insulator_prep.dart:192 | why (right, ptw 1) | বৈধ পারমিট (PTW) আর শাটডাউন ছাড়া লাইনে হাত নয় (47) | বৈধ পারমিট আর শাটডাউন ছাড়া লাইনে হাত নয় (41) | 47 vs 35: drop (PTW) (a) -> 41 |
+| lib/features/game/m4_insulator_prep.dart:192 | why (right, ptw 2) | কাজের প্রথম শর্ত বৈধ পারমিট (PTW), তারপর বাকি সব (48) | কাজের প্রথম শর্ত বৈধ পারমিট, তারপর বাকি সব (42) | 48 vs 35: drop (PTW) (a) -> 42 |
+| lib/features/game/m4_insulator_prep.dart:198 | why (myth, old hand) | অভিজ্ঞ লোকের পারমিট (PTW) ছাড়াও কাজ চলে যায় (45) | অভিজ্ঞ লোকের পারমিট ছাড়াও কাজ চলে যায় (39) | 45 fits alone, but dropped (PTW) (a) so no card in the deck keeps it (option A, same as its siblings) -> 39 |
+| lib/features/game/m4_insulator_prep.dart:199 | why (myth, verbal) | মুখে বলে দিলেই চলে, পারমিট (PTW) কাগজ পরে নিলেই হবে (51) | মুখে বলে দিলেই চলে, পারমিট কাগজ পরে নিলেই হবে (45) | longest 51: drop (PTW) (a) -> 45 |
+| lib/features/game/m4_tree_plan.dart:253 | why (right, shutdown) | লাইনের কাছে কাটার আগে পারমিট (PTW) নিয়ে লাইন বন্ধ করি (54) | লাইনের কাছে কাটার আগে পারমিট নিয়ে লাইন বন্ধ করি (48) | longest 54 vs 37: drop (PTW) (a) -> 48 |
+| lib/features/game/m4_tree_plan.dart:279 | why (wrong, shutdown) | পারমিট (PTW) নিলে পরে কেউ আমাকে দোষ দিতে পারে না (48) | পারমিট নিলে পরে কেউ আমাকে দোষ দিতে পারে না (42) | 48 fits alone, but dropped (PTW) (a) so the shutdown deck matches its right card (option A) -> 42 |
+| lib/features/game/m4_tree_plan.dart:307 | coworker choice (right) | না, আগে শাটডাউন আর পারমিট (PTW) নেব (35) | না, আগে শাটডাউন আর পারমিট নেব (29) | 35 vs 26 (next failing group): drop (PTW) (a) -> 29 |
+| lib/features/game/m5_gate_case.dart:416 | ptw why (right) | লাইনে হাত দেওয়ার আগে পারমিট (PTW) বাধ্যতামূলক (46) | হাত দেওয়ার আগে পারমিট বাধ্যতামূলক (34) | 46 vs 29 (shared excuse card): drop (PTW) (a) + 'লাইনে' (already in the question) (b) -> 34 |
+| lib/features/game/m5_gate_case.dart:434 | ptw why (wrong) | পারমিট (PTW) থাকলে আর আর্থ লাগানোর দরকার নেই (44) | পারমিট থাকলে আর্থ লাগানোর দরকার নেই (35) | 44 vs 29: drop (PTW) (a) + filler 'আর' (b) -> 35 |
+| lib/features/game/m5_gate_case.dart:434 | ptw why (wrong) | পারমিট (PTW) শুধু অফিসের খাতা ভরানোর জন্য (41) | পারমিট শুধু অফিসের খাতা ভরানোর জন্য (35) | 41 vs 29: drop (PTW) (a) -> 35 |
+| lib/features/game/m5_gate_case.dart:437 | earth why (wrong) | আর্থ দিলে পারমিট (PTW)-র আর দরকার পড়ে না (41) | আর্থ দিলে পারমিটের আর দরকার পড়ে না (35) | 41 vs 29 (next failing group): drop (PTW) (a) -> 35 |
+| lib/features/game/m5_recloser_watch.dart:165 | why (right, ptw) | পারমিট (PTW) ছাড়া ট্রিপ হওয়া লাইন ছোঁয়া যায় না (50) | পারমিট ছাড়া ট্রিপ হওয়া লাইন ছোঁয়া যায় না (44) | 50 vs 36: drop (PTW) (a) -> 44 |
+| lib/features/game/m5_recloser_watch.dart:166 | why (right, earth) | পারমিট (PTW) আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয় (52) | পারমিট আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয় (46) | longest 52: drop (PTW) (a) -> 46; new text = owner's own wording of the same card in learn_board_pack51 w3. NOTE: old text is a learnCoachVoice key, but this reason card is never spoken here (reason_table speaks only the question/praise) |
+| lib/features/game/m5_trip_call.dart:253 | brief (right) | যা জানলাম আর কোথা থেকে শুরু; হাত দেওয়ার আগে পারমিট ও আর্থিং (60) | যা জানলাম, কোথা থেকে শুরু; হাত দেওয়ার আগে পারমিট ও আর্থিং (58) | longest 60 vs 45: ' আর' -> ',' (b) -> 58 |
+| test/learn_board_42_test.dart:159 | the lesson's points (test) | w.correct && w.textBn.contains('PTW') && w.textBn.contains('PPE') (65) | w.correct && w.textBn.contains('পারমিট') && w.textBn.contains('PPE') (68) | the app card now says 'পারমিট' (owner option A) |
+| test/m5_cause_strike_test.dart:620 | rival lines (test) | সামান্য তেল পড়ছে, ও কিছু না — চলতে দাও। (40) | সামান্য তেল লিক করছে, ও কিছু না — চলতে দাও। (43) | test updated to the owner's current wording (already recorded: r_841014f536.mp3) |
+
+## Notes for the owner
+
+1. **learn_board_pack42 patrol:** the longest card is the right chip `লুজ জাম্পার টাইটে পারমিট, PPE আর সঠিক পদ্ধতি চাই` (48). It is spoken the first time it is picked, so it was left alone and four wrong chips were lengthened. A one-card alternative: drop `লুজ` from that right chip (টাইট already implies loose), giving 44. Then the four wrong-chip edits above could be undone.
+2. **m5_recloser_watch:166:** the old text `পারমিট (PTW) আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয়` is a key in learnCoachVoice (clip c_..., recorded for the learn-board 5.1 chip). This level never speaks reason cards. The new text is your own wording of the same card in learn_board_pack51 w3, so the clip is now unused by both. Keeping it would have meant lengthening seven sibling cards.
+3. **Not changed:** `m4_dp_survey.dart:303 caughtPlan` (the "আজ যা ধরলেন" line) has the same text as the old plan card and still says `পারমিট (PTW)`. Only the plan card at line 243 changed.
+4. **m4_insulator_prep:198 and m4_tree_plan:279** fit the 1.3x rule even with "(PTW)". They were shortened anyway so that no card in the deck keeps "(PTW)" while its right card doesn't. Revert these two if you prefer the smallest diff.

@@ -395,7 +395,7 @@ void main() {
       expect(clean.caught, contains(M5PmLines.caughtScan));
     });
 
-    test('শাটডাউন: the wrench before the written PTW, before 0 V or before the earth is deadly', () {
+    test('শাটডাউন: the wrench before the written পারমিট (PTW), before 0 V or before the earth is deadly', () {
       final d = _dealOf(1);
       M5PmRun at() => M5PmRun(d)..next();
       final a = at();

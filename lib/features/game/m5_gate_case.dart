@@ -388,7 +388,7 @@ abstract final class M5GateLines {
 
   // --- the ◆ questions and their cards (every card 29–36 letters) -------------
   static String question(M5Reason r) => switch (r) {
-        M5Reason.ptw => 'লাইনে হাত দেওয়ার আগে পারমিট (PTW) কেন?',
+        M5Reason.ptw => 'লাইনে হাত দেওয়ার আগে পারমিট (PTW) কেন জরুরি?',
         M5Reason.hypothesis => 'প্রথমে ওই সেকশনেই কেন দল পাঠালেন?',
         M5Reason.locate => 'কেন এই অংশেই খুঁজলেন?',
         M5Reason.earth => 'হাত দেওয়ার আগে আর্থ কেন?',
@@ -413,7 +413,7 @@ abstract final class M5GateLines {
 
   /// The right cards. [fpi]: the find was bracketed by FPIs.
   static List<String> whyRight(M5Reason r, {bool fpi = false}) => switch (r) {
-        M5Reason.ptw => const ['ট্রিপ মানে ডেড নয়, চালু হতে পারে', 'লাইনে হাত দেওয়ার আগে পারমিট (PTW) বাধ্যতামূলক', 'রিক্লোজার যেকোনো সময় চালু করে দেয়'],
+        M5Reason.ptw => const ['ট্রিপ মানে ডেড নয়, চালু হতে পারে', 'হাত দেওয়ার আগে পারমিট বাধ্যতামূলক', 'রিক্লোজার যেকোনো সময় চালু করে দেয়'],
         M5Reason.hypothesis => const ['সূত্রগুলো ওই সেকশনের দিকেই দেখাচ্ছিল', 'ভালো অনুমান খোঁজার এলাকা ছোট করে'],
         M5Reason.locate => fpi
             ? const ['জ্বলা আর নেভা FPI-এর মাঝেই এই অংশ', 'FPI-জোড়া বলছে ফল্ট এই দুইয়ের মাঝে']
@@ -431,10 +431,10 @@ abstract final class M5GateLines {
 
   static List<String> whyWrong(M5Reason r) => [
         ...switch (r) {
-          M5Reason.ptw => const ['পারমিট (PTW) থাকলে আর আর্থ লাগানোর দরকার নেই', 'পারমিট (PTW) শুধু অফিসের খাতা ভরানোর জন্য'],
+          M5Reason.ptw => const ['পারমিট থাকলে আর্থ লাগানোর দরকার নেই', 'পারমিট শুধু অফিসের খাতা ভরানোর জন্য'],
           M5Reason.hypothesis => const ['সাবস্টেশনের সবচেয়ে কাছে, তাই আগে', 'ওই রাস্তাটা ভালো, গাড়ি চলে সহজে'],
           M5Reason.locate => const ['পুরো লাইন হাঁটার সময় ছিল না তাই', 'এই অংশটা গাড়ি থেকে সবচেয়ে কাছে'],
-          M5Reason.earth => const ['আর্থ দিলে পারমিট (PTW)-র আর দরকার পড়ে না', 'আর্থ লাগালে কাজ তাড়াতাড়ি শেষ হয়'],
+          M5Reason.earth => const ['আর্থ দিলে পারমিটের আর দরকার পড়ে না', 'আর্থ লাগালে কাজ তাড়াতাড়ি শেষ হয়'],
           M5Reason.cordon => const ['স্পার্ক নেই, তাই তার আসলে ডেডই আছে', 'দড়ি দিলে লোকে তারটা দেখতে পাবে'],
           M5Reason.closeView => const ['একটা পেলেই হলো, বাকিটা পরে দেখব', 'যত বেশি সারাব, তত বেশি নম্বর পাব'],
           M5Reason.permanent => const ['একটু পরে নিজেই ঠিক হয়ে যেত তো', 'স্থায়ী লিখলে অফিস তাড়াতাড়ি মানে'],

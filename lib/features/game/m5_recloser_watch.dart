@@ -52,7 +52,7 @@ export 'm5_recloser_watch_world.dart' show M5Event, M5EventKind, M5Fault, M5Recl
 //    on the first press with the lesson's myth 1 word for word (the radio waits
 //    for him: holdForCoworker). Refused, hold again: "ফিডার 4 আইসোলেট করা
 //    হলো। PTW নম্বর 472 — লিখে নিন।" Drag the PTW slip to the trainee → ◆ →
-//    "ট্রিপ লাইনে PTW কেন লাগবে?". Then drag the van to the span of the flash
+//    "ট্রিপ লাইনে পারমিট (PTW) কেন লাগবে?". Then drag the van to the span of the flash
 //    (the tea stall's locals point the way if asked).
 //  ৩ আর্থ: at the span: hold the tester on each phase (0 V), hold to drive the
 //    earth spike, drag the clamp onto the conductors → ◆ → "ওঠার আগে আর্থ কেন?".
@@ -162,8 +162,8 @@ abstract final class M5RecloserLines {
   };
   static const whyRight = <M5RecloserWhy, List<String>>{
     M5RecloserWhy.lockout: ['লক-আউট হলেও লাইনকে লাইভ ধরে নিতে হবে', 'ট্রিপ মানে ডেড নয়, আবার চালু হতে পারে'],
-    M5RecloserWhy.ptw: ['কন্ট্রোল রুম ভুল করে লাইন চালু করে দিতে পারে', 'পারমিট (PTW) ছাড়া ট্রিপ হওয়া লাইন ছোঁয়া যায় না'],
-    M5RecloserWhy.earth: ['বন্ধ লাইনেও চার্জ থাকে, আর্থ তা মাটিতে নামায়', 'পারমিট (PTW) আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয়'],
+    M5RecloserWhy.ptw: ['কন্ট্রোল রুম ভুল করে লাইন চালু করে দিতে পারে', 'পারমিট ছাড়া ট্রিপ হওয়া লাইন ছোঁয়া যায় না'],
+    M5RecloserWhy.earth: ['বন্ধ লাইনেও চার্জ থাকে, আর্থ তা মাটিতে নামায়', 'পারমিট আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয়'],
   };
   static const myths = [
     'আলো নিভে গেছে, মানে তারে আর কারেন্ট নেই',
@@ -184,7 +184,7 @@ abstract final class M5RecloserLines {
     exitLine: coworkerExit,
     right: [
       'না, রিক্লোজার যেকোনো সময় লাইন চালু করতে পারে',
-      'না, পারমিট (PTW) আর আর্থিং ছাড়া ট্রিপ লাইনে হাত নয়',
+      'না, পারমিট আর আর্থিং ছাড়া ট্রিপ লাইনে হাত নয়',
       'না, কন্ট্রোল রুম ভুল করে লাইন চালু করতে পারে',
     ],
     wrong: [
@@ -237,7 +237,7 @@ abstract final class M5RecloserMistakes {
     deadly: true,
   );
 
-  /// R4 (lesson 5.1: "PTW এবং ব্যক্তিগত আর্থিং ছাড়া … স্পর্শ করা যাবে না").
+  /// R4 (lesson 5.1: "পারমিট (PTW) এবং ব্যক্তিগত আর্থিং ছাড়া … স্পর্শ করা যাবে না").
   static const noEarth = DoMistake(
     key: '5.1/m5_recloser_watch/no-earth',
     textBn: 'টেস্টারে 0 V দেখার পরও আর্থ ছাড়া ওঠা নয় — ব্যক্তিগত আর্থিং লাগিয়ে তবেই পোলে।',

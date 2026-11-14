@@ -141,7 +141,7 @@ void main() {
   });
 
   test('the lesson\'s points: signed, valid, numbered PTW; LOTO; feeder match; no verbal permit; line clear', () {
-    expect(_reject('form', 'unsigned'), contains('হাতে স্বাক্ষরিত PTW ছাড়া কাজ শুরু করবেন না'));
+    expect(_reject('form', 'unsigned'), contains('হাতে স্বাক্ষরিত পারমিট (PTW) ছাড়া কাজ শুরু করবেন না'));
     expect(_reject('form', 'expired'), contains('নতুন পারমিট'));
     expect(_reject('form', 'no_number'), contains('ইউনিক পারমিট নম্বর'));
     expect(_reject('loto', 'on'), contains('Breaker OFF'));
@@ -158,7 +158,7 @@ void main() {
     expect(_slot('start').whyChips.any((w) => w.correct && w.textBn.contains('ফিডার') && w.textBn.contains('টেস্ট')), isTrue);
     expect(_reject('form', 'early'), contains('নির্দিষ্ট সময়'));
     expect(_reject('start', 'phone'), contains('আইনি বা সুরক্ষা ভিত্তি নেই'));
-    expect(_reject('start', 'shout'), contains('হাতে স্বাক্ষরিত PTW'));
+    expect(_reject('start', 'shout'), contains('হাতে স্বাক্ষরিত পারমিট (PTW)'));
     // Discharge & test is ONE step in the lesson (golden step 4): never an order between them.
     expect(_reject('start', 'permit'), contains('ডিসচার্জ ও টেস্ট'));
     expect(_reject('start', 'no_permit'), contains('পারমিট গ্রহণ করার পরই ডিসচার্জ ও টেস্ট'));
