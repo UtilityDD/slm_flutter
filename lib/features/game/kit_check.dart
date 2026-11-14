@@ -330,7 +330,7 @@ const _crackLine = 'সোল ফেটে গেছে। ফাটল দি�
 const kitCheckPack11 = KitCheckPack(
   id: 'kit_check_1_1',
   titleBn: 'কবচ যাচাই',
-  introBn: 'কাল রাতের ঝড়ে লাইন পড়েছে। স্টোরের কিট পুরনো—প্রতিটা জিনিস দেখে তবেই পরুন।',
+  introBn: 'কাল রাতের ঝড়ে লাইনে ব্রেকডাউন হয়েছে। স্টোরের কিট পুরনো—প্রতিটা জিনিস দেখে তবেই পরুন।',
   quickMs: 75000,
   callBefore: [KitSlot.legs, KitSlot.feet],
   callers: [

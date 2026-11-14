@@ -10,6 +10,7 @@ import '../duty_slip/duty_slip_voice.dart';
 import '../game/learn_voice.dart';
 import '../home/bangla_read_aloud.dart';
 import 'guide_director.dart';
+import 'welcome_chooser.dart';
 
 /// Shared lip-sync notifier so [AiLinemanGuide] and legacy [DsCoach] adapters
 /// animate mouth movement whenever the mascot speaks (via neural MP3 or TTS).
@@ -76,10 +77,7 @@ class RivalTalk {
 
 /// High-level activity / event categories for the unified Game Mascot.
 enum MascotCueId {
-  // 1. Ladder Presence & Nudges
-  ladderWelcomeNew,
-  ladderWelcomeDaily,
-  ladderWelcomeReturn,
+  // 1. Ladder Presence & Nudges (welcomes: [MascotSpeechLibrary.welcomeCue])
   ladderIdleLevel,
   ladderIdleGift,
   ladderPoke,
@@ -191,54 +189,84 @@ class MascotSpeechLibrary {
   // 1. LADDER PRESENCE, WELCOME, IDLE NUDGE & POKE LINES
   // ===========================================================================
 
-  static const _welcomeNewPool = <MascotCue>[
-    MascotCue(
-      id: 'ladder.welcome.new.1',
-      textBn: 'হ্যালো! আমি সুব্রত, আপনার সেফটি গাইড। চলুন, প্রথম ধাপ থেকে কাজ শুরু করি!',
+  /// Owner-approved welcomes (2026-11-14), chosen by [chooseWelcome]. The
+  /// guide always welcomes by name. [MascotCue.textBn] is the spoken text
+  /// (the clip key); [welcomeCaption] is what the bubble shows.
+  static const _welcomeCues = <WelcomeSituation, MascotCue>{
+    WelcomeSituation.firstEver: MascotCue(
+      id: 'ladder.welcome.w01',
+      textBn: 'নমস্কার! আমি সুব্রত। নিরাপদে কাজ শেখার এই পথে আপনাকে স্বাগত জানাই — চলুন, প্রথম ধাপ থেকে শুরু করি।',
       mood: GuideMood.wake,
     ),
-    MascotCue(
-      id: 'ladder.welcome.new.2',
-      textBn: 'স্বাগতম! নিরাপদে কাজ শিখতে প্রথম ধাপে ট্যাপ করুন।',
+    WelcomeSituation.newBeforeL1: MascotCue(
+      id: 'ladder.welcome.w02',
+      textBn: 'আমি সুব্রত। প্রথম কাজটা দিয়েই শুরু করা যাক — আমি সঙ্গে আছি।',
+      mood: GuideMood.talk,
+    ),
+    WelcomeSituation.dailyMorning: MascotCue(
+      id: 'ladder.welcome.w03',
+      textBn: 'নমস্কার, সুপ্রভাত! আমি সুব্রত — আজকের ধাপটা একসাথে নিরাপদে শেষ করি।',
       mood: GuideMood.wake,
     ),
-  ];
+    WelcomeSituation.dailyAfternoon: MascotCue(
+      id: 'ladder.welcome.w04',
+      textBn: 'আমি সুব্রত। চলুন, আজকের ধাপটা নিরাপদে এগিয়ে নিই।',
+      mood: GuideMood.wake,
+    ),
+    WelcomeSituation.dailyEvening: MascotCue(
+      id: 'ladder.welcome.w05',
+      textBn: 'নমস্কার, শুভ সন্ধ্যা! আমি সুব্রত — আজকের শেষ কাজটা একসাথে করি।',
+      mood: GuideMood.wake,
+    ),
+    WelcomeSituation.sameDay: MascotCue(
+      id: 'ladder.welcome.w06',
+      textBn: 'আমি সুব্রত। পরের ধাপটা তৈরি — চলুন, শুরু করি।',
+      mood: GuideMood.talk,
+    ),
+    WelcomeSituation.afterBreak: MascotCue(
+      id: 'ladder.welcome.w07',
+      textBn: 'আমি সুব্রত। কয়েকদিনের বিরতির পর ফিরলেন — আজ ধীরে, নিরাপদে শুরু করি।',
+      mood: GuideMood.wake,
+    ),
+    WelcomeSituation.afterDeath: MascotCue(
+      id: 'ladder.welcome.w08',
+      textBn: 'নমস্কার, আমি সুব্রত। ভুল থেকেই শেখা — চলুন, এবার সাবধানে এগোই।',
+      mood: GuideMood.inspire,
+    ),
+    WelcomeSituation.afterRankUp: MascotCue(
+      id: 'ladder.welcome.w09',
+      textBn: 'আমি সুব্রত — আপনার উন্নতিতে আমি গর্বিত। নতুন মডিউলের প্রথম ধাপ অপেক্ষা করছে।',
+      mood: GuideMood.celebrate,
+    ),
+    // W10: the voice can't say every name, so only this name-free part is
+    // spoken; the caption puts the name in front ([welcomeCaption]).
+    WelcomeSituation.dailyNamed: MascotCue(
+      id: 'ladder.welcome.w10',
+      textBn: 'সুব্রত বলছি — আজও নিরাপদে কাজ শিখি।',
+      mood: GuideMood.wake,
+    ),
+  };
 
-  static const _welcomeDailyPool = <MascotCue>[
-    MascotCue(
-      id: 'ladder.welcome.daily.1',
-      textBn: 'হ্যালো! আবার দেখা হলো। আজকের কাজ শুরু করি?',
-      mood: GuideMood.wake,
-    ),
-    MascotCue(
-      id: 'ladder.welcome.daily.2',
-      textBn: 'ওয়েলকাম ব্যাক! চলুন, পরের কাজটা সেরে ফেলি।',
-      mood: GuideMood.wake,
-    ),
-    MascotCue(
-      id: 'ladder.welcome.daily.3',
-      textBn: 'হাই! আজও এসেছেন—দারুণ! চলুন শুরু করি।',
-      mood: GuideMood.wake,
-    ),
-  ];
+  /// W11: the home screen greeting (catalog guideLine `welcome`, when=home_open).
+  static const homeGreetingBn = 'সুব্রত বলছি — আজকের কাজের জন্য তৈরি তো?';
 
-  static const _welcomeReturnPool = <MascotCue>[
-    MascotCue(
-      id: 'ladder.welcome.return.1',
-      textBn: 'হাই! আবার এসেছেন? চলুন, কাজ শুরু করা যাক।',
-      mood: GuideMood.talk,
-    ),
-    MascotCue(
-      id: 'ladder.welcome.return.2',
-      textBn: 'ওয়েলকাম ব্যাক! চলুন, পরের ধাপে যাই।',
-      mood: GuideMood.talk,
-    ),
-    MascotCue(
-      id: 'ladder.welcome.return.3',
-      textBn: 'হ্যালো! চলুন, আরেক ধাপ ওঠা যাক।',
-      mood: GuideMood.talk,
-    ),
-  ];
+  /// The welcome for [situation]; its [MascotCue.textBn] is the spoken text.
+  static MascotCue welcomeCue(WelcomeSituation situation) => _welcomeCues[situation]!;
+
+  /// What the bubble shows for [situation]: W10 adds the player's [name]
+  /// (`{নাম}, সুব্রত বলছি — …`); every other welcome shows its spoken text.
+  static String welcomeCaption(WelcomeSituation situation, {String? name}) {
+    final cue = welcomeCue(situation);
+    final n = name?.trim() ?? '';
+    if (situation == WelcomeSituation.dailyNamed && n.isNotEmpty) return enDigits('$n, ${cue.textBn}');
+    return cue.displayBn;
+  }
+
+  /// Every spoken welcome line (W01–W10, then W11), for recording and tests.
+  static List<String> get welcomeSpokenLines => [
+        for (final s in WelcomeSituation.values) welcomeCue(s).textBn,
+        homeGreetingBn,
+      ];
 
   static const _idleLevelPool = <MascotCue>[
     MascotCue(
@@ -524,9 +552,6 @@ class MascotSpeechLibrary {
   static MascotCue cueFor(MascotCueId id) {
     final idx = _cycle++;
     return switch (id) {
-      MascotCueId.ladderWelcomeNew => _welcomeNewPool[idx % _welcomeNewPool.length],
-      MascotCueId.ladderWelcomeDaily => _welcomeDailyPool[idx % _welcomeDailyPool.length],
-      MascotCueId.ladderWelcomeReturn => _welcomeReturnPool[idx % _welcomeReturnPool.length],
       MascotCueId.ladderIdleLevel => _idleLevelPool[idx % _idleLevelPool.length],
       MascotCueId.ladderIdleGift => _idleGiftPool[idx % _idleGiftPool.length],
       MascotCueId.ladderPoke => _pokePool[idx % _pokePool.length],

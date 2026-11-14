@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -23,8 +24,15 @@ import 'scene_kit.dart';
 ///
 /// Owner rule: the FIRST time through a lesson the whole video must be watched
 /// (no seek bar, no skip; forward jumps are pulled back) before the board
-/// opens. Once [GameSave.videosWatched] has the lesson, later visits get the
-/// normal controls and a skip button.
+/// opens. Once [GameSave.videosWatched] has the lesson, later visits get our
+/// seek bar and a skip button.
+///
+/// On every visit YouTube itself is out of reach: its controls are off, a
+/// touch-absorbing layer covers the video (no logo/title/share link, no
+/// long-press menu) and playback stops [learnVideoStopBeforeEnd] seconds
+/// before the end, which counts as the end, so the "more videos" end screen
+/// never shows. In portrait a small rotate-phone icon invites landscape
+/// (never forced); it goes for good once the phone is turned.
 ///
 /// Only opened when [LearnExplainerVideos] has an id for this lesson.
 class LearnVideoGatePage extends ConsumerStatefulWidget {
@@ -93,6 +101,18 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
 
   final _status = ValueNotifier<LearnVideoStatus>(LearnVideoStatus.loading);
   final _watchedFraction = ValueNotifier<double>(0);
+
+  /// Later visits: (position, duration) for our seek bar.
+  final _timeline = ValueNotifier<(double, double)>((0, 0));
+
+  /// The rotate-phone hint over the video.
+  final _hint = ValueNotifier<bool>(false);
+  var _hasPlayed = false;
+  var _hintGone = false;
+  var _wasFullscreen = false;
+  Duration? _fullscreenChangedAt;
+  Timer? _stopTimer;
+  Timer? _reallowTimer;
   var _tracker = FirstWatchTracker();
   Timer? _sampleTimer;
   Timer? _loadTimer;
@@ -122,10 +142,13 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
     _life.dispose();
     _stopSampling();
     _loadTimer?.cancel();
+    _reallowTimer?.cancel();
     unawaited(_statusSub?.cancel() ?? Future<void>.value());
     _closePlayer();
     _status.dispose();
     _watchedFraction.dispose();
+    _timeline.dispose();
+    _hint.dispose();
     unawaited(_restoreOrientations());
     unawaited(MascotSpeechLibrary.stop());
     super.dispose();
@@ -136,7 +159,9 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
   void _closePlayer() {
     final p = _player;
     _player = null;
-    if (p != null) unawaited(p.close().catchError((_) {}));
+    if (p == null) return;
+    p.fullscreen.removeListener(_onFullscreenChanged);
+    unawaited(p.close().catchError((_) {}));
   }
 
   Future<void> _allowVideoOrientations() async {
@@ -150,6 +175,13 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
   Future<void> _forcePortrait() async {
     await SystemChrome.setPreferredOrientations(const [
       DeviceOrientation.portraitUp,
+    ]);
+  }
+
+  Future<void> _forceLandscape() async {
+    await SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
     ]);
   }
 
@@ -176,10 +208,13 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
     _tracker = FirstWatchTracker();
     _watchedFraction.value = 0;
     _duration = 0;
+    _timeline.value = (0, 0);
     _status.value = LearnVideoStatus.loading;
     try {
       final p = (widget.playerFactory ?? YoutubeLearnVideoPlayer.create)(widget.youtubeId, firstWatch: _firstWatch);
       _player = p;
+      _wasFullscreen = p.fullscreen.value;
+      p.fullscreen.addListener(_onFullscreenChanged);
       _statusSub = p.statusStream.listen(_onStatus);
       _loadTimer?.cancel();
       _loadTimer = Timer(widget.loadTimeout, () {
@@ -201,15 +236,21 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
       return;
     }
     if (s != LearnVideoStatus.loading) _loadTimer?.cancel();
-    if (!_firstWatch) {
-      if (s == LearnVideoStatus.ended) unawaited(_finishVideo());
-      return;
-    }
     if (s == LearnVideoStatus.playing) {
+      if (!_hasPlayed) {
+        _hasPlayed = true;
+        _updateHint();
+      }
+      // Every visit samples while playing: the stop-before-end check (and,
+      // later visits, our seek bar).
       _lastSampleAt = _now();
       _sampleTimer ??= Timer.periodic(const Duration(milliseconds: 500), (_) {
         if (!_sampleBusy) _queueSample();
       });
+      return;
+    }
+    if (!_firstWatch && s == LearnVideoStatus.ended) {
+      unawaited(_finishVideo());
       return;
     }
     // Not playing: no clock (idle draws nothing). Close the playing stretch
@@ -221,6 +262,8 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
   void _stopSampling() {
     _sampleTimer?.cancel();
     _sampleTimer = null;
+    _stopTimer?.cancel();
+    _stopTimer = null;
   }
 
   void _queueSample({bool counting = true}) {
@@ -238,7 +281,19 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
       final now = _now();
       final elapsed = (now - _lastSampleAt).inMicroseconds / 1e6;
       _lastSampleAt = now;
-      final ended = _status.value == LearnVideoStatus.ended;
+      final stopAt = _duration - learnVideoStopBeforeEnd;
+      final atStop = _duration > 0 && pos >= stopAt;
+      // The stop point is the end: YouTube's own end is never reached.
+      final ended = _status.value == LearnVideoStatus.ended || atStop;
+      if (!_firstWatch) {
+        _timeline.value = (pos, _duration);
+        if (ended) {
+          await _finishVideo();
+        } else {
+          _armStop(pos, stopAt);
+        }
+        return;
+      }
       final back = _tracker.sample(pos, elapsed, counting: counting);
       if (back != null) {
         // A skip: back to the last watched second.
@@ -247,19 +302,104 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
         _toast(_mustWatchBn);
         return;
       }
+      if (atStop) await _holdAtStop(p);
       _watchedFraction.value = _tracker.fraction(_duration);
-      final atEnd = _tracker.atEnd(pos, _duration, ended: ended);
-      if (_tracker.complete(_duration, atEnd: atEnd)) {
+      // "Reached the end" = the stop point (or YouTube's own end).
+      if (_tracker.complete(_duration, atEnd: ended)) {
         await _finishVideo(markWatched: true);
       } else if (ended && _duration > 0) {
         // Reached the end short of 95 %: replay the missing part.
         await p.seekTo(_tracker.replayFrom(_duration));
         await p.play();
         _toast(_mustWatchBn);
+      } else {
+        _armStop(pos, stopAt);
       }
     } finally {
       _sampleBusy = false;
     }
+  }
+
+  /// Freeze at the stop point, before YouTube shows its end screen.
+  Future<void> _holdAtStop(LearnVideoPlayer p) async {
+    final s = _status.value;
+    if (s == LearnVideoStatus.playing || s == LearnVideoStatus.buffering) await p.pause();
+  }
+
+  /// Less than one sampling step before the stop point: one exact sample
+  /// there, so playback can't run into the real end between samples.
+  void _armStop(double pos, double stopAt) {
+    _stopTimer?.cancel();
+    _stopTimer = null;
+    final left = stopAt - pos;
+    if (_status.value != LearnVideoStatus.playing || _duration <= 0 || left <= 0 || left >= 0.5) return;
+    _stopTimer = Timer(Duration(milliseconds: (left * 1000).ceil()), () {
+      _stopTimer = null;
+      _queueSample();
+    });
+  }
+
+  /// Later visits: our seek bar. Never past the stop point.
+  void _seekTo(double seconds) {
+    final p = _player;
+    if (p == null || _firstWatch || _videoDone) return;
+    final to = seconds.clamp(0.0, math.max(0.0, _duration - learnVideoStopBeforeEnd)).toDouble();
+    _timeline.value = (to, _duration);
+    unawaited(p.seekTo(to).then((_) => _queueSample(counting: false)).catchError((_) {}));
+  }
+
+  void _updateHint() {
+    _hint.value = _hasPlayed && !_sawLandscape && !_hintGone && !_loadFailed && !_videoDone;
+  }
+
+  /// Our fullscreen button and the rotate hint: fullscreen in landscape.
+  void _toggleFullscreen() {
+    final p = _player;
+    if (p == null || _videoDone) return;
+    HapticFeedback.selectionClick();
+    if (p.fullscreen.value) {
+      p.setFullscreen(false);
+      return;
+    }
+    _reallowTimer?.cancel();
+    unawaited(_forceLandscape());
+    p.setFullscreen(true);
+  }
+
+  void _onFullscreenChanged() {
+    final p = _player;
+    if (p == null) return;
+    final on = p.fullscreen.value;
+    if (on == _wasFullscreen) return;
+    _wasFullscreen = on;
+    _fullscreenChangedAt = _now();
+    if (on) {
+      _hintGone = true;
+      _updateHint();
+      return;
+    }
+    if (!mounted || _phase != _GatePhase.video || _videoDone) return;
+    // Left fullscreen (button, back, or turned upright): stand the phone up,
+    // then allow landscape again for the rest of the video (never locked).
+    unawaited(_forcePortrait());
+    _reallowTimer?.cancel();
+    _reallowTimer = Timer(const Duration(seconds: 2), () {
+      _reallowTimer = null;
+      if (!mounted || _phase != _GatePhase.video || _videoDone) return;
+      if (_player?.fullscreen.value ?? false) return;
+      unawaited(_allowVideoOrientations());
+    });
+  }
+
+  /// Back while fullscreen (or just leaving it) only leaves fullscreen.
+  bool _backLeavesFullscreen() {
+    final p = _player;
+    if (p == null) return false;
+    final at = _fullscreenChangedAt;
+    final recent = at != null && _now() - at < const Duration(milliseconds: 400);
+    if (!p.fullscreen.value && !recent) return false;
+    p.setFullscreen(false);
+    return true;
   }
 
   void _toast(String text) {
@@ -305,6 +445,8 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
     _loadTimer?.cancel();
     unawaited(_statusSub?.cancel() ?? Future<void>.value());
     _statusSub = null;
+    _updateHint();
+    _player?.setFullscreen(false);
     try {
       await _player?.pause();
     } catch (_) {}
@@ -323,6 +465,7 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
     _loadTimer?.cancel();
     unawaited(_statusSub?.cancel() ?? Future<void>.value());
     _statusSub = null;
+    _player?.setFullscreen(false);
     _closePlayer();
     unawaited(_forcePortrait());
     if (mounted) setState(() => _phase = _GatePhase.board);
@@ -360,8 +503,12 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
   }
 
   void _noteOrientation(Orientation o) {
-    if (_phase == _GatePhase.video && o == Orientation.landscape) {
+    if (_phase == _GatePhase.video && o == Orientation.landscape && !_sawLandscape) {
       _sawLandscape = true;
+      // The hint hides itself in landscape at once; this keeps it gone.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _updateHint();
+      });
     }
   }
 
@@ -391,6 +538,7 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
       canPop: _phase != _GatePhase.video || _videoDone,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
+        if (_phase == _GatePhase.video && _backLeavesFullscreen()) return;
         // From the video: leave Learn without clearing (nothing marked watched).
         unawaited(_forcePortrait());
         if (mounted) Navigator.of(context).pop(false);
@@ -418,11 +566,14 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
       surface = const SizedBox.shrink();
     } else {
       surface = p.view(
-        locked: _firstWatch,
-        lockedControls: (ctx, fullscreen) => _LockedControls(
+        controls: (ctx) => _VideoControls(
           status: _status,
           onTogglePlay: _togglePlay,
-          fullscreenButton: fullscreen,
+          fullscreen: p.fullscreen,
+          onFullscreen: _toggleFullscreen,
+          hint: _hint,
+          timeline: _firstWatch ? null : _timeline,
+          onSeek: _seekTo,
         ),
       );
     }
@@ -499,39 +650,203 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
   }
 }
 
-/// First watch: our play/pause and the fullscreen button over the video —
-/// no seek bar, no drag-to-seek.
-class _LockedControls extends StatelessWidget {
-  const _LockedControls({required this.status, required this.onTogglePlay, this.fullscreenButton});
+/// Our controls over the video on every visit. A full-size layer at the back
+/// absorbs every tap, long-press and context-menu press, so nothing ever
+/// reaches YouTube (logo, title, share, end screen). On top: the rotate hint
+/// (portrait only), play/pause, fullscreen and — later visits — a seek bar.
+class _VideoControls extends StatelessWidget {
+  const _VideoControls({
+    required this.status,
+    required this.onTogglePlay,
+    required this.fullscreen,
+    required this.onFullscreen,
+    required this.hint,
+    required this.onSeek,
+    this.timeline,
+  });
 
   final ValueListenable<LearnVideoStatus> status;
   final VoidCallback onTogglePlay;
-  final Widget? fullscreenButton;
+  final ValueListenable<bool> fullscreen;
+  final VoidCallback onFullscreen;
+  final ValueListenable<bool> hint;
+
+  /// Null on the first watch: no seek bar.
+  final ValueListenable<(double, double)>? timeline;
+  final ValueChanged<double> onSeek;
+
+  static const _buttonBg = Color(0x99050A16);
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: Row(
-          children: [
-            ValueListenableBuilder<LearnVideoStatus>(
-              valueListenable: status,
-              builder: (_, s, _) {
-                final playing = s == LearnVideoStatus.playing;
-                return IconButton(
-                  key: const ValueKey('learnVideoPlayPause'),
-                  tooltip: playing ? 'থামান' : 'চালান',
-                  onPressed: onTogglePlay,
-                  style: IconButton.styleFrom(backgroundColor: const Color(0x99050A16)),
-                  icon: Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded, color: SlmColors.ivory),
-                );
-              },
+    final tl = timeline;
+    return Material(
+      type: MaterialType.transparency,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          GestureDetector(
+            key: const ValueKey('learnVideoShield'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () {},
+            onLongPress: () {},
+            onSecondaryTap: () {},
+            child: const SizedBox.expand(),
+          ),
+          Positioned(
+            top: 6,
+            right: 6,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: hint,
+              builder: (_, show, _) => show ? _RotateHint(onTap: onFullscreen) : const SizedBox.shrink(),
             ),
-            const Spacer(),
-            ?fullscreenButton,
-          ],
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (tl != null) _SeekBar(timeline: tl, onSeek: onSeek),
+                  Row(
+                    children: [
+                      ValueListenableBuilder<LearnVideoStatus>(
+                        valueListenable: status,
+                        builder: (_, s, _) {
+                          final playing = s == LearnVideoStatus.playing;
+                          return IconButton(
+                            key: const ValueKey('learnVideoPlayPause'),
+                            tooltip: playing ? 'থামান' : 'চালান',
+                            onPressed: onTogglePlay,
+                            style: IconButton.styleFrom(backgroundColor: _buttonBg),
+                            icon: Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded, color: SlmColors.ivory),
+                          );
+                        },
+                      ),
+                      const Spacer(),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: fullscreen,
+                        builder: (_, on, _) => IconButton(
+                          key: const ValueKey('learnVideoFullscreen'),
+                          onPressed: onFullscreen,
+                          style: IconButton.styleFrom(backgroundColor: _buttonBg),
+                          icon: Icon(on ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded, color: SlmColors.ivory),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Later visits: our own seek bar (the video was already watched once).
+class _SeekBar extends StatefulWidget {
+  const _SeekBar({required this.timeline, required this.onSeek});
+
+  final ValueListenable<(double, double)> timeline;
+  final ValueChanged<double> onSeek;
+
+  @override
+  State<_SeekBar> createState() => _SeekBarState();
+}
+
+class _SeekBarState extends State<_SeekBar> {
+  double? _drag;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<(double, double)>(
+      valueListenable: widget.timeline,
+      builder: (context, t, _) {
+        final (pos, dur) = t;
+        // Duration not known yet: the bar shows, but can't be dragged.
+        final known = dur > 0;
+        return SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 3,
+            activeTrackColor: SlmColors.gold300,
+            inactiveTrackColor: SlmColors.ivory.withValues(alpha: 0.25),
+            thumbColor: SlmColors.gold300,
+            overlayColor: SlmColors.gold300.withValues(alpha: 0.2),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+          ),
+          child: Slider(
+            key: const ValueKey('learnVideoSeek'),
+            value: known ? (_drag ?? pos).clamp(0.0, dur).toDouble() : 0,
+            max: known ? dur : 1,
+            onChangeStart: known ? (v) => setState(() => _drag = v) : null,
+            onChanged: known ? (v) => setState(() => _drag = v) : null,
+            onChangeEnd: known
+                ? (v) {
+                    setState(() => _drag = null);
+                    widget.onSeek(v);
+                  }
+                : null,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Portrait only: a small rotate-phone icon. Turns 90° and back twice over
+/// 1.5 s once, then rests still (zero frames). Tapping it = fullscreen.
+class _RotateHint extends StatefulWidget {
+  const _RotateHint({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  State<_RotateHint> createState() => _RotateHintState();
+}
+
+class _RotateHintState extends State<_RotateHint> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+  late final Animation<double> _turns = TweenSequence<double>([
+    for (var i = 0; i < 2; i++) ...[
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.25).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.25, end: 0.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
+    ],
+  ]).animate(_c);
+  var _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final portrait = MediaQuery.orientationOf(context) == Orientation.portrait;
+    if (!portrait) {
+      _c.stop();
+    } else if (!_started) {
+      _started = true;
+      if (!MediaQuery.disableAnimationsOf(context)) unawaited(_c.forward());
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.orientationOf(context) != Orientation.portrait) return const SizedBox.shrink();
+    return RepaintBoundary(
+      child: IconButton(
+        key: const ValueKey('learnVideoRotateHint'),
+        onPressed: widget.onTap,
+        style: IconButton.styleFrom(backgroundColor: _VideoControls._buttonBg),
+        icon: RotationTransition(
+          turns: _turns,
+          child: const Icon(Icons.screen_rotation_rounded, color: SlmColors.gold300),
         ),
       ),
     );

@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/en_digits.dart';
+import '../auth/auth_provider.dart';
 import '../game/game_save.dart';
 import 'mascot_speech_library.dart';
+import 'welcome_chooser.dart';
 
 enum GuideMood {
   idle,
@@ -107,13 +109,23 @@ class GuideState {
 }
 
 class GuideDirector extends Notifier<GuideState> {
+  /// Day of the last welcome, kept before [GameSave.lastLadderOpenMs] existed;
+  /// read only so an older install is not greeted as a brand-new player.
   static const _welcomeDayKey = 'guide_last_welcome_day_v1';
+
+  /// The clock for welcomes (tests pin it).
+  @visibleForTesting
+  static DateTime Function() clock = DateTime.now;
 
   int _token = 0;
   int _lineToken = 0;
   DateTime _lastPoke = DateTime.fromMillisecondsSinceEpoch(0);
   bool _entranceMuted = false;
   String? _entranceVoiceKey;
+
+  /// What the entrance says aloud when it differs from the caption (W10's
+  /// caption carries the player's name; the clip is the name-free text).
+  String? _entranceSpoken;
   GuideMood _entranceMood = GuideMood.talk;
   GuideGesture _entranceGesture = GuideGesture.none;
 
@@ -319,21 +331,27 @@ class GuideDirector extends Notifier<GuideState> {
   /// Line held until the host reveals the bubble (after body has settled).
   String get entranceLine => _entranceLine;
 
-  /// First ladder open today → center welcome; else dock hi-pop.
+  /// First ladder open today → center welcome; else dock hi-pop; back from a
+  /// level in the same session → a quick comeback word.
   /// Body mood is set immediately; speech line stays empty until [revealEntranceLine].
   Future<GuideEntranceKind> beginLadderEntrance({bool muted = false}) async {
     _entranceMuted = muted;
     _entranceGesture = GuideGesture.none;
+    _entranceSpoken = null;
+    final now = clock();
+    final saveCtl = ref.read(gameSaveProvider.notifier);
     final save = ref.read(gameSaveProvider);
     final cleared = save.rungProgress.values.where((v) => v == 'cleared').length;
     final before = _clearedAtEntrance;
     final streakBefore = _streakAtEntrance;
     _clearedAtEntrance = cleared;
     _streakAtEntrance = save.safeStreak;
-    final prefs = await SharedPreferences.getInstance();
-    final today = _dayKey(DateTime.now());
-    final last = prefs.getString(_welcomeDayKey);
-    final firstToday = last != today;
+    var lastOpen = save.lastLadderOpen;
+    if (lastOpen == null) {
+      final prefs = await SharedPreferences.getInstance();
+      lastOpen = _parseDayKey(prefs.getString(_welcomeDayKey));
+    }
+    final firstToday = lastOpen == null || welcomeDaysBetween(lastOpen, now) != 0;
     if (before != null && !firstToday) {
       final climbed = cleared > before;
       final passedAgain = !climbed && streakBefore != null && save.safeStreak > streakBefore;
@@ -344,41 +362,68 @@ class GuideDirector extends Notifier<GuideState> {
       _entranceVoiceKey = null;
       _entranceMood = climbed || passedAgain ? GuideMood.celebrate : GuideMood.inspire;
       _entranceGesture = climbed ? GuideGesture.spinHop : GuideGesture.none;
+      await saveCtl.noteLadderOpen(now, consumeFlags: false);
       say(mood: _entranceMood, line: '', entrance: GuideEntranceKind.comeback);
       return GuideEntranceKind.comeback;
     }
-    if (firstToday) {
-      await prefs.setString(_welcomeDayKey, today);
-      final cue = MascotSpeechLibrary.cueFor(
-        last == null ? MascotCueId.ladderWelcomeNew : MascotCueId.ladderWelcomeDaily,
-      );
-      _entranceLine = cue.displayBn;
-      _entranceVoiceKey = cue.voiceKey;
-      _entranceMood = GuideMood.wake;
-      say(mood: GuideMood.wake, line: '', entrance: GuideEntranceKind.dailyWelcome);
-      return GuideEntranceKind.dailyWelcome;
-    }
-    final cue = MascotSpeechLibrary.cueFor(MascotCueId.ladderWelcomeReturn);
-    _entranceLine = cue.displayBn;
+    final l1Cleared = save.rungProgress.values.any((v) => v == 'cleared' || v == 'prove');
+    final situation = chooseWelcome(
+      now: now,
+      lastLadderOpen: lastOpen,
+      l1Cleared: l1Cleared,
+      isFirstEver: lastOpen == null && !l1Cleared && save.playsByRung.isEmpty && save.points == 0,
+      diedLastSession: save.diedLastSession,
+      rankedUpSinceLastOpen: save.rankedUpSinceLastOpen,
+      name: _playerName(),
+    );
+    await saveCtl.noteLadderOpen(now, consumeFlags: true);
+    final cue = MascotSpeechLibrary.welcomeCue(situation);
+    _entranceLine = MascotSpeechLibrary.welcomeCaption(situation, name: _playerName());
+    _entranceSpoken = cue.displayBn == _entranceLine ? null : cue.displayBn;
     _entranceVoiceKey = cue.voiceKey;
-    _entranceMood = GuideMood.talk;
-    say(mood: GuideMood.talk, line: '', entrance: GuideEntranceKind.hiPop);
-    return GuideEntranceKind.hiPop;
+    _entranceMood = cue.mood;
+    final kind = firstToday ? GuideEntranceKind.dailyWelcome : GuideEntranceKind.hiPop;
+    say(mood: _entranceMood, line: '', entrance: kind);
+    return kind;
+  }
+
+  /// The signed-in player's name for W10 (null for guests or when unknown).
+  String? _playerName() {
+    try {
+      final auth = ref.read(authProvider);
+      if (!auth.isAuthenticated) return null;
+      final name = auth.profile?.fullName?.trim() ?? '';
+      return name.isEmpty ? null : name;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static DateTime? _parseDayKey(String? key) {
+    if (key == null) return null;
+    final p = key.split('-');
+    if (p.length != 3) return null;
+    final y = int.tryParse(p[0]), m = int.tryParse(p[1]), d = int.tryParse(p[2]);
+    return y == null || m == null || d == null ? null : DateTime(y, m, d);
   }
 
   void revealEntranceLine() {
     if (_entranceLine.isEmpty) return;
     final line = _entranceLine;
     final entrance = state.entrance;
+    final spoken = _entranceSpoken;
     say(
       mood: _entranceMood,
       gesture: _entranceGesture,
       line: line,
       entrance: entrance,
       voiceKey: _entranceVoiceKey,
-      speakVoice: true,
+      speakVoice: spoken == null,
       muted: _entranceMuted,
     );
+    if (spoken != null && !_entranceMuted) {
+      unawaited(MascotSpeechLibrary.speak(spoken, voiceKey: _entranceVoiceKey));
+    }
   }
 
   /// Minimum on-screen time before we may clear; voice wait is separate ([MascotSpeechLibrary.waitUntilQuiet]).
@@ -417,9 +462,6 @@ class GuideDirector extends Notifier<GuideState> {
     _lastPoke = now;
     sayCue(MascotCueId.ladderPoke, speakVoice: true, muted: muted);
   }
-
-  String _dayKey(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
 
 final guideDirectorProvider = NotifierProvider<GuideDirector, GuideState>(GuideDirector.new);

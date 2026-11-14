@@ -1,14 +1,19 @@
 // Learn explainer video gate (lib/features/game/learn_video_gate.dart): the
-// first watch of a lesson's video can't be skipped; later visits can. A fake
-// player stands in for YouTube (no webview).
+// first watch of a lesson's video can't be skipped; later visits can. YouTube
+// is never reachable (touch shield, our controls, stop before the end), and a
+// rotate hint invites landscape in portrait. A fake player stands in for
+// YouTube (no webview).
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart' show HitTestResult;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart' show PointerEvents;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
 import 'package:slm_flutter/features/game/learn_board_models.dart';
@@ -28,11 +33,14 @@ class _FakePlayer implements LearnVideoPlayer {
   int plays = 0;
   int pauses = 0;
   int positionReads = 0;
-  bool locked = false;
   bool closed = false;
+  bool endedEmitted = false;
+  final fullscreenN = ValueNotifier<bool>(false);
+  final fullscreenRequests = <bool>[];
 
   void emit(LearnVideoStatus s) {
     _status = s;
+    if (s == LearnVideoStatus.ended) endedEmitted = true;
     if (!_ctl.isClosed) _ctl.add(s);
   }
 
@@ -70,19 +78,24 @@ class _FakePlayer implements LearnVideoPlayer {
   }
 
   @override
-  Widget view({
-    required bool locked,
-    required Widget Function(BuildContext context, Widget? fullscreenButton) lockedControls,
-  }) {
-    this.locked = locked;
+  ValueListenable<bool> get fullscreen => fullscreenN;
+
+  @override
+  void setFullscreen(bool on) {
+    fullscreenRequests.add(on);
+    fullscreenN.value = on;
+  }
+
+  @override
+  Widget view({required WidgetBuilder controls}) {
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: Builder(
         builder: (ctx) => Stack(
           fit: StackFit.expand,
           children: [
-            const ColoredBox(color: Colors.black),
-            if (locked) lockedControls(ctx, null) else const Text('YT_CONTROLS'),
+            const ColoredBox(key: ValueKey('fakeVideo'), color: Colors.black),
+            controls(ctx),
           ],
         ),
       ),
@@ -97,11 +110,14 @@ class _FakePlayer implements LearnVideoPlayer {
 }
 
 class _Rig {
-  _Rig(this.container);
+  _Rig(this.container, this.orientations);
   final ProviderContainer container;
   final players = <_FakePlayer>[];
   var nowMs = 0;
   var reads = 0;
+
+  /// Every SystemChrome.setPreferredOrientations call, in order.
+  final List<List<String>> orientations;
   _FakePlayer get player => players.last;
   GameSave get save => container.read(gameSaveProvider);
 }
@@ -111,6 +127,24 @@ const _needNet = 'ভিডিওটি দেখতে ইন্টারনে
 final _guide = find.byKey(const ValueKey('guide'));
 final _board = find.text('BOARD');
 final _skip = find.byKey(const ValueKey('learnVideoSkip'));
+final _shield = find.byKey(const ValueKey('learnVideoShield'));
+final _seek = find.byKey(const ValueKey('learnVideoSeek'));
+final _hint = find.byKey(const ValueKey('learnVideoRotateHint'));
+final _fullscreenBtn = find.byKey(const ValueKey('learnVideoFullscreen'));
+const _landscapeOnly = ['DeviceOrientation.landscapeLeft', 'DeviceOrientation.landscapeRight'];
+const _portraitOnly = ['DeviceOrientation.portraitUp'];
+
+/// A phone held upright / sideways (the default test view is landscape).
+void _portrait(WidgetTester tester) {
+  tester.view.devicePixelRatio = 3;
+  tester.view.physicalSize = const Size(1080, 2340);
+  addTearDown(tester.view.reset);
+}
+
+void _landscape(WidgetTester tester) {
+  tester.view.devicePixelRatio = 3;
+  tester.view.physicalSize = const Size(2340, 1080);
+}
 
 Future<_Rig> _open(
   WidgetTester tester, {
@@ -118,15 +152,21 @@ Future<_Rig> _open(
   _FakePlayer Function(int attempt)? makePlayer,
 }) async {
   SharedPreferences.setMockInitialValues({});
+  final orientations = <List<String>>[];
   // Orientation calls answer at once (no real platform in tests).
-  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+    if (call.method == 'SystemChrome.setPreferredOrientations') {
+      orientations.add((call.arguments as List).cast<String>());
+    }
+    return null;
+  });
   addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
   final container = ProviderContainer();
   addTearDown(container.dispose);
   container.read(gameSaveProvider);
   await tester.pump();
   if (watched) await container.read(gameSaveProvider.notifier).markVideoWatched('1.1');
-  final rig = _Rig(container);
+  final rig = _Rig(container, orientations);
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
@@ -258,9 +298,8 @@ void main() {
   testWidgets('first watch: no skip, jumps pulled back, full watch marks it and opens the board', (tester) async {
     final rig = await _open(tester, watched: false);
     final p = rig.player;
-    expect(p.locked, isTrue);
     expect(_skip, findsNothing);
-    expect(find.text('YT_CONTROLS'), findsNothing);
+    expect(_seek, findsNothing);
     expect(find.byKey(const ValueKey('learnVideoPlayPause')), findsOneWidget);
     expect(find.byKey(const ValueKey('learnVideoWatched')), findsOneWidget);
 
@@ -298,10 +337,11 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('later visit: normal controls and a skip button straight to the board', (tester) async {
+  testWidgets('later visit: our controls, a seek bar and a skip button straight to the board', (tester) async {
     final rig = await _open(tester, watched: true);
-    expect(rig.player.locked, isFalse);
-    expect(find.text('YT_CONTROLS'), findsOneWidget);
+    expect(find.byKey(const ValueKey('learnVideoPlayPause')), findsOneWidget);
+    expect(_fullscreenBtn, findsOneWidget);
+    expect(_seek, findsOneWidget);
     expect(find.byKey(const ValueKey('learnVideoWatched')), findsNothing);
     expect(_skip, findsOneWidget);
     expect(find.text('এড়িয়ে যান ›'), findsOneWidget);
@@ -399,5 +439,196 @@ void main() {
     await _wait(tester, rig, 5);
     expect(p.positionReads, reads, reason: 'no position polling while paused');
     expect(tester.binding.hasScheduledFrame, isFalse);
+  });
+
+  group('YouTube out of reach', () {
+    test('player params, same on every visit: no YouTube controls, keyboard, fullscreen, annotations, captions or taps', () {
+      const p = YoutubeLearnVideoPlayer.params;
+      expect(p.showControls, isFalse);
+      expect(p.enableKeyboard, isFalse);
+      expect(p.showFullscreenButton, isFalse);
+      expect(p.pointerEvents, PointerEvents.none);
+      expect(p.strictRelatedVideos, isTrue);
+      expect(p.showVideoAnnotations, isFalse);
+      expect(p.enableCaption, isFalse);
+      final m = p.toMap();
+      expect(m['controls'], 0);
+      expect(m['disablekb'], 1);
+      expect(m['fs'], 0);
+      expect(m['rel'], 0);
+      expect(m['iv_load_policy'], 3);
+      expect(m['cc_load_policy'], 0);
+    });
+
+    for (final watched in [false, true]) {
+      testWidgets('touch shield covers the whole video (${watched ? 'later visit' : 'first watch'}); taps and long-press reach nothing', (tester) async {
+        final rig = await _open(tester, watched: watched);
+        final p = rig.player;
+        p.emit(LearnVideoStatus.playing);
+        await tester.pump();
+        final video = find.byKey(const ValueKey('fakeVideo'));
+        expect(_shield, findsOneWidget);
+        expect(tester.getRect(_shield), tester.getRect(video));
+        // A touch on the video stops at the shield: the video surface (the
+        // YouTube webview in the app) is never hit.
+        final center = tester.getCenter(video);
+        final hit = HitTestResult();
+        tester.binding.hitTestInView(hit, center, tester.view.viewId);
+        final targets = hit.path.map((e) => e.target).toList();
+        expect(targets, contains(tester.renderObject(_shield)));
+        expect(targets, isNot(contains(tester.renderObject(video))));
+        await tester.tapAt(center);
+        await tester.longPressAt(center);
+        await tester.pump();
+        expect(p.status, LearnVideoStatus.playing);
+        expect(p.pauses, 0);
+        expect(p.seeks, isEmpty);
+        // Seek bar only once the video was watched before.
+        expect(_seek, watched ? findsOneWidget : findsNothing);
+        await _wait(tester, rig, 1);
+      });
+    }
+
+    testWidgets('later visit: stops 0.5 s before the end, which counts as ended; YouTube never ends', (tester) async {
+      final rig = await _open(tester, watched: true);
+      final p = rig.player;
+      p.emit(LearnVideoStatus.playing);
+      await tester.pump();
+      await _play(tester, rig, 101);
+      expect(p.endedEmitted, isFalse, reason: 'YouTube end screen never reached');
+      expect(p.pos, closeTo(p.duration - 0.5, 1e-9));
+      expect(p.status, LearnVideoStatus.paused);
+      expect(find.textContaining('সাবধানে খেলুন'), findsOneWidget);
+      await tester.tap(_guide);
+      await tester.pump();
+      expect(_board, findsOneWidget);
+    });
+
+    testWidgets('first watch: the stop point is the end; marked watched without YouTube ever ending', (tester) async {
+      final rig = await _open(tester, watched: false);
+      final p = rig.player;
+      p.emit(LearnVideoStatus.playing);
+      await tester.pump();
+      await _play(tester, rig, 101);
+      expect(p.endedEmitted, isFalse);
+      expect(p.pos, closeTo(p.duration - 0.5, 1e-9));
+      expect(rig.save.videosWatched, contains('1.1'));
+      expect(find.textContaining('সাবধানে খেলুন'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+    });
+
+    testWidgets('an exact sample lands on the stop point between 500 ms ticks', (tester) async {
+      final rig = await _open(tester, watched: true);
+      final p = rig.player;
+      p.emit(LearnVideoStatus.playing);
+      await tester.pump();
+      p.pos = 99.2;
+      rig.nowMs += 500;
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(p.pauses, 0);
+      p.pos = 99.5;
+      rig.nowMs += 300;
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(p.pauses, 1, reason: 'stopped at 99.5 s, before the next 500 ms tick');
+      expect(p.endedEmitted, isFalse);
+      await tester.pump();
+      expect(find.textContaining('সাবধানে খেলুন'), findsOneWidget);
+    });
+
+    testWidgets('later visit: our seek bar seeks, never past the stop point', (tester) async {
+      final rig = await _open(tester, watched: true);
+      final p = rig.player;
+      p.emit(LearnVideoStatus.playing);
+      await tester.pump();
+      await _play(tester, rig, 2);
+      await tester.drag(_seek, const Offset(-2000, 0));
+      await tester.pump();
+      expect(p.seeks.last, 0);
+      await tester.drag(_seek, const Offset(4000, 0));
+      await tester.pump();
+      await tester.pump();
+      expect(p.seeks.last, closeTo(p.duration - 0.5, 1e-9));
+      expect(p.endedEmitted, isFalse);
+      expect(find.textContaining('সাবধানে খেলুন'), findsOneWidget);
+    });
+  });
+
+  group('rotate hint', () {
+    testWidgets('shows in portrait once playing, is gone in landscape and stays gone', (tester) async {
+      _portrait(tester);
+      final rig = await _open(tester, watched: false);
+      final p = rig.player;
+      expect(_hint, findsNothing, reason: 'not before the video plays');
+      p.emit(LearnVideoStatus.playing);
+      await tester.pump();
+      await tester.pump();
+      expect(_hint, findsOneWidget);
+      await _play(tester, rig, 2);
+      expect(_hint, findsOneWidget, reason: 'rests as a still icon');
+      _landscape(tester);
+      await tester.pump();
+      expect(_hint, findsNothing);
+      await tester.pump();
+      tester.view.physicalSize = const Size(1080, 2340);
+      await tester.pump();
+      await tester.pump();
+      expect(_hint, findsNothing, reason: 'does not come back for this video');
+      // Encouraged, never forced.
+      expect(p.fullscreenRequests, isEmpty);
+      expect(rig.orientations.where((o) => listEquals(o, _landscapeOnly)), isEmpty);
+    });
+
+    testWidgets('tapping it = fullscreen landscape; back leaves fullscreen, phone stands up, rotation freed again', (tester) async {
+      _portrait(tester);
+      final rig = await _open(tester, watched: true);
+      final p = rig.player;
+      p.emit(LearnVideoStatus.playing);
+      await tester.pump();
+      await tester.pump();
+      await tester.tap(_hint);
+      await tester.pump();
+      expect(p.fullscreenRequests, [true]);
+      expect(rig.orientations.last, _landscapeOnly);
+      expect(_hint, findsNothing);
+
+      // Back leaves fullscreen, not the page.
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      expect(p.fullscreenRequests, [true, false]);
+      expect(rig.orientations.last, _portraitOnly);
+      expect(_skip, findsOneWidget);
+      await _play(tester, rig, 2.5);
+      expect(rig.orientations.last, unorderedEquals([..._portraitOnly, ..._landscapeOnly]));
+      expect(_hint, findsNothing);
+
+      // Our fullscreen button does the same both ways.
+      await tester.tap(_fullscreenBtn);
+      await tester.pump();
+      expect(p.fullscreenRequests.last, isTrue);
+      expect(rig.orientations.last, _landscapeOnly);
+      await tester.tap(_fullscreenBtn);
+      await tester.pump();
+      expect(p.fullscreenRequests.last, isFalse);
+      expect(rig.orientations.last, _portraitOnly);
+      await _play(tester, rig, 2.5);
+      expect(rig.orientations.last, unorderedEquals([..._portraitOnly, ..._landscapeOnly]));
+    });
+
+    for (final watched in [false, true]) {
+      testWidgets('idle after the hint settles: zero frames (${watched ? 'later visit' : 'first watch'})', (tester) async {
+        _portrait(tester);
+        final rig = await _open(tester, watched: watched);
+        final p = rig.player;
+        p.emit(LearnVideoStatus.playing);
+        await tester.pump();
+        await _play(tester, rig, 2);
+        await tester.tap(find.byKey(const ValueKey('learnVideoPlayPause')));
+        await tester.pump();
+        expect(p.status, LearnVideoStatus.paused);
+        await _wait(tester, rig, 2);
+        expect(_hint, findsOneWidget);
+        expect(tester.binding.hasScheduledFrame, isFalse);
+      });
+    }
   });
 }

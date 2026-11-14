@@ -7,14 +7,14 @@ class AppConfig {
 
   // TODO(owner): host the privacy policy page and put its real URL here
   // (the same URL goes into Play Console → App content → Privacy policy).
-  static const String privacyPolicyUrl = 'https://example.com/privacy';
+  static const String privacyPolicyUrl = 'https://smartlinemanapp.github.io/privacy_policy/smartlineman.html';
 
   // TODO(owner): host docs/playstore/account-deletion.html and put its URL here
   // (the same URL goes into Play Console → Data deletion).
-  static const String accountDeletionUrl = 'https://example.com/account-deletion';
+  static const String accountDeletionUrl = 'https://smartlinemanapp.github.io/privacy_policy/account-deletion.html';
 
   // TODO(owner): the support inbox that handles deletion requests by email.
-  static const String supportEmail = 'support@example.com';
+  static const String supportEmail = 'smartlinemanapp@gmail.com';
 
   /// Google accounts that may open the in-app admin panel. Matched to the session email.
   /// The server has the same two emails: `slm_app.is_admin()` and the league /

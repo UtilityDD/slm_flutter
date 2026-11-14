@@ -59,6 +59,17 @@ class GameSave {
   /// Lesson ids whose Learn explainer video was watched through once. The
   /// first watch can't be skipped; later visits may skip it.
   final Set<String> videosWatched;
+
+  /// When the ladder was last opened (ms since epoch; null = never, or a save
+  /// from before this was kept). Drives the guide's welcome ([chooseWelcome]).
+  final int? lastLadderOpenMs;
+
+  /// A play ended in a death and no rung was passed after it: the next
+  /// session's welcome is W08. Cleared by the welcome that uses it.
+  final bool diedLastSession;
+
+  /// A rank was earned since the last welcome: the next welcome is W09.
+  final bool rankedUpSinceLastOpen;
   final bool migratedFromDs;
 
   const GameSave({
@@ -85,8 +96,14 @@ class GameSave {
     this.starsByRung = const {},
     this.toolbox = const ToolboxSave(),
     this.videosWatched = const <String>{},
+    this.lastLadderOpenMs,
+    this.diedLastSession = false,
+    this.rankedUpSinceLastOpen = false,
     required this.migratedFromDs,
   });
+
+  DateTime? get lastLadderOpen =>
+      lastLadderOpenMs == null ? null : DateTime.fromMillisecondsSinceEpoch(lastLadderOpenMs!);
 
   static const empty = GameSave(
     seasonId: 'season-1',
@@ -128,6 +145,9 @@ class GameSave {
     Map<String, int>? starsByRung,
     ToolboxSave? toolbox,
     Set<String>? videosWatched,
+    int? lastLadderOpenMs,
+    bool? diedLastSession,
+    bool? rankedUpSinceLastOpen,
     bool? migratedFromDs,
   }) {
     return GameSave(
@@ -154,6 +174,9 @@ class GameSave {
       starsByRung: starsByRung ?? this.starsByRung,
       toolbox: toolbox ?? this.toolbox,
       videosWatched: videosWatched ?? this.videosWatched,
+      lastLadderOpenMs: lastLadderOpenMs ?? this.lastLadderOpenMs,
+      diedLastSession: diedLastSession ?? this.diedLastSession,
+      rankedUpSinceLastOpen: rankedUpSinceLastOpen ?? this.rankedUpSinceLastOpen,
       migratedFromDs: migratedFromDs ?? this.migratedFromDs,
     );
   }
@@ -182,6 +205,9 @@ class GameSave {
         'starsByRung': starsByRung,
         'toolbox': toolbox.toJson(),
         'videosWatched': videosWatched.toList()..sort(),
+        if (lastLadderOpenMs != null) 'lastLadderOpenMs': lastLadderOpenMs,
+        'diedLastSession': diedLastSession,
+        'rankedUpSinceLastOpen': rankedUpSinceLastOpen,
         'migratedFromDs': migratedFromDs,
       };
 
@@ -252,6 +278,9 @@ class GameSave {
       videosWatched: {
         for (final v in (json['videosWatched'] as List? ?? const [])) v.toString(),
       },
+      lastLadderOpenMs: (json['lastLadderOpenMs'] as num?)?.toInt(),
+      diedLastSession: json['diedLastSession'] as bool? ?? false,
+      rankedUpSinceLastOpen: json['rankedUpSinceLastOpen'] as bool? ?? false,
       migratedFromDs: json['migratedFromDs'] as bool? ?? false,
     );
   }
@@ -738,6 +767,7 @@ class GameSaveController extends Notifier<GameSave> {
       currentRungId: moduleFirstRungId,
       rungProgress: progress,
       clearedSinceDeath: const [],
+      diedLastSession: true,
     );
     await _persist();
   }
@@ -765,6 +795,8 @@ class GameSaveController extends Notifier<GameSave> {
         safeStreak: state.safeStreak + 1,
         currentRungId: rungId,
         clearedSinceDeath: since,
+        // A pass after a death: the session no longer ends on that death.
+        diedLastSession: false,
       ),
       rungId,
       // A Do/gate clear is worth at least 1 key; its stars may lift it to 2.
@@ -872,7 +904,19 @@ class GameSaveController extends Notifier<GameSave> {
 
   Future<void> unlockRank(int index) async {
     if (index <= state.rankIndex) return;
-    state = state.copyWith(rankIndex: index);
+    state = state.copyWith(rankIndex: index, rankedUpSinceLastOpen: true);
+    await _persist();
+  }
+
+  /// The ladder opened at [now]. A welcome ([consumeFlags]) also clears the
+  /// death and rank-up flags it just used; the quick word on coming back
+  /// from a level in the same session keeps them for the next welcome.
+  Future<void> noteLadderOpen(DateTime now, {required bool consumeFlags}) async {
+    state = state.copyWith(
+      lastLadderOpenMs: now.millisecondsSinceEpoch,
+      diedLastSession: consumeFlags ? false : null,
+      rankedUpSinceLastOpen: consumeFlags ? false : null,
+    );
     await _persist();
   }
 

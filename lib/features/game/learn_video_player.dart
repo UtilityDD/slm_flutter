@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -20,13 +21,16 @@ abstract class LearnVideoPlayer {
   Future<void> pause();
   Future<void> seekTo(double seconds);
 
-  /// The video surface. When [locked] (first watch) the player's own
-  /// controls and seek gestures are gone and [lockedControls] is laid over
-  /// the video instead; it gets the player's fullscreen button, if any.
-  Widget view({
-    required bool locked,
-    required Widget Function(BuildContext context, Widget? fullscreenButton) lockedControls,
-  });
+  /// True while the video fills the screen (our fullscreen / landscape view).
+  ValueListenable<bool> get fullscreen;
+
+  /// Enter or leave the fullscreen view (orientation is the gate's job).
+  void setFullscreen(bool on);
+
+  /// The video surface with [controls] laid over it on every visit. The
+  /// player's own controls, links and gestures are never reachable: the
+  /// controls layer covers the whole video and absorbs every touch.
+  Widget view({required WidgetBuilder controls});
 
   Future<void> close();
 }
@@ -36,22 +40,24 @@ typedef LearnVideoPlayerFactory = LearnVideoPlayer Function(String videoId, {req
 /// YouTube (youtube_player_flutter) behind [LearnVideoPlayer].
 class YoutubeLearnVideoPlayer implements LearnVideoPlayer {
   YoutubeLearnVideoPlayer(String videoId, {required bool firstWatch})
-      : _c = YoutubePlayerController.fromVideoId(
-          videoId: videoId,
-          autoPlay: true,
-          params: YoutubePlayerParams(
-            showFullscreenButton: true,
-            mute: false,
-            strictRelatedVideos: true,
-            // First watch: no YouTube controls, no keyboard, no taps into
-            // the iframe — only our play/pause and fullscreen.
-            showControls: !firstWatch,
-            enableKeyboard: false,
-            pointerEvents: firstWatch ? PointerEvents.none : PointerEvents.initial,
-          ),
-        ) {
+      : _c = YoutubePlayerController.fromVideoId(videoId: videoId, autoPlay: true, params: params) {
     _sub = _c.listen(_onValue);
   }
+
+  /// Same on every visit: no YouTube controls, keyboard, fullscreen button,
+  /// annotations or captions; no taps reach the iframe (so the logo, title,
+  /// share and "watch on YouTube" links are dead); related videos only from
+  /// the same channel. Our own controls sit on top.
+  static const params = YoutubePlayerParams(
+    mute: false,
+    showControls: false,
+    enableKeyboard: false,
+    showFullscreenButton: false,
+    strictRelatedVideos: true,
+    showVideoAnnotations: false,
+    enableCaption: false,
+    pointerEvents: PointerEvents.none,
+  );
 
   static LearnVideoPlayer create(String videoId, {required bool firstWatch}) =>
       YoutubeLearnVideoPlayer(videoId, firstWatch: firstWatch);
@@ -60,8 +66,13 @@ class YoutubeLearnVideoPlayer implements LearnVideoPlayer {
   StreamSubscription<YoutubePlayerValue>? _sub;
   final _statusCtl = StreamController<LearnVideoStatus>.broadcast();
   var _status = LearnVideoStatus.loading;
+  final _fullscreen = ValueNotifier<bool>(false);
 
   void _onValue(YoutubePlayerValue v) {
+    if (_statusCtl.isClosed) return;
+    // The controller's current value, not this event's snapshot: a late
+    // event must not undo a fullscreen change made since.
+    _fullscreen.value = _c.value.fullScreenOption.enabled;
     final s = v.hasError
         ? LearnVideoStatus.error
         : switch (v.playerState) {
@@ -103,22 +114,32 @@ class YoutubeLearnVideoPlayer implements LearnVideoPlayer {
   Future<void> seekTo(double seconds) => _c.seekTo(seconds: seconds, allowSeekAhead: true);
 
   @override
-  Widget view({
-    required bool locked,
-    required Widget Function(BuildContext context, Widget? fullscreenButton) lockedControls,
-  }) {
+  ValueListenable<bool> get fullscreen => _fullscreen;
+
+  @override
+  void setFullscreen(bool on) {
+    if (_statusCtl.isClosed || _fullscreen.value == on) return;
+    _fullscreen.value = on;
+    if (on) {
+      _c.enterFullScreen();
+    } else {
+      _c.exitFullScreen();
+    }
+  }
+
+  @override
+  Widget view({required WidgetBuilder controls}) {
     return YoutubePlayer(
       controller: _c,
       aspectRatio: 16 / 9,
       backgroundColor: const Color(0xFF070D1A),
-      // A builder replaces the package's controls overlay (seek bar and
-      // horizontal-drag seek) with ours.
-      builder: locked
-          ? (ctx, player, c) => Stack(
-                fit: StackFit.expand,
-                children: [player, lockedControls(ctx, FullscreenButton(controller: c))],
-              )
-          : null,
+      enableFullScreenOnVerticalDrag: false,
+      // A builder replaces the package's controls overlay (seek bar, speed,
+      // horizontal-drag seek) with ours, on every visit.
+      builder: (ctx, player, c) => Stack(
+        fit: StackFit.expand,
+        children: [player, controls(ctx)],
+      ),
     );
   }
 
@@ -127,9 +148,14 @@ class YoutubeLearnVideoPlayer implements LearnVideoPlayer {
     await _sub?.cancel();
     _sub = null;
     await _statusCtl.close();
+    _fullscreen.dispose();
     await _c.close();
   }
 }
+
+/// Playback stops this many seconds before the real end and counts as ended,
+/// so YouTube's end screen ("more videos") never shows.
+const learnVideoStopBeforeEnd = 0.5;
 
 /// First-watch accounting: seconds really watched, and skip detection.
 ///
