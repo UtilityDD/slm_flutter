@@ -199,12 +199,15 @@ List<SpeechBit> speechBits(String raw) {
   return bits;
 }
 
-/// The one device voice for the app.
+/// The one device voice for the app (the lesson readers and the guide's
+/// [MascotSpeechLibrary] device voice).
 ///
 /// flutter_tts sends every callback over one static channel to whichever
-/// FlutterTts was built last, so a FlutterTts per page left older pages
-/// waiting out 12-20 s timeouts. One engine, set up once; the reader that
-/// spoke last owns the callbacks.
+/// FlutterTts was built last, and `awaitSpeakCompletion` is one plugin-wide
+/// flag, so a second FlutterTts (one per page, or the guide's own) left the
+/// others waiting out 12-20 s timeouts or returning at once. One engine, set
+/// up once (completion comes by callback); the reader that spoke last owns
+/// the callbacks.
 class _DeviceTts {
   _DeviceTts._();
   static final instance = _DeviceTts._();
@@ -243,6 +246,7 @@ class _DeviceTts {
   Future<void> stop() => _tts.stop();
   Future<void> speak(String text) => _tts.speak(text);
   Future<void> setSpeechRate(double rate) => _tts.setSpeechRate(rate);
+  Future<void> setPitch(double pitch) => _tts.setPitch(pitch);
 
   Future<void> _init() async {
     await _tts.awaitSpeakCompletion(false);
@@ -375,6 +379,7 @@ class BanglaReadAloud {
     if (mine != _token) return false;
     if (language == null) return false;
     await _device.setSpeechRate(rate);
+    await _device.setPitch(1.0);
     if (mine != _token) return false;
 
     if (onClause != null) {
@@ -391,8 +396,10 @@ class BanglaReadAloud {
   }
 
   /// Speaks [raw] and finishes when the voice finishes, so the next line can wait.
-  Future<void> speakAwait(String raw, {double rate = 0.42}) async {
-    final clean = lessonSpeechText(raw);
+  /// [asIs] speaks the text unchanged (the guide's lines are already spoken
+  /// Bangla, not lesson markup).
+  Future<void> speakAwait(String raw, {double rate = 0.42, double pitch = 1.0, bool asIs = false}) async {
+    final clean = asIs ? raw.trim() : lessonSpeechText(raw);
     if (clean.isEmpty) return;
     final mine = ++_token;
     _device.claim(this);
@@ -404,6 +411,7 @@ class BanglaReadAloud {
     await init();
     if (mine != _token || language == null) return;
     await _device.setSpeechRate(rate);
+    await _device.setPitch(pitch);
     if (mine != _token) return;
     speaking = true;
     final wait = Completer<void>();
