@@ -548,10 +548,12 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   void _openLevel(int index, {BuiltLadder? built}) {
     _clearNudge();
     _armIdle();
+    // Before the catalog is built a rung has no id: a tap would open a legacy
+    // level and save progress under its old number. It loads in a moment.
+    if (built == null) return;
     final save = ref.read(gameSaveProvider);
     final focus = _computeFocus(built, save);
-    final rung =
-        built != null && index < built.length ? built.rungs[index] : null;
+    final rung = index < built.length ? built.rungs[index] : null;
     final locked = !dsPlayAllLevels && index > focus;
     if (locked) {
       _pulseMist(shake: true, focus: focus);
