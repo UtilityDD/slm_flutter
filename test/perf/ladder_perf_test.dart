@@ -29,6 +29,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -149,6 +150,20 @@ Future<_Rebuilds> _measureFrames(WidgetTester tester, {double seconds = 2}) asyn
   return r;
 }
 
+/// Paints so far of the layers that hold whole ladder bands (the nearest
+/// RepaintBoundary above each built `_MapBand`).
+int _bandLayerPaints(WidgetTester tester) {
+  final layers = <RenderRepaintBoundary>{};
+  for (final e in find.byWidgetPredicate((w) => w.runtimeType.toString() == '_MapBand').evaluate()) {
+    RenderObject? o = e.renderObject;
+    while (o != null && o is! RenderRepaintBoundary) {
+      o = o.parent;
+    }
+    if (o is RenderRepaintBoundary) layers.add(o);
+  }
+  return layers.fold(0, (n, b) => n + b.debugSymmetricPaintCount + b.debugAsymmetricPaintCount);
+}
+
 Future<void> _idle(WidgetTester tester, Duration d) async {
   final steps = d.inMilliseconds ~/ 100;
   for (var i = 0; i < steps; i++) {
@@ -174,8 +189,16 @@ void main() {
     // The mascot greets on open and breathes for one ~6 s cycle, then rests;
     // measure the settled ladder (dfd3fd1 mascot design).
     await _idle(tester, const Duration(seconds: 8));
+    final bands0 = _bandLayerPaints(tester);
     final r = await _measureFrames(tester);
+    final bandPaints = _bandLayerPaints(tester) - bands0;
     _report('idle 2s (120 frames), $cleared cleared', r);
+    // ignore: avoid_print
+    print('[ladder-perf] band layers repainted in 120 idle frames: $bandPaints');
+    // The coin, badge and gleam animate on their own layers; a band's layer
+    // (rails, plaque, coin face) must not repaint with them (LayoutBuilder
+    // around the band: 120 = every frame).
+    expect(bandPaints, lessThanOrEqualTo(4));
     // Header, bands, background and guide host must not rebuild per frame.
     expect(r.of('_MapBand'), lessThanOrEqualTo(4));
     expect(r.of('_TopHeader'), lessThanOrEqualTo(2));

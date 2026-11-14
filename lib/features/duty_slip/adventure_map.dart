@@ -1654,10 +1654,13 @@ class _MapBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, box) {
-        final w = box.maxWidth;
-        final h = box.maxHeight;
+    // Not a LayoutBuilder: any animation inside one relayouts it each frame,
+    // and that repaints the whole band past the coin's own RepaintBoundary.
+    // The ladder is full width; each row is the list's itemExtent tall.
+    return Builder(
+      builder: (context) {
+        final w = MediaQuery.sizeOf(context).width;
+        const h = _AdventureMapState._rowH;
         final rungY = h * 0.58;
         final sideLeft = index.isEven;
         final chestTop = const [0.0, 8.0, 16.0][index % 3];
