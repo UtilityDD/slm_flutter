@@ -2,6 +2,7 @@
 // every level, the ladder and every learn board mounts. Each test prints a
 // `PERF guide …` line so a before/after run can be compared.
 //
+//  * frames one guide line costs, muted (no voice) and voiced,
 //  * the speech bubble: it fades after the voice ends (or after a reading
 //    time when muted), a tap or a new line brings it back, keepBubble holds it.
 import 'package:flutter/material.dart';
@@ -71,6 +72,21 @@ Future<int> _framesUntilQuiet(WidgetTester tester, {Duration max = const Duratio
   return frames;
 }
 
+/// Pumps [total] in 16 ms frames; counts requested frames and rebuilds.
+Future<({int frames, int rebuilds, int steps})> _sample(WidgetTester tester, Duration total) async {
+  var rebuilds = 0;
+  var frames = 0;
+  final prev = debugOnRebuildDirtyWidget;
+  debugOnRebuildDirtyWidget = (_, _) => rebuilds++;
+  final steps = total.inMilliseconds ~/ _frame.inMilliseconds;
+  for (var i = 0; i < steps; i++) {
+    if (tester.binding.hasScheduledFrame) frames++;
+    await tester.pump(_frame);
+  }
+  debugOnRebuildDirtyWidget = prev;
+  return (frames: frames, rebuilds: rebuilds, steps: steps);
+}
+
 Finder get _bubble => find.text(_line);
 
 /// Lets [ms] pass in 50 ms frames (a fade needs frames to run).
@@ -98,6 +114,33 @@ void main() {
   });
 
   GuideDirector director() => c.read(guideDirectorProvider.notifier);
+
+  testWidgets('a muted line costs one frame (no 6 s breath lap)', (tester) async {
+    await tester.pumpWidget(_app(c));
+    await _settle(tester);
+    director().say(mood: GuideMood.talk, line: _line);
+    final frames = await _framesUntilQuiet(tester);
+    // A mood that changes his face adds only the 220 ms face cross-fade.
+    director().say(mood: GuideMood.glad, line: 'সাবাশ!');
+    final newFace = await _framesUntilQuiet(tester);
+    debugPrint('PERF guide muted line: $frames frames (same face), $newFace frames (new face)');
+    expect(frames, 1);
+    expect(newFace, lessThan(20));
+    await _wait(tester, 5000); // the praise line's own soft-clear
+  });
+
+  testWidgets('a voiced line: the rig runs while he speaks, then eases back', (tester) async {
+    await tester.pumpWidget(_app(c));
+    await _settle(tester);
+    director().say(mood: GuideMood.talk, line: _line);
+    MascotTalk.begin();
+    final talking = await _sample(tester, const Duration(seconds: 2));
+    MascotTalk.end();
+    final tail = await _framesUntilQuiet(tester);
+    debugPrint('PERF guide voiced line: talking 2 s ${talking.frames}/${talking.steps} frames, '
+        '${talking.rebuilds} rebuilds; tail after voice $tail frames');
+    expect(tail, lessThan(45), reason: 'about 0.5 s ease-back, not the rest of a 6 s lap');
+  });
 
   group('speech bubble', () {
     testWidgets('fades about 1.5 s after the voice ends', (tester) async {

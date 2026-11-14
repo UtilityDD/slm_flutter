@@ -94,8 +94,12 @@ class _VisemePose {
 class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     with TickerProviderStateMixin {
   /// Master rig clock (drives breathing, head drift, eye glints, aura). It
-  /// loops while speaking, then finishes its lap and rests (see [_syncRig]).
+  /// loops only while speaking, then eases back and rests (see [_syncRig]).
   late final AnimationController _rig;
+
+  /// How much of the rig's breath and sway shows (0 = at rest). Eases in when
+  /// he starts speaking and back out in 0.5 s when he stops.
+  late final AnimationController _rigAmp;
 
   /// Smooth crossfade between base facial expressions.
   late final AnimationController _face;
@@ -306,6 +310,10 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       vsync: this,
       duration: const Duration(milliseconds: 6000),
     );
+    _rigAmp = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
     _face = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 220),
@@ -337,7 +345,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       value: 1,
     )..addStatusListener(_onBubbleFade);
     _rig.addListener(_countLaps);
-    _rig.addStatusListener(_onRigStatus);
+    _rigAmp.addStatusListener(_onRigStatus);
     MascotTalk.active.addListener(_onTalkChanged);
   }
 
@@ -440,33 +448,37 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
 
   var _talkChangePending = false;
 
-  /// The rig loops only while speaking. After speech, a cue or a tap it
-  /// finishes the current lap (at most one 6 s breath cycle) and rests at
-  /// the neutral pose, where blinks run on a Timer, so an idle guide draws
-  /// no frames. Nothing runs with remove-animations or a hidden route.
-  void _syncRig({bool kick = false}) {
+  /// The rig loops only while speaking. When the voice ends it stops where
+  /// it is and its breath and sway ease out in 0.5 s ([_rigAmp]); a new line,
+  /// a cue or a tap without voice starts no lap (their own one-shots carry
+  /// them). At rest blinks run on a Timer, so an idle guide draws no frames.
+  /// Nothing runs with remove-animations or a hidden route.
+  void _syncRig() {
     if (!_loopsOn) {
       _rigLooping = false;
       _rig.stop();
       if (_rig.value != 0) _rig.value = 0;
+      _rigAmp.stop();
+      if (_rigAmp.value != 0) _rigAmp.value = 0;
       _stopEyes();
     } else if (_isSpeaking) {
       if (_rigLooping) return;
       _rigLooping = true;
       _stopEyes();
+      _rigAmp.animateTo(1, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
       _rig.repeat();
-    } else if (_rigLooping || kick) {
+    } else if (_rigLooping) {
       _rigLooping = false;
       _stopEyes();
-      _rig.forward();
-    } else if (!_rig.isAnimating) {
+      _rig.stop();
+      _rigAmp.animateBack(0, curve: Curves.easeOut);
+    } else if (!_rigAmp.isAnimating) {
       _startEyes();
     }
   }
 
   void _onRigStatus(AnimationStatus status) {
-    if (status != AnimationStatus.completed || _rigLooping) return;
-    _rig.value = 0;
+    if (status != AnimationStatus.dismissed || _rigLooping) return;
     _startEyes();
   }
 
@@ -531,7 +543,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   void _onSpriteTap() {
     HapticFeedback.selectionClick();
     _touchPop.forward(from: 0);
-    _syncRig(kick: true);
+    _syncRig();
     // The line again (most levels also re-say the task on a tap).
     if (_activeLine.trim().isNotEmpty) _showBubble();
     widget.onTap?.call();
@@ -556,8 +568,9 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     _bubbleTimer?.cancel();
     _bubbleFade.dispose();
     _rig.removeListener(_countLaps);
-    _rig.removeStatusListener(_onRigStatus);
+    _rigAmp.removeStatusListener(_onRigStatus);
     _rig.dispose();
+    _rigAmp.dispose();
     _face.dispose();
     _gesture.dispose();
     _settle.dispose();
@@ -651,7 +664,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     _lastToken = token;
     _lastOverrideMood = widget.overrideMood;
     _lastOverrideLine = widget.overrideLine;
-    _syncRig(kick: true);
+    _syncRig();
 
     if (hasEntrance || overrideChanged) {
       _settle.forward(from: 0);
@@ -825,6 +838,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     return AnimatedBuilder(
       animation: Listenable.merge([
         _rig,
+        _rigAmp,
         _face,
         _gesture,
         _settle,
@@ -858,20 +872,21 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
         final syllableEnergy = viseme.open * talkW;
 
         // Soft Lottie-like body physics (capped amplitudes — no wild wobble).
+        final amp = reduce ? 0.0 : _rigAmp.value;
         final breathWave = reduce
             ? 0.0
-            : (math.sin(tau * 2.0) * 0.75 + math.sin(tau * 4.0 + 0.6) * 0.25);
+            : amp * (math.sin(tau * 2.0) * 0.75 + math.sin(tau * 4.0 + 0.6) * 0.25);
         final swayX = reduce
             ? 0.0
-            : math.sin(tau) * 0.7 + math.cos(_mouth.value * math.pi * 3) * 0.55 * talkW;
+            : amp * math.sin(tau) * 0.7 + math.cos(_mouth.value * math.pi * 3) * 0.55 * talkW;
         final floatY = reduce
             ? 0.0
             : -breathWave.abs() * 1.1 - syllableEnergy * 1.8;
         final tiltAngle = reduce
             ? 0.0
-            : math.sin(tau + 0.4) * 0.014 +
+            : amp * math.sin(tau + 0.4) * 0.014 +
                 math.sin(_mouth.value * math.pi * 2) * 0.022 * talkW +
-                (joy ? math.sin(tau * 2.2) * 0.016 : 0.0);
+                (joy ? amp * math.sin(tau * 2.2) * 0.016 : 0.0);
         final stretchY = reduce
             ? 1.0
             : 1.0 + 0.010 * breathWave + 0.018 * syllableEnergy + (1.0 - settleRaw) * 0.04;
