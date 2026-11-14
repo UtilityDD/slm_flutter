@@ -28,7 +28,7 @@ kV → কেভি, DO → ডি-ও … The **screen keeps the original text*
   `tool/update_duty_slip_voice_dart.py` — edit the catalog, never the generated file by hand).
 - `MascotSpeechLibrary.speak` looks up the clip by voiceKey or exact text; only when none exists does it fall
   back to the phone voice (guide) or a silent caption (coworker).
-- Format: MP3 mono 24 kHz 48 kbps (Edge default). Keep file names when re-recording the same line.
+- Format: MP3 mono 24 kHz **32 kbps** (the app standard; Edge saves 48 kbps, and the tools re-encode every new clip with `tool/voice_32k.py` — run `python tool/voice_32k.py assets/sounds` after any manual recording; it only touches the speech folders and skips clips already at 32 kbps). Keep file names when re-recording the same line.
 
 ## 4. The pipeline (in this order)
 1. **Inventory** — run the suite with the switch on:

@@ -53,7 +53,7 @@ every frame, the mascot redrew 600/600 frames while idle, a dress-up level held 
 - `pubspec.yaml` folder entries bundle **only direct children**, and everything in them ships in the APK.
   Never put READMEs, source art, PSDs or unused files inside `assets/`. Tool-only media goes in `tool/media_src/`.
 - Size budget: full-screen backgrounds ≤ ~1080 px tall, tray/thumb art ≤ 512 px, JPEG q≈82, WebP q≈78,
-  voice MP3 mono ≤ 48 kbps, WAV mono 22 kHz. Re-encode **in place, keeping the filename and real format**.
+  voice MP3 mono 24 kHz 32 kbps (`tool/voice_32k.py`), short effects Ogg Opus mono (no WAV). Re-encode **in place, keeping the filename and real format**.
 - `lib/features/duty_slip/duty_slip_voice.dart` is **generated** by `tool/update_duty_slip_voice_dart.py` —
   don't hand-edit; every key that `lib/features/guide/mascot_speech_library.dart` uses must stay.
 

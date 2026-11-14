@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 import edge_tts
 
 from tool.voice_system.catalog import VoiceCue
+from tool.voice_32k import to_32k
 from tool.voice_system.speakers import SPEAKERS, SpeakerProfile
 
 
@@ -37,6 +38,7 @@ async def synthesize_cue(
                     pitch=speaker.pitch,
                 )
                 await communicator.save(cue.output_path)
+                to_32k(cue.output_path)  # app standard: 32 kbps mono 24 kHz
                 return True  # Generated successfully
             except Exception as e:
                 if attempt == retries:
