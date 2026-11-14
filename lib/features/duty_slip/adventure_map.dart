@@ -55,6 +55,12 @@ class AdventureMap extends ConsumerStatefulWidget {
     required this.muted,
   });
 
+  /// Closes the card open on the ladder on screen (a reply or the lucky
+  /// toolbox) and returns true; false when none is open. Android back asks
+  /// this first, so it closes the card instead of asking to leave the game
+  /// (the cards are Stack layers, not routes).
+  static bool closeOpenCard() => _AdventureMapState._shown?._closeCard() ?? false;
+
   @override
   ConsumerState<AdventureMap> createState() => _AdventureMapState();
 }
@@ -180,9 +186,26 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     _syncLoops();
   }
 
+  /// The ladder on screen, for [AdventureMap.closeOpenCard].
+  static _AdventureMapState? _shown;
+
+  /// Closes the reply or the lucky toolbox, as their own close does.
+  bool _closeCard() {
+    if (_toolbox != null) {
+      _closeToolbox();
+      return true;
+    }
+    if (_reply != null) {
+      _closeKinetic();
+      return true;
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
+    _shown = this;
     _scroll.addListener(_publish);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -503,6 +526,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
 
   @override
   void dispose() {
+    if (identical(_shown, this)) _shown = null;
     _idleTimer?.cancel();
     _nudgeCycleTimer?.cancel();
     _replyAutoClose?.cancel();
