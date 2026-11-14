@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -215,8 +216,10 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
 
   /// Decision clock: runs only while the player can answer (never during
   /// scripted beats or with the app hidden). Counts up; it never ends a level.
-  final _levelClock = Stopwatch();
-  final _choiceClock = Stopwatch();
+  /// `clock.stopwatch()` is a plain Stopwatch on a phone; in widget tests fake
+  /// time drives it, so the clock ticks the same on a busy or an idle machine.
+  final _levelClock = clock.stopwatch();
+  final _choiceClock = clock.stopwatch();
   final _clockSec = ValueNotifier<int>(0);
   Timer? _clockTimer;
   var _clockWanted = false;
@@ -385,7 +388,19 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     if (!_clockWanted || _clockTimer != null || !mounted || _readOpen || _openingLesson || _verdict != null) return;
     _levelClock.start();
     _choiceClock.start();
-    _clockTimer = Timer.periodic(const Duration(milliseconds: 250), (_) => _clockPoll());
+    _armClockTick();
+  }
+
+  /// One wake per shown second, armed for just past the next whole second
+  /// (a 250 ms poll woke the app 4 times a second for one change).
+  void _armClockTick() {
+    final ms = _choiceClock.elapsedMilliseconds;
+    _clockTimer = Timer(Duration(milliseconds: 1000 - ms % 1000 + 1), () {
+      _clockTimer = null;
+      if (!mounted || !_clockWanted) return;
+      _clockPoll();
+      _armClockTick();
+    });
   }
 
   void _clockPoll() {
@@ -869,14 +884,14 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     String? voiceKey,
   }) async {
     final run = ++_voiceRun;
-    final clock = Stopwatch()..start();
+    final lineClock = clock.stopwatch()..start();
     // The rival speaks only in his recorded voice; a line with no clip stays
     // silent with its bubble held for reading (as in the Do levels).
     await MascotSpeechLibrary.speak(spoken ?? line, voiceKey: voiceKey, muted: _muted, rival: rival);
     if (!mounted) return false;
     // Muting mid-line still leaves the bubble up long enough to read.
     final floor = (_muted || run != _voiceRun) ? _readTime(line) : _readTime(line) * 0.55;
-    final rest = floor - clock.elapsed;
+    final rest = floor - lineClock.elapsed;
     if (rest > Duration.zero) await Future<void>.delayed(rest);
     return mounted && run == _voiceRun;
   }
@@ -2882,7 +2897,8 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
                 ),
               ),
             const SizedBox(width: 8),
-            _ClockChip(seconds: _clockSec),
+            // Its own layer: the once-a-second tick repaints the chip, not the board.
+            RepaintBoundary(child: _ClockChip(seconds: _clockSec)),
           ],
         ),
       ),
@@ -3303,44 +3319,79 @@ String _fmtClock(int seconds) {
   return enDigits('$m:${s.toString().padLeft(2, '0')}');
 }
 
-/// Count-up decision clock. Only this chip rebuilds, once a second.
-class _ClockChip extends StatelessWidget {
+/// Count-up decision clock. A tick rebuilds only the digits (one element: the
+/// builder hands [RichText] straight to the engine); the frame and icon
+/// rebuild once, when the clock turns amber at 15 s.
+class _ClockChip extends StatefulWidget {
   const _ClockChip({required this.seconds});
 
   final ValueListenable<int> seconds;
 
   @override
+  State<_ClockChip> createState() => _ClockChipState();
+}
+
+class _ClockChipState extends State<_ClockChip> {
+  late bool _slow = widget.seconds.value >= 15;
+
+  void _onTick() {
+    final slow = widget.seconds.value >= 15;
+    if (slow != _slow) setState(() => _slow = slow);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.seconds.addListener(_onTick);
+  }
+
+  @override
+  void didUpdateWidget(_ClockChip old) {
+    super.didUpdateWidget(old);
+    if (old.seconds == widget.seconds) return;
+    old.seconds.removeListener(_onTick);
+    widget.seconds.addListener(_onTick);
+    _onTick();
+  }
+
+  @override
+  void dispose() {
+    widget.seconds.removeListener(_onTick);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: seconds,
-      builder: (_, s, _) {
-        final slow = s >= 15;
-        final color = slow ? const Color(0xFFFBBF24) : SlmColors.ivory;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: const Color(0xB30A1226),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: color.withValues(alpha: 0.55)),
+    final color = _slow ? const Color(0xFFFBBF24) : SlmColors.ivory;
+    // What [Text] would resolve, worked out once per frame change, not per tick.
+    final style = DefaultTextStyle.of(context).style.merge(TextStyle(
+          fontSize: 12.5,
+          fontWeight: FontWeight.w800,
+          color: color,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ));
+    final scaler = MediaQuery.textScalerOf(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xB30A1226),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.55)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.timer_outlined, size: 13, color: color),
+          const SizedBox(width: 4),
+          ValueListenableBuilder<int>(
+            valueListenable: widget.seconds,
+            builder: (_, s, _) => RichText(
+              textScaler: scaler,
+              text: TextSpan(text: _fmtClock(s), style: style),
+            ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.timer_outlined, size: 13, color: color),
-              const SizedBox(width: 4),
-              Text(
-                _fmtClock(s),
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w800,
-                  color: color,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

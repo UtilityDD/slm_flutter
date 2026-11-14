@@ -13,6 +13,7 @@ import 'package:slm_flutter/design/slm_design.dart';
 import 'package:slm_flutter/features/auth/auth_provider.dart';
 import 'package:slm_flutter/features/game/learn_board_models.dart';
 import 'package:slm_flutter/features/game/learn_board_runner.dart';
+import 'package:slm_flutter/features/guide/ai_lineman_guide.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
 
@@ -30,6 +31,22 @@ final _boards = [
 
 var _rebuilds = 0;
 
+/// Rebuilds outside the coach (AiLinemanGuide): the board's own, which the
+/// guide's blinks cannot move.
+var _boardRebuilds = 0;
+
+void _countRebuild(Element e, bool _) {
+  _rebuilds++;
+  var coach = e.widget is AiLinemanGuide;
+  if (!coach) {
+    e.visitAncestorElements((a) {
+      coach = a.widget is AiLinemanGuide;
+      return !coach;
+    });
+  }
+  if (!coach) _boardRebuilds++;
+}
+
 void _muteAudio() {
   final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   Future<Object?> ok(MethodCall _) async => 1;
@@ -40,7 +57,7 @@ void _muteAudio() {
 
 Finder get _cards => find.byWidgetPredicate((w) => w.runtimeType.toString() == '_AnimatedChoiceCard');
 
-Future<({double rebuildsPerSec, int framesInIdleSecond, bool dayCardFirst})> _waitAtFirstQuestion(
+Future<({double rebuildsPerSec, double boardPerSec, int framesInIdleSecond, bool dayCardFirst})> _waitAtFirstQuestion(
   WidgetTester tester, {
   required bool reduce,
   required LearnBoardPack pack,
@@ -76,10 +93,12 @@ Future<({double rebuildsPerSec, int framesInIdleSecond, bool dayCardFirst})> _wa
   }
 
   _rebuilds = 0;
+  _boardRebuilds = 0;
   for (var i = 0; i < 125; i++) {
     await tester.pump(const Duration(milliseconds: 16));
   }
   final perSec = _rebuilds / 2.0;
+  final boardPerSec = _boardRebuilds / 2.0;
 
   // Frames in one idle second, pumped frame by frame: a 60 fps loop shows ~60.
   var frames = 0;
@@ -87,7 +106,7 @@ Future<({double rebuildsPerSec, int framesInIdleSecond, bool dayCardFirst})> _wa
     if (tester.binding.hasScheduledFrame) frames++;
     await tester.pump(const Duration(milliseconds: 16));
   }
-  return (rebuildsPerSec: perSec, framesInIdleSecond: frames, dayCardFirst: dayCardFirst);
+  return (rebuildsPerSec: perSec, boardPerSec: boardPerSec, framesInIdleSecond: frames, dayCardFirst: dayCardFirst);
 }
 
 Future<void> _tearDownBoard(WidgetTester tester) async {
@@ -103,7 +122,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   _muteAudio();
   ZlFx.setMuted(true);
-  setUp(() => debugOnRebuildDirtyWidget = (_, _) => _rebuilds++);
+  setUp(() => debugOnRebuildDirtyWidget = _countRebuild);
   tearDown(() => debugOnRebuildDirtyWidget = null);
 
   for (final b in _boards) {
@@ -111,15 +130,21 @@ void main() {
     final tag = '${b.pack.lessonId} ${reduce ? 'reduce' : 'anim'}';
     testWidgets('board waits quietly at the first question ($tag)', (tester) async {
       final s = await _waitAtFirstQuestion(tester, reduce: reduce, pack: b.pack, index: b.index, day: b.day);
-      debugPrint('PERF learn board $tag: ${s.rebuildsPerSec.toStringAsFixed(0)} rebuilds/s, '
-          '${s.framesInIdleSecond} frames in an idle second');
+      debugPrint('PERF learn board $tag: ${s.rebuildsPerSec.toStringAsFixed(1)} rebuilds/s '
+          '(${s.boardPerSec.toStringAsFixed(1)} outside the coach), ${s.framesInIdleSecond} frames in an idle second');
 
       expect(tester.takeException(), isNull);
       expect(s.dayCardFirst, isTrue, reason: 'a first play opens on the day card');
       expect(find.text(b.day), findsNothing, reason: 'the day card leaves on its own');
       expect(_cards, findsNWidgets(b.pack.slots.first.cards), reason: 'the first hand is dealt');
-      // Only the clock (once a second) and the coach's blink may draw while waiting.
+      // Only the clock (once a second, one element) and the coach's blink may draw
+      // while waiting. The clock runs on fake time (package:clock), so these
+      // counts no longer depend on how busy the machine is. Measured: 1/s outside
+      // the coach; 5-10/s in all, 19/s when a window catches the guide's double-
+      // blink burst (a setState on the whole guide per beat). Drop the total to 10
+      // once the blink rebuilds only the face.
       expect(s.rebuildsPerSec, lessThan(20), reason: 'nothing may rebuild every frame while the player thinks');
+      expect(s.boardPerSec, lessThan(5), reason: 'the board itself: only the clock digits, once a second');
       expect(s.framesInIdleSecond, lessThan(12), reason: 'no 60 fps loop while waiting for an answer');
 
       // The picture must carry the cue: no item names until a card is tapped.
