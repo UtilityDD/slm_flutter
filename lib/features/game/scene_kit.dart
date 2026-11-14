@@ -347,16 +347,20 @@ class _LinemanFigureState extends State<LinemanFigure> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     final talking = widget.mode == LinemanMode.talk && _ticker.isActive && _left > 0.4;
-    return IgnorePointer(
-      child: CustomPaint(
-        painter: _LinemanPainter(
-          look: widget.look,
-          pose: _pose,
-          mood: widget.mood ?? widget.mode,
-          carry: widget.carry,
-          throwOut: widget.mode == LinemanMode.throwIt && _modeT >= 0.25,
-          blink: (_t % 3.4) < 0.12,
-          mouth: talking ? 0.5 + 0.5 * math.sin(_t * 13) : 0,
+    // His own layer: a wake (or a walk) repaints the figure, not the scene
+    // it stands in (most call sites have no boundary of their own).
+    return RepaintBoundary(
+      child: IgnorePointer(
+        child: CustomPaint(
+          painter: _LinemanPainter(
+            look: widget.look,
+            pose: _pose,
+            mood: widget.mood ?? widget.mode,
+            carry: widget.carry,
+            throwOut: widget.mode == LinemanMode.throwIt && _modeT >= 0.25,
+            blink: (_t % 3.4) < 0.12,
+            mouth: talking ? 0.5 + 0.5 * math.sin(_t * 13) : 0,
+          ),
         ),
       ),
     );
