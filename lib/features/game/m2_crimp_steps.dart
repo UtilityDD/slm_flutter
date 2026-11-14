@@ -817,7 +817,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
         final m = _run.clean();
         if (m != null) return unawaited(_slip(m, origin));
         if (was) return _tick();
-        _cue('sounds/learn/tag_slap.wav', volume: 0.35);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.35);
         setState(() => _brushing = true);
         if (_quiet) {
           setState(() => _brushing = false);
@@ -833,7 +833,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
         if (m != null) return unawaited(_slip(m, origin));
         // Already on, or the conductor is in the barrel: nothing to paste.
         if (was || !_run.pasted) return _tick();
-        _cue('sounds/quiz_select.wav', volume: 0.45);
+        _cue('sounds/quiz_select.ogg', volume: 0.45);
         HapticFeedback.selectionClick();
         setState(() => _wake++);
       case CrimpStep.insert:
@@ -860,7 +860,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
         final r = _run.pull();
         if (r == PullResult.nothing) return _tick();
         HapticFeedback.mediumImpact();
-        _cue(r == PullResult.held ? 'sounds/learn/knock_solid.wav' : 'sounds/intro/drop.ogg', volume: 0.6);
+        _cue(r == PullResult.held ? 'sounds/learn/knock_solid.ogg' : 'sounds/intro/drop.ogg', volume: 0.6);
         _ins.value = _run.inserted;
         setState(() => _tugging = true);
         if (_quiet) {
@@ -889,7 +889,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
     setState(() => _mode = _Mode.idle);
     if (m != null) return unawaited(_slip(m, origin));
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     setState(() => _wake++);
   }
 
@@ -937,7 +937,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
     if (n > (_pressCue ?? 0)) {
       _pressCue = n;
       HapticFeedback.selectionClick();
-      _cue('sounds/learn/tick.wav', volume: 0.5);
+      _cue('sounds/learn/tick.ogg', volume: 0.5);
     }
   }
 
@@ -1001,7 +1001,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
     if (!_canPlay || !_round.inspect) return;
     _run.toggle(i);
     HapticFeedback.selectionClick();
-    _cue(_run.rejected.contains(i) ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/click.ogg', volume: 0.45);
+    _cue(_run.rejected.contains(i) ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/click.ogg', volume: 0.45);
     setState(() {});
   }
 
@@ -1028,7 +1028,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
   void _roundRight(String stamp, String question) {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       _stamp = stamp;
       _wake++;
@@ -1097,7 +1097,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
     if (!held) {
       // Listened to him: the lug squeezed flat with pliers.
       setState(() => _pliered = true);
-      _cue('sounds/learn/dull_steel.wav', volume: 0.7);
+      _cue('sounds/learn/dull_steel.ogg', volume: 0.7);
       await _ruin(_run.pliers(), origin);
       return;
     }
@@ -1147,7 +1147,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
       _heatAt = at ?? (_round.inspect ? null : Offset(geo.mouthAt(_run.inserted) + CrimpGeo.barrel / 2, geo.cableY));
       _wake++;
     });
-    _cue('sounds/learn/spark.wav', volume: 0.6);
+    _cue('sounds/learn/spark.ogg', volume: 0.6);
     if (_quiet) {
       _heat.value = 1;
       await Future<void>.delayed(const Duration(milliseconds: 600));
@@ -1166,7 +1166,7 @@ class _CrimpRunPageState extends ConsumerState<_CrimpRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _mode = _Mode.idle;

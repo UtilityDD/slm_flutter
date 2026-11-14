@@ -898,7 +898,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
     final m = _held;
     if (m != null) _run.spot(m);
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tock.wav', volume: 0.6);
+    _cue('sounds/learn/tock.ogg', volume: 0.6);
   }
 
   void _putBack() {
@@ -911,7 +911,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
       _setMode(LinemanMode.idle);
     });
     if (aside) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
       unawaited(_sayChain([m.cat == MeterCat.cat2 ? M2MeterLines.asideCat : M2MeterLines.asideFlaw, M2MeterLines.askMeter], mood: GuideMood.glad));
     } else {
       _cue('sounds/intro/drop.ogg', volume: 0.4);
@@ -928,7 +928,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
     switch (o.verdict) {
       case MeterVerdict.right:
         HapticFeedback.lightImpact();
-        _cue('sounds/quiz_right.wav', volume: 0.6);
+        _cue('sounds/quiz_right.ogg', volume: 0.6);
         setState(() => _setMode(LinemanMode.cheer));
         _ask(15, () => dealChoices(M2MeterLines.meterRight(m.cat), M2MeterLines.meterMyths, widget.rng), M2MeterLines.meterAsk);
       case MeterVerdict.slip:
@@ -1060,12 +1060,12 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
           _lifted = null;
           _setMode(LinemanMode.cheer);
         });
-        if (_run.beeps) _cue('sounds/learn/dmm_beep.wav', volume: 0.7);
+        if (_run.beeps) _cue('sounds/learn/dmm_beep.ogg', volume: 0.7);
         if (_run.judging) {
           unawaited(_sayChain([M2MeterLines.judgeAsk]));
           return;
         }
-        _cue('sounds/quiz_right.wav', volume: 0.6);
+        _cue('sounds/quiz_right.ogg', volume: 0.6);
         final j = _run.job!;
         _ask(
           15,
@@ -1088,7 +1088,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
     final o = _run.judge(good);
     if (o.verdict == MeterVerdict.right) {
       HapticFeedback.lightImpact();
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       setState(() => _setMode(LinemanMode.cheer));
       final g = _run.deal.fuseGood;
       _ask(20, () => dealChoices(M2MeterLines.fuseRight(g), M2MeterLines.fuseWrong(g), widget.rng), M2MeterLines.fuseAsk);
@@ -1116,7 +1116,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
       _lifted = null;
       _setMode(LinemanMode.idle);
     });
-    _cue('sounds/quiz_flip.wav', volume: 0.5);
+    _cue('sounds/quiz_flip.ogg', volume: 0.5);
     _armCoworker();
     unawaited(_sayChain([_task]));
   }
@@ -1124,7 +1124,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
   void _openDocket() {
     if (_blocked || coworkerOpen || _held != null) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_flip.wav', volume: 0.4);
+    _cue('sounds/quiz_flip.ogg', volume: 0.4);
     setState(() => _docketOpen = true);
   }
 
@@ -1219,7 +1219,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav', volume: 0.7);
+    _cue('sounds/quiz_wrong.ogg', volume: 0.7);
     _hush();
     setState(() {
       _card = m;
@@ -1239,7 +1239,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 0.9);
+    _cue('sounds/learn/spark.ogg', volume: 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _held = null;
@@ -1251,7 +1251,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1633,7 +1633,7 @@ class _MeterRunPageState extends ConsumerState<_MeterRunPage> with DoDeathGuard,
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M2MeterLines.intro,
-                  alarm: 'sounds/van_arrive.wav',
+                  alarm: 'sounds/van_arrive.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

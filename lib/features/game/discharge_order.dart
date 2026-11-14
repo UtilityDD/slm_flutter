@@ -830,10 +830,10 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
     final phase = DischargeIds.phases.contains(id);
     if (phase) {
       HapticFeedback.mediumImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.9, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.9, muted: false));
     } else {
       HapticFeedback.lightImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.55, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.55, muted: false));
     }
     setState(() {
       _wake++;
@@ -859,7 +859,7 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
     final origin = _lastGlobal;
     final ok = !_muted;
     if (id == DischargeIds.earth) {
-      if (ok) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: false));
+      if (ok) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.55, muted: false));
       _ask(10, DischargeLines.earthRight, DischargeLines.earthWrong, DischargeLines.earthAsk, then: _goOn);
       return;
     }
@@ -873,12 +873,12 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
       return;
     }
     if (id == DischargeIds.chain) {
-      if (ok) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: false));
+      if (ok) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.55, muted: false));
       _ask(10, DischargeLines.chainRight, DischargeLines.chainWrong, DischargeLines.chainAsk, then: () => unawaited(_roundTwo()));
       return;
     }
     if (t.allDone) {
-      if (ok) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: false));
+      if (ok) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.55, muted: false));
       setState(() => _cheer = true);
       _ask(5, DischargeLines.lastRight, DischargeLines.lastWrong, DischargeLines.lastAsk, then: () => unawaited(_finish()));
       return;
@@ -1035,7 +1035,7 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     _hush();
     setState(() {
       _pings++;
@@ -1062,7 +1062,7 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 1, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 1, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1070,7 +1070,7 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
     });
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1395,7 +1395,7 @@ class _DischargeRunState extends ConsumerState<_DischargeRun> with DoDeathGuard,
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: DischargeLines.intro,
-                  alarm: 'sounds/learn/spark.wav',
+                  alarm: 'sounds/learn/spark.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

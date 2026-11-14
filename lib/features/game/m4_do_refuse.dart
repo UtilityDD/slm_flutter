@@ -868,7 +868,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
         if (unit == null || !_run.openOther(unit)) return;
         _hush();
         HapticFeedback.mediumImpact();
-        _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
         setState(() {
           _aim = geo.ringOf(unit);
           _touch = true;
@@ -929,7 +929,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
         }
         _run.seat();
         HapticFeedback.mediumImpact();
-        _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
         setState(() {
           _aim = geo.ringOpenOf(_blown);
           _touch = true;
@@ -941,7 +941,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
         if (unit == null || !_run.closeOther(unit)) return;
         _hush();
         HapticFeedback.mediumImpact();
-        _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
         setState(() {
           _aim = geo.ringOf(unit);
           _touch = true;
@@ -980,7 +980,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
     _hush();
     if (o.correct) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/quiz_select.wav', volume: 0.5);
+      _cue('sounds/quiz_select.ogg', volume: 0.5);
       setState(() => _deckPicked = o.textBn);
       await Future<void>.delayed(Duration(milliseconds: _quiet ? 200 : 650));
       if (!mounted) return;
@@ -1017,7 +1017,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
     final m = _run.watch(right: false)!;
     if (!_run.settles) {
       // Pushed home again onto the fault: it blows again.
-      _cue('sounds/learn/tag_slap.wav', volume: 0.8);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.8);
       _flash(_geoNow.ringOf(_blown), big: true);
     }
     await _slip(m, resume: _afterWatch);
@@ -1035,7 +1035,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     setState(() => _wake++);
     if (m != null) {
       unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
@@ -1110,7 +1110,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
     _hush();
     final geo = _geoNow;
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: _run.settles ? 0.6 : 0.85);
+    _cue('sounds/learn/tag_slap.ogg', volume: _run.settles ? 0.6 : 0.85);
     setState(() {
       _aim = geo.ringOf(_blown);
       _touch = true;
@@ -1260,7 +1260,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1282,7 +1282,7 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;

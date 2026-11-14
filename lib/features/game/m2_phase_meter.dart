@@ -720,7 +720,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
   void _putGloves() {
     if (!_canPlay) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.35);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.35);
     _run.putGloves();
     setState(() => _wake++);
   }
@@ -728,7 +728,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
   void _openLeads() {
     if (!_canPlay) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.45);
+    _cue('sounds/quiz_select.ogg', volume: 0.45);
     _run.inspect();
     setState(() => _leads = true);
   }
@@ -758,7 +758,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     // The main switch.
     if (geo.mainSwitch.inflate(6).contains(p)) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
       _run.toggleSwitch();
       setState(() => _wake++);
       return;
@@ -816,7 +816,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     final m = _run.clip(lead, tag);
     if (m == null) {
       HapticFeedback.lightImpact();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.55);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.55);
       setState(() {
         _selected = null;
         _wake++;
@@ -841,8 +841,8 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     final m = _run.decide(fwd: fwd);
     HapticFeedback.mediumImpact();
     if (m == null) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       _showStamp(fwd ? PmLines.stampFwd : PmLines.stampRev);
       putOnTable(15 + (_run.thorough ? 5 : 0));
       final c = _run.current;
@@ -873,18 +873,18 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     bool still() => mounted && !_ended && _run.index == idx;
     if (!_run.current.fwd) {
       setState(() => _run.live = false);
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
       _showStamp(PmLines.stampSwap);
       unawaited(_sayChain([PmLines.fixLine]));
       await _wait(1400);
       if (!still()) return;
       _run.fix();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
       setState(() => _wake++);
       await _wait(1600);
       if (!still()) return;
     }
-    _cue('sounds/quiz_right.wav', volume: 0.5);
+    _cue('sounds/quiz_right.ogg', volume: 0.5);
     _showStamp(PmLines.stampRun);
     setState(() => _motor = 1);
     unawaited(_sayChain([PmLines.runLine], mood: GuideMood.glad));
@@ -993,7 +993,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1015,7 +1015,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1024,7 +1024,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1400,7 +1400,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage> with DoDeathGuard, DoStr
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: PmLines.intro,
-                  alarm: 'sounds/learn/spark.wav',
+                  alarm: 'sounds/learn/spark.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

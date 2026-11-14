@@ -899,7 +899,7 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
   // --- hands on ----------------------------------------------------------------
   void _openLog() {
     if (!_canPlay || _logOpen || _run.open != null) return;
-    _tick('sounds/learn/tag_slap.wav', 0.5);
+    _tick('sounds/learn/tag_slap.ogg', 0.5);
     setState(() {
       _logOpen = true;
       _wake++;
@@ -967,7 +967,7 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
       return;
     }
     // The workshop van at a transformer site: the proof round.
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
     unawaited(_sayChain([M5WrLines.askProof]));
   }
 
@@ -1072,7 +1072,7 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
   }
 
   void _pin(M5WrProof p, Offset global) {
-    _tick('sounds/learn/tag_slap.wav', 0.55);
+    _tick('sounds/learn/tag_slap.ogg', 0.55);
     final m = _run.pin(p);
     setState(() => _wake++);
     if (m != null) {
@@ -1080,7 +1080,7 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
       return;
     }
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.5);
+    _cue('sounds/quiz_right.ogg', volume: 0.5);
     unawaited(_levelDelta(5, global, mood: GuideMood.glad));
   }
 
@@ -1089,7 +1089,7 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
     _rub += dx.abs();
     if (_rub < 120) return;
     if (_run.rub()) {
-      _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+      _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
       setState(() => _wake++);
     }
   }
@@ -1101,7 +1101,7 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
       _hints.missTap();
       return;
     }
-    _tick(step == 1 ? 'sounds/learn/card_deal_a.wav' : 'sounds/intro/click.ogg', 0.5);
+    _tick(step == 1 ? 'sounds/learn/card_deal_a.ogg' : 'sounds/intro/click.ogg', 0.5);
     setState(() {
       if (step == 1) _swirlTok++;
       _wake++;
@@ -1112,7 +1112,7 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
 
   Future<void> _send(Offset global) async {
     if (!_canPlay || _run.open != null || _run.stage != M5WrStage.proof) return;
-    _tick('sounds/learn/tag_slap.wav', 0.6);
+    _tick('sounds/learn/tag_slap.ogg', 0.6);
     final m = _run.send();
     if (m != null) {
       setState(() => _wake++);
@@ -1135,8 +1135,8 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
   Future<void> _roundDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final why = _run.site.why;
     final idx = _run.index;
@@ -1270,7 +1270,7 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1298,7 +1298,7 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -2024,7 +2024,7 @@ class _ReferralRunPageState extends ConsumerState<_ReferralRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5WrLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -647,7 +647,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
     HapticFeedback.selectionClick();
     final first = _run.look(s);
     if (s == M3DtrCheckupSpot.sound) {
-      _cue(_run.current.look.rattle ? 'sounds/learn/knock_hollow.wav' : 'sounds/intro/tick.ogg', volume: _run.current.look.rattle ? 0.9 : 0.4);
+      _cue(_run.current.look.rattle ? 'sounds/learn/knock_hollow.ogg' : 'sounds/intro/tick.ogg', volume: _run.current.look.rattle ? 0.9 : 0.4);
     } else {
       _cue('sounds/intro/tick.ogg', volume: 0.5);
     }
@@ -692,8 +692,8 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
     if (m == null && !_run.shown) return;
     HapticFeedback.mediumImpact();
     if (m == null) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       setState(() {
         _stamped = call;
         _lens = null;
@@ -815,7 +815,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -837,7 +837,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -846,7 +846,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1151,7 +1151,7 @@ class _DtrRunPageState extends ConsumerState<_DtrRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3DtrCheckupLines.intro,
-                  alarm: 'sounds/learn/heartbeat.wav',
+                  alarm: 'sounds/learn/heartbeat.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -635,7 +635,7 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
       });
       return;
     }
-    _cue('sounds/learn/tag_slap.wav', volume: 0.35);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.35);
     setState(() {
       _run.tryTool(t);
       _wake++;
@@ -663,8 +663,8 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
     HapticFeedback.mediumImpact();
     if (m == null) {
       if (!_run.shown) return;
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       final job = _run.current.job;
       setState(() {
         if (job == TuJob.strip) _stripped = true;
@@ -787,7 +787,7 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _wake++;
@@ -1072,7 +1072,7 @@ class _TuRunPageState extends ConsumerState<_TuRunPage> with DoStrikeOut, Ticker
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: TuLines.intro,
-                  alarm: 'sounds/learn/tag_slap.wav',
+                  alarm: 'sounds/learn/tag_slap.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

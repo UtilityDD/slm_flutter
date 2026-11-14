@@ -794,7 +794,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
       return;
     }
     _tick('sounds/intro/click.ogg', 0.4);
-    if (identical(c, _clockHold)) _cue('sounds/clock_tick.wav', volume: 0.5);
+    if (identical(c, _clockHold)) _cue('sounds/clock_tick.ogg', volume: 0.5);
     unawaited(c.forward(from: 0));
   }
 
@@ -834,8 +834,8 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
     if (_case.kind == M5ReblowKind.permanent) {
       // The instant blast with arc.
       HapticFeedback.heavyImpact();
-      _cue('sounds/learn/spark.wav', volume: 0.9);
-      _cue('sounds/learn/thunder_near.wav', volume: 0.7);
+      _cue('sounds/learn/spark.ogg', volume: 0.9);
+      _cue('sounds/learn/thunder_near.ogg', volume: 0.7);
       setState(() {
         _blastTok++;
         _barrelUp = false;
@@ -868,9 +868,9 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
     _busy = true;
     final idx = _run.index;
     _cue(switch (_case.weather) {
-      M5ReblowWeather.wind => 'sounds/learn/wind_gust.wav',
-      M5ReblowWeather.lightning => 'sounds/learn/thunder_clap.wav',
-      M5ReblowWeather.bird => 'sounds/learn/rush_out.wav',
+      M5ReblowWeather.wind => 'sounds/learn/wind_gust.ogg',
+      M5ReblowWeather.lightning => 'sounds/learn/thunder_clap.ogg',
+      M5ReblowWeather.bird => 'sounds/learn/rush_out.ogg',
     }, volume: 0.7);
     setState(() {
       _weatherTok++;
@@ -910,7 +910,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
     final older = v > 0 || (v == 0 && _swipe > 0);
     final next = (_page + (older ? 1 : -1)).clamp(0, _case.older.length);
     if (next == _page) return;
-    _cue('sounds/quiz_flip.wav', volume: 0.5);
+    _cue('sounds/quiz_flip.ogg', volume: 0.5);
     setState(() => _page = next);
   }
 
@@ -949,8 +949,8 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
     }
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.8);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.8);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       _imprint = k;
       _wake++;
@@ -977,7 +977,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
         _orderPicked = null;
       });
     } else {
-      _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+      _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
       setState(() {
         _followOpen = true;
         _spotWrong.clear();
@@ -1000,7 +1000,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
     _followBusy = true;
     setState(() => _orderPicked = o.textBn);
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     if (!mounted || _ended) return;
     _run.order(o.textBn);
@@ -1021,7 +1021,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
     _followBusy = true;
     setState(() => _spotPicked = s);
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     await Future<void>.delayed(const Duration(milliseconds: 620));
     if (!mounted || _ended) return;
     _run.spot(s);
@@ -1030,7 +1030,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
   }
 
   void _followDone() {
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     putOnTable(10);
     final idx = _run.index;
     final kind = _case.kind;
@@ -1132,7 +1132,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
     _run.caught.add(M5ReblowLines.caughtCall);
     unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
     unawaited(coworkerSnarl());
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
     await Future<void>.delayed(const Duration(milliseconds: 1400));
     if (!mounted || _ended) return;
     unawaited(_sayChain([M5ReblowLines.callHeld, M5ReblowLines.askOrder], mood: GuideMood.glad));
@@ -1168,7 +1168,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1190,7 +1190,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
     _doHold.stop();
     _clockHold.stop();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1201,7 +1201,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1691,7 +1691,7 @@ class _ReblowRunPageState extends ConsumerState<_ReblowRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5ReblowLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

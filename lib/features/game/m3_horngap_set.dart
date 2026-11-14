@@ -882,7 +882,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     final again = _run.deal.blowsAgain;
     HapticFeedback.heavyImpact();
     if (again) {
-      _cue('sounds/learn/spark.wav', volume: 1);
+      _cue('sounds/learn/spark.ogg', volume: 1);
       _cue('sounds/intro/impact_metal.ogg', volume: 0.9);
     } else {
       _cue('sounds/intro/confirm.ogg', volume: 0.6);
@@ -947,7 +947,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     }
     if (_run.steps.length == before) return;
     _tick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.4);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.4);
     setState(() => _wake++);
   }
 
@@ -980,7 +980,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
       return;
     }
     _tick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     setState(() => _wake++);
   }
 
@@ -999,8 +999,8 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     final r = _run.tapFix(phase, part);
     if (r == M3HorngapSetFix.none) return false;
     _tick();
-    if (r == M3HorngapSetFix.cleaned) _cue('sounds/learn/knock_solid.wav', volume: 0.5);
-    if (r == M3HorngapSetFix.set) _cue('sounds/learn/ring_steel.wav', volume: 0.5);
+    if (r == M3HorngapSetFix.cleaned) _cue('sounds/learn/knock_solid.ogg', volume: 0.5);
+    if (r == M3HorngapSetFix.set) _cue('sounds/learn/ring_steel.ogg', volume: 0.5);
     setState(() => _wake++);
     if (_run.shown) {
       _stationRight(M3HorngapSetLines.stampFixed);
@@ -1026,7 +1026,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     if (!_canPlay || _run.tying == null) return;
     _run.pull();
     _tick();
-    _cue('sounds/learn/ring_steel.wav', volume: 0.35);
+    _cue('sounds/learn/ring_steel.ogg', volume: 0.35);
     setState(() => _wake++);
   }
 
@@ -1063,8 +1063,8 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
   void _stationRight(String stamp) {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       _stamp = stamp;
       _wake++;
@@ -1180,7 +1180,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1201,12 +1201,12 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1691,7 +1691,7 @@ class _HgRunPageState extends ConsumerState<_HgRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3HorngapSetLines.intro,
-                  alarm: 'sounds/learn/spark.wav',
+                  alarm: 'sounds/learn/spark.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

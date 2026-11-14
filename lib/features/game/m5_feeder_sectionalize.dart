@@ -808,7 +808,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
 
   void _blast() {
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 0.9);
+    _cue('sounds/learn/spark.ogg', volume: 0.9);
     _cue('sounds/intro/impact_metal.ogg', volume: 0.9);
     setState(() {
       _blastTok++;
@@ -840,10 +840,10 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
       case M5FeederEvent.pullFirst:
         unawaited(_sayChain([M5FeederLines.pullFirst]));
       case M5FeederEvent.tagged:
-        _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
         unawaited(_roundDone(M5FeederLines.tagged));
       case M5FeederEvent.chosen:
-        _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
         unawaited(_roundDone(M5FeederLines.chosen));
       default:
         break;
@@ -859,7 +859,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
   void _table(M5FeederWhy w) {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final idx = _run.index;
     unawaited(askReason(
@@ -887,7 +887,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
 
   void _arm() {
     if (!_canPlay) return;
-    _tick('sounds/learn/tag_slap.wav', 0.4);
+    _tick('sounds/learn/tag_slap.ogg', 0.4);
     setState(() => _tagArmed = !_tagArmed);
   }
 
@@ -985,7 +985,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1008,7 +1008,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
     _ring.stop();
     _holding = false;
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     _cue('sounds/intro/impact_metal.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
@@ -1019,7 +1019,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1454,7 +1454,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5FeederLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

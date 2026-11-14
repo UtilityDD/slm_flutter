@@ -951,7 +951,7 @@ class _DarkRunPageState extends ConsumerState<_DarkRunPage>
         if (!geo.insulatorHit(z, pole, ph).contains(w)) continue;
         if (holdForCoworker()) return;
         HapticFeedback.mediumImpact();
-        _cue('sounds/learn/tag_slap.wav', volume: 0.55);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.55);
         final m = _run.mark(z, pole, ph);
         setState(() => _wake++);
         if (m != null) {
@@ -982,7 +982,7 @@ class _DarkRunPageState extends ConsumerState<_DarkRunPage>
           setState(() => _wake++);
           unawaited(_mistake(m, global));
         } else if (_run.plateRead) {
-          _tick('sounds/learn/tag_slap.wav', 0.5);
+          _tick('sounds/learn/tag_slap.ogg', 0.5);
           _dealFinal();
         } else {
           _hints.missTap();
@@ -1026,7 +1026,7 @@ class _DarkRunPageState extends ConsumerState<_DarkRunPage>
       _finalPicked = null;
       _wake++;
     });
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     unawaited(_sayChain([M5DarkEyesLines.askReport], mood: GuideMood.think));
   }
 
@@ -1042,7 +1042,7 @@ class _DarkRunPageState extends ConsumerState<_DarkRunPage>
     _finalBusy = true;
     setState(() => _finalPicked = o.textBn);
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     if (!mounted || _ended) return;
     _run.report(M5DarkFinal.report);
@@ -1057,8 +1057,8 @@ class _DarkRunPageState extends ConsumerState<_DarkRunPage>
   Future<void> _roundDone(M5DarkWhy why, {int? amount}) async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     _why = why;
     putOnTable(amount ?? 15 + (_run.thorough ? 5 : 0));
     _syncAdapt();
@@ -1182,7 +1182,7 @@ class _DarkRunPageState extends ConsumerState<_DarkRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1213,7 +1213,7 @@ class _DarkRunPageState extends ConsumerState<_DarkRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1637,7 +1637,7 @@ class _DarkRunPageState extends ConsumerState<_DarkRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5DarkEyesLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

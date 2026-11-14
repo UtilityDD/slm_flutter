@@ -401,7 +401,7 @@ class _LearnVideoGatePageState extends ConsumerState<LearnVideoGatePage> {
           fit: StackFit.expand,
           children: [
             if (_phase == _GatePhase.video) _buildVideo(),
-            if (_phase == _GatePhase.listenGuide) _guide(_listenLineBn, 'sounds/learn/rush_in.wav', _onListenDone),
+            if (_phase == _GatePhase.listenGuide) _guide(_listenLineBn, 'sounds/learn/rush_in.ogg', _onListenDone),
             if (_phase == _GatePhase.playGuide) _guide(_playLineBn, null, _onPlayGuideDone),
           ],
         ),

@@ -1194,7 +1194,7 @@ class _LoadRunPageState extends ConsumerState<_LoadRunPage>
       _deckPicked = null;
       _wake++;
     });
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     final ask = switch (d) {
       _Deck.verdict => M5LvLoadLines.askVerdict,
       _Deck.method => M5LvLoadLines.askMethod,
@@ -1215,7 +1215,7 @@ class _LoadRunPageState extends ConsumerState<_LoadRunPage>
   void _action(Offset origin) {
     if (!_handsFree) return;
     if (holdForCoworker()) return;
-    _tick('sounds/learn/tag_slap.wav', 0.5);
+    _tick('sounds/learn/tag_slap.ogg', 0.5);
     switch (_run.stage) {
       case M5LvLoadStage.measure:
         if (_run.index == _run.cwCall && !_cwArmed && !coworkerDone) _run.passCoworker();
@@ -1229,7 +1229,7 @@ class _LoadRunPageState extends ConsumerState<_LoadRunPage>
           unawaited(_mistake(m, origin));
           return;
         }
-        _cue('sounds/quiz_right.wav', volume: 0.6);
+        _cue('sounds/quiz_right.ogg', volume: 0.6);
         _success(origin, joints: true);
       default:
         break;
@@ -1268,7 +1268,7 @@ class _LoadRunPageState extends ConsumerState<_LoadRunPage>
     _deckBusy = true;
     setState(() => _deckPicked = o.textBn);
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     _deckBusy = false;
     if (!mounted || _ended) return;
@@ -1278,7 +1278,7 @@ class _LoadRunPageState extends ConsumerState<_LoadRunPage>
       _Deck.method => (mistake: _run.pickMethod(M5LvLoadMethod.right), accepted: true),
       _Deck.none => (mistake: null, accepted: false),
     };
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     setState(() {
       _closeDeck();
       _wake++;
@@ -1314,7 +1314,7 @@ class _LoadRunPageState extends ConsumerState<_LoadRunPage>
     }
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final idx = _run.index;
     unawaited(askReason(
@@ -1457,7 +1457,7 @@ class _LoadRunPageState extends ConsumerState<_LoadRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1487,7 +1487,7 @@ class _LoadRunPageState extends ConsumerState<_LoadRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1850,7 +1850,7 @@ class _LoadRunPageState extends ConsumerState<_LoadRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5LvLoadLines.intro(_run.deal.calls.first.complaint),
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

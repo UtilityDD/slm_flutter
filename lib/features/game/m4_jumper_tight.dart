@@ -697,7 +697,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
 
   void _hold(M4JumperTightTool t) {
     if (!_canPlay || _run.wrenchOn) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.hold(t);
       _wake++;
@@ -741,7 +741,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
       unawaited(_mistake(m, origin));
       return;
     }
-    _tick('sounds/learn/tag_slap.wav', 0.5);
+    _tick('sounds/learn/tag_slap.ogg', 0.5);
     if (_run.up) unawaited(_sayChain([_task]));
   }
 
@@ -764,7 +764,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
         final after = (_run.spotted, _run.cleaned, _run.replaced, _run.wrenchOn);
         if (before != after) {
           HapticFeedback.lightImpact();
-          _cue(after.$1 && !before.$1 ? 'sounds/quiz_right.wav' : 'sounds/learn/tag_slap.wav', volume: 0.5);
+          _cue(after.$1 && !before.$1 ? 'sounds/quiz_right.ogg' : 'sounds/learn/tag_slap.ogg', volume: 0.5);
           if (after.$1 && !before.$1 && !_coworkerArmed && _run.index == _run.deal.callAt) {
             _coworkerArmed = true;
             scheduleCoworker();
@@ -804,7 +804,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     }
     if (_run.tightened) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
       _torque.value = 0;
       setState(() => _wake++);
       unawaited(_sayChain([_task]));
@@ -816,8 +816,8 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   Future<void> _siteDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final s = _run.site;
     final idx = _run.index;
@@ -930,7 +930,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -959,7 +959,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1382,7 +1382,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4JumperTightLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

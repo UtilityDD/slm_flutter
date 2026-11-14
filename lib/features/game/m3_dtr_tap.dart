@@ -778,7 +778,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
 
   void _holdMeter() {
     if (!_canPlay || _run.readingUp || _run.dialOpen) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.holdMeter();
       _wake++;
@@ -803,7 +803,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
   void _toggleLock() {
     if (!_canPlay) return;
     if (_run.toggleLock()) {
-      _tick('sounds/learn/tag_slap.wav', 0.5);
+      _tick('sounds/learn/tag_slap.ogg', 0.5);
     } else {
       _tick('sounds/intro/click.ogg', 0.3);
     }
@@ -882,7 +882,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
         if (m.deadly) _arcAt = geo.dial;
         unawaited(_mistake(m, global));
       } else if (_run.dialOpen) {
-        _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+        _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
         unawaited(_sayChain([M3DtrTapLines.askDial]));
       }
       return;
@@ -898,7 +898,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
       _wake++;
     });
     if (_run.readingUp) {
-      _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+      _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
       unawaited(_sayChain([M3DtrTapLines.askRead]));
     } else if (_run.blank) {
       // No supply at the house: the meter reads 0, the leads come off.
@@ -923,7 +923,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
       return;
     }
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.5);
+    _cue('sounds/quiz_right.ogg', volume: 0.5);
     if (_run.over) {
       unawaited(_siteDone());
       return;
@@ -945,7 +945,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
         _wake++;
       });
       if (wasNotched && !_run.dialOpen) {
-        _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
         unawaited(_sayChain([M3DtrTapLines.askNext]));
       }
       return;
@@ -967,8 +967,8 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
   Future<void> _siteDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final s = _run.site;
     final idx = _run.index;
@@ -1084,7 +1084,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1113,7 +1113,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1512,7 +1512,7 @@ class _TapRunPageState extends ConsumerState<_TapRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3DtrTapLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

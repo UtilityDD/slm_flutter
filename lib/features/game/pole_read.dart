@@ -844,7 +844,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
   void _walkRound() {
     if (!_canPlay) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.3, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.ogg', volume: 0.3, muted: false));
     setState(() => _knock = null);
     _orbitTowards((_orbit.value * 2).roundToDouble() / 2 + 0.5, 1100);
   }
@@ -865,7 +865,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
   void _dragEnd() {
     if (!_dragging) return;
     _dragging = false;
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.25, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.ogg', volume: 0.25, muted: false));
     _orbitTowards((_orbit.value * 2).roundToDouble() / 2, 420);
   }
 
@@ -884,7 +884,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
   void _openLens(double metres) {
     if (!_canPlay) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.4, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.4, muted: false));
     setState(() {
       _lens = metres.clamp(0.25, 9.0);
       _knock = null;
@@ -915,7 +915,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
     if (!_canPlay) return;
     final bad = _run.current.soundsBad;
     HapticFeedback.mediumImpact();
-    final cue = _pcc ? (bad ? 'sounds/learn/knock_hollow.wav' : 'sounds/learn/knock_solid.wav') : (bad ? 'sounds/learn/dull_steel.wav' : 'sounds/learn/ring_steel.wav');
+    final cue = _pcc ? (bad ? 'sounds/learn/knock_hollow.ogg' : 'sounds/learn/knock_solid.ogg') : (bad ? 'sounds/learn/dull_steel.ogg' : 'sounds/learn/ring_steel.ogg');
     if (!_muted) unawaited(ZlFx.cue(cue, volume: 0.9, muted: false));
     setState(() {
       _knocks++;
@@ -936,8 +936,8 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
     if (m == null) {
       // Right: stamp, the ◆ wait on the table, then "কেন …?".
       if (!_muted) {
-        unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.7, muted: false));
-        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+        unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.7, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       }
       setState(() {
         _verdict = climb ? _Verdict.climbed : _Verdict.reported;
@@ -1090,7 +1090,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1114,7 +1114,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
     final d = _run.current.flaws.first.defect;
     _collapse = collapseFor(d);
     if (!_muted) {
-      unawaited(ZlFx.cue(_collapse == PoleCollapse.spark ? 'sounds/learn/spark.wav' : 'sounds/learn/stomp.wav', volume: 0.9, muted: false));
+      unawaited(ZlFx.cue(_collapse == PoleCollapse.spark ? 'sounds/learn/spark.ogg' : 'sounds/learn/stomp.ogg', volume: 0.9, muted: false));
     }
     final frozen = _frozen = Completer<void>();
     setState(() {
@@ -1124,7 +1124,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1539,7 +1539,7 @@ class _PoleRunPageState extends ConsumerState<_PoleRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: _pcc ? PoleLines.introPcc : PoleLines.introSteel,
-                  alarm: _pcc ? 'sounds/learn/knock_hollow.wav' : 'sounds/learn/dull_steel.wav',
+                  alarm: _pcc ? 'sounds/learn/knock_hollow.ogg' : 'sounds/learn/dull_steel.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

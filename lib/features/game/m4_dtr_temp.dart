@@ -635,7 +635,7 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     setState(() {
       _gun = true;
       _wake++;
@@ -866,7 +866,7 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -895,7 +895,7 @@ class _DtRunPageState extends ConsumerState<_DtRunPage> with DoDeathGuard, DoStr
     await Future<void>.delayed(Duration(milliseconds: _quiet ? 50 : 650));
     if (!mounted) return;
     HapticFeedback.heavyImpact();
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;

@@ -617,7 +617,7 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
   void _pickTool(M3ServiceDropTool t) {
     if (!_canPlay || !_trayReady) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.45);
+    _cue('sounds/quiz_select.ogg', volume: 0.45);
     setState(() => _tool = _tool == t ? null : t);
   }
 
@@ -662,7 +662,7 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
       return;
     }
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
     setState(() => _wake++);
     _stationRight(global);
   }
@@ -689,7 +689,7 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
           return;
         }
         if (r.cableOn) {
-          _placed('sounds/learn/tag_slap.wav');
+          _placed('sounds/learn/tag_slap.ogg');
           unawaited(_sayChain([M3ServiceDropLines.askClip]));
           return;
         }
@@ -728,7 +728,7 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
       return;
     }
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
     setState(() => _wake++);
     _stationRight(global);
   }
@@ -753,7 +753,7 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
   // --- a station done right: the ◆ and the reason ---------------------------------
   void _stationRight(Offset origin) {
     _hush();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     final station = _run.station;
     putOnTable(15 + (_run.clean ? 5 : 0));
     unawaited(askReason(
@@ -880,7 +880,7 @@ class _DropRunPageState extends ConsumerState<_DropRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _wake++;

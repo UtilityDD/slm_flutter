@@ -1423,7 +1423,7 @@ class _CaseRunPageState extends ConsumerState<_CaseRunPage>
       _villagerTimer = Timer(Duration(milliseconds: _muted ? 2600 : 3400), () {
         if (mounted) setState(() => _villagerTalk = false);
       });
-      if (added) _cue('sounds/learn/tag_slap.wav', volume: 0.4);
+      if (added) _cue('sounds/learn/tag_slap.ogg', volume: 0.4);
       return;
     }
     _hints.missTap();
@@ -1431,7 +1431,7 @@ class _CaseRunPageState extends ConsumerState<_CaseRunPage>
 
   void _openBoard() {
     if (!_canPlay || _phase != _Phase.scene || _run.pins.isEmpty) return;
-    _tick('sounds/learn/card_deal_a.wav', 0.6);
+    _tick('sounds/learn/card_deal_a.ogg', 0.6);
     setState(() {
       _phase = _Phase.board;
       _knobArmed = null;
@@ -1527,7 +1527,7 @@ class _CaseRunPageState extends ConsumerState<_CaseRunPage>
     final had = _run.threads[id];
     _run.thread(id, target);
     if (target != null) {
-      _tick('sounds/learn/tag_slap.wav', 0.45);
+      _tick('sounds/learn/tag_slap.ogg', 0.45);
     } else if (had != null) {
       _tick();
     }
@@ -1556,7 +1556,7 @@ class _CaseRunPageState extends ConsumerState<_CaseRunPage>
       return;
     }
     if (holdForCoworker()) return;
-    _tick('sounds/learn/tag_slap.wav', 0.45);
+    _tick('sounds/learn/tag_slap.ogg', 0.45);
     setState(() {
       _run.link(from, c);
       _knobArmed = null;
@@ -1568,7 +1568,7 @@ class _CaseRunPageState extends ConsumerState<_CaseRunPage>
     if (holdForCoworker()) return;
     final opts = which == 'type' ? _run.typeOptions(widget.rng) : _run.remedyOptions(widget.rng);
     if (opts.isEmpty) return;
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     setState(() {
       _slotOpen = which;
       _slotOpts = opts;
@@ -1582,7 +1582,7 @@ class _CaseRunPageState extends ConsumerState<_CaseRunPage>
     final which = _slotOpen;
     if (which == null || !_canPlay) return;
     _hush();
-    _tick('sounds/learn/tag_slap.wav', 0.45);
+    _tick('sounds/learn/tag_slap.ogg', 0.45);
     setState(() {
       if (which == 'type') {
         _run.answerType(o.textBn);
@@ -1610,8 +1610,8 @@ class _CaseRunPageState extends ConsumerState<_CaseRunPage>
 
   Future<void> _spotDone() async {
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.8);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.8);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() => _stampTok++);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final idx = _run.index;
@@ -1723,7 +1723,7 @@ class _CaseRunPageState extends ConsumerState<_CaseRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1755,7 +1755,7 @@ class _CaseRunPageState extends ConsumerState<_CaseRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -2349,7 +2349,7 @@ class _CaseRunPageState extends ConsumerState<_CaseRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5CulpritLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

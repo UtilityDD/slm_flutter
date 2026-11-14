@@ -689,7 +689,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
     // The call is his moment on the AB job: he speaks first.
     if (k == HsKit.offload && holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    _cue(k == HsKit.offload ? 'sounds/quiz_select.wav' : 'sounds/learn/tag_slap.wav', volume: 0.45);
+    _cue(k == HsKit.offload ? 'sounds/quiz_select.ogg' : 'sounds/learn/tag_slap.ogg', volume: 0.45);
     setState(() {
       _run.wear(k);
       _wake++;
@@ -771,7 +771,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
           return;
         }
         HapticFeedback.mediumImpact();
-        _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
         setState(() {
           _run.hook();
           _wake++;
@@ -882,7 +882,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
     }
     _hush();
     HapticFeedback.mediumImpact();
-    _cue(j.isDo ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/confirm.ogg', volume: 0.7);
+    _cue(j.isDo ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/confirm.ogg', volume: 0.7);
     setState(() {
       if (j.isDo) {
         _open = [for (var i = 0; i < 3; i++) i == j.phase ? j.kind == HsKind.doOpen : _open[i]];
@@ -1028,7 +1028,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1050,7 +1050,7 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;

@@ -737,7 +737,7 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
     }
     if (!hit) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.55);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.55);
     setState(() => _wake++);
   }
 
@@ -839,7 +839,7 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
       _planOpen = true;
       _wake++;
     });
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     unawaited(_sayChain([M4DpSurveyLines.askPlan]));
   }
 
@@ -972,7 +972,7 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -994,7 +994,7 @@ class _DpRunPageState extends ConsumerState<_DpRunPage> with DoDeathGuard, DoStr
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;

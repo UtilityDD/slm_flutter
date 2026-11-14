@@ -866,8 +866,8 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
   Future<void> _success(Offset origin) async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       _stamped = true;
       _wake++;
@@ -987,7 +987,7 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1008,12 +1008,12 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1405,7 +1405,7 @@ class _CallRunPageState extends ConsumerState<_CallRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3MeterCallLines.intro,
-                  alarm: 'sounds/learn/spark.wav',
+                  alarm: 'sounds/learn/spark.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

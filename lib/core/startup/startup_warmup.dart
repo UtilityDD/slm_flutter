@@ -47,12 +47,12 @@ Future<void> warmUpDuringIntro(BuildContext context, {bool sounds = true}) async
 
 /// The cues played most across the app (quiz, cards, levels).
 const warmCues = [
-  'sounds/quiz_right.wav',
-  'sounds/quiz_wrong.wav',
-  'sounds/quiz_flip.wav',
-  'sounds/quiz_select.wav',
+  'sounds/quiz_right.ogg',
+  'sounds/quiz_wrong.ogg',
+  'sounds/quiz_flip.ogg',
+  'sounds/quiz_select.ogg',
   'sounds/intro/tick.ogg',
-  'sounds/learn/card_deal_a.wav',
+  'sounds/learn/card_deal_a.ogg',
 ];
 
 /// The ladder map's coins, decoded as the map does (`cacheWidth: 180`).

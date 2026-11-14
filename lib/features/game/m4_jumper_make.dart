@@ -735,7 +735,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   void _lookAt(int i) {
     if (!_canPlay || _run.station != M4JumperMakeStation.wire) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.45);
+    _cue('sounds/quiz_select.ogg', volume: 0.45);
     setState(() => _look = _look == i ? null : i);
   }
 
@@ -755,7 +755,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
       return;
     }
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
     setState(() => _wake++);
     _stationRight(origin);
   }
@@ -785,7 +785,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     if (!mounted || _ended) return;
     _run.brushDone();
     HapticFeedback.lightImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.45);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.45);
     setState(() {
       _brushing = false;
       _wake++;
@@ -805,7 +805,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
       return;
     }
     HapticFeedback.lightImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     setState(() => _wake++);
   }
 
@@ -875,7 +875,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
     final m = _run.bend(s);
     HapticFeedback.selectionClick();
     if (m == null) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
       setState(() => _wake++);
       unawaited(_sayChain([M4JumperMakeLines.askFinish]));
       return;
@@ -929,7 +929,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
   // --- a station done right: the ◆ and the reason ---------------------------------
   void _stationRight(Offset origin) {
     _hush();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     final station = _run.station;
     final copper = _run.copperJoint;
     putOnTable(15 + (_run.clean ? 5 : 0));
@@ -952,7 +952,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
       _look = null;
       _wake++;
     });
-    _cue('sounds/learn/tag_slap.wav', volume: 0.4);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.4);
     unawaited(_sayChain([_task]));
     if (_run.station == M4JumperMakeStation.joint2 && !_coworkerArmed) {
       _coworkerArmed = true;
@@ -1048,7 +1048,7 @@ class _JumperRunPageState extends ConsumerState<_JumperRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _wake++;

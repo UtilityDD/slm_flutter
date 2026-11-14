@@ -1254,7 +1254,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
           _mapOpen = true;
           _wake++;
         });
-        _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+        _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
         if (!coworkerDone && _run.index == _run.deal.pushStreet && _run.deal.push == M5CrlPush.map) scheduleCoworker();
         unawaited(_sayChain([M5CrlLines.askMap]));
         return;
@@ -1289,7 +1289,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
 
   /// The specialist van at the gate; the TDR screen, then its deck.
   void _teamArrives() {
-    _cue('sounds/learn/rush_in.wav', volume: 0.5);
+    _cue('sounds/learn/rush_in.ogg', volume: 0.5);
     setState(() {
       _wheelT = 0;
       _wheelLastM = 0;
@@ -1306,7 +1306,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
         _tdrWrong.clear();
         _tdrPicked = null;
       });
-      _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+      _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
       unawaited(_sayChain([M5CrlLines.askTdr], mood: GuideMood.think));
     });
   }
@@ -1324,10 +1324,10 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
     _tdrBusy = true;
     setState(() => _tdrPicked = o.textBn);
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     if (!mounted || _ended) return;
-    if (_street.tdrBlank) _cue('sounds/learn/spark.wav', volume: 0.5);
+    if (_street.tdrBlank) _cue('sounds/learn/spark.ogg', volume: 0.5);
     _run.tdrPick(true);
     _tdrBusy = false;
     setState(() {
@@ -1352,7 +1352,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
 
   void _call(M5CrlContact c) {
     if (!_canPlay || !_phoneOpen || _run.called.contains(c)) return;
-    _tick('sounds/learn/dmm_beep.wav', 0.5);
+    _tick('sounds/learn/dmm_beep.ogg', 0.5);
     setState(() {
       _run.call(c);
       _wake++;
@@ -1402,7 +1402,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
             return;
           }
           if (holdForCoworker()) return;
-          _tick('sounds/learn/tag_slap.wav', 0.5);
+          _tick('sounds/learn/tag_slap.ogg', 0.5);
           final mk = _run.tapMark(i);
           setState(() => _wake++);
           if (mk != null) {
@@ -1598,7 +1598,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
       _thumps++;
       _sweepThumps++;
     });
-    _cue('sounds/learn/knock_solid.wav', volume: 0.08 + 0.8 * loud);
+    _cue('sounds/learn/knock_solid.ogg', volume: 0.08 + 0.8 * loud);
   }
 
   void _chalk() {
@@ -1611,7 +1611,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
     }
     final far = _metresFromPeak(mic);
     _endDrag();
-    _tick('sounds/learn/tag_slap.wav', 0.6);
+    _tick('sounds/learn/tag_slap.ogg', 0.6);
     final m = _run.chalk(far);
     setState(() => _wake++);
     final box = _touchKey.currentContext?.findRenderObject();
@@ -1648,7 +1648,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
   void _pitUp(Size size) {
     if (!_canPlay || _run.pitOpen == null || _run.pitStage != M5CrlPitStage.cover) return;
     if (_lift >= 0.45) {
-      _tick('sounds/learn/dull_steel.wav', 0.5);
+      _tick('sounds/learn/dull_steel.ogg', 0.5);
       setState(() {
         _lift = 1;
         _run.liftCover();
@@ -1676,7 +1676,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
 
   void _decidePit(bool pin, Offset global) {
     if (!_canPlay || _run.pitOpen == null || _run.pitStage != M5CrlPitStage.decide) return;
-    _tick(pin ? 'sounds/learn/tag_slap.wav' : 'sounds/learn/dull_steel.wav', 0.5);
+    _tick(pin ? 'sounds/learn/tag_slap.ogg' : 'sounds/learn/dull_steel.ogg', 0.5);
     final m = _run.decidePit(pin);
     setState(() => _wake++);
     if (m != null) {
@@ -1690,8 +1690,8 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
   Future<void> _roundDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final why = _run.why;
     final spot = _run.spotKind ?? M5CrlSpotKind.chalk;
@@ -1810,7 +1810,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _wake++;
@@ -2237,7 +2237,7 @@ class _CrlRunPageState extends ConsumerState<_CrlRunPage> with DoStrikeOut, Tick
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5CrlLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

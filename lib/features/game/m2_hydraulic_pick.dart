@@ -836,7 +836,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
     final t = _held;
     if (t != null) _run.spot(t);
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tock.wav', 0.6);
+    _cue('sounds/learn/tock.ogg', 0.6);
   }
 
   void _putBack() {
@@ -853,7 +853,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
       _setMode(LinemanMode.idle);
     });
     if (aside) {
-      _cue('sounds/learn/tag_slap.wav', 0.6);
+      _cue('sounds/learn/tag_slap.ogg', 0.6);
       unawaited(_sayChain([t.flaw == HydFlaw.battery ? HydLines.asideCharge : HydLines.asideService, HydLines.ask], mood: GuideMood.glad));
     } else {
       _cue('sounds/intro/drop.ogg', 0.4);
@@ -921,7 +921,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
     final o = _run.holdJob();
     if (o.verdict == HydVerdict.right) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/quiz_right.wav', 0.6);
+      _cue('sounds/quiz_right.ogg', 0.6);
       setState(() => _setMode(LinemanMode.cheer));
       final r = _run.current;
       _ask(20, () => dealChoices(HydLines.holdRight(r), HydLines.holdWrong(r), widget.rng), HydLines.holdAskWhy);
@@ -950,13 +950,13 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
     switch (o.verdict) {
       case HydVerdict.more:
         HapticFeedback.selectionClick();
-        _cue('sounds/learn/tock.wav', 0.45);
+        _cue('sounds/learn/tock.ogg', 0.45);
         setState(() {});
       case HydVerdict.right:
         HapticFeedback.heavyImpact();
         final crimp = _run.current.crimp;
         _cue(crimp ? 'sounds/intro/click.ogg' : 'sounds/intro/impact_metal.ogg', 0.8);
-        _cue('sounds/quiz_right.wav', 0.5);
+        _cue('sounds/quiz_right.ogg', 0.5);
         setState(() => _setMode(LinemanMode.cheer));
         final r = _run.current;
         _ask(
@@ -999,7 +999,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
       return;
     }
     setState(() => _setMode(LinemanMode.idle));
-    _cue('sounds/quiz_flip.wav', 0.5);
+    _cue('sounds/quiz_flip.ogg', 0.5);
     _armCoworker();
     unawaited(_sayChain([HydLines.ask]));
   }
@@ -1007,7 +1007,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
   void _openDocket() {
     if (_blocked || coworkerOpen || _held != null) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_flip.wav', 0.4);
+    _cue('sounds/quiz_flip.ogg', 0.4);
     setState(() => _docketOpen = true);
   }
 
@@ -1109,7 +1109,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav', 0.7);
+    _cue('sounds/quiz_wrong.ogg', 0.7);
     _hush();
     setState(() => _card = m);
     unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
@@ -1430,7 +1430,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoStrikeOut, Reas
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: HydLines.intro,
-                  alarm: 'sounds/van_arrive.wav',
+                  alarm: 'sounds/van_arrive.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);
@@ -2015,7 +2015,7 @@ class _InspectState extends State<_Inspect> {
     HapticFeedback.selectionClick();
     final t = widget.tool;
     final stuck = t.flaw == HydFlaw.pump || t.flaw == HydFlaw.battery;
-    if (!widget.muted) unawaited(ZlFx.cue(stuck ? 'sounds/learn/dull_steel.wav' : 'sounds/learn/tock.wav', volume: 0.6, muted: false));
+    if (!widget.muted) unawaited(ZlFx.cue(stuck ? 'sounds/learn/dull_steel.ogg' : 'sounds/learn/tock.ogg', volume: 0.6, muted: false));
     setState(() {
       _stroked = true;
       _strokes++;

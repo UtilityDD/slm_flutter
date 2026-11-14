@@ -730,8 +730,8 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
     });
     final c = _run.current;
     if (part == M3CrossarmPart.clamp && c.rattles) {
-      _cue('sounds/learn/wind_gust.wav', volume: 0.45);
-      _cue('sounds/learn/knock_hollow.wav', volume: 0.6);
+      _cue('sounds/learn/wind_gust.ogg', volume: 0.45);
+      _cue('sounds/learn/knock_hollow.ogg', volume: 0.6);
     } else {
       _cue('sounds/intro/tick.ogg', volume: 0.5);
     }
@@ -754,7 +754,7 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
     if (m == null) {
       if (!_run.up) return;
       HapticFeedback.mediumImpact();
-      _cue('sounds/learn/stomp.wav', volume: 0.5);
+      _cue('sounds/learn/stomp.ogg', volume: 0.5);
       setState(() {
         _looking = null;
         _wake++;
@@ -788,8 +788,8 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
       return;
     }
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       _reported = true;
       _wake++;
@@ -819,7 +819,7 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
     final b = _run.check(i);
     if (b == null) return;
     HapticFeedback.selectionClick();
-    _cue(b.loose ? 'sounds/learn/knock_hollow.wav' : 'sounds/learn/knock_solid.wav', volume: 0.6);
+    _cue(b.loose ? 'sounds/learn/knock_hollow.ogg' : 'sounds/learn/knock_solid.ogg', volume: 0.6);
     _torque.value = 0;
     setState(() => _wake++);
   }
@@ -837,7 +837,7 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
     if (!_canPlay || !_run.up || _run.selected == null || _holding) return;
     _holding = true;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tick.wav', volume: 0.4);
+    _cue('sounds/learn/tick.ogg', volume: 0.4);
     _torque.forward(from: 0);
     setState(() {});
   }
@@ -852,9 +852,9 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
     switch (r) {
       case M3CrossarmTorque.right:
         HapticFeedback.mediumImpact();
-        _cue('sounds/learn/ring_steel.wav', volume: 0.6);
+        _cue('sounds/learn/ring_steel.ogg', volume: 0.6);
       case M3CrossarmTorque.under:
-        _cue('sounds/learn/tock.wav', volume: 0.5);
+        _cue('sounds/learn/tock.ogg', volume: 0.5);
       case M3CrossarmTorque.over:
         HapticFeedback.heavyImpact();
         _cue('sounds/intro/impact_metal.ogg', volume: 0.8);
@@ -872,8 +872,8 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
     final m = _run.finish();
     if (m == null) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       setState(() {
         _reported = false;
         _wake++;
@@ -980,7 +980,7 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1006,7 +1006,7 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1369,7 +1369,7 @@ class _CrossarmRunPageState extends ConsumerState<_CrossarmRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3CrossarmCheckLines.intro,
-                  alarm: 'sounds/learn/wind_gust.wav',
+                  alarm: 'sounds/learn/wind_gust.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

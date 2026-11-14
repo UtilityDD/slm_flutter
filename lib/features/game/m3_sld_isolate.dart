@@ -718,7 +718,7 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
       unawaited(_mistake(m, origin));
       return;
     }
-    _tick('sounds/learn/tag_slap.wav', 0.6);
+    _tick('sounds/learn/tag_slap.ogg', 0.6);
   }
 
   void _work(Offset origin) {
@@ -781,7 +781,7 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
     }
     if (_run.opened.length + (_run.tieTagged ? 1 : 0) > before) {
       // No guide line here: a line on "isolated" would tell the map's answer.
-      _tick(hit == M3SldIsolatePoint.tie && _run.kind == M3SldIsolateKind.ringNo ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/impact_metal.ogg', 0.6);
+      _tick(hit == M3SldIsolatePoint.tie && _run.kind == M3SldIsolateKind.ringNo ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/impact_metal.ogg', 0.6);
     } else {
       _tick('sounds/intro/click.ogg', 0.3);
     }
@@ -790,8 +790,8 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
   Future<void> _docketDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final d = _run.docket;
     final idx = _run.index;
@@ -929,7 +929,7 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -958,7 +958,7 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1264,7 +1264,7 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3SldIsolateLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -679,7 +679,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
       _wake++;
     });
     if (_run.round == _run.deal.callRound) scheduleCoworker();
-    if (c.cue == StormCue.thunder && !_muted) unawaited(ZlFx.cue('sounds/learn/thunder_clap.wav', volume: 0.8, muted: false));
+    if (c.cue == StormCue.thunder && !_muted) unawaited(ZlFx.cue('sounds/learn/thunder_clap.ogg', volume: 0.8, muted: false));
     unawaited(() async {
       await Future<void>.delayed(_quiet ? const Duration(milliseconds: 50) : const Duration(milliseconds: 1500));
       if (!mounted || tok != _roundTok || _ended) return;
@@ -769,8 +769,8 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
     if (m == null) {
       // The emergency in plain drizzle, gloved: up he goes, carefully.
       if (!_muted) {
-        unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.4, muted: false));
-        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+        unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: 0.4, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       }
       setState(() {
         _climb = 0.8;
@@ -810,7 +810,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
     final r = _run.stop();
     if (r == StormStop.ignored) return;
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.6, muted: false));
     setState(() {
       _lay = 1;
       _wake++;
@@ -827,7 +827,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
       _next();
       return;
     }
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
     putOnTable(15);
     final c = _run.current;
     final round = _run.round;
@@ -842,7 +842,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
   void _takeGloves() {
     if (_run.gloved || _intro || _ended || _card != null || tableBusy || _run.phase != StormPhase.judge) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.5, muted: false));
     _run.takeGloves();
     setState(() => _wake++);
     if (!coworkerOpen) unawaited(_sayChain([StormLines.glovesOn]));
@@ -872,7 +872,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
     if (m == null) {
       if (!_muted) {
         unawaited(ZlFx.cue('sounds/intro/click.ogg', volume: 0.6, muted: false));
-        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       }
       putOnTable(10);
       final round = _run.round;
@@ -986,7 +986,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1010,13 +1010,13 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
     HapticFeedback.heavyImpact();
     _doom = _run.current.cue == StormCue.wind ? StormCue.wind : StormCue.thunder;
     if (!_muted) {
-      unawaited(ZlFx.cue(_doom == StormCue.thunder ? 'sounds/learn/thunder_clap.wav' : 'sounds/learn/spark.wav', volume: 0.95, muted: false));
+      unawaited(ZlFx.cue(_doom == StormCue.thunder ? 'sounds/learn/thunder_clap.ogg' : 'sounds/learn/spark.ogg', volume: 0.95, muted: false));
     }
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1420,7 +1420,7 @@ class _StormRunPageState extends ConsumerState<_StormRunPage> with DoDeathGuard,
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: StormLines.intro,
-                  alarm: 'sounds/learn/thunder_clap.wav',
+                  alarm: 'sounds/learn/thunder_clap.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

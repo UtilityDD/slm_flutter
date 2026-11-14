@@ -145,11 +145,11 @@ class ZlMusic {
       _playing = true;
       if (_Background.away) {
         // Started while out of sight: set the source now, sound on return.
-        await _player.setSource(AssetSource('sounds/safe_home.wav'));
+        await _player.setSource(AssetSource('sounds/safe_home.ogg'));
         _held = true;
         return;
       }
-      await _player.play(AssetSource('sounds/safe_home.wav'));
+      await _player.play(AssetSource('sounds/safe_home.ogg'));
     } catch (_) {
       _playing = false;
     }
@@ -272,7 +272,7 @@ class ZlFx {
         _playing = false;
         return;
       }
-      await _clock.play(AssetSource('sounds/clock_tick.wav'));
+      await _clock.play(AssetSource('sounds/clock_tick.ogg'));
     } catch (_) {
       _playing = false;
     }

@@ -917,8 +917,8 @@ const Map<String, M5CauseStrikePack> m5CauseStrikePacks = {
 };
 
 /// The listening clips (a steady hum; a loud, irregular one) — wordless.
-const m5HumSteady = 'game/art/m5_cause_strike/hum_steady.wav';
-const m5HumLoud = 'game/art/m5_cause_strike/hum_loud.wav';
+const m5HumSteady = 'game/art/m5_cause_strike/hum_steady.ogg';
+const m5HumLoud = 'game/art/m5_cause_strike/hum_loud.ogg';
 
 /// The clipboard's layout (design px): the head, one row per suspect, the
 /// empty ruled line, the 'তালিকা শেষ' button.
@@ -1250,7 +1250,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
       case M5Tool.tong:
         if (geo.cableHit.contains(p)) {
           if (_waitForHim()) return;
-          _tick('sounds/learn/dmm_beep.wav', 0.5);
+          _tick('sounds/learn/dmm_beep.ogg', 0.5);
           _run.tong();
           _show(M5Reading.tong);
           _stepDone();
@@ -1260,7 +1260,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
         for (var i = 0; i < 3; i++) {
           if (geo.terminalHit(i).contains(p)) {
             if (_waitForHim()) return;
-            _tick('sounds/learn/dmm_beep.wav', 0.5);
+            _tick('sounds/learn/dmm_beep.ogg', 0.5);
             _run.meter(i);
             _stepDone();
             return;
@@ -1288,7 +1288,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
         for (var i = 0; i < 3; i++) {
           if (geo.bushingHit(i).contains(p)) {
             if (_waitForHim()) return;
-            _tick('sounds/learn/dmm_beep.wav', 0.5);
+            _tick('sounds/learn/dmm_beep.ogg', 0.5);
             final dead = _run.test(i);
             _chip(tester: (phase: i, dead: dead));
             _stepDone();
@@ -1305,7 +1305,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
               unawaited(_mistake(m, global));
               return;
             }
-            _tick('sounds/learn/ring_steel.wav', 0.55);
+            _tick('sounds/learn/ring_steel.ogg', 0.55);
             _chip(nut: (phase: i, loose: i == _case.deadPhase && _case.loose));
             _stepDone();
             return;
@@ -1341,7 +1341,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
         if (geo.stainHit(i).inflate(6).contains(from)) {
           if (_waitForHim()) return;
           if (_run.trace(i)) {
-            _tick('sounds/learn/tag_slap.wav', 0.5);
+            _tick('sounds/learn/tag_slap.ogg', 0.5);
             _show(M5Reading.source);
             _stepDone();
           } else if (!_run.traced) {
@@ -1374,7 +1374,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
     }
     if (!_run.struck.contains(c)) return;
     HapticFeedback.lightImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.55);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.55);
     unawaited(_levelDelta(5, global, mood: GuideMood.glad));
     _stepDone();
   }
@@ -1397,7 +1397,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
       _verdictPicked = null;
       _wake++;
     });
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     unawaited(_sayChain([M5CauseStrikeLines.askVerdict], mood: GuideMood.think));
   }
 
@@ -1413,7 +1413,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
     _verdictBusy = true;
     setState(() => _verdictPicked = o.textBn);
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     if (!mounted || _ended) return;
     _run.pickVerdict(true);
@@ -1428,7 +1428,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
   Future<void> _caseDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final topic = _run.deal.why[_run.index];
     final idx = _run.index;
@@ -1551,7 +1551,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1573,7 +1573,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
     _chipTimer?.cancel();
     _dripTimer?.cancel();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1584,7 +1584,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -2002,7 +2002,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5CauseStrikeLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -644,7 +644,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
     switch (o.verdict) {
       case M3FuseRatingVerdict.right:
         HapticFeedback.lightImpact();
-        _cue('sounds/quiz_right.wav');
+        _cue('sounds/quiz_right.ogg');
         setState(() => _setMode(LinemanMode.hold));
         unawaited(_levelDelta(5, origin, mood: GuideMood.glad));
         unawaited(_sayChain([M3FuseRatingLines.takeRight, M3FuseRatingLines.barrelAsk], mood: GuideMood.glad));
@@ -660,7 +660,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
   void _wiped(M3FuseRatingSpot s) {
     _run.wipe(s);
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tock.wav');
+    _cue('sounds/learn/tock.ogg');
   }
 
   void _tie(double tension, Offset origin) {
@@ -668,7 +668,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
     final o = _run.tie(tension);
     if (o.verdict == M3FuseRatingVerdict.right) {
       HapticFeedback.lightImpact();
-      _cue('sounds/quiz_right.wav');
+      _cue('sounds/quiz_right.ogg');
       setState(() => _setMode(LinemanMode.cheer));
       unawaited(_levelDelta(5, origin, mood: GuideMood.glad));
       final r = _run.current;
@@ -708,7 +708,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
       _tieTry = 0;
       _setMode(LinemanMode.idle);
     });
-    _cue('sounds/van_arrive.wav', volume: 0.5);
+    _cue('sounds/van_arrive.ogg', volume: 0.5);
     _armCoworker();
     unawaited(_sayChain([M3FuseRatingLines.ask]));
   }
@@ -716,7 +716,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
   void _openPlate() {
     if (_blocked || coworkerOpen || _held != null) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_flip.wav', volume: 0.4);
+    _cue('sounds/quiz_flip.ogg', volume: 0.4);
     setState(() => _plateOpen = true);
   }
 
@@ -805,7 +805,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav', volume: 0.7);
+    _cue('sounds/quiz_wrong.ogg', volume: 0.7);
     _hush();
     setState(() {
       _card = m;
@@ -827,7 +827,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -837,7 +837,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage> with DoDeathGuard, D
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {

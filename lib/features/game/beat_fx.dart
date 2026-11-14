@@ -37,11 +37,11 @@ class BeatFx {
     }
     if (playSound && !muted) {
       if (delta >= 20) {
-        unawaited(ZlFx.cue('sounds/level_done.wav', volume: 0.75, muted: false));
+        unawaited(ZlFx.cue('sounds/level_done.ogg', volume: 0.75, muted: false));
       } else if (delta > 0) {
-        unawaited(ZlFx.cue('sounds/dress_right.wav', volume: 0.72, muted: false));
+        unawaited(ZlFx.cue('sounds/dress_right.ogg', volume: 0.72, muted: false));
       } else {
-        unawaited(ZlFx.cue('sounds/dress_wrong.wav', volume: 0.72, muted: false));
+        unawaited(ZlFx.cue('sounds/dress_wrong.ogg', volume: 0.72, muted: false));
       }
     }
     ref.read(gameSaveProvider.notifier).pulseDelta(delta, originGlobal: originGlobal);
@@ -67,11 +67,11 @@ class BeatFx {
     }
     if (playSound && !muted) {
       if (delta >= 20) {
-        unawaited(ZlFx.cue('sounds/level_done.wav', volume: 0.75, muted: false));
+        unawaited(ZlFx.cue('sounds/level_done.ogg', volume: 0.75, muted: false));
       } else if (delta > 0) {
-        unawaited(ZlFx.cue('sounds/dress_right.wav', volume: 0.72, muted: false));
+        unawaited(ZlFx.cue('sounds/dress_right.ogg', volume: 0.72, muted: false));
       } else {
-        unawaited(ZlFx.cue('sounds/dress_wrong.wav', volume: 0.72, muted: false));
+        unawaited(ZlFx.cue('sounds/dress_wrong.ogg', volume: 0.72, muted: false));
       }
     }
     await ref.read(gameSaveProvider.notifier).addPoints(

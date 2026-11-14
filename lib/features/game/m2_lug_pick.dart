@@ -703,7 +703,7 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
     final l = _held;
     if (l != null) _run.spot(l);
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.wav', volume: 0.6, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.ogg', volume: 0.6, muted: false));
   }
 
   void _putBack() {
@@ -716,7 +716,7 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
       _setMode(LinemanMode.idle);
     });
     if (aside) {
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.6, muted: false));
       unawaited(_sayChain([LugLines.asideFlaw, LugLines.ask], mood: GuideMood.glad));
     } else {
       if (!_muted) unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.4, muted: false));
@@ -737,7 +737,7 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
     final o = _run.take(l);
     if (o.verdict == LugVerdict.right) {
       HapticFeedback.lightImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       setState(() => _setMode(LinemanMode.hold));
       unawaited(_sayChain([LugLines.stripAsk]));
       return;
@@ -755,7 +755,7 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
     final o = _run.strip(u);
     if (o.verdict == LugVerdict.right) {
       HapticFeedback.lightImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       setState(() => _setMode(LinemanMode.cheer));
       // +5 for the strip: outside the shared rules, kept (owner decision).
       unawaited(_levelDelta(5, origin, mood: GuideMood.glad));
@@ -779,7 +779,7 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
     final o = _run.holdJob();
     if (o.verdict == LugVerdict.right) {
       HapticFeedback.mediumImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       setState(() => _setMode(LinemanMode.cheer));
       final r = _run.current;
       final known = _run.flawKnown;
@@ -815,7 +815,7 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
       _stripTry = 0;
       _setMode(LinemanMode.idle);
     });
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: false));
     _armCoworker();
     unawaited(_sayChain([LugLines.ask]));
   }
@@ -823,7 +823,7 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
   void _openCable() {
     if (_blocked || coworkerOpen || _held != null) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.4, muted: false));
     setState(() => _cableOpen = true);
   }
 
@@ -922,7 +922,7 @@ class _LugRunPageState extends ConsumerState<_LugRunPage> with DoStrikeOut, Reas
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     _hush();
     setState(() => _card = m);
     unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));

@@ -1095,7 +1095,7 @@ class _FaRunPageState extends ConsumerState<_FaRunPage>
     }
     final from = _run.van2S!;
     final reason = _run.sendVan2();
-    _cue('sounds/learn/rush_in.wav', volume: 0.4);
+    _cue('sounds/learn/rush_in.ogg', volume: 0.4);
     setState(() {
       _van2From = from;
       _radio = M5FaLines.teamGone;
@@ -1167,7 +1167,7 @@ class _FaRunPageState extends ConsumerState<_FaRunPage>
     }
     _hush();
     setState(() => _closeUp = _CloseUp(n, r.lit, ++_closeTok));
-    if (r.lit) _cue('sounds/learn/tag_slap.wav', volume: 0.35);
+    if (r.lit) _cue('sounds/learn/tag_slap.ogg', volume: 0.35);
     _afterClose = r.again ? null : () => _afterRead(r, global);
     _closeTimer?.cancel();
     _closeTimer = Timer(Duration(milliseconds: _quiet ? 900 : 1700), _shutCloseUp);
@@ -1246,7 +1246,7 @@ class _FaRunPageState extends ConsumerState<_FaRunPage>
       if (!geo.nodeHit(n).inflate(10).contains(p)) continue;
       final f = _run.placeFlag(n.id);
       if (!f.placed) break;
-      _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
       setState(() {});
       if (f.judged) unawaited(_judged(f, g));
       return;
@@ -1274,7 +1274,7 @@ class _FaRunPageState extends ConsumerState<_FaRunPage>
       _histWrong.clear();
       _histPicked = null;
     });
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     unawaited(_sayChain([M5FaLines.historyNote, M5FaLines.askHistory], mood: GuideMood.think));
   }
 
@@ -1289,7 +1289,7 @@ class _FaRunPageState extends ConsumerState<_FaRunPage>
     }
     setState(() => _histPicked = o.textBn);
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     if (!mounted || _ended) return;
     _run.pickHistory(true);
@@ -1304,8 +1304,8 @@ class _FaRunPageState extends ConsumerState<_FaRunPage>
   void _table(M5FaReason r, int amount, Offset origin) {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     _reasonFor = r;
     putOnTable(amount);
     final idx = _run.index;
@@ -1417,7 +1417,7 @@ class _FaRunPageState extends ConsumerState<_FaRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() => _card = m);
     unawaited(bookMistake(ref, widget.ctx, m));
     final speak = await SpokenOnce.first('faultaddr/${m.key}');
@@ -1772,7 +1772,7 @@ class _FaRunPageState extends ConsumerState<_FaRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5FaLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

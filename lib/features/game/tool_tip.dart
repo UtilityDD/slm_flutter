@@ -466,7 +466,7 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
       unawaited(_deadly(m));
       return;
     }
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.55, muted: false));
     if (_run.round == 0) {
       // The first time: "কেন হট স্টিক?" — the ◆ wait on the table.
       putOnTable(10);
@@ -541,11 +541,11 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
     _hush();
     final m = _run.decide(reach: reach);
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: 0.5, muted: false));
     setState(() {});
     if (m == null) {
       // Right: the ◆ wait on the table, then "কেন …?".
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       putOnTable(15);
       final round = _run.round;
       unawaited(askReason(
@@ -671,7 +671,7 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -690,12 +690,12 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.9, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -939,7 +939,7 @@ class _ToolTipRunState extends ConsumerState<_ToolTipRun> with DoDeathGuard, DoS
               if (_intro)
                 GuideIntro(
                   line: ToolTipLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

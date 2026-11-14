@@ -1209,7 +1209,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     if (_intro || _ended || coworkerOpen || reasonOpen) return;
     final lines = M2GateLines.tasks[_run.station]!;
     _tapN++;
-    _cue('sounds/learn/tick.wav', volume: 0.5);
+    _cue('sounds/learn/tick.ogg', volume: 0.5);
     final line = lines[_tapN % lines.length];
     ref.read(guideDirectorProvider.notifier).say(mood: GuideMood.talk, line: line);
     unawaited(MascotSpeechLibrary.speak(line, muted: _muted));
@@ -1275,7 +1275,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   Future<void> _stationWon(Offset origin, String question, List<String> right, List<String> wrong, int salt) async {
     _busy = true;
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.7);
     putOnTable(_scored(20));
     final praise = M2GateLines.praise[_run.station];
     if (praise != null) await _say(praise, mood: GuideMood.celebrate);
@@ -1293,7 +1293,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     // Nothing but the death itself counts once a deadly move is made.
     if (!m.deadly && (_run.deadly != null || _freeze)) return;
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     _combo.miss();
     _holdTimer?.cancel();
     _holdTimer = null;
@@ -1328,8 +1328,8 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   /// Plays the spark of a deadly move (the scene is locked first).
   Future<void> _deathSpark(Offset at, {bool accident = true}) async {
     _lockForDeath();
-    _cue('sounds/learn/spark.wav', volume: 0.95);
-    if (accident) _cue('sounds/accident.wav', volume: 0.7);
+    _cue('sounds/learn/spark.ogg', volume: 0.95);
+    if (accident) _cue('sounds/accident.ogg', volume: 0.7);
     setState(() {
       _sparkAt = at;
       _sparkBig = true;
@@ -1394,7 +1394,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (held) {
       _run.tag('সহকর্মীর চাপে "না" বলা');
-      _cue('sounds/quiz_right.wav', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.7);
       setState(() => _wake++);
       unawaited(coworkerSnarl());
       await Future<void>.delayed(const Duration(milliseconds: 900));
@@ -1410,7 +1410,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   void _onShelfTap(M2Tool t) {
     if (!_canAct || _run.settled(t)) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/card_deal_b.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_b.ogg', volume: 0.6);
     setState(() => _inspect = t);
   }
 
@@ -1425,7 +1425,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       await _handleMistake(m);
       return;
     }
-    _cue(pack ? 'sounds/intro/drop.ogg' : 'sounds/learn/tag_slap.wav', volume: pack ? 0.7 : 0.8);
+    _cue(pack ? 'sounds/intro/drop.ogg' : 'sounds/learn/tag_slap.ogg', volume: pack ? 0.7 : 0.8);
     setState(() => _wake++);
     if (_run.packDone) {
       await _stationWon(origin, M2GateLines.whyPackQ, M2GateLines.whyPackRight, M2GateLines.whyPackWrong, 11);
@@ -1446,7 +1446,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   void _onWear({required bool shield}) {
     if (!_canAct) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/dress_right.wav', volume: 0.6);
+    _cue('sounds/dress_right.ogg', volume: 0.6);
     setState(() {
       if (_run.station == M2GateStation.phase) {
         _run.phaseGloves = true;
@@ -1462,7 +1462,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   void _onStand(M2Stance s) {
     if (!_canAct) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/stomp.wav', volume: 0.4);
+    _cue('sounds/learn/stomp.ogg', volume: 0.4);
     setState(() {
       _run.stance = s;
       _wake++;
@@ -1492,7 +1492,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       return;
     }
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/spark.wav', volume: 0.5);
+    _cue('sounds/learn/spark.ogg', volume: 0.5);
     setState(() {
       _sparkAt = geo.doRing(i).translate(0, -30);
       _sparkBig = false;
@@ -1587,7 +1587,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       return;
     }
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.7);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.7);
     setState(() => _wake++);
     await _pay(5, origin);
   }
@@ -1628,7 +1628,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
 
   void _pumpTick() {
     setState(() => _pump = math.min(1, _pump + 0.045));
-    if ((_pump * 100).round() % 18 == 0) _cue('sounds/learn/tock.wav', volume: 0.4);
+    if ((_pump * 100).round() % 18 == 0) _cue('sounds/learn/tock.ogg', volume: 0.4);
     if (_pump >= 1) {
       _holdTimer?.cancel();
       _holdTimer = null;
@@ -1666,7 +1666,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     if (!_canAct) return;
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 0.6);
+    _cue('sounds/learn/spark.ogg', volume: 0.6);
     setState(() {
       _run.dischargeCable();
       _sparkAt = Offset(geo.endX, geo.y);
@@ -1720,7 +1720,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
         _holdTimer = null;
         _run.runMegger();
         // A neutral tick: the reading, not the sound, tells good from bad.
-        _cue('sounds/learn/tock.wav', volume: 0.6);
+        _cue('sounds/learn/tock.ogg', volume: 0.6);
         setState(() => _megReading = M2GateRun.megText(target));
       }
     });
@@ -1749,7 +1749,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     _hush();
     final m = _run.removeLeads();
     if (m != null) {
-      _cue('sounds/learn/spark.wav', volume: 0.7);
+      _cue('sounds/learn/spark.ogg', volume: 0.7);
       await _handleMistake(m);
       return;
     }
@@ -1820,7 +1820,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   void _onCareTool(M2Care c) {
     if (!_canAct || _run.cared.contains(c) || _holdTimer != null) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     setState(() {
       _run.pickCare(c);
       _oilMode = false;
@@ -1834,7 +1834,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
     if (_wipe >= 1) {
       _holdTimer?.cancel();
       _holdTimer = null;
-      _cue('sounds/learn/card_deal_b.wav', volume: 0.6);
+      _cue('sounds/learn/card_deal_b.ogg', volume: 0.6);
       setState(() {
         _run.wipeHeld();
         _wipe = 0;
@@ -1864,7 +1864,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   void _onOilCan() {
     if (!_canAct || _run.careHeld != M2Care.pliers || _run.pliersOiled) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tock.wav', volume: 0.5);
+    _cue('sounds/learn/tock.ogg', volume: 0.5);
     setState(() => _oilMode = !_oilMode);
   }
 
@@ -1877,7 +1877,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       await _handleMistake(m);
       return;
     }
-    _cue('sounds/learn/tock.wav', volume: 0.6);
+    _cue('sounds/learn/tock.ogg', volume: 0.6);
     setState(() => _wake++);
   }
 
@@ -1943,10 +1943,10 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       if (delta > 0) _totalDelta = delta;
     });
     if (passed) {
-      _cue('sounds/level_done.wav', volume: 0.85);
+      _cue('sounds/level_done.ogg', volume: 0.85);
       await _say(M2GateLines.allSet, mood: GuideMood.celebrate);
     } else {
-      _cue('sounds/learn/level_fail.wav', volume: 0.7);
+      _cue('sounds/learn/level_fail.ogg', volume: 0.7);
       await _say(M2GateLines.fail, mood: GuideMood.warn);
     }
   }
@@ -2692,7 +2692,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
                     title: M2GateLines.stationTitles[_run.station]!,
                     onDocket: () {
                       if (!_canAct) return;
-                      _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
+                      _cue('sounds/learn/card_deal_a.ogg', volume: 0.8);
                       setState(() => _docketOpen = true);
                     },
                   ),
@@ -2803,7 +2803,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M2GateLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () => unawaited(_start()),
                 ),
@@ -2812,7 +2812,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
                   key: const ValueKey('docket-modal'),
                   child: _DocketSheet(
                     onClose: () {
-                      _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
+                      _cue('sounds/learn/card_deal_a.ogg', volume: 0.8);
                       setState(() => _docketOpen = false);
                     },
                   ),

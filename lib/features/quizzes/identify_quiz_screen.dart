@@ -56,7 +56,7 @@ class _IdentifyQuizScreenState extends ConsumerState<IdentifyQuizScreen> {
   Future<void> _playCue(bool right) async {
     try {
       await _cues.stop();
-      await _cues.play(AssetSource(right ? 'sounds/quiz_right.wav' : 'sounds/quiz_wrong.wav'));
+      await _cues.play(AssetSource(right ? 'sounds/quiz_right.ogg' : 'sounds/quiz_wrong.ogg'));
     } catch (_) {}
   }
 

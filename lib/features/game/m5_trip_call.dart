@@ -928,9 +928,9 @@ class _TripRunPageState extends ConsumerState<_TripRunPage>
     });
     if (_run.stage == M5TripStage.ring) {
       HapticFeedback.heavyImpact();
-      _cue('sounds/complaint.wav', volume: 0.8);
+      _cue('sounds/complaint.ogg', volume: 0.8);
     }
-    if (_run.stage == M5TripStage.brief) _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    if (_run.stage == M5TripStage.brief) _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     unawaited(_sayChain([_task]));
   }
 
@@ -947,7 +947,7 @@ class _TripRunPageState extends ConsumerState<_TripRunPage>
     if (!_canPlay) return;
     final r = _run.ask(t);
     if (r == null) return;
-    _tick('sounds/quiz_select.wav', 0.45);
+    _tick('sounds/quiz_select.ogg', 0.45);
     _talkAt = _clock.elapsedMilliseconds;
     final c = _run.now;
     final line = switch (r) {
@@ -1005,7 +1005,7 @@ class _TripRunPageState extends ConsumerState<_TripRunPage>
     final at = [for (var i = 0; i < 3; i++) i].where((i) => geo.card(i).inflate(6).contains(p)).firstOrNull;
     if (at == null) return;
     final s = _run.now.cards[at];
-    _tick('sounds/learn/tag_slap.wav', 0.55);
+    _tick('sounds/learn/tag_slap.ogg', 0.55);
     final m = _run.pin(s);
     if (m != null) {
       setState(() {});
@@ -1044,7 +1044,7 @@ class _TripRunPageState extends ConsumerState<_TripRunPage>
     }
     setState(() => _briefPicked = o.textBn);
     HapticFeedback.mediumImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     _run.brief(true);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     if (!mounted || _ended) return;
@@ -1058,7 +1058,7 @@ class _TripRunPageState extends ConsumerState<_TripRunPage>
   void _stepDone(String question, List<String> right) {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final idx = (_run.call, _run.stage);
     unawaited(askReason(
@@ -1255,7 +1255,7 @@ class _TripRunPageState extends ConsumerState<_TripRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1274,7 +1274,7 @@ class _TripRunPageState extends ConsumerState<_TripRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1283,7 +1283,7 @@ class _TripRunPageState extends ConsumerState<_TripRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1726,7 +1726,7 @@ class _TripRunPageState extends ConsumerState<_TripRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5TripLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

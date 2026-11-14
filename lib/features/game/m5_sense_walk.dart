@@ -1008,7 +1008,7 @@ class _SenseRunPageState extends ConsumerState<_SenseRunPage>
 
   void _stumble() {
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/stomp.wav', volume: 0.7);
+    _cue('sounds/learn/stomp.ogg', volume: 0.7);
     setState(() {
       _stumbleTok++;
       _wake++;
@@ -1101,14 +1101,14 @@ class _SenseRunPageState extends ConsumerState<_SenseRunPage>
       return;
     }
     _hush();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
     HapticFeedback.lightImpact();
     setState(() => _wake++);
     if (clue == SenseClue.hidden) {
       _onRight(_layout.hidden == SenseHidden.ear ? SenseWhy.hidden : SenseWhy.smell);
       return;
     }
-    _cue('sounds/quiz_right.wav', volume: 0.55);
+    _cue('sounds/quiz_right.ogg', volume: 0.55);
     unawaited(_levelDelta(10, global, mood: GuideMood.glad));
     unawaited(_sayChain([_rightBag.next().shownBn], mood: GuideMood.glad));
   }
@@ -1202,7 +1202,7 @@ class _SenseRunPageState extends ConsumerState<_SenseRunPage>
       unawaited(_deadly(m));
       return;
     }
-    _tick('sounds/learn/stomp.wav', 0.45);
+    _tick('sounds/learn/stomp.ogg', 0.45);
     _stepFrom = from;
     _stepTo = _run.pos;
     if (_quiet) {
@@ -1224,7 +1224,7 @@ class _SenseRunPageState extends ConsumerState<_SenseRunPage>
       unawaited(_mistake(m, global));
       return;
     }
-    _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
     HapticFeedback.mediumImpact();
     setState(() => _wake++);
     _onRight(_run.deal.wireWhy);
@@ -1255,7 +1255,7 @@ class _SenseRunPageState extends ConsumerState<_SenseRunPage>
     final yes = _run.sense(s);
     _senseTimer?.cancel();
     HapticFeedback.selectionClick();
-    if (yes) _cue('sounds/learn/tick.wav', volume: 0.5);
+    if (yes) _cue('sounds/learn/tick.ogg', volume: 0.5);
     setState(() {
       _senseOn = null;
       _senseHold.value = 0;
@@ -1418,7 +1418,7 @@ class _SenseRunPageState extends ConsumerState<_SenseRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1442,7 +1442,7 @@ class _SenseRunPageState extends ConsumerState<_SenseRunPage>
     _senseHold.stop();
     if (_eyesUp) _setEyes(false);
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1451,7 +1451,7 @@ class _SenseRunPageState extends ConsumerState<_SenseRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1872,7 +1872,7 @@ class _SenseRunPageState extends ConsumerState<_SenseRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: SenseWalkLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

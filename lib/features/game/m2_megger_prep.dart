@@ -622,7 +622,7 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.lightImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.55, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.55, muted: false));
     setState(() => _wake++);
     unawaited(_sayChain([MeggerPrepLines.leadsIn], mood: GuideMood.glad));
     _ask(10, MeggerPrepLines.leadRight, MeggerPrepLines.leadWrong, MeggerPrepLines.leadAsk, then: () {
@@ -736,7 +736,7 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
   Future<void> _stepDone(String id, OrderTap t, Offset point) async {
     final origin = _lastGlobal;
     HapticFeedback.lightImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.55, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.55, muted: false));
     setState(() => _wake++);
     switch (id) {
       case MeggerIds.off:
@@ -748,7 +748,7 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
         unawaited(_sayChain([MeggerPrepLines.deadProved], mood: GuideMood.glad));
       case MeggerIds.discharge:
       case MeggerIds.discharge2:
-        if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.8, muted: false));
+        if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.8, muted: false));
         final g = _geo;
         setState(() {
           _sparks++;
@@ -765,7 +765,7 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
           _ask(5, MeggerPrepLines.afterRight, MeggerPrepLines.afterWrong, MeggerPrepLines.afterAsk, then: () => unawaited(_finish()));
         }
       case MeggerIds.v500:
-        if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: false));
+        if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.55, muted: false));
         _ask(10, MeggerPrepLines.voltRight, MeggerPrepLines.voltWrong, MeggerPrepLines.voltAsk, then: () {
           setState(() {});
           unawaited(_sayChain([_nudge.next(_task)]));
@@ -794,7 +794,7 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
       _testing = true;
       _testTok++;
     });
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.35, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.35, muted: false));
     unawaited(_sayChain([MeggerPrepLines.testing]));
     final quiet = MediaQuery.disableAnimationsOf(context);
     await Future<void>.delayed(Duration(milliseconds: quiet ? 300 : 2400));
@@ -803,7 +803,7 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
       _testing = false;
       _reading = _deal.reading;
     });
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.55, muted: false));
     unawaited(_levelDelta(5, origin, mood: GuideMood.glad));
     unawaited(_sayChain([MeggerPrepLines.reading, MeggerPrepLines.askAfter], mood: GuideMood.glad));
   }
@@ -910,7 +910,7 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     _hush();
     setState(() {
       _pings++;
@@ -936,12 +936,12 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 1, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 1, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1404,7 +1404,7 @@ class _MeggerRunState extends ConsumerState<_MeggerRun> with DoDeathGuard, DoStr
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: MeggerPrepLines.intro,
-                  alarm: 'sounds/learn/spark.wav',
+                  alarm: 'sounds/learn/spark.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

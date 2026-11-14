@@ -1035,7 +1035,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
       _deckPicked = null;
       _wake++;
     });
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     unawaited(_sayChain([M5LiveWireLines.askOpen], mood: GuideMood.think));
   }
 
@@ -1054,7 +1054,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
     _deckBusy = true;
     setState(() => _deckPicked = o.textBn);
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     if (!mounted || _ended) return;
     if (kind == _Deck.opening) {
@@ -1076,8 +1076,8 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
   void _stepDone() {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     final idx = _run.index;
     final String q;
     final List<String> right;
@@ -1213,9 +1213,9 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
       _callShown = true;
       _wake++;
     });
-    _cue('sounds/learn/dmm_beep.wav', volume: 0.8);
+    _cue('sounds/learn/dmm_beep.ogg', volume: 0.8);
     await Future<void>.delayed(const Duration(milliseconds: 380));
-    _cue('sounds/learn/dmm_beep.wav', volume: 0.8);
+    _cue('sounds/learn/dmm_beep.ogg', volume: 0.8);
     if (!mounted || _ended) return;
     // The control room on the phone (device TTS); the guide stays quiet.
     final line = M5LiveWireLines.calls[_run.deal.callLine];
@@ -1234,7 +1234,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
       _deckWrong.clear();
       _deckPicked = null;
     });
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     unawaited(_sayChain([M5LiveWireLines.askCall], mood: GuideMood.think));
   }
 
@@ -1408,7 +1408,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
     _hush();
     _ticker.stop();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1430,7 +1430,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
     _hush();
     _demoHand.stop();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1441,7 +1441,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1813,7 +1813,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5LiveWireLines.intro,
-                  alarm: 'sounds/learn/wind_gust.wav',
+                  alarm: 'sounds/learn/wind_gust.ogg',
                   muted: _muted,
                   onDone: _start,
                 ),

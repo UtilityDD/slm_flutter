@@ -110,10 +110,10 @@ void main() {
 
   test('SFX: native players created for 60 cues across 3 helpers', () async {
     const files = [
-      'sounds/quiz_flip.wav',
-      'sounds/quiz_select.wav',
-      'sounds/quiz_right.wav',
-      'sounds/quiz_wrong.wav',
+      'sounds/quiz_flip.ogg',
+      'sounds/quiz_select.ogg',
+      'sounds/quiz_right.ogg',
+      'sounds/quiz_wrong.ogg',
     ];
     // A burst far denser than any screen fires (one cue every 10 ms).
     Future<void> round() async {
@@ -131,7 +131,7 @@ void main() {
       }
       for (var i = 0; i < 4; i++) {
         // The old lesson-shelf open/close cue (same call it made).
-        await SlmSfx.play(i.isEven ? 'sounds/quiz_right.wav' : 'sounds/quiz_wrong.wav', volume: 0.85, mix: false);
+        await SlmSfx.play(i.isEven ? 'sounds/quiz_right.ogg' : 'sounds/quiz_wrong.ogg', volume: 0.85, mix: false);
         await _settle(10);
       }
       await quiz.dispose();

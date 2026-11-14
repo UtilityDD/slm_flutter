@@ -632,7 +632,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
   void _pickTool(PullTool t) {
     if (!_canPlay || _run.station != PullStation.rig) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.45);
+    _cue('sounds/quiz_select.ogg', volume: 0.45);
     setState(() => _tool = _tool == t ? null : t);
   }
 
@@ -704,7 +704,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
 
   void _placed() {
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
     setState(() {
       _tool = null;
       _wake++;
@@ -809,7 +809,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
     HapticFeedback.selectionClick();
     if (_run.slipping) {
       _run.seatPawl();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     } else {
       _cue('sounds/intro/tick.ogg', volume: 0.4);
     }
@@ -842,7 +842,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
     if (_won) return;
     _won = true;
     _hush();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     final station = _run.station;
     putOnTable(15 + (_run.clean ? 5 : 0));
     unawaited(askReason(
@@ -864,7 +864,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
       _taps.clear();
       _wake++;
     });
-    if (_run.station == PullStation.release) _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    if (_run.station == PullStation.release) _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     unawaited(_sayChain([_task]));
   }
 
@@ -957,7 +957,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -984,7 +984,7 @@ class _PullRunPageState extends ConsumerState<_PullRunPage>
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {

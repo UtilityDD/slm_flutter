@@ -723,7 +723,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
 
   void _putGloves() {
     if (!_canPlay || _run.gloves) return;
-    _tick('sounds/learn/tag_slap.wav', 0.35);
+    _tick('sounds/learn/tag_slap.ogg', 0.35);
     setState(() {
       _run.putGloves();
       _wake++;
@@ -732,7 +732,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
 
   void _hold(PhaseTool t) {
     if (!_canPlay || _run.readingUp) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.hold(t);
       _wake++;
@@ -756,7 +756,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
   void _toggleLock() {
     if (!_canPlay) return;
     if (_run.toggleLock()) {
-      _tick('sounds/learn/tag_slap.wav', 0.5);
+      _tick('sounds/learn/tag_slap.ogg', 0.5);
     } else {
       _tick('sounds/intro/click.ogg', 0.3);
     }
@@ -795,7 +795,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
         if (m != null) {
           unawaited(_mistake(m, global));
         } else if (_run.readingUp) {
-          _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+          _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
           unawaited(_sayChain([PhaseLines.askRead]));
         } else if (_run.blank) {
           // No supply on the clips: the meter stays dark, the clips come off.
@@ -809,7 +809,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
           });
         } else if (_run.swapped && !_run.readSinceChange && _run.tool == PhaseTool.none && _run.lifted == null) {
           // The two wires are swapped and screwed down.
-          _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+          _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
           unawaited(_sayChain([PhaseLines.askNext]));
         }
         return;
@@ -848,7 +848,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
       return;
     }
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.5);
+    _cue('sounds/quiz_right.ogg', volume: 0.5);
     if (!_coworkerSet && _run.index == _run.deal.callAt && _run.fixing) {
       _coworkerSet = true;
       scheduleCoworker();
@@ -859,8 +859,8 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
   Future<void> _siteDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final s = _run.site;
     final idx = _run.index;
@@ -973,7 +973,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1002,7 +1002,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1375,7 +1375,7 @@ class _PhaseRunPageState extends ConsumerState<_PhaseRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: PhaseLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -850,7 +850,7 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
   Future<void> _start() async {
     _clock.start();
     // The para goes dark.
-    _cue('sounds/learn/dull_steel.wav', volume: 0.5);
+    _cue('sounds/learn/dull_steel.ogg', volume: 0.5);
     setState(() {
       _lit = false;
       _wake++;
@@ -890,13 +890,13 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
   void _play(M5Event e) {
     switch (e.kind) {
       case M5EventKind.shot:
-        _cue('sounds/learn/spark.wav', volume: 0.8);
+        _cue('sounds/learn/spark.ogg', volume: 0.8);
         _eventTimer?.cancel();
         _eventTimer = Timer(Duration(milliseconds: (e.ms * 0.66).round()), () => _cue('sounds/intro/impact_metal.ogg', volume: 0.9));
       case M5EventKind.lightning:
-        _cue('sounds/learn/thunder_near.wav', volume: 0.8);
+        _cue('sounds/learn/thunder_near.ogg', volume: 0.8);
       case M5EventKind.headlight:
-        _cue('sounds/learn/wind_gust.wav', volume: 0.35);
+        _cue('sounds/learn/wind_gust.ogg', volume: 0.35);
       case M5EventKind.inverter:
         _cue('sounds/intro/click.ogg', volume: 0.4);
     }
@@ -948,7 +948,7 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
 
   void _stepCount(int d) {
     if (!_canPlay || !_reporting) return;
-    _tick('sounds/learn/tick.wav', 0.4);
+    _tick('sounds/learn/tick.ogg', 0.4);
     setState(() => _count = ((_count ?? 0) + d).clamp(0, 6));
   }
 
@@ -1008,7 +1008,7 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
       case _Hold.spike:
         if (_run.spike) return;
     }
-    _cue(h == _Hold.radio ? 'sounds/intro/click.ogg' : 'sounds/learn/tick.wav', volume: 0.4);
+    _cue(h == _Hold.radio ? 'sounds/intro/click.ogg' : 'sounds/learn/tick.ogg', volume: 0.4);
     setState(() => _holding = h);
     if (_quiet) {
       _holdDone();
@@ -1040,11 +1040,11 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
         }());
       case _Hold.tester:
         _run.test();
-        _cue('sounds/learn/dmm_beep.wav', volume: 0.6);
+        _cue('sounds/learn/dmm_beep.ogg', volume: 0.6);
         setState(() => _wake++);
       case _Hold.spike:
         _run.driveSpike();
-        _cue('sounds/learn/knock_solid.wav', volume: 0.7);
+        _cue('sounds/learn/knock_solid.ogg', volume: 0.7);
         setState(() => _wake++);
     }
   }
@@ -1063,7 +1063,7 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
     final to = _globalOf(_traineeKey, inflate: 28);
     if (to == null || !to.contains(at)) return;
     if (!_run.takePtw()) return;
-    _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
     _stepDone(M5RecloserWhy.ptw);
   }
 
@@ -1090,7 +1090,7 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
     for (var i = 1; i < M5RecloserGeo.spans; i++) {
       if ((geo.vanX(i) - x).abs() < (geo.vanX(best) - x).abs()) best = i;
     }
-    _cue('sounds/van_arrive.wav', volume: 0.5);
+    _cue('sounds/van_arrive.ogg', volume: 0.5);
     final m = _run.drive(best);
     setState(() {
       _vanDrag = null;
@@ -1142,7 +1142,7 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
     if (span == null) return;
     final to = _sceneRect(geo.spanHit(span).inflate(10));
     if (to == null || !to.contains(at)) return;
-    _cue('sounds/learn/ring_steel.wav', volume: 0.6);
+    _cue('sounds/learn/ring_steel.ogg', volume: 0.6);
     final m = _run.clamp();
     setState(() {
       _wake++;
@@ -1172,7 +1172,7 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
       return;
     }
     if (!_run.aloft) return;
-    _cue('sounds/learn/stomp.wav', volume: 0.5);
+    _cue('sounds/learn/stomp.ogg', volume: 0.5);
     setState(() => _wake++);
     unawaited(_sayChain([M5RecloserLines.askClear]));
   }
@@ -1200,8 +1200,8 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
         if (_run.aloft && geo.spanHit(_run.deal.faultSpan).contains(p)) {
           if (_run.clearFault()) {
             HapticFeedback.mediumImpact();
-            _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-            _cue('sounds/quiz_right.wav', volume: 0.6);
+            _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+            _cue('sounds/quiz_right.ogg', volume: 0.6);
             setState(() => _wake++);
             unawaited(Future<void>.delayed(const Duration(milliseconds: 900), () {
               if (mounted && !_ended) unawaited(_finish());
@@ -1220,8 +1220,8 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
   void _stepDone(M5RecloserWhy why) {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final stage = _run.stage;
     unawaited(askReason(
@@ -1358,7 +1358,7 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1393,7 +1393,7 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1948,7 +1948,7 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5RecloserLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

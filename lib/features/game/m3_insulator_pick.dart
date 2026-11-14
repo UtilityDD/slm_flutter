@@ -713,7 +713,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
     final o = _run.take(i);
     if (o.verdict == M3InsulatorPickVerdict.right) {
       HapticFeedback.lightImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       setState(() => _setMode(LinemanMode.cheer));
       final s = _run.current.spot;
       _ask(15, () => _L.dealPack(s, widget.rng), _L.packAsk, lead: _L.fitted);
@@ -745,7 +745,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
       return;
     }
     setState(() => _setMode(LinemanMode.idle));
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: false));
     _armCoworker();
     unawaited(_sayChain([_L.ask]));
   }
@@ -753,7 +753,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
   void _openPlate() {
     if (_blocked || coworkerOpen || _held != null) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.4, muted: false));
     setState(() => _plateOpen = true);
   }
 
@@ -870,7 +870,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoStrikeOut, ReasonTabl
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     _hush();
     setState(() => _card = m);
     unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));

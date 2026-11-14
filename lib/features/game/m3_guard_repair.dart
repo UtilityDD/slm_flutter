@@ -924,7 +924,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
 
   void _placed() {
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
   }
 
   // --- ক prep --------------------------------------------------------------------
@@ -1091,7 +1091,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
 
   void _hold(M3GuardTool t) {
     if (!_canPlay || _run.station != M3GuardStation.repair) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.hold(t);
       _wake++;
@@ -1152,7 +1152,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
   // --- a station done right: the ◆ and the reason ---------------------------------
   void _stationRight(Offset origin) {
     _hush();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     final station = _run.station;
     setState(() => _stationPaid = true);
     putOnTable(15 + (_run.clean ? 5 : 0));
@@ -1292,7 +1292,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1321,7 +1321,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1695,7 +1695,7 @@ class _GuardRunPageState extends ConsumerState<_GuardRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3GuardRepairLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

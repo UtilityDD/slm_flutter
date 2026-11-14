@@ -771,7 +771,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
     _turnedFor = _run.index;
     final c = _run.current;
     setState(() => _wake++);
-    if (c.windy) _cue('sounds/learn/wind_gust.wav', volume: 0.6);
+    if (c.windy) _cue('sounds/learn/wind_gust.ogg', volume: 0.6);
     if (c.bolt != SkyBolt.none) {
       _strike();
       // The storm goes on: one more flash a little later.
@@ -802,7 +802,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
     HapticFeedback.mediumImpact();
     void roll() {
       if (!mounted || _ended) return;
-      _cue(near ? 'sounds/learn/thunder_near.wav' : 'sounds/learn/thunder_far.wav', volume: near ? 0.9 : 0.7);
+      _cue(near ? 'sounds/learn/thunder_near.ogg' : 'sounds/learn/thunder_far.ogg', volume: near ? 0.9 : 0.7);
       _wordTimer?.cancel();
       setState(() {
         _word = near ? SkyLines.crack : SkyLines.rumble;
@@ -847,7 +847,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
   void _openPhone() {
     if (!_canPlay) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.45);
+    _cue('sounds/quiz_select.ogg', volume: 0.45);
     _run.check(SkyCheck.phone);
     setState(() => _phone = true);
   }
@@ -864,7 +864,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
   void _putGloves() {
     if (!_canPlay) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.35);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.35);
     _run.check(SkyCheck.gloves);
     setState(() => _wake++);
   }
@@ -893,8 +893,8 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
     _againTimer?.cancel();
     HapticFeedback.mediumImpact();
     if (m == null) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       setState(() {
         _verdict = stop ? _Verdict.stopped : _Verdict.working;
         _wake++;
@@ -1043,7 +1043,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1066,7 +1066,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
     _flashTimer?.cancel();
     _againTimer?.cancel();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/thunder_near.wav', volume: 1);
+    _cue('sounds/learn/thunder_near.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1075,7 +1075,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1483,7 +1483,7 @@ class _SkyRunPageState extends ConsumerState<_SkyRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: SkyLines.intro,
-                  alarm: 'sounds/learn/thunder_far.wav',
+                  alarm: 'sounds/learn/thunder_far.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

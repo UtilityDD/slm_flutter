@@ -49,21 +49,21 @@ flutter:
         - asset: assets/fonts/PoppinsBrand-ExtraBold.ttf
           weight: 800
   assets:
-    - assets/sounds/quiz_right.wav
-    - assets/sounds/quiz_wrong.wav
-    - assets/sounds/quiz_shuffle.wav
-    - assets/sounds/quiz_flip.wav
-    - assets/sounds/quiz_select.wav
-    - assets/sounds/quiz_complete.wav
-    - assets/sounds/dress_right.wav
-    - assets/sounds/dress_wrong.wav
-    - assets/sounds/level_done.wav
-    - assets/sounds/safe_home.wav
-    - assets/sounds/clock_tick.wav
-    - assets/sounds/accident.wav
-    - assets/sounds/complaint.wav
-    - assets/sounds/van_arrive.wav
-    - assets/sounds/customer.wav
+    - assets/sounds/quiz_right.ogg
+    - assets/sounds/quiz_wrong.ogg
+    - assets/sounds/quiz_shuffle.ogg
+    - assets/sounds/quiz_flip.ogg
+    - assets/sounds/quiz_select.ogg
+    - assets/sounds/quiz_complete.ogg
+    - assets/sounds/dress_right.ogg
+    - assets/sounds/dress_wrong.ogg
+    - assets/sounds/level_done.ogg
+    - assets/sounds/safe_home.ogg
+    - assets/sounds/clock_tick.ogg
+    - assets/sounds/accident.ogg
+    - assets/sounds/complaint.ogg
+    - assets/sounds/van_arrive.ogg
+    - assets/sounds/customer.ogg
     - assets/sounds/intro/impact_metal.ogg
     - assets/sounds/intro/tick.ogg
     - assets/sounds/intro/glass.ogg

@@ -717,7 +717,7 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
     final on = _run.toggle(hit);
     if (on == null) return;
     HapticFeedback.selectionClick();
-    _cue(on ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/tick.ogg', volume: 0.5);
+    _cue(on ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/tick.ogg', volume: 0.5);
     setState(() => _wake++);
   }
 
@@ -760,7 +760,7 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
     _cue('sounds/intro/click.ogg', volume: 0.55);
     setState(() => _wake++);
     if (_run.tested) {
-      _cue('sounds/quiz_select.wav', volume: 0.4);
+      _cue('sounds/quiz_select.ogg', volume: 0.4);
       unawaited(_sayChain([M3PillarInspectLines.askLock]));
       if (!_coworkerScheduled) {
         _coworkerScheduled = true;
@@ -782,8 +782,8 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
       await _slip(m);
       return;
     }
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       _stamp = M3PillarInspectLines.stampReport;
       _wake++;
@@ -799,7 +799,7 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
     if (!_run.lock()) return;
     HapticFeedback.mediumImpact();
     _cue('sounds/intro/click.ogg', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       _stamp = M3PillarInspectLines.stampLock;
       _wake++;
@@ -917,7 +917,7 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -938,12 +938,12 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1276,7 +1276,7 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3PillarInspectLines.intro,
-                  alarm: 'sounds/learn/tag_slap.wav',
+                  alarm: 'sounds/learn/tag_slap.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

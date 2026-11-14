@@ -581,7 +581,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
           // A tag on or off: the same feel on a fault and a sound point.
           final on = _run.tapEarth(i);
           HapticFeedback.mediumImpact();
-          _cue(on ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/click.ogg', volume: 0.6);
+          _cue(on ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/click.ogg', volume: 0.6);
           setState(() => _wake++);
           return;
         }
@@ -642,7 +642,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
       return;
     }
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.5);
+    _cue('sounds/quiz_select.ogg', volume: 0.5);
     setState(() {
       _shown = false;
       _wake++;
@@ -676,7 +676,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
       return;
     }
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
     setState(() => _wake++);
     _stationRight(origin);
   }
@@ -684,7 +684,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   // --- a station done right: the ◆ and the reason ---------------------------------
   void _stationRight(Offset origin) {
     _hush();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     final station = _run.station;
     final look = station == M4EarthTestStation.look;
     final high = !look && _run.readingHigh;
@@ -819,7 +819,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _wake++;

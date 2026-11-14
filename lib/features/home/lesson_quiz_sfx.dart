@@ -7,12 +7,12 @@ class LessonQuizSfx {
 
   bool _disposed = false;
 
-  Future<void> shuffle() => _play('sounds/quiz_shuffle.wav', volume: 0.8);
-  Future<void> flip() => _play('sounds/quiz_flip.wav', volume: 0.7);
-  Future<void> select() => _play('sounds/quiz_select.wav', volume: 0.55);
-  Future<void> complete() => _play('sounds/quiz_complete.wav', volume: 0.85);
-  Future<void> success() => _play('sounds/quiz_right.wav', volume: 0.9);
-  Future<void> failure() => _play('sounds/quiz_wrong.wav', volume: 0.85);
+  Future<void> shuffle() => _play('sounds/quiz_shuffle.ogg', volume: 0.8);
+  Future<void> flip() => _play('sounds/quiz_flip.ogg', volume: 0.7);
+  Future<void> select() => _play('sounds/quiz_select.ogg', volume: 0.55);
+  Future<void> complete() => _play('sounds/quiz_complete.ogg', volume: 0.85);
+  Future<void> success() => _play('sounds/quiz_right.ogg', volume: 0.9);
+  Future<void> failure() => _play('sounds/quiz_wrong.ogg', volume: 0.85);
 
   Future<void> result(bool passed) => passed ? success() : failure();
 

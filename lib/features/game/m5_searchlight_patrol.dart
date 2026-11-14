@@ -988,7 +988,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     }
     final c = geo.deviceHome(d).center + off;
     if (geo.dock.inflate(16).contains(c) && _run.dock(d)) {
-      _tick('sounds/learn/tag_slap.wav', 0.6);
+      _tick('sounds/learn/tag_slap.ogg', 0.6);
       setState(() {
         _justDocked = d;
         _dockTok++;
@@ -1002,7 +1002,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
 
   void _wear(M5SlJacket j) {
     if (!_canPlay || _run.station != M5SlStation.depot) return;
-    _tick('sounds/learn/tag_slap.wav', 0.5);
+    _tick('sounds/learn/tag_slap.ogg', 0.5);
     setState(() {
       _run.wear(j);
       _wake++;
@@ -1011,7 +1011,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
 
   void _takeDocket() {
     if (!_canPlay || _run.station != M5SlStation.depot || _run.docket) return;
-    _tick('sounds/learn/tag_slap.wav', 0.5);
+    _tick('sounds/learn/tag_slap.ogg', 0.5);
     setState(() {
       _run.takeDocket();
       _wake++;
@@ -1068,7 +1068,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
 
   void _afterDepart() {
     final why = _run.depotWhy;
-    _cue('sounds/learn/rush_in.wav', volume: 0.4);
+    _cue('sounds/learn/rush_in.ogg', volume: 0.4);
     if (why == null) {
       setState(() => _leaving = true);
       unawaited(Future<void>.delayed(const Duration(milliseconds: 700), () {
@@ -1082,8 +1082,8 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
   void _roundTable(M5SlWhy why, _ReasonFor what) {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     _reasonFor = what;
     putOnTable(15 + (what != _ReasonFor.pin && _run.thorough ? 5 : 0));
     final idx = _run.index;
@@ -1106,7 +1106,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
       unawaited(_mistake(m, global));
       return;
     }
-    _cue('sounds/quiz_right.wav', volume: 0.5);
+    _cue('sounds/quiz_right.ogg', volume: 0.5);
     setState(() => _leaving = true);
     unawaited(_sayChain([M5SearchlightLines.roadRight], mood: GuideMood.glad));
     unawaited(Future<void>.delayed(Duration(milliseconds: _quiet ? 500 : 1100), () {
@@ -1357,7 +1357,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
       _biteTok++;
       _wake++;
     });
-    _cue(kind == _Bite.truck ? 'sounds/learn/rush_in.wav' : 'sounds/intro/tick.ogg', volume: 0.8);
+    _cue(kind == _Bite.truck ? 'sounds/learn/rush_in.ogg' : 'sounds/intro/tick.ogg', volume: 0.8);
     unawaited(Future<void>.delayed(Duration(milliseconds: _quiet ? 500 : 1500), () {
       if (!mounted || _ended) return;
       setState(() {
@@ -1407,7 +1407,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
           });
           return;
         }
-        _cue('sounds/quiz_right.wav', volume: 0.6);
+        _cue('sounds/quiz_right.ogg', volume: 0.6);
         _viewTimer = Timer(const Duration(milliseconds: 1500), () {
           if (!mounted) return;
           setState(() => _phoneOn = false);
@@ -1548,7 +1548,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     _hush();
     _ticker.stop();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1579,7 +1579,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -2205,7 +2205,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5SearchlightLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

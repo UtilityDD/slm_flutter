@@ -815,7 +815,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
     // He is due before this piece: he cuts in now (a fast play never skips him).
     if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.55, muted: false));
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     // A fresh look: yesterday's caption ("ঠিক ধরেছেন!") must not linger.
@@ -860,7 +860,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
     } else {
       HapticFeedback.heavyImpact();
     }
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: o.right ? 0.45 : 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: o.right ? 0.45 : 0.7, muted: false));
     if (o.wears) {
       putOnTable(o.delta);
     } else {
@@ -872,7 +872,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
     final worstWear = !o.right && choice == KitChoice.wear && item.wornAsset != null;
     if (worstWear) {
       // Straight to "what would happen": short, and a tap skips it.
-      if (!_muted) unawaited(ZlFx.cue('sounds/dress_wrong.wav', volume: 0.7, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/dress_wrong.ogg', volume: 0.7, muted: false));
       setState(() {
         _overlay = _Overlay.consequence;
         _shown = item;
@@ -1108,7 +1108,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.9, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() {
       _overlay = _Overlay.none;
@@ -1123,7 +1123,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     setState(() {
       _card = m;
       _cardTone = death ? MistakeTone.deadly : MistakeTone.nearMiss;
@@ -1384,7 +1384,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
               if (_introCard)
                 GuideIntro(
                   line: widget.pack.introBn,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _introCard = false);

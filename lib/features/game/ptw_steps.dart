@@ -608,31 +608,31 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
     if (const [StepIds.isolate, StepIds.issue, StepIds.cancel, StepIds.unlock].contains(id)) _operatorAnswers();
     switch (id) {
       case StepIds.request || StepIds.clear:
-        _cue('sounds/quiz_select.wav');
+        _cue('sounds/quiz_select.ogg');
         _praise(origin);
       case StepIds.isolate:
         _cue('sounds/intro/impact_metal.ogg', 0.7);
-        _cue('sounds/learn/tag_slap.wav', 0.5);
+        _cue('sounds/learn/tag_slap.ogg', 0.5);
         _ask(PtwWhy.isolate);
       case StepIds.issue:
-        _cue('sounds/quiz_flip.wav');
+        _cue('sounds/quiz_flip.ogg');
         _praise(origin);
       case StepIds.receive:
-        _cue('sounds/quiz_flip.wav');
+        _cue('sounds/quiz_flip.ogg');
         _ask(PtwWhy.receive, then: _armCoworker);
       case StepIds.test:
-        _cue('sounds/learn/tock.wav', 0.7);
+        _cue('sounds/learn/tock.ogg', 0.7);
         if (!_run.caught.contains(StepLines.caughtTest)) _run.caught.add(StepLines.caughtTest);
         _ask(PtwWhy.test);
       case StepIds.start:
-        _cue('sounds/learn/stomp.wav', 0.4);
+        _cue('sounds/learn/stomp.ogg', 0.4);
         unawaited(_levelDelta(15, origin, mood: GuideMood.glad));
         unawaited(_toLineClear());
       case StepIds.tools:
         _cue('sounds/intro/drop.ogg');
         _praise(origin);
       case StepIds.cancel:
-        _cue('sounds/quiz_flip.wav');
+        _cue('sounds/quiz_flip.ogg');
         if (!_run.caught.contains(StepLines.caughtReturn)) _run.caught.add(StepLines.caughtReturn);
         _ask(PtwWhy.giveBack);
       case StepIds.unlock:
@@ -641,7 +641,7 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
         unawaited(_wrapUp());
       default:
         // A worker comes down the ladder; the last one: the head count's reason.
-        _cue('sounds/learn/stomp.wav', 0.35);
+        _cue('sounds/learn/stomp.ogg', 0.35);
         if (_run.allDown) {
           if (!_run.caught.contains(StepLines.caughtCount)) _run.caught.add(StepLines.caughtCount);
           _ask(PtwWhy.count);
@@ -798,7 +798,7 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav', 0.7);
+    _cue('sounds/quiz_wrong.ogg', 0.7);
     _hush();
     setState(() {
       _card = m;
@@ -819,19 +819,19 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/stomp.wav', 0.5);
+    _cue('sounds/learn/stomp.ogg', 0.5);
     setState(() {
       _climbAll = true;
       _wake++;
     });
     if (!_quiet) await Future<void>.delayed(const Duration(milliseconds: 900));
     if (!mounted) return;
-    _cue('sounds/learn/spark.wav', 0.9);
+    _cue('sounds/learn/spark.ogg', 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', 0.9);
+    _cue('sounds/accident.ogg', 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1348,7 +1348,7 @@ class _StepsRunPageState extends ConsumerState<_StepsRunPage> with DoDeathGuard,
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: StepLines.intro,
-                  alarm: 'sounds/van_arrive.wav',
+                  alarm: 'sounds/van_arrive.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

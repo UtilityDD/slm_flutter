@@ -621,7 +621,7 @@ class _LinemanPainter extends CustomPainter {
 /// fair reading time are done he steps aside and [onDone] runs. No start
 /// button and no skipping — as level 1.
 class GuideIntro extends ConsumerStatefulWidget {
-  const GuideIntro({super.key, required this.line, required this.muted, required this.onDone, this.alarm = 'sounds/learn/fire_alarm.wav'});
+  const GuideIntro({super.key, required this.line, required this.muted, required this.onDone, this.alarm = 'sounds/learn/fire_alarm.ogg'});
 
   final String line;
   final bool muted;

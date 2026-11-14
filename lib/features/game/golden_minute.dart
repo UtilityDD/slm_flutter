@@ -789,8 +789,8 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
   void _right() {
     HapticFeedback.lightImpact();
     if (!_muted) {
-      unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
-      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: false));
+      unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.6, muted: false));
+      unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.55, muted: false));
     }
   }
 
@@ -925,7 +925,7 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
     _rhythm.add(_rhythmBase + _beatNow);
     _compressions.value++;
     HapticFeedback.lightImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.wav', volume: 0.45, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.ogg', volume: 0.45, muted: false));
   }
 
   void _onBeatTick(Duration elapsed) {
@@ -946,14 +946,14 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
     _metro = Timer.periodic(const Duration(milliseconds: kMetronomeMs), (_) {
       if (!mounted) return;
       _metroBeat.value++;
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tick.wav', volume: 0.3, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tick.ogg', volume: 0.3, muted: false));
     });
   }
 
   void _ambulanceComes() {
     _ambComing = true;
     if (!mounted || _ended) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/siren.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/siren.ogg', volume: 0.5, muted: false));
     if (!_quiet) unawaited(_amb.forward());
   }
 
@@ -1007,7 +1007,7 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
       _pose = RescuerPose.rest;
       _victimSays = awake ? GoldenLines.cameRoundSays : null;
     });
-    if (!_muted && !awake) unawaited(ZlFx.cue('sounds/van_arrive.wav', volume: 0.6, muted: false));
+    if (!_muted && !awake) unawaited(ZlFx.cue('sounds/van_arrive.ogg', volume: 0.6, muted: false));
     unawaited(() async {
       await _sayChain([awake ? GoldenLines.cameRound : GoldenLines.helpCame, good ? GoldenLines.rhythmGood : GoldenLines.rhythmOff],
           mood: good ? GuideMood.glad : GuideMood.warn);
@@ -1033,7 +1033,7 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
         _arrived = true;
         _victimSays = null;
       });
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/siren.wav', volume: 0.5, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/siren.ogg', volume: 0.5, muted: false));
       if (_quiet) {
         _amb.value = 1;
       } else {
@@ -1041,7 +1041,7 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
       }
       await Future<void>.delayed(Duration(milliseconds: _quiet ? 400 : 2600));
       if (!mounted || _ended) return;
-      if (!_muted) unawaited(ZlFx.cue('sounds/van_arrive.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/van_arrive.ogg', volume: 0.6, muted: false));
       await _sayChain([GoldenLines.helpCame], mood: GuideMood.glad);
     }
     if (mounted) unawaited(_finish());
@@ -1197,7 +1197,7 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _card = m;
       _afterCard = then;
@@ -1519,7 +1519,7 @@ class _GoldenRunPageState extends ConsumerState<_GoldenRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: GoldenLines.intro,
-                  alarm: 'sounds/learn/heartbeat.wav',
+                  alarm: 'sounds/learn/heartbeat.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

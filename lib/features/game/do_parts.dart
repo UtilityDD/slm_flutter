@@ -269,7 +269,7 @@ class _DoDealInState extends State<DoDealIn> with SingleTickerProviderStateMixin
     _delay = Timer(Duration(milliseconds: 90 * widget.index), () {
       if (!mounted) return;
       if (!widget.muted) {
-        unawaited(ZlFx.cue(widget.index.isEven ? 'sounds/learn/card_deal_a.wav' : 'sounds/learn/card_deal_b.wav', volume: 0.55, muted: false));
+        unawaited(ZlFx.cue(widget.index.isEven ? 'sounds/learn/card_deal_a.ogg' : 'sounds/learn/card_deal_b.ogg', volume: 0.55, muted: false));
       }
       _c.forward();
     });

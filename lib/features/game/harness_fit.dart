@@ -734,7 +734,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
     if (!_canFit) return;
     _touched();
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.3, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.ogg', volume: 0.3, muted: false));
     setState(() {
       _back = !_back;
       _turns++;
@@ -770,13 +770,13 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
       case _Grab.tail:
         if (_grabMoved > 14 && _run.tighten()) {
           HapticFeedback.mediumImpact();
-          if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.55, muted: false));
+          if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.55, muted: false));
           setState(() => _felt = null);
         }
       case _Grab.strap:
         if (_grabMoved.abs() > 16 && _run.straighten()) {
           HapticFeedback.lightImpact();
-          if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.4, muted: false));
+          if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.4, muted: false));
           setState(() {});
         }
     }
@@ -803,7 +803,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
 
   void _clickBuckle() {
     HapticFeedback.lightImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tick.wav', volume: 0.6, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tick.ogg', volume: 0.6, muted: false));
   }
 
   void _handMove(Offset p) {
@@ -823,7 +823,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
       final loose = _run.feelLeg();
       HapticFeedback.lightImpact();
       // One sound for both readings: the player judges the fit, not the cue.
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.wav', volume: 0.5, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.ogg', volume: 0.5, muted: false));
       setState(() {
         _felt = loose;
         _hand = null;
@@ -858,8 +858,8 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
     if (c.clean) {
       // Right: the ◆ wait on the table, then "কেন …?" about what he fixed.
       if (!_muted) {
-        unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
-        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+        unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.6, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       }
       putOnTable(10 * owedN + 10);
       final f = FitLines.reasonFault(owed);
@@ -897,7 +897,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
     _run.fit.fixAll();
     _run.toAnchor();
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.35, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.ogg', volume: 0.35, muted: false));
     setState(() {
       _up = true;
       _shown = null;
@@ -920,7 +920,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
     if (_hisTurn && !coworkerDue) scheduleCoworker();
     if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.45, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.45, muted: false));
     setState(() => _lens = a);
   }
 
@@ -949,8 +949,8 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
     }
     HapticFeedback.mediumImpact();
     if (!_muted) {
-      unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.7, muted: false));
-      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+      unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.7, muted: false));
+      unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
     }
     putOnTable(15);
     final r = _run.current;
@@ -1099,7 +1099,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1119,7 +1119,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: 0.9, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1127,7 +1127,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
     });
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1608,7 +1608,7 @@ class _FitRunPageState extends ConsumerState<_FitRunPage> with DoDeathGuard, DoS
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: FitLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

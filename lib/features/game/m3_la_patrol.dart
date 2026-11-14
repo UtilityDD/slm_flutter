@@ -602,7 +602,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
     if (!_canLook) return;
     _hush();
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     final m = _run.spot(p);
     final c = _run.current;
     if (m != null) {
@@ -622,7 +622,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
     // A failed LA found: what now? At the hanging lead the same deck opens
     // and he is armed: he peeps in a moment later, or at once on the first
     // pick (holdForCoworker in _pickAct) — never a gap with nothing to do.
-    _cue('sounds/quiz_select.wav', volume: 0.5);
+    _cue('sounds/quiz_select.ogg', volume: 0.5);
     setState(() => _wake++);
     if (_run.index == _run.deal.callAt && !coworkerDone) scheduleCoworker();
     _openAct();
@@ -635,7 +635,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
       _actPicked = null;
       _actOpen = true;
     });
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     unawaited(_sayChain([M3LaPatrolLines.actAsk]));
   }
 
@@ -670,8 +670,8 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
   /// The DTR is settled rightly: the stamp, the ◆ on the table, the reason.
   void _success(Offset origin) {
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     final c = _run.current;
     setState(() {
       _stamp = !c.healthy;
@@ -786,7 +786,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -807,7 +807,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -816,7 +816,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1130,7 +1130,7 @@ class _LaRunPageState extends ConsumerState<_LaRunPage> with DoDeathGuard, DoStr
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3LaPatrolLines.intro,
-                  alarm: 'sounds/learn/thunder_far.wav',
+                  alarm: 'sounds/learn/thunder_far.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

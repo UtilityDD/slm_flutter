@@ -596,7 +596,7 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
       _readNudge = nudge;
     });
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.32, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.ogg', volume: 0.32, muted: false));
     if (_quietMotion) {
       _readFly.value = 1;
     } else {
@@ -607,7 +607,7 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
   Future<void> _tuckReadCard() async {
     if (!_readOpen || _readFly.isAnimating) return;
     _readFrom = readLessonFrom(_readPillKey, _layerKey) ?? _readFrom;
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.3, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.3, muted: false));
     if (_quietMotion) {
       _readFly.value = 0;
     } else {

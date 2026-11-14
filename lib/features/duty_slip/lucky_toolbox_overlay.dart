@@ -185,7 +185,7 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
       _phase = _Phase.task;
     });
     _say(ToolboxLines.intro, GuideMood.inspire);
-    _cue('sounds/quiz_flip.wav', volume: 0.5);
+    _cue('sounds/quiz_flip.ogg', volume: 0.5);
     if (_still) {
       // Reduce motion: no shrinking bar; the task waits for an answer or a skip.
       _clock.value = 0;
@@ -228,11 +228,11 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
     }
     if (right) {
       HapticFeedback.lightImpact();
-      _cue('sounds/quiz_right.wav');
+      _cue('sounds/quiz_right.ogg');
       _say(ToolboxLines.right, GuideMood.glad);
     } else {
       HapticFeedback.selectionClick();
-      _cue('sounds/quiz_wrong.wav', volume: 0.5);
+      _cue('sounds/quiz_wrong.ogg', volume: 0.5);
       _say(ToolboxLines.wrong, GuideMood.think);
     }
     _hold = Timer(Duration(milliseconds: right ? 1000 : 2000), _toPick);
@@ -249,7 +249,7 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
       _phase = _Phase.pick;
     });
     _say(ToolboxLines.pick, GuideMood.talk);
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     if (_still) {
       _dealIn.value = 1;
     } else {
@@ -292,7 +292,7 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
       widget.onClose();
       return;
     }
-    _cue(r.rareOrBetter || extra != null ? 'sounds/level_done.wav' : 'sounds/dress_right.wav', volume: 0.75);
+    _cue(r.rareOrBetter || extra != null ? 'sounds/level_done.ogg' : 'sounds/dress_right.ogg', volume: 0.75);
     _say(ToolboxLines.won(extra?.prize == ToolboxPrize.lifeSkill ? extra! : r), GuideMood.celebrate);
     if (_still) {
       _open.value = 1;
@@ -306,7 +306,7 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
   void _revealOthers() {
     if (!mounted || _phase != _Phase.opening) return;
     setState(() => _phase = _Phase.done);
-    _cue('sounds/learn/card_deal_b.wav', volume: 0.5);
+    _cue('sounds/learn/card_deal_b.ogg', volume: 0.5);
     if (_still) {
       _others.value = 1;
     } else {

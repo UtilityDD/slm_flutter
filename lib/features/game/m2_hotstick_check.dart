@@ -672,7 +672,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
     final r = _held;
     if (r != null) _run.spot(r);
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.wav', volume: 0.6, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.ogg', volume: 0.6, muted: false));
   }
 
   void _slidOnce() {
@@ -710,7 +710,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
       _setMode(LinemanMode.idle);
     });
     if (aside) {
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.6, muted: false));
       final line = r.bamboo ? HotStickLines.asideBamboo : (r.flaw == StickMark.overdue ? HotStickLines.asideOverdue : HotStickLines.asideFlaw);
       unawaited(_sayChain([line, HotStickLines.ask], mood: GuideMood.glad));
     } else {
@@ -729,7 +729,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
       case StickVerdict.right:
         HapticFeedback.lightImpact();
         if (!_muted) {
-          unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+          unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
           unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.5, muted: false));
         }
         setState(() {
@@ -769,7 +769,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
       _packed = null;
       _setMode(LinemanMode.idle);
     });
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: false));
     _armCoworker();
     unawaited(_sayChain([HotStickLines.ask]));
   }
@@ -777,7 +777,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
   void _openDocket() {
     if (_blocked || coworkerOpen || _held != null) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.4, muted: false));
     setState(() => _docketOpen = true);
   }
 
@@ -896,7 +896,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     _hush();
     setState(() {
       _card = m;
@@ -916,7 +916,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.9, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() {
       _held = null;
@@ -927,7 +927,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
     });
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1201,7 +1201,7 @@ class _StickRunPageState extends ConsumerState<_StickRunPage> with DoDeathGuard,
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: HotStickLines.intro,
-                  alarm: 'sounds/van_arrive.wav',
+                  alarm: 'sounds/van_arrive.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);
@@ -1564,7 +1564,7 @@ class _InspectState extends State<_Inspect> {
   void _wipe() {
     if (_wiping) return;
     HapticFeedback.selectionClick();
-    if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.35, muted: false));
+    if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.35, muted: false));
     if (widget.quiet) {
       setState(() => _wipes++);
       widget.onWiped();

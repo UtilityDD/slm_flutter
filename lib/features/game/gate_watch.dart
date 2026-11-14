@@ -839,7 +839,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
     final moves = prev != null && g != null && (prev.slot.atVan != m.slot.atVan || _camOf(prev, g) != _camOf(m, g));
     if (first) unawaited(_sayChain([GateLines.watch]));
     if (moves && !_quiet) {
-      if (prev.slot.atVan != m.slot.atVan) _cue('sounds/van_arrive.wav', volume: 0.35);
+      if (prev.slot.atVan != m.slot.atVan) _cue('sounds/van_arrive.ogg', volume: 0.35);
       unawaited(_travel.forward(from: 0));
     } else {
       _travel.value = 1;
@@ -875,13 +875,13 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
     switch (m.slot) {
       case GateSlot.poleCheck when f != GateFault.skipCheck && t >= 0.44:
         _cuePlayed = true;
-        _cue(f == GateFault.hollow ? 'sounds/learn/knock_hollow.wav' : 'sounds/learn/knock_solid.wav', volume: 0.8);
+        _cue(f == GateFault.hollow ? 'sounds/learn/knock_hollow.ogg' : 'sounds/learn/knock_solid.ogg', volume: 0.8);
       case GateSlot.sky when t >= 0.42:
         _cuePlayed = true;
-        _cue('sounds/learn/thunder_far.wav', volume: 0.8);
+        _cue('sounds/learn/thunder_far.ogg', volume: 0.8);
       case GateSlot.discharge when f == null && t >= 0.52:
         _cuePlayed = true;
-        _cue('sounds/learn/spark.wav', volume: 0.35);
+        _cue('sounds/learn/spark.ogg', volume: 0.35);
       default:
         break;
     }
@@ -940,7 +940,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
     _play.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.8);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.8);
     final m = _run.stop();
     if (m != null) {
       // Needless: the crew lead shrugs, then the slip card.
@@ -974,13 +974,13 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
       _missTaps++;
       _hints.missTap();
       HapticFeedback.lightImpact();
-      _cue('sounds/quiz_wrong.wav', volume: 0.35);
+      _cue('sounds/quiz_wrong.ogg', volume: 0.35);
       unawaited(_sayChain([GateLines.notHere[_notHereN++ % GateLines.notHere.length]], mood: GuideMood.think));
       return;
     }
     final f = _moment.fault!;
     HapticFeedback.mediumImpact();
-    _cue('sounds/quiz_select.wav', volume: 0.6);
+    _cue('sounds/quiz_select.ogg', volume: 0.6);
     setState(() {
       _lensAt = p;
       _phase = _Phase.what;
@@ -996,7 +996,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
     _hush();
     if (!o.correct) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/quiz_wrong.wav');
+      _cue('sounds/quiz_wrong.ogg');
       setState(() {
         _whatWrong.add(o.textBn);
         _whatWrongs++;
@@ -1005,7 +1005,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
       return;
     }
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.8);
+    _cue('sounds/quiz_right.ogg', volume: 0.8);
     setState(() => _whatPicked = o.textBn);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     if (!mounted || _ended || _phase != _Phase.what) return;
@@ -1155,7 +1155,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _phase = _Phase.card;
       _card = m;
@@ -1178,7 +1178,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
     _cardLesson = _lessonNow;
     HapticFeedback.heavyImpact();
     final harm = gateHarmOf(_moment.fault!);
-    _cue(harm == GateHarm.fall ? 'sounds/learn/stomp.wav' : 'sounds/learn/spark.wav', volume: 0.9);
+    _cue(harm == GateHarm.fall ? 'sounds/learn/stomp.ogg' : 'sounds/learn/spark.ogg', volume: 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _phase = _Phase.freeze;
@@ -1191,7 +1191,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
     }
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1252,7 +1252,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
     final stars = starsFor(passed: _run.passed, strikes: strikes, quick: _run.quick);
     if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
-    if (_run.passed) _cue('sounds/level_done.wav', volume: 0.85);
+    if (_run.passed) _cue('sounds/level_done.ogg', volume: 0.85);
     setState(() {
       _stars = stars;
       _mark = mark;
@@ -1600,7 +1600,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: GateLines.intro,
-                  alarm: 'sounds/learn/card_deal_a.wav',
+                  alarm: 'sounds/learn/card_deal_a.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _phase = _Phase.travel);

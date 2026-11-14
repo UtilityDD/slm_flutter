@@ -770,7 +770,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
         final a = _run.test();
         if (a.note == null) {
           final live = _run.reading(_run.selected!) ?? false;
-          _cue(live ? 'sounds/learn/spark.wav' : 'sounds/intro/click.ogg', volume: live ? 0.5 : 0.5);
+          _cue(live ? 'sounds/learn/spark.ogg' : 'sounds/intro/click.ogg', volume: live ? 0.5 : 0.5);
           if (live) HapticFeedback.mediumImpact();
         }
         _apply(a, origin);
@@ -784,7 +784,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
           return;
         }
         HapticFeedback.selectionClick();
-        _cue('sounds/quiz_select.wav', volume: 0.45);
+        _cue('sounds/quiz_select.ogg', volume: 0.45);
         setState(() => _tray = true);
       case HydStep.place:
         final a = _run.place();
@@ -810,7 +810,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
     final a = _run.pump();
     if (a.mistake == null && a.note == null) {
       HapticFeedback.lightImpact();
-      _cue('sounds/learn/tock.wav', volume: 0.5);
+      _cue('sounds/learn/tock.ogg', volume: 0.5);
       if (_run.clicked && !before) {
         // The pressure release valve opens by itself: the click.
         _cue('sounds/intro/click.ogg', volume: 0.95);
@@ -877,7 +877,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
   }
 
   void _sparkOn(int slot) {
-    _cue('sounds/learn/spark.wav', volume: 0.9);
+    _cue('sounds/learn/spark.ogg', volume: 0.9);
     _sparkTimer?.cancel();
     setState(() {
       _spark = slot;
@@ -891,8 +891,8 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
   void _done(HydEnd end) {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       _verdict = end;
       _wake++;
@@ -1002,7 +1002,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1024,7 +1024,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1033,7 +1033,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1445,7 +1445,7 @@ class _HydRunPageState extends ConsumerState<_HydRunPage> with DoDeathGuard, DoS
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: HydLines.intro,
-                  alarm: 'sounds/learn/ring_steel.wav',
+                  alarm: 'sounds/learn/ring_steel.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

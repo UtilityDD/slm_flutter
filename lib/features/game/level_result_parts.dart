@@ -118,7 +118,7 @@ class _LevelFailPanelState extends State<LevelFailPanel> with SingleTickerProvid
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
-      if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/level_fail.wav', volume: 0.8, muted: false));
+      if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/level_fail.ogg', volume: 0.8, muted: false));
       if (MediaQuery.disableAnimationsOf(context) || slmReduceMotion(context)) {
         _in.value = 1;
       } else {

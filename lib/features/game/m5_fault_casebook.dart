@@ -784,7 +784,7 @@ class _CasebookRunPageState extends ConsumerState<_CasebookRunPage>
   void _open(M5Spot spot, {bool say = true}) {
     if (_run.open(spot) != M5Open.opened) return;
     HapticFeedback.lightImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     _showLens(spot);
     if (say && _run.cluesLeft == 0) unawaited(_sayChain([M5CasebookLines.askFile]));
     _armGlyphs();
@@ -848,8 +848,8 @@ class _CasebookRunPageState extends ConsumerState<_CasebookRunPage>
     _hush();
     _glyphIdle?.cancel();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(_run.caseSlips == 0 ? 20 : 15);
     final idx = _run.index;
     unawaited(askReason(
@@ -979,7 +979,7 @@ class _CasebookRunPageState extends ConsumerState<_CasebookRunPage>
     _hush();
     _glyphIdle?.cancel();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _wake++;
@@ -1221,7 +1221,7 @@ class _CasebookRunPageState extends ConsumerState<_CasebookRunPage>
                       key: const ValueKey('case-slip'),
                       data: _run.index,
                       maxSimultaneousDrags: canFile && _run.canFile ? 1 : 0,
-                      onDragStarted: () => _tick('sounds/learn/card_deal_a.wav', 0.4),
+                      onDragStarted: () => _tick('sounds/learn/card_deal_a.ogg', 0.4),
                       feedback: Material(color: Colors.transparent, child: Transform.rotate(angle: -0.05, child: slip)),
                       childWhenDragging: Opacity(opacity: 0.3, child: slip),
                       child: KeyedSubtree(key: _slipKey, child: slip),
@@ -1381,7 +1381,7 @@ class _CasebookRunPageState extends ConsumerState<_CasebookRunPage>
                   GuideIntro(
                     key: const ValueKey('intro'),
                     line: M5CasebookLines.intro,
-                    alarm: 'sounds/learn/rush_in.wav',
+                    alarm: 'sounds/learn/rush_in.ogg',
                     muted: _muted,
                     onDone: () {
                       setState(() => _intro = false);

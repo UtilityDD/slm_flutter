@@ -836,7 +836,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
 
   void _hold(M4InsulatorSwapTool t) {
     if (!_canPlay) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.hold(t);
       _wake++;
@@ -845,7 +845,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
 
   void _pickSpare(int j, Offset global) {
     if (!_canPlay) return;
-    _tick('sounds/learn/card_deal_a.wav', 0.5);
+    _tick('sounds/learn/card_deal_a.ogg', 0.5);
     final m = _run.pickSpare(j);
     setState(() => _wake++);
     if (m != null) unawaited(_mistake(m, global));
@@ -901,7 +901,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
       _tick('sounds/intro/click.ogg', 0.3);
       return;
     }
-    _cue(r.oldOff || r.discOut ? 'sounds/intro/impact_metal.ogg' : 'sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue(r.oldOff || r.discOut ? 'sounds/intro/impact_metal.ogg' : 'sounds/learn/tag_slap.ogg', volume: 0.5);
     HapticFeedback.lightImpact();
     // The new insulator is on the pin: on his pole, the coworker comes now.
     if (r.isPin && r.newOn && !_coworkerSent && r.index == r.deal.callAt) {
@@ -915,8 +915,8 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
   Future<void> _poleDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() => _stamp = true);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final p = _run.pole;
@@ -1040,7 +1040,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1065,7 +1065,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1393,7 +1393,7 @@ class _SwapRunPageState extends ConsumerState<_SwapRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4InsulatorSwapLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

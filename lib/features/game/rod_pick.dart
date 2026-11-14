@@ -666,7 +666,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
     final r = _held;
     if (r != null) _run.spot(r);
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.wav', volume: 0.6, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tock.ogg', volume: 0.6, muted: false));
   }
 
   void _putBack() {
@@ -679,7 +679,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
       _setMode(LinemanMode.idle);
     });
     if (aside) {
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.6, muted: false));
       unawaited(_sayChain([r.jugaad ? RodLines.asideJugaad : RodLines.asideFlaw, RodLines.ask], mood: GuideMood.glad));
     } else {
       if (!_muted) unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.4, muted: false));
@@ -696,7 +696,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
       case RodVerdict.right:
         HapticFeedback.lightImpact();
         if (!_muted) {
-          unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+          unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
           unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.5, muted: false));
         }
         setState(() {
@@ -723,7 +723,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
     final o = _run.holdJob();
     if (o.verdict == RodVerdict.right) {
       HapticFeedback.mediumImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       setState(() => _setMode(LinemanMode.cheer));
       final r = _run.current;
       final known = _run.flawKnown;
@@ -757,7 +757,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
       _packed = null;
       _setMode(LinemanMode.idle);
     });
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: false));
     _armCoworker();
     unawaited(_sayChain([RodLines.ask]));
   }
@@ -765,7 +765,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
   void _openDocket() {
     if (_blocked || coworkerOpen || _held != null) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.4, muted: false));
     setState(() => _docketOpen = true);
   }
 
@@ -862,7 +862,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     _hush();
     setState(() {
       _card = m;
@@ -884,7 +884,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.9, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() {
       _held = null;
@@ -895,7 +895,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
     });
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1214,7 +1214,7 @@ class _RodRunPageState extends ConsumerState<_RodRunPage> with DoDeathGuard, DoS
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: RodLines.intro,
-                  alarm: 'sounds/van_arrive.wav',
+                  alarm: 'sounds/van_arrive.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -763,7 +763,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
           return;
         }
         if (!_run.marked.contains(i)) return;
-        _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
         setState(() => _wake++);
       case M4TreePlanPhase.drop:
         final d = m4TreePlanDropOf(geo, t, p.dx, p.dy);
@@ -782,7 +782,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
           await _slip(m);
           return;
         }
-        _cue('sounds/learn/tag_slap.wav', volume: 0.55);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.55);
         _askStep();
       case M4TreePlanPhase.plan:
         _hints.missTap();
@@ -812,7 +812,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
     // Taking the শাটডাউন ends his moment: he has his say first.
     if (k == M4TreePlanKit.shutdown && !_run.kit.contains(k) && holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    _cue(k == M4TreePlanKit.shutdown ? 'sounds/quiz_select.wav' : 'sounds/learn/tag_slap.wav', volume: 0.45);
+    _cue(k == M4TreePlanKit.shutdown ? 'sounds/quiz_select.ogg' : 'sounds/learn/tag_slap.ogg', volume: 0.45);
     setState(() {
       _run.wear(k);
       _wake++;
@@ -861,7 +861,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
   /// The branches come down into the cordon; then the ◆ and "কেন …?".
   Future<void> _cut() async {
     _busy = true;
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
     setState(() {
       _cutting = true;
       _cutN++;
@@ -987,7 +987,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1008,7 +1008,7 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;

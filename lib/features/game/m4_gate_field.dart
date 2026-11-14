@@ -1102,7 +1102,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     if (_intro || _ended || tableBusy || coworkerOpen) return;
     final lines = M4GateLines.tasks[_run.station]!;
     _tapN++;
-    _cue('sounds/learn/tick.wav', volume: 0.5);
+    _cue('sounds/learn/tick.ogg', volume: 0.5);
     final line = lines[_tapN % lines.length];
     ref.read(guideDirectorProvider.notifier).say(mood: GuideMood.talk, line: line);
     unawaited(MascotSpeechLibrary.speak(line, muted: _muted));
@@ -1271,7 +1271,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     if (_won == st || _run.completed.contains(st) || _ended) return;
     _won = st;
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.7);
     putOnTable(_scored(20));
     final praise = M4GateLines.praise[st];
     if (praise != null) await _say(praise, mood: GuideMood.celebrate);
@@ -1284,8 +1284,8 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   }
 
   Future<void> _spark(Offset at, {bool big = true}) async {
-    _cue('sounds/learn/spark.wav', volume: big ? 0.95 : 0.5);
-    if (big) _cue('sounds/accident.wav', volume: 0.7);
+    _cue('sounds/learn/spark.ogg', volume: big ? 0.95 : 0.5);
+    if (big) _cue('sounds/accident.ogg', volume: 0.7);
     setState(() {
       _sparkAt = at;
       _sparkBig = big;
@@ -1296,7 +1296,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
 
   Future<void> _handleMistake(DoMistake m) async {
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     _combo.miss();
     if (m.deadly) {
       _busy = true;
@@ -1392,7 +1392,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (held) {
       _run.tag('সহকর্মীর চাপে "না" বলা');
-      _cue('sounds/quiz_right.wav', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.7);
       setState(() => _wake++);
       unawaited(coworkerSnarl());
       await Future<void>.delayed(const Duration(milliseconds: 900));
@@ -1416,7 +1416,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   void _onWear({required bool shield}) {
     if (!_canAct) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/dress_right.wav', volume: 0.6);
+    _cue('sounds/dress_right.ogg', volume: 0.6);
     setState(() {
       if (shield) {
         _run.faceShield = true;
@@ -1430,7 +1430,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   void _onStand(M4GateStance s) {
     if (!_canAct) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/stomp.wav', volume: 0.4);
+    _cue('sounds/learn/stomp.ogg', volume: 0.4);
     setState(() {
       _run.stance = s;
       _wake++;
@@ -1472,7 +1472,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   void _onGauge() {
     if (!_canAct || _run.gaugeRead) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/card_deal_b.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_b.ogg', volume: 0.6);
     setState(() {
       _run.readGauge();
       _wake++;
@@ -1508,7 +1508,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
 
   void _onPit() {
     if (!_canAct || _run.pitWet) return;
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     setState(() {
       _run.waterPit();
       _wake++;
@@ -1571,7 +1571,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     HapticFeedback.selectionClick();
     // The cool clamp is a wrong flag: a slip, and the card stays neutral.
     if (await _check(_run.spotClamp(side))) return;
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
     setState(() => _wake++);
   }
 
@@ -1611,7 +1611,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   // --- 7 tree ---------------------------------------------------------------------------
   void _onCordon() {
     if (!_canAct || _run.cordoned) return;
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     setState(() {
       _run.cordoned = true;
       _wake++;
@@ -1620,7 +1620,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
 
   void _onRope() {
     if (!_canAct || _run.roped) return;
-    _cue('sounds/learn/card_deal_b.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_b.ogg', volume: 0.6);
     setState(() {
       _run.roped = true;
       _wake++;
@@ -1631,7 +1631,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     if (!_canAct || _run.treeDone) return;
     if (await _check(_run.cut(c))) return;
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.8);
     setState(() => _wake++);
     if (_run.treeDone) {
       await _stationWon(origin, M4GateLines.whyTreeQ, M4GateLines.whyTreeRight, M4GateLines.whyTreeWrong, 77);
@@ -1740,10 +1740,10 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
       if (delta > 0) _totalDelta = delta;
     });
     if (passed) {
-      _cue('sounds/level_done.wav', volume: 0.85);
+      _cue('sounds/level_done.ogg', volume: 0.85);
       await _say(M4GateLines.allSet, mood: GuideMood.celebrate);
     } else {
-      _cue('sounds/learn/level_fail.wav', volume: 0.7);
+      _cue('sounds/learn/level_fail.ogg', volume: 0.7);
       await _say(M4GateLines.fail, mood: GuideMood.warn);
     }
   }
@@ -2363,7 +2363,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
                     onDocket: () {
                       // Not while praise, the reason deck or the coworker is up.
                       if (!_canAct) return;
-                      _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
+                      _cue('sounds/learn/card_deal_a.ogg', volume: 0.8);
                       setState(() => _docketOpen = true);
                     },
                   ),
@@ -2457,7 +2457,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4GateLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () => unawaited(_start()),
                 ),
@@ -2467,7 +2467,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
                   child: _DocketSheet(
                     buttonKey: _docketBtnKey,
                     onClose: () {
-                      _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
+                      _cue('sounds/learn/card_deal_a.ogg', volume: 0.8);
                       setState(() => _docketOpen = false);
                     },
                   ),

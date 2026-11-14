@@ -578,7 +578,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
       return;
     }
     HapticFeedback.lightImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.5, muted: false));
     if (!_caught.contains(PassLines.caughtStand)) _caught.add(PassLines.caughtStand);
     unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
     setState(() {
@@ -629,7 +629,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
     if (!_step(PassIds.aim, origin)) return;
     if (!_caught.contains(PassLines.caughtAim)) _caught.add(PassLines.caughtAim);
     unawaited(_levelDelta(_scored(10), origin, mood: GuideMood.glad));
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.5, muted: false));
     setState(() => _aimed = true);
   }
 
@@ -642,7 +642,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
     }
     _hush();
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.5, muted: false));
     setState(() {
       _squeezing = true;
       _wake++;
@@ -674,7 +674,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
   void _out(Offset origin) {
     if (_phase != PassPhase.pass) return;
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.7, muted: false));
     setState(() {
       _phase = PassPhase.out;
       _squeezing = false;
@@ -722,7 +722,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
       if (!mounted || _ended) return;
       setState(() => _wake++);
       HapticFeedback.heavyImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/fire_alarm.wav', volume: 0.5, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/fire_alarm.ogg', volume: 0.5, muted: false));
       unawaited(_sayChain([PassLines.alarm(_r.kind), PassLines.askStand], mood: GuideMood.warn));
     }
 
@@ -754,7 +754,7 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _card = m;
       _squeezing = false;

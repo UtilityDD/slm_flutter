@@ -656,7 +656,7 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
   void _pick(VoidCallback change) {
     if (!_canPlay) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.35);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.35);
     setState(() {
       change();
       _wake++;
@@ -704,13 +704,13 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
     if (m == null) {
       if (!_run.shown) {
         // One card placed on the job card; the round goes on.
-        _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
         setState(() => _wake++);
         return;
       }
       _hush();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       setState(() {
         _doneStamp = true;
         _wake++;
@@ -824,7 +824,7 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _wake++;
@@ -1294,7 +1294,7 @@ class _SpRunPageState extends ConsumerState<_SpRunPage> with DoStrikeOut, Ticker
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4ServicePlanLines.intro,
-                  alarm: 'sounds/learn/tag_slap.wav',
+                  alarm: 'sounds/learn/tag_slap.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

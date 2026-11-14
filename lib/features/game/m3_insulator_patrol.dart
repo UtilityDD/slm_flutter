@@ -614,7 +614,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
       if (!M3InsulatorPatrolGeo.unitHit(kind, i).contains(p)) continue;
       HapticFeedback.selectionClick();
       final on = _run.toggle(i);
-      _cue(on ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/tick.ogg', volume: on ? 0.45 : 0.5);
+      _cue(on ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/tick.ogg', volume: on ? 0.45 : 0.5);
       setState(() => _wake++);
       return;
     }
@@ -637,8 +637,8 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     }
     HapticFeedback.mediumImpact();
     if (m == null) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       setState(() {
         _stamp = report;
         _wake++;
@@ -750,7 +750,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -771,12 +771,12 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1090,7 +1090,7 @@ class _PatrolRunPageState extends ConsumerState<_PatrolRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3InsulatorPatrolLines.intro,
-                  alarm: 'sounds/learn/wind_gust.wav',
+                  alarm: 'sounds/learn/wind_gust.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

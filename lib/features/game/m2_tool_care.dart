@@ -812,7 +812,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
           if (o.verdict == CareVerdict.ok) _cue('sounds/intro/click.ogg', 0.6);
         } else if (CareZones.onLeads(p)) {
           o = _run.coilLeads();
-          if (o.verdict == CareVerdict.ok) _cue('sounds/quiz_flip.wav', 0.5);
+          if (o.verdict == CareVerdict.ok) _cue('sounds/quiz_flip.ogg', 0.5);
         } else {
           return;
         }
@@ -840,11 +840,11 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
     _rubSound += distance;
     if (_rubSound > 110) {
       _rubSound = 0;
-      _cue('sounds/quiz_shuffle.wav', 0.25);
+      _cue('sounds/quiz_shuffle.ogg', 0.25);
     }
     if (found) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/learn/tock.wav', 0.6);
+      _cue('sounds/learn/tock.ogg', 0.6);
     }
     setState(() => _rubAt = local);
   }
@@ -861,7 +861,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
     switch (o.verdict) {
       case CareVerdict.right:
         HapticFeedback.lightImpact();
-        _cue('sounds/quiz_right.wav', 0.6);
+        _cue('sounds/quiz_right.ogg', 0.6);
         _cue('sounds/intro/impact_metal.ogg', 0.45);
         setState(() {
           _hand = null;
@@ -883,8 +883,8 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
     final o = _run.retire();
     if (o.verdict == CareVerdict.right) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/learn/tag_slap.wav', 0.6);
-      _cue('sounds/quiz_right.wav', 0.5);
+      _cue('sounds/learn/tag_slap.ogg', 0.6);
+      _cue('sounds/quiz_right.ogg', 0.5);
       setState(() {
         _hand = null;
         _setMode(LinemanMode.cheer);
@@ -915,7 +915,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
       _hand = null;
       _setMode(LinemanMode.idle);
     });
-    _cue('sounds/quiz_flip.wav', 0.5);
+    _cue('sounds/quiz_flip.ogg', 0.5);
     _armCoworker();
     unawaited(_sayChain([CareLines.ask]));
   }
@@ -1031,7 +1031,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav', 0.7);
+    _cue('sounds/quiz_wrong.ogg', 0.7);
     _hush();
     setState(() {
       _card = m;
@@ -1052,7 +1052,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', 0.9);
+    _cue('sounds/learn/spark.ogg', 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _hand = null;
@@ -1062,7 +1062,7 @@ class _CareRunPageState extends ConsumerState<_CareRunPage> with DoDeathGuard, D
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', 0.9);
+    _cue('sounds/accident.ogg', 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {

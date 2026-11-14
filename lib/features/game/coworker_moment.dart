@@ -193,7 +193,7 @@ mixin CoworkerMoment<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     coworkerHush();
     coworkerClearGuideBubble();
     HapticFeedback.heavyImpact();
-    if (!coworkerMuted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.6, muted: false));
+    if (!coworkerMuted) unawaited(ZlFx.cue('sounds/learn/rush_in.ogg', volume: 0.6, muted: false));
     final s = coworkerScript;
     setState(() {
       coworkerOpen = true;

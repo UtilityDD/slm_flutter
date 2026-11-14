@@ -770,7 +770,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
     if (!_canPlay || _run.stage != M4DoOpenStage.rod) return;
     _hush();
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     final m = _run.pickRod(i);
     setState(() {
       _rodPicked = m == null ? i : _run.deal.rods.indexOf(M4DoOpenRod.good);
@@ -799,7 +799,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
   void _wear(M4DoOpenKit k) {
     if (!_canPlay || _run.stage != M4DoOpenStage.prep) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.45);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.45);
     setState(() {
       _run.wear(k);
       _wake++;
@@ -881,7 +881,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
           unawaited(_sayChain([M4DoOpenLines.already]));
           return;
         }
-        _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
         setState(() {
           _run.hook(hit.$1);
           _wake++;
@@ -949,7 +949,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
     }
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
     setState(() {
       _flashAt = geo.ringOf(phase) + const Offset(4, 0);
       _flashN++;
@@ -1120,7 +1120,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1141,7 +1141,7 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;

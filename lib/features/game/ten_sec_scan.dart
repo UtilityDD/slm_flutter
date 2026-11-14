@@ -1140,7 +1140,7 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage> with DoDeathGuar
     final m = _run.evaluate(chooseGo);
     if (m == null) {
       HapticFeedback.lightImpact();
-      _cue('sounds/quiz_right.wav', volume: 0.65);
+      _cue('sounds/quiz_right.ogg', volume: 0.65);
       _coworkerReason = false;
       putOnTable(15);
       _busy = false;
@@ -1171,7 +1171,7 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage> with DoDeathGuar
       return;
     }
     HapticFeedback.mediumImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1200,7 +1200,7 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage> with DoDeathGuar
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue(how == ScanDeath.strike ? 'sounds/learn/thunder_near.wav' : 'sounds/accident.wav', volume: 0.9);
+    _cue(how == ScanDeath.strike ? 'sounds/learn/thunder_near.ogg' : 'sounds/accident.ogg', volume: 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1286,9 +1286,9 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage> with DoDeathGuar
       _totalDelta = delta;
     });
     if (_passed) {
-      _cue('sounds/level_done.wav', volume: 0.8);
+      _cue('sounds/level_done.ogg', volume: 0.8);
     } else {
-      _cue('sounds/learn/level_fail.wav');
+      _cue('sounds/learn/level_fail.ogg');
     }
     await _say(!_passed ? TenSecLines.fail : (_quickBonus ? TenSecLines.quick : TenSecLines.allSet),
         mood: _passed ? GuideMood.celebrate : GuideMood.warn);
@@ -1583,7 +1583,7 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage> with DoDeathGuar
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: TenSecLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: _start,
                 ),

@@ -284,7 +284,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     super.initState();
     widget.engine.beginDress();
     ZlFx.holdClock();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.35, muted: widget.muted));
     _flip = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
     _tapAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 680));
     _stayTwang = AnimationController(vsync: this, duration: const Duration(milliseconds: 520));
@@ -370,12 +370,12 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
   void _doGrass(Offset global) {
     if (_finishing) return;
     HapticFeedback.lightImpact();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.55, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.55, muted: widget.muted));
     final first = _done.add('grass');
     setState(() => _grassCleared = true);
     precacheImage(AssetImage(_poleShot(true)), context, onError: (_, _) {});
     if (first) {
-      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
+      unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.65, muted: widget.muted));
       widget.engine.dressRight();
       widget.onDelta(5, global);
       _praise(_steel ? _okBase13 : _unfit ? _okGrass12 : _okGrass);
@@ -386,11 +386,11 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     if (_finishing) return;
     HapticFeedback.lightImpact();
     if (!slmReduceMotion(context)) _stayTwang.forward(from: 0);
-    unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.55, muted: widget.muted));
     final first = _done.add('stay');
     setState(() {});
     if (first) {
-      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
+      unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.65, muted: widget.muted));
       widget.engine.dressRight();
       widget.onDelta(5, global);
       _praise(_unfit ? _okStay12 : _okStay);
@@ -410,7 +410,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     }
     if (!mounted || !_backSide || _finishing) return;
     if (_done.add('back')) {
-      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
+      unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.65, muted: widget.muted));
       widget.engine.dressRight();
       widget.onDelta(5, global);
       setState(() {});
@@ -423,17 +423,17 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     _hammerBusy = true;
     _tapAnim.forward(from: 0);
     HapticFeedback.mediumImpact();
-    unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.72, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.72, muted: widget.muted));
     await Future<void>.delayed(const Duration(milliseconds: 280));
     if (!mounted) return;
     HapticFeedback.mediumImpact();
-    unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.86, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.86, muted: widget.muted));
     await Future<void>.delayed(const Duration(milliseconds: 460));
     _hammerBusy = false;
     if (!mounted || _finishing) return;
     if (!_done.add('hammer')) return;
     setState(() {});
-    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.55, muted: widget.muted));
     widget.engine.dressRight();
     widget.onDelta(5, global);
     await Future<void>.delayed(const Duration(milliseconds: 260));
@@ -445,7 +445,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
 
   void _fault(String line, Offset global) {
     HapticFeedback.heavyImpact();
-    unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.8, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.8, muted: widget.muted));
     widget.engine.dressWrong();
     widget.onDelta(-5, global);
     if (!slmReduceMotion(context)) _shake.forward(from: 0);
@@ -483,9 +483,9 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     setState(() => _lookingUp = opening);
     if (!opening) return;
     HapticFeedback.selectionClick();
-    unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.55, muted: widget.muted));
     if (_done.add('top')) {
-      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
+      unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.65, muted: widget.muted));
       widget.engine.dressRight();
       widget.onDelta(5, global);
       _praise(_okTop13);
@@ -509,7 +509,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
       _reported = true;
     });
     HapticFeedback.mediumImpact();
-    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.82, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.82, muted: widget.muted));
     widget.engine.dressRight();
     widget.onDelta(5, global);
     await _closeOut(_pole12Done);
@@ -538,7 +538,7 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
       _ladderPlaced = true;
     });
     HapticFeedback.mediumImpact();
-    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.62, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.62, muted: widget.muted));
     widget.engine.dressRight();
     widget.onDelta(5, global);
     await Future<void>.delayed(const Duration(milliseconds: 780));
@@ -569,12 +569,12 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
     for (var i = 0; i < endItems.length; i++) {
       await Future<void>.delayed(const Duration(milliseconds: 520));
       if (!mounted) return;
-      unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.45, muted: widget.muted));
+      unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.45, muted: widget.muted));
       setState(() => _checkedCount = i + 1);
     }
     await Future<void>.delayed(const Duration(milliseconds: 280));
     if (!mounted) return;
-    unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.55, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.55, muted: widget.muted));
     setState(() => _checklistReady = true);
     await gate.future;
     if (!mounted) return;
@@ -771,11 +771,11 @@ class _DsPoleInspectState extends State<DsPoleInspect> with TickerProviderStateM
                                     behavior: HitTestBehavior.opaque,
                                     onTapDown: (d) {
                                       HapticFeedback.selectionClick();
-                                      unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.5, muted: widget.muted));
+                                      unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.5, muted: widget.muted));
                                       if (_done.add('back')) {
                                         widget.engine.dressRight();
                                         widget.onDelta(5, d.globalPosition);
-                                        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
+                                        unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.65, muted: widget.muted));
                                         _praise(_steel ? _okBack13 : _unfit ? _okBack12 : _okBack);
                                       }
                                       setState(() {});

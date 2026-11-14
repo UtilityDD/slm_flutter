@@ -898,7 +898,7 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
   }
 
   /// Runs a run action that may return a mistake, then shows it.
-  void _act(DoMistake? Function() f, Offset origin, {String sound = 'sounds/quiz_select.wav'}) {
+  void _act(DoMistake? Function() f, Offset origin, {String sound = 'sounds/quiz_select.ogg'}) {
     if (!_canPlay) return;
     _tick(sound);
     final m = f();
@@ -926,7 +926,7 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
 
   void _hold(M4ServiceConnectTool t) {
     if (!_canPlay || _run.readingUp) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.hold(t);
       _wake++;
@@ -955,7 +955,7 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
   void _toggleEarth(Offset origin) {
     final geo = _geo;
     if (geo != null) _arcAt = Offset(M4ServiceConnectGeo.poleX + 26, geo.conductorY(1));
-    _act(_run.toggleEarth, origin, sound: 'sounds/learn/tag_slap.wav');
+    _act(_run.toggleEarth, origin, sound: 'sounds/learn/tag_slap.ogg');
   }
 
   void _tapScene(Offset p, M4ServiceConnectGeo geo, Offset global) {
@@ -1010,14 +1010,14 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
     for (final x in [..._run.scrapsShown]) {
       if (geo.scrapHit(x).contains(p)) {
         if (_run.pickScrap(x)) {
-          _tick('sounds/learn/tag_slap.wav', 0.4);
+          _tick('sounds/learn/tag_slap.ogg', 0.4);
           setState(() => _wake++);
         }
         return;
       }
     }
     if (geo.spanHit.contains(p) && _run.tapSpan()) {
-      _tick('sounds/learn/tag_slap.wav', 0.5);
+      _tick('sounds/learn/tag_slap.ogg', 0.5);
       setState(() => _wake++);
       _afterStep();
       return;
@@ -1038,7 +1038,7 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
       return;
     }
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.5);
+    _cue('sounds/quiz_right.ogg', volume: 0.5);
     _lastTask = _task;
     unawaited(_sayChain([_task]));
   }
@@ -1058,8 +1058,8 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
   Future<void> _siteDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final s = _run.site;
     final idx = _run.index;
@@ -1174,7 +1174,7 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1203,7 +1203,7 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1417,7 +1417,7 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
           on: _run.tool == M4ServiceConnectTool.pliers,
           onTap: (_) => _hold(M4ServiceConnectTool.pliers)),
       M4ServiceConnectButton.harness => _ToolButton(
-          key: key, icon: Icons.safety_check_rounded, label: M4ServiceConnectLines.harness, on: _run.harness, onTap: (o) => act(_run.toggleHarness, o, 'sounds/learn/tag_slap.wav')),
+          key: key, icon: Icons.safety_check_rounded, label: M4ServiceConnectLines.harness, on: _run.harness, onTap: (o) => act(_run.toggleHarness, o, 'sounds/learn/tag_slap.ogg')),
       M4ServiceConnectButton.shutdown => _ToolButton(
           key: key, icon: Icons.power_off_rounded, label: M4ServiceConnectLines.shutdown, on: _run.shutdown, onTap: (o) => act(_run.toggleShutdown, o, 'sounds/intro/impact_metal.ogg')),
       M4ServiceConnectButton.tester => _ToolButton(key: key, icon: Icons.flash_on_rounded, label: M4ServiceConnectLines.tester, on: _tester != null, onTap: _useTester),
@@ -1575,7 +1575,7 @@ class _SvcRunPageState extends ConsumerState<_SvcRunPage> with DoDeathGuard, DoS
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4ServiceConnectLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

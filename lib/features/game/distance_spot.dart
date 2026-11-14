@@ -644,7 +644,7 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
     _hush();
     final c = _run.checkBand(_bandM);
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: 0.5, muted: false));
     setState(() => _shown = c);
     final quiet = MediaQuery.disableAnimationsOf(context);
     if (c.deadly != null) {
@@ -663,7 +663,7 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
     }
     // Right: the ◆ wait on the table, then "কেন …?".
     HapticFeedback.lightImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
     putOnTable(10 * c.caught.length + (_streetSlipped ? 0 : 10));
     _busy = false;
     final round = _run.round;
@@ -731,7 +731,7 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
       await _struckOut(m);
       return;
     }
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -749,12 +749,12 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
     _busy = true;
     _clock.stop();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.9, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -988,7 +988,7 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
               if (_intro)
                 GuideIntro(
                   line: DistanceLines.intro,
-                  alarm: 'sounds/learn/spark.wav',
+                  alarm: 'sounds/learn/spark.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

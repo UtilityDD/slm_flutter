@@ -85,7 +85,7 @@ class _DsClearanceState extends State<DsClearance> with TickerProviderStateMixin
     super.initState();
     widget.engine.beginDress();
     ZlFx.holdClock();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.35, muted: widget.muted));
     _shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
   }
 
@@ -133,7 +133,7 @@ class _DsClearanceState extends State<DsClearance> with TickerProviderStateMixin
 
   void _fault(String line, Offset global) {
     HapticFeedback.heavyImpact();
-    unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.8, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.8, muted: widget.muted));
     widget.engine.dressWrong();
     widget.onDelta(-5, global);
     _shake.forward(from: 0);
@@ -155,7 +155,7 @@ class _DsClearanceState extends State<DsClearance> with TickerProviderStateMixin
     HapticFeedback.lightImpact();
     if (!_done.add(id)) return;
     setState(() {});
-    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.65, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.65, muted: widget.muted));
     widget.engine.dressRight();
     widget.onDelta(5, global);
     _praise(line);
@@ -189,7 +189,7 @@ class _DsClearanceState extends State<DsClearance> with TickerProviderStateMixin
       _coachVisible = false;
     });
     HapticFeedback.mediumImpact();
-    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.82, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.82, muted: widget.muted));
     widget.engine.dressRight();
     widget.onDelta(5, global);
     await Future<void>.delayed(const Duration(milliseconds: 650));
@@ -201,14 +201,14 @@ class _DsClearanceState extends State<DsClearance> with TickerProviderStateMixin
     for (var i = 0; i < _endItems.length; i++) {
       await Future<void>.delayed(const Duration(milliseconds: 520));
       if (!mounted) return;
-      unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.45, muted: widget.muted));
+      unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.45, muted: widget.muted));
       setState(() => _checkedCount = i + 1);
     }
     await Future<void>.delayed(const Duration(milliseconds: 280));
     if (!mounted) return;
     final gate = Completer<void>();
     _nextGate = gate;
-    unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.55, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.55, muted: widget.muted));
     setState(() => _checklistReady = true);
     await gate.future;
     if (!mounted) return;

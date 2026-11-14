@@ -737,7 +737,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
       unawaited(_sayChain([M4EarthFixLines.fine[_fineN++ % M4EarthFixLines.fine.length]]));
       return;
     }
-    _cue('sounds/quiz_wrong.wav', volume: 0.35);
+    _cue('sounds/quiz_wrong.ogg', volume: 0.35);
     if (_run.index == _run.deal.callAt && !coworkerDone) {
       // His moment: right after the cut is seen (the fix deck and "কাজ শেষ"
       // wait for him).
@@ -769,7 +769,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
       _wake++;
     });
     if (m == null) {
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       unawaited(_levelDelta(5, origin, mood: GuideMood.glad));
       unawaited(_sayChain([_rightBag.next().shownBn, M4EarthFixLines.askSteps]));
       return;
@@ -783,13 +783,13 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     HapticFeedback.selectionClick();
     final m = _run.step(id);
     if (m == null) {
-      _cue(id == 'water' ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/click.ogg', volume: 0.55);
+      _cue(id == 'water' ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/click.ogg', volume: 0.55);
       setState(() {
         _stepWrong = null;
         _wake++;
       });
       if (_run.fixed) {
-        _cue('sounds/quiz_right.wav', volume: 0.5);
+        _cue('sounds/quiz_right.ogg', volume: 0.5);
         unawaited(_sayChain([M4EarthFixLines.askAfter]));
       }
       return;
@@ -802,7 +802,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
   void _measure() {
     if (!_canPlay || _settling) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.35);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.35);
     _settleTimer?.cancel();
     setState(() {
       _spikes = true;
@@ -820,7 +820,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
         if (_log.length > 4) _log.removeLast();
         _wake++;
       });
-      _cue('sounds/quiz_select.wav', volume: 0.35);
+      _cue('sounds/quiz_select.ogg', volume: 0.35);
     });
   }
 
@@ -841,8 +841,8 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     final m = gaveIn ? _run.giveIn() : _run.signOff();
     HapticFeedback.mediumImpact();
     if (m == null) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       setState(() {
         _signed = true;
         _wake++;
@@ -960,7 +960,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -981,12 +981,12 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1387,7 +1387,7 @@ class _EarthRunPageState extends ConsumerState<_EarthRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4EarthFixLines.intro,
-                  alarm: 'sounds/learn/spark.wav',
+                  alarm: 'sounds/learn/spark.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

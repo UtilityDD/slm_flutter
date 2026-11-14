@@ -672,7 +672,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
 
   void _hold(M4StreetlightFindTool t) {
     if (!_canPlay || _run.readingUp || _run.choosingGear) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.hold(t);
       _wake++;
@@ -740,7 +740,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
           return;
         case M4StreetlightFindProbe.reading:
           setState(() => _wake++);
-          _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+          _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
           unawaited(_sayChain([M4StreetlightFindLines.askRead]));
         case M4StreetlightFindProbe.dead:
         case M4StreetlightFindProbe.live:
@@ -755,7 +755,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
       if (m != null) {
         unawaited(_mistake(m, global));
       } else if (_run.relamped) {
-        _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
         unawaited(_sayChain([M4StreetlightFindLines.askNext]));
       }
       return;
@@ -767,7 +767,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
       if (m != null) {
         unawaited(_mistake(m, global));
       } else if (_run.choosingGear) {
-        _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+        _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
         unawaited(_sayChain([M4StreetlightFindLines.askPick]));
       }
       return;
@@ -786,7 +786,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
       return;
     }
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.5);
+    _cue('sounds/quiz_right.ogg', volume: 0.5);
     if (_run.diagnosed) {
       unawaited(_postDone());
       return;
@@ -807,15 +807,15 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
       unawaited(_mistake(m, origin));
       return;
     }
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     unawaited(_sayChain([M4StreetlightFindLines.askNext]));
   }
 
   Future<void> _postDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     final p = _run.post;
     final idx = _run.index;
     if (_run.diagnosed) await _say(M4StreetlightFindLines.supplyFound, mood: GuideMood.glad);
@@ -932,7 +932,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -961,7 +961,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1347,7 +1347,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4StreetlightFindLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -734,7 +734,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
   /// A clip or a verdict: right goes on; a slip shows its card.
   void _apply(DoMistake? m, Offset origin, {bool clip = false}) {
     if (m == null) {
-      if (clip) _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+      if (clip) _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
       HapticFeedback.lightImpact();
       setState(() => _wake++);
       _maybeFinishCore();
@@ -747,7 +747,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
 
   void _openKit() {
     if (!_canPlay || _run.testing) return;
-    _cue('sounds/quiz_select.wav', volume: 0.45);
+    _cue('sounds/quiz_select.ogg', volume: 0.45);
     HapticFeedback.selectionClick();
     _run.openCheck();
     setState(() {
@@ -766,7 +766,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
       _apply(m, Offset(size.width / 2, size.height * 0.45));
       return;
     }
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     HapticFeedback.selectionClick();
     setState(() => _wake++);
   }
@@ -803,7 +803,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
     void spark() {
       if (!mounted) return;
       if (hadCharge) {
-        _cue('sounds/learn/spark.wav', volume: 0.6);
+        _cue('sounds/learn/spark.ogg', volume: 0.6);
         setState(() => _sparkAt = MeggerGeo.forScene(_lastH, _lastInset).coreEnds[core]);
         if (_quiet) {
           _spark.value = 0.5;
@@ -860,7 +860,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
       _apply(m, origin);
       return;
     }
-    _cue('sounds/learn/tick.wav', volume: 0.5);
+    _cue('sounds/learn/tick.ogg', volume: 0.5);
     setState(() {
       _pressed = true;
       _hold = MeggerHold.none;
@@ -881,7 +881,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
   void _testDone() {
     if (!mounted || !_run.testing) return;
     _run.endTest(full: true);
-    _cue('sounds/learn/tock.wav', volume: 0.7);
+    _cue('sounds/learn/tock.ogg', volume: 0.7);
     HapticFeedback.lightImpact();
     setState(() => _wake++);
     if (_run.round == _run.deal.callAt && !coworkerDone) scheduleCoworker();
@@ -891,7 +891,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
     if (!_canPlay || _run.testing) return;
     final m = _run.verdict(good: good);
     if (m == null) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
       setState(() => _cheer = true);
       Timer(const Duration(milliseconds: 1200), () {
         if (mounted) setState(() => _cheer = false);
@@ -913,7 +913,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
       }));
       return;
     }
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15);
     final good = _run.verdicts[core]!;
     final idx = _run.round;
@@ -1022,7 +1022,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1043,7 +1043,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1052,7 +1052,7 @@ class _MeggerRunPageState extends ConsumerState<_MeggerRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {

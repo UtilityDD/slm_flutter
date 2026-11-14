@@ -1666,7 +1666,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     }
     if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.5);
+    _cue('sounds/quiz_select.ogg', volume: 0.5);
     setState(() {
       _phase = _Phase.phone;
       _chipUp = null;
@@ -1681,7 +1681,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     }
     if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.45);
+    _cue('sounds/quiz_select.ogg', volume: 0.45);
     setState(() {
       _chipUp = _chipUp == c ? null : c;
       _phase = _chipUp == null ? _Phase.idle : _Phase.chip;
@@ -1696,7 +1696,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     }
     if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/dmm_beep.wav', volume: 0.4);
+    _cue('sounds/learn/dmm_beep.ogg', volume: 0.4);
     setState(() {
       _phase = _Phase.call;
       _chipUp = null;
@@ -1729,7 +1729,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     if (!_free || !_run.ptwIssued || _run.ptwOn) return;
     if (holdForCoworker()) return;
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
     final o = _run.placePtw();
     _toIdle();
     if (o.reason != null) _reason(o.reason!, then: _toIdle);
@@ -1747,7 +1747,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     if (!_free || !(_phase == _Phase.idle || _phase == _Phase.chip)) return;
     if (holdForCoworker()) return;
     HapticFeedback.mediumImpact();
-    _cue('sounds/quiz_select.wav', volume: 0.6);
+    _cue('sounds/quiz_select.ogg', volume: 0.6);
     setState(() {
       _chipUp = c;
       _target = spot;
@@ -1760,7 +1760,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
   void _pickOrder(M5Order o) {
     if (_phase != _Phase.orders) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.5);
+    _cue('sounds/quiz_select.ogg', volume: 0.5);
     setState(() {
       _orderPicked = o;
       _phase = _Phase.send;
@@ -1788,7 +1788,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
   void _ask(M5Ask a) {
     if (_phase != _Phase.phone || _ended) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.6);
+    _cue('sounds/quiz_select.ogg', volume: 0.6);
     _hush();
     final o = _run.ask(a);
     _toIdle();
@@ -1798,7 +1798,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     }
     _note(o.note);
     if (o.lit) {
-      _cue('sounds/level_done.wav', volume: 0.6);
+      _cue('sounds/level_done.ogg', volume: 0.6);
       if (_quiet) {
         _lit.value = 1;
       } else {
@@ -1822,7 +1822,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     if (_phase != _Phase.send || _ended) return;
     if (holdForCoworker()) return;
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/dmm_beep.wav', volume: 0.55);
+    _cue('sounds/learn/dmm_beep.ogg', volume: 0.55);
     _hush();
     if (_calling) {
       final o = _run.callDown();
@@ -1877,7 +1877,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
       _travel.value = 1;
       _arrived();
     } else {
-      _cue('sounds/van_arrive.wav', volume: 0.3);
+      _cue('sounds/van_arrive.ogg', volume: 0.3);
       unawaited(_travel.forward(from: 0));
     }
   }
@@ -1891,7 +1891,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
       _held = null;
     });
     _note(o.note, spot: o.spot, radio: true);
-    _cue('sounds/learn/dmm_beep.wav', volume: 0.45);
+    _cue('sounds/learn/dmm_beep.ogg', volume: 0.45);
     // The first report is back: the coworker comes (once a play).
     // (The 'wait till morning' push comes at the first patrol's send instead.)
     if (o.firstReport && !coworkerDone && _deal.push != M5Push.waitMorning) scheduleCoworker();
@@ -1938,7 +1938,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     if (holdForCoworker()) return;
     if (_run.cvTags.contains(p)) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.5);
+    _cue('sounds/quiz_select.ogg', volume: 0.5);
     final r = _run.remedyOf(p);
     setState(() {
       _partOpen = p;
@@ -1958,12 +1958,12 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     _run.cvPick(p, right: o.correct);
     if (!o.correct) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/quiz_wrong.wav');
+      _cue('sounds/quiz_wrong.ogg');
       setState(() => _remedyWrong.add(o.textBn));
       return;
     }
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.7);
     setState(() => _remedyPicked = o.textBn);
     await Future<void>.delayed(const Duration(milliseconds: 420));
     if (!mounted || _ended || _phase != _Phase.remedy) return;
@@ -1982,7 +1982,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
       unawaited(_slip(m, then: _run.repaired ? _toVerdict : _toView));
       return;
     }
-    _cue('sounds/quiz_right.wav', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.7);
     _reason(M5Reason.closeView, then: _toVerdict);
   }
 
@@ -2011,7 +2011,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     if (_phase != _Phase.ug || !_free) return;
     if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.5);
+    _cue('sounds/quiz_select.ogg', volume: 0.5);
     final o = _run.ug(s);
     if (o.deadly) {
       unawaited(_deadly(o.mistake!, at: _spotCentre(M5Spot.section(_deal.k))));
@@ -2209,7 +2209,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _phase = _Phase.card;
       _card = m;
@@ -2231,7 +2231,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     _hush();
     _cardLesson = M5GateMistakes.lessonOf(m);
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 0.9);
+    _cue('sounds/learn/spark.ogg', volume: 0.9);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _phase = _Phase.freeze;
@@ -2245,7 +2245,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     }
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -2313,7 +2313,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     final stars = starsFor(passed: _run.passed, strikes: strikes, quick: quick);
     if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
-    if (_run.passed) _cue('sounds/level_done.wav', volume: 0.85);
+    if (_run.passed) _cue('sounds/level_done.ogg', volume: 0.85);
     setState(() {
       _stars = stars;
       _mark = mark;
@@ -2797,7 +2797,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5GateLines.intro(_deal),
-                  alarm: 'sounds/learn/card_deal_a.wav',
+                  alarm: 'sounds/learn/card_deal_a.ogg',
                   muted: _muted,
                   onDone: _start,
                 ),

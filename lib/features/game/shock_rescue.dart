@@ -611,7 +611,7 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
       _lever.value = 0;
     });
     _startClock();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.8, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.8, muted: false));
     if (!_coworkerArmed && _run.round == _callScene) {
       _coworkerArmed = true;
       scheduleCoworker();
@@ -639,7 +639,7 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
         }
       } else if (_secs.value <= 5) {
         HapticFeedback.selectionClick();
-        if (!_muted) unawaited(ZlFx.cue('sounds/learn/tick.wav', volume: 0.4, muted: false));
+        if (!_muted) unawaited(ZlFx.cue('sounds/learn/tick.ogg', volume: 0.4, muted: false));
       }
     });
   }
@@ -725,7 +725,7 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
       if (g.slot(i).inflate(4).contains(p)) {
         _refuseByWorking(d.globalPosition);
         HapticFeedback.selectionClick();
-        if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.4, muted: false));
+        if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.4, muted: false));
         _held.value = _Held(i, r.objects[i], p);
         return;
       }
@@ -794,7 +794,7 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
       return;
     }
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.6, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: 0.6, muted: false));
     setState(() => _reach = _Reach(at: at, object: h.object, slot: h.slot));
     _cleared(_centre(), 20 + _secs.value);
   }
@@ -807,7 +807,7 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
   /// He is free: the ◆ wait on the table, then "কেন …?".
   void _cleared(Offset origin, int amount) {
     _hush();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
     setState(() => _wake++);
     putOnTable(amount);
     final r = _run.current;
@@ -927,7 +927,7 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     _hush();
     setState(() {
       _card = m;
@@ -952,12 +952,12 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
     _beats.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.9, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1367,7 +1367,7 @@ class _RescueRunPageState extends ConsumerState<_RescueRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: RescueLines.intro,
-                  alarm: 'sounds/learn/spark.wav',
+                  alarm: 'sounds/learn/spark.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

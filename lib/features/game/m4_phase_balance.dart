@@ -883,7 +883,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
 
   void _putGloves() {
     if (!_canPlay || _run.gloves) return;
-    _tick('sounds/learn/tag_slap.wav', 0.35);
+    _tick('sounds/learn/tag_slap.ogg', 0.35);
     setState(() {
       _run.putGloves();
       _wake++;
@@ -892,7 +892,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
 
   void _hold(M4PhaseBalanceTool t) {
     if (!_canPlay) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.hold(t);
       _wake++;
@@ -901,7 +901,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
 
   void _tell() {
     if (!_canPlay || _run.told) return;
-    _tick('sounds/learn/tag_slap.wav', 0.4);
+    _tick('sounds/learn/tag_slap.ogg', 0.4);
     _toldTimer?.cancel();
     setState(() {
       _run.tell();
@@ -916,7 +916,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
   void _togglePtw() {
     if (!_canPlay) return;
     if (_run.togglePtw()) {
-      _tick('sounds/learn/tag_slap.wav', 0.5);
+      _tick('sounds/learn/tag_slap.ogg', 0.5);
     } else {
       _tick('sounds/intro/click.ogg', 0.3);
     }
@@ -947,7 +947,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
 
   void _writeBook(Offset global) {
     if (!_canPlay) return;
-    _tick('sounds/learn/tag_slap.wav', 0.5);
+    _tick('sounds/learn/tag_slap.ogg', 0.5);
     final m = _run.writeBook();
     setState(() => _wake++);
     if (m != null) {
@@ -989,7 +989,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
         if (m != null) {
           unawaited(_mistake(m, global));
         } else if (!wasReady && _run.readyToRead) {
-          _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+          _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
           unawaited(_sayChain([M4PhaseBalanceLines.askRead]));
         }
         return;
@@ -1002,7 +1002,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
       if (m != null) {
         unawaited(_mistake(m, global));
       } else if (_run.shifted) {
-        _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
         setState(() => _shiftTok++);
         unawaited(_sayChain([M4PhaseBalanceLines.askNext]));
       }
@@ -1026,13 +1026,13 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
 
   void _tapChip(String id) {
     if (!_canPlay) return;
-    _tick('sounds/quiz_select.wav', 0.4);
+    _tick('sounds/quiz_select.ogg', 0.4);
     setState(() => _run.tapChip(id));
   }
 
   void _tapColumn(int p) {
     if (!_canPlay || _run.picked == null) return;
-    _tick('sounds/learn/card_deal_a.wav', 0.4);
+    _tick('sounds/learn/card_deal_a.ogg', 0.4);
     setState(() => _run.moveTo(p));
   }
 
@@ -1053,8 +1053,8 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
   Future<void> _stageDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final s = _run.stage;
     unawaited(askReason(
@@ -1168,7 +1168,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1197,7 +1197,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1664,7 +1664,7 @@ class _BalanceRunPageState extends ConsumerState<_BalanceRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4PhaseBalanceLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

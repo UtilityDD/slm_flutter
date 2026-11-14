@@ -649,7 +649,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     // cannot skip him).
     if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.55, muted: false));
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     ref.read(guideDirectorProvider.notifier).clearLine();
@@ -666,7 +666,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     if (!_handsFree) return;
     if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.55, muted: false));
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     ref.read(guideDirectorProvider.notifier).clearLine();
@@ -706,10 +706,10 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     }
     if (o.right) {
       HapticFeedback.lightImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.45, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: 0.45, muted: false));
     } else {
       HapticFeedback.heavyImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
       // The last task line (e.g. "ক্লিক—লক হলো।") must not sit under the stamp.
       _chain++;
       unawaited(MascotSpeechLibrary.stop());
@@ -773,7 +773,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     _r.markTested(g);
     if (leaked) {
       HapticFeedback.heavyImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.75, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.75, muted: false));
     } else {
       HapticFeedback.lightImpact();
     }
@@ -801,7 +801,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     } else {
       HapticFeedback.heavyImpact();
     }
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: o.right ? 0.45 : 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: o.right ? 0.45 : 0.7, muted: false));
     if (o.packs) {
       putOnTable(o.delta);
     } else {
@@ -911,7 +911,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
         return;
       }
       HapticFeedback.heavyImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
       if (!mounted) return;
       setState(() => _card = slip);
       unawaited(_sayChain([_helmetPush ? HelmetLines.callRushed : GloveLines.callRushed], mood: GuideMood.warn));
@@ -1243,7 +1243,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
               if (_introCard)
                 GuideIntro(
                   line: GloveLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _introCard = false);

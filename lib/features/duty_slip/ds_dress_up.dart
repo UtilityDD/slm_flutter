@@ -714,7 +714,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     _mixShelf(sound: false);
     widget.engine.beginDress();
     ZlFx.holdClock();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.35, muted: widget.muted));
     final hello = switch (widget.engine.level.number) {
       2 => 'লাইনম্যানের সবচেয়ে বড় সুরক্ষা তার হেলমেট। সঠিক সুরক্ষাকবচটি বেছে নিন।',
       3 => 'হাতে গ্লাভস পরার আগে ত্রুটি ও ইনসুলেশন যাচাই করে সঠিক সুরক্ষাকবচ বেছে নিন।',
@@ -1106,7 +1106,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
 
   void _rollVan() {
     if (!mounted || _vanRide.isAnimating || _vanRide.isCompleted) return;
-    unawaited(ZlFx.cue('sounds/van_arrive.wav', volume: 0.62, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/van_arrive.ogg', volume: 0.62, muted: widget.muted));
     _vanRide.animateTo(1, duration: _still ? Duration.zero : null).whenComplete(() {
       if (!mounted) return;
       HapticFeedback.lightImpact();
@@ -1147,7 +1147,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _coachSay = '';
     });
     HapticFeedback.mediumImpact();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.32, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.32, muted: widget.muted));
     await Future<void>.delayed(const Duration(milliseconds: 700));
     if (!mounted || token != _gateToken || _finishing) return;
     await Future<void>.delayed(const Duration(milliseconds: 680));
@@ -1199,7 +1199,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       ..clear()
       ..addAll(ids);
     _shelfWave++;
-    if (sound) unawaited(ZlFx.cue('sounds/quiz_shuffle.wav', volume: 0.4, muted: widget.muted));
+    if (sound) unawaited(ZlFx.cue('sounds/quiz_shuffle.ogg', volume: 0.4, muted: widget.muted));
   }
 
   final _mistakeCounts = <String, int>{};
@@ -1209,7 +1209,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     widget.onDelta(-5, global);
     if (!_still) _shake.forward(from: 0);
     _mixShelf(sound: true);
-    unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', muted: widget.muted));
     HapticFeedback.heavyImpact();
 
     _coachTimer?.cancel();
@@ -1274,7 +1274,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
   void _point(Offset global) {
     widget.engine.dressRight();
     widget.onDelta(5, global);
-    unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.5, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.5, muted: widget.muted));
     final okSay = switch (widget.engine.level.number) {
       1 || 2 || 3 || 4 => switch (math.Random().nextInt(4)) {
           0 => 'বাহবা! একদম ঠিক।',
@@ -1302,7 +1302,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _coachFace = DsCoachMood.ready;
       _coachSay = line;
     });
-    unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.5, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.5, muted: widget.muted));
     HapticFeedback.mediumImpact();
     await Future<void>.delayed(const Duration(milliseconds: 1500));
     if (!mounted) return;
@@ -1311,7 +1311,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _hero = true;
       _coachFace = DsCoachMood.thanks;
     });
-    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.62, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.62, muted: widget.muted));
     HapticFeedback.lightImpact();
     final voice = widget.onSpeak(line);
     final hold = Future<void>.delayed(const Duration(milliseconds: 2400));
@@ -1337,7 +1337,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _outro = _VanOutro.list;
       _checkShown = 0;
     });
-    unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.45, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.45, muted: widget.muted));
     HapticFeedback.mediumImpact();
     for (var i = 0; i < _job.pack.length; i++) {
       await Future<void>.delayed(const Duration(milliseconds: 280));
@@ -1351,7 +1351,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
           curve: Curves.easeOut,
         );
       });
-      unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.38, muted: widget.muted));
+      unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.38, muted: widget.muted));
       HapticFeedback.selectionClick();
     }
     await Future<void>.delayed(const Duration(milliseconds: 820));
@@ -1362,7 +1362,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
     });
     await Future<void>.delayed(const Duration(milliseconds: 180));
     if (!mounted) return;
-    unawaited(ZlFx.cue('sounds/van_arrive.wav', volume: 0.5, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/van_arrive.ogg', volume: 0.5, muted: widget.muted));
     try {
       await _vanRide.animateTo(1, duration: _still ? Duration.zero : null).orCancel;
     } on TickerCanceled {
@@ -1375,7 +1375,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _outro = _VanOutro.aboard;
       _vanBoarded = true;
     });
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.4, muted: widget.muted));
     HapticFeedback.mediumImpact();
     await Future<void>.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
@@ -1385,7 +1385,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _coachFace = DsCoachMood.thanks;
       _coachSay = _job.done;
     });
-    unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.55, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.55, muted: widget.muted));
     HapticFeedback.lightImpact();
     final voice = widget.onSpeak(_job.done);
     final hold = Future<void>.delayed(const Duration(milliseconds: 2600));
@@ -1517,7 +1517,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _landId = piece.id;
     });
     HapticFeedback.lightImpact();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.35, muted: widget.muted));
     Future<void>.delayed(const Duration(milliseconds: 320), () {
       if (!mounted || token != _landToken) return;
       setState(() => _landId = '');
@@ -1886,7 +1886,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       widget.engine.dressWrong();
       widget.onDelta(-5, _frontPoint());
       HapticFeedback.heavyImpact();
-      unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.7, muted: widget.muted));
+      unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.7, muted: widget.muted));
       await widget.onSpeak(fault.why);
       if (!mounted || token != _roomToken) return;
       final piece = fault.zone == 'bench' ? null : _byId(fault.zone);
@@ -1981,7 +1981,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _heldBack.remove(piece.id);
     });
     HapticFeedback.lightImpact();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.32, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.32, muted: widget.muted));
   }
 
   void _wear(_Piece piece, Offset global) {
@@ -2039,7 +2039,7 @@ class _DsDressUpState extends State<DsDressUp> with TickerProviderStateMixin {
       _on.remove(piece.id);
       _clearMark();
     });
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.3, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.3, muted: widget.muted));
     if (_vanLesson) HapticFeedback.selectionClick();
     if (_headLesson && piece.id == 'gamcha') {
       const line = 'মাথা উন্মুক্ত হয়েছে। এবার উপযুক্ত ইলেকট্রিক্যাল হেলমেটটি পরিয়ে দিন।';

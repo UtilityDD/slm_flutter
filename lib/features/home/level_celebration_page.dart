@@ -9,7 +9,7 @@ import '../../design/slm_design.dart';
 import 'hero_card.dart';
 import 'lineman_figure.dart';
 
-Future<void> _playCelebrationCue() => SlmSfx.play('sounds/quiz_right.wav', volume: 1.0, mix: false);
+Future<void> _playCelebrationCue() => SlmSfx.play('sounds/quiz_right.ogg', volume: 1.0, mix: false);
 
 /// Premium level-clear celebration + automatic color reveal of the next lineman.
 class LevelCelebrationPage extends ConsumerStatefulWidget {

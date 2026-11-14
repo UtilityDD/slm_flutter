@@ -728,7 +728,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   void _putGloves() {
     if (!_cutting || _run.gloves) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.4);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.4);
     setState(() {
       _run.putGloves();
       _wake++;
@@ -738,7 +738,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   void _openBlade() {
     if (!_cutting) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.45);
+    _cue('sounds/quiz_select.ogg', volume: 0.45);
     setState(() {
       _run.checkBlade();
       _bladeOpen = true;
@@ -850,11 +850,11 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
       return;
     }
     HapticFeedback.lightImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.45);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.45);
     setState(() => _wake++);
     if (!_run.cutDone) return;
     // Through: the sleeve comes off, the copper shines.
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     if (_quiet) {
       _peel.value = 1;
     } else {
@@ -876,7 +876,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
 
   Future<void> _hurtFlash() async {
     HapticFeedback.heavyImpact();
-    _cue('sounds/dress_wrong.wav', volume: 0.8);
+    _cue('sounds/dress_wrong.ogg', volume: 0.8);
     setState(() {
       _hurt = true;
       _hurtN++;
@@ -888,7 +888,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
   // --- hands on: the bench ----------------------------------------------------------
   void _openLens(int i) {
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.45);
+    _cue('sounds/quiz_select.ogg', volume: 0.45);
     setState(() {
       _lens = i;
       _lensTaps.clear();
@@ -943,8 +943,8 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
       return;
     }
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     final f = _run.deal.ends[i];
     putOnTable(10 + (_run.thoroughEnd(i) ? 5 : 0));
     setState(() {
@@ -1068,7 +1068,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _wake++;

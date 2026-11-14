@@ -1174,7 +1174,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     if (_intro || _ended || _freeze || _run.ended) return;
     final lines = M3GateLines.tasks[_run.station]!;
     _tapN++;
-    _cue('sounds/learn/tick.wav', volume: 0.5);
+    _cue('sounds/learn/tick.ogg', volume: 0.5);
     final line = lines[_tapN % lines.length];
     ref.read(guideDirectorProvider.notifier).say(mood: GuideMood.talk, line: line);
     unawaited(MascotSpeechLibrary.speak(line, muted: _muted));
@@ -1242,7 +1242,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     };
     _busy = true;
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.7);
     // The station's ◆ wait on the table; the right reason pays them (once).
     putOnTable(_scored(20));
     final praise = M3GateLines.praise[_run.station];
@@ -1257,8 +1257,8 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
   }
 
   Future<void> _spark(Offset at, {bool big = true}) async {
-    _cue('sounds/learn/spark.wav', volume: big ? 0.95 : 0.5);
-    if (big) _cue('sounds/accident.wav', volume: 0.7);
+    _cue('sounds/learn/spark.ogg', volume: big ? 0.95 : 0.5);
+    if (big) _cue('sounds/accident.ogg', volume: 0.7);
     setState(() {
       _sparkAt = at;
       _sparkBig = big;
@@ -1271,7 +1271,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     _busy = true;
     _hints.hide();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     _combo.miss();
     if (m.deadly) {
       if (at != null) await _spark(at);
@@ -1359,7 +1359,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (held) {
       _run.tag('সহকর্মীর চাপে "না" বলা');
-      _cue('sounds/quiz_right.wav', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.7);
       setState(() => _wake++);
       unawaited(coworkerSnarl());
       await Future<void>.delayed(const Duration(milliseconds: 900));
@@ -1379,7 +1379,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
       return;
     }
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
     setState(() => _wake++);
   }
 
@@ -1402,7 +1402,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
   void _onLook(M3Look l) {
     if (!_canAct) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/card_deal_b.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_b.ogg', volume: 0.6);
     setState(() => _look = l);
   }
 
@@ -1433,7 +1433,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
       await _handleMistake(m);
       return;
     }
-    _cue(fault ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/confirm.ogg', volume: 0.7);
+    _cue(fault ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/confirm.ogg', volume: 0.7);
     setState(() => _wake++);
     if (part != null && _run.patrolDone) {
       await _stationWon(origin);
@@ -1511,7 +1511,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
   void _onWear({required bool shield}) {
     if (!_canAct) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/dress_right.wav', volume: 0.6);
+    _cue('sounds/dress_right.ogg', volume: 0.6);
     setState(() {
       if (_run.station == M3GateStation.guard) {
         _run.gGloves = true;
@@ -1666,10 +1666,10 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
       if (delta > 0) _totalDelta = delta;
     });
     if (passed) {
-      _cue('sounds/level_done.wav', volume: 0.85);
+      _cue('sounds/level_done.ogg', volume: 0.85);
       await _say(M3GateLines.allSet, mood: GuideMood.celebrate);
     } else {
-      _cue('sounds/learn/level_fail.wav', volume: 0.7);
+      _cue('sounds/learn/level_fail.ogg', volume: 0.7);
       await _say(M3GateLines.fail, mood: GuideMood.warn);
     }
   }
@@ -2252,7 +2252,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
                     title: M3GateLines.stationTitles[_run.station]!,
                     onDocket: () {
                       if (!_canAct) return;
-                      _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
+                      _cue('sounds/learn/card_deal_a.ogg', volume: 0.8);
                       setState(() => _docketOpen = true);
                     },
                   ),
@@ -2362,7 +2362,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3GateLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () => unawaited(_start()),
                 ),
@@ -2374,7 +2374,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
                     tapTo: _run.tapTo,
                     threePhase: _run.threePhase,
                     onClose: () {
-                      _cue('sounds/learn/card_deal_a.wav', volume: 0.8);
+                      _cue('sounds/learn/card_deal_a.ogg', volume: 0.8);
                       setState(() => _docketOpen = false);
                     },
                   ),

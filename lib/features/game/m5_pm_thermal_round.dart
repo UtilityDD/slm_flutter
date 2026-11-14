@@ -970,13 +970,13 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
     if (_run.snapped.length == 1) {
       _scanStop();
       _hush();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       putOnTable(15);
       _askWhy(_Why.hot);
       return;
     }
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     unawaited(_levelDelta(10, origin, mood: GuideMood.glad));
     unawaited(_sayChain([M5PmLines.snapMore], mood: GuideMood.glad));
   }
@@ -992,7 +992,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
       return;
     }
     _hush();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
     unawaited(_levelDelta(5, global, mood: GuideMood.glad));
     unawaited(_sayChain([M5PmLines.scanAll], mood: GuideMood.glad));
     final idx = _run.index;
@@ -1004,7 +1004,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
   // --- শাটডাউন -------------------------------------------------------------------
   void _useTool(M5PmTool t, Offset global) {
     if (!_canPlay || _run.stage != M5PmStage.shutdown) return;
-    _tick(t == M5PmTool.permit ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/click.ogg', 0.5);
+    _tick(t == M5PmTool.permit ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/click.ogg', 0.5);
     final m = _run.use(t);
     setState(() => _wake++);
     if (m != null) {
@@ -1026,8 +1026,8 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
     if (_run.roundDone) {
       _hush();
       HapticFeedback.mediumImpact();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       putOnTable(15 + (_run.thorough ? 5 : 0));
       _askWhy(_Why.ptw);
     }
@@ -1126,8 +1126,8 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
     });
     if (loose) {
       _hush();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       putOnTable(15);
       _askWhy(_Why.nut);
     }
@@ -1182,7 +1182,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
   // --- লগবুক ---------------------------------------------------------------------
   void _toggleCard(String card) {
     if (!_canPlay || _run.stage != M5PmStage.logbook) return;
-    _tick('sounds/learn/card_deal_a.wav', 0.45);
+    _tick('sounds/learn/card_deal_a.ogg', 0.45);
     setState(() {
       if (_run.page.contains(card)) {
         _run.unplace(card);
@@ -1195,7 +1195,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
 
   void _dropCard(String card) {
     if (!_canPlay || _run.stage != M5PmStage.logbook || _run.page.contains(card)) return;
-    _tick('sounds/learn/tag_slap.wav', 0.45);
+    _tick('sounds/learn/tag_slap.ogg', 0.45);
     setState(() {
       _run.place(card);
       _wake++;
@@ -1206,7 +1206,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
     if (!_canPlay || _run.stage != M5PmStage.logbook) return;
     // He is due (push B): "সই" waits for him.
     if (holdForCoworker()) return;
-    _tick('sounds/learn/tag_slap.wav', 0.55);
+    _tick('sounds/learn/tag_slap.ogg', 0.55);
     final m = _run.sign();
     setState(() => _wake++);
     if (m != null) {
@@ -1215,7 +1215,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
     }
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     _askWhy(_Why.log);
   }
@@ -1351,7 +1351,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1382,7 +1382,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1984,7 +1984,7 @@ class _PmRunPageState extends ConsumerState<_PmRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5PmLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -848,7 +848,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
   void _hold(M4StreetlightFixTool t) {
     if (!_canPlay) return;
     _armCoworker();
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.hold(t);
       _wake++;
@@ -859,7 +859,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
     if (!_canPlay) return;
     _armCoworker();
     if (_run.tie()) {
-      _tick('sounds/learn/tag_slap.wav', 0.5);
+      _tick('sounds/learn/tag_slap.ogg', 0.5);
     } else {
       _tick('sounds/intro/click.ogg', 0.3);
     }
@@ -870,7 +870,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
   void _harness() {
     if (!_canPlay || _run.harness) return;
     _armCoworker();
-    _tick('sounds/learn/tag_slap.wav', 0.4);
+    _tick('sounds/learn/tag_slap.ogg', 0.4);
     setState(() {
       _run.wearHarness();
       _wake++;
@@ -958,7 +958,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
     // The old lamp in hand: the crate or the bin.
     if (r.oldInHand) {
       if (geo.crateHit.contains(p)) {
-        _tick('sounds/learn/tag_slap.wav', 0.5);
+        _tick('sounds/learn/tag_slap.ogg', 0.5);
         setState(() {
           r.toCrate();
           _wake++;
@@ -1001,7 +1001,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
         _armCoworker();
         _rearmCoworkerTop();
         setState(() => _wake++);
-        if (r.lightOn && r.station == M4StreetlightFixStation.finish) _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+        if (r.lightOn && r.station == M4StreetlightFixStation.finish) _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
         _checkFinish();
         return;
       }
@@ -1032,7 +1032,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
       return;
     }
     if (!was && _run.tightened) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
       HapticFeedback.lightImpact();
     }
   }
@@ -1040,7 +1040,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
   void _fit(M4StreetlightFixPart p, Offset global) {
     if (!_canPlay || !_run.up || _run.fitted != null) return;
     if (holdForCoworker()) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     final m = _run.fit(p);
     setState(() => _wake++);
     if (m != null) {
@@ -1058,8 +1058,8 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
   void _stationDone(M4StreetlightFixStation s, {required bool clean}) {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     _asking = s;
     putOnTable(15 + (clean ? 5 : 0));
     unawaited(askReason(
@@ -1286,7 +1286,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1315,7 +1315,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1677,7 +1677,7 @@ class _FixRunPageState extends ConsumerState<_FixRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4StreetlightFixLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

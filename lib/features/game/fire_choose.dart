@@ -805,7 +805,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
       // The bucket flies first; the fire answers. Nothing else moves meanwhile.
       _busy = true;
       setState(() => _throwing = FireTool.water);
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.5, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.5, muted: false));
       await Future<void>.delayed(const Duration(milliseconds: 450));
       if (!mounted) return;
       await _after(m, origin);
@@ -817,7 +817,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
         _throwing = t;
         _usedTool = t;
       });
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.5, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.5, muted: false));
       _dropFire(origin);
       return;
     }
@@ -851,7 +851,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
     if (!down) return;
     if (at != null) _sprayFrom = at;
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.5, muted: false));
     var n = 0;
     _sprayTick = Timer.periodic(const Duration(milliseconds: 42), (tm) {
       if (!mounted) return tm.cancel();
@@ -878,7 +878,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
     });
     putOnTable(pend);
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.7, muted: false));
     final round = _run.round;
     final k = _run.current;
     unawaited(askReason(
@@ -960,7 +960,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
     if (!mounted || _ended) return;
     setState(() => _wake++);
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/fire_alarm.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/fire_alarm.ogg', volume: 0.5, muted: false));
     _scheduleCoworker();
     unawaited(_sayChain([FireLines.alarm(_run.current), _ask], mood: GuideMood.warn));
   }
@@ -983,7 +983,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1000,7 +1000,7 @@ class _FireRunPageState extends ConsumerState<_FireRunPage>
     _busy = true;
     _clock.stop();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;

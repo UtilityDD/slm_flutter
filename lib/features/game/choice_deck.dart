@@ -128,7 +128,7 @@ class _ChoiceDeckState extends State<ChoiceDeck> {
   /// A tap on a card: open it big (never an answer by itself).
   void _open(ChoiceOption o, Offset at) {
     if (_locked || widget.wrong.contains(o.textBn) || _preview != null) return;
-    if (!widget.muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    if (!widget.muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.55, muted: false));
     _arm?.cancel();
     setState(() {
       _preview = o.textBn;
@@ -499,7 +499,7 @@ class _CardPreviewOverlayState extends State<CardPreviewOverlay> {
   @override
   void initState() {
     super.initState();
-    if (!widget.muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    if (!widget.muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.55, muted: false));
     _arm = Timer(ChoiceDeck.armDelay, () {
       if (mounted) setState(() => _armed = true);
     });
@@ -702,7 +702,7 @@ class _DealtCardState extends State<_DealtCard> with TickerProviderStateMixin {
     _delay = Timer(Duration(milliseconds: 90 + widget.index * 130), () {
       if (!mounted) return;
       if (!widget.muted) {
-        final file = widget.index.isEven ? 'sounds/learn/card_deal_a.wav' : 'sounds/learn/card_deal_b.wav';
+        final file = widget.index.isEven ? 'sounds/learn/card_deal_a.ogg' : 'sounds/learn/card_deal_b.ogg';
         unawaited(ZlFx.cue(file, volume: 0.62, muted: false));
       }
       unawaited(_deal.forward());

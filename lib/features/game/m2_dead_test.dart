@@ -830,7 +830,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
         _wake++;
       });
       if (r == null) return;
-      _cue('sounds/quiz_select.wav', volume: 0.35);
+      _cue('sounds/quiz_select.ogg', volume: 0.35);
       // His moment: the first 0.0 on the circuit on his round.
       if (!_coworkerCalled && _run.index == _run.deal.callAt && r.volts == 0 && r.whereBn != DeadLines.prover) {
         _coworkerCalled = true;
@@ -843,7 +843,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
     if (!_canPlay || _settling || _run.lastPair == null) return;
     if (holdForCoworker()) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.35);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.35);
     final p = _run.lastPair!;
     setState(() {
       _onProver = false;
@@ -885,8 +885,8 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
     if (m == null && !_run.shown) return;
     HapticFeedback.mediumImpact();
     if (m == null) {
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       setState(() {
         _touched = touch;
         _wake++;
@@ -1016,7 +1016,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardStays = stays;
@@ -1038,7 +1038,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1046,7 +1046,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1392,7 +1392,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: DeadLines.intro,
-                  alarm: 'sounds/learn/spark.wav',
+                  alarm: 'sounds/learn/spark.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -149,7 +149,7 @@ class _GuidedTourState extends ConsumerState<GuidedTour> with SingleTickerProvid
     final b = _cur;
     if (b == null || !b.tapToReveal) return _tapAnywhere();
     HapticFeedback.mediumImpact();
-    if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
+    if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.6, muted: false));
     unawaited(MascotSpeechLibrary.stop());
     setState(() {
       _reveal = b.revealBn;
@@ -289,9 +289,9 @@ class _RescueBurstState extends State<RescueBurst> with SingleTickerProviderStat
     super.initState();
     HapticFeedback.mediumImpact();
     if (!widget.muted) {
-      unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.6, muted: false));
+      unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.6, muted: false));
       Future<void>.delayed(const Duration(milliseconds: 700), () {
-        if (!widget.muted) unawaited(ZlFx.cue('sounds/level_done.wav', volume: 0.7, muted: false));
+        if (!widget.muted) unawaited(ZlFx.cue('sounds/level_done.ogg', volume: 0.7, muted: false));
       });
     }
   }
@@ -358,7 +358,7 @@ class _FreezeFrameState extends State<FreezeFrame> with SingleTickerProviderStat
   void initState() {
     super.initState();
     HapticFeedback.heavyImpact();
-    if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/heartbeat.wav', volume: 1, muted: false));
+    if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/heartbeat.ogg', volume: 1, muted: false));
     _c.forward().whenComplete(() {
       if (!mounted) return;
       setState(() {}); // stop absorbing touches

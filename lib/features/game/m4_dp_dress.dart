@@ -775,7 +775,7 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
 
   void _useTool(M4DpDressTool t, Offset global) {
     if (!_canPlay) return;
-    _tick(t == M4DpDressTool.harness || t == M4DpDressTool.permit ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/click.ogg', 0.5);
+    _tick(t == M4DpDressTool.harness || t == M4DpDressTool.permit ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/click.ogg', 0.5);
     final m = _run.use(t);
     setState(() => _wake++);
     if (m != null) {
@@ -846,7 +846,7 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
       _fixWrong.clear();
       _fixPicked = null;
     });
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     unawaited(_sayChain([M4DpDressLines.askFix], mood: GuideMood.think));
   }
 
@@ -863,12 +863,12 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
     final s = _run.picking!;
     setState(() => _fixPicked = o.textBn);
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     if (!mounted || _ended) return;
     _run.pickFix(true);
     _fixBusy = false;
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     setState(() {
       _fixOpts = const [];
       _justFixed = s;
@@ -886,8 +886,8 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
   Future<void> _roundDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final r = _run.round;
     final idx = _run.index;
@@ -1000,7 +1000,7 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1030,7 +1030,7 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1429,7 +1429,7 @@ class _DressRunPageState extends ConsumerState<_DressRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4DpDressLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

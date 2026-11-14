@@ -1171,7 +1171,7 @@ class _CableRunPageState extends ConsumerState<_CableRunPage>
       }
       if (geo.tagHit(e).contains(p)) {
         if (_run.hangTag(e)) {
-          _tick('sounds/learn/tag_slap.wav', 0.55);
+          _tick('sounds/learn/tag_slap.ogg', 0.55);
           setState(() => _wake++);
           if (_run.isolated) _isolated();
         } else {
@@ -1309,7 +1309,7 @@ class _CableRunPageState extends ConsumerState<_CableRunPage>
       _tick('sounds/intro/click.ogg', 0.3);
       return;
     }
-    _tick(t == M5Tool.rod ? 'sounds/intro/impact_metal.ogg' : 'sounds/learn/tag_slap.wav', 0.45);
+    _tick(t == M5Tool.rod ? 'sounds/intro/impact_metal.ogg' : 'sounds/learn/tag_slap.ogg', 0.45);
     setState(() => _wake++);
   }
 
@@ -1353,7 +1353,7 @@ class _CableRunPageState extends ConsumerState<_CableRunPage>
     if (_run.index == 0) {
       _hush();
       HapticFeedback.mediumImpact();
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       putOnTable(10);
       _reasonEnds = false;
       final idx = _run.index;
@@ -1363,7 +1363,7 @@ class _CableRunPageState extends ConsumerState<_CableRunPage>
         stillValid: () => _run.index == idx && !_ended,
       ));
     } else {
-      _cue('sounds/quiz_right.wav', volume: 0.5);
+      _cue('sounds/quiz_right.ogg', volume: 0.5);
       unawaited(_sayChain([M5CableLines.askTest]));
     }
     if (coworkerHere) scheduleCoworker();
@@ -1376,7 +1376,7 @@ class _CableRunPageState extends ConsumerState<_CableRunPage>
       _tick('sounds/intro/click.ogg', 0.3);
       return;
     }
-    _tick('sounds/learn/card_deal_a.wav', 0.55);
+    _tick('sounds/learn/card_deal_a.ogg', 0.55);
     setState(() {
       _sheet = true;
       _pick.clear();
@@ -1416,8 +1416,8 @@ class _CableRunPageState extends ConsumerState<_CableRunPage>
   Future<void> _roundDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     _reasonEnds = true;
     final idx = _run.index;
@@ -1547,7 +1547,7 @@ class _CableRunPageState extends ConsumerState<_CableRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1576,7 +1576,7 @@ class _CableRunPageState extends ConsumerState<_CableRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -2132,7 +2132,7 @@ class _CableRunPageState extends ConsumerState<_CableRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5CableLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

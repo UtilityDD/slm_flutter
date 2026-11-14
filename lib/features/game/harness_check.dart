@@ -641,7 +641,7 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
   void _openLens(HarnessCheck c) {
     if (!_canPlay || !_taken) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.4, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.4, muted: false));
     setState(() {
       _lens = c;
       _wake++;
@@ -687,8 +687,8 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
     if (m == null) {
       // Right: the stamp, the ◆ wait on the table, then "কেন …?".
       if (!_muted) {
-        unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.7, muted: false));
-        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+        unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.7, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       }
       setState(() => _stamped = true);
       putOnTable(15 + (_run.thorough ? 5 : 0));
@@ -712,7 +712,7 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
   /// It goes into the crate or off the stand; then the next (or the result).
   void _sendOff() {
     if (!mounted || _ended) return;
-    if (!_muted) unawaited(ZlFx.cue(_wore == false ? 'sounds/intro/drop.ogg' : 'sounds/learn/rush_out.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue(_wore == false ? 'sounds/intro/drop.ogg' : 'sounds/learn/rush_out.ogg', volume: 0.5, muted: false));
     setState(() => _leaving = true);
     final idx = _run.index;
     unawaited(Future<void>.delayed(Duration(milliseconds: _quiet ? 60 : 560), () {
@@ -838,7 +838,7 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -859,7 +859,7 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: 0.9, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -867,7 +867,7 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
     });
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1324,7 +1324,7 @@ class _HarnessRunPageState extends ConsumerState<_HarnessRunPage> with DoDeathGu
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: HarnessLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);
@@ -1680,7 +1680,7 @@ class _WebbingLookState extends State<_WebbingLook> {
     final passed = h.webbingAt >= math.min(from, v) - 0.045 && h.webbingAt <= math.max(from, v) + 0.045;
     if (!_found && h.flaw.onWebbing && passed) {
       HapticFeedback.heavyImpact();
-      if (!widget.muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.5, muted: false));
+      if (!widget.muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.5, muted: false));
       setState(() => _found = true);
     } else if ((v * 20).floor() != (from * 20).floor()) {
       HapticFeedback.selectionClick();

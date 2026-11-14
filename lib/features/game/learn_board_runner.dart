@@ -394,7 +394,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     _clockSec.value = s;
     // Tick-tock under the player's thinking, never over coach or rival voice.
     if (_muted || MascotTalk.active.value || RivalTalk.active.value) return;
-    final file = s.isEven ? 'sounds/learn/tick.wav' : 'sounds/learn/tock.wav';
+    final file = s.isEven ? 'sounds/learn/tick.ogg' : 'sounds/learn/tock.ogg';
     unawaited(ZlFx.cue(file, volume: 0.3, muted: false));
   }
 
@@ -414,7 +414,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   /// One flick per card, fired by the card itself as it leaves the deck.
   void _dealCue(int i) {
     if (_muted) return;
-    final file = i.isEven ? 'sounds/learn/card_deal_a.wav' : 'sounds/learn/card_deal_b.wav';
+    final file = i.isEven ? 'sounds/learn/card_deal_a.ogg' : 'sounds/learn/card_deal_b.ogg';
     unawaited(ZlFx.cue(file, volume: 0.62, muted: false));
   }
 
@@ -596,7 +596,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   void _openLook(LearnPick item, int index, Offset global) {
     if (!_boardBeat || _locked || _busy || _look != null || _readOpen || _openingLesson) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.55, muted: false));
     final quiet = _quietMotion;
     setState(() {
       _look = _Look(item: item, index: index, origin: global);
@@ -626,7 +626,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     final look = _look;
     if (look == null || !_lookReady || _verdict != null || _busy || _locked) return;
     _aside.remove(_asideId(look.item.id));
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.55, muted: false));
     switch (look.item) {
       case LearnBoardOption o:
         unawaited(_onPick(o, look.origin));
@@ -675,7 +675,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       _readShown = true;
     });
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.32, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.ogg', volume: 0.32, muted: false));
     if (_quietMotion) {
       _readFly.value = 1;
     } else {
@@ -687,7 +687,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   Future<void> _tuckReadCard() async {
     if (!_readOpen || _readFly.isAnimating) return;
     _measureReadFrom();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.3, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.3, muted: false));
     if (_quietMotion) {
       _readFly.value = 0;
     } else {
@@ -969,7 +969,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     await _stopVoice();
     if (!opt.correct) {
       HapticFeedback.mediumImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.72, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.72, muted: false));
       ref.read(guideDirectorProvider.notifier).react(GuideMood.warn);
       _marks.miss();
       await _penalize(global);
@@ -983,7 +983,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     _clockHold();
     await _scripted(() async {
       HapticFeedback.lightImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.78, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.78, muted: false));
       setState(() {
         // A slot paid on an earlier play puts nothing on the table.
         _pending = _cur.pendingPoints;
@@ -1031,7 +1031,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
 
   Future<void> _burnPending() async {
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/dress_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/dress_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _burning = true;
       _pending = 0;
@@ -1050,7 +1050,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     _markHit(chip.id, chip.correct);
 
     if (!chip.correct) {
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.72, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.72, muted: false));
       ref.read(guideDirectorProvider.notifier).react(GuideMood.warn);
       setState(() => _whyRetry = true);
       _marks.miss();
@@ -1064,7 +1064,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     _clockHold();
     await _scripted(() async {
       final bank = _pending > 0 ? _pending : (_whyRetry ? 5 : 0);
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.8, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.8, muted: false));
       final banked = _bankPending(bank, global);
       final praise = _rightLine();
       unawaited(_speakRule(chip.textBn, praise, key: '${_cur.id}/${chip.id}'));
@@ -1116,7 +1116,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       // Rival rushes in from the right and stomps down.
       ref.read(guideDirectorProvider.notifier).clearLine();
       setState(() => _rivalOnStage = true);
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.75, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_in.ogg', volume: 0.75, muted: false));
       if (quiet) {
         _rivalEnter.value = 1;
         _rivalLand();
@@ -1143,7 +1143,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       for (var i = 0; i < myth.dangerHints.length; i++) {
         if (!await _pause(i == 0 ? 300 : 520)) return;
         HapticFeedback.mediumImpact();
-        if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.7, muted: false));
+        if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.7, muted: false));
         setState(() => _rivalLayers = i + 1);
       }
       if (!await _pause(1100)) return;
@@ -1152,7 +1152,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       await _rivalSay(myth.exitBn);
       if (!mounted) return;
       setState(() => _rivalBubbleBn = '');
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.wav', volume: 0.7, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.7, muted: false));
       if (quiet) {
         _rivalExit.value = 1;
       } else {
@@ -1177,7 +1177,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   /// Boots hit the floor: thud, rumble, dust.
   void _rivalLand() {
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: 0.9, muted: false));
     _stageShake.forward(from: 0);
     setState(() => _rivalLandToken++);
   }
@@ -1204,7 +1204,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
         });
         _celebrate.forward(from: 0);
         _scorePunch.forward(from: 0);
-        if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.78, muted: false));
+        if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.78, muted: false));
         HapticFeedback.lightImpact();
         await _sayRight();
         if (!mounted) return;
@@ -1224,7 +1224,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     }
 
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.78, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.78, muted: false));
     setState(() {
       _whyRetry = true;
       _whyOpts = why;
@@ -1250,7 +1250,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     setState(() => _pickedWhy = chip.id);
     _markHit(chip.id, chip.correct);
     if (!chip.correct) {
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.72, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.72, muted: false));
       setState(() => _whyRetry = true);
       _marks.miss();
       await _penalize(global);
@@ -1327,7 +1327,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     });
     if (_newRecord) {
       HapticFeedback.mediumImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.75, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.75, muted: false));
       await _say(LearnCoachLines.newRecord, mood: GuideMood.celebrate);
       if (!mounted) return;
     }

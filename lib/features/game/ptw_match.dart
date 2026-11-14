@@ -744,10 +744,10 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
     });
     if (_run.current.phone) {
       HapticFeedback.heavyImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/complaint.wav', volume: 0.8, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/complaint.ogg', volume: 0.8, muted: false));
       unawaited(_sayChain([PtwLines.taskPhone]));
     } else {
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: false));
       unawaited(_sayChain([PtwLines.taskLift]));
     }
   }
@@ -789,7 +789,7 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
 
   void _lifted() {
     HapticFeedback.lightImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.5, muted: false));
     setState(() => _wake++);
     unawaited(_sayChain([PtwLines.ask]));
   }
@@ -798,7 +798,7 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
   void _openLens(PtwField f) {
     if (!_canPlay || !_held || _lens != null || !ptwLensFields.contains(f)) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.4, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.4, muted: false));
     setState(() => _lens = f);
     unawaited(_sayChain([PtwLines.taskLens]));
   }
@@ -833,8 +833,8 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
     if (m == null) {
       // Right: the stamp, the ◆ wait on the table, then "কেন …?".
       if (!_muted) {
-        unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.7, muted: false));
-        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+        unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.7, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       }
       setState(() {
         _verdict = start ? _Verdict.started : _Verdict.stopped;
@@ -960,7 +960,7 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
       await _deadly(m);
       return;
     }
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
     setState(() {
       _verdict = _Verdict.stopped;
       _wake++;
@@ -1012,7 +1012,7 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1033,7 +1033,7 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.9, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
@@ -1042,7 +1042,7 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1456,7 +1456,7 @@ class _PtwRunPageState extends ConsumerState<_PtwRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: PtwLines.intro,
-                  alarm: 'sounds/van_arrive.wav',
+                  alarm: 'sounds/van_arrive.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -887,10 +887,10 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
       switch (s) {
         case M4OilLevelStep.test:
           final live = _run.lastTestLive ?? false;
-          _cue(live ? 'sounds/learn/spark.wav' : 'sounds/intro/click.ogg', volume: 0.5);
+          _cue(live ? 'sounds/learn/spark.ogg' : 'sounds/intro/click.ogg', volume: 0.5);
           if (live) HapticFeedback.mediumImpact();
         case M4OilLevelStep.shutdown:
-          _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+          _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
         case M4OilLevelStep.earth || M4OilLevelStep.climb:
           _cue('sounds/intro/click.ogg', volume: 0.5);
       }
@@ -923,8 +923,8 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
   Future<void> _filled() async {
     if (!mounted || !_run.fill()) return;
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       _pouring = false;
       _stamp = M4OilLevelLines.stampFilled;
@@ -951,14 +951,14 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
     final m = _run.decide(report: report);
     if (m == null && _topup) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
       _startTopup();
       return;
     }
     if (m == null) {
       HapticFeedback.mediumImpact();
-      _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-      _cue('sounds/quiz_right.wav', volume: 0.6);
+      _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
       setState(() {
         _stamp = report ? M4OilLevelLines.stampReport : M4OilLevelLines.stampOk;
         _wake++;
@@ -1065,7 +1065,7 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1086,7 +1086,7 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/spark.wav', volume: 1);
+    _cue('sounds/learn/spark.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     final geo = _geo ?? M4OilLevelGeo.forScene(560, 0);
     setState(() {
@@ -1097,7 +1097,7 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1481,7 +1481,7 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4OilLevelLines.intro,
-                  alarm: 'sounds/learn/tag_slap.wav',
+                  alarm: 'sounds/learn/tag_slap.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

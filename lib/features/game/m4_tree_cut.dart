@@ -677,7 +677,7 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
             return;
           }
           HapticFeedback.mediumImpact();
-          _cue('sounds/learn/tag_slap.wav', volume: 0.6);
+          _cue('sounds/learn/tag_slap.ogg', volume: 0.6);
           setState(() {
             _tool = null;
             _wake++;
@@ -744,13 +744,13 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
 
   void _sawFx() {
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/dull_steel.wav', volume: 0.6);
+    _cue('sounds/learn/dull_steel.ogg', volume: 0.6);
     setState(() => _wake++);
   }
 
   void _cutFx(Offset from, M4TreeCutGeo geo, {required bool big}) {
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.55);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.55);
     setState(() {
       _drops.add((_dropN++, from, big));
       _wake++;
@@ -760,7 +760,7 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
   void _pickTool(M4TreeCutTool t) {
     if (!_canPlay || _run.station != M4TreeCutStation.rope) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/quiz_select.wav', volume: 0.45);
+    _cue('sounds/quiz_select.ogg', volume: 0.45);
     setState(() => _tool = _tool == t ? null : t);
   }
 
@@ -807,7 +807,7 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
     HapticFeedback.lightImpact();
     setState(() => _wake++);
     if (down) {
-      _cue('sounds/learn/knock_hollow.wav', volume: 0.6);
+      _cue('sounds/learn/knock_hollow.ogg', volume: 0.6);
       unawaited(_sayChain([M4TreeCutLines.askFinish]));
     }
   }
@@ -833,7 +833,7 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
   // --- a station done right: the ◆ and the reason ---------------------------------
   void _stationRight(Offset origin) {
     _hush();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     final station = _run.station;
     putOnTable(15 + (_run.clean ? 5 : 0));
     unawaited(askReason(
@@ -949,7 +949,7 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -970,12 +970,12 @@ class _TreeRunPageState extends ConsumerState<_TreeRunPage>
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/learn/knock_solid.wav', volume: 1);
+    _cue('sounds/learn/knock_solid.ogg', volume: 1);
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {

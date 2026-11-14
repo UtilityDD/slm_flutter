@@ -759,7 +759,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
 
   void _openShelf() {
     if (!_canPlay) return;
-    _tick('sounds/learn/card_deal_a.wav', 0.5);
+    _tick('sounds/learn/card_deal_a.ogg', 0.5);
     setState(() {
       _shelfOpen = !_shelfOpen;
       _wake++;
@@ -777,7 +777,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
 
   void _pick(M4InsulatorPrepItem it, Offset origin) {
     if (!_canPlay) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     final m = _run.pick(it);
     setState(() => _wake++);
     if (m != null) unawaited(_mistake(m, origin));
@@ -785,7 +785,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
 
   void _takePtw() {
     if (!_canPlay || _run.ptw) return;
-    _tick('sounds/learn/tag_slap.wav', 0.5);
+    _tick('sounds/learn/tag_slap.ogg', 0.5);
     setState(() {
       _run.takePtw();
       _wake++;
@@ -809,7 +809,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
 
   void _holdEarth() {
     if (!_canPlay) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.holdEarth();
       _wake++;
@@ -818,7 +818,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
 
   void _putHarness() {
     if (!_canPlay || _run.harness) return;
-    _tick('sounds/learn/tag_slap.wav', 0.35);
+    _tick('sounds/learn/tag_slap.ogg', 0.35);
     setState(() {
       _run.putHarness();
       _wake++;
@@ -867,7 +867,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
             unawaited(_mistake(m, global));
           } else {
             HapticFeedback.lightImpact();
-            _cue('sounds/quiz_right.wav', volume: 0.5);
+            _cue('sounds/quiz_right.ogg', volume: 0.5);
             unawaited(_sayChain([M4InsulatorPrepLines.askPrep]));
           }
           return;
@@ -903,8 +903,8 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
   Future<void> _siteDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final s = _run.site;
     final idx = _run.index;
@@ -1025,7 +1025,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1056,7 +1056,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1440,7 +1440,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M4InsulatorPrepLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

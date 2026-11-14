@@ -846,7 +846,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
         setState(() => _magneting = true);
         _oneShot(() {
           HapticFeedback.mediumImpact();
-          _cue(sticks ? 'sounds/learn/knock_solid.wav' : 'sounds/intro/drop.ogg', volume: 0.6);
+          _cue(sticks ? 'sounds/learn/knock_solid.ogg' : 'sounds/intro/drop.ogg', volume: 0.6);
           setState(() {
             _magneting = false;
             _wake++;
@@ -861,7 +861,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
         unawaited(_sayChain([M3ConductorJointLines.askKit]));
       case M3ConductorJointStep.brush:
         if (!_run.brush()) return _tick();
-        _cue('sounds/learn/tag_slap.wav', volume: 0.35);
+        _cue('sounds/learn/tag_slap.ogg', volume: 0.35);
         setState(() => _brushing = true);
         _oneShot(() => setState(() {
               _brushing = false;
@@ -939,7 +939,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     if (n > (_pressCue ?? 0)) {
       _pressCue = n;
       HapticFeedback.selectionClick();
-      _cue('sounds/learn/tick.wav', volume: 0.5);
+      _cue('sounds/learn/tick.ogg', volume: 0.5);
     }
   }
 
@@ -996,7 +996,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
     if (!_canPlay || !_round.inspect) return;
     _run.toggle(i);
     HapticFeedback.selectionClick();
-    _cue(_run.rejected.contains(i) ? 'sounds/learn/tag_slap.wav' : 'sounds/intro/click.ogg', volume: 0.45);
+    _cue(_run.rejected.contains(i) ? 'sounds/learn/tag_slap.ogg' : 'sounds/intro/click.ogg', volume: 0.45);
     setState(() {});
   }
 
@@ -1018,7 +1018,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
   void _roundRight(String stamp, String question) {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       _stamp = stamp;
       _wake++;
@@ -1093,7 +1093,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
         _bad = M3ConductorJointKind.halfPress;
         _mode = _Mode.idle;
       });
-      _cue('sounds/learn/dull_steel.wav', volume: 0.7);
+      _cue('sounds/learn/dull_steel.ogg', volume: 0.7);
       await _ruin(_run.loose(), origin);
       return;
     }
@@ -1145,7 +1145,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
       _bad ??= M3ConductorJointKind.good;
       _wake++;
     });
-    _cue('sounds/learn/spark.wav', volume: 0.6);
+    _cue('sounds/learn/spark.ogg', volume: 0.6);
     if (_quiet) {
       _heat.value = 1;
       await Future<void>.delayed(const Duration(milliseconds: 600));
@@ -1164,7 +1164,7 @@ class _RunPageState extends ConsumerState<_RunPage> with DoDeathGuard, DoStrikeO
       return;
     }
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _mode = _Mode.idle;

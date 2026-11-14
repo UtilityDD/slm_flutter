@@ -113,7 +113,7 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       _reasonRevealText = '';
       _reasonPicked = null;
     });
-    if (!reasonMuted) unawaited(ZlFx.cue('sounds/learn/card_deal_a.wav', volume: 0.6, muted: false));
+    if (!reasonMuted) unawaited(ZlFx.cue('sounds/learn/card_deal_a.ogg', volume: 0.6, muted: false));
     unawaited(reasonSay([question]));
   }
 
@@ -129,7 +129,7 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     reasonHush();
     if (!opt.correct) {
       HapticFeedback.mediumImpact();
-      if (!reasonMuted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+      if (!reasonMuted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
       final burnt = tablePending;
       setState(() {
         _reasonWrong.add(opt.textBn);
@@ -140,7 +140,7 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
           tablePending = 0;
         }
       });
-      if (burnt > 0 && !reasonMuted) unawaited(ZlFx.cue('sounds/dress_wrong.wav', volume: 0.7, muted: false));
+      if (burnt > 0 && !reasonMuted) unawaited(ZlFx.cue('sounds/dress_wrong.ogg', volume: 0.7, muted: false));
       unawaited(reasonSay([LearnCoachLines.notThisReason], mood: GuideMood.warn));
       return;
     }
@@ -155,7 +155,7 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     });
     HapticFeedback.lightImpact();
     if (!reasonMuted) {
-      unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.8, muted: false));
+      unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.8, muted: false));
       unawaited(ZlFx.cue('sounds/intro/confirm.ogg', volume: 0.7, muted: false));
     }
     await reasonScore(bank, from, mood: GuideMood.celebrate);

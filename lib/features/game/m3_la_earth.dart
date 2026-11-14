@@ -607,7 +607,7 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
 
   void _ok(Offset at) {
     HapticFeedback.lightImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.55, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.55, muted: false));
     setState(() {
       _oks++;
       _okAt = at;
@@ -839,7 +839,7 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     _hush();
     final g = _geo;
     setState(() {
@@ -865,12 +865,12 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
     _clock.stop();
     _hush();
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.wav', volume: 1, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 1, muted: false));
     final frozen = _frozen = Completer<void>();
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    if (!_muted) unawaited(ZlFx.cue('sounds/accident.wav', volume: 0.9, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1248,7 +1248,7 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3LaEarthLines.intro,
-                  alarm: 'sounds/learn/spark.wav',
+                  alarm: 'sounds/learn/spark.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

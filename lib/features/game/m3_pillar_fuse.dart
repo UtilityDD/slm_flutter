@@ -683,7 +683,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
 
   void _putPpe() {
     if (!_canPlay || _run.ppe) return;
-    _tick('sounds/learn/tag_slap.wav', 0.35);
+    _tick('sounds/learn/tag_slap.ogg', 0.35);
     setState(() {
       _run.putPpe();
       _wake++;
@@ -692,7 +692,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
 
   void _holdPuller() {
     if (!_canPlay) return;
-    _tick('sounds/quiz_select.wav');
+    _tick('sounds/quiz_select.ogg');
     setState(() {
       _run.holdPuller();
       _wake++;
@@ -702,7 +702,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
   void _toggleLock() {
     if (!_canPlay) return;
     if (_run.toggleLock()) {
-      _tick('sounds/learn/tag_slap.wav', 0.5);
+      _tick('sounds/learn/tag_slap.ogg', 0.5);
     } else {
       _tick('sounds/intro/click.ogg', 0.3);
     }
@@ -740,7 +740,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
       return;
     }
     HapticFeedback.mediumImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     unawaited(_sayChain([M3PillarFuseLines.askClose]));
   }
 
@@ -778,7 +778,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
         if (m != null) {
           unawaited(_mistake(m, global));
         } else if (_run.trayUp) {
-          _cue('sounds/learn/card_deal_a.wav', volume: 0.5);
+          _cue('sounds/learn/card_deal_a.ogg', volume: 0.5);
           if (!_coworkerScheduled && _run.index == _run.deal.callAt) {
             _coworkerScheduled = true;
             scheduleCoworker();
@@ -807,7 +807,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
     }
     if (_run.spot(onCause)) {
       HapticFeedback.lightImpact();
-      _cue('sounds/quiz_right.wav', volume: 0.5);
+      _cue('sounds/quiz_right.ogg', volume: 0.5);
       setState(() => _wake++);
       unawaited(_sayChain([M3PillarFuseLines.causeSeen(r.cause), M3PillarFuseLines.causeMended]));
       _mendTimer?.cancel();
@@ -825,8 +825,8 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
   Future<void> _roundDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final r = _run.round;
     final idx = _run.index;
@@ -947,7 +947,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -974,7 +974,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
     setState(() => _freeze = true);
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1327,7 +1327,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3PillarFuseLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

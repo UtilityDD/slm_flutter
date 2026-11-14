@@ -743,7 +743,7 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
       _setMode(LinemanMode.idle);
     });
     if (aside) {
-      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/learn/tag_slap.ogg', volume: 0.6, muted: false));
       unawaited(_sayChain([M3CrossarmPickLines.asideFlaw, _ask], mood: GuideMood.glad));
     } else {
       if (!_muted) unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.4, muted: false));
@@ -782,7 +782,7 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
     if (o.verdict == M3CrossarmPickVerdict.right) {
       HapticFeedback.lightImpact();
       if (!_muted) {
-        unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
         unawaited(ZlFx.cue('sounds/intro/drop.ogg', volume: 0.5, muted: false));
       }
       setState(() => _setMode(LinemanMode.cheer));
@@ -802,7 +802,7 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
     final o = _run.holdJob();
     if (o.verdict == M3CrossarmPickVerdict.right) {
       HapticFeedback.mediumImpact();
-      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.wav', volume: 0.6, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.6, muted: false));
       setState(() => _setMode(LinemanMode.cheer));
       _askWhy(20, () => dealChoices(M3CrossarmPickLines.holdRight, M3CrossarmPickLines.holdWrong, widget.rng), M3CrossarmPickLines.holdAsk);
       return;
@@ -826,7 +826,7 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
       return;
     }
     setState(() => _setMode(LinemanMode.idle));
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: false));
     _armCoworker();
     unawaited(_sayChain([if (held) M3CrossarmPickLines.holdDone, _ask]));
   }
@@ -834,7 +834,7 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
   void _openDocket() {
     if (_blocked || coworkerOpen || _held != null) return;
     HapticFeedback.selectionClick();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.4, muted: false));
     setState(() => _docketOpen = true);
   }
 
@@ -925,7 +925,7 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
       return;
     }
     HapticFeedback.heavyImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.wav', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     _hush();
     setState(() => _card = m);
     unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
@@ -1214,7 +1214,7 @@ class _CpRunPageState extends ConsumerState<_CpRunPage> with DoStrikeOut, Reason
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M3CrossarmPickLines.intro,
-                  alarm: 'sounds/van_arrive.wav',
+                  alarm: 'sounds/van_arrive.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

@@ -358,7 +358,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       _hint = null;
     }
     e.backToRoad();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.4, muted: _muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.4, muted: _muted));
     _holdClock(false);
     setState(() {});
   }
@@ -388,7 +388,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
           speakVoice: false,
           muted: _muted,
         );
-    unawaited(ZlFx.cue('sounds/level_done.wav', volume: 0.75, muted: _muted));
+    unawaited(ZlFx.cue('sounds/level_done.ogg', volume: 0.75, muted: _muted));
     // Return directly to the unified Ladder instead of the old medal result board.
     e.backToRoad();
     setState(() {});
@@ -433,7 +433,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     DsVoice.stop();
     _tts.stop();
     e.openDress();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.45, muted: _muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.45, muted: _muted));
     HapticFeedback.mediumImpact();
     setState(() {});
   }
@@ -446,10 +446,10 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     e.startLevelPlay();
     if (e.playing) {
       _holdClock(true);
-      unawaited(ZlFx.cue('sounds/quiz_shuffle.wav', muted: _muted));
+      unawaited(ZlFx.cue('sounds/quiz_shuffle.ogg', muted: _muted));
     } else {
       _holdClock(true);
-      unawaited(ZlFx.cue('sounds/quiz_flip.wav', muted: _muted));
+      unawaited(ZlFx.cue('sounds/quiz_flip.ogg', muted: _muted));
       unawaited(_speak('ডকেট পড়ে নিন।'));
     }
     HapticFeedback.mediumImpact();
@@ -462,7 +462,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     _runScore = 0;
     e.replayNow();
     if (e.playing) _holdClock(true);
-    if (!e.showingDressIntro) unawaited(ZlFx.cue('sounds/quiz_shuffle.wav', muted: _muted));
+    if (!e.showingDressIntro) unawaited(ZlFx.cue('sounds/quiz_shuffle.ogg', muted: _muted));
     setState(() {});
   }
 
@@ -475,7 +475,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     }
     e.nextAfterPass();
     _holdClock(false);
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', muted: _muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', muted: _muted));
     HapticFeedback.mediumImpact();
     setState(() {});
   }
@@ -605,18 +605,18 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     if (e == null) return;
     if (r.delta != 0) _flyDelta(r.delta, fromGlobal: fromGlobal);
     if (r.ok) {
-      unawaited(ZlFx.cue('sounds/quiz_right.wav', muted: _muted));
+      unawaited(ZlFx.cue('sounds/quiz_right.ogg', muted: _muted));
       HapticFeedback.lightImpact();
       if (e.act == DsAct.call) {
         _callOpen = false;
-        unawaited(ZlFx.cue('sounds/complaint.wav', volume: 0.85, muted: _muted));
+        unawaited(ZlFx.cue('sounds/complaint.ogg', volume: 0.85, muted: _muted));
         setState(() {});
         unawaited(_speak(e.activeCall?.lineBn ?? ''));
         return;
       }
       if (e.act == DsAct.done || e.act == DsAct.lethal) {
         _holdClock(false);
-        unawaited(ZlFx.cue('sounds/quiz_complete.wav', muted: _muted));
+        unawaited(ZlFx.cue('sounds/quiz_complete.ogg', muted: _muted));
       }
       if (e.act == DsAct.done && e.level.isField) {
         // Safe or risky: the gate clears. Unsafe: no clear, but the play's score stands.
@@ -629,13 +629,13 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       _loadCard(speak: true);
     } else if (r.lethal || e.act == DsAct.lethal) {
       _holdClock(false);
-      unawaited(ZlFx.cue('sounds/accident.wav', muted: _muted));
+      unawaited(ZlFx.cue('sounds/accident.ogg', muted: _muted));
       HapticFeedback.heavyImpact();
       setState(() {});
       unawaited(_speak(e.lethalReason ?? r.noteBn));
       unawaited(_commitLethalFall(e, r));
     } else {
-      unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: _muted));
+      unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', muted: _muted));
       HapticFeedback.heavyImpact();
       _shake.forward(from: 0);
       _hintOn = true;
@@ -682,14 +682,14 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     if (take) _yes.add(o.id);
     if (ok) {
       e.addScore(5);
-      unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.55, muted: _muted));
+      unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.55, muted: _muted));
       HapticFeedback.selectionClick();
       _flyDelta(5, fromGlobal: global);
     } else {
       e.addScore(-5);
       e.safety = (e.safety - 5).clamp(0, 100);
       e.jumpMinutes(5);
-      unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: _muted));
+      unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', muted: _muted));
       HapticFeedback.heavyImpact();
       _shake.forward(from: 0);
       _flyDelta(-5, fromGlobal: global);
@@ -700,7 +700,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       _handle(e.answerKit(_yes), fromGlobal: global);
     } else {
       setState(() {});
-      unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.45, muted: _muted));
+      unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.45, muted: _muted));
     }
   }
 
@@ -710,12 +710,12 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
     _feedClock();
     final r = e.tapPlan(id);
     if (r.ok) {
-      unawaited(ZlFx.cue('sounds/quiz_select.wav', muted: _muted));
+      unawaited(ZlFx.cue('sounds/quiz_select.ogg', muted: _muted));
       if (r.streak >= 3) {
-        unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.35, muted: _muted));
+        unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.35, muted: _muted));
       }
       if (r.gift) {
-        unawaited(ZlFx.cue('sounds/quiz_right.wav', muted: _muted));
+        unawaited(ZlFx.cue('sounds/quiz_right.ogg', muted: _muted));
       }
       HapticFeedback.lightImpact();
       _flyDelta(r.delta, fromGlobal: global);
@@ -733,9 +733,9 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
         e.backToRoad();
       }
     } else {
-      unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: _muted));
+      unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', muted: _muted));
       if (e.level.living) {
-        unawaited(ZlFx.cue('sounds/quiz_shuffle.wav', volume: 0.55, muted: _muted));
+        unawaited(ZlFx.cue('sounds/quiz_shuffle.ogg', volume: 0.55, muted: _muted));
       }
       HapticFeedback.heavyImpact();
       _shake.forward(from: 0);
@@ -781,20 +781,20 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
       onDelta: _flyDelta,
       roadScroll: _roadScroll,
       onOpenPtw: () {
-        unawaited(ZlFx.cue('sounds/quiz_flip.wav', muted: _muted));
+        unawaited(ZlFx.cue('sounds/quiz_flip.ogg', muted: _muted));
         e.openPtw();
         setState(() {});
       },
       onSetFeeder: (v) {
-        unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.35, muted: _muted));
+        unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.35, muted: _muted));
         setState(() => _ptwFeeder = v);
       },
       onSetPole: (v) {
-        unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.35, muted: _muted));
+        unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.35, muted: _muted));
         setState(() => _ptwPole = v);
       },
       onSetShift: (v) {
-        unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.35, muted: _muted));
+        unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.35, muted: _muted));
         setState(() => _ptwShift = v);
       },
       onSubmitPtw: () {
@@ -812,11 +812,11 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
         _feedClock();
         final ok = e.submitPtw(feederPick: _ptwFeeder!, polePick: _ptwPole!, shiftPick: _ptwShift!);
         if (ok) {
-          unawaited(ZlFx.cue('sounds/quiz_right.wav', muted: _muted));
+          unawaited(ZlFx.cue('sounds/quiz_right.ogg', muted: _muted));
           _flyDelta(5, fromGlobal: g);
           _loadCard(speak: true);
         } else {
-          unawaited(ZlFx.cue('sounds/quiz_wrong.wav', muted: _muted));
+          unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', muted: _muted));
           _shake.forward(from: 0);
           _flyDelta(-5, fromGlobal: g);
           setState(() {});
@@ -958,7 +958,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
                             call: e.activeCall!,
                             open: _callOpen,
                             onOpen: () {
-                              unawaited(ZlFx.cue('sounds/quiz_flip.wav', muted: _muted));
+                              unawaited(ZlFx.cue('sounds/quiz_flip.ogg', muted: _muted));
                               setState(() => _callOpen = true);
                             },
                             onReply: (id, g) {
@@ -1530,7 +1530,7 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
       ..forward();
     _insist = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
     _insistScale = _insist.drive(Tween<double>(begin: 1, end: 1.03));
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.48, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.48, muted: widget.muted));
     Future<void>.delayed(const Duration(milliseconds: 480), () {
       if (!mounted || _said) return;
       _said = true;
@@ -1541,7 +1541,7 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
   void _onTick() {
     for (var i = 0; i < dsJobGroups.length; i++) {
       if (_run.value >= _btnStart(i) && _pinged.add(i)) {
-        unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.38, muted: widget.muted));
+        unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.38, muted: widget.muted));
         HapticFeedback.mediumImpact();
       }
     }
@@ -1844,7 +1844,7 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
       _openGroup = g;
       _openStep = null;
     });
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.48, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.48, muted: widget.muted));
     HapticFeedback.mediumImpact();
     unawaited(widget.onSpeak(dsJobGroups[g].title));
   }
@@ -1855,7 +1855,7 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
       _openGroup = null;
       _openStep = null;
     });
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.42, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.42, muted: widget.muted));
     HapticFeedback.selectionClick();
   }
 
@@ -1872,7 +1872,7 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
     final plan = widget.engine.tonightPlan;
     if (i < 0 || i >= plan.length) return;
     setState(() => _openStep = i);
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: widget.muted));
     HapticFeedback.mediumImpact();
     final why = plan[i].whyBn;
     if (why.isNotEmpty) unawaited(widget.onSpeak(why));
@@ -1900,7 +1900,7 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
       _openGroup = null;
       _openStep = null;
     });
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: widget.muted));
     HapticFeedback.mediumImpact();
     unawaited(widget.onSpeak('শুরু থেকে শেষ পর্যন্ত কাজের ধাপগুলো দেখে নিন।'));
   }
@@ -1910,7 +1910,7 @@ class _JobBriefBoardState extends State<_JobBriefBoard> with TickerProviderState
       _page = 2;
       _openStep = null;
     });
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: widget.muted));
     HapticFeedback.mediumImpact();
     final hint = widget.engine.briefOf().body.trim();
     if (hint.isNotEmpty) unawaited(widget.onSpeak(hint));
@@ -1993,7 +1993,7 @@ class _DressIntroState extends State<_DressIntro> {
   @override
   void initState() {
     super.initState();
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.48, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.48, muted: widget.muted));
     Future<void>.delayed(const Duration(milliseconds: 520), () {
       if (!mounted || _said) return;
       _said = true;
@@ -2110,7 +2110,7 @@ class _BriefBoardState extends State<_BriefBoard> with SingleTickerProviderState
     super.initState();
     _run = AnimationController(vsync: this, duration: const Duration(milliseconds: 5200));
     _run.addListener(_onTick);
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.48, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.48, muted: widget.muted));
     _run.forward();
     Future<void>.delayed(const Duration(milliseconds: 520), () {
       if (!mounted || _said) return;
@@ -2126,13 +2126,13 @@ class _BriefBoardState extends State<_BriefBoard> with SingleTickerProviderState
         : widget.engine.briefOf().stamps.length;
     for (var i = 0; i < n; i++) {
       if (_run.value >= _cardStart(i) && _pinged.add(i)) {
-        unawaited(ZlFx.cue('sounds/quiz_select.wav', volume: 0.42, muted: widget.muted));
+        unawaited(ZlFx.cue('sounds/quiz_select.ogg', volume: 0.42, muted: widget.muted));
         HapticFeedback.mediumImpact();
       }
     }
     if (_run.value >= 0.94 && !_nextCue) {
       _nextCue = true;
-      unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.32, muted: widget.muted));
+      unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.32, muted: widget.muted));
       HapticFeedback.lightImpact();
     }
   }
@@ -2223,7 +2223,7 @@ class _BriefBoardState extends State<_BriefBoard> with SingleTickerProviderState
         _showBody = true;
         _open = null;
       });
-      unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: widget.muted));
+      unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: widget.muted));
       HapticFeedback.mediumImpact();
       unawaited(widget.onSpeak(body));
       return;
@@ -2243,7 +2243,7 @@ class _BriefBoardState extends State<_BriefBoard> with SingleTickerProviderState
       return;
     }
     setState(() => _open = i);
-    unawaited(ZlFx.cue('sounds/quiz_flip.wav', volume: 0.5, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/quiz_flip.ogg', volume: 0.5, muted: widget.muted));
     HapticFeedback.mediumImpact();
     if (why.isNotEmpty) unawaited(widget.onSpeak(why));
   }
@@ -3152,16 +3152,16 @@ class _ResultBoardState extends State<_ResultBoard> with TickerProviderStateMixi
 
   void _onShow() {
     if (_ok) {
-      _cue(0, 0.02, 'sounds/quiz_complete.wav', volume: 0.9);
-      _cue(1, 0.16, 'sounds/quiz_select.wav', volume: 0.38);
-      _cue(2, 0.40, 'sounds/quiz_right.wav', volume: 0.72);
-      _cue(3, 0.44, 'sounds/quiz_flip.wav', volume: 0.42);
-      _cue(4, 0.68, 'sounds/quiz_select.wav', volume: 0.32);
+      _cue(0, 0.02, 'sounds/quiz_complete.ogg', volume: 0.9);
+      _cue(1, 0.16, 'sounds/quiz_select.ogg', volume: 0.38);
+      _cue(2, 0.40, 'sounds/quiz_right.ogg', volume: 0.72);
+      _cue(3, 0.44, 'sounds/quiz_flip.ogg', volume: 0.42);
+      _cue(4, 0.68, 'sounds/quiz_select.ogg', volume: 0.32);
     } else {
-      _cue(0, 0.02, 'sounds/accident.wav', volume: 0.88);
-      _cue(1, 0.16, 'sounds/quiz_select.wav', volume: 0.34);
-      _cue(2, 0.44, 'sounds/quiz_flip.wav', volume: 0.38);
-      _cue(3, 0.68, 'sounds/quiz_wrong.wav', volume: 0.72);
+      _cue(0, 0.02, 'sounds/accident.ogg', volume: 0.88);
+      _cue(1, 0.16, 'sounds/quiz_select.ogg', volume: 0.34);
+      _cue(2, 0.44, 'sounds/quiz_flip.ogg', volume: 0.38);
+      _cue(3, 0.68, 'sounds/quiz_wrong.ogg', volume: 0.72);
     }
   }
 

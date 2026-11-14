@@ -803,7 +803,7 @@ class _AnnealRunPageState extends ConsumerState<_AnnealRunPage>
       if (_run.roundDone) unawaited(_roundDone());
       return;
     }
-    _tick('sounds/learn/tag_slap.wav', 0.45);
+    _tick('sounds/learn/tag_slap.ogg', 0.45);
     setState(() => _held = _held == t ? null : t);
   }
 
@@ -981,7 +981,7 @@ class _AnnealRunPageState extends ConsumerState<_AnnealRunPage>
         final at = _ghost;
         setState(() => _ghost = null);
         if (at != null && _canPlay && _onLine(geo, at) && _run.placeTape(geo.uOf(at.dx))) {
-          _tick('sounds/learn/tag_slap.wav', 0.5);
+          _tick('sounds/learn/tag_slap.ogg', 0.5);
           setState(() => _wake++);
         } else {
           _hints.missTap();
@@ -1104,8 +1104,8 @@ class _AnnealRunPageState extends ConsumerState<_AnnealRunPage>
   Future<void> _roundDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final idx = _run.index;
     final s = _run.spot;
@@ -1219,7 +1219,7 @@ class _AnnealRunPageState extends ConsumerState<_AnnealRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1250,7 +1250,7 @@ class _AnnealRunPageState extends ConsumerState<_AnnealRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1720,7 +1720,7 @@ class _AnnealRunPageState extends ConsumerState<_AnnealRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5AnnealLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

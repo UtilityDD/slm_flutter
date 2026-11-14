@@ -32,10 +32,10 @@ enum FailSound { electric, thud, fire, paper }
 
 extension FailSoundCue on FailSound {
   String get cue => switch (this) {
-        FailSound.electric => 'sounds/learn/spark.wav',
-        FailSound.thud => 'sounds/learn/stomp.wav',
-        FailSound.fire => 'sounds/learn/rush_out.wav',
-        FailSound.paper => 'sounds/learn/level_fail.wav',
+        FailSound.electric => 'sounds/learn/spark.ogg',
+        FailSound.thud => 'sounds/learn/stomp.ogg',
+        FailSound.fire => 'sounds/learn/rush_out.ogg',
+        FailSound.paper => 'sounds/learn/level_fail.ogg',
       };
 }
 
@@ -110,7 +110,7 @@ class _LevelIntroState extends ConsumerState<LevelIntro> {
   }
 
   Future<void> _run() async {
-    if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/rush_in.wav', volume: 0.45, muted: false));
+    if (!widget.muted) unawaited(ZlFx.cue('sounds/learn/rush_in.ogg', volume: 0.45, muted: false));
     for (var i = 0; i < widget.lines.length; i++) {
       if (!mounted || _done) return;
       setState(() => _i = i);
@@ -228,7 +228,7 @@ class _StruckOutCardState extends ConsumerState<StruckOutCard> {
     HapticFeedback.heavyImpact();
     if (!widget.muted) {
       unawaited(ZlFx.cue(widget.sound.cue, volume: 0.9, muted: false));
-      unawaited(ZlFx.cue('sounds/learn/level_fail.wav', volume: 0.6, muted: false));
+      unawaited(ZlFx.cue('sounds/learn/level_fail.ogg', volume: 0.6, muted: false));
     }
     // The guide speaks after the first frame (no provider change during build).
     WidgetsBinding.instance.addPostFrameCallback((_) {

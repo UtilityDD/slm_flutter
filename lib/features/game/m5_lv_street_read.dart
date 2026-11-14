@@ -942,7 +942,7 @@ class _StreetRunPageState extends ConsumerState<_StreetRunPage>
 
   void _pickScope(bool many, Offset global) {
     if (!_canPlay || _deck != M5LvDeck.none || _run.stage != M5LvStage.ask) return;
-    _tick('sounds/learn/tag_slap.wav', 0.5);
+    _tick('sounds/learn/tag_slap.ogg', 0.5);
     final m = _run.scope(many);
     setState(() => _wake++);
     if (m != null) {
@@ -1007,7 +1007,7 @@ class _StreetRunPageState extends ConsumerState<_StreetRunPage>
       _deckPicked = null;
       _wake++;
     });
-    _cue('sounds/learn/card_deal_a.wav', volume: 0.6);
+    _cue('sounds/learn/card_deal_a.ogg', volume: 0.6);
     unawaited(_sayChain([_task], mood: GuideMood.think));
   }
 
@@ -1045,11 +1045,11 @@ class _StreetRunPageState extends ConsumerState<_StreetRunPage>
     _deckBusy = true;
     setState(() => _deckPicked = card.textBn);
     HapticFeedback.lightImpact();
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     await Future<void>.delayed(const Duration(milliseconds: 520));
     if (!mounted || _ended) return;
     _deckBusy = false;
-    _cue('sounds/learn/tag_slap.wav', volume: 0.5);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
     setState(() {
       _closeDeck();
       _wake++;
@@ -1075,8 +1075,8 @@ class _StreetRunPageState extends ConsumerState<_StreetRunPage>
   Future<void> _roundDone() async {
     _hush();
     HapticFeedback.mediumImpact();
-    _cue('sounds/learn/tag_slap.wav', volume: 0.7);
-    _cue('sounds/quiz_right.wav', volume: 0.6);
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.7);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     putOnTable(15 + (_run.thorough ? 5 : 0));
     final why = _c.why;
     final idx = _run.index;
@@ -1199,7 +1199,7 @@ class _StreetRunPageState extends ConsumerState<_StreetRunPage>
     }
     _hush();
     HapticFeedback.heavyImpact();
-    _cue('sounds/quiz_wrong.wav');
+    _cue('sounds/quiz_wrong.ogg');
     setState(() {
       _card = m;
       _cardTone = MistakeTone.slip;
@@ -1227,7 +1227,7 @@ class _StreetRunPageState extends ConsumerState<_StreetRunPage>
     });
     await frozen.future;
     if (!mounted) return;
-    _cue('sounds/accident.wav', volume: 0.9);
+    _cue('sounds/accident.ogg', volume: 0.9);
     final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
     if (!mounted) return;
     setState(() {
@@ -1672,7 +1672,7 @@ class _StreetRunPageState extends ConsumerState<_StreetRunPage>
                 GuideIntro(
                   key: const ValueKey('intro'),
                   line: M5LvLines.intro,
-                  alarm: 'sounds/learn/rush_in.wav',
+                  alarm: 'sounds/learn/rush_in.ogg',
                   muted: _muted,
                   onDone: () {
                     setState(() => _intro = false);

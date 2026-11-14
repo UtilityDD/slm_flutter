@@ -77,9 +77,9 @@ class _LessonSealPageState extends State<LessonSealPage> with TickerProviderStat
     if (!mounted || _stamped) return;
     setState(() => _stamped = true);
     HapticFeedback.heavyImpact();
-    unawaited(ZlFx.cue('sounds/learn/stomp.wav', volume: 0.85, muted: widget.muted));
+    unawaited(ZlFx.cue('sounds/learn/stomp.ogg', volume: 0.85, muted: widget.muted));
     Timer(const Duration(milliseconds: 260), () {
-      if (mounted) unawaited(ZlFx.cue('sounds/quiz_complete.wav', volume: 0.7, muted: widget.muted));
+      if (mounted) unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.7, muted: widget.muted));
     });
   }
 
