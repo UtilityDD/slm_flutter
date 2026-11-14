@@ -422,15 +422,22 @@ class _ContinueCard extends StatelessWidget {
                   style: bangla(fontSize: 14, fontWeight: FontWeight.w700, color: SlmColors.mist, height: 1.2),
                 ),
               ),
-              if (n.starsMax > 0) ...[
-                const Icon(Icons.star_rounded, size: 18, color: SlmColors.gold300),
-                const SizedBox(width: 2),
-                Text(
-                  enDigits('${n.stars}/${n.starsMax}'),
-                  key: const ValueKey('home-stars'),
-                  style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.gold200, height: 1.2),
+              if (n.starsMax > 0)
+                // Own row, centred: an Icon has no text baseline, so in the
+                // baseline row above it floated up off the numbers.
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.star_rounded, size: 17, color: SlmColors.gold300),
+                    const SizedBox(width: 3),
+                    Text(
+                      enDigits('${n.stars}/${n.starsMax}'),
+                      key: const ValueKey('home-stars'),
+                      style: bangla(fontSize: 13, fontWeight: FontWeight.w800, color: SlmColors.gold200, height: 1.0),
+                    ),
+                  ],
                 ),
-              ],
             ],
           ),
           const SizedBox(height: 10),
@@ -449,8 +456,11 @@ class _ContinueCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 14, 16, 14),
       child: Row(
         children: [
-          // The emblem, still: an idle Home draws no frames.
-          const AnimatedSafetyShield(size: 64, animate: false, entrance: false),
+          // The emblem, alive (owner, 2026-11-14): ring spin, rim light and
+          // float. It stops on its own with "remove animations" and while
+          // another screen covers Home (TickerMode), so a hidden Home draws
+          // no frames.
+          const AnimatedSafetyShield(size: 64, entrance: false),
           const SizedBox(width: 12),
           Expanded(child: body),
         ],

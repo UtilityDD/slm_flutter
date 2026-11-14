@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../identify/fit_image.dart';
@@ -19,7 +20,6 @@ const int _maxQuestions = 10;
 const int _guaranteedImageQuestions = 2;
 const int _maxSearchQuota = 5;
 const String _muteKey = 'chapterQuizReadAloudMuted';
-const String _waGroupLink = 'https://chat.whatsapp.com/Drmeya7EyRlErKGy3VL8DF?mode=gi_t';
 
 enum LessonQuizOutcome { passed, readAgain, closed }
 
@@ -386,13 +386,13 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
             const SizedBox(height: 14),
             FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF25D366),
+                backgroundColor: _accent,
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               onPressed: () => Navigator.pop(ctx, true),
-              icon: const Icon(Icons.send_rounded),
-              label: Text(tr('হোয়াটসঅ্যাপে পাঠান', 'Send on WhatsApp'),
+              icon: const Icon(Icons.mail_outline_rounded),
+              label: Text(tr('ইমেইলে পাঠান', 'Send by email'),
                   style: const TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w700)),
             ),
           ],
@@ -421,17 +421,29 @@ class _LessonQuizPageState extends State<LessonQuizPage> {
       'Comment:',
       comment,
     ].join('\n');
+    final mail = Uri(
+      scheme: 'mailto',
+      path: AppConfig.supportEmail,
+      query: 'subject=${Uri.encodeComponent('SmartLineman quiz report #${widget.lessonBadge}')}'
+          '&body=${Uri.encodeComponent(report)}',
+    );
+    var opened = false;
+    try {
+      opened = await launchUrl(mail, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+    if (opened || !mounted) return;
+    // No mail app: keep the report so it can be sent by hand.
     await Clipboard.setData(ClipboardData(text: report));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       behavior: SnackBarBehavior.floating,
       backgroundColor: const Color(0xFF3F3A36),
       content: Text(
-        tr('রিপোর্ট কপি হয়েছে — গ্রুপে পেস্ট করুন।', 'Report copied — paste it in the group.'),
+        tr('ইমেইল অ্যাপ খোলা যায়নি। রিপোর্ট কপি হয়েছে — ${AppConfig.supportEmail}-এ পাঠান।',
+            'Could not open an email app. The report is copied — send it to ${AppConfig.supportEmail}.'),
         style: const TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w600),
       ),
     ));
-    await launchUrl(Uri.parse(_waGroupLink), mode: LaunchMode.externalApplication);
   }
 
   @override

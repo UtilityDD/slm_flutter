@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/app_config.dart';
+import '../../core/models/lineman_profile.dart';
 import '../../design/slm_design.dart';
+import '../more/delete_account.dart' show linkOpenerProvider;
 import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 import 'auth_provider.dart';
@@ -17,6 +20,35 @@ Future<void> showVerifySheet(BuildContext context) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => const _VerifyInfo(),
+  );
+}
+
+/// True when the profile has what the admin needs to recognise a lineman.
+bool verifyRequestReady(LinemanProfile? p) =>
+    (p?.fullName ?? '').trim().isNotEmpty && (p?.district ?? '').trim().isNotEmpty;
+
+/// The email a lineman sends to ask for verification, filled from the profile.
+Uri verifyRequestMail(LinemanProfile? p, String? email) {
+  String v(String? s) => (s ?? '').trim().isEmpty ? '—' : s!.trim();
+  final id = v(p?.slmId);
+  final body = [
+    'নমস্কার,',
+    'আমার SmartLineman অ্যাকাউন্টটি লাইনম্যান হিসেবে যাচাই করার অনুরোধ জানাচ্ছি।',
+    '',
+    'নাম: ${v(p?.fullName)}',
+    'জেলা: ${v(p?.district)}',
+    'ব্লক: ${v(p?.block)}',
+    'কাজ: ${v(p?.job)}',
+    'ইমেইল: ${v(email)}',
+    'SLM আইডি: $id',
+    '',
+    'ধন্যবাদ।',
+  ].join('\n');
+  return Uri(
+    scheme: 'mailto',
+    path: AppConfig.supportEmail,
+    query: 'subject=${Uri.encodeComponent('SmartLineman যাচাইয়ের অনুরোধ — $id')}'
+        '&body=${Uri.encodeComponent(body)}',
   );
 }
 
@@ -103,6 +135,30 @@ class _VerifyInfo extends ConsumerWidget {
                       onPressed: auth.isLoading
                           ? null
                           : () => ref.read(authProvider.notifier).signInWithGoogle(),
+                    ),
+                  ] else if (!verified && !auth.isAdmin) ...[
+                    const SizedBox(height: 14),
+                    SlmText(
+                      verifyRequestReady(auth.profile)
+                          ? tr(bn, 'যাচাইয়ের জন্য অ্যাডমিনকে ইমেইল পাঠান। আপনার নাম, জেলা ও SLM আইডি নিজে থেকেই লেখা থাকবে।',
+                              'Email the admin to get verified. Your name, district and SLM ID are filled in for you.')
+                          : tr(bn, 'আগে সেটিংসে নাম ও জেলা লিখুন, তারপর যাচাইয়ের অনুরোধ পাঠান।',
+                              'First add your name and district in Settings, then send the request.'),
+                      role: SlmTextRole.bodySm,
+                      color: SlmColors.mist,
+                      align: TextAlign.center,
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 12),
+                    SlmButton(
+                      key: const Key('verify-request'),
+                      label: tr(bn, 'যাচাইয়ের অনুরোধ পাঠান', 'Request verification'),
+                      icon: Icons.mail_outline_rounded,
+                      variant: SlmButtonVariant.gold,
+                      expand: true,
+                      onPressed: verifyRequestReady(auth.profile)
+                          ? () => ref.read(linkOpenerProvider)(verifyRequestMail(auth.profile, auth.email))
+                          : null,
                     ),
                   ] else
                     const SizedBox(height: 6),

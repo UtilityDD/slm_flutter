@@ -127,6 +127,13 @@ Future<void> _pump(
   }
 }
 
+/// The home emblem loops, so pumpAndSettle never settles: step 1.5 s instead.
+Future<void> _settle(WidgetTester t) async {
+  for (var i = 0; i < 30; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+}
+
 Future<void> _done(WidgetTester t) async {
   await t.pumpWidget(const SizedBox());
   await t.pump(const Duration(seconds: 1));
@@ -157,7 +164,7 @@ void main() {
   testWidgets('the gold button opens the ladder at the current rung', (t) async {
     await _pump(t, save: _seeded());
     await t.tap(find.text('চলুন, L4'));
-    await t.pumpAndSettle();
+    await _settle(t);
     expect(_opened, [null], reason: 'no anchor: the ladder opens on its own current rung');
     expect(find.text('ladder:null'), findsOneWidget);
     // The app's ladder is the real duty-slip page, opened at an anchor.
@@ -176,7 +183,7 @@ void main() {
     expect(find.text('🎁 1টি উপহার অপেক্ষা করছে'), findsOneWidget);
     expect(find.text('🏆 জেলায় #4'), findsOneWidget);
     await t.tap(find.byKey(const ValueKey('home-chip-gift')));
-    await t.pumpAndSettle();
+    await _settle(t);
     expect(_opened, [3], reason: 'the chest stands one rung above the rung that dropped it');
     await _done(t);
   });
@@ -240,7 +247,7 @@ void main() {
     expect(find.text('রহিম মিয়া'), findsOneWidget);
     expect(find.text('⏳ যাচাই চলছে'), findsOneWidget);
     await t.tap(find.text('⏳ যাচাই চলছে'));
-    await t.pumpAndSettle();
+    await _settle(t);
     expect(find.text('যাচাই অপেক্ষমাণ।'), findsOneWidget, reason: 'pending opens the verify sheet');
     await _done(t);
 
@@ -262,7 +269,7 @@ void main() {
     expect(find.text('সব খোলা ধাপ শেষ! নতুন মডিউল শীঘ্রই আসছে'), findsOneWidget);
     expect(find.byKey(const ValueKey('home-step')), findsNothing);
     await t.tap(find.text('সিঁড়িতে চলুন'));
-    await t.pumpAndSettle();
+    await _settle(t);
     expect(_opened, [null]);
     await _done(t);
   });
@@ -290,16 +297,49 @@ void main() {
     });
   }
 
-  testWidgets('an idle Home draws no frames', (t) async {
-    await _pump(t, save: _seeded(chest: true), leagueRank: 4);
+  Future<int> idleFrames(WidgetTester t) async {
     await t.pump(const Duration(seconds: 3));
     var frames = 0;
     for (var i = 0; i < 180; i++) {
       if (t.binding.hasScheduledFrame) frames++;
       await t.pump(const Duration(milliseconds: 16));
     }
-    debugPrint('PERF Home idle 3 s: frames requested $frames/180');
+    return frames;
+  }
+
+  testWidgets('the home emblem is animated; with "remove animations" an idle Home draws no frames', (t) async {
+    await _pump(t, save: _seeded(chest: true), leagueRank: 4);
+    final shield = t.widget<AnimatedSafetyShield>(find.byType(AnimatedSafetyShield));
+    expect(shield.animate, isTrue, reason: 'owner: the animated shield on Home');
+    await _done(t);
+
+    t.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await _pump(t, save: _seeded(chest: true), leagueRank: 4);
+    final frames = await idleFrames(t);
+    debugPrint('PERF Home idle 3 s (remove animations): frames requested $frames/180');
     expect(frames, 0);
+    await _done(t);
+  });
+
+  testWidgets('a Home covered by the ladder draws no frames (the emblem pauses)', (t) async {
+    await _pump(t, save: _seeded(chest: true), leagueRank: 4);
+    await t.tap(find.byKey(const ValueKey('home-go')));
+    for (var i = 0; i < 30; i++) {
+      await t.pump(const Duration(milliseconds: 50));
+    }
+    expect(find.textContaining('ladder:'), findsOneWidget);
+    final frames = await idleFrames(t);
+    debugPrint('PERF Home covered 3 s: frames requested $frames/180');
+    expect(frames, 0);
+    await _done(t);
+  });
+
+  testWidgets('the star sits level with its count', (t) async {
+    await _pump(t, save: _seeded());
+    final star = t.getRect(find.byIcon(Icons.star_rounded));
+    final count = t.getRect(find.byKey(const ValueKey('home-stars')));
+    expect((star.center.dy - count.center.dy).abs(), lessThanOrEqualTo(1.5));
     await _done(t);
   });
 }

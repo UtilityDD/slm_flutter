@@ -284,25 +284,18 @@ class _LadderGuideHostState extends ConsumerState<LadderGuideHost>
                     opacity: raw,
                     child: Transform.scale(
                       scale: (0.86 + 0.14 * t).clamp(0.7, 1.1),
+                      // He stands on the scene itself: no card or dark box
+                      // behind him (owner, 2026-11-14).
                       child: Center(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: SlmColors.navy950.withValues(alpha: 0.56 * raw),
-                            borderRadius: BorderRadius.circular(28),
-                            border: Border.all(
-                              color: SlmColors.gold400.withValues(alpha: 0.32 * raw),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-                            child: AiLinemanGuide(
-                              sprite: 176,
-                              bubbleWidth: 300,
-                              large: true,
-                              centered: true,
-                              showBubble: _bubbleVisible,
-                              bubbleOpacity: _bubbleVisible ? bubbleT : 0,
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+                          child: AiLinemanGuide(
+                            sprite: 176,
+                            bubbleWidth: 300,
+                            large: true,
+                            centered: true,
+                            showBubble: _bubbleVisible,
+                            bubbleOpacity: _bubbleVisible ? bubbleT : 0,
                           ),
                         ),
                       ),

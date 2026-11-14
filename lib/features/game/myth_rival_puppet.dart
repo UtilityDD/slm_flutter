@@ -119,9 +119,12 @@ class MythRivalPuppet extends StatelessWidget {
                 child: IgnorePointer(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
+                      // Radius ≤ half the box width, so the glow fades out
+                      // inside the box: at 0.85 it was cut off by the box's
+                      // sides and showed as a light rectangle behind him.
                       gradient: RadialGradient(
                         center: const Alignment(0, -0.1),
-                        radius: 0.85,
+                        radius: 0.46,
                         colors: [
                           Color.fromRGBO(255, 80, 60, 0.10 + 0.06 * math.sin(t * math.pi * 4).abs()),
                           Colors.transparent,
