@@ -259,6 +259,28 @@ void main() {
   });
   }
 
+  testWidgets('every raster on the ladder decodes at display size (coach badge: 38 dp × DPR)', (tester) async {
+    await _pumpLadder(tester, cleared: 40);
+    await _idle(tester, const Duration(seconds: 8));
+    final images = tester.widgetList<Image>(find.byType(Image)).toList();
+    final full = [
+      for (final i in images)
+        if (i.image is AssetImage) (i.image as AssetImage).assetName,
+    ];
+    // The guide's face decodes the same file by cacheHeight; the badge by cacheWidth.
+    final badge = [
+      for (final i in images)
+        if (i.image case ResizeImage(:final AssetImage imageProvider, :final int width)
+            when imageProvider.assetName.endsWith('coach_ready.webp'))
+          width,
+    ];
+    // ignore: avoid_print
+    print('[ladder-perf] images=${images.length} full-size=$full coach badge cacheWidth=$badge');
+    expect(full, isEmpty, reason: 'decode ladder art at its display size');
+    expect(badge, [76]); // 38 dp × DPR 2
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('idle nudge fires a bounded number of times', (tester) async {
     await _pumpLadder(tester);
     await _idle(tester, const Duration(seconds: 75));

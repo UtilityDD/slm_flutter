@@ -1864,6 +1864,7 @@ class _ClimberOnRungBadge extends StatelessWidget {
         child: ClipOval(
           child: Image.asset(
             'assets/duty_slip/dress/coach_ready.webp',
+            cacheWidth: (38 * MediaQuery.devicePixelRatioOf(context)).round(),
             fit: BoxFit.cover,
             alignment: Alignment.topCenter,
             errorBuilder: (_, _, _) => const Icon(
