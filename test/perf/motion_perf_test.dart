@@ -195,6 +195,16 @@ void main() {
       _report('lineman figure breathing 2 s', r);
       expect(r.rebuilds / r.steps, lessThanOrEqualTo(2));
     });
+
+    testWidgets('LinemanFigure portrait decodes near display size, not 864 × 1152', (tester) async {
+      await tester.pumpWidget(_app(const SizedBox(width: 150, child: LinemanFigure(step: 2, enableHero: false))));
+      final img = tester.widget<Image>(find.descendant(of: find.byType(LinemanFigure), matching: find.byType(Image)));
+      final h = (img.image as ResizeImage).height!;
+      final dpr = tester.view.devicePixelRatio;
+      debugPrint('PERF lineman portrait decode height (box 200 dp, dpr $dpr): $h');
+      expect(h, ((200 * dpr) / 64).ceil() * 64);
+      expect(h, lessThan(1152));
+    });
   });
 
   group('design-motion-14 tokens', () {

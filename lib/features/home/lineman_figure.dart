@@ -22,6 +22,15 @@ const _looks = <String>[
 
 String linemanAssetForStep(int step) => _looks[step.clamp(0, _looks.length - 1)];
 
+/// The portraits are 864×1152 (~4 MB each decoded): decode at the box height
+/// in device pixels instead, rounded up to 64 px steps (so a resizing card
+/// reuses one decode) and never past the source.
+int _decodeHeight(double h, double dpr) {
+  if (!h.isFinite || h <= 0) return 1152;
+  final px = (h * dpr / 64).ceil() * 64;
+  return px.clamp(64, 1152);
+}
+
 class LinemanFigure extends StatefulWidget {
   final int step;
   final double glance;
@@ -90,6 +99,7 @@ class _LinemanFigureState extends State<LinemanFigure> with SingleTickerProvider
                 final h = constraints.maxHeight;
                 Widget portrait = Image.asset(
                   asset,
+                  cacheHeight: _decodeHeight(h, MediaQuery.devicePixelRatioOf(context)),
                   fit: BoxFit.contain,
                   alignment: Alignment.bottomCenter,
                   filterQuality: FilterQuality.medium,
