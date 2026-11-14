@@ -104,7 +104,7 @@ abstract final class GloveLines {
   /// What the guide repeats (a different way each time) when tapped.
   static const tasks = [askOwn, askMate, askSpare];
 
-  static const intro = 'গাড়ি ছাড়ার আগে তিন জোড়া রাবার গ্লাভস বাছুন—নিজের, সাথীর আর একটা বাড়তি—প্রতিটায় হাওয়া দিয়ে। শেষে নিজের হেলমেট।';
+  static const intro = 'গাড়ি ছাড়ার আগে তিন জোড়া গ্লাভস হাওয়া দিয়ে পরীক্ষা করুন—নিজের, সাথীর আর স্পেয়ার। শেষে হেলমেট।';
   static const scene = 'সকাল 7:20 · ভ্যানের পাশে';
   static const askOwn = 'আগে নিজের জোড়াটা বাছুন।';
   static const askMate = 'এবার সাথীর জোড়া।';
@@ -127,7 +127,7 @@ abstract final class GloveLines {
   static const testButton = 'চেপে ধরে হাওয়া দিন';
 
   /// Mistakes-book lines (glove slips are booked like the helmet's).
-  static const uncheckedCard = 'রাবার গ্লাভস হাওয়া না দিয়েই নিলেন। নতুন হোক বা পুরোনো—প্রতিবার পরার আগে হাওয়া দিয়ে দেখুন।';
+  static const uncheckedCard = 'হাওয়া না দেখেই গ্লাভস নিলেন? নতুন হোক বা পুরনো—আগে হাওয়া দিয়ে লিক পরীক্ষা করুন।';
   static const rejectedCard = 'বাদ দেওয়ার আগে হাওয়া-পরীক্ষা আর চোখের দেখা মিলিয়ে নিন—আন্দাজে নয়।';
   static const listenCard = 'তাড়ার চাপে হাওয়া-পরীক্ষা বাদ দিতে রাজি হলেন। নতুন হোক বা জরুরি ডাক—প্রতিবার পরার আগে হাওয়া দিয়ে দেখুন।';
 

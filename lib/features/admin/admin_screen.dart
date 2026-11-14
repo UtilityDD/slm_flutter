@@ -665,7 +665,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                         subtitle: Text(
                                           tr(
                                             bn,
-                                            'সব অধ্যায়, পাঠ, মৃত্যুহীন লেভেল ও জিরো লস ডিউটি খুলবে। শুধু এই ফোনে।',
+                                            'সব অধ্যায়, পাঠ ও প্র্যাকটিস লেভেল আনলক হবে (শুধু এই ডিভাইসে)।',
                                             'Opens every chapter, lesson, duty-slip level, and Zero Loss duty. This phone only.',
                                           ),
                                           style: bangla(fontSize: 13, fontWeight: FontWeight.w500, color: SlmColors.mist, height: 1.35),

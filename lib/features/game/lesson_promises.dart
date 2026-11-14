@@ -17,7 +17,7 @@ const lessonPromises = <String, LessonPromise>{
   '1.1': LessonPromise(
     id: 'promise/1.1/glove_air_test',
     lessonId: '1.1',
-    textBn: 'প্রতিবার পরার আগে গ্লাভসে হাওয়া ভরে এয়ার টেস্ট করব।',
+    textBn: 'প্রতিবার পরার আগে গ্লাভসে হাওয়া ভরে এয়ার টেস্ট করব।',
   ),
   '1.2': LessonPromise(
     id: 'promise/1.2/tool_tip_outside',
@@ -32,7 +32,7 @@ const lessonPromises = <String, LessonPromise>{
   '1.4': LessonPromise(
     id: 'promise/1.4/harness_check',
     lessonId: '1.4',
-    textBn: 'ওঠার আগে হারনেসের ফিতে, সেলাই আর হুক দেখে নেব।',
+    textBn: 'ওঠার আগে হারনেসের স্ট্র্যাপ, সেলাই আর হুক দেখে নেব।',
   ),
   '1.5': LessonPromise(
     id: 'promise/1.5/earth_first',

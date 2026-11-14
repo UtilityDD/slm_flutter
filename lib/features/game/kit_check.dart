@@ -289,7 +289,7 @@ abstract final class KitMistakes {
   /// Lesson 1.1 point 1 (importance): synthetic cloth melts onto the skin.
   static const synthetic = DoMistake(
     key: '1.1/kit/synthetic',
-    textBn: 'লাইনে সামান্য স্পার্ক বা আর্কিং ফ্ল্যাশ হলেই সিন্থেটিক কাপড় প্লাস্টিকের মতো গলে সোজা চামড়ায় সেঁটে যায়। পরুন শুধু সুতি বা FR কাপড়।',
+    textBn: 'আর্ক ফ্ল্যাশের তাপে সিন্থেটিক কাপড় গলে চামড়ায় সেঁটে যায়! পরুন কেবল সুতি বা FR পোশাক।',
     art: 'assets/duty_slip/dress/mistake_synthetic.svg',
     deadly: true,
     lessonPoint: 0,
@@ -299,7 +299,7 @@ abstract final class KitMistakes {
   /// path to the ground.
   static const nail = DoMistake(
     key: '1.1/kit/boot-nail',
-    textBn: 'সোলে পেরেক গেঁথে থাকলে সেটাই কারেন্টের মাটিতে নামার রাস্তা বানিয়ে দেয় — সাক্ষাৎ মৃত্যুফাঁদ। জুতোর তলা রোজ দেখে নিন।',
+    textBn: 'সোলে পেরেক থাকলে কারেন্ট মাটিতে নামার পথ পেয়ে যায়—সাক্ষাৎ ফাঁদ! জুতোর তলা রোজ দেখে নিন।',
     art: 'assets/duty_slip/dress/mistake_nail.svg',
     deadly: true,
     lessonPoint: 2,

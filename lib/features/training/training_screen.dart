@@ -228,7 +228,7 @@ class _EmptyLessons extends StatelessWidget {
             Text(
               tr(
                 bn,
-                'মৃত্যুহীন পথে লেভেল পাস করলেই সেই পাঠ এখানে খুলে যাবে।',
+                'লেভেল পাস করলেই সংশ্লিষ্ট পাঠ এখানে আনলক হয়ে যাবে।',
                 'Pass a level on the Deathless Path and its lesson opens here.',
               ),
               textAlign: TextAlign.center,

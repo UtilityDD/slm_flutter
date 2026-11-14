@@ -166,22 +166,22 @@ class _Piece {
 }
 
 const _pieces = <_Piece>[
-  _Piece(id: 'fatua', asset: 'assets/duty_slip/dress/tray_fatua.webp', zone: 'torso', good: false, why: 'না, সাবধান! ঢিলে পোশাক বাতাসে উড়ে লাইনের তারে জড়িয়ে যেতে পারে। শরীর আঁটোসাঁটো রাখা জরুরি।'),
-  _Piece(id: 'halftee', asset: 'assets/duty_slip/dress/tray_halftee.webp', zone: 'torso', good: false, why: 'থামুন! হাত খোলা থাকলে সামান্য স্পার্কেই সরাসরি চামড়া পুড়ে যাবে। হাত সম্পূর্ণ ঢাকা দরকার।'),
-  _Piece(id: 'poly', asset: 'assets/duty_slip/dress/tray_poly.webp', zone: 'torso', good: false, why: 'মারাত্মক ভুল! আর্ক ফ্ল্যাশের তাপে পলিয়েস্টার গলে চামড়ায় আটকে যাবে। এমন কাপড় বিপজ্জনক।'),
+  _Piece(id: 'fatua', asset: 'assets/duty_slip/dress/tray_fatua.webp', zone: 'torso', good: false, why: 'সাবধান! ঢিলেঢালা জামা বাতাসে উড়ে লাইনে জড়িয়ে যেতে পারে। ফিটিং জামা পরা জরুরি।'),
+  _Piece(id: 'halftee', asset: 'assets/duty_slip/dress/tray_halftee.webp', zone: 'torso', good: false, why: 'থামুন! হাত খোলা থাকলে সামান্য স্পার্কেই চামড়া পুড়ে যাবে। ফুলহাতা জামা পরুন।'),
+  _Piece(id: 'poly', asset: 'assets/duty_slip/dress/tray_poly.webp', zone: 'torso', good: false, why: 'মারাত্মক ভুল! আর্ক ফ্ল্যাশে পলিয়েস্টার গলে চামড়ায় সেঁটে যাবে। সুতি বা FR পোশাক পরুন।'),
   _Piece(id: 'shirt', asset: 'assets/duty_slip/dress/tray_shirt.webp', zone: 'torso', good: true, why: ''),
-  _Piece(id: 'halfpant', asset: 'assets/duty_slip/dress/tray_halfpant.webp', zone: 'legs', good: false, why: 'সাবধান! পা উন্মুক্ত রেখে কাজ করা অনিরাপদ, ধারালো তারের ঘষা লাগতে পারে।'),
-  _Piece(id: 'pajama', asset: 'assets/duty_slip/dress/tray_pajama.webp', zone: 'legs', good: false, why: 'না, এটা বিপজ্জনক! ঢিলে পাজামা যন্ত্রাংশে আটকে ভারসাম্য নষ্ট করতে পারে।'),
+  _Piece(id: 'halfpant', asset: 'assets/duty_slip/dress/tray_halfpant.webp', zone: 'legs', good: false, why: 'সাবধান! পা খোলা রাখা যাবে না, ধারালো তারের ঘষা লাগতে পারে।'),
+  _Piece(id: 'pajama', asset: 'assets/duty_slip/dress/tray_pajama.webp', zone: 'legs', good: false, why: 'বিপজ্জনক! ঢিলে পাজামা আটকে ব্যালান্স নষ্ট হতে পারে।'),
   _Piece(id: 'pant', asset: 'assets/duty_slip/dress/tray_pant.webp', zone: 'legs', good: true, why: ''),
-  _Piece(id: 'slip', asset: 'assets/duty_slip/dress/tray_slipper.webp', zone: 'feet', good: false, why: 'বিপদ! চপ্পলে কোনো গ্রিপ নেই—মই বা পোলে পা হড়কালেই পতন ঘটবে।'),
-  _Piece(id: 'normal', asset: 'assets/duty_slip/dress/tray_normalshoe.webp', zone: 'feet', good: false, why: 'না, সতর্ক হোন! সাধারণ জুতোর সোলে বৈদ্যুতিক ইনসুলেশন থাকে না।'),
+  _Piece(id: 'slip', asset: 'assets/duty_slip/dress/tray_slipper.webp', zone: 'feet', good: false, why: 'বিপদ! চপ্পলে গ্রিপ নেই—মই বা পোলে পা হড়কে পড়ার ঝুঁকি!'),
+  _Piece(id: 'normal', asset: 'assets/duty_slip/dress/tray_normalshoe.webp', zone: 'feet', good: false, why: 'সতর্ক হোন! সাধারণ জুতোর সোলে কোনো ইলেকট্রিক্যাল ইনসুলেশন থাকে না।'),
   _Piece(id: 'boot', asset: 'assets/duty_slip/dress/tray_boot.webp', zone: 'feet', good: true, why: ''),
 ];
 
-const _roomStart = 'কন্ট্রোল রুমের ভিতরে কাজের আদেশ এসেছে। দ্রুত তৈরি হতে হবে।';
-const _roomDone = 'সাজ সম্পূর্ণ। ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড আর পোর্টেবল আর্থিং কিট ভ্যানে উঠেছে। এবার বের হওয়া যাবে।';
-const _vanInsist = 'লাইনম্যান তৈরি। ভোল্টেজ ডিটেক্টর, ডিসচার্জ রড আর পোর্টেবল আর্থিং কিট সবসময় সঙ্গে রাখতে হবে।';
-const _vanNoTester = 'ভোল্টেজ ডিটেক্টর ছাড়া ভ্যানে উঠবেন না। লাইন জীবিত না মৃত, আগে সেটাই দেখতে হয়।';
+const _roomStart = 'কন্ট্রোল রুম থেকে কাজের নির্দেশ এসেছে। দ্রুত তৈরি হয়ে নিন।';
+const _roomDone = 'সব রেডি! ভোল্টেজ টেস্টার, ডিসচার্জ রড আর আর্থিং কিট ভ্যানে উঠেছে। এবার বের হওয়া যাক।';
+const _vanInsist = 'লাইনম্যান তৈরি! টেস্টার, ডিসচার্জ রড আর আর্থিং কিট সবসময় সাথে রাখতে হবে।';
+const _vanNoTester = 'টেস্টার ছাড়া ভ্যানে উঠবেন না। লাইন লাইভ না ডেড, আগে সেটাই দেখতে হবে!';
 const _vanNoDischarge = 'ডিসচার্জ রড বাদ পড়েছে। আটকে থাকা বিদ্যুৎ না নামালে ছুঁলেই শক।';
 const _vanNoEarth = 'পোর্টেবল আর্থিং কিট না নিলে কাজ শুরু করা যাবে না। ভোল্টেজ ফিরলে মাটিতে যাবে না।';
 const _roomFatua = 'না, সাবধান! ঢিলে পোশাক প্যানেলের হাতলে জড়িয়ে যেতে পারে। শরীর আঁটোসাঁটো রাখা জরুরি।';

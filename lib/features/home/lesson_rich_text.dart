@@ -37,6 +37,7 @@ class LessonFigurePlate extends StatelessWidget {
   final Color paperColor;
   final VoidCallback? onTap;
   final double maxHeightFraction;
+  final double radius;
 
   const LessonFigurePlate({
     super.key,
@@ -44,6 +45,7 @@ class LessonFigurePlate extends StatelessWidget {
     this.paperColor = const Color(0xFFF5E6D8),
     this.onTap,
     this.maxHeightFraction = 0.42,
+    this.radius = 14,
   });
 
   @override
@@ -52,7 +54,7 @@ class LessonFigurePlate extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(radius),
         child: ColoredBox(
           color: paperColor,
           child: ConstrainedBox(
@@ -93,6 +95,12 @@ class LessonRichText extends StatelessWidget {
   final void Function(String url, String caption)? onOpenImage;
   final void Function(String body)? onOpenNote;
 
+  /// Letterbox colour behind `[[image]]` figures.
+  final Color figurePaper;
+
+  /// Style of the caption under a figure; null keeps the muted default.
+  final TextStyle? captionStyle;
+
   const LessonRichText({
     super.key,
     required this.text,
@@ -100,6 +108,8 @@ class LessonRichText extends StatelessWidget {
     this.style,
     this.onOpenImage,
     this.onOpenNote,
+    this.figurePaper = const Color(0xFFF5E6D8),
+    this.captionStyle,
   });
 
   @override
@@ -167,13 +177,14 @@ class LessonRichText extends StatelessWidget {
             padding: const EdgeInsets.only(top: 12, bottom: 4),
             child: LessonFigurePlate(
               imageUrl: src,
-              paperColor: const Color(0xFFF5E6D8),
+              paperColor: figurePaper,
+              radius: 12,
               onTap: () => onOpenImage?.call(src, caption),
             ),
           ),
         );
         if (caption.isNotEmpty) {
-          below.add(Text(caption, style: const TextStyle(fontSize: 13, color: AppColors.muted)));
+          below.add(Text(caption, style: captionStyle ?? const TextStyle(fontSize: 13, color: AppColors.muted)));
         }
       } else if (part.isNotEmpty) {
         children.add(TextSpan(text: part, style: base));

@@ -790,7 +790,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
         .react(GuideMood.inspire);
     _showKinetic(
       title: 'মৃত্যুহীন লক্ষ্য',
-      body: 'পথের শেষ। প্রতিটি ধাপে বাঁচার অভ্যাসই এই লক্ষ্য।',
+      body: 'পথের শেষ! প্রতি পদে নিরাপদ থাকাই আমাদের আসল লক্ষ্য।',
       speak: false,
     );
   }

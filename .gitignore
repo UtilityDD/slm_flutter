@@ -90,3 +90,8 @@ key.properties
 
 # Flutter run slots for parallel agents (tool/flk.ps1)
 .flk/
+
+# Excel lock files and Python caches
+~$*
+__pycache__/
+*.pyc

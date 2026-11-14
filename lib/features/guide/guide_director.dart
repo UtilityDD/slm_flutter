@@ -42,19 +42,19 @@ enum GuideEntranceKind { dailyWelcome, hiPop, comeback }
 abstract final class LadderComebackLines {
   static const climbed = <String>[
     'এক ধাপ উপরে! চলুন, পরেরটা।',
-    'সাবাশ! পরের ধাপ আপনার অপেক্ষায়।',
+    'সাবাশ! এবার পরের ধাপে চলুন।',
     'দারুণ চলছে! থামবেন না।',
     'আরও একটা ধাপ পার! এগিয়ে চলুন।',
   ];
   /// A rung passed again (replay): praise without claiming a new rung.
   static const passedAgain = <String>[
-    'সাবাশ! পরের ধাপ আপনার অপেক্ষায়।',
+    'সাবাশ! এবার পরের ধাপ।',
     'দারুণ চলছে! থামবেন না।',
   ];
   static const same = <String>[
-    'আবার চেষ্টা করলেই হবে, আমি আছি।',
+    'আবার চেষ্টা করলেই হবে, আমি সঙ্গে আছি।',
     'কোন ধাপে যাবেন? আমি সঙ্গে আছি।',
-    'একটু ভেবে নিয়ে আবার শুরু করুন।',
+    'একটু ভেবে নিয়ে আবার শুরু করুন।',
   ];
 }
 

@@ -300,7 +300,7 @@ const learnBoardPack11 = LearnBoardPack(
   lessonId: '1.1',
   titleBn: 'প্রথম দিনের ইউনিফর্ম ও পিপিই',
   badgeBn: 'সুরক্ষা কবচ',
-  introBn: 'আজ প্রথম দিন। সঠিক পোশাক বেছে নিন—ভুল মানে বিপদ।',
+  introBn: 'আজ প্রথম দিন! কাজের সঠিক পিপিই বেছে নিন—ভুল হলেই বিপদ।',
   slots: [
     LearnBoardSlot(
       id: 'shirt',
@@ -318,7 +318,7 @@ const learnBoardPack11 = LearnBoardPack(
           labelBn: 'পলিয়েস্টার',
           asset: 'assets/duty_slip/dress/tray_poly.webp',
           correct: false,
-          rejectBn: 'আর্ক ফ্ল্যাশে পলিয়েস্টার গলে চামড়ায় আটকে যায়।',
+          rejectBn: 'আর্ক ফ্ল্যাশে পলিয়েস্টার গলে চামড়ায় সেঁটে যায়!',
         ),
         LearnBoardOption(
           id: 'fatua',
@@ -396,7 +396,7 @@ const learnBoardPack11 = LearnBoardPack(
           labelBn: 'ভেন্টেড হেলমেট',
           asset: 'assets/duty_slip/dress/tray_vent_helmet.webp',
           correct: false,
-          rejectBn: 'গর্ত দিয়ে স্পার্ক বা জল ঢুকে মাথায় বিদ্যুৎ নামতে পারে।',
+          rejectBn: 'ভেন্টেড হেলমেটের ফুটো দিয়ে কারেন্ট বা বৃষ্টির জল ঢুকতে পারে।',
         ),
         LearnBoardOption(
           id: 'road',
@@ -428,7 +428,7 @@ const learnBoardPack11 = LearnBoardPack(
       whyChips: [
         LearnWhyChip(
           id: 'w1',
-          textBn: 'ছিদ্রহীন ডাই-ইলেকট্রিক শেল দরকার',
+          textBn: 'ফুটোহীন ডাই-ইলেকট্রিক শেলই আসল সুরক্ষা',
           correct: true,
         ),
         LearnWhyChip(
@@ -500,7 +500,7 @@ const learnBoardPack11 = LearnBoardPack(
       whyChips: [
         LearnWhyChip(
           id: 'w1',
-          textBn: 'মোটা রাবার সোল কারেন্টের আর্থ পথ বন্ধ করে',
+          textBn: 'মোটা রাবার সোল কারেন্ট মাটিতে নামতে দেয় না',
           correct: true,
         ),
         LearnWhyChip(

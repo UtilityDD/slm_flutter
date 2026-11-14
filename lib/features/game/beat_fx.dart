@@ -755,7 +755,7 @@ class _DeathMomentHostState extends ConsumerState<DeathMomentHost> with SingleTi
                 final deathN = enDigits('${pulse.deathCount}');
                 final line = tr(
                   bn,
-                  'বাস্তবে এটা আপনার $deathN নম্বর মৃত্যু',
+                  'বাস্তবে এটা কিন্তু আপনার $deathN নম্বর মারাত্মক ভুল!',
                   'In real work this would be death #$deathN',
                 );
 

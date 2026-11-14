@@ -101,38 +101,38 @@ class HelmetItem {
 /// Fixed lines (device TTS until recorded).
 abstract final class HelmetLines {
   static const station = 'হেলমেট';
-  static const ask = 'শেষে নিজের হেলমেট। তাক থেকে বেছে নিন।';
+  static const ask = 'শেষে নিজের হেলমেট। তাক থেকে পছন্দ করুন।';
   static const head = 'ভালো করে দেখুন';
-  static const tabShell = 'খোলস';
+  static const tabShell = 'শেল';
   static const tabInside = 'ভেতর';
-  static const tabStrap = 'ফিতে';
-  static const torchTask = 'টর্চ টেনে পুরো খোলসে আলো ফেলুন। ফাটল চোখে পড়লে সেখানে ছুঁয়ে দিন।';
+  static const tabStrap = 'স্ট্র্যাপ';
+  static const torchTask = 'টর্চ জ্বেলে পুরো শেলটা দেখুন। ফাটল চোখে পড়লে ট্যাপ করুন।';
   static const insideTask = 'ভেতরটা চোখের কাছে এনে দেখুন।';
-  static const strapTask = 'ফিতের লকটা লাগিয়ে দেখুন।';
-  static const checkFirst = 'আগে খোলস, ভেতর আর ফিতে—তিনটেই দেখুন!';
+  static const strapTask = 'স্ট্র্যাপের লকটা লাগিয়ে দেখুন।';
+  static const checkFirst = 'আগে শেল, ভেতর আর স্ট্র্যাপ—তিনটেই দেখুন!';
   static const guessed = 'ঠিক, কিন্তু আন্দাজে নয়—আগে ভালো করে দেখুন।';
   static const caught = 'ঠিক ধরেছেন!';
   /// A sound helmet sent back: a neutral reply (never "it was fine").
   static const rejectedGood = 'আন্দাজে বাদ নয়—তিনটে দিক মিলিয়ে তবে সিদ্ধান্ত নিন।';
-  static const crackSpotted = 'ঠিক ধরেছেন—খোলসে সূক্ষ্ম ফাটল!';
+  static const crackSpotted = 'ঠিক ধরেছেন—বাইরের শেলে সূক্ষ্ম ফাটল!';
   static const locked = 'ক্লিক—লক হলো।';
   static const noLock = 'লক হচ্ছে না!';
   static const packed = 'ব্যাগে তোলা হলো।';
 
   /// Slip cards (the line under the picture).
-  static const uncheckedCard = 'না দেখেই হেলমেট নিলেন। খোলস, ভেতর, ফিতে—তিনটেই দেখে তবে নিন।';
-  static const goodCard = 'খোলস, ভেতর আর ফিতে—তিনটে দেখে যা পেলেন, তা মিলিয়ে তবে বাদ দিন; আন্দাজে নয়।';
+  static const uncheckedCard = 'না দেখেই হেলমেট নিলেন? শেল, ভেতর আর চিন-স্ট্র্যাপ—তিনটেই দেখে তবে নিন।';
+  static const goodCard = 'শেল, ভেতর আর চিন-স্ট্র্যাপ—তিনটে দেখে মিলিয়ে তবে বাদ দিন; আন্দাজে নয়।';
 
   /// Listening to the coworker (take it without the looks) — a slip.
-  static const listenCard = 'ওর কথায় না দেখেই হেলমেট নিতে রাজি হলেন। খোলস, ভেতর, ফিতে—প্রতিবার দেখে তবেই মাথায় দিন।';
+  static const listenCard = 'ওর কথায় না দেখেই হেলমেট নিলেন? শেল, ভেতর, স্ট্র্যাপ—প্রতিবার দেখে মাথায় দিন।';
 
   // The reason after the helmet is packed (lesson 1.1): one right, two wrong.
   static const whyAsk = 'কেন এই হেলমেটটা নিলেন?';
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
   static const whyRight = [
-    'ফাটলহীন, ছিদ্রহীন খোলসই মাথা বাঁচায়',
+    'ফাটলহীন মজবুত শেলই আঘাতে মাথা বাঁচায়',
     'ভেন্ট বা মেটাল নেই—লাইনের কাজের হেলমেট',
-    'ফিতে লক হয়, পোল ঝাঁকালেও খসবে না',
+    'স্ট্র্যাপ লক থাকলে পোল ঝাঁকালেও খসবে না',
     'স্ট্যাম্প আর তারিখ দেখে তবেই নিয়েছি',
   ];
   static const whyWrong = [
@@ -148,10 +148,10 @@ abstract final class HelmetLines {
   /// হেলমেটে কিছু হয় না" — the ladder's pressure line, from the myths).
   static const coworkerLine = 'দেখার কী আছে? একটু ফাটা হেলমেটে কিছু হয় না!';
   static const choiceRight = [
-    'না — খোলস, ভেতর, ফিতে দেখে নেব',
+    'না — শেল, ভেতর, স্ট্র্যাপ দেখে নেব',
     'ফাটা হেলমেট মাথা বাঁচায় না, দেখব',
     'আগে দেখে নেব, তারপর মাথায় দেব',
-    'ফিতে লক হয় কিনা, সেটাও দেখব',
+    'স্ট্র্যাপ লক হয় কি না, সেটাও দেখব',
   ];
   static const choiceWrong = [
     'ঠিক, একটু ফাটলে কিছুই হয় না',
@@ -205,7 +205,7 @@ const helmetWrongs = [
     asset: '$_dress/tray_vent_helmet.webp',
     aspect: 512 / 413,
     labelBn: 'ভেন্টেড টুপি',
-    lineBn: 'ফুটোওয়ালা (ভেন্টেড) টুপি—গর্ত দিয়ে মাথায় কারেন্ট ছোঁয়ার ঝুঁকি। লাইনের কাজে চলবে না।',
+    lineBn: 'ভেন্টেড হেলমেটের ফুটো দিয়ে মাথায় কারেন্ট ছোঁয়ার ঝুঁকি। লাইনের কাজে চলবে না।',
   ),
   HelmetItem(
     id: 'bike',
@@ -218,10 +218,10 @@ const helmetWrongs = [
 ];
 
 const helmetFlaws = [
-  HelmetFlaw(kind: HelmetFlawKind.crack, labelBn: 'ফাটা হেলমেট', lineBn: 'খোলসে সূক্ষ্ম ফাটল—ফাটা হেলমেট মানে ফুটো ছাতা, আর আঘাত নিতে পারে না।'),
+  HelmetFlaw(kind: HelmetFlawKind.crack, labelBn: 'ফাটা হেলমেট', lineBn: 'শেলে সূক্ষ্ম ফাটল—ফাটা হেলমেট ফুটো ছাতার মতো, মাথায় কোনো আঘাত আটকাতে পারবে না।'),
   HelmetFlaw(kind: HelmetFlawKind.metal, labelBn: 'ভেতরে মেটাল পার্টস', lineBn: 'ভেতরে মেটাল পার্টস—লাইনের কাজে ভুলেও ব্যবহার করবেন না।'),
   HelmetFlaw(kind: HelmetFlawKind.noStamp, labelBn: 'স্ট্যাম্পহীন হেলমেট', lineBn: 'ভেতরে তারিখ বা পরীক্ষার স্ট্যাম্প নেই। স্টোর থেকে নতুনটা চেয়ে নেওয়া আপনার অধিকার।'),
-  HelmetFlaw(kind: HelmetFlawKind.strap, labelBn: 'ফিতের লক ভাঙা', lineBn: 'চিন স্ট্র্যাপ লক হয় না—পোল ঝাঁকালেই হেলমেট খসে নিচে পড়বে।'),
+  HelmetFlaw(kind: HelmetFlawKind.strap, labelBn: 'স্ট্র্যাপের লক ভাঙা', lineBn: 'চিন স্ট্র্যাপ লক হয় না—পোল ঝাঁকালেই হেলমেট খসে নিচে পড়বে।'),
 ];
 
 /// Where a hairline crack can run on the line helmet's shell (picture box 0–1).
@@ -1016,14 +1016,21 @@ class _Tab extends StatelessWidget {
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: edge, width: on ? 2 : 1)),
           child: Stack(
             children: [
-              Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(done ? Icons.check_circle_rounded : icon, size: 18, color: done ? SlmColors.emerald500 : (on ? SlmColors.gold300 : SlmColors.ink)),
-                    const SizedBox(width: 4),
-                    Text(label, style: bangla(fontSize: 14, fontWeight: FontWeight.w800, color: on ? SlmColors.ivory : SlmColors.ink)),
-                  ],
+              // The label shrinks to fit a narrow tab rather than overflowing.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(done ? Icons.check_circle_rounded : icon, size: 18, color: done ? SlmColors.emerald500 : (on ? SlmColors.gold300 : SlmColors.ink)),
+                        const SizedBox(width: 4),
+                        Text(label, style: bangla(fontSize: 14, fontWeight: FontWeight.w800, color: on ? SlmColors.ivory : SlmColors.ink)),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               if (progress != null && !done && progress! > 0)

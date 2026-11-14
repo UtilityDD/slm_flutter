@@ -348,13 +348,13 @@ abstract final class PoleMistakes {
             lessonPoint: 0),
         PoleDefect.hollow => const DoMistake(
             key: '1.3/pole/hollow',
-            textBn: 'ঠুকলে ‘দপ্ দপ্’ ফাঁপা শব্দ — ভেতরে কংক্রিট দুর্বল বা ফাটল আছে। বাইরে ঠিক দেখালেও উঠবেন না।',
+            textBn: 'ফাঁপা শব্দ মানেই ভেতরে কংক্রিট ভাঙা! বাইরে ঠিক দেখালেও এই পোলে উঠবেন না।',
             art: 'assets/game/art/pole/pole_sound.svg',
             deadly: true,
             lessonPoint: 1),
         PoleDefect.groundRust => const DoMistake(
             key: '1.3/pole/ground-rust',
-            textBn: 'মাটির কাছে মরিচা — স্টিলের ক্যান্সার। ঠুকলে ভোঁতা শব্দ; স্টিলের পোলও সতর্কবার্তা ছাড়াই ভেঙে পড়ে।',
+            textBn: 'গোড়ায় মরিচা স্টিল পোলের ক্যান্সার! ভোঁতা শব্দ মানে যে কোনো সময় মট করে ভেঙে পড়বে।',
             art: 'assets/game/art/pole/steel_rust.svg',
             deadly: true,
             lessonPoint: 2),

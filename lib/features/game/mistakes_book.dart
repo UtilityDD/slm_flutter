@@ -228,7 +228,7 @@ abstract final class MistakesBookLines {
   static const all = 'সব';
   static const deadly = 'মারাত্মক';
   static const empty = 'এখনও কোনো ভুল নেই। ভুল হলে এখানে জমা হবে — ফিরে দেখে শিখবেন।';
-  static const deaths = 'মৃত্যু';
+  static const deaths = 'মারাত্মক ভুল';
   static const kinds = 'ভুলের ধরন';
   static const today = 'আজ';
   static const yesterday = 'গতকাল';

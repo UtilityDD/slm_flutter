@@ -194,14 +194,14 @@ abstract final class ToolTipLines {
 abstract final class ToolTipMistakes {
   static const bamboo = DoMistake(
     key: '1.2/tool/bamboo',
-    textBn: 'শুকনো বাঁশ বা কাঠেও ভেতরের আর্দ্রতা আর বাইরের ময়লা বিদ্যুৎ টানে। লাইভ লাইনের কাছে শুধু পরীক্ষিত ফাইবারগ্লাস হট স্টিক।',
+    textBn: 'শুকনো বাঁশ বা কাঠেও আর্দ্রতায় কারেন্ট টানে! লাইভ লাইনে কেবল সার্টিফাইড ফাইবারগ্লাস হট স্টিক চলবে।',
     art: 'assets/game/art/distance/bamboo_vs_hot_stick.svg',
     deadly: true,
     lessonPoint: 3,
   );
   static const pvc = DoMistake(
     key: '1.2/tool/pvc-jugaad',
-    textBn: 'পিভিসি পাইপে মেটাল হুক — জুগাড়, হট স্টিক নয়। ফাটে, ভিজে লিক করে; প্লাস্টিক দেখে নিরাপদ ভাববেন না।',
+    textBn: 'পিভিসি পাইপে মেটাল হুক বিপজ্জনক জুগাড়! প্লাস্টিক হলেও যে কোনো সময় কারেন্ট লিক করবে।',
     art: 'assets/game/art/rod/jugaad_vs_standard.svg',
     deadly: true,
     lessonPoint: 3,

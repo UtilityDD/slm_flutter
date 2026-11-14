@@ -7272,7 +7272,7 @@
     {
       "id": "welcome",
       "mood": "wake",
-      "bnText": "আসুন, নিরাপদ পথে ওঠা যাক।",
+      "bnText": "চলুন, নিরাপদ কাজের পথে শুরু করি।",
       "when": "home_open"
     },
     {
@@ -7290,19 +7290,19 @@
     {
       "id": "coming_soon",
       "mood": "talk",
-      "bnText": "শীঘ্রই আসছে — এই ধাপ তৈরি হচ্ছে।",
+      "bnText": "শীঘ্রই আসছে — এই ধাপের কাজ চলছে।",
       "when": "coming_soon"
     },
     {
       "id": "exit_level",
       "mood": "listen",
-      "bnText": "ধাপ ছেড়ে মইয়ে ফিরবেন?",
+      "bnText": "লেভেল ছেড়ে মইয়ে ফিরবেন?",
       "when": "exit_level"
     },
     {
       "id": "exit_game",
       "mood": "listen",
-      "bnText": "খেলা ছেড়ে হোমে যাবেন?",
+      "bnText": "বেরিয়ে হোমে ফিরে যাবেন?",
       "when": "exit_game"
     }
   ]

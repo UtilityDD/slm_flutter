@@ -51,7 +51,7 @@ abstract final class MistakeLines {
   static const nearMissHead = 'অল্পের জন্য বাঁচলেন!';
   static const nearMissSub = 'মাঠে এই ভুলে প্রাণ যায়। এবার শুধু সতর্কবার্তা — পরের বার আর নয়।';
   static const deadlyHead = 'মারাত্মক ভুল';
-  static const deadlySub = 'মাঠে এখানেই শেষ। শেষ মৃত্যুর পরে পাস করা কাজগুলো আবার প্রমাণ করতে হবে।';
+  static const deadlySub = 'মাঠে এখানেই শেষ! মারাত্মক ভুলের পর এই ধাপগুলো আবার পাস করতে হবে।';
   static const readLesson = 'পাঠে দেখুন';
   static const gotIt = 'বুঝেছি';
   static const tryAgain = 'আবার চেষ্টা';

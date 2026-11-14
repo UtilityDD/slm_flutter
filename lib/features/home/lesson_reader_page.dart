@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/supabase_service.dart';
-import '../../core/services/neural_tts_service.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
@@ -21,8 +19,13 @@ import 'lesson_rich_text.dart';
 import 'lesson_seal_page.dart';
 import 'level_celebration_page.dart';
 import 'lineman_progress.dart';
+import 'reader/reader_prefs.dart';
+import 'reader/reader_resume.dart';
+import 'reader/sentence_highlight.dart';
 
-/// Immersive guided reader — Kindle / Google Books paper feel + Bangla read-aloud.
+/// Edge-to-edge lesson reader: the whole screen is the page (warm paper by
+/// day, charcoal by night), one section at a time, read-aloud highlights the
+/// sentence being spoken in the text itself.
 class LessonReaderPage extends ConsumerStatefulWidget {
   final LessonCardItem lesson;
   final bool bn;
@@ -31,10 +34,14 @@ class LessonReaderPage extends ConsumerStatefulWidget {
   final bool muted;
 
   /// Open straight at this lesson point (0-based), e.g. from a mistake's
-  /// "পাঠে দেখুন". Null: start at the beginning.
+  /// "পাঠে দেখুন". Null: start at the beginning (or the saved place).
   final int? startPoint;
 
   const LessonReaderPage({super.key, required this.lesson, required this.bn, this.muted = false, this.startPoint});
+
+  /// Tests replace the device voice with this.
+  @visibleForTesting
+  static SentenceSpeak? debugSpeak;
 
   @override
   ConsumerState<LessonReaderPage> createState() => _LessonReaderPageState();
@@ -42,26 +49,181 @@ class LessonReaderPage extends ConsumerStatefulWidget {
 
 enum _Phase { hero, point, tip, myth, done }
 
+/// One screen of the reader: a phase, and for points which point.
+class _Section {
+  final _Phase phase;
+  final int point;
+  const _Section(this.phase, [this.point = 0]);
+}
+
+enum _Role { title, overline, heading, subheading, body, hint, image, tip, wrong, right, doneTitle, doneBody }
+
+/// One block of a section. The same list draws the page and feeds the voice,
+/// so sentence numbers always match what is highlighted.
+class _Line {
+  final _Role role;
+  final String text;
+
+  /// Spoken first and shown as a small label (myth "ভুল" / "সত্য").
+  final String? label;
+  final String? imageUrl;
+  final bool spoken;
+
+  /// Has `((chip))` / `[[figure]]` markup: drawn by [LessonRichText] and
+  /// highlighted as a whole block.
+  final bool rich;
+  final List<String> sentences;
+
+  _Line._(this.role, this.text, this.label, this.imageUrl, this.spoken, this.rich, this.sentences);
+
+  factory _Line(_Role role, String text, {String? label, String? imageUrl, bool spoken = true}) {
+    final rich = text.contains('((') || text.contains('[[');
+    final body = !spoken || text.trim().isEmpty
+        ? const <String>[]
+        : splitBanglaSentences(rich ? lessonSpeechText(text) : text);
+    return _Line._(role, text, label, imageUrl, spoken, rich, [
+      if (label != null && spoken) '$label।',
+      ...body,
+    ]);
+  }
+
+  int get labelSentences => label != null && spoken ? 1 : 0;
+}
+
+/// Reader colours. Body ink on the page is ≥ 7:1 in both themes.
+@immutable
+class _Palette {
+  final bool night;
+  final Color bg, ink, soft, rule, accent, track, progress, highlight, plate;
+  final Color tipTint, tipEdge, tipLabel;
+  final Color wrongTint, wrongEdge, wrongLabel, wrongChip;
+  final Color rightTint, rightEdge, rightLabel, rightChip;
+
+  const _Palette({
+    required this.night,
+    required this.bg,
+    required this.ink,
+    required this.soft,
+    required this.rule,
+    required this.accent,
+    required this.track,
+    required this.progress,
+    required this.highlight,
+    required this.plate,
+    required this.tipTint,
+    required this.tipEdge,
+    required this.tipLabel,
+    required this.wrongTint,
+    required this.wrongEdge,
+    required this.wrongLabel,
+    required this.wrongChip,
+    required this.rightTint,
+    required this.rightEdge,
+    required this.rightLabel,
+    required this.rightChip,
+  });
+}
+
+const _dayPalette = _Palette(
+  night: false,
+  bg: Color(0xFFFBF7EF),
+  ink: Color(0xFF2B2118),
+  soft: Color(0xFF6B5A4B),
+  rule: Color(0xFFE6DCCB),
+  accent: Color(0xFF8A5A12),
+  track: Color(0xFFEAE1D1),
+  progress: Color(0xFFC8901A),
+  highlight: Color(0xFFE0A72E),
+  plate: Color(0xFFF1E9DA),
+  tipTint: Color(0xFFFCF1DC),
+  tipEdge: Color(0xFFD19A2A),
+  tipLabel: Color(0xFF7A4E0B),
+  wrongTint: Color(0xFFFCEDEA),
+  wrongEdge: Color(0xFFC8443A),
+  wrongLabel: Color(0xFF9E2A20),
+  wrongChip: Color(0xFFF6D5D0),
+  rightTint: Color(0xFFEBF6EE),
+  rightEdge: Color(0xFF3F9A5C),
+  rightLabel: Color(0xFF1E6B38),
+  rightChip: Color(0xFFCFE9D6),
+);
+
+const _nightPalette = _Palette(
+  night: true,
+  bg: Color(0xFF121417),
+  ink: Color(0xFFE8E2D6),
+  soft: Color(0xFFA89F92),
+  rule: Color(0xFF2A2D31),
+  accent: Color(0xFFE2B65C),
+  track: Color(0xFF2A2D31),
+  progress: Color(0xFFE2B65C),
+  highlight: Color(0xFFE2B65C),
+  plate: Color(0xFF1C1F23),
+  tipTint: Color(0xFF211E17),
+  tipEdge: Color(0xFFD9A441),
+  tipLabel: Color(0xFFE8C474),
+  wrongTint: Color(0xFF261A19),
+  wrongEdge: Color(0xFFE0675C),
+  wrongLabel: Color(0xFFF2A69D),
+  wrongChip: Color(0xFF3D2321),
+  rightTint: Color(0xFF16221A),
+  rightEdge: Color(0xFF5DBB7B),
+  rightLabel: Color(0xFF9BD8AE),
+  rightChip: Color(0xFF1F3A27),
+);
+
+/// Reader type ramp, already multiplied by the reading size and the clamped
+/// system text scale.
+class _Type {
+  final TextStyle title, heading, subheading, body, caption, label, overline;
+
+  _Type(double s, _Palette p)
+      : title = TextStyle(fontFamily: banglaFont, fontSize: 26 * s, fontWeight: FontWeight.w700, height: 1.35, color: p.ink),
+        heading = TextStyle(fontFamily: banglaFont, fontSize: 22 * s, fontWeight: FontWeight.w700, height: 1.4, color: p.ink),
+        subheading = TextStyle(fontFamily: banglaFont, fontSize: 18 * s, fontWeight: FontWeight.w600, height: 1.5, color: p.ink),
+        body = TextStyle(fontFamily: banglaFont, fontSize: 18 * s, fontWeight: FontWeight.w400, height: 1.7, color: p.ink),
+        caption = TextStyle(fontFamily: banglaFont, fontSize: 14 * s, fontWeight: FontWeight.w400, height: 1.5, color: p.soft),
+        label = TextStyle(fontFamily: banglaFont, fontSize: 13 * s, fontWeight: FontWeight.w700, height: 1.3),
+        overline = TextStyle(fontFamily: banglaFont, fontSize: 14 * s, fontWeight: FontWeight.w600, height: 1.4, color: p.accent);
+}
+
+/// Combined reading scale: system text scale × reader size, kept in a range
+/// the layout survives.
+const _maxScale = 1.3;
+const _minScale = 0.8;
+const _maxTextWidth = 640.0;
+const _fade = Duration(milliseconds: 180);
+
 class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
   late final List<_Phase> _phases;
   late final List<LessonSectionPoint> _points;
+  late final List<_Section> _sections;
   late final BanglaReadAloud _voice;
-  late final NeuralTtsService _neural;
-  bool _neuralRun = false;
-  int _listenRun = 0;
-  String? _nowReading;
-  int _phaseIndex = 0;
-  int _pointDone = 0;
+  late final SentenceReader _reader;
+  late final AppLifecycleListener _life;
+
+  int _at = 0;
+  int _epoch = 0;
+  List<_Line> _script = const [];
+  List<int> _offsets = const [];
+  List<GlobalKey> _keys = const [];
+  int _followedLine = -1;
+
+  double _scrollFraction = 0;
+  double _initialFraction = 0;
+
   bool _isClaiming = false;
   bool _speaking = false;
-  bool _voiceBusy = false;
+  int _listenRun = 0;
+  bool _navLocked = false;
+  Timer? _navTimer;
+  bool _userMoved = false;
+  bool _finished = false;
+  bool _reduceMotion = false;
+  double _dragDx = 0;
 
-  // Reading stays dark ink on warm paper; only the chrome around it is night.
-  static const _paper = SlmColors.ivory;
-  static const _paperDeep = SlmColors.ivoryDeep;
-  static const _ink = SlmColors.ink;
-  static const _softInk = Color(0xFF3A4660);
-  static const _accent = SlmColors.gold700;
+  _Section get _section => _sections[_at];
+  bool get _onLast => _at == _sections.length - 1;
 
   @override
   void initState() {
@@ -75,125 +237,243 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
       if (lesson.myths.isNotEmpty) _Phase.myth,
       _Phase.done,
     ];
+    _sections = [
+      const _Section(_Phase.hero),
+      for (var i = 0; i < _points.length; i++) _Section(_Phase.point, i),
+      if (lesson.proTips.isNotEmpty) const _Section(_Phase.tip),
+      if (lesson.myths.isNotEmpty) const _Section(_Phase.myth),
+      const _Section(_Phase.done),
+    ];
     final start = widget.startPoint;
-    if (start != null && _points.isNotEmpty && _phases.contains(_Phase.point)) {
-      _phaseIndex = _phases.indexOf(_Phase.point);
-      _pointDone = start.clamp(0, _points.length - 1);
+    if (start != null && _points.isNotEmpty) {
+      _at = 1 + start.clamp(0, _points.length - 1);
     }
     _voice = BanglaReadAloud();
-    _voice.onSpeakingChanged = (value) {
-      if (!mounted || _neuralRun) return;
-      setState(() => _speaking = value);
-    };
-    _voice.init();
-    _neural = NeuralTtsService();
-    _neural.onSpeakingChanged = (value) {
-      if (!mounted) return;
-      setState(() {
-        _speaking = value;
-        if (value) _voiceBusy = false;
-      });
-    };
+    // Warm the device voice; a phone without one just has no read-aloud.
+    unawaited(_voice.init().catchError((Object _) {}));
+    _reader = SentenceReader(const [], voice: _voice, speak: LessonReaderPage.debugSpeak);
+    _reader.active.addListener(_followSentence);
+    _loadScript();
+    _life = AppLifecycleListener(onPause: _saveSpot);
     // Download (or read the saved copy of) the quiz while the lesson is read,
     // so it is ready offline by the last page.
     unawaited(LessonQuizStore.instance.prefetch(lesson.moduleNumber, lesson.chapterNumber));
+    if (!lesson.isCompleted && start == null) unawaited(_restoreSpot());
   }
 
   @override
   void dispose() {
-    _neural.dispose();
-    _voice.dispose();
+    _navTimer?.cancel();
+    _life.dispose();
+    _saveSpot();
+    _reader.active.removeListener(_followSentence);
+    unawaited(_reader.dispose());
+    unawaited(_voice.dispose());
     super.dispose();
   }
 
-  bool get _pointsFinished => _points.isEmpty || _pointDone >= _points.length;
+  // ---------------------------------------------------------------- script
+
+  void _loadScript() {
+    _script = _scriptFor(_section);
+    var n = 0;
+    _offsets = [
+      for (final line in _script) (n += line.sentences.length) - line.sentences.length,
+    ];
+    _keys = [for (final _ in _script) GlobalKey()];
+    _followedLine = -1;
+    _reader.setSentences([for (final line in _script) ...line.sentences]);
+  }
+
+  List<_Line> _paragraphs(_Role role, String text) => [
+        for (final p in text.split(RegExp(r'\r?\n')))
+          if (p.trim().isNotEmpty) _Line(role, p.trim()),
+      ];
+
+  List<_Line> _scriptFor(_Section section) {
+    final lesson = widget.lesson;
+    final bn = widget.bn;
+    switch (section.phase) {
+      case _Phase.hero:
+        final brief = lesson.missionBriefing;
+        return [
+          _Line(_Role.title, lesson.title),
+          _Line(_Role.overline, bn ? 'প্রথমে এটা বুঝুন' : 'Understand this first'),
+          if (brief != null && brief.isNotEmpty)
+            ..._paragraphs(_Role.body, brief)
+          else
+            _Line(_Role.hint, bn ? 'এই পাঠের মূল কথা পরের ধাপে আসবে।' : 'The main points come next.'),
+          _Line(
+            _Role.hint,
+            bn
+                ? 'উপরের হেডফোনে চাপলে পাঠটি শুনতে পাবেন। পরের ধাপে যেতে পাতাটি বাঁ দিকে সরান।'
+                : 'Tap the headphones above to listen. Swipe left for the next step.',
+            spoken: false,
+          ),
+        ];
+      case _Phase.point:
+        final p = _points[section.point];
+        final img = p.fullImageUrl;
+        return [
+          _Line(_Role.heading, p.itemName),
+          if (img != null && img.isNotEmpty) _Line(_Role.image, p.imageCaption ?? '', imageUrl: img, spoken: false),
+          if (p.specifications != null && p.specifications!.isNotEmpty) ..._paragraphs(_Role.body, p.specifications!),
+          if (p.importance != null && p.importance!.isNotEmpty) ...[
+            _Line(_Role.subheading, bn ? 'কেন জরুরি' : 'Why it matters'),
+            ..._paragraphs(_Role.body, p.importance!),
+          ],
+          if (p.dailyCheck != null && p.dailyCheck!.isNotEmpty) ...[
+            _Line(_Role.subheading, bn ? 'কাজের আগে চেক' : 'Check before work'),
+            ..._paragraphs(_Role.body, p.dailyCheck!),
+          ],
+        ];
+      case _Phase.tip:
+        return [
+          _Line(_Role.heading, bn ? 'কাজের সহজ টিপ' : 'Easy field tip'),
+          for (final tip in lesson.proTips) _Line(_Role.tip, tip),
+        ];
+      case _Phase.myth:
+        return [
+          _Line(_Role.heading, bn ? 'ভুল কথা · সত্য কথা' : 'Wrong · Right'),
+          for (final myth in lesson.myths) ...[
+            _Line(_Role.wrong, myth.myth, label: bn ? 'ভুল' : 'Wrong'),
+            _Line(_Role.right, myth.reality, label: bn ? 'সত্য' : 'Right'),
+          ],
+        ];
+      case _Phase.done:
+        return [
+          _Line(_Role.doneTitle, bn ? 'পাঠ শেষ' : 'Lesson complete'),
+          _Line(
+            _Role.doneBody,
+            bn
+                ? 'কুইজে 70% সঠিক হলে পাঠ সম্পন্ন—পাবেন এই পাঠের সিল।'
+                : 'Score 70% in the quiz to complete the lesson and earn its seal.',
+          ),
+        ];
+    }
+  }
+
+  // ------------------------------------------------------------ navigation
+
+  void _goTo(int index, {double fraction = 0}) {
+    final target = index.clamp(0, _sections.length - 1);
+    _listenRun++;
+    setState(() {
+      _speaking = false;
+      _at = target;
+      _epoch++;
+      _initialFraction = fraction;
+      _scrollFraction = fraction;
+      _loadScript();
+    });
+    _saveSpot();
+  }
+
+  /// Next / previous section, with a short lock so a double tap moves once.
+  void _step(int delta) {
+    if (_navLocked || _isClaiming) return;
+    final target = _at + delta;
+    if (target < 0 || target >= _sections.length) return;
+    _navLocked = true;
+    _navTimer?.cancel();
+    _navTimer = Timer(const Duration(milliseconds: 250), () => _navLocked = false);
+    _userMoved = true;
+    HapticFeedback.selectionClick();
+    _goTo(target);
+  }
+
+  void _onDragEnd(DragEndDetails d) {
+    final v = d.primaryVelocity ?? 0;
+    final dx = _dragDx;
+    _dragDx = 0;
+    if (v < -250 || (v.abs() <= 250 && dx < -60)) {
+      if (!_onLast) _step(1);
+    } else if (v > 250 || (v.abs() <= 250 && dx > 60)) {
+      _step(-1);
+    }
+  }
+
+  // ---------------------------------------------------------------- resume
+
+  ReaderSpot get _spot => ReaderSpot(
+        phaseIndex: _phases.indexOf(_section.phase),
+        pointIndex: _section.point,
+        scrollFraction: _scrollFraction,
+      );
+
+  void _saveSpot() {
+    if (_finished || widget.lesson.isCompleted) return;
+    unawaited(ReaderResume.save(widget.lesson.id, _spot));
+  }
+
+  Future<void> _restoreSpot() async {
+    final spot = await ReaderResume.load(widget.lesson.id);
+    if (spot == null || !mounted || _userMoved || _finished) return;
+    if (spot.phaseIndex >= _phases.length) return;
+    final phase = _phases[spot.phaseIndex];
+    final point = _points.isEmpty ? 0 : spot.pointIndex.clamp(0, _points.length - 1);
+    final target = _sections.indexWhere((s) => s.phase == phase && (phase != _Phase.point || s.point == point));
+    if (target < 0 || (target == 0 && spot.scrollFraction < 0.02)) return;
+    _goTo(target, fraction: phase == _Phase.done ? 0 : spot.scrollFraction);
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text(
+          widget.bn ? 'আগের জায়গা থেকে' : 'Back where you left off',
+          style: const TextStyle(fontFamily: banglaFont, fontWeight: FontWeight.w600),
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        backgroundColor: const Color(0xFF3F3A36),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------ read-aloud
 
   Future<void> _stopVoice() async {
     _listenRun++;
-    _neuralRun = false;
-    await _neural.stop();
-    await _voice.stop();
-    if (mounted) {
-      setState(() {
-        _speaking = false;
-        _voiceBusy = false;
-        _nowReading = null;
-      });
-    }
+    await _reader.stop();
+    if (mounted && _speaking) setState(() => _speaking = false);
   }
 
-  List<NeuralClip> _pageClips() {
-    final lesson = widget.lesson;
-    final out = <NeuralClip>[];
-    switch (_phases[_phaseIndex]) {
-      case _Phase.hero:
-        out
-          ..addAll(lessonWelcomeClips)
-          ..addAll(lessonTitleClips(lesson.chapterNumber, lesson.title))
-          ..addAll(lessonSubheadClips('প্রথমে এটা বুঝুন'));
-        final brief = lesson.missionBriefing;
-        out.addAll(lessonBodyClips(brief != null && brief.isNotEmpty ? brief : 'এই পাঠের মূল কথা পরের ধাপে আসবে।'));
-      case _Phase.point:
-        if (_pointsFinished) {
-          out
-            ..addAll(lessonSubheadClips('সব ধাপ সম্পন্ন'))
-            ..addAll(lessonBodyClips(_points.map((p) => '• ${p.itemName}').join('\n')));
-        } else {
-          final p = _points[_pointDone.clamp(0, _points.length - 1)];
-          out.addAll(lessonSubheadClips(p.itemName));
-          if (p.specifications != null) out.addAll(lessonBodyClips(p.specifications!));
-          if (p.importance != null) {
-            out
-              ..addAll(lessonSubheadClips('কেন জরুরি'))
-              ..addAll(lessonBodyClips(p.importance!));
-          }
-          if (p.dailyCheck != null) {
-            out
-              ..addAll(lessonSubheadClips('কাজের আগে চেক'))
-              ..addAll(lessonBodyClips(p.dailyCheck!));
-          }
-        }
-      case _Phase.tip:
-        out.addAll(lessonSubheadClips('কাজের সহজ টিপ'));
-        for (final tip in lesson.proTips) {
-          out.addAll(lessonBodyClips(tip));
-        }
-      case _Phase.myth:
-        out.addAll(lessonSubheadClips('ভুল কথা এবং সত্য কথা'));
-        for (final myth in lesson.myths) {
-          out
-            ..addAll(lessonSubheadClips('ভুল'))
-            ..addAll(lessonBodyClips(myth.myth))
-            ..addAll(lessonSubheadClips('সত্য'))
-            ..addAll(lessonBodyClips(myth.reality));
-        }
-      case _Phase.done:
-        out.addAll(lessonQuizCallClips);
+  Future<void> _toggleListen() async {
+    if (_speaking) {
+      await _stopVoice();
+      return;
     }
-    return out;
-  }
-
-  Future<void> _listenNeural() async {
+    HapticFeedback.selectionClick();
     final run = ++_listenRun;
-    _neuralRun = true;
-    final ok = await _neural.play(
-      _pageClips(),
-      onClip: (_, clip) {
-        if (mounted) setState(() => _nowReading = clip.text);
-      },
-      fallback: (text) async {
-        await _voice.speakAwait(text);
-        return _voice.language != null;
-      },
-    );
+    setState(() => _speaking = true);
+    var ok = false;
+    try {
+      ok = await _reader.start();
+    } catch (_) {}
     if (!mounted || run != _listenRun) return;
-    _neuralRun = false;
-    setState(() {
-      _speaking = false;
-      _voiceBusy = false;
-      _nowReading = null;
-    });
+    setState(() => _speaking = false);
     if (!ok) _noVoiceNotice();
+  }
+
+  /// Keeps the line being read on screen.
+  void _followSentence() {
+    final a = _reader.active.value;
+    if (a == null) return;
+    var line = -1;
+    for (var i = 0; i < _script.length; i++) {
+      if (a >= _offsets[i] && a < _offsets[i] + _script[i].sentences.length) {
+        line = i;
+        break;
+      }
+    }
+    if (line < 0 || line == _followedLine) return;
+    _followedLine = line;
+    final ctx = _keys[line].currentContext;
+    if (ctx == null) return;
+    unawaited(Scrollable.ensureVisible(
+      ctx,
+      alignment: 0.2,
+      duration: _reduceMotion ? Duration.zero : const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+    ));
   }
 
   void _noVoiceNotice() {
@@ -211,97 +491,12 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     );
   }
 
-  String _pageSpeech() {
-    final lesson = widget.lesson;
-    final bn = widget.bn;
-    final phase = _phases[_phaseIndex];
-    final buf = StringBuffer();
-
-    switch (phase) {
-      case _Phase.hero:
-        buf.writeln(lesson.title);
-        if (lesson.missionBriefing != null && lesson.missionBriefing!.isNotEmpty) {
-          buf.writeln(lesson.missionBriefing!);
-        } else {
-          buf.writeln(bn ? 'এই পাঠের মূল কথা পরের ধাপে আসবে।' : 'The main points come next.');
-        }
-      case _Phase.point:
-        if (_pointsFinished) {
-          buf.writeln(bn ? 'সব ধাপ সম্পন্ন।' : 'All steps done.');
-          for (final p in _points) {
-            buf.writeln(p.itemName);
-          }
-        } else {
-          final p = _points[_pointDone.clamp(0, _points.length - 1)];
-          buf.writeln(p.itemName);
-          if (p.specifications != null) buf.writeln(p.specifications!);
-          if (p.importance != null) {
-            buf.writeln(bn ? 'কেন জরুরি।' : 'Why it matters.');
-            buf.writeln(p.importance!);
-          }
-          if (p.dailyCheck != null) {
-            buf.writeln(bn ? 'কাজের আগে চেক।' : 'Check before work.');
-            buf.writeln(p.dailyCheck!);
-          }
-        }
-      case _Phase.tip:
-        buf.writeln(bn ? 'কাজের সহজ টিপ।' : 'Easy field tip.');
-        for (final tip in lesson.proTips) {
-          buf.writeln(tip);
-        }
-      case _Phase.myth:
-        buf.writeln(bn ? 'ভুল কথা এবং সত্য কথা।' : 'Wrong and right.');
-        for (final myth in lesson.myths) {
-          buf.writeln(bn ? 'ভুল।' : 'Wrong.');
-          buf.writeln(myth.myth);
-          buf.writeln(bn ? 'সত্য।' : 'Right.');
-          buf.writeln(myth.reality);
-        }
-      case _Phase.done:
-        buf.writeln(bn ? 'পাঠ শেষ। নিচের বাটনে চাপুন।' : 'Lesson complete. Tap below.');
-    }
-    return buf.toString();
-  }
-
-  Future<void> _toggleListen() async {
-    if (_speaking || _voiceBusy) {
-      await _stopVoice();
-      return;
-    }
-    HapticFeedback.selectionClick();
-    setState(() => _voiceBusy = true);
-    if (widget.bn && neuralVoiceEnabled) {
-      unawaited(_listenNeural());
-      return;
-    }
-    try {
-      final ok = await _voice.speak(_pageSpeech());
-      if (!mounted) return;
-      if (!ok) {
-        _noVoiceNotice();
-        setState(() => _speaking = false);
-      }
-    } finally {
-      if (mounted) setState(() => _voiceBusy = false);
-    }
-  }
-
-  void _advance() {
-    HapticFeedback.selectionClick();
-    _stopVoice();
-    final phase = _phases[_phaseIndex];
-    if (phase == _Phase.point && _pointDone < _points.length) {
-      setState(() => _pointDone++);
-      return;
-    }
-    if (_phaseIndex < _phases.length - 1) {
-      setState(() => _phaseIndex++);
-    }
-  }
+  // ------------------------------------------------------------ quiz/claim
 
   Future<void> _claim() async {
     if (_isClaiming) return;
     await _stopVoice();
+    if (!mounted) return;
     setState(() => _isClaiming = true);
 
     final lesson = widget.lesson;
@@ -330,13 +525,8 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
       );
       if (!mounted) return;
       if (outcome != LessonQuizOutcome.passed) {
-        setState(() {
-          _isClaiming = false;
-          if (outcome == LessonQuizOutcome.readAgain) {
-            _phaseIndex = 0;
-            _pointDone = 0;
-          }
-        });
+        setState(() => _isClaiming = false);
+        if (outcome == LessonQuizOutcome.readAgain) _goTo(0);
         return;
       }
     }
@@ -344,6 +534,9 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
   }
 
   Future<void> _completeLesson() async {
+    // The lesson is done: its saved reading place goes.
+    _finished = true;
+    await ReaderResume.clear(widget.lesson.id);
     final wasRevision = widget.lesson.isCompleted;
     final module = widget.lesson.moduleNumber;
     var siblings = const <LessonCardItem>[];
@@ -449,6 +642,8 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     );
   }
 
+  // ------------------------------------------------------------ media/notes
+
   void _zoom(String url, String caption) {
     showDialog(
       context: context,
@@ -488,205 +683,159 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     );
   }
 
-  void _openNote(String body) {
+  void _openNote(String body, _Palette p) {
     final pipe = body.indexOf('|');
     final title = pipe >= 0 ? body.substring(pipe + 1).trim() : (widget.bn ? 'আরও জানুন' : 'More');
     final text = pipe >= 0 ? body.substring(0, pipe).trim() : body.trim();
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: _paper,
+      backgroundColor: p.bg,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.fromLTRB(22, 14, 22, 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(width: 42, height: 4, decoration: BoxDecoration(color: const Color(0xFFD8C7AE), borderRadius: BorderRadius.circular(99))),
-            ),
-            const SizedBox(height: 14),
-            Text(title, style: const TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w600, color: _accent)),
-            const SizedBox(height: 10),
-            Text(text, style: const TextStyle(fontFamily: banglaFont, fontSize: 17, height: 1.55, fontWeight: FontWeight.w500, color: _ink)),
-          ],
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(22, 14, 22, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(width: 42, height: 4, decoration: BoxDecoration(color: p.rule, borderRadius: BorderRadius.circular(99))),
+              ),
+              const SizedBox(height: 14),
+              Text(title, style: TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w600, color: p.accent)),
+              const SizedBox(height: 10),
+              Text(text, style: TextStyle(fontFamily: banglaFont, fontSize: 17, height: 1.7, fontWeight: FontWeight.w400, color: p.ink)),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  // ----------------------------------------------------------------- build
 
   @override
   Widget build(BuildContext context) {
-    final lesson = widget.lesson;
-    final bn = widget.bn;
-    final phase = _phases[_phaseIndex];
-    final totalSteps = 1 + _points.length + (lesson.proTips.isNotEmpty ? 1 : 0) + (lesson.myths.isNotEmpty ? 1 : 0);
-    var progress = 0;
-    if (phase == _Phase.hero) {
-      progress = 0;
-    } else if (phase == _Phase.point) {
-      progress = 1 + _pointDone.clamp(0, _points.length);
-    } else if (phase == _Phase.tip) {
-      progress = 1 + _points.length;
-    } else if (phase == _Phase.myth) {
-      progress = 1 + _points.length + (lesson.proTips.isNotEmpty ? 1 : 0);
-    } else {
-      progress = totalSteps;
-    }
-
-    String cta;
-    if (phase == _Phase.done) {
-      cta = lesson.isCompleted
-          ? (bn ? 'অনুশীলন কুইজ দিন' : 'Take practice quiz')
-          : (bn ? 'পুরোটা পড়েছি · কুইজ দিন' : 'I finished · take the quiz');
-    } else if (phase == _Phase.point && !_pointsFinished) {
-      cta = bn ? 'বুঝেছি · পরের ধাপ' : 'Got it · next step';
-    } else if (phase == _Phase.point && _pointsFinished) {
-      cta = bn ? 'সব ধাপ শেষ · এগোন' : 'All steps done · continue';
-    } else {
-      cta = bn ? 'পরের পাতা' : 'Next page';
-    }
-
-    final ratio = totalSteps == 0 ? 0.0 : progress / totalSteps;
+    final size = ref.watch(readerTextSizeProvider);
+    final theme = ref.watch(readerThemeProvider);
+    final p = readerIsNight(context, theme) ? _nightPalette : _dayPalette;
+    _reduceMotion = slmReduceMotion(context);
+    final system = MediaQuery.textScalerOf(context).scale(100) / 100;
+    final scale = (system * size.scale).clamp(_minScale, _maxScale).toDouble();
+    final type = _Type(scale, p);
+    final ratio = _sections.length <= 1 ? 1.0 : _at / (_sections.length - 1);
+    final page = KeyedSubtree(
+      key: ValueKey('section-$_at-$_epoch'),
+      child: _sectionView(p, type),
+    );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        backgroundColor: SlmColors.navy950,
-        body: Stack(
+      value: p.night ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: _maxScale,
+        child: Scaffold(
+          backgroundColor: p.bg,
+          bottomNavigationBar: _bottomBar(p),
+          body: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                _ProgressLine(value: ratio, palette: p, animate: !_reduceMotion),
+                _header(p, size, theme),
+                Expanded(
+                  child: GestureDetector(
+                    onHorizontalDragStart: (_) => _dragDx = 0,
+                    onHorizontalDragUpdate: (d) => _dragDx += d.delta.dx,
+                    onHorizontalDragEnd: _onDragEnd,
+                    child: MediaQuery(
+                      // Body sizes already carry the clamped scale.
+                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                      // Reduce motion: no switcher at all, the page changes at once.
+                      child: _reduceMotion
+                          ? page
+                          : AnimatedSwitcher(
+                              duration: _fade,
+                              switchInCurve: Curves.easeOut,
+                              switchOutCurve: Curves.easeIn,
+                              transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+                              layoutBuilder: (current, previous) => Stack(
+                                fit: StackFit.expand,
+                                children: [...previous, ?current],
+                              ),
+                              child: page,
+                            ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _header(_Palette p, ReaderTextSize size, ReaderTheme theme) {
+    final bn = widget.bn;
+    final iconColor = p.ink;
+    final off = p.soft.withValues(alpha: 0.4);
+    final themeIcon = switch (theme) {
+      ReaderTheme.day => Icons.light_mode_outlined,
+      ReaderTheme.night => Icons.dark_mode_outlined,
+      ReaderTheme.system => Icons.brightness_auto_outlined,
+    };
+    return SizedBox(
+      height: 52,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Row(
           children: [
-            Positioned.fill(
-              child: Theme(
-                data: SlmTheme.night(),
-                child: const SlmBackground(constrain: false, child: SizedBox.expand()),
+            IconButton(
+              key: const ValueKey('reader-close'),
+              tooltip: bn ? 'বন্ধ করুন' : 'Close',
+              onPressed: () async {
+                await _stopVoice();
+                if (mounted) Navigator.of(context).pop();
+              },
+              icon: Icon(Icons.close_rounded, color: iconColor),
+            ),
+            Expanded(
+              child: Text(
+                bn ? 'পাঠ ${widget.lesson.chapterNumber}' : 'Lesson ${widget.lesson.chapterNumber}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontFamily: banglaFont, fontSize: 13, fontWeight: FontWeight.w600, color: p.soft),
               ),
             ),
-            SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 2, 12, 4),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          onPressed: () async {
-                            await _stopVoice();
-                            if (context.mounted) Navigator.of(context).pop();
-                          },
-                          icon: const Icon(Icons.close_rounded, color: SlmColors.ivory),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                bn ? 'পাঠ ${lesson.chapterNumber}' : 'Lesson ${lesson.chapterNumber}',
-                                style: const TextStyle(
-                                  fontFamily: banglaFont,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
-                                  color: SlmColors.gold300,
-                                ),
-                              ),
-                              Text(
-                                lesson.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontFamily: banglaFont,
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: SlmColors.ivory,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _ListenButton(
-                          speaking: _speaking,
-                          busy: _voiceBusy,
-                          bn: bn,
-                          onTap: _toggleListen,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(end: ratio),
-                      duration: SlmMotion.slow,
-                      curve: SlmMotion.emphasized,
-                      builder: (context, value, _) => _ReaderBar(value: value, complete: phase == _Phase.done),
-                    ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(22),
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [_paper, _paperDeep],
-                          ),
-                          border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.55)),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 24, offset: const Offset(0, 10)),
-                          ],
-                        ),
-                        child: _NowReadingLayer(
-                          text: _speaking ? _nowReading : null,
-                          child: ClipRRect(
-                          borderRadius: BorderRadius.circular(21),
-                          child: AnimatedSwitcher(
-                            duration: SlmMotion.slow,
-                            reverseDuration: SlmMotion.fast,
-                            switchInCurve: SlmMotion.emphasized,
-                            switchOutCurve: Curves.easeInCubic,
-                            transitionBuilder: (child, anim) => FadeTransition(
-                              opacity: anim,
-                              child: SlideTransition(
-                                position: Tween(begin: const Offset(0.035, 0), end: Offset.zero).animate(anim),
-                                child: child,
-                              ),
-                            ),
-                            child: KeyedSubtree(
-                              key: ValueKey('$_phaseIndex-$_pointDone'),
-                              child: _buildBody(phase, lesson, bn),
-                            ),
-                          ),
-                        ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(18, 12, 18, 12 + MediaQuery.paddingOf(context).bottom * 0.15),
-                    child: Theme(
-                      data: SlmTheme.night(),
-                      child: SlmButton(
-                        label: cta,
-                        variant: phase == _Phase.done ? SlmButtonVariant.primary : SlmButtonVariant.gold,
-                        size: SlmButtonSize.large,
-                        expand: true,
-                        loading: _isClaiming,
-                        trailingIcon: phase == _Phase.done ? null : Icons.arrow_forward_rounded,
-                        onPressed: _isClaiming
-                            ? null
-                            : () {
-                                if (phase == _Phase.done) {
-                                  _claim();
-                                } else {
-                                  _advance();
-                                }
-                              },
-                      ),
-                    ),
-                  ),
-                ],
+            IconButton(
+              key: const ValueKey('reader-smaller'),
+              tooltip: bn ? 'লেখা ছোট করুন' : 'Smaller text',
+              onPressed: size == ReaderTextSize.values.first ? null : () => ref.read(readerTextSizeProvider.notifier).smaller(),
+              icon: const Icon(Icons.text_decrease_rounded),
+              color: iconColor,
+              disabledColor: off,
+            ),
+            IconButton(
+              key: const ValueKey('reader-bigger'),
+              tooltip: bn ? 'লেখা বড় করুন' : 'Larger text',
+              onPressed: size == ReaderTextSize.values.last ? null : () => ref.read(readerTextSizeProvider.notifier).bigger(),
+              icon: const Icon(Icons.text_increase_rounded),
+              color: iconColor,
+              disabledColor: off,
+            ),
+            IconButton(
+              key: const ValueKey('reader-theme'),
+              tooltip: bn ? 'পাতার রং বদলান' : 'Page colour',
+              onPressed: () => ref.read(readerThemeProvider.notifier).cycle(),
+              icon: Icon(themeIcon, color: iconColor),
+            ),
+            IconButton(
+              key: const ValueKey('reader-listen'),
+              tooltip: _speaking ? (bn ? 'থামান' : 'Stop') : (bn ? 'শুনুন' : 'Listen'),
+              onPressed: _toggleListen,
+              icon: Icon(
+                _speaking ? Icons.stop_circle_outlined : Icons.headphones_rounded,
+                color: _speaking ? p.accent : iconColor,
               ),
             ),
           ],
@@ -695,358 +844,431 @@ class _LessonReaderPageState extends ConsumerState<LessonReaderPage> {
     );
   }
 
-  Widget _buildBody(_Phase phase, LessonCardItem lesson, bool bn) {
-    switch (phase) {
-      case _Phase.hero:
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(26, 18, 26, 28),
+  Widget _bottomBar(_Palette p) {
+    final bn = widget.bn;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final back = IconButton(
+      key: const ValueKey('reader-back'),
+      tooltip: bn ? 'আগের ধাপ' : 'Previous step',
+      onPressed: _at == 0 || _isClaiming ? null : () => _step(-1),
+      icon: const Icon(Icons.chevron_left_rounded, size: 28),
+      color: p.ink,
+      disabledColor: p.soft.withValues(alpha: 0.35),
+    );
+    final Widget bar;
+    if (_onLast) {
+      final cta = widget.lesson.isCompleted
+          ? (bn ? 'অনুশীলন কুইজ দিন' : 'Take practice quiz')
+          : (bn ? 'পুরোটা পড়েছি · কুইজ দিন' : 'I finished · take the quiz');
+      bar = Padding(
+        padding: const EdgeInsets.fromLTRB(4, 8, 16, 10),
+        child: Row(
           children: [
-            Text(
-              lesson.title,
-              style: const TextStyle(
-                fontFamily: banglaFont,
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                height: 1.38,
-                color: _ink,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Container(
-              height: 1.2,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: [SlmColors.gold500, Color(0x00BF9443)]),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              bn ? 'প্রথমে এটা বুঝুন' : 'Understand this first',
-              style: const TextStyle(
-                fontFamily: banglaFont,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-                color: _accent,
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (lesson.missionBriefing != null && lesson.missionBriefing!.isNotEmpty)
-              LessonRichText(
-                text: lesson.missionBriefing!,
-                bn: bn,
-                style: const TextStyle(
-                  fontFamily: banglaFont,
-                  fontSize: 19.5,
-                  height: 1.72,
-                  fontWeight: FontWeight.w500,
-                  color: _ink,
+            back,
+            const SizedBox(width: 4),
+            Expanded(
+              child: Theme(
+                data: p.night ? SlmTheme.night() : SlmTheme.day(),
+                child: SlmButton(
+                  key: const ValueKey('reader-cta'),
+                  label: cta,
+                  variant: SlmButtonVariant.primary,
+                  size: SlmButtonSize.large,
+                  expand: true,
+                  loading: _isClaiming,
+                  onPressed: _isClaiming ? null : _claim,
                 ),
-                onOpenImage: _zoom,
-                onOpenNote: _openNote,
-              )
-            else
-              Text(
-                bn ? 'এই পাঠের মূল কথা পরের ধাপে আসবে।' : 'The main points come next.',
-                style: const TextStyle(fontFamily: banglaFont, fontSize: 18, height: 1.6, color: _softInk),
               ),
-            const SizedBox(height: 28),
-            Text(
-              bn ? 'উপরে শুনুন বাটনে চাপুন — অথবা নিচে পরের পাতায় যান।' : 'Tap Listen above — or turn the page below.',
-              style: const TextStyle(fontFamily: banglaFont, fontSize: 13.5, height: 1.5, color: Color(0xFF8A7464)),
             ),
           ],
-        );
-      case _Phase.point:
-        return _GuidedPoints(
-          points: _points,
-          done: _pointDone,
-          bn: bn,
-          onZoom: _zoom,
-          onOpenNote: _openNote,
-        );
-      case _Phase.tip:
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(26, 16, 26, 28),
-          children: [
-            Text(
-              bn ? 'কাজের সহজ টিপ' : 'Easy field tip',
-              style: const TextStyle(fontFamily: banglaFont, fontSize: 24, fontWeight: FontWeight.w700, color: _ink),
-            ),
-            const SizedBox(height: 16),
-            for (final tip in lesson.proTips)
-              Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF8EF),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE8D2B0)),
-                ),
-                child: LessonRichText(
-                  text: tip,
-                  bn: bn,
-                  style: const TextStyle(fontFamily: banglaFont, fontSize: 18, height: 1.65, fontWeight: FontWeight.w500, color: _ink),
-                  onOpenImage: _zoom,
-                  onOpenNote: _openNote,
+        ),
+      );
+    } else {
+      bar = SizedBox(
+        height: 52,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            children: [
+              back,
+              Expanded(
+                child: Text(
+                  bn ? 'ধাপ ${_at + 1}/${_sections.length}' : 'Step ${_at + 1}/${_sections.length}',
+                  key: const ValueKey('reader-position'),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontFamily: banglaFont, fontSize: 13, fontWeight: FontWeight.w600, color: p.soft),
                 ),
               ),
-          ],
-        );
-      case _Phase.myth:
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(26, 16, 26, 28),
-          children: [
-            Text(
-              bn ? 'ভুল কথা · সত্য কথা' : 'Wrong · Right',
-              style: const TextStyle(fontFamily: banglaFont, fontSize: 24, fontWeight: FontWeight.w700, color: _ink),
-            ),
-            const SizedBox(height: 16),
-            for (final myth in lesson.myths)
-              Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFBF6),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE8D2B0)),
+              TextButton(
+                key: const ValueKey('reader-next'),
+                onPressed: _isClaiming ? null : () => _step(1),
+                style: TextButton.styleFrom(
+                  foregroundColor: p.accent,
+                  minimumSize: const Size(48, 48),
+                  padding: const EdgeInsets.only(left: 12, right: 6),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(bn ? 'ভুল' : 'Wrong', style: const TextStyle(fontFamily: banglaFont, fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFB91C1C))),
-                    const SizedBox(height: 6),
-                    LessonRichText(
-                      text: myth.myth,
-                      bn: bn,
-                      style: const TextStyle(fontFamily: banglaFont, fontSize: 17.5, height: 1.55, fontWeight: FontWeight.w600, color: Color(0xFF7F1D1D)),
-                      onOpenImage: _zoom,
-                      onOpenNote: _openNote,
+                    Text(
+                      bn ? 'পরের ধাপ' : 'Next step',
+                      style: const TextStyle(fontFamily: banglaFont, fontSize: 15, fontWeight: FontWeight.w700),
                     ),
-                    const SizedBox(height: 14),
-                    Text(bn ? 'সত্য' : 'Right', style: const TextStyle(fontFamily: banglaFont, fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF166534))),
-                    const SizedBox(height: 6),
-                    LessonRichText(
-                      text: myth.reality,
-                      bn: bn,
-                      style: const TextStyle(fontFamily: banglaFont, fontSize: 17.5, height: 1.55, fontWeight: FontWeight.w500, color: Color(0xFF14532D)),
-                      onOpenImage: _zoom,
-                      onOpenNote: _openNote,
-                    ),
+                    const Icon(Icons.chevron_right_rounded, size: 24),
                   ],
                 ),
               ),
-          ],
-        );
-      case _Phase.done:
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 112,
-                  height: 112,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.none,
-                    children: [
-                      SlmSparkBurst(playOnMount: true, radius: 78),
-                      SlmReveal(rise: 0, child: _DoneMedal()),
+            ],
+          ),
+        ),
+      );
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: p.bg,
+        border: Border(top: BorderSide(color: p.rule)),
+      ),
+      child: Padding(padding: EdgeInsets.only(bottom: bottom), child: bar),
+    );
+  }
+
+  // --------------------------------------------------------------- content
+
+  Widget _sectionView(_Palette p, _Type type) {
+    final width = MediaQuery.sizeOf(context).width;
+    final side = width < 400 ? 20.0 : 24.0;
+    final lines = _script;
+    final offsets = _offsets;
+    final keys = _keys;
+    if (_section.phase == _Phase.done) {
+      return LayoutBuilder(
+        builder: (context, box) => SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: side, vertical: 24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: (box.maxHeight - 48).clamp(0, double.infinity)),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: _maxTextWidth),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 112,
+                      height: 112,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          SlmSparkBurst(playOnMount: true, radius: 78),
+                          SlmReveal(rise: 0, child: _DoneMedal()),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    for (var i = 0; i < lines.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 10),
+                      KeyedSubtree(key: keys[i], child: _lineView(lines[i], offsets[i], p, type)),
                     ],
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  bn ? 'পাঠ শেষ' : 'Lesson complete',
-                  style: const TextStyle(fontFamily: banglaFont, fontSize: 28, fontWeight: FontWeight.w700, color: _ink),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  bn
-                      ? 'কুইজে 70% সঠিক হলে পাঠ সম্পন্ন—পাবেন এই পাঠের সিল।'
-                      : 'Score 70% in the quiz to complete the lesson and earn its seal.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontFamily: banglaFont, fontSize: 16, height: 1.5, color: _softInk),
-                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return _SectionScroll(
+      initialFraction: _initialFraction,
+      onFraction: (f) => _scrollFraction = f,
+      builder: (controller) => SingleChildScrollView(
+        controller: controller,
+        padding: EdgeInsets.fromLTRB(side, 20, side, 32),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _maxTextWidth),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < lines.length; i++) ...[
+                  if (i > 0) SizedBox(height: _gap(lines[i - 1], lines[i])),
+                  KeyedSubtree(key: keys[i], child: _lineView(lines[i], offsets[i], p, type)),
+                ],
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  static final _bulletLead = RegExp(r'^(?:[•·\-*–]|[0-9০-৯]+[.)।])\s*');
+
+  /// Space above [b]: paragraphs 14, list items 8, headings 24, a myth's
+  /// truth sits right under its myth.
+  double _gap(_Line a, _Line b) {
+    if (b.role == _Role.right) return 2;
+    if (b.role == _Role.wrong && a.role == _Role.right) return 16;
+    switch (b.role) {
+      case _Role.overline:
+        return 20;
+      case _Role.subheading:
+        return 24;
+      case _Role.image:
+        return 16;
+      case _Role.hint:
+        return a.role == _Role.body ? 24 : 14;
+      default:
+        break;
+    }
+    if (a.role == _Role.heading || a.role == _Role.overline || a.role == _Role.subheading) return 10;
+    if (a.role == _Role.body && b.role == _Role.body && _bulletLead.hasMatch(b.text) && _bulletLead.hasMatch(a.text)) return 8;
+    return 14;
+  }
+
+  Widget _lineView(_Line line, int offset, _Palette p, _Type type) {
+    final style = switch (line.role) {
+      _Role.title => type.title,
+      _Role.overline => type.overline,
+      _Role.heading => type.heading,
+      _Role.subheading => type.subheading,
+      _Role.hint => type.caption,
+      _Role.doneTitle => type.title,
+      _Role.doneBody => type.caption.copyWith(fontSize: type.body.fontSize! * 0.9),
+      _ => type.body,
+    };
+    final align = line.role == _Role.doneTitle || line.role == _Role.doneBody ? TextAlign.center : TextAlign.start;
+
+    if (line.role == _Role.image) {
+      final url = line.imageUrl!;
+      final caption = line.text.trim();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LessonFigurePlate(
+            imageUrl: url,
+            paperColor: p.plate,
+            radius: 12,
+            onTap: () => _zoom(url, caption.isNotEmpty ? caption : _points[_section.point].itemName),
+          ),
+          if (caption.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(caption, style: type.caption),
+          ],
+        ],
+      );
+    }
+
+    Widget text(int? active) {
+      if (line.rich) {
+        return LessonRichText(
+          text: line.text,
+          bn: widget.bn,
+          style: style,
+          figurePaper: p.plate,
+          captionStyle: type.caption,
+          onOpenImage: _zoom,
+          onOpenNote: (body) => _openNote(body, p),
         );
+      }
+      return Align(
+        alignment: align == TextAlign.center ? Alignment.center : AlignmentDirectional.centerStart,
+        child: DefaultTextStyle.merge(
+          textAlign: align,
+          child: HighlightedParagraph(text: line.text, activeSentence: active, style: style, highlight: p.highlight),
+        ),
+      );
+    }
+
+    Widget follow(Widget Function(int? local) build) {
+      if (line.sentences.isEmpty) return build(null);
+      return ValueListenableBuilder<int?>(
+        valueListenable: _reader.active,
+        builder: (context, active, _) {
+          final local = active == null ? null : active - offset;
+          final inLine = local != null && local >= 0 && local < line.sentences.length ? local : null;
+          return build(inLine);
+        },
+      );
+    }
+
+    switch (line.role) {
+      case _Role.tip:
+        return follow((local) => _EdgeBlock(
+              tint: p.tipTint,
+              edge: p.tipEdge,
+              reading: line.rich && local != null ? p.highlight : null,
+              child: text(line.rich ? null : local),
+            ));
+      case _Role.wrong:
+      case _Role.right:
+        final wrong = line.role == _Role.wrong;
+        return follow((local) {
+          final onLabel = local != null && local < line.labelSentences;
+          final inText = local == null || onLabel ? null : local - line.labelSentences;
+          return _EdgeBlock(
+            tint: wrong ? p.wrongTint : p.rightTint,
+            edge: wrong ? p.wrongEdge : p.rightEdge,
+            reading: line.rich && inText != null ? p.highlight : null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _Label(
+                  text: line.label!,
+                  color: wrong ? p.wrongLabel : p.rightLabel,
+                  fill: wrong ? p.wrongChip : p.rightChip,
+                  style: type.label,
+                  reading: onLabel,
+                ),
+                const SizedBox(height: 8),
+                text(line.rich ? null : inText),
+              ],
+            ),
+          );
+        });
+      default:
+        return follow((local) {
+          final child = text(line.rich ? null : local);
+          if (!line.rich || local == null) return child;
+          return DecoratedBox(
+            decoration: BoxDecoration(
+              color: p.highlight.withValues(alpha: HighlightedParagraph.highlightAlpha),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: child,
+          );
+        });
     }
   }
 }
 
-/// Caption of the sentence being read, floating at the foot of the page.
-class _NowReadingLayer extends StatelessWidget {
-  final String? text;
+/// Thin progress line on the very top edge. Moves once per page turn, then
+/// stands still.
+class _ProgressLine extends StatelessWidget {
+  final double value;
+  final _Palette palette;
+  final bool animate;
+
+  const _ProgressLine({required this.value, required this.palette, required this.animate});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: const ValueKey('reader-progress'),
+      height: 3,
+      child: ColoredBox(
+        color: palette.track,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(end: value.clamp(0.0, 1.0)),
+          duration: animate ? const Duration(milliseconds: 200) : Duration.zero,
+          curve: Curves.easeOutCubic,
+          builder: (context, v, _) => Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: FractionallySizedBox(
+              widthFactor: v,
+              heightFactor: 1,
+              child: ColoredBox(color: palette.progress),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Owns one section's scroll position: starts at [initialFraction] and
+/// reports how far down the reader is.
+class _SectionScroll extends StatefulWidget {
+  final double initialFraction;
+  final ValueChanged<double> onFraction;
+  final Widget Function(ScrollController controller) builder;
+
+  const _SectionScroll({required this.initialFraction, required this.onFraction, required this.builder});
+
+  @override
+  State<_SectionScroll> createState() => _SectionScrollState();
+}
+
+class _SectionScrollState extends State<_SectionScroll> {
+  final _controller = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_report);
+    if (widget.initialFraction > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_controller.hasClients) return;
+        final max = _controller.position.maxScrollExtent;
+        _controller.jumpTo(max * widget.initialFraction);
+      });
+    }
+  }
+
+  void _report() {
+    if (!_controller.hasClients) return;
+    final max = _controller.position.maxScrollExtent;
+    widget.onFraction(max <= 0 ? 0 : (_controller.offset / max).clamp(0.0, 1.0));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(_controller);
+}
+
+/// Light tinted block with a 3 dp coloured left edge (tips, myths).
+class _EdgeBlock extends StatelessWidget {
+  final Color tint;
+  final Color edge;
+  final Color? reading;
   final Widget child;
 
-  const _NowReadingLayer({required this.text, required this.child});
+  const _EdgeBlock({required this.tint, required this.edge, required this.child, this.reading});
 
   @override
   Widget build(BuildContext context) {
-    final line = text;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        child,
-        Positioned(
-          left: 10,
-          right: 10,
-          bottom: 10,
-          child: IgnorePointer(
-            child: AnimatedSwitcher(
-              duration: SlmMotion.base,
-              switchInCurve: SlmMotion.emphasized,
-              transitionBuilder: (c, anim) => FadeTransition(
-                opacity: anim,
-                child: SlideTransition(
-                  position: Tween(begin: const Offset(0, 0.25), end: Offset.zero).animate(anim),
-                  child: c,
-                ),
-              ),
-              child: line == null
-                  ? const SizedBox.shrink()
-                  : Container(
-                      key: ValueKey(line),
-                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 11),
-                      decoration: BoxDecoration(
-                        color: SlmColors.navy900.withValues(alpha: 0.94),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6)),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 6)),
-                        ],
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(top: 3),
-                            child: Icon(Icons.graphic_eq_rounded, size: 18, color: SlmColors.gold300),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              line,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: banglaFont,
-                                fontSize: 15.5,
-                                height: 1.45,
-                                fontWeight: FontWeight.w600,
-                                color: SlmColors.gold100,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ListenButton extends StatelessWidget {
-  final bool speaking;
-  final bool busy;
-  final bool bn;
-  final VoidCallback onTap;
-
-  const _ListenButton({
-    required this.speaking,
-    required this.busy,
-    required this.bn,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: speaking ? (bn ? 'থামান' : 'Stop') : (bn ? 'শুনুন' : 'Listen'),
-      child: Material(
-        color: speaking ? SlmColors.emerald700 : SlmColors.navy800,
-        shape: StadiumBorder(
-          side: BorderSide(color: SlmColors.gold400.withValues(alpha: speaking ? 0.9 : 0.55)),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(99),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 14, 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (busy)
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: SlmColors.gold200),
-                  )
-                else
-                  Icon(
-                    speaking ? Icons.stop_rounded : Icons.headphones_rounded,
-                    size: 18,
-                    color: SlmColors.gold200,
-                  ),
-                const SizedBox(width: 6),
-                Text(
-                  speaking ? (bn ? 'থামান' : 'Stop') : (bn ? 'শুনুন' : 'Listen'),
-                  style: const TextStyle(
-                    fontFamily: banglaFont,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: SlmColors.gold100,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ReaderBar extends StatelessWidget {
-  final double value;
-  final bool complete;
-
-  const _ReaderBar({required this.value, required this.complete});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 6,
-      padding: const EdgeInsets.all(1),
+    final fill = reading == null ? tint : Color.alphaBlend(reading!.withValues(alpha: HighlightedParagraph.highlightAlpha), tint);
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: SlmColors.navy950,
-        borderRadius: SlmRadius.pillAll,
-        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.25), width: 0.8),
+        color: fill,
+        borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+        border: Border(left: BorderSide(color: edge, width: 3)),
       ),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: FractionallySizedBox(
-          widthFactor: value.clamp(0.0, 1.0),
-          heightFactor: 1,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: complete ? SlmGradients.emerald : SlmGradients.gold,
-              borderRadius: SlmRadius.pillAll,
-              boxShadow: [
-                BoxShadow(
-                  color: (complete ? SlmColors.emerald400 : SlmColors.gold400).withValues(alpha: 0.5),
-                  blurRadius: 6,
-                ),
-              ],
-            ),
-          ),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _Label extends StatelessWidget {
+  final String text;
+  final Color color;
+  final Color fill;
+  final TextStyle style;
+  final bool reading;
+
+  const _Label({required this.text, required this.color, required this.fill, required this.style, required this.reading});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(6),
+        border: reading ? Border.all(color: color, width: 1.5) : null,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: Text(text, style: style.copyWith(color: color)),
       ),
     );
   }
@@ -1076,275 +1298,6 @@ class _DoneMedal extends StatelessWidget {
           ),
         ),
         child: Icon(Icons.menu_book_rounded, size: 44, color: SlmColors.gold100),
-      ),
-    );
-  }
-}
-
-class _GuidedPoints extends StatelessWidget {
-  final List<LessonSectionPoint> points;
-  final int done;
-  final bool bn;
-  final void Function(String, String) onZoom;
-  final void Function(String) onOpenNote;
-
-  const _GuidedPoints({
-    required this.points,
-    required this.done,
-    required this.bn,
-    required this.onZoom,
-    required this.onOpenNote,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final finished = done >= points.length;
-    final active = finished ? points.length : done.clamp(0, points.length - 1);
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-      children: [
-        Row(
-          children: [
-            Text(
-              finished
-                  ? (bn ? 'সব ধাপ সম্পন্ন' : 'All steps done')
-                  : (bn ? 'ধাপ ${active + 1} / ${points.length}' : 'Step ${active + 1} / ${points.length}'),
-              style: const TextStyle(fontFamily: banglaFont, fontSize: 13, fontWeight: FontWeight.w700, color: SlmColors.gold700),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Row(
-                children: [
-                  for (var i = 0; i < points.length; i++)
-                    Expanded(
-                      child: AnimatedContainer(
-                        duration: SlmMotion.slow,
-                        curve: SlmMotion.emphasized,
-                        height: 4,
-                        margin: EdgeInsets.only(right: i == points.length - 1 ? 0 : 3),
-                        decoration: BoxDecoration(
-                          color: i < done
-                              ? SlmColors.emerald600
-                              : (!finished && i == done)
-                                  ? SlmColors.gold500
-                                  : const Color(0xFFDCD2BE),
-                          borderRadius: SlmRadius.pillAll,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (finished)
-          for (final point in points) _DoneChip(title: point.itemName)
-        else
-          for (var i = 0; i < points.length; i++)
-            if (i < done)
-              _DoneChip(title: points[i].itemName)
-            else if (i == done)
-              _ActivePointCard(index: i + 1, point: points[i], bn: bn, onZoom: onZoom, onOpenNote: onOpenNote)
-            else
-              _LockedChip(title: points[i].itemName),
-      ],
-    );
-  }
-}
-
-class _DoneChip extends StatelessWidget {
-  final String title;
-  const _DoneChip({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFA7F3D0)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_rounded, color: AppColors.safeGreen, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(fontFamily: banglaFont, fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF065F46)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LockedChip extends StatelessWidget {
-  final String title;
-  const _LockedChip({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFDFD0BA)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.lock_outline_rounded, color: Color(0xFFB8A894), size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontFamily: banglaFont, fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFFB8A894)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActivePointCard extends StatelessWidget {
-  final int index;
-  final LessonSectionPoint point;
-  final bool bn;
-  final void Function(String, String) onZoom;
-  final void Function(String) onOpenNote;
-
-  const _ActivePointCard({
-    required this.index,
-    required this.point,
-    required this.bn,
-    required this.onZoom,
-    required this.onOpenNote,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final img = point.fullImageUrl;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFDF8),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.5)),
-        boxShadow: [BoxShadow(color: SlmColors.navy900.withValues(alpha: 0.08), blurRadius: 14, offset: const Offset(0, 6))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: SlmGradients.gold,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: SlmColors.gold700.withValues(alpha: 0.6)),
-                ),
-                child: Text(
-                  '$index',
-                  style: const TextStyle(fontFamily: banglaFont, fontSize: 16, fontWeight: FontWeight.w700, color: SlmColors.navy900),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  point.itemName,
-                  style: const TextStyle(fontFamily: banglaFont, fontSize: 21, fontWeight: FontWeight.w700, height: 1.35, color: SlmColors.ink),
-                ),
-              ),
-            ],
-          ),
-          if (img != null && img.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            LessonFigurePlate(
-              imageUrl: img,
-              paperColor: const Color(0xFFEADFCB),
-              onTap: () => onZoom(img, point.imageCaption ?? point.itemName),
-            ),
-          ],
-          if (point.specifications != null && point.specifications!.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            LessonRichText(
-              text: point.specifications!,
-              bn: bn,
-              style: const TextStyle(fontFamily: banglaFont, fontSize: 17.5, height: 1.65, fontWeight: FontWeight.w500, color: Color(0xFF1F1A14)),
-              onOpenImage: onZoom,
-              onOpenNote: onOpenNote,
-            ),
-          ],
-          if (point.importance != null && point.importance!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _FactBox(
-              tint: const Color(0xFFF3F0E8),
-              title: bn ? 'কেন জরুরি' : 'Why it matters',
-              child: LessonRichText(
-                text: point.importance!,
-                bn: bn,
-                style: const TextStyle(fontFamily: banglaFont, fontSize: 16.5, height: 1.6, fontWeight: FontWeight.w500, color: Color(0xFF1F1A14)),
-                onOpenImage: onZoom,
-                onOpenNote: onOpenNote,
-              ),
-            ),
-          ],
-          if (point.dailyCheck != null && point.dailyCheck!.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            _FactBox(
-              tint: const Color(0xFFEFF7F1),
-              title: bn ? 'কাজের আগে চেক' : 'Check before work',
-              child: LessonRichText(
-                text: point.dailyCheck!,
-                bn: bn,
-                style: const TextStyle(fontFamily: banglaFont, fontSize: 16.5, height: 1.6, fontWeight: FontWeight.w500, color: Color(0xFF1F1A14)),
-                onOpenImage: onZoom,
-                onOpenNote: onOpenNote,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _FactBox extends StatelessWidget {
-  final Color tint;
-  final String title;
-  final Widget child;
-
-  const _FactBox({required this.tint, required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: tint, borderRadius: BorderRadius.circular(14)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontFamily: banglaFont, fontSize: 12.5, fontWeight: FontWeight.w700, letterSpacing: 0.3, color: SlmColors.gold700),
-          ),
-          const SizedBox(height: 6),
-          child,
-        ],
       ),
     );
   }

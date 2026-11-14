@@ -17,9 +17,9 @@ Future<bool> showGameExitSheet(
       : (bn ? 'খেলা ছাড়বেন?' : 'Leave the game?');
   final body = scope == GameExitScope.level
       ? (bn
-          ? 'মইয়ে ফিরে যাবেন। এই ধাপের চলতি কাজ সংরক্ষিত হবে না।'
+          ? 'মইয়ে ফিরবেন? এই ধাপের কাজ সেভ থাকবে না।'
           : 'Return to the ladder. Progress on this step will not be saved.')
-      : (bn ? 'হোমে ফিরে যাবেন। স্কোর সংরক্ষিত থাকবে।' : 'Return home. Your score stays saved.');
+      : (bn ? 'হোমে ফিরবেন? আপনার স্কোর জমা থাকবে।' : 'Return home. Your score stays saved.');
   final yes = scope == GameExitScope.level
       ? (bn ? 'হ্যাঁ, মইয়ে ফিরি' : 'Yes, back to ladder')
       : (bn ? 'হ্যাঁ, হোমে' : 'Yes, go home');

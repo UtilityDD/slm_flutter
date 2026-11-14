@@ -55,6 +55,10 @@ class GameSave {
 
   /// "ভাগ্যের টুলবক্স": keys from finished levels, pity counter, pending boosts.
   final ToolboxSave toolbox;
+
+  /// Lesson ids whose Learn explainer video was watched through once. The
+  /// first watch can't be skipped; later visits may skip it.
+  final Set<String> videosWatched;
   final bool migratedFromDs;
 
   const GameSave({
@@ -80,6 +84,7 @@ class GameSave {
     this.nearMissUsed = false,
     this.starsByRung = const {},
     this.toolbox = const ToolboxSave(),
+    this.videosWatched = const <String>{},
     required this.migratedFromDs,
   });
 
@@ -122,6 +127,7 @@ class GameSave {
     bool? nearMissUsed,
     Map<String, int>? starsByRung,
     ToolboxSave? toolbox,
+    Set<String>? videosWatched,
     bool? migratedFromDs,
   }) {
     return GameSave(
@@ -147,6 +153,7 @@ class GameSave {
       nearMissUsed: nearMissUsed ?? this.nearMissUsed,
       starsByRung: starsByRung ?? this.starsByRung,
       toolbox: toolbox ?? this.toolbox,
+      videosWatched: videosWatched ?? this.videosWatched,
       migratedFromDs: migratedFromDs ?? this.migratedFromDs,
     );
   }
@@ -174,6 +181,7 @@ class GameSave {
         'nearMissUsed': nearMissUsed,
         'starsByRung': starsByRung,
         'toolbox': toolbox.toJson(),
+        'videosWatched': videosWatched.toList()..sort(),
         'migratedFromDs': migratedFromDs,
       };
 
@@ -241,6 +249,9 @@ class GameSave {
       toolbox: json['toolbox'] is Map
           ? ToolboxSave.fromJson(Map<String, dynamic>.from(json['toolbox'] as Map))
           : const ToolboxSave(),
+      videosWatched: {
+        for (final v in (json['videosWatched'] as List? ?? const [])) v.toString(),
+      },
       migratedFromDs: json['migratedFromDs'] as bool? ?? false,
     );
   }
@@ -845,6 +856,13 @@ class GameSaveController extends Notifier<GameSave> {
       await _persist();
     }
     return true;
+  }
+
+  /// The Learn explainer video of [lessonId] was watched through once.
+  Future<void> markVideoWatched(String lessonId) async {
+    if (lessonId.isEmpty || state.videosWatched.contains(lessonId)) return;
+    state = state.copyWith(videosWatched: {...state.videosWatched, lessonId});
+    await _persist();
   }
 
   Future<void> setCurrentRung(String rungId) async {

@@ -192,12 +192,12 @@ class MascotSpeechLibrary {
   static const _welcomeNewPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.new.1',
-      textBn: 'হ্যালো! আমি ওস্তাদ, আপনার সেফটি গাইড। চলুন, প্রথম ধাপ থেকে শুরু করি!',
+      textBn: 'হ্যালো! আমি ওস্তাদ। চলুন, প্রথম ধাপ থেকে কাজ শুরু করি!',
       mood: GuideMood.wake,
     ),
     MascotCue(
       id: 'ladder.welcome.new.2',
-      textBn: 'হাই! স্বাগতম। খেলতে খেলতে নিরাপদে কাজ শিখব—প্রথম ধাপে ট্যাপ করুন।',
+      textBn: 'স্বাগতম! নিরাপদে কাজ শিখতে প্রথম ধাপে ট্যাপ করুন।',
       mood: GuideMood.wake,
     ),
   ];
@@ -205,17 +205,17 @@ class MascotSpeechLibrary {
   static const _welcomeDailyPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.daily.1',
-      textBn: 'হ্যালো! আবার দেখা হলো। আজকের ডিউটি শুরু করি?',
+      textBn: 'হ্যালো! আবার দেখা হলো। আজকের কাজ শুরু করি?',
       mood: GuideMood.wake,
     ),
     MascotCue(
       id: 'ladder.welcome.daily.2',
-      textBn: 'ওয়েলকাম ব্যাক! চলুন, পরের ধাপটা সেরে ফেলি।',
+      textBn: 'ওয়েলকাম ব্যাক! চলুন, পরের কাজটা সেরে ফেলি।',
       mood: GuideMood.wake,
     ),
     MascotCue(
       id: 'ladder.welcome.daily.3',
-      textBn: 'হাই! আজও এসেছেন—দারুণ! চলুন এগোই।',
+      textBn: 'হাই! আজও এসেছেন—দারুণ! চলুন শুরু করি।',
       mood: GuideMood.wake,
     ),
   ];
@@ -223,17 +223,17 @@ class MascotSpeechLibrary {
   static const _welcomeReturnPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.return.1',
-      textBn: 'হাই! আবার এলেন? চলুন, যেখানে ছিলাম।',
+      textBn: 'হাই! আবার এসেছেন? চলুন, কাজ শুরু করা যাক।',
       mood: GuideMood.talk,
     ),
     MascotCue(
       id: 'ladder.welcome.return.2',
-      textBn: 'ওয়েলকাম ব্যাক! পরের ধাপটা আপনার অপেক্ষায়।',
+      textBn: 'ওয়েলকাম ব্যাক! চলুন, পরের ধাপে যাই।',
       mood: GuideMood.talk,
     ),
     MascotCue(
       id: 'ladder.welcome.return.3',
-      textBn: 'হ্যালো! চলুন, আরেকটা ধাপ উঠি।',
+      textBn: 'হ্যালো! চলুন, আরেক ধাপ ওঠা যাক।',
       mood: GuideMood.talk,
     ),
   ];
@@ -241,22 +241,22 @@ class MascotSpeechLibrary {
   static const _idleLevelPool = <MascotCue>[
     MascotCue(
       id: 'ladder.idle.level.1',
-      textBn: 'সামনের ধাপটা জ্বলছে—ট্যাপ করুন, কাজটা সেরে নিই!',
+      textBn: 'পরের ধাপে ট্যাপ করুন, কাজটা সেরে ফেলি!',
       mood: GuideMood.inspire,
     ),
     MascotCue(
       id: 'ladder.idle.level.2',
-      textBn: 'দাঁড়িয়ে ভাবছেন কী? এই ধাপে ট্যাপ করুন, মাঠে নেমে পড়ি।',
+      textBn: 'কী ভাবছেন? ট্যাপ করে মাঠে নামা যাক!',
       mood: GuideMood.talk,
     ),
     MascotCue(
       id: 'ladder.idle.level.3',
-      textBn: 'এক ট্যাপেই শুরু—নিয়ম মানলে পয়েন্ট আপনার হাতেই!',
+      textBn: 'ট্যাপ করে শুরু করুন—নিয়ম মানলেই ফুল পয়েন্ট!',
       mood: GuideMood.inspire,
     ),
     MascotCue(
       id: 'ladder.idle.level.4',
-      textBn: 'প্রস্তুত তো? জ্বলন্ত ধাপটায় চাপ দিন, ওপরে ওঠা যাক।',
+      textBn: 'তৈরি তো? ট্যাপ করে ওপরে ওঠা যাক।',
       mood: GuideMood.talk,
     ),
   ];
@@ -264,17 +264,17 @@ class MascotSpeechLibrary {
   static const _idleGiftPool = <MascotCue>[
     MascotCue(
       id: 'ladder.idle.gift.1',
-      textBn: 'পাশে একটা টুলবক্স অপেক্ষা করছে! ট্যাপ করে খুলে দেখুন।',
+      textBn: 'পাশে টুলবক্স আছে! ট্যাপ করে খুলে দেখুন।',
       mood: GuideMood.glad,
     ),
     MascotCue(
       id: 'ladder.idle.gift.2',
-      textBn: 'ওই দেখুন হঠাৎ উপহার—টুলবক্সটা খুলতে একবার ট্যাপ করুন!',
+      textBn: 'বোনাস উপহার! টুলবক্সটা খুলতে ট্যাপ করুন।',
       mood: GuideMood.inspire,
     ),
     MascotCue(
       id: 'ladder.idle.gift.3',
-      textBn: 'টুলবক্সটা এখনো বন্ধ—ভেতরে কী আছে, একবার দেখে নিন!',
+      textBn: 'টুলবক্সটা বন্ধ—ভেতরে কী আছে দেখে নিন!',
       mood: GuideMood.talk,
     ),
   ];
@@ -282,49 +282,49 @@ class MascotSpeechLibrary {
   static const _pokePool = <MascotCue>[
     MascotCue(
       id: 'ladder.poke.1',
-      textBn: 'মনে রাখবেন—হেলমেটের চিন-স্ট্র্যাপ শক্ত করে না বাঁধলে পড়ে যাওয়ার সময় কোনো কাজ হবে না!',
+      textBn: 'হেলমেটের চিন-স্ট্র্যাপ শক্ত না বাঁধলে কিন্তু পড়ে যাওয়ার সময় বাঁচাবে না!',
       mood: GuideMood.talk,
       gesture: GuideGesture.leanRight,
     ),
     MascotCue(
       id: 'ladder.poke.2',
-      textBn: 'তারে হাত দেওয়ার আগে গ্লাভস গুটিয়ে ফুঁ দিয়ে দেখুন—একটুও এয়ার লিক থাকলে ওই গ্লাভস বাতিল!',
+      textBn: 'লাইনে হাত দেওয়ার আগে গ্লাভস ফুঁ দিয়ে দেখুন—লিক থাকলে বাতিল!',
       mood: GuideMood.inspire,
       gesture: GuideGesture.leanLeft,
     ),
     MascotCue(
       id: 'ladder.poke.3',
-      textBn: 'শাটডাউন নিলেও লাইন টেস্টার দিয়ে আগে চেক করুন, তারপর দুপাশে আর্থিং রড লাগান!',
+      textBn: 'শাটডাউন পেলেও আগে টেস্টার দিয়ে চেক করুন, তারপর দুপাশে আর্থিং লাগান!',
       mood: GuideMood.warn,
       gesture: GuideGesture.peek,
     ),
     MascotCue(
       id: 'ladder.poke.4',
-      textBn: 'পোলে ওঠার সময় দুটো ল্যানিয়ার্ডের নিয়ম মানুন—লাইন পার করার সময়ও এক মুহূর্তের জন্য বেল্ট খুলবেন না!',
+      textBn: 'পোলে সবসময় দুটো ল্যানিয়ার্ড রাখুন—লাইন পারের সময়ও একটা আটকে রাখতে হবে।',
       mood: GuideMood.inspire,
       gesture: GuideGesture.spinHop,
     ),
     MascotCue(
       id: 'ladder.poke.5',
-      textBn: 'পোলে ওঠার আগে হাতুড়ি বা লাঠি ঠুকে শুনুন—নিরেট ঠক্-ঠক্ না হয়ে ভোঁতা দপ্-দপ্ শব্দ হলে ওই পোল বিপজ্জনক!',
+      textBn: 'পোলে ওঠার আগে হাতুড়ি দিয়ে ঠুকুন—ভোঁতা দপ্-দপ্ শব্দ মানেই ওই পোল দুর্বল!',
       mood: GuideMood.warn,
       gesture: GuideGesture.leanRight,
     ),
     MascotCue(
       id: 'ladder.poke.6',
-      textBn: 'কখনো হাত দিয়ে টুলস ওপরে ছুঁড়ে দেবেন না—সবসময় শুকনো ক্যানভাস ব্যাগ আর হ্যান্ড-লাইন দড়ি ব্যবহার করুন!',
+      textBn: 'ওপরে কখনো টুলস ছুড়ে দেবেন না—হ্যান্ড-লাইন আর ব্যাগে তুলুন!',
       mood: GuideMood.talk,
       gesture: GuideGesture.leanLeft,
     ),
     MascotCue(
       id: 'ladder.poke.7',
-      textBn: 'স্টে-ওয়ারে কখনো লিকেজ কারেন্ট থাকতে পারে—কাজ করার আগে স্টে-ওয়ারেও টেস্টার ছুঁইয়ে দেখুন!',
+      textBn: 'স্টে-ওয়ারে লিকেজ কারেন্ট থাকতে পারে—কাজের আগে টেস্টার ছুঁইয়ে দেখুন!',
       mood: GuideMood.warn,
       gesture: GuideGesture.peek,
     ),
     MascotCue(
       id: 'ladder.poke.8',
-      textBn: 'তাড়াহুড়ো একদম নয় ভাই—প্রতিদিন ০ মৃত্যুঝুঁকি নিয়ে ঘরে ফেরার শপথ আমাদের!',
+      textBn: 'তাড়াহুড়ো একদম নয়—দিনশেষে নিরাপদে বাড়ি ফেরাই আমাদের আসল কাজ।',
       mood: GuideMood.glad,
       gesture: GuideGesture.spinHop,
     ),
@@ -333,19 +333,19 @@ class MascotSpeechLibrary {
   static const _funnyIdlePool = <MascotCue>[
     MascotCue(
       id: 'ladder.gag.1',
-      textBn: 'একটু হাত-পা ছাড়িয়ে নিলাম—এবার চলুন কাজে নামা যাক!',
+      textBn: 'সন্দেহ হলেই কাজ থামান—জীবনের দাম সবকিছুর চেয়ে বেশি!',
       mood: GuideMood.glad,
       gesture: GuideGesture.spinHop,
     ),
     MascotCue(
       id: 'ladder.gag.2',
-      textBn: 'ওপরের লাইনটা এখান থেকেই নজরে রাখছি!',
+      textBn: 'পোলে সহকর্মীর অসাবধানতা দেখলে সাথে সাথে বারণ করুন!',
       mood: GuideMood.talk,
       gesture: GuideGesture.peek,
     ),
     MascotCue(
       id: 'ladder.gag.3',
-      textBn: 'কী খবর ভাই? পরের ধাপে হাত লাগাব নাকি?',
+      textBn: 'লাইন ট্রিপ করলেই ডেড নয়—কন্ট্রোল রুম থেকে যে কোনো সময় চালু হতে পারে!',
       mood: GuideMood.inspire,
       gesture: GuideGesture.leanRight,
     ),
@@ -358,31 +358,31 @@ class MascotSpeechLibrary {
   static const _sidePropCues = <String, MascotCue>{
     'helmet': MascotCue(
       id: 'side.helmet',
-      textBn: 'মাথায় গামছা থাকলে Helmet ঠিকমতো বসবে না! চিন-স্ট্র্যাপ লক করে Class-E হেলমেট পরুন।',
+      textBn: 'ঝড়-বৃষ্টিতে পিপিই ছাড়া পোলের নিচে দাঁড়াবেন না—তার ছিঁড়ে পড়তে পারে!',
       mood: GuideMood.inspire,
       voiceKey: 'ds_why_gamcha_block',
     ),
     'gloves': MascotCue(
       id: 'side.gloves',
-      textBn: 'কাজের আগে Gloves মুড়িয়ে হাওয়া ভরে দেখুন—সূক্ষ্ম পিন-হোল থাকলেও 11 kV শক লাগবে!',
+      textBn: 'ট্রান্সফরমারে হাত দেওয়ার আগে ড্রেন রড দিয়ে সব চার্জ বের করে নিন!',
       mood: GuideMood.inspire,
       voiceKey: 'ds_why_hole',
     ),
     'harness': MascotCue(
       id: 'side.harness',
-      textBn: 'কোমরের বেল্ট নয়, Full-Body Harness পরুন—পিঠের D-ring কাঁধের মাঝখানে আর দুই আঙুলের ছাড় রাখুন।',
+      textBn: 'শক খাওয়া কাউকে খালি হাতে ধরবেন না—শুকনো লাঠি দিয়ে আলাদা করুন!',
       mood: GuideMood.inspire,
       voiceKey: 'ds_why_belt',
     ),
     'boots': MascotCue(
       id: 'side.boots',
-      textBn: 'চপ্পল বা সাধারণ জুতোয় ইনসুলেশন থাকে না—পোলে ও সাবস্টেশনে Dielectric Safety Boot বাধ্যতামূলক।',
+      textBn: 'লিখিত PTW ছাড়া কাজে নামবেন না—সই করা পারমিটই আপনার আসল সুরক্ষা!',
       mood: GuideMood.inspire,
       voiceKey: 'ds_why_slip',
     ),
     'vest': MascotCue(
       id: 'side.vest',
-      textBn: 'পলিয়েস্টার কাপড় আর্ক ফ্ল্যাশে গলে চামড়ায় আটকে যায়! ফুল-হাতা সুতির পোশাক ও রিফ্লেক্টিভ জ্যাকেট পরুন।',
+      textBn: 'হারনেসের ডি-রিং যেন কাঁধের মাঝে পিঠে থাকে—ঝুললে এটাই সোজা রাখবে!',
       mood: GuideMood.inspire,
       voiceKey: 'ds_why_poly',
     ),
@@ -419,13 +419,13 @@ class MascotSpeechLibrary {
   static const _learnCheckOkPool = <MascotCue>[
     MascotCue(
       id: 'learn.check.1',
-      textBn: 'সাবাশ! কাজের আগে এই ছোট্ট চেকটাই মাঠে আপনার প্রাণ বাঁচাবে।',
+      textBn: 'দারুণ নজর! এই চেকটাই মাঠে আপনার জান বাঁচাবে।',
       mood: GuideMood.glad,
       voiceKey: 'ds_exp_right_1',
     ),
     MascotCue(
       id: 'learn.check.2',
-      textBn: 'একদম নিখুঁত নজর! সরঞ্জাম যাচাই করে তবেই কাজে হাত দেবেন।',
+      textBn: 'একদম ঠিক! সরঞ্জাম পরখ করেই কাজে হাত দেবেন।',
       mood: GuideMood.glad,
       voiceKey: 'ds_exp_right_2',
     ),
@@ -440,14 +440,14 @@ class MascotSpeechLibrary {
   static const _learnQuizRightPool = <MascotCue>[
     MascotCue(
       id: 'learn.quiz.right.1',
-      textBn: 'দারুণ! মাঠের নিয়ম আপনার একদম নখদর্পণে আছে।',
+      textBn: 'দারুণ! মাঠের নিয়ম আপনার একদম নখদর্পণে।',
       mood: GuideMood.celebrate,
       gesture: GuideGesture.spinHop,
       voiceKey: 'ds_exp_right_2',
     ),
     MascotCue(
       id: 'learn.quiz.right.2',
-      textBn: 'সঠিক সিদ্ধান্ত! এভাবেই ঠান্ডা মাথায় কাজ করতে হবে।',
+      textBn: 'সঠিক সিদ্ধান্ত! এভাবেই ঠান্ডা মাথায় কাজ করবেন।',
       mood: GuideMood.glad,
       voiceKey: 'ds_exp_right_3',
     ),
@@ -456,13 +456,13 @@ class MascotSpeechLibrary {
   static const _learnQuizWrongPool = <MascotCue>[
     MascotCue(
       id: 'learn.quiz.wrong.1',
-      textBn: 'আরে, একটু ভুল হলো! তাড়াহুড়ো না করে নিয়মটা আরেকবার ভাবুন।',
+      textBn: 'আরে, একটু ভুল হলো! শান্ত হয়ে আরেকবার ভাবুন।',
       mood: GuideMood.warn,
       voiceKey: 'ds_wrong_bhabun',
     ),
     MascotCue(
       id: 'learn.quiz.wrong.2',
-      textBn: 'না ভাই, ওটা ঝুঁকির পথ! নিচের ইঙ্গিতটা দেখে সঠিকটা বেছে নিন।',
+      textBn: 'না ভাই, ওটা বিপজ্জনক! ক্লু দেখে সঠিকটা বেছে নিন।',
       mood: GuideMood.warn,
       voiceKey: 'ds_wrong_niyom',
     ),
@@ -481,7 +481,7 @@ class MascotSpeechLibrary {
     ),
     MascotCue(
       id: 'do.right.2',
-      textBn: 'বাঃ, একদম নিখুঁত নির্বাচন!',
+      textBn: 'বাঃ, একদম সঠিক পছন্দ!',
       mood: GuideMood.glad,
       voiceKey: 'ds_exp_right_2',
     ),
@@ -493,7 +493,7 @@ class MascotSpeechLibrary {
     ),
     MascotCue(
       id: 'do.right.4',
-      textBn: 'চমৎকার! যথাযথ ফিটিং হয়েছে।',
+      textBn: 'চমৎকার! একদম ঠিকঠাক ফিটিং।',
       mood: GuideMood.glad,
       voiceKey: 'ds_exp_right_4',
     ),
@@ -502,13 +502,13 @@ class MascotSpeechLibrary {
   static const _doMissFirstPool = <MascotCue>[
     MascotCue(
       id: 'do.miss.1',
-      textBn: 'না, হলো না—আবার ভেবে দেখুন।',
+      textBn: 'না, হলো না—আরেকবার ভাবুন।',
       mood: GuideMood.warn,
       voiceKey: 'ds_wrong_bhabun',
     ),
     MascotCue(
       id: 'do.miss.2',
-      textBn: 'ভুল হলো! নিয়মটি আবার মনে করুন।',
+      textBn: 'ভুল হলো! নিয়মটা আরেকবার মনে করুন।',
       mood: GuideMood.warn,
       voiceKey: 'ds_wrong_niyom',
     ),
@@ -530,25 +530,25 @@ class MascotSpeechLibrary {
       MascotCueId.ladderPoke => _pokePool[idx % _pokePool.length],
       MascotCueId.ladderComingSoon => const MascotCue(
           id: 'ladder.soon',
-          textBn: 'এই ধাপটা তৈরি হচ্ছে ভাই—তার আগে নিচের ধাপগুলো পাকা করে নিন!',
+          textBn: 'এই ধাপটা তৈরি হচ্ছে ভাই—আগের ধাপগুলো ঝালিয়ে নিন!',
           mood: GuideMood.talk,
         ),
       MascotCueId.ladderEmeraldGoal => const MascotCue(
           id: 'ladder.emerald',
-          textBn: 'মৃত্যুহীন পথের শীর্ষ চূড়া! প্রতিটি ধাপে বাঁচার অভ্যাসই আমাদের আসল জয়।',
+          textBn: 'মৃত্যুহীন পথের শীর্ষে আপনি! প্রতি পদে সতর্ক থাকাই আমাদের আসল জয়।',
           mood: GuideMood.celebrate,
           gesture: GuideGesture.spinHop,
         ),
       MascotCueId.ladderRankUp => const MascotCue(
           id: 'ladder.rank_up',
-          textBn: 'অভিনন্দন ওস্তাদ! নতুন র‍্যাঙ্ক শিল্ড অর্জন করেছেন—এগিয়ে চলুন!',
+          textBn: 'অভিনন্দন ওস্তাদ! নতুন র‍্যাঙ্ক শিল্ড পেয়েছেন—এগিয়ে চলুন!',
           mood: GuideMood.celebrate,
           gesture: GuideGesture.spinHop,
           voiceKey: 'ds_exp_right_2',
         ),
       MascotCueId.ladderDeathRespawn => const MascotCue(
           id: 'ladder.respawn',
-          textBn: 'মন খারাপ করবেন না ভাই, চেকপয়েন্ট থেকে আবার শুরু করুন—এবার সবকটা চেক সেরে উঠব।',
+          textBn: 'মন খারাপ করবেন না ভাই, চেকপয়েন্ট থেকে আবার শুরু করুন—এবার সব ঠিক হবে।',
           mood: GuideMood.inspire,
           voiceKey: 'ds_wrong_niyom',
         ),
@@ -563,13 +563,13 @@ class MascotSpeechLibrary {
       MascotCueId.sideGoggles => _sidePropCues['goggles']!,
       MascotCueId.sideGiftOpen => const MascotCue(
           id: 'side.gift.open',
-          textBn: 'সারপ্রাইজ বক্স! এই ছোট্ট ফিল্ড চ্যালেঞ্জটা মিলিয়ে বোনাস পয়েন্ট জিতে নিন!',
+          textBn: 'সারপ্রাইজ বক্স! ছোট্ট ফিল্ড চ্যালেঞ্জে বোনাস পয়েন্ট জিতুন!',
           mood: GuideMood.glad,
           gesture: GuideGesture.peek,
         ),
       MascotCueId.sideGiftRight => const MascotCue(
           id: 'side.gift.right',
-          textBn: 'সাবাশ! একদম সঠিক উত্তর—বোনাস পয়েন্ট আপনার ঝুলিতে!',
+          textBn: 'সাবাশ! একদম ঠিক উত্তর—বোনাস পয়েন্ট জমা হলো!',
           mood: GuideMood.celebrate,
           gesture: GuideGesture.spinHop,
           voiceKey: 'ds_exp_right_1',
@@ -582,44 +582,44 @@ class MascotSpeechLibrary {
         ),
       MascotCueId.sideIdentifyPrompt => const MascotCue(
           id: 'side.identify.prompt',
-          textBn: 'পাকা লাইনম্যানের নজর পরীক্ষা! বলুন তো কোনটা সঠিক নিয়ম?',
+          textBn: 'পাকা লাইনম্যানের পরীক্ষা! বলুন তো কোনটা সঠিক নিয়ম?',
           mood: GuideMood.talk,
         ),
       MascotCueId.sideIdentifyRight => _learnQuizRightPool[0],
       MascotCueId.sideIdentifyWrong => _learnQuizWrongPool[0],
       MascotCueId.sideHourlyPrompt => const MascotCue(
           id: 'side.hourly.prompt',
-          textBn: 'কুইক ফিল্ড কল! ৫ সেকেন্ডে ভাবুন—মাঠে এখন কী করবেন?',
+          textBn: 'কুইক ফিল্ড কল! 5 সেকেন্ডে বলুন—মাঠে এখন কী করবেন?',
           mood: GuideMood.inspire,
         ),
       MascotCueId.sideHourlyRight => _learnQuizRightPool[1],
       MascotCueId.sideHourlyWrong => _learnQuizWrongPool[1],
       MascotCueId.sideLifeSkill => const MascotCue(
           id: 'side.life',
-          textBn: 'মনে রাখবেন—অন্ধকারে বা ঝড়-বৃষ্টিতে তাড়াহুড়ো করে পোলে ওঠা মানেই বিপদ ডেকে আনা।',
+          textBn: 'অন্ধকারে বা ঝড়-বৃষ্টিতে তাড়াহুড়ো করে পোলে ওঠা মানেই বিপদ ডেকে আনা।',
           mood: GuideMood.inspire,
         ),
       MascotCueId.sidePocketRule => const MascotCue(
           id: 'side.rule',
-          textBn: 'সোনার নিয়ম: লিখিত PTW, ভোল্টেজ টেস্ট, ডিসচার্জ রড আর দুদিক আর্থিং ছাড়া লাইন ছোঁয়া মানা!',
+          textBn: 'গোল্ডেন রুল: লিখিত PTW, ভোল্টেজ টেস্ট, ডিসচার্জ রড আর দুপাশে আর্থিং ছাড়া লাইন ছোঁয়া মানা!',
           mood: GuideMood.inspire,
           voiceKey: 'ds_l6_done',
         ),
       MascotCueId.learnDeckStart => const MascotCue(
           id: 'learn.start',
-          textBn: 'চলুন, কাজের আগে জরুরি পয়েন্টগুলো ছুঁয়ে যাচাই করে নিই!',
+          textBn: 'চলুন, কাজের আগে জরুরি চেকলিস্ট মিলিয়ে নিই!',
           mood: GuideMood.talk,
         ),
       MascotCueId.learnCardCheckOk => _learnCheckOkPool[idx % _learnCheckOkPool.length],
       MascotCueId.learnCardSpecOk => const MascotCue(
           id: 'learn.spec',
-          textBn: 'ভোল্টেজ রেটিং আর টেস্টের নিয়মটা মাথায় রাখবেন—এটাই আসল সুরক্ষা।',
+          textBn: 'ভোল্টেজ আর টেস্টের নিয়ম মাথায় রাখবেন—এটাই আসল সুরক্ষা।',
           mood: GuideMood.inspire,
           voiceKey: 'ds_exp_right_3',
         ),
       MascotCueId.learnQuizStart => const MascotCue(
           id: 'learn.quiz.start',
-          textBn: 'চেক সম্পূর্ণ! এবার ২টি কুইক ফিল্ড সিদ্ধান্তের উত্তর দিন।',
+          textBn: 'চেক শেষ! এবার 2টি কুইক ফিল্ড সিদ্ধান্তের উত্তর দিন।',
           mood: GuideMood.inspire,
         ),
       MascotCueId.learnQuizRight => _learnQuizRightPool[idx % _learnQuizRightPool.length],
@@ -627,7 +627,7 @@ class MascotSpeechLibrary {
       MascotCueId.learnQuizWrongHint => _learnQuizWrongPool[1],
       MascotCueId.learnDeckClear => const MascotCue(
           id: 'learn.clear',
-          textBn: 'চমৎকার! পাঠ সম্পূর্ণ—এবার চলুন সরাসরি মাঠে হাত পাকাই!',
+          textBn: 'চমৎকার! পাঠ শেষ—এবার চলুন সরাসরি মাঠে নামি!',
           mood: GuideMood.celebrate,
           gesture: GuideGesture.spinHop,
           voiceKey: 'ds_exp_right_1',
@@ -637,7 +637,7 @@ class MascotSpeechLibrary {
       MascotCueId.doMissThink => _doMissFirstPool[0],
       MascotCueId.doLevelClear => const MascotCue(
           id: 'do.clear',
-          textBn: 'সাবাশ ওস্তাদ! মাঠের কাজ নিখুঁতভাবে শেষ করেছেন—পরের ধাপে চলুন!',
+          textBn: 'সাবাশ ওস্তাদ! মাঠের কাজ দারুণ শেষ করেছেন—পরের ধাপে চলুন!',
           mood: GuideMood.celebrate,
           gesture: GuideGesture.spinHop,
           voiceKey: 'ds_exp_right_1',
