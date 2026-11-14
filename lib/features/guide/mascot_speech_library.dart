@@ -107,7 +107,6 @@ enum MascotCueId {
   sideHourlyPrompt,
   sideHourlyRight,
   sideHourlyWrong,
-  sideLifeSkill,
   sidePocketRule,
 
   // 3. Learn Card & Exit Quiz Coaching
@@ -595,11 +594,6 @@ class MascotSpeechLibrary {
         ),
       MascotCueId.sideHourlyRight => _learnQuizRightPool[1],
       MascotCueId.sideHourlyWrong => _learnQuizWrongPool[1],
-      MascotCueId.sideLifeSkill => const MascotCue(
-          id: 'side.life',
-          textBn: 'অন্ধকারে বা ঝড়-বৃষ্টিতে তাড়াহুড়ো করে পোলে ওঠা মানেই বিপদ ডেকে আনা।',
-          mood: GuideMood.inspire,
-        ),
       MascotCueId.sidePocketRule => const MascotCue(
           id: 'side.rule',
           textBn: 'গোল্ডেন রুল: লিখিত PTW, ভোল্টেজ টেস্ট, ডিসচার্জ রড আর দুপাশে আর্থিং ছাড়া লাইন ছোঁয়া মানা!',

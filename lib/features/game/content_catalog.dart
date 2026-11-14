@@ -12,7 +12,6 @@ class ContentCatalog {
   final List<CatalogLesson> lessons;
   final List<CatalogRungDef> rungDefs;
   final Map<String, CatalogGamePack> packsById;
-  final List<CatalogSideItem> sideItems;
   final List<CatalogGuideLine> guideLines;
 
   const ContentCatalog({
@@ -23,7 +22,6 @@ class ContentCatalog {
     required this.lessons,
     required this.rungDefs,
     required this.packsById,
-    required this.sideItems,
     required this.guideLines,
   });
 
@@ -49,10 +47,6 @@ class ContentCatalog {
           CatalogRungDef.fromJson(Map<String, dynamic>.from(raw as Map)),
       ],
       packsById: {for (final p in packs) p.id: p},
-      sideItems: [
-        for (final raw in (json['sideItemDefs'] as List? ?? const []))
-          CatalogSideItem.fromJson(Map<String, dynamic>.from(raw as Map)),
-      ],
       guideLines: [
         for (final raw in (json['guideLines'] as List? ?? const []))
           CatalogGuideLine.fromJson(Map<String, dynamic>.from(raw as Map)),
@@ -85,13 +79,6 @@ class ContentCatalog {
         throw StateError('Missing pack ${r.packId} for rung ${r.id}');
       }
     }
-  }
-
-  CatalogGuideLine? lineFor(String when) {
-    for (final g in guideLines) {
-      if (g.when == when) return g;
-    }
-    return null;
   }
 }
 
@@ -236,33 +223,6 @@ class CatalogGamePack {
         for (final v in (json['deadlyRules'] as List? ?? const [])) v.toString(),
       ],
       legacyLevel: (json['legacyLevel'] as num?)?.toInt(),
-    );
-  }
-}
-
-class CatalogSideItem {
-  final String id;
-  final String kind;
-  final String placeRule;
-  final String? packId;
-  final CatalogRungStatus status;
-
-  const CatalogSideItem({
-    required this.id,
-    required this.kind,
-    required this.placeRule,
-    required this.packId,
-    required this.status,
-  });
-
-  factory CatalogSideItem.fromJson(Map<String, dynamic> json) {
-    final statusRaw = json['status'] as String? ?? 'comingSoon';
-    return CatalogSideItem(
-      id: json['id'] as String,
-      kind: json['kind'] as String? ?? 'tip',
-      placeRule: json['placeRule'] as String? ?? '',
-      packId: json['packId'] as String?,
-      status: statusRaw == 'playable' ? CatalogRungStatus.playable : CatalogRungStatus.comingSoon,
     );
   }
 }

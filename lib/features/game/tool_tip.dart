@@ -178,8 +178,6 @@ abstract final class ToolTipLines {
   static const helperLine = 'শুকনো বাঁশ তো, চলবে! হট স্টিক আনতে গাড়ি পর্যন্ত কে যাবে?';
   static const callHeld = 'ঠিক! শুকনো বাঁশও বিদ্যুৎ টানে।';
   static const toolOk = [FeedbackLine('ফাইবারগ্লাস — ঠিক টুল।'), FeedbackLine('পরীক্ষিত হট স্টিক!'), FeedbackLine('এটাই।')];
-  static const reachOk = 'ডগা রেখার বাইরে — ঘুড়ি নামল।';
-  static const shutOk = 'ঠিক! রেখার ভেতরে কাজ মানেই লাইন বন্ধ চাই।';
   static const allSet = 'টুল আর ডগা — দুটোই রেখার নিয়মে!';
   static const quick = 'নিখুঁত আর ঝটপট!';
   static const fail = 'আরেকবার — ডগাও আপনার হাত।';

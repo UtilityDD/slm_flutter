@@ -224,7 +224,6 @@ abstract final class FireLines {
   }
 
   static const powerOff = 'নিরাপদ হলে আগে পাওয়ার বন্ধ';
-  static const rushIn = 'সোজা নেভাতে যাই';
   static const askTool = 'কী দিয়ে নেভাবেন?';
   static String tool(FireTool t) => switch (t) {
         FireTool.water => 'জলের বালতি',
@@ -1691,13 +1690,6 @@ class FireScenePainter extends CustomPainter {
     c.drawCircle(base.translate(8, -38), 18, p);
     c.drawCircle(base.translate(-4, -62), 22, p);
   }
-
-  /// Where the fire's base is (for aiming).
-  static Offset baseOf(FireKind k) => switch (k) {
-        FireKind.oil => const Offset(200, 298),
-        FireKind.electrical => const Offset(180, 250),
-        FireKind.grass => const Offset(170, 300),
-      };
 
   @override
   void paint(Canvas c, Size s) {

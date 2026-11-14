@@ -134,7 +134,6 @@ class KitCheckPack {
   const KitCheckPack({
     required this.id,
     required this.titleBn,
-    required this.sceneBn,
     required this.introBn,
     required this.pool,
     required this.callers,
@@ -144,9 +143,6 @@ class KitCheckPack {
 
   final String id;
   final String titleBn;
-
-  /// Where and when, shown at the start ("সকাল 7টা · …").
-  final String sceneBn;
   final String introBn;
 
   /// Every good and wrong item that can be dealt; flawed copies are made
@@ -334,7 +330,6 @@ const _crackLine = 'সোল ফেটে গেছে। ফাটল দি�
 const kitCheckPack11 = KitCheckPack(
   id: 'kit_check_1_1',
   titleBn: 'কবচ যাচাই',
-  sceneBn: 'সকাল 7টা · সাবস্টেশনের স্টোর রুম',
   introBn: 'কাল রাতের ঝড়ে লাইন পড়েছে। স্টোরের কিট পুরনো—প্রতিটা জিনিস দেখে তবেই পরুন।',
   quickMs: 75000,
   callBefore: [KitSlot.legs, KitSlot.feet],

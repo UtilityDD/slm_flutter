@@ -65,9 +65,6 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   final _tokenKey = GlobalKey();
   final _praise = LineBag(LearnFeedbackLines.right);
 
-  /// The options on the deck now (tests and taps).
-  List<ChoiceOption> get reasonOptions => _reasonOpts;
-
   /// True while the zoomed proceed card is up (tests can wait on this).
   bool get reasonAwaitingProceed => _reasonReveal;
 

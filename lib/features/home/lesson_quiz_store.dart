@@ -2,10 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../core/constants/app_constants.dart';
+import '../../core/config/app_config.dart';
 import 'lesson_quiz_page.dart';
 
 /// What a lesson quiz load produced.
@@ -106,7 +105,7 @@ class LessonQuizStore {
   Future<LessonQuizLoad> _download(String file) async {
     final LessonQuizHttpResponse res;
     try {
-      res = await _httpGet(Uri.parse('${AppConstants.remoteAssetOrigin}/quizzes/$file'))
+      res = await _httpGet(Uri.parse('${AppConfig.remoteAssetOrigin}/quizzes/$file'))
           .timeout(const Duration(seconds: 20));
     } catch (_) {
       return LessonQuizLoad.unavailable;
@@ -168,9 +167,6 @@ class LessonQuizStore {
       await tmp.rename('${dir.path}/$file');
     } catch (_) {}
   }
-
-  @visibleForTesting
-  void clearMemory() => _memory.clear();
 }
 
 List<LessonQuizQuestion> parseLessonQuiz(List<dynamic> raw) =>

@@ -5,7 +5,6 @@ App-wide code with no feature logic. Feature engines stay under `lib/features/`.
 | Path | What |
 |---|---|
 | `config/app_config.dart` | `AppConfig`, the one config source: name, site URL, `remoteAssetOrigin` (`https://www.smartlineman.in`, where large posters, audio and quiz packs stream from), admin emails, auth redirect, Google web client id, Supabase URL and anon key |
-| `constants/app_constants.dart` | `AppConstants`: old name kept for existing imports; forwards to `AppConfig` |
 | `en_digits.dart` | `enDigits`: turns `০–৯` into `0–9` |
 | `models/lineman_profile.dart` | `LinemanProfile` (Supabase profile row) and `LinemanProfile.guest()` (`SLM-GUEST`) |
 | `network/supabase_service.dart` | `SupabaseService.initialize()` / `.ready`. Needs no network (restores the saved session from the phone); `main.dart` starts it just after the first frame and never awaits it. A plugin/config failure is logged and the app runs as guest |

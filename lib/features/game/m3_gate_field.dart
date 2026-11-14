@@ -449,7 +449,6 @@ abstract final class M3GateLines {
   static const planOk = 'পরিকল্পনা পাকা';
   static const markFirst = 'আগে ডায়াগ্রামে আইসোলেশন পয়েন্ট গোল করুন।';
   static const openOthers = 'বাকি DO-গুলোর কী হবে?';
-  static const linkQ = 'ফিউজ লিঙ্ক';
   static const linkNames = {
     M3Link.rated: 'নেমপ্লেট-মাফিক লিঙ্ক',
     M3Link.thickWire: 'মোটা তামার তার',

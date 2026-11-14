@@ -89,11 +89,6 @@ class BeatFx {
       ref.read(guideDirectorProvider.notifier).react(GuideMood.warn);
     }
   }
-
-  /// Tip / gift / Coming Soon beat — guide reacts; visual lives on the ladder.
-  static void hintAppear(WidgetRef ref, {GuideMood mood = GuideMood.inspire}) {
-    ref.read(guideDirectorProvider.notifier).react(mood);
-  }
 }
 
 /// Unified top HUD bar shared by LearnRunnerPage and Do Rungs (DutySlipPage)

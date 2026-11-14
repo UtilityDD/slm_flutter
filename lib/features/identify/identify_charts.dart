@@ -332,7 +332,3 @@ final identifyChartPagesProvider = FutureProvider<Map<String, IdentifyChartPage>
 });
 
 IdentifyChartPage? chartPageOf(Map<String, IdentifyChartPage>? pages, String id) => pages?[id];
-
-bool isChartItem(String category, String id, Map<String, IdentifyChartPage>? pages) {
-  return category == 'Charts' || (pages != null && pages.containsKey(id));
-}

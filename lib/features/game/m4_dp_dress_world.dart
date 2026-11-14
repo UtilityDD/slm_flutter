@@ -61,9 +61,8 @@ class M4DpDressGeo {
   static const List<double> phaseX = [134, 180, 226];
   List<Offset> get insulatorTops => [for (final x in phaseX) Offset(x, armY - 18)];
 
-  /// The DO-fuse cross-arm (level when tidy) and the fuse tops.
+  /// The DO-fuse cross-arm (level when tidy).
   double get doArmY => y(0.29);
-  List<Offset> get fuseTops => [for (final x in phaseX) Offset(x, doArmY - 4)];
 
   /// The transformer between the poles, on its platform.
   Rect get tank => Rect.fromLTRB(146, y(0.50), 214, y(0.72));

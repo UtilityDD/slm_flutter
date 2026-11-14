@@ -41,14 +41,6 @@ const m3PillarInspectInside = [
 /// The fuse spot of outgoing feeder [k] (0–2).
 M3PillarInspectSpot m3PillarInspectFuseSpot(int k) => const [M3PillarInspectSpot.fuse1, M3PillarInspectSpot.fuse2, M3PillarInspectSpot.fuse3][k];
 
-/// The feeder of a fuse spot, or null.
-int? m3PillarInspectFeederOf(M3PillarInspectSpot s) => switch (s) {
-      M3PillarInspectSpot.fuse1 => 0,
-      M3PillarInspectSpot.fuse2 => 1,
-      M3PillarInspectSpot.fuse3 => 2,
-      _ => null,
-    };
-
 /// Where things stand (design px, 360 wide).
 @immutable
 class M3PillarInspectGeo {

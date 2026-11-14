@@ -55,8 +55,7 @@ class M4TreePlanGeo {
   static const poleL = 22.0;
   static const poleR = 338.0;
 
-  /// The verge (the drop zone may go here) and the road in front of it.
-  double get vergeBottom => groundY + 66;
+  /// The road in front of the verge.
   double get roadTop => groundY + 70;
   double get roadBottom => groundY + 130;
 

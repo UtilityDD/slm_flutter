@@ -219,9 +219,6 @@ abstract final class M3LaPatrolLines {
   };
   static const caughtReport = 'না ছুঁয়ে রিপোর্ট';
   static const caughtCall = 'চাপে “না” বলেছেন';
-
-  /// Every fixed line of the guide (to record later).
-  static List<String> get voiceLines => [intro, ask, actAsk, ...tapAct, ...tapWhy, whyBad, whyOk, ...coworker.asks, callHeld, allSet, quick, fail, deadlyWord, nearMissWord];
 }
 
 abstract final class M3LaPatrolMistakes {

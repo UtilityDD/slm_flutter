@@ -6,7 +6,6 @@ import '../admin/dev_unlock.dart';
 import 'auth_provider.dart';
 import 'verify_hold.dart';
 
-const lessonOpenThrough = 3;
 const gameOpenThrough = 5;
 
 bool linemanIsVerified(AuthState auth, Set<String> holds) {
@@ -29,18 +28,6 @@ bool _alreadyPlaying(LinemanProfile? profile) {
   return profile.completedLessons.isNotEmpty;
 }
 
-bool lessonNeedsVerify(
-  AuthState auth,
-  Set<String> holds,
-  bool devOpen,
-  int step,
-) {
-  if (_alreadyPlaying(auth.profile)) return false;
-  return !linemanIsVerified(auth, holds) &&
-      !devOpen &&
-      step > lessonOpenThrough;
-}
-
 bool gameNeedsVerify(
   AuthState auth,
   Set<String> holds,
@@ -49,16 +36,6 @@ bool gameNeedsVerify(
 ) {
   if (_alreadyPlaying(auth.profile)) return false;
   return !linemanIsVerified(auth, holds) && !devOpen && level > gameOpenThrough;
-}
-
-bool lessonNeedsVerifyNow(BuildContext context, int step) {
-  final container = ProviderScope.containerOf(context);
-  return lessonNeedsVerify(
-    container.read(authProvider),
-    container.read(verifyHoldProvider),
-    container.read(devUnlockProvider),
-    step,
-  );
 }
 
 bool gameNeedsVerifyNow(BuildContext context, int level) {

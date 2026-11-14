@@ -57,14 +57,11 @@ class DsResult {
   });
 }
 
-/// Testing only. Keep `false` so normal / guest accounts unlock one level at a time.
-/// Admin Developer mode still opens everything via [devLevelsOpen].
-const dsAllLevelsOpen = false;
-
-/// Admin developer switch. Other accounts never set this.
+/// Admin developer switch. Other accounts never set this; normal and guest
+/// accounts unlock one level at a time.
 bool devLevelsOpen = false;
 
-bool get dsPlayAllLevels => dsAllLevelsOpen || devLevelsOpen;
+bool get dsPlayAllLevels => devLevelsOpen;
 
 const dsLevels = <DsLevelSpec>[
   DsLevelSpec(number: 1, kind: DsLevelKind.letters, choices: 2, darunSec: 150),

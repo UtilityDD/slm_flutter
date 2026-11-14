@@ -100,7 +100,6 @@ Future<void> forgetDeletedAccount(WidgetRef ref) async {
   } catch (_) {}
   ref.invalidate(gameSaveProvider);
   ref.invalidate(localCompletedLessonsProvider);
-  ref.invalidate(readPositionProvider);
   ref.invalidate(myLeagueWinsProvider);
   ref.invalidate(myLeagueProvider);
   ref.invalidate(leagueShowNameProvider);
