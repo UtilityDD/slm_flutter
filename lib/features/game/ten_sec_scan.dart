@@ -1286,7 +1286,7 @@ class _TenSecRunPageState extends ConsumerState<_TenSecRunPage> with DoDeathGuar
       _totalDelta = delta;
     });
     if (_passed) {
-      _cue('sounds/level_done.ogg', volume: 0.8);
+      _cue('sounds/quiz_complete.ogg', volume: 0.8);
     } else {
       _cue('sounds/learn/level_fail.ogg');
     }

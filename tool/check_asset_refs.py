@@ -1,21 +1,30 @@
 """Check that every asset path referenced by the app resolves to a bundled, non-empty file.
 
 usage: python3 -I tool/check_asset_refs.py .   (run from the repo root; exit 1 = broken reference)
+       python3 -I tool/check_asset_refs.py . --orphans   (also exit 1 if a bundled file is unreferenced)
 
 Scans lib/ and test/ Dart plus every bundled assets/**/*.json for literal asset paths
 ('assets/...', and AssetSource-style 'sounds/...'), expands the dress-up name builders
 (ds_dress_up.dart, ai_lineman_guide.dart), and checks pubspec file entries. Prints
 missing/empty/unbundled references and exits 1 if any are found that were not already
 broken at the baseline listed in KNOWN_BROKEN.
+
+--orphans also lists bundled files nothing in the app can load: no literal path in lib/
+or bundled JSON, and no path-like use of the file name (stem) there, e.g. the
+'$_dir/name.svg' builders or a 'name' key in a sound map. Test-only references don't
+count. Fonts are kept by their pubspec entries. Allowlist real exceptions in ORPHAN_OK.
 """
 import os, re, sys, json
 
 root = sys.argv[1]
+ORPHANS = '--orphans' in sys.argv[2:]
 EXT = r'(?:webp|jpg|jpeg|png|gif|svg|mp3|wav|ogg|json|ttf|riv|lottie)'
 LIT = re.compile(r"""['"]((?:assets/)?(?:sounds|duty_slip|zero_loss|safety|quizzes|lineman|brand|data|game|fonts|life_skills)/[^'"$\s]*?\.""" + EXT + r""")['"]""")
 JSON_LIT = re.compile(r'"((?:assets/)[^"$\s]*?\.' + EXT + r')"')
 # Known broken before this change (reported, not caused here)
 KNOWN_BROKEN = set()  # everything resolves as of the 2026-11 cleanup; keep it that way
+# Bundled files that are loaded without their name appearing in lib/ or bundled JSON.
+ORPHAN_OK = set()
 
 # ---- bundled set from pubspec (folder entries bundle direct children only)
 txt = open(os.path.join(root, 'pubspec.yaml')).read()
@@ -53,8 +62,12 @@ def norm(ref):
     return ref if ref.startswith('assets/') else 'assets/' + ref
 
 refs = {}  # path -> first location
+app_refs = set()  # referenced from lib/ or bundled JSON (what the app can load)
 def add(ref, loc):
     refs.setdefault(norm(ref), loc)
+    if not loc.startswith('test'):
+        app_refs.add(norm(ref))
+app_text = []  # non-comment lib/ Dart lines + bundled JSON, for the stem search
 
 for d in ('lib', 'test'):
     for dp, dn, fn in os.walk(os.path.join(root, d)):
@@ -67,6 +80,8 @@ for d in ('lib', 'test'):
                 s = line.strip()
                 if s.startswith('//'):
                     continue
+                if d == 'lib':
+                    app_text.append(line)
                 for m in LIT.finditer(line):
                     add(m.group(1), f'{rel}:{i}')
 
@@ -76,6 +91,7 @@ for f in sorted(bundled):
             t = open(os.path.join(root, f), encoding='utf-8').read()
         except Exception:
             continue
+        app_text.append(t)
         for m in JSON_LIT.finditer(t):
             add(m.group(1), f)
 
@@ -108,4 +124,22 @@ print(f'{len(refs)} referenced asset paths, {ok} resolve to bundled non-empty fi
 for kind, ref, loc in problems:
     tag = 'NEW ' if (kind, ref, loc) in new else 'known'
     print(f'  [{tag}] {kind}: {ref}  <- {loc}')
-sys.exit(1 if new else 0)
+
+orphans = []
+if ORPHANS:
+    fonts = set(re.findall(r'- asset: (\S+)', txt))
+    blob = '\n'.join(app_text)
+    # 'stem', "stem", /stem. , }stem. : the name used as a path piece or a key
+    EDGE_L, EDGE_R = r"""(?<=['"/}])""", r"""(?=['".])"""
+    tokens = set(re.findall(EDGE_L + r'([\w\-]+)' + EDGE_R, blob))
+    for f in sorted(bundled - app_refs - fonts - ORPHAN_OK):
+        stem = os.path.splitext(os.path.basename(f))[0]
+        if stem in tokens or (not re.fullmatch(r'[\w\-]+', stem) and re.search(EDGE_L + re.escape(stem) + EDGE_R, blob)):
+            continue
+        orphans.append(f)
+    size = sum(os.path.getsize(os.path.join(root, f)) for f in orphans)
+    print(f'{len(orphans)} orphan bundled files ({size:,} B) nothing in lib/ or bundled JSON references')
+    for f in orphans:
+        tag = '  (test only)' if f in refs else ''
+        print(f'  [orphan] {f}{tag}')
+sys.exit(1 if new or orphans else 0)

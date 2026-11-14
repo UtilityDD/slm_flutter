@@ -140,7 +140,7 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
           tablePending = 0;
         }
       });
-      if (burnt > 0 && !reasonMuted) unawaited(ZlFx.cue('sounds/dress_wrong.ogg', volume: 0.7, muted: false));
+      if (burnt > 0 && !reasonMuted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
       unawaited(reasonSay([LearnCoachLines.notThisReason], mood: GuideMood.warn));
       return;
     }

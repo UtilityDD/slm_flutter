@@ -1416,7 +1416,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
   void _onWear({required bool shield}) {
     if (!_canAct) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/dress_right.ogg', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       if (shield) {
         _run.faceShield = true;
@@ -1740,7 +1740,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
       if (delta > 0) _totalDelta = delta;
     });
     if (passed) {
-      _cue('sounds/level_done.ogg', volume: 0.85);
+      _cue('sounds/quiz_complete.ogg', volume: 0.85);
       await _say(M4GateLines.allSet, mood: GuideMood.celebrate);
     } else {
       _cue('sounds/learn/level_fail.ogg', volume: 0.7);

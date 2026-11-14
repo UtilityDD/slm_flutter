@@ -1031,7 +1031,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
 
   Future<void> _burnPending() async {
     HapticFeedback.mediumImpact();
-    if (!_muted) unawaited(ZlFx.cue('sounds/dress_wrong.ogg', volume: 0.7, muted: false));
+    if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     setState(() {
       _burning = true;
       _pending = 0;

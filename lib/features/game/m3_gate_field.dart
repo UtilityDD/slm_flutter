@@ -1511,7 +1511,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
   void _onWear({required bool shield}) {
     if (!_canAct) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/dress_right.ogg', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       if (_run.station == M3GateStation.guard) {
         _run.gGloves = true;
@@ -1666,7 +1666,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
       if (delta > 0) _totalDelta = delta;
     });
     if (passed) {
-      _cue('sounds/level_done.ogg', volume: 0.85);
+      _cue('sounds/quiz_complete.ogg', volume: 0.85);
       await _say(M3GateLines.allSet, mood: GuideMood.celebrate);
     } else {
       _cue('sounds/learn/level_fail.ogg', volume: 0.7);

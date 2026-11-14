@@ -388,7 +388,7 @@ class _DutySlipPageState extends State<DutySlipPage> with TickerProviderStateMix
           speakVoice: false,
           muted: _muted,
         );
-    unawaited(ZlFx.cue('sounds/level_done.ogg', volume: 0.75, muted: _muted));
+    unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.75, muted: _muted));
     // Return directly to the unified Ladder instead of the old medal result board.
     e.backToRoad();
     setState(() {});

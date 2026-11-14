@@ -292,7 +292,7 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
       widget.onClose();
       return;
     }
-    _cue(r.rareOrBetter || extra != null ? 'sounds/level_done.ogg' : 'sounds/dress_right.ogg', volume: 0.75);
+    _cue(r.rareOrBetter || extra != null ? 'sounds/quiz_complete.ogg' : 'sounds/quiz_right.ogg', volume: 0.75);
     _say(ToolboxLines.won(extra?.prize == ToolboxPrize.lifeSkill ? extra! : r), GuideMood.celebrate);
     if (_still) {
       _open.value = 1;

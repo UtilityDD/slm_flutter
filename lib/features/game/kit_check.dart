@@ -872,7 +872,7 @@ class _KitCheckRunState extends ConsumerState<_KitCheckRun> with DoDeathGuard, D
     final worstWear = !o.right && choice == KitChoice.wear && item.wornAsset != null;
     if (worstWear) {
       // Straight to "what would happen": short, and a tap skips it.
-      if (!_muted) unawaited(ZlFx.cue('sounds/dress_wrong.ogg', volume: 0.7, muted: false));
+      if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
       setState(() {
         _overlay = _Overlay.consequence;
         _shown = item;
