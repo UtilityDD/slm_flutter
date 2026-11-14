@@ -2915,13 +2915,17 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
           key: _pendingDockKey,
           width: 112,
           height: 46,
-          child: _PendingChip(
-            pending: _pending,
-            burning: _burning,
-            fxToken: _pendingFxToken,
-            quiet: quiet,
-            celebrate: _celebrate,
-            burn: _burn,
+          // Its own layer: the chip's breaths and pops repaint the chip, not the board.
+          child: RepaintBoundary(
+            child: _PendingChip(
+              pending: _pending,
+              burning: _burning,
+              fxToken: _pendingFxToken,
+              breath: (_pendingFxToken, _beat),
+              quiet: quiet,
+              celebrate: _celebrate,
+              burn: _burn,
+            ),
           ),
         ),
       ),
@@ -2934,6 +2938,7 @@ class _PendingChip extends StatefulWidget {
     required this.pending,
     required this.burning,
     required this.fxToken,
+    required this.breath,
     required this.quiet,
     required this.celebrate,
     required this.burn,
@@ -2942,6 +2947,10 @@ class _PendingChip extends StatefulWidget {
   final int pending;
   final bool burning;
   final int fxToken;
+
+  /// The chip breathes a few times when this changes (◆ put on the table, the
+  /// reason deck dealt), then rests: a board waiting on the player draws no frames.
+  final Object breath;
   final bool quiet;
   final Animation<double> celebrate;
   final Animation<double> burn;
@@ -2951,27 +2960,43 @@ class _PendingChip extends StatefulWidget {
 }
 
 class _PendingChipState extends State<_PendingChip> with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 760));
+  static const _breaths = 3;
 
-  void _sync() => slmSyncLoop(
-        context,
-        _pulse,
-        enabled: !widget.quiet && widget.pending > 0 && !widget.burning,
-        reverse: true,
-        restAt: 0.5,
-      );
+  /// [_breaths] breaths of 1.52 s (the old loop's 760 ms each way) in one shot;
+  /// 0 and 1 are both the resting size.
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1520 * _breaths),
+    value: 1,
+  );
+
+  bool get _wanted => !widget.quiet && widget.pending > 0 && !widget.burning;
+
+  /// Breathes again on [replay]. Rests when not wanted, burning, or when loops
+  /// are off ("remove animations", a hidden route).
+  void _sync({required bool replay}) {
+    final on = _wanted && slmLoopsOn(context);
+    if (on && replay) {
+      _pulse.forward(from: 0);
+    } else if (!on && _pulse.value != 1) {
+      _pulse.value = 1;
+    }
+  }
+
+  var _started = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _sync();
+    // First build: the ◆ just went on the table.
+    _sync(replay: !_started);
+    _started = true;
   }
 
   @override
   void didUpdateWidget(_PendingChip old) {
     super.didUpdateWidget(old);
-    _sync();
+    _sync(replay: old.breath != widget.breath || (old.pending <= 0 && widget.pending > 0));
   }
 
   @override
@@ -3028,7 +3053,7 @@ class _PendingChipState extends State<_PendingChip> with SingleTickerProviderSta
             animation: Listenable.merge([_pulse, widget.celebrate, widget.burn]),
             child: chip,
             builder: (_, child) {
-              final pulse = 0.96 + 0.08 * _pulse.value;
+              final pulse = 1 + 0.04 * math.sin(2 * math.pi * _breaths * _pulse.value);
               final pop = Curves.easeOutBack.transform(widget.celebrate.value.clamp(0.0, 1.0));
               final burnT = burning ? widget.burn.value : 0.0;
               return Opacity(
