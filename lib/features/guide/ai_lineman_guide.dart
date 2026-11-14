@@ -132,7 +132,15 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   var _eyeArmed = true;
 
   /// Eye phase while the rig rests; stepped by [_eyeTimer], not a ticker.
-  var _eyeT = 0.0;
+  /// Only the blink/glance layers listen ([_blinkOpacity], [_glanceOpacity]):
+  /// a beat repaints the sprite and rebuilds nothing.
+  final _eyeT = ValueNotifier<double>(0);
+  late final _eyeClock = Listenable.merge([_rig, _eyeT]);
+  late final _blinkOpacity = _EyeOpacity(_eyeClock, () => _eyeBeat().blink ? 0.94 : 0.0);
+  late final _glanceOpacity = _EyeOpacity(_eyeClock, () {
+    final beat = _eyeBeat();
+    return !beat.blink && beat.glance ? 0.94 : 0.0;
+  });
   Timer? _eyeTimer;
   var _rigLooping = false;
 
@@ -489,11 +497,11 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   void _stopEyes() {
     _eyeTimer?.cancel();
     _eyeTimer = null;
-    _eyeT = 0;
+    _eyeT.value = 0;
   }
 
   /// Steps [_eyeT] through the same blink / double-blink / glance beats as
-  /// one rig lap (ms into 6 s), with one setState per beat.
+  /// one rig lap (ms into 6 s); each beat only repaints the eye layers.
   void _armEye(int ms) {
     final beats = [
       360, 630,
@@ -506,11 +514,11 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       if (!mounted) return;
       if (next >= 6000) {
         _eyeLap++;
-        _eyeT = 0;
+        _eyeT.value = 0;
         _armEye(0);
         return;
       }
-      setState(() => _eyeT = (next + 1) / 6000);
+      _eyeT.value = (next + 1) / 6000;
       _armEye(next);
     });
   }
@@ -565,6 +573,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   void dispose() {
     MascotTalk.active.removeListener(_onTalkChanged);
     _eyeTimer?.cancel();
+    _eyeT.dispose();
     _bubbleTimer?.cancel();
     _bubbleFade.dispose();
     _rig.removeListener(_countLaps);
@@ -599,29 +608,27 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     };
   }
 
-  /// Natural blink & eye saccade overlay with occasional double-blinks.
-  String? _blinkOverlay(
-    GuideMood mood,
-    double t, {
-    required bool reduce,
-    required bool speaking,
-  }) {
-    if (reduce || mood == GuideMood.sleep) return null;
+  /// Natural blink & eye saccade beats with occasional double-blinks, at
+  /// the rig phase while he speaks, else at the eye timer's phase.
+  ({bool blink, bool glance}) _eyeBeat() {
+    final t = _rig.isAnimating ? _rig.value : _eyeT.value;
     final primaryBlink = t > 0.06 && t < 0.105;
     final doubleBlink = _eyeLap % 3 == 0 && t > 0.135 && t < 0.175;
-    final blink = primaryBlink || doubleBlink;
     final glance = _eyeLap.isOdd && t > 0.48 && t < 0.64;
-    if (!blink && !glance) return null;
-    return switch (mood) {
-      GuideMood.warn || GuideMood.fright || GuideMood.fallen =>
-        blink ? 'coach_oops_blink' : 'coach_oops_glance',
-      GuideMood.glad || GuideMood.celebrate =>
-        speaking ? (blink ? 'coach_talk_blink' : null) : null,
-      _ => speaking
-          ? (blink ? 'coach_talk_blink' : 'coach_talk_glance')
-          : (blink ? 'coach_blink' : 'coach_glance'),
-    };
+    return (blink: primaryBlink || doubleBlink, glance: glance);
   }
+
+  /// The face drawn over the base face for a blink ([blink]) or a glance.
+  String? _eyeAsset(GuideMood mood, {required bool blink, required bool speaking}) =>
+      switch (mood) {
+        GuideMood.warn || GuideMood.fright || GuideMood.fallen =>
+          blink ? 'coach_oops_blink' : 'coach_oops_glance',
+        GuideMood.glad || GuideMood.celebrate =>
+          speaking && blink ? 'coach_talk_blink' : null,
+        _ => speaking
+            ? (blink ? 'coach_talk_blink' : 'coach_talk_glance')
+            : (blink ? 'coach_blink' : 'coach_glance'),
+      };
 
   void _crossTo(String next) {
     final current = _showingA ? _faceA : _faceB;
@@ -851,12 +858,10 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       builder: (_, _) {
         final rigT = reduce ? 0.0 : _rig.value;
         final tau = rigT * math.pi * 2;
-        final overlay = _blinkOverlay(
-          activeMood,
-          _rig.isAnimating ? rigT : _eyeT,
-          reduce: reduce,
-          speaking: _isSpeaking,
-        );
+        // Blink and glance faces stay mounted; [_EyeOpacity] shows them.
+        final eyes = !reduce && activeMood != GuideMood.sleep;
+        final blinkFace = eyes ? _eyeAsset(activeMood, blink: true, speaking: _isSpeaking) : null;
+        final glanceFace = eyes ? _eyeAsset(activeMood, blink: false, speaking: _isSpeaking) : null;
         final faceT = Curves.easeInOutCubic.transform(_face.value.clamp(0.0, 1.0));
         final topFace = _showingA ? _faceA : _faceB;
         final botFace = _showingA ? _faceB : _faceA;
@@ -985,10 +990,15 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
                                         opacity: faceT.clamp(0.0, 1.0),
                                         child: _faceWidget(topFace),
                                       ),
-                                      if (overlay != null)
-                                        Opacity(
-                                          opacity: 0.94,
-                                          child: _faceWidget(overlay),
+                                      if (blinkFace != null)
+                                        FadeTransition(
+                                          opacity: _blinkOpacity,
+                                          child: _faceWidget(blinkFace),
+                                        ),
+                                      if (glanceFace != null)
+                                        FadeTransition(
+                                          opacity: _glanceOpacity,
+                                          child: _faceWidget(glanceFace),
                                         ),
                                       MascotFaceRig(
                                         sprite: widget.sprite,
@@ -1057,6 +1067,33 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       ),
     );
   }
+}
+
+/// Opacity of a blink/glance face, read from the eye clock: the layer
+/// repaints on a beat without a rebuild.
+class _EyeOpacity extends Animation<double> {
+  _EyeOpacity(this._clock, this._read);
+
+  final Listenable _clock;
+  final double Function() _read;
+
+  @override
+  void addListener(VoidCallback listener) => _clock.addListener(listener);
+
+  @override
+  void removeListener(VoidCallback listener) => _clock.removeListener(listener);
+
+  @override
+  void addStatusListener(AnimationStatusListener listener) {}
+
+  @override
+  void removeStatusListener(AnimationStatusListener listener) {}
+
+  @override
+  AnimationStatus get status => AnimationStatus.forward;
+
+  @override
+  double get value => _read();
 }
 
 class _CoachFace extends StatelessWidget {

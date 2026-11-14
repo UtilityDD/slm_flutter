@@ -3,6 +3,7 @@
 // `PERF guide …` line so a before/after run can be compared.
 //
 //  * frames one guide line costs, muted (no voice) and voiced,
+//  * widget rebuilds per second while the guide idles (eye blinks),
 //  * whether his talking frames repaint the scene behind him,
 //  * the speech bubble: it fades after the voice ends (or after a reading
 //    time when muted), a tap or a new line brings it back, keepBubble holds it.
@@ -148,6 +149,37 @@ void main() {
         '${talking.rebuilds} rebuilds, scene repaints $scene; tail after voice $tail frames');
     expect(tail, lessThan(45), reason: 'about 0.5 s ease-back, not the rest of a 6 s lap');
     expect(scene, 0, reason: 'his talking frames repaint his own layer, not the scene');
+  });
+
+  testWidgets('idle guide: blinks rebuild nothing and draw no frames', (tester) async {
+    await tester.pumpWidget(_app(c));
+    director().say(mood: GuideMood.talk, line: _line);
+    await _settle(tester);
+    await _wait(tester, 5000); // the line read and its bubble faded
+    await _framesUntilQuiet(tester);
+    // Two eye laps: blinks, a double blink, glances.
+    final scene0 = _ScenePainter.paints;
+    final r = await _sample(tester, const Duration(seconds: 12));
+    final scene = _ScenePainter.paints - scene0;
+    final perSec = r.rebuilds / 12;
+    debugPrint('PERF guide idle 12 s: frames ${r.frames}/${r.steps}, rebuilds ${r.rebuilds} '
+        '(${perSec.toStringAsFixed(2)}/s), scene repaints $scene');
+    expect(r.frames, 0);
+    expect(perSec, lessThan(1));
+    expect(scene, 0);
+  });
+
+  testWidgets('idle guide still blinks and glances', (tester) async {
+    await tester.pumpWidget(_app(c));
+    await _settle(tester);
+    final eyes = find.descendant(of: find.byType(AiLinemanGuide), matching: find.byType(FadeTransition));
+    var shown = 0;
+    for (var i = 0; i < 12000 ~/ 30; i++) {
+      await tester.pump(const Duration(milliseconds: 30));
+      if (tester.widgetList<FadeTransition>(eyes).any((f) => f.opacity.value > 0.9)) shown++;
+    }
+    debugPrint('PERF guide eye face shown in $shown of 400 samples (12 s)');
+    expect(shown, greaterThan(0));
   });
 
   testWidgets('the guide has his own repaint boundary', (tester) async {
