@@ -128,20 +128,6 @@ List<LessonQuizQuestion> selectLessonQuizQuestions(List<LessonQuizQuestion> all,
   return selected;
 }
 
-/// Learn runner exit beat — hard-cap 2; prefer one picture when available.
-List<LessonQuizQuestion> selectLearnExitQuestions(List<LessonQuizQuestion> all, [math.Random? rng]) {
-  final r = rng ?? math.Random();
-  final imagePool = all.where((q) => q.isImageQuestion).toList()..shuffle(r);
-  final textPool = all.where((q) => !q.isImageQuestion).toList()..shuffle(r);
-  final picked = <LessonQuizQuestion>[];
-  if (imagePool.isNotEmpty) picked.add(imagePool.removeAt(0));
-  final rest = [...imagePool, ...textPool]..shuffle(r);
-  while (picked.length < 2 && rest.isNotEmpty) {
-    picked.add(rest.removeAt(0));
-  }
-  return [for (final q in picked) q.shuffledOptions(r)];
-}
-
 String _quizSpeech(LessonQuizQuestion q, int index, int total, bool bn) {
   final parts = <String>[
     bn ? 'প্রশ্ন ${index + 1}, মোট $total।' : 'Question ${index + 1} of $total.',

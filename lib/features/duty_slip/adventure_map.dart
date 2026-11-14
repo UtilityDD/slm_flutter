@@ -20,7 +20,6 @@ import '../game/ladder_builder.dart';
 import '../game/learn_board_models.dart';
 import '../game/learn_board_runner.dart';
 import '../game/learn_explainer_videos.dart';
-import '../game/learn_runner.dart';
 import '../game/learn_video_gate.dart';
 import '../game/level_shell.dart';
 import '../game/lucky_toolbox.dart' show ChestTier, ToolboxLines, chestTierNamed;
@@ -651,12 +650,17 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       return;
     }
     final boardPack = learnBoardPackFor(lessonId);
+    if (boardPack == null) {
+      // Every playable lesson has a board; one without is not built yet.
+      _hintComingSoon();
+      return;
+    }
     final youtubeId = LearnExplainerVideos.youtubeIdFor(lessonId);
     await _openRoute(
       rung,
       index,
       (_) {
-        if (boardPack != null && youtubeId != null) {
+        if (youtubeId != null) {
           // Guide → explainer video → portrait → guide → board.
           return LearnVideoGatePage(
             rungId: rung.id,
@@ -667,19 +671,11 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
             muted: widget.muted,
           );
         }
-        if (boardPack != null) {
-          return LearnBoardRunnerPage(
-            rungId: rung.id,
-            lessonId: lessonId,
-            ladderIndex: index,
-            pack: boardPack,
-            muted: widget.muted,
-          );
-        }
-        return LearnRunnerPage(
+        return LearnBoardRunnerPage(
           rungId: rung.id,
           lessonId: lessonId,
           ladderIndex: index,
+          pack: boardPack,
           muted: widget.muted,
         );
       },

@@ -669,22 +669,6 @@ class MascotSpeechLibrary {
     return enDigits(out);
   }
 
-  /// Extracts a concise, punchy 1-to-2 sentence field takeaway (never a textbook wall)
-  /// from a longer lesson explanation.
-  static String conciseFieldRule(String raw, {int maxChars = 135}) {
-    final clean = toNaturalFieldBangla(raw).replaceAll(RegExp(r'\s+'), ' ').trim();
-    if (clean.length <= maxChars) return clean;
-    // Try to cut cleanly at the first or second Bengali danda '।' or '!'
-    final parts = clean.split(RegExp(r'(?<=[।!?])\s+'));
-    if (parts.isNotEmpty && parts.first.length >= 24 && parts.first.length <= maxChars) {
-      if (parts.length > 1 && (parts[0].length + 1 + parts[1].length) <= maxChars) {
-        return '${parts[0]} ${parts[1]}';
-      }
-      return parts.first;
-    }
-    return '${clean.substring(0, maxChars - 1).trimRight()}…';
-  }
-
   // ===========================================================================
   // 6. UNIFIED VOICE + LIP-SYNC ENGINE (NEURAL MP3 FIRST -> TTS FALLBACK)
   // ===========================================================================

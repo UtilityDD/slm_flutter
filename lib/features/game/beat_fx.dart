@@ -91,7 +91,7 @@ class BeatFx {
   }
 }
 
-/// Unified top HUD bar shared by LearnRunnerPage and Do Rungs (DutySlipPage)
+/// Unified top HUD bar shared by the Learn and Do rungs
 /// so the player always sees the exact same live ◆ Score and 💀 Death counters.
 /// The main ◆ total, small, beside a level score. When the level ends and
 /// its score lands in the total, the number counts to the new value once

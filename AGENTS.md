@@ -93,9 +93,8 @@ UTF-8 only (never PowerShell `Set-Content`). English digits through `enDigits`. 
   (forgeable, and lesson completion overwrites hourly-quiz points); `profiles` may be readable across users
   (check the SELECT policy); blocking is client-side only; `submit_flutter_hourly_quiz` ends with `json || json`
   (likely errors on every submit). Fix server-side (RPCs + column grants) — coordinate with the web app.
-- **Learn runner:** `learn_runner.dart` calls the unofficial Edge "Read Aloud" endpoint live
-  (`NeuralTtsService.play` ignores `neuralVoiceEnabled`), and falls back to a self-built quiz offline.
-  Plan: pre-generated voice packs (official Azure) + on-device fallback.
+- **Voice:** there is no online TTS (the Edge client, `NeuralTtsService` and the old `learn_runner.dart` are gone;
+  `test/no_online_tts_test.dart` guards it). A better voice ships as pre-generated packs + the on-device fallback.
 - **Release:** release build is signed with the debug key; no AAB / ABI split yet.
 - Consolidation: 5 quiz players → one QuizRunner; SharedPreferences keys → one store; 3 colour systems → `SlmColors`.
 
