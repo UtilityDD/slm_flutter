@@ -32,6 +32,11 @@ class MythRivalPuppet extends StatelessWidget {
     final shirtWave = math.sin(t * math.pi * 2 + 2.1) * 0.08;
     final breath = 1.0 + math.sin(t * math.pi * 2) * 0.012;
     final snarl = speaking ? 1.0 + 0.03 * math.sin(t * math.pi * 6) : 1.0;
+    // Decode near display size (the body is 864×1152, ~4 MB at full size):
+    // the box height in device pixels, with headroom for the snarl and the
+    // learn board's squash-and-stretch. Never upscales past the source.
+    final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1.0;
+    final decodeH = (size * 1.22 * dpr * 1.1).round();
 
     return SizedBox(
       width: size,
@@ -45,6 +50,7 @@ class MythRivalPuppet extends StatelessWidget {
           children: [
             Image.asset(
               bodyAsset,
+              cacheHeight: decodeH,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.medium,
               gaplessPlayback: true,

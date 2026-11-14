@@ -2,7 +2,7 @@
 // once he has said his line and the deck is up he settles and holds still, so
 // the screen draws zero frames while the player thinks (audit-kit-03). He
 // moves while he talks and on his entrance and exit beats only. His puppet
-// sits on its own repaint layer.
+// sits on its own repaint layer, and his picture decodes near display size.
 // Measured in three levels from different modules (2.3, 3.3, 5.7) and on the
 // peek alone (beat 1 held by his voice, then beat 2).
 import 'dart:async';
@@ -206,6 +206,20 @@ void main() {
       expect(frames, 0);
       expect(puppet, 0);
       RivalTalk.end();
+      await _close(t);
+    });
+
+    testWidgets('his picture decodes near display size, not 864 × 1152', (t) async {
+      t.view.physicalSize = const Size(720, 1600);
+      t.view.devicePixelRatio = 2.0;
+      await t.pumpWidget(peek(captionFull: true, quiet: true));
+      final img = t.widget<Image>(find.descendant(of: find.byType(MythRivalPuppet), matching: find.byType(Image)));
+      expect(img.image, isA<ResizeImage>());
+      final r = img.image as ResizeImage;
+      final h = r.height ?? 0;
+      // Box 172.8 × 210.8 dp at dpr 2, with 10 % headroom: 464 px, not 1152.
+      expect(h, inInclusiveRange(1, 1151));
+      expect(h, lessThanOrEqualTo((math.min(200.0, 360 * 0.48) * 1.22 * 2 * 1.1).round() + 1));
       await _close(t);
     });
   });
