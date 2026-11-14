@@ -524,11 +524,8 @@ class M4PoleGeo {
         1 => Offset(poleX, armY - 30),
         _ => Offset(242, armY - 4),
       };
-  Rect insHit(int i) => Rect.fromCenter(center: ins(i).translate(0, -12), width: 44, height: 44);
   double wireY(int i) => ins(i).dy - 22;
 
-  /// The portable earth sets, left and right of the work.
-  Offset earthAt(int side) => Offset(side == 0 ? 34 : 326, armY + 6);
   Rect earthHit(int side) => Rect.fromCenter(center: Offset(side == 0 ? 34 : 326, armY + 70), width: 64, height: 150);
 
   Rect groundFigure() => Rect.fromLTWH(poleX - 92, groundY - 118, 59, 118);
@@ -910,7 +907,6 @@ class M4StreetGeo {
   static const postX = 262.0;
   double get headY => 196;
   Offset get head => const Offset(170, 0).translate(0, headY);
-  Rect get headHit => Rect.fromCenter(center: head, width: 70, height: 50);
   Rect get mcb => Rect.fromLTWH(postX - 16, groundY - 132, 32, 40);
   Rect get mcbHit => mcb.inflate(12);
 }

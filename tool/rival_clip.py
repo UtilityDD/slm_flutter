@@ -20,6 +20,10 @@ import re
 import sys
 
 import edge_tts
+try:
+    from tool.voice_32k import to_32k
+except ImportError:  # run as a plain script from tool/
+    from voice_32k import to_32k
 
 root, say_file = sys.argv[1], sys.argv[2]
 sys.stdout.reconfigure(encoding='utf-8')
@@ -28,6 +32,7 @@ name = 'r_' + hashlib.sha1(key.encode('utf-8')).hexdigest()[:10] + '.mp3'
 path = os.path.join(root, 'assets', 'sounds', 'learn_voice', name)
 if not os.path.exists(path):
     asyncio.run(edge_tts.Communicate(say, 'bn-BD-PradeepNeural', rate='-6%', pitch='-14Hz').save(path))
+    to_32k(path)  # app standard: 32 kbps mono 24 kHz
 print(name, os.path.getsize(path), '|', say)
 p = os.path.join(root, 'lib', 'features', 'game', 'learn_voice_map.dart')
 s = io.open(p, encoding='utf-8').read()

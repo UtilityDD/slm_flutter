@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/en_digits.dart';
-import '../game/content_catalog.dart';
 import '../game/game_save.dart';
 import 'mascot_speech_library.dart';
 
@@ -67,6 +65,10 @@ class GuideState {
   final GuideEntranceKind? entrance;
   final bool levelFocus;
 
+  /// Bumped by every [GuideDirector.say] (not by react/gesture beats), so the
+  /// guide shows his bubble again for each new line, even a repeated one.
+  final int lineToken;
+
   const GuideState({
     required this.mood,
     required this.gesture,
@@ -74,6 +76,7 @@ class GuideState {
     required this.token,
     this.entrance,
     this.levelFocus = false,
+    this.lineToken = 0,
   });
 
   static const quiet = GuideState(
@@ -99,6 +102,7 @@ class GuideState {
         token: token ?? this.token,
         entrance: clearEntrance ? null : (entrance ?? this.entrance),
         levelFocus: levelFocus ?? this.levelFocus,
+        lineToken: lineToken,
       );
 }
 
@@ -106,10 +110,8 @@ class GuideDirector extends Notifier<GuideState> {
   static const _welcomeDayKey = 'guide_last_welcome_day_v1';
 
   int _token = 0;
-  DateTime _lastInspire = DateTime.fromMillisecondsSinceEpoch(0);
-  DateTime _lastGag = DateTime.fromMillisecondsSinceEpoch(0);
+  int _lineToken = 0;
   DateTime _lastPoke = DateTime.fromMillisecondsSinceEpoch(0);
-  final _rng = math.Random();
   bool _entranceMuted = false;
   String? _entranceVoiceKey;
   GuideMood _entranceMood = GuideMood.talk;
@@ -128,8 +130,6 @@ class GuideDirector extends Notifier<GuideState> {
   /// Pause ladder mascot idle while a level route owns the coach.
   void setLevelFocus(bool active) {
     if (active) {
-      _lastInspire = DateTime.now();
-      _lastGag = DateTime.now();
       state = GuideState(
         mood: GuideMood.idle,
         gesture: GuideGesture.none,
@@ -194,6 +194,7 @@ class GuideDirector extends Notifier<GuideState> {
       token: _token,
       entrance: entrance,
       levelFocus: state.levelFocus,
+      lineToken: ++_lineToken,
     );
     if (speakVoice && cleanLine.trim().isNotEmpty && !muted) {
       unawaited(MascotSpeechLibrary.speak(cleanLine, voiceKey: voiceKey, muted: muted));
@@ -280,6 +281,7 @@ class GuideDirector extends Notifier<GuideState> {
       line: state.line,
       token: _token,
       levelFocus: state.levelFocus,
+      lineToken: state.lineToken,
     );
   }
 
@@ -392,24 +394,6 @@ class GuideDirector extends Notifier<GuideState> {
     sayCue(MascotCueId.ladderComingSoon);
   }
 
-  Future<void> maybeInspire({Duration minGap = const Duration(seconds: 45)}) async {
-    if (state.levelFocus) return;
-    if (state.gesture != GuideGesture.none) return;
-    if (MascotTalk.active.value || state.line.isNotEmpty) return;
-    final now = DateTime.now();
-    if (now.difference(_lastPoke) < const Duration(seconds: 12)) return;
-    if (now.difference(_lastInspire) < minGap) return;
-    final catalog = await ref.read(contentCatalogProvider.future);
-    final lines = catalog.guideLines.where((g) => g.when == 'idle').toList();
-    _lastInspire = now;
-    if (lines.isEmpty) {
-      sayCue(MascotCueId.ladderIdleLevel);
-      return;
-    }
-    final pick = lines[_rng.nextInt(lines.length)];
-    say(mood: GuideMood.inspire, line: MascotSpeechLibrary.toNaturalFieldBangla(pick.bnText));
-  }
-
   /// Idle highlight on a playable level / gift — short, actionable field coach line.
   /// Never overrules other active lineman engagement (TTS speech, recent pro-tip poke, active dialogue).
   void nudgePlay({required bool gift}) {
@@ -421,27 +405,7 @@ class GuideDirector extends Notifier<GuideState> {
     if (state.gesture != GuideGesture.none) {
       state = state.copyWith(gesture: GuideGesture.none);
     }
-    _lastInspire = now;
     sayCue(gift ? MascotCueId.ladderIdleGift : MascotCueId.ladderIdleLevel);
-  }
-
-  /// Gentle idle gesture — lean / peek / hop. Call after long quiet.
-  Future<void> maybeFunnyIdle({Duration minGap = const Duration(seconds: 28)}) async {
-    if (state.levelFocus) return;
-    final now = DateTime.now();
-    if (now.difference(_lastGag) < minGap) return;
-    if (state.entrance != null) return;
-    if (MascotTalk.active.value || state.line.isNotEmpty) return;
-    if (now.difference(_lastPoke) < const Duration(seconds: 12)) return;
-    if (state.mood == GuideMood.warn ||
-        state.mood == GuideMood.fright ||
-        state.mood == GuideMood.fallen ||
-        state.mood == GuideMood.celebrate) {
-      return;
-    }
-    _lastGag = now;
-    final cue = MascotSpeechLibrary.randomFunnyIdle();
-    say(mood: cue.mood, line: cue.displayBn, gesture: cue.gesture);
   }
 
   /// User tapped the mascot — react with an encouraging senior lineman field tip & voice!
@@ -451,7 +415,6 @@ class GuideDirector extends Notifier<GuideState> {
     final now = DateTime.now();
     if (now.difference(_lastPoke) < const Duration(milliseconds: 420)) return;
     _lastPoke = now;
-    _lastGag = now;
     sayCue(MascotCueId.ladderPoke, speakVoice: true, muted: muted);
   }
 

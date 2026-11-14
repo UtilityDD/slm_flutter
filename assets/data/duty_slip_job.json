@@ -256,7 +256,7 @@
       "options": [
         {"id": "insul", "label_bn": "ইনসুলেটেড প্লায়ার / গ্রিপ", "image": "assets/safety/library/tools/come_along_clamp.webp", "correct": true},
         {"id": "plain", "label_bn": "সাধারণ প্লায়ার", "image": "assets/quizzes/mistake_non_insulated_pliers.webp"},
-        {"id": "sickle", "label_bn": "কাস্তে দিয়ে টান", "image": "assets/zero_loss/scene/gear_iron_sickle.webp"}
+        {"id": "sickle", "label_bn": "কাস্তে দিয়ে টান", "image": "assets/safety/library/tools/Hacksaw.webp"}
       ]
     },
     {

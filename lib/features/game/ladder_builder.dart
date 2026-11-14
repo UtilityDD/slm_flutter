@@ -45,22 +45,6 @@ class BuiltLadder {
     }
     return null;
   }
-
-  /// First playable rung at or after [fromNumber] (1-based). Skips Coming Soon.
-  BuiltRung? nextPlayable({int fromNumber = 1}) {
-    for (final r in rungs) {
-      if (r.number >= fromNumber && !r.isComingSoon) return r;
-    }
-    return null;
-  }
-
-  /// Module checkpoint = first rung of that module.
-  BuiltRung? moduleStart(String moduleId) {
-    for (final r in rungs) {
-      if (r.module.id == moduleId) return r;
-    }
-    return null;
-  }
 }
 
 class LadderBuilder {

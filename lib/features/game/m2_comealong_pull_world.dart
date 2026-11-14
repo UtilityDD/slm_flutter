@@ -133,9 +133,6 @@ class PullGeo {
     return Rect.fromCenter(center: Offset(b.center.dx, b.top + figH * 0.36), width: 46, height: 46);
   }
 
-  /// Where he stands while rigging (on his step, by the pole, below the arm).
-  Rect get rigBox => spotBox(PullSpot.side);
-
   @override
   bool operator ==(Object other) => other is PullGeo && other.height == height && other.groundY == groundY && other.topY == topY;
 

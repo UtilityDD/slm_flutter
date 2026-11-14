@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:slm_flutter/design/slm_design.dart';
 import 'package:slm_flutter/features/startup/brand_intro.dart';
 
 class _Sound implements IntroSound {
@@ -82,6 +83,29 @@ void main() {
     expect(find.text('app'), findsOneWidget);
     expect(started, 1);
     warm.complete();
+  });
+
+  testWidgets('the app animates only once the splash starts to fade', (t) async {
+    // Home's entrances used to play out unseen under the opaque splash (and
+    // cost ~1 rebuild and a page repaint per splash frame); its tickers now
+    // wait, so the entrance plays as the splash fades.
+    await t.pumpWidget(MaterialApp(
+      home: IntroGate(sound: _Sound(), child: const Scaffold(body: SlmReveal(child: Text('app')))),
+    ));
+    double shown() => t
+        .widget<FadeTransition>(find.ancestor(of: find.text('app'), matching: find.byType(FadeTransition)).first)
+        .opacity
+        .value;
+    for (var ms = 0; ms < IntroOverlay.length.inMilliseconds - 50; ms += 16) {
+      await t.pump(const Duration(milliseconds: 16));
+    }
+    expect(find.byType(IntroOverlay), findsOneWidget);
+    expect(shown(), 0, reason: 'nothing animates under the splash');
+    for (var i = 0; i < 90; i++) {
+      await t.pump(const Duration(milliseconds: 16));
+    }
+    expect(find.byType(IntroOverlay), findsNothing);
+    expect(shown(), 1, reason: 'the entrance played as the splash faded');
   });
 
   testWidgets('disabled: the app straight away', (t) async {

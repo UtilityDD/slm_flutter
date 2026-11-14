@@ -13,16 +13,6 @@ abstract final class StartupTrace {
   /// Steps started before `runApp` that finish after it.
   static List<({String name, int ms})> get background => List.unmodifiable(_background);
 
-  /// Awaits [work] before the first frame. Keep this list empty if you can.
-  static Future<T> blockingStep<T>(String name, Future<T> Function() work) async {
-    final sw = Stopwatch()..start();
-    try {
-      return await work();
-    } finally {
-      _blocking.add((name: name, ms: sw.elapsedMilliseconds));
-    }
-  }
-
   /// Starts [work] without waiting for it and records how long it took.
   static Future<T> backgroundStep<T>(String name, Future<T> Function() work) {
     final sw = Stopwatch()..start();

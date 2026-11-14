@@ -333,12 +333,6 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  void continueAsGuest() {
-    _fetchGen++;
-    _blockNotice = null;
-    state = AuthState(profile: LinemanProfile.guest());
-  }
-
   Future<void> signOut() async {
     await _signOutQuiet();
     state = AuthState(profile: LinemanProfile.guest());

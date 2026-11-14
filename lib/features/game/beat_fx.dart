@@ -37,11 +37,11 @@ class BeatFx {
     }
     if (playSound && !muted) {
       if (delta >= 20) {
-        unawaited(ZlFx.cue('sounds/level_done.ogg', volume: 0.75, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.75, muted: false));
       } else if (delta > 0) {
-        unawaited(ZlFx.cue('sounds/dress_right.ogg', volume: 0.72, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.72, muted: false));
       } else {
-        unawaited(ZlFx.cue('sounds/dress_wrong.ogg', volume: 0.72, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.72, muted: false));
       }
     }
     ref.read(gameSaveProvider.notifier).pulseDelta(delta, originGlobal: originGlobal);
@@ -67,11 +67,11 @@ class BeatFx {
     }
     if (playSound && !muted) {
       if (delta >= 20) {
-        unawaited(ZlFx.cue('sounds/level_done.ogg', volume: 0.75, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.75, muted: false));
       } else if (delta > 0) {
-        unawaited(ZlFx.cue('sounds/dress_right.ogg', volume: 0.72, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_right.ogg', volume: 0.72, muted: false));
       } else {
-        unawaited(ZlFx.cue('sounds/dress_wrong.ogg', volume: 0.72, muted: false));
+        unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.72, muted: false));
       }
     }
     await ref.read(gameSaveProvider.notifier).addPoints(
@@ -89,14 +89,9 @@ class BeatFx {
       ref.read(guideDirectorProvider.notifier).react(GuideMood.warn);
     }
   }
-
-  /// Tip / gift / Coming Soon beat — guide reacts; visual lives on the ladder.
-  static void hintAppear(WidgetRef ref, {GuideMood mood = GuideMood.inspire}) {
-    ref.read(guideDirectorProvider.notifier).react(mood);
-  }
 }
 
-/// Unified top HUD bar shared by LearnRunnerPage and Do Rungs (DutySlipPage)
+/// Unified top HUD bar shared by the Learn and Do rungs
 /// so the player always sees the exact same live ◆ Score and 💀 Death counters.
 /// The main ◆ total, small, beside a level score. When the level ends and
 /// its score lands in the total, the number counts to the new value once

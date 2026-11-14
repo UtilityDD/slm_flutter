@@ -1252,7 +1252,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
     final stars = starsFor(passed: _run.passed, strikes: strikes, quick: _run.quick);
     if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
-    if (_run.passed) _cue('sounds/level_done.ogg', volume: 0.85);
+    if (_run.passed) _cue('sounds/quiz_complete.ogg', volume: 0.85);
     setState(() {
       _stars = stars;
       _mark = mark;

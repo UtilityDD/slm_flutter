@@ -3,6 +3,9 @@
 // may change (once a second) — nothing loops at 60 fps on a 3–4 GB phone — and
 // with "remove animations" the board deals instantly and waits just as quietly.
 // Also guards the teaching rule that a picture's name stays hidden until tapped.
+// The reason step waits just as quietly: the pending ◆ chip breathes a few
+// times when it goes on the table and when the reason deck is dealt, then rests
+// (it used to pulse at 60 fps for as long as the player thought).
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,8 +16,11 @@ import 'package:slm_flutter/design/slm_design.dart';
 import 'package:slm_flutter/features/auth/auth_provider.dart';
 import 'package:slm_flutter/features/game/learn_board_models.dart';
 import 'package:slm_flutter/features/game/learn_board_runner.dart';
+import 'package:slm_flutter/features/guide/ai_lineman_guide.dart';
 import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
+
+import '../support/board_pick.dart';
 
 /// Has read lessons 1.1 and 1.2 already, so a board opens straight on the cards.
 class _TestAuth extends AuthNotifier {
@@ -30,6 +36,22 @@ final _boards = [
 
 var _rebuilds = 0;
 
+/// Rebuilds outside the coach (AiLinemanGuide): the board's own, which the
+/// guide's blinks cannot move.
+var _boardRebuilds = 0;
+
+void _countRebuild(Element e, bool _) {
+  _rebuilds++;
+  var coach = e.widget is AiLinemanGuide;
+  if (!coach) {
+    e.visitAncestorElements((a) {
+      coach = a.widget is AiLinemanGuide;
+      return !coach;
+    });
+  }
+  if (!coach) _boardRebuilds++;
+}
+
 void _muteAudio() {
   final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   Future<Object?> ok(MethodCall _) async => 1;
@@ -40,7 +62,39 @@ void _muteAudio() {
 
 Finder get _cards => find.byWidgetPredicate((w) => w.runtimeType.toString() == '_AnimatedChoiceCard');
 
-Future<({double rebuildsPerSec, int framesInIdleSecond, bool dayCardFirst})> _waitAtFirstQuestion(
+/// A dealt card (`pick-…` or `why-…`) whose id is one of [ids].
+Finder _dealt(String kind, Set<String> ids) => find.byWidgetPredicate((w) {
+      final k = w.key;
+      return w.runtimeType.toString() == '_AnimatedChoiceCard' &&
+          k is ValueKey<String> &&
+          k.value.startsWith('$kind-') &&
+          ids.contains(k.value.split('-').skip(2).join('-'));
+    });
+
+/// Rebuilds per second over 2 s, then frames scheduled in one more second.
+Future<({double rebuildsPerSec, double boardPerSec, int frames})> _idle(WidgetTester tester) async {
+  _rebuilds = 0;
+  _boardRebuilds = 0;
+  for (var i = 0; i < 125; i++) {
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  final perSec = _rebuilds / 2.0;
+  final boardPerSec = _boardRebuilds / 2.0;
+  var frames = 0;
+  for (var i = 0; i < 60; i++) {
+    if (tester.binding.hasScheduledFrame) frames++;
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  return (rebuildsPerSec: perSec, boardPerSec: boardPerSec, frames: frames);
+}
+
+Future<void> _pumpMs(WidgetTester tester, int ms) async {
+  for (var i = 0; i < ms ~/ 100; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
+Future<({double rebuildsPerSec, double boardPerSec, int framesInIdleSecond, bool dayCardFirst})> _waitAtFirstQuestion(
   WidgetTester tester, {
   required bool reduce,
   required LearnBoardPack pack,
@@ -76,10 +130,12 @@ Future<({double rebuildsPerSec, int framesInIdleSecond, bool dayCardFirst})> _wa
   }
 
   _rebuilds = 0;
+  _boardRebuilds = 0;
   for (var i = 0; i < 125; i++) {
     await tester.pump(const Duration(milliseconds: 16));
   }
   final perSec = _rebuilds / 2.0;
+  final boardPerSec = _boardRebuilds / 2.0;
 
   // Frames in one idle second, pumped frame by frame: a 60 fps loop shows ~60.
   var frames = 0;
@@ -87,7 +143,7 @@ Future<({double rebuildsPerSec, int framesInIdleSecond, bool dayCardFirst})> _wa
     if (tester.binding.hasScheduledFrame) frames++;
     await tester.pump(const Duration(milliseconds: 16));
   }
-  return (rebuildsPerSec: perSec, framesInIdleSecond: frames, dayCardFirst: dayCardFirst);
+  return (rebuildsPerSec: perSec, boardPerSec: boardPerSec, framesInIdleSecond: frames, dayCardFirst: dayCardFirst);
 }
 
 Future<void> _tearDownBoard(WidgetTester tester) async {
@@ -103,7 +159,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   _muteAudio();
   ZlFx.setMuted(true);
-  setUp(() => debugOnRebuildDirtyWidget = (_, _) => _rebuilds++);
+  setUp(() => debugOnRebuildDirtyWidget = _countRebuild);
   tearDown(() => debugOnRebuildDirtyWidget = null);
 
   for (final b in _boards) {
@@ -111,15 +167,21 @@ void main() {
     final tag = '${b.pack.lessonId} ${reduce ? 'reduce' : 'anim'}';
     testWidgets('board waits quietly at the first question ($tag)', (tester) async {
       final s = await _waitAtFirstQuestion(tester, reduce: reduce, pack: b.pack, index: b.index, day: b.day);
-      debugPrint('PERF learn board $tag: ${s.rebuildsPerSec.toStringAsFixed(0)} rebuilds/s, '
-          '${s.framesInIdleSecond} frames in an idle second');
+      debugPrint('PERF learn board $tag: ${s.rebuildsPerSec.toStringAsFixed(1)} rebuilds/s '
+          '(${s.boardPerSec.toStringAsFixed(1)} outside the coach), ${s.framesInIdleSecond} frames in an idle second');
 
       expect(tester.takeException(), isNull);
       expect(s.dayCardFirst, isTrue, reason: 'a first play opens on the day card');
       expect(find.text(b.day), findsNothing, reason: 'the day card leaves on its own');
       expect(_cards, findsNWidgets(b.pack.slots.first.cards), reason: 'the first hand is dealt');
-      // Only the clock (once a second) and the coach's blink may draw while waiting.
+      // Only the clock (once a second, one element) and the coach's blink may draw
+      // while waiting. The clock runs on fake time (package:clock), so these
+      // counts no longer depend on how busy the machine is. Measured: 1/s outside
+      // the coach; 5-10/s in all, 19/s when a window catches the guide's double-
+      // blink burst (a setState on the whole guide per beat). Drop the total to 10
+      // once the blink rebuilds only the face.
       expect(s.rebuildsPerSec, lessThan(20), reason: 'nothing may rebuild every frame while the player thinks');
+      expect(s.boardPerSec, lessThan(5), reason: 'the board itself: only the clock digits, once a second');
       expect(s.framesInIdleSecond, lessThan(12), reason: 'no 60 fps loop while waiting for an answer');
 
       // The picture must carry the cue: no item names until a card is tapped.
@@ -129,5 +191,53 @@ void main() {
       await _tearDownBoard(tester);
     });
   }
+  }
+
+  for (final reduce in [false, true]) {
+    final tag = reduce ? 'reduce' : 'anim';
+    testWidgets('reason step waits quietly, ◆ on the table (1.1 $tag)', (tester) async {
+      final b = _boards.first;
+      await _waitAtFirstQuestion(tester, reduce: reduce, pack: b.pack, index: b.index, day: b.day);
+      final slot = b.pack.slots.first;
+      expect(slot.pendingPoints, greaterThan(0), reason: 'the round puts ◆ on the table');
+      final safe = {for (final o in slot.options) if (o.correct) o.id};
+      final right = {for (final w in slot.whyChips) if (w.correct) w.id};
+      final pending = find.byWidgetPredicate((w) => w.runtimeType.toString() == '_PendingChip');
+
+      // The right card: its feedback waits for Continue with the ◆ pending.
+      await tapBoardCard(tester, _dealt('pick', safe));
+      expect(boardFeedback, findsOneWidget);
+      await _pumpMs(tester, 8000);
+      expect(pending, findsOneWidget, reason: 'the ◆ waits on the table');
+      final verdict = await _idle(tester);
+
+      // Continue: the reason deck. Deal, ask, the chip's breaths, then the wait.
+      await continueBoard(tester);
+      for (var i = 0; i < 100 && _dealt('why', right).evaluate().isEmpty; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(_dealt('why', right), findsOneWidget, reason: 'the reason deck is dealt');
+      await _pumpMs(tester, 8000);
+      expect(pending, findsOneWidget, reason: 'the ◆ still waits on the reason');
+      final why = await _idle(tester);
+
+      // A reason opened large, waiting on ✓ / ✕.
+      await openBoardCard(tester, _dealt('why', right));
+      await _pumpMs(tester, 2000);
+      final look = await _idle(tester);
+
+      String fmt(({double rebuildsPerSec, double boardPerSec, int frames}) s) =>
+          '${s.rebuildsPerSec.toStringAsFixed(1)} rebuilds/s (${s.boardPerSec.toStringAsFixed(1)} outside the coach) ${s.frames} frames';
+      debugPrint('PERF learn board reason step 1.1 $tag: Continue ${fmt(verdict)}; deck ${fmt(why)}; preview ${fmt(look)}');
+      expect(tester.takeException(), isNull);
+      for (final (name, s) in [('Continue', verdict), ('reason deck', why), ('reason preview', look)]) {
+        // In all: the clock and the coach (blinks, the cheer after a right pick);
+        // 20 as on every board until the blink rebuilds only the face.
+        expect(s.rebuildsPerSec, lessThan(20), reason: '$name: nothing may rebuild every frame while the player thinks');
+        expect(s.boardPerSec, lessThan(5), reason: '$name: the board itself: only the clock digits, once a second');
+        expect(s.frames, lessThan(12), reason: '$name: no 60 fps loop (the ◆ chip) while waiting for an answer');
+      }
+      await _tearDownBoard(tester);
+    });
   }
 }

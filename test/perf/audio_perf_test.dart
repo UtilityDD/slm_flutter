@@ -6,7 +6,6 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:slm_flutter/core/services/neural_tts_service.dart';
 import 'package:slm_flutter/features/home/bangla_read_aloud.dart';
 import 'package:slm_flutter/features/home/lesson_quiz_sfx.dart';
 import 'package:slm_flutter/features/zero_loss/zero_loss_fx.dart';
@@ -189,17 +188,6 @@ void main() {
     await a.dispose();
     await b.dispose();
   }, timeout: const Timeout(Duration(seconds: 60)));
-
-  test('Neural TTS (disabled) creates no player until used', () async {
-    final n = NeuralTtsService();
-    await _settle();
-    await n.stop();
-    await n.dispose();
-    final neural = _creates;
-    // ignore: avoid_print
-    print('[perf:audio] players created: neural page=$neural');
-    expect(neural, 0);
-  });
 
   test('Background pauses music + clock tick and resume restores them', () async {
     final binding = TestWidgetsFlutterBinding.instance;

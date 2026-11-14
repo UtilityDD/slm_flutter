@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,9 +8,7 @@ import 'package:slm_flutter/features/duty_slip/duty_slip_engine.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
 import 'package:slm_flutter/features/game/ladder_builder.dart';
-import 'package:slm_flutter/features/game/learn_runner.dart';
 import 'package:slm_flutter/features/game/lesson_promises.dart';
-import 'package:slm_flutter/features/training/training_models.dart';
 
 void main() {
   group('GameSave.claimOnce', () {
@@ -133,34 +130,6 @@ void main() {
       await save.addPromise(lessonPromiseFor('1.3')!.id);
       await die();
       expect(save.lastDeathPulse!.promiseBn, lessonPromiseFor('1.3')!.textBn);
-    });
-  });
-
-  group('learnQuizFromPoints (lesson with no quiz file)', () {
-    const points = [
-      LessonSectionPoint(itemName: 'গ্লাভস', dailyCheck: 'হাওয়া ভরে লিক চেক করুন।'),
-      LessonSectionPoint(itemName: 'হেলমেট', dailyCheck: 'খোলসে ফাটল আছে কিনা দেখুন।'),
-      LessonSectionPoint(itemName: 'বুট', dailyCheck: 'সোলে পেরেক গেঁথে আছে কিনা দেখুন।'),
-      LessonSectionPoint(itemName: 'হারনেস', dailyCheck: 'ফিতেয় সুতো উঠেছে কিনা দেখুন।'),
-    ];
-
-    test('two questions, each item asked against its own check', () {
-      final quiz = learnQuizFromPoints(points, math.Random(7));
-      expect(quiz, hasLength(2));
-      for (final q in quiz) {
-        final item = points.firstWhere((p) => q.questionText.startsWith(p.itemName));
-        expect(q.options[q.correctIndex], item.dailyCheck);
-        expect(q.options.toSet(), hasLength(q.options.length));
-        // Every option is a real check from this lesson: nothing invented.
-        for (final o in q.options) {
-          expect(points.map((p) => p.dailyCheck), contains(o));
-        }
-      }
-    });
-
-    test('too few checks: no made-up questions', () {
-      expect(learnQuizFromPoints(points.take(2).toList()), isEmpty);
-      expect(learnQuizFromPoints(const [LessonSectionPoint(itemName: 'গ্লাভস')]), isEmpty);
     });
   });
 

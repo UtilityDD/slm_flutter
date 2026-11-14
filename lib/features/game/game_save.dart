@@ -876,12 +876,6 @@ class GameSaveController extends Notifier<GameSave> {
     await _persist();
   }
 
-  Future<void> ownPpe(String id) async {
-    if (state.ppeOwned.contains(id)) return;
-    state = state.copyWith(ppeOwned: [...state.ppeOwned, id]);
-    await _persist();
-  }
-
   Future<void> claimGift(String id) async {
     if (state.giftsClaimed.contains(id)) return;
     state = state.copyWith(giftsClaimed: [...state.giftsClaimed, id]);

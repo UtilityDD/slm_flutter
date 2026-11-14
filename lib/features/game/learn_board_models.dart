@@ -99,8 +99,6 @@ export 'learn_board_pack58.dart' show learnBoardPack58, M5Board58Lines;
 export 'learn_board_pack59.dart' show learnBoardPack59, M5Board59Lines;
 export 'learn_board_pack510.dart' show learnBoardPack510, M5Board510Lines;
 
-enum LearnBoardMode { pickGear, mythRival }
-
 /// Anything dealt onto a board: an item card or a "why" chip.
 abstract interface class LearnPick {
   String get id;
@@ -148,7 +146,6 @@ class LearnBoardSlot {
     required this.promptBn,
     required this.options,
     required this.whyChips,
-    this.wearAsset = '',
     this.pendingPoints = 15,
     this.cards = 4,
     this.whyCards = 3,
@@ -166,8 +163,6 @@ class LearnBoardSlot {
   final int cards;
   final int whyCards;
 
-  /// Optional body-layer asset shown on the silhouette when locked.
-  final String wearAsset;
   final int pendingPoints;
 }
 
@@ -178,7 +173,6 @@ class LearnMythBeat {
     required this.whyChips,
     this.pendingPoints = 15,
     this.bodyAsset = 'assets/duty_slip/dress/myth_rival_bad.webp',
-    this.wornAssets = const [],
     this.dangerHints = const [],
     this.tauntBn = 'আরে! আমাদের বাপ-দাদারা তো এসব দিয়েই সারা জীবন কাজ করে গেল!',
     this.stingBn = 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
@@ -195,9 +189,6 @@ class LearnMythBeat {
 
   /// Full-body aggressive rival WebP (badly dressed).
   final String bodyAsset;
-
-  /// Optional wrong-kit slap layers (legacy); prefer dangerHints alone.
-  final List<String> wornAssets;
 
   /// Short Bangla danger ticks (optional).
   final List<String> dangerHints;
@@ -305,7 +296,6 @@ const learnBoardPack11 = LearnBoardPack(
     LearnBoardSlot(
       id: 'shirt',
       promptBn: 'সঠিক জিনিস বেছে নিন',
-      wearAsset: 'assets/duty_slip/dress/tray_shirt.webp',
       options: [
         LearnBoardOption(
           id: 'shirt',
@@ -383,7 +373,6 @@ const learnBoardPack11 = LearnBoardPack(
     LearnBoardSlot(
       id: 'helmet',
       promptBn: 'সঠিক জিনিস বেছে নিন',
-      wearAsset: 'assets/duty_slip/dress/tray_elec_helmet.webp',
       options: [
         LearnBoardOption(
           id: 'helmet',
@@ -461,7 +450,6 @@ const learnBoardPack11 = LearnBoardPack(
     LearnBoardSlot(
       id: 'boots',
       promptBn: 'সঠিক জিনিস বেছে নিন',
-      wearAsset: 'assets/duty_slip/dress/tray_boot.webp',
       options: [
         LearnBoardOption(
           id: 'boot',
@@ -533,7 +521,6 @@ const learnBoardPack11 = LearnBoardPack(
     LearnBoardSlot(
       id: 'gloves',
       promptBn: 'সঠিক জিনিস বেছে নিন',
-      wearAsset: 'assets/duty_slip/dress/tray_rubber_gloves.webp',
       options: [
         LearnBoardOption(
           id: 'rubber',
@@ -630,7 +617,6 @@ const learnBoardPack11 = LearnBoardPack(
     exitBn: 'যত্তসব নতুন নিয়ম! আমি চললাম…',
     believeNoIsCorrect: true,
     stingBn: 'শুনলেন তো ওর কথা? সত্যি কি ওর এই বিপজ্জনক কথায় কান দেবেন?',
-    wornAssets: [],
     dangerHints: [
       'ফাটা হেলমেট—চিন-স্ট্র্যাপ খোলা',
       'এক হাতে ছেঁড়া গ্লাভস, অন্য হাত খালি',

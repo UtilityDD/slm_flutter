@@ -545,9 +545,6 @@ class M4PhaseBalanceRun {
     return null;
   }
 
-  /// The phase of a load on the chart (null = a new one not given a phase).
-  int? phaseOf(String id) => plan[id];
-
   /// Taps a chip on the chart: picks it up, puts it down, or (with another
   /// one picked in another column) moves the picked one to this column.
   void tapChip(String id) {

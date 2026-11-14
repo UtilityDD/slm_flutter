@@ -29,6 +29,10 @@ class AiLinemanGuide extends ConsumerStatefulWidget {
   final bool centered;
   final VoidCallback? onTap;
 
+  /// Keep the bubble up for as long as the line stands (a learn board asks
+  /// its round's question in it). Otherwise it fades after the voice.
+  final bool keepBubble;
+
   const AiLinemanGuide({
     super.key,
     this.sprite = 96,
@@ -40,6 +44,7 @@ class AiLinemanGuide extends ConsumerStatefulWidget {
     this.overrideLine,
     this.centered = true,
     this.onTap,
+    this.keepBubble = false,
   });
 
   @override
@@ -89,8 +94,12 @@ class _VisemePose {
 class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     with TickerProviderStateMixin {
   /// Master rig clock (drives breathing, head drift, eye glints, aura). It
-  /// loops while speaking, then finishes its lap and rests (see [_syncRig]).
+  /// loops only while speaking, then eases back and rests (see [_syncRig]).
   late final AnimationController _rig;
+
+  /// How much of the rig's breath and sway shows (0 = at rest). Eases in when
+  /// he starts speaking and back out in 0.5 s when he stops.
+  late final AnimationController _rigAmp;
 
   /// Smooth crossfade between base facial expressions.
   late final AnimationController _face;
@@ -108,6 +117,14 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   late final AnimationController _talkBlend;
   late final AnimationController _touchPop;
 
+  /// Speech bubble fade (1 = shown). It fades about 1.5 s after the voice
+  /// ends, or after a reading time when no voice plays; a new line or a tap
+  /// shows it again. [AiLinemanGuide.keepBubble] holds it.
+  late final AnimationController _bubbleFade;
+  Timer? _bubbleTimer;
+  var _bubbleGone = false;
+  String? _bubbleKey;
+
   String _faceA = 'coach_ready';
   String _faceB = 'coach_ready';
   var _showingA = true;
@@ -115,7 +132,15 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   var _eyeArmed = true;
 
   /// Eye phase while the rig rests; stepped by [_eyeTimer], not a ticker.
-  var _eyeT = 0.0;
+  /// Only the blink/glance layers listen ([_blinkOpacity], [_glanceOpacity]):
+  /// a beat repaints the sprite and rebuilds nothing.
+  final _eyeT = ValueNotifier<double>(0);
+  late final _eyeClock = Listenable.merge([_rig, _eyeT]);
+  late final _blinkOpacity = _EyeOpacity(_eyeClock, () => _eyeBeat().blink ? 0.94 : 0.0);
+  late final _glanceOpacity = _EyeOpacity(_eyeClock, () {
+    final beat = _eyeBeat();
+    return !beat.blink && beat.glance ? 0.94 : 0.0;
+  });
   Timer? _eyeTimer;
   var _rigLooping = false;
 
@@ -293,6 +318,10 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       vsync: this,
       duration: const Duration(milliseconds: 6000),
     );
+    _rigAmp = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
     _face = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 220),
@@ -318,8 +347,13 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       vsync: this,
       duration: const Duration(milliseconds: 380),
     );
+    _bubbleFade = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+      value: 1,
+    )..addStatusListener(_onBubbleFade);
     _rig.addListener(_countLaps);
-    _rig.addStatusListener(_onRigStatus);
+    _rigAmp.addStatusListener(_onRigStatus);
     MascotTalk.active.addListener(_onTalkChanged);
   }
 
@@ -346,38 +380,113 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     }
     _syncMouth();
     _syncRig();
+    _armBubble();
     if (mounted) setState(() {});
+  }
+
+  /// How long a line stays up when no voice plays (muted, no clip, no engine).
+  static Duration bubbleReadTime(String line) =>
+      Duration(milliseconds: (900 + line.trim().length * 70).clamp(2500, 7000));
+
+  /// After the voice ends the line stays this long, then fades.
+  static const bubbleAfterVoice = Duration(milliseconds: 1500);
+
+  /// The line on screen (set from the build).
+  var _activeLine = '';
+
+  /// A new line (or a tap): show the bubble and arm its fade.
+  void _showBubble() {
+    _bubbleTimer?.cancel();
+    _bubbleTimer = null;
+    _voiceSeen = false;
+    if (_bubbleGone) {
+      _bubbleGone = false;
+      if (mounted && SchedulerBinding.instance.schedulerPhase != SchedulerPhase.persistentCallbacks) {
+        setState(() {});
+      }
+    }
+    _bubbleFade.value = 1;
+    _armBubble();
+  }
+
+  /// The voice played for the line on screen.
+  var _voiceSeen = false;
+
+  /// While he speaks the bubble stays. When the voice ends it fades after
+  /// [bubbleAfterVoice]; when no voice plays, after [bubbleReadTime].
+  void _armBubble() {
+    if (widget.keepBubble || _bubbleGone || _activeLine.trim().isEmpty) {
+      _bubbleTimer?.cancel();
+      _bubbleTimer = null;
+      return;
+    }
+    if (_isSpeaking) {
+      _voiceSeen = true;
+      _bubbleTimer?.cancel();
+      _bubbleTimer = null;
+      if (_bubbleFade.status == AnimationStatus.reverse) _bubbleFade.value = 1;
+      return;
+    }
+    if (_voiceSeen) {
+      _bubbleTimer?.cancel();
+      _bubbleTimer = Timer(bubbleAfterVoice, _fadeBubble);
+    } else {
+      _bubbleTimer ??= Timer(bubbleReadTime(_activeLine), _fadeBubble);
+    }
+  }
+
+  void _fadeBubble() {
+    _bubbleTimer = null;
+    if (!mounted || widget.keepBubble) return;
+    if (!_loopsOn || slmReduceMotion(context)) {
+      _bubbleFade.value = 0;
+    } else {
+      unawaited(_bubbleFade.reverse());
+    }
+  }
+
+  /// The bubble under its fade (a held bubble needs none).
+  Widget _fading(Widget bubble) =>
+      widget.keepBubble ? bubble : FadeTransition(opacity: _bubbleFade, child: bubble);
+
+  void _onBubbleFade(AnimationStatus status) {
+    if (status != AnimationStatus.dismissed || !mounted || _bubbleGone) return;
+    setState(() => _bubbleGone = true);
   }
 
   var _talkChangePending = false;
 
-  /// The rig loops only while speaking. After speech, a cue or a tap it
-  /// finishes the current lap (at most one 6 s breath cycle) and rests at
-  /// the neutral pose, where blinks run on a Timer, so an idle guide draws
-  /// no frames. Nothing runs with remove-animations or a hidden route.
-  void _syncRig({bool kick = false}) {
+  /// The rig loops only while speaking. When the voice ends it stops where
+  /// it is and its breath and sway ease out in 0.5 s ([_rigAmp]); a new line,
+  /// a cue or a tap without voice starts no lap (their own one-shots carry
+  /// them). At rest blinks run on a Timer, so an idle guide draws no frames.
+  /// Nothing runs with remove-animations or a hidden route.
+  void _syncRig() {
     if (!_loopsOn) {
       _rigLooping = false;
       _rig.stop();
       if (_rig.value != 0) _rig.value = 0;
+      _rigAmp.stop();
+      if (_rigAmp.value != 0) _rigAmp.value = 0;
       _stopEyes();
     } else if (_isSpeaking) {
       if (_rigLooping) return;
       _rigLooping = true;
       _stopEyes();
+      _rigAmp.animateTo(1, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
       _rig.repeat();
-    } else if (_rigLooping || kick) {
+    } else if (_rigLooping) {
       _rigLooping = false;
       _stopEyes();
-      _rig.forward();
-    } else if (!_rig.isAnimating) {
+      _rig.stop();
+      _rigAmp.animateBack(0, curve: Curves.easeOut);
+    } else if (!_rigAmp.isAnimating) {
       _startEyes();
     }
   }
 
   void _onRigStatus(AnimationStatus status) {
-    if (status != AnimationStatus.completed || _rigLooping) return;
-    _rig.value = 0;
+    if (status != AnimationStatus.dismissed || _rigLooping) return;
     _startEyes();
   }
 
@@ -388,11 +497,11 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   void _stopEyes() {
     _eyeTimer?.cancel();
     _eyeTimer = null;
-    _eyeT = 0;
+    _eyeT.value = 0;
   }
 
   /// Steps [_eyeT] through the same blink / double-blink / glance beats as
-  /// one rig lap (ms into 6 s), with one setState per beat.
+  /// one rig lap (ms into 6 s); each beat only repaints the eye layers.
   void _armEye(int ms) {
     final beats = [
       360, 630,
@@ -405,11 +514,11 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       if (!mounted) return;
       if (next >= 6000) {
         _eyeLap++;
-        _eyeT = 0;
+        _eyeT.value = 0;
         _armEye(0);
         return;
       }
-      setState(() => _eyeT = (next + 1) / 6000);
+      _eyeT.value = (next + 1) / 6000;
       _armEye(next);
     });
   }
@@ -442,17 +551,35 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
   void _onSpriteTap() {
     HapticFeedback.selectionClick();
     _touchPop.forward(from: 0);
-    _syncRig(kick: true);
+    _syncRig();
+    // The line again (most levels also re-say the task on a tap).
+    if (_activeLine.trim().isNotEmpty) _showBubble();
     widget.onTap?.call();
+  }
+
+  @override
+  void didUpdateWidget(AiLinemanGuide old) {
+    super.didUpdateWidget(old);
+    if (old.keepBubble != widget.keepBubble) {
+      if (widget.keepBubble) {
+        _bubbleGone = false;
+        _bubbleFade.value = 1;
+      }
+      _armBubble();
+    }
   }
 
   @override
   void dispose() {
     MascotTalk.active.removeListener(_onTalkChanged);
     _eyeTimer?.cancel();
+    _eyeT.dispose();
+    _bubbleTimer?.cancel();
+    _bubbleFade.dispose();
     _rig.removeListener(_countLaps);
-    _rig.removeStatusListener(_onRigStatus);
+    _rigAmp.removeStatusListener(_onRigStatus);
     _rig.dispose();
+    _rigAmp.dispose();
     _face.dispose();
     _gesture.dispose();
     _settle.dispose();
@@ -481,29 +608,27 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     };
   }
 
-  /// Natural blink & eye saccade overlay with occasional double-blinks.
-  String? _blinkOverlay(
-    GuideMood mood,
-    double t, {
-    required bool reduce,
-    required bool speaking,
-  }) {
-    if (reduce || mood == GuideMood.sleep) return null;
+  /// Natural blink & eye saccade beats with occasional double-blinks, at
+  /// the rig phase while he speaks, else at the eye timer's phase.
+  ({bool blink, bool glance}) _eyeBeat() {
+    final t = _rig.isAnimating ? _rig.value : _eyeT.value;
     final primaryBlink = t > 0.06 && t < 0.105;
     final doubleBlink = _eyeLap % 3 == 0 && t > 0.135 && t < 0.175;
-    final blink = primaryBlink || doubleBlink;
     final glance = _eyeLap.isOdd && t > 0.48 && t < 0.64;
-    if (!blink && !glance) return null;
-    return switch (mood) {
-      GuideMood.warn || GuideMood.fright || GuideMood.fallen =>
-        blink ? 'coach_oops_blink' : 'coach_oops_glance',
-      GuideMood.glad || GuideMood.celebrate =>
-        speaking ? (blink ? 'coach_talk_blink' : null) : null,
-      _ => speaking
-          ? (blink ? 'coach_talk_blink' : 'coach_talk_glance')
-          : (blink ? 'coach_blink' : 'coach_glance'),
-    };
+    return (blink: primaryBlink || doubleBlink, glance: glance);
   }
+
+  /// The face drawn over the base face for a blink ([blink]) or a glance.
+  String? _eyeAsset(GuideMood mood, {required bool blink, required bool speaking}) =>
+      switch (mood) {
+        GuideMood.warn || GuideMood.fright || GuideMood.fallen =>
+          blink ? 'coach_oops_blink' : 'coach_oops_glance',
+        GuideMood.glad || GuideMood.celebrate =>
+          speaking && blink ? 'coach_talk_blink' : null,
+        _ => speaking
+            ? (blink ? 'coach_talk_blink' : 'coach_talk_glance')
+            : (blink ? 'coach_blink' : 'coach_glance'),
+      };
 
   void _crossTo(String next) {
     final current = _showingA ? _faceA : _faceB;
@@ -524,11 +649,20 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     String line,
     GuideGesture gesture,
     int token,
+    int lineToken,
     bool hasEntrance, {
     required bool reduce,
   }) {
     final targetFace = _baseFace(mood, speaking: _isSpeaking);
     _crossTo(targetFace);
+
+    // Every new line shows the bubble (a repeated say counts as new).
+    _activeLine = line;
+    final bubbleKey = line.trim().isEmpty ? null : (widget.overrideLine != null ? 'o:$line' : '$lineToken:$line');
+    if (bubbleKey != _bubbleKey) {
+      _bubbleKey = bubbleKey;
+      if (bubbleKey != null) _showBubble();
+    }
 
     final overrideChanged = widget.overrideMood != null &&
         (widget.overrideMood != _lastOverrideMood ||
@@ -537,7 +671,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     _lastToken = token;
     _lastOverrideMood = widget.overrideMood;
     _lastOverrideLine = widget.overrideLine;
-    _syncRig(kick: true);
+    _syncRig();
 
     if (hasEntrance || overrideChanged) {
       _settle.forward(from: 0);
@@ -683,6 +817,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       activeLine,
       activeGesture,
       guide.token,
+      guide.lineToken,
       guide.entrance != null,
       reduce: reduce,
     );
@@ -707,9 +842,12 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     final sleep = activeMood == GuideMood.sleep;
     final stars = widget.sprite > 110 ? 5 : 3;
 
-    return AnimatedBuilder(
+    // His own layer: a talking frame repaints the guide, not the whole scene.
+    return RepaintBoundary(
+      child: AnimatedBuilder(
       animation: Listenable.merge([
         _rig,
+        _rigAmp,
         _face,
         _gesture,
         _settle,
@@ -720,12 +858,10 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
       builder: (_, _) {
         final rigT = reduce ? 0.0 : _rig.value;
         final tau = rigT * math.pi * 2;
-        final overlay = _blinkOverlay(
-          activeMood,
-          _rig.isAnimating ? rigT : _eyeT,
-          reduce: reduce,
-          speaking: _isSpeaking,
-        );
+        // Blink and glance faces stay mounted; [_EyeOpacity] shows them.
+        final eyes = !reduce && activeMood != GuideMood.sleep;
+        final blinkFace = eyes ? _eyeAsset(activeMood, blink: true, speaking: _isSpeaking) : null;
+        final glanceFace = eyes ? _eyeAsset(activeMood, blink: false, speaking: _isSpeaking) : null;
         final faceT = Curves.easeInOutCubic.transform(_face.value.clamp(0.0, 1.0));
         final topFace = _showingA ? _faceA : _faceB;
         final botFace = _showingA ? _faceB : _faceA;
@@ -743,20 +879,21 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
         final syllableEnergy = viseme.open * talkW;
 
         // Soft Lottie-like body physics (capped amplitudes — no wild wobble).
+        final amp = reduce ? 0.0 : _rigAmp.value;
         final breathWave = reduce
             ? 0.0
-            : (math.sin(tau * 2.0) * 0.75 + math.sin(tau * 4.0 + 0.6) * 0.25);
+            : amp * (math.sin(tau * 2.0) * 0.75 + math.sin(tau * 4.0 + 0.6) * 0.25);
         final swayX = reduce
             ? 0.0
-            : math.sin(tau) * 0.7 + math.cos(_mouth.value * math.pi * 3) * 0.55 * talkW;
+            : amp * math.sin(tau) * 0.7 + math.cos(_mouth.value * math.pi * 3) * 0.55 * talkW;
         final floatY = reduce
             ? 0.0
             : -breathWave.abs() * 1.1 - syllableEnergy * 1.8;
         final tiltAngle = reduce
             ? 0.0
-            : math.sin(tau + 0.4) * 0.014 +
+            : amp * math.sin(tau + 0.4) * 0.014 +
                 math.sin(_mouth.value * math.pi * 2) * 0.022 * talkW +
-                (joy ? math.sin(tau * 2.2) * 0.016 : 0.0);
+                (joy ? amp * math.sin(tau * 2.2) * 0.016 : 0.0);
         final stretchY = reduce
             ? 1.0
             : 1.0 + 0.010 * breathWave + 0.018 * syllableEnergy + (1.0 - settleRaw) * 0.04;
@@ -787,6 +924,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
               children: [
                 if (widget.showBubble &&
                     activeLine.isNotEmpty &&
+                    (widget.keepBubble || !_bubbleGone) &&
                     widget.bubbleOpacity > 0.02) ...[
                   Opacity(
                     opacity: widget.bubbleOpacity.clamp(0.0, 1.0),
@@ -795,7 +933,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
                         0,
                         (1 - widget.bubbleOpacity.clamp(0.0, 1.0)) * 8,
                       ),
-                      child: _GuideBubble(
+                      child: _fading(_GuideBubble(
                         key: ValueKey(activeLine),
                         line: enDigits(activeLine),
                         warn: warn,
@@ -805,7 +943,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
                         rigPhase: rigT,
                         maxWidth: widget.bubbleWidth,
                         tailRight: !widget.centered,
-                      ),
+                      )),
                     ),
                   ),
                   const SizedBox(height: 5),
@@ -852,10 +990,15 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
                                         opacity: faceT.clamp(0.0, 1.0),
                                         child: _faceWidget(topFace),
                                       ),
-                                      if (overlay != null)
-                                        Opacity(
-                                          opacity: 0.94,
-                                          child: _faceWidget(overlay),
+                                      if (blinkFace != null)
+                                        FadeTransition(
+                                          opacity: _blinkOpacity,
+                                          child: _faceWidget(blinkFace),
+                                        ),
+                                      if (glanceFace != null)
+                                        FadeTransition(
+                                          opacity: _glanceOpacity,
+                                          child: _faceWidget(glanceFace),
                                         ),
                                       MascotFaceRig(
                                         sprite: widget.sprite,
@@ -921,8 +1064,36 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
           ),
         );
       },
+      ),
     );
   }
+}
+
+/// Opacity of a blink/glance face, read from the eye clock: the layer
+/// repaints on a beat without a rebuild.
+class _EyeOpacity extends Animation<double> {
+  _EyeOpacity(this._clock, this._read);
+
+  final Listenable _clock;
+  final double Function() _read;
+
+  @override
+  void addListener(VoidCallback listener) => _clock.addListener(listener);
+
+  @override
+  void removeListener(VoidCallback listener) => _clock.removeListener(listener);
+
+  @override
+  void addStatusListener(AnimationStatusListener listener) {}
+
+  @override
+  void removeStatusListener(AnimationStatusListener listener) {}
+
+  @override
+  AnimationStatus get status => AnimationStatus.forward;
+
+  @override
+  double get value => _read();
 }
 
 class _CoachFace extends StatelessWidget {

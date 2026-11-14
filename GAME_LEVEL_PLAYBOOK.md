@@ -87,8 +87,8 @@ an animated hand shows **how** to interact: **tap** (ripple), **hold** (a ring f
   scene hint is off (`hintWaiting` false), so only one hand is ever on screen.
 - **Wired now (2026-11-13):** every `ChoiceDeck` (reason and coworker decks) and its preview, every `CardPreviewOverlay`,
   the zoomed reason card's **এগিয়ে যান**, the Learn board's picture pick and reason chips (`_whyBoard`), and the Do levels'
-  scenes (`FullSceneFrame(hint:, hintWaiting:, hintKey:, hintController:)` — all but `ten_sec_scan.dart`). **Not yet:** the
-  text-deck `LearnRunnerPage`'s question list (its option preview has the pair sweep). A new Do level adds its scene hint
+  scenes (`FullSceneFrame(hint:, hintWaiting:, hintKey:, hintController:)` — all but `ten_sec_scan.dart`).
+  A new Do level adds its scene hint
   and calls `missTap()` in its plain-tap branch (developer guide §4) before it ships.
 
 ### 1.4 Card picks — two steps, then Continue (every Learn and Do level)

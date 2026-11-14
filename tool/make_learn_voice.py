@@ -5,7 +5,7 @@ different one.
 1. flutter test tool/dump_learn_voice_lines_test.dart   (writes tool/learn_voice_lines.json)
 2. python -I tool/make_learn_voice.py
 
-Writes assets/sounds/learn_voice/*.mp3 (mono 24 kHz 48 kbps) and the generated
+Writes assets/sounds/learn_voice/*.mp3 (mono 24 kHz, re-encoded to 32 kbps by tool/voice_32k.py) and the generated
 lib/features/game/learn_voice_map.dart. Existing clips are kept; clips for
 lines that are gone are deleted.
 """
@@ -17,6 +17,10 @@ import os
 import sys
 
 import edge_tts
+try:
+    from tool.voice_32k import to_32k
+except ImportError:  # run as a plain script from tool/
+    from voice_32k import to_32k
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 LINES = os.path.join(ROOT, "tool", "learn_voice_lines.json")
@@ -39,6 +43,7 @@ async def _make(sem, text, path, voice):
         for attempt in range(3):
             try:
                 await edge_tts.Communicate(text, name, rate=rate, pitch=pitch).save(path)
+                to_32k(path)  # app standard: 32 kbps mono 24 kHz
                 return
             except Exception as e:  # network hiccups
                 if attempt == 2:

@@ -96,6 +96,9 @@ class IntroGate extends StatefulWidget {
 
 class _IntroGateState extends State<IntroGate> {
   late bool _showing = widget.enabled;
+
+  /// The splash still hides the app (true until its fade-out starts).
+  late bool _covering = widget.enabled;
   // Owned here, not by the overlay: the last hit plays as the app appears.
   late final IntroSound _sound = widget.sound ?? AssetIntroSound();
 
@@ -122,13 +125,18 @@ class _IntroGateState extends State<IntroGate> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        widget.child,
+        // The app builds and lays out under the splash, but its tickers wait:
+        // Home's entrance plays as the splash fades, not unseen beneath it.
+        TickerMode(enabled: !_covering, child: widget.child),
         if (_showing)
           IntroOverlay(
             key: const ValueKey('intro'),
             sound: _sound,
+            onLeave: () {
+              if (mounted) setState(() => _covering = false);
+            },
             onDone: () {
-              if (mounted) setState(() => _showing = false);
+              if (mounted) setState(() => _showing = _covering = false);
             },
           ),
       ],
@@ -139,9 +147,12 @@ class _IntroGateState extends State<IntroGate> {
 /// The splash layer: the lockup beat with its sound → fade out → [onDone].
 /// A tap anywhere ends it at once.
 class IntroOverlay extends StatefulWidget {
-  const IntroOverlay({super.key, required this.sound, required this.onDone});
+  const IntroOverlay({super.key, required this.sound, required this.onDone, this.onLeave});
   final IntroSound sound;
   final VoidCallback onDone;
+
+  /// The fade-out starts (the app begins to show).
+  final VoidCallback? onLeave;
 
   /// The drawing's timeline is 0–6 s (the soundtrack's length); the splash
   /// plays [from] → [until] of it in real time, then fades for [fade].
@@ -196,6 +207,7 @@ class _IntroOverlayState extends State<IntroOverlay> with SingleTickerProviderSt
     if (_leaving || !mounted) return;
     _stillTimer?.cancel();
     setState(() => _leaving = true);
+    widget.onLeave?.call();
   }
 
   void _finish() {

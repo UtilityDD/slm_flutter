@@ -20,7 +20,6 @@ import '../game/ladder_builder.dart';
 import '../game/learn_board_models.dart';
 import '../game/learn_board_runner.dart';
 import '../game/learn_explainer_videos.dart';
-import '../game/learn_runner.dart';
 import '../game/learn_video_gate.dart';
 import '../game/level_shell.dart';
 import '../game/lucky_toolbox.dart' show ChestTier, ToolboxLines, chestTierNamed;
@@ -54,6 +53,12 @@ class AdventureMap extends ConsumerStatefulWidget {
     required this.scrollOut,
     required this.muted,
   });
+
+  /// Closes the card open on the ladder on screen (a reply or the lucky
+  /// toolbox) and returns true; false when none is open. Android back asks
+  /// this first, so it closes the card instead of asking to leave the game
+  /// (the cards are Stack layers, not routes).
+  static bool closeOpenCard() => _AdventureMapState._shown?._closeCard() ?? false;
 
   @override
   ConsumerState<AdventureMap> createState() => _AdventureMapState();
@@ -89,7 +94,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   /// Emerald cap sits above the last catalog rung.
   static const _emeraldExtra = 1;
 
-  /// Fallback when the catalog is not loaded yet (Module 1 + Module 2 = 60).
+  /// Fallback when the catalog is not loaded yet (see [ladderFallbackSpan]).
   static const _playableFallbackSpan = ladderFallbackSpan;
 
   /// Contiguous playable prefix from the catalog (stops at first comingSoon).
@@ -169,9 +174,37 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   var _programmaticScroll = false;
   final _nudgeRng = math.Random();
 
+  /// The ladder's loops (glow, gleam, motes, the live coin, shimmer, the
+  /// finish shield) rest once an idle nudge spell ends untouched; the next
+  /// touch wakes them. An idle ladder then draws no frames (AGENTS §1).
+  final _calm = SlmMotionSettings();
+
+  void _setCalm(bool calm) {
+    if (_calm.paused == calm) return;
+    calm ? _calm.pause() : _calm.play();
+    _syncLoops();
+  }
+
+  /// The ladder on screen, for [AdventureMap.closeOpenCard].
+  static _AdventureMapState? _shown;
+
+  /// Closes the reply or the lucky toolbox, as their own close does.
+  bool _closeCard() {
+    if (_toolbox != null) {
+      _closeToolbox();
+      return true;
+    }
+    if (_reply != null) {
+      _closeKinetic();
+      return true;
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
+    _shown = this;
     _scroll.addListener(_publish);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -189,7 +222,11 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   /// Glow and gleam loop only while looping motion is allowed (slmLoopsOn);
   /// TickerMode already mutes them while another route covers the ladder.
   void _syncLoops() {
-    if (slmLoopsOn(context)) {
+    if (slmLoopsOn(context) && _calm.paused) {
+      // Idle calm: frozen where they are, no snap.
+      _glow.stop();
+      _ascent.stop();
+    } else if (slmLoopsOn(context)) {
       if (!_glow.isAnimating) _glow.repeat(reverse: true);
       if (!_ascent.isAnimating) _ascent.repeat();
     } else {
@@ -270,6 +307,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   }
 
   void _armIdle() {
+    _setCalm(false);
     _nudgeCycles = 0;
     _nudgeSounded = false;
     _idleTimer?.cancel();
@@ -373,7 +411,12 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   void _startIdleNudge() {
     if (!mounted || !slmLoopsOn(context)) return;
     if (_reply != null || _sideBusy) return;
-    if (MascotTalk.active.value) return;
+    if (MascotTalk.active.value) {
+      // The guide is talking: try again later (so the spell, and the calm
+      // after it, still come).
+      _armIdle();
+      return;
+    }
     if (_nudgeIndex != null) return;
     if (!_ladderVisible()) {
       // A lesson or quiz is on top: check again later, stay silent now.
@@ -392,6 +435,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       if (_nudgeCycles >= _nudgeMaxCycles || !_ladderVisible()) {
         // Done for this idle spell; the next touch re-arms it.
         _clearNudge();
+        if (_nudgeCycles >= _nudgeMaxCycles) _setCalm(true);
         return;
       }
       if (MascotTalk.active.value || _reply != null || _sideBusy) {
@@ -481,6 +525,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
 
   @override
   void dispose() {
+    if (identical(_shown, this)) _shown = null;
     _idleTimer?.cancel();
     _nudgeCycleTimer?.cancel();
     _replyAutoClose?.cancel();
@@ -490,6 +535,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
     _glow.dispose();
     _ascent.dispose();
     _nudgePulse.dispose();
+    _calm.dispose();
     _mist.dispose();
     _shake.dispose();
     _drop.dispose();
@@ -525,10 +571,12 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   void _openLevel(int index, {BuiltLadder? built}) {
     _clearNudge();
     _armIdle();
+    // Before the catalog is built a rung has no id: a tap would open a legacy
+    // level and save progress under its old number. It loads in a moment.
+    if (built == null) return;
     final save = ref.read(gameSaveProvider);
     final focus = _computeFocus(built, save);
-    final rung =
-        built != null && index < built.length ? built.rungs[index] : null;
+    final rung = index < built.length ? built.rungs[index] : null;
     final locked = !dsPlayAllLevels && index > focus;
     if (locked) {
       _pulseMist(shake: true, focus: focus);
@@ -602,12 +650,17 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
       return;
     }
     final boardPack = learnBoardPackFor(lessonId);
+    if (boardPack == null) {
+      // Every playable lesson has a board; one without is not built yet.
+      _hintComingSoon();
+      return;
+    }
     final youtubeId = LearnExplainerVideos.youtubeIdFor(lessonId);
     await _openRoute(
       rung,
       index,
       (_) {
-        if (boardPack != null && youtubeId != null) {
+        if (youtubeId != null) {
           // Guide → explainer video → portrait → guide → board.
           return LearnVideoGatePage(
             rungId: rung.id,
@@ -618,19 +671,11 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
             muted: widget.muted,
           );
         }
-        if (boardPack != null) {
-          return LearnBoardRunnerPage(
-            rungId: rung.id,
-            lessonId: lessonId,
-            ladderIndex: index,
-            pack: boardPack,
-            muted: widget.muted,
-          );
-        }
-        return LearnRunnerPage(
+        return LearnBoardRunnerPage(
           rungId: rung.id,
           lessonId: lessonId,
           ladderIndex: index,
+          pack: boardPack,
           muted: widget.muted,
         );
       },
@@ -871,6 +916,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
               onPointerDown: (_) {
                 _activePointers++;
                 _springBackTimer?.cancel();
+                if (_calm.paused) _armIdle();
               },
               onPointerUp: (_) {
                 _activePointers = math.max(0, _activePointers - 1);
@@ -907,7 +953,8 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                                 (1 - _shake.value),
                         0,
                       ),
-                      child: child,
+                      // The bands' coins, shimmer and shield follow the calm.
+                      child: SlmMotionScope(settings: _calm, child: child!),
                     ),
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (n) {
@@ -1813,6 +1860,7 @@ class _ClimberOnRungBadge extends StatelessWidget {
         child: ClipOval(
           child: Image.asset(
             'assets/duty_slip/dress/coach_ready.webp',
+            cacheWidth: (38 * MediaQuery.devicePixelRatioOf(context)).round(),
             fit: BoxFit.cover,
             alignment: Alignment.topCenter,
             errorBuilder: (_, _, _) => const Icon(
@@ -2216,9 +2264,13 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 420),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _syncLoops();
-    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Also told when "remove animations" or the ladder's calm changes.
+    _syncLoops();
   }
 
   @override
@@ -2233,11 +2285,15 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
   }
 
   void _syncLoops() {
-    final quiet = !widget.motion || MediaQuery.disableAnimationsOf(context);
+    final quiet = !widget.motion || slmReduceMotion(context);
     final liveCurrent = widget.current && !widget.locked && !widget.soon;
-    if (liveCurrent && !quiet) {
+    if (liveCurrent && !quiet && slmLoopsOn(context)) {
       if (!_breath.isAnimating) _breath.repeat(reverse: true);
       if (!_spin.isAnimating) _spin.repeat();
+    } else if (liveCurrent && !quiet) {
+      // A paused motion scope (the ladder's calm) freezes it where it is.
+      _breath.stop();
+      _spin.stop();
     } else {
       _breath.stop();
       _breath.value = liveCurrent ? 0.55 : 0;
@@ -2255,7 +2311,7 @@ class _LevelCoinState extends State<_LevelCoin> with TickerProviderStateMixin {
   }
 
   void _onTap() {
-    final quiet = !widget.motion || MediaQuery.disableAnimationsOf(context);
+    final quiet = !widget.motion || slmReduceMotion(context);
     final live = !widget.locked && !widget.soon;
     if (!quiet && live && (widget.current || widget.cleared)) {
       _flash.forward(from: 0);

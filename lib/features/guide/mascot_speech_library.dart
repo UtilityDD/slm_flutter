@@ -4,11 +4,11 @@ import 'dart:io' show File, FileMode, Platform;
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../core/en_digits.dart';
 import '../duty_slip/duty_slip_voice.dart';
 import '../game/learn_voice.dart';
+import '../home/bangla_read_aloud.dart';
 import 'guide_director.dart';
 
 /// Shared lip-sync notifier so [AiLinemanGuide] and legacy [DsCoach] adapters
@@ -107,7 +107,6 @@ enum MascotCueId {
   sideHourlyPrompt,
   sideHourlyRight,
   sideHourlyWrong,
-  sideLifeSkill,
   sidePocketRule,
 
   // 3. Learn Card & Exit Quiz Coaching
@@ -156,8 +155,10 @@ class MascotSpeechLibrary {
 
   static final _rng = math.Random();
   static int _cycle = 0;
-  static FlutterTts? _tts;
-  static bool _ttsReady = false;
+  /// The guide's device voice: a reader on the app's one shared engine
+  /// (never a FlutterTts of its own; see [BanglaReadAloud]).
+  static BanglaReadAloud? _voice;
+  static BanglaReadAloud get _deviceVoice => _voice ??= BanglaReadAloud();
   static int _speakToken = 0;
 
   /// The silent reading hold of a rival line with no recorded clip (see
@@ -595,11 +596,6 @@ class MascotSpeechLibrary {
         ),
       MascotCueId.sideHourlyRight => _learnQuizRightPool[1],
       MascotCueId.sideHourlyWrong => _learnQuizWrongPool[1],
-      MascotCueId.sideLifeSkill => const MascotCue(
-          id: 'side.life',
-          textBn: 'অন্ধকারে বা ঝড়-বৃষ্টিতে তাড়াহুড়ো করে পোলে ওঠা মানেই বিপদ ডেকে আনা।',
-          mood: GuideMood.inspire,
-        ),
       MascotCueId.sidePocketRule => const MascotCue(
           id: 'side.rule',
           textBn: 'গোল্ডেন রুল: লিখিত পারমিট (PTW), ভোল্টেজ টেস্ট, ডিসচার্জ রড আর দুপাশে আর্থিং ছাড়া লাইন ছোঁয়া মানা!',
@@ -671,22 +667,6 @@ class MascotSpeechLibrary {
         .replaceAll('আইসোলেশন ও শাটডাউন', 'শাটডাউন ও আইসোলেশন')
         .replaceAll('আর্থিং', 'আর্থিং');
     return enDigits(out);
-  }
-
-  /// Extracts a concise, punchy 1-to-2 sentence field takeaway (never a textbook wall)
-  /// from a longer lesson explanation.
-  static String conciseFieldRule(String raw, {int maxChars = 135}) {
-    final clean = toNaturalFieldBangla(raw).replaceAll(RegExp(r'\s+'), ' ').trim();
-    if (clean.length <= maxChars) return clean;
-    // Try to cut cleanly at the first or second Bengali danda '।' or '!'
-    final parts = clean.split(RegExp(r'(?<=[।!?])\s+'));
-    if (parts.isNotEmpty && parts.first.length >= 24 && parts.first.length <= maxChars) {
-      if (parts.length > 1 && (parts[0].length + 1 + parts[1].length) <= maxChars) {
-        return '${parts[0]} ${parts[1]}';
-      }
-      return parts.first;
-    }
-    return '${clean.substring(0, maxChars - 1).trimRight()}…';
   }
 
   // ===========================================================================
@@ -793,8 +773,9 @@ class MascotSpeechLibrary {
       return;
     }
 
-    // 2. Otherwise use FlutterTts (bn-IN). Lips open on the engine's start
-    // callback (not before), so the mouth never runs ahead of the voice.
+    // 2. Otherwise the device voice (the shared engine). Lips open on the
+    // engine's start callback (not before), so the mouth never runs ahead of
+    // the voice; speakAwait returns when the engine reports the end.
     DsVoice.stop();
     LearnVoice.stop();
     var began = false;
@@ -806,33 +787,18 @@ class MascotSpeechLibrary {
 
     Timer? startGuard;
     try {
-      final tts = await _ensureTts();
-      if (tts == null || token != _speakToken) {
-        resetLips();
-        return;
-      }
-      await tts.stop();
-      await tts.setPitch(pitch);
-      await tts.setSpeechRate(rate);
-      if (token != _speakToken) return;
-      tts.setStartHandler(open);
-      tts.setCompletionHandler(() {
-        if (token == _speakToken && began) endLips();
-      });
-      tts.setCancelHandler(() {
-        if (token == _speakToken) resetLips();
-      });
-      tts.setErrorHandler((_) {
-        if (token == _speakToken) resetLips();
-      });
+      final voice = _deviceVoice;
+      voice.onSpeakingChanged = (on) {
+        if (on) open();
+      };
       // Engines that never report start still get lips after a short beat.
       startGuard = Timer(const Duration(milliseconds: 650), open);
-      await tts.speak(cleanText);
+      await voice.speakAwait(cleanText, rate: rate, pitch: pitch, asIs: true);
     } catch (_) {
       if (token == _speakToken) resetLips();
     } finally {
       startGuard?.cancel();
-      // awaitSpeakCompletion should finish with the utterance; clear lip-sync if still open.
+      // The voice ended (or was cut off): close the lips if still open.
       if (token == _speakToken && lipsOpen()) {
         resetLips();
       }
@@ -897,35 +863,18 @@ class MascotSpeechLibrary {
     await _stopTts();
   }
 
-  /// Starts the TTS engine (language, rate) without speaking, so the guide's
-  /// first line does not wait for it (done while the brand intro plays).
+  /// Starts the shared device voice (language, voice) without speaking, so
+  /// the guide's first line does not wait for it (done while the brand intro
+  /// plays).
   static Future<void> warmUp() async {
-    await _ensureTts();
-  }
-
-  static Future<FlutterTts?> _ensureTts() async {
     try {
-      if (_tts == null) {
-        _tts = FlutterTts();
-        await _tts!.setLanguage('bn-IN');
-        await _tts!.setSpeechRate(0.48);
-        await _tts!.setPitch(1.0);
-        await _tts!.awaitSpeakCompletion(true);
-        _ttsReady = true;
-      } else if (!_ttsReady) {
-        await _tts!.setLanguage('bn-IN');
-        await _tts!.awaitSpeakCompletion(true);
-        _ttsReady = true;
-      }
-      return _tts;
-    } catch (_) {
-      return null;
-    }
+      await _deviceVoice.init();
+    } catch (_) {}
   }
 
   static Future<void> _stopTts() async {
     try {
-      await _tts?.stop();
+      await _voice?.stop();
     } catch (_) {}
   }
 }

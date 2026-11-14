@@ -138,7 +138,6 @@ void main() {
         'lib/features/home/lesson_reader_page.dart',
         'lib/features/home/lesson_rich_text.dart',
         'lib/features/home/lesson_quiz_page.dart',
-        'lib/features/game/learn_runner.dart',
         'lib/features/identify/identify_detail_page.dart',
         'lib/features/identify/identify_screen.dart',
       ];

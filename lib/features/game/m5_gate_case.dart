@@ -1798,7 +1798,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     }
     _note(o.note);
     if (o.lit) {
-      _cue('sounds/level_done.ogg', volume: 0.6);
+      _cue('sounds/quiz_complete.ogg', volume: 0.6);
       if (_quiet) {
         _lit.value = 1;
       } else {
@@ -2313,7 +2313,7 @@ class _M5RunPageState extends ConsumerState<_M5RunPage>
     final stars = starsFor(passed: _run.passed, strikes: strikes, quick: quick);
     if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
-    if (_run.passed) _cue('sounds/level_done.ogg', volume: 0.85);
+    if (_run.passed) _cue('sounds/quiz_complete.ogg', volume: 0.85);
     setState(() {
       _stars = stars;
       _mark = mark;

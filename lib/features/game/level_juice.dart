@@ -291,7 +291,7 @@ class _RescueBurstState extends State<RescueBurst> with SingleTickerProviderStat
     if (!widget.muted) {
       unawaited(ZlFx.cue('sounds/learn/rush_out.ogg', volume: 0.6, muted: false));
       Future<void>.delayed(const Duration(milliseconds: 700), () {
-        if (!widget.muted) unawaited(ZlFx.cue('sounds/level_done.ogg', volume: 0.7, muted: false));
+        if (!widget.muted) unawaited(ZlFx.cue('sounds/quiz_complete.ogg', volume: 0.7, muted: false));
       });
     }
   }

@@ -86,13 +86,6 @@ class M3PillarFuseGeo {
         M3PillarFuseCause.rodent => 4,
       };
 
-  /// The centre of the cause (for its ring and the flash).
-  Offset causeAt(M3PillarFuseCause c, int feeder) => switch (c) {
-        M3PillarFuseCause.hotspot => lugs(feeder).center,
-        M3PillarFuseCause.water => leak + const Offset(0, 8),
-        M3PillarFuseCause.rodent => gland + const Offset(-6, -6),
-      };
-
   /// Where the lineman stands: by the houses, clear of the guide's corner.
   Rect get trainee => Rect.fromLTWH(286, groundY - 140, 70, 140);
 

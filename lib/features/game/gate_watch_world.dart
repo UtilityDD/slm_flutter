@@ -189,16 +189,6 @@ class GateGeo {
   Offset get wireTop => Offset(cx, pole.topY - 18 * pole.s);
   Offset get wireLeft => Offset(cx - 64 * pole.s, y(8.4) - 18 * pole.s);
 
-  /// The right conductor's height at [x] (its sag to the scene's edge).
-  double wireYAt(double x) {
-    final p0 = wireRight;
-    final x2 = cx + 400;
-    final u = ((x - p0.dx) / (x2 - p0.dx)).clamp(0.0, 1.0);
-    final ctl = p0.dy + 16;
-    final end = p0.dy + 4;
-    return (1 - u) * (1 - u) * p0.dy + 2 * (1 - u) * u * ctl + u * u * end;
-  }
-
   @override
   bool operator ==(Object other) => other is GateGeo && other.h == h && other.inset == inset;
 

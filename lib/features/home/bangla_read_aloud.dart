@@ -2,120 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_tts/flutter_tts.dart';
 
-import '../../core/services/neural_tts_service.dart';
-
-const _rateSub = '-2%';
-
-List<NeuralClip> lessonSubheadClips(String text) {
-  final t = _speechClean(text).replaceAll(RegExp(r'[।.:]+$'), '').trim();
-  return t.isEmpty ? const [] : [NeuralClip(t, rate: _rateSub, pauseMs: 500)];
-}
-
-const _optionNames = ['এ', 'বি', 'সি', 'ডি', 'ই', 'এফ'];
-
-/// "প্রশ্ন N, মোট M।" → question → spaced options.
-List<NeuralClip> quizQuestionClips({
-  required String question,
-  required List<String> options,
-  required int index,
-  required int total,
-  bool hasImage = false,
-  bool Function(String option)? isImage,
-}) {
-  final out = <NeuralClip>[
-    NeuralClip('প্রশ্ন ${index + 1}, মোট $total।', pauseMs: 500),
-    ..._sentences(_speechClean(question)),
-  ];
-  if (hasImage) out.add(const NeuralClip('এখানে একটি ছবি আছে।'));
-  _setLastPause(out, 600);
-  for (var i = 0; i < options.length; i++) {
-    final name = i < _optionNames.length ? _optionNames[i] : '${i + 1}';
-    final opt = isImage?.call(options[i]) == true ? 'ছবি' : _speechClean(options[i]);
-    out.add(NeuralClip('অপশন $name: $opt', pauseMs: i == options.length - 1 ? 0 : 350));
-  }
-  return out;
-}
-
-final _bulletLead = RegExp(r'^(?:[•·\-*–]|[0-9০-৯]+[.)।])\s*');
-final _headingLine = RegExp(r'^(?:#{1,6}\s+.+|\*\*[^*]+\*\*\s*:?)$');
-
-/// Part B: lesson text cut into sentence clips with the pause hierarchy.
-List<NeuralClip> lessonBodyClips(String raw) {
-  final out = <NeuralClip>[];
-  var inList = false;
-  for (final rawLine in raw.split(RegExp(r'\r?\n'))) {
-    final line = rawLine.trim();
-    if (line.isEmpty) continue;
-    if (_headingLine.hasMatch(line)) {
-      inList = false;
-      out.addAll(lessonSubheadClips(line));
-      continue;
-    }
-    final inline = line.contains('•') ? line.split('•').map((s) => s.trim()).where((s) => s.isNotEmpty).toList() : null;
-    final isBullet = _bulletLead.hasMatch(line) && !RegExp(r'^[0-9০-৯]+\.[0-9০-৯]').hasMatch(line);
-    final items = inline != null && (inline.length > 1 || isBullet) ? inline : (isBullet ? [line] : null);
-    if (items == null) {
-      inList = false;
-      out.addAll(_sentences(_speechClean(line)));
-      continue;
-    }
-    for (final item in items) {
-      final clips = _sentences(_speechClean(item.replaceFirst(_bulletLead, '')));
-      if (clips.isEmpty) continue;
-      if (!inList) {
-        _setLastPause(out, 400, atLeast: true);
-        inList = true;
-      }
-      out.addAll(clips);
-      _setLastPause(out, 350);
-    }
-  }
-  return out;
-}
-
-void _setLastPause(List<NeuralClip> clips, int ms, {bool atLeast = false}) {
-  if (clips.isEmpty) return;
-  final last = clips.last;
-  if (atLeast && last.pauseMs >= ms) return;
-  clips[clips.length - 1] = last.withPause(ms);
-}
-
-/// Markup and token cleanup for the neural voice.
-String _speechClean(String raw) => lessonSpeechText(raw)
-    .replaceAll(RegExp(r'[*_#>`~]+'), ' ')
-    .replaceAll(RegExp(r'\s+([।,?!:;])'), r'$1')
-    .replaceAll(RegExp(r'\s{2,}'), ' ')
-    .trim();
-
-/// One clip per sentence; the danda and ?/! set the rest after it.
-List<NeuralClip> _sentences(String text) {
-  final out = <NeuralClip>[];
-  final buf = StringBuffer();
-  final chars = text.runes.map(String.fromCharCode).toList();
-  void flush(int pause) {
-    final s = buf.toString().trim();
-    buf.clear();
-    if (s.replaceAll(RegExp(r'[\s।.,?!:;]'), '').isEmpty) return;
-    out.add(NeuralClip(s, pauseMs: pause));
-  }
-
-  for (var i = 0; i < chars.length; i++) {
-    final ch = chars[i];
-    buf.write(ch);
-    final next = i + 1 < chars.length ? chars[i + 1] : ' ';
-    final prev = i > 0 ? chars[i - 1] : '';
-    if (ch == '।') {
-      flush(450);
-    } else if ((ch == '?' || ch == '!') && next != '?' && next != '!') {
-      flush(500);
-    } else if (ch == '.' && next.trim().isEmpty && !RegExp(r'[0-9]').hasMatch(prev)) {
-      flush(450);
-    }
-  }
-  flush(450);
-  return out;
-}
-
 /// Strips lesson markup so Bangla TTS reads clean prose.
 String lessonSpeechText(String raw) {
   var text = raw;
@@ -199,12 +85,15 @@ List<SpeechBit> speechBits(String raw) {
   return bits;
 }
 
-/// The one device voice for the app.
+/// The one device voice for the app (the lesson readers and the guide's
+/// [MascotSpeechLibrary] device voice).
 ///
 /// flutter_tts sends every callback over one static channel to whichever
-/// FlutterTts was built last, so a FlutterTts per page left older pages
-/// waiting out 12-20 s timeouts. One engine, set up once; the reader that
-/// spoke last owns the callbacks.
+/// FlutterTts was built last, and `awaitSpeakCompletion` is one plugin-wide
+/// flag, so a second FlutterTts (one per page, or the guide's own) left the
+/// others waiting out 12-20 s timeouts or returning at once. One engine, set
+/// up once (completion comes by callback); the reader that spoke last owns
+/// the callbacks.
 class _DeviceTts {
   _DeviceTts._();
   static final instance = _DeviceTts._();
@@ -243,6 +132,7 @@ class _DeviceTts {
   Future<void> stop() => _tts.stop();
   Future<void> speak(String text) => _tts.speak(text);
   Future<void> setSpeechRate(double rate) => _tts.setSpeechRate(rate);
+  Future<void> setPitch(double pitch) => _tts.setPitch(pitch);
 
   Future<void> _init() async {
     await _tts.awaitSpeakCompletion(false);
@@ -375,6 +265,7 @@ class BanglaReadAloud {
     if (mine != _token) return false;
     if (language == null) return false;
     await _device.setSpeechRate(rate);
+    await _device.setPitch(1.0);
     if (mine != _token) return false;
 
     if (onClause != null) {
@@ -391,8 +282,10 @@ class BanglaReadAloud {
   }
 
   /// Speaks [raw] and finishes when the voice finishes, so the next line can wait.
-  Future<void> speakAwait(String raw, {double rate = 0.42}) async {
-    final clean = lessonSpeechText(raw);
+  /// [asIs] speaks the text unchanged (the guide's lines are already spoken
+  /// Bangla, not lesson markup).
+  Future<void> speakAwait(String raw, {double rate = 0.42, double pitch = 1.0, bool asIs = false}) async {
+    final clean = asIs ? raw.trim() : lessonSpeechText(raw);
     if (clean.isEmpty) return;
     final mine = ++_token;
     _device.claim(this);
@@ -404,6 +297,7 @@ class BanglaReadAloud {
     await init();
     if (mine != _token || language == null) return;
     await _device.setSpeechRate(rate);
+    await _device.setPitch(pitch);
     if (mine != _token) return;
     speaking = true;
     final wait = Completer<void>();

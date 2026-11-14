@@ -11,7 +11,6 @@ import '../../design/slm_design.dart';
 import '../identify/fit_image.dart';
 import 'bangla_read_aloud.dart';
 import 'lesson_quiz_sfx.dart';
-import 'lesson_quiz_store.dart';
 import 'lesson_rich_text.dart';
 import 'quiz_turn_card.dart';
 
@@ -77,13 +76,6 @@ bool isQuizImageOption(String opt) {
 /// Web lesson id "1.1" → `questions_1_1.json`.
 String lessonQuizFileName(int module, int chapter) => 'questions_${module}_$chapter.json';
 
-/// Returns null when there are no questions to show (no quiz, or offline with
-/// no saved copy). Use [LessonQuizStore.load] to tell those two apart.
-Future<List<LessonQuizQuestion>?> fetchLessonQuiz(int module, int chapter) async {
-  final load = await LessonQuizStore.instance.load(module, chapter);
-  return load.isReady ? load.questions : null;
-}
-
 /// Shown when the lesson quiz is not on this phone yet and cannot be
 /// downloaded. Returns true when the player taps retry.
 Future<bool?> showLessonQuizOfflineDialog(BuildContext context, {required bool bn}) {
@@ -134,20 +126,6 @@ List<LessonQuizQuestion> selectLessonQuizQuestions(List<LessonQuizQuestion> all,
   final rest = [...imagePool.skip(guaranteed), ...textPool]..shuffle(r);
   final selected = [...imagePool.take(guaranteed), ...rest].take(_maxQuestions).toList()..shuffle(r);
   return selected;
-}
-
-/// Learn runner exit beat — hard-cap 2; prefer one picture when available.
-List<LessonQuizQuestion> selectLearnExitQuestions(List<LessonQuizQuestion> all, [math.Random? rng]) {
-  final r = rng ?? math.Random();
-  final imagePool = all.where((q) => q.isImageQuestion).toList()..shuffle(r);
-  final textPool = all.where((q) => !q.isImageQuestion).toList()..shuffle(r);
-  final picked = <LessonQuizQuestion>[];
-  if (imagePool.isNotEmpty) picked.add(imagePool.removeAt(0));
-  final rest = [...imagePool, ...textPool]..shuffle(r);
-  while (picked.length < 2 && rest.isNotEmpty) {
-    picked.add(rest.removeAt(0));
-  }
-  return [for (final q in picked) q.shuffledOptions(r)];
 }
 
 String _quizSpeech(LessonQuizQuestion q, int index, int total, bool bn) {

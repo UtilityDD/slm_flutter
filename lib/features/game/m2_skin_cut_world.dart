@@ -38,9 +38,6 @@ class SkinGeo {
   static const double endRight = 306;
   static const double endBare = 56;
 
-  /// The cable's strip zone for a mark [strip] px from the end.
-  Rect stripZone(double strip) => Rect.fromLTRB(endX - strip, cableY - cableR, endX, cableY + cableR);
-
   /// The cable on the bench (taps and strokes).
   Rect get cableRect => Rect.fromLTRB(cableLeft + 30, cableY - 26, endX + 10, cableY + 26);
 

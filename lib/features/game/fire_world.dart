@@ -15,7 +15,6 @@ import 'fire_choose.dart' show FireKind, FireTool, FireToolFacts;
 abstract final class FireWorld {
   static const width = 1000.0;
   static const viewW = 360.0;
-  static const viewH = 420.0;
   static const ground = 262.0;
 
   /// The isolator switch on its post, beside the feeder panel (world pixels,

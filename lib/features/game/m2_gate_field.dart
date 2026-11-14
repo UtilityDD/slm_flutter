@@ -1446,7 +1446,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
   void _onWear({required bool shield}) {
     if (!_canAct) return;
     HapticFeedback.selectionClick();
-    _cue('sounds/dress_right.ogg', volume: 0.6);
+    _cue('sounds/quiz_right.ogg', volume: 0.6);
     setState(() {
       if (_run.station == M2GateStation.phase) {
         _run.phaseGloves = true;
@@ -1943,7 +1943,7 @@ class _M2GateRunPageState extends ConsumerState<_M2GateRunPage>
       if (delta > 0) _totalDelta = delta;
     });
     if (passed) {
-      _cue('sounds/level_done.ogg', volume: 0.85);
+      _cue('sounds/quiz_complete.ogg', volume: 0.85);
       await _say(M2GateLines.allSet, mood: GuideMood.celebrate);
     } else {
       _cue('sounds/learn/level_fail.ogg', volume: 0.7);

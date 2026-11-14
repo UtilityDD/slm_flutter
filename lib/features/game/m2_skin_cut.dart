@@ -876,7 +876,7 @@ class _SkinRunPageState extends ConsumerState<_SkinRunPage>
 
   Future<void> _hurtFlash() async {
     HapticFeedback.heavyImpact();
-    _cue('sounds/dress_wrong.ogg', volume: 0.8);
+    _cue('sounds/quiz_wrong.ogg', volume: 0.8);
     setState(() {
       _hurt = true;
       _hurtN++;
