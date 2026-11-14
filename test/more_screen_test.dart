@@ -41,22 +41,22 @@ final _member = const AuthState(profile: _me, email: 'me@example.com');
 final _admin = AuthState(profile: _me, email: AppConfig.adminEmails.first);
 final _guest = AuthState(profile: LinemanProfile.guest());
 
-/// League settings with no network (slm_app.my_league_settings / set_league_show_name).
+/// League settings with no network (slm_app.my_league / set_league_show_name).
 class _League extends LeagueBoardSource {
   bool showName = true;
   final saved = <bool>[];
 
   @override
-  Future<List<LeagueRow>> month({required int year, required int month, String? district}) async => const [];
+  Future<List<LeagueRow>> month({required bool district}) async => const [];
 
   @override
-  Future<List<LeagueRow>> allTime({String? district}) async => const [];
+  Future<List<LeagueRow>> allTime({required bool district}) async => const [];
+
+  @override
+  Future<LeagueMe> myLeague() async => LeagueMe(showName: showName, nameAsked: true);
 
   @override
   Future<List<LeagueWin>> myWins() async => const [];
-
-  @override
-  Future<bool> myShowName() async => showName;
 
   @override
   Future<bool> setShowName(bool value) async {

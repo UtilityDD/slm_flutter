@@ -9,9 +9,11 @@
 -- ("একই অ্যাকাউন্ট smartlineman.in ওয়েবসাইটেও মুছে যাবে").
 --
 -- What it deletes for one user, in this order, in ONE transaction:
---   1. the user's rows in the Android app's own tables (slm_app.league_level_best,
---      slm_app.league_level_best_all, slm_app.league_settings; they also cascade
---      from auth.users, deleted here so the counts are visible);
+--   1. the user's rows in the Android app's own tables (slm_app.league_month,
+--      slm_app.league_all (which also holds the cloud progress backup),
+--      slm_app.league_winners, slm_app.league_settings; they also cascade from
+--      auth.users, deleted here so the counts are visible). The per-rung clear
+--      counters (slm_app.league_rung_counts) hold no user id;
 --   2. the user's own rows in the website's history tables listed in
 --      delete_user_data() (quiz and lesson history, only the ones that exist and
 --      have that column). This is the only write into public tables outside the
@@ -26,9 +28,9 @@
 -- ON DELETE CASCADE), nothing is deleted and the error goes back to the caller. The
 -- app then shows "could not delete, write to us".
 --
--- League boards and monthly winners are worked out on every read
--- (slm_app_10_league.sql), so the user disappears from every board at once.
--- No anonymised copy is kept.
+-- Boards are worked out on every read from league_month / league_all, and the
+-- user's league_winners rows go too, so the user disappears from every board
+-- and every past winners list at once. No anonymised copy is kept.
 --
 -- RUN ORDER (Supabase dashboard -> SQL editor). Safe to run again.
 --   0. Already run: slm_app_00_schema.sql (needed), slm_app_10_league.sql (optional;
@@ -40,7 +42,7 @@
 --   2. Run this whole file.
 --   3. Test with a throwaway Google account: sign in on a phone, then in the SQL editor
 --        SELECT slm_app.delete_user_data((SELECT id FROM auth.users WHERE email = 'throwaway@gmail.com'));
---      and check that the auth user, profile and league rows are gone.
+--      and check that the auth user, profile, league rows and cloud save are gone.
 --   4. Ship the app build with the "Delete account" button (docs/playstore/account-deletion-app.md).
 --
 -- Admin accounts (the two emails in AppConfig.adminEmails / slm_app.is_admin()) cannot
@@ -72,9 +74,11 @@ BEGIN
   FOR v_schema, v_tbl, v_col IN
     SELECT t.sch, t.tbl, t.col
     FROM (VALUES
-      -- the Android app's own tables (slm_app_10_league.sql)
-      ('slm_app', 'league_level_best', 'user_id'),
-      ('slm_app', 'league_level_best_all', 'user_id'),
+      -- the Android app's own tables (slm_app_10_league.sql); league_all
+      -- holds the cloud progress backup (save_progress)
+      ('slm_app', 'league_month', 'user_id'),
+      ('slm_app', 'league_all', 'user_id'),
+      ('slm_app', 'league_winners', 'user_id'),
       ('slm_app', 'league_settings', 'user_id'),
       -- the website's quiz and lesson history (submit_quiz_result_v2 etc.):
       -- only this user's rows (names guessed from common use; whichever exist are cleaned)

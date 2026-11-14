@@ -40,11 +40,14 @@ class _Auth extends AuthNotifier {
 }
 
 class _League extends LeagueBoardSource {
-  const _League(this.myRank);
+  const _League(this.myRank, {this.me});
   final int? myRank;
 
+  /// What my_league() answers (null: offline).
+  final LeagueMe? me;
+
   @override
-  Future<List<LeagueRow>> month({required int year, required int month, String? district}) async {
+  Future<List<LeagueRow>> month({required bool district}) async {
     final rank = myRank;
     if (rank == null) throw StateError('offline');
     return [
@@ -54,11 +57,11 @@ class _League extends LeagueBoardSource {
   }
 
   @override
-  Future<List<LeagueRow>> allTime({String? district}) async => const [];
+  Future<List<LeagueRow>> allTime({required bool district}) async => const [];
+  @override
+  Future<LeagueMe> myLeague() async => me ?? (throw StateError('offline'));
   @override
   Future<List<LeagueWin>> myWins() async => const [];
-  @override
-  Future<bool> myShowName() async => true;
   @override
   Future<bool> setShowName(bool value) async => true;
 }
@@ -88,10 +91,14 @@ Future<void> _pump(
   GameSave? save,
   _Who who = _Who.verified,
   int? leagueRank,
+  LeagueMe? me,
+  DateTime? now,
+  Map<String, Object> prefs = const {},
   Size size = const Size(360, 740),
 }) async {
   SharedPreferences.setMockInitialValues({
     if (save != null) 'game_save_v1': jsonEncode(save.toJson()),
+    ...prefs,
   });
   t.view.physicalSize = size;
   t.view.devicePixelRatio = 1;
@@ -101,7 +108,8 @@ Future<void> _pump(
     overrides: [
       authProvider.overrideWith(() => _Auth(who)),
       builtLadderProvider.overrideWith((ref) async => _built),
-      leagueBoardSourceProvider.overrideWithValue(_League(leagueRank)),
+      leagueBoardSourceProvider.overrideWithValue(_League(leagueRank, me: me)),
+      if (now != null) leagueClockProvider.overrideWithValue(() => now),
     ],
     child: MaterialApp(
       home: Scaffold(
@@ -171,6 +179,48 @@ void main() {
     await t.pumpAndSettle();
     expect(_opened, [3], reason: 'the chest stands one rung above the rung that dropped it');
     await _done(t);
+  });
+
+  group('new month chip', () {
+    // 2 Dec 2026 in India; my_league() says November ended at #3 in the district.
+    final dec2 = DateTime.utc(2026, 12, 2, 6);
+    final novMe = LeagueMe(lastMonth: DateTime(2026, 11), lastMonthPoints: 240, lastMonthRankDistrict: 3);
+
+    testWidgets('first days of a new month: last month\'s district rank', (t) async {
+      await _pump(t, save: _seeded(), me: novMe, now: dec2);
+      expect(find.text('নতুন মাস, নতুন লিগ · গত মাসে জেলায় #3'), findsOneWidget);
+      expect(find.textContaining(RegExp('[০-৯]')), findsNothing);
+      await _done(t);
+    });
+
+    testWidgets('gone once the Rank screen was opened this month', (t) async {
+      await _pump(t, save: _seeded(), me: novMe, now: dec2, prefs: {leagueSeenMonthKey: '2026-12'});
+      expect(find.byKey(const ValueKey('home-chip-new-month')), findsNothing);
+      await _done(t);
+    });
+
+    testWidgets('not after the first week, not without last month, not for pending', (t) async {
+      await _pump(t, save: _seeded(), me: novMe, now: DateTime.utc(2026, 12, 9, 6));
+      expect(find.byKey(const ValueKey('home-chip-new-month')), findsNothing, reason: 'day 9');
+      await _done(t);
+
+      await _pump(t, save: _seeded(), me: const LeagueMe(), now: dec2);
+      expect(find.byKey(const ValueKey('home-chip-new-month')), findsNothing, reason: 'did not play last month');
+      await _done(t);
+
+      await _pump(t, save: _seeded(), who: _Who.pending, me: novMe, now: dec2);
+      expect(find.byKey(const ValueKey('home-chip-new-month')), findsNothing, reason: 'not verified');
+      await _done(t);
+    });
+
+    test('rule: unranked last month shows the chip without a rank', () {
+      final me = LeagueMe(lastMonth: DateTime(2026, 11), lastMonthPoints: 20);
+      expect(leagueNewMonthChip(me: me, seenMonth: '2026-11', now: dec2), (show: true, rank: null));
+      final jan = DateTime.utc(2027, 1, 1, 6);
+      final decMe = LeagueMe(lastMonth: DateTime(2026, 12), lastMonthPoints: 90, lastMonthRankDistrict: 1);
+      expect(leagueNewMonthChip(me: decMe, seenMonth: null, now: jan), (show: true, rank: 1), reason: 'across the year');
+      expect(leagueNewMonthChip(me: null, seenMonth: null, now: jan).show, isFalse);
+    });
   });
 
   testWidgets('the league chip is for verified members only', (t) async {

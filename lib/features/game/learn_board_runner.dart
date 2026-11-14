@@ -1289,7 +1289,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
     final save = ref.read(gameSaveProvider.notifier);
     final mark = _marks.percent;
     await save.recordLevelResult(widget.rungId, mark);
-    GameSaveController.onPlayResult?.call(widget.rungId, mark: mark);
+    GameSaveController.onPlayResult?.call(widget.rungId, mark: mark, ms: _levelClock.elapsedMilliseconds);
     if (!mounted) return;
     if (!_marks.passed) {
       await _fail(mark);

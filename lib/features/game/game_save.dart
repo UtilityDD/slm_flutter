@@ -652,6 +652,8 @@ class GameSaveController extends Notifier<GameSave> {
   /// Saves [ms] as the rung's best time when it beats the old one (or there is
   /// none). Returns the previous best (null = first clear) and whether it improved.
   Future<({int? previous, bool record})> recordBestTime(String rungId, int ms) async {
+    // This play's time, for the league (recordStars sends it with the stars).
+    if (ms > 0) _playMs[rungId] = ms;
     final prev = state.bestTimeMsByRung[rungId];
     if (ms <= 0 || (prev != null && prev > 0 && ms >= prev)) {
       return (previous: prev, record: false);
@@ -904,14 +906,19 @@ class GameSaveController extends Notifier<GameSave> {
   }
 
   /// Hears every finished play: a Do/gate play's stars (below) and a Learn
-  /// play's mark (from the Learn runners). Set by the monthly league
+  /// play's mark (from the Learn runners), with the play's time in [ms] from
+  /// level start to result when known. Set by the monthly league
   /// (`rank/league_service.dart`); null in tests.
-  static void Function(String rungId, {int? stars, int? mark})? onPlayResult;
+  static void Function(String rungId, {int? stars, int? mark, int? ms})? onPlayResult;
+
+  /// Time of the latest play per rung, from [recordBestTime] (the runners call
+  /// it just before [recordStars]). Memory only.
+  final _playMs = <String, int>{};
 
   /// Keeps the best stars (1–3) of a rung; returns true when this is a new best.
   Future<bool> recordStars(String rungId, int stars) async {
     final s = stars.clamp(0, 3);
-    onPlayResult?.call(rungId, stars: s);
+    onPlayResult?.call(rungId, stars: s, ms: _playMs.remove(rungId));
     if (s <= (state.starsByRung[rungId] ?? 0)) return false;
     state = _withToolboxKeys(
       state.copyWith(starsByRung: {...state.starsByRung, rungId: s}),

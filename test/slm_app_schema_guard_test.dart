@@ -10,17 +10,20 @@ import 'package:flutter_test/flutter_test.dart';
 /// The app's RPCs. Each must be called as `client.schema('slm_app').rpc(...)`
 /// and be defined in an slm_app_*.sql file.
 const slmAppRpcs = {
-  'submit_level_result',
+  'submit_level_results',
   'league_board',
   'league_board_all',
-  'league_my_wins',
-  'my_league_settings',
+  'my_league',
+  'my_wins',
   'set_league_show_name',
+  'save_progress',
+  'load_progress',
   'toolbox_quiz_question',
   'toolbox_quiz_check',
   'delete_my_account',
   'admin_set_league_hidden',
   'admin_set_approved_name',
+  'admin_rung_counts',
 };
 
 /// SQL files written before Option B for the web side's `profiles` columns
@@ -89,8 +92,8 @@ void main() {
       if (RegExp(r'''\.from\(['"](league_|profiles_public)''').hasMatch(src)) bad.add('$path: .from(league_...)');
     }
     expect(bad, isEmpty, reason: "call these as SupabaseService.client.schema('slm_app').rpc(...)");
-    for (final name in ['submit_level_result', 'league_board', 'league_board_all', 'league_my_wins',
-        'my_league_settings', 'set_league_show_name', 'delete_my_account', 'toolbox_quiz_question',
+    for (final name in ['submit_level_results', 'league_board', 'league_board_all', 'my_league', 'my_wins',
+        'set_league_show_name', 'save_progress', 'load_progress', 'delete_my_account', 'toolbox_quiz_question',
         'toolbox_quiz_check']) {
       expect(seen, contains(name), reason: '$name is called by the app (scan found no call)');
     }

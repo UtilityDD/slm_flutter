@@ -30,7 +30,8 @@ Sign-In) are not "sharing". Data that never leaves the phone is not "collected".
 | Personal info → **User IDs** (Supabase account id, SLM id) | Yes | No | Required | No | App functionality, Account management, Fraud prevention, security & compliance |
 | Personal info → **Phone number** | Yes | No | **Optional** | No | Account management, Fraud prevention, security & compliance (admin verification) |
 | Personal info → **Other info** (district, block, job type, role, verification/blocked status, league name choice) | Yes | No ⚠ B | **Optional** ⚠ C | No | App functionality, Account management, Fraud prevention, security & compliance |
-| App activity → **App interactions** (levels cleared, stars, deaths in a level, points, lessons finished, quiz answers) | Yes | No | Required (for signed-in users; guest play stays on the phone) | No | App functionality |
+| App activity → **App interactions** (levels cleared, stars, deaths in a level, level time, points, lessons finished, quiz answers) | Yes | No | Required (for signed-in users; guest play stays on the phone) | No | App functionality, Fraud prevention, security & compliance (too-fast plays are refused) |
+| App activity → **Other actions** (game progress backup: ladder progress, stars, ◆, mistake book, toolbox) | Yes | No | Required (for signed-in users; guest play stays on the phone) | No | App functionality (restore progress on a new phone; deleted with the account) |
 
 Purposes **not** used for any type: Analytics, Developer communications, Advertising or marketing,
 Personalization.
@@ -41,8 +42,12 @@ How the main reasons map to the code:
   in `supabase/fix_new_google_signup.sql`); stored in `public.profiles`.
 - Phone, district, block, job are typed/picked in Settings (`profile_edit.dart`) and used by admins to
   verify linemen (`verify_lineman.sql`, admin screen) and for the district league board.
-- Level results go to `slm_app.submit_level_result` (`slm_app_10_league.sql`); points/lessons to `profiles`; hourly quiz
+- Level results (rung, stars, deaths, time taken) go to `slm_app.submit_level_results` (`slm_app_10_league.sql`),
+  which keeps one monthly and one all-time row per player; points/lessons to `profiles`; hourly quiz
   answers to `submit_flutter_hourly_quiz`.
+- Progress backup: `slm_app.save_progress` stores the compressed game save (at most 16 KB) in the player's
+  `slm_app.league_all` row; `load_progress` reads it back after sign-in. Signed-in members only; deleted
+  with the account by `slm_app_30_delete_account.sql`.
 
 ### Not collected (answer "No" for each)
 

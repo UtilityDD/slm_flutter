@@ -10,6 +10,7 @@ import 'core/startup/app_memory.dart';
 import 'core/startup/startup_trace.dart';
 import 'core/startup/startup_warmup.dart';
 import 'core/theme/app_theme.dart';
+import 'features/rank/cloud_save.dart';
 import 'features/rank/league_service.dart';
 import 'features/shell/main_shell.dart';
 import 'features/startup/brand_intro.dart';
@@ -35,6 +36,8 @@ void bootstrap() {
   ));
   // Monthly league: hears finished plays; sends offline ones after sign-in restore.
   LeagueService.install();
+  // Cloud progress backup: after level results (throttled) and on background.
+  CloudSaveService.install();
 }
 
 /// Completes after the first frame, or after 1 s if no frame comes (app
@@ -64,7 +67,12 @@ class SmartLinemanApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       // The brand intro plays over Home on a cold start (not in widget tests).
       // Meanwhile the warm-up loads the ladder, lessons, voice and sounds.
-      home: IntroGate(enabled: !_inWidgetTest, warmUp: warmUpDuringIntro, child: const MainShell()),
+      // CloudSaveHost offers the server's progress after sign-in when it is further ahead.
+      home: IntroGate(
+        enabled: !_inWidgetTest,
+        warmUp: warmUpDuringIntro,
+        child: const CloudSaveHost(child: MainShell()),
+      ),
     );
   }
 }

@@ -102,7 +102,9 @@ Future<void> forgetDeletedAccount(WidgetRef ref) async {
   ref.invalidate(localCompletedLessonsProvider);
   ref.invalidate(readPositionProvider);
   ref.invalidate(myLeagueWinsProvider);
+  ref.invalidate(myLeagueProvider);
   ref.invalidate(leagueShowNameProvider);
+  ref.invalidate(leagueSeenMonthProvider);
 }
 
 enum _Phase { confirm, working, failed, admin }

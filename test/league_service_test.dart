@@ -1,21 +1,26 @@
 import 'dart:io';
 
+import 'package:flutter/widgets.dart' show AppLifecycleState;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
 import 'package:slm_flutter/features/rank/league_service.dart';
 
-/// Records what would reach the server. [offline] throws like a dead network;
-/// [refuse] answers like the RPC refusing (e.g. not verified).
+/// Records what would reach the server, one list per batch. [offline]
+/// throws like a dead network; [refuse] answers like the RPC refusing the
+/// whole batch (e.g. not verified).
 class _FakeSubmitter implements LeagueSubmitter {
   bool offline = false;
   String? refuse;
-  final sent = <LeagueResult>[];
+  final batches = <List<LeagueResult>>[];
+
+  List<LeagueResult> get sent => [for (final b in batches) ...b];
 
   @override
-  Future<String?> submit(LeagueResult r) async {
+  Future<String?> submit(List<LeagueResult> batch) async {
     if (offline) throw const SocketException('offline');
-    sent.add(r);
+    batches.add(List.of(batch));
     return refuse;
   }
 }
@@ -74,8 +79,13 @@ void main() {
     late _FakeSubmitter server;
     late DateTime now;
     String? uid;
+    final made = <LeagueService>[];
 
-    LeagueService service() => LeagueService(submitter: server, userId: () => uid, clock: () => now);
+    LeagueService service() {
+      final s = LeagueService(submitter: server, userId: () => uid, clock: () => now);
+      made.add(s);
+      return s;
+    }
 
     setUp(() {
       SharedPreferences.setMockInitialValues({});
@@ -84,13 +94,21 @@ void main() {
       uid = 'u1';
     });
 
+    tearDown(() {
+      for (final s in made) {
+        s.dispose();
+      }
+      made.clear();
+    });
+
     test('offline: plays wait, keeping only the best per rung', () async {
       final s = service();
       server.offline = true;
-      await s.recordPlay('1.1/do/1', stars: 1);
-      await s.recordPlay('1.1/do/1', stars: 3);
-      await s.recordPlay('1.1/do/1', stars: 2);
-      await s.recordPlay('1.2/learn', stars: 2);
+      await s.recordPlay('1.1/do/1', stars: 1, ms: 30000);
+      await s.recordPlay('1.1/do/1', stars: 3, ms: 31000);
+      await s.recordPlay('1.1/do/1', stars: 2, ms: 32000);
+      await s.recordPlay('1.2/learn', stars: 2, ms: 20000);
+      await s.flush();
       final q = await s.pending();
       expect(q.map((r) => '${r.rungId}:${r.stars}'), ['1.1/do/1:3', '1.2/learn:2']);
       expect(server.sent, isEmpty);
@@ -98,7 +116,9 @@ void main() {
 
     test('the queue survives a restart and is sent on the next flush', () async {
       server.offline = true;
-      await service().recordPlay('m1/gate', stars: 3);
+      final first = service();
+      await first.recordPlay('m1/gate', stars: 3, ms: 90000);
+      await first.flush();
       server.offline = false;
       final fresh = service(); // a new app start reads the same saved queue
       await fresh.flush();
@@ -107,22 +127,82 @@ void main() {
       expect(await fresh.pending(), isEmpty);
     });
 
-    test('online: a play is sent at once and nothing stays queued', () async {
+    test('online: the first play goes at once, with its time (ms)', () async {
       final s = service();
-      await s.recordPlay('2.3/do/0', stars: 2);
+      await s.recordPlay('2.3/do/0', stars: 2, ms: 41234);
+      await s.pending(); // waits for the send
       expect(server.sent.single.rungId, '2.3/do/0');
-      expect(server.sent.single.points, 20);
+      expect(server.sent.single.toItem(), {'rung_id': '2.3/do/0', 'stars': 2, 'deaths': 0, 'ms': 41234});
       expect(await s.pending(), isEmpty);
     });
 
-    test('the next play also flushes what waited', () async {
+    test('only improvements are sent: same or fewer stars this month stay home', () async {
       final s = service();
-      server.offline = true;
-      await s.recordPlay('1.1/do/1', stars: 2);
-      server.offline = false;
-      await s.recordPlay('1.2/do/1', stars: 1);
-      expect(server.sent.map((r) => r.rungId), unorderedEquals(['1.1/do/1', '1.2/do/1']));
-      expect(await s.pending(), isEmpty);
+      await s.recordPlay('1.1/do/1', stars: 2, ms: 30000);
+      await s.flush();
+      await s.recordPlay('1.1/do/1', stars: 2, ms: 25000);
+      await s.recordPlay('1.1/do/1', stars: 1, ms: 25000);
+      await s.flush();
+      expect(server.sent.map((r) => r.stars), [2]);
+      await s.recordPlay('1.1/do/1', stars: 3, ms: 28000);
+      await s.flush();
+      expect(server.sent.map((r) => r.stars), [2, 3]);
+    });
+
+    test('a new month starts from zero: the same stars are sent again', () async {
+      final s = service();
+      await s.recordPlay('1.1/do/1', stars: 3, ms: 30000);
+      await s.flush();
+      now = DateTime.utc(2026, 12, 2, 6);
+      await s.recordPlay('1.1/do/1', stars: 3, ms: 30000);
+      await s.flush();
+      expect(server.sent.map((r) => r.month), ['2026-11', '2026-12']);
+    });
+
+    test('batching: at most one automatic batch every 30 s', () async {
+      final s = service();
+      await s.recordPlay('1.1/do/0', stars: 3, ms: 30000);
+      await s.pending();
+      expect(server.batches, hasLength(1), reason: 'nothing went before: sent at once');
+
+      now = now.add(const Duration(seconds: 5));
+      await s.recordPlay('1.1/do/1', stars: 2, ms: 30000);
+      await s.recordPlay('1.2/do/0', stars: 1, ms: 30000);
+      await s.pending();
+      expect(server.batches, hasLength(1), reason: 'inside 30 s: waits');
+      expect(s.flushScheduled, isTrue);
+
+      // The timer's turn (or the app going to the background) sends both together.
+      now = now.add(const Duration(seconds: 30));
+      await s.flush();
+      expect(server.batches, hasLength(2));
+      expect(server.batches.last.map((r) => r.rungId), ['1.1/do/1', '1.2/do/0']);
+      expect(s.flushScheduled, isFalse);
+    });
+
+    test('install: the app going to the background sends the queue', () async {
+      final old = LeagueService.instance;
+      addTearDown(() {
+        LeagueService.instance = old;
+        GameSaveController.onPlayResult = null;
+      });
+      final s = service();
+      LeagueService.instance = s;
+      LeagueService.install();
+      await s.recordPlay('1.1/do/0', stars: 3, ms: 30000);
+      await s.pending();
+      now = now.add(const Duration(seconds: 2));
+      await s.recordPlay('1.1/do/1', stars: 3, ms: 30000);
+      await s.pending();
+      expect(server.batches, hasLength(1));
+      final binding = TestWidgetsFlutterBinding.instance;
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await s.pending();
+      expect(server.batches, hasLength(2));
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     });
 
     test('guest play, no stars and bad rung ids are never queued', () async {
@@ -136,10 +216,11 @@ void main() {
       expect(await s.pending(), isEmpty);
     });
 
-    test('a refusal from the server (e.g. not verified) drops the play', () async {
+    test('a refusal from the server (e.g. not verified) drops the plays', () async {
       final s = service();
       server.refuse = 'not_verified';
-      await s.recordPlay('1.1/do/1', stars: 3);
+      await s.recordPlay('1.1/do/1', stars: 3, ms: 30000);
+      await s.flush();
       expect(server.sent, hasLength(1));
       expect(await s.pending(), isEmpty);
     });
@@ -159,7 +240,20 @@ void main() {
       expect(await s.pending(), isEmpty);
     });
 
-    test('install: Do stars and Learn marks from the game reach the queue', () async {
+    test('big queues go in batches of at most 50', () async {
+      final s = service();
+      server.offline = true;
+      for (var m = 1; m <= 10; m++) {
+        for (var l = 1; l <= 6; l++) {
+          await s.recordPlay('$m.$l/do/0', stars: 1, ms: 20000);
+        }
+      }
+      server.offline = false;
+      await s.flush();
+      expect(server.batches.map((b) => b.length), [50, 10]);
+    });
+
+    test('install: Do stars, Learn marks and their times reach the queue', () async {
       final old = LeagueService.instance;
       addTearDown(() {
         LeagueService.instance = old;
@@ -168,12 +262,25 @@ void main() {
       server.offline = true;
       LeagueService.instance = service();
       LeagueService.install();
-      GameSaveController.onPlayResult!('1.1/do/1', stars: 2);
-      GameSaveController.onPlayResult!('1.1/learn', mark: 100);
-      GameSaveController.onPlayResult!('1.2/learn', mark: 40);
+      GameSaveController.onPlayResult!('1.1/do/1', stars: 2, ms: 33000);
+      GameSaveController.onPlayResult!('1.1/learn', mark: 100, ms: 21000);
+      GameSaveController.onPlayResult!('1.2/learn', mark: 40, ms: 9000);
       await Future<void>.delayed(const Duration(milliseconds: 50));
       final q = await LeagueService.instance.pending();
-      expect(q.map((r) => '${r.rungId}:${r.stars}'), unorderedEquals(['1.1/do/1:2', '1.1/learn:3']));
+      expect(q.map((r) => '${r.rungId}:${r.stars}:${r.ms}'), unorderedEquals(['1.1/do/1:2:33000', '1.1/learn:3:21000']));
+    });
+
+    test('GameSave hands the play time from recordBestTime to recordStars', () async {
+      final heard = <String>[];
+      addTearDown(() => GameSaveController.onPlayResult = null);
+      GameSaveController.onPlayResult = (rungId, {stars, mark, ms}) => heard.add('$rungId:$stars:$ms');
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final save = c.read(gameSaveProvider.notifier);
+      await save.recordBestTime('1.1/do/0', 42000);
+      await save.recordStars('1.1/do/0', 3);
+      await save.recordStars('1.1/do/0', 2);
+      expect(heard, ['1.1/do/0:3:42000', '1.1/do/0:2:null'], reason: 'one time per play');
     });
   });
 }

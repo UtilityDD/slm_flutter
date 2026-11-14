@@ -131,6 +131,9 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
   final _scoreKey = GlobalKey();
   final _deathKey = GlobalKey();
 
+  /// Time from opening the level to its result, for the league's speed check.
+  final _playClock = Stopwatch()..start();
+
   /// "Read the lesson" card: 0 = tucked into the পাঠ pill, 1 = open over the quiz.
   late final AnimationController _readFly = AnimationController(
     vsync: this,
@@ -687,7 +690,7 @@ class _LearnRunState extends ConsumerState<_LearnRun> with SingleTickerProviderS
     final noQuiz = _quiz.isEmpty;
     final mark = noQuiz ? 100 : _marks.percent;
     await save.recordLevelResult(widget.rungId, mark);
-    GameSaveController.onPlayResult?.call(widget.rungId, mark: mark);
+    GameSaveController.onPlayResult?.call(widget.rungId, mark: mark, ms: _playClock.elapsedMilliseconds);
     if (!mounted) return;
     _runMark = mark;
     if (!noQuiz && !_marks.passed) {

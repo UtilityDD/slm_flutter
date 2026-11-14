@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
 import '../auth/auth_provider.dart';
 import '../auth/verify_gate.dart';
@@ -20,6 +21,7 @@ enum LeagueTab { district, state, allTime }
 /// "মাসিক লাইনম্যান লিগ" (docs/LEAGUE.md): verified linemen ranked by level
 /// clears this month — in the member's district, state-wide — and by their
 /// best stars ever. Guests and unverified members can look but never appear.
+/// The first visit asks once whether to show the member's name.
 class RankScreen extends ConsumerStatefulWidget {
   const RankScreen({super.key});
 
@@ -30,6 +32,44 @@ class RankScreen extends ConsumerStatefulWidget {
 class _RankScreenState extends ConsumerState<RankScreen> {
   LeagueTab? _tab;
 
+  /// The name question was shown in this visit (never twice).
+  var _askedName = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // The Home "new month" chip stops once the board is opened this month.
+      ref.read(leagueSeenMonthProvider.notifier).markSeen(leagueMonthKey(ref.read(leagueClockProvider)()));
+      _maybeAskName();
+    });
+  }
+
+  /// "বোর্ডে আপনার নাম দেখাবেন?" once, for a signed-in member (not an admin)
+  /// whose my_league says it was never answered. The answer goes through
+  /// set_league_show_name, which marks it answered on the server.
+  Future<void> _maybeAskName() async {
+    final auth = ref.read(authProvider);
+    final p = auth.profile;
+    if (_askedName || !auth.isAuthenticated || p == null || p.isGuest || auth.isAdmin) return;
+    LeagueMe? me;
+    try {
+      me = await ref.read(myLeagueProvider.future);
+    } catch (_) {}
+    if (!mounted || me == null || me.nameAsked || _askedName) return;
+    _askedName = true;
+    final bn = ref.read(languageProvider);
+    final masked = leagueMaskedName(slmId: p.slmId, id: p.id);
+    final show = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _NameQuestion(bn: bn, masked: masked),
+    );
+    if (show == null || !mounted) return;
+    await ref.read(leagueShowNameProvider.notifier).set(show);
+  }
+
   @override
   Widget build(BuildContext context) {
     final bn = ref.watch(languageProvider);
@@ -38,7 +78,7 @@ class _RankScreenState extends ConsumerState<RankScreen> {
     final district = auth.isAuthenticated ? (auth.profile?.district?.trim() ?? '') : '';
     final tabs = [if (district.isNotEmpty) LeagueTab.district, LeagueTab.state, LeagueTab.allTime];
     final tab = tabs.contains(_tab) ? _tab! : tabs.first;
-    final query = (allTime: tab == LeagueTab.allTime, district: tab == LeagueTab.district ? district : null);
+    final query = (allTime: tab == LeagueTab.allTime, district: tab == LeagueTab.district);
     final board = ref.watch(leagueBoardProvider(query));
     final now = leagueNow();
     final month = leagueMonthLabel(now.year, now.month, bn: bn);
@@ -85,6 +125,8 @@ class _RankScreenState extends ConsumerState<RankScreen> {
                         child: _Board(
                           bn: bn,
                           board: board,
+                          monthly: !query.allTime,
+                          onRefresh: () => refreshLeagueBoard(ref, query),
                           banner: verified ? null : _JoinBanner(bn: bn),
                           padding: shellScrollPadding(
                             context,
@@ -103,7 +145,11 @@ class _RankScreenState extends ConsumerState<RankScreen> {
                     left: g,
                     right: g,
                     bottom: shellDockBottomOffset(context, 10),
-                    child: SlmReveal(index: 3, rise: 22, child: _StandingCard(bn: bn, rows: board.value!)),
+                    child: SlmReveal(
+                      index: 3,
+                      rise: 22,
+                      child: _StandingCard(bn: bn, rows: board.value!, monthly: !query.allTime),
+                    ),
                   ),
               ],
             );
@@ -130,10 +176,31 @@ class _Board extends ConsumerWidget {
   final Widget? banner;
   final EdgeInsets padding;
 
-  const _Board({required this.bn, required this.board, required this.banner, required this.padding});
+  /// This month's board (at least 3 levels to appear) or the all-time one.
+  final bool monthly;
+
+  /// Pull to refresh (at most once a minute per board).
+  final Future<void> Function() onRefresh;
+
+  const _Board({
+    required this.bn,
+    required this.board,
+    required this.banner,
+    required this.padding,
+    required this.monthly,
+    required this.onRefresh,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: SlmColors.gold300,
+      child: _list(context, ref),
+    );
+  }
+
+  Widget _list(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
     final showName = ref.watch(leagueShowNameProvider).value ?? true;
     final head = [
@@ -141,8 +208,9 @@ class _Board extends ConsumerWidget {
     ];
     return board.when(
       skipLoadingOnReload: true,
-      loading: () => ListView(padding: padding, children: [...head, const _BoardSkeleton()]),
+      loading: () => ListView(physics: const AlwaysScrollableScrollPhysics(), padding: padding, children: [...head, const _BoardSkeleton()]),
       error: (_, _) => ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: padding,
         children: [
           ...head,
@@ -156,20 +224,25 @@ class _Board extends ConsumerWidget {
       data: (rows) {
         if (rows.isEmpty) {
           return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: padding,
             children: [
               ...head,
               SlmEmptyState(
                 icon: Icons.emoji_events_rounded,
                 title: tr(bn, 'এখনও কেউ নেই', 'No one here yet'),
-                message: tr(bn, 'লেভেল পার করলেই পয়েন্ট বোর্ডে উঠবে।', 'Clear a level to get on the board.'),
+                message: monthly
+                    ? tr(bn, 'এই মাসে 3টি লেভেল পার করলেই বোর্ডে উঠবেন।', 'Clear 3 levels this month to get on the board.')
+                    : tr(bn, 'লেভেল পার করলেই পয়েন্ট বোর্ডে উঠবে।', 'Clear a level to get on the board.'),
               ),
             ],
           );
         }
         final top = rows.where((r) => r.rank <= 3).toList();
         final rest = rows.where((r) => r.rank > 3).toList();
+        final shown = rows.where((r) => r.rank <= 50).length;
         return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: padding,
           children: [
             ...head,
@@ -180,11 +253,11 @@ class _Board extends ConsumerWidget {
                 index: 2,
                 child: SlmSectionHeader(
                   overline: tr(bn, 'লিডারবোর্ড', 'Leaderboard'),
-                  title: tr(bn, 'সেরা ${rows.where((r) => r.rank <= 100).length}', 'Top ${rows.where((r) => r.rank <= 100).length}'),
+                  title: tr(bn, 'সেরা $shown', 'Top $shown'),
                 ),
               ),
               for (var i = 0; i < rest.length; i++) ...[
-                // The member's own row, when below the top 100, comes after a gap.
+                // The member's own row, when below the top 50, comes after a gap.
                 if (i > 0 && rest[i].rank > rest[i - 1].rank + 1)
                   const Padding(
                     padding: EdgeInsets.only(bottom: SlmSpace.xs),
@@ -199,6 +272,14 @@ class _Board extends ConsumerWidget {
                 ),
               ],
             ],
+            const SizedBox(height: SlmSpace.sm),
+            SlmText(
+              tr(bn, 'সমান পয়েন্ট হলে যিনি আগে পৌঁছেছেন তিনি আগে।', 'On equal points, whoever got there first is ahead.'),
+              key: const ValueKey('league-tie-note'),
+              role: SlmTextRole.caption,
+              color: SlmColors.mist,
+              align: TextAlign.center,
+            ),
           ],
         );
       },
@@ -351,7 +432,7 @@ class _RankRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.slm;
-    final where = row.district.trim();
+    final where = row.districtFor(bn).trim();
     final levels = tr(bn, '${row.rungs} লেভেল', '${row.rungs} levels');
     return SlmCard(
       variant: row.isMe ? SlmCardVariant.gold : SlmCardVariant.surface,
@@ -392,8 +473,9 @@ class _RankRow extends StatelessWidget {
 class _StandingCard extends StatelessWidget {
   final bool bn;
   final List<LeagueRow> rows;
+  final bool monthly;
 
-  const _StandingCard({required this.bn, required this.rows});
+  const _StandingCard({required this.bn, required this.rows, required this.monthly});
 
   @override
   Widget build(BuildContext context) {
@@ -406,7 +488,10 @@ class _StandingCard extends StatelessWidget {
     double? progress;
     if (me == null) {
       headline = tr(bn, 'এখনও বোর্ডে নেই', 'Not on the board yet');
-      detail = tr(bn, 'লেভেল পার করুন — প্রতিটি তারা 10 পয়েন্ট।', 'Clear levels — every star is 10 points.');
+      detail = monthly
+          ? tr(bn, 'এই মাসে কমপক্ষে 3টি লেভেল পার করুন — প্রতিটি তারা 10 পয়েন্ট।',
+              'Clear at least 3 levels this month — every star is 10 points.')
+          : tr(bn, 'লেভেল পার করুন — প্রতিটি তারা 10 পয়েন্ট।', 'Clear levels — every star is 10 points.');
     } else if (me.rank == 1) {
       headline = tr(bn, 'আপনিই শীর্ষে', 'You are on top');
       detail = tr(bn, 'জায়গা ধরে রাখতে আরও লেভেলে 3 তারা নিন।', 'Take 3 stars on more levels to hold the spot.');
@@ -417,7 +502,8 @@ class _StandingCard extends StatelessWidget {
       headline = tr(bn, 'স্থান ${me.rank}', 'Rank ${me.rank}');
       detail = gap > 0
           ? tr(bn, 'পরের স্থানে যেতে আর $gap পয়েন্ট', '$gap points to the next spot')
-          : tr(bn, 'সমান পয়েন্ট — আর একটা লেভেল পার করলেই এগিয়ে যাবেন', 'Level on points — one more level puts you ahead');
+          : tr(bn, 'সমান পয়েন্ট — উপরের জন আগে পৌঁছেছেন। আর একটা তারা নিলেই এগিয়ে যাবেন',
+              'Level on points — they got there first. One more star puts you ahead');
       progress = above == 0 ? 0 : (me.points / above).clamp(0.0, 1.0);
     }
 
@@ -494,6 +580,40 @@ class _BoardSkeleton extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// The one-time question on the first visit: show the name on the board?
+class _NameQuestion extends StatelessWidget {
+  final bool bn;
+  final String masked;
+
+  const _NameQuestion({required this.bn, required this.masked});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: SlmColors.navy900,
+      title: Text(
+        tr(bn, 'বোর্ডে আপনার নাম দেখাবেন?', 'Show your name on the board?'),
+        style: bangla(fontSize: 18, fontWeight: FontWeight.w800, color: SlmColors.ivory, height: 1.3),
+      ),
+      content: Text(
+        tr(bn, 'না বললে বোর্ডে দেখাবে: $masked। পরে সেটিংস থেকে বদলাতে পারবেন।',
+            'If not, the board shows: $masked. You can change it later in Settings.'),
+        style: bangla(fontSize: 14.5, fontWeight: FontWeight.w500, color: SlmColors.mist, height: 1.4),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(tr(bn, 'না', 'No'), style: bangla(fontSize: 15, fontWeight: FontWeight.w700, color: SlmColors.mist)),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(tr(bn, 'হ্যাঁ', 'Yes'), style: bangla(fontSize: 15, fontWeight: FontWeight.w800, color: SlmColors.gold300)),
+        ),
+      ],
     );
   }
 }

@@ -36,12 +36,14 @@ SmartLineman (প্যাকেজ `com.smartlineman.lineman`) পশ্চি�
 | ফোন নম্বর (ইচ্ছা হলে) | আপনি নিজে লেখেন | অ্যাডমিন যাচাই ও দরকারে যোগাযোগ |
 | জেলা, ব্লক, কাজের ধরন | আপনি নিজে বাছেন | যাচাই, জেলার লিগ বোর্ড |
 | SLM আইডি, ভূমিকা, যাচাই ও ব্লক স্থিতি | অ্যাপ ও অ্যাডমিন | কে যাচাই হয়েছেন তা জানা, অপব্যবহার রোধ |
-| পয়েন্ট, শেষ করা লেভেল ও পাঠ, লেভেলের তারা, কুইজের উত্তর | খেলার সময় | অগ্রগতি সেভ, স্কোর, লিগ |
+| পয়েন্ট, শেষ করা লেভেল ও পাঠ, লেভেলের তারা, লেভেলে লাগা সময়, কুইজের উত্তর | খেলার সময় | অগ্রগতি সেভ, স্কোর, লিগ (খুব তাড়াতাড়ি শেষ করা অবিশ্বাস্য খেলা বাদ দিতে সময় দেখা হয়) |
+| খেলার অগ্রগতির ব্যাকআপ (সিঁড়ির অগ্রগতি, তারা, ◆, ভুলের খাতা, টুলবক্স) | খেলার সময়, লগইন থাকলে | নতুন ফোনে বা অ্যাপ আবার ইনস্টল করলে অগ্রগতি ফিরিয়ে আনা |
 | লিগে নাম দেখানো হবে কি না | আপনার সেটিং | লিগ বোর্ডে নাম না দেখানোর সুবিধা |
 
 আমরা **নিই না**: আপনার অবস্থান (GPS), কন্টাক্ট, ছবি বা ফাইল, মাইক্রোফোন, ক্যামেরা, বিজ্ঞাপন আইডি। অ্যাপে কোনো বিজ্ঞাপন নেই এবং কোনো কেনাকাটা নেই। পড়ে শোনানোর ভয়েস ফোনের নিজস্ব টেক্সট-টু-স্পিচ দিয়ে তৈরি হয়।
 
 ফোনে কিছু তথ্য রাখা হয় (খেলার সেভ, ডাউনলোড করা কুইজ ও পাঠ, শেষ দেখা লিগ বোর্ড) যাতে ইন্টারনেট ছাড়াও অ্যাপ চলে।
+লগইন করা থাকলে খেলার অগ্রগতির একটি ছোট ব্যাকআপ (সর্বোচ্চ 16 KB) আমাদের সার্ভারে রাখা হয়, যাতে নতুন ফোনে লগইন করলে "আগের অগ্রগতি ফিরিয়ে আনবেন?" জিজ্ঞেস করে অগ্রগতি ফেরানো যায়। অতিথির অগ্রগতি সার্ভারে যায় না। অ্যাকাউন্ট মুছলে ব্যাকআপও মুছে যায়।
 
 ### 3. Google লগইন
 
@@ -73,7 +75,7 @@ SmartLineman (প্যাকেজ `com.smartlineman.lineman`) পশ্চি�
 
 ### 8. কতদিন রাখি
 
-অ্যাকাউন্ট থাকা পর্যন্ত তথ্য রাখি। অ্যাকাউন্ট মুছলে প্রোফাইল, অগ্রগতি, লিগের ফল ও লগইন অ্যাকাউন্ট মুছে যায়। নিরাপত্তা ব্যাকআপ থেকে তথ্য সর্বোচ্চ [BACKUP_DAYS] দিনের মধ্যে নিজে থেকে মুছে যায়।
+অ্যাকাউন্ট থাকা পর্যন্ত তথ্য রাখি। অ্যাকাউন্ট মুছলে প্রোফাইল, অগ্রগতি, অগ্রগতির ব্যাকআপ, লিগের ফল (মাসের সেরাদের তালিকায় আপনার নামসহ) ও লগইন অ্যাকাউন্ট মুছে যায়। নিরাপত্তা ব্যাকআপ থেকে তথ্য সর্বোচ্চ [BACKUP_DAYS] দিনের মধ্যে নিজে থেকে মুছে যায়।
 
 ### 9. অ্যাকাউন্ট ও তথ্য মোছা
 
@@ -121,12 +123,14 @@ The app is not an official app of any electricity utility or government body and
 | Phone number (optional) | You type it | Admin verification, contact if needed |
 | District, block, job type | You choose them | Verification, district league board |
 | SLM ID, role, verification and block status | The app and admins | Know who is verified, prevent abuse |
-| Points, finished levels and lessons, level stars, quiz answers | While you play | Save progress, scoring, the league |
+| Points, finished levels and lessons, level stars, time taken per level, quiz answers | While you play | Save progress, scoring, the league (the time is checked to refuse impossibly fast plays) |
+| Game progress backup (ladder progress, stars, ◆, mistake book, toolbox) | While you play, when signed in | Bring your progress back on a new phone or after reinstalling |
 | Whether to show your name in the league | Your setting | Let you hide your name on the board |
 
 We do **not** collect: your location (GPS), contacts, photos or files, microphone, camera, or advertising ID. The app has no ads and no purchases. Read-aloud voices are made by your phone's own text-to-speech.
 
 Some data is kept on your phone (game save, downloaded quizzes and lessons, the last league board) so the app works offline.
+When you are signed in, a small backup of your game progress (at most 16 KB) is kept on our server, so that after signing in on a new phone the app can ask "Bring back your earlier progress?" and restore it. Guest progress is never sent to the server. The backup is deleted with your account.
 
 ### 3. Google sign-in
 
@@ -158,7 +162,7 @@ Some lessons play YouTube videos inside the app. When you play a video, YouTube 
 
 ### 8. How long we keep it
 
-We keep your data while your account exists. Deleting your account deletes your profile, progress, league results and sign-in account. Copies in security backups expire automatically within [BACKUP_DAYS] days.
+We keep your data while your account exists. Deleting your account deletes your profile, progress, progress backup, league results (including your entries in the monthly winners list) and sign-in account. Copies in security backups expire automatically within [BACKUP_DAYS] days.
 
 ### 9. Deleting your account and data
 

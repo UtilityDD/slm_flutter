@@ -22,10 +22,10 @@ Run each file once in the Supabase SQL editor. **The database is shared with the
 | # | File | What |
 |---|---|---|
 | 00 | `slm_app_00_schema.sql` | Schema `slm_app`, grants, default privileges, `slm_app.is_admin()`, `slm_app.me_verified()` |
-| 10 | `slm_app_10_league.sql` | Monthly league and all-time board, `league_settings` (name switch, hidden, approved name), wins (see `docs/LEAGUE.md`) |
-| 11 | `slm_app_11_league_rungs_seed.sql` | Known rung ids. **Run again whenever new levels ship** (add their ids first) |
+| 10 | `slm_app_10_league.sql` | League: one `league_month` and one `league_all` row per player (packed stars), `league_rungs` (append-only), `districts`, `league_winners`, `league_rung_counts`, `league_settings`; lazy monthly rollover; the cloud progress backup (`save_progress` / `load_progress`). See `docs/LEAGUE.md` |
+| 11 | `slm_app_11_league_rungs_seed.sql` | The rung registry (id, idx, min_ms). **Append-only**: when new levels ship, add their ids at the end with the next idx and run it again. Without it every play is refused |
 | 20 | `slm_app_20_toolbox_quiz.sql` | Lucky toolbox quiz: reads `hourly_questions`, awards nothing |
-| 30 | `slm_app_30_delete_account.sql` | `delete_my_account()` (app) and `delete_user_data(uuid)` (dashboard only). **Run its CHECK query first** |
+| 30 | `slm_app_30_delete_account.sql` | `delete_my_account()` (app) and `delete_user_data(uuid)` (dashboard only): also clears `league_month`, `league_all` (cloud save), `league_winners`, `league_settings`. **Run its CHECK query first** |
 
 **Then, once, in the dashboard:** Project Settings → API (Data API) → **Exposed schemas**: add
 `slm_app` (keep `public` and `graphql_public`) and save. Without it every app call fails with

@@ -801,9 +801,10 @@ class _PassRunPageState extends ConsumerState<_PassRunPage>
     }
     final delta = await save.commitLevelScore(_rungId, _runScore);
     final stars = starsFor(passed: _passedRun, strikes: strikes, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
+    // Best time first: recordStars hands this play's time to the league.
+    if (_passedRun) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
     if (stars > 0) await save.recordStars(_rungId, stars);
     _stars = stars;
-    if (_passedRun) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
     if (!mounted) return;
     setState(() {
       _mark = mark;

@@ -68,7 +68,7 @@ class LeaderboardSource {
   Future<List<LeaderboardEntry>> fetch() async {
     final res = await SupabaseService.client
         .schema('slm_app')
-        .rpc('league_board', params: {'p_month': null, 'p_district': null});
+        .rpc('league_board', params: {'p_scope': 'state'});
     String? me;
     try {
       me = SupabaseService.client.auth.currentUser?.id;

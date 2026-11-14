@@ -112,11 +112,18 @@ class _HomeScreenState extends State<HomeScreen> {
     // loading, offline with no saved board, or when the member is not on it.
     final district = profile?.district?.trim() ?? '';
     int? leagueRank;
+    var newMonth = (show: false, rank: null as int?);
     if (verified && !auth.isAdmin && district.isNotEmpty) {
-      final rows = ref.watch(leagueBoardProvider((allTime: false, district: district))).value;
+      final rows = ref.watch(leagueBoardProvider((allTime: false, district: true))).value;
       for (final r in rows ?? const <LeagueRow>[]) {
         if (r.isMe && r.rank > 0) leagueRank = r.rank;
       }
+      // First days of a new month, until the Rank screen is opened (my_league()).
+      newMonth = leagueNewMonthChip(
+        me: ref.watch(myLeagueProvider).value,
+        seenMonth: ref.watch(leagueSeenMonthProvider).value,
+        now: ref.watch(leagueClockProvider)(),
+      );
     }
 
     final status = guest
@@ -167,6 +174,15 @@ class _HomeScreenState extends State<HomeScreen> {
           key: const ValueKey('home-chip-gift'),
           label: enDigits(tr(bn, '🎁 ${chests.length}টি উপহার অপেক্ষা করছে', '🎁 ${chests.length} gifts waiting')),
           onTap: () => _openLadder(ref, _nearest(chests.keys, focus ?? 0)),
+        ),
+      if (newMonth.show)
+        _HomeChip(
+          key: const ValueKey('home-chip-new-month'),
+          label: enDigits(newMonth.rank == null
+              ? tr(bn, 'নতুন মাস, নতুন লিগ', 'New month, new league')
+              : tr(bn, 'নতুন মাস, নতুন লিগ · গত মাসে জেলায় #${newMonth.rank}',
+                  'New month, new league · #${newMonth.rank} in district last month')),
+          onTap: () => Navigator.of(context).pushNamed(AppRoutes.rank),
         ),
       if (leagueRank != null)
         _HomeChip(
