@@ -16,8 +16,18 @@
 //   reduce motion: 120 rebuilds / 2 s both before and after (the guide's
 //                  eye loop in ai_lineman_guide.dart, outside this file set)
 //
+// The real catalog is loaded (327 rungs, 150 playable): the provider's own
+// rootBundle read never finishes under the test's fake clock, so before
+// 2026-11-14 every case here measured the 60-rung fallback with the loading
+// spinner turning (reduce motion: 120 rebuilds / 2 s, all the spinner).
+// On the real ladder, 400x800 dp: idle 2 s 1080 rebuilds (new player) and
+// 1028 (40 rungs cleared); reduce motion 0; covered 0; nudge 3 cycles.
+//
 // Self-contained: no shared helpers. Run with
 //   flutter test test/perf/ladder_perf_test.dart
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,6 +35,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/duty_slip/adventure_map.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_engine.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_models.dart';
+import 'package:slm_flutter/features/duty_slip/ladder_focus.dart';
+import 'package:slm_flutter/features/game/content_catalog.dart';
+import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/ladder_builder.dart';
 import 'package:slm_flutter/features/guide/guide_director.dart';
 import 'package:slm_flutter/features/training/training_models.dart';
 import 'package:slm_flutter/features/training/training_provider.dart';
@@ -60,8 +74,22 @@ class _Rebuilds {
 
 final _navKey = GlobalKey<NavigatorState>();
 
-Future<void> _pumpLadder(WidgetTester tester, {bool reduceMotion = false}) async {
-  SharedPreferences.setMockInitialValues({});
+/// The bundled catalog, parsed synchronously (see the header).
+ContentCatalog _catalog() => ContentCatalog.fromJson(
+    jsonDecode(File('assets/game/catalog/content_catalog.json').readAsStringSync()) as Map<String, dynamic>);
+
+/// [cleared] rungs cleared in ladder order (0: a new player).
+Future<void> _pumpLadder(WidgetTester tester, {bool reduceMotion = false, int cleared = 0}) async {
+  final ids = [for (final r in const LadderBuilder().build(_catalog()).rungs) r.id];
+  SharedPreferences.setMockInitialValues({
+    if (cleared > 0)
+      'game_save_v1': jsonEncode({
+        'points': 900,
+        'migratedFromDs': true,
+        'currentRungId': ids[cleared],
+        'rungProgress': {for (final id in ids.take(cleared)) id: 'cleared'},
+      }),
+  });
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
@@ -74,6 +102,7 @@ Future<void> _pumpLadder(WidgetTester tester, {bool reduceMotion = false}) async
     ProviderScope(
       overrides: [
         guideDirectorProvider.overrideWith(_CountingDirector.new),
+        contentCatalogProvider.overrideWith((ref) async => _catalog()),
         trainingLadderProvider.overrideWith((ref) async => <TrainingModuleItem>[]),
       ],
       child: MaterialApp(
@@ -96,6 +125,16 @@ Future<void> _pumpLadder(WidgetTester tester, {bool reduceMotion = false}) async
   // Let the catalog load, the pin scroll run and the guide entrance finish.
   for (var i = 0; i < 120; i++) {
     await tester.pump(const Duration(milliseconds: 50));
+  }
+  // The guards below mean something only on the real ladder.
+  final built = ProviderScope.containerOf(tester.element(find.byType(AdventureMap))).read(builtLadderProvider).value;
+  expect(built, isNotNull, reason: 'the catalog must load (no fallback ladder, no spinner)');
+  expect(built!.length, 327);
+  expect(ladderPlayableSpan(built), 150);
+  expect(find.byType(CircularProgressIndicator), findsNothing);
+  if (cleared > 0) {
+    final save = ProviderScope.containerOf(tester.element(find.byType(AdventureMap))).read(gameSaveProvider);
+    expect(ladderFocus(built, save, 0), cleared, reason: 'the climb stands on rung ${cleared + 1}');
   }
 }
 
@@ -129,13 +168,14 @@ void _report(String label, _Rebuilds r) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('idle ladder: rebuild work per frame stays local to animated bits', (tester) async {
-    await _pumpLadder(tester);
+  for (final cleared in const [0, 40]) {
+  testWidgets('idle ladder ($cleared rungs cleared): rebuild work per frame stays local to animated bits', (tester) async {
+    await _pumpLadder(tester, cleared: cleared);
     // The mascot greets on open and breathes for one ~6 s cycle, then rests;
     // measure the settled ladder (dfd3fd1 mascot design).
     await _idle(tester, const Duration(seconds: 8));
     final r = await _measureFrames(tester);
-    _report('idle 2s (120 frames)', r);
+    _report('idle 2s (120 frames), $cleared cleared', r);
     // Header, bands, background and guide host must not rebuild per frame.
     expect(r.of('_MapBand'), lessThanOrEqualTo(4));
     expect(r.of('_TopHeader'), lessThanOrEqualTo(2));
@@ -148,6 +188,7 @@ void main() {
     expect(r.total, lessThan(120 * 20));
     await tester.pumpWidget(const SizedBox());
   });
+  }
 
   testWidgets('idle nudge fires a bounded number of times', (tester) async {
     await _pumpLadder(tester);
