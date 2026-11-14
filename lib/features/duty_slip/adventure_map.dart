@@ -95,7 +95,7 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
   /// Emerald cap sits above the last catalog rung.
   static const _emeraldExtra = 1;
 
-  /// Fallback when the catalog is not loaded yet (Module 1 + Module 2 = 60).
+  /// Fallback when the catalog is not loaded yet (see [ladderFallbackSpan]).
   static const _playableFallbackSpan = ladderFallbackSpan;
 
   /// Contiguous playable prefix from the catalog (stops at first comingSoon).

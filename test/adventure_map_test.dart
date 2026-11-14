@@ -13,8 +13,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/duty_slip/adventure_map.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_engine.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_models.dart';
+import 'package:slm_flutter/features/duty_slip/ladder_focus.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
+import 'package:slm_flutter/features/game/ladder_builder.dart';
 import 'package:slm_flutter/features/training/training_models.dart';
 import 'package:slm_flutter/features/training/training_provider.dart';
 
@@ -102,5 +104,33 @@ void main() {
     await t.pump();
     expect(_exitAsked, 1, reason: 'with no card open, back asks as before');
     await _done(t);
+  });
+
+  group('stale constants', () {
+    Map<String, dynamic> raw() =>
+        jsonDecode(File('assets/game/catalog/content_catalog.json').readAsStringSync()) as Map<String, dynamic>;
+
+    test('the catalog check is about structure, not fixed counts', () {
+      _catalog().validate();
+      // One rung more or fewer is a content edit, not a broken catalog
+      // (validate used to demand exactly 10 modules, 109 lessons, 327 rungs).
+      final fewer = raw();
+      (fewer['rungDefs'] as List).removeLast();
+      ContentCatalog.fromJson(fewer).validate();
+      // A broken catalog still fails.
+      final dup = raw();
+      final rungs = dup['rungDefs'] as List;
+      rungs.add(Map<String, dynamic>.from(rungs.first as Map));
+      expect(() => ContentCatalog.fromJson(dup).validate(), throwsStateError, reason: 'duplicate rung id');
+      final orphan = raw();
+      ((orphan['rungDefs'] as List).first as Map)['moduleId'] = 'no_such_module';
+      expect(() => ContentCatalog.fromJson(orphan).validate(), throwsStateError, reason: 'rung of a missing module');
+    });
+
+    test('before the catalog loads, the ladder never draws more rungs open than there are', () {
+      final real = ladderPlayableSpan(const LadderBuilder().build(_catalog()));
+      expect(real, 150);
+      expect(ladderPlayableSpan(null), lessThanOrEqualTo(real));
+    });
   });
 }

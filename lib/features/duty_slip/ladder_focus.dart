@@ -6,9 +6,9 @@ import '../game/ladder_builder.dart';
 // Where the climb stands, shared by the ladder (adventure_map.dart) and Home
 // (home_screen.dart), so Home's "L<n>" is always the rung the ladder opens on.
 
-/// Rungs the ladder assumes playable before the catalog has loaded
-/// (Module 1 + Module 2).
-const ladderFallbackSpan = 60;
+/// Rungs the ladder draws as playable before the catalog has loaded (today's
+/// playable prefix: Modules 1–5). Only drawing: rung taps wait for the catalog.
+const ladderFallbackSpan = 150;
 
 /// The contiguous playable prefix of the ladder (stops at the first Coming Soon).
 int ladderPlayableSpan(BuiltLadder? built) {

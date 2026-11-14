@@ -64,20 +64,29 @@ class ContentCatalog {
     return catalog;
   }
 
+  /// Structure, not counts: content grows (a fixed 10/109/327 check failed
+  /// every edit, and a failed catalog turned the ladder into the old game).
   void validate() {
-    if (modules.length != 10) {
-      throw StateError('Expected 10 modules, got ${modules.length}');
+    final moduleIds = {for (final m in modules) m.id};
+    if (moduleIds.isEmpty || moduleIds.length != modules.length) {
+      throw StateError('Modules missing or with duplicate ids');
     }
-    if (lessons.length != 109) {
-      throw StateError('Expected 109 lessons, got ${lessons.length}');
+    if ({for (final l in lessons) l.id}.length != lessons.length) {
+      throw StateError('Duplicate lesson ids');
     }
-    if (rungDefs.length != 327) {
-      throw StateError('Expected 327 rungs, got ${rungDefs.length}');
+    if ({for (final r in rungDefs) r.id}.length != rungDefs.length) {
+      throw StateError('Duplicate rung ids');
     }
     for (final r in rungDefs) {
       if (!packsById.containsKey(r.packId)) {
         throw StateError('Missing pack ${r.packId} for rung ${r.id}');
       }
+      if (!moduleIds.contains(r.moduleId)) {
+        throw StateError('Missing module ${r.moduleId} for rung ${r.id}');
+      }
+    }
+    if (!rungDefs.any((r) => r.status == CatalogRungStatus.playable)) {
+      throw StateError('No playable rung');
     }
   }
 }
