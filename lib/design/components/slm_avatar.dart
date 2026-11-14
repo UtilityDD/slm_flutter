@@ -51,6 +51,7 @@ class SlmAvatar extends StatelessWidget {
             ? fallback
             : Image.network(
                 src,
+                cacheWidth: (d * MediaQuery.devicePixelRatioOf(context)).round(),
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => fallback,
                 loadingBuilder: (context, child, progress) => progress == null ? child : fallback,

@@ -411,10 +411,10 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
                     ),
                     const SizedBox(height: 14),
                     switch (_phase) {
-                      _Phase.loading => const SizedBox(
+                      _Phase.loading => SizedBox(
                           height: 160,
                           child: Center(
-                            child: Image(image: AssetImage(_chestArt), width: 110, height: 96, fit: BoxFit.contain),
+                            child: Image.asset(_chestArt, width: 110, height: 96, cacheWidth: 300, fit: BoxFit.contain),
                           ),
                         ),
                       _Phase.task || _Phase.checking || _Phase.answer => _taskCard(_task!),
