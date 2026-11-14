@@ -228,7 +228,7 @@ abstract final class DistanceLines {
 abstract final class DistanceMistakes {
   static const insideMissed = DoMistake(
     key: '1.2/distance/inside-missed',
-    textBn: 'লক্ষ্মণ রেখার ভেতরে ঢুকেছেন—না ছুঁলেও কারেন্ট লাফিয়ে আসে! ভোল্টেজ দেখে নিরাপদ দূরত্ব রাখুন।',
+    textBn: 'সেফটি দূরত্বের ভেতর ঢুকেছেন—না ছুঁলেও কারেন্ট লাফিয়ে স্পার্ক করতে পারে!',
     art: 'assets/game/art/distance/arc_jump.svg',
     deadly: true,
     lessonPoint: 1,

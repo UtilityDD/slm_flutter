@@ -169,9 +169,9 @@ abstract final class StepLines {
   static List<String> whyRight(PtwWhy w) => switch (w) {
         PtwWhy.isolate => const ['তালা থাকলে কেউ ভুল করে ব্রেকার চালু করতে পারবে না', 'ট্যাগে লেখা থাকে কেন বন্ধ, কার অনুমতিতে খোলা যাবে'],
         PtwWhy.receive => const [
-            'হাতে স্বাক্ষরিত PTW ছাড়া কাজ শুরু করা যায় না',
+            'হাতে স্বাক্ষরিত পারমিট (PTW) ছাড়া কাজ শুরু করা যায় না',
             'ফোনে বলা ‘লাইন বন্ধ’ কথার কোনো সুরক্ষা ভিত্তি নেই',
-            'PTW-তে লেখা ফিডার আর এই লাইন মিলিয়ে নিতে হবে',
+            'পারমিট (PTW)-তে লেখা ফিডার আর এই লাইন মিলিয়ে নিতে হবে',
           ],
         PtwWhy.test => const [
             'ভুল করে অন্য কোনো ফিডার বন্ধ হয়ে থাকতে পারে',
@@ -197,7 +197,7 @@ abstract final class StepLines {
   static const notWrong = <PtwWhy, List<String>>{
     PtwWhy.isolate: ['কেউ পোলে থেকে গেলে লাইন চালু হবে তার ওপরেই'],
     PtwWhy.receive: ['ভুল করে অন্য কোনো ফিডার বন্ধ হয়ে থাকতে পারে'],
-    PtwWhy.test: ['PTW-তে লেখা ফিডার আর এই লাইন মিলিয়ে নিতে হবে'],
+    PtwWhy.test: ['পারমিট (PTW)-তে লেখা ফিডার আর এই লাইন মিলিয়ে নিতে হবে'],
   };
 
   static List<String> whyWrong(PtwWhy w) => [
@@ -234,7 +234,7 @@ abstract final class StepLines {
 abstract final class StepMistakes {
   static const noPermit = DoMistake(
     key: '1.6/steps/no-permit',
-    textBn: 'হাতে স্বাক্ষরিত PTW আসার আগেই কাজ শুরু — অনুরোধ, ফোন বা মুখের কথা পারমিট নয়। হাতে স্বাক্ষরিত PTW ছাড়া লাইনে হাত নয়।',
+    textBn: 'হাতে স্বাক্ষরিত পারমিট (PTW) আসার আগেই কাজ শুরু — অনুরোধ, ফোন বা মুখের কথা পারমিট নয়। হাতে স্বাক্ষরিত পারমিট (PTW) ছাড়া লাইনে হাত নয়।',
     art: 'assets/game/art/ptw/verbal_vs_written.svg',
     deadly: true,
     lessonPoint: 1,

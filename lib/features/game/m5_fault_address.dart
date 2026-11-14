@@ -137,7 +137,7 @@ abstract final class M5FaLines {
   static String feederOnly(M5FaCall c) => enDigits('ফিডার ${c.feeder}');
 
   /// The control room's reply on the radio.
-  static String control(M5FaCall c) => enDigits('কন্ট্রোল রুম: ফিডার ${c.feeder} জানা গেল — ডকেট ${c.docket}, টহলে যান।');
+  static String control(M5FaCall c) => enDigits('কন্ট্রোল রুম: ফিডার ${c.feeder}, ডকেট ${c.docket}—টহলে যান।');
   static const teamGone = 'দল 2 অন্য মাথার দিকে রওনা হলো।';
   static String team(M5FaNode n, bool on) => enDigits('দল 2: পোল ${n.pole} — ${on ? (n.sectionalizer ? open : lit) : dark}');
   static const historyNote = 'এই পোলে আগেও 3 বার ফল্ট';
@@ -234,7 +234,7 @@ abstract final class M5FaMistakes {
   /// lesson has no numbered point for it, so no পাঠে দেখুন.
   static const noDocket = DoMistake(
     key: '5.2/m5_fault_address/no-docket',
-    textBn: 'টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে PTW বাধ্যতামূলক।',
+    textBn: 'টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে পারমিট (PTW) বাধ্যতামূলক।',
     art: '$_dir/no_docket.svg',
   );
 

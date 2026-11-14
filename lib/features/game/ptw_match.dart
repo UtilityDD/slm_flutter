@@ -169,7 +169,7 @@ abstract final class PtwLines {
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
 
   // The permit sheet (what is printed on it).
-  static const formTitle = 'পারমিট-টু-ওয়ার্ক (PTW)';
+  static const formTitle = 'পারমিট (PTW)';
   static const labels = {
     PtwField.number: 'পারমিট নং',
     PtwField.feeder: 'ফিডার',
@@ -323,7 +323,7 @@ abstract final class PtwLines {
 abstract final class PtwMistakes {
   static const verbal = DoMistake(
     key: '1.6/ptw/verbal',
-    textBn: 'ফোনে ‘লাইন বন্ধ’ কোনো পারমিট নয় — হাতে স্বাক্ষরিত PTW ছাড়া লাইনে হাত নয়।',
+    textBn: 'ফোনে ‘লাইন বন্ধ’ কোনো পারমিট নয় — হাতে স্বাক্ষরিত পারমিট (PTW) ছাড়া লাইনে হাত নয়।',
     art: 'assets/game/art/ptw/verbal_vs_written.svg',
     deadly: true,
     lessonPoint: 1,
@@ -337,7 +337,7 @@ abstract final class PtwMistakes {
   );
   static const unsigned = DoMistake(
     key: '1.6/ptw/unsigned',
-    textBn: 'স্বাক্ষরের ঘর ফাঁকা — এটা পারমিট নয়, শুধু একটা কাগজ। হাতে স্বাক্ষরিত PTW ছাড়া কাজ নয়।',
+    textBn: 'স্বাক্ষরের ঘর ফাঁকা — এটা পারমিট নয়, শুধু একটা কাগজ। হাতে স্বাক্ষরিত পারমিট (PTW) ছাড়া কাজ নয়।',
     art: 'assets/game/art/ptw/no_signature.svg',
     deadly: true,
     lessonPoint: 0,

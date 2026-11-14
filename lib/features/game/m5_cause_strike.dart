@@ -126,7 +126,7 @@ abstract final class M5CauseStrikeLines {
   // The guide's task now (tap him: the same task, a different way).
   static const askNoise = 'অভিযোগ: শব্দ করছে। পরীক্ষা করে কারণ খুঁজুন।';
   static const askLtDead = 'অভিযোগ: এক ফেজে বিদ্যুৎ নেই। পরীক্ষা করে কারণ খুঁজুন।';
-  static const askLeak = 'অভিযোগ: তেল পড়ছে। পরীক্ষা করে কারণ খুঁজুন।';
+  static const askLeak = 'অভিযোগ: তেল লিক করছে। পরীক্ষা করে কারণ খুঁজুন।';
   static const askVerdict = 'এখন কী করবেন?';
   static const tasks = [askNoise, askLtDead, askLeak, askVerdict];
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
@@ -146,7 +146,7 @@ abstract final class M5CauseStrikeLines {
   static String complaint(M5CaseKind k) => switch (k) {
         M5CaseKind.noise => 'শব্দ করছে',
         M5CaseKind.ltDead => 'এক ফেজে বিদ্যুৎ নেই',
-        M5CaseKind.leak => 'তেল পড়ছে',
+        M5CaseKind.leak => 'তেল লিক করছে',
       };
   static String round(M5CaseKind k) => switch (k) {
         M5CaseKind.noise => 'শব্দ',
@@ -275,7 +275,7 @@ abstract final class M5CauseStrikeLines {
     asks: ['কী করবেন?', 'ও বলছে চালু অবস্থায় উঠে দেখতে। কী করবেন?', 'চালু প্ল্যাটফর্মে উঠবেন?'],
   );
   static const coworkerSmall = CoworkerScript(
-    line: 'সামান্য তেল পড়ছে, ও কিছু না — চলতে দাও।',
+    line: 'সামান্য তেল লিক করছে, ও কিছু না — চলতে দাও।',
     exitLine: coworkerExit,
     right: ['না, লিক বেশি — বন্ধ করে সারাতে হবে', 'না, তেল কমছে, এভাবে চলতে দেব না', 'না, বেশি লিক মানে বন্ধ করে মেরামত'],
     wrong: [

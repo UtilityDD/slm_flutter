@@ -111,7 +111,7 @@ abstract final class M3ServiceDropLines {
   static const job = 'নতুন সার্ভিস কানেকশন';
   static const single = 'সিঙ্গেল-ফেজ';
   static const three = 'থ্রি-ফেজ';
-  static const permit = 'শাটডাউন · PTW · আর্থ';
+  static const permit = 'শাটডাউন · পারমিট (PTW) · আর্থ';
 
   // The reasons (lesson 3.8): the right ones state this station's rule (and
   // fit the cable he actually took); the wrong ones are field excuses.

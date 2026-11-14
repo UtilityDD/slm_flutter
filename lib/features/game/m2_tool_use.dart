@@ -99,7 +99,7 @@ abstract final class TuLines {
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
 
   // Labels a worker reads (the docket, the slots, the buttons).
-  static const docket = 'ডকেট · শাটডাউন · PTW';
+  static const docket = 'ডকেট · শাটডাউন · পারমিট (PTW)';
   static const sceneLabel = 'ডিস্ট্রিবিউশন বক্স';
   static const use = 'এটা দিয়েই করি';
   static const putBack = 'রেখে দিই';

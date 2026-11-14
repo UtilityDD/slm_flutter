@@ -253,7 +253,7 @@ abstract final class M4GateMistakes {
   );
   static const balLive = DoMistake(
     key: '4.10/m4_gate_field/bal-live',
-    textBn: 'চালু লাইনে সার্ভিস লাইনের ফেজ বদলানো মারাত্মক — শাটডাউন আর PTW নিয়ে তবেই কাজ।',
+    textBn: 'চালু লাইনে সার্ভিস লাইনের ফেজ বদলানো মারাত্মক — শাটডাউন আর পারমিট (PTW) নিয়ে তবেই কাজ।',
     art: '$_art/bal_shutdown.svg',
     deadly: true,
     lessonPoint: 2,
@@ -330,7 +330,7 @@ abstract final class M4GateLines {
       'আর্থিং সুস্থ কিনা প্রমাণ করুন।',
     ],
     M4GateStation.insulator: [
-      'এগারো কেভি সেকশনে PTW এসেছে। ভাঙা ইনসুলেটরটা বদলান।',
+      'এগারো কেভি সেকশনে পারমিট (PTW) এসেছে। ভাঙা ইনসুলেটরটা বদলান।',
       'ভাঙা ইনসুলেটর বদলের কাজ — নিয়ম মেনে।',
       'পোলের কাজ শুরু। নিরাপদে বদলান।',
     ],
@@ -2752,7 +2752,7 @@ class _DocketSheet extends StatelessWidget {
   static const _rows = [
     (Icons.place_rounded, 'ফিডার', '11 kV বটতলা ফিডার · DTR-23 আর তার সেকশন', Color(0xFF1565C0)),
     (Icons.build_circle_rounded, 'কাজ', 'DTR-এর DO খোলা, তেল-তাপ ও আর্থ টেস্ট · ভাঙা ইনসুলেটর · গরম জাম্পার · ডিপি ড্রেসিং · লাইনের ধারে ডাল · মোড়ের স্ট্রিট লাইট · LT ফেজ ব্যালেন্স', Color(0xFFC62828)),
-    (Icons.power_off_rounded, 'শাটডাউন', 'DTR: হট স্টিকে তিনটে DO খুলে · 11 kV সেকশন: লিখিত PTW, দুই দিকে আর্থ · LT: শাটডাউন নিয়ে', Color(0xFFE65100)),
+    (Icons.power_off_rounded, 'শাটডাউন', 'DTR: হট স্টিকে তিনটে DO খুলে · 11 kV সেকশন: লিখিত পারমিট (PTW), দুই দিকে আর্থ · LT: শাটডাউন নিয়ে', Color(0xFFE65100)),
     (Icons.handyman_rounded, 'হাতিয়ার', 'হট স্টিক, IR থার্মোমিটার, আর্থ টেস্টার ও স্পাইক, আর্থিং সেট, দড়ি, স্টিল ব্রাশ ও পেস্ট, দুটো রেঞ্চ, করাত, টেস্টার, টং টেস্টার', Color(0xFF2E7D32)),
     (Icons.verified_user_rounded, 'সুরক্ষা', 'হেলমেট, হার্নেস, ইনসুলেটেড গ্লাভস, ফেস শিল্ড · মৃত প্রমাণ ও আর্থ ছাড়া লাইনে হাত নয়', Color(0xFF6A1B9A)),
   ];

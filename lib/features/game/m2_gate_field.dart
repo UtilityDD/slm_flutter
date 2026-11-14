@@ -588,7 +588,7 @@ abstract final class M2GateLines {
   );
   static const coworkerHeld = 'ঠিক! মেগার ছাড়া চালু নয় — মাপ চালিয়ে যান।';
 
-  static const allSet = 'অভিনন্দন! জুনিয়রের ডকেট নিখুঁত — আপনি এখন জুনিয়র লাইনম্যান, হাতিয়ারের ওস্তাদ!';
+  static const allSet = 'অভিনন্দন! জুনিয়রের ডকেট নিখুঁত — আপনি এখন জুনিয়র লাইনম্যান, হাতিয়ারের দাদা!';
   static const fail = 'আরেকবার — সাতটা স্টেশনের প্রতিটা নিয়ম মেনে জুনিয়র র‍্যাঙ্ক জিতুন।';
 
   /// Every fixed line the guide says (for recording).

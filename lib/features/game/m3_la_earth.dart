@@ -100,7 +100,7 @@ abstract final class M3LaEarthLines {
 
   static const docket = 'ডকেট';
   static const docketJob = 'LA বদল · আর্থ মেরামত';
-  static const docketTaken = 'শাটডাউন · PTW';
+  static const docketTaken = 'শাটডাউন · পারমিট (PTW)';
 
   // Short reactions.
   static const laFound = 'ঠিক! ডিসকানেক্টর ফেটে তার ঝুলছে।';

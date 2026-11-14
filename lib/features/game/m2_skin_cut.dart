@@ -315,7 +315,7 @@ abstract final class SkinMistakes {
   /// A clean end sent back (a wrong call costs a slip).
   static const needlessRedo = DoMistake(
     key: '2.6/skin/needless-redo',
-    textBn: 'এই প্রান্তটা নিখুঁত ছিল — কন্ডাক্টর মসৃণ আর উজ্জ্বল, আঁচড়, কালো দাগ বা কাটা স্ট্র্যান্ড নেই, ইনসুলেশনের প্রান্ত 90-ডিগ্রিতে মসৃণ। লেন্সে ভালো করে দেখে তবে রায় দিন।',
+    textBn: 'এই প্রান্তটা নিখুঁত ছিল — কন্ডাক্টর মসৃণ আর উজ্জ্বল, আঁচড়, কালো দাগ বা কাটা স্ট্র্যান্ড নেই, ইনসুলেশনের প্রান্ত 90-ডিগ্রিতে মসৃণ। লেন্সে ভালো করে দেখে তবে সিদ্ধান্ত নিন।',
     art: '$_dir/clean_end.svg',
     lessonPoint: 2,
   );

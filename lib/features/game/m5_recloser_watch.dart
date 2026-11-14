@@ -101,7 +101,7 @@ abstract final class M5RecloserLines {
   static const askWatch = 'চোখ রাখুন — লাইন চালু হলেই নোটপ্যাডে দাগ দিন।';
   static const askReport = 'কতবার লাইন চালু হতে দেখলেন? ঝলক কোথায়?';
   static const askPtw = 'লক-আউট হয়েছে। এবার প্রথম কাজ কী?';
-  static const askSlip = 'PTW নম্বর এসেছে — কাগজটা ট্রেইনির হাতে দিন।';
+  static const askSlip = 'পারমিট নম্বর এসেছে — কাগজটা ট্রেইনির হাতে দিন।';
   static const askDrive = 'এবার ঝলকের জায়গায় চলুন।';
   static const askSpan = 'পৌঁছে গেছেন। এবার কাজ শুরু করুন।';
   static const askClimb = 'এবার ফল্টটা সারান।';
@@ -141,9 +141,9 @@ abstract final class M5RecloserLines {
       ];
   static const opLockout = 'ফাইনাল ট্রিপ — লক-আউট।';
   static String opRecord(int shots, int span) =>
-      'রেকর্ডে আছে, রিক্লোজার $shots বার চালু করেছিল। গ্রাহকেরা ${span + 1} আর ${span + 2} নম্বর পোলের মাঝে ঝলক দেখেছেন।';
+      'রেকর্ডে আছে, রিক্লোজার $shots বার চালু করেছিল। গ্রাহকেরা ${span + 1} আর ${span + 2} নম্বর পোলের মাঝে স্পার্ক দেখেছেন।';
   static const opNoted = 'ঠিক আছে, নোট করলাম।';
-  static String opIssue(int feeder, int ptw) => 'ফিডার $feeder আইসোলেট করা হলো। PTW নম্বর $ptw — লিখে নিন।';
+  static String opIssue(int feeder, int ptw) => 'ফিডার $feeder আইসোলেট করা হলো। পারমিট নম্বর $ptw — লিখে নিন।';
   static String opCharge(int feeder) => 'ফিডার $feeder চার্জ করছি…';
   static const recloseNow = 'রিক্লোজার আবার লাইন চালু করল…';
 
@@ -157,13 +157,13 @@ abstract final class M5RecloserLines {
   // The reasons (one right is dealt with two myths); 36–45 letters.
   static const whyQ = <M5RecloserWhy, String>{
     M5RecloserWhy.lockout: 'লাইনটা এখন কী অবস্থায়?',
-    M5RecloserWhy.ptw: 'ট্রিপ লাইনে PTW কেন লাগবে?',
+    M5RecloserWhy.ptw: 'ট্রিপ লাইনে পারমিট (PTW) কেন লাগবে?',
     M5RecloserWhy.earth: 'ওঠার আগে আর্থ কেন?',
   };
   static const whyRight = <M5RecloserWhy, List<String>>{
     M5RecloserWhy.lockout: ['লক-আউট হলেও লাইনকে লাইভ ধরে নিতে হবে', 'ট্রিপ মানে ডেড নয়, আবার চালু হতে পারে'],
-    M5RecloserWhy.ptw: ['কন্ট্রোল রুম ভুল করে লাইন চালু করে দিতে পারে', 'PTW ছাড়া ট্রিপ হওয়া লাইন ছোঁয়া যায় না'],
-    M5RecloserWhy.earth: ['বন্ধ লাইনেও চার্জ থাকে, আর্থ তা মাটিতে নামায়', 'PTW আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয়'],
+    M5RecloserWhy.ptw: ['কন্ট্রোল রুম ভুল করে লাইন চালু করে দিতে পারে', 'পারমিট (PTW) ছাড়া ট্রিপ হওয়া লাইন ছোঁয়া যায় না'],
+    M5RecloserWhy.earth: ['বন্ধ লাইনেও চার্জ থাকে, আর্থ তা মাটিতে নামায়', 'পারমিট (PTW) আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয়'],
   };
   static const myths = [
     'আলো নিভে গেছে, মানে তারে আর কারেন্ট নেই',
@@ -184,7 +184,7 @@ abstract final class M5RecloserLines {
     exitLine: coworkerExit,
     right: [
       'না, রিক্লোজার যেকোনো সময় লাইন চালু করতে পারে',
-      'না, PTW আর আর্থিং ছাড়া ট্রিপ লাইনে হাত নয়',
+      'না, পারমিট (PTW) আর আর্থিং ছাড়া ট্রিপ লাইনে হাত নয়',
       'না, কন্ট্রোল রুম ভুল করে লাইন চালু করতে পারে',
     ],
     wrong: [
@@ -202,7 +202,7 @@ abstract final class M5RecloserLines {
   static List<String> get rivalToRecord => [coworker.line];
 
   static const callHeld = 'ঠিক! ট্রিপ লাইনকে লাইভ ধরেই কাজ।';
-  static const allSet = 'ট্রিপ মানে ডেড নয় — গুনে, PTW নিয়ে, টেস্ট আর আর্থ করে তবে ওঠা।';
+  static const allSet = 'ট্রিপ মানে ডেড নয় — গুনে, পারমিট (PTW) নিয়ে, টেস্ট আর আর্থ করে তবে ওঠা।';
   static const quick = 'নিখুঁত আর ঝটপট!';
   static const fail = 'আরেকবার — মন দিয়ে গুনুন, আর ট্রিপ লাইনকে লাইভ ধরুন।';
   static const deadlyWord = 'থামুন!';
@@ -211,7 +211,7 @@ abstract final class M5RecloserLines {
   // "আজ যা ধরলেন".
   static const caughtCount = 'রিক্লোজার কতবার চালু করল, ঠিক গুনেছেন';
   static const caughtLive = 'লক-আউট লাইনকেও লাইভ ধরেছেন';
-  static const caughtPtw = 'লাইনে হাত দেওয়ার আগে PTW হাতে নিয়েছেন';
+  static const caughtPtw = 'লাইনে হাত দেওয়ার আগে পারমিট (PTW) হাতে নিয়েছেন';
   static const caughtEarth = 'টেস্টারে 0 V, তারপর আর্থ — তবে ওঠা';
   static const caughtCall = '“পারমিট লাগবে না” — না বলেছেন';
 }
@@ -223,7 +223,7 @@ abstract final class M5RecloserMistakes {
   /// 2 and myth 1's "মারাত্মক ভুল").
   static const noPtw = DoMistake(
     key: '5.1/m5_recloser_watch/no-ptw',
-    textBn: 'ট্রিপ মানে ডেড নয়! রিক্লোজার বা কন্ট্রোল রুম যেকোনো মুহূর্তে লাইন চালু করতে পারে — PTW আর আর্থিং ছাড়া হাত নয়।',
+    textBn: 'ট্রিপ মানে ডেড নয়! রিক্লোজার বা কন্ট্রোল রুম যেকোনো মুহূর্তে লাইন চালু করতে পারে — পারমিট (PTW) আর আর্থিং ছাড়া হাত নয়।',
     art: '$_dir/no_ptw.svg',
     deadly: true,
     lessonPoint: 1,
@@ -232,7 +232,7 @@ abstract final class M5RecloserMistakes {
   /// R2 (M1 step 18, not lesson 5.1's text).
   static const noTest = DoMistake(
     key: '5.1/m5_recloser_watch/no-test',
-    textBn: 'PTW হাতে থাকলেও আগে টেস্টারে প্রতিটি ফেজে 0 V দেখুন — তারপর আর্থ, তবেই ওঠা।',
+    textBn: 'পারমিট (PTW) হাতে থাকলেও আগে টেস্টারে প্রতিটি ফেজে 0 V দেখুন — তারপর আর্থ, তবেই ওঠা।',
     art: '$_dir/no_test.svg',
     deadly: true,
   );
@@ -265,7 +265,7 @@ abstract final class M5RecloserMistakes {
   /// ground patrol).
   static const patrolEarly = DoMistake(
     key: '5.1/m5_recloser_watch/patrol-early',
-    textBn: 'টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে PTW বাধ্যতামূলক।',
+    textBn: 'টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে পারমিট (PTW) বাধ্যতামূলক।',
     art: '$_dir/patrol_early.svg',
     lessonPoint: 1,
   );
@@ -298,7 +298,7 @@ abstract final class M5RecloserMistakes {
   static const sources = <String, String>{
     '5.1/m5_recloser_watch/no-ptw': '5.1 point 2 (PTW) + myth 1 reality',
     '5.1/m5_recloser_watch/no-test': 'M1 step 18 (lessons 1.5/1.6)',
-    '5.1/m5_recloser_watch/no-earth': '5.1 myth 1 reality: PTW এবং ব্যক্তিগত আর্থিং',
+    '5.1/m5_recloser_watch/no-earth': '5.1 myth 1 reality: পারমিট (PTW) এবং ব্যক্তিগত আর্থিং',
     '5.1/m5_recloser_watch/clamp-first': 'M1 step 15 (lesson 1.5)',
     '5.1/m5_recloser_watch/test-first': 'ruling M5-2 (4.1a)',
     '5.1/m5_recloser_watch/patrol-early': '5.1 point 2 + ruling M5-3',

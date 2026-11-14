@@ -132,7 +132,7 @@ abstract final class M3GuardRepairLines {
       };
   static const docket = 'ডকেট';
   static const job = 'রাস্তা ক্রসিং · গার্ডিং মেরামত';
-  static String permitNo(int n) => enDigits('PTW নং $n');
+  static String permitNo(int n) => enDigits('পারমিট (PTW) নং $n');
   static const testerLive = 'লাইভ';
   static const testerDead = '0 V';
 
@@ -151,7 +151,7 @@ abstract final class M3GuardRepairLines {
         M3GuardCloseWhy.order => 'কেন আর্থ খুলে তবে লাইন ক্লিয়ার দিলেন?',
       };
 
-  static const prepWhy = ['জাল লাইভ ধরেই চলি — বন্ধ আর আর্থ ছাড়া হাত নয়', 'আর্থিং দুর্বল হলে পুরো জালটাই লাইভ হতে পারে', 'PTW শুধু কাগজ, টেস্টে মৃত প্রমাণ করা চাই'];
+  static const prepWhy = ['জাল লাইভ ধরেই চলি — বন্ধ আর আর্থ ছাড়া হাত নয়', 'আর্থিং দুর্বল হলে পুরো জালটাই লাইভ হতে পারে', 'পারমিট (PTW) শুধু কাগজ, টেস্টে মৃত প্রমাণ করা চাই'];
   static const inspectWhy = ['একটা ছেঁড়া তারেও পুরো জালের শক্তি কমে যায়', 'ঝুলে পড়া জাল বাতাসে লাইভ তার ছুঁতে পারে', 'আর্থ চুরি গেলে জাল তার আসল কাজটাই হারায়'];
   static const sagWhy = ['বেশি টানে তার ছেঁড়ে, কম টানে ঝুলে পড়ে', 'ঝুলে থাকলে লাইভ তারের সঙ্গে দূরত্ব কমে যায়'];
   static const lacingWhy = ['একটা ছেঁড়া লেসিং পুরো কাঠামোকে দুর্বল করে', 'জালটা GI তারে বোনা, জোড়াও মজবুত হওয়া চাই'];
@@ -216,7 +216,7 @@ abstract final class M3GuardRepairLines {
   static const coworker = CoworkerScript(
     line: 'লাইন বন্ধ করার দরকার নেই, তাড়াতাড়ি সেরে নাও!',
     exitLine: coworkerExit,
-    right: ['না, শাটডাউন, PTW, টেস্ট, আর্থ — তবে কাজ', 'না, জাল লাইভ ধরেই চলব, আগে লাইন বন্ধ', 'না, লাইন বন্ধ না করে জালে হাত দেব না'],
+    right: ['না, শাটডাউন, পারমিট (PTW), টেস্ট, আর্থ — তবে কাজ', 'না, জাল লাইভ ধরেই চলব, আগে লাইন বন্ধ', 'না, লাইন বন্ধ না করে জালে হাত দেব না'],
     wrong: [
       'ঠিক, চালু লাইনেই সাবধানে সেরে নিই',
       'আচ্ছা, জালে তো কারেন্ট নেই, উঠে পড়ি',
@@ -235,7 +235,7 @@ abstract final class M3GuardRepairLines {
   static const nearMissWord = 'অল্পের জন্য!';
 
   // "আজ যা ধরলেন".
-  static const caughtSafe = 'শাটডাউন, PTW, টেস্ট, আর্থ — তবে জালে';
+  static const caughtSafe = 'শাটডাউন, পারমিট (PTW), টেস্ট, আর্থ — তবে জালে';
   static const caughtTraffic = 'নিচের রাস্তা আগে থামিয়েছেন';
   static const caughtAll = 'জালের সব খুঁত ধরেছেন';
   static const caughtTension = 'ঠিক টানে জাল টানটান';
@@ -259,7 +259,7 @@ abstract final class M3GuardRepairMistakes {
 
   static const climbLive = DoMistake(
     key: '3.9/m3_guard_repair/climb-live',
-    textBn: 'লাইন চালু রেখে জালে উঠলেন! গার্ডিংকে সবসময় লাইভ ধরুন — আগে শাটডাউন, PTW, টেস্টে মৃত প্রমাণ, আর্থ; তবে কাজ।',
+    textBn: 'লাইন চালু রেখে জালে উঠলেন! গার্ডিংকে সবসময় লাইভ ধরুন — আগে শাটডাউন, পারমিট (PTW), টেস্টে মৃত প্রমাণ, আর্থ; তবে কাজ।',
     art: '$_dir/climb_live.svg',
     deadly: true,
     lessonPoint: 3,
@@ -273,17 +273,17 @@ abstract final class M3GuardRepairMistakes {
   // The PTW steps are lesson 1.6's, not lesson 3.9's: no lesson point.
   static const ptwEarly = DoMistake(
     key: '3.9/m3_guard_repair/ptw-before-shutdown',
-    textBn: 'আগে কন্ট্রোল রুমে শাটডাউন চান — লাইন বন্ধ আর লক-ট্যাগ হলে তবেই PTW ইস্যু হয়।',
+    textBn: 'আগে কন্ট্রোল রুমে শাটডাউন চান — লাইন বন্ধ আর লক-ট্যাগ হলে তবেই পারমিট (PTW) ইস্যু হয়।',
     art: '$_dir/permit_steps.svg',
   );
   static const noPtw = DoMistake(
     key: '3.9/m3_guard_repair/no-ptw',
-    textBn: 'লাইন বন্ধ হলেই হলো না — হাতে স্বাক্ষরিত PTW ছাড়া কাজ শুরু নয়।',
+    textBn: 'লাইন বন্ধ হলেই হলো না — হাতে স্বাক্ষরিত পারমিট (PTW) ছাড়া কাজ শুরু নয়।',
     art: '$_dir/permit_steps.svg',
   );
   static const noTest = DoMistake(
     key: '3.9/m3_guard_repair/not-tested',
-    textBn: 'PTW কাগজ মাত্র — টেস্টারে দেখে নিন লাইন সত্যিই মৃত, তারপর আর্থ, তবে জালে।',
+    textBn: 'পারমিট (PTW) কাগজ মাত্র — টেস্টারে দেখে নিন লাইন সত্যিই মৃত, তারপর আর্থ, তবে জালে।',
     art: '$_dir/permit_steps.svg',
   );
   static const earthUntested = DoMistake(

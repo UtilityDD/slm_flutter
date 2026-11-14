@@ -194,7 +194,7 @@ abstract final class ToolTipLines {
 abstract final class ToolTipMistakes {
   static const bamboo = DoMistake(
     key: '1.2/tool/bamboo',
-    textBn: 'শুকনো বাঁশ বা কাঠেও আর্দ্রতায় কারেন্ট টানে! লাইভ লাইনে কেবল সার্টিফাইড ফাইবারগ্লাস হট স্টিক চলবে।',
+    textBn: 'শুকনো বাঁশ বা কাঠেও আর্দ্রতায় কারেন্ট টানে! লাইভ লাইনে কেবল সার্টিফাইড ফাইবার রড ব্যবহার করুন।',
     art: 'assets/game/art/distance/bamboo_vs_hot_stick.svg',
     deadly: true,
     lessonPoint: 3,

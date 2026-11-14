@@ -324,7 +324,7 @@ abstract final class PoleMistakes {
   static DoMistake climbed(PoleDefect d) => switch (d) {
         PoleDefect.hairline => const DoMistake(
             key: '1.3/pole/hairline',
-            textBn: 'চুলের মতো ফাটল দিয়ে জল ঢোকে, ভেতরের রডে মরিচা ধরে — বড় বিপদের শুরু। রিপোর্ট করুন, উঠবেন না।',
+            textBn: 'চুলের মতো সূক্ষ্ম ফাটল দিয়ে জল ঢুকে রডে মরচে ধরে—পোল দুর্বল হয়ে ভেঙে পড়বে!',
             art: 'assets/game/art/pole/pole_crack.svg',
             deadly: true,
             lessonPoint: 2),
@@ -360,7 +360,7 @@ abstract final class PoleMistakes {
             lessonPoint: 2),
         PoleDefect.weldRust => const DoMistake(
             key: '1.3/pole/weld-rust',
-            textBn: 'ওয়েল্ডিং জয়েন্টে মরিচা — মরিচা স্টিলের ক্যান্সার, যেখানে দেখবেন সেখানেই বিপদ লুকিয়ে থাকতে পারে।',
+            textBn: 'ওয়েল্ডিং জয়েন্টে মরচে—স্টিলের ক্ষতি করে পোল দুর্বল করে দেয়!',
             art: 'assets/game/art/pole/steel_rust.svg',
             deadly: true,
             lessonPoint: 2),

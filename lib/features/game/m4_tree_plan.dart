@@ -202,7 +202,7 @@ abstract final class M4TreePlanLines {
   static const rounds = ['ক', 'খ', 'গ'];
 
   // The task of each step (what the guide says and repeats when tapped).
-  static const askSurvey = 'কোন কোন ডাল লাইনের কাছে? ছুঁয়ে চিহ্ন দিন।';
+  static const askSurvey = 'কোন কোন ডাল লাইনের কাছে? ট্যাপ করে চিহ্নিত করুন।';
   static const askDrop = 'কাটা ডাল কোথায় নামবে? নিচে জায়গাটা দেখান।';
   static const askPlan = 'প্রথম কাটের আগে পুরো পরিকল্পনা সেরে নিন।';
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
@@ -216,8 +216,8 @@ abstract final class M4TreePlanLines {
   // Labels a worker reads (buttons, the docket).
   static const sceneLabel = 'গাছ, লাইন আর রাস্তা';
   static const surveyDone = 'জরিপ শেষ';
-  static const shutdown = 'শাটডাউন · PTW';
-  static const shutdownOn = 'PTW হাতে';
+  static const shutdown = 'শাটডাউন · পারমিট (PTW)';
+  static const shutdownOn = 'পারমিট (PTW) হাতে';
   static const helper = 'নিচে সহকর্মী';
   static const ppe = 'গ্লাভস · গগলস';
   static const rope = 'দড়ি';
@@ -236,7 +236,7 @@ abstract final class M4TreePlanLines {
 
   // The reasons (lesson 4.8 and its film): the right ones fit the tree's
   // topic; the wrong ones are the lesson's myths and field excuses.
-  static const whyShutdown = 'কেন আগে শাটডাউন আর PTW নিলেন?';
+  static const whyShutdown = 'কেন আগে শাটডাউন আর পারমিট (PTW) নিলেন?';
   static const whyCordon = 'কেন রাস্তা ছেড়ে গাছের নিচে ঘিরলেন?';
   static const whyToolSmall = "কেন ইনসুলেটেড প্রুনার বা স' নিলেন?";
   static const whyToolBig = 'কেন চেইনসঅ আর দড়ি নিলেন?';
@@ -250,7 +250,7 @@ abstract final class M4TreePlanLines {
     M4TreePlanTopic.abCable => whyAb,
   };
 
-  static const shutdownWhy = ['ডাল লাইনের খুব কাছে, তাই আগে লাইন বন্ধ চাই', 'লাইনের কাছে কাটার আগে PTW নিয়ে লাইন বন্ধ করি'];
+  static const shutdownWhy = ['ডাল লাইনের খুব কাছে, তাই আগে লাইন বন্ধ চাই', 'লাইনের কাছে কাটার আগে পারমিট (PTW) নিয়ে লাইন বন্ধ করি'];
   static const cordonWhy = ['কাটা ডাল যেন পথচারী বা গাড়ির ওপর না পড়ে', 'নিচে ঘেরা থাকলে ডাল পড়ার জায়গায় কেউ ঢোকে না'];
   static const toolSmallWhy = ["ছোট ডালে লম্বা ইনসুলেটেড প্রুনার বা স' চলে", 'লাইনের কাছে ইনসুলেটেড হাতল বাড়তি সুরক্ষা দেয়'];
   static const toolBigWhy = ['বড় ভারী ডালে চেইনসঅ, আর দড়িতে পতন নিয়ন্ত্রণ', 'দড়িতে বাঁধা থাকলে ভারী ডাল ঠিক দিকেই নামে'];
@@ -276,7 +276,7 @@ abstract final class M4TreePlanLines {
 
   /// Wrong reasons that use the tree's own words (so no word appears only on
   /// the right card): field excuses and myths about the same act.
-  static const shutdownWrong = ['PTW নিলে পরে কেউ আমাকে দোষ দিতে পারে না', 'শাটডাউন নিলে সুপারভাইজার খুশি হন, তাই নিলাম'];
+  static const shutdownWrong = ['পারমিট (PTW) নিলে পরে কেউ আমাকে দোষ দিতে পারে না', 'শাটডাউন নিলে সুপারভাইজার খুশি হন, তাই নিলাম'];
   static const cordonWrong = ['নিচে ঘেরা থাকলে ডালগুলো পরে কুড়াতে সুবিধা', 'রাস্তায় ঘিরলে গাড়ি থামাতে বড় ঝামেলা হয়'];
   static const toolSmallWrong = ['ইনসুলেটেড হাতলে ধরলে চালু লাইনেও কাটা যায়', "ইনসুলেটেড প্রুনার বা স' হালকা, হাত কম ব্যথা"];
   static const toolBigWrong = ['চেইনসঅ থাকলে দড়ি বা ঘেরার দরকার পড়ে না', 'দড়ি বাঁধা থাকলে ডাল ধরে উঠতে সুবিধা হয়'];
@@ -304,7 +304,7 @@ abstract final class M4TreePlanLines {
   static const coworker = CoworkerScript(
     line: 'লাইন চালু থাক! শাটডাউনের ঝামেলা কে করবে? উঠে কেটে দাও।',
     exitLine: coworkerExit,
-    right: ['না, আগে শাটডাউন আর PTW নেব', 'না, লাইন চালু রেখে ডাল কাটব না', 'ডাল লাইনের গায়ে, আগে লাইন বন্ধ'],
+    right: ['না, আগে শাটডাউন আর পারমিট (PTW) নেব', 'না, লাইন চালু রেখে ডাল কাটব না', 'ডাল লাইনের গায়ে, আগে লাইন বন্ধ'],
     wrong: [
       'ঠিক, চালু লাইনেই কেটে দিচ্ছি',
       'আচ্ছা, শাটডাউনের দরকার নেই',
@@ -328,7 +328,7 @@ abstract final class M4TreePlanLines {
   // "আজ যা ধরলেন".
   static const caughtSurvey = 'শুধু লাইনের দিকের ডালে চিহ্ন';
   static const caughtDrop = 'রাস্তা ছেড়ে নিচে জায়গা ঘেরা';
-  static const caughtShutdown = 'কাটার আগে শাটডাউন · PTW';
+  static const caughtShutdown = 'কাটার আগে শাটডাউন · পারমিট (PTW)';
   static const caughtTool = 'ডালের মাপে ইনসুলেটেড টুল';
   static const caughtCrew = 'একা নয় — নিচে সহকর্মী, PPE';
   static const caughtCall = 'চাপে “না” বলেছেন';
@@ -339,7 +339,7 @@ abstract final class M4TreePlanMistakes {
 
   static const liveLine = DoMistake(
     key: '4.8/m4_tree_plan/cut-with-line-live',
-    textBn: 'লাইন চালু রেখেই লাইনের গায়ের ডাল কাটতে গেলেন। ভেজা ডাল বা টুল তারে লাগলেই বিপদ। ডাল লাইনের খুব কাছে থাকলে আগে PTW নিয়ে লাইন বন্ধ — তবেই কাটা।',
+    textBn: 'লাইন চালু রেখেই লাইনের গায়ের ডাল কাটতে গেলেন। ভেজা ডাল বা টুল তারে লাগলেই বিপদ। ডাল লাইনের খুব কাছে থাকলে আগে পারমিট (PTW) নিয়ে লাইন বন্ধ — তবেই কাটা।',
     art: '$_dir/tp_live.svg',
     deadly: true,
     lessonPoint: 1,
@@ -374,7 +374,7 @@ abstract final class M4TreePlanMistakes {
   /// Listening to the careless coworker (playbook row 8: a slip).
   static const listened = DoMistake(
     key: '4.8/m4_tree_plan/listened-line-on',
-    textBn: 'লাইন চালু রেখে কাটার কথায় সায় দিলেন। ডাল লাইনের খুব কাছে — আগে PTW নিয়ে লাইন বন্ধ, তবেই কাটা। কারও চাপে নিয়ম ভাঙবেন না।',
+    textBn: 'লাইন চালু রেখে কাটার কথায় সায় দিলেন। ডাল লাইনের খুব কাছে — আগে পারমিট (PTW) নিয়ে লাইন বন্ধ, তবেই কাটা। কারও চাপে নিয়ম ভাঙবেন না।',
     art: '$_dir/tp_live.svg',
     lessonPoint: 1,
   );

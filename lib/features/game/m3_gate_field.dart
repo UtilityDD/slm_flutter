@@ -389,7 +389,7 @@ abstract final class M3GateLines {
       'বিদ্যুৎ কোন কোন দিক থেকে আসতে পারে? ম্যাপে খুঁজুন।',
     ],
     M3GateStation.patrol: [
-      'এবার পেট্রোল। প্রতিটা অংশ কাছ থেকে দেখে রায় দিন।',
+      'এবার পেট্রোল। প্রতিটা অংশ কাছ থেকে দেখে সিদ্ধান্ত নিন।',
       'ইনসুলেটর, ক্ল্যাম্প, তার, ক্রস-আর্ম — একে একে দেখুন।',
       'কোনটা ঠিক, কোনটা ফল্ট — ভালো করে দেখে লিখুন।',
     ],
@@ -2718,7 +2718,7 @@ class _DocketSheet extends StatelessWidget {
     final rows = [
       (Icons.place_rounded, 'সাইট', 'ফিডার-7 · DTR-17 (100 kVA) · বটতলা মোড়', const Color(0xFF1565C0)),
       (Icons.warning_rounded, 'অভিযোগ', 'DTR-17-এর একটা DO ঝুলে পড়েছে · পাড়ায় কম ভোল্টেজ · পিলারের OUT লাইনে ফিউজ উড়েছে', const Color(0xFFC62828)),
-      (Icons.power_off_rounded, 'শাটডাউন', 'SLD দেখে আইসোলেশন পয়েন্ট চিহ্নিত করে, লিখিত অনুমতি (PTW) নিয়ে', const Color(0xFFE65100)),
+      (Icons.power_off_rounded, 'শাটডাউন', 'SLD দেখে আইসোলেশন পয়েন্ট চিহ্নিত করে, লিখিত অনুমতি (পারমিট (PTW)) নিয়ে', const Color(0xFFE65100)),
       (
         Icons.handyman_rounded,
         'কাজ',

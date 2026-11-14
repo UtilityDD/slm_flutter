@@ -249,8 +249,8 @@ abstract final class M5TripLines {
 
   // --- the team briefing at the van (point 2) ---
   static const briefRight = [
-    'খবর, সন্দেহ, শুরু; হাত দেওয়ার আগে PTW, আইসোলেট, আর্থিং',
-    'যা জানলাম আর কোথা থেকে শুরু; হাত দেওয়ার আগে PTW ও আর্থিং',
+    'খবর, সন্দেহ, শুরু; হাত দেওয়ার আগে পারমিট (PTW), আইসোলেট, আর্থিং',
+    'যা জানলাম আর কোথা থেকে শুরু; হাত দেওয়ার আগে পারমিট (PTW) ও আর্থিং',
   ];
   static const briefWrong = [
     'লাইন তো ট্রিপ করেই আছে, পারমিট ছাড়াই দ্রুত কাজ সারি',
@@ -282,7 +282,7 @@ abstract final class M5TripLines {
 
   static const callHeld = 'ঠিক! ফল্ট খুঁজতে লাইন চার্জ নয়।';
   static const askPaid = 'ঠিক! ফোন রাখার আগে সব খবর।';
-  static const briefPaid = 'চমৎকার! খবর, পরিকল্পনা — আর হাত দেওয়ার আগে PTW।';
+  static const briefPaid = 'চমৎকার! খবর, পরিকল্পনা — আর হাত দেওয়ার আগে পারমিট (PTW)।';
   static const allSet = 'খবর নিয়ে, অনুমান করে, ঠিক জায়গা থেকে — নিরাপদে পেট্রোলিং।';
   static const quick = 'নিখুঁত আর ঝটপট!';
   static const fail = 'আরেকবার — ফোন রাখার আগে সব খবর, তারপর অনুমান।';
@@ -295,7 +295,7 @@ abstract final class M5TripLines {
   static const caughtSuspect = 'সূত্র মিলিয়ে ঠিক সন্দেহ';
   static const caughtStart = 'ঠিক জায়গা থেকে পেট্রোলিং শুরু';
   static const caughtCall = 'চার্জ করে ফল্ট খোঁজায় “না” বলেছেন';
-  static const caughtBrief = 'বেরোনোর আগে টিম ব্রিফিং; হাত দেওয়ার আগে PTW';
+  static const caughtBrief = 'বেরোনোর আগে টিম ব্রিফিং; হাত দেওয়ার আগে পারমিট (PTW)';
 
   /// The operator's clear answer to [t] in [c].
   static String clearAnswer(M5TripCall c, M5TripTopic t) {
@@ -368,7 +368,7 @@ abstract final class M5TripMistakes {
   );
   static const brief = DoMistake(
     key: '5.1/m5_trip_call/brief',
-    textBn: 'টিমকে জানান কী খবর পেলেন আর কোথা থেকে শুরু। ট্রিপ মানে ডেড নয় — লাইনে হাত দেওয়া বা ওঠার আগে PTW, আইসোলেট আর আর্থিং।',
+    textBn: 'টিমকে জানান কী খবর পেলেন আর কোথা থেকে শুরু। ট্রিপ মানে ডেড নয় — লাইনে হাত দেওয়া বা ওঠার আগে পারমিট (PTW), আইসোলেট আর আর্থিং।',
     art: '$_dir/brief.svg',
     lessonPoint: 1,
   );

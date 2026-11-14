@@ -145,7 +145,7 @@ abstract final class M4ServiceConnectLines {
   static const sayNone = 'ভোল্টেজ আসেনি';
   static const docket = 'ডকেট';
   static const docketJob = 'নতুন সার্ভিস কানেকশন';
-  static const docketPtw = 'শাটডাউন · PTW';
+  static const docketPtw = 'শাটডাউন · পারমিট (PTW)';
   static const testerLive = 'লাইভ';
   static const testerDead = '0 V';
   static const stampLit = 'আলো জ্বলল';

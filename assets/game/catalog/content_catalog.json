@@ -144,7 +144,7 @@
       "id": "1.6",
       "moduleId": "m1",
       "order": 6,
-      "titleBn": "পারমিট-টু-ওয়ার্ক (PTW): একটি জীবন বীমা",
+      "titleBn": "পারমিট (PTW): একটি জীবন বীমা",
       "learnPackId": "learn_1_6",
       "doSlotIds": [
         "do_1_6_a",
@@ -793,7 +793,7 @@
       "id": "7.4",
       "moduleId": "m7",
       "order": 4,
-      "titleBn": "পারমিট-টু-ওয়ার্ক (PTW): একটি আইনি চুক্তি",
+      "titleBn": "পারমিট (PTW): একটি আইনি চুক্তি",
       "learnPackId": "learn_7_4",
       "doSlotIds": [
         "do_7_4_a",

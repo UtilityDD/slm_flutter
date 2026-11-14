@@ -123,13 +123,13 @@ abstract final class M5CasebookLines {
   static const intro = 'চার জায়গায় লাইনের গোলমাল — সূত্র ধরে শত্রু চিনুন!';
 
   // The guide's task now (tap him: the same task, a different way).
-  static const askClue = 'দুটো সূত্র দেখুন, তারপর স্লিপ খাতায় রাখুন।';
+  static const askClue = 'দুটো ক্লু দেখুন, তারপর স্লিপ খাতায় রাখুন।';
   static const askFile = 'কোন শত্রু? স্লিপটা ঠিক ঘরে রাখুন।';
   static const cluesGone = 'সূত্র শেষ — এবার স্লিপটা খাতায় রাখুন।';
   static const revealed = 'সব সূত্র খোলা — আবার ভেবে স্লিপ রাখুন।';
 
   /// The slip touched before both clues are seen (it does not move).
-  static const clueFirst = 'আগে দুটো সূত্র দেখুন — প্রমাণ ছাড়া খাতায় লেখা নয়।';
+  static const clueFirst = 'আগে দুটো ক্লু দেখুন — প্রমাণ ছাড়া খাতায় লেখা নয়।';
   static const tasks = [askClue, askFile];
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
 

@@ -201,7 +201,7 @@ abstract final class M5GateLines {
   // The tasks (the corner guide repeats the current one, a new way each tap).
   static const taskIdle = 'ফল্টটা খুঁজে বের করুন — যা দরকার, করুন।';
   static const taskChip = 'কোথায় পাঠাবেন? ম্যাপে রাখুন।';
-  static const taskSlip = 'PTW-টা কোথায় রাখবেন?';
+  static const taskSlip = 'পারমিট (PTW)-টা কোথায় রাখবেন?';
   static const taskOrder = 'কী করতে বলবেন?';
   static const taskSend = 'রেডিও চেপে ধরে বলুন।';
   static const taskPhone = 'কন্ট্রোল রুমকে কী বলবেন?';
@@ -242,7 +242,7 @@ abstract final class M5GateLines {
         M5Ask.weather => 'ট্রিপের সময় আবহাওয়া?',
         M5Ask.customers => 'গ্রাহকরা কিছু বলেছে?',
         M5Ask.logbook => 'লগবুকে এই ফিডার?',
-        M5Ask.ptw => 'PTW দিন',
+        M5Ask.ptw => 'পারমিট (PTW) দিন',
         M5Ask.lineClear => 'লাইন ক্লিয়ার',
         M5Ask.charge => 'চার্জ করুন',
       };
@@ -305,13 +305,13 @@ abstract final class M5GateLines {
             }}'
           : 'অনেক ফোন — শুধু “আলো নেই”',
       M5Ask.logbook => d.repeats ? enDigits('$v সেকশনে গত মাসে 2 বার ফল্ট') : 'এই ফিডারে আগে তেমন ফল্ট নেই',
-      M5Ask.ptw => d.kase.lockOut ? 'PTW দেওয়া হলো — ফিডার বন্ধ' : 'ফিডার চালু আছে — আগে কারণ খুঁজুন',
-      M5Ask.lineClear => 'লাইন ক্লিয়ার নেওয়া হলো, PTW ফেরত',
+      M5Ask.ptw => d.kase.lockOut ? 'পারমিট (PTW) দেওয়া হলো — ফিডার বন্ধ' : 'ফিডার চালু আছে — আগে কারণ খুঁজুন',
+      M5Ask.lineClear => 'লাইন ক্লিয়ার নেওয়া হলো, পারমিট (PTW) ফেরত',
       M5Ask.charge => 'ফিডার চার্জ হলো',
     };
   }
 
-  static const ptwAgain = 'PTW তো দেওয়াই আছে';
+  static const ptwAgain = 'পারমিট (PTW) তো দেওয়াই আছে';
   static const liveAlready = 'ফিডার তো চালুই আছে';
   static const clearAgain = 'লাইন ক্লিয়ার তো দেওয়াই আছে';
   static const clearNotYet = 'কন্ট্রোল রুম: কাজ কি শেষ হয়েছে?';
@@ -388,7 +388,7 @@ abstract final class M5GateLines {
 
   // --- the ◆ questions and their cards (every card 29–36 letters) -------------
   static String question(M5Reason r) => switch (r) {
-        M5Reason.ptw => 'লাইনে হাত দেওয়ার আগে PTW কেন?',
+        M5Reason.ptw => 'লাইনে হাত দেওয়ার আগে পারমিট (PTW) কেন?',
         M5Reason.hypothesis => 'প্রথমে ওই সেকশনেই কেন দল পাঠালেন?',
         M5Reason.locate => 'কেন এই অংশেই খুঁজলেন?',
         M5Reason.earth => 'হাত দেওয়ার আগে আর্থ কেন?',
@@ -413,7 +413,7 @@ abstract final class M5GateLines {
 
   /// The right cards. [fpi]: the find was bracketed by FPIs.
   static List<String> whyRight(M5Reason r, {bool fpi = false}) => switch (r) {
-        M5Reason.ptw => const ['ট্রিপ মানে ডেড নয়, চালু হতে পারে', 'লাইনে হাত দেওয়ার আগে PTW বাধ্যতামূলক', 'রিক্লোজার যেকোনো সময় চালু করে দেয়'],
+        M5Reason.ptw => const ['ট্রিপ মানে ডেড নয়, চালু হতে পারে', 'লাইনে হাত দেওয়ার আগে পারমিট (PTW) বাধ্যতামূলক', 'রিক্লোজার যেকোনো সময় চালু করে দেয়'],
         M5Reason.hypothesis => const ['সূত্রগুলো ওই সেকশনের দিকেই দেখাচ্ছিল', 'ভালো অনুমান খোঁজার এলাকা ছোট করে'],
         M5Reason.locate => fpi
             ? const ['জ্বলা আর নেভা FPI-এর মাঝেই এই অংশ', 'FPI-জোড়া বলছে ফল্ট এই দুইয়ের মাঝে']
@@ -431,10 +431,10 @@ abstract final class M5GateLines {
 
   static List<String> whyWrong(M5Reason r) => [
         ...switch (r) {
-          M5Reason.ptw => const ['PTW থাকলে আর আর্থ লাগানোর দরকার নেই', 'PTW শুধু অফিসের খাতা ভরানোর জন্য'],
+          M5Reason.ptw => const ['পারমিট (PTW) থাকলে আর আর্থ লাগানোর দরকার নেই', 'পারমিট (PTW) শুধু অফিসের খাতা ভরানোর জন্য'],
           M5Reason.hypothesis => const ['সাবস্টেশনের সবচেয়ে কাছে, তাই আগে', 'ওই রাস্তাটা ভালো, গাড়ি চলে সহজে'],
           M5Reason.locate => const ['পুরো লাইন হাঁটার সময় ছিল না তাই', 'এই অংশটা গাড়ি থেকে সবচেয়ে কাছে'],
-          M5Reason.earth => const ['আর্থ দিলে PTW-র আর দরকার পড়ে না', 'আর্থ লাগালে কাজ তাড়াতাড়ি শেষ হয়'],
+          M5Reason.earth => const ['আর্থ দিলে পারমিট (PTW)-র আর দরকার পড়ে না', 'আর্থ লাগালে কাজ তাড়াতাড়ি শেষ হয়'],
           M5Reason.cordon => const ['স্পার্ক নেই, তাই তার আসলে ডেডই আছে', 'দড়ি দিলে লোকে তারটা দেখতে পাবে'],
           M5Reason.closeView => const ['একটা পেলেই হলো, বাকিটা পরে দেখব', 'যত বেশি সারাব, তত বেশি নম্বর পাব'],
           M5Reason.permanent => const ['একটু পরে নিজেই ঠিক হয়ে যেত তো', 'স্থায়ী লিখলে অফিস তাড়াতাড়ি মানে'],
@@ -449,7 +449,7 @@ abstract final class M5GateLines {
 
   /// "আজ যা ধরলেন" — from the player's own moves.
   static String caught(M5Reason r, {bool fpi = false, bool knock = false}) => switch (r) {
-        M5Reason.ptw => 'PTW নিয়ে তবে লাইনে হাত',
+        M5Reason.ptw => 'পারমিট (PTW) নিয়ে তবে লাইনে হাত',
         M5Reason.hypothesis => 'সূত্র ধরে প্রথম টহল',
         M5Reason.locate => fpi ? 'FPI-জোড়ায় ফল্ট ধরা' : 'সূত্র মিলিয়ে ফল্ট ধরা',
         M5Reason.earth => 'আর্থ দিয়ে তবে হাত',
@@ -553,7 +553,7 @@ abstract final class M5GateMistakes {
   // Deadly.
   static const handsNoPtw = M5Mistake('5.1', DoMistake(
     key: 'm5/gate/hands-no-ptw',
-    textBn: 'PTW ক্লিপবোর্ডে ওঠার আগেই লাইনে হাত — ট্রিপ মানে ডেড নয়। PTW আর ব্যক্তিগত আর্থিং ছাড়া ট্রিপ হওয়া লাইন ছোঁয়া যাবে না।',
+    textBn: 'পারমিট (PTW) ক্লিপবোর্ডে ওঠার আগেই লাইনে হাত — ট্রিপ মানে ডেড নয়। পারমিট (PTW) আর ব্যক্তিগত আর্থিং ছাড়া ট্রিপ হওয়া লাইন ছোঁয়া যাবে না।',
     art: '$_art/ptw.svg',
     deadly: true,
     lessonPoint: 1,
@@ -595,14 +595,14 @@ abstract final class M5GateMistakes {
   ));
   static const climbLive = M5Mistake('5.7', DoMistake(
     key: 'm5/gate/climb-live',
-    textBn: 'চালু লাইনে ওঠা বা হাত — চালু লাইনের টহল শুধু মাটি থেকে। আভা দেখা ইনসুলেটর শাটডাউন আর PTW নিয়ে তবেই বদলানো।',
+    textBn: 'চালু লাইনে ওঠা বা হাত — চালু লাইনের টহল শুধু মাটি থেকে। আভা দেখা ইনসুলেটর শাটডাউন আর পারমিট (PTW) নিয়ে তবেই বদলানো।',
     art: '$_art/glow.svg',
     deadly: true,
     lessonPoint: 2,
   ));
   static const handsAfterClear = M5Mistake('5.1', DoMistake(
     key: 'm5/gate/hands-after-clear',
-    textBn: 'লাইন ক্লিয়ার দিয়ে PTW ফেরতের পর আবার লাইনে হাত — কন্ট্রোল রুম এখন যেকোনো সময় চার্জ করতে পারে। PTW ফেরত মানে আর কেউ লাইনে নয়।',
+    textBn: 'লাইন ক্লিয়ার দিয়ে পারমিট (PTW) ফেরতের পর আবার লাইনে হাত — কন্ট্রোল রুম এখন যেকোনো সময় চার্জ করতে পারে। পারমিট (PTW) ফেরত মানে আর কেউ লাইনে নয়।',
     art: '$_art/clear.svg',
     deadly: true,
     lessonPoint: 1,
@@ -625,7 +625,7 @@ abstract final class M5GateMistakes {
   // Slips.
   static const patrolNoPtw = M5Mistake('5.1', DoMistake(
     key: 'm5/gate/patrol-no-ptw',
-    textBn: 'কন্ট্রোল রুমের ডকেট/PTW হাতে না নিয়েই লক-আউট ফিডারে দল পাঠালেন — টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে PTW বাধ্যতামূলক।',
+    textBn: 'কন্ট্রোল রুমের ডকেট/পারমিট (PTW) হাতে না নিয়েই লক-আউট ফিডারে দল পাঠালেন — টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে পারমিট (PTW) বাধ্যতামূলক।',
     art: '$_art/ptw.svg',
     lessonPoint: 1,
   ));

@@ -125,9 +125,9 @@ abstract final class M3DtrCheckupLines {
   static const tasks = [ask];
 
   static const title = 'ডাক্তারের চোখে DTR';
-  static const intro = 'আজ DTR-এর চেকআপ। নিচ থেকে সব লক্ষণ দেখে রায় দিন।';
+  static const intro = 'আজ DTR-এর চেকআপ। নিচ থেকে সব লক্ষণ দেখে সিদ্ধান্ত নিন।';
   static const rounds = ['ক', 'খ', 'গ'];
-  static const ask = 'নিচ থেকে DTR-এর সব লক্ষণ দেখে রায় দিন।';
+  static const ask = 'নিচ থেকে DTR-এর সব লক্ষণ দেখে সিদ্ধান্ত নিন।';
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
 
   // Labels a worker reads.
@@ -319,7 +319,7 @@ abstract final class M3DtrCheckupMistakes {
   );
   static const climbLive = DoMistake(
     key: '3.6/m3_dtr_checkup/climb-live',
-    textBn: 'চালু DTR-এর মাচায় উঠলেন! এগারো কেভি বুশিং হাতের নাগালে। চেকআপ নিচ থেকে; উঠতে হলে আগে শাটডাউন, PTW, টেস্ট আর আর্থ।',
+    textBn: 'চালু DTR-এর মাচায় উঠলেন! এগারো কেভি বুশিং হাতের নাগালে। চেকআপ নিচ থেকে; উঠতে হলে আগে শাটডাউন, পারমিট (PTW), টেস্ট আর আর্থ।',
     art: '$_dir/climb_live.svg',
     deadly: true,
     lessonPoint: 0,

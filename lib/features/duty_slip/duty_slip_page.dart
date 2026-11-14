@@ -1222,7 +1222,7 @@ class _OfficeStage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _ActionBtn(label: 'PTW নিন', onTap: onOpenPtw),
+            _ActionBtn(label: 'পারমিট নিন', onTap: onOpenPtw),
           ],
         ),
       );
@@ -1278,7 +1278,7 @@ class _OfficeStage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          _ActionBtn(label: 'PTW হাতে নিন', tone: _BtnTone.good, onTap: onSubmitPtw),
+          _ActionBtn(label: 'পারমিট (PTW) হাতে নিন', tone: _BtnTone.good, onTap: onSubmitPtw),
         ],
       ),
     );

@@ -105,7 +105,7 @@ abstract final class M4TreeCutLines {
   static const clearOk = 'ক্লিয়ারেন্স ঠিক';
   static const docket = 'ডকেট';
   static const job = 'গাছের ডাল ছাঁটা';
-  static const permit = 'শাটডাউন · PTW · আর্থ';
+  static const permit = 'শাটডাউন · পারমিট (PTW) · আর্থ';
   static const stampDone = 'লাইন পরিষ্কার';
 
   // The reasons (lesson 4.8): the right ones state this station's rule; the

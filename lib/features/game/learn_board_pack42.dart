@@ -319,7 +319,7 @@ const learnBoardPack42 = LearnBoardPack(
       whyChips: [
         LearnWhyChip(id: 'w1', textBn: 'রাতে লাল আভা মানে ঢিলা জাম্পারের হটস্পট', correct: true),
         LearnWhyChip(id: 'w2', textBn: 'স্পার্ক বা হিসহিস শব্দ ঢিলা কানেকশনের লক্ষণ', correct: true),
-        LearnWhyChip(id: 'w3', textBn: 'লুজ জাম্পার টাইটে PTW, PPE আর সঠিক পদ্ধতি চাই', correct: true),
+        LearnWhyChip(id: 'w3', textBn: 'লুজ জাম্পার টাইটে পারমিট (PTW), PPE আর সঠিক পদ্ধতি চাই', correct: true),
         LearnWhyChip(id: 'w4', textBn: 'রাতে লাল আভা জাম্পারের স্বাভাবিক রং', correct: false),
         LearnWhyChip(id: 'w5', textBn: 'ছোট স্পার্ক হলে লাইনের কোনো বিপদ নেই', correct: false),
         LearnWhyChip(id: 'w6', textBn: 'টিভিতে নয়েজের সাথে লাইনের কোনো সম্পর্ক নেই', correct: false),

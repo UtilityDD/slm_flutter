@@ -252,7 +252,7 @@ abstract final class SkinLines {
   static const callHeld = 'ঠিক! শর্টকাট নয় — নিয়ম মেনেই কাজ।';
   static const glovesOn = 'গ্লাভস পরা হলো।';
   static const asideBad = 'ঠিক — এটা বাতিল।';
-  static const allSet = 'টুলের ওস্তাদ! প্রস্তুতি, টেস্ট, ঠিক টুল — সব মিলিয়েছেন।';
+  static const allSet = 'টুলের দাদা! প্রস্তুতি, টেস্ট, ঠিক টুল — সব মিলিয়েছেন।';
   static const quick = 'নিখুঁত আর ঝটপট!';
   static const fail = 'আরেকবার — আগে প্রস্তুতি, তারপর ঠিক টুল।';
   static const deadlyWord = 'থামুন!';

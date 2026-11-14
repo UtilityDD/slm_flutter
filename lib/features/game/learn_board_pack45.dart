@@ -68,7 +68,7 @@ const learnBoardPack45 = LearnBoardPack(
           asset: 'assets/game/art/m4_board45/level_leak.svg',
           scene: true,
           correct: false,
-          rejectBn: 'কম তেলের প্রধান কারণ লিক — ড্রেন কক থেকে তেল পড়ছে, লেভেল Min-এর নিচে। এখনই রিপোর্ট করুন।',
+          rejectBn: 'কম তেলের প্রধান কারণ লিক — ড্রেন কক থেকে তেল লিক করছে, লেভেল Min-এর নিচে। এখনই রিপোর্ট করুন।',
         ),
       ],
       whyChips: [

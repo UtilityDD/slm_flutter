@@ -223,7 +223,7 @@ abstract final class CareLines {
       };
 
   static const callHeld = 'ঠিক! যত্ন আজই — কাল নয়।';
-  static const allSet = 'হাতিয়ারের ওস্তাদ! মুছেছেন, দেখেছেন, ঘরে রেখেছেন — ভাঙাটা বাতিল।';
+  static const allSet = 'হাতিয়ারের দাদা! মুছেছেন, দেখেছেন, ঘরে রেখেছেন — ভাঙাটা বাতিল।';
   static const quick = 'নিখুঁত আর ঝটপট!';
   static const fail = 'আরেকবার — মুছুন, দেখুন, তারপর ঘরে বা বাতিল।';
   static const deadlyWord = 'থামুন!';

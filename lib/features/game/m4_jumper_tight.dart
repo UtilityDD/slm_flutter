@@ -236,7 +236,7 @@ abstract final class M4JumperTightMistakes {
 
   static const workLive = DoMistake(
     key: '4.2/m4_jumper_tight/work-live',
-    textBn: 'চালু জাম্পারে প্লাস-রেঞ্চ নয়! আগে শাটডাউন ও PTW, টেস্টারে মৃত প্রমাণ, আর্থ — তবেই টাইট।',
+    textBn: 'চালু জাম্পারে প্লাস-রেঞ্চ নয়! আগে শাটডাউন ও পারমিট (PTW), টেস্টারে মৃত প্রমাণ, আর্থ — তবেই টাইট।',
     art: _live,
     deadly: true,
     lessonPoint: 2,
@@ -279,7 +279,7 @@ abstract final class M4JumperTightMistakes {
   );
   static const earthOn = DoMistake(
     key: '4.2/m4_jumper_tight/earth-left-on',
-    textBn: 'আর্থ লাগানো রেখে লাইন চালু নয়! আগে সব আর্থ খুলুন, তারপর PTW ফেরত।',
+    textBn: 'আর্থ লাগানো রেখে লাইন চালু নয়! আগে সব আর্থ খুলুন, তারপর পারমিট (PTW) ফেরত।',
     art: _earthOn,
   );
   static const unfinished = DoMistake(

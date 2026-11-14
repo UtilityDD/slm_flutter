@@ -143,7 +143,7 @@ abstract final class M4DpSurveyLines {
   static const rounds = ['ক', 'খ', 'গ'];
 
   // The task of each step (what the guide says and repeats when tapped).
-  static const askSurvey = 'নিচ থেকে খুঁটিয়ে দেখুন — যা এলোমেলো, ছুঁয়ে দাগ দিন।';
+  static const askSurvey = 'নিচ থেকে খুঁটিয়ে দেখুন — যা এলোমেলো, ট্যাপ করে চিহ্নিত করুন।';
   static const askOrder = 'লিস্টের কোন কাজ আগে, কোনটা পরে? ক্রমে ছুঁয়ে দিন।';
   static const askPlan = 'লিস্ট তৈরি। এই ড্রেসিং-এর কাজ কীভাবে হবে?';
   static const tasks = [askSurvey, askOrder, askPlan];
@@ -240,13 +240,13 @@ abstract final class M4DpSurveyLines {
   static List<String> whyWrongFor(M4DpSurveyTopic t) => [...whyWrongTopic(t), ...whyWrongGeneral(t)];
 
   // The plan: how the dressing on the list gets done.
-  static const planRight = ['শাটডাউন, PTW, টেস্ট, আর্থ — তারপর ড্রেসিং', 'PTW নিয়ে, লাইন টেস্ট করে আর্থ দিয়ে তবেই'];
+  static const planRight = ['শাটডাউন, পারমিট (PTW), টেস্ট, আর্থ — তারপর ড্রেসিং', 'পারমিট (PTW) নিয়ে, লাইন টেস্ট করে আর্থ দিয়ে তবেই'];
   static const planWrong = [
     'লাইন চালু রেখেই ড্রেসিংটা সেরে ফেলি',
     'রাবার গ্লাভস দিয়ে তবেই চালু লাইনে উঠি',
     'শাটডাউন লাগবে না, সাবধানে করে নিলেই হবে',
     'শাটডাউন পেলেই উঠি, টেস্ট-আর্থ লাগবে না',
-    'PTW নিয়ে ভাবছি না, আগে উঠি তারপর দেখি',
+    'পারমিট (PTW) নিয়ে ভাবছি না, আগে উঠি তারপর দেখি',
   ];
 
   /// The careless coworker (lesson 4.7, myth 1).
@@ -300,7 +300,7 @@ abstract final class M4DpSurveyLines {
   // "আজ যা ধরলেন".
   static const caughtTidy = 'পরিপাটি ডিপি চিনলেন';
   static const caughtOrder = 'ওপরের HT আগে, তারপর LT';
-  static const caughtPlan = 'শাটডাউন, PTW, টেস্ট, আর্থ — তারপর ড্রেসিং';
+  static const caughtPlan = 'শাটডাউন, পারমিট (PTW), টেস্ট, আর্থ — তারপর ড্রেসিং';
   static const caughtCall = 'চাপে “না” বলেছেন';
 }
 
@@ -395,7 +395,7 @@ abstract final class M4DpSurveyMistakes {
   /// lesson text: no lesson point.
   static const liveDressing = DoMistake(
     key: '4.7/m4_dp_survey/dressing-live',
-    textBn: 'চালু লাইনে ড্রেসিং-এ হাত দিলেন। জাম্পার আর তার লাইভ — শাটডাউন, PTW, টেস্ট আর আর্থ ছাড়া স্ট্রাকচারে কাজ নয়।',
+    textBn: 'চালু লাইনে ড্রেসিং-এ হাত দিলেন। জাম্পার আর তার লাইভ — শাটডাউন, পারমিট (PTW), টেস্ট আর আর্থ ছাড়া স্ট্রাকচারে কাজ নয়।',
     art: '$_dir/dp_live.svg',
     deadly: true,
   );

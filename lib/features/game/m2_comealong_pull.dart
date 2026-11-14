@@ -115,7 +115,7 @@ abstract final class PullLines {
   static const fastRelease = 'এক ঝটকায় ছাড়ুন';
   static const docket = 'ডকেট';
   static const job = 'স্যাগ ঠিক করা';
-  static const permit = 'শাটডাউন · PTW · আর্থ';
+  static const permit = 'শাটডাউন · পারমিট (PTW) · আর্থ';
   static const stampDone = 'টান ঠিক';
 
   // The reasons (lesson 2.4): the right ones state this station's rule; the

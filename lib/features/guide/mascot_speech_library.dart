@@ -193,7 +193,7 @@ class MascotSpeechLibrary {
   static const _welcomeNewPool = <MascotCue>[
     MascotCue(
       id: 'ladder.welcome.new.1',
-      textBn: 'হ্যালো! আমি ওস্তাদ। চলুন, প্রথম ধাপ থেকে কাজ শুরু করি!',
+      textBn: 'হ্যালো! আমি সুব্রত, আপনার সেফটি গাইড। চলুন, প্রথম ধাপ থেকে কাজ শুরু করি!',
       mood: GuideMood.wake,
     ),
     MascotCue(
@@ -377,7 +377,7 @@ class MascotSpeechLibrary {
     ),
     'boots': MascotCue(
       id: 'side.boots',
-      textBn: 'লিখিত PTW ছাড়া কাজে নামবেন না—সই করা পারমিটই আপনার আসল সুরক্ষা!',
+      textBn: 'লিখিত পারমিট ছাড়া কাজে নামবেন না—সই করা পারমিটই আপনার আসল সুরক্ষা!',
       mood: GuideMood.inspire,
       voiceKey: 'ds_why_slip',
     ),
@@ -389,25 +389,25 @@ class MascotSpeechLibrary {
     ),
     'lock': MascotCue(
       id: 'side.lock',
-      textBn: 'মৌখিক কথায় ভরসা নয়—ব্রেকার অফ করে নিজের হাতে LOTO তালা ও Danger Tag লাগিয়ে PTW নিন।',
+      textBn: 'মৌখিক কথায় বিশ্বাস নয়—ব্রেকার অফ করে তালা ও ট্যাগ লাগিয়ে তবেই পারমিট নিন!',
       mood: GuideMood.inspire,
       voiceKey: 'ds_l8_start',
     ),
     'rope': MascotCue(
       id: 'side.rope',
-      textBn: 'পোলে টুলস বা তার তোলার সময় হাতে না বয়ে শুকনো Hand-Rope ও টুল-ব্যাগ ব্যবহার করুন।',
+      textBn: 'পোলে টুলস তুলতে শুকনো দড়ি আর টুল-ব্যাগ ব্যবহার করুন—হাতে ঝুলিয়ে উঠবেন না।',
       mood: GuideMood.inspire,
       voiceKey: 'ds_l7_start',
     ),
     'cone': MascotCue(
       id: 'side.cone',
-      textBn: 'রাস্তার ধারে কাজ শুরুর আগে Traffic Cone ও ফিতে দিয়ে ভিড় সরিয়ে লক্ষ্মণ রেখা তৈরি করুন।',
+      textBn: 'রাস্তায় কাজ শুরুর আগে ট্রাফিক কোন ও ফিতে দিয়ে কাজের জায়গা ঘিরে নিন।',
       mood: GuideMood.inspire,
       voiceKey: 'ds_l14_crowd_first',
     ),
     'goggles': MascotCue(
       id: 'side.goggles',
-      textBn: 'ফিউজ বাঁধা বা প্যানেল সুইচিংয়ের সময় আর্কের ফুলকি থেকে চোখ বাঁচাতে Safety Goggles / Face Shield পরুন।',
+      textBn: 'ফিউজ বা প্যানেলে কাজের সময় আর্কের ফুলকি থেকে বাঁচতে ফেস শিল্ড পরুন।',
       mood: GuideMood.inspire,
       voiceKey: 'ds_l6_room_no_shield',
     ),
@@ -542,7 +542,7 @@ class MascotSpeechLibrary {
         ),
       MascotCueId.ladderRankUp => const MascotCue(
           id: 'ladder.rank_up',
-          textBn: 'অভিনন্দন ওস্তাদ! নতুন র‍্যাঙ্ক শিল্ড পেয়েছেন—এগিয়ে চলুন!',
+          textBn: 'অভিনন্দন দাদা! নতুন র‍্যাঙ্ক শিল্ড পেয়েছেন—এগিয়ে চলুন!',
           mood: GuideMood.celebrate,
           gesture: GuideGesture.spinHop,
           voiceKey: 'ds_exp_right_2',
@@ -602,7 +602,7 @@ class MascotSpeechLibrary {
         ),
       MascotCueId.sidePocketRule => const MascotCue(
           id: 'side.rule',
-          textBn: 'গোল্ডেন রুল: লিখিত PTW, ভোল্টেজ টেস্ট, ডিসচার্জ রড আর দুপাশে আর্থিং ছাড়া লাইন ছোঁয়া মানা!',
+          textBn: 'গোল্ডেন রুল: লিখিত পারমিট (PTW), ভোল্টেজ টেস্ট, ডিসচার্জ রড আর দুপাশে আর্থিং ছাড়া লাইন ছোঁয়া মানা!',
           mood: GuideMood.inspire,
           voiceKey: 'ds_l6_done',
         ),
@@ -638,7 +638,7 @@ class MascotSpeechLibrary {
       MascotCueId.doMissThink => _doMissFirstPool[0],
       MascotCueId.doLevelClear => const MascotCue(
           id: 'do.clear',
-          textBn: 'সাবাশ ওস্তাদ! মাঠের কাজ দারুণ শেষ করেছেন—পরের ধাপে চলুন!',
+          textBn: 'সাবাশ দাদা! মাঠের কাজ দারুণ শেষ করেছেন—পরের ধাপে চলুন!',
           mood: GuideMood.celebrate,
           gesture: GuideGesture.spinHop,
           voiceKey: 'ds_exp_right_1',
@@ -665,11 +665,11 @@ class MascotSpeechLibrary {
         .replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '')
         .replaceAll('দস্তানা', 'গ্লাভস')
         .replaceAll('হস্তাবরণী', 'গ্লাভস')
-        .replaceAll('শিরস্ত্রাণ', 'হেলমেট')
+        .replaceAll('হেলমেট', 'হেলমেট')
         .replaceAll('পাদুকা', 'সেফটি বুট')
         .replaceAll('নিরাপত্তা বেল্ট', 'সেফটি হারনেস')
-        .replaceAll('বিচ্ছিন্নকরণ', 'শাটডাউন ও আইসোলেশন')
-        .replaceAll('ভূ-সংযোগ', 'আর্থিং');
+        .replaceAll('আইসোলেশন ও শাটডাউন', 'শাটডাউন ও আইসোলেশন')
+        .replaceAll('আর্থিং', 'আর্থিং');
     return enDigits(out);
   }
 

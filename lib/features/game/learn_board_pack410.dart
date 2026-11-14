@@ -199,7 +199,7 @@ const learnBoardPack410 = LearnBoardPack(
       options: [
         LearnBoardOption(
           id: 'shutdown',
-          labelBn: 'শাটডাউন ও PTW নিয়ে R থেকে B-তে বদল',
+          labelBn: 'শাটডাউন ও পারমিট (PTW) নিয়ে R থেকে B-তে বদল',
           asset: 'assets/game/art/m4_board410/work_shutdown.svg',
           scene: true,
           correct: true,
@@ -217,7 +217,7 @@ const learnBoardPack410 = LearnBoardPack(
           asset: 'assets/game/art/m4_board410/work_live.svg',
           scene: true,
           correct: false,
-          rejectBn: 'ফেজ বদল সঠিক PTW আর সুরক্ষা নিয়ম মেনে, শাটডাউন নিয়েই — চালু পিলারে তার খোলা মানে মৃত্যুর ঝুঁকি।',
+          rejectBn: 'ফেজ বদল সঠিক পারমিট (PTW) আর সুরক্ষা নিয়ম মেনে, শাটডাউন নিয়েই — চালু পিলারে তার খোলা মানে মৃত্যুর ঝুঁকি।',
         ),
         LearnBoardOption(
           id: 'surprise',
@@ -237,12 +237,12 @@ const learnBoardPack410 = LearnBoardPack(
         ),
       ],
       whyChips: [
-        LearnWhyChip(id: 'w1', textBn: 'ফেজ বদল শুধু শাটডাউন ও PTW নিয়ে, নিয়ম মেনে', correct: true),
+        LearnWhyChip(id: 'w1', textBn: 'ফেজ বদল শুধু শাটডাউন ও পারমিট (PTW) নিয়ে, নিয়ম মেনে', correct: true),
         LearnWhyChip(id: 'w2', textBn: 'সংযোগ বদলের আগে গ্রাহককে আগাম জানিয়ে রাখুন', correct: true),
         LearnWhyChip(id: 'w3', textBn: 'বেশি লোডের ফেজের লাইন কম লোডের ফেজে যায়', correct: true),
         LearnWhyChip(id: 'w4', textBn: 'ছোট সার্ভিস লাইন চালু অবস্থাতেই বদলানো যায়', correct: false),
         LearnWhyChip(id: 'w5', textBn: 'গ্রাহককে জানালে শুধু ঝামেলা আর দেরি বাড়ে', correct: false),
-        LearnWhyChip(id: 'w6', textBn: 'PTW শুধু HT লাইনের কাজে লাগে, LT-তে নয়', correct: false),
+        LearnWhyChip(id: 'w6', textBn: 'পারমিট (PTW) শুধু HT লাইনের কাজে লাগে, LT-তে নয়', correct: false),
         LearnWhyChip(id: 'w7', textBn: 'যে ফেজে জায়গা পাওয়া যায় সেখানেই জুড়ে দিন', correct: false),
         LearnWhyChip(id: 'w8', textBn: 'পিলারের সুইচ চালু রেখেই কাজ দ্রুত হয়', correct: false),
         LearnWhyChip(id: 'w9', textBn: 'রাতে না জানিয়ে বন্ধ করলে কেউ টের পায় না', correct: false),

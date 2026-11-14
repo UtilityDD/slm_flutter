@@ -125,7 +125,7 @@ abstract final class M4JumperMakeLines {
   static String line(bool acsr) => acsr ? 'লাইন: ACSR' : 'লাইন: AAAC';
   static String material(bool acsr) => acsr ? 'ACSR' : 'AAAC';
   static const copperSide = 'ডান পাশে তামার তার';
-  static const permit = 'শাটডাউন · PTW · আর্থ';
+  static const permit = 'শাটডাউন · পারমিট (PTW) · আর্থ';
   static const stampDone = 'জাম্পার তৈরি';
 
   // The reasons (lesson 4.2): the right ones state this station's rule; the

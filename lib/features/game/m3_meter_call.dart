@@ -148,7 +148,7 @@ abstract final class M3MeterCallLines {
   static const title = 'গ্রাহকের ডাক';
   static const intro = 'আজ তিন বাড়ি থেকে অভিযোগ। দেখে, বুঝে, নিরাপদে সারান।';
   static const rounds = ['ক', 'খ', 'গ'];
-  static const askFlicker = 'এই বাড়িতে আলো কাঁপছে। দোষটা খুঁজে সারান।';
+  static const askFlicker = 'এই বাড়িতে আলো কাঁপছে। সমস্যা খুঁজে সারান।';
   static const askFast = 'গ্রাহক বলছেন মিটার খুব জোরে চলছে। দোষ খুঁজুন।';
   static const askBurnt = 'এই বাড়িতে টিভি-ফ্যান পুড়ে গেছে। কারণ খুঁজুন।';
   static String ask(M3MeterCallKind k) => switch (k) {

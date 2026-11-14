@@ -246,14 +246,14 @@ abstract final class HarnessLines {
 abstract final class HarnessMistakes {
   static const waistBelt = DoMistake(
     key: '1.4/harness/waist-belt',
-    textBn: 'কোমরের বেল্ট শুধু ওয়ার্ক পজিশনিং-এর জন্য — পড়লে সব চাপ পেটে আর শিরদাঁড়ায়। পতন-সুরক্ষায় ফুল বডি হারনেস চাই।',
+    textBn: 'কোমরের বেল্ট শুধু কাজের সুবিধার জন্য—পতনের ধাক্কা সামলাতে ফুল-বডি হারনেস আবশ্যক!',
     art: 'assets/game/art/harness/belt_vs_harness.svg',
     deadly: true,
     lessonPoint: 0,
   );
   static const webbing = DoMistake(
     key: '1.4/harness/webbing',
-    textBn: 'ছোট্ট কাটাও ফিতের শক্তি 50% পর্যন্ত কমিয়ে দিতে পারে; পোড়া দাগ বা রাসায়নিকের ক্ষতিতেও ফিতে দুর্বল — এমন হারনেস বাতিল।',
+    textBn: 'ছোট্ট কাটাতেও ফিতের শক্তি 50% কমে যায়—পোড়া বা কাটা দাগ থাকলে বাতিল করুন!',
     art: 'assets/game/art/harness/webbing_damage.svg',
     deadly: true,
     lessonPoint: 1,

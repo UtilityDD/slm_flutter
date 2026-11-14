@@ -129,7 +129,7 @@ class HydJob {
 
 abstract final class HydLines {
   static const title = 'কাটার আগে নিশ্চিত হও';
-  static const intro = 'মোটা কেবল কাটা আর ল্যাগ ক্রিম্প — হাইড্রোলিকের দানবীয় শক্তি! কাটার আগে নিশ্চিত হোন।';
+  static const intro = 'মোটা কেবল কাটা আর ল্যাগ ক্রিম্প — হাইড্রোলিকের নিখুঁত চাপ ও শক্তি! কাটার আগে নিশ্চিত হোন।';
   static const rounds = ['ক', 'খ', 'গ'];
   static const askCut = 'ডকেট পড়ুন — এই কেবলটা কাটতে হবে।';
   static const askCrimp = 'ডকেট পড়ুন — এই কেবলে ল্যাগ ক্রিম্প করতে হবে।';

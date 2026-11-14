@@ -28,7 +28,7 @@ const learnBoardPack41 = LearnBoardPack(
   titleBn: 'পিন বা ডিস্ক ইনসুলেটর বদলানো',
   badgeBn: 'কাজের কারিগর',
   introBn: 'ভাঙা ইনসুলেটর লাইনে রাখা মানেই ফল্ট আর দুর্ঘটনা। সার্জনের মতো নিপুণ হাতে, নিয়ম মেনে বদলান।',
-  earnedBn: 'PTW, দুই দিকে আর্থিং, সাপোর্টে কন্ডাক্টর, আগে লোড বাইপাস — তবেই ইনসুলেটর বদল।',
+  earnedBn: 'পারমিট (PTW), দুই দিকে আর্থিং, সাপোর্টে কন্ডাক্টর, আগে লোড বাইপাস — তবেই ইনসুলেটর বদল।',
   slots: [
     LearnBoardSlot(
       id: 'prep',
@@ -36,7 +36,7 @@ const learnBoardPack41 = LearnBoardPack(
       options: [
         LearnBoardOption(
           id: 'both',
-          labelBn: 'PTW নিয়ে দুই দিকে আর্থিং, তারপর ওঠা',
+          labelBn: 'পারমিট (PTW) নিয়ে দুই দিকে আর্থিং, তারপর ওঠা',
           asset: 'assets/game/art/m4_board41/prep_both.svg',
           scene: true,
           correct: true,
@@ -62,7 +62,7 @@ const learnBoardPack41 = LearnBoardPack(
           asset: 'assets/game/art/m4_board41/prep_noearth.svg',
           scene: true,
           correct: false,
-          rejectBn: 'প্রথম শর্ত: বৈধ PTW, লাইন সম্পূর্ণ বন্ধ, আর দুই প্রান্তে নিরেট আর্থিং — তারপর পোলে ওঠা।',
+          rejectBn: 'প্রথম শর্ত: বৈধ পারমিট (PTW), লাইন সম্পূর্ণ বন্ধ, আর দুই প্রান্তে নিরেট আর্থিং — তারপর পোলে ওঠা।',
         ),
         LearnBoardOption(
           id: 'cracked',
@@ -74,12 +74,12 @@ const learnBoardPack41 = LearnBoardPack(
         ),
       ],
       whyChips: [
-        LearnWhyChip(id: 'w1', textBn: 'বৈধ PTW নেওয়াই কাজের প্রথম ও জরুরি ধাপ', correct: true),
+        LearnWhyChip(id: 'w1', textBn: 'বৈধ পারমিট (PTW) নেওয়াই কাজের প্রথম ও জরুরি ধাপ', correct: true),
         LearnWhyChip(id: 'w2', textBn: 'লাইন বন্ধ করে দুই দিক থেকেই আর্থিং করতে হয়', correct: true),
         LearnWhyChip(id: 'w3', textBn: 'ওঠার আগে পোল ও ক্রস-আর্মের অবস্থা দেখে নিন', correct: true),
         LearnWhyChip(id: 'w4', textBn: 'সঠিক সাইজের নতুন ইনসুলেটর ও টুলস সঙ্গে নিন', correct: true),
         LearnWhyChip(id: 'w5', textBn: 'এক দিকে আর্থিং দিলেই পুরো লাইন নিরাপদ হয়', correct: false),
-        LearnWhyChip(id: 'w6', textBn: 'লাইন বন্ধ থাকলে PTW নেওয়ার দরকার পড়ে না', correct: false),
+        LearnWhyChip(id: 'w6', textBn: 'লাইন বন্ধ থাকলে পারমিট (PTW) নেওয়ার দরকার পড়ে না', correct: false),
         LearnWhyChip(id: 'w7', textBn: 'ক্রস-আর্মের অবস্থা ওপরে উঠেই দেখে নেওয়া যায়', correct: false),
         LearnWhyChip(id: 'w8', textBn: 'টুলস কম পড়লে কাজের মাঝপথে জোগাড় করা যায়', correct: false),
         LearnWhyChip(id: 'w9', textBn: 'অভিজ্ঞ হাতে পরিকল্পনা ছাড়াই কাজ শুরু করা যায়', correct: false),

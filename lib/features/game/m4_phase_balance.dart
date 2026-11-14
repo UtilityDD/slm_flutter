@@ -264,7 +264,7 @@ abstract final class M4PhaseBalanceLines {
   static const caughtPlan = 'তিন ফেজে সমান ভাগ';
   static const caughtCall = '“সব এক ফেজে” — না বলেছেন';
   static const caughtNotice = 'গ্রাহকদের আগে জানিয়েছেন';
-  static const caughtSafe = 'শাটডাউন, PTW, মৃত প্রমাণ, আর্থ — তবে বদল';
+  static const caughtSafe = 'শাটডাউন, পারমিট (PTW), মৃত প্রমাণ, আর্থ — তবে বদল';
   static const caughtCheck = 'কাজের পর আবার মেপেছেন';
   static const caughtBook = 'রেকর্ড খাতায় লিখেছেন';
 }
@@ -282,7 +282,7 @@ abstract final class M4PhaseBalanceMistakes {
 
   static const shiftLive = DoMistake(
     key: '4.10/m4_phase_balance/shift-live',
-    textBn: 'চালু বাসবারে কানেকশন বদল নয়! আগে শাটডাউন, PTW, টেস্টারে মৃত প্রমাণ, আর্থ — তবে বদল।',
+    textBn: 'চালু বাসবারে কানেকশন বদল নয়! আগে শাটডাউন, পারমিট (PTW), টেস্টারে মৃত প্রমাণ, আর্থ — তবে বদল।',
     art: _live,
     deadly: true,
     lessonPoint: 2,
@@ -325,7 +325,7 @@ abstract final class M4PhaseBalanceMistakes {
   );
   static const noPtw = DoMistake(
     key: '4.10/m4_phase_balance/no-ptw',
-    textBn: 'শুধু সুইচ বন্ধ করলেই হলো না — সঠিক PTW নিয়ে তবে কানেকশন বদল।',
+    textBn: 'শুধু সুইচ বন্ধ করলেই হলো না — সঠিক পারমিট (PTW) নিয়ে তবে কানেকশন বদল।',
     art: _ptw,
     lessonPoint: 2,
   );
@@ -342,7 +342,7 @@ abstract final class M4PhaseBalanceMistakes {
   );
   static const restoreEarly = DoMistake(
     key: '4.10/m4_phase_balance/on-with-earth-or-ptw',
-    textBn: 'লাইন চালুর আগে আর্থ খুলুন, PTW ফেরত দিন — তবেই সুইচ ON।',
+    textBn: 'লাইন চালুর আগে আর্থ খুলুন, পারমিট (PTW) ফেরত দিন — তবেই সুইচ ON।',
     art: _ptw,
   );
   static const noCheck = DoMistake(

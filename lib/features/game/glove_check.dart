@@ -104,7 +104,7 @@ abstract final class GloveLines {
   /// What the guide repeats (a different way each time) when tapped.
   static const tasks = [askOwn, askMate, askSpare];
 
-  static const intro = 'গাড়ি ছাড়ার আগে তিন জোড়া গ্লাভস হাওয়া দিয়ে পরীক্ষা করুন—নিজের, সাথীর আর স্পেয়ার। শেষে হেলমেট।';
+  static const intro = 'গাড়ি ছাড়ার আগে 3 জোড়া গ্লাভসই হাওয়া দিয়ে পরীক্ষা করে নিন!';
   static const scene = 'সকাল 7:20 · ভ্যানের পাশে';
   static const askOwn = 'আগে নিজের জোড়াটা বাছুন।';
   static const askMate = 'এবার সাথীর জোড়া।';

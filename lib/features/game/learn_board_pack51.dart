@@ -29,7 +29,7 @@ const learnBoardPack51 = LearnBoardPack(
   titleBn: "'লাইন ট্রিপ করেছে'—প্রথম কাজ কী?",
   badgeBn: 'ফল্ট ফাইন্ডার',
   introBn: 'ফিডার ট্রিপ করেছে, চারিদিক অন্ধকার। ফল্ট ফাইন্ডার শান্ত থাকেন — আগে তথ্য, তারপর সুরক্ষা।',
-  earnedBn: 'আগে তথ্য, তারপর অনুমান ধরে খোঁজা; ট্রিপ লাইন মানেই লাইভ — হাত দেওয়ার আগে PTW আর আর্থিং।',
+  earnedBn: 'আগে তথ্য, তারপর অনুমান ধরে খোঁজা; ট্রিপ লাইন মানেই লাইভ — হাত দেওয়ার আগে পারমিট (PTW) আর আর্থিং।',
   slots: [
     LearnBoardSlot(
       id: 'call',
@@ -106,14 +106,14 @@ const learnBoardPack51 = LearnBoardPack(
         ),
         LearnBoardOption(
           id: 'ptw',
-          labelBn: 'বৈধ PTW নিয়ে লাইন আইসোলেট আর আর্থিং',
+          labelBn: 'বৈধ পারমিট (PTW) নিয়ে লাইন আইসোলেট আর আর্থিং',
           asset: 'assets/game/art/m5_board51/treat_ptw.svg',
           scene: true,
           correct: true,
         ),
         LearnBoardOption(
           id: 'personal',
-          labelBn: 'PTW আর ব্যক্তিগত আর্থিং — তবেই লাইনে হাত',
+          labelBn: 'পারমিট (PTW) আর ব্যক্তিগত আর্থিং — তবেই লাইনে হাত',
           asset: 'assets/game/art/m5_board51/treat_personal.svg',
           scene: true,
           correct: true,
@@ -146,7 +146,7 @@ const learnBoardPack51 = LearnBoardPack(
       whyChips: [
         LearnWhyChip(id: 'w1', textBn: 'ট্রিপ লাইন যেকোনো মুহূর্তে চালু হতে পারে', correct: true),
         LearnWhyChip(id: 'w2', textBn: 'রিক্লোজার থাকলে লাইন নিজেই আবার চালু হয়', correct: true),
-        LearnWhyChip(id: 'w3', textBn: 'PTW আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয়', correct: true),
+        LearnWhyChip(id: 'w3', textBn: 'পারমিট (PTW) আর ব্যক্তিগত আর্থিং ছাড়া লাইনে হাত নয়', correct: true),
         LearnWhyChip(id: 'w4', textBn: 'ট্রিপ হওয়া লাইন পুরোপুরি ডেড হয়ে থাকে', correct: false),
         LearnWhyChip(id: 'w5', textBn: 'রিক্লোজার একবার চেষ্টা করেই থেমে যায়', correct: false),
         LearnWhyChip(id: 'w6', textBn: 'বাড়ির আলো নিভে থাকলে লাইনও নিরাপদ', correct: false),
@@ -285,7 +285,7 @@ const learnBoardPack51 = LearnBoardPack(
         ),
         LearnBoardOption(
           id: 'ptw',
-          labelBn: 'লক-আউট মানে স্থায়ী ফল্ট — কন্ট্রোলকে জানিয়ে খোঁজা, হাত দেওয়ার আগে PTW',
+          labelBn: 'লক-আউট মানে স্থায়ী ফল্ট — কন্ট্রোলকে জানিয়ে খোঁজা, হাত দেওয়ার আগে পারমিট (PTW)',
           asset: 'assets/game/art/m5_board51/lockout_ptw.svg',
           scene: true,
           correct: true,
@@ -296,7 +296,7 @@ const learnBoardPack51 = LearnBoardPack(
           asset: 'assets/game/art/m5_board51/lockout_touch.svg',
           scene: true,
           correct: false,
-          rejectBn: 'কন্ট্রোল রুম ভুল করেও লাইন চালু করতে পারে — PTW আর ব্যক্তিগত আর্থিং ছাড়া ট্রিপ হওয়া লাইন স্পর্শ নয়।',
+          rejectBn: 'কন্ট্রোল রুম ভুল করেও লাইন চালু করতে পারে — পারমিট (PTW) আর ব্যক্তিগত আর্থিং ছাড়া ট্রিপ হওয়া লাইন স্পর্শ নয়।',
         ),
         LearnBoardOption(
           id: 'tea',
@@ -337,12 +337,12 @@ const learnBoardPack51 = LearnBoardPack(
     stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
     dangerHints: [
       'রিক্লোজারে আবার চালু',
-      'PTW ছাড়া হাত',
+      'পারমিট (PTW) ছাড়া হাত',
     ],
     whyChips: [
       LearnWhyChip(id: 'm1', textBn: 'কন্ট্রোল রুম ভুল করে লাইন আবার চালু করতে পারে', correct: true),
       LearnWhyChip(id: 'm2', textBn: 'অটো-রিক্লোজার যেকোনো মুহূর্তে লাইন চালু করে', correct: true),
-      LearnWhyChip(id: 'm3', textBn: 'PTW আর ব্যক্তিগত আর্থিং ছাড়া লাইন স্পর্শ নয়', correct: true),
+      LearnWhyChip(id: 'm3', textBn: 'পারমিট (PTW) আর ব্যক্তিগত আর্থিং ছাড়া লাইন স্পর্শ নয়', correct: true),
       LearnWhyChip(id: 'm4', textBn: 'ট্রিপ হওয়া লাইনে কারেন্ট ফেরার ভয় নেই', correct: false),
       LearnWhyChip(id: 'm5', textBn: 'তাড়াতাড়ি কাজ সারলে পারমিটের দরকার পড়ে না', correct: false),
       LearnWhyChip(id: 'm6', textBn: 'অন্ধকার লাইন দেখলেই বোঝা যায় ওটা পুরো ডেড', correct: false),

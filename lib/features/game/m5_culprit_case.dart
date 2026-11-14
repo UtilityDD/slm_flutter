@@ -97,7 +97,7 @@ abstract final class M5CulpritLines {
   static const spots = ['স্পট 1', 'স্পট 2', 'স্পট 3'];
 
   // The guide's task now (tap him: the same task, a different way).
-  static const askShoot = 'সূত্রের ছবি তুলুন।';
+  static const askShoot = 'প্রমাণের ছবি তুলুন।';
   static const askAim = 'ফ্রেমে এনে শাটার টিপুন।';
   static const askBoard = 'সূত্র মিলিয়ে অপরাধী ধরুন।';
   static const askSlots = 'কেস বন্ধের আগে ঘরগুলো ভরুন।';
@@ -123,7 +123,7 @@ abstract final class M5CulpritLines {
   static const knob = 'তারপর →';
   static const sound = 'শব্দ';
   static const stamp = 'সমাধান';
-  static String docket(int feeder) => enDigits('ফিডার $feeder · ট্রিপ · PTW · আর্থ লাগানো');
+  static String docket(int feeder) => enDigits('ফিডার $feeder · ট্রিপ · পারমিট (PTW) · আর্থ লাগানো');
 
   static String culprit(M5Culprit c) => switch (c) {
         M5Culprit.tree => 'গাছের ডাল',

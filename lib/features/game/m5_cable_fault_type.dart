@@ -167,7 +167,7 @@ abstract final class M5CableLines {
   // The guide's task now (tap him: the same task, a different way).
   static const askIsolate = 'পরীক্ষার আগে কেবিলটা নিরাপদ করুন।';
   static const askTest = 'মেপে দেখুন — ফল্টটা কী ধরনের?';
-  static const askVerdict = 'রিডিং দেখে রায় দিন।';
+  static const askVerdict = 'রিডিং দেখে সিদ্ধান্ত নিন।';
   static const askPit = 'ফল্ট কোন অর্ধেকে? কেবিলটা ভাগ করে দেখুন।';
   static const askPitTest = 'দুই দিকেই মেপে দেখুন।';
   static const tasks = [askIsolate, askTest, askVerdict, askPit, askPitTest];
@@ -185,7 +185,7 @@ abstract final class M5CableLines {
   static const nearEnd = 'কাছের প্রান্ত';
   static const test = 'TEST';
   static const hasp = 'হ্যাস্প';
-  static const submit = 'রায় দিন';
+  static const submit = 'সিদ্ধান্ত নিন';
   static const back = 'আরও মাপি';
   static const notebook = 'খাতা';
   static const short = 'শর্ট';

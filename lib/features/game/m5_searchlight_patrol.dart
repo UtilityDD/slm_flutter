@@ -298,7 +298,7 @@ abstract final class M5SearchlightMistakes {
   // pro tips — jacket, battery, never alone — follow it in the reader).
   static const noDocket = DoMistake(
     key: '$_k/no-docket',
-    textBn: 'টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে PTW বাধ্যতামূলক।',
+    textBn: 'টহলের আগে কন্ট্রোল রুমকে জানিয়ে ফিল্ড মেমো/ডকেট নিন; লাইনে হাত দেওয়া বা ওঠার আগে পারমিট (PTW) বাধ্যতামূলক।',
     art: '$_dir/no_docket.svg',
   );
   static const alone = DoMistake(
@@ -353,7 +353,7 @@ abstract final class M5SearchlightMistakes {
   // Lesson 5.1 (not 5.7's text) and ruling M5-3: no lesson point here.
   static const climb = DoMistake(
     key: '$_k/climb',
-    textBn: 'ট্রিপ করা লাইন ডেড নয় — কন্ট্রোল রুম বা অটো-রিক্লোজার যেকোনো মুহূর্তে চালু করতে পারে। PTW ছাড়া পোলে ওঠা নয়।',
+    textBn: 'ট্রিপ করা লাইন ডেড নয় — কন্ট্রোল রুম বা অটো-রিক্লোজার যেকোনো মুহূর্তে চালু করতে পারে। পারমিট (PTW) ছাড়া পোলে ওঠা নয়।',
     art: '$_dir/climb.svg',
     deadly: true,
   );

@@ -154,7 +154,7 @@ abstract final class M4InsulatorSwapLines {
   static const splitPin = 'স্প্লিট-পিন';
   static const spare = 'নতুন';
   static const docket = 'ডকেট';
-  static const docketDone = 'শাটডাউন · PTW · দুই দিকে আর্থিং';
+  static const docketDone = 'শাটডাউন · পারমিট (PTW) · দুই দিকে আর্থিং';
   static String jobBn(M4InsulatorSwapKind k) => switch (k) {
         M4InsulatorSwapKind.pin => 'পিন ইনসুলেটর বদল',
         M4InsulatorSwapKind.disc => 'টেনশন স্ট্রিংয়ে ডিস্ক বদল',

@@ -188,7 +188,7 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
                     const SizedBox(height: 4),
                     Text(
                       allChecked
-                          ? 'সব সরঞ্জাম সম্পূর্ণ ও প্রস্তুত। এবার নিরাপদে পোলে উঠুন ওস্তাদ!'
+                          ? 'সব সরঞ্জাম সম্পূর্ণ ও প্রস্তুত। এবার নিরাপদে পোলে উঠুন দাদা!'
                           : 'যাচাই করা হয়েছে: /টি সরঞ্জাম',
                       style: TextStyle(
                         fontSize: 13,
@@ -319,7 +319,7 @@ class _SopsScreenState extends State<SopsScreen> with SingleTickerProviderStateM
     final sops = [
       {
         'num': '1',
-        'title': 'শাটডাউন ও লাইন বিচ্ছিন্নকরণ (PTW)',
+        'title': 'শাটডাউন ও লাইন আইসোলেশন ও শাটডাউন (পারমিট (PTW))',
         'rule': 'আগে শাটডাউন নিশ্চিত করুন, টেস্টার দিয়ে ভোল্টেজ পরীক্ষা করুন, তারপর দুই প্রান্তে ডিসচার্জ ও আর্থিং রড লাগান। মনে খটকা থাকলে কখনও লাইনে হাত দেবেন না।',
         'color': AppColors.safetyOrange,
       },

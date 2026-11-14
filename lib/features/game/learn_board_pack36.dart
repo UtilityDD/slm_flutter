@@ -340,7 +340,7 @@ const learnBoardPack36 = LearnBoardPack(
 /// The careless coworker's lines on this board. [rivalExit] is already in his
 /// recorded voice; [toRecord] play through device TTS until recorded.
 abstract final class M3Board36Lines {
-  static const rivalTaunt = 'আরে, দু-চার ফোঁটা তেল পড়ছে তো কী! ট্যাঙ্ক তো এখনও ভরা।';
+  static const rivalTaunt = 'আরে, দু-চার ফোঁটা তেল লিক করছে তো কী! ট্যাঙ্ক তো এখনও ভরা।';
 
   /// Lesson 3.6's first myth buster, word for word.
   static const rivalMyth = 'ট্রান্সফরমার থেকে তেল লিক করলে কিছু হয় না, যতক্ষণ না তেল শেষ হচ্ছে।';

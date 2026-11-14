@@ -111,7 +111,7 @@ const dsSafeHome = <DsPlanItem>[
     whyBn: 'PPE ছাড়া লাইনে হাত দিলে শক, পোড়া, পড়ে যাওয়া — তিনটাই হয়।',
     icon: 'assets/safety/library/ppe/Safety_Helmet.webp'),
   DsPlanItem(id: 'form', labelBn: 'পারমিট নাও', letter: 'F',
-    whyBn: 'PTW ছাড়া কেউ জানে না আপনি লাইনে — যে কোনো সময় চালু করতে পারে।',
+    whyBn: 'পারমিট (PTW) ছাড়া কেউ জানে না আপনি লাইনে — যে কোনো সময় চালু করতে পারে।',
     icon: 'assets/zero_loss/scene/gear_ptw.webp'),
   DsPlanItem(id: 'end', labelBn: 'দুদিক কাটো', letter: 'E',
     whyBn: 'লাইন কাটা না হলে কারেন্ট আছে — ছুঁলেই মৃত্যু।',

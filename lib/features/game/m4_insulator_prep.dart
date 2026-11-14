@@ -168,7 +168,7 @@ abstract final class M4InsulatorPrepLines {
   static const docket = 'ডকেট';
   static const docketJob = 'ইনসুলেটর খারাপ — বদলাতে হবে';
   static String poleBn(int n) => 'পোল নং $n';
-  static const ptwStamp = 'PTW · শাটডাউন';
+  static const ptwStamp = 'পারমিট (PTW) · শাটডাউন';
   static const testerLive = 'লাইভ';
   static const testerDead = 'মৃত';
   static const stampUp = 'প্রস্তুত';
@@ -185,18 +185,18 @@ abstract final class M4InsulatorPrepLines {
   // the wrong ones are myths and field excuses — never a true rule marked
   // wrong. Every card 35–44 letters.
   static const whyEarthQ = 'কেন দুই দিকে আর্থ দিয়ে তবে উঠলেন?';
-  static const whyPtwQ = 'কেন সবার আগে PTW নিলেন?';
+  static const whyPtwQ = 'কেন সবার আগে পারমিট (PTW) নিলেন?';
   static const whyKitQ = 'কেন ওঠার আগে সব সরঞ্জাম মিলিয়ে নিলেন?';
   static const whySpareQ = 'কেন নতুন ইনসুলেটরটাও দেখে নিলেন?';
   static const earthWhy = ['বন্ধ লাইনেও ইন্ডুসড ভোল্টেজ — দুই দিকে আর্থ', 'কাজের জায়গার দুই দিকেই আর্থ — তবেই পোলে ওঠা'];
-  static const ptwWhy = ['বৈধ PTW আর শাটডাউন ছাড়া লাইনে হাত নয়', 'কাজের প্রথম শর্ত বৈধ PTW, তারপর বাকি সব'];
+  static const ptwWhy = ['বৈধ পারমিট (PTW) আর শাটডাউন ছাড়া লাইনে হাত নয়', 'কাজের প্রথম শর্ত বৈধ পারমিট (PTW), তারপর বাকি সব'];
   static const kitWhy = ['সরঞ্জাম না থাকলে কাজের মাঝপথে বিপদ হতে পারে', 'ইনসুলেটর, বাইন্ডিং, সাপোর্ট — সব নিচেই মেলাই'];
   static const spareWhy = ['ফাটা নতুনটা লাগালে লাইনে আবার ফল্ট হবে', 'নতুনটাতেও ফাটল বা পোড়া দাগ থাকতে পারে'];
   static const _mythNoEarth = 'লাইন বন্ধ থাকলে আর্থের কোনো দরকারই নেই';
   static const _mythOneEarth = 'এক দিকে আর্থ দিলেই পুরো লাইন নিরাপদ হয়';
   static const _mythTwoLong = 'দুই দিকে আর্থ শুধু লম্বা লাইনের কাজে লাগে';
-  static const _mythOldHand = 'অভিজ্ঞ লোকের PTW ছাড়াও কাজ চলে যায়';
-  static const _mythVerbal = 'মুখে বলে দিলেই চলে, PTW কাগজ পরে নিলেই হবে';
+  static const _mythOldHand = 'অভিজ্ঞ লোকের পারমিট (PTW) ছাড়াও কাজ চলে যায়';
+  static const _mythVerbal = 'মুখে বলে দিলেই চলে, পারমিট (PTW) কাগজ পরে নিলেই হবে';
   static const _mythWhatever = 'যা আছে নিয়ে উঠি, বাকিটা পরে দেখা যাবে';
   static const _mythAskUp = 'সরঞ্জাম কম পড়লে পোলে উঠে চেয়ে নেওয়া যায়';
   static const _mythNotAll = 'সব সরঞ্জাম লাগে না, যা আছে তা নিয়েই উঠি';
@@ -284,9 +284,9 @@ abstract final class M4InsulatorPrepLines {
   );
 
   static const callHeld = 'ঠিক! দুই দিকে আর্থ, তবেই পোলে।';
-  static const allSet = 'তিন পোলেই সব প্রস্তুত — PTW, মৃত প্রমাণ, দুই দিকে আর্থ, ঠিক সরঞ্জাম।';
+  static const allSet = 'তিন পোলেই সব প্রস্তুত — পারমিট (PTW), মৃত প্রমাণ, দুই দিকে আর্থ, ঠিক সরঞ্জাম।';
   static const quick = 'নিখুঁত আর ঝটপট!';
-  static const fail = 'আরেকবার — আগে PTW, মৃত প্রমাণ, দুই দিকে আর্থ।';
+  static const fail = 'আরেকবার — আগে পারমিট (PTW), মৃত প্রমাণ, দুই দিকে আর্থ।';
   static const deadlyWord = 'থামুন!';
   static const nearMissWord = 'অল্পের জন্য!';
 
@@ -294,7 +294,7 @@ abstract final class M4InsulatorPrepLines {
   static const caughtSpot = 'খারাপ ইনসুলেটর চিনেছেন';
   static const caughtSpare = 'ঠিক ধরনের ভালো নতুন ইনসুলেটর';
   static const caughtFittings = 'বাইন্ডিং, সাপোর্ট, কাম-অ্যালং — যা লাগে';
-  static const caughtPtw = 'সবার আগে PTW আর শাটডাউন';
+  static const caughtPtw = 'সবার আগে পারমিট (PTW) আর শাটডাউন';
   static const caughtDead = 'টেস্টারে মৃত প্রমাণ';
   static const caughtEarth = 'দুই দিকে আর্থ';
   static const caughtHarness = 'হেলমেট-হার্নেস পরে তবে ওঠা';
@@ -318,7 +318,7 @@ abstract final class M4InsulatorPrepMistakes {
 
   static const climbLive = DoMistake(
     key: '${prefix}climb-live',
-    textBn: 'লাইন চালু! বৈধ PTW আর শাটডাউন ছাড়া পোলে ওঠা নয় — তারপর মৃত প্রমাণ, দুই দিকে আর্থ।',
+    textBn: 'লাইন চালু! বৈধ পারমিট (PTW) আর শাটডাউন ছাড়া পোলে ওঠা নয় — তারপর মৃত প্রমাণ, দুই দিকে আর্থ।',
     art: _live,
     deadly: true,
     lessonPoint: 0,
@@ -334,7 +334,7 @@ abstract final class M4InsulatorPrepMistakes {
   // rule (lesson 1.6), not lesson 4.1's text.
   static const earthLive = DoMistake(
     key: '${prefix}earth-live',
-    textBn: 'লাইন এখনো চালু! আগে PTW নিয়ে শাটডাউন, টেস্টারে মৃত প্রমাণ — তবে আর্থ।',
+    textBn: 'লাইন এখনো চালু! আগে পারমিট (PTW) নিয়ে শাটডাউন, টেস্টারে মৃত প্রমাণ — তবে আর্থ।',
     art: _earth,
     lessonPoint: 0,
   );

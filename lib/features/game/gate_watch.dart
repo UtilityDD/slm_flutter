@@ -333,7 +333,7 @@ abstract final class GateMistakes {
             lessonPoint: 3),
         GateFault.phonePermit => const DoMistake(
             key: 'm1/gate/phone-permit',
-            textBn: 'ফোনে বলা “লাইন বন্ধ” কোনো পারমিট নয় — হাতে স্বাক্ষরিত PTW ছাড়া কাজ শুরু নয়।',
+            textBn: 'ফোনে বলা “লাইন বন্ধ” কোনো পারমিট নয় — হাতে স্বাক্ষরিত পারমিট (PTW) ছাড়া কাজ শুরু নয়।',
             art: 'assets/game/art/gate/permit.svg',
             deadly: true,
             lessonPoint: 1),

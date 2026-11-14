@@ -69,7 +69,7 @@ class TaskNudge {
 
   static final List<String Function(String)> _ways = [
     (t) => t,
-    (t) => 'আবার বলি — $t',
+    (t) => 'আবার বলছি — $t',
     (t) => 'তাড়াহুড়ো নয়। $t',
     (t) => 'ভালো করে দেখুন। $t',
   ];
