@@ -1,12 +1,14 @@
-/// Stays false: there is no online voice in the app. Lessons and quizzes use
-/// bundled recorded clips and the phone's own Bangla voice (flutter_tts).
-///
-/// The old client for Microsoft's unofficial Edge "Read Aloud" service was
-/// removed (Play release, 2026-11-13): it sent lesson text off the phone, which
-/// the privacy policy says never happens. A future voice pack must ship as
-/// pre-generated assets, never as a live call. `test/no_online_tts_test.dart`
-/// fails if an online TTS client comes back.
-const neuralVoiceEnabled = false;
+// There is no online voice in the app. Lessons and quizzes use bundled
+// recorded clips and the phone's own Bangla voice (flutter_tts).
+//
+// The old client for Microsoft's unofficial Edge "Read Aloud" service was
+// removed (Play release, 2026-11-13): it sent lesson text off the phone, which
+// the privacy policy says never happens. A future voice pack must ship as
+// pre-generated assets, never as a live call. `test/no_online_tts_test.dart`
+// fails if an online TTS client comes back.
+//
+// What is left here only sequences clips through the device voice, for the
+// old LearnRunnerPage (lib/features/game/learn_runner.dart); it goes with it.
 
 /// One spoken line and the silence that follows it.
 class NeuralClip {

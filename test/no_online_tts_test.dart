@@ -6,10 +6,6 @@ import 'package:slm_flutter/core/services/neural_tts_service.dart';
 /// Privacy guard for the Play release: voices are made on the phone (bundled
 /// clips or flutter_tts). No lesson text may go to an online TTS service.
 void main() {
-  test('the online voice flag is off', () {
-    expect(neuralVoiceEnabled, isFalse);
-  });
-
   test('every clip is spoken by the device voice, in order', () async {
     final said = <String>[];
     final n = NeuralTtsService();

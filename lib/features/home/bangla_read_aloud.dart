@@ -6,31 +6,6 @@ import '../../core/services/neural_tts_service.dart';
 
 const _rateSub = '-2%';
 
-/// Part A: fixed welcome before every lesson.
-const lessonWelcomeClips = [
-  NeuralClip('নমস্কার লাইনম্যান ভাই!', pauseMs: 500),
-  NeuralClip('স্মার্ট লাইনম্যানের আজকের সুরক্ষা পাঠে আপনাকে স্বাগতম।', pauseMs: 650),
-  NeuralClip('লাইনে বা পোলে কাজে নামার আগে এই পাঠের প্রতিটি নিয়ম মনোযোগ দিয়ে শুনুন এবং মনে গেঁথে নিন।', pauseMs: 800),
-];
-
-/// Part C: fixed close that sends the reader to the quiz.
-const lessonQuizCallClips = [
-  NeuralClip('এই পাঠের মূল আলোচনা এখানেই সম্পন্ন হলো।', pauseMs: 650),
-  NeuralClip('মনে রাখবেন: আগে জীবন, তারপর কাজ!', pauseMs: 600),
-  NeuralClip('নিজের সুরক্ষা জ্ঞান ঝালিয়ে নিতে এবং দক্ষতা প্রমাণ করতে এখনই নিচের কুইজে অংশ নিন,', pauseMs: 400),
-  NeuralClip('সঠিক উত্তর দিয়ে পরবর্তী লেভেল আনলক করুন।'),
-];
-
-const quizWelcomeClips = [
-  NeuralClip('সুরক্ষা কুইজে স্বাগতম!', pauseMs: 500),
-  NeuralClip('এখানে আপনার ফিল্ড রিফ্লেক্স ও সুরক্ষা জ্ঞানের পরীক্ষা হবে।', pauseMs: 450),
-  NeuralClip('প্রতিটি প্রশ্ন মনোযোগ দিয়ে শুনুন এবং নিরাপদতম অপশনটি বেছে নিন।', pauseMs: 700),
-];
-
-List<NeuralClip> lessonTitleClips(int chapter, String title) => [
-      NeuralClip('পাঠ $chapter: ${_speechClean(title)}', volume: '+10%', pitch: '+1Hz', pauseMs: 750),
-    ];
-
 List<NeuralClip> lessonSubheadClips(String text) {
   final t = _speechClean(text).replaceAll(RegExp(r'[।.:]+$'), '').trim();
   return t.isEmpty ? const [] : [NeuralClip(t, rate: _rateSub, pauseMs: 500)];
@@ -60,21 +35,6 @@ List<NeuralClip> quizQuestionClips({
   }
   return out;
 }
-
-List<NeuralClip> quizResultClips({required bool passed, required int score, required int total}) => passed
-    ? [
-        const NeuralClip('খুব ভালো!', pauseMs: 400),
-        NeuralClip('আপনি $total-এ $score পেয়ে সফলভাবে এই কুইজ সম্পন্ন করেছেন।', pauseMs: 600),
-        const NeuralClip('মনে রাখবেন: আগে জীবন, তারপর কাজ!', pauseMs: 450),
-        const NeuralClip('পরের লেভেলে এগিয়ে চলুন।'),
-      ]
-    : [
-        const NeuralClip('সাবধান!', pauseMs: 400),
-        const NeuralClip('ফিল্ডে সামান্য অসাবধানতাই বড় দুর্ঘটনার কারণ হতে পারে।', pauseMs: 500),
-        NeuralClip('আপনার স্কোর $score।', pauseMs: 250),
-        const NeuralClip('কুইজ পাস করতে অন্তত 70 শতাংশ সঠিক উত্তর প্রয়োজন।', pauseMs: 500),
-        const NeuralClip('পাঠটি আরেকবার মনোযোগ দিয়ে পড়ুন এবং পুনরায় পরীক্ষা দিন।'),
-      ];
 
 final _bulletLead = RegExp(r'^(?:[•·\-*–]|[0-9০-৯]+[.)।])\s*');
 final _headingLine = RegExp(r'^(?:#{1,6}\s+.+|\*\*[^*]+\*\*\s*:?)$');
