@@ -91,7 +91,8 @@ void main() {
       final repo = LifeSkillsRepo(bundle: _DiskBundle());
       final modules = await repo.modules();
       expect([for (final m in modules) m.id], kLifeSkillIds);
-      final pubspec = File('pubspec.yaml').readAsStringSync();
+      // Works for CRLF and LF checkouts.
+      final pubspec = File('pubspec.yaml').readAsStringSync().replaceAll('\r\n', '\n');
       for (final m in modules) {
         expect(m.titleBn, isNotEmpty);
         expect(m.code, startsWith('LS'));

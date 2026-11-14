@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'dart:io' show Platform;
+import 'dart:convert' show jsonEncode;
+import 'dart:io' show File, FileMode, Platform;
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -702,6 +703,7 @@ class MascotSpeechLibrary {
     double rate = 0.48,
     bool rival = false,
   }) async {
+    _logVoiceInventory(textBn, voiceKey, rival);
     final token = ++_speakToken;
     _endSilentHold();
     if (muted || textBn.trim().isEmpty) {
@@ -835,6 +837,28 @@ class MascotSpeechLibrary {
         resetLips();
       }
     }
+  }
+
+  /// Voice inventory (VOICE_GUIDE.md): with
+  /// `--dart-define=SLM_VOICE_INVENTORY=<file>` every line the app asks to speak
+  /// is appended to that file as one JSON line, with whether a recorded clip
+  /// already covers it. Off (no-op) in every normal build.
+  static const _voiceInventoryPath = String.fromEnvironment('SLM_VOICE_INVENTORY');
+
+  static void _logVoiceInventory(String textBn, String? voiceKey, bool rival) {
+    if (_voiceInventoryPath.isEmpty || kIsWeb || textBn.trim().isEmpty) return;
+    try {
+      final clean = toNaturalFieldBangla(textBn);
+      final hasClip = rival
+          ? LearnVoice.resolve(textBn, rival: true) != null || LearnVoice.resolve(clean, rival: true) != null
+          : (voiceKey != null && DsVoice.hasAudio(voiceKey)) ||
+              DsVoice.hasAudio(clean) ||
+              DsVoice.hasAudio(textBn.trim()) ||
+              LearnVoice.resolve(textBn) != null ||
+              LearnVoice.resolve(clean) != null;
+      final row = jsonEncode({'text': textBn.trim(), 'rival': rival, 'clip': hasClip});
+      File(_voiceInventoryPath).writeAsStringSync('$row\n', mode: FileMode.append, flush: true);
+    } catch (_) {}
   }
 
   /// Rough max hold so lip-sync never outlives a hung TTS session.
