@@ -3,6 +3,7 @@
 // `PERF guide …` line so a before/after run can be compared.
 //
 //  * frames one guide line costs, muted (no voice) and voiced,
+//  * whether his talking frames repaint the scene behind him,
 //  * the speech bubble: it fades after the voice ends (or after a reading
 //    time when muted), a tap or a new line brings it back, keepBubble holds it.
 import 'package:flutter/material.dart';
@@ -17,10 +18,13 @@ import 'package:slm_flutter/features/guide/mascot_speech_library.dart';
 const _frame = Duration(milliseconds: 16);
 const _line = 'খুঁটিতে ওঠার আগে আর্থিং দেখে নিন।';
 
-/// Paints behind the guide in the same layer, like a level's scene.
+/// Paints behind the guide in the same layer, like a level's scene: counts
+/// scene repaints.
 class _ScenePainter extends CustomPainter {
+  static int paints = 0;
   @override
   void paint(Canvas canvas, Size size) {
+    paints++;
     canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFF0A1424));
   }
 
@@ -134,12 +138,28 @@ void main() {
     await _settle(tester);
     director().say(mood: GuideMood.talk, line: _line);
     MascotTalk.begin();
+    await tester.pump();
+    final scene0 = _ScenePainter.paints;
     final talking = await _sample(tester, const Duration(seconds: 2));
+    final scene = _ScenePainter.paints - scene0;
     MascotTalk.end();
     final tail = await _framesUntilQuiet(tester);
     debugPrint('PERF guide voiced line: talking 2 s ${talking.frames}/${talking.steps} frames, '
-        '${talking.rebuilds} rebuilds; tail after voice $tail frames');
+        '${talking.rebuilds} rebuilds, scene repaints $scene; tail after voice $tail frames');
     expect(tail, lessThan(45), reason: 'about 0.5 s ease-back, not the rest of a 6 s lap');
+    expect(scene, 0, reason: 'his talking frames repaint his own layer, not the scene');
+  });
+
+  testWidgets('the guide has his own repaint boundary', (tester) async {
+    await tester.pumpWidget(_app(c));
+    await _settle(tester);
+    RenderObject? b = tester.renderObject(find.byType(AiLinemanGuide));
+    while (b != null && !b.isRepaintBoundary) {
+      b = b.parent;
+    }
+    final size = (b! as RenderBox).size;
+    debugPrint('PERF guide nearest repaint boundary: ${b.runtimeType} $size');
+    expect(size.width * size.height, lessThan(300 * 400));
   });
 
   group('speech bubble', () {

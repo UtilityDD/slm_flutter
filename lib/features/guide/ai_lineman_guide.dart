@@ -835,7 +835,9 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
     final sleep = activeMood == GuideMood.sleep;
     final stars = widget.sprite > 110 ? 5 : 3;
 
-    return AnimatedBuilder(
+    // His own layer: a talking frame repaints the guide, not the whole scene.
+    return RepaintBoundary(
+      child: AnimatedBuilder(
       animation: Listenable.merge([
         _rig,
         _rigAmp,
@@ -1052,6 +1054,7 @@ class _AiLinemanGuideState extends ConsumerState<AiLinemanGuide>
           ),
         );
       },
+      ),
     );
   }
 }
