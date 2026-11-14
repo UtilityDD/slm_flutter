@@ -341,36 +341,65 @@ class CoworkerPeek extends StatefulWidget {
 
 class _CoworkerPeekState extends State<CoworkerPeek> with SingleTickerProviderStateMixin {
   late final AnimationController _bob = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
-  Timer? _settle;
-
-  /// He bobs while he barges in, then settles on a still frame (an idle
-  /// screen draws zero frames while the player thinks over the deck).
-  static const _bobFor = Duration(milliseconds: 4500);
+  var _looping = false;
+  var _loopsOn = true;
+  static const _settleMax = Duration(milliseconds: 700);
 
   @override
   void initState() {
     super.initState();
-    if (!widget.quiet) {
-      unawaited(_bob.repeat());
-      _settle = Timer(_bobFor, () {
-        if (mounted && widget.exit == null && _bob.isAnimating) unawaited(_bob.forward());
-      });
-    }
+    RivalTalk.active.addListener(_sync);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loopsOn = slmLoopsOn(context);
+    _sync();
   }
 
   @override
   void didUpdateWidget(CoworkerPeek old) {
     super.didUpdateWidget(old);
     if (widget.exit != null && old.exit == null) {
-      _settle?.cancel();
+      // His exit beat: one lap as he goes, then nothing.
+      _looping = false;
       _bob.stop();
-      if (!widget.quiet) unawaited(_bob.forward(from: 0));
+      if (!widget.quiet && _loopsOn) unawaited(_bob.forward(from: 0));
+      return;
+    }
+    _sync();
+  }
+
+  /// He moves while he barges in and talks (beat 1, and whenever his voice
+  /// plays); once beat 2 is up and he is silent he finishes the lap he is on
+  /// and holds a still pose, so the screen draws zero frames while the player
+  /// thinks over the deck (audit-kit-03).
+  void _sync() {
+    if (!mounted || widget.exit != null) return;
+    final move = !widget.quiet && _loopsOn && (widget.captionFull || RivalTalk.active.value);
+    if (move) {
+      if (!_looping) {
+        _looping = true;
+        unawaited(_bob.repeat());
+      }
+    } else if (_looping) {
+      _looping = false;
+      if (widget.quiet || !_loopsOn) {
+        _bob.stop();
+        _bob.value = 0;
+      } else {
+        // Settle: the rest of this lap, eased and at most 0.7 s, ends on the
+        // rest pose (phase 1 ≡ 0).
+        final rest = _bob.duration! * (1 - _bob.value);
+        unawaited(_bob.animateTo(1, duration: rest < _settleMax ? rest : _settleMax, curve: Curves.easeOut));
+      }
     }
   }
 
   @override
   void dispose() {
-    _settle?.cancel();
+    RivalTalk.active.removeListener(_sync);
     _bob.dispose();
     super.dispose();
   }
@@ -438,17 +467,20 @@ class _CoworkerPeekState extends State<CoworkerPeek> with SingleTickerProviderSt
               child: IgnorePointer(
                 child: Transform.flip(
                   flipX: widget.fromLeft,
-                  child: AnimatedBuilder(
-                    animation: _bob,
-                    builder: (_, _) => ValueListenableBuilder<bool>(
-                      valueListenable: RivalTalk.active,
-                      builder: (_, talking, _) => MythRivalPuppet(
-                        size: pw,
-                        bodyAsset: CoworkerPeek.bodyAsset,
-                        phase: _bob.value,
-                        speaking: talking && !leaving,
-                        reduce: quiet,
-                        defeated: widget.exit == CoworkerExit.beaten,
+                  // His own layer: a bob frame repaints him, not the scene.
+                  child: RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _bob,
+                      builder: (_, _) => ValueListenableBuilder<bool>(
+                        valueListenable: RivalTalk.active,
+                        builder: (_, talking, _) => MythRivalPuppet(
+                          size: pw,
+                          bodyAsset: CoworkerPeek.bodyAsset,
+                          phase: _bob.value,
+                          speaking: talking && !leaving,
+                          reduce: quiet,
+                          defeated: widget.exit == CoworkerExit.beaten,
+                        ),
                       ),
                     ),
                   ),
