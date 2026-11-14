@@ -27,6 +27,23 @@ class VerifyHoldNotifier extends Notifier<Set<String>> {
     await prefs.setStringList(_key, next.toList());
   }
 
+  static const _markedKey = 'slm_verify_marked';
+
+  /// True once this phone has flipped [id]'s fresh signup to unverified, so a
+  /// later admin verify (even inside the first minutes) is never undone.
+  Future<bool> wasMarked(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getStringList(_markedKey) ?? const <String>[]).contains(id);
+  }
+
+  Future<void> markOnce(String id) async {
+    if (id.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_markedKey) ?? const <String>[];
+    if (list.contains(id)) return;
+    await prefs.setStringList(_markedKey, [...list, id]);
+  }
+
   Future<void> release(String id) async {
     if (!state.contains(id)) return;
     final next = {...state}..remove(id);

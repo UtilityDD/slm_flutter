@@ -201,12 +201,19 @@ class AuthNotifier extends Notifier<AuthState> {
 
       if (res != null) {
         var profile = LinemanProfile.fromJson(res);
-        if (profile.verified == true) {
-          unawaited(ref.read(verifyHoldProvider.notifier).release(user.id));
-        } else if (_freshUntouched(user, res)) {
+        final hold = ref.read(verifyHoldProvider.notifier);
+        // New rows default to verified = true (kept for slm_web users), so a
+        // fresh, untouched Google signup is flipped to unverified here — once.
+        if (_freshUntouched(user, res) &&
+            profile.verified != false &&
+            !await hold.wasMarked(user.id)) {
+          if (gen != _fetchGen) return;
           profile = profile.withVerified(false);
-          unawaited(ref.read(verifyHoldProvider.notifier).hold(user.id));
+          unawaited(hold.hold(user.id));
+          unawaited(hold.markOnce(user.id));
           unawaited(_markUnverified(user.id));
+        } else if (profile.verified == true) {
+          unawaited(hold.release(user.id));
         }
         if (profile.blocked && !state.isAdmin) {
           _blockNotice = 'এই অ্যাকাউন্ট বন্ধ করা হয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।';
