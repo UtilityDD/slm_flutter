@@ -90,11 +90,13 @@ In Google Cloud Console, **in the same project as the Web client** used in
 
 ## 4. Play App Signing
 
-- [ ] Keep the default: **Google generates and holds the app-signing key**; you upload with the upload key.
-- [ ] After the first AAB is uploaded (step 6): Setup → App signing → copy the **App signing key
+- [x] Keep the default: **Google generates and holds the app-signing key**; you upload with the upload key.
+- [x] After the first AAB is uploaded (step 6): Setup → App signing → copy the **App signing key
       certificate SHA-1** → add the third Android OAuth client (step 2). Also note the upload key SHA-1
       shown there matches D5:B1:…:AD:82.
-- [ ] Record the app-signing SHA-1 here: `__:__:…` ⚠
+- [x] App-signing SHA-1: `B1:7D:42:21:34:37:E4:BD:88:D9:A8:65:26:E3:05:C7:9E:51:CB:EE` (client
+      "Android Play signing", Google Cloud project smartlineman, added 2026-11-14). Without it the
+      account picker opens and sign-in silently ends as `canceled [16] Account reauth failed`.
 
 ## 5. Build the bundle
 
@@ -121,8 +123,8 @@ flutter build appbundle --release
 
 - [ ] Testing → Internal testing → create release → upload the AAB → release notes (Bangla + English).
 - [ ] Testers: an email list with the owner and 2–3 helpers. Share the opt-in link; install from Play.
-- [ ] Do step 4 (app-signing SHA-1 → OAuth client), then confirm **Google sign-in works on the
-      Play-installed build**.
+- [x] Do step 4 (app-signing SHA-1 → OAuth client), then confirm **Google sign-in works on the
+      Play-installed build** (owner confirmed 2026-11-14).
 - [ ] Check Play Console → Pre-launch report for crashes and accessibility warnings.
 
 ## 7. App content (can be filled while testing runs; needed before closed testing review)

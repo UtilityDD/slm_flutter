@@ -298,6 +298,11 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: false);
       return true;
     } on GoogleSignInException catch (e) {
+      // Logcat only (tag "flutter", release builds too). A "canceled" right
+      // after the account picker ("[16] Account reauth failed") usually means
+      // no Android OAuth client for this package + signing SHA-1, not a user
+      // cancel — so it is logged even though the UI stays quiet.
+      debugPrint('Google sign-in failed: ${e.code.name} ${e.description ?? ''}');
       final quiet =
           e.code == GoogleSignInExceptionCode.canceled ||
           e.code == GoogleSignInExceptionCode.interrupted ||
@@ -317,6 +322,7 @@ class AuthNotifier extends Notifier<AuthState> {
       );
       return false;
     } catch (e) {
+      debugPrint('Google sign-in failed: ${e.runtimeType} $e');
       final text = e.toString().toLowerCase();
       if (text.contains('cancel')) {
         state = state.copyWith(isLoading: false, errorMessage: null);
