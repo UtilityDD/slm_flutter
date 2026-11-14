@@ -35,6 +35,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slm_flutter/features/duty_slip/adventure_map.dart';
+import 'package:slm_flutter/features/duty_slip/adventure_scenery.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_engine.dart';
 import 'package:slm_flutter/features/duty_slip/duty_slip_models.dart';
 import 'package:slm_flutter/features/duty_slip/ladder_focus.dart';
@@ -169,6 +170,46 @@ int _bandLayerPaints(WidgetTester tester) {
   return layers.fold(0, (n, b) => n + b.debugSymmetricPaintCount + b.debugAsymmetricPaintCount);
 }
 
+/// The world's 10 background plates and their decode widths.
+const _plates = {
+  'depth_sky_a': 720, 'depth_sky_b': 720, //
+  'depth_ridge_a': 780, 'depth_ridge_b': 780, 'depth_ridge_c': 780,
+  'depth_mid_river': 900, 'depth_mid_falls': 900, 'depth_mid_forest': 900,
+  'depth_near_a': 800, 'depth_near_b': 800,
+};
+
+/// Plates something still listens to (a held plate stays in memory even
+/// after `imageCache.clear()`, which is what memory pressure calls).
+Future<int> _platesHeld(WidgetTester tester) async {
+  var n = 0;
+  for (final e in _plates.entries) {
+    final provider = ResizeImage.resizeIfNeeded(e.value, null, AssetImage('assets/duty_slip/world3d/${e.key}.webp'));
+    final key = await tester.runAsync(() => provider.obtainKey(ImageConfiguration.empty));
+    if (imageCache.statusForKey(key!).live) n++;
+  }
+  return n;
+}
+
+/// Plates the world's painter has to draw right now.
+int _platesDrawn(WidgetTester tester) {
+  for (final p in tester.widgetList<CustomPaint>(
+      find.descendant(of: find.byType(AdventureWorld), matching: find.byType(CustomPaint)))) {
+    final painter = p.painter;
+    if (painter != null && painter.runtimeType.toString() == '_DepthPainter') {
+      return ((painter as dynamic).images as Map).length;
+    }
+  }
+  return -1;
+}
+
+/// Lets real image decoding finish (it runs outside the fake clock).
+Future<void> _decode(WidgetTester tester) async {
+  for (var i = 0; i < 20; i++) {
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+}
+
 Future<void> _idle(WidgetTester tester, Duration d) async {
   final steps = d.inMilliseconds ~/ 100;
   for (var i = 0; i < steps; i++) {
@@ -282,6 +323,41 @@ void main() {
     expect(_CountingDirector.nudges, 0);
     expect(r.of('_MapBand'), lessThanOrEqualTo(2));
     expect(r.total, lessThan(200));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('covered by a level: the background plates are let go, and back at once', (tester) async {
+    imageCache.clear();
+    imageCache.clearLiveImages();
+    await _pumpLadder(tester);
+    await _decode(tester);
+    expect(_platesDrawn(tester), 10);
+    expect(await _platesHeld(tester), 10);
+
+    _navKey.currentState!.push(MaterialPageRoute<void>(builder: (_) => const Scaffold(body: Text('level'))));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    // ignore: avoid_print
+    print('[ladder-perf] plates held while covered: ${await _platesHeld(tester)} (was 10 = ~34 MB pinned)');
+    expect(await _platesHeld(tester), 0, reason: 'the cache may evict them; memory pressure can free them');
+
+    // Back while they are still cached: drawn in the very first frame.
+    _navKey.currentState!.pop();
+    await tester.pump();
+    expect(_platesDrawn(tester), 10, reason: 'no blank flash coming back');
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Covered again, then memory pressure: nothing keeps them alive.
+    _navKey.currentState!.push(MaterialPageRoute<void>(builder: (_) => const Scaffold(body: Text('level'))));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    imageCache.clear();
+    expect(await _platesHeld(tester), 0);
+    expect(imageCache.currentSizeBytes, 0);
+    _navKey.currentState!.pop();
+    await tester.pump();
+    await _decode(tester);
+    expect(_platesDrawn(tester), 10, reason: 'decoded again after a clear');
     await tester.pumpWidget(const SizedBox());
   });
 }

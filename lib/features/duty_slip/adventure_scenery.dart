@@ -72,6 +72,15 @@ class _AdventureWorldState extends State<AdventureWorld> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // While a level, lesson or quiz covers the ladder (its route is offstage,
+    // TickerMode off) the plates (~34 MB decoded) are let go, so the image
+    // cache can evict them and memory pressure can free them. Coming back
+    // they are resolved again: the same cache keys, so while they are still
+    // cached the images come back in the same frame (no blank flash).
+    if (!TickerMode.valuesOf(context).enabled) {
+      _release();
+      return;
+    }
     if (_streams.isNotEmpty) return;
     final config = createLocalImageConfiguration(context);
     for (final band in AdventureWorld._bands) {
@@ -94,15 +103,20 @@ class _AdventureWorldState extends State<AdventureWorld> {
     }
   }
 
-  @override
-  void dispose() {
+  void _release() {
     for (final (stream, listener) in _streams.values) {
       stream.removeListener(listener);
     }
+    _streams.clear();
     for (final image in _images.values) {
       image.dispose();
     }
     _images.clear();
+  }
+
+  @override
+  void dispose() {
+    _release();
     _version.dispose();
     super.dispose();
   }
