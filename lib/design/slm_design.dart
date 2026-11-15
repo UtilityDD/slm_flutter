@@ -9,6 +9,7 @@ export 'components/slm_controls.dart';
 export 'components/slm_icons.dart';
 export 'components/slm_text.dart';
 export 'components/slm_tone.dart';
+export 'motion/slm_ambient_life.dart';
 export 'motion/slm_card_motion.dart';
 export 'motion/slm_motion_scope.dart';
 export 'motion/slm_motion_widgets.dart';

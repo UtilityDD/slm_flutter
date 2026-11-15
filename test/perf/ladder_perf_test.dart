@@ -16,7 +16,7 @@
 //   reduce motion: 120 rebuilds / 2 s both before and after (the guide's
 //                  eye loop in ai_lineman_guide.dart, outside this file set)
 //
-// The real catalog is loaded (327 rungs, 150 playable): the provider's own
+// The real catalog is loaded (327 rungs, 165 playable since Module 6 Wave A): the provider's own
 // rootBundle read never finishes under the test's fake clock, so before
 // 2026-11-14 every case here measured the 60-rung fallback with the loading
 // spinner turning (reduce motion: 120 rebuilds / 2 s, all the spinner).
@@ -136,7 +136,7 @@ Future<void> _pumpLadder(WidgetTester tester, {bool reduceMotion = false, int cl
   final built = ProviderScope.containerOf(tester.element(find.byType(AdventureMap))).read(builtLadderProvider).value;
   expect(built, isNotNull, reason: 'the catalog must load (no fallback ladder, no spinner)');
   expect(built!.length, 327);
-  expect(ladderPlayableSpan(built), 150);
+  expect(ladderPlayableSpan(built), 165);
   expect(find.byType(CircularProgressIndicator), findsNothing);
   if (cleared > 0) {
     final save = ProviderScope.containerOf(tester.element(find.byType(AdventureMap))).read(gameSaveProvider);

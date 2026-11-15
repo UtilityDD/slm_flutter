@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="day" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#D6E7F0"/></linearGradient>
+  <linearGradient id="yard" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D8E2"/><stop offset="0.62" stop-color="#E2E6DE"/><stop offset="1" stop-color="#B9B39E"/></linearGradient>
+  <linearGradient id="bench" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5E6E7C"/><stop offset="0.42" stop-color="#7C8C98"/><stop offset="0.42" stop-color="#9A7650"/><stop offset="1" stop-color="#7A5A3A"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9DBB72"/><stop offset="1" stop-color="#7E9C55"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E979E"/><stop offset="0.5" stop-color="#C6CED4"/><stop offset="1" stop-color="#7C858C"/></linearGradient>
+  <linearGradient id="chan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A3ABB2"/><stop offset="1" stop-color="#6C747B"/></linearGradient>
+  <linearGradient id="porc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6E3A22"/><stop offset="0.45" stop-color="#A65E3A"/><stop offset="1" stop-color="#5E301C"/></linearGradient>
+  <linearGradient id="tank" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F8A78"/><stop offset="0.5" stop-color="#9DB5A5"/><stop offset="1" stop-color="#5E7766"/></linearGradient>
+  <linearGradient id="box" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9EDF0"/><stop offset="1" stop-color="#AEB8C0"/></linearGradient>
+  <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9AA5AE"/><stop offset="1" stop-color="#7D8891"/></linearGradient>
+  <linearGradient id="ceramic" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D9D3C6"/><stop offset="0.45" stop-color="#FAF8F2"/><stop offset="1" stop-color="#C8C1B2"/></linearGradient>
+  <linearGradient id="lcd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9E2B8"/><stop offset="1" stop-color="#A9C997"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="house" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D9C3A0"/><stop offset="1" stop-color="#B9A07A"/></linearGradient>
+  <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A4E35"/><stop offset="1" stop-color="#743A28"/></linearGradient>
+  <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF6C8"/><stop offset="1" stop-color="#FFE08A" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#day)"/>
+<rect x="0" y="190" width="200" height="30" fill="url(#ground)"/>
+<rect x="132" y="104" width="64" height="86" fill="url(#house)"/>
+<path d="M126 105 L164 74 L202 105 Z" fill="url(#roof)"/>
+<rect x="174" y="116" width="16" height="18" fill="#FFE08A"/>
+<rect x="138" y="118" width="30" height="34" rx="2" fill="url(#box)" stroke="#4A5560" stroke-width="0.6"/>
+<rect x="142" y="122" width="10" height="7" rx="1" fill="#D8402F"/>
+<rect x="141" y="134" width="24" height="14" rx="2" fill="url(#ceramic)" stroke="#4A5560" stroke-width="0.5"/>
+<path d="M145 141 L161 141" stroke="#D9DDE0" stroke-width="1.2"/>
+<path d="M96 46 Q130 70 152 118" stroke="#2B3138" stroke-width="1" fill="none"/>
+<rect x="22.5" y="14" width="7" height="184" fill="url(#pole)"/>
+<rect x="88.5" y="14" width="7" height="184" fill="url(#pole)"/>
+<rect x="12" y="30" width="94" height="5" rx="1" fill="url(#chan)"/>
+<rect x="12" y="82" width="94" height="4" rx="1" fill="url(#chan)"/>
+<rect x="10" y="148" width="98" height="5" fill="url(#chan)"/>
+<path d="M40 0 L40 26" stroke="#2B3138" stroke-width="1.2"/>
+<path d="M59 0 L59 26" stroke="#2B3138" stroke-width="1.2"/>
+<path d="M78 0 L78 26" stroke="#2B3138" stroke-width="1.2"/>
+<rect x="31" y="24" width="4" height="6" fill="url(#porc)"/><rect x="45" y="24" width="4" height="6" fill="url(#porc)"/>
+<path d="M32 22 L48 22" stroke="url(#steel)" stroke-width="3.2" stroke-linecap="round"/>
+<rect x="50" y="24" width="4" height="6" fill="url(#porc)"/><rect x="64" y="24" width="4" height="6" fill="url(#porc)"/>
+<path d="M51 22 L67 22" stroke="url(#steel)" stroke-width="3.2" stroke-linecap="round"/>
+<rect x="69" y="24" width="4" height="6" fill="url(#porc)"/><rect x="83" y="24" width="4" height="6" fill="url(#porc)"/>
+<path d="M70 22 L86 22" stroke="url(#steel)" stroke-width="3.2" stroke-linecap="round"/>
+<path d="M97 32 L97 170" stroke="url(#steel)" stroke-width="2"/>
+<rect x="93" y="166" width="12" height="5" rx="2" fill="#D8402F"/>
+<path d="M47 24 Q49 50 35 72" stroke="#2B3138" stroke-width="1" fill="none"/>
+<path d="M66 24 Q68 50 54 72" stroke="#2B3138" stroke-width="1" fill="none"/>
+<path d="M85 24 Q87 50 73 72" stroke="#2B3138" stroke-width="1" fill="none"/>
+<rect x="34" y="74" width="3" height="8" fill="url(#porc)"/><rect x="43" y="74" width="3" height="8" fill="url(#porc)"/>
+<path d="M35.5 74 L38.5 71 Q39 64 33 60" stroke="#B8733A" stroke-width="1.6" fill="none"/>
+<path d="M44.5 74 L41.5 71 Q41 64 47 60" stroke="#B8733A" stroke-width="1.6" fill="none"/>
+<path d="M38.5 71 L41.5 71" stroke="#D9DDE0" stroke-width="1.8"/>
+<path d="M44.5 82 L42 108" stroke="#2B3138" stroke-width="1"/>
+<rect x="53" y="74" width="3" height="8" fill="url(#porc)"/><rect x="62" y="74" width="3" height="8" fill="url(#porc)"/>
+<path d="M54.5 74 L57.5 71 Q58 64 52 60" stroke="#B8733A" stroke-width="1.6" fill="none"/>
+<path d="M63.5 74 L60.5 71 Q60 64 66 60" stroke="#B8733A" stroke-width="1.6" fill="none"/>
+<path d="M63.5 82 L61 108" stroke="#2B3138" stroke-width="1"/>
+<rect x="72" y="74" width="3" height="8" fill="url(#porc)"/><rect x="81" y="74" width="3" height="8" fill="url(#porc)"/>
+<path d="M73.5 74 L76.5 71 Q77 64 71 60" stroke="#B8733A" stroke-width="1.6" fill="none"/>
+<path d="M82.5 74 L79.5 71 Q79 64 85 60" stroke="#B8733A" stroke-width="1.6" fill="none"/>
+<path d="M76.5 71 L79.5 71" stroke="#D9DDE0" stroke-width="1.8"/>
+<path d="M82.5 82 L80 108" stroke="#2B3138" stroke-width="1"/>
+<rect x="32" y="106" width="54" height="42" rx="3" fill="url(#tank)"/>
+<rect x="41" y="100" width="4" height="7" fill="url(#porc)"/>
+<rect x="60" y="100" width="4" height="7" fill="url(#porc)"/>
+<rect x="79" y="100" width="4" height="7" fill="url(#porc)"/>
+<rect x="38" y="158" width="44" height="30" rx="2" fill="url(#box)" stroke="#4A5560" stroke-width="0.6"/>
+<rect x="42" y="162" width="9" height="6" rx="1" fill="#D8402F"/>
+<path d="M56 166 h20 M56 172 h16" stroke="#4A5560" stroke-width="0.8"/>
+<path d="M116 196 a14 5 0 1 0 28 0 a14 5 0 1 0 -28 0" stroke="#3E9B4F" stroke-width="2.6" fill="none" stroke-linejoin="round"/><path d="M116 196 a14 5 0 1 0 28 0 a14 5 0 1 0 -28 0" stroke="#E8C830" stroke-width="2.6" fill="none" stroke-dasharray="4 4" stroke-linejoin="round"/><path d="M119 196 a11 4 0 1 0 22 0 a11 4 0 1 0 -22 0" stroke="#3E9B4F" stroke-width="2.6" fill="none" stroke-linejoin="round"/><path d="M119 196 a11 4 0 1 0 22 0 a11 4 0 1 0 -22 0" stroke="#E8C830" stroke-width="2.6" fill="none" stroke-dasharray="4 4" stroke-linejoin="round"/><path d="M122 196 a8 3 0 1 0 16 0 a8 3 0 1 0 -16 0" stroke="#3E9B4F" stroke-width="2.6" fill="none" stroke-linejoin="round"/><path d="M122 196 a8 3 0 1 0 16 0 a8 3 0 1 0 -16 0" stroke="#E8C830" stroke-width="2.6" fill="none" stroke-dasharray="4 4" stroke-linejoin="round"/><rect x="110" y="193" width="5" height="7" rx="1.5" fill="url(#steel)"/><rect x="148" y="193" width="5" height="7" rx="1.5" fill="url(#steel)"/><rect x="154" y="193" width="5" height="7" rx="1.5" fill="url(#steel)"/>
+<g transform="translate(66 148) scale(1.1) translate(-66 -148)"><path d="M66 118 L64.6 133.7 L73 147" stroke="#222B37" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="66" y="143" width="11" height="5" rx="2" fill="#1C1F24"/><path d="M66 118 L58.1 131.5 L60 147" stroke="#2A3442" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="53" y="143" width="11" height="5" rx="2" fill="#1C1F24"/><path d="M67 95 L58.1 89.4 L57.8 78.9" stroke="#174A70" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="57.8" cy="78.9" r="3" fill="#2A2D33"/><path d="M58.5 118.3 L57.5 91.3 Q65 88 72.5 90.7 L73.5 117.7 Z" fill="url(#shirt)"/><path d="M58.5 115.3 L73.5 114.7" stroke="#222B37" stroke-width="2.4"/><g transform="rotate(24 63 89)"><rect x="60" y="88" width="6" height="6" rx="2" fill="#8C5A3A"/><circle cx="63" cy="84" r="7" fill="#A86E48"/><path d="M70 85 Q70 90 66 91 L66 85 Z" fill="#2A1E16"/><circle cx="59" cy="85" r="1.1" fill="#2A1E16"/><path d="M55 83 A8 8 0 0 1 71 83 Z" fill="#FFD34E"/><rect x="51" y="81.6" width="20" height="2.8" rx="1.3" fill="#E5B92E"/></g><path d="M64 95 L57.8 89.8 L61.5 82.5" stroke="#1F5F8F" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="61.5" cy="82.5" r="3" fill="#2A2D33"/></g>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

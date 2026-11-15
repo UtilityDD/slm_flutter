@@ -68,6 +68,16 @@ import 'm5_cable_fault_type.dart' as m5_cable_fault_type;
 import 'm5_cable_route_locate.dart' as m5_cable_route_locate;
 import 'm5_pm_thermal_round.dart' as m5_pm_thermal_round;
 import 'm5_gate_case.dart' as m5_gate_case;
+import 'm6_dtr_photo_report.dart' as m6_dtr_photo_report;
+import 'm6_dtr_coil_forensic.dart' as m6_dtr_coil_forensic;
+import 'm6_trip_log.dart' as m6_trip_log;
+import 'm6_breaker_rack.dart' as m6_breaker_rack;
+import 'm6_fuse_gauge.dart' as m6_fuse_gauge;
+import 'm6_fuse_chain.dart' as m6_fuse_chain;
+import 'm6_ab_gap_log.dart' as m6_ab_gap_log;
+import 'm6_ab_unjam.dart' as m6_ab_unjam;
+import 'm6_ug_cable_lay.dart' as m6_ug_cable_lay;
+import 'm6_ug_dig_guard.dart' as m6_ug_dig_guard;
 import 'm4_dp_survey.dart' as m4_dp_survey;
 import 'm4_do_refuse.dart' as m4_do_refuse;
 import 'm4_insulator_prep.dart' as m4_insulator_prep;
@@ -198,6 +208,16 @@ final Map<String, DoMistake> knownMistakes = {
     ...m5_cable_route_locate.M5CrlMistakes.all,
     ...m5_pm_thermal_round.M5PmMistakes.all,
     ...m5_gate_case.M5GateMistakes.all,
+    ...m6_dtr_photo_report.M6PhotoMistakes.all,
+    ...m6_dtr_coil_forensic.M6CoilMistakes.all,
+    ...m6_trip_log.M6TripLogMistakes.all,
+    ...m6_breaker_rack.M6BreakerRackMistakes.all,
+    ...m6_fuse_gauge.M6FuseGaugeMistakes.all,
+    ...m6_fuse_chain.M6ChainMistakes.all,
+    ...m6_ab_gap_log.M6AbGapLogMistakes.all,
+    ...m6_ab_unjam.M6AbUnjamMistakes.all,
+    ...m6_ug_cable_lay.M6UgCableMistakes.all,
+    ...m6_ug_dig_guard.M6DigMistakes.all,
     ...m2_comealong_pick.M2ComeAlongMistakes.all,
     ...m2_comealong_pull.PullMistakes.all,
     ...m2_crimp_steps.CrimpMistakes.all,

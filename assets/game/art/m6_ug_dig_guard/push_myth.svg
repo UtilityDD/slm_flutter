@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <g transform="translate(30,40)">
+    <circle cx="50" cy="60" r="44" fill="#15181c"/><circle cx="50" cy="60" r="38" fill="#7d858c"/><circle cx="50" cy="60" r="30" fill="#2b2f33"/>
+    <circle cx="50" cy="60" r="22" fill="#e9edf0"/><circle cx="50" cy="60" r="12" fill="#b87333"/>
+    <path d="M10,10 L40,48 L30,52 L60,92" fill="none" stroke="#ffd34e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g stroke="#c0392b" stroke-width="5" stroke-linecap="round"><line x1="131" y1="173" x2="149" y2="191"/><line x1="149" y1="173" x2="131" y2="191"/></g>
+  <g transform="translate(190,40)">
+    <path d="M10,22 L58,22 L50,62 L18,62 Z" fill="#3c4248"/>
+    <line x1="34" y1="62" x2="34" y2="100" stroke="#e0a012" stroke-width="6"/>
+    <line x1="0" y1="118" x2="110" y2="118" stroke="#15181c" stroke-width="7"/>
+    <line x1="84" y1="110" x2="84" y2="62" stroke="#f2eee4" stroke-width="3"/><path d="M85,62 Q100,56 114,66 L114,82 Q100,74 85,80 Z" fill="#d9362b"/>
+  </g>
+  <polyline points="290,182 297,190 311,174" fill="none" stroke="#1e8a4c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

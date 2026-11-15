@@ -1,0 +1,332 @@
+[
+ {
+  "id": "learn_6_1",
+  "kind": "board",
+  "spec": "board_61.json",
+  "file": "lib/features/game/learn_board_pack61.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board61/",
+  "lessonId": "6.1",
+  "wave": "A"
+ },
+ {
+  "id": "do_6_1_a",
+  "kind": "do",
+  "spec": "do_6_1_a.json",
+  "file": "lib/features/game/m6_dtr_photo_report.dart",
+  "engineType": "m6_dtr_photo_report",
+  "art": "assets/game/art/m6_dtr_photo_report/",
+  "lessonId": "6.1",
+  "wave": "A"
+ },
+ {
+  "id": "do_6_1_b",
+  "kind": "do",
+  "spec": "do_6_1_b.json",
+  "file": "lib/features/game/m6_dtr_coil_forensic.dart",
+  "engineType": "m6_dtr_coil_forensic",
+  "art": "assets/game/art/m6_dtr_coil_forensic/",
+  "lessonId": "6.1",
+  "wave": "A"
+ },
+ {
+  "id": "learn_6_2",
+  "kind": "board",
+  "spec": "board_62.json",
+  "file": "lib/features/game/learn_board_pack62.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board62/",
+  "lessonId": "6.2",
+  "wave": "A"
+ },
+ {
+  "id": "do_6_2_a",
+  "kind": "do",
+  "spec": "do_6_2_a.json",
+  "file": "lib/features/game/m6_trip_log.dart",
+  "engineType": "m6_trip_log",
+  "art": "assets/game/art/m6_trip_log/",
+  "lessonId": "6.2",
+  "wave": "A"
+ },
+ {
+  "id": "do_6_2_b",
+  "kind": "do",
+  "spec": "do_6_2_b.json",
+  "file": "lib/features/game/m6_breaker_rack.dart",
+  "engineType": "m6_breaker_rack",
+  "art": "assets/game/art/m6_breaker_rack/",
+  "lessonId": "6.2",
+  "wave": "A"
+ },
+ {
+  "id": "learn_6_3",
+  "kind": "board",
+  "spec": "board_63.json",
+  "file": "lib/features/game/learn_board_pack63.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board63/",
+  "lessonId": "6.3",
+  "wave": "A"
+ },
+ {
+  "id": "do_6_3_a",
+  "kind": "do",
+  "spec": "do_6_3_a.json",
+  "file": "lib/features/game/m6_fuse_gauge.dart",
+  "engineType": "m6_fuse_gauge",
+  "art": "assets/game/art/m6_fuse_gauge/",
+  "lessonId": "6.3",
+  "wave": "A"
+ },
+ {
+  "id": "do_6_3_b",
+  "kind": "do",
+  "spec": "do_6_3_b.json",
+  "file": "lib/features/game/m6_fuse_chain.dart",
+  "engineType": "m6_fuse_chain",
+  "art": "assets/game/art/m6_fuse_chain/",
+  "lessonId": "6.3",
+  "wave": "A"
+ },
+ {
+  "id": "learn_6_4",
+  "kind": "board",
+  "spec": "board_64.json",
+  "file": "lib/features/game/learn_board_pack64.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board64/",
+  "lessonId": "6.4",
+  "wave": "A"
+ },
+ {
+  "id": "do_6_4_a",
+  "kind": "do",
+  "spec": "do_6_4_a.json",
+  "file": "lib/features/game/m6_ab_gap_log.dart",
+  "engineType": "m6_ab_gap_log",
+  "art": "assets/game/art/m6_ab_gap_log/",
+  "lessonId": "6.4",
+  "wave": "A"
+ },
+ {
+  "id": "do_6_4_b",
+  "kind": "do",
+  "spec": "do_6_4_b.json",
+  "file": "lib/features/game/m6_ab_unjam.dart",
+  "engineType": "m6_ab_unjam",
+  "art": "assets/game/art/m6_ab_unjam/",
+  "lessonId": "6.4",
+  "wave": "A"
+ },
+ {
+  "id": "learn_6_5",
+  "kind": "board",
+  "spec": "board_65.json",
+  "file": "lib/features/game/learn_board_pack65.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board65/",
+  "lessonId": "6.5",
+  "wave": "A"
+ },
+ {
+  "id": "do_6_5_a",
+  "kind": "do",
+  "spec": "do_6_5_a.json",
+  "file": "lib/features/game/m6_ug_cable_lay.dart",
+  "engineType": "m6_ug_cable_lay",
+  "art": "assets/game/art/m6_ug_cable_lay/",
+  "lessonId": "6.5",
+  "wave": "A"
+ },
+ {
+  "id": "do_6_5_b",
+  "kind": "do",
+  "spec": "do_6_5_b.json",
+  "file": "lib/features/game/m6_ug_dig_guard.dart",
+  "engineType": "m6_ug_dig_guard",
+  "art": "assets/game/art/m6_ug_dig_guard/",
+  "lessonId": "6.5",
+  "wave": "A"
+ },
+ {
+  "id": "learn_6_6",
+  "kind": "board",
+  "spec": "board_66.json",
+  "file": "lib/features/game/learn_board_pack66.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board66/",
+  "lessonId": "6.6",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_6_a",
+  "kind": "do",
+  "spec": "do_6_6_a.json",
+  "file": "lib/features/game/m6_abc_clamp_seat.dart",
+  "engineType": "m6_abc_clamp_seat",
+  "art": "assets/game/art/m6_abc_clamp_seat/",
+  "lessonId": "6.6",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_6_b",
+  "kind": "do",
+  "spec": "do_6_6_b.json",
+  "file": "lib/features/game/m6_abc_nick_seal.dart",
+  "engineType": "m6_abc_nick_seal",
+  "art": "assets/game/art/m6_abc_nick_seal/",
+  "lessonId": "6.6",
+  "wave": "B"
+ },
+ {
+  "id": "learn_6_7",
+  "kind": "board",
+  "spec": "board_67.json",
+  "file": "lib/features/game/learn_board_pack67.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board67/",
+  "lessonId": "6.7",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_7_a",
+  "kind": "do",
+  "spec": "do_6_7_a.json",
+  "file": "lib/features/game/m6_capbank_wait.dart",
+  "engineType": "m6_capbank_wait",
+  "art": "assets/game/art/m6_capbank_wait/",
+  "lessonId": "6.7",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_7_b",
+  "kind": "do",
+  "spec": "do_6_7_b.json",
+  "file": "lib/features/game/m6_capbank_meter.dart",
+  "engineType": "m6_capbank_meter",
+  "art": "assets/game/art/m6_capbank_meter/",
+  "lessonId": "6.7",
+  "wave": "B"
+ },
+ {
+  "id": "learn_6_8",
+  "kind": "board",
+  "spec": "board_68.json",
+  "file": "lib/features/game/learn_board_pack68.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board68/",
+  "lessonId": "6.8",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_8_a",
+  "kind": "do",
+  "spec": "do_6_8_a.json",
+  "file": "lib/features/game/m6_reclose_count.dart",
+  "engineType": "m6_reclose_count",
+  "art": "assets/game/art/m6_reclose_count/",
+  "lessonId": "6.8",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_8_b",
+  "kind": "do",
+  "spec": "do_6_8_b.json",
+  "file": "lib/features/game/m6_upstream_trace.dart",
+  "engineType": "m6_upstream_trace",
+  "art": "assets/game/art/m6_upstream_trace/",
+  "lessonId": "6.8",
+  "wave": "B"
+ },
+ {
+  "id": "learn_6_9",
+  "kind": "board",
+  "spec": "board_69.json",
+  "file": "lib/features/game/learn_board_pack69.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board69/",
+  "lessonId": "6.9",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_9_a",
+  "kind": "do",
+  "spec": "do_6_9_a.json",
+  "file": "lib/features/game/m6_pillar_thermal.dart",
+  "engineType": "m6_pillar_thermal",
+  "art": "assets/game/art/m6_pillar_thermal/",
+  "lessonId": "6.9",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_9_b",
+  "kind": "do",
+  "spec": "do_6_9_b.json",
+  "file": "lib/features/game/m6_pillar_newway.dart",
+  "engineType": "m6_pillar_newway",
+  "art": "assets/game/art/m6_pillar_newway/",
+  "lessonId": "6.9",
+  "wave": "B"
+ },
+ {
+  "id": "learn_6_10",
+  "kind": "board",
+  "spec": "board_610.json",
+  "file": "lib/features/game/learn_board_pack610.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board610/",
+  "lessonId": "6.10",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_10_a",
+  "kind": "do",
+  "spec": "do_6_10_a.json",
+  "file": "lib/features/game/m6_meter_pulse.dart",
+  "engineType": "m6_meter_pulse",
+  "art": "assets/game/art/m6_meter_pulse/",
+  "lessonId": "6.10",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_10_b",
+  "kind": "do",
+  "spec": "do_6_10_b.json",
+  "file": "lib/features/game/m6_meter_swap_proof.dart",
+  "engineType": "m6_meter_swap_proof",
+  "art": "assets/game/art/m6_meter_swap_proof/",
+  "lessonId": "6.10",
+  "wave": "B"
+ },
+ {
+  "id": "learn_6_11",
+  "kind": "board",
+  "spec": "board_611.json",
+  "file": "lib/features/game/learn_board_pack611.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m6_board611/",
+  "lessonId": "6.11",
+  "wave": "B"
+ },
+ {
+  "id": "do_6_11_a",
+  "kind": "do",
+  "spec": "do_6_11_a.json",
+  "file": "lib/features/game/m6_earth_pit_test.dart",
+  "engineType": "m6_earth_pit_test",
+  "art": "assets/game/art/m6_earth_pit_test/",
+  "lessonId": "6.11",
+  "wave": "B"
+ },
+ {
+  "id": "gate_m6",
+  "kind": "gate",
+  "spec": "gate_m6.json",
+  "file": "lib/features/game/m6_gate_storm_feeder.dart",
+  "engineType": "m6_gate_storm_feeder",
+  "art": "assets/game/art/m6_gate_storm_feeder/",
+  "lessonId": "6.11",
+  "wave": "B"
+ }
+]

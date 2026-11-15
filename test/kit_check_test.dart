@@ -272,8 +272,9 @@ void main() {
       expect(second.pack.engineType, 'glove_check');
       expect(doGameFor(second.pack), isNotNull);
       // A Do rung that is not built yet has no shell game. Modules 1–5 are built
-      // (Module 5 wired 2026-11-12), so the check uses Module 6's first Do rung, still a placeholder.
-      final later = ladder.rungs.firstWhere((r) => r.id == '6.1/do/0');
+      // (Module 5 wired 2026-11-12) and so are lessons 6.1–6.5 (2026-11-15), so the check uses
+      // lesson 6.6's first Do rung, still a placeholder.
+      final later = ladder.rungs.firstWhere((r) => r.id == '6.6/do/0');
       expect(later.pack.engineType, 'placeholder');
       expect(doGameFor(later.pack), isNull);
       final scan = ladder.rungs.firstWhere((r) => r.id == '1.10/do/0');

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs><radialGradient id="fire" cx="0.5" cy="0.6" r="0.6"><stop offset="0" stop-color="#fff4c8"/><stop offset="0.5" stop-color="#ff8c28"/><stop offset="1" stop-color="#c0392b" stop-opacity="0"/></radialGradient></defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <rect x="40" y="40" width="70" height="130" rx="12" fill="#eff1ec" stroke="#9aa09a" stroke-width="2"/>
+  <rect x="53" y="62" width="44" height="10" fill="#c9a23e"/><rect x="53" y="138" width="44" height="10" fill="#c9a23e"/>
+  <line x1="75" y1="67" x2="75" y2="143" stroke="#c77b3a" stroke-width="12"/>
+  <path d="M120 105 L 170 105" stroke="#55645a" stroke-width="4"/>
+  <polygon points="170,96 186,105 170,114" fill="#55645a"/>
+  <rect x="196" y="70" width="34" height="70" rx="4" fill="#3e4a56"/>
+  <rect x="244" y="96" width="56" height="44" rx="4" fill="#5a6470"/>
+  <circle cx="240" cy="104" r="46" fill="url(#fire)"/>
+</svg>

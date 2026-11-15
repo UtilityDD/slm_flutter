@@ -17,6 +17,7 @@ import 'package:slm_flutter/features/duty_slip/ladder_focus.dart';
 import 'package:slm_flutter/features/game/content_catalog.dart';
 import 'package:slm_flutter/features/game/game_save.dart';
 import 'package:slm_flutter/features/game/ladder_builder.dart';
+import 'package:slm_flutter/features/home/brand_emblem_page.dart';
 import 'package:slm_flutter/features/home/home_screen.dart';
 import 'package:slm_flutter/features/home/home_toolbox.dart';
 import 'package:slm_flutter/features/rank/league_board.dart';
@@ -319,6 +320,27 @@ void main() {
     final frames = await idleFrames(t);
     debugPrint('PERF Home idle 3 s (remove animations): frames requested $frames/180');
     expect(frames, 0);
+    await _done(t);
+  });
+
+  testWidgets('tapping the home emblem opens it big with the name and a chime; a tap closes it', (t) async {
+    var chimes = 0;
+    final saved = BrandEmblem.chime;
+    BrandEmblem.chime = () async => chimes++;
+    addTearDown(() => BrandEmblem.chime = saved);
+    await _pump(t, save: _seeded(chest: true), leagueRank: 4);
+    expect(find.byKey(const ValueKey('brand-emblem-page')), findsNothing);
+    await t.tap(find.byKey(const ValueKey('home-emblem')));
+    await _settle(t);
+    expect(find.byKey(const ValueKey('brand-emblem-page')), findsOneWidget);
+    expect(find.text(BrandEmblem.word1), findsOneWidget);
+    expect(find.text(BrandEmblem.word2), findsOneWidget);
+    expect(chimes, 1);
+    expect(_opened, isEmpty, reason: 'the emblem must not open the ladder');
+    await t.tapAt(const Offset(30, 60));
+    await _settle(t);
+    expect(find.byKey(const ValueKey('brand-emblem-page')), findsNothing);
+    expect(find.byType(AnimatedSafetyShield), findsOneWidget, reason: 'the shield flew back to Home');
     await _done(t);
   });
 

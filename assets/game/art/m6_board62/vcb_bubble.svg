@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D2CE"/><stop offset="1" stop-color="#A9B4AF"/></linearGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8E918B"/><stop offset="1" stop-color="#6C6F69"/></linearGradient>
+  <linearGradient id="day" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#D6E7F0"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9DBB72"/><stop offset="1" stop-color="#7E9C55"/></linearGradient>
+  <linearGradient id="panel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DCE2DA"/><stop offset="1" stop-color="#AEB8AF"/></linearGradient>
+  <linearGradient id="panelD" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8F9A92"/><stop offset="1" stop-color="#6E7972"/></linearGradient>
+  <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F6F1E6"/><stop offset="0.5" stop-color="#E4DCCB"/><stop offset="1" stop-color="#C2B9A6"/></linearGradient>
+  <linearGradient id="oil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E7B95A"/><stop offset="1" stop-color="#B88426"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E979E"/><stop offset="0.5" stop-color="#C6CED4"/><stop offset="1" stop-color="#7C858C"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="lcd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9E2B8"/><stop offset="1" stop-color="#A9C997"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#room)"/>
+<rect y="150" width="200" height="70" fill="url(#floor)"/>
+<rect x="38" y="30" width="124" height="160" rx="12" fill="url(#panelD)"/>
+<rect x="48" y="40" width="104" height="140" rx="6" fill="#1A2434"/>
+<rect x="48" y="64" width="104" height="116" rx="4" fill="url(#oil)"/>
+<rect x="94" y="30" width="12" height="76" fill="#C8783A"/><rect x="88" y="102" width="24" height="6" rx="2" fill="#C8783A"/>
+<rect x="88" y="136" width="24" height="6" rx="2" fill="#C8783A"/><rect x="94" y="140" width="12" height="46" fill="#C8783A"/>
+<ellipse cx="100" cy="122" rx="28" ry="22" fill="#F4F1E6" opacity="0.45" stroke="#F4F1E6" stroke-width="1.2"/>
+<path d="M100 108 l-5 7 l8 3 l-6 8 l7 2 l-4 8" stroke="#BFE4FF" stroke-width="2.6" fill="none" stroke-linejoin="round"/>
+<circle cx="70" cy="90" r="4" fill="none" stroke="#F4F1E6" stroke-width="1"/>
+<circle cx="132" cy="96" r="3" fill="none" stroke="#F4F1E6" stroke-width="1"/>
+<circle cx="124" cy="80" r="2.5" fill="none" stroke="#F4F1E6" stroke-width="1"/>
+<circle cx="78" cy="74" r="2" fill="none" stroke="#F4F1E6" stroke-width="1"/>
+<g stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" opacity="0.9"><path d="M95 96 l0 -6"/><path d="M100 96 l0 -6"/><path d="M105 96 l0 -6"/></g>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

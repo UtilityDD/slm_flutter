@@ -1,0 +1,610 @@
+{
+ "module": "6",
+ "note": "Split from docs/module_specs/module6_spec.json. docs/module_specs/module6_rulings.md WINS over anything in this file (owner answers of 2026-11-15 + cross-module rulings). Lesson text source: tool/all_training_chapters_bn.json only (live text wins over a spec quote).",
+ "id": "gate_m6",
+ "rungId": "m6/gate",
+ "kind": "gate",
+ "lessonId": "6.11",
+ "wave": "B",
+ "engineType": "m6_gate_storm_feeder",
+ "file": "lib/features/game/m6_gate_storm_feeder.dart",
+ "worldFile": "lib/features/game/m6_gate_storm_feeder_world.dart",
+ "art": "assets/game/art/m6_gate_storm_feeder/",
+ "catalogEngineTypeNow": "gate_field (content_catalog gamePacks gate_m6; change to m6_gate_storm_feeder at wiring)",
+ "rank": "সিনিয়র (content_catalog modules m6 rankName)",
+ "badge": "PENDING OWNER: placeholder constant M6GateLines.badge = '' (see ruling M6-10)",
+ "rulings": [
+  "M6-1",
+  "M6-2",
+  "M6-3",
+  "M6-4",
+  "M6-5",
+  "M6-6",
+  "M6-7",
+  "M6-10",
+  "M6-12",
+  "M6-13",
+  "X1",
+  "X2",
+  "X3",
+  "X4",
+  "X6",
+  "X7"
+ ],
+ "level": {
+  "packId": "gate_m6",
+  "engineType": "m6_gate_storm_feeder",
+  "titleBn": "ঝড়ের রাত: ফিডার ফেরান",
+  "verb": "drag crew tools onto feeder equipment",
+  "scene": "One feeder after a stormy night, a ~4-screen panorama panned by swipe (wet sky, far roofs parallax, the feeder, van and crew). Left to right: substation window (feeder breaker panel with equal red/green lamps; relay case with R/Y/B flags and a fault-type window 'ওভারলোড'/'শর্ট সার্কিট', lens needed); recloser R-12 just outside with control box, counter and handle (up = normal, down = locked out); road crossing where the main line dips into a UG cable between two riser terminations (excavator in some deals); AB-1 on a DP with ground handle and earth lead; pole capacitor bank with its plate 'বিপদ! সঞ্চিত শক্তি। স্পর্শ করার আগে 5-10 মিনিট অপেক্ষা করুন'; junction pole with sectionalizer S-3 and branch A; AB-2; tie AB-T to ফিডার-5 (normally open); DTR with HG sets, drain valve, earth strip, LT box with HRC dots and main switches; LT pillar with 3–4 ways; one AB-cable lane to houses with veranda meters. Windows/lamps are the live cue. Bottom: six fixed same-size toolbelt tokens চোখ · রেডিও · হাতল · আর্থ সেট · ডিসচার্জ রড · ক্রু. Top left: ডকেট with the call only ('ফিডার-2 ট্রিপ · এলাকা অন্ধকার · নিরাপদে আলো ফেরান') and a plain section sketch without states. Wristwatch shows game time. No countdown, no captions; only worker-readable plates and labels.",
+  "flow": [
+   "GuideIntro over the live scene: 'ঝড়ে ফিডার বন্ধ! ফল্ট খুঁজুন, নিরাপদে সারান, ঠিক ক্রমে আলো ফেরান।'",
+   "One verb: drag a token onto any device = one step (van drives, crew acts, game minutes pass). All tokens live on all devices from the first second. চোখ = lens; রেডিও = hold PTT then a 3-chip request pick (all of the device's requests always offered); হাতল = the device's own control; আর্থ সেট; ডিসচার্জ রড; ক্রু = climb/work + 'কী কাজ?' deck.",
+   "Beat A find: 'ফল্টটা কোথায়? যন্ত্রগুলো কী বলছে, দেখুন।' Read states with চোখ, drag the ডকেট chalk onto one section. Wrong = slip; right → ◆ → reason 'কী দেখে বুঝলেন?' → এগিয়ে যান.",
+   "Beat B make it dead: 'ক্রু কাজ ধরবে — লাইনটা সত্যি মরা তো?' Rules applied to the dealt path, order free where the lesson gives none: relay indication logged after a breaker trip; recloser line → Non-Reclose + PTW (reply complete or incomplete); isolators open at both ends only after OFF is confirmed; চোখ on all three gaps (stuck phase ~1 in 4); AB-T checked (sometimes left closed); earths both sides; capacitor bank switched off, ≥ 5 game minutes on the watch, rod on every terminal; LT way: main switch OFF, PPE + puller in the ক্রু deck.",
+   "Coworker two-beat moment once per play on the path's decisive control (that control calls holdForCoworker first).",
+   "Beat C fix the cause: ক্রু on the faulty device → 'কী কাজ?' deck dealt to the cause (e.g. burnt oil → 'অফ-লোড রেখে DGA/BDV পরীক্ষার রিপোর্ট' vs 'নতুন HG তার বেঁধে আবার চার্জ' (deadly) / 'ট্যাঙ্ক খুলে কয়েলটা দেখি' (deadly); UG struck → 'সার্টিফায়েড জয়েন্টার ডাকুন' vs 'আমরাই জয়েন্ট করে দিই' (slip); AB nick → 'গ্লাভস পরে জলরোধী টেপে সিল' vs 'ইনসুলেটেড তো, খালি হাতেই টেপ' (deadly) / 'কাটা থাক, ফিউজ বদলাই' (slip); coordination fault → remove the jugaad first, then the right fuse wire). ◆ → reason.",
+   "Beat D restore: 'আলো ফেরানোর পালা — কোনটা আগে?' Crew down, earths off; isolators closed first with চোখ on all blades seated; then breaker ON or R-12 back to normal by radio; fuses back only after the cause is fixed, right rating. Windows light section by section.",
+   "Twist (~half the plays): one house stays dark — LCD lit ('মিটার অন, আলো নেই') or blank; ক্রু → deck 'নিউট্রাল কাটা — নিউট্রাল দেখি' / 'আগে ইনকামিংয়ে ভোল্টেজ দেখি' vs 'মিটারই খারাপ, বদলে দিই' (slip).",
+   "Pass panel (rank + badge from the module plan, mark 100 − 15 × slips, game and real time, ◆, 'আজ যা ধরলেন', stars); 3 slips → StruckOutCard; deadly → FreezeFrame, consequence, DoDeathGuard, fall C."
+  ],
+  "dealtVariety": "Fault family (one of six; never the same twice in a row, best effort): F-A permanent on branch A (S-3 open, rest lit, counter moved, handle up); F-B permanent on the main section (R-12 locked out, handle down; sometimes still mid-cycle on arrival); F-C UG crossing struck (breaker green, 1–3 flags + 'শর্ট সার্কিট'); F-D DTR internal (one HG gone, dark burnt drain oil, only the DTR's lanes dark); F-E coordination fault (HG gone, oil not dark, house short repaired, jugaad hidden in LT box or kit-kat); F-F one LT way dark (HRC dot gone, AB-cable nick with water). Device states: AB-T open/closed; bank in section or not, swollen or sound; handle earth leads intact/cut/loose; stuck phase; DTR earth strip whole/cut (F-D/F-E); flags and type. Operator reply complete or incomplete (≥ 1 incomplete where a permit is needed). Twist yes/no and kind. Coworker variant, timing, side. Mirror, branch side, 3–4 LT ways, plate numbers, sky. Deck phrasings from libraries.",
+  "deadly": [
+   "Crew up/working on an 11 kV section on the breaker's green/trip alone, without isolators open at both ends and earth sets on (incl. AB-T left closed, or the 6.2 myth)",
+   "Crew up on a recloser line without Non-Reclose on the right recloser confirmed + PTW (mid-cycle, incomplete/wrong reply, or the 6.8 myth)",
+   "Opening an AB before the breaker/recloser is confirmed OFF, or closing an AB after the breaker is back ON",
+   "Hand or tool other than the earthed rod on the capacitor bank before every terminal is rod-discharged; rod hook before its earth clamp",
+   "Non-fuse conductor in a fuse's place (thick copper, strip, GI, ACSR strand) — own pick or coworker",
+   "Drawing an HRC/kit-kat with the way's main switch ON, or touching a fuse without gloves and goggles",
+   "Re-charging the burnt-oil DTR or opening its tank in the field (owner to confirm, as do_6_1_b)",
+   "Bare hands on the AB cable",
+   "Charging the DTR with its earth strip still cut (F-D/F-E)",
+   "Hanging an earth set on a section still live (Module 1 earthing rule, not a Module 6 lesson — owner to confirm carry-over)"
+  ],
+  "slips": [
+   "Wrong section marked as the fault",
+   "Needless outage (isolating healthy sections; whole feeder off for a branch fault S-3 already isolated)",
+   "Asking the operator again after a complete confirmation",
+   "Not asking for / logging the relay indication, or logging it wrong",
+   "Operating an AB with its handle earth lead cut or loose",
+   "Earths on or crew up without looking at all three gaps when a phase stuck",
+   "Closing in a part-seated phase",
+   "Rod on the bank before 5 game minutes",
+   "Leaving a swollen capacitor unit in service or switching it back in (owner may raise)",
+   "Re-fusing before the cause is found and fixed (incl. jugaad still in the LT box)",
+   "Wrong SWG / rating of a standard tinned fuse wire",
+   "Crew doing the HT cable joint instead of calling the certified jointer",
+   "Leaving the AB-cable nick open and only replacing the fuse",
+   "Twist: calling the meter faulty (neutral cut / blank display)",
+   "Listening to the coworker where his line leads to a non-fatal act"
+  ],
+  "coworkerPushBn": "Once per play, from the variants that fit the fault family, just before that path's decisive control (held; never in a praise window). (a) F-C at the ক্রু drop: 'সার্কিট ব্রেকার ট্রিপ করেছে মানে লাইনটি সম্পূর্ণ বন্ধ। এতে কোনো ভোল্টেজ নেই। উঠে পড়ো!' (b) F-A/F-B at the ক্রু drop: 'লাইনটা তো ট্রিপ করে আছে, রিক্লোজার নিশ্চয়ই লক-আউট হয়ে গেছে। কাজ করতে কোনো ভয় নেই।' (c) bank in section, at the ক্রু drop on the bank pole: 'লাইন তো বন্ধ এবং আর্থ করা আছে, তাই ক্যাপাসিটর ব্যাংকে কাজ করতে কোনো ভয় নেই।' (d) F-C at the হাতল drop on AB-1 before OFF is confirmed: 'সামান্য লোড থাকলে আইসোলেটর খোলা যায়, কিছু হয় না।' (e) restore, at the radio for breaker ON with an AB still open: 'আইসোলেটর আর ব্রেকার একই জিনিস — আগে ব্রেকার দিতে বলো।' (f) F-E/F-F at the fuse fit: 'ফিউজের জায়গায় একটা মোটা তার বা পাত লাগিয়ে দিলে আর বারবার ফিউজ যাওয়ার সমস্যা থাকবে না।' (g) NEW (judge: F-D had no own variant) F-D at the HG fit: 'তেল একটু কালো তো কী! ফিউজ লাগিয়ে আবার চার্জ করে দেখি, চলবে।' (same line as do_6_1_b). Listening is deadly in every variant. Refuse cards ≥ 2 per variant (e.g. 'না — দুই প্রান্ত খোলা আর আর্থ ছাড়া কেউ উঠবে না।' / 'না — Non-Reclose আর PTW নিশ্চিত না হলে ওঠা নয়।' / 'না — পোড়া তেল মানে কাগজ পুড়েছে — চার্জ নয়।'); listen cards ≥ 5, similar length. Clips reuse level clips; (a) and (f) need new ones.",
+  "reasonQuestionsBn": [
+   "ফল্টটা এই সেকশনেই — কী দেখে বুঝলেন?",
+   "রিলের খবর কেন লিখে রাখলেন?",
+   "সবুজ বাতি দেখেও কেন ক্রু তুললেন না?",
+   "কেন দুই প্রান্তের আইসোলেটরই খুললেন?",
+   "টাই সুইচটা কেন দেখলেন?",
+   "অপারেটর পুরো নিশ্চিত না করায় কেন থামলেন?",
+   "তিনটে ফেজের গ্যাপ কেন নিজের চোখে দেখলেন?",
+   "লাইনে আর্থ থাকা সত্ত্বেও ব্যাংকে কেন আলাদা রড?",
+   "ফিউজ বাঁধার আগে কেন কারণ খুঁজলেন?",
+   "কালো, পোড়া গন্ধের তেল দেখে কেন আবার চার্জ করলেন না?",
+   "লাইন ফেরাতে কেন আগে আইসোলেটর, পরে ব্রেকার?",
+   "মিটার অন অথচ আলো নেই — কেন নিউট্রাল দেখলেন?",
+   "ও যা বলছে, করবেন?"
+  ],
+  "gestureHints": "~8 s idle or 3 empty taps in 4 s, twice, back after ~25 s, max 3 per state. Main state: alternating swipe across the panorama, then a sweep over all six tokens (never a tap on one token or device). Token held idle: ≤ 64 dp drag straight up out of the belt. Lens: sweep over its parts and close. Radio dropped: hold ring on PTT; chips get a sweep. Chalk: sweep over every sketch section. Reply decision: main-state sweep. Decks built-in. Off during intro, van/crew animations, radio caption beat, light-up beats, praise window, coworker beat 1, cards, freezes, results. hintKey = stage*100 + judgedMomentIndex.",
+  "lessonPoints": [
+   "6.2: সবুজ মানেই নিরাপদ নয় … দুই প্রান্তে আইসোলেটর খোলা এবং … আর্থিং; myth 1 reality (back-feeding, induced voltage); pro tip 3 (relay indication)",
+   "6.4: off-load first; restore in reverse; all three phases open; part-seated contact = hotspot",
+   "6.8: sectionalizer isolates the faulty branch before lock-out; last reclose powers healthy branches; Non-Reclose request and confirmation; myth reality (mid-cycle)",
+   "6.7: 5-10 minute wait; separate direct discharge even with the line earthed; swollen unit isolated at once",
+   "6.3: discrimination order; never re-charge without the cause; on-load pull = arc flash",
+   "6.9: per-way switching and fusing; myth 2",
+   "6.1: burnt drain oil → off-load, DGA/BDV; do not re-charge",
+   "6.5: certified jointing",
+   "6.6: nick lets water in; treat as live, PTW + PPE",
+   "6.10: meter on, no power = neutral cut; check incoming voltage first",
+   "6.11 myth 1 reality: earthing failure → breaker will not trip"
+  ],
+  "giveawayRisks": "(1) No stations or unlock order; fixed belt; the fault decides which 4–6 devices matter. (2) States only as real equipment shows them; flags and dots need the lens. (3) ডকেট names only the call; sketch has no states; guide stage lines never name a device or step. (4) Needless outage, needless call-back, wrong section and re-fusing without cause all cost — over-caution punished; honest signs are honest about half the time. (5) Operator replies plain, equal length. (6) Capacitor wait uses the watch only (the rule, not do_6_7_a's bezel mechanic). (7) Stuck/part-seated blades only in the lens. (8) Decks from libraries, equal length, shuffled. (9) Coworker variant from the deal, always before a still-open decision, held. (10) Hints sweep all, nudges straight up. NOT A MEDLEY: no stations and no Module 6 level mechanic replayed (no crank, tally, thermal sweep, photo framing, route trace, wrap, core landing, pit build, meter clock); one verb on one feeder tests feeder-scale protection coordination — read which device operated, isolate/confirm/earth so 'off' means dead, restore in order after the cause is fixed — and only the 4–6 devices the dealt fault involves are touched."
+ },
+ "deadlySlipTable": [
+  {
+   "id": "R1",
+   "act": "Crew up / work on an 11 kV line on the breaker's trip or green lamp alone (no isolators open at both ends, no earths), incl. backfeed tie left closed or listening to the 6.2 myth",
+   "cls": "deadly",
+   "source": "6.2 pro tip 1 + myth reality; matches M1.6, M3.10 — do_6_2_a, gate",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "X1",
+   "rulingNote": "Right reply/sequence also proves the line dead with a proven tester (live-dead-live) before the earths (lesson 6.2 pro tip 1, live text)."
+  },
+  {
+   "id": "R2",
+   "act": "Crew told to start with one end isolated, or LOTO on the breaker but no earth",
+   "cls": "deadly",
+   "source": "6.2 pro tip 1 — do_6_2_a, gate",
+   "needsOwner": false
+  },
+  {
+   "id": "R3",
+   "act": "Climb/work on a recloser line without Non-Reclose confirmed on the right recloser + PTW (mid-cycle, incomplete/wrong reply, 6.8 myth)",
+   "cls": "deadly",
+   "source": "6.8 safety protocol + myth reality; matches M1 step 17 — do_6_8_a, do_6_8_b, gate",
+   "needsOwner": false
+  },
+  {
+   "id": "R4",
+   "act": "Opening an AB/isolator before the breaker is confirmed OFF (incl. 'সামান্য লোড' myth)",
+   "cls": "deadly",
+   "source": "6.4 point 2; matches 2.5/do/1, 3.10 — do_6_4_a, gate",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "X3",
+   "rulingNote": "Also covers opening the DTR's own AB switch with the LT load still on; the LT is made dead at the LT switch/MCCB first."
+  },
+  {
+   "id": "R5",
+   "act": "Closing an AB after the breaker is already ON (closing on load), incl. 'আগে ব্রেকার দিতে বলো'",
+   "cls": "deadly",
+   "source": "6.4 restore order (consequence inferred) — do_6_4_b, gate",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M6-4",
+   "rulingNote": "Confirmed by the owner (decision 4); needsOwner cleared."
+  },
+  {
+   "id": "R8",
+   "act": "Touching a capacitor terminal/can before every terminal is rod-discharged (line earthed, small capacitor or full wait passed)",
+   "cls": "deadly",
+   "source": "6.7 'মারাত্মক বা প্রাণঘাতী শক'; matches M1 step 15 — do_6_7_a, do_6_7_b, gate",
+   "needsOwner": false
+  },
+  {
+   "id": "R9",
+   "act": "Discharge-rod hook on a terminal before its earth clamp is on earth",
+   "cls": "deadly",
+   "source": "M1 step 15 (lesson 1.5) carried into 6.7 — do_6_7_a, gate",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M6-4",
+   "rulingNote": "Confirmed (decision 4)."
+  },
+  {
+   "id": "R10",
+   "act": "Rod on the capacitor before the 5-minute minimum (rod still used)",
+   "cls": "slip",
+   "source": "6.7 'কমপক্ষে ৫-১০ মিনিট' — do_6_7_a, gate",
+   "needsOwner": false,
+   "classAfterRulings": "slip",
+   "ruling": "M6-6",
+   "rulingNote": "Minimum is 5 game minutes (decision 6); optional bonus for waiting 10 in do_6_7_a."
+  },
+  {
+   "id": "R11",
+   "act": "Swollen/leaking capacitor unit left in service or switched in",
+   "cls": "slip",
+   "source": "6.7 'বিস্ফোরিত হতে পারে' (no fatal word) — do_6_7_b, gate",
+   "needsOwner": false,
+   "classAfterRulings": "slip",
+   "ruling": "M6-5",
+   "rulingNote": "Confirmed; same class in do_6_7_b and the gate; card says remove from service."
+  },
+  {
+   "id": "R12",
+   "act": "Non-fuse conductor in a fuse's place (ACSR strand, GI wire, thick copper conductor, copper strip, 'মোটা তার বা পাত'), own pick or coworker",
+   "cls": "deadly",
+   "source": "6.3 'চরম অপরাধ', 6.9 myth 2; matches M3 3.4a/3.7a, M4 4.4b — do_6_3_a, do_6_9_a, gate",
+   "needsOwner": false
+  },
+  {
+   "id": "R13",
+   "act": "Standard tinned-copper fuse wire of the wrong SWG/rating (incl. thickest reel on 'মোটাটাই বাঁধো')",
+   "cls": "slip",
+   "source": "6.3 table; matches M3 over-rated link — do_6_3_a, gate",
+   "needsOwner": false,
+   "classAfterRulings": "slip",
+   "ruling": "M6-5/X6",
+   "rulingNote": "Confirmed; ratings follow the live IS 9926 table (16 A 0.50 mm ~25 SWG, 32 A 0.85 mm, 63 A 1.50 mm, 100 A 2.00 mm ~14 SWG; above 100 A an HRC fuse)."
+  },
+  {
+   "id": "R14",
+   "act": "Drawing an HRC/kit-kat with the way's main switch ON",
+   "cls": "deadly",
+   "source": "6.3 point 6 arc flash — do_6_3_b, gate",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "X4",
+   "rulingNote": "Supply on = the DTR LT switch/MCCB not OFF, locked, tagged and proved dead (ruling A5)."
+  },
+  {
+   "id": "R15",
+   "act": "Any hands on a fuse / inside a live pillar without gloves + goggles / full PPE",
+   "cls": "deadly",
+   "source": "6.3 PPE, 6.9 safety tip; matches M3 3.7a — do_6_3_b, do_6_9_b, gate",
+   "needsOwner": false,
+   "classAfterRulings": "deadly (supply on) / slip (no PPE after a proven isolation)",
+   "ruling": "X4",
+   "rulingNote": "Ruling A5: a fuse touched with the supply on is deadly whatever the PPE; after a proven isolation, no PPE at the fuse = slip."
+  },
+  {
+   "id": "R20",
+   "act": "Opening a DTR tank in the field",
+   "cls": "deadly",
+   "source": "6.1 myth 3 'ভুল ও মারাত্মক বিপজ্জনক' — do_6_1_b, gate",
+   "needsOwner": false,
+   "classAfterRulings": "slip",
+   "ruling": "M6-4",
+   "rulingNote": "LOWERED: field tank opening on a dead, earthed DTR = slip in do_6_1_b and the gate (decision 4, IS 10028-3)."
+  },
+  {
+   "id": "R21",
+   "act": "Re-charging a tripped DTR with dark, burnt-smelling drain oil",
+   "cls": "deadly",
+   "source": "6.1 sections 6 + 8 'চার্জ করার ঝুঁকি নেবেন না' — do_6_1_b, gate",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M6-4",
+   "rulingNote": "Confirmed on lesson 6.1 authority (lesson-sourced, not reference-sourced)."
+  },
+  {
+   "id": "R23",
+   "act": "Bare hands on AB cable (forgetting gloves, or on the coworker's word)",
+   "cls": "deadly",
+   "source": "6.6 myth 1 'মারাত্মক ভুল … মারাত্মক শক' — do_6_6_a, do_6_6_b, gate",
+   "needsOwner": false
+  },
+  {
+   "id": "R26",
+   "act": "Tight bend / armour earthed one end / termination fitted by an uncertified person",
+   "cls": "slip",
+   "source": "6.5 pro tips (cable new, not energised) — do_6_5_a, gate (HT joint)",
+   "needsOwner": false,
+   "classAfterRulings": "slip (one end) / deadly (no end at sign-off)",
+   "ruling": "M6-1/M6-5",
+   "rulingNote": "Armour earthed at one end = slip (decision 5, IS 1255 cl 13.1); armour earthed at neither end at sign-off = broken earth path = deadly (decision 1)."
+  },
+  {
+   "id": "R27",
+   "act": "Signing off / charging equipment with its earth path broken (unbolted joint, cut strip), incl. myth 1 'একটু কাটা'",
+   "cls": "deadly",
+   "source": "6.11 myth 1 reality; matches 4.6b; CONFLICTS with 3.5b (slip) — do_6_11_a, gate",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M6-1",
+   "rulingNote": "Confirmed (decision 1, one rule M3/M4/M6); an open (OL) earth-tester reading signed is the same deadly."
+  },
+  {
+   "id": "R29",
+   "act": "Hanging an earth set on a section still live",
+   "cls": "deadly",
+   "source": "Module 1 earthing rule; M3 3.6b/3.9b — gate only",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M6-4",
+   "rulingNote": "Confirmed (decision 4; M1-4 ruling B8)."
+  },
+  {
+   "id": "R32",
+   "act": "Needless stop / report / isolation / call-back (sound pole analogue): healthy breaker reported, stuck phase reported when clear, flag on a clear dig, sound bank tagged, even joint tagged, clean meter reported, needless chalk, needless outage, ask again after full confirmation",
+   "cls": "slip",
+   "source": "M1 sound-pole ruling — 6.2b, 6.3b, 6.4a, 6.5b, 6.7b, 6.8b, 6.9a, 6.10b, gate",
+   "needsOwner": false
+  },
+  {
+   "id": "R33",
+   "act": "Re-fusing / refitting a fuse before the cause is found",
+   "cls": "slip",
+   "source": "6.3 'কখনই বারবার ফিউজ চার্জ করবেন না', 6.7 — do_6_3_b, do_6_7_b, gate",
+   "needsOwner": false
+  },
+  {
+   "id": "R35",
+   "act": "Stuck phase logged open / earths on without seeing all three gaps; part-seated phase closed in; handle earth unchecked or faulty; stalled stroke",
+   "cls": "slip",
+   "source": "6.4 — do_6_4_a, do_6_4_b, gate",
+   "needsOwner": false,
+   "classAfterRulings": "slip",
+   "ruling": "M6-3",
+   "rulingNote": "Only a slow/hesitant/stalled stroke is a slip; speed itself never is (ruling A3)."
+  },
+  {
+   "id": "R38",
+   "act": "Wrong diagnosis / reading / log (relay flags, meter LED, neutral cut, DTR sign, recloser state, coil family)",
+   "cls": "slip",
+   "source": "lesson diagnostics — 6.1a/b, 6.2a, 6.8a, 6.10a, gate",
+   "needsOwner": false
+  },
+  {
+   "id": "R39",
+   "act": "Listening to the coworker: deadly when his line acts out a deadly act above, slip otherwise",
+   "cls": "deadly",
+   "source": "M1 ruling — all levels",
+   "needsOwner": false,
+   "classAfterRulings": "B1",
+   "ruling": "X2",
+   "rulingNote": "Listening takes the class of the act pushed in that level right then (ruling B1)."
+  }
+ ],
+ "addedRows": [
+  {
+   "id": "N1",
+   "act": "HG fuse wire touched or renewed with the DTR's AB switch still closed (live fuse)",
+   "cls": "deadly",
+   "ruling": "M6-2/X4",
+   "source": "added by docs/module_specs/module6_rulings.md"
+  },
+  {
+   "id": "N2",
+   "act": "DTR's AB switch opened with the LT load still on (isolator on load)",
+   "cls": "deadly",
+   "ruling": "X3",
+   "source": "added by docs/module_specs/module6_rulings.md"
+  },
+  {
+   "id": "N3",
+   "act": "Isolated HT section or HG: hands/tool before the tester shows 0 V = deadly; after 0 V but no earth = deadly; earth set before the 0 V = slip; earth on a live section = deadly (R29)",
+   "cls": "deadly / slip",
+   "ruling": "X1",
+   "source": "added by docs/module_specs/module6_rulings.md"
+  },
+  {
+   "id": "N4",
+   "act": "LT made dead incompletely: LT switch/MCCB OFF but no lock and tag, not proved dead, or the tester not re-proved after the 0 V (m3_pillar_fuse precedent)",
+   "cls": "slip",
+   "ruling": "X4/X5",
+   "source": "added by docs/module_specs/module6_rulings.md"
+  },
+  {
+   "id": "N5",
+   "act": "LT switched back on with the pillar door open (ruling A5)",
+   "cls": "slip",
+   "ruling": "X4",
+   "source": "added by docs/module_specs/module6_rulings.md"
+  },
+  {
+   "id": "N7",
+   "act": "Signing a DTR earth pit whose earth tester reads open (OL) or whose lead/strip is cut or unbolted",
+   "cls": "deadly",
+   "ruling": "M6-1/M6-13",
+   "source": "added by docs/module_specs/module6_rulings.md"
+  },
+  {
+   "id": "N8",
+   "act": "Crew up / hands-on work without a PTW from the control room (M5 R1)",
+   "cls": "deadly",
+   "ruling": "X1",
+   "source": "added by docs/module_specs/module6_rulings.md"
+  },
+  {
+   "id": "N9",
+   "act": "Tester not proved on a live source before the reading (live-dead-live; ruling A9)",
+   "cls": "slip",
+   "ruling": "X1/X4/X5",
+   "source": "added by docs/module_specs/module6_rulings.md"
+  }
+ ],
+ "changes": [
+  "Gate gate_m6: added coworker variant (g) for F-D (the 6.1 recharge push at the HG fit), because the DTR-internal family had no variant of its own. Noted that the gate's capacitor wait reuses the rule but not do_6_7_a's bezel mechanic. Folded 'whyNotMedley' into giveawayRisks."
+ ],
+ "changesGeneral": [
+  "Every level was checked against M1–M4 loops; no Module 6 core verb repeats one. Accepted overlaps of content only, where the verbs differ: 6.1a vs 3.6a (same DTR checklist), 6.3b vs 3.7a and 4.4b (fuse handling sub-beats), 6.10a vs 3.8b (fast-meter call), 6.11a vs 4.6a (final megger read), 6.7a vs M1 step 15 (rod discharge sub-beat). Shared sub-beats inside Module 6 (phone or radio to the substation in 6.2a, 6.4a, 6.4b and 6.8b; the AB stroke in 6.4a and 6.4b; the push-button in 6.10b only) are not the core loop of more than one level.",
+  "Unique engineTypes: m6_dtr_photo_report, m6_dtr_coil_forensic, m6_trip_log, m6_breaker_rack, m6_fuse_gauge, m6_fuse_chain, m6_ab_gap_log, m6_ab_unjam, m6_ug_cable_lay, m6_ug_dig_guard, m6_abc_clamp_seat, m6_abc_nick_seal, m6_capbank_wait, m6_capbank_meter, m6_reclose_count, m6_upstream_trace, m6_pillar_thermal, m6_pillar_newway, m6_meter_pulse, m6_meter_swap_proof, m6_earth_build, m6_gate_storm_feeder. All pack ids were kept.",
+  "Lesson check: these facts were spot-verified in tool/all_training_chapters_bn.json: the SWG table and diameters, the HG ratings (25/63/100 kVA → 2-3/5/8-10 A), the GI melting point 1535°, tinned copper, DO not used on WBSEDCL 11 kV DTRs, the Buchholz relay absent on small pole DTRs, pink/white spent gel, Dyn11, 2 minutes, the UG cable layers and the 90% figure, stress control, A2XFY, the AB-cable bare/insulated messenger, ridges, rollers, IPC shear head, heat-shrink, bentonite, the 60x60 copper plate, earth mat and gravel, the capacitor plate text, star/delta, the 50 V figure, APFC, 3200 imp/kWh and the smart meter. No new invented fact was found beyond those the designers already listed under unsupported."
+ ],
+ "unsupported": [],
+ "ownerDecisions": [
+  {
+   "n": 1,
+   "specQuestion": "EARTH CONFLICT ACROSS MODULES: 6.11a and the gate make signing off with a broken earth path deadly (as 4.6b does), but 3.5b scored listening to 'আর্থ তারটা একটু কাটা তো কী' as a slip. Pick one rule for Modules 3, 4 and 6.",
+   "ownerAnswer": "Adopt the single rule (broken earth path = deadly, weak but connected = slip) and re-score 3.5b.",
+   "basis": "National law over WBSEDCL. CEA Safety Regulations 2023 Reg 43(ix)(c): earthing must 'retain electrical continuity' and be tested 'before ... apparatus are energised'. Reg 50(1)(i) requires earthing to limit touch and step voltage. Reg 77(1) says the arrester's job is to send lightning surges to earth because they 'may result into injuries'. DHBVN Safety Manual Don'ts 8: 'DO NOT disconnect earthing connection'. Precedent M1-4 ruling B1: listening is deadly only when the act pushed is deadly in that level, so 3.5b listening becomes deadly once the act is deadly.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 2,
+   "specQuestion": "DO-FUSE CONFLICT: lesson 6.3 says WBSEDCL 11 kV DTRs and AB switches 'সাধারণত ড্রপ আউট (DO) ফিউজ ব্যবহার করা হয় না', while M3 3.4 and M4 4.4 play DO fuses on DTRs. Module 6 uses HG only. Decide how the ladder reconciles this.",
+   "ownerAnswer": "Split into two. (2a) Module 6 levels show the WBSEDCL DTR with AB switch + HG fuses only (WBSEDCL HVDS BOQ; CEA 2023 Reg 37(3)(i) allows either). (2b) Built M3/M4 levels keep their DO fuses; add one short line on the 3.4 picture board: some companies use DO fuses, a normal WBSEDCL DTR has AB switch + HG fuses (owner to give the natural Bangla wording). Ask a WBSEDCL lineman whether older DTRs/branch lines still have DO fuses.",
+   "basis": "CEA Safety Regulations 2023 Reg 37(3)(i): 'a linked switch with fuse or gang operated air break switch with fuse or circuit breaker'. WBSEDCL HVDS BOQ, Malda 2020 (items 1.17, 1.18, 1.26: TPGO isolator + 'H.T Horn Gap Fuse Unit', no DO fuse). No WBSEDCL document found that says DO fuses are never used. A WBSEDCL field lineman can say whether older transformers or branch lines in his division still have DO fuses.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 3,
+   "specQuestion": "SPEED CONFLICT: 2.5/do/1 slips a rushed hot-stick AB turn, but 6.4 says 'দ্রুত এবং দৃঢ়ভাবে' for the AB's own ground handle. Proposal: only a stalled stroke is a slip in 6.4, and add a note in MODULE2_LADDER.",
+   "ownerAnswer": "Apply ruling A3 in 6.4 and in 2.5/do/1.",
+   "basis": "Owner ruling A3 (2026-11-15, OWNER_DECISIONS_M1-4): 'AB switch: one firm, continuous stroke after the preparation. A slow or stalled stroke = slip.' DHBVN Safety Manual Don'ts 9: 'DO NOT open or close switch or fuse slowly or hesitatingly.' WBSEDCL TPGO isolator spec cl 4.4(iii): a spring makes contact opening speed 'independent of the speed of manual operation'.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 4,
+   "specQuestion": "Confirm the deadly rows marked needsOwner: closing an AB on load; the rod-hook-before-clamp rule carried from M1; field tank opening and re-charging a burnt-oil DTR (6.1b and gate); landing a core with the SFU ON and water on a live joint (6.9); a bare-hand bypass pull (6.10b); an earth set on a live section (gate, M1 rule); the optional 6.1a climb push.",
+   "ownerAnswer": "Confirm the eight deadly rows. Lower field tank opening on a dead, earthed transformer to slip in do_6_1_b and the gate.",
+   "basis": "TANGEDCO Safety Manual p.65: isolators 'should not be operated (open or close) on charged line / transformer'. WBSEDCL buys these as 'off-load' isolators. OSHA 1910.269(n)(6)(i): 'attach the ground-end connection first'. CEA 2023 Reg 21(1) and DHBVN Don'ts: touch nothing unless 'DEAD AND EARTHED'. DHBVN: 'DO NOT throw water on live electrical equipment'. CEA Schedule I Part-II(6), and precedent M1-4 B8: earth on a live line is deadly everywhere. Precedent M5-1: re-charging a transformer after a blow without finding the cause is deadly; lesson 6.1 says 'চার্জ করার ঝুঁকি নেবেন না'. Tank opening: IS 10028-3 cl 5.4.2 (national standard) treats it as a moisture/fire procedure risk. Precedent M5-6: a lesson's 'মারাত্মক' about equipment harm with nobody exposed stays a slip. Precedent A4: never touch a running transformer tank.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 5,
+   "specQuestion": "Confirm the slip rows marked needsOwner, in particular: pliers on an HRC (judge changed it from deadly to slip); a swollen capacitor unit left in service (if raised to deadly, raise it in 6.7b and the gate together); armour earthed at one end only (6.5a, unlike 4.6b's strip); hands-on in TEST; the capacitor wait cut short; reclosing before the fault is found; a broken R-Y-B sequence; a wrong-SWG tinned fuse wire.",
+   "ownerAnswer": "Confirm all eight as slips with the limits above, and use the reason-card lines from the reference review (owner to give the natural Bangla).",
+   "basis": "Precedent A5: fuse touched or pulled with supply on = deadly, no PPE after proven isolation = slip. OSHA 1910.335(a)(2)(i)(A): insulated fuse tools when the terminals are energized. GE GEH-2743B: bulged capacitors risk 'explosive case rupture'. IS 1255 cl 13.1 (national): armour 'efficiently earthed at both ends'. IS 13925-1 cl 21: the discharge device is 'not a substitute for short-circuiting', so the rod is the real protection. DHBVN/TANGEDCO: do not renew a fuse until the cause is found. Precedent M5-1 (re-charge after a failed test charge = deadly). Precedent M5-6 (equipment harm only = slip). DHBVN Do's 7 'correct size and quality of fuse wire'. Precedent B2 (3.4a thick copper = deadly). The TEST-position and phase-order rows rest on engineering logic; no reference contradicts them.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 6,
+   "specQuestion": "Capacitor wait minimum: 5 game minutes (recommended) or 10. This applies to 6.7a and the gate.",
+   "ownerAnswer": "5 minutes, with an optional bonus for waiting 10.",
+   "basis": "OSHA 1910.269(w)(1)(i): 'waits at least 5 minutes ... before applying the short circuit'. TANGEDCO Safety Manual (Indian discom) p.62: 'wait for at least 5 minutes'. GE GEH-2743B: 'WAIT 5 MINUTES ... THEN SHORT-CIRCUIT AND GROUND'. The national IS 13925-1 10-minute figure is a design limit for the built-in resistor, not a work rule, and it says the rod is the real safeguard. CEA's ten-minute rule is for HVDC filter banks only. Lesson 6.7 '৫-১০ মিনিট' fits.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 7,
+   "specQuestion": "Accept the judge's verb changes: 6.1b becomes coil forensics; 6.5b uses pegged straight legs; 6.9b uses a dropper pluck; 6.9a has no shutter; 6.10a drops note-taking; 6.10b is auto-framed and renamed m6_meter_swap_proof. 6.8b remains the module's only finger-trace level.",
+   "ownerAnswer": "Approve all as one set, with gentle cable bends in 6.5b.",
+   "basis": "REFERENCE_REVIEW M6-7 (game rule, no safety change); precedent M5-9 (verb changes approved as a set); IS 1255 cl 5.3 bending radius.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 8,
+   "specQuestion": "Lesson overlap: 6.9 almost duplicates 3.7, and 6.1 repeats much of 3.6. Keep both as full lessons or shorten them? Both board myths about thick wire (6.3 board, 6.9 board) repeat M3 3.4's idea.",
+   "ownerAnswer": "Shorten 6.1 and 6.9 to one recap round plus the new material, and swap the 6.9 board's thick-wire myth for a new one.",
+   "basis": "REFERENCE_REVIEW M6-8 (game rule); design_flags_M5-10 (6.9 nearly duplicates 3.7).",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 9,
+   "specQuestion": "Should a lineman build an earth pit (6.11a), or should the level frame him as inspecting a contractor's pit? Also: is one Do level enough for 6.11, given 4.6?",
+   "ownerAnswer": "Inspect-and-test framing, with one Do level.",
+   "basis": "CEA Safety Regulations 2023 Reg 43(x): the supplier's earths must be 'tested for resistance on dry day during the dry season at least once in a year'. That is a lineman's check-and-test duty whoever dug the pit. TANGEDCO Safety Manual p.79-80: 'three earth pits in triangular formation at a distance of six meter'. Level 4.6 already teaches building. A WBSEDCL lineman can say who digs pits in his division, but the answer does not change this framing.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 10,
+   "specQuestion": "Gate items not in any single lesson: the combined feeder layout, 'needless outage = slip', the radio to the control room for breaker and recloser, AB-T as the backfeed source, 'both sides' earthing (Module 1), the game-time ratio, and the rank name and badge from the module plan.",
+   "ownerAnswer": "Option 1. Keep the safety items, use rank সিনিয়র and a 5–7 minute gate, and have the owner name the badge.",
+   "basis": "CEA 2023 Schedule I Part-II(3): permit from the 'Operation In-charge' and isolation 'from all sources of energy'. Reg 47(1)(iii): guard against 'inadvertent paralleling or backfeed'. DHBVN cl 8.16: 'completely isolated on both sides ... discharged and earthed'. CEA Schedule I Part-II(4): local earths 'at the zone of working'. Precedent M1 sound-pole ruling (needless outage = slip). Rank সিনিয়র: GAME_PATH_CHECKLIST Module 6. Gate format precedent: M5-12 (5–7 min).",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 11,
+   "specQuestion": "Kit additions requested: HintSpec.pinch and HintSpec.circle for 6.6b (or the listed fallbacks).",
+   "ownerAnswer": "Use the existing fallback hints unless later modules plan to use pinch or circle.",
+   "basis": "REFERENCE_REVIEW M6-11 (UI kit, no safety content).",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 12,
+   "specQuestion": "New rival clips needed via tool/rival_clip.py: 6.1a myths 1 and 2; 6.1b myth 3 + push and the recharge push (shared with gate variant g); 6.2 myth 1 + push (gate a); the 6.2b pushes; the 6.3a pushes; 6.4 myth word for word and the two 6.4b pushes; the 6.5a pushes; the 6.6a/b lines; 6.7b's pushes; 6.8b myth 2 + shortcut; 6.9a shortcut; 6.9b myth 1 and SFU variant; 6.9 myth 2 (gate f); 6.10a/b pushes; 6.11 myths A/B. Board rival clips are shared where the words match.",
+   "ownerAnswer": "Owner approves the wording first, then all lines are recorded in the voice system after decisions 1 and 4 are final.",
+   "basis": "Owner voice rule 2026-11-14 (VOICE_GUIDE.md: 'Every spoken line is a recorded clip in the owner's voice system'; coworker voice = bn-BD-PradeepNeural, recorded with tool/rival_clip.py). New-text rule: ask the owner for natural wording before using any new line. REFERENCE_REVIEW M6-12: record after the M6-1/M6-4 rulings.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 13,
+   "specQuestion": "Illustrative numbers that need sign-off: the 6.7b meter values, the 6.11a megger bands (the reason cards say '5 ওহমের মধ্যে'), the 6.1a quick bonus of 120 s, and the 6.5a ring scales.",
+   "ownerAnswer": "Option 1, then ask a lineman which tool name he uses and switch to 'আর্থ মেগার' if that is the field word.",
+   "basis": "TANGEDCO Safety Manual p.81 'Recommended Combined Values for Earth Resistance': 'Distribution Transformer 5 Ohm'. CEA 2023 sets no transformer figure (its 25 ohm in Reg 50(7) is only for guard wires at crossings). No WBSEDCL figure found. A WBSEDCL engineer can say whether WBSEDCL uses a different target and which word linemen use ('আর্থ টেস্টার' or 'আর্থ মেগার').",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 14,
+   "specQuestion": "YouTube explainer ids for 6.1–6.11 (null until given).",
+   "ownerAnswer": "Leave them empty for now; the owner adds Indian training videos later.",
+   "basis": "REFERENCE_REVIEW M6-14; precedent M5-14 (no YouTube ids yet); owner reference rule (Indian/international sources, never Bangladesh).",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  }
+ ],
+ "allVerbs": [
+  [
+   "6.1",
+   "do_6_1_a",
+   "frame requested parts with a phone viewfinder"
+  ],
+  [
+   "6.1",
+   "do_6_1_b",
+   "turn the opened coil, read damage to cause"
+  ],
+  [
+   "6.2",
+   "do_6_2_a",
+   "copy relay flags into the trip log"
+  ],
+  [
+   "6.2",
+   "do_6_2_b",
+   "crank the trolley to the right position"
+  ],
+  [
+   "6.3",
+   "do_6_3_a",
+   "measure wire in gauge slots, twist strands"
+  ],
+  [
+   "6.3",
+   "do_6_3_b",
+   "read guards up the chain, deduce the failed one"
+  ],
+  [
+   "6.4",
+   "do_6_4_a",
+   "swing the handle, sight and log each gap"
+  ],
+  [
+   "6.4",
+   "do_6_4_b",
+   "oil and rock a jammed switch free"
+  ],
+  [
+   "6.5",
+   "do_6_5_a",
+   "drag-shape cable bends against a radius ring"
+  ],
+  [
+   "6.5",
+   "do_6_5_b",
+   "peg the hidden route, then flag-stop the digger"
+  ],
+  [
+   "6.6",
+   "do_6_6_a",
+   "roll the twisted bundle, clamp the messenger"
+  ],
+  [
+   "6.6",
+   "do_6_6_b",
+   "zoom to find, wrap the nick shut"
+  ],
+  [
+   "6.7",
+   "do_6_7_a",
+   "set a watch bezel, wait out the stored charge"
+  ],
+  [
+   "6.7",
+   "do_6_7_b",
+   "log meters, switch once, compare the swing"
+  ],
+  [
+   "6.8",
+   "do_6_8_a",
+   "count reclose tries live with a tally clicker"
+  ],
+  [
+   "6.8",
+   "do_6_8_b",
+   "trace the wire upstream by dragging"
+  ],
+  [
+   "6.9",
+   "do_6_9_a",
+   "sweep a thermal camera, compare R-Y-B joints"
+  ],
+  [
+   "6.9",
+   "do_6_9_b",
+   "pluck droppers, land cores by phase"
+  ],
+  [
+   "6.10",
+   "do_6_10_a",
+   "switch off every load, read the pulse"
+  ],
+  [
+   "6.10",
+   "do_6_10_b",
+   "tug seals, then snap readings around switch-off"
+  ],
+  [
+   "6.11",
+   "do_6_11_a",
+   "build an earth pit in cut-away soil"
+  ],
+  [
+   "6.11",
+   "gate_m6",
+   "drag crew tools onto feeder equipment"
+  ]
+ ]
+}

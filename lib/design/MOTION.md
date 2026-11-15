@@ -67,6 +67,7 @@ Used by app screens today:
 - `SlmReveal` (with `index`): staggered entrance.
 - `SlmShimmer`: one slow highlight; the idle gap runs on a `Timer`.
 - `SlmSweepMask` / `SlmLiveShaderMask`: light sweep without swapping the widget type (see above).
+- `SlmAmbientLife()`: now and then 1–3 birds or a butterfly drift across and fly far away, behind the content on Home and the ladder map (never in a level). A `Timer` waits between visitors (first 8–18 s, then 10–30 s, sometimes 40–60 s; at most 2 at once); the ticker runs only while one flies. Nothing with "remove animations"; no new visitor under TickerMode off, a paused `SlmMotionScope` (the ladder's calm) or a backgrounded app. Tests: `test/ambient_life_test.dart`.
 - `SlmPulse`, `SlmSparkBurst(trigger:)`, `SlmCountUp`, `showSlmXpToast`.
 - `SlmPageRoute(builder:, style: SlmTransition.…)`: route with the shared motion.
 

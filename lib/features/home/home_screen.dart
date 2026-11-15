@@ -17,6 +17,7 @@ import '../game/ladder_builder.dart';
 import '../rank/league_board.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_providers.dart';
+import 'brand_emblem_page.dart';
 import 'home_toolbox.dart';
 
 /// Home → one tap → the ladder (owner's redesign, Nov 2026): ◆ and 💀 with
@@ -81,6 +82,8 @@ class _HomeScreenState extends State<HomeScreen> {
           fit: StackFit.expand,
           children: [
             const Positioned.fill(child: SlmBackground(constrain: false, child: SizedBox.expand())),
+            // Now and then birds or a butterfly drift by, behind the cards (owner, 2026-11-15).
+            const Positioned.fill(child: SlmAmbientLife()),
             SafeArea(
               child: Consumer(builder: (context, ref, _) => _body(context, ref)),
             ),
@@ -393,7 +396,7 @@ class _ContinueCard extends StatelessWidget {
     final n = next;
     final Widget body;
     if (n == null) {
-      body = _title(tr(bn, 'মৃত্যুহীন পথ', 'The deathless path'));
+      body = _title(tr(bn, 'মৃত্যুহীন কর্মপথ', 'The deathless path'));
     } else if (n.allDone) {
       body = Text(
         tr(bn, 'সব খোলা ধাপ শেষ! নতুন মডিউল শীঘ্রই আসছে', 'Every open step done! New modules coming soon'),
@@ -459,8 +462,15 @@ class _ContinueCard extends StatelessWidget {
           // The emblem, alive (owner, 2026-11-14): ring spin, rim light and
           // float. It stops on its own with "remove animations" and while
           // another screen covers Home (TickerMode), so a hidden Home draws
-          // no frames.
-          const AnimatedSafetyShield(size: 64, entrance: false),
+          // no frames. A tap opens it big with the name (owner, 2026-11-15).
+          SlmPressable(
+            key: const ValueKey('home-emblem'),
+            pressedScale: 0.92,
+            haptic: false,
+            semanticLabel: 'মৃত্যুহীন কর্মপথ',
+            onTap: () => BrandEmblem.open(context),
+            child: const AnimatedSafetyShield(size: 64, entrance: false, heroTag: BrandEmblem.heroTag),
+          ),
           const SizedBox(width: 12),
           Expanded(child: body),
         ],

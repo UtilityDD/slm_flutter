@@ -1,0 +1,35 @@
+# Module 6 asset folders for pubspec.yaml (flutter: assets:). Paste after the last
+# "- assets/game/art/m5_gate_case/" line, same 4-space indent. 33 lines.
+    - assets/game/art/m6_board61/
+    - assets/game/art/m6_board62/
+    - assets/game/art/m6_board63/
+    - assets/game/art/m6_board64/
+    - assets/game/art/m6_board65/
+    - assets/game/art/m6_board66/
+    - assets/game/art/m6_board67/
+    - assets/game/art/m6_board68/
+    - assets/game/art/m6_board69/
+    - assets/game/art/m6_board610/
+    - assets/game/art/m6_board611/
+    - assets/game/art/m6_dtr_photo_report/
+    - assets/game/art/m6_dtr_coil_forensic/
+    - assets/game/art/m6_trip_log/
+    - assets/game/art/m6_breaker_rack/
+    - assets/game/art/m6_fuse_gauge/
+    - assets/game/art/m6_fuse_chain/
+    - assets/game/art/m6_ab_gap_log/
+    - assets/game/art/m6_ab_unjam/
+    - assets/game/art/m6_ug_cable_lay/
+    - assets/game/art/m6_ug_dig_guard/
+    - assets/game/art/m6_abc_clamp_seat/
+    - assets/game/art/m6_abc_nick_seal/
+    - assets/game/art/m6_capbank_wait/
+    - assets/game/art/m6_capbank_meter/
+    - assets/game/art/m6_reclose_count/
+    - assets/game/art/m6_upstream_trace/
+    - assets/game/art/m6_pillar_thermal/
+    - assets/game/art/m6_pillar_newway/
+    - assets/game/art/m6_meter_pulse/
+    - assets/game/art/m6_meter_swap_proof/
+    - assets/game/art/m6_earth_pit_test/
+    - assets/game/art/m6_gate_storm_feeder/

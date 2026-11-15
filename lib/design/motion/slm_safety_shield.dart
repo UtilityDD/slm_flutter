@@ -34,7 +34,7 @@ class AnimatedSafetyShieldController extends ChangeNotifier {
   void replayEntrance() => notifyListeners();
 }
 
-/// The মৃত্যুহীন পথ emblem: the emerald-and-gold shield with a 3D orbital
+/// The মৃত্যুহীন কর্মপথ emblem: the emerald-and-gold shield with a 3D orbital
 /// ring, travelling rim light and a gentle float.
 ///
 /// Background is transparent; the widget is a [size] × [size] square.
@@ -269,7 +269,7 @@ class _AnimatedSafetyShieldState extends State<AnimatedSafetyShield> with Ticker
         child: emblem,
       );
     }
-    return Semantics(label: 'মৃত্যুহীন পথ শিল্ড', image: true, child: emblem);
+    return Semantics(label: 'মৃত্যুহীন কর্মপথ শিল্ড', image: true, child: emblem);
   }
 
   /// Two arcs of light orbiting the gold border, one per revolution.

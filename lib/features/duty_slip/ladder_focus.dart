@@ -7,8 +7,9 @@ import '../game/ladder_builder.dart';
 // (home_screen.dart), so Home's "L<n>" is always the rung the ladder opens on.
 
 /// Rungs the ladder draws as playable before the catalog has loaded (today's
-/// playable prefix: Modules 1–5). Only drawing: rung taps wait for the catalog.
-const ladderFallbackSpan = 150;
+/// playable prefix: Modules 1–5 and lessons 6.1–6.5). Only drawing: rung taps
+/// wait for the catalog.
+const ladderFallbackSpan = 165;
 
 /// The contiguous playable prefix of the ladder (stops at the first Coming Soon).
 int ladderPlayableSpan(BuiltLadder? built) {

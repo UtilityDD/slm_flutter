@@ -2642,7 +2642,7 @@
       "lessonId": "6.1",
       "moduleId": "m6",
       "packId": "learn_6_1",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 0
     },
     {
@@ -2651,7 +2651,7 @@
       "lessonId": "6.1",
       "moduleId": "m6",
       "packId": "do_6_1_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 1
     },
     {
@@ -2660,7 +2660,7 @@
       "lessonId": "6.1",
       "moduleId": "m6",
       "packId": "do_6_1_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 2
     },
     {
@@ -2669,7 +2669,7 @@
       "lessonId": "6.2",
       "moduleId": "m6",
       "packId": "learn_6_2",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 3
     },
     {
@@ -2678,7 +2678,7 @@
       "lessonId": "6.2",
       "moduleId": "m6",
       "packId": "do_6_2_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 4
     },
     {
@@ -2687,7 +2687,7 @@
       "lessonId": "6.2",
       "moduleId": "m6",
       "packId": "do_6_2_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 5
     },
     {
@@ -2696,7 +2696,7 @@
       "lessonId": "6.3",
       "moduleId": "m6",
       "packId": "learn_6_3",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 6
     },
     {
@@ -2705,7 +2705,7 @@
       "lessonId": "6.3",
       "moduleId": "m6",
       "packId": "do_6_3_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 7
     },
     {
@@ -2714,7 +2714,7 @@
       "lessonId": "6.3",
       "moduleId": "m6",
       "packId": "do_6_3_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 8
     },
     {
@@ -2723,7 +2723,7 @@
       "lessonId": "6.4",
       "moduleId": "m6",
       "packId": "learn_6_4",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 9
     },
     {
@@ -2732,7 +2732,7 @@
       "lessonId": "6.4",
       "moduleId": "m6",
       "packId": "do_6_4_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 10
     },
     {
@@ -2741,7 +2741,7 @@
       "lessonId": "6.4",
       "moduleId": "m6",
       "packId": "do_6_4_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 11
     },
     {
@@ -2750,7 +2750,7 @@
       "lessonId": "6.5",
       "moduleId": "m6",
       "packId": "learn_6_5",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 12
     },
     {
@@ -2759,7 +2759,7 @@
       "lessonId": "6.5",
       "moduleId": "m6",
       "packId": "do_6_5_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 13
     },
     {
@@ -2768,7 +2768,7 @@
       "lessonId": "6.5",
       "moduleId": "m6",
       "packId": "do_6_5_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 14
     },
     {
@@ -5663,136 +5663,174 @@
       "id": "learn_6_1",
       "engineType": "learn_cards",
       "lessonId": "6.1",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_1_a",
-      "engineType": "placeholder",
+      "engineType": "m6_dtr_photo_report",
       "lessonId": "6.1",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.1/m6_dtr_photo_report/climb-live"
+      ]
     },
     {
       "id": "do_6_1_b",
-      "engineType": "placeholder",
+      "engineType": "m6_dtr_coil_forensic",
       "lessonId": "6.1",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
+      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.1/m6_dtr_coil_forensic/recharge"
+      ]
     },
     {
       "id": "learn_6_2",
       "engineType": "learn_cards",
       "lessonId": "6.2",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_2_a",
-      "engineType": "placeholder",
+      "engineType": "m6_trip_log",
       "lessonId": "6.2",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.2/m6_trip_log/green-alone",
+        "6.2/m6_trip_log/half-isolation"
+      ]
     },
     {
       "id": "do_6_2_b",
-      "engineType": "placeholder",
+      "engineType": "m6_breaker_rack",
       "lessonId": "6.2",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
+      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.2/m6_breaker_rack/hands-service",
+        "6.2/m6_breaker_rack/push-isolator"
+      ]
     },
     {
       "id": "learn_6_3",
       "engineType": "learn_cards",
       "lessonId": "6.3",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_3_a",
-      "engineType": "placeholder",
+      "engineType": "m6_fuse_gauge",
       "lessonId": "6.3",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.3/m6_fuse_gauge/acsr-strand",
+        "6.3/m6_fuse_gauge/gi-wire"
+      ]
     },
     {
       "id": "do_6_3_b",
-      "engineType": "placeholder",
+      "engineType": "m6_fuse_chain",
       "lessonId": "6.3",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
+      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.3/m6_fuse_chain/live-draw",
+        "6.3/m6_fuse_chain/no-ppe",
+        "6.3/m6_fuse_chain/hg-live",
+        "6.3/m6_fuse_chain/hg-untested",
+        "6.3/m6_fuse_chain/hg-no-earth",
+        "6.3/m6_fuse_chain/earth-live",
+        "6.3/m6_fuse_chain/close-earthed",
+        "6.3/m6_fuse_chain/ab-on-load"
+      ]
     },
     {
       "id": "learn_6_4",
       "engineType": "learn_cards",
       "lessonId": "6.4",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_4_a",
-      "engineType": "placeholder",
+      "engineType": "m6_ab_gap_log",
       "lessonId": "6.4",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.4/m6_ab_gap_log/on-load",
+        "6.4/m6_ab_gap_log/push-load"
+      ]
     },
     {
       "id": "do_6_4_b",
-      "engineType": "placeholder",
+      "engineType": "m6_ab_unjam",
       "lessonId": "6.4",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
+      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.4/m6_ab_unjam/close-on-load",
+        "6.4/m6_ab_unjam/listen-breaker-first"
+      ]
     },
     {
       "id": "learn_6_5",
       "engineType": "learn_cards",
       "lessonId": "6.5",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_5_a",
-      "engineType": "placeholder",
+      "engineType": "m6_ug_cable_lay",
       "lessonId": "6.5",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.5/m6_ug_cable_lay/armour-none"
+      ]
     },
     {
       "id": "do_6_5_b",
-      "engineType": "placeholder",
+      "engineType": "m6_ug_dig_guard",
       "lessonId": "6.5",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
+      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.5/m6_ug_dig_guard/dig-strike",
+        "6.5/m6_ug_dig_guard/push-strike"
+      ]
     },
     {
       "id": "learn_6_6",

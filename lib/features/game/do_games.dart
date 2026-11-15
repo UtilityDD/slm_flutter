@@ -101,6 +101,16 @@ import 'm5_cable_fault_type.dart' show M5CableFaultTypePage, m5CableFaultTypePac
 import 'm5_cable_route_locate.dart' show M5CableRouteLocatePage, m5CrlPacks;
 import 'm5_pm_thermal_round.dart' show M5PmThermalRoundPage, m5PmThermalRoundPacks;
 import 'm5_gate_case.dart' show M5GateCasePage, m5GateCasePacks;
+import 'm6_dtr_photo_report.dart' show M6DtrPhotoReportPage, m6PhotoPacks;
+import 'm6_dtr_coil_forensic.dart' show M6DtrCoilForensicPage, m6CoilPacks;
+import 'm6_trip_log.dart' show M6TripLogPage, m6TripLogPacks;
+import 'm6_breaker_rack.dart' show M6BreakerRackPage, m6BreakerRackPacks;
+import 'm6_fuse_gauge.dart' show M6FuseGaugePage, m6FuseGaugePacks;
+import 'm6_fuse_chain.dart' show M6FuseChainPage, m6FuseChainPacks;
+import 'm6_ab_gap_log.dart' show M6AbGapLogPage, m6AbGapLogPacks;
+import 'm6_ab_unjam.dart' show M6AbUnjamPage, m6AbUnjamPacks;
+import 'm6_ug_cable_lay.dart' show M6UgCablePage, m6UgCablePacks;
+import 'm6_ug_dig_guard.dart' show M6UgDigGuardPage, m6UgDigGuardPacks;
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -507,6 +517,46 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m5GateCasePacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M5GateCasePage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_dtr_photo_report':
+      final content = m6PhotoPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6DtrPhotoReportPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_dtr_coil_forensic':
+      final content = m6CoilPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6DtrCoilForensicPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_trip_log':
+      final content = m6TripLogPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6TripLogPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_breaker_rack':
+      final content = m6BreakerRackPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6BreakerRackPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_fuse_gauge':
+      final content = m6FuseGaugePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6FuseGaugePage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_fuse_chain':
+      final content = m6FuseChainPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6FuseChainPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_ab_gap_log':
+      final content = m6AbGapLogPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6AbGapLogPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_ab_unjam':
+      final content = m6AbUnjamPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6AbUnjamPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_ug_cable_lay':
+      final content = m6UgCablePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6UgCablePage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_ug_dig_guard':
+      final content = m6UgDigGuardPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6UgDigGuardPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

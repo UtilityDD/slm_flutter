@@ -1,0 +1,438 @@
+{
+ "module": "6",
+ "note": "Split from docs/module_specs/module6_spec.json. docs/module_specs/module6_rulings.md WINS over anything in this file (owner answers of 2026-11-15 + cross-module rulings). Lesson text source: tool/all_training_chapters_bn.json only (live text wins over a spec quote).",
+ "id": "learn_6_11",
+ "rungId": "6.11/learn",
+ "kind": "board",
+ "lessonId": "6.11",
+ "titleBn": "আর্থিং সিস্টেম: অদৃশ্য অভিভাবক",
+ "wave": "B",
+ "engineType": "learn_cards",
+ "file": "lib/features/game/learn_board_pack611.dart",
+ "packConst": "learnBoardPack611",
+ "art": "assets/game/art/m6_board611/",
+ "rulings": [
+  "M6-1",
+  "M6-7",
+  "M6-12",
+  "M6-13",
+  "M6-14",
+  "X7"
+ ],
+ "board": {
+  "artFolder": "assets/game/art/m6_board611/",
+  "mythBn": "যেকোনো একটি লোহার রড মাটিতে পুঁতে দিলেই ভালো আর্থিং হয়ে যায়।",
+  "rounds": [
+   {
+    "promptBn": "ফল্ট হলে সুরক্ষা ঠিক কাজ করবে — কোন ব্যবস্থা ঠিক?",
+    "safe": [
+     "Pillar body bonded by strip (equipment earthing)",
+     "DTR neutral earthed (system earthing)",
+     "Double earthing from two separate pits"
+    ],
+    "traps": [
+     {
+      "what": "New breaker, body unearthed",
+      "rejectBn": "আর্থিং ছাড়া কোনো সুরক্ষা ডিভাইস (ফিউজ, ব্রেকার, LA) সঠিকভাবে কাজ করতে পারে না — এটিই সুরক্ষার ভিত্তি।"
+     },
+     {
+      "what": "Pole earth wire cut, line running",
+      "rejectBn": "লাইন স্বাভাবিক চলবে, কিন্তু ফল্টের সময় আর্থিং কাজ না করলে সার্কিট ব্রেকার ট্রিপ করবে না।"
+     },
+     {
+      "what": "LA with no earth below",
+      "rejectBn": "আর্থিং ছাড়া LA-ও কাজ করতে পারে না — আর্থিং-ই পুরো সুরক্ষা সিস্টেমের ভিত্তি।"
+     }
+    ]
+   },
+   {
+    "promptBn": "নতুন আর্থিং বসছে — কোনটা ঠিক পদ্ধতি?",
+    "safe": [
+     "Perforated GI pipe 2.5-3 m driven vertical",
+     "Copper plate (60cm x 60cm) buried deep where very low resistance is needed (wording changed from 'সাবস্টেশনে', which the lesson does not say)"
+    ],
+    "traps": [
+     {
+      "what": "Any rusty iron rod",
+      "rejectBn": "কার্যকর আর্থিং-এ সঠিক উপাদান (GI বা কপার) চাই — শুধু একটা রড পুঁতে দেওয়া নয়, এটা বিজ্ঞান।"
+     },
+     {
+      "what": "GI pipe laid flat",
+      "rejectBn": "পাইপ আর্থিং-এ GI পাইপ মাটিতে উল্লম্বভাবে পোঁতা হয় — সঠিক ইনস্টলেশন পদ্ধতিও জরুরি।"
+     },
+     {
+      "what": "Short stub, half above ground",
+      "rejectBn": "মাটির সাথে বিশাল পৃষ্ঠতলের সংযোগ চাই — তাই সঠিক দৈর্ঘ্যের (সাধারণত 2.5-3 মিটার) পাইপ মাটিতে পুঁততে হয়।"
+     }
+    ]
+   },
+   {
+    "promptBn": "পেট্রোলিং-এ পোলের আর্থ জোড় দেখছেন — কোনটা ঠিক?",
+    "safe": [
+     "Clean tight brass nut-bolt joint",
+     "Welded joint"
+    ],
+    "traps": [
+     {
+      "what": "Rusty ordinary iron nut",
+      "rejectBn": "সাধারণ নাট-বল্টুতে মরিচা ধরে — আর্থিং-এ পিতল বা স্টেইনলেস স্টিলের নাট-বল্টু দিন।"
+     },
+     {
+      "what": "Earth wire only twisted",
+      "rejectBn": "জোড় অত্যন্ত মজবুত, পরিষ্কার ও টাইট চাই — লুজ জোড় আর্থিং-এর রেজিস্ট্যান্স বহুগুণ বাড়ায়।"
+     },
+     {
+      "what": "Torn strip hanging",
+      "rejectBn": "আর্থিং তার বা পাত কোথাও কাটা, ছেঁড়া বা অতিরিক্ত মরিচা ধরা উচিত নয়।"
+     }
+    ]
+   },
+   {
+    "promptBn": "আর্থ পিট গড়ছেন ও যত্ন নিচ্ছেন — কোনটা ঠিক?",
+    "safe": [
+     "Charcoal and salt layers round the electrode",
+     "Water by funnel on a dry day",
+     "Concrete chamber, clean, lid on"
+    ],
+    "traps": [
+     {
+      "what": "Only sand fill",
+      "rejectBn": "বালুকাময় মাটির রেজিস্ট্যান্স বেশি — ইলেক্ট্রোড ঘিরে কাঠকয়লা ও লবণ পরিবাহিতা বাড়ায়, আর্দ্রতা ধরে রাখে।"
+     },
+     {
+      "what": "Broken chamber, no lid, rubbish",
+      "rejectBn": "আর্থ পিটের চারপাশ পরিষ্কার, কংক্রিটের চেম্বারে সুরক্ষিত আর ঢাকনা ঠিকমতো লাগানো থাকবে।"
+     },
+     {
+      "what": "Cracked dry pit never watered",
+      "rejectBn": "শুকনো আবহাওয়ায় পিটে জল দিলে চারপাশের মাটির আর্দ্রতা বাড়ে, আর্থ রেজিস্ট্যান্স কমে।"
+     }
+    ]
+   },
+   {
+    "promptBn": "পাথুরে মাটিতে নতুন আর্থিং — মান ঠিক রাখতে কোনটা ঠিক?",
+    "safe": [
+     "Several electrodes joined in rocky soil",
+     "Bentonite treatment in sandy soil",
+     "Earth megger within 5 ohm"
+    ],
+    "traps": [
+     {
+      "what": "One electrode, no treatment, rocky soil",
+      "rejectBn": "পাথুরে বা বালির মাটিতে রেজিস্ট্যান্স বেশি — একাধিক ইলেক্ট্রোড বা বেন্টোনাইট ট্রিটমেন্ট লাগে।"
+     },
+     {
+      "what": "Left unmeasured",
+      "rejectBn": "আর্থ মেগারে রেজিস্ট্যান্স মাপাই আর্থিং-এর স্বাস্থ্য পরীক্ষার সবচেয়ে নির্ভরযোগ্য উপায়।"
+     },
+     {
+      "what": "High reading signed off",
+      "rejectBn": "আর্থ রেজিস্ট্যান্স নির্দিষ্ট সীমার (যেমন 5 ওহম) মধ্যে থাকা উচিত — বেশি হলে আর্থিং দুর্বল।"
+     }
+    ]
+   },
+   {
+    "promptBn": "সাবস্টেশনে ফল্টের বিপদ কমানো — কোনটা ঠিক ব্যবস্থা?",
+    "safe": [
+     "Gravel spread in the switchyard",
+     "Buried copper/steel earth mat"
+    ],
+    "traps": [
+     {
+      "what": "Touching faulty equipment during a fault",
+      "rejectBn": "ফল্টের সময় হাত আর পায়ের মধ্যে ভোল্টেজ পার্থক্য — টাচ পটেনশিয়াল — মারাত্মক শক দিতে পারে।"
+     },
+     {
+      "what": "Walking by an electrode during a fault",
+      "rejectBn": "ইলেক্ট্রোডের চারপাশের মাটিতে ভোল্টেজ গ্রেডিয়েন্ট — দুই পায়ের মাঝে স্টেপ পটেনশিয়াল মারাত্মক।"
+     },
+     {
+      "what": "Gravel cleared to bare soil",
+      "rejectBn": "পাথরের কুচি মাটির পৃষ্ঠের রেজিস্ট্যান্স বাড়িয়ে টাচ ও স্টেপ পটেনশিয়ালের বিপদ কমায়।"
+     }
+    ]
+   }
+  ]
+ },
+ "deadlySlipTable": [
+  {
+   "id": "R27",
+   "act": "Signing off / charging equipment with its earth path broken (unbolted joint, cut strip), incl. myth 1 'একটু কাটা'",
+   "cls": "deadly",
+   "source": "6.11 myth 1 reality; matches 4.6b; CONFLICTS with 3.5b (slip) — do_6_11_a, gate",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M6-1",
+   "rulingNote": "Confirmed (decision 1, one rule M3/M4/M6); an open (OL) earth-tester reading signed is the same deadly."
+  },
+  {
+   "id": "R28",
+   "act": "Weak but connected earth (wrong electrode, off-plumb, sand/gravel, iron nut, no lid, single DTR pit, high reading signed)",
+   "cls": "slip",
+   "source": "6.11 pro tips; matches 4.6a — do_6_11_a",
+   "needsOwner": false
+  },
+  {
+   "id": "R39",
+   "act": "Listening to the coworker: deadly when his line acts out a deadly act above, slip otherwise",
+   "cls": "deadly",
+   "source": "M1 ruling — all levels",
+   "needsOwner": false,
+   "classAfterRulings": "B1",
+   "ruling": "X2",
+   "rulingNote": "Listening takes the class of the act pushed in that level right then (ruling B1)."
+  }
+ ],
+ "addedRows": [
+  {
+   "id": "N7",
+   "act": "Signing a DTR earth pit whose earth tester reads open (OL) or whose lead/strip is cut or unbolted",
+   "cls": "deadly",
+   "ruling": "M6-1/M6-13",
+   "source": "added by docs/module_specs/module6_rulings.md"
+  }
+ ],
+ "changes": [
+  "6.11a do_6_11_a: the bentonite sack and the full remedy tray now appear on every deal. Before, bentonite showed up only on rocky or sandy soil, which revealed the soil type. Bentonite on loam is not scored. Board round 2 plate-earthing wording no longer says 'সাবস্টেশনে', because the lesson does not say it."
+ ],
+ "changesGeneral": [
+  "Every level was checked against M1–M4 loops; no Module 6 core verb repeats one. Accepted overlaps of content only, where the verbs differ: 6.1a vs 3.6a (same DTR checklist), 6.3b vs 3.7a and 4.4b (fuse handling sub-beats), 6.10a vs 3.8b (fast-meter call), 6.11a vs 4.6a (final megger read), 6.7a vs M1 step 15 (rod discharge sub-beat). Shared sub-beats inside Module 6 (phone or radio to the substation in 6.2a, 6.4a, 6.4b and 6.8b; the AB stroke in 6.4a and 6.4b; the push-button in 6.10b only) are not the core loop of more than one level.",
+  "Unique engineTypes: m6_dtr_photo_report, m6_dtr_coil_forensic, m6_trip_log, m6_breaker_rack, m6_fuse_gauge, m6_fuse_chain, m6_ab_gap_log, m6_ab_unjam, m6_ug_cable_lay, m6_ug_dig_guard, m6_abc_clamp_seat, m6_abc_nick_seal, m6_capbank_wait, m6_capbank_meter, m6_reclose_count, m6_upstream_trace, m6_pillar_thermal, m6_pillar_newway, m6_meter_pulse, m6_meter_swap_proof, m6_earth_build, m6_gate_storm_feeder. All pack ids were kept.",
+  "Lesson check: these facts were spot-verified in tool/all_training_chapters_bn.json: the SWG table and diameters, the HG ratings (25/63/100 kVA → 2-3/5/8-10 A), the GI melting point 1535°, tinned copper, DO not used on WBSEDCL 11 kV DTRs, the Buchholz relay absent on small pole DTRs, pink/white spent gel, Dyn11, 2 minutes, the UG cable layers and the 90% figure, stress control, A2XFY, the AB-cable bare/insulated messenger, ridges, rollers, IPC shear head, heat-shrink, bentonite, the 60x60 copper plate, earth mat and gravel, the capacitor plate text, star/delta, the 50 V figure, APFC, 3200 imp/kWh and the smart meter. No new invented fact was found beyond those the designers already listed under unsupported."
+ ],
+ "unsupported": [
+  "Who builds an earth pit and whether shutdown is needed — site drawn uncharged.",
+  "Depth, pit size, layer quantities, layer order not given.",
+  "Plumb tolerance not given.",
+  "1.2 m / 2.7 m pipes and megger readings are scene values (6.11 '5 ওহম' vs 4.6 '5–8 Ω').",
+  "Megger connection (4.6a) left out.",
+  "Remedy effects and non-fitting remedies are scene behaviour.",
+  "Gravel as a wrong fill inferred.",
+  "Double-earthing layout (6.11 two pits vs 4.6 film four).",
+  "Grease only for maintenance.",
+  "Plate earthing and copper only on the board; plate site wording not tied to substations.",
+  "Safe movement near a faulted earth not given.",
+  "Device that trips in the replay generic."
+ ],
+ "lessonOwnerQuestions": [
+  "Broken earth path signed off = deadly (4.6b); weak but connected = slips (4.6a). Conflict: 3.5b scored listening to 'একটু কাটা' as a slip — settle one rule for Modules 3, 4 and 6.",
+  "Board myth 2 (4.6 board used myth 1).",
+  "One Do level enough given 4.6?",
+  "Lineman builds the pit, or supervises a contractor?",
+  "Limit shown: 5 Ω vs 5–8 Ω.",
+  "Needless 'মান কমান' costs time and bonus only?",
+  "DTR: two pits or four?"
+ ],
+ "ownerDecisions": [
+  {
+   "n": 1,
+   "specQuestion": "EARTH CONFLICT ACROSS MODULES: 6.11a and the gate make signing off with a broken earth path deadly (as 4.6b does), but 3.5b scored listening to 'আর্থ তারটা একটু কাটা তো কী' as a slip. Pick one rule for Modules 3, 4 and 6.",
+   "ownerAnswer": "Adopt the single rule (broken earth path = deadly, weak but connected = slip) and re-score 3.5b.",
+   "basis": "National law over WBSEDCL. CEA Safety Regulations 2023 Reg 43(ix)(c): earthing must 'retain electrical continuity' and be tested 'before ... apparatus are energised'. Reg 50(1)(i) requires earthing to limit touch and step voltage. Reg 77(1) says the arrester's job is to send lightning surges to earth because they 'may result into injuries'. DHBVN Safety Manual Don'ts 8: 'DO NOT disconnect earthing connection'. Precedent M1-4 ruling B1: listening is deadly only when the act pushed is deadly in that level, so 3.5b listening becomes deadly once the act is deadly.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 2,
+   "specQuestion": "DO-FUSE CONFLICT: lesson 6.3 says WBSEDCL 11 kV DTRs and AB switches 'সাধারণত ড্রপ আউট (DO) ফিউজ ব্যবহার করা হয় না', while M3 3.4 and M4 4.4 play DO fuses on DTRs. Module 6 uses HG only. Decide how the ladder reconciles this.",
+   "ownerAnswer": "Split into two. (2a) Module 6 levels show the WBSEDCL DTR with AB switch + HG fuses only (WBSEDCL HVDS BOQ; CEA 2023 Reg 37(3)(i) allows either). (2b) Built M3/M4 levels keep their DO fuses; add one short line on the 3.4 picture board: some companies use DO fuses, a normal WBSEDCL DTR has AB switch + HG fuses (owner to give the natural Bangla wording). Ask a WBSEDCL lineman whether older DTRs/branch lines still have DO fuses.",
+   "basis": "CEA Safety Regulations 2023 Reg 37(3)(i): 'a linked switch with fuse or gang operated air break switch with fuse or circuit breaker'. WBSEDCL HVDS BOQ, Malda 2020 (items 1.17, 1.18, 1.26: TPGO isolator + 'H.T Horn Gap Fuse Unit', no DO fuse). No WBSEDCL document found that says DO fuses are never used. A WBSEDCL field lineman can say whether older transformers or branch lines in his division still have DO fuses.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 3,
+   "specQuestion": "SPEED CONFLICT: 2.5/do/1 slips a rushed hot-stick AB turn, but 6.4 says 'দ্রুত এবং দৃঢ়ভাবে' for the AB's own ground handle. Proposal: only a stalled stroke is a slip in 6.4, and add a note in MODULE2_LADDER.",
+   "ownerAnswer": "Apply ruling A3 in 6.4 and in 2.5/do/1.",
+   "basis": "Owner ruling A3 (2026-11-15, OWNER_DECISIONS_M1-4): 'AB switch: one firm, continuous stroke after the preparation. A slow or stalled stroke = slip.' DHBVN Safety Manual Don'ts 9: 'DO NOT open or close switch or fuse slowly or hesitatingly.' WBSEDCL TPGO isolator spec cl 4.4(iii): a spring makes contact opening speed 'independent of the speed of manual operation'.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 4,
+   "specQuestion": "Confirm the deadly rows marked needsOwner: closing an AB on load; the rod-hook-before-clamp rule carried from M1; field tank opening and re-charging a burnt-oil DTR (6.1b and gate); landing a core with the SFU ON and water on a live joint (6.9); a bare-hand bypass pull (6.10b); an earth set on a live section (gate, M1 rule); the optional 6.1a climb push.",
+   "ownerAnswer": "Confirm the eight deadly rows. Lower field tank opening on a dead, earthed transformer to slip in do_6_1_b and the gate.",
+   "basis": "TANGEDCO Safety Manual p.65: isolators 'should not be operated (open or close) on charged line / transformer'. WBSEDCL buys these as 'off-load' isolators. OSHA 1910.269(n)(6)(i): 'attach the ground-end connection first'. CEA 2023 Reg 21(1) and DHBVN Don'ts: touch nothing unless 'DEAD AND EARTHED'. DHBVN: 'DO NOT throw water on live electrical equipment'. CEA Schedule I Part-II(6), and precedent M1-4 B8: earth on a live line is deadly everywhere. Precedent M5-1: re-charging a transformer after a blow without finding the cause is deadly; lesson 6.1 says 'চার্জ করার ঝুঁকি নেবেন না'. Tank opening: IS 10028-3 cl 5.4.2 (national standard) treats it as a moisture/fire procedure risk. Precedent M5-6: a lesson's 'মারাত্মক' about equipment harm with nobody exposed stays a slip. Precedent A4: never touch a running transformer tank.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 5,
+   "specQuestion": "Confirm the slip rows marked needsOwner, in particular: pliers on an HRC (judge changed it from deadly to slip); a swollen capacitor unit left in service (if raised to deadly, raise it in 6.7b and the gate together); armour earthed at one end only (6.5a, unlike 4.6b's strip); hands-on in TEST; the capacitor wait cut short; reclosing before the fault is found; a broken R-Y-B sequence; a wrong-SWG tinned fuse wire.",
+   "ownerAnswer": "Confirm all eight as slips with the limits above, and use the reason-card lines from the reference review (owner to give the natural Bangla).",
+   "basis": "Precedent A5: fuse touched or pulled with supply on = deadly, no PPE after proven isolation = slip. OSHA 1910.335(a)(2)(i)(A): insulated fuse tools when the terminals are energized. GE GEH-2743B: bulged capacitors risk 'explosive case rupture'. IS 1255 cl 13.1 (national): armour 'efficiently earthed at both ends'. IS 13925-1 cl 21: the discharge device is 'not a substitute for short-circuiting', so the rod is the real protection. DHBVN/TANGEDCO: do not renew a fuse until the cause is found. Precedent M5-1 (re-charge after a failed test charge = deadly). Precedent M5-6 (equipment harm only = slip). DHBVN Do's 7 'correct size and quality of fuse wire'. Precedent B2 (3.4a thick copper = deadly). The TEST-position and phase-order rows rest on engineering logic; no reference contradicts them.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 6,
+   "specQuestion": "Capacitor wait minimum: 5 game minutes (recommended) or 10. This applies to 6.7a and the gate.",
+   "ownerAnswer": "5 minutes, with an optional bonus for waiting 10.",
+   "basis": "OSHA 1910.269(w)(1)(i): 'waits at least 5 minutes ... before applying the short circuit'. TANGEDCO Safety Manual (Indian discom) p.62: 'wait for at least 5 minutes'. GE GEH-2743B: 'WAIT 5 MINUTES ... THEN SHORT-CIRCUIT AND GROUND'. The national IS 13925-1 10-minute figure is a design limit for the built-in resistor, not a work rule, and it says the rod is the real safeguard. CEA's ten-minute rule is for HVDC filter banks only. Lesson 6.7 '৫-১০ মিনিট' fits.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 7,
+   "specQuestion": "Accept the judge's verb changes: 6.1b becomes coil forensics; 6.5b uses pegged straight legs; 6.9b uses a dropper pluck; 6.9a has no shutter; 6.10a drops note-taking; 6.10b is auto-framed and renamed m6_meter_swap_proof. 6.8b remains the module's only finger-trace level.",
+   "ownerAnswer": "Approve all as one set, with gentle cable bends in 6.5b.",
+   "basis": "REFERENCE_REVIEW M6-7 (game rule, no safety change); precedent M5-9 (verb changes approved as a set); IS 1255 cl 5.3 bending radius.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 8,
+   "specQuestion": "Lesson overlap: 6.9 almost duplicates 3.7, and 6.1 repeats much of 3.6. Keep both as full lessons or shorten them? Both board myths about thick wire (6.3 board, 6.9 board) repeat M3 3.4's idea.",
+   "ownerAnswer": "Shorten 6.1 and 6.9 to one recap round plus the new material, and swap the 6.9 board's thick-wire myth for a new one.",
+   "basis": "REFERENCE_REVIEW M6-8 (game rule); design_flags_M5-10 (6.9 nearly duplicates 3.7).",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 9,
+   "specQuestion": "Should a lineman build an earth pit (6.11a), or should the level frame him as inspecting a contractor's pit? Also: is one Do level enough for 6.11, given 4.6?",
+   "ownerAnswer": "Inspect-and-test framing, with one Do level.",
+   "basis": "CEA Safety Regulations 2023 Reg 43(x): the supplier's earths must be 'tested for resistance on dry day during the dry season at least once in a year'. That is a lineman's check-and-test duty whoever dug the pit. TANGEDCO Safety Manual p.79-80: 'three earth pits in triangular formation at a distance of six meter'. Level 4.6 already teaches building. A WBSEDCL lineman can say who digs pits in his division, but the answer does not change this framing.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 10,
+   "specQuestion": "Gate items not in any single lesson: the combined feeder layout, 'needless outage = slip', the radio to the control room for breaker and recloser, AB-T as the backfeed source, 'both sides' earthing (Module 1), the game-time ratio, and the rank name and badge from the module plan.",
+   "ownerAnswer": "Option 1. Keep the safety items, use rank সিনিয়র and a 5–7 minute gate, and have the owner name the badge.",
+   "basis": "CEA 2023 Schedule I Part-II(3): permit from the 'Operation In-charge' and isolation 'from all sources of energy'. Reg 47(1)(iii): guard against 'inadvertent paralleling or backfeed'. DHBVN cl 8.16: 'completely isolated on both sides ... discharged and earthed'. CEA Schedule I Part-II(4): local earths 'at the zone of working'. Precedent M1 sound-pole ruling (needless outage = slip). Rank সিনিয়র: GAME_PATH_CHECKLIST Module 6. Gate format precedent: M5-12 (5–7 min).",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 11,
+   "specQuestion": "Kit additions requested: HintSpec.pinch and HintSpec.circle for 6.6b (or the listed fallbacks).",
+   "ownerAnswer": "Use the existing fallback hints unless later modules plan to use pinch or circle.",
+   "basis": "REFERENCE_REVIEW M6-11 (UI kit, no safety content).",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 12,
+   "specQuestion": "New rival clips needed via tool/rival_clip.py: 6.1a myths 1 and 2; 6.1b myth 3 + push and the recharge push (shared with gate variant g); 6.2 myth 1 + push (gate a); the 6.2b pushes; the 6.3a pushes; 6.4 myth word for word and the two 6.4b pushes; the 6.5a pushes; the 6.6a/b lines; 6.7b's pushes; 6.8b myth 2 + shortcut; 6.9a shortcut; 6.9b myth 1 and SFU variant; 6.9 myth 2 (gate f); 6.10a/b pushes; 6.11 myths A/B. Board rival clips are shared where the words match.",
+   "ownerAnswer": "Owner approves the wording first, then all lines are recorded in the voice system after decisions 1 and 4 are final.",
+   "basis": "Owner voice rule 2026-11-14 (VOICE_GUIDE.md: 'Every spoken line is a recorded clip in the owner's voice system'; coworker voice = bn-BD-PradeepNeural, recorded with tool/rival_clip.py). New-text rule: ask the owner for natural wording before using any new line. REFERENCE_REVIEW M6-12: record after the M6-1/M6-4 rulings.",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 13,
+   "specQuestion": "Illustrative numbers that need sign-off: the 6.7b meter values, the 6.11a megger bands (the reason cards say '5 ওহমের মধ্যে'), the 6.1a quick bonus of 120 s, and the 6.5a ring scales.",
+   "ownerAnswer": "Option 1, then ask a lineman which tool name he uses and switch to 'আর্থ মেগার' if that is the field word.",
+   "basis": "TANGEDCO Safety Manual p.81 'Recommended Combined Values for Earth Resistance': 'Distribution Transformer 5 Ohm'. CEA 2023 sets no transformer figure (its 25 ohm in Reg 50(7) is only for guard wires at crossings). No WBSEDCL figure found. A WBSEDCL engineer can say whether WBSEDCL uses a different target and which word linemen use ('আর্থ টেস্টার' or 'আর্থ মেগার').",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  },
+  {
+   "n": 14,
+   "specQuestion": "YouTube explainer ids for 6.1–6.11 (null until given).",
+   "ownerAnswer": "Leave them empty for now; the owner adds Indian training videos later.",
+   "basis": "REFERENCE_REVIEW M6-14; precedent M5-14 (no YouTube ids yet); owner reference rule (Indian/international sources, never Bangladesh).",
+   "source": "docs/decisions/OWNER_DECISIONS_M5-10.md, \"## Module 6 owner answers (2026-11-15)\" (final, binding)"
+  }
+ ],
+ "allVerbs": [
+  [
+   "6.1",
+   "do_6_1_a",
+   "frame requested parts with a phone viewfinder"
+  ],
+  [
+   "6.1",
+   "do_6_1_b",
+   "turn the opened coil, read damage to cause"
+  ],
+  [
+   "6.2",
+   "do_6_2_a",
+   "copy relay flags into the trip log"
+  ],
+  [
+   "6.2",
+   "do_6_2_b",
+   "crank the trolley to the right position"
+  ],
+  [
+   "6.3",
+   "do_6_3_a",
+   "measure wire in gauge slots, twist strands"
+  ],
+  [
+   "6.3",
+   "do_6_3_b",
+   "read guards up the chain, deduce the failed one"
+  ],
+  [
+   "6.4",
+   "do_6_4_a",
+   "swing the handle, sight and log each gap"
+  ],
+  [
+   "6.4",
+   "do_6_4_b",
+   "oil and rock a jammed switch free"
+  ],
+  [
+   "6.5",
+   "do_6_5_a",
+   "drag-shape cable bends against a radius ring"
+  ],
+  [
+   "6.5",
+   "do_6_5_b",
+   "peg the hidden route, then flag-stop the digger"
+  ],
+  [
+   "6.6",
+   "do_6_6_a",
+   "roll the twisted bundle, clamp the messenger"
+  ],
+  [
+   "6.6",
+   "do_6_6_b",
+   "zoom to find, wrap the nick shut"
+  ],
+  [
+   "6.7",
+   "do_6_7_a",
+   "set a watch bezel, wait out the stored charge"
+  ],
+  [
+   "6.7",
+   "do_6_7_b",
+   "log meters, switch once, compare the swing"
+  ],
+  [
+   "6.8",
+   "do_6_8_a",
+   "count reclose tries live with a tally clicker"
+  ],
+  [
+   "6.8",
+   "do_6_8_b",
+   "trace the wire upstream by dragging"
+  ],
+  [
+   "6.9",
+   "do_6_9_a",
+   "sweep a thermal camera, compare R-Y-B joints"
+  ],
+  [
+   "6.9",
+   "do_6_9_b",
+   "pluck droppers, land cores by phase"
+  ],
+  [
+   "6.10",
+   "do_6_10_a",
+   "switch off every load, read the pulse"
+  ],
+  [
+   "6.10",
+   "do_6_10_b",
+   "tug seals, then snap readings around switch-off"
+  ],
+  [
+   "6.11",
+   "do_6_11_a",
+   "build an earth pit in cut-away soil"
+  ],
+  [
+   "6.11",
+   "gate_m6",
+   "drag crew tools onto feeder equipment"
+  ]
+ ]
+}

@@ -87,7 +87,7 @@ void main() {
   testWidgets('back with a ladder card open closes the card, not the game', (t) async {
     await _pump(t, catalog: () async => _catalog());
     expect(AdventureMap.closeOpenCard(), isFalse, reason: 'no card open');
-    // A Coming Soon rung (just past the 150 playable ones) answers with a card.
+    // A Coming Soon rung (just past the 165 playable ones) answers with a card.
     final list = t.state<ScrollableState>(find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable))).position;
     list.jumpTo(list.maxScrollExtent);
     await t.pump(const Duration(milliseconds: 100));
@@ -129,7 +129,8 @@ void main() {
 
     test('before the catalog loads, the ladder never draws more rungs open than there are', () {
       final real = ladderPlayableSpan(const LadderBuilder().build(_catalog()));
-      expect(real, 150);
+      // Modules 1–5 (150) + Module 6 Wave A, lessons 6.1–6.5 (15), wired 2026-11-15.
+      expect(real, 165);
       expect(ladderPlayableSpan(null), lessThanOrEqualTo(real));
     });
   });

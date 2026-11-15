@@ -942,6 +942,14 @@ class _AdventureMapState extends ConsumerState<AdventureMap>
                       ),
                     ),
                   ),
+                  // Birds and butterflies now and then, behind the rungs;
+                  // they rest with the ladder's idle calm (owner, 2026-11-15).
+                  Positioned.fill(
+                    child: SlmMotionScope(
+                      settings: _calm,
+                      child: const SlmAmbientLife(),
+                    ),
+                  ),
                   AnimatedBuilder(
                     animation: _shake,
                     builder: (context, child) => Transform.translate(

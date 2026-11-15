@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+  <line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+  <rect x="10" y="40" width="130" height="16" fill="#bdb6a8"/><rect x="10" y="56" width="130" height="92" fill="#55595f"/><rect x="10" y="148" width="130" height="18" fill="#c6bfb1"/><rect x="124" y="18" width="5" height="32" fill="#c9ccce"/><line x1="124" y1="22" x2="124" y2="48" stroke="#15181c" stroke-width="2.5"/><rect x="16" y="124" width="30" height="26" fill="#6f907c"/><rect x="12" y="148" width="40" height="10" fill="#b9b3a8"/>
+  <rect x="40" y="73" width="24" height="18" rx="3" fill="#1e1a16"/><line x1="40" y1="84" x2="64" y2="83" stroke="#15181c" stroke-width="3.5"/><rect x="45" y="80" width="14" height="7" rx="2" fill="#2e3338"/><rect x="40" y="58" width="24" height="12" rx="3" fill="#6e757d"/>
+  <polyline points="122,50 56,152" fill="none" stroke="#f4f1e6" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#c0392b" stroke-width="5" stroke-linecap="round"><line x1="131" y1="169" x2="149" y2="187"/><line x1="149" y1="169" x2="131" y2="187"/></g>
+  <rect x="170" y="40" width="130" height="16" fill="#bdb6a8"/><rect x="170" y="56" width="130" height="92" fill="#55595f"/><rect x="170" y="148" width="130" height="18" fill="#c6bfb1"/><rect x="284" y="18" width="5" height="32" fill="#c9ccce"/><line x1="284" y1="22" x2="284" y2="48" stroke="#15181c" stroke-width="2.5"/><rect x="176" y="124" width="30" height="26" fill="#6f907c"/><rect x="172" y="148" width="40" height="10" fill="#b9b3a8"/>
+  <rect x="200" y="73" width="24" height="18" rx="3" fill="#1e1a16"/><line x1="200" y1="84" x2="224" y2="83" stroke="#15181c" stroke-width="3.5"/><rect x="205" y="80" width="14" height="7" rx="2" fill="#2e3338"/><rect x="200" y="58" width="24" height="12" rx="3" fill="#6e757d"/>
+  <polyline points="282,50 212,84 216,152" fill="none" stroke="#f4f1e6" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="290,178 297,186 311,170" fill="none" stroke="#1e8a4c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="pn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9dee3"/><stop offset="1" stop-color="#b2bac2"/></linearGradient>
+<linearGradient id="gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b232c"/><stop offset="1" stop-color="#2c3640"/></linearGradient>
+<radialGradient id="red" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#ff8a80"/><stop offset="1" stop-color="#d7332a"/></radialGradient>
+<radialGradient id="grn" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#9be7a9"/><stop offset="1" stop-color="#2e9e4f"/></radialGradient>
+<radialGradient id="wht" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fff3c4"/></radialGradient>
+</defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+<rect x="34" y="27" width="92" height="30" rx="4" fill="#3a4048"/><rect x="37" y="30" width="86" height="24" fill="#101418"/><text x="80.0" y="47" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#f1f1f1">SERVICE</text><path d="M34 37 l6 5 l-6 5 z M126 37 l-6 5 l6 5 z" fill="#ffc94a"/>
+<circle cx="56" cy="110" r="14" fill="#2e343b"/><circle cx="56" cy="110" r="10" fill="url(#red)"/><text x="56" y="134" font-family="sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="#26303d">ON</text>
+<circle cx="104" cy="110" r="14" fill="#2e343b"/><circle cx="104" cy="110" r="10" fill="url(#grn)"/><text x="104" y="134" font-family="sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="#26303d">OFF</text>
+<path d="M58 104 l6 -2 l10 26 q2 8 -6 10 l-6 -4 z" fill="#a86e48" stroke="#6b4a2e" stroke-width="1.5"/>
+<circle cx="132" cy="32" r="15" fill="#c0392b"/><path d="M126 26 L138 38 M138 26 L126 38" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+<rect x="194" y="27" width="92" height="30" rx="4" fill="#3a4048"/><rect x="197" y="30" width="86" height="24" fill="#101418"/><text x="240.0" y="47" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#f1f1f1">TEST</text><path d="M194 37 l6 5 l-6 5 z M286 37 l-6 5 l6 5 z" fill="#ffc94a"/>
+<circle cx="216" cy="110" r="14" fill="#2e343b"/><circle cx="216" cy="110" r="10" fill="url(#red)"/><text x="216" y="134" font-family="sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="#26303d">ON</text>
+<circle cx="264" cy="110" r="14" fill="#2e343b"/><circle cx="264" cy="110" r="10" fill="url(#grn)"/><text x="264" y="134" font-family="sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="#26303d">OFF</text>
+<path d="M218 104 l6 -2 l10 26 q2 8 -6 10 l-6 -4 z" fill="#a86e48" stroke="#6b4a2e" stroke-width="1.5"/>
+<circle cx="292" cy="32" r="15" fill="#27ae60"/><path d="M285 32 L290 38 L300 26" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

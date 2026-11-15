@@ -87,6 +87,16 @@ import 'package:slm_flutter/features/game/m5_searchlight_patrol.dart' as m5_sear
 import 'package:slm_flutter/features/game/m5_sense_walk.dart' as m5_sense_walk;
 import 'package:slm_flutter/features/game/m5_trip_call.dart' as m5_trip_call;
 import 'package:slm_flutter/features/game/m5_workshop_referral.dart' as m5_workshop_referral;
+import 'package:slm_flutter/features/game/m6_ab_gap_log.dart' as m6_ab_gap_log;
+import 'package:slm_flutter/features/game/m6_ab_unjam.dart' as m6_ab_unjam;
+import 'package:slm_flutter/features/game/m6_breaker_rack.dart' as m6_breaker_rack;
+import 'package:slm_flutter/features/game/m6_dtr_coil_forensic.dart' as m6_dtr_coil_forensic;
+import 'package:slm_flutter/features/game/m6_dtr_photo_report.dart' as m6_dtr_photo_report;
+import 'package:slm_flutter/features/game/m6_fuse_chain.dart' as m6_fuse_chain;
+import 'package:slm_flutter/features/game/m6_fuse_gauge.dart' as m6_fuse_gauge;
+import 'package:slm_flutter/features/game/m6_trip_log.dart' as m6_trip_log;
+import 'package:slm_flutter/features/game/m6_ug_cable_lay.dart' as m6_ug_cable_lay;
+import 'package:slm_flutter/features/game/m6_ug_dig_guard.dart' as m6_ug_dig_guard;
 import 'package:slm_flutter/features/game/discharge_order.dart';
 import 'package:slm_flutter/features/game/fire_choose.dart';
 import 'package:slm_flutter/features/game/fire_pass.dart';
@@ -219,6 +229,16 @@ void main() {
       ...M5Board58Lines.toRecord,
       ...M5Board59Lines.toRecord,
       ...M5Board510Lines.recorded,
+    ]) {
+      rival.add(enDigits(l).trim());
+    }
+    // Module 6 lesson boards (6.1–6.5): the rival's taunt and myth.
+    for (final l in [
+      ...M6Board61Lines.toRecord,
+      ...M6Board62Lines.toRecord,
+      ...M6Board63Lines.toRecord,
+      ...M6Board64Lines.toRecord,
+      ...M6Board65Lines.toRecord,
     ]) {
       rival.add(enDigits(l).trim());
     }
@@ -364,6 +384,23 @@ void main() {
       m5_gate_case.M5GateLines.chargeNight,
       m5_gate_case.M5GateLines.chargeDay,
       m5_gate_case.M5GateLines.waitMorning, // m5 rank gate
+      // Module 6 Wave A (2026-11-15).
+      m6_dtr_photo_report.M6PhotoLines.coworkerLeak,
+      m6_dtr_photo_report.M6PhotoLines.coworkerHum,
+      m6_dtr_photo_report.M6PhotoLines.coworkerClimb,
+      ...m6_dtr_coil_forensic.M6CoilLines.allCoworkers,
+      ...m6_trip_log.M6TripLogLines.allCoworkers,
+      m6_breaker_rack.M6BreakerRackLines.coworkerGreen,
+      m6_breaker_rack.M6BreakerRackLines.coworkerTest,
+      m6_breaker_rack.M6BreakerRackLines.coworkerIsolator,
+      m6_fuse_gauge.M6FuseGaugeLines.coworkerAcsr,
+      m6_fuse_gauge.M6FuseGaugeLines.coworkerThick,
+      m6_fuse_chain.M6ChainLines.coworkerNoBother,
+      m6_fuse_chain.M6ChainLines.coworkerGlovesOn,
+      m6_ab_gap_log.M6AbGapLogLines.coworker,
+      ...m6_ab_unjam.M6AbUnjamLines.allCoworkers,
+      ...m6_ug_cable_lay.M6UgCableLines.allCoworkers,
+      m6_ug_dig_guard.M6DigLines.coworker,
     ]) {
       for (final l in c.recordedLines) {
         rival.add(enDigits(l).trim());

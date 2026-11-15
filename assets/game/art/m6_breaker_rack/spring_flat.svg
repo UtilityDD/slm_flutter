@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="pn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9dee3"/><stop offset="1" stop-color="#b2bac2"/></linearGradient>
+<linearGradient id="gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b232c"/><stop offset="1" stop-color="#2c3640"/></linearGradient>
+<radialGradient id="red" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#ff8a80"/><stop offset="1" stop-color="#d7332a"/></radialGradient>
+<radialGradient id="grn" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#9be7a9"/><stop offset="1" stop-color="#2e9e4f"/></radialGradient>
+<radialGradient id="wht" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fff3c4"/></radialGradient>
+</defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+<rect x="32" y="40" width="96" height="24" rx="3" fill="#3a4048"/><rect x="35" y="43" width="90" height="18" fill="#efe8d2"/><text x="80" y="56" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#26303d">DISCHARGED</text>
+<circle cx="80" cy="120" r="14" fill="#2e343b"/><circle cx="80" cy="120" r="10" fill="url(#red)"/><text x="80" y="144" font-family="sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="#26303d">ON</text>
+<path d="M82 114 l6 -2 l10 26 q2 8 -6 10 l-6 -4 z" fill="#a86e48" stroke="#6b4a2e" stroke-width="1.5"/>
+<circle cx="132" cy="32" r="15" fill="#c0392b"/><path d="M126 26 L138 38 M138 26 L126 38" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+<rect x="192" y="40" width="96" height="24" rx="3" fill="#3a4048"/><rect x="195" y="43" width="90" height="18" fill="#efe8d2"/><text x="240" y="56" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#26303d">CHARGED</text>
+<line x1="210" y1="150" x2="214" y2="104" stroke="#2b3138" stroke-width="6" stroke-linecap="round"/><rect x="208" y="96" width="12" height="16" rx="5" fill="#d0352b"/><path d="M196 110 v26" stroke="#1c2e4a" stroke-width="2.5"/><path d="M196 138 l-5 -8 h10 z" fill="#1c2e4a"/><circle cx="262" cy="120" r="14" fill="#2e343b"/><circle cx="262" cy="120" r="10" fill="url(#red)"/><text x="262" y="144" font-family="sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="#26303d">ON</text>
+<circle cx="292" cy="32" r="15" fill="#27ae60"/><path d="M285 32 L290 38 L300 26" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
