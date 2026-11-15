@@ -3112,11 +3112,9 @@ class _AnimatedChoiceCard extends StatefulWidget {
 class _AnimatedChoiceCardState extends State<_AnimatedChoiceCard> with TickerProviderStateMixin {
   static const _landAt = 0.74;
 
-  // Reason cards (slide) come in quickly: all three are in by ~0.4 s
-  // (owner, 2026-11-15). The pick deal keeps its own pace.
   late final AnimationController _deal = AnimationController(
     vsync: this,
-    duration: Duration(milliseconds: widget.style == _DealStyle.deal ? 680 : 340),
+    duration: Duration(milliseconds: widget.style == _DealStyle.deal ? 680 : 560),
   );
   late final AnimationController _hit =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 480));
@@ -3131,9 +3129,8 @@ class _AnimatedChoiceCardState extends State<_AnimatedChoiceCard> with TickerPro
       if (widget.index == 0) widget.onLaunch?.call();
       return;
     }
-    final deal = widget.style == _DealStyle.deal;
-    final stagger = deal ? 110 : 50;
-    _delay = Timer(Duration(milliseconds: (deal ? 80 : 0) + widget.index * stagger), () {
+    final stagger = widget.style == _DealStyle.deal ? 110 : 120;
+    _delay = Timer(Duration(milliseconds: 80 + widget.index * stagger), () {
       if (!mounted) return;
       widget.onLaunch?.call();
       _deal.forward();
