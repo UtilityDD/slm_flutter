@@ -514,7 +514,9 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
   /// Asks a fresh wording of the board's question and remembers it.
   Future<bool> _askFrom(LineBag bag) {
     final l = bag.next();
-    _ask = l.shownBn;
+    // Rebuild with the question so the header shows it with the cards (this
+    // also arms the reason board's idle hint now that input is unlocked).
+    if (mounted) setState(() => _ask = l.shownBn);
     return _sayLine(l, GuideMood.inspire);
   }
 
@@ -1014,6 +1016,8 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       await _stopVoice();
       if (!mounted) return;
       _closeLook();
+      // The "why" question shows at once with the reason board (owner,
+      // 2026-11-15: it felt late); no locked pause before the cards.
       setState(() {
         _beat = _Beat.why;
         _pickedWhy = null;
@@ -1021,12 +1025,9 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
         _whyOpts = why;
         _cardWave++;
       });
-      await _pause(320);
     });
     _busy = false;
     if (!mounted) return;
-    // Rebuild once unlocked so the reason board's idle hint can arm.
-    setState(() {});
     _clockGo(reset: true);
     await _askFrom(_whyAskBag);
   }
@@ -1227,12 +1228,9 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
           _beat = _Beat.mythWhy;
           _hitId = null;
         });
-        await _pause(320);
       });
       _busy = false;
       if (!mounted) return;
-      // Rebuild once unlocked so the reason board's idle hint can arm.
-      setState(() {});
       _clockGo(reset: true);
       await _askFrom(_mythAskBag);
       return;
@@ -3114,9 +3112,11 @@ class _AnimatedChoiceCard extends StatefulWidget {
 class _AnimatedChoiceCardState extends State<_AnimatedChoiceCard> with TickerProviderStateMixin {
   static const _landAt = 0.74;
 
+  // Reason cards (slide) come in quickly: all three are in by ~0.4 s
+  // (owner, 2026-11-15). The pick deal keeps its own pace.
   late final AnimationController _deal = AnimationController(
     vsync: this,
-    duration: Duration(milliseconds: widget.style == _DealStyle.deal ? 680 : 560),
+    duration: Duration(milliseconds: widget.style == _DealStyle.deal ? 680 : 340),
   );
   late final AnimationController _hit =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 480));
@@ -3131,8 +3131,9 @@ class _AnimatedChoiceCardState extends State<_AnimatedChoiceCard> with TickerPro
       if (widget.index == 0) widget.onLaunch?.call();
       return;
     }
-    final stagger = widget.style == _DealStyle.deal ? 110 : 120;
-    _delay = Timer(Duration(milliseconds: 80 + widget.index * stagger), () {
+    final deal = widget.style == _DealStyle.deal;
+    final stagger = deal ? 110 : 50;
+    _delay = Timer(Duration(milliseconds: (deal ? 80 : 0) + widget.index * stagger), () {
       if (!mounted) return;
       widget.onLaunch?.call();
       _deal.forward();
