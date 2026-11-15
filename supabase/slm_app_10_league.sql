@@ -326,13 +326,16 @@ AS $fn$
        + 3 * (length(p) - length(replace(p, '3', '')))
 $fn$;
 
+-- Rungs with at least one star = every digit that is not '0'. (Fixed
+-- 2026-11-15: it used to count the '0' digits, so a player with "2" showed 0
+-- rungs cleared and never reached the monthly board's 3-rung minimum.)
 CREATE OR REPLACE FUNCTION slm_app.stars_cleared(p text)
 RETURNS int
 LANGUAGE sql
 IMMUTABLE
 SET search_path = ''
 AS $fn$
-  SELECT length(p) - length(replace(p, '0', ''))
+  SELECT length(replace(COALESCE(p, ''), '0', ''))
 $fn$;
 
 REVOKE ALL ON FUNCTION slm_app.stars_sum(text) FROM PUBLIC, anon, authenticated;
