@@ -1,5 +1,5 @@
 // The toolbox sheet (Home): exactly four rows, in order
-// র‍্যাঙ্ক, আমার পাঠ, জরুরি নম্বর, সেটিংস. No language toggle, no পরিচিতি.
+// র‍্যাঙ্ক, আমার পাঠ, সব ভুল, জরুরি নম্বর, সেটিংস. No language toggle, no পরিচিতি.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,13 +36,13 @@ Future<void> _openSheet(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('sheet shows exactly the four rows, in order', (tester) async {
+  testWidgets('sheet shows exactly the five rows, in order', (tester) async {
     await _openSheet(tester);
 
     final rows = find.descendant(of: find.byType(BottomSheet), matching: find.byType(SlmPressable));
-    expect(rows, findsNWidgets(4));
+    expect(rows, findsNWidgets(5));
 
-    const labels = ['র‍্যাঙ্ক', 'আমার পাঠ', 'জরুরি নম্বর', 'সেটিংস'];
+    const labels = ['র‍্যাঙ্ক', 'আমার পাঠ', 'সব ভুল', 'জরুরি নম্বর', 'সেটিংস'];
     final ys = [for (final l in labels) tester.getTopLeft(find.text(l)).dy];
     for (var i = 1; i < ys.length; i++) {
       expect(ys[i], greaterThan(ys[i - 1]), reason: '${labels[i]} comes after ${labels[i - 1]}');

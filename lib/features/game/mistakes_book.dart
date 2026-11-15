@@ -232,16 +232,28 @@ abstract final class MistakesBookLines {
   static const kinds = 'ভুলের ধরন';
   static const today = 'আজ';
   static const yesterday = 'গতকাল';
+  // The 💀 page: deadly mistakes only (owner's option 2, 2026-11-15).
+  static const deathTitle = 'যে ভুলে মৃত্যু হয়';
+  static const deathLine = 'মাঠে এই ভুলগুলো একবারই হয় — তারপর আর ফেরা যায় না।';
+  static const deathSub = 'পাঠে ফিরে দেখুন — নিয়মটা মনে গেঁথে নিন।';
+  static const deathEmpty = 'দারুণ! এখনও একটাও মারাত্মক ভুল হয়নি।';
+
+  /// The menu row that opens the full list (slips too).
+  static const menuAll = 'সব ভুল';
   static String daysAgo(int d) => '${enDigits('$d')} দিন আগে';
   static String times(int n) => '${enDigits('$n')} বার';
   static String lesson(String id) => 'পাঠ ${enDigits(id)}';
 }
 
 class MistakesBookPage extends ConsumerStatefulWidget {
-  const MistakesBookPage({super.key, this.now});
+  const MistakesBookPage({super.key, this.now, this.deathsOnly = false});
 
   /// Tests: a fixed "now" for the day labels.
   final DateTime? now;
+
+  /// The 💀 chip's page: only the deadly mistakes, most repeated first, under
+  /// a plain header (no filters). The full list is the menu's "সব ভুল".
+  final bool deathsOnly;
 
   @override
   ConsumerState<MistakesBookPage> createState() => _MistakesBookPageState();
@@ -263,6 +275,7 @@ class _MistakesBookPageState extends ConsumerState<MistakesBookPage> {
   Widget build(BuildContext context) {
     final save = ref.watch(gameSaveProvider);
     final all = save.mistakes.reversed.toList();
+    if (widget.deathsOnly) return _deathsPage(context, ref, save, all, _when);
     final shown = _deadlyOnly ? all.where((m) => m.deadly).toList() : all;
     return Scaffold(
       backgroundColor: SlmColors.navy950,
@@ -328,6 +341,96 @@ class _MistakesBookPageState extends ConsumerState<MistakesBookPage> {
                           entry: e,
                           art: knownMistakes[e.key]?.art,
                           when: _when(e.atMs),
+                          onRead: e.lessonPoint == null
+                              ? null
+                              : () => unawaited(openLessonPoint(context, ref, lessonId: e.lessonId, point: e.lessonPoint)),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Deadly mistakes only: big 💀 count, one strong line, then the cards,
+/// the most repeated first (newest first among equals).
+Widget _deathsPage(
+  BuildContext context,
+  WidgetRef ref,
+  GameSave save,
+  List<MistakeEntry> newestFirst,
+  String Function(int atMs) when,
+) {
+  {
+    final deadly = newestFirst.where((m) => m.deadly).toList();
+    final order = {for (var i = 0; i < deadly.length; i++) deadly[i]: i};
+    deadly.sort((a, b) {
+      final byCount = b.count.compareTo(a.count);
+      return byCount != 0 ? byCount : order[a]!.compareTo(order[b]!);
+    });
+    return Scaffold(
+      backgroundColor: SlmColors.navy950,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 16, 0),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    icon: const Icon(Icons.arrow_back_rounded, color: SlmColors.ivory),
+                  ),
+                  Expanded(
+                    child: Text(MistakesBookLines.deathTitle,
+                        style: bangla(fontSize: 20, fontWeight: FontWeight.w900, color: SlmColors.ivory)),
+                  ),
+                  Text('💀', style: const TextStyle(fontSize: 22)),
+                  const SizedBox(width: 6),
+                  Text(
+                    enDigits('${save.deaths}'),
+                    key: const ValueKey('deaths-count'),
+                    style: bangla(fontSize: 24, fontWeight: FontWeight.w900, color: SlmColors.danger),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 6, 20, 2),
+              child: Text(MistakesBookLines.deathLine,
+                  style: bangla(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFFFFB4AB), height: 1.35)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 2, 20, 12),
+              child: Text(MistakesBookLines.deathSub,
+                  style: bangla(fontSize: 13, fontWeight: FontWeight.w700, color: SlmColors.gold200)),
+            ),
+            Expanded(
+              child: deadly.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          MistakesBookLines.deathEmpty,
+                          textAlign: TextAlign.center,
+                          style: bangla(fontSize: 15, fontWeight: FontWeight.w700, color: SlmColors.mist, height: 1.5),
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                      itemCount: deadly.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      itemBuilder: (context, i) {
+                        final e = deadly[i];
+                        return _MistakeTile(
+                          entry: e,
+                          art: knownMistakes[e.key]?.art,
+                          when: when(e.atMs),
                           onRead: e.lessonPoint == null
                               ? null
                               : () => unawaited(openLessonPoint(context, ref, lessonId: e.lessonId, point: e.lessonPoint)),

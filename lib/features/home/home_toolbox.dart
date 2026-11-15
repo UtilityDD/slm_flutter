@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../design/slm_design.dart';
+import '../game/mistakes_book.dart' show MistakesBookPage, MistakesBookLines;
 import '../life_skills/life_skills_menu_row.dart';
 import '../shell/app_routes.dart';
 import '../shell/shell_providers.dart';
@@ -84,6 +85,17 @@ Future<void> openHomeToolbox(BuildContext context) {
                 },
               ),
               const LifeSkillsMenuRow(),
+              // Every mistake, slips too (the ladder's 💀 shows the deadly ones).
+              _ToolRow(
+                icon: Icons.menu_book_rounded,
+                label: tr(bn, MistakesBookLines.menuAll, 'All mistakes'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const MistakesBookPage()),
+                  );
+                },
+              ),
               _ToolRow(
                 icon: Icons.phone_in_talk_rounded,
                 label: tr(bn, 'জরুরি নম্বর', 'Emergency'),

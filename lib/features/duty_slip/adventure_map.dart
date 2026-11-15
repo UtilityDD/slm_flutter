@@ -1513,11 +1513,11 @@ class _TopHeader extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 8),
-          // Tap the 💀 chip: "আমার ভুলের খাতা".
+          // Tap the 💀 chip: the deadly mistakes only ("যে ভুলে মৃত্যু হয়").
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const MistakesBookPage()),
+              MaterialPageRoute<void>(builder: (_) => const MistakesBookPage(deathsOnly: true)),
             ),
             child: KeyedSubtree(
               key: deathKey,

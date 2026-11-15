@@ -65,6 +65,41 @@ void main() {
     expect(t.takeException(), isNull);
   });
 
+  testWidgets('the 💀 page: deadly mistakes only, most repeated first, plain header, no filters', (t) async {
+    t.view.physicalSize = const Size(720, 1600);
+    t.view.devicePixelRatio = 2.0;
+    addTearDown(t.view.reset);
+    final c = ProviderContainer();
+    addTearDown(c.dispose);
+    await t.pumpWidget(UncontrolledProviderScope(
+      container: c,
+      child: MaterialApp(home: MistakesBookPage(now: DateTime.now(), deathsOnly: true)),
+    ));
+    await t.pump();
+    expect(find.text(MistakesBookLines.deathTitle), findsOneWidget);
+    expect(find.text(MistakesBookLines.deathEmpty), findsOneWidget);
+
+    final deadlyOnes = knownMistakes.values.where((m) => m.deadly).take(2).toList();
+    expect(deadlyOnes, hasLength(2));
+    await book(c, DischargeMistakes.rustyEarth); // a slip: never on this page
+    await book(c, deadlyOnes[0]);
+    await book(c, deadlyOnes[1]);
+    await book(c, deadlyOnes[1]); // repeated: goes first
+    await t.pump();
+
+    expect(find.text(MistakesBookLines.deathLine), findsOneWidget);
+    expect(find.text(MistakesBookLines.deathSub), findsOneWidget);
+    expect(find.text(DischargeMistakes.rustyEarth.textBn), findsNothing);
+    expect(find.text(MistakesBookLines.all), findsNothing, reason: 'no filter chips');
+    expect(find.text(MistakesBookLines.deadly), findsNothing);
+    final twice = find.text(deadlyOnes[1].textBn);
+    final once = find.text(deadlyOnes[0].textBn);
+    expect(twice, findsOneWidget);
+    expect(once, findsOneWidget);
+    expect(t.getTopLeft(twice).dy, lessThan(t.getTopLeft(once).dy), reason: 'most repeated first');
+    expect(t.takeException(), isNull);
+  });
+
   test('every known mistake has its picture on disk', () {
     expect(knownMistakes, isNotEmpty);
     for (final m in knownMistakes.values) {
