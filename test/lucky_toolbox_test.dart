@@ -442,7 +442,11 @@ void main() {
       await t.tap(find.byKey(const ValueKey('toolbox-opt-0')));
       await t.pump();
       expect(find.text(ToolboxLines.tierName(ChestTier.silver)), findsOneWidget);
-      await t.pump(const Duration(milliseconds: 1100));
+      // The result waits for "বাক্স বাছুন": nothing moves on by itself.
+      await t.pump(const Duration(seconds: 3));
+      expect(find.text(ToolboxLines.pick), findsNothing);
+      expect(find.byKey(const ValueKey('toolbox-caption')), findsOneWidget, reason: 'Subrata says it inside the card');
+      await _toPick(t);
       expect(find.text(ToolboxLines.pick), findsOneWidget);
       await t.pump(const Duration(milliseconds: 1200));
       final before = c.read(gameSaveProvider).points;
@@ -463,17 +467,33 @@ void main() {
       expect(find.byType(LuckyToolboxOverlay), findsNothing);
     });
 
-    testWidgets('a wrong answer shows the right one ~2 s, no tier boost', (t) async {
+    testWidgets('a wrong answer shows the right one until "বাক্স বাছুন", no tier boost', (t) async {
       await pumpOverlay(t, withKey);
       await t.tap(find.byKey(const ValueKey('toolbox-opt-1')));
       await t.pump();
       expect(find.text(ToolboxLines.tierName(ChestTier.wood)), findsOneWidget);
       expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
-      await t.pump(const Duration(milliseconds: 1500));
-      expect(find.text(ToolboxLines.pick), findsNothing);
-      await t.pump(const Duration(milliseconds: 600));
+      expect(find.text(ToolboxLines.wrong), findsOneWidget);
+      await t.pump(const Duration(seconds: 5));
+      expect(find.text(ToolboxLines.pick), findsNothing, reason: 'no auto-advance');
+      await _toPick(t);
       expect(find.text(ToolboxLines.pick), findsOneWidget);
       expect(find.text(ToolboxLines.tierName(ChestTier.wood)), findsOneWidget);
+      await t.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('time up: "সময় ফুরোল" and the right answer show; 12 s for a picture task, 20 s for a quiz', (t) async {
+      await pumpOverlay(t, withKey);
+      await t.pump(const Duration(seconds: 11));
+      expect(find.byKey(const ValueKey('toolbox-time-up')), findsNothing);
+      await t.pump(const Duration(seconds: 2));
+      expect(find.byKey(const ValueKey('toolbox-time-up')), findsOneWidget);
+      expect(find.text(ToolboxLines.timeUp), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+      expect(find.text(ToolboxLines.pick), findsNothing);
+      expect(find.text(ToolboxLines.tierName(ChestTier.wood)), findsOneWidget, reason: 'no boost');
+      await _toPick(t);
+      expect(find.text(ToolboxLines.pick), findsOneWidget);
       await t.pump(const Duration(seconds: 2));
     });
 
@@ -505,6 +525,7 @@ void main() {
       expect(find.text(ToolboxLines.tierName(ChestTier.silver)), findsOneWidget);
       expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
       await t.pump(const Duration(seconds: 3));
+      await _toPick(t);
       expect(find.text(ToolboxLines.pick), findsOneWidget);
       // Checking a quiz awards nothing by itself.
       expect(c.read(gameSaveProvider).points, 0);
@@ -920,6 +941,15 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
   });
+}
+
+/// Taps "বাক্স বাছুন" (the result waits for it).
+Future<void> _toPick(WidgetTester t) async {
+  final button = find.byKey(const ValueKey('toolbox-to-pick'));
+  await t.ensureVisible(button);
+  await t.pump();
+  await t.tap(button);
+  await t.pump();
 }
 
 class _OverlayHarness extends StatefulWidget {

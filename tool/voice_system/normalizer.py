@@ -48,6 +48,12 @@ ACRONYM_MAP: List[Tuple[str, str]] = [
     (r"পিটিডাবলু", "পি টি ডাবলু"),
     (r"ডি ও(?=\s)", "ডি-ও"),
     (r"জি ও(?=\s)", "জি-ও"),
+
+    # Words the voice says wrongly as written (owner-approved spellings).
+    # বাক্স → "baksho" (owner picked sample B "বাকশো", 2026-11-15). With a
+    # vowel sign after it (বাক্সে, বাক্সের) the sign replaces the ো: বাকশে.
+    (r"বাক্স(?=[া-ৌৗ])", "বাকশ"),
+    (r"বাক্স", "বাকশো"),
 ]
 
 

@@ -457,21 +457,27 @@ ChestTier tierAfterTask(ChestTier start, {required bool? right}) => right == tru
 abstract final class ToolboxLines {
   static const name = 'ভাগ্যের টুলবক্স';
   static const noKeyTitle = 'চাবি নেই';
-  static const noKeyBody = 'একটা লেভেল শেষ করুন — চাবি পাবেন।';
-  static const intro = 'ঝটপট একটা প্রশ্ন! ঠিক হলে বাক্স আরও দামি।';
+  // Spoken lines: owner's option 2 (docs/review/gift_box_review.xlsx,
+  // 2026-11-15). Spoken text never carries a changing number or a symbol, so
+  // every line has a Subrata clip.
+  static const noKeyBody = 'আগে একটা লেভেল শেষ করুন — তবেই চাবি মিলবে।';
+  static const intro = 'একটা ছোট প্রশ্ন! ঠিক উত্তর দিলে বাক্স আরও দামি হবে।';
   static const whichMistake = 'কোন ভুলটা ছবিতে?';
   static const eyeAsk = 'সব ঠিক আছে?';
   static const eyeOk = 'ঠিক আছে';
   static const eyeFault = 'সমস্যা';
   static const skip = 'এড়িয়ে যান';
-  static const right = 'ঠিক! বাক্স এক ধাপ উপরে।';
-  static const wrong = 'এটাই ঠিক উত্তর — মনে রাখুন।';
-  static const unchecked = 'উত্তর যাচাই করা গেল না — বাক্স যেমন ছিল তেমনই।';
-  static const pick = 'একটা বাক্স বেছে নিন';
+  static const right = 'ঠিক উত্তর! বাক্সটা এবার আরও দামি।';
+  static const wrong = 'এটাই ঠিক উত্তর — পরের বার মনে রাখবেন।';
+  static const timeUp = 'সময় ফুরিয়ে গেল — সবুজটাই ঠিক উত্তর।';
+  static const timeUpLabel = 'সময় ফুরোল';
+  static const toPick = 'বাক্স বাছুন';
+  static const unchecked = 'নেট নেই, উত্তর মেলানো গেল না — বাক্স যেমন ছিল তেমনই।';
+  static const pick = 'তিনটের মধ্যে একটা বাক্স বেছে নিন!';
   static const missed = 'বাকি দুটোয় ছিল';
   static const back = 'মইয়ে ফিরুন';
   static const gateExtra = 'গেট পার করার উপহার';
-  static const dropped = 'হঠাৎ উপহার! পাশের ধাপে একটা টুলবক্স এসেছে।';
+  static const dropped = 'একটা উপহার এসেছে! পাশের ধাপের টুলবক্সটা খুলে দেখুন।';
 
   static String taskTitle(ToolboxTaskKind k) => switch (k) {
         ToolboxTaskKind.ownMistake => 'নিজের ভুল চিনুন',
@@ -502,11 +508,22 @@ abstract final class ToolboxLines {
       };
 
   /// What the guide says when the picked box opens.
+  /// Fixed sentences (the amount stays on the box label, never in the voice).
   static String won(ToolboxReward r) => switch (r.prize) {
-        ToolboxPrize.coins => '+${r.coins} ◆ আপনার!',
-        ToolboxPrize.shield => 'শিল্ড পেলেন! পরের কাজে একটা ছোট ভুল মাফ।',
-        ToolboxPrize.doubleNext => '×2! পরের লেভেলের ◆ দ্বিগুণ।',
-        ToolboxPrize.badge => 'বিরল ব্যাজ পেলেন! টুলবক্সের সেরা পুরস্কার।',
-        ToolboxPrize.lifeSkill => '${LifeSkillLines.won} টুলবক্সের মেনুতে "${LifeSkillLines.menu}"-এ পাবেন।',
+        ToolboxPrize.coins => 'দারুণ! কয়েন পেলেন!',
+        ToolboxPrize.shield => 'শিল্ড পেলেন! পরের কাজে একটা ছোট ভুল হলে মাফ হবে।',
+        ToolboxPrize.doubleNext => 'দ্বিগুণ কয়েন! পরের লেভেলে সব কয়েন দুই গুণ।',
+        ToolboxPrize.badge => 'বিরল ব্যাজ জিতলেন! এটাই টুলবক্সের সেরা পুরস্কার।',
+        ToolboxPrize.lifeSkill => 'জীবন দক্ষতা জিতলেন! মেনুতে আমার জীবন দক্ষতা খুলে দেখুন।',
       };
+
+  /// Every line the gift box speaks (all must have a Subrata clip).
+  static const spoken = <String>[
+    intro, right, wrong, timeUp, unchecked, pick, noKeyBody, dropped,
+    'দারুণ! কয়েন পেলেন!',
+    'শিল্ড পেলেন! পরের কাজে একটা ছোট ভুল হলে মাফ হবে।',
+    'দ্বিগুণ কয়েন! পরের লেভেলে সব কয়েন দুই গুণ।',
+    'বিরল ব্যাজ জিতলেন! এটাই টুলবক্সের সেরা পুরস্কার।',
+    'জীবন দক্ষতা জিতলেন! মেনুতে আমার জীবন দক্ষতা খুলে দেখুন।',
+  ];
 }

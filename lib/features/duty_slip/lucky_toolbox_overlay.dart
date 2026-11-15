@@ -14,6 +14,7 @@ import '../game/mistakes_book.dart' show knownMistakes;
 import '../game/ten_sec_scan.dart' show TenSecChecks;
 import '../game/toolbox_quiz_sources.dart';
 import '../guide/guide_director.dart';
+import '../guide/mascot_speech_library.dart' show MascotTalk;
 import '../life_skills/life_skills_data.dart';
 import '../zero_loss/zero_loss_fx.dart';
 import '../zero_loss/zero_loss_ui.dart' show zlText;
@@ -112,10 +113,26 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
   /// A gate chest's extra (a life skill, or ◆ once all are won), set at the pick.
   ToolboxReward? _extra;
   var _skills = const <String, LifeSkillModule>{};
-  Timer? _hold;
 
-  /// The task's ~10 s clock (the bar shrinks; at the end = a wrong answer).
-  late final AnimationController _clock = AnimationController(vsync: this, duration: const Duration(seconds: 10));
+  /// The clock ran out (no answer): "সময় ফুরোল" on the card.
+  var _timeUp = false;
+
+  /// What Subrata last said, shown in the card (his ladder bubble is behind
+  /// this dark overlay).
+  String? _caption;
+  var _captionMood = GuideMood.talk;
+
+  /// Starting the clock waits for the intro line to end (5 s cap).
+  Timer? _startCap;
+  Timer? _startGrace;
+  VoidCallback? _talkWatch;
+
+  /// The task's clock (20 s for a quiz question, 12 s otherwise); the bar
+  /// shrinks, and the end counts as "time up". Starts after the intro line.
+  late final AnimationController _clock = AnimationController(vsync: this, duration: const Duration(seconds: 12));
+
+  static Duration taskTime(ToolboxTaskKind k) =>
+      k == ToolboxTaskKind.quiz ? const Duration(seconds: 20) : const Duration(seconds: 12);
 
   /// The boxes drop in and shake once, then hold still.
   late final AnimationController _dealIn = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
@@ -143,7 +160,7 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
 
   @override
   void dispose() {
-    _hold?.cancel();
+    _stopStartWait();
     _clock.dispose();
     _dealIn.dispose();
     _open.dispose();
@@ -157,7 +174,50 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
   }
 
   void _say(String line, GuideMood mood) {
+    if (mounted) {
+      setState(() {
+        _caption = line;
+        _captionMood = mood;
+      });
+    }
     ref.read(guideDirectorProvider.notifier).say(mood: mood, line: line, speakVoice: true, muted: widget.muted);
+  }
+
+  void _stopStartWait() {
+    _startCap?.cancel();
+    _startGrace?.cancel();
+    final w = _talkWatch;
+    if (w != null) MascotTalk.active.removeListener(w);
+    _talkWatch = null;
+  }
+
+  /// Starts the task clock once the intro line has been said (or at once
+  /// when muted), never later than 5 s.
+  void _startClockAfterVoice() {
+    void go() {
+      _stopStartWait();
+      if (!mounted || _phase != _Phase.task) return;
+      unawaited(_clock.forward(from: 0));
+    }
+
+    if (widget.muted) {
+      go();
+      return;
+    }
+    _startCap = Timer(const Duration(seconds: 5), go);
+    // A moment for the voice to begin, then wait for it to end.
+    _startGrace = Timer(const Duration(milliseconds: 300), () {
+      if (!MascotTalk.active.value) {
+        go();
+        return;
+      }
+      void watch() {
+        if (!MascotTalk.active.value) go();
+      }
+
+      _talkWatch = watch;
+      MascotTalk.active.addListener(watch);
+    });
   }
 
   Future<void> _prepare() async {
@@ -179,6 +239,7 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
       _toPick();
       return;
     }
+    _clock.duration = taskTime(task.kind);
     setState(() {
       _task = task;
       _rightIndex = task.correctIndex;
@@ -190,14 +251,16 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
       // Reduce motion: no shrinking bar; the task waits for an answer or a skip.
       _clock.value = 0;
     } else {
-      unawaited(_clock.forward(from: 0));
+      _startClockAfterVoice();
     }
   }
 
   Future<void> _onAnswer(int? i) async {
     final task = _task;
     if (_phase != _Phase.task || task == null) return;
+    _stopStartWait();
     _clock.stop();
+    final timeUp = i == null;
     bool? right;
     if (task.serverChecked) {
       // The server knows the answer: a short wait, options locked.
@@ -217,13 +280,15 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
     }
     setState(() {
       _answer = i;
+      _timeUp = timeUp;
       _tier = tierAfterTask(_tier, right: right);
       _phase = _Phase.answer;
     });
+    // The result stays until "বাক্স বাছুন" (or a tap on the backdrop), so
+    // the line is never cut off and there is time to read the right answer.
     if (right == null) {
       HapticFeedback.selectionClick();
       _say(ToolboxLines.unchecked, GuideMood.think);
-      _hold = Timer(const Duration(milliseconds: 1600), _toPick);
       return;
     }
     if (right) {
@@ -233,15 +298,14 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
     } else {
       HapticFeedback.selectionClick();
       _cue('sounds/quiz_wrong.ogg', volume: 0.5);
-      _say(ToolboxLines.wrong, GuideMood.think);
+      _say(timeUp ? ToolboxLines.timeUp : ToolboxLines.wrong, GuideMood.think);
     }
-    _hold = Timer(Duration(milliseconds: right ? 1000 : 2000), _toPick);
   }
 
   /// Skip (or the end of the answer beat): straight to the pick, no tier boost.
   void _toPick() {
     if (!mounted || _phase.index >= _Phase.pick.index) return;
-    _hold?.cancel();
+    _stopStartWait();
     _clock.stop();
     final save = ref.read(gameSaveProvider);
     setState(() {
@@ -409,7 +473,12 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
                       textAlign: TextAlign.center,
                       style: zlText(24, weight: FontWeight.w900, color: SlmColors.gold100, height: 1.15),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
+                    // Not at the pick: its heading already says the line.
+                    if (_caption != null && _phase != _Phase.loading && _phase != _Phase.pick) ...[
+                      _CoachCaption(key: const ValueKey('toolbox-caption'), line: _caption!, mood: _captionMood),
+                      const SizedBox(height: 10),
+                    ],
                     switch (_phase) {
                       _Phase.loading => SizedBox(
                           height: 160,
@@ -490,6 +559,19 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
                     : Image.asset(art, fit: BoxFit.contain, cacheWidth: 420),
               ),
             ],
+            if (answered && _timeUp) ...[
+              const SizedBox(height: 8),
+              Center(
+                child: _Chip(
+                  color: SlmColors.danger,
+                  child: Text(
+                    ToolboxLines.timeUpLabel,
+                    key: const ValueKey('toolbox-time-up'),
+                    style: zlText(13, weight: FontWeight.w900, color: const Color(0xFFFFD6D1)),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 10),
             Text(
               enDigits(task.promptBn),
@@ -520,6 +602,17 @@ class _LuckyToolboxOverlayState extends ConsumerState<LuckyToolboxOverlay> with 
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2, color: SlmColors.gold300),
                 ),
+              ),
+            ],
+            if (answered) ...[
+              const SizedBox(height: 14),
+              SlmButton(
+                key: const ValueKey('toolbox-to-pick'),
+                label: ToolboxLines.toPick,
+                icon: Icons.inventory_2_rounded,
+                variant: SlmButtonVariant.gold,
+                expand: true,
+                onPressed: _toPick,
               ),
             ],
           ],
@@ -863,4 +956,50 @@ class _GlowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GlowPainter old) => old.color != color || old.burst != burst || old.big != big;
+}
+
+/// Subrata, small, with the line he is saying: inside the gift box, because
+/// the ladder guide and his bubble sit behind this dark overlay.
+class _CoachCaption extends StatelessWidget {
+  const _CoachCaption({super.key, required this.line, required this.mood});
+  final String line;
+  final GuideMood mood;
+
+  @override
+  Widget build(BuildContext context) {
+    final face = switch (mood) {
+      GuideMood.glad || GuideMood.celebrate => 'coach_happy',
+      GuideMood.think || GuideMood.warn => 'coach_oops',
+      _ => 'coach_talk',
+    };
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Image.asset(
+          'assets/duty_slip/dress/$face.webp',
+          height: 64,
+          cacheHeight: 200,
+          fit: BoxFit.contain,
+          gaplessPlayback: true,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: const Color(0xFF15243E),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: SlmColors.gold400.withValues(alpha: 0.6)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              child: Text(
+                enDigits(line),
+                style: zlText(14, weight: FontWeight.w700, color: SlmColors.ivory, height: 1.3),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
