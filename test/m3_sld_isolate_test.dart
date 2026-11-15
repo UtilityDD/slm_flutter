@@ -2,11 +2,12 @@
 // (breaker before isolator — an isolator on load is deadly; the docket's
 // feeder, not its neighbour; not the DO fuse; on a ring the NO point tagged,
 // and when it is closed today the other feeder's breaker and the tie opened
-// too; then tester, earth, work — work on a live section is deadly), the deal,
+// too; then tester, earth, work — work or an earth on a live section is
+// deadly, B8), the deal,
 // the reason libraries, and the level in the shell: idle perf, the guide first,
 // a full clean play with the coworker refused, a slip card that keeps the
 // docket, three slips, the deadly freeze (isolator on load), listening to him
-// (a slip), he comes even on a fast play (the tie waits for him), no work
+// (B1: deadly work while live, a slip once dead), he comes even on a fast play (the tie waits for him), no work
 // with a point on the map still closed, and the gesture hint (a sweep).
 import 'dart:async';
 import 'dart:io';
@@ -240,9 +241,30 @@ void main() {
       final (live, m) = r.test();
       expect(live, isTrue);
       expect(m, M3SldIsolateMistakes.backfeedTest);
-      expect(r.earth(), M3SldIsolateMistakes.earthUnproven);
       expect(r.start(), M3SldIsolateMistakes.backfeedWork);
       expect(r.deadly, M3SldIsolateMistakes.backfeedWork);
+    });
+
+    test('owner ruling B8: the earth on a live section is deadly (backfed or never isolated); on a dead one unproven, a slip', () {
+      final back = run1(_K.ringClosed)
+        ..tap(_P.cbA)
+        ..tap(_P.abA);
+      expect(back.live, isTrue, reason: 'backfed through the closed ring');
+      expect(back.earth(), M3SldIsolateMistakes.earthLive);
+      expect(back.deadly, M3SldIsolateMistakes.earthLive);
+      expect(back.ended, isTrue);
+      expect(back.earthed, isFalse);
+      final radial = run1(_K.radial);
+      expect(radial.live, isTrue);
+      expect(radial.earth()!.deadly, isTrue);
+      expect(radial.slips, 0);
+      final dead = run1(_K.ringNo)
+        ..tap(_P.cbA)
+        ..tap(_P.abA);
+      expect(dead.live, isFalse);
+      expect(dead.earth(), M3SldIsolateMistakes.earthUnproven);
+      expect(dead.deadly, isNull);
+      expect(dead.slips, 1);
     });
 
     test('ring closed today: the tie on load is deadly; its breaker first, then the tie', () {
@@ -352,12 +374,30 @@ void main() {
       }
     });
 
-    test('listening to him is a slip (playbook row 8), not a death', () {
-      final r = run1(_K.ringClosed);
-      expect(r.listened(), M3SldIsolateMistakes.listened);
+    test('owner ruling B1: listening = the work on his word — deadly while live, a slip once the section is dead', () {
+      // Nothing open: the work on a live section.
+      final a = run1(_K.ringClosed);
+      expect(a.listened(), M3SldIsolateMistakes.liveWork);
+      expect(a.deadly, M3SldIsolateMistakes.liveWork);
+      expect(a.ended, isTrue);
+      expect(a.slips, 0);
+      // Only this feeder's side open on the ring closed today: backfeed.
+      final b = run1(_K.ringClosed)
+        ..tap(_P.cbA)
+        ..tap(_P.abA);
+      expect(b.listened(), M3SldIsolateMistakes.backfeedWork);
+      expect(b.ended, isTrue);
+      // Both breakers and this side's isolator open (tie still closed): dead,
+      // so listening is only the slip and the docket goes on.
+      final c = run1(_K.ringClosed)
+        ..tap(_P.cbA)
+        ..tap(_P.abA)
+        ..tap(_P.cbB);
+      expect(c.live, isFalse);
+      expect(c.listened(), M3SldIsolateMistakes.listened);
       expect(M3SldIsolateMistakes.listened.deadly, isFalse);
-      expect(r.slips, 1);
-      expect(r.ended, isFalse);
+      expect(c.slips, 1);
+      expect(c.ended, isFalse);
     });
 
     test('English digits only; every mistake has its picture; deadly ones; keys unique', () {
@@ -380,7 +420,7 @@ void main() {
         expect(l.contains('পানি'), isFalse, reason: l);
       }
       expect(M3SldIsolateMistakes.all.where((m) => m.deadly).toSet(),
-          {M3SldIsolateMistakes.abOnLoad, M3SldIsolateMistakes.backfeedWork, M3SldIsolateMistakes.liveWork});
+          {M3SldIsolateMistakes.abOnLoad, M3SldIsolateMistakes.backfeedWork, M3SldIsolateMistakes.liveWork, M3SldIsolateMistakes.earthLive});
       expect(M3SldIsolateMistakes.all.map((m) => m.key).toSet(), hasLength(M3SldIsolateMistakes.all.length));
       for (final m in M3SldIsolateMistakes.all) {
         expect(m.key, startsWith('3.10/m3_sld_isolate/'));
@@ -563,7 +603,24 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('listening to him = a slip: its card, no freeze; the docket goes on', (t) async {
+    testWidgets('owner ruling B8: the earth on the live section: the scene freezes first, then the card', (t) async {
+      final seed = _quietSeed();
+      final c = await _open(t, seed);
+      await _tool(t, M3SldIsolateLines.earth);
+      await _pump(t, 500);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, M3SldIsolateMistakes.earthLive.key);
+      expect(s.mistakes.single.deadly, isTrue);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('owner ruling B1: listening to him on a live section = the deadly work: freeze, then the near-miss', (t) async {
       final deal = m3SldIsolateDeal(math.Random(11));
       final c = await _open(t, 11);
       for (var i = 0; i < deal.callAt; i++) {
@@ -578,16 +635,15 @@ void main() {
       await t.tap(wrong.first, warnIfMissed: false);
       await tapReasonProceed(t);
       await _pump(t, 800);
-      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pump(t, 3500);
       expect(find.byType(MistakeCard), findsOneWidget);
-      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
       final s = c.read(gameSaveProvider);
-      expect(s.mistakes.single.key, M3SldIsolateMistakes.listened.key);
-      expect(s.mistakes.single.deadly, isFalse);
-      await t.tap(find.text(MistakeLines.gotIt));
-      await _pump(t, 600);
-      expect(_label(M3SldIsolateLines.tester), findsOneWidget, reason: 'the same docket goes on');
-      expect(find.byType(CoworkerPeek), findsNothing);
+      // Nothing opened yet on his docket: the work on a live section.
+      expect(s.mistakes.single.key, M3SldIsolateMistakes.liveWork.key);
+      expect(s.mistakes.single.deadly, isTrue);
       await _close(t, c);
     });
 

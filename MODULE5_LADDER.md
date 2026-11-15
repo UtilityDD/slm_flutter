@@ -18,7 +18,7 @@ The Deadly column lists each level's `deadly: true` mistake keys (the same list 
 |---:|---|---|---|---|---|---|
 | 1 | 5.1/learn | 'লাইন ট্রিপ করেছে'—প্রথম কাজ কী? (picture board) | `learn_cards` · `learn_5_1` · `learn_board_pack51.dart` | 5 rounds (call · treat · van · storm · lock-out) + myth 'ট্রিপ মানে ডেড' | — (board traps only) | built, pending review |
 | 2 | 5.1/do/0 | কন্ট্রোল রুমের ফোন | `m5_trip_call` · `do_5_1_a` · `m5_trip_call(_world).dart` | interview the operator: drag the handset, 7 question tiles (6 required incl. the logbook; vague answers need a second probe), pin the suspect, van to the start section, briefing (PTW only before touch/climb, M5-3) | 💀 asking control to charge the locked-out feeder (coworker, R8) | built, pending review |
-| 3 | 5.1/do/1 | ট্রিপ মানে ডেড নয় | `m5_recloser_watch` · `do_5_1_b` | count recloser shots against decoys, report count + span; at lock-out: docket → drive → PTW → tester → spike → clamp | 💀 hands-on with no PTW · no test · no earth · clamp before spike | built, pending review |
+| 3 | 5.1/do/1 | ট্রিপ মানে ডেড নয় | `m5_recloser_watch` · `do_5_1_b` | count recloser shots against decoys, report count + span; at lock-out: docket → drive → PTW → tester → spike → clamp; earths on both sides of the working zone (the crew's set drawn on at the span's far pole once 0 V shows; WBSEDCL Safety Manual 2025 5.14(d)); driving off before the lock-out is reported = slip, after it the drag is ignored (ground patrol needs no PTW, M5-3) | 💀 hands-on with no PTW · no test · no earth · clamp before spike | built, pending review |
 | 4 | 5.2/learn | লাইন পেট্রোলিং-এর সঠিক নিয়ম | `learn_5_2` · `learn_board_pack52.dart` | 5 rounds + myth | — | built, pending review |
 | 5 | 5.2/do/0 | ফল্টের ঠিকানা | `m5_fault_address` · `do_5_2_a` | radio control for the docket first (M5-3), drive the feeder, read FPIs in close-up, bracket with two flags; long feeder = van 2 to the far end; sectionalizer call; history note | — (slip-only level) | built, pending review |
 | 6 | 5.2/do/1 | থামুন, দেখুন, শুনুন | `m5_sense_walk` · `do_5_2_b` | hold-walk / release-stop, swipe up to the pole top, ear/nose hold, tag (evidence-gated, M5-10); fallen wire ahead (stop ≥10 m, rope ≥10 m) or drop (feet-together steps out) | 💀 entering the 10 m zone · touching the wire · long stride out | built, pending review |
@@ -26,11 +26,11 @@ The Deadly column lists each level's `deadly: true` mistake keys (the same list 
 | 8 | 5.3/do/0 | অপরাধী কে? সূত্রের সুতো | `m5_culprit_case` · `do_5_3_a` | photograph clues, thread them to the culprit, fault type and remedy deck | 💀 closing with 'charge it and see' (R8, added by builder) | built, pending review |
 | 9 | 5.3/do/1 | পোড়া জোড়, নরম তার | `m5_anneal_cut` · `do_5_3_b` | earth both ends, spanner off the clamp/bolted sleeve, judge softness by colour/feel, cut out the soft length, new joint | 💀 climbing with an earth missing at either end (R4) | built, pending review |
 | 10 | 5.4/learn | ফিউজ বারবার উড়ে যাওয়ার কারণ | `learn_5_4` · `learn_board_pack54.dart` | 5 rounds + myth | — | built, pending review |
-| 11 | 5.4/do/0 | একে একে ফিডার — ফল্ট কোথায়? | `m5_feeder_sectionalize` · `do_5_4_a` | pull every LT way, charge, restore one by one, tag the blower; DTR/HT case → patrol or megger | 💀 charging with no LT way open · re-pushing the proved faulty way · re-charge with nothing changed · re-charge after HT proved | built, pending review |
-| 12 | 5.4/do/1 | লাগাতেই, না পরে? | `m5_reblow_clock` · `do_5_4_b` | read today's logbook, look first (M5-8), hold the DO / hold the clock, stamp instant vs delayed; permanent → order deck; transient → where-to-look deck | 💀 re-fit after an instant blast · listening to 'burn it' · ordering a re-charge · thick wire / wrong rating | built, pending review |
+| 11 | 5.4/do/0 | একে একে ফিডার — ফল্ট কোথায়? | `m5_feeder_sectionalize` · `do_5_4_a` | the crew has opened all three DOs (the board is dead); pull every LT way, shut the DO, then for each way: DTR LT switch OFF (lock, tag, 0 V: one automatic beat) → carrier in → LT switch ON; tag the blower with the LT switch OFF; a DO is never reopened on load (B3); DTR/HT case → patrol or megger | 💀 charging with no LT way open · re-pushing the proved faulty way · re-charge with nothing changed · re-charge after HT proved · a hand on a carrier while the board is live (DTR charged, LT switch ON; owner A5, 2026-11-15) | built, pending review |
+| 12 | 5.4/do/1 | লাগাতেই, না পরে? | `m5_reblow_clock` · `do_5_4_b` | read today's logbook, look first (M5-8), hold the DO / hold the clock, stamp instant vs delayed; the other two phases' DOs are drawn open by the crew before every re-fit (lesson 4.4 pro tip 2); permanent → order deck; transient → where-to-look deck | 💀 re-fit after an instant blast · listening to 'burn it' · ordering a re-charge · thick wire / wrong rating | built, pending review |
 | 13 | 5.5/learn | 'লো-ভোল্টেজ' সমস্যার সমাধান | `learn_5_5` · `learn_board_pack55.dart` | 5 rounds + myth | — (live tap-changer trap is a board trap) | built, pending review |
-| 14 | 5.5/do/0 | ড্রপ কোথায়? | `m5_lv_street_read` · `do_5_5_a` | ask the street → scope chip → route → LTDB R/Y/B → line probes → evidence-gated verdict → docket/span card | 💀 turning the tap changer live (R21) | built, pending review |
-| 15 | 5.5/do/1 | লোড দিয়ে মাপুন | `m5_lv_load_test` · `do_5_5_b` | measure with the load on, N–E check, evidence-gated verdict, method deck, every joint, loaded re-measure | 💀 plain spanner on live terminals · bare-hand neutral (R22) | built, pending review |
+| 14 | 5.5/do/0 | ড্রপ কোথায়? | `m5_lv_street_read` · `do_5_5_a` | ask the street → scope chip → route → LTDB incoming R/Y/B ('এলটিডিবি-র ইনকামিং', the bushing's own cable, M5-15(c); Bangla labels; a lineman's check of the stand-in is open) → line probes → evidence-gated verdict → docket/span card | 💀 turning the tap changer live (R21) | built, pending review |
+| 15 | 5.5/do/1 | লোড দিয়ে মাপুন | `m5_lv_load_test` · `do_5_5_b` | measure with the load on, N–E check, evidence-gated verdict, method deck (right: the LT line shut down at the DTR / pillar way with lock and tag — a house cut-out leaves the pole-end joints live — 0 V on the tester, insulated spanner; WBSEDCL 3.2, owner A5), every joint, loaded re-measure | 💀 plain spanner on live terminals · bare-hand neutral (R22) | built, pending review |
 | 16 | 5.6/learn | শর্ট সার্কিট এবং ওপেন সার্কিট ফল্ট | `learn_5_6` · `learn_board_pack56.dart` | 5 rounds + myth | — | built, pending review |
 | 17 | 5.6/do/0 | দুই শত্রুর খাতা | `m5_fault_casebook` · `do_5_6_a` | 4 cases, spend two clues by gesture, file into short / open / trip-no-proof (locked until both clues seen) | — (slip-only level) | built, pending review |
 | 18 | 5.6/do/1 | ছেঁড়া তার, তবু লাইভ | `m5_live_wire_guard` · `do_5_6_b` | swipe to stop people reaching live metal (waves; needless stops cost time and the clean +5) | 💀 hand lift · bamboo push · joining the ends · phone-off · bystander contact | built, pending review |
@@ -38,14 +38,14 @@ The Deadly column lists each level's `deadly: true` mistake keys (the same list 
 | 20 | 5.7/do/0 | সার্চলাইটের টহল | `m5_searchlight_patrol` · `do_5_7_a` | docket, two-person van, steer the searchlight, call the speed, mark poles, report | 💀 climbing to look (R1/R19, added by builder) | built, pending review |
 | 21 | 5.7/do/1 | আঁধারে চোখ-কান | `m5_dark_eyes` · `do_5_7_b` | lights off, wait for the eyes, then mark the glow/sound; report pole number from the ground | 💀 climbing the live pole · bamboo poke (R19/R20) | built, pending review |
 | 22 | 5.8/learn | ট্রান্সফরমারের সাধারণ সমস্যা | `learn_5_8` · `learn_board_pack58.dart` | 5 rounds + myth | — | built, pending review |
-| 23 | 5.8/do/0 | লক্ষণ থেকে কারণ | `m5_cause_strike` · `do_5_8_a` | run a test, strike causes off the list (noise · leak · LT no voltage) | 💀 spanner untested · untested hands · climbing live | built, pending review |
+| 23 | 5.8/do/0 | লক্ষণ থেকে কারণ | `m5_cause_strike` · `do_5_8_a` | run a test, strike causes off the list (noise · leak · LT no voltage) | 💀 spanner live · no PTW · untested · no earth · earth on live · DO on load · bare meter on live LT · climbing live (also the verdict cards that order them) | built, pending review |
 | 24 | 5.8/do/1 | হাসপাতালের কাগজ | `m5_workshop_referral` · `do_5_8_b` | gather proof at 3 sites (bushing, IR, oil, record), pin it to the workshop slip | 💀 re-charge DTR · re-charge LT with the blower in (R8) · no HT test | built, pending review |
 | 25 | 5.9/learn | কেবিল ফল্ট খোঁজার প্রাথমিক ধারণা | `learn_5_9` · `learn_board_pack59.dart` | 5 rounds + myth | — | built, pending review |
 | 26 | 5.9/do/0 | কোর থেকে কোরে: ফল্টের ধরন | `m5_cable_fault_type` · `do_5_9_a` | isolate, plan megger/multimeter tests core by core, discharge, deduce open / short / earth | 💀 live lead (R23) · earthed rod on a live core · lifting a charged clip (R24) | built, pending review |
-| 27 | 5.9/do/1 | মাটির নিচের সূত্র | `m5_cable_route_locate` · `do_5_9_b` | read the TDR, trace the route, call the underground owners (M5-7), sweep for the thump, peg ('গোঁজ') | — (slip-only level) | built, pending review |
+| 27 | 5.9/do/1 | মাটির নিচের সূত্র | `m5_cable_route_locate` · `do_5_9_b` | read the TDR, trace the route, check the cable route record and call the underground owners (M5-7; India's DoT 'Call Before u Dig'), sweep for the thump, peg ('গোঁজ') | — (slip-only level) | built, pending review |
 | 28 | 5.10/learn | প্রিভেন্টিভ মেইনটেন্যান্স | `learn_5_10` · `learn_board_pack510.dart` | 5 rounds + myth | — | built, pending review |
 | 29 | 5.10/do/0 | লুকানো গরম: PM রাউন্ড | `m5_pm_thermal_round` · `do_5_10_a` | sweep the thermal camera, snap hotspots (>15 °C over the other two phases, M5-15b), shutdown order, tighten | 💀 no permit · no test · no earth (R4 added by builder) | built, pending review |
-| 30 | m5/gate | অ্যাডভান্সডের ডকেট: এক রাতের কেস | `m5_gate_case` · `gate_m5` · `m5_gate_case(_world).dart` | one fault call as crew in-charge: phone menu, PTW clipboard, chip → map → order → hold radio dispatch (9 orders), close view or UG sheet, report, line clear; `unlockRank(5)` | 💀 hands without PTW · climb without earth · charge a fault · charge with crew · clear with crew up · wire zone · climb live · hands after clear · bamboo poke · megger live | built, pending review |
+| 30 | m5/gate | অ্যাডভান্সডের ডকেট: এক রাতের কেস | `m5_gate_case` · `gate_m5` · `m5_gate_case(_world).dart` | one fault call as crew in-charge: phone menu, PTW clipboard, chip → map → order → hold radio dispatch (9 orders), close view or UG sheet (isolate both ends and discharge before the megger), report, line clear; `unlockRank(5)` | 💀 hands without PTW · climb without earth · charge a fault · charge with crew · clear with crew up · wire zone · climb live · hands after clear · bamboo poke · megger live | built, pending review |
 
 ## Deadly / slip table (module design, with rulings applied)
 
@@ -87,13 +87,25 @@ From `module5_items/*.json` `deadlySlipTable`; where a ruling (M5-x) changed a r
 | R32 | Accepting water in DTR oil as harmless (M5-6) | slip | 5.8b |
 | R33 | Pegging/digging before calling the underground-service owners (M5-7) | slip | 5.9b, gate |
 
+**Cross-module rulings applied 2026-11-15** (`docs/decisions/OWNER_DECISIONS_M1-4.md`, "Rulings made 2026-11-15"):
+
+| Ruling | Act | Class | Used in |
+|---|---|---|---|
+| B3 | Opening (or re-opening) a DO on load | 💀 | 5.8a; 5.4a never reopens a DO on load (the DTR's LT switch makes the board dead instead) |
+| A5 | A fuse / LT way carrier touched, pulled or pushed with the supply on | 💀 | 5.4a; boards 5.4 and 5.5 (LT fuses and pole-end joints only on a dead LT line) |
+| B8 | Earth set on a live line | 💀 | 5.8a |
+| B4 | Bare-hand meter leads on live terminals (on dead terminals, or a bare tong = slip) | 💀 | 5.8a |
+| R1/R4 | Spanner with no PTW, or after 0 V but before the LT earth set | 💀 | 5.8a (as 5.10a) |
+| B1 | A verdict card that orders a deadly act ('চালু রেখেই নাট টাইট', 'চালু রেখেই ওপরে উঠে') = that deadly | 💀 | 5.8a |
+| M5-1 | Reclosing a DO that blew again the moment it was fitted | 💀 | also M4 `do_4_4_b` (was a slip there) |
+
 Learn boards have no deadly freeze or strike-out (kit design): deadly-class traps cost a ◆ and show their lesson/ruling text.
 
 ## Owner decisions (flagged by the builders — please confirm or change)
 
 ### Top decisions for Module 5 (director's summary)
 1. **Deadly acts added beyond the item specs** (each rung needs a deadly freeze per the worker contract): 5.3a 'charge it and see' (R8), 5.7a climbing to look (R1/R19), 5.10a wrench before the earth (R4), 5.9a earthed rod on a live core (R23+R2), gate: line clear with the crew up, hands after line clear. 5.2a, 5.6a, 5.9b stay slip-only — add a deadly act or accept.
-2. **R8 across the module** (re-energizing a faulted line = deadly) still conflicts with M4 `do_4_4_b` (re-blow = slip). Align the two.
+2. ~~**R8 across the module** conflicts with M4 `do_4_4_b`~~ — aligned 2026-11-15: in `do_4_4_b` reclosing after the fuse blew again at once is now deadly (M5-1), also on the coworker's push (B1).
 3. **Learn boards have no deadly path**: deadly-class traps (charge, bare hand, live tap changer, live megger…) are ordinary ◆ traps. Kit change or accept the board rule.
 4. **Gate badge = board badge**: every 5.x board uses the lesson badge 'ফল্ট ফাইন্ডার', which M5-12 also gives the gate.
 5. **Fallen-wire cordon**: rope beside the wire is a slip (M5-4 cordon < 10 m) though tying it means entering the 10 m zone (deadly); confirm.
@@ -113,7 +125,7 @@ Learn boards have no deadly freeze or strike-out (kit design): deadly-class trap
 - Operator speaks via device TTS through the guide's lips (kit gap).
 
 ### m5do1b
-- Driving off before the PTW is a slip with the M5-3 card; wrong count + wrong span in one report = one slip; a needless stop costs 2 s only.
+- Driving off before the lock-out is reported to control is a slip with the M5-3 card (after the report a drag of the van is ignored: ground patrol needs no PTW; climbing before it stays deadly); wrong count + wrong span in one report = one slip; a needless stop costs 2 s only.
 - Quick clock runs from the lock-out (70 s after it). Driving the spike before the tester is not a mistake (only the clamp counts as earth applied).
 - Weather → fault mapping, inverter-house decoy, 2–3 shots in game seconds are game choices.
 
@@ -144,18 +156,20 @@ Learn boards have no deadly freeze or strike-out (kit design): deadly-class trap
 
 ### m5lb4
 - No deadly path on boards (blast re-close, Fault Burning are ordinary traps). Round 'where' mixes action traps with place traps (reword the prompt or swap a trap). Rounds 1 and 4 both carry a Fault Burning trap.
+- 2026-11-15 (A5): the one-by-one card now reads 'এলটি সুইচ বন্ধ করে একে একে ফিউজ লাগানো' — each way goes in with the DTR's LT switch OFF, the switch back ON is the test.
 - Cards not yet spot-checked on screen.
 
 ### m5do4a
 - Re-pushing a proved faulty way on a live board = deadly (R8 reading); re-charge after a partial blast is deadly only if nothing was pulled since. `rechargeSame` reuses `no_open.svg`.
-- DTR/HT case accepts both patrol and megger. quickMs 75 s.
+- DTR/HT case accepts both patrol and megger. quickMs 90 s.
+- 2026-11-15 rulings: the crew opens all three DOs before the round (the board is dead); a DO is never reopened on load (B3), so after the DTR is charged each way goes in with the DTR's LT switch OFF (lock, tag, 0 V as one automatic beat) and the switch back ON is the test. A hand on a carrier while the board is live = deadly (`live-carrier`, A5, the m3_pillar_inspect card and art). The catalog's `do_5_4_a` `deadlyRules` lists it.
 
 ### m5do4b
 - Fuse-rating tag reads 'ফিউজ · সঠিক রেটিং' (no amp figure in the lesson) — owner may supply one.
-- Look-first step comes from M5-8 (no lesson point). Held times 40 s … 3 h 30 m, older-page notes, birds as a weather sign are game devices. quickMs 60 s.
+- Look-first step comes from M5-8 (no lesson point). The other two phases' DOs are drawn open before every re-fit (lesson 4.4 pro tip 2, M4 refit-at-once; no extra step, the no-check card says it). Held times 40 s … 3 h 30 m, older-page notes, birds as a weather sign are game devices. quickMs 60 s.
 
 ### m5lb5
-- Round 5 uses the M5-15c wording 'এলটিডিবি-র ইনকামিং' (the lesson says LT bushing). Supply-off before tightening joints comes from M3/M4 rulings.
+- Round 5 uses the M5-15c wording 'এলটিডিবি-র ইনকামিং' (the lesson says LT bushing). Before tightening the pole joint the LT line is shut down at the DTR / pillar way, red tag on the pole (the pole-end joint is upstream of any cut-out; WBSEDCL 3.2, owner A5, 2026-11-15): card 'এলটি লাইন বন্ধ করে পোলের জয়েন্ট টাইট'; the meter joint keeps the cut-out pulled.
 - Ruling M5-15(c) is labelled 5.5b but applies to 5.5a (relabel in the rulings file).
 
 ### m5do5a
@@ -163,7 +177,7 @@ Learn boards have no deadly freeze or strike-out (kit design): deadly-class trap
 - Probing 8+ houses only loses the 'রিডিং দেখে ঠিক রায়' tag (no score cost). quickMs 90 s. Neighbour TTS moves the guide's lips.
 
 ### m5do5b
-- Meter-seal and neutral–earth slips are not in lesson 5.5; method deck and R22 cards come from M3/M4 rulings.
+- Meter-seal and neutral–earth slips are not in lesson 5.5; method deck and R22 cards come from M3/M4 rulings. Since 2026-11-15 the right method shuts the LT line at the DTR / pillar way with lock and tag (a house cut-out or meter switch leaves the pole-end joints live; WBSEDCL 3.2, A5), and the scene hangs the red shutdown tag on the pole.
 - Load-grew report without asking the customer = slip (ask-first); weak-neutral call rejects 'loose joint'; the loose verdict card states a diagnosis (reword as a suspicion?). Voltages illustrative. quickMs 90 s.
 
 ### m5lb6
@@ -189,10 +203,11 @@ Learn boards have no deadly freeze or strike-out (kit design): deadly-class trap
 - Dark adaptation ~5 s; pole plate and reporting phase are not in the lesson. quickMs 75 s.
 
 ### m5lb8
-- Water-in-oil myth used as a trap card (M5-6 text), not a second myth beat. Tong tester as the load check, leak sizes, oil jar look are inferred. Rival bubble lane is a fixed 150 px.
+- Water-in-oil myth used as a trap card (M5-6 text), not a second myth beat. Since 2026-11-15 the bushing card and its why chip add the earth: 'বন্ধ, টেস্টারে ডেড, আর্থ — তারপর বুশিং' (as 5.8a). Tong tester as the load check, leak sizes, oil jar look are inferred. Rival bubble lane is a fixed 150 px.
 
 ### m5do8a
 - Added slip: opening a DO on load (LT lever still ON). +5 per right strike is new scoring. LT lever gated until all three phases are metered (gentle nudge, not a slip). Second listen on a loud case adds `humLate` push + `push-report` slip. quickMs 80 s.
+- 2026-11-15 rulings: DO on load raised to deadly (B3). Dead-phase work now PTW → LT off → DOs open → tester 0 V on all three → LT earth set → spanner; no PTW / no earth = deadly (R1/R4, as m5_pm_thermal_round), earth on live = deadly (B8), tester/earth before the PTW and earth before every 0 V = slips. Rubber gloves button in every row: bare meter leads on the live LT box = deadly (B4), bare tong or bare leads on dead terminals = slip. Verdict decoys 'চালু রেখেই নাট টাইট' / 'চালু রেখেই ওপরে উঠে' book liveSpanner / climbLive (B1); the two 'আবার চার্জ' decoys reworded as plain slips. quickMs 90 s.
 
 ### m5do8b
 - Re-charge button reads 'এ অবস্থায় চার্জ' (width). LT box plate reads 'LT' (blower still in) so re-charge is deadly under R8. Charge push only at a transformer site (could be a tell).
@@ -206,7 +221,7 @@ Learn boards have no deadly freeze or strike-out (kit design): deadly-class trap
 - Clean play ~4.6 min (quickMs 230 s): trim round 2?
 
 ### m5do9b
-- No deadly act. Calling all three underground owners before the peg (M5-7); their replies are flavour text. Calling the team after a clue is pinned is free (worker contract says needless costs something).
+- No deadly act. Calling all three underground owners before the peg (M5-7; India's DoT 'Call Before u Dig' as the reference, the cable route record first); their replies are flavour text. Calling the team after a clue is pinned is free (worker contract says needless costs something).
 - Peg label changed from 'খুঁটি' to 'গোঁজ'. B1 coworker line is three sentences (shorten before recording?). Tolerances are game data. quickMs 80 s.
 
 ### m5lb10
@@ -220,4 +235,4 @@ Learn boards have no deadly freeze or strike-out (kit design): deadly-class trap
 - Aftershock beat not built (the spec's right card would be R8-deadly). Restore with another card or leave out (M5-12 allows).
 - Line clear with crew up / earth on = deadly (by analogy with R12); line clear early with crew down = slip; hands after line clear = deadly. None is a separate table row.
 - R16 rope beside the wire = slip (M5-4); bamboo poke before tester + earth = deadly (M5-2). 'Wait till morning' coworker cuts in when the first patrol is sent.
-- Needless-order and hands-before-found slips are game rules. Clash remedy 're-tension the sag' is not in lesson 5.4. quickMs 7 min; `unlockRank(5)` (rank numbering F5 open).
+- Needless-order and hands-before-found slips are game rules. The UG step now reads 'দুই প্রান্ত আইসোলেট করে ডিসচার্জ' (isolate both ends and discharge before the megger), and so do its done line and the R23 card. Clash remedy 're-tension the sag' is not in lesson 5.4. quickMs 7 min; `unlockRank(5)` (rank numbering F5 open).

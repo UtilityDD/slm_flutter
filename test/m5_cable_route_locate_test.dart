@@ -618,6 +618,10 @@ void main() {
       expect(m5CrlPacks.keys, ['do_5_9_b']);
       // Ruling M5-7: the R33 card names the owners of the other lines.
       expect(M5CrlMistakes.pegBeforeCall.textBn, 'খোঁড়ার আগে কেবিল রুট রেকর্ড দেখুন এবং অন্য ভূগর্ভস্থ লাইনের (টেলিফোন, জল, গ্যাস) মালিকদের জানান।');
+      // ...and so does the reason chip: no foreign slogan ('Dial before you dig'
+      // is Australia's service; India's is DoT 'Call Before u Dig').
+      expect(M5CrlLines.whyCall.any((w) => w.contains('মালিক')), isTrue);
+      expect(M5CrlLines.allWhyRight.where((w) => RegExp('[A-Za-z]{4,}').hasMatch(w)), isEmpty);
     });
 
     test('libraries: same length, big enough, never a rule marked wrong; the deal is one right of three', () {

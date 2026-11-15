@@ -6,7 +6,10 @@ import 'package:flutter/material.dart';
 // an 11 kV spur in open country. The spur comes in from the left over a
 // middle pole and ends on the DTR pole on the right: a top cross-arm with
 // three pin insulators, the DO-fuse cross-arm under it with three drop-out
-// fuses (one barrel hangs dropped, hinged at its bottom contact), leads down
+// fuses (the faulted barrel hangs dropped, hinged at its bottom contact, its
+// fuse-link tail burnt; until it is re-fitted the other two hang open too,
+// opened by the crew — lesson 4.4 pro tip 2 / M4 refit-at-once: before a
+// re-fit after a fault the other two phases' DOs are open), leads down
 // to the pole-mounted transformer. A second DTR stands far away on the
 // spur. The trainee stands to the side of the DO (never under the barrel),
 // with gloves and the operating rod when he re-fits. In front: the van's
@@ -281,8 +284,10 @@ class M5ReblowWorldPainter extends CustomPainter {
       ..color = const Color(0xFF3A3020)
       ..strokeWidth = 1.1);
     // The DOs.
+    // Before the re-fit all three hang open (the crew opened the two healthy
+    // ones); re-fitted, the three are in again.
     for (var k = 0; k < 3; k++) {
-      _do(c, k, dropped: k == rig.phase && !rig.barrelUp);
+      _do(c, k, dropped: !rig.barrelUp, blown: k == rig.phase);
     }
     // The transformer, hung on the pole.
     c.drawRect(Rect.fromLTRB(tank.left + 6, tank.top + 10, tank.right - 6, tank.top + 16), arm);
@@ -338,8 +343,10 @@ class M5ReblowWorldPainter extends CustomPainter {
   }
 
   /// One drop-out fuse: the porcelain body and the barrel (closed upright
-  /// between the contacts, or dropped: hanging from the bottom hinge).
-  void _do(Canvas c, int k, {required bool dropped}) {
+  /// between the contacts, or dropped: hanging from the bottom hinge). Only
+  /// the [blown] one shows a burnt fuse-link tail; an opened healthy barrel
+  /// hangs a little steeper.
+  void _do(Canvas c, int k, {required bool dropped, bool blown = true}) {
     final g = geo;
     final x = M5ReblowGeo.doX(k);
     final top = g.doTopContact(k);
@@ -359,7 +366,7 @@ class M5ReblowWorldPainter extends CustomPainter {
     c.drawRect(Rect.fromCenter(center: top, width: 12, height: 5), contact);
     c.drawRect(Rect.fromCenter(center: hinge, width: 12, height: 5), contact);
     // The barrel.
-    final angle = dropped ? 2.55 : 0.0;
+    final angle = !dropped ? 0.0 : (blown ? 2.55 : 2.85);
     c.save();
     c.translate(hinge.dx, hinge.dy);
     c.rotate(angle);
@@ -374,7 +381,7 @@ class M5ReblowWorldPainter extends CustomPainter {
       ..color = const Color(0xFFB9C1C7)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.6);
-    if (dropped) {
+    if (dropped && blown) {
       // The fuse-link tail, burnt.
       c.drawLine(const Offset(0, 0), const Offset(2, 9), Paint()
         ..color = const Color(0xFF2A2A2A)

@@ -17,7 +17,8 @@ import 'learn_board_models.dart';
 ///    body aside; goggles or face shield and insulated gloves;
 ///  * switch: an AB switch / isolator only off-load (the breaker opened
 ///    first — it has no arc quenching); a spline / socket on the handle,
-///    turned slowly and in control; on-load = a huge arc;
+///    then one firm, unbroken turn to full travel, no haste over the
+///    preparation (lesson 6.4; ruled A3); on-load = a huge arc;
 ///  * care: a soft dry cloth after use; a waterproof bag or hung on a wall —
 ///    not on the ground or a vehicle floor (scratches); never an ordinary
 ///    stick for other work.
@@ -185,7 +186,7 @@ const learnBoardPack25 = LearnBoardPack(
       id: 'switch',
       promptBn: 'AB সুইচ (আইসোলেটর) খুলবেন — কোনটা ঠিক?',
       options: [
-        LearnBoardOption(id: 'slow', labelBn: 'সকেট বসিয়ে ধীরে হ্যান্ডেল ঘোরানো', asset: 'assets/game/art/m2_board25/switch_slow.svg', scene: true, correct: true),
+        LearnBoardOption(id: 'slow', labelBn: 'সকেট বসিয়ে এক টানে পুরো ঘোরানো', asset: 'assets/game/art/m2_board25/switch_slow.svg', scene: true, correct: true),
         LearnBoardOption(id: 'breaker', labelBn: 'আগে ব্রেকার খোলা নিশ্চিত করা', asset: 'assets/game/art/m2_board25/switch_breaker.svg', scene: true, correct: true),
         LearnBoardOption(
           id: 'on_load',
@@ -197,11 +198,11 @@ const learnBoardPack25 = LearnBoardPack(
         ),
         LearnBoardOption(
           id: 'rush',
-          labelBn: 'তাড়াহুড়োয় জোরে ঘুরিয়ে দেওয়া',
+          labelBn: 'প্রস্তুতি না সেরেই তাড়াহুড়োয় ঘোরানো',
           asset: 'assets/game/art/m2_board25/switch_rush.svg',
           scene: true,
           correct: false,
-          rejectBn: 'হ্যান্ডেল ধীরে ধীরে, নিয়ন্ত্রিতভাবে ঘোরান — তাড়াহুড়ো নয়।',
+          rejectBn: 'সুইচিংয়ে তাড়াহুড়ো একদম নয় — আগে সব প্রস্তুতি সেরে নিন, তারপর এক টানে পুরো ঘোরান।',
         ),
         LearnBoardOption(
           id: 'no_socket',
@@ -225,7 +226,7 @@ const learnBoardPack25 = LearnBoardPack(
         LearnWhyChip(id: 'w2', textBn: 'অফ-লোড মানে লাইনে কারেন্ট বইছে না', correct: true),
         LearnWhyChip(id: 'w3', textBn: 'আগে ব্রেকার খুলে তবে আইসোলেটর খোলা', correct: true),
         LearnWhyChip(id: 'w4', textBn: 'লোড থাকলেও আইসোলেটর খোলা যায়', correct: false),
-        LearnWhyChip(id: 'w5', textBn: 'জোরে ঘোরালে আর্ক হওয়ার সময় পায় না', correct: false),
+        LearnWhyChip(id: 'w5', textBn: 'আধখোলা ব্লেডেও লাইন বিচ্ছিন্ন হয়', correct: false),
         LearnWhyChip(id: 'w6', textBn: 'সকেট না বসালেও হ্যান্ডেল ঘুরে যায়', correct: false),
         LearnWhyChip(id: 'w7', textBn: 'ব্রেকার খোলা কিনা দেখা অন্যের কাজ', correct: false),
         LearnWhyChip(id: 'w8', textBn: 'স্টিক বাঁকলেও জোর দিলে সুইচ খোলে', correct: false),

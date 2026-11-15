@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' show PictureRecorder;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +29,7 @@ import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/m5_recloser_watch.dart';
+import 'package:slm_flutter/features/game/m5_recloser_watch_world.dart';
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/scene_kit.dart' show GuideIntro, LinemanFigure;
 import 'package:slm_flutter/features/game/spoken_once.dart';
@@ -300,7 +302,7 @@ void main() {
       expect(b.slips, 1);
     });
 
-    test('the PTW: climbing before it is deadly (in the watch too); driving off before it is a slip; the slip needs the permit', () {
+    test('the PTW: climbing before it is deadly (in the watch too); driving off before the report is a slip; after the report the drive just waits (M5-3)', () {
       final w = M5RecloserRun(_deal1);
       final m = w.climb();
       expect(m, M5RecloserMistakes.noPtw);
@@ -311,13 +313,35 @@ void main() {
       expect(r.vanSpan, isNull, reason: 'the van stays');
       final p = _toPtw();
       expect(p.takePtw(), isFalse, reason: 'not issued yet');
-      expect(p.drive(2), M5RecloserMistakes.patrolEarly);
+      final before = p.slips;
+      expect(p.drive(2), isNull, reason: 'control already told (the report): ground patrol needs no PTW — ruling M5-3');
+      expect(p.slips, before, reason: 'no patrol-early slip in the PTW stage');
+      expect(p.vanSpan, isNull, reason: 'the van waits for the permit');
+      expect(p.stage, M5RecloserStage.ptw);
       expect(p.radio(), isTrue);
       expect(p.climb(), M5RecloserMistakes.noPtw, reason: 'issued but not in hand');
       final q = _toPtw()..radio();
       expect(q.takePtw(), isTrue);
       expect(q.roundDone, isTrue);
       expect(q.caught, containsAll([M5RecloserLines.caughtLive, M5RecloserLines.caughtPtw]));
+    });
+
+    test('earths on both sides of the working zone (WBSEDCL 5.14(d)): the card says it; the crew\'s far set is drawn at the span\'s far pole', () {
+      expect(M5RecloserMistakes.noEarth.textBn, contains('দুই দিকে আর্থ'));
+      expect(M5RecloserMistakes.noEarth.deadly, isTrue, reason: 'R4 stays deadly');
+      expect(M5RecloserLines.caughtEarth, contains('দুই দিকে'));
+      final g = M5RecloserGeo.forScene(760, 0);
+      for (var span = 0; span < M5RecloserGeo.spans; span++) {
+        final far = g.farSpike(span + 1);
+        expect(far.dx, lessThan(M5RecloserGeo.poleX[span + 1]), reason: 'on the work span\'s side of the far pole');
+        expect(far.dx, greaterThan(g.spike(span).dx), reason: 'the two sets bracket the span');
+        final rec = PictureRecorder();
+        M5RecloserPainter(
+          geo: g,
+          rig: M5RecloserRig(weather: M5Weather.clear, fault: M5Fault.values.first, faultSpan: span, pole: span, spike: true, clamp: true, tested: 3, farEarth: true),
+        ).paint(Canvas(rec), const Size(360, 760));
+        rec.endRecording().dispose();
+      }
     });
 
     test('the drive: a span without the flash keeps the drive; the flash span starts the span step', () {

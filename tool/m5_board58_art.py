@@ -457,6 +457,19 @@ def megger(x, y, needle=0.0):
             f'<path d="M{x + 12} {y + 2} l6 0 l0 6" stroke="{WIRE}" stroke-width="1.8" fill="none"/>')
 
 
+def earth_set(tips, spike):
+    """An LT earthing set: a clamp on each bushing tip, the shorting bar, its
+    lead down to a spike in the ground (put on after the tester shows 0 V)."""
+    x = max(t[0] for t in tips) + 5
+    top, bot = min(t[1] for t in tips), max(t[1] for t in tips)
+    s = [f'<path d="M{t[0]} {t[1]} L{x} {t[1]}" stroke="{WIRE}" stroke-width="1.6"/>' for t in tips]
+    s += [f'<rect x="{t[0] - 2}" y="{t[1] - 2.5}" width="5" height="5" rx="1" fill="url(#steel)"/>' for t in tips]
+    s.append(f'<rect x="{x - 1.5}" y="{top - 3}" width="3" height="{bot - top + 6}" rx="1" fill="url(#steel)"/>')
+    s.append(f'<path d="M{x} {bot + 3} Q{x - 2} {(bot + spike[1]) / 2 + 8} {spike[0]} {spike[1] - 4}" stroke="{WIRE}" stroke-width="1.6" fill="none"/>')
+    s.append(f'<rect x="{spike[0] - 1.6}" y="{spike[1] - 6}" width="3.2" height="12" rx="1" fill="url(#steel)"/>')
+    return ''.join(s)
+
+
 def leads(src, dsts):
     return ''.join(f'<path d="M{src[0]} {src[1]} Q{(src[0] + d[0]) / 2} {max(src[1], d[1]) + 14} {d[0]} {d[1]}" '
                    f'stroke="{CROSS if i == 0 else WIRE}" stroke-width="1.2" fill="none"/>' for i, d in enumerate(dsts))
@@ -634,6 +647,7 @@ def ltdead_card(kind):
     if kind == 'check':
         out = stage('sky', dos=OPEN3, lamps=(1, 0, 1))
         out.append(worker(178, ((168, 136), (172, 168)), face=-1, look=10))
+        out.append(earth_set(LTB, (140, GY + 2)))
         out.append(tester(150, 130, -70))
         out.append(spanner(176, 186, -10))
     elif kind == 'swap':

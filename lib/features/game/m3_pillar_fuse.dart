@@ -32,10 +32,13 @@ import 'spoken_once.dart';
 // Lesson 3.7 "এলটি ডিস্ট্রিবিউশন বক্স/ফিডার পিলার", কাজ 1 "ফিউজ বদলাও ঠিকঠাক"
 // (pack do_3_7_a, engineType m3_pillar_fuse). Three street pillars a play;
 // at each, the docket names the dead feeder and phase (one fuse has blown).
-// The trainee puts on full PPE, opens the pillar, finds why the fuse blew,
-// pulls the blown fuse (only that one) with the insulated fuse puller, fits a
-// new HRC fuse — never a copper strip or a thick wire — and closes and locks
-// the door before he signs off.
+// The trainee switches the pillar's supply off at the DTR's LT switch, locks
+// and tags it, puts on full PPE, opens the pillar and proves it dead with the
+// tester (live-dead-live: the tester proved on the LT switch's supply side,
+// 0 V across a fuse, proved again), finds why the fuse blew, pulls the blown
+// fuse (only that one) with the insulated fuse puller, fits a new HRC fuse —
+// never a copper strip or a thick wire — shuts the door, takes the lock and
+// tag off, switches the LT on, locks the door and signs off.
 //
 // The lesson's rules, and only those:
 //   • point 1: a fault on one line takes out only that line (each feeder has
@@ -54,14 +57,24 @@ import 'spoken_once.dart';
 // goes in (else it blows again); the fuse puller as the insulated tool; how
 // the cause is mended is not in the lesson, so the level marks it put right
 // once the trainee has spotted it.
+// Owner ruling A5 (2026-11-15; WBSEDCL Safety Manual 2025 3.2, Ch IV duty
+// item 8 "replace L.T. fuses on dead line only", 7.13(iii)/(vi); CEA Safety
+// Regulations 2023 Reg 21(1), Sch I Pt II (6)): an LT pillar fuse is changed
+// only on a dead supply — the DTR's LT switch OFF, locked and tagged, proved
+// dead live-dead-live — and the door is shut before the LT goes back on.
 //
-// Deadly: any work on a fuse with no PPE (an arc flash); a copper strip or a
-// thick wire in the fuse's place (also by listening to the coworker, "তামার
-// পাত লাগিয়ে দাও, আর উড়বে না!" — the act he pushes is on MODULE3_LADDER.md
-// row 20's deadly list, so listening stays deadly here). Slips: a hand on a
-// fuse (no puller), pulling a healthy feeder's fuse, calling a sound spot the
-// cause (a wrong flag: once per spot a pillar), a new fuse before the cause is
-// found, signing off with the door open or unlocked. Three slips strike out.
+// Deadly: a hand or the puller on a fuse (or a new fuse in the slot) with the
+// LT still ON (A5); a copper strip or a thick wire in the fuse's place (also
+// by listening to the coworker, "তামার পাত লাগিয়ে দাও, আর উড়বে না!" — the act
+// he pushes is on MODULE3_LADDER.md row 20's deadly list, so listening stays
+// deadly here; owner ruling B1). Slips: a fuse touched with the LT off but no
+// lock and tag, not proved dead, or the tester not proved again after the
+// 0 V; a pillar reading before the tester was proved on a live source; no
+// PPE at the fuse after a proven isolation (A5: was deadly); a hand on a fuse
+// (no puller), pulling a healthy feeder's fuse, calling a sound spot the cause
+// (a wrong flag: once per spot a pillar), a new fuse before the cause is
+// found, the LT switched on with the pillar door open (A5), signing off with
+// the door open or unlocked. Three slips strike out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
 // scene (m3_pillar_fuse_world.dart), corner guide, ◆ on the table → "কেন …?"
@@ -72,7 +85,9 @@ import 'spoken_once.dart';
 // the job's order); each reason deck carries one myth that shares the
 // question's key word (no word only on the right card); gesture hints sweep
 // over every tool / tray item and the pillar (never one), and a tap on nothing
-// counts as a miss. Voice: the guide by device TTS; the coworker's push has
+// counts as a miss. The DTR's LT switch is a tap on the pole (the handle; with
+// the tester in hand, its supply side — always live — proves the tester); the
+// tester's reading shows by the tap ("লাইভ" / "0 V"). Voice: the guide by device TTS; the coworker's push has
 // no clip yet (silent, caption held — the director records it); his exit line
 // is his existing clip.
 
@@ -86,8 +101,9 @@ enum M3PillarFuseWhy { hrc, cause, ppe, lock }
 /// What can go in the empty fuse slot (the tray).
 enum M3PillarFuseItem { hrc, strip, wire }
 
-/// The hands-on tool row (dealt in a shuffled order, never the job's order).
-enum M3PillarFuseTool { ppe, puller, lock, signOff }
+/// The hands-on tool row (dealt in a shuffled order, never the job's order:
+/// PPE → lock and tag → tester → puller → door lock → sign off).
+enum M3PillarFuseTool { ppe, lockTag, tester, puller, lock, signOff }
 
 @immutable
 class M3PillarFuseRound {
@@ -98,7 +114,14 @@ class M3PillarFuseRound {
     required this.cause,
     required this.why,
     required this.tray,
-    this.tools = const [M3PillarFuseTool.lock, M3PillarFuseTool.ppe, M3PillarFuseTool.signOff, M3PillarFuseTool.puller],
+    this.tools = const [
+      M3PillarFuseTool.lock,
+      M3PillarFuseTool.tester,
+      M3PillarFuseTool.ppe,
+      M3PillarFuseTool.signOff,
+      M3PillarFuseTool.lockTag,
+      M3PillarFuseTool.puller,
+    ],
   });
   final String id;
 
@@ -140,8 +163,12 @@ abstract final class M3PillarFuseLines {
   static const sceneLabel = 'ফিডার পিলার';
   static const ppe = 'পিপিই';
   static const puller = 'ফিউজ পুলার';
-  static const lock = 'তালা';
+  static const lockTag = 'তালা-ট্যাগ';
+  static const tester = 'টেস্টার';
+  static const lock = 'দরজায় তালা';
   static const signOff = 'কাজ শেষ';
+  static const testerLive = 'লাইভ';
+  static const testerDead = '0 V';
   static const docket = 'ডকেট';
   static String itemBn(M3PillarFuseItem i) => switch (i) {
         M3PillarFuseItem.hrc => 'HRC ফিউজ',
@@ -235,11 +262,12 @@ abstract final class M3PillarFuseLines {
   static const callHeld = 'ঠিক! ফিউজের জায়গায় শুধু HRC ফিউজ।';
   static const allSet = 'তিন পাড়ায় আলো — কারণ সারিয়ে, HRC ফিউজে, দরজায় তালা।';
   static const quick = 'নিখুঁত আর ঝটপট!';
-  static const fail = 'আরেকবার — পিপিই, কারণ, HRC ফিউজ, তালা।';
+  static const fail = 'চলুন আরেকবার — আগে LT বন্ধ, তালা-ট্যাগ, টেস্টারে ডেড প্রমাণ, তারপরই ফিউজে হাত!';
   static const deadlyWord = 'থামুন!';
   static const nearMissWord = 'অল্পের জন্য!';
 
   // "আজ যা ধরলেন".
+  static const caughtIsolate = 'বন্ধ, তালা-ট্যাগ, মৃত প্রমাণ — তবে হাত';
   static const caughtPpe = 'পুরো পিপিই পরে বক্সে হাত';
   static const caughtFuse = 'ডকেট মিলিয়ে ঠিক ফিউজটাই খুলেছেন';
   static const caughtCause = 'ফিউজের আগে কারণ ধরেছেন';
@@ -251,12 +279,47 @@ abstract final class M3PillarFuseLines {
 abstract final class M3PillarFuseMistakes {
   static const _dir = 'assets/game/art/m3_pillar_fuse';
 
+  /// A hand, the puller or a new fuse at a fuse with the LT still ON: a live
+  /// 415 V fuse (owner ruling A5, 2026-11-15). The m3_pillar_inspect card's
+  /// words and picture.
+  static const liveFuse = DoMistake(
+    key: '3.7/m3_pillar_fuse/live-fuse',
+    textBn: 'সুইচ ON রেখেই ফিউজে হাত। নিয়ম: আগে লাইন বন্ধ, তারপর ফিউজ খোলা।',
+    art: 'assets/game/art/m3_pillar_inspect/fuse_before_off.svg',
+    deadly: true,
+    lessonPoint: 1,
+  );
+  /// No PPE at the fuse — reached only after a proven isolation, so a slip
+  /// (owner ruling A5, 2026-11-15; it was deadly).
   static const noPpe = DoMistake(
     key: '3.7/m3_pillar_fuse/no-ppe',
     textBn: 'পিপিই ছাড়া পিলারের ভেতরে হাত নয়! এখানে আর্ক ফ্ল্যাশ মুহূর্তে পুড়িয়ে দেয় — আগে পুরো পিপিই, ইনসুলেটেড টুল।',
     art: '$_dir/no_ppe.svg',
-    deadly: true,
     lessonPoint: 1,
+  );
+  // Lock-out and proving dead come from the module's rules (A5), not lesson
+  // 3.7's text: no lesson point. Words of m2_phase_swap / m3_gate_field.
+  static const noLockTag = DoMistake(
+    key: '3.7/m3_pillar_fuse/no-lock-tag',
+    textBn: 'সুইচ বন্ধ করলেই হলো না — তালা আর ট্যাগ লাগান, যাতে কাজের মাঝে কেউ চালু করে না দেয়।',
+    art: 'assets/game/art/m2_phase_swap/lock_prove.svg',
+  );
+  static const noTest = DoMistake(
+    key: '3.7/m3_pillar_fuse/no-test',
+    textBn: 'বন্ধ জানলেও কাজের আগে টেস্টার দিয়ে যাচাই — ম্যাপ বা কথা নয়, পরীক্ষাই প্রমাণ।',
+    art: 'assets/game/art/m2_phase_swap/lock_prove.svg',
+  );
+  // DRAFT wording (owner to approve; m2_gate_field's live-first / live-after
+  // with the tester in place of the meter).
+  static const testFirst = DoMistake(
+    key: '3.7/m3_pillar_fuse/test-before-proof',
+    textBn: 'আগে জানা লাইভ পয়েন্টে টেস্টার যাচাই করে নিন — খারাপ টেস্টার কিন্তু চালু লাইনকেও ডেড দেখায়!',
+    art: 'assets/game/art/m2_gate_field/live_dead_live.svg',
+  );
+  static const noReprove = DoMistake(
+    key: '3.7/m3_pillar_fuse/no-reprove',
+    textBn: 'ভোল্টেজ মাপার পর আবার জানা লাইভে টেস্টার দেখে নিন — মাঝপথে টেস্টার বিগড়ালে "0 V"-র কোনো ভরসা নেই!',
+    art: 'assets/game/art/m2_gate_field/live_dead_live.svg',
   );
   static const bodgeStrip = DoMistake(
     key: '3.7/m3_pillar_fuse/copper-strip',
@@ -305,6 +368,14 @@ abstract final class M3PillarFuseMistakes {
     art: '$_dir/door_open.svg',
     lessonPoint: 0,
   );
+  /// The LT switched on with the pillar door open (owner ruling A5). DRAFT
+  /// wording (owner to approve; m3_dtr_tap's "on with the earth" pattern).
+  static const onDoorOpen = DoMistake(
+    key: '3.7/m3_pillar_fuse/on-door-open',
+    textBn: 'পিলারের দরজা খোলা রেখে কখনও চালু করবেন না — আগে দরজা বন্ধ করুন, তারপর LT চালু!',
+    art: '$_dir/door_open.svg',
+    lessonPoint: 0,
+  );
 
   // A wrong flag: a sound spot called the cause (point 3's causes).
   static const wrongSpot = DoMistake(
@@ -314,7 +385,23 @@ abstract final class M3PillarFuseMistakes {
     lessonPoint: 2,
   );
 
-  static List<DoMistake> get all => const [noPpe, bodgeStrip, bodgeWire, noPuller, wrongFuse, noCause, wrongSpot, doorOpen, noLock];
+  static List<DoMistake> get all => const [
+        liveFuse,
+        noLockTag,
+        noTest,
+        testFirst,
+        noReprove,
+        noPpe,
+        bodgeStrip,
+        bodgeWire,
+        noPuller,
+        wrongFuse,
+        noCause,
+        wrongSpot,
+        onDoorOpen,
+        doorOpen,
+        noLock,
+      ];
 }
 
 @immutable
@@ -327,7 +414,7 @@ class M3PillarFuseDeal {
 }
 
 /// The tool row in a shuffled order that is never the job's order
-/// (PPE → puller → lock → sign off).
+/// (PPE → lock and tag → tester → puller → door lock → sign off).
 List<M3PillarFuseTool> m3PillarFuseTools(math.Random rng) {
   while (true) {
     final t = [...M3PillarFuseTool.values]..shuffle(rng);
@@ -371,6 +458,17 @@ class M3PillarFuseRun {
 
   // --- this pillar ---
   var ppe = false;
+
+  /// The DTR's LT switch feeding the pillar; [lockTag] = locked and tagged OFF.
+  var ltOn = true;
+  var lockTag = false;
+
+  /// The tester in hand; proved on a live source before the pillar reading,
+  /// the 0 V seen across a fuse, proved again after it (live-dead-live).
+  var tester = false;
+  var provedBefore = false;
+  var deadSeen = false;
+  var provedAfter = false;
   var doorOpen = false;
   var locked = false;
   var puller = false;
@@ -391,6 +489,13 @@ class M3PillarFuseRun {
   /// Done this pillar without a slip (+5 on the table).
   bool get thorough => roundSlips == 0;
 
+  /// The feeder's houses are lit: the new fuse is in and the LT is on.
+  bool get lightsOn => fitted && ltOn;
+
+  /// Safe to work at a fuse (owner ruling A5): the LT off, locked and tagged,
+  /// 0 V on a tester proved before and after.
+  bool get provenDead => !ltOn && lockTag && deadSeen && provedAfter;
+
   bool get _open => !ended && !signedOff;
 
   void _tag(String t) {
@@ -407,9 +512,74 @@ class M3PillarFuseRun {
     if (_open) ppe = true;
   }
 
-  /// Picks up the fuse puller (or puts it down).
+  /// Picks up the fuse puller (or puts it down). One tool in hand at a time.
   void holdPuller() {
-    if (_open) puller = !puller;
+    if (!_open) return;
+    puller = !puller;
+    if (puller) tester = false;
+  }
+
+  /// Picks up the tester (or puts it down).
+  void holdTester() {
+    if (!_open) return;
+    tester = !tester;
+    if (tester) puller = false;
+  }
+
+  /// The DTR's LT switch, OFF ↔ ON. moved = false: it did not move (locked
+  /// and tagged; or the slip — ON with the pillar door open, owner ruling A5).
+  (bool, DoMistake?) toggleLt() {
+    if (!_open || lockTag) return (false, null);
+    if (!ltOn && doorOpen) return (false, _slip(M3PillarFuseMistakes.onDoorOpen));
+    ltOn = !ltOn;
+    if (ltOn) {
+      // Back on: the proof is void; a new isolation is proved afresh.
+      provedBefore = false;
+      deadSeen = false;
+      provedAfter = false;
+    }
+    return (true, null);
+  }
+
+  /// The padlock and tag on the OFF handle (or off it). False = not now.
+  bool toggleLockTag() {
+    if (!_open || ltOn) return false;
+    lockTag = !lockTag;
+    return true;
+  }
+
+  /// The tester on the LT switch's supply side (always live): it proves the
+  /// tester — before the pillar reading, or again after it. False = not now.
+  bool testLive() {
+    if (!_open || !tester) return false;
+    if (deadSeen) {
+      provedAfter = true;
+    } else {
+      provedBefore = true;
+    }
+    return true;
+  }
+
+  /// The tester across a fuse in the open pillar: (live, the mistake). A
+  /// live reading is never punished (owner ruling A9); a 0 V on a tester not
+  /// yet proved is a slip (as m2_gate_field's live-first).
+  (bool, DoMistake?) testPillar() {
+    if (!_open || !doorOpen || !tester) return (false, null);
+    if (ltOn) return (true, null);
+    if (!provedBefore) return (false, _slip(M3PillarFuseMistakes.testFirst));
+    deadSeen = true;
+    provedAfter = false;
+    return (false, null);
+  }
+
+  /// Why a hand, the puller or a new fuse may not go in yet: the LT on is
+  /// deadly (A5); no lock and tag, no proof, no proof after = slips.
+  DoMistake? _notIsolated() {
+    if (ltOn) return deadly = M3PillarFuseMistakes.liveFuse;
+    if (!lockTag) return _slip(M3PillarFuseMistakes.noLockTag);
+    if (!deadSeen) return _slip(M3PillarFuseMistakes.noTest);
+    if (!provedAfter) return _slip(M3PillarFuseMistakes.noReprove);
+    return null;
   }
 
   /// The door (open ↔ shut). False = it did not move (locked).
@@ -428,15 +598,19 @@ class M3PillarFuseRun {
     return true;
   }
 
-  /// A fuse carrier touched (with the puller in hand, or bare). Returns the mistake, if any.
+  /// A fuse carrier touched (with the puller in hand, or bare; the page sends
+  /// a tap with the tester in hand to [testPillar]). Returns the mistake, if any.
   DoMistake? tapFuse(int feeder, int phase) {
     if (!_open || !doorOpen) return null;
     final blown = feeder == round.feeder && phase == round.phase;
     if (blown && (slotEmpty || fitted)) return null;
-    if (!ppe) return deadly = M3PillarFuseMistakes.noPpe;
+    final m = _notIsolated();
+    if (m != null) return m;
+    if (!ppe) return _slip(M3PillarFuseMistakes.noPpe);
     if (!puller) return _slip(M3PillarFuseMistakes.noPuller);
     if (!blown) return _slip(M3PillarFuseMistakes.wrongFuse);
     slotEmpty = true;
+    _tag(M3PillarFuseLines.caughtIsolate);
     _tag(M3PillarFuseLines.caughtPpe);
     _tag(M3PillarFuseLines.caughtFuse);
     return null;
@@ -463,6 +637,9 @@ class M3PillarFuseRun {
   /// Something from the tray into the empty slot. Null and [fitted] = the new HRC fuse is in.
   DoMistake? fit(M3PillarFuseItem item) {
     if (!_open || !trayUp) return null;
+    // The LT back on (the door shut) before the slot is filled: a live slot.
+    final m = _notIsolated();
+    if (m != null) return m;
     switch (item) {
       case M3PillarFuseItem.strip:
         return deadly = M3PillarFuseMistakes.bodgeStrip;
@@ -477,9 +654,10 @@ class M3PillarFuseRun {
     }
   }
 
-  /// "কাজ শেষ". Null and [signedOff] = this pillar is done; null alone = not yet (the feeder is still dead).
+  /// "কাজ শেষ". Null and [signedOff] = this pillar is done; null alone = not
+  /// yet (the feeder is still dead: no new fuse, or the LT still off).
   DoMistake? signOff() {
-    if (!_open || !fitted) return null;
+    if (!_open || !lightsOn) return null;
     if (doorOpen) return _slip(M3PillarFuseMistakes.doorOpen);
     if (!locked) return _slip(M3PillarFuseMistakes.noLock);
     signedOff = true;
@@ -493,6 +671,12 @@ class M3PillarFuseRun {
     index++;
     roundSlips = 0;
     ppe = false;
+    ltOn = true;
+    lockTag = false;
+    tester = false;
+    provedBefore = false;
+    deadSeen = false;
+    provedAfter = false;
     doorOpen = false;
     locked = false;
     puller = false;
@@ -507,8 +691,10 @@ class M3PillarFuseRun {
 /// The quick bonus: a little under a thorough play (~85 %, rounded to 10 s).
 /// ms, ~1500 per human action: PPE, door, spot + its lines ~3000, puller,
 /// fuse, tray, door, lock, sign off ≈ 15000; the lights ~1500; reason ~8200
-/// ≈ 24700 × 3 + the coworker once ≈ 9600 ≈ 83700. 85 % ≈ 71000 → 70 s.
-const kM3PillarFuseQuickMs = 70000;
+/// ≈ 24700; the isolation (A5): LT off, lock and tag, tester, prove, 0 V,
+/// prove again, lock and tag off, LT on ≈ 12000 → 36700 × 3 + the coworker
+/// once ≈ 9600 ≈ 119700. 85 % ≈ 101700 → 100 s.
+const kM3PillarFuseQuickMs = 100000;
 
 @immutable
 class M3PillarFusePack {
@@ -608,6 +794,12 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
   Offset _flashAt = Offset.zero;
   var _flashFire = false;
 
+  /// The tester's last reading by the tap (design px): "লাইভ" or "0 V".
+  Offset? _readAt;
+  var _readLive = false;
+  int _readN = 0;
+  Timer? _readTimer;
+
   var _freeze = false;
   Completer<void>? _frozen;
   final _nudge = TaskNudge();
@@ -622,6 +814,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
   void dispose() {
     disposeCoworker();
     _mendTimer?.cancel();
+    _readTimer?.cancel();
     _chain++;
     unawaited(MascotSpeechLibrary.stop());
     super.dispose();
@@ -660,16 +853,18 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
   bool get _canPlay => !_intro && !_ended && _card == null && !tableBusy && !coworkerOpen && !_run.signedOff && !_freeze;
 
   String get _task {
-    if (_run.fitted) return M3PillarFuseLines.askClose;
+    if (_run.lightsOn) return M3PillarFuseLines.askClose;
     if (_run.trayUp) return M3PillarFuseLines.askFit;
-    if (_run.doorOpen) return M3PillarFuseLines.askFix;
+    if (_run.doorOpen || _run.fitted) return M3PillarFuseLines.askFix;
     return M3PillarFuseLines.askOpen;
   }
 
   void _startRound() {
     _mendTimer?.cancel();
+    _readTimer?.cancel();
     setState(() {
       _causeShown = true;
+      _readAt = null;
       _wake++;
     });
     unawaited(_sayChain([M3PillarFuseLines.askOpen]));
@@ -697,6 +892,69 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
       _run.holdPuller();
       _wake++;
     });
+  }
+
+  void _holdTester() {
+    if (!_canPlay) return;
+    _tick('sounds/quiz_select.ogg');
+    setState(() {
+      _run.holdTester();
+      _wake++;
+    });
+  }
+
+  void _toggleLockTag() {
+    if (!_canPlay) return;
+    if (_run.toggleLockTag()) {
+      _tick('sounds/learn/tag_slap.ogg', 0.5);
+    } else {
+      _tick('sounds/intro/click.ogg', 0.3);
+    }
+    setState(() => _wake++);
+  }
+
+  /// Shows the tester's reading by [at] (design px) for a moment.
+  void _showReading(Offset at, {required bool live}) {
+    _readTimer?.cancel();
+    setState(() {
+      _readAt = at;
+      _readLive = live;
+      _readN++;
+      _wake++;
+    });
+    _readTimer = Timer(const Duration(milliseconds: 2200), () {
+      if (mounted) setState(() => _readAt = null);
+    });
+  }
+
+  /// The DTR's LT switch on the pole: the handle, or (tester in hand) its
+  /// supply side to prove the tester.
+  void _onLt(M3PillarFuseGeo geo, Offset global) {
+    if (_run.tester) {
+      if (!_run.testLive()) return;
+      _tick('sounds/intro/click.ogg', 0.5);
+      _showReading(geo.ltBox.center, live: true);
+      return;
+    }
+    final (moved, m) = _run.toggleLt();
+    if (m != null) {
+      _tick('sounds/intro/click.ogg', 0.4);
+      setState(() => _wake++);
+      unawaited(_mistake(m, global));
+      return;
+    }
+    if (!moved) {
+      _tick('sounds/intro/click.ogg', 0.3);
+      setState(() => _wake++);
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    _cue('sounds/intro/click.ogg', volume: 0.9);
+    setState(() => _wake++);
+    if (_run.lightsOn) {
+      _cue('sounds/quiz_right.ogg', volume: 0.6);
+      unawaited(_sayChain([M3PillarFuseLines.askClose]));
+    }
   }
 
   void _toggleLock() {
@@ -741,12 +999,17 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
     }
     HapticFeedback.mediumImpact();
     _cue('sounds/quiz_right.ogg', volume: 0.6);
-    unawaited(_sayChain([M3PillarFuseLines.askClose]));
+    // The fuse is in; the feeder comes back once the LT is on again.
+    unawaited(_sayChain([M3PillarFuseLines.askFix]));
   }
 
   void _tapScene(Offset p, M3PillarFuseGeo geo, Offset global) {
     if (!_canPlay) return;
     final r = _run.round;
+    if (geo.ltHit.contains(p)) {
+      _onLt(geo, global);
+      return;
+    }
     if (!_run.doorOpen) {
       if (geo.body.contains(p)) {
         if (_run.toggleDoor()) {
@@ -769,6 +1032,13 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
       for (var ph = 0; ph < 3; ph++) {
         if (!geo.fuseHit(f, ph).contains(p)) continue;
         _tick();
+        if (_run.tester) {
+          // The tester across this fuse (both sides of its base).
+          final (live, tm) = _run.testPillar();
+          _showReading(geo.fuse(f, ph), live: live);
+          if (tm != null) unawaited(_mistake(tm, global));
+          return;
+        }
         final m = _run.tapFuse(f, ph);
         setState(() {
           _flashAt = geo.fuse(f, ph);
@@ -959,7 +1229,7 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
     await _sayChain([speak ? m.textBn : _wrongBag.next().shownBn], mood: GuideMood.warn);
   }
 
-  /// No PPE in the box (an arc flash) or a bodged fuse (the slot burns): the
+  /// A fuse touched with the LT on (an arc flash) or a bodged fuse (the slot burns): the
   /// street freezes grey and the flash comes off the fuse in colour; then
   /// near-miss or death.
   Future<void> _deadly(DoMistake m) async {
@@ -1072,13 +1342,15 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
     if (_card != null && _cardTone == MistakeTone.slip) return LinemanMode.worried;
     if (coworkerOpen) return LinemanMode.worried;
     if (_run.signedOff) return LinemanMode.cheer;
-    if (_run.puller) return LinemanMode.hold;
+    if (_run.puller || _run.tester) return LinemanMode.hold;
     return LinemanMode.idle;
   }
 
   M3PillarFuseBox get _box {
     final r = _run.round;
     return M3PillarFuseBox(
+      ltOn: _run.ltOn,
+      lockTag: _run.lockTag,
       doorOpen: _run.doorOpen,
       locked: _run.locked,
       feeder: r.feeder,
@@ -1120,7 +1392,15 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
           ),
         ),
       ),
-      if (_run.fitted && !_freeze)
+      if (_readAt != null && !_freeze)
+        Positioned(
+          key: ValueKey('reading-$_readN'),
+          left: _readAt!.dx - 30,
+          width: 60,
+          top: _readAt!.dy - 52,
+          child: IgnorePointer(child: _ReadingChip(live: _readLive)),
+        ),
+      if (_run.lightsOn && !_freeze)
         Positioned(
           key: ValueKey('stamp-${_run.index}'),
           left: 236,
@@ -1181,11 +1461,12 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
         for (final t in _run.round.tools) ?HintSpec.globalRectOf(_toolKeys[t]!),
       ?_sceneRect(geo.body),
       if (_run.doorOpen) ?_sceneRect(geo.openDoorHit),
+      ?_sceneRect(geo.ltHit),
     ];
     return rects.length < 2 ? null : HintSpec.sweep(rects);
   }
 
-  String get _hintStage => _run.trayUp ? 'tray' : (_run.doorOpen ? 'open' : 'shut');
+  String get _hintStage => '${_run.trayUp ? 'tray' : (_run.doorOpen ? 'open' : 'shut')}-${_run.ltOn}-${_run.lockTag}';
 
   @override
   Widget build(BuildContext context) {
@@ -1268,10 +1549,14 @@ class _FuseRunPageState extends ConsumerState<_FuseRunPage>
                         switch (tool) {
                           M3PillarFuseTool.ppe => _ToolButton(
                               key: _toolKeys[tool], icon: Icons.health_and_safety_rounded, label: M3PillarFuseLines.ppe, on: _run.ppe, onTap: _putPpe),
+                          M3PillarFuseTool.lockTag => _ToolButton(
+                              key: _toolKeys[tool], icon: Icons.lock_rounded, label: M3PillarFuseLines.lockTag, on: _run.lockTag, onTap: _toggleLockTag),
+                          M3PillarFuseTool.tester => _ToolButton(
+                              key: _toolKeys[tool], icon: Icons.flash_on_rounded, label: M3PillarFuseLines.tester, on: _run.tester, onTap: _holdTester),
                           M3PillarFuseTool.puller => _ToolButton(
                               key: _toolKeys[tool], icon: Icons.handyman_rounded, label: M3PillarFuseLines.puller, on: _run.puller, onTap: _holdPuller),
                           M3PillarFuseTool.lock => _ToolButton(
-                              key: _toolKeys[tool], icon: Icons.lock_rounded, label: M3PillarFuseLines.lock, on: _run.locked, onTap: _toggleLock),
+                              key: _toolKeys[tool], icon: Icons.door_front_door_rounded, label: M3PillarFuseLines.lock, on: _run.locked, onTap: _toggleLock),
                           M3PillarFuseTool.signOff => _ToolButton(
                               key: _toolKeys[tool], icon: Icons.task_alt_rounded, label: M3PillarFuseLines.signOff, on: false, onTapUp: _signOff),
                         },
@@ -1426,7 +1711,8 @@ class _ToolButton extends StatelessWidget {
           onTapUp?.call(d.globalPosition);
         },
         child: SizedBox(
-          width: 76,
+          // Six tools fit a 360 dp phone (6 × 58 within its 352 dp row).
+          width: 58,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1506,6 +1792,29 @@ class _TrayItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The tester's reading by the tap: "লাইভ" (red) or "0 V" (green).
+class _ReadingChip extends StatelessWidget {
+  const _ReadingChip({required this.live});
+  final bool live;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = live ? const Color(0xFFE53935) : SlmColors.success;
+    return Container(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xF20B1324),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: c, width: 2),
+        boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2))],
+      ),
+      child: Text(live ? M3PillarFuseLines.testerLive : M3PillarFuseLines.testerDead,
+          maxLines: 1, softWrap: false, style: bangla(fontSize: 13, fontWeight: FontWeight.w900, color: c)),
     );
   }
 }

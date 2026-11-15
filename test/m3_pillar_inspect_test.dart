@@ -3,7 +3,8 @@
 // feeder OFF → its fuses out → the megger on its cable; the door locked), the
 // deal, the reason libraries, and the level in the shell: idle perf, the guide
 // first, a full clean play (the coworker refused), a missed fault's slip card,
-// the deadly freeze (the megger on a live cable), three slips striking out,
+// the deadly freeze (the megger on a live cable; a hand on live fuses — owner
+// ruling A5, 2026-11-15), three slips striking out,
 // the coworker meeting a fast player, listening to him (a slip), English
 // digits and the gesture hint.
 import 'dart:async';
@@ -234,7 +235,7 @@ void main() {
       expect(i.report(), M3PillarInspectMistakes.missedHot);
     });
 
-    test('the megger order: gloves first, the docket feeder only, OFF before fuses, fuses before the megger', () {
+    test('the megger order: gloves first, the docket feeder only, fuses before the megger', () {
       M3PillarInspectRun at() => M3PillarInspectRun(deal)
         ..next()
         ..next();
@@ -243,13 +244,37 @@ void main() {
       expect(a.off, isEmpty);
       a.tapGloves();
       expect(a.tapSwitch(0).mistake, M3PillarInspectMistakes.wrongFeeder);
-      expect(a.tapFuses(2).mistake, M3PillarInspectMistakes.fuseBeforeOff);
       a.tapSwitch(2);
       expect(a.tapCable(2).mistake, M3PillarInspectMistakes.fusesIn);
-      expect(a.slips, 4);
+      expect(a.slips, 3);
       expect(a.deadly, isNull);
       a.tapFuses(2);
       expect(a.tapCable(2).kind, OrderTapKind.ok);
+    });
+
+    test('a hand on fuses whose SFU is still ON is deadly (owner ruling A5): the docket way, another way, gloves or not', () {
+      M3PillarInspectRun at() => M3PillarInspectRun(deal)
+        ..next()
+        ..next();
+      final a = at()..tapGloves();
+      final m = a.tapFuses(2).mistake;
+      expect(m, M3PillarInspectMistakes.fuseBeforeOff);
+      expect(m!.deadly, isTrue);
+      expect(a.ended, isTrue);
+      expect(a.slips, 0);
+      final b = at();
+      expect(b.tapFuses(2).mistake, M3PillarInspectMistakes.fuseBeforeOff, reason: 'no gloves either: still the live fuse');
+      expect(b.ended, isTrue);
+      final c = at()
+        ..tapGloves()
+        ..tapSwitch(2);
+      expect(c.tapFuses(0).mistake, M3PillarInspectMistakes.fuseBeforeOff, reason: "another way's SFU is ON");
+      expect(c.ended, isTrue);
+      final d = at()
+        ..tapGloves()
+        ..tapSwitch(2);
+      expect(d.tapFuses(2).kind, OrderTapKind.ok, reason: 'its SFU OFF: the fuses come out');
+      expect(d.deadly, isNull);
     });
 
     test('the megger on a cable whose SFU is ON is deadly (the docket feeder or another)', () {
@@ -319,7 +344,7 @@ void main() {
         expect(m.key.startsWith('3.7/m3_pillar_inspect/'), isTrue);
         expect(keys.add(m.key), isTrue, reason: m.key);
       }
-      expect(M3PillarInspectMistakes.all.where((m) => m.deadly), [M3PillarInspectMistakes.liveMegger]);
+      expect(M3PillarInspectMistakes.all.where((m) => m.deadly).toSet(), {M3PillarInspectMistakes.fuseBeforeOff, M3PillarInspectMistakes.liveMegger});
       expect(M3PillarInspectMistakes.missedBy.keys.toSet(), M3PillarInspectFault.values.toSet());
       expect(m3PillarInspectPacks.keys, ['do_3_7_b']);
     });
@@ -563,6 +588,25 @@ void main() {
       expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
       final s = c.read(gameSaveProvider);
       expect(s.mistakes.single.key, M3PillarInspectMistakes.liveMegger.key);
+      expect(s.mistakes.single.deadly, isTrue);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a hand on the fuses with the SFU still ON: deadly (A5) — freeze first, then the card', (t) async {
+      const seed = 7;
+      final deal = dealM3PillarInspect(math.Random(seed));
+      final c = await _open(t, seed);
+      await _spotRight(t, deal.outside);
+      await _spotRight(t, deal.inside);
+      await _tapAt(t, _geo.gloves.center);
+      await _tapAt(t, _geo.fuses(deal.feeder).center, ms: 800);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, M3PillarInspectMistakes.fuseBeforeOff.key);
       expect(s.mistakes.single.deadly, isTrue);
       expect(t.takeException(), isNull);
       await _close(t, c);

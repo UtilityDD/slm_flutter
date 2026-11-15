@@ -54,7 +54,7 @@ import 'spoken_once.dart';
 // never sits on the line. Phase-to-phase tests are NOT in the lesson (only
 // conductor-to-armour) and are left out (flagged in REGISTER.md).
 //
-// Deadly (MODULE2_LADDER.md row 21; flagged for the owner): taking the L clip
+// Deadly (MODULE2_LADDER.md row 21; owner ruling B2, 2026-11-15): taking the L clip
 // off a core still charged by the test — also on the coworker's "রিডিং হয়ে
 // গেছে, তার খুলে নাও" (the act he pushes is that deadly act itself). Slips:
 // testing unchecked / with a cracked lead or a weak battery, a needless fix on

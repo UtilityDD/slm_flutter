@@ -297,8 +297,8 @@ void main() {
     expect(text, contains('বড় ব্রেকডাউনের জন্ম দেয়'));
     expect(text, contains('থার্মাল ক্যামেরা দিয়ে সমস্ত কানেকশন'));
     // Fix now: pro tip 1 and the torque wrench of pro tip 3.
-    expect(_reject('fixnow', 'leave'), contains('তখনই ঠিক করুন'));
-    expect(text, contains('সেটিকে তখনই ঠিক করুন'));
+    expect(_reject('fixnow', 'leave'), contains('ফেলে রাখবেন না'));
+    expect(text, contains('সেটিকে ফেলে রাখবেন না'));
     expect(_reject('fixnow', 'pipe'), contains('টর্ক রেঞ্চ'));
     expect(_reject('fixnow', 'half'), contains('দুটোই'));
     // Record: both the work and the abnormalities, in a logbook or an app.

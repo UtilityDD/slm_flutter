@@ -40,7 +40,9 @@ import 'scene_kit.dart' show GuideIntro, LinemanFigure, LinemanLook, LinemanMode
 //     point again (live-dead-live); never on the 11 kV side (2.1, 2.2). The
 //     readings are dealt: on some plays one phase still shows voltage — the
 //     player must stop the work (the line is isolated again and re-tested);
-//     a needless stop is a slip.
+//     a needless stop is a slip; calling it dead after a live reading is
+//     deadly, even before all three phases are tested (owner ruling B5,
+//     2026-11-15). Under the DO is a slip, as everywhere (B3).
 //   4 স্কিনিং ও ক্রিম্পিং — skin away from the body, AL 95 lug on the 95 sq mm
 //     aluminium cable, the hydraulic crimper with the 95 die, pump to the click (2.3, 2.6, 2.9).
 //   5 মেগার — discharge, LINE to the conductor and EARTH to the armour, 500V,
@@ -122,9 +124,8 @@ abstract final class M2GateMistakes {
   );
   static const doUnder = DoMistake(
     key: 'm2/gate/do-under',
-    textBn: 'DO-র ঠিক নিচে দাঁড়িয়ে টানা মারাত্মক — আর্কের গরম গ্যাস ও গলিত ধাতু মুখে-শরীরে পড়ে। পাশে, কোণাকুণি দাঁড়ান।',
+    textBn: 'DO-র ঠিক নিচে দাঁড়িয়ে টানবেন না — আর্কের গরম গ্যাস ও গলিত ধাতু মুখে-শরীরে পড়ে। পাশে, কোণাকুণি দাঁড়ান।',
     art: '$_art/do_stance.svg',
-    deadly: true,
     lessonPoint: 1,
   );
   static const doNoPpe = DoMistake(
@@ -164,10 +165,13 @@ abstract final class M2GateMistakes {
     art: '$_art/live_dead_live.svg',
     lessonPoint: 1,
   );
+  /// Deadly (owner ruling B5, 2026-11-15): on that word the crew handles the
+  /// cable.
   static const deadCallLive = DoMistake(
     key: 'm2/gate/dead-call-live',
     textBn: 'একটা ফেজে এখনো ভোল্টেজ — লাইন মৃত নয়! কাজ থামিয়ে খবর দিন; মৃত প্রমাণ না হলে কেবিলে হাত নয়।',
     art: '$_art/live_dead_live.svg',
+    deadly: true,
     lessonPoint: 1,
   );
   static const needlessStop = DoMistake(
@@ -755,7 +759,8 @@ class M2GateRun {
   DoMistake? pullDo(int i) {
     if (ended || stance == null || doOpen[i]) return null;
     if (ltOn) return deadly = M2GateMistakes.doOnLoad;
-    if (stance == M2Stance.under) return deadly = M2GateMistakes.doUnder;
+    // Under the DO: a slip everywhere (owner ruling B3, 2026-11-15).
+    if (stance == M2Stance.under) return _slip(M2GateMistakes.doUnder);
     if (!faceShield || !doGloves) return _slip(M2GateMistakes.doNoPpe);
     doOpen[i] = true;
     if (doDone) tag('পাশে দাঁড়িয়ে হট স্টিকে DO');
@@ -803,8 +808,10 @@ class M2GateRun {
 
   DoMistake? confirmDead() {
     if (ended || provenDead) return null;
+    // A live reading first: calling it dead is deadly even before all three
+    // phases are tested (owner ruling B5, 2026-11-15).
+    if (sawLive) return deadly = M2GateMistakes.deadCallLive;
     if (tested.length < 3) return _slip(M2GateMistakes.allPhases);
-    if (sawLive) return _slip(M2GateMistakes.deadCallLive);
     if (!liveAfter) return _slip(M2GateMistakes.liveAfter);
     provenDead = true;
     tag('লাইভ-মৃত-লাইভ পরীক্ষা');

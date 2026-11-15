@@ -89,6 +89,7 @@ void main() {
       pack.titleBn, pack.badgeBn, pack.introBn, pack.earnedBn,
       for (final s in pack.slots) ...[
         s.promptBn,
+        s.noteBn,
         for (final o in s.options) ...[o.labelBn, o.rejectBn],
         for (final w in s.whyChips) w.textBn,
       ],
@@ -158,6 +159,17 @@ void main() {
     expect(_reject('horn', 'stuck'), contains('দূরত্ব'));
     expect(_slot('horn').whyChips.any((w) => w.correct && w.textBn.contains('বড় ফল্টে')), isTrue);
     expect(pack.earnedBn, contains('তিনটিই খুলুন'));
+  });
+
+  test('the DTR round notes (written, never spoken) that a normal WBSEDCL DTR has an AB switch + HG fuses (owner 2b, 2026-11-15)', () {
+    final note = _slot('three').noteBn;
+    for (final w in ['ডিও', 'WBSEDCL', 'DTR', 'AB সুইচ', 'HG', 'হর্ন গ্যাপ']) {
+      expect(note, contains(w));
+    }
+    expect(note.length, lessThan(110), reason: 'one short line');
+    for (final s in pack.slots.where((s) => s.id != 'three')) {
+      expect(s.noteBn, isEmpty, reason: '${s.id}: one note on the board');
+    }
   });
 
   test('every picture exists (vector scenes from tool/m3_board34_art.py)', () {

@@ -607,15 +607,18 @@ void main() {
       final seed = _seedWhere((d) => d.callScene != 0 && d.rounds[0].scene.switchNear);
       final c = await _open(t, seed);
       await _pullSwitch(t);
-      // Straight after the right move (praise) and once the deck is up.
+      // Straight after the right move (praise) and once the deck is up. The
+      // reason deck opens at once (2026-11-15) and its question is asked over
+      // it at once: check its bubble on the first pass, before it fades.
       for (final wait in [0, 2500]) {
         await _pump(t, wait);
         await t.tapAt(t.getCenter(find.byKey(const ValueKey('zone-head'))));
         await _pump(t, 300);
         expect(find.byType(FreezeFrame), findsNothing, reason: 'after $wait ms');
         expect(find.byType(MistakeCard), findsNothing, reason: 'after $wait ms');
+        if (wait == 0) expect(find.text(RescueLines.whySwitch), findsWidgets);
       }
-      expect(find.text(RescueLines.whySwitch), findsWidgets);
+      expect(c.read(guideDirectorProvider).line, RescueLines.whySwitch, reason: 'the taps on him said nothing over the question');
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
       await _close(t, c);
     });

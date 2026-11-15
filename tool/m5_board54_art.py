@@ -24,8 +24,11 @@ shows only what a lineman would see; content follows lesson 5.4:
                 branch close to the conductors, him reading the line logbook.
                 Traps: the rod on the DO with nothing checked, driving off in
                 the jeep, closing into a burning branch.
-* section_*   — the DTR with its LT distribution box: every LT fuse out on
-                the tarp, one fuse going back, the megger on an outgoing way.
+* section_*   — the DTR with its LT distribution box and its LT switch beside
+                it: every LT fuse out on the tarp, one fuse going back with
+                the LT switch OFF (handle down, padlocked, red tag — owner
+                ruling A5: an LT fuse is handled only on a dead board), the
+                megger on an outgoing way.
                 Traps: all LT in and the DTR roaring (hands on his ears), all
                 three fuses pushed in together, running with one fuse.
 
@@ -405,6 +408,21 @@ def ltbox(x, y, ways=('in', 'in', 'in')):
     return ''.join(g)
 
 
+def ltswitch(x, y, on=True):
+    """The DTR's LT switch (a small box, top-left (x, y), 12 x 18): handle
+    up = ON; handle down with a padlock and a red tag = OFF (locked out)."""
+    g = [f'<rect x="{n(x)}" y="{n(y)}" width="12" height="18" rx="2" fill="url(#ltbox)" stroke="{FIN}" stroke-width="1"/>']
+    cx, cy = x + 6, y + 9
+    ey = cy - 9 if on else cy + 9
+    g.append(f'<path d="M{n(cx)} {n(cy)} L{n(cx)} {n(ey)}" stroke="{DARK}" stroke-width="2.6" stroke-linecap="round"/>')
+    if not on:
+        g.append(f'<rect x="{n(cx - 3)}" y="{n(ey + 1)}" width="6" height="5" rx="1" fill="{DARK}"/>')
+        g.append(f'<path d="M{n(cx)} {n(ey + 6)} L{n(cx + 3)} {n(ey + 11)}" stroke="{PORC_S}" stroke-width="0.8"/>')
+        g.append(f'<rect x="{n(cx + 1)}" y="{n(ey + 11)}" width="7" height="10" rx="1" fill="{RED}"/>')
+    g.append(wire(f'M{n(cx)} {n(y)} L{n(cx)} {n(y - 10)} L{n(x - 6)} {n(y - 10)}', 1.4))
+    return ''.join(g)
+
+
 def lt_fuse(x, y, rot=0):
     """One LT fuse carrier lying or held (porcelain with its red grip)."""
     return (f'<g transform="translate({n(x)} {n(y)}) rotate({rot})">'
@@ -675,6 +693,8 @@ def section_card(kind):
         'guess': ('out', 'out', 'out'),
     }[kind]
     g.append(ltbox(77, 132, ways))
+    # The DTR's LT switch: OFF and locked out only while a fuse goes back.
+    g.append(ltswitch(128, 136, on=kind != 'onebyone'))
     on_tarp = {'ltout': 3, 'onebyone': 2, 'megger': 3, 'roar': 0, 'allback': 0, 'guess': 2}[kind]
     for k in range(on_tarp):
         g.append(lt_fuse(22 + k * 18, GY + 15, 90))

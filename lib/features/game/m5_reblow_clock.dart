@@ -42,6 +42,9 @@ import 'spoken_once.dart';
 //     (স্থায়ী / অস্থায়ী) onto today's entry.
 //     • Blank page: the re-fit is allowed after one visual check of the DTR,
 //       the DO and the span (ruling M5-8; re-fit with no check = slip). The
+//       other two phases' DOs hang open before every re-fit, opened by the
+//       crew (lesson 4.4 pro tip 2, M4 refit-at-once; drawn, no extra step;
+//       the no-check card says it). The
 //       permanent fault blasts at once (0 সে written); the transient one holds
 //       and the stopwatch becomes the only control: hold it to run the
 //       time-lapse, a sign comes (wind, lightning, birds) and the barrel drops
@@ -259,10 +262,12 @@ abstract final class M5ReblowMistakes {
     art: '$_dir/thick_wire.svg',
     deadly: true,
   );
-  // Module 5 ruling M5-8 (not lesson 5.4's text).
+  // Module 5 ruling M5-8 (not lesson 5.4's text); the other two phases' DOs
+  // open before a re-fit after a fault: lesson 4.4 pro tip 2, M4 refit-at-once
+  // (drawn opened by the crew — m5_reblow_clock_world.dart).
   static const noCheck = DoMistake(
     key: '$_k/no-check',
-    textBn: 'প্রথমবার লাগানোর আগেও একবার চোখে দেখে নিন — ডিটিআর, ডিও আর স্প্যান। তারপর অপারেটিং রডে, পাশে দাঁড়িয়ে।',
+    textBn: 'প্রথমবার লাগানোর আগেও একবার ভালো করে দেখে নিন — DTR, DO আর স্প্যান। বাকি দুই ফেজের DO খোলা রেখে, অপারেটিং রড দিয়ে পাশে দাঁড়িয়ে লাগান।',
     art: '$_dir/look_first.svg',
   );
   static const refitDelayed = DoMistake(

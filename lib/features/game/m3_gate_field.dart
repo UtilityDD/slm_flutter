@@ -39,16 +39,26 @@ import 'scene_kit.dart' show GuideIntro, LinemanFigure, LinemanLook, LinemanMode
 //   3 DO ও LA — one DO has dropped out: open the other two, pick the rated
 //     fuse link (thick wire deadly), judge the LA (dealt healthy / cracked /
 //     hanging disconnector lead) (3.4, 3.5).
-//   4 DTR — judge the silica gel and the oil, LT OFF, then the off-load tap
-//     change; the careless coworker pushes "the HT DOs are open, skip the LT" (3.6).
-//   5 ফিডার পিলার — gloves + face shield, prove dead with the tester, a
-//     same-rating HRC fuse in the blown way (copper strip deadly), tighten the
-//     hot spot, lock the door (3.7, 3.10).
+//   4 DTR — judge the silica gel and the oil, LT OFF and its lock and tag (a
+//     tap turned without them is a slip; owner ruling A5, 2026-11-15: the LT
+//     stays locked off for the pillar), then the off-load tap change; the
+//     careless coworker pushes "the HT DOs are open, skip the LT" (3.6);
+//     listening = the tap turned with the LT on, deadly (owner ruling B1).
+//   5 ফিডার পিলার — gloves + face shield, prove dead with the tester
+//     live-dead-live ("টেস্টার যাচাই" on a known live point, 0 V on the bus,
+//     টেস্টার যাচাই again; A5 — a bus reading before the first proof, or a
+//     fuse / bolt before the second, is a slip), a same-rating HRC fuse in the
+//     blown way (copper strip deadly), tighten the hot spot, lock the door
+//     (3.7, 3.10). The pillar is dead and locked off from station 4 and the
+//     line goes back on only at station 7, after the door is locked, so A5's
+//     live-fuse deadly and door-open re-energising cannot arise here.
 //   6 সার্ভিস ড্রপ — four choices on a deck, one per step: twin/four core to
 //     match the connection, bearer wire, drip loop, neutral with gloves (a
 //     bare hand deadly) (3.8).
 //   7 ক্রেডল গার্ডিং — gloves (bare hand deadly), find the dealt fault (an
-//     earth lead cut, or a broken wire), then the line goes back on (3.9).
+//     earth lead cut, or a broken wire), then the line goes back on (3.9);
+//     back on with the earth lead still cut is deadly, with a broken mesh
+//     wire a slip (owner's one earth rule, 2026-11-15).
 // Every over-call (a sound part flagged, a sound fuse pulled, a sound bolt or
 // guard spot worked on) is a slip; the guide never says "this one is fine"
 // before the decision. The careless coworker can't be skipped: the LT switch
@@ -222,10 +232,13 @@ abstract final class M3GateMistakes {
     deadly: true,
     lessonPoint: 1,
   );
-  static const coworkerLt = DoMistake(
-    key: '3.6/m3_gate_field/coworker-lt',
-    textBn: 'শুধু HT-র DO খোলা যথেষ্ট নয় — ট্যাপ বদলের আগে LT দিকও বন্ধ, দুদিক বন্ধ করে তবেই।',
-    art: '$_art/tap_offload.svg',
+  /// The tap turned with the LT off but not locked and tagged (owner ruling
+  /// A5: the LT is locked off before the DTR and the pillar are worked on).
+  /// The m2_phase_swap / m3_pillar_fuse words.
+  static const ltNoLock = DoMistake(
+    key: '3.6/m3_gate_field/no-lock-tag',
+    textBn: 'সুইচ বন্ধ করলেই হলো না — তালা আর ট্যাগ লাগান, যাতে কাজের মাঝে কেউ চালু করে না দেয়।',
+    art: 'assets/game/art/m2_phase_swap/lock_prove.svg',
     lessonPoint: 1,
   );
   static const pillarPpe = DoMistake(
@@ -238,6 +251,21 @@ abstract final class M3GateMistakes {
     key: '3.10/m3_gate_field/no-test',
     textBn: 'বন্ধ জানলেও কাজের আগে টেস্টার দিয়ে যাচাই — ম্যাপ বা কথা নয়, পরীক্ষাই প্রমাণ।',
     art: '$_art/pillar_ppe.svg',
+    lessonPoint: 0,
+  );
+  /// Live-dead-live (owner ruling A5): the bus read before the tester was
+  /// proved, or a fuse / bolt worked before it was proved again. DRAFT words
+  /// (m3_pillar_fuse's; owner to approve).
+  static const testFirst = DoMistake(
+    key: '3.10/m3_gate_field/test-before-proof',
+    textBn: 'আগে জানা লাইভ পয়েন্টে টেস্টার যাচাই করে নিন — খারাপ টেস্টার কিন্তু চালু লাইনকেও ডেড দেখায়!',
+    art: 'assets/game/art/m2_gate_field/live_dead_live.svg',
+    lessonPoint: 0,
+  );
+  static const noReprove = DoMistake(
+    key: '3.10/m3_gate_field/no-reprove',
+    textBn: 'ভোল্টেজ মাপার পর আবার জানা লাইভে টেস্টার দেখে নিন — মাঝপথে টেস্টার বিগড়ালে "0 V"-র কোনো ভরসা নেই!',
+    art: 'assets/game/art/m2_gate_field/live_dead_live.svg',
     lessonPoint: 0,
   );
   static const copperStrip = DoMistake(
@@ -307,6 +335,9 @@ abstract final class M3GateMistakes {
     key: '3.9/m3_gate_field/guard-earth',
     textBn: 'গার্ডিং-এর আর্থিং কাটা রেখে লাইন চালু নয় — তখন জাল সুরক্ষা নয়, মারণফাঁদ। জুড়ে পাইপে ঢাকুন।',
     art: '$_art/guard_live.svg',
+    // Owner's one earth rule (2026-11-15): back in service with the earth
+    // path broken = deadly; a weak but connected earth = a slip.
+    deadly: true,
     lessonPoint: 3,
   );
   static const guardWire = DoMistake(
@@ -346,9 +377,11 @@ abstract final class M3GateMistakes {
     gelDry,
     oilDry,
     tapLive,
-    coworkerLt,
+    ltNoLock,
     pillarPpe,
     noTest,
+    testFirst,
+    noReprove,
     copperStrip,
     hrcBigger,
     wrongFuse,
@@ -461,6 +494,8 @@ abstract final class M3GateLines {
   static const doorFirst = 'আগে পিলারের দরজা খুলুন।';
   static const fitFirst = 'আগে উড়ে যাওয়া ফিউজটা বদলান।';
   static const lockDoor = 'দরজা লক';
+  static const lockTag = 'তালা-ট্যাগ';
+  static const proveTester = 'টেস্টার যাচাই';
   static const hrcNames = {
     M3Hrc.same: 'একই রেটিংয়ের HRC',
     M3Hrc.bigger: 'বড় রেটিংয়ের HRC',
@@ -838,6 +873,10 @@ class M3GateRun {
   var oilJudged = false;
   var oilFixed = false;
   var ltOn = true;
+
+  /// The LT's padlock and tag (on the OFF handle); it stays on through the
+  /// pillar (owner ruling A5).
+  var ltLocked = false;
   var tap = tapFrom;
   var tapped = false;
 
@@ -881,10 +920,24 @@ class M3GateRun {
     if (!ended) ltOn = false;
   }
 
+  /// The padlock and tag on the OFF LT handle (once on, they stay for the
+  /// pillar). False = not now (the LT is on).
+  bool lockLt() {
+    if (ended || ltOn || ltLocked) return false;
+    ltLocked = true;
+    return true;
+  }
+
+  /// Listened to the coworker ("skip the LT, turn the tap"): he comes only
+  /// while the LT is on, so it is the tap turned live — deadly (owner ruling
+  /// B1, 2026-11-15: listening is deadly when the act he pushes is deadly).
+  DoMistake listenTap() => deadly = M3GateMistakes.tapLive;
+
   /// Null with [tapped] false: the health check comes first (no cost).
   DoMistake? turnTap() {
     if (ended || tapped || !healthDone) return null;
     if (ltOn) return deadly = M3GateMistakes.tapLive;
+    if (!ltLocked) return slip(M3GateMistakes.ltNoLock);
     tap = tapTo;
     tapped = true;
     tag('HT-LT দুদিক বন্ধ করে ট্যাপ বদল');
@@ -896,6 +949,11 @@ class M3GateRun {
   var pShield = false;
   var doorOpen = false;
   var tested = false;
+
+  /// Live-dead-live (owner ruling A5): the tester proved on a known live
+  /// point before the bus reading, and again after it.
+  var liveBefore = false;
+  var liveAfter = false;
   var pickingFuse = false;
   var fitted = false;
   var tightened = false;
@@ -910,16 +968,35 @@ class M3GateRun {
     if (ended || tested) return null;
     final m = _inside();
     if (m != null) return m;
+    if (!liveBefore) return slip(M3GateMistakes.testFirst);
     tested = true;
+    return null;
+  }
+
+  /// The tester on a known live point: before the bus reading it proves the
+  /// tester; after it, proves it again (live-dead-live).
+  void proveTester() {
+    if (ended) return;
+    if (tested) {
+      if (!liveAfter) tag('লাইভ-মৃত-লাইভ পরীক্ষা');
+      liveAfter = true;
+    } else {
+      liveBefore = true;
+    }
+  }
+
+  /// Not proved dead yet: no 0 V on the bus, or the tester not proved again.
+  DoMistake? _unproven() {
+    if (!tested) return slip(M3GateMistakes.noTest);
+    if (!liveAfter) return slip(M3GateMistakes.noReprove);
     return null;
   }
 
   /// Picks up fuse ([way], [ph]); pulling a sound fuse is a slip.
   DoMistake? tapFuse(int way, int ph) {
     if (ended || fitted || pickingFuse) return null;
-    final m = _inside();
+    final m = _inside() ?? _unproven();
     if (m != null) return m;
-    if (!tested) return slip(M3GateMistakes.noTest);
     if (way != blownWay || ph != blownPh) return slip(M3GateMistakes.wrongFuse);
     pickingFuse = true;
     return null;
@@ -938,9 +1015,8 @@ class M3GateRun {
   /// Tightens [bolt]; a sound bolt is a slip (the hot spot is the black one).
   DoMistake? tighten(int bolt) {
     if (ended || tightened) return null;
-    final m = _inside();
+    final m = _inside() ?? _unproven();
     if (m != null) return m;
-    if (!tested) return slip(M3GateMistakes.noTest);
     if (bolt != hotBolt) return slip(M3GateMistakes.wrongBolt);
     tightened = true;
     tag('হটস্পট টাইট');
@@ -1001,7 +1077,7 @@ class M3GateRun {
 
   DoMistake? energise() {
     if (ended || guardDone) return null;
-    if (!guardFixed) return slip(guardFault == M3GuardFault.brokenWire ? M3GateMistakes.guardWire : M3GateMistakes.guardEarth);
+    if (!guardFixed) return guardFault == M3GuardFault.brokenWire ? slip(M3GateMistakes.guardWire) : deadly = M3GateMistakes.guardEarth;
     guardDone = true;
     return null;
   }
@@ -1364,7 +1440,10 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
       await Future<void>.delayed(const Duration(milliseconds: 900));
       await _say(M3GateLines.coworkerHeld, mood: GuideMood.glad);
     } else {
-      await _handleMistake(_run.slip(M3GateMistakes.coworkerLt));
+      // Listened: the tap turned with the LT on — deadly (B1).
+      final box = _gk('tap').currentContext?.findRenderObject() as RenderBox?;
+      final at = box != null && box.hasSize ? box.localToGlobal(box.size.center(Offset.zero)) : null;
+      await _handleMistake(_run.listenTap(), at: at);
     }
   }
 
@@ -1487,6 +1566,21 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
     });
   }
 
+  /// The padlock and tag on the OFF LT handle (owner ruling A5).
+  void _onLtLock() {
+    if (!_canAct) return;
+    if (!_run.lockLt()) {
+      _cue('sounds/intro/click.ogg', volume: 0.3);
+      return;
+    }
+    HapticFeedback.selectionClick();
+    _cue('sounds/learn/tag_slap.ogg', volume: 0.5);
+    setState(() {
+      _run.tag('LT-তে তালা-ট্যাগ');
+      _wake++;
+    });
+  }
+
   Future<void> _onTap(Offset at) async {
     if (!_canAct || _run.tapped) return;
     if (holdForCoworker()) return;
@@ -1519,6 +1613,17 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
       } else {
         _run.pGloves = true;
       }
+      _wake++;
+    });
+  }
+
+  /// The tester on a known live point (live-dead-live, owner ruling A5).
+  void _onProveTester() {
+    if (!_canAct) return;
+    HapticFeedback.selectionClick();
+    _cue('sounds/intro/click.ogg', volume: 0.6);
+    setState(() {
+      _run.proveTester();
       _wake++;
     });
   }
@@ -1954,7 +2059,14 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
           ),
         ];
       case M3GateStation.dtr:
-        return const [];
+        return [
+          Positioned(
+            key: const ValueKey('lt-lock-row'),
+            left: 12,
+            bottom: b,
+            child: _keyed('lt-lock', _ToolButton(icon: Icons.lock_rounded, label: M3GateLines.lockTag, on: _run.ltLocked, onTap: _onLtLock)),
+          ),
+        ];
       case M3GateStation.pillar:
         return [
           Positioned(
@@ -1993,7 +2105,22 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
                 ],
               ),
             ),
-          if (_run.doorOpen)
+          if (!_run.fitted)
+            Positioned(
+              key: const ValueKey('prove-row'),
+              left: 212,
+              bottom: b,
+              child: _keyed(
+                'prove',
+                _ToolButton(
+                  icon: Icons.flash_on_rounded,
+                  label: M3GateLines.proveTester,
+                  on: _run.tested ? _run.liveAfter : _run.liveBefore,
+                  onTap: _onProveTester,
+                ),
+              ),
+            ),
+          if (_run.doorOpen && _run.fitted)
             Positioned(
               key: const ValueKey('lock-row'),
               left: 212,
@@ -2051,6 +2178,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
         switch (_run.station) {
           M3GateStation.fuseLa => _run.link == null ? 128 : 72,
           M3GateStation.pillar => _run.pickingFuse ? 168 : 96,
+          M3GateStation.dtr => 96,
           M3GateStation.guard => 96,
           M3GateStation.service => _run.serviceDone ? 72 : 236,
           _ => 72,
@@ -2075,7 +2203,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
       // Station 6's deck carries its own sweep hint.
       (_docketOpen || _look != null || _run.station != M3GateStation.service || _run.serviceDone);
 
-  Object get _hintKey => '${_run.station.name}|${_look?.name}|$_docketOpen|${_run.doorOpen}|${_run.pickingFuse}';
+  Object get _hintKey => '${_run.station.name}|${_look?.name}|$_docketOpen|${_run.doorOpen}|${_run.pickingFuse}|${_run.ltLocked}|${_run.tested}';
 
   Rect? _rectOf(String id) {
     final k = _gks[id];
@@ -2110,6 +2238,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
             if (!_run.gelJudged) 'gel',
             if (!_run.oilJudged) 'oil',
             if (_run.ltOn) 'lt-switch',
+            if (!_run.ltLocked) 'lt-lock',
             'tap',
           ],
         M3GateStation.pillar => _run.pickingFuse
@@ -2117,6 +2246,7 @@ class _M3GateRunPageState extends ConsumerState<_M3GateRunPage>
             : [
                 if (!_run.pGloves) 'ppe-gloves',
                 if (!_run.pShield) 'ppe-shield',
+                if (!_run.fitted) 'prove',
                 if (!_run.doorOpen) 'door' else ...['bus', 'lock'],
               ],
         M3GateStation.service => const [],

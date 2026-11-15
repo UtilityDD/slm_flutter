@@ -162,8 +162,14 @@ void main() {
     expect(_reject('golden', 'mud'), allOf(contains('সময় নষ্ট'), contains('Infection')));
     expect(_reject('golden', 'wait'), allOf(contains('গোল্ডেন মিনিট'), contains('সাড়া')));
     expect(_reject('golden', 'leave'), contains('একা ছাড়বেন না'));
-    // 5. No ice, water or ointment on a burn; hospital even if he talks.
-    expect(_reject('care', 'ice'), allOf(contains('বরফ'), contains('জল'), contains('মলম')));
+    // 5. Clean water on a burn, no ice or ointment; hospital even if he talks
+    //    (A1 ruling: MoHFW/DGHS burns STG 2025, IFRC 2020 — cool with water).
+    expect(_reject('care', 'ice'), allOf(contains('বরফ'), contains('জল'), contains('মলম'), contains('হাসপাতাল')));
+    expect(_reject('care', 'cream'), allOf(contains('মলম'), contains('জল')));
+    expect(_safe('care'), {'walk', 'seat', 'water'}, reason: 'A1: pouring clean water on the burn is right');
+    for (final o in _slot('care').options) {
+      expect(o.rejectBn, isNot(contains('জল ঢালবেন না')), reason: 'care/${o.id}: never "no water" on a burn');
+    }
     expect(_reject('care', 'home'), allOf(contains('কথা বললেও'), contains('হাসপাতালে')));
     expect(_slot('care').whyChips.any((w) => w.correct && w.textBn.contains('ভেতরের ক্ষতি')), isTrue);
   });

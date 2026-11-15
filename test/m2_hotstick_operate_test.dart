@@ -1,10 +1,10 @@
 // Lesson 2.5 (অপারেটিং রড / হট স্টিক), কাজ 2 "দূর থেকে চালাও": the rules
 // (get ready before the rod goes up; stand to the side of a DO fuse; both
 // hands below the guard; hook; DO = face aside + one quick stroke, AB = the
-// breaker opened first + a slow turn), the deal, the option libraries, and the
-// level in the shell: idle perf, the guide first, a full clean play with the
-// coworker refused, a slip card, the deadly freezes (no gloves; the AB switch
-// on-load on his say-so), three slips strike out, he comes even on a fast play
+// breaker opened first + one firm turn), the deal, the option libraries, and
+// the level in the shell: idle perf, the guide first, a full clean play with
+// the coworker refused, slip cards (under the fuse; no গ্লাভস), the deadly
+// freezes (a DO fuse on-load; the AB switch on-load on his say-so), three slips strike out, he comes even on a fast play
 // (grip / call), the grip's beat takes no hook tap, gesture hints (the DO
 // stroke: a sweep over the stroke spot and the face button), the praise window
 // shuts the kit, the raise and his entry, no dead call button after listening.
@@ -120,12 +120,12 @@ Future<void> _refuse(WidgetTester t, CoworkerScript s) async {
   await _pump(t, 2000);
 }
 
-Future<void> _prep(WidgetTester t, HsJob j, {bool gloves = true}) async {
+Future<void> _prep(WidgetTester t, HsJob j, {bool gloves = true, bool offload = true}) async {
   for (final l in [if (gloves) HsLines.gloves, HsLines.shield, HsLines.lock, j.isDo ? HsLines.puller : HsLines.socket]) {
     await t.tap(_label(l));
     await _pump(t, 150);
   }
-  if (_label(HsLines.offload).evaluate().isNotEmpty) {
+  if (offload && _label(HsLines.offload).evaluate().isNotEmpty) {
     await t.tap(_label(HsLines.offload));
     await _pump(t, 150);
   }
@@ -163,7 +163,7 @@ Future<void> _playRight(WidgetTester t, HsDeal deal, int i) async {
     await _pump(t, 200);
     await t.dragFrom(start, Offset(0, j.kind == HsKind.doOpen ? 140 : -140));
   } else {
-    await t.timedDragFrom(start, const Offset(150, 0), const Duration(milliseconds: 1500));
+    await t.timedDragFrom(start, const Offset(150, 0), const Duration(milliseconds: 600));
   }
   await _pump(t, 600);
   expect(find.text(MistakeLines.slipHead), findsNothing, reason: 'job $i');
@@ -208,11 +208,19 @@ void main() {
       return r;
     }
 
-    test('the rod goes up only after gloves, head, lock, shield: no gloves = deadly; the rest are slips, put right', () {
-      final a = run1(HsKind.doOpen);
+    test('the rod goes up only after gloves, head, lock, shield: each missing one is a slip, put right', () {
+      // Owner ruling B3 (2026-11-15): no insulated গ্লাভস for the DO = a slip
+      // everywhere (the hot stick is the main insulation).
+      final a = run1(HsKind.doOpen)
+        ..wear(HsKit.shield)
+        ..wear(HsKit.lock)
+        ..fit(HsHead.puller);
       expect(a.raise(), HsMistakes.noGloves);
-      expect(a.deadly!.deadly, isTrue);
-      expect(a.ended, isTrue);
+      expect(a.deadly, isNull);
+      expect(a.ended, isFalse);
+      expect(a.slips, 1);
+      expect(a.kit, contains(HsKit.gloves), reason: 'the guide put it right');
+      expect(a.phase, HsPhase.stand);
       final b = run1(HsKind.doOpen)
         ..wear(HsKit.gloves)
         ..wear(HsKit.shield)
@@ -293,11 +301,21 @@ void main() {
         ..wear(HsKit.lock)
         ..fit(HsHead.puller);
       toOperate(c).turnFace();
+      // Owner ruling B3 (2026-11-15): a DO on load = deadly everywhere.
       expect(c.operate(120, 300).$2, HsMistakes.onLoadDo);
-      expect(c.deadly, isNull);
+      expect(c.deadly, HsMistakes.onLoadDo);
+      expect(c.ended, isTrue);
+      final o = run1(HsKind.doOpen)
+        ..wear(HsKit.gloves)
+        ..wear(HsKit.shield)
+        ..wear(HsKit.lock)
+        ..fit(HsHead.puller);
+      toOperate(o).turnFace();
+      expect(o.operate(120, 300).$2, HsMistakes.onLoadDo, reason: 'opening on load too');
+      expect(o.deadly!.deadly, isTrue);
     });
 
-    test('AB: on-load is deadly (also on his say-so); a rushed turn is a slip; slow is right', () {
+    test('AB: on-load is deadly (also on his say-so); a slow / stalled turn is a slip; one firm turn is right', () {
       final a = run1(HsKind.abOff)
         ..wear(HsKit.gloves)
         ..wear(HsKit.shield)
@@ -309,11 +327,19 @@ void main() {
       final b = ready(HsKind.abOff)..skippedCall = true;
       toOperate(b);
       expect(b.operate(150, 1500).$2, HsMistakes.onLoadAb, reason: 'he talked him out of the call');
+      // Owner ruling A3 (2026-11-15): one firm, unbroken stroke; slow or
+      // stalled (over 1.2 s) = a slip, and a quick turn is never punished.
       final c = toOperate(ready(HsKind.abOff));
-      expect(c.operate(150, 300).$2, HsMistakes.rushAb);
+      expect(c.operate(150, 1500).$2, HsMistakes.stalledAb);
+      expect(c.slips, 1);
+      expect(c.deadly, isNull);
+      expect(c.caught, isNot(contains(HsLines.caughtTurn)));
       final d = toOperate(ready(HsKind.abOff));
-      expect(d.operate(150, 1500), (HsStroke.done, null));
+      expect(d.operate(150, 600), (HsStroke.done, null));
       expect(d.caught, containsAll([HsLines.caughtOffload, HsLines.caughtTurn]));
+      final e = toOperate(ready(HsKind.abOff));
+      expect(e.operate(150, 150), (HsStroke.done, null), reason: 'a quick turn is right');
+      expect(e.slips, 0);
     });
 
     test('mark: 100 − 15 per slip; next job clears the kit', () {
@@ -343,7 +369,7 @@ void main() {
       for (final l in all) {
         expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
       }
-      expect(HsMistakes.all.where((m) => m.deadly).toSet(), {HsMistakes.noGloves, HsMistakes.onLoadAb});
+      expect(HsMistakes.all.where((m) => m.deadly).toSet(), {HsMistakes.onLoadAb, HsMistakes.onLoadDo});
       for (final m in HsMistakes.all) {
         expect(m.key, startsWith('2.5/hotstick-op/'));
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
@@ -543,12 +569,38 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('the rod up without গ্লাভস: the yard freezes first, then the card (near-miss)', (t) async {
+    testWidgets('the rod up without গ্লাভস: the slip card, put right, the job goes on (B3)', (t) async {
       final seed = seedWhere((d) => d.callAt != 0);
       final j = dealHotstick(math.Random(seed)).jobs[0];
       final c = await _open(t, seed);
       await _prep(t, j, gloves: false);
       await t.tap(find.text(HsLines.raise));
+      await _pump(t, 900);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, HsMistakes.noGloves.key);
+      expect(s.mistakes.single.deadly, isFalse);
+      await _close(t, c);
+    });
+
+    testWidgets('a DO fuse on-load (breaker never called): the yard freezes first, then the card (B3)', (t) async {
+      final seed = seedWhere((d) => d.jobs[0].isDo && d.callAt != 0);
+      final j = dealHotstick(math.Random(seed)).jobs[0];
+      final c = await _open(t, seed);
+      await _prep(t, j, offload: false);
+      await t.tap(find.text(HsLines.raise));
+      await _pump(t, 500);
+      await t.tapAt(_screen(Offset(HsGeo.phaseX[j.phase] - 70, _geo.groundY + 20)));
+      await _pump(t, 900);
+      expect(await _pumpUntil(t, find.byKey(const ValueKey('grip-rod')), maxMs: 3000), isTrue);
+      await _gripRight(t);
+      await t.tapAt(_screen(hsTargetOf(_geo, j, open: j.kind == HsKind.doClose)));
+      await _pump(t, 500);
+      await t.tap(_label(HsLines.faceAside));
+      await _pump(t, 200);
+      await t.dragFrom(_screen(const Offset(200, 380)), Offset(0, j.kind == HsKind.doOpen ? 140 : -140));
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       expect(find.byType(MistakeCard), findsNothing);
@@ -556,7 +608,7 @@ void main() {
       expect(find.byType(MistakeCard), findsOneWidget);
       expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
       final s = c.read(gameSaveProvider);
-      expect(s.mistakes.single.key, HsMistakes.noGloves.key);
+      expect(s.mistakes.single.key, HsMistakes.onLoadDo.key);
       expect(s.mistakes.single.deadly, isTrue);
       await _close(t, c);
     });
@@ -587,7 +639,7 @@ void main() {
       await _gripRight(t);
       await t.tapAt(_screen(_geo.handle));
       await _pump(t, 500);
-      await t.timedDragFrom(_screen(const Offset(200, 380)), const Offset(150, 0), const Duration(milliseconds: 1500));
+      await t.timedDragFrom(_screen(const Offset(200, 380)), const Offset(150, 0), const Duration(milliseconds: 600));
       await _pump(t, 800);
       expect(find.byType(FreezeFrame), findsOneWidget);
       await _pump(t, 3500);
@@ -794,7 +846,7 @@ void main() {
       expect(st.tableHolding, isTrue);
       expect(cw.coworkerCanCome(), isFalse, reason: 'he never cuts into the praise window');
       expect(glovesTap().onTap, isNull, reason: 'the kit is shut');
-      // The raise without গ্লাভস would be deadly — straight past the frame's shield, it does nothing.
+      // The raise without গ্লাভস would be a slip — straight past the frame's shield, it does nothing.
       t.widget<DoBigButton>(find.byType(DoBigButton)).onTapUp(TapUpDetails(kind: PointerDeviceKind.touch, globalPosition: const Offset(196, 700)));
       await _pump(t, 1500);
       expect(find.byType(FreezeFrame), findsNothing);

@@ -10,8 +10,10 @@ import 'package:flutter/material.dart';
 // outgoing feeders F1 · F2 · F3 as rows of HRC fuse carriers on the phase
 // risers, each feeder's cable lugs on the right, the cables down the gutter to
 // the glands, the earth terminal. Behind: the pole transformer and the houses
-// of the dead feeder (dark until its fuse is back). Code-drawn, gradients, no
-// bitmaps. Design space 360 wide; the street sits [M3PillarFuseGeo.floorUp]
+// of the dead feeder (dark until its fuse is back and the LT is on again), and on
+// the pole the DTR's LT switch that feeds the pillar (handle up ON / down OFF,
+// its padlock and DANGER tag when locked out; owner ruling A5, 2026-11-15).
+// Code-drawn, gradients, no bitmaps. Design space 360 wide; the street sits [M3PillarFuseGeo.floorUp]
 // above the bottom so the controls sit on it.
 
 /// Why the fuse blew (lesson 3.7 point 3: hotspot, water, rodents).
@@ -89,6 +91,13 @@ class M3PillarFuseGeo {
   /// Where the lineman stands: by the houses, clear of the guide's corner.
   Rect get trainee => Rect.fromLTWH(286, groundY - 140, 70, 140);
 
+  /// The DTR's LT switch on the pole (it feeds the pillar), above the
+  /// houses and the "আলো ফিরল" stamp, right of the open door.
+  Rect get ltBox => Rect.fromLTWH(302, groundY - 262, 40, 48);
+
+  /// Its tap zone: the handle, or the tester on its supply side (always live).
+  Rect get ltHit => Rect.fromLTRB(301, groundY - 274, 356, groundY - 204);
+
   @override
   bool operator ==(Object other) => other is M3PillarFuseGeo && other.height == height && other.groundY == groundY;
 
@@ -103,6 +112,8 @@ const m3PillarFusePhaseColors = [Color(0xFFD63A2F), Color(0xFFF2C230), Color(0xF
 @immutable
 class M3PillarFuseBox {
   const M3PillarFuseBox({
+    this.ltOn = true,
+    this.lockTag = false,
     required this.doorOpen,
     required this.locked,
     required this.feeder,
@@ -113,6 +124,10 @@ class M3PillarFuseBox {
     required this.causeShown,
     required this.spotted,
   });
+
+  /// The DTR's LT switch is ON; [lockTag] = its padlock and tag are on (OFF).
+  final bool ltOn;
+  final bool lockTag;
 
   final bool doorOpen;
   final bool locked;
@@ -133,11 +148,14 @@ class M3PillarFuseBox {
   /// The cause was spotted (a ring round it).
   final bool spotted;
 
-  bool get lightsOn => fitted;
+  /// The feeder's houses light up once the new fuse is in and the LT is on.
+  bool get lightsOn => fitted && ltOn;
 
   @override
   bool operator ==(Object other) =>
       other is M3PillarFuseBox &&
+      other.ltOn == ltOn &&
+      other.lockTag == lockTag &&
       other.doorOpen == doorOpen &&
       other.locked == locked &&
       other.feeder == feeder &&
@@ -149,7 +167,7 @@ class M3PillarFuseBox {
       other.spotted == spotted;
 
   @override
-  int get hashCode => Object.hash(doorOpen, locked, feeder, phase, slotEmpty, fitted, cause, causeShown, spotted);
+  int get hashCode => Object.hash(ltOn, lockTag, doorOpen, locked, feeder, phase, slotEmpty, fitted, cause, causeShown, spotted);
 }
 
 /// The street and the pillar. [t] (seconds) drips the water and curls the
@@ -186,6 +204,7 @@ class M3PillarFuseWorldPainter extends CustomPainter {
     }
     _pole(c);
     _houses(c, w);
+    _ltSwitch(c);
     // The street and the footpath.
     final street = Rect.fromLTRB(0, g.groundY, w, size.height);
     c.drawRect(street, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF6D6A66), Color(0xFF45433F)]).createShader(street));
@@ -217,6 +236,47 @@ class M3PillarFuseWorldPainter extends CustomPainter {
     c.drawLine(Offset(px - 6, tank.bottom), Offset(px - 6, g.groundY), Paint()
       ..color = const Color(0xFF1E1E1E)
       ..strokeWidth = 4);
+  }
+
+  /// The DTR's LT switch on the pole: handle up = ON (red lamp), down = OFF
+  /// (green lamp); locked out, a padlock through the handle and a DANGER tag.
+  void _ltSwitch(Canvas c) {
+    final r = geo.ltBox;
+    final on = box.ltOn;
+    c.drawRect(Rect.fromLTRB(r.center.dx - 9, r.top - 5, r.center.dx + 9, r.bottom + 5), Paint()..color = const Color(0xFF5B5852));
+    final body = RRect.fromRectAndRadius(r, const Radius.circular(4));
+    c.drawRRect(body.shift(const Offset(2, 3)), Paint()..color = const Color(0x55000000));
+    c.drawRRect(body, Paint()..shader = const LinearGradient(colors: [Color(0xFFA7B0B7), Color(0xFF6C767E)]).createShader(r));
+    c.drawRRect(
+        body,
+        Paint()
+          ..color = const Color(0xFF3E454B)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.4);
+    _label(c, 'LT', Offset(r.center.dx, r.top + 8), 8.5, const Color(0xFF1E2226));
+    c.drawCircle(Offset(r.right - 7, r.top + 8), 3.4, Paint()..color = on ? const Color(0xFFE53935) : const Color(0xFF2E9B57));
+    final pivot = Offset(r.center.dx, r.center.dy + 4);
+    final end = pivot + Offset(0, on ? -13 : 13);
+    c.drawLine(pivot, end, Paint()
+      ..color = const Color(0xFF1E2226)
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round);
+    c.drawCircle(pivot, 3.2, Paint()..color = const Color(0xFF3E454B));
+    _label(c, on ? 'ON' : 'OFF', Offset(r.left + 9, r.center.dy + 4), 6.5, const Color(0xFF1E2226));
+    if (box.lockTag) {
+      final at = end + const Offset(9, 2);
+      c.drawArc(Rect.fromCenter(center: at + const Offset(0, -4), width: 9, height: 11), math.pi, math.pi, false, Paint()
+        ..color = const Color(0xFFB0B6BB)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2);
+      c.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: at + const Offset(0, 4), width: 12, height: 10), const Radius.circular(2)), Paint()..color = const Color(0xFFD9A441));
+      final tag = Rect.fromLTWH(r.right - 2, r.bottom - 6, 14, 20);
+      c.drawLine(at + const Offset(0, 8), tag.topCenter, Paint()
+        ..color = const Color(0xFF3E454B)
+        ..strokeWidth = 1);
+      c.drawRect(tag, Paint()..color = const Color(0xFFFFD54F));
+      c.drawRect(Rect.fromLTWH(tag.left, tag.top + 3, tag.width, 5), Paint()..color = const Color(0xFFC62828));
+    }
   }
 
   void _houses(Canvas c, double w) {

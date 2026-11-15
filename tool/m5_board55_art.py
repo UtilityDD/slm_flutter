@@ -15,9 +15,13 @@ What the cards show comes from lesson 5.5 (and the Module 5 rulings) only:
      always with the load running (the pump on); never with every switch off,
      at the DTR for one house, or only at a socket inside;
   3. joint (the meter's incoming is low too): check and tighten every joint
-     of the service connection, at the pole and at the meter (supply off and
-     proven dead: the cut-out's carrier pulled out, dark windows, the meter
-     on the joint reading 0); a thermal camera finds the hot joint; never
+     of the service connection, at the pole and at the meter, proven dead
+     first (dark windows, the meter on the joint reading 0). The pole-end
+     joint sits on the live LT main, upstream of any cut-out: it is dead only
+     with the LT way at the DTR / pillar opened and tagged (WBSEDCL Safety
+     Manual 2025 3.2, owner ruling A5) — the red shutdown tag on the pole, its
+     cut-out left in; at the meter end the cut-out's carrier is pulled out.
+     A thermal camera finds the hot joint; never
      only the one hot joint (camera in hand, walking off while the other
      joint glows), the inside wiring, or a too-thin service cable left as it
      is under a new AC (the cable glowing, the worker walking off);
@@ -376,6 +380,14 @@ def cutout(x, y, pulled=True):
     return ''.join(o)
 
 
+def shutdown_tag(x, y):
+    """The red shutdown tag hung on the pole: the LT way feeding this line is
+    open at the DTR / pillar and tagged."""
+    return (f'<path d="M{f(x)} {f(y)} L{f(x + 4)} {f(y + 8)}" stroke="{PAPER}" stroke-width="0.9"/>'
+            f'<rect x="{f(x + 1)}" y="{f(y + 8)}" width="10" height="15" rx="1.5" fill="{CLAMP}"/>'
+            f'<circle cx="{f(x + 6)}" cy="{f(y + 11)}" r="1.3" fill="{PAPER}"/>')
+
+
 def fuse_carrier(x, y):
     """The pulled-out fuse carrier, lying down."""
     return (f'<rect x="{f(x)}" y="{f(y)}" width="16" height="6" rx="1.5" fill="url(#steel)"/>'
@@ -586,17 +598,19 @@ def thermal_cam(x, y, hot=True):
 
 def joint_card(kind):
     if kind == 'pole':
-        # Supply off and proven dead: the cut-out's carrier is out (lying by
-        # the bag), the windows are dark, the meter on the joint reads 0.
+        # The LT line shut down at the DTR / pillar way and proven dead: the
+        # red shutdown tag on the pole (the cut-out stays in — it does not
+        # isolate the pole-end joint), the windows are dark, the meter on the
+        # joint reads 0.
         out = drop_stage(WIN_OFF)
-        out.append(cutout(23, 66, pulled=True))
+        out.append(cutout(23, 66, pulled=False))
+        out.append(shutdown_tag(30, 140))
         out.append(ladder(58, GY - 4, 40, 64))
         out.append(person(52, ((40, 58), (44, 52)), face=-1, look=-20, gy=128))
         out.append(spanner(42, 52, 200))
         out.append(leads((66 + 12.6, 70), ((PJ[0] + 2, PJ[1] + 3), (PJ[0] - 3, PJ[1] + 4)), drop=-14))
         out.append(multimeter(66, 70, '0', 0.9))
         out.append(tool_bag(80, GY - 18))
-        out.append(fuse_carrier(96, GY - 10))
     elif kind == 'meter':
         # Supply off and proven dead: the cut-out's carrier is out, the
         # windows are dark, the meter on the terminals reads 0.

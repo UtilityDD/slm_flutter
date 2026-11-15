@@ -52,14 +52,19 @@ export 'm4_do_open_world.dart' show M4DoOpenGeo, M4DoOpenHead, M4DoOpenRod;
 // Deadly: pulling a heavily loaded fuse without the load-break tool — the arc
 // is not quenched (pro tip 1; the film: an arc flash blinds or kills).
 // Slips: a cracked / short rod, no গ্লাভস, no shield, wet ground, under the
-// fuses, the face not aside, "done" with a fuse still in, listening to him.
+// fuses, the face not aside, "done" with a fuse still in, listening to him on
+// the fault job. On the heavy job listening is the deadly pull without the
+// tool (owner ruling B1, 2026-11-15: listening is deadly when the act he
+// pushes is deadly).
 // Not scored (the guide says the rule, the step stays): no head on the rod,
 // standing too far, a miss on the ring, an already-open fuse, a short or slow pull.
 // The careless coworker once a play, before the first pull (the pull and
 // "সব ফিউজ খোলা" wait for him — holdForCoworker): on the heavy job "লোড
-// থাকলেও টেনে দাও", on the fault job "বাকি দুটো খোলার দরকার নেই". Listening
-// is a slip (playbook row 8); the guide puts it right and nothing on the rod
-// changes, refusing changes nothing either — the head is the player's own pick.
+// থাকলেও টেনে দাও", on the fault job "বাকি দুটো খোলার দরকার নেই". On the
+// fault job listening is a slip (playbook row 8); the guide puts it right and
+// nothing on the rod changes. On the heavy job it is the pull without the
+// load-break tool: deadly (B1). Refusing changes nothing — the head is the
+// player's own pick.
 
 // ============================================================================
 // Content
@@ -357,14 +362,6 @@ abstract final class M4DoOpenMistakes {
     art: '$_dir/do_three.svg',
   );
 
-  /// Listened to him on the heavy job (pro tip 1; a slip, playbook row 8 —
-  /// the pull itself without the tool stays the deadly one).
-  static const listenedNoTool = DoMistake(
-    key: '4.4/m4_do_open/listened-no-tool',
-    textBn: 'চাপে পড়ে টুল ছাড়াই টানতে রাজি হলেন। খুব বেশি লোডের ফিউজ খুলতে হট স্টিকের মাথায় লোড ব্রেক টুল লাগান — এটি আর্ককে নিরাপদে নিভিয়ে দেয়।',
-    art: '$_dir/do_lbt.svg',
-  );
-
   /// Pro tip 1 (and the film: an arc flash blinds or kills).
   static const heavyNoTool = DoMistake(
     key: '4.4/m4_do_open/heavy-load-no-tool',
@@ -373,7 +370,7 @@ abstract final class M4DoOpenMistakes {
     deadly: true,
   );
 
-  static List<DoMistake> get all => const [crackedRod, shortRod, noGloves, noShield, wetGround, underFuse, faceIn, notAllThree, listenedTwo, listenedNoTool, heavyNoTool];
+  static List<DoMistake> get all => const [crackedRod, shortRod, noGloves, noShield, wetGround, underFuse, faceIn, notAllThree, listenedTwo, heavyNoTool];
 }
 
 /// The DO pull: one drag down of ≥ 70 design px within 1.2 s (quick and firm).
@@ -525,11 +522,12 @@ class M4DoOpenRun {
     return _slip(M4DoOpenMistakes.listenedTwo);
   }
 
-  /// He listened on the heavy job: a slip. Nothing on the rod changes (the
-  /// guide puts it right); a pull without the tool is still the deadly one.
+  /// He listened on the heavy job ("লোড থাকলেও টেনে দাও! লোড ব্রেক টুল-টুল
+  /// লাগবে না"): the heavy-load pull without the load-break tool — deadly
+  /// (owner ruling B1, 2026-11-15).
   DoMistake? listenHeavy() {
     if (ended) return null;
-    return _slip(M4DoOpenMistakes.listenedNoTool);
+    return deadly = M4DoOpenMistakes.heavyNoTool;
   }
 
   /// "সব ফিউজ খোলা": the job is done if all three are; else the all-three
@@ -1070,9 +1068,15 @@ class _DoOpenRunPageState extends ConsumerState<_DoOpenRunPage> with DoDeathGuar
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     final heavy = _job.kind == M4DoOpenKind.heavy;
     if (!held) {
-      // Listening is a slip; the guide puts it right and the job goes on with
-      // the rod as the player made it ready.
+      // Heavy job: listening = the pull without the tool, deadly (B1). Fault
+      // job: a slip; the guide puts it right and the job goes on with the rod
+      // as the player made it ready.
       final m = heavy ? _run.listenHeavy() : _run.listenAll();
+      if (m != null && m.deadly) {
+        final closed = _run.open.indexWhere((o) => !o);
+        await _deadly(m, at: _geoNow.ringOf(_run.hooked ?? (closed < 0 ? 1 : closed)));
+        return;
+      }
       if (m != null) {
         unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
         await _slip(m);

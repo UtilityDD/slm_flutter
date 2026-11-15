@@ -53,12 +53,14 @@ export 'm3_pillar_inspect_world.dart'
 //     coworker: "দরজা খোলা থাক, কাল আবার আসব" — the trainee locks the door
 //     (pro tip 1).
 //
-// Deadly (FLAGGED for the owner): the megger leads on an outgoing cable whose
-// SFU is still ON (a live 415 V cable — lesson myth 1: deadly shock / arc
-// flash). Slips: a fault missed, a fine part reported as faulty, a hand in the
-// box without gloves, the wrong feeder, fuses pulled before the switch is
-// OFF, the megger with the fuses still in, the door left open on his say-so.
-// Three slips strike the level out.
+// Deadly: the megger leads on an outgoing cable whose SFU is still ON (a live
+// 415 V cable — lesson myth 1: deadly shock / arc flash); a hand on a way's
+// fuses while its SFU is still ON (any feeder: owner ruling A5, 2026-11-15 —
+// a fuse touched or pulled with the supply on is deadly, as in
+// m3_pillar_fuse). Slips: a fault missed, a fine part reported as faulty, a
+// hand in the box without gloves, the wrong feeder's switch, the megger with
+// the fuses still in, the door left open on his say-so. Three slips strike
+// the level out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, the
 // full scene (m3_pillar_inspect_world.dart), corner guide, ◆ on the table →
@@ -284,6 +286,8 @@ abstract final class M3PillarInspectMistakes {
     key: '$_k/fuse-before-off',
     textBn: 'সুইচ ON রেখেই ফিউজে হাত। নিয়ম: আগে লাইন বন্ধ, তারপর ফিউজ খোলা।',
     art: '$_dir/fuse_before_off.svg',
+    // A fuse touched or pulled with the supply on (owner ruling A5, 2026-11-15).
+    deadly: true,
   );
   static const fusesIn = DoMistake(
     key: '$_k/fuses-in',
@@ -493,11 +497,12 @@ class M3PillarInspectRun {
     return _ok;
   }
 
+  /// A hand on way [k]'s fuses. Its SFU still ON = a live fuse: deadly (owner
+  /// ruling A5), whichever feeder it is — only the docket's way can be OFF.
   OrderTap tapFuses(int k) {
     if (!_meggerOpen || tested) return _ignored;
-    if (!gloves) return _mistake(M3PillarInspectMistakes.noGloves);
-    if (k != deal.feeder) return _mistake(M3PillarInspectMistakes.wrongFeeder);
     if (!off.contains(k)) return _mistake(M3PillarInspectMistakes.fuseBeforeOff);
+    if (!gloves) return _mistake(M3PillarInspectMistakes.noGloves);
     if (!fusesOut.add(k)) return _ignored;
     return _ok;
   }
@@ -628,6 +633,9 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
   String? _stamp;
   var _coworkerScheduled = false;
   int? _zapCable;
+
+  /// The fuse unit a live hand went to (the flash comes off it), if that was it.
+  int? _zapFuse;
   final _hints = IdleHintController();
   final _lockKey = GlobalKey();
 
@@ -724,6 +732,7 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
   void _tapMegger(Offset p, M3PillarInspectGeo geo) {
     OrderTap? r;
     int? cable;
+    int? fuse;
     if (geo.gloves.contains(p)) {
       r = _run.tapGloves();
     } else {
@@ -731,6 +740,7 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
         if (geo.handle(k).contains(p)) {
           r = _run.tapSwitch(k);
         } else if (geo.fuses(k).contains(p)) {
+          fuse = k;
           r = _run.tapFuses(k);
         } else if (geo.cable(k).contains(p)) {
           cable = k;
@@ -748,6 +758,7 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
       final m = r.mistake!;
       if (m.deadly) {
         _zapCable = cable;
+        _zapFuse = cable == null ? fuse : null;
         unawaited(_deadly(m));
         return;
       }
@@ -929,8 +940,8 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
     await _sayChain([speak ? m.textBn : _wrongBag.next().shownBn], mood: GuideMood.warn);
   }
 
-  /// The megger's leads on a live cable: the scene freezes grey and the
-  /// flash shows at the cable in colour; then near-miss or death.
+  /// The megger's leads on a live cable, or a hand on live fuses: the scene
+  /// freezes grey and the flash shows there in colour; then near-miss or death.
   Future<void> _deadly(DoMistake m) async {
     if (_ended) return;
     _ended = true;
@@ -1151,7 +1162,8 @@ class _PillarRunPageState extends ConsumerState<_PillarRunPage>
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: quiet ? 1 : 0, end: 1),
               duration: const Duration(milliseconds: 1500),
-              builder: (_, v, _) => CustomPaint(painter: M3PillarInspectZapPainter(at: geo.cableLug(_zapCable ?? _run.deal.feeder), v: v)),
+              builder: (_, v, _) => CustomPaint(
+                  painter: M3PillarInspectZapPainter(at: _zapFuse != null ? geo.fuses(_zapFuse!).center : geo.cableLug(_zapCable ?? _run.deal.feeder), v: v)),
             ),
           ),
         ),

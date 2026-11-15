@@ -35,13 +35,23 @@ import 'spoken_once.dart';
 // HT DO fuse blows "the moment it is fitted" (the docket on the van). The
 // player finds the fault by sectionalizing, with the HT DO as the meter:
 //
+//  • the crew has already opened all three DO barrels (the blown one dropped,
+//    the other two opened by the rod while nothing was on load), so the DTR
+//    is dead and the LT board with it when the round starts;
 //  • tap the LT box's door: the board shows 3 or 4 fuse carriers (road names);
-//  • swipe a carrier down to pull it, drag it up to put it back;
-//  • hold the dropped DO barrel 1 s: the operating rod shuts it (automatic).
-//    It holds or blows — honestly, whatever the player did.
-//  • LT fault: all ways out and the HT holds → ◆ "কী বোঝা গেল?"; ways back one
-//    by one, the faulty one blows the HT → ◆ "কেন এই ফিডারেই?"; pull it and
-//    hang the red tag on it.
+//  • swipe a carrier down to pull it, drag it up to put it back — only on a
+//    dead board (owner ruling A5, M1-4; WBSEDCL Safety Manual 2025 3.2 and
+//    Ch IV duty 8 "replace L.T. fuses on dead line only");
+//  • hold the dropped DO barrel 1 s: the operating rod shuts all three
+//    (automatic). It holds or blows — honestly, whatever the player did. A DO
+//    is never opened again on load (ruling B3): once the DTR is charged the
+//    board is made dead at the DTR's LT switch (the tool row: tap it OFF —
+//    lock, tag and the tester's 0 V come with it, an automatic beat — and tap
+//    it ON again, which is the test of the ways now in);
+//  • LT fault: all ways out and the HT holds → ◆ "কী বোঝা গেল?"; then for
+//    each way: LT switch OFF, the carrier in, LT switch ON — the faulty one
+//    blows the HT → ◆ "কেন এই ফিডারেই?"; LT switch OFF, pull it and hang the
+//    red tag on it.
 //  • DTR/HT fault (2nd transformer, 40 %): it blows with every way out → ◆
 //    "কী বোঝা গেল?" → send the van to patrol the HT or test the DTR with the
 //    megger (either is right; lesson point 1 and pro tip 3).
@@ -50,9 +60,11 @@ import 'spoken_once.dart';
 // myth 1 'Fault Burning … কঠোরভাবে নিষিদ্ধ', myth 2, pro tips 2–3), graded by the
 // Module 5 table (docs/module_specs/module5_rulings.md M5-1 / R8, R11):
 //   deadly — the DO shut with no LT way open after an instant-blast docket;
-//            shut again with the blowing carrier still in (or a known faulty
-//            carrier pushed into a live board); shut again after it blew with
-//            every way out;
+//            shut again (or the LT switch put back ON) with the blowing
+//            carrier still in; shut again after it blew with every way out;
+//            a hand on a carrier (pull or push) while the board is live — the
+//            DTR charged and its LT switch ON (owner ruling A5, the
+//            m3_pillar_inspect card);
 //   slip   — the DO shut with only some ways open; listening to the coworker
 //            (myth 2: 'এইচটি ফিউজ উড়েছে, তার মানে সমস্যাটা এইচটি লাইনেই');
 //            the red tag on the wrong way. Three slips strike the level out.
@@ -73,7 +85,7 @@ import 'spoken_once.dart';
 enum M5FeederWhy { held, identified, ht }
 
 /// What a move did.
-enum M5FeederEvent { none, opened, pulled, restored, held, heldProof, blast, identified, htProof, tagged, pullFirst, chosen }
+enum M5FeederEvent { none, opened, pulled, restored, held, heldProof, blast, identified, htProof, tagged, pullFirst, chosen, ltOff, ltOn }
 
 /// A move's outcome: the event and its mistake, if any.
 @immutable
@@ -107,6 +119,11 @@ abstract final class M5FeederLines {
   static const sceneLabel = 'গ্রামের মোড়, ডিপি ট্রান্সফরমার';
   static const door = 'এলটি বক্স';
   static const doLabel = 'ডিও ফিউজ';
+
+  /// The DTR's LT switch (tool row): its name, and what it shows when OFF
+  /// (locked and tagged, the tester's 0 V on the board).
+  static const ltSwitch = 'এলটি সুইচ';
+  static const ltOffShown = 'এলটি বন্ধ · 0 V';
   static const tag = 'লাল ট্যাগ';
   static const patrol = 'লাইন টহল';
   static const megger = 'মেগার টেস্ট';
@@ -240,7 +257,18 @@ abstract final class M5FeederMistakes {
     lessonPoint: 3,
   );
 
-  static const all = [noOpen, rechargeFaulty, rechargeSame, rechargeHt, partialOpen, listened, wrongTag];
+  /// A carrier pulled or pushed while the board is live (the DTR charged, its
+  /// LT switch ON): owner ruling A5 (2026-11-15), the m3_pillar_inspect /
+  /// m3_pillar_fuse card's words and picture.
+  static const liveCarrier = DoMistake(
+    key: '5.4/m5_feeder_sectionalize/live-carrier',
+    textBn: 'সুইচ ON রেখেই ফিউজে হাত। নিয়ম: আগে লাইন বন্ধ, তারপর ফিউজ খোলা।',
+    art: 'assets/game/art/m3_pillar_inspect/fuse_before_off.svg',
+    deadly: true,
+    lessonPoint: 3,
+  );
+
+  static const all = [noOpen, rechargeFaulty, rechargeSame, rechargeHt, liveCarrier, partialOpen, listened, wrongTag];
 }
 
 /// One transformer of the play.
@@ -357,6 +385,26 @@ class M5FeederRun {
   var htProved = false;
   int pulls = 0;
 
+  /// The DTR's LT switch feeding the board is ON (OFF = locked, tagged and
+  /// proved 0 V on the board — one automatic beat).
+  var ltOn = true;
+
+  /// The DO has been shut this round. Until then the crew's three open DOs
+  /// keep the DTR, and so the board, dead; after it, two barrels stay in even
+  /// when one blows, so only the LT switch makes the board dead (a DO is
+  /// never opened again on load — ruling B3).
+  var charged = false;
+
+  /// The ways feeding the DTR when the HT last held: a way put in since is
+  /// tested when the LT switch goes back ON.
+  Set<int> heldWith = {};
+
+  /// Hands on the board now would be on live metal (owner ruling A5).
+  bool get boardLive => charged && ltOn;
+
+  /// The ways the DTR feeds now (none with the LT switch OFF).
+  Set<int> get _feeding => ltOn ? inWays : const <int>{};
+
   M5FeederSite get site => deal.sites[math.min(index, deal.sites.length - 1)];
   bool get done => index >= deal.sites.length;
   bool get ended => done || deadly != null;
@@ -379,6 +427,9 @@ class M5FeederRun {
     tagged = null;
     htProved = false;
     pulls = 0;
+    ltOn = true;
+    charged = false;
+    heldWith = {};
   }
 
   void _tag(String t) {
@@ -402,49 +453,76 @@ class M5FeederRun {
     return const M5FeederStep(M5FeederEvent.opened);
   }
 
-  /// Swipe carrier [i] down (out of its base).
+  /// Swipe carrier [i] down (out of its base). On a live board: deadly (A5).
   M5FeederStep pull(int i) {
     if (!_open || !doorOpen || !inWays.contains(i)) return M5FeederStep.none;
+    if (boardLive) return _die(M5FeederMistakes.liveCarrier);
     inWays.remove(i);
     pulls++;
     return const M5FeederStep(M5FeederEvent.pulled);
   }
 
-  /// Drag carrier [i] up into its base. On a live board (the HT holding) the
-  /// faulty way blows the HT at once; a way already proved faulty pushed into
-  /// a live board is charging the fault again (deadly).
+  /// Drag carrier [i] up into its base. Only on a dead board (A5): a hand on
+  /// a live board is deadly. The way is tested when the board is charged
+  /// again (the LT switch back ON, or the DO shut).
   M5FeederStep restore(int i) {
     if (!_open || !doorOpen || inWays.contains(i)) return M5FeederStep.none;
-    if (held && i == blower) return _die(M5FeederMistakes.rechargeFaulty);
+    if (boardLive) return _die(M5FeederMistakes.liveCarrier);
     inWays.add(i);
-    if (held && !site.ht && i == site.faulty) {
-      held = false;
-      lastBlast = {...inWays};
-      blower = i;
-      if (thorough) _tag(M5FeederLines.caughtOneByOne);
-      return const M5FeederStep(M5FeederEvent.identified);
-    }
     return const M5FeederStep(M5FeederEvent.restored);
   }
 
-  /// Hold the dropped DO barrel: the operating rod shuts it.
+  /// The DTR's LT switch, ON ↔ OFF. OFF makes the board dead (lock, tag and
+  /// the tester's 0 V in one beat). Back ON with the HT holding is the test of
+  /// the ways put in since it last held: the faulty way blows the HT at once —
+  /// alone, it is proved; with others, it only blows. ON again with a way
+  /// already proved faulty in is charging the fault again (deadly).
+  M5FeederStep toggleLt() {
+    if (!_open) return M5FeederStep.none;
+    if (ltOn) {
+      ltOn = false;
+      return const M5FeederStep(M5FeederEvent.ltOff);
+    }
+    final b = blower;
+    if (charged && b != null && inWays.contains(b)) return _die(M5FeederMistakes.rechargeFaulty);
+    ltOn = true;
+    if (!held) return const M5FeederStep(M5FeederEvent.ltOn);
+    final added = inWays.difference(heldWith);
+    if (!site.ht && added.contains(site.faulty)) {
+      held = false;
+      lastBlast = {...inWays};
+      if (added.length == 1) {
+        blower = site.faulty;
+        if (thorough) _tag(M5FeederLines.caughtOneByOne);
+        return const M5FeederStep(M5FeederEvent.identified);
+      }
+      return const M5FeederStep(M5FeederEvent.blast);
+    }
+    heldWith = {...inWays};
+    return const M5FeederStep(M5FeederEvent.ltOn);
+  }
+
+  /// Hold the dropped DO barrel: the operating rod shuts it (all three, the
+  /// first time). The ways it charges are the ones the LT switch lets through.
   M5FeederStep closeDo() {
     if (!_open || held) return M5FeederStep.none;
+    final feed = _feeding;
     final last = lastBlast;
     if (last != null) {
       final b = blower;
-      if (b != null && inWays.contains(b)) return _die(M5FeederMistakes.rechargeFaulty);
+      if (b != null && feed.contains(b)) return _die(M5FeederMistakes.rechargeFaulty);
       // Nothing pulled since it blew: no feeder is proved here, so the card
       // blames the re-charge itself (or the DTR/HT side once that is proved).
-      if (inWays.containsAll(last)) return _die(htProved ? M5FeederMistakes.rechargeHt : M5FeederMistakes.rechargeSame);
-    } else if (inWays.length == site.ways) {
+      if (feed.containsAll(last)) return _die(htProved ? M5FeederMistakes.rechargeHt : M5FeederMistakes.rechargeSame);
+    } else if (feed.length == site.ways) {
       return _die(M5FeederMistakes.noOpen);
     }
-    final slip = inWays.isNotEmpty && !proof && blower == null ? _slip(M5FeederMistakes.partialOpen) : null;
-    final faultIn = site.ht || inWays.contains(site.faulty);
+    charged = true;
+    final slip = feed.isNotEmpty && !proof && blower == null ? _slip(M5FeederMistakes.partialOpen) : null;
+    final faultIn = site.ht || feed.contains(site.faulty);
     if (faultIn) {
-      lastBlast = {...inWays};
-      if (inWays.isEmpty) {
+      lastBlast = {...feed};
+      if (feed.isEmpty) {
         htProved = true;
         if (thorough) _tag(M5FeederLines.caughtHt);
         return const M5FeederStep(M5FeederEvent.htProof);
@@ -452,7 +530,8 @@ class M5FeederRun {
       return M5FeederStep(M5FeederEvent.blast, slip);
     }
     held = true;
-    if (inWays.isEmpty && !proof) {
+    heldWith = {...feed};
+    if (feed.isEmpty && !proof) {
       proof = true;
       if (thorough) _tag(M5FeederLines.caughtAllOut);
       return const M5FeederStep(M5FeederEvent.heldProof);
@@ -500,7 +579,10 @@ class M5FeederRun {
 ///     reason, choice ≈ 19000                                      ≈ 28600 avg
 /// + the coworker once ≈ 9600                                     ≈ 73200
 /// 85 % ≈ 62000 → 65 s; an LT + LT play is longer, so 75 s (owner may tune).
-const m5FeederQuickMs = 75000;
+/// The dead-board rule (A5) adds the LT switch OFF and ON round each way put
+/// back and OFF before the faulty way is pulled: ≈ 7 taps ≈ 10500 an LT
+/// round; an LT + LT play ≈ 79600 + 21000 ≈ 100600, 85 % ≈ 85500 → 90 s.
+const m5FeederQuickMs = 90000;
 
 @immutable
 class M5FeederPack {
@@ -612,6 +694,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
   final _sceneKey = GlobalKey();
   final _docketKey = GlobalKey();
   final _tagKey = GlobalKey();
+  final _ltKey = GlobalKey();
   final _patrolKey = GlobalKey();
   final _meggerKey = GlobalKey();
   final _hintRng = math.Random();
@@ -719,6 +802,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
       }
     } else {
       s = _run.restore(i);
+      if (s.event == M5FeederEvent.restored) _tick('sounds/intro/click.ogg', 0.5);
     }
     setState(() => _wake++);
     unawaited(_outcome(s, global));
@@ -826,7 +910,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
       case M5FeederEvent.blast:
         _blast();
       case M5FeederEvent.held:
-      case M5FeederEvent.restored:
+      case M5FeederEvent.ltOn:
         if (_run.held) _cue('sounds/intro/confirm.ogg', volume: 0.5);
       case M5FeederEvent.heldProof:
         _cue('sounds/intro/confirm.ogg', volume: 0.6);
@@ -889,6 +973,21 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
     if (!_canPlay) return;
     _tick('sounds/learn/tag_slap.ogg', 0.4);
     setState(() => _tagArmed = !_tagArmed);
+  }
+
+  /// The DTR's LT switch: OFF (locked, tagged, 0 V) or back ON (the test).
+  void _toggleLt(Offset global) {
+    if (!_canPlay) return;
+    if (holdForCoworker()) return;
+    final s = _run.toggleLt();
+    if (s.event == M5FeederEvent.none && s.mistake == null) return;
+    HapticFeedback.mediumImpact();
+    _tick('sounds/intro/impact_metal.ogg', 0.4);
+    setState(() {
+      _tagArmed = false;
+      _wake++;
+    });
+    unawaited(_outcome(s, global));
   }
 
   void _choose(Offset global) {
@@ -1013,7 +1112,9 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
     final frozen = _frozen = Completer<void>();
     setState(() {
       _freeze = true;
-      _fire = true;
+      // The blast at the DO is for a re-charge; a hand on the live board has
+      // no DO blast.
+      _fire = m != M5FeederMistakes.liveCarrier;
       _closing = false;
       _tagArmed = false;
     });
@@ -1129,6 +1230,8 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
         dusk: _site.dusk,
         tagged: _run.tagged,
         soot: _run.blower,
+        charged: _run.charged || _closing,
+        ltOn: _run.ltOn,
       );
 
   /// A design-px rect of the scene on screen (null before layout).
@@ -1161,6 +1264,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
         ?HintSpec.globalRectOf(_docketKey),
         ?ring,
         for (var i = 0; i < _site.ways; i++) ?_sceneRect(geo.carrierHit(i)),
+        ?HintSpec.globalRectOf(_ltKey),
         ?HintSpec.globalRectOf(_tagKey),
         ?HintSpec.globalRectOf(_patrolKey),
         ?HintSpec.globalRectOf(_meggerKey),
@@ -1374,7 +1478,7 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
             layers: (context, m) => _scene(m),
             hint: _hint,
             hintWaiting: handsOn && !tableBusy && !_closing && !_holding,
-            hintKey: '${_run.index}/${_run.doorOpen}/${_run.held}/${_run.blower}/${_run.htProved}',
+            hintKey: '${_run.index}/${_run.doorOpen}/${_run.held}/${_run.blower}/${_run.htProved}/${_run.ltOn}',
             hintController: _hints,
             overlays: [
               // Under the docket card (top left), clear of the board.
@@ -1395,6 +1499,14 @@ class _FeederRunPageState extends ConsumerState<_FeederRunPage>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
+                      _ToolButton(
+                        key: _ltKey,
+                        icon: Icons.power_settings_new_rounded,
+                        label: M5FeederLines.ltSwitch,
+                        shown: _run.ltOn ? null : M5FeederLines.ltOffShown,
+                        on: !_run.ltOn,
+                        onTap: _toggleLt,
+                      ),
                       _ToolButton(key: _tagKey, icon: Icons.label_rounded, label: M5FeederLines.tag, on: _tagArmed, red: true, onTap: (_) => _arm()),
                       if (_run.htProved) ...[
                         _ToolButton(key: _patrolKey, icon: Icons.local_shipping_rounded, label: M5FeederLines.patrol, on: false, onTap: _choose),
@@ -1545,9 +1657,12 @@ class _DocketCard extends StatelessWidget {
 
 /// A hands-on tool: a round icon with its name under it; lit while in hand.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap, this.red = false});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap, this.red = false, this.shown});
   final IconData icon;
   final String label;
+
+  /// What it shows under the icon now, when not its name (its state).
+  final String? shown;
   final bool on;
   final bool red;
   final ValueChanged<Offset> onTap;
@@ -1558,6 +1673,7 @@ class _ToolButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: label,
+      value: shown,
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -1586,7 +1702,7 @@ class _ToolButton extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(color: const Color(0xCC0B1324), borderRadius: BorderRadius.circular(8)),
-                child: Text(label,
+                child: Text(shown ?? label,
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.visible,

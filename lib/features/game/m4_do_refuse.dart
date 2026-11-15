@@ -51,16 +51,19 @@ export 'm4_do_refuse_world.dart' show M4DoRefuseGeo, M4DoRefuseBarrel;
 //       spark that dies once it locks (myth 2 / advanced fact 2: inrush, not a
 //       fault — do not reopen; then the other two fuses one by one), or the
 //       fuse blows again at once (a fault is still there: stop, no reclosing —
-//       inferred from pro tip 2 + myth 2, flagged).
+//       pro tip 2 + myth 2; lesson 5.4 point 3 "মারাত্মক ভুল").
 // Deadly: a thick wire in place of the fuse link (point 1 / point 2's
-// "fails to drop out on a fault"; the deadly call is flagged). Slips: a sound
-// fuse called the dropped one, refit at once, a wrong rating, a link step out
-// of order, under the fuse, face not aside, reopening on a normal spark,
-// reclosing after a re-blow.
+// "fails to drop out on a fault"); reclosing after the fuse blew again the
+// moment it was fitted (Module 5 ruling M5-1 change 4: a re-fit after an
+// instant blast with arc = deadly, as m5_reblow_clock / m5_feeder_sectionalize).
+// Slips: a sound fuse called the dropped one, refit at once, a wrong rating, a
+// link step out of order, under the fuse, face not aside, reopening on a
+// normal spark.
 // The careless coworker once a play: at the tray ("মোটা তার দিয়ে বেঁধে দাও" —
-// listening is the deadly bodge, on Module 4's deadly list; owner to confirm)
+// listening is the deadly bodge, on Module 4's deadly list; owner ruling B1)
 // or at the re-blow ("যতবার উড়বে ততবার লাগাও" — listening = reclosing on the
-// fault, a slip). The tray waits for him ([CoworkerMoment.holdForCoworker]).
+// fault, deadly too under B1: the act he pushes is deadly here right then).
+// The tray waits for him ([CoworkerMoment.holdForCoworker]).
 // His push lines have no recorded clip yet ([M4DoRefuseLines.recordLines]):
 // the kit shows them as a held caption until they are recorded.
 // Gesture hints (how, never what): a sweep over the fuses / the tray / the
@@ -390,11 +393,15 @@ abstract final class M4DoRefuseMistakes {
     art: '$_dir/spark.svg',
   );
 
-  /// Pro tip 2 + myth 2 (not a lesson point).
+  /// Pro tip 2 + myth 2 (not a lesson point). Deadly: it blew again the
+  /// moment it was fitted, so closing it again is charging a permanent fault
+  /// (ruling M5-1; lesson 5.4 point 3 "মারাত্মক ভুল"). The words are unchanged
+  /// (recorded clip).
   static const reclose = DoMistake(
     key: '4.4/m4_do_refuse/reclose-on-fault',
     textBn: 'লাগাতেই আবার উড়ল, তবু আবার লাগাতে গেলেন। আবার উড়ে যাওয়া মানে লাইনে ফল্ট রয়ে গেছে — ফল্ট না সারিয়ে আর লাগানো নয়।',
     art: '$_dir/reblow.svg',
+    deadly: true,
   );
 
   static List<DoMistake> get all => [wrongFuse, refitAtOnce, thickWire, wrongRating, noClean, noButton, noWrap, portUnchecked, underFuse, faceIn, reopen, reclose];
@@ -573,7 +580,7 @@ class M4DoRefuseRun {
     }
     if (!right) {
       reclosed = true;
-      return _slip(M4DoRefuseMistakes.reclose);
+      return deadly = M4DoRefuseMistakes.reclose;
     }
     _tag(M4DoRefuseLines.caughtReblow);
     return null;
@@ -995,7 +1002,8 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
       return;
     }
     setState(() => _deck = null);
-    unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
+    // Reclosing on the re-blow is deadly (no -10: the freeze takes over).
+    if (d == _Deck.decide || _run.settles) unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
     if (d == _Deck.decide) {
       await _slip(_run.decide(right: false)!, resume: _askStep);
     } else {
@@ -1012,13 +1020,15 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
     }
   }
 
-  /// He reopened on the spark / reclosed on the fault.
+  /// He reopened on the spark (a slip) / reclosed on the fault (deadly).
   Future<void> _watchWrong() async {
     final m = _run.watch(right: false)!;
-    if (!_run.settles) {
-      // Pushed home again onto the fault: it blows again.
+    if (m.deadly) {
+      // Pushed home again onto the fault: it blows again, at his face.
       _cue('sounds/learn/tag_slap.ogg', volume: 0.8);
       _flash(_geoNow.ringOf(_blown), big: true);
+      await _deadly(m, at: _geoNow.ringOf(_blown));
+      return;
     }
     await _slip(m, resume: _afterWatch);
   }
@@ -1208,7 +1218,8 @@ class _DrRunPageState extends ConsumerState<_DrRunPage> with DoDeathGuard, DoStr
         final m = _run.pick(null)!;
         await _deadly(m, at: _geoNow.bushingOf(_blown));
       } else {
-        unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
+        // His push at the re-blow: reclosing on the fault (deadly, B1).
+        if (_run.settles) unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
         await _watchWrong();
       }
       return;

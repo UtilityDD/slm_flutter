@@ -3,7 +3,9 @@
 // on disk, and a full clean play in the shell that unlocks the টেকনিশিয়ান
 // rank; the coworker comes even on a fast play; a deadly pick freezes (no
 // control takes a touch) and shows its card; three slips strike out; the
-// gesture hint shows after idle; the idle screen stays quiet.
+// gesture hint shows after idle; the idle screen stays quiet. Owner ruling
+// A5 (2026-11-15): the LT locked and tagged before the tap; at the pillar the
+// tester proved before and after the 0 V (live-dead-live).
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -76,7 +78,9 @@ Future<void> _tapLabel(WidgetTester t, String l, {int ms = 400}) async {
 }
 
 Future<void> _reason(WidgetTester t, String q, List<String> right) async {
-  await _pump(t, 3000);
+  // The deck opens at once; its question shows as the cards come up (the
+  // muted bubble fades about 2.9 s later), so check it right away.
+  await waitChoiceDeck(t);
   expect(find.text(q), findsWidgets);
   await _pickRight(t, right);
   await _pump(t, 3500);
@@ -132,7 +136,7 @@ Future<void> _playFuseLa(WidgetTester t, M3GateRun deal) async {
   await _tapKey(t, 'link-rated', ms: 600);
   await _tapKey(t, 'la', ms: 300);
   await _tapKey(t, deal.laFault == null ? 'judge-ok' : 'judge-bad', ms: 300);
-  await _pump(t, 3000);
+  await waitChoiceDeck(t);
   expect(find.text(M3GateLines.whyFuseQ), findsWidgets);
   await _pickRight(t, M3GateLines.whyFuseRight);
 }
@@ -259,7 +263,7 @@ void main() {
       expect(good.slips, 1);
     });
 
-    test('4 DTR: health first, LT on is deadly, LT off turns the tap', () {
+    test('4 DTR: health first, LT on is deadly, LT off and locked turns the tap', () {
       var s = 0;
       while (!(M3GateRun(s).gelPinkDealt && M3GateRun(s).oilLeakDealt)) {
         s++;
@@ -277,10 +281,27 @@ void main() {
 
       final ok = M3GateRun(s)
         ..gelReplace()
-        ..oilReport()
-        ..switchLtOff();
+        ..oilReport();
+      expect(ok.lockLt(), isFalse, reason: 'no lock on an ON handle');
+      ok.switchLtOff();
+      // Owner ruling A5: off is not enough — the lock and tag first (a slip).
+      expect(ok.turnTap(), M3GateMistakes.ltNoLock);
+      expect(ok.tapped, isFalse);
+      expect(ok.slips, 1);
+      expect(ok.lockLt(), isTrue);
+      expect(ok.lockLt(), isFalse, reason: 'already on');
       expect(ok.turnTap(), isNull);
       expect(ok.tap, ok.tapTo);
+      expect(M3GateMistakes.ltNoLock.deadly, isFalse);
+
+      // Owner ruling B1: listening to "skip the LT, turn the tap" is the tap
+      // turned with the LT on — that deadly, not a slip.
+      final pushed = M3GateRun(s);
+      expect(pushed.ltOn, isTrue);
+      expect(pushed.listenTap(), M3GateMistakes.tapLive);
+      expect(pushed.deadly, M3GateMistakes.tapLive);
+      expect(pushed.ended, isTrue);
+      expect(pushed.slips, 0);
 
       s = 0;
       while (M3GateRun(s).gelPinkDealt || M3GateRun(s).oilLeakDealt) {
@@ -295,14 +316,24 @@ void main() {
       expect(dry.slips, 2);
     });
 
-    test('5 pillar: PPE, test, the blown fuse, copper deadly, hot spot before lock', () {
+    test('5 pillar: PPE, live-dead-live, the blown fuse, copper deadly, hot spot before lock', () {
       final r = M3GateRun(5);
       expect(r.testBus(), M3GateMistakes.pillarPpe);
       r
         ..pGloves = true
         ..pShield = true;
       expect(r.tapFuse(r.blownWay, r.blownPh), M3GateMistakes.noTest);
+      // Owner ruling A5: the tester proved before the bus reading…
+      expect(r.testBus(), M3GateMistakes.testFirst);
+      expect(r.tested, isFalse);
+      r.proveTester();
       expect(r.testBus(), isNull);
+      // …and again after it, before a fuse or a bolt.
+      expect(r.tapFuse(r.blownWay, r.blownPh), M3GateMistakes.noReprove);
+      expect(r.tighten(r.hotBolt), M3GateMistakes.noReprove);
+      r.proveTester();
+      expect(r.liveAfter, isTrue);
+      expect(r.caught, contains('লাইভ-মৃত-লাইভ পরীক্ষা'));
       expect(r.tapFuse((r.blownWay + 1) % 3, r.blownPh), M3GateMistakes.wrongFuse, reason: 'pulling a sound fuse costs');
       expect(r.pickingFuse, isFalse);
       expect(r.tapFuse(r.blownWay, r.blownPh), isNull);
@@ -316,12 +347,17 @@ void main() {
       expect(r.tighten((r.hotBolt + 1) % 6), isNull, reason: 'found: no more cost');
       expect(r.lock(), isNull);
       expect(r.locked, isTrue);
-      expect(r.slips, 6, reason: 'PPE, no test, a sound fuse, bigger HRC, hot spot, a sound bolt');
+      expect(r.slips, 9, reason: 'PPE, no test, test first, no re-proof twice, a sound fuse, bigger HRC, hot spot, a sound bolt');
+      for (final m in [M3GateMistakes.testFirst, M3GateMistakes.noReprove]) {
+        expect(m.deadly, isFalse, reason: m.key);
+      }
 
       final c = M3GateRun(5)
         ..pGloves = true
         ..pShield = true
-        ..testBus();
+        ..proveTester()
+        ..testBus()
+        ..proveTester();
       c.tapFuse(c.blownWay, c.blownPh);
       expect(c.fitHrc(M3Hrc.copperStrip), M3GateMistakes.copperStrip);
       expect(c.deadly, isNotNull);
@@ -340,13 +376,29 @@ void main() {
 
       final g = M3GateRun(7);
       expect(g.touchGuard(g.guardFault), M3GateMistakes.guardBare);
-      final h = M3GateRun(7)..gGloves = true;
-      expect(h.energise(), h.guardFault == M3GuardFault.brokenWire ? M3GateMistakes.guardWire : M3GateMistakes.guardEarth);
+      final h = List.generate(40, (i) => M3GateRun(i)).firstWhere((r) => r.guardFault == M3GuardFault.brokenWire)..gGloves = true;
+      expect(h.energise(), M3GateMistakes.guardWire);
+      expect(h.ended, isFalse, reason: 'a broken mesh wire left = a slip');
       final other = M3GuardFault.values.firstWhere((f) => f != h.guardFault);
       expect(h.touchGuard(other), M3GateMistakes.guardSpot, reason: 'a spot with nothing wrong costs');
       expect(h.guardFixed, isFalse);
       expect(h.touchGuard(h.guardFault), isNull);
       expect(h.energise(), isNull);
+    });
+
+    test('7 guard: line back on with a guard earth lead still cut is deadly (one earth rule, 2026-11-15)', () {
+      final runs = List.generate(40, (i) => M3GateRun(i));
+      for (final f in [M3GuardFault.leftEarth, M3GuardFault.rightEarth]) {
+        final r = runs.firstWhere((r) => r.guardFault == f)..gGloves = true;
+        expect(r.energise(), M3GateMistakes.guardEarth, reason: f.name);
+        expect(r.deadly, M3GateMistakes.guardEarth);
+        expect(r.slips, 0);
+      }
+      expect(M3GateMistakes.guardEarth.deadly, isTrue);
+      final mended = List.generate(40, (i) => M3GateRun(i)).firstWhere((r) => r.guardFault != M3GuardFault.brokenWire)..gGloves = true;
+      expect(mended.touchGuard(mended.guardFault), isNull);
+      expect(mended.energise(), isNull, reason: 'the earth lead joined first: back on safely');
+      expect(mended.deadly, isNull);
     });
 
     test('the mark: 15 per slip; two slips still pass (the third strikes out on the page)', () {
@@ -480,6 +532,7 @@ void main() {
         '3.7/m3_gate_field/copper-strip',
         '3.8/m3_gate_field/neutral-bare',
         '3.9/m3_gate_field/guard-bare',
+        '3.9/m3_gate_field/guard-earth',
       });
       expect(M3GateMistakes.lessonOf('3.10/m3_gate_field/ring-no'), '3.10');
     });
@@ -530,6 +583,7 @@ void main() {
       await _tapKey(t, 'oil', ms: 300);
       await _tapKey(t, deal.oilLeakDealt ? 'judge-bad' : 'judge-ok', ms: 500);
       await _tapKey(t, 'lt-switch');
+      await _tapLabel(t, M3GateLines.lockTag, ms: 200);
       await _tapKey(t, 'tap');
       await _reason(t, M3GateLines.whyDtrQ, M3GateLines.whyDtrRight);
 
@@ -538,7 +592,9 @@ void main() {
       await _tapKey(t, 'door');
       await _tapLabel(t, M3GateLines.gloves, ms: 200);
       await _tapLabel(t, M3GateLines.faceShield, ms: 200);
+      await _tapLabel(t, M3GateLines.proveTester, ms: 200);
       await _tapKey(t, 'bus');
+      await _tapLabel(t, M3GateLines.proveTester, ms: 200);
       await _tapKey(t, 'fuse-${deal.blownWay}-${deal.blownPh}');
       await _tapKey(t, 'hrc-same', ms: 1500);
       await _tapKey(t, 'bolt-${deal.hotBolt}');
@@ -595,7 +651,7 @@ void main() {
       await t.tap(find.byKey(const ValueKey('lt-switch')), warnIfMissed: false);
       await t.pump();
       expect(_ltOn(t), isTrue);
-      // Listening is a slip (its card), and the job goes on.
+      // Listening = the tap turned with the LT on: deadly (owner ruling B1).
       final wrong = [
         for (final w in M3GateLines.coworker.wrong)
           if (_label(w).evaluate().isNotEmpty) _label(w),
@@ -603,13 +659,17 @@ void main() {
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
       await confirmChoice(t);
-      await _pump(t, 1500);
-      expect(find.text(M3GateMistakes.coworkerLt.textBn), findsOneWidget);
-      await t.tap(find.text(MistakeLines.gotIt));
-      await _pump(t, 600);
-      await _tapKey(t, 'lt-switch');
-      expect(_ltOn(t), isFalse, reason: 'after him the switch works');
-      expect(c.read(gameSaveProvider).mistakes.single.key, M3GateMistakes.coworkerLt.key);
+      for (var i = 0; i < 40 && find.byKey(const ValueKey('freeze')).evaluate().isEmpty; i++) {
+        await _pump(t, 100);
+      }
+      expect(find.byKey(const ValueKey('freeze')), findsOneWidget, reason: 'listening plays out as the deadly act');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pump(t, 3000);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(M3GateMistakes.tapLive.textBn), findsOneWidget);
+      final saved = c.read(gameSaveProvider).mistakes.single;
+      expect(saved.key, M3GateMistakes.tapLive.key);
+      expect(saved.deadly, isTrue);
       expect(t.takeException(), isNull);
       await _close(t, c);
     });
@@ -735,7 +795,8 @@ void main() {
       await _pickRight(t, M3GateLines.coworker.right);
       await _pump(t, 9000);
       expect(t.state<IdleHintState>(find.byType(IdleHint).first).showing, isTrue);
-      const steps = ['gel', 'oil', 'lt-switch', 'tap'];
+      // 'lt-lock-row' holds the তালা-ট্যাগ button (owner ruling A5).
+      const steps = ['gel', 'oil', 'lt-switch', 'lt-lock-row', 'tap'];
       final swept = _sweptIds(t, steps);
       expect(swept.toSet(), steps.toSet(), reason: '$swept');
       expect(swept.first, isNot('gel'), reason: '$swept');

@@ -82,7 +82,7 @@ import 'spoken_once.dart';
 //
 // Listening to the coworker is deadly here, not the playbook's slip: the act
 // he pushes (a lamp out of a live fitting) is this level's own deadly
-// (MODULE4_LADDER step 26 lists both) — owner to confirm.
+// (MODULE4_LADDER step 26 lists both; owner ruling B1, 2026-11-15).
 
 // ============================================================================
 // Content

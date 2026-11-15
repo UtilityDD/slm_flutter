@@ -1021,9 +1021,9 @@ class _OilRunPageState extends ConsumerState<_OilRunPage>
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Listened to him: up the live transformer with a can of oil. Deadly,
-      // not the playbook's slip: climbing the live transformer is this
-      // level's own deadly move (MODULE4_LADDER step 14) — owner to confirm.
+      // Listened to him: up the live transformer with a can of oil. Deadly:
+      // climbing the live transformer is this level's own deadly move
+      // (MODULE4_LADDER step 14; owner ruling B1, playbook row 8).
       await _step(M4OilLevelStep.climb, origin, force: true);
       return;
     }

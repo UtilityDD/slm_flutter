@@ -25,7 +25,8 @@ What the cards show comes from lesson 1.7 only:
      lesson's myth; standing about waiting for the ambulance; leaving him
      alone). No CPR card: the lesson gives CPR only when he does not respond
      and is not breathing, and that order is step 21's job;
-  5. no ice, water or ointment on a burn, and hospital even if he talks.
+  5. clean running water on a burn (no ice, no ointment), and hospital even
+     if he talks (A1 ruling: MoHFW/DGHS burns STG 2025, IFRC 2020).
 
 Fairness (the playbook, section 4, and the step-10/13 reviews): every card
 in a round shares one sky, one victim, one helper and the same props; any
@@ -658,8 +659,10 @@ def care_card(kind):
                   '<rect x="-1.8" y="-12" width="3.6" height="3.2" fill="#3A7BD5"/></g>')
         out.append(person(128, GY, ((122, 168), (hand[0] + 14, hand[1] - 26)), props='', facing=-1))
         out.append(bottle)
-        out.append(f'<path d="M{hand[0] + 6} {hand[1] - 22} Q{hand[0] + 2} {hand[1] - 12} {hand[0] + 1} {hand[1] - 2}" stroke="#7FC4F0" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
-                   f'<circle cx="{hand[0] - 3}" cy="{hand[1] + 6}" r="1.2" fill="#7FC4F0"/><circle cx="{hand[0] + 4}" cy="{hand[1] + 8}" r="1" fill="#7FC4F0"/>')
+        # The stream in the ice card's blue: water is a safe card now (A1), so
+        # it may draw no colour that the traps of its hand do not draw.
+        out.append(f'<path d="M{hand[0] + 6} {hand[1] - 22} Q{hand[0] + 2} {hand[1] - 12} {hand[0] + 1} {hand[1] - 2}" stroke="#8CC8EE" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
+                   f'<circle cx="{hand[0] - 3}" cy="{hand[1] + 6}" r="1.2" fill="#8CC8EE"/><circle cx="{hand[0] + 4}" cy="{hand[1] + 8}" r="1" fill="#8CC8EE"/>')
     elif kind == 'cream':
         out.append(sitting_victim(70, hand))
         out.append(person(126, GY, ((hand[0] + 2, hand[1] - 1), (hand[0] + 8, hand[1] - 6)), pose='kneel', facing=-1))
@@ -700,7 +703,7 @@ CARDS = {
     'gold_mud': golden_card('mud'),
     'gold_wait': golden_card('wait'),
     'gold_leave': golden_card('leave'),
-    # Round 5 — after: hospital, nothing on a burn.
+    # Round 5 — after: hospital; clean water on a burn, no ice or cream.
     'care_walk': care_card('walk'),
     'care_seat': care_card('seat'),
     'care_ice': care_card('ice'),

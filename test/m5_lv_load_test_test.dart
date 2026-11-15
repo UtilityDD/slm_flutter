@@ -9,6 +9,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' show PictureRecorder;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -335,6 +336,25 @@ void main() {
       expect(r.supplyOn, isFalse);
       expect(r.stage, M5LvLoadStage.tighten);
       expect(r.red, isNull);
+    });
+
+    test('the pole-end joints are dead only with the LT line shut down at the DTR / pillar way (WBSEDCL 3.2, A5): the words and the tag', () {
+      for (final t in M5LvLoadLines.methodRight) {
+        expect(t, contains('এলটি'), reason: t);
+        expect(t, isNot(contains('সাপ্লাই বন্ধ')), reason: 'a house cut-out leaves the pole joints live: $t');
+      }
+      for (final m in [M5LvLoadMistakes.liveSpanner, M5LvLoadMistakes.bareNeutral]) {
+        expect(m.textBn, contains('LT লাইন বন্ধ'), reason: m.key);
+        expect(m.deadly, isTrue, reason: 'R22 stays deadly');
+      }
+      expect(M5LvLoadLines.caughtSafe, startsWith('এলটি বন্ধ'));
+      // The scene: with the supply off the red shutdown tag is drawn on the pole.
+      final g = M5LvLoadGeo.forScene(760, 0);
+      for (final on in [true, false]) {
+        final rec = PictureRecorder();
+        M5LvLoadWorldPainter(geo: g, rig: M5LvLoadRig(supplyOn: on, tight: const {}, wall: 0, lit: 1)).paint(Canvas(rec), const Size(360, 760));
+        rec.endRecording().dispose();
+      }
     });
 
     test('joints: হয়ে গেছে with one left = a slip; all four → supply back; the close needs the loaded re-measure', () {

@@ -47,7 +47,7 @@ export 'm2_tool_care_world.dart' show CareKind, CareFlaw, CareZones, careLocalPo
 // play ("ভ্যানে ছুঁড়ে রেখে দাও, কাল দেখা যাবে!", the lesson's grease myth,
 // or "একটু ফাটা তো!" on a cracked grip).
 //
-// Deadly (FLAGGED for the owner): putting a tool with a cracked insulated grip
+// Deadly (ratified, owner ruling B2, 2026-11-15): putting a tool with a cracked insulated grip
 // back as fit for use (lesson: "একটি ক্ষতিগ্রস্ত বা দুর্বল টুল ব্যবহার করা
 // নিজের এবং সহকর্মীদের জীবন নিয়ে খেলা করার সমান"). Everything else is a slip.
 //
@@ -573,7 +573,7 @@ class CareRun {
 
   /// The player listened to him. Listening is a slip; on the cracked grip
   /// (the module table's deadly act: a cracked insulated grip kept as fit) it
-  /// is deadly — FLAGGED for the owner.
+  /// is deadly (owner rulings B1/B2, 2026-11-15).
   CareOutcome listen(CarePush p) {
     if (ended) return CareOutcome.none;
     if (p == CarePush.crack) {

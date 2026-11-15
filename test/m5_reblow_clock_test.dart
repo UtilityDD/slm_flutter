@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' show PictureRecorder;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -273,6 +274,18 @@ void main() {
       expect(m!.deadly, isTrue);
       expect(r.ended, isTrue);
       expect(r.slips, 2);
+    });
+
+    test('lesson 4.4 pro tip 2: before a re-fit the other two phases\' DOs are open — the no-check card says it, the scene draws it', () {
+      expect(M5ReblowMistakes.noCheck.textBn, contains('বাকি দুই ফেজের DO খোলা'));
+      expect(M5ReblowMistakes.noCheck.deadly, isFalse, reason: 'ruling M5-8: no check = slip');
+      // The painter draws all three barrels open before the re-fit, all in after it.
+      final g = M5ReblowGeo.forScene(760, 0);
+      for (final up in [false, true]) {
+        final rec = PictureRecorder();
+        M5ReblowWorldPainter(geo: g, rig: M5ReblowRig(phase: 1, barrelUp: up, rod: false, seed: 3)).paint(Canvas(rec), const Size(360, 760));
+        rec.endRecording().dispose();
+      }
     });
 
     test('permanent: a written blast page — re-fit is deadly at once; the wrong stamp is a slip; the orders', () {

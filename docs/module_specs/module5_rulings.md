@@ -27,3 +27,26 @@ Cross-module consistency (from the Modules 1–4 review, apply in Module 5 too):
 **6.5 m** across a street (CEA 2023 Reg 60); burns are cooled with clean running water ~20 min after the supply is
 off, no ice; full-body harness (never "safety belt"); a cracked hot stick is deadly; declaring a live line dead is
 deadly; bare-hand leads on live terminals are deadly.
+
+## Owner rulings of 2026-11-15 applied in Module 5
+
+From `docs/decisions/OWNER_DECISIONS_M1-4.md`, "Rulings made 2026-11-15" (national reference over WBSEDCL when they
+conflict). Where they meet a row above, the 2026-11-15 ruling wins.
+
+| Ruling | What it means in Module 5 | Where |
+|---|---|---|
+| B1 | Listening, or a verdict card that orders an act, takes that act's class (R29 already said so). | 5.8a: 'চালু রেখেই নাট টাইট' = live spanner, 'চালু রেখেই ওপরে উঠে' = climb live; the two 'আবার চার্জ' decoys are plain slips |
+| B3 | Opening a DO on load = deadly (it was a builder slip in 5.8a); under the DO and no গ্লাভস for the DO = slips. | 5.8a; 5.4a never reopens a DO on load: the crew opens all three DOs first, then each LT way goes in with the DTR's LT switch OFF |
+| B4 | Bare-hand meter leads on live terminals = deadly; on dead terminals, or a bare tong, = slip. | 5.8a (rubber gloves button in every row) |
+| B8 | Earth set on a live line = deadly. | 5.8a |
+| A5 | A fuse touched, pulled or pushed with the supply on = deadly; LT fuses and LT joints are worked only on a dead LT line (WBSEDCL Safety Manual 2025 3.2, Ch IV duty 8). | 5.4a (`live-carrier`); 5.5b and board 5.5 (pole-end joint: the LT line shut at the DTR / pillar way, lock and tag; a house cut-out does not make it dead); board 5.4 |
+| R1/R4 (as 5.10a) | 5.8a dead-phase work: PTW → LT off → DOs open → tester 0 V on all three → LT earth set → spanner. No PTW or no earth = deadly; tester or earth before the PTW, and the earth before every 0 V, = slips. | 5.8a; board 5.8 (the earth before the bushing) |
+| M5-1 → M4 | Reclosing a DO that blew again the moment it was fitted is deadly in M4 `do_4_4_b` too (it was a slip there). | M4 `do_4_4_b` |
+| M5-3 (refined) | In 5.1b, a van drag before the lock-out is reported = the patrol-early slip; after the report it is ignored (ground patrol needs no PTW; climbing or touching before the PTW stays deadly, R1). | 5.1b |
+| Earths both sides | WBSEDCL Safety Manual 2025 5.14(d): earths on both sides of the working zone; the crew's set is drawn on at the far pole once 0 V shows. | 5.1b |
+| M5-7 (reference) | The cable route record first, then the owners of the other underground lines (India's DoT 'Call Before u Dig'). | 5.9b |
+| M5-8 (with M4) | The other two phases' DOs are open before every re-fit (lesson 4.4 pro tip 2), drawn opened by the crew. | 5.4b |
+| Discharge | The gate's UG step isolates both ends and discharges before the megger ('দুই প্রান্ত আইসোলেট করে ডিসচার্জ'). | gate |
+
+New or changed Bangla card text from these fixes is DRAFT until the owner gives the natural wording (voice rule
+2026-11-14); spoken lines need Subrata clips.

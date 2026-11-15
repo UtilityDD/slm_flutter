@@ -9,7 +9,7 @@ Status: built on the shared kit, tests green. Every row's open content questions
 | Step | Rung | Name | Moves | Deadly (💀) | Status |
 |---:|---|---|---|---|---|
 | 1 | 4.1/learn | পিন বা ডিস্ক ইনসুলেটর বদলানো (picture board) | 5 picture rounds (prep · hold · fit · bypass · disc) + myth | — | playable (tests green) |
-| 2 | 4.1 কাজ 1 | বদলের আগে (`do_4_1_a`, `m4_insulator_prep`) | spot (the faulty insulator: crack or burn/puncture) · choose (the right kind of new insulator + its fittings from the van's shelf) · inspect (a cracked spare of each kind on the shelf) · order (PTW → tester → earth both sides → helmet + harness → climb) · say no (coworker: "এক দিকে আর্থ দিলেই হবে") | 💀 climbing with no PTW / shutdown · 💀 climbing without earth on both sides (also by listening to him) | built, tests green |
+| 2 | 4.1 কাজ 1 | বদলের আগে (`do_4_1_a`, `m4_insulator_prep`) | spot (the faulty insulator: crack or burn/puncture) · choose (the right kind of new insulator + its fittings from the van's shelf) · inspect (a cracked spare of each kind on the shelf) · order (PTW → tester → earth both sides → helmet + harness → climb) · say no (coworker: "এক দিকে আর্থ দিলেই হবে") | 💀 climbing with no PTW / shutdown · 💀 climbing without earth on both sides (also by listening to him) · 💀 an earth put on the line while it is still live (no PTW / shutdown; owner B8, 2026-11-15: earth on a live line is deadly everywhere) | built, tests green |
 | 3 | 4.1/do/1 | পোলের ওপর বদল | spot (the faulty insulator) · order (lesson steps with tools) · inspect + choose (a tray of 3 spares: cracked / punctured / sound; rusted pin) · say no (coworker) | pliers on a tension string still under load (no load bypass) | built, tests green (20) |
 | 4 | `4.2/learn` | জাম্পার কানেকশন ও টাইট করা (picture board) | 5 picture rounds (bridge · connector · fit · shape · patrol) + myth | — | built, tests green |
 | 5 | `4.2/do/0` (`do_4_2_a`) | জাম্পার বানাও | choose + inspect (jumper piece: cut end beside the line's, same size or bigger) · order (brush → paste → connector → two spanners, at both joints) · choose (connector by metal: PG·Al, or বাই-মেটালিক on the copper span) · spot (the smooth U among three bends) · inspect (trim the stray strand) · say no (coworker: "ব্রাশ-ট্রাশ লাগবে না, সোজা লাগিয়ে দাও!") | none — all slips (the line is dead and earthed) | built, tests green (15) |
@@ -18,8 +18,8 @@ Status: built on the shared kit, tests green. Every row's open content questions
 | 8 | `4.3/do/0` | কানেকশনের প্রস্তুতি | inspect (papers) · choose (route on the survey sketch) · choose (material shelf) · order (work card) · say no (coworker on papers / route / GI wire) | — (planning; all slips) | built, tests green |
 | 9 | 4.3/do/1 (do_4_3_b) | সংযোগ দাও (m4_service_connect) | order (strap → drip loop → meter L/N → pole: harness → shutdown → tester → earth → IPC sheared → earth off → PTW back → fuse → multimeter → offcuts → hand over) · choose (IPC vs pliers; read the multimeter: 230-240 V vs 0 V) · spot (the L/N marks on the meter, the cores and the LT conductors, which are dealt; the offcuts) · say no (coworker: "ফেজ-নিউট্রাল যেকোনোটা যেকোনো দিকে") | IPC/pliers or the earth set on the LT line without the shutdown | built, 17/17 tests green, analyze clean |
 | 10 | 4.4/learn | ডিও (DO) ফিউজ পরিচালনা করা — picture board | 5 picture rounds (prep · link · open · close · field) + why chips + rival myth (gloves without hot stick) | — | built, tests green |
-| 11 | 4.4/do/0 | ডিও খোলো নিয়মে (`m4_do_open`, `do_4_4_a`) | choose (operating rod from the van rack: not cracked or short; head = puller / load-break tool) · inspect (গ্লাভস + face shield before the rod goes up) · spot (dry ground to the side, not under the DO set, not in the puddle) · order (hook → face aside → one quick pull, each fuse; all three open before "done") · say no (coworker: "লোড থাকলেও টেনে দাও" on the heavy job / "বাকি দুটো খোলার দরকার নেই" on the fault job) | 💀 heavy-load fuse pulled without the load-break tool (arc not quenched) | built, tests green |
-| 12 | `do_4_4_b` | ফিউজ উড়েছে — কেন? | spot (the dropped barrel) · choose (what first; the docket's link from a tray with thick wire; spark vs re-blow) · order (clean → button → wind tail + nut → port → ready) · stance + face aside + one push · say no (coworker: "মোটা তার দিয়ে বেঁধে দাও" / "যতবার উড়বে ততবার লাগাও") | 💀 thick wire in place of the fuse link (from the tray or on his say-so) | built, tests green |
+| 11 | 4.4/do/0 | ডিও খোলো নিয়মে (`m4_do_open`, `do_4_4_a`) | choose (operating rod from the van rack: not cracked or short; head = puller / load-break tool) · inspect (গ্লাভস + face shield before the rod goes up) · spot (dry ground to the side, not under the DO set, not in the puddle) · order (hook → face aside → one quick pull, each fuse; all three open before "done") · say no (coworker: "লোড থাকলেও টেনে দাও" on the heavy job / "বাকি দুটো খোলার দরকার নেই" on the fault job) | 💀 heavy-load fuse pulled without the load-break tool (arc not quenched), also by listening to "লোড থাকলেও টেনে দাও" on the heavy job (owner B1, 2026-11-15); on the fault job listening is a slip. Under the DO and no গ্লাভস = slips (B3) | built, tests green |
+| 12 | `do_4_4_b` | ফিউজ উড়েছে — কেন? | spot (the dropped barrel) · choose (what first; the docket's link from a tray with thick wire; spark vs re-blow) · order (clean → button → wind tail + nut → port → ready) · stance + face aside + one push · say no (coworker: "মোটা তার দিয়ে বেঁধে দাও" / "যতবার উড়বে ততবার লাগাও") | 💀 thick wire in place of the fuse link (from the tray or on his say-so); reclosing after the fuse blew again at once (also on his "যতবার উড়বে ততবার লাগাও" push; ruling M5-1, B1) | built, tests green |
 | 13 | 4.5/learn | ট্রান্সফরমারের অয়েল লেভেল ও তাপমাত্রা পরীক্ষা (picture board) | 5 picture rounds (level · check · heat · leak · topup) + myth (engine oil) | — | built, 13/13 tests green |
 | 14 | 4.5 কাজ 1 (`do_4_5_a`) | তেলের মাপ | read (conservator gauge MIN · 30°C · MAX against the dealt weather: summer noon / winter dawn / mild day) · spot (leak at the bushing gasket, weld, drain cock or fin) · choose (ঠিক আছে / রিপোর্ট; the right drum: new filtered transformer oil vs engine / used / rain-wet oil) · order (শাটডাউন → টেস্টার → আর্থ → উঠুন, then hold to pour up to the mark) · say no (coworker: "চালু অবস্থায় একটু তেল ঢেলে দাও!") | 💀 climbing the live transformer (also by listening to him); 💀 the earth put on before the shutdown | built, tests green |
 | 15 | 4.5 কাজ 2 (`do_4_5_b`) | গরম কতটা? | choose (ইনফ্রারেড থার্মোমিটার vs হাতে ছুঁয়ে) · read (thermometer heat bar + shimmer → স্বাভাবিক / অতিরিক্ত গরম) · spot (tap oil gauge / fins / LT cables with clamp meter + nameplate to find the cause) · choose (the action deck + reason) · say no (coworker: "হাত দিয়ে ছুঁয়ে দেখো কত গরম") | a hand on the live DTR's tank (own pick or on the coworker's word) | built, tests green |
@@ -27,7 +27,7 @@ Status: built on the shared kit, tests green. Every row's open content questions
 | 17 | 4.6 কাজ 1 | মাটির পরীক্ষা | spot (visual check of a DTR's double earthing, pits N-1 N-2 B-1 B-2: tag 1–2 dealt faults — strip cut/stolen, rusty loose joint, pit cover off; "দেখা শেষ" with one missed = slip) · order (for one neutral pit and one body pit: drive two temporary spikes → connect the tester's leads → TEST; leads before both spikes / TEST before the circuit = slip) · read (the earth tester counts up to the ohms; mark "মান ঠিক" / "মান বেশি" against the lesson's value for a distribution line, < 5–8 Ω; one good ≤ 4.2 Ω and one high ≥ 12 Ω a play; a wrong mark = slip) · say no (coworker, one of two dealt: "চোখে তো সবই দেখলে! মেগার-টেগার লাগবে না, চলো।" before the first test, or "লাইন তো দিব্যি চলছে! খাতায় মান ঠিক লিখে দাও…" on the high reading — listening = slip) | none | built, tests green (14; flows cover both coworker pushes) |
 | 18 | 4.6/do/1 | আর্থ মেরামত (`m4_earth_fix`, `do_4_6_b`) | inspect (joint · strip · pit) · choose (the fix) · order (the fix's steps) · measure again (earth tester) · say no (coworker: "তার কেটে গেছে? ঝুলিয়ে রাখো, কেউ দেখবে না") | 💀 signing off with the earth strip still cut (also by listening to him) | built, 16/16 tests green |
 | 19 | 4.7/learn | ডিপি (DP) স্ট্রাকচার ড্রেসিং (picture board) | 5 picture rounds (jumper · align · cable · gap · finish) + myth | — | playable (tests green) |
-| 20 | `4.7/do/0` | এলোমেলো স্ট্রাকচার — survey 3 DP transformer structures from the ground and write the dressing list: tap what is untidy (binding wire's long tail · tangled jumper · tilted DO cross-arm · low clearance phase-phase / phase-pole · LT cables hanging loose · two LT wires touching); half the plays deal one fully tidy DP ("সব পরিপাটি"); a list with HT and LT work is ordered HT first (pro tip 1); reason deck per DP; at the end, how the dressing will be done (shutdown, PTW, test, earth) | spot + order + choose + say no | choosing to dress the structure live (no shutdown / PTW / test / earth) — **flagged** | ✅ built on the shared kit (2026-11-11): drawn DP (HT arm + pin insulators + line, upper jumpers, DO fuse arm, lower jumpers, DTR on the platform, LT cables to the LT box, LT arm with outgoing wires, danger + DP number plates), red numbered rings on marked parts, orange dashed rings on missed ones, the dressing list chip, order card, reason deck, coworker once (myth 1 "যা আছে চলছে তো…" or myth 2 "ওগুলো তো ইনসুলেটেড" = slip), plan deck, freeze with an arc at the jumpers; slips: tidy part marked, a fault missed, LT before HT, listening to him |
+| 20 | `4.7/do/0` | এলোমেলো স্ট্রাকচার — survey 3 DP transformer structures from the ground and write the dressing list: tap what is untidy (binding wire's long tail · tangled jumper · tilted DO cross-arm · low clearance phase-phase / phase-pole · LT cables hanging loose · two LT wires touching); half the plays deal one fully tidy DP ("সব পরিপাটি"); a list with HT and LT work is ordered HT first (pro tip 1); reason deck per DP; at the end, how the dressing will be done (shutdown, PTW, test, earth) | spot + order + choose + say no | choosing to dress the structure live (no shutdown / PTW / test / earth; owner B8, 2026-11-15) | ✅ built on the shared kit (2026-11-11): drawn DP (HT arm + pin insulators + line, upper jumpers, DO fuse arm, lower jumpers, DTR on the platform, LT cables to the LT box, LT arm with outgoing wires, danger + DP number plates), red numbered rings on marked parts, orange dashed rings on missed ones, the dressing list chip, order card, reason deck, coworker once (myth 1 "যা আছে চলছে তো…" or myth 2 "ওগুলো তো ইনসুলেটেড" = slip), plan deck, freeze with an arc at the jumpers; slips: tidy part marked, a fault missed, LT before HT, listening to him |
 | 21 | 4.7 কাজ 2 (`do_4_7_b`) | পরিচ্ছন্নতার শিল্প | order (permit → tester 0 V → earth on both side spans → harness → climb; line clear in reverse: down → look + photo → both earths off → line clear) · spot (4 of 6 untidy places on the DP, HT before LT; a tidy place = slip) · choose (the fix per place, card deck) · say no (coworker: "আর্থের তারটা হাতে বাধছে! এক দিকের আর্থ খুলে কাজ সেরে ফেলো।") | climbing without both earth sets; listening to him (one earth off while aloft) | built, tests green (19) |
 | 22 | 4.8/learn | গাছের ডালপালা ছাঁটা (learn_4_8) | 5 picture rounds (why · plan · tool · cut · trim) + myth | — | done |
 | 23 | `do_4_8_a` (`m4_tree_plan`) | কাটার আগে পরিকল্পনা | spot (branches grown into the line's clearance — only those; the drop zone under the tree, off the road) · choose (tool by branch size: insulated pruner / saw for thin, chainsaw + rope for thick; plain saw wrong) · order (শাটডাউন · PTW, helper below, গ্লাভস · গগলস, rope, tool — all before the first cut) · say no (coworker: "লাইন চালু থাক! শাটডাউনের ঝামেলা কে করবে? উঠে কেটে দাও।") | 💀 starting the cut with the line live (no শাটডাউন, or kept on at his say-so) | built · 18 tests green · perf 9 rebuilds/s, 0 idle frames |
@@ -37,19 +37,21 @@ Status: built on the shared kit, tests green. Every row's open content questions
 | 27 | `do_4_9_b` · engine `m4_streetlight_fix` | আলো ফেরাও | order (isolate → ladder → tie → harness → climb; prove → tighten → part; down → scrap → MCB ON) · spot (THIS light's MCB by the pole plate; the safe ladder side; the loose, corroded terminal) · choose (part matching the ballast / LED driver; scrap crate vs dustbin) · inspect (tester 0 V / LIVE) · say no (coworker: "কোনো দরকার নেই MCB নামানোর! শুধু তো ল্যাম্প — মই লাগিয়ে উঠে পড়ো।" or, if the MCB is already off, "আবার টেস্টার কেন?") | 💀 a hand on the terminals / lamp holder while live (untested, after a LIVE reading, or by listening to the coworker) — lesson point 2 + myth 1 | built, tests green |
 | 28 | `4.10/learn` | এলটি (LT) লাইনের ফেজ ব্যালেন্সিং — ছবির বোর্ড | 5 picture rounds (spot · measure · plan · work · check) + myth (নিউট্রালে কারেন্ট থাকে না) | — | built, tests green |
 | 29 | 4.10/do/0 (do_4_10_a) | তিন ফেজে সমান ভার (m4_phase_balance) | read (tong tester round R, Y, B and N at the feeder pillar, then say which phase is heavy) · spot (the neutral must be measured too) · choose (the phase chart: move connections off the heavy phase and give the 2 new ones a phase until the 3 phases are within 10 A) · order (tell consumers → LT main OFF → PTW → tester 0 V → earth → spanner on the bars → earth off → PTW back → ON → measure all 4 again → record book) · say no (coworker: "সব নতুন কানেকশন <heavy> ফেজেই দিয়ে দাও") | spanner on the bars with the LT main ON (changing service connections live) | built, 19/19 tests green, analyze clean |
-| 30 | m4/gate | স্কিলডের ডকেট · র‍্যাঙ্ক গেট (9 কাজ) | DO off-load + PPE + stance; read oil gauge + IR temp, report/write; earth test (2 spikes) → water pit + clamp → retest; earths both sides + insulator order (coworker: "skip earths"); spot hot jumper clamp → brush/paste → two wrenches; DP dressing top→bottom + nuts; cordon + rope + three-cut (no topping); MCB off → test 0 V → lamp → MCB on; tong tester R/Y/B/N → shift heavy→light under shutdown → re-measure | DO on load · DO from underneath · line work without earths both sides · lamp on a live MCB · moving service lines on a live LT | built, tests green |
+| 30 | m4/gate | স্কিলডের ডকেট · র‍্যাঙ্ক গেট (9 কাজ) | read oil gauge + IR temp on the running DTR (station 1, before the DOs are opened; owner A4), report/write; DO off-load + PPE + stance; earth test (2 spikes) → water pit + clamp → retest; earths both sides + insulator order (coworker: "skip earths" — listening = work with no earths, deadly, B1); spot hot jumper clamp → brush/paste → two wrenches; DP dressing top→bottom + nuts; cordon + rope + three-cut (no topping); MCB off → test 0 V → lamp → MCB on; tong tester R/Y/B/N → shift heavy→light under shutdown → re-measure | a hand on the running DTR's tank (owner A4, 2026-11-15, as 4.5b) · DO on load · line work without earths both sides (also by listening to him, B1) · lamp on a live MCB · moving service lines on a live LT. Standing under the DO and missing face shield / গ্লাভস = slips (B3) | built, tests green |
 
-## Owner decisions (flagged by the level agents — please confirm or change)
+## Owner decisions (level agents' notes)
+
+Every deadly column above was ratified by the owner on 2026-11-15 (ruling B2; see `docs/decisions/OWNER_DECISIONS_M1-4.md`, "Rulings made 2026-11-15"). The deadly/slip notes below record why; the other notes stay open content questions.
 
 ### Top decisions for Module 4 (director's summary — details per level below)
-1. **DO fuse on load — the levels disagree.** 4.4 board and 4.4a follow lesson 4.4: heavy load is opened with a load-break tool (pulling without it = fatal). The Module 4 gate follows Module 2 / lesson 2.5: LT off first, opening on load = fatal (no load-break tool offered). Pick one rule; the fix is either the gate or the two 4.4 levels.
+1. ~~**DO fuse on load — the levels disagree.**~~ Ruled (B3, 2026-11-15): opening a DO on load is deadly in every level. 4.4a keeps lesson 4.4's load-break tool for heavy load (pulling without it = deadly, also on the coworker's push, B1); the gate keeps "LT off first" (no load-break tool offered, opening on load = deadly). Standing under the DO and no গ্লাভস = slips everywhere.
 2. **Lesson 4.2 calls jumper tightening "live line maintenance".** Board 4.2, 4.2a and 4.2b keep the job dead (shutdown, test, earth); the lesson text likely needs correcting.
-3. **Touching the transformer tank** (4.5b, gate): lesson 4.5 says feeling it by hand is OK if earthed; the checked film says never. Levels follow the film (hand on tank = fatal in 4.5b, slip in the gate).
+3. ~~**Touching the transformer tank**~~ Ruled (A4, 2026-11-15): never touch a DTR tank in service; measure remotely. A hand on the tank is deadly in 4.5b and in the gate, whose oil/temperature station now comes first, on the running DTR. Lesson 4.5's "feel it if earthed" text needs the owner's go-ahead to change (Supabase).
 4. **4.9a street light**: MCB off + prove 0 V, but no lock-and-tag (lesson doesn't ask for it). 230 V borrowed from other lessons.
 5. **4.6 board — earth pits**: lesson says "two separate pits", film says neutral and body each get two; the card draws four.
 6. **Harness**: 4.7b makes no-harness only a slip (lesson 4.7 silent). 4.1a/4.1b treat harness as required.
 7. **Made-up numbers** to confirm: 4.5b nameplate/clamp currents, 4.6a/4.6b earth readings, 4.4b link ratings 6–20 A, 4.10 board uses the lesson's own R/Y/B currents.
-8. **4.7a**: the "live dressing = fatal" plan beat comes from the brief's safety rule, not lesson 4.7.
+8. **4.7a**: the "live dressing = deadly" plan beat comes from the brief's safety rule, not lesson 4.7 (ratified, B8, 2026-11-15).
 
 ### m4lb1
 - hold/block: the second safe card draws the rope run over a block at the pole top; the lesson only says "rope or other support".
@@ -63,7 +65,9 @@ Status: built on the shared kit, tests green. Every row's open content questions
   the earths go on" (slips `earth-live`, `earth-untested`) and "helmet + harness before climbing" (slip
   `no-harness`). Lesson 4.1 says only PTW, de-energise and earth from both sides.
 - **Deadly for one-side earth:** the lesson says earthing from both sides is required and that a dead line can carry
-  induced voltage; making a one-side-earth climb deadly is my call per the brief.
+  induced voltage; a one-side-earth climb is deadly per the brief (ratified, B2, 2026-11-15). An earth put on the live
+  line (no PTW / shutdown) is deadly too (B8: earth on a live line is deadly everywhere); on a dead line not yet tested
+  it stays the `earth-untested` slip.
 - **Left out:** lesson 4.1's "inspect the pole and crossarm before climbing" — no hands-on move for it (it is not
   scored); ratings/sizes (11 kV, insulator ratings) — the lesson gives none, so the shelf only distinguishes pin vs
   disc and sound vs cracked; spanner/pliers (assumed on the tool belt).
@@ -121,7 +125,7 @@ Status: built on the shared kit, tests green. Every row's open content questions
 - Shape tiles have screen-reader labels "আকার 1/2/3" only (no text on screen).
 
 ### m4do2b
-1. **Live vs shutdown:** lesson 4.2's safety tip says tightening a loose jumper is "লাইভ লাইন মেইনটেন্যান্স" (with PTW and PPE). The level follows the module brief instead: shutdown + PTW, tester, earth, then the work; any tool on a live jumper is deadly. Please confirm, and consider correcting the lesson's tip.
+1. **Live vs shutdown:** lesson 4.2's safety tip says tightening a loose jumper is "লাইভ লাইন মেইনটেন্যান্স" (with PTW and PPE). The level follows the module brief instead: shutdown + PTW, tester, earth, then the work; any tool on a live jumper is deadly (ratified, B2, 2026-11-15). The lesson's tip still needs correcting (Supabase, owner's go-ahead).
 2. **Torque:** the lesson only says "সমানভাবে এবং সঠিক টর্কে". No value is given, so the dial has no numbers — its green band is a game abstraction. Going past the band is a slip ("বেশি টাইটে বোল্ট আর ক্ল্যাম্প নষ্ট হয়"); that consequence is inferred, not in the lesson.
 3. **Melted clamp → replace:** the lesson says a loose connector can melt and the wire fall; that a melted clamp must be replaced (tightening it = slip) is inferred. Replacing an intact loose clamp is allowed (no slip).
 4. **Brush + paste before re-tightening:** the lesson gives this for making a connection (point 1, pro tip 4); the level applies it to re-tightening a hotspot too.
@@ -149,7 +153,7 @@ Status: built on the shared kit, tests green. Every row's open content questions
 - Fetching a paper that was fine is booked as a slip (`paper-misread`) — a design choice, not a lesson rule.
 
 ### m4do3b
-1. **The safety steps around the LT tap are not in lesson 4.3.** The lesson never says how the LT line is made safe for the IPC. I followed the brief's module rules: helmet and harness on the pole, then shutdown/PTW, prove it dead with a tester, earth it, and remove the earth before the line or the fuse comes back. The deadly mistake is a tool or the earth set on the line without a shutdown. In real work IPCs are often fitted live on LT ABC with insulated gloves, but the lesson doesn't support that, so the level never allows it. Owner to confirm.
+1. **The safety steps around the LT tap are not in lesson 4.3.** The lesson never says how the LT line is made safe for the IPC. I followed the brief's module rules: helmet and harness on the pole, then shutdown/PTW, prove it dead with a tester, earth it, and remove the earth before the line or the fuse comes back. The deadly mistake is a tool or the earth set on the line without a shutdown (ratified, B2/B8, 2026-11-15). In real work IPCs are often fitted live on LT ABC with insulated gloves, but the lesson doesn't support that, so the level never allows it.
 2. **"House end first, the pole last."** This follows the order of lesson point 2 (strap the cable, connect the meter, then the pole). The lesson presents that order but does not state it as a rule. Doing the pole first books the `pole-before-meter` slip. Owner to confirm.
 3. **Colours and marks.** The phase core is red with an "L" sleeve and the neutral core is black with an "N" sleeve. The LT conductors carry R/Y/B/N tags. The lesson only says to "mark phase and neutral". The colours are an assumption.
 4. **No harness item in the lesson.** `no-harness`, `not-proven-dead`, `no-earth` and `earth-left-on` have no lesson point, so their cards have no "পাঠে দেখুন". The same goes for `offcuts-left`, which comes from pro tip 4, not a numbered point.
@@ -169,8 +173,8 @@ Status: built on the shared kit, tests green. Every row's open content questions
 - The test imports `learn_board_pack44.dart` directly (the models file does not export it until registered).
 
 ### m4do4a
-- **Lessons 2.5 and 4.4 disagree on load.** Lesson 4.4 treats the DO as a switch worked ON LOAD ("মনে রাখবেন, আপনি একটি লোডযুক্ত সুইচ অপারেট করছেন"), with a load-break tool for heavy load (pro tip 1). Lesson 2.5 (and `m2_hotstick_operate`) says a DO fuse is opened off-load. This level follows 4.4, so there is no "off-load first" step here. Please settle which rule is right.
-- **The deadly is an inference.** Lesson 4.4 says to use the load-break tool on heavy load. Film line 1 says an arc flash can blind or kill. Making "a heavy-load fuse pulled without the load-break tool" deadly combines the two.
+- **Lessons 2.5 and 4.4 disagree on load.** Lesson 4.4 treats the DO as a switch worked ON LOAD ("মনে রাখবেন, আপনি একটি লোডযুক্ত সুইচ অপারেট করছেন"), with a load-break tool for heavy load (pro tip 1). Lesson 2.5 (and `m2_hotstick_operate`) says a DO fuse is opened off-load. This level follows 4.4, so there is no "off-load first" step here: heavy load is opened only with the load-break tool. Settled by B3 (2026-11-15): a DO opened on load without that is deadly in every level.
+- **The deadly is an inference.** Lesson 4.4 says to use the load-break tool on heavy load. Film line 1 says an arc flash can blind or kill. Making "a heavy-load fuse pulled without the load-break tool" deadly combines the two (ratified, B2). Listening to "লোড থাকলেও টেনে দাও! লোড ব্রেক টুল-টুল লাগবে না।" on the heavy job is that pull, so it is deadly too (B1); he comes only once the load-break head is fitted, so listening means taking it off. On the fault job listening stays a slip.
 - **Two parts of the concept seed were left out (not in the lesson or the film):**
   - "switch the LT side off first";
   - any phase ORDER for opening (e.g. middle first).
@@ -181,8 +185,8 @@ Status: built on the shared kit, tests green. Every row's open content questions
 
 ### m4do4b
 - **Patrol / DTR-LT check / "report"** (from the concept seed) are not in lesson 4.4 or its film. I kept it to one neutral line ("দল লাইনটা ঘুরে দেখে এল।") and the lesson's own rule (pro tip 2: open all three, clear the fault, refit one by one). No patrol procedure is shown.
-- **Re-blow → stop** is inferred from pro tip 2 + myth 2 ("if there is no permanent fault, a small spark is normal"); the lesson does not say it in so many words. Reclosing after a re-blow is a slip, not deadly.
-- **Thick wire = deadly**: the lesson says only "the right ampere-rating fuse element" (point 1) and that a badly made link "may fail to drop out on a fault" (point 2). Deadly is my call (seed allowed it); the card says only that it will not drop out on a fault.
+- **Re-blow → stop** is inferred from pro tip 2 + myth 2 ("if there is no permanent fault, a small spark is normal"); the lesson does not say it in so many words. Reclosing after the fuse blew again the moment it was fitted is **deadly** (Module 5 ruling M5-1: a re-fit after an instant blast = charging a permanent fault; lesson 5.4 point 3 "মারাত্মক ভুল"; as m5_reblow_clock), and so is listening to "যতবার উড়বে ততবার লাগাও" at the re-blow (B1). Reopening on a normal spark stays a slip. The card's words are unchanged (recorded clip).
+- **Thick wire = deadly**: the lesson says only "the right ampere-rating fuse element" (point 1) and that a badly made link "may fail to drop out on a fault" (point 2). Deadly (ratified, B2, 2026-11-15); the card says only that it will not drop out on a fault.
 - **Link ratings 6A / 8A / 10A / 16A / 20A** are a match-the-docket task; no sizing rule (kVA → link) is claimed or shown. Owner may want real WBSEDCL ratings.
 - Opening the other two phases and closing them again is a single tap each (stance/face aside are tested only on the main closing, to keep the round short; lesson 4.4 কাজ 1 covers opening).
 - PPE (helmet, insulated গ্লাভস, face shield) is always shown on the trainee, not a move here.
@@ -191,7 +195,8 @@ Status: built on the shared kit, tests green. Every row's open content questions
 ### m4lb5
 - **Lesson vs film on touching the tank:** the lesson says *if safe, feel the tank by hand (after checking it is
   earthed)*; the reviewed film (S3_03) says *don't touch the tank — measure from afar with an infrared thermometer*.
-  The board follows the film: hand-on-tank is a trap, infrared thermometer is a safe card. Please confirm.
+  The board follows the film: hand-on-tank is a trap, infrared thermometer is a safe card. Ruled (A4, 2026-11-15): never
+  touch a DTR tank in service; measure remotely.
 - **Leak / climb trap:** the reject says the leak is mended "শাটডাউন নিয়ে" — the house rule, not the lesson's words
   (the lesson only says report and arrange top-up and leak repair).
 - **check / climb trap:** standing on a live transformer to read the gauge — the lesson only says the gauge can be
@@ -209,7 +214,7 @@ Status: built on the shared kit, tests green. Every row's open content questions
   the commit ran there (git via `--git-dir …/slm_flutter/.git/worktrees/m4lb5`).
 
 ### m4do5a
-- **Test → earth → climb (with helmet + harness) before the top-up** comes from the brief's module safety rule ("line work only after shutdown, PTW, test and earth"). It is not in lesson 4.5's text. The lesson (pro tip 1) and the film (line 11) only say the transformer/line is switched off first. The deadly "earth on a live line" is mine, from the same rule.
+- **Test → earth → climb (with helmet + harness) before the top-up** comes from the brief's module safety rule ("line work only after shutdown, PTW, test and earth"). It is not in lesson 4.5's text. The lesson (pro tip 1) and the film (line 11) only say the transformer/line is switched off first. The deadly "earth on a live line" comes from the same rule (ratified, B8, 2026-11-15: earth on a live line is deadly everywhere).
 - **Shutdown = DO fuses dropped open** (a single শাটডাউন step, as in the M2 gate). I did not invent an LT-before-HT order; the lesson does not give one.
 - **Drum choice:** the lesson says "একই গ্রেডের এবং ফিল্টার করা নতুন তেল" and warns against "ভুল তেল বা আর্দ্র তেল". The myth is engine oil. I show the moist oil as a transformer-oil drum left open in the rain (water on the lid). The labels "OIL · FILTERED", "USED OIL" and the seal band are my drawings. **Sludge is left out** (not in the lesson).
 - **Low-oil response:** the lesson says report to the supervisor first; the top-up and leak repair are arranged. In the game the supervisor's go-ahead is one guide line ("সুপারভাইজার বললেন, টপ-আপ করুন"), then the player does the top-up.
@@ -222,7 +227,7 @@ Status: built on the shared kit, tests green. Every row's open content questions
 - **Touching the tank:** the lesson (point 2, sign 1) says feel the tank by hand "if safely possible, after making
   sure the tank is earthed"; the accuracy-checked film (S3_03) says "তাপ মাপতে ট্যাঙ্কে হাত দেবেন না; দূর থেকে
   ইনফ্রারেড থার্মোমিটারে মাপুন". We follow the film: a hand on the tank is deadly (burn + a live body if the earth is
-  bad). Please confirm.
+  bad). Ruled (A4, 2026-11-15): never touch a DTR tank in service; the gate makes it deadly too.
 - **No temperature limits in the sources:** the lesson gives none for DTRs (only OTI/WTI alarms on big power
   transformers). So the IR thermometer's screen shows a colour heat bar with a pointer, no numbers; overheating is
   also shown by heat shimmer over the tank. "Compare with the lesson's limits" from the seed is left out.
@@ -306,7 +311,7 @@ Status: built on the shared kit, tests green. Every row's open content questions
 - The lesson's second myth (insulated wires touching) is used as the gap/touch trap and a reason chip, not as the board's myth beat.
 
 ### m4do7a
-- **Deadly beat is not from the lesson text.** Lesson 4.7 never mentions shutdown/PTW. The final "how will the dressing be done?" deck uses the project rule (line work only after shutdown, PTW, test and earth); any live-work option is the deadly. Wrong options include "শাটডাউন পেলেই উঠি, টেস্ট-আর্থ লাগবে না" — also treated as deadly. Remove the beat if you want the level slips-only.
+- **Deadly beat is not from the lesson text.** Lesson 4.7 never mentions shutdown/PTW. The final "how will the dressing be done?" deck uses the project rule (line work only after shutdown, PTW, test and earth); any live-work option is the deadly. Wrong options include "শাটডাউন পেলেই উঠি, টেস্ট-আর্থ লাগবে না" — also treated as deadly. Ratified (B8, 2026-11-15).
 - **Left out (not in the lesson or the film script):** danger plate missing, anti-climbing device, bird nests (the concept seed's ideas). The danger plate is drawn only as correct decor.
 - **Loose connections** (lesson mistake 4, film line about torque) are not a spot item: they can't be seen from the ground. Not in the level.
 - **"Two insulated LT wires touching"** is drawn on the outgoing LT wires from the myth ("তার একটু ছুঁয়ে থাকলে কিছু হয় না, ওগুলো তো ইনসুলেটেড") — the lesson does not say which wires.
@@ -321,7 +326,7 @@ Status: built on the shared kit, tests green. Every row's open content questions
   Earthing "from both sides" is lesson 4.1 point 1 ("দুই দিক থেকে আর্থিং"); I drew it as one earth set on each side
   span (left / right) of the DP — please confirm that reading for a DP structure.
 - **Harness = slip, not deadly.** The brief says "helmet + harness for anyone on a pole", but lesson 4.7 says nothing about
-  it, so climbing without the harness is a slip with its own card. Make it deadly if you want.
+  it, so climbing without the harness is a slip with its own card (the deadly column was ratified as listed, B2, 2026-11-15).
 - **Left out (no source):** danger plate, anti-climbing device, bird nests (from the concept seed) and any clearance
   figures. The lesson and film give no clearance figures, so the level never shows one.
 - **"HT before LT" as a slip.** It's a pro tip in the lesson ("a good habit") and an instruction in the film
@@ -345,7 +350,7 @@ Status: built on the shared kit, tests green. Every row's open content questions
 
 ### m4do8a
 - **Metal ladder / bamboo jugaad** (from the concept seed) are not in lesson 4.8 or its film script — left out; the
-  coworker's line and the deadly are about keeping the line live instead.
+  coworker's line and the deadly are about keeping the line live instead. Listening to "লাইন চালু থাক! শাটডাউনের ঝামেলা কে করবে? উঠে কেটে দাও।" is that live cut, so it is deadly (owner B1, 2026-11-15); he comes only before the শাটডাউন is taken.
 - **Live-line tool work as an alternative to shutdown** is not in the sources — the lesson says branches very close to
   the line → PTW + de-energise before work; the film says "লাইনের কাছে কাজের আগে শাটডাউন নিন". The level always
   requires শাটডাউন · PTW.
@@ -361,7 +366,7 @@ Status: built on the shared kit, tests green. Every row's open content questions
 
 ### m4do8b
 - **Earth set / "আর্থ" on the docket** come from the project rule (line work only after shutdown, PTW, test, earth). Lesson 4.8 itself mentions only PTW and de-energising.
-- **The deadly (fall line)** is my reading of the lesson's "পতনশীল ডাল" danger together with "ডালটি কোন দিকে পড়বে তা আগে থেকে পরিকল্পনা করুন". The lesson never says where to stand. "Out on the limb beyond the cut" is also counted as in the fall line. Make it a slip if you prefer.
+- **The deadly (fall line)** is my reading of the lesson's "পতনশীল ডাল" danger together with "ডালটি কোন দিকে পড়বে তা আগে থেকে পরিকল্পনা করুন". The lesson never says where to stand. "Out on the limb beyond the cut" is also counted as in the fall line (ratified, B8, 2026-11-15).
 - **Rope rigging:** the rope runs from a tie on the limb, outboard of the cuts, over a higher crotch, down to the ground mate. The lesson only says "দড়ি দিয়ে বেঁধে এর পতনকে নিয়ন্ত্রণ করুন"; the crotch and the ground mate are drawn and carry no rule. The ground mate is a plain helper (white helmet), not the careless coworker. He follows the pro tip "একা কাজ করবেন না".
 - **Where the twigs fall:** the small twigs drop free into the roped-off area without a rope. In the 2D view they fall past the (dead) conductors.
 - **Order rule** is by size rank: every twig, then the side branch, then the heavy limb. Within the twigs any order is fine.
@@ -452,14 +457,17 @@ Status: built on the shared kit, tests green. Every row's open content questions
 
 ### m4gate
 1. **Hand on the tank (4.5):** the lesson text says touching the tank is OK "if safe and the body is earthed"; the
-   accuracy-checked film says never touch, use an IR thermometer. The gate follows the film (a hand on the tank is a slip).
+   accuracy-checked film says never touch, use an IR thermometer. Ruled (A4, 2026-11-15): a hand on the tank of the running
+   DTR is deadly, as in 4.5b (m4_dtr_temp's card word for word), and the oil/temperature station now comes first, before
+   the DOs are opened, so the check is on a DTR in service.
 2. **Illustrative numbers (not from the sources):** IR reading 44–57 °C (no judgement is made on it); earth readings
    11–19 Ω before the fix and 2.6–4.5 Ω after (judged against the film's "line earth below 5–8 Ω"); currents use the
    lesson's own example (heavy 120 A, 70 A, 50 A, N 50 A); after one shift 84/70/86 A with N 6 A — illustrative.
-3. **Engine oil** in the transformer is a slip, not deadly (film: "fire at once"; no deadly rule in the lesson). Change if wanted.
+3. **Engine oil** in the transformer is a slip, not deadly (film: "fire at once"; no deadly rule in the lesson; the gate's deadly column was ratified as listed, B2, 2026-11-15).
 4. **DO off-load:** 4.4 says heavy load needs a load-break tool; the gate keeps Module 2's rule (switch the LT off first,
-   pulling on load is deadly).
-5. **Order inside a day:** the DTR is isolated by its three DOs for stations 1–3; stations 4–7 run on the 11 kV section under
+   pulling on load is deadly; B3: deadly in every level). Standing under the DO is a slip (B3; the code changed it from
+   deadly to match 4.4a), and so is a missing face shield or গ্লাভস.
+5. **Order inside a day:** the oil and temperature check (station 1) is on the running DTR; the DTR is then isolated by its three DOs for stations 2–3; stations 4–7 run on the 11 kV section under
    a written PTW with earths both sides (shown in the docket); the street light uses its own MCB; the LT shift is "under
    shutdown". Closing the DOs back at the end of the day is not played.
 6. **Lesson 4.3 (new service connection)** is not one of the nine seed jobs, so no station teaches it.

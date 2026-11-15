@@ -48,12 +48,16 @@ export 'm2_hotstick_operate_world.dart' show HsGeo, HsGripPainter;
 //      text — flagged);
 //   4. hook the ring / the handle's eye (point 2 step 2, point 3);
 //   5. operate: DO — turn the face aside, one quick, controlled stroke (step 3,
-//      pro tip 1); AB — turn the handle slowly, no hurry (point 3).
-// Deadly: raising the rod to a live fuse without insulated গ্লাভস (the
-// seed's candidate; the lesson: always গ্লাভস + face shield); turning the AB
-// switch on-load (point 3: the huge arc). Slips: no face shield, sections not
-// locked, no / wrong head, the DO fuse on-load, standing under the fuse, a
-// hand above the guard, the face not turned aside, rushing the AB handle.
+//      pro tip 1); AB — no hurry over the preparation, then one firm,
+//      unbroken turn to full travel (point 3 as ruled in A3; lesson 6.4 point 4).
+// Deadly: turning the AB switch on-load (point 3: the huge arc); pulling or
+// pushing a DO fuse on-load (advanced fact 2: a DO cannot quench an arc
+// either). Slips: no insulated গ্লাভস, no face shield, sections not locked,
+// no / wrong head, standing under the fuse, a hand above the guard, the face
+// not turned aside, a slow or stalled AB turn (over 1.2 s: one firm, unbroken
+// stroke is the rule). Owner rulings 2026-11-15: B3 (under the DO and no
+// গ্লাভস for the DO = slip everywhere; a DO on load = deadly everywhere), A3
+// (a slow or stalled AB stroke = slip; 1.2 s is game feel, not a standard).
 // Retries that are not scored: standing too far to reach, a stroke too short or
 // too slow (the guide says the lesson's rule and the step stays).
 // Shared kit: guide first, full scene, corner guide, ◆ on the table → "কেন …?"
@@ -69,7 +73,7 @@ export 'm2_hotstick_operate_world.dart' show HsGeo, HsGripPainter;
 // kit / the ground / the rod / the three rings, a tap on the AB handle (the
 // one way forward); at a DO stroke, a sweep over the stroke spot and the
 // face-aside button alike until the face is aside, then a short drag nudge
-// (the AB turn: a short, unhurried nudge). After listening on the AB job the
+// (the AB turn: a sweep across). After listening on the AB job the
 // call button leaves the row (no dead control).
 
 // ============================================================================
@@ -174,7 +178,7 @@ abstract final class HsLines {
   static const missHandle = 'সকেটটা হ্যান্ডেলের সাথে ঠিকমতো লাগান।';
   static const shortStroke = 'আধা টান হলো। একটি দ্রুত আর নিয়ন্ত্রিত টানে — পুরোটা।';
   static const slowStroke = 'এত ধীরে নয়। ফিউজ খোলে একটি দ্রুত, নিয়ন্ত্রিত টানে।';
-  static const shortTurn = 'হ্যান্ডেলটা পুরো ঘোরান — ধীরে, নিয়ন্ত্রিতভাবে।';
+  static const shortTurn = 'হ্যান্ডেলটা পুরো ঘোরান — এক টানে, একদম শেষ পর্যন্ত।';
   static const oneHand = 'আরেক হাত — হট স্টিক দুই হাতে ধরুন।';
 
   // The reasons (lesson 2.5): the right ones fit the step asked; the wrong
@@ -183,7 +187,7 @@ abstract final class HsLines {
   static const whyStroke = 'কেন মুখ সরিয়ে, এক টানে খুললেন?';
   static const whyStrokeClose = 'কেন মুখ সরিয়ে, এক ঠেলায় লাগালেন?';
   static const whyOffload = 'কেন আগে ব্রেকার খোলালেন?';
-  static const whyTurn = 'কেন হ্যান্ডেলটা ধীরে ঘোরালেন?';
+  static const whyTurn = 'হ্যান্ডেলটা এক টানে পুরো ঘোরালেন কেন?';
   static String why(HsJob j) => switch (j.topic) {
     HsTopic.stand => whyStand,
     HsTopic.stroke => j.kind == HsKind.doClose ? whyStrokeClose : whyStroke,
@@ -194,7 +198,7 @@ abstract final class HsLines {
   static const standWhy = ['ফ্ল্যাশে গরম গ্যাস-ধাতু মুখে পড়তে পারে', 'ফিউজ পাশে বা কোণাকুণি রাখাই সঠিক অবস্থান'];
   static const strokeWhy = ['চালানোর সময় ফ্ল্যাশ হতে পারে, তাই মুখ সরাই', 'দ্রুত আর নিয়ন্ত্রিত এক টানে চালানোই নিয়ম'];
   static const offloadWhy = ['আইসোলেটরে আর্ক নেভানোর কোনো ব্যবস্থা নেই', 'অন-লোডে ঘোরালে বিশাল আর্ক তৈরি হতে পারে'];
-  static const turnWhy = ['বড় সুইচ ধীরে, নিয়ন্ত্রিতভাবে ঘোরানোর নিয়ম', 'তাড়াহুড়ো নয়, সকেট হ্যান্ডেলে বসিয়ে ঘোরাই'];
+  static const turnWhy = ['মাঝপথে থামলে ব্লেড আধখোলা থেকে আর্ক হতে পারে', 'সকেট ঠিক বসিয়ে, না থেমে শেষ পর্যন্ত ঘোরাই'];
   static List<String> whyRight(HsJob j) => switch (j.topic) {
     HsTopic.stand => standWhy,
     HsTopic.stroke => strokeWhy,
@@ -238,7 +242,7 @@ abstract final class HsLines {
       'না না, সোজা ঘুরিয়েই দিচ্ছি',
       'আচ্ছা, ফোনের কোনো দরকার নেই',
       'লোড থাকলেও সুইচটা খুলে যাবে',
-      'তাড়াতাড়ি ঘুরিয়ে কাজ সারি',
+      'খবর না নিয়েই ঘুরিয়ে কাজ সারি',
       'ঠিক আছে, খবর পরে নিয়ে নেব',
       'ব্রেকার পরে দেখব, আগে ঘুরিয়ে নিই',
     ],
@@ -261,7 +265,7 @@ abstract final class HsLines {
   static const caughtGrip = 'দুই হাতে, গার্ডের নিচে ধরা';
   static const caughtStroke = 'মুখ সরিয়ে এক টানে';
   static const caughtOffload = 'AB সুইচ — আগে ব্রেকার খোলা';
-  static const caughtTurn = 'হ্যান্ডেল ধীরে ঘোরানো';
+  static const caughtTurn = 'হ্যান্ডেল এক টানে পুরো ঘোরানো';
   static const caughtCall = 'চাপে “না” বলেছেন';
 }
 
@@ -272,7 +276,6 @@ abstract final class HsMistakes {
     key: '2.5/hotstick-op/no-gloves',
     textBn: 'গ্লাভস ছাড়া লাইভ ফিউজে রড তুললেন। রড ভেজা বা নোংরা হলে ইনসুলেশন কমে যায় — সবসময় ইনসুলেটেড গ্লাভস আর ফেস শিল্ড পরে তবেই কাজ।',
     art: '$_dir/hs_gloves.svg',
-    deadly: true,
     lessonPoint: 1,
   );
   static const noShield = DoMistake(
@@ -302,11 +305,13 @@ abstract final class HsMistakes {
     lessonPoint: 2,
   );
 
-  /// Advanced fact 2 (a DO fuse cannot quench an arc either): no lesson point.
+  /// Advanced fact 2 (a DO fuse cannot quench an arc either): no lesson
+  /// point. Deadly, as in both gates (owner ruling B3, 2026-11-15).
   static const onLoadDo = DoMistake(
     key: '2.5/hotstick-op/do-on-load',
-    textBn: 'লাইন অফ-লোড না করেই ডিও ফিউজ চালালেন। ডিও ফিউজে আর্ক নেভানোর ব্যবস্থা নেই — তাই অফ-লোড অবস্থায় চালানোর নিয়ম।',
+    textBn: 'লাইন অফ-লোড না করেই DO ফিউজ চালালেন! DO আর্ক নেভাতে পারে না — লোডে চালালে ভয়াবহ আর্কে মুখ-চোখ পুড়ে প্রাণও যেতে পারে।',
     art: '$_dir/hs_offload.svg',
+    deadly: true,
   );
   static const underFuse = DoMistake(
     key: '2.5/hotstick-op/under-the-fuse',
@@ -326,14 +331,16 @@ abstract final class HsMistakes {
     art: '$_dir/hs_stand.svg',
     lessonPoint: 1,
   );
-  static const rushAb = DoMistake(
-    key: '2.5/hotstick-op/ab-rushed',
-    textBn: 'হ্যান্ডেলটা ঝটকায় ঘোরালেন। বড় সুইচ ঘোরাতে হয় ধীরে ধীরে, নিয়ন্ত্রিতভাবে — তাড়াহুড়ো করবেন না।',
+  /// A slow or stalled AB turn (owner ruling A3, 2026-11-15): one firm,
+  /// unbroken stroke to full travel; a quick turn is right.
+  static const stalledAb = DoMistake(
+    key: '2.5/hotstick-op/ab-stalled',
+    textBn: 'হ্যান্ডেলটা থেমে থেমে ধীরে ঘোরালেন! মাঝপথে থামলে আর্ক বেশিক্ষণ থাকে — এক টানে শেষ পর্যন্ত ঘোরান।',
     art: '$_dir/hs_offload.svg',
     lessonPoint: 2,
   );
 
-  static const all = [noGloves, noShield, unlocked, badHead, onLoadAb, onLoadDo, underFuse, aboveGuard, faceIn, rushAb];
+  static const all = [noGloves, noShield, unlocked, badHead, onLoadAb, onLoadDo, underFuse, aboveGuard, faceIn, stalledAb];
 }
 
 /// Where a tap on the ground leaves the trainee, against the fuse.
@@ -351,11 +358,12 @@ HsStand hsStandOf(double dx) {
 enum HsStroke { short, slow, done }
 
 /// The DO stroke: one drag of ≥ 70 design px within 1.2 s (quick and
-/// controlled); the AB turn: ≥ 110 px, and under 0.9 s is a rush.
+/// controlled; slower = an unscored retry); the AB turn: ≥ 110 px in one drag
+/// within 1.2 s (one firm stroke); slower = stalled, a slip (A3).
 const kHsStrokePx = 70.0;
 const kHsStrokeMaxMs = 1200;
 const kHsTurnPx = 110.0;
-const kHsTurnMinMs = 900;
+const kHsTurnMaxMs = 1200;
 
 /// The play state (pure logic).
 class HsRun {
@@ -411,7 +419,7 @@ class HsRun {
     final j = job;
     DoMistake? m;
     if (!kit.contains(HsKit.gloves)) {
-      return deadly = HsMistakes.noGloves;
+      m = _slip(HsMistakes.noGloves);
     } else if (head != j.head) {
       m = _slip(HsMistakes.badHead);
     } else if (!kit.contains(HsKit.lock)) {
@@ -470,11 +478,11 @@ class HsRun {
     if (!j.isDo) {
       if (!off) return (HsStroke.done, deadly = HsMistakes.onLoadAb);
       _tag(HsLines.caughtOffload);
-      if (ms < kHsTurnMinMs) return (HsStroke.done, _slip(HsMistakes.rushAb));
+      if (ms > kHsTurnMaxMs) return (HsStroke.done, _slip(HsMistakes.stalledAb));
       _tag(HsLines.caughtTurn);
       return (HsStroke.done, null);
     }
-    if (!off) return (HsStroke.done, _slip(HsMistakes.onLoadDo));
+    if (!off) return (HsStroke.done, deadly = HsMistakes.onLoadDo);
     if (!faceAside) return (HsStroke.done, _slip(HsMistakes.faceIn));
     _tag(HsLines.caughtStroke);
     return (HsStroke.done, null);
@@ -1388,11 +1396,11 @@ class _HsRunPageState extends ConsumerState<_HsRunPage> with DoDeathGuard, DoStr
           return HintSpec.sweep([stroke, ?face]);
         }
         // A short drag nudge on the scene: pull (open), push (close), across
-        // (AB: a short, unhurried nudge — rushing the turn is a slip).
+        // (AB: a sweep across — one firm turn; a stalled turn is a slip).
         return switch (j.kind) {
           HsKind.doOpen => HintSpec.drag(from, toward: const Offset(0, 1), space: HintSpace.scene),
           HsKind.doClose => HintSpec.drag(from, toward: const Offset(0, -1), space: HintSpace.scene),
-          HsKind.abOff => HintSpec.drag(from, toward: const Offset(1, 0), travel: 36, space: HintSpace.scene),
+          HsKind.abOff => HintSpec.drag(from, toward: const Offset(1, 0), space: HintSpace.scene),
         };
       case HsPhase.done:
         return null;

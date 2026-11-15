@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/network/supabase_service.dart';
 import '../auth/auth_provider.dart';
+import '../game/game_save.dart' show gameSaveProvider;
 import 'league_service.dart';
 
 // Read side of the league (supabase/slm_app_10_league.sql, schema `slm_app`):
@@ -120,6 +121,8 @@ class LeagueMe {
     this.points = 0,
     this.rungs = 0,
     this.allPoints = 0,
+    this.allRungs = 0,
+    this.verified = false,
     this.lastMonth,
     this.lastMonthPoints,
     this.lastMonthRankDistrict,
@@ -133,6 +136,12 @@ class LeagueMe {
   final int points;
   final int rungs;
   final int allPoints;
+
+  /// Rungs counted all time on the server (0 = never counted).
+  final int allRungs;
+
+  /// An admin verified the member (only verified members are counted).
+  final bool verified;
 
   /// First day of the month the last-month numbers belong to.
   final DateTime? lastMonth;
@@ -149,6 +158,8 @@ class LeagueMe {
       points: n('points') ?? 0,
       rungs: n('rungs_cleared') ?? 0,
       allPoints: n('all_points') ?? 0,
+      allRungs: n('all_rungs') ?? 0,
+      verified: res['verified'] == true,
       lastMonth: DateTime.tryParse(res['last_month']?.toString() ?? ''),
       lastMonthPoints: n('last_month_points'),
       lastMonthRankDistrict: n('last_month_rank_district'),
@@ -163,6 +174,8 @@ class LeagueMe {
         'points': points,
         'rungs_cleared': rungs,
         'all_points': allPoints,
+        'all_rungs': allRungs,
+        'verified': verified,
         if (lastMonth != null)
           'last_month': '${lastMonth!.year}-${lastMonth!.month.toString().padLeft(2, '0')}-01',
         'last_month_points': ?lastMonthPoints,
@@ -385,6 +398,11 @@ final myLeagueProvider = FutureProvider.autoDispose<LeagueMe?>(retry: (_, _) => 
   try {
     final me = await ref.read(leagueBoardSourceProvider).myLeague();
     await _saveMe(key, me, now);
+    // Verified, but the server never counted a rung: plays sent before the
+    // verification were dropped by older builds. Send the save's best once.
+    if (me.verified && me.allRungs == 0) {
+      unawaited(LeagueService.instance.catchUpFromSave(ref.read(gameSaveProvider)));
+    }
     return me;
   } catch (_) {
     link.close();

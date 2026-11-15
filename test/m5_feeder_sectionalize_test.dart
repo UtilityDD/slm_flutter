@@ -2,7 +2,9 @@
 // the rules (all LT out → HT holds → ways back one by one → the faulty way
 // blows the HT → pull it, red tag; DTR/HT: blows with all out → patrol or
 // megger; deadly: shut the DO with no way open / again with the blower in /
-// again after it blew with all out; slips: shut with only some ways open,
+// again after it blew with all out / a hand on a carrier while the board is
+// live (owner ruling A5: the DTR charged and its LT switch ON); slips: shut
+// with only some ways open,
 // listening to the coworker, the tag on the wrong way), the deal, the
 // libraries, the rival lines, and the level in the shell: the guide first, a
 // full clean play (an LT round and a DTR/HT round, both orders of the coworker
@@ -142,6 +144,12 @@ Future<void> _restore(WidgetTester t, M5FeederSite s, int i) async {
   await _pump(t, 300);
 }
 
+/// The DTR's LT switch (OFF <-> ON).
+Future<void> _lt(WidgetTester t) async {
+  await t.tap(_label(M5FeederLines.ltSwitch));
+  await _pump(t, 400);
+}
+
 /// Hold the DO 1 s; the rod shuts it.
 Future<void> _holdDo(WidgetTester t) async {
   final g = await t.startGesture(t.getCenter(_label(M5FeederLines.doLabel)));
@@ -187,11 +195,16 @@ Future<void> _playRound(WidgetTester t, M5FeederDeal d, int k) async {
     return;
   }
   await _reason(t, M5FeederWhy.held);
+  // Each way back on a dead board: LT switch OFF, the carrier in, ON (the test).
   for (var i = 0; i < s.ways; i++) {
+    await _lt(t);
     await _restore(t, s, i);
+    expect(_seated(t, s, i), isTrue, reason: 'way $i back in');
+    await _lt(t);
     if (i == s.faulty) break;
   }
   await _reason(t, M5FeederWhy.identified);
+  await _lt(t);
   await _pull(t, s, s.faulty);
   await t.tap(_label(M5FeederLines.tag));
   await _pump(t, 200);
@@ -251,23 +264,31 @@ void main() {
       expect(r.closeDo().event, M5FeederEvent.heldProof);
       expect(r.held, isTrue);
       expect(r.proof, isTrue);
+      expect(r.boardLive, isTrue, reason: 'the DTR is charged and its LT switch ON');
+      expect(r.toggleLt().event, M5FeederEvent.ltOff);
+      expect(r.boardLive, isFalse);
       expect(r.restore(0).event, M5FeederEvent.restored);
+      expect(r.held, isTrue, reason: 'nothing tested yet');
+      expect(r.toggleLt().event, M5FeederEvent.ltOn);
       expect(r.held, isTrue, reason: 'a sound way holds');
-      final s = r.restore(1);
+      r.toggleLt();
+      expect(r.restore(1).event, M5FeederEvent.restored);
+      final s = r.toggleLt();
       expect(s.event, M5FeederEvent.identified);
       expect(r.held, isFalse);
       expect(r.blower, 1);
       expect(r.tag(1).event, M5FeederEvent.pullFirst, reason: 'still in: no cost');
       expect(r.tag(0).mistake, M5FeederMistakes.wrongTag);
       expect(r.slips, 1);
-      r.pull(1);
+      r.toggleLt();
+      expect(r.pull(1).event, M5FeederEvent.pulled);
       expect(r.tag(1).event, M5FeederEvent.tagged);
       expect(r.roundDone, isTrue);
       expect(r.caught, containsAll([M5FeederLines.caughtAllOut, M5FeederLines.caughtOneByOne]));
       expect(r.caught, isNot(contains(M5FeederLines.caughtTag)), reason: 'the round had a slip');
     });
 
-    test('deadly: the DO shut with no way open; again with the blower in; the blower pushed into a live board', () {
+    test('deadly: the DO shut with no way open; again with the blower in; the LT switch ON with the blower pushed back', () {
       final a = _runOf(_lt3);
       expect(a.closeDo().mistake, M5FeederMistakes.noOpen);
       expect(a.ended, isTrue);
@@ -278,7 +299,9 @@ void main() {
         b.pull(i);
       }
       b.closeDo();
+      b.toggleLt();
       b.restore(1);
+      expect(b.toggleLt().event, M5FeederEvent.identified);
       expect(b.closeDo().mistake, M5FeederMistakes.rechargeFaulty, reason: 'shut again with the blower in');
 
       final c = _runOf(_lt3);
@@ -286,13 +309,73 @@ void main() {
         c.pull(i);
       }
       c.closeDo();
+      c.toggleLt();
       c.restore(1);
+      c.toggleLt();
+      c.toggleLt();
       c.pull(1);
-      c.pull(0);
-      expect(c.closeDo().event, M5FeederEvent.held, reason: 'the blower out: the rest may hold');
+      expect(c.closeDo().event, M5FeederEvent.held, reason: 'the blower out: it holds');
       expect(c.slips, 0);
-      expect(c.restore(1).mistake, M5FeederMistakes.rechargeFaulty, reason: 'a proved fault into a live board');
+      expect(c.restore(1).event, M5FeederEvent.restored, reason: 'the LT switch is still OFF: a dead board');
+      expect(c.toggleLt().mistake, M5FeederMistakes.rechargeFaulty, reason: 'a proved fault charged again');
       expect(c.ended, isTrue);
+    });
+
+    test("deadly (owner ruling A5): a hand on a carrier while the board is live; free while the crew's DOs are open or the LT switch is OFF", () {
+      // Before the DO is shut the crew's three open DOs keep the board dead.
+      final a = _runOf(_lt3);
+      expect(a.boardLive, isFalse);
+      expect(a.pull(0).event, M5FeederEvent.pulled);
+      expect(a.restore(0).event, M5FeederEvent.restored);
+      for (final i in [0, 1, 2]) {
+        a.pull(i);
+      }
+      a.closeDo();
+      expect(a.charged, isTrue);
+      expect(a.restore(0).mistake, M5FeederMistakes.liveCarrier, reason: 'a push into a live board');
+      expect(a.ended, isTrue);
+
+      final b = _runOf(_lt3);
+      b.pull(0);
+      b.pull(2);
+      expect(b.closeDo().event, M5FeederEvent.blast, reason: 'the fault was in');
+      expect(b.held, isFalse);
+      expect(b.pull(1).mistake, M5FeederMistakes.liveCarrier, reason: 'one barrel dropped, two still in: the board is live');
+
+      final c = _runOf(_lt3);
+      for (final i in [0, 1, 2]) {
+        c.pull(i);
+      }
+      c.closeDo();
+      c.toggleLt();
+      expect(c.restore(2).event, M5FeederEvent.restored);
+      expect(c.pull(2).event, M5FeederEvent.pulled);
+      expect(c.ended, isFalse);
+      expect(c.slips, 0);
+      expect(M5FeederMistakes.liveCarrier.deadly, isTrue);
+      expect(M5FeederMistakes.liveCarrier.textBn, 'সুইচ ON রেখেই ফিউজে হাত। নিয়ম: আগে লাইন বন্ধ, তারপর ফিউজ খোলা।', reason: 'the m3_pillar_inspect card, reused');
+    });
+
+    test('the LT switch: two ways in at once blow the HT but prove none; OFF at the start means no way is fed when the DO shuts', () {
+      final r = _runOf(_lt3);
+      for (final i in [0, 1, 2]) {
+        r.pull(i);
+      }
+      r.closeDo();
+      r.toggleLt();
+      r.restore(0);
+      r.restore(1);
+      final s = r.toggleLt();
+      expect(s.event, M5FeederEvent.blast);
+      expect(s.mistake, isNull);
+      expect(r.blower, isNull, reason: 'two new ways: the fault is not singled out');
+      expect(r.held, isFalse);
+
+      final q = _runOf(_lt3);
+      expect(q.toggleLt().event, M5FeederEvent.ltOff);
+      expect(q.closeDo().event, M5FeederEvent.heldProof, reason: 'the LT switch OFF: no way fed');
+      expect(q.toggleLt().event, M5FeederEvent.blast, reason: 'all three back at once, the fault among them');
+      expect(q.blower, isNull);
     });
 
     test('a tag before any feeder is proved costs a slip, the same on every carrier (never singles out the faulty way)', () {
@@ -342,6 +425,7 @@ void main() {
         again.pull(i);
       }
       again.closeDo();
+      again.toggleLt();
       again.restore(0);
       expect(again.closeDo().mistake, M5FeederMistakes.rechargeHt);
       expect(r.tag(0).mistake, M5FeederMistakes.wrongTag, reason: 'no LT way is faulty here');
@@ -361,6 +445,7 @@ void main() {
       final q = _runOf(_lt4);
       q.pull(0);
       q.closeDo();
+      q.toggleLt();
       q.pull(1);
       q.pull(2);
       q.pull(3);
@@ -372,7 +457,10 @@ void main() {
       final hs = h.closeDo();
       expect(hs.event, M5FeederEvent.held, reason: 'the fault was out: it holds');
       expect(hs.mistake, M5FeederMistakes.partialOpen);
-      expect(h.restore(3).event, M5FeederEvent.identified);
+      h.toggleLt();
+      h.restore(3);
+      expect(h.toggleLt().event, M5FeederEvent.identified);
+      h.toggleLt();
       h.pull(3);
       h.pull(0);
       expect(h.closeDo().mistake, isNull, reason: 'the fault is found: no second slip');
@@ -383,9 +471,13 @@ void main() {
       final r = _runOf(_lt4);
       r.pull(0);
       r.closeDo();
+      r.toggleLt();
       r.pull(1);
+      r.toggleLt();
       r.closeDo();
+      r.toggleLt();
       r.pull(2);
+      r.toggleLt();
       expect(r.closeDo().mistake, M5FeederMistakes.partialOpen);
       expect(r.slips, 3);
       expect(r.percent, 55);
@@ -396,17 +488,22 @@ void main() {
         n.pull(i);
       }
       n.closeDo();
+      n.toggleLt();
       n.restore(1);
+      n.toggleLt();
+      n.toggleLt();
       n.pull(1);
       n.tag(1);
       n.next();
       expect(n.index, 1);
       expect(n.doorOpen, isFalse);
+      expect(n.ltOn, isTrue, reason: 'the new board: its LT switch ON');
+      expect(n.charged, isFalse, reason: "the new DTR: the crew's DOs open");
       expect(n.inWays, {0, 1, 2}, reason: 'the new board starts all in');
       expect(n.roundDone, isFalse);
     });
 
-    test('English digits; locked words; every mistake has its picture and a lesson point; keys unique; three deadly', () {
+    test('English digits; locked words; every mistake has its picture and a lesson point; keys unique; five deadly', () {
       final d = m5FeederDeal(math.Random(3));
       final all = <String>[
         M5FeederLines.intro,
@@ -422,13 +519,16 @@ void main() {
         for (final s in d.sites) ...[M5FeederLines.docketLine1(s), M5FeederLines.docketLine2(s), M5FeederLines.docketSpoken(s), s.time],
         M5FeederLines.allSet,
         M5FeederLines.fail,
+        M5FeederLines.ltSwitch,
+        M5FeederLines.ltOffShown,
       ];
       for (final l in all) {
         expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
         expect(l.contains('পানি'), isFalse, reason: l);
       }
       expect(M5FeederLines.docketLine1(d.sites.first), startsWith('ডকেট'));
-      expect(M5FeederMistakes.all.where((m) => m.deadly).toSet(), {M5FeederMistakes.noOpen, M5FeederMistakes.rechargeFaulty, M5FeederMistakes.rechargeSame, M5FeederMistakes.rechargeHt});
+      expect(M5FeederMistakes.all.where((m) => m.deadly).toSet(),
+          {M5FeederMistakes.noOpen, M5FeederMistakes.rechargeFaulty, M5FeederMistakes.rechargeSame, M5FeederMistakes.rechargeHt, M5FeederMistakes.liveCarrier});
       expect(M5FeederMistakes.all.map((m) => m.key).toSet(), hasLength(M5FeederMistakes.all.length));
       for (final m in M5FeederMistakes.all) {
         expect(m.key, startsWith('5.4/m5_feeder_sectionalize/'));
@@ -436,7 +536,10 @@ void main() {
         expect(m.lessonPoint, inInclusiveRange(0, 3));
       }
       // No unused pictures in the folder.
-      final used = {for (final m in M5FeederMistakes.all) m.art.split('/').last};
+      final used = {
+        for (final m in M5FeederMistakes.all)
+          if (m.art.startsWith('assets/game/art/m5_feeder_sectionalize/')) m.art.split('/').last
+      };
       final files = Directory('assets/game/art/m5_feeder_sectionalize').listSync().map((f) => f.uri.pathSegments.last).toSet();
       expect(files, used);
       expect(m5FeederPacks.keys, ['do_5_4_a']);
@@ -624,7 +727,10 @@ void main() {
       await _door(t);
       final sound = [for (var i = 0; i < 4; i++) if (i != s.faulty) i];
       for (var k = 0; k < 3; k++) {
+        // After the first shut the board is live: the LT switch OFF round the pull.
+        if (k > 0) await _lt(t);
         await _pull(t, s, sound[k]);
+        if (k > 0) await _lt(t);
         await _holdDo(t);
         await _pump(t, 600);
         if (k < 2) {
@@ -657,6 +763,25 @@ void main() {
       await _close(t, c);
     });
 
+    testWidgets('a carrier pushed into a live board (the HT holding, the LT switch ON): the freeze, then the deadly card', (t) async {
+      final seed = _seedWhere((d) => d.coworkerRound == 1);
+      final s = m5FeederDeal(math.Random(seed)).sites.first;
+      final c = await _open(t, seed);
+      await _door(t);
+      for (var i = 0; i < s.ways; i++) {
+        await _pull(t, s, i);
+      }
+      await _holdDo(t);
+      await _reason(t, M5FeederWhy.held);
+      await _restore(t, s, 0);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(M5FeederMistakes.liveCarrier.textBn), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, M5FeederMistakes.liveCarrier.key);
+      await _close(t, c);
+    });
+
     testWidgets('a short tap on the DO does nothing (it must be held)', (t) async {
       final c = await _open(t, _seedWhere((d) => d.coworkerRound == 1));
       await _door(t);
@@ -682,7 +807,7 @@ void main() {
       expect(scene().showing, isFalse);
       await _pump(t, 9000);
       expect(scene().showing, isTrue, reason: 'idle at the open board');
-      expect(scene().debugOptions, hasLength(3 + s.ways), reason: 'docket, DO, every carrier, the tag');
+      expect(scene().debugOptions, hasLength(4 + s.ways), reason: 'docket, DO, every carrier, the LT switch, the tag');
       // Three plain taps on one carrier: the hand shows how a carrier moves, there.
       for (var k = 0; k < 3; k++) {
         await t.tap(_carrier(s, 0), warnIfMissed: false);

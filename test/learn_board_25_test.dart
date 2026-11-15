@@ -151,9 +151,9 @@ void main() {
     expect(_reject('fuse', 'bare'), contains('ইনসুলেটেড গ্লাভস'));
     expect(_reject('fuse', 'miss'), contains('রিং'));
     expect(_slot('fuse').whyChips.any((w) => w.correct && w.textBn.contains('আর্ক')), isTrue);
-    // Isolator: off-load only; socket on; slow; no force.
+    // Isolator: off-load only; socket on; no haste, then one full stroke; no force.
     expect(_reject('switch', 'on_load'), allOf(contains('অফ-লোড'), contains('আর্ক')));
-    expect(_reject('switch', 'rush'), contains('ধীরে'));
+    expect(_reject('switch', 'rush'), allOf(contains('তাড়াহুড়ো'), contains('এক টানে')));
     expect(_reject('switch', 'no_socket'), contains('সকেট'));
     expect(_slot('switch').whyChips.any((w) => w.correct && w.textBn.contains('ব্রেকার')), isTrue);
     // Care: not on the ground (scratches); never an ordinary stick.

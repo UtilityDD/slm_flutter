@@ -5441,7 +5441,8 @@
         "5.4/m5_feeder_sectionalize/no-lt-open",
         "5.4/m5_feeder_sectionalize/recharge-faulty",
         "5.4/m5_feeder_sectionalize/recharge-same",
-        "5.4/m5_feeder_sectionalize/recharge-ht"
+        "5.4/m5_feeder_sectionalize/recharge-ht",
+        "5.4/m5_feeder_sectionalize/live-carrier"
       ]
     },
     {
@@ -5572,9 +5573,14 @@
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": [
+        "5.8/m5_cause_strike/do-on-load",
         "5.8/m5_cause_strike/live-spanner",
         "5.8/m5_cause_strike/untested",
-        "5.8/m5_cause_strike/climb-live"
+        "5.8/m5_cause_strike/climb-live",
+        "5.8/m5_cause_strike/no-permit",
+        "5.8/m5_cause_strike/no-earth",
+        "5.8/m5_cause_strike/earth-live",
+        "5.8/m5_cause_strike/bare-meter"
       ]
     },
     {

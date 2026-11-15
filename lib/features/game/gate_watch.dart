@@ -59,8 +59,9 @@ import 'van_yard.dart';
 //    → "সব তো ঠিক ছিল!" (a slip). 3 slips → StruckOutCard.
 // 5. Once a play, on a mistake moment once the mistake is in view, the
 //    careless coworker (level 1's rival, his recorded voice) says "থামিও না,
-//    দেরি হয়ে যাচ্ছে!"; listening = the slip (that mistake's card, even for a
-//    deadly-class one). The থামান button waits for him (holdForCoworker).
+//    দেরি হয়ে যাচ্ছে!"; listening = that mistake's own class (a deadly-class
+//    one plays out; owner ruling B1, 2026-11-15). The থামান button waits for
+//    him (holdForCoworker).
 // 6. Pass: rank-up ট্রেইনি → জুনিয়র (catalog rankName of m1 → m2), stars, "আজ
 //    যা ধরলেন". Scoring as the module's levels: ◆ 15 (10 after a wrong tap or a
 //    wrong "কী ভুল?") on the table, coworker refused +10, slip −10, pass +20,
@@ -543,18 +544,18 @@ class GateRun {
 
   /// The moment played out with no stop: null when it was done right; else
   /// the missed mistake (a slip, or the deadly one that ends the play).
-  /// [pushed]: he listened to the coworker — that is the slip (playbook §1
-  /// beat 8, "Listening = the slip"), whatever the mistake's class.
-  DoMistake? letPass({bool pushed = false}) {
+  /// Listening to the coworker changes nothing: the mistake keeps its own
+  /// class (owner ruling B1, 2026-11-15 — listening is deadly when the act he
+  /// pushes is deadly).
+  DoMistake? letPass() {
     if (ended) return null;
     final f = current.fault;
     if (f == null) return null;
     quick = false;
     final m = f.mistake;
-    if (m.deadly && !pushed) return deadly = m;
+    if (m.deadly) return deadly = m;
     slips++;
-    // Booked as a slip (a deadly-class card here must not use a near-miss).
-    return m.deadly ? DoMistake(key: m.key, textBn: m.textBn, art: m.art, lessonPoint: m.lessonPoint) : m;
+    return m;
   }
 
   void tag(String t) {
@@ -895,7 +896,7 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
     }
     if (_phase != _Phase.play || coworkerOpen) return;
     // He never came on his moment (it is over): he does not come later.
-    final m = _run.letPass(pushed: _listened);
+    final m = _run.letPass();
     if (m == null) {
       _prev = _moment;
       _next();
@@ -1081,8 +1082,8 @@ class _GateRunPageState extends ConsumerState<_GateRunPage>
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Listened: the mistake plays out (it is missed) — then its card, a
-      // slip even on a deadly-class mistake (playbook: listening = the slip).
+      // Listened: the mistake plays out (it is missed) — then its own class:
+      // a deadly-class one ends the play (owner ruling B1), else its slip card.
       setState(() => _listened = true);
       if (!_ended && _phase == _Phase.play) unawaited(_play.forward());
       return;

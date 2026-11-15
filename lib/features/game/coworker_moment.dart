@@ -25,7 +25,11 @@ import 'reason_table.dart';
 // Going on working while he is still talking (beat 1) refuses him too.
 // Beat 1's caption is held for a reading time when muted (and his lines with
 // no recorded clip are silent with the caption held — never the device voice).
-// He never cuts into the praise window of a right move ([ReasonTable.tableBusy]).
+// He never comes while a right move is rewarded ([ReasonTable.tableBusy]: from
+// putOnTable through the open reason deck until its proceed). The reason deck
+// opens at once now (no praise wait), so a visit that falls due in that time
+// (his timer, or a held control) waits and he comes about 0.9 s after the
+// deck has closed, if the level still lets him in ([coworkerCanCome]).
 // A level that must not let the player finish his item before he comes calls
 // [CoworkerMoment.holdForCoworker] at the top of its decisive control.
 // Learn myth cutscenes are separate and unchanged.
@@ -157,7 +161,9 @@ mixin CoworkerMoment<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// finish the item he is dealt on): `if (holdForCoworker()) return;`.
   /// While he is [coworkerDue] the control does nothing, the guide hushes and
   /// he cuts in now; once he has gone (or his moment passed: [coworkerCanCome]
-  /// null) it returns false and the control works as usual.
+  /// null) it returns false and the control works as usual. While a right
+  /// move is rewarded ([ReasonTable.tableBusy]) the control does nothing and
+  /// he is not called over the reason deck (nor is its voice cut).
   bool holdForCoworker() {
     if (!coworkerDue) return false;
     if (coworkerCanCome() == null) {
@@ -165,6 +171,7 @@ mixin CoworkerMoment<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       _coworkerTimer?.cancel();
       return false;
     }
+    if (_tableBusy) return true;
     coworkerHush();
     HapticFeedback.selectionClick();
     _coworkerHeld = true;
@@ -186,7 +193,8 @@ mixin CoworkerMoment<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       _coworkerHeld = false;
       return;
     }
-    if (!_coworkerHeld && (!can || _tableBusy)) {
+    // Never over the table window or an open reason deck, held or not.
+    if (_tableBusy || (!_coworkerHeld && !can)) {
       _coworkerTimer = Timer(const Duration(milliseconds: 900), _tryCoworker);
       return;
     }

@@ -108,7 +108,12 @@ class LinemanLook {
     this.moustache = false,
     this.grey = false,
     this.gloves = false,
+    this.gloveColor = leatherGloves,
   });
+
+  /// Work gloves (leather) and insulating rubber gloves for live work.
+  static const leatherGloves = Color(0xFF6B4A33);
+  static const rubberGloves = Color(0xFFC62828);
 
   final Color helmet;
   final Color shirt;
@@ -118,6 +123,7 @@ class LinemanLook {
   final bool moustache;
   final bool grey;
   final bool gloves;
+  final Color gloveColor;
 
   /// The trainee (the player): yellow helmet, leather gloves.
   static const trainee = LinemanLook(
@@ -411,7 +417,7 @@ class _LinemanPainter extends CustomPainter {
   void _arm(Canvas c, Offset s, Offset e, Offset h, Color sleeve) {
     _limb(c, s, e, 9, sleeve);
     _limb(c, e, h, 8, sleeve);
-    c.drawCircle(h, 4.6, Paint()..color = look.gloves ? const Color(0xFF6B4A33) : look.skin);
+    c.drawCircle(h, 4.6, Paint()..color = look.gloves ? look.gloveColor : look.skin);
   }
 
   void _cylinder(Canvas c, Offset hand) {

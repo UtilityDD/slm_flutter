@@ -5,7 +5,7 @@
 // the first cut; the line live = deadly), the deal, the option libraries, and
 // the level in the shell: idle perf, the guide first, a full clean play with
 // the coworker refused (also on a fast play: শাটডাউন and কাটা শুরু wait for
-// him), listening = a slip, a slip card, 3 slips strike out, the deadly freeze
+// him), listening = the deadly live cut (owner ruling B1), a slip card, 3 slips strike out, the deadly freeze
 // (no শাটডাউন), the drop off the tree = a slip with a neutral miss reply, the
 // rack dealt out of order, and the gesture hint (a sweep, never one answer).
 import 'dart:async';
@@ -304,7 +304,7 @@ void main() {
       expect(w.caught, isNot(contains(M4TreePlanLines.caughtDrop)));
     });
 
-    test('the plan: no tool = not started; no শাটডাউন = deadly; listening to him = a slip, শাটডাউন still on offer', () {
+    test('the plan: no tool = not started; no শাটডাউন = deadly; listening to him = that deadly (owner ruling B1)', () {
       final a = toPlan();
       expect(a.start(), (false, null));
       expect(a.phase, M4TreePlanPhase.plan);
@@ -315,21 +315,22 @@ void main() {
       expect(a.start(), (true, M4TreePlanMistakes.liveLine));
       expect(a.deadly!.deadly, isTrue);
       expect(a.ended, isTrue);
+      // Owner ruling B1: listening ("keep the line on, go up and cut") is the
+      // cut with the line live — that deadly, not a slip.
       final b = toPlan();
-      expect(b.listen(), M4TreePlanMistakes.listened);
-      expect(b.slips, 1);
-      expect(M4TreePlanMistakes.listened.deadly, isFalse, reason: 'playbook row 8: listening = the slip');
-      b
+      expect(b.listen(), M4TreePlanMistakes.liveLine);
+      expect(b.deadly, M4TreePlanMistakes.liveLine);
+      expect(b.ended, isTrue);
+      expect(b.slips, 0);
+      expect(b.listen(), isNull, reason: 'nothing more after a death');
+      // Refused (no listen): the শাটডাউন on the plan, the cut is safe.
+      final ok = toPlan()
         ..wear(M4TreePlanKit.shutdown)
         ..wear(M4TreePlanKit.helper)
         ..wear(M4TreePlanKit.ppe)
         ..pick(M4TreePlanTool.pruner);
-      expect(b.kit, contains(M4TreePlanKit.shutdown), reason: 'he cannot take the শাটডাউন off the plan');
-      expect(b.start(), (true, null));
-      expect(b.deadly, isNull);
-      final c = toPlan()..listen();
-      c.pick(M4TreePlanTool.pruner);
-      expect(c.start().$2, M4TreePlanMistakes.liveLine, reason: 'cutting with the line live is still the deadly');
+      expect(ok.start(), (true, null));
+      expect(ok.deadly, isNull);
     });
 
     test('the plan: the most serious gap is the slip, the rest put right; a clean plan tags', () {
@@ -635,9 +636,8 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('listening to him = a slip card; the শাটডাউন stays on offer and the tree passes', (t) async {
+    testWidgets('owner ruling B1: listening to him = the cut with the line live — freeze, then the near-miss', (t) async {
       final seed = seedWhere((d) => d.callAt == 0);
-      final tree = m4TreePlanDeal(math.Random(seed)).trees[0];
       final c = await _open(t, seed);
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
       await waitChoiceDeck(t);
@@ -645,23 +645,14 @@ void main() {
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
       await confirmChoice(t);
-      await _pump(t, 1500);
+      expect(await _pumpUntil(t, find.byType(FreezeFrame), maxMs: 3000), isTrue, reason: 'listening plays out as the deadly cut');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pump(t, 3500);
       expect(find.byType(MistakeCard), findsOneWidget);
-      expect(find.text(MistakeLines.slipHead), findsOneWidget, reason: 'a slip, not a freeze');
-      expect(find.byType(FreezeFrame), findsNothing);
-      expect(c.read(gameSaveProvider).mistakes.single.key, M4TreePlanMistakes.listened.key);
-      await t.tap(find.text(MistakeLines.gotIt));
-      await _pump(t, 800);
-      await _survey(t, tree);
-      await _dropRight(t, tree);
-      await _plan(t, tree);
-      expect(find.text(M4TreePlanLines.shutdownOn), findsWidgets, reason: 'the শাটডাউন could still be taken');
-      await t.tap(find.text(M4TreePlanLines.start));
-      await _pump(t, 2200);
-      expect(find.byType(FreezeFrame), findsNothing);
-      expect(c.read(gameSaveProvider).mistakes.single.key, M4TreePlanMistakes.listened.key, reason: 'no deadly');
-      await _pumpUntil(t, find.byType(ChoiceDeck));
-      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the reason deck of the tree');
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, M4TreePlanMistakes.liveLine.key);
+      expect(s.mistakes.single.deadly, isTrue);
       await _close(t, c);
     });
 

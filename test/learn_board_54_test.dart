@@ -316,9 +316,25 @@ void main() {
     // Sectionalizing: all LT out, HT in, LT back one at a time, megger after; the roar is a danger sign.
     expect(_safe('section'), {'ltout', 'onebyone', 'megger'});
     expect(_reject('section', 'roar'), allOf(contains('সমস্ত আউটগোয়িং'), contains('বিপদের সংকেত')));
-    expect(_reject('section', 'allback'), contains('একটি একটি করে'));
+    expect(_reject('section', 'allback'), contains('একে একে'));
     expect(_reject('section', 'guess'), contains('ধৈর্যের কাজ'));
     expect(pack.earnedBn, allOf(contains('স্থায়ী ফল্ট'), contains('সেকশনালাইজিং')));
+  });
+
+  test('owner ruling A5: an LT fuse goes back only with the LT switch OFF — label, reject and picture', () {
+    final one = _slot('section').options.firstWhere((o) => o.id == 'onebyone');
+    expect(one.labelBn, contains('এলটি সুইচ বন্ধ'));
+    expect(_reject('section', 'allback'), allOf(contains('এলটি সুইচ বন্ধ'), contains('একে একে')));
+    for (final w in _slot('section').whyChips) {
+      expect(w.textBn, isNot(contains('লাগাতেই এইচটি')), reason: 'the test is the switch back ON, not a push into a live board');
+    }
+    // The picture: the LT switch is drawn on every section card; its red
+    // lock-out tag only on the card where a fuse goes back in.
+    const tag = 'width="7" height="10" rx="1" fill="#C62828"';
+    for (final o in _slot('section').options) {
+      final svg = File(o.asset).readAsStringSync();
+      expect(svg.contains(tag), o.id == 'onebyone', reason: '${o.id}: the LT switch OFF and tagged only while a fuse goes back');
+    }
   });
 
   test('every picture exists (vector scenes from tool/m5_board54_art.py)', () {

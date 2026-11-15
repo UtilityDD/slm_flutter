@@ -241,14 +241,6 @@ void main() {
         expect(r.slips, 2);
       }
       final deadAt = d.moments.indexWhere((m) => m.deadly);
-      // Listening to the coworker = the slip, even on a deadly-class mistake
-      // (booked as a slip: it must not use a near-miss).
-      final pushed = GateRun(d)..index = deadAt;
-      final ps = pushed.letPass(pushed: true)!;
-      expect(ps.deadly, isFalse);
-      expect(ps.key, d.moments[deadAt].fault!.mistake.key);
-      expect(pushed.slips, 1);
-      expect(pushed.ended, isFalse);
       r.index = deadAt;
       expect(r.letPass()!.deadly, isTrue);
       expect(r.ended, isTrue);
@@ -454,7 +446,7 @@ void main() {
     testWidgets('a missed slip-class mistake shows its card; the stop waits for the coworker on his moment', (t) async {
       final seed = _seedWhere((d) {
         final first = d.moments.indexWhere((m) => !m.right);
-        return first >= 0 && !d.moments[first].deadly && first != d.coworkerAt;
+        return first >= 0 && !d.moments[first].deadly && first != d.coworkerAt && !d.moments[d.coworkerAt].deadly;
       });
       final p = GateWatchProbe();
       final c = await _open(t, seed, p);
@@ -483,14 +475,42 @@ void main() {
       expect(find.text(GateLines.coworker.line), findsWidgets, reason: 'he comes now');
       expect(p.phase, 'play', reason: 'the stop waited for him');
       await waitChoiceDeckUp(t);
-      // Listening = the slip: the mistake plays out, then its card (a slip
-      // card even for a deadly-class mistake — no freeze, no near-miss).
+      // Listening on a slip-class mistake = the slip: it plays out, then its
+      // card (no freeze, no near-miss).
       await _pickRight(t, GateLines.coworker.wrong.where((w) => _label(w).evaluate().isNotEmpty).take(1).toList());
       final f = d.moments[d.coworkerAt].fault!;
       await _until(t, () => find.text(f.mistake.textBn).evaluate().isNotEmpty, maxMs: 9000);
       expect(p.phase, 'card');
       expect(find.text(MistakeLines.slipHead), findsOneWidget);
       expect(find.byType(FreezeFrame), findsNothing);
+      await _close(t, c);
+    });
+    testWidgets('owner ruling B1: listening on a deadly-class mistake is that deadly — it plays out, then the near-miss', (t) async {
+      final seed = _seedWhere((d) {
+        final first = d.moments.indexWhere((m) => !m.right);
+        return first == d.coworkerAt && d.moments[first].deadly;
+      });
+      final p = GateWatchProbe();
+      final c = await _open(t, seed, p);
+      final d = p.deal!;
+      for (var i = 0; i < d.coworkerAt; i++) {
+        await _waitPlay(t, p, i);
+        await _until(t, () => p.index > i, maxMs: 12000);
+      }
+      await _waitPlay(t, p, d.coworkerAt);
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tap(_stop, warnIfMissed: false);
+      await t.pump();
+      await _pump(t, 100);
+      expect(find.text(GateLines.coworker.line), findsWidgets, reason: 'he comes now');
+      await waitChoiceDeckUp(t);
+      await _pickRight(t, GateLines.coworker.wrong.where((w) => _label(w).evaluate().isNotEmpty).take(1).toList());
+      await _until(t, () => p.phase == 'freeze', maxMs: 9000, reason: 'it plays out');
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      await _until(t, () => find.text(MistakeLines.nearMissHead).evaluate().isNotEmpty, maxMs: 6000);
+      expect(find.text(d.moments[d.coworkerAt].fault!.mistake.textBn), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(c.read(gameSaveProvider).rungProgress['m1/gate'], isNot('cleared'));
       await _close(t, c);
     });
     testWidgets('gesture hint in a stop: a sweep over the same broad areas whatever the mistake; it presses nothing', (t) async {

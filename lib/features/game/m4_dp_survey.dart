@@ -55,7 +55,8 @@ export 'm4_dp_survey_world.dart' show M4DpSurveyFault, M4DpSurveyFaultSide, M4Dp
 //      slip.
 //   5. choose — the list is done: how will the dressing be done? Only after
 //      shutdown, PTW, test and earth (the project's safety rule — the lesson
-//      text does not say it: flagged). Dressing a live structure = deadly.
+//      text does not say it). Dressing a live structure = deadly (owner ruling
+//      B8, 2026-11-15).
 // Shared kit: guide first, full scene, corner guide, ◆ on the table, coworker
 // once, mistake cards, freeze on the deadly choice, gesture hints (a sweep
 // over every part while surveying, over the open cards while ordering). His

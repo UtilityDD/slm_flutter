@@ -52,8 +52,8 @@ export 'm3_la_patrol_world.dart' show M3LaPatrolBody, M3LaPatrolFault, M3LaPatro
 // choice); climbing the live structure to fix it. Slips: a failed LA missed or
 // the wrong one marked, a healthy DTR reported, a failed LA not reported.
 // (Listening is deadly here, not the playbook's slip, because the act he
-// pushes is on Module 3's deadly list — MODULE3_LADDER.md row 14; flagged to
-// the owner.)
+// pushes is on Module 3's deadly list — MODULE3_LADDER.md row 14; owner ruling
+// B1, 2026-11-15.)
 //
 // Gesture hint (looking): a sweep over the three LAs and "সব ঠিক আছে" alike —
 // how to answer, never which. The decks bring their own sweep.

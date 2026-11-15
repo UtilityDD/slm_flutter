@@ -84,6 +84,23 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   await tapReasonProceed(t);
 }
 
+/// Refuses him (✓ on his right card). Refusing leads straight into the
+/// reason deck (it opens at once since 2026-11-15, with no gap after his
+/// deck), so wait for the reason [question] — the guide asks it as the deck
+/// opens and the muted bubble fades after a reading time — not for a
+/// ChoiceDeck to go.
+Future<void> _refuse(WidgetTester t, String question) async {
+  await waitChoiceDeck(t);
+  final r = _onScreen(SkyLines.coworker.right);
+  expect(r, hasLength(1), reason: SkyLines.coworker.right.first);
+  await t.tap(r.single, warnIfMissed: false);
+  expect(await confirmChoice(t), isTrue, reason: 'his refuse card is picked with ✓');
+  for (var ms = 0; ms < 4000 && find.text(question).evaluate().isEmpty; ms += 50) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+  expect(find.text(question), findsWidgets, reason: 'the reason deck asks why');
+}
+
 /// Design px → screen px on the 392 × 850 test screen (the scene fits it).
 const _k = 392 / 360;
 SkyGeo get _geo => SkyGeo.forScene((360 * 850 / 392).clamp(560.0, 900.0), 0);
@@ -641,11 +658,8 @@ void main() {
       await t.pump(const Duration(milliseconds: 100));
       expect(find.byType(CoworkerPeek), findsOneWidget, reason: 'the press brings him in now');
       expect(find.text(SkyLines.whyStop), findsNothing, reason: 'no reason deck before he has spoken');
+      await _refuse(t, SkyLines.whyStop);
       await waitChoiceDeck(t);
-      await _pickRight(t, SkyLines.coworker.right);
-      await _pump(t, 2600);
-      await waitChoiceDeck(t);
-      expect(find.text(SkyLines.whyStop), findsWidgets);
       await _pickRight(t, SkyLines.whyRight(deal.cases[0]));
       await _pump(t, 1500);
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
@@ -862,10 +876,10 @@ void main() {
         expect(find.byType(ChoiceDeck), findsNothing, reason: 'no reason deck before he has spoken');
       }
       expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 6000), isTrue);
-      await waitChoiceDeck(t);
-      await _pickRight(t, SkyLines.coworker.right);
-      await _pump(t, 2600);
-      expect(find.text(SkyLines.whyStop), findsWidgets);
+      await _refuse(t, SkyLines.whyStop);
+      await _pump(t, 1000);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he has left');
+      expect(c.read(guideDirectorProvider).line, SkyLines.whyStop, reason: 'the reason deck still waits on its question');
       await _close(t, c);
     });
   });

@@ -1,8 +1,12 @@
 // Lesson 5.8 (ট্রান্সফরমারের সাধারণ সমস্যা), কাজ 1 "লক্ষণ থেকে কারণ": the
 // rules (strike only what a test ruled out; the list closed only with the
 // evidence in and every ruled-out cause struck; the verdict per case; a
-// spanner on a live or untested bushing = deadly; a DO on load = slip), the
-// deal, the libraries, the coworker's pushes, and the level in the shell:
+// spanner on a live, unpermitted, untested or unearthed bushing = deadly; a
+// DO on load = deadly (B3); the earth set on live = deadly (B8), before the
+// permit or the test a slip; meter leads on the live box bare-handed = deadly
+// (B4), the tong bare-handed a slip; a verdict card that orders a deadly act
+// = that act (B1)), the deal, the libraries, the coworker's pushes, and the
+// level in the shell:
 // the guide first, a full clean play (a reason pick each case, the coworker
 // refused), a slip card that keeps the case, three slips, the deadly freeze
 // (spanner on live; listening to his deadly push), the next control waits
@@ -110,6 +114,9 @@ Future<void> _tool(WidgetTester t, M5Tool tool) async {
   await _pump(t, 300);
 }
 
+/// Rubber gloves on (a second tap once they are on does nothing).
+Future<void> _gloves(WidgetTester t) => _tool(t, M5Tool.gloves);
+
 Future<void> _strike(WidgetTester t, M5Cause c) async {
   await t.drag(_label(L.cause(c)), const Offset(-100, 0));
   await _pump(t, 400);
@@ -183,6 +190,7 @@ Future<void> _playCase(WidgetTester t, M5CauseDeal d, int i) async {
       await _pump(t, 400);
       if (him == M5Push.hum) await _refuse(t, him!);
       if (c.loud) {
+        await _gloves(t);
         await _tool(t, M5Tool.tong);
         await _tapAt(t, g.cableHit.center);
         await _strike(t, M5Cause.overload);
@@ -191,6 +199,7 @@ Future<void> _playCase(WidgetTester t, M5CauseDeal d, int i) async {
         await _pump(t, 400);
       }
     case M5CaseKind.ltDead:
+      await _gloves(t);
       await _tool(t, M5Tool.meter);
       for (var p = 0; p < 3; p++) {
         await _tapAt(t, g.terminalHit(p).center);
@@ -198,14 +207,19 @@ Future<void> _playCase(WidgetTester t, M5CauseDeal d, int i) async {
       if (him == M5Push.live) await _refuse(t, him!);
       await _swipeUp(t, g.swipeFrom);
       await _strike(t, M5Cause.htFuse);
+      await _tool(t, M5Tool.permit);
       await _tapAt(t, g.leverHit.center);
       await _tool(t, M5Tool.hotStick);
       for (var p = 0; p < 3; p++) {
         await _tapAt(t, g.doHit(p).center);
       }
       await _tool(t, M5Tool.tester);
-      await _tapAt(t, g.bushingHit(c.deadPhase).center);
-      expect(find.text(L.testerDead), findsOneWidget);
+      for (var p = 0; p < 3; p++) {
+        await _tapAt(t, g.bushingHit(p).center);
+        expect(find.text(L.testerDead), findsOneWidget);
+      }
+      await _tool(t, M5Tool.earth);
+      await _tapAt(t, g.bushingHit(0).center);
       await _tool(t, M5Tool.spanner);
       await _tapAt(t, g.bushingHit(c.deadPhase).center);
       expect(find.text(c.loose ? L.nutLoose : L.nutFirm), findsOneWidget);
@@ -231,12 +245,38 @@ M5Case _lt({bool loose = false, int dead = 1}) =>
 M5Case _leak({bool large = true, M5LeakSource src = M5LeakSource.weld, int fresh = 2}) =>
     M5Case(kind: M5CaseKind.leak, place: M5Place.school, suspects: m5CaseCauses[M5CaseKind.leak]!, large: large, source: src, freshStain: fresh);
 
-M5CauseRun _runOf(M5Case first) => M5CauseRun(M5CauseDeal(
-      cases: [first, if (first.kind != M5CaseKind.noise) _noise(), if (first.kind != M5CaseKind.ltDead) _lt(), if (first.kind != M5CaseKind.leak) _leak()],
-      coworkerCase: 0,
-      push: m5PushesFor(first).isEmpty ? M5Push.live : m5PushesFor(first).first,
-      why: const [M5WhyTopic.report, M5WhyTopic.switchOff, M5WhyTopic.twoStruck],
-    ));
+/// A run on [first]; rubber gloves already on unless [gloves] is false.
+M5CauseRun _runOf(M5Case first, {bool gloves = true}) {
+  final r = M5CauseRun(M5CauseDeal(
+    cases: [first, if (first.kind != M5CaseKind.noise) _noise(), if (first.kind != M5CaseKind.ltDead) _lt(), if (first.kind != M5CaseKind.leak) _leak()],
+    coworkerCase: 0,
+    push: m5PushesFor(first).isEmpty ? M5Push.live : m5PushesFor(first).first,
+    why: const [M5WhyTopic.report, M5WhyTopic.switchOff, M5WhyTopic.twoStruck],
+  ));
+  if (gloves) r.putGloves();
+  return r;
+}
+
+/// The dead-phase case isolated and proved dead on every phase (permit in,
+/// gloves on, metered, LT off, every DO open, the tester on all three).
+M5CauseRun _isolated({bool loose = false, int dead = 1, bool earth = true}) {
+  final r = _runOf(_lt(loose: loose, dead: dead));
+  for (var i = 0; i < 3; i++) {
+    r.meter(i);
+  }
+  r
+    ..lookUp()
+    ..takePermit()
+    ..lever();
+  for (var i = 0; i < 3; i++) {
+    r.openDo(i);
+  }
+  for (var i = 0; i < 3; i++) {
+    r.test(i);
+  }
+  if (earth) r.earth();
+  return r;
+}
 
 void main() {
   group('rules', () {
@@ -325,25 +365,48 @@ void main() {
       expect(r.caught, contains(L.caughtHum));
     });
 
-    test('এক ফেজ: a spanner with the LT on or a DO closed is deadly; a DO on load is a slip', () {
+    test('এক ফেজ: a spanner with the LT on or a DO closed is deadly; a DO on load is deadly (B3)', () {
       final a = _runOf(_lt());
       final m = a.spanner(1);
       expect(m, Mk.liveSpanner);
       expect(m!.deadly, isTrue);
       expect(a.ended, isTrue);
       final b = _runOf(_lt());
-      expect(b.openDo(0), Mk.doOnLoad);
-      expect(b.doOpen[0], isFalse, reason: 'it stays in');
+      final d = b.openDo(0);
+      expect(d, Mk.doOnLoad);
+      expect(d!.deadly, isTrue);
+      expect(b.ended, isTrue);
+      expect(b.slips, 0, reason: 'deadly, not a slip');
+      final c = _runOf(_lt());
       for (var i = 0; i < 3; i++) {
-        b.meter(i);
+        c.meter(i);
       }
-      expect(b.lever(), isTrue);
-      expect(b.openDo(0), isNull);
-      expect(b.doOpen[0], isTrue);
-      expect(b.spanner(1), Mk.liveSpanner, reason: 'two DOs still closed');
+      expect(c.lever(), isTrue);
+      expect(c.openDo(0), isNull, reason: 'off-load now');
+      expect(c.doOpen[0], isTrue);
+      c.takePermit();
+      expect(c.spanner(1), Mk.liveSpanner, reason: 'two DOs still closed');
     });
 
     test('এক ফেজ: DOs open but no 0 V on that bushing = deadly (R2)', () {
+      final r = _runOf(_lt());
+      for (var i = 0; i < 3; i++) {
+        r.meter(i);
+      }
+      r
+        ..takePermit()
+        ..lever();
+      for (var i = 0; i < 3; i++) {
+        r.openDo(i);
+      }
+      expect(r.test(0), isNull);
+      expect(r.testerDead, isTrue);
+      final m = r.spanner(1);
+      expect(m, Mk.untested);
+      expect(m!.deadly, isTrue);
+    });
+
+    test('এক ফেজ: PTW before the work — the tester or the earth before it is a slip; a spanner with none is deadly (R1)', () {
       final r = _runOf(_lt());
       for (var i = 0; i < 3; i++) {
         r.meter(i);
@@ -352,13 +415,129 @@ void main() {
       for (var i = 0; i < 3; i++) {
         r.openDo(i);
       }
-      expect(r.test(0), isTrue);
+      expect(r.test(1), Mk.permitFirst);
+      expect(r.tested, isEmpty, reason: 'no reading counts before the permit');
+      expect(r.earth(), Mk.permitFirst);
+      expect(r.earthed, isFalse);
+      expect(r.slips, 2);
       final m = r.spanner(1);
-      expect(m, Mk.untested);
+      expect(m, Mk.noPermit);
       expect(m!.deadly, isTrue);
+      // The permit only counts in the dead-phase case.
+      final n = _runOf(_noise())..takePermit();
+      expect(n.permit, isFalse);
     });
 
-    test('এক ফেজ (firm): meter, look, switch off, test, spanner → strike both → replace', () {
+    test('এক ফেজ: the earth after every phase shows 0 V — on live deadly (B8), before the test a slip (R3); a spanner with no earth is deadly (R4)', () {
+      // A DO still in: the earth set on a live transformer.
+      final live = _runOf(_lt());
+      for (var i = 0; i < 3; i++) {
+        live.meter(i);
+      }
+      live
+        ..takePermit()
+        ..lever()
+        ..openDo(0);
+      final e = live.earth();
+      expect(e, Mk.earthLive);
+      expect(e!.deadly, isTrue);
+      // Two of three phases tested: the earth waits (a slip).
+      final r = _runOf(_lt());
+      for (var i = 0; i < 3; i++) {
+        r.meter(i);
+      }
+      r
+        ..takePermit()
+        ..lever();
+      for (var i = 0; i < 3; i++) {
+        r.openDo(i);
+      }
+      r
+        ..test(0)
+        ..test(1);
+      expect(r.earth(), Mk.testFirst);
+      expect(r.earthed, isFalse);
+      r.test(2);
+      expect(r.earth(), isNull);
+      expect(r.earthed, isTrue);
+      expect(r.spanner(1), isNull);
+      // Proved dead on every phase but no earth: deadly.
+      final s = _isolated(earth: false);
+      final m = s.spanner(1);
+      expect(m, Mk.noEarth);
+      expect(m!.deadly, isTrue);
+      expect(s.slips, 0);
+    });
+
+    test('rubber gloves for live measurement: the tong bare-handed a slip (no reading); meter leads on the live box deadly (B4), on dead terminals a slip', () {
+      final n = _runOf(_noise(), gloves: false)..listen();
+      expect(n.tong(), Mk.noGloves);
+      expect(n.loadChecked, isFalse, reason: 'no reading');
+      n.putGloves();
+      expect(n.tong(), isNull);
+      expect(n.loadChecked, isTrue);
+      expect(n.slips, 1);
+      final a = _runOf(_lt(), gloves: false);
+      final m = a.meter(0);
+      expect(m, Mk.bareMeter);
+      expect(m!.deadly, isTrue);
+      expect(a.ended, isTrue);
+      // The LT off but a DO still in: the box still live.
+      final b = _runOf(_lt());
+      for (var i = 0; i < 3; i++) {
+        b.meter(i);
+      }
+      b
+        ..lever()
+        ..gloved = false;
+      expect(b.meter(0), Mk.bareMeter);
+      // Every DO open: the terminals dead, a slip.
+      final c = _isolated()..gloved = false;
+      expect(c.meter(0), Mk.noGloves);
+      expect(c.ended, isFalse);
+      // Kept on for the next case.
+      final k = _runOf(_noise());
+      k.next();
+      expect(k.gloved, isTrue);
+    });
+
+    test('a verdict card that orders a deadly act is that act (B1); the other wrong cards are slips; no "charge again" card', () {
+      expect(Mk.verdictDeadly(L.liveCard), Mk.liveSpanner);
+      expect(Mk.verdictDeadly(L.climbCard), Mk.climbLive);
+      expect(L.allVerdicts.where((v) => v.contains('চার্জ')), isEmpty, reason: 'repeat charging (R8) is not offered as a card');
+      expect(L.verdictWrong(M5Verdict.report), contains(L.liveCard));
+      expect(L.verdictWrong(M5Verdict.repair), contains(L.climbCard));
+      final n = _runOf(_noise())
+        ..listen()
+        ..tong()
+        ..strike(M5Cause.overload)
+        ..listen();
+      expect(n.finishList(), isNull);
+      final m = n.pickVerdict(false, card: L.liveCard);
+      expect(m, Mk.liveSpanner);
+      expect(m!.deadly, isTrue);
+      expect(n.ended, isTrue);
+      final k = _runOf(_leak())
+        ..trace(2)
+        ..gauge()
+        ..drip()
+        ..strike(M5Cause.gasket)
+        ..strike(M5Cause.impact);
+      expect(k.finishList(), isNull);
+      expect(k.pickVerdict(false, card: L.climbCard), Mk.climbLive);
+      final s = _runOf(_leak())
+        ..trace(2)
+        ..gauge()
+        ..drip()
+        ..strike(M5Cause.gasket)
+        ..strike(M5Cause.impact)
+        ..finishList();
+      expect(s.pickVerdict(false, card: 'তেল মুছে দিন, ও কিছু না'), Mk.verdictLeak);
+      expect(s.slips, 1);
+      expect(s.ended, isFalse);
+    });
+
+    test('এক ফেজ (firm): meter, look, permit, switch off, test, earth, spanner → strike both → replace', () {
       final r = _runOf(_lt());
       expect(r.strike(M5Cause.htFuse), Mk.strikeLt, reason: 'the DOs not looked at');
       for (var i = 0; i < 3; i++) {
@@ -367,12 +546,19 @@ void main() {
       r.lookUp();
       expect(r.strike(M5Cause.htFuse), isNull);
       expect(r.finishList(), Mk.evidenceLt, reason: 'the bushing not checked');
-      expect(r.test(1), isFalse, reason: 'the DOs still in: it reads live');
+      r.takePermit();
+      expect(r.test(1), isNull);
+      expect(r.testerDead, isFalse, reason: 'the DOs still in: it reads live');
+      expect(r.tested, isEmpty);
       r.lever();
       for (var i = 0; i < 3; i++) {
         r.openDo(i);
       }
-      expect(r.test(1), isTrue);
+      for (var i = 0; i < 3; i++) {
+        expect(r.test(i), isNull);
+      }
+      expect(r.testerDead, isTrue);
+      expect(r.earth(), isNull);
       expect(r.spanner(1), isNull);
       expect(r.deadChecked, isTrue);
       expect(r.strike(M5Cause.ltWinding), Mk.strikeLt, reason: 'never ruled out');
@@ -385,21 +571,10 @@ void main() {
     });
 
     test('এক ফেজ (loose): the bushing connection is the cause — striking it is a slip; tighten', () {
-      final r = _runOf(_lt(loose: true, dead: 2));
-      for (var i = 0; i < 3; i++) {
-        r.meter(i);
-      }
-      r
-        ..lookUp()
-        ..strike(M5Cause.htFuse)
-        ..lever();
-      for (var i = 0; i < 3; i++) {
-        r.openDo(i);
-      }
-      r.test(0);
+      final r = _isolated(loose: true, dead: 2)..strike(M5Cause.htFuse);
+      expect(r.slips, 0);
       expect(r.spanner(0), isNull);
       expect(r.deadChecked, isFalse, reason: 'a healthy phase is no check');
-      r.test(2);
       r.spanner(2);
       expect(r.deadChecked, isTrue);
       expect(r.strike(M5Cause.bushingConn), Mk.strikeLt);
@@ -426,10 +601,12 @@ void main() {
         ..openDo(0)
         ..openDo(1);
       expect([for (var i = 0; i < 3; i++) m5DialLive(rig(), i)], [false, true, true], reason: 'one DO still in (the tester agrees: live)');
-      expect(r.test(1), isFalse);
+      expect(r.testerDead, isFalse);
       r.openDo(2);
       expect([for (var i = 0; i < 3; i++) m5DialLive(rig(), i)], [false, false, false], reason: 'every DO open: every dial 0');
-      expect(r.test(1), isTrue);
+      r.takePermit();
+      expect(r.test(1), isNull);
+      expect(r.testerDead, isTrue);
       // A meter once isolated adds nothing to the evidence.
       final s = _runOf(_lt());
       s.meter(0);
@@ -516,22 +693,24 @@ void main() {
 
     test('tool rows: the case\'s tools, the dead-phase row never in its working order; rows differ', () {
       expect(m5CauseInWorkOrder(const [M5Tool.meter, M5Tool.hotStick, M5Tool.tester, M5Tool.spanner]), isTrue);
+      expect(m5CauseInWorkOrder(const [M5Tool.permit, M5Tool.meter, M5Tool.hotStick, M5Tool.gloves, M5Tool.tester, M5Tool.earth, M5Tool.spanner]), isTrue);
+      expect(m5CauseInWorkOrder(const [M5Tool.meter, M5Tool.hotStick, M5Tool.earth, M5Tool.tester, M5Tool.spanner]), isFalse);
       final rows = <String>{};
       for (var s = 0; s < 60; s++) {
         final rng = math.Random(s);
         final n = m5CauseToolRow(M5CaseKind.noise, rng);
         final l = m5CauseToolRow(M5CaseKind.ltDead, rng);
         final k = m5CauseToolRow(M5CaseKind.leak, rng);
-        expect(n.toSet(), {M5Tool.ear, M5Tool.tong, M5Tool.meter});
-        expect(l.toSet(), {M5Tool.meter, M5Tool.hotStick, M5Tool.tester, M5Tool.spanner});
-        expect(k.toSet(), {M5Tool.watch, M5Tool.ear, M5Tool.tong});
+        expect(n.toSet(), {M5Tool.ear, M5Tool.tong, M5Tool.meter, M5Tool.gloves});
+        expect(l.toSet(), {M5Tool.meter, M5Tool.gloves, M5Tool.permit, M5Tool.hotStick, M5Tool.tester, M5Tool.earth, M5Tool.spanner});
+        expect(k.toSet(), {M5Tool.watch, M5Tool.ear, M5Tool.tong, M5Tool.gloves});
         expect(m5CauseInWorkOrder(l), isFalse, reason: '$l');
         rows.add('${n.map((t) => t.name)}|${l.map((t) => t.name)}|${k.map((t) => t.name)}');
       }
       expect(rows.length, greaterThan(20));
     });
 
-    test('English digits only; jol not pani; every mistake has its picture; three deadly; keys unique; lesson points', () {
+    test('English digits only; jol not pani; every mistake has its picture; the deadly set; keys unique; lesson points', () {
       final all = <String>[
         L.intro,
         L.rule,
@@ -557,7 +736,8 @@ void main() {
         expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
         expect(l.contains('পানি'), isFalse, reason: l);
       }
-      expect(Mk.all.where((m) => m.deadly).toSet(), {Mk.liveSpanner, Mk.untested, Mk.climbLive});
+      expect(Mk.all.where((m) => m.deadly).toSet(),
+          {Mk.liveSpanner, Mk.untested, Mk.climbLive, Mk.doOnLoad, Mk.noPermit, Mk.noEarth, Mk.earthLive, Mk.bareMeter});
       expect(Mk.all.map((m) => m.key).toSet(), hasLength(Mk.all.length));
       for (final m in Mk.all) {
         expect(m.key, startsWith('5.8/m5_cause_strike/'));
@@ -572,8 +752,15 @@ void main() {
       for (final f in [m5HumSteady, m5HumLoud]) {
         expect(File('assets/$f').existsSync(), isTrue, reason: f);
       }
-      // Every file in the art folder is used.
-      final used = {for (final m in Mk.all) m.art.split('/').last, m5HumSteady.split('/').last, m5HumLoud.split('/').last};
+      // Every file in the art folder is used (the PTW / earth / gloves cards
+      // reuse other levels' pictures).
+      const dir = 'assets/game/art/m5_cause_strike/';
+      final used = {
+        for (final m in Mk.all)
+          if (m.art.startsWith(dir)) m.art.split('/').last,
+        m5HumSteady.split('/').last,
+        m5HumLoud.split('/').last,
+      };
       final files = Directory('assets/game/art/m5_cause_strike').listSync().whereType<File>().map((f) => f.uri.pathSegments.last).toSet();
       expect(files, used);
       expect(m5CauseStrikePacks.keys, ['do_5_8_a']);
@@ -756,6 +943,27 @@ void main() {
       await _close(t, c);
     });
 
+    final noiseLoudFirst = _seedWhere((d) => d.cases.first.kind == M5CaseKind.noise && d.cases.first.loud && d.coworkerCase != 0);
+    testWidgets('the tong with no rubber gloves: a slip card and no reading; gloves on, it reads', (t) async {
+      final c = await _open(t, noiseLoudFirst);
+      await t.longPress(_label(L.tool(M5Tool.ear)));
+      await _pump(t, 400);
+      await _tool(t, M5Tool.tong);
+      await _tapAt(t, _geo.cableHit.center);
+      expect(find.text(Mk.noGloves.textBn), findsOneWidget);
+      await t.tap(find.text(MistakeLines.gotIt));
+      await _pump(t, 600);
+      await _gloves(t);
+      await _tool(t, M5Tool.tong);
+      await _tapAt(t, _geo.cableHit.center);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _strike(t, M5Cause.overload);
+      expect(find.byType(MistakeCard), findsNothing, reason: 'the load was read: ওভারলোড ruled out');
+      expect(c.read(gameSaveProvider).mistakes.single.key, Mk.noGloves.key);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
     testWidgets('a cause struck with no test is a slip: the row stays standing', (t) async {
       const seed = 4;
       final d = m5CauseDeal(math.Random(seed));
@@ -803,18 +1011,13 @@ void main() {
     });
 
     final ltFirstAlone = _seedWhere((d) => d.cases.first.kind == M5CaseKind.ltDead && d.coworkerCase != 0);
-    testWidgets('the lever before the meter: no slip, the guide asks for the phases first; metered, it switches off', (t) async {
+    testWidgets('the lever before the meter: no slip, the guide asks for the phases first; metered, it switches off and the DO opens', (t) async {
       final c = await _open(t, ltFirstAlone);
       await _tapAt(t, _geo.leverHit.center);
       await _pump(t, 300);
       expect(find.byType(MistakeCard), findsNothing);
       expect(c.read(guideDirectorProvider).line, contains(L.meterFirst));
-      // Still ON: a DO opened now is on load.
-      await _tool(t, M5Tool.hotStick);
-      await _tapAt(t, _geo.doHit(0).center);
-      expect(find.text(Mk.doOnLoad.textBn), findsOneWidget);
-      await t.tap(find.text(MistakeLines.gotIt));
-      await _pump(t, 600);
+      await _gloves(t);
       await _tool(t, M5Tool.meter);
       for (var p = 0; p < 3; p++) {
         await _tapAt(t, _geo.terminalHit(p).center);
@@ -823,14 +1026,42 @@ void main() {
       await _tool(t, M5Tool.hotStick);
       await _tapAt(t, _geo.doHit(0).center);
       expect(find.byType(MistakeCard), findsNothing, reason: 'switched off: the DO opens');
-      expect(c.read(gameSaveProvider).mistakes.single.key, Mk.doOnLoad.key);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty);
       expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('a DO opened on load: the scene freezes first, then the card (near-miss, deadly)', (t) async {
+      final c = await _open(t, ltFirstAlone);
+      await _tool(t, M5Tool.hotStick);
+      await _tapAt(t, _geo.doHit(0).center);
+      await _pump(t, 500);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, Mk.doOnLoad.key);
+      expect(s.mistakes.single.deadly, isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('meter leads on the live LT box with no rubber gloves: deadly freeze', (t) async {
+      final c = await _open(t, ltFirstAlone);
+      await _tool(t, M5Tool.meter);
+      await _tapAt(t, _geo.terminalHit(0).center);
+      await _pump(t, 500);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, Mk.bareMeter.key);
       await _close(t, c);
     });
 
     final liveFirst = _seedWhere((d) => d.cases.first.kind == M5CaseKind.ltDead && d.coworkerCase == 0);
     testWidgets('listening to "tighten it live" = deadly: freeze, then the card', (t) async {
       final c = await _open(t, liveFirst);
+      await _gloves(t);
       await _tool(t, M5Tool.meter);
       for (var p = 0; p < 3; p++) {
         await _tapAt(t, _geo.terminalHit(p).center);
@@ -855,6 +1086,7 @@ void main() {
 
     testWidgets('a fast play: the next control waits for the coworker; he cuts in at once', (t) async {
       final c = await _open(t, liveFirst);
+      await _gloves(t);
       await _tool(t, M5Tool.meter);
       for (var p = 0; p < 3; p++) {
         await t.tapAt(_geo.terminalHit(p).center * _k);
@@ -877,6 +1109,7 @@ void main() {
     final humFirst = _seedWhere((d) => d.cases.first.kind == M5CaseKind.noise && d.coworkerCase == 0 && d.push == M5Push.hum);
     testWidgets('the load checked before the noise is heard: he comes after the second listen with "the load is fine"', (t) async {
       final c = await _open(t, humFirst);
+      await _gloves(t);
       await _tool(t, M5Tool.tong);
       await _tapAt(t, _geo.cableHit.center);
       await _strike(t, M5Cause.overload);
@@ -901,6 +1134,7 @@ void main() {
       await t.longPress(_label(L.tool(M5Tool.ear)));
       await _pump(t, 400);
       if (first.loud) {
+        await _gloves(t);
         await _tool(t, M5Tool.tong);
         await _tapAt(t, _geo.cableHit.center);
         await _strike(t, M5Cause.overload);
@@ -949,6 +1183,7 @@ void main() {
       // The verdict cards up: the scene's hand stays away (the deck has its own).
       final first = d.cases.first;
       if (first.loud) {
+        await _gloves(t);
         await _tool(t, M5Tool.tong);
         await _tapAt(t, _geo.cableHit.center);
         await _strike(t, M5Cause.overload);
@@ -969,7 +1204,7 @@ void main() {
       IdleHintState scene() => t.state<IdleHintState>(find.byType(IdleHint).first);
       await _pump(t, 9000);
       expect(scene().showing, isTrue);
-      expect(scene().debugOptions, hasLength(4), reason: 'all four tools');
+      expect(scene().debugOptions, hasLength(7), reason: 'all seven tools');
       expect(scene().debugFrame?.ripple, isNull);
       await _close(t, c);
     });

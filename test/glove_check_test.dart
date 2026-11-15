@@ -13,6 +13,7 @@ import 'package:slm_flutter/features/game/gesture_hint.dart';
 import 'package:slm_flutter/features/game/glove_check.dart';
 import 'package:slm_flutter/features/game/helmet_check.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
+import 'package:slm_flutter/features/game/level_juice.dart' show FreezeFrame;
 import 'package:slm_flutter/features/game/level_shell.dart';
 import 'package:slm_flutter/features/game/mistake_kit.dart';
 import 'package:slm_flutter/features/game/spoken_once.dart';
@@ -83,6 +84,46 @@ void main() {
       expect(judgeGlove(bad, GloveChoice.wear, tested: true).right, isFalse);
     });
 
+    test('owner ruling A6: the deep crack leaks in the air test; seen on a close look, sending it back untested is clean', () {
+      final good = _pool('rubber_cream');
+      final crack = good.withFlaw(good.flaws.firstWhere((f) => f.kind == GloveFlawKind.crack));
+      expect(crack.leaks, isTrue, reason: 'a crack through the rubber lets the air out');
+      expect(crack.hiddenFlaw, isFalse, reason: 'it shows on a close look');
+      expect(_pinholed(good).leaks, isTrue);
+      expect(_pinholed(good).hiddenFlaw, isTrue);
+      expect(good.leaks, isFalse);
+      expect(_pool('wet').leaks, isFalse, reason: 'a wet pair holds air; the eye finds it');
+      final untested = judgeGlove(crack, GloveChoice.reject, tested: false);
+      expect(untested.right, isTrue);
+      expect(untested.clean, isTrue);
+      expect(untested.wordBn, GloveLines.caught);
+      expect(judgeGlove(crack, GloveChoice.reject, tested: true).clean, isTrue);
+      // Every pool pair: its crack copy leaks, like its pinhole copy.
+      for (final g in gloveCheckPack11.pool.where((g) => g.kind == GloveKind.good)) {
+        for (final f in g.flaws) {
+          expect(g.withFlaw(f).leaks, f.kind == GloveFlawKind.pinhole || f.kind == GloveFlawKind.crack, reason: f.id);
+        }
+      }
+      // No line says a crack holds air or leaks slower than a hole.
+      final all = gloveCheckLines(gloveCheckPack11).join('\n');
+      expect(all.contains('ধীরে'), isFalse);
+      expect(all.contains('ফু দিয়ে') || all.contains('ফুঁ'), isFalse, reason: 'the roll test, not blowing into it');
+    });
+
+    test('owner ruling A6: app texts teach the roll test, never blowing into the glove', () {
+      // 'য়' is stored both ways in the repo, so match the parts before it.
+      for (final path in [
+        'lib/features/sops/sops_screen.dart',
+        'lib/features/guide/mascot_speech_library.dart',
+        'assets/data/safety_library.json',
+      ]) {
+        final text = File(path).readAsStringSync();
+        for (final blow in ['ফু দি', 'ফুঁ দি', 'মুখে হাও']) {
+          expect(text.contains(blow), isFalse, reason: '$path: $blow');
+        }
+      }
+    });
+
     test('wrong gloves need no test: send them back', () {
       final cotton = _pool('cotton');
       expect(cotton.rubber, isFalse);
@@ -121,7 +162,7 @@ void main() {
         for (final hand in d.rounds) {
           final good = hand.where((g) => g.kind == GloveKind.good).toList();
           expect(good, hasLength(1), reason: 'seed $seed');
-          expect(hand.any((g) => g.leaks && g.asset == good.first.asset), isTrue, reason: 'same picture, hidden pinhole');
+          expect(hand.any((g) => g.hiddenFlaw && g.asset == good.first.asset), isTrue, reason: 'same picture, hidden pinhole');
           expect(hand.any((g) => g.kind == GloveKind.wrong), isTrue);
           expect(hand.length, lessThanOrEqualTo(4));
           expect(hand.map((g) => g.id).toSet(), hasLength(hand.length));
@@ -261,7 +302,7 @@ void main() {
       final m = gloveMistake(pin, judgeGlove(pin, GloveChoice.wear, tested: false));
       expect(m.key, '1.1/glove/pinhole');
       expect(m.textBn, isNotEmpty);
-      expect(m.deadly, isFalse, reason: 'owner decision pending (ladder lists it as deadly)');
+      expect(m.deadly, isTrue, reason: 'owner ruling B6: packing a pinholed pair is deadly');
       final cut = _pool('cut');
       expect(gloveMistake(cut, judgeGlove(cut, GloveChoice.wear, tested: false)).lessonPoint, kCutGloveLessonPoint);
       expect(gloveMistake(_pool('cotton'), judgeGlove(_pool('cotton'), GloveChoice.wear, tested: false)).key, '1.1/glove/cotton');
@@ -271,6 +312,34 @@ void main() {
       expect(gloveCheckLines(gloveCheckPack11), containsAll([GloveLines.listenCard, GloveLines.uncheckedCard, GloveLines.rejectedCard, HelmetLines.listenCard]));
       for (final l in gloveCheckLines(gloveCheckPack11)) {
         expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: 'English digits: $l');
+      }
+    });
+
+    test('owner ruling B6: packing a pinholed, cracked or any non-rubber glove is deadly; a wet pair stays a slip', () {
+      final good = _pool('rubber_orange');
+      GloveItem flawed(GloveFlawKind k) => good.withFlaw(good.flaws.firstWhere((f) => f.kind == k));
+      DoMistake packed(GloveItem g) => gloveMistake(g, judgeGlove(g, GloveChoice.wear, tested: true));
+      expect(packed(flawed(GloveFlawKind.pinhole)).deadly, isTrue);
+      expect(packed(flawed(GloveFlawKind.crack)).deadly, isTrue);
+      for (final id in ['cotton', 'bike', 'leather', 'cut']) {
+        final g = _pool(id);
+        expect(g.rubber, isFalse, reason: id);
+        expect(gloveDeadly(g), isTrue, reason: id);
+        expect(gloveMistake(g, judgeGlove(g, GloveChoice.wear, tested: false)).deadly, isTrue, reason: id);
+      }
+      final wet = _pool('wet');
+      expect(gloveDeadly(wet), isFalse);
+      expect(packed(wet).deadly, isFalse, reason: 'a wet pair: dry it and use it — a slip');
+      // A sound pair is never deadly: untested it is refused, sent back a slip.
+      expect(gloveDeadly(good), isFalse);
+      expect(gloveMistake(good, judgeGlove(good, GloveChoice.wear, tested: false)).deadly, isFalse);
+      expect(gloveMistake(good, judgeGlove(good, GloveChoice.reject, tested: true)).deadly, isFalse);
+      // Every glove in the pool: deadly exactly when packing it would kill.
+      for (final g in gloveCheckPack11.pool) {
+        expect(gloveDeadly(g), g.kind == GloveKind.wrong, reason: g.id);
+        for (final f in g.flaws) {
+          expect(gloveDeadly(g.withFlaw(f)), f.kind != GloveFlawKind.wet, reason: f.id);
+        }
       }
     });
 
@@ -348,28 +417,50 @@ void main() {
       const seed = 11;
       final d = _dealFor(seed);
       final c = await open(t, seed);
-      final left = [...d.order[0]];
-      Future<void> decide(bool Function(GloveItem g) which, String button) async {
-        final i = left.indexWhere(which);
-        expect(i, isNonNegative);
-        await t.tap(_trayCards.at(i));
+      final good = d.order[0].indexWhere((g) => g.kind == GloveKind.good);
+      expect(good, isNonNegative);
+      Future<void> decide(String button) async {
+        await t.tap(_trayCards.at(good));
         await _pumpMs(t, 400);
         await t.tap(find.text(button));
         await _pumpMs(t, 2600);
-        if (button == 'নিয়ে নিন' && left[i].kind != GloveKind.good) left.removeAt(i);
       }
 
-      await decide((g) => g.kind == GloveKind.wrong, 'নিয়ে নিন'); // slip 1
+      // The slips that stay slips (B6 made packing a bad glove deadly).
+      await decide('নিয়ে নিন'); // slip 1: a sound pair packed untested
       expect(find.byType(StruckOutCard), findsNothing);
-      await decide((g) => g.leaks, 'নিয়ে নিন'); // slip 2: packed untested
+      await decide('বাদ দিন'); // slip 2: a sound pair sent back untested
       expect(find.byType(StruckOutCard), findsNothing);
-      await decide((g) => g.kind == GloveKind.good, 'বাদ দিন'); // slip 3
+      await decide('নিয়ে নিন'); // slip 3
       await _pumpMs(t, 600);
       expect(find.byType(StruckOutCard), findsOneWidget);
       final keys = c.read(gameSaveProvider).mistakes.map((m) => m.key).toSet();
-      final wrong = d.order[0].firstWhere((g) => g.kind == GloveKind.wrong);
-      expect(keys, containsAll(['1.1/glove/${wrong.id}', '1.1/glove/pinhole', '1.1/glove/rejected-good']));
+      expect(keys, containsAll(['1.1/glove/untested', '1.1/glove/rejected-good']));
       expect(c.read(gameSaveProvider).mistakes.every((m) => !m.deadly), isTrue);
+      expect(t.takeException(), isNull);
+      await close(t, c);
+    });
+
+    testWidgets('owner ruling B6: packing a non-rubber glove freezes the yard, then the near-miss card', (t) async {
+      const seed = 11;
+      final d = _dealFor(seed);
+      final c = await open(t, seed);
+      final i = d.order[0].indexWhere((g) => g.kind == GloveKind.wrong);
+      expect(i, isNonNegative);
+      final wrong = d.order[0][i];
+      await t.tap(_trayCards.at(i));
+      await _pumpMs(t, 400);
+      await t.tap(find.text('নিয়ে নিন'));
+      await _pumpMs(t, 600);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pumpMs(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, '1.1/glove/${wrong.id}');
+      expect(s.mistakes.single.deadly, isTrue);
+      expect(find.byType(StruckOutCard), findsNothing);
       expect(t.takeException(), isNull);
       await close(t, c);
     });

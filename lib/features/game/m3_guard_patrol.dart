@@ -73,8 +73,10 @@ export 'm3_guard_patrol_world.dart'
 // line is recorded).
 //
 // Flagged to the owner: no minimum vertical clearance or ground clearance
-// figure is used (the lesson gives the ground clearance 5.8 m LT / 6.1 m HT
-// only; it is not measured here); what a patroller does about a hanging guard
+// figure is used (ground clearance across a street is 5.8 m LT / 6.5 m 11 and
+// 33 kV, CEA 2023 Reg 60(1) Sch VIII A = WBSEDCL Safety Manual 2025 3.4.4; the
+// lesson's old 6.1 m HT is superseded; it is not measured here); what a
+// patroller does about a hanging guard
 // wire beyond reporting it (keeping people away, traffic control) is not in
 // the lesson and is left out; the 11 kV look of the line is ours.
 

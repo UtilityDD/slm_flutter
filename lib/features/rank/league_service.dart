@@ -162,6 +162,13 @@ const leagueQueueKey = 'league_queue_v1';
 /// one month: `{"u": id, "m": "YYYY-MM", "b": {rungId: stars}}`.
 const leagueKnownKey = 'league_known_v1';
 
+/// Accounts whose one-time [LeagueService.catchUpFromSave] already ran.
+const leagueCatchUpKey = 'league_catchup_v1';
+
+/// The server counts about 40 clears per hour per member; a catch-up sends
+/// no more than that.
+const leagueCatchUpMax = 40;
+
 /// The server takes at most 50 items per call.
 const leagueBatchMax = 50;
 
@@ -291,15 +298,70 @@ class LeagueService {
         for (var i = 0; i < pending.length; i += leagueBatchMax) {
           final end = i + leagueBatchMax < pending.length ? i + leagueBatchMax : pending.length;
           final batch = pending.sublist(i, end);
+          String? refused;
           try {
-            await submitter.submit(batch);
+            refused = await submitter.submit(batch);
           } catch (_) {
+            left.addAll(pending.sublist(i));
+            break;
+          }
+          // Not verified yet (or no profile yet): keep the plays and send
+          // them once an admin verifies the member. Before this, a new member's
+          // first plays were dropped for good (2026-11-15 tester report).
+          if (refused == 'not_verified' || refused == 'no_profile') {
             left.addAll(pending.sublist(i));
             break;
           }
         }
         await _save(left);
       });
+    } catch (_) {}
+  }
+
+  /// One-time catch-up for a verified member the server has never counted
+  /// (no rung cleared all time), although this phone's save has clears:
+  /// their plays were dropped while they were not verified yet. Queues the
+  /// best stars of every cleared rung (Learn rungs from their best mark), with
+  /// the rung's best time, best stars first and at most the server's hourly
+  /// limit; once per account. Never throws.
+  Future<void> catchUpFromSave(GameSave save) async {
+    try {
+      final uid = userId();
+      if (uid == null || uid.isEmpty) return;
+      final prefs = await SharedPreferences.getInstance();
+      final done = prefs.getStringList(leagueCatchUpKey) ?? const <String>[];
+      if (done.contains(uid)) return;
+      final month = leagueMonthKey(clock());
+      final plays = <LeagueResult>[];
+      for (final e in save.rungProgress.entries) {
+        final rung = e.key;
+        if (e.value != 'cleared' || !isLeagueRungId(rung)) continue;
+        final mark = save.bestMarkByRung[rung];
+        var stars = save.starsByRung[rung] ?? 0;
+        if (stars <= 0 && mark != null) stars = leagueStarsForLearnMark(mark);
+        final ms = save.bestTimeMsByRung[rung] ?? 0;
+        if (stars <= 0 || ms <= 0) continue;
+        plays.add(LeagueResult(userId: uid, month: month, rungId: rung, stars: stars.clamp(1, 3), ms: ms));
+      }
+      plays.sort((a, b) => b.stars.compareTo(a.stars));
+      final take = plays.take(leagueCatchUpMax).toList();
+      await _serial(() async {
+        final q = await _load();
+        final known = await _loadKnown(uid, month);
+        for (final p in take) {
+          final i = q.indexWhere(p.sameSlot);
+          if (i < 0) {
+            q.add(p);
+          } else if (p.beats(q[i])) {
+            q[i] = p;
+          }
+          if (p.stars > (known[p.rungId] ?? 0)) known[p.rungId] = p.stars;
+        }
+        await _save(q);
+        await _saveKnown(uid, month, known);
+      });
+      await prefs.setStringList(leagueCatchUpKey, [...done, uid]);
+      if (take.isNotEmpty) _scheduleFlush();
     } catch (_) {}
   }
 

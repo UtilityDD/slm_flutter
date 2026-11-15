@@ -22,7 +22,9 @@ import 'learn_board_models.dart';
 ///  * reblow: a fuse that holds for hours, then blows: line history, weather
 ///    and a visual check of spans sagging low and branches too close;
 ///  * section: when unsure, every LT outgoing out, then the HT fuse; LT ways
-///    back one at a time; the megger on the suspect feeder afterwards
+///    back one at a time, each with the DTR's LT switch OFF (owner ruling A5:
+///    an LT fuse is handled only on a dead board; the switch back ON is the
+///    test); the megger on the suspect feeder afterwards
 ///    (pro tip 3); a loud abnormal DTR sound is a danger sign (pro tip 2);
 ///    patience, never a hurried guess (pro tip 4).
 /// The rival's myth is the lesson's first myth buster, word for word.
@@ -287,7 +289,7 @@ const learnBoardPack54 = LearnBoardPack(
         ),
         LearnBoardOption(
           id: 'onebyone',
-          labelBn: 'একটি একটি করে এলটি ফিডারের ফিউজ লাগানো',
+          labelBn: 'এলটি সুইচ বন্ধ করে একে একে ফিউজ লাগানো',
           asset: 'assets/game/art/m5_board54/section_onebyone.svg',
           scene: true,
           correct: true,
@@ -313,7 +315,7 @@ const learnBoardPack54 = LearnBoardPack(
           asset: 'assets/game/art/m5_board54/section_allback.svg',
           scene: true,
           correct: false,
-          rejectBn: 'একটি একটি করে এলটি ফিডার লাগান — যেটা লাগাতেই এইচটি ফিউজ উড়বে, ফল্ট সেই ফিডারেই।',
+          rejectBn: 'আগে এলটি সুইচ বন্ধ করে একে একে ফিডার লাগান, তারপর সুইচ চালু করুন — যেটাতে এইচটি ফিউজ উড়বে, ফল্ট সেই ফিডারেই!',
         ),
         LearnBoardOption(
           id: 'guess',
@@ -326,7 +328,7 @@ const learnBoardPack54 = LearnBoardPack(
       ],
       whyChips: [
         LearnWhyChip(id: 'w1', textBn: 'এলটি খুলে এইচটি টিকলে সমস্যা এলটি নেটওয়ার্কে', correct: true),
-        LearnWhyChip(id: 'w2', textBn: 'যে ফিডার লাগাতেই এইচটি ওড়ে, ফল্ট সেখানেই', correct: true),
+        LearnWhyChip(id: 'w2', textBn: 'যে ফিডার চালু করতেই এইচটি ওড়ে, ফল্ট সেখানেই', correct: true),
         LearnWhyChip(id: 'w3', textBn: 'মেগার দিয়ে ইনসুলেশন ফল্ট সহজে ধরা যায়', correct: true),
         LearnWhyChip(id: 'w4', textBn: 'ফল্ট খোঁজা ধৈর্যের কাজ, তাড়াহুড়োর নয়', correct: true),
         LearnWhyChip(id: 'w5', textBn: 'সব এলটি লাগানো রেখে চার্জ দিলেই কাজ দ্রুত', correct: false),

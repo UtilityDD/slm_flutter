@@ -30,8 +30,10 @@ import 'learn_board_models.dart';
 ///    since the lesson checks load and tap only once the LT side reads low.
 /// Hands on a DTR or a service joint are drawn only once it is proven dead
 /// (ruling M5-2): drop-outs hanging open, earth set on and the meter reading
-/// 0 on area_tap; cut-out pulled and the meter reading 0 on joint_pole and
-/// joint_meter. The live-DTR trap (area_live) keeps the closed drop-outs,
+/// 0 on area_tap; on joint_pole the LT way at the DTR / pillar open with its
+/// red tag on the pole (the pole-end joint is on the LT main, upstream of any
+/// cut-out: WBSEDCL Safety Manual 2025 3.2, owner ruling A5) and the meter
+/// reading 0; on joint_meter the cut-out pulled and 0. The live-DTR trap (area_live) keeps the closed drop-outs,
 /// lit windows and the unused earth set on the ground.
 /// The rival's myth is the lesson's second myth, word for word. The danger
 /// tags name the harm without repeating the right reason chips.
@@ -158,7 +160,7 @@ const learnBoardPack55 = LearnBoardPack(
       options: [
         LearnBoardOption(
           id: 'pole',
-          labelBn: 'সাপ্লাই বন্ধ করে পোলের জয়েন্ট টাইট',
+          labelBn: 'এলটি লাইন বন্ধ করে পোলের জয়েন্ট টাইট',
           asset: 'assets/game/art/m5_board55/joint_pole.svg',
           scene: true,
           correct: true,

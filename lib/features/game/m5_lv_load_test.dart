@@ -44,8 +44,10 @@ import 'spoken_once.dart';
 //  2. সিদ্ধান্ত: the verdict deck. Evidence-gated (ruling M5-10): a right
 //     verdict without a P–N reading under the complaint load, or without an
 //     N–E reading, is a slip. ◆ → reason.
-//  3. A service fault: the method deck (right: supply off, 0 V on the tester,
-//     an insulated spanner; deadly: a plain spanner / pliers on the live
+//  3. A service fault: the method deck (right: the LT line feeding the
+//     service shut down at the DTR / pillar way, locked and tagged — a house
+//     cut-out or meter switch leaves the pole-end joints live — 0 V on the
+//     tester, an insulated spanner; deadly: a plain spanner / pliers on the live
 //     joints, a bare hand on the neutral — R22), then tap every joint (two at
 //     the pole end, P and N at the meter) and হয়ে গেছে (one left = slip).
 //  4. Supply back, measure again under the load and close: fixed → done; the
@@ -57,8 +59,10 @@ import 'spoken_once.dart';
 // the service connection, at the pole and at the meter; ask the customer
 // about new heavy appliances; "the company sends less" and "a little low
 // voltage does no harm" are myths. From the module's safety rules (M3/M4
-// rulings, not lesson 5.5): joints are tightened with the supply off, proved
-// dead on the tester, with an insulated spanner. All voltages are
+// rulings, not lesson 5.5): joints are tightened with the LT line shut down
+// at the DTR / pillar way (WBSEDCL Safety Manual 2025 3.2, owner ruling A5;
+// the scene hangs the red shutdown tag on the pole), proved dead on the
+// tester, with an insulated spanner. All voltages are
 // illustrative and kept clear of the 5–10 V threshold.
 //
 // Deadly (Module 5 table R22): a plain spanner (or pliers) on live joints; a
@@ -172,7 +176,7 @@ abstract final class M5LvLoadLines {
 
   // The method deck (M3/M4 rulings; R22). 45–53 letters.
   static const methodText = <M5LvLoadMethod, List<String>>{
-    M5LvLoadMethod.right: ['সাপ্লাই বন্ধ, টেস্টারে 0 V, ইনসুলেটেড স্প্যানারে টাইট', 'আগে সাপ্লাই বন্ধ, 0 V দেখে ইনসুলেটেড স্প্যানারে টাইট'],
+    M5LvLoadMethod.right: ['এলটি লাইন বন্ধ, টেস্টারে 0 V, ইনসুলেটেড স্প্যানারে টাইট', 'আগে এলটি শাটডাউন, 0 V দেখে ইনসুলেটেড স্প্যানারে টাইট'],
     M5LvLoadMethod.liveSpanner: ['চালু লাইনেই সাধারণ স্প্যানারে জয়েন্টগুলো টাইট দিই'],
     M5LvLoadMethod.livePliers: ['চালু লাইনে সাধারণ প্লাস দিয়ে জয়েন্টগুলো চেপে দিই'],
     M5LvLoadMethod.bareNeutral: ['খালি হাতে নিউট্রাল তারটা জয়েন্টে চেপে বসিয়ে দিই'],
@@ -305,7 +309,7 @@ abstract final class M5LvLoadLines {
   // "আজ যা ধরলেন".
   static const caughtLoad = 'যন্ত্র চালিয়ে, লোডে মেপেছেন';
   static const caughtNe = 'নিউট্রাল-আর্থও মেপেছেন';
-  static const caughtSafe = 'সাপ্লাই বন্ধ, 0 V, ইনসুলেটেড স্প্যানার';
+  static const caughtSafe = 'এলটি বন্ধ, 0 V, ইনসুলেটেড স্প্যানার';
   static const caughtJoints = 'পোলে ও মিটারে প্রতিটি জয়েন্ট টাইট';
   static const caughtReport = 'লোড বাড়লে কেবিলের সাইজের রিপোর্ট';
   static const caughtCall = 'সহকর্মীকে “না” বলেছেন';
@@ -335,13 +339,13 @@ abstract final class M5LvLoadMistakes {
   // R22 (Module 5 table; M3/M4 rulings — not lesson 5.5's text).
   static const liveSpanner = DoMistake(
     key: '$_k/live-spanner',
-    textBn: 'চালু জয়েন্টে সাধারণ স্প্যানার বা প্লাস নয়! আগে সাপ্লাই বন্ধ, টেস্টারে 0 V, তারপর ইনসুলেটেড স্প্যানারে টাইট।',
+    textBn: 'চালু জয়েন্টে সাধারণ স্প্যানার বা প্লাস একদম নয়! আগে LT লাইন বন্ধ, টেস্টারে 0 V দেখে, তারপর ইনসুলেটেড স্প্যানারে টাইট দিন।',
     art: '$_dir/live_spanner.svg',
     deadly: true,
   );
   static const bareNeutral = DoMistake(
     key: '$_k/bare-neutral',
-    textBn: 'খালি হাতে নিউট্রাল নয় — নিউট্রালেও ভোল্টেজ থাকতে পারে। সাপ্লাই বন্ধ, 0 V দেখে, ইনসুলেটেড যন্ত্রে কাজ।',
+    textBn: 'খালি হাতে কখনো নিউট্রাল ছোঁবেন না — নিউট্রালেও কিন্তু ভোল্টেজ থাকতে পারে! আগে LT লাইন বন্ধ, 0 V দেখে, ইনসুলেটেড যন্ত্রে কাজ করুন।',
     art: '$_dir/bare_neutral.svg',
     deadly: true,
   );
@@ -781,7 +785,8 @@ class M5LvLoadRun {
     return (mistake: m, accepted: true);
   }
 
-  /// The method deck's pick: right → the supply off, tightening starts.
+  /// The method deck's pick: right → the LT line shut down at the DTR /
+  /// pillar way (the pole-end joints dead too), tightening starts.
   DoMistake? pickMethod(M5LvLoadMethod m) {
     if (!_open || stage != M5LvLoadStage.method) return null;
     final mistake = M5LvLoadMistakes.method(m);

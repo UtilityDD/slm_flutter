@@ -68,8 +68,10 @@ export 'm5_cable_route_locate_world.dart' show M5CrlGeo, M5CrlPath, M5CrlPlan;
 // spots; open joint pits for burns), point 4 (the thumper's thump heard with a
 // special microphone; the TDR gives the distance in metres), advanced fact ARM
 // (a high-resistance fault does not reflect the TDR's low-voltage signal: arc
-// it with the thumper first), pro tip 2 (ask before digging: 'Dial before you
-// dig'), myth 2 (overhead knowledge is not enough for UG cable work), pro tip
+// it with the thumper first), pro tip 2 (ask before digging; ruling M5-7: the
+// cable route record and the owners of the other underground lines, India's
+// DoT 'Call Before u Dig'), myth 2 (overhead knowledge is not enough for UG
+// cable work), pro tip
 // 4 (always under the specialist team). Game data, not the lesson's (flagged):
 // the ±10 m wheel tolerance, the 7 m chalk radius, the 10–16 m peak offset,
 // the 1.1 s thump and 1.4 s hold, the junction pits, the trainee holding the
@@ -214,7 +216,7 @@ abstract final class M5CrlLines {
   static const whyPegChalk = ['এখানেই থাম্পের শব্দ সবচেয়ে জোরে', 'মাইক্রোফোনে এখানেই ঠক্ সবচেয়ে জোরে'];
   static const whyPegMark = ['রুটের ঠিক ওপরে মাটিতে অস্বাভাবিক দাগ', 'কেবিল রুটের ওপরেই খোঁড়া-পোড়ার দাগ'];
   static const whyPegPit = ['এই জয়েন্ট পিটের ভেতরে পোড়া দাগ', 'জয়েন্টে পোড়া দাগ, ফল্ট এই জয়েন্টে'];
-  static const whyCall = ['নিচে জল, গ্যাস বা টেলিফোনের লাইন থাকে', 'Dial before you dig — আগে জেনে নিই'];
+  static const whyCall = ['নিচে জল, গ্যাস বা টেলিফোনের লাইন থাকে', 'ভূগর্ভস্থ লাইনের মালিকদের আগে জানাতে হয়'];
   static const myths = [
     'ওভারহেডের অভিজ্ঞতা আছে, আন্দাজই যথেষ্ট',
     'মাটির নিচের কেবিলে ফল্ট হয় না বললেই চলে',

@@ -54,10 +54,14 @@ export 'm2_dead_test_world.dart' show DeadGeo, DeadPoint, DeadSite, deadPointBn;
 //
 // Deadly (Module 2 ladder row): touching a line that has voltage; touching on
 // the word of an unproven meter (no successful proof before the tests, or the
-// proof after them failed). Slips: a pair left untested, no proof after the
+// proof after them failed). Slips: a circuit test before a good proof (once
+// a round; the reading still shows — owner ruling A9, 2026-11-15, as
+// m2_gate_field liveFirst), a pair left untested, no proof after the
 // tests, a ghost reading never checked with a load, a stop without a voltage
 // reading (a needless stop on a dead or ghost line, or a guess with no test),
-// and listening to the coworker. Three slips strike out. A stop counts once
+// and listening to the coworker on a dead line with the meter proven (on a
+// live line or an unproven meter, listening is the deadly touch itself: owner
+// ruling B1, 2026-11-15). Three slips strike out. A stop counts once
 // the meter read the line's voltage (proven or not: a meter cannot fake
 // 230 V, and stopping in front of real voltage is never wrong); any other
 // stop is a slip whose card says the rule without telling what the line is,
@@ -66,8 +70,9 @@ export 'm2_dead_test_world.dart' show DeadGeo, DeadPoint, DeadSite, deadPointBn;
 // The careless coworker comes once a play, right after the first 0.0 on the
 // circuit on his round: "মিটারে শূন্য দেখাচ্ছে, হাত দাও!". Every hands-on
 // control waits for him once he is due (holdForCoworker), so the 0.0 he points
-// at is still on the display and a fast play cannot skip him. Listening = a
-// slip (playbook row 8); the hand does not go on the line, the round stays.
+// at is still on the display and a fast play cannot skip him. Listening =
+// the hand goes on now: deadly (touchLive / unproven) when touching now would
+// be deadly; otherwise a slip (playbook row 8), the round stays.
 // His moment passes (he does not come) once a real voltage was read this round
 // or the test is already complete.
 //
@@ -220,13 +225,17 @@ abstract final class DeadLines {
     'একটা জোড়ায় টেস্ট করেছি, ওতেই সব প্রমাণ',
   ];
   static const liveWhy = ['মিটারে পুরো ভোল্টেজ, লোড দিলেও কমেনি', 'সুইচ বন্ধ হলেও মিটার বলছে লাইনে ভোল্টেজ', 'ভোল্টেজ স্থির, লোডেও শূন্য হলো না — আসল'];
+  // Wrong reasons for a stop on a live line. Any voltage reading, proven meter
+  // or not, means treat the line as live and stop (owner A9; WBSEDCL 3.3 a;
+  // HSE GS38 para 20: proving guards a false zero), so no card here may blame
+  // the stop for skipping the proof.
   static const stopExcuses = [
     'মিটারের ব্যাটারি বাঁচাতে কাজ থামিয়ে দিলাম',
-    'প্রমাণিত মিটার লাগে না, আন্দাজেই থামালাম',
+    'সাথী থামতে বলল, তাই আমিও কাজ থামালাম',
     'সুপারভাইজার আসেননি, তাই কাজ থামালাম',
     // Words of the right cards (ভোল্টেজ, মিটার, লোড) on wrong cards too.
     'ভোল্টেজ না মেপেই বুঝেছিলাম, তাই থামলাম',
-    'মিটার প্রমাণের ঝামেলা না করেই থামলাম',
+    'ভোল্টেজ যা-ই হোক, কাজ এড়াতেই থামালাম',
     'লোড দিয়ে দেখার আগেই ভয়ে কাজ থামালাম',
     'রিডিং স্থির হয়নি, তাই আসল ভেবে থামালাম',
   ];
@@ -290,6 +299,15 @@ abstract final class DeadMistakes {
     art: '$_dir/missed_pair.svg',
     lessonPoint: 1,
   );
+  /// A circuit test before a good proof with the meter in hand (owner ruling
+  /// A9, 2026-11-15; as m2_gate_field liveFirst). Once a round; the reading
+  /// still shows, and a voltage on it is still a reason to stop.
+  static const testFirst = DoMistake(
+    key: '2.2/dead/test-before-proof',
+    textBn: 'টেস্টের আগে মিটার প্রমাণ করেননি! কাটা তার বা বিগড়ানো মিটারও শূন্য দেখায় — আগে কোনো জানা লাইভ উৎসে পরখ করে নিন।',
+    art: '$_dir/unproven.svg',
+    lessonPoint: 0,
+  );
   static const noReprove = DoMistake(
     key: '2.2/dead/no-reprove',
     textBn: 'টেস্টের পরে মিটার আবার প্রমাণ করেননি। মাঝপথে লিড ছিঁড়লে শূন্যটা মিথ্যে — শেষে আবার জানা লাইভ উৎসে দেখুন।',
@@ -314,8 +332,9 @@ abstract final class DeadMistakes {
     lessonPoint: 1,
   );
 
-  /// Listened to the coworker (one zero is enough): the slip (playbook row 8);
-  /// the hand does not go on the line and the round stays.
+  /// Listened to the coworker (one zero is enough) on a dead line with the
+  /// meter proven: the slip (playbook row 8); the round stays. On a live line
+  /// or an unproven meter it is [touchLive] / [unproven] instead (B1).
   static const listened = DoMistake(
     key: '2.2/dead/listened',
     textBn: 'সাথীর কথায় একটা শূন্য দেখেই হাত দিতে রাজি হলেন। একটা শূন্য কিছুই প্রমাণ করে না — মিটার প্রমাণ, সব জোড়ায় টেস্ট, আবার প্রমাণ।',
@@ -323,7 +342,7 @@ abstract final class DeadMistakes {
     lessonPoint: 1,
   );
 
-  static const all = [touchLive, unproven, missedPair, noReprove, ghostUnchecked, needlessStop, listened];
+  static const all = [touchLive, unproven, testFirst, missedPair, noReprove, ghostUnchecked, needlessStop, listened];
 }
 
 @immutable
@@ -417,6 +436,10 @@ class DeadRun {
   /// The meter read the line's real voltage on the circuit this round, proven
   /// or not (a meter cannot fake 230 V; a stop counts only then).
   var liveRead = false;
+
+  /// The test-before-proof slip was given this round (once a round).
+  var testedFirst = false;
+  DoMistake? _slipDue;
   int _circuitTests = 0;
   DeadPair? lastPair;
 
@@ -451,9 +474,19 @@ class DeadRun {
     ghostChecked = false;
     loadUsed = false;
     liveRead = false;
+    testedFirst = false;
+    _slipDue = null;
     _circuitTests = 0;
     lastPair = null;
     shown = false;
+  }
+
+  /// The slip a circuit test just earned ([DeadMistakes.testFirst]), once;
+  /// the page shows it after the reading.
+  DoMistake? takeSlip() {
+    final m = _slipDue;
+    _slipDue = null;
+    return m;
   }
 
   /// The probes on the known live source.
@@ -478,7 +511,14 @@ class DeadRun {
     if (!_open) return null;
     final c = current;
     final v = meterOk ? c.truth(p) : 0;
-    if (proven) valid.add(p);
+    if (proven) {
+      valid.add(p);
+    } else if (!testedFirst) {
+      // Owner ruling A9: testing before proving the meter is a slip.
+      testedFirst = true;
+      slips++;
+      _slipDue = DeadMistakes.testFirst;
+    }
     if (v == kLiveVolts) liveRead = true;
     reproven = false;
     lastPair = p;
@@ -557,10 +597,19 @@ class DeadRun {
     return null;
   }
 
-  /// Listened to the coworker: always a slip, whatever the line and the meter
-  /// (the hand does not go on the line; the round stays).
+  /// Listened to the coworker: the hand goes on now. Deadly when touching now
+  /// would be deadly — the line has voltage, or the meter is unproven (owner
+  /// ruling B1, 2026-11-15); otherwise a slip and the round stays.
   DoMistake? listen() {
     if (!_open) return null;
+    if (current.live) {
+      shown = true;
+      return deadly = DeadMistakes.touchLive;
+    }
+    if (!proven || valid.isEmpty) {
+      shown = true;
+      return deadly = DeadMistakes.unproven;
+    }
     slips++;
     return DeadMistakes.listened;
   }
@@ -836,6 +885,14 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
         _coworkerCalled = true;
         scheduleCoworker();
       }
+      // A test before a good proof (A9): the slip card, the round stays (he
+      // waits for the card to go).
+      final early = _run.takeSlip();
+      if (early != null) {
+        final size = MediaQuery.sizeOf(context);
+        unawaited(_levelDelta(-10, Offset(size.width / 2, size.height * 0.45), mood: GuideMood.warn));
+        unawaited(_slip(early, stays: true));
+      }
     });
   }
 
@@ -912,11 +969,15 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
     await _slip(m, stays: m == DeadMistakes.needlessStop);
   }
 
-  /// Listened to him: a slip; the hand does not go on the line and the round
-  /// stays (the meter work so far is kept).
+  /// Listened to him: on a live line or an unproven meter the hand on the box
+  /// is deadly (B1); else a slip and the round stays (the meter work is kept).
   Future<void> _listened(Offset origin) async {
     final m = _run.listen();
     if (m == null) return;
+    if (m.deadly) {
+      await _deadly(m);
+      return;
+    }
     HapticFeedback.mediumImpact();
     unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
     await _slip(m, stays: true);
@@ -975,7 +1036,7 @@ class _DeadRunPageState extends ConsumerState<_DeadRunPage>
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Listened to him: always a slip (playbook row 8).
+      // Listened to him: deadly when touching now is deadly, else a slip (B1).
       await _listened(origin);
       return;
     }

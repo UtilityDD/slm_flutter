@@ -1,10 +1,13 @@
-// Lesson 3.7 (এলটি ফিডার পিলার), কাজ 1 "ফিউজ বদলাও ঠিকঠাক": the rules (full
-// PPE before any work in the box, the fuse puller, only the docket's fuse,
-// the cause found before the new fuse, only an HRC fuse — a copper strip or a
-// thick wire is deadly — the door shut and locked before signing off), the
-// deal, the reason libraries, and the level in the shell: idle perf, the
-// guide first, a full clean play with the coworker refused, a slip card that
-// keeps the pillar, three slips, the deadly freeze (no PPE; listening to him).
+// Lesson 3.7 (এলটি ফিডার পিলার), কাজ 1 "ফিউজ বদলাও ঠিকঠাক": the rules (owner
+// ruling A5, 2026-11-15: the DTR's LT switch OFF, locked and tagged, proved
+// dead live-dead-live before any fuse — a fuse touched with the LT on is
+// deadly, no PPE after a proven isolation is a slip, the LT on with the door
+// open is a slip; the fuse puller, only the docket's fuse, the cause found
+// before the new fuse, only an HRC fuse — a copper strip or a thick wire is
+// deadly — the door shut and locked before signing off), the deal, the reason
+// libraries, and the level in the shell: idle perf, the guide first, a full
+// clean play with the coworker refused, a slip card that keeps the pillar,
+// three slips, the deadly freeze (a live fuse; listening to him).
 // Kit 2026-11-11: he comes even on a fast fit (holdForCoworker); a sound spot
 // called the cause is a slip (once per spot); the tool row is never in the
 // job's order; each reason deck carries a myth with the question's key word;
@@ -142,14 +145,29 @@ Future<void> _close(WidgetTester t, ProviderContainer c) async {
   t.view.reset();
 }
 
-/// PPE on, the door open, the cause spotted, the blown fuse pulled.
+/// The LT off, locked and tagged; PPE on, the door open; the tester proved,
+/// 0 V across the docket's fuse, proved again; the cause spotted, the blown
+/// fuse pulled.
 Future<void> _toTray(WidgetTester t, M3PillarFuseRound r) async {
+  await _tapAt(t, _geo.ltHit.center); // LT OFF
+  await _tool(t, _L.lockTag);
   await _tool(t, _L.ppe);
   await _tapAt(t, _geo.body.center);
+  await _tool(t, _L.tester);
+  await _tapAt(t, _geo.ltHit.center); // proved on the live side
+  await _tapAt(t, _geo.fuse(r.feeder, r.phase)); // 0 V
+  await _tapAt(t, _geo.ltHit.center); // proved again
   await _tapAt(t, _geo.causeHits(r.cause, r.feeder).first.center);
   await _pump(t, 1800);
   await _tool(t, _L.puller);
   await _tapAt(t, _geo.fuse(r.feeder, r.phase));
+}
+
+/// After the fit: the door shut, the lock and tag off, the LT on (the lights).
+Future<void> _restore(WidgetTester t) async {
+  await _tapAt(t, _geo.openDoorHit.center); // shut
+  await _tool(t, _L.lockTag);
+  await _tapAt(t, _geo.ltHit.center); // LT ON
 }
 
 /// Plays pillar [i] right (the coworker refused on his pillar).
@@ -166,7 +184,7 @@ Future<void> _playRight(WidgetTester t, M3PillarFuseDeal deal, int i) async {
   expect(await _pumpUntil(t, _label(_L.itemBn(M3PillarFuseItem.hrc)), maxMs: 3000), isTrue, reason: 'the tray on pillar $i');
   await _tool(t, _L.itemBn(M3PillarFuseItem.hrc));
   await _pump(t, 600);
-  await _tapAt(t, _geo.openDoorHit.center); // shut
+  await _restore(t);
   await _tool(t, _L.lock);
   await _tool(t, _L.signOff);
   await _pump(t, 1200);
@@ -215,24 +233,129 @@ void main() {
           M3PillarFuseRound(id: 'x', feeder: feeder, phase: phase, cause: M3PillarFuseCause.water, why: M3PillarFuseWhy.hrc, tray: M3PillarFuseItem.values),
         ], callAt: 0));
 
-    test('no PPE in the box is deadly (bare hand or puller); the door shut, nothing happens', () {
+    /// The LT off, locked and tagged, the door open, proved dead live-dead-live.
+    M3PillarFuseRun isolated({bool ppe = true}) {
+      final r = run1()..toggleLt();
+      r.toggleLockTag();
+      if (ppe) r.putPpe();
+      r
+        ..toggleDoor()
+        ..holdTester()
+        ..testLive()
+        ..testPillar()
+        ..testLive()
+        ..holdTester();
+      return r;
+    }
+
+    test('a fuse touched with the LT on is deadly (A5): bare or puller, any fuse, PPE or not; the door shut, nothing happens', () {
       final shut = run1();
       expect(shut.tapFuse(1, 2), isNull);
       final bare = run1()..toggleDoor();
       final m = bare.tapFuse(1, 2);
-      expect(m, _M.noPpe);
+      expect(m, _M.liveFuse);
       expect(m!.deadly, isTrue);
       expect(bare.ended, isTrue);
-      final tool = run1()
+      final dressed = run1()
+        ..putPpe()
         ..toggleDoor()
         ..holdPuller();
-      expect(tool.tapFuse(0, 0), _M.noPpe);
+      expect(dressed.tapFuse(0, 0), _M.liveFuse, reason: 'a healthy fuse, PPE and puller: still live');
+      expect(dressed.ended, isTrue);
+    });
+
+    test('LT off: no lock and tag, no 0 V reading, no proof after are slips, in that order; then the fuse comes out', () {
+      final r = run1()
+        ..toggleLt()
+        ..putPpe()
+        ..toggleDoor()
+        ..holdPuller();
+      expect(r.tapFuse(1, 2), _M.noLockTag);
+      expect(r.toggleLockTag(), isTrue);
+      expect(r.tapFuse(1, 2), _M.noTest);
+      r
+        ..holdTester()
+        ..testLive();
+      expect(r.testPillar(), (false, null));
+      expect(r.deadSeen, isTrue);
+      r.holdPuller();
+      expect(r.tapFuse(1, 2), _M.noReprove);
+      r
+        ..holdTester()
+        ..testLive()
+        ..holdPuller();
+      expect(r.provenDead, isTrue);
+      expect(r.tapFuse(1, 2), isNull);
+      expect(r.slotEmpty, isTrue);
+      expect(r.slips, 3);
+      expect(r.deadly, isNull);
+      expect(r.caught, contains(_L.caughtIsolate));
+      for (final m in [_M.noLockTag, _M.noTest, _M.noReprove, _M.testFirst, _M.onDoorOpen]) {
+        expect(m.deadly, isFalse, reason: m.key);
+      }
+    });
+
+    test('after a proven isolation no PPE is a slip, not deadly (A5)', () {
+      final r = isolated(ppe: false)..holdPuller();
+      final m = r.tapFuse(1, 2);
+      expect(m, _M.noPpe);
+      expect(m!.deadly, isFalse);
+      expect(r.ended, isFalse);
+      expect(r.slips, 1);
+      r.putPpe();
+      expect(r.tapFuse(1, 2), isNull);
+    });
+
+    test('the tester: a 0 V before it is proved is a slip; a live reading is never punished; proving needs it in hand', () {
+      final r = run1()..toggleDoor();
+      expect(r.testLive(), isFalse, reason: 'no tester in hand');
+      r.holdTester();
+      expect(r.testPillar(), (true, null), reason: 'LT on: voltage, no cost');
+      expect(r.slips, 0);
+      expect(r.deadly, isNull);
+      r.toggleLt();
+      expect(r.ltOn, isFalse, reason: 'OFF with the door open is fine');
+      expect(r.testPillar(), (false, _M.testFirst));
+      expect(r.deadSeen, isFalse);
+      expect(r.slips, 1);
+      expect(r.testLive(), isTrue);
+      expect(r.provedBefore, isTrue);
+      expect(r.testPillar(), (false, null));
+      expect(r.deadSeen, isTrue);
+      expect(r.provedAfter, isFalse);
+      expect(r.testLive(), isTrue);
+      expect(r.provedAfter, isTrue);
+      r.holdPuller();
+      expect(r.tester, isFalse, reason: 'one tool in hand');
+    });
+
+    test('the LT switch: lock and tag only when OFF, a locked handle does not move; ON with the door open is a slip; ON voids the proof', () {
+      final r = run1();
+      expect(r.toggleLockTag(), isFalse, reason: 'the LT is on');
+      expect(r.toggleLt(), (true, null));
+      expect(r.ltOn, isFalse);
+      expect(r.toggleLockTag(), isTrue);
+      expect(r.toggleLt(), (false, null), reason: 'locked and tagged');
+      expect(r.ltOn, isFalse);
+      r
+        ..toggleDoor()
+        ..holdTester()
+        ..testLive()
+        ..testPillar();
+      expect(r.deadSeen, isTrue);
+      expect(r.toggleLockTag(), isTrue, reason: 'off again');
+      expect(r.toggleLt(), (false, _M.onDoorOpen));
+      expect(r.ltOn, isFalse, reason: 'it did not go on');
+      expect(r.slips, 1);
+      r.toggleDoor();
+      expect(r.toggleLt(), (true, null));
+      expect(r.ltOn, isTrue);
+      expect(r.deadSeen, isFalse, reason: 'back on: the proof is void');
+      expect(r.provedBefore, isFalse);
     });
 
     test('with PPE: a hand is a slip; a healthy fuse is a slip; the docket\'s fuse comes out', () {
-      final r = run1()
-        ..putPpe()
-        ..toggleDoor();
+      final r = isolated();
       expect(r.tapFuse(1, 2), _M.noPuller);
       r.holdPuller();
       expect(r.tapFuse(1, 1), _M.wrongFuse);
@@ -245,12 +368,18 @@ void main() {
       expect(r.caught, containsAll([_L.caughtPpe, _L.caughtFuse]));
     });
 
-    test('the tray: a strip or a wire is deadly; HRC before the cause is a slip; after it, in', () {
-      M3PillarFuseRun pulled() => run1()
-        ..putPpe()
-        ..toggleDoor()
+    test('the tray: a strip or a wire is deadly; HRC before the cause is a slip; after it, in; the LT back on first is deadly', () {
+      M3PillarFuseRun pulled() => isolated()
         ..holdPuller()
         ..tapFuse(1, 2);
+      final live = pulled()
+        ..toggleDoor()
+        ..toggleLockTag()
+        ..toggleLt();
+      expect(live.ltOn, isTrue);
+      expect(live.trayUp, isTrue);
+      expect(live.fit(M3PillarFuseItem.hrc), _M.liveFuse, reason: 'a new fuse into a live slot');
+      expect(live.ended, isTrue);
       final s = pulled();
       expect(s.fit(M3PillarFuseItem.strip), _M.bodgeStrip);
       expect(s.ended, isTrue);
@@ -301,18 +430,24 @@ void main() {
       }
     });
 
-    test('sign off: not before the fuse is in; door open and unlocked are slips; locked = done', () {
-      final r = run1();
+    test('sign off: not before the fuse is in and the LT on; door open and unlocked are slips; locked = done', () {
+      final r = isolated();
       expect(r.signOff(), isNull);
       expect(r.signedOff, isFalse);
       r
-        ..putPpe()
-        ..toggleDoor()
         ..spot(true)
         ..holdPuller()
         ..tapFuse(1, 2)
         ..fit(M3PillarFuseItem.hrc);
+      expect(r.fitted, isTrue);
+      expect(r.lightsOn, isFalse, reason: 'the LT is still off');
+      expect(r.signOff(), isNull, reason: 'the feeder is still dead');
       expect(r.toggleLock(), isFalse, reason: 'no lock on an open door');
+      expect(r.toggleDoor(), isTrue);
+      expect(r.toggleLockTag(), isTrue);
+      expect(r.toggleLt(), (true, null));
+      expect(r.lightsOn, isTrue);
+      expect(r.toggleDoor(), isTrue, reason: 'opened again');
       expect(r.signOff(), _M.doorOpen);
       expect(r.toggleDoor(), isTrue);
       expect(r.signOff(), _M.noLock);
@@ -346,7 +481,7 @@ void main() {
         expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
         expect(l.contains('পানি'), isFalse, reason: l);
       }
-      expect(_M.all.where((m) => m.deadly).toSet(), {_M.noPpe, _M.bodgeStrip, _M.bodgeWire});
+      expect(_M.all.where((m) => m.deadly).toSet(), {_M.liveFuse, _M.bodgeStrip, _M.bodgeWire});
       expect(_M.all.map((m) => m.key).toSet(), hasLength(_M.all.length));
       for (final m in _M.all) {
         expect(m.key, startsWith('3.7/m3_pillar_fuse/'));
@@ -408,7 +543,11 @@ void main() {
           expect(fuses[i].overlaps(fuses[j]), isFalse, reason: '$i/$j');
         }
         expect(fuses[i].overlaps(g.openDoorHit), isFalse);
+        expect(fuses[i].overlaps(g.ltHit), isFalse);
       }
+      expect(g.ltHit.overlaps(g.openDoorHit), isFalse, reason: 'the LT switch and the open door');
+      expect(g.ltHit.overlaps(g.body), isFalse);
+      expect(g.ltHit.contains(g.ltBox.center), isTrue);
       for (final c in M3PillarFuseCause.values) {
         for (var f = 0; f < 3; f++) {
           for (final h in g.causeHits(c, f)) {
@@ -505,7 +644,7 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('flow: PPE, cause, the docket\'s fuse, HRC, shut and lock; refuse him; right reasons → pass', (t) async {
+    testWidgets('flow: LT off + lock and tag, PPE, live-dead-live, cause, the docket\'s fuse, HRC, shut, LT on, lock; refuse him; right reasons → pass', (t) async {
       final deal = m3PillarFuseDeal(math.Random(7));
       final c = await _open(t, 7);
       for (var i = 0; i < 3; i++) {
@@ -523,21 +662,79 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('a slip (a hand on the fuse) shows its card; the same pillar goes on after it', (t) async {
+    testWidgets('a slip (the LT off, no lock and tag) shows its card; the same pillar goes on after it', (t) async {
       final deal = m3PillarFuseDeal(math.Random(2));
       final r = deal.rounds[0];
       final c = await _open(t, 2);
+      await _tapAt(t, _geo.ltHit.center); // LT OFF
       await _tool(t, _L.ppe);
       await _tapAt(t, _geo.body.center);
       await _tapAt(t, _geo.fuse(r.feeder, r.phase));
       await _pump(t, 600);
       expect(find.byType(MistakeCard), findsOneWidget);
-      expect(find.text(_M.noPuller.textBn), findsOneWidget);
+      expect(find.text(_M.noLockTag.textBn), findsOneWidget);
       await t.tap(find.text(MistakeLines.gotIt));
       await _pump(t, 600);
       expect(find.byType(MistakeCard), findsNothing);
       expect(_label(_L.puller), findsOneWidget, reason: 'the same pillar');
-      expect(c.read(gameSaveProvider).mistakes.single.key, _M.noPuller.key);
+      expect(c.read(gameSaveProvider).mistakes.single.key, _M.noLockTag.key);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the tester shows its reading by the tap; a 0 V before proving it is a slip card', (t) async {
+      final r = m3PillarFuseDeal(math.Random(2)).rounds[0];
+      final c = await _open(t, 2);
+      await _tapAt(t, _geo.body.center);
+      await _tool(t, _L.tester);
+      await _tapAt(t, _geo.fuse(r.feeder, r.phase));
+      expect(find.text(_L.testerLive), findsOneWidget, reason: 'the LT is on: voltage');
+      expect(find.byType(MistakeCard), findsNothing, reason: 'a live reading is never punished');
+      await _pump(t, 2400);
+      await _tapAt(t, _geo.openDoorHit.center); // shut
+      await _tool(t, _L.tester); // put down
+      await _tapAt(t, _geo.ltHit.center); // LT OFF
+      await _tapAt(t, _geo.body.center);
+      await _tool(t, _L.tester);
+      await _tapAt(t, _geo.fuse(r.feeder, r.phase));
+      expect(find.text(_L.testerDead), findsOneWidget);
+      await _pump(t, 600);
+      expect(find.text(_M.testFirst.textBn), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, _M.testFirst.key);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('the LT on with the pillar door open: a slip card; the LT stays off', (t) async {
+      final c = await _open(t, 2);
+      await _tapAt(t, _geo.ltHit.center); // LT OFF
+      await _tapAt(t, _geo.body.center); // open
+      await _tapAt(t, _geo.ltHit.center); // LT ON?
+      await _pump(t, 600);
+      expect(find.text(_M.onDoorOpen.textBn), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.key, _M.onDoorOpen.key);
+      expect(c.read(gameSaveProvider).mistakes.single.deadly, isFalse);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets('no PPE at the fuse after a proven isolation: a slip card, not the freeze (A5)', (t) async {
+      final r = m3PillarFuseDeal(math.Random(2)).rounds[0];
+      final c = await _open(t, 2);
+      await _tapAt(t, _geo.ltHit.center);
+      await _tool(t, _L.lockTag);
+      await _tapAt(t, _geo.body.center);
+      await _tool(t, _L.tester);
+      await _tapAt(t, _geo.ltHit.center);
+      await _tapAt(t, _geo.fuse(r.feeder, r.phase));
+      await _tapAt(t, _geo.ltHit.center);
+      await _tool(t, _L.puller);
+      await _tapAt(t, _geo.fuse(r.feeder, r.phase));
+      await _pump(t, 600);
+      expect(find.byType(FreezeFrame), findsNothing);
+      expect(find.text(_M.noPpe.textBn), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.single.deadly, isFalse);
       expect(t.takeException(), isNull);
       await _close(t, c);
     });
@@ -545,6 +742,7 @@ void main() {
     testWidgets('three slips strike the level out', (t) async {
       final r = m3PillarFuseDeal(math.Random(2)).rounds[0];
       final c = await _open(t, 2);
+      await _tapAt(t, _geo.ltHit.center); // LT OFF, no lock and tag
       await _tool(t, _L.ppe);
       await _tapAt(t, _geo.body.center);
       for (var i = 0; i < 3; i++) {
@@ -574,6 +772,8 @@ void main() {
       expect(await _pumpUntil(t, _label(_L.itemBn(M3PillarFuseItem.hrc)), maxMs: 3000), isTrue);
       await _tool(t, _L.itemBn(M3PillarFuseItem.hrc));
       await _pump(t, 300);
+      expect(find.text(_L.stampLights), findsNothing, reason: 'the LT is still off');
+      await _restore(t);
       expect(find.text(_L.stampLights), findsOneWidget);
       expect(find.byType(CoworkerPeek), findsNothing, reason: 'once a play');
       expect(c.read(gameSaveProvider).mistakes, isEmpty);
@@ -613,7 +813,7 @@ void main() {
       await _toTray(t, r);
       await _tool(t, _L.itemBn(M3PillarFuseItem.hrc));
       await _pump(t, 600);
-      await _tapAt(t, _geo.openDoorHit.center); // shut
+      await _restore(t);
       await _tool(t, _L.lock);
       final lock = t.getCenter(_label(_L.lock));
       final signOff = t.getCenter(_label(_L.signOff));
@@ -641,7 +841,7 @@ void main() {
       expect(hint().showing, isFalse);
       await _pump(t, 9000);
       expect(hint().showing, isTrue, reason: 'stuck at the shut pillar: the hand shows');
-      expect(hint().debugOptions, hasLength(5), reason: 'all four tools and the pillar');
+      expect(hint().debugOptions, hasLength(8), reason: 'all six tools, the pillar and the LT switch');
       for (var i = 0; i < 20; i++) {
         await t.pump(const Duration(milliseconds: 120));
         final f = hint().debugFrame;
@@ -651,13 +851,14 @@ void main() {
       expect(hint().showing, isFalse, reason: 'a touch hides it');
       await _pump(t, 9000);
       expect(hint().showing, isTrue);
-      expect(hint().debugOptions, hasLength(5), reason: 'the three tray items, the pillar and its door');
+      expect(hint().debugOptions, hasLength(6), reason: 'the three tray items, the pillar, its door and the LT switch');
       expect(t.takeException(), isNull);
       await _close(t, c);
     });
 
-    testWidgets('no PPE in the box: the street freezes first, then the card (near-miss)', (t) async {
+    testWidgets('a fuse touched with the LT on (A5): the street freezes first, then the card (near-miss)', (t) async {
       final c = await _open(t, 2);
+      await _tool(t, _L.ppe);
       await _tapAt(t, _geo.body.center);
       await _tool(t, _L.puller);
       await _tapAt(t, _geo.fuse(0, 0));
@@ -668,7 +869,7 @@ void main() {
       expect(find.byType(MistakeCard), findsOneWidget);
       expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
       final s = c.read(gameSaveProvider);
-      expect(s.mistakes.single.key, _M.noPpe.key);
+      expect(s.mistakes.single.key, _M.liveFuse.key);
       expect(s.mistakes.single.deadly, isTrue);
       await _close(t, c);
     });

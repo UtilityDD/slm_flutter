@@ -4,7 +4,8 @@
 // load-break tool), the deal, the option libraries, and the level in the
 // shell: idle perf, the guide first, a full clean play with the coworker
 // refused, slip cards, the deadly freeze (heavy load pulled without the tool),
-// listening = a slip (audit 2026-11-11), a fast pull waits for him, refusing
+// listening = a slip on the fault job and the deadly no-tool pull on the heavy
+// job (owner ruling B1, 2026-11-15), a fast pull waits for him, refusing
 // fits nothing, three slips strike out, the gesture hint.
 import 'dart:async';
 import 'dart:io';
@@ -312,16 +313,14 @@ void main() {
       expect(b.confirm(), (true, null));
       expect(b.caught, contains(M4DoOpenLines.caughtLbt));
       expect(b.clean, isTrue);
-      // His say-so is a slip; nothing on the rod changes, the job goes on.
+      // Owner ruling B1: his say-so ("pull it without the tool") is that
+      // deadly pull, not a slip.
       final c = atFuses(M4DoOpenKind.heavy, head: M4DoOpenHead.loadBreak);
-      expect(c.listenHeavy(), M4DoOpenMistakes.listenedNoTool);
-      expect(c.listenHeavy()!.deadly, isFalse);
-      expect(c.head, M4DoOpenHead.loadBreak);
-      expect(c.ended, isFalse);
-      c
-        ..hook(0)
-        ..turnFace();
-      expect(c.pull(140, 300), (M4DoOpenPull.done, null));
+      expect(c.listenHeavy(), M4DoOpenMistakes.heavyNoTool);
+      expect(c.deadly, M4DoOpenMistakes.heavyNoTool);
+      expect(c.ended, isTrue);
+      expect(c.slips, 0);
+      expect(c.listenHeavy(), isNull, reason: 'nothing more after a death');
     });
 
     test('listening on the fault job is a slip (once a job, and stands for the all-three slip); next() resets the job, keeps the kit', () {
@@ -375,9 +374,7 @@ void main() {
       expect(M4DoOpenLines.intro.length, lessThan(60), reason: 'the intro stays short');
       // Lesson 4.4 point 3: "ধীর গতিতে খুললে আর্কটি দীর্ঘস্থায়ী হতে পারে".
       expect(M4DoOpenLines.slowPull, contains('দীর্ঘস্থায়ী হতে পারে'));
-      for (final m in [M4DoOpenMistakes.listenedTwo, M4DoOpenMistakes.listenedNoTool]) {
-        expect(m.deadly, isFalse, reason: 'listening to him is a slip');
-      }
+      expect(M4DoOpenMistakes.listenedTwo.deadly, isFalse, reason: 'listening on the fault job is a slip');
     });
 
     test('reasons fit, same length, big enough; his choices too', () {
@@ -613,7 +610,7 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('listening to him on the heavy job: a slip, the tool stays on, the job goes on', (t) async {
+    testWidgets('owner ruling B1: listening to him on the heavy job is the deadly pull without the tool — freeze, then the near-miss', (t) async {
       final seed = seedWhere((d) => d.jobs[0].kind == M4DoOpenKind.heavy && d.callAt == 0);
       final deal = m4DoOpenDeal(math.Random(seed));
       final j = deal.jobs[0];
@@ -628,23 +625,14 @@ void main() {
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
       await tapReasonProceed(t);
-      expect(await _pumpUntil(t, find.text(MistakeLines.slipHead), maxMs: 3000), isTrue, reason: 'listening is a slip');
-      expect(find.byType(FreezeFrame), findsNothing);
-      var s = c.read(gameSaveProvider);
-      expect(s.mistakes.single.key, M4DoOpenMistakes.listenedNoTool.key);
-      expect(s.mistakes.single.deadly, isFalse);
-      await t.tap(find.text(MistakeLines.gotIt));
-      await _pump(t, 800);
-      for (var p = 0; p < 3; p++) {
-        await _pullOpen(t, p);
-        expect(find.byType(FreezeFrame), findsNothing, reason: 'the load-break tool is still on');
-        expect(find.text(MistakeLines.slipHead), findsNothing);
-      }
-      await t.tap(find.text(M4DoOpenLines.allOpen));
-      await _pump(t, 400);
-      await _reason(t, M4DoOpenLines.heavyWhy);
-      s = c.read(gameSaveProvider);
-      expect(s.mistakes, hasLength(1));
+      expect(await _pumpUntil(t, find.byType(FreezeFrame), maxMs: 3000), isTrue, reason: 'listening plays out as the deadly pull');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, M4DoOpenMistakes.heavyNoTool.key);
+      expect(s.mistakes.single.deadly, isTrue);
       await _close(t, c);
     });
 

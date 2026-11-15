@@ -59,7 +59,7 @@ import 'spoken_once.dart';
 //
 // Deadly: climbing to work without both earth sets on — also by listening to
 // the coworker's "এক দিকের আর্থ খুলে কাজ সেরে ফেলো" while up the pole (the
-// act he pushes is this deadly; MODULE4_LADDER.md row 21 — owner to confirm).
+// act he pushes is this deadly; MODULE4_LADDER.md row 21; owner ruling B1, 2026-11-15).
 // Slips: a step out of order (test before the permit, earth before the
 // test), climbing without the harness, a tidy place "fixed", LT before HT, a
 // wrong fix (one per place), the earth off while still up, looking over the

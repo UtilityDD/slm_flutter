@@ -4,7 +4,8 @@
 // helmet + harness → climb; up a live line or with one earth = deadly), the
 // deal, the reason libraries, and the level in the shell: idle perf, the
 // guide first, a full clean play with the coworker refused, a slip card that
-// keeps the pole, three slips, the deadly freeze (climbing a live line;
+// keeps the pole, three slips, the deadly freezes (an earth on the live
+// line, B8; climbing a live line;
 // listening to him), refusing him by putting on the second earth; he comes
 // even on a fast play; the tool row never shows the safe order; the reason
 // deck always holds a myth on the same topic; old mistake keys still resolve;
@@ -275,11 +276,23 @@ void main() {
       expect(_M.wrongFitting.deadly, isFalse);
     });
 
-    test('earth: not on a live line, not before the tester; then both sides', () {
+    test('owner ruling B8: an earth on the live line (no PTW / shutdown) is deadly', () {
       final r = run1(M4InsulatorPrepKind.disc)
         ..tapInsulator(1)
         ..holdEarth();
-      expect(r.tapEarth(0), _M.earthLive);
+      final m = r.tapEarth(0);
+      expect(m, _M.earthLive);
+      expect(m!.deadly, isTrue);
+      expect(r.deadly, _M.earthLive);
+      expect(r.ended, isTrue);
+      expect(r.earths, isEmpty);
+      expect(r.slips, 0);
+    });
+
+    test('earth: not before the tester; then both sides', () {
+      final r = run1(M4InsulatorPrepKind.disc)
+        ..tapInsulator(1)
+        ..holdEarth();
       expect(r.test(), isTrue, reason: 'live before the PTW');
       expect(r.tested, isFalse);
       r.takePtw();
@@ -377,7 +390,7 @@ void main() {
         expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
         expect(l.contains('পানি'), isFalse, reason: l);
       }
-      expect(_M.all.where((m) => m.deadly), [_M.climbLive, _M.earthBoth]);
+      expect(_M.all.where((m) => m.deadly), [_M.climbLive, _M.earthBoth, _M.earthLive]);
       expect(_M.all.map((m) => m.key).toSet(), hasLength(_M.all.length));
       for (final m in _M.all) {
         expect(m.key, startsWith('4.1/m4_insulator_prep/'));
@@ -589,6 +602,26 @@ void main() {
       final save = c.read(gameSaveProvider);
       expect(save.mistakes.single.key, _M.climbLive.key);
       expect(save.mistakes.single.deadly, isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('owner ruling B8: an earth on the live line: the scene freezes first, then the card', (t) async {
+      final deal = m4InsulatorPrepDeal(math.Random(2));
+      final s = deal.sites[0];
+      final c = await _open(t, 2);
+      await _tapAt(t, _geo.spotCentre(s.kind, s.faulty));
+      await _tool(t, _L.earth);
+      await _tapAt(t, _earthAt(0));
+      await _pump(t, 200);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final save = c.read(gameSaveProvider);
+      expect(save.mistakes.single.key, _M.earthLive.key);
+      expect(save.mistakes.single.deadly, isTrue);
+      expect(t.takeException(), isNull);
       await _close(t, c);
     });
 

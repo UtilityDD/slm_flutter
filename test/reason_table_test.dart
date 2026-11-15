@@ -2,6 +2,9 @@
 // (full_scene_frame.dart): from putOnTable until the deck opens the scene and
 // the overlays take no touch (no double ◆, no false slip), the header's close
 // stays live; the deck itself and, after proceed, the scene work again.
+// Since 2026-11-15 askReason opens the deck the moment it is called (no wait
+// for the praise line): the table window lasts only as long as the level's own
+// beat between putOnTable and askReason.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -112,23 +115,28 @@ void main() {
     expect((s.sceneTaps, s.overlayTaps), (1, 1));
     expect(s.tableBusy, isFalse);
 
-    s.right();
+    // The ◆ go on the table; the level's own beat runs before it asks.
+    s.putOnTable(10);
     await t.pump();
     expect(s.tableHolding, isTrue);
     expect(s.tableBusy, isTrue);
     await t.tapAt(const Offset(180, 600));
     await t.tap(find.text('A'), warnIfMissed: false);
     await t.pump();
-    expect((s.sceneTaps, s.overlayTaps), (1, 1), reason: 'praise window swallows the second tap');
+    expect((s.sceneTaps, s.overlayTaps), (1, 1), reason: 'the table window swallows the second tap');
     await t.tap(find.byIcon(Icons.close_rounded));
     expect(s.closes, 1, reason: 'the header close still works');
+    await t.pump(const Duration(milliseconds: 600));
+    expect(s.tableHolding, isTrue, reason: 'the hold lasts until the deck opens');
 
-    // The deck opens after praise + 650 ms: it is live, the scene still waits.
-    await t.pump(const Duration(milliseconds: 1400));
-    await t.pump(const Duration(milliseconds: 100));
-    expect(s.reasonOpen, isTrue);
+    // askReason opens the deck at once (no praise wait): it is live, the scene still waits.
+    unawaited(s.askReason(deal: () => const [_wrong1, _right, _wrong2], question: 'কেন?'));
+    expect(s.reasonOpen, isTrue, reason: 'the deck opens the moment askReason is called');
     expect(s.tableHolding, isFalse);
     expect(s.tableBusy, isTrue);
+    await t.pump();
+    expect(find.byType(ChoiceDeck), findsOneWidget);
+    await waitChoiceDeck(t);
     await t.tap(find.text(_right.textBn));
     expect(s.scored, 0, reason: 'a tap only opens the card');
     expect(await confirmChoice(t), isTrue);
@@ -175,12 +183,15 @@ void main() {
     await t.pumpWidget(const ProviderScope(child: MaterialApp(home: _Probe())));
     final s = t.state<_ProbeState>(find.byType(_Probe));
     s.putOnTable(10);
-    unawaited(s.askReason(deal: () => const [_wrong1, _right, _wrong2], question: 'কেন?', stillValid: () => false));
     await t.pump();
     expect(s.tableHolding, isTrue);
+    unawaited(s.askReason(deal: () => const [_wrong1, _right, _wrong2], question: 'কেন?', stillValid: () => false));
+    expect(s.tableHolding, isFalse, reason: 'the checks run at call time: the hold ends at once');
+    expect(s.reasonOpen, isFalse, reason: 'no stale deck');
     await t.pump(const Duration(milliseconds: 1500));
     expect(s.tableHolding, isFalse);
     expect(s.reasonOpen, isFalse);
+    expect(find.byType(ChoiceDeck), findsNothing);
     await t.tapAt(const Offset(180, 400));
     expect(s.sceneTaps, 1);
     await t.pumpWidget(const SizedBox());

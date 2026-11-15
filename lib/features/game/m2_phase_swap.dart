@@ -23,6 +23,7 @@ import 'level_frame.dart';
 import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
 import 'level_result_parts.dart';
 import 'level_shell.dart';
+import 'm2_phase_meter.dart' show PmMistakes;
 import 'm2_phase_swap_world.dart';
 import 'mistake_kit.dart';
 import 'reason_table.dart';
@@ -60,9 +61,11 @@ import 'spoken_once.dart';
 //
 // Deadly: a screwdriver on the terminals with the main switch ON (also by
 // listening to the coworker, "লাইন চালু রেখেই দুটো তার বদলে দাও!" — the act he
-// pushes is itself this level's deadly, MODULE2_LADDER.md step 24; owner to
-// confirm against playbook row 8, listening = slip). Slips:
-// clipping the meter without gloves, a probe on the earth bar, misreading the
+// pushes is itself this level's deadly, MODULE2_LADDER.md step 24; owner
+// ruling B1, 2026-11-15, playbook row 8); clipping the meter bare-handed on
+// live terminals (the main switch ON; owner ruling B4, 2026-11-15: deadly in
+// every level, the m2_phase_meter card reused). Slips: clipping the meter
+// without gloves on dead terminals (switch OFF), a probe on the earth bar, misreading the
 // meter, starting the pump untested / reversed / not tested again after the
 // swap, the swap without the lock and tag or without proving dead, a swap
 // without a reading first, swapping a sequence the meter showed right.
@@ -256,6 +259,11 @@ abstract final class PhaseMistakes {
     textBn: 'বন্ধ করার পর টেস্টারে দেখে নিন টার্মিনাল সত্যিই মৃত — তবেই হাত দিন।',
     art: _loto,
   );
+  /// A bare-hand clip on live terminals (switch ON): deadly in every level
+  /// (owner ruling B4, 2026-11-15) — the m2_phase_meter card, same key.
+  static const bareLive = PmMistakes.bareLive;
+
+  /// A bare-hand clip on dead terminals (switch OFF): a slip.
   static const noGloves = DoMistake(
     key: '2.8/phase/meter-no-gloves',
     textBn: 'ফেজ সিকোয়েন্স মিটার লাইভ লাইনে লাগে — আগে পুরো পিপিই, বিশেষ করে ইনসুলেটেড গ্লাভস।',
@@ -305,7 +313,7 @@ abstract final class PhaseMistakes {
     lessonPoint: 2,
   );
 
-  static const all = [swapLive, noLock, noProve, noGloves, probeEarth, misread, untested, reverseRun, noRetest, swapUnread, needlessSwap];
+  static const all = [swapLive, bareLive, noLock, noProve, noGloves, probeEarth, misread, untested, reverseRun, noRetest, swapUnread, needlessSwap];
 }
 
 @immutable
@@ -417,7 +425,7 @@ class PhaseRun {
       case PhaseTool.none:
         return null;
       case PhaseTool.meter:
-        if (!gloves) return _slip(PhaseMistakes.noGloves);
+        if (!gloves) return switchOn ? deadly = PhaseMistakes.bareLive : _slip(PhaseMistakes.noGloves);
         probes.add(i);
         if (probes.length == 3 && switchOn) readingUp = true;
         return null;

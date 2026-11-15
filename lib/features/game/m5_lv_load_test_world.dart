@@ -13,6 +13,10 @@ import 'package:flutter/material.dart';
 // board; the analogue tester (a widget, see the page) stands on the veranda
 // floor with its two leads.
 //
+// With the supply off the street's LT line is shut down at the DTR / pillar
+// way: a red shutdown tag hangs on the pole (a house cut-out alone would leave
+// the pole-end joints live — WBSEDCL Safety Manual 2025 3.2).
+//
 // No hint is drawn: the joints look alike, nothing on the wall is ringed.
 // After a joint is tightened its nut shows bright (feedback, after the act).
 //
@@ -128,7 +132,8 @@ class M5LvLoadGeo {
 class M5LvLoadRig {
   const M5LvLoadRig({required this.supplyOn, required this.tight, required this.wall, required this.lit});
 
-  /// The supply is on (the windows glow).
+  /// The supply is on (the windows glow). Off = the LT line shut down at the
+  /// DTR / pillar way (the red tag on the pole).
   final bool supplyOn;
 
   /// The joints tightened this call (their nuts show bright).
@@ -235,6 +240,15 @@ class M5LvLoadWorldPainter extends CustomPainter {
     // The pole-end joints (alike; bright once tightened).
     for (final j in [M5LvLoadJoint.poleP, M5LvLoadJoint.poleN]) {
       _clamp(c, g.jointAt(j), rig.tight.contains(j));
+    }
+    // The LT line shut down at the DTR / pillar way: its red tag on the pole.
+    if (!rig.supplyOn) {
+      final at = Offset(M5LvLoadGeo.poleX, g.wireN + 46);
+      c.drawLine(at, at.translate(6, 10), Paint()
+        ..color = const Color(0xFFEDE6D6)
+        ..strokeWidth = 1);
+      c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(at.dx + 1, at.dy + 10, 14, 20), const Radius.circular(2)), Paint()..color = const Color(0xFFD92B2B));
+      c.drawCircle(Offset(at.dx + 8, at.dy + 14), 1.6, Paint()..color = const Color(0xFFEDE6D6));
     }
   }
 

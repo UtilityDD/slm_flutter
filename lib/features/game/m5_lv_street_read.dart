@@ -57,8 +57,10 @@ import 'spoken_once.dart';
 // holdForCoworker): the lesson's myth 1 in his mouth. Listening = slip (R29).
 //
 // Content: lesson 5.5 points 1–3 and myth 1 only; the voltage numbers are
-// illustrative (bands far apart), the LTDB stands in for the LT bushing (no
-// climbing a live DTR), and the remedies for a long line / thin wire / one
+// illustrative (bands far apart), the LTDB incoming stands in for the LT
+// bushing (ruling M5-15(c): the bushing's own cable, no climbing a live DTR;
+// the level says 'এলটিডিবি-র ইনকামিং', and its labels are Bangla — a
+// lineman's confirmation of the stand-in is still open), and the remedies for a long line / thin wire / one
 // heavy phase are reports only (not in 5.5) — all flagged to the owner.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
@@ -115,8 +117,9 @@ abstract final class M5LvLines {
   static const scopeMany = 'অনেক বাড়ি';
   static const decide = 'সিদ্ধান্ত';
   static const notebook = 'খাতা';
-  static const ltdbLabel = 'LTDB';
-  static String terminalLabel(int ph) => 'LTDB ${_phaseNames[ph]}';
+  // Ruling M5-15(c): the LTDB incoming (the bushing's own cable), in Bangla.
+  static const ltdbLabel = 'এলটিডিবি ইনকামিং';
+  static String terminalLabel(int ph) => '$ltdbLabel ${_phaseNames[ph]}';
   static String houseLabel(int h) => 'বাড়ি ${h + 1}';
 
   // The neighbours (device voice).
@@ -133,7 +136,7 @@ abstract final class M5LvLines {
     'পাশের ফেজ থেকে আলাদা লাইন টেনে দিই',
     'কোম্পানিকে বলি বেশি ভোল্টেজ পাঠাতে',
   ];
-  static const routeAreaRight = ['আগে ট্রান্সফরমারের এলটি দিকে মাপি', 'এলটিডিবি-তে তিন ফেজের ভোল্টেজ মাপি'];
+  static const routeAreaRight = ['আগে ট্রান্সফরমারের এলটি দিকে মাপি', 'এলটিডিবি-র ইনকামিং-এ তিন ফেজ মাপি'];
   static const routeAreaWrong = [
     'ফোনের বাড়ির জয়েন্ট টাইট দিয়ে ফিরি',
     'ফোনের বাড়ির মিটারটাই বদলে দিয়ে আসি',
@@ -145,7 +148,7 @@ abstract final class M5LvLines {
   // The LTDB decision deck. 31–40 letters.
   static const decideText = <M5LvDecide, List<String>>{
     M5LvDecide.okLine: ['তিন ফেজই ঠিক — এবার লাইনে মেপে দেখি', 'ট্রান্সফরমার ঠিক, লাইনের পয়েন্টে মাপি'],
-    M5LvDecide.lowDocket: ['ট্রান্সফরমারেই কম — ওভারলোড-ট্যাপের ডকেট', 'এলটিডিবি-তেই কম, ওভারলোড ও ট্যাপের ডকেট'],
+    M5LvDecide.lowDocket: ['ট্রান্সফরমারেই কম — ওভারলোড-ট্যাপের ডকেট', 'ইনকামিং-এই কম — ওভারলোড ও ট্যাপের ডকেট'],
     M5LvDecide.liveTap: ['চালু অবস্থাতেই ট্যাপ এক ঘর ঘুরাই', 'লাইন চালু রেখেই ট্যাপ এক ঘর ঘুরিয়ে দিই'],
     M5LvDecide.company: ['কোম্পানিই কম পাঠাচ্ছে, ফিরে যাই', 'ওপর থেকেই কম আসছে, কিছু করার নেই'],
   };

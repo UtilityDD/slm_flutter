@@ -24,6 +24,10 @@ import 'learn_board_models.dart';
 ///  * horn: the arc rises with the hot air and, as the gap between the horns
 ///    widens, goes out by itself; it quenches arcs poorly — dangerous on a big
 ///    fault, less reliable than a DO fuse.
+/// Round "three" carries a written note (never spoken) on its right-reason
+/// card: a normal WBSEDCL DTR has an AB switch + HG fuses, not DO fuses
+/// (owner answer 2b, 2026-11-15, OWNER_DECISIONS_M5-10 "Module 6 owner
+/// answers" item 2; DRAFT wording, the owner gives the final Bangla).
 /// The rival's myth is the lesson's first myth buster, word for word.
 const learnBoardPack34 = LearnBoardPack(
   lessonId: '3.4',
@@ -35,6 +39,7 @@ const learnBoardPack34 = LearnBoardPack(
     LearnBoardSlot(
       id: 'three',
       promptBn: 'থ্রি-ফেজের একটা ডিও ফিউজ উড়েছে — এবার কী করবেন?',
+      noteBn: 'কিছু বিদ্যুৎ সংস্থা DTR-এ ডিও ফিউজ লাগায়; WBSEDCL-এর সাধারণ DTR-এ থাকে AB সুইচ আর HG (হর্ন গ্যাপ) ফিউজ।',
       options: [
         LearnBoardOption(
           id: 'open2',

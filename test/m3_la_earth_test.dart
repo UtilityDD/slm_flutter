@@ -150,9 +150,21 @@ Future<void> _pathDone(WidgetTester t, int seed) async {
   await _tap(t, L.spotLabel(d.cut), ms: 600);
   expect(find.byType(CoworkerPeek), findsOneWidget);
   expect(find.text(L.pathAsk), findsNothing);
-  await _pickRight(t, L.coworker.right);
-  await _pump(t, 2500);
-  expect(find.text(L.pathAsk), findsWidgets);
+  // Refusing him leads straight into the reason deck (no gap between the two
+  // decks), so wait for the reason cards rather than for his deck to close.
+  await waitChoiceDeck(t);
+  final refuse = _onScreen(L.coworker.right);
+  expect(refuse, hasLength(1), reason: L.coworker.right.first);
+  await t.tap(refuse.single, warnIfMissed: false);
+  await confirmChoice(t);
+  for (var ms = 0; ms < 4000 && _onScreen(L.pathRight).isEmpty; ms += 50) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+  await waitChoiceDeck(t);
+  expect(find.text(L.pathAsk), findsWidgets, reason: 'the reason comes once he is answered');
+  await _pump(t, 900);
+  expect(find.byType(CoworkerPeek), findsNothing, reason: 'he has gone');
+  expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the reason deck stays open');
   await _pickRight(t, L.pathRight);
   await _pump(t, 3000);
 }
@@ -187,7 +199,7 @@ void main() {
       expect(r.stage, 1);
     });
 
-    test('round 2: both faults tagged; a tag on a sound spot is a slip (once per spot); listening is a slip', () {
+    test('round 2: both faults tagged; a tag on a sound spot is a slip (once per spot)', () {
       final d = _deal(5);
       final r = M3LaEarthRun(d)..pickLa(d.badLa);
       final healthy = d.spots.where((s) => !d.faults.containsKey(s)).toList();
@@ -205,12 +217,23 @@ void main() {
       expect(r.look(d.cut), M3LaEarthFault.cut);
       expect(r.look(d.cut), isNull, reason: 'already tagged');
       expect(r.stage, 1);
-      expect(r.listened(), M.smallCut);
-      expect(r.slips, 4);
-      expect(r.ended, isFalse, reason: 'equipment damage, not deadly');
       expect(r.look(d.loose), M3LaEarthFault.loose);
       expect(r.stage, 2);
       expect(r.tag(healthy.last).mistake, isNull, reason: 'the round is over');
+    });
+
+    test('listening to him is deadly: the cut lead left in service (one earth rule, 2026-11-15)', () {
+      final d = _deal(5);
+      final r = M3LaEarthRun(d)
+        ..pickLa(d.badLa)
+        ..look(d.cut);
+      expect(r.listened(), M.smallCut);
+      expect(M.smallCut.deadly, isTrue, reason: 'a broken earth path = deadly');
+      expect(r.deadly, M.smallCut);
+      expect(r.ended, isTrue);
+      expect(r.passed, isFalse);
+      expect(r.slips, 0, reason: 'deadly, not a slip');
+      expect(r.look(d.loose), isNull, reason: 'the play is over');
     });
 
     test('listening after the play has ended costs nothing more', () {
@@ -246,7 +269,7 @@ void main() {
         expect(r.tap(I.replace).mistake, M.liveLa);
         expect(r.ended, isTrue);
       }
-      expect(M.all.where((m) => m.deadly), [M.liveLa]);
+      expect(M.all.where((m) => m.deadly), [M.smallCut, M.liveLa]);
     });
 
     test('slips: test or earth before the docket, earth before the test, work before the earth, no harness up the pole', () {
@@ -516,7 +539,7 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('the coworker on a fast play: both faults at once, the reason waits for him; listening is a slip', (t) async {
+    testWidgets('the coworker on a fast play: both faults at once, the reason waits for him; listening is deadly', (t) async {
       const seed = 9;
       final d = _deal(seed);
       final c = await _open(t, seed);
@@ -535,16 +558,17 @@ void main() {
       expect(wrong, isNotEmpty);
       await t.tap(wrong.first, warnIfMissed: false);
       await confirmChoice(t);
-      await _pump(t, 900);
-      expect(find.byType(FreezeFrame), findsNothing);
-      expect(find.text(MistakeLines.slipHead), findsOneWidget);
-      expect(c.read(gameSaveProvider).mistakes.single.key, M.smallCut.key);
-      await t.tap(find.text(MistakeLines.gotIt));
-      await _pump(t, 2200);
-      expect(find.text(L.pathAsk), findsWidgets);
-      await _pickRight(t, L.pathRight);
-      await _pump(t, 2000);
-      expect(find.byType(CoworkerPeek), findsNothing, reason: 'once per play');
+      await _pump(t, 600);
+      expect(find.byType(FreezeFrame), findsOneWidget, reason: 'the cut lead left live: frozen first');
+      expect(find.byKey(const ValueKey('zap')), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pump(t, 3500);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, M.smallCut.key);
+      expect(s.mistakes.single.deadly, isTrue);
+      expect(find.text(L.pathAsk), findsNothing, reason: 'the play is over');
       await _close(t, c);
     });
 

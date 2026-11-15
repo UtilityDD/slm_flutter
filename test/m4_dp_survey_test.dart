@@ -678,7 +678,11 @@ void main() {
       expect(c.read(gameSaveProvider).mistakes.single.key, M4DpSurveyMistakes.missed(first).key);
       await t.tap(find.text(MistakeLines.gotIt));
       expect(await _pumpUntil(t, find.byKey(const ValueKey('why-deck'))), isTrue, reason: 'on to the reason');
+      // The why-deck opens at once; his peek's 900 ms exit may still be on
+      // screen. Past it, he must be gone and must not come back.
+      await _pump(t, 1000);
       expect(find.byType(CoworkerPeek), findsNothing, reason: 'once a play');
+      expect(find.byKey(const ValueKey('why-deck')), findsOneWidget, reason: 'he never cuts the reason short');
       await _close(t, c);
     });
 

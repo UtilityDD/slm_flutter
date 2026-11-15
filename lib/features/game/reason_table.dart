@@ -21,11 +21,21 @@ import 'learn_feedback_lines.dart';
 // proceed button; the level moves only when the player taps proceed.
 // A wrong reason is not a strike; the field mistakes are the strikes.
 //
-// From [ReasonTable.putOnTable] until the deck opens (the praise line + a
-// breath) the scene takes no input: [FullSceneFrame] finds this mixin above it
-// and shields its scene and overlays (the header's close and mute stay live).
-// Levels gate their own handlers on [ReasonTable.tableBusy] as well, so a
-// second tap in that window can never score twice or slip.
+// Timing (owner, 2026-11-15: the "কেন?" cards come at once, as on the Learn
+// boards): [ReasonTable.askReason] deals the cards the moment it is called and
+// they are live at once (no wait for the praise line, no breath). The praise
+// line (Subrata's voice) and then the question play in the voice queue over
+// the open deck; a tap on a reason card cuts them (the level's hush), and the
+// question is never spoken once a card was picked or the deck closed.
+//
+// The table window: from [ReasonTable.putOnTable] until [askReason] opens the
+// deck (only the level's own beat between the two, e.g. a stamp or a dwell)
+// the scene takes no input: [FullSceneFrame] finds this mixin above it and
+// shields its scene and overlays (the header's close and mute stay live).
+// Levels gate their own handlers on [ReasonTable.tableBusy] (table window +
+// open deck) as well, so a second tap can never score twice or slip. The
+// careless coworker never comes while [tableBusy] (coworker_moment.dart): a
+// visit due in this time waits until the deck has closed ([proceedReason]).
 
 /// The reason pays what waited on the table; after a wrong reason burned it,
 /// the right one still pays 5 (the level 1 rule).
@@ -52,8 +62,11 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   int _burnAmt = 0;
   int _burnTok = 0;
   var reasonOpen = false;
-  /// Praise window: the ◆ is on the table, the deck is not up yet.
+  /// Table window: the ◆ is on the table, the deck is not up yet.
   var _tableHold = false;
+  /// Bumped by every table/pick/proceed: a praise line that ends after the
+  /// player moved on never brings in a stale question.
+  int _askTok = 0;
   var _reasonBusy = false;
   var _reasonRetry = false;
   List<ChoiceOption> _reasonOpts = const [];
@@ -68,8 +81,9 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// True while the zoomed proceed card is up (tests can wait on this).
   bool get reasonAwaitingProceed => _reasonReveal;
 
-  /// The praise window: from [putOnTable] until the reason deck opens. The
-  /// scene must take no input now ([FullSceneFrame] shields it by itself).
+  /// The table window: from [putOnTable] until [askReason] opens the deck
+  /// (which it does at once, without waiting for the praise). The scene must
+  /// take no input now ([FullSceneFrame] shields it by itself).
   bool get tableHolding => _tableHold && !reasonEnded;
 
   /// A right move is being rewarded: from [putOnTable] until the reason deck
@@ -80,6 +94,7 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// A right move: its ◆ go on the table (call inside the level's setState
   /// or on its own — it sets state).
   void putOnTable(int amount) {
+    _askTok++;
     setState(() {
       tablePending = amount;
       _tableHold = true;
@@ -92,16 +107,17 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     });
   }
 
-  /// Praise, then the reason cards are dealt and [question] is asked.
-  /// [stillValid]: false when the level moved on meanwhile.
+  /// The reason cards are dealt now and are live at once; the praise line
+  /// and then [question] follow in the voice queue (not awaited: the returned
+  /// future completes as soon as the deck is up). [stillValid]: false when
+  /// the level moved on (then no deck opens and the table window ends).
   Future<void> askReason({required List<ChoiceOption> Function() deal, required String question, bool Function()? stillValid}) async {
-    await reasonSay([_praise.next().shownBn], mood: GuideMood.celebrate);
-    await Future<void>.delayed(const Duration(milliseconds: 650));
     if (!mounted) return;
     if (reasonEnded || reasonOpen || (stillValid != null && !stillValid())) {
       if (_tableHold) setState(() => _tableHold = false);
       return;
     }
+    final tok = ++_askTok;
     setState(() {
       _reasonOpts = deal();
       _tableHold = false;
@@ -111,7 +127,15 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       _reasonPicked = null;
     });
     if (!reasonMuted) unawaited(ZlFx.cue('sounds/learn/card_deal_a.ogg', volume: 0.6, muted: false));
-    unawaited(reasonSay([question]));
+    unawaited(_askVoice(tok, _praise.next().shownBn, question));
+  }
+
+  /// Praise, then the question, over the open deck: the question only while
+  /// this deck still waits for its first pick.
+  Future<void> _askVoice(int tok, String praise, String question) async {
+    await reasonSay([praise], mood: GuideMood.celebrate);
+    if (!mounted || tok != _askTok || !reasonOpen || _reasonReveal || reasonEnded) return;
+    await reasonSay([question]);
   }
 
   Offset? _tokenCentre() {
@@ -123,6 +147,7 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// A reason card: the right one pays the table, a wrong one burns it.
   Future<void> pickReason(ChoiceOption opt, Offset origin) async {
     if (!reasonOpen || _reasonBusy || reasonEnded || _reasonReveal || _reasonWrong.contains(opt.textBn)) return;
+    _askTok++;
     reasonHush();
     if (!opt.correct) {
       HapticFeedback.mediumImpact();
@@ -167,6 +192,7 @@ mixin ReasonTable<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// Allowed even while praise still plays (cuts the line and moves on).
   void proceedReason() {
     if (!_reasonReveal || reasonEnded) return;
+    _askTok++;
     reasonHush();
     HapticFeedback.selectionClick();
     if (!reasonMuted) unawaited(ZlFx.cue('sounds/intro/click.ogg', volume: 0.55, muted: false));

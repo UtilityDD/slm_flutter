@@ -395,8 +395,11 @@ void main() {
       final c = await _open(t, seed);
       await t.tap(_tools.at(d.rounds[0].tools.indexOf(LongTool.hotStick)), warnIfMissed: false);
       await t.pump(const Duration(milliseconds: 150));
-      expect(find.byType(ChoiceDeck), findsNothing, reason: 'still the praise window');
-      expect(find.text(ToolTipLines.shutdown), findsNothing, reason: 'no control in the praise window');
+      // The reason deck opens at once (2026-11-15); the ◆ wait on the table.
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the reason deck is up at once');
+      expect(find.text(ToolTipLines.shutdown), findsNothing, reason: 'no control while the ◆ waits');
+      await waitChoiceDeck(t);
+      expect(find.text(ToolTipLines.shutdown), findsNothing, reason: 'nor while the reason cards are open');
       await _pickRight(t, ToolTipLines.toolRight);
       await _pump(t, 3000);
       expect(find.text(ToolTipLines.shutdown), findsOneWidget, reason: 'after the reason, the kite');

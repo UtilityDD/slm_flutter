@@ -61,13 +61,16 @@ export 'm3_sld_isolate_world.dart' show M3SldIsolateKind, M3SldIsolatePoint;
 //
 // Deadly: an isolator opened while its breaker is still ON (on load); the work
 // started on a live section — above all with only one side opened on a ring
-// that is closed today (backfeed). Slips: the wrong feeder's breaker, the DO
-// fuse for the line, a tester that finds the backfeed, the earth before
-// proving dead, the work without a test / without earth / with the NO point
+// that is closed today (backfeed); the earth put on a section that is still
+// live (owner ruling B8, 2026-11-15: earth on a live line is deadly
+// everywhere). Slips: the wrong feeder's breaker, the DO fuse for the line, a
+// tester that finds the backfeed, the earth on a dead section before proving
+// it dead, the work without a test / without earth / with the NO point
 // untagged / with an isolation point on the map still closed (only a breaker
-// open, or the ring's tie left closed today), and listening to the coworker
-// ("এলাকা আমার মুখস্থ, ম্যাপ লাগবে না" — playbook row 8; the act he pushes,
-// work on the backfed section, stays deadly when the player then does it).
+// open, or the ring's tie left closed today). Listening to the coworker
+// ("এলাকা আমার মুখস্থ, ম্যাপ লাগবে না") is the work he pushes: deadly
+// (backfeedWork / liveWork) while the section is live, a slip only once it is
+// already dead (owner ruling B1, 2026-11-15; playbook row 8).
 // Opening the other feeder's breaker on an open ring is not needed: it costs
 // the docket's thorough bonus and the play's quick (third) star, with no word
 // from the guide.
@@ -248,6 +251,14 @@ abstract final class M3SldIsolateMistakes {
     deadly: true,
     lessonPoint: 2,
   );
+  /// The earth on a section still live (owner ruling B8, 2026-11-15).
+  static const earthLive = DoMistake(
+    key: '3.10/m3_sld_isolate/earth-live',
+    textBn: 'সাবধান, লাইন এখনও চালু! ম্যাপ দেখে সবকটি আইসোলেশন পয়েন্ট খুলে, টেস্টারে ডেড প্রমাণ করে তবেই আর্থ লাগান।',
+    art: _back,
+    deadly: true,
+    lessonPoint: 2,
+  );
   static const wrongFeeder = DoMistake(
     key: '3.10/m3_sld_isolate/wrong-feeder',
     textBn: 'ভুল ফিডার! ডকেটের ফিডারের নাম ম্যাপে মিলিয়ে সেই ফিডারের ব্রেকারই খুলুন।',
@@ -300,7 +311,8 @@ abstract final class M3SldIsolateMistakes {
     lessonPoint: 2,
   );
 
-  /// Listening to "এলাকা আমার মুখস্থ" (playbook row 8: a slip; lesson myth 1).
+  /// Listening to "এলাকা আমার মুখস্থ" on a section already dead (playbook
+  /// row 8: a slip; lesson myth 1). On a live section it is the deadly work.
   static const listened = DoMistake(
     key: '3.10/m3_sld_isolate/listened-memory',
     textBn: 'মুখস্থের ভরসায় নয়! রিং ফিডারে উল্টো দিক থেকেও বিদ্যুৎ আসে — ম্যাপে সব সোর্স দেখে বিচ্ছিন্ন করুন।',
@@ -309,7 +321,7 @@ abstract final class M3SldIsolateMistakes {
   );
 
   static List<DoMistake> get all =>
-      const [abOnLoad, backfeedWork, liveWork, wrongFeeder, doFuse, backfeedTest, noTest, earthUnproven, noEarth, noTag, notIsolated, listened];
+      const [abOnLoad, backfeedWork, liveWork, earthLive, wrongFeeder, doFuse, backfeedTest, noTest, earthUnproven, noEarth, noTag, notIsolated, listened];
 }
 
 @immutable
@@ -472,7 +484,10 @@ class M3SldIsolateRun {
   /// The portable earth on the section.
   DoMistake? earth() {
     if (!_open || earthed) return null;
-    if (!proved || live) return _slip(M3SldIsolateMistakes.earthUnproven);
+    // On a live section the earth is deadly (B8); on a dead one not yet
+    // proven, a slip.
+    if (live) return deadly = M3SldIsolateMistakes.earthLive;
+    if (!proved) return _slip(M3SldIsolateMistakes.earthUnproven);
     earthed = true;
     _tag(M3SldIsolateLines.caughtEarth);
     return null;
@@ -490,8 +505,11 @@ class M3SldIsolateRun {
     return null;
   }
 
-  /// Listening to the coworker: a slip (the docket goes on).
-  DoMistake listened() => _slip(M3SldIsolateMistakes.listened);
+  /// Listening to the coworker = the work on his word: deadly while the
+  /// section is live (owner ruling B1), else a slip (the docket goes on).
+  DoMistake listened() => live
+      ? (deadly = sideAOpen ? M3SldIsolateMistakes.backfeedWork : M3SldIsolateMistakes.liveWork)
+      : _slip(M3SldIsolateMistakes.listened);
 
   void next() {
     index++;
@@ -862,8 +880,8 @@ class _SldRunPageState extends ConsumerState<_SldRunPage>
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Listened to him: a slip (playbook row 8); the docket goes on, and work
-      // on the backfed section is still deadly if the player then does it.
+      // Listened to him: the work starts on his word — deadly while the
+      // section is live (B1); a slip once it is already dead (docket goes on).
       await _mistake(_run.listened(), origin);
       return;
     }

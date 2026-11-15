@@ -179,7 +179,7 @@ const learnBoardPack510 = LearnBoardPack(
           asset: 'assets/game/art/m5_board510/fixnow_leave.svg',
           scene: true,
           correct: false,
-          rejectBn: 'PM-এর সময় লুজ নাট বা হালকা মরিচা ধরা ক্ল্যাম্প দেখলে তখনই ঠিক করুন।',
+          rejectBn: 'PM-এর সময় লুজ নাট বা মরিচা ধরা ক্ল্যাম্প দেখলে ফেলে রাখবেন না — আগে লাইন বন্ধ করে, ডেড প্রমাণ ও আর্থ করে তবেই ঠিক করুন।',
         ),
         LearnBoardOption(
           id: 'pipe',
@@ -195,7 +195,7 @@ const learnBoardPack510 = LearnBoardPack(
           asset: 'assets/game/art/m5_board510/fixnow_half.svg',
           scene: true,
           correct: false,
-          rejectBn: "লুজ নাট আর মরিচা ধরা ক্ল্যাম্প — দুটোই তখনই ঠিক করুন; 'পরে করা যাবে' নয়।",
+          rejectBn: "লুজ নাট আর মরিচা ধরা ক্ল্যাম্প — দুটোই ফেলে রাখবেন না; আগে লাইন বন্ধ করে, ডেড প্রমাণ ও আর্থ দিয়ে তবেই ঠিক করুন।",
         ),
       ],
       whyChips: [

@@ -71,3 +71,26 @@ After merging duplicates and dropping items fixed in a later refix or that were 
 - [F12] Flow tweaks: the fuse can be fitted with the door shut (m3_pillar_fuse); the tension needs a fine visual judgement with no reference line, and the tray forbids the exact reverse order (m3_guard_repair) — rec: require the door to be open, and add a faint reference line; leave the tray rule.
 - [F13] Step 5 has no careless coworker (he first appears at step 6) — rec: keep it that way — distance_spot.
 - [F14] Docs to update once these rulings are made: MODULE1_LADDER 1.4 (expired harness = slip, already ruled) and step 24; GAME_DEVELOPER_GUIDE row 26; MODULE2_LADDER row 20; MODULE3_LADDER deck quotes (m3_meter_call); MODULE4_LADDER row 40; scratchpad kit_api.md (overwritten) — rec: yes, the director updates them right after the ruling.
+
+
+## Rulings made 2026-11-15 (owner: "most logical; national reference over WBSEDCL when they conflict")
+References for A1–A9 are in docs/review/safety_fixes_m1-4_review.xlsx (sheet References), each opened by an independent checker.
+
+- [A1] Burns: cool every burn (fire, flash, shock entry/exit) with clean running water 10–20 min after the supply is off and the casualty is clear; CPR first if not breathing; no ice; **no ointment/cream/ghee before hospital** (MoHFW/DGHS Burns STG 2025 — national — over WBSEDCL 12.2(v) "Vaseline or burn ointment"); every electrical burn to hospital. Board 1.7: the water card becomes a safe card (no new art). Lesson 10.17: drop the "Burn Heal cream" check; fix its wrong manual citations (first aid is WBSEDCL 12.2–12.4).
+- [A2] 11 kV clearance: 6.5 m across a street, 5.8 m along, 4.6 m elsewhere (33 kV 6.5/5.8/5.2; LT 5.8/5.5/4.6) — CEA (Measures relating to Safety and Electric Supply) Regulations 2023 Reg 60(1), Schedule VIII A; WBSEDCL 2025 3.4.4. Old 6.1 m lines may be lawfully existing: reject texts say "below the current rule — report it", not "illegal". 10.13 cites CEA 2023 Reg 60 and WBSEDCL 3.4.4.
+- [A3] AB switch: one firm, continuous stroke after the preparation. A slow or stalled stroke = slip. The extra blade look + padlock step is not added now (future idea).
+- [A4] Never touch a DTR tank in service; measure remotely. m4_gate_field: move "তেল ও তাপ" ahead of "DO খোলা" so the check is on a running DTR; a hand on the tank is deadly there, as in m4_dtr_temp.
+- [A5] Pillar fuse: add the isolate → lock/tag → prove dead (live-dead-live) step at the DTR LT switch. A fuse touched or pulled with the supply on = deadly (also m3_pillar_inspect "fuse-before-off"). After a proven isolation, no PPE at the fuse = slip. Re-energising with the pillar door open = new slip.
+- [A6] Glove air test: the existing deep crack leaks (no new art); teach the roll method (IS 4770 Annex B, national) instead of "ফু দিয়ে". No card says a crack leaks slower than a pinhole.
+- [A7] Fall arrest = full body harness (IS 3521 (Part 1):2021 — national standard; WBSEDCL 10.1 k(i)); lessons never quote "safety belt". 10.18 cites the Chapter XVII checklist.
+- [A8] Typos fixed as proposed (রিমাইন্ডার, ওষুধের, হঠাৎ, শোধরানো, ঝুল/তার নিচু; 10.4 myth 3 and pro tip 5 cite 10.4).
+- [A9] Approved: stopping at any voltage reading is never punished. In m2_dead_test, testing before proving the meter becomes a slip too (consistent with m2_gate_field liveFirst).
+- [B1] Option (a) as one rule for every module, including m3_gate_field (tap), m4_gate_field (earths), m4_do_open (heavy), m4_tree_plan: listening is deadly only when the pushed act is deadly in that level right then; otherwise a slip. Playbook row 8 updated to say so.
+- [B2] All M2–M4 deadly columns ratified as listed (incl. tool_care cracked grip, 3.4a thick copper, gate bare neutral under shutdown); remove the "flagged / owner to confirm" wording.
+- [B3] Under the DO = slip everywhere; no insulated gloves for the DO = slip everywhere; opening a DO on load = deadly everywhere (incl. m2_hotstick_operate).
+- [B4] Bare-hand clip on live terminals = deadly in every level; on dead terminals = slip.
+- [B5] Calling "মৃত প্রমাণিত" after a live reading = deadly, even before all three phases are tested.
+- [B6] Packing pinholed, cotton, cracked or any non-rubber glove = deadly; a wet pair stays a slip.
+- [B7] Step 28–30 rulings approved as listed; ptw_no_read deadly under the step 17 ruling.
+- [B8] The 5 deadlies approved; earth on a live line is deadly everywhere (also m4_insulator_prep and m3_sld_isolate when live).
+- Supabase lesson text (1.7, 3.9, 7.3, 8.5, 10.4, 10.13, 10.17, 10.18) and slm_web quiz/answer keys: shared with slm_web, so they are changed only with the owner's go-ahead (see the review sheet, orange rows).

@@ -823,10 +823,20 @@ void main() {
       if (d.oldLamp) await _tapAt(t, _geo.crate.center);
       await _tapAt(t, _geo.mcb(d.mineSlot).center);
       expect(find.text(_L.stampOn), findsOneWidget);
-      // The praise window: the street takes no touch.
+      // The reason deck is up at once: a second tap on the MCB does not
+      // switch it OFF (the street takes no touch while the reason is open).
+      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
       await _tapAt(t, _geo.mcb(d.mineSlot).center);
       expect(find.text(_L.stampOn), findsOneWidget);
-      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
+      // That tap may have opened a reason card's preview: it never answers; set it aside.
+      final reject = find.byKey(const ValueKey('choice-reject'));
+      if (reject.evaluate().isNotEmpty) {
+        for (var ms = 0; ms < 1500 && reject.hitTestable().evaluate().isEmpty; ms += 50) {
+          await t.pump(const Duration(milliseconds: 50));
+        }
+        await t.tap(reject.hitTestable().first, warnIfMissed: false);
+        await t.pump();
+      }
       await _pump(t, 700);
       await _pickRight(t, d.oldLamp ? _L.disposeWhy : _L.testWhy);
       // Between এগিয়ে যান and the sign-off (where the light could go off before).

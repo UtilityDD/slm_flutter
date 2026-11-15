@@ -282,6 +282,11 @@ void main() {
       final ug2 = _runWhere((d) => d.kase == M5Case.cable);
       ug2.ask(M5Ask.relay);
       expect(ug2.ug(M5UgStep.isolate).mistake, M5GateMistakes.handsNoPtw.m, reason: 'R1: isolating without the PTW');
+      // The UG order (as 5.9a, WBSEDCL 7.2(g)(i)): isolate both ends and
+      // discharge, then the megger.
+      expect(M5GateLines.ug(M5UgStep.isolate), allOf(contains('আইসোলেট'), contains('ডিসচার্জ')));
+      expect(M5GateLines.ugNote(M5UgStep.isolate), contains('ডিসচার্জ'));
+      expect(M5GateMistakes.meggerLive.m.textBn, contains('ডিসচার্জ'));
     });
 
     test('slips: one per move — no PTW patrol, blind start, blind patrol, lone night mate, needless order, hands before the find', () {

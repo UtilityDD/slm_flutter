@@ -467,3 +467,12 @@ int starsFor({required bool passed, required int strikes, required bool quick}) 
   if (strikes > 0) return 1;
   return quick ? 3 : 2;
 }
+
+/// Stars of a marked play (levels scored in percent, e.g. distance_spot,
+/// tool_tip): 1 passed, 2 at 80 % or more, 3 a quick 100 %. Without this
+/// those rungs never reached the league or gave gift-box keys.
+int starsForMark({required bool passed, required int mark, required bool quick}) {
+  if (!passed) return 0;
+  if (mark >= 100 && quick) return 3;
+  return mark >= 80 ? 2 : 1;
+}

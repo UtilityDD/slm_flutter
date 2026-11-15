@@ -73,6 +73,23 @@ Future<void> _pickRight(WidgetTester t, List<String> right) async {
   await tapReasonProceed(t);
 }
 
+/// Refuses him on his deck (✓ on his right card). Refusing is the right move
+/// and the reason deck opens at once (2026-11-15), so his deck can give way
+/// to it with no gap: wait for the reason question (the guide says it as the
+/// deck opens; the muted bubble fades after a reading time), not for a
+/// ChoiceDeck to go.
+Future<void> _refuse(WidgetTester t, String question) async {
+  await waitChoiceDeck(t);
+  final r = _onScreen(PtwLines.coworker.right);
+  expect(r, hasLength(1), reason: PtwLines.coworker.right.first);
+  await t.tap(r.single, warnIfMissed: false);
+  expect(await confirmChoice(t), isTrue, reason: 'his refuse card is picked with ✓');
+  for (var ms = 0; ms < 4000 && find.text(question).evaluate().isEmpty; ms += 50) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+  expect(find.text(question), findsWidgets, reason: 'the reason deck asks why');
+}
+
 /// The words of [text] (split on spaces and punctuation).
 Set<String> _words(String text) => {for (final w in text.split(RegExp(r'[\s,—।?!]+'))) if (w.isNotEmpty) w};
 
@@ -468,9 +485,9 @@ void main() {
           expect(find.textContaining(PtwLines.phoneLine), findsOneWidget);
           await _pump(t, 3200);
           expect(find.byType(CoworkerPeek), findsOneWidget);
-          await _pickRight(t, PtwLines.coworker.right);
-          await _pump(t, 2800);
-          expect(find.text(PtwLines.whyPhone), findsWidgets);
+          await _refuse(t, PtwLines.whyPhone);
+          await _pump(t, 1000);
+          expect(find.byType(CoworkerPeek), findsNothing, reason: 'he has left');
           met = true;
         } else {
           await _lift(t);
@@ -578,8 +595,8 @@ void main() {
       final startAt = t.getCenter(find.text(PtwLines.start));
       await t.tap(find.text(PtwLines.start));
       await t.pump(const Duration(milliseconds: 120));
-      // The ◆ waits on the table; the deck has not opened yet.
-      expect(find.byType(ChoiceDeck), findsNothing);
+      // The ◆ waits on the table; the reason deck is up at once (2026-11-15).
+      expect(find.byType(ChoiceDeck), findsOneWidget);
       final score = _levelScore(t);
       for (var i = 0; i < 3; i++) {
         await t.tapAt(sheet);
@@ -588,6 +605,14 @@ void main() {
       }
       expect(_label(PtwLines.lensLabel), findsNothing);
       expect(find.text(MistakeLines.slipHead), findsNothing);
+      expect(_levelScore(t), score);
+      // A tap where the start button was may only have opened a reason
+      // card's preview (it answers nothing): set it aside.
+      final reject = find.byKey(const ValueKey('choice-reject'));
+      if (reject.evaluate().isNotEmpty) {
+        await t.tap(reject, warnIfMissed: false);
+        await _pump(t, 600);
+      }
       expect(_levelScore(t), score);
       await _pickRight(t, PtwLines.whyValid);
       expect(find.text(MistakeLines.slipHead), findsNothing);
@@ -617,9 +642,8 @@ void main() {
       await waitChoiceDeck(t);
       expect(find.byType(CoworkerPeek), findsOneWidget);
       expect(find.byType(ChoiceDeck), findsOneWidget);
-      await _pickRight(t, PtwLines.coworker.right);
-      await _pump(t, 2800);
-      expect(find.text(PtwLines.whyPhone), findsWidgets);
+      await _refuse(t, PtwLines.whyPhone);
+      await _pump(t, 1000);
       await _pickRight(t, PtwLines.whyRight(dealPermits(math.Random(seed), _today)[1]));
       await _pump(t, 4000);
       final s = c.read(gameSaveProvider);

@@ -363,8 +363,12 @@ void main() {
       expect(b.caught, contains(M4DoRefuseLines.caughtSettle));
       final c = pushed(M4DoRefuseOutcome.reblows);
       expect(c.barrels[1], M4DoRefuseBarrel.open, reason: 'it blew again');
+      final slipsBefore = c.slips;
       expect(c.watch(right: false), M4DoRefuseMistakes.reclose);
-      expect(c.phase, M4DoRefusePhase.done);
+      expect(M4DoRefuseMistakes.reclose.deadly, isTrue, reason: 'ruling M5-1: a re-fit after an instant re-blow is deadly');
+      expect(c.deadly, M4DoRefuseMistakes.reclose);
+      expect(c.ended, isTrue);
+      expect(c.slips, slipsBefore, reason: 'deadly, not a slip');
       final d = pushed(M4DoRefuseOutcome.reblows);
       expect(d.watch(right: true), isNull);
       expect(d.phase, M4DoRefusePhase.done);
@@ -375,7 +379,7 @@ void main() {
       expect(d.percent, 100);
     });
 
-    test('English digits only; every mistake has its picture, a stable key; one deadly', () {
+    test('English digits only; every mistake has its picture, a stable key; two deadly', () {
       final all = <String>[
         M4DoRefuseLines.intro,
         ...M4DoRefuseLines.tasks,
@@ -401,7 +405,7 @@ void main() {
         expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
         expect(l.contains('পানি'), isFalse, reason: l);
       }
-      expect(M4DoRefuseMistakes.all.where((m) => m.deadly).toList(), [M4DoRefuseMistakes.thickWire]);
+      expect(M4DoRefuseMistakes.all.where((m) => m.deadly).toList(), [M4DoRefuseMistakes.thickWire, M4DoRefuseMistakes.reclose]);
       for (final m in M4DoRefuseMistakes.all) {
         expect(m.key, startsWith('4.4/m4_do_refuse/'));
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
@@ -743,7 +747,7 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('listening to him at the re-blow = reclosing on the fault: a slip, then the reason', (t) async {
+    testWidgets('listening to him at the re-blow = reclosing on the fault: deadly (B1, M5-1) — freeze, then the card', (t) async {
       final seed = seedWhere((d) => d.call == M4DoRefuseCall.reblow);
       final d = m4DoRefuseDeal(math.Random(seed));
       final c = await _open(t, seed);
@@ -755,11 +759,13 @@ void main() {
       await _pump(t, 600);
       await _pickWrong(t, M4DoRefuseLines.coworkerReblow.wrong);
       await _pump(t, 1500);
-      expect(find.text(MistakeLines.slipHead), findsOneWidget);
-      expect(c.read(gameSaveProvider).mistakes.last.key, M4DoRefuseMistakes.reclose.key);
-      await t.tap(find.text(MistakeLines.gotIt));
-      await _pump(t, 800);
-      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue, reason: 'the reason deck');
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.last.key, M4DoRefuseMistakes.reclose.key);
+      expect(s.mistakes.last.deadly, isTrue);
       await _close(t, c);
     });
 

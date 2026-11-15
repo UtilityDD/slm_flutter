@@ -55,12 +55,13 @@ export 'm4_tree_plan_world.dart' show M4TreePlanGeo, M4TreePlanBranch, M4TreePla
 //      branches, chainsaw for thick (point 2; pro tip 2: fibreglass handles
 //      near the line); a plain saw = a slip. The plan buttons are dealt in a
 //      fresh order per tree (never the plan's order).
-// Deadly: starting the cut with the line live (no শাটডাউন).
+// Deadly: starting the cut with the line live (no শাটডাউন, or kept on at the
+// coworker's word).
 // The careless coworker ("লাইন চালু থাক …") comes once a play, before the
 // শাটডাউন is taken; taking it and "কাটা শুরু" wait for him
-// (holdForCoworker). Listening to him = a slip (playbook row 8, audit
-// 2026-11-11); the শাটডাউন stays on offer — cutting without it is still
-// the deadly.
+// (holdForCoworker). Listening to him = the cut with the line live, deadly:
+// he comes only before the শাটডাউন is taken (owner ruling B1, 2026-11-15:
+// listening is deadly when the act he pushes is deadly).
 // Kit 2026-11-11: no control works in a praise window (tableBusy); gesture
 // hints sweep over all the branches + "জরিপ শেষ", the ground (verge and road)
 // or the plan buttons + "কাটা শুরু" — never one answer.
@@ -371,13 +372,6 @@ abstract final class M4TreePlanMistakes {
     lessonPoint: 1,
   );
 
-  /// Listening to the careless coworker (playbook row 8: a slip).
-  static const listened = DoMistake(
-    key: '4.8/m4_tree_plan/listened-line-on',
-    textBn: 'লাইন চালু রেখে ডাল কাটা যাবে না! আগে পারমিট নিয়ে লাইন বন্ধ করুন, কারও কথায় নিয়ম ভাঙবেন না।',
-    art: '$_dir/tp_live.svg',
-    lessonPoint: 1,
-  );
   static const plainTool = DoMistake(
     key: '4.8/m4_tree_plan/plain-saw-near-line',
     textBn: "লাইনের কাছে সাধারণ করাত নিলেন। ফাইবারগ্লাসের হাতলযুক্ত ইনসুলেটেড প্রুনার বা স' নিন — এটি বাড়তি সুরক্ষা দেয়।",
@@ -416,7 +410,7 @@ abstract final class M4TreePlanMistakes {
     lessonPoint: 2,
   );
 
-  static List<DoMistake> get all => [liveLine, listened, wrongBranch, missedBranch, roadDrop, awayDrop, plainTool, smallTool, bigTool, alone, noPpe, noRope];
+  static List<DoMistake> get all => [liveLine, wrongBranch, missedBranch, roadDrop, awayDrop, plainTool, smallTool, bigTool, alone, noPpe, noRope];
 }
 
 /// The play state (pure logic).
@@ -496,11 +490,12 @@ class M4TreePlanRun {
     if (!kit.add(k)) kit.remove(k);
   }
 
-  /// Agreed with the careless coworker to keep the line on: a slip. The
-  /// শাটডাউন stays on offer (cutting without it is the deadly).
+  /// Agreed with the careless coworker to keep the line on and cut: the cut
+  /// with the line live — deadly (owner ruling B1, 2026-11-15). He comes only
+  /// before the শাটডাউন is taken.
   DoMistake? listen() {
     if (ended) return null;
-    return _slip(M4TreePlanMistakes.listened);
+    return deadly = M4TreePlanMistakes.liveLine;
   }
 
   void pick(M4TreePlanTool t) {
@@ -942,11 +937,14 @@ class _TpRunPageState extends ConsumerState<_TpRunPage> with DoDeathGuard, DoStr
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Listening = a slip (playbook row 8); the শাটডাউন stays on offer.
+      // Listening = the cut with the line live: deadly (B1).
       final m = _run.listen();
       if (m == null) return;
-      unawaited(_levelDelta(-10, origin, mood: GuideMood.warn));
-      await _slip(m);
+      _hush();
+      final t = _tree;
+      final b = t.branches[t.toward.first];
+      final (_, _, tip) = _geoNow.branchOf(b, t.treeX, t.wire);
+      await _deadly(m, at: tip);
       return;
     }
     _run.caught.add(M4TreePlanLines.caughtCall);

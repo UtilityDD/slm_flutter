@@ -359,9 +359,17 @@ void main() {
     expect(tap, isNot(contains('rx="1.6" fill="url(#steel)"/><path')), reason: 'area_tap: no spanner on the tap');
     expect(live, isNot(contains(openDo)), reason: 'area_live: the drop-outs are closed — it is live');
     expect(live, contains('fill="#FFE08A"'), reason: 'area_live: the lane\'s windows are lit');
-    for (final c in ['joint_pole', 'joint_meter']) {
-      expect(svg(c), contains(pulledCutout), reason: '$c: the cut-out is pulled before the tightening');
+    // The meter end is dead with its cut-out pulled; the pole-end joint is on
+    // the LT main, upstream of any cut-out: dead only with the LT way at the
+    // DTR / pillar opened and tagged (WBSEDCL 3.2, owner ruling A5).
+    const shutdownTag = 'width="10" height="15" rx="1.5" fill="#D8402F"'; // the red shutdown tag on the pole
+    expect(svg('joint_meter'), contains(pulledCutout), reason: 'joint_meter: the cut-out is pulled before the tightening');
+    expect(svg('joint_pole'), contains(shutdownTag), reason: 'joint_pole: the LT line shut down and tagged');
+    expect(svg('joint_pole'), isNot(contains(pulledCutout)), reason: 'joint_pole: a pulled cut-out is not the isolation of the pole joint');
+    for (final c in ['joint_meter', 'joint_thermal', 'joint_onlyhot', 'joint_inside', 'joint_thin']) {
+      expect(svg(c), isNot(contains(shutdownTag)), reason: '$c: the tag only where the pole joint is worked');
     }
+    expect(_slot('joint').options.firstWhere((o) => o.id == 'pole').labelBn, contains('এলটি লাইন বন্ধ'));
     // One house's complaint: the worker heads for the DTR but never touches a live tap.
     expect(svg('call_tap'), contains('stroke="#FFFFFF" stroke-width="1.8"'), reason: 'call_tap: walking to the DTR (motion lines)');
     expect(live, contains('rx="1.6" fill="url(#steel)"/><path'), reason: 'area_live: the spanner on the live tap');

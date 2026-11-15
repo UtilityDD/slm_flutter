@@ -1084,7 +1084,7 @@ class _LearnBoardRunState extends ConsumerState<_LearnBoardRun>
       final banked = _bankPending(bank, global);
       final praise = _rightLine();
       unawaited(_speakRule(chip.textBn, praise, key: '${_cur.id}/${chip.id}'));
-      await _awaitContinue(_Verdict(good: true, headline: praise.shownBn));
+      await _awaitContinue(_Verdict(good: true, headline: praise.shownBn, body: _cur.noteBn));
       await banked;
       if (!mounted) return;
       await _stopVoice();

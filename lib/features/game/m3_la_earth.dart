@@ -45,15 +45,18 @@ export 'm3_la_earth_world.dart' show M3LaEarthGeo, M3LaEarthSpot, M3LaEarthFault
 //     slip (once per spot) and the reply comes only on the mistake card. The
 //     careless coworker pushes the lesson's own myth once the cut is tagged
 //     (never before: his words would name it): "একটু কাটা তো কী, বাকিটা ঠিক
-//     আছে" — listening is a slip (myth 2: a small cut raises the resistance
-//     many times; the surge goes through the transformer — damage to
-//     equipment, so not deadly). If the last fault is tagged before he came,
-//     the round's reason waits for him (holdForCoworker);
+//     আছে" — listening is deadly: it leaves the LA in service with its earth
+//     path broken (owner's one earth rule for Modules 3, 4 and 6,
+//     2026-11-15: a broken earth path = deadly, a weak but connected one = a
+//     slip; ruling B1: listening = the pushed act's class). If the last
+//     fault is tagged before he came, the round's reason waits for him
+//     (holdForCoworker);
 //  3. order the repair: ডকেট/শাটডাউন → prove dead (HT tester) → earth the
 //     line → the work (replace the bad LA, mend each tagged fault, any
 //     order); helmet + harness before any work up the pole (the rod clamp is
 //     at the ground). The kit lies on the tarp in a dealt order.
-// Deadly: hands on the LA (replacing it) before the shutdown — it sits on the
+// Deadly: listening to him (above); hands on the LA (replacing it) before the
+// shutdown — it sits on the
 // 11 kV line (point 2: "স্বাভাবিক সিস্টেম ভোল্টেজে (যেমন ১১ কেভি)"). The
 // shutdown → test → earth order is the house safety rule, not in lesson 3.5
 // (flagged). Not in the sources, left out (flagged): a target earth
@@ -218,10 +221,13 @@ abstract final class M3LaEarthMistakes {
     art: '$_art/hanging_lead.svg',
     lessonPoint: 2,
   );
+  /// Listening to him: the cut lead left in service (deadly: a broken earth
+  /// path, the owner's one earth rule of 2026-11-15).
   static const smallCut = DoMistake(
     key: '3.5/m3_la_earth/small-cut',
-    textBn: 'সামান্য কাটা বা লুজ কানেকশনেও আর্থিং-এর রেজিস্ট্যান্স বহুগুণ বাড়ে — সার্জ তখন মাটিতে না গিয়ে ট্রান্সফরমার দিয়ে যায়।',
+    textBn: 'কাটা আর্থ রেখে লাইন চালু একদম নয়! আর্থিং ছাড়া এল এ অকেজো — বাজ পড়লে বা এল এ বিগড়ালে ওই কাটা তারটাই লাইভ হয়ে যাবে, নিচে কেউ ছুঁলেই মৃত্যু!',
     art: '$_art/small_cut.svg',
+    deadly: true,
     lessonPoint: 2,
   );
   static const liveLa = DoMistake(
@@ -357,10 +363,11 @@ class M3LaEarthRun {
   final Set<M3LaEarthSpot> wrongTags = {};
   var harnessOn = false;
   int _ownSlips = 0;
+  DoMistake? _ownDeadly;
 
   int get slips => order.slips + _ownSlips;
   int get percent => (100 - 15 * slips).clamp(0, 100);
-  DoMistake? get deadly => order.deadly;
+  DoMistake? get deadly => _ownDeadly ?? order.deadly;
   bool get done => order.done;
   bool get ended => done || deadly != null;
   bool get passed => done && deadly == null && percent >= 55;
@@ -405,11 +412,11 @@ class M3LaEarthRun {
   /// [tag]'s fault only.
   M3LaEarthFault? look(M3LaEarthSpot s) => tag(s).fault;
 
-  /// Gave in to him: "a little cut is fine" (null once the play has ended).
+  /// Gave in to him: "a little cut is fine" — the LA left in service with
+  /// its earth path broken, deadly (null once the play has ended).
   DoMistake? listened() {
     if (ended) return null;
-    _ownSlips++;
-    return M3LaEarthMistakes.smallCut;
+    return _ownDeadly = M3LaEarthMistakes.smallCut;
   }
 
   /// Helmet and harness on (any time in the repair).
@@ -535,6 +542,10 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
   var _quickBonus = false;
   var _freeze = false;
   Completer<void>? _frozen;
+
+  /// The deadly picture is the cut lead left live (listening), not the hands
+  /// on the LA.
+  var _zapCut = false;
   VoidCallback? _afterPaid;
   int? _mark;
   int _stars = 0;
@@ -786,9 +797,12 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
   @override
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
-      // Listening is a slip; the card's "got it" resumes the round.
+      // Listening is deadly: the cut lead stays in service.
       final m = _run.listened();
-      if (m != null) await _slip(m, origin, own: true);
+      if (m != null) {
+        _zapCut = true;
+        await _deadly(m);
+      }
       return;
     }
     _callHeld = true;
@@ -833,7 +847,7 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
     if (mounted) setState(() {});
   }
 
-  Future<void> _slip(DoMistake m, Offset point, {bool own = false}) async {
+  Future<void> _slip(DoMistake m, Offset point) async {
     if (strike(m)) {
       await _struckOut(m);
       return;
@@ -841,10 +855,9 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
     HapticFeedback.heavyImpact();
     if (!_muted) unawaited(ZlFx.cue('sounds/quiz_wrong.ogg', volume: 0.7, muted: false));
     _hush();
-    final g = _geo;
     setState(() {
       _pings++;
-      _pingAt = own && g != null ? g.spotAt(_deal.cut) : point;
+      _pingAt = point;
       _card = m;
       _cardTone = MistakeTone.slip;
       _wake++;
@@ -1097,7 +1110,7 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
           child: IgnorePointer(
             child: M3LaEarthOneShot(
               ms: quiet ? 1 : 1400,
-              painter: (t) => M3LaEarthZapPainter(t, path: _zapPath(g), figure: g.traineeBox(up: true, left: _leftPole)),
+              painter: (t) => M3LaEarthZapPainter(t, path: _zapPath(g), figure: g.traineeBox(up: !_zapCut, left: _leftPole)),
             ),
           ),
         ),
@@ -1123,8 +1136,21 @@ class _LaRunState extends ConsumerState<_LaRun> with DoDeathGuard, DoStrikeOut, 
   }
 
   /// The way 11 kV goes in the deadly picture: the bad LA's line terminal,
-  /// the hands, the body, the pole.
+  /// the hands, the body, the pole; or, the cut lead left in service, from an
+  /// LA down the lead to the cut and on through whoever stands below.
   List<Offset> _zapPath(M3LaEarthGeo g) {
+    if (_zapCut) {
+      final low = g.traineeBox(up: false);
+      return [
+        g.laBox(_deal.badLa).topCenter,
+        g.laBottomTerm(_deal.badLa),
+        g.junction,
+        g.spotAt(_deal.cut),
+        g.hands(up: false),
+        low.center,
+        low.bottomCenter,
+      ];
+    }
     final box = g.traineeBox(up: true, left: _leftPole);
     return [
       g.laBox(_deal.badLa).topCenter,

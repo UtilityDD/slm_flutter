@@ -646,11 +646,20 @@ void main() {
       final (c, deal) = await open(t, _seed((d) => d.callRound == 3 && !d.tools.first.flawed && d.tools.first.need == CareNeed.plain));
       final right = await care(t, deal.tools.first);
       await t.pump(const Duration(milliseconds: 120));
-      expect(find.byType(ChoiceDeck), findsNothing, reason: 'the ◆ waits on the table first');
+      // New contract: the reason deck opens at once (no praise wait); taps while it
+      // deals still cost nothing — no slip, no second store, no early answer.
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the reason deck comes at once');
       await t.tapAt(const Offset(180, 400));
       await t.tapAt(const Offset(120, 560));
       await _pump(t, 300);
       expect(find.byType(MistakeCard), findsNothing);
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'a stray tap never answers the deck');
+      // A stray tap may have opened a card's preview: put it back before the real pick.
+      final reject = find.byKey(const ValueKey('choice-reject'));
+      if (reject.evaluate().isNotEmpty) {
+        await t.tap(reject, warnIfMissed: false);
+        await _pump(t, 400);
+      }
       await _pickRight(t, right);
       await _pump(t, 2000);
       expect(find.byType(MistakeCard), findsNothing);

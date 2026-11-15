@@ -216,13 +216,50 @@ void main() {
       expect(await s.pending(), isEmpty);
     });
 
-    test('a refusal from the server (e.g. not verified) drops the plays', () async {
+    test('not verified yet: the plays stay queued and go once verified', () async {
       final s = service();
       server.refuse = 'not_verified';
       await s.recordPlay('1.1/do/1', stars: 3, ms: 30000);
       await s.flush();
+      expect(server.sent, isNotEmpty);
+      expect(await s.pending(), hasLength(1));
+      server.refuse = null;
+      final before = server.batches.length;
+      await s.flush();
+      expect(server.batches.length, before + 1);
+      expect(server.batches.last.single.rungId, '1.1/do/1');
+      expect(await s.pending(), isEmpty);
+    });
+
+    test('any other refusal of the whole batch (e.g. blocked) drops the plays', () async {
+      final s = service();
+      server.refuse = 'blocked';
+      await s.recordPlay('1.1/do/1', stars: 3, ms: 30000);
+      await s.flush();
       expect(server.sent, hasLength(1));
       expect(await s.pending(), isEmpty);
+    });
+
+    test('catch-up: a never-counted member sends the save\'s best once', () async {
+      final s = service();
+      final save = GameSave.empty.copyWith(
+        rungProgress: {'1.1/learn': 'cleared', '1.1/do/0': 'cleared', '1.2/do/0': 'cleared', '1.2/do/1': 'prove'},
+        starsByRung: {'1.1/do/0': 3},
+        bestMarkByRung: {'1.1/learn': 90, '1.2/do/0': 85, '1.2/do/1': 70},
+        bestTimeMsByRung: {'1.1/learn': 40000, '1.1/do/0': 50000, '1.2/do/0': 119000, '1.2/do/1': 90000},
+      );
+      await s.catchUpFromSave(save);
+      await s.flush();
+      final sent = {for (final r in server.sent) r.rungId: r};
+      expect(sent.keys.toSet(), {'1.1/learn', '1.1/do/0', '1.2/do/0'});
+      expect(sent['1.1/do/0']!.stars, 3);
+      expect(sent['1.1/learn']!.stars, 2);
+      expect(sent['1.2/do/0']!.stars, 2);
+      expect(sent['1.2/do/0']!.ms, 119000);
+      // Once per account.
+      await s.catchUpFromSave(save);
+      await s.flush();
+      expect(server.sent, hasLength(3));
     });
 
     test('plays of an earlier month or another account are dropped, not sent', () async {

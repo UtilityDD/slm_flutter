@@ -31,16 +31,20 @@ import 'scene_kit.dart' show GuideIntro, LinemanFigure, LinemanLook, LinemanMode
 // Module 4 Rank Gate (rung m4/gate, pack gate_m4): "স্কিলডের ডকেট".
 // One maintenance day on one feeder that uses the whole of Module 4
 // (lessons 4.1–4.10), in nine stations:
-//   1 DO খোলা — LT switch OFF (off-load), face shield + insulated gloves,
+//   1 তেল ও তাপ — on the running DTR (the check needs no shutdown, and a
+//     temperature only means something under load): read the conservator's
+//     glass gauge (MIN/MAX), take the temperature with the IR thermometer
+//     from a distance; oil below MIN → report to the supervisor; never engine
+//     oil (4.5). A hand on the tank of a DTR in service is deadly, as in
+//     m4_dtr_temp (owner ruling A4, 2026-11-15).
+//   2 DO খোলা — LT switch OFF (off-load), face shield + insulated gloves,
 //     stand to the side, pull the three DO fuses with the hot stick (4.4).
-//   2 তেল ও তাপ — read the conservator's glass gauge (MIN/MAX), take the
-//     temperature with the IR thermometer from a distance (never a hand on
-//     the tank); oil below MIN → report to the supervisor; never engine oil (4.5).
 //   3 আর্থ টেস্ট — two spikes (fall of potential), test, too high → water
 //     in the pit and the rusty clamp cleaned and tightened, test again (4.6).
 //   4 ইনসুলেটর বদল — the 11 kV section under PTW: portable earths on both
 //     sides, then binding off → conductor on a rope → old insulator off →
-//     new one on and bound (4.1). The careless coworker pushes "skip the earths".
+//     new one on and bound (4.1). The careless coworker pushes "skip the earths";
+//     listening = work with no earths, deadly (owner ruling B1).
 //   5 জাম্পার টাইট — find the hot clamp, wire-brush + paste, two wrenches (4.2).
 //   6 ডিপি ড্রেসিং — top to bottom: jumper off the cross-arm, binding tail
 //     cut, LT cables bunched; every nut tight (4.7).
@@ -68,7 +72,7 @@ const m4GateFieldPacks = {
   'gate_m4': M4GateFieldPack(id: 'gate_m4', titleBn: M4GateLines.title),
 };
 
-enum M4GateStation { doOpen, oilTemp, earth, insulator, jumper, dpDress, tree, streetLight, balance }
+enum M4GateStation { oilTemp, doOpen, earth, insulator, jumper, dpDress, tree, streetLight, balance }
 
 enum M4GateStance { under, side }
 
@@ -105,10 +109,13 @@ abstract final class M4GateMistakes {
     art: '$_m2Art/do_ppe.svg',
     lessonPoint: 0,
   );
+  /// A hand on the tank of the running DTR: deadly, m4_dtr_temp's card word
+  /// for word (owner ruling A4).
   static const touchTank = DoMistake(
     key: '4.5/m4_gate_field/touch-tank',
-    textBn: 'তাপ মাপতে ট্যাঙ্কে হাত দেবেন না — দূর থেকে ইনফ্রারেড থার্মোমিটারে মাপুন।',
+    textBn: 'চালু ট্রান্সফরমারের ট্যাঙ্কে হাত দিলেন। গরম ট্যাঙ্ক পুড়িয়ে দেয়, আর আর্থ ঠিক না থাকলে বডিতেই কারেন্ট — তাপ মাপুন দূর থেকে, ইনফ্রারেড থার্মোমিটারে।',
     art: '$_art/ir_not_hand.svg',
+    deadly: true,
     lessonPoint: 1,
   );
   static const engineOil = DoMistake(
@@ -158,12 +165,6 @@ abstract final class M4GateMistakes {
     textBn: 'দুই দিকে আর্থ ছাড়া লাইনে কাজ মারাত্মক — বন্ধ লাইনেও ইন্ডুসড ভোল্টেজ বা ভুল চালু থাকতে পারে।',
     art: '$_art/earth_both_sides.svg',
     deadly: true,
-    lessonPoint: 0,
-  );
-  static const earthSkip = DoMistake(
-    key: '4.1/m4_gate_field/earth-skip',
-    textBn: 'শাটডাউন থাকলেও লাইনের দুই প্রান্তে আর্থিং বাধ্যতামূলক — বন্ধ লাইনেও ইন্ডুসড ভোল্টেজ থাকে।',
-    art: '$_art/earth_both_sides.svg',
     lessonPoint: 0,
   );
   static const insNoRope = DoMistake(
@@ -284,7 +285,6 @@ abstract final class M4GateMistakes {
         earthHigh,
         earthUntested,
         noEarth,
-        earthSkip,
         insNoRope,
         insOrder,
         jumperWrongClamp,
@@ -314,15 +314,15 @@ abstract final class M4GateLines {
 
   /// The task per station; a tap on the guide says the next wording.
   static const tasks = {
-    M4GateStation.doOpen: [
-      'ট্রান্সফরমারের কাজ। আগে হট স্টিকে তিনটে DO খুলুন।',
-      'তিনটে DO নামাতে হবে — নিরাপদে।',
-      'DO খোলার কাজ। তাড়াহুড়ো নয়।',
-    ],
     M4GateStation.oilTemp: [
       'এবার ট্রান্সফরমারের তেল আর তাপ দেখুন।',
       'রক্তচাপ আর জ্বর — গেজ আর তাপমাত্রা।',
       'তেলের লেভেল আর তাপ মেপে সিদ্ধান্ত নিন।',
+    ],
+    M4GateStation.doOpen: [
+      'তিনটে DO নামাতে হবে — নিরাপদে।',
+      'ট্রান্সফরমারের কাজ। আগে হট স্টিকে তিনটে DO খুলুন।',
+      'DO খোলার কাজ। তাড়াহুড়ো নয়।',
     ],
     M4GateStation.earth: [
       'ট্রান্সফরমারের আর্থিং মাপুন — দরকার হলে ঠিক করুন।',
@@ -362,8 +362,8 @@ abstract final class M4GateLines {
   };
 
   static const stationTitles = {
-    M4GateStation.doOpen: 'DO খোলা',
     M4GateStation.oilTemp: 'তেল ও তাপ',
+    M4GateStation.doOpen: 'DO খোলা',
     M4GateStation.earth: 'আর্থ টেস্ট',
     M4GateStation.insulator: 'ইনসুলেটর বদল',
     M4GateStation.jumper: 'জাম্পার টাইট',
@@ -423,8 +423,8 @@ abstract final class M4GateLines {
   static const shifted = 'শাটডাউন নিয়ে কয়েকটা সার্ভিস লাইন সরানো হলো, গ্রাহককে জানানো হয়েছিল। লাইন চালু — আবার মাপুন।';
 
   static const praise = {
-    M4GateStation.doOpen: 'তিনটে DO খোলা — অফ-লোডে, পাশ থেকে, পুরো PPE-তে।',
     M4GateStation.oilTemp: 'গেজ পড়া হলো, তাপ মাপা হলো দূর থেকে — ঠিক সিদ্ধান্ত!',
+    M4GateStation.doOpen: 'তিনটে DO খোলা — অফ-লোডে, পাশ থেকে, পুরো PPE-তে।',
     M4GateStation.earth: 'আর্থ রেজিস্ট্যান্স এখন সীমার নিচে — অদৃশ্য রক্ষক সচল!',
     M4GateStation.insulator: 'নতুন ইনসুলেটর শক্ত করে বাঁধা — সার্জনের হাত!',
     M4GateStation.jumper: 'পরিষ্কার, টাইট জাম্পার — আর হটস্পট হবে না।',
@@ -659,7 +659,7 @@ class M4GateRun {
   /// The lamp row (tester / new lamp) is dealt swapped.
   bool get flipLamp => rowFlips & 8 != 0;
 
-  M4GateStation station = M4GateStation.doOpen;
+  M4GateStation station = M4GateStation.values.first;
   final Set<M4GateStation> completed = {};
   int slips = 0;
   DoMistake? deadly;
@@ -686,7 +686,7 @@ class M4GateRun {
     if (next < M4GateStation.values.length) station = M4GateStation.values[next];
   }
 
-  // 1. DO ---------------------------------------------------------------------
+  // 2. DO ---------------------------------------------------------------------
   var ltOn = true;
   var faceShield = false;
   var doGloves = false;
@@ -712,7 +712,7 @@ class M4GateRun {
 
   bool get doDone => doOpen.every((o) => o);
 
-  // 2. Oil and temperature --------------------------------------------------------
+  // 1. Oil and temperature, on the running DTR -------------------------------------
   var gaugeRead = false;
   var tempRead = false;
   var oilDone = false;
@@ -721,7 +721,8 @@ class M4GateRun {
 
   DoMistake? measureTemp({required bool ir}) {
     if (ended || tempRead) return null;
-    if (!ir) return slip(M4GateMistakes.touchTank);
+    // A hand on the tank of a DTR in service: deadly (A4), as in m4_dtr_temp.
+    if (!ir) return deadly = M4GateMistakes.touchTank;
     tempRead = true;
     tag('দূর থেকে IR-এ তাপ মাপা');
     return null;
@@ -784,6 +785,11 @@ class M4GateRun {
     earths.add(side);
     if (earthsBoth) tag('দুই দিকে আর্থ দিয়ে পোলে ওঠা');
   }
+
+  /// Listened to the coworker ("skip the earths, climb"): he comes only with
+  /// no earth on, so it is line work without earths — deadly (owner ruling B1,
+  /// 2026-11-15: listening is deadly when the act he pushes is deadly).
+  DoMistake listenNoEarth() => deadly = M4GateMistakes.noEarth;
 
   DoMistake? insStep(M4InsStep s) {
     if (ended || insDone.contains(s) || insDoneAll) return null;
@@ -1398,11 +1404,12 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
       await Future<void>.delayed(const Duration(milliseconds: 900));
       await _say(M4GateLines.coworkerHeld, mood: GuideMood.glad);
     } else {
-      await _handleMistake(_run.slip(M4GateMistakes.earthSkip));
+      // Listened: up the pole with no earths — deadly (B1).
+      await _handleMistake(_run.listenNoEarth());
     }
   }
 
-  // --- 1 DO ------------------------------------------------------------------------
+  // --- 2 DO ------------------------------------------------------------------------
   void _onLtSwitch() {
     if (!_canAct || !_run.ltOn) return;
     HapticFeedback.mediumImpact();
@@ -1468,7 +1475,7 @@ class _M4GateRunPageState extends ConsumerState<_M4GateRunPage>
     }
   }
 
-  // --- 2 oil and temperature ----------------------------------------------------------
+  // --- 1 oil and temperature (running DTR) ----------------------------------------------------------
   void _onGauge() {
     if (!_canAct || _run.gaugeRead) return;
     HapticFeedback.selectionClick();
@@ -2751,7 +2758,7 @@ class _DocketSheet extends StatelessWidget {
 
   static const _rows = [
     (Icons.place_rounded, 'ফিডার', '11 kV বটতলা ফিডার · DTR-23 আর তার সেকশন', Color(0xFF1565C0)),
-    (Icons.build_circle_rounded, 'কাজ', 'DTR-এর DO খোলা, তেল-তাপ ও আর্থ টেস্ট · ভাঙা ইনসুলেটর · গরম জাম্পার · ডিপি ড্রেসিং · লাইনের ধারে ডাল · মোড়ের স্ট্রিট লাইট · LT ফেজ ব্যালেন্স', Color(0xFFC62828)),
+    (Icons.build_circle_rounded, 'কাজ', 'চালু DTR-এর তেল-তাপ, তারপর DO খোলা ও আর্থ টেস্ট ·ভাঙা ইনসুলেটর · গরম জাম্পার · ডিপি ড্রেসিং · লাইনের ধারে ডাল · মোড়ের স্ট্রিট লাইট · LT ফেজ ব্যালেন্স', Color(0xFFC62828)),
     (Icons.power_off_rounded, 'শাটডাউন', 'DTR: হট স্টিকে তিনটে DO খুলে · 11 kV সেকশন: লিখিত পারমিট (PTW), দুই দিকে আর্থ · LT: শাটডাউন নিয়ে', Color(0xFFE65100)),
     (Icons.handyman_rounded, 'হাতিয়ার', 'হট স্টিক, IR থার্মোমিটার, আর্থ টেস্টার ও স্পাইক, আর্থিং সেট, দড়ি, স্টিল ব্রাশ ও পেস্ট, দুটো রেঞ্চ, করাত, টেস্টার, টং টেস্টার', Color(0xFF2E7D32)),
     (Icons.verified_user_rounded, 'সুরক্ষা', 'হেলমেট, হার্নেস, ইনসুলেটেড গ্লাভস, ফেস শিল্ড · মৃত প্রমাণ ও আর্থ ছাড়া লাইনে হাত নয়', Color(0xFF6A1B9A)),

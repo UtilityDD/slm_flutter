@@ -456,6 +456,19 @@ void main() {
       expect(M5LvLines.spanCard(3), 'P3–P4 স্প্যানের জয়েন্ট শাটডাউনে টাইট');
     });
 
+    test('ruling M5-15(c): the LTDB incoming, in Bangla — no English "LTDB" on screen', () {
+      expect(M5LvLines.ltdbLabel, 'এলটিডিবি ইনকামিং');
+      for (var ph = 0; ph < 3; ph++) {
+        expect(M5LvLines.terminalLabel(ph), startsWith('এলটিডিবি ইনকামিং '));
+        expect(M5LvLines.terminalLabel(ph), isNot(contains('LTDB')));
+      }
+      expect(M5LvLines.routeAreaRight, contains('এলটিডিবি-র ইনকামিং-এ তিন ফেজ মাপি'));
+      for (final l in [...M5LvLines.routeAreaRight, for (final l in M5LvLines.decideText.values) ...l]) {
+        expect(l, isNot(contains('এলটিডিবি-তে')), reason: l);
+        expect(l, isNot(contains('LTDB')), reason: l);
+      }
+    });
+
     test('libraries: same length, big enough, never a right marked wrong; the coworker lines are listed', () {
       expectSameLength('why', [...M5LvLines.allWhyRight, ...M5LvLines.myths]);
       expect(M5LvLines.myths.toSet().intersection(M5LvLines.allWhyRight.toSet()), isEmpty);

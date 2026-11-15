@@ -59,9 +59,12 @@ export 'm4_insulator_prep_world.dart' show M4InsulatorPrepFault, M4InsulatorPrep
 // (order).
 //
 // Deadly: climbing a line with no PTW / shutdown, or with the earth not on
-// both sides (also by listening to the coworker, "এক দিকে আর্থ দিলেই হবে").
+// both sides (also by listening to the coworker, "এক দিকে আর্থ দিলেই হবে");
+// an earth put on the line while it is still live (no PTW / shutdown: owner
+// ruling B8, 2026-11-15 — earth on a live line is deadly everywhere).
 // Slips: a good insulator called faulty, the wrong kind of insulator, a
-// fitting for the other kind, a cracked spare, an earth on a live / untested line, climbing without helmet
+// fitting for the other kind, a cracked spare, an earth on a dead line not yet
+// tested, climbing without helmet
 // + harness or without the full kit. Three slips strike the level out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, full
@@ -330,12 +333,13 @@ abstract final class M4InsulatorPrepMistakes {
     deadly: true,
     lessonPoint: 0,
   );
-  // Earthing a line that is still on / not yet proven dead: the module's
-  // rule (lesson 1.6), not lesson 4.1's text.
+  // Earthing a line that is still on: the module's rule (lesson 1.6), not
+  // lesson 4.1's text. Deadly (owner ruling B8, 2026-11-15).
   static const earthLive = DoMistake(
     key: '${prefix}earth-live',
     textBn: 'লাইন এখনো চালু! আগে পারমিট (PTW) নিয়ে শাটডাউন, টেস্টারে মৃত প্রমাণ — তবে আর্থ।',
     art: _earth,
+    deadly: true,
     lessonPoint: 0,
   );
   static const earthUntested = DoMistake(
@@ -543,7 +547,7 @@ class M4InsulatorPrepRun {
   /// The earthing set on the line, [side] 0 left / 1 right of the pole.
   DoMistake? tapEarth(int side) {
     if (!_open || tool != M4InsulatorPrepTool.earth || earths.contains(side)) return null;
-    if (!ptw) return _slip(M4InsulatorPrepMistakes.earthLive);
+    if (!ptw) return deadly = M4InsulatorPrepMistakes.earthLive;
     if (!tested) return _slip(M4InsulatorPrepMistakes.earthUntested);
     earths.add(side);
     if (earths.length == 2) {
@@ -683,6 +687,10 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
 
   var _freeze = false;
   Completer<void>? _frozen;
+
+  /// The earth went onto the live line on this side (B8): the flash comes off
+  /// its clamps, and the trainee stays on the ground.
+  int? _earthDeathSide;
   final _nudge = TaskNudge();
   int _nudgeN = 0;
 
@@ -837,6 +845,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
     if (_run.earths.length == 1 && !_run.earths.contains(side) && _run.tested && holdForCoworker()) return;
     _tick('sounds/intro/impact_metal.ogg', 0.5);
     final m = _run.tapEarth(side);
+    if (m != null && m.deadly) _earthDeathSide = side;
     setState(() => _wake++);
     if (m != null) unawaited(_mistake(m, global));
   }
@@ -976,8 +985,8 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
   Future<void> onCoworkerAnswer(bool held, Offset origin, {required bool direct}) async {
     if (!held) {
       // Listened to him: up the pole with the earth on one side only. Deadly
-      // (not the playbook's usual slip) because the act he pushes is itself on
-      // the Module 4 deadly list (MODULE4_LADDER.md row 2) — an owner question.
+      // because the act he pushes is itself on the Module 4 deadly list
+      // (MODULE4_LADDER.md row 2; owner ruling B1, playbook row 8).
       _run.failDeadly(M4InsulatorPrepMistakes.earthBoth);
       await _deadly(M4InsulatorPrepMistakes.earthBoth);
       return;
@@ -1037,9 +1046,9 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
     await _sayChain([speak ? m.textBn : _wrongBag.next().shownBn], mood: GuideMood.warn);
   }
 
-  /// Up a line that is not dead and earthed both sides: the scene freezes
-  /// grey and the flash comes off the work point in colour; then near-miss
-  /// or death.
+  /// Up a line that is not dead and earthed both sides, or an earth on the
+  /// live line (B8): the scene freezes grey and the flash comes off the work
+  /// point (or the earth's clamps) in colour; then near-miss or death.
   Future<void> _deadly(DoMistake m) async {
     if (_ended) return;
     _ended = true;
@@ -1178,7 +1187,7 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
     final grey = _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst);
     final view = _view;
     final s = _run.site;
-    final up = _run.climbed || _run.deadly != null;
+    final up = _run.climbed || (_run.deadly != null && _earthDeathSide == null);
     return [
       Positioned.fill(
         key: const ValueKey('world'),
@@ -1251,7 +1260,14 @@ class _PrepRunPageState extends ConsumerState<_PrepRunPage>
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: quiet ? 1 : 0, end: 1),
               duration: const Duration(milliseconds: 1500),
-              builder: (_, v, _) => CustomPaint(painter: M4InsulatorPrepFlashPainter(at: geo.spotCentre(s.kind, s.faulty), v: v)),
+              builder: (_, v, _) => CustomPaint(
+                painter: M4InsulatorPrepFlashPainter(
+                  at: _earthDeathSide == null
+                      ? geo.spotCentre(s.kind, s.faulty)
+                      : Offset(M4InsulatorPrepGeo.earthX[_earthDeathSide!], geo.wireY(s.kind, 1, M4InsulatorPrepGeo.earthX[_earthDeathSide!])),
+                  v: v,
+                ),
+              ),
             ),
           ),
         ),

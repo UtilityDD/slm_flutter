@@ -5,7 +5,8 @@
 // in the shell: idle perf, the guide first, a full clean play (bad meters
 // swapped, the ghost checked, the live line stopped, the coworker refused), a
 // needless stop and a guessed stop (a slip, neutral card, the round stays),
-// listening to the coworker (a slip, never a hand on the line), the coworker
+// listening to the coworker (owner ruling B1: deadly on a live line or an
+// unproven meter's zero, else a slip and the round stays), the coworker
 // on a fast play, three slips striking out, a slip card, the gesture hint, and
 // the deadly freeze (touching on an unproven meter's zero).
 import 'dart:async';
@@ -292,18 +293,22 @@ void main() {
       expect(a.ended, isFalse);
       expect(a.slips, 1);
       // A reading of 0.0 (no voltage seen yet) is no reason to stop either.
+      // (The test before a proof is its own slip, once a round: A9.)
       expect(a.test(const DeadPair(r, b))!.volts, 0);
+      expect(a.takeSlip(), DeadMistakes.testFirst);
+      expect(a.slips, 2);
       expect(a.liveRead, isFalse);
       expect(a.decide(touch: false), DeadMistakes.needlessStop);
-      expect(a.slips, 2);
+      expect(a.slips, 3);
       // Real voltage on the meter, even one not proven yet (a meter cannot
       // fake 230 V): the stop counts, never a slip.
       expect(a.proven, isFalse);
       expect(a.test(const DeadPair(y, n))!.volts, kLiveVolts);
+      expect(a.takeSlip(), isNull, reason: 'the test-first slip is once a round');
       expect(a.liveRead, isTrue);
       expect(a.decide(touch: false), isNull);
       expect(a.shown, isTrue);
-      expect(a.slips, 2);
+      expect(a.slips, 3);
       // The same with a proven meter.
       final p = run1(c)..prove();
       expect(p.test(const DeadPair(r, y))!.volts, kLiveVolts);
@@ -329,7 +334,7 @@ void main() {
       expect(l.liveRead, isTrue);
     });
 
-    test('listening to the coworker is always a slip: never deadly, never right, the round stays', () {
+    test('owner ruling B1: listening is the touch now — deadly on a live line or an unproven meter, else a slip and the round stays', () {
       for (final line in DeadLine.values) {
         for (final fault in [DeadFault.none, DeadFault.cutLead]) {
           final c = DeadCase(
@@ -340,19 +345,74 @@ void main() {
               livePoint: line == DeadLine.live ? r : null,
               ghostPair: line == DeadLine.ghost ? const DeadPair(y, n) : null,
               ghostVolts: 24);
-          // Proven and every pair tested (a proven-dead line too): still a slip.
           final a = run1(c)..prove();
           allPairs(a);
           a.prove();
           final m = a.listen();
-          expect(m, DeadMistakes.listened, reason: '$line $fault');
-          expect(m!.deadly, isFalse);
-          expect(a.slips, 1);
-          expect(a.shown, isFalse);
-          expect(a.ended, isFalse);
-          expect(a.deadly, isNull);
+          final reason = '$line $fault';
+          if (line == DeadLine.live) {
+            expect(m, DeadMistakes.touchLive, reason: reason);
+          } else if (fault == DeadFault.cutLead) {
+            // The cut lead fails the proof: the meter is unproven.
+            expect(m, DeadMistakes.unproven, reason: reason);
+          } else {
+            expect(m, DeadMistakes.listened, reason: reason);
+            expect(m!.deadly, isFalse);
+            expect(a.slips, 1);
+            expect(a.shown, isFalse);
+            expect(a.ended, isFalse);
+            expect(a.deadly, isNull);
+            continue;
+          }
+          expect(m!.deadly, isTrue, reason: reason);
+          expect(a.deadly, m);
+          expect(a.ended, isTrue);
+          // A cut lead fails the proof, so its tests came before a good proof:
+          // the test-first slip (A9).
+          expect(a.slips, fault == DeadFault.cutLead ? 1 : 0, reason: reason);
         }
       }
+      // A good meter never proven (tests straight away): unproven.
+      final u = run1(const DeadCase(id: 'x', site: DeadSite.threePhase, fault: DeadFault.none, line: DeadLine.dead));
+      u.test(const DeadPair(r, n));
+      expect(u.listen(), DeadMistakes.unproven);
+      expect(u.ended, isTrue);
+    });
+
+    test('owner ruling A9: a test before proving the meter is a slip (once a round); the reading still shows and a stop on its voltage is right', () {
+      const live = DeadCase(id: 'x', site: DeadSite.threePhase, fault: DeadFault.none, line: DeadLine.live, livePoint: DeadPoint.r);
+      final a = run1(live);
+      expect(a.test(const DeadPair(r, n))!.volts, kLiveVolts, reason: 'the reading still shows');
+      expect(a.slips, 1);
+      expect(a.takeSlip(), DeadMistakes.testFirst);
+      expect(a.takeSlip(), isNull, reason: 'taken once');
+      expect(DeadMistakes.testFirst.deadly, isFalse);
+      expect(a.ended, isFalse);
+      expect(a.valid, isEmpty, reason: 'a test before the proof never counts');
+      a.test(const DeadPair(y, n));
+      expect(a.takeSlip(), isNull);
+      expect(a.slips, 1, reason: 'once a round');
+      // Stopping at any voltage reading is never punished, proven or not.
+      expect(a.decide(touch: false), isNull);
+      expect(a.slips, 1);
+      // Proven first: no slip.
+      final p = run1(live)..prove();
+      p.test(const DeadPair(y, n));
+      expect(p.takeSlip(), isNull);
+      expect(p.slips, 0);
+      // After a failed proof (a cut lead) the meter is not proven either.
+      final cut = run1(const DeadCase(id: 'x', site: DeadSite.single, fault: DeadFault.cutLead, line: DeadLine.dead))..prove();
+      cut.test(const DeadPair(DeadPoint.p, n));
+      expect(cut.takeSlip(), DeadMistakes.testFirst);
+      // A new round deals the slip afresh.
+      final two = DeadRun(DeadDeal(cases: const [live, live], callAt: 0));
+      two.test(const DeadPair(r, n));
+      expect(two.takeSlip(), DeadMistakes.testFirst);
+      two.decide(touch: false);
+      two.next();
+      two.test(const DeadPair(r, n));
+      expect(two.takeSlip(), DeadMistakes.testFirst);
+      expect(two.slips, 2);
     });
 
     test('complete: every pair proven, proven again, the ghost checked', () {
@@ -685,8 +745,12 @@ void main() {
       expect(c.read(gameSaveProvider).mistakes.single.key, DeadMistakes.needlessStop.key);
       await _gotIt(t);
       expect(find.text(DeadLines.stop), findsOneWidget, reason: 'the round stays');
-      // No proof first: real voltage on the display is reason enough to stop.
+      // No proof first: the test-first slip (A9), but the reading still shows
+      // and real voltage on the display is reason enough to stop.
       await _testPair(t, c0.site, DeadPair(c0.livePoint!, DeadPoint.n));
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(c.read(gameSaveProvider).mistakes.last.key, DeadMistakes.testFirst.key);
+      await _gotIt(t);
       expect(_meter(), DeadLines.volts(kLiveVolts));
       await t.tap(find.text(DeadLines.stop));
       await _pump(t, 1500);
@@ -834,8 +898,10 @@ void main() {
         seed++;
       }
       final c = await _open(t, seed);
-      // Straight onto the circuit: no proof.
+      // Straight onto the circuit: no proof (the test-first slip, A9).
       await _testPair(t, DeadSite.threePhase, const DeadPair(DeadPoint.r, DeadPoint.n));
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      await _gotIt(t);
       expect(_meter(), DeadLines.volts(0));
       await t.tap(find.text(DeadLines.touch));
       await _pump(t, 800);
@@ -849,8 +915,43 @@ void main() {
       expect(find.byType(MistakeCard), findsOneWidget);
       expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
       final s = c.read(gameSaveProvider);
-      expect(s.mistakes.single.key, deal.cases[0].live ? DeadMistakes.touchLive.key : DeadMistakes.unproven.key);
-      expect(s.mistakes.single.deadly, isTrue);
+      expect(s.mistakes.map((m) => m.key), [DeadMistakes.testFirst.key, deal.cases[0].live ? DeadMistakes.touchLive.key : DeadMistakes.unproven.key]);
+      expect(s.mistakes.last.deadly, isTrue);
+      expect(t.takeException(), isNull);
+      await _close(t, c);
+    });
+
+    testWidgets("owner ruling B1: listening on an unproven meter's zero is the deadly touch — freeze, then the near-miss", (t) async {
+      var seed = 0;
+      late DeadDeal deal;
+      while (true) {
+        deal = dealDead(math.Random(seed));
+        final c0 = deal.cases[0];
+        if (deal.callAt == 0 && c0.fault == DeadFault.cutLead && c0.site == DeadSite.threePhase) break;
+        seed++;
+      }
+      final c0 = deal.cases[0];
+      final c = await _open(t, seed);
+      // Straight onto the circuit: no proof (the test-first slip, A9; he
+      // waits for the card); the cut lead reads 0.0.
+      await _testPair(t, DeadSite.threePhase, const DeadPair(DeadPoint.r, DeadPoint.n));
+      expect(find.text(MistakeLines.slipHead), findsOneWidget);
+      expect(find.byType(CoworkerPeek), findsNothing, reason: 'he waits for the card');
+      await _gotIt(t);
+      expect(await _pumpUntil(t, find.byType(CoworkerPeek), maxMs: 4000), isTrue);
+      await waitChoiceDeck(t);
+      final wrong = _onScreen(DeadLines.coworker.wrong);
+      expect(wrong, isNotEmpty);
+      await t.tap(wrong.first, warnIfMissed: false);
+      await tapReasonProceed(t);
+      await _pump(t, 800);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pump(t, 3500);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.map((m) => m.key), [DeadMistakes.testFirst.key, c0.live ? DeadMistakes.touchLive.key : DeadMistakes.unproven.key]);
+      expect(s.mistakes.last.deadly, isTrue);
       expect(t.takeException(), isNull);
       await _close(t, c);
     });

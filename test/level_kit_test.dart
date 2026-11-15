@@ -273,15 +273,50 @@ void main() {
     });
 
     testWidgets('he never cuts into a praise window', (t) async {
+      // Since 2026-11-15 the reason deck opens the moment askReason is called;
+      // he stays away while the right move is rewarded (table window, open
+      // deck, zoomed card) and comes about 0.9 s after its proceed.
+      const right = ChoiceOption('ক', true);
       final s = await _open(t);
       s.putOnTable(10);
-      unawaited(s.askReason(deal: () => const [ChoiceOption('ক', true), ChoiceOption('খ', false), ChoiceOption('গ', false)], question: 'কেন?', stillValid: () => false));
       s.scheduleCoworker();
-      await t.pump(const Duration(milliseconds: 1000));
+      await t.pump(const Duration(milliseconds: 600));
       expect(s.tableHolding, isTrue);
-      expect(s.coworkerOpen, isFalse);
-      await t.pump(const Duration(milliseconds: 3000));
-      expect(s.tableHolding, isFalse);
+      expect(s.holdForCoworker(), isTrue, reason: 'a held control does nothing in the table window');
+      await t.pump();
+      expect(s.coworkerOpen, isFalse, reason: '… and does not call him over the table');
+      unawaited(s.askReason(deal: () => const [right, ChoiceOption('খ', false), ChoiceOption('গ', false)], question: 'কেন?', stillValid: () => true));
+      expect(s.reasonOpen, isTrue, reason: 'the deck opens at once');
+      await t.pump(const Duration(milliseconds: 4000));
+      expect(s.coworkerOpen, isFalse, reason: 'never over an open reason deck (his timer fell due meanwhile)');
+      expect(s.coworkerDue, isTrue);
+      expect(s.holdForCoworker(), isTrue);
+      await t.pump();
+      expect(s.coworkerOpen, isFalse, reason: 'a held control does not call him over the deck');
+      unawaited(s.pickReason(right, Offset.zero));
+      await t.pump(const Duration(milliseconds: 1500));
+      expect(s.reasonAwaitingProceed, isTrue);
+      expect(s.coworkerOpen, isFalse, reason: 'nor over the zoomed reason');
+      s.proceedReason();
+      await t.pump();
+      expect(s.tableBusy, isFalse);
+      await t.pump(const Duration(milliseconds: 950));
+      expect(s.coworkerOpen, isTrue, reason: 'he comes within about 0.9 s once the deck has closed');
+      await _close(t);
+    });
+
+    testWidgets('a level that moved on (stillValid false): no deck, he comes after the window', (t) async {
+      final s = await _open(t);
+      s.putOnTable(10);
+      s.scheduleCoworker();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(s.tableHolding, isTrue);
+      unawaited(s.askReason(deal: () => const [ChoiceOption('ক', true), ChoiceOption('খ', false), ChoiceOption('গ', false)], question: 'কেন?', stillValid: () => false));
+      expect(s.tableHolding, isFalse, reason: 'the hold ends at once');
+      expect(s.reasonOpen, isFalse, reason: 'no stale deck');
+      for (var i = 0; i < 80 && !s.coworkerOpen; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
       expect(s.coworkerOpen, isTrue, reason: 'he comes once the window is over');
       await _close(t);
     });

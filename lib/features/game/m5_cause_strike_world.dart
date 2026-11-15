@@ -136,6 +136,7 @@ class M5CauseRig {
     this.large = false,
     this.source = M5LeakSource.gasket,
     this.traced = false,
+    this.earthed = false,
   });
 
   final M5Place place;
@@ -153,6 +154,9 @@ class M5CauseRig {
   final M5LeakSource source;
   final bool traced;
 
+  /// The LT earth set on the three LT bushings (after the tester's 0 V).
+  final bool earthed;
+
   @override
   bool operator ==(Object other) =>
       other is M5CauseRig &&
@@ -165,10 +169,11 @@ class M5CauseRig {
       other.freshStain == freshStain &&
       other.large == large &&
       other.source == source &&
-      other.traced == traced;
+      other.traced == traced &&
+      other.earthed == earthed;
 
   @override
-  int get hashCode => Object.hash(place, Object.hashAll(doOpen), ltOn, Object.hashAllUnordered(meter), deadPhase, leak, freshStain, large, source, traced);
+  int get hashCode => Object.hash(place, Object.hashAll(doOpen), ltOn, Object.hashAllUnordered(meter), deadPhase, leak, freshStain, large, source, traced, earthed);
 }
 
 const _steel = Color(0xFF6F7880);
@@ -462,6 +467,36 @@ class M5CausePainter extends CustomPainter {
       c.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: b.translate(0, -4), width: 12, height: 16), const Radius.circular(3)), Paint()..color = const Color(0xFF6B4A2E));
       c.drawRect(Rect.fromCenter(center: b.translate(0, 6), width: 4, height: 8), Paint()..color = const Color(0xFFC18A3A));
       c.drawRect(Rect.fromCenter(center: b.translate(0, 4), width: 9, height: 5), Paint()..color = _steel);
+    }
+    // The LT earth set: a clamp on each stud, the copper shorting lead along
+    // them and down to its spike by the right pole's foot.
+    if (rig.earthed) {
+      final copper = Paint()
+        ..color = const Color(0xFFC87533)
+        ..strokeWidth = 2.2
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round;
+      final clamp = Paint()
+        ..color = const Color(0xFF3A3F45)
+        ..strokeWidth = 3.4
+        ..strokeCap = StrokeCap.round;
+      for (var i = 0; i < 3; i++) {
+        final b = g.bushing(i);
+        c.drawLine(b.translate(-4, -6), b.translate(4, 2), clamp);
+      }
+      final a = g.bushing(0).translate(0, 2);
+      final z = g.bushing(2).translate(0, 2);
+      final spike = Offset(M5CauseGeo.rp - 14, g.groundY - 2);
+      c.drawPath(
+          Path()
+            ..moveTo(a.dx, a.dy)
+            ..quadraticBezierTo((a.dx + z.dx) / 2, a.dy + 8, z.dx, z.dy)
+            ..quadraticBezierTo(z.dx + 14, (z.dy + spike.dy) / 2, spike.dx, spike.dy),
+          copper);
+      c.drawLine(spike, spike.translate(0, 8), Paint()
+        ..color = const Color(0xFF5A6066)
+        ..strokeWidth = 4);
+      c.drawCircle(spike, 4.5, Paint()..color = const Color(0xFFC87533));
     }
     // A fresh streak from the source (a leak case, once traced).
     if (rig.leak && rig.traced) {

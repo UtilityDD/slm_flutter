@@ -1,8 +1,10 @@
 // Module 4 rank gate (m4_gate_field.dart, pack gate_m4): the rules of all
 // nine stations, the option libraries, the art on disk, and a full clean
 // play in the shell that unlocks the স্কিলড rank; a deadly move freezes and
-// shows its card; a slip shows its card; three slips strike out; the
-// coworker comes even on a fast play and listening to him is a slip; a
+// shows its card; a slip shows its card; three slips strike out; the oil
+// check comes first, on the running DTR, and a hand on its tank is deadly
+// (A4); the coworker comes even on a fast play and listening to him is the
+// deadly no-earth climb (B1); a
 // station pays only from the table, once; no start button; the guide
 // restates the task; the idle screen stays quiet.
 import 'dart:async';
@@ -124,7 +126,7 @@ Future<void> _close(WidgetTester t, ProviderContainer c) async {
   t.view.reset();
 }
 
-/// Station 1 played right.
+/// Station 2 played right.
 Future<void> _playDo(WidgetTester t) async {
   await _tapKey(t, 'lt-switch');
   await t.tap(_label(M4GateLines.faceShield));
@@ -138,7 +140,7 @@ Future<void> _playDo(WidgetTester t) async {
   await _reason(t, M4GateLines.whyDoQ, M4GateLines.whyDoRight);
 }
 
-/// Station 2 played right.
+/// Station 1 played right.
 Future<void> _playOil(WidgetTester t, M4GateRun deal) async {
   await _tapKey(t, 'gauge');
   await t.tap(_label(M4GateLines.irGun));
@@ -190,7 +192,7 @@ void main() {
       expect(orders.length, greaterThan(30));
     });
 
-    test('1 DO: on-load is deadly; under the fuse and no PPE are slips; off-load + side + PPE opens', () {
+    test('2 DO: on-load is deadly; under the fuse and no PPE are slips; off-load + side + PPE opens', () {
       final load = M4GateRun(2)..stance = M4GateStance.side;
       expect(load.pullDo(0), M4GateMistakes.doOnLoad);
       expect(load.deadly, M4GateMistakes.doOnLoad);
@@ -219,7 +221,7 @@ void main() {
       expect(r.deadly, isNull);
     });
 
-    test('2 oil: a hand on the tank, engine oil and a call unread are slips; low oil → report, normal → write', () {
+    test('1 oil: engine oil and a call unread are slips; low oil → report, normal → write', () {
       int seedFor(bool low) {
         var s = 0;
         while (M4GateRun(s).oilLow != low) {
@@ -233,7 +235,6 @@ void main() {
       expect(low.callOil(M4OilCall.report), M4GateMistakes.oilUnread);
       expect(low.oilDone, isFalse);
       expect(low.slips, 1);
-      expect(low.measureTemp(ir: false), M4GateMistakes.touchTank);
       expect(low.measureTemp(ir: true), isNull);
       low.readGauge();
       expect(low.callOil(M4OilCall.engineOil), M4GateMistakes.engineOil);
@@ -246,6 +247,22 @@ void main() {
         ..measureTemp(ir: true);
       expect(ok.callOil(M4OilCall.report), M4GateMistakes.oilNeedless);
       expect(ok.callOil(M4OilCall.normal), isNull);
+    });
+
+    test('owner ruling A4: the oil check comes first, on the running DTR; a hand on its tank is deadly', () {
+      expect(M4GateStation.values.first, M4GateStation.oilTemp);
+      expect(M4GateStation.oilTemp.index, lessThan(M4GateStation.doOpen.index));
+      final r = M4GateRun(4);
+      expect(r.station, M4GateStation.oilTemp);
+      expect(r.ltOn, isTrue, reason: 'the DTR is still in service');
+      expect(r.doOpen, everyElement(isFalse), reason: 'the DO fuses are still in');
+      expect(M4GateMistakes.touchTank.deadly, isTrue);
+      expect(r.measureTemp(ir: false), M4GateMistakes.touchTank);
+      expect(r.deadly, M4GateMistakes.touchTank);
+      expect(r.ended, isTrue);
+      expect(r.slips, 0);
+      expect(r.measureTemp(ir: true), isNull, reason: 'a dead play takes no more moves');
+      expect(r.tempRead, isFalse);
     });
 
     test('3 earth: two spikes, a high reading cannot pass, water + clamp then retest', () {
@@ -272,6 +289,13 @@ void main() {
     test('4 insulator: no earths is deadly; rope before the insulator; the order', () {
       final bare = M4GateRun(4)..placeEarth(0);
       expect(bare.insStep(M4InsStep.unbind), M4GateMistakes.noEarth);
+
+      // Owner ruling B1: listening to "skip the earths, climb" is that deadly.
+      final pushed = M4GateRun(4);
+      expect(pushed.listenNoEarth(), M4GateMistakes.noEarth);
+      expect(pushed.deadly, M4GateMistakes.noEarth);
+      expect(pushed.ended, isTrue);
+      expect(pushed.slips, 0);
 
       final r = M4GateRun(4)
         ..placeEarth(0)
@@ -472,12 +496,14 @@ void main() {
         expect(keys.add(m.key), isTrue, reason: m.key);
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
         expect(m.lessonPoint, isNotNull, reason: m.key);
-        expect(m.textBn.length, lessThan(140), reason: m.key);
+        // The tank card is m4_dtr_temp's recorded card, word for word (A4).
+        expect(m.textBn.length, lessThan(m == M4GateMistakes.touchTank ? 150 : 140), reason: m.key);
       }
       // Every lesson of the module teaches at least one station.
       expect({for (final m in M4GateMistakes.all) M4GateMistakes.lessonOf(m)}, lessons..remove('4.3'));
       expect(M4GateMistakes.all.where((m) => m.deadly).map((m) => m.key.split('/').last).toSet(), {
         'do-on-load',
+        'touch-tank',
         'no-earth',
         'lamp-live',
         'bal-live',
@@ -509,11 +535,7 @@ void main() {
       final deal = M4GateRun(seed);
       final c = await _open(t, seed);
 
-      // 1 — DO.
-      expect(find.text('DO খোলা'), findsOneWidget);
-      await _playDo(t);
-
-      // 2 — oil and temperature.
+      // 1 — oil and temperature, on the running DTR (A4).
       expect(find.text('তেল ও তাপ'), findsOneWidget);
       await _tapKey(t, 'gauge');
       expect(find.byKey(const ValueKey('gauge-lens')), findsOneWidget);
@@ -521,6 +543,10 @@ void main() {
       await _pump(t, 400);
       await _tapKey(t, deal.oilLow ? 'oil-report' : 'oil-normal', ms: 200);
       await _reason(t, M4GateLines.whyOilQ, M4GateLines.whyOilRight);
+
+      // 2 — DO.
+      expect(find.text('DO খোলা'), findsOneWidget);
+      await _playDo(t);
 
       // 3 — earth.
       expect(find.text('আর্থ টেস্ট'), findsOneWidget);
@@ -598,6 +624,7 @@ void main() {
 
     testWidgets('pulling a DO on load: the scene freezes, then the deadly card', (t) async {
       final c = await _open(t, 5);
+      await _playOil(t, M4GateRun(5));
       await _tapKey(t, 'stand-side');
       await _tapKey(t, 'do-0', ms: 1000);
       expect(find.byKey(const ValueKey('freeze')), findsOneWidget);
@@ -648,7 +675,7 @@ void main() {
         await _pump(t, 400);
         lines.add(c.read(guideDirectorProvider).line);
       }
-      final tasks = M4GateLines.tasks[M4GateStation.doOpen]!;
+      final tasks = M4GateLines.tasks[M4GateStation.oilTemp]!;
       expect(lines.every(tasks.contains), isTrue, reason: '$lines');
       expect(lines.first, isNot(lines.last));
       expect(_score(), before);
@@ -658,6 +685,7 @@ void main() {
 
     testWidgets('three slips: the StruckOutCard, the play failed', (t) async {
       final c = await _open(t, 4);
+      await _playOil(t, M4GateRun(4));
       await _tapKey(t, 'lt-switch');
       await _tapKey(t, 'stand-side');
       for (var i = 0; i < 3; i++) {
@@ -680,24 +708,36 @@ void main() {
       const seed = 31;
       final deal = M4GateRun(seed);
       final c = await _open(t, seed);
-      await _playDo(t);
       final before = _score();
       await _tapKey(t, 'gauge');
       await t.tap(_label(M4GateLines.irGun));
       await _pump(t, 400);
       final key = deal.oilLow ? 'oil-report' : 'oil-normal';
+      final rightAt = t.getCenter(find.byKey(ValueKey(key)));
+      final wrongAt = t.getCenter(find.byKey(const ValueKey('oil-engineOil')));
       await _tapKey(t, key, ms: 100);
-      // Second and third taps in the praise window (and on a wrong call).
-      await t.tap(find.byKey(ValueKey(key)), warnIfMissed: false);
-      await t.tap(find.byKey(const ValueKey('oil-engineOil')), warnIfMissed: false);
+      // The reason deck opens at once and the oil calls go with it: second and
+      // third taps where the right call and a wrong call stood.
+      expect(find.byKey(ValueKey(key)).hitTestable(), findsNothing, reason: 'the calls hide while the reason is open');
+      await t.tapAt(rightAt);
+      await t.tapAt(wrongAt);
       await _pump(t, 200);
+      // A tap may have opened a reason card's preview: it never answers; set it aside.
+      final reject = find.byKey(const ValueKey('choice-reject'));
+      if (reject.evaluate().isNotEmpty) {
+        for (var ms = 0; ms < 1500 && reject.hitTestable().evaluate().isEmpty; ms += 50) {
+          await t.pump(const Duration(milliseconds: 50));
+        }
+        await t.tap(reject.hitTestable().first, warnIfMissed: false);
+        await _pump(t, 300);
+      }
       expect(_score(), before, reason: 'nothing is paid before the reason');
       expect(find.byType(MistakeCard), findsNothing);
       await _reason(t, M4GateLines.whyOilQ, M4GateLines.whyOilRight);
       final paid = _score() - before;
       expect(paid, greaterThan(0));
       expect(paid, lessThanOrEqualTo(40), reason: 'one station, one payout');
-      expect(find.text('আর্থ টেস্ট'), findsOneWidget);
+      expect(find.text('DO খোলা'), findsOneWidget);
       await _pump(t, 3000);
       expect(find.byType(ChoiceDeck), findsNothing, reason: 'no second reason deck');
       expect(_score(), before + paid);
@@ -705,12 +745,12 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('the coworker comes even on a fast play; listening to him is a slip', (t) async {
+    testWidgets('the coworker comes even on a fast play; listening to him is the deadly no-earth climb (owner ruling B1)', (t) async {
       const seed = 21;
       final deal = M4GateRun(seed);
       final c = await _open(t, seed);
-      await _playDo(t);
       await _playOil(t, deal);
+      await _playDo(t);
       await _playEarth(t);
       expect(find.text('ইনসুলেটর বদল'), findsOneWidget);
       // At once, before his 1.2 s: the first earth waits for him.
@@ -725,23 +765,17 @@ void main() {
       expect(wrong, hasLength(2));
       await t.tap(wrong.first, warnIfMissed: false);
       await tapReasonProceed(t);
-      await _pump(t, 1500);
-      expect(find.byType(MistakeCard), findsOneWidget);
-      expect(find.text(M4GateMistakes.earthSkip.textBn), findsOneWidget);
-      expect(find.byKey(const ValueKey('freeze')), findsNothing);
-      final m = c.read(gameSaveProvider).mistakes;
-      expect(m.where((x) => x.deadly), isEmpty, reason: 'listening is a slip');
-      await t.tap(find.text(MistakeLines.gotIt));
-      await _pump(t, 800);
-      // The play goes on: both earths, then the steps; he never comes back.
-      await _tapKey(t, 'earth-0');
-      await _tapKey(t, 'earth-1');
-      expect(find.byKey(const ValueKey('coworker')), findsNothing);
-      for (final s in M4InsStep.values) {
-        await _tapKey(t, 'ins-${s.name}', ms: 500);
+      for (var i = 0; i < 40 && find.byKey(const ValueKey('freeze')).evaluate().isEmpty; i++) {
+        await _pump(t, 100);
       }
-      await _reason(t, M4GateLines.whyInsQ, M4GateLines.whyInsRight);
-      expect(find.text('জাম্পার টাইট'), findsOneWidget);
+      expect(find.byKey(const ValueKey('freeze')), findsOneWidget, reason: 'listening plays out as the deadly act');
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      await _pump(t, 3000);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(M4GateMistakes.noEarth.textBn), findsOneWidget);
+      final m = c.read(gameSaveProvider).mistakes.single;
+      expect(m.key, M4GateMistakes.noEarth.key);
+      expect(m.deadly, isTrue);
       expect(t.takeException(), isNull);
       await _close(t, c);
     });
@@ -750,8 +784,8 @@ void main() {
       const seed = 21;
       final deal = M4GateRun(seed);
       final c = await _open(t, seed);
-      await _playDo(t);
       await _playOil(t, deal);
+      await _playDo(t);
       await _playEarth(t);
       await _pump(t, 3000);
       await _pickRight(t, M4GateLines.coworker.right);
@@ -771,7 +805,6 @@ void main() {
 
     testWidgets('over-calls cost a slip: "earthing OK" unread, an oil call unread', (t) async {
       final c = await _open(t, 6);
-      await _playDo(t);
       // An oil call before the gauge and the heat are read.
       await _tapKey(t, 'oil-normal', ms: 600);
       expect(find.text(M4GateMistakes.oilUnread.textBn), findsOneWidget);
@@ -779,6 +812,7 @@ void main() {
       await t.tap(find.text(MistakeLines.gotIt));
       await _pump(t, 800);
       await _playOil(t, M4GateRun(6));
+      await _playDo(t);
       // "Earthing OK" before any reading.
       await _tapKey(t, 'earth-ok', ms: 600);
       expect(find.text(M4GateMistakes.earthUntested.textBn), findsOneWidget);
@@ -798,7 +832,7 @@ void main() {
       expect(state().showing, isFalse);
       await _pump(t, GestureHints.idle.inMilliseconds + 600);
       expect(state().showing, isTrue, reason: 'the hand shows after idle');
-      // Station 1 has the LT switch, two PPE, two stances and three DOs.
+      // Station 1 (oil) has the gauge, the IR gun, the hand and three calls.
       expect(state().debugOptions.length, greaterThanOrEqualTo(6), reason: 'a sweep over all, never one answer');
       var pressed = false;
       for (var ms = 0; ms < 2000; ms += 50) {
@@ -836,6 +870,7 @@ void main() {
 
     testWidgets('the docket chip and the guide wait while the reason deck is up', (t) async {
       final c = await _open(t, 8);
+      await _playOil(t, M4GateRun(8));
       await _tapKey(t, 'lt-switch');
       await t.tap(_label(M4GateLines.faceShield));
       await _pump(t, 200);
@@ -872,15 +907,20 @@ void main() {
       }
     });
 
-    testWidgets('a hand on the tank is a slip: its card, no freeze', (t) async {
+    testWidgets('owner ruling A4: a hand on the running DTR tank freezes the scene, then the deadly card', (t) async {
       final c = await _open(t, 6);
-      await _playDo(t);
+      expect(find.text('তেল ও তাপ'), findsOneWidget, reason: 'the first station, before the DOs');
       await t.tap(_label(M4GateLines.handOnTank));
       await _pump(t, 600);
-      expect(find.byKey(const ValueKey('freeze')), findsNothing);
+      expect(find.byKey(const ValueKey('freeze')), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pump(t, 3000);
       expect(find.byType(MistakeCard), findsOneWidget);
       expect(find.text(M4GateMistakes.touchTank.textBn), findsOneWidget);
-      expect(c.read(gameSaveProvider).mistakes.single.deadly, isFalse);
+      expect(find.text(MistakeLines.slipHead), findsNothing);
+      final m = c.read(gameSaveProvider).mistakes.single;
+      expect(m.key, M4GateMistakes.touchTank.key);
+      expect(m.deadly, isTrue);
       expect(t.takeException(), isNull);
       await _close(t, c);
     });

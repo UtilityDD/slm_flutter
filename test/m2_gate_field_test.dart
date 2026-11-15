@@ -336,7 +336,7 @@ void main() {
       expect(r.deadly, M2GateMistakes.bambooStick);
     });
 
-    test('2 DO: on-load and under are deadly, no PPE a slip, off-load + side + PPE opens', () {
+    test('2 DO: on-load is deadly; under and no PPE are slips (B3); off-load + side + PPE opens', () {
       final load = M2GateRun(2)..stance = M2Stance.side;
       expect(load.pullDo(0), M2GateMistakes.doOnLoad);
 
@@ -346,6 +346,11 @@ void main() {
         ..faceShield = true
         ..doGloves = true;
       expect(under.pullDo(0), M2GateMistakes.doUnder);
+      expect(under.deadly, isNull, reason: 'under the DO = a slip everywhere (owner ruling B3)');
+      expect(under.slips, 1);
+      expect(under.doOpen[0], isFalse);
+      under.stance = M2Stance.side;
+      expect(under.pullDo(0), isNull, reason: 'to the side: the DO opens');
 
       final r = M2GateRun(2)
         ..switchLtOff()
@@ -382,7 +387,7 @@ void main() {
       expect(M2GateRun(3).probeHt(), M2GateMistakes.mmOnHt);
     });
 
-    test('3 prove dead (a phase still live): calling it dead is a slip; stop → isolate again → re-test', () {
+    test('3 prove dead (a phase still live): calling it dead is deadly (B5); stop → isolate again → re-test', () {
       final r = M2GateRun(_seedWhere((r) => r.liveLeft != null))..dial = M2Dial.acV;
       final live = r.liveLeft!;
       expect(r.stopWork(), M2GateMistakes.needlessStop, reason: 'nothing read yet');
@@ -392,7 +397,29 @@ void main() {
       }
       expect(r.readingPhase(live), matches(RegExp(r'^2[23]\d V$')));
       r.probeLive();
-      expect(r.confirmDead(), M2GateMistakes.deadCallLive);
+      final called = M2GateRun(r.seed)..dial = M2Dial.acV;
+      called.probeLive();
+      for (var i = 0; i < 3; i++) {
+        called.probePhase(i);
+      }
+      called.probeLive();
+      expect(called.confirmDead(), M2GateMistakes.deadCallLive);
+      expect(called.deadly, M2GateMistakes.deadCallLive);
+      expect(called.ended, isTrue);
+      // Owner ruling B5: deadly even before all three phases are tested.
+      final early = M2GateRun(r.seed)..dial = M2Dial.acV;
+      early.probeLive();
+      early.probePhase(live);
+      expect(early.tested, hasLength(1));
+      expect(early.confirmDead(), M2GateMistakes.deadCallLive);
+      expect(early.deadly!.deadly, isTrue);
+      expect(early.slips, 0);
+      // A dead phase only so far: still the all-phases slip.
+      final notYet = M2GateRun(r.seed)..dial = M2Dial.acV;
+      notYet.probeLive();
+      notYet.probePhase((live + 1) % 3);
+      expect(notYet.confirmDead(), M2GateMistakes.allPhases);
+      expect(notYet.deadly, isNull);
       expect(r.stopWork(), isNull);
       expect(r.liveLeft, isNull);
       expect(r.tested, isEmpty);
@@ -404,7 +431,7 @@ void main() {
       }
       r.probeLive();
       expect(r.confirmDead(), isNull);
-      expect(r.slips, 2);
+      expect(r.slips, 1, reason: 'only the needless stop before any reading');
     });
 
     test('4 skin and crimp: away from the body, AL 95, die 95, full cycle', () {
@@ -577,7 +604,7 @@ void main() {
       expect(M2GateMistakes.all.where((m) => m.deadly).map((m) => m.key).toSet(), {
         'm2/gate/bamboo-stick',
         'm2/gate/do-on-load',
-        'm2/gate/do-under',
+        'm2/gate/dead-call-live',
         'm2/gate/mm-on-ht',
         'm2/gate/phase-no-gloves',
         'm2/gate/phase-live-swap',

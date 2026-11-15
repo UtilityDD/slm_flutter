@@ -318,7 +318,7 @@ class MascotSpeechLibrary {
     ),
     MascotCue(
       id: 'ladder.poke.2',
-      textBn: 'লাইনে হাত দেওয়ার আগে গ্লাভস ফুঁ দিয়ে দেখুন—লিক থাকলে বাতিল!',
+      textBn: 'লাইনে হাত দেওয়ার আগে গ্লাভসের মুখটা পাকিয়ে হাওয়া আটকে দেখুন — সামান্য লিক থাকলেও ওটা বাতিল!',
       mood: GuideMood.inspire,
       gesture: GuideGesture.leanLeft,
     ),

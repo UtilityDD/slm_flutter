@@ -584,7 +584,7 @@ void main() {
       await _close(t, c);
     });
 
-    testWidgets('praise window: taps on the DTR or where the calls were do nothing until the reason deck', (t) async {
+    testWidgets('right call: taps on the DTR or where the calls were do nothing while the reason deck comes up', (t) async {
       final seed = _seedWhere((d) => d.callAt != 0);
       final deal = m3DtrCheckupDeal(math.Random(seed));
       final c = await _open(t, seed);
@@ -597,16 +597,18 @@ void main() {
       await t.tap(right);
       await confirmChoice(t);
       await t.pump(const Duration(milliseconds: 120));
-      expect(find.byType(ChoiceDeck), findsNothing, reason: 'still the praise window');
-      // Taps in the praise window: on a part of the DTR and where the calls were.
+      // The reason deck opens at once (no praise wait); its cards are still dealing.
+      expect(find.byType(ChoiceDeck), findsOneWidget, reason: 'the deck comes at once');
+      // Taps as it comes up: on a part of the DTR and where the calls were.
       await t.tapAt(_geo.spotAt(M3DtrCheckupSpot.breather) * _k);
       await t.tapAt(okAt);
       await t.tapAt(urgentAt);
       await t.pump(const Duration(milliseconds: 100));
       expect(_lensName(), '', reason: 'no look while the ◆ waits on the table');
       expect(find.byType(MistakeCard), findsNothing);
-      expect(await _pumpUntil(t, find.byType(ChoiceDeck)), isTrue);
-      await _pump(t, 700);
+      expect(c.read(gameSaveProvider).mistakes, isEmpty, reason: 'no second call');
+      await waitChoiceDeck(t);
+      expect(find.byKey(const ValueKey('choice-confirm')), findsNothing, reason: 'the taps opened no card');
       await _pickRight(t, M3DtrCheckupLines.whyRight(deal.cases[0], deal.cases[0].verdict));
       await _pump(t, 3000);
       expect(c.read(gameSaveProvider).mistakes, isEmpty);

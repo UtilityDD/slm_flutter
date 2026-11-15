@@ -20,7 +20,7 @@ import 'game_save.dart';
 import 'gesture_hint.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
-import 'level_juice.dart' show FreezeFrame, freezeFilter;
+import 'level_juice.dart' show FreezeFrame, freezeFilter, starsForMark;
 import 'level_result_parts.dart';
 import 'level_shell.dart';
 import 'mistake_kit.dart';
@@ -818,6 +818,8 @@ class _DistanceRunPageState extends ConsumerState<_DistanceRunPage> with DoDeath
     }
     final delta = await save.commitLevelScore(_rungId, _runScore);
     if (_run.passed) await save.recordBestTime(_rungId, _clock.elapsedMilliseconds);
+    final stars = starsForMark(passed: _run.passed, mark: mark, quick: _clock.elapsedMilliseconds < widget.pack.quickMs);
+    if (stars > 0) await save.recordStars(_rungId, stars);
     if (!mounted) return;
     setState(() {
       _mark = mark;

@@ -149,10 +149,15 @@ class LearnBoardSlot {
     this.pendingPoints = 15,
     this.cards = 4,
     this.whyCards = 3,
+    this.noteBn = '',
   });
 
   final String id;
   final String promptBn;
+
+  /// A short side note written (never spoken) on this round's right-reason
+  /// card; empty = none.
+  final String noteBn;
 
   /// Item pool: every run deals one safe item and [cards] − 1 traps from it;
   /// unseen traps swap in after a mistake.

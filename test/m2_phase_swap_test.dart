@@ -26,6 +26,7 @@ import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/level_frame.dart';
 import 'package:slm_flutter/features/game/level_juice.dart';
 import 'package:slm_flutter/features/game/level_shell.dart';
+import 'package:slm_flutter/features/game/m2_phase_meter.dart' show PmMistakes;
 import 'package:slm_flutter/features/game/m2_phase_swap.dart';
 import 'package:slm_flutter/features/game/m2_phase_swap_world.dart';
 import 'package:slm_flutter/features/game/mistake_kit.dart';
@@ -223,11 +224,30 @@ void main() {
       }
     }
 
+    test('owner ruling B4: a bare-hand clip on live terminals (switch ON) is deadly; on dead terminals (OFF) a slip', () {
+      final live = run1(PhaseKind.rev)..hold(PhaseTool.meter);
+      expect(live.switchOn, isTrue);
+      final m = live.tapTerminal(0);
+      expect(m, PhaseMistakes.bareLive);
+      expect(m, same(PmMistakes.bareLive), reason: 'the m2_phase_meter card, reused');
+      expect(m!.deadly, isTrue);
+      expect(live.deadly, m);
+      expect(live.ended, isTrue);
+      expect(live.probes, isEmpty);
+      final dead = run1(PhaseKind.rev)
+        ..toggleSwitch()
+        ..hold(PhaseTool.meter);
+      expect(dead.switchOn, isFalse);
+      expect(dead.tapTerminal(0), PhaseMistakes.noGloves);
+      expect(dead.deadly, isNull);
+      expect(dead.slips, 1);
+      expect(dead.probes, isEmpty);
+    });
+
     test('the live test: gloves first; probes never on the earth bar; a misread is a slip', () {
-      final r = run1(PhaseKind.rev)..hold(PhaseTool.meter);
-      expect(r.tapTerminal(0), PhaseMistakes.noGloves);
-      expect(r.probes, isEmpty);
-      r.putGloves();
+      final r = run1(PhaseKind.rev)
+        ..putGloves()
+        ..hold(PhaseTool.meter);
       expect(r.tapEarth(), PhaseMistakes.probeEarth);
       clip(r);
       expect(r.readingUp, isTrue);
@@ -235,7 +255,7 @@ void main() {
       expect(r.readingUp, isTrue, reason: 'still to read');
       expect(r.answer(false), isNull);
       expect(r.fixing, isTrue);
-      expect(r.slips, 3);
+      expect(r.slips, 2);
       expect(r.caught, containsAll([PhaseLines.caughtTest, PhaseLines.caughtRev]));
     });
 
@@ -344,7 +364,7 @@ void main() {
       for (final l in all) {
         expect(RegExp('[০-৯]').hasMatch(l), isFalse, reason: l);
       }
-      expect(PhaseMistakes.all.where((m) => m.deadly), [PhaseMistakes.swapLive]);
+      expect(PhaseMistakes.all.where((m) => m.deadly), [PhaseMistakes.swapLive, PhaseMistakes.bareLive]);
       for (final m in PhaseMistakes.all) {
         expect(m.key, startsWith('2.8/phase/'));
         expect(File(m.art).existsSync(), isTrue, reason: m.art);
@@ -598,6 +618,22 @@ void main() {
       expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
       final s = c.read(gameSaveProvider);
       expect(s.mistakes.single.key, PhaseMistakes.swapLive.key);
+      expect(s.mistakes.single.deadly, isTrue);
+      await _close(t, c);
+    });
+
+    testWidgets('owner ruling B4: the meter clipped bare-handed on live terminals: freeze first, then the card', (t) async {
+      final c = await _open(t, 2);
+      await _tool(t, PhaseLines.meter);
+      await _tapAt(t, _geo.terminals[0]);
+      await _pump(t, 500);
+      expect(find.byType(FreezeFrame), findsOneWidget);
+      expect(find.byType(MistakeCard), findsNothing);
+      await _pump(t, 3500);
+      expect(find.byType(MistakeCard), findsOneWidget);
+      expect(find.text(MistakeLines.nearMissHead), findsOneWidget);
+      final s = c.read(gameSaveProvider);
+      expect(s.mistakes.single.key, PmMistakes.bareLive.key);
       expect(s.mistakes.single.deadly, isTrue);
       await _close(t, c);
     });

@@ -21,7 +21,7 @@ import 'gesture_hint.dart';
 import 'helmet_check.dart';
 import 'learn_feedback_lines.dart';
 import 'level_frame.dart';
-import 'level_juice.dart' show starsFor;
+import 'level_juice.dart' show FreezeFrame, freezeFilter, starsFor;
 import 'level_result_parts.dart';
 import 'mistake_kit.dart';
 import 'reason_table.dart';
@@ -32,7 +32,13 @@ import 'spoken_once.dart';
 
 // Lesson 1.1, কাজ 2: "গ্লাভস যাচাই". Before the van leaves, pick three sound
 // pairs of rubber gloves (own, partner's, spare). Rubber gloves must be
-// air-tested before they are packed: a pinhole shows only that way. Then the
+// air-tested before they are packed: a pinhole shows only that way (the
+// roll test of IS 4770 Annex B: the cuff rolled up to trap the air; the deep
+// crack leaks too, owner ruling A6, 2026-11-15). Packing a
+// pinholed or cracked rubber pair, or any non-rubber glove (cotton, bike,
+// leather, cut-resistant), is deadly (owner ruling B6, 2026-11-15; MODULE1
+// row 3): the yard freezes, then the near-miss / death card. A wet pair stays
+// a slip (dry it and use it). Then the
 // helmet station (helmet_check.dart): your own helmet from the shelf, looked
 // over with the torch, inside and at the chin strap.
 //
@@ -46,7 +52,11 @@ import 'spoken_once.dart';
 
 enum GloveKind { good, flawed, wrong }
 
-/// pinhole: hidden, only the air test finds it. crack / wet: visible on a close look.
+/// pinhole: hidden, only the air test finds it. crack: a deep crack through
+/// the rubber, seen on a close look, and it leaks in the air test like a hole
+/// (owner ruling A6, 2026-11-15; IS 4770 Annex B; OSHA 1910.137(c)(2)(iii)(A)).
+/// No line compares how fast a crack and a pinhole leak. wet: seen on a close
+/// look; it holds air (the eye check finds it).
 enum GloveFlawKind { pinhole, crack, wet }
 
 @immutable
@@ -91,7 +101,11 @@ class GloveItem {
   /// Flawed copies (and the wet pair) only.
   final GloveFlaw? flaw;
 
-  bool get leaks => flaw?.kind == GloveFlawKind.pinhole;
+  /// The air test lets the air out: a pinhole or the deep crack (A6).
+  bool get leaks => flaw?.kind == GloveFlawKind.pinhole || flaw?.kind == GloveFlawKind.crack;
+
+  /// Only the air test finds it (the crack shows on a close look too).
+  bool get hiddenFlaw => flaw?.kind == GloveFlawKind.pinhole;
 
   GloveItem withFlaw(GloveFlaw f) =>
       GloveItem(id: '$id#${f.id}', kind: GloveKind.flawed, asset: asset, aspect: aspect, labelBn: f.labelBn, lineBn: f.lineBn, flaw: f);
@@ -111,7 +125,8 @@ abstract final class GloveLines {
   static const askSpare = 'শেষে একটা বাড়তি জোড়া।';
   static const testFirst = 'আগে হাওয়া দিয়ে দেখুন!';
   static const guessed = 'ঠিক, কিন্তু আন্দাজে নয়—আগে হাওয়া দিয়ে দেখুন।';
-  /// Neutral: the air test finds leaks only (a wet or cracked pair holds air too).
+  /// Neutral: the air test finds leaks only (a wet pair holds air too; the
+  /// deep crack leaks, A6), so it never says "this pair is fine".
   static const holds = 'হাওয়া ধরে রাখছে—লিক নেই।';
   static const leaks = 'হাওয়া বেরিয়ে যাচ্ছে—ফুটো আছে!';
   static const pressMore = 'আরও একটু চেপে ধরে রাখুন।';
@@ -124,6 +139,8 @@ abstract final class GloveLines {
   static const allSet = 'তিন জোড়া গ্লাভস পরীক্ষিত, হেলমেটও দেখা হলো। এবার বেরোনো যায়।';
   static const fail = 'এবার হলো না। ভালো করে দেখে আবার চেষ্টা করুন।';
   static const quick = 'ঝটপট আর নির্ভুল! বোনাস পেলেন।';
+  static const deadlyWord = 'থামুন!';
+  static const nearMissWord = 'অল্পের জন্য!';
   static const testButton = 'চেপে ধরে হাওয়া দিন';
 
   /// Mistakes-book lines (glove slips are booked like the helmet's).
@@ -132,7 +149,9 @@ abstract final class GloveLines {
   static const listenCard = 'তাড়ার চাপে হাওয়া-পরীক্ষা বাদ দিতে রাজি হলেন। নতুন হোক বা জরুরি ডাক—প্রতিবার পরার আগে হাওয়া দিয়ে দেখুন।';
 
   /// Listening to the coworker (skip the air test) — a slip (playbook row 8;
-  /// Module 1's deadly list does not include it).
+  /// owner ruling B1: the act he pushes, packing untested, is not deadly by
+  /// itself — an untested sound pair is refused; packing a bad pair is the
+  /// deadly act on its own, B6).
   static const listenMistake = DoMistake(key: '1.1/glove/listened', textBn: listenCard, art: '$_d/tray_rubber_gloves.webp', lessonPoint: kGloveLessonPoint);
 
 
@@ -357,7 +376,8 @@ class GloveOutcome {
 
 /// Rubber gloves must be air-tested before a decision: packing an untested
 /// sound pair is refused ("আগে হাওয়া দিয়ে দেখুন!"), and sending back an
-/// untested pinholed pair is a lucky guess, not a clean answer.
+/// untested pinholed pair is a lucky guess, not a clean answer (the crack
+/// shows on a close look, so sending it back untested is clean).
 GloveOutcome judgeGlove(GloveItem g, GloveChoice c, {required bool tested}) {
   final needsTest = g.rubber && !tested;
   switch ((g.kind, c)) {
@@ -372,14 +392,19 @@ GloveOutcome judgeGlove(GloveItem g, GloveChoice c, {required bool tested}) {
     case (_, GloveChoice.wear):
       return GloveOutcome(right: false, clean: false, delta: -5, packs: false, leavesTray: true, stampBn: gloveStampWrong, reasonBn: g.lineBn);
     case (_, GloveChoice.reject):
-      if (g.leaks && needsTest) {
+      if (g.hiddenFlaw && needsTest) {
         return GloveOutcome(right: true, clean: false, delta: 0, packs: false, leavesTray: true, stampBn: gloveStampReject, wordBn: GloveLines.guessed, reasonBn: g.lineBn);
       }
       return GloveOutcome(right: true, clean: true, delta: 5, packs: false, leavesTray: true, stampBn: gloveStampReject, wordBn: GloveLines.caught, reasonBn: g.lineBn);
   }
 }
 
-/// The slip booked for a wrong decision on [g] (mistakes book, strike-out card).
+/// Packing [g] would kill: a pinholed or cracked rubber pair, or any
+/// non-rubber glove (owner ruling B6, 2026-11-15). A wet pair is a slip.
+bool gloveDeadly(GloveItem g) => g.kind == GloveKind.wrong || (g.kind == GloveKind.flawed && g.flaw?.kind != GloveFlawKind.wet);
+
+/// The mistake booked for a wrong decision on [g] (mistakes book, strike-out
+/// card): deadly when a deadly glove was packed ([gloveDeadly]), else a slip.
 DoMistake gloveMistake(GloveItem g, GloveOutcome o) {
   final key = switch (g.kind) {
     GloveKind.good => o.wordBn == GloveLines.testFirst ? 'untested' : 'rejected-good',
@@ -390,7 +415,15 @@ DoMistake gloveMistake(GloveItem g, GloveOutcome o) {
     GloveKind.good => o.wordBn == GloveLines.testFirst ? GloveLines.uncheckedCard : GloveLines.rejectedCard,
     _ => o.reasonBn.isNotEmpty ? o.reasonBn : g.lineBn,
   };
-  return DoMistake(key: '1.1/glove/$key', textBn: text, art: g.asset, lessonPoint: g.id == 'cut' ? kCutGloveLessonPoint : kGloveLessonPoint);
+  return DoMistake(
+    key: '1.1/glove/$key',
+    textBn: text,
+    art: g.asset,
+    // Only a pack reaches here for a flawed or wrong glove (sending one back
+    // is always right), so a deadly glove here was packed.
+    deadly: gloveDeadly(g),
+    lessonPoint: g.id == 'cut' ? kCutGloveLessonPoint : kGloveLessonPoint,
+  );
 }
 
 class GloveRound {
@@ -447,7 +480,7 @@ Iterable<String> gloveCheckLines(GloveCheckPack p) sync* {
     GloveLines.intro, GloveLines.askOwn, GloveLines.askMate, GloveLines.askSpare, GloveLines.testFirst, GloveLines.guessed,
     GloveLines.holds, GloveLines.leaks, GloveLines.pressMore, GloveLines.caught, GloveLines.rejectedGood, GloveLines.rejectedTested,
     GloveLines.callHeld, GloveLines.callRushed, GloveLines.allSet, GloveLines.fail, GloveLines.quick, GloveLines.uncheckedCard,
-    GloveLines.rejectedCard, GloveLines.listenCard,
+    GloveLines.rejectedCard, GloveLines.listenCard, GloveLines.deadlyWord, GloveLines.nearMissWord,
   ];
   for (final g in p.pool) {
     if (g.lineBn.isNotEmpty) yield g.lineBn;
@@ -510,7 +543,7 @@ class _GloveRun extends ConsumerStatefulWidget {
 
 enum _Overlay { none, inspect }
 
-class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTable, CoworkerMoment {
+class _GloveRunState extends ConsumerState<_GloveRun> with DoDeathGuard, DoStrikeOut, ReasonTable, CoworkerMoment {
   final _scoreKey = GlobalKey();
   late final GloveDeal _deal = dealGloves(widget.pack, widget.rng);
   late final GloveRound _r = GloveRound(_deal);
@@ -533,8 +566,13 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   GloveItem? _held;
   HelmetItem? _heldHelmet;
 
-  /// The slip card on screen (helmet station).
+  /// The card on screen: a slip (glove or helmet), or the near-miss / death.
   DoMistake? _card;
+  MistakeTone _cardTone = MistakeTone.slip;
+
+  /// A deadly glove was packed: the yard freezes grey, then the card.
+  var _freeze = false;
+  Completer<void>? _frozen;
   GloveOutcome? _verdict;
   var _leaving = false;
   Completer<void>? _gone;
@@ -549,6 +587,9 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   int _totalDelta = 0;
 
   String get _rungId => widget.ctx.rungId;
+
+  @override
+  LevelContext get deathCtx => widget.ctx;
 
   // Gesture hints (how to interact, never which item): the tray, the air
   // test's hold, the two decision buttons. Decks and the helmet's close look
@@ -749,10 +790,58 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   }
 
   void _cardGo() {
-    if (_card == null || _ended) return;
+    if (_card == null) return;
+    if (_cardTone != MistakeTone.slip) {
+      _chain++;
+      unawaited(MascotSpeechLibrary.stop());
+      if (_cardTone == MistakeTone.deadly) {
+        if (_popped) return;
+        _popped = true;
+        unawaited(dieAndLeave());
+      } else {
+        widget.onRetry(_muted);
+      }
+      return;
+    }
+    if (_ended) return;
     HapticFeedback.selectionClick();
     setState(() => _card = null);
     unawaited(_askRound());
+  }
+
+  /// A deadly glove packed (B6): the yard freezes grey; then near-miss (play
+  /// again) or death (back to the ladder).
+  Future<void> _deadly(DoMistake m) async {
+    if (_ended) return;
+    _ended = true;
+    _busy = true;
+    _clock.stop();
+    _chain++;
+    unawaited(MascotSpeechLibrary.stop());
+    HapticFeedback.heavyImpact();
+    if (!_muted) unawaited(ZlFx.cue('sounds/learn/spark.ogg', volume: 0.9, muted: false));
+    final frozen = _frozen = Completer<void>();
+    setState(() {
+      _overlay = _Overlay.none;
+      _held = null;
+      _heldHelmet = null;
+      _verdict = null;
+      _leaving = false;
+      _freeze = true;
+    });
+    // Booked at once, so leaving during the freeze cannot skip the mistakes
+    // book, the near-miss or the death.
+    final death = await bookDeadly(m, runScore: _runScore) == DeadlyOutcome.death;
+    await frozen.future;
+    if (!mounted) return;
+    if (!_muted) unawaited(ZlFx.cue('sounds/accident.ogg', volume: 0.9, muted: false));
+    setState(() {
+      _card = m;
+      _cardTone = death ? MistakeTone.deadly : MistakeTone.nearMiss;
+    });
+    final speak = await SpokenOnce.first('glove/deadly/${m.key}');
+    if (!mounted) return;
+    await _sayChain([death ? GloveLines.deadlyWord : GloveLines.nearMissWord, if (speak) m.textBn], mood: GuideMood.warn);
   }
 
   Future<void> _reactHelmet(HelmetItem h, GloveOutcome o) async {
@@ -788,8 +877,12 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
     final roundBefore = _r.round;
     final o = _r.decide(g, c);
     if (!o.right) {
-      // Booked like the helmet's slips (mistakes book, পাঠে দেখুন).
       final slip = gloveMistake(g, o);
+      if (slip.deadly) {
+        await _deadly(slip);
+        return;
+      }
+      // Booked like the helmet's slips (mistakes book, পাঠে দেখুন).
       unawaited(bookMistake(ref, widget.ctx, slip));
       if (strike(slip)) {
         await _struckOut();
@@ -1059,6 +1152,14 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
   }
 
   Future<void> _leave() async {
+    if (deathPending) {
+      if (_popped) return;
+      _popped = true;
+      await dieAndLeave();
+      return;
+    }
+    // The freeze plays out first (it is short); its card is the way out.
+    if (_freeze && _card == null) return;
     if (_passed) {
       _popOnce(true);
       return;
@@ -1107,8 +1208,14 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
               current: _station < 4 ? _station : null,
               quiet: quiet,
             ),
-            layers: (context, m) => const [
-              Positioned.fill(key: ValueKey('yard'), child: CustomPaint(painter: VanYardPainter())),
+            layers: (context, m) => [
+              Positioned.fill(
+                key: const ValueKey('yard'),
+                child: ColorFiltered(
+                  colorFilter: _freeze ? freezeFilter : const ColorFilter.mode(Color(0x00000000), BlendMode.dst),
+                  child: const CustomPaint(painter: VanYardPainter()),
+                ),
+              ),
             ],
             overlays: [
               // The bag (three places) and the tray of gloves.
@@ -1219,7 +1326,7 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
                 MistakeCard(
                   key: ValueKey('card-${_card!.key}'),
                   mistake: _card!,
-                  tone: MistakeTone.slip,
+                  tone: _cardTone,
                   quiet: quiet,
                   onRead: _card!.lessonPoint == null
                       ? null
@@ -1239,6 +1346,16 @@ class _GloveRunState extends ConsumerState<_GloveRun> with DoStrikeOut, ReasonTa
                   muted: _muted,
                   onRetry: () => widget.onRetry(_muted),
                   onLeave: () => _popOnce(false),
+                ),
+              if (_freeze && _card == null)
+                FreezeFrame(
+                  key: const ValueKey('freeze'),
+                  muted: _muted,
+                  ms: MediaQuery.disableAnimationsOf(context) ? 300 : 2400,
+                  onDone: () {
+                    final f = _frozen;
+                    if (f != null && !f.isCompleted) f.complete();
+                  },
                 ),
               if (_introCard)
                 GuideIntro(
@@ -1375,8 +1492,10 @@ class _Bag extends StatelessWidget {
 }
 
 /// Close look at a pair. Rubber pairs get the air test: press and hold, the
-/// cuff rolls and the glove puffs up; let go — a sound pair stays puffed, a
-/// pinholed one hisses flat with air puffing out of the hole. Then decide.
+/// cuff rolls and the glove puffs up; let go — a sound pair stays puffed (so
+/// does the wet pair: the eye check finds it), a pinholed or deeply cracked
+/// one hisses flat with air puffing out of the hole or the crack (A6). Then
+/// decide.
 class _GloveInspect extends StatefulWidget {
   const _GloveInspect({
     super.key,
@@ -1493,7 +1612,7 @@ class _GloveInspectState extends State<_GloveInspect> with TickerProviderStateMi
     final leaked = widget.item.leaks;
     setState(() => _leaked = leaked);
     if (leaked) {
-      // Slowly flat, with air puffing out of the hole.
+      // Slowly flat, with air puffing out of the hole or the crack.
       if (widget.quiet) {
         _leak.value = 1;
       } else {
@@ -1695,7 +1814,7 @@ class _GloveInspectState extends State<_GloveInspect> with TickerProviderStateMi
   }
 }
 
-/// Little puffs of air escaping from the pinhole.
+/// Little puffs of air escaping from the pinhole or the crack.
 class _AirPuffPainter extends CustomPainter {
   _AirPuffPainter(this.hole, this.t);
   final Offset hole;

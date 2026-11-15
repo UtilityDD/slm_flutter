@@ -277,7 +277,10 @@ void main() {
     expect(_reject('leak', 'pour'), allOf(contains('উৎস'), contains('পরিমাণ')));
     // Dead LT phase: off, prove dead (M5-2: a tool before 0 V is deadly), connection; sound → replace.
     expect(_slot('ltdead').options.where((o) => o.correct).map((o) => o.id), ['check', 'swap']);
-    expect(_reject('ltdead', 'livespanner'), allOf(contains('মারাত্মক'), contains('ডেড প্রমাণ'), contains('বন্ধ')));
+    expect(_reject('ltdead', 'livespanner'), allOf(contains('মারাত্মক'), contains('ডেড প্রমাণ'), contains('বন্ধ'), contains('আর্থ')));
+    // Ruling 2026-11-15 (CEA 2023 Sch I Part-II): proved dead, then earthed, then hands.
+    expect(_slot('ltdead').options.firstWhere((o) => o.id == 'check').labelBn, allOf(contains('ডেড'), contains('আর্থ')));
+    expect(_slot('ltdead').whyChips.firstWhere((w) => w.id == 'w1').textBn, allOf(contains('ডেড প্রমাণ'), contains('আর্থ')));
     expect(_reject('ltdead', 'newlink'), contains('এইচটি ফিউজ ঠিক'));
     expect(_reject('ltdead', 'leftrun'), contains('বদলাতে'));
     // Proof (pro tips): IR on an isolated DTR, dark oil, bushing; water (M5-6 card) and records.
@@ -285,7 +288,7 @@ void main() {
     expect(_reject('proof', 'livemegger'), allOf(contains('মারাত্মক'), contains('বিচ্ছিন্ন')));
     expect(_reject('proof', 'water'), 'জল তেলের সবচেয়ে বড় শত্রু — ডাই-ইলেকট্রিক স্ট্রেন্থ নাটকীয়ভাবে কমায়।');
     expect(_reject('proof', 'records'), contains('ইতিহাস'));
-    expect(pack.earnedBn, allOf(contains('সেকশনালাইজিং'), contains('ডেড প্রমাণ')));
+    expect(pack.earnedBn, allOf(contains('সেকশনালাইজিং'), contains('ডেড প্রমাণ'), contains('আর্থ')));
   });
 
   test('"মারাত্মক" marks exactly the deadly-class cards (R8, R2, R23)', () {

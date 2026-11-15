@@ -6,8 +6,11 @@ import 'package:flutter/material.dart';
 // The drawn world of lesson 5.4 কাজ 1 "একে একে ফিডার" (m5_feeder_sectionalize.dart):
 // a village crossroads at dusk. On the left a DP transformer structure: the
 // 11 kV line over the top cross-arm, the DO-fuse cross-arm with three barrels
-// (the blown one hangs dropped and sooty until it is closed again), the
-// transformer on its platform, and the LT box on the right pole. When its
+// (at the start all three hang open — the blown one dropped and sooty, the
+// other two opened by the crew; once shut, only a barrel that blows drops),
+// the
+// transformer on its platform, and the LT box on the right pole with the
+// DTR's LT switch on its side (handle up = ON; down with a red tag = OFF). When its
 // door is opened the LT board shows big on the right: 3 or 4 fuse carriers
 // (the 4th on a lower row), each under its road's name and a small lamp that
 // is lit while the HT holds and that way is in. Village houses along the
@@ -136,6 +139,8 @@ class M5FeederRig {
     required this.dusk,
     this.tagged,
     this.soot,
+    this.charged = true,
+    this.ltOn = true,
   });
 
   /// 3 or 4 LT ways.
@@ -160,7 +165,14 @@ class M5FeederRig {
   /// The way that blew the HT fuse (soot on its base).
   final int? soot;
 
-  bool lit(int i) => held && inWays.contains(i);
+  /// The DO has been shut this round (before it, the crew's three barrels
+  /// hang open).
+  final bool charged;
+
+  /// The DTR's LT switch is ON.
+  final bool ltOn;
+
+  bool lit(int i) => held && ltOn && inWays.contains(i);
 
   @override
   bool operator ==(Object other) =>
@@ -172,10 +184,12 @@ class M5FeederRig {
       other.phase == phase &&
       other.dusk == dusk &&
       other.tagged == tagged &&
-      other.soot == soot;
+      other.soot == soot &&
+      other.charged == charged &&
+      other.ltOn == ltOn;
 
   @override
-  int get hashCode => Object.hash(ways, Object.hashAllUnordered(inWays), held, doorOpen, phase, dusk, tagged, soot);
+  int get hashCode => Object.hash(ways, Object.hashAllUnordered(inWays), held, doorOpen, phase, dusk, tagged, soot, charged, ltOn);
 }
 
 const _wire = Color(0xFF2F353A);
@@ -339,7 +353,10 @@ class M5FeederPainter extends CustomPainter {
 
   void _barrel(Canvas c, int i) {
     final t = geo.barrelTop(i);
-    final dropped = i == rig.phase && !rig.held;
+    // The blown barrel hangs until shut; before the first shut the crew's two
+    // hang open too (no soot on theirs).
+    final blown = i == rig.phase && !rig.held;
+    final dropped = blown || !rig.charged;
     // The DO's insulator body.
     c.drawRect(Rect.fromLTWH(t.dx - 3, t.dy - 6, 6, 6), Paint()..color = _steel);
     c.drawRect(Rect.fromLTWH(t.dx - 3, t.dy + 30, 6, 6), Paint()..color = _steel);
@@ -350,7 +367,7 @@ class M5FeederPainter extends CustomPainter {
     final tube = Rect.fromLTWH(-3.5, -32, 7, 30);
     c.drawRRect(RRect.fromRectAndRadius(tube, const Radius.circular(2)),
         Paint()..shader = LinearGradient(colors: dropped ? const [Color(0xFF3A2A1E), Color(0xFF6A4A30)] : const [Color(0xFF7B5A3A), Color(0xFFA77E52)]).createShader(tube));
-    if (dropped) {
+    if (blown) {
       // Soot round the blown end.
       c.drawCircle(const Offset(0, -30), 6, Paint()..color = const Color(0x99202020));
     }
@@ -406,6 +423,27 @@ class M5FeederPainter extends CustomPainter {
         ..strokeWidth = 1);
     } else {
       c.drawCircle(Offset(b.right - 6, b.center.dy), 2, Paint()..color = const Color(0xFF2B3036));
+    }
+    _ltSwitch(c);
+  }
+
+  /// The DTR's LT switch on the left of the LT box: handle up = ON; down,
+  /// padlocked with a red tag = OFF.
+  void _ltSwitch(Canvas c) {
+    final b = geo.ltBox;
+    final box = Rect.fromLTWH(b.left - 15, b.top - 14, 12, 16);
+    c.drawRRect(RRect.fromRectAndRadius(box, const Radius.circular(2)), Paint()..color = const Color(0xFF59636B));
+    final pivot = Offset(box.center.dx, box.center.dy);
+    final end = pivot.translate(0, rig.ltOn ? -9 : 9);
+    c.drawLine(pivot, end, Paint()
+      ..color = const Color(0xFF1D2226)
+      ..strokeWidth = 2.6
+      ..strokeCap = StrokeCap.round);
+    if (!rig.ltOn) {
+      c.drawLine(end, end.translate(-4, 6), Paint()
+        ..color = const Color(0xFFEDE6D6)
+        ..strokeWidth = 1);
+      c.drawRect(Rect.fromLTWH(end.dx - 9, end.dy + 5, 7, 10), Paint()..color = const Color(0xFFD92B2B));
     }
   }
 

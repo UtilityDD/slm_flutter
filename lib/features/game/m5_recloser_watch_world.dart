@@ -161,6 +161,9 @@ class M5RecloserGeo {
   /// The earth spike at the pole's foot.
   Offset spike(int pole) => Offset(poleX[pole] + 18, roadTop - 2);
 
+  /// The crew's earth spike at the far pole of the work span (its span side).
+  Offset farSpike(int pole) => Offset(poleX[pole] - 18, roadTop - 2);
+
   /// Where the flash (and the arc) shows at a span.
   Offset flashAt(int span) => spanMid(span);
 
@@ -189,6 +192,7 @@ class M5RecloserRig {
     this.spike = false,
     this.clamp = false,
     this.tested = 0,
+    this.farEarth = false,
   });
 
   final M5Weather weather;
@@ -215,6 +219,10 @@ class M5RecloserRig {
   /// Phases proved dead (0–3).
   final int tested;
 
+  /// The crew's earth set at the far pole of the work span (earths on both
+  /// sides of the working zone, WBSEDCL Safety Manual 2025 5.14(d)).
+  final bool farEarth;
+
   @override
   bool operator ==(Object other) =>
       other is M5RecloserRig &&
@@ -228,10 +236,11 @@ class M5RecloserRig {
       other.pole == pole &&
       other.spike == spike &&
       other.clamp == clamp &&
-      other.tested == tested;
+      other.tested == tested &&
+      other.farEarth == farEarth;
 
   @override
-  int get hashCode => Object.hash(weather, fault, faultSpan, lit, night, torch, cleared, pole, spike, clamp, tested);
+  int get hashCode => Object.hash(weather, fault, faultSpan, lit, night, torch, cleared, pole, spike, clamp, tested, farEarth);
 }
 
 const _concrete = Color(0xFF8C8F92);
@@ -315,9 +324,14 @@ class M5RecloserPainter extends CustomPainter {
     }
     // Weather in front of the far layers.
     if (rig.weather == M5Weather.storm) _rain(canvas, size);
-    // The earth set at the crew's pole.
+    // The earth set at the crew's pole, and the crew's set at the span's far
+    // pole (both sides of the working zone).
     if (rig.spike) _spike(canvas, g.spike(rig.pole));
     if (rig.clamp) _earthLead(canvas);
+    if (rig.farEarth && rig.pole + 1 < M5RecloserGeo.poleX.length) {
+      _spike(canvas, g.farSpike(rig.pole + 1));
+      _earthLead(canvas, pole: rig.pole + 1, far: true);
+    }
     // The torch on the fault (the end).
     if (rig.torch) _torch(canvas);
   }
@@ -452,14 +466,19 @@ class M5RecloserPainter extends CustomPainter {
     canvas.drawCircle(s.translate(0, -10), 3, Paint()..color = const Color(0xFFD8C18E));
   }
 
-  void _earthLead(Canvas canvas) {
+  /// An earth lead from a spike up to its clamps: the trainee's at [pole]
+  /// (the span side, right of it), or [far] — the crew's at the span's far
+  /// pole (left of it).
+  void _earthLead(Canvas canvas, {int? pole, bool far = false}) {
     final g = geo;
-    final x = M5RecloserGeo.poleX[rig.pole];
-    final s = g.spike(rig.pole).translate(0, -10);
-    final clampAt = Offset(x + 14, g.wireY(2, x + 14));
+    final at = pole ?? rig.pole;
+    final x = M5RecloserGeo.poleX[at];
+    final dx = far ? -14.0 : 14.0;
+    final s = (far ? g.farSpike(at) : g.spike(at)).translate(0, -10);
+    final clampAt = Offset(x + dx, g.wireY(2, x + dx));
     final lead = Path()
       ..moveTo(s.dx, s.dy)
-      ..quadraticBezierTo(x + 30, (s.dy + clampAt.dy) / 2, clampAt.dx, clampAt.dy);
+      ..quadraticBezierTo(x + dx * 30 / 14, (s.dy + clampAt.dy) / 2, clampAt.dx, clampAt.dy);
     canvas.drawPath(
       lead,
       Paint()
@@ -468,7 +487,7 @@ class M5RecloserPainter extends CustomPainter {
         ..color = const Color(0xFF3FA06A),
     );
     for (var p = 0; p < 3; p++) {
-      canvas.drawCircle(Offset(x + 14, g.wireY(p, x + 14)), 2.6, Paint()..color = const Color(0xFF6FD39A));
+      canvas.drawCircle(Offset(x + dx, g.wireY(p, x + dx)), 2.6, Paint()..color = const Color(0xFF6FD39A));
     }
   }
 

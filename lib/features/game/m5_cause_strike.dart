@@ -38,14 +38,17 @@ export 'm5_cause_strike_world.dart' show M5LeakSource, M5Place;
 //
 //  শব্দ করছে (5.8 point 2): hold the ear button — a steady hum is normal; a
 //    loud, irregular noise needs the load check (tong tester on the LT
-//    cable: always inside the nameplate mark) → strike 'ওভারলোড' → listen
+//    cable, rubber gloves on first: always inside the nameplate mark) →
+//    strike 'ওভারলোড' → listen
 //    again (the noise has not stopped) → the list closed → 'সুপারভাইজারকে
 //    রিপোর্ট'.
-//  এক ফেজে বিদ্যুৎ নেই (point 4): meter each phase at the LT box on the
-//    transformer as found (the lever stays ON until all three are read; off,
-//    every dial reads 0); swipe up to see every DO barrel in → strike 'HT
-//    ফিউজ উড়েছে'; switch off (LT lever OFF, hot stick opens each DO), the
-//    tester on the LT bushing shows 0 V;
+//  এক ফেজে বিদ্যুৎ নেই (point 4): rubber gloves on, meter each phase at the
+//    LT box on the transformer as found (the lever stays ON until all three
+//    are read; off, every dial reads 0); swipe up to see every DO barrel in →
+//    strike 'HT ফিউজ উড়েছে'; the permit (PTW); switch off (LT lever OFF, hot
+//    stick opens each DO), the tester on every LT bushing shows 0 V, the LT
+//    earth set on (ruling 2026-11-15: PTW → off → prove dead → earth →
+//    spanner, as m5_pm_thermal_round);
 //    the spanner on the dead phase's terminal: loose → 'কানেকশন টাইট করে
 //    চালু'; firm → strike 'বুশিং-এর কানেকশন' → 'ট্রান্সফরমার বদলাতে হবে'.
 //  তেল পড়ছে (point 3): trace the fresh stain up to its source (gasket line,
@@ -57,14 +60,22 @@ export 'm5_cause_strike_world.dart' show M5LeakSource, M5Place;
 // cause only when a test has ruled it out; 'তালিকা শেষ' only with the
 // evidence in and every ruled-out cause struck; then the verdict card.
 //
-// Deadly (module 5 table, rulings M5-2): a spanner on the LT bushing with any
-// DO closed or the LT on (R2/3.6b); on it after the DOs are open but before
-// the tester shows 0 V (R2, raised from slip); climbing the live platform on
-// the coworker's word (R19). Slips: a cause struck that no test ruled out;
-// 'তালিকা শেষ' with a ruled-out cause standing; a verdict before its
-// evidence (e.g. internal before the load check); a wrong verdict card
-// (loud called normal, a steady hum reported…); a DO opened on load (module
-// rule, flagged); listening to a slip-line coworker. Three slips strike out.
+// Deadly (module 5 table, rulings M5-2, owner rulings 2026-11-15): a spanner
+// on the LT bushing with any DO closed or the LT on (R2/3.6b); on it with no
+// permit (R1); after the DOs are open but before the tester shows 0 V (R2,
+// raised from slip); after 0 V but before the earth (R4, as
+// m5_pm_thermal_round noEarth); the earth set on with a DO still in (B8); a
+// DO opened on load (B3); meter leads on the live LT box with no rubber
+// gloves (B4); climbing the live platform on the coworker's word (R19); a
+// verdict card that orders one of those acts ('চালু রেখেই নাট টাইট' =
+// the live spanner, 'চালু রেখেই ওপরে উঠে' = the live climb; B1). Slips: a
+// cause struck that no test ruled out; 'তালিকা শেষ' with a ruled-out cause
+// standing; a verdict before its evidence (e.g. internal before the load
+// check); any other wrong verdict card (loud called normal, a steady hum
+// reported…); the tong on the live cable, or meter leads on dead terminals,
+// with no rubber gloves (m4_phase_balance noGloves, B4); the tester or the
+// earth before the permit; the earth before every phase shows 0 V (R3);
+// listening to a slip-line coworker. Three slips strike out.
 //
 // Built on the shared level kit (GAME_LEVEL_PLAYBOOK.md): guide first, the
 // full scene (m5_cause_strike_world.dart), corner guide, a right strike puts
@@ -85,8 +96,9 @@ enum M5CaseKind { noise, ltDead, leak }
 /// The causes on the suspects lists (lesson 5.8 points 2–4).
 enum M5Cause { looseInside, lamination, windingShort, overload, htFuse, ltWinding, bushingConn, gasket, weld, impact }
 
-/// The hands-on tools.
-enum M5Tool { ear, tong, meter, hotStick, tester, spanner, watch }
+/// The hands-on tools. [gloves] and [permit] act at a tap (worn / in hand);
+/// the rest are held and tapped on a target.
+enum M5Tool { ear, tong, meter, hotStick, tester, spanner, watch, gloves, permit, earth }
 
 /// The verdicts.
 enum M5Verdict { normal, report, tighten, replace, watch, repair }
@@ -131,7 +143,7 @@ abstract final class M5CauseStrikeLines {
   static const tasks = [askNoise, askLtDead, askLeak, askVerdict];
   static const tapWhy = ['কারণটা বেছে নিন।', 'ঠিক কারণটা কোনটা?'];
   static const oldStain = 'এ দাগ শুকনো, পুরনো।';
-  static const meterFirst = 'বন্ধ করার আগে চালু অবস্থায় তিন ফেজই মেপে দেখুন।';
+  static const meterFirst = 'রাবার গ্লাভস পরে, বন্ধ করার আগে চালু অবস্থাতেই তিনটে ফেজ মেপে দেখে নিন।';
 
   static String ask(M5CaseKind k) => switch (k) {
         M5CaseKind.noise => askNoise,
@@ -175,6 +187,9 @@ abstract final class M5CauseStrikeLines {
         M5Tool.tester => 'টেস্টার',
         M5Tool.spanner => 'স্প্যানার',
         M5Tool.watch => 'ঘড়ি',
+        M5Tool.gloves => 'গ্লাভস',
+        M5Tool.permit => 'পারমিট',
+        M5Tool.earth => 'আর্থ',
       };
   static const testerDead = '0 V';
   static const nutLoose = 'নাট ঢিলা';
@@ -191,10 +206,14 @@ abstract final class M5CauseStrikeLines {
     M5Verdict.repair: ['বন্ধ করে লিক সারান, তেল টপ-আপ', 'বন্ধ করে মেরামত, তেল ভরে দিন'],
   };
   static const _shortcuts = <M5CaseKind, List<String>>{
-    M5CaseKind.noise: ['ওভারলোড — লোড কমিয়ে দিন', 'বারবার চার্জ করে দেখে নিন', 'চালু রেখেই নাট টাইট দিন'],
-    M5CaseKind.ltDead: ['HT ফিউজ বদলে আবার চালু করুন', 'আবার চার্জ করে দেখে নিন', 'এক ফেজ ছাড়াই চালু রাখুন'],
-    M5CaseKind.leak: ['তেল মুছে দিন, ও কিছু না', 'চালু রেখেই ওপরে উঠে সারান', 'লিকের জায়গায় মাটি লেপে দিন'],
+    M5CaseKind.noise: ['ওভারলোড — লোড কমিয়ে দিন', 'কদিন পরে শব্দ নিজেই থেমে যাবে', liveCard],
+    M5CaseKind.ltDead: ['HT ফিউজ বদলে আবার চালু করুন', 'কাল সকালে এসে আবার দেখব', 'এক ফেজ ছাড়াই চালু রাখুন'],
+    M5CaseKind.leak: ['তেল মুছে দিন, ও কিছু না', climbCard, 'লিকের জায়গায় মাটি লেপে দিন'],
   };
+
+  /// The wrong cards that order a deadly act (B1: picking one is that act).
+  static const liveCard = 'চালু রেখেই নাট টাইট দিন';
+  static const climbCard = 'চালু রেখেই ওপরে উঠে সারান';
   static const _pairs = <M5Verdict, M5Verdict>{
     M5Verdict.normal: M5Verdict.report,
     M5Verdict.report: M5Verdict.normal,
@@ -228,7 +247,7 @@ abstract final class M5CauseStrikeLines {
     M5WhyTopic.hum: ['একটানা মৃদু হামিং — এটাই স্বাভাবিক ভাষা', 'জোরালো বা অনিয়মিত নয় — এই শব্দ স্বাভাবিক'],
     M5WhyTopic.overload: ['টং টেস্টারে লোড দাগের ভেতরে, তাই ওভারলোড নয়', 'লোড স্বাভাবিক পেলাম, তাই ওভারলোড বাদ গেল'],
     M5WhyTopic.report: ['লোড স্বাভাবিক, তবু শব্দ থামেনি — ভেতরের সমস্যা', 'লোড ঠিক থেকেও জোরালো শব্দ ভেতরের রোগের লক্ষণ'],
-    M5WhyTopic.switchOff: ['বন্ধ করে টেস্টারে 0 V দেখে তবেই বুশিং-এ হাত', 'চালু বুশিং-এ স্প্যানার মানেই প্রাণঘাতী শক'],
+    M5WhyTopic.switchOff: ['বন্ধ করে 0 V দেখে, আর্থ দিয়ে তবেই বুশিং-এ হাত', 'চালু বুশিং-এ স্প্যানার মানেই প্রাণঘাতী শক'],
     M5WhyTopic.tighten: ['মৃত ফেজের বুশিং-এর কানেকশনই ঢিলা পেলাম', 'কানেকশন ঢিলা ছিল — টাইট দিলেই ফেজ ফিরবে'],
     M5WhyTopic.replace: ['বুশিং-এর কানেকশন ঠিক, তাই সমস্যা ভেতরের', 'কানেকশন টাইট থেকেও ফেজ নেই — ভেতরের ফল্ট'],
     M5WhyTopic.twoStruck: ['লিকের উৎস দেখলাম — বাকি দুটো কারণ মেলে না', 'দাগ ধরে উৎসে পৌঁছে বাকি দুটো বাদ দিলাম'],
@@ -327,7 +346,7 @@ abstract final class M5CauseStrikeLines {
   static String callHeld(M5Push p) => switch (p) {
         M5Push.hum => 'ঠিক! জোরালো শব্দ মানেই আগে লোড পরীক্ষা।',
         M5Push.humLate => 'ঠিক! লোড স্বাভাবিক, তবু শব্দ — রিপোর্ট।',
-        M5Push.live => 'ঠিক! আগে বন্ধ, টেস্টারে 0 V — তারপর হাত।',
+        M5Push.live => 'একদম ঠিক! আগে বন্ধ, টেস্টারে 0 V, তারপর আর্থ — তবেই হাত!',
         M5Push.climb => 'ঠিক! চালু ট্রান্সফরমারে ওঠা নয়।',
         M5Push.small => 'ঠিক! বেশি লিকে বন্ধ করে মেরামত।',
       };
@@ -341,7 +360,7 @@ abstract final class M5CauseStrikeLines {
   // "আজ যা ধরলেন".
   static const caughtHum = 'স্বাভাবিক হামিং চিনেছেন';
   static const caughtReport = 'লোড স্বাভাবিক, তবু শব্দ — রিপোর্ট';
-  static const caughtOff = 'বন্ধ করে 0 V দেখে তবে স্প্যানার';
+  static const caughtOff = 'পারমিট, বন্ধ, 0 V, আর্থ — তবে স্প্যানার';
   static const caughtLeak = 'দাগ ধরে লিকের উৎস ও পরিমাণ';
   static const caughtStrike = 'শুধু পরীক্ষায় বাদ পড়া কারণ কেটেছেন';
   static const caughtCall = 'ওর কথায় “না” বলেছেন';
@@ -429,15 +448,17 @@ abstract final class M5CauseStrikeMistakes {
     lessonPoint: 2,
   );
   // The module's switching rule (lesson 5.4's "সমস্ত আউটগোয়িং" before the
-  // DO; not lesson 5.8's text): no lesson point.
+  // DO; not lesson 5.8's text): no lesson point. Deadly everywhere (owner
+  // ruling B3, 2026-11-15); the text is m4_gate_field's word for word.
   static const doOnLoad = DoMistake(
     key: '5.8/m5_cause_strike/do-on-load',
-    textBn: 'আগে এলটি সুইচ বন্ধ করে লোড নামান, তারপর হট স্টিকে ডিও খুলুন।',
+    textBn: 'লোড চালু রেখে DO খোলা মারাত্মক — বড় আর্ক, আর্ক ফ্ল্যাশে অন্ধত্ব বা মৃত্যু। আগে LT সুইচ বন্ধ করে অফ-লোড করুন।',
     art: '$_dir/do_on_load.svg',
+    deadly: true,
   );
   static const liveSpanner = DoMistake(
     key: '5.8/m5_cause_strike/live-spanner',
-    textBn: 'চালু ট্রান্সফরমারের বুশিং-এ স্প্যানার নয়! আগে এলটি বন্ধ, সব ডিও খোলা, টেস্টারে 0 V — তবেই হাত।',
+    textBn: 'চালু ট্রান্সফরমারের বুশিংয়ে স্প্যানার একদম নয়! আগে LT বন্ধ, সব DO খোলা, টেস্টারে 0 V, তারপর আর্থ — তবেই হাত দেবেন!',
     art: '$_dir/live_spanner.svg',
     deadly: true,
     lessonPoint: 3,
@@ -455,6 +476,50 @@ abstract final class M5CauseStrikeMistakes {
     textBn: 'চালু ট্রান্সফরমারের প্ল্যাটফর্মে ওঠা নয়! লিকের উৎস নিচ থেকে খুঁজুন; কাছে যেতে হলে আগে বন্ধ, টেস্ট, আর্থ।',
     art: '$_dir/climb_live.svg',
     deadly: true,
+  );
+  // Module 1's PTW / earth rules (R1, R4 deadly; R3 slip; B8 deadly), as
+  // m5_pm_thermal_round (its art and, where it fits, its words): no lesson
+  // point.
+  static const noPermit = DoMistake(
+    key: '5.8/m5_cause_strike/no-permit',
+    textBn: 'পারমিট (PTW) ছাড়া ট্রান্সফরমারে হাত একদম নয়! আগে পারমিট, তারপর বন্ধ, টেস্টারে 0 V, আর্থ — তবেই স্প্যানার লাগাবেন!',
+    art: 'assets/game/art/m5_pm_thermal_round/no_permit.svg',
+    deadly: true,
+  );
+  static const noEarth = DoMistake(
+    key: '5.8/m5_cause_strike/no-earth',
+    textBn: 'টেস্টারে 0 V পেয়েছেন, তাও আর্থ ছাড়া হাত দিলেন! আগে টেস্টারে ডেড প্রমাণ, তারপর আর্থ লাগান, তবেই স্প্যানার।',
+    art: 'assets/game/art/m5_pm_thermal_round/no_earth.svg',
+    deadly: true,
+  );
+  static const earthLive = DoMistake(
+    key: '5.8/m5_cause_strike/earth-live',
+    textBn: 'চালু লাইনে আর্থিং লাগানো নয়! আগে HT বন্ধ, টেস্টারে মৃত প্রমাণ — তবে আর্থিং।',
+    art: 'assets/game/art/m3_dtr_tap/earth_live.svg',
+    deadly: true,
+  );
+  static const permitFirst = DoMistake(
+    key: '5.8/m5_cause_strike/permit-first',
+    textBn: 'আগে লিখিত পারমিট হাতে — তারপর টেস্টার আর আর্থ।',
+    art: 'assets/game/art/m5_pm_thermal_round/ptw_order.svg',
+  );
+  static const testFirst = DoMistake(
+    key: '5.8/m5_cause_strike/test-first',
+    textBn: 'আগে টেস্টার দিয়ে ডেড প্রমাণ, তারপর আর্থ — এই ক্রম বাধ্যতামূলক।',
+    art: 'assets/game/art/m5_pm_thermal_round/test_first.svg',
+  );
+  // Rubber gloves for live measurement (lesson 1.1; owner ruling B4; the tong
+  // as m4_phase_balance noGloves): no lesson 5.8 point.
+  static const bareMeter = DoMistake(
+    key: '5.8/m5_cause_strike/bare-meter',
+    textBn: 'চালু LT বক্সে খালি হাতে মিটারের লিড ধরা চলবে না! আগে রাবার গ্লাভস পরুন, তারপর মাপুন।',
+    art: 'assets/game/art/m4_phase_balance/clamp_gloves.svg',
+    deadly: true,
+  );
+  static const noGloves = DoMistake(
+    key: '5.8/m5_cause_strike/no-gloves',
+    textBn: 'মাপার আগেই রাবার গ্লাভস পরে নিন — লাইভ কাজে এই গ্লাভসই আপনার হাতের সবচেয়ে বড় ঢাল!',
+    art: 'assets/game/art/m4_phase_balance/clamp_gloves.svg',
   );
   static const pushHum = DoMistake(
     key: '5.8/m5_cause_strike/push-hum',
@@ -495,6 +560,13 @@ abstract final class M5CauseStrikeMistakes {
         M5CaseKind.ltDead => verdictLt,
         M5CaseKind.leak => verdictLeak,
       };
+  /// A verdict card that orders a deadly act is that act (B1); null for the
+  /// other cards.
+  static DoMistake? verdictDeadly(String card) => switch (card) {
+        M5CauseStrikeLines.liveCard => liveSpanner,
+        M5CauseStrikeLines.climbCard => climbLive,
+        _ => null,
+      };
   static DoMistake push(M5Push p) => switch (p) {
         M5Push.hum => pushHum,
         M5Push.humLate => pushReport,
@@ -521,6 +593,13 @@ abstract final class M5CauseStrikeMistakes {
     liveSpanner,
     untested,
     climbLive,
+    noPermit,
+    noEarth,
+    earthLive,
+    permitFirst,
+    testFirst,
+    bareMeter,
+    noGloves,
     pushHum,
     pushReport,
     pushSmall,
@@ -671,6 +750,13 @@ class M5CauseRun {
   List<bool> doOpen = [false, false, false];
   final Set<int> tested = {};
   var deadChecked = false;
+
+  /// The written permit in hand (this case), the LT earth set on.
+  var permit = false;
+  var earthed = false;
+
+  /// Rubber gloves on (kept on for the rest of the round).
+  var gloved = false;
   var traced = false;
   var gaugeRead = false;
   var dripped = false;
@@ -732,19 +818,40 @@ class M5CauseRun {
     if (loadChecked) heardAfterLoad = true;
   }
 
-  /// The tong tester on the LT cable: the load reads inside the nameplate mark.
-  /// Before the noise was heard, a dealt "hum" push no longer fits: he comes
-  /// after the second listen with "the load is fine, let it run" instead.
-  void tong() {
-    if (!_open) return;
-    if (!listened && push == M5Push.hum && index == deal.coworkerCase) push = M5Push.humLate;
-    loadChecked = true;
+  /// Rubber gloves on (a tap).
+  void putGloves() {
+    if (_open) gloved = true;
   }
 
+  /// The written permit in hand (a tap; the dead-phase case only).
+  void takePermit() {
+    if (_open && kase.kind == M5CaseKind.ltDead) permit = true;
+  }
+
+  /// The tong tester on the live LT cable: the load reads inside the
+  /// nameplate mark. With no rubber gloves, a slip and no reading.
+  /// Before the noise was heard, a dealt "hum" push no longer fits: he comes
+  /// after the second listen with "the load is fine, let it run" instead.
+  DoMistake? tong() {
+    if (!_open) return null;
+    if (!gloved) return _slip(M5CauseStrikeMistakes.noGloves);
+    if (!listened && push == M5Push.hum && index == deal.coworkerCase) push = M5Push.humLate;
+    loadChecked = true;
+    return null;
+  }
+
+  /// The LT box terminals are live until every DO is open (the dials read
+  /// the incoming side).
+  bool get boxLive => !allDosOpen;
+
   /// The phase meter at the LT box: it counts only on the transformer as
-  /// found (switched off, every dial reads 0 and tells nothing).
-  void meter(int phase) {
-    if (_open && asFound) metered.add(phase);
+  /// found (switched off, every dial reads 0 and tells nothing). Leads on the
+  /// live box with no rubber gloves = deadly (B4); on dead terminals a slip.
+  DoMistake? meter(int phase) {
+    if (!_open) return null;
+    if (!gloved) return boxLive ? deadly = M5CauseStrikeMistakes.bareMeter : _slip(M5CauseStrikeMistakes.noGloves);
+    if (asFound) metered.add(phase);
+    return null;
   }
 
   /// A swipe up the structure: every DO barrel is seen in its clamps.
@@ -760,27 +867,47 @@ class M5CauseRun {
     return true;
   }
 
-  /// The hot stick opens DO [i]; with the LT still on, a slip (it stays in).
+  /// The hot stick opens DO [i]; with the LT still on, deadly (B3: a DO
+  /// opened on load).
   DoMistake? openDo(int i) {
     if (!_open || kase.kind != M5CaseKind.ltDead || doOpen[i]) return null;
-    if (ltOn) return _slip(M5CauseStrikeMistakes.doOnLoad);
+    if (ltOn) return deadly = M5CauseStrikeMistakes.doOnLoad;
     doOpen = [for (var k = 0; k < 3; k++) k == i || doOpen[k]];
     return null;
   }
 
-  /// The tester on LT bushing [phase]: true = 0 V (proved dead there).
-  bool test(int phase) {
-    if (!_open || !allDosOpen) return false;
-    tested.add(phase);
-    return true;
+  /// The tester on LT bushing [phase], under the permit (before it, a slip
+  /// and no reading). It reads 0 V only once every DO is open ([testerDead]).
+  DoMistake? test(int phase) {
+    if (!_open) return null;
+    if (!permit) return _slip(M5CauseStrikeMistakes.permitFirst);
+    if (allDosOpen) tested.add(phase);
+    return null;
   }
 
-  /// The spanner on LT bushing [phase]: deadly while it can be live or before
-  /// the tester proved it dead; on the dead phase it tells loose or firm.
+  /// What the tester shows now: true = 0 V.
+  bool get testerDead => allDosOpen;
+
+  /// The LT earth set on the three bushings: deadly with a DO still in (B8);
+  /// before the permit or before every phase shows 0 V, a slip (R3).
+  DoMistake? earth() {
+    if (!_open || kase.kind != M5CaseKind.ltDead || earthed) return null;
+    if (ltOn || !allDosOpen) return deadly = M5CauseStrikeMistakes.earthLive;
+    if (!permit) return _slip(M5CauseStrikeMistakes.permitFirst);
+    if (tested.length < 3) return _slip(M5CauseStrikeMistakes.testFirst);
+    earthed = true;
+    return null;
+  }
+
+  /// The spanner on LT bushing [phase]: deadly while it can be live, with no
+  /// permit, before the tester proved it dead, or before the earth is on; on
+  /// the dead phase it tells loose or firm.
   DoMistake? spanner(int phase) {
     if (!_open) return null;
     if (ltOn || !allDosOpen) return deadly = M5CauseStrikeMistakes.liveSpanner;
+    if (!permit) return deadly = M5CauseStrikeMistakes.noPermit;
     if (!tested.contains(phase)) return deadly = M5CauseStrikeMistakes.untested;
+    if (!earthed) return deadly = M5CauseStrikeMistakes.noEarth;
     if (phase == kase.deadPhase) deadChecked = true;
     return null;
   }
@@ -825,10 +952,15 @@ class M5CauseRun {
     return null;
   }
 
-  /// The verdict card chosen.
-  DoMistake? pickVerdict(bool right) {
+  /// The verdict card chosen ([card]: its words; a wrong card that orders a
+  /// deadly act is that act, B1).
+  DoMistake? pickVerdict(bool right, {String card = ''}) {
     if (!_open || !verdictUp) return null;
-    if (!right) return _slip(M5CauseStrikeMistakes.wrongVerdict(kase));
+    if (!right) {
+      final d = M5CauseStrikeMistakes.verdictDeadly(card);
+      if (d != null) return deadly = d;
+      return _slip(M5CauseStrikeMistakes.wrongVerdict(kase));
+    }
     verdictUp = false;
     roundDone = true;
     final c = kase;
@@ -863,6 +995,8 @@ class M5CauseRun {
     doOpen = [false, false, false];
     tested.clear();
     deadChecked = false;
+    permit = false;
+    earthed = false;
     traced = false;
     gaugeRead = false;
     dripped = false;
@@ -873,23 +1007,25 @@ class M5CauseRun {
 
 /// The quick bonus: a little under a thorough play (~85 %, rounded to 10 s).
 /// ms, ~1500 per human action:
-///   শব্দ (loud): hold, tong + cable, strike, hold again, list, verdict
-///     ≈ 10500 + reason ~8200
-///   এক ফেজ: meter + 3, swipe, lever, stick + 3, tester + 1, spanner + 1,
-///     strike × 2, list, verdict ≈ 25500 + reason ~8200
+///   শব্দ (loud): hold, gloves, tong + cable, strike, hold again, list,
+///     verdict ≈ 12000 + reason ~8200
+///   এক ফেজ (gloves already on): meter + 3, swipe, permit, lever, stick + 3,
+///     tester + 3, earth + 1, spanner + 1, strike × 2, list, verdict
+///     ≈ 33000 + reason ~8200
 ///   তেল: trace, strike × 2, gauge, watch 5 s + 1500, list, verdict
 ///     ≈ 15500 + reason ~8200
-/// + the coworker once ≈ 9600                                     ≈ 93900
-/// 85 % ≈ 79800 → 80 s.
-const m5CauseStrikeQuickMs = 80000;
+/// + the coworker once ≈ 9600                                     ≈ 102900
+/// 85 % ≈ 87500 → 90 s.
+const m5CauseStrikeQuickMs = 90000;
 
 /// A case's tool row, shuffled; the dead-phase row is never laid out in its
-/// working order (meter → hot stick → tester → spanner).
+/// working order (meter → hot stick → tester → earth → spanner). The rubber
+/// gloves are in every row (the tong and the meter go on live metal).
 List<M5Tool> m5CauseToolRow(M5CaseKind k, math.Random rng) {
   final tools = switch (k) {
-    M5CaseKind.noise => [M5Tool.ear, M5Tool.tong, M5Tool.meter],
-    M5CaseKind.ltDead => [M5Tool.meter, M5Tool.hotStick, M5Tool.tester, M5Tool.spanner],
-    M5CaseKind.leak => [M5Tool.watch, M5Tool.ear, M5Tool.tong],
+    M5CaseKind.noise => [M5Tool.ear, M5Tool.tong, M5Tool.meter, M5Tool.gloves],
+    M5CaseKind.ltDead => [M5Tool.meter, M5Tool.gloves, M5Tool.permit, M5Tool.hotStick, M5Tool.tester, M5Tool.earth, M5Tool.spanner],
+    M5CaseKind.leak => [M5Tool.watch, M5Tool.ear, M5Tool.tong, M5Tool.gloves],
   };
   do {
     tools.shuffle(rng);
@@ -897,11 +1033,18 @@ List<M5Tool> m5CauseToolRow(M5CaseKind k, math.Random rng) {
   return tools;
 }
 
-/// True if [row] reads left to right in the dead-phase working order.
+/// True if [row] reads left to right in the dead-phase working order (the
+/// order tools in it).
 bool m5CauseInWorkOrder(List<M5Tool> row) {
   if (!row.contains(M5Tool.spanner)) return false;
-  int at(M5Tool t) => row.indexOf(t);
-  return at(M5Tool.meter) < at(M5Tool.hotStick) && at(M5Tool.hotStick) < at(M5Tool.tester) && at(M5Tool.tester) < at(M5Tool.spanner);
+  final at = [
+    for (final t in const [M5Tool.meter, M5Tool.hotStick, M5Tool.tester, M5Tool.earth, M5Tool.spanner])
+      if (row.contains(t)) row.indexOf(t),
+  ];
+  for (var i = 1; i < at.length; i++) {
+    if (at[i - 1] > at[i]) return false;
+  }
+  return true;
 }
 
 @immutable
@@ -1179,6 +1322,23 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
       unawaited(_watchDrip());
       return;
     }
+    if (t == M5Tool.gloves || t == M5Tool.permit) {
+      // Worn / in hand at a tap.
+      final had = t == M5Tool.gloves ? _run.gloved : _run.permit;
+      if (had) {
+        _hints.missTap();
+        return;
+      }
+      _tick(t == M5Tool.gloves ? 'sounds/intro/click.ogg' : 'sounds/learn/tag_slap.ogg', 0.5);
+      if (t == M5Tool.gloves) {
+        _run.putGloves();
+      } else {
+        _run.takePermit();
+      }
+      setState(() => _held = null);
+      _stepDone();
+      return;
+    }
     _tick('sounds/intro/click.ogg', 0.5);
     setState(() {
       _held = _held == t ? null : t;
@@ -1250,8 +1410,13 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
       case M5Tool.tong:
         if (geo.cableHit.contains(p)) {
           if (_waitForHim()) return;
+          final m = _run.tong();
+          if (m != null) {
+            setState(() => _wake++);
+            unawaited(_mistake(m, global));
+            return;
+          }
           _tick('sounds/learn/dmm_beep.ogg', 0.5);
-          _run.tong();
           _show(M5Reading.tong);
           _stepDone();
           return;
@@ -1260,8 +1425,14 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
         for (var i = 0; i < 3; i++) {
           if (geo.terminalHit(i).contains(p)) {
             if (_waitForHim()) return;
+            final m = _run.meter(i);
+            if (m != null) {
+              _flashAt = geo.terminal(i);
+              setState(() => _wake++);
+              unawaited(_mistake(m, global));
+              return;
+            }
             _tick('sounds/learn/dmm_beep.ogg', 0.5);
-            _run.meter(i);
             _stepDone();
             return;
           }
@@ -1273,6 +1444,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
             final was = _run.doOpen[i];
             final m = _run.openDo(i);
             if (m != null) {
+              _flashAt = geo.doHit(i).center;
               setState(() => _wake++);
               unawaited(_mistake(m, global));
             } else if (!was && _run.doOpen[i]) {
@@ -1288,9 +1460,35 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
         for (var i = 0; i < 3; i++) {
           if (geo.bushingHit(i).contains(p)) {
             if (_waitForHim()) return;
+            final m = _run.test(i);
+            if (m != null) {
+              setState(() => _wake++);
+              unawaited(_mistake(m, global));
+              return;
+            }
             _tick('sounds/learn/dmm_beep.ogg', 0.5);
-            final dead = _run.test(i);
-            _chip(tester: (phase: i, dead: dead));
+            _chip(tester: (phase: i, dead: _run.testerDead));
+            _stepDone();
+            return;
+          }
+        }
+      case M5Tool.earth:
+        for (var i = 0; i < 3; i++) {
+          if (geo.bushingHit(i).contains(p)) {
+            if (_waitForHim()) return;
+            final m = _run.earth();
+            if (m != null) {
+              _flashAt = geo.bushing(i);
+              setState(() => _wake++);
+              unawaited(_mistake(m, global));
+              return;
+            }
+            if (!_run.earthed) {
+              _hints.missTap();
+              return;
+            }
+            _tick('sounds/intro/impact_metal.ogg', 0.55);
+            setState(() => _held = null);
             _stepDone();
             return;
           }
@@ -1313,6 +1511,8 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
         }
       case M5Tool.ear:
       case M5Tool.watch:
+      case M5Tool.gloves:
+      case M5Tool.permit:
         break;
     }
     _hints.missTap();
@@ -1406,8 +1606,12 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
     _hush();
     if (!o.correct) {
       setState(() => _verdictWrong.add(o.textBn));
-      final m = _run.pickVerdict(false);
-      if (m != null) unawaited(_mistake(m, origin));
+      final m = _run.pickVerdict(false, card: o.textBn);
+      if (m != null) {
+        final geo = _geoNow;
+        if (m.deadly && geo != null) _flashAt = m == M5CauseStrikeMistakes.liveSpanner ? geo.bushing(1) : geo.tank.topCenter;
+        unawaited(_mistake(m, origin));
+      }
       return;
     }
     _verdictBusy = true;
@@ -1699,6 +1903,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
       large: c.large,
       source: c.source,
       traced: _run.traced,
+      earthed: _run.earthed,
     );
   }
 
@@ -1708,7 +1913,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
     final rects = <Rect>[
       if (tool == null || tool == M5Tool.hotStick) for (var i = 0; i < 3; i++) if (k == M5CaseKind.ltDead) geo.doHit(i),
       if (tool == null) geo.gaugeHit,
-      if (tool == null || tool == M5Tool.tester || tool == M5Tool.spanner) for (var i = 0; i < 3; i++) if (k == M5CaseKind.ltDead) geo.bushingHit(i),
+      if (tool == null || tool == M5Tool.tester || tool == M5Tool.spanner || tool == M5Tool.earth) for (var i = 0; i < 3; i++) if (k == M5CaseKind.ltDead) geo.bushingHit(i),
       if (tool == null && k == M5CaseKind.ltDead) geo.leverHit,
       if (tool == null || tool == M5Tool.meter) for (var i = 0; i < 3; i++) geo.terminalHit(i),
       if (tool == null || tool == M5Tool.tong) geo.cableHit,
@@ -1774,7 +1979,7 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
               Positioned.fromRect(
                 key: const ValueKey('trainee'),
                 rect: geo.ground,
-                child: LinemanFigure(look: LinemanLook.trainee, mode: _mode, wake: _wake, quiet: quiet),
+                child: LinemanFigure(look: _run.gloved ? _rubberGloved : LinemanLook.trainee, mode: _mode, wake: _wake, quiet: quiet),
               ),
             ],
           ),
@@ -1886,6 +2091,8 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
     final deckUp = reasonOpen || coworkerChoiceUp || verdictUp;
     final handsOn = playing && !_run.roundDone && !deckUp && !coworkerOpen && _card == null;
     final tools = _tools;
+    // Up to seven tools: each takes an even share of the width (at most 80).
+    final toolW = math.min(80.0, (size.width - 8) / tools.length);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1933,7 +2140,8 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
                           key: _toolKeys[t],
                           icon: _icons[t]!,
                           label: M5CauseStrikeLines.tool(t),
-                          on: _held == t || (t == M5Tool.watch && _dripping),
+                          width: toolW,
+                          on: _held == t || (t == M5Tool.watch && _dripping) || (t == M5Tool.gloves && _run.gloved) || (t == M5Tool.permit && _run.permit),
                           onTap: (g) => _tapTool(t, g),
                           onHold: t == M5Tool.ear ? _holdEar : null,
                         ),
@@ -2055,7 +2263,21 @@ class _CauseRunPageState extends ConsumerState<_CauseRunPage>
     M5Tool.tester: Icons.flash_on_rounded,
     M5Tool.spanner: Icons.build_rounded,
     M5Tool.watch: Icons.timer_rounded,
+    M5Tool.gloves: Icons.back_hand_rounded,
+    M5Tool.permit: Icons.assignment_turned_in_rounded,
+    M5Tool.earth: Icons.link_rounded,
   };
+
+  /// The trainee in insulating rubber gloves (live measurement).
+  static const _rubberGloved = LinemanLook(
+    helmet: Color(0xFFFFD34E),
+    shirt: Color(0xFF1F5F8F),
+    vest: Color(0xFFFF851B),
+    pants: Color(0xFF26303D),
+    skin: Color(0xFFA86E48),
+    gloves: true,
+    gloveColor: LinemanLook.rubberGloves,
+  );
 }
 
 // ============================================================================
@@ -2313,9 +2535,10 @@ class _NutChip extends StatelessWidget {
 /// A hands-on tool: a round icon with its name under it; lit while in hand.
 /// [onHold]: a hold control (the ear) — a plain tap does nothing.
 class _ToolButton extends StatelessWidget {
-  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap, this.onHold});
+  const _ToolButton({super.key, required this.icon, required this.label, required this.on, required this.onTap, this.onHold, this.width = 80});
   final IconData icon;
   final String label;
+  final double width;
   final bool on;
   final ValueChanged<Offset> onTap;
   final VoidCallback? onHold;
@@ -2332,13 +2555,13 @@ class _ToolButton extends StatelessWidget {
         onTapUp: (d) => onTap(d.globalPosition),
         onLongPress: onHold,
         child: SizedBox(
-          width: 80,
+          width: width,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: math.min(48.0, width - 4),
+                height: math.min(48.0, width - 4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
@@ -2355,12 +2578,15 @@ class _ToolButton extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(color: const Color(0xCC0B1324), borderRadius: BorderRadius.circular(8)),
-                child: Text(label,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.visible,
-                    softWrap: false,
-                    style: bangla(fontSize: 10.5, fontWeight: FontWeight.w800, height: 1.15, color: SlmColors.ivory)),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(label,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.visible,
+                      softWrap: false,
+                      style: bangla(fontSize: 10.5, fontWeight: FontWeight.w800, height: 1.15, color: SlmColors.ivory)),
+                ),
               ),
             ],
           ),

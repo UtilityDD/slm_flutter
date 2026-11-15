@@ -19,8 +19,10 @@ import 'learn_board_models.dart';
 ///    call; the order check → call → CPR is step 21's job; the mud / burying
 ///    myth wastes time and raises infection; the golden minute is not for
 ///    standing about waiting;
-///  * pro tips: no ice, water or ointment on an entry/exit burn — take him to
-///    the doctor; never leave him alone, and hospital even if he talks.
+///  * pro tips: never leave him alone, and hospital even if he talks;
+///  * burns (A1 ruling, MoHFW/DGHS burns STG 2025, IFRC 2020): once he is
+///    clear of the supply and breathing, cool the burn with clean running
+///    water — no ice, no ointment — then hospital.
 /// The rival's myth is the lesson's own: LT shocks are "just a jolt".
 const learnBoardPack17 = LearnBoardPack(
   lessonId: '1.7',
@@ -224,15 +226,14 @@ const learnBoardPack17 = LearnBoardPack(
           asset: 'assets/game/art/aid_board/care_ice.svg',
           scene: true,
           correct: false,
-          rejectBn: 'পোড়া জায়গায় বরফ, জল বা মলম নয় — ডাক্তারের কাছে নিন।',
+          rejectBn: 'পোড়া জায়গায় বরফ বা মলম একদম নয় — আগে পরিষ্কার জল ঢালুন, তারপর সোজা হাসপাতাল।',
         ),
         LearnBoardOption(
           id: 'water',
           labelBn: 'পোড়া হাতে জল ঢালা',
           asset: 'assets/game/art/aid_board/care_water.svg',
           scene: true,
-          correct: false,
-          rejectBn: 'পোড়ায় জল ঢালবেন না, হাতও দেবেন না — ডাক্তারের কাছে নিন।',
+          correct: true,
         ),
         LearnBoardOption(
           id: 'cream',
@@ -240,7 +241,7 @@ const learnBoardPack17 = LearnBoardPack(
           asset: 'assets/game/art/aid_board/care_cream.svg',
           scene: true,
           correct: false,
-          rejectBn: 'Entry/Exit পোড়ায় মলম নয় — সোজা ডাক্তারের কাছে।',
+          rejectBn: 'Entry/Exit পোড়ায় কোনো মলম নয় — আগে পরিষ্কার জল ঢালুন, তারপর সোজা হাসপাতাল।',
         ),
         LearnBoardOption(
           id: 'home',
@@ -253,7 +254,7 @@ const learnBoardPack17 = LearnBoardPack(
       ],
       whyChips: [
         LearnWhyChip(id: 'w1', textBn: 'কথা বললেও ভেতরের ক্ষতি দেখা যায় না', correct: true),
-        LearnWhyChip(id: 'w2', textBn: 'পোড়ায় বরফ, জল বা মলম নয় — ডাক্তার', correct: true),
+        LearnWhyChip(id: 'w2', textBn: 'পোড়ায় বরফ-মলম নয় — জল ঢেলে হাসপাতাল', correct: true),
         LearnWhyChip(id: 'w3', textBn: 'কথা বলতে পারলে আর হাসপাতাল লাগে না', correct: false),
         LearnWhyChip(id: 'w4', textBn: 'পোড়ায় বরফ দিলে তাড়াতাড়ি সেরে যায়', correct: false),
         LearnWhyChip(id: 'w5', textBn: 'জল ঢাললেই ভেতরের ক্ষতি কমে যায়', correct: false),

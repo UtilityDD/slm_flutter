@@ -33,7 +33,7 @@ const learnBoardPack58 = LearnBoardPack(
   titleBn: 'ট্রান্সফরমারের সাধারণ সমস্যা: হৃৎপিণ্ডের রোগ নির্ণয়',
   badgeBn: 'ফল্ট ফাইন্ডার',
   introBn: 'ট্রান্সফরমার নেটওয়ার্কের হৃৎপিণ্ড। লক্ষণ দেখে রোগ ধরুন — কখন প্রাথমিক চিকিৎসা, কখন ওয়ার্কশপ।',
-  earnedBn: 'আগে সেকশনালাইজিং, আগে লোড, আগে লিকের উৎস — বন্ধ করে ডেড প্রমাণ, তবেই হাত।',
+  earnedBn: 'আগে সেকশনালাইজিং, আগে লোড, আগে লিকের উৎস — তারপর বন্ধ, ডেড প্রমাণ ও আর্থ, তবেই হাত!',
   slots: [
     LearnBoardSlot(
       id: 'htfuse',
@@ -205,7 +205,7 @@ const learnBoardPack58 = LearnBoardPack(
       options: [
         LearnBoardOption(
           id: 'check',
-          labelBn: 'বন্ধ করে টেস্টারে ডেড, তারপর বুশিং কানেকশন',
+          labelBn: 'বন্ধ, টেস্টারে ডেড, আর্থ — তারপর বুশিং',
           asset: 'assets/game/art/m5_board58/ltdead_check.svg',
           scene: true,
           correct: true,
@@ -223,7 +223,7 @@ const learnBoardPack58 = LearnBoardPack(
           asset: 'assets/game/art/m5_board58/ltdead_livespanner.svg',
           scene: true,
           correct: false,
-          rejectBn: 'চালু ট্রান্সফরমারে স্প্যানার মারাত্মক — আগে বন্ধ করে টেস্টারে ডেড প্রমাণ, তারপর এলটি বুশিং-এর কানেকশন।',
+          rejectBn: 'চালু ট্রান্সফরমারে স্প্যানার লাগানো মারাত্মক ভুল! আগে বন্ধ করে টেস্টারে ডেড প্রমাণ ও আর্থ, তারপর এলটি বুশিং-এর কানেকশন।',
         ),
         LearnBoardOption(
           id: 'newlink',
@@ -243,7 +243,7 @@ const learnBoardPack58 = LearnBoardPack(
         ),
       ],
       whyChips: [
-        LearnWhyChip(id: 'w1', textBn: 'আগে বন্ধ, টেস্টারে ডেড প্রমাণ, তারপর হাত', correct: true),
+        LearnWhyChip(id: 'w1', textBn: 'আগে বন্ধ, টেস্টারে ডেড প্রমাণ, আর্থ — তবে হাত', correct: true),
         LearnWhyChip(id: 'w2', textBn: 'এলটি বুশিং-এর কানেকশন খুললেও ফেজ মরে যায়', correct: true),
         LearnWhyChip(id: 'w3', textBn: 'কানেকশন ঠিক থাকলে দোষ ভেতরে — বদলাতে হবে', correct: true),
         LearnWhyChip(id: 'w4', textBn: 'এইচটি ফিউজ ঠিক থাকলেও নতুন ফিউজ দিলেই হয়', correct: false),

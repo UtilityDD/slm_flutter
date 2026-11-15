@@ -13,7 +13,7 @@ param([Parameter(ValueFromRemainingArguments = $true)][string[]]$FlutterArgs)
 $flutter = 'C:\Users\rouma\flutter\bin\flutter.bat'
 $root = Split-Path -Parent $PSScriptRoot
 $lockDir = Join-Path $root '.flk'
-$slots = if ($env:FLK_SLOTS) { [int]$env:FLK_SLOTS } else { 8 }
+$slots = if ($env:FLK_SLOTS) { [int]$env:FLK_SLOTS } else { 3 }
 New-Item -ItemType Directory -Force $lockDir | Out-Null
 
 $mine = $null

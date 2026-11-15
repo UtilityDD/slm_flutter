@@ -262,7 +262,7 @@ abstract final class M5GateLines {
   static const callDown = 'সবাই নেমে এসো, আর্থ খোলো';
 
   static String ug(M5UgStep s) => switch (s) {
-        M5UgStep.isolate => 'দুই প্রান্ত আইসোলেট করো',
+        M5UgStep.isolate => 'দুই প্রান্ত আইসোলেট করে ডিসচার্জ',
         M5UgStep.megger => 'মেগারে ফল্টের ধরন দেখো',
         M5UgStep.team => 'বিশেষজ্ঞ টিম ডাকো',
         M5UgStep.owners => 'মাটির নিচের লাইনের মালিকদের ফোন',
@@ -360,7 +360,7 @@ abstract final class M5GateLines {
     'পোলের গোড়ায় জল জমে আছে',
   ];
   static String ugNote(M5UgStep s) => switch (s) {
-        M5UgStep.isolate => 'কেবিলের দুই প্রান্ত খুলে আলাদা করা হলো',
+        M5UgStep.isolate => 'কেবিলের দুই প্রান্ত খুলে আলাদা করে ডিসচার্জ করা হলো',
         M5UgStep.megger => 'মেগার: একটা কোর আর আর্মারে প্রায় শূন্য',
         M5UgStep.team => 'বিশেষজ্ঞ টিম থাম্পার নিয়ে আসছে',
         M5UgStep.owners => 'টেলিফোন, জল, গ্যাস লাইনের মালিকরা জানলেন',
@@ -616,7 +616,7 @@ abstract final class M5GateMistakes {
   ));
   static const meggerLive = M5Mistake('5.9', DoMistake(
     key: 'm5/gate/megger-live',
-    textBn: 'কেবিলের দুই প্রান্ত আলাদা না করেই মেগার — অন্য প্রান্ত লাইভ থাকতে পারে। আগে দুই প্রান্ত আইসোলেট, তারপর মেগার।',
+    textBn: 'কেবিলের দুই প্রান্ত আলাদা না করেই মেগার চালাবেন না — অন্য প্রান্ত লাইভ থাকতে পারে! আগে দুই প্রান্ত আইসোলেট ও ডিসচার্জ করুন, তারপর মেগার।',
     art: '$_art/cable.svg',
     deadly: true,
     lessonPoint: 1,

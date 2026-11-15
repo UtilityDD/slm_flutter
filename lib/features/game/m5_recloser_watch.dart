@@ -53,9 +53,16 @@ export 'm5_recloser_watch_world.dart' show M5Event, M5EventKind, M5Fault, M5Recl
 //    for him: holdForCoworker). Refused, hold again: "ফিডার 4 আইসোলেট করা
 //    হলো। PTW নম্বর 472 — লিখে নিন।" Drag the PTW slip to the trainee → ◆ →
 //    "ট্রিপ লাইনে পারমিট (PTW) কেন লাগবে?". Then drag the van to the span of the flash
-//    (the tea stall's locals point the way if asked).
+//    (the tea stall's locals point the way if asked). Before the lock-out is
+//    reported, dragging the van off is the patrol-early slip (control not yet
+//    told); once reported (the PTW stage) control knows, and a drag of the van
+//    before the PTW is simply ignored — ground patrol needs no PTW (ruling
+//    M5-3), climbing or touching before it stays deadly (R1).
 //  ৩ আর্থ: at the span: hold the tester on each phase (0 V), hold to drive the
 //    earth spike, drag the clamp onto the conductors → ◆ → "ওঠার আগে আর্থ কেন?".
+//    Earths go on both sides of the working zone (WBSEDCL Safety Manual 2025
+//    5.14(d)): the trainee's set at the work pole; once the tester shows 0 V
+//    on every phase, the crew's set is drawn on at the span's far pole.
 //  ৪ মেরামত: "পোলে উঠুন" → the torch shows the fault → tap it off → pass.
 //
 // Deadly vs slip (Module 5 table, docs/module_specs/module5_rulings.md):
@@ -65,9 +72,9 @@ export 'm5_recloser_watch_world.dart' show M5Event, M5EventKind, M5Fault, M5Recl
 //   R4 climbing before the earth is on; R5 the clamp on the line before the
 //   spike is in.
 //   slip — a wrong count / a wrong flash span (one slip per report); driving
-//   off on patrol before the PTW (ruling M5-3 card text: inform control, a PTW
-//   before any touch or climb); R3 the clamp before the tester proved the line
-//   dead (ruling M5-2 card text).
+//   off on patrol before the lock-out is reported to control (ruling M5-3
+//   card text: inform control, a PTW before any touch or climb); R3 the clamp
+//   before the tester proved the line dead (ruling M5-2 card text).
 // Three slips strike the level out; a deadly move freezes the scene grey and
 // the line comes on in colour (the next reclose, or "ফিডার 4 চার্জ করছি…").
 //
@@ -212,7 +219,7 @@ abstract final class M5RecloserLines {
   static const caughtCount = 'রিক্লোজার কতবার চালু করল, ঠিক গুনেছেন';
   static const caughtLive = 'লক-আউট লাইনকেও লাইভ ধরেছেন';
   static const caughtPtw = 'লাইনে হাত দেওয়ার আগে পারমিট (PTW) হাতে নিয়েছেন';
-  static const caughtEarth = 'টেস্টারে 0 V, তারপর আর্থ — তবে ওঠা';
+  static const caughtEarth = 'টেস্টারে 0 V, তারপর দুই দিকে আর্থ — তবে ওঠা';
   static const caughtCall = '“পারমিট লাগবে না” — না বলেছেন';
 }
 
@@ -237,10 +244,11 @@ abstract final class M5RecloserMistakes {
     deadly: true,
   );
 
-  /// R4 (lesson 5.1: "পারমিট (PTW) এবং ব্যক্তিগত আর্থিং ছাড়া … স্পর্শ করা যাবে না").
+  /// R4 (lesson 5.1: "পারমিট (PTW) এবং ব্যক্তিগত আর্থিং ছাড়া … স্পর্শ করা যাবে না";
+  /// both sides of the working zone: WBSEDCL Safety Manual 2025 5.14(d)).
   static const noEarth = DoMistake(
     key: '5.1/m5_recloser_watch/no-earth',
-    textBn: 'টেস্টারে 0 V দেখার পরও আর্থ ছাড়া ওঠা নয় — ব্যক্তিগত আর্থিং লাগিয়ে তবেই পোলে।',
+    textBn: 'টেস্টারে 0 V দেখার পরও আর্থ ছাড়া পোলে ওঠা একদম নয় — কাজের জায়গার দুই দিকে আর্থ লাগিয়ে তবেই পোলে উঠুন!',
     art: '$_dir/no_earth.svg',
     deadly: true,
     lessonPoint: 1,
@@ -298,7 +306,7 @@ abstract final class M5RecloserMistakes {
   static const sources = <String, String>{
     '5.1/m5_recloser_watch/no-ptw': '5.1 point 2 (PTW) + myth 1 reality',
     '5.1/m5_recloser_watch/no-test': 'M1 step 18 (lessons 1.5/1.6)',
-    '5.1/m5_recloser_watch/no-earth': '5.1 myth 1 reality: পারমিট (PTW) এবং ব্যক্তিগত আর্থিং',
+    '5.1/m5_recloser_watch/no-earth': '5.1 myth 1 reality: পারমিট (PTW) এবং ব্যক্তিগত আর্থিং; both sides: WBSEDCL 5.14(d)',
     '5.1/m5_recloser_watch/clamp-first': 'M1 step 15 (lesson 1.5)',
     '5.1/m5_recloser_watch/test-first': 'ruling M5-2 (4.1a)',
     '5.1/m5_recloser_watch/patrol-early': '5.1 point 2 + ruling M5-3',
@@ -476,12 +484,15 @@ class M5RecloserRun {
     return true;
   }
 
-  /// The van dragged to [span]. Before the PTW = a slip (it stays by pole 1);
-  /// at the fault span the crew is there (the span step begins).
+  /// The van dragged to [span]. Before the lock-out is reported to control =
+  /// a slip (it stays by pole 1). In the PTW stage control already knows:
+  /// ground patrol needs no PTW (ruling M5-3), so the drag is ignored (the van
+  /// waits for the permit; climbing before it stays deadly). At the fault span
+  /// the crew is there (the span step begins).
   DoMistake? drive(int span) {
     if (ended) return null;
     switch (stage) {
-      case M5RecloserStage.report || M5RecloserStage.ptw:
+      case M5RecloserStage.report:
         if (roundDone) return null;
         _patrolSlip = true;
         return _slip(M5RecloserMistakes.patrolEarly);
@@ -1516,6 +1527,9 @@ class _RecloserRunPageState extends ConsumerState<_RecloserRunPage>
         spike: _run.spike,
         clamp: _run.clamped,
         tested: _run.tested,
+        // The crew's earth set at the span's far pole (both sides of the
+        // working zone, WBSEDCL 5.14(d)), on once the line is proved dead.
+        farEarth: _run.atFault && _run.tested >= 3,
       );
 
   /// A design-px rect of the scene on screen (null before layout).
