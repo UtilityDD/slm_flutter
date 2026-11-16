@@ -761,13 +761,26 @@ class MascotSpeechLibrary {
         ? null
         : LearnVoice.resolve(textBn, rival: rival) ?? LearnVoice.resolve(cleanText, rival: rival);
 
-    if (resolvedKey != null || learnClip != null) {
+    // 1d. A task nudge with no clip of its own («তাড়াহুড়ো নয়। …»): the
+    // prefix clip, then the task's clip, as one line (the bubble keeps the
+    // whole text; lips stay open until both have played).
+    final nudgeClips = resolvedKey != null || learnClip != null || rival
+        ? null
+        : LearnVoice.resolveNudge(textBn) ?? LearnVoice.resolveNudge(cleanText);
+
+    if (resolvedKey != null || learnClip != null || nudgeClips != null) {
       await _stopTts();
       DsVoice.stop();
       LearnVoice.stop();
       beginLips();
       try {
-        if (learnClip != null) {
+        if (nudgeClips != null) {
+          for (final clip in nudgeClips) {
+            // A new line or [stop] in between ends the sequence.
+            if (token != _speakToken) break;
+            await LearnVoice.play(clip);
+          }
+        } else if (learnClip != null) {
           await LearnVoice.play(learnClip);
         } else {
           await DsVoice.play(resolvedKey!, muted: false);
@@ -846,7 +859,9 @@ class MascotSpeechLibrary {
               DsVoice.hasAudio(clean) ||
               DsVoice.hasAudio(textBn.trim()) ||
               LearnVoice.resolve(textBn) != null ||
-              LearnVoice.resolve(clean) != null;
+              LearnVoice.resolve(clean) != null ||
+              LearnVoice.resolveNudge(textBn) != null ||
+              LearnVoice.resolveNudge(clean) != null;
       final row = jsonEncode({'text': textBn.trim(), 'rival': rival, 'clip': hasClip});
       File(_voiceInventoryPath).writeAsStringSync('$row\n', mode: FileMode.append, flush: true);
     } catch (_) {}

@@ -2827,6 +2827,9 @@ const learnCoachVoice = <String, String>{
   "আবার বলছি — বাঁকটা ঠিক করে কেবিল বসান।": 'sounds/learn_voice/c_b8d23b43d2.mp3',
   "আবার বলছি — বাইরের লক্ষণটা খুঁজুন — ভেতরের কোন জিনিসের ক্ষতি করছে?": 'sounds/learn_voice/c_c00e119c2a.mp3',
   "আবার বলছি — সুইচটা ঠিক করুন, কাজ শেষ হলে নিচে নামুন।": 'sounds/learn_voice/c_be6a77972e.mp3',
+  "আবার বলছি —": 'sounds/learn_voice/c_971df932d8.mp3',
+  "তাড়াহুড়ো নয়।": 'sounds/learn_voice/c_cecf0032f4.mp3',
+  "ভালো করে দেখুন।": 'sounds/learn_voice/c_c7de5f8a9d.mp3',
 };
 
 const learnRivalVoice = <String, String>{

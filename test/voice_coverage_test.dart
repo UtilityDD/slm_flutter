@@ -18,7 +18,10 @@ bool _hasClip(String text, {required bool rival}) {
   return DsVoice.hasAudio(text) ||
       DsVoice.hasAudio(clean) ||
       LearnVoice.resolve(text) != null ||
-      LearnVoice.resolve(clean) != null;
+      LearnVoice.resolve(clean) != null ||
+      // A task nudge is spoken as its prefix clip, then the task's clip.
+      LearnVoice.resolveNudge(text) != null ||
+      LearnVoice.resolveNudge(clean) != null;
 }
 
 void main() {

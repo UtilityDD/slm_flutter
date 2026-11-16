@@ -14151,6 +14151,21 @@
    "text": "আবার বলছি — সুইচটা ঠিক করুন, কাজ শেষ হলে নিচে নামুন।",
    "rival": false,
    "clip": true
+  },
+  {
+   "text": "আবার বলছি —",
+   "rival": false,
+   "clip": true
+  },
+  {
+   "text": "তাড়াহুড়ো নয়।",
+   "rival": false,
+   "clip": true
+  },
+  {
+   "text": "ভালো করে দেখুন।",
+   "rival": false,
+   "clip": true
   }
  ]
 }

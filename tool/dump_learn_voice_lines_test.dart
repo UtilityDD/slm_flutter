@@ -117,6 +117,7 @@ import 'package:slm_flutter/features/game/tool_tip.dart';
 import 'package:slm_flutter/features/game/kit_check.dart';
 import 'package:slm_flutter/features/game/learn_board_models.dart';
 import 'package:slm_flutter/features/game/learn_feedback_lines.dart';
+import 'package:slm_flutter/features/game/learn_voice.dart';
 import 'package:slm_flutter/features/game/lesson_day_card.dart';
 import 'package:slm_flutter/features/game/lesson_promises.dart';
 import 'package:slm_flutter/features/game/read_lesson_offer.dart';
@@ -153,6 +154,10 @@ void main() {
       }
     }
     LearnCoachLines.all.forEach(addCoach);
+    // The task nudge's prefixes, each its own clip (played before the task's clip).
+    for (final p in LearnVoice.nudgePrefixes) {
+      addCoach(p);
+    }
     for (final n in ReadLessonNudges.all) {
       addCoach(n.title);
     }

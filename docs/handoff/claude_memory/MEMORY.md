@@ -1,0 +1,10 @@
+- [Duty slip: no Supabase yet](duty-slip-no-supabase-yet.md) — keep মৃত্যুহীন local-only behind a repo interface; UI/UX of part 1 before field page
+- [Duty slip goal](duty-slip-improvement-plan.md) — memorize real work steps; intuitive, competitive, easy→hard, immersive
+- [New levels: device TTS only](new-levels-use-device-tts.md) — SUPERSEDED 2026-11-14 by voice-and-new-text-rules
+- [Module 1 owner decisions](module1-owner-decisions-2026-11-08.md) — deadly/slip splits, helmet station, nests, distances approved 2026-11-08
+- [Step 30 gate in progress](step30-gate-in-progress.md) — hazard-spotting rank gate concept + steps 28–29 review were mid-run 2026-11-10; resume notes
+- [Safety refs: WBSEDCL/Indian/intl](safety-references-wbsedcl-indian.md) — never Bangladesh manuals; cite clause + quote
+- [Play Store release state](playstore-release-decisions.md) — KarmaPath acct (no closed-test gate), OAuth clients incl. Play SHA-1, prod draft all countries
+- [Voice & new-text rules](voice-and-new-text-rules.md) — ask owner for natural wording of any new text; every spoken line = Subrata clip
+- [Bangla term rules](bangla-term-rules.md) — ডেড, LT/HT/kV, ON/OFF, AB লাগানো (never «AB বন্ধ» for closing)
+- [Module 6 Wave B handoff](module6-wave-b-handoff.md) — run Workflow name module6-wave-b from a FRESH session; director steps after

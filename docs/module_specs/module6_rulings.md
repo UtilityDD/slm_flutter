@@ -60,6 +60,17 @@ Row ids: R1–R39 follow `module6_spec.json` `deadlySlipTable` in order. The rul
 | 6.5a 'armour earthed at one end **or none**' was one slip | Split by dec 1 / dec 5 (M6-1). |
 | 6.1a climb push was 'off by default' | Dec 4 confirmed the row; turned ON (M6-4). |
 
+## Owner answers after Wave A (2026-11-15 sheet + chat) — binding for Wave B
+
+- **Open items 1–6 closed:** gate badge = 'যন্ত্র গুরু' (same as the lessons); earth tester word = 'আর্থ টেস্টার'; meter swap with the supply on = DEADLY (X5 confirmed; the dead point is the pole fuse / incoming cut-out); armour earthed at neither end = deadly; 6.3a twist job stays dropped; handle earth lead = slip.
+- **Term rules (owner):** «ডেড» never «মৃত» for a proven-dead line («টেস্টারে ডেড প্রমাণ»); LT, HT, 11 kV in English letters (never এলটি/এইচটি/কেভি); breaker/switch states ON / OFF (never অন/অফ); closing an AB/isolator = «লাগানো / লাগালেন», never «AB বন্ধ» (বন্ধ on a switch reads as OFF); «AB না খুলে» for "with the AB still closed".
+- **Unicode:** write য় ড় ঢ় as base + nukta (U+09AF U+09BC etc.), the app's form; tests that compare with the lesson file must normalise the lesson's single code points.
+- **Isolator / AB on load:** charging or opening a feeder on an isolator/AB under load (incl. listening to such a push) = DEADLY (6.2b ruling).
+- **Boards:** 5 rounds (M5-11) unless a ruling says otherwise (6.9 stays at its ruled length); 4–6 picture cards per round; every hand must hold a safe card.
+- **Every spoken line must be listed** in the level's newGuideLines/newRivalLines (including spoken "why" questions, crew/radio lines, JE lines read by the guide), so the voice pass can find them.
+- **Quick-bonus times:** builder's estimate (~85 % of a clean play) is accepted; state it in the report.
+- **Reason cards:** when a level marks a stage with a slip, the right/wrong cards describe what THIS item had (never "this safety rule is false").
+
 ## Open for the owner
 
 1. **Gate badge name** (`M6GateLines.badge`, empty until given).

@@ -11,6 +11,7 @@ import '../guide/ai_lineman_guide.dart';
 import '../guide/guide_director.dart';
 import '../guide/mascot_speech_library.dart';
 import '../zero_loss/zero_loss_fx.dart';
+import 'learn_voice.dart';
 
 // Pieces every Do game in the level shell shares, so all Do levels look, move
 // and sound the same. Every animation plays once; an idle screen is still.
@@ -67,11 +68,12 @@ class DoBackdrop extends StatelessWidget {
 class TaskNudge {
   int _n = 0;
 
+  // 'আবার বলছি — ', 'তাড়াহুড়ো নয়। ', 'ভালো করে দেখুন। ': each has its
+  // own clip, so a repeat with no clip of its own is the prefix clip then
+  // the task's clip (MascotSpeechLibrary.speak).
   static final List<String Function(String)> _ways = [
     (t) => t,
-    (t) => 'আবার বলছি — $t',
-    (t) => 'তাড়াহুড়ো নয়। $t',
-    (t) => 'ভালো করে দেখুন। $t',
+    for (final p in LearnVoice.nudgePrefixes) (t) => '$p$t',
   ];
 
   String next(String task) => _ways[_n++ % _ways.length](task);
