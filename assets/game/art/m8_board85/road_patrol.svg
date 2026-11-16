@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="office" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D8E2"/><stop offset="0.6" stop-color="#D9CDB6"/><stop offset="0.6" stop-color="#9A7650"/><stop offset="1" stop-color="#6E5236"/></linearGradient>
+  <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9AA5AE"/><stop offset="1" stop-color="#6F7A84"/></linearGradient>
+  <linearGradient id="day" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#D6E7F0"/></linearGradient>
+  <linearGradient id="yard" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D8E2"/><stop offset="0.7" stop-color="#E2E6DE"/><stop offset="1" stop-color="#B9B39E"/></linearGradient>
+  <linearGradient id="van" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5E6E7C"/><stop offset="0.55" stop-color="#7C8C98"/><stop offset="1" stop-color="#4E5C68"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9DBB72"/><stop offset="1" stop-color="#7E9C55"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E979E"/><stop offset="0.5" stop-color="#C6CED4"/><stop offset="1" stop-color="#7C858C"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="box" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9EDF0"/><stop offset="1" stop-color="#AEB8C0"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#day)"/>
+<circle cx="170" cy="26" r="13" fill="#FFE08A"/>
+<rect x="0" y="176" width="200" height="44" fill="#5A6068"/>
+<rect x="0" y="180" width="200" height="3" rx="1" fill="#F4F1E6"/>
+<rect x="14.5" y="34" width="7" height="166" fill="url(#pole)"/>
+<rect x="178.5" y="34" width="7" height="166" fill="url(#pole)"/>
+<rect x="4" y="100" width="28" height="22" rx="2" fill="#F4F1E6" stroke="#4A5560" stroke-width="1"/>
+<rect x="8" y="108" width="20" height="4" fill="#4A5560"/>
+<path d="M16 68 L26 68" stroke="#4A5560" stroke-width="1" stroke-linecap="round" fill="none"/>
+<path d="M18 58 Q100 138 182 58" stroke="#2B3138" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<rect x="40" y="188" width="32.2" height="15.4" rx="2.1" fill="#3F6E8C"/><rect x="72.2" y="192.2" width="9.8" height="11.2" rx="2.1" fill="#3F6E8C"/><rect x="75" y="193.6" width="5.6" height="4.2" fill="#9CC6E4"/><circle cx="46.3" cy="204.1" r="2.8" fill="#4A5560"/><circle cx="68" cy="204.1" r="2.8" fill="#4A5560"/>
+<path d="M146.2 191.5 L144.3 218.1 M153.8 191.5 L155.7 218.1" stroke="#2A3442" stroke-width="6.6" stroke-linecap="round" fill="none"/><rect x="139.6" y="216.2" width="8.5" height="3.8" rx="1.4" fill="#1C1F24"/><rect x="151.9" y="216.2" width="8.5" height="3.8" rx="1.4" fill="#1C1F24"/><rect x="141.4" y="164.9" width="17.1" height="28.5" rx="3.8" fill="url(#shirt)"/><path d="M142.4 170.6 L140 160" stroke="#1F5F8F" stroke-width="5.7" stroke-linecap="round" fill="none"/><circle cx="140" cy="160" r="3.4" fill="#2A2D33"/><path d="M157.6 170.6 L160 160" stroke="#1F5F8F" stroke-width="5.7" stroke-linecap="round" fill="none"/><circle cx="160" cy="160" r="3.4" fill="#2A2D33"/><circle cx="151.9" cy="157.3" r="6.2" fill="#A86E48"/><path d="M145.2 156.4 A6.6 6.6 0 0 1 158.6 156.4 Z" fill="#FFD34E"/><rect x="144.3" y="155" width="15.2" height="2.5" rx="1.1" fill="#E5B92E"/>
+<rect x="133" y="146" width="16" height="20" rx="1.5" fill="#F4F1E6" stroke="#4A5560" stroke-width="0.8"/><path d="M136 152 L146 152" stroke="#4A5560" stroke-width="0.8" stroke-linecap="round" fill="none"/><path d="M136 158 L146 158" stroke="#4A5560" stroke-width="0.8" stroke-linecap="round" fill="none"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

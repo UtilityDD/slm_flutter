@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="refbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFE3EE"/><stop offset="1" stop-color="#EEF4F7"/></linearGradient>
+  <linearGradient id="balbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6E9EF"/><stop offset="1" stop-color="#F7F5EC"/></linearGradient>
+  <linearGradient id="billbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9EEDF"/><stop offset="1" stop-color="#F3F8F1"/></linearGradient>
+  <linearGradient id="sopbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6E2CF"/><stop offset="1" stop-color="#FBF3EA"/></linearGradient>
+  <linearGradient id="licbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3DAF0"/><stop offset="1" stop-color="#F5F1FA"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#billbg)"/>
+<rect x="0" y="0" width="200" height="172" fill="#D6E7F0"/>
+<rect x="14" y="132" width="172" height="8" fill="#9A7650"/>
+<rect x="22" y="140" width="6" height="32" fill="#6B5B3E"/>
+<rect x="172" y="140" width="6" height="32" fill="#6B5B3E"/>
+<rect x="54" y="122" width="90" height="10" fill="#F4F1E6" stroke="#4A5560" stroke-width="1"/>
+<path d="M58 127 L140 127" stroke="#C8352B" stroke-width="3" stroke-linecap="round" fill="none"/>
+<rect x="92.8" y="140.8" width="6" height="31.2" fill="#2A3442" rx="1.5"/>
+<rect x="101.2" y="140.8" width="6" height="31.2" fill="#2A3442" rx="1.5"/>
+<rect x="89.2" y="112" width="21.6" height="32.4" fill="#1F5F8F" rx="4.8"/>
+<circle cx="100" cy="102.4" r="8.4" fill="#A86E48"/>
+<path d="M91.6 102.4 A8.4 8.4 0 0 1 108.4 102.4 Z" fill="#2A1E16"/>
+<path d="M89.2 116.8 L85.6 143.2" stroke="#1F5F8F" stroke-width="6" stroke-linecap="round" fill="none"/>
+<path d="M110.8 116.8 L118 133.6" stroke="#1F5F8F" stroke-width="6" stroke-linecap="round" fill="none"/>
+<rect x="14" y="132" width="172" height="8" fill="#9A7650"/>
+<rect x="0" y="206" width="13" height="14" fill="#1F5F8F"/>
+<rect x="12.5" y="206" width="13" height="14" fill="#2A1E16"/>
+<rect x="25" y="206" width="13" height="14" fill="#2A3442"/>
+<rect x="37.5" y="206" width="13" height="14" fill="#4A5560"/>
+<rect x="50" y="206" width="13" height="14" fill="#6B5B3E"/>
+<rect x="62.5" y="206" width="13" height="14" fill="#9A7650"/>
+<rect x="75" y="206" width="13" height="14" fill="#A86E48"/>
+<rect x="87.5" y="206" width="13" height="14" fill="#B5651F"/>
+<rect x="100" y="206" width="13" height="14" fill="#B9B39E"/>
+<rect x="112.5" y="206" width="13" height="14" fill="#C8352B"/>
+<rect x="125" y="206" width="13" height="14" fill="#D6E7F0"/>
+<rect x="137.5" y="206" width="13" height="14" fill="#D9822B"/>
+<rect x="150" y="206" width="13" height="14" fill="#D9A27A"/>
+<rect x="162.5" y="206" width="13" height="14" fill="#E5B92E"/>
+<rect x="175" y="206" width="13" height="14" fill="#F4F1E6"/>
+<rect x="187.5" y="206" width="13" height="14" fill="url(#billbg)"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

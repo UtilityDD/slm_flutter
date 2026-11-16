@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">
+<rect width="200" height="120" rx="10" fill="#0E182D"/>
+<rect x="20" y="10" width="160" height="26" rx="6" fill="#111B31" stroke="#E9C46A" stroke-width="2"/>
+<path d="M32 16 l8 0 l-1 8 l4 4 l-7 0 l0 7 l-2 0 l0 -7 l-7 0 l4 -4 z" fill="#E9C46A"/>
+<text x="54" y="28" font-family="sans-serif" font-size="12" font-weight="800" fill="#F5F0E1">CGRF</text>
+<g font-family="sans-serif" font-size="11" font-weight="700" fill="#DDE6F7" opacity="0.55">
+<rect x="20" y="46" width="160" height="16" rx="4" fill="#1A2742" stroke="#2B3B5E"/><text x="26" y="58">52614</text>
+<rect x="20" y="66" width="160" height="16" rx="4" fill="#1A2742" stroke="#2B3B5E"/><text x="26" y="78">31872</text>
+</g>
+<g font-family="sans-serif" font-size="11" font-weight="700" fill="#DDE6F7">
+<rect x="20" y="88" width="160" height="16" rx="4" fill="#2A3E68" stroke="#E9C46A" stroke-width="2"/><text x="26" y="100">CGRF</text>
+</g>
+<path d="M150 98 L150 52" stroke="#E9C46A" stroke-width="3" stroke-dasharray="4 4" fill="none"/>
+<path d="M143 58 L150 46 L157 58 Z" fill="#E9C46A"/>
+</svg>

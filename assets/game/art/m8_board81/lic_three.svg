@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="refbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFE3EE"/><stop offset="1" stop-color="#EEF4F7"/></linearGradient>
+  <linearGradient id="balbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6E9EF"/><stop offset="1" stop-color="#F7F5EC"/></linearGradient>
+  <linearGradient id="billbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9EEDF"/><stop offset="1" stop-color="#F3F8F1"/></linearGradient>
+  <linearGradient id="sopbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6E2CF"/><stop offset="1" stop-color="#FBF3EA"/></linearGradient>
+  <linearGradient id="licbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3DAF0"/><stop offset="1" stop-color="#F5F1FA"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#licbg)"/>
+<rect x="0" y="0" width="200" height="172" fill="#D6E7F0"/>
+<rect x="12" y="120" width="176" height="10" fill="#9A7650"/>
+<rect x="20" y="130" width="8" height="42" fill="#6B5B3E"/>
+<rect x="172" y="130" width="8" height="42" fill="#6B5B3E"/>
+<rect x="28" y="78" width="52" height="40" fill="#F4F1E6" stroke="#4A5560" stroke-width="1"/>
+<rect x="28" y="78" width="52" height="8" fill="#3E9B4F"/>
+<rect x="72" y="66" width="52" height="40" fill="#F4F1E6" stroke="#4A5560" stroke-width="1"/>
+<rect x="72" y="66" width="52" height="8" fill="#D9822B"/>
+<rect x="116" y="78" width="52" height="40" fill="#F4F1E6" stroke="#4A5560" stroke-width="1"/>
+<rect x="116" y="78" width="52" height="8" fill="#1F5F8F"/>
+<path d="M34 98 L70 98" stroke="#4A5560" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+<path d="M78 98 L114 98" stroke="#4A5560" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+<path d="M122 98 L158 98" stroke="#4A5560" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+<rect x="0" y="206" width="11" height="14" fill="#174A70"/>
+<rect x="10.5" y="206" width="11" height="14" fill="#1F5F8F"/>
+<rect x="21.1" y="206" width="11" height="14" fill="#2A1E16"/>
+<rect x="31.6" y="206" width="11" height="14" fill="#2A3442"/>
+<rect x="42.1" y="206" width="11" height="14" fill="#3E9B4F"/>
+<rect x="52.6" y="206" width="11" height="14" fill="#4A5560"/>
+<rect x="63.2" y="206" width="11" height="14" fill="#6B5B3E"/>
+<rect x="73.7" y="206" width="11" height="14" fill="#9A7650"/>
+<rect x="84.2" y="206" width="11" height="14" fill="#A86E48"/>
+<rect x="94.7" y="206" width="11" height="14" fill="#B5651F"/>
+<rect x="105.3" y="206" width="11" height="14" fill="#B9B39E"/>
+<rect x="115.8" y="206" width="11" height="14" fill="#C8352B"/>
+<rect x="126.3" y="206" width="11" height="14" fill="#D6E7F0"/>
+<rect x="136.8" y="206" width="11" height="14" fill="#D9822B"/>
+<rect x="147.4" y="206" width="11" height="14" fill="#D9DDE0"/>
+<rect x="157.9" y="206" width="11" height="14" fill="#E5B92E"/>
+<rect x="168.4" y="206" width="11" height="14" fill="#EEF4F7"/>
+<rect x="178.9" y="206" width="11" height="14" fill="#F4F1E6"/>
+<rect x="189.5" y="206" width="11" height="14" fill="url(#licbg)"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

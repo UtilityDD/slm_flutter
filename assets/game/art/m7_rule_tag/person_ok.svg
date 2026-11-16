@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe6f5"/><stop offset="1" stop-color="#fff4d6"/></linearGradient>
+<linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8e9399"/><stop offset="0.5" stop-color="#c9cdd1"/><stop offset="1" stop-color="#7c8187"/></linearGradient>
+<linearGradient id="tank" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6f8a78"/><stop offset="0.5" stop-color="#9fb8a6"/><stop offset="1" stop-color="#627c6b"/></linearGradient>
+<linearGradient id="gnd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9a887"/><stop offset="1" stop-color="#9c9488"/></linearGradient>
+</defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<rect x="92" y="16" width="136" height="150" rx="6" fill="url(#sky)"/><rect x="92" y="140" width="136" height="26" fill="url(#gnd)"/>
+<line x1="153" y1="90" x2="152" y2="146" stroke="#2e3a4e" stroke-width="9" stroke-linecap="round"/><line x1="167" y1="90" x2="168" y2="146" stroke="#2e3a4e" stroke-width="9" stroke-linecap="round"/><rect x="145" y="46" width="30" height="46" rx="6" fill="#1f5f8f"/><path d="M153 47 L160 66 L167 47" stroke="#d7332a" stroke-width="1.6" fill="none"/><rect x="154" y="66" width="12" height="15" fill="#f7f4ec"/><rect x="156" y="68" width="8" height="4" fill="#1f5f8f"/><circle cx="160" cy="34" r="11" fill="#a8714b"/><path d="M147 33 a13 13 0 0 1 26 0 z" fill="#f2f2f2"/><line x1="144" y1="33" x2="176" y2="33" stroke="#dadada" stroke-width="3"/>
+<circle cx="160" cy="180" r="9" fill="#2e9e4f"/><path d="M156 180 l3 3 l6 -6" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9E3D6"/><stop offset="1" stop-color="#CFC6B3"/></linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1ECE0"/><stop offset="1" stop-color="#DCD5C4"/></linearGradient>
+  <linearGradient id="street" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6E7F0"/><stop offset="1" stop-color="#B9C7B0"/></linearGradient>
+  <linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D8E2"/><stop offset="0.6" stop-color="#B7CC8E"/><stop offset="1" stop-color="#8FB06A"/></linearGradient>
+  <linearGradient id="office" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4E8EA"/><stop offset="1" stop-color="#BFC6CC"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#office)"/>
+<rect x="0" y="190" width="200" height="30" fill="#9C9C90"/>
+<path d="M12 190 Q39 150 66 190 Z" fill="#2B2F33"/>
+<rect x="88" y="36" width="76" height="100" rx="2" fill="#F4F1E6" stroke="#4A5560" stroke-width="1"/>
+<path d="M95 46 L157 46" stroke="#4A5560" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+<rect x="91" y="53" width="70" height="7" rx="1" fill="#E8C830"/>
+<path d="M95 56 L157 56" stroke="#4A5560" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+<path d="M95 66 L157 66" stroke="#4A5560" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+<path d="M95 76 L157 76" stroke="#4A5560" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+<path d="M95 86 L157 86" stroke="#4A5560" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+<path d="M161 150 L159 188" stroke="#2A3442" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M167 150 L170 188" stroke="#2A3442" stroke-width="7" stroke-linecap="round" fill="none"/>
+<rect x="153" y="108" width="22" height="48" rx="6" fill="#1F5F8F"/>
+<circle cx="164" cy="88" r="11" fill="#A86E48"/>
+<path d="M153 88 A11 11 0 0 1 175 88 Z" fill="#2A1E16"/>
+<path d="M155 118 L124 92" stroke="#1F5F8F" stroke-width="6" stroke-linecap="round" fill="none"/>
+<circle cx="124" cy="92" r="3.5" fill="#A86E48"/>
+<path d="M104 142 L126 162" stroke="#7C8891" stroke-width="3" stroke-linecap="round" fill="none"/>
+<path d="M126 142 L104 162" stroke="#7C8891" stroke-width="3" stroke-linecap="round" fill="none"/>
+<circle cx="101" cy="140" r="4" fill="#7C8891"/>
+<circle cx="101" cy="164" r="4" fill="#7C8891"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

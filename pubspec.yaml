@@ -142,6 +142,66 @@ flutter:
     - assets/game/art/m6_meter_swap_proof/
     - assets/game/art/m6_earth_pit_test/
     - assets/game/art/m6_gate_storm_feeder/
+    - assets/game/art/m7_board71/
+    - assets/game/art/m7_rule_tag/
+    - assets/game/art/m7_rule_question/
+    - assets/game/art/m7_board72/
+    - assets/game/art/m7_comp_casebook/
+    - assets/game/art/m7_claim_route/
+    - assets/game/art/m7_board73/
+    - assets/game/art/m7_clearance_survey/
+    - assets/game/art/m7_street_warn/
+    - assets/game/art/m7_board74/
+    - assets/game/art/m7_ptw_sign/
+    - assets/game/art/m7_ptw_inquiry/
+    - assets/game/art/m7_board75/
+    - assets/game/art/m7_theft_trace/
+    - assets/game/art/m7_theft_evidence/
+    - assets/game/art/m7_board76/
+    - assets/game/art/m7_ppe_counter_claim/
+    - assets/game/art/m7_ppe_mishap_route/
+    - assets/game/art/m7_board77/
+    - assets/game/art/m7_scene_guard/
+    - assets/game/art/m7_report_note/
+    - assets/game/art/m7_board78/
+    - assets/game/art/m7_spill_boom/
+    - assets/game/art/m7_waste_handover/
+    - assets/game/art/m7_board79/
+    - assets/game/art/m7_doorstep_visit/
+    - assets/game/art/m7_honest_reply/
+    - assets/game/art/m7_board710/
+    - assets/game/art/m7_crew_papers/
+    - assets/game/art/m7_gate_permit_day/
+    - assets/game/art/m8_board81/
+    - assets/game/art/m8_bill_listen/
+    - assets/game/art/m8_hearing_balance/
+    - assets/game/art/m8_board82/
+    - assets/game/art/m8_notice_calendar/
+    - assets/game/art/m8_theft_evidence/
+    - assets/game/art/m8_board83/
+    - assets/game/art/m8_sop_clock/
+    - assets/game/art/m8_shutdown_plan/
+    - assets/game/art/m8_board84/
+    - assets/game/art/m8_grid_hotline/
+    - assets/game/art/m8_voltage_band/
+    - assets/game/art/m8_board85/
+    - assets/game/art/m8_clearance_gauge/
+    - assets/game/art/m8_chain_throw/
+    - assets/game/art/m8_board86/
+    - assets/game/art/m8_grievance_reply/
+    - assets/game/art/m8_docket_lookup/
+    - assets/game/art/m8_board87/
+    - assets/game/art/m8_slab_stairs/
+    - assets/game/art/m8_day_dial/
+    - assets/game/art/m8_board88/
+    - assets/game/art/m8_solar_backfeed/
+    - assets/game/art/m8_net_bill/
+    - assets/game/art/m8_board89/
+    - assets/game/art/m8_trim_not_fell/
+    - assets/game/art/m8_oil_contain/
+    - assets/game/art/m8_board810/
+    - assets/game/art/m8_duty_logbook/
+    - assets/game/art/m8_gate_case_file/
     - assets/game/art/pole_board/
     - assets/game/art/harness_board/
     - assets/game/art/m3_gate_field/

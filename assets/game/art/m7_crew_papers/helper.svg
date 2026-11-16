@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9f0e6"/><stop offset="1" stop-color="#cfdccb"/></linearGradient>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8cc8ee"/><stop offset="1" stop-color="#d8eef8"/></linearGradient>
+<linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b98549"/><stop offset="1" stop-color="#8e5f2e"/></linearGradient>
+</defs>
+<rect width="320" height="200" rx="14" fill="url(#bg)"/>
+<g transform="translate(36,36)"><rect width="150" height="128" rx="8" fill="#1e3a5f" stroke="#0f2744" stroke-width="3"/><rect x="10" y="10" width="130" height="108" rx="4" fill="#f6efdc"/><rect x="20" y="22" width="90" height="6" rx="3" fill="#c8bf9f"/><rect x="20" y="44" width="76" height="6" rx="3" fill="#c8bf9f"/><rect x="20" y="88" width="76" height="6" rx="3" fill="#c8bf9f"/><rect x="20" y="66" width="96" height="6" rx="3" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4"/></g><g transform="translate(250,118)"><rect x="-14" y="22" width="12" height="34" rx="4" fill="#334155"/><rect x="2" y="22" width="12" height="34" rx="4" fill="#334155"/><rect x="-20" y="-6" width="40" height="34" rx="9" fill="#64748b"/><rect x="-11" y="4" width="22" height="9" rx="3" fill="#f8fafc"/><circle cx="0" cy="-20" r="14" fill="#c68642"/><path d="M-16 -22 Q0 -42 16 -22 Z" fill="#e5e7eb"/></g><g transform="translate(210,50)"><circle r="14" fill="#dc2626"/><path d="M-6.3 -6.3 L6.3 6.3 M6.3 -6.3 L-6.3 6.3" stroke="#fff" stroke-width="3.9200000000000004" fill="none" stroke-linecap="round"/></g></svg>

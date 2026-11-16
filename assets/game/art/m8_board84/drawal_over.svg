@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D8E2"/><stop offset="1" stop-color="#9FB3C0"/></linearGradient>
+  <linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EFE3CC"/><stop offset="1" stop-color="#D2BE9C"/></linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9EDEF"/><stop offset="1" stop-color="#C5CED4"/></linearGradient>
+  <linearGradient id="yard" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D8E2"/><stop offset="0.62" stop-color="#E2E6DE"/><stop offset="1" stop-color="#B9B39E"/></linearGradient>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#D6E7F0"/></linearGradient>
+  <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9AA5AE"/><stop offset="1" stop-color="#7D8891"/></linearGradient>
+  <linearGradient id="porc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6E3A22"/><stop offset="0.45" stop-color="#A65E3A"/><stop offset="1" stop-color="#5E301C"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#sky)"/>
+<rect x="18" y="40" width="164" height="24" rx="4" fill="#F4F1E6" stroke="#4A5560" stroke-width="1.5"/>
+<rect x="20" y="44" width="120" height="16" rx="2" fill="#F2B630"/>
+<path d="M100 34 L100 70" stroke="#4A5560" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M20 81.4 L20 86.3 M21.4 87 L27 87 M28.4 81.4 L28.4 86.3 M28.4 87.7 L28.4 92.6 M32.3 80 L37.9 80 M39.3 81.4 L39.3 86.3 M39.3 87.7 L39.3 92.6 M32.3 94 L37.9 94 M30.9 81.4 L30.9 86.3 M32.3 87 L37.9 87 M48.3 80 L53.9 80 M55.3 81.4 L55.3 86.3 M55.3 87.7 L55.3 92.6 M48.3 94 L53.9 94 M46.9 87.7 L46.9 92.6 M46.9 81.4 L46.9 86.3 M48.3 87 L53.9 87 M59.2 80 L64.8 80 M66.2 81.4 L66.2 86.3 M66.2 87.7 L66.2 92.6 M59.2 94 L64.8 94 M57.8 87.7 L57.8 92.6 M57.8 81.4 L57.8 86.3" stroke="#4A5560" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="42.7" cy="94" r="1.5" fill="#4A5560"/>
+<path d="M112 80 L112 94 M120.4 80 L120.4 94 M112 87 L120.4 87 M122.9 80 L131.3 80 L122.9 94 L131.3 94" stroke="#4A5560" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<rect x="18" y="120" width="62" height="60" rx="6" fill="url(#panel)"/>
+<circle cx="38" cy="150" r="7" fill="#F4F1E6" stroke="#D8402F" stroke-width="2.5"/>
+<circle cx="60" cy="150" r="7" fill="#3E9B4F" stroke="#3E9B4F" stroke-width="2.5"/>
+<circle cx="138" cy="150" r="22" fill="#F4F1E6" stroke="#4A5560" stroke-width="2"/>
+<path d="M138 150 L138 134" stroke="#D8402F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<circle cx="138" cy="150" r="3" fill="#4A5560"/>
+<circle cx="176" cy="120" r="12" fill="#A86E48"/>
+<rect x="156" y="138" width="40" height="64" rx="12" fill="#1F5F8F"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

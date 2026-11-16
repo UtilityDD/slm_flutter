@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<rect x="14" y="16" width="144" height="168" rx="10" fill="#fbe6e3" stroke="#c8493f" stroke-width="2.5"/>
+<path d="M126 24 l22 22 M148 24 l-22 22" fill="none" stroke="#c8493f" stroke-width="5" stroke-linecap="round"/>
+<rect x="32" y="92" width="64" height="26" rx="7" fill="#c62828"/>
+<rect x="36" y="74" width="56" height="16" rx="8" fill="#c62828" stroke="#ffffff" stroke-opacity=".5"/>
+<path d="M98 72 q8 6 0 14 M104 68 q12 10 0 22" fill="none" stroke="#e0a000" stroke-width="3" stroke-linecap="round"/>
+<rect x="100" y="92" width="64" height="26" rx="7" fill="#20242c"/>
+<rect x="104" y="52" width="56" height="16" rx="8" fill="#20242c" stroke="#ffffff" stroke-opacity=".5"/>
+<rect x="162" y="16" width="144" height="168" rx="10" fill="#e7f5ea" stroke="#3d9a5c" stroke-width="2.5"/>
+<path d="M274 30 l9 10 l17 -20" fill="none" stroke="#3d9a5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="180" y="92" width="64" height="26" rx="7" fill="#c62828"/>
+<rect x="184" y="50" width="56" height="16" rx="8" fill="#c62828" stroke="#ffffff" stroke-opacity=".5"/>
+<path d="M246 48 q8 6 0 14 M252 44 q12 10 0 22" fill="none" stroke="#e0a000" stroke-width="3" stroke-linecap="round"/>
+<rect x="248" y="92" width="64" height="26" rx="7" fill="#20242c"/>
+<rect x="252" y="74" width="56" height="16" rx="8" fill="#20242c" stroke="#ffffff" stroke-opacity=".5"/>
+<text x="212" y="64" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="11" fill="#c62828">SLDC</text>
+</svg>

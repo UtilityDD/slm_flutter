@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<line x1="160" y1="14" x2="160" y2="186" stroke="#c9bfa5" stroke-width="2" stroke-dasharray="5 4"/>
+<rect x="54" y="62" width="52" height="36" rx="6" fill="#26303d"/><rect x="58" y="66" width="44" height="28" rx="4" fill="#05080f"/><text x="80" y="88" font-family="sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#ffc94a">5</text>
+<text x="80" y="58" font-family="sans-serif" font-size="9" font-weight="bold" text-anchor="middle" fill="#3a2a1c">OLTC</text>
+<path d="M54 142 Q80 120 106 142 Q80 164 54 142 Z" fill="#fff" stroke="#26303d" stroke-width="3"/><circle cx="80" cy="142" r="9" fill="#26303d"/><circle cx="83" cy="139" r="3" fill="#fff"/>
+<line x1="50" y1="162" x2="110" y2="122" stroke="#d7332a" stroke-width="5" stroke-linecap="round"/>
+<circle cx="80" cy="26" r="16" fill="#d7332a"/><line x1="73" y1="19" x2="87" y2="33" stroke="#fff" stroke-width="4" stroke-linecap="round"/><line x1="87" y1="19" x2="73" y2="33" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+<rect x="214" y="62" width="52" height="36" rx="6" fill="#26303d"/><rect x="218" y="66" width="44" height="28" rx="4" fill="#05080f"/><text x="240" y="88" font-family="sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#ffc94a">5</text>
+<text x="240" y="58" font-family="sans-serif" font-size="9" font-weight="bold" text-anchor="middle" fill="#3a2a1c">OLTC</text>
+<path d="M214 142 Q240 120 266 142 Q240 164 214 142 Z" fill="#fff" stroke="#26303d" stroke-width="3"/><circle cx="240" cy="142" r="9" fill="#26303d"/><circle cx="243" cy="139" r="3" fill="#fff"/>
+<circle cx="240" cy="26" r="16" fill="#2e9d57"/><path d="M232 26 l6 7 l11 -13" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

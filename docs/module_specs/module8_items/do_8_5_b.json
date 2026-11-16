@@ -1,0 +1,684 @@
+{
+ "module": "8",
+ "note": "Split from docs/module_specs/module8_spec.json on 2026-11-16. docs/module_specs/module8_rulings.md (DRAFT: pending owner answers; written as if every recommendation in docs/review/m8_questions_2026-11-16.xlsx is accepted) WINS over anything in this file once the owner confirms it; the Module 1-7 cross-module rulings already bind. Lesson text source: tool/all_training_chapters_bn.json only; the live text wins over a spec quote (see notes.mismatches). Never use a Bangladesh source.",
+ "id": "do_8_5_b",
+ "rungId": "8.5/do/1",
+ "kind": "do",
+ "lessonId": "8.5",
+ "lessonTitleBn": "সেফটি কোড (Safety Code): সুরক্ষার স্থানীয় আইন",
+ "liveLevelTitleBn": "সেফটি কোড (Safety Code): সুরক্ষার স্থানীয় আইন",
+ "wave": "A",
+ "engineType": "m8_chain_throw",
+ "file": "lib/features/game/m8_chain_throw.dart",
+ "worldFile": "lib/features/game/m8_chain_throw_world.dart",
+ "art": "assets/game/art/m8_chain_throw/",
+ "catalogEngineTypeNow": "placeholder (content_catalog gamePacks do_8_5_b; set to m8_chain_throw at wiring)",
+ "rulings": [
+  "M8-1",
+  "M8-5",
+  "M8-8",
+  "M8-14",
+  "M8-15",
+  "M8-17",
+  "X1",
+  "X2",
+  "X6",
+  "X7"
+ ],
+ "level": {
+  "packId": "do_8_5_b",
+  "engineType": "m8_chain_throw",
+  "titleBn": "দুই প্রান্তে কবচ — রড, তারপর চেইন",
+  "verb": "flick-throw a ball-chain over the phases",
+  "scene": "A shut-down 11 kV village span: the work pole in the middle (docket 'কাজের পোল'), an earth pole before and after it; camera pans between them. At each end a tarp with a dealt layout: a rod set (rod, earth spike, clamp, cable) and a chain bag. Opening beat in the substation: feeder breaker at OFF, an operator, a key-hook board. Brass/copper chains glint; a jugaad iron chain is grey with rust. A crew mate works on the work pole in the cutaway.",
+  "flow": [
+   "GuideIntro: 'শাটডাউন পেয়েছেন। আইন মেনে নিজের কবচ নিজে বানান—তালা থেকে চেইন পর্যন্ত।'",
+   "Substation: drag the padlock onto the OFF handle's hasp, drag the board onto the handle. The key pops out: drag it to own shirt pocket, the key-hook board or the operator's open hand (all on screen). Pocket = small ◆ (deck 'চাবি কেন নিজের পকেটে?' once per play).",
+   "First end (player picks with left/right arrows). First touch chooses rod set or chain bag. Rod: drag the earth clamp onto the spike, lift the rod hook to the line and hold until drained (ring, spark).",
+   "Chain: pull it from the bag hand over hand (repeated upward drags); rust, broken links, a bent hook or grey iron show as they pass the fist. The player may drop it in the বাতিল crate and take the spare from the van, or keep it.",
+   "Throw (core): flick upward — angle = aim, length/speed = strength. Short → falls back; too strong → slides off the far side; partial → lies on 1–2 phases; full → drapes all three with a chink. Short/over = free retry. A partial chain can be tugged down and rethrown.",
+   "Rod drained then full drape with a good chain → praise → ◆ → deck 'কেন আগে রড, পরে চেইন?' (once) → zoom → এগিয়ে যান.",
+   "Walk to the other end and repeat. The coworker is dealt to one end; his push comes on the first kit touch there (holdForCoworker).",
+   "'উঠি' at the work pole is live from the start. Both ends rod-earthed and chained → deck 'কেন দুই প্রান্তেই আর্থ?' → job cutaway (~3 s).",
+   "Close: the mate is still coming down; wait for clearance (mate's wave on the ground), then tug each chain down. If the early-removal script is dealt he pushes here and the tails wait for him.",
+   "Pass or fail panel; deadly → grey freeze, consequence in colour, near-miss/death card."
+  ],
+  "dealtVariety": "Which end first (player); mirrored kit layout per end; chain bag contents (good brass, good copper, rusty, broken link, bent hook, grey iron) with at least one bad chain per play and never only bad pulls; conductor height and throw distance per end; cross-arm shape; key-tray distractors; coworker end and script (myth ~2 plays in 3, early removal otherwise); mate's coming-down time.",
+  "deadly": [
+   "Throwing the chain at an end before that end's rod has drained and earthed the line (own move or listening to the myth) — module table row 'chain as the earth'",
+   "Pressing 'উঠি' with either end not rod-earthed — module table row 'climb without rod earth both sides'",
+   "Lifting the rod hook to the line before the earth clamp is on the spike — module table row 'hook before clamp'"
+  ],
+  "slips": [
+   "Key not in own pocket (hook board or operator)",
+   "No padlock or no 'কাজ চলছে' board when leaving the substation",
+   "Throwing a rusty, broken-link, bent-hook or iron jugaad chain after the rod earthed that end",
+   "Chain on only 1–2 phases when walking on or climbing",
+   "Skipping the chain at an end (the docket asks for rod + chain at both ends)",
+   "Tugging a chain down before clearance (own move or the early-removal push)"
+  ],
+  "coworkerPushBn": "Once per play, two beats. Myth script (~2 plays in 3; at the dealt end, on the first kit touch, before the rod; that touch calls holdForCoworker()): 'চেইন ছুঁড়লেই আর্থিং হয়ে গেল—ডিসচার্জ রডের দরকার নেই।' (myth 3 word for word). Refuse: 'না, আগে রড—শর্ট আর আর্থিং এক নয়।' / 'রড চার্জ নামায়, চেইন শুধু ফেজ শর্ট করে।' Listen: 'ঠিক, চেইনটাই ছুঁড়ে দিই।' / 'চেইন ছুঁড়লেই হবে, রড থাক।' Listening = deadly. Early-removal script (otherwise; in the close while the mate is on the pole; the chain tails wait for him): 'কাজ তো শেষ, চেইনগুলো টেনে নামাও—দাঁড়িয়ে আছ কেন?' Refuse: 'ক্লিয়ারেন্স না পাওয়া পর্যন্ত চেইন থাকবে।' Listen: 'ঠিক, এখনই টেনে নামিয়ে দিই।' Listening = slip.",
+  "reasonQuestionsBn": [
+   "কেন আগে রড, পরে চেইন? — right: 'চেইন শুধু ফেজ শর্ট করে; রড চার্জ নামায়।' / 'শর্ট সার্কিট আর আর্থিং এক নয়—দুটোই লাগে।' wrong: 'চেইন ছুঁড়লে রডের কাজও হয়ে যায়।' / 'রড ভারী, তাই পরে লাগালেও চলে।' / 'চেইন আগে দিলে স্পার্ক কম হয়।' / 'লাইন তো বন্ধ, ক্রম নিয়ে চিন্তা নেই।' / 'অভিজ্ঞ লোকেরা চেইনই আগে দেয়।'",
+   "কেন দুই প্রান্তেই আর্থ দিলেন? — right: 'কাজের জায়গার আগে ও পরে আর্থিং আইনে বাধ্যতামূলক।' / 'ব্যাক-ফিডিং বা ইন্ডাকশন থেকে বাঁচতে দুই দিকেই আর্থ।'",
+   "চাবি কেন নিজের পকেটে? — right: 'ভুল করে কেউ যেন ব্রেকার অন না করে দেয়।' / 'নিজের তালা, নিজের চাবি—জীবন আমার পকেটে।'",
+   "কেন চেইনটা বদলালেন? — right: 'মরিচা, ভাঙা বা লোহার জুগাড় চেইন বারণ।' / 'বল, লিঙ্ক বা হুকে সন্দেহ হলে ওঠার আগেই বদলাই।'"
+  ],
+  "gestureHints": "Tray: sweep over padlock and board; key out: straight-up nudge on the key. End, nothing used: sweep over rod set and chain bag equally. Clamp in hand: generic nudge. Rod hook at the line: hold ring. Bag open: swipe-up pull hint on the chain end. Chain coiled: straight-up flick hint (not the right angle/strength). After landing and at the work pole: the same sweep over chain tail, walk arrows and 'উঠি' whether the drape is full or partial. Close: the same sweep over the tails before and after clearance. Decks built-in. Off during intro, cutaway, coworker beat 1, freeze, cards, results.",
+  "lessonPoints": [
+   "ব্রেকার অফ করার পর হ্যান্ডেলে তালা লাগানো এবং 'কাজ চলছে' বোর্ড ঝোলানো।",
+   "নিজের তালা, নিজের চাবি: … চাবিটা নিজের পকেটে রাখুন। আপনার জীবন আপনার পকেটে।",
+   "সেফটি কোড অনুযায়ী কাজের জায়গার আগে ও পরে (দুই প্রান্তে) অস্থায়ী আর্থিং বাধ্যতামূলক।",
+   "আগে স্ট্যান্ডার্ড ডিসচার্জ/আর্থ রড দিয়ে চার্জ নামান ও আর্থ করুন। তারপর প্রয়োজনে ব্রাস/কপার শর্টিং চেইন লাইনের ওপর ছুঁড়ে ফেজ শর্ট রাখুন।",
+   "শর্ট সার্কিট ≠ আর্থিং—চেইন রডের বদলি নয়।",
+   "চেইনের বল, লিঙ্ক ও প্রান্তের হুক পরীক্ষা করুন। সন্দেহ হলে বদলান—পোলে ওঠার আগেই।",
+   "দুই প্রান্তে সুরক্ষা; ক্লিয়ারেন্স না পাওয়া পর্যন্ত চেইন রাখুন।",
+   "আইন বলছে, Dead লাইনকেও Live মনে করতে হবে যতক্ষণ না সেটা আর্থ করা হচ্ছে।"
+  ],
+  "giveawayRisks": "Kit mirrored at random, end hint is a sweep. Bad chains show only as they pass the fist. Key destinations always on screen; key hint goes straight up. 'উঠি' live from the start. Landing and close hints identical whatever the state. Coworker on either end/script, held on the kit touch. Strength/angle change per end."
+ },
+ "deadlySlipTable": [
+  {
+   "id": "R3",
+   "act": "Climbing / pressing 'উঠি' without rod earth on both sides of the work span",
+   "cls": "deadly",
+   "source": "8.5 two-end temporary earthing; Module 1 step 15; Module 4 4.1a/4.7b. Used: do_8_5_b, gate",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M8-1",
+   "rulingNote": "Confirmed (M1 step 15; WBSEDCL SM earths both sides; live 8.5).",
+   "rulingStatus": "DRAFT pending owner"
+  },
+  {
+   "id": "R4",
+   "act": "Throwing the shorting chain as the earth before that end's rod has drained and earthed the line (incl. listening to myth 3)",
+   "cls": "deadly",
+   "source": "8.5 myth 3 reality; Module 1 step 15 'chain instead of rod'. Used: do_8_5_b",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M8-1",
+   "rulingNote": "Confirmed (live 8.5 myth 3 reality; M1 step 15).",
+   "rulingStatus": "DRAFT pending owner"
+  },
+  {
+   "id": "R5",
+   "act": "Rod hook to the line before the earth clamp is on the spike",
+   "cls": "deadly",
+   "source": "8.5 rod-first spec; Module 1 step 15. Used: do_8_5_b",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M8-1",
+   "rulingNote": "Confirmed (M6-4 R9: rod hook before its earth clamp = deadly).",
+   "rulingStatus": "DRAFT pending owner"
+  },
+  {
+   "id": "R11",
+   "act": "Padlock key not in own pocket (left on the hook board or handed to the operator)",
+   "cls": "slip",
+   "source": "8.5 pro tip 2 'আপনার জীবন আপনার পকেটে'; both earth ends still protect the climber",
+   "needsOwner": true,
+   "classAfterRulings": "slip",
+   "ruling": "M8-5",
+   "rulingNote": "DRAFT: slip (both rod earths still protect; M1 step 18).",
+   "rulingStatus": "DRAFT pending owner",
+   "needsOwnerInSpec": true
+  },
+  {
+   "id": "R12",
+   "act": "No padlock or no 'কাজ চলছে' board on the OFF handle",
+   "cls": "slip",
+   "source": "8.5 LOTO; Module 1 step 18 does not make LOTO deadly",
+   "needsOwner": true,
+   "classAfterRulings": "slip",
+   "ruling": "M8-5",
+   "rulingNote": "DRAFT: slip (M1 step 18 does not make LOTO deadly).",
+   "rulingStatus": "DRAFT pending owner",
+   "needsOwnerInSpec": true
+  },
+  {
+   "id": "R13",
+   "act": "Throwing a rusty / broken-link / bent-hook / iron jugaad chain after the rod has earthed that end",
+   "cls": "slip",
+   "source": "8.5 chain বারণীয় ('আইনি দায় + জীবনের ঝুঁকি'); contrast Module 1 step 14 jugaad ROD = deadly",
+   "needsOwner": true,
+   "classAfterRulings": "slip",
+   "ruling": "M8-5",
+   "rulingNote": "DRAFT: slip after the rod has earthed that end (the rod is the earth; M1 step 14 jugaad ROD stays deadly).",
+   "rulingStatus": "DRAFT pending owner",
+   "needsOwnerInSpec": true
+  },
+  {
+   "id": "R14",
+   "act": "Chain on only 1–2 phases, or chain skipped at an end, with the rod on",
+   "cls": "slip",
+   "source": "8.5 chain 'প্রয়োজনে'",
+   "needsOwner": true,
+   "classAfterRulings": "slip",
+   "ruling": "M8-5",
+   "rulingNote": "DRAFT: slip (live 8.5: chain \"প্রয়োজনে\").",
+   "rulingStatus": "DRAFT pending owner",
+   "needsOwnerInSpec": true
+  },
+  {
+   "id": "R15",
+   "act": "Chains pulled down before clearance (rods still on), own move or coworker",
+   "cls": "slip",
+   "source": "8.5 'ক্লিয়ারেন্স না পাওয়া পর্যন্ত চেইন রাখুন'",
+   "needsOwner": true,
+   "classAfterRulings": "slip",
+   "ruling": "M8-5",
+   "rulingNote": "DRAFT: slip (rods stay on; live 8.5 \"ক্লিয়ারেন্স না পাওয়া পর্যন্ত চেইন রাখুন\").",
+   "rulingStatus": "DRAFT pending owner",
+   "needsOwnerInSpec": true
+  },
+  {
+   "id": "R18",
+   "act": "Needless act: reporting a sound span, pulling a non-solar fuse, needless hold on a valid cut, needless Sec 126 stamp, needless net-meter stamp, needless 'আগে জানাই', cutting a harmless branch, needless seizure list, refusing an in-limit solar application",
+   "cls": "slip",
+   "source": "Module 1 owner ruling 'reporting a sound pole = slip' (keeps 3-slip fail reachable; no free flag-everything)",
+   "needsOwner": false,
+   "classAfterRulings": "slip",
+   "ruling": "M8-1",
+   "rulingNote": "Unchanged (M1 sound-pole ruling; R29 in Module 7).",
+   "rulingStatus": "DRAFT pending owner"
+  },
+  {
+   "id": "R22",
+   "act": "Listening to the coworker",
+   "cls": "slip",
+   "source": "Same class as the act he pushes: deadly only where listening = a deadly row above (do_8_5_b myth 3, do_8_8_a, do_8_10_a variant A, gate M1); slip everywhere else",
+   "needsOwner": false,
+   "classAfterRulings": "B1",
+   "ruling": "X2",
+   "rulingNote": "Listening takes the class of the act pushed right then (B1): deadly only in do_8_5_b myth 3, do_8_8_a, do_8_10_a variant A and gate M1.",
+   "rulingStatus": "DRAFT pending owner"
+  },
+  {
+   "id": "R23",
+   "act": "Wrong card in a 'why' reason deck (◆ only) vs wrong card in a field decision deck (what you say/do = slip)",
+   "cls": "slip",
+   "source": "Module-wide rule set by this judge (removes drift between levels)",
+   "needsOwner": true,
+   "classAfterRulings": "slip",
+   "ruling": "M8-8",
+   "rulingNote": "Settled by GAME_LEVEL_PLAYBOOK: a wrong reason costs the table ◆, not a strike; a wrong field-decision card = slip.",
+   "rulingStatus": "DRAFT pending owner",
+   "needsOwnerInSpec": true
+  }
+ ],
+ "addedRows": [
+  {
+   "id": "N1",
+   "act": "Climbing, or a hand or tool on the line, after the shutdown but before the tester shows 0 V (incl. a skipped tester)",
+   "cls": "deadly",
+   "ruling": "M8-17 / X1 / M5-2",
+   "howUsed": "Scored in do_8_5_b (tester at the first end) and the gate (11th token টেস্টার). Shown done by the crew, without new scoring, in do_8_8_a (climb coda) and do_8_10_a (time-lapse).",
+   "source": "added by docs/module_specs/module8_rulings.md (DRAFT)"
+  },
+  {
+   "id": "N2",
+   "act": "Earth (rod) set after the shutdown but before the tester shows 0 V",
+   "cls": "slip",
+   "ruling": "M8-17 / X1",
+   "howUsed": "Card: \"আগে টেস্টারে ডেড প্রমাণ, তারপর আর্থ — এই ক্রম বাধ্যতামূলক\" (DRAFT, M5-2 wording). An earth on a line that is still live (before the permit's shutdown) is deadly (B8, R16).",
+   "source": "added by docs/module_specs/module8_rulings.md (DRAFT)"
+  },
+  {
+   "id": "N3",
+   "act": "Tester not proved on a live point first (live-dead-live)",
+   "cls": "slip",
+   "ruling": "M8-17 / A9",
+   "source": "added by docs/module_specs/module8_rulings.md (DRAFT)"
+  }
+ ],
+ "changes": [],
+ "changesGeneral": [
+  "Unified rule: a wrong card in a 'why' reason deck costs the ◆ only; a wrong card in a field decision deck (what you say or do) costs a slip — applied across all levels and the gate.",
+  "Unified rule: the deadly class always sits on the CLIMB (permit, earth both ends, solar fuses) or the rod/chain order, never on hook removal, disconnection or paperwork; 8.2's disconnections and hook removal are abstract holds from the ground.",
+  "Fact check against tool/all_training_chapters_bn.json: every quoted lesson line in boards, MistakeCards and reason cards was found in chapter 8.x (spot-checked: 8.1 referee/balance/APTEL/2003 Act, 8.2 Sec 56/135/126/180 days/wayleave/meter room, 8.3 all limits and pro tips, 8.4 49.90–50.05/49.0/±6–9%/rotation/over-drawal 'ভাগ', 8.5 18–19 ft/1.2 m/chain rules/CEI, 8.6 1912/CCC/CGRF/Ombudsman/'তর্কের জায়গা নন', 8.7 102/MVCA/meter rent/TOD/BPL, 8.8 sticker/100%/anti-islanding, 8.9 trimming/permission/oil/batteries/PCB, 8.10 logbook/carbon copy/uniform/bribe). Game-premise items moved to each lesson's unsupported list.",
+  "Verb distinctness confirmed across the module and against M1–M4 (see each level's giveawayRisks for the nearest neighbour): 8.2a calendar ribbon vs 8.3b hour planner kept but must stay visually distinct (no ribbon/counter in 8.3b, no hour strips in 8.2a); 8.1a chart tap and 8.7a hold-to-show are sub-beats with different cores; 8.5a vs M1 step 5 differ (line-to-ground/house measurement vs the worker's own distance band).",
+  "All pack ids kept; engineTypes are unique: m8_bill_listen, m8_hearing_balance, m8_notice_calendar, m8_theft_evidence, m8_sop_clock, m8_shutdown_plan, m8_grid_hotline, m8_voltage_band, m8_clearance_gauge, m8_chain_throw, m8_grievance_reply, m8_docket_lookup, m8_slab_stairs, m8_day_dial, m8_solar_backfeed, m8_net_bill, m8_trim_not_fell, m8_oil_contain, m8_duty_logbook, m8_gate_case_file."
+ ],
+ "unsupported": [
+  "Clearance figures beyond the two the lesson gives; no single cut-off inside '১৮-১৯ ফুট' (deals avoid 17–19.5 ft and 1.0–1.4 m).",
+  "How clearance is measured, how a sag is tightened, what to do about a building-clearance breach.",
+  "The chain end hook's purpose; when a chain is 'প্রয়োজনে'; the order for removing rod sets; throwing from the ground; a voltage test; group lockout; inspecting covered conductor; myth 1's statistic."
+ ],
+ "lessonOwnerQuestions": [
+  "do_8_5_a has no deadly (patrol on the ground; harm is to the public). Gap bands 1.5–2.2 m OK / 0.5–0.9 m close. Confirm.",
+  "Measuring tape as a game readout (same abstraction as step 5's band).",
+  "Key not in own pocket = slip (both earth ends still protect); the lesson says 'আপনার জীবন আপনার পকেটে', so you may want deadly.",
+  "Bad (rusty/jugaad) chain thrown after the rod = slip, while Module 1 step 14 made a jugaad ROD deadly. Confirm the split.",
+  "Chain skipped at an end = slip (chain is 'প্রয়োজনে'); chains pulled before clearance = slip (rods stay on).",
+  "quickMs to be set from playtests."
+ ],
+ "ownerDecisions": [
+  {
+   "n": 1,
+   "specQuestion": "Confirm the module rule: Module 8 deadly only for climb/earthing acts (written PTW, rod earth both ends, solar fuses out, rod-before-chain, clamp-before-hook) plus the gate's pre-shutdown trim; everything regulatory, billing, grievance, grid, environmental and ethical is a slip.",
+   "question": "Module 8 is mostly law, bills and paperwork. Keep 'deadly' (level ends at once) only for climbing and earthing mistakes: no written permit, no rod earth at both ends, a solar fuse left in, chain before rod, rod hook before its clamp - plus cutting a branch on a live line in the gate? Everything about bills, notices, complaints, grid, environment and ethics = slip.",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-1 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Confirm, with the earlier deadly rows added.\n(b) Add more deadly acts (say which).",
+   "recommended": "(a) Every row matches an earlier ruling; nobody is near a live wire in the paperwork levels.",
+   "whatWeWillDo": "Keep that list. Add the deadly rows earlier modules already made binding: climbing or touching before the tester shows 0 V, an earth put on a live line, and the Module 7 hook rules. Listening to the coworker takes the class of the act he pushes.",
+   "earlierRulings": "M5-6 and M7-6 (nobody exposed = slip). M1 step 17 / B7 (no PTW = deadly). M1 step 15 (rod earth). M6-4 (rod hook before clamp = deadly). X1 / M5-2 (climb before 0 V = deadly). B8 (earth on a live line = deadly). M7-8 (hook). B1 (listening).",
+   "preFilled": null
+  },
+  {
+   "n": 2,
+   "specQuestion": "New deadly row: climbing with any solar fuse in (8.8a, gate) — deadly every time. Yes?",
+   "question": "Lesson 8.8: a solar house can push power back into a 'dead' line. If the player climbs while any solar house's fuse is still in at the pole, is that deadly every time (even if that inverter would have switched off)?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-2 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Deadly every time.\n(b) Deadly only when the dealt inverter is faulty.",
+   "recommended": "(a) The lineman cannot see whether the inverter works; the lesson says pull the fuse anyway.",
+   "whatWeWillDo": "Deadly every time, in 8.8a and the gate. Listening to the coworker ('the inverter switches itself off') is deadly too. Pulling a non-solar house's fuse = slip.",
+   "earlierRulings": "M1 step 15 (missing earth = deadly whether or not charge was there). B1 (listening). Lesson 8.8 pro tip 1 and the anti-islanding item ('ব্যাক-ফিড কারেন্টে মারা যাবে').",
+   "preFilled": null
+  },
+  {
+   "n": 3,
+   "specQuestion": "Gate C2: a pre-shutdown trim is deadly (4.8/do/0 precedent) — confirm, or drop C2 from the gate.",
+   "question": "Gate: a branch rests on the LT line. If the player cuts it before the shutdown and permit, is that deadly? (Or drop this branch from the gate.)",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-3 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Deadly; keep it in the gate.\n(b) Drop the branch from the gate.",
+   "recommended": "(a) Cutting it puts the pruner on a live wire; same as Module 4.",
+   "whatWeWillDo": "Deadly. After the permit it is the right act; cutting a harmless branch or the trunk = slip.",
+   "earlierRulings": "Lesson 8.9 ('শাটডাউন নিয়ে ডাল কাটার সময়'). Module 4 tree level 4.8 precedent. B8 (a tool on a live line = deadly).",
+   "preFilled": null
+  },
+  {
+   "n": 4,
+   "specQuestion": "Frequency through 49.0 stays a slip (alternative: module-wide 'ব্ল্যাকআউট' deadly).",
+   "question": "8.4a (grid control room): if the frequency falls below 49.0 Hz before the player switches off the ordered feeders, is that a slip, or a deadly 'blackout'?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-4 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Slip.\n(b) Deadly 'ব্ল্যাকআউট' (then for the whole module).",
+   "recommended": "(a) Nobody touches a live part; deadly stays for acts that can kill a person.",
+   "whatWeWillDo": "Slip. The round still ends with the feeders off.",
+   "earlierRulings": "M5-6 and M6-4 (harm to the system or equipment with nobody exposed = slip).",
+   "preFilled": null
+  },
+  {
+   "n": 5,
+   "specQuestion": "8.5b splits: key not in own pocket, missing lock/board, bad chain after the rod, partial/skipped chain, early chain removal — all slips (Module 1 step 14 made a jugaad rod deadly). Confirm each.",
+   "question": "8.5b (earthing with rod and chain): are these all slips? Padlock key not in your own pocket; no padlock or no 'কাজ চলছে' board; a rusty or jugaad chain thrown after the rod has earthed; chain on only 1-2 phases or skipped; chains pulled down before clearance.",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-5 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) All slips.\n(b) Make some deadly (say which, e.g. the key).",
+   "recommended": "(a) Same split as Module 1: the rod is the earth, the chain is extra.",
+   "whatWeWillDo": "All slips. The rod earth at both ends is the protection and stays on. Chain before the rod, climbing without rod earth at both ends, and rod hook before its clamp stay deadly.",
+   "earlierRulings": "M1 step 18 (LOTO faults not deadly). M1 step 14 (a jugaad ROD = deadly; the chain is not the earth). M6-4 (hook before clamp = deadly).",
+   "preFilled": null
+  },
+  {
+   "n": 6,
+   "specQuestion": "PCB oil without গ্লাভস/mask = slip; taking a bribe = slip. Confirm.",
+   "question": "Two acts with slow or legal harm: handling old transformer oil (may hold PCBs) without গ্লাভস and mask, and taking cash to help with hooking. Both slips?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-6 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Both slips.\n(b) Make one deadly (say which).",
+   "recommended": "(a) No shock or fall risk; the harm is slow or legal.",
+   "whatWeWillDo": "Both slips. The PCB card says the oil can cause cancer and mask + গ্লাভস are compulsory; the bribe card says the law will not spare you.",
+   "earlierRulings": "M5-6 (no shock or fall risk = slip). B6 (bad electrical gloves = deadly) is about shock, not oil.",
+   "preFilled": null
+  },
+  {
+   "n": 7,
+   "specQuestion": "Earth rod before the permit in the gate = slip (not in the lesson).",
+   "question": "Gate: the player puts an earth rod on the line before the written permit. The design says slip. But before the permit the transformer is still ON, so the rod goes onto a live line. Deadly or slip?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-7 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Deadly before the permit; slip after the permit but before the tester.\n(b) Slip, as designed.",
+   "recommended": "(a) B8 already makes an earth on a live line deadly everywhere.",
+   "whatWeWillDo": "Deadly before the permit (earth on a live line). After the permit but before the tester shows 0 V = slip.",
+   "earlierRulings": "B8 (earth on a live line = deadly in every module). X1 / M5-2 (earth before the tester = slip).",
+   "preFilled": null
+  },
+  {
+   "n": 8,
+   "specQuestion": "Reason-deck vs decision-deck rule (◆ only vs slip) for the whole module.",
+   "question": "Wrong 'why' reason card = lose the ◆ only. Wrong card in a decision deck (what you say or do) = slip. Use this in the whole module?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-8 assumes the recommendation",
+   "sheetStatus": "Settled by earlier rulings (pre-filled)",
+   "options": "(a) Yes.\n(b) Other.",
+   "recommended": "(a) Already the playbook rule.",
+   "whatWeWillDo": "Yes, as in every module so far.",
+   "earlierRulings": "GAME_LEVEL_PLAYBOOK: 'A wrong reason costs the table ◆, not a strike; strikes are for field mistakes.'",
+   "preFilled": "PRE-FILLED (a): settled by the playbook rule. Write here only if you disagree."
+  },
+  {
+   "n": 9,
+   "specQuestion": "Replacement levels: approve do_8_1_b (hearing balance, with the trainee as mic runner — a game premise) or cut it; approve do_8_6_b (docket list lookup); approve do_8_9_a's pole-pruner verb.",
+   "question": "Three levels were redesigned so no two play the same: 8.1b (pass the hearing mic to balance both sides; the trainee helps at a public hearing), 8.6b (find the docket number in a list), 8.9a (swing a pole pruner). Approve them?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-9 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Approve all three.\n(b) Cut 8.1b (8.1 then has one Do level).\n(c) Name the ones you do not want.",
+   "recommended": "(a) Only how the player acts changes, not what is safe.",
+   "whatWeWillDo": "Approve all three. Keep 8.1b (the catalog has two 8.1 slots).",
+   "earlierRulings": "M5-9, M6-7, M7-1 (verb changes approved as one set).",
+   "preFilled": null
+  },
+  {
+   "n": 10,
+   "specQuestion": "Silent drawn figures (consumers, hearing speakers, bystanders, the tree owner, CGRF bench) with caption bubbles, no TTS: acceptable under 'one guide, one coworker'?",
+   "question": "Consumers, hearing speakers, bystanders, the tree owner and the CGRF bench are drawn figures with caption bubbles and no voice (only the guide and the coworker speak). OK?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-10 assumes the recommendation",
+   "sheetStatus": "Settled by earlier rulings (pre-filled)",
+   "options": "(a) Yes, silent captions.\n(b) Record a third voice.",
+   "recommended": "(a) Same as Module 7; no new voice needed.",
+   "whatWeWillDo": "Yes. Their words show as captions; nothing is read aloud for them.",
+   "earlierRulings": "M7-D17 (silent witnesses OK). Voice rule 2026-11-14 covers spoken lines; these are not spoken.",
+   "preFilled": "PRE-FILLED (a): same as Module 7 (M7-D17). Write here only if you disagree."
+  },
+  {
+   "n": 11,
+   "specQuestion": "Branding: the regulator and companies appear only as plain text labels the lessons name (WBERC, WBSEDCL, CESC, APTEL, SLDC), no logos; 8.2 scenes use generic office papers.",
+   "question": "Names on screen: WBERC, WBSEDCL, CESC, APTEL, SLDC only as plain text labels (as the lessons name them), no logos; office papers generic. OK?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-11 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Plain text, no logos.\n(b) No company names at all.",
+   "recommended": "(a) The lessons use the names; no logo avoids copying real branding.",
+   "whatWeWillDo": "Plain text names only; no logos, no copies of real forms.",
+   "earlierRulings": "No earlier ruling. The lessons name these bodies.",
+   "preFilled": null
+  },
+  {
+   "n": 12,
+   "specQuestion": "Number rules: 'clear' notice-day counting (deals avoid 13–17 and 175–185 days); shutdown notice ≥ 24 h accepted; 17:00/06:00 boundaries allowed; breakdown treated as the emergency exception; clearance bands 20–24 / 13–16.5 ft and 1.5–2.2 / 0.5–0.9 m; ±5 game-min logbook tolerance; OLTC ~1.5% per step.",
+   "question": "Numbers. Today's lessons changed several (8.3 time limits and notice, 8.4 voltage, 8.5 road height). Rebuild those levels on today's numbers ('Need your call' rows M8-L2 to M8-L9), with these game rules: notice days counted as clear days (no deals at 13-17 or 175-185 days); 17:00 and 06:00 boundaries allowed; a broken line counts as the emergency exception; ±5 game-minute logbook tolerance; OLTC about 1.5 % per step?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-12 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Today's numbers + the game rules listed.\n(b) Change some (say which).",
+   "recommended": "(a) The lesson is the source; the game rules only avoid unclear border cases.",
+   "whatWeWillDo": "Use today's numbers: village fuse-off 6 h (8 h June-Sept); DTR town 12 h, village 48 h; LT wire break town 4 h, village 10 h (16 h monsoon); 11 kV pole town 12 h, village 24 h; loose contact 15 days; a shutdown over 6 h needs 3 days' notice; voltage +6 % / -9 %; 11 kV road height 6.5 m, measured in metres.",
+   "earlierRulings": "X3 / X6 (live lesson text wins). A2 (11 kV road clearance 6.5 m). Module 7 X5 (an old 6.1 m span = 'below today's rule, report it').",
+   "preFilled": null
+  },
+  {
+   "n": 13,
+   "specQuestion": "do_8_10_a sign cap: at most 2 slips from the sign itself?",
+   "question": "8.10a judges the logbook only when you sign. Cap it at 2 slips from the signing, so one careless signature cannot fail the level alone?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-13 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Cap at 2.\n(b) No cap.",
+   "recommended": "(a) Keeps the level fair.",
+   "whatWeWillDo": "Yes, at most 2 slips from the signature. A deadly climb still fails the level.",
+   "earlierRulings": "No earlier ruling. Point values and pass marks do not change.",
+   "preFilled": null
+  },
+  {
+   "n": 14,
+   "specQuestion": "New rival clips to record via tool/rival_clip.py: 8.1a, 8.1b, 8.3a (two), 8.3b (two), 8.4a (three), 8.4b (two), 8.5a (two), 8.5b (two), 8.6a (two), 8.6b (two), 8.7a, 8.7b, 8.8a, 8.8b, 8.9a, 8.9b (b), 8.10a (two), gate (two).",
+   "question": "New coworker lines and the myth lines need voice clips (Subrata). Same process as Modules 6 and 7?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-14 assumes the recommendation",
+   "sheetStatus": "Settled by earlier rulings (pre-filled)",
+   "options": "(a) Yes, as Modules 6 and 7.\n(b) Other.",
+   "recommended": "(a) Same process as before.",
+   "whatWeWillDo": "You give the natural wording of every new line first; then all are recorded. Myth lines word for word also get clips. Until then the on-device fallback plays.",
+   "earlierRulings": "M6-12, M7-10, voice rule 2026-11-14.",
+   "preFilled": "PRE-FILLED (a): settled by M6-12 / M7-10. Wording sheet after the build."
+  },
+  {
+   "n": 15,
+   "specQuestion": "quickMs and quick-bonus values for every Do level and the gate to be set from playtests (no point values or pass marks changed).",
+   "question": "Quick-bonus times: builder's estimate (about 85 % of a clean play), adjusted after playtest?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-15 assumes the recommendation",
+   "sheetStatus": "Settled by earlier rulings (pre-filled)",
+   "options": "(a) Yes.\n(b) Other.",
+   "recommended": "(a) Same as Modules 6 and 7.",
+   "whatWeWillDo": "Builder's estimate, stated in each report.",
+   "earlierRulings": "Module 6 Wave B rule; M7-13.",
+   "preFilled": "PRE-FILLED (a): settled by the Module 6/7 rule."
+  },
+  {
+   "n": 16,
+   "specQuestion": "Rank name and badge for the Module 8 gate come from the director's catalog.",
+   "question": "Gate: rank স্পেশালিস্ট (from the game catalog), badge 'জরুরী রেগুলেশন (WBERC ফোকাস)' (the 8.x lessons' badge), 5-7 minutes?",
+   "addedBy": null,
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-16 assumes the recommendation",
+   "sheetStatus": "Settled by earlier rulings (pre-filled)",
+   "options": "(a) Yes.\n(b) Another badge name (write it).",
+   "recommended": "(a) Same pattern as Modules 6 and 7.",
+   "whatWeWillDo": "Yes. The badge is one constant you may rename (it is long; give a shorter name if you like).",
+   "earlierRulings": "M6-10 / M7-13 (gate badge = the lessons' badge; 5-7 min, M5-12). Catalog m8 rankName = স্পেশালিস্ট.",
+   "preFilled": "PRE-FILLED (a): same pattern as Modules 6 and 7. Write a shorter badge name here if you want one."
+  },
+  {
+   "n": 17,
+   "specQuestion": null,
+   "question": "Earlier modules require: written permit -> switch off -> tester shows 0 V (tested on a live point first) -> earth -> then climb or touch. Module 8 has no tester anywhere (8.5b, 8.8a, 8.10a, gate). Add it?",
+   "addedBy": "today's check (cross-module rulings)",
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-17 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) As listed: scored in 8.5b and the gate, shown by the crew in 8.8a and 8.10a.\n(b) Shown by the crew everywhere (no scoring).\n(c) Leave it out.",
+   "recommended": "(a) The rule already binds; the earthing level and the gate are where it matters most.",
+   "whatWeWillDo": "8.5b: tester at the first end before the rod (rod before 0 V = slip; climb before 0 V = deadly). Gate: an 11th token 'টেস্টার'. 8.8a and 8.10a: the crew's tester and earth are shown before anyone climbs (no new scoring).",
+   "earlierRulings": "X1 / M5-2 (climb before 0 V = deadly; earth before 0 V = slip). A9 (tester not proved = slip). Module 6 gate got a 7th token টেস্টার. Lesson 8.5: don't touch an unverified line.",
+   "preFilled": null
+  },
+  {
+   "n": 18,
+   "specQuestion": null,
+   "question": "Hooking wire removal (8.2b, gate) follows Module 7: switch off -> tester 0 V -> earth -> গ্লাভস -> hook off; no গ্লাভস on the hook = deadly only before tester 0 V + earth, slip after. In 8.2b the crew does the removal in that order (cut-scene), and the coworker's 'আগে তারটা টেনে খুলে দাও' is reworded so he pushes the wrong order (no video), not a live pull. OK?",
+   "addedBy": "today's check (cross-module rulings)",
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-18 assumes the recommendation",
+   "sheetStatus": "Settled by earlier rulings (pre-filled)",
+   "options": "(a) Yes.\n(b) Make the removal a scored player act in 8.2b too.",
+   "recommended": "(a) Keeps 8.2b about evidence while staying consistent with Module 7.",
+   "whatWeWillDo": "As described. The player scores the evidence-first order in 8.2b; in the gate 'তার খোলা' is a climb and runs the full climb checks.",
+   "earlierRulings": "M7-2, M7-8, Module 7 sheet Q2 (glove split), B1.",
+   "preFilled": "PRE-FILLED (a): the rules are settled by M7-8 and your Module 7 Q2 answer. Write here only if you disagree."
+  },
+  {
+   "n": 19,
+   "specQuestion": null,
+   "question": "The transformer in 8.3, 8.8 and the gate is drawn 'OFF'. Draw the WBSEDCL transformer with an AB switch + HG fuses (AB opened in one firm stroke, three blades seen, handle locked and tagged), never DO fuses?",
+   "addedBy": "today's check (cross-module rulings)",
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-19 assumes the recommendation",
+   "sheetStatus": "Settled by earlier rulings (pre-filled)",
+   "options": "(a) AB switch + HG fuses.\n(b) Other.",
+   "recommended": "(a) Same as Modules 6 and 7.",
+   "whatWeWillDo": "Yes, everywhere in Module 8.",
+   "earlierRulings": "M6-2a, M7-9, A3. Term rule: closing = «AB লাগানো», never «AB বন্ধ».",
+   "preFilled": "PRE-FILLED (a): settled by M6-2 / M7-9."
+  },
+  {
+   "n": 20,
+   "specQuestion": null,
+   "question": "Some Module 8 levels play almost like Module 7 levels: 8.2b ≈ 7.5b (phone camera on a hooking wire), 8.6a ≈ 7.9b (build a reply from phrase tiles), 8.5a ≈ 7.3a (measure a clearance, stamp legal or breach). Smaller overlaps: 8.9b ≈ 7.8a/7.8b, 8.2a calendar ≈ 7.2a. What to do?",
+   "addedBy": "today's check (design flags)",
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-20 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Redesign 8.2b, 8.6a, 8.5a; keep the rest.\n(b) Keep all; builders only change the look.\n(c) Redesign every overlap.",
+   "recommended": "(a) These three would feel like replays; the others share only a prop.",
+   "whatWeWillDo": "A short redesign of 8.2b, 8.6a and 8.5a (new core action; same lesson content and rules) before their wave. Keep the others; builders make them look different.",
+   "earlierRulings": "Audit lesson 1 (look-alike levels, PARALLEL_BUILD_PLAN §6). design_flags_M5-10 (planned cross-module verb-dedupe pass). M5-9 / M6-7 / M7-1 (verb changes approved as a set).",
+   "preFilled": null
+  },
+  {
+   "n": 21,
+   "specQuestion": null,
+   "question": "Eight boards have 6 rounds (8.1, 8.2, 8.3, 8.5, 8.6, 8.7, 8.9, 8.10). Trim each to 5 by dropping the round a Do level already plays?",
+   "addedBy": "today's check (Module 5-7 rule)",
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-21 assumes the recommendation",
+   "sheetStatus": "Settled by earlier rulings (pre-filled)",
+   "options": "(a) Trim as listed.\n(b) Keep 6 on some (say which).",
+   "recommended": "(a) Same length as Modules 5-7.",
+   "whatWeWillDo": "8.1 drop round 4 (new rate/hearing); 8.2 round 4 (reconnection/dismantling); 8.3 round 4 (meter/voltage); 8.5 round 4 (LT house gap); 8.6 round 4 (false complaint photo); 8.7 round 6 (factory); 8.9 round 3 (pre-monsoon); 8.10 round 2 (carbon copy).",
+   "earlierRulings": "M5-11 and the Module 6/7 rule: boards have 5 rounds.",
+   "preFilled": "PRE-FILLED (a): settled by M5-11. Change the dropped round here if you prefer another."
+  },
+  {
+   "n": 22,
+   "specQuestion": null,
+   "question": "Gate: an LT wire has snapped in a town lane. The design does not say where the broken wire lies or whether people are near it. Draw it hanging clear of the ground with the crew's cordon already up?",
+   "addedBy": "today's check (cross-module rulings)",
+   "ownerAnswer": null,
+   "status": "PENDING owner (sheet docs/review/m8_questions_2026-11-16.xlsx); DRAFT ruling M8-22 assumes the recommendation",
+   "sheetStatus": "Needs your answer",
+   "options": "(a) Hanging clear, cordon up.\n(b) On the ground, with the fallen-wire rules.",
+   "recommended": "(a) Lessons 8.x do not teach fallen wires; Module 5 already does.",
+   "whatWeWillDo": "Yes; then the fallen-wire and passer-by rules never come up in the gate. (If on the ground: within 10 m = deadly; a passer-by touching it after a fair chance to warn = deadly.)",
+   "earlierRulings": "M5-4 (fallen wire: inside 10 m = deadly). M5-5 / M7-3 (letting another person touch a live conductor you could stop = deadly).",
+   "preFilled": null
+  }
+ ],
+ "allVerbs": [
+  [
+   "8.1",
+   "do_8_1_a",
+   "hold to listen, then show the chart"
+  ],
+  [
+   "8.1",
+   "do_8_1_b",
+   "pass the hearing mic to balance both sides"
+  ],
+  [
+   "8.2",
+   "do_8_2_a",
+   "count days by dragging across a calendar"
+  ],
+  [
+   "8.2",
+   "do_8_2_b",
+   "frame evidence through a phone camera"
+  ],
+  [
+   "8.3",
+   "do_8_3_a",
+   "dispatch the van against SoP clocks"
+  ],
+  [
+   "8.3",
+   "do_8_3_b",
+   "place shutdown blocks on a planner"
+  ],
+  [
+   "8.4",
+   "do_8_4_a",
+   "lift the hotline, twist rostered feeders off"
+  ],
+  [
+   "8.4",
+   "do_8_4_b",
+   "hold-step the OLTC tap reading the needle"
+  ],
+  [
+   "8.5",
+   "do_8_5_a",
+   "slide a gauge along the span"
+  ],
+  [
+   "8.5",
+   "do_8_5_b",
+   "flick-throw a ball-chain over the phases"
+  ],
+  [
+   "8.6",
+   "do_8_6_a",
+   "drag phrase tiles into a reply"
+  ],
+  [
+   "8.6",
+   "do_8_6_b",
+   "flick-scroll the docket list to match"
+  ],
+  [
+   "8.7",
+   "do_8_7_a",
+   "stack unit blocks up a slab staircase"
+  ],
+  [
+   "8.7",
+   "do_8_7_b",
+   "drag the sun through a day"
+  ],
+  [
+   "8.8",
+   "do_8_8_a",
+   "trace service cables, pull solar fuses"
+  ],
+  [
+   "8.8",
+   "do_8_8_b",
+   "page meter registers, dial net units"
+  ],
+  [
+   "8.9",
+   "do_8_9_a",
+   "swing a pole pruner, pull to cut"
+  ],
+  [
+   "8.9",
+   "do_8_9_b",
+   "spread, flick and twist-seal to contain oil"
+  ],
+  [
+   "8.10",
+   "do_8_10_a",
+   "stamp the running clock into the logbook"
+  ],
+  [
+   "8.10",
+   "gate_m8",
+   "choose each next act, then defend the file"
+  ]
+ ],
+ "notes": {
+  "lessonCheck": "Checked 2026-11-16 against tool/all_training_chapters_bn.json lesson 8.5 (version 7, updated_at 2026-01-04; live text). Every spec quote was compared with the live text (scripted quote search + reading); the live text wins.",
+  "mismatches": [
+   "No tester anywhere (spec unsupported lists 'a voltage test'). X1 / M5-2 / A9 bind: M8-17 adds a tester beat at the first end before the rod - tester proved on a live point, then 0 V on the span. Rod before 0 V = slip (N2); 'উঠি' before 0 V = deadly (N1); tester not proved = slip (N3). Live 8.5 'বারণীয়': 'যাচাই না করে চেইন ছোড়া বা খালি হাতে অযাচাই লাইন ধরা'.",
+   "The opening shows the written PTW in hand (staged; R1 is not scored here).",
+   "Otherwise matches live 8.5 (LOTO, own key, two-end earthing, rod first, chain 'প্রয়োজনে', chain checks, chains kept until clearance, three myths)."
+  ],
+  "crossModuleRulingsToApply": [
+   "B1: listening to the coworker takes the class of the act he pushes right then; otherwise a slip.",
+   "M6-12 / voice rule 2026-11-14: every new Bangla line is a DRAFT until the owner gives the wording; every spoken line (incl. myth lines, 'why' questions, guide and radio lines) is listed in newGuideLines/newRivalLines and recorded (Subrata). Consumers, speakers and bystanders are silent caption figures (M8-10).",
+   "Term rules on screen: «ডেড» never «মৃত»/«মরা»; LT, HT, 11 kV, kVA in English letters (never এলটি/এইচটি/কেভি/কেভিএ, also inside a verbatim myth line on screen; the clip may say it naturally); switch and line states ON / OFF (never অন/অফ; the complaint name 'ফিউজ অফ' and 'অফ-পিক' stay); closing an AB = «AB লাগানো» (never «AB বন্ধ»); English digits via enDigits.",
+   "M6-11: no new hint kinds; use the existing fallback hints.",
+   "X1 / M5-2 / A9: written PTW -> isolate -> tester live-dead-live 0 V -> earth -> climb or touch. Hand or climb before 0 V = deadly; work after 0 V without earth = deadly; earth before 0 V = slip; tester not proved = slip. Earth on a live line = deadly (B8). After a proven isolation, missing PPE = slip (A5).",
+   "M1 step 17 / B7: work without a read, signed PTW = deadly.",
+   "M6-1: a broken earth path left in service = deadly; weak but connected = slip."
+  ]
+ }
+}

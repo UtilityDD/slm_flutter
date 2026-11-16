@@ -1,0 +1,302 @@
+[
+ {
+  "id": "learn_7_1",
+  "kind": "board",
+  "spec": "board_71.json",
+  "file": "lib/features/game/learn_board_pack71.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m7_board71/",
+  "lessonId": "7.1",
+  "wave": "A"
+ },
+ {
+  "id": "do_7_1_a",
+  "kind": "do",
+  "spec": "do_7_1_a.json",
+  "file": "lib/features/game/m7_rule_tag.dart",
+  "engineType": "m7_rule_tag",
+  "art": "assets/game/art/m7_rule_tag/",
+  "lessonId": "7.1",
+  "wave": "A"
+ },
+ {
+  "id": "do_7_1_b",
+  "kind": "do",
+  "spec": "do_7_1_b.json",
+  "file": "lib/features/game/m7_rule_question.dart",
+  "engineType": "m7_rule_question",
+  "art": "assets/game/art/m7_rule_question/",
+  "lessonId": "7.1",
+  "wave": "A"
+ },
+ {
+  "id": "learn_7_2",
+  "kind": "board",
+  "spec": "board_72.json",
+  "file": "lib/features/game/learn_board_pack72.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m7_board72/",
+  "lessonId": "7.2",
+  "wave": "A"
+ },
+ {
+  "id": "do_7_2_a",
+  "kind": "do",
+  "spec": "do_7_2_a.json",
+  "file": "lib/features/game/m7_comp_casebook.dart",
+  "engineType": "m7_comp_casebook",
+  "art": "assets/game/art/m7_comp_casebook/",
+  "lessonId": "7.2",
+  "wave": "A"
+ },
+ {
+  "id": "do_7_2_b",
+  "kind": "do",
+  "spec": "do_7_2_b.json",
+  "file": "lib/features/game/m7_claim_route.dart",
+  "engineType": "m7_claim_route",
+  "art": "assets/game/art/m7_claim_route/",
+  "lessonId": "7.2",
+  "wave": "A"
+ },
+ {
+  "id": "learn_7_3",
+  "kind": "board",
+  "spec": "board_73.json",
+  "file": "lib/features/game/learn_board_pack73.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m7_board73/",
+  "lessonId": "7.3",
+  "wave": "A"
+ },
+ {
+  "id": "do_7_3_a",
+  "kind": "do",
+  "spec": "do_7_3_a.json",
+  "file": "lib/features/game/m7_clearance_survey.dart",
+  "engineType": "m7_clearance_survey",
+  "art": "assets/game/art/m7_clearance_survey/",
+  "lessonId": "7.3",
+  "wave": "A"
+ },
+ {
+  "id": "do_7_3_b",
+  "kind": "do",
+  "spec": "do_7_3_b.json",
+  "file": "lib/features/game/m7_street_warn.dart",
+  "engineType": "m7_street_warn",
+  "art": "assets/game/art/m7_street_warn/",
+  "lessonId": "7.3",
+  "wave": "A"
+ },
+ {
+  "id": "learn_7_4",
+  "kind": "board",
+  "spec": "board_74.json",
+  "file": "lib/features/game/learn_board_pack74.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m7_board74/",
+  "lessonId": "7.4",
+  "wave": "A"
+ },
+ {
+  "id": "do_7_4_a",
+  "kind": "do",
+  "spec": "do_7_4_a.json",
+  "file": "lib/features/game/m7_ptw_sign.dart",
+  "engineType": "m7_ptw_sign",
+  "art": "assets/game/art/m7_ptw_sign/",
+  "lessonId": "7.4",
+  "wave": "A"
+ },
+ {
+  "id": "do_7_4_b",
+  "kind": "do",
+  "spec": "do_7_4_b.json",
+  "file": "lib/features/game/m7_ptw_inquiry.dart",
+  "engineType": "m7_ptw_inquiry",
+  "art": "assets/game/art/m7_ptw_inquiry/",
+  "lessonId": "7.4",
+  "wave": "A"
+ },
+ {
+  "id": "learn_7_5",
+  "kind": "board",
+  "spec": "board_75.json",
+  "file": "lib/features/game/learn_board_pack75.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m7_board75/",
+  "lessonId": "7.5",
+  "wave": "A"
+ },
+ {
+  "id": "do_7_5_a",
+  "kind": "do",
+  "spec": "do_7_5_a.json",
+  "file": "lib/features/game/m7_theft_trace.dart",
+  "engineType": "m7_theft_trace",
+  "art": "assets/game/art/m7_theft_trace/",
+  "lessonId": "7.5",
+  "wave": "A"
+ },
+ {
+  "id": "do_7_5_b",
+  "kind": "do",
+  "spec": "do_7_5_b.json",
+  "file": "lib/features/game/m7_theft_evidence.dart",
+  "engineType": "m7_theft_evidence",
+  "art": "assets/game/art/m7_theft_evidence/",
+  "lessonId": "7.5",
+  "wave": "A"
+ },
+ {
+  "id": "learn_7_6",
+  "kind": "board",
+  "spec": "board_76.json",
+  "file": "lib/features/game/learn_board_pack76.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m7_board76/",
+  "lessonId": "7.6",
+  "wave": "B"
+ },
+ {
+  "id": "do_7_6_a",
+  "kind": "do",
+  "spec": "do_7_6_a.json",
+  "file": "lib/features/game/m7_ppe_counter_claim.dart",
+  "engineType": "m7_ppe_counter_claim",
+  "art": "assets/game/art/m7_ppe_counter_claim/",
+  "lessonId": "7.6",
+  "wave": "B"
+ },
+ {
+  "id": "do_7_6_b",
+  "kind": "do",
+  "spec": "do_7_6_b.json",
+  "file": "lib/features/game/m7_ppe_mishap_route.dart",
+  "engineType": "m7_ppe_mishap_route",
+  "art": "assets/game/art/m7_ppe_mishap_route/",
+  "lessonId": "7.6",
+  "wave": "B"
+ },
+ {
+  "id": "learn_7_7",
+  "kind": "board",
+  "spec": "board_77.json",
+  "file": "lib/features/game/learn_board_pack77.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m7_board77/",
+  "lessonId": "7.7",
+  "wave": "B"
+ },
+ {
+  "id": "do_7_7_a",
+  "kind": "do",
+  "spec": "do_7_7_a.json",
+  "file": "lib/features/game/m7_scene_guard.dart",
+  "engineType": "m7_scene_guard",
+  "art": "assets/game/art/m7_scene_guard/",
+  "lessonId": "7.7",
+  "wave": "B"
+ },
+ {
+  "id": "do_7_7_b",
+  "kind": "do",
+  "spec": "do_7_7_b.json",
+  "file": "lib/features/game/m7_report_note.dart",
+  "engineType": "m7_report_note",
+  "art": "assets/game/art/m7_report_note/",
+  "lessonId": "7.7",
+  "wave": "B"
+ },
+ {
+  "id": "learn_7_8",
+  "kind": "board",
+  "spec": "board_78.json",
+  "file": "lib/features/game/learn_board_pack78.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m7_board78/",
+  "lessonId": "7.8",
+  "wave": "B"
+ },
+ {
+  "id": "do_7_8_a",
+  "kind": "do",
+  "spec": "do_7_8_a.json",
+  "file": "lib/features/game/m7_spill_boom.dart",
+  "engineType": "m7_spill_boom",
+  "art": "assets/game/art/m7_spill_boom/",
+  "lessonId": "7.8",
+  "wave": "B"
+ },
+ {
+  "id": "do_7_8_b",
+  "kind": "do",
+  "spec": "do_7_8_b.json",
+  "file": "lib/features/game/m7_waste_handover.dart",
+  "engineType": "m7_waste_handover",
+  "art": "assets/game/art/m7_waste_handover/",
+  "lessonId": "7.8",
+  "wave": "B"
+ },
+ {
+  "id": "learn_7_9",
+  "kind": "board",
+  "spec": "board_79.json",
+  "file": "lib/features/game/learn_board_pack79.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m7_board79/",
+  "lessonId": "7.9",
+  "wave": "B"
+ },
+ {
+  "id": "do_7_9_a",
+  "kind": "do",
+  "spec": "do_7_9_a.json",
+  "file": "lib/features/game/m7_doorstep_visit.dart",
+  "engineType": "m7_doorstep_visit",
+  "art": "assets/game/art/m7_doorstep_visit/",
+  "lessonId": "7.9",
+  "wave": "B"
+ },
+ {
+  "id": "do_7_9_b",
+  "kind": "do",
+  "spec": "do_7_9_b.json",
+  "file": "lib/features/game/m7_honest_reply.dart",
+  "engineType": "m7_honest_reply",
+  "art": "assets/game/art/m7_honest_reply/",
+  "lessonId": "7.9",
+  "wave": "B"
+ },
+ {
+  "id": "learn_7_10",
+  "kind": "board",
+  "spec": "board_710.json",
+  "file": "lib/features/game/learn_board_pack710.dart",
+  "engineType": "learn_cards",
+  "art": "assets/game/art/m7_board710/",
+  "lessonId": "7.10",
+  "wave": "B"
+ },
+ {
+  "id": "do_7_10_a",
+  "kind": "do",
+  "spec": "do_7_10_a.json",
+  "file": "lib/features/game/m7_crew_papers.dart",
+  "engineType": "m7_crew_papers",
+  "art": "assets/game/art/m7_crew_papers/",
+  "lessonId": "7.10",
+  "wave": "B"
+ },
+ {
+  "id": "gate_m7",
+  "kind": "gate",
+  "spec": "gate_m7.json",
+  "file": "lib/features/game/m7_gate_permit_day.dart",
+  "engineType": "m7_gate_permit_day",
+  "art": "assets/game/art/m7_gate_permit_day/",
+  "lessonId": "7.10",
+  "wave": "B"
+ }
+]

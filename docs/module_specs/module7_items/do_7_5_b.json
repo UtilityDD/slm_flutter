@@ -1,0 +1,543 @@
+{
+ "module": "7",
+ "note": "Split from docs/module_specs/module7_spec.json on 2026-11-16. docs/module_specs/module7_rulings.md WINS over anything in this file (owner answers of 2026-11-16 + cross-module rulings of Modules 1-6). Lesson text source: tool/all_training_chapters_bn.json only; the live text wins over a spec quote (see notes.mismatches). Never use a Bangladesh source.",
+ "id": "do_7_5_b",
+ "rungId": "7.5/do/1",
+ "kind": "do",
+ "lessonId": "7.5",
+ "lessonTitleBn": "বিদ্যুৎ চুরি: একটি অপরাধ এবং তার বিপদ",
+ "liveLevelTitleBn": "বিদ্যুৎ চুরি: একটি অপরাধ এবং তার বিপদ",
+ "wave": "A",
+ "engineType": "m7_theft_evidence",
+ "file": "lib/features/game/m7_theft_evidence.dart",
+ "worldFile": "lib/features/game/m7_theft_evidence_world.dart",
+ "art": "assets/game/art/m7_theft_evidence/",
+ "catalogEngineTypeNow": "placeholder (content_catalog gamePacks do_7_5_b; set to m7_theft_evidence at wiring)",
+ "rulings": [
+  "M7-2",
+  "M7-8",
+  "M7-10",
+  "X1",
+  "X2",
+  "X3",
+  "X4",
+  "X6"
+ ],
+ "level": {
+  "packId": "do_7_5_b",
+  "engineType": "m7_theft_evidence",
+  "titleBn": "দূর থেকে প্রমাণ",
+  "verb": "aim, zoom and shoot evidence",
+  "scene": "Phase 1: long dusk lane, van at the near end, a tea stall across the road, one stealing house far down (dealt method), owner on the roof or in the doorway, legal neighbours; the trainee's phone: viewfinder, zoom slider (1x–5x), shutter. Phase 2: same pole next morning: vigilance officer with an order paper, sometimes a constable (scenery), the crew phone, a PPE bag, the hook still on the line; the switch that carries the OFF tag once the shutdown is called.",
+  "flow": [
+   "Guide first: 'ওই বাড়ির হুক থেকে লাইনে চুরি! দূর থেকে পরিষ্কার ছবি তুলুন।'",
+   "Frame: drag the viewfinder, slide zoom, tap the shutter; each shot lands in the roll exactly as framed.",
+   "Walking closer into the house's zone brings the owner out shouting: slip ('বিবাদে জড়াবেন না'), walked back. Zoom from a safe spot is always enough.",
+   "Report: drag exactly 2 photos into the evidence slots (theft point legible; wire into that house) and tap পাঠান. Blurry/empty/neighbour's meter = slip; slot empties.",
+   "Coworker script (i) held on পাঠান.",
+   "Phase 2: guide 'ভিজিল্যান্স এসেছে। এবার হুকটা নিয়মে খুলুন।' Four things scattered (dealt layout, no list): officer (take and read the order 'বিচ্ছিন্ন করুন'), phone (call শাটডাউন → OFF tag appears), PPE bag (drag each item onto the trainee), hook (drag off).",
+   "Hook dragged while live = deadly (any PPE). Line off, no order = slip. Line off + order, PPE incomplete (non-glove item missing) = slip. গ্লাভস not on = deadly (module row 11). All done → praise, ◆, reason.",
+   "Coworker script (ii) instead of (i): held on the phone's শাটডাউন call; listening = the hook pulled live = deadly.",
+   "Pass panel."
+  ],
+  "dealtVariety": "Theft method; which house and how far; owner's state; vantage (van / tea stall); neighbours; light; phase-2 layout; constable present; coworker script and timing.",
+  "deadly": [
+   "Dragging the hook off while the line is still live, with or without PPE",
+   "Listening to 'লাইন বন্ধ করার দরকার নেই, হুকটা টেনে খুলে দাও।'",
+   "Removing the hook with no গ্লাভস on (module row 11; owner to confirm with row 14b)"
+  ],
+  "slips": [
+   "Walking up to the stealing house (confrontation)",
+   "Attaching a blurry/empty frame or a neighbour's meter",
+   "Listening to the 'একটু চুরি' myth (report not sent)",
+   "Removing the hook (line off) before taking the order",
+   "Removing the hook (line off, order taken) with a non-glove PPE item missing"
+  ],
+  "coworkerPushBn": "One per play. (i) Myth 1 word for word: 'একটু বিদ্যুৎ চুরি করলে কোম্পানির কিছু হয় না, ওদের তো অনেক টাকা।' held on পাঠান; listen = slip. (ii) 'লাইন বন্ধ করার দরকার নেই, হুকটা টেনে খুলে দাও।' held on the শাটডাউন call; listen = deadly. Refuse: 'না, চুরির ক্ষতি সৎ গ্রাহকের ঘাড়েই পড়ে।' / 'না, আগে লাইন বন্ধ, পুরো PPE।' Builders: myth 1 contains 'কোম্পানির' — use the word-boundary check for 'পানি'.",
+  "reasonQuestionsBn": [
+   "দূর থেকেই ছবি কেন তুললেন?",
+   "এই ছবি রিপোর্টে কেন দিলেন?",
+   "হুক খোলার আগে লাইন বন্ধ কেন?",
+   "নির্দেশ না পেয়ে খোলেননি কেন?",
+   "পুরো PPE কেন পরলেন?"
+  ],
+  "gestureHints": "Phase 1 untouched: viewfinder drag nudge ~60 dp alternating left/right. Moved once, zoom 1x, 8 s idle: short upward drag nudge on the slider. Framed and idle: tap on the shutter. Walk-closer ground never hinted. Roll: sweep over all thumbnails; tap on পাঠান when both slots full. Phase 2: sweep over officer, phone, bag and hook equally. Phone open: tap the শাটডাউন call. Bag open: sweep + generic upward drag nudge of the first item. Hook drag hint only once order, shutdown and full PPE are done. Decks: built-in.",
+  "lessonPoints": [
+   "নিজেকে বিপদে ফেলবেন না: বিদ্যুৎ চোরেরা প্রায়ই আক্রমণাত্মক হতে পারে। সরাসরি তাদের সাথে বিবাদে জড়াবেন না।",
+   "প্রমাণ সংগ্রহ করুন: যদি নিরাপদে সম্ভব হয়, তবে দূর থেকে অবৈধ সংযোগের ছবি বা ভিডিও তুলুন।",
+   "সংযোগ বিচ্ছিন্ন করা: শুধুমাত্র কর্তৃপক্ষের নির্দেশে এবং পুলিশি সহায়তায় (যদি প্রয়োজন হয়) অবৈধ সংযোগটি বিচ্ছিন্ন করুন।",
+   "অবৈধ সংযোগ বিচ্ছিন্ন করার কাজটি অত্যন্ত বিপজ্জনক হতে পারে। … লাইনটি বন্ধ করে নেওয়া এবং সম্পূর্ণ PPE ব্যবহার করা অপরিহার্য।",
+   "এই 'একটু একটু' চুরি মিলেই … সৎ গ্রাহকদের ওপরই বিলের মাধ্যমে চাপানো হয়।"
+  ],
+  "giveawayRisks": "Photo quality judged from the actual frame; 2 slots and wrong attachments cost; house unmarked; phase 2 scattered with no order and the hook draggable from the start; equal sweeps; coworker held on পাঠান or the শাটডাউন call."
+ },
+ "deadlySlipTable": [
+  {
+   "id": "R10",
+   "act": "Signing for, packing or keeping in use torn 11 kV gloves or gloves with no 11 kV rating for an 11 kV job; going to an 11 kV job without rated gloves; touching a hook with no gloves on",
+   "cls": "deadly",
+   "source": "do_7_6_a, do_7_6_b, do_7_5_b, gate F3, Module 1 step 3",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M7-2/X3",
+   "rulingNote": "Confirmed. The rated glove is 'IS 4770 টাইপ ৪' (live 7.6), never '11 kV গ্লাভস'; an unrated glove = a lower type or no marking.",
+   "needsOwnerInSpec": true
+  },
+  {
+   "id": "R13",
+   "act": "Removing an illegal hook from a line that is still live (incl. listening to 'হুকটা টেনে খুলে দাও')",
+   "cls": "deadly",
+   "source": "do_7_5_b, gate F7",
+   "needsOwner": false,
+   "classAfterRulings": "deadly",
+   "ruling": "M7-2/M7-8/X1",
+   "rulingNote": "Confirmed and WIDENED: a hand or tool on the hook after the shutdown but before the tester shows 0 V is deadly too (N1); hook off after 0 V with no earth = deadly (N2).",
+   "needsOwnerInSpec": true
+  },
+  {
+   "id": "R14",
+   "act": "Hook removal on a dead line without the authority's order, or with a non-glove PPE item missing",
+   "cls": "slip",
+   "source": "do_7_5_b, gate F7",
+   "needsOwner": false,
+   "classAfterRulings": "slip",
+   "ruling": "M7-2",
+   "rulingNote": "Confirmed as written: line proven dead + order taken + a non-glove PPE item missing = slip; no গ্লাভস on the hook stays DEADLY (owner approved the list as written).",
+   "needsOwnerInSpec": true
+  },
+  {
+   "id": "R15",
+   "act": "Approaching or confronting the electricity thief",
+   "cls": "slip",
+   "source": "do_7_5_b, gate F7",
+   "needsOwner": false,
+   "classAfterRulings": "slip",
+   "ruling": "M7-2",
+   "rulingNote": "Confirmed.",
+   "needsOwnerInSpec": true
+  },
+  {
+   "id": "R16",
+   "act": "False theft report, missed theft, missed seal/magnet, unclear or wrong-house evidence, report not sent to both supervisor and vigilance",
+   "cls": "slip",
+   "source": "do_7_5_a, do_7_5_b, gate F6",
+   "needsOwner": false,
+   "classAfterRulings": "slip",
+   "ruling": "M7-2",
+   "rulingNote": "Unchanged."
+  },
+  {
+   "id": "R29",
+   "act": "Any needless stop, flag, claim, report, refusal or claim at the commissioner",
+   "cls": "slip",
+   "source": "every level and the gate",
+   "needsOwner": false,
+   "classAfterRulings": "slip",
+   "ruling": "M7-2",
+   "rulingNote": "Unchanged."
+  },
+  {
+   "id": "R30",
+   "act": "Listening to the coworker",
+   "cls": "slip",
+   "source": "every level; carries the act's class, so deadly only in do_7_5_b push (ii), do_7_10_a and do_7_7_a S2",
+   "needsOwner": false,
+   "classAfterRulings": "B1",
+   "ruling": "X2",
+   "rulingNote": "Listening takes the class of the act pushed in that level right then (B1): deadly in do_7_5_b push (ii), do_7_10_a, do_7_7_a S2.",
+   "needsOwnerInSpec": true
+  }
+ ],
+ "addedRows": [
+  {
+   "id": "N1",
+   "act": "Hand or tool on the illegal hook or its conductor after the shutdown but before the tester shows 0 V (incl. a skipped tester)",
+   "cls": "deadly",
+   "ruling": "M7-8/M5-2",
+   "source": "added by docs/module_specs/module7_rulings.md"
+  },
+  {
+   "id": "N2",
+   "act": "Hook removed after the 0 V reading but with no earth set (live 7.5 pro tip 4)",
+   "cls": "deadly",
+   "ruling": "X1",
+   "source": "added by docs/module_specs/module7_rulings.md"
+  },
+  {
+   "id": "N3",
+   "act": "Earth set before the tester shows 0 V",
+   "cls": "slip",
+   "ruling": "X1",
+   "source": "added by docs/module_specs/module7_rulings.md"
+  },
+  {
+   "id": "N4",
+   "act": "Tester not proved on a live point first (live-dead-live incomplete)",
+   "cls": "slip",
+   "ruling": "X1/A9",
+   "source": "added by docs/module_specs/module7_rulings.md"
+  }
+ ],
+ "changes": [
+  "do_7_5_b: removing a hook with no গ্লাভস on added as deadly, to match the module's glove rule (row 11); other missing PPE stays a slip."
+ ],
+ "changesGeneral": [
+  "Module-wide rules written into the table: deadly is set by the act, not the level; a past act judged at a desk (do_7_4_b) is always a slip; letting another person touch a conductor you could have stopped is deadly (do_7_3_b, do_7_7_a S2); listening to the coworker carries the class of the act he pushes; every needless stop, flag, claim, report or refusal is a slip.",
+  "Lesson text glitches to fix in tool/all_training_chapters_bn.json (never quoted on screen): Cyrillic 'работодаাতা' (7.4, 7.6), Tamil 'முறையான' (7.4 briefing), Latin 'এনফোর্cement' (7.5 section 3), Persian 'بخواهید' (7.6 pro tip 4), Hindi 'बिना सर्टिफिकेशन' (7.6 section 3).",
+  "All pack ids kept; engineTypes are unique: m7_rule_tag, m7_rule_question, m7_comp_casebook, m7_claim_route, m7_clearance_survey, m7_street_warn, m7_ptw_sign, m7_ptw_inquiry, m7_theft_trace, m7_theft_evidence, m7_ppe_counter_claim, m7_ppe_mishap_route, m7_scene_guard, m7_report_note, m7_spill_boom, m7_waste_handover, m7_doorstep_visit, m7_honest_reply, m7_crew_papers, m7_gate_permit_day."
+ ],
+ "unsupported": [
+  "No numbers for 'few' consumers or 'repeated' overload.",
+  "Vigilance phone number and procedure not given.",
+  "Test-and-earth before hook removal: not in 7.5 (Module 2.2 rules would require it — owner question).",
+  "Contents of 'সম্পূর্ণ PPE' not listed; Module 1's set used (cross-lesson).",
+  "Removal tool not stated.",
+  "Look of a broken seal, magnet, upstream joint: inferred.",
+  "When police are needed: scenery only.",
+  "Penalties and assessment formula: not used.",
+  "Raid/seizure powers: not playable.",
+  "Harm of a false report: inferred from 'নির্ভুল'."
+ ],
+ "lessonOwnerQuestions": [
+  "Confronting the thief = slip.",
+  "Hook removal, line off + order, non-glove PPE missing = slip; no গ্লাভস = deadly (module rule).",
+  "Removing an illegal hook from a live line = deadly in every Module 7 level (7.5b and the gate).",
+  "Should do_7_5_b phase 2 add a tester proof after the শাটডাউন call (Module 2.2's live-dead-live rule), or keep 7.5's words only?",
+  "False report / wrong evidence = slip.",
+  "quickMs for both levels."
+ ],
+ "ownerDecisions": [
+  {
+   "n": 1,
+   "specQuestion": "Approve the four redesigns made to keep verbs distinct: do_7_1_b (question orders with the rulebook), do_7_2_a (calendar tear instead of a scrubber), do_7_6_b (route the mishap, one-hold record), do_7_8_b (depot handover to arriving vehicles).",
+   "question": "Four levels were redesigned so no two levels play the same way: 7.1b (question an order with the rulebook), 7.2a (tear calendar pages), 7.6b (take each PPE problem to the right person), 7.8b (hand each waste to the right truck). Approve them?",
+   "addedBy": null,
+   "ownerAnswer": "Approved: the four redesigns (do_7_1_b, do_7_2_a, do_7_6_b, do_7_8_b).",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) Same as Modules 5 and 6; it only changes how the player acts, not what is safe.",
+   "whatWeWillDo": "Approve all four as one set. Rulebook pages in 7.1b use today's CEA 2023 numbers (see Need your call, row 7.1).",
+   "earlierRulings": "M5-9 and M6-7: verb changes approved as one set. No safety fact changes."
+  },
+  {
+   "n": 2,
+   "specQuestion": "Module deadly list: unsigned field copy or verbal permit; torn/unrated 11 kV gloves (and no gloves on a hook); cut harness webbing; live hook removal; uncertified person on energised live-line work; charging the line with a man up (F12); a public rod/bamboo reaching the line (7.3b); letting the coworker coil a wire not proven dead (7.7a S2); entering a fallen wire's zone. Everything else is a slip. Confirm each 'needsOwner' row.",
+   "question": "Module 7 'deadly' list (level ends at once): field PTW copy not signed, or a spoken 'line off' with no paper; torn or wrong-rated gloves on an 11 kV job; cut harness strap; pulling a theft hook off a live line; untrained man on live-line work; asking to charge the line while a man is still up; a passer-by's rod touching the line because you did not warn; letting a coworker coil a fallen wire not proven dead; walking into a fallen wire's zone. Everything else is a small mistake (slip). Confirm?",
+   "addedBy": null,
+   "ownerAnswer": "Approved as written: the module deadly list; everything else = slip; every needsOwner row on that list is confirmed.",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) Every row already matches an earlier ruling; the glove change is A5.",
+   "whatWeWillDo": "Confirm the list, with one change: no gloves on a hook is deadly only while the line is not yet proven dead and earthed. After tester 0 V and earth, missing gloves (or any PPE) = slip. Listening to the coworker takes the class of the act he pushes.",
+   "earlierRulings": "M1 step 17 + B7 (no PTW = deadly). B6 (bad glove = deadly). M1 steps 11-12 (harness). B8/X1 (touching live = deadly). M5-1 (charging with anyone on the line = deadly). M5-5 (bystander contact = deadly). M5-4 (inside 10 m = deadly). A5/X4 (no PPE after a proven isolation = slip). B1 (listening = class of the act)."
+  },
+  {
+   "n": 3,
+   "specQuestion": "Rule: letting another person touch a conductor you could have stopped = deadly (7.3b, 7.7a S2). Accept, or make both heavy slips?",
+   "question": "If the player could have stopped another person touching a live wire and did not (a passer-by's bamboo in 7.3b, a coworker coiling a wire in 7.7a), is that deadly?",
+   "addedBy": null,
+   "ownerAnswer": "DEADLY: letting another person touch a conductor you could have stopped (7.3b, 7.7a S2). Matches M6-1 (signing a broken earth because coworker B said so = deadly).",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) Same as Module 5 (5.6b).",
+   "whatWeWillDo": "Deadly, but only after a clear, timed chance to warn. A late but successful stop = slip.",
+   "earlierRulings": "M5-5: a bystander's contact = deadly for the player; late but successful stop = slip."
+  },
+  {
+   "n": 4,
+   "specQuestion": "Rule: past acts judged at an inquiry desk are always slips (do_7_4_b), while the same act done in the field carries its own class (F12). Accept?",
+   "question": "At the inquiry desk (7.4b) the player only judges old records. Are mistakes there always slips, while the same act done in the field (gate: charging with a man up) stays deadly?",
+   "addedBy": null,
+   "ownerAnswer": "Approved: past acts judged at an inquiry desk (do_7_4_b) are always slips; the same act in the field keeps its own class.",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Your call",
+   "recommended": "(a) Nobody is at risk at a desk; the card keeps the act from looking minor.",
+   "whatWeWillDo": "Desk mistakes = slips. The reason card adds that in the field the same act is deadly.",
+   "earlierRulings": "M5-6: harm with nobody exposed = slip. Game rule, no safety reference decides it."
+  },
+  {
+   "n": 5,
+   "specQuestion": "Reg 3 split: non-live line work by an unfit person = slip everywhere; energised live-line work without its certificate = deadly (7.10a only). Accept, or make all Reg 3 cases slips?",
+   "question": "Untrained or unauthorized man on shutdown (dead) line work = slip. Man without the live-line certificate on live-line work = deadly (7.10a only). Accept this split?",
+   "addedBy": null,
+   "ownerAnswer": "Approved: non-live work by an unfit person = slip everywhere; energised live-line work without the certificate = deadly (7.10a only).",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Your call",
+   "recommended": "(a) The danger is real only on live work; dead work is still a legal breach.",
+   "whatWeWillDo": "Keep the split. The slip card says it is still against the law (CEA Reg 3), never that it is allowed.",
+   "earlierRulings": "X1 logic: on a proven-dead, earthed line the main protection is in place. CEA 2023 Reg 3(3) and Schedule I Part-I(1) (hotline work only by trained men)."
+  },
+  {
+   "n": 6,
+   "specQuestion": "Lessons with no deadly: 7.1, 7.2, 7.8, 7.9 (and do_7_3_a, do_7_4_b, do_7_5_a, do_7_7_b). Confirm.",
+   "question": "No deadly at all in lessons 7.1, 7.2, 7.8, 7.9 and in levels 7.3a, 7.4b, 7.5a, 7.7b (paperwork, waste, customer visits, surveys). OK?",
+   "addedBy": null,
+   "ownerAnswer": "Confirmed: no deadly in 7.1, 7.2, 7.8, 7.9, do_7_3_a, do_7_4_b, do_7_5_a, do_7_7_b.",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) Consistent with Modules 5 and 6.",
+   "whatWeWillDo": "Confirm. These levels never put anyone near a live wire or a fall.",
+   "earlierRulings": "M5-6: harm to equipment or paper only, nobody exposed = slip."
+  },
+  {
+   "n": 7,
+   "specQuestion": "HT side-of-house clearance dealt on 33 kV only (the lesson's 2.0 m for 11 kV may need correcting).",
+   "question": "Today's lesson 7.3 has new clearance numbers: across a road 11 kV and 33 kV = 6.5 m (was 6.1), LT = 5.8 m; beside a house 11 kV = 1.2 m and 33 kV = 2.0 m (was 2.0 m for all HT). Use them, and also show 11 kV house-side sites?",
+   "addedBy": null,
+   "ownerAnswer": "HT side-of-house clearance dealt on 33 kV only (2.0 m). The lesson's 11 kV figure is corrected to 1.2 m (CEA) - a lesson fix for the director (already present in the live text, checked 2026-11-16).",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) The lesson now teaches 1.2 m for 11 kV, so the game can test it.",
+   "whatWeWillDo": "Use the lesson numbers. Tags and the drum: 1.2, 2.0, 2.5, 3.7, 5.8, 6.5 m. 11 kV side sites at 1.2 m; every 2.0 m card says 33 kV. An old span at 6.1 m is 'below today's rule, report it', not 'illegal'.",
+   "earlierRulings": "A2 (6.5 m across a street, CEA 2023 Reg 60). Live lesson text wins (X6). REFERENCE_REVIEW M7-7 (Reg 63(3): 1.2 m up to 11 kV)."
+  },
+  {
+   "n": 8,
+   "specQuestion": "do_7_5_b phase 2: add a tester proof after the shutdown (Module 2.2's rule), or keep 7.5's words only?",
+   "question": "Before pulling a theft hook (7.5b and gate), add a tester check and an earth after the shutdown?",
+   "addedBy": null,
+   "ownerAnswer": "ADD the tester live-dead-live proof after the shutdown in do_7_5_b phase 2 (Module 2.2 rule).",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) The live lesson now requires it; same order as Modules 5 and 6.",
+   "whatWeWillDo": "Yes. Order: shutdown call, tester live-dead-live 0 V, earth, gloves, hook off. Hand on the hook before 0 V = deadly. After 0 V but no earth = deadly. Earth before 0 V = slip. Tester not proved on a live point first = slip.",
+   "earlierRulings": "Today's lesson 7.5 pro tip 4 says tester + earth. M5-2 (hands before 0 V = deadly). X1 (no earth = deadly; earth before test = slip). A9 (unproven tester = slip)."
+  },
+  {
+   "n": 9,
+   "specQuestion": "Gate F7 cue (hook on the job's isolated span vs the other DTR's live line) and the drawn DO-isolation at the lane DTR. Approve.",
+   "question": "Gate hook step (F7): the job's DTR is isolated and the other DTR's line is live. Should approving the hook removal also need tester 0 V and an earth on the job span? And if the player approves on the open switch alone, is that deadly or a slip?",
+   "addedBy": null,
+   "ownerAnswer": "Gate F7 cue approved, but no DO: the lane DTR isolation is the AB switch (+ HG fuses), per M6-2. Every DO in the Module 7 items becomes the AB switch.",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Your call",
+   "recommended": "(a) Same as Q8 and M5-2: a hand before 0 V is deadly.",
+   "whatWeWillDo": "Keep the two-line cue. Safe approval needs: isolated span + tester 0 V + earth, other DTR's line left alone. Approving the live line = deadly.",
+   "earlierRulings": "Q8 above. M5-2 (hands before 0 V = deadly). X1. Q14 (draw an AB switch, not DO fuses)."
+  },
+  {
+   "n": 10,
+   "specQuestion": "Coworker clips to record with tool/rival_clip.py: every myth line used verbatim (7.1 ×2, 7.2 ×2, 7.3 ×2, 7.4 ×2, 7.5 ×2, 7.6 ×2, 7.7 ×2, 7.8 ×2, 7.9 ×2, 7.10 myth 2) plus the shortcut lines (7.2b bills, 7.3b roof variant, 7.4a ×2, 7.5b hook, 7.7a S2/S3, 7.8a hose, 7.8b municipal truck, 7.9a ID).",
+   "question": "New coworker lines and the myth lines need voice clips. How to do it?",
+   "addedBy": null,
+   "ownerAnswer": "Yes: every myth line verbatim + the shortcut lines, recorded in Subrata's voice system after the owner words them (DRAFT rule M6-12).",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) Same process as Module 6.",
+   "whatWeWillDo": "You give the natural wording of every new line first; then all lines are recorded in the voice system (coworker voice). Myth lines quoted word for word also get clips. Record only after Q2, Q7, Q8 are final, so no clip has an old number.",
+   "earlierRulings": "M6-12 and the voice rule of 2026-11-14 (every spoken line is a recorded clip)."
+  },
+  {
+   "n": 11,
+   "specQuestion": "Fix the lesson JSON glitches (Cyrillic, Tamil, Persian, Hindi and Latin fragments in 7.4, 7.5 and 7.6).",
+   "question": "Fix the stray foreign letters in lesson text 7.4, 7.5, 7.6?",
+   "addedBy": null,
+   "ownerAnswer": "Yes: fix the glitches in lessons 7.4, 7.5, 7.6 - list each exact fix for the director (already applied in the live text 2026-11-15; none left, checked 2026-11-16).",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Done already",
+   "recommended": "-",
+   "whatWeWillDo": "Already fixed in today's lesson text. Checked 2026-11-16: no foreign letters left in 7.1-7.10. Nothing to answer.",
+   "earlierRulings": "Lesson fixes of 2026-11-15."
+  },
+  {
+   "n": 12,
+   "specQuestion": "Kit change needed: a curved-path drag hint for do_7_8_a's boom ring.",
+   "question": "7.8a (draw an oil boom ring) asked for a new curved hand-hint in the game kit. Add it?",
+   "addedBy": null,
+   "ownerAnswer": "No new curved-path hint: do_7_8_a uses the existing drag-hint fallback (as M6-11).",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) Same as Module 6; no kit change.",
+   "whatWeWillDo": "No new hint kind. Use the existing arc hint for the ring.",
+   "earlierRulings": "M6-11: no new hint kinds; use the existing fallback hints."
+  },
+  {
+   "n": 13,
+   "specQuestion": "quickMs for every Module 7 level after playtest; rank সুপারভাইজার (unlockRank(7)) with badge 'আইন কি বলে?' at the gate.",
+   "question": "Gate: rank সুপারভাইজার, badge 'আইন কি বলে?' (the same badge as the 7.x lessons), 5-7 minutes. Quick-bonus times: builder's estimate (about 85% of a clean play)?",
+   "addedBy": null,
+   "ownerAnswer": "Gate rank সুপারভাইজার (unlockRank(7)), badge 'আইন কি বলে?' (one constant, marked owner-may-rename); quickMs after playtest.",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) Same pattern as Module 6.",
+   "whatWeWillDo": "Use rank সুপারভাইজার, badge 'আইন কি বলে?', a 5-7 minute gate, and the builder's quick-bonus estimate (stated in each report).",
+   "earlierRulings": "M6-10 and the Module 6 answer (gate badge = the lessons' badge 'যন্ত্র গুরু'). Wave A rule: quick bonus = builder's estimate. M5-12 (5-7 min)."
+  },
+  {
+   "n": 14,
+   "specQuestion": null,
+   "question": "Module 7 art still shows DO fuses on DTRs (7.5 picture board, the 7.8a background DTR, and the gate's isolation). Draw the WBSEDCL DTR with an AB switch + HG fuses instead?",
+   "addedBy": "lesson check 2026-11-16 (not in module7_spec.json)",
+   "ownerAnswer": "Answered by decision 9: AB switch + HG fuses everywhere in Module 7 (no DO).",
+   "status": "ANSWERED 2026-11-16 (owner: \"proceed with the recommendations\") - see docs/module_specs/module7_rulings.md",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) Matches Module 6 and the WBSEDCL standard DTR.",
+   "whatWeWillDo": "Yes. Isolation = AB switch opened in one firm stroke, all three blades seen, handle locked and tagged. The other DTR's AB stays closed (live). An overloaded DTR shows a blown HG fuse wire, not a dropped DO.",
+   "earlierRulings": "M6-2a (WBSEDCL DTR = AB switch + HG fuses). A3 (one firm stroke). Term rule: closing = «AB লাগানো», never «AB বন্ধ»."
+  },
+  {
+   "n": 15,
+   "specQuestion": null,
+   "question": "Today's lesson 7.6 no longer says '11 kV rated gloves'. It says 'IS 4770 টাইপ ৪ গ্লাভস (১৭,০০০ ভোল্ট পর্যন্ত)' for 11 kV work. What should the glove cuff and kit list show?",
+   "addedBy": "lesson check 2026-11-16 (not in module7_spec.json)",
+   "ownerAnswer": null,
+   "status": "Applied by existing rule (X3 live text wins / X6 board length) - owner may still override in the sheet",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) The '11 kV' label is the mix-up that kills; the lesson now teaches the type.",
+   "whatWeWillDo": "Cuff and kit list show 'IS 4770 · টাইপ ৪' (English digits). The wrong glove for an 11 kV job is a lower type (for example 'টাইপ ২') or one with no marking. Never print '11 kV গ্লাভস'.",
+   "earlierRulings": "Live lesson text wins (X6). A6 (IS 4770 is the national glove standard). REFERENCE_REVIEW M7-2 (a glove sold as '11 kV' is often a 1,100 V glove)."
+  },
+  {
+   "n": 16,
+   "specQuestion": null,
+   "question": "Today's lesson 7.10 dropped the 'over 18 years' rule (no CEA clause has it). It now says a competent man needs a government certificate of competency or electrical work permit, his name on the company register, and training. 7.10a, 7.1b, the gate and board 7.10 still use an under-18 helper. What to do?",
+   "addedBy": "lesson check 2026-11-16 (not in module7_spec.json)",
+   "ownerAnswer": null,
+   "status": "Applied by existing rule (X3 live text wins / X6 board length) - owner may still override in the sheet",
+   "sheetStatus": "Your call",
+   "recommended": "(a) The lesson no longer teaches it, and no source was found.",
+   "whatWeWillDo": "Drop the age check. Use the lesson's checks instead: certificate / work permit, name on the company register, training done, authorization signed.",
+   "earlierRulings": "Live lesson text wins (X6). Never invent facts. Open lesson item L7.10-3 (2026-11-15 sheet)."
+  },
+  {
+   "n": 17,
+   "specQuestion": null,
+   "question": "Today's lesson 7.4 says shutdown work needs a written permit: 'PTW, or a field memo where company rules use it'. In 7.4a and the gate the job is an 11 kV shutdown. Accept only a PTW there?",
+   "addedBy": "lesson check 2026-11-16 (not in module7_spec.json)",
+   "ownerAnswer": null,
+   "status": "OPEN - interim default in module7_rulings.md (PTW only in levels)",
+   "sheetStatus": "Your call",
+   "recommended": "(a) Keeps one clear rule for the 11 kV jobs the levels show.",
+   "whatWeWillDo": "Levels play the PTW only (11 kV shutdown jobs). The field memo appears only in the lesson's own words on board 7.4.",
+   "earlierRulings": "M1 step 17 (PTW before work). M5-3 (field memo/docket for a ground patrol). Open lesson item L7.4-3 (keep the field-memo words?)."
+  },
+  {
+   "n": 18,
+   "specQuestion": null,
+   "question": "Five boards have 6 rounds (7.2, 7.4, 7.5, 7.7, 7.9). Trim each to 5?",
+   "addedBy": "lesson check 2026-11-16 (not in module7_spec.json)",
+   "ownerAnswer": null,
+   "status": "Applied by existing rule (X3 live text wins / X6 board length) - owner may still override in the sheet",
+   "sheetStatus": "Settled by your rule",
+   "recommended": "(a) Same length as Modules 5 and 6.",
+   "whatWeWillDo": "Trim to 5 rounds (4-6 picture cards each, a safe card in every hand). 7.4 drops its round 6 ('which is true' consequences).",
+   "earlierRulings": "M5-11 and the Module 6 rule: boards have 5 rounds unless a ruling says otherwise."
+  }
+ ],
+ "allVerbs": [
+  [
+   "7.1",
+   "do_7_1_a",
+   "drag a rulebook tab onto the breach"
+  ],
+  [
+   "7.1",
+   "do_7_1_b",
+   "page the rulebook to back a question"
+  ],
+  [
+   "7.2",
+   "do_7_2_a",
+   "tear calendar pages, file each case"
+  ],
+  [
+   "7.2",
+   "do_7_2_b",
+   "trace the claim route across town"
+  ],
+  [
+   "7.3",
+   "do_7_3_a",
+   "stretch a measuring tape between points"
+  ],
+  [
+   "7.3",
+   "do_7_3_b",
+   "hold on moving people to warn"
+  ],
+  [
+   "7.4",
+   "do_7_4_a",
+   "peel carbon copies, sign each copy"
+  ],
+  [
+   "7.4",
+   "do_7_4_b",
+   "scrub the day's photos against the logbook"
+  ],
+  [
+   "7.5",
+   "do_7_5_a",
+   "trace each wire by finger, pin theft"
+  ],
+  [
+   "7.5",
+   "do_7_5_b",
+   "aim, zoom and shoot evidence"
+  ],
+  [
+   "7.6",
+   "do_7_6_a",
+   "ink a legal claim on the register"
+  ],
+  [
+   "7.6",
+   "do_7_6_b",
+   "carry each PPE mishap to the right hands"
+  ],
+  [
+   "7.7",
+   "do_7_7_a",
+   "body-block reaching hands by dragging yourself"
+  ],
+  [
+   "7.7",
+   "do_7_7_b",
+   "write the report from a replay"
+  ],
+  [
+   "7.8",
+   "do_7_8_a",
+   "draw a closed boom ring around the spill"
+  ],
+  [
+   "7.8",
+   "do_7_8_b",
+   "hand each waste to the right arriving vehicle"
+  ],
+  [
+   "7.9",
+   "do_7_9_a",
+   "present ID, decide entry, walk the work zone"
+  ],
+  [
+   "7.9",
+   "do_7_9_b",
+   "build an honest reply from phrase tiles"
+  ],
+  [
+   "7.10",
+   "do_7_10_a",
+   "flip a worker's papers, staff the jobs"
+  ],
+  [
+   "7.10",
+   "gate_m7",
+   "authorize or halt each job step"
+  ]
+ ],
+ "notes": {
+  "lessonCheck": "Checked 2026-11-16 against tool/all_training_chapters_bn.json lesson 7.5 (version 4, carries the 2026-11-15 lesson fixes). Every spec quote was compared with the live text; the live text wins.",
+  "mismatches": [
+   "Hook removal: live pro tip 4 now says 'কাজটি করার আগে লাইনটি বন্ধ করে টেস্টার দিয়ে ডেড প্রমাণ করা, আর্থ লাগানো এবং সম্পূর্ণ PPE ব্যবহার করা অপরিহার্য।' The spec quotes the old 'লাইনটি বন্ধ করে নেওয়া এবং সম্পূর্ণ PPE ব্যবহার করা অপরিহার্য' and has no tester or earth beat. Spec owner decision 8 is answered by the live text (M7-8): shutdown -> tester live-dead-live 0 V -> earth -> gloves -> hook.",
+   "lessonPoints[3] old quote (see above). flow[5]-[6]: add the tester (live-dead-live) and earth items after the শাটডাউন call (M7-8, N1-N4); 'গ্লাভস not on = deadly' stays (M7-2 as written). unsupported[2] ('test-and-earth not in 7.5') is obsolete.",
+   "RULING M7-2 (as written) keeps 'removing the hook with no গ্লাভস on = deadly' even after the proven isolation, although A5/X4 made missing PPE after a proven isolation a slip in Modules 3-6. Builders follow M7-2."
+  ],
+  "crossModuleRulingsToApply": [
+   "B1: listening to the coworker takes the class of the act he pushes right then; otherwise a slip.",
+   "M6-12 / voice rule 2026-11-14: every new Bangla line is a DRAFT until the owner gives the wording; every spoken line (incl. myth lines, 'why' questions, guide and radio lines) is listed in newGuideLines/newRivalLines and recorded.",
+   "Term rules: «ডেড» (never «মৃত») for a proven-dead line; LT, HT, 11 kV in English letters; ON / OFF; closing an AB = «AB লাগানো» (never «AB বন্ধ»). English digits via enDigits. য় ড় ঢ় as base + nukta.",
+   "X1 / M5-2: PTW -> isolate -> tester live-dead-live 0 V -> earth. Hand before 0 V = deadly; work after 0 V without earth = deadly; earth before 0 V = slip; tester not proved = slip (A9). After a proven isolation, missing PPE = slip (A5) - except in Module 7 no গ্লাভস on the hook stays deadly (M7-2 as written)."
+  ]
+ }
+}

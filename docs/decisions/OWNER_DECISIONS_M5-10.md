@@ -154,3 +154,49 @@ Answered by the owner in docs/review/lessons_m5-10_and_m6_questions.xlsx. Rule u
 14. Which YouTube explainer videos (if any) should be linked to lessons 6.1 to 6.11?
    - **Answer:** Leave them empty for now; the owner adds Indian training videos later.
    - Basis: REFERENCE_REVIEW M6-14; precedent M5-14 (no YouTube ids yet); owner reference rule (Indian/international sources, never Bangladesh).
+
+## Module 7 owner answers (2026-11-16)
+
+Answered by the owner on 2026-11-16 ("proceed with the recommendations"), sheet docs/review/m7_questions_2026-11-16.xlsx. Rulings and what builders do: docs/module_specs/module7_rulings.md. Rule used: authentic documents; national (CEA, BIS) over WBSEDCL when they conflict; never Bangladesh sources.
+
+1. Four levels were redesigned so no two levels play the same way: 7.1b (question an order with the rulebook), 7.2a (tear calendar pages), 7.6b (take each PPE problem to the right person), 7.8b (hand each waste to the right truck). Approve them?
+   - **Answer:** Approved: the four redesigns.
+   - Basis: M5-9 and M6-7 (verb changes approved as a set); REFERENCE_REVIEW M7-1.
+2. Module 7 'deadly' list (level ends at once): field PTW copy not signed, or a spoken 'line off' with no paper; torn or wrong-rated gloves on an 11 kV job; cut harness strap; pulling a theft hook off a live line; untrained man on live-line work; asking to charge the line while a man is still up; a passer-by's rod touching the line because you did not warn; letting a coworker coil a fallen wire not proven dead; walking into a fallen wire's zone. Everything else is a small mistake (slip). Confirm?
+   - **Answer:** Approved as written. Everything else = slip; every needsOwner row on the list is confirmed. No গ্লাভস on the hook stays deadly even after the proven isolation.
+   - Basis: M1 step 17 / B7; B6; B8; M5-1; M5-4; M5-5; CEA 2023 Reg 21(1)-(2), Schedule I Part-I(1), Part-II(3), (4), (6); IS 4770 Annex B-3.2 (REFERENCE_REVIEW M7-2).
+3. If the player could have stopped another person touching a live wire and did not (a passer-by's bamboo in 7.3b, a coworker coiling a wire in 7.7a), is that deadly?
+   - **Answer:** DEADLY (7.3b, 7.7a S2), after a clear timed chance to warn. Matches M6-1 (signing a broken earth because coworker B said so = deadly).
+   - Basis: M5-5; M6-1; CEA 2023 Schedule I Part-II(6)-(7) (REFERENCE_REVIEW M7-3).
+4. At the inquiry desk (7.4b) the player only judges old records. Are mistakes there always slips, while the same act done in the field (gate: charging with a man up) stays deadly?
+   - **Answer:** Approved: desk = slip; the same act in the field keeps its class.
+   - Basis: M5-6 precedent; REFERENCE_REVIEW M7-4.
+5. Untrained or unauthorized man on shutdown (dead) line work = slip. Man without the live-line certificate on live-line work = deadly (7.10a only). Accept this split?
+   - **Answer:** Approved: non-live work by an unfit person = slip everywhere; live-line work without the certificate = deadly (7.10a only).
+   - Basis: CEA 2023 Reg 3(3), Reg 21(3), Schedule I Part-I(1) (REFERENCE_REVIEW M7-5).
+6. No deadly at all in lessons 7.1, 7.2, 7.8, 7.9 and in levels 7.3a, 7.4b, 7.5a, 7.7b (paperwork, waste, customer visits, surveys). OK?
+   - **Answer:** Confirmed: 7.1, 7.2, 7.8, 7.9, do_7_3_a, do_7_4_b, do_7_5_a, do_7_7_b have no deadly.
+   - Basis: M5-6 (nobody exposed = slip); REFERENCE_REVIEW M7-6.
+7. Today's lesson 7.3 has new clearance numbers: across a road 11 kV and 33 kV = 6.5 m (was 6.1), LT = 5.8 m; beside a house 11 kV = 1.2 m and 33 kV = 2.0 m (was 2.0 m for all HT). Use them, and also show 11 kV house-side sites?
+   - **Answer:** HT side-of-house clearance dealt on 33 kV only (2.0 m). The lesson's 11 kV figure is corrected to 1.2 m (CEA) as a lesson fix for the director - already present in the live 7.3 text (checked 2026-11-16).
+   - Basis: CEA 2023 Reg 63(3); A2 (6.5 m across a road) (REFERENCE_REVIEW M7-7).
+8. Before pulling a theft hook (7.5b and gate), add a tester check and an earth after the shutdown?
+   - **Answer:** ADD the tester live-dead-live proof after the shutdown in do_7_5_b phase 2 (Module 2.2 rule). With X1 and live 7.5 pro tip 4 the earth follows the 0 V.
+   - Basis: CEA 2023 Reg 21(1), Schedule I Part-II(3), (6); OSHA 1910.269(m)(3)(vi) (REFERENCE_REVIEW M7-8); M5-2.
+9. Gate hook step (F7): the job's DTR is isolated and the other DTR's line is live. Should approving the hook removal also need tester 0 V and an earth on the job span? And if the player approves on the open switch alone, is that deadly or a slip?
+   - **Answer:** F7 cue approved, but no DO: the lane DTR isolation is the AB switch (+ HG fuses), per M6-2. Every DO in the Module 7 items becomes the AB switch.
+   - Basis: M6-2a; CEA 2023 Schedule I Part-II(3), (6), (7) (REFERENCE_REVIEW M7-9).
+10. New coworker lines and the myth lines need voice clips. How to do it?
+   - **Answer:** Yes: every myth line verbatim + the shortcut lines, recorded in Subrata's voice system after the owner words them (DRAFT rule M6-12).
+   - Basis: Voice rule 2026-11-14; M6-12.
+11. Fix the stray foreign letters in lesson text 7.4, 7.5, 7.6?
+   - **Answer:** Yes; the director keeps the exact fix list (module7_rulings.md, M7-11). Already applied in the live text 2026-11-15; none left (checked 2026-11-16).
+   - Basis: Lesson fixes 2026-11-15.
+12. 7.8a (draw an oil boom ring) asked for a new curved hand-hint in the game kit. Add it?
+   - **Answer:** No new curved-path hint: do_7_8_a uses the existing drag-hint fallback.
+   - Basis: M6-11.
+13. Gate: rank সুপারভাইজার, badge 'আইন কি বলে?' (the same badge as the 7.x lessons), 5-7 minutes. Quick-bonus times: builder's estimate (about 85% of a clean play)?
+   - **Answer:** Rank সুপারভাইজার (unlockRank(7)); badge 'আইন কি বলে?' (one constant, owner may rename); quickMs after playtest.
+   - Basis: M6-10; M5-12; lesson badge_name (REFERENCE_REVIEW M7-13).
+
+Still open after these answers (interim defaults in module7_rulings.md): O1 field memo in levels (interim PTW only); O2 a national source for an 18+ bar (applied: no age rule, as the live 7.10 text); O3 the glove label 'IS 4770 · টাইপ ৪' (applied from the live 7.6 text); lesson items XL7.1-T1, L7.2-2, L7.3-3.

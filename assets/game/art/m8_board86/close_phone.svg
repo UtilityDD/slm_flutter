@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="bg_docket" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#D6E7F0"/></linearGradient>
+  <linearGradient id="bg_calm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9D7B8"/><stop offset="1" stop-color="#F6EEDC"/></linearGradient>
+  <linearGradient id="bg_close" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9FC7B4"/><stop offset="1" stop-color="#DDEEE5"/></linearGradient>
+  <linearGradient id="bg_cgrf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9B5D6"/><stop offset="1" stop-color="#E6E3F1"/></linearGradient>
+  <linearGradient id="bg_order" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9B7B0"/><stop offset="1" stop-color="#F3E3DE"/></linearGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9C2AE"/><stop offset="1" stop-color="#A89F88"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#bg_close)"/>
+<rect x="0" y="170" width="200" height="36" fill="url(#floor)"/>
+<rect x="10" y="12" width="52" height="38" rx="3" fill="#F4F1E6"/><path d="M16 22 L56 22" stroke="#2B3138" stroke-width="1.4" stroke-linecap="round" fill="none"/><path d="M16 30 L50 30" stroke="#2B3138" stroke-width="1.4" stroke-linecap="round" fill="none"/><path d="M16 38 L44 38" stroke="#2B3138" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+<rect x="10" y="100" width="48" height="70" rx="2" fill="#F4F1E6"/><rect x="18" y="112" width="16" height="14" rx="1.5" fill="#FFD34E"/><rect x="34" y="112" width="16" height="14" rx="1.5" fill="#FFD34E"/><rect x="26" y="144" width="16" height="26" rx="1.5" fill="#2B3138"/>
+<rect x="110" y="128" width="82" height="44" rx="6" fill="#F4F1E6"/><rect x="166" y="135" width="20" height="14" rx="2" fill="#2B3138"/><circle cx="128" cy="172" r="7" fill="#2B3138"/><circle cx="174" cy="172" r="7" fill="#2B3138"/>
+<rect x="82" y="112" width="9" height="16" rx="4" fill="#2B3138"/><rect x="85" y="117" width="3" height="4" rx="1.5" fill="#F4F1E6"/><path d="M88 124 L85 124" stroke="#2B3138" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M88 129 L85 129" stroke="#2B3138" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M88 134 L85 134" stroke="#2B3138" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M88 139 L85 139" stroke="#2B3138" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="86.5" cy="124" r="1.4" fill="#F4F1E6"/>
+<path d="M57 170 L56 196" stroke="#2B3138" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M63 170 L64 196" stroke="#2B3138" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M52 144 L68 144 L67 170 L53 170 Z" fill="url(#shirt)"/><circle cx="60" cy="132" r="7" fill="#A86E48"/><circle cx="57.5" cy="130" r="0.9" fill="#2B3138"/><circle cx="62.5" cy="130" r="0.9" fill="#2B3138"/><ellipse cx="62" cy="136" rx="2" ry="2.6" fill="#2B3138"/><path d="M52 130 A8 8 0 0 1 68 130 Z" fill="#FFD34E"/><rect x="51" y="129" width="18" height="2.6" rx="1.2" fill="#FFD34E"/><path d="M53 147 Q68.5 141.5 84 124" stroke="url(#shirt)" stroke-width="6" stroke-linecap="round" fill="none"/><circle cx="84" cy="124" r="3.4" fill="#2B3138"/><path d="M67 147 Q79.5 155.5 92 152" stroke="url(#shirt)" stroke-width="6" stroke-linecap="round" fill="none"/><circle cx="92" cy="152" r="3.4" fill="#2B3138"/>
+<rect x="0" y="204" width="200" height="16" fill="#2B3138"/>
+<path d="M-8 220 L0 204 L8 204 L0 220 Z" fill="#FFD34E"/>
+<path d="M12 220 L20 204 L28 204 L20 220 Z" fill="#FFD34E"/>
+<path d="M32 220 L40 204 L48 204 L40 220 Z" fill="#FFD34E"/>
+<path d="M52 220 L60 204 L68 204 L60 220 Z" fill="#FFD34E"/>
+<path d="M72 220 L80 204 L88 204 L80 220 Z" fill="#FFD34E"/>
+<path d="M92 220 L100 204 L108 204 L100 220 Z" fill="#FFD34E"/>
+<path d="M112 220 L120 204 L128 204 L120 220 Z" fill="#FFD34E"/>
+<path d="M132 220 L140 204 L148 204 L140 220 Z" fill="#FFD34E"/>
+<path d="M152 220 L160 204 L168 204 L160 220 Z" fill="#FFD34E"/>
+<path d="M172 220 L180 204 L188 204 L180 220 Z" fill="#FFD34E"/>
+<path d="M192 220 L200 204 L208 204 L200 220 Z" fill="#FFD34E"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9E3D6"/><stop offset="1" stop-color="#CFC6B3"/></linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1ECE0"/><stop offset="1" stop-color="#DCD5C4"/></linearGradient>
+  <linearGradient id="street" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6E7F0"/><stop offset="1" stop-color="#B9C7B0"/></linearGradient>
+  <linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D8E2"/><stop offset="0.6" stop-color="#B7CC8E"/><stop offset="1" stop-color="#8FB06A"/></linearGradient>
+  <linearGradient id="office" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4E8EA"/><stop offset="1" stop-color="#BFC6CC"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#street)"/>
+<rect x="0" y="190" width="200" height="30" fill="#A7B99A"/>
+<rect x="4" y="140" width="56" height="50" fill="#D9C3A0" stroke="#4A5560" stroke-width="1"/>
+<polygon points="-2,140 32,114 66,140" fill="#9A4E35"/>
+<rect x="24" y="160" width="16" height="30" fill="#6B5B3E"/>
+<rect x="12" y="152" width="14" height="12" fill="#8FD0EE"/>
+<circle cx="68" cy="100" r="14" fill="#EEF1F3" stroke="#7C8891" stroke-width="1.5"/>
+<path d="M68 100 L77.1 104.2" stroke="#7C8891" stroke-width="3" stroke-linecap="round" fill="none"/>
+<path d="M68 100 L63.8 109.1" stroke="#7C8891" stroke-width="3" stroke-linecap="round" fill="none"/>
+<path d="M68 100 L58.9 95.8" stroke="#7C8891" stroke-width="3" stroke-linecap="round" fill="none"/>
+<path d="M68 100 L72.2 90.9" stroke="#7C8891" stroke-width="3" stroke-linecap="round" fill="none"/>
+<path d="M88 80 L124 60" stroke="#2B3138" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+<path d="M124 60 L150 92" stroke="#2B3138" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+<rect x="108" y="130" width="84" height="60" fill="#E9EDF0" stroke="#4A5560" stroke-width="1"/>
+<rect x="108" y="130" width="14" height="12" fill="#C8352B"/>
+<rect x="122" y="130" width="14" height="12" fill="#FAF8F2"/>
+<rect x="136" y="130" width="14" height="12" fill="#C8352B"/>
+<rect x="150" y="130" width="14" height="12" fill="#FAF8F2"/>
+<rect x="164" y="130" width="14" height="12" fill="#C8352B"/>
+<rect x="178" y="130" width="14" height="12" fill="#FAF8F2"/>
+<rect x="116" y="148" width="68" height="22" fill="#8FD0EE"/>
+<rect x="143" y="164" width="14" height="26" fill="#6B5B3E"/>
+<rect x="160" y="150" width="20" height="40" rx="2" fill="#E9EDF0" stroke="#7C8891" stroke-width="1.2"/>
+<path d="M162 168 L178 168" stroke="#7C8891" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+<rect x="173" y="158" width="3" height="12" fill="#7C8891"/>
+<rect x="20" y="160" width="36" height="26" rx="2" fill="#F4F1E6" stroke="#4A5560" stroke-width="1"/>
+<polygon points="30,173 38,165 46,173" fill="#9A4E35"/>
+<rect x="33" y="173" width="10" height="8" fill="#D9C3A0"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="refbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFE3EE"/><stop offset="1" stop-color="#EEF4F7"/></linearGradient>
+  <linearGradient id="balbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6E9EF"/><stop offset="1" stop-color="#F7F5EC"/></linearGradient>
+  <linearGradient id="billbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9EEDF"/><stop offset="1" stop-color="#F3F8F1"/></linearGradient>
+  <linearGradient id="sopbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6E2CF"/><stop offset="1" stop-color="#FBF3EA"/></linearGradient>
+  <linearGradient id="licbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3DAF0"/><stop offset="1" stop-color="#F5F1FA"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#balbg)"/>
+<rect x="0" y="172" width="200" height="48" fill="#B9B39E"/>
+<rect x="96" y="60" width="8" height="110" fill="#C3CBD1"/>
+<rect x="78" y="166" width="44" height="6" fill="#C3CBD1" rx="2"/>
+<path d="M56 48 L144 72" stroke="#4A5560" stroke-width="4" stroke-linecap="round" fill="none"/>
+<circle cx="100" cy="60" r="5" fill="#E5B92E"/>
+<path d="M56 48 L36 78" stroke="#4A5560" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+<path d="M56 48 L76 78" stroke="#4A5560" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+<rect x="34" y="78" width="44" height="5" fill="#4A5560" rx="2"/>
+<path d="M144 72 L124 102" stroke="#4A5560" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+<path d="M144 72 L164 102" stroke="#4A5560" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+<rect x="122" y="102" width="44" height="5" fill="#4A5560" rx="2"/>
+<circle cx="144" cy="92" r="10" fill="#C9A43A"/>
+<rect x="138" y="80" width="12" height="6" fill="#6B5B3E" rx="1"/>
+<rect x="0" y="206" width="13.8" height="14" fill="#1F5F8F"/>
+<rect x="13.3" y="206" width="13.8" height="14" fill="#4A5560"/>
+<rect x="26.7" y="206" width="13.8" height="14" fill="#6B5B3E"/>
+<rect x="40" y="206" width="13.8" height="14" fill="#7C8C98"/>
+<rect x="53.3" y="206" width="13.8" height="14" fill="#9A4E35"/>
+<rect x="66.7" y="206" width="13.8" height="14" fill="#9A7650"/>
+<rect x="80" y="206" width="13.8" height="14" fill="#B9B39E"/>
+<rect x="93.3" y="206" width="13.8" height="14" fill="#C3CBD1"/>
+<rect x="106.7" y="206" width="13.8" height="14" fill="#C9A43A"/>
+<rect x="120" y="206" width="13.8" height="14" fill="#D6E7F0"/>
+<rect x="133.3" y="206" width="13.8" height="14" fill="#D9822B"/>
+<rect x="146.7" y="206" width="13.8" height="14" fill="#E5B92E"/>
+<rect x="160" y="206" width="13.8" height="14" fill="#E9DDC4"/>
+<rect x="173.3" y="206" width="13.8" height="14" fill="#F4F1E6"/>
+<rect x="186.7" y="206" width="13.8" height="14" fill="url(#balbg)"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

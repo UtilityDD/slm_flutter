@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="refbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFE3EE"/><stop offset="1" stop-color="#EEF4F7"/></linearGradient>
+  <linearGradient id="balbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6E9EF"/><stop offset="1" stop-color="#F7F5EC"/></linearGradient>
+  <linearGradient id="billbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9EEDF"/><stop offset="1" stop-color="#F3F8F1"/></linearGradient>
+  <linearGradient id="sopbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6E2CF"/><stop offset="1" stop-color="#FBF3EA"/></linearGradient>
+  <linearGradient id="licbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3DAF0"/><stop offset="1" stop-color="#F5F1FA"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#billbg)"/>
+<rect x="0" y="172" width="200" height="48" fill="#B9B39E"/>
+<rect x="53.1" y="142.1" width="5.8" height="29.9" fill="#2A3442" rx="1.5"/>
+<rect x="61.1" y="142.1" width="5.8" height="29.9" fill="#2A3442" rx="1.5"/>
+<rect x="49.6" y="114.5" width="20.7" height="31" fill="#1F5F8F" rx="4.6"/>
+<circle cx="60" cy="105.3" r="8" fill="#A86E48"/>
+<path d="M52 105.3 A8 8 0 0 1 68 105.3 Z" fill="#2A1E16"/>
+<path d="M49.6 119.1 L38.2 103" stroke="#1F5F8F" stroke-width="5.8" stroke-linecap="round" fill="none"/>
+<path d="M70.3 119.1 L81.8 103" stroke="#1F5F8F" stroke-width="5.8" stroke-linecap="round" fill="none"/>
+<rect x="135.1" y="142.1" width="5.8" height="29.9" fill="#2A3442" rx="1.5"/>
+<rect x="143.2" y="142.1" width="5.8" height="29.9" fill="#2A3442" rx="1.5"/>
+<rect x="131.7" y="114.5" width="20.7" height="31" fill="#B5651F" rx="4.6"/>
+<circle cx="142" cy="105.3" r="8" fill="#D9A27A"/>
+<path d="M133.9 105.3 A8 8 0 0 1 150.1 105.3 Z" fill="#2A1E16"/>
+<path d="M131.7 119.1 L120.2 103" stroke="#B5651F" stroke-width="5.8" stroke-linecap="round" fill="none"/>
+<path d="M152.3 119.1 L163.8 103" stroke="#B5651F" stroke-width="5.8" stroke-linecap="round" fill="none"/>
+<circle cx="65" cy="110.3" r="2.2" fill="#C8352B"/>
+<circle cx="137" cy="110.3" r="2.2" fill="#C8352B"/>
+<polygon points="86,118 98,104 106,116 116,102 126,120 112,130 96,126" fill="#F4F1E6" stroke="#4A5560" stroke-width="1" stroke-linejoin="round"/>
+<rect x="0" y="206" width="13" height="14" fill="#1F5F8F"/>
+<rect x="12.5" y="206" width="13" height="14" fill="#2A1E16"/>
+<rect x="25" y="206" width="13" height="14" fill="#2A3442"/>
+<rect x="37.5" y="206" width="13" height="14" fill="#4A5560"/>
+<rect x="50" y="206" width="13" height="14" fill="#6B5B3E"/>
+<rect x="62.5" y="206" width="13" height="14" fill="#9A7650"/>
+<rect x="75" y="206" width="13" height="14" fill="#A86E48"/>
+<rect x="87.5" y="206" width="13" height="14" fill="#B5651F"/>
+<rect x="100" y="206" width="13" height="14" fill="#B9B39E"/>
+<rect x="112.5" y="206" width="13" height="14" fill="#C8352B"/>
+<rect x="125" y="206" width="13" height="14" fill="#D6E7F0"/>
+<rect x="137.5" y="206" width="13" height="14" fill="#D9822B"/>
+<rect x="150" y="206" width="13" height="14" fill="#D9A27A"/>
+<rect x="162.5" y="206" width="13" height="14" fill="#E5B92E"/>
+<rect x="175" y="206" width="13" height="14" fill="#F4F1E6"/>
+<rect x="187.5" y="206" width="13" height="14" fill="url(#billbg)"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9E3D6"/><stop offset="1" stop-color="#CFC6B3"/></linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1ECE0"/><stop offset="1" stop-color="#DCD5C4"/></linearGradient>
+  <linearGradient id="street" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6E7F0"/><stop offset="1" stop-color="#B9C7B0"/></linearGradient>
+  <linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D8E2"/><stop offset="0.6" stop-color="#B7CC8E"/><stop offset="1" stop-color="#8FB06A"/></linearGradient>
+  <linearGradient id="office" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4E8EA"/><stop offset="1" stop-color="#BFC6CC"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#street)"/>
+<rect x="0" y="190" width="200" height="30" fill="#A7B99A"/>
+<rect x="14" y="126" width="96" height="64" fill="#E9EDF0" stroke="#4A5560" stroke-width="1"/>
+<rect x="14" y="126" width="16" height="12" fill="#C8352B"/>
+<rect x="30" y="126" width="16" height="12" fill="#FAF8F2"/>
+<rect x="46" y="126" width="16" height="12" fill="#C8352B"/>
+<rect x="62" y="126" width="16" height="12" fill="#FAF8F2"/>
+<rect x="78" y="126" width="16" height="12" fill="#C8352B"/>
+<rect x="94" y="126" width="16" height="12" fill="#FAF8F2"/>
+<rect x="22" y="144" width="80" height="22" fill="#8FD0EE"/>
+<rect x="55" y="164" width="14" height="26" fill="#6B5B3E"/>
+<rect x="118" y="138" width="26" height="52" rx="2" fill="#E9EDF0" stroke="#7C8891" stroke-width="1.2"/>
+<path d="M120 161.4 L142 161.4" stroke="#7C8891" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+<rect x="137" y="146" width="3" height="12" fill="#7C8891"/>
+<g transform="translate(150 186) scale(1.3)">
+<rect x="0" y="-26" width="36" height="26" rx="2" fill="#F4F1E6" stroke="#4A5560" stroke-width="1"/>
+<rect x="9" y="-20" width="4.5" height="6" fill="#C8352B"/>
+<rect x="13.5" y="-20" width="4.5" height="6" fill="#FAF8F2"/>
+<rect x="18" y="-20" width="4.5" height="6" fill="#C8352B"/>
+<rect x="22.5" y="-20" width="4.5" height="6" fill="#FAF8F2"/>
+<rect x="10" y="-14" width="16" height="9" fill="#E9EDF0" stroke="#4A5560" stroke-width="0.8"/>
+</g>
+<rect x="0" y="190" width="200" height="4" fill="#7C8891"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

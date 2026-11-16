@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e3a4c"/><stop offset="1" stop-color="#4a5566"/></linearGradient>
+<linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b4426"/><stop offset="1" stop-color="#4c2e18"/></linearGradient>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fa8dc"/><stop offset="1" stop-color="#dce8ef"/></linearGradient>
+<linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8c9a5b"/><stop offset="1" stop-color="#6a7444"/></linearGradient>
+<linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9a9c98"/><stop offset="0.5" stop-color="#c9cac4"/><stop offset="1" stop-color="#8c8e8a"/></linearGradient>
+<linearGradient id="page" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f3eedf"/><stop offset="1" stop-color="#e9e1cb"/></linearGradient>
+<linearGradient id="stamp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2e4a"/><stop offset="1" stop-color="#0b1324"/></linearGradient>
+<radialGradient id="pin" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#ff8a7a"/><stop offset="1" stop-color="#b8261b"/></radialGradient>
+</defs>
+<rect width="320" height="200" fill="url(#wall)"/>
+<rect y="120" width="320" height="80" fill="url(#wood)"/>
+<g transform="translate(110,30)">
+<path d="M10 150 Q10 92 50 86 Q90 92 90 150 Z" fill="#b8682c"/>
+<circle cx="50" cy="62" r="24" fill="#8a5a3c"/>
+<path d="M26 58 A24 24 0 0 1 74 58 Z" fill="#1e1a18"/>
+<path d="M14 104 L-8 84 L-14 70" fill="none" stroke="#8a5a3c" stroke-width="9" stroke-linecap="round"/>
+<path d="M86 104 L108 84 L114 70" fill="none" stroke="#8a5a3c" stroke-width="9" stroke-linecap="round"/>
+<path d="M40 74 Q50 70 60 74" fill="none" stroke="#3a2010" stroke-width="2.4" stroke-linecap="round"/>
+</g>
+<g transform="translate(22,128)"><rect width="74" height="50" fill="#f7f1e1"/><rect width="74" height="11" fill="#c9483b"/><text x="37" y="38" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="15" fill="#14284a">PTW</text></g>
+<g transform="translate(250,40)"><g stroke="#e5483c" stroke-width="9" stroke-linecap="round"><line x1="0" y1="0" x2="34" y2="34"/><line x1="34" y1="0" x2="0" y2="34"/></g></g>
+</svg>

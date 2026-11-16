@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="street" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FBCE0"/><stop offset="0.74" stop-color="#E2EAEE"/><stop offset="0.74" stop-color="#6E747A"/><stop offset="1" stop-color="#5A6066"/></linearGradient>
+  <linearGradient id="town" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9CC3E0"/><stop offset="0.8" stop-color="#E4E8E0"/><stop offset="0.8" stop-color="#BDB7A2"/><stop offset="1" stop-color="#A9A28C"/></linearGradient>
+  <linearGradient id="house" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E4C9A2"/><stop offset="1" stop-color="#C8A87E"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E979E"/><stop offset="0.5" stop-color="#C6CED4"/><stop offset="1" stop-color="#7C858C"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="lcd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9E2B8"/><stop offset="1" stop-color="#A9C997"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#town)"/>
+<!--prop:house--><rect x="8" y="140.4" width="150" height="57.6" fill="url(#house)"/><rect x="6" y="137.4" width="154" height="4" fill="#6B4A2E"/><path d="M8 169.2 h150" stroke="#6B4A2E" stroke-width="1.4"/><rect x="18" y="150.4" width="14" height="14" fill="#BFD9E8" stroke="#6B4A2E" stroke-width="1.2"/><rect x="18" y="177.2" width="14" height="14" fill="#BFD9E8" stroke="#6B4A2E" stroke-width="1.2"/>
+<rect x="60" y="99" width="80" height="41.4" fill="#B4583A" stroke="#8F4229" stroke-width="0.8"/>
+<path d="M60 105 h80" stroke="#8F4229" stroke-width="0.6"/>
+<path d="M60 111 h80" stroke="#8F4229" stroke-width="0.6"/>
+<path d="M60 117 h80" stroke="#8F4229" stroke-width="0.6"/>
+<path d="M60 123 h80" stroke="#8F4229" stroke-width="0.6"/>
+<path d="M60 129 h80" stroke="#8F4229" stroke-width="0.6"/>
+<path d="M60 135 h80" stroke="#8F4229" stroke-width="0.6"/>
+<!--prop:bricks--><rect x="30" y="134.4" width="10" height="5" fill="#B4583A" stroke="#8F4229" stroke-width="0.6"/><rect x="41" y="134.4" width="10" height="5" fill="#B4583A" stroke="#8F4229" stroke-width="0.6"/><rect x="52" y="134.4" width="10" height="5" fill="#B4583A" stroke="#8F4229" stroke-width="0.6"/><rect x="63" y="134.4" width="10" height="5" fill="#B4583A" stroke="#8F4229" stroke-width="0.6"/><rect x="35" y="128.4" width="10" height="5" fill="#B4583A" stroke="#8F4229" stroke-width="0.6"/><rect x="46" y="128.4" width="10" height="5" fill="#B4583A" stroke="#8F4229" stroke-width="0.6"/><rect x="57" y="128.4" width="10" height="5" fill="#B4583A" stroke="#8F4229" stroke-width="0.6"/><rect x="68" y="128.4" width="10" height="5" fill="#B4583A" stroke="#8F4229" stroke-width="0.6"/>
+<!--prop:mason--><g transform="translate(48 140.4) scale(0.7) translate(-48 -140.4)"><path d="M48 110.4 L49.4 126.1 L41 139.4" stroke="#222B37" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="37" y="135.4" width="11" height="5" rx="2" fill="#1C1F24"/><path d="M48 110.4 L55.9 123.9 L54 139.4" stroke="#2A3442" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="50" y="135.4" width="11" height="5" rx="2" fill="#1C1F24"/><path d="M47 87.4 L46.3 100.4 L36.6 109" stroke="#6E714F" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="36.6" cy="109" r="3" fill="#A86E48"/><path d="M40.5 110.1 L41.5 83.1 Q49 80.4 56.5 83.7 L55.5 110.7 Z" fill="#8C8F6A"/><path d="M40.5 107.1 L55.5 107.7" stroke="#222B37" stroke-width="2.4"/><g transform="rotate(-10 51 81.4)"><rect x="48" y="80.4" width="6" height="6" rx="2" fill="#8C5A3A"/><circle cx="51" cy="76.4" r="7" fill="#A86E48"/><path d="M44 77.4 Q44 82.4 48 83.4 L48 77.4 Z" fill="#2A1E16"/><circle cx="55" cy="77.4" r="1.1" fill="#2A1E16"/><path d="M44 75.4 A7 7 0 0 1 58 75.4 Z" fill="#2A1E16"/></g><path d="M50 87.4 L57.7 92.2 L65.1 87" stroke="#8C8F6A" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="65.1" cy="87" r="3" fill="#A86E48"/></g>
+<rect x="182.5" y="51.8" width="7" height="146.2" fill="url(#pole)"/>
+<rect x="174" y="61.8" width="24" height="3.4" fill="#4A5560"/>
+<path d="M-20 63.8 Q83 83.8 186 63.8" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<path d="M-20 57.8 Q83 77.8 186 57.8" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<path d="M-20 51.8 Q83 71.8 186 51.8" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<!--plate:11kV--><rect x="148.2" y="86.8" width="27.5" height="14" rx="2.5" fill="#F4F1E6" stroke="#4A5560" stroke-width="0.8"/><path d="M153.8 90.6 L153.8 93.4 M153.8 94.2 L153.8 97 M158.2 90.6 L158.2 93.4 M158.2 94.2 L158.2 97 M160.9 89.8 L160.9 97.8 M164.9 93 L161.3 95.8 M162.5 95 L165.3 97.8 M166.8 89.8 L169.2 97.8 M169.2 97.8 L171.6 89.8" stroke="#4A5560" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M118 99 L118 73.8" stroke="#C8352B" stroke-width="1.2" stroke-dasharray="3 2"/><path d="M114 78.8 L118 73.8 L122 78.8" stroke="#C8352B" stroke-width="1.4" fill="none"/><path d="M114 94 L118 99 L122 94" stroke="#C8352B" stroke-width="1.4" fill="none"/><!--dim:1.4--><rect x="78.5" y="78.4" width="31" height="16" rx="2.5" fill="#F4F1E6" stroke="#4A5560" stroke-width="0.8"/><path d="M84.5 82.4 L84.5 85.9 M84.5 86.9 L84.5 90.4 M88.5 91.4 l0.01 0 M91.1 82.4 L91.1 85.9 M92.1 86.4 L96.1 86.4 M97.1 82.4 L97.1 85.9 M97.1 86.9 L97.1 90.4 M98.9 91.4 L98.9 85.9 M98.9 86.9 L100.5 85.4 M100.5 85.4 L101.9 86.6 M101.9 86.6 L101.9 91.4 M101.9 86.6 L103.3 85.4 M103.3 85.4 L104.9 86.9 M104.9 86.9 L104.9 91.4" stroke="#4A5560" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<!--gap:16.4-->
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

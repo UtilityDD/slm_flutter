@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="refbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFE3EE"/><stop offset="1" stop-color="#EEF4F7"/></linearGradient>
+  <linearGradient id="balbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6E9EF"/><stop offset="1" stop-color="#F7F5EC"/></linearGradient>
+  <linearGradient id="billbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9EEDF"/><stop offset="1" stop-color="#F3F8F1"/></linearGradient>
+  <linearGradient id="sopbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6E2CF"/><stop offset="1" stop-color="#FBF3EA"/></linearGradient>
+  <linearGradient id="licbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3DAF0"/><stop offset="1" stop-color="#F5F1FA"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#sopbg)"/>
+<rect x="0" y="16" width="110" height="156" fill="#D6E7F0"/>
+<rect x="92" y="74" width="24" height="98" fill="#6B5B3E"/>
+<circle cx="56" cy="46" r="13" fill="#F4F1E6" stroke="#4A5560" stroke-width="1.5"/>
+<path d="M56 46 L56 38" stroke="#4A5560" stroke-width="2" stroke-linecap="round" fill="none"/>
+<path d="M56 46 L63 48" stroke="#4A5560" stroke-width="2" stroke-linecap="round" fill="none"/>
+<rect x="128" y="128" width="58" height="34" fill="#174A70" rx="3"/>
+<rect x="182" y="142" width="14" height="20" fill="#1F5F8F" rx="2"/>
+<rect x="122" y="132" width="6" height="30" fill="#1F5F8F"/>
+<circle cx="144" cy="172" r="6" fill="#4A5560"/>
+<circle cx="182" cy="172" r="6" fill="#4A5560"/>
+<rect x="0" y="172" width="200" height="48" fill="#B9B39E"/>
+<rect x="104" y="106" width="14" height="10" fill="#F4F1E6" stroke="#4A5560" stroke-width="0.8"/>
+<rect x="104.8" y="140.8" width="6" height="31.2" fill="#2A3442" rx="1.5"/>
+<rect x="113.2" y="140.8" width="6" height="31.2" fill="#2A3442" rx="1.5"/>
+<rect x="101.2" y="112" width="21.6" height="32.4" fill="#1F5F8F" rx="4.8"/>
+<circle cx="112" cy="102.4" r="8.4" fill="#A86E48"/>
+<path d="M103.6 102.4 A8.4 8.4 0 0 1 120.4 102.4 Z" fill="#2A1E16"/>
+<path d="M101.2 116.8 L110.8 134.8" stroke="#1F5F8F" stroke-width="6" stroke-linecap="round" fill="none"/>
+<path d="M122.8 116.8 L113.2 134.8" stroke="#1F5F8F" stroke-width="6" stroke-linecap="round" fill="none"/>
+<rect x="0" y="206" width="9.2" height="14" fill="#174A70"/>
+<rect x="8.7" y="206" width="9.2" height="14" fill="#1B232C"/>
+<rect x="17.4" y="206" width="9.2" height="14" fill="#1F5F8F"/>
+<rect x="26.1" y="206" width="9.2" height="14" fill="#2A1E16"/>
+<rect x="34.8" y="206" width="9.2" height="14" fill="#2A3442"/>
+<rect x="43.5" y="206" width="9.2" height="14" fill="#2E3A46"/>
+<rect x="52.2" y="206" width="9.2" height="14" fill="#3E9B4F"/>
+<rect x="60.9" y="206" width="9.2" height="14" fill="#4A5560"/>
+<rect x="69.6" y="206" width="9.2" height="14" fill="#6B5B3E"/>
+<rect x="78.3" y="206" width="9.2" height="14" fill="#7C8C98"/>
+<rect x="87" y="206" width="9.2" height="14" fill="#9A7650"/>
+<rect x="95.7" y="206" width="9.2" height="14" fill="#A86E48"/>
+<rect x="104.3" y="206" width="9.2" height="14" fill="#B9A07A"/>
+<rect x="113" y="206" width="9.2" height="14" fill="#B9B39E"/>
+<rect x="121.7" y="206" width="9.2" height="14" fill="#C3CBD1"/>
+<rect x="130.4" y="206" width="9.2" height="14" fill="#C8352B"/>
+<rect x="139.1" y="206" width="9.2" height="14" fill="#C98A4B"/>
+<rect x="147.8" y="206" width="9.2" height="14" fill="#D6E7F0"/>
+<rect x="156.5" y="206" width="9.2" height="14" fill="#D9822B"/>
+<rect x="165.2" y="206" width="9.2" height="14" fill="#D9A27A"/>
+<rect x="173.9" y="206" width="9.2" height="14" fill="#D9DDE0"/>
+<rect x="182.6" y="206" width="9.2" height="14" fill="#F4F1E6"/>
+<rect x="191.3" y="206" width="9.2" height="14" fill="url(#sopbg)"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

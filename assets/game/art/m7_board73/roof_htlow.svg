@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="street" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FBCE0"/><stop offset="0.74" stop-color="#E2EAEE"/><stop offset="0.74" stop-color="#6E747A"/><stop offset="1" stop-color="#5A6066"/></linearGradient>
+  <linearGradient id="town" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9CC3E0"/><stop offset="0.8" stop-color="#E4E8E0"/><stop offset="0.8" stop-color="#BDB7A2"/><stop offset="1" stop-color="#A9A28C"/></linearGradient>
+  <linearGradient id="house" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E4C9A2"/><stop offset="1" stop-color="#C8A87E"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E979E"/><stop offset="0.5" stop-color="#C6CED4"/><stop offset="1" stop-color="#7C858C"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="lcd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9E2B8"/><stop offset="1" stop-color="#A9C997"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#town)"/>
+<!--prop:house--><rect x="8" y="140.4" width="150" height="57.6" fill="url(#house)"/><rect x="6" y="137.4" width="154" height="4" fill="#6B4A2E"/><path d="M8 169.2 h150" stroke="#6B4A2E" stroke-width="1.4"/><rect x="18" y="150.4" width="14" height="14" fill="#BFD9E8" stroke="#6B4A2E" stroke-width="1.2"/><rect x="18" y="177.2" width="14" height="14" fill="#BFD9E8" stroke="#6B4A2E" stroke-width="1.2"/>
+<rect x="182.5" y="73.4" width="7" height="124.6" fill="url(#pole)"/>
+<rect x="174" y="83.4" width="24" height="3.4" fill="#4A5560"/>
+<path d="M-20 85.4 Q83 105.4 186 85.4" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<path d="M-20 79.4 Q83 99.4 186 79.4" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<path d="M-20 73.4 Q83 93.4 186 73.4" stroke="#2B3138" stroke-width="1.6" fill="none"/>
+<!--plate:11kV--><rect x="148.2" y="108.4" width="27.5" height="14" rx="2.5" fill="#F4F1E6" stroke="#4A5560" stroke-width="0.8"/><path d="M153.8 112.2 L153.8 115 M153.8 115.8 L153.8 118.6 M158.2 112.2 L158.2 115 M158.2 115.8 L158.2 118.6 M160.9 111.4 L160.9 119.4 M164.9 114.6 L161.3 117.4 M162.5 116.6 L165.3 119.4 M166.8 111.4 L169.2 119.4 M169.2 119.4 L171.6 111.4" stroke="#4A5560" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M118 140.4 L118 95.4" stroke="#C8352B" stroke-width="1.2" stroke-dasharray="3 2"/><path d="M114 100.4 L118 95.4 L122 100.4" stroke="#C8352B" stroke-width="1.4" fill="none"/><path d="M114 135.4 L118 140.4 L122 135.4" stroke="#C8352B" stroke-width="1.4" fill="none"/><!--dim:2.5--><rect x="77.3" y="109.9" width="33.4" height="16" rx="2.5" fill="#F4F1E6" stroke="#4A5560" stroke-width="0.8"/><path d="M82.3 112.9 L86.3 112.9 M87.3 113.9 L87.3 117.4 M82.3 117.9 L86.3 117.9 M81.3 118.4 L81.3 121.9 M82.3 122.9 L86.3 122.9 M89.7 122.9 l0.01 0 M93.3 112.9 L97.3 112.9 M92.3 113.9 L92.3 117.4 M93.3 117.9 L97.3 117.9 M98.3 118.4 L98.3 121.9 M93.3 122.9 L97.3 122.9 M100.1 122.9 L100.1 117.4 M100.1 118.4 L101.7 116.9 M101.7 116.9 L103.1 118.1 M103.1 118.1 L103.1 122.9 M103.1 118.1 L104.5 116.9 M104.5 116.9 L106.1 118.4 M106.1 118.4 L106.1 122.9" stroke="#4A5560" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

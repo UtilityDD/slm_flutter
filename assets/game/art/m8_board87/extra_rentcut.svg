@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9E3D6"/><stop offset="1" stop-color="#CFC6B3"/></linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1ECE0"/><stop offset="1" stop-color="#DCD5C4"/></linearGradient>
+  <linearGradient id="street" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6E7F0"/><stop offset="1" stop-color="#B9C7B0"/></linearGradient>
+  <linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D8E2"/><stop offset="0.6" stop-color="#B7CC8E"/><stop offset="1" stop-color="#8FB06A"/></linearGradient>
+  <linearGradient id="office" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4E8EA"/><stop offset="1" stop-color="#BFC6CC"/></linearGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#office)"/>
+<rect x="0" y="190" width="200" height="30" fill="#9C9C90"/>
+<rect x="20" y="46" width="66" height="96" rx="2" fill="#F4F1E6" stroke="#4A5560" stroke-width="1"/>
+<path d="M27 56 L79 56" stroke="#4A5560" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+<path d="M27 66 L79 66" stroke="#4A5560" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+<path d="M27 76 L79 76" stroke="#4A5560" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+<rect x="23" y="83" width="60" height="7" rx="1" fill="#E8C830"/>
+<path d="M27 86 L79 86" stroke="#4A5560" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+<path d="M27 96 L79 96" stroke="#4A5560" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+<path d="M20 122 L90 102" stroke="#C8352B" stroke-width="4" stroke-linecap="round" fill="none"/>
+<path d="M137 150 L135 188" stroke="#2A3442" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M143 150 L146 188" stroke="#2A3442" stroke-width="7" stroke-linecap="round" fill="none"/>
+<rect x="129" y="108" width="22" height="48" rx="6" fill="#1F5F8F"/>
+<circle cx="140" cy="88" r="11" fill="#A86E48"/>
+<path d="M129 88 A11 11 0 0 1 151 88 Z" fill="#2A1E16"/>
+<path d="M131 118 L108 112" stroke="#1F5F8F" stroke-width="6" stroke-linecap="round" fill="none"/>
+<circle cx="108" cy="112" r="3.5" fill="#A86E48"/>
+<path d="M92 120 L110 104" stroke="#7C8891" stroke-width="5" stroke-linecap="round" fill="none"/>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<path d="M100 18 h120 v150 l-10 -8 l-10 8 l-10 -8 l-10 8 l-10 -8 l-10 8 l-10 -8 l-10 8 l-10 -8 z" fill="#ffffff" stroke="#8a6a3c" stroke-width="2.5"/>
+<rect x="114" y="34" width="92" height="9" rx="3" fill="#c9d3e2"/>
+<rect x="114" y="56" width="92" height="6" rx="3" fill="#dde3ee"/><rect x="114" y="70" width="60" height="6" rx="3" fill="#dde3ee"/>
+<rect x="114" y="92" width="92" height="6" rx="3" fill="#dde3ee"/><rect x="114" y="106" width="92" height="8" rx="3" fill="none" stroke="#8a6a3c" stroke-dasharray="4 3"/>
+<text x="160" y="146" font-family="sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#8a2a16">Rs</text>
+</svg>

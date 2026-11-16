@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<rect x="90" y="20" width="10" height="150" fill="#6a4a30"/><rect x="60" y="30" width="70" height="8" fill="#4a3622"/>
+<rect x="104" y="64" width="62" height="56" rx="6" fill="#4a4f55"/><rect x="104" y="58" width="62" height="8" fill="#2a2d31"/>
+<circle cx="126" cy="40" r="12" fill="#9a9aa0" opacity="0.7"/><circle cx="136" cy="24" r="16" fill="#9a9aa0" opacity="0.5"/>
+<ellipse cx="136" cy="168" rx="46" ry="8" fill="#1a1208" opacity="0.7"/>
+<rect x="196" y="40" width="96" height="112" rx="10" fill="#e8f4e6" stroke="#2e9e4f" stroke-width="3"/>
+<path d="M214 100 C224 78 240 78 250 100 M214 100 L214 126 M250 100 L250 126" fill="none" stroke="#2e9e4f" stroke-width="5" stroke-linecap="round"/>
+<rect x="206" y="62" width="76" height="22" rx="11" fill="#fff" stroke="#2e9e4f" stroke-width="2"/>
+<text x="244" y="78" font-family="sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#1b2433">JE</text>
+</svg>
