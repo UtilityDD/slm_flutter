@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfeaf2"/><stop offset="1" stop-color="#fdf8ec"/></linearGradient>
+    <linearGradient id="box" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4640"/><stop offset="1" stop-color="#28302c"/></linearGradient>
+    <linearGradient id="cu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b27a"/><stop offset="0.5" stop-color="#c77a3a"/><stop offset="1" stop-color="#8e5226"/></linearGradient>
+    <linearGradient id="grey" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cbd2d8"/><stop offset="1" stop-color="#9ea7af"/></linearGradient>
+    <radialGradient id="zap" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.45" stop-color="#9ccfff"/><stop offset="1" stop-color="#508cff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="hot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.4" stop-color="#ff5a3c"/><stop offset="1" stop-color="#ff2a00" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="url(#bg)" stroke="#c48a2e" stroke-width="3"/>
+  <rect x="4" y="150" width="312" height="46" fill="#9b9488"/>
+  <rect x="70" y="40" width="110" height="116" rx="6" fill="#55705f"/>
+  <rect x="80" y="50" width="90" height="96" fill="url(#box)"/>
+  <rect x="86" y="58" width="78" height="6" rx="2" fill="url(#cu)"/>
+  <rect x="86" y="70" width="78" height="6" rx="2" fill="url(#cu)"/>
+  <rect x="86" y="82" width="78" height="6" rx="2" fill="url(#cu)"/>
+  <path d="M70 44 L36 56 L36 150 L70 154 z" fill="#6f8a78" stroke="#3e5446" stroke-width="2"/>
+  <circle cx="236" cy="96" r="12" fill="#e0a67a"/>
+  <rect x="224" y="108" width="24" height="30" rx="8" fill="#d7332a"/>
+  <line x1="230" y1="138" x2="228" y2="160" stroke="#3b5b8c" stroke-width="6" stroke-linecap="round"/>
+  <line x1="242" y1="138" x2="244" y2="160" stroke="#3b5b8c" stroke-width="6" stroke-linecap="round"/>
+  <line x1="224" y1="116" x2="198" y2="104" stroke="#e0a67a" stroke-width="6" stroke-linecap="round"/>
+  <path d="M268 46 l28 28 M296 46 l-28 28" stroke="#c0392b" stroke-width="6" stroke-linecap="round"/>
+</svg>

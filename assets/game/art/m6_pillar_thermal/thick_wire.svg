@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="cu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0b07a"/><stop offset="1" stop-color="#b0683a"/></linearGradient>
+<linearGradient id="bk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b434b"/><stop offset="1" stop-color="#262c32"/></linearGradient>
+<linearGradient id="fz" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4f1ea"/><stop offset="1" stop-color="#cfc9bc"/></linearGradient>
+<radialGradient id="hot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fffff4"/><stop offset="0.35" stop-color="#ffc93a"/><stop offset="0.7" stop-color="#ee6a1e"/><stop offset="1" stop-color="#b02a74" stop-opacity="0"/></radialGradient>
+<radialGradient id="warm" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#b02a74"/><stop offset="1" stop-color="#4a1a82" stop-opacity="0"/></radialGradient>
+<radialGradient id="arc" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fffae1"/><stop offset="0.5" stop-color="#82a5ff" stop-opacity="0.7"/><stop offset="1" stop-color="#ffc24a" stop-opacity="0"/></radialGradient>
+<linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8b48a"/><stop offset="1" stop-color="#c98d62"/></linearGradient>
+</defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<line x1="160" y1="16" x2="160" y2="184" stroke="#e1d4b8" stroke-width="2" stroke-dasharray="5 4"/>
+<rect x="28" y="50" width="104" height="110" rx="4" fill="url(#bk)"/><rect x="58" y="62" width="44" height="10" fill="url(#cu)"/><rect x="58" y="138" width="44" height="10" fill="url(#cu)"/><path d="M80 72 q-14 34 0 66" stroke="#c77a3a" stroke-width="6" fill="none"/><path d="M40 176 q20 -12 40 0 q20 12 40 0" stroke="#3a2a16" stroke-width="8" fill="none"/><path d="M60 168 c-4 -10 6 -14 2 -24 M84 170 c-4 -10 6 -14 2 -24 M104 168 c-4 -10 6 -14 2 -24" stroke="#ee6a1e" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="188" y="50" width="104" height="110" rx="4" fill="url(#bk)"/><rect x="218" y="62" width="44" height="10" fill="url(#cu)"/><rect x="218" y="138" width="44" height="10" fill="url(#cu)"/><rect x="226" y="72" width="28" height="66" rx="4" fill="url(#fz)"/><rect x="222" y="98" width="36" height="12" fill="#202326"/><text x="240" y="90" font-family="sans-serif" font-size="9" font-weight="bold" text-anchor="middle" fill="#3a2a16">HRC</text>
+<circle cx="28" cy="28" r="13" fill="#e53935"/><path d="M22 22 L34 34 M34 22 L22 34" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+<circle cx="292" cy="28" r="13" fill="#2e9e4f"/><path d="M285 28 L290 33 L299 23" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

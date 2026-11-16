@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="mt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2f2ee"/><stop offset="1" stop-color="#cfd3d4"/></linearGradient>
+<linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2e3be"/><stop offset="1" stop-color="#d9c79e"/></linearGradient>
+<linearGradient id="dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#232a3c"/><stop offset="1" stop-color="#1a2030"/></linearGradient>
+<radialGradient id="led" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ff3b30"/></radialGradient>
+<radialGradient id="bulb" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#fffff0"/><stop offset="1" stop-color="#ffd86a"/></radialGradient>
+<radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff0a8" stop-opacity="0.8"/><stop offset="1" stop-color="#fff0a8" stop-opacity="0"/></radialGradient>
+</defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<circle cx="70" cy="100" r="24" fill="url(#glow)"/>
+<circle cx="70" cy="100" r="11" fill="url(#bulb)" stroke="#b09a50"/>
+<rect x="65" y="81" width="10" height="8" fill="#b0a070"/><path d="M70 81 L70 40" stroke="#1e1e1e" stroke-width="2"/><circle cx="210" cy="100" r="60" fill="#6a4a30"/>
+<circle cx="210" cy="100" r="56" fill="#fffdf4"/>
+<text x="210.0" y="55.0" font-family="sans-serif" font-size="7.0" font-weight="bold" text-anchor="middle" fill="#26303d">12</text>
+<text x="258.0" y="103.0" font-family="sans-serif" font-size="7.0" font-weight="bold" text-anchor="middle" fill="#26303d">3</text>
+<text x="210.0" y="151.0" font-family="sans-serif" font-size="7.0" font-weight="bold" text-anchor="middle" fill="#26303d">6</text>
+<text x="162.0" y="103.0" font-family="sans-serif" font-size="7.0" font-weight="bold" text-anchor="middle" fill="#26303d">9</text>
+<path d="M210 47 A53 53 0 0 1 255.9 126.5" fill="none" stroke="#d7332a" stroke-width="4" stroke-linecap="round"/>
+<line x1="210" y1="100" x2="248.8" y2="122.4" stroke="#2a2018" stroke-width="2.2"/>
+<circle cx="210" cy="100" r="3" fill="#b0322a"/><circle cx="210" cy="100" r="53" fill="none" stroke="#2e9e4f" stroke-width="2" stroke-dasharray="4 4"/>
+</svg>

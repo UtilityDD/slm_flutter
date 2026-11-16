@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfeaf2"/><stop offset="1" stop-color="#fdf8ec"/></linearGradient>
+    <linearGradient id="box" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4640"/><stop offset="1" stop-color="#28302c"/></linearGradient>
+    <linearGradient id="cu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b27a"/><stop offset="0.5" stop-color="#c77a3a"/><stop offset="1" stop-color="#8e5226"/></linearGradient>
+    <linearGradient id="grey" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cbd2d8"/><stop offset="1" stop-color="#9ea7af"/></linearGradient>
+    <radialGradient id="zap" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.45" stop-color="#9ccfff"/><stop offset="1" stop-color="#508cff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="hot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.4" stop-color="#ff5a3c"/><stop offset="1" stop-color="#ff2a00" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="url(#bg)" stroke="#c48a2e" stroke-width="3"/>
+  <rect x="30" y="40" width="120" height="60" rx="6" fill="#1f2327"/>
+  <rect x="72" y="48" width="36" height="44" rx="4" fill="#3a4048"/>
+  <rect x="80" y="101" width="20" height="14" fill="#2a2f35"/>
+  <circle cx="90" cy="108" r="5" fill="#bfc6cc"/>
+  <rect x="85" y="114" width="10" height="40" rx="3" fill="#1e2126"/>
+  <rect x="82" y="120" width="16" height="11" rx="2" fill="#f4f1e8"/>
+  <text x="90" y="129" font-family="sans-serif" font-size="9" font-weight="bold" text-anchor="middle" fill="#15181c">N</text>
+  <circle cx="90" cy="108" r="8" fill="url(#grey)"/>
+  <circle cx="90" cy="108" r="3" fill="#3a4048"/>
+  <path d="M76 56 l28 28 M104 56 l-28 28" stroke="#c0392b" stroke-width="6" stroke-linecap="round"/>
+  <rect x="180" y="96" width="110" height="18" rx="4" fill="#d6b552" stroke="#8a6a1e" stroke-width="2"/>
+  <text x="194" y="110" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#26303d">N</text>
+  <rect x="250" y="98" width="20" height="14" fill="#2a2f35"/>
+  <circle cx="260" cy="105" r="5" fill="#bfc6cc"/>
+  <path d="M150 150 q60 30 104 -30" fill="none" stroke="#2e9e4f" stroke-width="4" stroke-dasharray="7 5"/>
+</svg>

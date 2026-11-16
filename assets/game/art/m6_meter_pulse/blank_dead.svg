@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="mt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2f2ee"/><stop offset="1" stop-color="#cfd3d4"/></linearGradient>
+<linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2e3be"/><stop offset="1" stop-color="#d9c79e"/></linearGradient>
+<linearGradient id="dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#232a3c"/><stop offset="1" stop-color="#1a2030"/></linearGradient>
+<radialGradient id="led" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ff3b30"/></radialGradient>
+<radialGradient id="bulb" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#fffff0"/><stop offset="1" stop-color="#ffd86a"/></radialGradient>
+<radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff0a8" stop-opacity="0.8"/><stop offset="1" stop-color="#fff0a8" stop-opacity="0"/></radialGradient>
+</defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<rect x="43.0" y="38.0" width="96.6" height="128.8" rx="8.0" fill="#000" opacity="0.18"/>
+<rect x="40.0" y="34.0" width="96.6" height="128.8" rx="8.0" fill="url(#mt)" stroke="#8a9096" stroke-width="1.6"/>
+<rect x="49.2" y="45.5" width="78.2" height="25.3" fill="#8e9a88" stroke="#555a5e" stroke-width="2"/>
+<circle cx="60.7" cy="91.5" r="6.9" fill="#3a5f8a"/>
+<text x="115.9" y="81.2" font-family="sans-serif" font-size="5.8" font-weight="bold" text-anchor="middle" fill="#26303d">CAL</text>
+<circle cx="115.9" cy="91.5" r="4.6" fill="#4a1a18"/>
+<text x="109.0" y="105.3" font-family="sans-serif" font-size="5.3" font-weight="bold" text-anchor="middle" fill="#26303d">3200 imp/kWh</text>
+<rect x="40.0" y="132.9" width="96.6" height="29.9" rx="4.6" fill="#bfc4c7" stroke="#7d8388"/>
+<text x="53.8" y="143.2" font-family="sans-serif" font-size="6.3" font-weight="bold" text-anchor="middle" fill="#26303d">IN</text>
+<text x="120.5" y="143.2" font-family="sans-serif" font-size="6.3" font-weight="bold" text-anchor="middle" fill="#26303d">OUT</text>
+<circle cx="88.3" cy="145.5" r="3.4" fill="#8a8f96"/><line x1="58" y1="140" x2="58" y2="150" stroke="#b8b8b8" stroke-width="2.4"/>
+<rect x="53" y="150" width="10" height="36" rx="4" fill="#c0392b"/>
+<circle cx="58" cy="159" r="3" fill="#5a2a20"/><rect x="265" y="30" width="10" height="150" fill="#8a8a84"/><rect x="246" y="34" width="48" height="5" fill="#5a5a55"/><circle cx="260" cy="46" r="4" fill="#3a3a3a"/><path d="M260 46 Q210 64 130 34" fill="none" stroke="#1e1e1e" stroke-width="3"/><rect x="160" y="22" width="136" height="56" rx="10" fill="none" stroke="#2e9e4f" stroke-width="3" stroke-dasharray="6 4"/><circle cx="232" cy="150" r="13" fill="#2e9e4f"/><path d="M226 150 l4 5 l8 -10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+</svg>

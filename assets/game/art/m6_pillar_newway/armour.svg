@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfeaf2"/><stop offset="1" stop-color="#fdf8ec"/></linearGradient>
+    <linearGradient id="box" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4640"/><stop offset="1" stop-color="#28302c"/></linearGradient>
+    <linearGradient id="cu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b27a"/><stop offset="0.5" stop-color="#c77a3a"/><stop offset="1" stop-color="#8e5226"/></linearGradient>
+    <linearGradient id="grey" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cbd2d8"/><stop offset="1" stop-color="#9ea7af"/></linearGradient>
+    <radialGradient id="zap" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.45" stop-color="#9ccfff"/><stop offset="1" stop-color="#508cff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="hot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.4" stop-color="#ff5a3c"/><stop offset="1" stop-color="#ff2a00" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="url(#bg)" stroke="#c48a2e" stroke-width="3"/>
+  <rect x="30" y="50" width="110" height="18" rx="4" fill="#d6b552" stroke="#8a6a1e" stroke-width="2"/>
+  <text x="44" y="64" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#26303d">N</text>
+  <rect x="100" y="52" width="20" height="14" fill="#2a2f35"/>
+  <circle cx="110" cy="59" r="5" fill="#bfc6cc"/>
+  <rect x="106" y="65" width="8" height="40" rx="3" fill="#8c939a"/>
+  <line x1="106" y1="69" x2="114" y2="72" stroke="#5e656c" stroke-width="1.2"/>
+  <line x1="106" y1="75" x2="114" y2="78" stroke="#5e656c" stroke-width="1.2"/>
+  <line x1="106" y1="81" x2="114" y2="84" stroke="#5e656c" stroke-width="1.2"/>
+  <line x1="106" y1="87" x2="114" y2="90" stroke="#5e656c" stroke-width="1.2"/>
+  <line x1="106" y1="93" x2="114" y2="96" stroke="#5e656c" stroke-width="1.2"/>
+  <line x1="106" y1="99" x2="114" y2="102" stroke="#5e656c" stroke-width="1.2"/>
+  <circle cx="110" cy="59" r="8" fill="url(#grey)"/>
+  <circle cx="110" cy="59" r="3" fill="#3a4048"/>
+  <path d="M96 98 l28 28 M124 98 l-28 28" stroke="#c0392b" stroke-width="6" stroke-linecap="round"/>
+  <rect x="180" y="46" width="110" height="26" rx="4" fill="#8c939a"/>
+  <path d="M276 50 l0 8 M268 58 l16 0 M271 63 l10 0 M274 68 l4 0" stroke="#26303d" stroke-width="2.4" stroke-linecap="round"/>
+  <rect x="210" y="52" width="20" height="14" fill="#2a2f35"/>
+  <circle cx="220" cy="59" r="5" fill="#bfc6cc"/>
+  <rect x="232" y="134" width="8" height="40" rx="3" fill="#8c939a"/>
+  <line x1="232" y1="138" x2="240" y2="141" stroke="#5e656c" stroke-width="1.2"/>
+  <line x1="232" y1="144" x2="240" y2="147" stroke="#5e656c" stroke-width="1.2"/>
+  <line x1="232" y1="150" x2="240" y2="153" stroke="#5e656c" stroke-width="1.2"/>
+  <line x1="232" y1="156" x2="240" y2="159" stroke="#5e656c" stroke-width="1.2"/>
+  <line x1="232" y1="162" x2="240" y2="165" stroke="#5e656c" stroke-width="1.2"/>
+  <line x1="232" y1="168" x2="240" y2="171" stroke="#5e656c" stroke-width="1.2"/>
+  <circle cx="236" cy="128" r="8" fill="url(#grey)"/>
+  <circle cx="236" cy="128" r="3" fill="#3a4048"/>
+  <path d="M236 120 q0 -30 -14 -50" fill="none" stroke="#2e9e4f" stroke-width="4" stroke-dasharray="7 5"/>
+</svg>

@@ -2777,7 +2777,7 @@
       "lessonId": "6.6",
       "moduleId": "m6",
       "packId": "learn_6_6",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 15
     },
     {
@@ -2786,7 +2786,7 @@
       "lessonId": "6.6",
       "moduleId": "m6",
       "packId": "do_6_6_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 16
     },
     {
@@ -2795,7 +2795,7 @@
       "lessonId": "6.6",
       "moduleId": "m6",
       "packId": "do_6_6_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 17
     },
     {
@@ -2804,7 +2804,7 @@
       "lessonId": "6.7",
       "moduleId": "m6",
       "packId": "learn_6_7",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 18
     },
     {
@@ -2813,7 +2813,7 @@
       "lessonId": "6.7",
       "moduleId": "m6",
       "packId": "do_6_7_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 19
     },
     {
@@ -2822,7 +2822,7 @@
       "lessonId": "6.7",
       "moduleId": "m6",
       "packId": "do_6_7_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 20
     },
     {
@@ -2831,7 +2831,7 @@
       "lessonId": "6.8",
       "moduleId": "m6",
       "packId": "learn_6_8",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 21
     },
     {
@@ -2840,7 +2840,7 @@
       "lessonId": "6.8",
       "moduleId": "m6",
       "packId": "do_6_8_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 22
     },
     {
@@ -2849,7 +2849,7 @@
       "lessonId": "6.8",
       "moduleId": "m6",
       "packId": "do_6_8_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 23
     },
     {
@@ -2858,7 +2858,7 @@
       "lessonId": "6.9",
       "moduleId": "m6",
       "packId": "learn_6_9",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 24
     },
     {
@@ -2867,7 +2867,7 @@
       "lessonId": "6.9",
       "moduleId": "m6",
       "packId": "do_6_9_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 25
     },
     {
@@ -2876,7 +2876,7 @@
       "lessonId": "6.9",
       "moduleId": "m6",
       "packId": "do_6_9_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 26
     },
     {
@@ -2885,7 +2885,7 @@
       "lessonId": "6.10",
       "moduleId": "m6",
       "packId": "learn_6_10",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 27
     },
     {
@@ -2894,7 +2894,7 @@
       "lessonId": "6.10",
       "moduleId": "m6",
       "packId": "do_6_10_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 28
     },
     {
@@ -2903,7 +2903,7 @@
       "lessonId": "6.10",
       "moduleId": "m6",
       "packId": "do_6_10_b",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 29
     },
     {
@@ -2912,7 +2912,7 @@
       "lessonId": "6.11",
       "moduleId": "m6",
       "packId": "learn_6_11",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 30
     },
     {
@@ -2921,7 +2921,7 @@
       "lessonId": "6.11",
       "moduleId": "m6",
       "packId": "do_6_11_a",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 31
     },
     {
@@ -2930,7 +2930,7 @@
       "lessonId": "6.11",
       "moduleId": "m6",
       "packId": "gate_m6",
-      "status": "comingSoon",
+      "status": "playable",
       "orderInModule": 32
     },
     {
@@ -5836,160 +5836,197 @@
       "id": "learn_6_6",
       "engineType": "learn_cards",
       "lessonId": "6.6",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_6_a",
-      "engineType": "placeholder",
+      "engineType": "m6_abc_clamp_seat",
       "lessonId": "6.6",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.6/m6_abc_clamp_seat/bare-hands"
+      ]
     },
     {
       "id": "do_6_6_b",
-      "engineType": "placeholder",
+      "engineType": "m6_abc_nick_seal",
       "lessonId": "6.6",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
+      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.6/m6_abc_nick_seal/bare-hands"
+      ]
     },
     {
       "id": "learn_6_7",
       "engineType": "learn_cards",
       "lessonId": "6.7",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_7_a",
-      "engineType": "placeholder",
+      "engineType": "m6_capbank_wait",
       "lessonId": "6.7",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.7/m6_capbank_wait/hand-before-rod",
+        "6.7/m6_capbank_wait/hook-before-clamp",
+        "6.7/m6_capbank_wait/handover-charged",
+        "6.7/m6_capbank_wait/push-line-earthed",
+        "6.7/m6_capbank_wait/push-small"
+      ]
     },
     {
       "id": "do_6_7_b",
-      "engineType": "placeholder",
+      "engineType": "m6_capbank_meter",
       "lessonId": "6.7",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
+      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.7/m6_capbank_meter/touch-can"
+      ]
     },
     {
       "id": "learn_6_8",
       "engineType": "learn_cards",
       "lessonId": "6.8",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_8_a",
-      "engineType": "placeholder",
+      "engineType": "m6_reclose_count",
       "lessonId": "6.8",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.8/m6_reclose_count/climb-mid-cycle"
+      ]
     },
     {
       "id": "do_6_8_b",
-      "engineType": "placeholder",
+      "engineType": "m6_upstream_trace",
       "lessonId": "6.8",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
+      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.8/m6_upstream_trace/climb-no-nonreclose",
+        "6.8/m6_upstream_trace/climb-wrong-recloser",
+        "6.8/m6_upstream_trace/climb-no-ptw"
+      ]
     },
     {
       "id": "learn_6_9",
       "engineType": "learn_cards",
       "lessonId": "6.9",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_9_a",
-      "engineType": "placeholder",
+      "engineType": "m6_pillar_thermal",
       "lessonId": "6.9",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.9/m6_pillar_thermal/water",
+        "6.9/m6_pillar_thermal/bare-hand",
+        "6.9/m6_pillar_thermal/insulated-live",
+        "6.9/m6_pillar_thermal/thick-wire"
+      ]
     },
     {
       "id": "do_6_9_b",
-      "engineType": "placeholder",
+      "engineType": "m6_pillar_newway",
       "lessonId": "6.9",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
+      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.9/m6_pillar_newway/live-hands",
+        "6.9/m6_pillar_newway/myth-415",
+        "6.9/m6_pillar_newway/sfu-only"
+      ]
     },
     {
       "id": "learn_6_10",
       "engineType": "learn_cards",
       "lessonId": "6.10",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_10_a",
-      "engineType": "placeholder",
+      "engineType": "m6_meter_pulse",
       "lessonId": "6.10",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_10_b",
-      "engineType": "placeholder",
+      "engineType": "m6_meter_swap_proof",
       "lessonId": "6.10",
       "slot": 1,
-      "status": "comingSoon",
+      "status": "playable",
+      "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.10/m6_meter_swap_proof/pull-bypass",
+        "6.10/m6_meter_swap_proof/live-swap"
+      ]
     },
     {
       "id": "learn_6_11",
       "engineType": "learn_cards",
       "lessonId": "6.11",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": []
     },
     {
       "id": "do_6_11_a",
-      "engineType": "placeholder",
+      "engineType": "m6_earth_pit_test",
       "lessonId": "6.11",
       "slot": 0,
-      "status": "comingSoon",
+      "status": "playable",
       "legacyHint": null,
       "assetRefs": {},
-      "deadlyRules": []
+      "deadlyRules": [
+        "6.11/m6_earth_pit_test/broken-signed"
+      ]
     },
     {
       "id": "gate_m6",
-      "engineType": "gate_field",
+      "engineType": "m6_gate_storm_feeder",
       "moduleId": "m6",
-      "status": "comingSoon",
+      "status": "playable",
       "assetRefs": {},
       "deadlyRules": [
         "lethal_any_marked"

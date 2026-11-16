@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfeaf2"/><stop offset="1" stop-color="#fdf8ec"/></linearGradient>
+    <linearGradient id="box" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4640"/><stop offset="1" stop-color="#28302c"/></linearGradient>
+    <linearGradient id="cu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b27a"/><stop offset="0.5" stop-color="#c77a3a"/><stop offset="1" stop-color="#8e5226"/></linearGradient>
+    <linearGradient id="grey" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cbd2d8"/><stop offset="1" stop-color="#9ea7af"/></linearGradient>
+    <radialGradient id="zap" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.45" stop-color="#9ccfff"/><stop offset="1" stop-color="#508cff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="hot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.4" stop-color="#ff5a3c"/><stop offset="1" stop-color="#ff2a00" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="4" y="4" width="312" height="192" rx="12" fill="url(#bg)" stroke="#c48a2e" stroke-width="3"/>
+  <rect x="60" y="60" width="200" height="90" rx="6" fill="url(#box)"/>
+  <circle cx="160" cy="104" r="62" fill="url(#hot)"/>
+  <rect x="146" y="98" width="28" height="18" fill="#2a2f35"/>
+  <circle cx="160" cy="104" r="12" fill="url(#grey)"/>
+  <path d="M150 84 l7 -4 h8 l7 4 v8 l-7 4 h-8 l-7 -4 z" fill="#d5dadf"/>
+  <line x1="160" y1="80" x2="160" y2="104" stroke="#59626b" stroke-width="3"/>
+  <rect x="155" y="116" width="10" height="40" rx="3" fill="#1e2126"/>
+  <path d="M118 70 l6 -6 m-2 10 l8 -2" stroke="#ffd34d" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M204 72 l6 -6 m-2 10 l8 -2" stroke="#ffd34d" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M120 134 l6 -6 m-2 10 l8 -2" stroke="#ffd34d" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M206 136 l6 -6 m-2 10 l8 -2" stroke="#ffd34d" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

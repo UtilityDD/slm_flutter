@@ -31,7 +31,10 @@ import 'learn_board_models.dart';
 ///  * patrol: a swollen or leaking unit can burst — cut it off the line at
 ///    once (R11, slip in the Do levels: ruling M6-5); a blown fuse is not
 ///    refitted before the cause is found (R33); internal fuses blow unseen
-///    (pro tip 1). A sound bank is passed (no needless report, R32).
+///    (pro tip 1: the 'outer' trap shows one can cold — no heat shimmer,
+///    frost — yet the outer fuses are taken as proof). A sound bank, every can
+///    warm, is passed (no needless report, R32). The safe 'cause' card looks
+///    for the cause from the ground — no tool near a can (ruling M6-6).
 ///    The spec's fourth trap (an old rusty bank taken as new) left the round:
 ///    a round holds 4-6 cards (rulings, 'Owner answers after Wave A').
 /// The rival's myth is the lesson's first myth, word for word.
@@ -202,7 +205,7 @@ const learnBoardPack67 = LearnBoardPack(
         ),
         LearnBoardOption(
           id: 'early',
-          labelBn: 'সুইচ নামতে না নামতেই রড নিয়ে এগোনো',
+          labelBn: 'সুইচ নামতে না নামতেই রডের হুক টার্মিনালে',
           asset: 'assets/game/art/m6_board67/wait_early.svg',
           scene: true,
           correct: false,
@@ -214,11 +217,13 @@ const learnBoardPack67 = LearnBoardPack(
           asset: 'assets/game/art/m6_board67/wait_norod.svg',
           scene: true,
           correct: false,
-          rejectBn: 'অপেক্ষার পরেও উপযুক্ত ডিসচার্জ রডে টার্মিনাল ডিসচার্জ আর আর্থিং করে নিতে হয় — বাড়তি সুরক্ষা।',
+          // Lesson sentence + DRAFT tail (owner): the rod is the protection, not
+          // an extra (rulings M6-5 / M6-6) — a hand without it is deadly.
+          rejectBn: 'অপেক্ষার পরেও উপযুক্ত ডিসচার্জ রডে টার্মিনাল ডিসচার্জ আর আর্থিং করে নিতে হয় — রড ছাড়া হাত দেওয়া প্রাণঘাতী।',
         ),
         LearnBoardOption(
           id: 'load',
-          labelBn: 'বাতির লাইনের মতো সোজা স্প্যানার লাগানো',
+          labelBn: 'সাধারণ লোড ভেবে সোজা স্প্যানার লাগানো',
           asset: 'assets/game/art/m6_board67/wait_load.svg',
           scene: true,
           correct: false,
@@ -298,7 +303,7 @@ const learnBoardPack67 = LearnBoardPack(
     ),
     LearnBoardSlot(
       id: 'patrol',
-      promptBn: 'লাইন পেট্রোলিং-এ ব্যাংক দেখলেন — কোন ছবিতে ঠিক কাজ হচ্ছে?',
+      promptBn: 'লাইন পেট্রোলিংয়ে ব্যাংক দেখলেন — কোন ছবিতে ঠিক কাজ হচ্ছে?',
       options: [
         LearnBoardOption(
           id: 'sound',
@@ -323,7 +328,7 @@ const learnBoardPack67 = LearnBoardPack(
         ),
         LearnBoardOption(
           id: 'leak',
-          labelBn: 'ফোলা, তেল চোঁয়ানো ক্যান রেখেই চলে যাওয়া',
+          labelBn: 'ফোলা, তেল চুঁইয়ে পড়া ক্যান রেখেই চলে যাওয়া',
           asset: 'assets/game/art/m6_board67/patrol_leak.svg',
           scene: true,
           correct: false,
@@ -340,7 +345,7 @@ const learnBoardPack67 = LearnBoardPack(
         ),
         LearnBoardOption(
           id: 'outer',
-          labelBn: 'বাইরের ফিউজ ঠিক আছে, তাই সব ইউনিট ঠিক',
+          labelBn: 'একটা ক্যান ঠান্ডা, তবু বাইরের ফিউজ দেখে সব ঠিক',
           asset: 'assets/game/art/m6_board67/patrol_outer.svg',
           scene: true,
           correct: false,
@@ -355,7 +360,7 @@ const learnBoardPack67 = LearnBoardPack(
         LearnWhyChip(id: 'w4', textBn: 'ফোলা ক্যানও আরও কিছুদিন দিব্যি চলে যায়', correct: false),
         LearnWhyChip(id: 'w5', textBn: 'ফিউজ উড়লে নতুন ফিউজ দিলেই সমস্যা শেষ', correct: false),
         LearnWhyChip(id: 'w6', textBn: 'বাইরের ফিউজ ঠিক থাকলে সব ইউনিটই ঠিক আছে', correct: false),
-        LearnWhyChip(id: 'w7', textBn: 'তেল চোঁয়ালে একটু মুছে দিলেই কাজ চলে যায়', correct: false),
+        LearnWhyChip(id: 'w7', textBn: 'তেল চুঁইয়ে পড়লে একটু মুছে দিলেই কাজ চলে', correct: false),
         LearnWhyChip(id: 'w8', textBn: 'পেট্রোলিংয়ে ব্যাংকের দিকে তাকানোর দরকার নেই', correct: false),
         LearnWhyChip(id: 'w9', textBn: 'ফোলা ক্যান দেখলে শুধু খাতায় লিখে রাখলেই হয়', correct: false),
       ],

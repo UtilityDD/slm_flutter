@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="can" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d4dae2"/><stop offset="1" stop-color="#8e99a8"/></linearGradient>
+<linearGradient id="pn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cdd3d9"/><stop offset="1" stop-color="#aeb6be"/></linearGradient>
+<radialGradient id="fl" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.5" stop-color="#ffe28a"/><stop offset="1" stop-color="#ffe28a" stop-opacity="0"/></radialGradient>
+</defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<rect x="92" y="76" width="36" height="56" rx="5" fill="#2c3440"/>
+<line x1="110" y1="104" x2="110" y2="121" stroke="#d0d6dc" stroke-width="7" stroke-linecap="round"/>
+<circle cx="110" cy="121" r="8" fill="#e8ecef"/>
+<text x="140" y="86" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#1b2230">ON</text>
+<text x="140" y="128" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#1b2230">OFF</text>
+<circle cx="110" cy="64" r="6" fill="#6a3a38" stroke="#3a4048" stroke-width="2"/>
+<rect x="182" y="76" width="36" height="56" rx="5" fill="#2c3440"/>
+<line x1="200" y1="104" x2="200" y2="87" stroke="#d0d6dc" stroke-width="7" stroke-linecap="round"/>
+<circle cx="200" cy="87" r="8" fill="#e8ecef"/>
+<text x="230" y="86" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#1b2230">ON</text>
+<text x="230" y="128" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#1b2230">OFF</text>
+<circle cx="200" cy="64" r="6" fill="#ff5a4e" stroke="#3a4048" stroke-width="2"/>
+<path d="M130,60 Q155,34 180,60" fill="none" stroke="#8a2a16" stroke-width="3"/>
+<path d="M180,60 l-10,-2 l6,-8 z" fill="#8a2a16"/>
+<path d="M180,150 Q155,176 130,150" fill="none" stroke="#8a2a16" stroke-width="3"/>
+<path d="M130,150 l10,2 l-6,8 z" fill="#8a2a16"/>
+<circle cx="280" cy="50" r="16" fill="#d7332a"/><line x1="272.8" y1="42.8" x2="287.2" y2="57.2" stroke="#fff" stroke-width="4" stroke-linecap="round"/><line x1="287.2" y1="42.8" x2="272.8" y2="57.2" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+</svg>

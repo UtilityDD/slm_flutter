@@ -1,4 +1,5 @@
 import 'learn_board_models.dart';
+import 'm6_earth_pit_test.dart' show kEarthTesterBn;
 
 /// Module 6 Lesson 6.11 (আর্থিং সিস্টেম: অদৃশ্য অভিভাবক), the picture board
 /// (rung `6.11/learn`, pack `learn_6_11`, engineType `learn_cards`).
@@ -81,7 +82,8 @@ const learnBoardPack611 = LearnBoardPack(
           asset: 'assets/game/art/m6_board611/role_unearthed.svg',
           scene: true,
           correct: false,
-          rejectBn: 'এই বডিতে আর্থ নেই — লাইভ তার বডিতে ঠেকলে লো-রেজিস্ট্যান্স পথ পাবে না, ফিউজ বা ব্রেকার ট্রিপ করবে না।',
+          // Deadly class (ruling M6-1): a danger clause (DRAFT).
+          rejectBn: 'এই বডিতে আর্থ নেই — ফল্ট কারেন্ট মাটিতে যাওয়ার লো-রেজিস্ট্যান্স পথ পাবে না, ফিউজ বা ব্রেকার ট্রিপ করবে না। বডিতে কারেন্ট থেকে যায় — ছুঁলেই প্রাণহানি।',
         ),
         LearnBoardOption(
           id: 'cut',
@@ -89,8 +91,9 @@ const learnBoardPack611 = LearnBoardPack(
           asset: 'assets/game/art/m6_board611/role_cut.svg',
           scene: true,
           correct: false,
-          // Lesson 6.11 myth 1's reality.
-          rejectBn: 'লাইন স্বাভাবিক অবস্থায় চলবে, কিন্তু ফল্টের সময় আর্থিং কাজ না করলে সার্কিট ব্রেকার ট্রিপ করবে না।',
+          // Lesson 6.11 myth 1's reality, whole and word for word (deadly class,
+          // ruling M6-1: the lesson's own danger words).
+          rejectBn: 'মারাত্মক ভুল। লাইন স্বাভাবিক অবস্থায় চলবে, কিন্তু ফল্টের সময় আর্থিং কাজ না করলে সার্কিট ব্রেকার ট্রিপ করবে না এবং একটি ছোট সমস্যা একটি বড় বিপর্যয় বা প্রাণহানির কারণ হয়ে দাঁড়াবে।',
         ),
         LearnBoardOption(
           id: 'la',
@@ -98,8 +101,9 @@ const learnBoardPack611 = LearnBoardPack(
           asset: 'assets/game/art/m6_board611/role_la.svg',
           scene: true,
           correct: false,
-          // Lesson 6.11 section 1 'importance'.
-          rejectBn: 'এই LA-র নিচে আর্থ নেই — আর্থিং ছাড়া কোনো সুরক্ষা ডিভাইস (ফিউজ, ব্রেকার, LA) সঠিকভাবে কাজ করতে পারে না।',
+          // Lesson 6.11 section 1 'importance' + a danger clause (deadly class,
+          // ruling M6-1; the clause is DRAFT, from myth 1's reality).
+          rejectBn: 'এই LA-র নিচে আর্থ নেই — আর্থিং ছাড়া কোনো সুরক্ষা ডিভাইস (ফিউজ, ব্রেকার, LA) সঠিকভাবে কাজ করতে পারে না। ছোট ফল্টই বড় বিপর্যয় বা প্রাণহানির কারণ হয়।',
         ),
       ],
       whyChips: [
@@ -219,7 +223,8 @@ const learnBoardPack611 = LearnBoardPack(
           scene: true,
           correct: false,
           // Lesson 6.11 section 3.
-          rejectBn: 'এই পাত ছেঁড়া — আর্থিং তার বা পাতটি কোথাও কাটা, ছেঁড়া বা অতিরিক্ত মরিচা ধরা উচিত নয়।',
+          // Deadly class (ruling M6-1): a danger clause (DRAFT).
+          rejectBn: 'এই পাত ছেঁড়া — আর্থিং তার বা পাতটি কোথাও কাটা, ছেঁড়া বা অতিরিক্ত মরিচা ধরা উচিত নয়। ফল্টে পোলে কারেন্ট থেকে যায় — ছুঁলেই প্রাণহানি।',
         ),
       ],
       whyChips: [
@@ -237,7 +242,7 @@ const learnBoardPack611 = LearnBoardPack(
     ),
     LearnBoardSlot(
       id: 'pit',
-      promptBn: 'আর্থ পিটের ভেতরটা দেখছেন — কোন যত্নটা ঠিক?',
+      promptBn: 'আর্থ পিট গড়ছেন ও যত্ন নিচ্ছেন — কোনটা ঠিক?',
       options: [
         LearnBoardOption(
           id: 'salt',
@@ -356,7 +361,7 @@ const learnBoardPack611 = LearnBoardPack(
         LearnWhyChip(id: 'w5', textBn: 'রিডিং যত বেশি, আর্থিং তত মজবুত হয়', correct: false),
         LearnWhyChip(id: 'w6', textBn: 'মাটি যেমনই হোক, একটা ইলেক্ট্রোডই যথেষ্ট', correct: false),
         LearnWhyChip(id: 'w7', textBn: 'পাথুরে মাটিতে আর্থ এমনিতেই ভালো হয়', correct: false),
-        LearnWhyChip(id: 'w8', textBn: 'বেন্টোনাইট দিলে মানে কোনো ফারাক হয় না', correct: false),
+        LearnWhyChip(id: 'w8', textBn: 'বেন্টোনাইট দিলেও রিডিং-এ ফারাক হয় না', correct: false),
         LearnWhyChip(id: 'w9', textBn: '18 ওহম হলেও সই করে দিলে কোনো ক্ষতি নেই', correct: false),
       ],
     ),
@@ -369,8 +374,8 @@ const learnBoardPack611 = LearnBoardPack(
     believeNoIsCorrect: true,
     stingBn: 'এই লোক যা বলছে… বিশ্বাস করেন?',
     dangerHints: [
-      'ফল্টে ট্রিপ হবে না',
-      'বডিতে কারেন্ট থেকে যাবে',
+      'যেকোনো লোহার রডে আর্থ',
+      'রেজিস্ট্যান্স বেশি, আর্থ দুর্বল',
     ],
     whyChips: [
       LearnWhyChip(id: 'm1', textBn: 'উপাদান চাই GI বা কপার, যেকোনো লোহা নয়', correct: true),
@@ -392,8 +397,9 @@ const learnBoardPack611 = LearnBoardPack(
 abstract final class M6Board611Lines {
   /// The earth-resistance instrument's on-screen name, in one place (ruling
   /// M6-13; owner after Wave A: 'আর্থ টেস্টার'). The lesson's own word is
-  /// 'আর্থ মেগার'; switch here if a WBSEDCL lineman says that is the field word.
-  static const earthTester = 'আর্থ টেস্টার';
+  /// 'আর্থ মেগার'. This is NOT a second copy: it reads the Do level's
+  /// [kEarthTesterBn] (do_6_11_a), so switching that one word switches both.
+  static const earthTester = kEarthTesterBn;
 
   /// DRAFT wording — owner.
   static const rivalTaunt = 'এত কয়লা-লবণ, এত মাপজোখ! আমরা তো এমনিই কাজ সারি।';
@@ -406,6 +412,9 @@ abstract final class M6Board611Lines {
 
   /// New rival lines for the voice session.
   static const toRecord = [rivalTaunt, rivalMyth];
+
+  /// The coworker's new spoken lines (ruling M6-12), for the voice pass.
+  static const newRivalLines = toRecord;
 
   /// The guide's new spoken lines on this board (DRAFT wording — owner; each
   /// becomes a recorded clip): the intro, every round's question, every

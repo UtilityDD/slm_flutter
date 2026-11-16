@@ -10,12 +10,17 @@ import 'learn_board_models.dart';
 /// `docs/module_specs/module6_items/board_69.json`, Module 6 rulings
 /// `docs/module_specs/module6_rulings.md`; the live lesson text wins):
 ///  * pillar (recap of spec rounds 0, 1 and 4): each outgoing way through its
-///    own fuse unit, so a fault on one lane darkens only that lane (point 1)
-///    and the door stays shut and locked (pro tip 1); inside, separate R, Y,
-///    B and N bars, every neutral on the common neutral link, the body and
-///    the cable armour on the earthing terminal (point 2). Traps: the whole
-///    neighbourhood dark from one fault, a neutral taken through a fuse unit,
-///    armour hanging loose, the door left open with children near;
+///    own fuse unit, so a fault on one lane darkens only that lane (point 1);
+///    inside, separate R, Y, B and N bars, every neutral on the common
+///    neutral link, the body and the cable armour on the earthing terminal
+///    (point 2) and the cores landed R on R, Y on Y, B on B (pro tip 2) — one
+///    inside picture; the door shut and padlocked (pro tip 1). Traps: the
+///    whole neighbourhood dark from one fault; a neutral taken through a fuse
+///    unit with an armour lead hanging loose (one 'wired wrong' picture); the
+///    door left open with children near. Every M6-8 idea is kept, merged so
+///    the round has 6 picture cards (owner answers after Wave A: 4–6 per
+///    round). Its right reasons are rules for the whole pillar, since any of
+///    the three safe cards can be the pick;
 ///  * thermal (spec round 2): a thermal scan finds the hotspot before the eye
 ///    can (pro tip 3); a blackened joint noted for tightening (point 3).
 ///    Traps: a bare hand feeling a joint (the safety tip: a live panel),
@@ -28,7 +33,9 @@ import 'learn_board_models.dart';
 ///    seal left broken, the nest left by a gnawed cable;
 ///  * dead (new, ruling M6-8: lesson myth 1, the safety tip and the HRC fact):
 ///    the DTR LT switch OFF with lock and tag, the tester live-dead-live at
-///    0 V, an HRC whose quartz sand soaks up and quenches the arc. Traps: a
+///    0 V, an HRC whose quartz sand soaks up and quenches the arc (all three
+///    right reasons are about the fault current and the arc, so each fits
+///    every safe pick; no wrong reason belongs to one card only). Traps: a
 ///    bare hand on a fuse because "it is only 415 V" (the myth's reality), a
 ///    fuse pulled with the supply on (the safety tip's own words), the switch
 ///    OFF but no lock, tag or test (ruling X4 / N4).
@@ -67,8 +74,15 @@ const learnBoardPack69 = LearnBoardPack(
         ),
         LearnBoardOption(
           id: 'inside',
-          labelBn: 'R, Y, B, N বার আলাদা, নিউট্রাল এক লিঙ্কে, আর্মার আর্থে',
+          labelBn: 'R, Y, B কোর মিলিয়ে, নিউট্রাল এক লিঙ্কে, আর্মার আর্থে',
           asset: 'assets/game/art/m6_board69/pillar_inside.svg',
+          scene: true,
+          correct: true,
+        ),
+        LearnBoardOption(
+          id: 'locked',
+          labelBn: 'কাজ শেষে পিলারের দরজা ভালো করে বন্ধ, তালা লাগানো',
+          asset: 'assets/game/art/m6_board69/pillar_locked.svg',
           scene: true,
           correct: true,
         ),
@@ -82,22 +96,13 @@ const learnBoardPack69 = LearnBoardPack(
           rejectBn: 'পিলারে প্রতিটি আউটগোয়িং ফিডার আলাদাভাবে ফিউজ করা থাকে — একটা লাইনে ফল্ট হলে পুরো এলাকা নয়, শুধু সেই লাইনটাই বন্ধ হয়।',
         ),
         LearnBoardOption(
-          id: 'nfuse',
-          labelBn: 'একটা লাইনের নিউট্রাল তার ফিউজ ইউনিট দিয়ে নেওয়া',
-          asset: 'assets/game/art/m6_board69/pillar_nfuse.svg',
+          id: 'wiring',
+          labelBn: 'নিউট্রাল ফিউজ ইউনিটে, আর এক কেবিলের আর্মার ঝুলছে',
+          asset: 'assets/game/art/m6_board69/pillar_wiring.svg',
           scene: true,
           correct: false,
-          // Lesson point 2 (fuse units, neutral link).
-          rejectBn: 'ফিউজ ইউনিট দিয়ে নেওয়া হয় ফেজ কানেকশন — সমস্ত ইনকামিং আর আউটগোয়িং নিউট্রাল যায় কমন নিউট্রাল লিঙ্কে।',
-        ),
-        LearnBoardOption(
-          id: 'armour',
-          labelBn: 'একটা কেবিলের আর্মার ঝুলছে, আর্থ টার্মিনালে নেই',
-          asset: 'assets/game/art/m6_board69/pillar_armour.svg',
-          scene: true,
-          correct: false,
-          // Lesson point 2 (earthing terminal).
-          rejectBn: 'বক্সের ধাতব বডি আর কেবিলের আর্মার আর্থ করার জন্যই আর্থিং টার্মিনাল থাকে — আর্মার ঝুলিয়ে রাখা চলে না।',
+          // Lesson point 2 (fuse units and neutral link; earthing terminal).
+          rejectBn: 'ফিউজ ইউনিট দিয়ে নেওয়া হয় ফেজ কানেকশন, নিউট্রাল যায় কমন নিউট্রাল লিঙ্কে — আর কেবিলের আর্মার যায় আর্থিং টার্মিনালে, ঝুলিয়ে রাখা চলে না।',
         ),
         LearnBoardOption(
           id: 'door',
@@ -110,15 +115,15 @@ const learnBoardPack69 = LearnBoardPack(
         ),
       ],
       whyChips: [
-        LearnWhyChip(id: 'w1', textBn: 'প্রতিটি লাইন নিজের ফিউজে, তাই ফল্ট এক লাইনেই থামে', correct: true),
-        LearnWhyChip(id: 'w2', textBn: 'সাজানো পিলারে ফল্ট খোঁজা আর কাজ সহজ ও নিরাপদ', correct: true),
-        LearnWhyChip(id: 'w3', textBn: 'ফেজ যায় ফিউজে, নিউট্রাল কমন লিঙ্কে, আর্মার আর্থে', correct: true),
+        LearnWhyChip(id: 'w1', textBn: 'সাজানো পিলারে ফল্ট খোঁজা আর কাজ সহজ ও নিরাপদ', correct: true),
+        LearnWhyChip(id: 'w2', textBn: 'ঠিকঠাক পিলার গ্রাহক আর পথচারী দুজনকেই বাঁচায়', correct: true),
+        LearnWhyChip(id: 'w3', textBn: 'নিয়মমতো পিলারে ফল্ট আর বিপদ দুটোই কমে', correct: true),
         LearnWhyChip(id: 'w4', textBn: 'নিউট্রালেও ফিউজ দিলে পিলার আরও নিরাপদ হয়', correct: false),
         LearnWhyChip(id: 'w5', textBn: 'একটা ফিউজে সব লাইন রাখলেই কাজ সবচেয়ে সহজ', correct: false),
         LearnWhyChip(id: 'w6', textBn: 'আর্মার আর্থ না করলেও পিলারের কিছু হয় না', correct: false),
         LearnWhyChip(id: 'w7', textBn: 'কাজ শেষে দরজা খোলা থাকলে ভেতরে হাওয়া খেলে', correct: false),
         LearnWhyChip(id: 'w8', textBn: 'এক লাইনে ফল্ট হলে পুরো পাড়া বন্ধ হওয়াই নিয়ম', correct: false),
-        LearnWhyChip(id: 'w9', textBn: 'বার আলাদা না রাখলেও কারেন্ট ঠিকই চলে যায়', correct: false),
+        LearnWhyChip(id: 'w9', textBn: 'ফেজ উল্টে গেলেও গ্রাহকের যন্ত্রের কিছু হয় না', correct: false),
       ],
     ),
     LearnBoardSlot(
@@ -127,7 +132,7 @@ const learnBoardPack69 = LearnBoardPack(
       options: [
         LearnBoardOption(
           id: 'scan',
-          labelBn: 'পুরো PPE-তে থার্মাল স্ক্যান: ঠিক-দেখা জয়েন্টে হটস্পট',
+          labelBn: 'PPE পরে থার্মাল স্ক্যান: চোখে ঠিক জয়েন্টেও হটস্পট',
           asset: 'assets/game/art/m6_board69/thermal_scan.svg',
           scene: true,
           correct: true,
@@ -208,7 +213,7 @@ const learnBoardPack69 = LearnBoardPack(
         ),
         LearnBoardOption(
           id: 'lug',
-          labelBn: 'LT OFF, তালা-ট্যাগ, টেস্টারে 0 — তারপর লাগ টাইট',
+          labelBn: 'LT OFF, তালা-ট্যাগ, টেস্টারে 0 V, তারপর লাগ টাইট',
           asset: 'assets/game/art/m6_board69/fix_lug.svg',
           scene: true,
           correct: true,
@@ -255,7 +260,7 @@ const learnBoardPack69 = LearnBoardPack(
     ),
     LearnBoardSlot(
       id: 'dead',
-      promptBn: 'পিলারে ফিউজ উড়েছে, বদলাতে হবে — কোন ছবিটা ঠিক?',
+      promptBn: 'পিলারে HRC ফিউজ উড়েছে — কোন ছবিটা ঠিক?',
       options: [
         LearnBoardOption(
           id: 'lock',
@@ -307,14 +312,14 @@ const learnBoardPack69 = LearnBoardPack(
         ),
       ],
       whyChips: [
-        LearnWhyChip(id: 'w1', textBn: 'পিলারের ভেতরটা লাইভ প্যানেলের মতোই বিপজ্জনক', correct: true),
-        LearnWhyChip(id: 'w2', textBn: 'LT-র বিশাল ফল্ট কারেন্টে আর্ক ফ্ল্যাশ হতে পারে', correct: true),
-        LearnWhyChip(id: 'w3', textBn: 'চালু সাপ্লাইয়ে ফিউজ ছোঁবেন না, টানবেনও না', correct: true),
+        LearnWhyChip(id: 'w1', textBn: 'LT-র বিশাল ফল্ট কারেন্টে আর্ক ফ্ল্যাশ হতে পারে', correct: true),
+        LearnWhyChip(id: 'w2', textBn: 'পিলারে আসল বিপদ ফল্ট কারেন্ট আর আর্ক', correct: true),
+        LearnWhyChip(id: 'w3', textBn: 'আর্ক থেকে বাঁচাতেই ডেড বোর্ড আর HRC ফিউজ', correct: true),
         LearnWhyChip(id: 'w4', textBn: 'গ্লাভস পরা থাকলে চালু ফিউজও টেনে খোলা যায়', correct: false),
-        LearnWhyChip(id: 'w5', textBn: 'LT সুইচ OFF করলেই হলো, তালা-ট্যাগ লাগে না', correct: false),
+        LearnWhyChip(id: 'w5', textBn: 'LT-তে ফল্ট কারেন্ট সামান্য, আর্কের ভয় নেই', correct: false),
         LearnWhyChip(id: 'w6', textBn: 'টেস্টার শুধু HT লাইনের জন্য, LT-তে লাগে না', correct: false),
-        LearnWhyChip(id: 'w7', textBn: 'HRC ফিউজ উড়লে বাইরে আগুনের গোলা ছিটকে আসে', correct: false),
-        LearnWhyChip(id: 'w8', textBn: 'বালু শুধু ফিউজটা ভারী করার জন্যই ভরা থাকে', correct: false),
+        LearnWhyChip(id: 'w7', textBn: 'ফিউজ উড়লেই পিলার নিজে থেকে ডেড হয়ে যায়', correct: false),
+        LearnWhyChip(id: 'w8', textBn: 'চালু পিলারে তাড়াতাড়ি কাজ সারলে বিপদ নেই', correct: false),
         LearnWhyChip(id: 'w9', textBn: 'পিলারে মাত্র 415 ভোল্ট, এতে ভয়ের কিছু নেই', correct: false),
       ],
     ),

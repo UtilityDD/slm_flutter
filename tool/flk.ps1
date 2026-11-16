@@ -10,7 +10,9 @@
 # the owner's PID; a slot whose process has died is reclaimed.
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$FlutterArgs)
 
-$flutter = 'C:\Users\rouma\flutter\bin\flutter.bat'
+$flutter = @($env:FLK_FLUTTER, 'C:\src\flutter\bin\flutter.bat', 'C:\Users\rouma\flutter\bin\flutter.bat') |
+  Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+if (-not $flutter) { $flutter = (Get-Command flutter.bat -ErrorAction SilentlyContinue).Source }
 $root = Split-Path -Parent $PSScriptRoot
 $lockDir = Join-Path $root '.flk'
 $slots = if ($env:FLK_SLOTS) { [int]$env:FLK_SLOTS } else { 3 }

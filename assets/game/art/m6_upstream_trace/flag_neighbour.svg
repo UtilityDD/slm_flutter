@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bcdcf3"/><stop offset="1" stop-color="#eef6ea"/></linearGradient>
+<linearGradient id="tank" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c3cad1"/><stop offset="1" stop-color="#7d868f"/></linearGradient>
+<linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8e8a82"/><stop offset="0.5" stop-color="#bdb8ae"/><stop offset="1" stop-color="#6b675f"/></linearGradient>
+<linearGradient id="flag" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ef5350"/><stop offset="1" stop-color="#b71c1c"/></linearGradient>
+<radialGradient id="arc" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.45" stop-color="#9fd0ff" stop-opacity="0.8"/><stop offset="1" stop-color="#9fd0ff" stop-opacity="0"/></radialGradient>
+</defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="url(#sky)" stroke="#c48a2e" stroke-width="3"/>
+<rect x="6" y="160" width="308" height="34" rx="0" fill="#7daa5a"/>
+<rect x="66" y="40" width="8" height="122" fill="url(#pole)"/><rect x="54" y="42" width="32" height="4" fill="#5a5650"/>
+<rect x="226" y="40" width="8" height="122" fill="url(#pole)"/><rect x="214" y="42" width="32" height="4" fill="#5a5650"/>
+<polyline fill="none" stroke="#2a2e33" stroke-width="2.2" points="10,46 70,46 160,50"/>
+<polyline fill="none" stroke="#2a2e33" stroke-width="2.2" points="150,38 230,38 310,38"/>
+<rect x="64" y="46" width="3" height="8" fill="#9a5a3a"/><rect x="69" y="46" width="3" height="8" fill="#9a5a3a"/><rect x="74" y="46" width="3" height="8" fill="#9a5a3a"/><rect x="52" y="54" width="36" height="34" rx="6" fill="url(#tank)"/><rect x="56" y="66" width="28" height="11" fill="#fff"/><text x="70" y="75" font-family="sans-serif" font-size="9" font-weight="bold" text-anchor="middle" fill="#1a1a1a">R-12</text><rect x="61" y="98" width="18" height="14" fill="#8a939b" stroke="#4a5056"/>
+<rect x="224" y="38" width="3" height="8" fill="#9a5a3a"/><rect x="229" y="38" width="3" height="8" fill="#9a5a3a"/><rect x="234" y="38" width="3" height="8" fill="#9a5a3a"/><rect x="212" y="46" width="36" height="34" rx="6" fill="url(#tank)"/><rect x="216" y="58" width="28" height="11" fill="#fff"/><text x="230" y="67" font-family="sans-serif" font-size="9" font-weight="bold" text-anchor="middle" fill="#1a1a1a">R-07</text><rect x="221" y="90" width="18" height="14" fill="#8a939b" stroke="#4a5056"/>
+<g transform="translate(244,50) rotate(0)" opacity="1"><line x1="0" y1="0" x2="0" y2="40" stroke="#333" stroke-width="2.5"/><path d="M2 1 L30 9 L2 18 Z" fill="url(#flag)"/></g>
+<g stroke="#d32f2f" stroke-width="6" stroke-linecap="round"><line x1="248" y1="102" x2="276" y2="130"/><line x1="276" y1="102" x2="248" y2="130"/></g>
+</svg>

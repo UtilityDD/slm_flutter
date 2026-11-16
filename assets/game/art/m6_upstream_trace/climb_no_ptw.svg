@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bcdcf3"/><stop offset="1" stop-color="#eef6ea"/></linearGradient>
+<linearGradient id="tank" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c3cad1"/><stop offset="1" stop-color="#7d868f"/></linearGradient>
+<linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8e8a82"/><stop offset="0.5" stop-color="#bdb8ae"/><stop offset="1" stop-color="#6b675f"/></linearGradient>
+<linearGradient id="flag" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ef5350"/><stop offset="1" stop-color="#b71c1c"/></linearGradient>
+<radialGradient id="arc" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="0.45" stop-color="#9fd0ff" stop-opacity="0.8"/><stop offset="1" stop-color="#9fd0ff" stop-opacity="0"/></radialGradient>
+</defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="url(#sky)" stroke="#c48a2e" stroke-width="3"/>
+<rect x="6" y="160" width="308" height="34" rx="0" fill="#7daa5a"/>
+<rect x="196" y="30" width="8" height="132" fill="url(#pole)"/><rect x="184" y="32" width="32" height="4" fill="#5a5650"/>
+<polyline fill="none" stroke="#2a2e33" stroke-width="2.2" points="10,36 200,36 310,40"/>
+<circle cx="212" cy="70" r="9" fill="#e0b48a"/><path d="M201 66 Q212 52 223 66 Z" fill="#f4c430"/><rect x="203" y="79" width="18" height="28" rx="4" fill="#1f5fa8"/><rect x="204" y="107" width="7" height="22" fill="#2b3a55"/><rect x="213" y="107" width="7" height="22" fill="#2b3a55"/>
+<circle cx="200" cy="40" r="44" fill="url(#arc)"/><polyline fill="none" stroke="#fff" stroke-width="3" points="200,40 214,30 222,44 238,34"/><polyline fill="none" stroke="#fff" stroke-width="3" points="200,40 188,52 174,46 164,58"/>
+<rect x="40" y="96" width="26" height="46" rx="5" fill="#26303d"/><rect x="45" y="104" width="16" height="12" fill="#9fc6e8"/><line x1="60" y1="96" x2="60" y2="78" stroke="#26303d" stroke-width="3"/>
+<rect x="70" y="120" width="100" height="26" rx="8" fill="#0b1324"/><text x="120.0" y="137" font-family="sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#f5e6b8">PTW ?</text>
+</svg>

@@ -731,8 +731,10 @@ def count_card(kind):
         out = count_stage('OFF')
         out.append(sectionalizer(124, 92, 'S-1', 2.0, 'open', '1'))
     elif kind == 'melt':
-        # Drawn like a blown fuse: the blade sagging, dripping, smoking.
-        out = count_stage('ON')
+        # Drawn like a blown fuse: the blade sagging, dripping, smoking (the
+        # recloser's flag reads OFF, as on the safe cards: the flag alone
+        # never tells the answer).
+        out = count_stage('OFF')
         out.append(sectionalizer(124, 92, 'S-1', 2.0, 'melt', '1'))
         out.append(smoke(132, 64))
     return card_close(out)
@@ -869,8 +871,9 @@ def pro_card(kind):
         out.append(motion(R_P + 44, 92, 0, 1, 3, 7))
     elif kind == 'deadonly':
         # The houses are dark, the handle still up — and 'lock-out' goes in
-        # the book.
-        out = pro_stage(lit=False)
+        # the book (the box is open, as on the setting card: an open box alone
+        # never tells the answer).
+        out = pro_stage(lit=False, door=True, screen='3')
         out.append(person(110, ((100, 150), (92, 146)), face=-1, look=4, front=clipboard(82, 136, 0.8)))
     elif kind == 'wait':
         # A branch on the S-1 line (a fault); he stands right under S-1,

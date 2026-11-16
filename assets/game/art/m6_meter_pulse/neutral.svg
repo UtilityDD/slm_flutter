@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+<defs>
+<linearGradient id="mt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2f2ee"/><stop offset="1" stop-color="#cfd3d4"/></linearGradient>
+<linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2e3be"/><stop offset="1" stop-color="#d9c79e"/></linearGradient>
+<linearGradient id="dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#232a3c"/><stop offset="1" stop-color="#1a2030"/></linearGradient>
+<radialGradient id="led" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ff3b30"/></radialGradient>
+<radialGradient id="bulb" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#fffff0"/><stop offset="1" stop-color="#ffd86a"/></radialGradient>
+<radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff0a8" stop-opacity="0.8"/><stop offset="1" stop-color="#fff0a8" stop-opacity="0"/></radialGradient>
+</defs>
+<rect x="4" y="4" width="312" height="192" rx="12" fill="#fdf8ec" stroke="#c48a2e" stroke-width="3"/>
+<rect x="18" y="24" width="120" height="150" rx="8" fill="url(#dark)"/><rect x="44" y="60" width="68" height="56" fill="#141a28" stroke="#4a5068" stroke-width="3"/><rect x="167.0" y="34.0" width="84.0" height="112.0" rx="7.0" fill="#000" opacity="0.18"/>
+<rect x="164.0" y="30.0" width="84.0" height="112.0" rx="7.0" fill="url(#mt)" stroke="#8a9096" stroke-width="1.6"/>
+<rect x="172.0" y="40.0" width="68.0" height="22.0" fill="#b8d8a6" stroke="#555a5e" stroke-width="2"/>
+<text x="202.0" y="56.0" font-family="sans-serif" font-size="12.0" font-weight="bold" text-anchor="middle" fill="#1e2a1a">01234.5</text>
+<text x="235.0" y="60.0" font-family="sans-serif" font-size="5.0" font-weight="bold" text-anchor="middle" fill="#1e2a1a">kWh</text>
+<circle cx="182.0" cy="80.0" r="6.0" fill="#3a5f8a"/>
+<text x="230.0" y="71.0" font-family="sans-serif" font-size="5.0" font-weight="bold" text-anchor="middle" fill="#26303d">CAL</text>
+<circle cx="230.0" cy="80.0" r="8.0" fill="#ff3b30" opacity="0.3"/><circle cx="230.0" cy="80.0" r="4.0" fill="url(#led)"/>
+<text x="224.0" y="92.0" font-family="sans-serif" font-size="4.6" font-weight="bold" text-anchor="middle" fill="#26303d">3200 imp/kWh</text>
+<rect x="164.0" y="116.0" width="84.0" height="26.0" rx="4.0" fill="#bfc4c7" stroke="#7d8388"/>
+<text x="176.0" y="125.0" font-family="sans-serif" font-size="5.5" font-weight="bold" text-anchor="middle" fill="#26303d">IN</text>
+<text x="234.0" y="125.0" font-family="sans-serif" font-size="5.5" font-weight="bold" text-anchor="middle" fill="#26303d">OUT</text>
+<circle cx="206.0" cy="127.0" r="3.0" fill="#8a8f96"/><line x1="180" y1="160" x2="226" y2="160" stroke="#2c6fb3" stroke-width="4"/><line x1="238" y1="160" x2="290" y2="160" stroke="#2c6fb3" stroke-width="4"/><path d="M226 152 l6 8 l-6 8 M238 152 l-6 8 l6 8" fill="none" stroke="#d7332a" stroke-width="2.4"/><text x="206.0" y="180.0" font-family="sans-serif" font-size="10.0" font-weight="bold" text-anchor="middle" fill="#2c6fb3">N</text>
+</svg>

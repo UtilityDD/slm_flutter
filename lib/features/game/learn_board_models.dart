@@ -54,6 +54,12 @@ import 'learn_board_pack62.dart';
 import 'learn_board_pack63.dart';
 import 'learn_board_pack64.dart';
 import 'learn_board_pack65.dart';
+import 'learn_board_pack66.dart';
+import 'learn_board_pack67.dart';
+import 'learn_board_pack68.dart';
+import 'learn_board_pack69.dart';
+import 'learn_board_pack610.dart';
+import 'learn_board_pack611.dart';
 
 export 'learn_board_pack13.dart' show learnBoardPack13, PoleBoardLines;
 export 'learn_board_pack14.dart' show learnBoardPack14;
@@ -108,6 +114,12 @@ export 'learn_board_pack62.dart' show learnBoardPack62, M6Board62Lines;
 export 'learn_board_pack63.dart' show learnBoardPack63, M6Board63Lines;
 export 'learn_board_pack64.dart' show learnBoardPack64, M6Board64Lines;
 export 'learn_board_pack65.dart' show learnBoardPack65, M6Board65Lines;
+export 'learn_board_pack66.dart' show learnBoardPack66, M6Board66Lines;
+export 'learn_board_pack67.dart' show learnBoardPack67, M6Board67Lines;
+export 'learn_board_pack68.dart' show learnBoardPack68, M6Board68Lines;
+export 'learn_board_pack69.dart' show learnBoardPack69, M6Board69Lines;
+export 'learn_board_pack610.dart' show learnBoardPack610, M6Board610Lines;
+export 'learn_board_pack611.dart' show learnBoardPack611, M6Board611Lines;
 
 /// Anything dealt onto a board: an item card or a "why" chip.
 abstract interface class LearnPick {
@@ -303,6 +315,12 @@ LearnBoardPack? learnBoardPackFor(String lessonId) {
   if (lessonId == '6.3') return learnBoardPack63;
   if (lessonId == '6.4') return learnBoardPack64;
   if (lessonId == '6.5') return learnBoardPack65;
+  if (lessonId == '6.6') return learnBoardPack66;
+  if (lessonId == '6.7') return learnBoardPack67;
+  if (lessonId == '6.8') return learnBoardPack68;
+  if (lessonId == '6.9') return learnBoardPack69;
+  if (lessonId == '6.10') return learnBoardPack610;
+  if (lessonId == '6.11') return learnBoardPack611;
   return null;
 }
 

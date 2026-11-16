@@ -97,6 +97,18 @@ import 'package:slm_flutter/features/game/m6_fuse_gauge.dart' as m6_fuse_gauge;
 import 'package:slm_flutter/features/game/m6_trip_log.dart' as m6_trip_log;
 import 'package:slm_flutter/features/game/m6_ug_cable_lay.dart' as m6_ug_cable_lay;
 import 'package:slm_flutter/features/game/m6_ug_dig_guard.dart' as m6_ug_dig_guard;
+import 'package:slm_flutter/features/game/m6_abc_clamp_seat.dart' as m6_abc_clamp_seat;
+import 'package:slm_flutter/features/game/m6_abc_nick_seal.dart' as m6_abc_nick_seal;
+import 'package:slm_flutter/features/game/m6_capbank_wait.dart' as m6_capbank_wait;
+import 'package:slm_flutter/features/game/m6_earth_pit_test.dart' as m6_earth_pit_test;
+import 'package:slm_flutter/features/game/m6_gate_storm_feeder.dart' as m6_gate_storm_feeder;
+import 'package:slm_flutter/features/game/m6_meter_pulse.dart' as m6_meter_pulse;
+import 'package:slm_flutter/features/game/m6_pillar_thermal.dart' as m6_pillar_thermal;
+import 'package:slm_flutter/features/game/m6_reclose_count.dart' as m6_reclose_count;
+import 'package:slm_flutter/features/game/m6_capbank_meter.dart' as m6_capbank_meter;
+import 'package:slm_flutter/features/game/m6_upstream_trace.dart' as m6_upstream_trace;
+import 'package:slm_flutter/features/game/m6_pillar_newway.dart' as m6_pillar_newway;
+import 'package:slm_flutter/features/game/m6_meter_swap_proof.dart' as m6_meter_swap_proof;
 import 'package:slm_flutter/features/game/discharge_order.dart';
 import 'package:slm_flutter/features/game/fire_choose.dart';
 import 'package:slm_flutter/features/game/fire_pass.dart';
@@ -237,13 +249,19 @@ void main() {
     ]) {
       rival.add(enDigits(l).trim());
     }
-    // Module 6 lesson boards (6.1–6.5): the rival's taunt and myth.
+    // Module 6 lesson boards (6.1–6.11): the rival's taunt and myth.
     for (final l in [
       ...M6Board61Lines.toRecord,
       ...M6Board62Lines.toRecord,
       ...M6Board63Lines.toRecord,
       ...M6Board64Lines.toRecord,
       ...M6Board65Lines.toRecord,
+      ...M6Board66Lines.toRecord,
+      ...M6Board67Lines.toRecord,
+      ...M6Board68Lines.toRecord,
+      ...M6Board69Lines.toRecord,
+      ...M6Board610Lines.toRecord,
+      ...M6Board611Lines.toRecord,
     ]) {
       rival.add(enDigits(l).trim());
     }
@@ -406,6 +424,19 @@ void main() {
       ...m6_ab_unjam.M6AbUnjamLines.allCoworkers,
       ...m6_ug_cable_lay.M6UgCableLines.allCoworkers,
       m6_ug_dig_guard.M6DigLines.coworker,
+      // Module 6 Wave B (2026-11-16).
+      ...m6_abc_clamp_seat.M6ClampLines.allCoworkers,
+      m6_abc_nick_seal.M6NickSealLines.coworker,
+      ...m6_capbank_wait.M6CapLines.allCoworkers,
+      m6_reclose_count.M6RecloseCountLines.coworker,
+      m6_pillar_thermal.M6PillarThermalLines.coworker,
+      ...m6_meter_pulse.M6MeterPulseLines.allCoworkers,
+      ...m6_earth_pit_test.M6EarthPitLines.allCoworkers,
+      ...m6_gate_storm_feeder.M6GateLines.coworkers, // m6 rank gate
+      ...m6_capbank_meter.M6CapbankMeterLines.allCoworkers,
+      m6_upstream_trace.M6UpstreamTraceLines.coworker,
+      ...m6_pillar_newway.M6PillarNewwayLines.allCoworkers,
+      ...m6_meter_swap_proof.M6MeterSwapLines.allCoworkers,
     ]) {
       for (final l in c.recordedLines) {
         rival.add(enDigits(l).trim());

@@ -33,6 +33,13 @@ rulings (docs/module_specs/module6_rulings.md) only:
 Five rounds (ruling M5-11 / the owner's Wave A answers): the spec's roller
 and nick rounds share one 'care' round.
 
+Legibility (review, fixer pass): at phone card size (about 160 px) the side
+view of a twisted bundle cannot show the messenger or count ridges, so every
+card in rounds 1 and 2 carries a magnifier on the cable's cut end, seen
+end-on (round 1: the whole bundle; round 2: the one conductor in the jaw).
+The close-up hands in rounds 4 and 5 are drawn big: long dark gauntlets
+pulled over the sleeve, or bare brown forearms and fingers.
+
 Fairness (the playbook, section 4): every card in a round shares one
 backdrop; the script checks every hand the dealer can make (one safe card +
 any three traps): each colour or gradient the safe card draws is drawn by a
@@ -196,14 +203,37 @@ def person(x, hands_world, face=-1, look=0, gy=GY, gloves=True, s=S):
 
 def arms(hands, gloves=True, side=1):
     """The forearms of a worker reaching in from the bottom edge (a close-up):
-    blue sleeves, rubber gloves or bare hands."""
-    hand_c = GLOVE if gloves else SKIN
+    blue sleeves, then either long rubber gauntlets pulled over the sleeve
+    cuff (dark, with a rolled rim) or bare brown forearms and fingers. Drawn
+    big so the difference reads at phone card size (review: the old 6.5 px
+    hand dot was about 5 px on a phone)."""
     o = []
     for i, (hx, hy) in enumerate(hands):
         bx = hx + (30 + 18 * i) * side
-        o.append(f'<path d="M{f(bx)} {H + 4} Q{f((bx + hx) / 2 + 6 * side)} {f((H + hy) / 2 + 10)} {f(hx)} {f(hy)}" '
-                 f'stroke="{SHIRT if i else SHIRT_D}" stroke-width="11" stroke-linecap="round" fill="none"/>')
-        o.append(f'<circle cx="{f(hx)}" cy="{f(hy)}" r="6.5" fill="{hand_c}"/>')
+        c = ((bx + hx) / 2 + 6 * side, (H + hy) / 2 + 10)
+        o.append(f'<path d="M{f(bx)} {H + 4} Q{f(c[0])} {f(c[1])} {f(hx)} {f(hy)}" '
+                 f'stroke="{SHIRT if i else SHIRT_D}" stroke-width="13" stroke-linecap="round" fill="none"/>')
+        # the last stretch of the forearm, from about 40 % of the way out
+        fore = offset_q((bx, H + 4), c, (hx, hy), 0, n=12, t0=0.58, t1=1.0)
+        if gloves:
+            o.append(stroke(poly(fore), GLOVE, 15))
+            rim = fore[0]
+            o.append(f'<circle cx="{f(rim[0])}" cy="{f(rim[1])}" r="8.5" fill="{GLOVE}" stroke="{CORE_HI}" stroke-width="2"/>')
+        else:
+            o.append(stroke(poly(fore), SKIN, 10))
+            rim = fore[0]
+            o.append(f'<circle cx="{f(rim[0])}" cy="{f(rim[1])}" r="7" fill="{SHIRT if i else SHIRT_D}"/>')
+        hand_c = GLOVE if gloves else SKIN
+        o.append(f'<circle cx="{f(hx)}" cy="{f(hy)}" r="9" fill="{hand_c}"/>')
+        # fingers curled over the cable
+        for k in (-1, 0, 1):
+            fx, fy = hx + k * 5.5, hy - 7
+            o.append(stroke(f'M{f(fx)} {f(fy + 4)} L{f(fx)} {f(fy - 4)}', hand_c, 4.2))
+        o.append(stroke(f'M{f(hx - 8 * side)} {f(hy + 1)} L{f(hx - 13 * side)} {f(hy - 4)}', hand_c, 4.6))
+        if not gloves:
+            for k in (-1, 0, 1):
+                fx = hx + k * 5.5
+                o.append(stroke(f'M{f(fx - 1.6)} {f(hy - 9)} L{f(fx + 1.6)} {f(hy - 9)}', SKIN_D, 1.0))
     return ''.join(o)
 
 
@@ -246,14 +276,16 @@ def offset_q(p0, c, p1, off, n=24, t0=0.0, t1=1.0):
     return out
 
 
-def core_q(p0, c, p1, w, ridges=0, color=CORE):
-    """One insulated core along a quadratic: black body, a shine line, and
-    [ridges] (0–3) raised ridge lines along it (the phase mark, pro tip 2)."""
+def core_q(p0, c, p1, w, ridges=0, color=CORE, shine=True):
+    """One insulated core along a quadratic: black body, a shine line
+    (unless [shine] is off), and [ridges] (0–3) raised ridge ribs along it
+    (the phase mark, pro tip 2), drawn bold so they can be counted."""
     o = [stroke(poly(offset_q(p0, c, p1, 0)), color, w)]
-    o.append(stroke(poly(offset_q(p0, c, p1, -w * 0.28, t0=0.04, t1=0.96)), CORE_HI, max(0.6, w * 0.14)))
-    offs = {1: [0.0], 2: [-0.17, 0.17], 3: [-0.26, 0.0, 0.26]}.get(ridges, [])
+    if shine:
+        o.append(stroke(poly(offset_q(p0, c, p1, -w * 0.28, t0=0.04, t1=0.96)), CORE_HI, max(0.6, w * 0.14)))
+    offs = {1: [0.0], 2: [-0.24, 0.24], 3: [-0.3, 0.0, 0.3]}.get(ridges, [])
     for k in offs:
-        o.append(stroke(poly(offset_q(p0, c, p1, w * k + w * 0.08, t0=0.03, t1=0.97)), RIDGE, max(0.6, w * 0.1)))
+        o.append(stroke(poly(offset_q(p0, c, p1, w * k, t0=0.03, t1=0.97)), RIDGE, max(0.8, w * 0.17)))
     return ''.join(o)
 
 
@@ -400,29 +432,103 @@ def ground(road=False):
 
 
 # --------------------------------------------------------------------------
+# The magnifier: a cut-end of the cable, seen end-on (rounds 1 and 2). At
+# phone size the side view of a twisted bundle cannot show which wire is the
+# messenger or how many ridges a core has; the end view can.
+# --------------------------------------------------------------------------
+
+LENS = '#F4F8FA'
+
+
+def lens(cx, cy, R, aim):
+    """A round magnifier at (cx, cy): a pointer line to [aim] (drawn first,
+    so it sits behind the scene) and the glass with a short handle."""
+    ax, ay = aim
+    dx, dy = ax - cx, ay - cy
+    n = math.hypot(dx, dy) or 1
+    edge = (cx + dx / n * R, cy + dy / n * R)
+    pointer = stroke(f'M{f(edge[0])} {f(edge[1])} L{f(ax)} {f(ay)}', INK, 1.4, ' stroke-dasharray="3 2.5"')
+    glass = (f'<circle cx="{f(cx)}" cy="{f(cy)}" r="{f(R)}" fill="{LENS}" stroke="{INK}" stroke-width="3"/>'
+             + stroke(f'M{f(cx - R * 0.72)} {f(cy + R * 0.72)} L{f(cx - R * 0.72 - 11)} {f(cy + R * 0.72 + 11)}', INK, 5))
+    return pointer, glass
+
+
+def x_core(cx, cy, r, ridges=0):
+    """An insulated core end-on: black XLPE ring, aluminium conductor, and
+    [ridges] raised bumps on top of the ring (the phase mark, pro tip 2)."""
+    o = []
+    for k in range(ridges):
+        a = math.radians(-90 + (k - (ridges - 1) / 2) * 40)
+        o.append(f'<circle cx="{f(cx + math.cos(a) * r)}" cy="{f(cy + math.sin(a) * r)}" r="{f(max(2.4, r * 0.3))}" '
+                 f'fill="{RIDGE}" stroke="{CORE}" stroke-width="1"/>')
+    o.append(f'<circle cx="{f(cx)}" cy="{f(cy)}" r="{f(r)}" fill="{CORE}"/>')
+    o.append(f'<circle cx="{f(cx)}" cy="{f(cy)}" r="{f(r * 0.58)}" fill="{ALU}" stroke="{ALU_D}" stroke-width="0.8"/>')
+    return ''.join(o)
+
+
+def x_bare(cx, cy, r):
+    """A bare stranded aluminium conductor end-on (the bare messenger)."""
+    o = [f'<circle cx="{f(cx)}" cy="{f(cy)}" r="{f(r)}" fill="{ALU}" stroke="{ALU_D}" stroke-width="1.2"/>']
+    for k in range(6):
+        a = 2 * math.pi * k / 6
+        o.append(f'<circle cx="{f(cx + math.cos(a) * r * 0.6)}" cy="{f(cy + math.sin(a) * r * 0.6)}" r="{f(r * 0.3)}" '
+                 f'fill="none" stroke="{ALU_D}" stroke-width="0.9"/>')
+    o.append(f'<circle cx="{f(cx)}" cy="{f(cy)}" r="{f(r * 0.3)}" fill="none" stroke="{ALU_D}" stroke-width="0.9"/>')
+    return ''.join(o)
+
+
+def x_bundle(cx, cy, msg, rc=8.5):
+    """The whole bundle end-on: three phase cores round a bare messenger
+    ('bare'), round a bigger insulated one ('insul'), or three cores with
+    nothing in the middle (None)."""
+    o = []
+    if msg == 'bare':
+        d = rc * 2.05
+        o.append(x_bare(cx, cy, rc * 1.05))
+    elif msg == 'insul':
+        d = rc * 2.35
+        o.append(x_core(cx, cy, rc * 1.35))
+    else:
+        d = rc * 1.16
+    for k in range(3):
+        a = math.radians(-90 + 120 * k)
+        o.append(x_core(cx + math.cos(a) * d, cy + math.sin(a) * d, rc))
+    return ''.join(o)
+
+
+# --------------------------------------------------------------------------
 # Round 1 — bundle: which line is an AB cable.
 # --------------------------------------------------------------------------
 
 def bundle_card(kind):
+    """The line from a pole, and a magnifier on its cut end: three cores round
+    a bare messenger, round a bigger insulated messenger, three cores with no
+    messenger, four bare wires apart, four insulated wires apart."""
     out = card_open('day')
-    out += [sun(), cloud(120, 26, 1.1), tree(164, GY, 1.3), house(118, GY, 1.0), ground()]
-    PX = 34
-    out.append(pole(PX, 40))
+    out += [sun(), cloud(120, 26, 1.1), tree(176, GY, 1.1), house(140, GY, 0.85), ground()]
+    PX = 30
+    LX, LY, LR = 74, 146, 40
+    out.append(pole(PX, 36))
     if kind in ('bare', 'insul', 'nomsg'):
         msg = {'bare': 'bare', 'insul': 'insul', 'nomsg': None}[kind]
-        out.append(bracket(PX + 4, 52, PX + 20))
-        cx, cy = PX + 18, 64
-        out.append(bundle((-12, 74), (14, 76), (cx, cy), r=4.4, w=3.8, msg=msg))
-        out.append(bundle((cx, cy), (118, 108), (214, 92), r=4.4, w=3.8, msg=msg))
-        out.append(susp_clamp(cx, cy, 52))
+        pointer, glass = lens(LX, LY, LR, (150, 97))
+        out.append(pointer)
+        out.append(bracket(PX + 4, 48, PX + 20))
+        cx, cy = PX + 18, 62
+        out.append(bundle((-12, 72), (12, 74), (cx, cy), r=5.6, w=4.6, msg=msg, pitch=24))
+        out.append(bundle((cx, cy), (118, 104), (214, 90), r=5.6, w=4.6, msg=msg, pitch=24))
+        out.append(susp_clamp(cx, cy, 48, s=1.2))
+        out.append(glass)
+        out.append(x_bundle(LX, LY, msg))
     else:
+        pointer, glass = lens(LX, LY, LR, (150, 92))
+        out.append(pointer)
         # a cross-arm with four pin insulators
-        out.append(f'<rect x="8" y="52" width="56" height="5" rx="1" fill="url(#steel)" stroke="{INK}" stroke-width="0.5"/>')
-        xs = (12, 24, 44, 58)
-        for i, x in enumerate(xs):
-            out.append(f'<rect x="{x - 3}" y="44" width="6" height="8" rx="2" fill="url(#ceramic)"/>')
-            y0 = 44
-            end_y = 82 + i * 9
+        out.append(f'<rect x="4" y="48" width="56" height="5" rx="1" fill="url(#steel)" stroke="{INK}" stroke-width="0.5"/>')
+        for i, x in enumerate((8, 20, 40, 54)):
+            out.append(f'<rect x="{x - 3}" y="40" width="6" height="8" rx="2" fill="url(#ceramic)"/>')
+            y0 = 40
+            end_y = 70 + i * 9
             if kind == 'open':
                 out.append(stroke(f'M{x} {y0} Q{(x + 214) / 2} {end_y + 18} 214 {end_y}', ALU_D, 2.6))
                 out.append(stroke(f'M{x} {y0} Q{(x + 214) / 2} {end_y + 18} 214 {end_y}', ALU, 1.6))
@@ -431,6 +537,11 @@ def bundle_card(kind):
                 p0, c, p1 = (x, y0), ((x + 214) / 2, end_y + 18), (214, end_y)
                 out.append(core_q(p0, c, p1, 3.4))
                 out.append(core_q((x, y0), (x / 2 - 4, y0 + 6), (-10, y0 + 4 + i * 3), 3.4))
+        out.append(glass)
+        # end-on: four wires side by side, well apart, nothing twisted
+        for i in range(4):
+            x = LX - 27 + i * 18
+            out.append(x_bare(x, LY, 5.5) if kind == 'open' else x_core(x, LY, 7))
     return card_close(out)
 
 
@@ -439,9 +550,17 @@ def bundle_card(kind):
 # --------------------------------------------------------------------------
 
 def grip_card(kind):
+    """The clamp's jaw on the pole bracket, and a magnifier on what the jaw
+    holds, end-on: the bare messenger, the insulated messenger (clearly
+    bigger and smooth, pro tip 1), a phase core with 1 or 3 raised ridges
+    (pro tip 2), or the whole bundle. In the side view the phase cores carry
+    bold ribs and no shine line, so a rib is never mistaken for a mark."""
     out = card_open('near')
     out.append(cloud(150, 30, 1.2))
     out.append(f'<rect x="-6" y="0" width="30" height="{H}" fill="url(#pole)"/>')
+    LX, LY, LR = 112, 166, 40
+    pointer, glass = lens(LX, LY, LR, (92, 80))
+    out.append(pointer)
     out.append(bracket(24, 40, 100, 7))
     JX, JY = 92, 73
     left0, left1 = (-12, 92), (54, 84)
@@ -452,6 +571,9 @@ def grip_card(kind):
         out.append(stroke(f'M{JX} 44 L{JX} 66', INK, 2.2))
         out.append(f'<rect x="{JX - 15}" y="{JY - 10}" width="30" height="22" rx="5" fill="url(#steel)" stroke="{INK}" stroke-width="0.8"/>')
         out.append(f'<circle cx="{JX - 9}" cy="{JY + 1}" r="2.2" fill="{INK}"/><circle cx="{JX + 9}" cy="{JY + 1}" r="2.2" fill="{INK}"/>')
+        out.append(glass)
+        out.append(f'<rect x="{LX - 29}" y="{LY - 29}" width="58" height="58" rx="8" fill="url(#steel)" stroke="{INK}" stroke-width="1"/>')
+        out.append(x_bundle(LX, LY, 'bare', rc=7))
         return card_close(out)
     gripped = {'bare': 'msg', 'mark': 'insul', 'r1': 1, 'r3': 3}[kind]
     msg = 'insul' if kind == 'mark' else 'bare'
@@ -463,18 +585,31 @@ def grip_card(kind):
         if which == 'msg':
             out.append(messenger_q(left1, c, right0, 5.4))
         else:
-            out.append(core_q(left1, c, right0, 6.2, which))
+            out.append(core_q(left1, c, right0, 6.6, which, shine=False))
     # the gripped conductor runs up through the jaw
     c = (92, 62)
     if gripped == 'msg':
         out.append(messenger_q(left1, c, right0, 5.4))
     elif gripped == 'insul':
-        out.append(core_q(left1, c, right0, 8.6, 0))
+        out.append(core_q(left1, c, right0, 11, 0, shine=False))
     else:
-        out.append(core_q(left1, c, right0, 6.2, gripped))
+        out.append(core_q(left1, c, right0, 6.6, gripped, shine=False))
     out.append(stroke(f'M{JX} 44 L{JX} 66', INK, 2.2))
     out.append(f'<path d="M{JX - 13} {JY - 3} Q{JX} {JY + 12} {JX + 13} {JY - 3} L{JX + 10} {JY - 9} L{JX - 10} {JY - 9} Z" fill="url(#steel)" stroke="{INK}" stroke-width="0.8"/>')
     out.append(f'<circle cx="{JX}" cy="{JY - 8}" r="2.4" fill="{INK}"/>')
+    out.append(glass)
+    # end-on: the jaw's saddle under the one conductor it holds
+    sy = LY + 4
+    if gripped == 'msg':
+        r, body = 14, x_bare(LX, sy, 14)
+    elif gripped == 'insul':
+        r, body = 22, x_core(LX, sy, 22)
+    else:
+        r, body = 14, x_core(LX, sy, 14, gripped)
+    out.append(f'<path d="M{f(LX - r - 8)} {f(sy - 2)} Q{f(LX)} {f(sy + r * 2 + 6)} {f(LX + r + 8)} {f(sy - 2)} '
+               f'L{f(LX + r + 4)} {f(sy - 4)} Q{f(LX)} {f(sy + r * 2 - 2)} {f(LX - r - 4)} {f(sy - 4)} Z" '
+               f'fill="url(#steel)" stroke="{INK}" stroke-width="0.8"/>')
+    out.append(body)
     return card_close(out)
 
 

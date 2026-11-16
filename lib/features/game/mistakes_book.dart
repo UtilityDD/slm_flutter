@@ -78,6 +78,18 @@ import 'm6_ab_gap_log.dart' as m6_ab_gap_log;
 import 'm6_ab_unjam.dart' as m6_ab_unjam;
 import 'm6_ug_cable_lay.dart' as m6_ug_cable_lay;
 import 'm6_ug_dig_guard.dart' as m6_ug_dig_guard;
+import 'm6_abc_clamp_seat.dart' as m6_abc_clamp_seat;
+import 'm6_abc_nick_seal.dart' as m6_abc_nick_seal;
+import 'm6_capbank_wait.dart' as m6_capbank_wait;
+import 'm6_reclose_count.dart' as m6_reclose_count;
+import 'm6_pillar_thermal.dart' as m6_pillar_thermal;
+import 'm6_meter_pulse.dart' as m6_meter_pulse;
+import 'm6_earth_pit_test.dart' as m6_earth_pit_test;
+import 'm6_gate_storm_feeder.dart' as m6_gate_storm_feeder;
+import 'm6_capbank_meter.dart' as m6_capbank_meter;
+import 'm6_upstream_trace.dart' as m6_upstream_trace;
+import 'm6_pillar_newway.dart' as m6_pillar_newway;
+import 'm6_meter_swap_proof.dart' as m6_meter_swap_proof;
 import 'm4_dp_survey.dart' as m4_dp_survey;
 import 'm4_do_refuse.dart' as m4_do_refuse;
 import 'm4_insulator_prep.dart' as m4_insulator_prep;
@@ -218,6 +230,18 @@ final Map<String, DoMistake> knownMistakes = {
     ...m6_ab_unjam.M6AbUnjamMistakes.all,
     ...m6_ug_cable_lay.M6UgCableMistakes.all,
     ...m6_ug_dig_guard.M6DigMistakes.all,
+    ...m6_abc_clamp_seat.M6ClampMistakes.all,
+    ...m6_abc_nick_seal.M6NickSealMistakes.all,
+    ...m6_capbank_wait.M6CapMistakes.all,
+    ...m6_reclose_count.M6RecloseCountMistakes.all,
+    ...m6_pillar_thermal.M6PillarThermalMistakes.all,
+    ...m6_meter_pulse.M6MeterPulseMistakes.all,
+    ...m6_earth_pit_test.M6EarthPitMistakes.all,
+    ...m6_gate_storm_feeder.M6GMistakes.all,
+    ...m6_capbank_meter.M6CapbankMeterMistakes.all,
+    ...m6_upstream_trace.M6UpstreamTraceMistakes.all,
+    ...m6_pillar_newway.M6PillarNewwayMistakes.all,
+    ...m6_meter_swap_proof.M6MeterSwapMistakes.all,
     ...m2_comealong_pick.M2ComeAlongMistakes.all,
     ...m2_comealong_pull.PullMistakes.all,
     ...m2_crimp_steps.CrimpMistakes.all,

@@ -111,6 +111,18 @@ import 'm6_ab_gap_log.dart' show M6AbGapLogPage, m6AbGapLogPacks;
 import 'm6_ab_unjam.dart' show M6AbUnjamPage, m6AbUnjamPacks;
 import 'm6_ug_cable_lay.dart' show M6UgCablePage, m6UgCablePacks;
 import 'm6_ug_dig_guard.dart' show M6UgDigGuardPage, m6UgDigGuardPacks;
+import 'm6_abc_clamp_seat.dart' show M6ClampSeatPage, m6ClampPacks;
+import 'm6_abc_nick_seal.dart' show M6NickSealPage, m6NickSealPacks;
+import 'm6_capbank_wait.dart' show M6CapbankWaitPage, m6CapbankWaitPacks;
+import 'm6_reclose_count.dart' show M6RecloseCountPage, m6RecloseCountPacks;
+import 'm6_pillar_thermal.dart' show M6PillarThermalPage, m6PillarThermalPacks;
+import 'm6_meter_pulse.dart' show M6MeterPulsePage, m6MeterPulsePacks;
+import 'm6_earth_pit_test.dart' show M6EarthPitPage, m6EarthPitPacks;
+import 'm6_gate_storm_feeder.dart' show M6GateStormFeederPage, m6GatePacks;
+import 'm6_capbank_meter.dart' show M6CapbankMeterPage, m6CapbankMeterPacks;
+import 'm6_upstream_trace.dart' show M6UpstreamTracePage, m6UpstreamTracePacks;
+import 'm6_pillar_newway.dart' show M6PillarNewwayPage, m6PillarNewwayPacks;
+import 'm6_meter_swap_proof.dart' show M6MeterSwapPage, m6MeterSwapPacks;
 
 /// Builds the page of a Do game inside the level shell.
 typedef DoGameBuilder = Widget Function(LevelContext ctx, bool muted);
@@ -557,6 +569,54 @@ DoGameBuilder? doGameFor(CatalogGamePack pack) {
       final content = m6UgDigGuardPacks[pack.id];
       if (content == null) return null;
       return (ctx, muted) => M6UgDigGuardPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_abc_clamp_seat':
+      final content = m6ClampPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6ClampSeatPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_abc_nick_seal':
+      final content = m6NickSealPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6NickSealPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_capbank_wait':
+      final content = m6CapbankWaitPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6CapbankWaitPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_reclose_count':
+      final content = m6RecloseCountPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6RecloseCountPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_pillar_thermal':
+      final content = m6PillarThermalPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6PillarThermalPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_meter_pulse':
+      final content = m6MeterPulsePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6MeterPulsePage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_earth_pit_test':
+      final content = m6EarthPitPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6EarthPitPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_gate_storm_feeder':
+      final content = m6GatePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6GateStormFeederPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_capbank_meter':
+      final content = m6CapbankMeterPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6CapbankMeterPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_upstream_trace':
+      final content = m6UpstreamTracePacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6UpstreamTracePage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_pillar_newway':
+      final content = m6PillarNewwayPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6PillarNewwayPage(ctx: ctx, pack: content, muted: muted);
+    case 'm6_meter_swap_proof':
+      final content = m6MeterSwapPacks[pack.id];
+      if (content == null) return null;
+      return (ctx, muted) => M6MeterSwapPage(ctx: ctx, pack: content, muted: muted);
   }
   return null;
 }

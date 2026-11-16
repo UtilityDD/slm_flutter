@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+<defs>
+  <linearGradient id="day" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB2DA"/><stop offset="1" stop-color="#D6E7F0"/></linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8DCC4"/><stop offset="1" stop-color="#CDBB98"/></linearGradient>
+  <linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EFE6D2"/><stop offset="1" stop-color="#D9CBAE"/></linearGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A88A66"/><stop offset="1" stop-color="#86694A"/></linearGradient>
+  <linearGradient id="paving" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A3A49C"/><stop offset="1" stop-color="#85867E"/></linearGradient>
+  <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9DBB72"/><stop offset="1" stop-color="#7E9C55"/></linearGradient>
+  <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8E979E"/><stop offset="0.5" stop-color="#C6CED4"/><stop offset="1" stop-color="#7C858C"/></linearGradient>
+  <linearGradient id="box" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9EDF0"/><stop offset="1" stop-color="#AEB8C0"/></linearGradient>
+  <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9AA5AE"/><stop offset="1" stop-color="#7D8891"/></linearGradient>
+  <linearGradient id="mbody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBFBF8"/><stop offset="1" stop-color="#D3D7D9"/></linearGradient>
+  <linearGradient id="cover" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9CED2"/><stop offset="1" stop-color="#A9B0B6"/></linearGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E4EEF2"/><stop offset="1" stop-color="#B8C8D0"/></linearGradient>
+  <linearGradient id="ceramic" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D9D3C6"/><stop offset="0.45" stop-color="#FAF8F2"/><stop offset="1" stop-color="#C8C1B2"/></linearGradient>
+  <linearGradient id="lcd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9E2B8"/><stop offset="1" stop-color="#A9C997"/></linearGradient>
+  <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A5280"/><stop offset="0.5" stop-color="#2A6EA3"/><stop offset="1" stop-color="#184B75"/></linearGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F7F9"/><stop offset="0.45" stop-color="#C3CBD1"/><stop offset="1" stop-color="#7D868E"/></linearGradient>
+  <linearGradient id="house" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D9C3A0"/><stop offset="1" stop-color="#B9A07A"/></linearGradient>
+  <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A4E35"/><stop offset="1" stop-color="#743A28"/></linearGradient>
+  <linearGradient id="fridge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DCE3E6"/><stop offset="0.5" stop-color="#F3F6F7"/><stop offset="1" stop-color="#C2CBD0"/></linearGradient>
+  <linearGradient id="pump" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4F8FB0"/><stop offset="1" stop-color="#2F6A88"/></linearGradient>
+  <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF6C8"/><stop offset="1" stop-color="#FFE08A" stop-opacity="0"/></radialGradient>
+  <radialGradient id="redglow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FF8A70"/><stop offset="1" stop-color="#D8402F" stop-opacity="0"/></radialGradient>
+  <clipPath id="card"><rect x="0" y="0" width="200" height="220" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="200" height="220" fill="url(#wall)"/>
+<rect x="0" y="196" width="200" height="24" fill="url(#paving)"/>
+<rect x="44" y="12" width="112" height="156" rx="4" fill="url(#box)" stroke="#4A5560" stroke-width="0.8"/>
+<rect x="50" y="18" width="100" height="144" rx="2" fill="url(#panel)"/>
+<path d="M44 12 L22 22 L22 158 L44 168 Z" fill="url(#panel)" stroke="#4A5560" stroke-width="0.8"/>
+<path d="M64 0 V36 H80" stroke="#2B3138" stroke-width="2.4" fill="none"/>
+<path d="M58 0 V152 H105.5 V134" stroke="#2B3138" stroke-width="2.4" fill="none"/>
+<path d="M120 36 H142 V148 H83.5 V134" stroke="#2B3138" stroke-width="2.4" fill="none"/>
+<path d="M94.5 134 V196" stroke="#2B3138" stroke-width="2.4"/>
+<path d="M116.5 134 V196" stroke="#2B3138" stroke-width="2.4"/>
+<rect x="80" y="28" width="40" height="16" rx="2" fill="#2B3138"/><rect x="83" y="32" width="7" height="8" fill="#C9A43A"/><rect x="110" y="32" width="7" height="8" fill="#C9A43A"/><g transform="rotate(0 100 36)"><rect x="78" y="26" width="44" height="20" rx="5" fill="url(#ceramic)" stroke="#4A5560" stroke-width="0.6"/><rect x="94" y="22" width="12" height="6" rx="2" fill="url(#ceramic)" stroke="#4A5560" stroke-width="0.6"/></g>
+<rect x="72" y="54" width="56" height="84" rx="5" fill="url(#mbody)" stroke="#4A5560" stroke-width="0.8"/><rect x="79" y="63" width="42" height="17" rx="1.5" fill="url(#lcd)" stroke="#4A5560" stroke-width="0.5"/><path d="M85.2 67 L88.8 67 M89.7 67.9 L89.7 71 M89.7 72 L89.7 75.1 M85.2 76 L88.8 76 M84.3 72 L84.3 75.1 M84.3 67.9 L84.3 71 M91.4 67.9 L91.4 71 M92.3 71.5 L95.9 71.5 M96.8 67.9 L96.8 71 M96.8 72 L96.8 75.1 M99.3 67 L102.9 67 M98.4 67.9 L98.4 71 M99.3 71.5 L102.9 71.5 M103.8 72 L103.8 75.1 M99.3 76 L102.9 76 M106.3 67 L109.9 67 M110.8 67.9 L110.8 71 M106.3 71.5 L109.9 71.5 M105.4 72 L105.4 75.1 M106.3 76 L109.9 76 M114.2 67.9 L114.2 71 M114.2 72 L114.2 75.1" stroke="#1D2B22" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="85" cy="90" r="2.8" fill="#D8402F"/><circle cx="115" cy="90" r="4.2" fill="url(#steel)" stroke="#4A5560" stroke-width="0.5"/><rect x="75" y="114" width="50" height="21" rx="3" fill="url(#cover)" stroke="#4A5560" stroke-width="0.5"/><circle cx="100" cy="118" r="1.6" fill="url(#steel)"/><path d="M100 118 q-5 14 0 24 q5 -10 0 -24" stroke="#6E747A" stroke-width="1.1" fill="none"/><circle cx="100" cy="145" r="3.8" fill="#6E747A" stroke="#4A5560" stroke-width="0.6"/>
+<path d="M142 70 Q166 90 160 128 Q154 156 94.5 168" stroke="#C8352B" stroke-width="2.6" fill="none"/><path d="M138 66 l8 8 M140 72 l6 -4" stroke="#C9A43A" stroke-width="1.4"/>
+<!--prop:spark--><circle cx="156" cy="110" r="12" fill="url(#glow)"/><path d="M147.6 110 L164.4 110 M156 101.6 L156 118.4 M150 104 L162 116 M162 104 L150 116" stroke="#FFE08A" stroke-width="1.6" stroke-linecap="round"/>
+<!--prop:worker--><!--prop:phone--><!--prop:barehands--><g transform="translate(180 198) scale(1.3) translate(-180 -198)"><path d="M180 168 L178.6 183.7 L187 197" stroke="#222B37" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="180" y="193" width="11" height="5" rx="2" fill="#1C1F24"/><path d="M180 168 L172.1 181.5 L174 197" stroke="#2A3442" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="167" y="193" width="11" height="5" rx="2" fill="#1C1F24"/><path d="M181 145 L169.1 142.5 L163.1 131.8" stroke="#174A70" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="163.1" cy="131.8" r="3" fill="#A86E48"/><path d="M172.5 168.3 L171.5 141.3 Q179 138 186.5 140.7 L187.5 167.7 Z" fill="url(#shirt)"/><path d="M172.5 165.3 L187.5 164.7" stroke="#222B37" stroke-width="2.4"/><g transform="rotate(10 177 139)"><rect x="174" y="138" width="6" height="6" rx="2" fill="#8C5A3A"/><circle cx="177" cy="134" r="7" fill="#A86E48"/><path d="M184 135 Q184 140 180 141 L180 135 Z" fill="#2A1E16"/><circle cx="173" cy="135" r="1.1" fill="#2A1E16"/><path d="M169 133 A8 8 0 0 1 185 133 Z" fill="#FFD34E"/><rect x="165" y="131.6" width="20" height="2.8" rx="1.3" fill="#E5B92E"/></g><path d="M178 145 L184.6 142.5 L182 136" stroke="#1F5F8F" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="179.5" y="130" width="5" height="9" rx="1" fill="#2B3138"/><rect x="180.4" y="131" width="3.2" height="6" fill="url(#lcd)"/><circle cx="182" cy="136" r="3" fill="#A86E48"/></g>
+</g>
+<rect x="0.75" y="0.75" width="198.5" height="218.5" rx="17.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.5"/>
+</svg>
