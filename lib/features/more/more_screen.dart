@@ -18,6 +18,7 @@ import '../shell/shell_insets.dart';
 import '../shell/shell_providers.dart';
 import 'delete_account.dart';
 import 'profile_edit.dart';
+import 'sources_page.dart';
 
 /// সেটিংস, in this order: profile, league, language, tool library,
 /// certificate + PPE, privacy policy, delete account, log out, admin.
@@ -127,6 +128,15 @@ class MoreScreen extends ConsumerWidget {
                           color: SlmColors.gold200,
                           trailing: Icons.open_in_new_rounded,
                           onTap: () => openLink(Uri.parse(AppConfig.privacyPolicyUrl)),
+                        ),
+                        // Official sources + "not a government app" (Play
+                        // Misleading Claims policy, 2026-11-21).
+                        _NavRow(
+                          key: const ValueKey('more-sources'),
+                          label: tr(bn, SafetySources.titleBn, SafetySources.titleEn),
+                          icon: Icons.menu_book_outlined,
+                          color: SlmColors.gold200,
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SourcesPage())),
                         ),
                         const SizedBox(height: 22),
                         if (auth.isAuthenticated) ...[
@@ -446,6 +456,7 @@ class _NavRow extends StatelessWidget {
   final VoidCallback onTap;
 
   const _NavRow({
+    super.key,
     required this.label,
     required this.icon,
     required this.color,

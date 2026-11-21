@@ -216,3 +216,13 @@ your log, in plain English:
 - Keep the target API level current every August (Play's yearly deadline).
 - Edge-TTS voice licence (memory note): recorded clips made with edge-tts need a licence check before
   wider release ⚠.
+
+
+## 1.0.0 (2003) — resubmission after the 17 Nov 2026 rejection
+- Rejected: Misleading Claims policy, "Missing Source Link for Government Information".
+- Fix: store description opens with a "Not a government app" notice and lists official sources
+  (CEA Regulations 2023, WBSEDCL Safety Manual / circulars / public safety guide, BIS, Ministry of Power);
+  in-app page Settings → «তথ্যসূত্র ও ঘোষণা» with the same links (lib/features/more/sources_page.dart).
+- Launch content: Modules 1–5 only. Build with
+  `flutter build appbundle --release --dart-define=SLM_MAX_MODULE=5` (later modules show as coming soon).
+- Version code 2003 (the owner's phone had a 2002 test build from the other machine; Play's last was 2).

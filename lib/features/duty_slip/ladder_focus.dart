@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../game/content_catalog.dart';
 import '../game/game_save.dart';
 import '../game/ladder_builder.dart';
 
@@ -9,7 +10,10 @@ import '../game/ladder_builder.dart';
 /// Rungs the ladder draws as playable before the catalog has loaded (today's
 /// playable prefix: Modules 1–6, all 33 Module 6 rungs since 2026-11-16). Only
 /// drawing: rung taps wait for the catalog.
-const ladderFallbackSpan = 183;
+/// A store build launching with fewer modules ([ContentCatalog.launchMaxModule])
+/// draws only those (30 rungs a module: 29 + its gate).
+const ladderFallbackSpan =
+    ContentCatalog.launchMaxModule > 0 && ContentCatalog.launchMaxModule < 6 ? ContentCatalog.launchMaxModule * 30 : 183;
 
 /// The contiguous playable prefix of the ladder (stops at the first Coming Soon).
 int ladderPlayableSpan(BuiltLadder? built) {

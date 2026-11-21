@@ -1,4 +1,4 @@
-# Store listing: paste-ready (14 Nov 2026)
+# Store listing: paste-ready (21 Nov 2026 — sources + not-a-government-app notice added after the 17 Nov Misleading Claims rejection)
 
 Updated from `store-listing.md` to match the 1.0.0 build (Subrata's recorded voice, videos,
 lucky toolbox, life skills, simplified menu). Default listing language: **English (United States)**.
@@ -13,6 +13,8 @@ A Bangla (bn-BD) translation can be added later, after the owner gives the natur
 ## Full description (≤ 4000)
 
 ```
+Not a government app: SmartLineman is an independent training app. It does not represent any government entity and is not affiliated with WBSEDCL, the Central Electricity Authority (CEA) or any government body. Official sources are listed below.
+
 SmartLineman is a Bangla safety-training game for electricity distribution linemen in West Bengal. Learn the real steps of field work by playing them, learn from your mistakes, and get home safe every day.
 
 The ladder
@@ -46,6 +48,15 @@ Important
 • This is a training aid. It does not replace your employer's official training, rules, permit-to-work or your supervisor's instructions. Always follow your organisation's procedures in the field.
 • SmartLineman is not an official app of any electricity utility or government body and is not affiliated with them.
 • Electrical accidents and deaths are shown for training purposes.
+
+Sources of the safety information (official)
+The safety rules in the lessons and levels follow these official documents (also listed in the app under Settings → Sources and notice):
+• CEA (Measures relating to Safety and Electric Supply) Regulations, 2023 — Central Electricity Authority, Govt. of India: https://cea.nic.in/regulations/notified-regulations?lang=en
+• WBSEDCL Safety Manual: https://www.wbsedcl.in/irj/go/km/docs/internet/new_website/pdf/Safety_Manual%202025_16_10.pdf
+• WBSEDCL safety circulars: https://portal.wbsedcl.in/irj/go/km/docs/internet/new_website/Safety_Circular.html
+• WBSEDCL public safety guide: https://www.wbsedcl.in/irj/go/km/docs/internet/new_website/pdf/Public_Safety.pdf
+• Bureau of Indian Standards (IS standards for gloves, fuse wire and PPE): https://www.bis.gov.in/
+• Ministry of Power, Govt. of India: https://powermin.gov.in/
 
 Privacy policy: https://smartlinemanapp.github.io/privacy_policy/smartlineman.html
 Contact: smartlinemanapp@gmail.com

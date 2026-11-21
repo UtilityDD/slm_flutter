@@ -25,7 +25,19 @@ class ContentCatalog {
     required this.guideLines,
   });
 
-  factory ContentCatalog.fromJson(Map<String, dynamic> json) {
+  /// Highest module open in this build; 0 = every built module. A store
+  /// release can launch with fewer modules than are built
+  /// (`--dart-define=SLM_MAX_MODULE=5`): later modules show as coming soon.
+  static const launchMaxModule = int.fromEnvironment('SLM_MAX_MODULE');
+
+  factory ContentCatalog.fromJson(Map<String, dynamic> json, {int maxModule = launchMaxModule}) {
+    int moduleNo(String? id) => int.tryParse((id ?? '').replaceFirst('m', '')) ?? 0;
+    bool capped(String? moduleId) => maxModule > 0 && moduleNo(moduleId) > maxModule;
+    final rungs = <CatalogRungDef>[
+      for (final raw in (json['rungDefs'] as List? ?? const []))
+        CatalogRungDef.fromJson(Map<String, dynamic>.from(raw as Map)),
+    ];
+    final cappedPacks = {for (final r in rungs) if (capped(r.moduleId)) r.packId};
     final packs = <CatalogGamePack>[
       for (final raw in (json['gamePacks'] as List? ?? const []))
         CatalogGamePack.fromJson(Map<String, dynamic>.from(raw as Map)),
@@ -43,10 +55,9 @@ class ContentCatalog {
           CatalogLesson.fromJson(Map<String, dynamic>.from(raw as Map)),
       ],
       rungDefs: [
-        for (final raw in (json['rungDefs'] as List? ?? const []))
-          CatalogRungDef.fromJson(Map<String, dynamic>.from(raw as Map)),
+        for (final r in rungs) capped(r.moduleId) ? r.comingSoon() : r,
       ],
-      packsById: {for (final p in packs) p.id: p},
+      packsById: {for (final p in packs) p.id: cappedPacks.contains(p.id) ? p.comingSoon() : p},
       guideLines: [
         for (final raw in (json['guideLines'] as List? ?? const []))
           CatalogGuideLine.fromJson(Map<String, dynamic>.from(raw as Map)),
@@ -170,6 +181,18 @@ class CatalogRungDef {
     required this.orderInModule,
   });
 
+  /// This rung shown as not open yet (a store release launching with fewer
+  /// modules, [ContentCatalog.launchMaxModule]).
+  CatalogRungDef comingSoon() => CatalogRungDef(
+        id: id,
+        kind: kind,
+        lessonId: lessonId,
+        moduleId: moduleId,
+        packId: packId,
+        status: CatalogRungStatus.comingSoon,
+        orderInModule: orderInModule,
+      );
+
   factory CatalogRungDef.fromJson(Map<String, dynamic> json) {
     final kindRaw = json['kind'] as String? ?? 'do';
     final kind = switch (kindRaw) {
@@ -217,6 +240,19 @@ class CatalogGamePack {
     required this.deadlyRules,
     this.legacyLevel,
   });
+
+  /// This pack shown as not open yet (see [CatalogRungDef.comingSoon]).
+  CatalogGamePack comingSoon() => CatalogGamePack(
+        id: id,
+        engineType: engineType,
+        lessonId: lessonId,
+        moduleId: moduleId,
+        slot: slot,
+        status: CatalogRungStatus.comingSoon,
+        legacyHint: legacyHint,
+        deadlyRules: deadlyRules,
+        legacyLevel: legacyLevel,
+      );
 
   factory CatalogGamePack.fromJson(Map<String, dynamic> json) {
     final statusRaw = json['status'] as String? ?? 'comingSoon';
